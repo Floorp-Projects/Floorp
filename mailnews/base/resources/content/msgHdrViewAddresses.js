@@ -39,3 +39,7 @@ function AddExtraAddressProcessing(emailAddress, addressButton)
 function NotifyClearAddresses()
 {
 }
+
+function FinishEmailProcessing()
+{
+}

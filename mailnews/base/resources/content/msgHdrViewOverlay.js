@@ -348,7 +348,7 @@ function OutputEmailAddresses(parentBox, defaultParentDiv, emailAddresses, inclu
     {
       optionalToggleButton.removeAttribute('hideNonBox');
     }
-
+    FinishEmailProcessing();
   } // if msgheader parser
 }
 
