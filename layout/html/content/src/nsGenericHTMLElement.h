@@ -107,7 +107,7 @@ public:
 
   // Implementation for nsIContent
   nsresult GetNameSpaceID(PRInt32& aNameSpaceID) const;
-  nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep);
+  nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
   nsresult ParseAttributeString(const nsString& aStr, 
                                 nsIAtom*& aName,
                                 PRInt32& aNameSpaceID);
@@ -131,6 +131,7 @@ public:
                                     nsIForm* aForm);
   nsresult SetDocumentForFormControls(nsIDocument* aDocument,
                                       PRBool aDeep,
+                                      PRBool aCompileEventHandlers,
                                       nsIFormControl* aControl,
                                       nsIForm* aForm);
   nsresult HandleDOMEventForAnchors(nsIPresContext* aPresContext,

@@ -915,14 +915,14 @@ nsGenericHTMLElement::InNavQuirksMode(nsIDocument* aDoc)
 }
 
 nsresult
-nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+nsGenericHTMLElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
 {
   PRBool doNothing = PR_FALSE;
   if (aDocument == mDocument) {
     doNothing = PR_TRUE; // short circuit useless work
   }
 
-  nsresult result = nsGenericElement::SetDocument(aDocument, aDeep);
+  nsresult result = nsGenericElement::SetDocument(aDocument, aDeep, aCompileEventHandlers);
   if (NS_OK != result) {
     return result;
   }
@@ -1022,6 +1022,7 @@ nsGenericHTMLElement::SetParentForFormControls(nsIContent* aParent,
 nsresult 
 nsGenericHTMLElement::SetDocumentForFormControls(nsIDocument* aDocument,
                                                  PRBool aDeep,
+                                                 PRBool aCompileEventHandlers,
                                                  nsIFormControl* aControl,
                                                  nsIForm* aForm)
 {
@@ -1038,7 +1039,7 @@ nsGenericHTMLElement::SetDocumentForFormControls(nsIDocument* aDocument,
   }
 
   if (NS_SUCCEEDED(result)) {
-    result = SetDocument(aDocument, aDeep);
+    result = SetDocument(aDocument, aDeep, aCompileEventHandlers);
   }
 
   return result;
@@ -3343,7 +3344,7 @@ nsGenericHTMLContainerElement::InsertChildAt(nsIContent* aKid,
     aKid->SetParent(mContent);
     nsRange::OwnerChildInserted(mContent, aIndex);
     if (nsnull != doc) {
-      aKid->SetDocument(doc, PR_FALSE);
+      aKid->SetDocument(doc, PR_FALSE, PR_TRUE);
       if (aNotify) {
         doc->ContentInserted(mContent, aKid, aIndex);
       }
@@ -3372,12 +3373,12 @@ nsGenericHTMLContainerElement::ReplaceChildAt(nsIContent* aKid,
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
     if (nsnull != doc) {
-      aKid->SetDocument(doc, PR_FALSE);
+      aKid->SetDocument(doc, PR_FALSE, PR_TRUE);
       if (aNotify) {
         doc->ContentReplaced(mContent, oldKid, aKid, aIndex);
       }
     }
-    oldKid->SetDocument(nsnull, PR_TRUE);
+    oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
     oldKid->SetParent(nsnull);
     NS_RELEASE(oldKid);
   }
@@ -3401,7 +3402,7 @@ nsGenericHTMLContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
     aKid->SetParent(mContent);
     // ranges don't need adjustment since new child is at end of list
     if (nsnull != doc) {
-      aKid->SetDocument(doc, PR_FALSE);
+      aKid->SetDocument(doc, PR_FALSE, PR_TRUE);
       if (aNotify) {
         doc->ContentAppended(mContent, mChildren.Count() - 1);
       }
@@ -3429,7 +3430,7 @@ nsGenericHTMLContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
         doc->ContentRemoved(mContent, oldKid, aIndex);
       }
     }
-    oldKid->SetDocument(nsnull, PR_TRUE);
+    oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
     oldKid->SetParent(nsnull);
     NS_RELEASE(oldKid);
   }

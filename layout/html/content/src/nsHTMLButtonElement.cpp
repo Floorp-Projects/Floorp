@@ -283,9 +283,9 @@ nsHTMLButtonElement::SetParent(nsIContent* aParent)
 }
 
 NS_IMETHODIMP
-nsHTMLButtonElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+nsHTMLButtonElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
 {
-  return mInner.SetDocumentForFormControls(aDocument, aDeep, this, mForm);
+  return mInner.SetDocumentForFormControls(aDocument, aDeep, aCompileEventHandlers, this, mForm);
 }
 
 NS_IMETHODIMP

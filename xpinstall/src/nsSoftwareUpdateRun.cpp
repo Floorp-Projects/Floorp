@@ -556,7 +556,7 @@ extern "C" void RunChromeInstallOnThread(void *data)
 
             if ( isSkin )
             {
-                rv = reg->InstallSkin(spec.GetBuffer(), PR_TRUE);
+              rv = reg->InstallSkin(spec.GetBuffer(), PR_TRUE, PR_FALSE);
                 if (NS_SUCCEEDED(rv) && selected)
                 {
                     rv = reg->SelectSkin(info->GetArguments(), PR_TRUE);

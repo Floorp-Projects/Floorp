@@ -46,11 +46,13 @@
 #include "nsITextContent.h"
 
 #include "nsIXBLBinding.h"
+#include "nsIChromeRegistry.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kXMLDocumentCID,             NS_XMLDOCUMENT_CID);
 static NS_DEFINE_CID(kParserCID,                  NS_PARSER_IID); // XXX What's up with this???
+static NS_DEFINE_CID(kChromeRegistryCID,          NS_CHROMEREGISTRY_CID);
 
 // nsProxyStream 
 // A helper class used for synchronous parsing of URLs.
@@ -130,6 +132,8 @@ class nsXBLService: public nsIXBLService
   // Gets the object's base class type.  
   NS_IMETHOD ResolveTag(nsIContent* aContent, nsIAtom** aResult);
 
+  NS_IMETHOD AllowScripts(nsIContent* aContent, PRBool* aAllowScripts);
+
 public:
   nsXBLService();
   virtual ~nsXBLService();
@@ -152,7 +156,7 @@ protected:
   static nsSupportsHashtable* mBindingTable; // This is a table of all the bindings files 
                                              // we have loaded
                                              // during this session.
-  static nsSupportsHashtable* mProtoClassTable;   // Every binding with methods/properties has a protoclass.
+  static nsSupportsHashtable* mScriptAccessTable;   // Can the doc's bindings access scripts
   static nsINameSpaceManager* gNameSpaceManager; // Used to register the XBL namespace
   static PRInt32  kNameSpaceID_XBL;          // Convenient cached XBL namespace.
 
@@ -170,7 +174,7 @@ protected:
 // Static member variable initialization
 PRUint32 nsXBLService::gRefCnt = 0;
 nsSupportsHashtable* nsXBLService::mBindingTable = nsnull;
-nsSupportsHashtable* nsXBLService::mProtoClassTable = nsnull;
+nsSupportsHashtable* nsXBLService::mScriptAccessTable = nsnull;
 
 nsINameSpaceManager* nsXBLService::gNameSpaceManager = nsnull;
 
@@ -191,7 +195,7 @@ nsXBLService::nsXBLService(void)
   if (gRefCnt == 1) {
     // Create our binding table.
     mBindingTable = new nsSupportsHashtable();
-    mProtoClassTable = new nsSupportsHashtable();
+    mScriptAccessTable = new nsSupportsHashtable();
 
     // Register the XBL namespace.
     nsresult rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
@@ -221,7 +225,7 @@ nsXBLService::~nsXBLService(void)
   gRefCnt--;
   if (gRefCnt == 0) {
     delete mBindingTable;
-    delete mProtoClassTable;
+    delete mScriptAccessTable;
 
     NS_IF_RELEASE(gNameSpaceManager);
     
@@ -358,6 +362,8 @@ nsXBLService::FlushBindingDocuments()
 {
   delete mBindingTable;
   mBindingTable = new nsSupportsHashtable();
+  delete mScriptAccessTable;
+  mScriptAccessTable = new nsSupportsHashtable();
   return NS_OK;
 }
 
@@ -375,6 +381,25 @@ nsXBLService::ResolveTag(nsIContent* aContent, nsIAtom** aResult)
   }
 
   aContent->GetTag(*aResult); // Addref happens here.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLService::AllowScripts(nsIContent* aContent, PRBool* aAllowScripts)
+{
+  nsAutoString uri;
+  aContent->GetAttribute(kNameSpaceID_None, kURIAtom, uri);
+  
+  PRInt32 indx = uri.RFindChar('#');
+  if (indx >= 0)
+    uri.Truncate(indx);
+
+  nsStringKey key(uri);
+  nsCOMPtr<nsIDocument> document;
+  document = dont_AddRef(NS_STATIC_CAST(nsIDocument*, mScriptAccessTable->Get(&key)));
+
+  *aAllowScripts = !document;
+
   return NS_OK;
 }
 
@@ -421,8 +446,11 @@ NS_IMETHODIMP nsXBLService::GetBinding(const nsCString& aURLStr, nsIXBLBinding**
     
     // If no ref is specified just use this.
     if ((bindingName.IsEmpty()) || (bindingName == value)) {
-      child->SetAttribute(kNameSpaceID_None, kURIAtom, NS_ConvertASCIItoUCS2(aURLStr.GetBuffer(), aURLStr.Length()), PR_FALSE);
-
+      nsAutoString url;
+      child->GetAttribute(kNameSpaceID_None, kURIAtom, url);
+      if (url.IsEmpty())
+        child->SetAttribute(kNameSpaceID_None, kURIAtom, NS_ConvertASCIItoUCS2(aURLStr.GetBuffer(), aURLStr.Length()), PR_FALSE);
+        
       // Make a new binding
       NS_NewXBLBinding(aResult);
 
@@ -457,6 +485,8 @@ NS_IMETHODIMP nsXBLService::GetBinding(const nsCString& aURLStr, nsIXBLBinding**
 NS_IMETHODIMP
 nsXBLService::GetBindingDocument(const nsCString& aURLStr, nsIDocument** aResult)
 {
+  nsresult rv;
+
   *aResult = nsnull;
   
   // We've got a file.  Check our key binding file cache.
@@ -465,7 +495,6 @@ nsXBLService::GetBindingDocument(const nsCString& aURLStr, nsIDocument** aResult
   document = dont_AddRef(NS_STATIC_CAST(nsIDocument*, mBindingTable->Get(&key)));
 
   if (!document) {
-
     nsCOMPtr<nsIURL> uri;
     nsComponentManager::CreateInstance("component://netscape/network/standard-url",
                                        nsnull,
@@ -477,6 +506,14 @@ nsXBLService::GetBindingDocument(const nsCString& aURLStr, nsIDocument** aResult
     if (document) {
       // Put the key binding doc into our table.
       mBindingTable->Put(&key, document);
+
+      nsCOMPtr<nsIChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
+      if (NS_SUCCEEDED(rv) && reg) {
+        PRBool allow;
+        reg->AllowScriptsForSkin(uri, &allow);
+        if (!allow)
+          mScriptAccessTable->Put(&key, document);
+      }
     }
     else return NS_ERROR_FAILURE;
   }

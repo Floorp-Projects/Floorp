@@ -1257,7 +1257,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   mStack[mStackPos].mFlags = 0;
   mStack[mStackPos].mNumFlushed = 0;
   mStack[mStackPos].mInsertionPoint = -1;
-  content->SetDocument(mSink->mDocument, PR_FALSE);
+  content->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
   
   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
   mSink->mDocument->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
@@ -1461,7 +1461,7 @@ SetDocumentInChildrenOf(nsIContent* aContent,
     nsIContent* child;
     aContent->ChildAt(i, child);
     if (nsnull != child) {
-      child->SetDocument(aDocument, PR_TRUE);
+      child->SetDocument(aDocument, PR_TRUE, PR_TRUE);
       NS_RELEASE(child);
     }
   }
@@ -1602,7 +1602,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       }      
 
       // Set the content's document
-      content->SetDocument(mSink->mDocument, PR_FALSE);
+      content->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
 
       rv = mSink->AddAttributes(aNode, content);
       if (NS_OK != rv) {
@@ -1706,7 +1706,7 @@ SinkContext::AddComment(const nsIParserNode& aNode)
       domComment->AppendData(aNode.GetText());
       NS_RELEASE(domComment);
       
-      comment->SetDocument(mSink->mDocument, PR_FALSE);
+      comment->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
       
       nsIHTMLContent* parent;
       if ((nsnull == mSink->mBody) && (nsnull != mSink->mHead)) {
@@ -1969,7 +1969,7 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
       rv = NS_NewTextNode(&content);
       if (NS_OK == rv) {
         // Set the content's document
-        content->SetDocument(mSink->mDocument, PR_FALSE);
+        content->SetDocument(mSink->mDocument, PR_FALSE, PR_TRUE);
         
         // Set the text in the text node
         nsITextContent* text = nsnull;
@@ -2206,7 +2206,7 @@ HTMLContentSink::Init(nsIDocument* aDoc,
     MOZ_TIMER_STOP(mWatch);
     return rv;
   }
-  mRoot->SetDocument(mDocument, PR_FALSE);
+  mRoot->SetDocument(mDocument, PR_FALSE, PR_TRUE);
   mDocument->SetRootContent(mRoot);
 
   // Make head part
@@ -2548,7 +2548,7 @@ HTMLContentSink::SetTitle(const nsString& aValue)
         NS_RELEASE(tc);
       }
       it->AppendChildTo(text, PR_FALSE);
-      text->SetDocument(mDocument, PR_FALSE);
+      text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
       NS_RELEASE(text);
     }
     mHead->AppendChildTo(it, PR_FALSE);
@@ -3351,7 +3351,7 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
     }    
 
     // Set the content's document and attributes
-    area->SetDocument(mDocument, PR_FALSE);
+    area->SetDocument(mDocument, PR_FALSE, PR_TRUE);
     rv = AddAttributes(aNode, area);
     if (NS_FAILED(rv)) {
       NS_RELEASE(area);
@@ -3434,7 +3434,7 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
 
       // Add in the attributes and add the style content object to the
       // head container.
-      element->SetDocument(mDocument, PR_FALSE);
+      element->SetDocument(mDocument, PR_FALSE, PR_TRUE);
       result = AddAttributes(aNode, element);
       if (NS_SUCCEEDED(result)) {
         parent->AppendChildTo(element, PR_FALSE);
@@ -3794,7 +3794,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 
       // Add in the attributes and add the style content object to the
       // head container.    
-      element->SetDocument(mDocument, PR_FALSE);
+      element->SetDocument(mDocument, PR_FALSE, PR_TRUE);
       result = AddAttributes(aNode, element);
       if (NS_FAILED(result)) {
         NS_RELEASE(element);
@@ -3912,7 +3912,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
     if (NS_OK == rv) {
       // Add in the attributes and add the meta content object to the
       // head container.
-      it->SetDocument(mDocument, PR_FALSE);
+      it->SetDocument(mDocument, PR_FALSE, PR_TRUE);
       rv = AddAttributes(aNode, it);
       if (NS_OK != rv) {
         NS_RELEASE(it);
@@ -4544,7 +4544,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 
     // Add in the attributes and add the style content object to the
     // head container.
-    element->SetDocument(mDocument, PR_FALSE);
+    element->SetDocument(mDocument, PR_FALSE, PR_TRUE);
     rv = AddAttributes(aNode, element);
     if (NS_FAILED(rv)) {
       NS_RELEASE(element);
@@ -4579,7 +4579,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
         NS_RELEASE(tc);
       }
       element->AppendChildTo(text, PR_FALSE);
-      text->SetDocument(mDocument, PR_FALSE);
+      text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
       NS_RELEASE(text);
     }
   }
@@ -4677,7 +4677,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
       // Add in the attributes and add the style content object to the
       // head container.
-      element->SetDocument(mDocument, PR_FALSE);
+      element->SetDocument(mDocument, PR_FALSE, PR_TRUE);
       rv = AddAttributes(aNode, element);
       if (NS_FAILED(rv)) {
         NS_RELEASE(element);
@@ -4750,7 +4750,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
               NS_RELEASE(tc);
             }
             element->AppendChildTo(text, PR_FALSE);
-            text->SetDocument(mDocument, PR_FALSE);
+            text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
             NS_RELEASE(text);
           }
 

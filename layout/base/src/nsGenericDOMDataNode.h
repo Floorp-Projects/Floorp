@@ -147,7 +147,7 @@ struct nsGenericDOMDataNode {
 
   // Implementation for nsIContent
   nsresult GetDocument(nsIDocument*& aResult) const;
-  nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep);
+  nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
   nsresult GetParent(nsIContent*& aResult) const;
   nsresult SetParent(nsIContent* aParent);
   nsresult IsSynthetic(PRBool& aResult) {
@@ -442,8 +442,8 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {                    \
     return _g.GetDocument(aResult);                                        \
   }                                                                        \
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep) {           \
-    return _g.SetDocument(aDocument, aDeep);                               \
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers) {           \
+    return _g.SetDocument(aDocument, aDeep, aCompileEventHandlers);                               \
   }                                                                        \
   NS_IMETHOD GetParent(nsIContent*& aResult) const {                       \
     return _g.GetParent(aResult);                                          \

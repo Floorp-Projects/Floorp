@@ -1856,7 +1856,7 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, sortPtr sortInfo)
 			// Because InsertChildAt() only does a
 			// "shallow" SetDocument(), we need to do a
 			// "deep" one now...
-			kid->SetDocument(doc, PR_TRUE);
+			kid->SetDocument(doc, PR_TRUE, PR_TRUE);
 
 			container->InsertChildAt(kid, childPos++, PR_FALSE);
 
@@ -2371,7 +2371,7 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	// only does a shallow one.
 	nsCOMPtr<nsIDocument> doc;
 	treeParent->GetDocument(*getter_AddRefs(doc));
-	treeBody->SetDocument(doc, PR_TRUE);
+	treeBody->SetDocument(doc, PR_TRUE, PR_TRUE);
 
 	if (NS_FAILED(rv = treeParent->AppendChildTo(treeBody, PR_TRUE)))	return(rv);
 

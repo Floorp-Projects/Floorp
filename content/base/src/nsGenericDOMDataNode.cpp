@@ -688,7 +688,7 @@ nsGenericDOMDataNode::GetDocument(nsIDocument*& aResult) const
 
 
 nsresult
-nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
 {
   // If we were part of a document, make sure we get rid of the
   // script context reference to our script object so that our

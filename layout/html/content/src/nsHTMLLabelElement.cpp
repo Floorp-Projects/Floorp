@@ -257,9 +257,9 @@ nsHTMLLabelElement::SetParent(nsIContent* aParent)
 }
 
 NS_IMETHODIMP
-nsHTMLLabelElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+nsHTMLLabelElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
 {
-  return mInner.SetDocumentForFormControls(aDocument, aDeep, this, mForm);
+  return mInner.SetDocumentForFormControls(aDocument, aDeep, aCompileEventHandlers, this, mForm);
 }
 
 NS_IMETHODIMP

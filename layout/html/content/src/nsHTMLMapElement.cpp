@@ -70,7 +70,7 @@ public:
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const {
     return mInner.GetDocument(aResult);                                        
   }                                                                        
-  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep);            
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);            
   NS_IMETHOD GetParent(nsIContent*& aResult) const {                       
     return mInner.GetParent(aResult);                                          
   }                                                                        
@@ -254,7 +254,7 @@ nsHTMLMapElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP 
-nsHTMLMapElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+nsHTMLMapElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
 {
   nsresult rv;
   
@@ -268,7 +268,7 @@ nsHTMLMapElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
     }
   }
 
-  rv = mInner.SetDocument(aDocument, aDeep);
+  rv = mInner.SetDocument(aDocument, aDeep, aCompileEventHandlers);
 
   if (NS_SUCCEEDED(rv) && (nsnull != aDocument)) {
     nsCOMPtr<nsIHTMLDocument> htmlDoc;

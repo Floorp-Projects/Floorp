@@ -1129,7 +1129,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     // Set aContent as the parent content and set the document object. This
     // way event handling works
     imageContent->SetParent(aContent);
-    imageContent->SetDocument(aDocument, PR_TRUE);
+    imageContent->SetDocument(aDocument, PR_TRUE, PR_TRUE);
   
     // Create an image frame and initialize it
     nsIFrame* imageFrame;
@@ -1180,7 +1180,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
             // Set aContent as the parent content and set the document object. This
             // way event handling works
             content->SetParent(aContent);
-            content->SetDocument(aDocument, PR_TRUE);
+            content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
 
             // Create a text frame and initialize it
             NS_NewTextFrame(shell, &textFrame);
@@ -1250,7 +1250,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
       // Set aContent as the parent content and set the document object. This
       // way event handling works
       textContent->SetParent(aContent);
-      textContent->SetDocument(aDocument, PR_TRUE);
+      textContent->SetDocument(aDocument, PR_TRUE, PR_TRUE);
       
       // Create a text frame and initialize it
       NS_NewTextFrame(shell, &textFrame);
@@ -5237,7 +5237,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
 
     nsCOMPtr<nsIContent> content(do_QueryInterface(node));
     content->SetParent(aParent);
-    content->SetDocument(aDocument, PR_TRUE);
+    content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
 
     nsIFrame * newFrame = nsnull;
     nsresult rv = creator->CreateFrameFor(aPresContext, content, &newFrame);
@@ -9784,7 +9784,7 @@ nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresShell*    aPresShell,
   nsCOMPtr<nsIDocument> document;
   aContent->GetDocument(*getter_AddRefs(document));
   altTextContent->SetParent(aContent);
-  altTextContent->SetDocument(document, PR_TRUE);
+  altTextContent->SetDocument(document, PR_TRUE, PR_TRUE);
 
   // Create either an inline frame, block frame, or area frame
   nsIFrame* containerFrame;

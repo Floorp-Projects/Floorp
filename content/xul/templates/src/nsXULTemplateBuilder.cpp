@@ -5540,7 +5540,7 @@ nsXULTemplateBuilder::RemoveMember(nsIContent* aContainerElement,
 
         // Set its document to null so that it'll get knocked out of
         // the XUL doc's resource-to-element map.
-        rv = child->SetDocument(nsnull, PR_TRUE);
+        rv = child->SetDocument(nsnull, PR_TRUE, PR_TRUE);
         if (NS_FAILED(rv)) return rv;
 
         // Remove from the content support map.
@@ -5969,7 +5969,7 @@ nsXULTemplateBuilder::RemoveGeneratedContent(nsIContent* aElement)
         rv = aElement->RemoveChildAt(count, PR_TRUE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "error removing child");
 
-        rv = child->SetDocument(nsnull, PR_TRUE);
+        rv = child->SetDocument(nsnull, PR_TRUE, PR_TRUE);
         if (NS_FAILED(rv)) return rv;
 
         // Remove this and any children from the content support map.
@@ -6168,7 +6168,7 @@ nsXULTemplateBuilder::CreateElement(PRInt32 aNameSpaceID,
             formControl->SetForm(form);
     }
     
-    rv = result->SetDocument(doc, PR_FALSE);
+    rv = result->SetDocument(doc, PR_FALSE, PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's document");
     if (NS_FAILED(rv)) return rv;
 

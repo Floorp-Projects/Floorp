@@ -1154,7 +1154,8 @@ nsGenericElement::GetDocument(nsIDocument*& aResult) const
 
 void
 nsGenericElement::SetDocumentInChildrenOf(nsIContent* aContent, 
-                                          nsIDocument* aDocument)
+                                          nsIDocument* aDocument, 
+                                          PRBool aCompileEventHandlers)
 {
   PRInt32 i, n;
   aContent->ChildCount(n);
@@ -1162,14 +1163,14 @@ nsGenericElement::SetDocumentInChildrenOf(nsIContent* aContent,
     nsIContent* child;
     aContent->ChildAt(i, child);
     if (nsnull != child) {
-      child->SetDocument(aDocument, PR_TRUE);
+      child->SetDocument(aDocument, PR_TRUE, aCompileEventHandlers);
       NS_RELEASE(child);
     }
   }
 }
 
 nsresult
-nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
 {
   if (aDocument != mDocument) {
     // If we were part of a document, make sure we get rid of the
@@ -1226,7 +1227,7 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
   }
 
   if (PR_TRUE == aDeep) {
-    SetDocumentInChildrenOf(mContent, aDocument);
+    SetDocumentInChildrenOf(mContent, aDocument, aCompileEventHandlers);
   }
 
   return NS_OK;
@@ -1863,7 +1864,7 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
         return res;
       }
 
-      childContent->SetDocument(mDocument, PR_TRUE);
+      childContent->SetDocument(mDocument, PR_TRUE, PR_TRUE);
 
       // Insert the child and increment the insertion position
       res = mContent->InsertChildAt(childContent, refPos++, PR_TRUE);
@@ -1928,7 +1929,7 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
       }
     }
 
-    newContent->SetDocument(mDocument, PR_TRUE);
+    newContent->SetDocument(mDocument, PR_TRUE, PR_TRUE);
 
     res = mContent->InsertChildAt(newContent, refPos, PR_TRUE);
 
@@ -2056,7 +2057,7 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
         return res;
       }
 
-      childContent->SetDocument(document, PR_TRUE);
+      childContent->SetDocument(document, PR_TRUE, PR_TRUE);
 
       // Insert the child and increment the insertion position
       if (i) {
@@ -2117,7 +2118,7 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
       }
     }
 
-    newContent->SetDocument(document, PR_TRUE);
+    newContent->SetDocument(document, PR_TRUE, PR_TRUE);
 
     res = mContent->ReplaceChildAt(newContent, oldPos, PR_TRUE);
 
@@ -2817,7 +2818,7 @@ nsGenericContainerElement::InsertChildAt(nsIContent* aKid,
     aKid->SetParent(mContent);
     nsRange::OwnerChildInserted(mContent, aIndex);
     if (nsnull != doc) {
-      aKid->SetDocument(doc, PR_FALSE);
+      aKid->SetDocument(doc, PR_FALSE, PR_TRUE);
       if (aNotify) {
         doc->ContentInserted(mContent, aKid, aIndex);
       }
@@ -2846,12 +2847,12 @@ nsGenericContainerElement::ReplaceChildAt(nsIContent* aKid,
     NS_ADDREF(aKid);
     aKid->SetParent(mContent);
     if (nsnull != doc) {
-      aKid->SetDocument(doc, PR_FALSE);
+      aKid->SetDocument(doc, PR_FALSE, PR_TRUE);
       if (aNotify) {
         doc->ContentReplaced(mContent, oldKid, aKid, aIndex);
       }
     }
-    oldKid->SetDocument(nsnull, PR_TRUE);
+    oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
     oldKid->SetParent(nsnull);
     NS_RELEASE(oldKid);
   }
@@ -2875,7 +2876,7 @@ nsGenericContainerElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
     aKid->SetParent(mContent);
     // ranges don't need adjustment since new child is at end of list
     if (nsnull != doc) {
-      aKid->SetDocument(doc, PR_FALSE);
+      aKid->SetDocument(doc, PR_FALSE, PR_TRUE);
       if (aNotify) {
         doc->ContentAppended(mContent, mChildren.Count() - 1);
       }
@@ -2903,7 +2904,7 @@ nsGenericContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
         doc->ContentRemoved(mContent, oldKid, aIndex);
       }
     }
-    oldKid->SetDocument(nsnull, PR_TRUE);
+    oldKid->SetDocument(nsnull, PR_TRUE, PR_TRUE);
     oldKid->SetParent(nsnull);
     NS_RELEASE(oldKid);
     if (aNotify && (nsnull != doc)) {

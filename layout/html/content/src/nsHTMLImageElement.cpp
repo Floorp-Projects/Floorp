@@ -702,13 +702,13 @@ nsHTMLImageElement::Initialize(JSContext* aContext,
 
 NS_IMETHODIMP 
 nsHTMLImageElement::SetDocument(nsIDocument* aDocument, 
-                                PRBool aDeep)
+                                PRBool aDeep, PRBool aCompileEventHandlers)
 {
   // If we've been added to the document, we can get rid of 
   // our owner document reference so as to avoid a circular
   // reference.
   NS_IF_RELEASE(mOwnerDocument);
-  return mInner.SetDocument(aDocument, aDeep);
+  return mInner.SetDocument(aDocument, aDeep, aCompileEventHandlers);
 }
 
 NS_IMETHODIMP

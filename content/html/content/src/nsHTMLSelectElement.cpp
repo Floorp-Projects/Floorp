@@ -343,9 +343,9 @@ nsHTMLSelectElement::SetParent(nsIContent* aParent)
 }
 
 NS_IMETHODIMP
-nsHTMLSelectElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
+nsHTMLSelectElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers)
 {
-  return mInner.SetDocumentForFormControls(aDocument, aDeep, this, mForm);
+  return mInner.SetDocumentForFormControls(aDocument, aDeep, aCompileEventHandlers, this, mForm);
 }
 
 NS_IMETHODIMP

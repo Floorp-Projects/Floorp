@@ -39,6 +39,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIXMLContent.h"
+#include "nsIXULContent.h"
 #include "nsIXMLContentSink.h"
 #include "nsLayoutCID.h"
 #include "nsXMLDocument.h"
@@ -48,6 +49,7 @@
 #include "nsINameSpace.h"
 #include "nsJSUtils.h"
 #include "nsIJSRuntimeService.h"
+#include "nsIXBLService.h"
 
 // Event listeners
 #include "nsIEventListenerManager.h"
@@ -166,6 +168,8 @@ public:
   virtual ~nsXBLBinding();
 
   NS_IMETHOD AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
+
+  PRBool AllowScripts();
 
   static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
   
@@ -428,8 +432,9 @@ nsXBLBinding::SetAnonymousContent(nsIContent* aParent)
   // element's document.
   nsCOMPtr<nsIDocument> doc;
   mBoundElement->GetDocument(*getter_AddRefs(doc));
-  mContent->SetDocument(doc, PR_TRUE);
 
+  mContent->SetDocument(doc, PR_TRUE, AllowScripts());
+  
   // (2) The children's parent back pointer should not be to this synthetic root
   // but should instead point to the bound element.
   PRInt32 childCount;
@@ -583,7 +588,7 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
   nsCOMPtr<nsIContent> handlers;
   GetImmediateChild(kHandlersAtom, getter_AddRefs(handlers));
 
-  if (handlers) {
+  if (handlers && AllowScripts()) {
     // Now walk the handlers and add event listeners to the bound
     // element.
     PRInt32 childCount;
@@ -669,7 +674,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
   nsCOMPtr<nsIContent> interfaceElement;
   GetImmediateChild(kInterfaceAtom, getter_AddRefs(interfaceElement));
 
-  if (interfaceElement) {
+  if (interfaceElement && AllowScripts()) {
     // Get our bound element's script context.
     nsresult rv;
     nsCOMPtr<nsIDocument> document;
@@ -1055,7 +1060,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
     nsCOMPtr<nsIContent> anonymous;
     GetAnonymousContent(getter_AddRefs(anonymous));
     if (anonymous)
-      anonymous->SetDocument(aNewDocument, PR_TRUE);
+      anonymous->SetDocument(aNewDocument, PR_TRUE, AllowScripts());
   }
 
   return NS_OK;
@@ -1457,6 +1462,20 @@ nsXBLBinding::GetTextData(nsIContent *aParent, nsString& aResult)
     }
   }
   return NS_OK;
+}
+
+PRBool
+nsXBLBinding::AllowScripts()
+{
+  nsresult rv;
+  nsCOMPtr<nsIXBLService> xblService(do_GetService("component://netscape/xbl", &rv));
+  if (xblService) {
+    PRBool allowScripts;
+    xblService->AllowScripts(mBinding, &allowScripts);
+    return allowScripts;
+  }
+
+  return PR_FALSE;
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

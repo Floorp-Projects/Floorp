@@ -577,7 +577,7 @@ nsHTMLOptionElement::SetText(const nsString& aText)
             nsIDocument * doc;
             result = GetDocument(doc);
             if (NS_SUCCEEDED(result)) {
-              text->SetDocument(doc, PR_FALSE);
+              text->SetDocument(doc, PR_FALSE, PR_TRUE);
               NS_IF_RELEASE(doc);
             }
           }

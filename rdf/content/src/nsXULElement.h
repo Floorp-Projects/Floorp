@@ -376,7 +376,7 @@ public:
        
     // nsIContent (from nsIStyledContent)
     NS_IMETHOD GetDocument(nsIDocument*& aResult) const;
-    NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep);
+    NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
     NS_IMETHOD GetParent(nsIContent*& aResult) const;
     NS_IMETHOD SetParent(nsIContent* aParent);
     NS_IMETHOD CanContainChildren(PRBool& aResult) const;
@@ -449,7 +449,7 @@ public:
     NS_IMETHOD ForceElementToOwnResource(PRBool aForce);
     NS_IMETHOD InitTemplateRoot(nsIRDFCompositeDataSource* aDatabase,
                                 nsIXULTemplateBuilder* aBuilder);
-
+    
     // nsIDOMNode (from nsIDOMElement)
     NS_DECL_IDOMNODE
   
