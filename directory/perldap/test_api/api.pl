@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #############################################################################
-# $Id: api.pl,v 1.2 1998/07/24 19:01:49 clayton Exp $
+# $Id: api.pl,v 1.3 1998/07/31 21:16:30 clayton Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -29,7 +29,7 @@
 #
 #############################################################################
 
-use Mozilla::LDAP::API (:api :constant);
+use Mozilla::LDAP::API qw(:api :constant);
 use strict;
 
 my $BASE = "ou=Test,o=Motorola,c=US";
@@ -38,7 +38,8 @@ my $PASS = "abcd1234";
 my $HOST = "localhost";
 my $PORT = 389;
 
-system("/usr/ucb/ps -auxw | grep $$ | grep -v grep");
+$howmany = 50;
+
 # Initialize the Connection
 {
 my $ld = ldap_init($HOST,$PORT);
@@ -109,7 +110,7 @@ if (ldap_add_s($ld,$BASE,$entry) != LDAP_SUCCESS)
 
 
 # Add People
-foreach my $number (1..50)
+foreach my $number (1..$howmany)
 {
    $entry = {
 	"objectclass" => ["top","person"],
@@ -126,7 +127,7 @@ foreach my $number (1..50)
 }
 
 # Modify People
-foreach my $number (1..5)
+foreach my $number (1..$howmany)
 {
    $entry = {
 	"sn" => {"a",["Test"]},
@@ -155,7 +156,7 @@ if (ldap_search_s($ld,$BASE,LDAP_SCOPE_SUBTREE,$filter,$attrs,0,$res)
 }
 
 # Count Results
-if (ldap_count_entries($ld,$res) != 5)
+if (ldap_count_entries($ld,$res) != $howmany)
 {
    print "count_res	- Failed!\n";
 } else {
@@ -238,7 +239,7 @@ ldap_ber_free($ber,0);
 ldap_msgfree($res);
 
 # Compare Attribute Values
-foreach my $number (1..10)
+foreach my $number (1..$howmany)
 {
    if(ldap_compare_s($ld,"cn=Mozilla $number,$BASE","sn",$number)
          != LDAP_COMPARE_TRUE)
@@ -250,7 +251,7 @@ foreach my $number (1..10)
 }
 
 # Delete Users
-foreach my $number (1..50)
+foreach my $number (1..$howmany)
 {
    if (ldap_delete_s($ld,"cn=Mozilla $number,$BASE") != LDAP_SUCCESS)
    {
@@ -270,5 +271,3 @@ if (ldap_delete_s($ld,"$BASE") != LDAP_SUCCESS)
 # Unbind
 ldap_unbind($ld);
 }
-
-system("/usr/ucb/ps -auxw | grep $$ | grep -v grep");

@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #############################################################################
-# $Id: write.pl,v 1.2 1998/07/24 19:01:51 clayton Exp $
+# $Id: write.pl,v 1.3 1998/07/31 21:16:32 clayton Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -30,7 +30,7 @@
 #############################################################################
 
 use strict;
-use Mozilla::LDAP::API (:constant :api);
+use Mozilla::LDAP::API qw(:constant :api);
 
 
 # This is the entry we will be adding.  Do not use a pre-existing entry.
