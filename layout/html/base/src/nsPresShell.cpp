@@ -1130,7 +1130,7 @@ protected:
   nsICSSStyleSheet* mPrefStyleSheet; // mStyleSet owns it but we maintaina ref, may be null
   PRPackedBool mEnablePrefStyleSheet;
   nsIViewManager* mViewManager;   // [WEAK] docViewer owns it so I don't have to
-  nsILayoutHistoryState* mHistoryState; // [WEAK] session history owns this
+  nsWeakPtr mHistoryState; // [WEAK] session history owns this
   PRUint32 mUpdateCount;
   // normal reflow commands
   nsVoidArray mReflowCommands; 
@@ -3333,11 +3333,12 @@ PresShell::EndLoad(nsIDocument *aDocument)
   // Restore frame state for the root scroll frame
   nsIFrame* rootFrame = nsnull;
   GetRootFrame(&rootFrame);
-  if (rootFrame && mHistoryState) {
+  nsCOMPtr<nsILayoutHistoryState> historyState = do_QueryReferent(mHistoryState);
+  if (rootFrame && historyState) {
     nsIFrame* scrollFrame = nsnull;
     GetRootScrollFrame(mPresContext, rootFrame, &scrollFrame);
     if (scrollFrame) {
-      mFrameManager->RestoreFrameStateFor(mPresContext, scrollFrame, mHistoryState, nsIStatefulFrame::eDocumentScrollState);
+      mFrameManager->RestoreFrameStateFor(mPresContext, scrollFrame, historyState, nsIStatefulFrame::eDocumentScrollState);
     }
   }
 
@@ -4150,21 +4151,21 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
 
   NS_PRECONDITION(nsnull != aState, "null state pointer");
 
-  if (!mHistoryState) {
+  nsCOMPtr<nsILayoutHistoryState> historyState = do_QueryReferent(mHistoryState);
+  if (!historyState) {
     // Create the document state object
-    rv = NS_NewLayoutHistoryState(aState); // This addrefs
+    rv = NS_NewLayoutHistoryState(getter_AddRefs(historyState));
   
     if (NS_FAILED(rv)) { 
       *aState = nsnull;
       return rv;
     }    
 
-    mHistoryState = *aState;
+    mHistoryState = getter_AddRefs(NS_GetWeakReference(historyState));
   }
-  else {
-    *aState = mHistoryState;
-    NS_IF_ADDREF(mHistoryState);
-  }
+
+  *aState = historyState;
+  NS_IF_ADDREF(*aState);
   
   // Capture frame state for the entire frame hierarchy
   nsIFrame* rootFrame = nsnull;
@@ -4178,12 +4179,12 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
     nsIFrame* scrollFrame = nsnull;
     rv = GetRootScrollFrame(mPresContext, rootFrame, &scrollFrame);
     if (scrollFrame) {
-      rv = mFrameManager->CaptureFrameStateFor(mPresContext, scrollFrame, mHistoryState, nsIStatefulFrame::eDocumentScrollState);
+      rv = mFrameManager->CaptureFrameStateFor(mPresContext, scrollFrame, historyState, nsIStatefulFrame::eDocumentScrollState);
     }
   }
 
 
-  rv = mFrameManager->CaptureFrameState(mPresContext, rootFrame, mHistoryState);  
+  rv = mFrameManager->CaptureFrameState(mPresContext, rootFrame, historyState);  
  
   return rv;
 }
@@ -4191,15 +4192,16 @@ PresShell::CaptureHistoryState(nsILayoutHistoryState** aState, PRBool aLeavingPa
 NS_IMETHODIMP
 PresShell::GetHistoryState(nsILayoutHistoryState** aState)
 {
-  NS_IF_ADDREF(mHistoryState);
-  *aState = mHistoryState;
+  nsCOMPtr<nsILayoutHistoryState> historyState = do_QueryReferent(mHistoryState);
+  *aState = historyState;
+  NS_IF_ADDREF(*aState);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 PresShell::SetHistoryState(nsILayoutHistoryState* aLayoutHistoryState)
 {
-  mHistoryState = aLayoutHistoryState;
+  mHistoryState = getter_AddRefs(NS_GetWeakReference(aLayoutHistoryState));
   return NS_OK;
 }
   
@@ -4819,7 +4821,8 @@ PresShell::ContentAppended(nsIDocument *aDocument,
   nsresult  rv = mStyleSet->ContentAppended(mPresContext, aContainer, aNewIndexInContainer);
   VERIFY_STYLE_TREE;
 
-  if (NS_SUCCEEDED(rv) && nsnull != mHistoryState) {
+  nsCOMPtr<nsILayoutHistoryState> historyState = do_QueryReferent(mHistoryState);
+  if (NS_SUCCEEDED(rv) && historyState) {
     // If history state has been set by session history, ask the frame manager 
     // to restore frame state for the frame hierarchy created for the chunk of
     // content that just came in.
@@ -4839,7 +4842,7 @@ PresShell::ContentAppended(nsIDocument *aDocument,
       nsIFrame* frame;
       rv = GetPrimaryFrameFor(newChild, &frame);
       if (NS_SUCCEEDED(rv) && nsnull != frame)
-        mFrameManager->RestoreFrameState(mPresContext, frame, mHistoryState);
+        mFrameManager->RestoreFrameState(mPresContext, frame, historyState);
     }
   }
 
