@@ -620,7 +620,7 @@ nsAppShellService::UnregisterTopLevelWindow(nsIWebShellWindow* aWindow)
   nsIWindowMediator* service;
 	if (NS_SUCCEEDED(nsServiceManager::GetService(kWindowMediatorCID, kIWindowMediatorIID, (nsISupports**) &service ) ) )
 	{
-		service->RegisterWindow( aWindow);
+		service->UnregisterWindow( aWindow );
 		nsServiceManager::ReleaseService(kWindowMediatorCID, service);
 	}
   
