@@ -379,7 +379,8 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     mEditor->EnableUndo(PR_FALSE);      // wipe out undo info
     SetTextControlFrameState(value);    // set new text value
     mEditor->EnableUndo(PR_TRUE);       // fire up a new txn stack
-    nsFormFrame::StyleChangeReflow(aPresContext, this);
+    if (aHint != NS_STYLE_HINT_REFLOW)
+      nsFormFrame::StyleChangeReflow(aPresContext, this);
   } 
   else if (nsHTMLAtoms::maxlength == aAttribute) 
   {
@@ -447,7 +448,7 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     }    
     mEditor->SetFlags(flags);
   }
-  else if (nsHTMLAtoms::size == aAttribute) {
+  else if (nsHTMLAtoms::size == aAttribute && aHint != NS_STYLE_HINT_REFLOW) {
     nsFormFrame::StyleChangeReflow(aPresContext, this);
   }
   // Allow the base class to handle common attributes supported

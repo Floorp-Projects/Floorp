@@ -158,7 +158,8 @@ nsNativeTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
         /*XXXnsresult rv = */GetText(&value, PR_TRUE);
         PRUint32 ignore;
         text->SetText(value, ignore);
-        nsFormFrame::StyleChangeReflow(aPresContext, this);
+        if (aHint != NS_STYLE_HINT_REFLOW) 
+          nsFormFrame::StyleChangeReflow(aPresContext, this);
       } else if (nsHTMLAtoms::maxlength == aAttribute) {
         PRInt32 maxLength;
         nsresult rv = GetMaxLength(&maxLength);
@@ -169,7 +170,8 @@ nsNativeTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
         PRBool oldReadOnly;
         text->SetReadOnly(nsFormFrame::GetReadonly(this),oldReadOnly);
       }
-      else if (nsHTMLAtoms::size == aAttribute) {
+      else if (nsHTMLAtoms::size == aAttribute &&
+               aHint != NS_STYLE_HINT_REFLOW) {
         nsFormFrame::StyleChangeReflow(aPresContext, this);
       }
       // Allow the base class to handle common attributes supported
