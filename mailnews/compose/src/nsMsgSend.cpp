@@ -380,13 +380,13 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	PRBool shouldDeleteDeliveryState = PR_TRUE;
 	PRInt32 status;
   PRUint32    i;
-  PRUnichar     *msg;
 	char *headers = 0;
 	PRFileDesc  *in_file = 0;
 	PRBool multipart_p = PR_FALSE;
 	PRBool plaintext_is_mainbody_p = PR_FALSE; // only using text converted from HTML?
 	char *buffer = 0;
 	char *buffer_tail = 0;
+  nsXPIDLString msg; 
   PRBool tonews;
   nsMsgSendPart   *mpartcontainer = nsnull;
 	nsMsgSendPart* toppart = nsnull;			// The very top most container of the message
@@ -976,18 +976,15 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	}
 
   // Tell the user we are creating the message...
-  msg = ComposeGetStringByID(NS_MSG_CREATING_MESSAGE);
+  mComposeBundle->GetStringByID(NS_MSG_CREATING_MESSAGE, getter_Copies(msg));
   SetStatusMessage( msg );
-  PR_FREEIF(msg);
 
 	// OK, now actually write the structure we've carefully built up.
 	status = toppart->Write();
 	if (status < 0)
 		goto FAIL;
-
-	HJ45609
-
-	if (mOutputFile) 
+  
+  if (mOutputFile) 
   {
 		/* If we don't do this check...ZERO length files can be sent */
 		if (mOutputFile->failed()) 
@@ -2188,9 +2185,9 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
 
       // Display some feedback to user...
       PRUnichar     *printfString = nsnull;
-      PRUnichar     *msg = nsnull;
 
-      msg = ComposeGetStringByID(NS_MSG_GATHERING_ATTACHMENT);
+      nsXPIDLString msg; 
+      mComposeBundle->GetStringByID(NS_MSG_GATHERING_ATTACHMENT, getter_Copies(msg));
 
       if (m_attachments[i].m_real_name)
         printfString = nsTextFormatter::smprintf(msg, m_attachments[i].m_real_name);
@@ -2202,8 +2199,6 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
         SetStatusMessage(printfString);	
         PR_FREEIF(printfString);  
       }
-
-      PR_FREEIF(msg);
       
       int status = m_attachments[i].SnarfAttachment(mCompFields);
       if (status < 0)
@@ -2286,7 +2281,11 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
   // If no subject was specified, use default one
   pStr = fields->GetSubject();
   if (!pStr || !*pStr)
-  	 mCompFields->SetSubject(ComposeGetStringByID(NS_MSG_NO_SUBJECT_WAS_SPECIFIED));
+  {
+    nsXPIDLString msg; 
+    mComposeBundle->GetStringByID(NS_MSG_NO_SUBJECT_WAS_SPECIFIED, getter_Copies(msg));
+  	mCompFields->SetSubject(msg);
+  }
   
   // Now, we will look for a URI defined as the default FCC pref. If this is set,
   // then SetFcc will use this value. The FCC field is a URI for the server that 
@@ -2460,12 +2459,13 @@ nsMsgComposeAndSend::Init(
 						  const nsMsgAttachedFile *preloaded_attachments)
 {
 	nsresult      rv = NS_OK;
-  PRUnichar     *msg;
+  nsXPIDLString msg;
+  if (!mComposeBundle)
+    mComposeBundle = do_GetService(NS_MSG_COMPOSESTRINGSERVICE_PROGID);
 
   // Tell the user we are assembling the message...
-  msg = ComposeGetStringByID(NS_MSG_ASSEMBLING_MESSAGE);
+  mComposeBundle->GetStringByID(NS_MSG_ASSEMBLING_MESSAGE, getter_Copies(msg));
   SetStatusMessage( msg );
-  PR_FREEIF(msg);
 
   // 
   // The Init() method should initialize a send operation for full
@@ -2635,13 +2635,13 @@ nsMsgComposeAndSend::DeliverMessage()
   if ( (mMessageWarningSize > 0) && (mTempFileSpec->GetFileSize() > mMessageWarningSize) && (mGUINotificationEnabled))
   {
     PRBool abortTheSend = PR_FALSE;
-
-    PRUnichar *msg = ComposeGetStringByID(NS_MSG_LARGE_MESSAGE_WARNING);
+    
+    nsXPIDLString msg;
+    mComposeBundle->GetStringByID(NS_MSG_LARGE_MESSAGE_WARNING, getter_Copies(msg));
     
     if (msg)
     {
       PRUnichar *printfString = nsTextFormatter::smprintf(msg, mTempFileSpec->GetFileSize());
-      PR_FREEIF(msg);
 
       if (printfString)
       {
@@ -2710,10 +2710,11 @@ nsMsgComposeAndSend::DeliverFileAsMail()
 						   10);
 	if (!buf) 
   {
-    PRUnichar *eMsg = ComposeGetStringByID(NS_ERROR_OUT_OF_MEMORY);
+    nsXPIDLString eMsg; 
+    mComposeBundle->GetStringByID(NS_ERROR_OUT_OF_MEMORY, getter_Copies(eMsg));
+    
     Fail(NS_ERROR_OUT_OF_MEMORY, eMsg);
     NotifyListenersOnStopSending(nsnull, NS_ERROR_OUT_OF_MEMORY, nsnull, nsnull);
-	  nsCRT::free(eMsg);
     return NS_ERROR_OUT_OF_MEMORY;
 	}
 
@@ -2809,9 +2810,9 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     }
 
     // Tell the user we are sending the message!
-    PRUnichar *msg = ComposeGetStringByID(NS_MSG_SENDING_MESSAGE);
+    nsXPIDLString msg; 
+    mComposeBundle->GetStringByID(NS_MSG_SENDING_MESSAGE, getter_Copies(msg));
     SetStatusMessage( msg );
-    PR_FREEIF(msg);
 
     rv = smtpService->SendMailMessage(aFileSpec, buf, mUserIdentity,
                                       mMailSendListener, nsnull, 
@@ -2854,9 +2855,9 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 	if (NS_FAILED(rv)) return rv;
 
     // Tell the user we are posting the message!
-    PRUnichar *msg = ComposeGetStringByID(NS_MSG_POSTING_MESSAGE);
+    nsXPIDLString msg; 
+    mComposeBundle->GetStringByID(NS_MSG_POSTING_MESSAGE, getter_Copies(msg));
     SetStatusMessage( msg );
-    PR_FREEIF(msg);
 
 	nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(kMsgMailSessionCID, &rv);
 	if (NS_FAILED(rv)) return rv;
@@ -2916,11 +2917,11 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsresult aExitCode, PRBool aCheckF
   printf("\nMessage Delivery Failed!\n");
 #endif
 
-    PRUnichar * eMsg = ComposeGetStringByID(aExitCode);
+    nsXPIDLString eMsg; 
+    mComposeBundle->GetStringByID(aExitCode, getter_Copies(eMsg));
     
     Fail(aExitCode, eMsg);
     NotifyListenersOnStopSending(nsnull, aExitCode, nsnull, nsnull);
-  	nsCRT::free(eMsg);
     return;
   }
 #ifdef NS_DEBUG
@@ -3026,7 +3027,9 @@ nsMsgComposeAndSend::DoFcc()
     //
     PRBool oopsGiveMeBackTheComposeWindow = PR_FALSE;
 
-    PRUnichar  *eMsg = ComposeGetStringByID(NS_MSG_FAILED_COPY_OPERATION);
+    nsXPIDLString eMsg; 
+    mComposeBundle->GetStringByID(NS_MSG_FAILED_COPY_OPERATION, getter_Copies(eMsg));
+
     Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
 
     if (mGUINotificationEnabled)
@@ -3037,7 +3040,6 @@ nsMsgComposeAndSend::DoFcc()
     }
 
     NotifyListenersOnStopCopy(rv);
-	  nsCRT::free(eMsg);
   }
 
   return rv;
@@ -3258,14 +3260,14 @@ nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus)
   }
 
   // Set a status message...
-  PRUnichar   *msg;
+  nsXPIDLString msg;
+
   if (NS_SUCCEEDED(aStatus))
-    msg = ComposeGetStringByID(NS_MSG_START_COPY_MESSAGE_COMPLETE);
+    mComposeBundle->GetStringByID(NS_MSG_START_COPY_MESSAGE_COMPLETE, getter_Copies(msg));
   else
-    msg = ComposeGetStringByID(NS_MSG_START_COPY_MESSAGE_FAILED);
+    mComposeBundle->GetStringByID(NS_MSG_START_COPY_MESSAGE_FAILED, getter_Copies(msg));
 
   SetStatusMessage( msg );
-  PR_FREEIF(msg);
 
   // Ok, now to support a second copy operation, we need to figure
   // out which copy request just finished. If the user has requested
@@ -3292,8 +3294,9 @@ nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus)
         // user that it did fail but the send operation has already succeeded.
         //
         PRBool oopsGiveMeBackTheComposeWindow = PR_FALSE;
-        
-        PRUnichar  *eMsg = ComposeGetStringByID(NS_MSG_FAILED_COPY_OPERATION);
+
+        nsXPIDLString eMsg; 
+        mComposeBundle->GetStringByID(NS_MSG_FAILED_COPY_OPERATION, getter_Copies(eMsg));
         Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
 
         if (mGUINotificationEnabled)
@@ -3304,8 +3307,6 @@ nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus)
           else
             aStatus = NS_ERROR_FAILURE;
         }
-        
-        nsCRT::free(eMsg);
       }
       else
         return NS_OK;
@@ -3652,8 +3653,8 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   PRBool        folderIsLocal = PR_TRUE;
   char          *turi = nsnull;
   PRUnichar     *printfString = nsnull;
-  PRUnichar     *msg = nsnull; 
   char          *folderName = nsnull;
+  nsXPIDLString msg; 
 
   //
   // Ok, this is here to keep track of this for 2 copy operations... 
@@ -3741,7 +3742,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   if (NS_FAILED(status)) { goto FAIL; }
 
   // Tell the user we are copying the message... 
-  msg = ComposeGetStringByID(NS_MSG_START_COPY_MESSAGE);
+  mComposeBundle->GetStringByID(NS_MSG_START_COPY_MESSAGE, getter_Copies(msg));
   if (msg)
   {
     folderName = GetFolderNameFromURLString(turi);
@@ -3757,7 +3758,6 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   }
 
   PR_FREEIF(folderName);
-  PR_FREEIF(msg);
 
   if ( (envelopeLine) && (folderIsLocal) )
   {
@@ -4081,7 +4081,7 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
 //I'm getting this each time without holding onto the feedback so that 3 pane windows can be closed
 //without any chance of crashing due to holding onto a deleted feedback.
 nsresult
-nsMsgComposeAndSend::SetStatusMessage(PRUnichar *aMsgString)
+nsMsgComposeAndSend::SetStatusMessage(const PRUnichar *aMsgString)
 {
   PRUnichar     *progressMsg;
   nsresult rv;

@@ -23,8 +23,23 @@
 #ifndef _nsMsgComposeStringBundle_H_
 #define _nsMsgComposeStringBundle_H_
 
-#include "nscore.h"
-#include "msgCore.h"
+#include "nsIMsgStringService.h"
+#include "nsIStringBundle.h"
+#include "nsCOMPtr.h"
+
+class nsComposeStringService : public nsIMsgStringService
+{
+public:
+  nsComposeStringService();
+  virtual ~nsComposeStringService();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMSGSTRINGSERVICE
+
+private:
+  nsCOMPtr<nsIStringBundle> mComposeStringBundle;
+  nsresult InitializeStringBundle();
+};
 
 //
 // The defines needed for error conditions and status. The corresponding strings
@@ -84,11 +99,5 @@
 #define NS_MSG_SENDING_MESSAGE                      NS_MSG_GENERATE_SUCCESS(12550)
 #define NS_MSG_POSTING_MESSAGE                      NS_MSG_GENERATE_SUCCESS(12551)
 #define NS_MSG_ATTACHMENT_TYPE_MISMATCH             NS_MSG_GENERATE_FAILURE(12552)
-
-NS_BEGIN_EXTERN_C
-
-PRUnichar     *ComposeGetStringByID(PRInt32 stringID);
-
-NS_END_EXTERN_C
 
 #endif /* _nsMsgComposeStringBundle_H_ */

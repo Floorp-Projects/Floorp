@@ -37,13 +37,14 @@ EXPORTS=    nsSmtpUrl.h             \
             nsMsgDeliveryListener.h \
             nsMsgSend.h \
             nsMsgAttachmentHandler.h \
-			nsMsgComposeService.h \
-			nsMsgCompose.h \
-			nsMsgCompFields.h \
-			nsMsgQuote.h \
-			nsMsgRecipientArray.h \
-			nsURLFetcher.h \
-			nsSmtpServer.h	\
+			      nsMsgComposeService.h \
+			      nsMsgCompose.h \
+			      nsMsgCompFields.h \
+			      nsMsgQuote.h \
+			      nsMsgRecipientArray.h \
+			      nsURLFetcher.h \
+			      nsSmtpServer.h	\
+            nsMsgComposeStringBundle.h \
             $(NULL)
 
 ################################################################################

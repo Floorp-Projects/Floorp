@@ -23,7 +23,10 @@
 #include "nsIPref.h"
 #include "nsMsgPrompts.h"
 #include "nsINetSupportDialogService.h"
+#include "nsIMsgStringService.h"
 #include "nsMsgComposeStringBundle.h"
+#include "nsXPIDLString.h"
+#include "nsMsgCompCID.h"
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
@@ -32,9 +35,14 @@ nsMsgDisplayMessageByID(PRInt32 msgID)
 {
   nsresult rv;
 
-  PRUnichar * msg = ComposeGetStringByID(msgID);
-  rv = nsMsgDisplayMessageByString(msg);
-  nsCRT::free(msg);	
+  nsCOMPtr<nsIMsgStringService> composebundle (do_GetService(NS_MSG_COMPOSESTRINGSERVICE_PROGID, &rv));
+  nsXPIDLString msg;
+
+  if (composebundle)
+  {
+    composebundle->GetStringByID(msgID, getter_Copies(msg));
+    rv = nsMsgDisplayMessageByString(msg);
+  }
   return rv;
 }
 
@@ -55,12 +63,15 @@ nsMsgDisplayMessageByString(const PRUnichar * msg)
 nsresult
 nsMsgAskBooleanQuestionByID(PRInt32 msgID, PRBool *answer)
 {
-  PRUnichar * msg = ComposeGetStringByID(msgID);
-  nsMsgAskBooleanQuestionByString(msg, answer);
-  nsCRT::free(msg);
-  return NS_OK;
+  nsCOMPtr<nsIMsgStringService> composebundle (do_GetService(NS_MSG_COMPOSESTRINGSERVICE_PROGID));
+  nsXPIDLString msg;
 
-  nsCRT::free(msg);
+  if (composebundle)
+  {
+    composebundle->GetStringByID(msgID, getter_Copies(msg));
+    nsMsgAskBooleanQuestionByString(msg, answer);
+  }
+
   return NS_OK;
 }     
 

@@ -164,4 +164,18 @@
   {0x9d653e00, 0xa1ca, 0x11d3, \
     { 0xa4, 0x49, 0xf7, 0x9a, 0xb1, 0xc7, 0xd8, 0xfc }}
 
+
+// compose string service routines 
+
+/* B51E56BD-FF80-11d3-98BC-001083010E9B */
+#define NS_MSG_COMPOSESTRINGSERVICE_CID          \
+{ 0xb51e56bd, 0xff80, 0x11d3,                  \
+    { 0x98, 0xbc, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b } }
+
+#define NS_MSG_SMTPSTRINGSERVICE_PROGID \
+  NS_MAILNEWS_STRINGSERVICE_PROGID_PREFIX "smtp"
+
+#define NS_MSG_COMPOSESTRINGSERVICE_PROGID \
+  NS_MAILNEWS_STRINGSERVICE_PROGID_PREFIX "compose"
+
 #endif // nsMessageCompCID_h__

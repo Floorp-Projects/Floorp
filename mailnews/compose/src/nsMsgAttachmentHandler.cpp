@@ -33,7 +33,9 @@
 #include "nsMsgI18N.h"
 #include "nsURLFetcher.h"
 #include "nsMimeTypes.h"
+#include "nsIMsgStringService.h"
 #include "nsMsgComposeStringBundle.h"
+#include "nsMsgCompCID.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
@@ -848,10 +850,12 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
     //
     PRBool            keepOnGoing = PR_TRUE;
     nsXPIDLCString    turl;
-    PRUnichar         *msg = nsnull;
+    nsXPIDLString     msg;
     PRUnichar         *printfString = nsnull;
+    nsCOMPtr<nsIMsgStringService> composebundle (do_GetService(NS_MSG_COMPOSESTRINGSERVICE_PROGID));
 
-    msg = ComposeGetStringByID(NS_MSG_FAILURE_ON_OBJ_EMBED);    
+    composebundle->GetStringByID(NS_MSG_FAILURE_ON_OBJ_EMBED, getter_Copies(msg));
+ 
     if (NS_SUCCEEDED(mURL->GetSpec(getter_Copies(turl))) && (turl))
       printfString = nsTextFormatter::smprintf(msg, (const char*)turl);
     else
@@ -859,7 +863,6 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 
     nsMsgAskBooleanQuestionByString(printfString, &keepOnGoing);
     PR_FREEIF(printfString);
-    PR_FREEIF(msg);
 
     if (!keepOnGoing)
     {

@@ -40,6 +40,7 @@
 #include "nsXPIDLString.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsMsgCompUtils.h"
+#include "nsIMsgStringService.h"
 #include "nsMsgComposeStringBundle.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsMsgSend.h"
@@ -1975,7 +1976,10 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
     }
     else
     {
-      PRUnichar *omitString = ComposeGetStringByID(NS_MSG_ATTACHMENT_TYPE_MISMATCH);
+      nsCOMPtr<nsIMsgStringService> composebundle (do_GetService(NS_MSG_COMPOSESTRINGSERVICE_PROGID));
+      nsXPIDLString omitString;
+      composebundle->GetStringByID(NS_MSG_ATTACHMENT_TYPE_MISMATCH, getter_Copies(omitString));
+
       if (omitString)
       {
         aMsgBody->Append("-- ");
@@ -1983,7 +1987,6 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
         aMsgBody->Append(omitString);
         aMsgBody->Append(CRLF);
       }
-      PR_FREEIF(omitString);
     }
 
     return NS_OK;

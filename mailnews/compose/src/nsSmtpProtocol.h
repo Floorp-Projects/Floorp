@@ -29,6 +29,7 @@
 #include "nsISmtpUrl.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsIMsgLogonRedirector.h"
+#include "nsIMsgStringService.h"
 
 #include "nsCOMPtr.h"
 
@@ -176,9 +177,10 @@ private:
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	PRInt32 ReadLine(nsIInputStream * inputStream, PRUint32 length, char ** line);
-
+  
+  nsCOMPtr<nsIMsgStringService> mSmtpBundle;
   void UpdateStatus(PRInt32 aStatusID);
-  void UpdateStatusWithString(PRUnichar * aStatusString);
+  void UpdateStatusWithString(const PRUnichar * aStatusString);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Protocol Methods --> This protocol is state driven so each protocol method is 

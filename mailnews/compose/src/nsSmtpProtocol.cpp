@@ -28,8 +28,8 @@
 #include "nsIMsgHeaderParser.h"
 #include "nsFileStream.h"
 #include "nsIMsgMailNewsUrl.h"
-#include "nsMsgComposeStringBundle.h"
 #include "nsMsgBaseCID.h"
+#include "nsMsgCompCID.h"
 #include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
 #include "nsString.h"
@@ -37,7 +37,7 @@
 #include "nsIMsgIdentity.h"
 #include "nsINetPrompt.h"
 #include "nsISmtpServer.h"
-
+#include "nsMsgComposeStringBundle.h"
 #include "prtime.h"
 #include "prlog.h"
 #include "prerror.h"
@@ -89,8 +89,9 @@ nsresult nsExplainErrorDetails(int code, ...)
 	
 	NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv);
 
-	PRUnichar *msg = nsnull;
-	PRUnichar *eMsg = nsnull;
+	PRUnichar *  msg;
+	nsXPIDLString eMsg;
+  nsCOMPtr<nsIMsgStringService> smtpBundle = do_GetService(NS_MSG_SMTPSTRINGSERVICE_PROGID);
 
 	va_start (args, code);
 
@@ -101,14 +102,12 @@ nsresult nsExplainErrorDetails(int code, ...)
 		case NS_ERROR_SENDING_RCPT_COMMAND:
 		case NS_ERROR_SENDING_DATA_COMMAND:
 		case NS_ERROR_SENDING_MESSAGE:   
-			eMsg = ComposeGetStringByID(code);
+      smtpBundle->GetStringByID(code, getter_Copies(eMsg));
 			msg = nsTextFormatter::vsmprintf(eMsg, args);
-			nsCRT::free(eMsg);
 			break;
 		default:
-			eMsg = ComposeGetStringByID(NS_ERROR_COMMUNICATIONS_ERROR);
+      smtpBundle->GetStringByID(NS_ERROR_COMMUNICATIONS_ERROR, getter_Copies(eMsg));
 			msg = nsTextFormatter::smprintf(eMsg, code);
-			nsCRT::free(eMsg);
 			break;
 	}
 
@@ -283,6 +282,9 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
 	if (aURL) 
     m_runningURL = do_QueryInterface(aURL);
 
+  if (!mSmtpBundle)
+    mSmtpBundle = do_GetService(NS_MSG_SMTPSTRINGSERVICE_PROGID);
+
     // extract out message feedback if there is any.
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aURL);
 	if (mailnewsUrl)
@@ -420,13 +422,13 @@ void nsSmtpProtocol::UpdateStatus(PRInt32 aStatusID)
 {
 	if (m_statusFeedback)
 	{
-		PRUnichar * statusString = ComposeGetStringByID(aStatusID);
-		UpdateStatusWithString(statusString);
-		nsCRT::free(statusString);
+    nsXPIDLString msg;
+    mSmtpBundle->GetStringByID(aStatusID, getter_Copies(msg));
+		UpdateStatusWithString(msg);
 	}
 }
 
-void nsSmtpProtocol::UpdateStatusWithString(PRUnichar * aStatusString)
+void nsSmtpProtocol::UpdateStatusWithString(const PRUnichar * aStatusString)
 {
 	if (m_statusFeedback && aStatusString)
 		m_statusFeedback->ShowStatusString(aStatusString);
@@ -1493,12 +1495,14 @@ nsSmtpProtocol::GetPassword(char **aPassword)
     nsXPIDLCString hostname;
     PRUnichar *passwordPromptString = nsnull;
 
-    PRUnichar *passwordTemplate =
-        ComposeGetStringByID(NS_SMTP_PASSWORD_PROMPT);
-    if (!passwordTemplate) return NS_ERROR_NULL_POINTER;
+    nsXPIDLString passwordTemplate;
+    mSmtpBundle->GetStringByID(NS_SMTP_PASSWORD_PROMPT, getter_Copies(passwordTemplate));
 
-    PRUnichar *passwordTitle =
-        ComposeGetStringByID(NS_SMTP_PASSWORD_PROMPT_TITLE);
+    if (!passwordTemplate) return NS_ERROR_NULL_POINTER;
+    
+    nsXPIDLString passwordTitle;
+    mSmtpBundle->GetStringByID(NS_SMTP_PASSWORD_PROMPT_TITLE, getter_Copies(passwordTitle));
+
     if (!passwordTitle) 
     {
         rv = NS_ERROR_NULL_POINTER;
@@ -1523,10 +1527,6 @@ nsSmtpProtocol::GetPassword(char **aPassword)
                                        netPrompt, aPassword);
 
 done:
-    if (passwordTitle)
-        nsCRT::free(passwordTitle);
-    if (passwordTemplate)
-        nsCRT::free(passwordTemplate);
     if (passwordPromptString)
         nsCRT::free(passwordPromptString);
 

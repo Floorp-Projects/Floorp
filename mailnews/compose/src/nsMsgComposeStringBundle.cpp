@@ -19,62 +19,60 @@
  *
  * Contributor(s): 
  */
+#include "msgCore.h"
 #include "prprf.h"
 #include "prmem.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 #include "nsIStringBundle.h"
 #include "nsMsgComposeStringBundle.h"
 #include "nsIServiceManager.h"
-#include "nsIPref.h"
-#include "nsIIOService.h"
 #include "nsIURI.h"
-#include "msgCore.h"
 
-/* This is the next generation string retrieval call */
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define COMPOSE_BE_URL       "chrome://messengercompose/locale/composeMsgs.properties"
 
-extern "C" 
-PRUnichar *
-ComposeGetStringByID(PRInt32 stringID)
+nsComposeStringService::nsComposeStringService()
 {
-	nsresult    res;
-	char*       propertyURL = NULL;
-	nsString	resultString = "???";
-
-	propertyURL = COMPOSE_BE_URL;
-
-	NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
-	if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
-	{
-		nsILocale   *locale = nsnull;
-
-		nsIStringBundle* sBundle = nsnull;
-		res = sBundleService->CreateBundle(propertyURL, locale, &sBundle);
-
-		if (NS_SUCCEEDED(res))
-		{
-			PRUnichar *ptrv = nsnull;
-			
-			if (NS_IS_MSG_ERROR(stringID))
-				stringID = NS_ERROR_GET_CODE(stringID);
-			
-			res = sBundle->GetStringFromID(stringID, &ptrv);
-
-			NS_RELEASE(sBundle);
-
-			if (NS_FAILED(res)) 
-			{
-				resultString = "[StringID(hex)=";
-				resultString.Append(stringID, 16);
-				resultString += "?]";
-				return resultString.ToNewUnicode();
-			}
-
-			return ptrv;
-		}
-	}
-
-	return resultString.ToNewUnicode();
+  NS_INIT_ISUPPORTS();
 }
+
+nsComposeStringService::~nsComposeStringService()
+{}
+
+NS_IMPL_ADDREF(nsComposeStringService);
+NS_IMPL_RELEASE(nsComposeStringService);
+
+NS_INTERFACE_MAP_BEGIN(nsComposeStringService)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgStringService)
+   NS_INTERFACE_MAP_ENTRY(nsIMsgStringService)
+NS_INTERFACE_MAP_END
+
+NS_IMETHODIMP 
+nsComposeStringService::GetStringByID(PRInt32 aStringID, PRUnichar ** aString)
+{
+  nsresult rv = NS_OK;
+  
+  if (!mComposeStringBundle)
+    rv = InitializeStringBundle();
+
+  NS_ENSURE_TRUE(mComposeStringBundle, NS_ERROR_UNEXPECTED);
+  if (NS_IS_MSG_ERROR(aStringID))
+    aStringID = NS_ERROR_GET_CODE(aStringID);
+  NS_ENSURE_SUCCESS(mComposeStringBundle->GetStringFromID(aStringID, aString), NS_ERROR_UNEXPECTED);
+
+  return rv;
+}
+
+nsresult
+nsComposeStringService::InitializeStringBundle()
+{
+  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
+  NS_ENSURE_TRUE(stringService, NS_ERROR_FAILURE);
+
+  NS_ENSURE_SUCCESS(stringService->CreateBundle(COMPOSE_BE_URL, nsnull, getter_AddRefs(mComposeStringBundle)), 
+                    NS_ERROR_FAILURE);
+  return NS_OK;
+}
+

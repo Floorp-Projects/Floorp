@@ -138,6 +138,7 @@
 #include "nsIEditorShell.h"
 #include "nsIUrlListener.h"
 #include "nsIMsgStatusFeedback.h"
+#include "nsIMsgStringService.h"
 #if 0
 #include "nsMsgCopy.h"
 #endif
@@ -330,7 +331,7 @@ public:
 
   NS_IMETHOD SetWebShell (nsIWebShell *aWebShell);
 
-  nsresult    SetStatusMessage(PRUnichar *aMsgString);     // Status message method
+  nsresult    SetStatusMessage(const PRUnichar *aMsgString);     // Status message method
 
   //
   // All vars necessary for this implementation
@@ -436,8 +437,10 @@ public:
   PRBool                  mGUINotificationEnabled;      // Should we throw up the GUI alerts on errors?
 
   void                    *m_crypto_closure;
-  HJ77514
-  HJ58534
+
+protected:
+  nsCOMPtr<nsIMsgStringService> mComposeBundle;
+
 };
 
 // 
