@@ -427,34 +427,20 @@ mime_generate_headers (nsMsgCompFields *fields,
 	NS_WITH_SERVICE(nsIHTTPProtocolHandler, pHTTPHandler, kHTTPHandlerCID, &rv); 
 	if (NS_SUCCEEDED(rv) && pHTTPHandler)
 	{
-    PRUnichar       *aAppName = nsnull;
+    nsXPIDLString userAgentString;
     nsCAutoString   cStr;
-
-    if (NS_SUCCEEDED(pHTTPHandler->GetAppName(&aAppName)))
-    {
-  		cStr = aAppName;
-      PR_FREEIF(aAppName);
-    }
-    else
-      cStr = "Netscape";
+    pHTTPHandler->GetUserAgent(getter_Copies(userAgentString));
+    cStr = userAgentString;
 
 		if (!cStr.IsEmpty()) 
 		{
 			// PUSH_STRING ("X-Mailer: ");  // To be more standards compliant
 			PUSH_STRING ("User-Agent: ");  
 			PUSH_STRING(cStr);
-
-      nsXPIDLString appInfo;
-			pHTTPHandler->GetAppVersion(getter_Copies(appInfo));
-			nsCAutoString cStr2 (appInfo);
-			if (!cStr2.IsEmpty()) 
-			{
-				PUSH_STRING (" ");
-				PUSH_STRING(cStr2);
-			}
 			PUSH_NEWLINE ();
 		}
 	}
+
 
 	/* for Netscape Server, Accept-Language data sent in Mail header */
 	char *acceptlang = nsMsgI18NGetAcceptLanguage();
