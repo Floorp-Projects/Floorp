@@ -32,6 +32,10 @@ nsRDFArrayCursor::~nsRDFArrayCursor(void)
     NS_IF_RELEASE(mDataSource);
 }
 
+NS_IMPL_ISUPPORTS_INHERITED(nsRDFArrayCursor, 
+                            nsSupportsArrayEnumerator,
+                            nsIRDFCursor);
+
 NS_IMETHODIMP nsRDFArrayCursor::Advance(void)
 { 
     nsresult rv = Next();
@@ -70,6 +74,10 @@ nsRDFArrayAssertionCursor::~nsRDFArrayAssertionCursor()
     NS_RELEASE(mSubject);
     NS_RELEASE(mPredicate);
 }
+
+NS_IMPL_ISUPPORTS_INHERITED(nsRDFArrayAssertionCursor,
+                            nsRDFArrayCursor,
+                            nsIRDFAssertionCursor);
 
 NS_IMETHODIMP 
 nsRDFArrayAssertionCursor::GetSubject(nsIRDFResource* *aSubject)
@@ -233,6 +241,18 @@ nsRDFArrayArcsCursor::~nsRDFArrayArcsCursor()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+NS_IMPL_ISUPPORTS_INHERITED(nsRDFArrayArcsOutCursor,
+                            nsRDFArrayArcsCursor,
+                            nsIRDFArcsOutCursor);
+
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMPL_ISUPPORTS_INHERITED(nsRDFArrayArcsInCursor,
+                            nsRDFArrayArcsCursor,
+                            nsIRDFArcsInCursor);
+
+////////////////////////////////////////////////////////////////////////////////
+
 nsRDFEnumeratorCursor::nsRDFEnumeratorCursor(nsIRDFDataSource* aDataSource,
                                              nsIEnumerator* valueEnumerator)
     : mDataSource(aDataSource), mEnum(valueEnumerator)
@@ -304,6 +324,10 @@ nsRDFEnumeratorAssertionCursor::~nsRDFEnumeratorAssertionCursor()
     NS_RELEASE(mPredicate);
 }
 
+NS_IMPL_ISUPPORTS_INHERITED(nsRDFEnumeratorAssertionCursor,
+                            nsRDFEnumeratorCursor,
+                            nsIRDFAssertionCursor);
+
 NS_IMETHODIMP 
 nsRDFEnumeratorAssertionCursor::GetSubject(nsIRDFResource* *aSubject)
 {
@@ -349,3 +373,16 @@ nsRDFEnumeratorArcsCursor::~nsRDFEnumeratorArcsCursor()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+NS_IMPL_ISUPPORTS_INHERITED(nsRDFEnumeratorArcsOutCursor,
+                            nsRDFEnumeratorArcsCursor,
+                            nsIRDFArcsOutCursor);
+
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMPL_ISUPPORTS_INHERITED(nsRDFEnumeratorArcsInCursor,
+                            nsRDFEnumeratorArcsCursor,
+                            nsIRDFArcsInCursor);
+
+////////////////////////////////////////////////////////////////////////////////
+

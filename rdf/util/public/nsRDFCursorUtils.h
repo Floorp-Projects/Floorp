@@ -24,46 +24,11 @@
 #include "nsSupportsArrayEnumerator.h"
 #include "nsIEnumerator.h"
 
-#define NS_INHERIT_QUERYINTERFACE1(FromClass, NewInterface)         \
-    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) { \
-        if (!aInstancePtr) return NS_ERROR_NULL_POINTER;            \
-        if (aIID.Equals(NewInterface::IID())) {                     \
-            *aInstancePtr = NS_STATIC_CAST(NewInterface*, this);    \
-            AddRef();                                               \
-            return NS_OK;                                           \
-        }                                                           \
-        return FromClass::QueryInterface(aIID, aInstancePtr);       \
-    }                                                               \
-
-#define NS_INHERIT_QUERYINTERFACE(FromClass)                        \
-    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) { \
-        return FromClass::QueryInterface(aIID, aInstancePtr);       \
-    }                                                               \
-
-#define NS_INHERIT_ADDREF(FromClass)                                \
-    NS_IMETHOD_(nsrefcnt) AddRef(void) {                            \
-        return FromClass::AddRef();                                 \
-    }                                                               \
-
-#define NS_INHERIT_RELEASE(FromClass)                               \
-    NS_IMETHOD_(nsrefcnt) Release(void) {                           \
-        return FromClass::Release();                                \
-    }                                                               \
-
-#define NS_INHERIT_ISUPPORTS(FromClass)                             \
-    NS_INHERIT_QUERYINTERFACE(FromClass)                            \
-    NS_INHERIT_ADDREF(FromClass)                                    \
-    NS_INHERIT_RELEASE(FromClass)                                   \
-
-////////////////////////////////////////////////////////////////////////////////
-
 class NS_RDF nsRDFArrayCursor : public nsSupportsArrayEnumerator, 
                                 public nsIRDFCursor
 {
 public:
-    NS_INHERIT_QUERYINTERFACE1(nsSupportsArrayEnumerator, nsIRDFCursor)
-    NS_INHERIT_ADDREF(nsSupportsArrayEnumerator)
-    NS_INHERIT_RELEASE(nsSupportsArrayEnumerator)
+    NS_DECL_ISUPPORTS_INHERITED
 
     // nsIRDFCursor methods:
     NS_IMETHOD Advance(void);
@@ -85,9 +50,7 @@ class NS_RDF nsRDFArrayAssertionCursor : public nsRDFArrayCursor,
                                          public nsIRDFAssertionCursor
 {
 public:
-    NS_INHERIT_QUERYINTERFACE1(nsRDFArrayCursor, nsIRDFAssertionCursor)
-    NS_INHERIT_ADDREF(nsRDFArrayCursor)
-    NS_INHERIT_RELEASE(nsRDFArrayCursor)
+    NS_DECL_ISUPPORTS_INHERITED
 
     // nsIRDFCursor methods:
     NS_IMETHOD Advance(void) { 
@@ -165,8 +128,6 @@ protected:
 class NS_RDF nsRDFArrayArcsCursor : public nsRDFArrayCursor
 {
 public:
-    NS_INHERIT_ISUPPORTS(nsRDFArrayCursor)
-
     // nsRDFArrayArcsCursor methods:
     nsRDFArrayArcsCursor(nsIRDFDataSource* aDataSource,
                          nsIRDFNode* node,
@@ -197,9 +158,7 @@ class NS_RDF nsRDFArrayArcsOutCursor : public nsRDFArrayArcsCursor,
                                        public nsIRDFArcsOutCursor
 {
 public:
-    NS_INHERIT_QUERYINTERFACE1(nsRDFArrayArcsCursor, nsIRDFArcsOutCursor)
-    NS_INHERIT_ADDREF(nsRDFArrayArcsCursor)
-    NS_INHERIT_RELEASE(nsRDFArrayArcsCursor)
+    NS_DECL_ISUPPORTS_INHERITED
 
     // nsIRDFCursor methods:
     NS_IMETHOD Advance(void) { 
@@ -236,9 +195,7 @@ class NS_RDF nsRDFArrayArcsInCursor : public nsRDFArrayArcsCursor,
                                       public nsIRDFArcsInCursor
 {
 public:
-    NS_INHERIT_QUERYINTERFACE1(nsRDFArrayArcsCursor, nsIRDFArcsInCursor)
-    NS_INHERIT_ADDREF(nsRDFArrayArcsCursor)
-    NS_INHERIT_RELEASE(nsRDFArrayArcsCursor)
+    NS_DECL_ISUPPORTS_INHERITED
 
     // nsIRDFCursor methods:
     NS_IMETHOD Advance(void) { 
@@ -297,9 +254,7 @@ class NS_RDF nsRDFEnumeratorAssertionCursor : public nsRDFEnumeratorCursor,
                                               public nsIRDFAssertionCursor
 {
 public:
-    NS_INHERIT_QUERYINTERFACE1(nsRDFEnumeratorCursor, nsIRDFAssertionCursor)
-    NS_INHERIT_ADDREF(nsRDFEnumeratorCursor)
-    NS_INHERIT_RELEASE(nsRDFEnumeratorCursor)
+    NS_DECL_ISUPPORTS_INHERITED
 
     // nsIRDFCursor methods:
     NS_IMETHOD Advance(void) { 
@@ -337,8 +292,6 @@ protected:
 class NS_RDF nsRDFEnumeratorArcsCursor : public nsRDFEnumeratorCursor
 {
 public:
-    NS_INHERIT_ISUPPORTS(nsRDFEnumeratorCursor)
-
     // nsRDFEnumeratorArcsOutCursor methods:
     nsRDFEnumeratorArcsCursor(nsIRDFDataSource* aDataSource,
                               nsIRDFNode* node,
@@ -369,9 +322,7 @@ class NS_RDF nsRDFEnumeratorArcsOutCursor : public nsRDFEnumeratorArcsCursor,
                                             public nsIRDFArcsOutCursor
 {
 public:
-    NS_INHERIT_QUERYINTERFACE1(nsRDFEnumeratorArcsCursor, nsIRDFArcsOutCursor)
-    NS_INHERIT_ADDREF(nsRDFEnumeratorArcsCursor)
-    NS_INHERIT_RELEASE(nsRDFEnumeratorArcsCursor)
+    NS_DECL_ISUPPORTS_INHERITED
 
     // nsIRDFCursor methods:
     NS_IMETHOD Advance(void) { 
@@ -408,9 +359,7 @@ class NS_RDF nsRDFEnumeratorArcsInCursor : public nsRDFEnumeratorArcsCursor,
                                            public nsIRDFArcsInCursor
 {
 public:
-    NS_INHERIT_QUERYINTERFACE1(nsRDFEnumeratorArcsCursor, nsIRDFArcsInCursor)
-    NS_INHERIT_ADDREF(nsRDFEnumeratorArcsCursor)
-    NS_INHERIT_RELEASE(nsRDFEnumeratorArcsCursor)
+    NS_DECL_ISUPPORTS_INHERITED
 
     // nsIRDFCursor methods:
     NS_IMETHOD Advance(void) { 
