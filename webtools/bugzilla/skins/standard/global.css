@@ -267,7 +267,7 @@ body
 /* generic (begin) */
     body
     {
-        background: #fff url("global/body_back.gif") repeat-x;
+        background: #fff url("global/body-back.gif") repeat-x;
     }
 
     :link {
