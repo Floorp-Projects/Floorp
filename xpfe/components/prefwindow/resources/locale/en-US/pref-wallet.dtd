@@ -15,4 +15,4 @@
 <!ENTITY signonEnabledCheck.accesskey "s">
 <!ENTITY walletEnabledCheck.label "Save form data when submitting forms.">
 <!ENTITY walletEnabledCheck.accesskey "w">
-<!ENTITY changePasswords.label "Change Passwords">
+<!ENTITY changePasswords.label "Change Master Password">
