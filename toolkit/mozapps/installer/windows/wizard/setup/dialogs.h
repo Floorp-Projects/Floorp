@@ -25,6 +25,15 @@
 #ifndef _DIALOGS_H_
 #define _DIALOGS_H_
 
+#ifdef WINTEGRATION_PAGE
+#undef WINTEGRATION_PAGE
+#endif
+
+#ifdef STUB_INSTALLER
+#undef STUB_INSTALLER
+#endif
+
+
 LRESULT CALLBACK  DlgProcMain(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK  DlgProcWelcome(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcLicense(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
@@ -32,15 +41,15 @@ LRESULT CALLBACK  DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPar
 LRESULT CALLBACK  DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
+#ifdef WINTEGRATION_PAGE
 LRESULT CALLBACK  DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
-LRESULT CALLBACK  DlgProcAdditionalOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
+#endif
+#ifdef STUB_INSTALLER
 LRESULT CALLBACK  DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
-LRESULT CALLBACK  DlgProcQuickLaunch(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
-LRESULT CALLBACK  DlgProcSiteSelector(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
+#endif
 LRESULT CALLBACK  DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcDownloading(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
-LRESULT CALLBACK  DlgProcReboot(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  NewListBoxWndProc( HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK  DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
@@ -57,9 +66,7 @@ BOOL              ShouldExitSetup(HWND hDlg);
 void              lbAddItem(HWND hList, siC *siCComponent);
 HWND              InstantiateDialog(HWND hParent, DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlgProc);
 void              InitSequence(HINSTANCE hInstance);
-void              PaintGradientShade(HWND hWnd, HDC hdc);
 void              BrowseForDirectory(HWND hDlg);
-LRESULT CALLBACK  BrowseHookProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 void              ShowMessage(LPSTR szMessage, BOOL bShow);
 void              DrawLBText(LPDRAWITEMSTRUCT lpdis, DWORD dwACFlag);
 void              DrawCheck(LPDRAWITEMSTRUCT lpdis, DWORD dwACFlag);
@@ -68,10 +75,8 @@ void              ProcessWindowsMessages(void);
 LPSTR             GetStartInstallMessage(void);
 void              AppendStringWOAmpersand(LPSTR szInputString, DWORD dwInputStringSize, LPSTR szString);
 void              TruncateString(HWND hWnd, LPSTR szInPath, LPSTR szOutPath, DWORD dwOutPathBufSize);
-void              SaveAdditionalOptions(HWND hDlg, HWND hwndCBSiteSelector);
 WNDPROC           SubclassWindow( HWND hWnd, WNDPROC NewWndProc);
 LRESULT CALLBACK  ListBoxBrowseWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-void              CommitInstall(void);
 
 #endif /* _DIALOGS_H_ */
 

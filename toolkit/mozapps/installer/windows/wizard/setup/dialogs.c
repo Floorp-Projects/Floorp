@@ -855,10 +855,12 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
   DWORD               dwIndex;
   DWORD               dwItems = MAX_BUF;
   HWND                hwndLBComponents;
-  TCHAR               tchBuffer[MAX_BUF];
   LPDRAWITEMSTRUCT    lpdis;
+#ifdef STUB_INSTALLER
+  TCHAR               tchBuffer[MAX_BUF];
   ULONGLONG           ullDSBuf;
   char                szBuf[MAX_BUF];
+#endif
 
   LPNMHDR             notifyMessage;
 
@@ -890,8 +892,10 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
     SetDlgItemText(hDlg, IDC_STATIC1, sgInstallGui.szComponents_);
     SetDlgItemText(hDlg, IDC_STATIC2, sgInstallGui.szDescription);
 
+#ifdef STUB_INSTALLER
     // XXXben We don't support net stub installs yet. 
     // SetDlgItemText(hDlg, IDC_STATIC_DOWNLOAD_SIZE, sgInstallGui.szTotalDownloadSize);
+#endif
 
     gdwACFlag = AC_COMPONENTS;
     OldListBoxWndProc = SubclassWindow(hwndLBComponents, (WNDPROC)NewListBoxWndProc);
@@ -921,6 +925,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
       if((dwIndex = SendMessage(hwndLBComponents, LB_GETCURSEL, 0, 0)) != LB_ERR) {
         SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(dwIndex, FALSE, AC_COMPONENTS));
 
+#ifdef STUB_INSTALLER
         // update the disk space required info in the dialog.  It is already
         // in Kilobytes
         ullDSBuf = GetDiskSpaceRequired(DSR_DOWNLOAD_SIZE);
@@ -929,6 +934,7 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
    
         // XXXben We don't support net stub installs yet. 
         // SetDlgItemText(hDlg, IDC_STATIC_DOWNLOAD_SIZE, szBuf);
+#endif
       }
 
       break;
@@ -1054,17 +1060,21 @@ LRESULT CALLBACK DlgProcSummary(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
       // options - WM_INITDIALOG only gets called once, not every time the
       // panel is displayed.
 
+#ifdef STUB_INSTALLER
       // Update strings that relate to whether or not files will be downloaded. 
       // The user may have selected additional components that require a download.
       if ((diAdvancedSettings.bShowDialog == FALSE) || (GetTotalArchivesToDownload() == 0)) {
+#endif
         SetDlgItemText(hDlg, IDC_MESSAGE0, diStartInstall.szMessageInstall);
 
         // Hide Download-related UI:
         ShowWindow(GetDlgItem(hDlg, IDC_MESSAGE2), SW_HIDE);
         ShowWindow(GetDlgItem(hDlg, IDC_CONNECTION_SETTINGS), SW_HIDE);
+#ifdef STUB_INSTALLER
       }
       else
         SetDlgItemText(hDlg, IDC_MESSAGE0, diStartInstall.szMessageDownload);
+#endif
 
       // Show the components we're going to install
       szAddtlComps[0] = '\0';
@@ -1336,6 +1346,7 @@ void TruncateString(HWND hWnd, LPSTR szInURL, LPSTR szOutString, DWORD dwOutStri
   ReleaseDC(hWnd, hdcWnd);
 }
 
+#ifdef STUB_INSTALLER
 ///////////////////////////////////////////////////////////////////////////////
 // DIALOG: CONNECTION SETTINGS
 //
@@ -1443,6 +1454,7 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
   }
   return(0);
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // DIALOG: DOWNLOADING FILES
@@ -1450,6 +1462,7 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
 
 LRESULT CALLBACK DlgProcDownloading(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
+#ifdef STUB_INSTALLER
   switch(msg)
   {
     case WM_INITDIALOG:
@@ -1468,7 +1481,9 @@ LRESULT CALLBACK DlgProcDownloading(HWND hDlg, UINT msg, WPARAM wParam, LONG lPa
       }
       break;
   }
-  return(0);
+#endif
+
+  return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2142,217 +2157,4 @@ HFONT MakeFont(TCHAR* aFaceName, int aFontSize, LONG aWeight)
 
   return CreateFontIndirect(&lf);
 }
-
-#if 0
-void CommitInstall(void)
-{
-  HRESULT hrErr;
-  char    szDestPath[MAX_BUF];
-  char    szInstallLogFile[MAX_BUF];
-  long    RetrieveResults;
-
-  LogISShared();
-  LogISDestinationPath();
-  LogISSetupType();
-  LogISComponentsSelected();
-  LogISComponentsToDownload();
-  LogISDiskSpace(gdsnComponentDSRequirement);
-
-  lstrcpy(szDestPath, sgProduct.szPath);
-  if(*sgProduct.szSubPath != '\0')
-  {
-    AppendBackSlash(szDestPath, sizeof(szDestPath));
-    lstrcat(szDestPath, sgProduct.szSubPath);
-  }
-  AppendBackSlash(szDestPath, sizeof(szDestPath));
-
-  /* Create the destination path here in case it had not been created,
-   * as in the case of silent or auto mode installs */
-  if(CreateDirectoriesAll(szDestPath, ADD_TO_UNINSTALL_LOG) != WIZ_OK)
-  {
-    char buf[MAX_BUF];
-    char errorCreateDir[MAX_BUF];
-    char pathToShow[MAX_PATH];
-
-    /* reformat the path to display so that it'll be readable in the
-     * error dialog shown */
-    _snprintf(pathToShow, sizeof(pathToShow), "\"%s\" ", szDestPath);
-    pathToShow[sizeof(pathToShow) - 1] = '\0';
-    if(GetPrivateProfileString("Messages", "ERROR_CREATE_DIRECTORY", "", errorCreateDir, sizeof(errorCreateDir), szFileIniInstall))
-      wsprintf(buf, errorCreateDir, pathToShow);
-    assert(*buf != '\0');
-    PrintError(buf, ERROR_CODE_HIDE);
-    PostQuitMessage(1);
-    return;
-  }
-
-  /* Set global var, that determines where the log file is to update, to
-   * not use the TEMP dir *before* the FileCopy() calls because we want
-   * to log the FileCopy() calls to where the log files were copied to.
-   * This is possible because the logging, that is done within the
-   * FileCopy() function, is done after the actual copy
-   */
-  gbILUseTemp = FALSE;
-
-  /* copy the install_wizard.log file from the temp\ns_temp dir to
-   * the destination dir and use the new destination file to continue
-   * logging.
-   */
-  lstrcpy(szInstallLogFile, szTempDir);
-  AppendBackSlash(szInstallLogFile, sizeof(szInstallLogFile));
-  lstrcat(szInstallLogFile, FILE_INSTALL_LOG);
-  FileCopy(szInstallLogFile, szDestPath, FALSE, FALSE);
-  DeleteFile(szInstallLogFile);
-
-  /* copy the install_status.log file from the temp\ns_temp dir to
-   * the destination dir and use the new destination file to continue
-   * logging.
-   */
-  lstrcpy(szInstallLogFile, szTempDir);
-  AppendBackSlash(szInstallLogFile, sizeof(szInstallLogFile));
-  lstrcat(szInstallLogFile, FILE_INSTALL_STATUS_LOG);
-  FileCopy(szInstallLogFile, szDestPath, FALSE, FALSE);
-  DeleteFile(szInstallLogFile);
-
-  /* PRE_DOWNLOAD process file manipulation functions */
-  RetrieveResults = WIZ_OK;
-  if(sgProduct.bInstallFiles)
-  {
-    ProcessFileOpsForAll(T_PRE_DOWNLOAD);
-    RetrieveResults = RetrieveArchives();
-  }
-
-  if(RetrieveResults == WIZ_OK)
-  {
-    // Clean up old versions of GRE previously installed.
-    // These GREs should only be fully uninstalled if they were only
-    // being used by the mozilla that we're installing over/ontop of
-    // (upgrade scenario).
-    // We should only do this type of cleanup if we're about to install'
-    // GRE in shared mode.
-    //
-    // This should only be called when the installer is installing GRE!
-    if(IsInstallerProductGRE())
-      CleanupOrphanedGREs();
-
-    if(sgProduct.bInstallFiles)
-    {
-      /* Check to see if Turbo is required.  If so, set the
-       * appropriate Windows registry keys */
-      SetTurboArgs();
-
-      /* POST_DOWNLOAD process file manipulation functions */
-      ProcessFileOpsForAll(T_POST_DOWNLOAD);
-      /* PRE_XPCOM process file manipulation functions */
-      ProcessFileOpsForAll(T_PRE_XPCOM);
-
-      /* save the installer files in the local machine */
-      if(diAdditionalOptions.bSaveInstaller)
-        SaveInstallerFiles();
-
-      if(CheckInstances())
-      {
-        bSDUserCanceled = TRUE;
-        CleanupXpcomFile();
-        PostQuitMessage(0);
-
-        return;
-      }
-
-      /* Remove the previous installation of the product here.
-       * This should be done before processing the Xpinstall engine. */
-      if(sgProduct.doCleanupOnUpgrade)
-      {
-        SetSetupState(SETUP_STATE_REMOVING_PREV_INST);
-        CleanupOnUpgrade();
-      }
-
-      if(gbDownloadTriggered || gbPreviousUnfinishedDownload)
-        SetSetupState(SETUP_STATE_UNPACK_XPCOM);
-
-      if(ProcessXpinstallEngine() != WIZ_OK)
-      {
-        bSDUserCanceled = TRUE;
-        CleanupXpcomFile();
-        PostQuitMessage(0);
-
-        return;
-      }
-
-      if(gbDownloadTriggered || gbPreviousUnfinishedDownload)
-        SetSetupState(SETUP_STATE_INSTALL_XPI); // clears and sets new setup state
-
-      /* POST_XPCOM process file manipulation functions */
-      ProcessFileOpsForAll(T_POST_XPCOM);
-      /* PRE_SMARTUPDATE process file manipulation functions */
-      ProcessFileOpsForAll(T_PRE_SMARTUPDATE);
-
-      lstrcat(szDestPath, "uninstall\\");
-      CreateDirectoriesAll(szDestPath, ADD_TO_UNINSTALL_LOG);
-      hrErr = SmartUpdateJars();
-    }
-    else
-      hrErr = WIZ_OK;
-
-    if((hrErr == WIZ_OK) || (hrErr == 999))
-    {
-      if(sgProduct.bInstallFiles)
-        UpdateJSProxyInfo();
-
-      /* POST_SMARTUPDATE process file manipulation functions */
-      ProcessFileOpsForAll(T_POST_SMARTUPDATE);
-
-      if(sgProduct.bInstallFiles)
-      {
-        /* PRE_LAUNCHAPP process file manipulation functions */
-        ProcessFileOpsForAll(T_PRE_LAUNCHAPP);
-
-        LaunchApps();
-
-        // Refresh system icons if necessary
-        if(gSystemInfo.bRefreshIcons)
-          RefreshIcons();
-
-        UnsetSetupState(); // clear setup state
-        ClearWinRegUninstallFileDeletion();
-        if(!gbIgnoreProgramFolderX)
-          ProcessProgramFolderShowCmd();
-
-        CleanupArgsRegistry();
-        CleanupPreviousVersionRegKeys();
-
-        /* POST_LAUNCHAPP process file manipulation functions */
-        ProcessFileOpsForAll(T_POST_LAUNCHAPP);
-        /* DEPEND_REBOOT process file manipulation functions */
-        ProcessFileOpsForAll(T_DEPEND_REBOOT);
-      }
-
-      CleanupXpcomFile();
-      if(NeedReboot())
-      {
-        LogExitStatus("Reboot");
-        if(sgProduct.mode == NORMAL)
-          hDlgCurrent = InstantiateDialog(hWndMain, DLG_RESTART, diReboot.szTitle, DlgProcReboot);
-        else
-          PostQuitMessage(0);
-      }
-      else
-        PostQuitMessage(0);
-    }
-    else
-    {
-      CleanupXpcomFile();
-      PostQuitMessage(0);
-    }
-  }
-  else
-  {
-    bSDUserCanceled = TRUE;
-    CleanupXpcomFile();
-    CleanupArgsRegistry();
-    PostQuitMessage(0);
-  }
-  gbProcessingXpnstallFiles = FALSE;
-}
-#endif
 
