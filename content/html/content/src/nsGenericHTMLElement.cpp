@@ -44,7 +44,7 @@
 #include "nsICSSParser.h"
 #include "nsICSSLoader.h"
 #include "nsICSSStyleRule.h"
-#include "nsICSSDeclaration.h"
+#include "nsCSSDeclaration.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMHTMLDocument.h"
@@ -1734,10 +1734,10 @@ static PRInt32 GetStyleImpactFrom(const nsHTMLValue& aValue)
       nsCOMPtr<nsICSSStyleRule> cssRule(do_QueryInterface(supports));
 
       if (cssRule) {
-        nsCOMPtr<nsICSSDeclaration> declaration(dont_AddRef(cssRule->GetDeclaration()));
+        nsCSSDeclaration* declaration = cssRule->GetDeclaration();
 
         if (declaration) {
-          declaration->GetStyleImpact(&hint);
+          hint = declaration->GetStyleImpact();
         }
       }
     }
@@ -2386,10 +2386,9 @@ nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
       if (rule) {
         nsICSSStyleRule*  cssRule;
         if (NS_OK == rule->QueryInterface(NS_GET_IID(nsICSSStyleRule), (void**)&cssRule)) {
-          nsICSSDeclaration* decl = cssRule->GetDeclaration();
+          nsCSSDeclaration* decl = cssRule->GetDeclaration();
           if (nsnull != decl) {
             decl->ToString(aResult);
-            NS_RELEASE(decl);
           }
           NS_RELEASE(cssRule);
         }

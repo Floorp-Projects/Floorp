@@ -40,7 +40,7 @@
 #include "nsIDOMCSSRule.h"
 #include "nsICSSParser.h"
 #include "nsIStyleRule.h"
-#include "nsICSSDeclaration.h"
+#include "nsCSSDeclaration.h"
 #include "nsCSSProps.h"
 #include "nsCOMPtr.h"
 #include "nsIURL.h"
@@ -75,9 +75,9 @@ NS_IMPL_RELEASE(nsDOMCSSDeclaration);
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetCssText(nsAWritableString& aCssText)
 {
-  nsCOMPtr<nsICSSDeclaration> decl;
+  nsCSSDeclaration* decl;
   aCssText.Truncate();
-  GetCSSDeclaration(getter_AddRefs(decl), PR_FALSE);
+  GetCSSDeclaration(&decl, PR_FALSE);
   NS_ASSERTION(decl, "null CSSDeclaration");
 
   if (decl) {
@@ -96,13 +96,12 @@ nsDOMCSSDeclaration::SetCssText(const nsAReadableString& aCssText)
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetLength(PRUint32* aLength)
 {
-  nsICSSDeclaration *decl;
+  nsCSSDeclaration *decl;
   nsresult result = GetCSSDeclaration(&decl, PR_FALSE);
  
   *aLength = 0;
   if ((NS_OK == result) && (nsnull != decl)) {
-    result = decl->Count(aLength);
-    NS_RELEASE(decl);
+    *aLength = decl->Count();
   }
 
   return result;
@@ -140,13 +139,12 @@ nsDOMCSSDeclaration::GetPropertyCSSValue(const nsAReadableString& aPropertyName,
 NS_IMETHODIMP
 nsDOMCSSDeclaration::Item(PRUint32 aIndex, nsAWritableString& aReturn)
 {
-  nsICSSDeclaration *decl;
+  nsCSSDeclaration *decl;
   nsresult result = GetCSSDeclaration(&decl, PR_FALSE);
 
   aReturn.SetLength(0);
   if ((NS_OK == result) && (nsnull != decl)) {
     result = decl->GetNthProperty(aIndex, aReturn);
-    NS_RELEASE(decl);
   }
 
   return result;
@@ -157,13 +155,12 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsAReadableString& aPropertyName,
                                      nsAWritableString& aReturn)
 {
   nsCSSValue val;
-  nsICSSDeclaration *decl;
+  nsCSSDeclaration *decl;
   nsresult result = GetCSSDeclaration(&decl, PR_FALSE);
 
   aReturn.SetLength(0);
   if ((NS_OK == result) && (nsnull != decl)) {
     result = decl->GetValue(aPropertyName, aReturn);
-    NS_RELEASE(decl);
   }
 
   return result;
@@ -173,13 +170,12 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::GetPropertyPriority(const nsAReadableString& aPropertyName, 
                                         nsAWritableString& aReturn)
 {
-  nsICSSDeclaration *decl;
+  nsCSSDeclaration *decl;
   nsresult result = GetCSSDeclaration(&decl, PR_FALSE);
   PRBool isImportant = PR_FALSE;
 
   if ((NS_OK == result) && (nsnull != decl)) {
-    result = decl->GetValueIsImportant(aPropertyName, isImportant);
-    NS_RELEASE(decl);
+    isImportant = decl->GetValueIsImportant(aPropertyName);
   }
 
   if ((NS_OK == result) && isImportant) {

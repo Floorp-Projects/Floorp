@@ -41,7 +41,7 @@
 #include "nsCSSRule.h"
 #include "nsICSSStyleRule.h"
 #include "nsICSSGroupRule.h"
-#include "nsICSSDeclaration.h"
+#include "nsCSSDeclaration.h"
 #include "nsICSSStyleSheet.h"
 #include "nsICSSParser.h"
 #include "nsICSSLoader.h"
@@ -861,30 +861,30 @@ nsresult nsCSSSelector::ToString( nsAWritableString& aString, nsICSSStyleSheet* 
 // -- CSSImportantRule -------------------------------
 
 // New map helpers shared by both important and regular rules.
-static nsresult MapFontForDeclaration(nsICSSDeclaration* aDecl, nsCSSFont& aFont);
-static nsresult MapDisplayForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSDisplay& aDisplay);
-static nsresult MapColorForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSColor& aColor);
-static nsresult MapMarginForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSMargin& aMargin); 
-static nsresult MapListForDeclaration(nsICSSDeclaration* aDecl, nsCSSList& aList);
-static nsresult MapPositionForDeclaration(nsICSSDeclaration* aDecl, nsCSSPosition& aPosition);
-static nsresult MapTableForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSTable& aTable);
-static nsresult MapContentForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSContent& aContent);
-static nsresult MapTextForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSText& aContent);
-static nsresult MapUIForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSUserInterface& aContent);
+static nsresult MapFontForDeclaration(nsCSSDeclaration* aDecl, nsCSSFont& aFont);
+static nsresult MapDisplayForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSDisplay& aDisplay);
+static nsresult MapColorForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSColor& aColor);
+static nsresult MapMarginForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSMargin& aMargin); 
+static nsresult MapListForDeclaration(nsCSSDeclaration* aDecl, nsCSSList& aList);
+static nsresult MapPositionForDeclaration(nsCSSDeclaration* aDecl, nsCSSPosition& aPosition);
+static nsresult MapTableForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSTable& aTable);
+static nsresult MapContentForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSContent& aContent);
+static nsresult MapTextForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSText& aContent);
+static nsresult MapUIForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSUserInterface& aContent);
 
 #ifdef INCLUDE_XUL
-static nsresult MapXULForDeclaration(nsICSSDeclaration* aDecl, nsCSSXUL& aXUL);
+static nsresult MapXULForDeclaration(nsCSSDeclaration* aDecl, nsCSSXUL& aXUL);
 #endif
 
 #ifdef MOZ_SVG
-static nsresult MapSVGForDeclaration(nsICSSDeclaration* aDecl, nsCSSSVG& aSVG);
+static nsresult MapSVGForDeclaration(nsCSSDeclaration* aDecl, nsCSSSVG& aSVG);
 #endif
 
 class CSSStyleRuleImpl;
 
 class CSSImportantRule : public nsIStyleRule {
 public:
-  CSSImportantRule(nsICSSStyleSheet* aSheet, nsICSSDeclaration* aDeclaration);
+  CSSImportantRule(nsICSSStyleSheet* aSheet, nsCSSDeclaration* aDeclaration);
 
   NS_DECL_ISUPPORTS
 
@@ -908,23 +908,22 @@ public:
 protected:
   virtual ~CSSImportantRule(void);
 
-  nsICSSDeclaration*  mDeclaration;
+  nsCSSDeclaration*  mDeclaration;
   nsICSSStyleSheet*   mSheet;
 
 friend class CSSStyleRuleImpl;
 };
 
-CSSImportantRule::CSSImportantRule(nsICSSStyleSheet* aSheet, nsICSSDeclaration* aDeclaration)
+CSSImportantRule::CSSImportantRule(nsICSSStyleSheet* aSheet, nsCSSDeclaration* aDeclaration)
   : mDeclaration(aDeclaration),
     mSheet(aSheet)
 {
   NS_INIT_REFCNT();
-  NS_IF_ADDREF(mDeclaration);
 }
 
 CSSImportantRule::~CSSImportantRule(void)
 {
-  NS_IF_RELEASE(mDeclaration);
+  mDeclaration = nsnull;
 }
 
 NS_IMPL_ISUPPORTS1(CSSImportantRule, nsIStyleRule)
@@ -1073,9 +1072,9 @@ public:
                             nsAWritableString& aReturn);
 
   virtual void DropReference(void);
-  virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
+  virtual nsresult GetCSSDeclaration(nsCSSDeclaration **aDecl,
                                      PRBool aAllocate);
-  virtual nsresult SetCSSDeclaration(nsICSSDeclaration *aDecl);
+  virtual nsresult SetCSSDeclaration(nsCSSDeclaration *aDecl);
   virtual nsresult GetCSSParsingEnvironment(nsICSSStyleRule* aRule,
                                             nsICSSStyleSheet** aSheet,
                                             nsIDocument** aDocument,
@@ -1115,8 +1114,8 @@ DOMCSSDeclarationImpl::RemoveProperty(const nsAReadableString& aPropertyName,
 {
   aReturn.Truncate();
 
-  nsCOMPtr<nsICSSDeclaration> decl;
-  nsresult rv = GetCSSDeclaration(getter_AddRefs(decl), PR_TRUE);
+  nsCSSDeclaration* decl;
+  nsresult rv = GetCSSDeclaration(&decl, PR_TRUE);
 
   if (NS_SUCCEEDED(rv) && decl) {
     nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
@@ -1145,7 +1144,7 @@ DOMCSSDeclarationImpl::DropReference(void)
 }
 
 nsresult
-DOMCSSDeclarationImpl::GetCSSDeclaration(nsICSSDeclaration **aDecl,
+DOMCSSDeclarationImpl::GetCSSDeclaration(nsCSSDeclaration **aDecl,
                                              PRBool aAllocate)
 {
   if (nsnull != mRule) {
@@ -1159,7 +1158,7 @@ DOMCSSDeclarationImpl::GetCSSDeclaration(nsICSSDeclaration **aDecl,
 }
 
 nsresult
-DOMCSSDeclarationImpl::SetCSSDeclaration(nsICSSDeclaration *aDecl)
+DOMCSSDeclarationImpl::SetCSSDeclaration(nsCSSDeclaration *aDecl)
 {
   if (nsnull != mRule) {
     mRule->SetDeclaration(aDecl);
@@ -1215,8 +1214,8 @@ nsresult
 DOMCSSDeclarationImpl::ParsePropertyValue(const nsAReadableString& aPropName,
                                           const nsAReadableString& aPropValue)
 {
-  nsCOMPtr<nsICSSDeclaration> decl;
-  nsresult result = GetCSSDeclaration(getter_AddRefs(decl), PR_TRUE);
+  nsCSSDeclaration* decl;
+  nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
   if (!decl) {
     return result;
   }
@@ -1262,8 +1261,8 @@ DOMCSSDeclarationImpl::ParseDeclaration(const nsAReadableString& aDecl,
                                         PRBool aParseOnlyOneDecl,
                                         PRBool aClearOldDecl)
 {
-  nsCOMPtr<nsICSSDeclaration> decl;
-  nsresult result = GetCSSDeclaration(getter_AddRefs(decl), PR_TRUE);
+  nsCSSDeclaration* decl;
+  nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
 
   if (decl) {
     nsCOMPtr<nsICSSLoader> cssLoader;
@@ -1280,8 +1279,7 @@ DOMCSSDeclarationImpl::ParseDeclaration(const nsAReadableString& aDecl,
                                       getter_AddRefs(cssParser));
 
     if (NS_SUCCEEDED(result)) {
-      nsCOMPtr<nsICSSDeclaration> declClone;
-      decl->Clone(*getter_AddRefs(declClone));
+      nsCSSDeclaration* declClone = decl->Clone();
       NS_ENSURE_TRUE(declClone, NS_ERROR_OUT_OF_MEMORY);
 
       if (aClearOldDecl) {
@@ -1289,7 +1287,7 @@ DOMCSSDeclarationImpl::ParseDeclaration(const nsAReadableString& aDecl,
         nsAutoString propName;
         PRUint32 count, i;
 
-        decl->Count(&count);
+        count = decl->Count();
 
         for (i = 0; i < count; i++) {
           decl->GetNthProperty(0, propName);
@@ -1366,8 +1364,8 @@ public:
   virtual PRUint32 GetLineNumber(void) const;
   virtual void SetLineNumber(PRUint32 aLineNumber);
 
-  virtual nsICSSDeclaration* GetDeclaration(void) const;
-  virtual void SetDeclaration(nsICSSDeclaration* aDeclaration);
+  virtual nsCSSDeclaration* GetDeclaration(void) const;
+  virtual void SetDeclaration(nsCSSDeclaration* aDeclaration);
 
   virtual PRInt32 GetWeight(void) const;
   virtual void SetWeight(PRInt32 aWeight);
@@ -1406,7 +1404,7 @@ protected:
 
 protected:
   nsCSSSelector           mSelector;
-  nsICSSDeclaration*      mDeclaration;
+  nsCSSDeclaration*      mDeclaration;
   PRInt32                 mWeight;
   CSSImportantRule*       mImportantRule;
   DOMCSSDeclarationImpl*  mDOMDeclaration;                          
@@ -1452,7 +1450,10 @@ CSSStyleRuleImpl::CSSStyleRuleImpl(const CSSStyleRuleImpl& aCopy)
   }
 
   if (aCopy.mDeclaration) {
-    aCopy.mDeclaration->Clone(mDeclaration);
+    mDeclaration = aCopy.mDeclaration->Clone();
+    if (nsnull != mDeclaration) {
+      mDeclaration->AddRef();
+    }
   }
   // rest is constructed lazily on existing data
 }
@@ -1472,10 +1473,14 @@ CSSStyleRuleImpl::~CSSStyleRuleImpl(void)
     next = selector->mNext;
     delete selector;
   }
-  NS_IF_RELEASE(mDeclaration);
+  if (nsnull != mDeclaration) {
+    mDeclaration->Release();
+    mDeclaration = nsnull;
+  }
   if (nsnull != mImportantRule) {
     mImportantRule->mSheet = nsnull;
-    NS_RELEASE(mImportantRule);
+    delete mImportantRule;
+    mImportantRule = nsnull;
   }
   if (nsnull != mDOMDeclaration) {
     mDOMDeclaration->DropReference();
@@ -1619,20 +1624,21 @@ void CSSStyleRuleImpl::SetLineNumber(PRUint32 aLineNumber)
   mLineNumber = aLineNumber;
 }
 
-nsICSSDeclaration* CSSStyleRuleImpl::GetDeclaration(void) const
+nsCSSDeclaration* CSSStyleRuleImpl::GetDeclaration(void) const
 {
-  nsICSSDeclaration* result = mDeclaration;
-  NS_IF_ADDREF(result);
+  nsCSSDeclaration* result = mDeclaration;
   return result;
 }
 
-void CSSStyleRuleImpl::SetDeclaration(nsICSSDeclaration* aDeclaration)
+void CSSStyleRuleImpl::SetDeclaration(nsCSSDeclaration* aDeclaration)
 {
   if (mDeclaration != aDeclaration) {
     NS_IF_RELEASE(mImportantRule); 
-    NS_IF_RELEASE(mDeclaration);
+    if (nsnull != mDeclaration) {
+      mDeclaration->Release();
+    }
     mDeclaration = aDeclaration;
-    NS_IF_ADDREF(mDeclaration);
+    mDeclaration->AddRef();
   }
 }
 
@@ -1649,12 +1655,10 @@ void CSSStyleRuleImpl::SetWeight(PRInt32 aWeight)
 nsIStyleRule* CSSStyleRuleImpl::GetImportantRule(void)
 {
   if ((nsnull == mImportantRule) && (nsnull != mDeclaration)) {
-    nsICSSDeclaration*  important;
-    mDeclaration->GetImportantValues(important);
+    nsCSSDeclaration*  important = mDeclaration->GetImportantValues();
     if (nsnull != important) {
       mImportantRule = new CSSImportantRule(mSheet, important);
       NS_ADDREF(mImportantRule);
-      NS_RELEASE(important);
     }
   }
   NS_IF_ADDREF(mImportantRule);
@@ -1740,13 +1744,12 @@ CSSStyleRuleImpl::MapRuleInfoInto(nsRuleData* aRuleData)
 }
 
 static nsresult 
-MapFontForDeclaration(nsICSSDeclaration* aDecl, nsCSSFont& aFont)
+MapFontForDeclaration(nsCSSDeclaration* aDecl, nsCSSFont& aFont)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
 
-  nsCSSFont* ourFont;
-  aDecl->GetData(kCSSFontSID, (nsCSSStruct**)&ourFont);
+  nsCSSFont* ourFont = (nsCSSFont*)aDecl->GetData(kCSSFontSID);
   if (!ourFont)
     return NS_OK; // We don't have any rules for fonts.
 
@@ -1773,13 +1776,12 @@ MapFontForDeclaration(nsICSSDeclaration* aDecl, nsCSSFont& aFont)
 
 #ifdef INCLUDE_XUL
 static nsresult 
-MapXULForDeclaration(nsICSSDeclaration* aDecl, nsCSSXUL& aXUL)
+MapXULForDeclaration(nsCSSDeclaration* aDecl, nsCSSXUL& aXUL)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
 
-  nsCSSXUL* ourXUL;
-  aDecl->GetData(kCSSXULSID, (nsCSSStruct**)&ourXUL);
+  nsCSSXUL* ourXUL = (nsCSSXUL*)aDecl->GetData(kCSSXULSID);
   if (!ourXUL)
     return NS_OK; // We don't have any rules for XUL.
 
@@ -1813,13 +1815,12 @@ MapXULForDeclaration(nsICSSDeclaration* aDecl, nsCSSXUL& aXUL)
 
 #ifdef MOZ_SVG
 static nsresult 
-MapSVGForDeclaration(nsICSSDeclaration* aDecl, nsCSSSVG& aSVG)
+MapSVGForDeclaration(nsCSSDeclaration* aDecl, nsCSSSVG& aSVG)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
 
-  nsCSSSVG* ourSVG;
-  aDecl->GetData(kCSSSVGSID, (nsCSSStruct**)&ourSVG);
+  nsCSSSVG* ourSVG = (nsCSSSVG*)aDecl->GetData(kCSSSVGSID);
   if (!ourSVG)
     return NS_OK; // We don't have any rules for SVG.
 
@@ -1863,13 +1864,12 @@ MapSVGForDeclaration(nsICSSDeclaration* aDecl, nsCSSSVG& aSVG)
 
 
 static nsresult 
-MapPositionForDeclaration(nsICSSDeclaration* aDecl, nsCSSPosition& aPosition)
+MapPositionForDeclaration(nsCSSDeclaration* aDecl, nsCSSPosition& aPosition)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
 
-  nsCSSPosition* ourPosition;
-  aDecl->GetData(kCSSPositionSID, (nsCSSStruct**)&ourPosition);
+  nsCSSPosition* ourPosition = (nsCSSPosition*)aDecl->GetData(kCSSPositionSID);
   if (!ourPosition)
     return NS_OK; // We don't have any rules for position.
 
@@ -1916,13 +1916,12 @@ MapPositionForDeclaration(nsICSSDeclaration* aDecl, nsCSSPosition& aPosition)
 }
 
 static nsresult 
-MapListForDeclaration(nsICSSDeclaration* aDecl, nsCSSList& aList)
+MapListForDeclaration(nsCSSDeclaration* aDecl, nsCSSList& aList)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
 
-  nsCSSList* ourList;
-  aDecl->GetData(kCSSListSID, (nsCSSStruct**)&ourList);
+  nsCSSList* ourList = (nsCSSList*)aDecl->GetData(kCSSListSID);
   if (!ourList)
     return NS_OK; // We don't have any rules for lists.
 
@@ -1961,10 +1960,9 @@ MapListForDeclaration(nsICSSDeclaration* aDecl, nsCSSList& aList)
 }
     
 static nsresult
-MapMarginForDeclaration(nsICSSDeclaration* aDeclaration, const nsStyleStructID& aSID, nsCSSMargin& aMargin)
+MapMarginForDeclaration(nsCSSDeclaration* aDeclaration, const nsStyleStructID& aSID, nsCSSMargin& aMargin)
 {
-  nsCSSMargin*  ourMargin;
-  aDeclaration->GetData(kCSSMarginSID, (nsCSSStruct**)&ourMargin);
+  nsCSSMargin*  ourMargin = (nsCSSMargin*)aDeclaration->GetData(kCSSMarginSID);
   if (!ourMargin)
     return NS_OK;
 
@@ -2106,13 +2104,12 @@ MapMarginForDeclaration(nsICSSDeclaration* aDeclaration, const nsStyleStructID& 
 }
 
 static nsresult
-MapColorForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSColor& aColor)
+MapColorForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSColor& aColor)
 {
   if (!aDecl)
     return NS_OK;
 
-  nsCSSColor* ourColor;
-  aDecl->GetData(kCSSColorSID, (nsCSSStruct**)&ourColor);
+  nsCSSColor* ourColor = (nsCSSColor*)aDecl->GetData(kCSSColorSID);
   if (!ourColor)
     return NS_OK; // No rules for color or background.
 
@@ -2149,13 +2146,12 @@ MapColorForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsC
 }
 
 static nsresult 
-MapTableForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSTable& aTable)
+MapTableForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSTable& aTable)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
 
-  nsCSSTable* ourTable;
-  aDecl->GetData(kCSSTableSID, (nsCSSStruct**)&ourTable);
+  nsCSSTable* ourTable = (nsCSSTable*)aDecl->GetData(kCSSTableSID);
   if (!ourTable)
     return NS_OK; // We don't have any rules for tables.
 
@@ -2190,13 +2186,12 @@ MapTableForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsC
 }
 
 static nsresult 
-MapContentForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSContent& aContent)
+MapContentForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSContent& aContent)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
 
-  nsCSSContent* ourContent;
-  aDecl->GetData(kCSSContentSID, (nsCSSStruct**)&ourContent);
+  nsCSSContent* ourContent = (nsCSSContent*)aDecl->GetData(kCSSContentSID);
   if (!ourContent)
     return NS_OK; // We don't have any rules for content.
 
@@ -2222,13 +2217,12 @@ MapContentForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, n
 }
 
 static nsresult
-MapTextForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSText& aText)
+MapTextForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSText& aText)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
 
-  nsCSSText* ourText;
-  aDecl->GetData(kCSSTextSID, (nsCSSStruct**)&ourText);
+  nsCSSText* ourText = (nsCSSText*)aDecl->GetData(kCSSTextSID);
   if (!ourText)
     return NS_OK; // We don't have any rules for text.
 
@@ -2272,13 +2266,12 @@ MapTextForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsCS
 }
 
 static nsresult 
-MapDisplayForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSDisplay& aDisplay)
+MapDisplayForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSDisplay& aDisplay)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
 
-  nsCSSDisplay* ourDisplay;
-  aDecl->GetData(kCSSDisplaySID, (nsCSSStruct**)&ourDisplay);
+  nsCSSDisplay* ourDisplay = (nsCSSDisplay*)aDecl->GetData(kCSSDisplaySID);
   if (!ourDisplay)
     return NS_OK; // We don't have any rules for display.
 
@@ -2342,13 +2335,12 @@ MapDisplayForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, n
 }
 
 static nsresult
-MapUIForDeclaration(nsICSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSUserInterface& aUI)
+MapUIForDeclaration(nsCSSDeclaration* aDecl, const nsStyleStructID& aID, nsCSSUserInterface& aUI)
 {
   if (!aDecl)
     return NS_OK; // The rule must have a declaration.
 
-  nsCSSUserInterface* ourUI;
-  aDecl->GetData(kCSSUserInterfaceSID, (nsCSSStruct**)&ourUI);
+  nsCSSUserInterface* ourUI = (nsCSSUserInterface*)aDecl->GetData(kCSSUserInterfaceSID);
   if (!ourUI)
     return NS_OK; // We don't have any rules for UI.
 

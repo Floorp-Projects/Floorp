@@ -54,7 +54,7 @@ EXPORTS =			\
 	nsICSSImportRule.h \
 	nsICSSMediaRule.h \
 	nsICSSNameSpaceRule.h \
-	nsICSSDeclaration.h 	\
+	nsCSSDeclaration.h 	\
 	nsICSSOMFactory.h 	\
 	nsIHTMLCSSStyleSheet.h 	\
 	nsDOMCSSDeclaration.h 	\

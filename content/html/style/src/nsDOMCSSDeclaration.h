@@ -42,7 +42,7 @@
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMCSS2Properties.h"
 
-class nsICSSDeclaration;
+class nsCSSDeclaration;
 class nsICSSParser;
 class nsIURI;
 
@@ -77,10 +77,10 @@ public:
   NS_DECL_NSIDOMNSCSS2PROPERTIES
 
   virtual void DropReference() = 0;
-  virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
+  virtual nsresult GetCSSDeclaration(nsCSSDeclaration **aDecl,
                                      PRBool aAllocate) = 0;
   // Note! This will only set the declaration if a style rule already exists
-  virtual nsresult SetCSSDeclaration(nsICSSDeclaration *aDecl) = 0;
+  virtual nsresult SetCSSDeclaration(nsCSSDeclaration *aDecl) = 0;
 
   virtual nsresult ParsePropertyValue(const nsAReadableString& aPropName,
                                       const nsAReadableString& aPropValue) = 0;

@@ -59,9 +59,9 @@ public:
                             nsAWritableString& aReturn);
 
   virtual void DropReference();
-  virtual nsresult GetCSSDeclaration(nsICSSDeclaration **aDecl,
+  virtual nsresult GetCSSDeclaration(nsCSSDeclaration **aDecl,
                                      PRBool aAllocate);
-  virtual nsresult SetCSSDeclaration(nsICSSDeclaration *aDecl);
+  virtual nsresult SetCSSDeclaration(nsCSSDeclaration *aDecl);
   virtual nsresult GetCSSParsingEnvironment(nsIContent* aContent,
                                             nsIURI** aBaseURI,
                                             nsICSSLoader** aCSSLoader,

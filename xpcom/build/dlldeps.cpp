@@ -40,6 +40,7 @@
 
 #include "nsVoidArray.h"
 #include "nsVoidBTree.h"
+#include "nsValueArray.h"
 #include "nsIAtom.h"
 #include "nsFileSpec.h"
 //#include "nsIBuffer.h"
@@ -115,6 +116,7 @@ void XXXNeverCalled()
     nsVoidArray();
     nsSmallVoidArray();
     nsVoidBTree();
+    nsValueArray(0);
     nsAVLTree(dummy, nsnull);
     nsSupportsArray();
     NS_GetNumberOfAtoms();
