@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: dbinit.c,v 1.14 2002/06/18 16:41:41 relyea%netscape.com Exp $
+ # $Id: dbinit.c,v 1.15 2002/08/23 02:12:05 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -52,6 +52,8 @@ pk11_certdb_name_cb(void *arg, int dbVersion)
 {
     const char *configdir = (const char *)arg;
     const char *dbver;
+    char *smpname = NULL;
+    char *dbname = NULL;
 
     switch (dbVersion) {
       case 7:
@@ -69,7 +71,14 @@ pk11_certdb_name_cb(void *arg, int dbVersion)
 	break;
     }
 
-    return PR_smprintf(CERT_DB_FMT, configdir, dbver);
+    /* make sure we return something allocated with PORT_ so we have properly
+     * matched frees at the end */
+    smpname = PR_smprintf(CERT_DB_FMT, configdir, dbver);
+    if (smpname) {
+	dbname = PORT_Strdup(smpname);
+	PR_smprintf_free(smpname);
+    }
+    return dbname;
 }
     
 static char *
@@ -77,6 +86,8 @@ pk11_keydb_name_cb(void *arg, int dbVersion)
 {
     const char *configdir = (const char *)arg;
     const char *dbver;
+    char *smpname = NULL;
+    char *dbname = NULL;
     
     switch (dbVersion) {
       case 4:
@@ -94,7 +105,12 @@ pk11_keydb_name_cb(void *arg, int dbVersion)
 	break;
     }
 
-    return PR_smprintf(KEY_DB_FMT, configdir, dbver);
+    smpname = PR_smprintf(KEY_DB_FMT, configdir, dbver);
+    if (smpname) {
+	dbname = PORT_Strdup(smpname);
+	PR_smprintf_free(smpname);
+    }
+    return dbname;
 }
 
 /* for now... we need to define vendor specific codes here.
@@ -158,7 +174,7 @@ pk11_OpenCertDB(const char * configdir, const char *prefix, PRBool readOnly,
     }
 loser: 
     if (certdb) PR_Free(certdb);
-    if (name) PORT_Free(name);
+    if (name) PR_smprintf_free(name);
     if (appName) PORT_Free(appName);
     return crv;
 }
@@ -181,7 +197,7 @@ pk11_OpenKeyDB(const char * configdir, const char *prefix, PRBool readOnly,
 	return SECFailure;
     keydb = nsslowkey_OpenKeyDB(readOnly, appName, prefix, 
 					pk11_keydb_name_cb, (void *)name);
-    PORT_Free(name);
+    PR_smprintf_free(name);
     if (appName) PORT_Free(appName);
     if (keydb == NULL)
 	return CKR_KEYDB_FAILED;
@@ -323,6 +339,13 @@ rdbmapflags(int flags) {
    return 0;
 }
 
+
+PRBool
+db_IsRDB(DB *db)
+{
+    return (PRBool) db->type == DB_RDB;
+}
+
 int
 db_BeginTransaction(DB *db)
 {
@@ -364,3 +387,4 @@ db_Copy(DB *dest,DB *src)
 
     return SECSuccess;
 }
+
