@@ -403,10 +403,10 @@ nsresult nsWindow::SetIcon(GdkPixmap *pixmap,
  * Processes an Expose Event
  *
  **/
-PRBool nsWindow::OnPaint(nsPaintEvent &event)
+PRBool nsWindow::OnExpose(nsPaintEvent &event)
 {
   nsresult result ;
-  
+
   // call the event callback
   if (mEventCallback) 
   {
@@ -421,13 +421,125 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 #endif // NS_DEBUG
 
 
+    // expose.. we didn't get an Invalidate, so we should up the count here
+    mUpdateArea->Union(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
+
+
+    printf("\n\n");
+    PRInt32 x, y, w, h;
+    mUpdateArea->GetBoundingBox(&x,&y,&w,&h);
+    printf("should be painting x = %i , y = %i , w = %i , h = %i\n", x, y, w, h);
+    printf("\n\n");
+    event.rect->x = x;
+    event.rect->y = y;
+    event.rect->width = w;
+    event.rect->height = h;
+
+    if (event.rect->width == 0 || event.rect->height == 0)
+    {
+      printf("ignoring paint for 0x0\n");
+      return NS_OK;
+    }
+
+
     event.renderingContext = GetRenderingContext();
     if (event.renderingContext)
     {
+      PRBool rv;
+
+      event.renderingContext->SetClipRegion(NS_STATIC_CAST(const nsIRegion &, *mUpdateArea),
+                                            nsClipCombine_kReplace, rv);
+
       result = DispatchWindowEvent(&event);
       NS_RELEASE(event.renderingContext);
     }
-    
+
+
+    mUpdateArea->Subtract(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
+
+#ifdef NS_DEBUG
+    if (debug_WantPaintFlashing())
+    {
+      GdkWindow *    gw = GetRenderWindow(mWidget);
+      
+      if (gw)
+      {
+        GdkRectangle   ar;
+        GdkRectangle * area = (GdkRectangle*) NULL;
+        
+        if (event.rect)
+        {
+          ar.x = event.rect->x;
+          ar.y = event.rect->y;
+          
+          ar.width = event.rect->width;
+          ar.height = event.rect->height;
+          
+          area = &ar;
+        }
+        
+        nsGtkUtils::gdk_window_flash(gw,1,100000,area);
+      }
+    }
+#endif // NS_DEBUG
+  }
+  return result;
+}
+
+/**
+ * Processes an Draw Event
+ *
+ **/
+PRBool nsWindow::OnDraw(nsPaintEvent &event)
+{
+  nsresult result ;
+
+  // call the event callback
+  if (mEventCallback) 
+  {
+    event.renderingContext = nsnull;
+
+#ifdef NS_DEBUG
+    debug_DumpPaintEvent(stdout,
+                         this,
+                         &event,
+                         debug_GetName(mWidget),
+                         (PRInt32) debug_GetRenderXID(mWidget));
+#endif // NS_DEBUG
+
+
+    //    printf("\n\n");
+    PRInt32 x, y, w, h;
+    mUpdateArea->GetBoundingBox(&x,&y,&w,&h);
+    //    printf("should be painting x = %i , y = %i , w = %i , h = %i\n", x, y, w, h);
+    //    printf("\n\n");
+    event.rect->x = x;
+    event.rect->y = y;
+    event.rect->width = w;
+    event.rect->height = h;
+
+    if (event.rect->width == 0 || event.rect->height == 0)
+    {
+      //      printf("ignoring paint for 0x0\n");
+      return NS_OK;
+    }
+
+
+    event.renderingContext = GetRenderingContext();
+    if (event.renderingContext)
+    {
+      PRBool rv;
+
+      event.renderingContext->SetClipRegion(NS_STATIC_CAST(const nsIRegion &, *mUpdateArea),
+                                            nsClipCombine_kReplace, rv);
+
+      result = DispatchWindowEvent(&event);
+      NS_RELEASE(event.renderingContext);
+    }
+
+
+    mUpdateArea->Subtract(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
+
 #ifdef NS_DEBUG
     if (debug_WantPaintFlashing())
     {
@@ -810,7 +922,7 @@ nsWindow::OnDrawSignal(GdkRectangle * aArea)
 
   NS_ADDREF(win);
 
-  win->OnPaint(pevent);
+  win->OnDraw(pevent);
 
   NS_RELEASE(win);
 

@@ -361,7 +361,7 @@ gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p)
 
   nsWindow *win = (nsWindow *)p;
   win->AddRef();
-  win->OnPaint(pevent);
+  win->OnExpose(pevent);
   win->Release();
 
   UninitExposeEvent(event, p, pevent, NS_PAINT);
