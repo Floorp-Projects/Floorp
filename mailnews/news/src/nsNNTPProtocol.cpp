@@ -2569,25 +2569,25 @@ void nsNNTPProtocol::ParseHeaderForCancel(char *buf)
     
     switch (header.First()) {
     case 'F': case 'f':
-        if (header.Find("From") == 0) {
+        if (header.Find("From",PR_TRUE) == 0) {
             PR_FREEIF(m_cancelFromHdr);
 			m_cancelFromHdr = PL_strdup(value.GetBuffer());
         }
         break;
     case 'M': case 'm':
-        if (header.Find("Message-ID") == 0) {
+        if (header.Find("Message-ID",PR_TRUE) == 0) {
             PR_FREEIF(m_cancelID);
 			m_cancelID = PL_strdup(value.GetBuffer());
         }
         break;
     case 'N': case 'n':
-        if (header.Find("Newsgroups") == 0) {
+        if (header.Find("Newsgroups",PR_TRUE) == 0) {
             PR_FREEIF(m_cancelNewsgroups);
 			m_cancelNewsgroups = PL_strdup(value.GetBuffer());
         }
         break;
      case 'D': case 'd':
-        if (header.Find("Distributions") == 0) {
+        if (header.Find("Distributions",PR_TRUE) == 0) {
             PR_FREEIF(m_cancelDistribution);
 			m_cancelDistribution = PL_strdup(value.GetBuffer());
         }       
@@ -5443,7 +5443,7 @@ NS_IMETHODIMP nsNNTPProtocol::GetContentType(char * *aContentType)
 
 	if (m_typeWanted != ARTICLE_WANTED && !m_currentGroup.IsEmpty() &&
 	    // if it is an article url, it has a @ or %40 in it.
-	    m_currentGroup.Find("@") == kNotFound && m_currentGroup.Find("%40") == kNotFound) {
+	    m_currentGroup.FindChar('@') == kNotFound && m_currentGroup.Find("%40") == kNotFound) {
 		*aContentType = nsCRT::strdup("x-application-newsgroup");
 	}
 	else {
