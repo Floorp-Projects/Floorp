@@ -188,8 +188,35 @@ nsresult nsRange::QueryInterface(const nsIID& aIID,
 
 PRBool nsRange::InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
 {
-  // XXX NEED IMPLEMENTATION!
-  return PR_TRUE;
+  nsresult res;
+  nsIDOMDocument* document1;
+  res = aNode1->GetOwnerDocument(&document1);
+  if (!NS_SUCCEEDED(res))
+    return PR_FALSE;
+
+  nsIDOMDocument* document2;
+  res = aNode2->GetOwnerDocument(&document2);
+  if (!NS_SUCCEEDED(res))
+  {
+    //NS_IF_RELEASE(document1);
+    return PR_FALSE;
+  }
+
+  PRBool retval = PR_FALSE;
+
+  // Now compare the two documents: is direct comparison safe?
+  if (document1 == document2)
+    retval = PR_TRUE;
+
+  // The releases are commented out for now, because they result
+  // in compile errors:
+  // "cannot lookup method in incomplete type `nsIDOMDocument'"
+  // But I think they're needed: 
+  // nsGenericDOMDataNode::GetOwnerDocument() does a QueryInterface().
+  //NS_IF_RELEASE(document1);
+  //NS_IF_RELEASE(document2);
+
+  return retval;
 }
   
 nsresult nsRange::DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
@@ -293,7 +320,7 @@ PRInt32 nsRange::IndexOf(nsIDOMNode* aChildNode)
   nsIDOMNode *parentNode;
   nsIContent *contentChild;
   nsIContent *contentParent;
-  PRInt32    theIndex = NULL;
+  PRInt32    theIndex = nsnull;
   
   // lots of error checking for now
   if (!aChildNode)
@@ -628,10 +655,10 @@ nsresult nsRange::Collapse(PRBool aToStart)
 nsresult nsRange::Unposition()
 {
   NS_IF_RELEASE(mStartParent);
-  mStartParent = NULL;
+  mStartParent = nsnull;
   mStartOffset = 0;
   NS_IF_RELEASE(mEndParent);
-  mEndParent = NULL;
+  mEndParent = nsnull;
   mEndOffset = 0;
   mIsPositioned = PR_FALSE;
   return NS_OK;
