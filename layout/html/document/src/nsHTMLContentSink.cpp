@@ -124,29 +124,6 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 
 #define SINK_TRACE_NODE(_bit,_msg,_node) SinkTraceNode(_bit,_msg,_node,this)
 
-#ifdef RAPTOR_PERF_METRICS
-#  define NS_RESET_AND_START_STOPWATCH()          \
-    mWatch.Start(PR_TRUE);
-
-#  define NS_START_STOPWATCH()                    \
-    mWatch.Start(PR_FALSE);
-
-#  define NS_STOP_STOPWATCH()                     \
-    mWatch.Stop();
-
-#  define NS_SAVE_STOPWATCH_STATE()               \
-    mWatch.SaveState();
-
-#  define NS_RESTORE_STOPWATCH_STATE()            \
-    mWatch.RestoreState();
-
-#else
-#  define NS_RESET_AND_START_STOPWATCH() 
-#  define NS_START_STOPWATCH()
-#  define NS_STOP_STOPWATCH()
-#  define NS_SAVE_STOPWATCH_STATE()
-#  define NS_RESTORE_STOPWATCH_STATE()
-#endif
 
 static void
 SinkTraceNode(PRUint32 aBit,
@@ -172,6 +149,30 @@ SinkTraceNode(PRUint32 aBit,
 #else
 #define SINK_TRACE(_bit,_args)
 #define SINK_TRACE_NODE(_bit,_msg,_node)
+#endif
+
+#ifdef RAPTOR_PERF_METRICS
+#  define NS_RESET_AND_START_STOPWATCH()          \
+    mWatch.Start(PR_TRUE);
+
+#  define NS_START_STOPWATCH()                    \
+    mWatch.Start(PR_FALSE);
+
+#  define NS_STOP_STOPWATCH()                     \
+    mWatch.Stop();
+
+#  define NS_SAVE_STOPWATCH_STATE()               \
+    mWatch.SaveState();
+
+#  define NS_RESTORE_STOPWATCH_STATE()            \
+    mWatch.RestoreState();
+
+#else
+#  define NS_RESET_AND_START_STOPWATCH() 
+#  define NS_START_STOPWATCH()
+#  define NS_STOP_STOPWATCH()
+#  define NS_SAVE_STOPWATCH_STATE()
+#  define NS_RESTORE_STOPWATCH_STATE()
 #endif
 
 //----------------------------------------------------------------------
