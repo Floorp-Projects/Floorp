@@ -28,10 +28,9 @@
 /* This style sheet should be in a seperate file */
 
 BODY {
+   whitespace: -moz-pre-wrap; width: 40ch;
    /* font-family: monospace; */
-   /* white-space: pre; */
-    background-color: #FFFFFF;
- 	/*  width:  450px;			this is a bogus, hard-coded value */
+   background-color: #FFFFFF;
    margin: 4px 4px 4px 4px;
  }
 
@@ -42,18 +41,15 @@ BODY {
 
 <body>
 
-<pre cols="80">
+<pre cols="72">
 80 char width (for reference only)
-|----------------------------------------------------------------------------|
+---------|---------|---------|---------|---------|---------|---------|---------|
 
-This entire body is in a &lt;PRE&gt; tag, wrapped to 80 columns.
+Welcome to the Gecko Plaintext Editor.
 
-Typed text will wrap to the window width. To get wrapping at a fixed width, play with the BODY style in this HTML file.
- 
-Welcome to the Gecko Editor Test Bed
+This entire body is in a &lt;PRE&gt; tag, wrapped to 72 columns.  Eventually we want to do this through a style sheet (see bug 4696).
 
-Try typing something...
-
+Typed text will wrap to the current wrap setting.  You can increase or decrease the wrap setting by typing alt-] or alt-[; you can see the current wrap column setting by typing alt-C.
 
 </pre>
 </body>
