@@ -20,9 +20,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.31 $
+ *  Version: $Revision: 1.32 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.31 2003/01/04 19:07:37 samuel%sieb.net Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.32 2003/03/09 01:59:33 samuel%sieb.net Exp $
  */
 
 /*
@@ -478,7 +478,7 @@ nsXmlRpcClient.prototype = {
                 break;
 
             case 'Char':
-            case 'String':
+            case 'CString':
                 obj=obj.QueryInterface(Components.interfaces['nsISupports' +
                     sType]);
                 writer.startElement('string');
@@ -588,7 +588,7 @@ nsXmlRpcClient.prototype = {
         
         try {
             obj.QueryInterface(Components.interfaces.nsISupportsCString);
-            return 'String';
+            return 'CString';
         } catch(e) {}
         
         try {
