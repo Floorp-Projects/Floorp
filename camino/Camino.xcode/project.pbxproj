@@ -203,10 +203,9 @@
 		035A4976079DC83E0084B05F = {
 			isa = PBXFileReference;
 			lastKnownFileType = text.xml;
-			name = "Info-HistoryPrefPane.plist";
-			path = "/Users/josh/src/Camino_Project/camino_opt/mozilla/camino/Info-HistoryPrefPane.plist";
-			refType = 0;
-			sourceTree = "<absolute>";
+			path = "Info-HistoryPrefPane.plist";
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
 		};
 		035A4981079DCA100084B05F = {
 			children = (
