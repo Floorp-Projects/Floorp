@@ -1491,18 +1491,27 @@ HRESULT CMozillaBrowser::PrintDocument(BOOL promptUser)
     }
 
     // Disable print progress dialog (XUL)
-    mPrefs->SetBoolPref("print.show_print_progress", PR_FALSE);
+    PRBool oldShowPrintProgress = FALSE;
+    const char *kShowPrintProgressPref = "print.show_print_progress";
+    mPrefs->GetBoolPref(kShowPrintProgressPref, &oldShowPrintProgress);
+    mPrefs->SetBoolPref(kShowPrintProgressPref, PR_FALSE);
 
+    // Print
     PrintListener *listener = new PrintListener;
     nsCOMPtr<nsIWebProgressListener> printListener = do_QueryInterface(listener);
-    browserAsPrint->Print(printSettings, printListener);
-    listener->WaitForComplete();
+    nsresult rv = browserAsPrint->Print(printSettings, printListener);
+    if (NS_SUCCEEDED(rv))
+    {
+        listener->WaitForComplete();
+    }
 
+    // Cleanup
     if (printSettings)
     {
         printSettings->SetPrintSilent(oldPrintSilent);
     }
-    
+    mPrefs->SetBoolPref(kShowPrintProgressPref, oldShowPrintProgress);
+
     return S_OK;
 }
 
@@ -1816,17 +1825,6 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 
     nsAutoString sUrl(URL);
 
-    // Check for a view-source op - this is a bit kludgy
-    // TODO
-    if (NS_LossyConvertUCS2toASCII(sUrl).Compare("view-source:", PR_TRUE, 12) == 0)
-     {
-        // Broken code - appears to want to replace view-source: with view: to 
-        // get Mozilla to respond to the IE view-source: protocol.
-///        std::wstring sCommand(L"view");
-//        sUrl.Left(sCommand, 11);
-//         sUrl.Cut(0,12);
-     }
-
     // Extract the launch flags parameter
     LONG lFlags = 0;
     if (Flags &&
@@ -1869,11 +1867,14 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
         // Can't open a new window without client support
         return E_NOTIMPL;
     }
+
     // Extract the target frame parameter
-    std::wstring sTargetFrame;
-    if (TargetFrameName && TargetFrameName->vt == VT_BSTR)
+    nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(mWebBrowser);
+    if (TargetFrameName &&
+        TargetFrameName->vt == VT_BSTR &&
+        TargetFrameName->bstrVal)
     {
-        sTargetFrame = TargetFrameName->bstrVal;
+        // TODO locate nsIWebNavigation for the named frame
     }
 
     // Extract the post data parameter
@@ -1883,7 +1884,9 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
         mLastPostData.Copy(PostData);
     }
 
-    if (PostData && PostData->vt == VT_BSTR)
+    if (PostData &&
+        PostData->vt == VT_BSTR &&
+        PostData->bstrVal)
     {
         USES_CONVERSION;
         char *szPostData = OLE2A(PostData->bstrVal);
@@ -1905,19 +1908,16 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
     // TODO find the correct target frame
 
     // Load the URL    
-    nsresult res = NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIWebNavigation> spIWebNavigation = do_QueryInterface(mWebBrowser);
+    nsresult rv = NS_ERROR_FAILURE;
     if (spIWebNavigation)
     {
-        res = spIWebNavigation->LoadURI(sUrl.get(),
+        rv = spIWebNavigation->LoadURI(sUrl.get(),
                                         nsIWebNavigation::LOAD_FLAGS_NONE,
                                         nsnull,
                                         nsnull,
                                         nsnull);
     }
-
-    return res;
+    return rv;
 }
 
 
