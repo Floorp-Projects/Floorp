@@ -204,8 +204,6 @@ nsImapService::LiteSelectFolder(nsIEventQueue * aClientEventQueue,
 
 	if (NS_SUCCEEDED(rv) && imapUrl)
 	{
-
-		rv = imapUrl->SetImapAction(nsIImapUrl::nsImapLiteSelectFolder);
         rv = SetImapUrlSink(aImapMailFolder, imapUrl);
 
 		if (NS_SUCCEEDED(rv))
@@ -696,6 +694,52 @@ nsImapService::Biff(nsIEventQueue * aClientEventQueue,
         NS_IF_RELEASE(imapUrl);
 	}
 	return rv;
+}
+
+NS_IMETHODIMP
+nsImapService::DeleteFolder(nsIEventQueue* eventQueue,
+                            nsIMsgFolder* folder,
+                            nsIUrlListener* urlListener,
+                            nsIURI** url)
+{
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    NS_ASSERTION(eventQueue && folder, 
+                 "Oops ... [DeleteFolder] null eventQueue or folder");
+    if (!eventQueue || ! folder)
+        return rv;
+    
+    nsIImapUrl* imapUrl = nsnull;
+    nsCString urlSpec;
+
+    rv = CreateStartOfImapUrl(imapUrl, folder, urlSpec);
+    if (NS_SUCCEEDED(rv) && imapUrl)
+    {
+        rv = SetImapUrlSink(folder, imapUrl);
+        if (NS_SUCCEEDED(rv))
+        {
+            char hierarchySeparator = kOnlineHierarchySeparatorUnknown;
+            urlSpec.Append("/delete>");
+            urlSpec.Append(hierarchySeparator);
+            
+            nsCString folderName;
+            rv = GetFolderName(folder, folderName);
+            if (NS_SUCCEEDED(rv))
+            {
+                urlSpec.Append(folderName.GetBuffer());
+                nsCOMPtr<nsIURL> uri = do_QueryInterface(imapUrl, &rv);
+                if (NS_SUCCEEDED(rv) && uri)
+                {
+                    rv = uri->SetSpec((char*) urlSpec.GetBuffer());
+                    if (NS_SUCCEEDED(rv))
+                        rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
+                                                         urlListener, nsnull,
+                                                         url);
+                }
+            }
+        }
+        NS_RELEASE(imapUrl);
+    }
+    return rv;
 }
 
 NS_IMETHODIMP

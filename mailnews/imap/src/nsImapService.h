@@ -159,6 +159,10 @@ public:
                           const char* leafName,
                           nsIUrlListener* urlListener,
                           nsIURI** url);
+    NS_IMETHOD DeleteFolder(nsIEventQueue* eventQueue,
+                            nsIMsgFolder* srcFolder,
+                            nsIUrlListener* urlListener,
+                            nsIURI** url);
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End support of nsIImapService interface 
 	////////////////////////////////////////////////////////////////////////////////////////
