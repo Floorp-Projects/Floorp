@@ -118,7 +118,8 @@ protected:
                           nsIFrame*        aParentFrame,
                           nsAbsoluteItems& aAbsoluteItems,
                           nsFrameItems&    aFrameItems,
-                          nsAbsoluteItems& aFixedItems);
+                          nsAbsoluteItems& aFixedItems,
+                          nsAbsoluteItems& aFloatingItems);
 
   nsresult ConstructDocElementFrame(nsIPresContext*  aPresContext,
                                     nsIContent*      aDocElement,
@@ -274,6 +275,13 @@ protected:
                                      nsIFrame*        aParentFrame,
                                      nsIFrame*&       aPlaceholderFrame);
 
+  nsresult CreateFloaterPlaceholderFrameFor(nsIPresContext*  aPresContext,
+                                            nsIContent*      aContent,
+                                            nsIFrame*        aFrame,
+                                            nsIStyleContext* aStyleContext,
+                                            nsIFrame*        aParentFrame,
+                                            nsIFrame**      aPlaceholderFrame);
+
   nsresult ConstructAlternateImageFrame(nsIPresContext* aPresContext,
                                         nsIContent*     aContent,
                                         nsIFrame*       aParentFrame,
@@ -297,7 +305,8 @@ protected:
                                nsIStyleContext* aStyleContext,
                                nsAbsoluteItems& aAbsoluteItems,
                                nsFrameItems&    aFrameItems,
-                               nsAbsoluteItems& aFixedItems);
+                               nsAbsoluteItems& aFixedItems,
+                               nsAbsoluteItems& aFloatingItems);
 
 #ifdef INCLUDE_XUL
   nsresult ConstructXULFrame(nsIPresContext*  aPresContext,
@@ -308,6 +317,7 @@ protected:
                              nsAbsoluteItems& aAbsoluteItems,
                              nsFrameItems&    aFrameItems,
                              nsAbsoluteItems& aFixedItems,
+                             nsAbsoluteItems& aFloatingItems,
                              PRBool&          aHaltProcessing);
 #endif
 
@@ -318,7 +328,8 @@ protected:
                                        nsIStyleContext*      aStyleContext,
                                        nsAbsoluteItems&      aAbsoluteItems,
                                        nsFrameItems&         aFrameItems,
-                                       nsAbsoluteItems&      aFixedItems);
+                                       nsAbsoluteItems&      aFixedItems,
+                                       nsAbsoluteItems&      aFloatingItems);
 
   nsresult GetAdjustedParentFrame(nsIFrame*  aCurrentParentFrame, 
                                   PRUint8    aChildDisplayType,
@@ -330,7 +341,8 @@ protected:
                            nsIFrame*        aFrame,
                            nsAbsoluteItems& aAbsoluteItems,
                            nsFrameItems&    aFrameItems,
-                           nsAbsoluteItems& aFixedItems);
+                           nsAbsoluteItems& aFixedItems,
+                           nsAbsoluteItems& aFloatingItems);
 
   nsresult CreateInputFrame(nsIContent* aContent, nsIFrame*& aFrame);
 
@@ -341,6 +353,9 @@ protected:
 
   nsIFrame* GetAbsoluteContainingBlock(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame);
+
+  nsIFrame* GetFloaterContainingBlock(nsIPresContext* aPresContext,
+                                      nsIFrame*       aFrame);
 
   nsresult InitializeScrollFrame(nsIFrame *       aScrollFrame,
                                  nsIPresContext*  aPresContext,
