@@ -68,7 +68,6 @@
 <!ENTITY examineCert.label "View Certificate">
 
 <!-- Strings for the Server cert expired dialog  -->
-<!ENTITY serverCertExpired.title "Security Error: Security Certificate Expired">
 <!ENTITY serverCertExpired.continue "Would you like to continue anyway?">
 
 <!-- Strings for the SSL client auth ask dialog -->
