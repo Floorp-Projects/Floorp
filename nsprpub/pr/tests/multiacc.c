@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define NUM_SERVER_THREADS 5
+#define NUM_SERVER_THREADS 10
 
 static int num_server_threads = NUM_SERVER_THREADS;
 static PRThreadScope thread_scope = PR_GLOBAL_THREAD;
