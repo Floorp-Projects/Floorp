@@ -198,6 +198,7 @@
     
   <menubar>
     <menu value="&fileMenu.label;">
+	  <menupopup>
       <menuitem value="&newCmd.label;" onaction="EditorNew()"/>
       <menuitem value="&openCmd.label;" onaction="EditorOpen()"/>
       <menuitem value="&closeCmd.label;" onaction="EditorClose()"/>
@@ -210,9 +211,11 @@
       <menuitem value="&printCmd.label;" onaction="EditorPrint()"/>
       <menuseparator />
       <menuitem value="&quitCmd.label;" onaction="EditorExit()"/>
+	  </menupopup>
     </menu>
 
     <menu value="&editMenu.label;">
+	  <menupopup>
       <menuitem value="&undoCmd.label;" onaction="EditorUndo()"/>
       <menuitem value="&redoCmd.label;" onaction="EditorRedo()"/>
       <menuseparator />
@@ -226,14 +229,18 @@
       <menuseparator />
       <menuitem value="&findCmd.label;" onaction="EditorFind()"/>
       <menuitem value="&findAgainCmd.label;" onaction="EditorFindNext()"/>
+	  </menupopup>
     </menu>
 
     <menu value="&viewMenu.label;">
+	  <menupopup>
       <menuitem value="&hideCompositionToolbarCmd.label;" onaction=""/>
       <menuitem value="&hideFormattingToolbarCmd.label;" onaction="" />
+	  </menupopup>
     </menu>
  
     <menu value="&insertMenu.label;">
+	  <menupopup>
       <menuitem value="&insertLinkCmd.label;" onaction="EditorInsertLink()"/>
       <menuitem value="&insertTargetCmd.label;" onaction=""/>
       <menuitem value="&insertImageCmd.label;" onaction="EditorInsertImage()"/>
@@ -243,27 +250,34 @@
       <menuseparator />
       <menuitem value="&insertLineBreakCmd.label;" onaction=""/>
       <menuitem value="&insertBreakBelowImagesCmd.label;" onaction=""/>
+	  </menupopup>
     </menu>
     <menu value="&formatMenu.label;">
+	  <menupopup>
       <menu value="&fontfaceMenu.label;">
+	    <menupopup>
         <menuitem value="&defaultVariableWidthCmd.label;" onaction="EditorSetFontFace('')"/>
         <menuitem value="&defaultFixedWidthCmd.label;" onaction="EditorSetFontFace('tt')"/>
         <menuseparator/>
         <menuitem value="&arialHelveticaFont.label;" onaction="EditorSetFontFace('Arial, Helvetica, sans-serif')"/>
         <menuitem value="&timesFont.label;" onaction="EditorSetFontFace('Times New Roman, Times, serif')"/>
         <menuitem value="&courierFont.label;" onaction="EditorSetFontFace('Courier New, Courier, mono')"/>
-      </menu>
+        </menupopup>
+	  </menu>
       <menu value="&fontsizeMenu.label;">
-        <menuitem value="&sizeMinusTwoCmd.label;" onaction="EditorSetFontSize('-2')"/>
+        <menupopup>
+		<menuitem value="&sizeMinusTwoCmd.label;" onaction="EditorSetFontSize('-2')"/>
         <menuitem value="&sizeMinusOneCmd.label;" onaction="EditorSetFontSize('-1')"/>
         <menuitem value="&sizeNormalCmd.label;" onaction="EditorSetFontSize('0')"/>
         <menuitem value="&sizePlusOneCmd.label;" onaction="EditorSetFontSize('+1')"/>
         <menuitem value="&sizePlusTwoCmd.label;" onaction="EditorSetFontSize('+2')"/>
         <menuitem value="&sizePlusThreeCmd.label;" onaction="EditorSetFontSize('+3')"/>
         <menuitem value="&sizePlusFourCmd.label;" onaction="EditorSetFontSize('+4')"/>
-      </menu>
+        </menupopup>
+	  </menu>
       <menu value="&fontStyleMenu.label;">
-        <menuitem value="&styleBoldCmd.label;" onaction="EditorApplyStyle('b')"/>
+        <menupopup>
+		<menuitem value="&styleBoldCmd.label;" onaction="EditorApplyStyle('b')"/>
         <menuitem value="&styleItalicCmd.label;" onaction="EditorApplyStyle('i')"/>
         <menuitem value="&styleUnderlineCmd.label;" onaction="EditorApplyStyle('u')"/>
         <menuitem value="&styleStrikeThruCmd.label;" onaction="EditorApplyStyle('strike')"/>
@@ -271,12 +285,14 @@
         <menuitem value="&styleSubscriptCmd.label;" onaction="EditorApplyStyle('sub')"/>
         <menuitem value="&styleBlinkCmd.label;" onaction="EditorApplyStyle('blink')"/>
         <menuitem value="&styleNonbreakingCmd.label;" onaction="EditorApplyStyle('nobr')"/>
-      </menu>
+        </menupopup>
+	  </menu>
       <menuitem value="&fontColorMenu.label;" onaction=""/>
       <menuitem value="&removeAllStylesCmd.label;" onaction="EditorRemoveStyle('all')"/>
       <menuseparator />
       <menu value="&paragraphHeadingMenu.label;">
-        <menuitem value="&paragraphNormalCmd.label;"    onaction="EditorSetParagraphFormat('normal')"/>
+        <menupopup>
+		<menuitem value="&paragraphNormalCmd.label;"    onaction="EditorSetParagraphFormat('normal')"/>
         <menuitem value="&headingOneCmd.label;"         onaction="EditorSetParagraphFormat('h1')"/>
         <menuitem value="&headingTwoCmd.label;"         onaction="EditorSetParagraphFormat('h2')"/>
         <menuitem value="&headingThreeCmd.label;"       onaction="EditorSetParagraphFormat('h3')"/>
@@ -288,17 +304,21 @@
         <menuitem value="&paragraphListCmd.label;"      onaction="EditorSetParagraphFormat('li')"/>
         <menuitem value="&paragraphDfnTermCmd.label;"   onaction="EditorSetParagraphFormat('dt')"/>
         <menuitem value="&paragraphDfnDescCmd.label;"   onaction="EditorSetParagraphFormat('dd')"/>
-      </menu>
+        </menupopup>
+	  </menu>
     </menu>
     <menu value="&toolsMenu.label;">
-      <menuitem value="&newBrowserCmd.label;" onaction="EditorNewBrowser()"/>
+      <menupopup>
+	  <menuitem value="&newBrowserCmd.label;" onaction="EditorNewBrowser()"/>
       <menuitem value="&newPlaintextEditorCmd.label;" onaction="EditorNewPlaintext()"/>
       <menuseparator />
       <menuitem value="&checkSpellingCmd.label;" onaction="CheckSpelling()"/>
       <menuitem value="&setFocusCmd.label;" onaction="window.focus()"/>
+	  </menupopup>
     </menu>
     <menu value="&debugMenu.label;">
-      <menuitem value="&outputTextCmd.label;" onaction="EditorGetText()"/>
+      <menupopup>
+	  <menuitem value="&outputTextCmd.label;" onaction="EditorGetText()"/>
       <menuitem value="&outputHTMLCmd.label;" onaction="EditorGetHTML()"/>
       <menuseparator />
       <menuitem value="&insertTextCmd.label;" onaction="EditorInsertText('All good things come to those who wait. ')"/>
@@ -306,9 +326,12 @@
       <menuitem value="&testSelectionCmd.label;" onaction="EditorTestSelection()"/>
       <menuitem value="&testDocumentCmd.label;" onaction="EditorTestDocument()"/>
       <menuitem value="&runUnitTestsCmd.label;" onaction="EditorUnitTests()"/>
+	  </menupopup>
     </menu>
     <menu value="&helpMenu.label;">
-      <menuitem value="&aboutCmd.label;" onaction=""/>
+      <menupopup>
+	  <menuitem value="&aboutCmd.label;" onaction=""/>
+	  </menupopup>
     </menu>
   </menubar>
   
