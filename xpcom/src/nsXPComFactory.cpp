@@ -19,6 +19,7 @@
 #include "nsXPComFactory.h"
 #include "nsXPComCIID.h"
 #include "nsAllocator.h"
+#include "nsEventQueue.h"
 #include "nsGenericFactory.h"
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -56,6 +57,8 @@ NSGetFactory(nsISupports* serviceMgr,
 		nsGenericFactory* factory = NULL;
 		if (aClass.Equals(nsAllocatorImpl::CID())) {
 			factory = new nsGenericFactory(&nsAllocatorImpl::Create);
+		} else if (aClass.Equals(nsEventQueueImpl::CID())) {
+			factory = new nsGenericFactory(&nsEventQueueImpl::Create);
 		} else if (aClass.Equals(nsGenericFactory::CID())) {
 			// whoa, create a generic factory that creates generic factories!
 			factory = new nsGenericFactory(&nsGenericFactory::Create);

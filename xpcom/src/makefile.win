@@ -70,6 +70,7 @@ CPPSRCS =                             \
         nsXPComFactory.cpp            \
         nsXPIDLString.cpp             \
         nsEventQueueService.cpp       \
+		nsEventQueue.cpp			  \
         nsAllocator.cpp               \
         xcDll.cpp                     \
         nsGenericFactory.cpp          \
@@ -93,6 +94,7 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsXPComFactory.obj            \
         .\$(OBJDIR)\nsXPIDLString.obj             \
         .\$(OBJDIR)\nsEventQueueService.obj       \
+		.\$(OBJDIR)\nsEventQueue.obj			  \
         .\$(OBJDIR)\nsAllocator.obj               \
         .\$(OBJDIR)\xcDll.obj                     \
         .\$(OBJDIR)\nsGenericFactory.obj          \
