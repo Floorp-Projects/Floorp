@@ -572,7 +572,7 @@ nsresult nsImapMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 
     rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDBFactory));
     if (NS_SUCCEEDED(rv) && mailDBFactory)
-      folderOpen = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase));
+      folderOpen = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_FALSE, getter_AddRefs(mDatabase));
 
     if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
       folderOpen = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase));
@@ -1110,8 +1110,20 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
           }
           return rv;
         }
+        nsCOMPtr<nsIDBFolderInfo> trashDBFolderInfo;
+        nsCOMPtr <nsIDBFolderInfo> transferInfo;
+        rv = trashFolder->GetDBFolderInfoAndDB(getter_AddRefs(trashDBFolderInfo), getter_AddRefs(trashDB));
+        if (trashDBFolderInfo)
+          trashDBFolderInfo->GetTransferInfo(getter_AddRefs(transferInfo));
+        trashDBFolderInfo = nsnull;
         rv = trashFolder->Delete(); // delete summary spec
         rv = trashFolder->GetMsgDatabase(msgWindow, getter_AddRefs(trashDB));
+        if (transferInfo && trashDB)
+        {
+          trashDB->GetDBFolderInfo(getter_AddRefs(trashDBFolderInfo));
+          if (trashDBFolderInfo)
+            trashDBFolderInfo->InitFromTransferInfo(transferInfo);
+        }
 
         nsCOMPtr<nsIImapService> imapService = 
                  do_GetService(kCImapService, &rv);
