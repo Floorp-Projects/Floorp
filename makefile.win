@@ -62,6 +62,9 @@ DIRS =                         \
   netwerk                      \
   widget\timer                 \
   js                           \
+!if !defined(DISABLE_JSD)
+  js\jsd                       \
+!endif
   modules\libjar               \
   modules\libimg               \
   modules\libpref              \
