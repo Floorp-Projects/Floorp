@@ -51,7 +51,7 @@
         onload="onLoad();"
         title="&aboutDialog.title;"
         windowtype="navigator:browser"
-        width="300" height="320"
+        width="300" height="335"
         screenX="4" screenY="4"
         persist="screenX screenY width height sizemode"> 
     
@@ -75,6 +75,7 @@
       </hbox>
       <spacer flex="1"/>
       <textbox id="userAgent" multiline="true" readonly="true" cols="60"/>
+      <spacer flex="1"/>
       <html:a href="&copyrightLink;"
               target="_new"
               style="display: block; color: blue; text-decoration: underline;">&copyright;</html:a>
