@@ -38,7 +38,7 @@ MOTIF			=
 MOTIFLIB		=
 OS_LIBS			=
 
-PLATFORM_FLAGS		= -ansi -Wall -pipe -DLINUX -Dlinux
+PLATFORM_FLAGS		= -ansi -Wall -pipe -DLINUX -Dlinux -DLINUX1_2
 MOVEMAIL_FLAGS		= -DHAVE_STRERROR
 PORT_FLAGS		= -D_POSIX_SOURCE -D_BSD_SOURCE -DSW_THREADS -DNEED_ENDIAN_H -DNEED_GETOPT_H -DNEED_IOCTL_H -DUSE_NODL_TABS -DHAVE_SIGNED_CHAR -DNEED_SYS_TIME_H -DHAVE_SYS_BITYPES_H -DNEED_UINT_T
 PDJAVA_FLAGS		= -mx128m
@@ -91,13 +91,18 @@ endif
 ifeq ($(OS_RELEASE),1.2)
 PORT_FLAGS		+= -DNEED_SYS_WAIT_H
 endif
-ifeq ($(basename $(OS_RELEASE)),2)
+ifneq (,$(filter 2.0 2.1,$(OS_RELEASE)))
 PORT_FLAGS		+= -DNO_INT64_T
+PLATFORM_FLAGS		+= -DLINUX2_0
 BUILD_UNIX_PLUGINS	= 1
 MKSHLIB			= $(CC) -shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.so=%.so)
 ifdef BUILD_OPT
 OPTIMIZER		= -O2
 endif
+endif
+# I think just -DLINUX1 for 1.x, -DLINUX2 for 2.x, ... would be a better strategy (?) --briano.
+ifeq ($(OS_RELEASE),2.1)
+PLATFORM_FLAGS		+= -DLINUX2_1
 endif
 
 ######################################################################
