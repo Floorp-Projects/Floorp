@@ -29,6 +29,7 @@
 
 #include <signal.h>
 #include "prthread.h"
+#include "plstr.h"
 
 extern "C" char * strsignal(int);
 static char _progname[1024] = "huh?";
@@ -99,7 +100,7 @@ ah_crap_handler(int signum)
 void InstallUnixSignalHandlers(const char *ProgramName)
 {
 
-  strncpy(_progname,ProgramName, (sizeof(_progname)-1) );
+  PL_strncpy(_progname,ProgramName, (sizeof(_progname)-1) );
 
 #if defined(NTO)
  /* Neutrino need this to free shared memory in case of a crash */
@@ -117,3 +118,4 @@ void InstallUnixSignalHandlers(const char *ProgramName)
 #endif // CRAWL_STACK_ON_SIGSEGV
 
 }
+
