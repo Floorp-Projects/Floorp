@@ -2815,7 +2815,11 @@ nsBlockFrame::GetTopBlockChild()
     while (--n >= 0) {
       nsIContent* content;
       nsresult rv = firstChild->GetContent(&content);
-      if (NS_FAILED(rv) || !content || !content->IsContentOfType(nsIContent::eTEXT)) {
+      if (NS_FAILED(rv) || !content) {
+        return nsnull;
+      }
+      if (!content->IsContentOfType(nsIContent::eTEXT)) {
+        NS_RELEASE(content);
         return nsnull;
       }
       nsITextContent* tc;
