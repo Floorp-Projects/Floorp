@@ -149,7 +149,6 @@ CSRCS		= \
 		  MozillaWm.c \
 		  commands.c \
 		  dialogs.c \
-		  hot.c \
 		  icons.c \
 		  images.c \
 		  lay.c \
