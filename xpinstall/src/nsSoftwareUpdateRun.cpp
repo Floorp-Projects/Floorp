@@ -117,58 +117,37 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
             }
         }
     }
-
-    // Build up error string
-    nsCAutoString errmsg("script error: ");
-
+    
     if (!report)
-        errmsg += message;
-    else
+        return;
+
+    nsIXPIListener *listener;
+
+    // lets set up an eventQ so that our xpcom/proxies will not have to:
+    NS_WITH_SERVICE(nsISoftwareUpdate, softwareUpdate, kSoftwareUpdateCID, &rv );
+
+    if (!NS_SUCCEEDED(rv))
+
     {
-        if (report->filename)
-        {
-            errmsg += report->filename;
-            errmsg += ", ";
-        }
-
-
-    }
-
-
-
-
-    int i, j, k, n;
-
-    fputs("xpinstall: ", stderr);
-    if (!report) 
-    {
-        fprintf(stderr, "%s\n", message);
+        NS_WARNING("shouldn't have RunInstall() if we can't get SoftwareUpdate");
         return;
     }
 
-    if (report->filename)
-        fprintf(stderr, "%s, ", report->filename);
-    if (report->lineno)
-        fprintf(stderr, "line %u: ", report->lineno);
-    fputs(message, stderr);
-    if (!report->linebuf) 
+    softwareUpdate->GetMasterListener(&listener);
+    
+    if(listener)
     {
-        putc('\n', stderr);
-        return;
-    }
+        nsAutoString logMessage;
+        logMessage.AssignWithConversion("Line: ");
+        logMessage.AppendInt(report->lineno, 10);
+        logMessage.AppendWithConversion("\t");
+        if (report->ucmessage)
+            logMessage.Append( report->ucmessage ); 
+        else
+            logMessage.AppendWithConversion( message ); 
 
-    fprintf(stderr, ":\n%s\n", report->linebuf);
-    n = report->tokenptr - report->linebuf;
-    for (i = j = 0; i < n; i++) {
-        if (report->linebuf[i] == '\t') {
-            for (k = (j + 8) & ~7; j < k; j++)
-                putc('.', stderr);
-            continue;
-        }
-        putc('.', stderr);
-        j++;
+        listener->LogComment( logMessage.GetUnicode() );
     }
-    fputs("^\n", stderr);
 }
 
 
