@@ -72,6 +72,7 @@ protected:
     PRInt16 mSecond;
 
     PRBool mIsUtc;
+    nsCString mTimezone;
 
     PRInt16 mWeekday;
     PRInt16 mYearday;

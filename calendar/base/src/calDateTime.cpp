@@ -47,9 +47,19 @@ extern "C" {
 NS_IMPL_ISUPPORTS1(calDateTime, calIDateTime)
 
 calDateTime::calDateTime()
-    : mValid(PR_FALSE)
+    : mImmutable(PR_FALSE),
+      mValid(PR_FALSE)
 {
-
+    mNativeTime = 0;
+    mYear = 0;
+    mMonth = 0;
+    mDay = 0;
+    mHour = 0;
+    mMinute = 0;
+    mSecond = 0;
+    mIsUtc = PR_FALSE;
+    mWeekday = 0;
+    mYearday = 0;
 }
 
 calDateTime::calDateTime(struct icaltimetype *atimeptr)
@@ -108,7 +118,6 @@ calDateTime::Clone(calIDateTime **aResult)
 
 CAL_VALUETYPE_ATTR_GETTER(calDateTime, PRBool, Valid)
 
-CAL_VALUETYPE_ATTR(calDateTime, PRTime, NativeTime)
 CAL_VALUETYPE_ATTR(calDateTime, PRInt16, Year)
 CAL_VALUETYPE_ATTR(calDateTime, PRInt16, Month)
 CAL_VALUETYPE_ATTR(calDateTime, PRInt16, Day)
@@ -119,6 +128,27 @@ CAL_VALUETYPE_ATTR(calDateTime, PRBool, IsUtc)
 
 CAL_VALUETYPE_ATTR_GETTER(calDateTime, PRInt16, Weekday)
 CAL_VALUETYPE_ATTR_GETTER(calDateTime, PRInt16, Yearday)
+
+CAL_STRINGTYPE_ATTR(calDateTime, nsACString, Timezone)
+
+NS_IMETHODIMP
+calDateTime::GetNativeTime(PRTime *aResult)
+{
+    *aResult = mNativeTime;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+calDateTime::SetNativeTime(PRTime aNativeTime)
+{
+    if (mIsUtc) {
+        return SetTimeInTimezone (aNativeTime, "UTC");
+    } else if (!mTimezone.IsEmpty()) {
+        return SetTimeInTimezone (aNativeTime, mTimezone.get());
+    } else {
+        return SetTimeInTimezone (aNativeTime, NULL);
+    }
+}
 
 NS_IMETHODIMP
 calDateTime::Normalize()

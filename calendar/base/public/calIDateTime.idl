@@ -89,9 +89,9 @@ interface calIDateTime : nsISupports
   attribute PRBool isUtc;
 
   // an associated timezone that's the preferred way of representing
-  // this object.  If this is null, then there is no preferred
+  // this object.  If this is null/empty, then there is no preferred
   // timezone, and UTC or localtime is assumed (based on isUtc).
-  attribute string timezone;
+  attribute AUTF8String timezone;
 
   //
   // computed values
