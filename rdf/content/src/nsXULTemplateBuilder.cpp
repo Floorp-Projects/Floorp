@@ -4956,7 +4956,7 @@ nsXULTemplateBuilder::ParseAttribute(const nsAReadableString& aAttributeValue,
 {
     // XXX wish we could use iterators, but we can't right now.
     PRInt32 len = aAttributeValue.Length();
-    PRInt32 mark = 0, backup = 0;
+    PRUint32 mark = 0, backup = 0;
 
     for (PRInt32 i = 0; i < len; backup = ++i) {
         // A variable is either prefixed with '?' (in the extended
@@ -4986,15 +4986,14 @@ nsXULTemplateBuilder::ParseAttribute(const nsAReadableString& aAttributeValue,
         else if (backup != mark && aTextCallback) {
             // Okay, we've found a variable, and there's some vanilla
             // text that's been buffered up. Flush it.
-            (*aTextCallback)(this, Substring(aAttributeValue, NS_STATIC_CAST(PRUint32, mark),
-                             NS_STATIC_CAST(PRUint32, backup - mark)), aClosure);
+            (*aTextCallback)(this, Substring(aAttributeValue, mark, backup - mark), aClosure);
         }
 
         // Construct a substring that is the symbol we need to look up
         // in the rule's symbol table. The symbol is terminated by a
         // space character, a caret, or the end of the string,
         // whichever comes first.
-        PRInt32 first = backup;
+        PRUint32 first = backup;
 
         PRUnichar c = 0;
         while (i < len) {
@@ -5005,7 +5004,7 @@ nsXULTemplateBuilder::ParseAttribute(const nsAReadableString& aAttributeValue,
             ++i;
         }
 
-        PRInt32 last = i;
+        PRUint32 last = i;
 
         // Back up so we don't consume the terminating character
         // *unless* the terminating character was a caret: the caret
@@ -5013,15 +5012,13 @@ nsXULTemplateBuilder::ParseAttribute(const nsAReadableString& aAttributeValue,
         if (c != PRUnichar('^'))
             --i;
 
-        (*aVariableCallback)(this, Substring(aAttributeValue, NS_STATIC_CAST(PRUint32, first),
-                             NS_STATIC_CAST(PRUint32, last - first)), aClosure);
+        (*aVariableCallback)(this, Substring(aAttributeValue, first, last - first), aClosure);
         mark = i + 1;
     }
 
     if (backup != mark && aTextCallback) {
         // If there's any text left over, then fire the text callback
-        (*aTextCallback)(this, Substring(aAttributeValue, NS_STATIC_CAST(PRUint32, mark),
-                         NS_STATIC_CAST(PRUint32, backup - mark)), aClosure);
+        (*aTextCallback)(this, Substring(aAttributeValue, mark, backup - mark), aClosure);
     }
 }
 
@@ -7478,8 +7475,7 @@ nsXULTemplateBuilder::AddBindingsFor(nsXULTemplateBuilder* aThis,
 {
     // We should *only* be recieving "rdf:"-style variables. Make
     // sure...
-    if (Substring(aVariable, NS_STATIC_CAST(PRUint32, 0),
-                  NS_STATIC_CAST(PRUint32, 4)) != NS_LITERAL_STRING("rdf:"))
+    if (Substring(aVariable, PRUint32(0), PRUint32(4)) != NS_LITERAL_STRING("rdf:"))
         return;
 
     Rule* rule = NS_STATIC_CAST(Rule*, aClosure);
@@ -7492,8 +7488,7 @@ nsXULTemplateBuilder::AddBindingsFor(nsXULTemplateBuilder* aThis,
 
     // Strip it down to the raw RDF property by clobbering the "rdf:"
     // prefix
-    const nsAReadableString& propertyStr = Substring(aVariable, NS_STATIC_CAST(PRUint32, 4),
-                                                     aVariable.Length() - 4);
+    const nsAReadableString& propertyStr = Substring(aVariable, PRUint32(4), aVariable.Length() - 4);
 
     nsCOMPtr<nsIRDFResource> property;
     gRDFService->GetUnicodeResource(nsPromiseFlatString(propertyStr), getter_AddRefs(property));
