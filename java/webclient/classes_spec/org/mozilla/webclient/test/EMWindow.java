@@ -50,7 +50,7 @@ import org.mozilla.util.Assert;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.7 2000/05/25 23:51:43 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.8 2000/06/01 23:10:33 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -71,9 +71,11 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
         private BookmarksFrame bookmarksFrame = null;
 	private TreeModel	    bookmarksTree;
 	private Panel			controlPanel;
+	private Panel			statusPanel;
 	private Panel			buttonsPanel;
-        private FindDialog           findDialog = null;
-        private MenuBar             menuBar;
+    private FindDialog           findDialog = null;
+    private MenuBar             menuBar;
+    private Label          statusLabel;
 
   private EmbeddedMozilla creator;
   private boolean viewMode = true;
@@ -150,6 +152,15 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 		controlPanel.add(urlField,     BorderLayout.CENTER);
 		controlPanel.add(buttonsPanel, BorderLayout.WEST);
 
+        // create the status panel
+        statusPanel = new Panel();
+        statusPanel.setLayout(new BorderLayout());
+
+        // create and add the statusLabel
+        statusLabel = new Label("", Label.LEFT);
+        statusLabel.setBackground(Color.lightGray);
+        statusPanel.add(statusLabel, BorderLayout.CENTER);
+
 		// Create the browser
         try {
             BrowserControlFactory.setAppData(binDir);
@@ -169,6 +180,7 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 		// Add the control panel and the browserCanvas
 		add(controlPanel, BorderLayout.NORTH);
 		add(browserCanvas,      BorderLayout.CENTER);
+		add(statusPanel,      BorderLayout.SOUTH);
 
 		addWindowListener(new WindowAdapter() {
 		    public void windowClosing(WindowEvent e) {
@@ -467,6 +479,7 @@ public void eventDispatched(WebclientEvent event)
             String currentURL = (String) event.getEventData();
             System.out.println("debug: edburns: Currently Viewing: " + 
                                currentURL);
+            statusLabel.setText("Starting to load " + currentURL);
             urlField.setText(currentURL);
             break;
         }
@@ -495,6 +508,7 @@ public void mouseEntered(java.awt.event.MouseEvent e)
         String href = eventProps.getProperty("href");
         if (null != href) {
             System.out.println(href);
+            statusLabel.setText(href);
         }
     }
 }
