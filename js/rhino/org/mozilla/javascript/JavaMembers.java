@@ -103,7 +103,6 @@ class JavaMembers {
     Member findExplicitFunction(String name, boolean isStatic) {
         Hashtable ht = isStatic ? staticMembers : members;
         int sigStart = name.indexOf('(');
-        Object member = null;
         Member[] methodsOrCtors = null;
         NativeJavaMethod method = null;
         boolean isCtor = (isStatic && sigStart == 0);

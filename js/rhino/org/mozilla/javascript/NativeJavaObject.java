@@ -812,7 +812,6 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             }
         }
         else {
-            double result = Double.NaN;
             Method meth;
             try {
                 meth = value.getClass().getMethod("doubleValue", null);

@@ -645,7 +645,7 @@ public class Interpreter extends LabelTable {
                     }
                     else {
                         iCodeTop = addByte((byte) TokenStream.GETVAR, iCodeTop);
-                        iCodeTop = addByte((byte)index, iCodeTop);
+                        iCodeTop = addByte((byte) index, iCodeTop);
                         iCodeTop = addByte((byte) TokenStream.TYPEOF, iCodeTop);
                     }
                     itsStackDepth++;
@@ -1817,20 +1817,12 @@ public class Interpreter extends LabelTable {
                         break;
                     case TokenStream.CLOSURE :
                         i = (iCode[pc + 1] << 8) | (iCode[pc + 2] & 0xFF);
-                        if (theData.itsNestedFunctions[i] 
-                                    instanceof InterpretedFunction) {
-                            stack[++stackTop] 
-                                = new InterpretedFunction(
-                                       (InterpretedFunction)
-                                               (theData.itsNestedFunctions[i]),
-                                        scope, cx);
-                            createFunctionObject(
-                                  (InterpretedFunction)stack[stackTop], scope);
-                        }
-                        else
-                            stack[++stackTop] 
-                                = ScriptRuntime.createFunctionObject(scope,
-                                 theData.itsNestedFunctions[i].getClass(), cx);
+                        stack[++stackTop] 
+                            = new InterpretedFunction(
+                                    theData.itsNestedFunctions[i],
+                                    scope, cx);
+                        createFunctionObject(
+                              (InterpretedFunction)stack[stackTop], scope);
                         pc += 2;
                         break;
                     case TokenStream.OBJECT :

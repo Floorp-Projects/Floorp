@@ -185,8 +185,7 @@ public class Main {
                 if (++i == args.length)
                     usage(arg);
                 Reader reader = new StringReader(args[i]);
-                Object result = evaluateReader(cx, global, reader, 
-                                               "<command>", 1);
+                evaluateReader(cx, global, reader, "<command>", 1);
                 continue;
             }
             if (arg.equals("-w")) {

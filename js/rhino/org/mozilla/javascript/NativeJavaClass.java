@@ -96,7 +96,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
             // experimental:  look for nested classes by appending $name to current class' name.
             try {
                 String nestedName = getClassObject().getName() + '$' + name;
-                Class nestedClass = Class.forName(nestedName);
+                Class nestedClass = ScriptRuntime.loadClassName(nestedName);
                 Scriptable nestedValue = wrap(ScriptableObject.getTopLevelScope(this), nestedClass);
                 nestedValue.setParentScope(this);
                 result = nestedValue;

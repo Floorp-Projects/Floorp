@@ -559,8 +559,8 @@ public class JavaAdapter extends ScriptableObject {
                 // Get argument Class 
                 cfw.addLoadConstant(parms[i].getName());
                 cfw.add(ByteCode.INVOKESTATIC, 
-                        "java/lang/Class", 
-                        "forName", 
+                        "org/mozilla/javascript/ScriptRuntime", 
+                        "loadClassName", 
                         "(Ljava/lang/String;)",                        
                         "Ljava/lang/Class;");
       

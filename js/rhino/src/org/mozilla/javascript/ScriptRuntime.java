@@ -18,13 +18,13 @@
  * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  * Patrick Beard
  * Norris Boyd
  * Roger Lawrence
  * Frank Mitchell
  * Andrew Wason
- * 
+ *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
  * provisions of the GPL are applicable instead of those above.
@@ -49,39 +49,39 @@ import java.lang.reflect.*;
  */
 
 public class ScriptRuntime {
-    
+
     /**
      * No instances should be created.
      */
-    protected ScriptRuntime() { 
+    protected ScriptRuntime() {
     }
-    
+
     /*
-     * There's such a huge space (and some time) waste for the Foo.class 
-     * syntax: the compiler sticks in a test of a static field in the  
-     * enclosing class for null and the code for creating the class value. 
-     * It has to do this since the reference has to get pushed off til  
-     * executiontime (i.e. can't force an early load), but for the 
-     * 'standard' classes - especially those in java.lang, we can trust 
-     * that they won't cause problems by being loaded early.  
+     * There's such a huge space (and some time) waste for the Foo.class
+     * syntax: the compiler sticks in a test of a static field in the
+     * enclosing class for null and the code for creating the class value.
+     * It has to do this since the reference has to get pushed off til
+     * executiontime (i.e. can't force an early load), but for the
+     * 'standard' classes - especially those in java.lang, we can trust
+     * that they won't cause problems by being loaded early.
      */
-    
-    public final static Class UndefinedClass = Undefined.class; 
-    public final static Class ScriptableClass = Scriptable.class; 
-    public final static Class StringClass = String.class; 
-    public final static Class NumberClass = Number.class; 
-    public final static Class BooleanClass = Boolean.class; 
-    public final static Class ByteClass = Byte.class; 
-    public final static Class ShortClass = Short.class; 
-    public final static Class IntegerClass = Integer.class; 
-    public final static Class LongClass = Long.class; 
-    public final static Class FloatClass = Float.class; 
-    public final static Class DoubleClass = Double.class; 
-    public final static Class CharacterClass = Character.class; 
-    public final static Class ObjectClass = Object.class; 
+
+    public final static Class UndefinedClass = Undefined.class;
+    public final static Class ScriptableClass = Scriptable.class;
+    public final static Class StringClass = String.class;
+    public final static Class NumberClass = Number.class;
+    public final static Class BooleanClass = Boolean.class;
+    public final static Class ByteClass = Byte.class;
+    public final static Class ShortClass = Short.class;
+    public final static Class IntegerClass = Integer.class;
+    public final static Class LongClass = Long.class;
+    public final static Class FloatClass = Float.class;
+    public final static Class DoubleClass = Double.class;
+    public final static Class CharacterClass = Character.class;
+    public final static Class ObjectClass = Object.class;
     public final static Class FunctionClass = Function.class;
     public final static Class ClassClass = Class.class;
-    
+
     /**
      * Convert the value to a boolean.
      *
@@ -134,7 +134,7 @@ public class ScriptRuntime {
             return ((Boolean) val).booleanValue() ? 1 : +0.0;
         throw errorWithClassName("msg.invalid.type", val);
     }
-    
+
     // This definition of NaN is identical to that in java.lang.Double
     // except that it is not final. This is a workaround for a bug in
     // the Microsoft VM, versions 2.01 and 3.0P1, that causes some uses
@@ -142,7 +142,7 @@ public class ScriptRuntime {
     // So we use ScriptRuntime.NaN instead of Double.NaN.
     public static double NaN = 0.0d / 0.0;
     public static Double NaNobj = new Double(0.0d / 0.0);
-    
+
     // A similar problem exists for negative zero.
     public static double negativeZero = -0.0;
 
@@ -181,9 +181,9 @@ public class ScriptRuntime {
         }
         if (sum >= 9007199254740992.0) {
             if (radix == 10) {
-                /* If we're accumulating a decimal number and the number 
-                 * is >= 2^53, then the result from the repeated multiply-add 
-                 * above may be inaccurate.  Call Java to get the correct 
+                /* If we're accumulating a decimal number and the number
+                 * is >= 2^53, then the result from the repeated multiply-add
+                 * above may be inaccurate.  Call Java to get the correct
                  * answer.
                  */
                 try {
@@ -191,28 +191,28 @@ public class ScriptRuntime {
                 } catch (NumberFormatException nfe) {
                     return NaN;
                 }
-            } else if (radix == 2 || radix == 4 || radix == 8 || 
-                       radix == 16 || radix == 32) 
+            } else if (radix == 2 || radix == 4 || radix == 8 ||
+                       radix == 16 || radix == 32)
             {
                 /* The number may also be inaccurate for one of these bases.
-                 * This happens if the addition in value*radix + digit causes 
-                 * a round-down to an even least significant mantissa bit 
-                 * when the first dropped bit is a one.  If any of the 
-                 * following digits in the number (which haven't been added 
-                 * in yet) are nonzero then the correct action would have  
-                 * been to round up instead of down.  An example of this 
-                 * occurs when reading the number 0x1000000000000081, which 
+                 * This happens if the addition in value*radix + digit causes
+                 * a round-down to an even least significant mantissa bit
+                 * when the first dropped bit is a one.  If any of the
+                 * following digits in the number (which haven't been added
+                 * in yet) are nonzero then the correct action would have
+                 * been to round up instead of down.  An example of this
+                 * occurs when reading the number 0x1000000000000081, which
                  * rounds to 0x1000000000000000 instead of 0x1000000000000100.
                  */
                 BinaryDigitReader bdr = new BinaryDigitReader(radix, s, start, end);
                 int bit;
                 sum = 0.0;
-    
+
                 /* Skip leading zeros. */
                 do {
                     bit = bdr.getNextBinaryDigit();
                 } while (bit == 0);
-    
+
                 if (bit == 1) {
                     /* Gather the 53 significant bits (including the leading 1) */
                     sum = 1.0;
@@ -228,7 +228,7 @@ public class ScriptRuntime {
                         double factor = 2.0;
                         int sticky = 0;  /* sticky is 1 if any bit beyond the 54th is 1 */
                         int bit3;
-    
+
                         while ((bit3 = bdr.getNextBinaryDigit()) >= 0) {
                             sticky |= bit3;
                             factor *= 2;
@@ -293,7 +293,7 @@ public class ScriptRuntime {
             return NaN;
         }
         // A non-hexadecimal, non-infinity number:
-        // just try a normal floating point conversion 
+        // just try a normal floating point conversion
         String sub = s.substring(start, end+1);
         if (MSJVM_BUG_WORKAROUNDS) {
             // The MS JVM will accept non-conformant strings
@@ -301,7 +301,7 @@ public class ScriptRuntime {
             // as it should.
             for (int i=sub.length()-1; i >= 0; i--) {
                 char c = sub.charAt(i);
-                if (('0' <= c && c <= '9') || c == '.' || 
+                if (('0' <= c && c <= '9') || c == '.' ||
                     c == 'e' || c == 'E'  ||
                     c == '+' || c == '-')
                     continue;
@@ -314,7 +314,7 @@ public class ScriptRuntime {
             return NaN;
         }
     }
-    
+
     /**
      * Helper function for builtin objects that use the varargs form.
      * ECMA function formal arguments are undefined if not supplied;
@@ -337,7 +337,7 @@ public class ScriptRuntime {
 
         return result;
     }
-    
+
     /* Work around Microsoft Java VM bugs. */
     private final static boolean MSJVM_BUG_WORKAROUNDS = true;
 
@@ -437,7 +437,7 @@ public class ScriptRuntime {
         }
 
         if (base != 10) {
-            /* Monkey see, Rhino do */ 
+            /* Monkey see, Rhino do */
             if (d < 0)
                 return "-" + Long.toString( ((long)-d) & 0xFFFFFFFFL, base);
             else
@@ -543,7 +543,7 @@ public class ScriptRuntime {
         return toObject(scope, val, null);
     }
 
-    public static Scriptable toObject(Scriptable scope, Object val, 
+    public static Scriptable toObject(Scriptable scope, Object val,
                                       Class staticClass)
     {
         if (val == null) {
@@ -581,7 +581,7 @@ public class ScriptRuntime {
         return result;
     }
 
-    public static Scriptable newObject(Context cx, Scriptable scope, 
+    public static Scriptable newObject(Context cx, Scriptable scope,
                                        String constructorName, Object[] args)
     {
         Exception re = null;
@@ -766,7 +766,7 @@ public class ScriptRuntime {
             start = toObject(scope, obj);
         }
         if (start == null || start == Undefined.instance) {
-            String msg = start == null ? "msg.null.to.object" 
+            String msg = start == null ? "msg.null.to.object"
                                        : "msg.undefined";
             throw NativeGlobal.constructError(
                         Context.getContext(), "ConversionError",
@@ -777,12 +777,12 @@ public class ScriptRuntime {
         do {
             Object result = m.get(id, start);
             if (result != Scriptable.NOT_FOUND)
-                return result;            
+                return result;
             m = m.getPrototype();
         } while (m != null);
         return Undefined.instance;
     }
-    
+
     public static Object getTopLevelProp(Scriptable scope, String id) {
         Scriptable s = ScriptableObject.getTopLevelScope(scope);
         Object v;
@@ -795,7 +795,7 @@ public class ScriptRuntime {
         return v;
     }
 
-    
+
 
 /***********************************************************************/
 
@@ -814,7 +814,7 @@ public class ScriptRuntime {
         }
         return s.getPrototype();
     }
-  
+
     public static Scriptable getParent(Object obj) {
         Scriptable s;
         try {
@@ -932,17 +932,17 @@ public class ScriptRuntime {
     // '5' here since it's less common than 0, 1, etc.
     private static final int NO_INDEX = 5;
     private static final char NO_INDEX_CHAR = '5';
-    
+
     // The length of the decimal string representation of Integer.MAX_VALUE.
-    private static final int MAX_VALUE_LENGTH = 
+    private static final int MAX_VALUE_LENGTH =
         Integer.toString(Integer.MAX_VALUE).length();
 
     private static int indexFromString(String str) {
         /* It must be a string. */
         int len = str.length();
         char c;
-        if (len > 0 && '0' <= (c = str.charAt(0)) && c <= '9' && 
-            len <= MAX_VALUE_LENGTH) 
+        if (len > 0 && '0' <= (c = str.charAt(0)) && c <= '9' &&
+            len <= MAX_VALUE_LENGTH)
         {
     	    int index = c - '0';
             int oldIndex = 0;
@@ -959,7 +959,7 @@ public class ScriptRuntime {
              */
             if (i == len &&
                 (oldIndex < (Integer.MAX_VALUE / 10) ||
-                 (oldIndex == (Integer.MAX_VALUE / 10) && 
+                 (oldIndex == (Integer.MAX_VALUE / 10) &&
                   c < (Integer.MAX_VALUE % 10))))
             {
                 return index;
@@ -967,7 +967,7 @@ public class ScriptRuntime {
         }
         return NO_INDEX;
     }
-    
+
     static String getStringId(Object id) {
         if (id instanceof Number) {
             double d = ((Number) id).doubleValue();
@@ -1279,7 +1279,7 @@ public class ScriptRuntime {
             Object[] errorArgs = { toString(fun) };
             throw NativeGlobal.constructError(
                         Context.getContext(), "TypeError",
-                        ScriptRuntime.getMessage("msg.isnt.function", 
+                        ScriptRuntime.getMessage("msg.isnt.function",
                                                  errorArgs),
                         scope);
         }
@@ -1293,7 +1293,7 @@ public class ScriptRuntime {
         return function.call(cx, function.getParentScope(), thisObj, args);
     }
 
-    private static Object callOrNewSpecial(Context cx, Scriptable scope, 
+    private static Object callOrNewSpecial(Context cx, Scriptable scope,
                                            Object fun, Object jsThis, Object thisArg,
                                            Object[] args, boolean isCall,
                                            String filename, int lineNumber)
@@ -1305,13 +1305,13 @@ public class ScriptRuntime {
             Class cl = m.getDeclaringClass();
             String name = m.getName();
             if (name.equals("eval") && cl == NativeGlobal.class)
-                return NativeGlobal.evalSpecial(cx, scope, thisArg, args, 
+                return NativeGlobal.evalSpecial(cx, scope, thisArg, args,
                                                 filename, lineNumber);
             if (name.equals("With") && cl == NativeWith.class)
                 return NativeWith.newWithSpecial(cx, args, fo, !isCall);
             if (name.equals("jsFunction_exec") && cl == NativeScript.class)
                 return ((NativeScript)jsThis).exec(cx, ScriptableObject.getTopLevelScope(scope));
-            if (name.equals("exec") 
+            if (name.equals("exec")
                         && (cx.getRegExpProxy() != null)
                         && (cx.getRegExpProxy().isRegExp(jsThis)))
                 return call(cx, fun, jsThis, args, scope);
@@ -1319,24 +1319,24 @@ public class ScriptRuntime {
         else    // could've been <java>.XXX.exec() that was re-directed here
             if (fun instanceof NativeJavaMethod)
                 return call(cx, fun, jsThis, args, scope);
-                
+
         if (isCall)
             return call(cx, fun, thisArg, args, scope);
         return newObject(cx, fun, args, scope);
     }
-    
-    public static Object callSpecial(Context cx, Object fun, 
-                                     Object thisArg, Object[] args, 
+
+    public static Object callSpecial(Context cx, Object fun,
+                                     Object thisArg, Object[] args,
                                      Scriptable enclosingThisArg,
-                                     Scriptable scope, String filename, 
+                                     Scriptable scope, String filename,
                                      int lineNumber)
         throws JavaScriptException
     {
-        return callOrNewSpecial(cx, scope, fun, thisArg, 
+        return callOrNewSpecial(cx, scope, fun, thisArg,
                                 enclosingThisArg, args, true,
                                 filename, lineNumber);
     }
-    
+
     /**
      * Operator new.
      *
@@ -1363,11 +1363,11 @@ public class ScriptRuntime {
                     scope);
     }
 
-    public static Scriptable newObjectSpecial(Context cx, Object fun, 
+    public static Scriptable newObjectSpecial(Context cx, Object fun,
                                               Object[] args, Scriptable scope)
         throws JavaScriptException
     {
-        return (Scriptable) callOrNewSpecial(cx, scope, fun, null, null, args, 
+        return (Scriptable) callOrNewSpecial(cx, scope, fun, null, null, args,
                                              false, null, -1);
     }
 
@@ -1501,7 +1501,7 @@ public class ScriptRuntime {
         return Undefined.instance;
     }
 
-    public static Object postIncrementElem(Object obj, 
+    public static Object postIncrementElem(Object obj,
                                             Object index, Scriptable scope) {
         Object oldValue = getElem(obj, index, scope);
         if (oldValue == Undefined.instance)
@@ -1512,7 +1512,7 @@ public class ScriptRuntime {
         return new Double(resultValue);
     }
 
-    public static Object postDecrementElem(Object obj, 
+    public static Object postDecrementElem(Object obj,
                                             Object index, Scriptable scope) {
         Object oldValue = getElem(obj, index, scope);
         if (oldValue == Undefined.instance)
@@ -1643,12 +1643,12 @@ public class ScriptRuntime {
                 if (typeX == StringClass || typeX == BooleanClass)
                     return xCopy.equals(yCopy);                                 // !!! JIT bug in Cafe 2.1
                 if (typeX == ScriptableClass) {
-                    if (x == y) 
+                    if (x == y)
                         return true;
-                    if (x instanceof NativeJavaObject && 
+                    if (x instanceof NativeJavaObject &&
                         y instanceof NativeJavaObject)
                     {
-                        return ((NativeJavaObject) x).unwrap() == 
+                        return ((NativeJavaObject) x).unwrap() ==
                                ((NativeJavaObject) y).unwrap();
                     }
                     return false;
@@ -1723,10 +1723,10 @@ public class ScriptRuntime {
             return ((Number) x).doubleValue() ==
                    ((Number) y).doubleValue();
         if (type == ScriptableClass) {
-            if (x == y) 
+            if (x == y)
                 return true;
             if (x instanceof NativeJavaObject && y instanceof NativeJavaObject)
-                return ((NativeJavaObject) x).unwrap() == 
+                return ((NativeJavaObject) x).unwrap() ==
                        ((NativeJavaObject) y).unwrap();
             return false;
         }
@@ -1766,7 +1766,7 @@ public class ScriptRuntime {
         // for primitive values on LHS, return false
         // XXX we may want to change this so that
         // 5 instanceof Number == true
-        if (! (a instanceof Scriptable))	
+        if (! (a instanceof Scriptable))
             return false;
 
         return ((Scriptable)b).hasInstance((Scriptable)a);
@@ -1879,7 +1879,7 @@ public class ScriptRuntime {
     // ------------------
     // Statements
     // ------------------
-    
+
     public static void main(String scriptClassName, String[] args)
         throws JavaScriptException
     {
@@ -1908,7 +1908,7 @@ public class ScriptRuntime {
         global.put("arguments", global, argsObj);
 
         try {
-            Class cl = Class.forName(scriptClassName);
+            Class cl = loadClassName(scriptClassName);
             Script script = (Script) cl.newInstance();
             script.exec(cx, global);
             return;
@@ -1924,11 +1924,11 @@ public class ScriptRuntime {
         }
         throw new RuntimeException("Error creating script object");
     }
-    
+
     public static Scriptable initScript(Context cx, Scriptable scope,
-                                        NativeFunction funObj, 
-                                        Scriptable thisObj, 
-                                        boolean fromEvalCode) 
+                                        NativeFunction funObj,
+                                        Scriptable thisObj,
+                                        boolean fromEvalCode)
     {
         String[] names = funObj.names;
         if (names != null) {
@@ -1944,29 +1944,29 @@ public class ScriptRuntime {
                 // oh well, we tried.
                 so = null;
             }
-            
+
             for (int i=funObj.names.length-1; i > 0; i--) {
                 String name = funObj.names[i];
                 // Don't overwrite existing def if already defined in object
                 // or prototypes of object.
                 if (!hasProp(scope, name)) {
                     if (so != null && !fromEvalCode)
-                        so.defineProperty(name, Undefined.instance, 
+                        so.defineProperty(name, Undefined.instance,
                                           ScriptableObject.PERMANENT);
                     else
                         scope.put(name, scope, Undefined.instance);
                 }
             }
         }
-        
+
         if (cx.getDebugLevel() > 0) {
             // need an activation to store debug information.
             new NativeCall(cx, scope, funObj, thisObj);
         }
-        
+
         return scope;
     }
-    
+
     public static Scriptable runScript(Script script) {
         Context cx = Context.enter();
         Scriptable global = cx.initStandardObjects(new ImporterTopLevel());
@@ -1978,7 +1978,7 @@ public class ScriptRuntime {
         Context.exit();
         return global;
     }
-    
+
     public static void setAdapterProto(Scriptable obj, Object adapter) {
         Scriptable oldProto = obj.getPrototype();
         Scriptable scope = ScriptableObject.getTopLevelScope(obj);
@@ -1986,10 +1986,10 @@ public class ScriptRuntime {
         obj.setPrototype(wrapped);
         wrapped.setPrototype(oldProto);
     }
-    
+
     public static Scriptable initVarObj(Context cx, Scriptable scope,
-                                        NativeFunction funObj, 
-                                        Scriptable thisObj, Object[] args) 
+                                        NativeFunction funObj,
+                                        Scriptable thisObj, Object[] args)
     {
         NativeCall result = new NativeCall(cx, scope, funObj, thisObj, args);
         String[] names = funObj.names;
@@ -2001,7 +2001,7 @@ public class ScriptRuntime {
         }
         return result;
     }
-    
+
     public static void popActivation(Context cx) {
         NativeCall current = cx.currentActivation;
         if (current != null) {
@@ -2034,7 +2034,7 @@ public class ScriptRuntime {
         return fn;
     }
 
-    public static NativeFunction createFunctionObject(Scriptable scope, 
+    public static NativeFunction createFunctionObject(Scriptable scope,
                                                       Class functionClass,
                                                       Context cx)
     {
@@ -2065,14 +2065,14 @@ public class ScriptRuntime {
         if (fnName != null && fnName.length() != 0 && !fnName.equals("anonymous"))
             setName(scope, result, scope, fnName);
 
-        return result;
+         return result;
     }
-    
+
     static void checkDeprecated(Context cx, String name) {
         int version = cx.getLanguageVersion();
         if (version >= Context.VERSION_1_4 || version == Context.VERSION_DEFAULT) {
             Object[] errArgs = { name };
-            String msg = getMessage("msg.deprec.ctor", 
+            String msg = getMessage("msg.deprec.ctor",
                                             errArgs);
             if (version == Context.VERSION_DEFAULT)
                 Context.reportWarning(msg);
@@ -2084,26 +2084,62 @@ public class ScriptRuntime {
     public static String getMessage(String messageId, Object[] arguments) {
         return Context.getMessage(messageId, arguments);
     }
-    
+
     public static RegExpProxy getRegExpProxy(Context cx) {
         return cx.getRegExpProxy();
     }
-    
+
     public static NativeCall getCurrentActivation(Context cx) {
         return cx.currentActivation;
     }
-    
-    public static void setCurrentActivation(Context cx, 
-                                            NativeCall activation) 
+
+    public static void setCurrentActivation(Context cx,
+                                            NativeCall activation)
     {
         cx.currentActivation = activation;
     }
-            
+
+    private static Method getContextClassLoaderMethod;
+    static {
+        try {
+            // We'd like to use "getContextClassLoader", but 
+            // that's only available on Java2. 
+            getContextClassLoaderMethod = 
+                Thread.class.getDeclaredMethod("getContextClassLoader", 
+                                               new Class[0]);
+        } catch (NoSuchMethodException e) {
+            // ignore exceptions; we'll use Class.forName instead.
+        } catch (SecurityException e) {
+            // ignore exceptions; we'll use Class.forName instead.
+        }
+    }
+        
+    public static Class loadClassName(String className) 
+        throws ClassNotFoundException
+    {
+        try {
+            if (getContextClassLoaderMethod != null) {
+                ClassLoader cl = (ClassLoader) 
+                                  getContextClassLoaderMethod.invoke(
+                                    Thread.currentThread(), 
+                                    new Object[0]);
+                return cl.loadClass(className);
+            }
+        } catch (SecurityException e) {
+            // fall through...
+        } catch (IllegalAccessException e) {
+            // fall through...
+        } catch (InvocationTargetException e) {
+            // fall through...
+        }
+        return Class.forName(className);                
+    }
+
     private static boolean hasProp(Scriptable start, String name) {
         Scriptable m = start;
         do {
             if (m.has(name, start))
-                return true;            
+                return true;
             m = m.getPrototype();
         } while (m != null);
         return false;
@@ -2116,7 +2152,7 @@ public class ScriptRuntime {
     }
 
     static public Object[] emptyArgs = new Object[0];
-    
+
 }
 
 
@@ -2190,7 +2226,7 @@ class IdEnumeration implements Enumeration {
         }
         return result;
     }
-    
+
     private Object next;
     private Scriptable obj;
     private int index;

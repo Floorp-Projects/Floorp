@@ -143,11 +143,16 @@ public class NativeJavaPackage extends ScriptableObject {
     }
 
     public void put(int index, Scriptable start, Object value) {
-        // Can't add properties to Java packages.  Sorry.
+        throw Context.reportRuntimeError(
+            Context.getMessage("msg.pkg.int", null));
     }
 
     public Object get(String id, Scriptable start) {
         return getPkgProperty(id, start, true);
+    }
+
+    public Object get(int index, Scriptable start) {
+        return NOT_FOUND;
     }
 
     synchronized Object getPkgProperty(String name, Scriptable start,
@@ -166,7 +171,7 @@ public class NativeJavaPackage extends ScriptableObject {
         try {
             if (ss != null && !ss.visibleToScripts(newPackage))
                 throw new ClassNotFoundException();
-            Class newClass = Class.forName(newPackage);
+            Class newClass = ScriptRuntime.loadClassName(newPackage);
             newValue =  NativeJavaClass.wrap(getTopLevelScope(this), newClass);
             newValue.setParentScope(this);
             newValue.setPrototype(this.prototype);
@@ -186,10 +191,6 @@ public class NativeJavaPackage extends ScriptableObject {
             super.put(name, start, newValue);
         }
         return newValue;
-    }
-
-    public Object get(int index, Scriptable start) {
-        return NOT_FOUND;
     }
 
     public Object getDefaultValue(Class ignored) {

@@ -314,7 +314,7 @@ public final class Context {
      *         number, and date.
      */
      public String getImplementationVersion() {
-        return "JavaScript-Java 1.4 release 3 1999 04 05";
+        return "JavaScript-Java 1.5 release 1 2000 02 15";
      }
 
     /**
