@@ -6,7 +6,6 @@
 #include "msgCore.h"
 
 class MSG_Pane;
-typedef struct URL_Struct _URL_Struct;
 
 void				FE_DestroyMailCompositionContext(MWContext*) {return;}
 const char *		FE_UsersSignature() {return NULL;}
