@@ -354,6 +354,7 @@ nsImapProtocol::nsImapProtocol() :
   m_socketIsOpen = PR_FALSE;
   m_ignoreExpunges = PR_FALSE;
   m_gotFEEventCompletion = PR_FALSE;
+  m_useSecAuth = PR_FALSE;
   m_connectionStatus = 0;
   m_hostSessionList = nsnull;
   m_flagState = nsnull;
@@ -727,6 +728,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
     m_hostSessionList->GetCapabilityForHost(GetImapServerKey(), capability);
     GetServerStateParser().SetCapabilityFlag(capability);
 
+    (void) server->GetUseSecAuth(&m_useSecAuth);
     if (imapServer)
     {
       nsXPIDLCString redirectorType;
@@ -4862,7 +4864,7 @@ void nsImapProtocol::AuthLogin(const char *userName, const char *password, eIMAP
   char * currentCommand=nsnull;
   nsresult rv;
 
-  if (flag & kHasCRAMCapability)
+  if (m_useSecAuth && flag & kHasCRAMCapability)
   {
       nsresult rv;
       char *digest;
@@ -7244,10 +7246,6 @@ PRBool nsImapProtocol::TryToLogon()
         if (GetServerStateParser().GetCapabilityFlag() == kCapabilityUndefined)
           Capability();
         
-        // for now, disable CRAM auth...we currently rely on PSM being present for this to work
-        // in order to get an MD5 hash routine. I'm in the process of adding this routine to 
-        // xpcom/ds so until then I'm going to leave CRAM turned off (although it does now work!)
-
         // try to use CRAM before we fall back to plain or auth login....
         if (GetServerStateParser().GetCapabilityFlag() & kHasCRAMCapability)
         {
