@@ -232,6 +232,8 @@ private:
     // local methods
     nsresult    RealizeFont        (void);
     nsresult    CacheFontMetrics   (void);
+    // Guaranteed to return either null or a font on which |GetXftFont|
+    // returns non-null.
     nsFontXft  *FindFont           (PRUint32);
     void        SetupFCPattern     (void);
     void        DoMatch            (PRBool aMatchAll);
@@ -277,6 +279,9 @@ private:
 
     nsCAutoString        mDefaultFont;
 
+    // private to DoMatch and FindFont; this array may contain fonts
+    // for which |GetXftFont| returns null (which are not allowed outside
+    // of those two functions).
     nsVoidArray          mLoadedFonts;
 
     // Xft-related items

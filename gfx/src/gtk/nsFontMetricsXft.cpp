@@ -85,6 +85,9 @@ public:
     nsFontXft(FcPattern *aPattern, FcPattern *aFontName);
     virtual ~nsFontXft() = 0;
 
+    // Callers outside of FindFont and DoMatch (which deal directly with
+    // mLoadedFonts) do not need to call this; they can access mXftFont
+    // directly since it is guaranteed to be non-null.
     XftFont   *GetXftFont (void);
     virtual nsresult GetTextExtents32 (const FcChar32 *aString, PRUint32 aLen, 
                                        XGlyphInfo &aGlyphInfo);
@@ -486,9 +489,8 @@ nsFontMetricsXft::GetWidth(const char* aString, PRUint32 aLength,
 {
     NS_TIMELINE_MARK_FUNCTION("GetWidth");
 
-    XftFont *font = mWesternFont->GetXftFont();
-    if (!font)
-        return NS_ERROR_NOT_AVAILABLE;
+    XftFont *font = mWesternFont->mXftFont;
+    NS_ASSERTION(font, "FindFont returned a bad font");
 
     XGlyphInfo glyphInfo;
 
@@ -779,9 +781,8 @@ nsFontMetricsXft::CacheFontMetrics(void)
     // Get our font face
     FT_Face face;
     TT_OS2 *os2;
-    XftFont *xftFont = mWesternFont->GetXftFont();
-    if (!xftFont)
-        return NS_ERROR_NOT_AVAILABLE;
+    XftFont *xftFont = mWesternFont->mXftFont;
+    NS_ASSERTION(xftFont, "FindFont returned a bad font");
 
     face = XftLockFace(xftFont);
     os2 = (TT_OS2 *) FT_Get_Sfnt_Table(face, ft_sfnt_os2);
@@ -929,9 +930,13 @@ nsFontMetricsXft::FindFont(PRUint32 aChar)
         return nsnull;
     }
 
+    PRBool removeFirstFont = PR_FALSE;
     nsFontXft *font = (nsFontXft *)mLoadedFonts.ElementAt(0);
-    if (font->HasChar(aChar))
-        return font;
+    if (font->HasChar(aChar)) {
+        if (font->GetXftFont())
+            return font;
+        removeFirstFont = PR_TRUE;
+    }
 
     // We failed to find the character in the best-match font, so load
     // _all_ matching fonts if we haven't already done so.
@@ -939,12 +944,27 @@ nsFontMetricsXft::FindFont(PRUint32 aChar)
     if (mMatchType == eBestMatch)
         DoMatch(PR_TRUE);
 
+    PRInt32 i = 1;
+    if (removeFirstFont) {
+        // The first font was bad, so remove it (see below).  But do this
+        // after |DoMatch| since otherwise it will get re-added.
+        mLoadedFonts.RemoveElementAt(0);
+        i = 0;
+    }
+
     // Now check the remaining fonts
 
-    for (PRInt32 i = 1, end = mLoadedFonts.Count(); i < end; ++i) {
+    for (PRInt32 end = mLoadedFonts.Count(); i < end; ++i) {
         nsFontXft *font = (nsFontXft *)mLoadedFonts.ElementAt(i);
-        if (font->HasChar(aChar))
-            return font;
+        if (font->HasChar(aChar)) {
+            if (font->GetXftFont())
+                return font;
+            // This is a bad font, so remove it from mLoadedFonts.  This
+            // could happen if it's in fc.cache-1 but the font doesn't exist
+            // (https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=111973)
+            // or isn't readable.
+            mLoadedFonts.RemoveElementAt(i--);
+        }
     }
 
     // If we got this far, none of the fonts support this character.
@@ -1231,9 +1251,8 @@ nsFontMetricsXft::SetupMiniFont(void)
 
     FcPattern *pattern = nsnull;
     XftFont *font = nsnull;
-    XftFont *xftFont = mWesternFont->GetXftFont();
-    if (!xftFont)
-        return NS_ERROR_NOT_AVAILABLE;
+    XftFont *xftFont = mWesternFont->mXftFont;
+    NS_ASSERTION(xftFont, "FindFont returned a bad font");
 
     mMiniFontAscent = xftFont->ascent;
     mMiniFontDescent = xftFont->descent;
@@ -1927,8 +1946,7 @@ nsresult
 nsFontXft::GetTextExtents32(const FcChar32 *aString, PRUint32 aLen, 
                             XGlyphInfo &aGlyphInfo)
 {
-    if (!mXftFont && !GetXftFont())
-            return NS_ERROR_NOT_AVAILABLE;
+    NS_PRECONDITION(mXftFont, "FindFont should not return bad fonts");
 
     // NS_CONST_CAST needed for older versions of Xft
     XftTextExtents32(GDK_DISPLAY(), mXftFont,
@@ -1970,18 +1988,14 @@ nsFontXft::GetBoundingMetrics32(const FcChar32*    aString,
 PRInt16
 nsFontXft::GetMaxAscent(void)
 {
-    if (!mXftFont && !GetXftFont())
-            return 0;
-
+    NS_PRECONDITION(mXftFont, "FindFont should not return bad fonts");
     return mXftFont->ascent;
 }
 
 PRInt16
 nsFontXft::GetMaxDescent(void)
 {
-    if (!mXftFont && !GetXftFont())
-            return 0;
-
+    NS_PRECONDITION(mXftFont, "FindFont should not return bad fonts");
     return mXftFont->descent;
 }
 
@@ -1995,10 +2009,8 @@ nsFontXft::CharToGlyphIndex(FcChar32 aChar)
 nsresult
 nsFontXft::DrawStringSpec(FcChar32 *aString, PRUint32 aLen, void *aData)
 {
+    NS_PRECONDITION(mXftFont, "FindFont should not return bad fonts");
     DrawStringData *data = (DrawStringData *)aData;
-
-    if (!mXftFont && !GetXftFont())
-            return NS_ERROR_NOT_AVAILABLE;
 
     FcChar32 *pstr = aString;
     const FcChar32 *end = aString + aLen;
@@ -2058,6 +2070,8 @@ nsresult
 nsFontXftCustom::GetTextExtents32(const FcChar32 *aString, PRUint32 aLen, 
                                   XGlyphInfo &aGlyphInfo)
 {
+    NS_PRECONDITION(mXftFont, "FindFont should not return bad fonts");
+
     nsAutoFcChar32Buffer buffer;
     nsresult rv;
     PRUint32 destLen = aLen;
@@ -2070,9 +2084,6 @@ nsFontXftCustom::GetTextExtents32(const FcChar32 *aString, PRUint32 aLen,
     NS_ENSURE_SUCCESS(rv, rv);
       
     FcChar32 *str = buffer.get();
-
-    if (!mXftFont && !GetXftFont())
-            return NS_ERROR_NOT_AVAILABLE;
 
     // short cut for the common case
     if (isWide) { 
@@ -2117,6 +2128,8 @@ nsresult
 nsFontXftCustom::DrawStringSpec(FcChar32* aString, PRUint32 aLen,
                                 void* aData)
 {
+    NS_PRECONDITION(mXftFont, "FindFont should not return bad fonts");
+
     nsresult rv = NS_OK;
     nsAutoFcChar32Buffer buffer;
     PRUint32 destLen = aLen;
@@ -2125,9 +2138,6 @@ nsFontXftCustom::DrawStringSpec(FcChar32* aString, PRUint32 aLen,
     rv = ConvertUCS4ToCustom(aString, aLen, destLen, mFontInfo->mConverter, 
                              isWide, buffer);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!mXftFont && !GetXftFont())
-            return NS_ERROR_NOT_AVAILABLE;
 
     if (!isWide) {
         // For some narrow fonts(Mathematica, Symbol, and MTExtra),  
@@ -2149,8 +2159,7 @@ nsFontXftCustom::DrawStringSpec(FcChar32* aString, PRUint32 aLen,
 nsresult
 nsFontXftCustom::SetFT_FaceCharmap(void)
 {
-    if (!mXftFont && !GetXftFont())
-            return NS_ERROR_NOT_AVAILABLE;
+    NS_PRECONDITION(mXftFont, "FindFont should not return bad fonts");
 
     if (mFT_Face)
         return NS_OK;
