@@ -46,6 +46,10 @@
 #include <unistd.h>
 #endif
 
+#ifdef XP_OS2_VACPP
+#include <io.h>
+#endif
+
 #if defined(_WINDOWS) && !defined(_WIN32_WCE)
 #include <conio.h>
 #include <io.h>
@@ -82,7 +86,7 @@ static void echoOn(int fd)
 char *SEC_GetPassword(FILE *input, FILE *output, char *prompt,
 			       PRBool (*ok)(char *))
 {
-#if defined(_WINDOWS) || defined(OS2)
+#if defined(_WINDOWS)
     int isTTY = (input == stdin);
 #define echoOn(x)
 #define echoOff(x)
