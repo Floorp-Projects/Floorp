@@ -182,7 +182,8 @@
           <menuitem id="viewCommandToolbar" type="checkbox" class="menuitem-iconic"
                     label="&menuitem.view.command.toolbar.label;"
                     accesskey="&menuitem.view.command.toolbar.accesskey;"
-                    oncommand="goToggleToolbar('command-toolbar', 'viewCommandToolbar');"/>
+                    oncommand="goToggleToolbar('command-toolbar', 'viewCommandToolbar');"
+                    persist="checked"/>
           <menuseparator/>
           <menuitem type="radio" name="sort_column" id="unsorted_menuitem"
                     label="&menuitem.view.unsorted.label;" 
