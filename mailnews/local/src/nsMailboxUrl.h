@@ -23,6 +23,7 @@
 #include "nsIUrlListenerManager.h"
 #include "nsINetlibURL.h" /* this should be temporary until Network N2 project lands */
 #include "nsFileSpec.h"
+#include "nsCOMPtr.h"
 
 class nsMailboxUrl : public nsIMailboxUrl, public nsINetlibURL, public nsIMsgUriUrl
 {
@@ -99,11 +100,11 @@ public:
 protected:
 
 	// mailboxurl specific state
-	nsIStreamListener *m_mailboxParser;
-	nsIStreamListener *m_mailboxCopyHandler;
+	nsCOMPtr<nsIStreamListener> m_mailboxParser;
+	nsCOMPtr<nsIStreamListener> m_mailboxCopyHandler;
 
 	// manager of all of current url listeners....
-	nsIUrlListenerManager * m_urlListeners;
+	nsCOMPtr<nsIUrlListenerManager> m_urlListeners;
 
     /* Here's our link to the old netlib world.... */
     URL_Struct *m_URL_s;

@@ -113,8 +113,6 @@ nsMailboxUrl::nsMailboxUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
     NS_INIT_REFCNT();
 
 	// nsIMailboxUrl specific code...
-	m_mailboxParser = nsnull;	
-	m_mailboxCopyHandler = nsnull;
 	m_errorMessage = nsnull;
 
     // nsINetLibUrl specific state
@@ -136,22 +134,18 @@ nsMailboxUrl::nsMailboxUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 
 	m_runningUrl = PR_FALSE;
 
-	m_urlListeners = nsnull;
-	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsIUrlListenerManager::GetIID(), (void **) &m_urlListeners);
+	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsIUrlListenerManager::GetIID(), (void **) getter_AddRefs(m_urlListeners));
     m_container = aContainer;
     NS_IF_ADDREF(m_container);
 }
  
 nsMailboxUrl::~nsMailboxUrl()
 {
-	NS_IF_RELEASE(m_mailboxParser);
-	NS_IF_RELEASE(m_mailboxCopyHandler);
-	NS_IF_RELEASE(m_urlListeners);
-
     NS_IF_RELEASE(m_container);
 	PR_FREEIF(m_errorMessage);
 
-	if (m_filePath) {
+	if (m_filePath) 
+	{
 		delete m_filePath;
         m_filePath = nsnull;
     }
@@ -163,10 +157,6 @@ nsMailboxUrl::~nsMailboxUrl()
     PR_FREEIF(m_file);
     PR_FREEIF(m_ref);
     PR_FREEIF(m_search);
-    if (nsnull != m_URL_s) 
-	{
-//        NET_DropURLStruct(m_URL_s);
-    }
 }
   
 NS_IMPL_THREADSAFE_ADDREF(nsMailboxUrl);
@@ -230,11 +220,7 @@ nsresult nsMailboxUrl::SetMailboxParser(nsIStreamListener * aMailboxParser)
 {
 	NS_LOCK_INSTANCE();
 	if (aMailboxParser)
-	{
-		NS_IF_RELEASE(m_mailboxParser);
-		NS_ADDREF(aMailboxParser);
-		m_mailboxParser = aMailboxParser;
-	}
+		m_mailboxParser = dont_QueryInterface(aMailboxParser);
 	NS_UNLOCK_INSTANCE();
 	return NS_OK;
 }
@@ -244,8 +230,8 @@ nsresult nsMailboxUrl::GetMailboxParser(nsIStreamListener ** aConsumer)
 	NS_LOCK_INSTANCE();
 	if (aConsumer)
 	{
-		NS_IF_ADDREF(m_mailboxParser);
 		*aConsumer = m_mailboxParser;
+		NS_IF_ADDREF(*aConsumer);
 	}
 	NS_UNLOCK_INSTANCE();
 	return  NS_OK;
@@ -255,11 +241,7 @@ nsresult nsMailboxUrl::SetMailboxCopyHandler(nsIStreamListener * aMailboxCopyHan
 {
 	NS_LOCK_INSTANCE();
 	if (aMailboxCopyHandler)
-	{
-		NS_IF_RELEASE(m_mailboxCopyHandler);
-		NS_ADDREF(aMailboxCopyHandler);
-		m_mailboxCopyHandler = aMailboxCopyHandler;
-	}
+		m_mailboxCopyHandler = dont_QueryInterface(aMailboxCopyHandler);
 	NS_UNLOCK_INSTANCE();
 	return NS_OK;
 }
@@ -269,8 +251,8 @@ nsresult nsMailboxUrl::GetMailboxCopyHandler(nsIStreamListener ** aMailboxCopyHa
 	NS_LOCK_INSTANCE();
 	if (aMailboxCopyHandler)
 	{
-		NS_IF_ADDREF(m_mailboxCopyHandler);
 		*aMailboxCopyHandler = m_mailboxCopyHandler;
+		NS_IF_ADDREF(*aMailboxCopyHandler);
 	}
 	NS_UNLOCK_INSTANCE();
 	return  NS_OK;
@@ -485,7 +467,8 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
     const char* uHost = nsnull;
     const char* uFile = nsnull;
     PRUint32 uPort;
-    if (nsnull != aURL) {
+    if (nsnull != aURL) 
+	{
         nsresult rslt = aURL->GetProtocol(&uProtocol);
         if (rslt != NS_OK) return rslt;
         rslt = aURL->GetHost(&uHost);
