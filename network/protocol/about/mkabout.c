@@ -15,6 +15,7 @@
 #include "httpauth.h"
 #include "mkstream.h"
 #include "glhist.h"
+#include "shist.h"
 
 #include "abouturl.h"
 
