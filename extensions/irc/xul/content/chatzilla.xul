@@ -83,14 +83,17 @@
     
             <treecols>
               <treecol id="usercol-op" label="O"
+                persist="hidden sortDirection"
                 onclick="return onSortCol('usercol-op')"
                 resource="http://home.netscape.com/NC-irc#op" width="25"/>
               <splitter class="tree-splitter"/>
               <treecol id="usercol-voice" label="V"
+                persist="hidden sortDirection"
                 onclick="return onSortCol('usercol-voice')"
                 resource="http://home.netscape.com/NC-irc#voice" width="25"/>
               <splitter class="tree-splitter"/>
               <treecol id="usercol-nick" label="Nick" flex="1"
+                persist="sortDirection" ignoreincolumnpicker="true"
                 onclick="return onSortCol('usercol-nick')"
                 resource="http://home.netscape.com/NC-irc#nick"/>
             </treecols>

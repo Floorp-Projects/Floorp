@@ -279,8 +279,6 @@ function initStatic()
     client.statusElement = document.getElementById ("status-text");
     client.defaultStatus = getMsg ("defaultStatus");
     
-    onSortCol ("usercol-nick");
-
     client.display (getMsg("welcome"), "HELLO");
     setCurrentObject (client);
 
