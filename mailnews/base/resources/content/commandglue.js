@@ -415,18 +415,27 @@ function LoadSelectionIntoMessagePane()
 	if ( selArray && (selArray.length == 1) )
 		LoadMessage(selArray[0]);
 	else
-		ClearMessagePane();
+  {
+    // don't necessarily clear the message pane...if you uncomment this,
+    // you'll be introducing a large inefficiency when deleting messages...as deleting
+    // a msg brings us here twice...so we end up clearing the message pane twice for no
+    // good reason...
+		// ClearMessagePane();
+  }
 }
 
 function FolderPaneSelectionChange()
 {
 	var tree = GetFolderTree();
-	
 	if(tree)
 	{
 		var selArray = tree.selectedItems;
 		if ( selArray && (selArray.length == 1) )
+    {
 			ChangeFolderByDOMNode(selArray[0]);
+      // explicitly force the message pane to get cleared when we switch folders
+      ClearMessagePane(); 
+    }
 		else
 		{
 			var threadTree = GetThreadTree();
