@@ -276,3 +276,35 @@ XFE_SimplePopupMenu::PushButtonActivate(Widget w, XtPointer userData)
 {
     ; // Do nothing for now.
 }
+
+
+//////////////////////////////////////////////////////////////////////////
+//
+//  RDFPopupMenu
+//
+//////////////////////////////////////////////////////////////////////////
+XFE_RDFPopupMenu::XFE_RDFPopupMenu(String name, Widget parent,
+                                   HT_View view, 
+                                   Boolean isWorkspace, Boolean isBackground)
+    : XFE_SimplePopupMenu(name, parent)
+{
+    m_pane = HT_GetPane(view);
+
+    HT_Cursor cursor = HT_NewContextualMenuCursor(view, 
+                                                  isWorkspace, isBackground);
+    HT_MenuCmd command;
+    while(HT_NextContextMenuItem(cursor, &command))
+    {
+        if (command == HT_CMD_SEPARATOR)
+            addSeparator();
+        else
+            addPushButton(HT_GetMenuCmdName(command), (XtPointer)command,
+                          HT_IsMenuCmdEnabled(m_pane, command));
+    }
+}
+
+void
+XFE_RDFPopupMenu::PushButtonActivate(Widget /* w */, XtPointer userData)
+{
+    HT_DoMenuCmd(m_pane, (HT_MenuCmd)(int)userData);
+}

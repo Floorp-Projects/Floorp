@@ -32,20 +32,6 @@
 #include "IconGroup.h"
 #include "htrdf.h"
 #include "NavCenterView.h"
-#include "PopupMenu.h"
-
-class XFE_RDFPopupMenu : public XFE_SimplePopupMenu
-{
-public:
-  XFE_RDFPopupMenu(String name, Widget parent,
-                   HT_View view, 
-                   Boolean isWorkspace, Boolean isBackground);
-
-  void PushButtonActivate(Widget w, XtPointer userData);
-
-protected:
-  HT_Pane m_pane;
-};
 
 //////////////////////////////////////////////////////////////////////////
 class XFE_ColumnData
@@ -58,6 +44,7 @@ public:
   uint32 token_type;
 };
 //////////////////////////////////////////////////////////////////////////
+class XFE_RDFPopupMenu;
 
 class XFE_RDFTreeView : public XFE_View,
                         public XFE_RDFBase

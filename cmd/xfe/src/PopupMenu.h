@@ -27,6 +27,8 @@
 
 #include "Menu.h"
 
+#include "htrdf.h"      // For HT_View for XFE_RDFPopupMenu
+
 class XFE_PopupMenuBase
 {
 public:
@@ -75,4 +77,18 @@ public:
 
   virtual void PushButtonActivate(Widget w, XtPointer userData);
 };
+
+class XFE_RDFPopupMenu : public XFE_SimplePopupMenu
+{
+public:
+  XFE_RDFPopupMenu(String name, Widget parent,
+                   HT_View view, 
+                   Boolean isWorkspace, Boolean isBackground);
+
+  void PushButtonActivate(Widget w, XtPointer userData);
+
+protected:
+  HT_Pane m_pane;
+};
+
 #endif /* _xfe_popupmenu_h */
