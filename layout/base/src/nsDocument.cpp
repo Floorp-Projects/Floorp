@@ -404,7 +404,7 @@ nsIStyleSheet* nsDocument::GetStyleSheetAt(PRInt32 aIndex)
 
 void nsDocument::AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet)
 {
-  aSet->AppendDocStyleSheet(aSheet);
+  aSet->InsertDocStyleSheetBefore(aSheet, nsnull);  // put it first
 }
 
 void nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
