@@ -1,0 +1,16 @@
+# target: rdf.shlb
+mozilla/rdf/src/nsBookmarkDataSource.cpp
+mozilla/rdf/src/nsEmptyCursor.cpp
+mozilla/rdf/src/nsMemoryDataSource.cpp
+mozilla/rdf/src/nsRDFContentSink.cpp
+mozilla/rdf/src/nsRDFDocument.cpp
+mozilla/rdf/src/nsRDFDocumentContentSink.cpp
+mozilla/rdf/src/nsRDFElement.cpp
+mozilla/rdf/src/nsRDFFactory.cpp
+mozilla/rdf/src/nsRDFHTMLDocument.cpp
+mozilla/rdf/src/nsRDFRegistryImpl.cpp
+mozilla/rdf/src/nsRDFResourceManager.cpp
+mozilla/rdf/src/nsRDFSimpleContentSink.cpp
+mozilla/rdf/src/nsRDFTreeDocument.cpp
+mozilla/rdf/src/nsSimpleDataBase.cpp
+mozilla/rdf/src/rdfutil.cpp

@@ -1,0 +1,10 @@
+# target: xpcomDebug.shlb
+mozilla/modules/plugin/src/nsMalloc.cpp
+mozilla/xpcom/src/nsDebug.cpp
+mozilla/xpcom/src/nsHashtable.cpp
+mozilla/xpcom/src/nsID.cpp
+mozilla/xpcom/src/nsRepository.cpp
+mozilla/xpcom/src/nsServiceManager.cpp
+mozilla/xpcom/src/nsSupportsArray.cpp
+mozilla/xpcom/src/nsTraceRefcnt.cpp
+mozilla/xpcom/src/plvector.c
