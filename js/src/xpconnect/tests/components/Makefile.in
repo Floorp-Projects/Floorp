@@ -50,6 +50,13 @@ CPPSRCS		= \
 		xpctest_overloaded.cpp \
 		xpctest_string.cpp \
 		xpctest_module.cpp \
+		xpctest_attributes.cpp \
+		xpctest_calljs.cpp \
+		xpctest_const.cpp \
+		xpctest_in.cpp \
+		xpctest_inout.cpp \
+		xpctest_multiple.cpp \
+		xpctest_out.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
