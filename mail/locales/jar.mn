@@ -182,30 +182,13 @@
   locale/@AB_CD@/communicator/contentAreaCommands.dtd        (@AB_CD@/chrome/communicator/contentAreaCommands.dtd)
   locale/@AB_CD@/communicator/contentAreaCommands.properties (@AB_CD@/chrome/communicator/contentAreaCommands.properties)
   locale/@AB_CD@/communicator/utilityOverlay.properties      (@AB_CD@/chrome/communicator/utilityOverlay.properties)
-+ locale/@AB_CD@/communicator/utilityOverlay.dtd             (@AB_CD@/chrome/communicator/utilityOverlay.dtd)
+*+ locale/@AB_CD@/communicator/utilityOverlay.dtd             (@AB_CD@/chrome/communicator/utilityOverlay.dtd)
   locale/@AB_CD@/communicator/wallet/wallet.properties       (@AB_CD@/chrome/communicator/wallet/wallet.properties)
   locale/@AB_CD@/communicator/wallet/SignonViewer.properties (@AB_CD@/chrome/communicator/wallet/SignonViewer.properties)
   locale/@AB_CD@/communicator/wallet/SignonViewer.dtd        (@AB_CD@/chrome/communicator/wallet/SignonViewer.dtd)
-* locale/@AB_CD@/communicator-platform/contents.rdf                         (generic/chrome/communicator-platform/contents.rdf)
-  locale/@AB_CD@/communicator-platform/win/pref/platformPrefOverlay.dtd     (@AB_CD@/chrome/communicator-platform/win/pref/platformPrefOverlay.dtd)
-  locale/@AB_CD@/communicator-platform/mac/pref/platformPrefOverlay.dtd     (@AB_CD@/chrome/communicator-platform/mac/pref/platformPrefOverlay.dtd)  
-  locale/@AB_CD@/communicator-platform/unix/pref/platformPrefOverlay.dtd    (@AB_CD@/chrome/communicator-platform/unix/pref/platformPrefOverlay.dtd)
 * locale/@AB_CD@/navigator/contents.rdf         (generic/chrome/navigator/contents.rdf)
   locale/@AB_CD@/navigator/navigator.properties (@AB_CD@/chrome/navigator/navigator.properties)
 * locale/@AB_CD@/navigator-platform/contents.rdf                        (generic/chrome/navigator-platform/contents.rdf)
-#ifdef XP_WIN
-  locale/@AB_CD@/communicator-platform/platformCommunicatorOverlay.dtd  (@AB_CD@/chrome/communicator-platform/win/platformCommunicatorOverlay.dtd)
-#else
-#ifdef XP_OS2
-  locale/@AB_CD@/communicator-platform/platformCommunicatorOverlay.dtd  (@AB_CD@/chrome/communicator-platform/win/platformCommunicatorOverlay.dtd)
-#else
-#ifdef XP_MACOSX
-  locale/@AB_CD@/communicator-platform/platformCommunicatorOverlay.dtd  (@AB_CD@/chrome/communicator-platform/mac/platformCommunicatorOverlay.dtd)
-#else
-  locale/@AB_CD@/communicator-platform/platformCommunicatorOverlay.dtd  (@AB_CD@/chrome/communicator-platform/unix/platformCommunicatorOverlay.dtd)
-#endif
-#endif
-#endif
   locale/@AB_CD@/navigator-platform/win/navigator.properties            (@AB_CD@/chrome/navigator-platform/win/navigator.properties)
   locale/@AB_CD@/navigator-platform/mac/platformNavigationBindings.dtd  (@AB_CD@/chrome/navigator-platform/mac/platformNavigationBindings.dtd)
   locale/@AB_CD@/navigator-platform/mac/navigator.properties            (@AB_CD@/chrome/navigator-platform/mac/navigator.properties)

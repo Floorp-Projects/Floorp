@@ -7,3 +7,4 @@ messenger.jar:
 
 comm.jar:
 +   content/editor/EdSpellCheck.js                                 (content/EdSpellCheck.js) 
+*+  content/editor/editorOverlay.xul                               (content/editorOverlay.xul) 

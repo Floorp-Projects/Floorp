@@ -64,10 +64,6 @@ locale/en-US/global-region,                                     en-US/locale/en-
 locale/en-US/communicator,                                      en-US/locale/en-US/communicator
 locale/en-US/communicator/pref,                                 en-US/locale/en-US/communicator/pref
 locale/en-US/communicator/wallet,                               en-US/locale/en-US/communicator/wallet
-locale/en-US/communicator-platform,                             en-US/locale/en-US/communicator-platform
-locale/en-US/communicator-platform/win,                         en-US/locale/en-US/communicator-platform/win
-locale/en-US/communicator-platform/mac,                         en-US/locale/en-US/communicator-platform/mac
-locale/en-US/communicator-platform/unix,                        en-US/locale/en-US/communicator-platform/unix
 
 #################################################################################################
 # editor

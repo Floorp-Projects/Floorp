@@ -8,17 +8,6 @@
 <!ENTITY fileMenu.accesskey				"f">
 <!ENTITY newMenu.label						"New">
 <!ENTITY newMenu.accesskey					"N">
-<!ENTITY newBlankPageCmd.label "Composer Page">
-<!ENTITY newBlankPageCmd.accesskey "P" >
-<!ENTITY newBlankPageCmd.key "n" >
-<!ENTITY newPageFromTemplateCmd.label "Page Using Template">
-<!ENTITY newPageFromTemplateCmd.accesskey "t">
-<!ENTITY newPageFromDraftCmd.label "Page Using Draft">
-<!ENTITY newPageFromDraftCmd.accesskey "d">
-<!-- LOCALIZATION NOTE  (newNavigatorCmd.label): Do NOT translate "Navigator" -->
-<!ENTITY newNavigatorCmd.label				"Navigator Window">
-<!ENTITY newNavigatorCmd.key				"N">
-<!ENTITY newNavigatorCmd.accesskey			"N">
 
 <!ENTITY editMenu.label					"Edit"> 
 <!ENTITY editMenu.accesskey				"e"> 
@@ -50,8 +39,6 @@
 
 <!ENTITY findTypeTextCmd.label "Find Text As You Type">
 <!ENTITY findTypeTextCmd.accesskey "x">
-<!ENTITY findTypeLinksCmd.label "Find Links As You Type">
-<!ENTITY findTypeLinksCmd.accesskey "k">
 
 <!ENTITY viewMenu.label					"View"> 
 <!ENTITY viewMenu.accesskey				"v"> 
@@ -59,19 +46,6 @@
 <!ENTITY viewToolbarsMenu.accesskey			"T"> 
 <!ENTITY showTaskbarCmd.label					"Status Bar">  
 <!ENTITY showTaskbarCmd.accesskey				"S"> 
-
-<!ENTITY helpMenu.label					"Help"> 
-<!ENTITY helpMenu.accesskey				"h"> 
-
-<!-- NOTE (whatNewCmd.label): This is not used in Mozilla but is used in Netscape -->
-<!ENTITY whatNewCmd.label				"What's New">  
-
-<!ENTITY releaseCmd.label				"Release Notes">
-<!ENTITY releaseCmd.accesskey				"r">
-<!ENTITY aboutCmd.label					"About &brandShortName;">
-<!ENTITY aboutCmd.accesskey				"A">
-<!ENTITY aboutCommPluginsCmd.label			"About Plug-ins">
-<!ENTITY aboutCommPluginsCmd.accesskey			"p">
 
 <!ENTITY direct.label                                   "Online (proxy: none)">
 <!ENTITY direct.accesskey                               "n">
@@ -82,3 +56,18 @@
 
 <!ENTITY proxy.label                                    "Proxy Configuration...">
 <!ENTITY proxy.accesskey                                "C">
+
+<!ENTITY findTypeTextCmd.key        "/">
+<!ENTITY findTypeLinksCmd.key       "'">
+
+<!ENTITY closeCmd.label			"Close">  
+<!ENTITY closeCmd.key			"W">  
+<!ENTITY closeCmd.accesskey		"c">
+
+<!ENTITY quitApplicationCmd.label	"Exit"> 
+<!ENTITY quitApplicationCmd.key		"Q"> 
+<!ENTITY quitApplicationCmd.accesskey	"x">
+
+<!ENTITY quitApplicationCmdUnix.label	"Quit"> 
+<!ENTITY quitApplicationCmdUnix.accesskey	"q">
+
