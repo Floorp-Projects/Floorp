@@ -66,7 +66,8 @@
         E_NO_PERMS      = -626,     /* don't have rwx perms on selected dir */
         E_NO_DISK_SPACE = -627,     /* not eough disk space to install */
         E_CRC_FAILED    = -628,     /* CRC failed */
-        E_USAGE_SHOWN   = -629      /* showed the usage message */
+        E_USAGE_SHOWN   = -629,     /* showed the usage message */
+        E_DIR_NOT_EMPTY = -630      /* destination dir wasn't empty */
     };
 
 #endif /* _XI_ERRORS_H_ */

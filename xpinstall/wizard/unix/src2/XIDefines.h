@@ -55,6 +55,9 @@
 #define GENERAL             "General"
 #define DEFAULT_LOCATION    "Default Location" 
 
+#define CLEAN_UPGRADE       "Cleanup On Upgrade"
+#define OBJECT_IGNOREd      "ObjectToIgnore%d"
+
 #define DLG_WELCOME         "Dialog Welcome"
 #define SHOW_DLG            "Show Dialog"
 #define TITLE               "Title"
@@ -67,7 +70,6 @@
 #define MSG0                "Message0"
 #define MSG1                "Message1"
 #define MSG2                "Message2"
-#define SETUP_TYPE          "Setup Type"
 #define SETUP_TYPEd         "Setup Type%d"
 #define DESC_SHORT          "Description Short"
 #define DESC_LONG           "Description Long"

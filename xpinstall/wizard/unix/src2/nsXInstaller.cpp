@@ -482,10 +482,11 @@ IsErrFatal(int aErr)
     /* non-fatal errors */
     switch (aErr)
     {
-        case -620:
-        case -621:
-        case -624:
-        case -625:
+        case E_XPI_FAIL:
+        case E_INSTALL:
+        case E_MKDIR_FAIL:
+        case E_OLD_INST:
+        case E_DIR_NOT_EMPTY:
             bFatal = FALSE;
         default:
             break; 
