@@ -42,7 +42,7 @@ else
 fi
 
 # Use DEPTH in the Makefile.in to determine the depth
-depth=`grep -w DEPTH ${MAKEFILE}  | grep -e "\.\." | awk -F"=" '{ print $2; }'`
+depth=`grep -w DEPTH ${MAKEFILE}  | grep "\.\." | awk -F"=" '{ print $2; }'`
 cwd=`pwd`
 
 # Determine the depth count
