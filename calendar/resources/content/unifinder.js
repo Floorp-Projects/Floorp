@@ -106,6 +106,10 @@ function selectSelectedEventsInTree( EventsToSelect )
 
          SearchTree.treeBoxObject.selection.timedSelect( RowToScrollTo, 1 );
       }
+      else
+      {
+         SearchTree.treeBoxObject.selection.clearSelection( );
+      }
    }
    else if( EventsToSelect.length > 1 )
    {
