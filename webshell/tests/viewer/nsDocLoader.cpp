@@ -49,6 +49,7 @@ nsDocLoader::nsDocLoader(nsIViewerContainer* aContainer, nsViewer* aViewer, PRIn
   mURLList = new nsVoidArray();
 
   NSRepository::CreateInstance(kCDocumentLoaderCID, nsnull, kIDocumentLoaderIID, (void**)&mDocLoader);
+  NS_INIT_REFCNT();
 }
 
 nsDocLoader::~nsDocLoader()
@@ -73,6 +74,10 @@ nsDocLoader::~nsDocLoader()
 
   NS_RELEASE(mDocLoader);
 }
+
+static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
+
+NS_IMPL_ISUPPORTS(nsDocLoader, kIStreamObserverIID);
   
 // Set the delay (by default, the timer is set to one second)
 void nsDocLoader::SetDelay(PRInt32 aSeconds)
@@ -129,6 +134,36 @@ void nsDocLoader::StartTimedLoading()
   }
 }
 
+void nsDocLoader::StartLoading()
+{
+  // Only start once!
+  if (mStart == PR_FALSE)
+  {
+    mStart = PR_TRUE;
+    if (mURLList)
+    {
+      if (mDocNum < mURLList->Count())
+      {
+        LoadDoc(mDocNum, PR_TRUE);
+      }
+    }
+  }
+}
+
+
+void
+nsDocLoader::LoadDoc(PRInt32 aDocNum, PRBool aObserveIt)
+{
+  nsString* url = (nsString*)mURLList->ElementAt(aDocNum);
+  if (url) {
+    mDocLoader->LoadURL(*url,            // URL string
+                        nsnull,          // Command
+                        mContainer,      // Container
+                        nsnull,          // Post Data
+                        nsnull,          // Extra Info...
+                        aObserveIt ? this : nsnull);           // Observer
+  }
+}
 
 
 
@@ -139,7 +174,7 @@ void nsDocLoader::StartTimedLoading()
 */
 
 nsDocLoader*  gDocLoader = nsnull;
-void MyCallback (nsITimer *aTimer, void *aClosure)
+static void MyCallback (nsITimer *aTimer, void *aClosure)
 {
 
   if (gDocLoader != nsnull)
@@ -165,7 +200,7 @@ void nsDocLoader::CreateOneShot(PRUint32 aDelay)
 }
 
 
-void MyRepeatCallback (nsITimer *aTimer, void *aClosure)
+static void MyRepeatCallback (nsITimer *aTimer, void *aClosure)
 {
   if (gDocLoader != nsnull)
   {
@@ -201,14 +236,10 @@ void nsDocLoader::DoAction(PRInt32 aDocNum)
   if (aDocNum >= 0 && aDocNum < mURLList->Count())
   {
     nsString* url = (nsString*)mURLList->ElementAt(aDocNum);
-    if (url)
-///   mWebWidget->LoadURL(*url, nsnull);
-      mDocLoader->LoadURL(*url,            // URL string
-                          nsnull,          // Command
-                          mContainer,      // Container
-                          nsnull,          // Post Data
-                          nsnull,          // Extra Info...
-                          nsnull);         // Observer
+    printf("Now loading ");
+    fputs(*url, stdout);
+    printf("\n");
+    LoadDoc(aDocNum, PR_FALSE);
   }
 }
 
@@ -266,4 +297,41 @@ void nsDocLoader::CancelAll()
     mURLList = nsnull;
   }
 
+}
+
+
+NS_IMETHODIMP
+nsDocLoader::OnStartBinding(const char *aContentType)
+{
+  nsString* url = (nsString*)mURLList->ElementAt(mDocNum);
+  fputs(*url, stdout);
+  printf(": start\n");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocLoader::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
+                        const nsString& aMsg)
+{
+  nsString* url = (nsString*)mURLList->ElementAt(mDocNum);
+  fputs(*url, stdout);
+  printf(": progress %d", aProgress);
+  if (0 != aProgressMax) {
+    printf(" (out of %d)", aProgressMax);
+  }
+  fputs("\n", stdout);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocLoader::OnStopBinding(PRInt32 status, const nsString& aMsg)
+{
+  nsString* url = (nsString*)mURLList->ElementAt(mDocNum);
+  fputs(*url, stdout);
+  printf(": stop\n");
+  ++mDocNum;
+  if (mDocNum < mURLList->Count()) {
+    LoadDoc(mDocNum, PR_TRUE);
+  }
+  return NS_OK;
 }

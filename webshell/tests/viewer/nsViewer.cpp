@@ -1057,55 +1057,46 @@ void nsViewer::AddTestDocs(nsDocLoader* aDocLoader)
 /*
  * SelfTest methods
  */
-void nsViewer::AddTestDocsFromFile(nsDocLoader* aDocLoader, char *aFileName)
+
+// Load a bunch of test url's from a file
+void nsViewer::AddTestDocsFromFile(nsDocLoader* aDocLoader, char* aFileName)
 {
-  /* Steve's table test code.  
-     Assumes you have a file in the current working directory called aFileName
-     that contains a list of URLs, one per line, of files to load.
-   */
+#ifdef XP_PC
+  FILE* fp = fopen(aFileName, "rb");
+#else
+  FILE* fp = fopen(aFileName, "r");
+#endif
 
-  PRFileDesc* input = PR_Open(aFileName, PR_RDONLY, 0);
-  if (nsnull==input)
-  {
-    printf("FAILED TO OPEN %s!", aFileName);
-    return;
-  }
-  // read one line of input and pass it in as a URL
-  char *inputString = new char[10000];
-  if (nsnull==inputString)
-  {
-    printf("couldn't allocate buffer, insufficient memory\n");
-    exit (-1);
-  }
-  nsCRT::memset(inputString, 0, 10000);
-  PR_Read(input, inputString, 10000);
-  PR_Close(input);
+  for (;;) {
+    char linebuf[2000];
+    char* cp = fgets(linebuf, sizeof(linebuf), fp);
+    if (nsnull == cp) {
+      break;
+    }
+    if (linebuf[0] == '#') {
+      continue;
+    }
 
-  char *nextInput = inputString;
-  while (nsnull!=nextInput && nsnull!=*nextInput)
-  {
-    char * endOfLine = PL_strchr(nextInput, '\n');
-    if (nsnull!=nextInput)
-    {
-      if (nsnull!=endOfLine)
-      {
-        char save = *endOfLine;
-        *endOfLine = nsnull;
+    // strip crlf's from the line
+    int len = strlen(linebuf);
+    if (0 != len) {
+      if (('\n' == linebuf[len-1]) || ('\r' == linebuf[len-1])) {
+        linebuf[--len] = 0;
       }
-      if ('#' != *nextInput)  // use '#' as a comment character
-      {
-        aDocLoader->AddURL(nextInput);
+    }
+    if (0 != len) {
+      if (('\n' == linebuf[len-1]) || ('\r' == linebuf[len-1])) {
+        linebuf[--len] = 0;
       }
-      if (nsnull!=endOfLine)
-      {
-        nextInput = endOfLine+1;
-      }
-      else
-        nextInput = nsnull;
+    }
+
+    // Add non-empty lines to the test list
+    if (0 != len) {
+      aDocLoader->AddURL(linebuf);
     }
   }
-  if (nsnull!=inputString)
-    delete [] inputString;
+
+  fclose(fp);
 }
 
 void nsViewer::DestroyAllWindows()
@@ -1477,12 +1468,10 @@ nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
   return(result);
 }
 
-void nsViewer::CleanupViewer(nsDocLoader* aDl) 
+void nsViewer::CleanupViewer(nsDocLoader* aDocLoader) 
 {
-  if (aDl != nsnull)
-    delete aDl;
+  NS_IF_RELEASE(aDocLoader);
   ReleaseMemory();
-  
   NS_ShutdownINetService();
 }
 
@@ -1741,6 +1730,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   nsDocLoader* dl = nsnull;
   if (gDoPurify) {
     dl = new nsDocLoader(wd->observer, this, gDelay);
+    dl->AddRef();
 
       // Add the documents to the loader
     for (PRInt32 i=0; i<gRepeatCount; i++)
@@ -1751,9 +1741,15 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   }
   else if (gLoadTestFromFile) {
     dl = new nsDocLoader(wd->observer, this, gDelay);
+    dl->AddRef();
     for (PRInt32 i=0; i<gRepeatCount; i++)
       AddTestDocsFromFile(dl, gInputFileName);
-    dl->StartTimedLoading();
+    if (0 == gDelay) {
+      dl->StartLoading();
+    }
+    else {
+      dl->StartTimedLoading();
+    }
   }
   else {
       // Load the starting url if we have one
