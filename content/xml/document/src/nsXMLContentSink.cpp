@@ -1445,7 +1445,7 @@ nsXMLContentSink::ScriptAvailable(nsresult aResult,
   // Mark the current script as loaded
   mNeedToBlockParser = PR_FALSE;
 
-  if (NS_FAILED(aResult)) {
+  if (NS_FAILED(aResult) || aResult == NS_CONTENT_SCRIPT_IS_EVENTHANDLER) {
     mScriptElements.RemoveObjectAt(count-1);
      
     if(mParser && aWasPending){
