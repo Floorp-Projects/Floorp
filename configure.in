@@ -2443,7 +2443,20 @@ if test "$ac_cv_need_derived_template_operators" = yes ; then
 fi
 
 
-
+dnl Some compilers have trouble detecting that a template class
+dnl that derives from another template is actually an instance
+dnl of the base class. This test checks for that.
+AC_CACHE_CHECK(whether we need to cast a derived template to pass as its base class,
+               ac_cv_need_cpp_template_cast_to_base,
+               [AC_TRY_COMPILE([template <class T> class Base { };
+                                template <class T> class Derived : public Base<T> { };
+                                template <class T> int foo(const Base<T>&) { return 0; }],
+                               [Derived<char> bar; return foo(bar);],
+                               ac_cv_need_cpp_template_cast_to_base=no,
+                               ac_cv_need_cpp_template_cast_to_base=yes)])
+if test "$ac_cv_need_cpp_template_cast_to_base" = yes ; then
+  AC_DEFINE(NEED_CPP_TEMPLATE_CAST_TO_BASE)
+fi
 
 dnl
 dnl We dont do exceptions on unix.  The only reason this used to be here
