@@ -598,6 +598,9 @@ static gint composition_start(GdkEventKey *aEvent, nsWindow *aWin,
   compEvent.compositionMessage = NS_COMPOSITION_START;
   aWin->DispatchEvent(&compEvent, *aStatus);
 
+  // set SpotLocation
+  aWin->SetXICSpotLocation(compEvent.theReply.mCursorPosition);
+
   return PR_TRUE;
 }
 
@@ -797,6 +800,9 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
     } else {
       InitKeyPressEvent(event,p, kevent);
       win->OnKey(kevent);
+      nsEventStatus status;
+      composition_start(event, win, &status);
+      composition_end(event, win, &status);
     }
   } else { // for Home/End/Up/Down/Left/Right/PageUp/PageDown key
     InitKeyPressEvent(event,p, kevent);
