@@ -87,7 +87,7 @@ class nsHTMLIFrameRootAccessible : public nsRootAccessible
     NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
 
   protected:
-    Init();
+    void Init();
 
     // In these variable names, "outer" relates to the nsHTMLIFrameAccessible, as opposed to the 
     // nsHTMLIFrameRootAccessible which is "inner".
