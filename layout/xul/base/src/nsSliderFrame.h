@@ -242,7 +242,7 @@ private:
 
   float mRatio;
 
-  nscoord mDragStartPx;
+  nscoord mDragStart;
   nscoord mThumbStart;
 
   PRInt32 mCurPos;
