@@ -354,7 +354,7 @@ NS_IMETHODIMP
 nsXBLService::FlushBindingDocuments()
 {
   delete mBindingTable;
-  mBindingTable = nsnull;
+  mBindingTable = new nsSupportsHashtable();
   return NS_OK;
 }
 
