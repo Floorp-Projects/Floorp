@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  */
+#include <ctype.h>
 #include "nsCOMPtr.h"
 #include "nsTextTransformer.h"
 #include "nsIContent.h"
