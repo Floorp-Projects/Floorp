@@ -29,13 +29,13 @@
 #include "nsIComponentManager.h"
 #include "nsIModule.h"
 #include "nsIFileSpec.h"
+#include "nsCOMPtr.h"
 
 // MAC ONLY
 nsDll::nsDll(const char *codeDllName, int type)
   : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
     m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
-    m_persistentDescriptor(NULL), m_nativePath(NULL)
-    
+    m_persistentDescriptor(NULL), m_nativePath(NULL), m_markForUnload(PR_FALSE)
 {
     if (!codeDllName || !*codeDllName)
     {
@@ -53,7 +53,7 @@ nsDll::nsDll(const char *codeDllName, int type)
 nsDll::nsDll(nsIFileSpec *dllSpec)
   : m_dllName(NULL), m_dllSpec(dllSpec), m_modDate(0), m_size(0),
     m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
-    m_persistentDescriptor(NULL), m_nativePath(NULL)
+    m_persistentDescriptor(NULL), m_nativePath(NULL), m_markForUnload(PR_FALSE)
 
 {
     Init(dllSpec);
@@ -62,7 +62,7 @@ nsDll::nsDll(nsIFileSpec *dllSpec)
 nsDll::nsDll(const char *libPersistentDescriptor)
   : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
     m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
-    m_persistentDescriptor(NULL), m_nativePath(NULL)
+    m_persistentDescriptor(NULL), m_nativePath(NULL), m_markForUnload(PR_FALSE)
 
 {
     Init(libPersistentDescriptor);
@@ -71,7 +71,7 @@ nsDll::nsDll(const char *libPersistentDescriptor)
 nsDll::nsDll(const char *libPersistentDescriptor, PRUint32 modDate, PRUint32 fileSize)
   : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
     m_instance(NULL), m_status(DLL_OK), m_moduleObject(NULL),
-    m_persistentDescriptor(NULL), m_nativePath(NULL)
+    m_persistentDescriptor(NULL), m_nativePath(NULL), m_markForUnload(PR_FALSE)
 
 {
     Init(libPersistentDescriptor);
@@ -267,7 +267,7 @@ PRBool nsDll::Unload(void)
     if (m_moduleObject)
     {
         NS_RELEASE2(m_moduleObject, refcnt);
-        NS_ASSERTION(refcnt == 0, "Dll moduleObject refcount not zero.");
+        NS_ASSERTION(refcnt == 0, "Dll moduleObject refcount non zero");
     }
 
 	PRStatus ret = PR_UnloadLibrary(m_instance);
@@ -306,6 +306,11 @@ nsresult nsDll::GetDllSpec(nsIFileSpec **fsobj)
 
 nsresult nsDll::GetModule(nsISupports *servMgr, nsIModule **cobj)
 {
+    nsIComponentManager *compMgr;
+    nsresult rv = NS_GetGlobalComponentManager(&compMgr);
+    NS_ASSERTION(compMgr, "Global Component Manager is null" );
+    if (NS_FAILED(rv)) return rv;
+
     NS_ASSERTION(cobj, "xcDll::GetModule : Null argument" );
 
     if (m_moduleObject)
@@ -330,7 +335,7 @@ nsresult nsDll::GetModule(nsISupports *servMgr, nsIModule **cobj)
 
     if (proc == NULL) return NS_ERROR_FAILURE;
 
-    nsresult rv = (*proc) (servMgr, m_dllSpec, &m_moduleObject);
+    rv = (*proc) (compMgr, m_dllSpec, &m_moduleObject);
     if (NS_SUCCEEDED(rv))
     {
         NS_ADDREF(m_moduleObject);
