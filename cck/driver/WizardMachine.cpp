@@ -74,7 +74,7 @@ NODE *WizardTree;
 NODE *CurrentNode;
 WIDGET GlobalWidgetArray[1000];
 
-int GlobalArrayIndex;
+int GlobalArrayIndex=0;
 int CurrentPageBaseIndex=100;
 
 CString Path;
@@ -1014,7 +1014,7 @@ BOOL CWizardMachineApp::interpret(CString cmds, WIDGET *curWidget)
 					CSumDlg sumdlg;
 					int retVal = sumdlg.DoModal();
 				}
-				else if (strcmp(pcmd, "ConfigDialog") == 0)
+				else if (strcmp(pcmd, "NewNCIDialog") == 0)
 				{
 					CString entryName;
 					CNewDialog newDlg;
@@ -1068,10 +1068,10 @@ BOOL CWizardMachineApp::interpret(CString cmds, WIDGET *curWidget)
 						CWizardUI::BrowseDir(curWidget);
 				}
 			
-				else if (strcmp(pcmd, "NewConfig") == 0)
+				else if (strcmp(pcmd, "NewConfigDialog") == 0)
 				{
 					if (curWidget)
-						CWizardUI::NewConfig(curWidget);
+						CWizardUI::NewConfig(curWidget, CString(parms));
 				}
 
 				else if (strcmp(pcmd, "CopyDir") == 0)
@@ -1083,6 +1083,18 @@ BOOL CWizardMachineApp::interpret(CString cmds, WIDGET *curWidget)
 						CString from = replaceVars(parms, NULL);
 						CString to = replaceVars(p2, NULL);
 						CopyDir(from, to);
+					}
+				}
+				else if (strcmp(pcmd, "SetGlobal") == 0)
+				{
+					char *p2 = strchr(parms, ',');
+					if (p2)
+					{
+						*p2++ = '\0';
+						CString name = replaceVars(parms, NULL);
+						CString value = replaceVars(p2, NULL);
+						value.TrimRight();
+						SetGlobal(name, value);
 					}
 				}
 			}
@@ -1496,7 +1508,7 @@ CString CWizardMachineApp::GetGlobalOptions(CString theName)
 {
 	CString temp="";
 
-	for (int i = 0; i <= GlobalArrayIndex; i++)
+	for (int i = 0; i < GlobalArrayIndex; i++)
 	{
 		if (GlobalWidgetArray[i].name == theName) {
 			if (GlobalWidgetArray[i].numOfOptions > 0) {
@@ -1541,7 +1553,7 @@ WIDGET* CWizardMachineApp::SetGlobal(CString theName, CString theValue)
 WIDGET* CWizardMachineApp::findWidget(char *theName)
 {
 	
-	for (int i = 0; i <= GlobalArrayIndex; i++)
+	for (int i = 0; i < GlobalArrayIndex; i++)
 	{
 		if (GlobalWidgetArray[i].name == theName) {
 			return (&GlobalWidgetArray[i]);
