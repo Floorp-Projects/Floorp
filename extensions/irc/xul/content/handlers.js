@@ -23,93 +23,43 @@
  *  Chiaki Koufugata chiaki@mozilla.gr.jp UI i18n 
  */
 
-function onTopicEditStart()
+window.onresize =
+function onresize()
 {
-    if (client.currentObject.TYPE != "IRCChannel")
-        return;
-
-    var text = client.statusBar["channel-topic"];
-    var edit = client.statusBar["channel-topicedit"];
-    text.setAttribute("collapsed", "true");
-    edit.removeAttribute("collapsed");
-    edit.value = client.currentObject.topic;
-    edit.focus();
-    edit.selectionStart = 0;
-    edit.selectionEnd = edit.value.length;
-}
-
-function onTopicEditEnd ()
-{
-    if (!("statusBar" in client))
-        return;
-    
-    var edit = client.statusBar["channel-topicedit"];
-    var text = client.statusBar["channel-topic"];
-    edit.setAttribute("collapsed", "true");
-    text.removeAttribute("collapsed");
-    focusInput();
-}
-
-function onTopicKeyPress (e)
-{
-    if (client.currentObject.TYPE != "IRCChannel")
-        return;
-    
-    if (e.keyCode == 13)
-    {        
-        var line = stringTrim(e.target.value);
-        var charset = client.currentObject.charset;
-        client.currentObject.setTopic (fromUnicode(line, charset));
-        onTopicEditEnd();
-    }
+    for (var i = 0; i < client.deck.childNodes.length; i++)
+        scrollDown(client.deck.childNodes[i], true);
 }
 
 function onInputFocus ()
 {
-    if (!("statusBar" in client))
-        return;
-    
-    var edit = client.statusBar["channel-topicedit"];
-    var text = client.statusBar["channel-topic"];
-    edit.setAttribute("collapsed", "true");
-    text.removeAttribute("collapsed");
 }
 
 function onLoad()
 {
-    
-    initPrefs();
-    initHost(client);
-    readPrefs();
-    setClientOutput();
-    initStatic();
-
-    if (!CIRCNetwork.prototype.INITIAL_NICK)
-        CIRCNetwork.prototype.INITIAL_NICK = "IRCMonkey";
-
-    if (!CIRCNetwork.prototype.INITIAL_NAME)
-        CIRCNetwork.prototype.INITIAL_NAME = "chatzilla";
-
-    if (!CIRCNetwork.prototype.INITIAL_DESC)
-        CIRCNetwork.prototype.INITIAL_DESC = "New Now Know How";
-    
-    client.userScripts = new Array();
-    if (client.INITIAL_SCRIPTS)
+    dd ("Initializing ChatZilla {");
+    try
     {
-        var urls = client.INITIAL_SCRIPTS.split (";");
-        for (var i = 0; i < urls.length; ++i)
-        {
-            client.userScripts[i] = new Object();
-            client.load(stringTrim(urls[i]), client.userScripts[i]);
-        }
+        init();
+    }
+    catch (ex)
+    {
+        dd("caught exception while initializing:\n" + dumpObjectTree(ex));
     }
     
-    processStartupURLs();
-
-    client.onInputNetworks();
-    client.onInputCommands();
-
+    dd("}");
     mainStep();
+}
+
+function initHandlers()
+{
+    var node;
+    node = document.getElementById("input");
+    node.addEventListener("keypress", onInputKeyPress, false);
+    node = document.getElementById("multiline-input");
+    node.addEventListener("keypress", onMultilineInputKeyPress, false);
+    node.active = false;
+
+    window.onkeypress = onWindowKeyPress;
 }
 
 function onClose()
@@ -118,41 +68,63 @@ function onClose()
         return true;
     
     client.userClose = true;
-    client.currentObject.display (getMsg("cli_closing"), "INFO");
+    display(MSG_CLOSING);
 
-    if (client.getConnectionCount() == 0)
+    if (!("getConnectionCount" in client) ||
+        client.getConnectionCount() == 0)
+    {
         /* if we're not connected to anything, just close the window */
         return true;
+    }
 
     /* otherwise, try to close out gracefully */
-    client.quit (client.userAgent);
+    client.quit(client.userAgent);
     return false;
 }
 
 function onUnload()
 {
-    if (client.SAVE_SETTINGS)
-        writePrefs();
-
-    destroyPrefs();
+    dd("Shutting down ChatZilla.");
+    destroy();
 }
 
 function onNotImplemented()
 {
-
     alert (getMsg("onNotImplementedMsg"));
-    
 }
 
 /* tab click */
-function onTabClick (id)
+function onTabClick (e, id)
 {
+    if (e.which != 1)
+        return;
     
     var tbi = document.getElementById (id);
     var view = client.viewsArray[tbi.getAttribute("viewKey")];
 
     setCurrentObject (view.source);
+}
+
+function onMessageViewClick(e)
+{
+    if (e.which != 1)
+        return;
     
+    var cx = getMessagesContext(null, e.target);
+    var command;
+    
+    if (e.metaKey || e.altKey)
+        command = client.prefs["messages.metaClick"];
+    else if (e.ctrlKey)
+        command = client.prefs["messages.ctrlClick"];
+    else
+        command = client.prefs["messages.click"];
+    
+    if (client.commandManager.isCommandSatisfied(cx, command))
+    {
+        dispatch(command, cx);
+        e.preventDefault();
+    }
 }
 
 function onMouseOver (e)
@@ -183,413 +155,6 @@ function onMouseOver (e)
     }
 }
     
-function onSimulateCommand (line)
-{
-    onInputCompleteLine ({line: line}, true);
-}
-
-function onPopupSimulateCommand (line)
-{
-    if ("user" in client._popupContext)
-    {
-        var nick = client._popupContext.user;
-        if (nick.indexOf("ME!") != -1)
-        {
-            var details = getObjectDetails(client.currentObject);
-            if ("server" in details)
-                nick = details.server.me.properNick;
-        }
-
-        line = line.replace (/\$nick/ig, nick);
-    }
-    
-    onInputCompleteLine ({line: line}, true);
-}
-
-function onPopupHighlight (ruleText)
-{
-    var user = client._popupContext.user;
-    
-    var rec = findDynamicRule(".msg[msg-user=" + user + "]");
-    
-    if (!ruleText)
-    {
-        if (rec)
-            rec.sheet.deleteRule(rec.index);
-        /* XXX just deleting it doesn't work */
-        addDynamicRule (".msg[msg-user=\"" + user + "\"] { }");
-    }
-    else
-    {
-        if (rec)
-            rec.sheet.deleteRule(rec.index);
-
-        addDynamicRule (".msg[msg-user=\"" + user + "\"] " +
-                        "{" + ruleText + "}");
-    }
-
-}
-
-function onToggleMungerEntry(entryName)
-{
-    client.munger.entries[entryName].enabled =
-        !client.munger.entries[entryName].enabled;
-    var item = document.getElementById("menu-munger-" + entryName);
-    item.setAttribute ("checked", client.munger.entries[entryName].enabled);
-}
-
-function createPopupContext(event, target)
-{
-    var targetType;
-    client._popupContext = new Object();
-    client._popupContext.menu = event.originalTarget;
-
-    if (!target)
-        return "unknown";
-    
-    switch (target.tagName.toLowerCase())
-    {
-        case "html:a":
-            var href = target.getAttribute("href");
-            client._popupContext.url = href;
-            if (href.indexOf("irc://") == 0)
-            {
-                var obj = parseIRCUrl(href);
-                if (obj)
-                {
-                    if (obj.target)
-                        if (obj.isnick)
-                        {
-                            targetType="nick-ircurl";
-                            client._popupContext.user = obj.target;
-                        }
-                        else
-                            targetType="channel-ircurl";
-                    else
-                        targetType="untargeted-ircurl";
-                }
-                else
-                    targetType="weburl";
-            }
-            else
-                targetType="weburl";
-            break;
-            
-        case "html:td":
-            var user = target.getAttribute("msg-user");
-            if (user)
-            {
-                if (user.indexOf("ME!") != -1)
-                    client._popupContext.user = "ME!";
-                else
-                    client._popupContext.user = user;
-            }
-            targetType = target.getAttribute("msg-type");
-            break;            
-    }
-
-    client._popupContext.targetType = targetType;
-    client._popupContext.targetClass = target.getAttribute("class");
-
-    return targetType;
-}
-
-function onOutputContextMenuCreate(e)
-{
-    function evalIfAttribute (node, attr)
-    {
-        var expr = node.getAttribute(attr);
-        if (!expr)
-            return true;
-        
-        expr = expr.replace (/\Wor\W/gi, " || ");
-        expr = expr.replace (/\Wand\W/gi, " && ");
-        return eval("(" + expr + ")");
-    }
-        
-    var target = document.popupNode;
-    var foundSomethingUseful = false;
-    
-    do
-    {
-        if ("tagName" in target &&
-            (target.tagName == "html:a" || target.tagName == "html:td"))
-            foundSomethingUseful = true;
-        else
-            target = target.parentNode;
-    } while (target && !foundSomethingUseful);
-    
-    var targetType = createPopupContext(e, target);
-    var targetClass = ("targetClass" in client._popupContext) ?
-        client._popupContext.targetClass : "";
-    var viewType = client.currentObject.TYPE;
-    var targetIsOp = "n/a";
-    var targetIsVoice = "n/a";
-    var iAmOp = "n/a";
-    var targetUser = ("user" in client._popupContext) ?
-        String(client._popupContext.user) : "";
-    var details = getObjectDetails(client.currentObject);
-    var targetServer = ("server" in details) ? details.server : "";
-
-    if (targetServer && targetUser == "ME!")
-    {
-        targetUser = targetServer.me.nick;
-    }
-
-    var targetProperNick = targetUser;
-    if (targetServer && targetUser in targetServer.users)
-        targetProperNick = targetServer.users[targetUser].properNick;
-    
-    if (viewType == "IRCChannel" && targetUser)
-    {
-        if (targetUser in client.currentObject.users)
-        {
-            var cuser = client.currentObject.users[targetUser];
-            targetIsOp = cuser.isOp ? "yes" : "no";
-            targetIsVoice = cuser.isVoice ? "yes" : "no";
-        }
-        
-        var server = getObjectDetails(client.currentObject).server;
-        if (server &&
-            server.me.nick in client.currentObject.users &&
-            client.currentObject.users[server.me.nick].isOp)
-        {
-            iAmOp =  "yes";
-        }
-        else
-        {
-            iAmOp = "no";
-        }
-    }
-
-    var popup = document.getElementById ("outputContext");
-    var menuitem = popup.firstChild;
-
-    do
-    {
-        if (evalIfAttribute(menuitem, "visibleif"))
-        {
-            menuitem.setAttribute ("hidden", "false");
-        }
-        else
-        {
-            menuitem.setAttribute ("hidden", "true");
-            continue;
-        }
-        
-        if (menuitem.hasAttribute("checkedif"))
-        {
-            if (evalIfAttribute(menuitem, "checkedif"))
-                menuitem.setAttribute ("checked", "true");
-            else
-                menuitem.setAttribute ("checked", "false");
-        }
-            
-        var format = menuitem.getAttribute("format");
-        if (format)
-        {
-            format = format.replace (/\$nick/gi, targetProperNick);
-            format = format.replace (/\$viewname/gi,
-                                     client.currentObject.unicodeName);
-            menuitem.setAttribute ("label", format);
-        }
-        
-    } while ((menuitem = menuitem.nextSibling));
-
-    return true;
-}
-
-/* popup click in user list */
-function onUserListPopupClick (e)
-{
-
-    var code = e.target.getAttribute("code");
-    var ary = code.substr(1, code.length).match (/(\S+)? ?(.*)/);    
-
-    if (!ary)
-        return;
-
-    var command = ary[1];
-
-    var ev = new CEvent ("client", "input-command", client,
-                         "onInputCommand");
-    ev.command = command;
-    ev.inputData =  ary[2] ? stringTrim(ary[2]) : "";    
-    ev.target = client.currentObject;
-
-    getObjectDetails (ev.target, ev);
-
-    client.eventPump.addEvent (ev);
-}
-
-
-function onToggleTraceHook()
-{
-    var h = client.eventPump.getHook ("event-tracer");
-    
-    h.enabled = client.debugMode = !h.enabled;
-    document.getElementById("menu-dmessages").setAttribute ("checked",
-                                                            h.enabled);
-    if (h.enabled)
-        client.currentObject.display (getMsg("debug_on"), "INFO");
-    else
-        client.currentObject.display (getMsg("debug_off"), "INFO");
-}
-
-function onToggleSaveOnExit()
-{
-    client.SAVE_SETTINGS = !client.SAVE_SETTINGS;
-    var m = document.getElementById ("menu-settings-autosave");
-    m.setAttribute ("checked", String(client.SAVE_SETTINGS));
-
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                         .getService(Components.interfaces.nsIPrefBranch);
-    pref.setBoolPref ("extensions.irc.settings.autoSave",
-                      client.SAVE_SETTINGS);
-}
-
-function onToggleVisibility(thing)
-{    
-    var menu = document.getElementById("menu-view-" + thing);
-    var ids = new Array();
-    
-    switch (thing)
-    {
-        case "tabstrip":
-            ids = ["view-tabs"];
-            break;
-            
-        case "info":
-            ids = ["main-splitter", "user-list-box"];            
-            break;
-            
-        case "header":
-            ids = ["header-bar-tbox"];
-            break;
-            
-        case "status":
-            ids = ["status-bar"];
-            break;
-
-        default:
-            dd ("** Unknown element ``" + menuId + 
-                "'' passed to onToggleVisibility. **");
-            return;
-    }
-
-
-    var newState;
-    var elem = document.getElementById(ids[0]);
-    var d = elem.getAttribute("collapsed");
-    
-    if (d == "true")
-    {
-        if (thing == "info")
-        {
-            if (client.currentObject.TYPE == "IRCChannel")
-                client.rdf.setTreeRoot ("user-list", 
-                                        client.currentObject.getGraphResource());
-            else
-                client.rdf.setTreeRoot ("user-list", client.rdf.resNullChan);
-        }
-        
-        newState = "false";
-        menu.setAttribute ("checked", "true");
-        client.uiState[thing] = true;
-    }
-    else
-    {
-        newState = "true";
-        menu.setAttribute ("checked", "false");
-        client.uiState[thing] = false;
-    }
-    
-    for (var i in ids)
-    {
-        elem = document.getElementById(ids[i]);
-        elem.setAttribute ("collapsed", newState);
-    }
-
-    updateTitle();
-    focusInput();
-}
-
-function onDoStyleChange (newStyle)
-{
-
-    if (newStyle == "other")
-        newStyle = window.prompt (getMsg("onDoStyleChangeMsg"));
-
-    if (newStyle)
-    {
-        setOutputStyle (newStyle);
-        setCurrentObject(client.currentObject);
-    }
-    
-}
-
-function onHideView(view)
-{
-    var tb = getTabForObject(view);
-    
-    if (tb)
-    {
-        var i = deleteTab (tb);
-        if (i != -1)
-        {
-            client.deck.removeChild(view.frame);
-            delete view.frame;
-            if (i >= client.viewsArray.length)
-                i = client.viewsArray.length - 1;
-            
-            setCurrentObject (client.viewsArray[i].source);
-        }
-        
-    }
-}
-
-function onDeleteView(view)
-{
-    var tb = getTabForObject(view);
-    if (client.viewsArray.length < 2)
-    {
-        view.display (getMsg("onDeleteViewMsg"), "ERROR");
-        return;
-    }
-    
-    if (tb)
-    {
-        var i = deleteTab (tb);
-        if (i != -1)
-        {
-            delete view.messageCount;
-            delete view.messages;
-            client.deck.removeChild(view.frame);
-            delete view.frame;
-
-            if (i >= client.viewsArray.length)
-                i = client.viewsArray.length - 1;            
-            setCurrentObject (client.viewsArray[i].source);
-        }
-        
-    }
-
-    if (view.TYPE == "IRCChannel" && view.active)
-        view.part();
-}
-
-function onClearCurrentView()
-{
-
-    client.currentObject.messages = null;
-    client.currentObject.messageCount = 0;
-
-    client.currentObject.display (getMsg("onClearCurrentViewMsg"), "INFO");
-
-    client.currentObject.frame.reload();
-    
-}
-
 function onSortCol(sortColName)
 {
     var node = document.getElementById(sortColName);
@@ -608,24 +173,6 @@ function onSortCol(sortColName)
     sortUserList(node, sortDirection);
     
     return false;
-}
-
-function onToggleMunger()
-{
-
-    client.munger.enabled = !client.munger.enabled;
-    var item = document.getElementById("menu-munger-global");
-    item.setAttribute ("checked", !client.munger.enabled);
-
-}
-
-function onToggleColors()
-{
-
-    client.enableColors = !client.enableColors;
-    document.getElementById("menu-colors").setAttribute ("checked",
-                                                         client.enableColors);
-
 }
 
 function onMultilineInputKeyPress (e)
@@ -655,59 +202,36 @@ function onMultilineSend(e)
     multiline.value = "";
 }
 
-function onToggleMsgCollapse()
+function onTooltip(event)
 {
-    client.COLLAPSE_MSGS = !client.COLLAPSE_MSGS;
-}
+    const XLinkNS = "http://www.w3.org/1999/xlink";
 
-function onToggleCopyMessages()
-{
-    client.COPY_MESSAGES = !client.COPY_MESSAGES;
-}
-
-function onToggleStartupURL()
-{
-    var tb = getTabForObject (client.currentObject);
-    if (!tb)
-        return;
+    var tipNode = event.originalTarget;
+    var titleText = null;
+    var XLinkTitleText = null;
     
-    var vk = Number(tb.getAttribute("viewKey"));
-    
-    var ary = client.INITIAL_URLS ? 
-        client.INITIAL_URLS.split(/\s*;\s*/) : new Array();
-    var url = client.currentObject.getURL();
-    var index = arrayIndexOf(ary, url);
-    if (index != -1)
-        arrayRemoveAt(ary, index);
-    else
-        ary.push(url);
-    
-    client.INITIAL_URLS = ary.join ("; ");
-}
+    var element = document.tooltipNode;
+    while (element)
+    {
+        if (element.nodeType == Node.ELEMENT_NODE)
+        {
+            var text;
+            if (element.hasAttribute("title"))
+                text = element.getAttribute("title");
+            else if (element.hasAttributeNS(XLinkNS, "title"))
+                text = element.getAttributeNS(XLinkNS, "title");
 
-function onViewMenuShowing ()
-{
-    var loc = client.currentFrame.document.location.href;
-    loc = loc.substr (loc.indexOf("?") + 1);
+            if (text)
+            {
+                tipNode.setAttribute("label", text);
+                return true;
+            }
+        }
 
-    var val = (loc == "chrome://chatzilla/skin/output-default.css");
-    document.getElementById ("menu-view-default").setAttribute ("checked", val);
+        element = element.parentNode;
+    }
 
-    val = (loc == "chrome://chatzilla/skin/output-dark.css");
-    document.getElementById ("menu-view-dark").setAttribute ("checked", val);
-
-    val = (loc == "chrome://chatzilla/skin/output-light.css");
-    document.getElementById ("menu-view-light").setAttribute ("checked", val);
-
-    val = client.COLLAPSE_MSGS;
-    document.getElementById ("menu-view-collapse").setAttribute ("checked", val);
-
-    val = client.COPY_MESSAGES;
-    document.getElementById ("menu-view-copymsgs").setAttribute ("checked", val);
-    
-    val = isStartupURL(client.currentObject.getURL());
-    document.getElementById ("menu-view-startup").setAttribute ("checked", val);
-    return true;
+    return false;
 }
     
 function onInputKeyPress (e)
@@ -716,12 +240,11 @@ function onInputKeyPress (e)
     switch (e.keyCode)
     {        
         case 9:  /* tab */
-    		if (e.ctrlKey || e.metaKey)
-                cycleView(e.shiftKey ? -1: 1);
-            else
+            if (!e.ctrlKey && !e.metaKey)
+            {
                 onTabCompleteRequest(e);
-
-            e.preventDefault();
+                e.preventDefault();
+            }
             break;
 
         case 13: /* CR */
@@ -777,11 +300,6 @@ function onInputKeyPress (e)
             client.incompleteLine = e.target.value;
             break;
     }
-
-}
-
-function onTest ()
-{
 
 }
 
@@ -846,16 +364,14 @@ function onTabCompleteRequest (e)
             if (matches.length > 0)
             {
                 /* then list possible completions, */
-                client.currentObject.display(getMsg("tabCompleteList",
-                                                    [matches.length, word,
-                                                     matches.join(MSG_CSP)]),
-                                             "INFO");
+                display(getMsg(MSG_FMT_MATCHLIST,
+                               [matches.length, word,
+                                matches.join(MSG_COMMASP)]));
             }
             else
             {
                 /* or display an error if there are none. */
-                client.currentObject.display(getMsg("tabCompleteError", [word]),
-                                             "ERROR");
+                display(getMsg(MSG_ERR_NO_MATCH, word), MT_ERROR);
             }
         }
         else if (matches.length >= 1)
@@ -886,7 +402,7 @@ function onTabCompleteRequest (e)
 
 function onWindowKeyPress (e)
 {
-    var code = Number (e.keyCode);
+    var code = Number(e.keyCode);
     var w;
     var newOfs;
     var userList = document.getElementById("user-list");
@@ -894,6 +410,14 @@ function onWindowKeyPress (e)
 
     switch (code)
     {
+        case 9: /* tab */
+            if (e.ctrlKey || e.metaKey)
+            {
+                cycleView(e.shiftKey ? -1: 1);
+                e.preventDefault();
+            }
+            break;
+
         case 112: /* F1 */
         case 113: /* ... */
         case 114:
@@ -905,16 +429,22 @@ function onWindowKeyPress (e)
         case 120:
         case 121: /* F10 */
             var idx = code - 112;
-            if ((idx in client.viewsArray) && (client.viewsArray[idx].source))
+            if ((idx in client.viewsArray) && client.viewsArray[idx].source)
                 setCurrentObject(client.viewsArray[idx].source);
             break;
 
         case 33: /* pgup */
+            if (e.ctrlKey)
+            {
+                cycleView(1);
+                break;
+            }
+
             if (elemFocused == userList)
                 break;
 
             w = client.currentFrame;
-            newOfs = w.pageYOffset - (w.innerHeight * 0.9);
+            newOfs = w.pageYOffset - (w.innerHeight * 0.75);
             if (newOfs > 0)
                 w.scrollTo (w.pageXOffset, newOfs);
             else
@@ -923,58 +453,45 @@ function onWindowKeyPress (e)
             break;
             
         case 34: /* pgdn */
+            if (e.ctrlKey)
+            {
+                cycleView(-1);
+                break;
+            }
+
             if (elemFocused == userList)
                 break;
 
             w = client.currentFrame;
-            newOfs = w.pageYOffset + (w.innerHeight * 0.9);
+            newOfs = w.pageYOffset + (w.innerHeight * 0.75);
             if (newOfs < (w.innerHeight + w.pageYOffset))
                 w.scrollTo (w.pageXOffset, newOfs);
             else
                 w.scrollTo (w.pageXOffset, (w.innerHeight + w.pageYOffset));
             e.preventDefault();
             break;
-
-        default:
-            
     }
-
 }
 
-function onInputCompleteLine(e, simulated)
+function onInputCompleteLine(e)
 {
-
-    if (!simulated)
-    {
-        if (!client.inputHistory.length || client.inputHistory[0] != e.line)
-            client.inputHistory.unshift (e.line);
+    if (!client.inputHistory.length || client.inputHistory[0] != e.line)
+        client.inputHistory.unshift (e.line);
     
-        if (client.inputHistory.length > client.MAX_HISTORY)
-            client.inputHistory.pop();
-        
-        client.lastHistoryReferenced = -1;
-        client.incompleteLine = "";
-    }
+    if (client.inputHistory.length > client.MAX_HISTORY)
+        client.inputHistory.pop();
+    
+    client.lastHistoryReferenced = -1;
+    client.incompleteLine = "";
     
     if (e.line[0] == client.COMMAND_CHAR)
     {
-        var ary = e.line.substr(1, e.line.length).match (/(\S+)? ?(.*)/);
-        var command = ary[1].toLowerCase();
-        
-        var ev = new CEvent ("client", "input-command", client,
-                             "onInputCommand");
-        ev.command = command;
-        ev.inputData =  ary[2] ? stringTrim(ary[2]) : "";
-        ev.line = e.line;
-        
-        ev.target = client.currentObject;
-        getObjectDetails (ev.target, ev);
-        client.eventPump.addEvent (ev);
+        dispatch(e.line.substr(1), null, true);
     }
     else /* plain text */
     {
         /* color codes */
-        if (client.COLORCODES)
+        if (client.prefs["outgoing.colorCodes"])
         {
             e.line = e.line.replace(/%U/g, "\x1f");
             e.line = e.line.replace(/%B/g, "\x02");
@@ -1004,1688 +521,6 @@ function onNotifyTimeout ()
         }
     }
 }
-    
-client.onInputCancel =
-function cli_icancel (e)
-{
-    if (client.currentObject.TYPE != "IRCNetwork")
-    {
-        client.currentObject.display (getMsg("cli_icancelMsg"), "ERROR");
-        return false;
-    }
-    
-    if (!client.currentObject.connecting)
-    {
-        client.currentObject.display (getMsg("cli_icancelMsg2"), "ERROR");
-        return false;
-    }
-    
-    client.currentObject.connectAttempt = 
-        client.currentObject.MAX_CONNECT_ATTEMPTS + 1;
-
-    client.currentObject.display (getMsg("cli_icancelMsg3",
-                                         client.currentObject.name), "INFO");
-
-    return true;
-}    
-
-client.onInputCharset =
-function cli_icharset (e)
-{
-    if (e.inputData)
-    {
-        if (!setCharset(e.inputData))
-        {
-            client.currentObject.display (getMsg("cli_charsetError",
-                                                 e.inputData),
-                                          "ERROR");
-            return false;
-        }
-    }
-
-    client.currentObject.display (getMsg("cli_currentCharset",
-                                         client.CHARSET),
-                                  "INFO");
-
-    return true;
-}
-
-client.onInputChannelCharset =
-function cli_ichancharset (e)
-{
-    if (e.inputData)
-    {
-        if(!checkCharset(e.inputData))
-        {
-            client.currentObject.display (getMsg("cli_charsetError",
-                                                 e.inputData),
-                                          "ERROR");
-            return false;
-        }
-        client.currentObject.charset = e.inputData;
-    }
-
-    client.currentObject.display (getMsg("cli_currentCharset",
-                                         client.currentObject.charset),
-                                  "INFO");
-
-    return true;
-}
-
-client.onInputCommand = 
-function cli_icommand (e)
-{
-    var ary = client.commands.list (e.command);
-    
-    if (ary.length == 0)
-    {        
-        var o = getObjectDetails(client.currentObject);
-        if ("server" in o)
-        {
-            client.currentObject.display (getMsg("cli_icommandMsg",
-                                                 e.command), "WARNING");
-            o.server.sendData (e.command + " " + e.inputData + "\n");
-        }
-        else
-            client.currentObject.display (getMsg("cli_icommandMsg2",
-                                                 e.command), "ERROR");
-    }
-    else if (ary.length == 1 || ary[0].name == e.command)
-    {
-        if (typeof client[ary[0].func] == "undefined")        
-            client.currentObject.display (getMsg("cli_icommandMsg3",
-                                                 ary[0].name), "ERROR");
-        else
-        {
-            e.commandEntry = ary[0];
-            if (!client[ary[0].func](e))
-                client.currentObject.display (ary[0].name + " " +
-                                              ary[0].usage, "USAGE");
-        }
-    }
-    else
-    {
-        client.currentObject.display (getMsg("cli_icommandMsg4",
-                                             e.command), "ERROR");
-        var str = "";
-        for (var i in ary)
-            str += str ? ", " + ary[i].name : ary[i].name;
-        client.currentObject.display (getMsg("cli_icommandMsg5",
-                                             [ary.length, str]), "ERROR");
-    }
-
-}
-
-client.onInputCSS =
-function cli_icss (e)
-{
-    if (e.inputData)
-    {
-        e.inputData = stringTrim(e.inputData);
-    
-        if (e.inputData.search(/^light$/i) != -1)
-            e.inputData = "chrome://chatzilla/skin/output-light.css";
-        else if (e.inputData.search(/^dark$/i) != -1)
-            e.inputData = "chrome://chatzilla/skin/output-dark.css";
-        else if (e.inputData.search(/^default$/i) != -1)
-            e.inputData = "chrome://chatzilla/skin/output-default.css";
-        else if (e.inputData.search(/^none$/i) != -1)
-            e.inputData = "chrome://chatzilla/content/output-base.css";
-    
-        for (var i = 0; i < client.deck.childNodes.length; i++)
-        {
-            client.deck.childNodes[i].loadURI (
-                "chrome://chatzilla/content/outputwindow.html?" + e.inputData);
-        }
-        client.DEFAULT_STYLE = e.inputData;
-    }
-    
-    client.currentObject.display (getMsg("cli_icss", client.DEFAULT_STYLE),
-                                  "INFO");
-    return true;
-}
-
-client.onInputSimpleCommand =
-function cli_iscommand (e)
-{    
-    var o = getObjectDetails(client.currentObject);
-    
-    if ("server" in o)
-    {
-        o.server.sendData (e.command + " " + e.inputData + "\n");
-        return true;
-    }
-    else
-    {
-        client.currentObject.display (getMsg("onInputSimpleCommandMsg",
-                                             e.command), "WARNING");
-        return false;
-    }
-}
-
-client.onInputSquery =
-function cli_isquery (e)
-{
-    var o = getObjectDetails(client.currentObject);
-    
-    if ("server" in o)
-    {
-        var ary = e.inputData.match (/(\S+)? ?(.*)/);
-        if (ary == null)
-            return false;
-
-        if (ary.length == 1)
-        {
-            o.server.sendData ("SQUERY " + ary[1] + "\n");
-        }
-        else
-        {
-            o.server.sendData ("SQUERY " + ary[1] + " :" + ary[2] + "\n");
-        }
-        return true;
-    }
-    else
-    {
-        client.currentObject.display (getMsg("onInputSimpleCommandMsg",
-                                             e.command), "WARNING");
-        return false;
-    }
-}
-
-client.onInputStatus =
-function cli_istatus (e)
-{    
-    function serverStatus (s)
-    {
-        if (!s.connection.isConnected)
-        {
-            client.currentObject.display(getMsg("cli_istatusServerOff",
-                                                s.parent.name), "STATUS");
-            return;
-        }
-        
-        var serverType = (s.parent.primServ == s) ?
-            getMsg("cli_istatusPrimary") : getMsg("cli_istatusSecondary");
-        client.currentObject.display(getMsg("cli_istatusServerOn",
-                                            [s.parent.name, s.me.properNick,
-                                             s.connection.host,
-                                             s.connection.port, serverType]),
-                                     "STATUS");        
-
-        var connectTime = formatDateOffset (Math.floor((new Date() -
-                                            s.connection.connectDate) / 1000));
-        var pingTime = ("lastPing" in s) ?
-            formatDateOffset (Math.floor((new Date() - s.lastPing) / 1000)) :
-            getMsg("na");
-        var lag = (s.lag >= 0) ? s.lag : getMsg("na");
-
-        client.currentObject.display(getMsg("cli_istatusServerDetail", 
-                                            [s.parent.name, connectTime,
-                                             pingTime, lag]), "STATUS");
-    }
-
-    function channelStatus (c)
-    {
-        var cu;
-        var net = c.parent.parent.name;
-
-        if ((cu = c.users[c.parent.me.nick]))
-        {
-            var mtype;
-            
-            if (cu.isOp && cu.isVoice)
-                mtype = getMsg("cli_istatusBoth");
-            else if (cu.isOp)
-                mtype = getMsg("cli_istatusOperator");
-            else if (cu.isVoice)
-                mtype = getMsg("cli_istatusVoiced");
-            else
-                mtype = getMsg("cli_istatusMember");
-
-            var mode = c.mode.getModeStr();
-            if (!mode)
-                mode = getMsg("cli_istatusNoMode");
-            
-            client.currentObject.display (getMsg("cli_istatusChannelOn",
-                                                 [net, mtype, c.unicodeName,
-                                                  mode,
-                                                  "irc://" + escape(net) + "/" +
-                                                  escape(c.encodedName) + "/"]),
-                                          "STATUS");
-            client.currentObject.display (getMsg("cli_istatusChannelDetail",
-                                                 [net, c.unicodeName,
-                                                  c.getUsersLength(),
-                                                  c.opCount, c.voiceCount]),
-                                          "STATUS");
-            if (c.topic)
-                client.currentObject.display (getMsg("cli_istatusChannelTopic",
-                                              [net, c.unicodeName, c.topic]),
-                                              "STATUS");
-            else
-                client.currentObject.display (getMsg("cli_istatusChannelNoTopic",
-                                              [net, c.unicodeName]), "STATUS");
-        }
-        else
-            client.currentObject.display (getMsg("cli_istatusChannelOff",
-                                          [net, c.unicodeName]), "STATUS");
-    }
-
-    client.currentObject.display (client.userAgent, "STATUS");
-    client.currentObject.display (getMsg("cli_istatusClient",
-                                         [CIRCNetwork.prototype.INITIAL_NICK,
-                                         CIRCNetwork.prototype.INITIAL_NAME,
-                                         CIRCNetwork.prototype.INITIAL_DESC]),
-                                  "STATUS");
-        
-    var n, s, c;
-
-    switch (client.currentObject.TYPE)
-    {
-        case "IRCNetwork":
-            for (s in client.currentObject.servers)
-            {
-                serverStatus(client.currentObject.servers[s]);
-                for (c in client.currentObject.servers[s].channels)
-                    channelStatus (client.currentObject.servers[s].channels[c]);
-            }
-            break;
-
-        case "IRCChannel":
-            serverStatus(client.currentObject.parent);
-            channelStatus(client.currentObject);
-            break;
-            
-        default:
-            for (n in client.networks)
-                for (s in client.networks[n].servers)
-                {
-                    serverStatus(client.networks[n].servers[s]);
-                    for (c in client.networks[n].servers[s].channels)
-                        channelStatus (client.networks[n].servers[s].channels[c]);
-                }
-            break;
-    }
-
-    client.currentObject.display (getMsg("cli_istatusEnd"), "END_STATUS");
-    return true;
-    
-}            
-            
-client.onInputHelp =
-function cli_ihelp (e)
-{
-    var ary = client.commands.list (e.inputData);
- 
-    if (ary.length == 0)
-    {
-        client.currentObject.display (getMsg("cli_ihelpMsg", e.inputData),
-                                      "ERROR");
-        return false;
-    }
-
-    var saveDir = client.PRINT_DIRECTION;
-    client.PRINT_DIRECTION = 1;
-    
-    for (var i in ary)
-    {        
-        client.currentObject.display (ary[i].name + " " + ary[i].usage,
-                                      "USAGE");
-        client.currentObject.display (ary[i].help, "HELP");
-    }
-
-    client.PRINT_DIRECTION = saveDir;
-    
-    return true;
-    
-}
-
-client.onInputTestDisplay =
-function cli_testdisplay (e)
-{
-    var o = getObjectDetails(client.currentObject);
-    
-    client.currentObject.display (getMsg("cli_testdisplayMsg"), "HELLO");
-    client.currentObject.display (getMsg("cli_testdisplayMsg2"), "INFO");
-    client.currentObject.display (getMsg("cli_testdisplayMsg3"), "ERROR");
-    client.currentObject.display (getMsg("cli_testdisplayMsg4"), "HELP");
-    client.currentObject.display (getMsg("cli_testdisplayMsg5"), "USAGE");
-    client.currentObject.display (getMsg("cli_testdisplayMsg6"), "STATUS");
-
-    if ("server" in o && o.server.me)
-    {
-        var me = o.server.me;
-        var viewType = client.currentObject.TYPE;
-        var sampleUser = {TYPE: "IRCUser", nick: "ircmonkey",
-                          name: "IRCMonkey", properNick: "IRCMonkey",
-                          host: ""};
-        var sampleChannel = {TYPE: "IRCChannel", name: "#mojo"};
-
-        function test (from, to)
-        {
-            var fromText = (from != me) ? from.TYPE + " ``" + from.name + "''" :
-                getMsg("cli_testdisplayYou");
-            var toText   = (to != me) ? to.TYPE + " ``" + to.name + "''" :
-                getMsg("cli_testdisplayYou");
-            
-            client.currentObject.display (getMsg("cli_testdisplayMsg7",
-                                                 [fromText, toText]),
-                                          "PRIVMSG", from, to);
-            client.currentObject.display (getMsg("cli_testdisplayMsg8",
-                                                 [fromText, toText]),
-                                          "ACTION", from, to);
-            client.currentObject.display (getMsg("cli_testdisplayMsg9",
-                                                 [fromText, toText]),
-                                          "NOTICE", from, to);
-        }
-        
-        test (sampleUser, me); /* from user to me */
-        test (me, sampleUser); /* me to user */
-
-        client.currentObject.display (getMsg("cli_testdisplayMsg10"),
-                                      "PRIVMSG", sampleUser, me);
-        client.currentObject.display (getMsg("cli_testdisplayMsg11"),
-                                      "PRIVMSG", sampleUser, me);
-        client.currentObject.display (getMsg("cli_testdisplayMsg12"),
-                                      "PRIVMSG", sampleUser, me);
-        client.currentObject.display (getMsg("cli_testdisplayMsg13"),
-                                      "PRIVMSG", sampleUser, me);
-        client.currentObject.display (unescape(getMsg("cli_testdisplayMsg20")),
-                                      "PRIVMSG", sampleUser, me);
-        client.currentObject.display (unescape(getMsg("cli_testdisplayMsg21")),
-                                      "PRIVMSG", sampleUser, me);
-        client.currentObject.display (unescape(getMsg("cli_testdisplayMsg22")),
-                                      "PRIVMSG", sampleUser, me);
-        
-
-        if (viewType == "IRCChannel")
-        {
-            test (sampleUser, sampleChannel); /* user to channel */
-            test (me, sampleChannel);         /* me to channel */
-            client.currentObject.display (getMsg("cli_testdisplayMsg14"),
-                                          "TOPIC", sampleUser, sampleChannel);
-            client.currentObject.display (getMsg("cli_testdisplayMsg15"), "JOIN",
-                                          sampleUser, sampleChannel);
-            client.currentObject.display (getMsg("cli_testdisplayMsg16"), "PART",
-                                          sampleUser, sampleChannel);
-            client.currentObject.display (getMsg("cli_testdisplayMsg17"), "KICK",
-                                          sampleUser, sampleChannel);
-            client.currentObject.display (getMsg("cli_testdisplayMsg18"), "QUIT",
-                                          sampleUser, sampleChannel);
-            client.currentObject.display (getMsg("cli_testdisplayMsg19",
-                                                 me.nick),
-                                          "PRIVMSG", sampleUser, sampleChannel);
-            client.currentObject.display (getMsg("cli_testdisplayMsg11"),
-                                          "PRIVMSG", me, sampleChannel);
-        }        
-        
-    }
-    
-    return true;
-    
-}   
-
-client.onInputNetwork =
-function cli_inetwork (e)
-{
-    if (!e.inputData)
-        return false;
-
-    var net = client.networks[e.inputData];
-
-    if (net)
-    {
-        setCurrentObject (net);    
-    }
-    else
-    {
-        client.currentObject.display (getMsg("cli_inetworkMsg",e.inputData),
-                                      "ERROR");
-        return false;
-    }
-    
-    return true;
-    
-}
-
-client.onInputNetworks =
-function clie_ilistnets (e)
-{
-    var span = document.createElementNS("http://www.w3.org/1999/xhtml",
-                                        "html:span");
-    
-    span.appendChild (newInlineText(getMsg("cli_listNetworks.a")));
-
-    var netnames = keys(client.networks).sort();
-    var lastname = netnames[netnames.length - 1];
-    
-    for (n in netnames)
-    {
-        var net = client.networks[netnames[n]];
-        var a = document.createElementNS("http://www.w3.org/1999/xhtml",
-                                         "html:a");
-        a.setAttribute ("class", "chatzilla-link");
-        a.setAttribute ("href", "irc://" + net.name);
-        var t = newInlineText (net.name);
-        a.appendChild (t);
-        span.appendChild (a);
-        if (netnames[n] != lastname)
-            span.appendChild (newInlineText (MSG_CSP));
-    }
-
-    span.appendChild (newInlineText(getMsg("cli_listNetworks.b")));
-
-    client.currentObject.display (span, "INFO");
-    return true;
-}   
-
-client.onInputServer =
-function cli_iserver (e)
-{
-    if (!e.inputData)
-        return false;
-
-    var ary = 
-        e.inputData.match(/^([^\s\:]+)[\s\:]?(?:(\d+)(?:\s+(\S+)|\s*$)|(\S+)|$)/);
-    var pass;
-    if (3 in ary && ary[3])
-        pass = ary[3];
-    else if (4 in ary && ary[4])
-        pass = ary[4];
-    
-    if (ary == null)
-        return false;
-
-    var port;
-    if (2 in ary && ary[2])
-        port = ary[2];
-    else
-        port = 6667;
-
-    var net = null;
-    
-    for (var n in client.networks)
-    {
-        if (n == ary[1])
-        {
-            if (client.networks[n].isConnected())
-            {
-                client.currentObject.display (getMsg("cli_iserverMsg",ary[1]),
-                                              "ERROR");
-                return false;
-            }
-            else
-            {
-                net = client.networks[n];
-                break;
-            }
-        }
-    }
-
-    if (!net)
-    {
-        /* if there wasn't already a network created for this server,
-         * make one. */
-        client.networks[ary[1]] =
-            new CIRCNetwork (ary[1],
-                             [{name: ary[1], port: port, password: pass}],
-                             client.eventPump);
-    }
-    else
-    {
-        /* if we've already created a network for this server, reinit the
-         * serverList, in case the user changed the port or password */
-        net.serverList = [{name: ary[1], port: port, password: pass}];
-    }
-
-    client.connectToNetwork (ary[1]);
-    return true;
-
-}
-
-client.onInputQuit =
-function cli_quit (e)
-{
-    if (!("server" in e))
-    {
-        client.currentObject.display (getMsg("cli_quitMsg"), "ERROR");
-        return false;
-    }
-
-    if (!e.server.connection.isConnected)
-    {
-        client.currentObject.display (getMsg("cli_quitMsg2"), "ERROR");
-        return false;
-    }
-
-    e.server.logout (e.inputData);
-
-    return true;
-    
-}
-
-client.onInputExit =
-function cli_exit (e)
-{
-    client.quit(fromUnicode(e.inputData));    
-    window.close();
-    return true;
-}
-
-client.onInputDelete =
-function cli_idelete (e)
-{
-    if ("inputData" in e && e.inputData)
-        return false;
-    onDeleteView(client.currentObject);
-    return true;
-
-}
-
-client.onInputHide=
-function cli_ihide (e)
-{
-    
-    onHideView(client.currentObject);
-    return true;
-
-}
-
-client.onInputClear =
-function cli_iclear (e)
-{
-    
-    onClearCurrentView();
-    return true;
-
-}
-
-client.onInputNames =
-function cli_inames (e)
-{
-    var chan;
-    
-    if (!e.network)
-    {
-        client.currentObject.display (getMsg("cli_inamesMsg"), "ERROR");
-        return false;
-    }
-
-    if (e.inputData)
-    {
-        if (!e.network.isConnected())
-        {
-            client.currentObject.display (getMsg("cli_inamesMsg2",
-                                                 e.network.name), "ERROR");
-            return false;
-        }
-
-        var encodedName = fromUnicode(e.inputData + " ",
-                                      client.currentObject.charset);
-        encodedName = encodedName.substr(0, encodedName.length -1);
-        chan = encodedName;
-
-    }
-    else
-    {
-        if (client.currentObject.TYPE != "IRCChannel")
-        {
-            client.currentObject.display (getMsg("cli_inamesMsg3"),"ERROR");
-            return false;
-        }
-        
-        chan = e.channel.encodedName;
-    }
-    
-    client.currentObject.pendingNamesReply = true;
-    e.server.sendData ("NAMES " + chan + "\n");
-    
-    return true;
-    
-}
-
-client.onInputInfobar =
-function cli_tinfo ()
-{
-    
-    onToggleVisibility ("info");
-    return true;
-    
-}
-
-client.onInputTabstrip =
-function cli_itabs ()
-{
-    
-    onToggleVisibility ("tabstrip");
-    return true;
-
-}
-
-client.onInputStatusbar =
-function cli_isbar ()
-{
-    
-    onToggleVisibility ("status");
-    return true;
-
-}
-
-client.onInputHeaders =
-function cli_isbar ()
-{
-    
-    onToggleVisibility ("header");
-    return true;
-
-}
-
-client.onInputCommands =
-function cli_icommands (e)
-{
-
-    client.currentObject.display (getMsg("cli_icommandsMsg"), "INFO");
-    
-    var pattern = (e && e.inputData) ? e.inputData : "";
-    var matchResult = client.commands.listNames(pattern).join(MSG_CSP);
-    
-    if (pattern)
-        client.currentObject.display (getMsg("cli_icommandsMsg2a",
-                                             [pattern, matchResult]), "INFO");
-    else
-        client.currentObject.display (getMsg("cli_icommandsMsg2b", matchResult),
-                                      "INFO");
-
-    return true;
-}
-
-client.onInputAttach =
-function cli_iattach (e)
-{
-    if (!e.inputData)
-    {
-        return false;
-    }
-
-    if (e.inputData.search(/irc:\/\//i) != 0)
-        e.inputData = "irc://" + e.inputData;
-    
-    var url = parseIRCURL(e.inputData);
-    if (!url)
-    {
-        client.currentObject.display (getMsg("badIRCURL", e.inputData),
-                                      "ERROR");
-        return false;
-    }
-    
-    gotoIRCURL (url);
-    return true;
-}
-    
-client.onInputMe =
-function cli_ime (e)
-{
-    if (typeof client.currentObject.act != "function")
-    {
-        client.currentObject.display (getMsg("cli_imeMsg"), "ERROR");
-        return false;
-    }
-
-    e.inputData = filterOutput (e.inputData, "ACTION", "ME!");
-    client.currentObject.display (e.inputData, "ACTION", "ME!",
-                                  client.currentObject);
-    client.currentObject.act (fromUnicode(e.inputData));
-    
-    return true;
-}
-
-client.onInputList =
-function cli_ilist (e)
-{
-    var o = getObjectDetails(client.currentObject);
-    if ("network" in o)
-    {
-        o.network.list = new Array();
-        o.network.list.regexp = null;
-    }
-    return client.onInputSimpleCommand(e);
-}
-
-client.onInputRlist =
-function cli_irlist (e)
-{
-    var o = getObjectDetails(client.currentObject);
-
-    if (!("server" in o))
-    {
-        client.currentObject.display (getMsg("onInputSimpleCommandMsg",
-                                             "list"), "WARNING");
-        return false;
-    }
-    o.network.list = new Array();
-    var ary = e.inputData.match (/^\s*(\"([^\"]*)\"|([^\s]*))/);
-    try
-    {
-        if (ary[2])
-            o.network.list.regexp = new RegExp(ary[2], "i");
-        else if (ary[3])
-            o.network.list.regexp = new RegExp(ary[3], "i");
-        else
-            return false;
-    }
-    catch(error)
-    {
-        client.currentObject.display (getMsg("cli_irlistMsg", e.inputData,
-                                             error),
-                                      "ERROR");
-        return false;
-    }
-    o.server.sendData ("list\n");
-    return true;
-}
-
-client.onInputQuery =
-function cli_iquery (e)
-{
-    if (!e.server.users)
-    {
-        client.currentObject.display (getMsg("cli_imsgMsg"), "ERROR");
-        return false;
-    }
-
-    var ary = e.inputData.match (/(\S+)\s*(.*)?/);
-    if (ary == null)
-    {
-        client.currentObject.display (getMsg("cli_imsgMsg2"), "ERROR");
-        return false;
-    }
-
-    var tab = openQueryTab (e.server, ary[1]);
-    setCurrentObject (tab);
-
-    if (ary[2])
-    {
-        var msg = filterOutput(ary[2], "PRIVMSG", "ME!");
-        tab.display (msg, "PRIVMSG", "ME!", tab);
-        tab.say (fromUnicode(ary[2]));
-    }
-    
-    e.user = tab;
-
-    return true;
-}
-
-client.onInputMsg =
-function cli_imsg (e)
-{
-
-    if (!e.network || !e.network.isConnected())
-    {
-        client.currentObject.display (getMsg("cli_imsgMsg4"), "ERROR");
-        return false;
-    }
-
-    var ary = e.inputData.match (/(\S+)\s+(.*)/);
-    if (ary == null)
-        return false;
-
-    var usr = e.network.primServ.addUser(ary[1]);
-
-    var msg = filterOutput(ary[2], "PRIVMSG", "ME!");
-    usr.display (msg, "PRIVMSG", "ME!", usr);
-    usr.say (fromUnicode(ary[2], client.currentObject.charset));
-
-    return true;
-
-}
-
-client.onInputNick =
-function cli_inick (e)
-{
-
-    if (!e.inputData)
-        return false;
-    
-    if (e.server) 
-        e.server.sendData ("NICK " + e.inputData + "\n");
-
-    CIRCNetwork.prototype.INITIAL_NICK = e.inputData;
-    
-    return true;
-    
-    
-}
-
-client.onInputName =
-function cli_iname (e)
-{
-
-    if (!e.inputData)
-        return false;
-    
-    CIRCNetwork.prototype.INITIAL_NAME = e.inputData;
-
-    return true;
-    
-}
-
-client.onInputDesc =
-function cli_idesc (e)
-{
-
-    if (!e.inputData)
-        return false;
-    
-    CIRCNetwork.prototype.INITIAL_DESC = e.inputData;
-    
-    return true;
-    
-}
-
-client.onInputQuote =
-function cli_iquote (e)
-{
-    if (!e.network || !e.network.isConnected())
-    {
-        client.currentObject.display (getMsg("cli_iquoteMsg"), "ERROR");
-        return false;
-    }
-
-    e.server.sendData (fromUnicode(e.inputData) + "\n");
-    
-    return true;
-    
-}
-
-client.onInputEval =
-function cli_ieval (e)
-{
-    if (!e.inputData)
-        return false;
-    
-    if (e.inputData.indexOf ("\n") != -1)
-        e.inputData = "\n" + e.inputData + "\n";
-    
-    try
-    {
-        client.currentObject.doEval = function (__s) { return eval(__s); }
-        client.currentObject.display (e.inputData, "EVAL-IN");
-        
-        var rv = String(client.currentObject.doEval (e.inputData));
-        
-        client.currentObject.display (rv, "EVAL-OUT");
-
-    }
-    catch (ex)
-    {
-        client.currentObject.display (String(ex), "ERROR");
-    }
-    
-    return true;
-    
-}
-
-client.onInputCTCP =
-function cli_ictcp (e)
-{
-    if (!e.inputData)
-        return false;
-
-    if (!e.server)
-    {
-        client.currentObject.display (getMsg("cli_ictcpMsg"), "ERROR");
-        return false;
-    }
-
-    var ary = e.inputData.match(/^(\S+) (\S+)\s?(.*)$/);
-    if (ary == null)
-        return false;
-    
-    e.server.ctcpTo (ary[1], ary[2], ary[3]);
-    
-    return true;
-    
-}
-
-client.onInputJoin =
-function cli_ijoin (e)
-{
-    var ary = e.inputData.match(/(((\S+), *)*(\S+)) *(\S+)?/);
-    var key = "";
-    var namelist;
-
-    if (ary)
-    {
-        namelist = ary[1].split(/, */);
-        if (5 in ary)
-            key = ary[5];
-    }
-    else
-    {
-        if (client.currentObject.TYPE == "IRCChannel")
-            namelist = [client.currentObject.unicodeName];
-        else
-            return false;
-
-        if (client.currentObject.mode.key)
-            key = client.currentObject.mode.key
-    }
-
-    return joinChannel(e, namelist, key, client.CHARSET);
-}
-
-client.onInputJoinCharset =
-function cli_ijoincharset (e)
-{
-    var ary = e.inputData.match(/(((\S+), *)*(\S+)) *(\S+) *(\S+)?/);
-    var key = "";
-    var namelist;
-    var charset;
-
-    if (ary)
-    {
-        namelist = ary[1].split(/, */);
-        if (5 in ary)
-            charset = ary[5];
-        else
-            return false;
-
-        if (!checkCharset(charset))
-        {
-            client.currentObject.display (getMsg("cli_charsetError",
-                                                 charset),
-                                      "ERROR");
-            return false;
-        }
-
-        if (6 in ary)
-            key = ary[6];
-    }
-    else
-    {
-        if (client.currentObject.TYPE == "IRCChannel")
-            namelist = [client.currentObject.unicodeName];
-        else
-            return false;
-
-        charset = client.CHARSET;
-
-        if (client.currentObject.mode.key)
-            key = client.currentObject.mode.key
-    }
-
-    return joinChannel(e, namelist, key, charset);
-}
-
-client.onInputLeave =
-function cli_ipart (e)
-{
-    if (!e.channel)
-    {            
-        client.currentObject.display (getMsg("cli_ipartMsg"), "ERROR");
-        return false;
-    }
-
-    e.channel.part();
-
-    return true;
-    
-}
-
-client.onInputZoom =
-function cli_izoom (e)
-{
-    client.currentObject.display (getMsg("cli_izoomMsg"), "WARNING");
-
-    if (!e.inputData)
-        return false;
-    
-    if (!e.channel)
-    {
-        client.currentObject.display (getMsg("cli_izoomMsg2"), "ERROR");
-        return false;
-    }
-    
-    var cuser = e.channel.getUser(e.inputData);
-    
-    if (!cuser)
-    {
-        client.currentObject.display (getMsg("cli_izoomMsg3",e.inputData),
-                                      "ERROR");
-        return false;
-    }
-    
-    setCurrentObject(cuser);
-
-    return true;
-    
-}    
-
-/**
- * Performs a whois on a user.
- */
-client.onInputWhoIs = 
-function cli_whois (e) 
-{
-    if (!e.network || !e.network.isConnected())
-    {
-        client.currentObject.display (getMsg("cli_whoisMsg"), "ERROR");
-        return false;
-    }
-
-    if (!e.inputData)
-    {
-        var nicksAry = e.channel.getSelectedUsers();
- 
-        if (nicksAry)
-        {
-            mapObjFunc(nicksAry, "whois", null);
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    // Otherwise, there is no guarantee that the username
-    // is currently a user
-    var nick = e.inputData.match( /\S+/ );
-
-    e.server.whois (nick);
-    
-    return true;
-}
-
-client.onInputTopic =
-function cli_itopic (e)
-{
-    if (!e.channel)
-    {
-        client.currentObject.display (getMsg("cli_itopicMsg"), "ERROR");
-        return false;
-    }
-    
-    if (!e.inputData)
-    {
-        e.server.sendData ("TOPIC " + e.channel.name + "\n");
-    }
-    else
-    {
-        if (!e.channel.setTopic(fromUnicode(e.inputData, e.channel.charset)))
-            client.currentObject.display (getMsg("cli_itopicMsg2"), "ERROR");
-    }
-
-    return true;
-    
-}
-
-client.onInputAbout =
-function cli_iabout (e)
-{
-    client.currentObject.display (CIRCServer.prototype.VERSION_RPLY, "ABOUT");
-    client.currentObject.display (getMsg("aboutHomepage"), "ABOUT");
-    return true;
-}
-
-client.onInputAway =
-function cli_iaway (e)
-{ 
-    if (!e.network || !e.network.isConnected())
-    {
-        client.currentObject.display (getMsg("cli_iawayMsg"), "ERROR");
-        return false;
-    }
-    else if (!e.inputData) 
-    {
-        e.server.sendData ("AWAY\n");
-    }
-    else
-    {
-        e.server.sendData ("AWAY :" + fromUnicode(e.inputData) + "\n");
-    }
-
-    return true;
-}    
-
-/**
- * Removes operator status from a user.
- */
-client.onInputDeop = 
-function cli_ideop (e) 
-{
-    /* NOTE: See the next function for a well commented explanation
-       of the general form of these Multiple-Target type functions */
-
-    if (!e.channel)
-    {
-        client.currentObject.display (getMsg("cli_ideopMsg"), "ERROR");
-        return false;
-    }    
-    
-    if (!e.inputData)
-    {
-        var nicksAry = e.channel.getSelectedUsers();
-
- 
-        if (nicksAry)
-        {
-            mapObjFunc(nicksAry, "setOp", false);
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    var cuser = e.channel.getUser(e.inputData);
-    
-    if (!cuser)
-    {
-        /* use e.inputData so the case is retained */
-        client.currentObject.display (getMsg("cli_ideopMsg2",e.inputData),
-                                      "ERROR");
-        return false;
-    }
-    
-    cuser.setOp(false);
-
-    return true;
-}
-
-
-/**
- * Gives operator status to a channel user.
- */
-client.onInputOp = 
-function cli_iop (e) 
-{
-    if (!e.channel)
-    {
-        client.currentObject.display (getMsg("cli_iopMsg"), "ERROR");
-        return false;
-    }
-    
-    
-    if (!e.inputData)
-    {
-        /* Since no param is passed, check for selection */
-        var nicksAry = e.channel.getSelectedUsers();
-
-        /* If a valid array of user objects, then call the mapObjFunc */
-        if (nicksAry)
-        {
-            /* See test3-utils.js: this simply
-               applies the setOp function to every item
-               in nicksAry with the parameter of "true" 
-               each time 
-            */
-            mapObjFunc(nicksAry, "setOp", true);
-            return true;
-        }
-        else
-        {
-            /* If no input and no selection, return false
-               to display the usage */
-            return false;
-        }
-    }
-
-    /* We do have inputData, so use that, rather than any
-       other option */
-
-    var cuser = e.channel.getUser(e.inputData);
-    
-    if (!cuser)
-    {
-        client.currentObject.display (getMsg("cli_iopMsg2",e.inputData),"ERROR");
-        return false;
-    }
-    
-    cuser.setOp(true);
-
-    return true;   
-    
-}
-
-client.onInputPing = 
-function cli_iping (e) 
-{
-    if (!e.inputData)
-        return false;
-    
-    onSimulateCommand("/ctcp " + e.inputData + " PING");
-    return true;
-}
-
-client.onInputVersion = 
-function cli_iversion (e) 
-{
-    if (!e.inputData)
-        return false;
-    
-    onSimulateCommand("/ctcp " + e.inputData + " VERSION");
-    return true;
-}
-
-/**
- * Gives voice status to a user.
- */
-client.onInputVoice = 
-function cli_ivoice (e) 
-{
-    if (!e.channel)
-    {
-        client.currentObject.display (getMsg("cli_ivoiceMsg"), "ERROR");
-        return false;
-    }    
-    
-    if (!e.inputData)
-    {
-        var nicksAry = e.channel.getSelectedUsers();
-
-        if (nicksAry)
-        {
-            mapObjFunc(nicksAry, "setVoice", true);
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    var cuser = e.channel.getUser(e.inputData);
-    
-    if (!cuser)
-    {
-        client.currentObject.display (getMsg("cli_ivoiceMsg2",e.inputData),
-                                      "ERROR");
-        return false;
-    }
-    
-    cuser.setVoice(true);
-
-    return true;
-}
-
-/**
- * Removes voice status from a user.
- */
-client.onInputDevoice = 
-function cli_devoice (e) 
-{
-    if (!e.channel)
-    {
-        client.currentObject.display (getMsg("cli_devoiceMsg"), "ERROR");
-        return false;
-    }    
-    
-    if (!e.inputData)
-    {
-        var nicksAry = e.channel.getSelectedUsers();
-
-        if (nicksAry)
-        {
-            mapObjFunc(nicksAry, "setVoice", false);
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-    
-    var cuser = e.channel.getUser(e.inputData);
-    
-    if (!cuser)
-    {
-        client.currentObject.display (getMsg("cli_devoiceMsg2", e.inputData),
-                                      "ERROR");
-        return false;
-    }
-    
-    cuser.setVoice(false);
-
-    return true;
-}
-
-/**
- * Displays input to the current view, but doesn't send it to the server.
- */
-client.onInputEcho =
-function cli_iecho (e)
-{
-    if (!e.inputData)
-    {
-        return false;
-    }
-    else 
-    {
-        client.currentObject.display (e.inputData, "ECHO");
-        
-        return true;
-    }
-}
-
-client.onInputInvite =
-function cli_iinvite (e) 
-{
-
-    if (!e.network || !e.network.isConnected())
-    {
-        client.currentObject.display (getMsg("cli_iinviteMsg"), "ERROR");
-        return false;
-    }     
-    else if (!e.channel)
-    {
-        client.currentObject.display (getMsg("cli_iinviteMsg2"), "ERROR");
-        return false;
-    }    
-    
-    if (!e.inputData) {
-        return false;
-    }
-    else 
-    {
-        var ary = e.inputData.split( /\s+/ );
-        
-        if (ary.length == 1)
-        {
-            e.channel.invite (ary[0]);
-        }
-        else
-        {
-            var encodeName = fromUnicode(ary[1] + " ");
-            encodeName = encodeName.substr(0, encodeName.length -1);
-            var chan = e.server.channels[encodeName.toLowerCase()];
-             
-            if (chan == undefined) 
-            {
-                client.currentObject.display (getMsg("cli_iinviteMsg3", ary[1]),
-                                              "ERROR");
-                return false;
-            }            
-
-            chan.invite (ary[0]);
-        }   
-        
-        return true;
-    }
-}
-
-
-client.onInputKick =
-function cli_ikick (e) 
-{
-    if (!e.channel)
-    {
-        client.currentObject.display (getMsg("cli_ikickMsg"), "ERROR");
-        return false;
-    }    
-    
-    if (!e.inputData)
-    {
-        var nicksAry = e.channel.getSelectedUsers();
-
-        if (nicksAry)
-        {
-            mapObjFunc(nicksAry, "kick", "");
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    var ary = e.inputData.match ( /(\S+)? ?(.*)/ );
-
-    var cuser = e.channel.getUser(ary[1]);
-    
-    if (!cuser)
-    {    
-        client.currentObject.display (getMsg("cli_ikickMsg2", e.inputData),
-                                      "ERROR");
-        return false;
-    }
-
-    if (ary.length > 2)
-    {               
-        cuser.kick(fromUnicode(ary[2]));
-    }
-    else     
-
-    cuser.kick();    
-     
-    return true;
-}
-
-client.onInputClient =
-function cli_iclient (e)
-{
-    if (!client.messages)
-        client.display (getMsg("cli_iclientMsg"), "INFO");
-    getTabForObject (client, true);
-    setCurrentObject (client);
-    return true;
-}
-
-client.onInputNotify =
-function cli_inotify (e)
-{
-    if (!("network" in e) || !e.network)
-    {
-        client.currentObject.display (getMsg("cli_inotifyMsg"), "ERROR");
-        return false;
-    }
-
-    var net = e.network;
-    
-    if (!e.inputData)
-    {
-        if ("notifyList" in net && net.notifyList.length > 0)
-        {
-            /* delete the lists and force a ISON check, this will
-             * print the current online/offline status when the server
-             * responds */
-            delete net.onList;
-            delete net.offList;
-            onNotifyTimeout();
-        }
-        else
-            client.currentObject.display (getMsg("cli_inotifyMsg2"), "INFO");
-    }
-    else
-    {
-        var adds = new Array();
-        var subs = new Array();
-        
-        if (!("notifyList" in net))
-            net.notifyList = new Array();
-        var ary = e.inputData.toLowerCase().split(/\s+/);
-
-        for (var i in ary)
-        {
-            var idx = arrayIndexOf (net.notifyList, ary[i]);
-            if (idx == -1)
-            {
-                net.notifyList.push (ary[i]);
-                adds.push(ary[i]);
-            }
-            else
-            {
-                arrayRemoveAt (net.notifyList, idx);
-                subs.push(ary[i]);
-            }
-        }
-
-        var msgname;
-        
-        if (adds.length > 0)
-        {
-            msgname = (adds.length == 1) ? "cli_inotifyMsg3a" : 
-                                           "cli_inotifyMsg3b";
-            client.currentObject.display (getMsg(msgname, arraySpeak(adds)));
-        }
-        
-        if (subs.length > 0)
-        {
-            msgname = (subs.length == 1) ? "cli_inotifyMsg4a" : 
-                                           "cli_inotifyMsg4b";
-            client.currentObject.display (getMsg(msgname, arraySpeak(subs)));
-        }
-            
-        delete net.onList;
-        delete net.offList;
-        onNotifyTimeout();
-    }
-
-    return true;
-    
-}
-
-                
-client.onInputStalk =
-function cli_istalk (e)
-{
-    if (!e.inputData)
-    {
-        if (client.stalkingVictims.length == 0)
-        {
-            client.currentObject.display(getMsg("cli_istalkMsg"), "STALK");
-        }
-        else
-        {
-            client.currentObject.display
-                (getMsg("cli_istalkMsg2", client.stalkingVictims.join(MSG_CSP)),
-                 "STALK");
-        }
-        return true;
-    }
-
-    client.stalkingVictims[client.stalkingVictims.length] = e.inputData;
-
-    updateAllStalkExpressions();
-    client.currentObject.display(getMsg("cli_istalkMsg3",e.inputData), "STALK");
-    return true;
-}
-
-client.onInputUnstalk =
-function cli_iunstalk ( e )
-{
-    if (!e.inputData)
-        return false;
-
-    for (i in client.stalkingVictims)
-    {
-        if (client.stalkingVictims[i].match("^" + e.inputData +"$", "i"))
-        {
-            client.stalkingVictims.splice(i, 1);
-            client.currentObject.display(getMsg("cli_iunstalkMsg", e.inputData),
-                                         "UNSTALK");
-            return true;
-        }
-    }
-
-    updateAllStalkExpressions();
-    client.currentObject.display(getMsg("cli_iunstalkMsg2", e.inputData),
-                                 "UNSTALK");
-    return true;
-}
-
-client.startLogging =
-function cli_startlog (view)
-{
-    var dir = getSpecialDirectory("ProfD");
-    switch (view.TYPE)
-    {
-        case "IRCNetwork":
-            view.logFile = view.name.replace(/:/, ".") + ".log";
-            break;
-        case "IRCChannel":
-        case "IRCUser":
-            view.logFile = view.parent.parent.name.replace(/:/, ".") +
-                           "," + view.name + ".log";
-            break;
-        case "IRCClient":
-            view.logFile = "client.log";
-            break;
-        default:
-            view.displayHere(getMsg("cli_ilogMsg4"), "ERROR");
-            return;
-    }
-
-    view.logFile = view.logFile.replace(/[^\w\d.,#-_]/g, encodeChar);
-    dir.append(view.logFile);
-    view.logFile = dir.path;
-
-    try
-    {
-        view.logFile = fopen(view.logFile, ">>");
-    }
-    catch (ex)
-    {
-        view.displayHere(getMsg("cli_ilogMsg5", view.logFile), "ERROR");
-        return;
-    }
-
-    view.displayHere(getMsg("cli_ilogMsg6", view.logFile.path), "INFO");
-    try
-    {
-        view.logFile.write("Logging started at " + new Date() + "\n");
-    }
-    catch (ex)
-    {
-        view.displayHere(getMsg("cli_ilogMsg7", view.logFile.path),
-                         "ERROR");
-        view.logFile.close();
-        return;
-    }
-
-    view.logging = true;
-    view.localPrefs.setBoolPref("logging", true);
-}
-
-client.stopLogging =
-function cli_stoplog (view)
-{
-    if (view.logging)
-    {
-        view.localPrefs.clearUserPref("logging");
-        view.logFile.close();
-        view.logging = false;
-    }
-    view.displayHere(getMsg("cli_ilogMsg3"), "INFO");
-}
-
-client.onInputLog =
-function cli_ilog (e)
-{
-    var view = client.currentObject;
-
-    if (!e.inputData)
-    {
-        if (!view.logging)
-          view.displayHere(getMsg("cli_ilogMsg"), "INFO");
-        else
-          view.displayHere(getMsg("cli_ilogMsg2", view.logFile.path), "INFO");
-        return true;
-    }
-
-    if (e.inputData == "off")
-    {
-        client.stopLogging(view);
-    }
-    else if (e.inputData == "on")
-    {
-        client.startLogging(view);
-    }
-    else
-    {
-        return false;
-    }
-    return true;
-}
 
 /* 'private' function, should only be used from inside */
 CIRCChannel.prototype._addUserToGraph =
@@ -2712,10 +547,7 @@ function my_remfgraph (user)
 CIRCNetwork.prototype.onInit =
 function net_oninit ()
 {
-    var myBranch = this.name.replace(/[^\w\d]/g, encodeChar);
-    this.localPrefs =
-        client.prefService.getBranch(client.prefBranch.root + "viewList." +
-                                     myBranch + ".");
+    this.logFile = null;
 }
 
 CIRCNetwork.prototype.onInfo =
@@ -2770,12 +602,19 @@ function my_showtonet (e)
 
         case "001":
             updateTitle(this);
-            updateNetwork (this);
+            this.updateHeader();
+            client.updateHeader();
             updateStalkExpression(this);
-            if (client.currentObject == this)
+            for (var v in client.viewsArray)
             {
-                var status = document.getElementById("offline-status");
-                status.removeAttribute ("offline");
+                // reconnect to any existing views
+                var source = client.viewsArray[v].source;
+                var details = getObjectDetails(client.viewsArray[v].source);
+                if (source.TYPE != "CIRCUser" &&
+                    "network" in details && details.network == this)
+                {
+                    gotoIRCURL(source.getURL());
+                }
             }
             if ("pendingURLs" in this)
             {
@@ -2786,14 +625,6 @@ function my_showtonet (e)
                     url = this.pendingURLs.pop();
                 }
                 delete this.pendingURLs;
-            }
-            for (var v in client.viewsArray)
-            {
-                // reconnect to any existing views
-                var source = client.viewsArray[v].source;
-                var details = getObjectDetails(client.viewsArray[v].source);
-                if ("network" in details && details.network == this)
-                    gotoIRCURL(source.getURL());
             }
 
             str = e.params[2];
@@ -2819,7 +650,7 @@ function my_showtonet (e)
 CIRCNetwork.prototype.onUnknownCTCPReply = 
 function my_ctcprunk (e)
 {
-    this.display (getMsg("my_ctcprunk",
+    this.display (getMsg(MSG_FMT_CTCPREPLY,
                          [e.CTCPCode, e.CTCPData, e.user.properNick]),
                          "CTCP_REPLY", e.user, e.server.me);
 }
@@ -2827,7 +658,7 @@ function my_ctcprunk (e)
 CIRCNetwork.prototype.onNotice = 
 function my_notice (e)
 {
-    this.display (toUnicode(e.params[2]), "NOTICE", this, e.server.me);
+    this.display (toUnicode(e.params[2], this), "NOTICE", this, e.server.me);
 }
 
 CIRCNetwork.prototype.on303 = /* ISON (aka notify) reply */
@@ -2921,7 +752,7 @@ function my_list_init ()
             if (end - start > CHUNK_SIZE)
                 end = start + CHUNK_SIZE;
             for (var i = start; i < end; ++i)
-                network.displayHere (getMsg("my_322", list[i]), "322");
+                network.displayHere (getMsg(MSG_FMT_CHANLIST, list[i]), "322");
             list.displayed = end;
         }
         if (list.done && (list.displayed == list.length))
@@ -2931,8 +762,8 @@ function my_list_init ()
                 var length = list.event323.params.length;
                 network.displayHere (list.event323.params[length - 1], "323");
             }
-            network.displayHere (getMsg("my_323", [list.displayed, list.count]),
-                                 "INFO");
+            network.displayHere(getMsg(MSG_LIST_END,
+                                       [list.displayed, list.count]));
             delete network.list;
         }
         else
@@ -2947,7 +778,7 @@ function my_list_init ()
         this.list.regexp = null;
     }
     if (client.currentObject != this)
-        client.currentObject.display (getMsg("my_321", this.name), "INFO");
+        display (getMsg(MSG_LIST_REROUTED, this.name));
     this.list.lastLength = 0;
     this.list.done = false;
     this.list.count = 0;
@@ -2982,11 +813,31 @@ function my_listrply (e)
     if (!("list" in this) || !("done" in this.list))
         this.listInit();
     ++this.list.count;
-    e.params[2] = toUnicode(e.params[2]);
+    e.params[2] = toUnicode(e.params[2], this);
     if (!(this.list.regexp) || e.params[2].match(this.list.regexp)
                             || e.params[4].match(this.list.regexp))
     {
-        this.list.push([e.params[2], e.params[3], toUnicode(e.params[4])]);
+        this.list.push([e.params[2], e.params[3], 
+                        toUnicode(e.params[4], this)]);
+    }
+}
+
+CIRCNetwork.prototype.on401 =
+function my_401 (e)
+{
+    var target = e.params[2].toLowerCase();
+    if (target in this.users && "messages" in this.users[target])
+    {
+        this.users[target].displayHere(e.params[3]);
+    }
+    else if (target in this.primServ.channels &&
+             "messages" in this.primServ.channels[target])
+    {
+        this.primServ.channels[target].displayHere(e.params[3]);
+    }
+    else
+    {
+        display(e.params[3]);
     }
 }
 
@@ -2999,7 +850,8 @@ function my_315 (e)
         matches = this.whoMatches;
     else
         matches = 0;
-    e.user.display (getMsg("my_315", [e.params[2], matches]), e.code);
+    e.user.display (getMsg(MSG_WHO_END, [e.params[2], matches]), e.code);
+    e.user.updateHeader();
     delete this.whoMatches;
 }
 
@@ -3024,13 +876,15 @@ function my_352 (e)
     
     var status = e.params[7];
     if (e.params[7] == "G")
-        status = getMsg("my_352.g");
+        status = MSG_GONE;
     else if (e.params[7] == "H")
-        status = getMsg("my_352.h");
+        status = MSG_HERE;
         
-    e.user.display (getMsg("my_352", [e.params[6], e.params[3], e.params[4],
-                                      desc, status, toUnicode(e.params[2]), 
-                                      e.params[5], hops]), e.code, e.user);
+    e.user.display (getMsg(MSG_WHO_MATCH,
+                           [e.params[6], e.params[3], e.params[4],
+                            desc, status,
+                            toUnicode(e.params[2], this), 
+                            e.params[5], hops]), e.code, e.user);
     updateTitle (e.user);
     if ("whoMatches" in this)
         ++this.whoMatches;
@@ -3047,85 +901,87 @@ function my_whoisreply (e)
 {
     var text = "egads!";
     var nick = e.params[2];
-    
+    var user;
+
+    if (nick in e.server.users)
+        user = e.server.users[nick];
+        
     switch (Number(e.code))
     {
         case 311:
-            text = getMsg("my_whoisreplyMsg",
+            text = getMsg(MSG_WHOIS_NAME,
                           [nick, e.params[3], e.params[4],
-                           toUnicode(e.params[6])]);
+                           toUnicode(e.params[6], this)]);
             break;
             
         case 319:
             var ary = stringTrim(e.params[3]).split(" ");
-            text = getMsg("my_whoisreplyMsg2",[nick, arraySpeak(ary)]);
+            text = getMsg(MSG_WHOIS_CHANNELS, [nick, arraySpeak(ary)]);
             break;
             
         case 312:
-            text = getMsg("my_whoisreplyMsg3",
+            text = getMsg(MSG_WHOIS_SERVER,
                           [nick, e.params[3], e.params[4]]);
             break;
             
         case 317:
-            text = getMsg("my_whoisreplyMsg4",
+            text = getMsg(MSG_WHOIS_IDLE,
                           [nick, formatDateOffset(Number(e.params[3])),
                           new Date(Number(e.params[4]) * 1000)]);
             break;
             
         case 318:
-            text = getMsg("my_whoisreplyMsg5", nick);
+            text = getMsg(MSG_WHOIS_END, nick);
+            if (user)
+                user.updateHeader();
             break;
             
     }
 
-    if (nick in e.server.users && "messages" in e.server.users[nick])
-    {
-        var user = e.server.users[nick];
-        updateTitle(user);
-        user.display (text, e.code);
-    }
+    if (user && "messages" in user)
+        user.displayHere (text, e.code);
     else
-    {
         e.server.parent.display(text, e.code);
-    }
 }
 
 CIRCNetwork.prototype.on341 = /* invite reply */
 function my_341 (e)
 {
-    this.display (getMsg("my_341", [e.params[2], toUnicode(e.params[3])]), "341");
+    this.display (getMsg(MSG_YOU_INVITE, [e.params[2],
+                                          toUnicode(e.params[3], this)]),
+                  "341");
 }
 
 CIRCNetwork.prototype.onInvite = /* invite message */
 function my_invite (e)
 {
-    this.display (getMsg("my_Invite", [e.user.properNick, e.user.name,
-                                       e.user.host, e.params[2]]), "INVITE");
+    this.display (getMsg(MSG_INVITE_YOU, [e.user.properNick, e.user.name,
+                                          e.user.host, e.params[2]]), "INVITE");
 }
 
 CIRCNetwork.prototype.on433 = /* nickname in use */
 function my_433 (e)
 {
-    if (e.params[2] == CIRCNetwork.prototype.INITIAL_NICK && this.connecting)
+    if (e.params[2] == this.INITIAL_NICK && this.connecting)
     {
-        var newnick = CIRCNetwork.prototype.INITIAL_NICK + "_";
-        CIRCNetwork.prototype.INITIAL_NICK = newnick;
-        e.server.parent.display (getMsg("my_433Retry", [e.params[2], newnick]),
+        var newnick = this.INITIAL_NICK + "_";
+        this.INITIAL_NICK = newnick;
+        e.server.parent.display (getMsg(MSG_RETRY_NICK, [e.params[2], newnick]),
                                  "433");
         this.primServ.sendData("NICK " + newnick + "\n");
     }
     else
     {
-        this.display (getMsg("my_433Msg", e.params[2]), "433");
+        this.display (getMsg(MSG_NICK_IN_USE, e.params[2]), "433");
     }
 }
 
 CIRCNetwork.prototype.onStartConnect =
 function my_sconnect (e)
 {
-    this.display (getMsg("my_sconnect", [this.name, e.host, e.port,
-                                         e.connectAttempt,
-                                         this.MAX_CONNECT_ATTEMPTS]), "INFO");
+    this.display (getMsg(MSG_CONNECTION_ATTEMPT,
+                         [this.name, e.host, e.port, e.connectAttempt,
+                          this.MAX_CONNECT_ATTEMPTS]), "INFO");
 }
     
 CIRCNetwork.prototype.onError =
@@ -3138,11 +994,11 @@ function my_neterror (e)
         switch (e.errorCode)
         {
             case JSIRC_ERR_NO_SOCKET:
-                msg = getMsg ("my_neterrorNoSocket");
+                msg = MSG_ERR_NO_SOCKET;
                 break;
                 
             case JSIRC_ERR_EXHAUSTED:
-                msg = getMsg ("my_neterrorExhausted");
+                msg = MSG_ERR_EXHAUSTED;
                 break;
         }
     }
@@ -3156,7 +1012,6 @@ function my_neterror (e)
 CIRCNetwork.prototype.onDisconnect =
 function my_netdisconnect (e)
 {
-    var connection = e.server.connection;
     var msg;
     var reconnect = false;
     
@@ -3165,36 +1020,36 @@ function my_netdisconnect (e)
         switch (e.disconnectStatus)
         {
             case 0:
-                msg = getMsg("my_netdisconnectConnectionClosed", [this.name,
-                             connection.host, connection.port]);
+                msg = getMsg(MSG_CONNECTION_CLOSED, [this.name,
+                             e.server.hostname, e.server.port]);
                 break;
 
             case NS_ERROR_CONNECTION_REFUSED:
-                msg = getMsg("my_netdisconnectConnectionRefused", [this.name,
-                             connection.host, connection.port]);
+                msg = getMsg(MSG_CONNECTION_REFUSED, [this.name,
+                             e.server.hostname, e.server.port]);
                 break;
 
             case NS_ERROR_NET_TIMEOUT:
-                msg = getMsg("my_netdisconnectConnectionTimeout", [this.name,
-                             connection.host, connection.port]);
+                msg = getMsg(MSG_CONNECTION_TIMEOUT, [this.name,
+                             e.server.hostname, e.server.port]);
                 break;
 
             case NS_ERROR_UNKNOWN_HOST:
-                msg = getMsg("my_netdisconnectUnknownHost",
-                             connection.host);
+                msg = getMsg(MSG_UNKNOWN_HOST,
+                             e.server.hostname);
                 break;
             
             default:
-                msg = getMsg("my_netdisconnectConnectionClosedStatus",
-                             [this.name, connection.host, connection.port]);
+                msg = getMsg(MSG_CLOSE_STATUS,
+                             [this.name, e.server.hostname, e.server.port]);
                 reconnect = true;
                 break;
         }    
     }
     else
     {
-        msg = getMsg("my_neterrorConnectionClosed", [this.name,
-                     connection.host, connection.port]);
+        msg = getMsg(MSG_CONNECTION_CLOSED,
+                     [this.name, e.server.hostname, e.server.port]);
     }
     
     for (var v in client.viewsArray)
@@ -3213,9 +1068,11 @@ function my_netdisconnect (e)
         var channel = this.primServ.channels[c];
         client.rdf.clearTargets(channel.getGraphResource(),
                                 client.rdf.resChanUser);
+        channel.active = false;
     }
     
     this.connecting = false;
+    dispatch("sync-headers");
     updateTitle();
     if ("userClose" in client && client.userClose &&
         client.getConnectionCount() == 0)
@@ -3227,8 +1084,19 @@ function my_replyping (e)
 {
     var delay = formatDateOffset ((new Date() - new Date(Number(e.CTCPData))) /
                                   1000);
-    display (getMsg("my_replyping", [e.user.properNick, delay]), "INFO",
+    display (getMsg(MSG_PING_REPLY, [e.user.properNick, delay]), "INFO",
              e.user, "ME!");
+}
+
+CIRCNetwork.prototype.on221 =
+CIRCNetwork.prototype.onUserMode =
+function my_umode (e)
+{
+    if ("user" in e && e.user)
+        e.user.updateHeader();
+
+    display(getMsg(MSG_USER_MODE, [e.params[1], e.params[2]]),
+            MT_MODE);
 }
 
 CIRCNetwork.prototype.onNick =
@@ -3237,43 +1105,34 @@ function my_cnick (e)
     if (userIsMe (e.user))
     {
         if (client.currentObject == this)
-            this.displayHere (getMsg("my_cnickMsg", e.user.properNick),
-                              "NICK", "ME!", e.user, this);
-        updateNetwork();
+            this.displayHere(getMsg(MSG_NEWNICK_YOU, e.user.properNick),
+                             "NICK", "ME!", e.user, this);
+        this.updateHeader();
         updateStalkExpression(this);
     }
     else
     {
-        this.display (getMsg("my_cnickMsg2", [e.oldNick, e.user.properNick]),
-                      "NICK", e.user, this);
+        this.display(getMsg(MSG_NEWNICK_NOTYOU, [e.oldNick, e.user.properNick]),
+                     "NICK", e.user, this);
     }
 }
 
 CIRCNetwork.prototype.onPing =
 function my_netping (e)
 {
-    updateNetwork (this);
+    this.updateHeader(this);
 }
 
 CIRCNetwork.prototype.onPong =
 function my_netpong (e)
 {
-
-    updateNetwork (this);
-    
+    this.updateHeader(this);
 }
 
 CIRCChannel.prototype.onInit =
 function chan_oninit ()
 {
-    var myBranch = this.parent.parent.name + "," + this.name;
-    myBranch = myBranch.replace(/[^\w\d,]/g, encodeChar);
-    this.localPrefs =
-        client.prefService.getBranch(client.prefBranch.root + "viewList." +
-                                     myBranch + ".");
-
-    if (getBoolPref("logging", false, this.localPrefs))
-       client.startLogging(this);
+    this.logFile = null;
 }
 
 CIRCChannel.prototype.onPrivmsg =
@@ -3292,18 +1151,18 @@ function my_cprivmsg (e)
         }
         catch (ex)
         {
-            this.say (fromUnicode(e.user.nick + ": " + String(ex), this.charset));
+            this.say(fromUnicode(e.user.nick + ": " + String(ex), this));
             return false;
         }
         
-        if (typeof (v) != "undefined")
+        if (typeof v != "undefined")
         {
             if (v != null)                
                 v = String(v);
             else
                 v = "null";
             
-            var rsp = getMsg("my_cprivmsgMsg", e.user.nick);
+            var rsp = getMsg(MSG_PREFIX_RESPONSE, e.user.nick);
             
             if (v.indexOf ("\n") != -1)
                 rsp += "\n";
@@ -3311,7 +1170,7 @@ function my_cprivmsg (e)
                 rsp += " ";
             
             this.display (rsp + v, "PRIVMSG", e.server.me, this);
-            this.say (fromUnicode(rsp + v, this.charset));
+            this.say (fromUnicode(rsp + v, this));
         }
     }
 
@@ -3352,30 +1211,33 @@ function my_topic (e)
 {
 
     if (e.code == "TOPIC")
-        this.display (getMsg("my_topicMsg", [this.topicBy, this.topic]),
+        this.display (getMsg(MSG_TOPIC_CHANGED, [this.topicBy, this.topic]),
                       "TOPIC");
     
     if (e.code == "332")
     {
         if (this.topic)
-            this.display (getMsg("my_topicMsg2", [this.unicodeName, this.topic]),
+        {
+            this.display (getMsg(MSG_TOPIC,
+                                 [this.unicodeName, this.topic]),
                           "TOPIC");
+        }
         else
-            this.display (getMsg("my_topicMsg3", this.unicodeName), "TOPIC");
+        {
+            this.display (getMsg(MSG_NO_TOPIC, this.unicodeName), "TOPIC");
+        }
     }
     
-    updateChannel (this);
-    updateTitle (this);
+    this.updateHeader();
+    updateTitle(this);
     
 }
 
 CIRCChannel.prototype.on333 = /* Topic setter information */
 function my_topicinfo (e)
 {
-    
-    this.display (getMsg("my_topicinfoMsg", [this.unicodeName, this.topicBy, 
-                                             this.topicDate]), "TOPIC");
-    
+    this.display (getMsg(MSG_TOPIC_DATE, [this.unicodeName, this.topicBy, 
+                                          this.topicDate]), "TOPIC");
 }
 
 CIRCChannel.prototype.on353 = /* names reply */
@@ -3389,61 +1251,56 @@ function my_topic (e)
 CIRCChannel.prototype.onNotice =
 function my_notice (e)
 {
-    this.display (toUnicode(e.params[2], this.charset),
+    this.display (toUnicode(e.params[2], this),
                   "NOTICE", e.user, this);   
 }
 
 CIRCChannel.prototype.onCTCPAction =
 function my_caction (e)
 {
-
     this.display (e.CTCPData, "ACTION", e.user, this);
-
 }
 
 CIRCChannel.prototype.onUnknownCTCP =
 function my_unkctcp (e)
 {
-
     this.display (getMsg("my_unkctcpMsg", [e.CTCPCode, e.CTCPData,
                                            e.user.properNick]),
                   "BAD-CTCP", e.user, this);
-    
 }   
 
 CIRCChannel.prototype.onJoin =
 function my_cjoin (e)
 {
+    if (!("messages" in this))
+        this.displayHere(getMsg(MSG_CHANNEL_OPENED, this.unicodeName), MT_INFO);
 
     if (userIsMe (e.user))
     {
-        this.display (getMsg("my_cjoinMsg", e.channel.unicodeName), "JOIN",
+        this.display (getMsg(MSG_YOU_JOINED, e.channel.unicodeName), "JOIN",
                       e.server.me, this);
-        setCurrentObject(this);
     }
     else
     {
-        this.display(getMsg("my_cjoinmsg2", [e.user.properNick, e.user.name,
-                                             e.user.host,
-                                             e.channel.unicodeName]),
+        this.display(getMsg(MSG_SOMEONE_JOINED,
+                            [e.user.properNick, e.user.name, e.user.host,
+                             e.channel.unicodeName]),
                      "JOIN", e.user, this);
     }
 
     this._addUserToGraph (e.user);
     updateUserList()
-    updateChannel (e.channel);
-    
+    e.channel.updateHeader();
 }
 
 CIRCChannel.prototype.onPart =
 function my_cpart (e)
 {
-
     this._removeUserFromGraph(e.user);
 
     if (userIsMe (e.user))
     {
-        this.display (getMsg("my_cpartMsg", e.channel.unicodeName), "PART",
+        this.display (getMsg(MSG_YOU_LEFT, e.channel.unicodeName), "PART",
                       e.user, this);
         if (client.currentObject == this)    
             /* hide the tree while we remove (possibly tons) of nodes */
@@ -3456,26 +1313,31 @@ function my_cpart (e)
             /* redisplay the tree */
             client.rdf.setTreeRoot("user-list", this.getGraphResource());
 
-        if (client.DELETE_ON_PART)
-            onDeleteView(this);
+        if ("noDelete" in this)
+            delete this.noDelete;
+        else if (client.prefs["deleteOnPart"])
+            this.dispatch("delete");
     }
     else
-        this.display (getMsg("my_cpartMsg2",
-                             [e.user.properNick, e.channel.unicodeName]), 
+    {
+        this.display (getMsg(MSG_SOMEONE_LEFT,
+                             [e.user.properNick, e.channel.unicodeName]),
                       "PART", e.user, this);
+    }
 
-    updateChannel (e.channel);
-    
+    e.channel.updateHeader();
 }
 
 CIRCChannel.prototype.onKick =
 function my_ckick (e)
 {
-
     if (userIsMe (e.lamer))
-        this.display (getMsg("my_ckickMsg",
-                             [e.channel.unicodeName, e.user.properNick, e.reason]),
+    {
+        this.display (getMsg(MSG_YOUR_GONE,
+                             [e.channel.unicodeName, e.user.properNick,
+                              e.reason]),
                       "KICK", e.user, this);
+    }
     else
     {
         var enforcerProper, enforcerNick;
@@ -3490,59 +1352,50 @@ function my_ckick (e)
             enforcerNick = e.user.nick;
         }
         
-        this.display (getMsg("my_ckickMsg2",
+        this.display (getMsg(MSG_SOMEONE_GONE,
                              [e.lamer.properNick, e.channel.unicodeName, 
                               enforcerProper, e.reason]), "KICK", e.user, this);
     }
     
     this._removeUserFromGraph(e.lamer);
 
-    updateChannel (e.channel);
-    
+    e.channel.updateHeader();
 }
 
 CIRCChannel.prototype.onChanMode =
 function my_cmode (e)
 {
-
     if ("user" in e)
     {
-        var msg = toUnicode(e.params.slice(1).join(" "),
-                            e.channel.charset);
-        this.display (getMsg("my_cmodeMsg",
-                             //[e.params.slice(1).join(" "),
-                             [msg,
-                              e.user.properNick]), "MODE", e.user, this);
+        var msg = toUnicode(e.params.slice(1).join(" "), this);
+        this.display (getMsg(MSG_MODE_CHANGED, [msg, e.user.properNick]),
+                      "MODE", e.user, this);
     }
 
     for (var u in e.usersAffected)
         e.usersAffected[u].updateGraphResource();
 
-    updateChannel (e.channel);
-    updateTitle (e.channel);
-    
+    e.channel.updateHeader();
+    updateTitle(e.channel);
+    if (client.currentObject == this)
+        updateUserList();
 }
-
-    
 
 CIRCChannel.prototype.onNick =
 function my_cnick (e)
 {
-
     if (userIsMe (e.user))
     {
-        this.display (getMsg("my_cnickMsg", e.user.properNick), "NICK",
-                      "ME!", e.user, this);
-        updateNetwork();
+        if (client.currentObject == this)
+            this.displayHere(getMsg(MSG_NEWNICK_YOU, e.user.properNick),
+                             "NICK", "ME!", e.user, this);
+        this.parent.parent.updateHeader();
     }
     else
-        this.display (getMsg("my_cnickMsg2", e.oldNick, e.user.properNick),
-                      "NICK", e.user, this);
-
-    /*
-      dd ("updating resource " + e.user.getGraphResource().Value +
-        " to new nickname " + e.user.properNick);
-    */
+    {
+        this.display(getMsg(MSG_NEWNICK_NOTYOU, [e.oldNick, e.user.properNick]),
+                     "NICK", e.user, this);
+    }
 
     e.user.updateGraphResource();
     updateUserList();
@@ -3551,32 +1404,29 @@ function my_cnick (e)
 CIRCChannel.prototype.onQuit =
 function my_cquit (e)
 {
-
-    if (userIsMe(e.user)) /* I dont think this can happen */
-        this.display (getMsg("my_cquitMsg", [e.server.parent.name, e.reason]),
+    if (userIsMe(e.user))
+    {
+        /* I dont think this can happen */
+        this.display (getMsg(MSG_YOU_QUIT, [e.server.parent.name, e.reason]),
                       "QUIT", e.user, this);
+    }
     else
-        this.display (getMsg("my_cquitMsg2", [e.user.properNick,
-                                              e.server.parent.name, e.reason]),
+    {
+        this.display (getMsg(MSG_SOMEONE_QUIT,
+                             [e.user.properNick, e.server.parent.name,
+                              e.reason]),
                       "QUIT", e.user, this);
+    }
 
     this._removeUserFromGraph(e.user);
 
-    updateChannel (e.channel);
-    
+    e.channel.updateHeader();
 }
 
 CIRCUser.prototype.onInit =
 function user_oninit ()
 {
-    var myBranch = this.parent.parent.name + "," + this.name;
-    myBranch = myBranch.replace(/[^\w\d,]/g, encodeChar);
-    this.localPrefs =
-        client.prefService.getBranch(client.prefBranch.root + "viewList." +
-                                     myBranch + ".");
-
-    if (getBoolPref("logging", false, this.localPrefs))
-       client.startLogging(this);
+    this.logFile = null;
 }
 
 CIRCUser.prototype.onPrivmsg =
@@ -3584,57 +1434,61 @@ function my_cprivmsg (e)
 {
     if ("messages" in this)
     {
-        playSounds(client.QUERY_BEEP);
+        playSounds(client.prefs["queryBeep"]);
     }
     else
     {        
-        playSounds(client.MSG_BEEP);
-        if (client.NEW_TAB_LIMIT == 0 ||
-            client.viewsArray.length < client.NEW_TAB_LIMIT)
+        playSounds(client.prefs["msgBeep"]);
+        var limit = client.prefs["newTabLimit"];
+        if (limit == 0 || client.viewsArray.length < limit)
         {
             var tab = openQueryTab (e.server, e.user.nick);
             if (client.FOCUS_NEW_TAB)
                 setCurrentObject(tab);
         }    
     }
+
     this.display (e.params[2], "PRIVMSG", e.user, e.server.me);
 }
 
 CIRCUser.prototype.onNick =
 function my_unick (e)
 {
-
     if (userIsMe(e.user))
     {
-        updateNetwork();
+        this.parent.parent.updateHeader();
         updateTitle();
     }
-    
+    else if ("messages" in this && this.messages)
+    {
+        this.display(getMsg(MSG_NEWNICK_NOTYOU, [e.oldNick, e.user.properNick]),
+                     "NICK", e.user, this);
+    }
+
+    this.updateHeader();
+    var tab = getTabForObject(this);
+    if (tab)
+        tab.setAttribute("label", this.properNick);
 }
 
 CIRCUser.prototype.onNotice =
 function my_notice (e)
 {
-    this.display (toUnicode(e.params[2], this.charset),
-                  "NOTICE", this, e.server.me);   
+    this.display (toUnicode(e.params[2], this), "NOTICE", this, e.server.me);   
 }
 
 CIRCUser.prototype.onCTCPAction =
 function my_uaction (e)
 {
-
     e.user.display (e.CTCPData, "ACTION", this, e.server.me);
-
 }
 
 CIRCUser.prototype.onUnknownCTCP =
 function my_unkctcp (e)
 {
-
-    this.parent.parent.display (getMsg("my_unkctcpMsg",
+    this.parent.parent.display (getMsg(MSG_UNKNOWN_CTCP,
                                        [e.CTCPCode, e.CTCPData,
                                        e.user.properNick]),
                                 "BAD-CTCP", this, e.server.me);
-
 }
 

@@ -29,25 +29,58 @@
 var utils = new Object();
 
 var DEBUG = true;
-
-var dumpln;
 var dd;
 
-if (typeof document == "undefined") /* in xpcshell */
-    dumpln = print;
-else
-    if (typeof dump == "function")
-        dumpln = function (str) {dump (str + "\n"); }
-    else if (jsenv.HAS_RHINO)
-        dumpln = function (str) {var out = java.lang.System.out;
-                                 out.println(str); out.flush(); }
-    else
-        dumpln = function () {} /* no suitable function */
-
-if (DEBUG)
-    dd = dumpln;
-else
+if (DEBUG) {
+    var _dd_pfx = "";
+    var _dd_singleIndent = "  ";
+    var _dd_indentLength = _dd_singleIndent.length;
+    var _dd_currentIndent = "";
+    var _dd_lastDumpWasOpen = false;
+    var _dd_timeStack = new Array();
+    var _dd_disableDepth = Number.MAX_VALUE;
+    var _dd_currentDepth = 0;
+    dd = function _dd(str) {
+             if (typeof str != "string") {
+                 dump (str + "\n");
+             } else if (str[str.length - 1] == "{") {
+                 ++_dd_currentDepth;
+                 if (_dd_currentDepth >= _dd_disableDepth)
+                     return;
+                 if (str.indexOf("OFF") == 0)
+                     _dd_disableDepth = _dd_currentDepth;
+                 _dd_timeStack.push (new Date());
+                 if (_dd_lastDumpWasOpen)
+                     dump("\n");
+                 dump (_dd_pfx + _dd_currentIndent + str);
+                 _dd_currentIndent += _dd_singleIndent;
+                 _dd_lastDumpWasOpen = true;
+             } else if (str[0] == "}") {
+                 if (--_dd_currentDepth >= _dd_disableDepth)
+                     return;
+                 _dd_disableDepth = Number.MAX_VALUE;
+                 var sufx = (new Date() - _dd_timeStack.pop()) / 1000 + " sec";
+                 _dd_currentIndent = 
+                     _dd_currentIndent.substr(0, _dd_currentIndent.length -
+                                              _dd_indentLength);
+                 if (_dd_lastDumpWasOpen)
+                     dump(str + " " + sufx + "\n");
+                 else
+                     dump(_dd_pfx + _dd_currentIndent + str + " " +
+                          sufx + "\n");
+                 _dd_lastDumpWasOpen = false;
+             } else {
+                 if (_dd_currentDepth >= _dd_disableDepth)
+                     return;
+                 if (_dd_lastDumpWasOpen)
+                     dump("\n");
+                 dump(_dd_pfx + _dd_currentIndent + str + "\n");
+                 _dd_lastDumpWasOpen = false;
+             }    
+         }
+} else {
     dd = function (){};
+}
 
 var jsenv = new Object();
 jsenv.HAS_SECURITYMANAGER = ((typeof netscape == "object") &&
@@ -178,6 +211,32 @@ function dumpObjectTree (o, recurse, compress, level)
     
 }
 
+function replaceVars(str, vars)
+{
+    // replace "string $with a $variable", with
+    // "string " + vars["with"] + " with a " + vars["variable"]
+
+    function doReplace(symbol)
+    {
+        var name = symbol.substr(1);
+        if (name in vars)
+            return vars[name];
+        
+        return "$" + name;
+    };
+    
+    return str.replace(/(\$\w[\w\d\-]+)/g, doReplace);
+}
+    
+function formatException (ex)
+{
+    if (ex instanceof Error)
+        return getMsg (MSG_FMT_JSEXCEPTION, [ex.name, ex.message, ex.fileName, 
+                                             ex.lineNumber]);
+
+    return String(ex);
+}
+
 /*
  * Clones an existing object (Only the enumerable properties
  * of course.) use as a function..
@@ -187,13 +246,27 @@ function dumpObjectTree (o, recurse, compress, level)
  */
 function Clone (obj)
 {
-    robj = new Object();
+    var robj = new Object();
 
     for (var p in obj)
         robj[p] = obj[p];
 
     return robj;
     
+}
+
+function Copy(source, dest, overwrite)
+{
+    if (!dest)
+        dest = new Object();
+    
+    for (var p in source)
+    {
+        if (overwrite || !(p in dest))
+            dest[p] = source[p];
+    }
+    
+    return dest;
 }
 
 /*
@@ -272,6 +345,16 @@ function matchEntry (partialName, list)
     
 }
 
+function encodeChar(ch)
+{
+   return "%" + ch.charCodeAt(0).toString(16);
+}
+
+function escapeFileName(fileName)
+{
+    return fileName.replace(/[^\w\d.,#-_]/g, encodeChar);
+}
+
 function getCommonPfx (list)
 {
     var pfx = list[0];
@@ -296,6 +379,23 @@ function getCommonPfx (list)
 
     return pfx;
 
+}
+
+function openTopWin (url)
+{
+    return openDialog (getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
+}
+    
+function getWindowByType (windowType)
+{
+    const MEDIATOR_CONTRACTID =
+        "@mozilla.org/appshell/window-mediator;1";
+    const nsIWindowMediator  = Components.interfaces.nsIWindowMediator;
+
+    var windowManager =
+        Components.classes[MEDIATOR_CONTRACTID].getService(nsIWindowMediator);
+
+    return windowManager.getMostRecentWindow(windowType);
 }
 
 function renameProperty (obj, oldname, newname)
@@ -336,6 +436,22 @@ function newObject(contractID, iface)
     
 }
 
+function getContentWindow(frame)
+{
+    try
+    {
+        if (!frame || !("contentWindow" in frame))
+            return false;
+
+        return frame.contentWindow;
+    }
+    catch (ex)
+    {
+        // throws exception is contentWindow is gone
+        return null;
+    }
+}
+
 function getPriv (priv)
 {
     if (!jsenv.HAS_SECURITYMANAGER)
@@ -355,6 +471,16 @@ function getPriv (priv)
     
     return rv;
     
+}
+
+function len(o)
+{
+    var l = 0;
+    
+    for (var p in o)
+        ++l;
+    
+    return l;
 }
 
 function keys (o)
@@ -391,13 +517,13 @@ function formatDateOffset (offset, format)
     {
         var ary = new Array();
         if (days > 0)
-            ary.push (getMsg("days", days));
+            ary.push (getMsg(MSG_DAYS, days));
         if (hours > 0)
-            ary.push (getMsg("hours", hours));
+            ary.push (getMsg(MSG_HOURS, hours));
         if (minutes > 0)
-            ary.push (getMsg("minutes", minutes));
+            ary.push (getMsg(MSG_MINUTES, minutes));
         if (seconds > 0 || offset == 0)
-            ary.push (getMsg("seconds", seconds));
+            ary.push (getMsg(MSG_SECONDS, seconds));
 
         format = ary.join(", ");
     }
@@ -652,7 +778,43 @@ function getSpecialDirectory(name)
     return utils.directoryService.get(name, Components.interfaces.nsIFile);
 }
 
-function encodeChar(ch)
+function getFileFromURLSpec(url)
 {
-   return "%" + ch.charCodeAt(0).toString(16);
+    const FILE_CTRID = "@mozilla.org/network/protocol;1?name=file";
+    const nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
+    
+    var handler = Components.classes[FILE_CTRID].createInstance();
+    handler = handler.QueryInterface(nsIFileProtocolHandler);
+    return handler.getFileFromURLSpec(url);
+}
+
+function getURLSpecFromFile (file)
+{
+    if (!file)
+        return null;
+
+    const IOS_CTRID = "@mozilla.org/network/io-service;1";
+    const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
+
+    const nsIIOService = Components.interfaces.nsIIOService;
+    const nsILocalFile = Components.interfaces.nsILocalFile;
+    
+    if (typeof file == "string")
+    {
+        var fileObj =
+            Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
+        fileObj.initWithPath(file);
+        file = fileObj;
+    }
+    
+    var service = Components.classes[IOS_CTRID].getService(nsIIOService);
+    /* In sept 2002, bug 166792 moved this method to the nsIFileProtocolHandler
+     * interface, but we need to support older versions too. */
+    if ("getURLSpecFromFile" in service)
+        return service.getURLSpecFromFile(file);
+
+    var nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
+    var fileHandler = service.getProtocolHandler("file");
+    fileHandler = fileHandler.QueryInterface(nsIFileProtocolHandler);
+    return fileHandler.getURLSpecFromFile(file);
 }

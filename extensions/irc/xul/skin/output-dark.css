@@ -43,6 +43,43 @@ a.chatzilla-link:visited {
     color: lightgrey;
 }
 
+.header {
+    color: lightslategrey;
+    background-color: #333333;
+/*    -moz-opacity: 0.9; */ causes memory leak?
+    border: 1px white solid;
+    -moz-border-radius: 7px;
+}
+
+.value {
+    color: silver;
+}
+
+#splash {
+    color: #444444;
+}
+
+#usr-descnodes,
+#ch-topicnodes {
+    color: white;
+}
+
+[condition] {
+    font-weight: bold;
+}
+
+[condition="red"] {
+    color: red;
+}
+
+[condition="yellow"] {
+    color: yellow;
+}
+
+[condition="green"] {
+    color: lightgreen;
+}
+
 .msg-data[msg-type="JOIN"]  a.chatzilla-link,
 .msg-data[msg-type="PART"]  a.chatzilla-link {
     color: lightcyan;

@@ -137,7 +137,8 @@ function (contentType, command, windowTarget, request)
         args.url = channel.URI.spec;
 
         w.openDialog("chrome://chatzilla/content/chatzilla.xul", "_blank",
-                     "chrome,menubar,toolbar,resizable,dialog=no", args);
+                     "chrome,menubar,toolbar,status,resizable,dialog=no",
+                     args);
     }
     
 }

@@ -67,6 +67,9 @@ const FILTER_IMAGES = Components.interfaces.nsIFilePicker.filterImages;
 const FILTER_XML    = Components.interfaces.nsIFilePicker.filterXML;
 const FILTER_XUL    = Components.interfaces.nsIFilePicker.filterXUL;
 
+const FTYPE_DIR  = Components.interfaces.nsIFile.DIRECTORY_TYPE;
+const FTYPE_FILE = Components.interfaces.nsIFile.NORMAL_FILE_TYPE;
+
 // evald f = fopen("/home/rginda/foo.txt", MODE_WRONLY | MODE_CREATE)
 // evald f = fopen("/home/rginda/vnk.txt", MODE_RDONLY)
 
@@ -218,6 +221,25 @@ function pickOpen (title, typeList, defaultFile, defaultDir)
     return {reason: rv, file: picker.file, picker: picker};
 }
 
+function mkdir (localFile, perms)
+{
+    if (typeof perms == "undefined")
+        perms = 0766 & ~futils.umask;
+
+    localFile.create(FTYPE_DIR, perms);
+}
+
+function nsLocalFile(path)
+{
+    const LOCALFILE_CTRID = "@mozilla.org/file/local;1";
+    const nsILocalFile = Components.interfaces.nsILocalFile;
+
+    var localFile =
+        Components.classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
+    localFile.initWithPath(path);
+    return localFile;
+}
+
 function fopen (path, mode, perms, tmp)
 {
     return new LocalFile(path, mode, perms, tmp);
@@ -262,8 +284,7 @@ function LocalFile(file, mode, perms, tmp)
         
     if (typeof file == "string")
     {
-        this.localFile = classes[LOCALFILE_CTRID].createInstance(nsILocalFile);
-        this.localFile.initWithPath(file);
+        this.localFile = new nsLocalFile(file);
     }
     else if (file instanceof nsILocalFile)
     {
@@ -292,7 +313,6 @@ function LocalFile(file, mode, perms, tmp)
         this.inputStream.init(is);
     }    
 }
-
 
 LocalFile.prototype.write =
 function fo_write(buf)

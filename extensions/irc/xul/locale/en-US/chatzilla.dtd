@@ -1,3 +1,7 @@
+<!ENTITY Menubar.tooltip    "Main Menu">
+<!ENTITY Toolbar.tooltip    "Main Toolbar">
+
+
 <!ENTITY menuBar.tooltip    "Menu Bar">
 <!ENTITY header.tooltip     "Headers">
 <!ENTITY op.value           "Op">

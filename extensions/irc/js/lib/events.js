@@ -196,8 +196,19 @@ function ep_routeevent (e)
                     }
                     catch (ex)
                     {
-                        dd ("Error routing event: " + dumpObjectTree(ex) +
-                            " in " + e.destMethod + "\n" + ex);
+                        if (typeof ex == "string")
+                        {
+                            dd ("Error routing event " + e.set + "." + 
+                                e.type + ": " + ex);
+                        }
+                        else
+                        {
+                            dd ("Error routing event " + e.set + "." + 
+                                e.type + ": " + dumpObjectTree(ex) +
+                                " in " + e.destMethod + "\n" + ex);
+                            if ("stack" in ex)
+                                dd(ex.stack);
+                        }
                     }
                 else
                     destObject[e.destMethod] (e);

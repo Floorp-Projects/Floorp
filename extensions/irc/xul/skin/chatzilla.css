@@ -103,6 +103,10 @@ window {
     padding-right: 10px;
 }
 
+#user-list {
+    margin: 0px;
+}
+
 #server-nick {
     padding-top: 5px;
 }
@@ -130,20 +134,38 @@ window {
     border: thin silver inset;
 }
 
-/* op image column */
-treechildren::-moz-tree-image(usercol-op, state-true) {
-    list-style-image: url(chrome://chatzilla/skin/images/is-op.gif)
+treecol { 
+    border: none;
 }
 
-treechildren::-moz-tree-image(usercol-op, state-false) {
-    list-style-image: url(chrome://chatzilla/skin/images/isnt-op.gif)
+/* we need to define both the : and :: versions of the treechildren selector
+ *  so that we work on both 1.5 and pre 1.5 builds.
+ */
+
+/* voice image column */
+treechildren:-moz-tree-image {
+    list-style-image: url(chrome://chatzilla/skin/images/is-nada.png);
+}
+
+treechildren::-moz-tree-image {
+    list-style-image: url(chrome://chatzilla/skin/images/is-nada.png);
 }
 
 /* voice image column */
-treechildren::-moz-tree-image(usercol-voice, state-true) {
-    list-style-image: url(chrome://chatzilla/skin/images/is-voice.gif)
+treechildren:-moz-tree-image(voice-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/is-voice.png);
 }
 
-treechildren::-moz-tree-image(usercol-voice, state-false) {
-    list-style-image: url(chrome://chatzilla/skin/images/isnt-voice.gif)
+treechildren::-moz-tree-image(voice-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/is-voice.png);
 }
+
+/* op image column */
+treechildren:-moz-tree-image(op-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/is-op.png);
+}
+
+treechildren::-moz-tree-image(op-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/is-op.png);
+}
+

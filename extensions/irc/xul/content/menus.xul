@@ -12,7 +12,7 @@
    - for the specific language governing rights and limitations under the
    - License. 
    -
-   - The Original Code is Chatzilla
+   - The Original Code is The JavaScript Debugger
    - 
    - The Initial Developer of the Original Code is
    - Netscape Communications Corporation
@@ -45,23 +45,18 @@
 
   <overlaytarget id="menu-overlay-target">
 
-    <commandset id="chatzillaCommands">
+    <!-- parents for the command manager-managed objects -->
+    <keyset id="dynamic-keys"/>
+    <popupset id="dynamic-popups"/>
 
-      <!-- Hidden commands -->
-      <command id="cmd_reload_ui"
-        oncommand="if (!('client' in window) || client.getConnectionCount() == 0) window.location.href = window.location.href;"/>
-      <command id="cmd_focus_input" oncommand="focusInput();"/>
-      <command id="cmd_next_view" oncommand="cycleView(1);"/>
-      <command id="cmd_prev_view" oncommand="cycleView(-1);"/>
+    <!-- tooltip thingy -->
+    <tooltip id="html-tooltip-node" onpopupshowing="return onTooltip(event);"/>
+    <tooltip id="xul-tooltip-node" onpopupshowing="return onTooltip(event);"/>
 
-      <!-- File commands -->
-      <command id="cmd_closewin" oncommand="window.close();"/>
-      <command id="cmd_quit"/>
+    <!-- Commands -->
+    <commandset id="chatzilla-commands">
 
-      <!-- File:Options commands -->
-        <command id="cmd_debug" oncommand="onToggleTraceHook()"/>
-
-      <!-- Edit Menu -->
+      <!-- Edit commands -->
       <commandset id="selectEditMenuItems"/>
       <commandset id="globalEditMenuItems"/>
       <commandset id="undoEditMenuItems"/>
@@ -74,44 +69,17 @@
       <command id="cmd_delete"/>
       <command id="cmd_selectAll"/>
 
-      <!-- View commands -->
-      <command id="cmd_toggle_startup_visit"
-        oncommand="onToggleStartupURL();"/>
-
-      <!-- View:Show/Hide -->
-      <command id="cmd_toggletabstrip"
-        oncommand="onToggleVisibility('tabstrip');"/>
-      <command id="cmd_togglelist" oncommand="onToggleVisibility('info');"/>
-      <command id="cmd_toggleheader" oncommand="onToggleVisibility('header');"/>
-      <command id="cmd_togglestatus" oncommand="onToggleVisibility('status');"/>
-
       <!-- Tasks commands, from overlay -->
       <commandset id="tasksCommands"/>
     </commandset>
 
+    <!-- Keys -->
+
     <keyset id="chatzillaKeys">
-      <!-- Hidden keys -->
-      <key id="key_focus_input" observes="cmd_focus_input" keycode="VK_ESCAPE"/>
-      <key id="key_test" oncommand="onTest();"
-        modifiers="accel alt" key="T"/>
-      <key id="key_reload_ui" observes="cmd_reload_ui" 
-        modifiers="accel alt" key="R"/>
-      <key id="key_next_view" observes="cmd_next_view"
-        modifiers="control" keycode="VK_TAB"/>
-      <key id="key_prev_view" observes="cmd_prev_view"
-        modifiers="control shift" keycode="VK_TAB"/>
-      <key id="key_next_view" observes="cmd_next_view"
-        modifiers="control" keycode="VK_PAGE_DOWN"/>
-      <key id="key_prev_view" observes="cmd_prev_view"
-        modifiers="control" keycode="VK_PAGE_UP"/>
+      <key id="key:reloadui" modifiers="accel alt" key="R"
+        oncommand="if (typeof cmdReloadUI =='function') cmdReloadUI(); else window.location.href = window.location.href;"/>
 
-      <!-- File keys -->
-      <key id="key_debug" observes="cmd_debug"
-        modifiers="accel shift" key="D"/>
-      <key id="key_closewin" observes="cmd_closewin"
-        modifiers="accel shift" key="W"/>
-
-      <!-- Edit Keys -->
+      <!-- Edit keys -->
       <key id="key_undo"/>
       <key id="key_redo"/>
       <key id="key_cut"/>
@@ -120,76 +88,18 @@
       <key id="key_delete"/>
       <key id="key_selectAll"/>
 
-      <!-- View keys -->
-      <key id="key_clearview" observes="cmd_clearview"
-        modifiers="accel" key="R"/>
-      <key id="key_deleteview" observes="cmd_deleteview"
-        modifiers="accel" key="W"/>
-      <key id="key_status" observes="cmd_status"
-        modifiers="accel shift" key="S"/>
-
-      <!-- View:Show/Hide keys -->
-      <key id="key_toggletabstrip"/>
-      <key id="key_togglelist" observes="cmd_togglelist"
-        modifiers="accel" key="L"/>
-      <key id="key_toggleheader" observes="cmd_toggleheader"
-        modifiers="accel" key="H"/>
-      <key id="key_togglestatus"/>
-      
-      <!-- Tasks keys -->
+      <!-- Tasks keys, from overlay -->
       <keyset id="tasksKeys"/>
     </keyset>
 
-    <toolbox flex="1">
-      <menubar id="main-menubar" persist="collapsed"
-        grippytooltiptext="&menuBar.tooltip;">
+    <!-- Main menu bar -->
+    <toolbox flex="1" id="main-toolbox">
+      <menubar id="mainmenu" persist="collapsed"
+        grippytooltiptext="&Menubar.tooltip;">
 
-        <!-- File menu -->
-        <menu id="menu_File">
-          <menupopup id="menu_FilePopup">
-            <menu label="&OptionsCmd.label;" accesskey="&OptionsCmd.accesskey;">
-              <menupopup>
+        <!-- File menu placeholder, see menus.js -->
+        <menu id="mainmenu:file"/>
   
-                <menu label="&MungerCmd.label;" accesskey="&MungerCmd.accesskey;">
-                  <menupopup id="menu-munger">
-                    <menuitem id="menu-munger-global"
-                      label="&DisableMunger.label;"
-                      oncommand="onToggleMunger()" type="checkbox"/>
-                    <menuitem id="menu-colors" label="&EnableColors.label;" 
-                      accesskey="&EnableColors.accesskey;"
-                      oncommand="onToggleColors();" type="checkbox"/>
-                    <menuseparator/>
-                  </menupopup>
-                </menu>
-  
-                <menuseparator/>
-  
-                <menuitem id="menu-dmessages" label="&DebugMsgCmd.label;"
-                  accesskey="&DebugMsgCmd.aKey;" type="checkbox"
-                  observes="cmd_debug" key="key_debug"/>
-  
-                <menuseparator/>
-  
-                <menuitem id="menu-settings-save-now"
-                  label="&SaveSetNowCmd.label;" accesskey="&SaveSetNowCmd.akey;"
-                  oncommand="writePrefs()"/>
-                <menuitem id="menu-settings-autosave"
-                  label="&SaveSetExitCmd.label;" accesskey="&SaveSetExitCmd.akey;"
-                  oncommand="onToggleSaveOnExit()" type="checkbox"/>
-  
-              </menupopup>
-            </menu>
-  
-            <menuseparator/>
-            <menuitem label="&DeleteViewCmd.label;"
-              accesskey="&DeleteViewCmd.aKey;"
-              observes="cmd_deleteview" key="key_deleteview"/>
-            <menuitem label="&CloseCmd.label;"
-              accesskey="&CloseCmd.aKey;"
-              observes="cmd_closewin" key="key_closewin"/>
-          </menupopup>
-        </menu>
-
         <!-- Edit menu -->
         <menu id="menu_Edit">
           <menupopup id="menu_Edit_Popup">
@@ -204,90 +114,41 @@
             <menuitem id="menu_selectAll"/>
             <menuseparator/>
             <menuitem id="menu_preferences"
-              oncommand="goPreferences('chatzillaItem', 'chrome://chatzilla/content/prefpanel/pref-irc.xul', 'chatzillaItem')"/>
+              oncommand="goPreferences('chatzillaItem', 'chrome://chatzilla/content/prefpanel/pref-irc.xul', 'chatzillaItem');"/>
           </menupopup>
         </menu> 
-
-        <!-- View menu -->
-        <menu label="&ViewCmd.label;" accesskey="&ViewCmd.aKey;">
-          <menupopup onpopupshowing="return onViewMenuShowing();">
   
-            <menu label="&ShowCmd.label;" accesskey="&ShowCmd.akey;">
-              <menupopup>
-                <menuitem id="menu-view-tabstrip"
-                  label="&ShowTabStripCmd.label;" 
-                  accesskey="&ShowTabStripCmd.aKey;" type="checkbox"
-                  key="key_toggletabstrip" observes="cmd_toggletabstrip"/>
-                <menuitem id="menu-view-header" label="&ShowHeaderCmd.label;" 
-                  accesskey="&ShowHeaderCmd.aKey;" type="checkbox"
-                  key="key_toggleheader" observes="cmd_toggleheader"/>
-                <menuitem id="menu-view-info" label="&ShowUserlistCmd.label;" 
-                  accesskey="&ShowUserlistCmd.aKey;" type="checkbox"
-                  key="key_togglelist" observes="cmd_togglelist"/>
-                <menuitem id="menu-view-status" label="&ShowStatusbarCmd.label;" 
-                  accesskey="&ShowStatusbarCmd.aKey;" type="checkbox"
-                  key="key_togglestatus" observes="cmd_togglestatus"/>
-              </menupopup>
-            </menu>
-  
-            <menuseparator/>
-
-            <menuitem id="menu-view-default" label="&DefaultCmd.label;" 
-              accesskey="&DefaultCmd.aKey;" type="checkbox"
-              oncommand="onSimulateCommand('/css default');"/>
-            <menuitem id="menu-view-dark" label="&DarkCmd.label;" 
-              accesskey="&DarkCmd.aKey;" type="checkbox"
-              oncommand="onSimulateCommand('/css dark');"/>
-            <menuitem id="menu-view-light" label="&LightCmd.label;" 
-              accesskey="&LightCmd.aKey;" type="checkbox"
-              oncommand="onSimulateCommand('/css light');"/>
-  
-            <menuseparator/>
-  
-         <!-- hide vs delete nuances are too vague
-            <menuitem label="&HideCmd.label;" oncommand="onHideCurrentView();"/>
-         -->
-  
-            <menuitem id="menu-view-startup" label="&StartupVisitCmd.label;"
-              accesskey="&StartupVisitCmd.aKey;" type="checkbox"
-              observes="cmd_toggle_startup_visit"/>
-            <menuitem label="&ClearViewCmd.label;"
-              accesskey="&ClearViewCmd.aKey;"
-              observes="cmd_clearview" key="key_clearview"/>
-            <menuitem label="&DeleteViewCmd.label;"
-              accesskey="&DeleteViewCmd.aKey;"
-              observes="cmd_deleteview" key="key_deleteview"/>
-
-            <menuseparator/>
-
-            <menuitem label="&StatusCmd.label;" accesskey="&StatusCmd.aKey;"
-              observes="cmd_status" key="key_status"/>
-
-            <menuseparator/>
-
-            <menuitem id="menu-view-collapse" label="&CollapseCmd.label;" 
-              accesskey="&CollapseCmd.aKey;" type="checkbox"
-              oncommand="onToggleMsgCollapse();"/>  
-            <menuitem id="menu-view-copymsgs" label="&CopyMessagesCmd.label;" 
-              accesskey="&CopyMessagesCmd.aKey;" type="checkbox"
-              oncommand="onToggleCopyMessages();"/>  
-
-          </menupopup>
-  
-        </menu>
+        <!-- View menu placeholder, see venkman-menus.js -->
+        <menu id="mainmenu:view"/>
 
         <!-- Tasks menu -->
         <menu id="tasksMenu"/>
 
-        <!-- Window menu -->
+        <!-- Tasks menu -->
         <menu id="windowMenu"/>
 
+        <!-- Help menu -->
+        <!-- Mac expects a help menu with this ID, and there is nothing we can
+             do about it. -->
         <menu id="menu_Help"/>
+      </menubar>  
 
-      </menubar>
-    
-    </toolbox>
+    </toolbox>  
 
   </overlaytarget>
 
+  <!-- Statusbar (hey, it's /almost/ a menu) -->
+  <overlaytarget id="statusbar-overlay-target">
+    <statusbar class="chromeclass-status" id="status-bar" flex="1">
+      <statusbarpanel id="component-bar"/>
+      <statusbarpanel id="status-text" label="" flex="1"
+        crop="right"/>
+<!--
+      <statusbarpanel class="statusbarpanel-iconic" id="offline-status"
+        hidden="true" offline="true"/>
+-->
+    </statusbar>
+  </overlaytarget>
+
 </overlay>
+  

@@ -45,10 +45,10 @@
 
     <commandset id="chatzillaPopupCommands">
       <!-- Context menu commands -->
-      <command id="cmd_leaveview" oncommand="onPopupSimulateCommand('/part');"/>
-      <command id="cmd_clearview" oncommand="onClearCurrentView();"/>
-      <command id="cmd_deleteview" oncommand="onDeleteView(client.currentObject);"/>
-      <command id="cmd_status" oncommand="client.onInputStatus();"/>
+      <command id="cmd_leaveview" oncommand="dispatch('part');"/>
+      <command id="cmd_clearview" oncommand="dispatch('clear-view');"/>
+      <command id="cmd_deleteview" oncommand="dispatch('delete-view');"/>
+      <command id="cmd_status" oncommand="dispatch('status')"/>
       <command id="cmd_popup_query"
         oncommand="onPopupSimulateCommand('/query $nick');"/>
       <command id="cmd_popup_whois"

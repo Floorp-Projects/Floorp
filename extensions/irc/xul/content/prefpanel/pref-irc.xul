@@ -45,9 +45,9 @@
         "czReconnect", "czColorCodes", "czNickCompleteStr", "czCharset"];
 
     const OSBS_CTRID = "@mozilla.org/observer-service;1";
-    const Components.interfaces.nsIObserverService = nsIObserverService;
+    const nsIObserverService = Components.interfaces.nsIObserverService;
     var observerService =
-       Components.classes[OBS_CTRID].getService(nsIObserverService);
+       Components.classes[OSBS_CTRID].getService(nsIObserverService);
     observerService.notifyObservers(null, "charsetmenu-selected", "other");
 
   ]]>
@@ -79,6 +79,7 @@
         </row>
       </rows>
     </grid>
+<!--
     <hbox id="czUserHelpButton">
       <button label="&userDetails.help.label;"
           accesskey="&userDetails.help.accesskey;" 
@@ -88,6 +89,7 @@
           "/>
       <spacer flex="1"/>
     </hbox>
+-->
     <label id="czUserHelpBox" hidden="true">&userDetails.help.desc;</label>
   </groupbox>
   
@@ -99,16 +101,16 @@
         prefstring="extensions.irc.notify.aggressive"/>
     <checkbox id="czDisplayCollapse" label="&global.collapse.label;" 
         accesskey="&global.collapse.accesskey;" prefdefval="false"
-        prefstring="extensions.irc.views.collapseMsgs"/>
+        prefstring="extensions.irc.collapseMsgs"/>
     <checkbox id="czDisplayCopyMsgs" label="&global.copyMsgs.label;" 
         accesskey="&global.copyMsgs.accesskey;" prefdefval="true" 
-        prefstring="extensions.irc.views.copyMessages"/>
+        prefstring="extensions.irc.copyMessages"/>
     <checkbox id="czReconnect" label="&global.reconnect.label;" 
         accesskey="&global.reconnect.accesskey;" prefdefval="true" 
         prefstring="extensions.irc.reconnect"/>
     <checkbox id="czColorCodes" label="&global.colorcodes.label;" 
         accesskey="&global.colorcodes.accesskey;" prefdefval="false" 
-        prefstring="extensions.irc.colorCodes"/>
+        prefstring="extensions.irc.outgoing.colorCodes"/>
     <separator/>
     <hbox align="center">
       <label value="&global.nickCompleteStr.label;" control="czNickCompleteStr" 

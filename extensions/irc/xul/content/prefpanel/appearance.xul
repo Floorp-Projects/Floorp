@@ -137,7 +137,7 @@
         <menulist flex="1" id="czStyleCSS" crop="center" 
             prefvalue="" prefattribute="prefvalue" wsm_attributes="prefvalue"
             prefdefval="chrome://chatzilla/skin/output-default.css"
-            preftype="string" prefstring="extensions.irc.style.default">
+            preftype="string" prefstring="extensions.irc.motif.current">
           <menupopup>
             <menuitem label="&style.default.label;" 
                 oncommand="selectStyle(this.getAttribute('url'));" 

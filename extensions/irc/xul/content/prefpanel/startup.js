@@ -50,10 +50,10 @@ function loadList(list)
     
     var prefList = gList.getAttribute("prefvalue");
     
-    if (prefList)
+    if (prefList.search(/\S/) != -1)
     {
         var items = prefList.split(/\s*;\s*/);
-        for (i in items)
+        for (var i = 0; i < items.length; i++)
             listAddItem(list, items[i]);
     }
     
@@ -195,7 +195,7 @@ function listUpdate(list)
     
     for (var item = gList.firstChild; item; item = item.nextSibling)
     {
-        var url = item.getAttribute("url");
+        var url = escape(item.getAttribute("url"));
         if (prefList)
             prefList = prefList + "; " + url;
         else
@@ -237,6 +237,7 @@ function listAddItem(list, url)
     var gList = document.getElementById("czInitial" + list);
     var newItem = document.createElement("listitem");
     
+    url = unescape(url);
     var label = url;
     if (list == "URLs")
         label = getIRCDisplayText(url);

@@ -36,11 +36,60 @@ body.chatzilla-body {               /* The topmost container in the ChatZilla */
 }
 
 a.chatzilla-link {
-    color: #777499 /*#ea3838*/;
+    font-weight: bold;
+    color: #342ecc;
 }
 
-.msg-data[msg-type="QUIT"] a.chatzilla-link {
-    color: #d1ecf9;
+.header-outer {
+    background-color: #d1d0ea;
+}
+
+.header {
+    color: darkslategrey;
+    background-color: #EEEEEE;
+/*    -moz-opacity: 0.9;*/
+    border: 1px #777499 solid;
+    -moz-border-radius: 7px;
+}
+
+#splash {
+    color: #DDDDDD;
+}
+
+#usr-descnodes,
+#ch-topicnodes {
+    color: black;
+}
+
+[condition] {
+    font-weight: bold;
+}
+
+[condition="red"] {
+    color: red;
+}
+
+[condition="yellow"] {
+    color: orange;
+}
+
+[condition="green"] {
+    color: #2ec908;
+}
+
+.msg-data[msg-type="PRIVMSG"],
+.msg-data[msg-type="ACTION"] {
+    background-color: #F0F0F0;
+}
+
+.msg-data[msg-type="HELLO"] a.chatzilla-link {
+    color: #d7d9dd;
+}
+
+.msg-data[msg-type="JOIN"] a.chatzilla-link,
+.msg-data[msg-type="PART"] a.chatzilla-link {
+    font-weight: bold;
+    color: #11c411;
 }
 
 .msg-data[msg-type="ERROR"] a.chatzilla-link {
@@ -48,12 +97,16 @@ a.chatzilla-link {
     color: white;
 }
 
-.msg-data[msg-type="QUIT"] a.chatzilla-link:visited {
-    color: #b4ccd8;
+.msg-data[msg-type="KICK"]  a.chatzilla-link {
+    color: #aa0d08;
 }
 
-.msg-data[msg-type="KICK"]  a.chatzilla-link {
-    color: lightgrey;
+.msg-data[msg-type="NOTICE"]  a.chatzilla-link {
+    color: #d64444;
+}
+
+.msg-data[msg-type="QUIT"]  a.chatzilla-link {
+    color: #c46907;
 }
 
 .chatzilla-rheet {
@@ -76,7 +129,8 @@ a.chatzilla-link {
 }
 
 .msg-type {                                 /* .msg-type = message type       */
-    color: #202020;                         /* indicator                      */
+    color: #686699;                         /* indicator                      */
+    font-weight: bold;
 }
 
 .msg-user a.chatzilla-link,
@@ -89,33 +143,24 @@ a.chatzilla-link {
     color: #555555;                         /* subtle brightness change when  */
 }                                           /* the speaker changes.           */
 
-
-.msg-type[msg-type="KICK"],
-.msg-type[msg-type="NICK"],
-.msg-type[msg-type="QUIT"],
-.msg-type[msg-type="JOIN"],
-.msg-type[msg-type="PART"] {
-    visibility: hidden;
-}
-
 .msg-data[msg-type="JOIN"],
 .msg-data[msg-type="PART"] {
-    background: #b4ccd8;
-    color: black;
+    color: #0e9e0e;
+    background-color: #c3f7c3; 
     font-weight: bold;
     -moz-border-radius: 5px 5px 5px 5px;
     /*border: thin darkblue solid;*/
 }
 
 .msg-data[msg-type="QUIT"] {
-    background: #777499;
-    color: white;
+    background: #fff196;
+    color: #ff8d02;
     font-weight: bold;
     -moz-border-radius: 5px 5px 5px 5px;
 }
 
 .msg-data[msg-type="HELLO"] {
-    background: #ffd000;
+    background: #1342a5;
     color: white;
     -moz-border-radius: 5px 5px 5px 5px;
     font-weight: bold;
@@ -123,7 +168,7 @@ a.chatzilla-link {
 
 .msg-data[msg-type="ERROR"] {
     -moz-border-radius: 5px 5px 5px 5px;
-    background: #ff2600;
+    background: #a8221e;
     color: white;
 }
 
@@ -137,22 +182,25 @@ a.chatzilla-link {
 }
 
 .msg-data[msg-type="NICK"] {
-    color: #669da3;
+    color: #4e8387;
+    background-color: #d5e9ea;
     font-weight: bold;
 }
 
 .msg-data[msg-type="NOTICE"] {
-    color: #ff6500;
+    color: #ae4141;
     font-weight: bold;
 }
 
 .msg-data[msg-type="MODE"] {
-    color: purple;
+    color: #2709ed;
+    font-weight: bold;
 }
 
 .msg-data[msg-type="KICK"] {
-    color: white;
-    background: #ff6500;
+    color: #ff1a0a;
+    background: #ffdbcc;
+    font-weight: bold;
     -moz-border-radius: 5px 5px 5px 5px;
 }
 
@@ -160,19 +208,12 @@ a.chatzilla-link {
  * it, has your nickname in it, or was spoken by someone in your /stalk list.
  */
 .msg-user[important="true"] {
+    background: #d4d8d4;
     -moz-border-radius: 5px 0px 0px 5px;
-    border-bottom: 1px black solid;
-    border-top: 1px lightslategrey solid;
-    border-left: 1px lightslategrey solid;
-    background: #d7ceea;
 }
 
 .msg-data[important="true"] {
-    -moz-border-radius: 0px 5px 5px 0px;
-    border-bottom: 1px black solid;
-    border-right: 1px black solid;
-    border-top: 1px lightslategrey solid;
-    background: #d7ceea;
+    background: #eaefeb;
 }
 
 

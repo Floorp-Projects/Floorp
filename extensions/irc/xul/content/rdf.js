@@ -26,6 +26,14 @@ const RES_PFX = "http://home.netscape.com/NC-irc#";
 const nsIRDFResource = Components.interfaces.nsIRDFResource;
 const nsIRDFNode = Components.interfaces.nsIRDFNode;
 
+function initRDF()
+{
+    client.rdf = new RDFHelper();
+    
+    client.rdf.initTree("user-list");
+    client.rdf.setTreeRoot("user-list", client.rdf.resNullChan);
+}
+
 function RDFHelper()
 {
     const RDF_MEMORYDS_CONTRACTID =
@@ -50,6 +58,7 @@ function RDFHelper()
     this.resServer   = this.svc.GetResource (RES_PFX + "server");
     this.resChannel  = this.svc.GetResource (RES_PFX + "channel");
     this.resChanUser = this.svc.GetResource (RES_PFX + "chanuser");
+    this.resSortName = this.svc.GetResource (RES_PFX + "sortname");
     this.resOp       = this.svc.GetResource (RES_PFX + "op");
     this.resVoice    = this.svc.GetResource (RES_PFX + "voice");
     this.resNick     = this.svc.GetResource (RES_PFX + "nick");
@@ -59,18 +68,16 @@ function RDFHelper()
     /* predefined literals */
     this.litTrue     = this.svc.GetLiteral ("true");
     this.litFalse    = this.svc.GetLiteral ("false");
-    this.litUnk      = this.svc.GetLiteral ("----"); 
+    this.litUnk      = this.svc.GetLiteral (""); 
 
     this.ds.Assert (this.resNullUser, this.resOp, this.litFalse, true);
     this.ds.Assert (this.resNullUser, this.resVoice, this.litFalse, true);
     this.ds.Assert (this.resNullUser, this.resNick, this.litUnk, true);
     this.ds.Assert (this.resNullUser, this.resUser, this.litUnk, true);
     this.ds.Assert (this.resNullUser, this.resHost, this.litUnk, true);
-    /*
-    this.ds.Assert (this.resNullChan, this.resChanUser, this.resNullUser, true);
-    */
     this.ds.Assert (this.resRoot, this.resChannel, this.resNullChan, true);
-    
+    this.ds.Assert (this.resNullChan, this.resChanUser, this.resNullUser,
+                    true);    
 }
 
 RDFHelper.prototype.GetResource =
@@ -136,10 +143,9 @@ function rdf_change (n1, a, n2)
 {
 
     var oldN2 = this.ds.GetTarget (n1, a, true);
-    if (!oldN2)
+    if (!ASSERT(oldN2, "Unable to change " + n1.Value + " -[" + a.Value +
+                "]->, " + "because old value was not found."))
     {
-        dd ("** Unable to change " + n1.Value + " -[" + a.Value + "]->, " +
-            "because old value was not found.");
         return null;
     }
     
@@ -175,8 +181,8 @@ function rdf_cleart (n1, a, recurse)
             catch (e)
             {
                 /*
-                dd ("** Caught " + e + " while recursivley clearing " +
-                    n2.Value + " **");
+                ASSERT(0, "Caught " + e + " while recursivley clearing " +
+                       n2.Value + " **");
                 */
             }
         }
