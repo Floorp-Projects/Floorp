@@ -71,7 +71,7 @@ static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
 
 
-class nsAttributeContent : public nsIContent, public nsITextContent {
+class nsAttributeContent : public nsIContent, public nsITextContent, public nsIAttributeContent {
 public:
   friend nsresult NS_NewAttributeContent(nsAttributeContent** aNewFrame);
 
@@ -202,8 +202,8 @@ NS_NewAttributeContent(nsIContent** aContent)
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  *aContent = (nsIContent *)it;
-  return NS_OK;
+  return NS_SUCCEEDED(it->QueryInterface(nsCOMTypeInfo<nsIContent>::GetIID(), (void **)aContent)) ?
+         NS_OK : NS_ERROR_FAILURE;
 }
 
 //----------------------------------------------------------------------
@@ -211,6 +211,7 @@ NS_NewAttributeContent(nsIContent** aContent)
 nsAttributeContent::nsAttributeContent()
   : mText()
 {
+  NS_INIT_REFCNT();
   mDocument = nsnull;
   mParent   = nsnull;
   mContent  = nsnull;
@@ -221,6 +222,7 @@ nsAttributeContent::nsAttributeContent()
 nsAttributeContent::~nsAttributeContent()
 {
   NS_IF_RELEASE(mAttrName);
+  //NS_IF_RELEASE(mDocument);
 }
 
 //----------------------------------------------------------------------
@@ -260,6 +262,12 @@ nsresult nsAttributeContent::QueryInterface(const nsIID& aIID, void** aInstanceP
 
   if (aIID.Equals(nsCOMTypeInfo<nsITextContent>::GetIID())) {
     *aInstancePtr = (void*) ((nsITextContent*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(nsCOMTypeInfo<nsIAttributeContent>::GetIID())) {
+    *aInstancePtr = (void*) ((nsIAttributeContent*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -323,46 +331,8 @@ nsAttributeContent::GetDocument(nsIDocument*& aResult) const
 nsresult
 nsAttributeContent::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 {
-  // If we were part of a document, make sure we get rid of the
-  // script context reference to our script object so that our
-  // script object can be freed (or collected).
-/*  if ((nsnull != mDocument) && (nsnull != mScriptObject)) {
-    nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
-    if (nsnull != owner) {
-      nsIScriptContext *context;
-      if (NS_OK == owner->GetScriptContext(&context)) {
-        context->RemoveReference((void *)&mScriptObject,
-                                 mScriptObject);
-        NS_RELEASE(context);
-      }
-      NS_RELEASE(owner);
-    }
-  }
-
   mDocument = aDocument;
-
-  // If we already have a script object and now we're being added
-  // to a document, make sure that the script context adds a 
-  // reference to our script object. This will ensure that it
-  // won't be freed (or collected) out from under us.
-  if ((nsnull != mDocument) && (nsnull != mScriptObject)) {
-    nsIScriptContextOwner *owner = mDocument->GetScriptContextOwner();
-    if (nsnull != owner) {
-      nsIScriptContext *context;
-      if (NS_OK == owner->GetScriptContext(&context)) {
-        context->AddNamedReference((void *)&mScriptObject,
-                                   mScriptObject,
-                                   "Text");
-        NS_RELEASE(context);
-      }
-      NS_RELEASE(owner);
-    }
-  }
-
-  if (PR_TRUE == aDeep) {
-    SetDocumentInChildrenOf(mContent, aDocument);
-  }*/
-  mDocument = aDocument;
+  //NS_IF_ADDREF(mDocument);
   return NS_OK;
 }
 
