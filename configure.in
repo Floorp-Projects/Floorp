@@ -1167,7 +1167,11 @@ xpcom/tools/xpidl/Makefile
 xpfe/Makefile
 xpfe/xpviewer/Makefile
 xpfe/xpviewer/src/Makefile
-xpfe/xpviewer/public/Makefile"
+xpfe/xpviewer/public/Makefile
+xpfe/appshell/Makefile
+xpfe/appshell/src/Makefile
+xpfe/appshell/public/Makefile
+xpfe/bootstrap/Makefile"
 
 EDITOR_MAKEFILES="
 editor/core/Makefile
