@@ -8,7 +8,7 @@ use vars qw(@ISA);
 @ISA = qw(BotModules);
 1;
 
-my $VERSION = '2.3';
+my $VERSION = '2.4';
 
 # RegisterConfig - Called when initialised, should call registerVariables
 sub RegisterConfig {
