@@ -147,7 +147,7 @@ _txClass* Document::_function(nsIDOM##_txClass* aNsObject) \
  * This macro does a nullsafe getNSObj. If the wrapper object is NULL,
  * NULL is returned. Else getNSObj is used to get the inner object.
  */
-#define GET_NSOBJ(_txWrapper) ((_txWrapper) ? (_txWrapper)->getNSObj() : NULL)
+#define GET_NSOBJ(_txWrapper) ((_txWrapper) ? (_txWrapper)->getNSObj() : nsnull)
 
 /**
  * Base wrapper class for a Mozilla object. Owns the Mozilla object through an
