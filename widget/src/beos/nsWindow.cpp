@@ -546,7 +546,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
       winrect.OffsetBy( 10, 30 );
       
       nsWindowBeOS *w = new nsWindowBeOS(this, winrect,	"", B_TITLED_WINDOW_LOOK, feel,
-                                         B_WILL_ACCEPT_FIRST_CLICK | B_ASYNCHRONOUS_CONTROLS);
+                                         B_ASYNCHRONOUS_CONTROLS);
       if(w)
       {
         w->AddChild(mView);
@@ -594,7 +594,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
         window_feel feel = (is_subset) ? B_FLOATING_SUBSET_WINDOW_FEEL : B_FLOATING_APP_WINDOW_FEEL;
         
         w = new nsWindowBeOS(this, winrect, "", B_NO_BORDER_WINDOW_LOOK, feel,
-                             B_WILL_ACCEPT_FIRST_CLICK | B_ASYNCHRONOUS_CONTROLS);
+                             B_NOT_CLOSABLE | B_AVOID_FOCUS | B_ASYNCHRONOUS_CONTROLS);
         if (w)
         {
           // popup window : no border
@@ -609,7 +609,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
         // normal window :normal look & feel
         winrect.OffsetBy( 10, 30 );
         w = new nsWindowBeOS(this, winrect, "", B_TITLED_WINDOW_LOOK, B_NORMAL_WINDOW_FEEL,
-                             B_WILL_ACCEPT_FIRST_CLICK | B_ASYNCHRONOUS_CONTROLS);
+                             B_ASYNCHRONOUS_CONTROLS);
       }
 
       if(w)
