@@ -318,7 +318,7 @@ function UseDefaultColors()
 function chooseFile()
 {
   // Get a local image file, converted into URL format
-  fileName = GetLocalFileURL("img");
+  var fileName = GetLocalFileURL("img");
   if (fileName)
   {
     dialog.BackgroundImageInput.value = fileName;
@@ -329,7 +329,6 @@ function chooseFile()
 
 function ChangeBackgroundImage()
 {
-dump("***ChangeBackgroundImage\n");
   // Don't show error message for image while user is typing
   ValidateAndPreviewImage(false);
 }
@@ -338,7 +337,7 @@ function ValidateAndPreviewImage(ShowErrorMessage)
 {
   // First make a string with just background color
   var styleValue = backColorStyle+dialog.backgroundColor+";";
-
+  var retVal = true;
   var image = dialog.BackgroundImageInput.value.trimString();
   if (image)
   {
@@ -357,7 +356,7 @@ function ValidateAndPreviewImage(ShowErrorMessage)
         // Tell user about bad image
         ShowInputErrorMessage(GetString("MissingImageError"));
       }
-      return false;
+      retVal = false;
     }
   }
   else backgroundImage = null;
@@ -366,7 +365,7 @@ function ValidateAndPreviewImage(ShowErrorMessage)
   dialog.ColorPreview.setAttribute(styleStr, styleValue);
 
   // Note that an "empty" string is valid
-  return true;
+  return retVal;
 }
 
 function ValidateData()
@@ -396,8 +395,10 @@ function ValidateData()
       globalElement.setAttribute(backgroundStr, backgroundImage);
     else
       globalElement.removeAttribute(backgroundStr);
+  
+    return true;
   }  
-  return true;
+  return false;
 }
 
 function onOK()

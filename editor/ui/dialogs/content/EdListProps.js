@@ -46,7 +46,6 @@ function Startup()
   dialog.BulletStyleLabel = document.getElementById("BulletStyleLabel");
   dialog.StartingNumberInput = document.getElementById("StartingNumber");
   dialog.StartingNumberLabel = document.getElementById("StartingNumberLabel");
-  dialog.StartExample = document.getElementById("StartExample").firstChild;
   dialog.AdvancedEditButton = document.getElementById("AdvancedEditButton1");
   dialog.RadioGroup = document.getElementById("RadioGroup");
   dialog.ChangeAllRadio = document.getElementById("ChangeAll");
@@ -145,7 +144,6 @@ function BuildBulletStyleList()
     dialog.BulletStyleLabel.removeAttribute("disabled");
     dialog.StartingNumberInput.setAttribute("disabled", "true");
     dialog.StartingNumberLabel.setAttribute("disabled", "true");
-    dialog.StartExample.setAttribute("disabled", "true");
 
     label = GetString("BulletStyle");
 
@@ -162,7 +160,6 @@ function BuildBulletStyleList()
     dialog.BulletStyleLabel.removeAttribute("disabled");
     dialog.StartingNumberInput.removeAttribute("disabled");
     dialog.StartingNumberLabel.removeAttribute("disabled");
-    dialog.StartExample.removeAttribute("disabled");
     label = GetString("NumberStyle");
 
     AppendStringToMenulistById(dialog.BulletStyleList,"Style_1");
