@@ -56,7 +56,7 @@ var EXPECTED_FORMAT = 0;
 // derive MyError from Error
 function MyError( msg )
 {
-	this.msg = msg;
+	this.message = msg;
 }
 MyError.prototype = new Error();
 MyError.prototype.name = "MyError";
@@ -64,25 +64,25 @@ MyError.prototype.name = "MyError";
 
 status = inSection(1);
 var err1 = new MyError('msg1');
-actual = examineThis(err1);
+actual = examineThis(err1, 'msg1');
 expect = EXPECTED_FORMAT;
 addThis();
 
 status = inSection(2);
 var err2 = new MyError(err1);
-actual = examineThis(err2);
+actual = examineThis(err2, err1);
 expect = EXPECTED_FORMAT;
 addThis();
 
 status = inSection(3);
 var err3 = new MyError();
-actual = examineThis(err3);
+actual = examineThis(err3, EMPTY_STRING);
 expect = EXPECTED_FORMAT;
 addThis();
 
 status = inSection(4);
 var err4 = new MyError(EMPTY_STRING);
-actual = examineThis(err4);
+actual = examineThis(err4, EMPTY_STRING);
 expect = EXPECTED_FORMAT;
 addThis();
 
@@ -94,7 +94,7 @@ try
 }
 catch(err5)
 {
- actual = examineThis(err5);
+ actual = examineThis(err5, "thrown");
 }
 expect = EXPECTED_FORMAT;
 addThis();
@@ -119,9 +119,9 @@ test();
  * you may have to modify |pattern| to take that into account -
  *
  */
-function examineThis(err)
+function examineThis(err, msg)
 {
-  var pattern = err.name + '\\s*:?\\s*' + err.message;
+  var pattern = err.name + '\\s*:?\\s*' + msg;
   return err.toString().search(RegExp(pattern));
 }
 
