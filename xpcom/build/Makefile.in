@@ -117,7 +117,6 @@ include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= \
 		-D_IMPL_NS_COM \
-		-D_IMPL_NS_BASE \
 		-DEXPORT_XPT_API \
 		-DEXPORT_XPTC_API \
 		-DEXPORT_XPTI_API

@@ -71,8 +71,7 @@ export::
 	rm -f $(XPCOM_GLUE_SRC_CSRCS:.cpp=.$(OBJ_SUFFIX))
 
 DEFINES		+= \
-		-D_IMPL_NS_COM \
-		-D_IMPL_NS_BASE 
+		-D_IMPL_NS_COM
 
 ifeq ($(OS_ARCH),WINNT)
 DEFINES		+= -DWIN32_LEAN_AND_MEAN
