@@ -85,13 +85,14 @@ typedef enum _FTP_STATE {
 
 ///////////////////////
 //// Data channel connection setup states
-    FTP_WAIT_FOR_DCON,
     FTP_S_PASV, 
     FTP_R_PASV
 } FTP_STATE;
 
 // higher level ftp actions
 typedef enum _FTP_ACTION { GET, PUT, MKDIR, DEL} FTP_ACTION;
+
+class DataRequestForwarder;
 
 class nsFtpState : public nsIStreamListener,
                    public nsIRequest {
@@ -152,7 +153,8 @@ private:
     void KillControlConnnection();
     nsresult StopProcessing();
     nsresult EstablishControlConnection();
-    nsresult SendFTPCommand(nsCString& command, PRBool waitForDataConn = PR_FALSE);
+    nsresult SendFTPCommand(nsCString& command);
+    nsresult BuildStreamConverter(nsIStreamListener** convertStreamListener);
 
     ///////////////////////////////////
     // Private members
@@ -165,10 +167,14 @@ private:
     nsCAutoString       mResponseMsg;       // the last command response text
 
         // ****** channel/transport/stream vars 
-    PRPackedBool                    mTryingCachedControl;     // retrying the password
     nsFtpControlConnection*         mControlConnection;// cacheable control connection (owns mCPipe)
+    PRPackedBool                    mTryingCachedControl;     // retrying the password
+    PRPackedBool                    mWaitingForDConn;     // Are we wait for a data connection
     nsCOMPtr<nsITransport>          mDPipe;            // the data transport
     nsCOMPtr<nsIRequest>            mDPipeRequest;
+    DataRequestForwarder*           mDRequestForwarder;
+
+
         // ****** consumer vars
     nsCOMPtr<nsIFTPChannel>         mChannel;         // our owning FTP channel we pass through our events
 

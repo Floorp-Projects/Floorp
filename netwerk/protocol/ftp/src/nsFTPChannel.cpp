@@ -477,7 +477,9 @@ nsFTPChannel::OnStopRequest(nsIRequest *request, nsISupports* aContext,
             this, request, aStatus));
 
     nsresult rv = NS_OK;
-        
+    
+    mStatus = aStatus;
+    
     if (mObserver) {
         rv = mObserver->OnStopRequest(this, mUserContext, aStatus, aStatusArg);
         if (NS_FAILED(rv)) return rv;
