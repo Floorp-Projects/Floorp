@@ -41,7 +41,7 @@ function onAdvanced(event)
     if (args.result) {
         // this is the wrong way to do this.
         dump("reloading panel...\n");
-        parent.onPanelLoaded('am-smtp.xul');
+        onLoad();
     }
 }
 
