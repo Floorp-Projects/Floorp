@@ -1,0 +1,7 @@
+<?xml version="1.0"?> 
+<!-- unix version of platformMailOverlay.xul -->
+
+<overlay id="platformMailOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+</overlay>

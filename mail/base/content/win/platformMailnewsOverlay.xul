@@ -1,0 +1,10 @@
+<?xml version="1.0"?> 
+<!-- win version of platformMailnewsOverlay.xul -->
+
+<overlay id="platformMailnewsOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+	<!-- Delete Key -->
+	<key id="cmd_shiftDelete" keycode="VK_DELETE"  xulkey="false" modifiers="shift"/>
+
+</overlay>		
