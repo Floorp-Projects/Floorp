@@ -59,8 +59,8 @@
         function onLoad() {
           var versionField = document.getElementById("versionField");
           var hidversionField = document.getElementById("hidversionField");
-          var brandShortNameEl = document.getElementById("brandShortName");          
-          hidversionField.value = brandShortNameEl.firstChild.nodeValue + ' ' + navigator.vendorSub + ' (' + navigator.productSub + ')';
+          var brandFullNameEl = document.getElementById("brandFullName");          
+          hidversionField.value = brandFullNameEl.firstChild.nodeValue + ' ' + navigator.vendorSub + ' (' + navigator.productSub + ')';
           versionField.value = hidversionField.value;
           versionField.width = hidversionField.width;
 
@@ -139,6 +139,6 @@
     
     <!-- Localizable strings (from .dtd) -->
     <strings style="display:none;">
-      <string id="brandShortName">&brandShortName;</string>
+      <string id="brandFullName">&brandFullName;</string>
     </strings>
 </dialog>

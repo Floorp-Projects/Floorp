@@ -1,5 +1,5 @@
 <!ENTITY messengerWindow.title "Mail &amp; Newsgroups">
-<!ENTITY titledefault.label    "&brandShortName;">
+<!ENTITY titledefault.label    "&brandFullName;">
 <!ENTITY titleSeparator.label " - ">
 
 <!-- File Menu -->
@@ -396,9 +396,9 @@
 <!ENTITY helpMenu.accesskey "H"> 
 <!ENTITY releaseCmd.label "Release Notes">
 <!ENTITY releaseCmd.accesskey "R"> 
-<!ENTITY hintsAndTips.label "&brandShortName; Help">
+<!ENTITY hintsAndTips.label "&brandFullName; Help">
 <!ENTITY hintsAndTips.accesskey "h"> 
-<!ENTITY aboutCmd.label "About &brandShortName;">
+<!ENTITY aboutCmd.label "About &brandFullName;">
 <!ENTITY aboutCmd.accesskey "A">
 
 <!-- Mail Toolbar -->

@@ -25,6 +25,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
 <!DOCTYPE overlay [
+  <!ENTITY % brandingDTD SYSTEM "chrome://global/locale/brand.dtd" > %brandingDTD;
   <!ENTITY % dtd1 SYSTEM "chrome://messenger/locale/pref-mailnews.dtd" > %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://messenger/locale/pref-notifications.dtd" > %dtd2;
 ]>
