@@ -526,7 +526,7 @@ nsContainerFrame::MoveOverflowToChildList()
   if (nsnull != prevInFlow) {
     if (prevInFlow->mOverflowFrames.NotEmpty()) {
       NS_ASSERTION(mFrames.IsEmpty(), "bad overflow list");
-      mFrames.Join(this, prevInFlow->mOverflowFrames);
+      mFrames.InsertFrames(this, nsnull, prevInFlow->mOverflowFrames);
       result = PR_TRUE;
     }
   }
