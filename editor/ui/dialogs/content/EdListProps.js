@@ -255,6 +255,14 @@ function SelectBulletStyle()
   }
 }
 
+function ChangeListType(type, changeAll)
+{
+  if (type && changeAll)
+    globalElement.setAttribute("type",type);
+  else
+    globalElement.removeAttribute("type");
+}
+
 function ValidateData()
 {
   var type = 0;
@@ -278,10 +286,7 @@ function ValidateData()
           break;
       }
       BulletStyleType = type;
-      if (type && gDialog.ChangeAllRadio.selected)
-        globalElement.setAttribute("type",type);
-      else
-        globalElement.removeAttribute("type");
+      ChangeListType(type, gDialog.ChangeAllRadio.selected);
 
     } 
     else if (ListType == "ol")
@@ -306,10 +311,7 @@ function ValidateData()
           break;
       }
       BulletStyleType = type;
-      if (type && gDialog.ChangeAllRadio.selected)
-        globalElement.setAttribute("type",type);
-      else
-        globalElement.removeAttribute("type");
+      ChangeListType(type, gDialog.ChangeAllRadio.selected);
         
       var startingNumber = TrimString(gDialog.StartingNumberInput.value);
       if (startingNumber)
@@ -343,6 +345,17 @@ function onAccept()
 
     if (changeList)
     {
+      if (ListElement && gDialog.ChangeAllRadio.selected && BulletStyleType != originalBulletStyleType) {
+        var child = ListElement.firstChild;
+        while (child) {
+          if (child.nodeType == Node.ELEMENT_NODE &&
+              child.nodeName.toLowerCase() == "li") {
+            editorShell.editor.removeAttributeOrEquivalent(child, "type");
+          }
+          child = child.nextSibling;
+        }
+      }
+
       editorShell.MakeOrChangeList(ListType, gDialog.ChangeAllRadio.selected,
                                    (BulletStyleType != originalBulletStyleType) ? BulletStyleType : null);
 
