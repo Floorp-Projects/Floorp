@@ -367,6 +367,7 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
   PRInt32 np;
   switch (theStyle) {
   case NS_STYLE_BORDER_STYLE_NONE:
+  case NS_STYLE_BORDER_STYLE_HIDDEN:
   case NS_STYLE_BORDER_STYLE_BLANK:
     return;
 
@@ -2513,6 +2514,7 @@ PRInt16   r,g,b;
         aRenderingContext.DrawPolyline(polypath,curIndex);
         break;
       case NS_STYLE_BORDER_STYLE_NONE:
+      case NS_STYLE_BORDER_STYLE_HIDDEN:
       case NS_STYLE_BORDER_STYLE_BLANK:
         break;
       case NS_STYLE_BORDER_STYLE_DOTTED:
