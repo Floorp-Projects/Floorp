@@ -209,6 +209,8 @@ nsXBLService::~nsXBLService(void)
     // XBL class structs held by unfinalized JS binding objects.
     delete gClassTable;
     gClassTable = nsnull;
+
+    nsMemory::UnregisterObserver(this);
   }
 }
 
