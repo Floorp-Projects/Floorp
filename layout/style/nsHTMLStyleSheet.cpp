@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsINameSpaceManager.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIArena.h"
 #include "nsCRT.h"
@@ -431,71 +432,80 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
   PRInt32 matchCount = 0;
 
-  nsIHTMLContent* htmlContent;
-  if (NS_OK == aContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent)) {
-    nsIAtom*  tag;
-    htmlContent->GetTag(tag);
-    // if we have anchor colors, check if this is an anchor with an href
-    if (tag == nsHTMLAtoms::a) {
-      if ((nsnull != mLinkRule) || (nsnull != mVisitedRule) || (nsnull != mActiveRule)) {
-        // test link state
-        nsILinkHandler* linkHandler;
+  nsIStyledContent* styledContent;
+  if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::IID(), (void**)&styledContent))) {
+    PRInt32 nameSpace;
+    styledContent->GetNameSpaceID(nameSpace);
+    if (kNameSpaceID_HTML == nameSpace) {
+      nsIAtom*  tag;
+      styledContent->GetTag(tag);
+      // if we have anchor colors, check if this is an anchor with an href
+      if (tag == nsHTMLAtoms::a) {
+        if ((nsnull != mLinkRule) || (nsnull != mVisitedRule) || (nsnull != mActiveRule)) {
+          // test link state
+          nsILinkHandler* linkHandler;
 
-        if ((NS_OK == aPresContext->GetLinkHandler(&linkHandler)) &&
-            (nsnull != linkHandler)) {
-          nsAutoString base, href;
-          nsresult attrState = htmlContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
+          if ((NS_OK == aPresContext->GetLinkHandler(&linkHandler)) &&
+              (nsnull != linkHandler)) {
+            nsAutoString base, href;
+            nsresult attrState = styledContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, href);
 
-          if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
-            nsIURL* docURL = nsnull;
-            htmlContent->GetBaseURL(docURL);
+            if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
+              nsIURL* docURL = nsnull;
 
-            nsAutoString absURLSpec;
-            nsresult rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
-            NS_IF_RELEASE(docURL);
+              nsIHTMLContent* htmlContent;
+              if (NS_SUCCEEDED(styledContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
+                htmlContent->GetBaseURL(docURL);
+               
+                nsAutoString absURLSpec;
+                nsresult rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
+                NS_IF_RELEASE(docURL);
 
-            nsLinkState  state;
-            if (NS_OK == linkHandler->GetLinkState(absURLSpec, state)) {
-              switch (state) {
-                case eLinkState_Unvisited:
-                  if (nsnull != mLinkRule) {
-                    aResults->AppendElement(mLinkRule);
-                    matchCount++;
+                nsLinkState  state;
+                if (NS_OK == linkHandler->GetLinkState(absURLSpec, state)) {
+                  switch (state) {
+                    case eLinkState_Unvisited:
+                      if (nsnull != mLinkRule) {
+                        aResults->AppendElement(mLinkRule);
+                        matchCount++;
+                      }
+                      break;
+                    case eLinkState_Visited:
+                      if (nsnull != mVisitedRule) {
+                        aResults->AppendElement(mVisitedRule);
+                        matchCount++;
+                      }
+                      break;
+                    //This case have been moved from nsILinkHandler to to nsIEventStateManager.
+                    //Code needs to be adjusted to get this state item from new location.
+                    /*case eLinkState_Active:
+                      if (nsnull != mActiveRule) {
+                        aResults->AppendElement(mActiveRule);
+                        matchCount++;
+                      }
+                      break;*/
                   }
-                  break;
-                case eLinkState_Visited:
-                  if (nsnull != mVisitedRule) {
-                    aResults->AppendElement(mVisitedRule);
-                    matchCount++;
-                  }
-                  break;
-                //This case have been moved from nsILinkHandler to to nsIEventStateManager.
-                //Code needs to be adjusted to get this state item from new location.
-                /*case eLinkState_Active:
-                  if (nsnull != mActiveRule) {
-                    aResults->AppendElement(mActiveRule);
-                    matchCount++;
-                  }
-                  break;*/
+                }
+                NS_RELEASE(htmlContent);
               }
             }
+            NS_RELEASE(linkHandler);
           }
-          NS_RELEASE(linkHandler);
         }
       }
+      NS_IF_RELEASE(tag);
     } // end A tag
 
     // just get the one and only style rule from the content
     nsIStyleRule* rule;
-    htmlContent->GetContentStyleRule(rule);
+    styledContent->GetContentStyleRule(rule);
     if (nsnull != rule) {
       aResults->AppendElement(rule);
       NS_RELEASE(rule);
       matchCount++;
     }
 
-    NS_IF_RELEASE(tag);
-    NS_RELEASE(htmlContent);
+    NS_RELEASE(styledContent);
   }
 
   return matchCount;
