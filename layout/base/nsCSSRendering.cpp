@@ -2093,7 +2093,7 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     nscoord             x,y;
     PRInt32             flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES;
     PRUint32            dsFlag = 0;
-    float               t2p,xscale,yscale,app2dev;
+    float               t2p,app2dev;
     PRBool              clip;
     nsTransform2D       *theTransform;
     nsIDeviceContext    *theDevContext;
@@ -2115,8 +2115,8 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       tvrect.height *=tileHeight;
 
       // create a new drawing surface... using pixels as the size
-      vrect.height = tvrect.height * t2p;
-      vrect.width = tvrect.width * t2p;
+      vrect.height = (nscoord)(tvrect.height * t2p);
+      vrect.width = (nscoord)(tvrect.width * t2p);
       aRenderingContext.CreateDrawingSurface(&vrect,dsFlag,(nsDrawingSurface&)ts);
     }
 
@@ -2162,7 +2162,6 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       aRenderingContext.DestroyDrawingSurface(ts);
     } else {
       // slow blitting, one tile at a time....
-      nscoord x,y;
       for(y=y0;y<y1;y+=tileHeight){
         for(x=x0;x<x1;x+=tileWidth){
           aRenderingContext.DrawImage(image,x,y,tileWidth,tileHeight);
@@ -2229,28 +2228,28 @@ static void
 TileImage(nsIRenderingContext& aRC,nsDrawingSurface  aDS,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight)
 {
 nsRect  destRect;
-PRInt32 flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_XFORM_SOURCE_VALUES;
-PRInt32 flag1 = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES;
+PRInt32 flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES;
   
   if( aSrcRect.width < aWidth) {
     // width is less than double so double our source bitmap width
     destRect = aSrcRect;
     destRect.x += aSrcRect.width;
-    aRC.CopyOffScreenBits(aDS,aSrcRect.x,aSrcRect.y,destRect,flag1);
+    aRC.CopyOffScreenBits(aDS,aSrcRect.x,aSrcRect.y,destRect,flag);
     aSrcRect.width*=2; 
     TileImage(aRC,aDS,aSrcRect,aWidth,aHeight);
   } else if (aSrcRect.height < aHeight) {
     // height is less than double so double our source bitmap height
     destRect = aSrcRect;
     destRect.y += aSrcRect.height;
-    aRC.CopyOffScreenBits(aDS,aSrcRect.x,aSrcRect.y,destRect,flag1);
+    aRC.CopyOffScreenBits(aDS,aSrcRect.x,aSrcRect.y,destRect,flag);
     aSrcRect.height*=2;
     TileImage(aRC,aDS,aSrcRect,aWidth,aHeight);
   } 
 }
 
+#ifdef NOTNOW
 static void  AntiAliasPoly(nsIRenderingContext& aRenderingContext,nsPoint aPoints[],PRInt32 aStartIndex,PRInt32 curIndex,PRInt8 aSide,PRInt8 aCorner);
-
+#endif
 
 /** ---------------------------------------------------
  *  See documentation in nsCSSRendering.h
@@ -2609,6 +2608,7 @@ PRInt16   r,g,b;
   }
 }
 
+#ifdef NOTNOW
 /** ---------------------------------------------------
  *  AntiAlias the polygon
  *	@update 4/13/99 dwc
@@ -2659,7 +2659,7 @@ PRInt32 x0,y0,x1,y1,offsetx,offsety;
     aRenderingContext.DrawLine(x0,y0,x1,y1); 
   }
 }
-
+#endif
 
 /** ---------------------------------------------------
  *  See documentation in nsCSSRendering.h
