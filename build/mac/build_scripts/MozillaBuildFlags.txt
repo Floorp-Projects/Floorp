@@ -74,6 +74,7 @@ static_build    0      MOZ_STATIC_COMPONENT_LIBS
 string_debug    0      DEBUG_STRING
 string_stats    0      DEBUG_STRING_STATS
 xpctools        0      XPC_TOOLS_SUPPORT
+smime			0      ENABLE_SMIME
 
 filepath_flags
 idepath             ":CodeWarrior IDE Path.txt"

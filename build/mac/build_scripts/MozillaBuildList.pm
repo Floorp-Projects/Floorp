@@ -365,6 +365,9 @@ sub ProcessJarManifests()
     CreateJarFromManifest(":mozilla:layout:html:forms:src:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:layout:html:base:src:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:mailnews:jar.mn", $chrome_dir, \%jars);
+    if ($main::options{smime}) {
+    	CreateJarFromManifest(":mozilla:mailnews:extensions:smime:jar.mn", $chrome_dir, \%jars);
+    }
     CreateJarFromManifest(":mozilla:netwerk:resources:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:profile:pref-migrator:resources:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:profile:resources:jar.mn", $chrome_dir, \%jars);
@@ -1168,6 +1171,9 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:mailnews:imap:macbuild:msgimapIDL.mcp",               "MsgImap");
     BuildIDLProject(":mozilla:mailnews:mime:macbuild:mimeIDL.mcp",                  "Mime");
     BuildIDLProject(":mozilla:mailnews:import:macbuild:msgImportIDL.mcp",           "msgImport");
+    if ($main::options{smime}) {
+    	BuildIDLProject(":mozilla:mailnews:extensions:smime:macbuild:msgsmimeIDL.mcp",  "msgsmime");
+    }
 
     BuildIDLProject(":mozilla:caps:macbuild:CapsIDL.mcp",                           "caps");
 
@@ -1991,18 +1997,23 @@ sub BuildMailNewsProjects()
     BuildOneProject(":mozilla:mailnews:mime:macbuild:mime.mcp",                         "Mime$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:mailnews:mime:emitters:macbuild:mimeEmitter.mcp",         "mimeEmitter$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:mailnews:mime:cthandlers:vcard:macbuild:vcard.mcp",       "vcard$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:mailnews:mime:cthandlers:smimestub:macbuild:smime.mcp",   "smime$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
 #   BuildOneProject(":mozilla:mailnews:mime:cthandlers:calendar:macbuild:calendar.mcp", "calendar$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:mailnews:import:macbuild:msgImport.mcp",                  "msgImport$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:mailnews:import:text:macbuild:msgImportText.mcp",         "msgImportText$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:mailnews:import:eudora:macbuild:msgImportEudora.mcp",     "msgImportEudora$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-             
+    
+         
     if ($main::options{static_build}) {
         BuildOneProject(":mozilla:modules:staticmod:macbuild:mailnewsComponent.mcp",  "MetaMailNews$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
     }
              
     InstallResources(":mozilla:mailnews:addrbook:src:MANIFEST_COMPONENTS",              "${dist_dir}Components");
-
+	if ($main::options{smime}) {
+    	BuildOneProject(":mozilla:mailnews:extensions:smime:macbuild:smime.mcp",         "msgsmime$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+    	InstallResources(":mozilla:mailnews:extensions:smime:src:MANIFEST",				 "${dist_dir}Components");
+    } else {
+        BuildOneProject(":mozilla:mailnews:mime:cthandlers:smimestub:macbuild:smime.mcp",   "smime$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+    }
     EndBuildModule("mailnews");
 }
 
