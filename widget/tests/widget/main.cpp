@@ -42,12 +42,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 #endif
 
 #ifdef XP_UNIX
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
   int argC = argc;
 
   WidgetTest(&argC, argv);
 
+  return 0;
 }
 #endif
 
