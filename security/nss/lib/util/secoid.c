@@ -1531,3 +1531,20 @@ SECOID_FindOIDTagDescription(SECOidTag tagnum)
   else
     return oidData->desc;
 }
+
+/*
+ * free up the oid tables.
+ */
+SECStatus
+SECOID_Shutdown(void)
+{
+    if (oidhash) {
+	(oidhash->close)(oidhash);
+	oidhash = NULL;
+    }
+    if (oidmechhash) {
+	(oidmechhash->close)(oidmechhash);
+	oidmechhash = NULL;
+    }
+    return SECSuccess;
+}

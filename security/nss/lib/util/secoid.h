@@ -36,7 +36,7 @@
 /*
  * secoid.h - public data structures and prototypes for ASN.1 OID functions
  *
- * $Id: secoid.h,v 1.3 2001/05/02 21:34:13 wtc%netscape.com Exp $
+ * $Id: secoid.h,v 1.4 2001/08/24 18:34:34 relyea%netscape.com Exp $
  */
 
 #include "plarena.h"
@@ -108,6 +108,11 @@ extern PRBool SECOID_KnownCertExtenOID (SECItem *extenOid);
 /* Given a SEC_OID_* tag, return a string describing it.
  */
 extern const char *SECOID_FindOIDTagDescription(SECOidTag tagnum);
+
+/*
+ * free up the oid data structures.
+ */
+extern SECStatus SECOID_Shutdown(void);
 
 
 SEC_END_PROTOS
