@@ -46,7 +46,7 @@ window[chromehidden~="location"][chromehidden~="toolbar"] .chromeclass-toolbar
 
 /****** elements that have no visual representation ******/
 
-data,
+script, data,
 xbl|children,
 commands, commandset, command,
 broadcasterset, broadcaster, observes,
