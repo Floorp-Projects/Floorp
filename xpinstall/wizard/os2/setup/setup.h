@@ -43,6 +43,7 @@ typedef int PRInt32;
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <direct.h>
 #include <ctype.h>
 #include "setuprsc.h"
 #include "resource.h"
