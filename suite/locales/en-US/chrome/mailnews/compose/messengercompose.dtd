@@ -50,55 +50,25 @@
 <!ENTITY attachmentsCmd.label ".Attachments">
 <!ENTITY wrapCmd.label ".Wrap Long Lines">
 <!ENTITY dcharMenu.label "Character Set">
-<!ENTITY dcharIso1Cmd.label "ISO Latin 1 (ISO-8859-1)">
-<!ENTITY dcharIso2Cmd.label "ISO Latin 2 (ISO-8859-2)">
-<!ENTITY dcharIso3Cmd.label "ISO Latin 3 (ISO-8859-3)">
-<!ENTITY dcharIso4Cmd.label "ISO Latin 4 (ISO-8859-4)">
-<!ENTITY dcharIso9Cmd.label "ISO Latin 5 (ISO-8859-9)">
-<!ENTITY dcharIso10Cmd.label "ISO Latin 6 (ISO-8859-10)">
-<!ENTITY dcharIso13Cmd.label "ISO Latin 7 (ISO-8859-13)">
-<!ENTITY dcharIso14Cmd.label "ISO Latin 8 (ISO-8859-14)">
-<!ENTITY dcharIso15Cmd.label "ISO Latin 9 (ISO-8859-15)">
-<!ENTITY dcharWinLat2Cmd.label "Windows Latin 2 (windows-1250)"> 
-<!ENTITY dcharWinLat1Cmd.label "Windows Latin 1 (windows-1252)">
-<!ENTITY dcharWinLat5Cmd.label "Windows Latin 5 (windows-1254)">
-<!ENTITY dcharWinBalRimCmd.label "Windows Baltic (windows-1257)">
-<!ENTITY dcharMacRomCmd.label "Macintosh Roman">
-<!ENTITY dcharMacCenEuroCmd.label "Macintosh Central European">
-<!ENTITY dcharMacTurCmd.label "Macintosh Turkish">
-<!ENTITY dcharMacCroaCmd.label "Macintosh Croatian">
-<!ENTITY dcharMacRomanianCmd.label "Macintosh Romanian">
-<!ENTITY dcharMacIceCmd.label "Macintosh Icelandic">
-<!ENTITY dcharJapanCmd.label "Japanese JIS (ISO-2022-JP)">
-<!ENTITY dcharJapanShiftjsCmd.label "Japanese (Shift_JIS)">
-<!ENTITY dcharJapanEucCmd.label "Japanese (EUC-JP)">
+<!ENTITY dcharIso1Cmd.label "Western (ISO-8859-1)">
+<!ENTITY dcharIso2Cmd.label "Central European (ISO-8859-2)">
+<!ENTITY dcharIso3Cmd.label "Esperanto/Maltese (ISO-8859-3)">
+<!ENTITY dcharIso4Cmd.label "Baltic (ISO-8859-4)">
+<!ENTITY dcharIso9Cmd.label "Turkish (ISO-8859-9)">
+<!ENTITY dcharIso10Cmd.label "Northern European (ISO-8859-10)">
+<!ENTITY dcharIso14Cmd.label "Celtic (ISO-8859-14)">
+<!ENTITY dcharIso15Cmd.label "New Western (ISO-8859-15)">
+<!ENTITY dcharJapanCmd.label "Japanese (ISO-2022-JP)">
 <!ENTITY dcharTradChiBigCmd.label "Traditional Chinese (Big5)">
-<!ENTITY dcharTriChiEucCmd.label "Traditional Chinese (EUC-TW)">
 <!ENTITY dcharSimpChiGbCmd.label "Simplified Chinese (GB2312)">
 <!ENTITY dcharKoreanCmd.label "Korean (EUC-KR)">
-<!ENTITY dcharUtf7Cmd.label "Multilingual (UTF-7)">
-<!ENTITY dcharUtf8Cmd.label "Multilingual (UTF-8)">
-<!ENTITY dcharIsoCyrCmd.label "ISO Cyrillic (ISO-8859-5)">
-<!ENTITY dcharEcmaCyrCmd.label "ECMA Cyrillic (ISO-IR-111)">
-<!ENTITY dcharDosCyrCmd.label "DOS Cyrillic (IBM866)">
-<!ENTITY dcharWinCyrCmd.label "Windows Cyrillic (windows-1251)">
-<!ENTITY dcharMacCyrCmd.label "Macintosh Cyrillic">
-<!ENTITY dcharMacUkrCmd.label "Macintosh Ukrainian">
-<!ENTITY dcharRusCmd.label "Russian (KOI8-R)">
+<!ENTITY dcharUtf8Cmd.label "UTF-8">
+<!ENTITY dcharRusCmd.label "Cyrillic (KOI8-R)">
 <!ENTITY dcharUkrCmd.label "Ukrainian (KOI8-U)">
-<!ENTITY dcharIsoGreekCmd.label "ISO Greek (ISO-8859-7)">
-<!ENTITY dcharWinGreekCmd.label "Windows Greek (windows-1253)">
-<!ENTITY dcharMacGreekCmd.label "Macintosh Greek">
-<!ENTITY dcharWinVietCmd.label "Windows Vietnamese (windows-1258)">
-<!ENTITY dcharVietTcnCmd.label "Vietnamese (TCVN5712)">
+<!ENTITY dcharIsoGreekCmd.label "Greek (ISO-8859-7)">
 <!ENTITY dcharVietViCmd.label "Vietnamese (VISCII)">
-<!ENTITY dcharVieVpCmd.label "Vietnamese (VPS)">
 <!ENTITY dcharThaiCmd.label "Thai (TIS-620)">
 <!ENTITY dcharArmCmd.label "Armenian (ARMSCII-8)">
-<!ENTITY dcharIso6Cmd.label ".ISO Arabic (ISO-8859-6)">
-<!ENTITY dcharIso8Cmd.label ".ISO Hebrew (ISO-8859-8)">
-<!ENTITY dcharCp1255Cmd.label "Windows Hebrew (windows-1255)">
-<!ENTITY dcharCp1256Cmd.label "Windows Arabic (windows-1256)">
 
 
 <!-- Insert menu items -->
