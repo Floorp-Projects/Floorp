@@ -49,7 +49,7 @@
 #include "nsCSSRendering.h"
 #include "nsIDOMHTMLHRElement.h"
 #include "nsIDeviceContext.h"
-#include "nsStyleUtil.h"
+#include "nsCSSRendering.h"
 #include "nsLayoutAtoms.h"
 #include "nsILookAndFeel.h"
 
@@ -204,7 +204,7 @@ HRuleFrame::Paint(nsIPresContext*      aPresContext,
   } else {
     nscolor colors[2]; 
     // Get the background color that applies to this HR 
-    color = nsStyleUtil::FindNonTransparentBackground(mStyleContext); 
+    color = nsCSSRendering::FindNonTransparentBackground(mStyleContext); 
     NS_Get3DColors(colors, color->mBackgroundColor); 
 
     // When a rule is not shaded, then we use a uniform color and

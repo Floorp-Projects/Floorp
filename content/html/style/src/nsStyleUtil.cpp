@@ -493,39 +493,6 @@ nsStyleUtil::ConstrainFontWeight(PRInt32 aWeight)
 }
 
 
-//------------------------------------------------------------------------------
-//
-//------------------------------------------------------------------------------
-
-const nsStyleBackground* nsStyleUtil::FindNonTransparentBackground(nsIStyleContext* aContext,
-                                                                   PRBool aStartAtParent /*= PR_FALSE*/)
-{
-  const nsStyleBackground* result = nsnull;
-  nsIStyleContext*    context;
-  if (aStartAtParent) {
-    context = aContext->GetParent();  // balance ending release
-  } else {
-    context = aContext;
-    NS_IF_ADDREF(context);  // balance ending release
-  }
-  NS_ASSERTION( context != nsnull, "Cannot find NonTransparentBackground in a null context" );
-  
-  while (nsnull != context) {
-    result = (const nsStyleBackground*)context->GetStyleData(eStyleStruct_Background);
-
-    if (0 == (result->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
-      break;
-    }
-    else {
-      nsIStyleContext* last = context;
-      context = context->GetParent();
-      NS_RELEASE(last);
-    }
-  }
-  NS_IF_RELEASE(context);
-  return result;
-}
-
 /*static*/
 PRBool nsStyleUtil::IsHTMLLink(nsIContent *aContent, nsIAtom *aTag, nsIPresContext *aPresContext, nsLinkState *aState)
 {
