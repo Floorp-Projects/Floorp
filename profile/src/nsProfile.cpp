@@ -583,12 +583,15 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
                                         nsFileSpec defaultsDirSpec;
                                         
                                         profDefaultsDir->GetFileSpec(&defaultsDirSpec);
+
+					// Need a separate hack for Mac. For now app folder is the fall back on Mac.
+					nsFilePath(tmpFileSpec.GetNativePathCString(), PR_TRUE);
                                         
-								// Copy contents from defaults folder.
+					// Copy contents from defaults folder.
                                         if (defaultsDirSpec.Exists())
-                                            {
-                                                defaultsDirSpec.RecursiveCopy(tmpFileSpec);
-                                            }
+                                        {
+                                        	defaultsDirSpec.RecursiveCopy(tmpFileSpec);
+                                        }
                                         
                                     }
                                     
