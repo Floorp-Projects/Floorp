@@ -673,11 +673,11 @@ protected:
                                         const nscoord& aYTotalOffset,
                                         nscoord& aYGroupOffset, PRInt32& aRowX);
 
-  NS_METHOD AdjustForCollapsingRows(nsIPresContext* aPresContext, 
-                                    nscoord&        aHeight);
+  NS_METHOD AdjustForCollapsingRows(nsIPresContext*       aPresContext,
+                                    nsHTMLReflowMetrics&  aDesiredSize);
 
-  NS_METHOD AdjustForCollapsingCols(nsIPresContext* aPresContext, 
-                                    nscoord&        aWidth);
+  NS_METHOD AdjustForCollapsingCols(nsIPresContext*       aPresContext,
+                                    nsHTMLReflowMetrics&  aDesiredSize);
   // end incremental reflow methods
 
 

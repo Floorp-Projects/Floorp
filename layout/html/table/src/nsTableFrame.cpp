@@ -2043,10 +2043,10 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
   nsMargin borderPadding = GetChildAreaOffset(&aReflowState);
   SetColumnDimensions(aDesiredSize.height, borderPadding);
   if (NeedToCollapseRows()) {
-    AdjustForCollapsingRows(aPresContext, aDesiredSize.height);
+    AdjustForCollapsingRows(aPresContext, aDesiredSize);
   }
   if (NeedToCollapseColumns()) {
-    AdjustForCollapsingCols(aPresContext, aDesiredSize.width);
+    AdjustForCollapsingCols(aPresContext, aDesiredSize);
   }
 
   // See if we need to calc max elem and/or preferred widths. This isn't done on 
@@ -2332,6 +2332,17 @@ nsTableFrame::CollapseRowGroupIfNecessary(nsIPresContext* aPresContext,
       } else { // row is not collapsed but needs to be adjusted by those that are
         rowRect.y -= aYGroupOffset;
         rowFrame->SetRect(rowRect);
+        // reset the collapse yoffset
+        nsIFrame* cellFrame = rowFrame->GetFirstChild(nsnull);
+        while (cellFrame) {
+          const nsStyleDisplay* cellDisplay = cellFrame->GetStyleDisplay();
+          if (NS_STYLE_DISPLAY_TABLE_CELL == cellDisplay->mDisplay) {
+            nsTableCellFrame* cFrame = (nsTableCellFrame*)cellFrame;
+            // reset the offset as this row is not collapsed
+            cFrame->SetCollapseOffsetY(aPresContext, 0);
+          }
+          cellFrame = cellFrame->GetNextSibling();
+        }
       }
       aRowX++;
     }
@@ -2348,33 +2359,38 @@ nsTableFrame::CollapseRowGroupIfNecessary(nsIPresContext* aPresContext,
 
 // collapsing row groups, rows, col groups and cols are accounted for after both passes of
 // reflow so that it has no effect on the calculations of reflow.
-NS_METHOD nsTableFrame::AdjustForCollapsingRows(nsIPresContext* aPresContext, 
-                                                nscoord&        aHeight)
+NS_METHOD nsTableFrame::AdjustForCollapsingRows(nsIPresContext*       aPresContext, 
+                                                nsHTMLReflowMetrics&  aDesiredSize)
 {
-  nsIFrame* groupFrame = mFrames.FirstChild(); 
   nscoord yGroupOffset = 0; // total offset among rows within a single row group
   nscoord yTotalOffset = 0; // total offset among all rows in all row groups
   PRInt32 rowIndex = 0;
   // reset the bit, it will be set again if row/rowgroup is collapsed
   SetNeedToCollapseRows(PR_FALSE); 
-                                   
+  
   // collapse the rows and/or row groups as necessary
-  while (nsnull != groupFrame) {
-    if (IsRowGroup(groupFrame->GetStyleDisplay()->mDisplay)) {
-      CollapseRowGroupIfNecessary(aPresContext, groupFrame, yTotalOffset, yGroupOffset, rowIndex);
-    }
+  // Get the ordered children
+  nsAutoVoidArray rowGroups;
+  PRUint32 numRowGroups;
+  OrderRowGroups(rowGroups, numRowGroups);
+  
+  // Walk the list of children
+  for (PRUint32 childX = 0; childX < numRowGroups; childX++) {
+    nsIFrame* childFrame = (nsIFrame*)rowGroups.ElementAt(childX);
+    nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(childFrame);
+    if (!rgFrame) continue; // skip foreign frame types
+    CollapseRowGroupIfNecessary(aPresContext, rgFrame, yTotalOffset, yGroupOffset, rowIndex);
     yTotalOffset += yGroupOffset;
     yGroupOffset = 0;
-    groupFrame = groupFrame->GetNextSibling();
   } 
 
-  aHeight -= yTotalOffset;
+  aDesiredSize.height -= yTotalOffset;
  
   return NS_OK;
 }
 
-NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext* aPresContext, 
-                                                nscoord&        aWidth)
+NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext*       aPresContext, 
+                                                nsHTMLReflowMetrics&  aDesiredSize)
 {
   nsTableCellMap* cellMap = GetCellMap();
   if (!cellMap) return NS_OK;
@@ -2452,7 +2468,7 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext* aPresContext,
     groupFrame = groupIter.Next();
   } // outer while
 
-  aWidth -= xOffset;
+  aDesiredSize.width -= xOffset;
  
   return NS_OK;
 }
@@ -2992,13 +3008,7 @@ nsTableFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
       ConsiderChildOverflow(aPresContext, desiredSize.mOverflowArea, kidFrame);
     }  
     StoreOverflow(aPresContext, desiredSize);
-    // XXX Is this needed?
-#if 0
-    AdjustForCollapsingRows(aPresContext, aDesiredSize.height);
-    AdjustForCollapsingCols(aPresContext, aDesiredSize.width);
-#endif
   }
-
   return rv;
 }
 
