@@ -1,0 +1,96 @@
+<!--  -*- Mode: HTML; tab-width: 8; indent-tabs-mode: nil -*-
+  
+   The contents of this file are subject to the Netscape Public License
+   Version 1.0 (the "NPL"); you may not use this file except in
+   compliance with the NPL.  You may obtain a copy of the NPL at
+   http://www.mozilla.org/NPL/
+  
+   Software distributed under the NPL is distributed on an "AS IS" basis,
+   WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+   for the specific language governing rights and limitations under the
+   NPL.
+  
+   The Initial Developer of this code under the NPL is Netscape
+   Communications Corporation.  Portions created by Netscape are
+   Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+   Reserved.
+ -->
+<HTML>
+<HEAD>
+<TITLE>Account Setup</TITLE>
+<SCRIPT LANGUAGE="JavaScript" ARCHIVE="asw.jar" SRC="compare.js"></SCRIPT>
+<LINK REL=STYLESHEET TYPE="text/JavaScript" ARCHIVE="asw.jar" HREF="sheet.js"></LINK>
+</HEAD>
+
+<BODY BACKGROUND="images/bg.gif" BGCOLOR="cccccc" onLoad="loadData()" ID="compare100">
+
+<!-- The layer below contains the Account Setup identifier. -->
+<ILAYER NAME="tagtext" LEFT=420 TOP=0 VISIBILITY=SHOW ID="compare101">
+	<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=200 ID="nospace">
+		<TR>
+			<TD HEIGHT=20 VALIGN=MIDDLE BACKGROUND="images/tag.gif">
+				<B CLASS="previewtag">ACCOUNT SETUP</B>
+			</TD>
+		</TR>
+	</TABLE>
+</ILAYER>
+
+<!-- The layer below contains the headline and text of this screen -->
+
+<P CLASS="title"><B>Compare Internet Service Providers</B></P>
+<BR>
+
+<!--
+<TABLE WIDTH="100%" >
+	<TR>
+		<TD><B><FONT SIZE=+2>Internet Service Providers</FONT></B></TD>
+		<TD WIDTH="30%" BACKGROUND="images/tag.gif">
+			<B>&nbsp;<NOBR>Internet Account Creation</NOBR></B>&nbsp;
+		</TD>
+	</TR>
+</TABLE>
+-->
+
+<CENTER>
+<TABLE WIDTH="100%">
+	<TR>
+		<TD COLSPAN="4">
+			<B>Provider Highlights:&nbsp;<IMG SRC="metadata/images/feature1.gif" BORDER=0 HEIGHT=16 WIDTH=16></B>
+			<B><FONT SIZE=-1>Free Account Time!&nbsp;</FONT></B>&nbsp;<IMG SRC="metadata/images/feature2.gif" HEIGHT=16 WIDTH=16>
+			<FONT SIZE=-1>Phone Bill Billing&nbsp;<IMG SRC="metadata/images/feature3.gif" HEIGHT=16 WIDTH=16></FONT>
+			<FONT SIZE=-1>Web Page Hosting</FONT>
+		</TD>
+	</TR>
+</TABLE>
+</CENTER>
+
+<LAYER NAME="allisp" LEFT=0 VISIBILITY="show" ID="compare102">
+
+	<ILAYER NAME="level1isp" LEFT=0>
+	<HR size=4>
+	<CENTER><P><A HREF="javascript:window.donothing()" onClick="toggle( 'level1isp' ); return false;" ID="compare103">Level 1</A></P></CENTER>
+	<P CLASS="body">
+	<ILAYER NAME="level1display" LEFT=0 VISIBILITY=SHOW>
+	###level1###
+	</LAYER>
+	</P>
+	</LAYER>
+
+	<ILAYER NAME="level2isp" LEFT=0>
+	<CENTER><P><A HREF="javascript:window.donothing()" onClick="toggle( 'level2isp' ); return false;" ID="compare104">Level 2</A></CENTER></P>
+	<P CLASS="body">
+	<ILAYER NAME="level2display" LEFT=0 VISIBILITY=SHOW>
+	###level2###
+	</LAYER>
+	</P>
+	</LAYER>
+
+</LAYER>
+
+<SCRIPT LANGUAGE="JavaScript1.2" ID="compare103">
+savePositions();
+allisp.visible = "show";
+</SCRIPT>
+
+</BODY>
+</HTML>
