@@ -10,9 +10,9 @@ use strict;
 
 # "use strict" complains if we do not define these.
 # They are not initialized here. The default values are after "__END__".
-$TreeSpecific::name = $TreeSpecific::checkout_target = $TreeSpecific::checkout_clobber_target = $::Version = undef;
+$TreeSpecific::name = $TreeSpecific::build_target = $TreeSpecific::checkout_target = $TreeSpecific::clobber_target = $::Version = undef;
 
-$::Version = '$Revision: 1.97 $ ';
+$::Version = '$Revision: 1.98 $ ';
 
 {    
     TinderUtils::Setup();
@@ -28,8 +28,9 @@ $::Version = '$Revision: 1.97 $ ';
 sub tree_specific_overides {
 
 	$TreeSpecific::name = 'mozilla';
-	$TreeSpecific::checkout_target = '';
-	$TreeSpecific::checkout_clobber_target = "checkout realclean build";
+	$TreeSpecific::build_target = 'alldep';
+	$TreeSpecific::checkout_target = 'checkout';
+	$TreeSpecific::clobber_target = 'distclean';
 	
 }
 
