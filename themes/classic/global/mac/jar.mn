@@ -58,6 +58,10 @@ classic.jar:
     skin/classic/global/check-radio-uncheck-active.gif
     skin/classic/global/check-radio-uncheck-disable.gif
     skin/classic/global/check-radio-uncheck.gif
+    skin/classic/global/flat-left-arrow.gif 
+    skin/classic/global/flat-right-arrow.gif 
+    skin/classic/global/flat-left-arrow-disabled.gif 
+    skin/classic/global/flat-right-arrow-disabled.gif 
     skin/classic/global/menu-arrow-disabled.gif
     skin/classic/global/menu-arrow-hover.gif
     skin/classic/global/menu-arrow.gif
