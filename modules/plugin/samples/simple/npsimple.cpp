@@ -1152,7 +1152,7 @@ SimplePluginInstance::PluginWindowProc( HWND hWnd, UINT Msg, WPARAM wParam, LPAR
           break;
       }
       default: {
-          inst->fPlatform.fDefaultWindowProc(hWnd, Msg, wParam, lParam);
+          CallWindowProc(inst->fPlatform.fDefaultWindowProc, hWnd, Msg, wParam, lParam);
       }
     }
     return 0;
