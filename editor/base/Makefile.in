@@ -105,7 +105,7 @@ CPPSRCS += nsHTMLEditorLog.cpp \
            nsEditorTxnLog.cpp  \
            $(NULL)
 
-DEFINES += -DENABLE_EDITOR_API_LOG
+DEFINES += -DENABLE_EDITOR_API_LOG=1
 
 endif
 
