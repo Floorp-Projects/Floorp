@@ -80,6 +80,13 @@ static void file_cancel_clicked(GtkWidget *w, PRBool *ret)
   gtk_main_quit();
 }
 
+static gint file_delete_window(GtkWidget *w, gpointer data)
+{
+  printf("window closed\n");
+  gtk_main_quit();
+  return PR_TRUE;
+}
+
 static void file_destroy_dialog(GtkWidget *w, gpointer data)
 {
   GtkFileSelection *fs = GTK_FILE_SELECTION(data);
@@ -101,7 +108,7 @@ static void filter_item_activated(GtkWidget *w, gpointer data)
 //-------------------------------------------------------------------------
 PRBool nsFileWidget::Show()
 {
-  PRBool ret;
+  PRBool ret = PR_FALSE;
   if (mWidget) {
     // make things shorter
     GtkFileSelection *fs = GTK_FILE_SELECTION(mWidget);
@@ -129,6 +136,9 @@ PRBool nsFileWidget::Show()
     gtk_signal_connect(GTK_OBJECT(fs->cancel_button), "clicked",
                        GTK_SIGNAL_FUNC(file_cancel_clicked),
                        &ret);
+    gtk_signal_connect(GTK_OBJECT(mWidget), "delete_event",
+                       GTK_SIGNAL_FUNC(file_delete_window),
+                       NULL);
     // start new loop.   ret is set in the above callbacks.
     gtk_main();
   }
@@ -261,7 +271,11 @@ NS_IMETHODIMP  nsFileWidget::GetFile(nsFileSpec& aFile)
 {
   if (mWidget) {
     gchar *fn = gtk_file_selection_get_filename(GTK_FILE_SELECTION(mWidget));
-    aFile = fn; // Put the filename into the nsFileSpec instance.
+    if (fn && !strcmp(fn,"")) {
+      aFile = fn; // Put the filename into the nsFileSpec instance.
+    } else {
+      return NS_ERROR_FAILURE;
+    }
   }
   return NS_OK;
 }
