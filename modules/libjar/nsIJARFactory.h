@@ -27,30 +27,4 @@
 #ifndef nsIJARFactory_h__
 #define nsIJARFactory_h__
 
-#include "nsISupports.h"
-#include "nsIFactory.h"
-
-
-// Module implementation
-class nsJARModule : public nsIModule
-{
-public:
-    nsJARModule();
-    virtual ~nsJARModule();
-
-    NS_DECL_ISUPPORTS
-
-    NS_DECL_NSIMODULE
-
-protected:
-    nsresult Initialize();
-
-    void Shutdown();
-
-    PRBool mInitialized;
-    nsCOMPtr<nsIGenericFactory> mFactory;
-};
-
-
-
 #endif // nsIJARFactory_h__
