@@ -18,17 +18,18 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#    Axel Hecht <axel@pike.org>
+#
 
 DEPTH=..\..\..\..\..
 
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSER=$(DIST)\bin\chrome\global\content
+CHROME_DIR = global
 
-install::
-	$(MAKE_INSTALL) console.js $(DISTBROWSER)
-	$(MAKE_INSTALL) console.xul $(DISTBROWSER)
+CHROME_CONTENT = \
+	console.js \
+        console.xul \
+        $(NULL)
 
-clobber::
-  rm -f $(DISTBROWSER)\console.js
-  rm -f $(DISTBROWSER)\console.xul
+CHROME_TYPE = content
