@@ -1,0 +1,335 @@
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+
+# generic.sample.buildcf - this is an example buildcf which should be
+# useful to most people.  Your needs may be different from this script
+# especially if you are running builds on many different OS platforms
+# which require different command sequences.  Each build type
+# (construct, test, lint) defines a sequence of commands which is the
+# same on all build machines.  They types each have different commands
+# to run but the commands are simple because all the difficult work is
+# performed inside makefiles and shell scripts.  There is one parser
+# on the tinderbox server for each type of build.  This cf file will
+# need a copy of the TreeData file on the build machine in order to
+# translate the treename into the name of the module and branch and
+# correctly set the CVSROOT environemental variable.
+
+# Run:
+
+	./build_shellscript	--buildcf ./generic.sample.buildcf	\
+				--build construct --test 		\
+					-- 				\
+				--tree seamonkey
+
+# to see the completed build script which has all the perl
+# vairiables substituted.
+
+
+# $Revision: 1.1 $ 
+# $Date: 2001/07/27 20:39:18 $ 
+# $Author: kestes%walrus.com $ 
+# $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/clientbin/generic.sample.buildcf,v $ 
+# $Name:  $ 
+
+
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is the Tinderbox build tool.
+#
+# The Initial Developer of the Original Code is Netscape Communications
+# Corporation. Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+
+# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# Contributor(s): 
+
+
+
+package UserDef;
+
+
+# We use the same tinderbox treedata module which is on the server
+# side to translate a treename into a module and branch.
+
+use lib '/home/build/lib';
+
+use TreeData;
+
+
+# User configurable variables live in their own namespace so that they
+# will not contaminate the build script.  The buildscript will get the
+# values it needs via well known functions.  This package may also set
+# %ENV to effect the build programs.
+
+
+
+
+# The environmental variables for building at mozilla/netscape are
+# quite complicated, your needs may be much simpler. Putting all
+# environmental variable differences into a single function makes it
+# clearer exactly how the environment differes on different platforms.
+
+sub build_environment{
+
+    $ENV{PATH} = (
+                  '/usr/bin:'.
+                  '/bin:'.
+                  '/usr/local/bin:'.
+                  '/home/build/bin'.
+                  );
+
+    $ENV{CVSROOT} = (
+                     "buildmaster\@cvs.yourcompany.com:".
+                     $TreeData::VC_TREE{tree_name()}{'root'}
+                     );
+    
+    $ENV{CVS_RSH} = "ssh2";
+    
+    return 1;
+}
+
+
+
+sub build_scripts {
+    
+    my ($argv) = "@ARGV";
+    
+    
+    $BUILD_DIR = "/tmp/tinderbox_build";
+    
+    $DEST_DIR="$BUILD_DIR/dest";
+    
+    if ($DEST_DIR) {
+        $make_flags .= " DESTDIR=$DEST_DIR ";
+    }
+    
+    my $tree = tree_name();
+    my $branch = $TreeData::VC_TREE{$tree}{'branch'};
+    my $module = $TreeData::VC_TREE{$tree}{'module'};
+    
+    if ($branch) {
+        $cvs_checkout_flags .= " -r $branch ";
+    }
+
+# builds discribe a sequence of steps needed to perform a "build".
+# Each build either succeeds or fails.  Builds can be used for running
+# tests and checking source code style in addition to creating binaries.
+
+# Builds may depend on the environment, the OS or special arguments
+# passed to the program.  Arguments which are passed after the '--'
+# are assumed to be build specific and are ignored by the build
+# harness and can be used in defining the build sequence.
+
+# Builds can be architecture dependent (one build name can be used for
+# all architectures) or independent (each OS uses a different
+# buildname) depending on your application.
+
+
+# each build can have as many phases as
+# are needed (sample: checkout, configure, build, test)
+
+
+# Each phase must have the following entries:
+
+#	 phase_name: which discribes what the phase is.
+
+#	 error_status: the tinderbox status which should be returned
+#	 if the phase fails.
+
+#	 script: a list of shell commands to be exectued in order
+#	 until one fails (each command in a separate shell, similar to make).
+
+#	 dir: the directory which will be local while the script is
+#	 executing.
+
+
+
+
+$BUILDS = { 
+	   'construct' => [
+			   {
+			    'phase_name' => "print_environment",
+			    'error_status' => "build_failed",
+			    'dir' => "/",
+			    'script' => [
+					 "show_env",
+					 "rpm -qa",
+					],
+			   },
+			   {
+			    'phase_name' => "checkout",
+			    'error_status' => "build_failed",
+			    'dir' => "$BUILD_DIR",
+			    'script' => [
+					 "cvs checkout $cvs_checkout_flags $module",
+					],
+			   },
+			    {
+			     'phase_name' => "build",
+			     'error_status' => "build_failed",
+			     'dir' => "$BUILD_DIR/reef",
+			     'script' => [
+					 ". ./setupenv; ./configure",
+					 ". ./setupenv; make $make_flags distclean",
+					 ". ./setupenv; make $make_flags install",
+					 ],
+			    },
+			  ],  # end construct
+	   
+   
+	   'test' => [
+			   {
+			    'phase_name' => "print_environment",
+			    'error_status' => "build_failed",
+			    'dir' => "/",
+			    'script' => [
+					 "show_env",
+					 "rpm -qa",
+					],
+			   },
+			   {
+			    'phase_name' => "checkout",
+			    'error_status' => "test_failed",
+			    'dir' => "$BUILD_DIR",
+			    'script' => [
+					 "cvs checkout $cvs_checkout_flags $module",
+					],
+			   },
+			    {
+			     'phase_name' => "test",
+			     'error_status' => "test_failed",
+			     'dir' => "$BUILD_DIR/reef",
+			     'script' => [
+					 ". ./setupenv; make $make_flags distclean",
+					 ". ./setupenv; make $make_flags test",
+					 ],
+			    },
+			  ],  # end test
+	   
+   
+	   'lint' => [
+			   {
+			    'phase_name' => "checkout",
+			    'error_status' => "build_failed",
+			    'dir' => "$BUILD_DIR",
+			    'script' => [
+					 "cvs checkout $cvs_checkout_flags $module",
+					],
+			   },
+			    {
+			     'phase_name' => "lint",
+			     'error_status' => "lint_failed",
+			     'dir' => "$BUILD_DIR/reef",
+			     'script' => [
+					 "make $make_flags lint",
+					 ],
+			    },
+			  ],  # end lint
+	   
+   
+	  }; # end %BUILDS
+
+return $BUILDS;
+}
+
+
+# We have different error parsers defined for each 'type' of build.
+
+sub error_parser_name {
+  my (%args) = @_;
+
+  my $parser_name =  $args{'buildname'};
+
+  return  $parser_name;
+}
+
+
+# Our build names on the tinderbox server (column names) are the
+# hostname and OS name (and a few other details). We are running the
+# same build instructions on each architecture so it makes sense to
+# speak of the 'Solaris Build'.  Other users who do not worry about
+# porability may use the buildscript buildname.  These users will have
+# tinderbox colums with names like: "seamonkey", "grendel", "aurora"
+# (these are the names of the 'type' of build).
+
+sub build_name {
+  my (%args) = @_;
+
+  my ($argv) = "@ARGV";
+
+    $OS = `uname -s`;
+    $OSVer = `uname -r`;
+    
+    chomp $OS;
+    chomp $OSVer;
+  
+
+  my ($build_name) = join('-', 
+			  $args{'hostname'},
+			  $OS, $OSVer, 
+			  );
+  $build_name =~ s/\.\.+/\./g;
+
+  return $build_name;
+}
+
+
+
+# person responsible for the build machines.
+
+sub build_administrator {
+  my (%args) = @_;
+
+  return "your.mailing.addres\@company.com";
+}
+
+# addressing information for the build messages
+
+sub mail_to {
+  my (%args) = @_;
+
+  return "tinderbox_builds\@mail.yourcompany.com";
+}
+
+
+sub mail_from {
+  my (%args) = @_;
+
+  return "tinderbox-build-daemon\@".$args{'hostname'};
+}
+
+
+# Tell the tinderbox webserver what page to display the build
+# information.  In our case we use the same build instructions for
+# several different products so this information must be passed in on
+# the command line.  We must have this information or the build can
+# not be displayed on the webserver, so it is a fatal error not to
+# provide it.
+
+
+sub tree_name {
+  my (%args) = @_;
+  my ($tree);
+
+  my ($argv) = "@ARGV";
+  if ($argv =~ m/--tree\s*=?\s*([a-zA-Z0-9\-\_]+)/) {
+    $tree= $1;
+  } else {
+    die("no tree specified on command line\n");
+  }
+
+  return $1;
+}
+
+
+1;
+
