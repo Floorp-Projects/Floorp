@@ -40,7 +40,7 @@ Rights Reserved.
   <splitter class="tree-splitter"/>
   <outlinercol id="senderCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden width"  flex="4" value="&senderColumn.label;"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="unreadButtonColHeader" fixed="true" class="outlinercol-header outlinercol-image outlinercol-inset-header readColumnHeader" display="&readColumn.label;" cycler="true"/> 
+  <outlinercol id="unreadButtonColHeader" fixed="true" persist="hidden" class="outlinercol-header outlinercol-image outlinercol-inset-header readColumnHeader" display="&readColumn.label;" cycler="true"/> 
   <splitter class="tree-splitter"/>
   <outlinercol id="dateCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden width"  flex="2" value="&dateColumn.label;"/>
   <splitter class="tree-splitter"/>
@@ -48,13 +48,13 @@ Rights Reserved.
   <splitter class="tree-splitter"/>
   <outlinercol id="sizeCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden width" flex="1"  value="&sizeColumn.label;"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="flaggedCol" fixed="true" class="outlinercol-header outlinercol-image outlinercol-inset-header flagColumnHeader" display="&flagColumn.label;" cycler="true"/>
+  <outlinercol id="flaggedCol" fixed="true" persist="hidden" class="outlinercol-header outlinercol-image outlinercol-inset-header flagColumnHeader" display="&flagColumn.label;" cycler="true"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="priorityCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden witdth" flex="1" value="&priorityColumn.label;"/>
+  <outlinercol id="priorityCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden width" flex="1" value="&priorityColumn.label;"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="unreadCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden witdth" flex="1" value="&unreadColumn.label;"/>
+  <outlinercol id="unreadCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden width" flex="1" value="&unreadColumn.label;"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="totalCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden witdth" flex="1" value="&totalColumn.label;"/>
+  <outlinercol id="totalCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden width" flex="1" value="&totalColumn.label;"/>
   <outlinerbody flex="1" onselect="this.parentNode.outlinerBoxObject.view.selectionChanged();"/>
 </outliner>
 
