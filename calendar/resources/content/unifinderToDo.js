@@ -294,7 +294,8 @@ var toDoTreeView =
       calendarToDo = gTaskArray[row];
       var aserv=Components.classes["@mozilla.org/atom-service;1"].createInstance(Components.interfaces.nsIAtomService);
 
-      if( column.id == "unifinder-todo-tree-col-priority" )
+      // Moz1.8 trees require column.id, moz1.7 and earlier trees use column.
+      if( (column.id || column) == "unifinder-todo-tree-col-priority" )
       {
       if(calendarToDo.priority > 0 && calendarToDo.priority < 5)
          props.AppendElement(aserv.getAtom("highpriority"));
