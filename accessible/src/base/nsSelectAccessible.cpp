@@ -351,7 +351,10 @@ NS_IMETHODIMP nsSelectChildAccessible::GetAccName(PRUnichar **_retval)
      // notice its supposed to be reversed. Close if opened
      // and Open if closed.
 
-     *_retval = ToNewUnicode(mOpen ? NS_LITERAL_STRING("Close") : NS_LITERAL_STRING("Open"));
+     if (mOpen)
+         *_retval = ToNewUnicode(NS_LITERAL_STRING("Close"));
+     else
+         *_retval = ToNewUnicode(NS_LITERAL_STRING("Open"));
 
   } else {
     /*rv = nsAccessible::GetAccName(_retval);*/
