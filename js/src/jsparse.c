@@ -657,7 +657,7 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
     }
 
     cx->fp = fp;
-    tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
+    tc->flags = oldflags | (tc->flags & (TCF_FUN_FLAGS | TCF_HAS_DEFXMLNS));
     return pn;
 }
 
@@ -4266,8 +4266,6 @@ FoldXMLConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
           case TOK_XMLATTR:
           case TOK_XMLSPACE:
           case TOK_XMLTEXT:
-          case TOK_XMLCDATA:
-          case TOK_XMLCOMMENT:
           case TOK_STRING:
             str = ATOM_TO_STRING(pn2->pn_atom);
             break;
@@ -4388,7 +4386,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
       }
 
       case PN_LIST:
-#if JS_HAS_XML_SUPPORT
+#if 0 /* JS_HAS_XML_SUPPORT */
         switch (pn->pn_type) {
           case TOK_XMLELEM:
           case TOK_XMLLIST:
