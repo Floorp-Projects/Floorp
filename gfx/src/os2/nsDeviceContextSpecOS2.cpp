@@ -624,6 +624,9 @@ HDC PrnOpenDC( PRTQUEUE *pInfo, PSZ pszApplicationName, int copies, int toPrinte
    LONG dcType;
    DEVOPENSTRUC dop;
 
+   if (!pInfo || !pszApplicationName)
+      return hdc;
+
    char pszQueueProcParams[CCHMAXPATH] = "COP=";
    char numCopies[12];
    itoa (copies, numCopies, 10);
