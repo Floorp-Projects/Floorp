@@ -245,6 +245,7 @@ protected:
 	PRInt32		mIMECompClauseStringLength;
 	PRInt32		mIMECompClauseStringSize;
 	long		mIMECursorPosition;
+	UINT		mCurrentKeyboardCP;
 
   PRBool  mIsInMouseCapture;
 
