@@ -28,9 +28,10 @@
   mDecArray[5].mCID  = &kEUCJPToUnicodeCID;
   mDecArray[6].mCID  = &kUTF8ToUnicodeCID;
   
-  mEncSize           = 3;
+  mEncSize           = 4;
   mEncArray          = new ConverterInfo [mEncSize];
 
   mEncArray[0].mCID  = &kUnicodeToLatin1CID;
-  mEncArray[1].mCID  = &kUnicodeToSJISCID;
-  mEncArray[2].mCID  = &kUnicodeToEUCJPCID;
+  mEncArray[1].mCID  = &kUnicodeToUTF8CID;
+  mEncArray[2].mCID  = &kUnicodeToSJISCID;
+  mEncArray[3].mCID  = &kUnicodeToEUCJPCID;

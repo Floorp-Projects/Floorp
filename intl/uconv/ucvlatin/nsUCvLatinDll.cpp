@@ -28,10 +28,31 @@
 #include "nsUCvLatinCID.h"
 #include "nsUCvLatinDll.h"
 #include "nsLatin1ToUnicode.h"
+#include "nsISO88592ToUnicode.h"
 #include "nsISO88597ToUnicode.h"
+#include "nsISO88599ToUnicode.h"
+#include "nsCP1250ToUnicode.h"
+#include "nsCP1252ToUnicode.h"
 #include "nsCP1253ToUnicode.h"
+#include "nsCP1254ToUnicode.h"
+#include "nsMacRomanToUnicode.h"
+#include "nsMacCEToUnicode.h"
+#include "nsMacGreekToUnicode.h"
+#include "nsMacTurkishToUnicode.h"
 #include "nsUTF8ToUnicode.h"
 #include "nsUnicodeToLatin1.h"
+#include "nsUnicodeToISO88592.h"
+#include "nsUnicodeToISO88597.h"
+#include "nsUnicodeToISO88599.h"
+#include "nsUnicodeToCP1250.h"
+#include "nsUnicodeToCP1252.h"
+#include "nsUnicodeToCP1253.h"
+#include "nsUnicodeToCP1254.h"
+#include "nsUnicodeToMacRoman.h"
+#include "nsUnicodeToMacCE.h"
+#include "nsUnicodeToMacGreek.h"
+#include "nsUnicodeToMacTurkish.h"
+#include "nsUnicodeToUTF8.h"
 
 // just for NS_IMPL_IDS; this is a good, central place to implement GUIDs
 #include "nsIUnicodeDecoder.h"
@@ -70,15 +91,45 @@ FactoryData g_FactoryData[] =
     "Unicode"
   },
   {
+    &kISO88592ToUnicodeCID,
+    nsISO88592ToUnicode::CreateInstance,
+    "ISO-8859-2",
+    "Unicode"
+  },
+  {
     &kISO88597ToUnicodeCID,
     nsISO88597ToUnicode::CreateInstance,
     "ISO-8859-7",
     "Unicode"
   },
   {
+    &kISO88599ToUnicodeCID,
+    nsISO88599ToUnicode::CreateInstance,
+    "ISO-8859-9",
+    "Unicode"
+  },
+  {
+    &kCP1250ToUnicodeCID,
+    nsCP1250ToUnicode::CreateInstance,
+    "windows-1250",
+    "Unicode"
+  },
+  {
+    &kCP1252ToUnicodeCID,
+    nsCP1252ToUnicode::CreateInstance,
+    "windows-1252",
+    "Unicode"
+  },
+  {
     &kCP1253ToUnicodeCID,
     nsCP1253ToUnicode::CreateInstance,
     "windows-1253",
+    "Unicode"
+  },
+  {
+    &kCP1254ToUnicodeCID,
+    nsCP1254ToUnicode::CreateInstance,
+    "windows-1254",
     "Unicode"
   },
   {
@@ -92,6 +143,12 @@ FactoryData g_FactoryData[] =
     nsUnicodeToLatin1::CreateInstance,
     "Unicode",
     "ISO-8859-1"
+  },
+  {
+    &kUnicodeToUTF8CID,
+    nsUnicodeToUTF8::CreateInstance,
+    "Unicode",
+    "UTF-8"
   }
 };
 
