@@ -403,6 +403,7 @@ function doOverallEnabling()
   wasEnableAll = canEnableOk;
 
   SetElementEnabledById("ok", canEnableOk );
+  SetElementEnabledById("AdvancedEditButton1", canEnableOk );
   SetElementEnabledById( "imagemapLabel",  canEnableOk );
   //TODO: Restore when Image Map editor is finished
   //SetElementEnabledById( "editImageMap",   canEnableOk );
