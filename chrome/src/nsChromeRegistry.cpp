@@ -526,7 +526,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     aChromeURL->SetSpec(finalDecision);
     if (search && *search) {
         aChromeURL->SetSearch(search);
-        delete []search;
+        nsCRT::free(search);
     }
 }
 #endif 
@@ -631,10 +631,10 @@ nsChromeRegistry::GetPackageTypeResource(const nsString& aChromeType,
     if (NS_FAILED(rv = gRDFService->GetResource(url, aResult))) {
         NS_ERROR("Unable to retrieve a resource for this package type.");
         *aResult = nsnull;
-        delete []url;
+        nsCRT::free(url);
         return rv;
     }
-    delete []url;
+    nsCRT::free(url);
     return NS_OK;
 }
 
