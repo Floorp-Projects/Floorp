@@ -207,15 +207,15 @@ endif
 ## Note: Ensure you create the redist dir containing the correct runtime dlls
 
 xpi:: install.js $(SHARED_LIBRARY)
-	$(ZIP_PROG) -9 -j $(DIST)/bin/$(XPIFILE) $<
-	$(ZIP_PROG) -9 -j $(DIST)/bin/$(XPIFILE) $(SHARED_LIBRARY)
-	$(ZIP_PROG) -9 -j $(DIST)/bin/$(XPIFILE) $(topsrcdir)/../redist/microsoft/system/msvcrt.dll
-	$(ZIP_PROG) -9 -j $(DIST)/bin/$(XPIFILE) $(topsrcdir)/../redist/microsoft/system/msvcp60.dll
+	$(ZIP) -9 -j $(DIST)/bin/$(XPIFILE) $<
+	$(ZIP) -9 -j $(DIST)/bin/$(XPIFILE) $(SHARED_LIBRARY)
+	$(ZIP) -9 -j $(DIST)/bin/$(XPIFILE) $(topsrcdir)/../redist/microsoft/system/msvcrt.dll
+	$(ZIP) -9 -j $(DIST)/bin/$(XPIFILE) $(topsrcdir)/../redist/microsoft/system/msvcp60.dll
 ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-	$(ZIP_PROG) -9 -j $(DIST)/bin/$(XPIFILE) MozAxPlugin.class
+	$(ZIP) -9 -j $(DIST)/bin/$(XPIFILE) MozAxPlugin.class
 endif
 ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
-	$(ZIP_PROG) -9 -j $(DIST)/bin/$(XPIFILE) $(XPIDL_GEN_DIR)/nsIMozAxPlugin.xpt
+	$(ZIP) -9 -j $(DIST)/bin/$(XPIFILE) $(XPIDL_GEN_DIR)/nsIMozAxPlugin.xpt
 endif
 
 $(SHARED_LIBRARY) : $(DEFFILE) copy-sources
