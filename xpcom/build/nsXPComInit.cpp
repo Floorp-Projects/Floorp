@@ -434,13 +434,18 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
 //
 nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 {
-    NS_RELEASE(nsServiceManager::mGlobalServiceManager);
-    // We may have AddRef'd for the caller of NS_InitXPCOM, so release it 
-    // here again:
-    NS_IF_RELEASE(servMgr);
+    nsrefcnt cnt;
+    NS_RELEASE2(nsServiceManager::mGlobalServiceManager, cnt);
+    NS_ASSERTION(cnt == 0, "Service Manager being held past XPCOM shutdown.");
+
     // Finally, release the component manager last because it unloads the
     // libraries:
-    NS_RELEASE(nsComponentManagerImpl::gComponentManager);
+    NS_RELEASE2(nsComponentManagerImpl::gComponentManager, cnt);
+    // XXX after shaver fixes jsloader to not hold a reference, we can enable the
+    // XXX the following assertion for everyone.
+#if defined(DEBUG_shaver) || defined(DEBUG_dp)
+    NS_ASSERTION(cnt == 0, "Component Manager being held past XPCOM shutdown.");
+#endif /* DEBUG_shaver */
 #ifdef DEBUG
     extern void _FreeAutoLockStatics();
     _FreeAutoLockStatics();
