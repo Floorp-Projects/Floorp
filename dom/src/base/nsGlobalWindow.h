@@ -233,7 +233,7 @@ protected:
   nsIEventListenerManager* mListenerManager;
   nsDOMWindowList *mFrames;
 
-  PRBool mFirstLoadKludge;
+  PRBool mFirstDocumentLoad;
 };
 
 /* 

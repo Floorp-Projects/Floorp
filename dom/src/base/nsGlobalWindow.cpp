@@ -115,7 +115,7 @@ GlobalWindowImpl::GlobalWindowImpl()
   mTimeoutPublicIdCounter = 1;
   mListenerManager = nsnull;
 
-  mFirstLoadKludge = PR_TRUE;
+  mFirstDocumentLoad = PR_TRUE;
 }
 
 GlobalWindowImpl::~GlobalWindowImpl() 
@@ -234,8 +234,8 @@ GlobalWindowImpl::GetContext(nsIScriptContext **aContext)
 NS_IMETHODIMP_(void)       
 GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
 {
-  if (mFirstLoadKludge) {
-    mFirstLoadKludge = PR_FALSE;
+  if (mFirstDocumentLoad) {
+    mFirstDocumentLoad = PR_FALSE;
     mDocument = aDocument;
     NS_IF_ADDREF(mDocument);
     return;
