@@ -1,0 +1,39 @@
+<?xml version="1.0"?> <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window 
+    xmlns:html="http://www.w3.org/1999/xhtml"
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+orient="vertical"
+    height="250"
+    width="250"
+    windowtype="opener:test"	
+    onload="scheduleNextWindow();">
+
+<script src="winopen.js" type="application/x-javascript"></script>
+
+<groupbox orient="vertical">
+<caption label="Window Opening Test"/>
+<html>
+This will open a series of browser windows, either "one at a
+      time" or in a sequence of some form. When this test is complete 
+      a final window will be opened which will report the overall results.
+    </html>
+<separator class="thick"/>
+<grid>
+<columns><column/><column/></columns>
+<rows>
+<row autostretch="never" valign="middle">
+<text value="Index:"/>
+<textbox id="formIndex" size="6" value=""/>
+</row>
+<row autostretch="never" valign="middle">
+<text value="Time:"/>
+<textbox id="formTime" size="6" value=""/>
+<text value="msec"/>
+</row>
+</rows>
+</grid>
+<separator class="thick"/>
+</groupbox>
+
+</window>
+
