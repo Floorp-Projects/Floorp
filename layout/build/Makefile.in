@@ -62,6 +62,8 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-lraptorhtmlpars \
 		-ljsdom \
+		-L$(DIST)/lib \
+		$(MOZ_TIMER_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
