@@ -95,6 +95,13 @@
 
 /* global preferences structure.
  */
+
+/* 
+ * The XFE_GlobalPrefsstructure is old and going away.
+ * Please use PREF_Get/Set() commands to get/set prefs.
+ * DO NOT ADD ANY NEW PREFS HERE!  -mcafee, ramiro, et. al.
+ */
+
 typedef struct _XFE_GlobalPrefs 
 {
 	/* 
