@@ -131,7 +131,7 @@ static PRMonitor * cookie_deferLockMonitor = NULL;
 static PRThread  * cookie_deferLockOwner = NULL;
 static int cookie_deferLockCount = 0;
 
-//#define REAL_DIALOG 1
+#define REAL_DIALOG 1
 
 /* StrAllocCopy and StrAllocCat should really be defined elsewhere */
 #include "plstr.h"
