@@ -2,8 +2,7 @@
 
 
 <!ENTITY fileMenu.label "File">
-<!ENTITY newWinCmd.label "New Window">
-<!ENTITY closeCmd.label ".Close">
+<!ENTITY closeCmd.label "Close">
 <!ENTITY editMenu.label "Edit">
 <!ENTITY undoCmd.label "Undo">
 <!ENTITY redoCmd.label "Redo">
@@ -17,6 +16,6 @@
 <!ENTITY historyBySite.label "History By Site">
 <!ENTITY historyByDate.label "History By Date">
 <!ENTITY historyWindowTitle.label "History">
-<!ENTITY name.column.label        "Title">
-<!ENTITY url.column.label         "URL">
-<!ENTITY lastvisited.column.label "Last Visited">
+<!ENTITY tree.header.name.label   "Title">
+<!ENTITY tree.header.url.label    "URL">
+<!ENTITY tree.header.date.label   "Last Visited">
