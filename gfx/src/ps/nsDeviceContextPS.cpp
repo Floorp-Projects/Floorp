@@ -369,8 +369,8 @@ NS_IMETHODIMP nsDeviceContextPS :: ConvertPixel(nscolor aColor, PRUint32 & aPixe
  */
 NS_IMETHODIMP nsDeviceContextPS::GetMetricsFor(const nsFont& aFont, nsIFontMetrics  *&aMetrics)
 {
-    mWestern = getter_AddRefs(NS_NewAtom("x-western"));
-    return GetMetricsFor(aFont, mWestern, aMetrics);
+    GetLocaleLangGroup();
+    return GetMetricsFor(aFont, mLocaleLangGroup, aMetrics);
 }
 
 NS_IMETHODIMP nsDeviceContextPS::GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup, nsIFontMetrics  *&aMetrics)
