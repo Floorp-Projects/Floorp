@@ -81,6 +81,7 @@ oeICalTodoImpl::oeICalTodoImpl()
 #endif
 
     mEvent = new oeICalEventImpl();
+    NS_ADDREF( mEvent );
 
     /* member initializers and constructor code */
     nsresult rv;
@@ -104,7 +105,6 @@ oeICalTodoImpl::~oeICalTodoImpl()
     if( m_completed )
         m_completed->Release();
     mEvent->Release();
-    mEvent = nsnull;
 }
 
 NS_IMETHODIMP oeICalTodoImpl::SetParent( oeIICal *calendar )
