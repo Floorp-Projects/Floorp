@@ -376,16 +376,6 @@ nsSelectControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
     return;
   }
 
-  // get the size of the combo box and let Reflow change its desired size 
-  if (mIsComboBox) {  // hack
-    nscoord ignore;
-    nscoord height;
-    GetWidgetSize(*aPresContext, ignore, height);
-    if (height > aHeight) {
-      aHeight = height;
-    }
-  }
-
   nsIListWidget* listWidget;
   if (NS_OK != mWidget->QueryInterface(kListWidgetIID, (void **) &listWidget)) {
     NS_ASSERTION(PR_FALSE, "invalid widget");
@@ -428,6 +418,17 @@ nsSelectControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
   }
 
   NS_RELEASE(listWidget);
+
+  // get the size of the combo box and let Reflow change its desired size 
+  // XXX this technique should be considered for other widgets as well
+  if (mIsComboBox) {  
+    nscoord ignore;
+    nscoord height;
+    GetWidgetSize(*aPresContext, ignore, height);
+    if (height > aHeight) {
+      aHeight = height;
+    }
+  }
 
   Reset();  // initializes selections 
 }
