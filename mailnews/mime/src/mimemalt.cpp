@@ -222,6 +222,8 @@ MimeMultipartAlternative_display_part_p(MimeObject *self,
                     MimeHeaders *sub_hdrs)
 {
   char *ct = MimeHeaders_get (sub_hdrs, HEADER_CONTENT_TYPE, PR_TRUE, PR_FALSE);
+  if (!ct)
+    return PR_FALSE;
 
   /* RFC 1521 says:
      Receiving user agents should pick and display the last format
