@@ -2,7 +2,7 @@
 <!ENTITY cookies.label                     "Cookies">
 <!ENTITY enableCookies.label               "Enable cookies">
 <!ENTITY enableCookies.accesskey           "c">
-<!ENTITY forOriginatingSiteOnly.label      "for originating Web site only">
+<!ENTITY forOriginatingSiteOnly.label      "for the originating Web site only">
 <!ENTITY forOriginatingSiteOnly.accesskey  "W">
 <!ENTITY forCurrentSessionOnly.label       "for the current session only">
 <!ENTITY forCurrentSessionOnly.accesskey   "s">
