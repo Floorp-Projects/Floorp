@@ -594,7 +594,7 @@ run_viewer: $(DIST)/bin/viewer
 	viewer
 
 clean clobber realclean clobber_all:: $(SUBMAKEFILES)
-	rm -f $(ALL_TRASH); \
+	-rm -f $(ALL_TRASH); \
 	rm -rf $(ALL_TRASH_DIRS)
 	+$(LOOP_OVER_DIRS)
 	+$(LOOP_OVER_EXPORT_DIRS)
@@ -602,9 +602,9 @@ clean clobber realclean clobber_all:: $(SUBMAKEFILES)
 distclean:: $(SUBMAKEFILES)
 	+$(LOOP_OVER_DIRS)
 	+$(LOOP_OVER_EXPORT_DIRS)
-	rm -f $(ALL_TRASH) ; \
+	-rm -f $(ALL_TRASH) ; \
 	rm -rf $(ALL_TRASH_DIRS) ;
-	rm -rf $(wildcard *.map) \
+	-rm -rf $(wildcard *.map) \
 	Makefile .HSancillary \
 	$(wildcard *.$(OBJ_SUFFIX)) $(wildcard *.ho) \
 	$(wildcard *.$(LIB_SUFFIX)) $(wildcard *$(DLL_SUFFIX))
