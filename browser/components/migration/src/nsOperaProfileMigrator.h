@@ -106,9 +106,11 @@ protected:
                                 nsIRDFResource* aFolder,
                                 nsIRDFResource* aToolbar, 
                                 nsIBookmarksService* aBMS);
+#ifdef XP_WIN
   nsresult CopySmartKeywords(nsIBookmarksService* aBMS, 
                              nsIStringBundle* aBundle, 
                              nsIRDFResource* aParentFolder);
+#endif
 
   void     GetOperaProfile(const PRUnichar* aProfile, nsILocalFile** aFile);
 

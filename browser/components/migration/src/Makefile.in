@@ -60,6 +60,7 @@ REQUIRES	= \
 		  unicharutil \
 		  windowwatcher \
 		  dom \
+      docshell \
 		  cookie \
 		  $(NULL)
 
@@ -80,9 +81,10 @@ endif
             
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsSafariProfileMigrator.cpp \
-           nsMacIEProfileMigrator.cpp \ 
+           nsMacIEProfileMigrator.cpp \
            nsOmniWebProfileMigrator.cpp \
            nsCaminoProfileMigrator.cpp \
+           nsICabProfileMigrator.cpp \
            $(NULL)
 endif            
 

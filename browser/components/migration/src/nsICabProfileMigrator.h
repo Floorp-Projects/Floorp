@@ -35,51 +35,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef dogbertprofilemigrator___h___
-#define dogbertprofilemigrator___h___
+#ifndef icabprofilemigrator___h___
+#define icabprofilemigrator___h___
 
 #include "nsIBrowserProfileMigrator.h"
-#include "nsILocalFile.h"
 #include "nsISupportsArray.h"
-#include "nsNetscapeProfileMigratorBase.h"
 #include "nsString.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
-#define NEED_TO_FIX_4X_COOKIES 1
-#define SECONDS_BETWEEN_1900_AND_1970 2208988800UL
-#endif /* XP_MAC */
-
-class nsIFile;
-
-class nsDogbertProfileMigrator : public nsNetscapeProfileMigratorBase, 
-                                 public nsIBrowserProfileMigrator
+class nsICabProfileMigrator : public nsIBrowserProfileMigrator
 {
 public:
   NS_DECL_NSIBROWSERPROFILEMIGRATOR
   NS_DECL_ISUPPORTS
 
-  nsDogbertProfileMigrator();
-  virtual ~nsDogbertProfileMigrator();
-
-public:
-  static nsresult GetHomepage(void* aTransform, nsIPrefBranch* aBranch);
-  static nsresult GetImagePref(void* aTransform, nsIPrefBranch* aBranch);
+  nsICabProfileMigrator();
+  virtual ~nsICabProfileMigrator();
 
 protected:
-  nsresult CopyPreferences(PRBool aReplace);
-  nsresult TransformPreferences(const nsAString& aSourcePrefFileName,
-                                const nsAString& aTargetPrefFileName);
-  
-  nsresult CopyCookies(PRBool aReplace);
-#ifdef NEED_TO_FIX_4X_COOKIES
-  nsresult FixDogbertCookies();
-#endif
-
-  nsresult CopyBookmarks(PRBool aReplace);
-  nsresult MigrateDogbertBookmarks();
 
 private:
-  nsCOMPtr<nsISupportsArray> mProfiles;
 };
  
 #endif

@@ -184,10 +184,17 @@ nsSeamonkeyProfileMigrator::GetProfileDataFromSeamonkeyRegistry(nsISupportsArray
   // Find the Seamonkey Registry
   nsCOMPtr<nsIProperties> fileLocator(do_GetService("@mozilla.org/file/directory_service;1"));
   nsCOMPtr<nsILocalFile> seamonkeyRegistry;
+#ifdef XP_WIN
   fileLocator->Get(NS_WIN_APPDATA_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(seamonkeyRegistry));
 
   seamonkeyRegistry->Append(NS_LITERAL_STRING("Mozilla"));
   seamonkeyRegistry->Append(NS_LITERAL_STRING("registry.dat"));
+#elif defined(XP_MACOSX)
+  fileLocator->Get(NS_MAC_USER_LIB_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(seamonkeyRegistry));
+  
+  seamonkeyRegistry->Append(NS_LITERAL_STRING("Mozilla"));
+  seamonkeyRegistry->Append(NS_LITERAL_STRING("Application Registry"));
+#endif
 
   // Open It
   nsCOMPtr<nsIRegistry> reg(do_CreateInstance("@mozilla.org/registry;1"));

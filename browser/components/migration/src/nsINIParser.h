@@ -26,7 +26,7 @@
 #define _NS_INIPARSER_H_
 
 #include <stdio.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <locale.h>
