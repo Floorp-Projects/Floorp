@@ -29,10 +29,6 @@
 #include "nsIDocumentLoader.h"
 
 #include "nsDOMCID.h"
-#ifdef OJI
-#include "nsILiveconnect.h"
-#include "nsIJVMManager.h"
-#endif
 #include "nsIProperties.h"
 
 #include "nsIObserverService.h"
@@ -58,16 +54,12 @@
     #define WEB_DLL         "WEBSHELL"
     #define DOM_DLL         "JSDOM"
     #define CAPS_DLL        "CAPS"
-    #define LIVECONNECT_DLL "JSJ"
-    #define OJI_DLL         "OJI"
 #elif defined(XP_PC)
     #define WIDGET_DLL "gkwidget.dll"
     #define GFXWIN_DLL "gkgfxwin.dll"
     #define VIEW_DLL   "gkview.dll"
     #define DOM_DLL    "jsdom.dll"
     #define CAPS_DLL   "caps.dll"
-    #define LIVECONNECT_DLL    "jsj3250.dll"
-    #define OJI_DLL    "oji.dll"
 #elif defined(XP_MAC)
     #define WIDGET_DLL    "WIDGET_DLL"
     #define GFXWIN_DLL    "GFXWIN_DLL"
@@ -75,14 +67,10 @@
     #define WEB_DLL            "WEB_DLL"
     #define DOM_DLL        "DOM_DLL"
     #define CAPS_DLL    "CAPS_DLL"
-    #define LIVECONNECT_DLL "LIVECONNECT_DLL"
-    #define OJI_DLL        "OJI_DLL"
 #else
     #define VIEW_DLL   "libgkview"MOZ_DLL_SUFFIX
     #define DOM_DLL    "libjsdom"MOZ_DLL_SUFFIX
     #define CAPS_DLL   "libcaps"MOZ_DLL_SUFFIX
-    #define LIVECONNECT_DLL "libjsj"MOZ_DLL_SUFFIX
-    #define OJI_DLL    "liboji"MOZ_DLL_SUFFIX
 #endif
 
 // Class ID's
@@ -151,13 +139,6 @@ static NS_DEFINE_IID(kCScrollPortViewCID, NS_SCROLL_PORT_VIEW_CID);
 // DOM
 static NS_DEFINE_IID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 static NS_DEFINE_IID(kCScriptNameSetRegistry, NS_SCRIPT_NAMESET_REGISTRY_CID);
-
-
-// OJI
-#ifdef OJI
-static NS_DEFINE_CID(kCLiveconnectCID, NS_CLIVECONNECT_CID);
-static NS_DEFINE_CID(kCJVMManagerCID, NS_JVMMANAGER_CID);
-#endif
 
 extern "C" void
 NS_SetupRegistry()
@@ -252,9 +233,4 @@ NS_SetupRegistry()
   // DOM
   nsComponentManager::RegisterComponentLib(kCDOMScriptObjectFactory, NULL, NULL, DOM_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCScriptNameSetRegistry, NULL, NULL, DOM_DLL, PR_FALSE, PR_FALSE);
-
-#ifdef OJI
-  nsComponentManager::RegisterComponentLib(kCLiveconnectCID, "LiveConnect", "@mozilla.org/javascript/liveconnect;1", LIVECONNECT_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCJVMManagerCID, "JVMManager", "@mozilla.org/oji/jvmmanager;1", OJI_DLL, PR_FALSE, PR_FALSE);
-#endif
 }
