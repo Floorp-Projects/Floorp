@@ -64,6 +64,7 @@
 #include "nsINetService.h"
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
+#include "jsapi.h"
 
 static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
 static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
@@ -144,6 +145,7 @@ public:
 
 
 	// nsIComposeAppCore
+	NS_IMETHOD CloseWindow(void);
 	NS_IMETHOD CompleteCallback(nsAutoString& aScript);
 	NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
 	NS_IMETHOD SetEditor(nsIDOMEditorAppCore *editor);
@@ -357,6 +359,14 @@ nsComposeAppCore::ConstructAfterJavaScript(nsIWebShell *aWebShell)
  		
  		SetWindowFields(domDoc, to, cc, bcc, newsgroup, subject, body);
  	}
+	return NS_OK;
+}
+
+nsresult nsComposeAppCore::CloseWindow()
+{
+	if (mWebShellWindow)
+		mWebShellWindow->Close();
+	
 	return NS_OK;
 }
 
@@ -952,9 +962,7 @@ NS_IMETHODIMP nsComposeAppCore::SendMsg(nsAutoString& aAddrTo,
         char    *bodyString = NULL;
         PRInt32 bodyLength;
 
-        if (!NS_SUCCEEDED(mMsgCompFields->GetBody(&bodyString)))
-          bodyString = aMsg.ToNewCString();
-
+        mMsgCompFields->GetBody(&bodyString);
         bodyLength = PL_strlen(bodyString);
 
         mMsgSend->SendMessage(mMsgCompFields, 
@@ -970,26 +978,18 @@ NS_IMETHODIMP nsComposeAppCore::SendMsg(nsAutoString& aAddrTo,
 					NULL,             				// nsMsgSendPart                     *relatedPart,
 					NULL);            				// void  (*message_delivery_done_callback)(MWContext *context, void *fe_data,
 								             			//                                         int status, const char *error_message))
-// ducarroz: please don't delete bodyString, because GetBody did not create a new string
-//		     but just get back the address of the body into the msgCompFields object!
-//        PR_FREEIF(bodyString);
     }
 	}
 	if (nsnull != mScriptContext) {
 		const char* url = "";
 		PRBool isUndefined = PR_FALSE;
 		nsString rVal;
+		
 		mScriptContext->EvaluateString(mScript, url, 0, rVal, &isUndefined);
+		CloseWindow();
 	}
-
-	if (mWindow)
-	{
-//		mWindow->Close();
-//ducarroz: mWindow->Close doesn't work yet because mopener wasn't set!
-//		if (mWebShellWindow)
-//			mWebShellWindow->Close();
-//ducarroz: mWebShellWindow->Close doesn't work too!
-	}
+	else // If we don't have a JS callback, then close the window by default!
+		CloseWindow();
 
 	PR_FREEIF(pUserEmail);
 	return NS_OK;
