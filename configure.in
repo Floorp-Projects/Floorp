@@ -6468,7 +6468,8 @@ if test "$MOZ_TREE_CAIRO"; then
     ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --includedir=$MOZ_BUILD_ROOT/dist/include/cairo"
     AC_OUTPUT_SUBDIRS(gfx/cairo/libpixman)
 
-    export PKG_CONFIG_PATH=$MOZ_BUILD_ROOT/gfx/cairo/libpixman
+    PKG_CONFIG_PATH=$MOZ_BUILD_ROOT/gfx/cairo/libpixman:$PKG_CONFIG_PATH
+    export $PKG_CONFIG_PATH
     ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --disable-ps --disable-pdf --disable-png --disable-glitz --disable-xcb"
     if test -n "$MACOSX"; then
         ac_configure_args="$ac_configure_args --disable-freetype --disable-xlib"
