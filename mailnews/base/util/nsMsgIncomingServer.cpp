@@ -811,7 +811,10 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
       // Get password entry corresponding to the host URI we are passing in.
       if (NS_SUCCEEDED(passwordMgrInt->FindPasswordEntry(currServerUri, NS_LITERAL_STRING(""), NS_LITERAL_STRING(""),
                                              hostFound, userNameFound, passwordFound)))
+      {
         m_password.AssignWithConversion(passwordFound);
+        *okayValue = PR_TRUE;
+      }
     }
   }
   if (m_password.IsEmpty())
