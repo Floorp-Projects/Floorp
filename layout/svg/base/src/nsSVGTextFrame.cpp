@@ -1021,7 +1021,7 @@ nsSVGTextFrame::UpdateGlyphPositioning()
 
   // determine x offset based on text_anchor:
   
-  PRUint8 anchor = ((const nsStyleSVG*)mStyleContext->GetStyleData(eStyleStruct_SVG))->mTextAnchor;
+  PRUint8 anchor = GetStyleSVG()->mTextAnchor;
 
   float chunkLength = 0.0f;
   if (anchor != NS_STYLE_TEXT_ANCHOR_START) {
@@ -1048,7 +1048,7 @@ nsSVGTextFrame::UpdateGlyphPositioning()
   // XXX should actually inspect 'alignment-baseline' for each fragment
   
   PRUint8 baseline;
-  switch(((const nsStyleSVGReset*)mStyleContext->GetStyleData(eStyleStruct_SVGReset))->mDominantBaseline) {
+  switch(GetStyleSVGReset()->mDominantBaseline) {
     case NS_STYLE_DOMINANT_BASELINE_TEXT_BEFORE_EDGE:
       baseline = nsISVGRendererGlyphMetrics::BASELINE_TEXT_BEFORE_EDGE;
       break;

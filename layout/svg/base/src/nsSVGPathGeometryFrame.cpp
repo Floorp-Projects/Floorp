@@ -325,7 +325,7 @@ nsSVGPathGeometryFrame::GetStrokeOpacity(float *aStrokeOpacity)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokeWidth(float *aStrokeWidth)
 {
-  *aStrokeWidth = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStrokeWidth;
+  *aStrokeWidth = GetStyleSVG()->mStrokeWidth;
   return NS_OK;
 }
 
@@ -354,7 +354,7 @@ nsSVGPathGeometryFrame::GetStrokeDashArray(float **arr, PRUint32 *count)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokeDashoffset(float *aStrokeDashoffset)
 {
-  *aStrokeDashoffset = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStrokeDashoffset;
+  *aStrokeDashoffset = GetStyleSVG()->mStrokeDashoffset;
   return NS_OK;
 }
 
@@ -362,7 +362,7 @@ nsSVGPathGeometryFrame::GetStrokeDashoffset(float *aStrokeDashoffset)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokeLinecap(PRUint16 *aStrokeLinecap)
 {
-  *aStrokeLinecap = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStrokeLinecap;
+  *aStrokeLinecap = GetStyleSVG()->mStrokeLinecap;
   return NS_OK;
 }
 
@@ -370,7 +370,7 @@ nsSVGPathGeometryFrame::GetStrokeLinecap(PRUint16 *aStrokeLinecap)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokeLinejoin(PRUint16 *aStrokeLinejoin)
 {
-  *aStrokeLinejoin = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStrokeLinejoin;
+  *aStrokeLinejoin = GetStyleSVG()->mStrokeLinejoin;
   return NS_OK;
 }
 
@@ -378,7 +378,7 @@ nsSVGPathGeometryFrame::GetStrokeLinejoin(PRUint16 *aStrokeLinejoin)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokeMiterlimit(float *aStrokeMiterlimit)
 {
-  *aStrokeMiterlimit = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStrokeMiterlimit;
+  *aStrokeMiterlimit = GetStyleSVG()->mStrokeMiterlimit;
   return NS_OK;
 }
 
@@ -395,7 +395,7 @@ nsSVGPathGeometryFrame::GetFillOpacity(float *aFillOpacity)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetFillRule(PRUint16 *aFillRule)
 {
-  *aFillRule = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFillRule;
+  *aFillRule = GetStyleSVG()->mFillRule;
   return NS_OK;
 }
 
@@ -403,7 +403,7 @@ nsSVGPathGeometryFrame::GetFillRule(PRUint16 *aFillRule)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokePaintType(PRUint16 *aStrokePaintType)
 {
-  *aStrokePaintType = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStroke.mType;
+  *aStrokePaintType = GetStyleSVG()->mStroke.mType;
   return NS_OK;
 }
 
@@ -411,7 +411,7 @@ nsSVGPathGeometryFrame::GetStrokePaintType(PRUint16 *aStrokePaintType)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokePaint(nscolor *aStrokePaint)
 {
-  *aStrokePaint = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStroke.mPaint.mColor;
+  *aStrokePaint = GetStyleSVG()->mStroke.mPaint.mColor;
   return NS_OK;
 }
 
@@ -420,7 +420,7 @@ NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetStrokeGradient(nsISVGGradient **aGrad)
 {
   nsIURI *aServer;
-  aServer = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStroke.mPaint.mPaintServer;
+  aServer = GetStyleSVG()->mStroke.mPaint.mPaintServer;
   if (aServer == nsnull)
     return NS_ERROR_FAILURE;
   // Now have the URI.  Get the gradient 
@@ -431,7 +431,7 @@ nsSVGPathGeometryFrame::GetStrokeGradient(nsISVGGradient **aGrad)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetFillPaintType(PRUint16 *aFillPaintType)
 {
-  *aFillPaintType = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFill.mType;
+  *aFillPaintType = GetStyleSVG()->mFill.mType;
   return NS_OK;
 }
 
@@ -439,7 +439,7 @@ nsSVGPathGeometryFrame::GetFillPaintType(PRUint16 *aFillPaintType)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetFillPaint(nscolor *aFillPaint)
 {
-  *aFillPaint = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFill.mPaint.mColor;
+  *aFillPaint = GetStyleSVG()->mFill.mPaint.mColor;
   return NS_OK;
 }
 
@@ -448,7 +448,7 @@ NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetFillGradient(nsISVGGradient **aGrad)
 {
   nsIURI *aServer;
-  aServer = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFill.mPaint.mPaintServer;
+  aServer = GetStyleSVG()->mFill.mPaint.mPaintServer;
   if (aServer == nsnull)
     return NS_ERROR_FAILURE;
   // Now have the URI.  Get the gradient 
@@ -463,14 +463,14 @@ nsSVGPathGeometryFrame::GetHittestMask(PRUint16 *aHittestMask)
 {
   *aHittestMask=0;
 
-  switch(((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mPointerEvents) {
+  switch(GetStyleSVG()->mPointerEvents) {
     case NS_STYLE_POINTER_EVENTS_NONE:
       break;
     case NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED:
       if (GetStyleVisibility()->IsVisible()) {
-        if (((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFill.mType != eStyleSVGPaintType_None)
+        if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None)
           *aHittestMask |= HITTEST_MASK_FILL;
-        if (((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStroke.mType != eStyleSVGPaintType_None)
+        if (GetStyleSVG()->mStroke.mType != eStyleSVGPaintType_None)
           *aHittestMask |= HITTEST_MASK_STROKE;
       }
       break;
@@ -491,9 +491,9 @@ nsSVGPathGeometryFrame::GetHittestMask(PRUint16 *aHittestMask)
       }
       break;
     case NS_STYLE_POINTER_EVENTS_PAINTED:
-      if (((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mFill.mType != eStyleSVGPaintType_None)
+      if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None)
         *aHittestMask |= HITTEST_MASK_FILL;
-      if (((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mStroke.mType != eStyleSVGPaintType_None)
+      if (GetStyleSVG()->mStroke.mType != eStyleSVGPaintType_None)
         *aHittestMask |= HITTEST_MASK_STROKE;
       break;
     case NS_STYLE_POINTER_EVENTS_FILL:
@@ -518,7 +518,7 @@ nsSVGPathGeometryFrame::GetHittestMask(PRUint16 *aHittestMask)
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::GetShapeRendering(PRUint16 *aShapeRendering)
 {
-  *aShapeRendering = ((const nsStyleSVG*) mStyleContext->GetStyleData(eStyleStruct_SVG))->mShapeRendering;
+  *aShapeRendering = GetStyleSVG()->mShapeRendering;
   return NS_OK;
 }
 

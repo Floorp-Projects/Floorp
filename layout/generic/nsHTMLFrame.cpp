@@ -415,9 +415,8 @@ CanvasFrame::Paint(nsPresContext*      aPresContext,
       /////////////////////
       // draw focus
       // XXX This is only temporary
-      const nsStyleVisibility* vis = (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
       // Only paint the focus if we're visible
-      if (vis->IsVisible()) {
+      if (GetStyleVisibility()->IsVisible()) {
         nsIFrame * parentFrame = GetParent();
         nsIView* parentView = parentFrame->GetView();
 
