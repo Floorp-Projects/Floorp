@@ -35,10 +35,13 @@ bin\mozilla.exe
 bin\oji.dll
 bin\prstrms4.dll
 bin\mozctl.dll
+bin\regxpcom.exe
 bin\components\AcctIdl.dll
 bin\components\AcctIdl.xpt
 bin\components\appshell.xpt
 bin\components\appshell.dll
+bin\components\autocomp.dll
+bin\components\autocomplete.xpt
 bin\components\bookmark.dll
 bin\components\bookmarks.xpt
 bin\components\caps.dll
@@ -157,18 +160,25 @@ bin\components\xpcom_io.xpt
 bin\components\xpcom_nativeapp.xpt
 bin\components\xpcom_thread.xpt
 bin\components\xpconnect.xpt
-bin\components\xpiflash.dll
 bin\components\xpinstall.xpt
 bin\components\xppref32.dll
-bin\components\autocomp.dll
-bin\components\autocomplete.xpt
 bin\components\xml-rpc.xpt
 bin\components\nsDictionary.js
 bin\components\nsXmlRpcClient.js
 
-bin\chrome\locales\*
-bin\chrome\packages\*
-bin\chrome\skins\*
+; chrome stuff
+bin\chrome\autocomplete.xml
+bin\chrome\htmlBindings.xml
+bin\chrome\menulistBindings.xml
+bin\chrome\platformHTMLBindings.xml
+bin\chrome\radioBindings.xml
+bin\chrome\treeBindings.xml
+bin\chrome\xul.css
+bin\chrome\xulBindings.xml
+bin\chrome\packages\core\*
+bin\chrome\packages\widget-toolkit\*
+bin\chrome\locales\en-US\*
+bin\chrome\skins\modern\*
 -bin\chrome\packages\core\editor\content\EditorInitPage.html
 -bin\chrome\packages\core\editor\content\EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
@@ -182,17 +192,8 @@ bin\chrome\skins\*
 -bin\chrome\packages\core\editor\content\viewsource.js
 -bin\chrome\packages\core\editor\content\viewsource.xul
 -bin\chrome\packages\core\communicator\content\domviewer
-bin\chrome\autocomplete.xml
-bin\chrome\htmlBindings.xml
-bin\chrome\menulistBindings.xml
-bin\chrome\radioBindings.xml
-bin\chrome\treeBindings.xml
-bin\chrome\platformHTMLBindings.xml
-bin\chrome\xul.css
-bin\chrome\xulBindings.xml
 
 bin\defaults\pref\all.js
-bin\defaults\pref\mailnews.js
 bin\defaults\pref\config.js
 bin\defaults\pref\initpref.js
 bin\defaults\pref\psm-glue.js
@@ -220,8 +221,6 @@ bin\res\throbber\*
 bin\res\toolbar\*
 ;debug menus reference samples dir - remove for actual releases:
 bin\res\samples\*
-
-bin\irc\*
 
 [mail]
 bin\msgbsutl.dll
@@ -256,4 +255,10 @@ bin\components\impEudra.dll
 bin\components\impText.dll
 bin\components\absyncsv.dll
 bin\components\absync.xpt
+bin\chrome\packages\messenger\*
+bin\defaults\pref\mailnews.js
 bin\help\mailhelp\*
+
+[chatzilla]
+bin\components\chatzilla-service.js
+bin\chrome\packages\chatzilla\*

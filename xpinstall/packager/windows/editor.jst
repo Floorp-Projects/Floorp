@@ -1,5 +1,5 @@
-var err = startInstall("Mozilla Editor", "Seamonkey", "$Version$"); 
-logComment("startInstall: " + err);
+var err = initInstall("Mozilla Editor", "Seamonkey", "$Version$"); 
+logComment("initInstall: " + err);
 
 var communicatorFolder = getFolder("Communicator");
 logComment("communicatorFolder: " + communicatorFolder);
@@ -13,6 +13,6 @@ err = addDirectory("Program",
 
 logComment("addDirectory() returned: " + err);
 
-err = finalizeInstall(); 
-logComment("FinalizeInstall() returned: " + err);
+err = performInstall(); 
+logComment("performInstall() returned: " + err);
 

@@ -150,7 +150,8 @@ viewer:Components:Necko2.shlb
 viewer:Components:necko.xpt 
 
 viewer:chrome:locales:*
-viewer:chrome:packages:*
+viewer:chrome:packages:core:*
+viewer:chrome:packages:widget-toolkit:*
 viewer:chrome:skins:*
 -viewer:chrome:packages:core:editor:content:EditorInitPage.html
 -viewer:chrome:packages:core:editor:content:EditorInitPagePlain.html
@@ -173,7 +174,6 @@ viewer:chrome:xul.css
 viewer:chrome:xulBindings.xml
 
 viewer:defaults:pref:all.js 
-viewer:defaults:pref:mailnews.js
 viewer:defaults:pref:config.js 
 viewer:defaults:Pref:editor.js
 viewer:defaults:pref:initpref.js 
@@ -232,6 +232,8 @@ viewer:res:ua.css
 viewer:res:URLFieldSchema.tbl
 
 [mail] 
+viewer:chrome:packages:messenger:*
+viewer:defaults:pref:mailnews.js
 viewer:Components:MsgAddrbook.shlb 
 viewer:Components:MsgAddrbook.xpt 
 viewer:Components:mimeEmitter.shlb 
@@ -260,3 +262,7 @@ viewer:Components:msgImportEudora.shlb
 viewer:Components:AbSyncSvc.shlb 
 viewer:Components:AbSyncSvc.xpt 
 viewer:res:Mailnews:*
+
+[chatzilla]
+viewer:Components:chatzilla-service.js
+viewer:chrome:packages:chatzilla:*

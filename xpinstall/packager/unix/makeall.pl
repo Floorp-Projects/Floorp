@@ -67,11 +67,13 @@ if(!(-e "$inDistPath"))
 MakeJsFile("xpcom");
 MakeJsFile("browser");
 MakeJsFile("mail");
+MakeJsFile("chatzilla");
 
 # Make all xpi files
 MakeXpiFile("xpcom");
 MakeXpiFile("browser");
 MakeXpiFile("mail");
+MakeXpiFile("chatzilla");
 
 # Make the config.ini file
 MakeConfigFile();

@@ -28,7 +28,7 @@ function updateWinReg()
     winreg.createKey(subkey,"");
 
     valname = "Install Directory";
-    value   = fCommunicator;
+    value   = fProgram;
     err     = winreg.setValueString(subkey, valname, value);
 
     subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Uninstall";
@@ -48,7 +48,7 @@ function updateWinReg()
 var srDest;
 var err;
 var szUninstall;
-var fCommunicator;
+var fProgram;
 var fWindowsSystem;
 var fileTemp;
 var fileComponentReg;
@@ -57,33 +57,33 @@ var fileMsvcrt;
 var fileMsvcirt;
 
 srDest = $SpaceRequired$:bin;
-err    = startInstall("Mozilla XPCom", "XPCom", "$Version$"); 
-logComment("startInstall: " + err);
+err    = initInstall("Mozilla XPCom", "XPCom", "$Version$"); 
+logComment("initInstall: " + err);
 
-fCommunicator  = getFolder("Communicator");
+fProgram  = getFolder("Program");
 fWindowsSystem = getFolder("Win System");
-logComment("fCommunicator: " + fCommunicator);
+logComment("fProgram: " + fProgram);
 
 // build the uninstall folder path
-szUninstall = fCommunicator + "Uninstall";
+szUninstall = fProgram + "Uninstall";
 
 // Log component.reg file so it can be deleted by the uninstaller.
 // These two files are created after installation is done, thus
 // are normally not logged for uninstall.
-logComment("Installing: " + fCommunicator + "component.reg");
+logComment("Installing: " + fProgram + "component.reg");
 
-if(verifyDiskSpace(fCommunicator, srDest) == true)
+if(verifyDiskSpace(fProgram, srDest) == true)
 {
-  setPackageFolder(fCommunicator);
+  setPackageFolder(fProgram);
   err = addDirectory("",
                      "$Version$",
                      "bin",              // dir name in jar to extract 
-                     fCommunicator,      // Where to put this file (Returned from GetFolder) 
-                     "",                 // subdir name to create relative to fCommunicator
+                     fProgram,           // Where to put this file (Returned from GetFolder) 
+                     "",                 // subdir name to create relative to fProgram
                      true);              // Force Flag 
   logComment("addDirectory() of Program returned: " + err);
 
-  if(!checkError(err))
+  if( err == SUCCESS )
   {
     // install msvcrt.dll *only* if it does not exist
     // we don't care if addFile() fails (if the file does not exist in the archive)
@@ -99,7 +99,7 @@ if(verifyDiskSpace(fCommunicator, srDest) == true)
               "$Version$",
               "msvcrt.dll",         // dir name in jar to extract 
               fWindowsSystem,       // Where to put this file (Returned from getFolder) 
-              "",                   // subdir name to create relative to fCommunicator
+              "",                   // subdir name to create relative to fProgram
               WIN_SHARED_FILE);
       logComment("addFile() of msvcrt.dll returned: " + err);
     }
@@ -122,7 +122,7 @@ if(verifyDiskSpace(fCommunicator, srDest) == true)
               "$Version$",
               "msvcirt.dll",        // dir name in jar to extract 
               fWindowsSystem,       // Where to put this file (Returned from getFolder) 
-              "",                   // subdir name to create relative to fCommunicator
+              "",                   // subdir name to create relative to fProgram
               WIN_SHARED_FILE);
       logComment("addFile() of msvcirt.dll returned: " + err);
     }
@@ -133,19 +133,19 @@ if(verifyDiskSpace(fCommunicator, srDest) == true)
   }
 
   // check return value
-  if(!checkError(err))
+  if( err == SUCCESS )
   {
-    fileComponentRegStr = fCommunicator + "component.reg";
-    fileComponentReg    = getFolder("file:///", fileComponentRegStr);
-    err                 = fileDelete(fileComponentReg);
-    logComment("fileDelete() returned: " + err);
-
     updateWinReg();
 
-    err = finalizeInstall(); 
-    logComment("finalizeInstall() returned: " + err);
+    err = performInstall(); 
+    logComment("performInstall() returned: " + err);
   }
+  else
+    cancelInstall(err);
 }
+else
+  cancelInstall(INSUFFICIENT_DISK_SPACE);
+
 
 // end main
 

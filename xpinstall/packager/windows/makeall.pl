@@ -102,11 +102,13 @@ else
 MakeJsFile("xpcom");
 MakeJsFile("browser");
 MakeJsFile("mail");
+MakeJsFile("chatzilla");
 
 # Make .xpi files
 MakeXpiFile("xpcom");
 MakeXpiFile("browser");
 MakeXpiFile("mail");
+MakeXpiFile("chatzilla");
 
 MakeUninstall();
 MakeConfigFile();

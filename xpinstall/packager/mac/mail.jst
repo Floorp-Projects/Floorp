@@ -1,7 +1,7 @@
-var err = startInstall("Mozilla Mail", "Mail", "$Version$"); 
-logComment("startInstall: " + err);
+var err = initInstall("Mozilla Mail", "Mail", "$Version$"); 
+logComment("initInstall: " + err);
 
-var communicatorFolder = getFolder("Communicator");
+var communicatorFolder = getFolder("Program");
 logComment("communicatorFolder: " + communicatorFolder);
 
 err = addDirectory("Program",
@@ -13,15 +13,19 @@ err = addDirectory("Program",
 
 logComment("addDirectory() returned: " + err);
 
+err = registerChrome(CONTENT | DELAYED_CHROME,
+                     getFolder("Chrome","packages/messenger"));
+logComment("registerChrome() returned: " + err);
+
 err = getLastError();
-if (err==SUCCESS || err==REBOOT_NEEDED)
+if (err==SUCCESS)
 {
-	err = finalizeInstall(); 
-	logComment("finalizeInstall() returned: " + err);
+	err = performInstall(); 
+	logComment("performInstall() returned: " + err);
 }
 else
 {
-	abortInstall();
-	logComment("abortInstall() due to error: " + err);
+	cancelInstall();
+	logComment("cancelInstall() due to error: " + err);
 }
 
