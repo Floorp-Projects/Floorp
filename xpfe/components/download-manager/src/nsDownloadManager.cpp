@@ -142,10 +142,11 @@ nsDownloadManager::NotifyDownloadEnded(const char* aKey)
   if (mCurrDownloadItems->Exists(&key)) {
     DownloadItem* item = NS_STATIC_CAST(DownloadItem*, mCurrDownloadItems->Get(&key));
     PRInt32 percentComplete;
+    item->GetPercentComplete(&percentComplete);
+
     nsCOMPtr<nsIRDFResource> res;
     nsCOMPtr<nsIRDFNode> oldTarget;
     gRDFService->GetResource(aKey, getter_AddRefs(res));
-    item->GetPercentComplete(&percentComplete);
     nsresult rv = GetTarget(res, gNC_ProgressPercent, PR_TRUE, getter_AddRefs(oldTarget));
     if (NS_FAILED(rv)) return rv;
 
@@ -231,7 +232,6 @@ nsDownloadManager::AssertProgressInfo()
   nsCOMPtr<nsISupports> supports;
   nsCOMPtr<nsIRDFResource> res;
   nsCOMPtr<nsIRDFInt> percent;
-  nsCOMPtr<nsIDownloadProgressListener> listener;
   nsCOMPtr<nsIRDFNode> oldTarget;
   char* id;
   PRInt32 percentComplete;
@@ -239,7 +239,7 @@ nsDownloadManager::AssertProgressInfo()
   // enumerate the resources, use their ids to retrieve the corresponding
   // nsIDownloadItems from the hashtable (if they don't exist, the download isn't
   // a current transfer), get the items' progress information,
-  // and assert it into the graph so we can show it in the UI
+  // and assert it into the graph
 
   PRBool moreElements;
   items->HasMoreElements(&moreElements);
@@ -389,6 +389,7 @@ nsDownloadManager::GetDownload(const char* aKey, nsIDownloadItem** aDownloadItem
 NS_IMETHODIMP
 nsDownloadManager::CancelDownload(const char* aKey)
 {
+  nsresult rv = NS_OK;
   nsCStringKey key(aKey);
   if (mCurrDownloadItems->Exists(&key)) {
     nsIDownloadItem* item = NS_STATIC_CAST(nsIDownloadItem*, mCurrDownloadItems->Get(&key));
@@ -405,11 +406,43 @@ nsDownloadManager::CancelDownload(const char* aKey)
     nsCOMPtr<nsIObserver> observer;
     item->GetObserver(getter_AddRefs(observer));
     if (observer)
-      return observer->Observe(item, "oncancel", nsnull);
+      rv = observer->Observe(item, "oncancel", nsnull);
+
     mCurrDownloadItems->Remove(&key);
   }
-  return NS_OK;
+  return rv;
 }
+
+NS_IMETHODIMP
+nsDownloadManager::RemoveDownload(const char* aKey)
+{
+  nsresult rv;
+  nsCStringKey key(aKey);
+  
+  // RemoveDownload is for downloads not currently in progress. Having it
+  // cancel in-progress downloads would make things complicated, so just return.
+  PRBool inProgress = mCurrDownloadItems->Exists(&key);
+  NS_ASSERTION(!inProgress, "Can't call RemoveDownload on a download in progress!");
+  if (inProgress)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIRDFContainer> downloads;
+  rv = GetDownloadsContainer(getter_AddRefs(downloads));
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIRDFResource> res;
+  gRDFService->GetResource(aKey, getter_AddRefs(res));
+
+  PRInt32 itemIndex;
+  downloads->IndexOf(res, &itemIndex);
+  if (itemIndex > 0) {
+    nsCOMPtr<nsIRDFNode> node;
+    rv = downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
+    if (NS_FAILED(rv)) return rv;
+    return Flush(); // necessary?
+  }
+  return rv;
+}  
 
 NS_IMETHODIMP
 nsDownloadManager::Open(nsIDOMWindow* aParent)
@@ -477,6 +510,7 @@ nsDownloadManager::HandleEvent(nsIDOMEvent* aEvent)
 {
   NS_ENSURE_ARG_POINTER(aEvent);
 
+  // the event is either load or unload
   nsAutoString eventType;
   aEvent->GetType(eventType);
   if (eventType.Equals(NS_LITERAL_STRING("unload")))
@@ -488,6 +522,8 @@ nsDownloadManager::HandleEvent(nsIDOMEvent* aEvent)
 
   nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(target));
   mDocument = do_QueryInterface(targetNode);
+  if (!mDocument) return NS_ERROR_FAILURE;
+
   // get the downloads container
   nsCOMPtr<nsIRDFContainer> downloads;
   rv = GetDownloadsContainer(getter_AddRefs(downloads));
@@ -728,6 +764,8 @@ nsDownloadManager::Flush()
 ///////////////////////////////////////////////////////////////////////////////
 // DownloadItem
 
+NS_IMPL_ISUPPORTS2(DownloadItem, nsIWebProgressListener, nsIDownloadItem)
+
 DownloadItem::DownloadItem()
 {
   NS_INIT_ISUPPORTS();
@@ -740,7 +778,6 @@ DownloadItem::DownloadItem(const PRUnichar* aPrettyName, nsILocalFile* aTarget, 
 {
   NS_INIT_ISUPPORTS();
   NS_INIT_REFCNT();
-
 }
 
 DownloadItem::~DownloadItem()
@@ -793,11 +830,24 @@ nsresult
 DownloadItem::GetDialogListener(nsIWebProgressListener** aDialogListener)
 {
   *aDialogListener = mDialogListener;
-  NS_ADDREF(*aDialogListener);
+  NS_IF_ADDREF(*aDialogListener);
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS2(DownloadItem, nsIWebProgressListener, nsIDownloadItem)
+nsresult
+DownloadItem::SetInternalListener(nsIDownloadProgressListener* aInternalListener)
+{
+  mInternalListener = aInternalListener;
+  return NS_OK;
+}
+
+nsresult
+DownloadItem::GetInternalListener(nsIDownloadProgressListener** aInternalListener)
+{
+  *aInternalListener = mInternalListener;
+  NS_IF_ADDREF(*aInternalListener);
+  return NS_OK;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebProgressListener
@@ -979,21 +1029,6 @@ DownloadItem::GetListener(nsIWebProgressListener** aListener)
 {
   *aListener = mListener;
   NS_IF_ADDREF(*aListener);
-  return NS_OK;
-}
-
-nsresult
-DownloadItem::SetInternalListener(nsIDownloadProgressListener* aInternalListener)
-{
-  mInternalListener = aInternalListener;
-  return NS_OK;
-}
-
-nsresult
-DownloadItem::GetInternalListener(nsIDownloadProgressListener** aInternalListener)
-{
-  *aInternalListener = mInternalListener;
-  NS_IF_ADDREF(*aInternalListener);
   return NS_OK;
 }
 
