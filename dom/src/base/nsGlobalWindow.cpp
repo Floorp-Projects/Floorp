@@ -56,6 +56,10 @@
 #include "nsScreen.h"
 #include "nsHistory.h"
 
+#if defined(OJI)
+#include "nsIJVMManager.h"
+#endif
+
 #include "nsMimeTypeArray.h"
 #include "nsPluginArray.h"
 
@@ -2203,5 +2207,18 @@ NS_IMETHODIMP
 NavigatorImpl::JavaEnabled(PRBool* aReturn)
 {
   *aReturn = PR_FALSE;
-  return NS_OK;
+
+#if defined(OJI)
+  nsIJVMManager* manager = NULL;
+  nsresult rv = nsServiceManager::GetService(nsIJVMManager::GetCID(),
+                                             nsIJVMManager::GetIID(),
+                                             (nsISupports **)&manager);
+
+  if (rv == NS_OK && manager != NULL) {
+    rv = manager->IsJavaEnabled(aReturn);
+    nsServiceManager::ReleaseService(nsIJVMManager::GetCID(), manager);
+  }
+#endif
+
+  return rv;
 }
