@@ -64,6 +64,7 @@ OBJS=   \
 	.\$(OBJDIR)\mkgeturl.obj	\
 	.\$(OBJDIR)\win-dns.obj		\
 	.\$(OBJDIR)\singsign.obj	\
+	.\$(OBJDIR)\autoupdt.obj	\
 	$(NULL)
 
 
@@ -92,6 +93,7 @@ CSRCS =	\
 	mktrace.c	\
 	mkutils.c	\
 	prefetch.c	\
+	autoupdt.c	\
 	$(NULL)
 
 CPPSRCS = \
@@ -122,7 +124,8 @@ EXPORTS= mkstream.h \
 #ifdef MOZ_MAIL_NEWS
 	 mkldap.h \
 #endif /* MOZ_MAIL_NEWS */
-	 mkhelp.h
+	 mkhelp.h \
+	 autoupdt.h
 
 C_OBJS = \
 	$(NULL)
