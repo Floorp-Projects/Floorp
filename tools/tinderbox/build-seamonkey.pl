@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.25 $ ';
+$Version = '$Revision: 1.26 $ ';
 
 
 sub PrintUsage {
@@ -479,23 +479,23 @@ sub BuildIt {
 
     } # unless ($TestOnly)
     
-	  if (&BinaryExists($fe)) {
-		if ($RunTest) {
-		  print LOG "export binary exists, build successful. Testing...\n";
-		  $BuildStatus = &RunAliveTest($fe);
-		  if ($BuildStatus == 0 and $BloatStats) {
-			$BuildStatusStr = 'success';
-			print LOG "export binary exists, build successful. Gathering bloat stats...\n";
-			$BuildStatus = &RunBloatTest($fe);
-		  }
-		} else {
-		  print LOG "export binary exists, build successful. Skipping test.\n";
-		  $BuildStatus = 0;
+	if (&BinaryExists($fe)) {
+	  if ($RunTest) {
+		print LOG "export binary exists, build successful. Testing...\n";
+		$BuildStatus = &RunAliveTest($fe);
+		if ($BuildStatus == 0 and $BloatStats) {
+		  $BuildStatusStr = 'success';
+		  print LOG "export binary exists, build successful. Gathering bloat stats...\n";
+		  $BuildStatus = &RunBloatTest($fe);
 		}
 	  } else {
-		print LOG "export binary missing, build FAILED\n";
-		$BuildStatus = 666;
-	  } # if (&BinaryExists($fe))
+		print LOG "export binary exists, build successful. Skipping test.\n";
+		$BuildStatus = 0;
+	  }
+	} else {
+	  print LOG "export binary missing, build FAILED\n";
+	  $BuildStatus = 666;
+	} # if (&BinaryExists($fe))
 
 
 	if ($BuildStatus == 0) {
