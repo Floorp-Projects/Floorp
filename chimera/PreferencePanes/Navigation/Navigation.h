@@ -42,7 +42,7 @@ class nsIPref;
   IBOutlet NSSlider *sliderHistoryDays;
   IBOutlet NSTextField *textFieldHistoryDays;
   
-  nsIPref* mPrefService;					// strong, but can't use a comptr here
+  nsIPref* 				mPrefService;					// strong, but can't use a comptr here
 }
 
 - (IBAction)openSystemInternetPanel:(id)sender;
