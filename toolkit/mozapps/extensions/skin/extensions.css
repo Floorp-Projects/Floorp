@@ -27,6 +27,12 @@
   list-style-image: url("chrome://mozapps/skin/extensions/placeholder.gif");
 }
 
+#useThemeButton {
+  margin: 0px;
+  -moz-user-focus: ignore;
+  list-style-image: url("chrome://mozapps/skin/extensions/placeholder.gif");
+}
+
 #uninstallButton .button-icon, #updateButton .button-icon {
   margin: 0px 5px 0px 0px !important;
 }
@@ -35,7 +41,7 @@
   list-style-image: url("chrome://mozapps/skin/extensions/placeholder.gif");
 }
 
-#commandBarSeparator {
+.commandBarSeparator {
   margin-left: 5px;
 }
 
@@ -102,6 +108,7 @@ extension[disabled="true"] .extension-icon {
   font-size: larger;
   font-weight: bold;
   color: ThreeDShadow;
+  text-align: center;
 }
 
 extension[itemType="theme"] {
@@ -110,5 +117,10 @@ extension[itemType="theme"] {
 
 extension[itemType="theme"] .extension-icon {
   margin-right: 3px;
+}
+
+.themePreviewArea {
+  -moz-appearance: listbox;
+  margin: 10px 10px 5px 5px;
 }
 

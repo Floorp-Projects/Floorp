@@ -11,6 +11,9 @@
 <!ENTITY cmd.update.label                 "Update">
 <!ENTITY cmd.update.accesskey             "U">
 <!ENTITY cmd.update.tooltip               "Checks for Updates to your Extensions">
+<!ENTITY cmd.useTheme.label               " Use Theme">
+<!ENTITY cmd.useTheme.accesskey           "U">
+<!ENTITY cmd.useTheme.tooltip             "Changes &brandShortName;'s theme.">
 
 <!-- Context Menu Options: Extension -->
 <!ENTITY cmd.options.label                "Options">
@@ -50,5 +53,5 @@
 <!ENTITY getMoreThemes.tooltip            "Get More Themes from update.mozilla.org">
 
 <!ENTITY previewNoThemeSelected.label     "No Theme Selected">
-<!ENTITY previewNoPreviewImage.label      "This Theme does not have a Preview Image.">
+<!ENTITY previewNoPreviewImage.label      "This Theme does not have a Preview Image">
 
