@@ -45,6 +45,7 @@ nsCSSInlineLayout::nsCSSInlineLayout(nsCSSLineLayout&     aLineLayout,
     aContainerStyle->GetStyleData(eStyleStruct_Display);
   mDirection = mContainerDisplay->mDirection;
   mIsBullet = PR_FALSE;
+  mNextRCFrame = nsnull;
 }
 
 nsCSSInlineLayout::~nsCSSInlineLayout()
@@ -134,21 +135,15 @@ nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
   // block frame that isn't at the start of a line). In this case the
   // reason will be wrong so we need to check the frame state.
   nsReflowReason reason = eReflowReason_Resize;
-  if (nsnull != mContainerReflowState->reflowCommand) {
-    // If the reflow command was targeted at the container we are
-    // reflowing for, don't make the reason incremental.
-    nsIFrame* target;
-    mContainerReflowState->reflowCommand->GetTarget(target);
-    if (mContainerFrame != target) {
-      reason = eReflowReason_Incremental;
-    }
+  nsFrameState state;
+  aFrame->GetFrameState(state);
+  if (NS_FRAME_FIRST_REFLOW & state) {
+    reason = eReflowReason_Initial;
   }
-  else {
-    nsFrameState state;
-    aFrame->GetFrameState(state);
-    if (NS_FRAME_FIRST_REFLOW & state) {
-      reason = eReflowReason_Initial;
-    }
+  else if (mNextRCFrame == aFrame) {
+    reason = eReflowReason_Incremental;
+    // Make sure we only incrementally reflow once
+    mNextRCFrame = nsnull;
   }
 
   // Setup reflow state for reflowing the frame

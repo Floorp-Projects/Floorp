@@ -227,6 +227,10 @@ nsCSSInlineFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
       }
     }
     else {
+      // Get next frame in reflow command chain
+      state.reflowCommand->GetNext(state.mInlineLayout.mNextRCFrame);
+
+      // Continue the reflow
       rv = ChildIncrementalReflow(state);
     }
   }
