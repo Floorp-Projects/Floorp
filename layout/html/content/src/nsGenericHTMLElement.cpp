@@ -2496,6 +2496,9 @@ nsGenericHTMLContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
   if (nsnull == aOldChild) {
     return NS_OK;
   }
+  if (nsnull == aNewChild) {
+    return NS_ERROR_NULL_POINTER;
+  }
   nsIContent* content = nsnull;
   nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
   NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
