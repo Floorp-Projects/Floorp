@@ -38,7 +38,7 @@ MOTIF			=
 MOTIFLIB		=
 OS_LIBS			=
 
-PLATFORM_FLAGS		= -ansi -Wall -pipe -DLINUX -Dlinux
+PLATFORM_FLAGS		= -ansi -Wall -pipe -DLINUX -Dlinux -DLINUX1_2
 MOVEMAIL_FLAGS		= -DHAVE_STRERROR
 PORT_FLAGS		= -D_POSIX_SOURCE -D_BSD_SOURCE -DSW_THREADS -DNEED_ENDIAN_H -DNEED_GETOPT_H -DNEED_IOCTL_H -DUSE_NODL_TABS -DHAVE_SIGNED_CHAR -DNEED_SYS_TIME_H -DHAVE_SYS_BITYPES_H -DNEED_UINT_T
 PDJAVA_FLAGS		= -mx128m
@@ -61,27 +61,27 @@ I2_LOCALE		= i2
 ######################################################################
 
 ifeq ($(CPU_ARCH),alpha)
-PLATFORM_FLAGS		+= -DLINUX1_2 -D__$(CPU_ARCH) -D_ALPHA_ 
+PLATFORM_FLAGS		+= -D__$(CPU_ARCH) -D_ALPHA_ 
 PORT_FLAGS		+= -DNEED_TIME_R -DMITSHM -D_XOPEN_SOURCE
 OS_INCLUDES		+= -I/usr/X11R6/include
 OS_LIBS			+= -L/lib -ldl -lc
 endif
 ifeq ($(CPU_ARCH),m68k)
-PLATFORM_FLAGS		+= -m68020-40 -DLINUX1_2 -D$(CPU_ARCH)
+PLATFORM_FLAGS		+= -m68020-40 -D$(CPU_ARCH)
 PORT_FLAGS		+= -DNEED_TIME_R -DMITSHM -D_XOPEN_SOURCE
 OS_INCLUDES		+= -I/usr/X11R6/include
 OS_LIBS			+= -L/lib -ldl -lc
 endif
 ifeq ($(CPU_ARCH),ppc)
-PLATFORM_FLAGS		+= -DMKLINUX -DLINUX1_2 -D$(CPU_ARCH)
+PLATFORM_FLAGS		+= -DMKLINUX -D$(CPU_ARCH)
 OS_INCLUDES		+= -I/usr/local/include -I/usr/X11R6/include
 endif
 ifeq ($(CPU_ARCH),sparc)
-PLATFORM_FLAGS		+= -DLINUX1_2 -D$(CPU_ARCH)
+PLATFORM_FLAGS		+= -D$(CPU_ARCH)
 OS_INCLUDES		+= -I/usr/X11R6/include
 endif
 ifeq ($(CPU_ARCH),x86)
-PLATFORM_FLAGS		+= -mno-486 -DLINUX1_2 -Di386
+PLATFORM_FLAGS		+= -mno-486 -Di386
 PORT_FLAGS		+= -DNEED_TIME_R -DMITSHM -D_XOPEN_SOURCE
 OS_INCLUDES		+= -I/usr/X11R6/include
 OS_LIBS			+= -L/lib -ldl -lc
@@ -91,7 +91,7 @@ endif
 ifeq ($(OS_RELEASE),1.2)
 PORT_FLAGS		+= -DNEED_SYS_WAIT_H
 endif
-ifeq ($(OS_RELEASE),2.0)
+ifneq (,$(filter 2.0 2.1,$(OS_RELEASE)))
 PORT_FLAGS		+= -DNO_INT64_T
 PLATFORM_FLAGS		+= -DLINUX2_0
 BUILD_UNIX_PLUGINS	= 1
@@ -99,6 +99,10 @@ MKSHLIB			= $(CC) -shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.so=%.so)
 ifdef BUILD_OPT
 OPTIMIZER		= -O2
 endif
+endif
+# I think just -DLINUX1 for 1.x, -DLINUX2 for 2.x, ... would be a better strategy (?) --briano.
+ifeq ($(OS_RELEASE),2.1)
+PLATFORM_FLAGS		+= -DLINUX2_1
 endif
 
 ######################################################################
