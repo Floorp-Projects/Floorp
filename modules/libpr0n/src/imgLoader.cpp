@@ -21,26 +21,24 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
+
 #include "imgLoader.h"
 
-#include "imgIRequest.h"
-
-#include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
 
 #include "nsIChannel.h"
+#include "nsIHTTPChannel.h"
 #include "nsIIOService.h"
 #include "nsILoadGroup.h"
+#include "nsIProxyObjectManager.h"
+#include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
-
-#include "imgRequest.h"
-#include "imgRequestProxy.h"
-
-#include "imgCache.h"
-
 #include "nsXPIDLString.h"
 
-#include "nsCOMPtr.h"
+#include "imgCache.h"
+#include "imgRequest.h"
+#include "imgRequestProxy.h"
 
 #include "ImageLogging.h"
 
@@ -78,10 +76,11 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
   imgCache::Get(aURI, &request, getter_AddRefs(entry)); // addrefs request
 
   if (request && entry && aLoadGroup) {
-    /* this isn't exactly what I want here.  This code will re-doom every cache hit in a document while
-       it is force reloading.  So for multiple copies of an image on a page, when you force reload, this
-       will cause you to get seperate loads for each copy of the image... this sucks.
-     */
+    /* this isn't exactly what I want here.  This code will re-doom every
+       cache hit in a document while it is force reloading.  So for multiple
+       copies of an image on a page, when you force reload, this will cause
+       you to get seperate loads for each copy of the image... this sucks.
+    */
     PRUint32 flags = 0;
     PRBool doomRequest = PR_FALSE;
     aLoadGroup->GetLoadFlags(&flags);
@@ -151,21 +150,47 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
 
     NS_ADDREF(pl);
 
-    /* XXX Are we calling AsyncOpen() too early?  Is it possible for AsyncOpen to result
-           in an OnStartRequest to the channel before we call CreateNewProxyForRequest() ?
+    // set the referrer if this is an HTTP request
+    nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(newChannel));
+    if (aLoadGroup && httpChannel) {
+      nsresult rv;
+      // Get the defloadRequest from the loadgroup
+      nsCOMPtr<nsIRequest> defLoadRequest;
+      rv = aLoadGroup->GetDefaultLoadRequest(getter_AddRefs(defLoadRequest));
+
+      if (NS_SUCCEEDED(rv) && defLoadRequest) {
+        nsCOMPtr<nsIChannel> reqChannel(do_QueryInterface(defLoadRequest));
+
+        if (reqChannel) {
+          // Get the referrer from the loadchannel
+          nsCOMPtr<nsIURI> referrer;
+          rv = reqChannel->GetURI(getter_AddRefs(referrer));
+          if (NS_SUCCEEDED(rv)) {
+            // Set the referrer
+            httpChannel->SetReferrer(referrer,
+                                     nsIHTTPChannel::REFERRER_INLINES);
+          }   
+        }
+      }
+    }
+
+    /* XXX Are we calling AsyncOpen() too early?  Is it possible for
+       AsyncOpen to result in an OnStartRequest to the channel before
+       we call CreateNewProxyForRequest() ?
      */
     nsresult asyncOpenResult = newChannel->AsyncOpen(NS_STATIC_CAST(nsIStreamListener *, pl), nsnull);
 
     NS_RELEASE(pl);
 
     if (NS_FAILED(asyncOpenResult)) {
-      /* If AsyncOpen fails, then we want to hand back a request proxy object that
-         has a canceled load.
+      /* If AsyncOpen fails, then we want to hand back a request proxy
+         object that has a canceled load.
        */
       PR_LOG(gImgLog, PR_LOG_DEBUG,
              ("[this=%p] imgLoader::LoadImage -- async open failed.\n", this));
 
-      nsresult rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver, cx, _retval);
+      nsresult rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
+                                             cx, _retval);
       if (NS_SUCCEEDED(rv)) {
         request->OnStartRequest(newChannel, nsnull);
         request->OnStopRequest(newChannel, nsnull, NS_BINDING_ABORTED);
@@ -211,8 +236,8 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
     // we have this in our cache already.. cancel the current (document) load
 
     /* XXX If |*listener| is null when we return here, the caller should 
-           probably cancel the channel instead of us doing it here.
-     */
+       probably cancel the channel instead of us doing it here.
+    */
     channel->Cancel(NS_BINDING_ABORTED); // this should fire an OnStopRequest
 
     *listener = nsnull; // give them back a null nsIStreamListener
@@ -263,9 +288,10 @@ imgLoader::CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGro
 {
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgLoader::CreateNewProxyForRequest", "imgRequest", aRequest);
 
-  /* XXX If we move decoding onto seperate threads, we should save off the calling thread here
-         and pass it off to |proxyRequest| so that it call proxy calls to |aObserver|.
-   */
+  /* XXX If we move decoding onto seperate threads, we should save off the
+     calling thread here and pass it off to |proxyRequest| so that it call
+     proxy calls to |aObserver|.
+  */
 
   imgRequestProxy *proxyRequest;
   NS_NEWXPCOM(proxyRequest, imgRequestProxy);
