@@ -19,6 +19,8 @@
 #include "nsScrollBar.h"
 #include "nsGfxCIID.h"
 
+#include "xlibrgb.h"
+
 NS_IMPL_ADDREF(nsScrollbar)
 NS_IMPL_RELEASE(nsScrollbar)
 
@@ -61,8 +63,11 @@ nsresult nsScrollbar::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsScrollbar::SetMaxRange()\n");
   printf("Max Range set to %d\n", aEndRange);
+#endif
+
   mMaxRange = aEndRange;
   CalcBarBounds();
   LayoutBar();
@@ -71,15 +76,21 @@ NS_METHOD nsScrollbar::SetMaxRange(PRUint32 aEndRange)
 
 PRUint32 nsScrollbar::GetMaxRange(PRUint32& aRange)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsScrollbar::GetMaxRange()\n");
+#endif
+
   aRange = mMaxRange;
   return NS_OK;
 }
 
 NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsScrollbar::SetPosition()\n");
   printf("Scroll to %d\n", aPos);
+#endif
+
   mPosition = aPos;
   CalcBarBounds();
   LayoutBar();
@@ -88,15 +99,21 @@ NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
 
 PRUint32 nsScrollbar::GetPosition(PRUint32& aPosition)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsScrollbar::GetPosition()\n");
+#endif
+
   aPosition = mPosition;
   return NS_OK;
 }
 
 NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsScrollbar::SetThumbSize()\n");
   printf("Thumb size set to %d\n", aSize);
+#endif
+
   mThumbSize = aSize;
   CalcBarBounds();
   LayoutBar();
@@ -105,15 +122,21 @@ NS_METHOD nsScrollbar::SetThumbSize(PRUint32 aSize)
 
 NS_METHOD nsScrollbar::GetThumbSize(PRUint32& aSize)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsScrollbar::GetThumbSize()\n");
+#endif
+
   aSize = mThumbSize;
   return NS_OK;
 }
 
 NS_METHOD nsScrollbar::SetLineIncrement(PRUint32 aSize)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsScrollbar::SetLineIncrement()\n");
   printf("Set Line Increment to %d\n", aSize);
+#endif
+
   mLineIncrement = aSize;
   CalcBarBounds();
   LayoutBar();
@@ -122,7 +145,10 @@ NS_METHOD nsScrollbar::SetLineIncrement(PRUint32 aSize)
 
 NS_METHOD nsScrollbar::GetLineIncrement(PRUint32& aSize)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsScrollbar::GetLineIncrement()\n");
+#endif
+
   aSize = mLineIncrement;
   return NS_OK;
 }
@@ -130,9 +156,13 @@ NS_METHOD nsScrollbar::GetLineIncrement(PRUint32& aSize)
 NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                 PRUint32 aPosition, PRUint32 aLineIncrement)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsScrollbar::SetParameters()\n");
+
   printf("MaxRange = %d ThumbSize = %d aPosition = %d LineIncrement = %d\n",
          aMaxRange, aThumbSize, aPosition, aLineIncrement);
+#endif
+
   SetMaxRange(aMaxRange);
   SetThumbSize(aThumbSize);
   SetPosition(aPosition);
@@ -144,7 +174,10 @@ NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
 
 PRBool nsScrollbar::OnScroll(PRUint32 scrollCode, int cPos)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsScrollbar::OnScroll\n");
+#endif
+
   PRBool result = PR_FALSE;
   switch (scrollCode) {
   case NS_SCROLLBAR_PAGE_NEXT:
@@ -162,7 +195,11 @@ PRBool nsScrollbar::OnScroll(PRUint32 scrollCode, int cPos)
 PRBool nsScrollbar::OnResize(nsSizeEvent &event)
 {
   PRBool result;
+
+#ifdef XLIB_WIDGET_NOISY
   printf("nsScrollbar::OnResize\n");
+#endif
+
   nsWidget::OnResize(event);
   CalcBarBounds();
   LayoutBar();
@@ -173,7 +210,11 @@ PRBool nsScrollbar::OnResize(nsSizeEvent &event)
 PRBool nsScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
   PRBool result;
+
+#ifdef XLIB_WIDGET_NOISY
   printf("nsScrollbar::DispatchMouseEvent\n");
+#endif
+
   // check to see if this was on the main window.
   switch (aEvent.message) {
   case NS_MOUSE_LEFT_BUTTON_DOWN:
@@ -343,14 +384,24 @@ void nsScrollbar::CalcBarBounds(void)
   if (mMaxRange == 0) {
     bar_start = 0;
     bar_end = 0;
+#ifdef XLIB_WIDGET_NOISY
     printf("CalcBarBounds: max range is zero.\n");
+#endif
+
   }
   else {
+
+#ifdef XLIB_WIDGET_NOISY
     printf("CalcBarBounds: position: %d max: %d thumb: %d\n",
            mPosition, mMaxRange, mThumbSize);
+#endif
+
     bar_start = (float)mPosition / (float)mMaxRange;
     bar_end = ((float)mThumbSize + (float)mPosition ) / (float)mMaxRange;
+#ifdef XLIB_WIDGET_NOISY
     printf("CalcBarBounds: start: %f end: %f\n", bar_start, bar_end);
+#endif
+
   }
   
   if (mIsVertical == PR_TRUE) {
@@ -371,7 +422,10 @@ void nsScrollbar::CalcBarBounds(void)
   if (mBarBounds.width == 0) {
     mBarBounds.width = 1;
   }
+
+#ifdef XLIB_WIDGET_NOISY
   printf("CalcBarBounds: bar is (%s) %d %d %d %d\n", ((mIsVertical == PR_TRUE) ? "vertical" : "horizontal" ), mBarBounds.x, mBarBounds.y, mBarBounds.width, mBarBounds.height);
+#endif
 }
 
 void nsScrollbar::LayoutBar(void)

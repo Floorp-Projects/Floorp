@@ -73,7 +73,9 @@ void nsWindow::CreateNative(Window aParent, nsRect aRect)
 
 NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsWindow::Invalidate(sync)\n");
+#endif
   nsPaintEvent pevent;
   pevent.message = NS_PAINT;
   pevent.widget = this;
@@ -91,7 +93,10 @@ NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
 
 NS_IMETHODIMP nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsWindow::Invalidate(rect, sync)\n");
+#endif
+
   nsPaintEvent pevent;
   pevent.message = NS_PAINT;
   pevent.widget = this;
@@ -109,7 +114,10 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 
 NS_IMETHODIMP nsWindow::Update()
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsWindow::Update()\n");
+#endif
+
   nsPaintEvent pevent;
   pevent.message = NS_PAINT;
   pevent.widget = this;
@@ -127,7 +135,10 @@ NS_IMETHODIMP nsWindow::Update()
 
 NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("nsWindow::Scroll()\n");
+#endif
+
   if (aClipRect)
     Invalidate(*aClipRect, PR_TRUE);
   else 

@@ -25,23 +25,35 @@ NS_IMPL_ISUPPORTS(nsLookAndFeel, kILookAndFeelIID)
 nsLookAndFeel::nsLookAndFeel() : nsILookAndFeel()
 {
     NS_INIT_REFCNT();
+
+#ifdef XLIB_WIDGET_NOISY
     printf("nsLookAndFeel::nsLookAndFeel()\n");
+#endif
 }
 
 nsLookAndFeel::~nsLookAndFeel()
 {
+#ifdef XLIB_WIDGET_NOISY
     printf("nsLookAndFeel::~nsLookAndFeel()\n");
+#endif
+
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
+#ifdef XLIB_WIDGET_NOISY
     printf("nsLookAndFeel::GetColor()\n");
+#endif
+
     return NS_OK;
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
+#ifdef XLIB_WIDGET_NOISY
     printf("nsLookAndFeel::GetMetric()\n");
+#endif
+
     // XXX These are not complete!
     nsresult res = NS_OK;
     switch (aID) { 
@@ -105,7 +117,10 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetric)
 {
+#ifdef XLIB_WIDGET_NOISY
     printf("nsLookAndFeel::GetMetric()\n");
+#endif
+
     // XXX this is not complete
     nsresult res = NS_OK;
     switch (aID) {

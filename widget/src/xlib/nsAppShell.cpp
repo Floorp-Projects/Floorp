@@ -120,7 +120,7 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
   mDisplay = XOpenDisplay(NULL);
 
   if (mDisplay == NULL) 
-    {
+  {
     fprintf(stderr, "%s: Cannot connect to X server %s\n",
             argv[0], 
             XDisplayName(NULL));
@@ -134,8 +134,7 @@ NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 
   xlib_rgb_init(mDisplay, mScreen);
 
-  printf("nsAppShell::Create(dpy=%p  screen=%p)\
-n",
+  printf("nsAppShell::Create(dpy=%p  screen=%p)\n",
            mDisplay,
            mScreen);
 
@@ -307,9 +306,18 @@ nsAppShell::DispatchEvent(XEvent *event)
   case MotionNotify:
     HandleMotionNotifyEvent(event, widget);
     break;
+
+  case NoExpose:
+    break;
+
   default:
+
+#ifdef XLIB_WIDGET_NOISY
     printf("Unhandled window event: Window 0x%lx Got a %s event\n",
            event->xany.window, event_names[event->type]);
+
+#endif
+
     break;
   }
 }
@@ -334,8 +342,12 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
 {
   nsMouseEvent mevent;
   PRUint32 eventType = 0;
+
+#ifdef XLIB_WIDGET_NOISY
   printf("Button event for window 0x%lx button %d type %s\n",
          event->xany.window, event->xbutton.button, (event->type == ButtonPress ? "ButtonPress" : "ButtonRelease"));
+#endif
+
   switch(event->type) {
   case ButtonPress:
     switch(event->xbutton.button) {
@@ -380,8 +392,11 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
 void
 nsAppShell::HandleExposeEvent(XEvent *event, nsWidget *aWidget)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("Expose event for window 0x%lx %d %d %d %d\n", event->xany.window,
          event->xexpose.x, event->xexpose.y, event->xexpose.width, event->xexpose.height);
+#endif
+
   nsPaintEvent pevent;
   pevent.message = NS_PAINT;
   pevent.widget = aWidget;
@@ -399,10 +414,13 @@ nsAppShell::HandleExposeEvent(XEvent *event, nsWidget *aWidget)
 void
 nsAppShell::HandleConfigureNotifyEvent(XEvent *event, nsWidget *aWidget)
 {
+#ifdef XLIB_WIDGET_NOISY
   printf("ConfigureNotify event for window 0x%lx %d %d %d %d\n",
          event->xconfigure.window,
          event->xconfigure.x, event->xconfigure.y,
          event->xconfigure.width, event->xconfigure.height);
+#endif
+
   nsSizeEvent sevent;
   sevent.message = NS_SIZE;
   sevent.widget = aWidget;
