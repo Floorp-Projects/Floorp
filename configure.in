@@ -4594,7 +4594,11 @@ MOZ_ARG_DISABLE_BOOL(md,
    fi])
 if test "$_cpp_md_flag"; then
   COMPILER_DEPEND=1
-  _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(MDDEPDIR)/$(*F).pp)'
+  if test "$OS_ARCH" = "OpenVMS"; then
+    _DEPEND_CFLAGS='$(subst =, ,$(filter-out %/.pp,-MM=-MD=-MF=$(MDDEPDIR)/$(*F).pp))'
+  else
+    _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(MDDEPDIR)/$(*F).pp)'
+  fi
 else
   COMPILER_DEPEND=
   _USE_CPP_INCLUDE_FLAG=
