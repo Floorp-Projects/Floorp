@@ -1,7 +1,7 @@
 XML_ErrorString
-XML_GetErrorByteIndex
-XML_GetErrorColumnNumber
-XML_GetErrorLineNumber
+XML_GetCurrentLineNumber
+XML_GetCurrentColumnNumber
+XML_GetCurrentByteIndex
 XML_GetErrorCode
 XML_GetBuffer
 XML_ParseBuffer
@@ -19,7 +19,6 @@ hashTableDestroy
 lookup
 XmlParseXmlDecl
 XmlInitEncoding
-XmlGetInternalEncoding
 XmlPrologStateInit
 tokenizeXMLElement
 XMLDOM_PIHandler

@@ -1,7 +1,7 @@
 /*
 The contents of this file are subject to the Mozilla Public License
 Version 1.0 (the "License"); you may not use this file except in
-compliance with the License. You may obtain a copy of the License at
+csompliance with the License. You may obtain a copy of the License at
 http://www.mozilla.org/MPL/
 
 Software distributed under the License is distributed on an "AS IS"
@@ -18,15 +18,22 @@ James Clark. All Rights Reserved.
 Contributor(s):
 */
 
-#include "xmldef.h"
-#include "hashtable.h"
 #include <stdlib.h>
 #include <string.h>
+
+#include "xmldef.h"
+#include "hashtable.h"
+
+#ifdef XML_UNICODE
+#define keycmp wcscmp
+#else
+#define keycmp strcmp
+#endif
 
 #define INIT_SIZE 64
 
 static
-unsigned long hash(const char *s)
+unsigned long hash(KEY s)
 {
   unsigned long h = 0;
   while (*s)
@@ -34,7 +41,7 @@ unsigned long hash(const char *s)
   return h;
 }
 
-NAMED *lookup(HASH_TABLE *table, const char *name, size_t createSize)
+NAMED *lookup(HASH_TABLE *table, KEY name, size_t createSize)
 {
   size_t i;
   if (table->size == 0) {
@@ -52,7 +59,7 @@ NAMED *lookup(HASH_TABLE *table, const char *name, size_t createSize)
     for (i = h & (table->size - 1);
          table->v[i];
          i == 0 ? i = table->size - 1 : --i) {
-      if (strcmp(name, table->v[i]->name) == 0)
+      if (keycmp(name, table->v[i]->name) == 0)
 	return table->v[i];
     }
     if (!createSize)
