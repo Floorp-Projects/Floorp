@@ -164,10 +164,9 @@ sub print_page_head {
   # Get the warnings summary
   do "$tree/warn.pl" if $nowdate eq $maxdate;
 
-#  use POSIX qw(strftime);
+  use POSIX qw(strftime);
   # Print time in format, "HH:MM timezone"
-#  my $now = strftime("%H:%M %Z", localtime);
-  $now = "Now";
+  my $now = strftime("%H:%M %Z", localtime);
 
   EmitHtmlTitleAndHeader("tinderbox: $tree", "tinderbox",
                          "tree: $tree ($now)");
@@ -692,7 +691,7 @@ sub do_flash {
     $text .= ($busted > 1 ? ' are ' : ' is ') . 'busted';
     
     # The Flash spec says we need to give ctime.
-#    use POSIX;
+    use POSIX;
     my $tm = POSIX::ctime(time());
     $tm =~ s/^...\s//;   # Strip day of week
     $tm =~ s/:\d\d\s/ /; # Strip seconds
