@@ -1172,6 +1172,7 @@ NET_CookieScriptPrefChanged(const char * newpref, void * data)
 {
     char    s[64];
     int len = sizeof(s);
+	*s='\0';
     PREF_GetCharPref(pref_scriptName, s, &len);
     NET_SetCookieScriptPref(s);
     return PREF_NOERROR;
@@ -1196,6 +1197,7 @@ NET_RegisterCookiePrefCallbacks(void)
 	NET_SetCookieWarningPref(x);
 	PREF_RegisterCallback(pref_warnAboutCookies, NET_CookieWarningPrefChanged, NULL);
 
+	*s='\0';
 	PREF_GetCharPref(pref_scriptName, s, &len);
 	NET_SetCookieScriptPref(s);
 	PREF_RegisterCallback(pref_scriptName, NET_CookieScriptPrefChanged, NULL);
