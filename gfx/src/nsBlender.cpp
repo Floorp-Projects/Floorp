@@ -80,7 +80,7 @@ nsBlender :: CalcBytesSpan(PRUint32 aWidth, PRUint32 aBitsPixel)
  * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
  */
 void
-nsBlender::Do32Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
+nsBlender::Do32Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor, nsPixelFormat &aPixFormat)
 {
 PRUint8   *d1,*d2,*s1,*s2;
 PRUint32  val1,val2;
@@ -205,11 +205,12 @@ PRInt32   sspan,dspan,mspan;
  * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
  */
 void
-nsBlender::Do24Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
+nsBlender::Do24Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor, nsPixelFormat &aPixFormat)
 {
-PRUint8   *d1,*d2,*s1,*s2;
+PRUint8   *d1,*d2,*s1,*s2,*ss1,*ss2;
 PRUint32  val1,val2;
 PRInt32   x,y,temp1,numlines,xinc,yinc;
+PRUint16  srccolor,secsrccolor;
 
   aBlendVal = (aBlendVal*255)/100;
   val2 = aBlendVal;
@@ -222,6 +223,19 @@ PRInt32   x,y,temp1,numlines,xinc,yinc;
   numlines = aNumlines;  
   xinc = 1;
   yinc = 1;
+
+  if (nsnull != aSecondSImage)
+  {
+    ss1 = (PRUint8 *)aSecondSImage;
+    srccolor = ((NS_GET_R(aSrcBackColor) & 0xf8) << 8) |
+               ((NS_GET_G(aSrcBackColor) & 0xfc) << 3) |
+               ((NS_GET_B(aSrcBackColor) & 0xf8) >> 3);
+    secsrccolor = ((NS_GET_R(aSecondSrcBackColor) & 0xf8) << 8) |
+                  ((NS_GET_G(aSecondSrcBackColor) & 0xfc) << 3) |
+                  ((NS_GET_B(aSecondSrcBackColor) & 0xf8) >> 3);
+  }
+  else
+    ss1 = nsnull;
 
   for(y = 0; y < aNumlines; y++){
     s2 = s1;
@@ -262,7 +276,7 @@ PRInt32   x,y,temp1,numlines,xinc,yinc;
  * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
  */
 void
-nsBlender::Do16Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor)
+nsBlender::Do16Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,nscolor aSrcBackColor, nscolor aSecondSrcBackColor, nsPixelFormat &aPixFormat)
 {
 PRUint16    *d1,*d2,*s1,*s2,*ss1,*ss2;
 PRUint32    val1,val2,red,green,blue,stemp,dtemp,sstemp;
@@ -287,7 +301,7 @@ PRInt16     dspan,sspan,span;
 
   if (nsnull != aSecondSImage)
   {
-    ss1 = (PRUint16*)aSecondSImage;
+    ss1 = (PRUint16 *)aSecondSImage;
     srccolor = ((NS_GET_R(aSrcBackColor) & 0xf8) << 8) |
                ((NS_GET_G(aSrcBackColor) & 0xfc) << 3) |
                ((NS_GET_B(aSrcBackColor) & 0xf8) >> 3);

@@ -19,7 +19,7 @@
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "../nsGfxCIID.h"
+#include "nsGfxCIID.h"
 #include "nsFontMetricsWin.h"
 #include "nsRenderingContextWin.h"
 #include "nsImageWin.h"

@@ -181,6 +181,7 @@ private:
 #ifdef NGLAYOUT_DDRAW
   nsresult CreateDDraw(void);
 #endif
+  BITMAPINFO *CreateBitmapInfo(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth);
 
 protected:
   nscolor					  mCurrentColor;
@@ -253,6 +254,8 @@ public:
   HBITMAP             mOrigBitmap;
   HBITMAP             mSelectedBitmap;
   PRBool              mKillDC;
+  BITMAPINFO          *mBitmapInfo;
+  PRUint8             *mDIBits;
 
 #ifdef NGLAYOUT_DDRAW
   IDirectDrawSurface  *mSurface;

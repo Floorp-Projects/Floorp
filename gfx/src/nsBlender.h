@@ -37,6 +37,25 @@
 #include "nsIImage.h"
 #include "libimg.h"
 
+typedef struct
+{
+  PRUint32  mRedZeroMask;     //red color mask in zero position
+  PRUint32  mGreenZeroMask;   //green color mask in zero position
+  PRUint32  mBlueZeroMask;    //blue color mask in zero position
+  PRUint32  mAlphaZeroMask;   //alpha data mask in zero position
+  PRUint32  mRedMask;         //red color mask
+  PRUint32  mGreenMask;       //green color mask
+  PRUint32  mBlueMask;        //blue color mask
+  PRUint32  mAlphaMask;       //alpha data mask
+  PRUint8   mRedCount;        //number of red color bits
+  PRUint8   mGreenCount;      //number of green color bits
+  PRUint8   mBlueCount;       //number of blue color bits
+  PRUint8   mAlphaCount;      //number of alpha data bits
+  PRUint8   mRedShift;        //number to shift value into red position
+  PRUint8   mGreenShift;      //number to shift value into green position
+  PRUint8   mBlueShift;       //number to shift value into blue position
+  PRUint8   mAlphaShift;      //number to shift value into alpha position
+} nsPixelFormat;
 
 //----------------------------------------------------------------------
 
@@ -83,10 +102,11 @@ public:
     * @param aDLSpan number of bytes per line for the destination bytes
     * @param aMLSpan number of bytes per line for the Mask bytes
     * @param aBlendQuality The quality of this blend, this is for tweening if neccesary
+    * @param aPixelFormat nsPixelFormat struct filled out to describe data format
     */
   void Do32Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
                  PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,
-                 nscolor aSrcBackColor, nscolor aSecondSrcBackColor);
+                 nscolor aSrcBackColor, nscolor aSecondSrcBackColor, nsPixelFormat &aPixelFormat);
 
   /** --------------------------------------------------------------------------
    * Blend two 24 bit image arrays using an 8 bit alpha mask
@@ -117,7 +137,7 @@ public:
    */
   void Do24Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
                  PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,
-                 nscolor aSrcBackColor, nscolor aSecondSrcBackColor);
+                 nscolor aSrcBackColor, nscolor aSecondSrcBackColor, nsPixelFormat &aPixelFormat);
 
 
  /** --------------------------------------------------------------------------
@@ -134,7 +154,7 @@ public:
    */
   void Do16Blend(PRUint8 aBlendVal,PRInt32 aNumlines,PRInt32 aNumbytes,PRUint8 *aSImage,PRUint8 *aDImage,
                  PRUint8 *aSecondSImage,PRInt32 aSLSpan,PRInt32 aDLSpan,nsBlendQuality aBlendQuality,
-                 nscolor aSrcBackColor, nscolor aSecondSrcBackColor);
+                 nscolor aSrcBackColor, nscolor aSecondSrcBackColor, nsPixelFormat &aPixelFormat);
 
  /** --------------------------------------------------------------------------
    * Blend two 8 bit image arrays using an 8 bit alpha mask
