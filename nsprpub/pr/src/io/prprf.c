@@ -251,7 +251,7 @@ static int cvt_l(SprintfState *ss, long num, int width, int prec, int radix,
 	int digit = (((unsigned long)num) % radix) & 0xF;
 	*--cvt = hexp[digit];
 	digits++;
-	num = (long)((unsigned long)num) / radix;
+	num = (long)(((unsigned long)num) / radix);
     }
     if (digits == 0) {
 	*--cvt = '0';
