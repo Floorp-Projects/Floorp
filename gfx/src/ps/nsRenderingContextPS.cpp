@@ -138,7 +138,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsRenderingContextPS, nsIRenderingContext)
  */
 nsRenderingContextPS :: nsRenderingContextPS()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mPSObj = nsnull;     // local copy of printcontext, will be set on the init process
   mContext = nsnull;

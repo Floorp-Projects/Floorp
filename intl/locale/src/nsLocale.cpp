@@ -55,7 +55,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocale, nsILocale)
 nsLocale::nsLocale(void)
 :	fHashtable(nsnull), fCategoryCount(0)
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 
 	fHashtable = PL_NewHashTable(LOCALE_HASH_SIZE,&nsLocale::Hash_HashFunction,
 		&nsLocale::Hash_CompareNSString,&nsLocale::Hash_CompareNSString,NULL,NULL);
@@ -65,7 +65,7 @@ nsLocale::nsLocale(void)
 nsLocale::nsLocale(nsLocale* other)
 :	fHashtable(nsnull), fCategoryCount(0)
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 
 	fHashtable = PL_NewHashTable(LOCALE_HASH_SIZE,&nsLocale::Hash_HashFunction,
 		&nsLocale::Hash_CompareNSString,&nsLocale::Hash_CompareNSString,NULL,NULL);
@@ -86,7 +86,7 @@ nsLocale::nsLocale(nsString** categoryList,nsString** valueList, PRUint32 count)
 	PRUint32	i;
 	nsString*	key, *value;
 
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
 	fHashtable = PL_NewHashTable(LOCALE_HASH_SIZE,&nsLocale::Hash_HashFunction,
 		&nsLocale::Hash_CompareNSString,&nsLocale::Hash_CompareNSString,NULL,NULL);

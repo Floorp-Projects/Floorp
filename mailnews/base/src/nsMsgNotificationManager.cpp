@@ -81,7 +81,7 @@ nsIAtom * nsMsgNotificationManager::kNumNewBiffMessagesAtom = nsnull;
 
 nsMsgNotificationManager::nsMsgNotificationManager()
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 
 }
 

@@ -38,13 +38,14 @@
 #include "msgCore.h"
 #include "nsMsgFolderCacheElement.h"
 #include "prmem.h"
+#include "nsISupportsObsolete.h"
 
 nsMsgFolderCacheElement::nsMsgFolderCacheElement()
 {
 	m_mdbRow = nsnull;
 	m_owningCache = nsnull;
 	m_folderKey = nsnull;
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 }
 
 nsMsgFolderCacheElement::~nsMsgFolderCacheElement()

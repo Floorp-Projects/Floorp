@@ -1203,7 +1203,7 @@ nsFontMetricsGTK::nsFontMetricsGTK()
   // XXX mFontIsGeneric will generally need to be the same size; right now
   // it's an nsAutoVoidArray.  If the average is under 8, that's ok.
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   gFontMetricsGTKCount++;
 }
 
@@ -5025,7 +5025,7 @@ nsFontMetricsGTK::FindFont(PRUnichar aChar)
 
 nsFontEnumeratorGTK::nsFontEnumeratorGTK()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsFontEnumeratorGTK, nsIFontEnumerator)

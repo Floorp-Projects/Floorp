@@ -105,7 +105,7 @@ NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
 // nsAppShell constructor
 nsAppShell::nsAppShell()
 { 
-   NS_INIT_REFCNT();
+   NS_INIT_ISUPPORTS();
    mDispatchListener = 0;
    mHab = 0; mHmq = 0;
    mQuitNow = FALSE;

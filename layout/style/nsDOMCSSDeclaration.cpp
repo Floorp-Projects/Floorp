@@ -50,7 +50,7 @@
 
 nsDOMCSSDeclaration::nsDOMCSSDeclaration()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsDOMCSSDeclaration::~nsDOMCSSDeclaration()

@@ -151,7 +151,7 @@ nsCLiveconnectFactory::LockFactory(PRBool aLock)
 
 nsCLiveconnectFactory::nsCLiveconnectFactory(void)
 {
-      NS_INIT_REFCNT();
+      NS_INIT_ISUPPORTS();
 }
 
 nsCLiveconnectFactory::~nsCLiveconnectFactory()

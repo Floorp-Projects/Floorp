@@ -42,7 +42,7 @@
 ArenaImpl::ArenaImpl(void)
   : mInitialized(PR_FALSE)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   memset(&mPool, 0, sizeof(PLArenaPool));
 }
 

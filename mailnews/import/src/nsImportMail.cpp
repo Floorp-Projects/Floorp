@@ -192,7 +192,7 @@ nsresult NS_NewGenericMail(nsIImportGeneric** aImportGeneric)
 
 nsImportGenericMail::nsImportGenericMail()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 	m_pSrcLocation = nsnull;
 	m_found = PR_FALSE;
 	m_userVerify = PR_FALSE;

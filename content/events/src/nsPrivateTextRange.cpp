@@ -44,7 +44,7 @@ nsPrivateTextRange::nsPrivateTextRange(PRUint16 aRangeStart, PRUint16 aRangeEnd,
 	mRangeEnd(aRangeEnd),
 	mRangeType(aRangeType)
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 }
 
 nsPrivateTextRange::~nsPrivateTextRange(void)
@@ -99,7 +99,7 @@ nsPrivateTextRangeList::nsPrivateTextRangeList(PRUint16 aLength,
            mLength = 0;
         }
 
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 }
 
 nsPrivateTextRangeList::~nsPrivateTextRangeList(void)

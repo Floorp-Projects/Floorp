@@ -66,7 +66,7 @@ PRLogModuleInfo* nsIThreadLog = nsnull;
 nsThread::nsThread()
     : mThread(nsnull), mDead(PR_FALSE), mStartLock(nsnull)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
 #if defined(PR_LOGGING)
     //
@@ -483,7 +483,7 @@ nsThreadPool::nsThreadPool()
       mPendingRequestsAtZero(nsnull), mMinThreads(0), mMaxThreads(0), 
       mBusyThreads(0), mShuttingDown(PR_FALSE)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsThreadPool::~nsThreadPool()
@@ -894,7 +894,7 @@ NS_NewThreadPool(nsIThreadPool* *result,
 nsThreadPoolRunnable::nsThreadPoolRunnable(nsThreadPool* pool)
     : mPool(pool)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsThreadPoolRunnable::~nsThreadPoolRunnable()

@@ -129,7 +129,7 @@ nsJARInputStream::Create(nsISupports* ignored, const nsIID& aIID, void* *aResult
 nsJARInputStream::nsJARInputStream()
   : mJAR(nsnull)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsJARInputStream::~nsJARInputStream()

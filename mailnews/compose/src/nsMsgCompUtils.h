@@ -44,6 +44,7 @@
 #include "nsMsgCompFields.h"
 #include "nsIMsgSend.h"
 #include "nsIMsgCompUtils.h"
+#include "nsComObsolete.h"
 
 class nsIPrompt; 
 

@@ -81,7 +81,7 @@ static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
 
 nsComm4xMailImport::nsComm4xMailImport()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
     IMPORT_LOG0("nsComm4xMailImport Module Created\n");
 
@@ -179,7 +179,7 @@ NS_IMETHODIMP nsComm4xMailImport::GetImportInterface(const char *pImportType, ns
 
 ImportComm4xMailImpl::ImportComm4xMailImpl()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     m_pBundleProxy = nsnull;
 }
 

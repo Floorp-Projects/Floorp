@@ -49,7 +49,7 @@
 nsDOMAttributeMap::nsDOMAttributeMap(nsIContent* aContent)
   : mContent(aContent)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   // We don't add a reference to our content. If it goes away,
   // we'll be told to drop our reference
 }

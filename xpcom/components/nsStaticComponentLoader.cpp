@@ -32,7 +32,7 @@ public:
 
     nsStaticComponentLoader() : 
         mAutoRegistered(PR_FALSE), mLoadedInfo(PR_FALSE) {
-		NS_INIT_REFCNT(); 
+		NS_INIT_ISUPPORTS(); 
 	}
 
     virtual ~nsStaticComponentLoader() {

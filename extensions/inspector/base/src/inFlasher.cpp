@@ -50,7 +50,7 @@ static NS_DEFINE_CID(kInspectorCSSUtilsCID, NS_INSPECTORCSSUTILS_CID);
 
 inFlasher::inFlasher()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mCSSUtils = do_GetService(kInspectorCSSUtilsCID);
 }
 

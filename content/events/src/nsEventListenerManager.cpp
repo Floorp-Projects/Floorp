@@ -101,7 +101,7 @@ nsEventListenerManager::nsEventListenerManager()
   mListenersRemoved = PR_FALSE;
 
   mTarget = nsnull;
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 static PRBool PR_CALLBACK

@@ -177,7 +177,7 @@ private:
 
 nsOEImport::nsOEImport()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
 	IMPORT_LOG0( "nsOEImport Module Created\n");
 
@@ -332,7 +332,7 @@ nsresult ImportOEMailImpl::Create(nsIImportMail** aImport)
 
 ImportOEMailImpl::ImportOEMailImpl()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 
@@ -547,7 +547,7 @@ nsresult ImportOEAddressImpl::Create(nsIImportAddressBooks** aImport)
 
 ImportOEAddressImpl::ImportOEAddressImpl()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 	m_pWab = nsnull;
 }
 

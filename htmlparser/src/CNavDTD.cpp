@@ -188,7 +188,7 @@ CNavDTD::CNavDTD() : nsIDTD(),
     mExpectedCRC32(0)
 #endif
 {
-  NS_INIT_REFCNT(); 
+  NS_INIT_ISUPPORTS(); 
 
   mBodyContext=new nsDTDContext();
 

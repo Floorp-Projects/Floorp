@@ -131,7 +131,7 @@ nsUnicodeToTIS620::nsUnicodeToTIS620()
   static   NS_DEFINE_CID(kLECID, NS_ULE_CID);
   nsresult rv;
 
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mCtlObj = do_CreateInstance(kLECID, &rv);
   if (NS_FAILED(rv)) {

@@ -45,7 +45,7 @@
 UnicharBufferImpl::UnicharBufferImpl()
   : mBuffer(NULL), mSpace(0), mLength(0)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 NS_METHOD

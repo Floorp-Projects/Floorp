@@ -132,7 +132,7 @@ static int currentWindowIdentifier = 0;
 //-------------------------------------------------------------------------
 nsWindow::nsWindow() : nsBaseWidget()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mWnd                = 0;
     mFrameWnd           = 0;
     mPrevWndProc        = NULL;

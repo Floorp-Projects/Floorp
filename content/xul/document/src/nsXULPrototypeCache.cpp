@@ -194,7 +194,7 @@ nsIFile*              nsXULPrototypeCache::gFastLoadFile = nsnull;
 nsXULPrototypeCache::nsXULPrototypeCache()
     : mJSRuntime(nsnull)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 
@@ -759,7 +759,7 @@ class nsXULFastLoadFileIO : public nsIFastLoadFileIO
   public:
     nsXULFastLoadFileIO(nsIFile* aFile)
       : mFile(aFile) {
-        NS_INIT_REFCNT();
+        NS_INIT_ISUPPORTS();
         MOZ_COUNT_CTOR(nsXULFastLoadFileIO);
     }
 

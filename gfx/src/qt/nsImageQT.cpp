@@ -61,7 +61,7 @@ nsImageQT::nsImageQT()
   mID = gImageID++;
   printf("JCG: nsImageQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gImageCount);
 #endif
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mImageBits = nsnull;
   mWidth = 0;
   mHeight = 0;

@@ -193,7 +193,7 @@ nsSocketTransport::nsSocketTransport():
     mReadRequest(nsnull),
     mWriteRequest(nsnull)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
 #if defined(PR_LOGGING)
     if (!gSocketTransportLog)

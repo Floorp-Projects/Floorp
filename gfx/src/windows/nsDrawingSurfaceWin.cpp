@@ -69,7 +69,7 @@ nsresult nsDrawingSurfaceWin::mDDrawResult = NS_OK;
 
 nsDrawingSurfaceWin :: nsDrawingSurfaceWin()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mDC = NULL;
   mOrigBitmap = nsnull;

@@ -63,7 +63,7 @@ public:
                                   const PRExplodedTime*  explodedTime, 
                                   nsString& stringOut); 
 
-  nsDateTimeFormatWin() {NS_INIT_REFCNT();
+  nsDateTimeFormatWin() {NS_INIT_ISUPPORTS();
                          mLocale.SetLength(0);mAppLocale.SetLength(0);}
 
 

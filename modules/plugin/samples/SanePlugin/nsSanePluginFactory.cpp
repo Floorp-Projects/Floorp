@@ -48,7 +48,7 @@ nsSanePluginFactoryImpl::nsSanePluginFactoryImpl( const nsCID &aClass,
     printf("nsSanePluginFactoryImpl::nsSanePluginFactoryImpl()\n");
 #endif
 
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
 }
 

@@ -55,7 +55,7 @@ nsresult nsEudoraSettings::Create(nsIImportSettings** aImport)
 
 nsEudoraSettings::nsEudoraSettings()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
 	m_pLocation = nsnull;
 }

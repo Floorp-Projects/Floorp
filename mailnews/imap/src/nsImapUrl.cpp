@@ -59,6 +59,7 @@
 #include "nsAutoLock.h"
 #include "nsIMAPNamespace.h"
 #include "nsICacheEntryDescriptor.h"
+#include "nsISupportsObsolete.h"
 // rdf stuff is needed to get the charset from the imap folder associated with the url.
 #include "nsIRDFService.h"
 #include "rdf.h"

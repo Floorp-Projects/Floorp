@@ -77,7 +77,7 @@ public:
     }
 
     nsConcurrentRunner(){
-        NS_INIT_REFCNT();
+        NS_INIT_ISUPPORTS();
         mTestInt = 0;
     }
 
@@ -110,7 +110,7 @@ public:
     }
 
     nsRunner(int num) : mNum(num) {
-        NS_INIT_REFCNT();
+        NS_INIT_ISUPPORTS();
     }
 
 protected:
@@ -234,7 +234,7 @@ public:
     }
 
     nsStressRunner(int num) : mNum(num), mWasRun(PR_FALSE) {
-        NS_INIT_REFCNT();
+        NS_INIT_ISUPPORTS();
         PR_AtomicIncrement(&gNum);
     }
 

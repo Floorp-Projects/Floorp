@@ -93,7 +93,7 @@ private:
 NS_IMPL_ISUPPORTS2(nsPromptService, nsIPromptService, nsPIPromptService)
 
 nsPromptService::nsPromptService() {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsPromptService::~nsPromptService() {

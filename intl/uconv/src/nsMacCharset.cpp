@@ -56,7 +56,7 @@ NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset);
 
 nsPlatformCharset::nsPlatformCharset()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   PR_AtomicIncrement(&gCnt);
 }
 nsPlatformCharset::~nsPlatformCharset()

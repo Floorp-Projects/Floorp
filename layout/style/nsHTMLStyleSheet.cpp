@@ -110,7 +110,7 @@ protected:
 HTMLColorRule::HTMLColorRule(nsIHTMLStyleSheet* aSheet)
   : mSheet(aSheet)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 HTMLColorRule::~HTMLColorRule()
@@ -298,7 +298,7 @@ public:
 
 GenericTableRule::GenericTableRule(nsIHTMLStyleSheet* aSheet)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mSheet = aSheet;
 }
 
@@ -865,7 +865,7 @@ HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
     mActiveRule(nsnull),
     mDocumentColorRule(nsnull)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mMappedAttrTable.ops = nsnull;
 }
 

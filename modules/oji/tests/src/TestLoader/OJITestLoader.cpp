@@ -30,7 +30,7 @@ NS_IMPL_ISUPPORTS1(OJITestLoader, OJITestLoader)
 OJITestLoader::OJITestLoader(void) 
 {
 
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   TestResult* res = NULL;
   char** testCase = loadTestList();

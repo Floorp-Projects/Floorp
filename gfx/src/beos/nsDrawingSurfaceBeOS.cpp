@@ -47,7 +47,7 @@ static PRTime mLockTime, mUnlockTime;
  
 nsDrawingSurfaceBeOS :: nsDrawingSurfaceBeOS()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mView = NULL;
 
   mBitmap = nsnull;

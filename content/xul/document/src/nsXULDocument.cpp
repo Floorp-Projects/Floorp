@@ -243,7 +243,7 @@ private:
 public:
   nsProxyLoadStream(void) : mBuffer(nsnull)
   {
-      NS_INIT_REFCNT();
+      NS_INIT_ISUPPORTS();
   }
 
   virtual ~nsProxyLoadStream(void) {
@@ -380,7 +380,7 @@ PlaceHolderRequest::Create(nsIRequest** aResult)
 
 PlaceHolderRequest::PlaceHolderRequest()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
     if (gRefCnt++ == 0) {
         nsresult rv;
@@ -431,7 +431,7 @@ nsXULDocument::nsXULDocument(void)
       mCurrentScriptProto(nsnull),
       mBroadcasterMap(nsnull)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mCharSetID.Assign(NS_LITERAL_STRING("UTF-8"));
 
     // Force initialization.
@@ -6951,7 +6951,7 @@ nsXULDocument::CachedChromeStreamListener::CachedChromeStreamListener(nsXULDocum
     : mDocument(aDocument),
       mProtoLoaded(aProtoLoaded)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_ADDREF(mDocument);
 }
 
@@ -7007,7 +7007,7 @@ nsXULDocument::CachedChromeStreamListener::OnDataAvailable(nsIRequest *request,
 nsXULDocument::ParserObserver::ParserObserver(nsXULDocument* aDocument)
     : mDocument(aDocument)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_ADDREF(mDocument);
 }
 
@@ -7131,7 +7131,7 @@ PRInt32 XULElementFactoryImpl::kNameSpaceID_XUL;
 
 XULElementFactoryImpl::XULElementFactoryImpl()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
     if (!gIsInitialized) {
         nsCOMPtr<nsINameSpaceManager> nsmgr =

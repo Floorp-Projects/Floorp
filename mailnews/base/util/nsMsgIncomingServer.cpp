@@ -48,6 +48,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsEscape.h"
+#include "nsISupportsObsolete.h"
 
 #include "nsMsgBaseCID.h"
 #include "nsMsgDBCID.h"
@@ -96,7 +97,7 @@ nsMsgIncomingServer::nsMsgIncomingServer():
     m_displayStartupPage(PR_TRUE),
     mPerformingBiff(PR_FALSE)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsMsgIncomingServer::~nsMsgIncomingServer()

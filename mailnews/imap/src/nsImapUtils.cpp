@@ -53,6 +53,7 @@
 #include "nsImapCore.h"
 #include "nsMsgUtils.h"
 #include "nsIImapFlagAndUidState.h"
+#include "nsISupportsObsolete.h"
 
 nsresult
 nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
@@ -287,7 +288,7 @@ nsImapMailboxSpec::nsImapMailboxSpec()
 
 	onlineVerified = PR_FALSE;
 	namespaceForFolder = nsnull;
-	NS_INIT_REFCNT ();
+	NS_INIT_ISUPPORTS ();
 }
 
 nsImapMailboxSpec::~nsImapMailboxSpec()

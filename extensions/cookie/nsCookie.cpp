@@ -46,7 +46,7 @@
 NS_IMPL_ISUPPORTS2(nsCookie, nsICookie, nsISupportsWeakReference);
 
 nsCookie::nsCookie() {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsCookie::nsCookie
@@ -68,7 +68,7 @@ nsCookie::nsCookie
   cookieExpires = expires;
   cookieStatus = status;
   cookiePolicy = policy;
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsCookie::~nsCookie(void) {

@@ -83,7 +83,7 @@ nsMsgCompFields::nsMsgCompFields()
   m_internalCharSet.Assign(msgCompHeaderInternalCharset());
 
 
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsMsgCompFields::~nsMsgCompFields()

@@ -58,7 +58,7 @@ nsRegionXlib::nsRegionXlib()
       printf("REGIONS+ = %i\n", nRegions);
 #endif
 
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mRegion = nsnull;
 }

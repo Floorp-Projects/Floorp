@@ -76,6 +76,7 @@
 #include "nsIObserverService.h"
 
 #include "nsIWalletService.h"
+#include "nsComObsolete.h"
 
 #include <time.h>
 

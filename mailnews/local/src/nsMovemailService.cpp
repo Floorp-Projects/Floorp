@@ -77,7 +77,7 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 nsMovemailService::nsMovemailService()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 #ifdef MOVEMAIL_DEBUG
     fprintf(stderr, "*** MURRR, new nsMovemailService\n");
 #endif

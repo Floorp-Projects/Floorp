@@ -114,7 +114,7 @@ nsMsgDeliveryListener::nsMsgDeliveryListener(nsMsgDeliveryCompletionCallback cal
   mMsgSendObj = nsnull;
   mMsgSendLaterObj = nsnull;
 
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsMsgDeliveryListener::~nsMsgDeliveryListener()

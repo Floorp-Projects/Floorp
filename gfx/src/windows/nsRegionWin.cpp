@@ -41,7 +41,7 @@
 
 nsRegionWin :: nsRegionWin()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mRegion = NULL;
   mRegionType = NULLREGION;

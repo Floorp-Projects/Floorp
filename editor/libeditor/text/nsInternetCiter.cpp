@@ -64,7 +64,7 @@ static NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
 
 nsInternetCiter::nsInternetCiter()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsInternetCiter::~nsInternetCiter()

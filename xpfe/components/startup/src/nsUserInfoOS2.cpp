@@ -33,7 +33,7 @@
 
 nsUserInfo::nsUserInfo()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsUserInfo::~nsUserInfo()

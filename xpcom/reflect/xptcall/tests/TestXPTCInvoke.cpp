@@ -130,7 +130,7 @@ NS_IMPL_ISUPPORTS1(InvokeTestTarget, InvokeTestTargetInterface)
 
 InvokeTestTarget::InvokeTestTarget()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 }
 
@@ -800,7 +800,7 @@ public:
 
 FooBarImpl::FooBarImpl() : MyName("FooBarImpl")
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 }
 
@@ -949,7 +949,7 @@ public:
 
 FooBarImpl2::FooBarImpl2() : value(0x12345678)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 }
 

@@ -142,7 +142,7 @@ nsRDFDataSourceDataSource::nsRDFDataSourceDataSource():
   mURI(nsnull),
   mDataSource(nsnull)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
 }
 

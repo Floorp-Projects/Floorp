@@ -167,7 +167,7 @@ nsCategoryManager::nsCategoryManager()
                                 (nsHashtableEnumFunc) Destroy_CategoryNode, 0 )
 
   {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
   }
 
 nsCategoryManager::~nsCategoryManager()
@@ -387,7 +387,7 @@ NS_IMPL_ISUPPORTS1(nsCategoryManagerFactory, nsIFactory)
 
 nsCategoryManagerFactory::nsCategoryManagerFactory()
   {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
   }
 
 NS_IMETHODIMP

@@ -50,7 +50,7 @@
 
 // nsDateTimeChannel methods
 nsDateTimeChannel::nsDateTimeChannel() {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mContentLength = -1;
     mPort = -1;
 }

@@ -142,7 +142,7 @@ nsPlaintextEditor::nsPlaintextEditor()
 , mInitTriggerCounter(0)
 {
 // Done in nsEditor
-// NS_INIT_REFCNT();
+// NS_INIT_ISUPPORTS();
 } 
 
 nsPlaintextEditor::~nsPlaintextEditor()

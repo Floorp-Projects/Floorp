@@ -154,7 +154,7 @@ public:
                           PRBool isMailList, 
                           nsAbAutoCompleteSession::MatchType type)
 	{
-	  NS_INIT_REFCNT();
+	  NS_INIT_ISUPPORTS();
 		mNickName = nsCRT::strdup(nickName ? nickName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
 		mDisplayName = nsCRT::strdup(displayName ? displayName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));
 		mFirstName = nsCRT::strdup(firstName ? firstName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));

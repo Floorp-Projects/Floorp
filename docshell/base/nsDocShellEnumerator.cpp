@@ -32,7 +32,7 @@ nsDocShellEnumerator::nsDocShellEnumerator(PRInt32 inEnumerationDirection)
 , mDocShellType(nsIDocShellTreeItem::typeAll)
 , mEnumerationDirection(inEnumerationDirection)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsDocShellEnumerator::~nsDocShellEnumerator()

@@ -55,7 +55,7 @@ nsDrawingSurfacePh :: nsDrawingSurfacePh( )
 {
 	nsresult rv;
 	
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 
 	mDrawContext = nsnull;
 	mGC = nsnull;

@@ -46,7 +46,7 @@ NS_IMPL_RELEASE(nsLabel);
 //-------------------------------------------------------------------------
 nsLabel::nsLabel() : nsTextWidget(), nsILabel()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   WIDGET_SET_CLASSNAME("nsLabel");
 }
 

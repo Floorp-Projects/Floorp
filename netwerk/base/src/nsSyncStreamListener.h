@@ -35,7 +35,7 @@ public:
     // nsSyncStreamListener methods:
     nsSyncStreamListener()
         : mOutputStream(nsnull) {
-        NS_INIT_REFCNT();
+        NS_INIT_ISUPPORTS();
     }
     virtual ~nsSyncStreamListener();
 

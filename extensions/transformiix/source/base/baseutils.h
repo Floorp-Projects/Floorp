@@ -59,7 +59,7 @@
   // Mozilla module
   #include "prtypes.h"
   #include "nscore.h"
-
+  #include "nsDebug.h"
   typedef PRBool MBool;
 
   #define MB_TRUE  PR_TRUE

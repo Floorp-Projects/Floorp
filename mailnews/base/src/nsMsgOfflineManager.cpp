@@ -78,7 +78,7 @@ nsMsgOfflineManager::nsMsgOfflineManager() :
   m_curState(eNoState),
   m_curOperation(eNoOp)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsMsgOfflineManager::~nsMsgOfflineManager()

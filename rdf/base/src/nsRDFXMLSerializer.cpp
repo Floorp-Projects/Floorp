@@ -91,7 +91,7 @@ nsRDFXMLSerializer::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
 nsRDFXMLSerializer::nsRDFXMLSerializer()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     MOZ_COUNT_CTOR(nsRDFXMLSerializer);
 }
 

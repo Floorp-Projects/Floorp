@@ -208,6 +208,7 @@ public:
 
 #include "prcmon.h"
 #include "nsError.h"
+#include "nsDebug.h"
 
 class NS_COM nsAutoMonitor : public nsAutoLockBase {
 public:

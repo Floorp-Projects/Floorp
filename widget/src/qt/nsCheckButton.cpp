@@ -68,7 +68,7 @@ NS_IMPL_QUERY_INTERFACE2(nsCheckButton, nsICheckButton, nsIWidget)
 nsCheckButton::nsCheckButton() : nsWidget() , nsICheckButton()
 {
     PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsCheckButton::nsCheckButton()\n"));
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mWidget = nsnull;
 }
 

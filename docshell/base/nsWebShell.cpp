@@ -175,7 +175,7 @@ nsWebShell::nsWebShell() : nsDocShell()
     printf("WEBSHELL+ = %ld\n", gNumberOfWebShells);
 #endif
 
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mThread = nsnull;
   InitFrameData();
   mItemType = typeContent;

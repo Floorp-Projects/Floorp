@@ -346,7 +346,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mSyncLoad(PR_FALSE),
     mObserver(aObserver)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   NS_ADDREF(mLoader);
   NS_ADDREF(mURL);
   NS_IF_ADDREF(mOwningElement);
@@ -379,7 +379,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mSyncLoad(PR_FALSE),
     mObserver(nsnull)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   NS_ADDREF(mLoader);
   NS_ADDREF(mURL);
   NS_ADDREF(mParentSheet);
@@ -407,7 +407,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURI* aURL,
     mSyncLoad(PRBool(nsnull == aObserver)),
     mObserver(aObserver)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   NS_ADDREF(mLoader);
   NS_ADDREF(mURL);
   NS_IF_ADDREF(mObserver);
@@ -428,7 +428,7 @@ SheetLoadData::~SheetLoadData(void)
 
 CSSLoaderImpl::CSSLoaderImpl(void)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mDocument = nsnull;
   mCaseSensitive = PR_FALSE;
   mCompatMode = eCompatibility_FullStandards;

@@ -85,7 +85,7 @@ public:
         }
 
         nsProxyInfo() : mType(nsnull), mHost(nsnull), mPort(-1) {
-            NS_INIT_REFCNT();
+            NS_INIT_ISUPPORTS();
         }
 
         char* mType;

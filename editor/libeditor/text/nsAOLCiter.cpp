@@ -48,7 +48,7 @@
 
 nsAOLCiter::nsAOLCiter()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsAOLCiter::~nsAOLCiter()

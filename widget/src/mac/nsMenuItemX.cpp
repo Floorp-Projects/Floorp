@@ -68,7 +68,7 @@ NS_IMPL_ISUPPORTS4(nsMenuItemX, nsIMenuItem, nsIMenuListener, nsIChangeObserver,
 //
 nsMenuItemX::nsMenuItemX()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mMenuParent         = nsnull;
   mIsSeparator        = PR_FALSE;
   mKeyEquivalent.Assign(NS_LITERAL_STRING(" "));

@@ -53,7 +53,7 @@ static NS_DEFINE_IID(kIDrawingSurfaceMacIID, NS_IDRAWING_SURFACE_MAC_IID);
  */
 nsDrawingSurfaceMac::nsDrawingSurfaceMac()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mPort = NULL;
 	mGS = sGraphicStatePool.GetNewGS();	//new nsGraphicState();

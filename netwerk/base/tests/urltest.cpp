@@ -104,7 +104,7 @@ protected:
 
 TestConsumer::TestConsumer()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 

@@ -30,7 +30,7 @@ static int nRegions;
 
 nsRegionGTK::nsRegionGTK()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
 #ifdef DEBUG_REGIONS
   ++nRegions;

@@ -75,7 +75,7 @@ mozXMLTermStream::mozXMLTermStream() :
   mDOMHTMLDocument( nsnull )
 #endif // !NO_WORKAROUND
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 

@@ -373,7 +373,7 @@ nsCacheService::nsCacheService()
       mDeactivateFailures(0),
       mDeactivatedUnboundEntries(0)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
     NS_ASSERTION(gService==nsnull, "multiple nsCacheService instances!");
     gService = this;

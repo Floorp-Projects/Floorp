@@ -52,7 +52,7 @@ static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsDateTimeHandler::nsDateTimeHandler() {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsDateTimeHandler::~nsDateTimeHandler() {

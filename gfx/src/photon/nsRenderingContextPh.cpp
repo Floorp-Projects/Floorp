@@ -72,7 +72,7 @@ PhGC_t *nsRenderingContextPh::mPtGC = nsnull;
 
 nsRenderingContextPh :: nsRenderingContextPh() 
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 	
 	mGC               = nsnull;
 	mTranMatrix          = nsnull;

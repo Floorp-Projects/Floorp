@@ -66,7 +66,7 @@
 #include "plbase64.h"
 #include "nsMsgI18N.h"
 #include "nsIWebNavigation.h"
-
+#include "nsISupportsObsolete.h"
 // XXX Remove
 #include "nsIWebShell.h"
 

@@ -48,6 +48,7 @@
 #include "nsIObserverService.h"
 #include "nsIMsgDBView.h"
 #include "nsReadableUtils.h"
+#include "nsISupportsObsolete.h"
 
 static const char *kDBFolderInfoScope = "ns:msg:db:row:scope:dbfolderinfo:all";
 static const char *kDBFolderInfoTableKind = "ns:msg:db:table:kind:dbfolderinfo";
@@ -170,7 +171,7 @@ nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
           m_numVisibleMessagesColumnToken(0),
           m_expiredMarkColumnToken(0)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   m_mdbTable = NULL;
   m_mdbRow = NULL;
   m_version = 1;			// for upgrading...

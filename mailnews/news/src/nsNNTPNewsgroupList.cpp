@@ -97,7 +97,7 @@ static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 
 nsNNTPNewsgroupList::nsNNTPNewsgroupList()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 

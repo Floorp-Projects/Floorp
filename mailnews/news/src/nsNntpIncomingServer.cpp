@@ -97,7 +97,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsMsgIncomingServer)
 
 nsNntpIncomingServer::nsNntpIncomingServer() : nsMsgLineBuffer(nsnull, PR_FALSE)
 {    
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mNewsrcHasChanged = PR_FALSE;
   mGroupsEnumerator = nsnull;

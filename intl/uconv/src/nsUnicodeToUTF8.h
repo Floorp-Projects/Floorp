@@ -67,7 +67,7 @@ public:
   /**
    * Class constructor.
    */
-  nsUnicodeToUTF8() {NS_INIT_REFCNT(); mHighSurrogate = 0;};
+  nsUnicodeToUTF8() {NS_INIT_ISUPPORTS(); mHighSurrogate = 0;};
 
   NS_IMETHOD FillInfo(PRUint32* aInfo);
 

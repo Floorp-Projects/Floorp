@@ -53,7 +53,7 @@ static nsICaseConversion *gCaseConv = nsnull;
 class nsShutdownObserver : public nsIObserver
 {
 public:
-    nsShutdownObserver() { NS_INIT_REFCNT(); }
+    nsShutdownObserver() { NS_INIT_ISUPPORTS(); }
     virtual ~nsShutdownObserver() {}
     NS_DECL_ISUPPORTS
     

@@ -66,7 +66,7 @@ nsXULTooltipListener::nsXULTooltipListener()
     mIsSourceTree(PR_FALSE), mNeedTitletip(PR_FALSE),
     mLastTreeRow(-1)
 {
-	 NS_INIT_REFCNT();
+	 NS_INIT_ISUPPORTS();
 }
 
 nsXULTooltipListener::~nsXULTooltipListener()

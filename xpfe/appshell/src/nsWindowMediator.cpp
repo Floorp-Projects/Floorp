@@ -109,7 +109,7 @@ nsWindowMediator::nsWindowMediator() :
   mEnumeratorList(), mOldestWindow(0), mTopmostWindow(0),
   mTimeStamp(0), mUpdateBatchNest(0), mListLock(0)
 {
-   NS_INIT_REFCNT();
+   NS_INIT_ISUPPORTS();
 
    // This should really be done in the static constructor fn.
    nsresult rv;

@@ -92,7 +92,7 @@ public:
 
     Reader(nsIBuffer* readBuffer)
         : mReadBuffer(readBuffer), mBytesRead(0), mDone(PR_FALSE) {
-        NS_INIT_REFCNT();
+        NS_INIT_ISUPPORTS();
         NS_ADDREF(mReadBuffer);
     }
 

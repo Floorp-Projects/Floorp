@@ -76,7 +76,7 @@ nsClipboard::nsClipboard()
   printf("nsClipboard::nsClipboard()\n");
 #endif /* DEBUG_CLIPBOARD */
 
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mIgnoreEmptyNotification = PR_FALSE;
   mGlobalTransferable = nsnull;
   mSelectionTransferable = nsnull;

@@ -48,6 +48,7 @@
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"
+#include "nsComObsolete.h"
 
 class nsIImageRequest;
 class nsHashtable;

@@ -58,7 +58,7 @@
 #include "nsTime.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
-
+#include "nsISupportsObsolete.h"
 
 //---------------------------------------------------------------------------
 // nsMsgSearchTerm specifies one criterion, e.g. name contains phil
@@ -311,7 +311,7 @@ PRInt32 NS_MsgGetStatusValueFromName(char *name)
 // Needed for DeStream method.
 nsMsgSearchTerm::nsMsgSearchTerm()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
     // initialize this to zero
     m_value.string=nsnull;
@@ -327,7 +327,7 @@ nsMsgSearchTerm::nsMsgSearchTerm (
 	nsMsgSearchBooleanOperator boolOp,
 	const char * arbitraryHeader) 
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 	m_operator = op;
 	m_attribute = attrib;
 	m_booleanOp = boolOp;
@@ -1302,7 +1302,7 @@ nsMsgSearchScopeTerm::nsMsgSearchScopeTerm (nsIMsgSearchSession *session,
                                             nsMsgSearchScopeValue attribute,
                                             nsIMsgFolder *folder)
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 	m_attribute = attribute;
 	m_folder = folder;
 	m_searchServer = PR_TRUE;
@@ -1311,7 +1311,7 @@ nsMsgSearchScopeTerm::nsMsgSearchScopeTerm (nsIMsgSearchSession *session,
 
 nsMsgSearchScopeTerm::nsMsgSearchScopeTerm ()
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 	m_searchServer = PR_TRUE;
 }
 

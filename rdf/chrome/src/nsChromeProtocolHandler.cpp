@@ -180,7 +180,7 @@ nsCachedChromeChannel::Create(nsIURI* aURI, nsIChannel** aResult)
 nsCachedChromeChannel::nsCachedChromeChannel(nsIURI* aURI)
     : mURI(aURI), mLoadGroup(nsnull), mLoadFlags (nsIRequest::LOAD_NORMAL), mStatus(NS_OK)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
 #ifdef PR_LOGGING
     if (! gLog)
@@ -495,7 +495,7 @@ nsCachedChromeChannel::DestroyLoadEvent(PLEvent* aEvent)
 
 nsChromeProtocolHandler::nsChromeProtocolHandler()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsresult

@@ -52,6 +52,7 @@
 
 #include "nsMsgImapCID.h"
 #include "nsIEventQueueService.h"
+#include "nsISupportsObsolete.h"
 
 #include "nsImapCore.h"
 #include "nsImapProtocol.h"
@@ -343,7 +344,7 @@ nsresult nsImapProtocol::GlobalInitialization()
 nsImapProtocol::nsImapProtocol() : 
     m_parser(*this)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   m_flags = 0;
   m_urlInProgress = PR_FALSE;
   m_socketIsOpen = PR_FALSE;
@@ -7351,7 +7352,7 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 nsImapMockChannel::nsImapMockChannel()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   m_channelContext = nsnull;
   m_cancelStatus = NS_OK;
   mLoadFlags = 0;

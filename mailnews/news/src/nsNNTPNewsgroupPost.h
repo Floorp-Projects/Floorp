@@ -43,7 +43,7 @@
 #include "nsCOMPtr.h"
 #include "nsIFileSpec.h"
 #include "prmem.h"
-
+#include "nsISupportsObsolete.h"
 
 #define HEADER_FROM				0
 #define HEADER_NEWSGROUPS		1

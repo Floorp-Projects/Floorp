@@ -170,7 +170,7 @@ OJITestLoaderFactory::LockFactory(PRBool aLock)
 
 OJITestLoaderFactory::OJITestLoaderFactory(void)
 {
-      NS_INIT_REFCNT();
+      NS_INIT_ISUPPORTS();
 }
 
 OJITestLoaderFactory::~OJITestLoaderFactory()

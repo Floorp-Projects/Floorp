@@ -70,7 +70,7 @@ static NS_DEFINE_CID(kICServiceCID, NS_INTERNETCONFIGSERVICE_CID);
 
 nsInternetConfigService::nsInternetConfigService()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsInternetConfigService::~nsInternetConfigService()

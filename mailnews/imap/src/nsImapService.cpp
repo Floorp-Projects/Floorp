@@ -126,7 +126,7 @@ NS_IMPL_QUERY_INTERFACE6(nsImapService,
 
 nsImapService::nsImapService()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mPrintingOperation = PR_FALSE;
   if (!gInitialized)
   {

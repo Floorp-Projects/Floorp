@@ -42,7 +42,7 @@
 
 nsAppleEventsService::nsAppleEventsService()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsAppleEventsService::~nsAppleEventsService()

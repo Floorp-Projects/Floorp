@@ -90,7 +90,7 @@ nsXMLMIMEDataSource::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResu
 
 // nsXMLMIMEDataSource methods
 nsXMLMIMEDataSource::nsXMLMIMEDataSource() {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsXMLMIMEDataSource::~nsXMLMIMEDataSource() {

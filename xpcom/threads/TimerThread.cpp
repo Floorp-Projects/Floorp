@@ -52,7 +52,7 @@ TimerThread::TimerThread() :
   mMinTimerPeriod(0),
   mTimeoutAdjustment(0)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 TimerThread::~TimerThread()

@@ -69,7 +69,7 @@ nsMIMEService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult) {
 
 // nsMIMEService methods
 nsMIMEService::nsMIMEService() {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsMIMEService::~nsMIMEService() {

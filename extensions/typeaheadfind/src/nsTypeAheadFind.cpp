@@ -136,7 +136,7 @@ nsTypeAheadFind::nsTypeAheadFind():
   mIsMenuBarActive(PR_FALSE), mIsMenuPopupActive(PR_FALSE),
   mIsFindAllowedInWindow(PR_FALSE), mRepeatingMode(eRepeatingNone), mTimeoutLength(0)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
 #ifdef DEBUG
   // There should only ever be one instance of us

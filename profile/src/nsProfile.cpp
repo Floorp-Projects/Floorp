@@ -254,7 +254,7 @@ nsresult RecursiveCopy(nsIFile* srcDir, nsIFile* destDir)
  */
 nsProfile::nsProfile()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mStartingUp = PR_FALSE;
     mAutomigrate = PR_FALSE;
     mOutofDiskSpace = PR_FALSE;

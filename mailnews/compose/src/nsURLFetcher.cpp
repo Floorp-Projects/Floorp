@@ -73,7 +73,7 @@ nsURLFetcher::nsURLFetcher()
   printf("CREATE nsURLFetcher: %x\n", this);
 #endif
   /* the following macro is used to initialize the ref counting data */
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   // Init member variables...
   mTotalWritten = 0;

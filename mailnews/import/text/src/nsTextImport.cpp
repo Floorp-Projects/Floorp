@@ -124,7 +124,7 @@ private:
 
 nsTextImport::nsTextImport()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
 	IMPORT_LOG0( "nsTextImport Module Created\n");
 
@@ -243,7 +243,7 @@ nsresult ImportAddressImpl::Create(nsIImportAddressBooks** aImport)
 
 ImportAddressImpl::ImportAddressImpl()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
 	m_fileLoc = nsnull;
 	m_haveDelim = PR_FALSE;

@@ -195,7 +195,7 @@ static const char* gQuartzRenderingPref = "browser.quartz.enable";
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit() : mInited(false)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   if (gEventQueueHandler == nsnull)
     gEventQueueHandler = new nsMacNSPREventQueueHandler;
 }

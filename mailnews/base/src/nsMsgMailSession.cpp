@@ -70,7 +70,7 @@ static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 nsMsgMailSession::nsMsgMailSession()
 {
 
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 }
 
 

@@ -50,7 +50,7 @@
 nsNodeInfo::nsNodeInfo()
   : nsINodeInfo(), mOwnerManager(nsnull)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 

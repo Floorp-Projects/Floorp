@@ -103,7 +103,7 @@ nsTextEditRules::nsTextEditRules()
 , mLockRulesSniffing(PR_FALSE)
 , mTheAction(0)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsTextEditRules::~nsTextEditRules()

@@ -60,7 +60,7 @@
 nsMsgStatusFeedback::nsMsgStatusFeedback() :
   m_lastPercent(0)
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 	LL_I2L(m_lastProgressTime, 0);
 
     nsresult rv;

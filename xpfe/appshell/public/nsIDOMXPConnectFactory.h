@@ -40,6 +40,7 @@
 #define nsIDOMXPConnectFactory_h__
 
 #include "nsISupports.h"
+#include "nsComObsolete.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
 

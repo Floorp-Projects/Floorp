@@ -74,7 +74,7 @@ nsBufferedStream::nsBufferedStream()
       mBufferDisabled(PR_FALSE),
       mGetBufferCount(0)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsBufferedStream::~nsBufferedStream()

@@ -53,6 +53,7 @@
 #include "nsMsgFolderFlags.h"
 #include "nsIMsgFolder.h"
 #include "prprf.h"
+#include "nsISupportsObsolete.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -66,7 +67,7 @@ nsMsgIdentity::nsMsgIdentity():
   m_identityKey(0),
   m_prefs(0)
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 }
 
 nsMsgIdentity::~nsMsgIdentity()

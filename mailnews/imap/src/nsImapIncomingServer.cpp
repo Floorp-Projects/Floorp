@@ -48,6 +48,7 @@
 
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsISupportsObsolete.h"
 
 #include "nsIMAPHostSessionList.h"
 #include "nsImapIncomingServer.h"
@@ -116,7 +117,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsMsgIncomingServer)
 
 nsImapIncomingServer::nsImapIncomingServer()
 {    
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   nsresult rv;
   rv = NS_NewISupportsArray(getter_AddRefs(m_connectionCache));
   rv = NS_NewISupportsArray(getter_AddRefs(m_urlQueue));

@@ -46,7 +46,7 @@
 
 inBitmapDepot::inBitmapDepot()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 inBitmapDepot::~inBitmapDepot()

@@ -1457,7 +1457,7 @@ nsFormControlList::nsFormControlList(nsIDOMHTMLFormElement* aForm)
   : mForm(aForm),
     mNameLookupTable(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsFormControlList::~nsFormControlList()

@@ -2954,7 +2954,7 @@ XPCJSObjectHolder::GetJSObject(JSObject** aJSObj)
 XPCJSObjectHolder::XPCJSObjectHolder(JSContext* cx, JSObject* obj)
     : mRuntime(JS_GetRuntime(cx)), mJSObj(obj)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     JS_AddNamedRoot(cx, &mJSObj, "XPCJSObjectHolder::mJSObj");
 }
 

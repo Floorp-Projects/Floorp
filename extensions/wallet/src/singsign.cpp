@@ -42,6 +42,7 @@
 #include "singsign.h"
 #include "wallet.h"
 #include "nsNetUtil.h"
+#include "nsComObsolete.h"
 
 #ifdef XP_MAC
 #include "prpriv.h"             /* for NewNamedMonitor */

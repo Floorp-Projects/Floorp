@@ -56,7 +56,7 @@ static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   m_mdb = db;
   Init();
   m_mdbRow = dbRow;

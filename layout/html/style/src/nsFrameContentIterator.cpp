@@ -60,7 +60,7 @@ nsFrameContentIterator::nsFrameContentIterator(nsIPresContext* aPresContext,
                                                    nsIFrame*       aFrame)
   : mPresContext(aPresContext), mParentFrame(aFrame), mIsDone(PR_FALSE)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   First();
 }
 

@@ -251,7 +251,7 @@ nsGeneratedContentIterator::nsGeneratedContentIterator() :
   // don't need to explicitly initialize |nsCOMPtr|s, they will automatically be NULL
   mIsDone(PR_FALSE), mPre(PR_FALSE)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 

@@ -129,7 +129,7 @@ nsSizeOfHandler::nsSizeOfHandler()
   : mTotalSize(0),
     mTotalCount(0)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mTotalSize = 0;
   mSizeTable = PL_NewHashTable(32, (PLHashFunction) PointerHashKey,
                                (PLHashComparator) PointerCompareKeys,

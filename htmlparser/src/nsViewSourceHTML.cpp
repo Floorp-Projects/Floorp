@@ -329,7 +329,7 @@ static const char* const kDumpFileAfterText[] = {
  *  @return  
  */
 CViewSourceHTML::CViewSourceHTML() : mFilename(), mTags(), mErrors() {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mStartTag = VIEW_SOURCE_START_TAG;
   mEndTag = VIEW_SOURCE_END_TAG;

@@ -112,7 +112,7 @@ NS_PICS nsresult NS_NewPICSElementObserver(nsIObserver** anObserver)
 
 nsPICSElementObserver::nsPICSElementObserver()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsPICSElementObserver::~nsPICSElementObserver(void)
@@ -225,7 +225,7 @@ NS_IMPL_ISUPPORTS1(nsPICSElementObserverFactory, nsIFactory)
 
 nsPICSElementObserverFactory::nsPICSElementObserverFactory(void)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsPICSElementObserverFactory::~nsPICSElementObserverFactory(void)

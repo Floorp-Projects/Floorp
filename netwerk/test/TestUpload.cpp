@@ -72,7 +72,7 @@ public:
 
 InputTestConsumer::InputTestConsumer()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 InputTestConsumer::~InputTestConsumer()

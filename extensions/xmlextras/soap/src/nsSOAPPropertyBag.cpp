@@ -170,7 +170,7 @@ nsSOAPPropertyBagEnumerator::nsSOAPPropertyBagEnumerator(nsSOAPPropertyBag * aPr
     mCurrent
     (0)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   aPropertyBag->mProperties->Enumerate(&PropertyBagEnumFunc, mProperties);
 }
 
@@ -205,7 +205,7 @@ NS_IMPL_ISUPPORTS1_CI(nsSOAPProperty, nsIProperty)
 
 nsSOAPProperty::nsSOAPProperty(const nsAString & aName,
                  nsIVariant * aValue) : mName(aName), mValue(aValue) {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 nsSOAPProperty::~nsSOAPProperty()
 {
@@ -238,7 +238,7 @@ NS_IMETHODIMP
 
 nsSOAPPropertyBagMutator::nsSOAPPropertyBagMutator()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mBag = mSOAPBag = new nsSOAPPropertyBag();
 }
 

@@ -1072,7 +1072,7 @@ NPP_HandleEvent(NPP instance, void* event)
 CPluginManager::CPluginManager(void)
 {
     // Set reference count to 0.
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     
     mLiveconnect = NULL;
 }
@@ -1375,7 +1375,7 @@ CPluginInstancePeer::CPluginInstancePeer(nsIPluginInstance* pluginInstance,
 		attribute_list(NULL), values_list(NULL)
 {
     // Set the reference count to 0.
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     
     NS_IF_ADDREF(mInstance);
 
@@ -1621,7 +1621,7 @@ CPluginManagerStream::CPluginManagerStream(NPP npp, NPStream* pstr)
     : npp(npp), pstream(pstr)
 {
     // Set the reference count to 0.
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 CPluginManagerStream::~CPluginManagerStream(void)
@@ -1726,7 +1726,7 @@ CPluginInputStream::CPluginInputStream(nsIPluginStreamListener* listener)
       mBuffer(NULL), mBufferLength(0), mAmountRead(0),
       mStreamInfo(NULL)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
     if (mListener != NULL) {
         mListener->AddRef();

@@ -77,7 +77,7 @@ IntHashKey(PRInt32 key)
 
 nsAppShell::nsAppShell(void)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
 #ifdef PR_LOGGING
     if (!gWidgetLog)

@@ -46,6 +46,7 @@
 #include "nsEscape.h"
 #include "nsIMimeConverter.h"
 #include "nsMsgMimeCID.h"
+#include "nsISupportsObsolete.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);

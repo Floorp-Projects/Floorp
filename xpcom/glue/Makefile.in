@@ -42,15 +42,12 @@ CPPSRCS		= \
 		$(XPCOM_GLUE_SRC_LCSRCS) \
 		$(NULL)
 
-EXPORTS		= \
+SDK_HEADERS     = \
 		nsIGenericFactory.h \
 		nsIInterfaceRequestorUtils.h \
 		nsISupportsImpl.h \
 		nsISupportsUtils.h \
 		nsIWeakReferenceUtils.h \
-		$(NULL)
-
-SDK_HEADERS     = \
 		$(XPCOM_GLUE_SRC_LEXPORTS) \
 		$(NULL)
 

@@ -37,7 +37,7 @@ static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsFingerHandler::nsFingerHandler() {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsFingerHandler::~nsFingerHandler() {

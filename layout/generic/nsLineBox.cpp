@@ -572,7 +572,7 @@ static nsLineBox* gDummyLines[1];
 
 nsLineIterator::nsLineIterator()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mLines = gDummyLines;
   mNumLines = 0;
   mIndex = 0;

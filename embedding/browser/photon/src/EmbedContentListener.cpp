@@ -32,7 +32,7 @@
 
 EmbedContentListener::EmbedContentListener(void)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mOwner = nsnull;
 }
 

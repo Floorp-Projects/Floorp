@@ -45,7 +45,7 @@
 #include "nsSampleWordBreaker.h"
 nsLWBreakerFImp::nsLWBreakerFImp()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 nsLWBreakerFImp::~nsLWBreakerFImp()
 {

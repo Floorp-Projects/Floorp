@@ -197,7 +197,7 @@ void ConvertToUnicode(const char *pStr, nsString &dist)
 
 nsEudoraImport::nsEudoraImport()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
 	IMPORT_LOG0( "nsEudoraImport Module Created\n");
 
@@ -352,7 +352,7 @@ nsresult ImportEudoraMailImpl::Create(nsIImportMail** aImport)
 
 ImportEudoraMailImpl::ImportEudoraMailImpl()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 
@@ -570,7 +570,7 @@ nsresult ImportEudoraAddressImpl::Create(nsIImportAddressBooks** aImport)
 
 ImportEudoraAddressImpl::ImportEudoraAddressImpl()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 

@@ -62,7 +62,7 @@ nsDeviceContextSpecFactoryQT::nsDeviceContextSpecFactoryQT()
   mID = gDCSpecFactoryID++;
   printf("JCG: nsDeviceContextSpecFactoryQT CTOR (%p) ID: %d, Count: %d\n",this,mID,gDCSpecFactoryCount);
 #endif
-   NS_INIT_REFCNT();
+   NS_INIT_ISUPPORTS();
 }
 
 /** -------------------------------------------------------

@@ -102,7 +102,7 @@ NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
 nsAppShell::nsAppShell()  
 	: is_port_error(false)
 { 
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mDispatchListener = 0;
 
   gBAppCount++;

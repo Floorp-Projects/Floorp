@@ -183,7 +183,7 @@ PRBool nsXPLookAndFeel::sInitialized = PR_FALSE;
 
 nsXPLookAndFeel::nsXPLookAndFeel() : nsILookAndFeel()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 static int PR_CALLBACK intPrefChanged (const char *newpref, void *data)

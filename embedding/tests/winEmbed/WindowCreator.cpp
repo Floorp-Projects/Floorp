@@ -34,7 +34,7 @@
 
 WindowCreator::WindowCreator()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 WindowCreator::~WindowCreator()

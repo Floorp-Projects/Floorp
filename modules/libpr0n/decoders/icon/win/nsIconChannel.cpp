@@ -51,7 +51,7 @@ PRUint32 CalcWordAlignedRowSpan(PRUint32  aWidth, PRUint32 aBitCount);
 // nsIconChannel methods
 nsIconChannel::nsIconChannel()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mStatus = NS_OK;
 }
 

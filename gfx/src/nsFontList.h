@@ -30,6 +30,7 @@
 #define _nsFontList_H_
 
 #include "nsIFontList.h"
+#include "nsComObsolete.h"
 
 #define NS_FONTLIST_CONTRACTID "@mozilla.org/gfx/fontlist;1"
 

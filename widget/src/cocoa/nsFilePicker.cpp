@@ -124,7 +124,7 @@ NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 nsFilePicker::nsFilePicker()
   : mAllFilesDisplayed(PR_TRUE)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   
   // Zero out the type lists
   for (int i = 0; i < kMaxTypeListCount; i++)

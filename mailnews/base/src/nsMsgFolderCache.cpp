@@ -59,7 +59,7 @@ nsMsgFolderCache::nsMsgFolderCache()
 {
 	m_mdbEnv = nsnull;
 	m_mdbStore = nsnull;
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 	m_mdbAllFoldersTable = nsnull;
 }
 

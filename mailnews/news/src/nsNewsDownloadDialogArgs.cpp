@@ -42,7 +42,7 @@
 
 nsNewsDownloadDialogArgs::nsNewsDownloadDialogArgs()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     
     mGroupName = "";
     mArticleCount = 0;

@@ -82,7 +82,7 @@ CopyListener::CopyListener(void)
 { 
   mCopyObject = nsnull;
   mCopyInProgress = PR_FALSE;
-  NS_INIT_REFCNT(); 
+  NS_INIT_ISUPPORTS(); 
 }
 
 CopyListener::~CopyListener(void) 
@@ -183,7 +183,7 @@ nsMsgCopy::nsMsgCopy()
   mMode = nsIMsgSend::nsMsgDeliverNow;
   mSavePref = nsnull;
 
-  NS_INIT_REFCNT(); 
+  NS_INIT_ISUPPORTS(); 
 }
 
 nsMsgCopy::~nsMsgCopy()

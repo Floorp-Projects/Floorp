@@ -52,7 +52,7 @@ static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsDataHandler::nsDataHandler() {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsDataHandler::~nsDataHandler() {

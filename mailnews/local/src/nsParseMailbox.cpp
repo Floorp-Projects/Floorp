@@ -252,7 +252,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnReadChanged(nsIDBChangeListener *instigator)
 nsMsgMailboxParser::nsMsgMailboxParser() : nsMsgLineBuffer(nsnull, PR_FALSE)
 {
   /* the following macro is used to initialize the ref counting data */
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 
 	m_obuffer = nsnull;
 	m_obuffer_size = 0;
@@ -490,7 +490,7 @@ NS_IMPL_ISUPPORTS1(nsParseMailMessageState, nsIMsgParseMailMsgState)
 
 nsParseMailMessageState::nsParseMailMessageState()
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 	m_position = 0;
 	m_IgnoreXMozillaStatus = PR_FALSE;
 	m_state = nsIMsgParseMailMsgState::ParseBodyState;

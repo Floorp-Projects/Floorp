@@ -67,6 +67,7 @@
 #include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 #include "nsICategoryManager.h"
+#include "nsComObsolete.h"
 
 // for making the leap from nsIDOMWindowInternal -> nsIPresShell
 #include "nsIScriptGlobalObject.h"
@@ -81,7 +82,7 @@ static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 class nsSingleSignOnProfileObserver : public nsIObserver
 {
 public:
-    nsSingleSignOnProfileObserver() { NS_INIT_REFCNT(); }
+    nsSingleSignOnProfileObserver() { NS_INIT_ISUPPORTS(); }
     virtual ~nsSingleSignOnProfileObserver() {}
     
     NS_DECL_ISUPPORTS
@@ -127,7 +128,7 @@ static nsresult EnsureSingleSignOnProfileObserver()
 
 nsWalletlibService::nsWalletlibService()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsWalletlibService::~nsWalletlibService()

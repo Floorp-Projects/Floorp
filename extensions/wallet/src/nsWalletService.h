@@ -98,7 +98,7 @@ public:
   NS_DECL_NSIAUTHPROMPT
   NS_DECL_NSIAUTHPROMPTWRAPPER
 
-  nsSingleSignOnPrompt() { NS_INIT_REFCNT(); }
+  nsSingleSignOnPrompt() { NS_INIT_ISUPPORTS(); }
   virtual ~nsSingleSignOnPrompt() {}
   
   nsresult Init();

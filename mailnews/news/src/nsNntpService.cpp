@@ -41,6 +41,7 @@
 
 #include "msgCore.h"    // precompiled header...
 #include "nntpCore.h"
+#include "nsISupportsObsolete.h"
 #include "nsMsgNewsCID.h"
 #include "nsINntpUrl.h"
 #include "nsNNTPProtocol.h"
@@ -98,7 +99,7 @@ static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
                     
 nsNntpService::nsNntpService()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mPrintingOperation = PR_FALSE;
 	mOpenAttachmentOperation = PR_FALSE;
 }

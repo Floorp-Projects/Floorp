@@ -202,7 +202,7 @@ nsPipe::nsPipe()
       mWriteLimit(nsnull),
       mCondition(NS_OK)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsPipe::~nsPipe()

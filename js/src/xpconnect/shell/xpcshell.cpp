@@ -670,7 +670,7 @@ NS_IMPL_ISUPPORTS1(FullTrustSecMan, nsIXPCSecurityManager);
 
 FullTrustSecMan::FullTrustSecMan()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 NS_IMETHODIMP

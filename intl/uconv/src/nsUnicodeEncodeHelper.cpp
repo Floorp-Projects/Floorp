@@ -52,7 +52,7 @@ NS_IMPL_ISUPPORTS1(nsUnicodeEncodeHelper, nsIUnicodeEncodeHelper)
 
 nsUnicodeEncodeHelper::nsUnicodeEncodeHelper() 
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsUnicodeEncodeHelper::~nsUnicodeEncodeHelper() 

@@ -159,7 +159,7 @@ nsProxyEventClass::nsProxyEventClass(REFNSIID aIID, nsIInterfaceInfo* aInfo)
 : mIID(aIID),
   mDescriptors(NULL)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
     
     mInfo = aInfo;

@@ -269,7 +269,7 @@ public:
                        , mGotSelectionState(PR_FALSE)
                        , mSelectionWasCollapsed(PR_FALSE)
                        {
-                         NS_INIT_REFCNT();
+                         NS_INIT_ISUPPORTS();
                        }
 
   virtual              ~nsDocViewerSelectionListener() {}
@@ -2979,7 +2979,7 @@ NS_IMPL_ISUPPORTS1(nsDocViewerFocusListener, nsIDOMFocusListener);
 nsDocViewerFocusListener::nsDocViewerFocusListener()
 :mDocViewer(nsnull)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsDocViewerFocusListener::~nsDocViewerFocusListener(){}

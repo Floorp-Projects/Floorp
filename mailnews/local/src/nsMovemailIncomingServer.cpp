@@ -70,7 +70,7 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsMovemailIncomingServer,
 
 nsMovemailIncomingServer::nsMovemailIncomingServer()
 {    
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsMovemailIncomingServer::~nsMovemailIncomingServer()

@@ -92,7 +92,7 @@ nsNewsDownloader::nsNewsDownloader(nsIMsgWindow *window, nsIMsgDatabase *msgDB, 
   // not the perfect place for this, but I think it will work.
   if (m_window)
     m_window->SetStopped(PR_FALSE);
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsNewsDownloader::~nsNewsDownloader()
@@ -356,7 +356,7 @@ NS_IMPL_ISUPPORTS1(nsMsgDownloadAllNewsgroups, nsIUrlListener)
 
 nsMsgDownloadAllNewsgroups::nsMsgDownloadAllNewsgroups(nsIMsgWindow *window, nsIUrlListener *listener)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   m_window = window;
   m_listener = listener;
   m_downloaderForGroup = new DownloadMatchingNewsArticlesToNewsDB(window, nsnull, nsnull, this);

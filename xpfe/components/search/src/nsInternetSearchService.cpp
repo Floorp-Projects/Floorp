@@ -422,7 +422,7 @@ nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_ClearFilters;
 nsIRDFLiteral			*InternetSearchDataSource::kTrueLiteral;
 InternetSearchDataSource::InternetSearchDataSource(void)
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 
 	if (gRefCnt++ == 0)
 	{

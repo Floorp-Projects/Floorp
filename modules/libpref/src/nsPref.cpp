@@ -134,7 +134,7 @@ nsPref::nsPref()
 //----------------------------------------------------------------------------------------
 {
   PR_AtomicIncrement(&g_InstanceCount);
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
   NS_ASSERTION(mPrefService, "Preference Service failed to start up!!");

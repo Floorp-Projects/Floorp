@@ -55,7 +55,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsConsoleService, nsIConsoleService);
 nsConsoleService::nsConsoleService()
     : mCurrent(0), mFull(PR_FALSE), mListening(PR_FALSE), mLock(nsnull)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
  
     // XXX grab this from a pref!
     // hm, but worry about circularity, bc we want to be able to report

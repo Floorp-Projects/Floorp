@@ -47,7 +47,7 @@ NS_IMPL_ISUPPORTS1(nsDeviceContextSpecFactoryXlib, nsIDeviceContextSpecFactory)
 
 nsDeviceContextSpecFactoryXlib::nsDeviceContextSpecFactoryXlib() 
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsDeviceContextSpecFactoryXlib::~nsDeviceContextSpecFactoryXlib() 

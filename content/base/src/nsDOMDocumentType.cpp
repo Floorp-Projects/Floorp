@@ -77,7 +77,7 @@ nsDOMDocumentType::nsDOMDocumentType(const nsAString& aName,
   mSystemId(aSystemId),
   mInternalSubset(aInternalSubset)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mEntities = aEntities;
   mNotations = aNotations;

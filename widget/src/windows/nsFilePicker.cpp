@@ -65,7 +65,7 @@ char nsFilePicker::mLastUsedDirectory[MAX_PATH+1] = { 0 };
 //-------------------------------------------------------------------------
 nsFilePicker::nsFilePicker()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mWnd = NULL;
   mUnicodeEncoder = nsnull;
   mUnicodeDecoder = nsnull;

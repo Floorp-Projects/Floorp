@@ -222,7 +222,7 @@ NS_IMPL_ISUPPORTS1(nsMacLocale,nsIMacLocale)
 
 nsMacLocale::nsMacLocale(void)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsMacLocale::~nsMacLocale(void)

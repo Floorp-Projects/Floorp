@@ -342,7 +342,7 @@ NS_EXPORT nsresult NS_NewPICS(nsIPICS** aPICS)
 
 nsPICS::nsPICS()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mPrefs = nsnull;
   mPICSElementObserver = nsnull;

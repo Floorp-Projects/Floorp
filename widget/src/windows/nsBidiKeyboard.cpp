@@ -27,7 +27,7 @@ NS_IMPL_ISUPPORTS1(nsBidiKeyboard, nsIBidiKeyboard)
 
 nsBidiKeyboard::nsBidiKeyboard() : nsIBidiKeyboard()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 #ifdef IBMBIDI
   mDefaultsSet = PR_FALSE;
   mLTRKeyboard[0] = '\0';

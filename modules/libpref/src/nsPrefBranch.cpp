@@ -968,7 +968,7 @@ nsPrefLocalizedString::nsPrefLocalizedString()
 {
   nsresult rv;
 
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mUnicodeString = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
 }

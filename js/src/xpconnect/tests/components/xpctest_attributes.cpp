@@ -59,7 +59,7 @@ class xpcTestObjectReadOnly : public nsIXPCTestObjectReadOnly {
 NS_IMPL_ISUPPORTS1(xpcTestObjectReadOnly, nsIXPCTestObjectReadOnly);
 
 xpcTestObjectReadOnly :: xpcTestObjectReadOnly() {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 
     boolProperty = PR_TRUE;
@@ -158,7 +158,7 @@ class xpcTestObjectReadWrite : public nsIXPCTestObjectReadWrite {
 NS_IMPL_ISUPPORTS1(xpcTestObjectReadWrite, nsIXPCTestObjectReadWrite);
 
 xpcTestObjectReadWrite :: xpcTestObjectReadWrite() {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 
 

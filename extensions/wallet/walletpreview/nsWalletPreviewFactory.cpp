@@ -86,7 +86,7 @@ WalletPreviewFactoryImpl::WalletPreviewFactoryImpl(const nsCID &aClass,
                                    const char* contractID)
     : mClassID(aClass), mClassName(className), mContractID(contractID)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 WalletPreviewFactoryImpl::~WalletPreviewFactoryImpl()

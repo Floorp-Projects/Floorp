@@ -161,7 +161,7 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
 
 nsXMLContentSink::nsXMLContentSink()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   gRefCnt++;
   if (gRefCnt == 1) {
 #ifdef DEBUG
@@ -1514,7 +1514,7 @@ public:
 
 XMLElementFactoryImpl::XMLElementFactoryImpl()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 XMLElementFactoryImpl::~XMLElementFactoryImpl()
@@ -1575,7 +1575,7 @@ public:
 
 MathMLElementFactoryImpl::MathMLElementFactoryImpl()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 MathMLElementFactoryImpl::~MathMLElementFactoryImpl()

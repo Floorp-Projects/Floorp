@@ -64,7 +64,7 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 nsMsgPrintEngine::nsMsgPrintEngine()
 {
   mCurrentlyPrintingURI = -1;
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 

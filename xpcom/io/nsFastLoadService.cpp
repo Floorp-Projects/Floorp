@@ -67,7 +67,7 @@ nsFastLoadService::nsFastLoadService()
     mFastLoadPtrMap(nsnull),
     mDirection(0)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
     NS_ASSERTION(gFastLoadService_ == nsnull, "double FastLoadService init?");
     gFastLoadService_ = this;

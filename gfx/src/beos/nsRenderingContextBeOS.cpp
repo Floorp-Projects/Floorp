@@ -52,7 +52,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsRenderingContextBeOS, nsIRenderingContext)
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
 nsRenderingContextBeOS::nsRenderingContextBeOS() {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 	
 	mOffscreenSurface = nsnull;
 	mSurface = nsnull;

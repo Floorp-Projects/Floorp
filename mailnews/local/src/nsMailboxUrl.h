@@ -45,6 +45,7 @@
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsMsgKeyArray.h"
+#include "nsISupportsObsolete.h"
 
 class nsMailboxUrl : public nsIMailboxUrl, public nsMsgMailNewsUrl, public nsIMsgMessageUrl, public nsIMsgI18NUrl
 {

@@ -151,7 +151,7 @@ NS_NewContentDocumentLoaderFactory(nsIDocumentLoaderFactory** aResult)
 
 nsContentDLF::nsContentDLF()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsContentDLF::~nsContentDLF()

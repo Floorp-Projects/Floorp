@@ -44,7 +44,7 @@ nsBinaryOutputStream::nsBinaryOutputStream(nsIOutputStream* aStream)
   : mOutputStream(aStream),
     mBufferAccess(do_QueryInterface(aStream))
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsBinaryOutputStream, nsIBinaryOutputStream)
@@ -274,7 +274,7 @@ nsBinaryInputStream::nsBinaryInputStream(nsIInputStream* aStream)
   : mInputStream(aStream),
     mBufferAccess(do_QueryInterface(aStream))
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsBinaryInputStream, nsIBinaryInputStream)

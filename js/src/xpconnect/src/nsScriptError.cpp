@@ -55,7 +55,7 @@ nsScriptError::nsScriptError()
        mFlags(0),
        mCategory(nsnull)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsScriptError::~nsScriptError() {};

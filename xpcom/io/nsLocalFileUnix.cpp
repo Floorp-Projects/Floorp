@@ -121,7 +121,7 @@ nsDirEnumeratorUnix::nsDirEnumeratorUnix() :
                          mDir(nsnull), 
                          mEntry(nsnull)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsDirEnumeratorUnix::~nsDirEnumeratorUnix()
@@ -201,7 +201,7 @@ nsDirEnumeratorUnix::GetNextEntry()
 nsLocalFile::nsLocalFile() :
     mHaveCachedStat(PR_FALSE)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsLocalFile::~nsLocalFile()

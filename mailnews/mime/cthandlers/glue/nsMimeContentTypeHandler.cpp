@@ -56,7 +56,7 @@ nsMimeContentTypeHandler::nsMimeContentTypeHandler(const char *aMimeType,
                                                    MCTHCreateCTHClass callback)
 {
   /* the following macro is used to initialize the ref counting data */
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   NS_ASSERTION(aMimeType, "nsMimeContentTypeHandler should be initialized with non-null mime type");
   NS_ASSERTION(callback, "nsMimeContentTypeHandler should be initialized with non-null callback");
   mimeType = PL_strdup(aMimeType);

@@ -111,7 +111,7 @@
 
 nsHTMLURIRefObject::nsHTMLURIRefObject()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mCurAttrIndex = mAttributeCnt = 0;
 }
 

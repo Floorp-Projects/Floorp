@@ -1045,7 +1045,7 @@ PRUint32 AppCallbacks::RunEventLoop(PRBool &aRunCondition)
 
 nsQABrowserUIGlue::nsQABrowserUIGlue():mAllowNewWindows(PR_TRUE)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsQABrowserUIGlue::~nsQABrowserUIGlue()

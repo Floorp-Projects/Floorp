@@ -42,7 +42,7 @@
 
 nsPluginStreamPeer ::  nsPluginStreamPeer()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mURL = nsnull;
   mLength = 0;

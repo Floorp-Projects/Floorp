@@ -61,7 +61,7 @@ selection_clear_event_cb   (GtkWidget          *aWidget,
 
 nsClipboard::nsClipboard()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mWidget = nsnull;
 }
 

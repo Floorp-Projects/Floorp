@@ -31,6 +31,7 @@
 
 #include <string.h>
 #include "nscore.h"
+#include "nsDebug.h"
 #include "prclist.h"
 #include <stdlib.h>
 

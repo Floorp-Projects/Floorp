@@ -59,7 +59,7 @@ NS_IMPL_QUERY_INTERFACE2(nsScrollbar, nsIScrollbar, nsWindow)
 //-------------------------------------------------------------------------
 nsScrollbar::nsScrollbar(PRBool aIsVertical) : nsWindow(), nsIScrollbar()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mOrientation  = (aIsVertical) ? B_VERTICAL : B_HORIZONTAL;
   mLineIncrement = 0;
   mScrollbar = 0;

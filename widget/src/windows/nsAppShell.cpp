@@ -59,7 +59,7 @@ static int gKeepGoing = 1;
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()  
 { 
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mDispatchListener = 0;
 }
 

@@ -94,7 +94,7 @@ nsNodeInfoManager::NodeInfoInnerKeyCompare(const void *key1, const void *key2)
 nsNodeInfoManager::nsNodeInfoManager()
   : mDocument(nsnull)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   if (gNodeManagerCount == 1 && gAnonymousNodeInfoManager) {
     /*

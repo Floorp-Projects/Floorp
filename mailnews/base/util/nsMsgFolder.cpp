@@ -129,7 +129,7 @@ nsMsgFolder::nsMsgFolder(void)
     mDeleteIsMoveToTrash(PR_TRUE),
     mBaseMessageURI(nsnull)
 {
-//  NS_INIT_REFCNT(); done by superclass
+//  NS_INIT_ISUPPORTS(); done by superclass
 
   mSemaphoreHolder = NULL;
 

@@ -221,7 +221,7 @@ nsMsgComposeAndSend::nsMsgComposeAndSend() :
   
   NS_NEWXPCOM(mSendReport, nsMsgSendReport);
 
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsMsgComposeAndSend::~nsMsgComposeAndSend()

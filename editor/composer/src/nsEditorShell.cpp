@@ -257,7 +257,7 @@ nsEditorShell::nsEditorShell()
 ,  mDictionaryIndex(0)
 {
   //TODO:Save last-used display mode in prefs so new window inherits?
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsEditorShell::~nsEditorShell()

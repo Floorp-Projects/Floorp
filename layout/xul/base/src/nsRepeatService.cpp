@@ -58,7 +58,7 @@ nsRepeatService* nsRepeatService::gInstance = nsnull;
 nsRepeatService::nsRepeatService()
 : mFirstCall(PR_FALSE)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsRepeatService::~nsRepeatService()

@@ -54,7 +54,7 @@ NS_IMPL_ISUPPORTS1(nsMsgFilterService, nsIMsgFilterService)
 
 nsMsgFilterService::nsMsgFilterService()
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 }
 
 nsMsgFilterService::~nsMsgFilterService()

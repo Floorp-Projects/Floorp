@@ -38,6 +38,7 @@
 #define _nsImapStringBundle_H__
 
 #include "nsIStringBundle.h"
+#include "nsComObsolete.h"
 
 NS_BEGIN_EXTERN_C
 

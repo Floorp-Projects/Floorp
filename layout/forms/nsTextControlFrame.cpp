@@ -250,7 +250,7 @@ nsTextInputListener::nsTextInputListener()
 , mKnowSelectionCollapsed(PR_FALSE)
 , mFirstDoOfFirstUndo(PR_TRUE)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 
@@ -661,7 +661,7 @@ NS_IMPL_ISUPPORTS3(nsTextInputSelectionImpl, nsISelectionController, nsISupports
 
 nsTextInputSelectionImpl::nsTextInputSelectionImpl(nsIFrameSelection *aSel, nsIPresShell *aShell, nsIContent *aLimiter)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   if (aSel && aShell)
   {
     mFrameSelection = aSel;//we are the owner now!

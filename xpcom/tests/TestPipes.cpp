@@ -94,7 +94,7 @@ public:
     }
 
     nsReceiver(nsIInputStream* in) : mIn(in), mCount(0) {
-        NS_INIT_REFCNT();
+        NS_INIT_ISUPPORTS();
         NS_ADDREF(in);
     }
 
@@ -190,7 +190,7 @@ public:
     }
 
     nsShortReader(nsIInputStream* in) : mIn(in), mReceived(0) {
-        NS_INIT_REFCNT();
+        NS_INIT_ISUPPORTS();
         NS_ADDREF(in);
     }
 
@@ -296,7 +296,7 @@ public:
         return NS_OK;
     }
 
-    nsPipeObserver() { NS_INIT_REFCNT(); }
+    nsPipeObserver() { NS_INIT_ISUPPORTS(); }
     virtual ~nsPipeObserver() {}
 };
 
@@ -445,7 +445,7 @@ public:
     nsPump(nsIInputStream* in,
            nsIOutputStream* out)
         : mIn(in), mOut(out), mCount(0) {
-        NS_INIT_REFCNT();
+        NS_INIT_ISUPPORTS();
     }
 
     virtual ~nsPump() {

@@ -743,7 +743,7 @@ nsMsgDatabase::nsMsgDatabase()
     m_cacheSize(kMaxHdrsInCache)
 
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 }
 
 nsMsgDatabase::~nsMsgDatabase()
@@ -2310,7 +2310,7 @@ nsMsgDBEnumerator::nsMsgDBEnumerator(nsMsgDatabase* db,
     : mDB(db), mRowCursor(nsnull), mResultHdr(nsnull), mDone(PR_FALSE),
       mFilter(filter), mClosure(closure)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_ADDREF(mDB);
 	mNextPrefetched = PR_FALSE;
 }
@@ -2493,7 +2493,7 @@ nsMsgDBThreadEnumerator::nsMsgDBThreadEnumerator(nsMsgDatabase* db,
     : mDB(db), mTableCursor(nsnull), mResultThread(nsnull), mDone(PR_FALSE),
       mFilter(filter)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_ADDREF(mDB);
 	mNextPrefetched = PR_FALSE;
 }

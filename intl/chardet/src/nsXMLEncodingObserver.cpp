@@ -63,7 +63,7 @@ static eHTMLTags gTags[] =
 //-------------------------------------------------------------------------
 nsXMLEncodingObserver::nsXMLEncodingObserver()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   bXMLEncodingObserverStarted = PR_FALSE;
 }
 //-------------------------------------------------------------------------

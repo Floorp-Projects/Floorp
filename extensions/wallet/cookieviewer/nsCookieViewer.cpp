@@ -57,7 +57,7 @@ static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
 CookieViewerImpl::CookieViewerImpl()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 CookieViewerImpl::~CookieViewerImpl()

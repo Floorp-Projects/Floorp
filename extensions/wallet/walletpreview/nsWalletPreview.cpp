@@ -58,7 +58,7 @@ static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 WalletPreviewImpl::WalletPreviewImpl()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 WalletPreviewImpl::~WalletPreviewImpl()

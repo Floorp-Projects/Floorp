@@ -59,7 +59,7 @@ NS_IMPL_ISUPPORTS1(nsSmtpDelegateFactory, nsIRDFDelegateFactory)
 
 nsSmtpDelegateFactory::nsSmtpDelegateFactory()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsSmtpDelegateFactory::~nsSmtpDelegateFactory()

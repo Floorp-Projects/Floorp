@@ -79,7 +79,7 @@ class ConsumerContext : public nsIEquals {
 public:
     NS_DECL_ISUPPORTS
 
-    ConsumerContext() { NS_INIT_REFCNT();}
+    ConsumerContext() { NS_INIT_ISUPPORTS();}
 
     NS_IMETHOD Equals(void *aPtr, PRBool *_retval) {
         *_retval = PR_TRUE;
@@ -180,7 +180,7 @@ Consumer::OnDataAvailable(nsIRequest *request, nsISupports *aContext,
 
 // Consumer implementation
 Consumer::Consumer() {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     mOnStart = mOnStop = PR_FALSE;
     mOnDataCount = 0;
     gKeepRunning++;

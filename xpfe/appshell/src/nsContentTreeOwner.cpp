@@ -75,7 +75,7 @@ nsContentTreeOwner::nsContentTreeOwner(PRBool fPrimary) : mXULWindow(nsnull),
    mPrimary(fPrimary), mContentTitleSetting(PR_FALSE), 
    mChromeFlags(nsIWebBrowserChrome::CHROME_ALL)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   // note if this fails, QI on nsIEmbeddingSiteWindow(2) will simply fail
   mSiteWindow2 = new nsSiteWindow2(this);
@@ -728,7 +728,7 @@ nsXULWindow* nsContentTreeOwner::XULWindow()
 
 nsSiteWindow2::nsSiteWindow2(nsContentTreeOwner *aAggregator)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mAggregator = aAggregator;
 }
 

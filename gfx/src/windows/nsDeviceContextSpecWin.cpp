@@ -164,7 +164,7 @@ const PRInt32 kNumPaperSizes = 41;
 //----------------------------------------------------------------------------------
 nsDeviceContextSpecWin::nsDeviceContextSpecWin()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mDriverName    = nsnull;
   mDeviceName    = nsnull;
@@ -779,7 +779,7 @@ nsDeviceContextSpecWin::SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSett
 //***********************************************************
 nsPrinterEnumeratorWin::nsPrinterEnumeratorWin()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsPrinterEnumeratorWin::~nsPrinterEnumeratorWin()

@@ -165,7 +165,7 @@ public:
 
     // nsDummyBufferStream methods:
     nsDummyBufferStream(const char* buffer, PRUint32 length)
-        : mBuffer(buffer), mLength(length) {NS_INIT_REFCNT();}
+        : mBuffer(buffer), mLength(length) {NS_INIT_ISUPPORTS();}
     virtual ~nsDummyBufferStream() {}
 
 protected:

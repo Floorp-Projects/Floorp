@@ -64,7 +64,7 @@ class nsI18nCompatibility : public nsII18nCompatibility {
   /* wstring CSIDtoCharsetName (in unsigned short csid); */
   NS_IMETHOD  CSIDtoCharsetName(PRUint16 csid, PRUnichar **_retval);
 
-  nsI18nCompatibility() {NS_INIT_REFCNT();}
+  nsI18nCompatibility() {NS_INIT_ISUPPORTS();}
   virtual ~nsI18nCompatibility() {}
 };
 

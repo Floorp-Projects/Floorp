@@ -150,7 +150,7 @@ nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
     mInitialized(PR_FALSE), mCopyState(nsnull), mType(nsnull),
     mCheckForNewMessagesAfterParsing(PR_FALSE)
 {
-//  NS_INIT_REFCNT(); done by superclass
+//  NS_INIT_ISUPPORTS(); done by superclass
 }
 
 nsMsgLocalMailFolder::~nsMsgLocalMailFolder(void)

@@ -176,7 +176,7 @@ nsHTMLEditor::nsHTMLEditor()
 , mHTMLCSSUtils(nsnull)
 {
 // Done in nsEditor
-// NS_INIT_REFCNT();
+// NS_INIT_ISUPPORTS();
   mBoldAtom = getter_AddRefs(NS_NewAtom("b"));
   mItalicAtom = getter_AddRefs(NS_NewAtom("i"));
   mUnderlineAtom = getter_AddRefs(NS_NewAtom("u"));

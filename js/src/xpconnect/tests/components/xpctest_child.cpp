@@ -66,7 +66,7 @@ NS_IMPL_ISUPPORTS1(xpctestOther, nsIXPCTestOther);
 
 xpctestOther::xpctestOther()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 }
 
@@ -171,7 +171,7 @@ xpctestChild::QueryInterface(REFNSIID iid, void** result)
 
 xpctestChild::xpctestChild()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 }
 

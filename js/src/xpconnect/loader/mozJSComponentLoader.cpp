@@ -395,7 +395,7 @@ mozJSComponentLoader::mozJSComponentLoader()
       mGlobals(nsnull),
       mInitialized(PR_FALSE)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 static PRIntn PR_CALLBACK

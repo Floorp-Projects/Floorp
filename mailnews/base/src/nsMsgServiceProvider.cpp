@@ -57,7 +57,7 @@ static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 
 nsMsgServiceProviderService::nsMsgServiceProviderService()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsMsgServiceProviderService::~nsMsgServiceProviderService()

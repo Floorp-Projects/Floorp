@@ -49,7 +49,7 @@ NS_IMPL_ISUPPORTS1(GIFDecoder, nsIImgDecoder);
 
 GIFDecoder::GIFDecoder(il_container* aContainer)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   ilContainer = aContainer;
 }
 

@@ -42,6 +42,7 @@
 #include "nscore.h"
 #include "nsCoord.h"
 #include "nsUnitConversion.h"
+#include "nsComObsolete.h"
 
 #define MG_2DIDENTITY     0
 #define MG_2DTRANSLATION  1

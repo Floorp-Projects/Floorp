@@ -46,7 +46,7 @@
 nsScreenMac :: nsScreenMac ( GDHandle inScreen )
   : mScreen(inScreen)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   NS_ASSERTION ( inScreen, "Passing null device to nsScreenMac" );
   

@@ -34,7 +34,7 @@
 nsDSURIContentListener::nsDSURIContentListener() : mDocShell(nsnull), 
     mParentContentListener(nsnull)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsDSURIContentListener::~nsDSURIContentListener()

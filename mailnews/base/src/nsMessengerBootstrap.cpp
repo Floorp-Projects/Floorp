@@ -65,7 +65,7 @@ NS_IMPL_QUERY_INTERFACE2(nsMessengerBootstrap, nsICmdLineHandler, nsIMessengerWi
 
 nsMessengerBootstrap::nsMessengerBootstrap()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsMessengerBootstrap::~nsMessengerBootstrap()

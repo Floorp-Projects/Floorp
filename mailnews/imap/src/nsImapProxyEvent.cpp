@@ -127,7 +127,7 @@ nsImapExtensionSinkProxy::nsImapExtensionSinkProxy(nsIImapExtensionSink* aImapEx
 {
     NS_ASSERTION (aImapExtensionSink, 
                   "nsImapExtensionSinkProxy: invalid aImapExtensionSink");
-    NS_INIT_REFCNT ();
+    NS_INIT_ISUPPORTS ();
     m_realImapExtensionSink = aImapExtensionSink;
     NS_IF_ADDREF (m_realImapExtensionSink);
 }
@@ -271,7 +271,7 @@ nsImapMiscellaneousSinkProxy::nsImapMiscellaneousSinkProxy(
 {
     NS_ASSERTION (aImapMiscellaneousSink, 
                   "nsImapMiscellaneousSinkProxy: invalid aImapMiscellaneousSink");
-    NS_INIT_REFCNT ();
+    NS_INIT_ISUPPORTS ();
     m_realImapMiscellaneousSink = aImapMiscellaneousSink;
     NS_IF_ADDREF (m_realImapMiscellaneousSink);
 }

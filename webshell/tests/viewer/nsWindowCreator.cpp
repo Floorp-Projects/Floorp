@@ -43,7 +43,7 @@
 
 nsWindowCreator::nsWindowCreator(nsViewerApp *aApp)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mApp = aApp;
 }
 

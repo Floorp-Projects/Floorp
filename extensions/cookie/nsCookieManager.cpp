@@ -55,7 +55,7 @@ class nsCookieEnumerator : public nsISimpleEnumerator
 
         nsCookieEnumerator() : mCookieCount(0) 
         {
-            NS_INIT_REFCNT();
+            NS_INIT_ISUPPORTS();
         }
 
         NS_IMETHOD HasMoreElements(PRBool *result) 
@@ -108,7 +108,7 @@ NS_IMPL_ISUPPORTS2(nsCookieManager, nsICookieManager, nsISupportsWeakReference);
 
 nsCookieManager::nsCookieManager()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsCookieManager::~nsCookieManager(void)

@@ -145,7 +145,7 @@ var contractIDsTo_NOT_Create = [
 
 // fixed    "@mozilla.org/rdf/xul-content-sink;1", // nsXULContentSink.cpp, XULContentSinkImpl::XULContentSinkImpl needs to init mNameSpaceManager
 
-/* dp claims to have fixes coming */   "@mozilla.org/image/decoder;1?type=image/",  // PNGDecoder::QueryInterface and JPGDecoder::QueryInterface, do NS_INIT_REFCNT() in QueryInterface! (npunn)
+/* dp claims to have fixes coming */   "@mozilla.org/image/decoder;1?type=image/",  // PNGDecoder::QueryInterface and JPGDecoder::QueryInterface, do NS_INIT_ISUPPORTS() in QueryInterface! (npunn)
 
 /* BUG 11507 */    "@mozilla.org/wallet;1", // WalletFactoryImpl::CreateInstance broken : calls "delete inst" then calls "NS_IF_RELEASE(inst)"
 

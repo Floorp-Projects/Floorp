@@ -60,7 +60,7 @@ NS_INTERFACE_MAP_END
 nsEditorController::nsEditorController()
 : mCommandRefCon(nsnull)
 {
-  NS_INIT_REFCNT();  
+  NS_INIT_ISUPPORTS();  
 }
 
 nsEditorController::~nsEditorController()

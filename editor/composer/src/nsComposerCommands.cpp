@@ -80,7 +80,7 @@ nsresult GetListItemState(nsIEditor *aEditor, PRBool *aMixed, PRUnichar **_retva
 
 nsBaseComposerCommand::nsBaseComposerCommand()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsBaseComposerCommand, nsIControllerCommand)

@@ -66,7 +66,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 nsMsgMailNewsUrl::nsMsgMailNewsUrl()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
  
 	// nsIURI specific state
 	m_errorMessage = nsnull;
@@ -837,7 +837,7 @@ nsMsgSaveAsListener::nsMsgSaveAsListener(nsIFileSpec *aFileSpec, PRBool addDummy
   m_writtenData = PR_FALSE;
   m_addDummyEnvelope = addDummyEnvelope;
   m_leftOver = 0;
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsMsgSaveAsListener::~nsMsgSaveAsListener()

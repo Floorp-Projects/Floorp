@@ -74,7 +74,7 @@ NS_INTERFACE_MAP_END
 
 nsComposerController::nsComposerController()
 {
-  NS_INIT_REFCNT();  
+  NS_INIT_ISUPPORTS();  
 }
 
 nsComposerController::~nsComposerController()

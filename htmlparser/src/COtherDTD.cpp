@@ -146,7 +146,7 @@ NS_IMPL_RELEASE(COtherDTD)
  *  @return   
  */ 
 COtherDTD::COtherDTD() : nsIDTD() {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mSink = 0; 
   mParser=0;        
   mLineNumber=1;  

@@ -21,6 +21,7 @@
  */
 
 #include "nsIScriptableRegion.h"
+#include "nsComObsolete.h"
 
 class nsIRegion;
 

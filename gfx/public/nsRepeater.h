@@ -40,6 +40,7 @@
 #define nsRepeater_h___
 
 #include "nscore.h"
+#include "nsComObsolete.h"
 
 class EventRecord;
 

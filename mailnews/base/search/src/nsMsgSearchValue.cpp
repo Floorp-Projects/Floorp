@@ -39,6 +39,7 @@
 #include "MailNewsTypes.h"
 #include "nsMsgSearchValue.h"
 #include "nsReadableUtils.h"
+#include "nsISupportsObsolete.h"
 
 nsMsgSearchValueImpl::nsMsgSearchValueImpl(nsMsgSearchValue *aInitialValue)
 {

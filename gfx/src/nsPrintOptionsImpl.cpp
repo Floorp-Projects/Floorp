@@ -164,7 +164,7 @@ nsPrinterListEnumerator : public nsISimpleEnumerator
 nsPrinterListEnumerator::nsPrinterListEnumerator() :
   mPrinters(nsnull), mCount(0), mIndex(0)
 {
-   NS_INIT_REFCNT();
+   NS_INIT_ISUPPORTS();
 }
 
 nsPrinterListEnumerator::~nsPrinterListEnumerator()

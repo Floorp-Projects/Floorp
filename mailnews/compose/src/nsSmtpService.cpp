@@ -159,7 +159,7 @@ nsresult NS_MsgLoadSmtpUrl(nsIURI * aUrl, nsISupports * aConsumer, nsIRequest **
 nsSmtpService::nsSmtpService() :
     mSmtpServersLoaded(PR_FALSE)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_NewISupportsArray(getter_AddRefs(mSmtpServers));
 }
 

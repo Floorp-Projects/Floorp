@@ -219,7 +219,7 @@ NameSpaceImpl::NameSpaceImpl(nsINameSpaceManager* aManager,
     mPrefix(aPrefix)
 {
   NS_ASSERTION(aManager, "null namespace manager");
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   NS_ADDREF(mManager);
   NS_IF_ADDREF(mParent);
   NS_IF_ADDREF(mPrefix);
@@ -236,7 +236,7 @@ NameSpaceImpl::NameSpaceImpl(nsINameSpaceManager* aManager,
     mID(aNameSpaceID)
 {
   NS_ASSERTION(aManager, "null namespace manager");
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   NS_ADDREF(mManager);
   NS_IF_ADDREF(mParent);
   NS_IF_ADDREF(mPrefix);
@@ -413,7 +413,7 @@ NameSpaceManagerImpl::NameSpaceManagerImpl()
   NS_ASSERTION(!gNameSpaceManagerWasShutDown,
                "Namespace manager used past content module shutdown!!!");
 
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   InitializeNameSpaceManager();
 }

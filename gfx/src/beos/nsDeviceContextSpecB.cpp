@@ -83,7 +83,7 @@ int            GlobalPrinters::mGlobalNumPrinters = 0;
  */
 nsDeviceContextSpecBeOS :: nsDeviceContextSpecBeOS()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 /** -------------------------------------------------------
@@ -408,7 +408,7 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS::GetPageSizeInTwips(PRInt32 *aWidth, PRInt
 //  Printer Enumerator
 nsPrinterEnumeratorBeOS::nsPrinterEnumeratorBeOS()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorBeOS, nsIPrinterEnumerator)

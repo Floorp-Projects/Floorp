@@ -52,6 +52,7 @@
 #include "nsIImportService.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgFilterService.h"
+#include "nsISupportsObsolete.h"
 
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 
@@ -72,7 +73,7 @@ nsMsgFilterList::nsMsgFilterList() :
 	m_loggingEnabled = PR_FALSE;
 	m_curFilter = nsnull;
   m_arbitraryHeaders.SetLength(0);
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ADDREF(nsMsgFilterList)

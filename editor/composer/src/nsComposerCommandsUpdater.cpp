@@ -45,7 +45,7 @@ nsComposerCommandsUpdater::nsComposerCommandsUpdater()
 ,  mSelectionCollapsed(eStateUninitialized)
 ,  mFirstDoOfFirstUndo(PR_TRUE)
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
 }
 
 nsComposerCommandsUpdater::~nsComposerCommandsUpdater()

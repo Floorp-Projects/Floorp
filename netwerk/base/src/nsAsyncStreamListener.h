@@ -56,7 +56,7 @@ public:
     // nsAsyncStreamObserver methods:
     nsAsyncStreamObserver() 
     { 
-        NS_INIT_REFCNT();
+        NS_INIT_ISUPPORTS();
     }
     
     virtual ~nsAsyncStreamObserver() {}

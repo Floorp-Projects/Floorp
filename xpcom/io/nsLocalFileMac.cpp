@@ -975,7 +975,7 @@ class nsDirEnumerator : public nsISimpleEnumerator
 
         nsDirEnumerator()
         {
-            NS_INIT_REFCNT();
+            NS_INIT_ISUPPORTS();
         }
 
         nsresult Init(nsILocalFileMac* parent) 
@@ -1081,7 +1081,7 @@ nsLocalFile::nsLocalFile() :
     mType('TEXT'),
     mCreator(kDefaultCreator)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 
     ClearFSSpec(mSpec);
     ClearFSSpec(mTargetSpec);
@@ -1093,7 +1093,7 @@ nsLocalFile::nsLocalFile() :
 
 nsLocalFile::nsLocalFile(const nsLocalFile& srcFile)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     *this = srcFile;
 }
 
@@ -1107,7 +1107,7 @@ nsLocalFile::nsLocalFile(const FSSpec& aSpec, const nsACString& aAppendedPath) :
     mType('TEXT'),
     mCreator(kDefaultCreator)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     
     ClearFSSpec(mTargetSpec);
     

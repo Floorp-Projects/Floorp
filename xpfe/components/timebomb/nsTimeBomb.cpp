@@ -91,7 +91,7 @@ static nsresult DisplayURI(const char *urlStr, PRBool block)
 
 nsTimeBomb::nsTimeBomb()
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsTimeBomb::~nsTimeBomb()

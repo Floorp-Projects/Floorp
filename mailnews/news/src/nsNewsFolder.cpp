@@ -129,7 +129,7 @@ nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
     SetLookingForCRLF(PR_FALSE);
   }
 
-//  NS_INIT_REFCNT(); done by superclass
+//  NS_INIT_ISUPPORTS(); done by superclass
 }
 
 nsMsgNewsFolder::~nsMsgNewsFolder(void)

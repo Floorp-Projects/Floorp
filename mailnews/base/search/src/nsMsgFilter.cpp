@@ -55,6 +55,7 @@
 #include "nsEscape.h"
 #include "nsMsgUtf7Utils.h"
 #include "nsIImportService.h"
+#include "nsISupportsObsolete.h"
 
 static const char *kImapPrefix = "//imap:";
 
@@ -71,7 +72,7 @@ nsMsgFilter::nsMsgFilter():
     m_temporary(PR_FALSE),
     m_filterList(nsnull)
 {
-	NS_INIT_REFCNT();
+	NS_INIT_ISUPPORTS();
   NS_NewISupportsArray(getter_AddRefs(m_termList));
 }
 

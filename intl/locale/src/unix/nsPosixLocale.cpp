@@ -50,7 +50,7 @@ NS_IMPL_ISUPPORTS1(nsPosixLocale, nsIPosixLocale)
 
 nsPosixLocale::nsPosixLocale(void)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 nsPosixLocale::~nsPosixLocale(void)

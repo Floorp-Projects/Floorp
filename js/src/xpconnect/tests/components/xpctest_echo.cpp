@@ -73,7 +73,7 @@ NS_IMPL_ISUPPORTS1(xpctestEcho, nsIEcho);
 xpctestEcho::xpctestEcho()
     : mReceiver(nsnull), mString(nsnull), mSomeValue(0)
 {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 }
 

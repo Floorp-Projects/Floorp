@@ -270,7 +270,7 @@ nsPrefMigration::GetInstance()
 
 nsPrefMigration::nsPrefMigration()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mErrorCode = NS_OK;
 }
 
@@ -2257,7 +2257,7 @@ nsPrefConverter::~nsPrefConverter()
 nsPrefConverter::nsPrefConverter()
 {
 
-   NS_INIT_REFCNT();
+   NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsPrefConverter, nsIPrefConverter)

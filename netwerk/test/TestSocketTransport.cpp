@@ -207,7 +207,7 @@ public:
 
   TestConnectionOpenObserver(TestConnection* test)
     : mTestConnection(test) { 
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
   }
   virtual ~TestConnectionOpenObserver() {}
 
@@ -302,7 +302,7 @@ TestConnection::TestConnection(const char* aHostName, PRInt32 aPort,
 {
   nsresult rv;
 
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 
   mIsAsync      = aAsyncFlag;
 
