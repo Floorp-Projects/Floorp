@@ -275,7 +275,8 @@ xpcarraytest::DoubleString(PRUint32 *count, char **str)
     if(!out)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    for(PRUint32 k = 0; k < *count; k++)
+    PRUint32 k;
+    for(k = 0; k < *count; k++)
         out[k*2] = out[(k*2)+1] = (*str)[k];
     out[k*2] = '\0';
     nsAllocator::Free(*str);
