@@ -4248,7 +4248,8 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
         // a dropdown list. The display area and button are created through anonymous content.
         // The drop-down list's frame is created explicitly. The combobox frame shares it's content
         // with the drop-down list.
-      PRUint32 flags = NS_BLOCK_SHRINK_WRAP | (aIsAbsolutelyPositioned?NS_BLOCK_SPACE_MGR:0);
+      PRUint32 flags = NS_BLOCK_SHRINK_WRAP | 
+          ((aIsAbsolutelyPositioned | aIsFixedPositioned)?NS_BLOCK_SPACE_MGR:0);
       nsIFrame * comboboxFrame;
       rv = NS_NewComboboxControlFrame(aPresShell, &comboboxFrame, flags);
 
@@ -4363,7 +4364,8 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
       rv = NS_NewListControlFrame(aPresShell, &listFrame);
       aNewFrame = listFrame;
 
-      PRUint32 flags = NS_BLOCK_SHRINK_WRAP | (aIsAbsolutelyPositioned?NS_BLOCK_SPACE_MGR:0);
+      PRUint32 flags = NS_BLOCK_SHRINK_WRAP | 
+          ((aIsAbsolutelyPositioned | aIsFixedPositioned)?NS_BLOCK_SPACE_MGR:0);
       nsIFrame* scrolledFrame = nsnull;
       NS_NewSelectsAreaFrame(aPresShell, &scrolledFrame, flags);
 
