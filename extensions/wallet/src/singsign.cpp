@@ -300,7 +300,7 @@ si_CheckGetUsernamePassword
  ******************/
 
 extern PRUnichar Wallet_GetKey(nsKeyType saveCount, nsKeyType writeCount);
-extern PRBool Wallet_KeySet();
+extern PRBool Wallet_IsKeySet();
 extern void Wallet_KeyResetTime();
 extern PRBool Wallet_KeyTimedOut();
 extern PRBool Wallet_SetKey(PRBool newkey);
@@ -317,7 +317,7 @@ si_GetKey(nsKeyType saveCount, nsKeyType writeCount) {
 
 PRIVATE PRBool
 si_KeySet() {
-  return Wallet_KeySet();
+  return Wallet_IsKeySet();
 }
 
 PRIVATE PRBool

@@ -33,6 +33,7 @@
 #include "nsIPresShell.h"
 #include "nsString.h"
 #include "nsIURL.h"
+#include "nsIKeyedStreamGenerator.h"
 
 XP_BEGIN_PROTOS
 
@@ -68,6 +69,9 @@ WLLT_OnSubmit (nsIContent* formNode);
 
 extern void
 WLLT_FetchFromNetCenter();
+
+extern NS_METHOD
+Wallet_GetMasterPassword(PRUnichar **password);
 
 XP_END_PROTOS
 

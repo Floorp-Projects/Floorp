@@ -18,7 +18,6 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -55,6 +54,9 @@
 #include "nsIProfile.h"
 #include "nsIContent.h"
 #include "nsVoidArray.h"
+
+#include "nsIWalletService.h"
+#include "nsIPasswordSink.h"
 
 #ifdef DEBUG_morse
 #define morseAssert NS_ASSERTION
@@ -1297,9 +1299,11 @@ Wallet_SimpleGet(nsInputFileStream strm) {
 /* The following routines are for unlocking the stored data */
 /************************************************************/
 
+nsCOMPtr<nsIKeyedStreamGenerator> gKeyedStreamGenerator;
+PRBool gNeedsSetup = PR_TRUE;
 nsAutoString key;
 PRBool keyCancel = PR_FALSE;
-PRBool keySet = PR_FALSE;
+PRBool gIsKeySet = PR_FALSE;
 time_t keyExpiresTime;
 
 // 30 minute duration (60*30=1800 seconds)
@@ -1316,14 +1320,71 @@ const char schemaConcatFileName[] = "SchemaConcat.tbl";
 const char distinguishedSchemaFileName[] = "DistinguishedSchema.tbl";
 #endif
 
+PUBLIC PRBool
+Wallet_IsKeySet() {
+  return gIsKeySet;
+}
+
+NS_METHOD
+Wallet_GetMasterPassword(PRUnichar ** password)
+{
+  NS_ENSURE_ARG_POINTER(password);
+  // We just return the key if we have one.
+  // If we dont have a key, we do not attempt to popping up a dialog and
+  // getting the key from the user. That was the need at the time we
+  // are writing this.
+  if (!Wallet_IsKeySet()) return NS_ERROR_FAILURE;
+  *password = nsCRT::strdup(key.GetUnicode());
+  if (!password) return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
+}
+
 PUBLIC PRUnichar
 Wallet_GetKey(nsKeyType saveCount, nsKeyType writeCount) {
+  nsresult rv = NS_OK;
+  if (!gKeyedStreamGenerator)
+  {
+    // Get a keyed stream generator
+    // XXX how do we get to the NS_BASIC_STREAM_GENERATOR progid/CID here
+    gKeyedStreamGenerator = do_CreateInstance("component://netscape/keyed-stream-generator/basic", &rv);
+    if (NS_FAILED(rv)) goto backup;
+    // XXX need to checkup signature
+  }
+  if (gNeedsSetup)
+  {
+    // Call setup on the keyed stream generator
+    nsCOMPtr<nsIWalletService> walletService = do_GetService(NS_WALLETSERVICE_PROGID, &rv);
+    if (NS_FAILED(rv)) goto backup;
+    nsCOMPtr<nsIPasswordSink> passwordSink = do_QueryInterface(walletService, &rv);
+    if (NS_FAILED(rv)) goto backup;
+    rv = gKeyedStreamGenerator->Setup(saveCount, passwordSink);
+    gNeedsSetup = PR_FALSE;
+  }
+
+  // Get the byte using the keyed stream generator
+  PRUint8 keyByte = 0;
+  rv = gKeyedStreamGenerator->GetByte(writeCount, &keyByte);
+  if (NS_FAILED(rv)) goto backup;
+  return (PRUnichar)keyByte;
+
+backup:
+  // Fallback to doing old access
+  NS_ASSERTION(0, "Bad! Using backup stream generator. Email dp@netscape.com");
   return key.CharAt((PRInt32)(writeCount % key.Length()));
 }
 
 PUBLIC PRBool
-Wallet_KeySet() {
-  return keySet;
+Wallet_InitKeySet(PRBool b) {
+  PRBool oldIsKeySet = gIsKeySet;
+  gIsKeySet = b;
+  // When transitioning from key set to not set, we need to make sure
+  // the keyedStreamGenerator also forgets all state. The reverse,
+  // setting it up properly after we have a key, happens lazily in GetKey.
+  if (oldIsKeySet == PR_TRUE && gIsKeySet == PR_FALSE && gKeyedStreamGenerator)
+  {
+    (void) gKeyedStreamGenerator->Setup(0, NULL);
+  }
+  return oldIsKeySet;
 }
 
 extern void SI_RemoveAllSignonData();
@@ -1331,8 +1392,8 @@ extern void SI_RemoveAllSignonData();
 PUBLIC PRBool
 Wallet_KeyTimedOut() {
   time_t curTime = time(NULL);
-  if (Wallet_KeySet() && (curTime >= keyExpiresTime)) {
-    keySet = PR_FALSE;
+  if (Wallet_IsKeySet() && (curTime >= keyExpiresTime)) {
+    Wallet_InitKeySet(PR_FALSE);
     SI_RemoveAllSignonData();
     return PR_TRUE;
   }
@@ -1341,14 +1402,14 @@ Wallet_KeyTimedOut() {
 
 PUBLIC void
 Wallet_KeyResetTime() {
-  if (Wallet_KeySet()) {
+  if (Wallet_IsKeySet()) {
     keyExpiresTime = time(NULL) + keyDuration;
   }
 }
 
 PRIVATE void
 wallet_KeyTimeoutImmediately() {
-  if (Wallet_KeySet()) {
+  if (Wallet_IsKeySet()) {
     keyExpiresTime = time(NULL);
   }
 }
@@ -1470,7 +1531,7 @@ wallet_ReadKeyFile(PRBool useDefaultKey) {
   nsKeyType writeCount = 0;
 
   if (useDefaultKey && (Wallet_KeySize() == 0) ) {
-    keySet = PR_TRUE;
+    Wallet_InitKeySet(PR_TRUE);
     return PR_TRUE;
   }
 
@@ -1504,6 +1565,7 @@ wallet_ReadKeyFile(PRBool useDefaultKey) {
   if (Wallet_UTF8Get(strm) != ((key.CharAt(0))^Wallet_GetKey(saveCount, writeCount++))
       || strm.eof()) {
     strm.close();
+    Wallet_InitKeySet(PR_FALSE);
     key = nsAutoString("");
     keyCancel = PR_FALSE;
     return PR_FALSE;
@@ -1512,10 +1574,11 @@ wallet_ReadKeyFile(PRBool useDefaultKey) {
   PRBool rv = strm.eof();
   strm.close();
   if (rv) {
-    keySet = PR_TRUE;
+    Wallet_InitKeySet(PR_TRUE);
     keyExpiresTime = time(NULL) + keyDuration;
     return PR_TRUE;
   } else {
+    Wallet_InitKeySet(PR_FALSE);
     key = nsAutoString("");
     keyCancel = PR_TRUE;
     return PR_FALSE;
@@ -1563,14 +1626,14 @@ wallet_WriteKeyFile(PRBool useDefaultKey) {
   }
   strm2.flush();
   strm2.close();
-  keySet = PR_TRUE;
+  Wallet_InitKeySet(PR_TRUE);
   return PR_TRUE;
 }
 
 PUBLIC PRBool
 Wallet_SetKey(PRBool isNewkey) {
   nsresult res;
-  if (Wallet_KeySet() && !isNewkey) {
+  if (Wallet_IsKeySet() && !isNewkey) {
     return PR_TRUE;
   }
   nsKeyType saveCount = 0;
@@ -1660,7 +1723,7 @@ Wallet_SetKey(PRBool isNewkey) {
       newkey = nsAutoString("~"); /* use zero-length key */
     }
   }
-  
+  Wallet_InitKeySet(PR_TRUE);
   key = newkey;
   saveCount = writeCount = 0;
 
@@ -1812,7 +1875,7 @@ void
 wallet_WriteToFile(const char * filename, nsVoidArray* list, PRBool obscure) {
   wallet_MapElement * ptr;
 
-  if (obscure && !Wallet_KeySet()) {
+  if (obscure && !Wallet_IsKeySet()) {
     return;
   }
 
@@ -2708,7 +2771,7 @@ void WLLT_ChangePassword() {
 
   /* read in user data using old key */
   wallet_Initialize(PR_TRUE);
-  if (!Wallet_KeySet()) {
+  if (!Wallet_IsKeySet()) {
     return;
   }
 #ifdef SingleSignon
@@ -2953,7 +3016,7 @@ wallet_Capture(nsIDocument* doc, nsAutoString field, nsAutoString value, nsAutoS
   if (!vcard.Length()) {
     wallet_Initialize(PR_TRUE);
     wallet_InitializeCurrentURL(doc);
-    if (!Wallet_KeySet()) {
+    if (!Wallet_IsKeySet()) {
       return;
     }
   }
@@ -3093,7 +3156,7 @@ WLLT_GetNocaptureListForViewer(nsAutoString& aNocaptureList)
 
 PUBLIC void
 WLLT_PostEdit(nsAutoString walletList) {
-  if (!Wallet_KeySet()) {
+  if (!Wallet_IsKeySet()) {
     return;
   }
 
@@ -3160,7 +3223,7 @@ WLLT_PostEdit(nsAutoString walletList) {
 PUBLIC void
 WLLT_PreEdit(nsAutoString& walletList) {
   wallet_Initialize(PR_FALSE);
-  if (!Wallet_KeySet()) {
+  if (!Wallet_IsKeySet()) {
     return;
   }
   walletList = BREAK;
@@ -3335,7 +3398,7 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
         NS_RELEASE(url);
       }
       wallet_Initialize(PR_TRUE);
-      if (!Wallet_KeySet()) {
+      if (!Wallet_IsKeySet()) {
         NS_RELEASE(doc);
         NS_RELEASE(shell);
         return NS_ERROR_FAILURE;
@@ -3426,7 +3489,7 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
 
   /* return if no elements were put into the list */
   if (LIST_COUNT(wallet_PrefillElement_list) == 0) {
-    if (Wallet_KeySet()) {
+    if (Wallet_IsKeySet()) {
       PRUnichar * message = Wallet_Localize("noPrefills");
       Wallet_Alert(message);
       Recycle(message);
@@ -3492,7 +3555,7 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
     result = shell->GetDocument(&doc);
     if (NS_SUCCEEDED(result)) {
       wallet_Initialize(PR_TRUE);
-      if (!Wallet_KeySet()) {
+      if (!Wallet_IsKeySet()) {
         NS_RELEASE(doc);
         NS_RELEASE(shell);
         return;
@@ -3617,7 +3680,6 @@ WLLT_OnSubmit(nsIContent* formNode) {
     return;
   }
 
-  PRUint32 elementNumber = 0;
   PRUint32 numForms;
   forms->GetLength(&numForms);
   for (PRUint32 formX = 0; formX < numForms; formX++) {

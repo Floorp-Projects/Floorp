@@ -41,6 +41,9 @@
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 
+// Defined and used in wallet.cpp
+extern nsCOMPtr<nsIKeyedStreamGenerator> gKeyedStreamGenerator;
+
 nsWalletlibService::nsWalletlibService()
 {
   NS_INIT_REFCNT();
@@ -51,6 +54,8 @@ nsWalletlibService::nsWalletlibService()
 
 nsWalletlibService::~nsWalletlibService()
 {
+  // Release the keyed stream generator that we might have acquired
+  gKeyedStreamGenerator = NULL;
 }
 
 
@@ -69,6 +74,7 @@ NS_INTERFACE_MAP_BEGIN(nsWalletlibService)
 
 	NS_INTERFACE_MAP_ENTRY(nsIFormSubmitObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
+	NS_INTERFACE_MAP_ENTRY(nsIPasswordSink)
 	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWalletService)
 NS_INTERFACE_MAP_END
@@ -360,3 +366,8 @@ nsWalletlibService::HandleUnknownContentType
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWalletlibService::GetPassword(PRUnichar **password)
+{
+  return Wallet_GetMasterPassword(password);
+}

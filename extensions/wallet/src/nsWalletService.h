@@ -28,11 +28,13 @@
 #include "nsIFormSubmitObserver.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsWeakReference.h"
+#include "nsIPasswordSink.h"
 
 class nsWalletlibService : public nsIWalletService,
                            public nsIObserver,
                            public nsIFormSubmitObserver,
                            public nsIDocumentLoaderObserver,
+                           public nsIPasswordSink,
                            public nsSupportsWeakReference {
 
 public:
@@ -88,6 +90,9 @@ public:
   NS_IMETHOD HandleUnknownContentType
     (nsIDocumentLoader* loader, nsIChannel* channel, const char *aContentType,
      const char *aCommand );		
+
+  // nsIPasswordSink
+  NS_DECL_NSIPASSWORDSINK
 
 protected:
   virtual ~nsWalletlibService();
