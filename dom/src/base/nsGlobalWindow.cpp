@@ -1350,7 +1350,8 @@ NS_IMETHODIMP GlobalWindowImpl::Focus()
       treeOwnerAsWin->SetVisibility(PR_TRUE);
 
    nsCOMPtr<nsIPresShell> presShell;
-   mDocShell->GetPresShell(getter_AddRefs(presShell));
+   if(mDocShell)
+     mDocShell->GetPresShell(getter_AddRefs(presShell));
    
    nsresult result = NS_OK;
    if(presShell)
