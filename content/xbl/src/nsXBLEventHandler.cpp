@@ -91,7 +91,7 @@ nsXBLEventHandler::~nsXBLEventHandler()
   }
 }
 
-NS_IMPL_ISUPPORTS3(nsXBLEventHandler, nsIDOMKeyListener, nsIDOMMouseListener, nsIDOMMenuListener)
+NS_IMPL_ISUPPORTS4(nsXBLEventHandler, nsIDOMKeyListener, nsIDOMMouseListener, nsIDOMMenuListener, nsIDOMFocusListener)
 
 nsresult nsXBLEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 {
@@ -197,6 +197,26 @@ nsresult nsXBLEventHandler::MouseOut(nsIDOMEvent* aMouseEvent)
     ExecuteHandler(NS_ConvertASCIItoUCS2("mouseout"), aMouseEvent);
   return NS_OK;
 }
+
+nsresult nsXBLEventHandler::Focus(nsIDOMEvent* aEvent)
+{
+  if (!mEventName.EqualsWithConversion("focus"))
+    return NS_OK;
+
+  ExecuteHandler(NS_ConvertASCIItoUCS2("focus"), aEvent);
+  return NS_OK;
+}
+
+
+nsresult nsXBLEventHandler::Blur(nsIDOMEvent* aEvent)
+{
+  if (!mEventName.EqualsWithConversion("blur"))
+    return NS_OK;
+
+  ExecuteHandler(NS_ConvertASCIItoUCS2("blur"), aEvent);
+  return NS_OK;
+}
+
 
 nsresult nsXBLEventHandler::Action(nsIDOMEvent* aEvent)
 {

@@ -409,6 +409,7 @@ NS_IMETHODIMP nsXBLService::GetBinding(const nsCString& aURLStr, nsIXBLBinding**
 
   PRInt32 count;
   root->ChildCount(count);
+
   for (PRInt32 i = 0; i < count; i++) {
     nsCOMPtr<nsIContent> child;
     root->ChildAt(i, *getter_AddRefs(child));
