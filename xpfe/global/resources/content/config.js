@@ -538,7 +538,16 @@ function ModifyPref(entry)
     if (!gPromptService.prompt(window, title, entry.prefCol, result, null, dummy))
       return false;
     if (entry.typeCol == nsIPrefBranch.PREF_INT) {
-      gPrefBranch.setIntPref(entry.prefCol, eval(result.value));
+      // | 0 converts to integer or 0; - 0 to float or NaN.
+      // Thus, this check should catch all cases.
+      var val = result.value | 0;
+      if (val != result.value - 0) {
+        var err_title = gConfigBundle.getString("nan_title");
+        var err_text = gConfigBundle.getString("nan_text");
+        gPromptService.alert(window, err_title, err_text);
+        return false;
+      }
+      gPrefBranch.setIntPref(entry.prefCol, val);
     } else {
       var supportsString = Components.classes[nsSupportsString_CONTRACTID].createInstance(nsISupportsString);
       supportsString.data = result.value;
