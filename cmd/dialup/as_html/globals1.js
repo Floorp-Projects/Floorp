@@ -73,7 +73,7 @@ function SetNameValuePair( file, section, variable, data )
 function getConfigFolder( object )
 {
 	var	pathName;
-	pathName = getFolder( object ) + "Config/";
+	pathName = getFolder( object ) + "Config" + "\\";
 
 	//debug( "getConfigFolder: " + pathName );
 
@@ -104,10 +104,9 @@ function getPlatform()
 function getFolder( window )
 {
 	platform = getPlatform();
-	
+
 	if ( platform == "Macintosh" )
 	{				// Macintosh support
-
 		var path = unescape( window.location.pathname );
 		if ( ( x = path.lastIndexOf( "/" ) ) > 0 )
 			path = path.substring( 0, x + 1 );
@@ -126,16 +125,24 @@ function getFolder( window )
 		// note: JavaScript returns path with '/' instead of '\'
 		var path = unescape( window.location.pathname );
 
+		var drive = "|";
+		
 		// gets the drive letter and directory path
 		if ( ( x = path.lastIndexOf( "|" ) ) > 0 )
 		{
-			var drive = path.substring( path.indexOf( '/' ) + 1, path.indexOf( '|' ) );
-			var dirPath = path.substring( path.indexOf( '|' ) + 1, path.lastIndexOf( '/' ) + 1 );
+			drive = path.substring( path.indexOf( '/' ) + 1, path.indexOf( '|' ) );
+			path = path.substring( path.indexOf( '|' ) + 1, path.lastIndexOf( '/' ) + 1 );
 		}
+
+		var pathArray = path.split( "/" );
+		path = pathArray.join( "\\" );
+
+		//debug( "drive: " + drive + " path: " + path );
 
 		// construct newpath		
 
-		newpath = drive + ":" + dirPath;
+		newpath = drive + ":" + path + "\\";
+		debug( "path: " + newpath );
 	}
 	return newpath;
 }
