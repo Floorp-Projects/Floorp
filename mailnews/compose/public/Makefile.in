@@ -29,7 +29,6 @@ IDLSRCS = \
 EXPORTS = \
 		nsIMsgCompose.h \
 		nsMsgComposeFact.h \
-		nsMsgCompFields.h	\
 		nsMsgCompFieldsFact.h	\
 		nsISmtpUrl.h	\
 		MsgCompGlue.h \
