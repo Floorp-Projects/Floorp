@@ -1573,6 +1573,9 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
                         GDK_POINTER_MOTION_MASK |
                         GDK_POINTER_MOTION_HINT_MASK);
 
+  NS_ASSERTION(mSuperWin,"no super window!");
+  if (!mSuperWin) return NS_ERROR_FAILURE;
+
   gdk_window_set_events(mSuperWin->bin_window, 
                         mask);
 
@@ -1645,11 +1648,14 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
 //-------------------------------------------------------------------------
 void nsWindow::InitCallbacks(char * aName)
 {
-  gdk_superwin_set_event_funcs(mSuperWin,
+  NS_ASSERTION(mSuperWin,"no superwin, can't init callbacks");
+  if (mSuperWin) {
+    gdk_superwin_set_event_funcs(mSuperWin,
                                handle_xlib_shell_event,
                                handle_xlib_bin_event,
                                handle_superwin_paint,
                                this, NULL);
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -2415,6 +2421,10 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
       aWidth = 1;
       aHeight = 1;
       mIsTooSmall = PR_TRUE;
+
+      NS_ASSERTION(mSuperWin,"no super window!");
+      if (!mSuperWin) return NS_ERROR_FAILURE;
+
       gdk_window_hide(mSuperWin->bin_window);
       gdk_window_hide(mSuperWin->shell_window);
     }
