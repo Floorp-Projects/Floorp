@@ -1,6 +1,6 @@
 <!ENTITY printCmd.commandkey            "p">
 
-<!ENTITY viewCustomizeToolbar.label     "Customize Toolbar...">
+<!ENTITY viewCustomizeToolbar.label     "Customize...">
 <!ENTITY viewCustomizeToolbar.accesskey "C">
 
 <!ENTITY findOnCmd.commandkey           "F">
@@ -19,12 +19,12 @@
 <!ENTITY findBtn.label		  	"Find">
 <!ENTITY sidebarBtn.label               "Toggle Sidebar">
 <!ENTITY sidebarBtn.tooltip             "Show or Hide the Help Sidebar">
-<!ENTITY textZoomReduceBtn.label 	"Shrink Text">
-<!ENTITY textZoomReduceBtn.accesskey    "S">
-<!ENTITY textZoomReduceBtn.tooltip      "Decrease the size of the text in the Help documents.">
-<!ENTITY textZoomEnlargeBtn.label 	"Enlarge Text">
-<!ENTITY textZoomEnlargeBtn.accesskey   "E">
-<!ENTITY textZoomEnlargeBtn.tooltip     "Increase the size of the text in the Help documents.">
+<!ENTITY textZoomReduceBtn.label 	"Decrease Text Size">
+<!ENTITY textZoomReduceBtn.accesskey    "D">
+<!ENTITY textZoomReduceBtn.tooltip      "Decrease the size of the text in Help documents.">
+<!ENTITY textZoomEnlargeBtn.label 	"Increase Text Size">
+<!ENTITY textZoomEnlargeBtn.accesskey   "I">
+<!ENTITY textZoomEnlargeBtn.tooltip     "Increase the size of the text in Help documents.">
 <!ENTITY customizeButton.tooltip        "Customize which buttons are shown on the Help toolbar.">
 <!ENTITY reloadCmd.label                "Reload">
 <!ENTITY reloadCmd.accesskey            "R">
