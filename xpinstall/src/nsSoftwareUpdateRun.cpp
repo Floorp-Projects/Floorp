@@ -56,12 +56,12 @@
 static NS_DEFINE_CID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-extern JSObject PR_CALLBACK *InitXPInstallObjects(JSContext *jscontext, JSObject *global, nsIFile* jarfile, const PRUnichar* url, const PRUnichar* args, PRUint32 flags, nsIChromeRegistry* reg, nsIZipReader* hZip);
-extern nsresult PR_CALLBACK InitInstallVersionClass(JSContext *jscontext, JSObject *global, void** prototype);
-extern nsresult PR_CALLBACK InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *global, void** prototype);
+extern JSObject *InitXPInstallObjects(JSContext *jscontext, JSObject *global, nsIFile* jarfile, const PRUnichar* url, const PRUnichar* args, PRUint32 flags, nsIChromeRegistry* reg, nsIZipReader* hZip);
+extern nsresult InitInstallVersionClass(JSContext *jscontext, JSObject *global, void** prototype);
+extern nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *global, void** prototype);
 
 // Defined in this file:
-static void     XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
+PR_STATIC_CALLBACK(void) XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 static PRInt32  GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptBuffer, PRUint32 *scriptLength);
 static nsresult SetupInstallContext(nsIZipReader* hZip, nsIFile* jarFile, const PRUnichar* url, const PRUnichar* args, PRUint32 flags, nsIChromeRegistry* reg, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
 
