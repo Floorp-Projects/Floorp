@@ -296,6 +296,10 @@ public:
    // Helper function to determine if the view point is inside of a view
   PRBool PointIsInside(nsView& aView, nscoord x, nscoord y) const;
 
+  // Helper function to get mouse grabbing off this view (by moving it to the
+  // parent, if we can)
+  void DropMouseGrabbing();
+
 public: // NOT in nsIView, so only available in view module
   nsView* GetFirstChild() const { return mFirstChild; }
   nsView* GetNextSibling() const { return mNextSibling; }

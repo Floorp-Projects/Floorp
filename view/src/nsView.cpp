@@ -100,11 +100,21 @@ nsView::nsView()
   mChildRemoved = PR_FALSE;
 }
 
+void nsView::DropMouseGrabbing() {
+  // check to see if we are grabbing events
+  if (mViewManager->GetMouseEventGrabber() == this) {
+    // we are grabbing events. Move the grab to the parent if we can.
+    PRBool boolResult; //not used
+    // if GetParent() returns null, then we release the grab, which is the best we can do
+    mViewManager->GrabMouseEvents(GetParent(), boolResult);
+  }
+}
+
 nsView::~nsView()
 {
   MOZ_COUNT_DTOR(nsView);
 
-  while (GetFirstChild() != nsnull)
+  while (GetFirstChild())
   {
     nsView* child = GetFirstChild();
     if (child->GetViewManager() == mViewManager) {
@@ -115,14 +125,16 @@ nsView::~nsView()
     }
   }
 
-  if (nsnull != mViewManager)
+  DropMouseGrabbing();
+  
+  if (mViewManager)
   {
     nsView *rootView = mViewManager->GetRootView();
     
-    if (nsnull != rootView)
+    if (rootView)
     {
       // Root views can have parents!
-      if (nsnull != mParent)
+      if (mParent)
       {
         mViewManager->RemoveChild(this);
       }
@@ -133,33 +145,26 @@ nsView::~nsView()
         mViewManager->SetRootView(nsnull);
       }
     }
-    else if (nsnull != mParent)
+    else if (mParent)
     {
       mParent->RemoveChild(this);
     }
     
-    nsView* grabbingView = mViewManager->GetMouseEventGrabber(); //check to see if we are capturing!!!
-    if (grabbingView == this)
-    {
-      PRBool boolResult;//not used
-      mViewManager->GrabMouseEvents(nsnull,boolResult);
-    }
-
     mViewManager = nsnull;
   }
-  else if (nsnull != mParent)
+  else if (mParent)
   {
     mParent->RemoveChild(this);
   }
 
-  if (nsnull != mZParent)
+  if (mZParent)
   {
     mZParent->RemoveReparentedView();
     mZParent->Destroy();
   }
 
   // Destroy and release the widget
-  if (nsnull != mWindow)
+  if (mWindow)
   {
     mWindow->SetClientData(nsnull);
     mWindow->Destroy();
@@ -555,13 +560,7 @@ NS_IMETHODIMP nsView::SetVisibility(nsViewVisibility aVisibility)
 
   if (aVisibility == nsViewVisibility_kHide)
   {
-    nsView* grabbingView = mViewManager->GetMouseEventGrabber(); //check to see if we are grabbing events
-    if (grabbingView == this)
-    {
-      //if yes then we must release them before we become hidden and can't get them
-      PRBool boolResult;//not used
-      mViewManager->GrabMouseEvents(nsnull,boolResult);
-    }
+    DropMouseGrabbing();
   }
 
   if (nsnull != mWindow)
