@@ -1486,13 +1486,18 @@ js_Interpret(JSContext *cx, jsval *result)
 
 #if JS_HAS_IN_OPERATOR
           case JSOP_IN:
-            rval = POP_OPND();
+            rval = FETCH_OPND(-1);
             if (JSVAL_IS_PRIMITIVE(rval)) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_IN_NOT_OBJECT);
+                str = js_DecompileValueGenerator(cx, -1, rval, NULL);
+                if (str) {
+                    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                         JSMSG_IN_NOT_OBJECT,
+                                         JS_GetStringBytes(str));
+                }
                 ok = JS_FALSE;
                 goto out;
             }
+            sp--;
             obj = JSVAL_TO_OBJECT(rval);
             FETCH_ELEMENT_ID(-1, id);
             ok = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);

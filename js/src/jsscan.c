@@ -515,7 +515,7 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts,
 
     js_AddRoot(cx, &linestr, "error line buffer");
 
-    JS_ASSERT(ts->linebuf.limit < ts->linebuf.base + JS_LINE_LIMIT);
+    JS_ASSERT(!ts || ts->linebuf.limit < ts->linebuf.base + JS_LINE_LIMIT);
     onError = cx->errorReporter;
     if (onError) {
         /* 
