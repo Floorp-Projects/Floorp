@@ -51,7 +51,7 @@ public:
     TestConsumer();
 
     NS_IMETHOD GetBindInfo(void);
-    NS_IMETHOD OnProgress(void);
+    NS_IMETHOD OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const char *msg);
     NS_IMETHOD OnStartBinding(void);
     NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream, PRInt32 length);
     NS_IMETHOD OnStopBinding(void);
@@ -74,7 +74,7 @@ NS_IMPL_ISUPPORTS(TestConsumer,kIStreamNotificationIID);
 TestConsumer::~TestConsumer()
 {
     if (bTraceEnabled) {
-        printf("TestConsumer is being deleted...\n");
+        printf("\nTestConsumer is being deleted...\n");
     }
 }
 
@@ -82,15 +82,21 @@ TestConsumer::~TestConsumer()
 NS_IMETHODIMP TestConsumer::GetBindInfo(void)
 {
     if (bTraceEnabled) {
-        printf("+++ TestConsumer::GetBindInfo\n");
+        printf("\n+++ TestConsumer::GetBindInfo\n");
     }
 
     return 0;
 }
 
-NS_IMETHODIMP TestConsumer::OnProgress(void)
+NS_IMETHODIMP TestConsumer::OnProgress(PRInt32 Progress, PRInt32 ProgressMax, const char *msg)
 {
-    printf("+++ TestConsumer::OnProgress\n");
+    if (bTraceEnabled) {
+        if (msg) {
+            printf("\n+++ TestConsumer::OnProgress: status %s\n", msg);
+        } else {
+            printf("\n+++ TestConsumer::OnProgress: %d of total %d\n", Progress, ProgressMax);
+        }
+    }
 
     return 0;
 }
@@ -98,7 +104,7 @@ NS_IMETHODIMP TestConsumer::OnProgress(void)
 NS_IMETHODIMP TestConsumer::OnStartBinding(void)
 {
     if (bTraceEnabled) {
-        printf("+++ TestConsumer::OnStartBinding\n");
+        printf("\n+++ TestConsumer::OnStartBinding\n");
     }
 
     return 0;
@@ -110,7 +116,7 @@ NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIInputStream *pIStream, PRInt32 le
     PRInt32 len;
 
     if (bTraceEnabled) {
-        printf("+++ TestConsumer::OnDataAvailable: %d bytes available...\n", length);
+        printf("\n+++ TestConsumer::OnDataAvailable: %d bytes available...\n", length);
     }
 
     do {
@@ -131,7 +137,7 @@ NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIInputStream *pIStream, PRInt32 le
 NS_IMETHODIMP TestConsumer::OnStopBinding(void)
 {
     if (bTraceEnabled) {
-        printf("+++ TestConsumer::OnStopBinding\n");
+        printf("\n+++ TestConsumer::OnStopBinding\n");
     }
 
     /* The document has been loaded, so drop out of the message pump... */
