@@ -4660,6 +4660,35 @@ if (($fielddef = GetFieldDef("logincookies", "lastused")) &&
     ChangeFieldType ('logincookies', 'lastused', 'DATETIME NOT NULL');
 }
 
+# 2005-01-12 Nick Barnes <nb@ravenbrook.com> bug 278010
+# Rename any group which has an empty name.
+# Note that there can be at most one such group (because of
+# the SQL index on the name column).
+$sth = $dbh->prepare("SELECT id FROM groups where name = ''");
+$sth->execute();
+my ($emptygroupid) = $sth->fetchrow_array();
+if ($emptygroupid) {
+    # There is a group with an empty name; find a name to rename it
+    # as.  Must avoid collisions with existing names.  Start with
+    # group_$gid and add _<n> if necessary.
+    my $trycount = 0;
+    my $trygroupname;
+    my $trygroupsth = $dbh->prepare("SELECT id FROM groups where name = ?");
+    do {
+        $trygroupname = "group_$emptygroupid";
+        if ($trycount > 0) {
+            $trygroupname .= "_$trycount";
+        }
+        $trygroupsth->execute($trygroupname);
+        if ($trygroupsth->rows > 0) {
+            $trycount ++;
+        }
+    } while ($trygroupsth->rows > 0);
+    $sth = $dbh->prepare("UPDATE groups SET name = ? WHERE id = $emptygroupid");
+    $sth->execute($trygroupname);
+    print "Group $emptygroupid had an empty name; renamed as '$trygroupname'.\n";
+}
+
 #
 # Final checks...
 
