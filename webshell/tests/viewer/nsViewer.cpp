@@ -899,6 +899,7 @@ nsresult nsViewer::ShowPrintPreview(nsIWebWidget* web, PRIntn aColumns)
       nsRect rr(0, 0, bounds.width, bounds.height);
 
       rv = NS_NewWebWidget(&wd->ww);
+      AddMenu(wd->windowWidget, PR_TRUE);
       rv = wd->ww->Init(wd->windowWidget->GetNativeData(NS_NATIVE_WIDGET), rr, doc, cx);
       wd->ww->Show();
       wd->observer = NewObserver(wd->ww);
@@ -1139,7 +1140,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   gMainWindowData = wd;
 
     // Attach a menu to the top level window
-  AddMenu(wd->windowWidget);
+  AddMenu(wd->windowWidget, PR_FALSE);
 
     // Now embed the web widget in it
   nsresult rv = NS_NewWebWidget(&wd->ww);
@@ -1211,7 +1212,7 @@ static char defaultURL[MAXPATHLEN];
   return(defaultURL);
 }
 
-void nsViewer::AddMenu(nsIWidget* aMainWindow)
+void nsViewer::AddMenu(nsIWidget* aMainWindow, PRBool aForPrintPreview)
 {
   printf("Menu not implemented\n");
 }

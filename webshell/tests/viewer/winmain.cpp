@@ -53,7 +53,7 @@ extern int  NET_PollSockets();
 class nsWin32Viewer : public nsViewer {
     // From nsViewer
   public:
-    virtual void AddMenu(nsIWidget* aMainWindow);
+    virtual void AddMenu(nsIWidget* aMainWindow, PRBool aForPrintPreview);
     virtual void ShowConsole(WindowData* aWindata);
     virtual void DoDebugRobot(WindowData* aWindata);
     virtual void CopySelection(WindowData* aWindata);
@@ -75,6 +75,7 @@ static HANDLE gInstance, gPrevInstance;
 JSConsole *gConsole = NULL;
 
 static char* class1Name = "Viewer";
+static char* class2Name = "PrintPreview";
 
 void DestroyConsole()
 {
@@ -176,9 +177,10 @@ void AddViewerMenu(HINSTANCE hInstance, nsIWidget* aWidget, LPCTSTR lpMenuName)
   ::SetMenu(hwnd, menu);
 }
 
-void nsWin32Viewer::AddMenu(nsIWidget* aMainWindow)
+void nsWin32Viewer::AddMenu(nsIWidget* aMainWindow, PRBool aForPrintPreview)
 {
-   AddViewerMenu(gInstance, aMainWindow, class1Name);
+   AddViewerMenu(gInstance, aMainWindow,
+                 aForPrintPreview ? class2Name : class1Name);
 }
 
 //-----------------------------------------------------------------
