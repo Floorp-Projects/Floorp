@@ -52,7 +52,7 @@ public:
 
     //nsIDrawingSurfaceQT interface
 
-    NS_IMETHOD Init(QPixmap * aPixmap, QPainter *aGC);
+    NS_IMETHOD Init(QPaintDevice * aPaintDevice, QPainter *aGC);
     NS_IMETHOD Init(QPainter *aGC, 
                     PRUint32 aWidth, 
                     PRUint32 aHeight, 
@@ -60,14 +60,14 @@ public:
 
     // utility functions.
     QPainter * GetGC(void);
-    QPixmap  * GetPixmap(void);
+    QPaintDevice  * GetPaintDevice(void);
 
 protected:
     NS_IMETHOD CommonInit();
 
 private:
     /* general */
-    QPixmap	      * mPixmap;
+    QPaintDevice  * mPaintDevice;
     QPainter	  * mGC;
     int		        mDepth;
     nsPixelFormat	mPixFormat;
