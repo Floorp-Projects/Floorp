@@ -35,7 +35,10 @@
   <box align="horizontal">
     <html:input name="identity.bccSelf" type="checkbox"/>
     <html:div>&bccAccount.label;</html:div>
-    <html:div id="bccemail"/>
+    <spring class="spacer"/>
+    <html:span>
+      <html:div before="&lt;" id="bccemail" after="&gt;"/>
+    </html:span>
   </box>
   <box align="horizontal">
     <html:input name="identity.bccOthers" type="checkbox"/>
@@ -44,7 +47,7 @@
   </box>
 </box>
 
-<html:div>&specialFolderTitle.label;</html:div>
+<html:div><html:b>&specialFolderTitle.label;</html:b></html:div>
 <box align="vertical" flex="100%">
   <box align="horizontal">
     <html:div flex="34%">&draftMailFolder.label;</html:div>
