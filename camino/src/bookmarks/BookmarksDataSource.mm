@@ -569,8 +569,9 @@ const int kBookmarksRootItemTag = -2;
   else 
     content = [item contentNode];
   
-  PRInt32 childCount;
-  content->ChildCount(childCount);
+  PRInt32 childCount = 0;
+  if ( content )
+	content->ChildCount(childCount);
   
   return childCount;
 }
