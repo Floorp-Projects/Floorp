@@ -35,7 +35,7 @@
  * p7sign -- A command to create a *detached* pkcs7 signature (over a given
  * input file).
  *
- * $Id: p7sign.c,v 1.5 2001/01/31 23:24:50 kirke%netscape.com Exp $
+ * $Id: p7sign.c,v 1.6 2001/02/01 00:57:23 kirke%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -178,7 +178,7 @@ main(int argc, char **argv)
     PRBool encapsulated = PR_FALSE;
     PLOptState *optstate;
     PLOptStatus status;
-	SECStatus rv;
+    SECStatus rv;
 
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
