@@ -206,23 +206,21 @@ nsWindow::nsWindow() : nsBaseWidget()
    
     mHitMenu            = nsnull;
     mHitSubMenus        = new nsVoidArray();
-#ifdef LOSER
-    mVScrollbar         = nsnull;
-#endif
     mIsInMouseCapture   = PR_FALSE;
 
-	mIMEProperty		= 0;
-	mIMEIsComposing		= PR_FALSE;
-	mIMECompString = NULL;
-	mIMECompUnicode = NULL;
-	mIMEAttributeString = NULL;
-	mIMEAttributeStringSize = 0;
-	mIMEAttributeStringLength = 0;
-	mIMECompClauseString = NULL;
-	mIMECompClauseStringSize = 0;
-	mIMECompClauseStringLength = 0;
-        WORD kblayout = (WORD)GetKeyboardLayout(0);
-        LangIDToCP((WORD)(0x0FFFFL & kblayout), mCurrentKeyboardCP);
+	  mIMEProperty		= 0;
+	  mIMEIsComposing		= PR_FALSE;
+	  mIMECompString = NULL;
+	  mIMECompUnicode = NULL;
+	  mIMEAttributeString = NULL;
+	  mIMEAttributeStringSize = 0;
+	  mIMEAttributeStringLength = 0;
+	  mIMECompClauseString = NULL;
+	  mIMECompClauseStringSize = 0;
+	  mIMECompClauseStringLength = 0;
+
+    WORD kblayout = (WORD)GetKeyboardLayout(0);
+    LangIDToCP((WORD)(0x0FFFFL & kblayout), mCurrentKeyboardCP);
 
 #ifdef IME_FROM_ON_CHAR
 	mHaveDBCSLeadByte = false;
@@ -2507,9 +2505,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
     static UINT vkKeyCached = 0;                // caches VK code fon WM_KEYDOWN
     static BOOL firstTime = TRUE;                // for mouse wheel logic
     static int  iDeltaPerLine, iAccumDelta ;     // for mouse wheel logic
-#ifdef LOSER
     ULONG       ulScrollLines ;                  // for mouse wheel logic
-#endif
 
     PRBool        result = PR_FALSE; // call the default nsWindow proc
     nsPaletteInfo palInfo;
@@ -2943,14 +2939,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_SETTINGCHANGE:
           firstTime = TRUE;
           // Fall through
+
         case WM_MOUSEWHEEL:
-#ifdef LOSER
         {
          if (firstTime) {
            firstTime = FALSE;
-            //printf("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ WM_SETTINGCHANGE\n");
             SystemParametersInfo (104, 0, &ulScrollLines, 0) ;
-            //SystemParametersInfo (SPI_GETWHEELSCROLLLINES, 0, &ulScrollLines, 0) ;
           
             // ulScrollLines usually equals 3 or 0 (for no scrolling)
             // WHEEL_DELTA equals 120, so iDeltaPerLine will be 40
@@ -2959,38 +2953,25 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               iDeltaPerLine = WHEEL_DELTA / ulScrollLines ;
             else
               iDeltaPerLine = 0 ;
-            //printf("ulScrollLines %d  iDeltaPerLine %d\n", ulScrollLines, iDeltaPerLine);
 
             if (msg == WM_SETTINGCHANGE) {
               return 0;
             }
          }
-         HWND scrollbar = NULL;
-
-         if (nsnull != mVScrollbar) {
-           scrollbar = (HWND)mVScrollbar->GetNativeData(NS_NATIVE_WINDOW);
-         }
-         if (scrollbar) {
-            if (iDeltaPerLine == 0)
-              break ;
-
-            iAccumDelta += (short) HIWORD (wParam) ;     // 120 or -120
-
-            while (iAccumDelta >= iDeltaPerLine) {    
-              //printf("iAccumDelta %d\n", iAccumDelta);
-              SendMessage (mWnd, WM_VSCROLL, SB_LINEUP, (LONG)scrollbar) ;
-              iAccumDelta -= iDeltaPerLine ;
-            }
-
-            while (iAccumDelta <= -iDeltaPerLine) {
-              //printf("iAccumDelta %d\n", iAccumDelta);
-              SendMessage (mWnd, WM_VSCROLL, SB_LINEDOWN, (LONG)scrollbar) ;
-              iAccumDelta += iDeltaPerLine ;
-            }
-         }
-            return 0 ;
-      } break;
-#endif
+         if (iDeltaPerLine == 0)
+           return 0;
+         nsMouseScrollEvent scrollEvent;
+         scrollEvent.deltaLines = -((short) HIWORD (wParam) / iDeltaPerLine);
+         scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
+         scrollEvent.isShift   = IS_VK_DOWN(NS_VK_SHIFT);
+         scrollEvent.isControl = IS_VK_DOWN(NS_VK_CONTROL);
+         scrollEvent.isMeta    = PR_FALSE;
+         scrollEvent.isAlt     = IS_VK_DOWN(NS_VK_ALT);
+         InitEvent(scrollEvent, NS_MOUSE_SCROLL);
+         if (nsnull != mEventCallback)
+           result = DispatchWindowEvent(&scrollEvent);
+        }
+        break;
 
         case WM_PALETTECHANGED:
             if ((HWND)wParam == mWnd) {
