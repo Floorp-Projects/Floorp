@@ -983,10 +983,10 @@ case "$target" in
 *-hpux*)
     DLL_SUFFIX=".sl"
     if test ! "$GNU_CC"; then
-    	DSO_LDOPTS='-b -Wl,+s -L$(DIST)/bin'
+    	DSO_LDOPTS='-Wl,-b -Wl,+s -L$(DIST)/bin'
     	DSO_CFLAGS=""
     	DSO_PIC_CFLAGS="+Z"
-    	MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
+    	MKSHLIB='$(CXX) -b $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
     	MKCSHLIB='$(CC) $(CFLAGS) $(DSO_LDOPTS) -o $@'
         CXXFLAGS="$CXXFLAGS -Wc,-ansi_for_scope,on"
     else
