@@ -39,9 +39,9 @@ protected:
 	// filter related methods. For filtering we always use the headers
     // list instead of the database...
 	PRBool m_Filtering;
-	PRInt32 GetNextFilterLine(char * buf, int bufSize);
+	PRInt32 GetNextFilterLine(char * buf, PRUint32 bufSize);
     // pointer into the headers list in the original message hdr db...
-	char * m_headers;  
+	const char * m_headers;  
 	PRUint32 m_headersSize;
 	PRUint32 m_headerBytesRead;
 
@@ -70,14 +70,8 @@ protected:
 	nsIMsgDatabase * m_db;
 	PRInt32 m_IMAPMessageOffset;
 
-    // PR_TRUE if we are in Offline IMAP mode, PR_FALSE otherwise
-	PRBool m_OfflineIMAP;		 
-
 	// News related methods & state
 	PRInt32 m_NewsArticleOffset;
-
-    // goes through the NewsDB
-	PRInt32 GetNextNewsLine (nsIMsgDatabase * newsDB, char * buf, int bufSize);  
 
 	// Transformations
 	PRBool m_stripHeaders;	// PR_TRUE if we're supposed to strip of message headers

@@ -28,6 +28,8 @@
 #include "nsIMsgSearchSession.h"
 #include "nsMsgSearchScopeTerm.h"
 
+#define EMPTY_MESSAGE_LINE(buf) (buf[0] == CR || buf[0] == LF || buf[0] == '\0')
+
 class nsMsgSearchTerm
 {
 public:

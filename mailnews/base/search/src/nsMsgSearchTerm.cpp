@@ -568,8 +568,6 @@ void nsMsgSearchTerm::StripQuotedPrintable (unsigned char *src)
 	dest[destIdx] = src[srcIdx]; // null terminate
 }
 
-#define EMPTY_MESSAGE_LINE(buf) (buf[0] == CR || buf[0] == LF || buf[0] == '\0')
-
 // Looks in the MessageDB for the user specified arbitrary header, if it finds the header, it then looks for a match against
 // the value for the header. 
 nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgSearchScopeTerm *scope, PRUint32 offset, PRUint32 length /* in lines*/, const char *charset,
@@ -667,7 +665,6 @@ nsresult nsMsgSearchTerm::MatchBody (nsMsgSearchScopeTerm *scope, PRUint32 offse
 	if (!bodyHan)
 		return NS_ERROR_OUT_OF_MEMORY;
 
-#ifdef HAVE_I18N
 	const int kBufSize = 512; // max size of a line???
 	char *buf = (char*) PR_Malloc(kBufSize);
 	if (buf)
@@ -675,13 +672,14 @@ nsresult nsMsgSearchTerm::MatchBody (nsMsgSearchScopeTerm *scope, PRUint32 offse
 		PRBool endOfFile = PR_FALSE;  // if retValue == 0, we've hit the end of the file
 		uint32 lines = 0;
 
-		CCCDataObject conv = INTL_CreateCharCodeConverter();
 		PRBool getConverter = PR_FALSE;
+#ifdef DO_I18N
+		CCCDataObject conv = INTL_CreateCharCodeConverter();
 		PRInt16 win_csid = INTL_DocToWinCharSetID(foldcsid);
 		PRInt16 mail_csid = INTL_DefaultMailCharSetID(win_csid);    // to default mail_csid (e.g. JIS for Japanese)
 		if ((nsnull != conv) && INTL_GetCharCodeConverter(mail_csid, win_csid, conv)) 
 			getConverter = PR_TRUE;
-
+#endif // DO_I18N
 		// Change the sense of the loop so we don't bail out prematurely
 		// on negative terms. i.e. opDoesntContain must look at all lines
 		PRBool boolContinueLoop;
@@ -698,7 +696,7 @@ nsresult nsMsgSearchTerm::MatchBody (nsMsgSearchScopeTerm *scope, PRUint32 offse
 		// general direction. Blech. ### FIX ME 
 		// bug fix #88935: for stateful csids like JIS, we don't want to decode
 		// quoted printable since it contains '='.
-		PRBool isQuotedPrintable = !(mail_csid & STATEFUL) &&
+		PRBool isQuotedPrintable =  /*!(mail_csid & STATEFUL) && */
 										(PL_strchr (m_value.u.string, '=') == nsnull);
 
 		while (!endOfFile && result == boolContinueLoop)
@@ -709,9 +707,10 @@ nsresult nsMsgSearchTerm::MatchBody (nsMsgSearchScopeTerm *scope, PRUint32 offse
 				if (isQuotedPrintable)
 					StripQuotedPrintable ((unsigned char*)buf);
 
-				char *compare = buf;
+				nsCString compare(buf);
 				if (getConverter) 
 				{	
+#ifdef DO_I18N
 					// In here we do I18N conversion if we get the converter
 					char *newBody = nsnull;
 					newBody = (char *)INTL_CallCharCodeConverter(conv, (unsigned char *) buf, (int32) PL_strlen(buf));
@@ -721,27 +720,26 @@ nsresult nsMsgSearchTerm::MatchBody (nsMsgSearchScopeTerm *scope, PRUint32 offse
 						// we don't want to free body in that case 
 						compare = newBody;
 					}
+#endif
 				}
-				if (*compare && *compare != CR && *compare != LF)
+				if (*compare != CR && *compare != LF)
 				{
-					err = MatchString (compare, win_csid, PR_TRUE, &result);
+					err = MatchString (&compare, nsnull, PR_TRUE, &result);
 					lines++; 
 				}
-				if (compare != buf)
-					XP_FREEIF(compare);
 			}
 			else 
 				endOfFile = PR_TRUE;
 		}
-
+#ifdef DO_I18N
 		if(conv) 
 			INTL_DestroyCharCodeConverter(conv);
+#endif
 		PR_FREEIF(buf);
 		delete bodyHan;
 	}
 	else
 		err = NS_ERROR_OUT_OF_MEMORY;
-#endif // HAVE_I18N
 	*pResult = result;
 	return err;
 }
@@ -1131,11 +1129,13 @@ nsMsgSearchScopeTerm::nsMsgSearchScopeTerm (nsMsgSearchScopeAttribute attribute,
 	m_attribute = attribute;
 	m_folder = folder;
 	m_searchServer = PR_TRUE;
+	m_fileStream = nsnull;
 }
 
 nsMsgSearchScopeTerm::nsMsgSearchScopeTerm ()
 {
 	m_searchServer = PR_TRUE;
+	m_fileStream = nsnull;
 }
 
 nsMsgSearchScopeTerm::~nsMsgSearchScopeTerm ()
@@ -1183,9 +1183,9 @@ PRBool nsMsgSearchScopeTerm::IsOfflineIMAPMail()
 	return PR_FALSE;       // we are not an IMAP folder that is offline
 }
 
-const char *nsMsgSearchScopeTerm::GetMailPath()
+nsresult nsMsgSearchScopeTerm::GetMailPath(nsIFileSpec **aFileSpec)
 {
-	return nsnull;
+	return (m_folder) ? m_folder->GetPath(aFileSpec) : NS_ERROR_NULL_POINTER;
 }
 
 nsresult nsMsgSearchScopeTerm::TimeSlice ()

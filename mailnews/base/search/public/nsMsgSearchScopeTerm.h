@@ -24,6 +24,7 @@
 #include "nsIMsgSearchAdapter.h"
 #include "nsIMsgFolder.h"
 #include "nsIMsgSearchAdapter.h"
+#include "nsFileStream.h"
 #include "nsCOMPtr.h"
 
 class nsMsgSearchScopeTerm 
@@ -36,7 +37,7 @@ public:
 	PRBool IsOfflineNews();
 	PRBool IsOfflineMail ();
 	PRBool IsOfflineIMAPMail();  // added by mscott 
-	const char *GetMailPath();
+	nsresult GetMailPath(nsIFileSpec **aFileSpec);
 	nsresult TimeSlice ();
 
 	nsresult InitializeAdapter (nsMsgSearchTermArray &termList);
@@ -46,7 +47,7 @@ public:
 	nsMsgSearchScopeAttribute m_attribute;
 	char *m_name;
 	nsCOMPtr <nsIMsgFolder> m_folder;
-//	XP_File m_file;
+	nsIOFileStream		*m_fileStream;
 	nsCOMPtr <nsIMsgSearchAdapter> m_adapter;
 	PRBool m_searchServer;
 
