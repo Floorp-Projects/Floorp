@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGMatrix.h"
+#include "nsDOMError.h"
 #include <math.h>
 
 const double radPerDegree = 2.0*3.1415926535 / 360.0;
@@ -192,10 +193,8 @@ NS_IMETHODIMP nsSVGMatrix::Multiply(nsIDOMSVGMatrix *secondMatrix, nsIDOMSVGMatr
 NS_IMETHODIMP nsSVGMatrix::Inverse(nsIDOMSVGMatrix **_retval)
 {
   double det = mA*mD - mC*mB;
-  if (det == 0.0) {
-    return NS_ERROR_FAILURE;    
-    // XXX should return SVG_MATRIX_NOT_INVERTABLE
-  }
+  if (det == 0.0)
+    return NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE;
 
   Create(_retval);
   if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;

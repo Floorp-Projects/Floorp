@@ -304,6 +304,7 @@
 #include "nsIDOMSVGAnimTransformList.h"
 #include "nsIDOMSVGCircleElement.h"
 #include "nsIDOMSVGEllipseElement.h"
+#include "nsIDOMSVGException.h"
 #include "nsIDOMSVGLineElement.h"
 #include "nsIDOMSVGRectElement.h"
 #include "nsIDOMSVGDocument.h"
@@ -893,7 +894,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(SVGScriptElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)  
-#endif  
+  NS_DEFINE_CLASSINFO_DATA(SVGException, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+#endif //MOZ_SVG
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -2384,6 +2387,11 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGScriptElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGURIReference)
     DOM_CLASSINFO_SVG_GRAPHIC_ELEMENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(SVGException, nsIDOMSVGException)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMSVGException)
+    DOM_CLASSINFO_MAP_ENTRY(nsIException)
   DOM_CLASSINFO_MAP_END
 
 #endif //MOZ_SVG

@@ -69,6 +69,14 @@ DOM_MSG_DEF(NS_ERROR_DOM_RANGE_INVALID_NODE_TYPE_ERR, "The container of an bound
 DOM_MSG_DEF(NS_ERROR_DOM_VALIDATION_ERR, "A call to a method would make the Node invalid with respect to \"partial validity\", so the operation was not done")
 DOM_MSG_DEF(NS_ERROR_DOM_TYPE_MISMATCH_ERR, "The type of an object is incompatible with the expected type of the parameter associated to the object")
 
+/* SVG DOM error codes from http://www.w3.org/TR/SVG11/svgdom.html */
+
+#ifdef MOZ_SVG
+DOM_MSG_DEF(NS_ERROR_DOM_SVG_WRONG_TYPE_ERR, "Unknown or invalid type")
+DOM_MSG_DEF(NS_ERROR_DOM_SVG_INVALID_VALUE_ERR, "One of the parameters has an invalid value")
+DOM_MSG_DEF(NS_ERROR_DOM_SVG_MATRIX_NOT_INVERTABLE, "The matrix could not be computed")
+#endif
+
 /* DOM error codes defined by us */
 
 /* XXX string should be specified by norris */

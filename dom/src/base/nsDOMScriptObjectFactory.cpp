@@ -78,6 +78,9 @@ nsDOMScriptObjectFactory::nsDOMScriptObjectFactory()
   if (xs) {
     xs->RegisterExceptionProvider(this, NS_ERROR_MODULE_DOM);
     xs->RegisterExceptionProvider(this, NS_ERROR_MODULE_DOM_RANGE);
+#ifdef MOZ_SVG
+    xs->RegisterExceptionProvider(this, NS_ERROR_MODULE_SVG);
+#endif
   }
 }
 
@@ -192,6 +195,10 @@ nsDOMScriptObjectFactory::Observe(nsISupports *aSubject,
 
     if (xs) {
       xs->UnregisterExceptionProvider(this, NS_ERROR_MODULE_DOM);
+      xs->UnregisterExceptionProvider(this, NS_ERROR_MODULE_DOM_RANGE);
+#ifdef MOZ_SVG
+      xs->UnregisterExceptionProvider(this, NS_ERROR_MODULE_SVG);
+#endif
     }
   }
 
@@ -203,10 +210,17 @@ nsDOMScriptObjectFactory::GetException(nsresult result,
 				       nsIException *aDefaultException,
 				       nsIException **_retval)
 {
-  if (NS_ERROR_GET_MODULE(result) == NS_ERROR_MODULE_DOM_RANGE) {
-    return NS_NewRangeException(result, aDefaultException, _retval);
+  switch (NS_ERROR_GET_MODULE(result))
+  {
+    case NS_ERROR_MODULE_DOM_RANGE:
+      return NS_NewRangeException(result, aDefaultException, _retval);
+#ifdef MOZ_SVG
+    case NS_ERROR_MODULE_SVG:
+      return NS_NewSVGException(result, aDefaultException, _retval);
+#endif
+    default:
+      return NS_NewDOMException(result, aDefaultException, _retval);
   }
-  return NS_NewDOMException(result, aDefaultException, _retval);
 }
 
 NS_IMETHODIMP
