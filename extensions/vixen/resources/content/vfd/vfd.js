@@ -56,8 +56,13 @@ var vxVFD =
     
     if (this.mTxMgrShell) {
       var rootShell = vxUtils.getRootShell();
-      rootShell.observerService.Notify(this.mTxMgrShell.mDataSource.mDataSource, 
-                                       "vfd-focus", this);
+      try {
+        rootShell.observerService.Notify(this.mTxMgrShell.mDataSource.mDataSource, 
+                                         "vfd-focus", this);
+      }
+      catch (e) {
+        // No big deal. No observers. 
+      }
     }
   },
   
@@ -68,8 +73,14 @@ var vxVFD =
     // vixenMain.vxShell.mFocusObserver.Notify({ }, "window_focus", ("vfd," + this.mParams.documentURL));
     rootShell.mFocusedWindow = window;
     
-    if (this.mTxMgrShell) 
-      rootShell.observerService.Notify(this.mTxMgrShell.mDataSource.mDataSource, "vfd-focus", this);
+    if (this.mTxMgrShell) {
+      try {
+        rootShell.observerService.Notify(this.mTxMgrShell.mDataSource.mDataSource, "vfd-focus", this);
+      }
+      catch (e) {
+        // No big deal, no observers.       
+      }
+    }
   },
   
   get vfdDocumentWindowNode()

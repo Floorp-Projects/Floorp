@@ -32,7 +32,7 @@ var vxPalette =
   insertButtonElement: function (aType) 
   {
     var nElements = this.incrementElementCount("button");
-    var attributes = ["value", "id"];
+    var attributes = ["label", "id"];
     var values = ["Button " + nElements, "button_" + nElements];
     this.insertSingleElement("button", attributes, values, "Insert Button " + nElements);    
   },
@@ -73,7 +73,7 @@ var vxPalette =
     radioTxn.init();
     radiogroupTxn.addListener(radioTxn);
     
-    var radioAttributes = ["value", "group", "id"];
+    var radioAttributes = ["label", "group", "id"];
     var radioValues = ["Radio " + nRadios, "radiogroup_" + nRadiogroups, "radio_" + nRadios];
     var radioAttrTxn = new vxChangeAttributeTxn(radioTxn.mID, 
                                                 radioAttributes, 
