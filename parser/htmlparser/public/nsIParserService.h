@@ -103,7 +103,7 @@ class nsIParserService : public nsISupports {
   NS_IMETHOD GetTopicObservers(const nsAString& aTopic,
                                nsIObserverEntry** aEntry) = 0;
 
-  virtual PRBool IsValidQName(const nsASingleFragmentString& aQName,
+  virtual nsresult CheckQName(const nsASingleFragmentString& aQName,
                               PRBool aNamespaceAware,
                               const PRUnichar** aColon) = 0;
   virtual PRBool IsXMLLetter(PRUnichar aChar) = 0;

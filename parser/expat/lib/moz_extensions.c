@@ -64,69 +64,82 @@ int MOZ_byte_type(unsigned char p)
 
 #endif
 
-#define CHECK_NAME_CASES(ptr) \
-  case BT_NONASCII: \
-    if (!IS_NAME_CHAR_MINBPC(ptr)) \
-      return 0; \
-  case BT_NMSTRT: \
-  case BT_HEX: \
-  case BT_DIGIT: \
-  case BT_NAME: \
-  case BT_MINUS:
+#define MOZ_EXPAT_VALID_QNAME       (0)
+#define MOZ_EXPAT_EMPTY_QNAME       (1 << 0)
+#define MOZ_EXPAT_INVALID_CHARACTER (1 << 1)
+#define MOZ_EXPAT_MALFORMED         (1 << 2)
 
-#define CHECK_NMSTRT_CASES(ptr) \
-  case BT_NONASCII: \
-    if (!IS_NMSTRT_CHAR_MINBPC(ptr)) \
-      return 0; \
-  case BT_NMSTRT: \
-  case BT_HEX:
-
-int MOZ_XMLIsValidQName(const char* ptr, const char* end,
-                        int ns_aware, const char** colon)
+int MOZ_XMLCheckQName(const char* ptr, const char* end, int ns_aware,
+                      const char** colon)
 {
+  int result = MOZ_EXPAT_VALID_QNAME;
+  int nmstrt = 1;
   *colon = 0;
-  if (ptr == end)
-    return 0;
-  switch (BYTE_TYPE(ptr)) {
-  CHECK_NMSTRT_CASES(ptr)
-    ptr += 2;
-    break;
-  default:
-    return 0;
+  if (ptr == end) {
+    return MOZ_EXPAT_EMPTY_QNAME;
   }
-  while (ptr != end) {
+  do {
     switch (BYTE_TYPE(ptr)) {
     case BT_COLON:
       if (ns_aware) {
-        if (*colon != 0)
-          return 0;
+        if (*colon != 0 || nmstrt || ptr + 2 == end) {
+          // We already encountered a colon or this is the first or the last
+          // character so the QName is malformed.
+          result |= MOZ_EXPAT_MALFORMED;
+        }
         *colon = ptr;
-        ptr += 2;
-        if (ptr == end)
-          return 0;
-        switch (BYTE_TYPE(ptr)) {
-        CHECK_NMSTRT_CASES(ptr)
-          break;
-        default:
-          return 0;
+        nmstrt = 1;
+      }
+      else if (nmstrt) {
+        // This is the first character so the QName is malformed.
+        result |= MOZ_EXPAT_MALFORMED;
+        nmstrt = 0;
+      }
+      break;
+    case BT_NONASCII:
+      if (nmstrt) {
+        if (!IS_NMSTRT_CHAR_MINBPC(ptr)) {
+          // If this is a valid name character the QName is malformed,
+          // otherwise it contains an invalid character.
+          result |= IS_NAME_CHAR_MINBPC(ptr) ? MOZ_EXPAT_MALFORMED :
+                                               MOZ_EXPAT_INVALID_CHARACTER;
         }
       }
-      ptr += 2;
+      else if (!IS_NAME_CHAR_MINBPC(ptr)) {
+        result |= MOZ_EXPAT_INVALID_CHARACTER;
+      }
+      nmstrt = 0;
       break;
-    CHECK_NAME_CASES(ptr)
-      ptr += 2;
+    case BT_NMSTRT:
+    case BT_HEX:
+      nmstrt = 0;
+      break;
+    case BT_DIGIT:
+    case BT_NAME:
+    case BT_MINUS:
+      if (nmstrt) {
+        result |= MOZ_EXPAT_MALFORMED;
+        nmstrt = 0;
+      }
       break;
     default:
-      return 0;
+      result |= MOZ_EXPAT_INVALID_CHARACTER;
+      nmstrt = 0;
     }
-  }
-  return 1;
+    ptr += 2;
+  } while (ptr != end);
+  return result;
 }
 
 int MOZ_XMLIsLetter(const char* ptr)
 {
   switch (BYTE_TYPE(ptr)) {
-  CHECK_NMSTRT_CASES(ptr)
+  case BT_NONASCII:
+    if (!IS_NMSTRT_CHAR_MINBPC(ptr)) {
+      return 0;
+    }
+  case BT_NMSTRT:
+  case BT_HEX:
     return 1;
   default:
     return 0;
@@ -136,7 +149,15 @@ int MOZ_XMLIsLetter(const char* ptr)
 int MOZ_XMLIsNCNameChar(const char* ptr)
 {
   switch (BYTE_TYPE(ptr)) {
-  CHECK_NAME_CASES(ptr)
+  case BT_NONASCII:
+    if (!IS_NAME_CHAR_MINBPC(ptr)) {
+      return 0;
+    }
+  case BT_NMSTRT:
+  case BT_HEX:
+  case BT_DIGIT:
+  case BT_NAME:
+  case BT_MINUS:
     return 1;
   default:
     return 0;
