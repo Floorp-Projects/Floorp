@@ -237,15 +237,17 @@
       </method>
 
       <constructor>
-        // wire up session history
-        // XXXdwh On a dynamic skin switch, we should be checking our box object to obtain
-        // the session history.
-        this.webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"].createInstance(Components.interfaces.nsISHistory);
-      
-        // wire up global history.  the same applies here.
-        var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIGlobalHistory);
-        
-        this.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).globalHistory = globalHistory;      
+        if (this.getAttribute("disableHistory") != "true") {
+          // wire up session history
+          // XXXdwh On a dynamic skin switch, we should be checking our box object to obtain
+          // the session history.
+          this.webNavigation.sessionHistory = Components.classes["@mozilla.org/browser/shistory;1"].createInstance(Components.interfaces.nsISHistory);
+
+          // wire up global history.  the same applies here.
+          var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIGlobalHistory);
+
+          this.docShell.QueryInterface(Components.interfaces.nsIDocShellHistory).globalHistory = globalHistory;      
+        }
       </constructor>
     </implementation>
 
