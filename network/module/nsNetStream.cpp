@@ -231,7 +231,7 @@ nsresult nsBufferedStream::GetAvailableSpace(PRUint32 *aCount)
 nsresult nsBufferedStream::GetLength(PRUint32 *aLength)
 {
     LockStream();
-    *aLength = m_dataLength;
+    *aLength = m_DataLength;
     UnlockStream();
 
     return NS_OK;
