@@ -472,12 +472,46 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         break;
       }
 
-      case NS_MOUSE_ACTIVATE:
+      case NS_MOUSE_ACTIVATE:{
+        break;
+      }
+      
       case NS_ACTIVATE: {
 #ifdef DEBUG_saari
         printf("nsWebShellWindow::NS_ACTIVATE\n");
 #endif
+// Sucky platform specific code to get around event dispatch ordering
+#ifdef WIN32
+        void* data;
+        aEvent->widget->GetClientData(data);
+        if (!data)
+          break;
+          
+        nsCOMPtr<nsIDOMWindowInternal> domWindow;
+        ((nsWebShellWindow *)data)->ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
+        /*
+        nsCOMPtr<nsIWebShell> contentShell;
+        ((nsWebShellWindow *)data)->GetContentWebShell(getter_AddRefs(contentShell));
+        if (contentShell) {
+          
+          if (NS_SUCCEEDED(((nsWebShellWindow *)data)->
+              ConvertWebShellToDOMWindow(contentShell, getter_AddRefs(domWindow)))) {
+            if(domWindow){
+              nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
+              if(privateDOMWindow)
+                privateDOMWindow->Activate();
+            }
+          }
+        }
+        else */
+        if (domWindow) {
+          nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
+          if(privateDOMWindow)
+            privateDOMWindow->Activate();
+        }
+#endif   
         break;
+
       }
 
       case NS_DEACTIVATE: {
@@ -491,6 +525,8 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
           break;
           
         nsCOMPtr<nsIDOMWindowInternal> domWindow;
+        ((nsWebShellWindow *)data)->ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
+        /*
         nsCOMPtr<nsIWebShell> contentShell;
         ((nsWebShellWindow *)data)->GetContentWebShell(getter_AddRefs(contentShell));
         if (contentShell) {
@@ -504,12 +540,12 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
             }
           }
         }
-        else if (domWindow) {
+        else */
+        if (domWindow) {
           nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
           if(privateDOMWindow)
             privateDOMWindow->Deactivate();
         }
-          
         break;
       }
       
