@@ -1565,7 +1565,7 @@ FrameManager::ReParentStyleContext(nsIFrame* aFrame,
             }
           }
 #ifdef NS_DEBUG
-          VerifyStyleTree(aFrame, aNewParentContext);
+          VerifyStyleTree(GetPresContext(), aFrame, aNewParentContext);
 #endif
         }
       }
