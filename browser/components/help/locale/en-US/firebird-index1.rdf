@@ -33,7 +33,6 @@
         <rdf:li> <rdf:Description ID="t" nc:name="T"/></rdf:li>
         <rdf:li> <rdf:Description ID="u" nc:name="U"/></rdf:li>
         <rdf:li> <rdf:Description ID="v" nc:name="V"/></rdf:li>
-        <rdf:li> <rdf:Description ID="w" nc:name="W"/></rdf:li>
         <rdf:li> <rdf:Description ID="x" nc:name="X"/></rdf:li>
         <rdf:li> <rdf:Description ID="y" nc:name="Y"/></rdf:li>
         <rdf:li> <rdf:Description ID="z" nc:name="Z"/></rdf:li>
@@ -99,6 +98,7 @@
                 <rdf:li><rdf:Description ID="clicking-a-link" nc:name="Clicking a Link" nc:link="using_firebird.xhtml#moving_to_another_page"/></rdf:li>
                 <rdf:li><rdf:Description ID="colors" nc:name="Colors" nc:link="prefs.xhtml#fonts_and_colors"/></rdf:li>
                 <rdf:li><rdf:Description ID="connection-settings" nc:name="Connection Settings" nc:link="prefs.xhtml#connection_settings"/></rdf:li>
+                <rdf:li><rdf:Description ID="content-options" nc:name="Content Options" nc:link="prefs.xhtml#content_options"/></rdf:li>
                 <rdf:li><rdf:Description ID="controlling-popups" nc:name="Controlling Popups" nc:link="popup.xhtml"/></rdf:li>
                 <rdf:li><rdf:Description ID="cookies" nc:name="Cookies" nc:link="cookies.xhtml#accepting_and_blocking_cookies"/></rdf:li>
                 <rdf:li><rdf:Description ID="copying" nc:name="Copying" nc:link="using_firebird.xhtml#copying_part_of_a_page"/></rdf:li>
@@ -156,7 +156,7 @@
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="default-browser" nc:name="Default Browser" nc:link="using_firebird.xhtml#making_firebird_your_default_browser"/></rdf:li>
                 <rdf:li><rdf:Description ID="download-manager" nc:name="Download Manager" nc:link="download_manager.xhtml"/></rdf:li>
-                <rdf:li><rdf:Description ID="download-options" nc:name="Downloads Options" nc:link="prefs.xhtml#downloads_options"/></rdf:li>
+                <rdf:li><rdf:Description ID="downloads-options" nc:name="Downloads Options" nc:link="prefs.xhtml#downloads_options"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
@@ -264,7 +264,7 @@
             <rdf:Seq>
                 <rdf:li>
                     <rdf:Description ID="ie-help" nc:name="Internet Explorer Users" nc:link="forieusers.xhtml"/>
-                    <rdf:Description ID="install" nc:name="Install" nc:link="prefs.xhtml#software_update"/>
+                    <rdf:Description ID="install" nc:name="Install" nc:link="prefs.xhtml#advanced_update"/>
                 </rdf:li>
             </rdf:Seq>
         </nc:subheadings>
@@ -285,7 +285,7 @@
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="install:extensions" nc:name="Extensions" nc:link="customization.xhtml#extensions"/></rdf:li>
                 <rdf:li><rdf:Description ID="install:themes" nc:name="Themes" nc:link="customization.xhtml#themes"/></rdf:li>
-                <rdf:li><rdf:Description ID="install:updates" nc:name="Updates" nc:link="prefs.xhtml#software_update"/></rdf:li>
+                <rdf:li><rdf:Description ID="install:updates" nc:name="Updates" nc:link="prefs.xhtml#advanced_update"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
@@ -364,7 +364,8 @@
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="prefs-general" nc:name="General" nc:link="prefs.xhtml#general_options"/></rdf:li>
                 <rdf:li><rdf:Description ID="prefs-privacy" nc:name="Privacy" nc:link="prefs.xhtml#privacy_options"/></rdf:li>
-                <rdf:li><rdf:Description ID="prefs-webfeatures" nc:name="Web Features" nc:link="prefs.xhtml#web_features_options"/></rdf:li>
+                <rdf:li><rdf:Description ID="prefs-content" nc:name="Content" nc:link="prefs.xhtml#content_options"/></rdf:li>
+                <rdf:li><rdf:Description ID="prefs-tabs" nc:name="Tabs" nc:link="prefs.xhtml#tabs_options"/></rdf:li>
                 <rdf:li><rdf:Description ID="prefs-downloads" nc:name="Downloads" nc:link="prefs.xhtml#downloads_options"/></rdf:li>
                 <rdf:li><rdf:Description ID="prefs-advanced" nc:name="Advanced" nc:link="prefs.xhtml#advanced_options"/></rdf:li>
             </rdf:Seq>
@@ -405,10 +406,10 @@
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="saving-information" nc:name="Saving Information" nc:link="using_firebird.xhtml#saving_all_or_part_of_a_page"/></rdf:li>
                 <rdf:li><rdf:Description ID="searching" nc:name="Searching" nc:link="using_firebird.xhtml#searching_the_web"/></rdf:li>
-                <rdf:li><rdf:Description ID="security-options" nc:name="Security Options" nc:link="prefs.xhtml#security"/></rdf:li>
+                <rdf:li><rdf:Description ID="security-options" nc:name="Security Options" nc:link="prefs.xhtml#advanced_security"/></rdf:li>
                 <rdf:li><rdf:Description ID="shortcuts" nc:name="Shortcuts" nc:link="shortcuts.xhtml"/></rdf:li>
                 <rdf:li><rdf:Description ID="sidebar" nc:name="Sidebar" nc:link="using_firebird.xhtml#using_the_sidebar"/></rdf:li>
-                <rdf:li><rdf:Description ID="software-updates" nc:name="Software Updates" nc:link="prefs.xhtml#software_update"/></rdf:li>
+                <rdf:li><rdf:Description ID="software-updates" nc:name="Software Updates" nc:link="prefs.xhtml#advanced_update"/></rdf:li>
                 <rdf:li><rdf:Description ID="stop-button" nc:name="Stop Button" nc:link="using_firebird.xhtml#stopping_and_reloading"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
@@ -418,8 +419,8 @@
         <nc:subheadings>
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="saving:page" nc:name="Web Page" nc:link="using_firebird.xhtml#saving_all_or_part_of_a_page"/></rdf:li>
-                <rdf:li><rdf:Description ID="saving:form" nc:name="Form" nc:link="prefs.xhtml#saved_form_information"/></rdf:li>
-                <rdf:li><rdf:Description ID="saving:passwords" nc:name="Passwords" nc:link="prefs.xhtml#saved_passwords"/></rdf:li>
+                <rdf:li><rdf:Description ID="saving:form" nc:name="Form" nc:link="prefs.xhtml#privacy_saved_forms"/></rdf:li>
+                <rdf:li><rdf:Description ID="saving:passwords" nc:name="Passwords" nc:link="prefs.xhtml#privacy_passwords"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
@@ -461,6 +462,7 @@
               <rdf:li><rdf:Description ID="tabbed-browsing-using-tabbed-browsing" nc:name="Using Tabbed Browsing" nc:link="tabbed_browsing.xhtml#using_tabbed_browsing"/></rdf:li>
               <rdf:li><rdf:Description ID="tabbed-browsing-creating-loading-tabs" nc:name="Creating and Loading Tabs" nc:link="tabbed_browsing.xhtml#creating_loading_tabs"/></rdf:li>
               <rdf:li><rdf:Description ID="tabbed-browsing-customizing" nc:name="Customizing" nc:link="tabbed_browsing.xhtml#customizing"/></rdf:li>
+              <rdf:li><rdf:Description ID="prefs-tabs" nc:name="Tabs Options" nc:link="prefs.xhtml#tabs_options"/></rdf:li>
           </rdf:Seq>
       </nc:subheadings>
   </rdf:Description>
@@ -478,7 +480,7 @@
     <rdf:Description about="#u">
         <nc:subheadings>
             <rdf:Seq>
-                <rdf:li><rdf:Description ID="updates" nc:name="Updates" nc:link="prefs.xhtml#software_update"/></rdf:li>
+                <rdf:li><rdf:Description ID="updates" nc:name="Updates" nc:link="prefs.xhtml#advanced_update"/></rdf:li>
                 <rdf:li><rdf:Description ID="url" nc:name="URLs" nc:link="glossary.xhtml#Uniform_Resource_Locator"/></rdf:li>
                 <rdf:li><rdf:Description ID="using" nc:name="Using"/></rdf:li>
                 <rdf:li><rdf:Description ID="using-firefox" nc:name="Using &brandShortName;" nc:link="using_firebird.xhtml"/></rdf:li>
@@ -512,19 +514,10 @@
     <rdf:Description about="#v">
         <nc:subheadings>
             <rdf:Seq>
-                <rdf:li><rdf:Description ID="validation" nc:name="Validation" nc:link="prefs.xhtml#validation"/></rdf:li>
+                <rdf:li><rdf:Description ID="verification" nc:name="Verification" nc:link="prefs.xhtml#certificates"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
-
-    <rdf:Description about="#w">
-        <nc:subheadings>
-            <rdf:Seq>
-                <rdf:li><rdf:Description ID="web-features-options" nc:name="Web Features Options" nc:link="prefs.xhtml#web_features_options"/></rdf:li>
-            </rdf:Seq>
-        </nc:subheadings>
-    </rdf:Description>
-
 
     <rdf:Description about="#x">
         <nc:subheadings>

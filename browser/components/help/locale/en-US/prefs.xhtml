@@ -14,548 +14,532 @@ Contributors:
 <head>
 	<title>&brandFullName; Options</title>
 	<link rel="stylesheet" type="text/css" href="chrome://help/skin/helpFileLayout.css"/>
+  <style type="text/css">
+    img { display: none; }
+  </style>
 </head>
 
 <body>
 
 <h1>&brandFullName; &pref.pluralCaps;</h1>
-<p>This document explains all of the &pref.plural; available in the &pref.pluralCaps;
-  window of &brandFullName;.</p>
+<p>This document explains all of the &pref.plural; available in the
+  &pref.pluralCaps; window of &brandFullName;.</p>
 
 <div class="contentsBox">In this section:
   <ul>
-    <li><a href="#general_options">General &pref.pluralCaps;</a>
-    <ul>
-      <li><a href="#fonts_and_colors">Fonts &amp; Colors</a></li>
-      <li><a href="#languages">Languages</a></li>
-      <li><a href="#connection_settings">Connection Settings</a></li>
-    </ul>
-    </li>
+    <li><a href="#general_options">General &pref.pluralCaps;</a></li>
     <li><a href="#privacy_options">Privacy &pref.pluralCaps;</a></li>
-    <li><a href="#web_features_options">Web Features &pref.pluralCaps;</a></li>
-    <li><a href="#downloads_options">Download &pref.pluralCaps;</a></li>
+    <li><a href="#content_options">Content &pref.pluralCaps;</a></li>
+    <li><a href="#tabs_options">Tabs &pref.pluralCaps;</a></li>
+    <li><a href="#downloads_options">Downloads &pref.pluralCaps;</a></li>
     <li><a href="#advanced_options">Advanced &pref.pluralCaps;</a></li>
   </ul>
 </div>
 
 <h2 id="general_options">General &pref.pluralCaps;</h2>
-
-  <p><img width="425" height="353" alt="General Panel"
+  <p><img width="425" height="353" alt=""
     src="&images.baseURL;/opt_general.png"/></p>
+
   <h3 id="home_page">Home Page</h3>
-  <p>Here you are able to specify the page (or tab group) that
-    &brandShortName; will show when you launch it or press the Home button.
-    Enter the address in the Location(s) field.</p>
+    <p>Here you can specify the page (or tab group) that
+      &brandShortName; will show when you launch it or press the Home button.
+      Enter the address in the Location(s) field.</p>
 
-  <p>Click <em>Use Current Page(s)</em> to use the page you're currently
-    visiting. You can also use <strong>multiple home pages</strong>. If more
-    than one browser tab is currently opened, this button will set the
-    <strong>whole tab group</strong> as a start page.</p>
+    <p>Click <em>Use Current Page(s)</em> to use the page you're currently
+      visiting. You can also use <strong>multiple home pages</strong>. If more
+      than one browser tab is currently opened, this button will set the
+      <strong>whole tab group</strong> as a start page.</p>
 
-  <p>To specify the home page(s) using a bookmark, click <em>Use
-    Bookmark....</em> You can even select a whole bookmark folder to be
-    used!</p>
+    <p>To specify the home page(s) using a bookmark, click <em>Use
+      Bookmark...</em>. Selecting a whole bookmark folder will load all the
+      bookmarks inside it in tabs.</p>
 
-  <p>If you don't want a home page to be loaded, click <em>Use Blank
-    Page</em>.</p>
+    <p>If you don't want a home page to be loaded, click <em>Use Blank
+      Page</em>.</p>
 
-  <h3 id="fonts_and_colors">Fonts &amp; Colors</h3>
-  <p><img width="305" height="296" alt="Fonts and Colors Dialog"
-    src="&images.baseURL;/opt_fontsandcolors.png"/></p>
-  <p>Click the <em>Fonts &amp; Colors...</em> button to change the default
-    fonts and colors used by &brandShortName;.</p>
+  <h3 class="noMac" id="default_browser">Default Browser</h3>
+    <p class="noMac"><em>&brandShortName; should check to see if it is the default
+      browser when starting</em><br/>
+      Check this option if you want &brandShortName; to check whether it is the
+      default browser when starting. This will ensure &brandShortName; is used
+      whenever an application tries to display a web page or when you open
+      an HTML file. You can also click the <em>Check Now</em> button to do a
+      check right now.</p>
 
-  <p><strong>Fonts for:</strong><br/>
-    Normally, web pages are displayed in the default font set by your browser
-    or in a font chosen by the web pages' authors.</p>
-  <p>To change the default fonts:</p>
-    <ol>
-      <li>From the <em>Fonts for</em> drop-down list, choose a language group/script. 
-        For instance, to set default fonts for the West European languages/scripts (Latin),
-        choose <em>Western</em>. For a language/script not yet in the list, choose
-        <em>Other Languages</em>.</li>
-      <li>Select whether proportional text should be serif (like &quot;Times
-        New Roman&quot;) or sans-serif (like &quot;Arial&quot;). Then specify 
-        the font size you want for proportional text.</li>
-      <li>Specify the font to use for Serif, Sans-serif and Monospace fonts.
-        You can also change the size for <code>Monospace fonts</code>.</li>
-    </ol>
-    <p>You can also specify the display resolution, which is normally 96
-      dpi.</p>
-
-    <p>Finally, you can set the minimum font size to be used on screen. This
-      can be useful on some sites that use very small fonts that are barely
-      readable.</p>
-
-    <p><strong>Text and Background</strong><br/>
-    Here you can change the default text and background color to be used on
-      web pages that haven't specified that information. Click on the color
-      samples to select colors.</p>
-
-    <p><em>Use system colors</em><br/>
-      Check this &pref.singular; to use the colors defined in your OS settings instead
-      of the colors specified above.</p>
-
-    <p><strong>Link Colors</strong><br/>
-    Here you can change the default colors for Web links. Click on the color
-      samples to select colors.</p>
-
-    <p><em>Underline links</em><br/>
-      By default, links are underlined on web pages. Uncheck this &pref.singular; to
-      disable this. Note that many sites specify their own styling rules
-      and this &pref.singular; has no effect on those sites.</p>
-
-    <p><strong>Always use my:</strong><br/>
-    <em>Fonts</em><br/>
-      By default &brandShortName; uses the fonts specified by the web page
-      author. Enabling this &pref.singular; will force all sites to use your default
-      fonts instead.</p>
-
-    <p><em>Colors</em><br/>
-      By default, &brandShortName; uses the colors specified by the web page
-      author. Enabling this &pref.singular; will force all sites to use your default
-      colors instead.</p>
-
-    <h3 id="languages">Languages</h3>
-    <p><img width="308" height="252" alt="Languages Dialog"
-      src="&images.baseURL;/opt_languages.png"/></p>
-    <p>Some web pages are offered in more than one language. Click the
-      <em>Languages</em> button to specify your preferred languages.</p>
-
-    <p><strong>Language Selection</strong><br/>
-      To add a language, press <em>Select a language to add...</em>, choose
-      the language, and click the <em>Add</em> button. Remove a language by
-      selecting it in the list of active languages and clicking the
-      <em>Remove</em> button.</p>
-
-    <p>You can reorder languages to determine the preferred one in case a page
-      is provided in two or more of your selected languages. Do this using the
-      <em>Move Up</em> and <em>Move Down</em> buttons.</p>
-
-    <p><strong>Character Encoding</strong><br/>
-      The character encoding selected here will be used to display pages that
-      do not specify which encoding to use.</p>
-
-    <h3 class="noMac" id="default_browser">Default Browser</h3>
-    <p class="noMac">You can set &brandShortName; as the default
-      browser by clicking <em>Set Default Browser</em>. This will ensure
-      &brandShortName; is used whenever an application is trying to display a
-      web page or when you open an HTML file.</p>
-
-    <h3 id="connection_settings">Connection Settings</h3>
-
-    <p><img width="275" height="296" alt="Connection Settings Dialog"
+  <h3 id="connection_settings">Connection Settings</h3>
+    <p><img width="275" height="296" alt=""
       src="&images.baseURL;/opt_connection.png"/></p>
 
-    <p>Your organization or internet service provider may offer or require you
+    <p>Your organization or Internet service provider may offer or require you
       to use a proxy. A proxy acts as an intermediary between your computer and
       the Internet. It intercepts all requests to the Internet to see if it can
       fulfill the request using its cache. Proxies are used to improve
       performance, filter requests, and hide your computer from the Internet to
       improve security. Proxies are often part of a corporate firewall.</p>
 
-    <strong>Configure Proxies to Access the Internet</strong>
+    <h4>Connection Settings dialog:</h4>
+      <dl>
+        <dt>Direct connection to the Internet</dt>
+        <dd>This is the default &pref.singular;. Choose this if you don't want
+          to use a proxy.</dd>
 
-    <dl>
-      <dt>Direct connection to the Internet</dt>
-      <dd>This is the default &pref.singular;. Choose this if you don't want to use a
-        proxy.</dd>
+        <dt>Auto-detect proxy settings for this network</dt>
+        <dd>Choose this if you want &brandShortName; to automatically detect the
+          proxy settings for your network.</dd>
 
-      <dt>Manual proxy configuration</dt>
-      <dd>Choose this if you don't have a proxy location (URL). Ask your
-        system administrator for the names and port numbers of the servers
-        running proxy software for each network service and enter the
-        information in the appropriate fields.</dd>
+        <dt>Manual proxy configuration</dt>
+        <dd>Choose this if you don't have a proxy location (URL). Ask your
+          system administrator for the names and port numbers of the servers
+          running proxy software for each network service and enter the
+          information in the appropriate fields.</dd>
 
-      <dt>Automatic proxy configuration URL</dt>
-      <dd>If your workplace has a proxy configuration file, ask the system
-        administrator for its URL and enter it here. Click <em>Reload</em> to
-        load the settings.</dd>
-    </dl>
+        <dt>Automatic proxy configuration URL</dt>
+        <dd>If your workplace has a proxy configuration file, ask the system
+          administrator for its URL and enter it here. Click <em>Reload</em> to
+          load the settings.</dd>
+      </dl>
 
 <h2 id="privacy_options">Privacy &pref.pluralCaps;</h2>
-
-  <p><img width="425" height="353" alt="Privacy Panel"
+  <p><img width="425" height="353" alt=""
         src="&images.baseURL;/opt_privacy.png"/></p>
 
-  <p>The Privacy panel contains &pref.plural; related to your privacy. As you browse
-    the web, information on where you have been, what pages you have visited,
-    etc. are stored here. You can click the <em>Clear</em> button on each
-    section to clear that information. Alternatively you can clear all
-    information stored while browsing by clicking <em>Clear All</em>. A
-    confirmation dialog will be shown before clearing the information.</p>
+  <p>The Privacy panel contains &pref.plural; related to your privacy. As you
+    browse the web, information on where you have been, what pages you have
+    visited, etc. are stored here. You can click the <em>Clear</em> button on
+    each tab to clear that information.</p>
 
-  <p>To display section-specific &pref.plural;, expand a section by clicking on the
-    small + button.</p>
+  <h3 id="sanitize">Sanitize Settings</h3>
+  <p>&brandShortName; also allows you to clear certain or all items by pressing
+    &accelKey;+&shiftKey;+<kbd>Del</kbd> or selecting <span class="menuPath">
+    Tools &gt; Sanitize &brandShortName;...</span>. You can also change the
+    &pref.singular; to make &brandShortName; clear your data when you close
+    &brandShortName;. &pref.pluralCaps; for this are in the <em>Sanitize
+    &brandShortName;...</em> dialog.</p>
 
-  <h3 id="history">History</h3>
-  <p>Here you can specify for how many days you want the browser to remember
-    what pages you have visited. The default is 9 days.</p>
+  <p>To display section-specific &pref.plural;, display a section by clicking on
+    its tab.</p>
 
-  <h3 id="saved_form_information">Saved Form Information</h3>
-  <p><em>Save information I enter in web page forms and the Search
-    bar</em><br/>When you enter information in web forms, &brandShortName;
-    remembers what you type and automatically makes suggestions when you enter
-    information again. To stop this behavior, uncheck this &pref.singular;.</p>
+  <h3 id="privacy_history">History</h3>
+    <p>Here you can specify how long you want &brandShortName; to remember what
+      pages you have visited. The default is 9 days.</p>
 
-  <h3 id="saved_passwords">Saved Passwords</h3>
-  <p><em>Remember Passwords</em><br/>&brandShortName; can securely
-    save passwords you enter in web forms to make it easier to log on to
-    web sites.  Clear this checkbox to prevent &brandShortName; from
-    remembering your passwords.</p>
+  <h3 id="privacy_saved_forms">Saved Forms</h3>
+    <p><em>Save information I enter in forms and the Search bar</em><br/>
+      When you enter information in web forms, &brandShortName;
+      remembers what you type and automatically makes suggestions when you enter
+      information again. To stop this behavior, uncheck this &pref.singular;.</p>
 
-  <p><em>View Saved Passwords</em><br/>You can manage saved passwords and
-    delete individual passwords by clicking the <em>View Saved Passwords</em>
-    button.</p>
+  <h3 id="privacy_passwords">Passwords</h3>
+    <p><em>Remember Passwords</em><br/>
+      &brandShortName; can securely save passwords you enter in web forms to
+      make it easier to log on to web sites. Clear this checkbox to prevent
+      &brandShortName; from remembering your passwords.</p>
 
-  <p id="set_change_master_password"><em>Set/Change Master Password...</em><br/>
-    &brandShortName; can protect sensitive information such as saved passwords
-    and certificates. If you create a Master Password, &brandShortName; will ask
-    you to enter it once per session as soon as it is needed. You can set,
-    change or delete the master password by clicking this button.</p>
+    <p id="set_change_master_password"><em>Set/Change Master Password...</em><br/>
+      &brandShortName; can protect sensitive information such as saved passwords
+      and certificates. If you create a Master Password, &brandShortName; will ask
+      you to enter it once per session as soon as it is needed. You can set or
+      change the master password by clicking this button.</p>
 
-  <h3 id="download_manager_history">Download Manager History</h3>
-  <p>The Download Manager (accessible from <span class="menuPath">Tools</span>
-    or by pressing
-    <span class="noUnix">&accelKey;+<kbd>J</kbd></span><span class="unix">&accelKey;+<kbd>Y</kbd></span>)
-    stores shortcuts to your recent downloads. The Download &pref.plural; are
-    available in the <strong>Downloads panel</strong>.</p>
+    <p id="remove_master_password"><em>Remove Master Password...</em><br/>
+      Click this button to remove your current master password. You will have to
+      enter your current master password to do this.</p>
 
-  <h3 id="cookies">Cookies</h3>
-  <p>A cookie is a file created by a web site that stores information on your
-    computer, such as your preferences when visiting that site.</p>
+    <p><em>View Saved Passwords</em><br/>
+      You can manage saved passwords and delete individual passwords by clicking
+      the <em>View Saved Passwords</em> button.</p>
 
-  <p>To display the Cookie Manager click <em>View Cookies</em>.</p>
+  <h3 id="privacy_download_history">Download History</h3>
+    <p>The Download Manager (accessible from <span class="menuPath">Tools</span>
+      or by pressing
+      <span class="noUnix">&accelKey;+<kbd>J</kbd></span><span class="unix">&accelKey;+<kbd>Y</kbd></span>)
+      stores shortcuts to your recent downloads. The Downloads &pref.plural; are
+      available in the <strong>Downloads panel</strong>.</p>
 
-  <p><em>Allow sites to set cookies</em><br/>
-    By default cookies are enabled. Uncheck this &pref.singular; to disable the use of
-    cookies. Note that some sites may not work properly when cookies are
-    disabled.</p>
+    <p><em>Remove files from the Download Manager:</em><br/>
+      Choose whether the list of the recently downloaded files is purged <em>upon
+      successful download</em>, or <em>when &brandShortName; exits</em>, or
+      whether you want to purge the list <em>manually</em>. To purge the list,
+      click the <em>Clear Download History Now</em> button below or the
+      <em>Clean Up</em> button in the Download Manager.</p>
 
-  <p>Learn more about cookies, the individual &pref.plural;, and how you can gain
-    control over what sites are allowed to store cookies on your computer by
-    reading about <a href="cookies.xhtml">Managing Cookies</a>.</p>
+  <h3 id="privacy_cookies">Cookies</h3>
+    <p>A cookie is a file created by a web site that stores information on your
+      computer, such as your preferences when visiting that site.</p>
 
-  <h3 id="cache">Cache</h3>
-  <p>Pages you view are normally stored in a special cache folder for quicker
-    viewing the next time you visit the same page. Here you are able to
-    specify the amount of disk space the cache can use.</p>
+    <p><em>Allow sites to set cookies</em><br/>
+      By default cookies are enabled. Uncheck this &pref.singular; to disable
+      the use of cookies. Note that some sites may not work properly when
+      cookies are disabled.</p>
 
-<h2 id="web_features_options">Web Features &pref.pluralCaps;</h2>
+    <p>To display the Cookie Manager click <em>View Cookies</em>.</p>
 
-  <p><img width="425" height="315" alt="Web Features Panel"
+    <p>Learn more about cookies, the individual &pref.plural;, and how you can
+      gain control over what sites are allowed to store cookies on your computer
+      by reading about <a href="cookies.xhtml">Managing Cookies</a>.</p>
+
+  <h3 id="privacy_cache">Cache</h3>
+    <p>Pages you view are normally stored in a special cache folder for quicker
+      viewing the next time you visit the same page. You can specify the amount
+      of disk space the cache can use here.</p>
+
+<h2 id="content_options">Content &pref.pluralCaps;</h2>
+  <p><img width="425" height="315" alt=""
     src="&images.baseURL;/opt_webfeatures.png"/></p>
 
-  <p><em>Block Popup Windows</em><br/>By default, &brandShortName; blocks
-    annoying popup windows on web sites. Unchecking this &pref.singular; will disable
-    popup blocking.</p>
+  <p><em>Block Popup Windows</em><br/>
+    By default, &brandShortName; blocks annoying popup windows on web sites.
+    Unchecking this &pref.singular; will disable popup blocking.</p>
 
   <p>Some web sites make legitimate use of popup windows. Therefore, you can
     allow these sites to open popups anyway. To do so, click <em>Allowed
     Sites</em>, enter the site name, and click <em>Allow</em>.</p>
 
   <p>To remove a web site from the list, select it and then click <em>Remove
-    Site</em>. To clear the list completely, click <em>Remove All Sites</em>.
-    Click <em>OK</em> to confirm your changes or click <em>Cancel</em> to
-    discard them.</p>
+    Site</em>. To clear the list completely, click <em>Remove All Sites</em>.</p>
 
   <p><em>Allow web sites to install software</em><br/>
     By default, web sites are allowed to install software such as extensions
     and themes. However, &brandShortName; will always ask you to confirm
-    software installations. Uncheck this &pref.singular; to completely disable extension
-    and theme installation.</p>
+    software installations. Uncheck this &pref.singular; to completely disable
+    extension and theme installation.</p>
 
-  <p>Enabling this &pref.singular; is sufficient to install themes. Extensions are more
-    powerful than themes, however, so you must explicitly allow a web site to
-    install its extensions. To do so, click <em>Allowed Sites</em>, enter the
-    site name, and click <em>Allow</em>.</p>
+  <p>Enabling this &pref.singular; is sufficient to install themes. Extensions
+    are more powerful than themes, however, so you must explicitly allow a web
+    site to install its extensions. To do so, click <em>Allowed Sites</em>,
+    enter the site name, and click <em>Allow</em>.</p>
 
-  <p><em>Load Images</em><br/>By default images are loaded on web pages.
-    Uncheck this &pref.singular; to disable images completely.</p>
+  <p><em>Load Images</em><br/>
+    By default images are loaded on web pages. Uncheck this &pref.singular;
+    to disable images completely.</p>
 
   <ul>
-    <li><em>for the originating web site only</em><br/>Enabling this &pref.singular;
-      will make sure that only images located at the current web site are
-      loaded.</li>
+    <li><em>for the originating web site only</em><br/>
+      Enabling this &pref.singular; will make sure that only images located at
+      the current web site are loaded.</li>
   </ul>
 
-    <p><img width="247" height="291" alt="Images Exceptions Dialog"
-    src="&images.baseURL;/opt_imagemanager.png"/></p>
+  <p><img width="247" height="291" alt=""
+  src="&images.baseURL;/opt_imagemanager.png"/></p>
 
-    <p>Depending on if you enable images, you can change which sites are
-      blocked or which sites can load images by clicking <em>Exceptions</em>.
-      Enter the site you want to allow/deny images from and click
-      <em>Allow</em> to allow images, or click <em>Block</em> to block the
-      images. Click <em>OK</em> to confirm your changes, or click
-      <em>Cancel</em> to discard them.</p>
+  <p>Depending on if you enable images, you can change which sites are
+    blocked or which sites can load images by clicking <em>Exceptions</em>.
+    Enter the site you want to allow/deny images from and click
+    <em>Allow</em> to allow images, or click <em>Block</em> to block the
+    images.</p>
 
-  <p><em>Enable Java</em><br/>Java is a popular programming language for the
-    web developed by Sun Microsystems. A single Java program can run on many
-    different kinds of computers, thus avoiding the need for programmers to
-    create a separate version of each program for each kind of computer.
-    Uncheck this &pref.singular; to disable Java applets in &brandShortName;. Note that
-    in order for Java applets to work, you must install the Java plugin.</p>
+  <p><em>Enable Java</em><br/>
+    Java is a popular programming language for the web developed by Sun
+    Microsystems. A single Java program can run on many different kinds of
+    computers, thus avoiding the need for programmers to create a separate
+    version of each program for each kind of computer.
+    Uncheck this &pref.singular; to disable Java applets in &brandShortName;.
+    Note that in order for Java applets to work, you must install the Java
+    plugin.</p>
 
-  <p><em>Enable JavaScript</em><br/>JavaScript is a scripting language
-    commonly used to construct web pages. JavaScript is often used to
-    dynamically validate forms and select buttons. Disabling JavaScript may
-    cause some sites to not work properly.</p>
+  <p><em>Enable JavaScript</em><br/>
+    JavaScript is a scripting language commonly used to construct web pages.
+    JavaScript is often used to dynamically validate forms and select buttons.
+    Disabling JavaScript may cause some sites to not work properly.</p>
 
-  <p>While it is usually recommended to keep JavaScript enabled, there are
-    some functions that you may want to disable. Click the <em>Advanced...</em>
-    button to display these &pref.plural;.</p>
+  <p>Having JavaScript enabled exposes you to certain annoyances. Select the
+    <em>but disable common annoyances</em> checkbox to disallow sites to
+    move or resize existing windows,
+    raise or lower windows,
+    disable or replace context menus,
+    hide the status bar,
+    or change status bar text.</p>
 
-  <p><img width="198" height="170" alt="JavaScript Settings Dialog"
-    src="&images.baseURL;/opt_javascript.png"/></p>
+  <h3 id="fonts_and_colors">Fonts &amp; Colors</h3>
+    <p><em>Default Font</em> and <em>Size</em><br/>
+      Web pages are usually displayed in the font and size specified here.
+      However, web pages may override these choices unless you specify otherwise
+      in the Advanced Fonts dialog.</p>
 
-  <h3 id="allow_scripts_to">Allow scripts to:</h3>
-  <dl>
-    <dt>Move or resize existing windows</dt>
-    <dd>Uncheck this &pref.singular; to disable moving and resizing windows using
-      scripts.</dd>
+    <p>Click the <em>Advanced...</em> button to access more fonts &pref.plural;.</p>
 
-    <dt>Raise or lower windows</dt>
-    <dd>Uncheck this &pref.singular; to make sure scripts cannot raise or lower
-      windows.</dd>
+    <p><img width="305" height="296" alt=""
+      src="&images.baseURL;/opt_fontsandcolors.png"/></p>
 
-    <dt>Disable or replace context menus</dt>
-    <dd>Uncheck this &pref.singular; to prevent web pages from disabling or changing
-      the &brandShortName; context menu.</dd>
+    <h4>Advanced Fonts Dialog:</h4>
+      <ol>
+        <li>From the <em>Fonts for</em> drop-down list, choose a language group/script.
+          For instance, to set default fonts for the West European
+          languages/scripts (Latin), choose <em>Western</em>. For a
+          language/script not yet in the list, choose <em>Other Languages</em>.</li>
+        <li>Select whether proportional text should be serif (like &quot;Times
+          New Roman&quot;) or sans-serif (like &quot;Arial&quot;). Then specify
+          the font size you want for proportional text.</li>
+        <li>Specify the font to use for Serif, Sans-serif and Monospace fonts.
+          You can also change the size for <code>Monospace fonts</code>.</li>
+      </ol>
+      <p>You can also specify the display resolution, which is normally 96
+        dpi.</p>
 
-    <dt>Hide the status bar</dt>
-    <dd>Uncheck this &pref.singular; to force the status bar to be displayed in popup
-      windows.</dd>
+      <p>Furthermore, you can set the minimum font size to be used on screen.
+        This can be useful on some sites that use very small fonts that are
+        barely readable.</p>
 
-    <dt>Change status bar text</dt>
-    <dd>Uncheck this &pref.singular; to disable annoying status bar text scrolling and
-      Web address hiding.</dd>
+      <p><em>Allow pages to choose their own fonts, instead of my selections
+        above</em><br/>
+        By default &brandShortName; uses the fonts specified by the web page
+        author. Disabling this &pref.singular; will force all sites to use your
+        default fonts instead.</p>
 
-    <dt>Change images</dt>
-    <dd>Uncheck this &pref.singular; to disable changing of images. Disabling this can
-      make some menus harder to navigate.</dd>
-  </dl>
+      <p><em>Character Encoding</em><br/>
+        The character encoding selected here will be used to display pages that
+        do not specify which encoding to use.</p>
+
+    <h4>Colors Dialog:</h4>
+      <p><strong>Text and Background</strong><br/>
+        Here you can change the default text and background color to be used on
+        web pages that haven't specified that information. Click on the color
+        samples to select colors.</p>
+
+      <p><em>Use system colors</em><br/>
+        Check this &pref.singular; to use the colors defined in your OS settings
+        instead of the colors specified above.</p>
+
+      <p><strong>Link Colors</strong><br/>
+      Here you can change the default colors for Web links. Click on the color
+        samples to select colors.</p>
+
+      <p><em>Underline links</em><br/>
+        By default, links are underlined on web pages. Uncheck this &pref.singular;
+        to disable this. Note that many sites specify their own styling rules
+        and this &pref.singular; has no effect on those sites.</p>
+
+      <p><em>Allow pages to choose their own colors, instead of my selections
+        above</em><br/>
+        By default, &brandShortName; uses the colors specified by the web page
+        author. Disabling this &pref.singular; will force all sites to use your
+        default colors instead.</p>
+
+<h2 id="tabs_options">Tabs &pref.pluralCaps;</h2>
+  <p><em>Open links from other applications in:</em><br/>
+    When other applications on your computer display a web page, &brandShortName;
+    opens the page in the most recently displayed tab or window. You can make
+    &brandShortName; open the page elsewhere by changing this
+    &pref.singular;.</p>
+
+  <p><em>Force links that open new windows to open in:</em><br/>
+    &brandShortName; opens new windows from links when web pages request them.
+    If you prefer to use tabs as you browse, this behavior may be
+    counterproductive. You can force &brandShortName; to open links that would
+    normally be opened in new windows to be opened elsewhere. To do so, select
+    the checkbox for this &pref.singular; and choose the behavior you desire.</p>
+
+  <p><em>Hide the tab bar when only one web site is open</em><br/>
+    If you're only viewing one web page in a &brandShortName; window, the tab
+    bar is not shown. Uncheck this &pref.singular; to always show the tab bar.</p>
+
+  <p><em>Select new tabs opened from links</em><br/>
+    When you middle-click on Web links (or hold down &accelKey; while clicking
+    with the left mouse button), the links will be opened in a new tab. That tab
+    will not be shown directly; it will be loaded in a background tab. Check
+    this &pref.singular; to load the link in a foreground tab instead, which
+    will show that tab directly.</p>
+
+  <p><em>Warn when closing multiple tabs</em><br/>
+    When you close a window with multiple tabs, &brandShortName; will ask you to
+    confirm your choice. This prevents you from accidentally closing the whole
+    window when you wish to close only the current tab. Uncheck this box to skip
+    past the warning and have &brandShortName; automatically close the window.</p>
 
 <h2 id="downloads_options">Downloads &pref.pluralCaps;</h2>
-
-  <p><img
-    src="&images.baseURL;/opt_downloads.png"
-    width="425" height="353" alt="Downloads Panel"/></p>
+  <p><img src="&images.baseURL;/opt_downloads.png"
+    width="425" height="353" alt=""/></p>
 
   <p>This panel controls how &brandShortName; handles different file types
     such as applications, compressed files, and multimedia files.</p>
 
   <h3 id="download_folder">Download Folder</h3>
+    <p><em>Ask me where to save every file</em><br/>
+      &brandShortName; will ask you where you want the file to be saved whenever
+      you download a file.</p>
 
-  <p><em>Ask me where to save every file</em><br/>
-    &brandShortName; will ask you where you want the file to be saved whenever
-    you download a file.</p>
+    <p><em>Save all files to this folder:</em><br/>
+      This is the default &pref.singular; in &brandShortName;, and the default
+      folder is the Desktop. You can specify a different folder where all
+      downloads will be saved by clicking the <em>Browse</em> button.</p>
 
-  <p><em>Save all files to this folder:</em><br/>This is the default &pref.singular;
-    in &brandShortName;, and the default folder is the Desktop.  You can
-    specify a different folder where all downloads will be saved, such as the
-    &quot;My Downloads&quot; folder. You can browse to a specific folder by
-    selecting <em>Other...</em> from the drop-down list of available folders.
-    To show the folder, click the <em>Show Folder</em> button. This will open
-    the folder in the default file manager.</p>
+  <h3 id="download_manager">Download Manager</h3>
+    <p><em>Show Download Manager when a download begins</em><br/>
+      Select whether or not you want the Download Manager to automatically
+      appear when a download begins.</p>
 
-  <h3 id="file_types">File Types</h3>
+    <p><em>Close the download manager when all downloads are complete</em><br/>
+      Select whether or not you want the Download Manager to be closed when all
+      downloads are complete.</p>
 
-  <p>This list contains file types that you have downloaded. You can choose
-    what &brandShortName; should do when clicking on a specific file type.
-    Select the file type you want to modify and click the <em>Change
-    Action...</em> button.</p>
+  <h3 id="download_actions">Download Actions</h3>
+    <p>The Download Actions dialog, which can be opened by clicking the <em>View
+      &amp; Edit Actions...</em> button, contains file types that you have
+      downloaded. You can choose what &brandShortName; should do when clicking
+      on a specific file type by selecting the file type you want to modify and
+      clicking the <em>Change Action...</em> button.</p>
 
-  <p>This will display the Change Action window, where you can choose to have
-    the file type opened by an application or saved to disk. For example, if
-    you view lots of media files on web pages, you might want to specify that
-    &brandShortName; always open media files in your media player instead of
-    asking where you want each media file to be saved.</p>
+    <p>This will display the Change Action dialog, where you can choose to have
+      the file type opened by the default application, opened by a user-selected
+      application, saved to disk, or shown with an installed plugin. For
+      example, if you view lots of media files on web pages, you might want to
+      specify that &brandShortName; always open media files in your media player
+      instead of asking where you want each media file to be saved.</p>
 
-  <p><img width="293" height="236" alt="Change Action Dialog"
-    src="&images.baseURL;/opt_downloadaction.png"/></p>
+    <p><img width="293" height="236" alt=""
+      src="&images.baseURL;/opt_downloadaction.png"/></p>
 
-  <ul>
-    <li><em>Open them in the Default application:</em><br/>Select this &pref.singular;
-      to open this file type in the default application for that file type
-      (determined by the operating system).</li>
-    <li><em>Open them in this application:</em><br/>Select this &pref.singular; to
-      specify another application that should handle this file type. You will
-      see a dialog asking you to specify the application to use.</li>
-    <li><em>Save to Disk</em><br/>This &pref.singular; will save the files to disk. If
-      you have the <em>Save all files to this folder</em> &pref.singular; enabled, the
-      files will be saved automatically.</li>
-  </ul>
+    <ul>
+      <li><em>Open them with the default application:</em><br/>
+        Select this &pref.singular; to open this file type in the default
+        application for that file type (determined by the operating system).</li>
+      <li><em>Open them with this application:</em><br/>
+        Select this &pref.singular; to specify another application that should
+        handle this file type. You will see a dialog asking you to specify the
+        application to use.</li>
+      <li><em>Save them on my computer:</em><br/>
+        This &pref.singular; will save the files to disk. If you have the
+        <em>Save all files to this folder</em> &pref.singular; enabled, the files
+        will be saved automatically.</li>
+      <li><em>Use this Plugin:</em><br/>
+        Select this &pref.singular; to let a plugin handle this file type.</li>
+    </ul>
 
-  <p>To remove an automatic rule for a file type, select that file type and
-    click the <em>Remove</em> button.</p>
-  <p>From the Downloads panel, you can also control the plug-ins for
-    &brandShortName;. Click the <em>Plug-Ins...</em> button to display the
-    Plug-Ins window:</p>
-
-  <p><img width="245" height="269" alt="Plug-Ins Dialog"
-    src="&images.baseURL;/opt_plugins.png"/></p>
-
-  <p>From this window, you can control which plug-ins for &brandShortName; can
-    run. For example, if you don't like Flash animations in general but still
-    find a need to have the plug-in installed, you can disable the plug-in
-    here. This will block any Flash ads and animations until you enable the
-    plug-in again.</p>
+    <p>To remove an automatic rule for a file type, select that file type in the
+      Download Actions dialog and click the <em>Remove Action</em> button.</p>
 
 <h2 id="advanced_options">Advanced &pref.pluralCaps;</h2>
+  <p>The advanced panel contains many &pref.plural; that are less likely to be
+      used by most people but are still useful and sometimes critical &pref.plural;
+      for some people.</p>
 
-  <p><img src="&images.baseURL;/opt_advanced.png"
-    width="425" height="318" alt="Advanced Panel"/></p>
+  <h3 id="advanced_general">General tab</h3>
+    <p><img src="&images.baseURL;/opt_advanced.png"
+      width="425" height="318" alt=""/></p>
 
-  <p>The advanced panel contains many &pref.plural; that are less likely to be used
-    by most people but are still useful and sometimes critical &pref.plural; for some
-    people.</p>
+    <h4 id="accessibility">Accessibility</h4>
+      <p><em>Allow text to be selected with the keyboard</em><br/>
+        Also known as Caret Browsing, this specifies whether a moveable cursor
+        is displayed, allowing you to select text with the keyboard. Some
+        accessibility aids, such as screen readers and screen magnifiers, use
+        the system caret to determine which area of the screen to read or
+        magnify. You can toggle this mode by pressing <kbd>F7</kbd>.</p>
 
-  <h3 id="accessibility">Accessibility</h3>
-  <p><em>Move system caret with focus/selection changes</em><br/>Also known as
-    Caret Browsing, this specifies whether a moveable cursor is displayed,
-    allowing you to select text with the keyboard. Some accessibility aids, such
-    as screen readers and screen magnifiers, use the system caret to determine
-    which area of the screen to read or magnify. You can toggle this mode by
-    pressing <kbd>F7</kbd>.</p>
+      <p><em>Begin finding when you begin typing</em><br/>
+        When this &pref.singular; is enabled, &brandShortName; will find within
+        the current web page what you type as you type it. While you are finding
+        typed text in the page, the Find Toolbar will automatically display at
+        the bottom of the window to show information about what you've found.</p>
 
-  <p><em>Begin finding as you begin typing</em><br/>When this &pref.singular; is
-    enabled, &brandShortName; will find within the current web page what you
-    type as you type it.  While you are finding typed text in the page, the Find
-    Toolbar will automatically display at the bottom of the window to show
-    information about what you've found.</p>
+    <h4 id="browsing">Browsing</h4>
+      <p><em>Resize large images to fit in the browser window</em><br/>
+        This feature is similar to the one seen in Internet Explorer. It makes
+        images that are larger than can be fit on the screen shrink automatically
+        so you can view the whole picture. Click on the image to view it at full
+        size.</p>
 
-  <h3 id="browsing">Browsing</h3>
+      <p><em>Use autoscrolling</em><br/>
+        Autoscrolling is a useful feature which allows you to scroll the page by
+        just holding down the middle mouse button (usually the scroll wheel) and
+        move the mouse up or down. Some people find this annoying, so
+        autoscrolling can be disabled with this &pref.singular;.</p>
 
-  <p><em>Resize large images to fit in the &brandShortName; window</em><br/>
-    This feature is similar to the one seen in Internet Explorer. It makes
-    images that are larger than can be fit on the screen shrink automatically
-    so you can view the whole picture. Click on the image to view it at full
-    size.</p>
+      <p><em>Use smooth scrolling</em><br/>
+        Smooth scrolling can be very useful if you read a lot of long pages.
+        Normally, when you press <kbd>Page Down</kbd>, the view jumps directly
+        down one page. With smooth scrolling, it slides down more smoothly, so
+        you can see how much it scrolls. This makes it easier to resume reading
+        from where you were before.</p>
 
-  <p><em>Use autoscrolling</em><br/>Autoscrolling is a useful feature which
-    allows you to scroll the page by just holding down the middle mouse button
-    (usually the scroll wheel) and move the mouse up or down. Some people find
-    this annoying, so autoscroll can be disabled with this &pref.singular;.</p>
+    <h4 id="languages">Languages</h4>
+      <p><img width="308" height="252" alt=""
+        src="&images.baseURL;/opt_languages.png"/></p>
 
-  <p><em>Use smooth scrolling</em><br/>Smooth scrolling is still somewhat
-    experimental in &brandShortName;, but it can be very useful if you read a
-    lot of long pages. Normally, when you press the Page Down key, the view
-    jumps directly down one page. With Smooth Scrolling, it slides down more
-    smoothly, so you are actually able to see how much it scrolls. This makes
-    it easier to resume reading from where you were before.</p>
+      <p>Some web pages are offered in more than one language. Click the
+        <em>Edit Languages...</em> button to specify your preferred languages.</p>
 
-  <h3 id="tabbed_browsing">Tabbed Browsing</h3>
+      <p><strong>Languages Dialog:</strong><br/>
+        To add a language, press <em>Select a language to add...</em>, choose
+        the language, and click the <em>Add</em> button. Remove a language by
+        selecting it in the list of active languages and clicking the
+        <em>Remove</em> button.</p>
 
-  <p><em>Open links from other applications in:</em><br/>When other
-    applications on your computer display a web page, &brandShortName; opens the
-    page in the most recently displayed tab or window.  You can make
-    &brandShortName; open the page elsewhere by changing this
-    &pref.singular;.</p>
+      <p>You can reorder languages to determine the preferred one in case a page
+        is provided in two or more of your selected languages. Do this using the
+        <em>Move Up</em> and <em>Move Down</em> buttons.</p>
 
-  <p><em>Force links that open new windows to open in:</em><br/>&brandShortName;
-    opens new windows from links when web pages request them.  If you prefer to
-    use tabs as you browse, this behavior may be counterproductive.  You can
-    force &brandShortName; to open links that would normally be opened in new
-    windows to be opened elsewhere.  To do so, select the checkbox for this
-    &pref.singular; and choose the behavior you desire.</p>
+  <h3 id="advanced_update">Update tab</h3>
+    <p>&brandShortName; can check whether new versions of your installed
+	    extensions, themes, or &brandShortName; itself are available.</p>
 
-  <p><em>Hide the tab bar when only one web site is open</em><br/>If you're
-    only viewing one web page in a &brandShortName; window, the tab bar is not
-    shown. Uncheck this &pref.singular; to always show the tab bar.</p>
+    <p><strong>&brandShortName;</strong><br/>
+      By default, &brandShortName; will periodically check and notify you when a
+      new version is available. Uncheck this &pref.singular; to disable the
+      periodic check.</p>
 
-  <p><em>Select new tabs opened from links</em><br/>When you middle-click on
-    Web links (or hold down &accelKey; while clicking with the left mouse
-    button), the links will be opened in a new tab. That tab will not be shown
-    directly; it will be loaded in a background tab. Check this &pref.singular; to load
-    the link in a foreground tab instead, which will show that tab
-    directly.</p>
+    <p><strong>My Extensions and Themes</strong><br/>
+      By default, &brandShortName; will periodically check and notify you when a
+      new version for one of your installed extensions or themes is available.
+      Uncheck this &pref.singular; to disable the periodic check.</p>
 
-  <p><em>Select new tabs opened from bookmarks or history</em><br/>When you open
-    bookmarks or web pages from your browsing history in a new tab,
-    &brandShortName; automatically selects the tab and displays the newly-opened
-    web page. Uncheck this &pref.singular; to load bookmarks and pages from your
-    browsing history in a background tab.</p>
+    <p>Click the appropriate <em>Check Now</em> button to manually perform a
+      check for updates to &brandShortName; or extensions and themes.</p>
 
-  <p><em>Warn when closing multiple tabs</em><br/>When you close a window with
-    multiple tabs, &brandShortName; will ask you to confirm your choice.  This
-    prevents you from accidentally closing the whole window when you wish to
-    close only the current tab.  Uncheck this box to skip past the warning
-    and have &brandShortName; automatically close the window.</p>
+  <h3 id="advanced_security">Security tab</h3>
+    <h4 id="protocols">Protocols</h4>
+      <p><em>Use SSL 2.0</em><br/>
+        Specifies whether you want to send and receive secured information
+        through SSL2 (Secure Sockets Layer Level 2), the standard protocol for
+        secure transmissions. All secure web sites support this protocol.</p>
 
-  <h3 id="software_update">Software Update</h3>
+      <p><em>Use SSL 3.0</em><br/>
+        Specifies whether you want to send and receive secured information
+        through SSL3 (Secure Sockets Layer Level 3), a protocol that is intended
+        to be more secure than SSL2. Note that some web sites may not support
+        this protocol.</p>
 
-  <p>&brandShortName; can check whether a new version of your installed
-    extensions or of &brandShortName; itself is available.</p>
+      <p><em>Use TLS 1.0</em><br/>
+        Specifies whether you want to send and receive secured information
+        through TLS (Transport Layer Security), an open security standard
+        similar to SSL3 (Secure Sockets Layer). Note that some web sites may not
+        support this protocol.</p>
 
-  <p><strong>&brandShortName;</strong><br/>
-    By default, &brandShortName; will periodically check and notify you when a
-    new version is available. Uncheck this &pref.singular; to disable the periodic
-    check.</p>
+    <h4 id="certificates">Certificates</h4>
+      <p>Certificates help perform encryption and decryption of connections to
+        <a href="glossary.xhtml#secure_site">secure sites</a>.</p>
 
-  <p><strong>My Extensions</strong><br/>
-    By default, &brandShortName; will periodically check and notify you when a
-    new version for one of your installed extensions is available. Uncheck
-    this &pref.singular; to disable the periodic check.</p>
+      <p><em>When a web site requires a certificate:</em><br/>
+        When a web site requests a secure connection, &brandShortName; will by
+        default automatically use an appropriate certificate. If you wish to
+        manually choose a certificate (for example, if you wish to use a certain
+        type of encryption instead of what is automatically selected), select
+        the &pref.singular; <em>Ask me every time</em> and you'll be in complete
+        control of what certificates you use while browsing.</p>
 
-  <p>Click the <em>Check Now</em> button to manually perform a check for
-    updates to &brandShortName; and installed extensions.</p>
+      <p><em>View Certificates</em><br/>
+        Click this button to view stored certificates, import new certificates,
+        and back up or delete old certificates in &brandShortName;.</p>
 
-  <h3 id="security">Security</h3>
+      <p><em>Revocation Lists</em><br/>
+        &brandShortName; can use Certificate Revocation Lists (also known as
+        CRLs) to ensure that your certificates are not invalid. Click the
+        <em>Revocation Lists</em> button to manage the CRLs installed on your
+        computer.</p>
 
-  <p><em>Use SSL 2.0</em><br/>Specifies whether you want to send and receive
-    secured information through SSL2 (Secure Sockets Layer Level 2), the
-    standard protocol for secure transmissions. All secure web sites support
-    this protocol.</p>
+      <p><em>Verification</em><br/>
+        OCSP (Online Certificate Status Protocol) is a way to validate your
+        certificates every time they are viewed or used. &brandShortName; does
+        not use OCSP by default, but if you want to enable it, you can do so
+        here. You will most likely only need to change this if your Internet
+        environment requires it.</p>
 
-  <p><em>Use SSL 3.0</em><br/>Specifies whether you want to send and receive
-    secured information through SSL3 (Secure Sockets Layer Level 3), a
-    protocol that is intended to be more secure than SSL2. Note that some web
-    sites may not support this protocol.</p>
+      <p><em>Security Devices</em><br/>
+        Security devices can encrypt and decrypt connections and store
+        certificates and passwords. If you need to use a security device other
+        than the one in &brandShortName;, click the <em>Security Devices</em>
+        button.</p>
 
-  <p><em>Use TLS 1.0</em><br/>Specifies whether you want to send and receive
-    secured information through TLS (Transport Layer Security), an open
-    security standard similar to SSL3 (Secure Sockets Layer). Note that some
-    web sites may not support this protocol.</p>
-
-  <h3 id="certificates">Certificates</h3>
-
-  <p>Certificates help perform encryption and decryption of connections to
-    <a href="glossary.xhtml#secure_site">secure sites</a>.</p>
-
-  <p><em>Client Certificate Selection</em><br/>When a web site requests a
-    secure connection, &brandShortName; will by default automatically use
-    an appropriate certificate.  If you wish to manually choose a certificate
-    (for example, if you wish to use a certain type of encryption instead of
-    what is automatically selected), select the &pref.singular; "Ask Every Time" and
-    you'll be in complete control of what certificates you use while
-    browsing.</p>
-
-  <p><em>Manage Certificates</em><br/>Click the <em>Manage Certificates...</em>
-    button to view stored certificates, import new certificates, and
-    back up or delete old certificates in &brandShortName;.</p>
-
-  <p><em>Manage Security Devices</em><br/>Security devices can encrypt and
-    decrypt connections and store certificates and passwords. If you need
-    to use a security device other than the one in &brandShortName;, click the
-    <em>Manage Security Devices...</em> button.</p>
-
-  <h3 id="validation">Validation</h3>
-
-  <p>Validation ensures that certificates used by &brandShortName; are not
-    obsolete.</p>
-
-  <p><em>CRL</em><br/>&brandShortName; can use CRLs (also known as Certificate
-    Revocation Lists) to ensure that your certificates are not invalid.  If you
-    need to add a CRL to &brandShortName; or wish to view information about CRLs
-    you have installed, click the <em>Manage CRLs...</em> button.</p>
-
-  <p><em>OCSP</em><br/>OCSP (Online Certificate Status Protocol) is a way to
-    validate your certificates every time they are viewed or used.
-    &brandShortName; does not use OCSP by default, but if you want to enable it,
-    you can do so here.  You will most likely only need to change this if your
-    Internet environment requires it.</p>
-
-<div class="contentsBox"><em>10 December 2004</em></div>
+<div class="contentsBox"><em>22 March 2005</em></div>
 <p>Copyright &copy; 2003-2005 Contributors to the Mozilla Help Viewer Project.</p>
 
 </body>
