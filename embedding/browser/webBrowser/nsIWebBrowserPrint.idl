@@ -76,6 +76,11 @@ interface nsIWebBrowserPrint : nsISupports
   readonly attribute nsIPrintSettings currentPrintSettings;
 
   /**
+   * Returns whether it is in Print mode
+   */
+  readonly attribute boolean doingPrint;
+
+  /**
    * Returns whether it is in Print Preview mode
    */
   readonly attribute boolean doingPrintPreview;

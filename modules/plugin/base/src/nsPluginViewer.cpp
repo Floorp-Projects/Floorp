@@ -875,6 +875,13 @@ PluginViewerImpl::GetDoingPrintPreview(PRBool *aDoingPrintPreview)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* readonly attribute boolean doingPrint; */
+NS_IMETHODIMP
+PluginViewerImpl::GetDoingPrint(PRBool *aDoingPrint)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 /* readonly attribute nsIPrintSettings currentPrintSettings; */
 NS_IMETHODIMP 
 PluginViewerImpl::GetCurrentPrintSettings(nsIPrintSettings * *aCurrentPrintSettings)
