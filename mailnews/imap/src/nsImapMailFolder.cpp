@@ -1284,8 +1284,11 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *aMsgWindow,
               IMAPGetStringByID(IMAP_EMPTY_TRASH_CONFIRM, getter_Copies(confirmationStr));
               promptService = do_GetService("@mozilla.org/embedcomp/prompt-service;1");
               nsCOMPtr<nsIDocShell> docShell;
-	      (void) aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
-   	      parentWindow = do_QueryInterface(docShell);
+              if (aMsgWindow)
+              {
+	              (void) aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
+   	            parentWindow = do_QueryInterface(docShell);
+              }
               rv = IMAPGetStringBundle(getter_AddRefs(bundle));
               NS_ENSURE_SUCCESS(rv, rv);
             rv = aEnumerator->First();
