@@ -26,7 +26,7 @@ CSRCS		= \
 
 EXPORTS= httpurl.h httpauth.h cookies.h jscookie.h
 
-REQUIRES	= network nspr2 dbm util pref js java fileurl \
+REQUIRES	= netcache network nspr2 dbm util pref js java fileurl \
 	security layer img httpurl
 
 include $(DEPTH)/config/rules.mk
