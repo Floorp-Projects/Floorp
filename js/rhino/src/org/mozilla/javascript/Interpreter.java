@@ -833,12 +833,10 @@ public class Interpreter {
                 Node finallyTarget = (Node)node.getProp(Node.FINALLY_PROP);
 
                 int tryStart = iCodeTop;
-                iCodeTop = addByte(TokenStream.TRY, iCodeTop);
-                iCodeTop = addShort(0, iCodeTop); // placeholder for catch pc
-                iCodeTop = addShort(0, iCodeTop); // placeholder for finally pc
-                iCodeTop = addIndex(itsWithDepth, iCodeTop);
-
                 int tryEnd = -1;
+                int catchStart = -1;
+                int finallyStart = -1;
+
                 while (child != null) {
                     boolean generated = false;
 
@@ -848,9 +846,7 @@ public class Interpreter {
 
                         if (tryEnd >= 0) Context.codeBug();
                         tryEnd = iCodeTop;
-
-                        int catchOffset = iCodeTop - tryStart;
-                        recordJumpOffset(tryStart + 1, catchOffset);
+                        catchStart = iCodeTop;
 
                         markTargetLabel(child, iCodeTop);
                         generated = true;
@@ -867,9 +863,7 @@ public class Interpreter {
                         if (tryEnd < 0) {
                             tryEnd = iCodeTop;
                         }
-
-                        int finallyOffset = iCodeTop - tryStart;
-                        recordJumpOffset(tryStart + 3, finallyOffset);
+                        finallyStart = iCodeTop;
 
                         markTargetLabel(child, iCodeTop);
                         generated = true;
@@ -898,7 +892,10 @@ public class Interpreter {
                 // handling assumes that the only code executed after
                 // finally returns will be a jump outside try which could not
                 // trigger exceptions.
-                addExceptionHandler(tryStart, tryEnd);
+                // It does not hold if instruction observer throws during
+                // goto. Currently it may lead to double execution of finally.
+                addExceptionHandler(tryStart, tryEnd, catchStart, finallyStart,
+                                    itsWithDepth);
                 break;
             }
 
@@ -1143,21 +1140,28 @@ public class Interpreter {
         return iCodeTop;
     }
 
-    private void addExceptionHandler(int icodeStart, int icodeEnd)
+    private void addExceptionHandler(int icodeStart, int icodeEnd,
+                                     int catchStart, int finallyStart,
+                                     int withDepth)
     {
+        int top = itsExceptionTableTop;
         int[] table = itsData.itsExceptionTable;
         if (table == null) {
-            if (itsExceptionTableTop != 0) Context.codeBug();
+            if (top != 0) Context.codeBug();
             table = new int[EXCEPTION_SLOT_SIZE * 2];
             itsData.itsExceptionTable = table;
-        } else if (table.length == itsExceptionTableTop) {
+        } else if (table.length == top) {
             table = new int[table.length * 2];
-            System.arraycopy(itsData.itsExceptionTable, 0, table, 0,
-                             itsExceptionTableTop);
+            System.arraycopy(itsData.itsExceptionTable, 0, table, 0, top);
             itsData.itsExceptionTable = table;
         }
-        table[itsExceptionTableTop++] = icodeStart;
-        table[itsExceptionTableTop++] = icodeEnd;
+        table[top + EXCEPTION_TRY_START_SLOT]  = icodeStart;
+        table[top + EXCEPTION_TRY_END_SLOT]    = icodeEnd;
+        table[top + EXCEPTION_CATCH_SLOT]      = catchStart;
+        table[top + EXCEPTION_FINALLY_SLOT]    = finallyStart;
+        table[top + EXCEPTION_WITH_DEPTH_SLOT] = withDepth;
+
+        itsExceptionTableTop = top + EXCEPTION_SLOT_SIZE;
     }
 
     private byte[] increaseICodeCapasity(int iCodeTop, int extraSize) {
@@ -1197,8 +1201,8 @@ public class Interpreter {
         if (exceptionTable == null) { return -1; }
         int best = -1, bestStart = 0, bestEnd = 0;
         for (int i = 0; i != exceptionTable.length; i += EXCEPTION_SLOT_SIZE) {
-            int start = exceptionTable[i];
-            int end = exceptionTable[i + 1];
+            int start = exceptionTable[i + EXCEPTION_TRY_START_SLOT];
+            int end = exceptionTable[i + EXCEPTION_TRY_END_SLOT];
             if (start <= pc && pc < end) {
                 if (best < 0 || bestStart <= start) {
                     // Check handlers are nested
@@ -1258,7 +1262,8 @@ public class Interpreter {
                 out.println("MaxStack = " + idata.itsMaxStack);
 
                 for (int pc = 0; pc < iCodeLength; ) {
-                    out.print("[" + pc + "] ");
+                    out.flush();
+                    out.print(" [" + pc + "] ");
                     int token = iCode[pc] & 0xff;
                     String tname = icodeToName(token);
                     int old_pc = pc;
@@ -1277,20 +1282,6 @@ public class Interpreter {
                             int newPC = getTarget(iCode, pc);
                             out.println(tname + " " + newPC);
                             pc += 2;
-                            break;
-                        }
-                        case TokenStream.TRY : {
-                            int catch_offset = getShort(iCode, pc);
-                            int finally_offset = getShort(iCode, pc + 2);
-                            int with_depth = getIndex(iCode, pc + 4);
-
-                            int catch_pc = (catch_offset == 0)
-                                           ? -1 : pc - 1 + catch_offset;
-                            int finally_pc = (finally_offset == 0)
-                                           ? -1 : pc - 1 + finally_offset;
-                            out.println(tname + " " + catch_pc
-                                        + " " + finally_pc + " " +with_depth);
-                            pc += 6;
                             break;
                         }
                         case RETSUB :
@@ -1383,6 +1374,26 @@ public class Interpreter {
                     }
                     if (old_pc + icodeLength != pc) Context.codeBug();
                 }
+
+                int[] table = idata.itsExceptionTable;
+                if (table != null) {
+                    out.println("Exception handlers: "
+                                 +table.length / EXCEPTION_SLOT_SIZE);
+                    for (int i = 0; i != table.length;
+                         i += EXCEPTION_SLOT_SIZE)
+                    {
+                        int tryStart     = table[i + EXCEPTION_TRY_START_SLOT];
+                        int tryEnd       = table[i + EXCEPTION_TRY_END_SLOT];
+                        int catchStart   = table[i + EXCEPTION_CATCH_SLOT];
+                        int finallyStart = table[i + EXCEPTION_FINALLY_SLOT];
+                        int withDepth    = table[i + EXCEPTION_WITH_DEPTH_SLOT];
+
+                        out.println(" "+tryStart+"\t "+tryEnd+"\t "
+                                    +catchStart+"\t "+finallyStart
+                                    +"\t "+withDepth);
+                    }
+                }
+
                 out.close();
             }
             catch (IOException x) {}
@@ -1460,12 +1471,6 @@ public class Interpreter {
             case TokenStream.IFNE :
                 // target pc offset
                 return 1 + 2;
-
-            case TokenStream.TRY :
-                // catch pc offset or 0
-                // finally pc offset or 0
-                // with depth
-                return 1 + 2 + 2 + 2;
 
             case RETSUB :
             case TokenStream.ENUMINIT :
@@ -1722,17 +1727,12 @@ public class Interpreter {
                 switch (iCode[pc] & 0xff) {
     // Back indent to ease imlementation reading
 
-    case TokenStream.TRY :
-        // Skip starting pc of catch/finally blocks and with depth
-        pc += 6;
-        break;
     case TokenStream.CATCH: {
         // See comments in generateICodeFromTree: the following code should
         // be executed inside try/catch inside main loop, not in the loop catch
         // block itself
         if (javaException == null) Context.codeBug();
 
-        int pcTry = -1;
         int pcNew = -1;
         boolean doCatch = false;
         int handlerOffset = getExceptionHandler(idata.itsExceptionTable,
@@ -1760,23 +1760,19 @@ public class Interpreter {
                 // Do not allow for JS to interfere with Error instances
                 // (exType == OTHER), as they can be used to terminate
                 // long running script
-                pcTry = idata.itsExceptionTable[handlerOffset];
                 if (exType == SCRIPT_CAN_CATCH) {
                     // Allow JS to catch only JavaScriptException and
                     // EcmaError
-                    int catch_offset = getShort(iCode, pcTry + 1);
-                    if (catch_offset != 0) {
+                    pcNew = idata.itsExceptionTable[handlerOffset
+                                                    + EXCEPTION_CATCH_SLOT];
+                    if (pcNew >= 0) {
                         // Has catch block
                         doCatch = true;
-                        pcNew = pcTry + catch_offset;
                     }
                 }
                 if (pcNew < 0) {
-                    int finally_offset = getShort(iCode, pcTry + 3);
-                    if (finally_offset != 0) {
-                        // has finally block
-                        pcNew = pcTry + finally_offset;
-                    }
+                    pcNew = idata.itsExceptionTable[handlerOffset
+                                                    + EXCEPTION_FINALLY_SLOT];
                 }
             }
         }
@@ -1792,7 +1788,8 @@ public class Interpreter {
         // We caught an exception
 
         // restore scope at try point
-        int tryWithDepth = getIndex(iCode, pcTry + 5);
+        int tryWithDepth = idata.itsExceptionTable[
+                               handlerOffset + EXCEPTION_WITH_DEPTH_SLOT];
         while (tryWithDepth != withDepth) {
             if (scope == null) Context.codeBug();
             scope = ScriptRuntime.leaveWith(scope);
@@ -3009,7 +3006,14 @@ public class Interpreter {
     private String lastAddString;
 
     private int itsExceptionTableTop = 0;
-    private static final int EXCEPTION_SLOT_SIZE = 2;
+
+    // 5 = space for try start/end, catch begin, finally begin and with depth
+    private static final int EXCEPTION_SLOT_SIZE       = 5;
+    private static final int EXCEPTION_TRY_START_SLOT  = 0;
+    private static final int EXCEPTION_TRY_END_SLOT    = 1;
+    private static final int EXCEPTION_CATCH_SLOT      = 2;
+    private static final int EXCEPTION_FINALLY_SLOT    = 3;
+    private static final int EXCEPTION_WITH_DEPTH_SLOT = 4;
 
     private int version;
     private boolean inLineStepMode;
