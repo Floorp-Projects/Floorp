@@ -27,27 +27,6 @@ IS_COMPONENT=1
 DEFINES=-D_IMPL_NS_APPSHELL -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
 
-CPPSRCS=                                \
- nsChromeTreeOwner.cpp                  \
- nsContentTreeOwner.cpp                  \
- nsXULWindow.cpp                  \
- nsXULCommand.cpp                  \
- nsAppShellService.cpp                  \
- nsWebShellWindow.cpp                   \
- nsAppShellFactory.cpp                  \
- nsCommandLineService.cpp               \
- nsXPConnectFactory.cpp                \
- nsJSXPConnectFactory.cpp              \
- nsAppShellNameSet.cpp                 \
- nsFileLocations.cpp                    \
- nsNetSupportDialog.cpp		\
- nsWindowMediator.cpp \
- nsDialogParamBlock.cpp \
- nsCommonDialogs.cpp \
- nsAbout.cpp \
- nsUserInfoWin.cpp \
- $(NULL)
-
 CPP_OBJS=                               \
  .\$(OBJDIR)\nsChromeTreeOwner.obj      \
  .\$(OBJDIR)\nsContentTreeOwner.obj      \
