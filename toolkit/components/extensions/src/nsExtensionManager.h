@@ -68,12 +68,22 @@ public:
   nsresult Init();
 
 protected:
-  nsresult  LoadExtensionsDataSource(nsIFile* aExtensionsDataSource);
-  void      InitResources();
+  nsresult InstallExtension(nsIRDFDataSource* aSourceDataSource, 
+                            nsIRDFDataSource* aTargetDataSource);
+  nsresult SetExtensionProperty(const PRUnichar* aExtensionID, 
+                                nsIRDFResource* aPropertyArc, 
+                                nsIRDFNode* aPropertyValue);
+
+
+  nsresult  LoadExtensionsDataSource(nsIFile* aExtensionsDataSource,
+                                     nsIRDFDataSource** aResult);
+  void      InitLexicalResources();
   nsresult  StartExtensions(PRBool aIsProfile);
 
 private:
   nsCOMPtr<nsIRDFCompositeDataSource>  mDataSource;
+  nsCOMPtr<nsIRDFDataSource> mProfileExtensions;
+  nsCOMPtr<nsIRDFDataSource> mAppExtensions;
 };
  
 #endif

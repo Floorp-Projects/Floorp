@@ -38,10 +38,12 @@
 
 #include "nsISupports.idl"
 
+interface nsIInputStream;
+
 [scriptable, uuid(c3515b0f-99f4-453b-805e-1fdf5724d6d9)]
 interface nsIExtensionManager : nsISupports
 {
-  void installExtension(in wstring aExtensionID);
+  void installExtensionFromStream(in nsIInputStream aStream, in boolean aUseProfile);
   void uninstallExtension(in wstring aExtensionID);
   void enableExtension(in wstring aExtensionID);
   void disableExtension(in wstring aExtensionID);
