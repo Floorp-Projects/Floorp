@@ -1,4 +1,5 @@
 AddHandler cgi-script .sh
+AddHandler cgi-script .mozconfig
 
 #RewriteEngine on 
 #RewriteBase /webtools/build/ 
