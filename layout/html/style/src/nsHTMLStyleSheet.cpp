@@ -58,6 +58,7 @@
 #include "nsToolbarFrame.h"
 #include "nsTreeIndentationFrame.h"
 #include "nsTreeCellFrame.h"
+#include "nsProgressMeterFrame.h"
 #endif
 
 //#define FRAMEBASED_COMPONENTS 1 // This is temporary please leave in for now - rods
@@ -2799,6 +2800,14 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
     rv = NS_NewToolbarFrame(aNewFrame);
   }
   // End of TOOLBAR CONSTRUCTION logic
+
+  // PROGRESS METER CONSTRUCTION
+  else if (aTag == nsXULAtoms::progressmeter) {
+    processChildren = PR_TRUE;
+    rv = NS_NewProgressMeterFrame(aNewFrame);
+  }
+  // End of PROGRESS METER CONSTRUCTION logic
+
   }
 
   // If we succeeded in creating a frame then initialize it, process its

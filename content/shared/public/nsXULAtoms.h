@@ -60,6 +60,9 @@ public:
   static nsIAtom* treeindentation; // Specifies that the indentation for the level should occur here.
   static nsIAtom* treeallowevents; // Lets events be handled on the cell contents.
 
+  static nsIAtom* progressmeter; 
+  static nsIAtom* mode; 
+
   static nsIAtom* widget;
   static nsIAtom* window;
 };
