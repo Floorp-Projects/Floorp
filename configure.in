@@ -2446,8 +2446,15 @@ dnl pass -Wno-long-long to the compiler
 MOZ_ARG_ENABLE_BOOL(ignore-no-long-long-warning,
 [  --enable-ignore-no-long-long-warning       pass -Wno-long-long to the compiler], _IGNORE_LONG_LONG_WARNINGS=)
 if test "$_IGNORE_LONG_LONG_WARNINGS"; then
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-long-long"
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-long-long"
+     _SAVE_CFLAGS="$CFLAGS"
+     CFLAGS="$CFLAGS -Wno-long-long"
+     AC_MSG_CHECKING([whether compiler supports -Wno-long-long])
+     AC_TRY_COMPILE([], [return(0);], 
+	[ _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-long-long"
+	  _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-long-long"
+	  result="yes" ], result="no")
+     AC_MSG_RESULT([$result])
+     CFLAGS="$_SAVE_CFLAGS"
 fi
 
 dnl Note: This should not be disabled if --enable-oji is set
