@@ -1779,7 +1779,7 @@ NS_IMETHODIMP nsHTMLEditor::GetInlineProperty(nsIAtom *aProperty,
 
     iter->Init(range);
     nsCOMPtr<nsIContent> content;
-    result = iter->CurrentNode(getter_AddRefs(content));
+    iter->CurrentNode(getter_AddRefs(content));
     while (NS_ENUMERATOR_FALSE == iter->IsDone())
     {
       //if (gNoisy) { printf("  checking node %p\n", content.get()); }

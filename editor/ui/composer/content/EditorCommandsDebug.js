@@ -29,7 +29,7 @@ function EditorGetText()
   if (editorShell) {
     dump("Getting text\n");
     var  outputText = editorShell.GetContentsAs("text/plain", 2);
-    dump(outputText + "\n");
+    dump("<<" + outputText + ">>\n");
   }
 }
 

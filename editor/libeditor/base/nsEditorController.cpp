@@ -24,6 +24,7 @@
 #include "nsIComponentManager.h"
 #include "nsEditorController.h"
 #include "nsIEditor.h"
+#include "nsIEditorShell.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIFormControlFrame.h"
 #include "nsIDOMSelection.h"
@@ -36,7 +37,7 @@
 #include "nsIPresShell.h"
 
 #include "nsEditorCommands.h"
-
+#include "nsComposerCommands.h"
 
 #define kMaxStackCommandNameLength 128
 
@@ -47,31 +48,49 @@ NS_IMPL_RELEASE(nsEditorController)
 NS_INTERFACE_MAP_BEGIN(nsEditorController)
 	NS_INTERFACE_MAP_ENTRY(nsIController)
 	NS_INTERFACE_MAP_ENTRY(nsIEditorController)
+	NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEditorController)
 NS_INTERFACE_MAP_END
 
 nsEditorController::nsEditorController()
-: mContent(NULL)
-, mEditor(NULL)
+: mCommandRefCon(nsnull)
 {
   NS_INIT_REFCNT();  
 }
 
 nsEditorController::~nsEditorController()
 {
-  // if the singleton command manger has a refcount of 1 at this point, we need to
-  // set it to null
 }
 
-NS_IMETHODIMP nsEditorController::Init()
+NS_IMETHODIMP nsEditorController::Init(nsISupports *aCommandRefCon)
 {
   nsresult  rv;
  
   // get our ref to the singleton command manager
-  rv = GetCommandManager(getter_AddRefs(mCommandManager));
+  rv = GetEditorCommandManager(getter_AddRefs(mCommandManager));  
   if (NS_FAILED(rv)) return rv;  
+
+  mCommandRefCon = aCommandRefCon;     // no addref  
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsEditorController::SetCommandRefCon(nsISupports *aCommandRefCon)
+{
+  mCommandRefCon = aCommandRefCon;     // no addref  
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsEditorController::GetInterface(const nsIID & aIID, void * *result)
+{
+  NS_ENSURE_ARG_POINTER(result);
+
+  if (NS_SUCCEEDED(QueryInterface(aIID, result)))
+    return NS_OK;
   
-  return rv;
+  if (mCommandManager && aIID.Equals(NS_GET_IID(nsIControllerCommandManager)))
+    return mCommandManager->QueryInterface(aIID, result);
+    
+  return NS_NOINTERFACE;
 }
 
 
@@ -100,6 +119,8 @@ nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandManager 
   nsresult rv;
  
   // now register all our commands
+  // These are commands that will be used in text widgets, and in composer
+  
   NS_REGISTER_ONE_COMMAND(nsUndoCommand, "cmd_undo");
   NS_REGISTER_ONE_COMMAND(nsRedoCommand, "cmd_redo");
 
@@ -107,8 +128,7 @@ nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandManager 
   NS_REGISTER_ONE_COMMAND(nsCopyCommand, "cmd_copy");
   NS_REGISTER_ONE_COMMAND(nsSelectAllCommand, "cmd_selectAll");
   
-  NS_REGISTER_FIRST_COMMAND(nsPasteCommand, "cmd_paste");
-  NS_REGISTER_LAST_COMMAND(nsPasteCommand, "cmd_pasteQuote");  
+  NS_REGISTER_ONE_COMMAND(nsPasteCommand, "cmd_paste");
   
   NS_REGISTER_FIRST_COMMAND(nsDeleteCommand, "cmd_delete");
   NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_deleteCharBackward");
@@ -166,158 +186,29 @@ nsresult nsEditorController::RegisterOneCommand(const PRUnichar* aCommandName,
   return inCommandManager->RegisterCommand(aCommandName, editorCommand);   // this is the owning ref
 }
 
-
-NS_IMETHODIMP nsEditorController::SetContent(nsIHTMLContent *aContent)
-{
-  // indiscriminately sets mContent, no ref counting here
-  mContent = aContent;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsEditorController::SetEditor(nsIEditor *aEditor)
-{
-  // null editors are allowed
-  mEditor = aEditor;
-  return NS_OK;
-}
-
-
 /* =======================================================================
  * nsIController
  * ======================================================================= */
 
 NS_IMETHODIMP nsEditorController::IsCommandEnabled(const PRUnichar *aCommand, PRBool *aResult)
 {
-  NS_ENSURE_ARG_POINTER(aCommand);
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  *aResult = PR_FALSE;
-  
-  nsCOMPtr<nsIEditor> editor;
-  NS_ENSURE_SUCCESS(GetEditor(getter_AddRefs(editor)), NS_ERROR_FAILURE);
-  // a null editor is a legal state
-  if (!editor)
-    return NS_OK;     // just say we don't handle the command
-  
-  if (!mCommandManager)
-  {
-    NS_ASSERTION(0, "No command handler!");
-    return NS_ERROR_UNEXPECTED;
-  }
-    
-  // find the command  
-  nsCOMPtr<nsIControllerCommand> commandHandler;
-  mCommandManager->FindCommandHandler(aCommand, getter_AddRefs(commandHandler));
-    
-  if (!commandHandler)
-  {
-#if DEBUG
-    nsCAutoString msg("EditorController asked about a command that it does not handle -- ");
-    msg.AppendWithConversion(aCommand);
-    NS_WARNING(msg);
-#endif
-    return NS_OK;    // we don't handle this command
-  }
-  
-  return commandHandler->IsCommandEnabled(aCommand, editor, aResult);
+  return mCommandManager->IsCommandEnabled(aCommand, mCommandRefCon, aResult);
 }
 
 NS_IMETHODIMP nsEditorController::SupportsCommand(const PRUnichar *aCommand, PRBool *aResult)
 {
-  NS_ENSURE_ARG_POINTER(aCommand);
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  // XXX: need to check the readonly and disabled states
-
-  *aResult = PR_FALSE;
-  
-  // find the command  
-  nsCOMPtr<nsIControllerCommand> commandHandler;
-  mCommandManager->FindCommandHandler(aCommand, getter_AddRefs(commandHandler));
-
-  *aResult = (commandHandler.get() != NULL);
-  return NS_OK;
+  return mCommandManager->SupportsCommand(aCommand, mCommandRefCon, aResult);
 }
 
 NS_IMETHODIMP nsEditorController::DoCommand(const PRUnichar *aCommand)
 {
-  NS_ENSURE_ARG_POINTER(aCommand);
-  nsCOMPtr<nsIEditor> editor;
-  nsCOMPtr<nsISelectionController> selCont;
-  NS_ENSURE_SUCCESS(GetEditor(getter_AddRefs(editor)), NS_ERROR_FAILURE);
-  if (!editor)
-  { // Q: What does it mean if there is no editor?  
-    // A: It means we've never had focus, so we can't do anything
-    return NS_OK;
-  }
-
-  // find the command  
-  nsCOMPtr<nsIControllerCommand> commandHandler;
-  mCommandManager->FindCommandHandler(aCommand, getter_AddRefs(commandHandler));
-  
-  if (!commandHandler)
-  {
-#if DEBUG
-    nsCAutoString msg("EditorController asked to do a command that it does not handle -- ");
-    msg.AppendWithConversion(aCommand);
-    NS_WARNING(msg);
-#endif
-    return NS_OK;    // we don't handle this command
-  }
-  
-  return commandHandler->DoCommand(aCommand, editor);
+  return mCommandManager->DoCommand(aCommand, mCommandRefCon);
 }
 
 NS_IMETHODIMP nsEditorController::OnEvent(const PRUnichar *aEventName)
 {
   NS_ENSURE_ARG_POINTER(aEventName);
 
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP nsEditorController::GetEditor(nsIEditor ** aEditor)
-{
-  NS_ENSURE_ARG_POINTER(aEditor);
-  if (mEditor)
-  {
-    *aEditor = mEditor;
-    NS_ADDREF(*aEditor);
-    return NS_OK; 
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsEditorController::GetSelectionController(nsISelectionController ** aSelCon)
-{
-  nsCOMPtr<nsIEditor>editor;
-  nsresult result = GetEditor(getter_AddRefs(editor));
-  if (NS_FAILED(result) || !editor)
-    return result ? result : NS_ERROR_FAILURE;
-
-  return  editor->GetSelectionController(aSelCon); 
-}
-
-NS_IMETHODIMP nsEditorController::GetFrame(nsIGfxTextControlFrame **aFrame)
-{
-  NS_ENSURE_ARG_POINTER(aFrame);
-  //DEPRICATED. WILL REMOVE LATER
-/*
-  *aFrame = nsnull;
-  NS_ENSURE_STATE(mContent);
-
-  nsIFormControlFrame *frame = nsnull;
-  NS_ENSURE_SUCCESS( 
-    nsGenericHTMLElement::GetPrimaryFrame(mContent, frame), 
-    NS_ERROR_FAILURE
-  );
-  if (!frame) { return NS_ERROR_FAILURE; }
-
-  NS_ENSURE_SUCCESS(
-    frame->QueryInterface(NS_GET_IID(nsIGfxTextControlFrame), (void**)aFrame), 
-    NS_ERROR_FAILURE
-  );
-  */
   return NS_OK;
 }
 
@@ -331,18 +222,15 @@ PRBool nsEditorController::IsEnabled()
    */
 }
 
-#ifdef XP_MAC
-#pragma mark -
-#endif
 
-nsWeakPtr nsEditorController::sCommandManager = NULL;
+nsWeakPtr nsEditorController::sEditorCommandManager = NULL;
 
 // static
-nsresult nsEditorController::GetCommandManager(nsIControllerCommandManager* *outCommandManager)
+nsresult nsEditorController::GetEditorCommandManager(nsIControllerCommandManager* *outCommandManager)
 {
   NS_ENSURE_ARG_POINTER(outCommandManager);
 
-  nsCOMPtr<nsIControllerCommandManager> cmdManager = do_QueryReferent(sCommandManager);
+  nsCOMPtr<nsIControllerCommandManager> cmdManager = do_QueryReferent(sEditorCommandManager);
   if (!cmdManager)
   {
     nsresult rv;
@@ -354,10 +242,139 @@ nsresult nsEditorController::GetCommandManager(nsIControllerCommandManager* *out
     if (NS_FAILED(rv)) return rv;
 
     // save the singleton in our static weak reference
-    sCommandManager = getter_AddRefs(NS_GetWeakReference(cmdManager, &rv));
+    sEditorCommandManager = getter_AddRefs(NS_GetWeakReference(cmdManager, &rv));
     if (NS_FAILED(rv))  return rv;
   }
 
+  NS_ADDREF(*outCommandManager = cmdManager);
+  return NS_OK;
+}
+
+
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+nsComposerController::nsComposerController()
+{
+}
+
+nsComposerController::~nsComposerController()
+{
+}
+
+NS_IMETHODIMP nsComposerController::Init(nsISupports *aCommandRefCon)
+{
+  nsresult  rv;
+ 
+  rv = nsEditorController::Init(aCommandRefCon);
+  if (NS_FAILED(rv)) return rv;  
+  
+  // get our ref to the singleton command manager
+  rv = GetComposerCommandManager(getter_AddRefs(mCommandManager));
+  if (NS_FAILED(rv)) return rv;  
+
+  return NS_OK;
+}
+
+#define NS_REGISTER_STYLE_COMMAND(_cmdClass, _cmdName, _styleTag)   \
+  {                                                                                 \
+  _cmdClass* theCmd = new _cmdClass(_styleTag);                     \
+  rv = RegisterOneCommand(NS_ConvertASCIItoUCS2(_cmdName).GetUnicode(), inCommandManager, theCmd); \
+  }
+  
+
+// static
+nsresult nsComposerController::RegisterComposerCommands(nsIControllerCommandManager *inCommandManager)
+{
+  nsresult rv;
+
+  // These are composer-only commands
+  
+  // File menu
+  NS_REGISTER_ONE_COMMAND(nsSaveCommand, "cmd_save");
+  NS_REGISTER_ONE_COMMAND(nsSaveAsCommand, "cmd_saveAs");
+  NS_REGISTER_ONE_COMMAND(nsCloseCommand, "cmd_close");
+  
+  NS_REGISTER_FIRST_COMMAND(nsPrintingCommands, "cmd_print");
+  NS_REGISTER_NEXT_COMMAND(nsPrintingCommands, "cmd_printSetup");
+  NS_REGISTER_LAST_COMMAND(nsPrintingCommands, "cmd_printPreview");
+  
+  // Edit menu
+  NS_REGISTER_ONE_COMMAND(nsPasteQuotationCommand, "cmd_pasteQuote");
+
+  // indent/outdent
+  NS_REGISTER_ONE_COMMAND(nsIndentCommand, "cmd_indent");
+  NS_REGISTER_ONE_COMMAND(nsOutdentCommand, "cmd_outdent");
+
+  // Styles
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_bold", "b");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_italic", "i");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_underline", "u");
+
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_strikethrough", "strike");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_superscript", "sup");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_subscript", "sub");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_nobreak", "nobr");
+
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_em", "em");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_strong", "strong");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_cite", "cite");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_abbr", "abbr");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_acronym", "acronym");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_code", "code");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_samp", "samp");
+  NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_var", "var");
+  
+  // lists
+  NS_REGISTER_STYLE_COMMAND(nsListCommand, "cmd_ol", "ol");
+  NS_REGISTER_STYLE_COMMAND(nsListCommand, "cmd_ul", "ul");
+
+  // format stuff
+  NS_REGISTER_ONE_COMMAND(nsParagraphStateCommand, "cmd_paragraphState");
+  NS_REGISTER_ONE_COMMAND(nsAlignCommand, "cmd_align");
+  NS_REGISTER_ONE_COMMAND(nsRemoveStylesCommand, "cmd_removeStyles");
+  NS_REGISTER_ONE_COMMAND(nsIncreaseFontSizeCommand, "cmd_increaseFont");
+  NS_REGISTER_ONE_COMMAND(nsDecreaseFontSizeCommand, "cmd_decreaseFont");
+  
+  return NS_OK;
+}
+
+
+nsWeakPtr nsComposerController::sComposerCommandManager = NULL;
+
+nsresult nsComposerController::GetComposerCommandManager(nsIControllerCommandManager* *outCommandManager)
+{
+  NS_ENSURE_ARG_POINTER(outCommandManager);
+
+/*
+  nsCOMPtr<nsIControllerCommandManager> cmdManager = do_QueryReferent(sComposerCommandManager);
+  if (!cmdManager)
+  {
+    nsresult rv;
+    cmdManager = do_CreateInstance("component://netscape/rdf/controller-command-manager", &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    // register the commands. This just happens once per instance
+    rv = nsComposerController::RegisterComposerCommands(cmdManager);
+    if (NS_FAILED(rv)) return rv;
+
+    // save the singleton in our static weak reference
+    sComposerCommandManager = getter_AddRefs(NS_GetWeakReference(cmdManager, &rv));
+    if (NS_FAILED(rv))  return rv;
+  }
+*/
+  // always make a new one
+  nsresult rv;
+  nsCOMPtr<nsIControllerCommandManager> cmdManager;
+  cmdManager = do_CreateInstance("component://netscape/rdf/controller-command-manager", &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // register the commands.
+  rv = nsComposerController::RegisterComposerCommands(cmdManager);
+  if (NS_FAILED(rv)) return rv;
+  
   NS_ADDREF(*outCommandManager = cmdManager);
   return NS_OK;
 }

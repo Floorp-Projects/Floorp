@@ -30,22 +30,22 @@
     { 0x99, 0x33, 0x0, 0x10, 0x83, 0x1, 0x23, 0x3c }}
 
 
-class nsIHTMLContent;
 class nsIEditor;
+class nsCString;
 
 class nsIEditorController : public nsISupports
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEDITORCONTROLLER_IID)
 
-  /** init the controller */
-  NS_IMETHOD Init() = 0;
+  /** init the controller
+   *  aCommandRefCon = a cookie that is passed to commands
+   */
+  NS_IMETHOD Init(nsISupports *aCommandRefCon) = 0;
 
-  /** set the content for this controller instance */
-  NS_IMETHOD SetContent(nsIHTMLContent *aContent) = 0;
-
-  /** set the editor for this controller. Mutually exclusive with setContent*/
-  NS_IMETHOD SetEditor(nsIEditor *aEditor) = 0;
+  /** Set the cookie that is passed to commands
+   */
+  NS_IMETHOD SetCommandRefCon(nsISupports *aCommandRefCon) = 0;
 
 };
 

@@ -30,6 +30,7 @@
 #include "nsISupports.h"
 
 #include "nsIEditorShell.h"
+#include "nsIEditorController.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIDOMSelectionListener.h"
 #include "nsIPrompt.h"
@@ -157,13 +158,14 @@ class nsEditorShell :   public nsIEditorShell,
     nsCOMPtr<nsICSSStyleSheet>  mAllTagsModeStyleSheet;
     nsCOMPtr<nsICSSStyleSheet>  mParagraphMarksStyleSheet;
     
-    nsIDOMWindow        *mToolbarWindow;				// weak reference
-    nsIDOMWindow        *mContentWindow;				// weak reference
+    nsIDOMWindow            *mWebShellWindow;				// weak reference
+    nsIDOMWindow            *mContentWindow;				// weak reference
 
-    nsEditorParserObserver*     mParserObserver;      // we hold the owning ref to this.
-    nsInterfaceState*           mStateMaintainer;     // we hold the owning ref to this.
+    nsEditorParserObserver  *mParserObserver;       // we hold the owning ref to this.
+    nsInterfaceState        *mStateMaintainer;      // we hold the owning ref to this.
 
-    nsIDocShell         *mDocShell;						  // weak reference
+    nsIEditorController     *mEditorController;     // temporary weak ref to the editor controller
+    nsIDocShell             *mDocShell;						  // weak reference
 
     // The webshell that contains the document being edited.
     // Don't assume that webshell directly contains the document being edited;

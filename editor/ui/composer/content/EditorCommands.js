@@ -45,7 +45,7 @@ var gStyleTags = {
   };
 
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
-  
+
 function EditorOnLoad()
 {
     // See if argument was passed.
@@ -82,7 +82,7 @@ function TextEditorOnLoad()
 
 function PageIsEmptyAndUntouched()
 {
-  return (editorShell.documentIsEmpty == true) && (docWasModified == false);
+  return (editorShell != null) && (editorShell.documentIsEmpty == true) && (docWasModified == false);
 }
 
 // This is called when the real editor document is created,
@@ -91,10 +91,14 @@ var DocumentStateListener =
 {
   NotifyDocumentCreated: function() 
   {
+    // Call EditorSetDefaultPrefs first so it gets the default author before initing toolbars
     EditorSetDefaultPrefs();
-    // Call EditorSetDefaultPrefs first
-    //  so it gets the default author before initing toolbars
     EditorInitToolbars();
+    
+    // udpate menu items now that we have an editor to play with
+    //dump("Updating 'create' commands\n");
+    content.focus();
+    window.updateCommands("create");
   },
   
   NotifyDocumentWillBeDestroyed: function() {},
@@ -104,6 +108,10 @@ var DocumentStateListener =
        another document is opened */
     if (isNowDirty)
       docWasModified = true;
+    
+    // hack! Should not need this, but there is some controller bug that this
+    // works around.
+    window.updateCommands("create");
   }
 };
 
@@ -115,11 +123,17 @@ function EditorStartup(editorType, editorElement)
   editorShell = editorElement.editorShell;
   
   editorShell.Init();
-  editorShell.SetWebShellWindow(window);
-  editorShell.SetToolbarWindow(window)
   editorShell.SetEditorType(editorType);
-  editorShell.SetContentWindow(contentWindow);
 
+  editorShell.webShellWindow = window;
+  editorShell.contentWindow = contentWindow;
+
+  // hide UI that we don't have components for
+  HideInapplicableUIElements();
+
+  // set up JS-implemented commands
+  SetupControllerCommands();
+  
   // add a listener to be called when document is really done loading
   editorShell.RegisterDocumentStateListener( DocumentStateListener );
  
@@ -132,12 +146,19 @@ function EditorStartup(editorType, editorElement)
   // This still doesn't work!
   // It works after using a toolbar button, however!
   contentWindow.focus();
+  // call updateCommands to disable while we're loading the page
+  window.updateCommands("create");
 }
 
 
 function _EditorNotImplemented()
 {
   dump("Function not implemented\n");
+}
+
+function _EditorObsolete()
+{
+  dump("Function is obsolete\n");
 }
 
 function EditorShutdown()
@@ -278,56 +299,12 @@ function FindAndSelectEditorWindowWithURL(urlToMatch)
 
 function EditorOpen()
 {
-  dump("In EditorOpen..\n");
-
-  var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
-  fp.init(window, editorShell.GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
-
-  // While we include "All", include filters that prefer HTML and Text files
-  fp.setFilters(nsIFilePicker.filterText | nsIFilePicker.filterHTML | nsIFilePicker.filterAll);
-
-  /* doesn't handle *.shtml files */
-  try {
-    fp.show();
-    /* need to handle cancel (uncaught exception at present) */
-  }
-  catch (ex) {
-    dump("filePicker.chooseInputFile threw an exception\n");
-  }
-
-  /* check for already open window and activate it... 
-   * note that we have to test the native path length
-   *  since fileURL.spec will be "file:///" if no filename picked (Cancel button used)
-  */
-  if (fp.file && fp.file.path.length > 0) {
-
-    var found = FindAndSelectEditorWindowWithURL(fp.fileURL.spec);
-    if (!found)
-    {
-      // if the existing window is untouched, just load there
-      if (PageIsEmptyAndUntouched())
-      {
-        editorShell.LoadUrl(fp.fileURL.spec);
-      }
-      else
-      {
-	      /* open new window */
-	      window.openDialog("chrome://editor/content",
-	                        "_blank",
-	                        "chrome,dialog=no,all",
-	                        fp.fileURL.spec);
-      }
-    }
-  }
+  return _EditorObsolete();
 }
 
 function EditorOpenRemote()
 {
-  /* The last parameter is the current browser window.
-     Use 0 and the default checkbox will be to load into an editor
-     and loading into existing browser option is removed
-   */
-  window.openDialog( "chrome://navigator/content/openLocation.xul", "_blank", "chrome,modal", 0);
+  return _EditorObsolete();
 }
 
 // used by openLocation. see navigator.js for additional notes.
@@ -357,29 +334,32 @@ function EditorSaveDocument(doSaveAs, doSaveCopy)
 
 function EditorSave()
 {
-  dump("In EditorSave...\n");
-  EditorSaveDocument(false, false)
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorSaveAs()
 {
-  EditorSaveDocument(true, false);
-  contentWindow.focus();
+  return _EditorObsolete();
 }
-
 
 function EditorPrint()
 {
-  dump("In EditorPrint..\n");
-  editorShell.Print();
-  contentWindow.focus();
+  return _EditorObsolete();
+}
+
+function EditorPrintSetup()
+{
+  return _EditorObsolete();
+}
+
+function EditorPrintPreview()
+{
+  return _EditorObsolete();
 }
 
 function EditorClose()
 {
-  dump("In EditorClose...\n");
-  return editorShell.CloseWindow();
+  return _EditorObsolete();
 }
 
 // Check for changes to document and allow saving before closing
@@ -438,18 +418,12 @@ function EditorSelectAll()
 
 function EditorFind()
 {
-  editorShell.Find();
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorFindNext()
 {
-  editorShell.FindNext();
-}
-
-function EditorShowClipboard()
-{
-  dump("EditorShowClipboard not implemented\n");
+  return _EditorObsolete();
 }
 
 // --------------------------- View menu ---------------------------
@@ -497,6 +471,15 @@ function EditorSetTextProperty(property, attribute, value)
   contentWindow.focus();
 }
 
+/*
+function EditorSelectParagraphFormat(commandID, select)
+{
+  content.focus();    // required hack for now
+  
+  if (select.selectedIndex != -1)
+    EditorSetParagraphFormat(commandID, gParagraphTagNames[select.selectedIndex]);
+}
+*/
 
 function onParagraphFormatChange()
 {
@@ -509,7 +492,7 @@ function onParagraphFormatChange()
   	var format = select.getAttribute("format");
     if ( format == "mixed")
     {
-dump("Mixed paragraph format *******\n");
+//dump("Mixed paragraph format *******\n");
       // No single type selected
       newIndex = -1;
     }
@@ -529,10 +512,14 @@ dump("Mixed paragraph format *******\n");
   }
 }
 
-function EditorSetParagraphFormat(paraFormat)
+function EditorSetParagraphFormat(commandID, paraFormat)
 {
-  editorShell.SetParagraphFormat(paraFormat);
-  contentWindow.focus();
+  // editorShell.SetParagraphFormat(paraFormat);
+  var commandNode = document.getElementById(commandID);
+  dump("Saving para format state " + paraFormat + "\n");
+  commandNode.setAttribute("state", paraFormat);
+  window.content.focus();   // needed for command dispatch to work
+  goDoCommand(commandID);
 }
 
 
@@ -569,7 +556,7 @@ function onFontFaceChange()
 
 function EditorSetFontFace(fontFace)
 {
-  if( fontFace == "tt") {
+  if (fontFace == "tt") {
     // The old "teletype" attribute
     editorShell.SetTextProperty("tt", "", "");  
     // Clear existing font face
@@ -584,14 +571,14 @@ function EditorSetFontFace(fontFace)
       editorShell.SetTextProperty("font", "face", fontFace);
     }
   }        
-dump("Setting focus to content window...\n");
+//dump("Setting focus to content window...\n");
   contentWindow.focus();
 }
 
 function EditorSelectFontSize()
 {
   var select = document.getElementById("FontSizeSelect");
-dump("EditorSelectFontSize: "+gFontSizeNames[select.selectedIndex]+"\n");
+//dump("EditorSelectFontSize: "+gFontSizeNames[select.selectedIndex]+"\n");
   if (select)
   { 
     if (select.selectedIndex == -1)
@@ -679,20 +666,18 @@ function EditorSetFontSize(size)
 
 function EditorIncreaseFontSize()
 {
-  editorShell.IncreaseFontSize();
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorDecreaseFontSize()
 {
-  editorShell.DecreaseFontSize();
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorSelectTextColor(ColorPickerID, ColorWellID)
 {
   var color = getColorAndSetColorWell(ColorPickerID, ColorWellID);
-dump("EditorSelectTextColor: "+color+"\n");
+// dump("EditorSelectTextColor: "+color+"\n");
 
   // Close appropriate menupopup  
   var menupopup;
@@ -771,8 +756,7 @@ function EditorApplyStyle(tagName)
 
 function EditorRemoveStyle(tagName)
 {
-  editorShell.RemoveTextProperty(tagName, "");
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorToggleStyle(styleName)
@@ -825,17 +809,17 @@ function GetSelectedElementOrParentCell()
 function EditorObjectProperties()
 {
   var element = GetSelectedElementOrParentCell();
-  dump("EditorObjectProperties: element="+element+"\n");
+  // dump("EditorObjectProperties: element="+element+"\n");
   if (element)
   {
-    dump("TagName="+element.nodeName+"\n");
+    // dump("TagName="+element.nodeName+"\n");
     switch (element.nodeName)
     {
       case 'IMG':
-        EditorInsertOrEditImage();
+        goDoCommand("cmd_image");
         break;
       case 'HR':
-        EditorInsertOrEditHLine();
+        goDoCommand("cmd_hline");
         break;
       case 'TABLE':
         EditorInsertOrEditTable(false);
@@ -845,188 +829,81 @@ function EditorObjectProperties()
         break;
       case 'A':
         if(element.href)
-          EditorInsertOrEditLink();  
+          goDoCommand("cmd_link");
         else if (element.name)
-          EditorInsertOrEditNamedAnchor();  
+          goDoCommand("cmd_anchor");
         break;
     }
   } else {
     // We get a partially-selected link if asked for specifically
     element = editorShell.GetSelectedElement("href");
     if (element)
-      EditorInsertOrEditLink();  
+      goDoCommand("cmd_link");
   }
 }
 
 function EditorListProperties()
 {
-  window.openDialog("chrome://editor/content/EdListProps.xul","_blank", "chrome,close,titlebar,modal");
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorPageProperties()
 {
-  window.openDialog("chrome://editor/content/EdPageProps.xul","_blank", "chrome,close,titlebar,modal,resizable", "");
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorColorProperties()
 {
-  window.openDialog("chrome://editor/content/EdColorProps.xul","_blank", "chrome,close,titlebar,modal", "");
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 // --------------------------- Dialogs ---------------------------
 
 function EditorInsertHTML()
 {
-  // Resizing doesn't work!
-  window.openDialog("chrome://editor/content/EdInsSrc.xul","_blank", "chrome,close,titlebar,modal,resizable");
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorInsertOrEditLink()
 {
-  window.openDialog("chrome://editor/content/EdLinkProps.xul","_blank", "chrome,close,titlebar,modal");
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorInsertOrEditImage()
 {
-  window.openDialog("chrome://editor/content/EdImageProps.xul","_blank", "chrome,close,titlebar,modal");
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorInsertOrEditHLine()
 {
-  // Inserting an HLine is different in that we don't use properties dialog
-  //  unless we are editing an existing line's attributes
-  //  We get the last-used attributes from the prefs and insert immediately
-
-  tagName = "hr";
-  hLine = editorShell.GetSelectedElement(tagName);
-
-  if (hLine) {
-    dump("HLine was found -- opening dialog...!\n");
-
-    // We only open the dialog for an existing HRule
-    window.openDialog("chrome://editor/content/EdHLineProps.xul", "_blank", "chrome,close,titlebar,modal");
-  } else {
-    hLine = editorShell.CreateElementWithDefaults(tagName);
-
-    if (hLine) {
-      // We change the default attributes to those saved in the user prefs
-      var prefs = Components.classes['component://netscape/preferences'];
-      if (prefs) {
-        prefs = prefs.getService();
-      }
-      if (prefs) {
-        prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
-      }
-      if (prefs) {
-        dump(" We found the Prefs Service\n");
-        var percent;
-        var height;
-        var shading;
-        var ud = "undefined";
-
-        try {
-          var align = prefs.GetIntPref("editor.hrule.align");
-          dump("Align pref: "+align+"\n");
-          if (align == 0 ) {
-            hLine.setAttribute("align", "left");
-          } else if (align == 2) {
-            hLine.setAttribute("align", "right");
-          } else  {
-            // Default is center
-            hLine.setAttribute("align", "center");
-          }
-	  
-          var width = prefs.GetIntPref("editor.hrule.width");
-          var percent = prefs.GetBoolPref("editor.hrule.width_percent");
-          dump("Width pref: "+width+", percent:"+percent+"\n");
-          if (percent)
-            width = width +"%";
-
-          hLine.setAttribute("width", width);
-
-          var height = prefs.GetIntPref("editor.hrule.height");
-          dump("Size pref: "+height+"\n");
-          hLine.setAttribute("size", String(height));
-
-          var shading = prefs.GetBoolPref("editor.hrule.shading");
-          dump("Shading pref:"+shading+"\n");
-          if (shading) {
-            hLine.removeAttribute("noshade");
-          } else {
-            hLine.setAttribute("noshade", "");
-          }
-        }
-        catch (ex) {
-          dump("failed to get HLine prefs\n");
-        }
-      }
-      try {
-        editorShell.InsertElementAtSelection(hLine, true);
-      } catch (e) {
-        dump("Exception occured in InsertElementAtSelection\n");
-      }
-    }
-  }
-  contentWindow.focus();
-}
+ return _EditorObsolete();}
 
 function EditorInsertChars()
 {
-  window.openDialog("chrome://editor/content/EdInsertChars.xul", "_blank", "chrome,close,titlebar", "");
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorInsertOrEditNamedAnchor()
 {
-  window.openDialog("chrome://editor/content/EdNamedAnchorProps.xul", "_blank", "chrome,close,titlebar,modal", "");
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorIndent(indent)
 {
-  dump(indent+"\n");
-  editorShell.Indent(indent);
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function EditorMakeOrChangeList(listType)
 {
-  // check the observer node,
-  // which is the appropriate button
-  var theButton = document.getElementById(listType + "Button");
-
-  if (theButton)
-  {
-    var buttonFormat = theButton.getAttribute("format");
-    var isOn = (listType == buttonFormat);
-
-    if (isOn == 1)
-    {
-      editorShell.RemoveList(listType);
-    }
-    else
-    {
-      editorShell.MakeOrChangeList(listType);
-    }
-
-    contentWindow.focus();
-  }
-  else
-  {
-    dump("No button found for the " + listType + " style\n");
-  }
+  return _EditorObsolete();
 }
 
-function EditorAlign(align)
+function EditorAlign(commandID, alignType)
 {
-  editorShell.Align(align);
-  contentWindow.focus();
+  var commandNode = document.getElementById(commandID);
+  // dump("Saving para format state " + alignType + "\n");
+  commandNode.setAttribute("state", alignType);
+  goDoCommand(commandID);
 }
 
 function EditorSetDisplayMode(mode)
@@ -1042,11 +919,6 @@ function EditorSetDisplayMode(mode)
   document.getElementById("TagModeButton").setAttribute("selected",Number(mode == 2));
   contentWindow.focus();
 }
-
-function EditorEditHTML()
-{
-  dump("EditorEditHTML NOT IMPLEMENTED\n");
-} 
 
 function EditorToggleParagraphMarks()
 {
@@ -1071,78 +943,12 @@ function EditorToggleParagraphMarks()
 
 function EditorPreview()
 {
-  if (!editorShell.CheckAndSaveDocument(editorShell.GetString("BeforePreview")))
-    return;
-
-  fileurl = "";
-  try {
-    fileurl = window.content.location;
-  } catch (e) {
-    return;
-  }
-
-  // CheckAndSave doesn't tell us if the user said "Don't Save",
-  // so make sure we have a url:
-  if (fileurl != "" && fileurl != "about:blank") {
-    window.openDialog(getBrowserURL(),
-                      "EditorPreview",
-                      "chrome,all,dialog=no",
-                      fileurl );
-  }
-}
-
-function EditorPrintSetup()
-{
-  // Old code? Browser no longer is doing this
-  //window.openDialog("resource:/res/samples/printsetup.html", "_blank", "chrome,close,titlebar", "");
-  _EditorNotImplemented();
-  contentWindow.focus();
-}
-
-function EditorPrintPreview()
-{
-  _EditorNotImplemented();
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function CheckSpelling()
 {
-  var spellChecker = editorShell.QueryInterface(Components.interfaces.nsIEditorSpellCheck);
-  if (spellChecker)
-  {
-    dump("Check Spelling starting...\n");
-    // Start the spell checker module. Return is first misspelled word
-    try {
-      firstMisspelledWord = spellChecker.StartSpellChecking();
-    }
-    catch(ex) {
-      dump("*** Exception error: StartSpellChecking\n");
-      return;
-    }
-    if( firstMisspelledWord == "")
-    {
-      try {
-        spellChecker.CloseSpellChecking();
-      }
-      catch(ex) {
-        dump("*** Exception error: CloseSpellChecking\n");
-        return;
-      }
-      // No misspelled word - tell user
-      editorShell.AlertWithTitle(editorShell.GetString("CheckSpelling"), editorShell.GetString("NoMisspelledWord")); 
-    } else {
-      // Set spellChecker variable on window
-      window.spellChecker = spellChecker;
-      try {
-        window.openDialog("chrome://editor/content/EdSpellCheck.xul", "_blank", "chrome,close,titlebar,modal", "", firstMisspelledWord);
-      }
-      catch(ex) {
-        dump("*** Exception error: SpellChecker Dialog Closing\n");
-        return;
-      }
-    }
-  }
-  contentWindow.focus();
+  return _EditorObsolete();
 }
 
 function SetBackColorString(xulElementID)
@@ -1499,23 +1305,56 @@ function EditorSetSelectionFromOffsets(selRanges)
 
 function EditorExit()
 {
-  dump("Exiting in EditorExit\n");
-  // This is in globalOverlay.js
-  goQuitApplication();
+  return _EditorObsolete();
 }
+
+
+//--------------------------------------------------------------------
+function initFontStyleMenu(menuPopup)
+{
+  for (var i = 0; i < menuPopup.childNodes.length; i++)
+  {
+    var menuItem = menuPopup.childNodes[i];
+    var theStyle = menuItem.getAttribute("state");
+    if (theStyle)
+    {
+      menuItem.setAttribute("checked", theStyle);
+    }
+  }
+}
+
+//--------------------------------------------------------------------
+function onButtonUpdate(button, commmandID)
+{
+  var commandNode = document.getElementById(commmandID);
+  var state = commandNode.getAttribute("state");
+
+  button.setAttribute("toggled", state);
+}
+
 
 // --------------------------- Status calls ---------------------------
 function onStyleChange(theStyle)
 {
+  dump("in onStyleChange with " + theStyle + "\n");
+  
+  var broadcaster = document.getElementById("cmd_" + theStyle);
+  var isOn = broadcaster.getAttribute("state");
+
+  // PrintObject(broadcaster);
+
   var theButton = document.getElementById(theStyle + "Button");
   if (theButton)
   {
-	var isOn = theButton.getAttribute(theStyle);
-	if (isOn == "true") {
-      theButton.setAttribute("toggled", 1);
-    } else {
-      theButton.setAttribute("toggled", 0);
-    }
+    // dump("setting button to " + isOn + "\n");
+    theButton.setAttribute("toggled", (isOn == "true") ? 1 : 0);
+  }
+
+  var theMenuItem = document.getElementById(theStyle + "MenuItem");
+  if (theMenuItem)
+  {
+    // dump("setting menuitem to " + isOn + "\n");
+    theMenuItem.setAttribute("checked", isOn);
   }
 }
 
@@ -1540,11 +1379,11 @@ function onListFormatChange(listType)
   var theButton = document.getElementById(listType + "Button");
   if (theButton)
   {
-	var listFormat = theButton.getAttribute("format");
-	if (listFormat == listType) {
-      theButton.setAttribute("toggled", 1);
+	  var isOn = theButton.getAttribute(listType);
+  	if (isOn == "true") {
+      theButton.setAttribute("toggled", "true");
     } else {
-      theButton.setAttribute("toggled", 0);
+      theButton.setAttribute("toggled", "false");
     }
   }
 }
@@ -1558,7 +1397,6 @@ function getColorAndSetColorWell(ColorPickerID, ColorWellID)
   var colorPicker = document.getElementById(ColorPickerID);
   if (colorPicker) 
   {
-dump("ColorPicker found\n");
     // Extract color from colorPicker and assign to colorWell.
     var color = colorPicker.getAttribute('color');
     dump("setColor to: "+color+"\n");
@@ -1702,5 +1540,41 @@ function EditorDeleteTableCellContents()
   // TODO: Get the number of cells to delete from the selection
   editorShell.DeleteTableCellContents();
   contentWindow.focus();
+}
+
+var gHaveSpellChecker = false;
+var gSoughtSpellChecker = false;
+
+//-----------------------------------------------------------------------------------
+function IsSpellCheckerInstalled()
+{
+  return true;      // fix me when kin checks in
+
+  if (gSoughtSpellChecker)
+    return gHaveSpellChecker;
+
+  var spellcheckerClass = Components.classes["org.mozilla.spellchecker.1"]; 
+  gHaveSpellChecker = (spellcheckerClass != null);
+  gSoughtSpellChecker = true;
+  return gHaveSpellChecker;
+}
+
+//-----------------------------------------------------------------------------------
+function HideInapplicableUIElements()
+{
+  // if no spell checker, remove spell checker ui
+  if (!IsSpellCheckerInstalled())
+  {
+    dump("Hiding spell checker items\n");
+    
+    var spellingButton = document.getElementById("spellingButton");
+    if (spellingButton)
+      spellingButton.setAttribute("hidden", "true");
+    
+    var spellingMenuItem = document.getElementById("menu_checkspelling");
+    if (spellingMenuItem)
+      spellingMenuItem.setAttribute("hidden", "true");
+  }
+
 }
 

@@ -40,12 +40,12 @@
     <key id="key_newMessage"/>
     <key id="key_newBlankPage"/>
 
-    <key id="openeditorkb"  xulkey="true" key="&fileopen.keybinding;" observes="Editor:Open" />
-    <key id="openremoteeditorkb" xulkey="true" key="&fileopenremote.keybinding;" onkeypress="EditorOpenRemote()" />
-    <key id="savekb"        xulkey="true" key="&filesave.keybinding;" observes="Editor:Save"/>
-    <key id="closekb"       xulkey="true" key="&fileclose.keybinding;" observes="Editor:Close" />
-    <key id="printkb"       xulkey="true" key="&fileprint.keybinding;" observes="Editor:Print" />
-    <key id="exitkb"        xulkey="true" key="&fileexit.keybinding;" observes="Editor:Exit" />
+    <key id="openeditorkb"  xulkey="true" key="&fileopen.keybinding;"  observes="cmd_open" />
+    <key id="openremoteeditorkb" xulkey="true" key="&fileopenremote.keybinding;" observes="cmd_openRemote" />
+    <key id="savekb"        xulkey="true" key="&filesave.keybinding;"  observes="cmd_save"/>
+    <key id="closekb"       xulkey="true" key="&fileclose.keybinding;" observes="cmd_close" />
+    <key id="printkb"       xulkey="true" key="&fileprint.keybinding;" observes="cmd_print" />
+    <key id="exitkb"        xulkey="true" key="&fileexit.keybinding;"  observes="cmd_quit" />
 
     <key id="key_undo"/>
     <key id="key_redo"/>
@@ -55,99 +55,165 @@
     <key id="pastequotationkb" xulkey="true" shift="true" key="&editpaste.keybinding;" observes="cmd_pasteQuote" />
     <key id="key_delete"/>
     <key id="key_selectAll"/>
-    <key id="findkb"        xulkey="true" key="&editfind.keybinding;" observes="cmd_find" />
+    <key id="findkb"        xulkey="true" key="&editfind.keybinding;"     observes="cmd_find" />
     <key id="findnextkb"    xulkey="true" key="&editfindnext.keybinding;" observes="cmd_findNext" />
-    <key id="checkspellingkb" xulkey="true" key="&editcheckspelling.keybinding;" observes="cmd_checkSpelling" />
+    <key id="checkspellingkb" xulkey="true" key="&editcheckspelling.keybinding;" observes="cmd_spelling" />
     <key id="key_preferences"/>
 
-    <key id="boldkb"        xulkey="true" key="&stylebold.keybinding;" observes="Editor:Bold"/>
-    <key id="italickb"      xulkey="true" key="&styleitalic.keybinding;" observes="Editor:Italic"/>
+    <key id="boldkb"        xulkey="true" key="&stylebold.keybinding;"   observes="cmd_bold"/>
+    <key id="italickb"      xulkey="true" key="&styleitalic.keybinding;" observes="cmd_italic"/>
     
     <key id="underlinekb"   xulkey="true" key="&styleunderline.keybinding;" onkeypress="EditorToggleStyle('underline')"/>
     
     <!-- these should come from tasksOverlay.xul -->
     <key id="navigatortaskkb" xulkey="true" key="1" onkeypress="Navigator()" />
-    <key id="messengerkb"   xulkey="true" key="2" onkeypress="Messenger()" />
-    <key id="composerkb"    xulkey="true" key="3" onkeypress="Composer()" />
-    <key id="calendarkb"    xulkey="true" key="4" onkeypress="Calendar()" />
+    <key id="messengerkb"     xulkey="true" key="2" onkeypress="Messenger()" />
+    <key id="composerkb"      xulkey="true" key="3" onkeypress="Composer()" />
+    <key id="calendarkb"      xulkey="true" key="4" onkeypress="Calendar()" />
 
 
-    <key id="increaseindentkb" xulkey="true" key="&formatindent.keybinding;" onkeypress="EditorIndent('indent')" />
-    <key id="decreaseindentkb" xulkey="true" key="&formatoutdent.keybinding;" onkeypress="EditorIndent('outdent')" />
+    <key id="increaseindentkb" xulkey="true" key="&formatindent.keybinding;"  observes="cmd_indent" />
+    <key id="decreaseindentkb" xulkey="true" key="&formatoutdent.keybinding;" observes="cmd_outdent" />
 
-    <key id="removestyleskb" shift="true" xulkey="true" key="&formatremovestyles.keybinding;" onkeypress="EditorRemoveStyle('all')" />
-    <key id="decreasefontsizekb" shift="true" xulkey="true" key="&decreaseFontSize.keybinding;" onkeypress="EditorDecreaseFontSize()" />
-    <key id="increasefontsizekb" shift="true" xulkey="true" key="&increaseFontSize.keybinding;" onkeypress="EditorIncreaseFontSize()" />
+    <key id="removestyleskb"     shift="true" xulkey="true" key="&formatremovestyles.keybinding;"   observes="cmd_removeStyles" />
+    <key id="decreasefontsizekb" shift="true" xulkey="true" key="&decreaseFontSize.keybinding;"     observes="cmd_decreaseFont" />
+    <key id="increasefontsizekb" shift="true" xulkey="true" key="&increaseFontSize.keybinding;"     observes="cmd_increaseFont" />
 
   </keyset>
 
-  <broadcasterset id="broadcasterset">
-    <!-- Complete broadcasters located in globalOverlay.xul -->
-    <!-- File Menu -->
-    <broadcaster id="cmd_newNavigator"/>
-    <broadcaster id="cmd_newMessage"/>
-    <broadcaster id="cmd_newCard"/>
-    <broadcaster id="cmd_newEditor"/>
-    <broadcaster id="cmd_newEditorTemplate"/>
-    <broadcaster id="cmd_newEditorDraft"/>
-    <broadcaster id="cmd_sendPage"/>
+  <!-- commands updated when the editor gets created -->
+  <commandset id="composerMenuItems"
+					commandupdater="true"
+					events="create"
+					oncommandupdate="goUpdateComposerMenuItems(this)"
+  >
+    <command id="cmd_newNavigator"/>
+    <command id="cmd_newMessage"/>
+    <command id="cmd_newCard"/>
+    <command id="cmd_newEditor"/>
+    <command id="cmd_newEditorTemplate"/>
+    <command id="cmd_newEditorDraft"/>
+    <command id="cmd_sendPage"/>
 
-    <!-- Edit Menu -->
-    <broadcaster id="cmd_undo"/>
-    <broadcaster id="cmd_redo"/>
-    <broadcaster id="cmd_cut"/>
-    <broadcaster id="cmd_copy"/>
-    <broadcaster id="cmd_paste"/>
+    <command id="cmd_open"                                          oncommand="goDoCommand('cmd_open')"/>
+    <command id="cmd_openRemote"   value="&openremoteCmd.label;"    oncommand="goDoCommand('cmd_openRemote')"/>
+    <command id="cmd_close"        value="&closeCmd.label;"         oncommand="goDoCommand('cmd_close')"/>
 
-    <broadcaster id="cmd_delete"/>
-    <broadcaster id="cmd_selectAll"/>
-    <broadcaster id="cmd_preferences"/>
+    <command id="cmd_save"         value="&saveCmd.label;"          oncommand="goDoCommand('cmd_save')"/>
+    <command id="cmd_saveAs"       value="&saveAsCmd.label;"        oncommand="goDoCommand('cmd_saveAs')"/>
 
-    <broadcaster id="cmd_find"          value="&findCmd.label;"            oncommand="EditorFind()"/>
-    <broadcaster id="cmd_findNext"      value="&findAgainCmd.label;"       oncommand="EditorFindNext()"/>
-    <broadcaster id="cmd_checkSpelling" value="&checkSpellingCmd.label;"   oncommand="CheckSpelling()"/>
-    <broadcaster id="cmd_pasteQuote"    value="&pasteAsQuotationCmd.label;" oncommand="goDoCommand('cmd_pasteQuote')"/>
-   
-    
-    <!-- Formatting-related commands -->
-    <broadcaster id="Editor:Bold"         bold="false"       oncommand="EditorToggleStyle('bold')"/>
-    <broadcaster id="Editor:Italic"       italic="false"     oncommand="EditorToggleStyle('italic')"/>
-    <broadcaster id="Editor:Underline"    underline="false"  oncommand="EditorToggleStyle('underline')"/>
+    <command id="cmd_printSetup"   value="&printSetupCmd.label;"    oncommand="goDoCommand('cmd_printSetup')"/>
+    <command id="cmd_printPreview" value="&printPreviewCmd.label;"  oncommand="goDoCommand('cmd_printPreview')"/>
+    <command id="cmd_print"                                         oncommand="goDoCommand('cmd_print')"/>
+
+    <command id="cmd_quit"         value="&exitCmd.label;"          oncommand="goQuitApplication()"/>
+
+    <!-- view menu -->
+   	<command id="cmd_viewCompToolbar"     oncommand="goToggleToolbar('EditToolbar','cmd_viewCompToolbar');"         checked="true"/>
+   	<command id="cmd_viewFormatToolbar"   oncommand="goToggleToolbar('FormatToolbar','cmd_viewFormatToolbar');"     checked="true"/>
+   	<command id="cmd_viewEditModeToolbar" oncommand="goToggleToolbar('EditModeToolbar','cmd_viewEditModeToolbar');" checked="true"/>
+  	<command id="cmd_viewtaskbar"         oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');"                 checked="true"/>
+
+    <!-- format menu -->
+    <command id="cmd_listProperties"                                            oncommand="goDoCommand('cmd_listProperties')"/>
+    <command id="cmd_pageProperties"                                            oncommand="goDoCommand('cmd_pageProperties')"/>
+    <command id="cmd_colorProperties"                                           oncommand="goDoCommand('cmd_colorProperties')"/>
+
+    <command id="cmd_link"            value="&insertLinkCmd.label;"             oncommand="goDoCommand('cmd_link')"/>
+    <command id="cmd_anchor"          value="&insertAnchorCmd.label;"           oncommand="goDoCommand('cmd_anchor')"/>
+    <command id="cmd_insertChars"     value="&insertCharsCmd.label;"            oncommand="goDoCommand('cmd_insertChars')"/>
+    <command id="cmd_image"           value="&insertImageCmd.label;"            oncommand="goDoCommand('cmd_image')"/>
+    <command id="cmd_hline"           value="&insertHLineCmd.label;"            oncommand="goDoCommand('cmd_hline')"/>
+    <command id="cmd_table"           value="&insertTableCmd.label;"            oncommand="goDoCommand('cmd_table')"/>
+    <command id="cmd_editTable"                                                 oncommand="goDoCommand('cmd_editTable')"/>
+    <command id="cmd_insertHTML"      value="&HTMLSourceCmd.label;"             oncommand="goDoCommand('cmd_insertHTML')"/>
+    <command id="cmd_editHTML"        value="&HTMLSourceCmd.label;"             oncommand="goDoCommand('cmd_editHTML')"/>
+    <command id="cmd_insertBreak"     value="&insertLineBreakCmd.label;"        oncommand="goDoCommand('cmd_insertBreak')"/>
+    <command id="cmd_insertBreakAll"  value="&insertBreakBelowImagesCmd.label;" oncommand="goDoCommand('cmd_insertBreakAll')"/>
+
+  </commandset>
   
-    <broadcaster id="Editor:Paragraph:Format" format=""/>
-    <broadcaster id="Editor:Paragraph:ListType" format=""/>
-    <broadcaster id="Editor:Font:Face" face=""/>
-    <broadcaster id="Editor:Font:Size" fontsize=""/>
+  <commandset id="composerSaveMenuItems"
+					commandupdater="true"
+					events="create, save"
+					oncommandupdate="goUpdateComposerMenuItems(this)"
+  >
+    <command id="cmd_save"         value="&saveCmd.label;"          oncommand="goDoCommand('cmd_save')"/>
+    <command id="cmd_saveAs"       value="&saveAsCmd.label;"        oncommand="goDoCommand('cmd_saveAs')"/>
 
-    <!-- Command Broadcaster nodes -->
-    <!-- Don't set value on items whose text should be different for different observers -->
-    <broadcaster id="Editor:Open"                                          oncommand="EditorOpen()"/>
-    <broadcaster id="Editor:Save"         value="&saveCmd.label;"          oncommand="EditorSave()" disabled="true"/>
-    <broadcaster id="Editor:SaveAs"       value="&saveAsCmd.label;"        oncommand="EditorSaveAs()"/>
-    <broadcaster id="Editor:Preview"                                       oncommand="EditorPreview()"/>
-    <broadcaster id="Editor:Close"        value="&closeCmd.label;"         oncommand="EditorClose()"/>
-    <broadcaster id="Editor:PrintSetup"   value="&printSetupCmd.label;"    oncommand="EditorPrintSetup()"   disabled="true"/>
-    <broadcaster id="Editor:PrintPreview" value="&printPreviewCmd.label;"  oncommand="EditorPrintPreview()" disabled="true"/>
-    <broadcaster id="Editor:Print"                                         oncommand="EditorPrint()"/>
-    <broadcaster id="Editor:Exit"         value="&exitCmd.label;"          oncommand="goQuitApplication()"/>
+    <command id="cmd_preview"                                       oncommand="goDoCommand('cmd_preview')"/>
+  </commandset>
+
+
+  <!-- edit menu commands. These get updated by code in globalOverlay.js -->
+  <commandset id="composerEditMenuItems"
+					commandupdater="true"
+					events="create"
+					oncommandupdate="goUpdateComposerMenuItems(this)"
+	>
+    <command id="cmd_undo"/>
+    <command id="cmd_redo"/>
+    <command id="cmd_cut"/>
+    <command id="cmd_copy"/>
+    <command id="cmd_paste"/>  
+    <command id="cmd_delete"/>
+    <command id="cmd_selectAll"/>
+
+    <command id="cmd_preferences"/>
+
+    <command id="cmd_find"          value="&findCmd.label;"             oncommand="goDoCommand('cmd_find')"/>
+    <command id="cmd_findNext"      value="&findAgainCmd.label;"        oncommand="goDoCommand('cmd_findNext')"/>
+    <command id="cmd_spelling"      value="&checkSpellingCmd.label;"    oncommand="goDoCommand('cmd_spelling')"/>
+    <command id="cmd_pasteQuote"    value="&pasteAsQuotationCmd.label;" oncommand="goDoCommand('cmd_pasteQuote')"/>
+
+  </commandset>
+
+  <!-- style related commands that update on creation, and on selection change -->
+  <commandset id="composerStyleMenuItems"
+					commandupdater="true"
+					events="create, style"
+					oncommandupdate="goUpdateComposerMenuItems(this)"
+	>
+    <command id="cmd_bold"          state="false"     oncommand="goDoCommand('cmd_bold')"/>
+    <command id="cmd_italic"        state="false"     oncommand="goDoCommand('cmd_italic')"/>
+    <command id="cmd_underline"     state="false"     oncommand="goDoCommand('cmd_underline')"/>
+
+    <command id="cmd_strikethrough" state="false"     oncommand="goDoCommand('cmd_strikethrough')"/>
+    <command id="cmd_superscript"   state="false"     oncommand="goDoCommand('cmd_superscript')"/>
+    <command id="cmd_subscript"     state="false"     oncommand="goDoCommand('cmd_subscript')"/>
+    <command id="cmd_nobreak"       state="false"     oncommand="goDoCommand('cmd_nobreak')"/>
+
+    <command id="cmd_em"            state="false"     oncommand="goDoCommand('cmd_em')"/>
+    <command id="cmd_strong"        state="false"     oncommand="goDoCommand('cmd_strong')"/>
+    <command id="cmd_cite"          state="false"     oncommand="goDoCommand('cmd_cite')"/>
+    <command id="cmd_abbr"          state="false"     oncommand="goDoCommand('cmd_abbr')"/>
+    <command id="cmd_acronym"       state="false"     oncommand="goDoCommand('cmd_acronym')"/>
+    <command id="cmd_code"          state="false"     oncommand="goDoCommand('cmd_code')"/>
+    <command id="cmd_samp"          state="false"     oncommand="goDoCommand('cmd_samp')"/>
+    <command id="cmd_var"           state="false"     oncommand="goDoCommand('cmd_var')"/>
+
+    <command id="cmd_ul"            state="false"     oncommand="goDoCommand('cmd_ul')"/>
+    <command id="cmd_ol"            state="false"     oncommand="goDoCommand('cmd_ol')"/>
+
+    <command id="cmd_indent"                          oncommand="goDoCommand('cmd_indent')"/>
+    <command id="cmd_outdent"                         oncommand="goDoCommand('cmd_outdent')"/>
+
+    <!-- the state attribute gets filled with the paragraph format before the command is exectued -->
+    <command id="cmd_paragraphState" state=""         oncommand="goDoCommand('cmd_paragraphState')"/>
+    <command id="cmd_align"          state=""         oncommand="goDoCommand('cmd_align')"/>
     
-    <!-- need to toggle the menu item text through style -->
- 	<broadcaster id="cmd_viewCompToolbar"     oncommand="goToggleToolbar('EditToolbar','cmd_viewCompToolbar');" checked="true"/>
- 	<broadcaster id="cmd_viewFormatToolbar"   oncommand="goToggleToolbar('FormatToolbar','cmd_viewFormatToolbar');" checked="true"/>
- 	<broadcaster id="cmd_viewEditModeToolbar" oncommand="goToggleToolbar('EditModeToolbar','cmd_viewEditModeToolbar');" checked="true"/>
-	<broadcaster id="cmd_viewtaskbar"         oncommand="goToggleToolbar('taskbar','cmd_viewtaskbar');" checked="true"/>
+    <command id="cmd_increaseFont"                    oncommand="goDoCommand('cmd_increaseFont')"/>
+    <command id="cmd_decreaseFont"                    oncommand="goDoCommand('cmd_decreaseFont')"/>
+    
+    <command id="cmd_removeStyles"                    oncommand="goDoCommand('cmd_removeStyles')"/>
+  </commandset>
 
-    <broadcaster id="Editor:InsertLink"   value="&insertLinkCmd.label;"    oncommand="EditorInsertOrEditLink()"/>
-    <broadcaster id="Editor:InsertAnchor" value="&insertAnchorCmd.label;"  oncommand="EditorInsertOrEditNamedAnchor()"/>
-    <broadcaster id="Editor:InsertChars"  value="&insertCharsCmd.label;"   oncommand="EditorInsertChars()"/>
-    <broadcaster id="Editor:InsertImage"  value="&insertImageCmd.label;"   oncommand="EditorInsertOrEditImage()"/>
-    <broadcaster id="Editor:InsertHLine"  value="&insertHLineCmd.label;"   oncommand="EditorInsertOrEditHLine()"/>
-    <broadcaster id="Editor:InsertTable"  value="&insertTableCmd.label;"   oncommand="EditorInsertTable()"/>
-    <broadcaster id="Editor:InsertHTML"   value="&HTMLSourceCmd.label;"    oncommand="EditorInsertHTML()"/>
-    <broadcaster id="Editor:EditHTML"     value="&HTMLSourceCmd.label;"    oncommand="EditorEditHTML()"/>
-    <broadcaster id="Editor:InsertBreak"  value="&insertLineBreakCmd.label;"    oncommand="_EditorNotImplemented()" disabled="true"/>
-    <broadcaster id="Editor:InsertBreakAll"  value="&insertBreakBelowImagesCmd.label;"    oncommand="_EditorNotImplemented()" disabled="true"/>
-    <broadcaster id="cmd_preferences"/>
+
+  <broadcasterset id="broadcasterset">
+    <!-- Obsolete; these will go away -->
+  
+    <command id="Editor:Font:Face" face=""/>
+    <command id="Editor:Font:Size" fontsize=""/>
   </broadcasterset>
 
   <!-- Editor menu items -->
@@ -168,22 +234,22 @@
             <menuitem id="menu_newCard"      observes="cmd_newCard"/>
           </menupopup>
         </menu>
-      <menuitem accesskey="&fileopenremote.accesskey;" value="&openremoteCmd.label;" key="openremoteeditorkb" oncommand="EditorOpenRemote()"/>
-      <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"   observes="Editor:Open" value="&openFileCmd.label;"/>
+      <menuitem accesskey="&fileopenremote.accesskey;"      key="openremoteeditorkb" observes="cmd_openRemote"/>
+      <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"   observes="cmd_open" value="&openFileCmd.label;"/>
       <menuseparator />
-      <menuitem accesskey="&fileclose.accesskey;"           key="closekb"        observes="Editor:Close"/>
-      <menuitem accesskey="&filesave.accesskey;"            key="savekb"         observes="Editor:Save"/>
-      <menuitem accesskey="&filesaveas.accesskey;"                               observes="Editor:SaveAs"/>
+      <menuitem accesskey="&fileclose.accesskey;"           key="closekb"        observes="cmd_close"/>
+      <menuitem accesskey="&filesave.accesskey;"            key="savekb"         observes="cmd_save"/>
+      <menuitem accesskey="&filesaveas.accesskey;"                               observes="cmd_saveAs"/>
       <menuseparator />
       <!-- FRAME, LINK should go here, but nav must put them in global files -->
       <menuitem id="menu_sendPage" observes="cmd_sendPage"/>
-      <menuitem accesskey="&filepreview.accesskey;"                              observes="Editor:Preview" value="&previewCmd.label;"/>
+      <menuitem accesskey="&filepreview.accesskey;"                              observes="cmd_preview" value="&previewCmd.label;"/>
       <menuseparator />
-      <menuitem accesskey="&fileprintsetup.accesskey;"                           observes="Editor:PrintSetup" />
-      <menuitem accesskey="&fileprintpreview.accesskey;"                         observes="Editor:PrintPreview"/>
-      <menuitem accesskey="&fileprint.accesskey;"           key="printkb"        observes="Editor:Print" value="&printCmd.label;"/>
+      <menuitem accesskey="&fileprintsetup.accesskey;"                           observes="cmd_printSetup" />
+      <menuitem accesskey="&fileprintpreview.accesskey;"                         observes="cmd_printPreview"/>
+      <menuitem accesskey="&fileprint.accesskey;"           key="printkb"        observes="cmd_print" value="&printCmd.label;"/>
       <menuseparator />
-      <menuitem accesskey="&fileexit.accesskey;"            key="exitkb"         observes="Editor:Exit"/>
+      <menuitem accesskey="&fileexit.accesskey;"            key="exitkb"         observes="cmd_quit"/>
     </menupopup>
   </menu>
 
@@ -203,11 +269,11 @@
       <menuitem id="menu_find"       accesskey="&editfind.accesskey;"            key="findkb"         observes="cmd_find"/>
       <menuitem id="menu_findnext"   accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="cmd_findNext"/>
       <menuseparator class="hide-in-IM" />
-      <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="cmd_checkSpelling"/>
+      <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="cmd_spelling"/>
       <menuseparator class="hide-in-IM"/>
-      <menuitem class="hide-in-IM" id="menu_editHTML"    accesskey="&HTMLsource.accesskey;" observes="Editor:EditHTML"/>
+      <menuitem class="hide-in-IM" id="menu_editHTML"    accesskey="&HTMLsource.accesskey;"            observes="cmd_editHTML"/>
       <menuseparator/>
-      <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-composer.xul','editor')"/>
+      <menuitem id="menu_preferences"                                                                  observes="cmd_preferences"/>
     </menupopup>
   </menu>
 
@@ -315,16 +381,16 @@
     <!-- Insert menu -->
   <menu id="insertMenu" value="&insertMenu.label;" accesskey="&insertmenu.accesskey;">
     <menupopup>
-      <menuitem accesskey="&insertlink.accesskey;"                               observes="Editor:InsertLink"/>
-      <menuitem accesskey="&insertanchor.accesskey;"                             observes="Editor:InsertAnchor"/>
-      <menuitem accesskey="&insertimage.accesskey;"                              observes="Editor:InsertImage"/>
-      <menuitem accesskey="&inserthline.accesskey;"                              observes="Editor:InsertHLine"/>
-      <menuitem accesskey="&inserttable.accesskey;"                              observes="Editor:InsertTable"/>
-      <menuitem accesskey="&HTMLsource.accesskey;"       key="inserthtmlkb"      observes="Editor:InsertHTML"/>
-      <menuitem accesskey="&insertchars.accesskey;"                              observes="Editor:InsertChars"/>
+      <menuitem accesskey="&insertlink.accesskey;"                               observes="cmd_link"/>
+      <menuitem accesskey="&insertanchor.accesskey;"                             observes="cmd_anchor"/>
+      <menuitem accesskey="&insertimage.accesskey;"                              observes="cmd_image"/>
+      <menuitem accesskey="&inserthline.accesskey;"                              observes="cmd_hline"/>
+      <menuitem accesskey="&inserttable.accesskey;"                              observes="cmd_table"/>
+      <menuitem accesskey="&HTMLsource.accesskey;"    key="inserthtmlkb"         observes="cmd_insertHTML"/>
+      <menuitem accesskey="&insertchars.accesskey;"                              observes="cmd_insertChars"/>
       <menuseparator />
-      <menuitem accesskey="&insertlinebreak.accesskey;"  disabled="true"         observes="Editor:InsertBreak"/>
-      <menuitem accesskey="&insertbreak.accesskey;"      disabled="true"         observes="Editor:InsertBreakAll"/>
+      <menuitem accesskey="&insertlinebreak.accesskey;"  disabled="true"         observes="cmd_insertBreak"/>
+      <menuitem accesskey="&insertbreak.accesskey;"      disabled="true"         observes="cmd_insertBreakAll"/>
     </menupopup>
   </menu>
     
@@ -348,8 +414,8 @@
           accesskey="&formatsizemenu.accesskey;" 
           position="2">
       <menupopup>
-        <menuitem value="&decreaseFontSize.label;" accesskey="&decreasefontsize.accesskey;" oncommand="EditorDecreaseFontSize()" key="decreasefontsizekb"/>
-        <menuitem value="&increaseFontSize.label;" accesskey="&increasefontsize.accesskey;" oncommand="EditorIncreaseFontSize()" key="increasefontsizekb"/>
+      <menuitem value="&decreaseFontSize.label;" accesskey="&decreasefontsize.accesskey;" observes="cmd_decreaseFont" key="decreasefontsizekb"/>
+      <menuitem value="&increaseFontSize.label;" accesskey="&increasefontsize.accesskey;" observes="cmd_increaseFont" key="increasefontsizekb"/>
         <menuseparator/>
         <menuitem value="&size-xx-smallCmd.label;" accesskey="&size-xx-small.accesskey;" oncommand="EditorSetFontSize('xx-small')"/>
         <menuitem value="&size-x-smallCmd.label;"  accesskey="&size-x-small.accesskey;"  oncommand="EditorSetFontSize('x-small')"/>
@@ -365,23 +431,23 @@
     <menu id="fontStyleMenu" value="&fontStyleMenu.label;" 
           accesskey="&formatstylemenu.accesskey;"
           position="3">
-    <menupopup>
-      <menuitem value="&styleBoldCmd.label;"        accesskey="&stylebold.accesskey;"        key="boldkb"      observes="Editor:Bold"/>
-      <menuitem value="&styleItalicCmd.label;"      accesskey="&styleitalic.accesskey;"      key="italickb"    observes="Editor:Italic"/>
-      <menuitem value="&styleUnderlineCmd.label;"   accesskey="&styleunderline.accesskey;"   key="underlinekb" observes="Editor:Underline"/>
-      <menuitem value="&styleStrikeThruCmd.label;"  accesskey="&stylestrikethru.accesskey;"  oncommand="EditorApplyStyle('strike')"/>
-      <menuitem value="&styleSuperscriptCmd.label;" accesskey="&stylesuperscript.accesskey;" oncommand="EditorApplyStyle('sup')"/>
-      <menuitem value="&styleSubscriptCmd.label;"   accesskey="&stylesubscript.accesskey;"   oncommand="EditorApplyStyle('sub')"/>
-      <menuitem value="&styleNonbreakingCmd.label;" accesskey="&stylenonbreaking.accesskey;" oncommand="EditorApplyStyle('nobr')"/>
+    <menupopup oncreate="initFontStyleMenu(this)" oncommand="goDoCommand(event.target.observes)">
+      <menuitem value="&styleBoldCmd.label;"        accesskey="&stylebold.accesskey;"         observes="cmd_bold"         key="boldkb"/>
+      <menuitem value="&styleItalicCmd.label;"      accesskey="&styleitalic.accesskey;"       observes="cmd_italic"       key="italickb" />
+      <menuitem value="&styleUnderlineCmd.label;"   accesskey="&styleunderline.accesskey;"    observes="cmd_underline"    key="underlinekb"/>
+      <menuitem value="&styleStrikeThruCmd.label;"  accesskey="&stylestrikethru.accesskey;"   observes="cmd_strikethrough"/>
+      <menuitem value="&styleSuperscriptCmd.label;" accesskey="&stylesuperscript.accesskey;"  observes="cmd_superscript"/>
+      <menuitem value="&styleSubscriptCmd.label;"   accesskey="&stylesubscript.accesskey;"    observes="cmd_subscript"/>
+      <menuitem value="&styleNonbreakingCmd.label;" accesskey="&stylenonbreaking.accesskey;"  observes="cmd_nobreak"/>
       <menuseparator/>
-      <menuitem value="&styleEm.label;"      accesskey="&styleEm.accesskey;"      oncommand="EditorApplyStyle('em')"/>
-      <menuitem value="&styleStrong.label;"  accesskey="&styleStrong.accesskey;"  oncommand="EditorApplyStyle('strong')"/>
-      <menuitem value="&styleCite.label;"    accesskey="&styleCite.accesskey;"    oncommand="EditorApplyStyle('cite')"/>
-      <menuitem value="&styleAbbr.label;"    accesskey="&styleAbbr.accesskey;"    oncommand="EditorApplyStyle('abbr')"/>
-      <menuitem value="&styleAcronym.label;" accesskey="&styleAcronym.accesskey;" oncommand="EditorApplyStyle('acronym')"/>
-      <menuitem value="&styleCode.label;"    accesskey="&styleCode.accesskey;"    oncommand="EditorApplyStyle('code')"/>
-      <menuitem value="&styleSamp.label;"    accesskey="&styleSamp.accesskey;"    oncommand="EditorApplyStyle('samp')"/>
-      <menuitem value="&styleVar.label;"     accesskey="&styleVar.accesskey;"     oncommand="EditorApplyStyle('var')"/>
+      <menuitem value="&styleEm.label;"             accesskey="&styleEm.accesskey;"           observes="cmd_em"/>
+      <menuitem value="&styleStrong.label;"         accesskey="&styleStrong.accesskey;"       observes="cmd_strong"/>
+      <menuitem value="&styleCite.label;"           accesskey="&styleCite.accesskey;"         observes="cmd_cite"/>
+      <menuitem value="&styleAbbr.label;"           accesskey="&styleAbbr.accesskey;"         observes="cmd_abbr"/>
+      <menuitem value="&styleAcronym.label;"        accesskey="&styleAcronym.accesskey;"      observes="cmd_acronym"/>
+      <menuitem value="&styleCode.label;"           accesskey="&styleCode.accesskey;"         observes="cmd_code"/>
+      <menuitem value="&styleSamp.label;"           accesskey="&styleSamp.accesskey;"         observes="cmd_samp"/>
+      <menuitem value="&styleVar.label;"            accesskey="&styleVar.accesskey;"          observes="cmd_var"/>
     </menupopup>
     </menu>
     
@@ -450,7 +516,7 @@
 
     <menuitem id="removeAllStylesMenuitem" value="&removeAllStylesCmd.label;"
                 accesskey="&formatremovestyles.accesskey;" key="removestyleskb"
-                oncommand="EditorRemoveStyle('all')" position="6"/>
+                oncommand="goDoCommand('cmd_removeStyles')" position="6"/>
     <menuitem id="removeLinksMenuitem" value="&removeLinksCmd.label;"
                 accesskey="&formatremovelinks.accesskey;"
                 oncommand="EditorRemoveLinks()" position="7"/>
@@ -460,7 +526,7 @@
     <menu id="headingMenu" value="&headingMenu.label;"
           accesskey="&formatheadingmenu.accesskey;"
           position="9">
-      <menupopup oncommand="EditorSetParagraphFormat(event.target.data)">
+      <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.data)">
         <menuitem value="&normalCmd.label;"   accesskey="&normal.accesskey;"   data=""/>
         <menuitem value="&heading1Cmd.label;" accesskey="&heading1.accesskey;" data="H1"/>
         <menuitem value="&heading2Cmd.label;" accesskey="&heading2.accesskey;" data="H2"/>
@@ -475,7 +541,7 @@
     <menu id="paragraphMenu" value="&paragraphMenu.label;"
           accesskey="&formatparagraphmenu.accesskey;"
           position="10">
-      <menupopup oncommand="EditorSetParagraphFormat(event.target.data)">
+      <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.data)">
         <menuitem value="&normalCmd.label;"               accesskey="&normal.accesskey;"              data=""/>
         <menuitem value="&paragraphParagraphCmd.label;"   accesskey="&paragraphparagraph.accesskey;"  data="P"/>
         <menuitem value="&paragraphBlockquoteCmd.label;"  accesskey="&paragraphblockquote.accesskey;" data="BLOCKQUOTE"/>
@@ -487,33 +553,22 @@
     </menu>
 
     <!-- List Style (opens dialog)  -->
-    <menuitem id="listProps" value="&listProps.label;"
-              accesskey="&formatlistmenu.accesskey;"
-              oncommand="EditorListProperties()"
-              position="11"/>
-    <menu id="alignMenu" value="&alignMenu.label;"
-          accesskey="&formatalignmenu.accesskey;"
-          position="12">
+    <menuitem id="listProps" value="&listProps.label;"  accesskey="&formatlistmenu.accesskey;"  position="11" observes="cmd_listProperties"/>
+    <menu id="alignMenu" value="&alignMenu.label;"      accesskey="&formatalignmenu.accesskey;" position="12">
       <!-- Align submenu -->
-      <menupopup>
-        <menuitem value="&alignLeft.label;"    accesskey="&alignleft.accesskey;"    oncommand="EditorAlign('left')"/>
-        <menuitem value="&alignCenter.label;"  accesskey="&aligncenter.accesskey;"  oncommand="EditorAlign('center')"/>
-        <menuitem value="&alignRight.label;"   accesskey="&alignright.accesskey;"   oncommand="EditorAlign('right')"/>
-        <menuitem value="&alignJustify.label;" accesskey="&alignjustify.accesskey;" oncommand="EditorAlign('justify')"/>
+      <menupopup oncommand="EditorAlign('cmd_align', event.target.getAttribute('data'))">
+        <menuitem value="&alignLeft.label;"    accesskey="&alignleft.accesskey;"    data="left"/>
+        <menuitem value="&alignCenter.label;"  accesskey="&aligncenter.accesskey;"  data="center"/>
+        <menuitem value="&alignRight.label;"   accesskey="&alignright.accesskey;"   data="right"/>
+        <menuitem value="&alignJustify.label;" accesskey="&alignjustify.accesskey;" data="justify"/>
       </menupopup>
     </menu>
     <menuseparator position="13"/>
 
-    <menuitem id="increaseIndent" value="&increaseIndent.label;"
-              accesskey="&increaseindent.accesskey;" 
-              key="increaseindentkb"
-              oncommand="EditorIndent('indent')"
-              position="14"/>
-    <menuitem id="decreaseIndent" value="&decreaseIndent.label;"
-              accesskey="&decreaseindent.accesskey;"
-              key="decreaseindentkb"
-              oncommand="EditorIndent('outdent')"
-              position="15"/>
+    <menuitem id="increaseIndent" value="&increaseIndent.label;"  accesskey="&increaseindent.accesskey;"  key="increaseindentkb"
+                observes="cmd_indent" position="14"/>
+    <menuitem id="decreaseIndent" value="&decreaseIndent.label;"  accesskey="&decreaseindent.accesskey;"  key="decreaseindentkb"
+              observes="cmd_outdent"  position="15"/>
     <menuseparator position="16"/>
     <!-- Merge Table Menu and separator in Messenger Composer here -->
     <!-- Merge property items here -->
@@ -525,10 +580,10 @@
             oncommand="EditorObjectProperties()"/>
   <menuitem id="pageProperties" value="&pageProperties.label;"
             accesskey="&pageproperties.accesskey;"
-            oncommand="EditorPageProperties()"/>
+            oncommand="goDoCommand('cmd_pageProperties')"/>
   <menuitem id="colorsAndBackground" value="&colorsAndBackground.label;"
             accesskey="&colorsandbackground.accesskey;"
-            oncommand="EditorColorProperties()"/>
+            oncommand="goDoCommand('cmd_colorProperties')"/>
 
   <menu id="tableMenu" value="&tableMenu.label;" accesskey="&tablemenu.accesskey;">
   <menupopup>
@@ -544,7 +599,7 @@
     </menu>
     <menu id="tableInsertMenu" value="&tableInsertMenu.label;" accesskey="&tableinsertmenu.accesskey;">
     <menupopup>
-        <menuitem value="&insertTableCmd.label;"    accesskey="&tabletable.accesskey;"    oncommand="EditorInsertTable()"/>
+        <menuitem value="&insertTableCmd.label;"    accesskey="&tabletable.accesskey;"       oncommand="EditorInsertTable()"/>
         <menuseparator />
         <menuitem value="&tableRowAbove.label;"     accesskey="&tablerow.accesskey;"         oncommand="EditorInsertTableRow(false)"/>
         <menuitem value="&tableRowBelow.label;"     accesskey="&tablerowbelow.accesskey;"    oncommand="EditorInsertTableRow(true)"/>
@@ -567,7 +622,7 @@
     <menuseparator />
     <menuitem id="tableFixupMenuitem"      value="&tableFixup.label;"      accesskey="&tablefixup.accesskey;"   oncommand="EditorNormalizeTable()"/>
     <menuitem id="tableJoinCellsMenuitem"  value="&tableJoinCells.label;"  accesskey="&tablejoin.accesskey;"    oncommand="EditorJoinTableCells()" disabled="true"/>
-    <menuitem id="tablePropertiesMenuitem" value="&tableProperties.label;" accesskey="&properties.accesskey;"   oncommand="EditorInsertOrEditTable(false)"/>
+    <menuitem id="tablePropertiesMenuitem" value="&tableProperties.label;" accesskey="&properties.accesskey;"   observes="cmd_editTable"/>
   </menupopup>
   </menu>
 
@@ -587,59 +642,59 @@
   </popup>
 
   <menupopup id="AlignmentPopup">
-    <menuitem oncommand="EditorAlign('left')">
+    <menuitem oncommand="EditorAlign('cmd_align', 'left')">
      <button class="borderless" id="text-align-left" align="left" value="&alignLeft.label;"/>
     </menuitem>
-    <menuitem oncommand="EditorAlign('center')">
+    <menuitem oncommand="EditorAlign('cmd_align', 'center')">
      <button class="borderless" id="text-align-center" align="left" value="&alignCenter.label;"/>
     </menuitem>
-    <menuitem oncommand="EditorAlign('right')">
+    <menuitem oncommand="EditorAlign('cmd_align', 'right')">
      <button class="borderless" id="text-align-right" align="left" value="&alignRight.label;"/>
     </menuitem>
-    <menuitem oncommand="EditorAlign('justify')">
+    <menuitem oncommand="EditorAlign('cmd_align', 'justify')">
      <button class="borderless" id="text-align-justify" align="left" value="&alignJustify.label;"/>
     </menuitem>
   </menupopup>
   
   <!-- InsertPopup is used by messengercompose.xul -->
   <menupopup id="InsertPopup">
-    <menuitem oncommand="EditorInsertOrEditLink()">
+    <menuitem oncommand="goDoCommand('cmd_link')">
      <button class="borderless" id="linkButton-dark" darkcolor="true" align="left" value="&linkToolbarCmd.label;"/>
     </menuitem>
-    <menuitem oncommand="EditorInsertOrEditNamedAnchor()">
+    <menuitem oncommand="goDoCommand('cmd_anchor')">
      <button class="borderless" id="namedAnchorButton-dark" align="left" value="&anchorToolbarCmd.label;"/>
     </menuitem>
-    <menuitem oncommand="EditorInsertOrEditImage()">
+    <menuitem oncommand="goDoCommand('cmd_image')">
      <button class="borderless" id="imageButton-dark" align="left" value="&imageToolbarCmd.label;"/>
     </menuitem>
-    <menuitem oncommand="EditorInsertOrEditHLine()">
+    <menuitem oncommand="goDoCommand('cmd_hline')">
      <button class="borderless" id="hlineButton-dark" align="left" value="&hruleToolbarCmd.label;"/>
     </menuitem>
-    <menuitem oncommand="EditorInsertOrEditTable(true)">
+    <menuitem oncommand="goDoCommand('cmd_table')">
      <button class="borderless" id="tableButton-dark" align="left" value="&tableToolbarCmd.label;"/>
     </menuitem>
   </menupopup>
 
   <!-- Editor toolbar items -->
   <!-- note that we override the submenu item label "Blank Window" with "New" used for the menu -->
-  <button class="button-toolbar-2 top" id="newButton" observes="cmd_newEditor" value="&newMenu.label;" />
-  <button class="button-toolbar-2 top" id="openButton" observes="Editor:Open" value="&openToolbarCmd.label;"/>
-  <button class="button-toolbar-2 top" id="saveButton" observes="Editor:Save"/>
-  <button class="button-toolbar-2 top" id="previewButton" observes="Editor:Preview" value="&previewToolbarCmd.label;"/>
-  <button class="button-toolbar-2 top" id="printButton" observes="Editor:Print" value="&printToolbarCmd.label;"/>
-  <button class="button-toolbar-2 top" id="findButton" observes="cmd_find" value="&findToolbarCmd.label;"/>
-  <button class="button-toolbar-2 top" id="spellingButton" value="&spellToolbarCmd.label;" oncommand="CheckSpelling()"/>
+  <button class="button-toolbar-2 top" id="newButton"       value="&newMenu.label;"           observes="cmd_newEditor"/>
+  <button class="button-toolbar-2 top" id="openButton"      value="&openToolbarCmd.label;"    observes="cmd_open"/>
+  <button class="button-toolbar-2 top" id="saveButton"                                        observes="cmd_save"/>
+  <button class="button-toolbar-2 top" id="previewButton"   value="&previewToolbarCmd.label;" observes="cmd_preview"/>
+  <button class="button-toolbar-2 top" id="printButton"     value="&printToolbarCmd.label;"   observes="cmd_print"/>
+  <button class="button-toolbar-2 top" id="findButton"      value="&findToolbarCmd.label;"    observes="cmd_find"/>
+  <button class="button-toolbar-2 top" id="spellingButton"  value="&spellToolbarCmd.label;"   observes="cmd_spelling"/>
 
-  <button class="button-toolbar-2 top" id="imageButton" value="&imageToolbarCmd.label;" oncommand="EditorInsertOrEditImage()"/>
-  <button class="button-toolbar-2 top" id="hlineButton" value="&hruleToolbarCmd.label;" oncommand="EditorInsertOrEditHLine()"/>
-  <button class="button-toolbar-2 top" id="tableButton" value="&tableToolbarCmd.label;" oncommand="EditorInsertOrEditTable(true)"/>
-  <button class="button-toolbar-2 top" id="linkButton" value="&linkToolbarCmd.label;" oncommand="EditorInsertOrEditLink()"/>
-  <button class="button-toolbar-2 top" id="namedAnchorButton" value="&anchorToolbarCmd.label;" oncommand="EditorInsertOrEditNamedAnchor()"/>
+  <button class="button-toolbar-2 top" id="imageButton"     value="&imageToolbarCmd.label;"   observes="cmd_image"/>
+  <button class="button-toolbar-2 top" id="hlineButton"     value="&hruleToolbarCmd.label;"   observes="cmd_hline"/>
+  <button class="button-toolbar-2 top" id="tableButton"     value="&tableToolbarCmd.label;"   observes="cmd_table"/>
+  <button class="button-toolbar-2 top" id="linkButton"      value="&linkToolbarCmd.label;"    observes="cmd_link"/>
+  <button class="button-toolbar-2 top" id="namedAnchorButton" value="&anchorToolbarCmd.label;"  observes="cmd_anchor"/>
 
   <!-- Formatting toolbar items. "data" are HTML tagnames, don't translate -->
   <menulist id="ParagraphSelect">
-    <observes element="Editor:Paragraph:Format" attribute="format" onbroadcast="onParagraphFormatChange()"/>
-    <menupopup oncommand="EditorSetParagraphFormat(event.target.data)">
+    <observes element="cmd_paragraphState" attribute="state" onbroadcast="onParagraphFormatChange()"/>
+    <menupopup oncommand="EditorSetParagraphFormat('cmd_paragraphState', event.target.data)">
       <menuitem value="&normalCmd.label;"              data=""/>
       <menuitem value="&paragraphParagraphCmd.label;"  data="P"/>
       <menuitem value="&heading1Cmd.label;"            data="H1"/>
@@ -688,30 +743,30 @@
     <text id="TextColorPopupButton" popup="TextColorPopup"/>
   </stack>
   
-  <button class="button-toolbar" id="DecreaseFontSizeButton" oncommand="EditorDecreaseFontSize()"/>
-  <button class="button-toolbar" id="IncreaseFontSizeButton" oncommand="EditorIncreaseFontSize()"/>
+  <button class="button-toolbar" id="DecreaseFontSizeButton" observes="cmd_decreaseFont"/>
+  <button class="button-toolbar" id="IncreaseFontSizeButton" observes="cmd_increaseFont"/>
 
-  <button class="button-toolbar" id="boldButton" align="center" oncommand="EditorToggleStyle('bold')">
-    <observes element="Editor:Bold" attribute="bold" onbroadcast="onStyleChange('bold')"/>
+  <button class="button-toolbar" id="boldButton" oncommand="goDoCommand('cmd_bold')">
+    <observes element="cmd_bold" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_bold')"/>
   </button>
-  <button class="button-toolbar" id="italicButton" align="center" oncommand="EditorToggleStyle('italic')">
-    <observes element="Editor:Italic" attribute="italic" onbroadcast="onStyleChange('italic')"/>
+  <button class="button-toolbar" id="italicButton" align="center" oncommand="goDoCommand('cmd_italic')">
+    <observes element="cmd_italic" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_italic')"/>
   </button>
-  <button class="button-toolbar" id="underlineButton" align="center" oncommand="EditorToggleStyle('underline')">
-    <observes element="Editor:Underline" attribute="underline" onbroadcast="onStyleChange('underline')"/>
-  </button>
-
-  <button class="button-toolbar" id="ulButton" oncommand="EditorMakeOrChangeList('ul')">
-      <observes element="Editor:Paragraph:ListType" attribute="format" onbroadcast="onListFormatChange('ul')"/>
+  <button class="button-toolbar" id="underlineButton" align="center" oncommand="goDoCommand('cmd_underline')">
+    <observes element="cmd_underline" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_underline')"/>
   </button>
 
-  <button class="button-toolbar" id="olButton" oncommand="EditorMakeOrChangeList('ol')">
-      <observes element="Editor:Paragraph:ListType" attribute="format" onbroadcast="onListFormatChange('ol')"/>
+  <button class="button-toolbar" id="ulButton" oncommand="goDoCommand('cmd_ul')">
+      <observes element="cmd_ul" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_ul')"/>
   </button>
 
-  <button class="button-toolbar format" id="outdentButton"    oncommand="EditorIndent('outdent')"/>
-  <button class="button-toolbar format" id="indentButton"     oncommand="EditorIndent('indent')"/>
-  <button class="button-toolbar format popup" id="AlignPopupButton"/>
+  <button class="button-toolbar" id="olButton" oncommand="goDoCommand('cmd_ol')">
+      <observes element="cmd_ol" attribute="state" onbroadcast="onButtonUpdate(this.parentNode, 'cmd_ol')"/>
+  </button>
+
+  <button class="button-toolbar format" id="outdentButton"    observes="cmd_outdent"/>
+  <button class="button-toolbar format" id="indentButton"     observes="cmd_indent"/>
+  <button class="button-toolbar format popup" id="AlignPopupButton" disabled="true"/>
   
   <!-- Edit Mode toolbar -->
   <text id="NormalModeButton"  class="EditModeButton" selected="1" value="&normalMode.label;"    onclick="EditorSetDisplayMode(1)"/>
@@ -726,7 +781,7 @@
   <!-- Paste as quotation is used by mail compose,
        but in composer it has to go in the debug menu
    -->
-  <menuitem id="menu_pasteQuote" value="&pasteAsQuotationCmd.label;" accesskey="&editpastequotation.accesskey;" oncommand="EditorPasteAsQuotation()"/>
+  <menuitem id="menu_pasteQuote" value="&pasteAsQuotationCmd.label;" accesskey="&editpastequotation.accesskey;" oncommand="goDoCommand('cmd_pasteQote')"/>
 
   <!-- DEBUG only -->
   <menu id="debugMenu" value="&debugMenu.label;">

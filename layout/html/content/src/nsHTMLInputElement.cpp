@@ -1132,18 +1132,12 @@ nsHTMLInputElement::GetControllers(nsIControllers** aResult)
         NS_ERROR_FAILURE);
       if (!mControllers) { return NS_ERROR_NULL_POINTER; }
 
-      nsCOMPtr<nsIController> controller;
-      NS_ENSURE_SUCCESS (
-        nsComponentManager::CreateInstance("component://netscape/editor/editorcontroller",
-                                           nsnull,
-                                           NS_GET_IID(nsIController),
-                                           getter_AddRefs(controller)),
-        NS_ERROR_FAILURE);
-      if (!controller) { return NS_ERROR_NULL_POINTER; }
       nsresult rv;
+      nsCOMPtr<nsIController> controller = do_CreateInstance("component://netscape/editor/editorcontroller", &rv);
+      if (NS_FAILED(rv)) return rv;
       nsCOMPtr<nsIEditorController> editorController = do_QueryInterface(controller, &rv);
       if (NS_FAILED(rv)) return rv;
-      rv = editorController->Init();
+      rv = editorController->Init(nsnull);
       if (NS_FAILED(rv)) return rv;
       mControllers->AppendController(controller);
     }

@@ -36,6 +36,7 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorController)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsComposerController)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorService)
 
 #ifdef ENABLE_EDITOR_API_LOG
@@ -58,8 +59,10 @@ static nsModuleComponentInfo components[] = {
     { "HTML Editor", NS_HTMLEDITOR_CID,
       "component://netscape/editor/htmleditor", nsHTMLEditorConstructor, },
 #endif
-    { "Editor Shell Controller", NS_EDITORCONTROLLER_CID,
+    { "Editor Controller", NS_EDITORCONTROLLER_CID,
       "component://netscape/editor/editorcontroller", nsEditorControllerConstructor, },
+    { "Composer Controller", NS_COMPOSERCONTROLLER_CID,
+      "component://netscape/editor/composercontroller", nsComposerControllerConstructor, },
     { "Editor Shell Component", NS_EDITORSHELL_CID,
       "component://netscape/editor/editorshell", nsEditorShellConstructor, },
     { "Editor Shell Spell Checker", NS_EDITORSHELL_CID,
