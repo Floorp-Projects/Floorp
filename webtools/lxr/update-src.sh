@@ -20,12 +20,14 @@ date
 
 # update the lxr sources
 pwd
-cvs -Q -d $CVSROOT update -dP
+time cvs -Q -d $CVSROOT update -dP
+
+date
 
 # then update the Mozilla sources
 cd $src_dir
 cd ..
-cvs -Q -d $CVSROOT checkout MozillaSource
+time cvs -Q -d $CVSROOT checkout MozillaSource
 
 date
 
