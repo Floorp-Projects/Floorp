@@ -122,9 +122,9 @@ ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool gdi32)
 RCINCLUDE = splash.rc
 ifndef GNU_CC
-RCFLAGS += -DMOZ_PHOENIX -I$(srcdir)
+RCFLAGS += -DMOZ_SUNBIRD -I$(srcdir)
 else
-RCFLAGS += -DMOZ_PHOENIX --include-dir $(srcdir)
+RCFLAGS += -DMOZ_SUNBIRD --include-dir $(srcdir)
 endif
 ifdef BUILD_STATIC_LIBS
 RCFLAGS += -DMOZ_STATIC_BUILD
@@ -134,15 +134,27 @@ RCFLAGS += -DDEBUG
 endif
 endif
 
+ifeq ($(OS_ARCH),BeOS)
+OS_LIBS += -ltracker
+endif
+
 ifeq ($(OS_ARCH),OS2)
 RESFILE=splashos2.res
+RCFLAGS += -DMOZ_SUNBIRD
 ifdef BUILD_STATIC_LIBS
+OS_LIBS += -lpmwinx
 EXE_DEF_FILE = browser.def
-RCFLAGS += -d MOZ_STATIC_BUILD -i $(DIST)/include/widget
+RCFLAGS += -DMOZ_STATIC_BUILD -i $(DIST)/include/widget
 endif
+ifdef DEBUG
+RCFLAGS += -DDEBUG
+endif
+RCFLAGS += -DSUNBIRD_ICO=\"$(DIST)/branding/sunbird.ico\"
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES += -DSUNBIRD_ICO=\"$(DIST)/branding/sunbird.ico\"
 
 ifdef BUILD_STATIC_LIBS
 include $(topsrcdir)/config/static-rules.mk
@@ -198,6 +210,7 @@ endif
 endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
+
 MozillaSunbird:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
                 -e "s|%MOZ_USER_DIR%|.sunbird|" \
@@ -217,15 +230,36 @@ GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, sunbird.js)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-libs:: default.xpm
-	$(INSTALL) $^ $(DIST)/bin/chrome/icons/default
+libs::
+	$(INSTALL) $(DIST)/branding/default.xpm $(DIST)/bin/chrome/icons/default
 
-install:: default.xpm
-	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/icons
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(DIST)/branding/default.xpm $(DESTDIR)$(mozappdir)/icons
 endif
 
 export:: brand.dtd.in
 	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $^ > brand.dtd
+
+export::
+ifndef MOZ_USE_OFFICIAL_BRANDING
+	$(NSINSTALL) -D $(DIST)/branding
+ifeq ($(OS_ARCH),WINNT)
+	cp $(srcdir)/sunbird.ico   $(DIST)/branding/sunbird.ico
+	cp $(srcdir)/sunbird.ico   $(DIST)/branding/app.ico
+	cp $(srcdir)/sunbird.ico  $(DIST)/branding/document.ico
+endif
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+	cp $(srcdir)/macbuild/sunbird.icns  $(DIST)/branding/sunbird.icns
+endif
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+	cp $(srcdir)/default.xpm   $(DIST)/branding/default.xpm	
+endif
+ifeq ($(OS_ARCH),OS2)
+	cp $(srcdir)/sunbird.ico   $(DIST)/branding/sunbird.ico
+	cp $(srcdir)/sunbird.ico   $(DIST)/branding/app.ico
+	cp $(srcdir)/sunbird.ico  $(DIST)/branding/document.ico
+endif
+endif
 
 libs::
 	touch $(DIST)/bin/.autoreg
@@ -239,9 +273,10 @@ libs:: $(PROGRAM)
 	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app
 	sed -e "s/APP_VERSION/$(APP_VERSION)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
 	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
-	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
+	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS/mangle $(DIST)/$(APP_NAME).app/Contents/MacOS/shlibsign
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
-	cp -RL $(srcdir)/macbuild/sunbird.icns $(DIST)/$(APP_NAME).app/Contents/Resources/mach.icns
+	-cp -L $(DIST)/bin/mangle $(DIST)/bin/shlibsign $(DIST)/$(APP_NAME).app/Contents/MacOS
+	cp -RL $(DIST)/branding/sunbird.icns $(DIST)/$(APP_NAME).app/Contents/Resources/sunbird.icns
 	echo -n APPLMOZB > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 #       remove CVS dirs from packaged app
 	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;

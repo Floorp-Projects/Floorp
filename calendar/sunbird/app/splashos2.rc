@@ -33,7 +33,7 @@
 #define ID_DDE_APPLICATION_NAME 102
 
 
-ICON 1 "mozos2.ico"
+ICON 1 SUNBIRD_ICO
 
 DLGTEMPLATE IDD_SPLASH DISCARDABLE 
 BEGIN
@@ -46,7 +46,11 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
+#ifdef DEBUG
+    ID_DDE_APPLICATION_NAME,            "Mozilla Sunbird Debug"
+#else
     ID_DDE_APPLICATION_NAME,            "Mozilla Sunbird"
+#endif
 END
 
 #ifdef MOZ_STATIC_BUILD

@@ -1,9 +1,7 @@
 <!ENTITY  lang.version          "1.7a">
 <!ENTITY  brandShortName        "Mozilla Sunbird">
 <!ENTITY  brandFullName         "Mozilla Sunbird">
-<!ENTITY  version               
-#expand __APP_VERSION__
->
+#expand <!ENTITY  version               __APP_VERSION__>
 <!ENTITY  vendorShortName       "Mozilla">
 
 <!ENTITY  releaseURL            "http://www.mozilla.org/projects/calendar">
