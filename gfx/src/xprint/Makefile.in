@@ -34,7 +34,7 @@ IS_COMPONENT	= 1
 MODULE_NAME	= nsGfxXprintModule
 GRE_MODULE	= 1
 
-EXTRA_DSO_LIBS	= gkgfx gfxshared_s
+EXTRA_DSO_LIBS	= gfxshared_s gkgfx
 
 REQUIRES	= xpcom \
 		  string \
@@ -87,14 +87,7 @@ EXPORTS		= \
 		xprintutil.h \
 		$(NULL)
 
-EXTRA_DSO_LDOPTS += \
-		$(MOZ_XPRINT_LDFLAGS) \
-		$(NULL)
-
 CXXFLAGS	 += $(MOZ_XPRINT_CFLAGS)
-
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
-		$(NULL)
 
 GARBAGE		+= $(X11SHARED_LCPPSRCS) $(XLIB_LCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
 
@@ -108,11 +101,11 @@ CFLAGS		+= $(TK_CFLAGS)
 CXXFLAGS	+= $(TK_CFLAGS)
 
 EXTRA_DSO_LDOPTS += \
+		$(LIBS_DIR) \
 		-lxlibrgb \
-		-L$(DIST)/bin \
-		-L$(DIST)/lib \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_XPRINT_LDFLAGS) \
 		$(NULL)
 
 LOCAL_INCLUDES	= \
