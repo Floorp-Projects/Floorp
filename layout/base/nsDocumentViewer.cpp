@@ -3149,8 +3149,6 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
   }
 
   // Figure where we are currently scrolled to
-  const nsIView * clippedView;
-  scrollableView->GetClipView(&clippedView);
   nscoord x;
   nscoord y;
   scrollableView->GetScrollPosition(x, y);
