@@ -310,7 +310,7 @@ pref("netcenter.register", false);
 
 pref("security.checkuri", true);
 pref("security.checkdomprops", true);
-pref("security.checkxpconnect", false);
+pref("security.checkxpconnect", true);
 
 pref("security.policies", "default");
 pref("security.policy.default.htmlinputelement.value", "sameOrigin");
