@@ -2401,8 +2401,8 @@ nsresult PresShell::SetPrefLinkRules(void)
         //   though if using an override sheet this will cause authors grief still
         //   In the agent stylesheet, they are !important when we are ignoring document colors
         //
-        // XXX: do active links and visited links get another color?
-        //      They were red in the html.css rules
+        // XXX: Do active links and visited links get another color?
+        //      They are red in the html.css rules, but there is no pref for their color.
         
         nscolor linkColor, visitedColor;
         result = mPresContext->GetDefaultLinkColor(&linkColor);
@@ -2419,23 +2419,33 @@ nsresult PresShell::SetPrefLinkRules(void)
           mPresContext->GetCachedBoolPref(kPresContext_UseDocumentColors, useDocColors);
 
           ///////////////////////////////////////////////////////////////
-          // - links: '*:link, *:link:active {color: #RRGGBB [!important];}'
+          // - links: '*:link {color: #RRGGBB [!important];}'
           ColorToString(linkColor,strColor);
-          NS_NAMED_LITERAL_STRING(notImportantStr, ";} ");
-          NS_NAMED_LITERAL_STRING(importantStr, " !important;} ");
+          NS_NAMED_LITERAL_STRING(notImportantStr, "}");
+          NS_NAMED_LITERAL_STRING(importantStr, "!important}");
           const nsAString& ruleClose = useDocColors ? notImportantStr : importantStr;
-          result = sheet->InsertRule(NS_LITERAL_STRING("*:link, *:link:active {color:") +
+          result = sheet->InsertRule(NS_LITERAL_STRING("*:link{color:") +
                                      strColor +
                                      ruleClose,
                                      0,&index);
           NS_ENSURE_SUCCESS(result, result);
             
           ///////////////////////////////////////////////////////////////
-          // - visited links '*:visited, *:visited:active {color: #RRGGBB [!important];}'
+          // - visited links '*:visited {color: #RRGGBB [!important];}'
           ColorToString(visitedColor,strColor);
           // insert the rule
-          result = sheet->InsertRule(NS_LITERAL_STRING("*:visited, *:visited:active {color:") +
+          result = sheet->InsertRule(NS_LITERAL_STRING("*:visited{color:") +
                                      strColor +
+                                     ruleClose,
+                                     0,&index);
+            
+          ///////////////////////////////////////////////////////////////
+          // - active links '*:-moz-any-link {color: red [!important];}'
+          // This has to be here (i.e. we can't just rely on the rule in the UA stylesheet)
+          // because this entire stylesheet is at the user level (not UA level) and so
+          // the two rules above override the rule in the UA stylesheet regardless of the
+          // weights of the respective rules.
+          result = sheet->InsertRule(NS_LITERAL_STRING("*:-moz-any-link:active{color:red") +
                                      ruleClose,
                                      0,&index);
         }
@@ -2457,13 +2467,13 @@ nsresult PresShell::SetPrefLinkRules(void)
               printf (" - Creating rules for enabling link underlines\n");
   #endif
               // make a rule to make text-decoration: underline happen for links
-              strRule.Append(NS_LITERAL_STRING(":link, :visited {text-decoration:underline;}"));
+              strRule.Append(NS_LITERAL_STRING("*:-moz-any-link{text-decoration:underline}"));
             } else {
   #ifdef DEBUG_attinasi
               printf (" - Creating rules for disabling link underlines\n");
   #endif
               // make a rule to make text-decoration: none happen for links
-              strRule.Append(NS_LITERAL_STRING(":link, :visited {text-decoration:none;}"));
+              strRule.Append(NS_LITERAL_STRING("*:-moz-any-link{text-decoration:none}"));
             }
 
             // ...now insert the rule
