@@ -843,6 +843,44 @@ nsresult testISO2022JPDecoder()
   }
 }
 
+/**
+ * Test the EUCJP decoder.
+ */
+nsresult testEUCJPDecoder()
+{
+  char * testName = "T103";
+  printf("\n[%s] EUCJPToUnicode\n", testName);
+
+  // create converter
+  CREATE_DECODER("euc-jp");
+
+  // test data
+  char src[] = {"\x45"};
+  PRUnichar exp[] = {0x0045};
+
+  // test converter - normal operation
+  res = testDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
+
+#ifdef NOPE // XXX decomment this when the decoder can take this test.
+  // reset converter
+  if (NS_SUCCEEDED(res)) res = resetDecoder(dec, testName);
+
+  // test converter - stress test
+  if (NS_SUCCEEDED(res)) 
+    res = testStressDecoder(dec, src, ARRAY_SIZE(src)-1, exp, ARRAY_SIZE(exp), testName);
+#endif
+
+  // release converter
+  NS_RELEASE(dec);
+
+  if (NS_FAILED(res)) {
+    return res;
+  } else {
+    printf("Test Passed.\n");
+    return NS_OK;
+  }
+}
+
 //----------------------------------------------------------------------
 // Encoders testing functions
 
@@ -924,6 +962,7 @@ nsresult testAll()
   // test decoders
   testLatin1Decoder();
   testISO2022JPDecoder();
+  testEUCJPDecoder();
 
   // test encoders
   testLatin1Encoder();
