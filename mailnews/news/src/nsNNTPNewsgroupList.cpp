@@ -60,6 +60,8 @@ class MessageDBView;
 #include "msgpane.h"
 #endif
 
+static NS_DEFINE_IID(kINNTPNewsgroupListIID, NS_INNTPNEWSGROUPLIST_IID);
+
 /* temporary hack until MessageKey is defined */
 typedef PRUint32 MessageKey;
 
@@ -182,7 +184,7 @@ nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, NS_INNTPNEWSGROUPLIST_IID);
+NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, kINNTPNewsgroupListIID);
 
 nsresult
 nsNNTPNewsgroupList::InitNewsgroupList(const char *url, const char *groupName)
