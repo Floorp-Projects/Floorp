@@ -478,9 +478,7 @@ static nsresult main1(int argc, char* argv[])
   // Unbuffer debug output (necessary for automated QA performance scripts).
   setbuf( stdout, 0 );
 #endif
-  
-  NS_VERIFY(NS_SUCCEEDED(nsIThread::SetMainThread()), "couldn't set main thread");
- 
+   
   InitFullCircle();
 
  #if XP_MAC 
