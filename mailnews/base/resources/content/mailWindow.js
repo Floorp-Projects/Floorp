@@ -53,14 +53,6 @@ var accountManagerDataSource;
 var folderDataSource;
 var messageDataSource;
 
-//Progress and Status variables
-var gStatusText;
-var gStatusBar;
-var gThrobber;
-var gStopMenu;
-var gStopButton;
-var bindCount = 0;
-var startTime = 0;
 //End progress and Status variables
 
 function OnMailWindowUnload()
@@ -104,6 +96,9 @@ function CreateMailWindowGlobals()
 	//Create windows status feedback
   // set the JS implementation of status feedback before creating the c++ one..
   window.MsgStatusFeedback = new nsMsgStatusFeedback();
+  // double register the status feedback object as the xul browser window implementation 
+  window.XULBrowserWindow = window.MsgStatusFeedback;
+
 	statusFeedback           = Components.classes[statusFeedbackContractID].createInstance();
 	statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
 
@@ -193,8 +188,6 @@ function SetupMoveCopyMenus(menuid, accountManagerDataSource, folderDataSource)
 }
 function dumpProgress() {
     var broadcaster = document.getElementById("Messenger:LoadingProgress");
-
-    dump( "bindCount=" + bindCount + "\n" );
     dump( "broadcaster mode=" + broadcaster.getAttribute("mode") + "\n" );
     dump( "broadcaster value=" + broadcaster.getAttribute("value") + "\n" );
     dump( "meter mode=" + meter.getAttribute("mode") + "\n" );
@@ -210,76 +203,116 @@ function nsMsgStatusFeedback()
 
 nsMsgStatusFeedback.prototype = 
 {
+  // global variables for status / feedback information....
+  startTime  : 0,
+  statusTextFld : null,
+  statusBar     : null,
+  throbber      : null,
+  stopMenu      : null,
+  stopButton    : null,
+
+  ensureStatusFields : function()
+    {
+      if (!this.statusTextFld ) this.statusTextFld = document.getElementById("statusText");
+      if (!this.statusBar) this.statusBar = document.getElementById("statusbar-icon");
+      if(!this.throbber)   this.throbber = document.getElementById("navigator-throbber");
+	    if(!this.stopButton) this.stopButton = document.getElementById("button-stop");
+	    if(!this.stopMenu)   this.stopMenu = document.getElementById("stopMenuitem");
+    },
+
+  // nsIXULBrowserWindow implementation
+  setJSStatus : function(status)
+    {
+    },
+  setJSDefaultStatus : function(status)
+    {
+    },
+  setDefaultStatus : function(status)
+    {
+    },
+  setOverLink : function(link)
+    {
+      this.showStatusString(link);
+    },
+  onProgress : function (channel, current, max)
+    {
+    },
+  onStateChange : function (progress, request, state, status)
+    {
+    },
+  onStatus : function(channel, url, message)
+    {
+    },
+  onLocationChange : function(location)
+    {
+    },
+
 	QueryInterface : function(iid)
 		{
-		if(iid.equals(Components.interfaces.nsIMsgStatusFeedback))
-			return this;
-		throw Components.results.NS_NOINTERFACE;
-        return null;
+	    if(iid.equals(Components.interfaces.nsIMsgStatusFeedback))
+		    return this;
+      if(iid.equals(Components.interfaces.nsIXULBrowserWindow))
+        return this;
+	    throw Components.results.NS_NOINTERFACE;
+      return null;
 		},
-	ShowStatusString : function(statusText)
+
+  // nsIMsgStatusFeedback implementation.
+	showStatusString : function(statusText)
 		{
-       if (!gStatusText ) gStatusText = document.getElementById("statusText");
+       this.ensureStatusFields();
+
        if ( statusText == "" )
           statusText = defaultStatus;
-       gStatusText.value = statusText;
+       this.statusTextFld.value = statusText;
 		},
-	StartMeteors : function()
+	startMeteors : function()
 		{
-      if (!gStatusBar) gStatusBar = document.getElementById("statusbar-icon");
-      if(!gThrobber) gThrobber = document.getElementById("navigator-throbber");
-	  if(!gStopButton) gStopButton = document.getElementById("button-stop");
-	  if(!gStopMenu) gStopMenu = document.getElementById("stopMenuitem");
+      this.ensureStatusFields();
 
       // Turn progress meter on.
-      gStatusBar.setAttribute("mode","undetermined");
+      this.statusBar.setAttribute("mode","undetermined");
       
       // turn throbber on 
-      gThrobber.setAttribute("busy", true);
+      this.throbber.setAttribute("busy", true);
 
-	  //turn on stop button and menu
-	  gStopButton.setAttribute("disabled", false);
-	  gStopMenu.setAttribute("disabled", false);
+	    //turn on stop button and menu
+	    this.stopButton.setAttribute("disabled", false);
+	    this.stopMenu.setAttribute("disabled", false);
       
       // Remember when loading commenced.
-    	startTime = (new Date()).getTime();
+    	this.startTime = (new Date()).getTime();
 		},
-	StopMeteors : function()
+	stopMeteors : function()
 		{
-            dump("stopping meteors 1\n");
-            if (!gStatusBar)
-                gStatusBar = document.getElementById("statusbar-icon");
-            if(!gThrobber)
-                gThrobber = document.getElementById("navigator-throbber");
-			if(!gStopButton) gStopButton = document.getElementById("button-stop");
-			if(!gStopMenu) gStopMenu = document.getElementById("stopMenuitem");
+      this.ensureStatusFields();
 
 			// Record page loading time.
-			var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
-            var msg = Bundle.GetStringFromName("documentDonePrefix") +
+			var elapsed = ( (new Date()).getTime() - this.startTime ) / 1000;
+      var msg = Bundle.GetStringFromName("documentDonePrefix") +
                 elapsed + Bundle.GetStringFromName("documentDonePostfix");
-			dump( msg + "\n" );
-      window.MsgStatusFeedback.ShowStatusString(msg);
+
+      this.showStatusString(msg);
       defaultStatus = msg;
 
-      gThrobber.setAttribute("busy", false);
-      dump("stopping meteors\n");
+      this.throbber.setAttribute("busy", false);
+
       // Turn progress meter off.
-      gStatusBar.setAttribute("mode","normal");
-      gStatusBar.value = 0;  // be sure to clear the progress bar
-      gStatusBar.progresstext = "";
-	  gStopButton.setAttribute("disabled", true);
-	  gStopMenu.setAttribute("disabled", true);
+      this.statusBar.setAttribute("mode","normal");
+      this.statusBar.value = 0;  // be sure to clear the progress bar
+      this.statusBar.progresstext = "";
+	    this.stopButton.setAttribute("disabled", true);
+	    this.stopMenu.setAttribute("disabled", true);
 
 		},
-	ShowProgress : function(percentage)
+	showProgress : function(percentage)
 		{
-      if (!gStatusBar) gStatusBar = document.getElementById("statusbar-icon");
+      this.ensureStatusFields();
       if (percentage >= 0)
       {
-        gStatusBar.setAttribute("mode", "normal");
-        gStatusBar.value = percentage; 
-        gStatusBar.progresstext = Math.round(percentage) + "%";
+        this.statusBar.setAttribute("mode", "normal");
+        this.statusBar.value = percentage; 
+        this.statusBar.progresstext = Math.round(percentage) + "%";
       }
 		},
 	closeWindow : function(percent)
