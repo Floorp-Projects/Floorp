@@ -62,22 +62,7 @@ function TestCase( n, d, e, a ) {
     this.passed = getTestCaseResult( this.expect, this.actual );
 }
 function startTest() {
-    //  JavaScript 1.3 is supposed to be compliant ecma version 1.0
-    if ( VERSION == "ECMA_1" ) {
-        version ( "130" );
-    }
-    if ( VERSION == "JS1_3" ) {
-        version ( "130" );
-    }
-    if ( VERSION == "JS1_2" ) {
-        version ( "120" );
-    }
-    if ( VERSION  == "JS1_1" ) {
-        version ( "110" );
-    }
-    // for ecma version 2.0, we will leave the javascript version to
-    // the default ( for now ).
-
+    version(120);
 
     if ( BUGNUMBER ) {
         writeLineToLog ("BUGNUMBER: " + BUGNUMBER );

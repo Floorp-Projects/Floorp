@@ -55,20 +55,24 @@
     }
 
     var o = {a: 1, b: 2};
+    inspect(o);
 
-    AddTestCase( "inspect(o),length", 2,         types.length );
+    AddTestCase( "inspect(o),length",   2,       types.length );
+    AddTestCase( "inspect(o)[0]",      "number", types[0] );
     AddTestCase( "inspect(o)[1]",      "number", types[1] );
-    AddTestCase( "inspect(o)[2]",      "number", types[2] );
+
+    types_2 = [];
 
     function inspect_again(object) {
         for (prop in object) {
-            types[types.length] = (typeof object[prop]);
+            types_2[types_2.length] = (typeof object[prop]);
         }
     }
 
-    AddTestCase( "inspect_again(o),length", 2,         types.length );
+    inspect_again(o);
+    AddTestCase( "inspect_again(o),length",   2,       types.length );
+    AddTestCase( "inspect_again(o)[0]",      "number", types[0] );
     AddTestCase( "inspect_again(o)[1]",      "number", types[1] );
-    AddTestCase( "inspect_again(o)[2]",      "number", types[2] );
 
 
     test();       // leave this alone.  this executes the test cases and
