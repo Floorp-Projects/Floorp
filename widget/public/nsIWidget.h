@@ -478,6 +478,15 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD Invalidate(const nsRect & aRect, PRBool aIsSynchronous) = 0;
 
     /**
+     * Invalidate a specified region for a widget and repaints it.
+     *
+     * @param aIsSynchronouse PR_TRUE then repaint synchronously. If PR_FALSE repaint later.
+     * @see #Update()
+     */
+
+    NS_IMETHOD InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSynchronous) = 0;
+
+    /**
      * Force a synchronous repaint of the window if there are dirty rects.
      *
      * @see Invalidate()
@@ -643,12 +652,14 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus) = 0;
 
 
+#ifdef LOSER
     /**
      * FSets the vertical scrollbar widget
      *
      */
     NS_IMETHOD SetVerticalScrollbar(nsIWidget * aScrollbar) = 0;
-   
+#endif
+
     /**
      * For printing and lightweight widgets
      *

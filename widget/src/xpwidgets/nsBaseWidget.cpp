@@ -60,7 +60,9 @@ nsBaseWidget::nsBaseWidget()
 ,	mIsDestroying(PR_FALSE)
 ,	mOnDestroyCalled(PR_FALSE)
 ,	mBounds(0,0,0,0)
+#ifdef LOSER
 ,	mVScrollbar(nsnull)
+#endif
 ,   mZIndex(0)
 {
     NS_NewISupportsArray(getter_AddRefs(mChildren));
@@ -77,7 +79,9 @@ nsBaseWidget::nsBaseWidget()
 nsBaseWidget::~nsBaseWidget()
 {
 	NS_IF_RELEASE(mMenuListener);
+#ifdef LOSER
 	NS_IF_RELEASE(mVScrollbar);
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -86,72 +90,79 @@ nsBaseWidget::~nsBaseWidget()
 //
 //-------------------------------------------------------------------------
 void nsBaseWidget::BaseCreate(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
+                              const nsRect &aRect,
+                              EVENT_CALLBACK aHandleEventFunction,
+                              nsIDeviceContext *aContext,
+                              nsIAppShell *aAppShell,
+                              nsIToolkit *aToolkit,
+                              nsWidgetInitData *aInitData)
 {
-    if (nsnull == mToolkit) {
-        if (nsnull != aToolkit) {
-            mToolkit = (nsIToolkit*)aToolkit;
-            NS_ADDREF(mToolkit);
-        }
-        else {
-            if (nsnull != aParent) {
-                mToolkit = (nsIToolkit*)(aParent->GetToolkit()); // the call AddRef's, we don't have to
-            }
-            // it's some top level window with no toolkit passed in.
-            // Create a default toolkit with the current thread
-            else {
-               static NS_DEFINE_CID(kToolkitCID, NS_TOOLKIT_CID);
-
-               nsresult res;
-               res = nsComponentManager::CreateInstance(kToolkitCID, nsnull, NS_GET_IID(nsIToolkit), (void **)&mToolkit);
-               if (NS_OK != res)
-                  NS_ASSERTION(PR_FALSE, "Can not create a toolkit in nsBaseWidget::Create");
-               if (mToolkit)
-	               mToolkit->Init(PR_GetCurrentThread());
-            }
-        }
-
-    }
-
-    mAppShell = aAppShell;
-    NS_IF_ADDREF(mAppShell);
-
-    // save the event callback function
-    mEventCallback = aHandleEventFunction;
-
-    // keep a reference to the device context
-    if (aContext) {
-        mContext = aContext;
-        NS_ADDREF(mContext);
+  if (nsnull == mToolkit) {
+    if (nsnull != aToolkit) {
+      mToolkit = (nsIToolkit*)aToolkit;
+      NS_ADDREF(mToolkit);
     }
     else {
-      nsresult  res;
-
-      static NS_DEFINE_CID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-
-      res = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull, NS_GET_IID(nsIDeviceContext), (void **)&mContext);
-
-      if (NS_OK == res)
-        mContext->Init(nsnull);
+      if (nsnull != aParent) {
+        mToolkit = (nsIToolkit*)(aParent->GetToolkit()); // the call AddRef's, we don't have to
+      }
+      // it's some top level window with no toolkit passed in.
+      // Create a default toolkit with the current thread
+      else {
+        static NS_DEFINE_CID(kToolkitCID, NS_TOOLKIT_CID);
+        
+        nsresult res;
+        res = nsComponentManager::CreateInstance(kToolkitCID, nsnull,
+                                                 NS_GET_IID(nsIToolkit), (void **)&mToolkit);
+        if (NS_OK != res)
+          NS_ASSERTION(PR_FALSE, "Can not create a toolkit in nsBaseWidget::Create");
+        if (mToolkit)
+          mToolkit->Init(PR_GetCurrentThread());
+      }
     }
+    
+  }
+  
+  mAppShell = aAppShell;
+  NS_IF_ADDREF(mAppShell);
+  
+  // save the event callback function
+  mEventCallback = aHandleEventFunction;
+  
+  // keep a reference to the device context
+  if (aContext) {
+    mContext = aContext;
+    NS_ADDREF(mContext);
+  }
+  else {
+    nsresult  res;
+    
+    static NS_DEFINE_CID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
+    
+    res = nsComponentManager::CreateInstance(kDeviceContextCID, nsnull,
+                                             NS_GET_IID(nsIDeviceContext), (void **)&mContext);
 
-    if (nsnull != aInitData) {
-      PreCreateWidget(aInitData);
-    }
+    if (NS_OK == res)
+      mContext->Init(nsnull);
+  }
 
-    if (aParent) {
-      aParent->AddChild(this);
-    }
+  if (nsnull != aInitData) {
+    PreCreateWidget(aInitData);
+  }
+
+  if (aParent) {
+    aParent->AddChild(this);
+  }
 }
 
 NS_IMETHODIMP nsBaseWidget::CaptureMouse(PRBool aCapture)
 {
   return NS_OK;
+}
+
+NS_IMETHODIMP nsBaseWidget::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous)
+{
+  return NS_ERROR_FAILURE;
 }
 
 //-------------------------------------------------------------------------
@@ -185,9 +196,9 @@ NS_METHOD nsBaseWidget::Destroy()
     parent->RemoveChild(this);
     NS_RELEASE(parent);
   }
-
+#ifdef LOSER
 	NS_IF_RELEASE(mVScrollbar);
-
+#endif
   // disconnect listeners.
   NS_IF_RELEASE(mMouseListener);
   NS_IF_RELEASE(mEventListener);
@@ -303,7 +314,7 @@ NS_IMETHODIMP nsBaseWidget::GetZIndex(PRInt32* aZIndex)
 //-------------------------------------------------------------------------
 nscolor nsBaseWidget::GetForegroundColor(void)
 {
-    return mForeground;
+  return mForeground;
 }
 
     
@@ -314,8 +325,8 @@ nscolor nsBaseWidget::GetForegroundColor(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsBaseWidget::SetForegroundColor(const nscolor &aColor)
 {
-    mForeground = aColor;
-    return NS_OK;
+  mForeground = aColor;
+  return NS_OK;
 }
 
     
@@ -326,7 +337,7 @@ NS_METHOD nsBaseWidget::SetForegroundColor(const nscolor &aColor)
 //-------------------------------------------------------------------------
 nscolor nsBaseWidget::GetBackgroundColor(void)
 {
-    return mBackground;
+  return mBackground;
 }
 
 //-------------------------------------------------------------------------
@@ -336,8 +347,8 @@ nscolor nsBaseWidget::GetBackgroundColor(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsBaseWidget::SetBackgroundColor(const nscolor &aColor)
 {
-    mBackground = aColor;
-    return NS_OK;
+  mBackground = aColor;
+  return NS_OK;
 }
      
 //-------------------------------------------------------------------------
@@ -347,7 +358,7 @@ NS_METHOD nsBaseWidget::SetBackgroundColor(const nscolor &aColor)
 //-------------------------------------------------------------------------
 nsCursor nsBaseWidget::GetCursor()
 {
-   return mCursor;
+  return mCursor;
 }
 
 NS_METHOD nsBaseWidget::SetCursor(nsCursor aCursor)
@@ -411,8 +422,8 @@ nsIDeviceContext* nsBaseWidget::GetDeviceContext()
 
 nsIAppShell *nsBaseWidget::GetAppShell()
 {
-    NS_IF_ADDREF(mAppShell);
-    return mAppShell;
+  NS_IF_ADDREF(mAppShell);
+  return mAppShell;
 }
 
 
@@ -423,131 +434,10 @@ nsIAppShell *nsBaseWidget::GetAppShell()
 //-------------------------------------------------------------------------
 void nsBaseWidget::OnDestroy()
 {
-    // release references to device context, toolkit, and app shell
-    NS_IF_RELEASE(mContext);
-    NS_IF_RELEASE(mToolkit);
-    NS_IF_RELEASE(mAppShell);
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Constructor
-//
-//-------------------------------------------------------------------------
-
-nsBaseWidget::Enumerator::Enumerator(nsBaseWidget & inParent)
-  : mCurrentPosition(0), mParent(inParent)
-{
-  NS_INIT_REFCNT();
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Destructor
-//
-//-------------------------------------------------------------------------
-nsBaseWidget::Enumerator::~Enumerator()
-{   
-}
-
-
-//enumerator interfaces
-NS_IMETHODIMP
-nsBaseWidget::Enumerator::Next()
-{
-  PRUint32 itemCount = 0;
-  mParent.mChildren->Count(&itemCount);
-  if (mCurrentPosition < itemCount - 1 )
-    mCurrentPosition ++;
-  else
-    return NS_ERROR_FAILURE;
-  return NS_OK;
-}
-
-
- 
-NS_IMETHODIMP
-nsBaseWidget::Enumerator::Prev()
-{
-  if (mCurrentPosition > 0 )
-    mCurrentPosition --;
-  else
-    return NS_ERROR_FAILURE;
-  return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-nsBaseWidget::Enumerator::CurrentItem(nsISupports **aItem)
-{
-  if (!aItem)
-    return NS_ERROR_NULL_POINTER;
-
-  PRUint32 itemCount = 0;
-  mParent.mChildren->Count(&itemCount);
-  if ( mCurrentPosition < itemCount ) {
-    nsISupports* widget = mParent.mChildren->ElementAt(mCurrentPosition);
-//  NS_IF_ADDREF(widget);		already addref'd in nsSupportsArray::ElementAt()
-    *aItem = widget;
-  }
-  else
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-nsBaseWidget::Enumerator::First()
-{
-  PRUint32 itemCount = 0;
-  mParent.mChildren->Count(&itemCount);
-  if ( itemCount ) {
-    mCurrentPosition = 0;
-    return NS_OK;
-  }
-  else
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-nsBaseWidget::Enumerator::Last()
-{
-  PRUint32 itemCount = 0;
-  mParent.mChildren->Count(&itemCount);
-  if ( itemCount ) {
-    mCurrentPosition = itemCount - 1;
-    return NS_OK;
-  }
-  else
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-nsBaseWidget::Enumerator::IsDone()
-{
-  PRUint32 itemCount = 0;
-  mParent.mChildren->Count(&itemCount);
-
-  if ((mCurrentPosition == itemCount-1) || (itemCount == 0) ){ //empty lists always return done
-    return NS_OK;
-  }
-  else {
-    return NS_COMFALSE;
-  }
-  return NS_OK;
+  // release references to device context, toolkit, and app shell
+  NS_IF_RELEASE(mContext);
+  NS_IF_RELEASE(mToolkit);
+  NS_IF_RELEASE(mAppShell);
 }
 
 
@@ -564,11 +454,6 @@ NS_METHOD nsBaseWidget::SetBorderStyle(nsBorderStyle aBorderStyle)
   return NS_OK;
 }
 
-
-NS_METHOD nsBaseWidget::SetTitle(const nsString& aTitle) 
-{
-  return NS_OK;
-} 
 
 /**
 * Processes a mouse pressed event
@@ -658,7 +543,7 @@ NS_METHOD nsBaseWidget::SetBounds(const nsRect &aRect)
 
   return NS_OK;
 }
-
+ 
 
 
 /**
@@ -765,6 +650,7 @@ NS_METHOD nsBaseWidget::Paint(nsIRenderingContext& aRenderingContext,
   return NS_OK;
 }
 
+#ifdef LOSER
 NS_METHOD nsBaseWidget::SetVerticalScrollbar(nsIWidget * aWidget)
 {
   NS_IF_RELEASE(mVScrollbar);
@@ -772,6 +658,7 @@ NS_METHOD nsBaseWidget::SetVerticalScrollbar(nsIWidget * aWidget)
   NS_IF_ADDREF(mVScrollbar);
   return NS_OK;
 }
+#endif
 
 NS_METHOD nsBaseWidget::EnableDragDrop(PRBool aEnable)
 {
@@ -779,12 +666,6 @@ NS_METHOD nsBaseWidget::EnableDragDrop(PRBool aEnable)
 }
 
 NS_METHOD nsBaseWidget::SetModal(void)
-{
-  return NS_ERROR_FAILURE;
-}
-
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture)
 {
   return NS_ERROR_FAILURE;
 }
@@ -1079,3 +960,143 @@ nsBaseWidget::debug_CleanupCrapSoThatBruceAndPurifyAreHappy()
 
 #endif // NS_DEBUG
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//-------------------------------------------------------------------------
+//
+// Constructor
+//
+//-------------------------------------------------------------------------
+
+nsBaseWidget::Enumerator::Enumerator(nsBaseWidget & inParent)
+  : mCurrentPosition(0), mParent(inParent)
+{
+  NS_INIT_REFCNT();
+}
+
+
+//-------------------------------------------------------------------------
+//
+// Destructor
+//
+//-------------------------------------------------------------------------
+nsBaseWidget::Enumerator::~Enumerator()
+{   
+}
+
+
+//enumerator interfaces
+NS_IMETHODIMP
+nsBaseWidget::Enumerator::Next()
+{
+  PRUint32 itemCount = 0;
+  mParent.mChildren->Count(&itemCount);
+  if (mCurrentPosition < itemCount - 1 )
+    mCurrentPosition ++;
+  else
+    return NS_ERROR_FAILURE;
+  return NS_OK;
+}
+
+
+ 
+NS_IMETHODIMP
+nsBaseWidget::Enumerator::Prev()
+{
+  if (mCurrentPosition > 0 )
+    mCurrentPosition --;
+  else
+    return NS_ERROR_FAILURE;
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsBaseWidget::Enumerator::CurrentItem(nsISupports **aItem)
+{
+  if (!aItem)
+    return NS_ERROR_NULL_POINTER;
+
+  PRUint32 itemCount = 0;
+  mParent.mChildren->Count(&itemCount);
+  if ( mCurrentPosition < itemCount ) {
+    nsISupports* widget = mParent.mChildren->ElementAt(mCurrentPosition);
+//  NS_IF_ADDREF(widget);		already addref'd in nsSupportsArray::ElementAt()
+    *aItem = widget;
+  }
+  else
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsBaseWidget::Enumerator::First()
+{
+  PRUint32 itemCount = 0;
+  mParent.mChildren->Count(&itemCount);
+  if ( itemCount ) {
+    mCurrentPosition = 0;
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsBaseWidget::Enumerator::Last()
+{
+  PRUint32 itemCount = 0;
+  mParent.mChildren->Count(&itemCount);
+  if ( itemCount ) {
+    mCurrentPosition = itemCount - 1;
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsBaseWidget::Enumerator::IsDone()
+{
+  PRUint32 itemCount = 0;
+  mParent.mChildren->Count(&itemCount);
+
+  if ((mCurrentPosition == itemCount-1) || (itemCount == 0) ){ //empty lists always return done
+    return NS_OK;
+  }
+  else {
+    return NS_COMFALSE;
+  }
+  return NS_OK;
+}

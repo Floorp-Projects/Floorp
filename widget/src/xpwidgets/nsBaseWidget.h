@@ -44,127 +44,129 @@ class nsBaseWidget : public nsIWidget
 {
 
 public:
-    nsBaseWidget();
-    virtual ~nsBaseWidget();
+  nsBaseWidget();
+  virtual ~nsBaseWidget();
+  
+  NS_DECL_ISUPPORTS
+  
+  NS_IMETHOD              PreCreateWidget(nsWidgetInitData *aWidgetInitData) { return NS_OK;}
+  
+  // nsIWidget interface
+  NS_IMETHOD              CaptureMouse(PRBool aCapture);
+  NS_IMETHOD              InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
+  NS_IMETHOD              GetClientData(void*& aClientData);
+  NS_IMETHOD              SetClientData(void* aClientData);
+  NS_IMETHOD              Destroy();
+  virtual nsIWidget*      GetParent(void);
+  virtual nsIEnumerator*  GetChildren();
+  virtual void            AddChild(nsIWidget* aChild);
+  virtual void            RemoveChild(nsIWidget* aChild);
 
-    NS_DECL_ISUPPORTS
+  NS_IMETHOD              SetZIndex(PRInt32 aZIndex);
+  NS_IMETHOD              GetZIndex(PRInt32* aZIndex);
 
-    NS_IMETHOD              PreCreateWidget(nsWidgetInitData *aWidgetInitData) { return NS_OK;}
-
-      // nsIWidget interface
-    NS_IMETHOD              CaptureMouse(PRBool aCapture);
-    NS_IMETHOD              GetClientData(void*& aClientData);
-    NS_IMETHOD              SetClientData(void* aClientData);
-    NS_IMETHOD              Destroy();
-    virtual nsIWidget*      GetParent(void);
-    virtual nsIEnumerator*  GetChildren();
-    virtual void            AddChild(nsIWidget* aChild);
-    virtual void            RemoveChild(nsIWidget* aChild);
-
-    NS_IMETHOD              SetZIndex(PRInt32 aZIndex);
-    NS_IMETHOD              GetZIndex(PRInt32* aZIndex);
-
-    virtual nscolor         GetForegroundColor(void);
-    NS_IMETHOD              SetForegroundColor(const nscolor &aColor);
-    virtual nscolor         GetBackgroundColor(void);
-    NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
-    virtual nsCursor        GetCursor();
-    NS_IMETHOD              SetCursor(nsCursor aCursor);
-    virtual nsIRenderingContext* GetRenderingContext();
-    virtual nsIDeviceContext* GetDeviceContext();
-    virtual nsIAppShell *   GetAppShell();
-    virtual nsIToolkit*     GetToolkit();  
-    NS_IMETHOD              SetModal(void); 
-    NS_IMETHOD              SetWindowType(nsWindowType aWindowType);
-    NS_IMETHOD              SetBorderStyle(nsBorderStyle aBorderStyle); 
-    NS_IMETHOD              SetTitle(const nsString& aTitle); 
-    NS_IMETHOD              AddMouseListener(nsIMouseListener * aListener);
-    NS_IMETHOD              AddEventListener(nsIEventListener * aListener);
-    NS_IMETHOD 				AddMenuListener(nsIMenuListener * aListener);
-    NS_IMETHOD              SetBounds(const nsRect &aRect);
-    NS_IMETHOD              GetBounds(nsRect &aRect);
-    NS_IMETHOD              GetBoundsAppUnits(nsRect &aRect, float aAppUnits);
-    NS_IMETHOD              GetClientBounds(nsRect &aRect);
-    NS_IMETHOD              GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
-    NS_IMETHOD              Paint(nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect);
-    NS_IMETHOD              SetVerticalScrollbar(nsIWidget * aScrollbar);
-    NS_IMETHOD              EnableDragDrop(PRBool aEnable);
-    virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
-    virtual void            FreeNativeData(void * data, PRUint32 aDataType) {}//~~~
-
-    NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture);
+  virtual nscolor         GetForegroundColor(void);
+  NS_IMETHOD              SetForegroundColor(const nscolor &aColor);
+  virtual nscolor         GetBackgroundColor(void);
+  NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
+  virtual nsCursor        GetCursor();
+  NS_IMETHOD              SetCursor(nsCursor aCursor);
+  virtual nsIRenderingContext* GetRenderingContext();
+  virtual nsIDeviceContext* GetDeviceContext();
+  virtual nsIAppShell *   GetAppShell();
+  virtual nsIToolkit*     GetToolkit();  
+  NS_IMETHOD              SetModal(void); 
+  NS_IMETHOD              SetWindowType(nsWindowType aWindowType);
+  NS_IMETHOD              SetBorderStyle(nsBorderStyle aBorderStyle); 
+  NS_IMETHOD              AddMouseListener(nsIMouseListener * aListener);
+  NS_IMETHOD              AddEventListener(nsIEventListener * aListener);
+  NS_IMETHOD              AddMenuListener(nsIMenuListener * aListener);
+  NS_IMETHOD              SetBounds(const nsRect &aRect);
+  NS_IMETHOD              GetBounds(nsRect &aRect);
+  NS_IMETHOD              GetBoundsAppUnits(nsRect &aRect, float aAppUnits);
+  NS_IMETHOD              GetClientBounds(nsRect &aRect);
+  NS_IMETHOD              GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
+  NS_IMETHOD              Paint(nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect);
+#ifdef LOSER
+  NS_IMETHOD              SetVerticalScrollbar(nsIWidget * aScrollbar);
+#endif
+  NS_IMETHOD              EnableDragDrop(PRBool aEnable);
+  virtual void            ConvertToDeviceCoordinates(nscoord  &aX,nscoord &aY) {}
+  virtual void            FreeNativeData(void * data, PRUint32 aDataType) {}//~~~
 
 protected:
 
-    virtual void            DrawScaledRect(nsIRenderingContext& aRenderingContext,
-                                           const nsRect & aRect,
-                                           float aScale,
-                                           float aAppUnits);
-    virtual void            DrawScaledLine(nsIRenderingContext& aRenderingContext, 
-                                           nscoord aSX, nscoord aSY, nscoord aEX, nscoord aEY, 
-                                           float   aScale, float aAppUnits, PRBool aIsHorz);
-    virtual void            OnDestroy();
-    virtual void            BaseCreate(nsIWidget *aParent,
-                            const nsRect &aRect,
-                            EVENT_CALLBACK aHandleEventFunction,
-                            nsIDeviceContext *aContext,
-                            nsIAppShell *aAppShell,
-                            nsIToolkit *aToolkit,
-                            nsWidgetInitData *aInitData);
+  virtual void            DrawScaledRect(nsIRenderingContext& aRenderingContext,
+                                         const nsRect & aRect,
+                                         float aScale,
+                                         float aAppUnits);
+  virtual void            DrawScaledLine(nsIRenderingContext& aRenderingContext, 
+                                         nscoord aSX, nscoord aSY, nscoord aEX, nscoord aEY, 
+                                         float   aScale, float aAppUnits, PRBool aIsHorz);
+  virtual void            OnDestroy();
+  virtual void            BaseCreate(nsIWidget *aParent,
+                                     const nsRect &aRect,
+                                     EVENT_CALLBACK aHandleEventFunction,
+                                     nsIDeviceContext *aContext,
+                                     nsIAppShell *aAppShell,
+                                     nsIToolkit *aToolkit,
+                                     nsWidgetInitData *aInitData);
 
 protected: 
-    void*             mClientData;
-    EVENT_CALLBACK    mEventCallback;
-    nsIDeviceContext  *mContext;
-    nsIAppShell       *mAppShell;
-    nsIToolkit        *mToolkit;
-    nsIMouseListener  *mMouseListener;
-    nsIEventListener  *mEventListener;
-    nsIMenuListener   *mMenuListener;
-    nscolor           mBackground;
-    nscolor           mForeground;
-    nsCursor          mCursor;
-    nsWindowType      mWindowType;
-    nsBorderStyle     mBorderStyle;
-    PRBool            mIsShiftDown;
-    PRBool            mIsControlDown;
-    PRBool            mIsAltDown;
-    PRBool            mIsDestroying;
-    PRBool            mOnDestroyCalled;
-    nsRect            mBounds;
-    nsIWidget        *mVScrollbar;
-    PRInt32           mZIndex;
+  void*             mClientData;
+  EVENT_CALLBACK    mEventCallback;
+  nsIDeviceContext  *mContext;
+  nsIAppShell       *mAppShell;
+  nsIToolkit        *mToolkit;
+  nsIMouseListener  *mMouseListener;
+  nsIEventListener  *mEventListener;
+  nsIMenuListener   *mMenuListener;
+  nscolor           mBackground;
+  nscolor           mForeground;
+  nsCursor          mCursor;
+  nsWindowType      mWindowType;
+  nsBorderStyle     mBorderStyle;
+  PRBool            mIsShiftDown;
+  PRBool            mIsControlDown;
+  PRBool            mIsAltDown;
+  PRBool            mIsDestroying;
+  PRBool            mOnDestroyCalled;
+  nsRect            mBounds;
+#ifdef LOSER
+  nsIWidget        *mVScrollbar;
+#endif
+  PRInt32           mZIndex;
 
     // keep the list of children
-    nsCOMPtr<nsISupportsArray> mChildren;
+  nsCOMPtr<nsISupportsArray> mChildren;
     
-    class Enumerator : public nsIBidirectionalEnumerator {
-    public:
-      NS_DECL_ISUPPORTS
+  class Enumerator : public nsIBidirectionalEnumerator {
+  public:
+    NS_DECL_ISUPPORTS
 
-      Enumerator(nsBaseWidget & inParent);
-      virtual ~Enumerator();
+    Enumerator(nsBaseWidget & inParent);
+    virtual ~Enumerator();
 
-      NS_DECL_NSIENUMERATOR
-      NS_DECL_NSIBIDIRECTIONALENUMERATOR
+    NS_DECL_NSIENUMERATOR
+    NS_DECL_NSIBIDIRECTIONALENUMERATOR
 
-    private:
-      PRUint32       mCurrentPosition;
-      nsBaseWidget& mParent;
-    };
-    friend class Enumerator;
+  private:
+    PRUint32       mCurrentPosition;
+    nsBaseWidget& mParent;
+  };
+  friend class Enumerator;
 
     // Enumeration of the methods which are accessable on the "main GUI thread"
     // via the CallMethod(...) mechanism...
     // see nsSwitchToUIThread
-    enum {
-        CREATE       = 0x0101,
-        CREATE_NATIVE,
-        DESTROY, 
-        SET_FOCUS,
-        SET_CURSOR,
-        CREATE_HACK
-    };
+  enum {
+    CREATE       = 0x0101,
+    CREATE_NATIVE,
+    DESTROY, 
+    SET_FOCUS,
+    SET_CURSOR,
+    CREATE_HACK
+  };
 
 #ifdef NS_DEBUG
 protected:

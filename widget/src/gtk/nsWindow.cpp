@@ -426,6 +426,10 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
     mUpdateArea->Union(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
 
 
+    //    NS_ADDREF(mUpdateArea);
+    //    event.region = mUpdateArea;
+
+
     //    printf("\n\n");
     PRInt32 x, y, w, h;
     mUpdateArea->GetBoundingBox(&x,&y,&w,&h);
@@ -453,6 +457,7 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
 
       result = DispatchWindowEvent(&event);
       NS_RELEASE(event.renderingContext);
+      //      NS_RELEASE(mUpdateArea);
     }
 
 
@@ -509,6 +514,9 @@ PRBool nsWindow::OnDraw(nsPaintEvent &event)
 #endif // NS_DEBUG
 
 
+    //    NS_ADDREF(mUpdateArea);
+    //    event.region = mUpdateArea;
+
     //    printf("\n\n");
     PRInt32 x, y, w, h;
     mUpdateArea->GetBoundingBox(&x,&y,&w,&h);
@@ -536,6 +544,7 @@ PRBool nsWindow::OnDraw(nsPaintEvent &event)
 
       result = DispatchWindowEvent(&event);
       NS_RELEASE(event.renderingContext);
+      //      NS_RELEASE(mUpdateArea);
     }
 
 
