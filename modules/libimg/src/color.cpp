@@ -38,7 +38,7 @@
                Includes dithering for B&W displays, but not dithering
                for PseudoColor displays which can be found in dither.c.
                
-   $Id: color.cpp,v 3.17 2001/01/10 06:12:10 jgmyers%netscape.com Exp $
+   $Id: color.cpp,v 3.18 2001/06/13 01:13:35 pavlov%netscape.com Exp $
 */
 
 
@@ -518,7 +518,7 @@ ConvertRGBToRGB24(il_container *ic,
     if (!mask)
     {
         while (sp < end) {
-#if !defined(XP_UNIX)  || defined(NTO)
+#if !defined(XP_UNIX)  || defined(MOZ_WIDGET_PHOTON)
             out[2] = sp[0];
             out[1] = sp[1];
             out[0] = sp[2];
@@ -534,7 +534,7 @@ ConvertRGBToRGB24(il_container *ic,
         while (sp < end) {
             if (*mask++)
             {
-#if !defined(XP_UNIX) || defined(NTO)
+#if !defined(XP_UNIX) || defined(MOZ_WIDGET_PHOTON)
             out[2] = sp[0];
             out[1] = sp[1];
             out[0] = sp[2];
