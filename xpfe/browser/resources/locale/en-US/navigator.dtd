@@ -15,8 +15,8 @@
 
 <!ENTITY browserCmd.label	"New Navigator Window">
 <!ENTITY browserCmd.accesskey	"n">
-<!ENTITY openCmd.label "Open Web Location...">
-<!ENTITY openCmd.accesskey "l">
+<!ENTITY openCmd.label "Open Address...">
+<!ENTITY openCmd.accesskey "r">
 <!ENTITY openCmd.commandkey "l">
 <!ENTITY openFileCmd.label "Open File...">
 <!ENTITY openFileCmd.accesskey "o">
