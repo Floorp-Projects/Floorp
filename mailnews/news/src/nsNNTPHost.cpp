@@ -89,8 +89,8 @@ public:
                                 nsINNTPNewsgroupList **_retval);
 
     NS_IMETHOD GetNewsgroupAndNumberOfID(const char *message_id,
-                                          nsINNTPNewsgroup **group,
-                                          PRUint32 *messageNumber);
+                                         nsINNTPNewsgroup **group,
+                                         PRUint32 *messageNumber);
 
     /* get this from MSG_Master::FindNewsFolder */
     NS_IMETHOD FindNewsgroup(const char *groupname, PRBool create,
@@ -107,6 +107,8 @@ public:
     // Virtual groups
     NS_IMETHOD AddVirtualGroup(const char *responseText);
     NS_IMETHOD SetIsVirtualGroup(const char *groupname, PRBool isVirtual);
+    NS_IMETHOD SetIsVirtualGroup(const char *groupname, PRBool isVirtual,
+                                 nsMsgGroupRecord *inGroupRecord);
     NS_IMETHOD GetIsVirtualGroup(const char *groupname, PRBool *_retval);
 
     // custom/searchable headers
@@ -140,6 +142,9 @@ public:
     
     NS_IMETHOD FindGroup(const char* name, nsINNTPNewsgroup* *_retval);
     NS_IMETHOD AddGroup(const char *groupname,
+                        nsINNTPNewsgroup **retval);
+    
+    NS_IMETHOD AddGroup(const char *groupname,
                         nsMsgGroupRecord *groupRecord,
                         nsINNTPNewsgroup **retval);
     
@@ -165,6 +170,12 @@ public:
        must be free'd using PR_Free(); the
        individual strings must not be free'd. */
     NS_IMETHOD GetGroupList(char **_retval);
+
+    NS_IMETHOD DisplaySubscribedGroup(const char *groupname,
+                                      PRInt32 first_message,
+                                      PRInt32 last_message,
+                                      PRInt32 total_messages,
+                                      PRBool visit_now);
     // end of nsINNTPHost
     
 private:
@@ -540,6 +551,7 @@ nsNNTPHost::CleanUp() {
 		XP_HashTableDestroy(m_searchableGroupCharsets);
 		m_searchableGroupCharsets = NULL;
 	}
+    return NS_OK;
 }
 
 
@@ -870,8 +882,6 @@ nsNNTPHost::WriteNewsrc()
 	// even if we do somehow get called without the dirty bit set.
 
 	XP_File fid=0;
-    char *newsRCFilename;
-    nsresult rv;
     
     fid = XP_FileOpen(GetNewsrcFileName(), xpTemporaryNewsRC,
                       XP_FILE_WRITE_BIN);
@@ -886,11 +896,8 @@ nsNNTPHost::WriteNewsrc()
 	   preferences don't appear to change. */
 	{
         XP_StatStruct st;
-        char *newsRCFile;
-        nsresult rv;
 
-        if (NS_FAILED(rv) &&
-            XP_Stat (GetNewsrcFileName(), &st, xpNewsRC) == 0)
+        if (XP_Stat (GetNewsrcFileName(), &st, xpNewsRC) == 0)
 			/* Ignore errors; if it fails, bummer. */
 
 		/* SCO doesn't define fchmod at all.  no big deal.
@@ -963,7 +970,6 @@ nsNNTPHost::WriteNewsrc()
 	}
 
 	if (status < 0) {
-        char *newsRCFile;
         
 		XP_FileRemove(GetNewsrcFileName(), xpTemporaryNewsRC);
 		return status;
@@ -1597,6 +1603,14 @@ nsNNTPHost::FindGroup(const char* name, nsINNTPNewsgroup* *retval)
 
 nsresult
 nsNNTPHost::AddGroup(const char *groupName,
+                     nsINNTPNewsgroup **retval)
+{
+    return AddGroup(groupName, NULL, retval);
+}
+
+
+nsresult
+nsNNTPHost::AddGroup(const char *groupName,
                      nsMsgGroupRecord *inGroupRecord,
                      nsINNTPNewsgroup **retval)
 {
@@ -1604,7 +1618,6 @@ nsNNTPHost::AddGroup(const char *groupName,
 	nsINNTPCategoryContainer *categoryContainer = NULL;
 	char* containerName = NULL;
 	PRBool needpaneupdate = PR_FALSE;
-    nsresult result = NS_OK;
     PRBool isSubscribed=FALSE;
     
 	nsMsgGroupRecord* group = (inGroupRecord) ? inGroupRecord : FindOrCreateGroup(groupName);
@@ -1761,7 +1774,8 @@ DONE:
     NS_IF_RELEASE(categoryContainer);
 
 	if (containerName) delete [] containerName;
-    *retval = newsInfo;
+    if (retval) *retval = newsInfo;
+    return NS_OK;
 }
 
 nsINNTPCategoryContainer *
@@ -1865,6 +1879,7 @@ nsNNTPHost::RemoveGroup (const nsINNTPNewsgroup *newsInfo)
 		infolist->Remove(newsInfo);
         */
 	}
+    return NS_OK;
 }
 
 nsresult
@@ -1873,7 +1888,8 @@ nsNNTPHost::RemoveGroupByName(const char* groupName)
 	nsINNTPNewsgroup *newsInfo = NULL;
 
     nsresult rv = FindGroup(groupName, &newsInfo);
-	RemoveGroup (newsInfo);
+    if (NS_SUCCEEDED(rv))
+        RemoveGroup (newsInfo);
 
     return NS_OK;
 }
@@ -1899,7 +1915,7 @@ nsNNTPHost::GetDBDirName()
 		// filesystem, or a hashified version of it, if the hostname is too
 		// long to fit.
 		char hashedname[MAX_HOST_NAME_LEN + 1];
-		PRBool needshash = PL_strlen(m_filename) > MAX_HOST_NAME_LEN;
+		PRBool needshash = (PL_strlen(m_filename) > MAX_HOST_NAME_LEN);
 #if defined(XP_WIN16)  || defined(XP_OS2)
 		if (!needshash) {
 			needshash = PL_strchr(m_filename, '.') != NULL ||
@@ -1954,7 +1970,7 @@ nsNNTPHost::GetNumGroupsNeedingCounts(PRInt32 *value)
 nsresult
 nsNNTPHost::GetFirstGroupNeedingCounts(char **result)
 {
-	if (!m_groups) return NULL;
+	if (!m_groups) return NS_ERROR_NULL_POINTER;
 	int num = m_groups->GetSize();
 	for (int i=0 ; i<num ; i++) {
 		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
@@ -1991,7 +2007,7 @@ nsNNTPHost::GetFirstGroupNeedingExtraInfo(char **result)
 	for (grec = m_groupTree->GetChildren();	 grec; grec = grec->GetNextAlphabetic()) {
 		if (grec && grec->NeedsExtraInfo()) {
 			char *fullName = grec->GetFullName();
-			char *result = PL_strdup(fullName);
+			*result = PL_strdup(fullName);
 			delete [] fullName;
             return NS_OK;
 		}
@@ -2032,6 +2048,7 @@ nsNNTPHost::AddExtension (const char *ext)
 		if (ourExt)
 			m_supportedExtensions.Add(ourExt);
 	}
+    return NS_OK;
 }
 
 nsresult
@@ -2068,6 +2085,7 @@ nsNNTPHost::AddSearchableGroup (const char *group)
 			XP_Puthash(m_searchableGroupCharsets, ourGroup, space);
 		}
 	}
+    return NS_OK;
 }
 
 nsresult
@@ -2127,7 +2145,7 @@ nsNNTPHost::QuerySearchableGroupCharsets(const char *group, char **result)
     if (gotGroup)
 	{
 		// Look up the searchable group for its supported charsets
-		*result = (const char *) XP_Gethash(m_searchableGroupCharsets, searchableGroup, NULL);
+		*result = (char *) XP_Gethash(m_searchableGroupCharsets, searchableGroup, NULL);
 	}
 
 	return NS_OK;
@@ -2144,6 +2162,7 @@ nsNNTPHost::AddSearchableHeader (const char *header)
 		if (ourHeader)
 			m_searchableHeaders.Add(ourHeader);
 	}
+    return NS_OK;
 }
 
 nsresult
@@ -2197,6 +2216,7 @@ nsNNTPHost::SetPushAuth(PRBool value)
 		m_pushAuth = value;
 		m_groupTreeDirty |= 1;
 	}
+    return NS_OK;
 }
 
 
@@ -2216,8 +2236,6 @@ nsNNTPHost::GetURLBase()
 
 int nsNNTPHost::RemoveHost()
 {
-    nsresult rv;
-    
 	if (m_groupFile) {
 		XP_FileClose(m_groupFile);
 		m_groupFile = NULL;
@@ -2446,19 +2464,26 @@ nsresult
 nsNNTPHost::GetIsVirtualGroup(const char* groupname, PRBool *retval)
 {
 	nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
-	if (!group) *retval = PR_FALSE;
-	else return group->IsVirtual(retval);
+	if (!group) {
+        *retval = PR_FALSE;
+        return NS_OK;
+    }
+	else
+        return group->IsVirtual(retval);
 }
 
 
 nsresult
 nsNNTPHost::SetIsVirtualGroup(const char* groupname, PRBool value)
 {
-#if 0
+    return SetIsVirtualGroup(groupname, value, nsnull);
+}
+nsresult
+nsNNTPHost::SetIsVirtualGroup(const char* groupname, PRBool value,
+                              nsMsgGroupRecord* inGroupRecord)
+{
 	nsMsgGroupRecord* group = (inGroupRecord) ? inGroupRecord : FindOrCreateGroup(groupname);
-#endif
-    // this used to come from the parameters. is it ok to discard?
-    nsMsgGroupRecord* group = FindOrCreateGroup(groupname);
+
 	if (!group) return NS_ERROR_OUT_OF_MEMORY;
 
 	nsresult rv = group->SetIsVirtual(value);
@@ -3044,7 +3069,7 @@ nsNNTPHost::AddNewNewsgroup(const char *groupName,
     if (xactiveFlags)
     {
         SetIsCategoryContainer(groupName, bIsCategoryContainer, groupRecord);
-        SetIsVirtual(groupName, bIsVirtual, groupRecord);
+        SetIsVirtualGroup(groupName, bIsVirtual, groupRecord);
     }
 
     if (status > 0) {
@@ -3076,6 +3101,41 @@ nsNNTPHost::AddNewNewsgroup(const char *groupName,
     return NS_OK;
 }
 
+nsresult
+nsNNTPHost::DisplaySubscribedGroup(const char *group,
+                                   PRInt32 first_message,
+                                   PRInt32 last_message,
+                                   PRInt32 total_messages,
+                                   PRBool visit_now)
+{
+    nsresult rv;
+    nsINNTPNewsgroup *newsgroup=NULL;
+
+    
+    rv = FindGroup(group, &newsgroup);
+    
+    SetGroupSucceeded(TRUE);
+    if (!newsgroup && visit_now) // let's try autosubscribe...
+    {
+        rv = AddGroup(group, NULL, &newsgroup);
+    }
+
+    if (!newsgroup)
+        return NS_OK;
+    else {
+        PRBool subscribed;
+        newsgroup->IsSubscribed(&subscribed);
+        if (!subscribed)
+            newsgroup->SetSubscribed(TRUE);
+    }
+
+    if (!newsgroup) return NS_OK;
+    newsgroup->UpdateSummaryFromNNTPInfo(first_message, last_message,
+                                    total_messages);
+    return NS_OK;
+}
+
+
 #define MSG_IMPL_GETFOLDER(_type)\
 nsIMsgFolder * \
 nsNNTPHost::getFolderFor(_type * _class) {\
@@ -3089,9 +3149,3 @@ nsNNTPHost::getFolderFor(_type * _class) {\
 MSG_IMPL_GETFOLDER(nsINNTPNewsgroup)
 MSG_IMPL_GETFOLDER(nsINNTPCategoryContainer)
     
-// to test if this interface implements everything
-#if 0                           
-static int testme() {
-    nsNNTPHost *host = new nsNNTPHost("abc",42);
-}
-#endif
