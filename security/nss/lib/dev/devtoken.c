@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.8 $ $Date: 2002/03/04 22:39:21 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.9 $ $Date: 2002/03/06 01:44:47 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -195,6 +195,9 @@ nssToken_GetName
   NSSToken *tok
 )
 {
+    if (tok->name[0] == 0) {
+	(void) nssToken_IsPresent(tok);
+    } 
     return tok->name;
 }
 
@@ -233,6 +236,7 @@ nssToken_IsPresent
     ckrv = CKAPI(slot)->C_GetSlotInfo(slot->slotID, &slotInfo);
     if (ckrv != CKR_OK) {
 	nssSession_ExitMonitor(session);
+	token->name[0] = 0;
 	return PR_FALSE;
     }
     slot->ckFlags = slotInfo.flags;
@@ -245,6 +249,7 @@ nssToken_IsPresent
 	    session->handle = CK_INVALID_SESSION;
 	}
 	nssSession_ExitMonitor(session);
+	token->name[0] = 0;
 	return PR_FALSE;
     }
     /* token is present, use the session info to determine if the card
@@ -267,6 +272,7 @@ nssToken_IsPresent
 	/* token has been removed, need to refresh with new session */
 	nssrv = nssSlot_Refresh(slot);
 	if (nssrv != PR_SUCCESS) {
+	    token->name[0] = 0;
 	    return PR_FALSE;
 	}
 	return PR_TRUE;
