@@ -112,6 +112,14 @@ class NS_COM nsXPIDLString
 
       void Adopt( char_type* aNewValue ) { *PrepareForUseAsOutParam() = aNewValue; }
 
+        // overridden to make getter_Copies mechanism work
+      const char_type* get() const
+        {
+          const buffer_handle_type* handle = GetBufferHandle();
+          // NS_ASSERTION(handle, "handle is null!");
+          return handle ? handle->DataStart() : 0;
+        }
+
         // deprecated, to be eliminated
       operator const char_type*() const { return get(); }
       char_type operator[]( int i ) const { return get()[ i ]; }
@@ -208,6 +216,14 @@ class NS_COM nsXPIDLCString
         }
 
       void Adopt( char_type* aNewValue ) { *PrepareForUseAsOutParam() = aNewValue; }
+
+        // overridden to make getter_Copies mechanism work
+      const char_type* get() const
+        {
+          const buffer_handle_type* handle = GetBufferHandle();
+          // NS_ASSERTION(handle, "handle is null!");
+          return handle ? handle->DataStart() : 0;
+        }
 
         // deprecated, to be eliminated
       operator const char_type*() const { return get(); }

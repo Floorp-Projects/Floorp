@@ -26,60 +26,24 @@
 #ifndef nsAFlatString_h___
 #define nsAFlatString_h___
 
-#ifndef nsAString_h___
-#include "nsAString.h"
+#ifndef nsASingleFragmenttring_h___
+#include "nsASingleFragmentString.h"
 #endif
 
 class NS_COM nsAFlatString
-    : public nsAString
+    : public nsASingleFragmentString
   {
     public:
         // don't really want this to be virtual, and won't after |obsolete_nsString| is really dead
-      virtual const char_type* get() const;
-      char_type operator[]( PRUint32 i ) const { return get()[ i ]; }
-      char_type CharAt( PRUint32 ) const;
-
-      virtual PRUint32 Length() const;
-
-//  protected:  // can't hide these (yet), since I call them from forwarding routines in |nsPromiseFlatString|
-    public:
-      virtual const char_type* GetReadableFragment( const_fragment_type&, nsFragmentRequest, PRUint32 ) const;
-      virtual       char_type* GetWritableFragment(       fragment_type&, nsFragmentRequest, PRUint32 );
+      virtual const char_type* get() const { const char_type* temp; return BeginReading(temp); }
   };
 
 class NS_COM nsAFlatCString
-    : public nsACString
+    : public nsASingleFragmentCString
   {
     public:
         // don't really want this to be virtual, and won't after |obsolete_nsCString| is really dead
-      virtual const char_type* get() const;
-      char_type operator[]( PRUint32 i ) const      { return get()[ i ]; }
-      char_type CharAt( PRUint32 ) const;
-
-      virtual PRUint32 Length() const;
-
-//  protected:  // can't hide these (yet), since I call them from forwarding routines in |nsPromiseFlatCString|
-    public:
-      virtual const char_type* GetReadableFragment( const_fragment_type&, nsFragmentRequest, PRUint32 ) const;
-      virtual       char_type* GetWritableFragment(       fragment_type&, nsFragmentRequest, PRUint32 );
+      virtual const char_type* get() const { const char_type* temp; return BeginReading(temp); }
   };
-
-inline
-nsAFlatString::char_type
-nsAFlatString::CharAt( PRUint32 i ) const
-  {
-    NS_ASSERTION(i<Length(), "|CharAt| out-of-range");
-    return operator[](i);
-  }
-
-inline
-nsAFlatCString::char_type
-nsAFlatCString::CharAt( PRUint32 i ) const
-  {
-    NS_ASSERTION(i<Length(), "|CharAt| out-of-range");
-    return operator[](i);
-  }
-
-
 
 #endif /* !defined(nsAFlatString_h___) */
