@@ -332,7 +332,8 @@ nsDocLoaderImpl::Stop(void)
     }
   }
 
-  rv = mLoadGroup->Cancel(NS_BINDING_ABORTED);
+  if (mLoadGroup)
+    rv = mLoadGroup->Cancel(NS_BINDING_ABORTED);
 
   return rv;
 }       
@@ -473,7 +474,8 @@ nsDocLoaderImpl::Destroy()
 
   mDocumentRequest = 0;
 
-  mLoadGroup->SetGroupObserver(nsnull);
+  if (mLoadGroup)
+    mLoadGroup->SetGroupObserver(nsnull);
 
   return NS_OK;
 }
@@ -960,7 +962,6 @@ nsDocLoaderImpl::GetIsLoadingDocument(PRBool *aIsLoadingDocument)
 nsresult nsDocLoaderImpl::GetMaxTotalProgress(PRInt32 *aMaxTotalProgress)
 {
   PRInt32 count = 0;
-  nsresult rv = NS_OK;
   PRInt32 invididualProgress, newMaxTotal;
 
   newMaxTotal = 0;
