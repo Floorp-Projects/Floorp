@@ -2535,7 +2535,7 @@ MOZ_ARG_ENABLE_BOOL(gprof,
 
 MOZ_ARG_ENABLE_BOOL(insure,
 [  --enable-insure         Enable insure++ instrumentation (linux only)],
-  [ MOZ_INSURE="insure" MOZ_INSURIFYING=1 MOZ_INSURE_DIRS="mozilla" MOZ_INSURE_EXCLUDE_DIRS="mozilla/config" ])
+  [ MOZ_INSURE="insure" MOZ_INSURIFYING=1 MOZ_INSURE_DIRS="." MOZ_INSURE_EXCLUDE_DIRS="config" ])
 
 MOZ_ARG_WITH_STRING(insure-dirs,
 [  --with-insure-dirs=\$dirs Dirs to instrument ],
@@ -2543,7 +2543,7 @@ MOZ_ARG_WITH_STRING(insure-dirs,
 
 MOZ_ARG_WITH_STRING(insure-exclude-dirs,
 [  --with-insure-exclude-dirs=\$dirs Dirs to not instrument ],
-  MOZ_INSURE_EXCLUDE_DIRS="mozilla/config $withval" )
+  MOZ_INSURE_EXCLUDE_DIRS="config $withval" )
 
 MOZ_ARG_ENABLE_BOOL(profile,
 [  --enable-profile        Enable profiling (solaris only)],
