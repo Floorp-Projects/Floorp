@@ -46,6 +46,9 @@
       var checked = document.getElementById("advancedMailFTP").checked;
       var field = document.getElementById("advancedMailFTPAddress");
       field.disabled = !checked;
+
+      if (! field.disabled)
+        field.focus();
     }
 
     /* 
