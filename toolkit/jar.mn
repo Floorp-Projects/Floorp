@@ -43,6 +43,7 @@ toolkit.jar:
          content/global/widgets/autoscroll_all.png          (content/widgets/autoscroll_all.png)
          content/global/widgets/autoscroll_h.png            (content/widgets/autoscroll_h.png)
          content/global/widgets/autoscroll_v.png            (content/widgets/autoscroll_v.png)
++        content/global/buildconfig.html                    (content/buildconfig.html)
 
 en-US.jar:
 +        locale/en-US/global/charset.dtd                    (locale/charset.dtd)
@@ -57,3 +58,4 @@ en-US.jar:
 +        locale/en-US/global/tabbrowser.properties          (locale/widgets/tabbrowser.properties)
 +        locale/en-US/global/tabbrowser.dtd                 (locale/widgets/tabbrowser.dtd)
 +        locale/en-US/global/textcontext.dtd                (locale/widgets/textcontext.dtd)
++        locale/global/build.dtd                            (locale/build.dtd)

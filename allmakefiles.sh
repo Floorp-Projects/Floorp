@@ -881,6 +881,7 @@ chrome/src/Makefile
 chrome/tools/Makefile
 chrome/tools/chromereg/Makefile
 toolkit/Makefile
+toolkit/content/buildconfig.html
 toolkit/components/autocomplete/Makefile
 toolkit/components/autocomplete/public/Makefile
 toolkit/components/autocomplete/src/Makefile
