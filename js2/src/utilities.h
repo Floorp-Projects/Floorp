@@ -30,23 +30,26 @@
 #include <cstdarg>
 
 #ifndef _WIN32	// Microsoft Visual C++ 6.0 bug: standard identifiers should be in std namespace
-using std::size_t;
-using std::ptrdiff_t;
-using std::va_list;
-using std::strlen;
-using std::strcpy;
-using std::FILE;
-using std::getc;
-using std::fgets;
-using std::fputc;
-using std::fputs;
-using std::sprintf;
-using std::snprintf;
-using std::vsnprintf;
-using std::fprintf;
-#define STD std
+ using std::size_t;
+ using std::ptrdiff_t;
+ using std::va_list;
+ using std::strlen;
+ using std::strcpy;
+ using std::FILE;
+ using std::getc;
+ using std::fgets;
+ using std::fputc;
+ using std::fputs;
+ using std::sprintf;
+ using std::snprintf;
+ using std::vsnprintf;
+ using std::fprintf;
+ #define STD std
 #else
-#define STD
+ #define STD
+ // Microsoft Visual C++ 6.0 bug: these identifiers should not begin with underscores
+ #define snprintf _snprintf
+ #define vsnprintf _vsnprintf
 #endif
 using std::string;
 using std::auto_ptr;
