@@ -39,7 +39,7 @@ EXPORTS =				\
 	nsIDOMPaintListener.h		\
 	nsIDOMDragListener.h		\
 	nsIDOMNSEvent.h			\
-	nsIDOMTextEvent.h		\
+	nsIDOMTextListener.h		\
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
