@@ -111,6 +111,7 @@ LIBRARY			:= $(addprefix $(OBJDIR)/, $(LIBRARY))
 
 ifndef NO_SHARED_LIB
 ifdef MKSHLIB
+
 ifeq ($(OS_ARCH),OS2)
 SHARED_LIBRARY		:= $(LIBRARY:.lib=.dll)
 MAPS			:= $(LIBRARY:.lib=.map)
@@ -118,6 +119,12 @@ else  # OS2
 ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY		:= $(LIBRARY:.lib=.dll)
 else  # WINNT
+
+# Unix only
+ifdef LIB_IS_C_ONLY
+MKSHLIB			= $(MKCSHLIB)
+endif
+
 ifeq ($(OS_ARCH),HP-UX)
 SHARED_LIBRARY		:= $(LIBRARY:.a=.sl)
 else  # HPUX
