@@ -51,9 +51,6 @@ static void PR_CALLBACK row_callback(png_structp png_ptr, png_bytep new_row,
 static void PR_CALLBACK end_callback(png_structp png_ptr, png_infop info);
 static void PR_CALLBACK il_png_error_handler(png_structp png_ptr, png_const_charp msg);
 
-int il_debug;
-PRLogModuleInfo *il_log_module = NULL;
-
 #define CAN_SUPPORT_8_BIT_MASK
 
 PRBool
