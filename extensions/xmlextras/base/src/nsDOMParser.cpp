@@ -416,6 +416,7 @@ nsDOMParser::ParseFromString(const PRUnichar *str,
   return ParseFromStream(stream, "UTF-8", contentLength, contentType, _retval);
 }
 
+
 /* nsIDOMDocument parseFromStream (in nsIInputStream stream, in string charset, in string contentType); */
 NS_IMETHODIMP 
 nsDOMParser::ParseFromStream(nsIInputStream *stream, 
@@ -449,7 +450,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
     JSContext* cx;
     rv = cc->GetJSContext(&cx);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    
+  
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                     NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
@@ -460,6 +461,19 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
           codebase->GetURI(getter_AddRefs(baseURI));
         }
       }
+    }
+  }
+
+  if (!baseURI) {
+    // No URI from script environment (we are running from command line, for example).
+    // Create a dummy one.
+    // XXX Is this safe? Could we get the URI from stream or something?
+    if (!mBaseURI) {
+      rv = NS_NewURI(getter_AddRefs(baseURI),
+                     "about:blank" );
+      if (NS_FAILED(rv)) return rv;    
+    } else {
+      baseURI = mBaseURI;
     }
   }
 
@@ -522,6 +536,22 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
   *_retval = domDocument;
   NS_ADDREF(*_retval);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsDOMParser::GetBaseURI(nsIURI **aBaseURI)
+{
+  NS_ENSURE_ARG_POINTER(aBaseURI);
+  *aBaseURI = mBaseURI;
+  NS_IF_ADDREF(*aBaseURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsDOMParser::SetBaseURI(nsIURI *aBaseURI)
+{
+  mBaseURI = aBaseURI;
   return NS_OK;
 }
 

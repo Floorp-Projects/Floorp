@@ -552,6 +552,16 @@ nsXMLHttpRequest::SetOnerror(nsISupports * aOnerror)
   return AddEventListener(kErrorStr, listener);
 }
 
+/* readonly attribute nsIHTTPChannel channel; */
+NS_IMETHODIMP nsXMLHttpRequest::GetChannel(nsIHTTPChannel **aChannel)
+{
+  NS_ENSURE_ARG_POINTER(aChannel);
+  *aChannel = mChannel;
+  NS_IF_ADDREF(*aChannel);
+
+  return NS_OK;
+}
+
 /* readonly attribute nsIDOMDocument responseXML; */
 NS_IMETHODIMP nsXMLHttpRequest::GetResponseXML(nsIDOMDocument **aResponseXML)
 {
