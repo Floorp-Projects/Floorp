@@ -315,18 +315,20 @@ nsGfxTextControlFrame::EnterPressed(nsIPresContext& aPresContext)
   if (mFormFrame && mFormFrame->CanSubmit(*this)) {
     nsIContent *formContent = nsnull;
 
+    nsEventStatus status = nsEventStatus_eIgnore;
+
     mFormFrame->GetContent(&formContent);
     if (nsnull != formContent) {
       nsEvent event;
-      nsEventStatus status = nsEventStatus_eIgnore;
-
       event.eventStructType = NS_EVENT;
       event.message = NS_FORM_SUBMIT;
       formContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
       NS_RELEASE(formContent);
     }
 
-    mFormFrame->OnSubmit(&aPresContext, this);
+    if (nsEventStatus_eConsumeNoDefault != status) {
+      mFormFrame->OnSubmit(&aPresContext, this);
+    }
   }
 }
 
