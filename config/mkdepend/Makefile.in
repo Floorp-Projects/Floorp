@@ -28,6 +28,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= mkdepend
 PROGRAM		= mkdepend
+ifdef GNU_CC
+MODULE_OPTIMIZE_FLAGS = -O3
+endif
 
 CSRCS		= \
 		cppsetup.c \

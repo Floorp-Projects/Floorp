@@ -2989,8 +2989,7 @@ dnl ========================================================
 dnl = Enable code optimization. OFF by default.
 dnl ========================================================
 MOZ_OPTIMIZE=
-if test ! "$MOZ_OPTIMIZE_FLAGS"
-then
+if test ! "$MOZ_OPTIMIZE_FLAGS"; then
 	MOZ_OPTIMIZE_FLAGS="-O"
 fi
 
@@ -3000,15 +2999,13 @@ MOZ_ARG_ENABLE_STRING(optimize,
     MOZ_OPTIMIZE=1
     if test -n "$enableval" && test "$enableval" != "yes"; then
         MOZ_OPTIMIZE_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
+        MOZ_OPTIMIZE=2
     fi
 fi ])
 
-if test "$MOZ_OPTIMIZE"
-then
-  CFLAGS="$CFLAGS $MOZ_OPTIMIZE_FLAGS"
-  CXXFLAGS="$CXXFLAGS $MOZ_OPTIMIZE_FLAGS"
-  LDFLAGS="$LDFLAGS $MOZ_OPTIMIZE_LDFLAGS"
-fi
+AC_SUBST(MOZ_OPTIMIZE)
+AC_SUBST(MOZ_OPTIMIZE_FLAGS)
+AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
 
 dnl ========================================================
 dnl = Enable/disable debug for specific modules only
