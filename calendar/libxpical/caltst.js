@@ -97,8 +97,8 @@ Observer.prototype.onEndBatch = function()
 
 function Test()
 {
+   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
    if( iCalLib == null ) {
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
       var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
       iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
    }
@@ -491,12 +491,11 @@ function TestRecurring() {
 
    var displayDates =  new Object();
    var checkdate = new Date( 2002, 0, 1, 0, 0, 0 );
-   var eventList = iCalLib.getEventsForDay( checkdate, displayDates );
+   var eventList = iCalLib.getEventsForDay( checkdate );
 
    if( !eventList.hasMoreElements() )
       alert( "Yearly Recur Test Failed" );
    
-   var displayDate = new Date( displayDates.value.getNext().QueryInterface(Components.interfaces.nsISupportsPRTime).data );
    iCalLib.deleteEvent( id );
 }
 
@@ -734,6 +733,81 @@ function TestFilterTodo()
 
 function TestIcalString()
 {
+
+    var iCalEventComponent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
+    var iCalEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalEvent);
+
+    iCalEvent.id = 999999999;
+    iCalEvent.title = DEFAULT_TITLE;
+    iCalEvent.description = DEFAULT_DESCRIPTION;
+    iCalEvent.location = DEFAULT_LOCATION;
+    iCalEvent.categories = DEFAULT_CATEGORY;
+    iCalEvent.privateEvent = DEFAULT_PRIVATE;
+    iCalEvent.allDay = DEFAULT_ALLDAY;
+    iCalEvent.alarm = DEFAULT_ALARM;
+    iCalEvent.alarmUnits = DEFAULT_ALARMUNITS;
+    iCalEvent.alarmLength = DEFAULT_ALARMLENGTH;
+    iCalEvent.alarmEmailAddress = DEFAULT_EMAIL;
+    iCalEvent.inviteEmailAddress = DEFAULT_EMAIL;
+
+    iCalEvent.recur = DEFAULT_RECUR;
+    iCalEvent.recurInterval = DEFAULT_RECURINTERVAL;
+    iCalEvent.recurUnits = DEFAULT_RECURUNITS;
+    iCalEvent.recurForever = DEFAULT_RECURFOREVER;
+
+    iCalEvent.start.year = 2001;
+    iCalEvent.start.month = 10; //November
+    iCalEvent.start.day = 1;
+    iCalEvent.start.hour = 12;
+    iCalEvent.start.minute = 24;
+
+    iCalEvent.end.year = 2001;
+    iCalEvent.end.month = 10; //November
+    iCalEvent.end.day = 1;
+    iCalEvent.end.hour = 13;
+    iCalEvent.end.minute = 24;
+
+    var snoozetime = new Date();
+    iCalEvent.setSnoozeTime( snoozetime );
+
+    var sCalenderData = iCalEvent.getIcalString();
+    var iCalEventComponent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
+    var iCalParseEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalEvent);
+    //alert(sCalenderData);
+    iCalParseEvent.parseIcalString( sCalenderData );
+    //alert("2" + iCalParseEvent.description);
+
+    if( iCalParseEvent.title != DEFAULT_TITLE )
+       alert( "Invalid Title" );
+    if( iCalParseEvent.description != DEFAULT_DESCRIPTION )
+       alert( "Invalid Description" );
+    if( iCalParseEvent.location != DEFAULT_LOCATION )
+       alert( "Invalid Location" );
+    if( iCalParseEvent.categories != DEFAULT_CATEGORY )
+       alert( "Invalid Category" );
+    if( iCalParseEvent.privateEvent != DEFAULT_PRIVATE )
+       alert( "Invalid PrivateEvent Setting" );
+    if( iCalParseEvent.allDay != DEFAULT_ALLDAY )
+       alert( "Invalid AllDay Setting" );
+    if( iCalParseEvent.alarm != DEFAULT_ALARM )
+       alert( "Invalid Alarm Setting" );
+    if( iCalParseEvent.alarmUnits != DEFAULT_ALARMUNITS )
+       alert( "Invalid Alarm Units" );
+    if( iCalParseEvent.alarmLength != DEFAULT_ALARMLENGTH )
+       alert( "Invalid Alarm Length" );
+    if( iCalParseEvent.alarmEmailAddress != DEFAULT_EMAIL )
+       alert( "Invalid Alarm Email Address" );
+    if( iCalParseEvent.inviteEmailAddress != DEFAULT_EMAIL )
+       alert( "Invalid Invite Email Address" );
+    if( iCalParseEvent.recur != DEFAULT_RECUR )
+       alert( "Invalid Recur Setting" );
+    if( iCalParseEvent.recurInterval != DEFAULT_RECURINTERVAL )
+       alert( "Invalid Recur Interval" );
+    if( iCalParseEvent.recurUnits != DEFAULT_RECURUNITS )
+       alert( "Invalid Recur Units" );
+    if( iCalParseEvent.recurForever != DEFAULT_RECURFOREVER )
+       alert( "Invalid Recur Forever" );
+
     var iCalTodoComponent = Components.classes["@mozilla.org/icaltodo;1"].createInstance();
     
     var iCalTodo = iCalTodoComponent.QueryInterface(Components.interfaces.oeIICalTodo);
@@ -778,4 +852,3 @@ function TestIcalString()
 
     return true;
 }
-

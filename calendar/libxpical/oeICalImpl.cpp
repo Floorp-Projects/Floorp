@@ -322,7 +322,6 @@ oeICalImpl::Test(void)
     char uidstr[10]="900000000";
     char icalrawcalendarstr[] = "BEGIN:VCALENDAR\n\
 BEGIN:VEVENT\n\
-UID:900000000\n\
 END:VEVENT\n\
 END:VCALENDAR\n\
 ";
@@ -332,7 +331,7 @@ END:VCALENDAR\n\
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::Test() failed: Cannot open stream: %s!\n", serveraddr );
         #endif
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
 
     icalcalendar = icalparser_parse_string(icalrawcalendarstr);
@@ -340,15 +339,15 @@ END:VCALENDAR\n\
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::Test() failed: Cannot create VCALENDAR!\n" );
         #endif
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
-
+    
     icalevent = icalcomponent_get_first_component(icalcalendar,ICAL_VEVENT_COMPONENT);
     if ( !icalevent ) {
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::Test() failed: VEVENT not found!\n" );
         #endif
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
 
     icalproperty *uid = icalproperty_new_uid( uidstr );
@@ -487,7 +486,7 @@ END:VCALENDAR\n\
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::Test() failed: Cannot fetch event!\n" );
         #endif
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
 	
     icalcomponent *fetchedevent = icalcomponent_get_first_component( fetchedcal,ICAL_VEVENT_COMPONENT);
@@ -495,7 +494,7 @@ END:VCALENDAR\n\
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::Test() failed: VEVENT not found!\n" );
         #endif
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
 
 #ifdef ICAL_DEBUG
@@ -509,7 +508,7 @@ END:VCALENDAR\n\
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::Test() failed: UID not found!\n" );
         #endif
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
 #ifdef ICAL_DEBUG
     printf("id: %s\n", icalproperty_get_uid( tmpprop ) );
@@ -520,7 +519,7 @@ END:VCALENDAR\n\
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::Test() failed: SUMMARY not found!\n" );
         #endif
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
 #ifdef ICAL_DEBUG
     printf("Title: %s\n", icalproperty_get_summary( tmpprop ) );
@@ -531,7 +530,7 @@ END:VCALENDAR\n\
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::Test() failed: CATEGORIES not found!\n" );
         #endif
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
 #ifdef ICAL_DEBUG
     printf("Category: %s\n", icalproperty_get_categories( tmpprop ) );
@@ -542,7 +541,7 @@ END:VCALENDAR\n\
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::Test() failed: DESCRIPTION not found!\n" );
         #endif
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
 #ifdef ICAL_DEBUG
     printf("Description: %s\n", icalproperty_get_description( tmpprop ) );
@@ -553,7 +552,7 @@ END:VCALENDAR\n\
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::Test() failed: LOCATION not found!\n" );
         #endif
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
 #ifdef ICAL_DEBUG
     printf("Location: %s\n", icalproperty_get_location( tmpprop ) );
@@ -564,7 +563,7 @@ END:VCALENDAR\n\
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::Test() failed: CLASS not found!\n" );
         #endif
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
 #ifdef ICAL_DEBUG
     printf("Class: %s\n", (icalproperty_get_class( tmpprop ) == ICAL_CLASS_PUBLIC) ? "PUBLIC" : "PRIVATE" );
@@ -575,7 +574,7 @@ END:VCALENDAR\n\
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::Test() failed: DTSTART not found!\n" );
         #endif
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
     start = icalproperty_get_dtstart( tmpprop );
 #ifdef ICAL_DEBUG
@@ -587,7 +586,7 @@ END:VCALENDAR\n\
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::Test() failed: DTEND not found!\n" );
         #endif
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
     end = icalproperty_get_dtstart( tmpprop );
 #ifdef ICAL_DEBUG
@@ -608,21 +607,22 @@ END:VCALENDAR\n\
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::Test() failed: Cannot clone event!\n" );
         #endif
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
+    
     icalcomponent *newevent = icalcomponent_get_first_component( newcomp, ICAL_VEVENT_COMPONENT );
-    if ( !tmpprop ) {
+    if ( !newevent ) {
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::Test() failed: VEVENT not found!\n" );
         #endif
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
     tmpprop = icalcomponent_get_first_property( newevent, ICAL_SUMMARY_PROPERTY );
     if ( !tmpprop ) {
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::Test() failed: SUMMARY not found!\n" );
         #endif
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
     icalproperty_set_summary( tmpprop, "LUNCH AND LEARN TIME" );
 //    icalfileset_modify( stream, fetchedcal, newcomp );
@@ -641,7 +641,7 @@ END:VCALENDAR\n\
         #ifdef ICAL_DEBUG
         printf( "oeICalImpl::Test() failed: Cannot fetch event!\n" );
         #endif
-        return NS_OK;
+        return NS_ERROR_FAILURE;
     }
     icalfileset_remove_component( stream, fetchedcal );
 	
@@ -655,7 +655,7 @@ END:VCALENDAR\n\
         #endif
     }
     icalfileset_free(stream);
-    return NS_OK;                                                                    
+    return NS_OK;
 }
 
 NS_IMETHODIMP
