@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.h,v 1.1 2000/12/27 03:20:04 nelsonb%netscape.com Exp $
+ * $Id: loader.h,v 1.2 2001/01/06 17:07:07 mcgreer%netscape.com Exp $
  */
 
 #ifndef _LOADER_H_
@@ -52,31 +52,31 @@ struct FREEBLVectorStr {
 
   SECStatus (* p_RSA_PublicKeyOp) (RSAPublicKey *   key,
 				 unsigned char *  output,
-				 unsigned char *  input);
+				 const unsigned char *  input);
 
   SECStatus (* p_RSA_PrivateKeyOp)(RSAPrivateKey *  key,
 				  unsigned char *  output,
-				  unsigned char *  input);
+				  const unsigned char *  input);
 
-  SECStatus (* p_DSA_NewKey)(PQGParams *           params, 
+  SECStatus (* p_DSA_NewKey)(const PQGParams *    params, 
 		            DSAPrivateKey **      privKey);
 
   SECStatus (* p_DSA_SignDigest)(DSAPrivateKey *   key,
 				SECItem *         signature,
-				SECItem *         digest);
+				const SECItem *   digest);
 
   SECStatus (* p_DSA_VerifyDigest)(DSAPublicKey *  key,
-				  SECItem *       signature,
-				  SECItem *       digest);
+				  const SECItem *  signature,
+				  const SECItem *  digest);
 
-  SECStatus (* p_DSA_NewKeyFromSeed)(PQGParams *params, 
-				     unsigned char * seed,
-                                    DSAPrivateKey **privKey);
+  SECStatus (* p_DSA_NewKeyFromSeed)(const PQGParams *params, 
+				     const unsigned char * seed,
+                                     DSAPrivateKey **privKey);
 
   SECStatus (* p_DSA_SignDigestWithSeed)(DSAPrivateKey * key,
-				        SECItem *       signature,
-				        SECItem *       digest,
-				        unsigned char * seed);
+				        SECItem *             signature,
+				        const SECItem *       digest,
+				        const unsigned char * seed);
 
  SECStatus (* p_DH_GenParam)(int primeLen, DHParams ** params);
 
@@ -117,11 +117,11 @@ struct FREEBLVectorStr {
 
  SECStatus (* p_RC2_Encrypt)(RC2Context *cx, unsigned char *output,
 			    unsigned int *outputLen, unsigned int maxOutputLen,
-			    unsigned char *input, unsigned int inputLen);
+			    const unsigned char *input, unsigned int inputLen);
 
  SECStatus (* p_RC2_Decrypt)(RC2Context *cx, unsigned char *output,
 			    unsigned int *outputLen, unsigned int maxOutputLen,
-			    unsigned char *input, unsigned int inputLen);
+			    const unsigned char *input, unsigned int inputLen);
 
  RC5Context *(* p_RC5_CreateContext)(SECItem *key, unsigned int rounds,
                      unsigned int wordSize, unsigned char *iv, int mode);
@@ -130,11 +130,11 @@ struct FREEBLVectorStr {
 
  SECStatus (* p_RC5_Encrypt)(RC5Context *cx, unsigned char *output,
                             unsigned int *outputLen, unsigned int maxOutputLen,
-                            unsigned char *input, unsigned int inputLen);
+                            const unsigned char *input, unsigned int inputLen);
 
  SECStatus (* p_RC5_Decrypt)(RC5Context *cx, unsigned char *output,
                             unsigned int *outputLen, unsigned int maxOutputLen,
-                            unsigned char *input, unsigned int inputLen);
+                            const unsigned char *input, unsigned int inputLen);
 
  DESContext *(* p_DES_CreateContext)(unsigned char *key, unsigned char *iv,
 				     int mode, PRBool encrypt);
@@ -143,11 +143,11 @@ struct FREEBLVectorStr {
 
  SECStatus (* p_DES_Encrypt)(DESContext *cx, unsigned char *output,
 			    unsigned int *outputLen, unsigned int maxOutputLen,
-			    unsigned char *input, unsigned int inputLen);
+			    const unsigned char *input, unsigned int inputLen);
 
  SECStatus (* p_DES_Decrypt)(DESContext *cx, unsigned char *output,
 			    unsigned int *outputLen, unsigned int maxOutputLen,
-			    unsigned char *input, unsigned int inputLen);
+			    const unsigned char *input, unsigned int inputLen);
 
  AESContext * (* p_AES_CreateContext)(unsigned char *key, unsigned char *iv, 
 			    int mode, int encrypt, unsigned int keylen, 
@@ -157,11 +157,11 @@ struct FREEBLVectorStr {
 
  SECStatus (* p_AES_Encrypt)(AESContext *cx, unsigned char *output,
 			    unsigned int *outputLen, unsigned int maxOutputLen,
-			    unsigned char *input, unsigned int inputLen);
+			    const unsigned char *input, unsigned int inputLen);
 
  SECStatus (* p_AES_Decrypt)(AESContext *cx, unsigned char *output,
 			    unsigned int *outputLen, unsigned int maxOutputLen,
-			    unsigned char *input, unsigned int inputLen);
+			    const unsigned char *input, unsigned int inputLen);
 
  SECStatus (* p_MD5_Hash)(unsigned char *dest, const char *src);
 
