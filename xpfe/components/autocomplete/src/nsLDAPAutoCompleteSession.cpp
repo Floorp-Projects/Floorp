@@ -46,8 +46,14 @@
 static PRLogModuleInfo *sLDAPAutoCompleteLogModule = 0;
 #endif
 
-NS_IMPL_ISUPPORTS3(nsLDAPAutoCompleteSession, nsIAutoCompleteSession, 
-                   nsILDAPMessageListener, nsILDAPAutoCompleteSession)
+
+// Because this object gets called via proxies, we need to use a THREADSAFE
+// ISUPPORTS; if bug 101252 gets fixed, we can go back to the non-threadsafe
+// version.
+//
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsLDAPAutoCompleteSession, 
+                              nsIAutoCompleteSession, nsILDAPMessageListener,
+                              nsILDAPAutoCompleteSession)
 
 nsLDAPAutoCompleteSession::nsLDAPAutoCompleteSession() :
     mState(UNBOUND), 
