@@ -458,7 +458,8 @@ sub groups {
              " LEFT JOIN group_control_map" .
              " ON group_control_map.group_id = groups.id" .
              " AND group_control_map.product_id = ? " .
-             " WHERE isbuggroup = 1");
+             " WHERE isbuggroup = 1" .
+             " ORDER BY description");
     $sth->execute($self->{'bug_id'}, Bugzilla->user->id,
                   $self->{'product_id'});
 
