@@ -780,6 +780,7 @@ nsSSLIOLayerNewSocket(const char *host,
                       nsISupports** info,
                       PRBool forTLSStepUp)
 {
+  // XXX - this code is duplicated in nsSSLIOLayerAddToSocket
   if (firstTime) {
     nsresult rv = InitNSSMethods();
     if (NS_FAILED(rv)) return rv;
@@ -2008,9 +2009,12 @@ nsSSLIOLayerAddToSocket(const char* host,
   PRFileDesc* layer = nsnull;
   nsresult rv;
 
+  // XXX - this code is duplicated in nsSSLIONewSocket
   if (firstTime) {
     rv = InitNSSMethods();
     if (NS_FAILED(rv)) return rv;
+    gTLSIntolerantSites =  new nsHashtable(16, PR_TRUE);
+    if (!gTLSIntolerantSites) return NS_ERROR_OUT_OF_MEMORY;
     firstTime = PR_FALSE;
   }
 
