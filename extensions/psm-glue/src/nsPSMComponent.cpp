@@ -278,7 +278,7 @@ nsPSMComponent::PassPrefs()
     list[prefs.n].type = INT_PREF;
     if (prefManager->GetIntPref(list[prefs.n].key, &intpref) != 0) 
     {
-         intpref = 2;    /* default */
+         intpref = 0;    /* default */
     }
 
     list[prefs.n].value = PR_smprintf("%d", intpref);
@@ -288,7 +288,7 @@ nsPSMComponent::PassPrefs()
     list[prefs.n].type = INT_PREF;
     if (prefManager->GetIntPref(list[prefs.n].key, &intpref) != 0) 
     {
-         intpref = 480;    /* default */
+         intpref = 30;    /* default */
     }
 
     list[prefs.n].value = PR_smprintf("%d", intpref);
