@@ -22,7 +22,6 @@
 #include "nsIFrame.h"
 #include "nsIContent.h"
 #include "nsIRenderingContext.h"
-#include "nsIDOMRenderingContext.h"
 #include "nsIWidget.h"
 #include "nsIWebShell.h"
 #include "nsIPresShell.h"
@@ -685,24 +684,6 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     break;
   }
   return nsnull;
-}
-
-static NS_DEFINE_IID(kIDOMRenderingContextIID, NS_IDOMRENDERINGCONTEXT_IID);
-
-NS_IMETHODIMP
-nsDOMEvent::GetRc(nsIDOMRenderingContext** aRc)
-{
-  *aRc = nsnull;
-  if (NS_PAINT_EVENT == mEvent->eventStructType) {
-    nsPaintEvent* pe = (nsPaintEvent*) mEvent;
-    if (nsnull != pe->renderingContext) {
-      nsIDOMRenderingContext* domrc;
-      if (NS_OK == pe->renderingContext->QueryInterface(kIDOMRenderingContextIID, (void**) &domrc)) {
-        *aRc = domrc;
-      }
-    }
-  }
-  return NS_OK;
 }
 
 nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext& aPresContext, nsEvent *aEvent) 

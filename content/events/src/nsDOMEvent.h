@@ -32,8 +32,6 @@
 #include "nsGUIEvent.h"
 class nsIContent;
 
-class nsIDOMRenderingContext;
-
 class nsDOMEvent : public nsIDOMUIEvent, public nsIDOMNSUIEvent, public nsIPrivateDOMEvent, public nsIPrivateTextEvent, public nsIPrivateCompositionEvent {
 
 public:
@@ -110,7 +108,7 @@ public:
 
   NS_IMETHOD    GetClickcount(PRUint16* aClickcount);  
     
-  // nsIDOMNSEvent interface
+  // nsIDOMNSUIEvent interface
   NS_IMETHOD    GetLayerX(PRInt32* aLayerX);
 
   NS_IMETHOD    GetLayerY(PRInt32* aLayerY);
@@ -120,8 +118,6 @@ public:
   NS_IMETHOD    GetPageY(PRInt32* aClientY);
 
   NS_IMETHOD    GetWhich(PRUint32* aKeyCode);
-
-  NS_IMETHOD    GetRc(nsIDOMRenderingContext** aRc);
 
   NS_IMETHOD    GetRangeParent(nsIDOMNode** aRangeParent);
 
