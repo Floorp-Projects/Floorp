@@ -49,10 +49,11 @@
 
 #include "nsEscape.h"
 
-#include "nsIPostToServer.h"
 #include "nsIURL.h"
 #ifdef NECKO
 #include "nsNeckoUtil.h"
+#else
+#include "nsIPostToServer.h"
 #endif // NECKO
 #include "nsIBuffer.h"
 #include "nsIInputStream.h"
@@ -953,6 +954,7 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 #endif // NECKO
 		if (NS_SUCCEEDED(rv))
 		{
+#ifndef NECKO // XXX NECKO this is crucial to repair
 			if (method.EqualsIgnoreCase("post"))
 			{
 				// HTTP Post method support
@@ -973,6 +975,7 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 					}
 			        }
 			}
+#endif // NECKO
 
 			SearchDataSourceCallback *callback = new SearchDataSourceCallback(mInner, source, engine);
 			if (nsnull != callback)
