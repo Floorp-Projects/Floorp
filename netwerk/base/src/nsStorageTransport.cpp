@@ -364,6 +364,7 @@ nsStorageTransport::AsyncRead(nsIStreamListener *aListener,
     NS_NEWXPCOM(reader, nsReadRequest);
     if (!reader)
         return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(reader);
 
     reader->SetTransport(this);
     reader->SetTransferOffset(aOffset);
@@ -376,14 +377,14 @@ nsStorageTransport::AsyncRead(nsIStreamListener *aListener,
     rv = reader->SetListener(aListener, aContext);
     if (NS_FAILED(rv)) goto error;
 
-    rv = reader->Process();
-    if (NS_FAILED(rv)) goto error;
-
-    NS_ADDREF(*aRequest = reader);
+    rv = reader->Process();  
+    if (NS_FAILED(rv))  goto error;
+    
+    *aRequest = reader;
     return NS_OK;
 
 error:
-    NS_DELETEXPCOM(reader);
+    NS_RELEASE(reader);
     return rv;
 }
 
