@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Simon Fraser <sfraser@netscape.com>
+ *   Dean Tessman <dean_tessman@hotmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -87,8 +88,11 @@ function findAgainInPage(browser, rootSearchWindow, startSearchWindow)
     findInst.findBackwards = findService.findBackwards;
 
     var found = false;
-    if (findInst.searchString.length > 0)   // should never happen if command updating works
-      found = findInst.findNext();
+    if (findInst.searchString.length == 0)
+      // no previous find text
+      return findInPage(browser, rootSearchWindow, startSearchWindow);
+
+    found = findInst.findNext();
     if (!found) {
       if (!gPromptService)
         gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService()
