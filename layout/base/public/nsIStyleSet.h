@@ -137,6 +137,14 @@ public:
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule) = 0;
 
+  // Notification that we were unable to render a replaced element.
+  // Called when the replaced element can not be rendered, and we should
+  // instead render the element's contents.
+  // The content object associated with aFrame should either be a IMG
+  // element or an OBJECT element.
+  NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
+                                       nsIFrame*       aFrame) = 0;
+
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) = 0;
   virtual void ListContexts(nsIStyleContext* aRootContext, FILE* out = stdout, PRInt32 aIndent = 0) = 0;
 };

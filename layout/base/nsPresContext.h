@@ -176,6 +176,7 @@ public:
                             nsIFrame* aTargetFrame,
                             nsFrameImageLoaderCB aCallBack,
                             PRBool aNeedSizeUpdate,
+                            PRBool aNeedErrorNotification,
                             nsIFrameImageLoader*& aLoader) = 0;
 
   /**

@@ -54,7 +54,8 @@ public:
                   const nscolor* aBackgroundColor,
                   nsIFrame* aTargetFrame,
                   nsFrameImageLoaderCB aCallBack,
-                  PRBool aNeedSizeUpdate) = 0;
+                  PRBool aNeedSizeUpdate,
+                  PRBool aNeedErrorNotification) = 0;
 
   NS_IMETHOD StopImageLoad() = 0;
 
@@ -72,10 +73,11 @@ public:
 };
 
 // Image load status bit values
-#define NS_IMAGE_LOAD_STATUS_NONE           0x0
-#define NS_IMAGE_LOAD_STATUS_SIZE_REQUESTED 0x1
-#define NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE 0x2
-#define NS_IMAGE_LOAD_STATUS_IMAGE_READY    0x4
-#define NS_IMAGE_LOAD_STATUS_ERROR          0x8
+#define NS_IMAGE_LOAD_STATUS_NONE             0x0
+#define NS_IMAGE_LOAD_STATUS_SIZE_REQUESTED   0x1
+#define NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE   0x2
+#define NS_IMAGE_LOAD_STATUS_IMAGE_READY      0x4
+#define NS_IMAGE_LOAD_STATUS_ERROR            0x8
+#define NS_IMAGE_LOAD_STATUS_ERROR_REQUESTED  0x10
 
 #endif /* nsIFrameImageLoader_h___ */

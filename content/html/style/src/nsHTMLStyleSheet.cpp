@@ -50,6 +50,8 @@
 #include "nsIListControlFrame.h"
 #include "nsDeque.h"
 #include "nsIDOMCharacterData.h"
+#include "nsIDOMHTMLImageElement.h"
+#include "nsITextContent.h"
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
@@ -74,6 +76,8 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIComboboxControlFrameIID, NS_ICOMBOBOXCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIListControlFrameIID,     NS_ILISTCONTROLFRAME_IID);
+static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
+static NS_DEFINE_IID(kIDOMCharacterDataIID, NS_IDOMCHARACTERDATA_IID);
 
 class HTMLAnchorRule : public nsIStyleRule {
 public:
@@ -384,6 +388,10 @@ public:
   NS_IMETHOD StyleRuleRemoved(nsIPresContext* aPresContext,
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule);
+  
+  // Notification that we were unable to render a replaced element.
+  NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
+                                       nsIFrame*       aFrame);
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -1966,8 +1974,6 @@ HTMLStyleSheetImpl::ConstructTableCellFrameOnly(nsIPresContext*  aPresContext,
   return rv;
 }
 
-static NS_DEFINE_IID(kIDOMCharacerDataIID, NS_IDOMCHARACTERDATA_IID);
-
 // This is only called by table row groups and rows. It allows children that are not
 // table related to have a cell wrapped around them.
 nsresult
@@ -2055,7 +2061,7 @@ HTMLStyleSheetImpl::TableProcessChild(nsIPresContext*  aPresContext,
       } else { // wrap it in a table cell, row, row group, table if it is not whitespace
         PRBool needCell = PR_TRUE;
         nsIDOMCharacterData* domData = nsnull;
-        nsresult rv2 = aChildContent->QueryInterface(kIDOMCharacerDataIID, (void**)&domData);
+        nsresult rv2 = aChildContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
         if ((NS_OK == rv2) && (nsnull != domData)) {
           nsString charData;
           domData->GetData(charData);
@@ -4425,6 +4431,83 @@ HTMLStyleSheetImpl::StyleRuleRemoved(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HTMLStyleSheetImpl::CantRenderReplacedElement(nsIPresContext* aPresContext,
+                                              nsIFrame*       aFrame)
+{
+  nsIContent* content;
+  nsIAtom*    tag;
+  nsIFrame*   parentFrame;
+
+  aFrame->GetParent(parentFrame);
+
+  // Get the content object associated with aFrame
+  aFrame->GetContent(content);
+  NS_ASSERTION(nsnull != content, "null content object");
+  content->GetTag(tag);
+  if (nsHTMLAtoms::img == tag) {
+    // The "alt" attribute specifies alternate text that is rendered
+    // when the image cannot be displayed
+    nsIDOMHTMLImageElement*  element;
+    if (NS_SUCCEEDED(content->QueryInterface(kIDOMHTMLImageElementIID, (void**)&element))) {
+      nsAutoString  altText;
+
+      element->GetAlt(altText);
+      if (altText.Length() > 0) {
+        // Create a text content element for the alt-text
+        nsIContent*          altTextContent;
+        nsIDOMCharacterData* domData;
+
+        NS_NewTextNode(&altTextContent);
+        altTextContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
+        domData->SetData(altText);
+        NS_RELEASE(domData);
+
+        // Create a text frame to display the alt-text
+        nsIFrame* textFrame;
+        NS_NewTextFrame(textFrame);
+
+        // Use a special pseudo element style context for text
+        nsIStyleContext*  textStyleContext;
+        nsIStyleContext*  parentStyleContext;
+        nsIContent*       parentContent;
+
+        parentFrame->GetContent(parentContent);
+        parentFrame->GetStyleContext(parentStyleContext);
+        textStyleContext = aPresContext->ResolvePseudoStyleContextFor
+                             (parentContent, nsHTMLAtoms::textPseudo, parentStyleContext);
+        NS_RELEASE(parentStyleContext);
+        NS_RELEASE(parentContent);
+
+        // Initialize the text frame
+        textFrame->Init(*aPresContext, altTextContent, parentFrame, textStyleContext);
+        NS_RELEASE(textStyleContext);
+        NS_RELEASE(altTextContent);
+
+        // Get the previous sibling frame
+        nsIFrame*     firstChild;
+        parentFrame->FirstChild(nsnull, firstChild);
+        nsFrameList   frameList(firstChild);
+        nsIFrame*     prevSibling = frameList.GetPrevSiblingFor(aFrame);
+
+        // Delete the current frame and insert the new frame
+        nsIPresShell* presShell = aPresContext->GetShell();
+        parentFrame->RemoveFrame(*aPresContext, *presShell, nsnull, aFrame);
+        parentFrame->InsertFrames(*aPresContext, *presShell, nsnull, prevSibling, textFrame);
+        NS_RELEASE(presShell);
+      }
+    }
+
+  } else if (nsHTMLAtoms::object == tag) {
+    ;
+  } else {
+    NS_ASSERTION(PR_FALSE, "unexpected tag");
+  }
+
+  NS_IF_RELEASE(tag);
+  NS_IF_RELEASE(content);
+  return NS_OK;
+}
 
 void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 {

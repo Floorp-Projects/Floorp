@@ -492,6 +492,7 @@ nsPresContext::StartLoadImage(const nsString& aURL,
                               nsIFrame* aTargetFrame,
                               nsFrameImageLoaderCB aCallBack,
                               PRBool aNeedSizeUpdate,
+                              PRBool aNeedErrorNotification,
                               nsIFrameImageLoader*& aLoaderResult)
 {
   if (mStopped) {
@@ -563,7 +564,7 @@ nsPresContext::StartLoadImage(const nsString& aURL,
   mImageLoaders.AppendElement(loader);
 
   rv = loader->Init(this, mImageGroup, aURL, aBackgroundColor, aTargetFrame,
-                    aCallBack, aNeedSizeUpdate);
+                    aCallBack, aNeedSizeUpdate, aNeedErrorNotification);
   if (NS_OK != rv) {
     mImageLoaders.RemoveElement(loader);
     NS_RELEASE(loader);

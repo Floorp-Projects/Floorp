@@ -72,6 +72,7 @@ public:
                             nsIFrame* aTargetFrame,
                             nsFrameImageLoaderCB aCallBack,
                             PRBool aNeedSizeUpdate,
+                            PRBool aNeedErrorNotification,
                             nsIFrameImageLoader*& aLoader);
   NS_IMETHOD StopLoadImage(nsIFrame* aForFrame);
   NS_IMETHOD SetContainer(nsISupports* aContainer);
