@@ -33,8 +33,8 @@ var default_owners = new Array([% component_.size %]);
 var components = new Array([% component_.size %]);
 [% count = 0 %]
 [%- FOREACH c = component_ %]
-    components[[% count %]] = "[% c.name FILTER html %]";
-    default_owners[[% count %]] = "[% c.default_login FILTER html %]";
+    components[[% count %]] = "[% c.name FILTER js %]";
+    default_owners[[% count %]] = "[% c.default_login FILTER js %]";
     [% count = count + 1 %]
 [%- END %]
 var last_default_owner;

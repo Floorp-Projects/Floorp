@@ -194,6 +194,7 @@ sub create {
                 $var =~ s/([\\\'\"])/\\$1/g;
                 $var =~ s/\n/\\n/g;
                 $var =~ s/\r/\\r/g;
+                $var =~ s/\@/\\x40/g; # anti-spam for email addresses
                 return $var;
             },
 
