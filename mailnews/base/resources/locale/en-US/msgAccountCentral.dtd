@@ -26,7 +26,7 @@ Rights Reserved.
 
 <!ENTITY accountsSectionHdr.label     "Accounts"> 
 <!ENTITY settingsPrefix.label         "View"> 
-<!ENTITY settingsLink.label           "Settings"> 
+<!ENTITY settingsLink.label           "settings"> 
 <!ENTITY settingsSuffix.label         "for this account"> 
 <!ENTITY newAcctPrefix.label          "Create a"> 
 <!ENTITY newAcctLink.label            "new account"> 
