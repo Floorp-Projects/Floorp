@@ -137,7 +137,6 @@ public class Parser
         this.decompiler = createDecompiler(compilerEnv);
         this.nf = new IRFactory(this);
         currentScriptOrFn = nf.createScript();
-        this.decompiler = decompiler;
         int sourceStartOffset = decompiler.getCurrentOffset();
         this.encodedSource = null;
         decompiler.addToken(Token.SCRIPT);
