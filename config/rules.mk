@@ -288,7 +288,7 @@ everything:: clobber_all alldep
 #
 MAKE_DIRS =
 
-ifdef XPIDLSRCS
+ifneq ($(XPIDLSRCS),)
 MAKE_DIRS += $(XPIDL_GEN_DIR)
 endif
 
