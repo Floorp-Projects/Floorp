@@ -168,10 +168,15 @@ function get_remote_datasource_url() {
       url = prefs.CopyCharPref("sidebar.customize.all_panels.url");
       url = url.replace(/%SIDEBAR_VERSION%/g, SIDEBAR_VERSION);
 
-      var locale_progid = 'component://netscape/intl/nslocaleservice';
-      var locale = Components.classes[locale_progid].getService();
-      locale = locale.QueryInterface(Components.interfaces.nsILocaleService);
-      locale = locale.GetLocaleComponentForUserAgent();
+	  var locale = prefs.CopyCharPref("intl.content.langcode");
+	  if (locale == "") {
+		// activation part not ready yet!
+		debug("\n -->intl.content.langcode:  activation part not ready yet! \n");
+		var locale_progid = 'component://netscape/intl/nslocaleservice';
+		var syslocale = Components.classes[locale_progid].getService();
+		syslocale = syslocale.QueryInterface(Components.interfaces.nsILocaleService);
+		locale = syslocale.GetLocaleComponentForUserAgent();
+	  }
       locale = locale.toLowerCase();
       url = url.replace(/%LOCALE%/g, locale);
 
