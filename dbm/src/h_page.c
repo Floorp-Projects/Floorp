@@ -1194,7 +1194,7 @@ open_temp(HTAB *hashp)
 	strcat(filename, (last == '/' || last == '\\') ? namestr + 1 : namestr);
 #endif
 
-#if defined(_WIN32) || defined(_WINDOWS) || defined(XP_OS2)
+#if defined(_WIN32) || defined(_WINDOWS)
 	if ((hashp->fp = mkstempflags(filename, _O_BINARY|_O_TEMPORARY)) != -1) {
 		if (hashp->filename) {
 			free(hashp->filename);
