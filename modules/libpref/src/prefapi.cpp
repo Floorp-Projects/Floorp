@@ -49,12 +49,6 @@
 #include "prefldap.h"
 #endif
 
-#if defined(XP_MAC) || defined(XP_UNIX)
-#include "fe_proto.h"
-#endif
-#if defined(XP_PC) || defined(XP_OS2)
-#define LINEBREAK "\n"
-#endif
 #ifndef NO_SECURITY
 #include "sechash.h"
 #endif
@@ -110,15 +104,18 @@ PR_IMPLEMENT(PLHashEntry *) pref_AllocEntry(void *pool, const void *key)
 PR_IMPLEMENT(void) pref_FreeEntry(void *pool, PLHashEntry *he, uint flag)
 {
 	PrefNode *pref = (PrefNode *) he->value;
-	if (pref) {
-		if (pref->flags & PREF_STRING) {
+	if (pref)
+	{
+		if (pref->flags & PREF_STRING)
+		{
 			PR_FREEIF(pref->defaultPref.stringVal);
 			PR_FREEIF(pref->userPref.stringVal);
 		}
 		PR_Free(he->value);
 	}
 
-    if (flag == HT_FREE_ENTRY) {
+    if (flag == HT_FREE_ENTRY)
+    {
 		PR_FREEIF(*(void**)&he->key);
         PR_Free(he);
 	}
@@ -306,11 +303,11 @@ PRBool pref_VerifyLockFile(char* buf, long buflen)
 
 	/* Unobscure file by subtracting some value from every char. */
 	long i;
-	for (i = 0; i < buflen; i++) {
+	for (i = 0; i < buflen; i++)
 		buf[i] -= obscure_value;
-	}
 
-    if (buflen >= hash_length) {
+    if (buflen >= hash_length)
+    {
     	const unsigned char magic_key[] = "VonGloda5652TX75235ISBN";
 	    unsigned char *pStart = (unsigned char*) buf + hash_length;
 	    unsigned int len;
@@ -449,7 +446,7 @@ PR_IMPLEMENT(PRBool) PREF_Init(const char *filename)
 		    }
 		}
 
-#if !defined(XP_PC) && !defined(XP_OS2) && !defined(XP_MAC)
+#if !defined(XP_PC) && !defined(XP_OS2)
 		ok = pref_InitInitialObjects();
 #endif
 	}
@@ -473,7 +470,8 @@ PREF_GetConfigContext(JSContext **js_context)
 	if (!js_context) return PREF_ERROR;
 
 	*js_context = NULL;
-    if (gMochaContext)  {
+    if (gMochaContext)
+    {
 		*js_context = gMochaContext;
 		JS_SetContextThread(gMochaContext);
     }
@@ -667,35 +665,32 @@ PREF_QuietEvaluateJSBufferWithGlobalScope(const char * js_buffer, size_t length)
 	return ok;
 }
 
-static char * str_escape(const char * original) {
+static char * str_escape(const char * original)
+{
 	const char *p;
 	char * ret_str, *q;
 
 	if (original == NULL)
 		return NULL;
 	
-	ret_str = malloc(2*strlen(original) + 1);  /* Paranoid worse case all slashes will free quickly */
-	for(p = original, q=ret_str ; *p; p++, q++)
-        switch(*p) {
+	ret_str = malloc(2 * strlen(original) + 1);
+	/* Paranoid worst case all slashes will free quickly */
+	p = original;
+	q = ret_str;
+	while (*p)
+	{
+        switch (*p)
+        {
             case '\\':
-                q[0] = '\\';
-				q[1] = '\\';
-				q++;
-                break;
             case '\"':
-                q[0] = '\\';
-				q[1] = '\"';
-				q++;
-                break;
             case '\n':
-				q[0] = '\\';
-				q[1] = '\n';
-				q++;
+                *q++ = '\\';
                 break;
             default:
-				*q = *p;
                 break;
         }
+        *q++ = *p++;
+    }
 	*q = 0;
 	return ret_str;
 }
@@ -858,43 +853,53 @@ pref_saveLIPref(PLHashEntry *he, int i, void *arg)
 	if (pref && PREF_HAS_USER_VALUE(pref) && !PREF_HAS_LI_VALUE(pref) && 
 		pref_ValueChanged(pref->defaultPref, 
 						  pref->userPref, 
-						  (PrefType) PREF_TYPE(pref))) {
+						  (PrefType) PREF_TYPE(pref)))
+	{
 		char buf[2048];
 
-		if (pref->flags & PREF_STRING) {
+		if (pref->flags & PREF_STRING)
+	    {
 			char *tmp_str = str_escape(pref->userPref.stringVal);
-			if (tmp_str) {
+			if (tmp_str)
+			{
 				PR_snprintf(buf, 2048, "user_pref(\"%s\", \"%s\");" LINEBREAK,
 					(char*) he->key, tmp_str);
 				PR_Free(tmp_str);
 			}
 		}
-		else if (pref->flags & PREF_INT) {
+		else if (pref->flags & PREF_INT)
+		{
 			PR_snprintf(buf, 2048, "user_pref(\"%s\", %ld);" LINEBREAK,
 				(char*) he->key, (long) pref->userPref.intVal);
 		}
-		else if (pref->flags & PREF_BOOL) {
+		else if (pref->flags & PREF_BOOL)
+		{
 			PR_snprintf(buf, 2048, "user_pref(\"%s\", %s);" LINEBREAK, (char*) he->key,
 				(pref->userPref.boolVal) ? "true" : "false");
 		}
 
 		prefArray[i] = PL_strdup(buf);
-	} else if (pref && PREF_IS_LOCKED(pref) && !PREF_HAS_LI_VALUE(pref)) {
+	}
+	else if (pref && PREF_IS_LOCKED(pref) && !PREF_HAS_LI_VALUE(pref))
+	{
 		char buf[2048];
-
-		if (pref->flags & PREF_STRING) {
+		if (pref->flags & PREF_STRING)
+		{
 			char *tmp_str = str_escape(pref->defaultPref.stringVal);
-			if (tmp_str) {
+			if (tmp_str)
+			{
 				PR_snprintf(buf, 2048, "user_pref(\"%s\", \"%s\");" LINEBREAK,
 					(char*) he->key, tmp_str);
 				PR_Free(tmp_str);
 			}
 		}
-		else if (pref->flags & PREF_INT) {
+		else if (pref->flags & PREF_INT)
+		{
 			PR_snprintf(buf, 2048, "user_pref(\"%s\", %ld);" LINEBREAK,
 				(char*) he->key, (long) pref->defaultPref.intVal);
 		}
-		else if (pref->flags & PREF_BOOL) {
+		else if (pref->flags & PREF_BOOL)
+		{
 			PR_snprintf(buf, 2048, "user_pref(\"%s\", %s);" LINEBREAK, (char*) he->key,
 				(pref->defaultPref.boolVal) ? "true" : "false");
 		}
@@ -922,7 +927,8 @@ pref_savePref(PLHashEntry *he, int i, void *arg)
 	{
 		char buf[2048];
 
-		if (pref->flags & PREF_STRING) {
+		if (pref->flags & PREF_STRING)
+		{
 			char *tmp_str = str_escape(pref->userPref.stringVal);
 			if (tmp_str)
 			{
@@ -931,11 +937,13 @@ pref_savePref(PLHashEntry *he, int i, void *arg)
 				PR_Free(tmp_str);
 			}
 		}
-		else if (pref->flags & PREF_INT) {
+		else if (pref->flags & PREF_INT)
+		{
 			PR_snprintf(buf, 2048, "user_pref(\"%s\", %ld);" LINEBREAK,
 				(char*) he->key, (long) pref->userPref.intVal);
 		}
-		else if (pref->flags & PREF_BOOL) {
+		else if (pref->flags & PREF_BOOL)
+		{
 			PR_snprintf(buf, 2048, "user_pref(\"%s\", %s);" LINEBREAK, (char*) he->key,
 				(pref->userPref.boolVal) ? "true" : "false");
 		}
@@ -1239,7 +1247,8 @@ PrefResult pref_CopyCharPref(const char *pref_name, char ** return_buffer, PRBoo
 
 	pref = (PrefNode*) PR_HashTableLookup(gHashTable, pref_name);
 
-	if (pref && pref->flags & PREF_STRING) {
+	if (pref && (pref->flags & PREF_STRING))
+	{
 		if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
 			stringVal = pref->defaultPref.stringVal;
 		else
@@ -1262,7 +1271,8 @@ PrefResult pref_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool ge
 		return PREF_NOT_INITIALIZED;
 
 	pref = (PrefNode*) PR_HashTableLookup(gHashTable, pref_name);
-	if (pref && pref->flags & PREF_INT) {
+	if (pref && (pref->flags & PREF_INT))
+	{
 		if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
 			*return_int = pref->defaultPref.intVal;
 		else
@@ -1281,7 +1291,8 @@ PrefResult pref_GetBoolPref(const char *pref_name, PRBool * return_value, PRBool
 		return PREF_NOT_INITIALIZED;
 
 	pref = (PrefNode*) PR_HashTableLookup(gHashTable, pref_name);	
-	if (pref && pref->flags & PREF_BOOL) {
+	if (pref && (pref->flags & PREF_BOOL))
+	{
 		if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
 			*return_value = pref->defaultPref.boolVal;
 		else
@@ -1324,14 +1335,14 @@ PREF_GetColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 *blue)
 
 	PrefResult result = PREF_GetCharPref(pref_name, colstr, &iSize);
 	
-	if (result == PREF_NOERROR) {
+	if (result == PREF_NOERROR)
+	{
 		int r, g, b;
 		sscanf(colstr, "#%02X%02X%02X", &r, &g, &b);
 		*red = r;
 		*green = g;
 		*blue = b;
-	}
-	
+	}	
 	return result;
 }
 
@@ -1342,15 +1353,10 @@ PREF_GetColorPrefDWord(const char *pref_name, PRUint32 *colorref)
 {
     uint8 red, green, blue;
     PrefResult   result;
-
     PR_ASSERT(colorref);
-
     result = PREF_GetColorPref(pref_name, &red, &green, &blue);
-
-    if (result == PREF_NOERROR) {
+    if (result == PREF_NOERROR)
     	*colorref = MYRGB(red,green,blue);
-    }
-
 	return result;
 }
 
@@ -1361,7 +1367,8 @@ PREF_GetRectPref(const char *pref_name, int16 *left, int16 *top, int16 *right, i
 	int iSize=64;
 	PrefResult result = PREF_GetCharPref(pref_name, rectstr, &iSize);
 	
-	if (result == PREF_NOERROR) {
+	if (result == PREF_NOERROR)
+	{
 		int l, t, r, b;
 		sscanf(rectstr, "%i,%i,%i,%i", &l, &t, &r, &b);
 		*left = l;	*top = t;
@@ -1380,8 +1387,10 @@ PREF_GetBinaryPref(const char *pref_name, void * return_value, int *size)
 
 	result = PREF_CopyCharPref(pref_name, &buf);
 
-	if (result == PREF_NOERROR) {
-		if (strlen(buf) == 0) {		/* don't decode empty string ? */
+	if (result == PREF_NOERROR)
+	{
+		if (strlen(buf) == 0)
+		{		/* don't decode empty string ? */
 			PR_Free(buf);
 			return PREF_ERROR;
 		}
@@ -1407,8 +1416,10 @@ ReadCharPrefUsing(const char *pref_name, void** return_value, int *size, CharPre
 
 	result = inFunc(pref_name, &buf);
 
-	if (result == PREF_NOERROR) {
-		if (strlen(buf) == 0) {		/* do not decode empty string? */
+	if (result == PREF_NOERROR)
+	{
+		if (strlen(buf) == 0)
+		{		/* do not decode empty string? */
 			PR_Free(buf);
 			return PREF_ERROR;
 		}
@@ -1491,7 +1502,8 @@ PREF_GetDefaultColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 
 
 	PrefResult result = PREF_GetDefaultCharPref(pref_name, colstr, &iSize);
 	
-	if (result == PREF_NOERROR) {
+	if (result == PREF_NOERROR)
+	{
 		int r, g, b;
 		sscanf(colstr, "#%02X%02X%02X", &r, &g, &b);
 		*red = r;
@@ -1507,15 +1519,10 @@ PREF_GetDefaultColorPrefDWord(const char *pref_name, PRUint32 * colorref)
 {
     uint8 red, green, blue;
     PrefResult   result;
-
     PR_ASSERT(colorref);
-
     result = PREF_GetDefaultColorPref(pref_name, &red, &green, &blue);
-
-    if (result == PREF_NOERROR) {
+    if (result == PREF_NOERROR)
     	*colorref = MYRGB(red,green,blue);
-    }
-
 	return result;
 }
 
@@ -1526,9 +1533,8 @@ PREF_GetDefaultRectPref(const char *pref_name, int16 *left, int16 *top, int16 *r
 	int iLen = 256;
 	PrefResult result = PREF_GetDefaultCharPref(pref_name, (char *)&rectstr, &iLen);
 	
-	if (result == PREF_NOERROR) {
+	if (result == PREF_NOERROR)
 		sscanf(rectstr, "%hd,%hd,%hd,%hd", left, top, right, bottom);
-	}
 	return result;
 }
 
@@ -1576,7 +1582,8 @@ PREF_ClearLIPref(const char *pref_name)
 		return PREF_NOT_INITIALIZED;
 
 	pref = (PrefNode*) PR_HashTableLookup(gHashTable, pref_name);
-	if (pref && PREF_HAS_LI_VALUE(pref)) {
+	if (pref && PREF_HAS_LI_VALUE(pref))
+	{
 		pref->flags &= ~PREF_LILOCAL;
 		if (gCallbacksEnabled)
     		pref_DoCallback(pref_name);
@@ -1597,7 +1604,8 @@ PREF_ClearUserPref(const char *pref_name)
 		return PREF_NOT_INITIALIZED;
 
 	pref = (PrefNode*) PR_HashTableLookup(gHashTable, pref_name);
-	if (pref && PREF_HAS_USER_VALUE(pref)) {
+	if (pref && PREF_HAS_USER_VALUE(pref))
+	{
 		pref->flags &= ~PREF_USERSET;
 		if (gCallbacksEnabled)
     		pref_DoCallback(pref_name);
@@ -1624,7 +1632,8 @@ PREF_CopyConfigString(const char *obj_name, char **return_buffer)
 	PrefResult success = PREF_ERROR;
 	PrefNode* pref = (PrefNode*) PR_HashTableLookup(gHashTable, obj_name);
 	
-	if (pref && pref->flags & PREF_STRING) {
+	if (pref && (pref->flags & PREF_STRING))
+	{
     	if (return_buffer)
     		*return_buffer = PL_strdup(pref->defaultPref.stringVal);
     	success = PREF_NOERROR;
@@ -1642,7 +1651,8 @@ PREF_CopyIndexConfigString(const char *obj_name,
 
 	pref = (PrefNode*) PR_HashTableLookup(gHashTable, setup_buf);
 	
-	if (pref && pref->flags & PREF_STRING) {
+	if (pref && (pref->flags & PREF_STRING))
+	{
     	if (return_buffer)
     		*return_buffer = PL_strdup(pref->defaultPref.stringVal);
     	success = PREF_NOERROR;
@@ -1655,10 +1665,9 @@ PR_IMPLEMENT(PrefResult)
 PREF_GetConfigInt(const char *obj_name, PRInt32 *return_int)
 {
 	PrefResult success = PREF_ERROR;
-	
 	PrefNode* pref = (PrefNode*) PR_HashTableLookup(gHashTable, obj_name);
-	
-	if (pref && pref->flags & PREF_INT) {
+	if (pref && (pref->flags & PREF_INT))
+	{
 		*return_int = pref->defaultPref.intVal;
 		success = PREF_NOERROR;
 	}
@@ -1669,54 +1678,43 @@ PREF_GetConfigInt(const char *obj_name, PRInt32 *return_int)
 PR_IMPLEMENT(PrefResult)
 PREF_GetConfigBool(const char *obj_name, PRBool *return_bool)
 {
-	PrefResult success = PREF_ERROR;
-	
-	PrefNode* pref = (PrefNode*) PR_HashTableLookup(gHashTable, obj_name);
-	
-	if (pref && pref->flags & PREF_BOOL) {
+	PrefNode* pref = (PrefNode*) PR_HashTableLookup(gHashTable, obj_name);	
+	if (pref && (pref->flags & PREF_BOOL))
+	{
 		*return_bool = pref->defaultPref.boolVal;
-		success = PREF_NOERROR;
+		return PREF_NOERROR;
 	}
-
-	return success;
+	return PREF_ERROR;
 }
 
 PrefResult pref_UnlockPref(const char *key)
 {
 	PrefNode* pref;
-	PrefResult result = PREF_OK;
-
 	if (!gHashTable)
 		return PREF_NOT_INITIALIZED;
 
 	pref = (PrefNode*) PR_HashTableLookup(gHashTable, key);
-	if (!pref) {
+	if (!pref)
         return PREF_DOES_NOT_EXIST;
-    }
 
-	if (PREF_IS_LOCKED(pref)) {
+	if (PREF_IS_LOCKED(pref))
+	{
 		pref->flags &= ~PREF_LOCKED;
-		if (gCallbacksEnabled) {
+		if (gCallbacksEnabled)
 			pref_DoCallback(key);
-		}
     }
-
     return PREF_OK;
 }
 
 PrefResult pref_LockPref(const char *key)
 {
 	PrefNode* pref;
-	PrefResult result = PREF_OK;
-
 	if (!gHashTable)
 		return PREF_NOT_INITIALIZED;
 
 	pref = (PrefNode*) PR_HashTableLookup(gHashTable, key);
-	if (!pref) {
+	if (!pref)
         return PREF_DOES_NOT_EXIST;
-    }
-
    
     return pref_HashPref(key, pref->defaultPref, (PrefType)pref->flags, PREF_LOCK);
 }
@@ -1733,20 +1731,22 @@ PREF_LockPref(const char *key)
 static PRBool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType type)
 {
 	PRBool changed = PR_TRUE;
-	if (type & PREF_STRING) {
+	if (type & PREF_STRING)
+	{
 		if (oldValue.stringVal && newValue.stringVal)
 			changed = (strcmp(oldValue.stringVal, newValue.stringVal) != 0);
-    } else if (type & PREF_INT) {		
-		changed = oldValue.intVal != newValue.intVal;
-    } else if (type & PREF_BOOL) {
-		changed = oldValue.boolVal != newValue.boolVal;
     }
+    else if (type & PREF_INT)
+		changed = oldValue.intVal != newValue.intVal;
+    else if (type & PREF_BOOL)
+		changed = oldValue.boolVal != newValue.boolVal;
 	return changed;
 }
 
 static void pref_SetValue(PrefValue* oldValue, PrefValue newValue, PrefType type)
 {
-	switch (type & PREF_VALUETYPE_MASK) {
+	switch (type & PREF_VALUETYPE_MASK)
+	{
 		case PREF_STRING:
 			PR_ASSERT(newValue.stringVal);
 			PR_FREEIF(oldValue->stringVal);
@@ -1767,7 +1767,8 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
 		return PREF_NOT_INITIALIZED;
 
 	pref = (PrefNode*) PR_HashTableLookup(gHashTable, key);
-	if (!pref) {
+	if (!pref)
+	{
     	pref = (PrefNode*) calloc(sizeof(PrefNode), 1);
     	if (!pref)	
     		return PREF_OUT_OF_MEMORY;
@@ -1780,16 +1781,20 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
 			pref->defaultPref.intVal = (PRInt32) -5632;
     	PR_HashTableAdd(gHashTable, PL_strdup(key), pref);
     }
-    else if ((pref->flags & PREF_VALUETYPE_MASK) != (type & PREF_VALUETYPE_MASK)) {
+    else if ((pref->flags & PREF_VALUETYPE_MASK) != (type & PREF_VALUETYPE_MASK))
+    {
 		PR_ASSERT(0);			/* this shouldn't happen */
 		return PREF_TYPE_CHANGE_ERR;
     }
     
-    switch (action) {
+    switch (action)
+    {
     	case PREF_SETDEFAULT:
     	case PREF_SETCONFIG:
-    		if (!PREF_IS_LOCKED(pref)) {		/* ?? change of semantics? */
-				if (pref_ValueChanged(pref->defaultPref, value, type)) {
+    		if (!PREF_IS_LOCKED(pref))
+    		{		/* ?? change of semantics? */
+				if (pref_ValueChanged(pref->defaultPref, value, type))
+				{
 					pref_SetValue(&pref->defaultPref, value, type);
 					if (!PREF_HAS_USER_VALUE(pref))
 				    	result = PREF_VALUECHANGED;
@@ -1802,7 +1807,8 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
 		/* LI_STUFF  turn the li stuff on */
 		case PREF_SETLI:
 			if ( !PREF_HAS_LI_VALUE(pref) ||
-					pref_ValueChanged(pref->userPref, value, type) ) {    	
+					pref_ValueChanged(pref->userPref, value, type) )
+			{    	
 				pref_SetValue(&pref->userPref, value, type);
 				pref->flags |= PREF_LILOCAL;
 				if (!PREF_IS_LOCKED(pref))
@@ -1813,15 +1819,18 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
 		case PREF_SETUSER:
 			/* If setting to the default value, then un-set the user value.
 			   Otherwise, set the user value only if it has changed */
-			if ( !pref_ValueChanged(pref->defaultPref, value, type) ) {
-				if (PREF_HAS_USER_VALUE(pref)) {
+			if ( !pref_ValueChanged(pref->defaultPref, value, type) )
+			{
+				if (PREF_HAS_USER_VALUE(pref))
+				{
 					pref->flags &= ~PREF_USERSET;
 					if (!PREF_IS_LOCKED(pref))
 						result = PREF_VALUECHANGED;
 				}
 			}
 			else if ( !PREF_HAS_USER_VALUE(pref) ||
-					   pref_ValueChanged(pref->userPref, value, type) ) {    	
+					   pref_ValueChanged(pref->userPref, value, type) )
+			{    	
 				pref_SetValue(&pref->userPref, value, type);
 				pref->flags |= PREF_USERSET;
 				if (!PREF_IS_LOCKED(pref))
@@ -1830,11 +1839,13 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
 			break;
 			
 		case PREF_LOCK:
-			if (pref_ValueChanged(pref->defaultPref, value, type)) {
+			if (pref_ValueChanged(pref->defaultPref, value, type))
+			{
 				pref_SetValue(&pref->defaultPref, value, type);
 		    	result = PREF_VALUECHANGED;
 		    }
-		    else if (!PREF_IS_LOCKED(pref)) {
+		    else if (!PREF_IS_LOCKED(pref))
+		    {
 		    	result = PREF_VALUECHANGED;
 		    }
 		    pref->flags |= PREF_LOCKED;
@@ -1842,7 +1853,8 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
 		    break;
 	}
 
-    if (result == PREF_VALUECHANGED && gCallbacksEnabled) {
+    if (result == PREF_VALUECHANGED && gCallbacksEnabled)
+    {
     	PrefResult result2 = pref_DoCallback(key);
     	if (result2 < 0)
     		result = result2;
@@ -1879,15 +1891,16 @@ JSBool PR_CALLBACK pref_NativeDefaultPref
 JSBool PR_CALLBACK pref_NativeLILocalPref
 	(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
 {
-    if (argc >= 1 && JSVAL_IS_STRING(argv[0])) {
+    if (argc >= 1 && JSVAL_IS_STRING(argv[0]))
+    {
     	const char *key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
 		PrefNode* pref = (PrefNode*) PR_HashTableLookup(gHashTable, key);
 		
-		if (pref && !PREF_HAS_LI_VALUE(pref)) {
+		if (pref && !PREF_HAS_LI_VALUE(pref))
+		{
 			pref->flags |= PREF_LILOCAL;
-			if (gCallbacksEnabled) {
+			if (gCallbacksEnabled)
 				pref_DoCallback(key);
-			}
 		}
 	}
 	return JS_TRUE;
@@ -1922,15 +1935,16 @@ JSBool PR_CALLBACK pref_NativeLockPref
 JSBool PR_CALLBACK pref_NativeUnlockPref
 	(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
 {
-    if (argc >= 1 && JSVAL_IS_STRING(argv[0])) {
+    if (argc >= 1 && JSVAL_IS_STRING(argv[0]))
+    {
     	const char *key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
 		PrefNode* pref = (PrefNode*) PR_HashTableLookup(gHashTable, key);
 		
-		if (pref && PREF_IS_LOCKED(pref)) {
+		if (pref && PREF_IS_LOCKED(pref))
+		{
 			pref->flags &= ~PREF_LOCKED;
-			if (gCallbacksEnabled) {
+			if (gCallbacksEnabled)
 				pref_DoCallback(key);
-			}
 		}
 	}
 	return JS_TRUE;
@@ -1954,20 +1968,21 @@ JSBool PR_CALLBACK pref_NativeGetPref
     	const char *key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
     	pref = (PrefNode*) PR_HashTableLookup(gHashTable, key);
     	
-    	if (pref) {
-    		PRBool use_default = (PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref));
-    			
-    		if (pref->flags & PREF_STRING) {
+    	if (pref)
+    	{
+    		PRBool use_default = (PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref));		
+    		if (pref->flags & PREF_STRING)
+    		{
     			char* str = use_default ? pref->defaultPref.stringVal : pref->userPref.stringVal;
     			JSString* jsstr = JS_NewStringCopyZ(cx, str);
     			*rval = STRING_TO_JSVAL(jsstr);
     		}
-    		else if (pref->flags & PREF_INT) {
-    			*rval = INT_TO_JSVAL(use_default ? pref->defaultPref.intVal : pref->userPref.intVal);
-    		}
-    		else if (pref->flags & PREF_BOOL) {
-    			*rval = BOOLEAN_TO_JSVAL(use_default ? pref->defaultPref.boolVal : pref->userPref.boolVal);
-    		}
+    		else if (pref->flags & PREF_INT)
+    			*rval = INT_TO_JSVAL(use_default ?
+    			    pref->defaultPref.intVal : pref->userPref.intVal);
+    		else if (pref->flags & PREF_BOOL)
+    			*rval = BOOLEAN_TO_JSVAL(use_default ?
+    			    pref->defaultPref.boolVal : pref->userPref.boolVal);
     	}
     }
 	return JS_TRUE;
@@ -2006,7 +2021,8 @@ PR_IMPLEMENT(int)
 pref_addChild(PLHashEntry *he, int i, void *arg)
 {
 	PrefChildIter* pcs = (PrefChildIter*) arg;
-	if ( PL_strncmp(he->key, pcs->parent, strlen(pcs->parent)) == 0 ) {
+	if ( PL_strncmp(he->key, pcs->parent, strlen(pcs->parent)) == 0 )
+	{
 		char buf[512];
 		char* nextdelim;
 		PRUint32 parentlen = strlen(pcs->parent);
@@ -2031,12 +2047,14 @@ pref_addChild(PLHashEntry *he, int i, void *arg)
 			substringBordersSeparator = (substring[buflen] == '\0' || substring[buflen] == ';');
 		}
 
-		if (!substring || !substringBordersSeparator) {
+		if (!substring || !substringBordersSeparator)
+		{
 			int newsize = strlen(pcs->childList) + strlen(buf) + 2;
 #ifdef XP_WIN16
 			return HT_ENUMERATE_STOP;
 #else
-			if (newsize > pcs->bufsize) {
+			if (newsize > pcs->bufsize)
+			{
 				pcs->bufsize *= 3;
 				pcs->childList = (char*) realloc(pcs->childList, sizeof(char) * pcs->bufsize);
 				if (!pcs->childList)
@@ -2218,7 +2236,8 @@ PREF_RegisterCallback(const char *pref_node,
 					   void * instance_data)
 {
 	struct CallbackNode* node = (struct CallbackNode*) malloc(sizeof(struct CallbackNode));
-	if (node) {
+	if (node)
+	{
 		node->domain = PL_strdup(pref_node);
 		node->func = callback;
 		node->data = instance_data;
@@ -2254,7 +2273,8 @@ PREF_UnregisterCallback(const char *pref_node,
 			node = next_node;
 			result = PREF_NOERROR;
 		}
-		else {
+		else
+		{
 			prev_node = node;
 			node = node->next;
 		}
@@ -2268,7 +2288,8 @@ PrefResult pref_DoCallback(const char* changed_pref)
 	struct CallbackNode* node;
 	for (node = gCallbacks; node != NULL; node = node->next)
 	{
-		if ( PL_strncmp(changed_pref, node->domain, strlen(node->domain)) == 0 ) {
+		if ( PL_strncmp(changed_pref, node->domain, strlen(node->domain)) == 0 )
+		{
 			int result2 = (*node->func) (changed_pref, node->data);
 			if (result2 != 0)
 				result = (PrefResult)result2;
@@ -2295,11 +2316,11 @@ JSBool PR_CALLBACK pref_NativeGetLDAPAttr
 #ifdef MOZ_ADMIN_LIB
 	ldap_func get_ldap_attributes = NULL;
 #if (defined (XP_MAC) && defined(powerc)) || defined (XP_PC) || defined(XP_UNIX)
-	if (gAutoAdminLib == NULL) {
+	if (!gAutoAdminLib)
 		gAutoAdminLib = pref_LoadAutoAdminLib();
-	}
 		
-	if (gAutoAdminLib) {
+	if (gAutoAdminLib)
+	{
 		get_ldap_attributes = (ldap_func)
 			PR_FindSymbol(
 			 gAutoAdminLib,
@@ -2437,14 +2458,16 @@ pref_BranchCallback(JSContext *cx, JSScript *script)
     JSBool ok = JS_TRUE;
 
     decoder = JS_GetPrivate(cx, JS_GetGlobalObject(cx));
-    if (decoder->window_context && ++decoder->branch_count == 1000000) {
-	decoder->branch_count = 0;
-	message = PR_smprintf("Lengthy %s still running.  Continue?",
+    if (decoder->window_context && ++decoder->branch_count == 1000000)
+    {
+	    decoder->branch_count = 0;
+	    message = PR_smprintf("Lengthy %s still running.  Continue?",
 			      lglanguage_name);
-	if (message) {
-	    ok = FE_Confirm(decoder->window_context, message);
-	    PR_Free(message);
-	}
+	    if (message)
+	    {
+	        ok = FE_Confirm(decoder->window_context, message);
+	        PR_Free(message);
+	    }
     }
 #endif
     return JS_TRUE;
@@ -2463,17 +2486,20 @@ pref_ErrorReporter(JSContext *cx, const char *message,
 		"Please contact your administrator.");
 
 	last = PR_sprintf_append(last, LINEBREAK LINEBREAK);
-	if (!report) {
+	if (!report)
 		last = PR_sprintf_append(last, "%s\n", message);
-	} else {
+	else
+	{
 		if (report->filename)
 			last = PR_sprintf_append(last, "%s, ",
 									 report->filename, report->filename);
 		if (report->lineno)
 			last = PR_sprintf_append(last, "line %u: ", report->lineno);
 		last = PR_sprintf_append(last, "%s. ", message);
-		if (report->linebuf) {
-			for (s = t = report->linebuf; *s != '\0'; s = t) {
+		if (report->linebuf)
+		{
+			for (s = t = report->linebuf; *s != '\0'; s = t)
+			{
 				for (; t != report->tokenptr && *t != '<' && *t != '\0'; t++)
 					;
 				last = PR_sprintf_append(last, "%.*s", t - s, s);
@@ -2485,7 +2511,8 @@ pref_ErrorReporter(JSContext *cx, const char *message,
 		}
 	}
 
-	if (last) {
+	if (last)
+	{
 		pref_Alert(last);
 		PR_Free(last);
 	}
@@ -2591,8 +2618,9 @@ pref_LoadAutoAdminLib()
 	return lib;
 }
 
-/*
- * Native implementations of JavaScript functions
+/*--------------------------------------------------------------------------------------*/
+static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action)
+/* Native implementations of JavaScript functions
 	pref		-> pref_NativeDefaultPref
 	defaultPref -> "
 	userPref	-> pref_NativeUserPref
@@ -2600,8 +2628,7 @@ pref_LoadAutoAdminLib()
 	unlockPref	-> pref_NativeUnlockPref
 	getPref		-> pref_NativeGetPref
 	config		-> pref_NativeSetConfig
- */
-static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action)
+ *--------------------------------------------------------------------------------------*/
 {	
 #ifdef NOPE1987
 	/* this is somehow fixing an internal compiler error for win16 */
@@ -2621,25 +2648,30 @@ static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action)
 
     key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
 
-    if (bIsString) {
+    if (bIsString)
+    {
     	value.stringVal = JS_GetStringBytes(JSVAL_TO_STRING(argv[1]));
     	pref_HashPref(key, value, PREF_STRING, action);
     }
     
 #else
-    if (argc >= 2 && JSVAL_IS_STRING(argv[0])) {
+    if (argc >= 2 && JSVAL_IS_STRING(argv[0]))
+    {
 		PrefValue value;
     	const char *key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
     	
-    	if (JSVAL_IS_STRING(argv[1])) {
+    	if (JSVAL_IS_STRING(argv[1]))
+    	{
     		value.stringVal = JS_GetStringBytes(JSVAL_TO_STRING(argv[1]));
     		pref_HashPref(key, value, PREF_STRING, action);
     	}
-    	else if (JSVAL_IS_INT(argv[1])) {
+    	else if (JSVAL_IS_INT(argv[1]))
+    	{
     		value.intVal = JSVAL_TO_INT(argv[1]);
     		pref_HashPref(key, value, PREF_INT, action);
     	}
-    	else if (JSVAL_IS_BOOLEAN(argv[1])) {
+    	else if (JSVAL_IS_BOOLEAN(argv[1]))
+    	{
     		value.boolVal = JSVAL_TO_BOOLEAN(argv[1]);
     		pref_HashPref(key, value, PREF_BOOL, action);
     	}
@@ -2649,34 +2681,26 @@ static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action)
 	return JS_TRUE;
 }
 
-/*
- * pref_CountListMembers
- */
-static int
-pref_CountListMembers(char* list)
+/*--------------------------------------------------------------------------------------*/
+static int pref_CountListMembers(char* list)
+/*--------------------------------------------------------------------------------------*/
 {
 	int members = 0;
 	char* p = list = PL_strdup(list);
-
-	for ( p = strtok(p, ","); p != NULL; p = strtok(NULL, ",") ) {
+	for ( p = strtok(p, ","); p != NULL; p = strtok(NULL, ",") )
 		members++;
-	}
-
 	PR_FREEIF(list);
-
 	return members;
 }
 
 
-/*
- * PREF_GetListPref
- * Splits a comma separated strings into an array of strings.
+/*--------------------------------------------------------------------------------------*/
+PR_IMPLEMENT(PrefResult) PREF_GetListPref(const char* pref, char*** list)
+/* Splits a comma separated string into an array of strings.
  * The array of strings is actually just an array of pointers into a copy
  * of the value returned by PREF_CopyCharPref().  So, we don't have to
  * allocate each string separately.
- */
-PR_IMPLEMENT(PrefResult)
-PREF_GetListPref(const char* pref, char*** list)
+----------------------------------------------------------------------------------------*/
 {
 	char* value;
 	char** p;
@@ -2684,9 +2708,8 @@ PREF_GetListPref(const char* pref, char*** list)
 
 	*list = NULL;
 
-	if ( PREF_CopyCharPref(pref, &value) != PREF_OK || value == NULL ) {
+	if ( PREF_CopyCharPref(pref, &value) != PREF_OK || value == NULL )
 		return PREF_ERROR;
-	}
 
 	nugmembers = pref_CountListMembers(value);
 
@@ -2698,23 +2721,19 @@ PREF_GetListPref(const char* pref, char*** list)
           *(++p) = strtok(NULL, ",") ) /* Empty body */ ;
 
 	/* Copy each entry so that users can free them. */
-	for ( p = *list; *p != NULL; p++ ) {
+	for ( p = *list; *p != NULL; p++ )
 		*p = PL_strdup(*p);
-	}
 
 	PR_Free(value);
 
 	return PREF_OK;
 }
 
-
-/*
- * PREF_SetListPref
- * TODO: Call Javascript callback to make sure user is allowed to make this
+/*--------------------------------------------------------------------------------------*/
+PR_IMPLEMENT(PrefResult) PREF_SetListPref(const char* pref, char** list)
+/* TODO: Call Javascript callback to make sure user is allowed to make this
  * change.
- */
-PR_IMPLEMENT(PrefResult)
-PREF_SetListPref(const char* pref, char** list)
+----------------------------------------------------------------------------------------*/
 {
 	PrefResult status;
 	int len;
@@ -2723,16 +2742,15 @@ PREF_SetListPref(const char* pref, char** list)
 
 	if ( pref == NULL || list == NULL ) return PREF_ERROR;
 
-	for ( len = 0, p = list; p != NULL && *p != NULL; p++ ) {
+	for ( len = 0, p = list; p != NULL && *p != NULL; p++ )
 		len+= (PL_strlen(*p)+1); /* The '+1' is for a comma or '\0' */
-	}
 
-	if ( len <= 0 || (value = PR_MALLOC(len)) == NULL ) {
+	if ( len <= 0 || (value = PR_MALLOC(len)) == NULL )
 		return PREF_ERROR;
-	}
 
 	(void) PL_strcpy(value, *list);
-	for ( p = list+1; p != NULL && *p != NULL; p++ ) {
+	for ( p = list+1; p != NULL && *p != NULL; p++ )
+	{
 		(void) PL_strcat(value, ",");
 		(void) PL_strcat(value, *p);
 	}
@@ -2744,9 +2762,10 @@ PREF_SetListPref(const char* pref, char** list)
 	return status;	
 }
 
-
+/*--------------------------------------------------------------------------------------*/
 PR_IMPLEMENT(PrefResult)
 PREF_AppendListPref(const char* pref, const char* value)
+/*--------------------------------------------------------------------------------------*/
 {
 	char *pListPref = NULL, *pNewList = NULL;
     int nPrefLen = 0;
@@ -2758,11 +2777,13 @@ PREF_AppendListPref(const char* pref, const char* value)
         nPrefLen = PL_strlen(pListPref);
     }
 
-    if (nPrefLen == 0) {
+    if (nPrefLen == 0)
 		PREF_SetCharPref(pref, value);
-    } else {
+    else
+    {
         pNewList = (char *) PR_MALLOC((nPrefLen + PL_strlen(value) + 2));
-        if (pNewList) {
+        if (pNewList)
+        {
             PL_strcpy(pNewList, pListPref);
 			PL_strcat(pNewList, ",");
 			PL_strcat(pNewList, value);
@@ -2777,25 +2798,20 @@ PREF_AppendListPref(const char* pref, const char* value)
     return PREF_NOERROR;
 }
 
-/*
- * PREF_FreeListPref
- * Free each element in the list, then free the list, then NULL the
- * list out.
- */
+/*--------------------------------------------------------------------------------------*/
 PR_IMPLEMENT(PrefResult)
 PREF_FreeListPref(char*** list)
+/* Free each element in the list, then free the list, then NULL the
+ * list out.
+ *--------------------------------------------------------------------------------------*/
 {
 	char** p;
+	if (!list)
+	    return PREF_ERROR;
 
-	if ( list == NULL ) return PREF_ERROR;
-
-	for ( p = *list; *p != NULL; p++ ) {
+	for ( p = *list; *p != NULL; p++ )
 		PR_Free(*p);
-	}
 
 	PR_FREEIF(*list);
-
-	*list = NULL;
-
 	return PREF_OK;
 }

@@ -58,5 +58,16 @@ NSPR_END_EXTERN_C
 PR_EXTERN(PrefResult) PREF_SavePrefFileSpecWith(
 	const nsFileSpec& fileSpec,
 	PLHashEnumerator heSaveProc);
-#endif /*PREF_SUPPORT_OLD_PATH_STRINGS*/
+#endif /*__cplusplus*/
+
+#ifdef XP_MAC
+#  define LINEBREAK           "\012"
+#  define LINEBREAK_LEN 1
+#elif defined(XP_PC) || defined(XP_OS2)
+#  define LINEBREAK           "\015\012"
+#  define LINEBREAK_LEN       2
+#elif defined(XP_UNIX)
+#  define LINEBREAK           "\012"
+#  define LINEBREAK_LEN       1
+#endif /* XP_MAC */
 
