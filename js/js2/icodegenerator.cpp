@@ -144,24 +144,37 @@ void ICodeGenerator::setLabel(int32 label)
     l->itsOffset = iCode->size();
 }
 
+void ICodeGenerator::setLabel(InstructionStream *stream, int32 label)
+{
+    Label* l;
+#ifdef __GNUC__
+    // libg++'s vector class doesn't have at():
+    if (label >= labels.size())
+        throw std::out_of_range("label out of range");
+    l = labels[label];
+#else
+    l = labels.at(label);
+#endif
+    l->itsBase = stream;
+    l->itsOffset = stream->size();
+}
+
 /***********************************************************************************************/
 
 void MultiPathICodeState::mergeStream(InstructionStream *mainStream, LabelList &labels)
 {
-    if (itsTopLabel < labels.size()) { 
-            // labels (might) have been allocated in this stream
-            // we need to adjust their position relative to the 
-            // size of the stream we're joining
-        for (LabelList::iterator i = labels.begin() + itsTopLabel; i != labels.end(); i++) {
-            if ((*i)->itsBase == its_iCode) {
-                (*i)->itsBase = mainStream;
-                (*i)->itsOffset += mainStream->size();
-            }
+    // change InstructionStream to be a class that also remembers
+    // if it contains any labels (maybe even remembers the labels
+    // themselves?) in order to avoid running this loop unnecessarily.
+    for (LabelList::iterator i = labels.begin(); i != labels.end(); i++) {
+        if ((*i)->itsBase == its_iCode) {
+            (*i)->itsBase = mainStream;
+            (*i)->itsOffset += mainStream->size();
         }
     }
 
-    for (InstructionIterator i = its_iCode->begin(); i != its_iCode->end(); i++)
-        mainStream->push_back(*i);
+    for (InstructionIterator ii = its_iCode->begin(); ii != its_iCode->end(); ii++)
+        mainStream->push_back(*ii);
 
 }
 
@@ -178,41 +191,174 @@ void ICodeGenerator::beginWhileStatement(const SourcePosition &pos)
     branch(whileConditionTop);
     
     // save off the current stream while we gen code for the condition
-    stitcher.push(new WhileCodeState(iCode, labels.size(), whileConditionTop, whileBlockStart));
+    stitcher.push_back(new WhileCodeState(whileConditionTop, whileBlockStart, this));
 
     iCode = new InstructionStream();
 }
 
 void ICodeGenerator::endWhileExpression(Register condition)
 {
-    WhileCodeState *ics = static_cast<WhileCodeState *>(stitcher.top());
-    ASSERT(ics->stateKind == While_State);
+    WhileCodeState *ics = static_cast<WhileCodeState *>(stitcher.back());
+    ASSERT(ics->stateKind == While_state);
 
-    branchConditional(ics->whileBodyLabel, condition);
+    branchConditional(ics->whileBody, condition);
     resetTopRegister();
     // stash away the condition expression and switch 
     // back to the main stream
     iCode = ics->swapStream(iCode);
-    setLabel(ics->whileBodyLabel);         // mark the start of the while block
+    setLabel(ics->whileBody);         // mark the start of the while block
 }
   
 void ICodeGenerator::endWhileStatement()
 {
     // recover the while stream
-    WhileCodeState *ics = static_cast<WhileCodeState *>(stitcher.top());
-    ASSERT(ics->stateKind == While_State);
-    stitcher.pop();
+    WhileCodeState *ics = static_cast<WhileCodeState *>(stitcher.back());
+    ASSERT(ics->stateKind == While_state);
+    stitcher.pop_back();
 
     // mark the start of the condition code
     // and re-attach it to the main stream
-    setLabel(ics->whileConditionLabel);
+    setLabel(ics->whileCondition);
 
     ics->mergeStream(iCode, labels);
+    if (ics->breakLabel != -1)
+        setLabel(ics->breakLabel);
 
-    delete ics->its_iCode;
     delete ics;
 
     resetTopRegister();
+}
+
+/***********************************************************************************************/
+
+void ICodeGenerator::beginDoStatement(const SourcePosition &pos)
+{
+    resetTopRegister();
+  
+    // mark the top of the loop body
+    // and reserve a label for the condition
+    int32 doBlock = getLabel();
+    int32 doCondition = getLabel();
+    setLabel(doBlock);
+    
+    stitcher.push_back(new DoCodeState(doBlock, doCondition, this));
+
+    iCode = new InstructionStream();
+}
+
+void ICodeGenerator::endDoStatement()
+{
+    DoCodeState *ics = static_cast<DoCodeState *>(stitcher.back());
+    ASSERT(ics->stateKind == Do_state);
+
+    // mark the start of the do conditional
+    setLabel(ics->doCondition);
+
+    resetTopRegister();
+}
+  
+void ICodeGenerator::endDoExpression(Register condition)
+{
+    DoCodeState *ics = static_cast<DoCodeState *>(stitcher.back());
+    ASSERT(ics->stateKind == Do_state);
+    stitcher.pop_back();
+
+    // add branch to top of do block
+    branchConditional(ics->doBody, condition);
+    if (ics->breakLabel != -1)
+        setLabel(ics->breakLabel);
+
+    delete ics;
+
+    resetTopRegister();
+}
+
+/***********************************************************************************************/
+
+void ICodeGenerator::beginSwitchStatement(const SourcePosition &pos, Register expression)
+{
+    // stash the control expression value
+    resetTopRegister();
+    op(MOVE_TO, getRegister(), expression);
+    // build an instruction stream for the case statements, the case
+    // expressions are generated into the main stream directly, the
+    // case statements are then added back in afterwards.
+    InstructionStream *x = new InstructionStream();
+    SwitchCodeState *ics = new SwitchCodeState(expression, this);
+    ics->swapStream(x);
+    stitcher.push_back(ics);
+}
+
+void ICodeGenerator::endCaseCondition(Register expression)
+{
+    SwitchCodeState *ics = static_cast<SwitchCodeState *>(stitcher.back());
+    ASSERT(ics->stateKind == Switch_state);
+
+    int32 caseLabel = getLabel();
+    Register r = op(COMPARE, expression, ics->controlExpression);
+    branchConditional(caseLabel, r);
+
+    setLabel(ics->its_iCode, caseLabel);                // mark the case in the Case Statement stream 
+    resetTopRegister();
+}
+
+void ICodeGenerator::beginCaseStatement()
+{
+    SwitchCodeState *ics = static_cast<SwitchCodeState *>(stitcher.back());
+    ASSERT(ics->stateKind == Switch_state);
+    iCode = ics->swapStream(iCode);                     // switch to Case Statement stream
+}
+
+void ICodeGenerator::endCaseStatement()
+{
+    SwitchCodeState *ics = static_cast<SwitchCodeState *>(stitcher.back());
+    ASSERT(ics->stateKind == Switch_state);             // do more to guarantee correct blocking?
+    iCode = ics->swapStream(iCode);                     // switch back to Case Conditional stream
+    resetTopRegister();
+}
+
+void ICodeGenerator::beginDefaultStatement()
+{
+    SwitchCodeState *ics = static_cast<SwitchCodeState *>(stitcher.back());
+    ASSERT(ics->stateKind == Switch_state);
+    ASSERT(ics->defaultLabel == -1);
+    ics->defaultLabel = getLabel();
+    setLabel(ics->its_iCode, ics->defaultLabel);
+    iCode = ics->swapStream(iCode);                    // switch to Case Statement stream
+}
+
+void ICodeGenerator::endDefaultStatement()
+{
+    SwitchCodeState *ics = static_cast<SwitchCodeState *>(stitcher.back());
+    ASSERT(ics->stateKind == Switch_state);
+    ASSERT(ics->defaultLabel != -1);            // do more to guarantee correct blocking?
+    iCode = ics->swapStream(iCode);             // switch to Case Statement stream
+    resetTopRegister();
+}
+
+void ICodeGenerator::endSwitchStatement()
+{
+    SwitchCodeState *ics = static_cast<SwitchCodeState *>(stitcher.back());
+    ASSERT(ics->stateKind == Switch_state);
+    stitcher.pop_back();
+
+    // ground out the case chain at the default block or fall thru
+    // to the break label
+    if (ics->defaultLabel != -1)       
+        branch(ics->defaultLabel);
+    else {
+        if (ics->breakLabel == -1)
+            ics->breakLabel = getLabel();
+        branch(ics->breakLabel);
+    }
+    
+    // dump all the case statements into the main stream
+    ics->mergeStream(iCode, labels);
+
+    if (ics->breakLabel != -1)
+        setLabel(ics->breakLabel);
+
+    delete ics;
 }
 
 
@@ -222,7 +368,7 @@ void ICodeGenerator::beginIfStatement(const SourcePosition &pos, Register condit
 {
     int32 elseLabel = getLabel();
     
-    stitcher.push(new IfCodeState(elseLabel, -1));
+    stitcher.push_back(new IfCodeState(elseLabel, -1, this));
 
     Register notCond = op(NOT, condition);
     branchConditional(elseLabel, notCond);
@@ -232,8 +378,8 @@ void ICodeGenerator::beginIfStatement(const SourcePosition &pos, Register condit
 
 void ICodeGenerator::beginElseStatement(bool hasElse)
 {
-    IfCodeState *ics = static_cast<IfCodeState *>(stitcher.top());
-    ASSERT(ics->stateKind == If_State);
+    IfCodeState *ics = static_cast<IfCodeState *>(stitcher.back());
+    ASSERT(ics->stateKind == If_state);
 
     if (hasElse) {
         int32 beyondElse = getLabel();
@@ -246,35 +392,54 @@ void ICodeGenerator::beginElseStatement(bool hasElse)
 
 void ICodeGenerator::endIfStatement()
 {
-    IfCodeState *ics = static_cast<IfCodeState *>(stitcher.top());
-    ASSERT(ics->stateKind == If_State);
+    IfCodeState *ics = static_cast<IfCodeState *>(stitcher.back());
+    ASSERT(ics->stateKind == If_state);
+    stitcher.pop_back();
 
     if (ics->beyondElse != -1) {     // had an else
         setLabel(ics->beyondElse);   // the beyond else label
     }
-    stitcher.pop();
+    
+    delete ics;
     resetTopRegister();
 }
 
+/***********************************************************************************************/
+
+void ICodeGenerator::breakStatement()
+{
+    for (std::vector<ICodeState *>::reverse_iterator p = stitcher.rbegin(); p != stitcher.rend(); p++) {
+        
+// this is NOT going to stay this way
+        
+        if (((*p)->stateKind == While_state)
+                || ((*p)->stateKind == Do_state)
+                || ((*p)->stateKind == For_state)
+                || ((*p)->stateKind == Switch_state)) {
+            if ((*p)->breakLabel == -1)
+                (*p)->breakLabel = getLabel();
+            branch((*p)->breakLabel);
+            return;
+        }
+    }
+    NOT_REACHED("no break target available");
+}
 
 /***********************************************************************************************/
 
 
 char *opcodeName[] = {
+        "move_to",
         "load_var",
         "save_var",
-
         "load_imm",
-
         "load_name",
         "save_name",
-
         "get_prop",
         "set_prop", 
-
         "add",
+        "compare",
         "not",
-
         "branch",
         "branch_cond",
 };
@@ -330,11 +495,13 @@ ostream &ICodeGenerator::print(ostream &s)
                 }
                 break;
             case ADD :
+            case COMPARE :
                 {
                      Instruction_3<Register, Register, Register> *t = static_cast<Instruction_3<Register, Register, Register> * >(instr);
                      s << "R" << t->itsOperand1 << ", R" << t->itsOperand2 << ", R" << t->itsOperand3;
                 }
                 break;
+            case MOVE_TO :
             case NOT :
                 {
                      Instruction_3<Register, Register, Register> *t = static_cast<Instruction_3<Register, Register, Register> * >(instr);
