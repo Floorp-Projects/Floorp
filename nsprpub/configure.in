@@ -1694,9 +1694,14 @@ mips-sony-newsos*)
         fi
         _OPTIMIZE_FLAGS=-xO4
     fi
-    if test -n "$USE_64" && test -z "$GNU_CC"; then
-        CC="$CC -xarch=v9"
-        CXX="$CXX -xarch=v9"
+    if test -n "$USE_64"; then
+        if test -n "$GNU_CC"; then
+            CC="$CC -m64"
+            CXX="$CXX -m64"
+        else
+            CC="$CC -xarch=v9"
+            CXX="$CXX -xarch=v9"
+        fi
     fi
     if test "$OS_TEST" = "i86pc"; then
         AC_DEFINE(i386)
