@@ -89,6 +89,15 @@ function doSort(sortColName, naturalOrderResource)
     return true;
 }
 
+// re-does a sort based on the current state
+function RefreshSort()
+{
+    var current_column = find_sort_column();
+    var current_direction = find_sort_direction(current_column);
+    sort_column(current_column, current_direction);
+}
+
+// set the sort direction on the currently sorted column
 function SetSortDirection(direction)
 {
     var current_column = find_sort_column();
@@ -98,6 +107,7 @@ function SetSortDirection(direction)
     }
 }
 
+// set the sorted column
 function SetSortColumn(column_name)
 {
     var current_column = find_sort_column();
@@ -108,6 +118,7 @@ function SetSortColumn(column_name)
     }
 }
 
+// actually sort given the column and direction
 function sort_column(column, direction)
 {
     var isupports_uri = "@mozilla.org/rdf/xul-sort-service;1";
@@ -128,6 +139,7 @@ function sort_column(column, direction)
     return false;
 }
 
+// search over the columns to find the first one with an active sort
 function find_sort_column() {
     var columns = document.getElementById('theColumns');
     var column = columns.firstChild;
@@ -141,6 +153,7 @@ function find_sort_column() {
 }
 
 
+// get the sort direction for the given column
 function find_sort_direction(column) {
     if ("true" == column.getAttribute('sortActive')) {
         return column.getAttribute('sortDirection');
@@ -149,6 +162,11 @@ function find_sort_direction(column) {
     }
 }
 
+// set up the menu items to reflect the specified sort column
+// and direction - put check marks next to the active ones, and clear
+// out the old ones
+// - disable ascending/descending direction if the tree isn't sorted
+// - disable columns that are not visible
 function update_sort_menuitems(column, direction)
 {
     var unsorted_menuitem = document.getElementById("unsorted_menuitem");
