@@ -262,7 +262,7 @@ public:
           mStatus(NS_OK), mMessage(nsnull) {}
     virtual ~nsOnStopBindingEvent();
 
-    nsresult Init(nsresult status, PRUnichar* aMsg);
+    nsresult Init(nsresult status, const PRUnichar* aMsg);
     NS_IMETHOD HandleEvent();
 
 protected:
@@ -275,10 +275,10 @@ nsOnStopBindingEvent::~nsOnStopBindingEvent()
 }
 
 nsresult
-nsOnStopBindingEvent::Init(nsresult status, PRUnichar* aMsg)
+nsOnStopBindingEvent::Init(nsresult status, const PRUnichar* aMsg)
 {
     mStatus = status;
-    mMessage = aMsg;
+    mMessage = (PRUnichar*)aMsg;
     return NS_OK;
 }
 
@@ -381,7 +381,7 @@ public:
           mStatus(NS_OK), mMessage(nsnull) {}
     virtual ~nsOnStopRequestEvent();
 
-    nsresult Init(nsresult status, PRUnichar* aMsg);
+    nsresult Init(nsresult status, const PRUnichar* aMsg);
     NS_IMETHOD HandleEvent();
 
 protected:
@@ -394,10 +394,10 @@ nsOnStopRequestEvent::~nsOnStopRequestEvent()
 }
 
 nsresult
-nsOnStopRequestEvent::Init(nsresult status, PRUnichar* aMsg)
+nsOnStopRequestEvent::Init(nsresult status, const PRUnichar* aMsg)
 {
     mStatus = status;
-    mMessage = aMsg;
+    mMessage = (PRUnichar*)aMsg;
     return NS_OK;
 }
 
