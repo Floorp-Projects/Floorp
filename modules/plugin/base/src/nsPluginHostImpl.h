@@ -88,7 +88,6 @@ public:
   void TryUnloadPlugin(PRBool aForceShutdown = PR_FALSE);
   void Mark(PRUint32 mask) { mFlags |= mask; }
   PRBool Equals(nsPluginTag* aPluginTag);
-  
 
   nsPluginTag   *mNext;
   char          *mName;
@@ -171,7 +170,7 @@ public:
 #define NS_PLUGIN_FLAG_ENABLED    0x0001    //is this plugin enabled?
 #define NS_PLUGIN_FLAG_OLDSCHOOL  0x0002    //is this a pre-xpcom plugin?
 #define NS_PLUGIN_FLAG_FROMCACHE  0x0004    // this plugintag info was loaded from cache
-#define NS_PLUGIN_FLAG_UNWANTED   0x0008    // this is an unwanted plugins
+#define NS_PLUGIN_FLAG_UNWANTED   0x0008    // this is an unwanted plugin
 
 class nsPluginHostImpl : public nsIPluginManager2,
                          public nsIPluginHost,
@@ -447,12 +446,22 @@ private:
 
   // Loads all cached plugins info into mCachedPlugins
   nsresult LoadCachedPluginsInfo(nsIRegistry* registry);
+
   // Stores all plugins info into the registry
   nsresult CachePluginsInfo(nsIRegistry* registry);
-  // Given a filename, returns the plugins info from our cache and removes
-  // it from the cache.
+
+  // Given a filename, returns the plugins info from our cache
+  // and removes it from the cache.
   nsPluginTag* RemoveCachedPluginsInfo(const char *filename);
 
+  //checks if the list already have the same plugin as given
+  nsPluginTag* HaveSamePlugin(nsPluginTag * aPluginTag);
+
+  // checks if given plugin is a duplicate of what we already have
+  // in the plugin list but found in some different place
+  PRBool IsDuplicatePlugin(nsPluginTag * aPluginTag);
+  
+  // destroys plugin info list
   void ClearCachedPluginInfoList();
   
   nsresult EnsurePrivateDirServiceProvider();
