@@ -283,6 +283,9 @@ function OnLoadMessenger()
 
 	gHaveLoadedMessage = false;
 
+	//Set focus to the Thread Pane the first time the window is opened.
+	SetFocusThreadPane();
+
 	var afterLoadMessenger = new Date();
 
 	var timeToLoad = (afterLoadMessenger.getTime() - beforeLoadMessenger.getTime())/1000;
@@ -290,7 +293,7 @@ function OnLoadMessenger()
 	{
 	  dump("Time in OnLoadMessger is " +  timeToLoad + " seconds\n");
 	}
-
+	
 }
 
 function OnUnloadMessenger()

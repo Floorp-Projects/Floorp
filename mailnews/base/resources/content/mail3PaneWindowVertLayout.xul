@@ -126,10 +126,10 @@ Rights Reserved.
 		<splitter id="sidebar-splitter" state="collapsed"/>
           
 		<box orient="vertical" flex="1">
-			<box align ="horizontal" flex="1">
+			<box align ="horizontal" persist="height" flex="1">
 				<tree id="folderTree" flex="1" style="width:0px;" context="folderPaneContext"  />
-				<splitter id="gray_vertical_splitter" collapse="after"  persist="state"/>
-				<tree id="threadTree" flex="2" style="width:0px" context="threadPaneContext" class="window-focusborder" focusring="false"/>
+				<splitter id="gray_vertical_splitter" collapse="before"  persist="state"/>
+				<tree id="threadTree" flex="2" persist="width" style="width:0px" context="threadPaneContext" class="window-focusborder" focusring="false"/>
 			</box>
 			<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePnae() -->
 			<splitter id="threadpane-splitter" collapse="after" persist="state"
@@ -137,7 +137,7 @@ Rights Reserved.
 			<grippy/>
 			</splitter>
 			<!-- msg header view -->
-			<box id="messagepanebox" orient="vertical" flex="4" persist="collapsed" class="window-focusborder" focusring="false">
+			<box id="messagepanebox" orient="vertical" flex="4" persist="collapsed height" class="window-focusborder" focusring="false">
 				<toolbox id="msgHeaderView"/>
     
 				<!-- message view -->

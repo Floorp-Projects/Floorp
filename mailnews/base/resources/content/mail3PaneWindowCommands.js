@@ -17,7 +17,6 @@
  * Copyright (C) 1998-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  */
-
 // Controller object for folder pane
 var FolderPaneController =
 {
@@ -940,14 +939,17 @@ function SetTemplateTreeItemOpen(open)
 	}
 }
 
+// global variable for the gray_vertical_splitter
+	var gray_vertical_splitter_exists = false;
+
 function SwitchPaneFocus(event)
 {
+	gray_vertical_splitter_exists = document.getElementById("gray_vertical_splitter");
 	var focusedElement;
 	var focusedElementId;
-
+//The first if statement is a check for the Shift+Tab -the else statement is for Tab
 	if (event && (event.shiftKey))
 	{
-		dump("Inside the SwitchPaneFocus \n");
 		focusedElement = document.commandDispatcher.focusedElement;
 		focusedElementId="";
 
@@ -959,9 +961,29 @@ function SwitchPaneFocus(event)
 			{ 
 				focusedElementId = focusedElement.getAttribute('id');
 				if(focusedElementId == "threadTree")
-					SetFocusFolderPane();
+				{
+					if (gray_vertical_splitter_exists)
+					{
+						if (!(is_folderpane_collapsed()))
+						SetFocusFolderPane();
+						else if(!(IsThreadAndMessagePaneSplitterCollapsed()))
+						SetFocusMessagePane();
+					}
+					else 
+					{
+						if (!(sidebar_is_collapsed()))
+						SetFocusFolderPane();
+						else if(!(IsThreadAndMessagePaneSplitterCollapsed()))
+						SetFocusMessagePane();
+					}
+				}
 				else if(focusedElementId == "folderTree")
-					SetFocusMessagePane();
+				{
+					if (!(IsThreadAndMessagePaneSplitterCollapsed()))
+						SetFocusMessagePane();
+					else
+						SetFocusThreadPane();
+				}
 			}
 			catch(e) 
 			{
@@ -971,19 +993,44 @@ function SwitchPaneFocus(event)
 	}
 	else
 	{
-		dump("Inside the SwitchPaneFocus \n");
 		focusedElement = document.commandDispatcher.focusedElement;
 		focusedElementId="";
 
 		if ( MessagePaneHasFocus() )
-			SetFocusFolderPane();
+		{
+			if (gray_vertical_splitter_exists)
+			{
+				if (!(is_folderpane_collapsed()))
+					SetFocusFolderPane();
+				else
+					SetFocusThreadPane();
+			}
+			else 
+			{
+				if (!(sidebar_is_collapsed()))
+				SetFocusFolderPane();
+				else
+				SetFocusThreadPane();
+			}
+		}
 		else 
 		{
 			try 
 			{ 
 				focusedElementId = focusedElement.getAttribute('id');
 				if(focusedElementId == "threadTree")
-					SetFocusMessagePane();
+				{
+					if (!(IsThreadAndMessagePaneSplitterCollapsed()))
+						SetFocusMessagePane();
+					else if (gray_vertical_splitter_exists)
+					{
+						if (!(is_folderpane_collapsed()))
+						SetFocusFolderPane();
+					}
+					else if (!(sidebar_is_collapsed()))
+						SetFocusFolderPane();
+
+				}
 				else if(focusedElementId == "folderTree")
 					SetFocusThreadPane();
 			}
@@ -1012,5 +1059,14 @@ function SetFocusMessagePane()
 {
 	top.frames['messagepane'].focus();
 	return;
+}
+
+function is_folderpane_collapsed() 
+{
+	if (gray_vertical_splitter_exists)
+	{ 
+		return (gray_vertical_splitter_exists.getAttribute('state') == 'collapsed');
+	}
+	return false;
 }
 
