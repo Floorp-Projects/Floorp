@@ -37,8 +37,6 @@ class GtkMozEmbedStream : public nsIInputStream
   NS_DECL_ISUPPORTS
   // nsIInputStream
   NS_DECL_NSIINPUTSTREAM
-  // nsIBaseStream
-  NS_DECL_NSIBASESTREAM
 
  private:
   nsCOMPtr<nsIOutputStream> mOutputStream;

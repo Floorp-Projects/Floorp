@@ -33,8 +33,6 @@ class MozEmbedStream : public nsIInputStream
   NS_DECL_ISUPPORTS
   // nsIInputStream
   NS_DECL_NSIINPUTSTREAM
-  // nsIBaseStream
-  NS_DECL_NSIBASESTREAM
 
   NS_METHOD Append(const char *aData, PRUint32 aLen); 
 
