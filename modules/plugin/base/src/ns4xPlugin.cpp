@@ -479,8 +479,61 @@ ns4xPlugin::CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
   if (pfnInitialize == NULL)
     return NS_ERROR_UNEXPECTED; // XXX Right error?
 
-  if (pfnInitialize(&(ns4xPlugin::CALLBACKS)) != NS_OK)
+  //Fixes problem where the OS/2 native multimedia plugins weren't working
+  //   on mozilla though did work on 4.x.  Problem is that they expect the
+  //   current working directory to be the plugins dir.  Since these plugins
+  //   are no longer maintained and they represent the majority of the OS/2
+  //   plugin contingency, we'll have to make them work here.
+
+#define MAP_DISKNUM_TO_LETTER(n) ('A' + (n - 1))
+#define MAP_LETTER_TO_DISKNUM(c) (toupper(c)-'A'+1)
+
+  unsigned long origDiskNum, pluginDiskNum, logicalDisk;
+
+  char pluginPath[CCHMAXPATH], origPath[CCHMAXPATH];
+  strcpy(pluginPath, aFileName);
+  char* slash = strrchr(pluginPath, '\\');
+  *slash = '\0';
+
+  DosQueryCurrentDisk( &origDiskNum, &logicalDisk );
+  pluginDiskNum = MAP_LETTER_TO_DISKNUM(pluginPath[0]);
+
+  origPath[0] = MAP_DISKNUM_TO_LETTER(origDiskNum);
+  origPath[1] = ':';
+  origPath[2] = '\\';
+
+  ULONG len = CCHMAXPATH-3;
+  APIRET rc = DosQueryCurrentDir(0, &origPath[3], &len);
+  NS_ASSERTION(NO_ERROR == rc,"DosQueryCurrentDir failed");
+
+  BOOL bChangedDir = FALSE;
+  BOOL bChangedDisk = FALSE;
+  if (pluginDiskNum != origDiskNum) {
+    rc = DosSetDefaultDisk(pluginDiskNum);
+    NS_ASSERTION(NO_ERROR == rc,"DosSetDefaultDisk failed");
+    bChangedDisk = TRUE;
+  }
+
+  if (stricmp(origPath, pluginPath) != 0) {
+    rc = DosSetCurrentDir(pluginPath);
+    NS_ASSERTION(NO_ERROR == rc,"DosSetCurrentDir failed");
+    bChangedDir = TRUE;
+  }
+
+  nsresult rv = pfnInitialize(&(ns4xPlugin::CALLBACKS));
+
+  if (bChangedDisk) {
+    rc= DosSetDefaultDisk(origDiskNum);
+    NS_ASSERTION(NO_ERROR == rc,"DosSetDefaultDisk failed");
+  }
+  if (bChangedDir) {
+    rc = DosSetCurrentDir(origPath);
+    NS_ASSERTION(NO_ERROR == rc,"DosSetCurrentDir failed");
+  }
+  
+  if (!NS_SUCCEEDED(rv)) {
     return NS_ERROR_UNEXPECTED;
+  }
 #endif
 
 #if defined(XP_MAC)
