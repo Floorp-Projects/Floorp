@@ -506,10 +506,10 @@ var BookmarksCommand = {
       return;
     for (var i=0; i<aSelection.length; ++i) {
       var type = aSelection.type[i];
-      dump("folder:"+aSelection.item[i].Value+"\n")
-      if (aTargetBrowser == "properties")
-        openDialog("chrome://browser/content/bookmarks/bookmarksProperties.xul",
-                   "", "centerscreen,chrome,resizable=no", aSelection.item[i].Value);
+      if (aTargetBrowser == "properties") {
+        var item = aSelection.item[i];
+        saveURL(item.Value, BookmarksUtils.getProperty(item, "Name"), null, true);
+      }
       else if (type == "Bookmark" || type == "")
         this.openOneBookmark(aSelection.item[i].Value, aTargetBrowser, aDS);
       else if (type == "FolderGroup" || type == "Folder" || type == "PersonalToolbarFolder")
@@ -1604,14 +1604,11 @@ var BookmarksUtils = {
 
   getBrowserTargetFromEvent: function (aEvent)
   {
-    var button = aEvent.type == "command" || aEvent.type == "keypress"? 0:aEvent.button;
-    if (button == 2)
-      return "";
-    if (aEvent.metaKey || aEvent.ctrlKey || button == 1)
-      if (aEvent.shiftKey)
-        return "window";
-      else
-        return "tab";
+    var button = (aEvent.type == "command" || aEvent.type == "keypress") ? 0 :aEvent.button;
+    if (aEvent.shiftKey)      
+      return "window";
+    else if (aEvent.ctrlKey)
+      return "tab";
     else if (aEvent.altKey)
       return "properties"
     else

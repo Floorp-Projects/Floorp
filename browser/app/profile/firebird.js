@@ -445,7 +445,7 @@ pref("network.proxy.socks_port",            0);
 pref("network.proxy.socks_version",         5);
 pref("network.proxy.no_proxies_on",         "localhost, 127.0.0.1");
 pref("network.online",                      true); //online/offline
-pref("network.cookie.enable",               true); // 0-Accept, 1-dontAcceptForeign, 2-dontUse, 3-p3p
+pref("network.cookie.enable",               true);
 pref("network.cookie.warnAboutCookies",     false);
 pref("network.cookie.enableForCurrentSessionOnly", false);
 pref("network.cookie.enableForOriginatingWebsiteOnly", false);
@@ -498,11 +498,9 @@ pref("ui.key.accelKey", 17);
 pref("ui.key.generalAccessKey", 18);
 pref("ui.key.menuAccessKey", 18);
 pref("ui.key.menuAccessKeyFocuses", false);
-pref("ui.key.saveLink.shift", true); // true = shift, false = meta
 
 // Middle-mouse handling
 pref("middlemouse.paste", false);
-pref("middlemouse.openNewWindow", true);
 pref("middlemouse.contentLoadURL", false);
 pref("middlemouse.scrollbarPosition", false);
 

@@ -47,14 +47,10 @@
   </groupbox>
 
   <groupbox>
-    <caption label="&openTabs.label;"/>
+    <caption label="&openingTabs.label;"/>
       <checkbox id="middleClick"
                 label="&middleClick.label;" 
                 prefstring="browser.tabs.opentabfor.middleclick"/>
-  </groupbox>
-
-  <groupbox>
-    <caption label="&openFolder.label;"/>
       <checkbox id="openFolder"
                 label="&openFolderReplace.label;" 
                 prefstring="browser.tabs.loadFolderAndReplace"/>

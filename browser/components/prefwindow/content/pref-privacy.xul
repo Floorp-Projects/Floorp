@@ -29,11 +29,11 @@
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["histDay", "browserCacheDiskCache", "enableCookies",
-                       "enableCookiesForOriginatingSiteOnly", "enableCookiesForCurrentSessionOnly"];
+                       "enableCookiesForOriginatingSiteOnly", "enableCookiesForCurrentSessionOnly",
+                       "enableCookiesButAskFirst"];
     function Startup() {
       var cookiesEnabled = document.getElementById("enableCookies").checked;
-      var cookieBroadcaster = document.getElementById("cookieBroadcaster");
-      cookieBroadcaster.setAttribute("disabled", !cookiesEnabled);
+      updateBroadcaster(!cookiesEnabled);
       var clearHistButton = document.getElementById("browserClearHistory");
       try {
         var urlBarHist = Components.classes["@mozilla.org/browser/urlbarhistory;1"]
@@ -74,6 +74,22 @@
                                     .getService(Components.interfaces.nsIUrlbarHistory);
       urlBarHistory.clearHistory();
     }
+    
+    function updateBroadcaster(aDisable)
+    {
+      var broadcaster = document.getElementById("cookieBroadcaster");
+      var checkbox1 = document.getElementById("enableCookiesForOriginatingSiteOnly");
+      var checkbox2 = document.getElementById("enableCookiesForCurrentSessionOnly");
+      var checkbox3 = document.getElementById("enableCookiesButAskFirst");
+      if (aDisable) {
+        broadcaster.setAttribute("disabled", "true");
+        checkbox1.checked = false;
+        checkbox2.checked = false;
+        checkbox3.checked = false;
+      }
+      else
+        broadcaster.removeAttribute("disabled");
+    }
   ]]>
   </script>
 
@@ -112,7 +128,7 @@
       <label value="&cookieExplanation.label;"/>
       <separator class="thin"/>
       <checkbox id="enableCookies"
-                oncommand="document.getElementById('cookieBroadcaster').setAttribute('disabled', this.checked ? 'false' : 'true');"
+                oncommand="updateBroadcaster(!this.checked);"
                 label="&enableCookies.label;" accesskey="&enableCookies.accesskey;"
                 prefstring="network.cookie.enable"/>
       <checkbox id="enableCookiesForOriginatingSiteOnly" observes="cookieBroadcaster"
@@ -122,6 +138,10 @@
       <checkbox id="enableCookiesForCurrentSessionOnly" observes="cookieBroadcaster"
                 label="&forCurrentSessionOnly.label;" accesskey="&forCurrentSessionOnly.accesskey;"
                 prefstring="network.cookie.enableForCurrentSessionOnly"
+                style="margin-left: 23px;"/>
+      <checkbox id="enableCookiesButAskFirst" observes="cookieBroadcaster"
+                label="&butAskFirst.label;" accesskey="&butAskFirst.accesskey;"
+                prefstring="network.cookie.warnAboutCookies"
                 style="margin-left: 23px;"/>
     </vbox>
     <vbox>
