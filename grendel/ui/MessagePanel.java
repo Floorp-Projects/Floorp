@@ -121,7 +121,7 @@ public class MessagePanel extends GeneralPanel {
     } else {
       fTextArea = new JEditorPane();
       fTextArea.setEditable(false);
-      fTextArea.setContentType("text/html");
+//      fTextArea.setContentType("text/html");
       fTextArea.setFont(new Font("Helvetica", Font.PLAIN, 12));
       fTextArea.setBorder(BorderFactory.createLoweredBevelBorder());
       add(new JScrollPane(fTextArea));
