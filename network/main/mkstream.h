@@ -38,7 +38,7 @@ XP_ListNextEncodingType(PRBool first);
 
 /* register a mime type and a command to be executed
  */
-extern void
+extern PUBLIC void
 NET_RegisterExternalViewerCommand(char * format_in, 
 								  char * system_command, 
 								  unsigned int stream_block_size);
