@@ -511,15 +511,17 @@ function onDoStyleChange (newStyle)
     
 }
 
-function onHideCurrentView()
+function onHideView(view)
 {
-    var tb = getTabForObject(client.currentObject);
+    var tb = getTabForObject(view);
     
     if (tb)
     {
         var i = deleteTab (tb);
         if (i != -1)
         {
+            client.deck.removeChild(view.frame);
+            delete view.frame;
             if (i >= client.viewsArray.length)
                 i = client.viewsArray.length - 1;
             
@@ -1556,7 +1558,7 @@ client.onInputHide=
 function cli_ihide (e)
 {
     
-    onHideCurrentView();
+    onHideView(client.currentObject);
     return true;
 
 }
