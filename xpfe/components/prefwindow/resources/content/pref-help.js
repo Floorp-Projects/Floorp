@@ -56,7 +56,9 @@ var fm = {
   "chrome://communicator/content/pref/pref-tabs.xul": "navigator_pref_tabbed_browsing",
   "chrome://communicator/content/pref/pref-winhooks.xul": "advanced_pref_system",
   "chrome://communicator/content/pref/pref-proxies.xul": "advanced_pref_proxies",
-  "chrome://communicator/content/pref/pref-keynav.xul":  "advanced_pref_keyboard_nav"
+  "chrome://communicator/content/pref/pref-keynav.xul":  "advanced_pref_keyboard_nav",
+  "chrome://sroaming/content/prefs/top.xul": "profile-help-roaming-prefs",
+  "chrome://sroaming/content/prefs/files.xul": "profile-help-roaming-item-selection"
 } 
 
 function doHelpButton() {

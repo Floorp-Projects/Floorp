@@ -1144,6 +1144,9 @@
       <rdf:Seq>
         <rdf:li><rdf:Description ID="profile-help-create" nc:name="Creating a New Profile" nc:link="profiles_help.xhtml#creating_a_new_profile"/> </rdf:li>
         <rdf:li><rdf:Description ID="profile-help-delete" nc:name="Deleting or Renaming a Profile" nc:link="profiles_help.xhtml#deleting_or_renaming_a_profile"/> </rdf:li>
+        <rdf:li><rdf:Description ID="profile-help-roaming" nc:name="Roaming Profiles" nc:link="profiles_help.xhtml#roaming_profiles"/> </rdf:li>
+        <rdf:li><rdf:Description ID="profile-help-roaming-prefs" nc:name="Roaming Preferences" nc:link="profiles_help.xhtml#roaming_prefs"/> </rdf:li>
+        <rdf:li><rdf:Description ID="profile-help-roaming-item-selection" nc:name="Item Selection" nc:link="profiles_help.xhtml#roaming_item_selection"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>

@@ -1779,6 +1779,11 @@
        <rdf:Description ID="profiles:renaming"
          nc:name="renaming a profile"
 	 nc:link="profiles_help.xhtml#deleting_or_renaming_a_profile"/>
+     </rdf:li>
+     <rdf:li>
+       <rdf:Description ID="profiles:roaming"
+         nc:name="roaming profile"
+	 nc:link="profiles_help.xhtml#roaming_profiles"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
