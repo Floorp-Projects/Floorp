@@ -141,6 +141,7 @@ protected:
   PRInt32 mStatus;
   nsIChannel* mChannel;
   nsISupports* mUserContext;
+  PRBool mIsMulti;
 };
 
 ImageConsumer::ImageConsumer(ilIURL *aURL, ImageNetContextImpl *aContext)
@@ -158,6 +159,7 @@ ImageConsumer::ImageConsumer(ilIURL *aURL, ImageNetContextImpl *aContext)
   mStatus = 0;
   mChannel = nsnull;
   mUserContext = nsnull;
+  mIsMulti = PR_FALSE;
 }
 
 NS_IMPL_THREADSAFE_ADDREF(ImageConsumer)
@@ -269,6 +271,8 @@ ImageConsumer::DoContent(const char * aContentType,
       || contentType.EqualsWithConversion("multipart/mixed")) {
     // if we're getting multipart data, we have to convert it.
     // so wedge the converter inbetween us and the consumer.
+    mIsMulti= PR_TRUE;
+
     nsCOMPtr<nsIStreamConverterService> convServ = do_GetService(kStreamConvServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
@@ -488,6 +492,7 @@ ImageConsumer::OnStopRequest(nsIChannel* channel, nsISupports* aContext, nsresul
     mStatus = MK_INTERRUPTED;
   }
 
+ 
   // Since we're still holding on to the stream, there's still data
   // that needs to be read. So, pump the stream ourselves.
   if((mStream != nsnull) && (status == NS_BINDING_SUCCEEDED)) {
@@ -528,8 +533,12 @@ ImageConsumer::OnStopRequest(nsIChannel* channel, nsISupports* aContext, nsresul
     reader->StreamAbort(mStatus);
   }
   else {
-    reader->StreamComplete(PR_FALSE);
+    reader->StreamComplete(mIsMulti);
   }
+
+  if(mIsMulti)
+        mFirstRead = PR_TRUE;  //reset to read new frame
+
   reader->NetRequestDone(mURL, mStatus);
   NS_RELEASE(reader);
   
