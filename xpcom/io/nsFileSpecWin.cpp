@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -19,7 +19,7 @@
  *
  * Contributor(s): 
  */
- 
+
 //	This file is included by nsFileSpec.cp, and includes the Windows-specific
 //	implementations.
 
@@ -470,6 +470,46 @@ void nsFileSpec::RecursiveCopy(nsFileSpec newDir) const
         filePath.CopyToDir(newDir);
     }
 } // nsFileSpec::RecursiveCopy
+
+//----------------------------------------------------------------------------------------
+nsresult
+nsFileSpec::Truncate(const PRInt32 aNewFileLength) const
+//----------------------------------------------------------------------------------------
+{
+    DWORD status;
+    HANDLE hFile;
+
+    // Leave it to Microsoft to open an existing file with a function
+    // named "CreateFile".
+    hFile = CreateFile(mPath,
+                       GENERIC_WRITE, 
+                       FILE_SHARE_READ, 
+                       NULL, 
+                       OPEN_EXISTING, 
+                       FILE_FLAG_NO_BUFFERING | FILE_FLAG_OVERLAPPED, 
+                       NULL); 
+    if (hFile == INVALID_HANDLE_VALUE)
+        return NS_FILE_FAILURE;
+
+    // Seek to new, desired end of file
+    status = SetFilePointer(hFile, aNewFileLength, NULL, FILE_BEGIN);
+    if (status == 0xffffffff)
+        goto error;
+
+    // Truncate file at current cursor position
+    if (!SetEndOfFile(hFile))
+        goto error;
+
+    if (!CloseHandle(hFile))
+        return NS_FILE_FAILURE;
+
+    return NS_OK;
+
+ error:
+    CloseHandle(hFile);
+    return NS_FILE_FAILURE;
+
+} // nsFileSpec::Truncate
 
 //----------------------------------------------------------------------------------------
 nsresult nsFileSpec::Rename(const char* inNewName)
