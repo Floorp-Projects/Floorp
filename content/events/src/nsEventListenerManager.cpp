@@ -978,7 +978,7 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
 
   if (NS_FAILED(rv = securityManager->CheckPropertyAccess(
       nsIXPCSecurityManager::ACCESS_SET_PROPERTY, cx, jsobj, aObject, classInfo,
-                  "EventTarget","addEventListener", PR_FALSE))) {
+                  "EventTarget","addEventListener"))) {
       // XXX set pending exception on the native call context?
     return rv;
   }

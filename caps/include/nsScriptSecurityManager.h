@@ -114,11 +114,11 @@ private:
                             JSContext* aJSContext, JSObject* aJSObject,
                             nsISupports* aObj, nsIClassInfo* aClassInfo,
                             jsval aName, const char* aClassName, 
-                            const char* aProperty, PRBool skipFrame, void** aPolicy);
+                            const char* aProperty, void** aPolicy);
 
     nsresult
     CheckSameOrigin(JSContext* aCx, nsIPrincipal* aSubject, 
-                    nsIPrincipal* aObject, PRUint32 aAction, PRBool aSkipFrame);
+                    nsIPrincipal* aObject, PRUint32 aAction);
     
     PRInt32 
     GetSecurityLevel(JSContext* aCx, nsIPrincipal *principal,
@@ -147,27 +147,20 @@ private:
     GetScriptPrincipal(JSContext* cx, JSScript* script, nsIPrincipal** result);
 
     nsresult
-    GetCallingPrincipal(JSContext* cx, nsIPrincipal** result);
-
-    nsresult
     GetFunctionObjectPrincipal(JSContext* cx, JSObject* obj, 
                                nsIPrincipal** result);
 
     nsresult
-    GetPrincipalAndFrame(JSContext *cx, PRBool skipInnerFrame,
+    GetPrincipalAndFrame(JSContext *cx,
                          nsIPrincipal** result,
                          JSStackFrame** frameResult);
 
     nsresult
     SavePrincipal(nsIPrincipal* aToSave);
 
-    nsresult IsCapabilityEnabledImpl(const char *capability,
-                                     PRBool skipFrame,
-                                     PRBool *result);
-
     nsresult
     CheckXPCPermissions(JSContext* cx, nsISupports* aObj,
-                        const char* aObjectSecurityLevel, PRBool skipFrame, const char* aErrorMsg);
+                        const char* aObjectSecurityLevel, const char* aErrorMsg);
 
     nsresult
     InitPrefs();

@@ -1081,18 +1081,12 @@ nsWindowSH::doCheckWriteAccess(JSContext *cx, JSObject *obj, jsval id,
 
   nsresult rv;
 
-#if 1
   PRBool isLocation = JSVAL_IS_STRING(id) &&
     JSVAL_TO_STRING(id) == sLocation_id;
 
   rv = sSecMan->CheckPropertyAccess(nsIXPCSecurityManager::ACCESS_SET_PROPERTY,
                                     cx, obj, native, this, "Window",
-                                    isLocation ? "location" : "scriptglobals",
-                                    PR_FALSE);
-#else
-  rv = sSecMan->CanAccess(nsIXPCSecurityManager::ACCESS_SET_PROPERTY, nsnull,
-                          cx, obj, native, this, id, nsnull);
-#endif
+                                    isLocation ? "location" : "scriptglobals");
 
   if (NS_SUCCEEDED(rv)) {
     return rv;
@@ -1102,14 +1096,12 @@ nsWindowSH::doCheckWriteAccess(JSContext *cx, JSObject *obj, jsval id,
   // following lines ensure that the exception is propagated.
 
   nsCOMPtr<nsIXPCNativeCallContext> cnccx;
-  sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(cnccx));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  cnccx->SetExceptionWasThrown(PR_TRUE);
+  rv = sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(cnccx));
+  if (cnccx)
+    cnccx->SetExceptionWasThrown(PR_TRUE);
 
   return rv; // rv is from CheckPropertyAccess()
 }
-
 
 nsresult
 nsWindowSH::doCheckReadAccess(JSContext *cx, JSObject *obj, jsval id,
@@ -1127,18 +1119,12 @@ nsWindowSH::doCheckReadAccess(JSContext *cx, JSObject *obj, jsval id,
     return NS_OK;
   }
 
-#if 1
   PRBool isLocation = JSVAL_IS_STRING(id) &&
     JSVAL_TO_STRING(id) == sLocation_id;
 
   rv = sSecMan->CheckPropertyAccess(nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
                                     cx, obj, native, this, "Window",
-                                    isLocation ? "location" : "scriptglobals",
-                                    PR_FALSE);
-#else
-  rv = sSecMan->CanAccess(nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
-                          nsnull, cx, obj, native, this, id, nsnull);
-#endif
+                                    isLocation ? "location" : "scriptglobals");
 
   if (NS_SUCCEEDED(rv)) {
     return rv;
@@ -1149,9 +1135,8 @@ nsWindowSH::doCheckReadAccess(JSContext *cx, JSObject *obj, jsval id,
 
   nsCOMPtr<nsIXPCNativeCallContext> cnccx;
   sXPConnect->GetCurrentNativeCallContext(getter_AddRefs(cnccx));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  cnccx->SetExceptionWasThrown(PR_TRUE);
+  if (cnccx)
+    cnccx->SetExceptionWasThrown(PR_TRUE);
 
   return rv; // rv is from CheckPropertyAccess()
 }

@@ -40,8 +40,7 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
                                         in nsISupports aObj,
                                         in nsIClassInfo aClassInfo,
                                         in string aClassName,
-                                        in string aProperty,
-                                        in boolean skipFrame);
+                                        in string aProperty);
 
     /**
      * Check that the script currently running in context "cx" can load "uri".
