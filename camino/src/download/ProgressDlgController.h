@@ -73,6 +73,8 @@ class nsDownloadListener;
     NSTimer             *mDownloadTimer;
 }
 
+-(void)autosaveWindowFrame;
+
 -(void) setupDownloadTimer;
 -(void) killDownloadTimer;
 -(void) setDownloadProgress:(NSTimer *)aTimer;

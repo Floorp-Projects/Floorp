@@ -57,6 +57,7 @@ static NSString *ShowFileToolbarItemIdentifier    = @"Show File Toolbar Item";
 static NSString *OpenFileToolbarItemIdentifier    = @"Open File Toolbar Item";
 static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar Item";
 
+static NSString *ProgressWindowFrameSaveName      = @"ProgressWindow";
 
 @implementation ChimeraDownloadControllerFactory : DownloadControllerFactory
 
@@ -85,8 +86,17 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
   [super dealloc];
 }
 
+- (void)awakeFromNib
+{
+  NSLog(@"awakeFromNib");
+  //[[self window] setFrameUsingName: ProgressWindowFrameSaveName];
+  //[[self window] setFrameAutosaveName: ProgressWindowFrameSaveName];
+}
+
 - (void)windowDidLoad
 {
+  [super windowDidLoad];
+  
   mDownloadIsPaused = NO;
   mDownloadIsComplete = NO;
 
@@ -100,6 +110,8 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
   [self setupToolbar];
   [mProgressBar setUsesThreadedAnimation:YES];      
   [mProgressBar startAnimation:self];   // move to onStateChange
+
+  //[[self window] setFrameUsingName: ProgressWindowFrameSaveName];
 }
 
 - (void)setupToolbar
@@ -150,6 +162,11 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
   if ([toolbarItem action] == @selector(openFile))  // open file
     return (mDownloadIsComplete);
   return YES;           // turn it on otherwise.
+}
+
+-(void)autosaveWindowFrame
+{
+  [[self window] saveFrameUsingName: ProgressWindowFrameSaveName];
 }
 
 - (NSToolbarItem *) toolbar:(NSToolbar *)toolbar
@@ -308,6 +325,7 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
 
 - (void)windowWillClose:(NSNotification *)notification
 {
+  [self autosaveWindowFrame];
   [self autorelease];
 }
 
@@ -467,6 +485,10 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
 - (void)onStartDownload:(BOOL)isFileSave;
 {
   mIsFileSave = isFileSave;
+  
+  [self window];		// make the window
+  [[self window] setFrameUsingName: ProgressWindowFrameSaveName];
+
   [self showWindow: self];
   [self setupDownloadTimer];
 }
@@ -514,6 +536,13 @@ static NSString *LeaveOpenToolbarItemIdentifier   = @"Leave Open Toggle Toolbar 
 {
   [mToField setStringValue: [aDestPath stringByAbbreviatingWithTildeInPath]];
   [mToField display];   // force an immmeditate update
+  
+  // also set the window title
+  NSString* downloadFileName = [aDestPath lastPathComponent];
+  if ([downloadFileName length] == 0)
+    downloadFileName = aDestPath;
+  
+  [[self window] setTitle:[NSString stringWithFormat:NSLocalizedString(@"DownloadingTitle", @""), downloadFileName]];
 }
 
 @end
