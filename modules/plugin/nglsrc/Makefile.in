@@ -43,7 +43,11 @@ CPPSRCS		= \
 ifeq ($(OS_ARCH), BeOS)
 	CPPSRCS += nsPluginsDirBeOS.cpp
 else
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+	CPPSRCS += nsPluginsDirOS2.cpp
+else
 	CPPSRCS += nsPluginsDirUNIX.cpp
+endif
 endif
 
 EXPORTS		= \
