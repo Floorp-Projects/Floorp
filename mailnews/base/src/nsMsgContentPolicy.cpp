@@ -44,8 +44,11 @@
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
-#include "nsString.h"
 #include "nsIContentPolicy.h"
+#include "nsIRDFService.h"
+#include "nsIRDFResource.h"
+#include "nsIMsgHeaderParser.h"
+#include "nsIAbMDBDirectory.h"
 
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIMsgWindow.h"
@@ -57,6 +60,8 @@
 #include "nsMsgUtils.h"
 
 static const char kBlockRemoteImages[] = "mailnews.message_display.disable_remote_image";
+static const char kRemoteImagesUseWhiteList[] = "mailnews.message_display.disable_remote_images.useWhitelist";
+static const char kRemoteImagesWhiteListURI[] = "mailnews.message_display.disable_remote_images.whiteListAbURI";
 static const char kAllowPlugins[] = "mailnews.message_display.allow.plugins";
 
 // Per message headder flags to keep track of whether the user is allowing remote
@@ -80,6 +85,8 @@ NS_INTERFACE_MAP_END
 nsMsgContentPolicy::nsMsgContentPolicy()
 {
   mAllowPlugins = PR_FALSE;
+  mUseRemoteImageWhiteList = PR_TRUE;
+  mBlockRemoteImages = PR_TRUE;
 }
 
 nsMsgContentPolicy::~nsMsgContentPolicy()
@@ -93,6 +100,8 @@ nsMsgContentPolicy::~nsMsgContentPolicy()
     if (NS_SUCCEEDED(rv))
     {
       prefInternal->RemoveObserver(kBlockRemoteImages, this);
+      prefInternal->RemoveObserver(kRemoteImagesUseWhiteList, this);
+      prefInternal->RemoveObserver(kRemoteImagesWhiteListURI, this);
       prefInternal->RemoveObserver(kAllowPlugins, this);
     }
   }
@@ -109,10 +118,47 @@ nsresult nsMsgContentPolicy::Init()
   nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefBranch, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   prefInternal->AddObserver(kBlockRemoteImages, this, PR_TRUE);
+  prefInternal->AddObserver(kRemoteImagesUseWhiteList, this, PR_TRUE);
+  prefInternal->AddObserver(kRemoteImagesWhiteListURI, this, PR_TRUE);
   prefInternal->AddObserver(kAllowPlugins, this, PR_TRUE);
 
   prefBranch->GetBoolPref(kAllowPlugins, &mAllowPlugins);
-  rv = prefBranch->GetBoolPref(kBlockRemoteImages, &mBlockRemoteImages);
+  prefBranch->GetBoolPref(kRemoteImagesUseWhiteList, &mUseRemoteImageWhiteList);
+  prefBranch->GetCharPref(kRemoteImagesWhiteListURI, getter_Copies(mRemoteImageWhiteListURI));
+  return prefBranch->GetBoolPref(kBlockRemoteImages, &mBlockRemoteImages);
+}
+
+nsresult nsMsgContentPolicy::IsSenderInWhiteList(nsIMsgDBHdr * aMsgHdr, PRBool * aWhiteListed)
+{
+  *aWhiteListed = PR_FALSE;
+  NS_ENSURE_ARG_POINTER(aMsgHdr); 
+  nsresult rv = NS_OK;
+
+  if (mBlockRemoteImages && mUseRemoteImageWhiteList && !mRemoteImageWhiteListURI.IsEmpty())
+  {
+    nsXPIDLCString author;
+    rv = aMsgHdr->GetAuthor(getter_Copies(author));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsCOMPtr <nsIRDFResource> resource;
+    rv = rdfService->GetResource(mRemoteImageWhiteListURI, getter_AddRefs(resource));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr <nsIAbMDBDirectory> addressBook = do_QueryInterface(resource, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIMsgHeaderParser> headerParser = do_GetService("@mozilla.org/messenger/headerparser;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsXPIDLCString emailAddress; 
+    rv = headerParser->ExtractHeaderAddressMailboxes(nsnull, author, getter_Copies(emailAddress));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = addressBook->HasCardForEmailAddress(emailAddress, aWhiteListed);
+  }
   
   return rv;
 }
@@ -172,8 +218,8 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
         //     see if this particular message has special rights to bypass the remote content check
         // (2) special case RSS urls, always allow them to load remote images since the user explicitly
         //     subscribed to the feed.
-        // (3) Eventually, check the personal address book and use it as a white list for senders 
-        //     who are allowed to send remote images (NOT IMPLEMENTED YET)
+        // (3) Check the personal address book and use it as a white list for senders 
+        //     who are allowed to send us remote images 
         
         // get the msg hdr for the message URI we are actually loading
         NS_ENSURE_TRUE(aRequestingLocation, NS_OK);
@@ -211,9 +257,13 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
           rssServer = do_QueryInterface(server);
         }
         
+        // Case #3, author is in our white list..
+        PRBool authorInWhiteList = PR_FALSE;
+        IsSenderInWhiteList(msgHdr, &authorInWhiteList);
+        
         // Case #1 and #2: special case RSS. Allow urls that are RSS feeds to show remote image (Bug #250246)
         // Honor the message specific remote content policy
-        if (rssServer || remoteContentPolicy == kAllowRemoteContent)
+        if (rssServer || remoteContentPolicy == kAllowRemoteContent || authorInWhiteList)
           *aDecision = nsIContentPolicy::ACCEPT;
         else if (mBlockRemoteImages) 
         {
@@ -264,6 +314,10 @@ NS_IMETHODIMP nsMsgContentPolicy::Observe(nsISupports *aSubject, const char *aTo
 
     if (pref.Equals(kBlockRemoteImages))
       rv = prefBranch->GetBoolPref(kBlockRemoteImages, &mBlockRemoteImages);
+    else if (pref.Equals(kRemoteImagesUseWhiteList))
+      prefBranch->GetBoolPref(kRemoteImagesUseWhiteList, &mUseRemoteImageWhiteList);
+    else if (pref.Equals(kRemoteImagesWhiteListURI))
+      prefBranch->GetCharPref(kRemoteImagesWhiteListURI, getter_Copies(mRemoteImageWhiteListURI));
   }
   
   return NS_OK;

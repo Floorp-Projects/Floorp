@@ -47,6 +47,7 @@
 #include "nsIContentPolicy.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
+#include "nsString.h"
 
 
 /* DBFCFDF0-4489-4faa-8122-190FD1EFA16C */
@@ -54,6 +55,8 @@
 { 0xdbfcfdf0, 0x4489, 0x4faa, { 0x81, 0x22, 0x19, 0xf, 0xd1, 0xef, 0xa1, 0x6c } }
 
 #define NS_MSGCONTENTPOLICY_CONTRACTID "@mozilla.org/messenger/content-policy;1"
+
+class nsIMsgDBHdr;
 
 class nsMsgContentPolicy : public nsIContentPolicy,
                            public nsIObserver,
@@ -71,7 +74,11 @@ public:
 
 protected:
   PRBool   mBlockRemoteImages;
+  PRBool   mUseRemoteImageWhiteList;
+  nsXPIDLCString mRemoteImageWhiteListURI;
   PRBool   mAllowPlugins;
+
+  nsresult IsSenderInWhiteList(nsIMsgDBHdr * aMsgHdr, PRBool * aWhiteListed);
 };
 
 #endif // _nsMsgContentPolicy_H_

@@ -59,6 +59,8 @@ function Startup()
   // proxy connection
   DoEnabling();
         
+  toggleRemoteImagesPrefUI(document.getElementById('networkImageDisableImagesInMailNews'));
+        
   return true;
 }                   
 
@@ -129,6 +131,20 @@ function DoEnabling()
         for (i = 0; i < auto.length; i++)
           auto[i].removeAttribute( "disabled" );
       break;
+  }
+}
+
+function toggleRemoteImagesPrefUI(aCheckbox)
+{
+  if (aCheckbox.checked) 
+  {
+    document.getElementById('useWhiteList').removeAttribute('disabled');
+    document.getElementById('whiteListAbURI').removeAttribute('disabled');
+  }
+  else
+  {
+    document.getElementById('useWhiteList').setAttribute('disabled', 'true');
+    document.getElementById('whiteListAbURI').setAttribute('disabled', 'true');
   }
 }
 

@@ -97,6 +97,7 @@ pref("update.severity", 0);
 pref("update.extensions.count", 0);
 pref("xpinstall.whitelist.add", "update.mozilla.org");
 
+
 /////////////////////////////////////////////////////////////////
 // Overrides of the seamonkey suite mailnews.js prefs
 ///////////////////////////////////////////////////////////////// 
@@ -104,6 +105,9 @@ pref("mail.showFolderPaneColumns", false); // setting to true will allow total/u
 pref("mail.showCondensedAddresses", true); // show the friendly display name for people I know
 
 pref("mailnews.message_display.allow.plugins", false); // disable plugins by default
+pref("mailnews.message_display.disable_remote_image", true);
+pref("mailnews.message_display.disable_remote_images.useWhitelist", true);
+pref("mailnews.message_display.disable_remote_images.whiteListAbURI","moz-abmdbdirectory://abook.mab");
 
 // hidden pref for changing how we present attachments in the message pane
 pref("mailnews.attachments.display.largeView", false); 

@@ -4,6 +4,8 @@
 <!ENTITY privacyTitle.label            "Privacy">
 <!ENTITY disableImageInMailNews.label  "Block loading of remote images in mail messages.">
 <!ENTITY disableImageInMailNews.accesskey "B">
+<!ENTITY allowRemoteImagesForFriends.label  "Allow remote images if the sender is in my:">
+<!ENTITY allowRemoteImagesForFriends.accesskey "A">
 <!ENTITY enbJsCheckMailNews.label      "Enable JavaScript in mail messages.">
 <!ENTITY enbJsCheckMailNews.accesskey  "J">
 
