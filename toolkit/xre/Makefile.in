@@ -59,6 +59,7 @@ REQUIRES = \
 	embedcomponents \
 	extensions \
 	gfx \
+	intl \
 	js \
 	necko \
 	pref \

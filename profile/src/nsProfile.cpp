@@ -506,11 +506,11 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
                 // If the profile is locked, we need the UI
                 nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(curProfileDir));
                 nsProfileLock tempLock;
-                rv = tempLock.Lock(localFile);
+                rv = tempLock.Lock(localFile, nsnull);
                 if (NS_FAILED(rv))
                     profileURLStr = PROFILE_MANAGER_URL;
 #endif
-            } 
+            }
         }
         else
             profileURLStr = PROFILE_SELECTION_URL;

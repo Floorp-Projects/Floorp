@@ -53,6 +53,7 @@ XPIDLSRCS	= \
 		nsIProfileInternal.idl \
 		nsIProfileStartupListener.idl \
 	        nsISessionRoaming.idl \
+	        nsIProfileUnlocker.idl \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

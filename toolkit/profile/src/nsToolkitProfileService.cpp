@@ -81,10 +81,11 @@ public:
     nsCOMPtr<nsToolkitProfile> mNext;
     nsToolkitProfile          *mPrev;
 
+    ~nsToolkitProfile() { }
+
 private:
     nsToolkitProfile(const nsACString& aName, nsILocalFile* aFile,
                      nsToolkitProfile* aPrev);
-    ~nsToolkitProfile() { }
 
     friend class nsToolkitProfileLock;
 
@@ -99,14 +100,13 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROFILELOCK
 
-    nsresult Init(nsToolkitProfile* aProfile);
-    nsresult Init(nsILocalFile* aDirectory);
+    nsresult Init(nsToolkitProfile* aProfile, nsIProfileUnlocker* *aUnlocker);
+    nsresult Init(nsILocalFile* aDirectory, nsIProfileUnlocker* *aUnlocker);
 
     nsToolkitProfileLock() { }
-
-private:
     ~nsToolkitProfileLock();
 
+private:
     nsCOMPtr<nsToolkitProfile> mProfile;
     nsCOMPtr<nsILocalFile> mDirectory;
 
@@ -242,7 +242,7 @@ nsToolkitProfile::Remove(PRBool removeFiles)
 }
 
 NS_IMETHODIMP
-nsToolkitProfile::Lock(nsIProfileLock* *aResult)
+nsToolkitProfile::Lock(nsIProfileUnlocker* *aUnlocker, nsIProfileLock* *aResult)
 {
     if (mLock) {
         NS_ADDREF(*aResult = mLock);
@@ -252,7 +252,7 @@ nsToolkitProfile::Lock(nsIProfileLock* *aResult)
     nsCOMPtr<nsToolkitProfileLock> lock = new nsToolkitProfileLock();
     if (!lock) return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = lock->Init(this);
+    nsresult rv = lock->Init(this, aUnlocker);
     if (NS_FAILED(rv)) return rv;
 
     NS_ADDREF(*aResult = lock);
@@ -262,10 +262,10 @@ nsToolkitProfile::Lock(nsIProfileLock* *aResult)
 NS_IMPL_ISUPPORTS1(nsToolkitProfileLock, nsIProfileLock)
 
 nsresult
-nsToolkitProfileLock::Init(nsToolkitProfile* aProfile)
+nsToolkitProfileLock::Init(nsToolkitProfile* aProfile, nsIProfileUnlocker* *aUnlocker)
 {
     nsresult rv;
-    rv = Init(aProfile->mFile);
+    rv = Init(aProfile->mFile, aUnlocker);
     if (NS_SUCCEEDED(rv))
         mProfile = aProfile;
 
@@ -273,11 +273,11 @@ nsToolkitProfileLock::Init(nsToolkitProfile* aProfile)
 }
 
 nsresult
-nsToolkitProfileLock::Init(nsILocalFile* aDirectory)
+nsToolkitProfileLock::Init(nsILocalFile* aDirectory, nsIProfileUnlocker* *aUnlocker)
 {
     nsresult rv;
 
-    rv = mLock.Lock(aDirectory);
+    rv = mLock.Lock(aDirectory, aUnlocker);
 
     if (NS_SUCCEEDED(rv))
         mDirectory = aDirectory;
@@ -523,16 +523,17 @@ NS_IMETHODIMP
 nsToolkitProfileService::LockProfilePath(nsILocalFile* aDirectory,
                                          nsIProfileLock* *aResult)
 {
-    return NS_LockProfilePath(aDirectory, aResult);
+    return NS_LockProfilePath(aDirectory, nsnull, aResult);
 }
 
 nsresult
-NS_LockProfilePath(nsILocalFile* aPath, nsIProfileLock* *aResult)
+NS_LockProfilePath(nsILocalFile* aPath, nsIProfileUnlocker* *aUnlocker,
+                   nsIProfileLock* *aResult)
 {
     nsCOMPtr<nsToolkitProfileLock> lock = new nsToolkitProfileLock();
     if (!lock) return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = lock->Init(aPath);
+    nsresult rv = lock->Init(aPath, aUnlocker);
     if (NS_FAILED(rv)) return rv;
 
     NS_ADDREF(*aResult = lock);

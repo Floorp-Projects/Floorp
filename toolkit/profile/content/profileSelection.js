@@ -117,12 +117,12 @@ function acceptDialog()
   var profileLock;
 
   try {
-    profileLock = selectedProfile.profile.lock();
+    profileLock = selectedProfile.profile.lock({ value: null });
   }
   catch (e) {
     var lockedTitle = gProfileManagerBundle.getString("profileLockedTitle");
     var locked =
-      gProfileManagerBundle.getFormattedString("profileLocked", [appName, selectedProfile.profile.name]);
+      gProfileManagerBundle.getFormattedString("profileLocked2", [appName, selectedProfile.profile.name, appName]);
     gPromptService.alert(window, lockedTitle, locked);
 
     return false;

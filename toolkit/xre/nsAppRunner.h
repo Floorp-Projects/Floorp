@@ -65,6 +65,7 @@ class nsXREDirProvider;
 class nsIToolkitProfileService;
 class nsILocalFile;
 class nsIProfileLock;
+class nsIProfileUnlocker;
 
 extern nsXREDirProvider* gDirServiceProvider;
 extern const nsXREAppData* gAppData;
@@ -90,7 +91,8 @@ NS_HIDDEN_(nsresult)
 NS_GetFileFromPath(const char *aPath, nsILocalFile* *aResult);
 
 NS_HIDDEN_(nsresult)
-NS_LockProfilePath(nsILocalFile* aPath, nsIProfileLock* *aResult);
+NS_LockProfilePath(nsILocalFile* aPath, nsIProfileUnlocker* *aUnlocker,
+                   nsIProfileLock* *aResult);
 
 #define NS_NATIVEAPPSUPPORT_CONTRACTID "@mozilla.org/toolkit/native-app-support;1"
 

@@ -39,6 +39,7 @@
 
 interface nsILocalFile;
 interface nsIToolkitProfile;
+interface nsIProfileUnlocker;
 
 /**
  * Hold on to a profile lock. Once you release the last reference to this
@@ -52,12 +53,29 @@ interface nsIProfileLock : nsISupports
     void unlock();
 };
 
-[scriptable, uuid(87cea5c2-b9ed-44f9-8984-e75bc9f7134a)]
+/**
+ * A interface representing a profile.
+ * @note THIS INTERFACE SHOULD BE IMPLEMENTED BY THE TOOLKIT CODE ONLY! DON'T
+ *       EVEN THINK ABOUT IMPLEMENTING THIS IN JAVASCRIPT!
+ */
+[scriptable, uuid(0008686a-ee99-4a27-8f1b-190596f535b1)]
 interface nsIToolkitProfile : nsISupports
 {
     readonly attribute nsILocalFile rootDir;
     attribute AUTF8String name;
 
     void remove(in boolean removeFiles);
-    nsIProfileLock lock();
+
+    /**
+     * Lock this profile using platform-specific locking methods.
+     *
+     * @param lockFile If locking fails, this may return a lockFile object
+     *                 which can be used in platform-specific ways to
+     *                 determine which process has the file locked. Null
+     *                 may be passed.
+     * @return An interface which holds a profile lock as long as you reference
+     *         it.
+     * @throws NS_ERROR_FILE_ACCESS_DENIED if the profile was already locked.
+     */
+    nsIProfileLock lock(out nsIProfileUnlocker aUnlocker);
 };
