@@ -2568,8 +2568,6 @@ public class Context
             activationNames.remove(name);
     }
 
-    static final boolean check = true;
-
     private static Hashtable threadContexts = new Hashtable(11);
     private static Object threadLocalCx;
     private static Method threadLocalGet;
@@ -2658,6 +2656,9 @@ public class Context
     int instructionCount;
     int instructionThreshold;
 
-    // It can be used to return the second long or uint32 result from function
-    long scratchLong;
+    // It can be used to return the second index-like result from function
+    int scratchIndex;
+
+    // It can be used to return the second uint32 result from function
+    long scratchUint32;
 }
