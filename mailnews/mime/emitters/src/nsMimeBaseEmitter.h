@@ -87,10 +87,10 @@ public:
                                       nsVoidArray *aArray);
 
   // To write out a stored header array as HTML
-  nsresult            WriteHeaderFieldHTMLPrefix();
-  nsresult            WriteHeaderFieldHTML(const char *field, const char *value);
-  nsresult            WriteHeaderFieldHTMLPostfix();
-  nsresult            WriteHTMLHeaders();
+  virtual nsresult            WriteHeaderFieldHTMLPrefix();
+  virtual nsresult            WriteHeaderFieldHTML(const char *field, const char *value);
+  virtual nsresult            WriteHeaderFieldHTMLPostfix();
+  virtual nsresult            WriteHTMLHeaders();
 
 protected:
   // Internal methods...

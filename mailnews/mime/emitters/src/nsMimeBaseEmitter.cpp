@@ -40,6 +40,8 @@
 #include "nsIRegistry.h"
 #include "nsIMimeStreamConverter.h"
 
+static PRLogModuleInfo * gMimeEmitterLogModule = nsnull;
+
 #define   MIME_URL      "chrome://messenger/locale/mimeheader.properties"
 static    NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static    NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -92,6 +94,9 @@ nsMimeBaseEmitter::nsMimeBaseEmitter()
 
   if ((mPrefs && NS_SUCCEEDED(rv)))
     mPrefs->GetIntPref("mail.show_headers", &mHeaderDisplayType);
+
+  if (!gMimeEmitterLogModule)
+    gMimeEmitterLogModule = PR_NewLogModule("MIME");
 }
 
 nsMimeBaseEmitter::~nsMimeBaseEmitter(void)
@@ -359,6 +364,8 @@ nsMimeBaseEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten
   nsresult rv = NS_OK;
   PRUint32            needToWrite;
 
+
+  PR_LOG(gMimeEmitterLogModule, PR_LOG_ALWAYS, (buf));
   //
   // Make sure that the buffer we are "pushing" into has enough room
   // for the write operation. If not, we have to buffer, return, and get
