@@ -191,13 +191,16 @@ struct GatherArgs {
 class BloatEntry {
 public:
   BloatEntry(const char* className, PRUint32 classSize)
-    : mClassName(className), mClassSize(classSize) { 
+    : mClassSize(classSize) { 
+    mClassName = PL_strdup(className);
     Clear(&mNewStats);
     Clear(&mAllStats);
     mTotalLeaked = 0;
   }
 
-  ~BloatEntry() {}
+  ~BloatEntry() {
+    PL_strfree(mClassName);
+  }
 
   PRUint32 GetClassSize() { return (PRUint32)mClassSize; }
   const char* GetClassName() { return mClassName; }
@@ -382,7 +385,7 @@ public:
   }
 
 protected:
-  const char*   mClassName;
+  char*         mClassName;
   double        mClassSize;     // this is stored as a double because of the way we compute the avg class size for total bloat
   PRInt32       mTotalLeaked; // used only for TOTAL entry
   nsTraceRefcntStats mNewStats;
@@ -1039,7 +1042,7 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
       Dl_info info;
       int ok = dladdr((void*) pc, &info);
       if (!ok) {
-        fprintf(aStream, "UNKNOWN 0x%8p\n", (char*)pc);
+        fprintf(aStream, "UNKNOWN %p\n", (void *)pc);
         bp = nextbp;
         continue;
       }
@@ -1060,7 +1063,9 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
       }
 
       PRUint32 off = (char*)pc - (char*)info.dli_saddr;
-      fprintf(aStream, "%s+0x%08X\n", symbol, off);
+      PRUint32 foff = (char*)pc - (char*)info.dli_fbase;
+      fprintf(aStream, "%s+0x%08X [%s +0x%08X]\n",
+              symbol, off, info.dli_fname, foff);
     }
     bp = nextbp;
   }
