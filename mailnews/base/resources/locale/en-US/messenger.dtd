@@ -1,0 +1,237 @@
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+--> 
+
+<!ENTITY messengerWindow.title "Messenger">
+
+<!-- menu items:  the . means that the menu item isn't implemented yet -->
+
+<!-- File menu items -->
+<!ENTITY fileMenu.label "File"> 
+<!ENTITY newMenu.label "New"> 
+<!ENTITY newNavCmd.label ".Navigator Window">  
+<!ENTITY newMessageCmd.label "Message">  
+<!ENTITY newBlankPageCmd.label ".Blank Page">  
+<!ENTITY newPageFromTemplate.label ".Page from Template">  
+<!ENTITY newPageFromWizard.label ".Page from Wizard">  
+<!ENTITY newFolderCmd.label ".New Folder...">  
+<!ENTITY openAttachmentCmd.label ".Open Attachment">  
+<!ENTITY saveAsMenu.label "Save As"> 
+<!ENTITY saveAsFileCmd.label "File">  
+<!ENTITY saveAsTemplateCmd.label "Template">  
+<!ENTITY getNewMsgCmd.label "Get New Messages">  
+<!ENTITY sendUnsentCmd.label "Send Unsent Messages">  
+<!ENTITY loadFirstDraft.label "Load First Draft Message">
+<!ENTITY subscribeCmd.label "Subscribe">  
+<!ENTITY renameFolder.label ".Rename Folder...">
+<!ENTITY compactFolder.label "Compact This Folder">
+<!ENTITY emptyTrashCmd.label "Empty Trash">  
+<!ENTITY importCmd.label ".Import...">  
+<!ENTITY offlineMenu.label ".Offline"> 
+<!ENTITY workOfflineCmd.label ".Work Offline">  
+<!ENTITY syncCmd.label ".Synchronize">  
+<!ENTITY getSelectedCmd.label ".Get Selected Messages">  
+<!ENTITY getFlaggedCmd.label ".Get Flagged Messages">  
+<!ENTITY printPreviewCmd.label ".Print Preview">  
+<!ENTITY printCmd.label ".Print">  
+<!ENTITY closeCmd.label "Close">  
+
+<!-- Edit Menu -->
+<!ENTITY editMenu.label "Edit"> 
+<!ENTITY undoCmd.label "Undo">  
+<!ENTITY redoCmd.label "Redo">  
+<!ENTITY cutCmd.label ".Cut">  
+<!ENTITY copyCmd.label ".Copy">  
+<!ENTITY pasteCmd.label ".Paste">  
+<!ENTITY deleteMsgCmd.label "Delete Message">  
+<!ENTITY deleteFolderCmd.label ".Delete Folder">  
+<!ENTITY selectMenu.label ".Select"> 
+<!ENTITY selectAllCmd.label ".All">  
+<!ENTITY selectThreadCmd.label ".Thread">  
+<!ENTITY selectFlaggedCmd.label ".Flagged Messages">  
+<!ENTITY spamFiltersCmd.label ".Junk Mail Filter">
+<!ENTITY filtersCmd.label "Message Filters...">  
+<!ENTITY folderPropsCmd.label ".Folder Properties">  
+<!ENTITY prefsCmd.label "Preferences...">
+<!ENTITY accountManagerCmd.label "Account Setup...">
+<!ENTITY accountWizardCmd.label "New Account Wizard...">
+
+<!-- View Menu -->
+<!ENTITY viewMenu.label "View"> 
+<!ENTITY showToolbarMenu.label ".Toolbars">
+<!ENTITY showSidebarMenu.label ".SideBar">
+<!ENTITY showMessengerToolbarCmd.label ".Messenger Toolbar">  
+<!ENTITY showMessageCmd.label ".Message">  
+<!ENTITY showFoldersCmd.label ".Folders">  
+<!ENTITY sortMenu.label "Sort"> 
+<!ENTITY sortByDateCmd.label "by Date">  
+<!ENTITY sortByFlagCmd.label ".by Flag">  
+<!ENTITY sortByPriorityCmd.label ".by Priority">  
+<!ENTITY sortBySenderCmd.label "by Sender">  
+<!ENTITY sortBySizeCmd.label ".by Size">  
+<!ENTITY sortByStatusCmd.label "by Status">  
+<!ENTITY sortBySubjectCmd.label "by Subject">  
+<!ENTITY sortByThreadCmd.label ".by Thread">  
+<!ENTITY sortByUnreadCmd.label ".by Unread">  
+<!ENTITY sortByOrderReceivedCmd.label ".by Order Received">  
+<!ENTITY sortAscendCmd.label ".Ascending">  
+<!ENTITY sortDescendCmd.label ".Descending">  
+<!ENTITY msgsMenu.label "Messages"> 
+<!ENTITY threadsMsgsCmd.label ".Threads">  
+<!ENTITY allMsgsCmd.label "All">  
+<!ENTITY unreadMsgsCmd.label "Unread">  
+<!ENTITY threadsWithUnreadMsgsCmd.label ".Threads with Unread">  
+<!ENTITY watchedThreadsMsgsCmd.label ".Watched Threads with Unread">  
+<!ENTITY ignoreThreadMsgsCmd.label ".Ignore Thread">  
+<!ENTITY headersMenu.label ".Headers"> 
+<!ENTITY headersAllCmd.label ".All">  
+<!ENTITY headersNormalCmd.label ".Normal">  
+<!ENTITY headersBriefCmd.label ".Brief">  
+<!ENTITY viewAttachmentsInlineCmd.label ".View Attachments Inline">  
+<!ENTITY wrapLongLinesCmd.label ".Wrap Long Lines">  
+<!ENTITY increaseFontCmd.label ".Enlarge Text Size">
+<!ENTITY decreaseFontCmd.label ".Reduce Text Size">
+<!ENTITY reloadCmd.label ".Reload">  
+<!ENTITY showImagesCmd.label ".Show Images">  
+<!ENTITY stopCmd.label ".Stop">  
+<!ENTITY pageSourceCmd.label ".Page Source">  
+<!ENTITY pageInfoCmd.label ".Page Info">  
+<!ENTITY charSetMenu.label "Character Set"> 
+<!ENTITY translateMenu.label ".Translate"> 
+<!ENTITY dcharMenu.label "Character Set">
+<!ENTITY dcharIso1Cmd.label "ISO Latin 1 (ISO-8859-1)">
+<!ENTITY dcharIso2Cmd.label "ISO Latin 2 (ISO-8859-2)">
+<!ENTITY dcharIso3Cmd.label "ISO Latin 3 (ISO-8859-3)">
+<!ENTITY dcharIso4Cmd.label "ISO Latin 4 (ISO-8859-4)">
+<!ENTITY dcharIso9Cmd.label "ISO Latin 5 (ISO-8859-9)">
+<!ENTITY dcharIso10Cmd.label "ISO Latin 6 (ISO-8859-10)">
+<!ENTITY dcharIso13Cmd.label "ISO Latin 7 (ISO-8859-13)">
+<!ENTITY dcharIso14Cmd.label "ISO Latin 8 (ISO-8859-14)">
+<!ENTITY dcharIso15Cmd.label "ISO Latin 9 (ISO-8859-15)">
+<!ENTITY dcharWinLat2Cmd.label "Windows Latin 2 (windows-1250)"> 
+<!ENTITY dcharWinLat1Cmd.label "Windows Latin 1 (windows-1252)">
+<!ENTITY dcharWinLat5Cmd.label "Windows Latin 5 (windows-1254)">
+<!ENTITY dcharWinBalRimCmd.label "Windows Baltic (windows-1257)">
+<!ENTITY dcharMacRomCmd.label "Macintosh Roman">
+<!ENTITY dcharMacCenEuroCmd.label "Macintosh Central European">
+<!ENTITY dcharMacTurCmd.label "Macintosh Turkish">
+<!ENTITY dcharMacCroaCmd.label "Macintosh Croatian">
+<!ENTITY dcharMacRomanianCmd.label "Macintosh Romanian">
+<!ENTITY dcharMacIceCmd.label "Macintosh Icelandic">
+<!ENTITY dcharJapanCmd.label "Japanese JIS (ISO-2022-JP)">
+<!ENTITY dcharJapanShiftjsCmd.label "Japanese (Shift_JIS)">
+<!ENTITY dcharJapanEucCmd.label "Japanese (EUC-JP)">
+<!ENTITY dcharTradChiBigCmd.label "Traditional Chinese (Big5)">
+<!ENTITY dcharTriChiEucCmd.label "Traditional Chinese (EUC-TW)">
+<!ENTITY dcharSimpChiGbCmd.label "Simplified Chinese (GB2312)">
+<!ENTITY dcharKoreanCmd.label "Korean (EUC-KR)">
+<!ENTITY dcharUtf7Cmd.label "Multilingual (UTF-7)">
+<!ENTITY dcharUtf8Cmd.label "Multilingual (UTF-8)">
+<!ENTITY dcharIsoCyrCmd.label "ISO Cyrillic (ISO-8859-5)">
+<!ENTITY dcharEcmaCyrCmd.label "ECMA Cyrillic (ISO-IR-111)">
+<!ENTITY dcharDosCyrCmd.label "DOS Cyrillic (IBM866)">
+<!ENTITY dcharWinCyrCmd.label "Windows Cyrillic (windows-1251)">
+<!ENTITY dcharMacCyrCmd.label "Macintosh Cyrillic">
+<!ENTITY dcharMacUkrCmd.label "Macintosh Ukrainian">
+<!ENTITY dcharRusCmd.label "Russian (KOI8-R)">
+<!ENTITY dcharUkrCmd.label "Ukrainian (KOI8-U)">
+<!ENTITY dcharIsoGreekCmd.label "ISO Greek (ISO-8859-7)">
+<!ENTITY dcharWinGreekCmd.label "Windows Greek (windows-1253)">
+<!ENTITY dcharMacGreekCmd.label "Macintosh Greek">
+<!ENTITY dcharWinVietCmd.label "Windows Vietnamese (windows-1258)">
+<!ENTITY dcharVietTcnCmd.label "Vietnamese (TCVN5712)">
+<!ENTITY dcharVietViCmd.label "Vietnamese (VISCII)">
+<!ENTITY dcharVieVpCmd.label "Vietnamese (VPS)">
+<!ENTITY dcharThaiCmd.label "Thai (TIS-620)">
+<!ENTITY dcharArmCmd.label "Armenian (ARMSCII-8)">
+<!ENTITY dcharIso6Cmd.label ".ISO Arabic (ISO-8859-6)">
+<!ENTITY dcharIso8Cmd.label ".ISO Hebrew (ISO-8859-8)">
+<!ENTITY dcharCp1255Cmd.label "Windows Hebrew (windows-1255)">
+<!ENTITY dcharCp1256Cmd.label "Windows Arabic (windows-1256)">
+
+<!-- Search Menu -->
+<!ENTITY searchMenu.label "Search">
+<!ENTITY findCmd.label ".Find...">  
+<!ENTITY findAgainCmd.label ".Find Again">
+<!ENTITY searchCurrentCmd.label ".Search in &lt;current&gt;">
+<!ENTITY searchParentCmd.label ".Search in &lt;parent&gt;">
+<!ENTITY searchParentParentCmd.label ".Search in &lt;parent parent&gt;">
+<!ENTITY searchInternetCmd.label ".Search the Internet...">
+<!ENTITY searchMailCmd.label "Search all Mail">
+<!ENTITY searchBookmarksCmd.label ".Search Bookmarks...">
+<!ENTITY searchPeopleCmd.label ".Search People...">
+<!ENTITY searchLocalCmd.label ".Search on this Computer...">
+
+<!-- Go Menu -->
+
+<!ENTITY goMenu.label ".Go"> 
+<!ENTITY firstUnreadMsgCmd.label ".First Unread Message">  
+<!ENTITY firstFlaggedMsgCmd.label ".First Flagged Message">  
+<!ENTITY nextMenu.label ".Next"> 
+<!ENTITY nextMsgCmd.label ".Message">  
+<!ENTITY nextUnreadMsgCmd.label ".Unread Message">  
+<!ENTITY nextFlaggedMsgCmd.label ".Flagged Message">  
+<!ENTITY prevMenu.label ".Previous"> 
+<!ENTITY prevMsgCmd.label ".Message">  
+<!ENTITY prevUnreadMsgCmd.label ".Unread Message">  
+<!ENTITY prevFlaggedMsgCmd.label ".Flagged Message">  
+<!ENTITY backCmd.label ".Back">  
+<!ENTITY forwardCmd.label ".Forward">  
+<!ENTITY msgMenu.label "Message">  
+<!ENTITY newMsgCmd.label "New Message">  
+<!ENTITY replyMsgCmd.label "Reply">  
+<!ENTITY replyToAllMsgCmd.label "Reply to All">  
+<!ENTITY forwardMsgCmd.label "Forward">  
+<!ENTITY forwardAsMenu.label "Forward As">  
+<!ENTITY forwardAsInline.label "Inline">  
+<!ENTITY forwardAsAttachmentCmd.label "Attachment">  
+<!ENTITY editMsgAsNewCmd.label ".Edit Message As New">  
+<!ENTITY moveMsgMenu.label "Move Message">  
+<!ENTITY copyMsgMenu.label "Copy Message">  
+<!ENTITY addSenderToAddressBookCmd.label ".Add Sender to Address Book">  
+<!ENTITY addAllToAddressBookCmd.label ".Add All to Address Book">  
+<!ENTITY markMenu.label "Mark">  
+<!ENTITY markAsReadCmd.label "As Read">  
+<!ENTITY markAsUnreadCmd.label "As Unread">  
+<!ENTITY markThreadAsReadCmd.label ".Thread As Read">  
+<!ENTITY markByDateCmd.label ".by Date...">  
+<!ENTITY markAllReadCmd.label "All Read">  
+<!ENTITY markFlaggedCmd.label ".Flag">  
+<!ENTITY ignoreThreadCmd.label ".Ignore Thread">  
+<!ENTITY watchThreadCmd.label ".Watch Thread">  
+
+<!-- Toolbar items -->  
+<!ENTITY getMsgButton.img "chrome://messenger/skin/getmsg.gif">
+<!ENTITY getMsgButton.label "Get Msg">  
+<!ENTITY newMsgButton.img "chrome://messenger/skin/newmsg.gif">
+<!ENTITY newMsgButton.label "New Msg">  
+<!ENTITY replyButton.img "chrome://messenger/skin/reply.gif">
+<!ENTITY replyButton.label "Reply">  
+<!ENTITY replyAllButton.img "chrome://messenger/skin/replyall.gif">
+<!ENTITY replyAllButton.label "Reply All">  
+<!ENTITY forwardButton.img "chrome://messenger/skin/forward.gif">
+<!ENTITY forwardButton.label "Forward">  
+<!ENTITY nextButton.img "chrome://messenger/skin/next.gif">
+<!ENTITY nextButton.label "Next">  
+<!ENTITY deleteButton.img "chrome://messenger/skin/trash.gif">
+<!ENTITY deleteButton.label "Delete">  
+<!ENTITY throbber.url "http://www.mozilla.org/"> 
+
+<!-- Statusbar -->
+<!ENTITY  statusText.label "Document: Done">
