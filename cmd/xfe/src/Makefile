@@ -49,7 +49,8 @@ REQUIRES	=\
 			xfeicons \
 			rdf \
 			xpcom \
-			plug
+			plug \
+			netcnvts
 
 CPPSRCS		= \
 		  plugin.cpp \
