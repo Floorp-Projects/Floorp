@@ -1036,14 +1036,18 @@ nsresult nsBidiPresUtils::GetBidiEngine(nsBidi** aBidiEngine)
   return rv; 
 }
 
-nsresult nsBidiPresUtils::RenderText(PRUnichar*           aText,
+nsresult nsBidiPresUtils::RenderText(const PRUnichar*     aText,
                                      PRInt32              aLength,
                                      nsBidiDirection      aBaseDirection,
                                      nsPresContext*      aPresContext,
                                      nsIRenderingContext& aRenderingContext,
                                      nscoord              aX,
-                                     nscoord              aY)
+                                     nscoord              aY,
+                                     nsBidiPositionResolve* aPosResolve,
+                                     PRInt32              aPosResolveCount)
 {
+  NS_ASSERTION((aPosResolve == nsnull) != (aPosResolveCount > 0), "Incorrect aPosResolve / aPosResolveCount arguments");
+
   PRInt32 runCount;
 
   mBuffer.Assign(aText);
@@ -1056,9 +1060,10 @@ nsresult nsBidiPresUtils::RenderText(PRUnichar*           aText,
   if (NS_FAILED(rv))
     return rv;
 
-  nscoord width, xEndRun;
+  nscoord width, xEndRun, xStartText = aX;
   PRBool isRTL = PR_FALSE;
   PRInt32 i, start, limit, length;
+  PRUint32 visualStart = 0;
   PRUint8 charType;
   PRUint8 prevType = eCharType_LeftToRight;
   nsBidiLevel level;
@@ -1066,6 +1071,12 @@ nsresult nsBidiPresUtils::RenderText(PRUnichar*           aText,
   PRUint32 hints = 0;
   aRenderingContext.GetHints(hints);
   PRBool isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
+      
+  for(int nPosResolve=0; nPosResolve < aPosResolveCount; ++nPosResolve)
+  {
+    aPosResolve[nPosResolve].visualIndex = kNotFound;
+    aPosResolve[nPosResolve].visualLeftTwips = kNotFound;
+  }
 
   for (i = 0; i < runCount; i++) {
     rv = mBidiEngine->GetVisualRun(i, &start, &length, &aBaseDirection);
@@ -1112,15 +1123,80 @@ nsresult nsBidiPresUtils::RenderText(PRUnichar*           aText,
         isRTL = !isRTL;
         aRenderingContext.SetRightToLeftText(isRTL);
       }
-      FormatUnicodeText(aPresContext, aText + start, subRunLength,
+      
+      nsAutoString runVisualText;
+      runVisualText.Assign(aText + start, subRunLength);
+      FormatUnicodeText(aPresContext, runVisualText.BeginWriting(), subRunLength,
                         (nsCharType)charType, level & 1,
                         isBidiSystem);
 
-      aRenderingContext.GetWidth(aText + start, subRunLength, width, nsnull);
+      aRenderingContext.GetWidth(runVisualText.get(), subRunLength, width, nsnull);
       if (level & 1) {
         aX -= width;
       }
-      aRenderingContext.DrawString(aText + start, subRunLength, aX, aY, width);
+      aRenderingContext.DrawString(runVisualText.get(), subRunLength, aX, aY, width);
+
+      /*
+       * The caller may request to calculate the visual position of one
+       * or more characters.
+       */
+      for(int nPosResolve=0; nPosResolve<aPosResolveCount; ++nPosResolve)
+      {
+        nsBidiPositionResolve* posResolve = &aPosResolve[nPosResolve];
+        /*
+         * Did we already resolve this position's visual metric? If so, skip.
+         */
+        if (posResolve->visualLeftTwips != kNotFound)
+           continue;
+           
+        /*
+         * First find out if the logical position is within this run.
+         */
+        if (start <= posResolve->logicalIndex &&
+            start + subRunLength > posResolve->logicalIndex) {
+          /*
+           * If this run is only one character long, we have an easy case:
+           * the visual position is the x-coord of the start of the run
+           * less the x-coord of the start of the whole text (saved in xStartText).
+           */
+          if (subRunLength == 1) {
+            posResolve->visualIndex = visualStart;
+            posResolve->visualLeftTwips = aX - xStartText;
+          }
+          /*
+           * Otherwise, we need to measure the width of the run's part
+           * which is to the visual left of the index.
+           * In other words, the run is broken in two, around the logical index,
+           * and we measure the part which is visually left.
+           * If the run is right-to-left, this part will span from after the index
+           * up to the end of the run; if it is left-to-right, this part will span
+           * from the start of the run up to (and inclduing) the character before the index.
+           */
+          else {
+            nscoord subWidth;
+            // The position in the text where this run's "left part" begins.
+            const PRUnichar* visualLeftPart;
+            if (level & 1) {
+              // One day, son, this could all be replaced with mBidiEngine.GetVisualIndex ...
+              posResolve->visualIndex = visualStart + (subRunLength - (posResolve->logicalIndex + 1 - start));
+              // Skipping to the "left part".
+              visualLeftPart = aText + posResolve->logicalIndex + 1;
+            }
+            else {
+              posResolve->visualIndex = visualStart + (posResolve->logicalIndex - start);
+              // Skipping to the "left part".
+              visualLeftPart = aText + start;
+            }
+            // The delta between the start of the run and the left part's end.
+            PRInt32 visualLeftLength = posResolve->visualIndex - visualStart;
+            aRenderingContext.GetWidth(visualLeftPart,
+                                       visualLeftLength,
+                                       subWidth, nsnull);
+            posResolve->visualLeftTwips = aX + subWidth - xStartText;
+          }
+        }
+      }
+
       if (!(level & 1)) {
         aX += width;
       }
@@ -1133,6 +1209,8 @@ nsresult nsBidiPresUtils::RenderText(PRUnichar*           aText,
     if (level & 1) {
       aX = xEndRun;
     }
+    
+    visualStart += length;
   } // for
 
   // Restore original reading order

@@ -540,10 +540,9 @@ nsPageFrame::DrawHeaderFooter(nsPresContext*      aPresContext,
       nsBidiPresUtils* bidiUtils = aPresContext->GetBidiUtils();
       
       if (bidiUtils) {
-        PRUnichar* buffer = str.BeginWriting();
         // Base direction is always LTR for now. If bug 139337 is fixed, 
         // that should change.
-        rv = bidiUtils->RenderText(buffer, str.Length(), NSBIDI_LTR,
+        rv = bidiUtils->RenderText(str.get(), str.Length(), NSBIDI_LTR,
                                    aPresContext, aRenderingContext,
                                    x, y + aAscent);
       }

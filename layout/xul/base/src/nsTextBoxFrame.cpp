@@ -418,22 +418,44 @@ nsTextBoxFrame::PaintTitle(nsPresContext*      aPresContext,
       nsBidiPresUtils* bidiUtils = aPresContext->GetBidiUtils();
 
       if (bidiUtils) {
-        PRUnichar* buffer = ToNewUnicode(mCroppedTitle);
-        if (buffer) {
-          const nsStyleVisibility* vis = GetStyleVisibility();
-          nsBidiDirection direction =
-                                    (NS_STYLE_DIRECTION_RTL == vis->mDirection)
-                                    ? NSBIDI_RTL : NSBIDI_LTR;
-          rv = bidiUtils->RenderText(buffer, mCroppedTitle.Length(), direction,
-                                     aPresContext, aRenderingContext,
-                                     textRect.x, textRect.y + baseline);
-          nsMemory::Free(buffer);
+        const nsStyleVisibility* vis = GetStyleVisibility();
+        nsBidiDirection direction = (NS_STYLE_DIRECTION_RTL == vis->mDirection) ? NSBIDI_RTL : NSBIDI_LTR;
+        if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
+           // We let the RenderText function calculate the mnemonic's
+           // underline position for us.
+           nsBidiPositionResolve posResolve;
+           posResolve.logicalIndex = mAccessKeyInfo->mAccesskeyIndex;
+           rv = bidiUtils->RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), direction,
+                                      aPresContext, aRenderingContext,
+                                      textRect.x, textRect.y + baseline,
+                                      &posResolve,
+                                      1);
+           mAccessKeyInfo->mBeforeWidth = posResolve.visualLeftTwips;
+        }
+        else
+        {
+           rv = bidiUtils->RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), direction,
+                                      aPresContext, aRenderingContext,
+                                      textRect.x, textRect.y + baseline);
         }
       }
     }
     if (NS_FAILED(rv) )
 #endif // IBMBIDI
-    aRenderingContext.DrawString(mCroppedTitle, textRect.x, textRect.y + baseline);
+    {
+       if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
+           // In the simple (non-BiDi) case, we calculate the mnemonic's
+           // underline position by getting the text metric.
+           // XXX are attribute values always two byte?
+           if (mAccessKeyInfo->mAccesskeyIndex > 0)
+               aRenderingContext.GetWidth(mCroppedTitle.get(), mAccessKeyInfo->mAccesskeyIndex,
+                                          mAccessKeyInfo->mBeforeWidth);
+           else
+               mAccessKeyInfo->mBeforeWidth = 0;
+       }
+
+       aRenderingContext.DrawString(mCroppedTitle, textRect.x, textRect.y + baseline);
+    }
 
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
         aRenderingContext.FillRect(textRect.x + mAccessKeyInfo->mBeforeWidth,
@@ -468,17 +490,9 @@ void
 nsTextBoxFrame::CalculateUnderline(nsIRenderingContext& aRenderingContext)
 {
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
-         // get all the underline-positioning stuff
-
-         // XXX are attribute values always two byte?
-         const PRUnichar *titleString;
-         titleString = mCroppedTitle.get();
-         if (mAccessKeyInfo->mAccesskeyIndex > 0)
-             aRenderingContext.GetWidth(titleString, mAccessKeyInfo->mAccesskeyIndex,
-                                        mAccessKeyInfo->mBeforeWidth);
-         else
-             mAccessKeyInfo->mBeforeWidth = 0;
-
+         // Calculate all fields of mAccessKeyInfo which
+         // are the same for both BiDi and non-BiDi rames.
+         const PRUnichar *titleString = mCroppedTitle.get();
          aRenderingContext.GetWidth(titleString[mAccessKeyInfo->mAccesskeyIndex],
                                     mAccessKeyInfo->mAccessWidth);
 

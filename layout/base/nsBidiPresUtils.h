@@ -49,6 +49,23 @@
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
 
+/**
+ * A structure representing a logical position which should be resolved
+ * into its visual position during BiDi processing.
+ */
+struct nsBidiPositionResolve
+{
+  // [in] Logical index within string.
+  PRInt32 logicalIndex;
+  // [out] Visual index within string.
+  // If the logical position was not found, set to kNotFound.
+  PRInt32 visualIndex;
+  // [out] Visual position of the character, from the left (on the X axis), in twips.
+  // Eessentially, this is the X position (relative to the rendering context) where the text was drawn + the font metric of the visual string to the left of the given logical position.
+  // If the logical position was not found, set to kNotFound.
+  PRInt32 visualLeftTwips;
+};
+
 class nsBidiPresUtils {
 public:
   nsBidiPresUtils();
@@ -122,22 +139,27 @@ public:
    * Reorder plain text using the Unicode Bidi algorithm and send it to
    * a rendering context for rendering.
    *
-   * @param aText the string to be rendered
+   * @param[in] aText  the string to be rendered (in logical order)
    * @param aLength the number of characters in the string
    * @param aBaseDirection the base direction of the string
    *  NSBIDI_LTR - left-to-right string
    *  NSBIDI_RTL - right-to-left string
    * @param aPresContext the presentation context
    * @param aRenderingContext the rendering context
-   * @param aTextRect contains the coordinates to render the string
+   * @param aX the x-coordinate to render the string
+   * @param aY the y-coordinate to render the string
+   * @param[in,out] aPosResolve array of logical positions to resolve into visual positions; can be nsnull if this functionality is not required
+   * @param aPosResolveCount number of items in the aPosResolve array
    */
-  nsresult RenderText(PRUnichar*           aText,
+  nsresult RenderText(const PRUnichar*     aText,
                       PRInt32              aLength,
                       nsBidiDirection      aBaseDirection,
                       nsPresContext*      aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       nscoord              aX,
-                      nscoord              aY);
+                      nscoord              aY,
+                      nsBidiPositionResolve* aPosResolve = nsnull,
+                      PRInt32              aPosResolveCount = 0);
 
 private:
   /**
