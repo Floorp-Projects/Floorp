@@ -98,7 +98,10 @@ pass_1(TreeState *state)
                 " %s.idl\n */\n", state->basename);
         fprintf(state->file, "\n#ifndef __%s_h__\n#define __%s_h__\n\n",
                 state->basename, state->basename);
-        g_hash_table_foreach(state->includes, write_header, state);
+        if (g_hash_table_size(state->includes)) {
+            g_hash_table_foreach(state->includes, write_header, state);
+            fputc('\n', state->file);
+        }
     } else {
         fprintf(state->file, "\n#endif /* __%s_h__ */\n", state->basename);
     }
@@ -129,7 +132,7 @@ interface(TreeState *state)
     char *className = IDL_IDENT(IDL_INTERFACE(iface).ident).str;
     const char *iid;
 
-    fprintf(state->file, "\n/* starting interface %s */\n",
+    fprintf(state->file, "/* starting interface %s */\n",
             className);
     iid = IDL_interface_get_property(iface, "uuid");
     if (iid) {
@@ -327,7 +330,6 @@ param_dcls(TreeState *state)
         if (IDL_LIST(iter).next)
             fputs(", ", state->file);
     }
-    fputs(")", state->file);
     return TRUE;
 }
 
@@ -396,7 +398,7 @@ do_enum(TreeState *state)
 {
     IDL_tree enumb = state->tree, iter;
     
-    fprintf(state->file, "\nenum %s {\n",
+    fprintf(state->file, "enum %s {\n",
             IDL_IDENT(IDL_TYPE_ENUM(enumb).ident).str);
 
     for (iter = IDL_TYPE_ENUM(enumb).enumerator_list;
@@ -404,7 +406,7 @@ do_enum(TreeState *state)
         fprintf(state->file, "  %s%s\n", IDL_IDENT(IDL_LIST(iter).data).str,
                 IDL_LIST(iter).next ? ",": "");
 
-    fputs("};\n", state->file);
+    fputs("};\n\n", state->file);
     return TRUE;
 }
 
@@ -456,15 +458,37 @@ op_dcl(TreeState *state)
     state->tree = op.parameter_dcls;
     if (!param_dcls(state))
         return FALSE;
-    fputs("; */\n", state->file);
+    if (op.f_varargs)
+        fputs(", ...", state->file);
+    fputs("); */\n", state->file);
 
     fprintf(state->file, "  NS_IMETHOD %s(", IDL_IDENT(op.ident).str);
     for (iter = op.parameter_dcls; iter; iter = IDL_LIST(iter).next) {
         state->tree = IDL_LIST(iter).data;
         if (!xpcom_param(state))
             return FALSE;
-        if (IDL_LIST(iter).next)
+        if (IDL_LIST(iter).next || op.op_type_spec || op.f_varargs)
             fputs(", ", state->file);
+    }
+
+    /* make IDL return value into trailing out argument */
+    if (op.op_type_spec) {
+        IDL_tree fake_param = IDL_param_dcl_new(IDL_PARAM_OUT,
+                                                op.op_type_spec,
+                                                IDL_ident_new("_retval"));
+        if (!fake_param)
+            return FALSE;
+        state->tree = fake_param;
+        if (!xpcom_param(state))
+            return FALSE;
+        if (op.f_varargs)
+            fputs(", ", state->file);
+    }
+
+    /* varargs go last */
+    /* XXX this should be ``nsIVarArgs *_varargs'', not ``...'', I guess */
+    if (op.f_varargs) {
+        fputs("...", state->file);
     }
     fputs(") = 0;\n", state->file);
     return TRUE;
