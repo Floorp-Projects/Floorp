@@ -383,10 +383,14 @@ nsCString& nsCString::StripWhitespace() {
  */
 nsCString& nsCString::ReplaceChar(PRUnichar aOldChar, PRUnichar aNewChar) {
   PRUint32 theIndex=0;
-  for(theIndex=0;theIndex<mLength;theIndex++){
-    if(mStr[theIndex]==(char)aOldChar) {
-      mStr[theIndex]=(char)aNewChar;
-    }//if
+  
+  if((aOldChar<256) && (aNewChar<256)){
+      //only execute this if oldchar and newchar are within legal ascii range
+    for(theIndex=0;theIndex<mLength;theIndex++){
+      if(mStr[theIndex]==(char)aOldChar) {
+        mStr[theIndex]=(char)aNewChar;
+      }//if
+    }
   }
   return *this;
 }
@@ -399,7 +403,9 @@ nsCString& nsCString::ReplaceChar(PRUnichar aOldChar, PRUnichar aNewChar) {
  *  @return *this 
  */
 nsCString& nsCString::ReplaceChar(const char* aSet, PRUnichar aNewChar){
-  if(aSet){
+  if(aSet && (aNewChar<256)){
+      //only execute this if newchar is valid ascii, and aset isn't null.
+
     PRInt32 theIndex=FindCharInSet(aSet,0);
     while(kNotFound<theIndex) {
       mStr[theIndex]=(char)aNewChar;
@@ -589,7 +595,7 @@ nsCString* nsCString::ToNewString() const {
  * @return  ptr to new ascii string
  */
 char* nsCString::ToNewCString() const {
-  nsCString temp(mStr);
+  nsCString temp(*this);
   temp.SetCapacity(8);
   char* result=temp.mStr;
   temp.mStr=0;
@@ -603,7 +609,7 @@ char* nsCString::ToNewCString() const {
  * @return  ptr to new ascii string
  */
 PRUnichar* nsCString::ToNewUnicode() const {
-  nsString temp(mStr);
+  nsString temp(mStr,mLength);
   temp.SetCapacity(8);
   PRUnichar* result=temp.mUStr;
   temp.mStr=0;

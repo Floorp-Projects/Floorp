@@ -245,7 +245,7 @@ CopyChars gCopyChars[2][2]={
 /**
  *  This methods cans the given buffer for the given char
  *  
- *  @update  gess 3/25/98
+ *  @update  gess 02/17/00
  *  @param   aDest is the buffer to be searched
  *  @param   aDestLength is the size (in char-units, not bytes) of the buffer
  *  @param   anOffset is the start pos to begin searching
@@ -262,8 +262,11 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset
   if(aCount<0)
     aCount = (PRInt32)aDestLength;
 
-  if((0<aDestLength) && ((PRUint32)anOffset<aDestLength)) {
- 
+  if((aChar<256) && (0<aDestLength) && ((PRUint32)anOffset<aDestLength)) {
+
+    //We'll only search if the given aChar is within the normal ascii a range,
+    //(Since this string is definitely within the ascii range).
+    
     if(0<aCount) {
 
       const char* left= aDest+anOffset;
@@ -353,7 +356,7 @@ inline PRInt32 FindChar2(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset
 /**
  *  This methods cans the given buffer (in reverse) for the given char
  *  
- *  @update  gess 3/25/98
+ *  @update  gess 02/17/00
  *  @param   aDest is the buffer to be searched
  *  @param   aDestLength is the size (in char-units, not bytes) of the buffer
  *  @param   anOffset is the start pos to begin searching
@@ -371,7 +374,10 @@ inline PRInt32 RFindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffse
   if(aCount<0)
     aCount = aDestLength;
 
-  if((0<aDestLength) && ((PRUint32)anOffset<aDestLength)) {
+  if((aChar<256) && (0<aDestLength) && ((PRUint32)anOffset<aDestLength)) {
+
+    //We'll only search if the given aChar is within the normal ascii a range,
+    //(Since this string is definitely within the ascii range).
  
     if(0<aCount) {
 
