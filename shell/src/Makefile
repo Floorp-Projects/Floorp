@@ -25,7 +25,7 @@ MODULE=shell
 
 LIBRARY_NAME = shell
 
-DEFINES = -D_IMPL_NS_SHELL
+DEFINES = -D_IMPL_NS_SHELL -DNSPR20
 
 EXTRA_DSO_LDOPTS+= -L$(DIST)/lib \
 		$(DIST)/bin/libxpcom.so \
@@ -50,7 +50,7 @@ endif
 LCFLAGS=-I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor \
       -I$(PUBLIC)/dom -I$(PUBLIC)/js -I$(PUBLIC)/netlib -I$(PUBLIC)/shell
 
-REQUIRES = xpcom raptor dom js netlib shell
+REQUIRES = xpcom raptor dom js netlib shell pref
 
 EXPORTS =				\
  nsApplicationManager.h			\
