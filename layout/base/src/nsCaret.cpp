@@ -281,7 +281,20 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 {
 	if (!mDrawn)
 	{
-		return (mLastCaretFrame != nsnull);		// if we are going to erase, we just need to have the old frame
+		if (!mLastCaretFrame) return PR_FALSE;
+		
+		// check there that our cached offset into the frame content
+		// is still valid. It can go bad when splitting nodes
+		PRInt32		contentStart, contentEnd;
+		mLastCaretFrame->GetOffsets(contentStart, contentEnd);
+		
+		if (mLastContentOffset < contentStart)
+			mLastContentOffset = contentStart;
+			
+		if (mLastContentOffset > contentEnd)
+			mLastContentOffset = contentEnd;
+			
+		return PR_TRUE;
 	}
 	
 	nsCOMPtr<nsIDOMSelection> domSelection;
@@ -291,7 +304,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 
 	PRBool isCollapsed;
 
-	if (domSelection && NS_SUCCEEDED(domSelection->IsCollapsed(&isCollapsed)) && isCollapsed)
+	if (domSelection && NS_SUCCEEDED(domSelection->GetIsCollapsed(&isCollapsed)) && isCollapsed)
 	{
 		// start and end parent should be the same since we are collapsed
 		nsCOMPtr<nsIDOMNode>	focusNode;
