@@ -149,3 +149,7 @@ pref("slider.snapMultiplier", 0);
 //The following pref is internal to Communicator. Please
 //do *not* place it in the docs...
 pref("netinst.profile.show_dir_overwrite_msg",  true); 
+
+// override double-click word selection behavior.
+pref("layout.word_select.eat_space_to_next_word", true);
+pref("layout.word_select.stop_at_punctuation", false);
