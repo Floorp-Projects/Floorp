@@ -28,6 +28,7 @@
 #include "nsIDocumentObserver.h"
 #include "nsIComponentManager.h"
 #include "nsIDocShell.h"
+#include "prinrval.h"
 
 #include "nsMenuX.h"
 #include "nsMenubarX.h"
@@ -54,6 +55,8 @@
 #include <Sound.h>
 #include <Balloons.h>
 #include <CarbonEvents.h>
+
+#include "nsGUIEvent.h"
 
 #include "nsDynamicMDEF.h"
 
