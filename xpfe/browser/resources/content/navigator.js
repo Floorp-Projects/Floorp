@@ -52,37 +52,13 @@ catch (ex) {
 
   //cached elements/ fields
   var statusTextFld = null;
+  var statusMeter = null;
   var throbberElement = null;
   var stopButton = null;
   var stopMenu = null;
   var locationFld = null;
   var backButton	= null;
   var forwardButton = null;
-
-function UpdateHistory(event)
-{
-    // This is registered as a capturing "load" event handler. When a
-    // document load completes in the content window, we'll be
-    // notified here. This allows us to update the global history and
-    // set the document's title information.
-
-   //  dump("UpdateHistory: content's location is '" + window.content.location.href + "',\n");
-    //dump("                         title is '" + window.content.document.title + "'\n");
-
-	if ((window.content.location.href) && (window.content.location.href != ""))
-	{
-		try
-		{
-			var history = Components.classes["component://netscape/browser/global-history"].getService();
-			if (history) history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
-			if (history) history.SetPageTitle(window.content.location.href, window.content.document.title);
-		}
-		catch (ex)
-		{
-			dump("failed to set the page title.\n");
-		}
-	}
-}
 
 function savePage( url ) {
         // Default is to save current page.
@@ -223,21 +199,26 @@ nsXULBrowserWindow.prototype =
 			overLink = link;
 		UpdateStatusField();
 		},
-	setNetworkActive : function(active)
+	onStatusChange : function(channel, status)
 		{
 		if(!throbberElement)
 			throbberElement = document.getElementById("Throbber");
-		throbberElement.setAttribute("busy", active);
+		if(!statusMeter)
+			statusMeter = document.getElementById("statusbar-icon");
+		if(!stopButton)
+			stopButton = document.getElementById("stop-button");
+		if(!stopMenu)
+			stopMenu = document.getElementById("menuitem-stop");
 
-      var meter = document.getElementById("statusbar-icon");
-		if(active) // starting network activity
+		if(status & Components.interfaces.nsIWebProgress.flag_net_start)
 			{
 			// Remember when loading commenced.
     		startTime = (new Date()).getTime();
          // Turn progress meter on.
-			meter.setAttribute("mode","undetermined");
+			statusMeter.setAttribute("mode","undetermined");
+			throbberElement.setAttribute("busy", true);
 			}
-		else // network activity finished
+		else if(status & Components.interfaces.nsIWebProgress.flag_net_stop)
 			{
 			// Record page loading time.
 			var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
@@ -247,19 +228,40 @@ nsXULBrowserWindow.prototype =
 			UpdateStatusField();
 			window.XULBrowserWindow.setDefaultStatus(msg);
          // Turn progress meter off.
-         meter.setAttribute("mode","normal");
+         statusMeter.setAttribute("mode","normal");
+			throbberElement.setAttribute("busy", false);
 			}
-		},
-	setWindowActive : function(active)
-		{
-		if(!stopButton)
-			stopButton = document.getElementById("stop-button");
+		else if(status & Components.interfaces.nsIWebProgress.flag_net_dns)
+			{
+			alert("XXX: Not yet Implemented (navigator.js dns network step.");
+			}
+		else if(status & Components.interfaces.nsIWebProgress.flag_net_connecting)
+			{
+			alert("XXX: Not yet Implemented (navigator.js connecting network step.");
+			}
+		else if(status & Components.interfaces.nsIWebProgress.flag_net_transferring)
+			{
+			alert("XXX: Not yet Implemented (navigator.js transferring network step.");
+			}
+		else if(status & Components.interfaces.nsIWebProgress.flag_net_redirecting)
+			{
+			alert("XXX: Not yet Implemented (navigator.js redirecting network step.");
+			}
+		else if(status & Components.interfaces.nsIWebProgress.flag_net_negotiating)
+			{
+			alert("XXX: Not yet Implemented (navigator.js negotiating network step.");
+			}
 
-		if(!stopMenu)
-			stopMenu = document.getElementById("menuitem-stop");
-
-		stopButton.setAttribute("disabled", !active);
-		stopMenu.setAttribute("disabled", !active);
+		if(status & Components.interfaces.nsIWebProgress.flag_win_start)
+			{
+			stopButton.setAttribute("disabled", false);
+			stopMenu.setAttribute("disabled", false);
+			}
+		else if(status & Components.interfaces.nsIWebProgress.flag_win_stop)
+			{
+			stopButton.setAttribute("disabled", true);
+			stopMenu.setAttribute("disabled", true);
+			}
 		},
 	onLocationChange : function(location)
 		{
@@ -310,7 +312,6 @@ function Startup()
     var contentArea = document.getElementById("appcontent");
     if (contentArea)
     {
-	    contentArea.addEventListener("load", UpdateHistory, true);
 	    contentArea.addEventListener("load", UpdateBookmarksLastVisitedDate, true);
 	    contentArea.addEventListener("load", UpdateInternetSearchResults, true);
     }
@@ -433,12 +434,9 @@ function Shutdown()
      if ( (bb.getAttribute("disabled")) == "true" ) 
         return;
 
-    if (appCore != null) {
       dump("Going Back\n");
       appCore.back();
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
+		UpdateBackForwardButtons();
   }
 
 
@@ -450,12 +448,9 @@ function Shutdown()
      if ( (fb.getAttribute("disabled")) == "true" ) 
         return;
 
-    if (appCore != null) {
       dump("Going Forward\n");
       appCore.forward();
-    } else {
-      dump("BrowserAppCore has not been created!\n");
-    }
+		UpdateBackForwardButtons();
   }
 
 
