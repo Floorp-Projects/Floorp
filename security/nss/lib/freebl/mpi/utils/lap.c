@@ -34,7 +34,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: lap.c,v 1.1 2000/07/14 00:44:58 nelsonb%netscape.com Exp $
+ *  $Id: lap.c,v 1.2 2001/10/17 20:35:37 jpierre%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -67,7 +67,9 @@ int main(int argc, char *argv[])
   mp_init_copy(&k, &a);
 
   signal(SIGINT, sig_catch);
+#ifndef __OS2__
   signal(SIGHUP, sig_catch);
+#endif
   signal(SIGTERM, sig_catch);
 
   while(mp_cmp(&p, &m) < 0) {
