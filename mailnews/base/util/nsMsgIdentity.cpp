@@ -101,6 +101,26 @@ nsMsgIdentity::setCharPref(const char *prefname,
 }
 
 nsresult
+nsMsgIdentity::getIntPref(const char *prefname,
+                                PRInt32 *val)
+{
+  char *prefName = getPrefName(m_identityKey, prefname);
+  nsresult rv = m_prefs->GetIntPref(prefName, val);
+  PR_Free(prefName);
+  return rv;
+}
+
+nsresult
+nsMsgIdentity::setIntPref(const char *prefname,
+                                 PRInt32 val)
+{
+  char *prefName = getPrefName(m_identityKey, prefname);
+  nsresult rv = m_prefs->SetIntPref(prefName, val);
+  PR_Free(prefName);
+  return rv;
+}
+
+nsresult
 nsMsgIdentity::SetKey(char* identityKey)
 {
   nsresult rv = NS_OK;
@@ -132,3 +152,4 @@ NS_IMPL_IDPREF_STR(SmtpHostname, "smtp_server");
 NS_IMPL_IDPREF_STR(SmtpUsername, "smtp_name");
 NS_IMPL_IDPREF_BOOL(AttachVCard, "attach_vcard");
 NS_IMPL_IDPREF_BOOL(AttachSignature, "attach_signature");
+NS_IMPL_IDPREF_INT(WrapColumn, "wrap_column");

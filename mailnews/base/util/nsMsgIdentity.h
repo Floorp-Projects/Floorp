@@ -38,6 +38,10 @@ public:
   
   NS_DECL_ISUPPORTS
   
+  /* attribute string key; */
+  NS_IMETHOD GetKey(char * *aKey);
+  NS_IMETHOD SetKey(char * aKey);
+
    /* attribute string identityName; */
   NS_IMETHOD GetIdentityName(char * *aIdentityName);
   NS_IMETHOD SetIdentityName(char * aIdentityName);
@@ -66,6 +70,10 @@ public:
   NS_IMETHOD GetAttachSignature(PRBool *aAttachSignature);
   NS_IMETHOD SetAttachSignature(PRBool aAttachSignature);
 
+  /* attribute attachVCard; */
+  NS_IMETHOD GetAttachVCard(PRBool *attachVCard);
+  NS_IMETHOD SetAttachVCard(PRBool attachVCard);
+
   /* attribute nsIMsgSignature signature; */
   NS_IMETHOD GetSignature(nsIMsgSignature * *aSignature);
   NS_IMETHOD SetSignature(nsIMsgSignature * aSignature);
@@ -74,10 +82,6 @@ public:
   NS_IMETHOD GetVCard(nsIMsgVCard * *aVCard);
   NS_IMETHOD SetVCard(nsIMsgVCard * aVCard);
   
-  /* attribute attachVCard; */
-  NS_IMETHOD GetAttachVCard(PRBool *attachVCard);
-  NS_IMETHOD SetAttachVCard(PRBool attachVCard);
-
   /* attribute string smtpHostname; */
   NS_IMETHOD GetSmtpHostname(char * *aSmtpHostname);
   NS_IMETHOD SetSmtpHostname(char * aSmtpHostname);
@@ -86,9 +90,9 @@ public:
   NS_IMETHOD GetSmtpUsername(char * *aSmtpUsername);
   NS_IMETHOD SetSmtpUsername(char * aSmtpUsername);
  
-  /* attribute string key; */
-  NS_IMETHOD GetKey(char * *aKey);
-  NS_IMETHOD SetKey(char * aKey);
+  /* attribute long WrapColumn; */
+  NS_IMETHOD GetWrapColumn(PRInt32 *aWrapColumn);
+  NS_IMETHOD SetWrapColumn(PRInt32 aWrapColumn);
 
 private:
   nsIMsgSignature* m_signature;
@@ -102,7 +106,9 @@ protected:
   nsresult setCharPref(const char *pref, char *);
   nsresult getBoolPref(const char *pref, PRBool *);
   nsresult setBoolPref(const char *pref, PRBool);
-  
+  nsresult getIntPref(const char *pref, PRInt32 *);
+  nsresult setIntPref(const char *pref, PRInt32);
+
 };
 
 
@@ -128,6 +134,18 @@ NS_IMETHODIMP	   								\
 nsMsgIdentity::Set##_postfix(PRBool value)		\
 {												\
   return setBoolPref(_prefname, value);			\
+}
+
+#define NS_IMPL_IDPREF_INT(_postfix, _prefname) \
+NS_IMETHODIMP								   	\
+nsMsgIdentity::Get##_postfix(PRInt32 *retval)   \
+{											   	\
+  return getIntPref(_prefname, retval);		\
+}												\
+NS_IMETHODIMP	   								\
+nsMsgIdentity::Set##_postfix(PRInt32 value)		\
+{												\
+  return setIntPref(_prefname, value);			\
 }
 
 
