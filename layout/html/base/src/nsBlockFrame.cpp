@@ -4269,20 +4269,27 @@ nsBlockFrame::DrainOverflowLines(nsPresContext* aPresContext)
 nsLineList*
 nsBlockFrame::GetOverflowLines() const
 {
-  nsLineList* lines =
-    NS_STATIC_CAST(nsLineList*,
-                   GetProperty(nsLayoutAtoms::overflowLinesProperty));
-  NS_ASSERTION(!lines || !lines->empty(), "value should never be stored as empty");
+  if (!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_LINES)) {
+    return nsnull;
+  }
+  nsLineList* lines = NS_STATIC_CAST(nsLineList*,
+    GetProperty(nsLayoutAtoms::overflowLinesProperty));
+  NS_ASSERTION(lines && !lines->empty(),
+               "value should always be stored and non-empty when state set");
   return lines;
 }
 
 nsLineList*
-nsBlockFrame::RemoveOverflowLines() const
+nsBlockFrame::RemoveOverflowLines()
 {
-  nsLineList* lines =
-    NS_STATIC_CAST(nsLineList*,
-                   UnsetProperty(nsLayoutAtoms::overflowLinesProperty));
-  NS_ASSERTION(!lines || !lines->empty(), "value should never be stored as empty");
+  if (!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_LINES)) {
+    return nsnull;
+  }
+  nsLineList* lines = NS_STATIC_CAST(nsLineList*,
+    UnsetProperty(nsLayoutAtoms::overflowLinesProperty));
+  NS_ASSERTION(lines && !lines->empty(),
+               "value should always be stored and non-empty when state set");
+  RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_LINES);
   return lines;
 }
 
@@ -4308,6 +4315,8 @@ nsBlockFrame::SetOverflowLines(nsLineList* aOverflowLines)
 {
   NS_ASSERTION(aOverflowLines, "null lines");
   NS_ASSERTION(!aOverflowLines->empty(), "empty lines");
+  NS_ASSERTION(!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_LINES),
+               "Overwriting existing overflow lines");
 
   nsPresContext *presContext = GetPresContext();
   nsresult rv = presContext->PropertyTable()->
@@ -4315,21 +4324,33 @@ nsBlockFrame::SetOverflowLines(nsLineList* aOverflowLines)
                 DestroyOverflowLines, presContext);
   // Verify that we didn't overwrite an existing overflow list
   NS_ASSERTION(rv != NS_PROPTABLE_PROP_OVERWRITTEN, "existing overflow list");
+  AddStateBits(NS_BLOCK_HAS_OVERFLOW_LINES);
   return rv;
 }
 
 nsFrameList*
 nsBlockFrame::GetOverflowOutOfFlows() const
 {
-  return NS_STATIC_CAST(nsFrameList*,
+  if (!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS)) {
+    return nsnull;
+  }
+  nsFrameList* result = NS_STATIC_CAST(nsFrameList*,
     GetProperty(nsLayoutAtoms::overflowOutOfFlowsProperty));
+  NS_ASSERTION(result, "value should always be non-empty when state set");
+  return result;
 }
 
 nsFrameList*
-nsBlockFrame::RemoveOverflowOutOfFlows() const
+nsBlockFrame::RemoveOverflowOutOfFlows()
 {
-  return NS_STATIC_CAST(nsFrameList*,
+  if (!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS)) {
+    return nsnull;
+  }
+  nsFrameList* result = NS_STATIC_CAST(nsFrameList*,
     UnsetProperty(nsLayoutAtoms::overflowOutOfFlowsProperty));
+  NS_ASSERTION(result, "value should always be non-empty when state set");
+  RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
+  return result;
 }
 
 // Destructor function for the overflowPlaceholders frame property
@@ -4347,27 +4368,39 @@ DestroyOverflowOOFs(void*           aFrame,
 nsresult
 nsBlockFrame::SetOverflowOutOfFlows(nsFrameList* aOOFs)
 {
+  NS_ASSERTION(!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS),
+               "Overwriting existing overflow out-of-flows list");
   nsresult rv = SetProperty(nsLayoutAtoms::overflowOutOfFlowsProperty,
                             aOOFs, DestroyOverflowOOFs);
   // Verify that we didn't overwrite an existing overflow list
   NS_ASSERTION(rv != NS_PROPTABLE_PROP_OVERWRITTEN, "existing overflow float list");
+  AddStateBits(NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS);
   return rv;
 }
 
 nsFrameList*
 nsBlockFrame::GetOverflowPlaceholders() const
 {
-  return
-    NS_STATIC_CAST(nsFrameList*,
-                   GetProperty(nsLayoutAtoms::overflowPlaceholdersProperty));
+  if (!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_PLACEHOLDERS)) {
+    return nsnull;
+  }
+  nsFrameList* result = NS_STATIC_CAST(nsFrameList*,
+    GetProperty(nsLayoutAtoms::overflowPlaceholdersProperty));
+  NS_ASSERTION(result, "value should always be non-empty when state set");
+  return result;
 }
 
 nsFrameList*
-nsBlockFrame::RemoveOverflowPlaceholders() const
+nsBlockFrame::RemoveOverflowPlaceholders()
 {
-  return
-    NS_STATIC_CAST(nsFrameList*, 
-                   UnsetProperty(nsLayoutAtoms::overflowPlaceholdersProperty));
+  if (!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_PLACEHOLDERS)) {
+    return nsnull;
+  }
+  nsFrameList* result = NS_STATIC_CAST(nsFrameList*, 
+    UnsetProperty(nsLayoutAtoms::overflowPlaceholdersProperty));
+  NS_ASSERTION(result, "value should always be non-empty when state set");
+  RemoveStateBits(NS_BLOCK_HAS_OVERFLOW_PLACEHOLDERS);
+  return result;
 }
 
 // Destructor function for the overflowPlaceholders frame property
@@ -4386,10 +4419,13 @@ DestroyOverflowPlaceholders(void*           aFrame,
 nsresult
 nsBlockFrame::SetOverflowPlaceholders(nsFrameList* aOverflowPlaceholders)
 {
+  NS_ASSERTION(!(GetStateBits() & NS_BLOCK_HAS_OVERFLOW_PLACEHOLDERS),
+               "Overwriting existing overflow placeholder list");
   nsresult rv = SetProperty(nsLayoutAtoms::overflowPlaceholdersProperty,
                             aOverflowPlaceholders, DestroyOverflowPlaceholders);
   // Verify that we didn't overwrite an existing overflow list
   NS_ASSERTION(rv != NS_PROPTABLE_PROP_OVERWRITTEN, "existing overflow placeholder list");
+  AddStateBits(NS_BLOCK_HAS_OVERFLOW_PLACEHOLDERS);
   return rv;
 }
 
