@@ -1073,6 +1073,36 @@ OSErr nsFileSpec::GetCatInfo(CInfoPBRec& outInfo) const
     dipb->ioNamePtr = const_cast<nsFileSpec*>(this)->mSpec.name;
     return PBGetCatInfoSync(&outInfo);
 } // nsFileSpec::GetCatInfo()
+#if DOUGT_UNTESTED 
+//----------------------------------------------------------------------------------------
+OSErr nsFileSpec::SetFileTypeAndCreator(OSType type, OSType creator)
+//----------------------------------------------------------------------------------------
+{
+    FInfo info;
+	OSErr err = ::FSpGetFInfo (mSpec, &info);
+	if (err != noErr)
+		return err;
+	info.fdType = type;
+    info.fdCreator = creator;
+	err = ::FSpSetFInfo (mSpec, &info);
+	return err;
+}
+
+
+//----------------------------------------------------------------------------------------
+OSErr nsFileSpec::GetFileTypeAndCreator(OSType* type, OSType* creator)
+//----------------------------------------------------------------------------------------
+{
+    FInfo info;
+	OSErr err = ::FSpGetFInfo (mSpec, &info);
+	if (err != noErr)
+		return err;
+	*type = info.fdType;
+    *creator = info.fdCreator;	
+    return noErr;
+}
+#endif
+
 
 //----------------------------------------------------------------------------------------
 PRUint32 nsFileSpec::GetDiskSpaceAvailable() const
