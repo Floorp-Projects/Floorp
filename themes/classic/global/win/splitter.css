@@ -55,9 +55,7 @@
       cursor              : n-resize;
     }
     
-  window[orient="vertical"] > splitter,
-  box[orient="vertical"] > splitter,
-  vbox > splitter
+  splitter[orient="vertical"]
     {
       cursor              : n-resize;
       border-top          : 1px solid ThreeDHighlight;
@@ -65,50 +63,37 @@
     
 /* Grippy alignment */
 
-/* Vertical splitter (between two boxes, horizontally stacked), collapse to left */
-  window > splitter > grippy,
-  box > splitter > grippy,
-  hbox > splitter > grippy
+  splitter > grippy
     {
       list-style-image    : url("chrome://global/skin/grippy-horizontal-before.gif");
       border-left         : none;
       border-right        : none;
     }  
     
-  window > splitter > grippy > .grippy-box,
-  box > splitter > grippy > .grippy-box,
-  hbox > splitter > grippy > .grippy-box 
+  splitter > grippy > .grippy-box
     {
       border-left         : none;
       border-right        : none;
     }  
 
-  window > splitter[state="collapsed"] > grippy,
-  box > splitter[state="collapsed"] > grippy,
-  hbox > splitter[state="collapsed"] > grippy
+  splitter[state="collapsed"] > grippy
     {
       list-style-image    : url("chrome://global/skin/grippy-horizontal-after.gif");
     }
 
 /* Vertical splitter (between two boxes, horizontally stacked), collapse to right */
-  window > splitter[collapse="after"] > grippy,
-  box > splitter[collapse="after"] > grippy,
-  hbox > splitter[collapse="after"] > grippy
+  splitter[collapse="after"] > grippy
     {
       list-style-image    : url("chrome://global/skin/grippy-horizontal-after.gif");
     }  
     
-  window > splitter[collapse="after"][state="collapsed"] > grippy,
-  box > splitter[collapse="after"][state="collapsed"] > grippy,
-  hbox > splitter[collapse="after"][state="collapsed"]> grippy
+  splitter[collapse="after"][state="collapsed"] > grippy
     {
       list-style-image    : url("chrome://global/skin/grippy-horizontal-before.gif");
     }
 
 /* Horizontal splitter (between two boxes, vertically stacked), collapse to left */
-  window[orient="vertical"] > splitter > grippy,
-  box[orient="vertical"] > splitter > grippy,
-  vbox > splitter > grippy
+  splitter[orient="vertical"] > grippy
     {
       list-style-image    : url("chrome://global/skin/grippy-vertical-before.gif");
       border-left         : 1px solid ThreeDShadow;
@@ -117,9 +102,7 @@
       border-bottom       : none;
     }  
     
-  window[orient="vertical"] > splitter > grippy > .grippy-box,
-  box[orient="vertical"] > splitter > grippy > .grippy-box,
-  vbox > splitter > grippy > .grippy-box
+  splitter[orient="vertical"] > grippy > .grippy-box
     {
       border-left         : 1px solid ThreeDHighlight;
       border-right        : 1px solid ThreeDShadow;
@@ -127,24 +110,18 @@
       border-bottom       : none;
     }  
 
-  window[orient="vertical"] > splitter[state="collapsed"] > grippy,
-  box[orient="vertical"] > splitter[state="collapsed"] > grippy,
-  vbox > splitter[state="collapsed"] > grippy
+  splitter[state="collapsed"][orient="vertical"] > grippy
     {
       list-style-image    : url("chrome://global/skin/grippy-vertical-after.gif");
     }
     
 /* Horizontal splitter (between two boxes, vertically stacked), collapse to right */
-  window[orient="vertical"] > splitter[collapse="after"] > grippy,
-  box[orient="vertical"] > splitter[collapse="after"] > grippy,
-  vbox > splitter[collapse="after"] > grippy
+  splitter[collapse="after"][orient="vertical"] > grippy
     {
       list-style-image    : url("chrome://global/skin/grippy-vertical-after.gif");
     }  
     
-  window[orient="vertical"] > splitter[collapse="after"][state="collapsed"] > grippy,
-  box[orient="vertical"] > splitter[collapse="after"][state="collapsed"] > grippy,
-  vbox > splitter[collapse="after"][state="collapsed"] > grippy
+  splitter[collapse="after"][state="collapsed"][orient="vertical"] > grippy
     {
       list-style-image    : url("chrome://global/skin/grippy-vertical-before.gif");
     }

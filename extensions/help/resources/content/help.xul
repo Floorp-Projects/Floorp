@@ -187,8 +187,6 @@
       <splitter id="helpsidebar-splitter"
                 collapse="before"
                 persist="state hidden"
-                autostretch="never"
-                orient="vertical"
                 state="open">
         <grippy/>
       </splitter>

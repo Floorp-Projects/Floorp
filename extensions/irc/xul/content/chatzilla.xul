@@ -357,8 +357,7 @@
   
       </vbox> <!-- user-list-box -->
 
-      <splitter id="main-splitter" orient="vertical" collapse="before"
-        persist="collapsed left">
+      <splitter id="main-splitter" collapse="before" persist="collapsed left">
         <grippy/>
       </splitter>
 
@@ -387,8 +386,7 @@
 
   </vbox> <!-- upper-box -->
 
-  <splitter id="input-splitter" orient="vertical" collapse="after"
-    collapsed="true"/>
+  <splitter id="input-splitter" collapse="after" collapsed="true"/>
 
   <vbox id="input-widgets">
     <textbox id="multiline-input" multiline="true" flex="1" height="100px"

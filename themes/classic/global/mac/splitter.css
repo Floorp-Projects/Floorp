@@ -48,7 +48,7 @@ splitter:hover:active
   }
 
 /* vertical splitters */
-  window > splitter, box, hbox > splitter 
+  splitter
     {
     	width               : 6px;
     }
@@ -56,10 +56,7 @@ splitter:hover:active
 /* horizontal splitters */  
   /* XXX 'align' support removed to force people to migrate 
          to 'orient' */
-  rows > splitter,
-  window[orient="vertical"] > splitter,
-  box[orient="vertical"] > splitter,
-  vbox > splitter
+  splitter[orient="vertical"]
     {
       cursor              : n-resize;
       border-right		  : 0px;
@@ -70,19 +67,13 @@ splitter:hover:active
 /**** NOTE *****/
 /* The images below are correct, even though their names are switched. */
 
-  window[orient="vertical"] > splitter > grippy,
-  window[orient="vertical"] > splitter > grippy[collapse="before"],
-  vbox > splitter > grippy,
-  vbox > splitter > grippy[collapse="before"],
-  box[orient="vertical"] > splitter > grippy,
-  box[orient="vertical"] > splitter > grippy[collapse="before"]
+  splitter[orient="vertical"] > grippy,
+  splitter[orient="vertical"] > grippy[collapse="before"]
     {
       list-style-image    : url("chrome://global/skin/grippy-vertical-after.gif");
     }
     
-  window[orient="vertical"] > splitter[state="collapsed"] > grippy,
-  vbox > splitter[state="collapsed"] > grippy,
-  box[orient="vertical"] > splitter[state="collapsed"] > grippy
+  splitter[state="collapsed"][orient="vertical"] > grippy
     {
       list-style-image    : url("chrome://global/skin/grippy-vertical-before.gif");
     }

@@ -339,6 +339,25 @@ nsSplitterFrame::Init(nsIPresContext*  aPresContext,
   else */
      realTimeDrag = 1;
 
+  // determine orientation of parent, and if vertical, set orient to vertical
+  // on splitter content, then re-resolve style
+  nsIBox* boxParent;
+  if (aParent)
+    CallQueryInterface(aParent, &boxParent);
+  if (boxParent) {
+    PRBool isHorizontal;
+    boxParent->GetOrientation(isHorizontal);
+    if (!isHorizontal) {
+      nsAutoString str;
+      aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::orient, str);
+      if (str.IsEmpty()) {
+        aContent->SetAttr(kNameSpaceID_None, nsXULAtoms::orient,
+                          NS_LITERAL_STRING("vertical"), PR_FALSE);
+        aPresContext->ResolveStyleContextFor(aContent, aContext->GetParent(), PR_FALSE, &aContext);
+      }
+    }
+  }
+
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   // XXX Hack because we need the pres context in some of the event handling functions...
