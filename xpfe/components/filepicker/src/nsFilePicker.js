@@ -84,6 +84,10 @@ nsFilePicker.prototype = {
   set file(a) { throw "readonly property"; },
   get file()  { return this.mFile; },
 
+  /* readonly attribute nsISimpleEnumerator files; */
+  set files(a) { throw "readonly property"; },
+  get files()  { return this.mFilesEnumerator; },
+
   /* readonly attribute nsIFileURL fileURL; */
   set fileURL(a) { throw "readonly property"; },
   get fileURL()  { 
@@ -110,6 +114,7 @@ nsFilePicker.prototype = {
 
   /* members */
   mFile: undefined,
+  mFilesEnumerator: undefined,
   mParentWindow: null,
 
   /* methods */
@@ -197,6 +202,7 @@ nsFilePicker.prototype = {
                         o);
       this.mFile = o.retvals.file;
       this.mFilterIndex = o.retvals.filterIndex;
+      this.mFilesEnumerator = o.retvals.files;
       lastDirectory = o.retvals.directory;
       return o.retvals.buttonStatus;
     } catch(ex) { dump("unable to open file picker\n" + ex + "\n"); }

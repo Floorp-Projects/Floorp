@@ -19,12 +19,15 @@
  * 
  * Contributor(s): 
  *   Stuart Parmenter <pavlov@netscape.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  */
 
 #ifndef nsFilePicker_h__
 #define nsFilePicker_h__
 
 #include "nsILocalFile.h"
+#include "nsISimpleEnumerator.h"
+#include "nsISupportsArray.h"
 
 #include "nsICharsetConverterManager.h"
 #include "nsBaseFilePicker.h"
@@ -54,6 +57,7 @@ public:
   NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
   NS_IMETHOD GetFile(nsILocalFile * *aFile);
   NS_IMETHOD GetFileURL(nsIFileURL * *aFileURL);
+  NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
   NS_IMETHOD Show(PRInt16 *aReturnVal); 
 #ifdef MOZ_UNICODE
   NS_IMETHOD ShowW(PRInt16 *aReturnVal); 
@@ -83,7 +87,7 @@ protected:
   nsIUnicodeDecoder*     mUnicodeDecoder;
   nsCOMPtr<nsILocalFile> mDisplayDirectory;
   PRInt16                mSelectedType;
-
+  nsCOMPtr <nsISupportsArray> mFiles;
   static char            mLastUsedDirectory[];
 
 #ifdef MOZ_UNICODE

@@ -27,6 +27,7 @@
 
 #include "nsIFilePicker.h"
 #include "nsIWidget.h"
+#include "nsISimpleEnumerator.h"
 
 class nsBaseFilePicker : public nsIFilePicker
 {
@@ -41,6 +42,7 @@ public:
   NS_IMETHOD AppendFilters(PRInt32 filterMask);
   NS_IMETHOD GetFilterIndex(PRInt32 *aFilterIndex);
   NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
+  NS_IMETHOD GetFiles(nsISimpleEnumerator **aFiles);
 
 protected:
 

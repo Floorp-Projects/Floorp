@@ -78,12 +78,13 @@ function filepickerLoad() {
     }
   }
 
-  if (filePickerMode != nsIFilePicker.modeOpen) {
+  if (filePickerMode != nsIFilePicker.modeOpen && filePickerMode != nsIFilePicker.modeOpenMultiple) {
     var newDirButton = document.getElementById("newDirButton");
     newDirButton.removeAttribute("hidden");
   }
 
   if ((filePickerMode == nsIFilePicker.modeOpen) ||
+      (filePickerMode == nsIFilePicker.modeOpenMultiple) ||
       (filePickerMode == nsIFilePicker.modeSave)) {
 
     treeView.setFilter(filterTypes[0]);
@@ -199,7 +200,9 @@ function openOnOK()
 
   if (dir)
     gotoDirectory(dir);
+
   retvals.file = dir;
+
   retvals.buttonStatus = nsIFilePicker.returnCancel;
   
   var filterMenuList = document.getElementById("filterMenuList");
@@ -248,6 +251,7 @@ function selectOnOK()
 
   switch(filePickerMode) {
   case nsIFilePicker.modeOpen:
+  case nsIFilePicker.modeOpenMultiple:
     if (isFile) {
       if (file.isReadable()) {
         retvals.directory = file.parent.path;
@@ -339,6 +343,11 @@ function selectOnOK()
   }
 
   retvals.file = file;
+
+  gFilesEnumerator.mFile = file;
+  gFilesEnumerator.mHasMore = true;
+
+  retvals.files = gFilesEnumerator;
   retvals.buttonStatus = ret;
 
   var filterMenuList = document.getElementById("filterMenuList");
@@ -347,11 +356,27 @@ function selectOnOK()
   return (ret != nsIFilePicker.returnCancel);
 }
 
+var gFilesEnumerator = {
+  mHasMore: false,
+  mFile: null,
+
+  hasMoreElements: function()
+  {
+    return this.mHasMore;
+  },
+  getNext: function()
+  {
+    this.mHasMore = false;
+    return this.mFile;
+  }
+};
+
 function onCancel()
 {
   // Close the window.
   retvals.buttonStatus = nsIFilePicker.returnCancel;
   retvals.file = null;
+  retvals.files = null;
   return true;
 }
 
@@ -465,6 +490,7 @@ function getOKAction(file) {
       buttonLabel = gFilePickerBundle.getString("selectFolderButtonLabel");
       break;
     case nsIFilePicker.modeOpen:
+    case nsIFilePicker.modeOpenMultiple:
       buttonLabel = gFilePickerBundle.getString("openButtonLabel");
       break;
     case nsIFilePicker.modeSave:

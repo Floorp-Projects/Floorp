@@ -178,8 +178,8 @@ function enableEditableFields()
 var gComposeRecyclingListener = {
   onClose: function() {
     //Reset recipients and attachments
-	  awResetAllRows();
-	  RemoveAllAttachments();
+    awResetAllRows();
+    RemoveAllAttachments();
 
 	  //We need to clear the identity popup menu in case the user will change them. It will be rebuilded later in ComposeStartup
     ClearIdentityListPopup(document.getElementById("msgIdentityPopup"));
@@ -2191,12 +2191,12 @@ function SetLastAttachDirectory(attachedLocalFile)
 
 function AttachFile()
 {
-  var currentAttachment = "";
+  var attachments;
   
   //Get file using nsIFilePicker and convert to URL
   try {
       var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-      fp.init(window, sComposeMsgsBundle.getString("chooseFileToAttach"), nsIFilePicker.modeOpen);
+      fp.init(window, sComposeMsgsBundle.getString("chooseFileToAttach"), nsIFilePicker.modeOpenMultiple);
       
       var lastDirectory = GetLastAttachDirectory();
       if (lastDirectory) 
@@ -2204,28 +2204,36 @@ function AttachFile()
 
       fp.appendFilters(nsIFilePicker.filterAll);
       if (fp.show() == nsIFilePicker.returnOK) {
-        currentAttachment = fp.fileURL.spec;
-        SetLastAttachDirectory(fp.file)
+        attachments = fp.files;
       }
   }
   catch (ex) {
-    dump("failed to get the local file to attach\n");
+    dump("failed to get attachments: " + ex + "\n");
   }
-  
-  if (currentAttachment == "")
+
+  if (!attachments || !attachments.hasMoreElements())
     return;
 
-  if (DuplicateFileCheck(currentAttachment))
-  {
-    dump("Error, attaching the same item twice\n");
-  }
-  else
-  {
-    var attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"]
-                     .createInstance(Components.interfaces.nsIMsgAttachment);
-    attachment.url = currentAttachment;
-    AddAttachment(attachment);
-    gContentChanged = true;
+  var haveSetAttachDirectory = false;
+
+  while (attachments.hasMoreElements()) {
+    var currentFile = attachments.getNext().QueryInterface(Components.interfaces.nsILocalFile);
+
+    if (!haveSetAttachDirectory) {
+      SetLastAttachDirectory(currentFile);
+      haveSetAttachDirectory = true;
+    }
+
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+    ioService = ioService.getService(Components.interfaces.nsIIOService);
+    var currentAttachment = ioService.getURLSpecFromFile(currentFile);
+
+    if (!DuplicateFileCheck(currentAttachment)) {
+      var attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
+      attachment.url = currentAttachment;
+      AddAttachment(attachment);
+      gContentChanged = true;
+    }
   }
 }
 
