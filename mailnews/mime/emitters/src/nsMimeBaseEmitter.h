@@ -36,6 +36,8 @@
 #include "nsIMimeMiscStatus.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsIPipe.h"
+#include "nsIStringBundle.h"
+#include "nsCOMPtr.h"
 
 class nsMimeBaseEmitter : public nsIMimeEmitter, nsIPipeObserver {
 public: 
@@ -50,9 +52,16 @@ public:
 
     NS_IMETHOD    UtilityWriteCRLF(const char *buf);
 
+    // For cacheing string bundles...
+    char          *MimeGetStringByName(const char *aHeaderName);
+    char          *LocalizeHeaderName(const char *aHeaderName, const char *aDefaultName);
+
 protected:
     // For buffer management on output
     MimeRebuffer        *mBufferMgr;
+
+    nsCOMPtr<nsIStringBundle>	m_stringBundle;     // For string bundle usage...
+
 
 	// mscott - dont ref count the streams....the emitter is owned by the converter
 	// which owns these streams...

@@ -100,10 +100,16 @@ nsMimeMiscStatus::GetIndividualXUL(const char *aHeader, const char *aName,
   char *retXUL = nsnull;
   char *className = PR_smprintf("ABOOK-%s", aEmail);
 
+  char *newName = nsEscape(aName, url_XAlphas);
+  char *newEmail = nsEscape(aEmail, url_XAlphas);
+
   retXUL = PR_smprintf(XUL,
                       "chrome://messenger/skin/abookstat.gif",
                        className,
-                       aName, aEmail);
+                       newName, newEmail);
+
+  PR_FREEIF(newName);
+  PR_FREEIF(newEmail);
 
   PR_FREEIF(className);
   if (retXUL)

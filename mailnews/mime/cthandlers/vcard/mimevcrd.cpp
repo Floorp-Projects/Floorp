@@ -47,7 +47,8 @@
 #include "nsVCard.h"
 #include "nsVCardObj.h"
 
-//#include "vobject.h"
+// String bundles...
+nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
@@ -96,12 +97,12 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-char *VCARD_URL = {"chrome://messenger/locale/vcard.properties"};
+#define     VCARD_URL     "chrome://messenger/locale/vcard.properties"
 
 /* This is the object definition. Note: we will set the superclass 
    to NULL and manually set this on the class creation */
 MimeDefClass(MimeInlineTextVCard, MimeInlineTextVCardClass,
-			 mimeInlineTextVCardClass, NULL);
+      			 mimeInlineTextVCardClass, NULL);
 
 extern "C" char *
 MIME_GetContentType(void)
@@ -136,11 +137,6 @@ MimeInlineTextVCardClassInitialize(MimeInlineTextVCardClass *clazz)
   oclass->parse_begin = MimeInlineTextVCard_parse_begin;
   oclass->parse_line  = MimeInlineTextVCard_parse_line;
   oclass->parse_eof   = MimeInlineTextVCard_parse_eof;
-
-  // RICHIE SHERRY TODO
-  // Need to initialize the String Bundle service for use in the 
-  // vCard handler
-
   return 0;
 }
 
@@ -316,10 +312,6 @@ MimeInlineTextVCard_parse_eof (MimeObject *obj, PRBool abort_p)
     
     cleanVObject(t);
   }
-  
-  // RICHIE SHERRY TODO
-  // Need to free the String Bundle service for use in the 
-  // vCard handler
   
   if (status < 0) 
     return status;
@@ -1928,81 +1920,49 @@ vCard_SACat (char **destination, const char *source)
   return *destination;
 }
 
+//
+// This is the next generation string retrieval call 
+//
 extern "C" 
 char *
-VCardGetStringByID(PRInt32 stringID)
+VCardGetStringByID(PRInt32 aMsgId)
 {
-  nsresult    res = NS_OK;
-  char*       propertyURL;
+  char          *tempString = nsnull;
+	char          *resultString = "???";
+	nsresult res = NS_OK;
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
-  if (NS_SUCCEEDED(res) && prefs)
-    res = prefs->CopyCharPref("mail.strings.vcard", &propertyURL);
+	if (!stringBundle)
+	{
+		char*       propertyURL = NULL;
 
-  if (!NS_SUCCEEDED(res) || !prefs)
-    propertyURL = VCARD_URL;
+		propertyURL = VCARD_URL;
 
-  nsCOMPtr<nsIURI> pURI;
-  NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &res);
-  if (NS_FAILED(res)) 
-  {
-    if (propertyURL != VCARD_URL)
-      PR_FREEIF(propertyURL);
-    return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
-  }
+		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
+		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
+		{
+			nsILocale   *locale = nsnull;
 
-  res = pService->NewURI(propertyURL, nsnull, getter_AddRefs(pURI));
-  if (NS_FAILED(res))
-  {
-    if (propertyURL != VCARD_URL)
-      PR_FREEIF(propertyURL);
-    return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
-  }
+			res = sBundleService->CreateBundle(propertyURL, locale, getter_AddRefs(stringBundle));
+		}
+	}
 
-  if (propertyURL != VCARD_URL)
-  {
-    PR_FREEIF(propertyURL);
-    propertyURL = nsnull;
-  }
+	if (stringBundle)
+	{
+		PRUnichar *ptrv = nsnull;
+		res = stringBundle->GetStringFromID(aMsgId, &ptrv);
 
-  NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
-  if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
-  {
-    nsILocale   *locale = nsnull;
-    nsIStringBundle* sBundle = nsnull;
-    res = sBundleService->CreateBundle(VCARD_URL, locale, &sBundle);
-
-    if (NS_FAILED(res)) 
+		if (NS_FAILED(res)) 
+      return resultString;
+		else
     {
-      return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
+      nsAutoString v("");
+      v = ptrv;
+			tempString = v.ToNewUTF8String();
     }
+	}
 
-    nsAutoString v("");
-    PRUnichar *ptrv = nsnull;
-    res = sBundle->GetStringFromID(stringID, &ptrv);
-    v = ptrv;
-
-    NS_RELEASE(sBundle);
-    if (NS_FAILED(res)) 
-    {
-      char    buf[128];
-
-      PR_snprintf(buf, sizeof(buf), "[StringID %d?]", stringID);
-      return nsCRT::strdup(buf);
-    }
-
-    // Here we need to return a new copy of the string
-    char      *returnBuffer = NULL;
-    PRInt32   bufferLen = v.Length() + 1;
-
-    returnBuffer = (char *)PR_MALLOC(bufferLen);
-    if (returnBuffer)
-    {
-      v.ToCString(returnBuffer, bufferLen);
-	  nsAllocator::Free(ptrv);
-      return returnBuffer;
-    }
-  }
-
-  return nsCRT::strdup("???");   // Don't I18N this string...failsafe return value
+  if (!tempString)
+    return resultString;
+  else
+    return tempString;
 }

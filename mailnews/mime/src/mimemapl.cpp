@@ -127,6 +127,8 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 			}
 		}
 
+/**********************8
+RICHIE SHERRY
 	  if (!nsCRT::strcmp (id, "0"))
 		{
 		  PR_Free(id);
@@ -134,7 +136,7 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 		}
 	  else
 		{
-		  const char *p = "Part ";  /* #### i18n */
+		  const char *p = "Part ";  
 		  char *s = (char *)PR_MALLOC(nsCRT::strlen(p) + nsCRT::strlen(id) + 1);
 		  if (!s)
 			{
@@ -149,15 +151,25 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 		}
 
 	  if (all_headers_p &&
-		  /* Don't bother showing all headers on this part if it's the only
-			 part in the message: in that case, we've already shown these
-			 headers. */
+		  // Don't bother showing all headers on this part if it's the only
+			// part in the message: in that case, we've already shown these
+			// headers. 
 		  obj->options->state &&
 		  obj->options->state->root == obj->parent)
 		all_headers_p = PR_FALSE;
 
 	  newopt.fancy_headers_p = PR_TRUE;
 	  newopt.headers = (all_headers_p ? MimeHeadersAll : MimeHeadersSome);
+
+//
+RICHIE SHERRY
+GOTTA STILL DO THIS FOR QUOTING!
+     status = MimeHeaders_write_attachment_box (obj->headers, &newopt,
+                                                 obj->content_type,
+                                                 obj->encoding,
+                                                 id_name? id_name : id, id_url, 0
+//
+*********************************************************************************/
 
 //	FAIL:
 	  PR_FREEIF(id);

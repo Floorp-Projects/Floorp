@@ -26,7 +26,6 @@
 #include "plstr.h"
 
 extern "C" PRBool   EmitThisHeaderForPrefSetting(PRInt32 dispType, const char *header);
-extern "C" char     *LocalizeHeaderName(const char *aHeaderName, const char *aDefaultName);
 
 //
 // Create a file spec or file name using the name passed

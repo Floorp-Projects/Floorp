@@ -406,6 +406,9 @@ FixURL(char *url)
   {
     if (*ptr == '\\')
       *ptr = '/';
+    else if (*ptr == ':')
+      *ptr = '|';
+
     ++ptr;
   }
 }
@@ -437,8 +440,9 @@ NewChannel(nsIChannel **aInstancePtrResult, nsIURI *aURI)
   if (NS_FAILED(res)) 
     return NS_ERROR_FAILURE;
 
-  res = pService->NewChannelFromURI(nsnull, aURI, (nsILoadGroup *)nsnull, 
-                                    (nsIEventSinkGetter *)nsnull, aInstancePtrResult);
+  res = pService->NewChannelFromURI(nsnull, aURI, (nsILoadGroup *)nsnull,
+                                    (nsIEventSinkGetter *)nsnull, 
+                                    (nsIURI *)nsnull, aInstancePtrResult);
   if (NS_FAILED(res))
     return NS_ERROR_FAILURE;
   else
@@ -559,7 +563,7 @@ DoRFC822toHTMLConversion(char *filename, int numArgs)
   }
   
   // Create an nsIURI object needed for stream IO...
-  PR_snprintf(newURL, sizeof(newURL), "file://%s", filename);
+  PR_snprintf(newURL, sizeof(newURL), "file:///%s", filename);
   FixURL(newURL);
   if (NS_FAILED(NewURI(&theURI, newURL)))
   {

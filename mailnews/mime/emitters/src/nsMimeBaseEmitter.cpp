@@ -56,6 +56,7 @@ nsMimeBaseEmitter::nsMimeBaseEmitter()
   mTotalRead = 0;
   mDocHeader = PR_FALSE;
   mAttachContentType = NULL;
+  m_stringBundle = nsnull;
 
   mInputStream = nsnull;
   mOutStream = nsnull;
@@ -356,4 +357,75 @@ NS_IMETHODIMP nsMimeBaseEmitter::OnFull(nsIPipe* /* aPipe */)
     rv = NS_ERROR_NULL_POINTER;
 
   return rv;
+}
+
+//
+// This should be part of the base class to optimize the performance of the
+// calls to get localized strings.
+//
+
+/* This is the next generation string retrieval call */
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+
+#define       MIME_URL      "chrome://messenger/locale/mimeheader.properties"
+
+char *
+nsMimeBaseEmitter::MimeGetStringByName(const char *aHeaderName)
+{
+	nsresult res = NS_OK;
+
+	if (!m_stringBundle)
+	{
+		char*       propertyURL = NULL;
+
+		propertyURL = MIME_URL;
+
+		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
+		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
+		{
+			nsILocale   *locale = nsnull;
+
+			res = sBundleService->CreateBundle(propertyURL, locale, getter_AddRefs(m_stringBundle));
+		}
+	}
+
+	if (m_stringBundle)
+	{
+    nsAutoString  v("");
+    PRUnichar     *ptrv = nsnull;
+    nsString      uniStr(aHeaderName);
+
+    res = m_stringBundle->GetStringFromName(uniStr.GetUnicode(), &ptrv);
+    v = ptrv;
+
+    if (NS_FAILED(res)) 
+      return nsnull;
+    
+    // Here we need to return a new copy of the string
+    // This returns a UTF-8 string so the caller needs to perform a conversion 
+    // if this is used as UCS-2 (e.g. cannot do nsString(utfStr);
+    //
+    return v.ToNewUTF8String();
+	}
+	else
+	{
+    return nsnull;
+	}
+}
+
+// 
+// This will search a string bundle (eventually) to find a descriptive header 
+// name to match what was found in the mail message. aHeaderName is passed in
+// in all caps and a dropback default name is provided. The caller needs to free
+// the memory returned by this function.
+//
+char *
+nsMimeBaseEmitter::LocalizeHeaderName(const char *aHeaderName, const char *aDefaultName)
+{
+  char *retVal = MimeGetStringByName(aHeaderName);
+
+  if (!retVal)
+    return retVal;
+  else
+    return nsCRT::strdup(aDefaultName);
 }

@@ -92,9 +92,9 @@ MimeExternalObject_parse_begin (MimeObject *obj)
     goto done;
 #endif /* XP_MAC */
   
-    /* If we're writing this object, and we're doing it in raw form, then
-    now is the time to inform the backend what the type of this data is.
-  */
+  // If we're writing this object, and we're doing it in raw form, then
+  // now is the time to inform the backend what the type of this data is.
+  //
   if (obj->output_p &&
     obj->options &&
     !obj->options->write_html_p &&
@@ -105,16 +105,17 @@ MimeExternalObject_parse_begin (MimeObject *obj)
     PR_ASSERT(obj->options->state->first_data_written_p);
   }
     
-  /* If we're writing this object as HTML, do all the work now -- just write
-     out a table with a link in it.  (Later calls to the `parse_buffer' method
-     will simply discard the data of the object itself.)
-  */
+  //
+  // If we're writing this object as HTML, do all the work now -- just write
+  // out a table with a link in it.  (Later calls to the `parse_buffer' method
+  // will simply discard the data of the object itself.)
+  //
   if (obj->options &&
       obj->output_p &&
       obj->options->write_html_p &&
       obj->options->output_fn)
   {
-    MimeDisplayOptions newopt = *obj->options;  /* copy it */
+    MimeDisplayOptions newopt = *obj->options;  // copy it 
     char *id = 0;
     char *id_url = 0;
     char *id_name = 0;
@@ -131,12 +132,12 @@ MimeExternalObject_parse_begin (MimeObject *obj)
       const char *url = obj->options->url;
       if (id_imap && id)
       {
-        /* if this is an IMAP part. */
+        // if this is an IMAP part. 
         id_url = mime_set_url_imap_part(url, id_imap, id);
       }
       else
       {
-        /* This is just a normal MIME part as usual. */
+        // This is just a normal MIME part as usual. 
         id_url = mime_set_url_part(url, id, PR_TRUE);
       }
       if (!id_url)
@@ -145,7 +146,6 @@ MimeExternalObject_parse_begin (MimeObject *obj)
         return MIME_OUT_OF_MEMORY;
       }
     }
-    
     if (!nsCRT::strcmp (id, "0"))
     {
       PR_Free(id);
@@ -153,7 +153,7 @@ MimeExternalObject_parse_begin (MimeObject *obj)
     }
     else
     {
-      const char *p = "Part ";  /* #### i18n */
+      const char *p = "Part ";  
       char *s = (char *)PR_MALLOC(nsCRT::strlen(p) + nsCRT::strlen(id) + 1);
       if (!s)
       {
@@ -161,7 +161,7 @@ MimeExternalObject_parse_begin (MimeObject *obj)
         PR_Free(id_url);
         return MIME_OUT_OF_MEMORY;
       }
-      /* we have a valid id */
+      // we have a valid id
       if (id)
         id_name = mime_find_suggested_name_of_part(id, obj);
       PL_strcpy(s, p);
@@ -171,9 +171,9 @@ MimeExternalObject_parse_begin (MimeObject *obj)
     }
     
     if (all_headers_p &&
-    /* Don't bother showing all headers on this part if it's the only
-    part in the message: in that case, we've already shown these
-    headers. */
+    // Don't bother showing all headers on this part if it's the only
+    // part in the message: in that case, we've already shown these
+    // headers.
     obj->options->state &&
     obj->options->state->root == obj->parent)
     all_headers_p = PR_FALSE;
@@ -181,7 +181,16 @@ MimeExternalObject_parse_begin (MimeObject *obj)
     newopt.fancy_headers_p = PR_TRUE;
     newopt.headers = (all_headers_p ? MimeHeadersAll : MimeHeadersSome);    
     PR_FREEIF(id_name);
-    
+
+/******    
+RICHIE SHERRY
+GOTTA STILL DO THIS FOR QUOTING!
+     status = MimeHeaders_write_attachment_box (obj->headers, &newopt,
+                                                 obj->content_type,
+                                                 obj->encoding,
+                                                 id_name? id_name : id, id_url, 0
+*****/
+
     PR_FREEIF(id);
     PR_FREEIF(id_url);
     PR_FREEIF(id_name);

@@ -128,7 +128,7 @@ nsMimeXULEmitter::~nsMimeXULEmitter(void)
   {
     for (i=0; i<mMiscStatusArray->Count(); i++)
     {
-      miscStatusType *statusInfo = (miscStatusType *)mHeaderArray->ElementAt(i);
+      miscStatusType *statusInfo = (miscStatusType *)mMiscStatusArray->ElementAt(i);
       if (!statusInfo)
         continue;
     
@@ -645,7 +645,7 @@ nsMimeXULEmitter::DumpAddBookIcon(char *fromLine)
   }
 
   nsCAutoString  newName;
-  char *newNameValue = nsEscapeHTML(name);
+  char *newNameValue = nsEscape(name, url_XAlphas);
   if (newNameValue) 
   {
     newName.SetString(newNameValue);
@@ -1245,7 +1245,6 @@ nsIMimeMiscStatus *
 nsMimeXULEmitter::GetStatusObjForProgID(nsCString aProgID)
 {
   nsresult            rv = NS_OK;
-  nsIMimeMiscStatus   *returnObj = nsnull;
   nsISupports         *obj = nsnull;
 
   NS_WITH_SERVICE(nsIComponentManager, comMgr, kComponentManagerCID, &rv);
@@ -1261,7 +1260,7 @@ nsMimeXULEmitter::GetStatusObjForProgID(nsCString aProgID)
   if (NS_FAILED(rv))
     return nsnull;
   else
-    return returnObj;
+    return (nsIMimeMiscStatus *)obj;
 }
 
 NS_IMETHODIMP
