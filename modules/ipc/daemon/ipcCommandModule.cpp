@@ -57,7 +57,8 @@ struct ipcCommandModule
     {
         LOG(("got PING\n"));
 
-        IPC_SendMsg(client, new ipcmMessagePing());
+        ipcmMessagePing out;
+        IPC_SendMsg(client, &out);
     }
 
     static void OnClientHello(ipcClient *client, const ipcMessage *rawMsg)
@@ -69,7 +70,8 @@ struct ipcCommandModule
         if (name)
             client->AddName(name);
 
-        IPC_SendMsg(client, new ipcmMessageClientID(client->ID()));
+        ipcmMessageClientID out(client->ID());
+        IPC_SendMsg(client, &out);
     }
 
     static void OnClientAddName(ipcClient *client, const ipcMessage *rawMsg)
@@ -116,11 +118,13 @@ struct ipcCommandModule
         ipcClient *result = IPC_GetClientByName(msg->Name());
         if (result) {
             LOG(("  client exists w/ ID = %u\n", result->ID()));
-            IPC_SendMsg(client, new ipcmMessageClientID(result->ID()));
+            ipcmMessageClientID out(result->ID());
+            IPC_SendMsg(client, &out);
         }
         else {
             LOG(("  client does not exist\n"));
-            IPC_SendMsg(client, new ipcmMessageError(IPCM_ERROR_CLIENT_NOT_FOUND));
+            ipcmMessageError out(IPCM_ERROR_CLIENT_NOT_FOUND);
+            IPC_SendMsg(client, &out);
         }
     }
 
@@ -131,17 +135,17 @@ struct ipcCommandModule
         ipcMessageCast<ipcmMessageForward> msg(rawMsg);
         PRUint32 destID = msg->DestClientID();
 
-        ipcMessage *newMsg = new ipcMessage();
-        newMsg->Init(msg->InnerTarget(),
-                     msg->InnerData(),
-                     msg->InnerDataLen());
+        ipcMessage newMsg;
+        newMsg.Init(msg->InnerTarget(),
+                    msg->InnerData(),
+                    msg->InnerDataLen());
 
         ipcClient *dest = IPC_GetClientByID(destID);
         if (!dest) {
             LOG(("  destination client not found!\n"));
             return;
         }
-        IPC_SendMsg(dest, newMsg);
+        IPC_SendMsg(dest, &newMsg);
     }
 
     //
