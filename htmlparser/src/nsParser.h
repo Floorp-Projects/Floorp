@@ -78,8 +78,6 @@ class nsIParserFilter;
 class nsIProgressEventSink;
 class nsParserBundle;
 
-#include <fstream.h>
-
 #ifdef XP_WIN
 #pragma warning( disable : 4275 )
 #endif
