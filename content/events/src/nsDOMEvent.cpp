@@ -190,7 +190,13 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
   mText = nsnull;
   mTextRange = nsnull;
   mButton = -1;
-  mScreenPoint.x = mScreenPoint.y = mClientPoint.x = mClientPoint.y = 0;
+  if (aEvent) {
+    mScreenPoint.x = aEvent->refPoint.x;
+    mScreenPoint.y = aEvent->refPoint.y;
+    mClientPoint.x = aEvent->point.x;
+    mClientPoint.y = aEvent->point.y;
+  } else
+    mScreenPoint.x = mScreenPoint.y = mClientPoint.x = mClientPoint.y = 0;
 
   if (aEvent && aEvent->eventStructType == NS_TEXT_EVENT) {
 	  //
@@ -1221,6 +1227,10 @@ nsDOMEvent::InitMouseEvent(const nsAReadableString & aTypeArg, PRBool aCanBubble
     mouseEvent->isAlt = aAltKeyArg;
     mouseEvent->isShift = aShiftKeyArg;
     mouseEvent->isMeta = aMetaKeyArg;
+    mouseEvent->point.x = aClientXArg;
+    mouseEvent->point.y = aClientYArg;
+    mouseEvent->refPoint.x = aScreenXArg;
+    mouseEvent->refPoint.y = aScreenYArg;
     mScreenPoint.x = aScreenXArg;
     mScreenPoint.y = aScreenYArg;
     mClientPoint.x = aClientXArg;
