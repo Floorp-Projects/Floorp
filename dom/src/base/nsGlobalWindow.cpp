@@ -1459,10 +1459,7 @@ nsGlobalWindow::GetOpener(nsIDOMWindowInternal** aOpener)
   *aOpener = nsnull;
   // First, check if we were called from a privileged chrome script
 
-  NS_ENSURE_TRUE(sSecMan, NS_ERROR_FAILURE);
-  PRBool allowClose;
-  nsresult rv = sSecMan->SubjectPrincipalIsSystem(&allowClose);
-  if (NS_SUCCEEDED(rv) && allowClose) {
+  if (IsCallerChrome()) {
     *aOpener = mOpener;
     NS_IF_ADDREF(*aOpener);
     return NS_OK;
@@ -2178,6 +2175,21 @@ nsGlobalWindow::WindowExists(const nsAString& aName)
   return foundWindow;
 }
 
+already_AddRefed<nsIWidget>
+nsGlobalWindow::GetMainWidget()
+{
+  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
+  GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
+
+  nsIWidget *widget = nsnull;
+
+  if (treeOwnerAsWin) {
+    treeOwnerAsWin->GetMainWidget(&widget);
+  }
+
+  return widget;
+}
+
 NS_IMETHODIMP
 nsGlobalWindow::SetFullScreen(PRBool aFullScreen)
 {
@@ -2213,12 +2225,7 @@ nsGlobalWindow::SetFullScreen(PRBool aFullScreen)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
-  GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
-  NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIWidget> widget;
-  treeOwnerAsWin->GetMainWidget(getter_AddRefs(widget));
+  nsCOMPtr<nsIWidget> widget = GetMainWidget();
   if (widget)
     widget->MakeFullScreen(aFullScreen);
 
@@ -3479,48 +3486,43 @@ nsGlobalWindow::Close()
 
   // Don't allow scripts from content to close windows
   // that were not opened by script
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (!mOpener && !mOpenerWasCleared) {
-    nsCOMPtr<nsIScriptSecurityManager> secMan(
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv)) {
-      PRBool allowClose = PR_TRUE;
-      rv = secMan->SubjectPrincipalIsSystem(&allowClose);
+    PRBool allowClose = PR_FALSE;
 
-      if (!allowClose)
-        rv = sSecMan->IsCapabilityEnabled("UniversalBrowserWrite",
-                                          &allowClose);
+    // UniversalBrowserWrite will be enabled if it's been explicitly
+    // enabled, or if we're called from chrome.
+    rv = sSecMan->IsCapabilityEnabled("UniversalBrowserWrite",
+                                      &allowClose);
 
-      if (NS_SUCCEEDED(rv) && !allowClose) {
-        allowClose =
-          nsContentUtils::GetBoolPref("dom.allow_scripts_to_close_windows",
-                                      PR_TRUE);
-        if (!allowClose) {
-          // We're blocking the close operation
-          // report localized error msg in JS console
-          nsCOMPtr<nsIStringBundleService> stringBundleService(
-            do_GetService(kCStringBundleServiceCID));
-          if (stringBundleService) {
-            nsCOMPtr<nsIStringBundle> stringBundle;
-            rv = stringBundleService->CreateBundle(
-                                        kDOMSecurityWarningsBundleURL,
-                                        getter_AddRefs(stringBundle));
-            if (NS_SUCCEEDED(rv) && stringBundle) {
-              nsXPIDLString errorMsg;
-              rv = stringBundle->GetStringFromName(
-                                   NS_LITERAL_STRING("WindowCloseBlockedWarning").get(),
-                                   getter_Copies(errorMsg));
-              if (NS_SUCCEEDED(rv)) {
-                nsCOMPtr<nsIConsoleService> console(
-                  do_GetService("@mozilla.org/consoleservice;1"));
-                if (console)
-                  console->LogStringMessage(errorMsg.get());
-              }
+    if (NS_SUCCEEDED(rv) && !allowClose) {
+      allowClose =
+        nsContentUtils::GetBoolPref("dom.allow_scripts_to_close_windows",
+                                    PR_TRUE);
+      if (!allowClose) {
+        // We're blocking the close operation
+        // report localized error msg in JS console
+        nsCOMPtr<nsIStringBundleService> stringBundleService =
+          do_GetService(kCStringBundleServiceCID);
+        if (stringBundleService) {
+          nsCOMPtr<nsIStringBundle> stringBundle;
+          stringBundleService->CreateBundle(kDOMSecurityWarningsBundleURL,
+                                            getter_AddRefs(stringBundle));
+          if (stringBundle) {
+            nsXPIDLString errorMsg;
+            rv = stringBundle->GetStringFromName(
+                   NS_LITERAL_STRING("WindowCloseBlockedWarning").get(),
+                   getter_Copies(errorMsg));
+            if (NS_SUCCEEDED(rv)) {
+              nsCOMPtr<nsIConsoleService> console =
+                do_GetService("@mozilla.org/consoleservice;1");
+              if (console)
+                console->LogStringMessage(errorMsg.get());
             }
           }
-
-          return NS_OK;
         }
+
+        return NS_OK;
       }
     }
   }
@@ -5781,13 +5783,12 @@ nsGlobalChromeWindow::GetWindowState(PRUint16* aWindowState)
 {
   *aWindowState = nsIDOMChromeWindow::STATE_NORMAL;
 
-  nsCOMPtr<nsIWidget> widget;
-  nsresult rv = GetMainWidget(getter_AddRefs(widget));
+  nsCOMPtr<nsIWidget> widget = GetMainWidget();
 
   PRInt32 aMode = 0;
 
   if (widget) {
-    rv = widget->GetSizeMode(&aMode);
+    nsresult rv = widget->GetSizeMode(&aMode);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -5806,14 +5807,14 @@ nsGlobalChromeWindow::GetWindowState(PRUint16* aWindowState)
       break;
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsGlobalChromeWindow::Maximize()
 {
-  nsCOMPtr<nsIWidget> widget;
-  nsresult rv = GetMainWidget(getter_AddRefs(widget));
+  nsCOMPtr<nsIWidget> widget = GetMainWidget();
+  nsresult rv = NS_OK;
 
   if (widget) {
     rv = widget->SetSizeMode(nsSizeMode_Maximized);
@@ -5825,8 +5826,8 @@ nsGlobalChromeWindow::Maximize()
 NS_IMETHODIMP
 nsGlobalChromeWindow::Minimize()
 {
-  nsCOMPtr<nsIWidget> widget;
-  nsresult rv = GetMainWidget(getter_AddRefs(widget));
+  nsCOMPtr<nsIWidget> widget = GetMainWidget();
+  nsresult rv = NS_OK;
 
   if (widget) {
     // minimize doesn't send deactivate events on windows,
@@ -5845,8 +5846,8 @@ nsGlobalChromeWindow::Minimize()
 NS_IMETHODIMP
 nsGlobalChromeWindow::Restore()
 {
-  nsCOMPtr<nsIWidget> widget;
-  nsresult rv = GetMainWidget(getter_AddRefs(widget));
+  nsCOMPtr<nsIWidget> widget = GetMainWidget();
+  nsresult rv = NS_OK;
 
   if (widget) {
     rv = widget->SetSizeMode(nsSizeMode_Normal);
@@ -5864,8 +5865,8 @@ nsGlobalChromeWindow::GetAttention()
 NS_IMETHODIMP
 nsGlobalChromeWindow::GetAttentionWithCycleCount(PRInt32 aCycleCount)
 {
-  nsCOMPtr<nsIWidget> widget;
-  nsresult rv = GetMainWidget(getter_AddRefs(widget));
+  nsCOMPtr<nsIWidget> widget = GetMainWidget();
+  nsresult rv = NS_OK;
 
   if (widget) {
     rv = widget->GetAttention(aCycleCount);
@@ -5925,19 +5926,6 @@ nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
 
     // Call esm and set cursor.
     rv = presContext->EventStateManager()->SetCursor(cursor, nsnull, widget, PR_TRUE);
-  }
-
-  return rv;
-}
-
-nsresult
-nsGlobalChromeWindow::GetMainWidget(nsIWidget** aMainWidget)
-{
-  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
-  nsresult rv = GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
-
-  if (treeOwnerAsWin) {
-    rv = treeOwnerAsWin->GetMainWidget(aMainWidget);
   }
 
   return rv;
