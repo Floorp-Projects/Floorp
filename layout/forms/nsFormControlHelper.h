@@ -179,6 +179,8 @@ public:
 
   // Localization Helper
   static nsresult GetLocalizedString(char* aKey, nsString& oVal);
+
+  static nsresult GetDisabled(nsIContent* aContent, PRBool* oIsDisabled);
 //
 //-------------------------------------------------------------------------------------
 //  Utility methods for managing checkboxes and radiobuttons

@@ -280,12 +280,16 @@ nsHTMLButtonControlFrame::GetValue(nsString* aResult)
 PRBool
 nsHTMLButtonControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
 {
+  PRBool successful = PR_TRUE;
   if (this == (aSubmitter)) {
     nsAutoString name;
-    return (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
+    PRBool disabled = PR_FALSE;
+    nsFormControlHelper::GetDisabled(mContent, &disabled);
+    successful = !disabled && (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
   } else {
-    return PR_FALSE;
+    successful = PR_FALSE;
   }
+  return successful;
 }
 
 PRBool

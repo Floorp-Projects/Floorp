@@ -41,14 +41,18 @@ nsGfxButtonControlFrame::IsSuccessful(nsIFormControlFrame* aSubmitter)
 {
   PRInt32 type;
   GetType(&type);
+  PRBool successful = PR_TRUE;
   if ((NS_FORM_INPUT_HIDDEN == type) || (this == aSubmitter)) {
      // Can not use the nsHTMLButtonControlFrame::IsSuccessful because
      // it will fail it's test of (this==aSubmitter)
     nsAutoString name;
-    return (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
+    PRBool disabled = PR_FALSE;
+    nsFormControlHelper::GetDisabled(mContent, &disabled);
+    successful = !disabled && (NS_CONTENT_ATTR_HAS_VALUE == GetName(&name));
   } else {
-    return PR_FALSE;
+    successful = PR_FALSE;
   }
+  return successful;
 }
 
 PRInt32

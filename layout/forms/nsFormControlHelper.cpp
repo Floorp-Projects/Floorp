@@ -1399,3 +1399,21 @@ nsFormControlHelper::GetLocalizedString(char* aKey, nsString& oVal)
   return rv;
 }
 
+// Return value of disabled attribute or PR_FALSE if none set
+nsresult
+nsFormControlHelper::GetDisabled(nsIContent* aContent, PRBool* oIsDisabled)
+{
+  nsCOMPtr<nsIHTMLContent> formControl = do_QueryInterface(aContent);
+  nsHTMLValue value;
+  nsresult result = formControl->GetHTMLAttribute(nsHTMLAtoms::disabled, value);
+  if (NS_CONTENT_ATTR_HAS_VALUE == result) {
+    if (eHTMLUnit_Empty == value.GetUnit()) {
+      *oIsDisabled = PR_TRUE;
+    } else {
+      *oIsDisabled = PR_FALSE;
+    }
+  } else {
+    *oIsDisabled = PR_FALSE;
+  }
+  return NS_OK;
+}
