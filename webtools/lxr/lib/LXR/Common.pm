@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.13 1999/01/21 00:42:26 endico%mozilla.org Exp $
+# $Id: Common.pm,v 1.14 1999/01/31 10:52:32 jwz%mozilla.org Exp $
 
 package LXR::Common;
 
@@ -83,6 +83,10 @@ sub urlargs {
 
 sub fileref {
     my ($desc, $path, $line, @args) = @_;
+
+    # jwz: URL-quote any special characters.
+    $path =~ s|([^-a-zA-Z0-9.\@/_\r\n])|sprintf("%%%02X", ord($1))|ge;
+
     return("<a href=\"$Conf->{virtroot}/source$path".
 	   &urlargs(@args).
 	   ($line > 0 ? "#$line" : "").
