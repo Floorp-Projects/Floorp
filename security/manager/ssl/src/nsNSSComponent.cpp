@@ -1896,7 +1896,7 @@ PSMContentListener::CanHandleContent(const char * aContentType,
 {
   PRUint32 type;
   type = getPSMContentType(aContentType);
-  if (type == nsIX509Cert::UNKNOWN_CERT) {
+  if (type == PSMContentDownloader::UNKNOWN_TYPE) {
     *aCanHandleContent = PR_FALSE;
   } else {
     *aCanHandleContent = PR_TRUE;
@@ -1915,7 +1915,7 @@ PSMContentListener::DoContent(const char * aContentType,
   PRUint32 type;
   type = getPSMContentType(aContentType);
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("PSMContentListener::DoContent\n"));
-  if (type != nsIX509Cert::UNKNOWN_CERT) {
+  if (type != PSMContentDownloader::UNKNOWN_TYPE) {
     downLoader = new PSMContentDownloader(type);
     if (downLoader) {
       downLoader->QueryInterface(NS_GET_IID(nsIStreamListener), 
