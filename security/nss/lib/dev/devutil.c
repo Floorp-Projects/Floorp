@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.5 $ $Date: 2002/04/18 17:29:55 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devutil.c,v $ $Revision: 1.6 $ $Date: 2002/04/19 16:14:08 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEVM_H
@@ -1052,7 +1052,8 @@ nssTokenObjectCache_FindObjectsByTemplate
   CK_OBJECT_CLASS objclass,
   CK_ATTRIBUTE_PTR otemplate,
   CK_ULONG otlen,
-  PRUint32 maximumOpt
+  PRUint32 maximumOpt,
+  PRStatus *statusOpt
 )
 {
     PRStatus status = PR_FAILURE;
@@ -1093,6 +1094,9 @@ nssTokenObjectCache_FindObjectsByTemplate
     }
 finish:
     PZ_Unlock(cache->lock);
+    if (statusOpt) {
+	*statusOpt = status;
+    }
     return rvObjects;
 }
 
@@ -1301,11 +1305,11 @@ nssTokenObjectCache_RemoveObject
 	    break;
 	}
     }
-    PZ_Unlock(cache->lock);
-    if (swp && *swp == NULL) {
-	nss_ZFreeIf(swp); /* the only entry */
+    if (cache->objects[oType] && cache->objects[oType][0] == NULL) {
+	nss_ZFreeIf(cache->objects[oType]); /* no entries remaining */
 	cache->objects[oType] = NULL;
     }
+    PZ_Unlock(cache->lock);
     return PR_SUCCESS;
 }
 

@@ -35,7 +35,7 @@
 #define DEVM_H
 
 #ifdef DEBUG
-static const char DEVM_CVS_ID[] = "@(#) $RCSfile: devm.h,v $ $Revision: 1.6 $ $Date: 2002/04/18 17:29:53 $ $Name:  $";
+static const char DEVM_CVS_ID[] = "@(#) $RCSfile: devm.h,v $ $Revision: 1.7 $ $Date: 2002/04/19 16:14:06 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BASE_H
@@ -171,7 +171,8 @@ nssTokenObjectCache_FindObjectsByTemplate
   CK_OBJECT_CLASS objclass,
   CK_ATTRIBUTE_PTR otemplate,
   CK_ULONG otlen,
-  PRUint32 maximumOpt
+  PRUint32 maximumOpt,
+  PRStatus *statusOpt
 );
 
 NSS_EXTERN PRStatus
