@@ -64,7 +64,7 @@ sub RederiveRegexp ($$)
                                 AND grant_type = ? and isbless = 0");
     $sth->execute();
     while (my ($uid, $login) = $sth->fetchrow_array()) {
-        if ($login =~ m/$regexp/i)
+        if (($regexp =~ /\S+/) && ($login =~ m/$regexp/i))
         {
             $sthadd->execute($uid, $gid, GRANT_REGEXP);
         } else {
