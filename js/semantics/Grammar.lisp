@@ -218,7 +218,8 @@
   (lhs nil :type general-nonterminal :read-only t) ;The general-nonterminal on the left-hand side of this general-production
   (rhs nil :type list :read-only t)                ;List of general grammar symbols to which that general-nonterminal expands
   (constraints nil :type list :read-only t)        ;List of constraints applying to rhs, sorted by increasing pos values
-  (name nil :read-only t))                         ;This general-production's name that will be used to name the parse tree node
+  (name nil :read-only t)                          ;This general-production's name that will be used to name the parse tree node
+  (highlight nil :read-only t))                    ;This general-production's markup style keyword or nil if default
 
 
 ; If general-production is a generic-production, return its list of productions;
@@ -340,7 +341,7 @@
 ;;; The evaluator is a lisp form that evaluates to a function f that takes one argument --
 ;;; the old state of the parser's value stack -- and returns the new state of that stack.
 (defstruct (production (:include general-production (lhs nil :type nonterminal :read-only t))
-                       (:constructor make-production (lhs rhs constraints name rhs-length number))
+                       (:constructor make-production (lhs rhs constraints name highlight rhs-length number))
                        (:copier nil) (:predicate production?))
   (rhs-length nil :type integer :read-only t) ;Number of grammar symbols in the rhs
   (number nil :type integer :read-only t)     ;This production's serial number
@@ -385,7 +386,7 @@
 ;;; A generic production is not a production and does not have a number or actions.
 
 (defstruct (generic-production (:include general-production (lhs nil :type generic-nonterminal :read-only t))
-                               (:constructor make-generic-production (lhs rhs constraints name productions))
+                               (:constructor make-generic-production (lhs rhs constraints name highlight productions))
                                (:copier nil)
                                (:predicate generic-production?))
   (productions nil :type list :read-only t))       ;List of instantiations of this generic production
@@ -404,6 +405,7 @@
                (generic-production-rhs generic-production))
        (general-production-constraints generic-production)
        (generic-production-name generic-production)
+       (generic-production-highlight generic-production)
        (remove-if #'(lambda (production)
                       (not (general-nonterminal-is-instance? grammar-parametrization new-lhs (production-lhs production))))
                   productions))
@@ -426,24 +428,62 @@
   (general-production-lhs (first (general-rule-productions general-rule))))
 
 
+; Return the given highlight.  If it is nil, return nil and ensure that no other
+; highlight (from the list given by highlights) is currently in effect in the markup-stream.
+(defun check-highlight (highlight highlights markup-stream)
+  (if highlight
+    (assert-true (member highlight highlights))
+    (dolist (h highlights)
+      (ensure-no-enclosing-style markup-stream h)))
+  highlight)
+
+
+; Return the list of general-productions, in order, gathered into runs of consecutive productions with the same highlight value.
+; The result is a list of runs:
+;   (<highlight> <p> ... <p>),
+; where each <p> is:
+;   (<general-production> <first> <last>),
+; where <first> is true if this is the first production and <last> is true if this is the last production.
+(defun gather-productions-by-highlights (general-productions)
+  (when general-productions
+    (let* ((first-production (first general-productions))
+           (prior-runs-reverse nil)
+           (current-highlight (general-production-highlight first-production))
+           (current-run-productions-reverse (list (list first-production t nil))))
+      (dolist (general-production (rest general-productions))
+        (let ((highlight (general-production-highlight general-production))
+              (p (list general-production nil nil)))
+          (if (eq highlight current-highlight)
+            (push p current-run-productions-reverse)
+            (progn
+              (push (cons current-highlight (nreverse current-run-productions-reverse)) prior-runs-reverse)
+              (setq current-highlight highlight)
+              (setq current-run-productions-reverse (list p))))))
+      (setf (third (first current-run-productions-reverse)) t)
+      (nreconc prior-runs-reverse (list (cons current-highlight (nreverse current-run-productions-reverse)))))))
+
+
 ; Emit markup paragraphs for the grammar general rule.
 ; If the rule is short enough (only one production), emit the rule on one line.
-(defun depict-general-rule (markup-stream general-rule)
-  (depict-block-style (markup-stream ':grammar-rule)
-    (let ((general-productions (general-rule-productions general-rule)))
-      (assert-true general-productions)
-      (if (cdr general-productions)
-        (labels
-          ((emit-general-productions (general-productions first)
-             (let ((general-production (first general-productions))
-                   (rest (rest general-productions)))
-               (depict-general-production-rhs markup-stream general-production first (endp rest))
-               (when rest
-                 (emit-general-productions rest nil)))))
-          (depict-general-production-lhs markup-stream (general-rule-lhs general-rule))
-          (emit-general-productions general-productions t))
-        (depict-paragraph (markup-stream ':grammar-lhs-last)
-          (depict-general-production markup-stream (first general-productions) :definition))))))
+; highlights is a list of keywords that may be used to highlight specific rules or productions.  It should
+; be the same as the list of highlights passed to make-grammar.
+(defun depict-general-rule (markup-stream general-rule highlights)
+  (let ((general-productions (general-rule-productions general-rule)))
+    (assert-true general-productions)
+    (let* ((production-runs (gather-productions-by-highlights general-productions))
+           (rule-highlight (and (endp (rest production-runs))
+                                (check-highlight (first (first production-runs)) highlights markup-stream))))
+      (depict-block-style (markup-stream rule-highlight t)
+        (depict-block-style (markup-stream ':grammar-rule)
+          (if (rest general-productions)
+            (progn
+              (depict-general-production-lhs markup-stream (general-rule-lhs general-rule))
+              (dolist (production-run production-runs)
+                (depict-block-style (markup-stream (check-highlight (first production-run) highlights markup-stream) t)
+                  (dolist (p (rest production-run))
+                    (apply #'depict-general-production-rhs markup-stream p)))))
+            (depict-paragraph (markup-stream ':grammar-lhs-last)
+              (depict-general-production markup-stream (first general-productions) :definition))))))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -1046,6 +1086,7 @@
   (max-production-length nil :type integer :read-only t) ;Maximum number of grammar symbols in the rhs of a production
   (general-productions nil :type hash-table :read-only t);Hash table of production-name -> general-production
   (n-productions nil :type integer :read-only t)         ;Number of productions in the grammar
+  (highlights nil :type list :read-only t)               ;List of style keywords for highlighting selected productions
   ;The following fields are used for the parser.
   (items-hash nil :type (or null hash-table))            ;Hash table of (production . dot) -> item; nil for a cleaned grammar or a grammar without a parser
   (states nil :type list)                                ;List of LR(0) states (in order of state numbers)
@@ -1174,15 +1215,18 @@
 
 ; Intern attributed or generic nonterminals in the production's lhs and rhs.  Replace
 ; (:- <terminal> ... <terminal>) or (:-- (<grammar-symbol> ... <grammar-symbol>) <terminal> ... <terminal>)
-; sublists in the rhs with lookahead-constraints and put these, in order, after the third element of
+; sublists in the rhs with lookahead-constraints and put these, in order, after the fourth element of
 ; the returned list.  Also replace variant constraint symbols with variant-constraints.
 ; The variant-constraint-names parameter should be a list of possible variant constraint symbols.
 ; Return the resulting production source.
-(defun intern-production-source (grammar-parametrization variant-constraint-names production-source)
-  (assert-type production-source (tuple (or user-nonterminal cons) (list (or user-grammar-symbol cons)) identifier))
+(defun intern-production-source (grammar-parametrization variant-constraint-names highlights production-source)
+  (assert-type production-source (tuple (or user-nonterminal cons) (list (or user-grammar-symbol cons)) identifier t))
   (let ((production-lhs-source (first production-source))
         (production-rhs-source (second production-source))
-        (production-name (third production-source)))
+        (production-name (third production-source))
+        (production-highlight (fourth production-source)))
+    (unless (or (null production-highlight) (member production-highlight highlights :test #'eq))
+      (error "Bad highlight in rule: ~S; allowed highlights are ~S" production-source highlights))
     (if (or (consp production-lhs-source) (some #'consp production-rhs-source) (intersection variant-constraint-names production-rhs-source))
       (multiple-value-bind (lhs-nonterminal lhs-arguments) (grammar-parametrization-intern grammar-parametrization production-lhs-source)
         (let ((rhs nil)
@@ -1205,7 +1249,7 @@
              (t
               (push (grammar-parametrization-intern grammar-parametrization component-source lhs-arguments) rhs)
               (incf pos))))
-          (list* lhs-nonterminal (nreverse rhs) production-name (nreverse constraints))))
+          (list* lhs-nonterminal (nreverse rhs) production-name production-highlight (nreverse constraints))))
       production-source)))
 
 
@@ -1213,7 +1257,8 @@
 ; A grammar-source is a list of productions; each production is a list of:
 ;   a nonterminal A (the lhs);
 ;   a list of grammar symbols forming A's expansion (the rhs);
-;   a production name.
+;   a production name;
+;   a highlight keyword or nil.
 ; Nonterminals in the lhs and rhs can be parametrized; in this case such a nonterminal
 ; is represented by a list whose first element is the name and the remaining elements are
 ; the arguments or attributes.  Any nonterminal argument in the rhs must also be an argument
@@ -1241,11 +1286,15 @@
 ; excluded-nonterminals is a list of nonterminals not used in the grammar.  Productions,
 ; including productions expanded from generic productions, that have one of these nonterminals
 ; on the lhs are ignored.
-(defun make-grammar (grammar-parametrization start-symbol grammar-source &key variant-constraint-names variant-generator excluded-nonterminals)
+;
+; highlights is a list of keywords that may be used to highlight specific rules or productions.  Each production that includes
+; a highlight as its fourth element will be rendered using the markup style specified by highlight.
+(defun make-grammar (grammar-parametrization start-symbol grammar-source &key variant-constraint-names variant-generator excluded-nonterminals highlights)
+  (assert-type highlights (list keyword))
   (let ((variant-constraint-forbid-lists (mapcar #'list variant-constraint-names))
         (interned-grammar-source
          (mapcar #'(lambda (production-source)
-                     (intern-production-source grammar-parametrization variant-constraint-names production-source))
+                     (intern-production-source grammar-parametrization variant-constraint-names highlights production-source))
                  grammar-source))
         (rules (make-hash-table :test #'eq))
         (terminals-hash (make-hash-table :test *grammar-symbol-=*))
@@ -1264,12 +1313,12 @@
     
     ;Create the starting production:  *start-nonterminal* ==> start-symbol
     (setf (gethash *start-nonterminal* rules)
-          (list (make-production *start-nonterminal* (list start-symbol) nil nil 1 0)))
+          (list (make-production *start-nonterminal* (list start-symbol) nil nil nil 1 0)))
     
     ;Create the rest of the productions.
     (flet
-      ((create-production (lhs rhs constraints name)
-         (let ((production (make-production lhs rhs constraints name (length rhs) (incf production-number))))
+      ((create-production (lhs rhs constraints name highlight)
+         (let ((production (make-production lhs rhs constraints name highlight (length rhs) (incf production-number))))
            (push production (gethash lhs rules))
            (dolist (rhs-terminal (production-terminals production))
              (setf (gethash rhs-terminal terminals-hash) t))
@@ -1283,7 +1332,8 @@
         (let* ((production-lhs (first production-source))
                (production-rhs (second production-source))
                (production-name (third production-source))
-               (production-constraints (cdddr production-source))
+               (production-highlight (fourth production-source))
+               (production-constraints (cddddr production-source))
                (lhs-arguments (general-grammar-symbol-arguments production-lhs)))
           (setq max-production-length (max max-production-length (length production-rhs)))
           (when (gethash production-name general-productions)
@@ -1301,16 +1351,17 @@
                                           (instantiate-general-grammar-symbol bound-argument-alist general-grammar-symbol))
                                       production-rhs)
                               production-constraints
-                              production-name)
+                              production-name
+                              production-highlight)
                              productions))))
                lhs-arguments)
               (when productions
                 (setf (gethash production-name general-productions)
-                      (make-generic-production production-lhs production-rhs production-constraints production-name (nreverse productions)))))
+                      (make-generic-production production-lhs production-rhs production-constraints production-name production-highlight (nreverse productions)))))
             
             (unless (nonterminal-excluded production-lhs)
               (setf (gethash production-name general-productions)
-                    (create-production production-lhs production-rhs production-constraints production-name)))))))
+                    (create-production production-lhs production-rhs production-constraints production-name production-highlight)))))))
     
     
     (when variant-generator
@@ -1384,7 +1435,8 @@
                         :parameter-trees (make-hash-table :test *grammar-symbol-=*)
                         :max-production-length max-production-length
                         :general-productions general-productions
-                        :n-productions production-number)))
+                        :n-productions production-number
+                        :highlights highlights)))
           
           ;Compute the terminalsets in the terminal-terminalsets.
           (dotimes (n (length terminals))
@@ -1527,7 +1579,7 @@
     (depict-general-nonterminal markup-stream (gramar-user-start-symbol grammar) :reference))
   (dolist (nonterminal (grammar-nonterminals-list grammar))
     (unless (grammar-symbol-= nonterminal *start-nonterminal*)
-      (depict-general-rule markup-stream (grammar-rule grammar nonterminal)))))
+      (depict-general-rule markup-stream (grammar-rule grammar nonterminal) (grammar-highlights grammar)))))
 
 
 ; Return a list of nontrivial sets of states with the same kernels.

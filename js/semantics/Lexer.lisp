@@ -383,7 +383,7 @@
 
 ; Return the charset of all characters that appear as terminals in grammar-source.
 (defun grammar-singletons (grammar-source)
-  (assert-type grammar-source (list (tuple t (list t) identifier)))
+  (assert-type grammar-source (list (tuple t (list t) identifier t)))
   (let ((singletons 0))
     (labels
       ((scan-for-singletons (list)
@@ -648,7 +648,7 @@
                                           (char-charset partition-name)
                                           (partition-charset (gethash partition-name (lexer-partitions lexer)))))
                      (production-name (intern (format nil "~A-~D" production-prefix (incf production-number)))))
-                (push (list nonterminal-source (list partition-name) production-name) productions)
+                (push (list nonterminal-source (list partition-name) production-name nil) productions)
                 (dolist (action (charclass-actions charclass))
                   (let* ((lexer-action (cdr action))
                          (body (if (characterp partition-name)
