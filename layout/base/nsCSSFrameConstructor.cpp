@@ -9408,6 +9408,9 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
         DeletingFrameSubtree(aPresContext, shell, frameManager, placeholderFrame);
         rv = frameManager->RemoveFrame(aPresContext, *shell, parentFrame,
                                        nsnull, placeholderFrame);
+
+        // Destroy the real frame.
+        childFrame->Destroy(aPresContext);
         return NS_OK;
       }
     }
