@@ -541,7 +541,7 @@ nsSVGSVGElement::ForceRedraw()
   NS_ASSERTION(vm, "need viewmanager to unsuspend redraw");
   if (!vm) return NS_ERROR_FAILURE;
 
-  vm->UpdateAllViews(NS_VMREFRESH_IMMEDIATE);
+  vm->EnableRefresh(NS_VMREFRESH_IMMEDIATE);
 
   return NS_OK;
 }
