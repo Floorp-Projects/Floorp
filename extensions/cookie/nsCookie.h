@@ -63,8 +63,8 @@ public:
      char * path,
      PRBool isSecure,
      PRUint64 expires,
-     nsCookieStatus_t status,
-     nsCookiePolicy_t policy
+     nsCookieStatus status,
+     nsCookiePolicy policy
      );
   nsCookie();
   virtual ~nsCookie(void);
@@ -77,8 +77,11 @@ protected:
   char * cookiePath;
   PRBool cookieIsSecure;
   PRUint64 cookieExpires;
-  nsCookieStatus_t cookieStatus;
-  nsCookiePolicy_t cookiePolicy;  
+  nsCookieStatus cookieStatus;
+  nsCookiePolicy cookiePolicy;  
 };
+
+// {E9FCB9A4-D376-458f-B720-E65E7DF593BC}
+#define NS_COOKIE_CID { 0xe9fcb9a4,0xd376,0x458f,{0xb7,0x20,0xe6,0x5e,0x7d,0xf5,0x93,0xbc}}
 
 #endif /* nsCookie_h__ */

@@ -56,8 +56,8 @@ nsCookie::nsCookie
    char * path,
    PRBool isSecure,
    PRUint64 expires,
-   nsCookieStatus_t status,
-   nsCookiePolicy_t policy) {
+   nsCookieStatus status,
+   nsCookiePolicy policy) {
   cookieName = name;
   cookieValue = value;
   cookieIsDomain = isDomain;
@@ -77,17 +77,17 @@ nsCookie::~nsCookie(void) {
   nsCRT::free(cookiePath);
 }
 
-NS_IMETHODIMP nsCookie::GetName(char * *aName) {
+NS_IMETHODIMP nsCookie::GetName(nsACString& aName) {
   if (cookieName) {
-    *aName = (char *) nsMemory::Clone(cookieName, strlen(cookieName) + 1);
+    aName = cookieName;
     return NS_OK;
   }
   return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsCookie::GetValue(char * *aValue) {
+NS_IMETHODIMP nsCookie::GetValue(nsACString& aValue) {
   if (cookieValue) {
-    *aValue = (char *) nsMemory::Clone(cookieValue, strlen(cookieValue) + 1);
+    aValue = cookieValue;
     return NS_OK;
   }
   return NS_ERROR_NULL_POINTER;
@@ -98,17 +98,21 @@ NS_IMETHODIMP nsCookie::GetIsDomain(PRBool *aIsDomain) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCookie::GetHost(char * *aHost) {
+NS_IMETHODIMP nsCookie::GetHost(nsACString& aHost) {
+//NS_IMETHODIMP nsCookie::GetHost(nsAUTF8String& aHost) {
+// using nsACString above instead of nsAUTF8String because the latter doesn't exist yet
   if (cookieHost) {
-    *aHost = (char *) nsMemory::Clone(cookieHost, strlen(cookieHost) + 1);
+    aHost = cookieHost;
     return NS_OK;
   }
   return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsCookie::GetPath(char * *aPath) {
+NS_IMETHODIMP nsCookie::GetPath(nsACString& aPath) {
+//NS_IMETHODIMP nsCookie::GetPath(nsAUTF8String& aPath) {
+// using nsACString above instead of nsAUTF8String because the latter doesn't exist yet
   if (cookiePath) {
-    *aPath = (char *) nsMemory::Clone(cookiePath, strlen(cookiePath) + 1);
+    aPath = cookiePath;
     return NS_OK;
   }
   return NS_ERROR_NULL_POINTER;
@@ -124,12 +128,12 @@ NS_IMETHODIMP nsCookie::GetExpires(PRUint64 *aExpires) {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCookie::GetStatus(nsCookieStatus_t *aStatus) {
+NS_IMETHODIMP nsCookie::GetStatus(nsCookieStatus *aStatus) {
   *aStatus = cookieStatus;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCookie::GetPolicy(nsCookiePolicy_t *aPolicy) {
+NS_IMETHODIMP nsCookie::GetPolicy(nsCookiePolicy *aPolicy) {
   *aPolicy = cookiePolicy;
   return NS_OK;
 }
