@@ -212,18 +212,18 @@
   -moz-image-region: rect(21px 88px 41px 66px) !important;
 }
 
-#button-junk {
-  -moz-image-region: rect(336px 23px 356px 0);
+#button-junk{
+  list-style-image: url("chrome://messenger/skin/icons/junk.gif");
 }
 
-#button-junk[buttonover] {
-  -moz-image-region: rect(336px 46px 356px 23px);
-} 
+#button-junk:hover {
+  list-style-image: url("chrome://messenger/skin/icons/junk-hov.gif");
+}
 
-#button-junk[buttondown] {
-  -moz-image-region: rect(336px 69px 356px 46px);
-} 
+#button-junk:hover:active {
+  list-style-image: url("chrome://messenger/skin/icons/junk-act.gif");
+}
 
-#button-junk[disabled] {
-  -moz-image-region: rect(336px 92px 356px 69px) !important;
-} 
+#button-junk[disabled="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/junk-dis.gif");
+}
