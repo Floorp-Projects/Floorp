@@ -923,8 +923,11 @@ CK_RV NSC_DecryptFinal(CK_SESSION_HANDLE hSession,
     	    if (rv == SECSuccess) {
 		unsigned int padSize = 
 			    (unsigned int) pLastPart[context->blockSize-1];
-
-		*pulLastPartLen = outlen - padSize;
+		if ((padSize > context->blockSize) || (padSize == 0)) {
+		    rv = SECFailure;
+		} else {
+		    *pulLastPartLen = outlen - padSize;
+		}
 	    }
 	}
     }
@@ -3881,7 +3884,7 @@ pk11_DeriveSensitiveCheck(PK11Object *baseKey,PK11Object *destKey) {
     hasSensitive = PR_FALSE;
     att = pk11_FindAttribute(destKey,CKA_SENSITIVE);
     if (att) {
-        hasSensitive = PR_FALSE;
+        hasSensitive = PR_TRUE;
 	sensitive = (PRBool) *(CK_BBOOL *)att->attrib.pValue;
 	pk11_FreeAttribute(att);
     }
@@ -3889,7 +3892,7 @@ pk11_DeriveSensitiveCheck(PK11Object *baseKey,PK11Object *destKey) {
     hasExtractable = PR_FALSE;
     att = pk11_FindAttribute(destKey,CKA_EXTRACTABLE);
     if (att) {
-        hasExtractable = PR_FALSE;
+        hasExtractable = PR_TRUE;
 	extractable = (PRBool) *(CK_BBOOL *)att->attrib.pValue;
 	pk11_FreeAttribute(att);
     }

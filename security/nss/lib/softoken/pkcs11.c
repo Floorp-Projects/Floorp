@@ -70,26 +70,6 @@ static char *manufacturerID      = "mozilla.org                     ";
 static char manufacturerID_space[33];
 static char *libraryDescription  = "NSS Internal Crypto Services    ";
 static char libraryDescription_space[33];
-#ifdef notdef
-static char *tokDescription      = "NSS Generic Crypto Services     ";
-static char tokDescription_space[33];
-static char *privTokDescription  = "NSS Certificate DB              ";
-static char privTokDescription_space[33];
-/* The next two strings must be exactly 64 characters long, with the
-   first 32 characters meaningful  */
-static char *slotDescription     = 
-	"NSS Internal Cryptographic Services Version 3.2                 ";
-static char slotDescription_space[65];
-static char *privSlotDescription = 
-	"NSS User Private Key and Certificate Services                   ";
-static char privSlotDescription_space[65];
-/* The next two strings must be exactly 64 characters long, with the
-   first 32 characters meaningful  */
-static char *slotDescription     =
-        "Netscape Internal FIPS-140-1 Cryptographic Services             ";
-static char *privSlotDescription =
-        "Netscape FIPS-140-1 User Private Key Services                   ";
-#endif
 
 #define __PASTE(x,y)    x##y
 
@@ -178,7 +158,7 @@ static const desKey  pk11_desWeakTable[] = {
     { 0x01, 0x1f, 0x01, 0x1f, 0x01, 0x0e, 0x01, 0x0e },
     { 0x1f, 0x01, 0x1f, 0x01, 0x0e, 0x01, 0x0e, 0x01 },
 
-    { 0xe0, 0xfe, 0xe0, 0xfe, 0xf1, 0xfe, 0xf1, 0xfe },
+    { 0xe0, 0xfe, 0xe0, 0xfe, 0xf1, 0xfe, 0xf1, 0xfe }, 
     { 0xfe, 0xe0, 0xfe, 0xe0, 0xfe, 0xf1, 0xfe, 0xf1 }
 #endif
 };
@@ -417,7 +397,7 @@ static const struct mechanismList mechanisms[] = {
 static CK_ULONG mechanismCount = sizeof(mechanisms)/sizeof(mechanisms[0]);
 
 static char *
-pk11_setStringName(char *inString, char *buffer, int buffer_length) {
+pk11_setStringName(const char *inString, char *buffer, int buffer_length) {
     int full_length, string_length;
 
     full_length = buffer_length -1;
@@ -425,14 +405,14 @@ pk11_setStringName(char *inString, char *buffer, int buffer_length) {
     if (string_length > full_length) string_length = full_length;
     PORT_Memset(buffer,' ',full_length);
     buffer[full_length] = 0;
-    PORT_Memcpy(buffer,inString,full_length);
+    PORT_Memcpy(buffer,inString,string_length);
     return buffer;
 }
 /*
  * Configuration utils
  */
 static CK_RV
-pk11_configure(char *man, char *libdes)
+pk11_configure(const char *man, const char *libdes)
 {
 
     /* make sure the internationalization was done correctly... */
@@ -1138,6 +1118,8 @@ pk11_handlePrivateKeyObject(PK11Session *session,PK11Object *object,CK_KEY_TYPE 
 						&ckfalse,sizeof(CK_BBOOL));
     if (crv != CKR_OK)  return crv; 
 
+    /* should we check the non-token RSA private keys? */
+
     if (pk11_isTrue(object,CKA_TOKEN)) {
 	PK11Slot *slot = session->slot;
 	NSSLOWKEYPrivateKey *privKey;
@@ -1165,9 +1147,17 @@ pk11_handlePrivateKeyObject(PK11Session *session,PK11Object *object,CK_KEY_TYPE 
 	    PORT_Memcpy(pubKey.data,buf,sizeof(buf));
 	    pubKey.len = sizeof(buf);
 	}
+
+        if (key_type == CKK_RSA) {
+	    rv = RSA_PrivateKeyCheck(&privKey->u.rsa);
+	    if (rv == SECFailure) {
+		goto fail;
+	    }
+	}
 	rv = nsslowkey_StoreKeyByPublicKey(object->slot->keyDB,
 			privKey, &pubKey, label, object->slot->password);
 
+fail:
 	if (label) PORT_Free(label);
 	object->handle = pk11_mkHandle(slot,&pubKey,PK11_TOKEN_TYPE_PRIV);
 	if (pubKey.data) PORT_Free(pubKey.data);
@@ -1863,7 +1853,7 @@ pk11_HashNumber(const void *key)
  * just go with the info in the slot. This is one place, however,
  * where it might be a little difficult.
  */
-char *
+const char *
 pk11_getDefTokName(CK_SLOT_ID slotID)
 {
     static char buf[33];
@@ -1882,7 +1872,7 @@ pk11_getDefTokName(CK_SLOT_ID slotID)
     return buf;
 }
 
-char *
+const char *
 pk11_getDefSlotName(CK_SLOT_ID slotID)
 {
     static char buf[65];
@@ -1916,8 +1906,7 @@ static PLHashTable *nscSlotHashTable = NULL;
 PK11Slot *
 pk11_SlotFromID(CK_SLOT_ID slotID)
 {
-    return (PK11Slot *)PL_HashTableLookupConst(nscSlotHashTable,
-							(void *)slotID);
+    return (PK11Slot *)PL_HashTableLookup(nscSlotHashTable, (void *)slotID);
 }
 
 PK11Slot *
@@ -2061,6 +2050,54 @@ PK11_SlotInit(char *configdir,pk11_token_parameters *params)
     return CKR_OK;
 }
 
+static PRIntn
+pk11_freeHashItem(PLHashEntry* entry, PRIntn index, void *arg)
+{
+    SECItem *item = (SECItem *)entry->value;
+
+    SECITEM_FreeItem(item, PR_TRUE);
+    return HT_ENUMERATE_NEXT;
+}
+
+/*
+ * initialize one of the slot structures. figure out which by the ID
+ */
+CK_RV
+PK11_DestroySlot(PK11Slot *slot)
+{
+    int i;
+
+#ifdef PKCS11_USE_THREADS
+    if (slot->sessionLock) {
+	PZ_DestroyLock(slot->sessionLock);
+	slot->sessionLock = NULL;
+    }
+    if (slot->objectLock) {
+	PZ_DestroyLock(slot->objectLock);
+	slot->objectLock = NULL;
+    }
+#endif
+
+    PL_HashTableEnumerateEntries(slot->tokenHashTable,pk11_freeHashItem,NULL);
+    PL_HashTableDestroy(slot->tokenHashTable);
+
+    for(i=0; i < TOKEN_OBJECT_HASH_SIZE; i++) {
+	PK11Object *object = slot->tokObjects[i];
+	slot->tokObjects[i] = NULL;
+	pk11_FreeObject(object);
+    }
+
+    for(i=0; i < SESSION_HASH_SIZE; i++) {
+	PK11Session *session = slot->head[i];
+	slot->head[i] = NULL;
+	pk11_FreeSession(session);
+    }
+    pk11_DBShutdown(slot->certDB,slot->keyDB);
+
+    PORT_Free(slot);
+    return CKR_OK;
+}
+
 /*
  * handle the SECMOD.db
  */
@@ -2087,16 +2124,16 @@ NSC_ModuleDBFunc(unsigned long function,char *parameters, char *args)
 }
 
 
+static PRBool nsc_init = PR_FALSE;
 /* NSC_Initialize initializes the Cryptoki library. */
 CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
 {
-    static PRBool init = PR_FALSE;
     CK_RV crv = CKR_OK;
     SECStatus rv;
     CK_C_INITIALIZE_ARGS *init_args = (CK_C_INITIALIZE_ARGS *) pReserved;
     int i;
 
-    if (init) {
+    if (nsc_init) {
 	return crv;
     }
 
@@ -2122,7 +2159,7 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
 	pk11_parameters paramStrings;
        
 	crv = secmod_parseParameters
-		((char *)init_args->LibraryParameters,&paramStrings, isFIPS);
+		((char *)init_args->LibraryParameters, &paramStrings, isFIPS);
 	if (crv != CKR_OK) {
 	    return crv;
 	}
@@ -2133,13 +2170,13 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
 
 	for (i=0; i < paramStrings.token_count; i++) {
 	    crv = 
-		PK11_SlotInit(paramStrings.configdir,&paramStrings.tokens[i]);
+		PK11_SlotInit(paramStrings.configdir, &paramStrings.tokens[i]);
 	    if (crv != CKR_OK) break;
 	}
 loser:
 	secmod_freeParams(&paramStrings);
     }
-    init = (PRBool) (crv == CKR_OK);
+    nsc_init = (PRBool) (crv == CKR_OK);
 
     return crv;
 }
@@ -2153,6 +2190,60 @@ CK_RV NSC_Initialize(CK_VOID_PTR pReserved)
  * Cryptoki library.*/
 CK_RV NSC_Finalize (CK_VOID_PTR pReserved)
 {
+    PK11Slot *slot = NULL;
+    CK_SLOT_ID slotID;
+    int i;
+
+    if (!nsc_init) {
+	return CKR_OK;
+    }
+
+    /* free all the slots */
+    if (nscSlotList) {
+	CK_ULONG tmpSlotCount = nscSlotCount;
+	CK_ULONG tmpSlotListSize = nscSlotListSize;
+	CK_SLOT_ID_PTR tmpSlotList = nscSlotList;
+	PLHashTable *tmpSlotHashTable = nscSlotHashTable;
+
+	/* now clear out the statics */
+	nscSlotList = NULL;
+	nscSlotCount = 0;
+	nscSlotHashTable = NULL;
+	nscSlotListSize = 0;
+
+	for (i=0; i < tmpSlotCount; i++) {
+	    slotID = tmpSlotList[i];
+	    slot = (PK11Slot *)
+			PL_HashTableLookup(tmpSlotHashTable, (void *)slotID);
+	    PORT_Assert(slot);
+	    if (!slot) continue;
+	    PK11_DestroySlot(slot);
+	    PL_HashTableRemove(tmpSlotHashTable, (void *)slotID);
+	}
+	PORT_Free(tmpSlotList);
+	PL_HashTableDestroy(tmpSlotHashTable);
+    }
+
+    nsslowcert_DestroyGlobalLocks();
+
+#ifdef LEAK_TEST
+    /*
+     * do we really want to throw away all our hard earned entropy here!!?
+     * No we don't! Not calling RNG_RNGShutdown only 'leaks' data on the 
+     * initial call to RNG_Init(). So the only reason to call this is to clean
+     * up leak detection warnings on shutdown. In many cases we *don't* want
+     * to free up the global RNG context because the application has Finalized
+     * simply to swap profiles. We don't want to loose the entropy we've 
+     * already collected.
+     */
+    RNG_RNGShutdown();
+#endif
+
+    pk11_CleanupFreeLists();
+    /* tell freeBL to clean up after itself */
+    BL_Cleanup();
+    nsc_init = PR_FALSE;
+
     return CKR_OK;
 }
 

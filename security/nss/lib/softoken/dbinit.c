@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: dbinit.c,v 1.6 2001/11/15 23:04:39 relyea%netscape.com Exp $
+ # $Id: dbinit.c,v 1.7 2001/11/30 23:24:29 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -209,24 +209,18 @@ loser:
 }
 
 
-#ifdef notdef
 void
-pk11_Shutdown(void)
+pk11_DBShutdown(NSSLOWCERTCertDBHandle *certHandle, 
+		NSSLOWKEYDBHandle *keyHandle)
 {
-    NSSLOWCERTCertDBHandle *certHandle;
-    NSSLOWKEYDBHandle *keyHandle;
-
-    PR_FREEIF(secmodname);
-    certHandle = nsslowcert_GetDefaultCertDB();
-    if (certHandle)
+    if (certHandle) {
     	nsslowcert_ClosePermCertDB(certHandle);
-    nsslowcert_SetDefaultCertDB(NULL); 
+	PORT_Free(certHandle);
+	certHandle= NULL;
+    }
 
-    keyHandle = nsslowkey_GetDefaultKeyDB();
-    if (keyHandle)
+    if (keyHandle) {
     	nsslowkey_CloseKeyDB(keyHandle);
-    nsslowkey_SetDefaultKeyDB(NULL); 
-
-    isInitialized = PR_FALSE;
+	keyHandle= NULL;
+    }
 }
-#endif

@@ -41,6 +41,11 @@
 #IMPORT_LIBRARY =
 #PROGRAM        =
 
+
+ifdef MOZILLA_CLIENT
+DEFINES += -DMOZ_CLIENT
+endif
+
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
 ifeq ($(OS_ARCH), WINNT)
 

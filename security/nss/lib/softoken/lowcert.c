@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: lowcert.c,v 1.2 2001/11/08 00:15:34 relyea%netscape.com Exp $
+ * $Id: lowcert.c,v 1.3 2001/11/30 23:24:30 relyea%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -116,44 +116,6 @@ const SEC_ASN1Template nsslowcert_DHPublicKeyTemplate[] = {
     { SEC_ASN1_INTEGER, offsetof(NSSLOWKEYPublicKey,u.dh.publicValue), },
     { 0, }
 };
-
-
-static PZLock *pcertRefCountLock = NULL;
-
-/*
- * Acquire the cert reference count lock
- * There is currently one global lock for all certs, but I'm putting a cert
- * arg here so that it will be easy to make it per-cert in the future if
- * that turns out to be necessary.
- */
-void
-nsslowcert_LockCertRefCount(NSSLOWCERTCertificate *cert)
-{
-    if ( pcertRefCountLock == NULL ) {
-	nss_InitLock(&pcertRefCountLock, nssILockRefLock);
-	PORT_Assert(pcertRefCountLock != NULL);
-    }
-    
-    PZ_Lock(pcertRefCountLock);
-    return;
-}
-
-/*
- * Free the cert reference count lock
- */
-void
-nsslowcert_UnlockCertRefCount(NSSLOWCERTCertificate *cert)
-{
-    PRStatus prstat;
-
-    PORT_Assert(pcertRefCountLock != NULL);
-    
-    prstat = PZ_Unlock(pcertRefCountLock);
-    
-    PORT_Assert(prstat == PR_SUCCESS);
-
-    return;
-}
 
 
 NSSLOWCERTCertificate *
@@ -318,23 +280,6 @@ nsslowcert_DecodeDERCertificate(SECItem *derSignedCert, PRBool copyDER,
     /* cert->subjectKeyID;	 x509v3 subject key identifier */
     cert->dbEntry = NULL;
     cert ->trust = NULL;
-
-#ifdef notdef
-    /* these fields are used by client GUI code to keep track of ssl sockets
-     * that are blocked waiting on GUI feedback related to this cert.
-     * XXX - these should be moved into some sort of application specific
-     *       data structure.  They are only used by the browser right now.
-     */
-    struct SECSocketNode *socketlist;
-    int socketcount;
-    struct SECSocketNode *authsocketlist;
-    int authsocketcount;
-
-    /* This is PKCS #11 stuff. */
-    PK11SlotInfo *slot;		/*if this cert came of a token, which is it*/
-    CK_OBJECT_HANDLE pkcs11ID;	/*and which object on that token is it */
-    PRBool ownSlot;		/*true if the cert owns the slot reference */
-#endif
 
     /* generate and save the database key for the cert */
     rv = nsslowcert_KeyFromDERCert(arena, &cert->derCert, &cert->certKey);
