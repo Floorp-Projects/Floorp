@@ -29,6 +29,7 @@ CPPSRCS=					\
 	COtherDTD.cpp				\
 	CRtfDTD.cpp				\
 	nsDTDDebug.cpp				\
+	nsHTMLEntities.cpp			\
 	nsHTMLNullSink.cpp			\
 	nsHTMLTags.cpp				\
 	nsHTMLTokens.cpp			\
@@ -41,8 +42,8 @@ CPPSRCS=					\
 	nsToken.cpp				\
 	nsTokenHandler.cpp			\
 	nsHTMLContentSinkStream.cpp		\
-	nsValid.cpp				\
-	nsWellFormed.cpp			\
+	nsValidDTD.cpp				\
+	nsWellFormedDTD.cpp			\
 	nsXIFDTD.cpp				\
 	prstrm.cpp				\
 	$(NULL)
