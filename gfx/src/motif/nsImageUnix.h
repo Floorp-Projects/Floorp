@@ -90,6 +90,7 @@ private:
   PRInt32 mRowBytes;
   Pixmap  mThePixMap;
   PRUint8 mImageBits;
+  PRInt32 mSizeImage;
   XImage  *mImage ;
 
 };

@@ -74,7 +74,7 @@ void nsImageUnix::ComputMetrics()
 
 //------------------------------------------------------------
 
-PRInt32  nsImageWin :: CalcBytesSpan(PRUint32  aWidth)
+PRInt32  nsImageUnix :: CalcBytesSpan(PRUint32  aWidth)
 {
 PRInt32 spanbytes;
 
