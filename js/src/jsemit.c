@@ -4311,6 +4311,7 @@ js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg, jssrcnote *notes)
 {
     uintN prologCount, mainCount, totalCount;
     ptrdiff_t offset, delta;
+    jssrcnote *sn;
 
     JS_ASSERT(cg->current == &cg->main);
 
@@ -4326,15 +4327,28 @@ js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg, jssrcnote *notes)
          * Either no prolog srcnotes, or no line number change over prolog.
          * We don't need a SRC_SETLINE, but we may need to adjust the offset
          * of the first main note, by adding to its delta and possibly even
-         * prepending SRC_XDELTA notes to it to account for prolog bytes.
+         * prepending SRC_XDELTA notes to it to account for prolog bytecodes
+         * that came at and after the last annotated bytecode.
          */
         offset = CG_PROLOG_OFFSET(cg) - cg->prolog.lastNoteOffset;
         JS_ASSERT(offset >= 0);
-        while (offset > 0) {
-            delta = JS_MIN(offset, SN_XDELTA_MASK);
-            if (!js_AddToSrcNoteDelta(cx, cg, cg->main.notes, delta))
-                return JS_FALSE;
-            offset -= delta;
+        if (offset > 0) {
+            /* NB: Use as much of the first main note's delta as we can. */
+            sn = cg->main.notes;
+            delta = SN_IS_XDELTA(sn)
+                    ? SN_XDELTA_MASK - (*sn & SN_XDELTA_MASK)
+                    : SN_DELTA_MASK - (*sn & SN_DELTA_MASK);
+            if (offset < delta)
+                delta = offset;
+            for (;;) {
+                if (!js_AddToSrcNoteDelta(cx, cg, sn, delta))
+                    return JS_FALSE;
+                offset -= delta;
+                if (offset == 0)
+                    break;
+                delta = JS_MIN(offset, SN_XDELTA_MASK);
+                sn = cg->main.notes;
+            }
         }
     }
 
