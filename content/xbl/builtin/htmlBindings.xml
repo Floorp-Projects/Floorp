@@ -10,10 +10,10 @@ Can't yet put script tags in XBL (hyatt has the bug)
 <bindings id="htmlBindings"
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
- 
+
   <binding id="browserBase">
     <handlers>
-    
+
       <handler event="draggesture">
 <!--
          nsDragAndDrop.startDrag(event, contentAreaDNDObserver);
@@ -29,7 +29,7 @@ Can't yet put script tags in XBL (hyatt has the bug)
          nsDragAndDrop.drop(event, contentAreaDNDObserver);
 -->
       </handler>
-      
+
       <handler event="keypress" key=" ">
       <![CDATA[
         var v = document.commandDispatcher.focusedElement;
@@ -67,13 +67,13 @@ Can't yet put script tags in XBL (hyatt has the bug)
         return true;
       ]]>
       </handler>
-      <handler event="keypress" keycode="VK_PAGE_UP" command="cmd_scrollPageUp"/>
-      <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_scrollPageDown"/>
-      
-      <handler event="keypress" keycode="VK_UP" command="cmd_scrollLineUp"/>
-      <handler event="keypress" keycode="VK_DOWN" command="cmd_scrollLineDown"/>
-      <handler event="keypress" keycode="VK_LEFT" command="cmd_scrollLeft"/>
-      <handler event="keypress" keycode="VK_RIGHT" command="cmd_scrollRight"/>
+      <handler event="keypress" keycode="VK_PAGE_UP" command="cmd_scrollPageUp" />
+      <handler event="keypress" keycode="VK_PAGE_DOWN" command="cmd_scrollPageDown" />
+
+      <handler event="keypress" keycode="VK_UP" command="cmd_scrollLineUp" />
+      <handler event="keypress" keycode="VK_DOWN" command="cmd_scrollLineDown" />
+      <handler event="keypress" keycode="VK_LEFT" command="cmd_scrollLeft" />
+      <handler event="keypress" keycode="VK_RIGHT" command="cmd_scrollRight" />
 
       <handler event="keypress" keycode="VK_HOME" command="cmd_scrollTop"/>
       <handler event="keypress" keycode="VK_END" command="cmd_scrollBottom"/>
@@ -119,7 +119,7 @@ Can't yet put script tags in XBL (hyatt has the bug)
 
   <binding id="inputFieldsBase">
     <handlers>
-          
+
     <handler event="keypress" id="key_home" keycode="VK_HOME"
         command="cmd_beginLine"/>
     <handler event="keypress" id="key_end" keycode="VK_END"
@@ -151,7 +151,7 @@ Can't yet put script tags in XBL (hyatt has the bug)
         command="cmd_cut"/>
     <handler event="keypress" id="key_paste" key="v" modifiers="accel"
         command="cmd_paste"/>
-    <handler event="keypress" id="key_undo" key="z" modifiers="accel" 
+    <handler event="keypress" id="key_undo" key="z" modifiers="accel"
         command="cmd_undo"/>
 
     </handlers>
@@ -190,7 +190,7 @@ Can't yet put script tags in XBL (hyatt has the bug)
         command="cmd_cut"/>
     <handler event="keypress" id="key_paste" key="v" modifiers="accel"
         command="cmd_paste"/>
-    <handler event="keypress" id="key_undo" key="z" modifiers="accel" 
+    <handler event="keypress" id="key_undo" key="z" modifiers="accel"
         command="cmd_undo"/>
 
     </handlers>

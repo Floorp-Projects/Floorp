@@ -106,8 +106,8 @@ protected:
   void UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   void GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
   void GenerateDragDropEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
-  NS_IMETHOD SetClickCount(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);  
-  NS_IMETHOD CheckForAndDispatchClick(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);  
+  NS_IMETHOD SetClickCount(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
+  NS_IMETHOD CheckForAndDispatchClick(nsIPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   PRBool ChangeFocus(nsIContent* aFocus, nsIFrame* aFocusFrame, PRBool aSetFocus);
   void ShiftFocus(PRBool foward);
   NS_IMETHOD GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame, PRBool foward, nsIContent** aResult);
@@ -141,6 +141,12 @@ protected:
 
   PRBool mSuppressFocusChange; // Used only for Ender text fields to suppress a focus firing on mouse down
 
+  // Return the location of the caret
+  nsresult GetCaretLocation(nsIContent **caretContent, nsIFrame **caretFrame, PRUint32 *caretOffset);
+  nsresult MoveFocusToCaret();
+  nsresult MoveCaretToFocus();
+  nsresult EnsureCaretVisible(nsIPresShell* aPresShell, nsIContent *aContent);
+
   //Any frames here must be checked for validity in ClearFrameRefs
   nsIFrame* mCurrentTarget;
   nsIContent* mCurrentTargetContent;
@@ -148,7 +154,7 @@ protected:
   nsIFrame* mLastMouseOverFrame;
   nsCOMPtr<nsIContent> mLastMouseOverContent;
   nsIFrame* mLastDragOverFrame;
-  
+
   // member variables for the d&d gesture state machine
   PRBool mIsTrackingDragGesture;
   nsPoint mGestureDownPoint;
@@ -191,6 +197,9 @@ protected:
 
   //Pref for using hierarchical hover (possibly expensive) or not
   PRBool hHover;
+
+  // So we don't have to keep checking accessibility.browsewithcaret pref
+  PRBool mBrowseWithCaret;
 };
 
 extern nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult);

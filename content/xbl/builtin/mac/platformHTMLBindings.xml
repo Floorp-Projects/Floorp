@@ -54,7 +54,6 @@
         command="cmd_deleteCharBackward"/>
       <handler event="keypress" id="key_delforw" key="d" modifiers="control"
         command="cmd_deleteCharForward"/>
-
     </handlers>
   </binding>
 
@@ -105,7 +104,20 @@
     </handlers>
   </binding>
 
-  <binding id="browser"/>
+  <binding id="browser">
+    <handlers>
+      <handler event="keypress" keycode="VK_LEFT" modifiers="alt" command="cmd_wordPrevious" />
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="alt" command="cmd_wordNext" />
+      <handler event="keypress" keycode="VK_LEFT" modifiers="alt,shift" command="cmd_selectWordPrevious" />
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="alt,shift" command="cmd_selectWordNext" />
+      <handler event="keypress" keycode="VK_LEFT" modifiers="shift" command="cmd_selectCharPrevious" />
+      <handler event="keypress" keycode="VK_RIGHT" modifiers="shift" command="cmd_selectCharNext" />
+      <handler event="keypress" keycode="VK_HOME" modifiers="shift" command="cmd_selectBeginLine" />
+      <handler event="keypress" keycode="VK_END" modifiers="shift" command="cmd_selectEndLine" />
+      <handler event="keypress" keycode="VK_UP" modifiers="shift" command="cmd_selectLinePrevious" />
+      <handler event="keypress" keycode="VK_DOWN" modifiers="shift" command="cmd_selectLineNext" />
+	</handlers>
+  </binding>
 
   <binding id="editor">
     <handlers>

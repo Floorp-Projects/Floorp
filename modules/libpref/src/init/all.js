@@ -17,10 +17,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
-// SYNTAX HINTS:  dashes are delimiters.  Use underscores instead. 
+// SYNTAX HINTS:  dashes are delimiters.  Use underscores instead.
 //  The first character after a period must be alphabetic.
 
 pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search=");
@@ -40,7 +40,7 @@ pref("general.startup.addressbook",         false);
 pref("general.open_location.last_url",      "");
 
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last
-pref("browser.startup.page",                1);     
+pref("browser.startup.page",                1);
 pref("browser.startup.homepage",	   "chrome://navigator/locale/navigator.properties");
 // "browser.startup.homepage_override" was for 4.x
 pref("browser.startup.homepage_override.1", true);
@@ -72,6 +72,10 @@ pref("browser.toolbars.showbutton.mynetscape", true);
 pref("browser.toolbars.showbutton.net2phone", true);
 pref("browser.toolbars.showbutton.print",   true);
 pref("browser.toolbars.showbutton.search",  true);
+
+pref("accessibility.browsewithcaret", false);
+pref("accessibility.usetexttospeech", "");
+pref("accessibility.usebrailledisplay", "");
 
 // Dialog modality issues
 pref("browser.prefWindowModal", true);
