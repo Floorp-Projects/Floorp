@@ -1019,7 +1019,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         else {
           didPlace = AddFloat(placeholder, aReflowStatus);
         }
+#ifdef DEBUG_roc
         printf("*** Reflowed float, didPlace=%d, status=%d\n", aReflowStatus);
+#endif
         if (!didPlace) {
           aReflowStatus = NS_INLINE_LINE_BREAK_BEFORE();
         }
