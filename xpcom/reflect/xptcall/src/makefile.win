@@ -49,7 +49,7 @@ LCFLAGS = \
         $(NULL)
 
 LLIBS=	$(LIBNSPR)	\
-	$(DIST)\lib\xpcom$(MOZ_BITS).lib	\
+	$(DIST)\lib\xpcom.lib	\
 	$(DIST)\lib\xptinfo$(MOZ_BITS).lib	\
 	$(NULL)
 
