@@ -491,7 +491,7 @@
     (:field-name (span (class "field-name")))
     (:tag-name (span (class "tag-name")))
     (:global-variable (span (class "global-variable")))
-    (:local-variable (span (class "local-variable")))
+    (:local-variable var)
     (:action-name (span (class "action-name")))
     (:text :wrap)
     

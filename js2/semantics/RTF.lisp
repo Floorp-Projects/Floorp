@@ -73,7 +73,8 @@
                          red 128 green 128 blue 0 ";"       ;14
                          red 128 green 128 blue 128 ";"     ;15
                          red 192 green 192 blue 192 ";"     ;16
-                         red 0 green 64 blue 0 ";"))        ;17
+                         red 0 green 64 blue 0 ";"          ;17
+                         red #x33 green #x66 blue #x00 ";"));18
     (:black cf 1)
     (:blue cf 2)
     (:aqua cf 3)
@@ -91,6 +92,7 @@
     (:gray cf 15)
     (:silver cf 16)
     (:dark-green cf 17)
+    (:color336600 cf 18)
     
     
     ;Misc.
@@ -307,9 +309,10 @@
     (:global-variable cs :global-variable-num i :times :dark-green :no-language)
     ((+ :styles) (* :global-variable additive sbasedon :default-paragraph-font-num "Global Variable;"))
     
-    (:local-variable-num 46)
-    (:local-variable cs :local-variable-num i :times :green :no-language)
-    ((+ :styles) (* :local-variable additive sbasedon :default-paragraph-font-num "Local Variable;"))
+    (:variable-num 46)
+    (:variable cs :variable-num i :times :color336600 :no-language)
+    ((+ :styles) (* :variable additive sbasedon :default-paragraph-font-num "Variable;"))
+    (:local-variable :variable)
     
     (:action-name-num 47)
     (:action-name cs :action-name-num :zapf-chancery :purple :no-language)
@@ -636,9 +639,10 @@
     (:global-variable cs :global-variable-num i :times :dark-green :no-language)
     ((+ :styles) (* :global-variable additive sbasedon :default-paragraph-font-num "Global Variable;"))
     
-    (:local-variable-num 46)
-    (:local-variable cs :local-variable-num i :times :green :no-language)
-    ((+ :styles) (* :local-variable additive sbasedon :default-paragraph-font-num "Local Variable;"))
+    (:variable-num 46)
+    (:variable cs :variable-num i :times :color336600 :no-language)
+    ((+ :styles) (* :variable additive sbasedon :default-paragraph-font-num "Variable;"))
+    (:local-variable :variable)
     
     (:action-name-num 47)
     (:action-name cs :action-name-num :zapf-chancery :purple :no-language)
@@ -651,11 +655,6 @@
     |#
     
     
-    (:variable-num 50)
-    (:variable cs :variable-num i :palatino :color336600 :no-language)
-    ((+ :styles) (* :variable additive sbasedon :default-paragraph-font-num "Variable;"))
-    
-
     (:heading1-num 61)
     (:heading1 s :heading1-num qj fi -720 li 720 sb 240 sa 180 keep keepn widctlpar hyphpar 0 level 1 b :14-pt :english)
     ((+ :styles) (:heading1 sbasedon :normal-num snext :body-text-num "heading 1;"))
