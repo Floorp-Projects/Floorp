@@ -31,6 +31,10 @@
 // FTP RANGE:   21-30
 // HTTP RANGE:  31-40
 // DNS RANGE:   41-50 
+// SOCKET RANGE 51-60
+// CACHE RANGE: 61-70
+
+// XXX Why can't we put all Netwerk error codes in one file to help avoid collisions?
 
 #define NS_ERROR_ALREADY_CONNECTED \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 11)
