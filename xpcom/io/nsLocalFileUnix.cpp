@@ -856,21 +856,24 @@ nsLocalFile::Remove(PRBool recursive)
     CHECK_mPath();
 
     VALIDATE_STAT_CACHE();
-    PRBool isDir = S_ISDIR(mCachedStat.st_mode);
+    PRBool isSymLink, isDir;
+    
+    nsresult rv = IsSymlink(&isSymLink);
+    if (NS_FAILED(rv))
+        return rv;
 
-    /* XXX ?
-     * if (!isDir && recursive)
-     *     return NS_ERROR_INVALID_ARG;
-     */
+    if (!recursive && isSymLink)
+        return NSRESULT_FOR_RETURN(unlink(mPath.get()));
+    
+    isDir = S_ISDIR(mCachedStat.st_mode);
     InvalidateCache();
-
     if (isDir) {
         if (recursive) {
             nsCOMPtr<nsDirEnumeratorUnix> dir = new nsDirEnumeratorUnix();
             if (!dir)
                 return NS_ERROR_OUT_OF_MEMORY;
 
-            nsresult rv = dir->Init(this, PR_FALSE);
+            rv = dir->Init(this, PR_FALSE);
             if (NS_FAILED(rv))
                 return rv;
 
@@ -889,10 +892,10 @@ nsLocalFile::Remove(PRBool recursive)
             }
         }
 
-        if (rmdir(mPath) == -1)
+        if (rmdir(mPath.get()) == -1)
             return NSRESULT_FOR_ERRNO();
     } else {
-        if (unlink(mPath) == -1)
+        if (unlink(mPath.get()) == -1)
             return NSRESULT_FOR_ERRNO();
     }
 
