@@ -59,6 +59,19 @@ nsAbDirectory::nsAbDirectory(void)
 
 nsAbDirectory::~nsAbDirectory(void)
 {
+	if (mURI && PL_strcmp(mURI, kDirectoryDataSourceRoot))
+	{
+		nsresult rv = NS_OK;
+
+		nsCOMPtr<nsIAddrDatabase> database;
+		NS_WITH_SERVICE(nsIAddressBook, addressBook, kAddrBookCID, &rv); 
+		if (NS_SUCCEEDED(rv) && addressBook)
+		{
+			rv = addressBook->GetAbDatabaseFromURI(mURI, getter_AddRefs(database));
+			if (NS_SUCCEEDED(rv) && database)
+				database->RemoveListener(this);
+		}
+	}
 	if (mSubDirectories)
 	{
 		PRUint32 count;
