@@ -7382,6 +7382,17 @@ void nsImapProtocol::GetQuotaDataIfSupported(const char *aBoxName)
   if (! (GetServerStateParser().GetCapabilityFlag() & kQuotaCapability))
     return;
 
+  // If it's an aol server then only issue cmd for INBOX (since all
+  // other AOL mailboxes are virtual and don't support all imap cmds).
+  nsresult rv;
+  nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryReferent(m_server, &rv);
+  if (NS_FAILED(rv))
+    return;
+  nsXPIDLCString redirectorType;
+  imapServer->GetRedirectorType(getter_Copies(redirectorType));
+  if (redirectorType.Equals(NS_LITERAL_CSTRING("aol")) && PL_strcasecmp("Inbox", aBoxName))
+    return;
+
   IncrementCommandTagNumber();
 
   nsCAutoString quotacommand;
