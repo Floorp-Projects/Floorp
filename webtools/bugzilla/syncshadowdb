@@ -1,0 +1,141 @@
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is the Bugzilla Bug Tracking System.
+#
+# The Initial Developer of the Original Code is Netscape Communications
+# Corporation. Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 David Gardiner <david.gardiner@unisa.edu.au>
+
+use diagnostics;
+use strict;
+
+require "globals.pl";
+
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub sillyness {
+    my $zz;
+    $zz = $::dbwritesallowed;
+}
+
+my $verbose = 0;
+if ($ARGV[0] eq '-v') {
+    $verbose = 1;
+}
+$| = 1;
+
+sub Verbose ($) {
+    my ($str) = (@_);
+    if ($verbose) {
+        print $str, "\n";
+    }
+}
+    
+
+
+my $db_name = "bugs";
+require "localconfig";
+
+if (!Param("shadowdb")) {
+    Verbose("We don't have shadow databases turned on; no syncing performed.");
+    exit;
+}
+
+ConnectToDatabase(1);
+$::dbwritesallowed = 1;
+
+SendSQL("SELECT GET_LOCK('synclock', 1)");
+if (!FetchOneColumn()) {
+    Verbose("Couldn't get the lock to do the shadow database syncing.");
+    exit;
+}
+
+my $shadowtable = "$db_name.shadowlog";
+
+SendSQL("SELECT id FROM $shadowtable " .
+        "WHERE reflected = 0 AND command = 'SYNCUP'");
+
+if (FetchOneColumn()) {
+    Verbose("Syncing up the shadow database by copying entire database in.");
+    my @tables;
+    SendSQL("SHOW TABLES");
+    while (MoreSQLData()) {
+        my $table = FetchOneColumn();
+        push(@tables, $table);
+    }
+    foreach my $table (@tables) {
+        Verbose("Dropping old shadow table $table");
+        SendSQL("DROP TABLE $table");
+    }
+    # Carefully lock the whole real database for reading, except for the
+    # shadowlog table, which we lock for writing.  Then dump everything
+    # into the shadowdb database.  Then mark everything in the shadowlog
+    # as reflected.  Only then unlock everything.  This sequence causes
+    # us to be sure not to miss anything or get something twice.
+    SendSQL("USE $db_name");
+    SendSQL("SHOW TABLES");
+    @tables = ();
+    my $query = "LOCK TABLES shadowlog WRITE";
+    while (MoreSQLData()) {
+        my $table = FetchOneColumn();
+        if ($table ne "shadowlog") {
+            $query .= ", $table READ";
+            push(@tables, $table);
+        }
+    }
+    Verbose("Locking entire database");
+    SendSQL($query);
+    my $tablelist = join(' ', @tables);
+    Verbose("Doing the actual sync (can take a real long time!)");
+    my $extra = "";
+    if ($verbose) {
+        $extra = "-v";
+    }
+    open(MYSQL, "mysqldump -l -e $db_name $tablelist | mysql $extra " .
+         Param("shadowdb") . "|") || die "Couldn't do db copy";
+    my $count = 0;
+    while (<MYSQL>) {
+        print ".";
+        $count++;
+        if ($count % 70 == 0) {
+            print "\n";
+        }
+    }
+    close(MYSQL);
+    Verbose("");
+    
+    
+    SendSQL("UPDATE shadowlog SET reflected = 1 WHERE reflected = 0", 1);
+    SendSQL("UNLOCK TABLES");
+    Verbose("OK, done.");
+}
+
+while (1) {
+    SendSQL("SELECT id, command FROM $shadowtable WHERE reflected = 0 " .
+            "ORDER BY id LIMIT 1");
+    my ($id, $command) = (FetchSQLData());
+    if (!$id) {
+        last;
+    }
+    Verbose("Executing command in shadow db: $command");
+    SendSQL($command, 1);
+    SendSQL("UPDATE $shadowtable SET reflected = 1 WHERE id = $id", 1);
+}
+
+SendSQL("SELECT RELEASE_LOCK('synclock')");

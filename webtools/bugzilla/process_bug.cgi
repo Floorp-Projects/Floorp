@@ -613,8 +613,8 @@ delete $::FORM{'resolution'};   # Make sure we don't test the resolution
 #
 foreach my $id (@idlist) {
     my %dependencychanged;
-    my $write = "LOW_PRIORITY WRITE"; # Might want to make a param to control
-                                      # whether we do LOW_PRIORITY ...
+    my $write = "WRITE";        # Might want to make a param to control
+                                # whether we do LOW_PRIORITY ...
     SendSQL("LOCK TABLES bugs $write, bugs_activity $write, cc $write, " .
             "profiles $write, dependencies $write, votes $write, " .
             "keywords $write, longdescs $write, fielddefs $write, " .

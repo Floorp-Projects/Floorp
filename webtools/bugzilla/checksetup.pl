@@ -751,6 +751,15 @@ $table{keyworddefs} =
      unique(name)';
 
 
+$table{shadowlog} =
+    'id int not null auto_increment primary key,
+     ts timestamp,
+     reflected tinyint not null,
+     command mediumtext not null,
+
+     index(reflected)';
+
+
 
 ###########################################################################
 # Create tables

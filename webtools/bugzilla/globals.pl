@@ -74,10 +74,17 @@ $::dontchange = "--do_not_change--";
 $::chooseone = "--Choose_one:--";
 $::defaultqueryname = "(Default query)";
 $::unconfirmedstate = "UNCONFIRMED";
+$::dbwritesallowed = 1;
 
 sub ConnectToDatabase {
+    my ($useshadow) = (@_);
     if (!defined $::db) {
-	$::db = Mysql->Connect($db_host, $db_name, $db_user, $db_pass)
+        my $name = $db_name;
+        if ($useshadow) {
+            $name = Param("shadowdb");
+            $::dbwritesallowed = 0;
+        }
+	$::db = Mysql->Connect($db_host, $name, $db_user, $db_pass)
             || die "Can't connect to database server.";
     }
 }
@@ -100,11 +107,31 @@ sub SqlLog {
 
 
 sub SendSQL {
-    my ($str) = (@_);
+    my ($str, $dontshadow) = (@_);
+    my $iswrite =  ($str =~ /^(INSERT|REPLACE|UPDATE|DELETE)/i);
+    if ($iswrite && !$::dbwritesallowed) {
+        die "Evil code attempted to write stuff to the shadow database.";
+    }
+    if ($str =~ /^LOCK TABLES/ && $str !~ /shadowlog/) {
+        $str =~ s/^LOCK TABLES/LOCK TABLES shadowlog WRITE, /;
+    }
     SqlLog($str);
     $::currentquery = $::db->query($str)
 	|| die "$str: $::db_errstr";
     SqlLog("Done");
+    if (!$dontshadow && $iswrite && Param("shadowdb")) {
+        my $q = SqlQuote($str);
+        my $insertid;
+        if ($str =~ /^(INSERT|REPLACE)/i) {
+            SendSQL("SELECT LAST_INSERT_ID()");
+            $insertid = FetchOneColumn();
+        }
+        SendSQL("INSERT INTO shadowlog (command) VALUES ($q)", 1);
+        if ($insertid) {
+            SendSQL("SET LAST_INSERT_ID = $insertid");
+        }
+        system("./syncshadowdb &");
+    }
 }
 
 sub MoreSQLData {

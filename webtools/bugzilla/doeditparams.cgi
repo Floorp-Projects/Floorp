@@ -72,6 +72,9 @@ foreach my $i (@::param_list) {
 WriteParams();
 
 unlink "data/versioncache";
+print "<PRE>";
+system("./syncshadowdb -v");
+print "</PRE>";
 
 print "OK, done.<p>\n";
 print "<a href=editparams.cgi>Edit the params some more.</a><p>\n";

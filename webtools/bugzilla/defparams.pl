@@ -83,7 +83,23 @@ sub check_numeric {
     return "";
 }
     
-
+sub check_shadowdb {
+    my ($value) = (@_);
+    $value = trim($value);
+    if ($value eq "") {
+        return "";
+    }
+    SendSQL("SHOW DATABASES");
+    while (MoreSQLData()) {
+        my $n = FetchOneColumn();
+        if (lc($n) eq lc($value)) {
+            return "The $n database already exists.  If that's really the name you want to use for the backup, please CAREFULLY make the existing database go away somehow, and then try again.";
+        }
+    }
+    SendSQL("CREATE DATABASE $value");
+    SendSQL("INSERT INTO shadowlog (command) VALUES ('SYNCUP')", 1);
+    return "";
+}
 
 @::param_list = ();
 
@@ -141,6 +157,18 @@ DefParam("usequip",
 	"If this is on, Bugzilla displays a silly quip at the beginning of buglists, and lets users add to the list of quips.",
 	"b",
 	1);
+
+DefParam("shadowdb",
+         "If non-empty, then this is the name of another database in which Bugzilla will keep a shadow read-only copy of everything.  This is done so that long slow read-only operations can be used against this db, and not lock up things for everyone else.  Turning on this parameter will create the given database; be careful not to use the name of an existing database with useful data in it!",
+         "t",
+         "",
+         \&check_shadowdb);
+
+DefParam("queryagainstshadowdb",
+         "If this is on, and the shadowdb is set, then queries will happen against the shadow database.",
+         "b",
+         0);
+         
 
 DefParam("usedespot",
          "If this is on, then we are using the Despot system to control our database of users.  Bugzilla won't ever write into the user database, it will let the Despot code maintain that.  And Bugzilla will send the user over to Despot URLs if they need to change their password.  Also, in that case, Bugzilla will treat the passwords stored in the database as being crypt'd, not plaintext.",

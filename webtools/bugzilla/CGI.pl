@@ -727,7 +727,10 @@ name=PleaseMailAPassword>
         # This seems like as good as time as any to get rid of old
         # crufty junk in the logincookies table.  Get rid of any entry
         # that hasn't been used in a month.
-        SendSQL("delete from logincookies where to_days(now()) - to_days(lastused) > 30");
+        if ($::dbwritesallowed) {
+            SendSQL("DELETE FROM logincookies " .
+                    "WHERE TO_DAYS(NOW()) - TO_DAYS(lastused) > 30");
+        }
 
         
         PutFooter();
@@ -735,7 +738,10 @@ name=PleaseMailAPassword>
     }
 
     # Update the timestamp on our logincookie, so it'll keep on working.
-    SendSQL("update logincookies set lastused = null where cookie = $::COOKIE{'Bugzilla_logincookie'}");
+    if ($::dbwritesallowed) {
+        SendSQL("UPDATE logincookies SET lastused = null " .
+                "WHERE cookie = $::COOKIE{'Bugzilla_logincookie'}");
+    }
     return $::userid;
 }
 

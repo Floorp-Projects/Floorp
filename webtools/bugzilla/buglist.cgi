@@ -49,7 +49,9 @@ sub sillyness {
 
 my $serverpush = 0;
 
-ConnectToDatabase();
+my $useshadow = Param("queryagainstshadowdb");
+
+ConnectToDatabase($useshadow);
 
 # print "Content-type: text/plain\n\n";    # Handy for debugging.
 # $::FORM{'debug'} = 1;
