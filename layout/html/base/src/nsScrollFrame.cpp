@@ -274,20 +274,18 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
 
   dc->GetScrollBarDimensions(sbWidth, sbHeight);
 
-  nsMargin  padding;
-  nsHTMLReflowState::ComputePaddingFor(this, (const nsHTMLReflowState*)aReflowState.parentReflowState,
-                                       padding);
-
   // Compute the scroll area size. This is the area inside of our border edge
   // and inside of any vertical and horizontal scrollbars. We need to add
   // back the padding area that was subtracted off
+  // XXX This isn't the best way to handle this...
   nsSize scrollAreaSize;
   PRBool roomForVerticalScrollbar = PR_FALSE;  // if we allocated room for vertical scrollbar
 
   scrollAreaSize.width = aReflowState.computedWidth;
   PRBool unconstrainedWidth = NS_UNCONSTRAINEDSIZE == scrollAreaSize.width;
   if (!unconstrainedWidth) {
-    scrollAreaSize.width += padding.left + padding.right;
+    scrollAreaSize.width += aReflowState.mComputedPadding.left +
+                            aReflowState.mComputedPadding.right;
   }
 
   if (NS_AUTOHEIGHT == aReflowState.computedHeight) {
@@ -301,8 +299,9 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   } else {
     // We have a fixed height so use the computed height plus padding
     // that applies to the scrolled frame
-    scrollAreaSize.height = aReflowState.computedHeight + padding.top +
-      padding.bottom;
+    scrollAreaSize.height = aReflowState.computedHeight +
+                            aReflowState.mComputedPadding.top +
+                            aReflowState.mComputedPadding.bottom;
   }
 
   // See whether we have 'auto' scrollbars
@@ -346,10 +345,11 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Reflow the child and get its desired size. Let it be as high as it
   // wants
-  nsSize              kidReflowSize(scrollAreaSize.width,
-                                    NS_UNCONSTRAINEDSIZE);
+  nsSize  kidReflowSize(scrollAreaSize.width, NS_UNCONSTRAINEDSIZE);
+
   if (!unconstrainedWidth) {
-    kidReflowSize.width -= padding.left + padding.right;
+    kidReflowSize.width -= aReflowState.mComputedPadding.left +
+                           aReflowState.mComputedPadding.right;
   }
   nsHTMLReflowState   kidReflowState(aPresContext, aReflowState,
                                      kidFrame, kidReflowSize);
@@ -358,7 +358,8 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   // Reset the computed width based on the scroll area size
   if (!unconstrainedWidth) {
     kidReflowState.computedWidth = scrollAreaSize.width -
-      padding.left - padding.right;
+                                   aReflowState.mComputedPadding.left -
+                                   aReflowState.mComputedPadding.right;
   }
   kidReflowState.computedHeight = NS_AUTOHEIGHT;
 
