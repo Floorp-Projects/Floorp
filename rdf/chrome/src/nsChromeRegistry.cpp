@@ -480,19 +480,23 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
       if (NS_FAILED(rv)) return rv;
       // This must always be the last line of profile initialization!
 
-      nsCAutoString userSheetURL;
-      rv = GetUserSheetURL(PR_TRUE, userSheetURL);
+      nsCAutoString sheetURL;
+      rv = GetUserSheetURL(PR_TRUE, sheetURL);
       if (NS_FAILED(rv)) return rv;
-      if(!userSheetURL.IsEmpty()) {
-        (void)LoadStyleSheet(getter_AddRefs(mUserChromeSheet), userSheetURL);
+      if(!sheetURL.IsEmpty()) {
+        (void)LoadStyleSheet(getter_AddRefs(mUserChromeSheet), sheetURL);
         // it's ok to not have a user.css file
       }
-      rv = GetUserSheetURL(PR_FALSE, userSheetURL);
+      rv = GetUserSheetURL(PR_FALSE, sheetURL);
       if (NS_FAILED(rv)) return rv;
-      if(!userSheetURL.IsEmpty()) {
-        (void)LoadStyleSheet(getter_AddRefs(mUserContentSheet), userSheetURL);
+      if(!sheetURL.IsEmpty()) {
+        (void)LoadStyleSheet(getter_AddRefs(mUserContentSheet), sheetURL);
         // it's ok not to have a userContent.css or userChrome.css file
       }
+      rv = GetFormSheetURL(sheetURL); 
+      if (NS_FAILED(rv)) return rv;
+      if(!sheetURL.IsEmpty())
+        (void)LoadStyleSheet(getter_AddRefs(mFormSheet), sheetURL);
     }
   }
  
@@ -2369,13 +2373,23 @@ nsChromeRegistry::GetBackstopSheets(nsISupportsArray **aResult)
     rv = LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
     if (NS_FAILED(rv)) return rv;
   }
+  if (!mFormSheet) {
+    nsCAutoString sheetURL;
+    GetFormSheetURL(sheetURL);
+    rv = LoadStyleSheet(getter_AddRefs(mScrollbarSheet), sheetURL); 
+    if (NS_FAILED(rv)) return rv;
+  }
 
-  if(mScrollbarSheet)
+  if(mScrollbarSheet || mFormSheet)
   {
     rv = NS_NewISupportsArray(aResult);
     if (NS_FAILED(rv)) return rv;
-    if(mScrollbarSheet) {
+    if (mScrollbarSheet) {
       rv = (*aResult)->AppendElement(mScrollbarSheet) ? NS_OK : NS_ERROR_FAILURE;
+      if (NS_FAILED(rv)) return rv;
+    }  
+    if (mFormSheet) {
+      rv = (*aResult)->AppendElement(mFormSheet) ? NS_OK : NS_ERROR_FAILURE;
       if (NS_FAILED(rv)) return rv;
     }  
   }
@@ -2443,6 +2457,12 @@ nsresult nsChromeRegistry::GetUserSheetURL(PRBool aIsChrome, nsCString & aURL)
     aURL.Append("userChrome.css");
   else aURL.Append("userContent.css");
 
+  return NS_OK;
+}
+
+nsresult nsChromeRegistry::GetFormSheetURL(nsCString& aURL)
+{
+  aURL = "resource:/res/forms.css"; // XXX This is going to get complicated.
   return NS_OK;
 }
 

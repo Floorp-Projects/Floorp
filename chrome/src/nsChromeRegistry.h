@@ -75,6 +75,7 @@ protected:
   nsresult LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet** aSheet);
   
   nsresult GetUserSheetURL(PRBool aIsChrome, nsCString & aURL);
+  nsresult GetFormSheetURL(nsCString& aURL);
 
 private:
   NS_IMETHOD LoadDataSource(const nsCString &aFileName, nsIRDFDataSource **aResult,
@@ -162,4 +163,6 @@ protected:
   nsCOMPtr<nsICSSStyleSheet> mScrollbarSheet;
   nsCOMPtr<nsICSSStyleSheet> mUserChromeSheet;
   nsCOMPtr<nsICSSStyleSheet> mUserContentSheet;
+  nsCOMPtr<nsICSSStyleSheet> mFormSheet;
 };
+
