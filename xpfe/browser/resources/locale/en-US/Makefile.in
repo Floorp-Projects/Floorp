@@ -31,12 +31,12 @@ CHROME_L10N_DIR=locale
 CHROME_TYPE=locale
 
 CHROME_L10N = \
-		$(srcdir)/navigator.dtd \
-		$(srcdir)/openLocation.dtd \
-		$(srcdir)/openLocation.properties \
-		$(srcdir)/viewSource.dtd \
-		$(srcdir)/NetSupportConfirmCheckYN.dtd \
-		$(srcdir)/navigator.properties \
+		navigator.dtd \
+		openLocation.dtd \
+		openLocation.properties \
+		viewSource.dtd \
+		NetSupportConfirmCheckYN.dtd \
+		navigator.properties \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
