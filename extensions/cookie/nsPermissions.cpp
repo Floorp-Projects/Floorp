@@ -53,6 +53,7 @@
 #include "nsIIOService.h"
 #include "nsNetCID.h"
 #include "nsTextFormatter.h"
+#include "nsIObserverService.h"
 
 static const char *kCookiesPermFileName = "cookperm.txt";
 
@@ -224,7 +225,7 @@ Permission_Check(
   if (rememberChecked != permission_GetRememberChecked(type)) {
     permission_SetRememberChecked(type, rememberChecked);
     permission_changed = PR_TRUE;
-    Permission_Save();
+    Permission_Save(PR_TRUE);
   }
   Recycle(remember_string);
   return permission;
@@ -316,7 +317,7 @@ Permission_AddHost(char * host, PRBool permission, PRInt32 type, PRBool save) {
   /* write the changes out to a file */
   if (save) {
     permission_changed = PR_TRUE;
-    Permission_Save();
+    Permission_Save(PR_TRUE);
   }
   return NS_OK;
 }
@@ -354,7 +355,7 @@ permission_Unblock(char * host, PRInt32 type) {
               PR_Free(hostStruct);
             }
             permission_changed = PR_TRUE;
-            Permission_Save();
+            Permission_Save(PR_TRUE);
             return;
           }
           break;
@@ -368,7 +369,7 @@ permission_Unblock(char * host, PRInt32 type) {
 
 /* saves the permissions to disk */
 PUBLIC void
-Permission_Save() {
+Permission_Save(PRBool notify) {
   permission_HostStruct * hostStruct;
   permission_TypeStruct * typeStruct;
 
@@ -442,6 +443,14 @@ Permission_Save() {
   permission_changed = PR_FALSE;
   strm.flush();
   strm.close();
+
+  /* Notify cookie manager dialog to update its display */
+  if (notify) {
+    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+    if (os) {
+      os->NotifyObservers(nsnull, "cookieChanged", NS_LITERAL_STRING("permissions").get());
+    }
+  }
 }
 
 /* reads the permissions from disk */
@@ -656,7 +665,7 @@ PERMISSION_Remove(const char* host, PRInt32 type) {
           if (typeStruct->type == type) {
             permission_remove(hostCount, typeCount);
             permission_changed = PR_TRUE;
-            Permission_Save();
+            Permission_Save(PR_FALSE);
             break;
           }
         }

@@ -73,6 +73,6 @@ extern PRBool Permission_Check
 extern nsresult Permission_AddHost
   (char * host, PRBool permission, PRInt32 type, PRBool save);
 //extern void Permission_Free(PRInt32 hostNumber, PRInt32 type, PRBool save);
-extern void Permission_Save();
+extern void Permission_Save(PRBool notify);
 
 #endif /* PERMISSIONS_H */

@@ -29,12 +29,12 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/CookieViewer.dtd" >
 
 <dialog id="cookieviewer"
-        buttons="accept,cancel,help"
+        buttons="accept,help"
         title="&windowtitle.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         style="width: 30em;"
         onload="Startup()"
-        ondialogaccept="onAccept();"
+        onunload="Shutdown()"
         ondialoghelp="doHelpButton();">
 
   <script src="chrome://communicator/content/wallet/CookieViewer.js"/>

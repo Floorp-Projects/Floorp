@@ -22,6 +22,8 @@
  *   Ben Goodger
  */
 
+var kObserverService;
+
 // interface variables
 var cookiemanager         = null;          // cookiemanager interfa
 var permissionmanager     = null;          // permissionmanager interface
@@ -64,6 +66,9 @@ function Startup() {
   // intialize string bundle
   cookieBundle = document.getElementById("cookieBundle");
 
+  // label the close button
+  document.documentElement.getButton("accept").label = cookieBundle.getString("close");
+
   // determine if labelling is for cookies or images
   try {
     var tabBox = document.getElementById("tabbox");
@@ -93,7 +98,29 @@ function Startup() {
   }
   loadPermissions();
 
+  // be prepared to reload the display if anything changes
+  kObserverService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+  kObserverService.addObserver(cookieReloadDisplay, "cookieChanged", false);
+
   window.sizeToContent();
+}
+
+function Shutdown() {
+  kObserverService.removeObserver(cookieReloadDisplay, "cookieChanged");
+}
+
+var cookieReloadDisplay = {
+  observe: function(subject, topic, state) {
+    if (topic == "cookieChanged") {
+      if (state == "cookies") {
+        cookies.length = 0;
+        loadCookies();
+      } else if (state == "permissions") {
+        permissions.length = 0;
+        loadPermissions();
+      }
+    }
+  }
 }
 
 /*** =================== COOKIES CODE =================== ***/
@@ -190,6 +217,8 @@ function loadCookies() {
   // disable "remove all cookies" button if there are no cookies
   if (cookies.length == 0) {
     document.getElementById("removeAllCookies").setAttribute("disabled","true");
+  } else {
+    document.getElementById("removeAllCookies").removeAttribute("disabled");
   }
 
   // show policy field if at least one cookie has a policy
@@ -299,6 +328,7 @@ function DeleteCookie() {
   if (!cookies.length) {
     ClearCookieProperties();
   }
+  FinalizeCookieDeletions();
 }
 
 function DeleteAllCookies() {
@@ -306,6 +336,17 @@ function DeleteAllCookies() {
   DeleteAllFromTree(cookiesTree, cookiesTreeView,
                         cookies, deletedCookies,
                         "removeCookie", "removeAllCookies");
+  FinalizeCookieDeletions();
+}
+
+function FinalizeCookieDeletions() {
+  for (var c=0; c<deletedCookies.length; c++) {
+    cookiemanager.remove(deletedCookies[c].host,
+                         deletedCookies[c].name,
+                         deletedCookies[c].path,
+                         document.getElementById("checkbox").checked);
+  }
+  deletedCookies.length = 0;
 }
 
 function HandleCookieKeyPress(e) {
@@ -393,6 +434,8 @@ function loadPermissions() {
   // disable "remove all" button if there are no cookies/images
   if (permissions.length == 0) {
     document.getElementById("removeAllPermissions").setAttribute("disabled","true");
+  } else {
+    document.getElementById("removeAllPermissions").removeAttribute("disabled");
   }
 
 }
@@ -408,12 +451,21 @@ function DeletePermission() {
   DeleteSelectedItemFromTree(permissionsTree, permissionsTreeView,
                                  permissions, deletedPermissions,
                                  "removePermission", "removeAllPermissions");
+  FinalizePermissionDeletions();
 }
 
 function DeleteAllPermissions() {
   DeleteAllFromTree(permissionsTree, permissionsTreeView,
                         permissions, deletedPermissions,
                         "removePermission", "removeAllPermissions");
+  FinalizePermissionDeletions();
+}
+
+function FinalizePermissionDeletions() {
+  for (var p=0; p<deletedPermissions.length; p++) {
+    permissionmanager.remove(deletedPermissions[p].host, deletedPermissions[p].type);
+  }
+  deletedPermissions.length = 0;
 }
 
 function HandlePermissionKeyPress(e) {
@@ -432,26 +484,7 @@ function PermissionColumnSort(column) {
   lastPermissionSortColumn = column;
 }
 
-/*** =================== GENERAL CODE =================== ***/
-
-function onAccept() {
-
-  for (var c=0; c<deletedCookies.length; c++) {
-    cookiemanager.remove(deletedCookies[c].host,
-                         deletedCookies[c].name,
-                         deletedCookies[c].path,
-                         document.getElementById("checkbox").checked);
-  }
-
-  for (var p=0; p<deletedPermissions.length; p++) {
-    permissionmanager.remove(deletedPermissions[p].host, deletedPermissions[p].type);
-  }
-
-  return true;
-}
-
 /*** ============ CODE FOR HELP BUTTON =================== ***/
-
 
 function getSelectedTab()
 {
