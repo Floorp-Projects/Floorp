@@ -344,6 +344,9 @@ netwerk/util/src/Makefile
 #network/protocol/remote/Makefile
 #network/protocol/sockstub/Makefile
 #network/util/Makefile
+uriloader/Makefile
+uriloader/base/Makefile
+uriloader/build/Makefile
 profile/Makefile
 profile/src/Makefile
 profile/public/Makefile
