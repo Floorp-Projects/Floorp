@@ -702,7 +702,8 @@ ServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool replace)
     if (! uri)
         return NS_ERROR_NULL_POINTER;
 
-    PLHashEntry** hep = PL_HashTableRawLookup(mResources, (*mResources->keyHash)(uri), uri);
+    PLHashNumber keyhash = (*mResources->keyHash)(uri);
+    PLHashEntry** hep = PL_HashTableRawLookup(mResources, keyhash, uri);
 
     if (*hep) {
         if (!replace) {
@@ -725,13 +726,13 @@ ServiceImpl::RegisterResource(nsIRDFResource* aResource, PRBool replace)
     }
     else {
 #ifdef REUSE_RESOURCE_URI_AS_KEY
-        PL_HashTableAdd(mResources, uri, aResource);
+        PL_HashTableRawAdd(mResources, hep, keyhash, uri, aResource);
 #else
         const char* key = PL_strdup(uri);
         if (! key)
             return NS_ERROR_OUT_OF_MEMORY;
 
-        PL_HashTableAdd(mResources, key, aResource);
+        PL_HashTableRawAdd(mResources, hep, keyhash, key, aResource);
 #endif
 
         PR_LOG(gLog, PR_LOG_DEBUG,
