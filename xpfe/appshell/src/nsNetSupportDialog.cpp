@@ -550,8 +550,6 @@ NS_IMETHODIMP nsNetSupportDialog::PromptPassword(const PRUnichar *text,
 #endif
 }
 
-#ifdef XP_MAC
-#else
 nsresult nsNetSupportDialog::Select(const PRUnichar *inDialogTitle, const PRUnichar *inMsg, PRUint32 inCount, const char **inList, PRInt32 *outSelection, PRBool *_retval)
 {
 	 nsresult rv;
@@ -567,7 +565,6 @@ nsresult nsNetSupportDialog::Select(const PRUnichar *inDialogTitle, const PRUnic
      *outSelection = selectedIndex;
      return rv;
 }
-#endif
 
 nsresult nsNetSupportDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell)
 {

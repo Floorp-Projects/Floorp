@@ -3034,8 +3034,6 @@ NS_IMETHODIMP nsWebShellWindow::ConfirmCheckYN(const PRUnichar *text, const PRUn
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#ifdef XP_MAC
-#else
 NS_IMETHODIMP nsWebShellWindow::Select( const PRUnichar *inDialogTitle, const PRUnichar* inMsg, PRUint32 inCount, const char **inList, PRInt32 *outSelection, PRBool *_retval)
 {
   nsresult rv; 
@@ -3054,7 +3052,6 @@ NS_IMETHODIMP nsWebShellWindow::Select( const PRUnichar *inDialogTitle, const PR
  	rv = dialog->Select(domWindow, inDialogTitle, inMsg, inCount,inList, outSelection, _retval);
   return rv;
 }
-#endif
 
 NS_IMETHODIMP nsWebShellWindow::Alert(const char *url, const PRUnichar *title, const PRUnichar *text)
 {
