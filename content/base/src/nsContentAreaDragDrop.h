@@ -49,6 +49,8 @@
 class nsIDOMNode;
 class nsISelection;
 class nsITransferable;
+class nsIOverrideDragSource;
+class nsIOverrideDropSite;
 
 
 // {1f34bc80-1bc7-11d6-a384-d705dd0746fc}
@@ -110,6 +112,8 @@ private:
 
   nsCOMPtr<nsIDOMEventReceiver> mEventReceiver;
   nsIWebNavigation* mNavigator;                     // weak ref, this is probably my owning webshell
+  nsIOverrideDragSource* mOverrideDrag;             // weak, these could own us but probably will outlive us
+  nsIOverrideDropSite* mOverrideDrop;
 
 }; // class nsContentAreaDragDrop
 

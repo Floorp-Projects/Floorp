@@ -71,6 +71,7 @@ XPIDLSRCS	= \
 		nsIPrintProgressParams.idl  \
 		nsIPrintStatusFeedback.idl  \
 		nsIDragDropHandler.idl \
+		nsIDragDropOverride.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

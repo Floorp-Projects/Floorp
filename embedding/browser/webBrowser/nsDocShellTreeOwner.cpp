@@ -815,7 +815,8 @@ nsDocShellTreeOwner :: AddChromeListeners ( )
       GetEventReceiver(mWebBrowser, getter_AddRefs(rcvr));
       //nsCOMPtr<nsIDOMWebNavigation> webNav (do_QueryInterface(mWebBrowser));
       nsCOMPtr<nsIDOMEventTarget> rcvrTarget(do_QueryInterface(rcvr));
-      mChromeDragHandler->HookupTo(rcvrTarget, NS_STATIC_CAST(nsIWebNavigation*, mWebBrowser));
+      mChromeDragHandler->HookupTo(rcvrTarget, NS_STATIC_CAST(nsIWebNavigation*, mWebBrowser),
+                                    nsnull, nsnull);
     }
   }
 
