@@ -26,6 +26,7 @@ install::
 	$(MAKE_INSTALL) messenger.dtd $(LOCALEDIR)
 	$(MAKE_INSTALL) threadpane.dtd $(LOCALEDIR)
 	$(MAKE_INSTALL) folderpane.dtd $(LOCALEDIR)
+	$(MAKE_INSTALL) newFolderNameDialog.dtd $(LOCALEDIR)
 	$(MAKE_INSTALL) subscribe.dtd $(LOCALEDIR)
 	$(MAKE_INSTALL) sidebar-messenger.dtd $(LOCALEDIR)
 	$(MAKE_INSTALL) sidebar-messenger-rdf.dtd $(LOCALEDIR)
