@@ -354,3 +354,9 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
     padding               : 2px;
   }
+
+#navigator-throbber
+  {
+    -moz-user-focus       : ignore !important;
+  }
+
