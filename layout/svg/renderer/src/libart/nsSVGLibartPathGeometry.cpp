@@ -295,7 +295,7 @@ nsSVGLibartPathGeometry::Render(nsISVGRendererCanvas *canvas)
     nsCOMPtr<nsISVGLibartRegion> aLibartRegion = do_QueryInterface(region);
     nsCOMPtr<nsIDOMSVGMatrix> ctm;
     mSource->GetCanvasTM(getter_AddRefs(ctm));
-    LibartGradient(render, ctm, aGrad, aLibartRegion);
+    LibartGradient(render, ctm, aGrad, aLibartRegion, mSource);
 
     // And draw it
     libartCanvas->InvokeRender(render);
@@ -338,7 +338,7 @@ nsSVGLibartPathGeometry::Render(nsISVGRendererCanvas *canvas)
     nsCOMPtr<nsISVGLibartRegion> aLibartRegion = do_QueryInterface(region);
     nsCOMPtr<nsIDOMSVGMatrix> ctm;
     mSource->GetCanvasTM(getter_AddRefs(ctm));
-    LibartGradient(render, ctm, aGrad, aLibartRegion);
+    LibartGradient(render, ctm, aGrad, aLibartRegion, mSource);
 
     // And draw it
     libartCanvas->InvokeRender(render);

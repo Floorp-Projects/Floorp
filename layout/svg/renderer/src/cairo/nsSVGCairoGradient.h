@@ -48,6 +48,6 @@
 cairo_pattern_t *
 CairoGradient(cairo_t *ctx,
               nsISVGGradient *aGrad,
-              cairo_text_extents_t *extent=NULL);
+              nsISVGGeometrySource *aSource);
 
 #endif

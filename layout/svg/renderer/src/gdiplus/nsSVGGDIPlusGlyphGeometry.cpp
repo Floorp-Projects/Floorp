@@ -215,6 +215,7 @@ class nsSVGGDIPlusGlyphGeometry : public nsISVGRendererGlyphGeometry
 protected:
   friend nsresult NS_NewSVGGDIPlusGlyphGeometry(nsISVGRendererGlyphGeometry **result,
                                                 nsISVGGlyphGeometrySource *src);
+  friend void gradCBPath(Graphics *gfx, Brush *brush, void *cbStruct);
 
   nsSVGGDIPlusGlyphGeometry();
   ~nsSVGGDIPlusGlyphGeometry();
@@ -226,7 +227,7 @@ public:
 
   // nsISVGRendererGlyphGeometry interface:
   NS_DECL_NSISVGRENDERERGLYPHGEOMETRY
-  
+
 protected:
   void DrawFill(Graphics* g, Brush& b, nsISVGGradient *aGrad,
                 const WCHAR* start, INT length, float x, float y);
@@ -303,8 +304,8 @@ NS_INTERFACE_MAP_END
 
 static void gradCBPath(Graphics *gfx, Brush *brush, void *cbStruct)
 {
-  GraphicsPath *path = (GraphicsPath *)cbStruct;
-  gfx->FillPath(brush, path);
+  nsSVGGDIPlusGlyphGeometry *geom = (nsSVGGDIPlusGlyphGeometry *)cbStruct;
+  gfx->FillPath(brush, geom->mStroke);
 }
 
 /** Implements void render(in nsISVGRendererCanvas canvas); */
@@ -456,8 +457,8 @@ nsSVGGDIPlusGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
           mSource->GetCanvasTM(getter_AddRefs(ctm));
           
           GDIPlusGradient(aRegion, aGrad, ctm,
-                          gdiplusCanvas->GetGraphics(),
-                          gradCBPath, mStroke);
+                          gdiplusCanvas->GetGraphics(), mSource,
+                          gradCBPath, this);
         }
       }
       else {
@@ -612,7 +613,7 @@ nsSVGGDIPlusGlyphGeometry::DrawFill(Graphics* g, Brush& b, nsISVGGradient *aGrad
     cb.x = x;  cb.y = y;
     cb.stringformat = &stringFormat;
     
-    GDIPlusGradient(aRegion, aGrad, ctm, g, gradCBString, &cb);
+    GDIPlusGradient(aRegion, aGrad, ctm, g, mSource, gradCBString, &cb);
   }
   else
     g->DrawString(start, length, metrics->GetFont(), PointF(x,y),

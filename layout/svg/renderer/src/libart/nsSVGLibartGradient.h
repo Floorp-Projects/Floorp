@@ -44,10 +44,12 @@
 #include "nsISVGGradient.h"
 #include "nsISVGLibartRegion.h"
 #include "nsISVGLibartCanvas.h"
+#include "nsISVGGeometrySource.h"
 
 // Define external
 void LibartGradient(ArtRender *render, nsIDOMSVGMatrix *aMatrix, 
-                    nsISVGGradient *aGrad, nsISVGLibartRegion *aRegion);
+                    nsISVGGradient *aGrad, nsISVGLibartRegion *aRegion,
+                    nsISVGGeometrySource *aSource);
 
 #endif // __NS_SVGLIBARTGRADIENT_H__
 

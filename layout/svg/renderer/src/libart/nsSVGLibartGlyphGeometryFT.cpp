@@ -300,7 +300,7 @@ nsSVGLibartGlyphGeometryFT::PaintFill(nsISVGLibartCanvas* canvas,
         else if (type == nsISVGGeometrySource::PAINT_TYPE_SERVER) {
           nsCOMPtr<nsIDOMSVGMatrix> ctm;
           mSource->GetCanvasTM(getter_AddRefs(ctm));
-          LibartGradient(render, ctm, aGrad, aLibartRegion);
+          LibartGradient(render, ctm, aGrad, aLibartRegion, mSource);
         }
         art_render_mask_solid(render, (int)(0x10000*opacity));
         

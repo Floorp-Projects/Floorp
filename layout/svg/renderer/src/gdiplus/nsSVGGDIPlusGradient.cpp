@@ -131,12 +131,15 @@ GDIPlusGetStops(nsISVGGradient *aGrad, Color **aColors, REAL **aPositions,
       (*aPositions)[i] = 1.0f - (*aPositions)[*aStops - 1 - i];
       (*aPositions)[*aStops - 1 - i] = 1.0f - tmpOffset;
     }
+    // need to flip position of center color
+    if (*aStops & 1)
+      (*aPositions)[*aStops / 2] = 1.0f - (*aPositions)[*aStops / 2];
   }
 }
 
-
 static void
-GDIPlusLinearGradient(nsISVGGradient *aGrad, Matrix *aMatrix, Graphics *aGFX,
+GDIPlusLinearGradient(nsISVGGradient *aGrad, Matrix *aMatrix,
+                      Graphics *aGFX, Matrix *aCTM,
                       void(*aCallback)(Graphics *, Brush*, void *), void *aData)
 {
   float fX1, fY1, fX2, fY2;
@@ -172,6 +175,7 @@ GDIPlusLinearGradient(nsISVGGradient *aGrad, Matrix *aMatrix, Graphics *aGFX,
   delete [] stopsPos;
 
   gradient.MultiplyTransform(aMatrix, MatrixOrderAppend);
+  gradient.MultiplyTransform(aCTM, MatrixOrderAppend);
 
   if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD) {
     float dx = fX2 - fX1;
@@ -181,19 +185,16 @@ GDIPlusLinearGradient(nsISVGGradient *aGrad, Matrix *aMatrix, Graphics *aGFX,
 #define INF 100
 
     PointF rect[4];
-    rect[0].X = fX1 + dy; rect[0].Y = fY1 - dx;
-    rect[1].X = fX2 + dy; rect[1].Y = fY2 - dx;
-    rect[2].X = fX2 - dy; rect[2].Y = fY2 + dx;
-    rect[3].X = fX1 - dy; rect[3].Y = fY1 + dx;
     
     GraphicsPath left;
     left.StartFigure();
-    rect[0].X = fX1 + INF * dy;  rect[0].Y = fY1 - INF * dx;
+    rect[0].X = fX1 + INF * dy;             rect[0].Y = fY1 - INF * dx;
     rect[1].X = fX1 + INF * dx + INF * dy;  rect[1].Y = fY1 + INF * dy - INF * dx;
     rect[2].X = fX1 + INF * dx - INF * dy;  rect[2].Y = fY1 + INF * dy + INF * dx;
-    rect[3].X = fX1 - INF * dy;  rect[3].Y = fY1 + INF * dx;
+    rect[3].X = fX1 - INF * dy;             rect[3].Y = fY1 + INF * dx;
     left.AddPolygon(rect, 4);
     left.Transform(aMatrix);
+    left.Transform(aCTM);
     
     GraphicsPath center;
     center.StartFigure();
@@ -203,15 +204,17 @@ GDIPlusLinearGradient(nsISVGGradient *aGrad, Matrix *aMatrix, Graphics *aGFX,
     rect[3].X = fX1 - INF * dy;  rect[3].Y = fY1 + INF * dx;
     center.AddPolygon(rect, 4);
     center.Transform(aMatrix);
+    center.Transform(aCTM);
     
     GraphicsPath right;
     right.StartFigure();
     rect[0].X = fX2 - INF * dx + INF * dy;  rect[0].Y = fY2 - INF * dy - INF * dx;
-    rect[1].X = fX2 + INF * dy;  rect[1].Y = fY2 - INF * dx;
-    rect[2].X = fX2 - INF * dy;  rect[2].Y = fY2 + INF * dx;
+    rect[1].X = fX2 + INF * dy;             rect[1].Y = fY2 - INF * dx;
+    rect[2].X = fX2 - INF * dy;             rect[2].Y = fY2 + INF * dx;
     rect[3].X = fX2 - INF * dx - INF * dy;  rect[3].Y = fY2 - INF * dy + INF * dx;
     right.AddPolygon(rect, 4);
     right.Transform(aMatrix);
+    right.Transform(aCTM);
     
     Region leftRegion(&left), centerRegion(&center), rightRegion(&right), oldClip;
     aGFX->GetClip(&oldClip);
@@ -233,7 +236,8 @@ GDIPlusLinearGradient(nsISVGGradient *aGrad, Matrix *aMatrix, Graphics *aGFX,
 }
 
 static void
-GDIPlusRadialGradient(nsISVGGradient *aGrad, Matrix *aMatrix, Graphics *aGFX,
+GDIPlusRadialGradient(nsISVGGradient *aGrad, Matrix *aMatrix,
+                      Graphics *aGFX, Matrix *aCTM, 
                       void(*aCallback)(Graphics *, Brush*, void *), void *aData)
 {
   float fCx, fCy, fR, fFx, fFy;
@@ -274,9 +278,11 @@ GDIPlusRadialGradient(nsISVGGradient *aGrad, Matrix *aMatrix, Graphics *aGFX,
   delete [] stopsPos;
 
   gradient.MultiplyTransform(aMatrix, MatrixOrderAppend);
+  gradient.MultiplyTransform(aCTM, MatrixOrderAppend);
   
   if (aSpread == nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD) {
     circle.Transform(aMatrix);
+    circle.Transform(aCTM);
     Region exclude(&circle), oldClip;
 
     aGFX->GetClip(&oldClip);
@@ -293,6 +299,7 @@ void
 GDIPlusGradient(nsISVGGDIPlusRegion *aRegion, nsISVGGradient *aGrad,
                 nsIDOMSVGMatrix *aCTM,
                 Graphics *aGFX,
+                nsISVGGeometrySource *aSource,
                 void(*aCallback)(Graphics *, Brush*, void *), void *aData)
 {
   NS_ASSERTION(aGrad, "Called GDIPlusGradient without a gradient!");
@@ -303,38 +310,22 @@ GDIPlusGradient(nsISVGGDIPlusRegion *aRegion, nsISVGGradient *aGrad,
   PRUint16 bbox;
   aGrad->GetGradientUnits(&bbox);
 
-  Matrix *patternMatrix;
-  if (bbox == nsIDOMSVGGradientElement::SVG_GRUNITS_OBJECTBOUNDINGBOX) {
-    // BoundingBox
-    // We need to calculate this from the Region (Uta?) in
-    // the object we're filling
-    const RectF *rect = aRegion->GetRect();
-
-#ifdef DEBUG_tor
-    printf("In GDIPlusGradient: bbox (%f, %f  %f x %f)\n",
-           rect->X, rect->Y, rect->Width, rect->Height);
-#endif
-    patternMatrix = new Matrix(rect->Width, 0, 0, rect->Height, rect->X, rect->Y);
-  } else {
-      patternMatrix = SVGToMatrix(aCTM);
-  }
-
   // Get the transform list (if there is one)
   nsCOMPtr<nsIDOMSVGMatrix> svgMatrix;
-  aGrad->GetGradientTransform(getter_AddRefs(svgMatrix));
+  aGrad->GetGradientTransform(getter_AddRefs(svgMatrix), aSource);
   NS_ASSERTION(svgMatrix, "GDIPlusGradient: GetGradientTransform returns null");
 
-  Matrix *aTransMatrix =  SVGToMatrix(svgMatrix);
-  patternMatrix->Multiply(aTransMatrix);
-  delete aTransMatrix;
+  Matrix *patternMatrix =  SVGToMatrix(svgMatrix);
+  Matrix *ctm = SVGToMatrix(aCTM);
 
   // Linear or Radial?
   PRUint32 type;
   aGrad->GetGradientType(&type);
   if (type == nsISVGGradient::SVG_LINEAR_GRADIENT)
-    GDIPlusLinearGradient(aGrad, patternMatrix, aGFX, aCallback, aData);
+    GDIPlusLinearGradient(aGrad, patternMatrix, aGFX, ctm, aCallback, aData);
   else if (type == nsISVGGradient::SVG_RADIAL_GRADIENT)
-    GDIPlusRadialGradient(aGrad, patternMatrix, aGFX, aCallback, aData);
+    GDIPlusRadialGradient(aGrad, patternMatrix, aGFX, ctm, aCallback, aData);
 
   delete patternMatrix;
+  delete ctm;
 }
