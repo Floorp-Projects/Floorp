@@ -2104,7 +2104,7 @@ nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
 {
     int status;
     
-    PR_ASSERT(m_pop3ConData->msg_closure);
+    NS_ASSERTION(m_pop3ConData->msg_closure, "m_pop3ConData->msg_closure is null in nsPop3Protocol::HandleLine()");
     if (!m_pop3ConData->msg_closure)
         return -1;
     
