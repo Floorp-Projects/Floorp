@@ -69,7 +69,7 @@ public:
     nsIStreamListener     *Listener()       { return mListener; }
     nsHttpConnection      *Connection()     { return mConnection; }
     nsHttpRequestHead     *RequestHead()    { return mRequestHead; }
-    nsHttpResponseHead    *ResponseHead()   { return mResponseHead; }
+    nsHttpResponseHead    *ResponseHead()   { return mHaveAllHeaders ? mResponseHead : nsnull; }
     nsIInterfaceRequestor *Callbacks()      { return mCallbacks; } 
     nsIEventQueue         *ConsumerEventQ() { return mConsumerEventQ; }
     nsISupports           *SecurityInfo()   { return mSecurityInfo; }
@@ -90,8 +90,8 @@ public:
     nsresult OnStopTransaction(nsresult);
 
 private:
-    nsresult ParseLine(char *line);
-    nsresult ParseLineSegment(char *seg, PRUint32 len);
+    void     ParseLine(char *line);
+    void     ParseLineSegment(char *seg, PRUint32 len);
     nsresult ParseHead(char *, PRUint32 count, PRUint32 *countRead);
     nsresult HandleContentStart();
     nsresult HandleContent(char *, PRUint32 count, PRUint32 *countRead);

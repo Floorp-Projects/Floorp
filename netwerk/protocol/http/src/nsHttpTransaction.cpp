@@ -67,8 +67,8 @@ nsHttpTransaction::~nsHttpTransaction()
 
     NS_IF_RELEASE(mConnection);
 
-    if (mChunkedDecoder)
-        delete mChunkedDecoder;
+    delete mChunkedDecoder;
+    delete mResponseHead;
 }
 
 nsresult
@@ -126,6 +126,9 @@ nsHttpTransaction::SetConnection(nsHttpConnection *conn)
 nsHttpResponseHead *
 nsHttpTransaction::TakeResponseHead()
 {
+    if (!mHaveAllHeaders)
+        return nsnull;
+
     nsHttpResponseHead *head = mResponseHead;
     mResponseHead = nsnull;
     return head;
@@ -238,17 +241,12 @@ nsHttpTransaction::OnStopTransaction(nsresult status)
     return NS_OK;
 }
 
-nsresult
+void
 nsHttpTransaction::ParseLine(char *line)
 {
     LOG(("nsHttpTransaction::ParseLine [%s]\n", line));
 
     if (!mHaveStatusLine) {
-        if (!mResponseHead)
-            mResponseHead = new nsHttpResponseHead();
-        if (!mResponseHead)
-            return NS_ERROR_OUT_OF_MEMORY;
-
         mResponseHead->ParseStatusLine(line);
         mHaveStatusLine = PR_TRUE;
         // XXX this should probably never happen
@@ -257,11 +255,9 @@ nsHttpTransaction::ParseLine(char *line)
     }
     else
         mResponseHead->ParseHeaderLine(line);
-
-    return NS_OK;
 }
 
-nsresult
+void
 nsHttpTransaction::ParseLineSegment(char *segment, PRUint32 len)
 {
     NS_PRECONDITION(!mHaveAllHeaders, "already have all headers");
@@ -276,9 +272,7 @@ nsHttpTransaction::ParseLineSegment(char *segment, PRUint32 len)
         else {
             // trim off the new line char and parse the line
             mLineBuf.Truncate(mLineBuf.Length() - 1);
-            nsresult rv = ParseLine(NS_CONST_CAST(char*,mLineBuf.get()));
-            if (NS_FAILED(rv))
-                return rv;
+            ParseLine(NS_CONST_CAST(char*,mLineBuf.get()));
             // stuff the segment into the line buf
             mLineBuf.Assign(segment, len);
         }
@@ -288,17 +282,21 @@ nsHttpTransaction::ParseLineSegment(char *segment, PRUint32 len)
     
     if (!mHaveStatusLine && mLineBuf.Last() == '\n') {
         // status lines aren't foldable, so don't try. See bug 89365
-        nsresult rv = ParseLine(NS_CONST_CAST(char*,mLineBuf.get()));
-        if (NS_FAILED(rv))
-            return rv;
+        ParseLine(NS_CONST_CAST(char*,mLineBuf.get()));
     }
     
     // a line buf with only a new line char signifies the end of headers.
     if (mLineBuf.First() == '\n') {
-        mHaveAllHeaders = PR_TRUE;
         mLineBuf.Truncate();
+        // discard this response if it is a 100 continue.
+        if (mResponseHead->Status() == 100) {
+            LOG(("ignoring 100 response\n"));
+            mHaveStatusLine = PR_FALSE;
+            mResponseHead->Reset();
+            return;
+        }
+        mHaveAllHeaders = PR_TRUE;
     }
-    return NS_OK;
 }
 
 nsresult
@@ -311,11 +309,16 @@ nsHttpTransaction::ParseHead(char *buf,
 
     LOG(("nsHttpTransaction::ParseHead [count=%u]\n", count));
 
-    nsresult rv = NS_OK;
-
     *countRead = 0;
 
     NS_PRECONDITION(!mHaveAllHeaders, "oops");
+        
+    // allocate the response head object if necessary
+    if (!mResponseHead) {
+        mResponseHead = new nsHttpResponseHead();
+        if (!mResponseHead)
+            return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     // if we don't have a status line and the line buf is empty, then
     // this must be the first time we've been called.
@@ -323,14 +326,6 @@ nsHttpTransaction::ParseHead(char *buf,
             PL_strncasecmp(buf, "HTTP", PR_MIN(count, 4)) != 0) {
         // XXX this check may fail for certain 0.9 content if we haven't
         // received at least 4 bytes of data.
-        
-        // allocate the response head object if necessary
-        if (!mResponseHead) {
-            mResponseHead = new nsHttpResponseHead();
-            if (!mResponseHead)
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-        
         mResponseHead->ParseStatusLine("");
         mHaveStatusLine = PR_TRUE;
         mHaveAllHeaders = PR_TRUE;
@@ -349,9 +344,7 @@ nsHttpTransaction::ParseHead(char *buf,
             len--;
 
         buf[len-1] = '\n';
-        rv = ParseLineSegment(buf, len);
-        if (NS_FAILED(rv))
-            return rv;
+        ParseLineSegment(buf, len);
 
         if (mHaveAllHeaders)
             return NS_OK;
@@ -367,10 +360,9 @@ nsHttpTransaction::ParseHead(char *buf,
         // ParseLineSegment if buf only contains a carriage return.
         if ((buf[len-1] == '\r') && (--len == 0))
             return NS_OK;
-        rv = ParseLineSegment(buf, len);
+        ParseLineSegment(buf, len);
     }
-
-    return rv;
+    return NS_OK;
 }
 
 // called on the socket thread
@@ -388,17 +380,9 @@ nsHttpTransaction::HandleContentStart()
         mResponseHead->Flatten(headers, PR_FALSE);
         LOG2(("http response [\n%s]\n", headers.get()));                        
 #endif
-        PRBool reset = PR_FALSE;
-
-        // we ignore a 100 response, which means that we must reset
-        // our state so that we'll parse from the beginning again.
-        if (mResponseHead->Status() == 100) {
-            LOG(("ignoring 100 response\n"));
-            reset = PR_TRUE;
-        }
         // notify the connection, give it a chance to cause a reset.
-        else
-            mConnection->OnHeadersAvailable(this, &reset);
+        PRBool reset = PR_FALSE;
+        mConnection->OnHeadersAvailable(this, &reset);
 
         // looks like we should ignore this response, resetting...
         if (reset) {
