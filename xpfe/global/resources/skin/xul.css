@@ -161,10 +161,6 @@ menubutton {
   behavior: url("resource:/chrome/xulBindings.xml#menubutton");
 }
 
-autocomplete {
-  behavior: url("resource:/chrome/autocomplete.xml#autocomplete");
-}
-
 /******** Titled buttons **********/
 
 /******** Tree widget **********/
@@ -299,6 +295,10 @@ text[editable="true"], text[editable="true"][mode="display"] {
 
 text[editable="true"][mode="edit"] {
   behavior: url(resource:/chrome/xulBindings.xml#text-editable-edit);
+}
+
+textfield[autocomplete="true"] {
+  behavior: url(resource:/chrome/autocomplete.xml#autocomplete);
 }
 
 colorpicker {
