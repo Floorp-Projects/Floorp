@@ -20,13 +20,20 @@
 #ifndef utilities_h
 #define utilities_h
 
+#include "systemtypes.h"
 #include <memory>
 #include <string>
 #include <iostream>
-#include "systemtypes.h"
 
+#ifndef _WIN32 // Microsoft VC6 bug: standard identifiers should be in std namespace
 using std::size_t;
 using std::ptrdiff_t;
+using std::strlen;
+using std::strcpy;
+#define STD std
+#else
+#define STD
+#endif
 using std::string;
 using std::istream;
 using std::ostream;
@@ -102,11 +109,12 @@ namespace JavaScript {
 	
 	inline char16 widen(char ch) {return static_cast<char16>(static_cast<uchar>(ch));}
 
+#ifndef _WIN32
 	// Return a String containing the characters of the null-terminated C string cstr
 	// (without the trailing null).
 	inline String widenCString(const char *cstr)
 	{
-		size_t len = std::strlen(cstr);
+		size_t len = strlen(cstr);
 		const uchar *ucstr = reinterpret_cast<const uchar *>(cstr);
 		return String(ucstr, ucstr+len);
 	}
@@ -118,6 +126,10 @@ namespace JavaScript {
 		const uchar *uchars = reinterpret_cast<const uchar *>(chars);
 		str.append(uchars, uchars + length);
 	}
+#else // Microsoft VC6 bug: String constructor and append limited to char16 iterators
+	String widenCString(const char *cstr);
+	void appendChars(String &str, const char *chars, size_t length);
+#endif
 
 
 	String &operator+=(String &str, const char *cstr);

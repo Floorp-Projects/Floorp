@@ -360,7 +360,7 @@ void JS::BigInt::allocate(uint lgGrossSize)
 	    FREE_DTOA_LOCK(0);
     } else {
 	    FREE_DTOA_LOCK(0);
-        w = static_cast<uint32 *>(std::malloc(min(grossSize*sizeof(uint32), sizeof(uint32 *))));
+        w = static_cast<uint32 *>(STD::malloc(max(grossSize*sizeof(uint32), uint32(sizeof(uint32 *)))));
         if (!w) {
 		    std::bad_alloc outOfMemory;
 		    throw outOfMemory;
@@ -1123,14 +1123,14 @@ double JS::strToDouble(const char *str, const char *&numEnd)
             goto ret;
         break;
       case 'I':
-        if (!std::strncmp(s+1, "nfinity", 7)) {
+        if (!STD::strncmp(s+1, "nfinity", 7)) {
         	rv = positiveInfinity;
         	s += 8;
         	goto ret;
         }
         break;
       case 'N':
-        if (!haveSign && !std::strncmp(s+1, "aN", 2)) {
+        if (!haveSign && !STD::strncmp(s+1, "aN", 2)) {
         	rv = nan;
         	s += 3;
         	goto ret;
@@ -1768,6 +1768,7 @@ double JS::stringToInteger(const char16 *str, const char16 *strEnd, const char16
 
 		    if (bit == 1) {
 				// Gather the 53 significant bits (including the leading 1)
+				int bit2;
 				value = 1.0;
 				for (int j = 52; j; --j) {
 				    bit = bdr.next();
@@ -1776,7 +1777,7 @@ double JS::stringToInteger(const char16 *str, const char16 *strEnd, const char16
 				    value = value*2 + bit;
 				}
 				// bit2 is the 54th bit (the first dropped from the mantissa)
-				int bit2 = bdr.next();
+				bit2 = bdr.next();
 				if (bit2 >= 0) {
 				    double factor = 2.0;
 				    int sticky = 0;  // sticky is 1 if any bit beyond the 54th is 1
@@ -1912,7 +1913,7 @@ static char *doubleToAscii(double d, int mode, bool biasUp, int ndigits,
         // Infinity or NaN
         *decpt = 9999;
         s = !word1(d) && !(word0(d) & Frac_mask) ? "Infinity" : "NaN";
-        std::strcpy(buf, s);
+        strcpy(buf, s);
         return buf[3] ? buf + 8 : buf + 3;
     }
     if (!d) {
@@ -2515,7 +2516,7 @@ char *JS::doubleToStr(char *buffer, size_t bufferSize, double value, DToStrMode 
                 numBegin[0] = numBegin[1];
                 numBegin[1] = '.';
             }
-            std::sprintf(numEnd, "e%+d", decPt-1);
+            STD::sprintf(numEnd, "e%+d", decPt-1);
         } else if (decPt != nDigits) {
             // Some kind of a fraction in fixed notation
             ASSERT(decPt <= nDigits);
@@ -2590,8 +2591,8 @@ size_t JS::doubleToBaseStr(char *buffer, double value, uint base)
 
     // Check for Infinity and NaN
     if ((word0(value) & Exp_mask) == Exp_mask) {
-        std::strcpy(p, !word1(value) && !(word0(value) & Frac_mask) ? "Infinity" : "NaN");
-        return std::strlen(buffer);
+        strcpy(p, !word1(value) && !(word0(value) & Frac_mask) ? "Infinity" : "NaN");
+        return strlen(buffer);
     }
 
     // Output the integer part of value with the digits in reverse order.

@@ -22,43 +22,33 @@
 
 #include <cstddef>
 
+#ifdef _WIN32
+ // Turn off warnings about identifiers too long in browser information
+ #pragma warning(disable: 4786)
+#endif
+
 // Define int8, int16, int32, int64, uint8, uint16, uint32, uint64, and uint.
-#ifdef XP_BEOS
- #include <SupportDefs.h>
+typedef unsigned int uint;
+typedef unsigned char uchar;
+
+typedef signed char int8;
+typedef unsigned char uint8;
+typedef short int16;
+typedef unsigned short uint16;
+#if !defined(XP_MAC) && !defined(_WIN32)
+ typedef int int32;
+ typedef unsigned int uint32;
 #else
- #ifdef XP_UNIX
-  #include <sys/types.h>
- #else
-  typedef unsigned int uint;
-  typedef unsigned char uchar;
- #endif
+ typedef long int32;
+ typedef unsigned long uint32;
+#endif
+#ifdef _WIN32
+ typedef __int64 int64;
+ typedef unsigned __int64 uint64;
+#else
+ typedef long long int64;
  typedef unsigned long long uint64;
- #if !defined(XP_MAC) && !defined(_WIN32) && !defined(XP_OS2)
-  typedef unsigned int uint32;
- #else
-  typedef unsigned long uint32;
- #endif
- typedef unsigned short uint16;
- typedef unsigned char uint8;
- #ifdef AIX4_3
-  #include <sys/inttypes.h>
- #else
-  typedef long long int64;
-  #ifdef HPUX
-   #include <model.h>
-  #else
-   #if !defined(WIN32) || !defined(_WINSOCK2API_)  /* defines its own "int32" */
-    #if !defined(XP_MAC) && !defined(_WIN32) && !defined(XP_OS2)
-     typedef int int32;
-    #else
-     typedef long int32;
-    #endif
-   #endif
-   typedef short int16;
-   typedef signed char int8;
-  #endif /* HPUX */
- #endif /* AIX4_3 */
-#endif	/* XP_BEOS */
+#endif
 
 // Define this if the machine natively supports 64-bit integers
 #define NATIVE_INT64
@@ -72,6 +62,13 @@ typedef float float32;
 // Note that in C++ wchar_t is a distinct type rather than a typedef for some integral type.
 // Like char, a char16 can be either signed or unsigned at the implementation's discretion.
 typedef wchar_t char16;
-typedef unsigned wchar_t uchar16;
+#ifndef _WIN32 // Microsoft VC6 bug: wchar_t should be a built-in type, not a typedef
+ typedef unsigned wchar_t uchar16;
+#else
+ typedef wchar_t uchar16;
+#endif
 
+#ifdef _WIN32
+ #define IS_LITTLE_ENDIAN
+#endif
 #endif

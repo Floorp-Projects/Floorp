@@ -24,6 +24,7 @@
 #include <cmath>
 // Use platform-defined floating-point routines.  On platforms with faulty floating-point code
 // ifdef these out and replace by custom implementations.
+#ifndef _WIN32 // Microsoft VC6 bug: standard identifiers should be in std namespace
 using std::abs;
 using std::floor;
 using std::ceil;
@@ -34,6 +35,7 @@ using std::tan;
 using std::asin;
 using std::acos;
 using std::atan;
+#endif
 
 namespace JavaScript {
 
@@ -53,7 +55,7 @@ namespace JavaScript {
 	int hi0bits(uint32 x);
 
 	class BigInt {
-		static const int maxLgGrossSize = 15;	// Maximum value of lg2(grossSize)
+		enum {maxLgGrossSize = 15};		// Maximum value of lg2(grossSize)
 		static uint32 *freeLists[maxLgGrossSize+1];
 		
 	    uint lgGrossSize;				// lg2(grossSize)

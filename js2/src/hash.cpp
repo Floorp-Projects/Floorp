@@ -17,8 +17,8 @@
 // Copyright (C) 1998 Netscape Communications Corporation. All
 // Rights Reserved.
 
-#include <new>
 #include "hash.h"
+#include <new>
 namespace JS = JavaScript;
 
 
