@@ -110,6 +110,9 @@ interface calIDateTime : nsISupports
   // Methods
   //
 
+  // reset to an invalid state
+  void reset();
+
   // return a string representation of this date/time
   // in the current locale
   AUTF8String toString();

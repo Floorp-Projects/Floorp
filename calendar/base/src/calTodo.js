@@ -56,20 +56,16 @@ calTodo.prototype = {
     __proto__: calItemBase ? (new calItemBase()) : {},
 
     QueryInterface: function (aIID) {
-        if (!aIID.equals(Components.interfaces.nsISupports) &&
-            !aIID.equals(Components.interfaces.calIItemBase) &&
-            !aIID.equals(Components.interfaces.calITodo))
-        {
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        }
+        if (aIID.equals(Components.interfaces.calITodo))
+            return this;
 
-        return this;
+        return this.__proto__.QueryInterface.apply(this, aIID);
     },
 
     initTodo: function () {
-        this.mEntryTime = createCalDateTime();
-        this.mDueDate = createCalDateTime();
-        this.mCompletedDate = createCalDateTime();
+        this.mEntryDate = new CalDateTime();
+        this.mDueDate = new CalDateTime();
+        this.mCompletedDate = new CalDateTime();
         this.mPercentComplete = 0;
     },
 
@@ -95,6 +91,80 @@ calTodo.prototype = {
     get recurrenceStartDate() {
         return this.mEntryDate;
     },
+
+    icsEventPropMap: [
+    { cal: "mEntryDate", ics: "startTime" },
+    { cal: "mDueDate", ics: "dueTime" },
+    { cal: "mCompletedDate", ics: "completedTime" }],
+
+    set icalString(value) {
+        this.icalComponent = icalFromString(value);
+    },
+
+    get icalString() {
+        const icssvc = Components.
+          classes["@mozilla.org/calendar/ics-service;1"].
+          getService(Components.interfaces.calIICSService);
+        var calcomp = icssvc.createIcalComponent("VCALENDAR");
+        calcomp.prodid = "-//Mozilla Calendar//NONSGML Sunbird//EN";
+        calcomp.version = "2.0";
+        calcomp.addSubcomponent(this.icalComponent);
+        return calcomp.serializeToICS();
+    },
+
+    get icalComponent() {
+        const icssvc = Components.
+          classes["@mozilla.org/calendar/ics-service;1"].
+          getService(Components.interfaces.calIICSService);
+        var icalcomp = icssvc.createIcalComponent("VTODO");
+        this.fillIcalComponentFromBase(icalcomp);
+        this.mapPropsToICS(icalcomp, this.icsEventPropMap);
+
+        var percentprop = icssvc.createIcalProperty("PERCENT-COMPLETE");
+        percentprop.stringValue = this.mPercentComplete;
+        icalcomp.addProperty(percentprop);
+
+        var bagenum = this.mProperties.enumerator;
+        while (bagenum.hasMoreElements()) {
+            var iprop = bagenum.getNext().
+                QueryInterface(Components.interfaces.nsIProperty);
+            try {
+                var icalprop = icssvc.createIcalProperty(iprop.name);
+                icalprop.stringValue = iprop.value;
+                icalcomp.addProperty(icalprop);
+            } catch (e) {
+                // dump("failed to set " + iprop.name + " to " + iprop.value +
+                // ": " + e + "\n");
+            }
+        }
+        return icalcomp;
+    },
+
+    set icalComponent() {
+        this.modify();
+        if (event.componentType != "VTODO") {
+            event = event.getFirstSubcomponent("VTODO");
+            if (!event)
+                throw Components.results.NS_ERROR_INVALID_ARG;
+        }
+
+        this.setItemBaseFromICS(event);
+        this.mapPropsFromICS(event, this.icsEventPropMap);
+        this.mIsAllDay = this.mStartDate && this.mStartDate.isDate;
+
+        var promotedProps = {
+            "DTSTART": true,
+            "DTEND": true,
+            "DTSTAMP": true,
+            "DUE": true,
+            "COMPLETED": true,
+            "PERCENT-COMPLETE": true,
+            __proto__: this.itemBasePromotedProps
+        };
+        this.importUnpromotedProperties(event, promotedProps);
+        // Importing didn't really change anything
+        this.mDirty = false;
+    },
 };
         
 // var decl to prevent spurious error messages when loaded as component
@@ -102,7 +172,7 @@ calTodo.prototype = {
 var makeMemberAttr;
 if (makeMemberAttr) {
     makeMemberAttr(calTodo, "mEntryDate", null, "entryDate");
-    makeMemberAttr(calTodo, "mEndDate", null, "endDate");
+    makeMemberAttr(calTodo, "mDueDate", null, "dueDate");
     makeMemberAttr(calTodo, "mCompletedDate", null, "completedDate");
     makeMemberAttr(calTodo, "mPercentComplete", 0, "percentComplete");
 }

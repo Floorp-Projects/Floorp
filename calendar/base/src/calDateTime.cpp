@@ -54,18 +54,7 @@ calDateTime::calDateTime()
     : mImmutable(PR_FALSE),
       mValid(PR_FALSE)
 {
-    mNativeTime = 0;
-    mYear = 0;
-    mMonth = 0;
-    mDay = 0;
-    mHour = 0;
-    mMinute = 0;
-    mSecond = 0;
-    mIsUtc = PR_FALSE;
-    mWeekday = 0;
-    mYearday = 0;
-    mTimezoneOffset = 0;
-    mIsDate = PR_FALSE;
+    Reset();
 }
 
 calDateTime::calDateTime(struct icaltimetype *atimeptr)
@@ -121,6 +110,28 @@ calDateTime::Clone(calIDateTime **aResult)
     cdt->mImmutable = PR_FALSE;
     
     NS_ADDREF(*aResult = cdt);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+calDateTime::Reset()
+{
+    if (mImmutable)
+        return NS_ERROR_FAILURE;
+
+    mNativeTime = 0;
+    mYear = 0;
+    mMonth = 0;
+    mDay = 0;
+    mHour = 0;
+    mMinute = 0;
+    mSecond = 0;
+    mIsUtc = PR_FALSE;
+    mWeekday = 0;
+    mYearday = 0;
+    mTimezoneOffset = 0;
+    mIsDate = PR_FALSE;
+
     return NS_OK;
 }
 
@@ -324,6 +335,7 @@ calDateTime::ToIcalTime(icaltimetype *icalt)
 
     icalt->is_utc = mIsUtc ? 1 : 0;
     icalt->is_date = mIsDate ? 1 : 0;
+    icalt->is_daylight = 0;
 
     icalt->zone = NULL;
 }
