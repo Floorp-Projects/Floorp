@@ -46,7 +46,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .toolbar-primary {
-  -moz-binding: url("chrome://global/content/widgets/toolbar.xml#toolbar");
+  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar");
 }
 
 /* ::::: throbber ::::: */
