@@ -41,7 +41,7 @@ CPPSRCS		= \
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
-SHARED_LIBRARY_LIBS = $(DIST)/lib/libzlib.a
+SHARED_LIBRARY_LIBS = $(DIST)/lib/libzlib_s.a
 
 include $(topsrcdir)/config/rules.mk
 
