@@ -198,6 +198,7 @@ RecycleTree(JSParseNode *pn, JSTreeContext *tc)
 
     if (!pn)
         return;
+    JS_ASSERT(pn != tc->nodeList);      /* catch back-to-back dup recycles */
     switch (pn->pn_arity) {
       case PN_FUNC:
         RecycleTree(pn->pn_body, tc);
@@ -3024,7 +3025,8 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             pn->pn_kid = NULL;
         }
         RecycleTree(pn2, tc);
-        RecycleTree(pn3, tc);
+        if (pn3 && pn3 != pn2)
+            RecycleTree(pn3, tc);
         break;
 
       case TOK_PLUS:
