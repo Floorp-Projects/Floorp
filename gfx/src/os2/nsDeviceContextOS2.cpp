@@ -218,9 +218,8 @@ void nsDeviceContextOS2 :: CommonInit(HDC aDC)
     mScreenManager = do_GetService("@mozilla.org/gfx/screenmanager;1", &ignore);   
     if ( !sNumberOfScreens )
       mScreenManager->GetNumberOfScreens(&sNumberOfScreens);
+    mSupportsRasterFonts = !!(alArray[CAPS_RASTER_CAPS] & CAPS_RASTER_FONTS);
   } // if this dc is not a print device
-
-  mSupportsRasterFonts = !!(alArray[CAPS_RASTER_CAPS] & CAPS_RASTER_FONTS);
 
   DeviceContextImpl::CommonInit();
 }
