@@ -43,11 +43,15 @@
                 pageSetup = id; 
                 previousTab = id; 
                 printPage = id; 
+                releaseNoteLink = id; 
                 reloadWithCharset = id; 
                 savePage = id; 
+                searchCustomizeLink = id; 
                 sendURL = id; 
+                setFileExtension = id; 
                 showHistory = id; 
                 smallerTextSize = id; 
+                tipsTricksLink = id; 
                 toggleBookmarksToolbar = id; 
                 toggleOfflineMode = id; 
                 viewSource = id; 

@@ -1140,6 +1140,27 @@ const int kReuseWindowOnAE = 2;
     [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
 }
 
+-(IBAction) releaseNoteLink:(id)aSender;
+{
+  NSString *pageToLoad = NSLocalizedStringFromTable(@"ReleaseNotesDefault", @"WebsiteDefaults", nil);
+  if (![pageToLoad isEqualToString:@"ReleaseNotesDefault"])
+    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
+}
+
+-(IBAction) tipsTricksLink:(id)aSender;
+{
+  NSString *pageToLoad = NSLocalizedStringFromTable(@"TipsTricksPageDefault", @"WebsiteDefaults", nil);
+  if (![pageToLoad isEqualToString:@"TipsTricksPageDefault"])
+    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
+}
+
+-(IBAction) searchCustomizeLink:(id)aSender;
+{
+  NSString *pageToLoad = NSLocalizedStringFromTable(@"SearchCustomPageDefault", @"WebsiteDefaults", nil);
+  if (![pageToLoad isEqualToString:@"SearchCustomPageDefault"])
+    [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
+}
+
 + (NSImage*)createImageForDragging:(NSImage*)aIcon title:(NSString*)aTitle
 {
   NSImage* image;

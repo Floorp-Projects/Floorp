@@ -5,3 +5,8 @@ ThrobberPageDefault = "http://www.mozilla.org/projects/camino/";
 FeedbackPageDefault = "http://www.mozilla.org/projects/camino/feedback.html";
 InfoPageDefault = "http://www.mozilla.org/projects/camino/";
 RendezvousPageDefault="http://www.zeroconf.org/webbrowsers.html";
+
+SearchCustomPageDefault="http://www.mozilla.org/products/features/searchCustomization.html";
+TipsTricksPageDefault="http://www.mozilla.org/products/features/tipsTricks.html";
+ReleaseNotesDefault="http://www.mozilla.org/products/camino/releases/0.8.html";
+

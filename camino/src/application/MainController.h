@@ -144,6 +144,9 @@
 // Help menu actions
 -(IBAction) infoLink:(id)aSender;
 -(IBAction) feedbackLink:(id)aSender;
+-(IBAction) releaseNoteLink:(id)aSender;
+-(IBAction) tipsTricksLink:(id)aSender;
+-(IBAction) searchCustomizeLink:(id)aSender;
 
 -(BrowserWindowController*)openBrowserWindowWithURL: (NSString*)aURL andReferrer: (NSString*)aReferrer;
 - (void)openNewWindowOrTabWithURL:(NSString*)inURLString andReferrer:(NSString*)aReferrer;
