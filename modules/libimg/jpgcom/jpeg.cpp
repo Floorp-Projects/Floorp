@@ -22,7 +22,7 @@
 
 /*
  *    jpeg.c --- Glue code to Independent JPEG Group decoder library
- *    $Id: jpeg.cpp,v 1.16 2000/03/27 22:08:15 pnunn%netscape.com Exp $
+ *    $Id: jpeg.cpp,v 1.17 2000/05/26 07:48:21 shaver%mozilla.org Exp $
  */
 
 
@@ -469,6 +469,10 @@ il_jpeg_COM_handler (j_decompress_ptr cinfo)
 
     /* Get 16-bit comment length word. */
     INPUT_2BYTES(cinfo, length, return FALSE);
+    if (length < 2) {
+       cinfo->err->msg_code = JERR_BAD_LENGTH;
+       il_error_exit((j_common_ptr)cinfo);
+    }
     length -= 2;            /* discount the length word itself */
   
     PR_FREEIF(ic->comment);
