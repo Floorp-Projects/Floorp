@@ -79,9 +79,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
         PRUnichar **Names;
         PRUint32 NamesLen = 0;
         rv = profile->GetProfileList(&NamesLen, &Names);
-        PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-               ("ProfileManagerImpl_nativeStartup: GetProfileList rv: %d\n", 
-                rv));
         
         argv[1] = PL_strdup("-p");
         if (NS_SUCCEEDED(rv)) {

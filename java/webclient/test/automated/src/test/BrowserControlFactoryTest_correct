@@ -5,7 +5,6 @@
 1024[80fc498]: WrapperFactoryImpl_nativeAppInitialize: exiting
 1024[80fc498]: ProfileManagerImpl_nativeStartup: entering
 1024[80fc498]: ProfileManagerImpl_nativeStartup: GetProfileCount rv: 0
-1024[80fc498]: ProfileManagerImpl_nativeStartup: GetProfileList rv: 0
 1024[80fc498]: ProfileManagerImpl_nativeStartup: commandLineService initialize rv: 0
 1024[80fc498]: ProfileManagerImpl_nativeStartup: profileInternal startupWithArgs rv: 0
 1024[80fc498]: ProfileManagerImpl_nativeStartup: exiting

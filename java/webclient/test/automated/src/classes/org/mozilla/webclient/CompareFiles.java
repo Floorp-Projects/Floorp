@@ -1,5 +1,5 @@
 /*
- * $Id: CompareFiles.java,v 1.2 2004/02/25 05:44:08 edburns%acm.org Exp $
+ * $Id: CompareFiles.java,v 1.3 2004/02/26 02:37:00 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -40,9 +40,9 @@ public class CompareFiles {
      * This method compares the input files character by character. 
      * Skips whitespaces and comparison is not case sensitive.
      */
-    public static boolean filesIdentical (String newFileName, 
-					  String oldFileName, 
-					  List oldLinesToIgnore, 
+    public static boolean filesIdentical (String actualFileName, 
+					  String expectedFileName, 
+					  List expectedLinesToIgnore, 
 					  boolean ignorePrefix,
 					  boolean ignoreWarnings, 
 					  List ignoreKeywords) 
@@ -50,51 +50,60 @@ public class CompareFiles {
 
         boolean same = true;
 
-        File newFile = new File(newFileName);
-        File oldFile = new File(oldFileName);
+        File actualFile = new File(actualFileName);
+        File expectedFile = new File(expectedFileName);
 
-        FileReader newFileReader = new FileReader(newFile);
-        FileReader oldFileReader = new FileReader(oldFile);
-	LineNumberReader newReader = new LineNumberReader(newFileReader);
-	LineNumberReader oldReader = new LineNumberReader(oldFileReader);
+        FileReader actualFileReader = new FileReader(actualFile);
+        FileReader expectedFileReader = new FileReader(expectedFile);
+	LineNumberReader actualReader = new LineNumberReader(actualFileReader);
+	LineNumberReader expectedReader = new LineNumberReader(expectedFileReader);
 
-	String newLine, oldLine;
+	String actualLine, expectedLine;
 
-	newLine = newReader.readLine().trim();
-	oldLine = oldReader.readLine().trim();
+	actualLine = actualReader.readLine().trim();
+	expectedLine = expectedReader.readLine().trim();
 
 	// if one of the lines is null, but not the other
-	if (((null == newLine) && (null != oldLine)) ||
-	    ((null != newLine) && (null == oldLine))) {
+	if (((null == actualLine) && (null != expectedLine)) ||
+	    ((null != actualLine) && (null == expectedLine))) {
 	    same = false;
 	}
 
-	while (null != newLine && null != oldLine) {
+	while (null != actualLine && null != expectedLine) {
 	    if (ignorePrefix) {
 		int bracketColon = 0;
-		if (-1 != (bracketColon = newLine.indexOf("]: "))) {
-		    newLine = newLine.substring(bracketColon + 3);
+		if (-1 != (bracketColon = actualLine.indexOf("]: "))) {
+		    actualLine = actualLine.substring(bracketColon + 3);
 		}
-		if (-1 != (bracketColon = oldLine.indexOf("]: "))) {
-		    oldLine = oldLine.substring(bracketColon + 3);
+		if (-1 != (bracketColon = expectedLine.indexOf("]: "))) {
+		    expectedLine = expectedLine.substring(bracketColon + 3);
 		}
 	    }
 	    
-	    if (ignoreWarnings && newLine.startsWith("WARNING:")) {
+	    if (ignoreWarnings && actualLine.startsWith("WARNING:")) {
 		// we're ignoring warnings, no-op
-		newLine = newReader.readLine(); // swallow the WARNING line
+		actualLine = actualReader.readLine(); // swallow WARNING
+						      // line
 		continue;
 		
 	    }
-	    else if (!newLine.equals(oldLine)) {
-		if (null != oldLinesToIgnore) {
-		    // go thru the list of oldLinesToIgnore and see if
-		    // the current oldLine matches any of them.
-		    Iterator ignoreLines = oldLinesToIgnore.iterator();
+	    else if (ignoreWarnings && expectedLine.startsWith("WARNING:")) {
+		// we're ignoring warnings, no-op
+		expectedLine = expectedReader.readLine(); // swallow
+							  // WARNING
+							  // line
+		continue;
+		
+	    }
+	    else if (!actualLine.equals(expectedLine)) {
+		if (null != expectedLinesToIgnore) {
+		    // go thru the list of expectedLinesToIgnore and see if
+		    // the current expectedLine matches any of them.
+		    Iterator ignoreLines = expectedLinesToIgnore.iterator();
 		    boolean foundMatch = false;
 		    while (ignoreLines.hasNext()) {
 			String newTrim = ((String) ignoreLines.next()).trim();
-			if (oldLine.equals(newTrim)) {
+			if (expectedLine.equals(newTrim)) {
 			    foundMatch = true;
 			    break;
 			}
@@ -103,8 +112,8 @@ public class CompareFiles {
 		    // important
 		    if (!foundMatch) {
 			same = false;
-			System.out.println("newLine: " + newLine);
-			System.out.println("oldLine: " + oldLine);
+			System.out.println("actualLine: " + actualLine);
+			System.out.println("expectedLine: " + expectedLine);
 			break;
 		    }
 		}
@@ -113,7 +122,7 @@ public class CompareFiles {
 		    if (null != ignoreKeywords && 0 < ignoreKeywords.size()) {
 			Iterator iter = ignoreKeywords.iterator();
 			while (iter.hasNext()) {
-			    if (-1 != newLine.indexOf((String) iter.next())) {
+			    if (-1 != actualLine.indexOf((String) iter.next())) {
 				// we're ignoring lines that contain this
 				// keyword, no-op
 				same = true;
@@ -122,32 +131,32 @@ public class CompareFiles {
 			}
 		    }
 		    if (!same) {
-			System.out.println("newLine: " + newLine);
-			System.out.println("oldLine: " + oldLine);
+			System.out.println("actualLine: " + actualLine);
+			System.out.println("expectedLine: " + expectedLine);
 			break;
 		    }
 		}
 	    }
 	    
-	    newLine = newReader.readLine();
-	    oldLine = oldReader.readLine();
+	    actualLine = actualReader.readLine();
+	    expectedLine = expectedReader.readLine();
 
 	    // if one of the lines is null, but not the other
-	    if (((null == newLine) && (null != oldLine)) ||
-		((null != newLine) && (null == oldLine))) {
+	    if (((null == actualLine) && (null != expectedLine)) ||
+		((null != actualLine) && (null == expectedLine))) {
 		same = false;
 		break;
 	    }
-	    if (null != newLine) {
-		newLine = newLine.trim();
+	    if (null != actualLine) {
+		actualLine = actualLine.trim();
 	    }
-	    if (null != oldLine) {
-		oldLine = oldLine.trim();
+	    if (null != expectedLine) {
+		expectedLine = expectedLine.trim();
 	    }
 	}
 
-        newReader.close();
-        oldReader.close();
+        actualReader.close();
+        expectedReader.close();
 
         // if same is true and both files have reached eof, then
         // files are identical
