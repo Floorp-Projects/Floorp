@@ -337,7 +337,6 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&          aPresContext,
     // Place and size the child
     nsRect rect(borderWidth, borderWidth, innerSize.width, innerSize.height);
     mFirstChild->SetRect(rect);
-    htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
   }
 
   // XXX what should the max-element-size of an iframe be? Shouldn't
