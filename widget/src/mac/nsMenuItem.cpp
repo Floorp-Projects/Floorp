@@ -117,6 +117,8 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
   nsISupports  * parent  = aParent;
 
 /*
+  // Bump the ref count on the parent, since it gets released unconditionally..
+  NS_ADDREF(parent);
   while (1) {
     if (NS_OK == parent->QueryInterface(kIMenuIID,(void**)&menu)) {
       NS_RELEASE(parent);
