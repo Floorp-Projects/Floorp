@@ -146,7 +146,7 @@ nsCacheEntry::MarkValid()
  */
 
 nsresult
-nsCacheEntry::CommonOpen(nsCacheRequest * request, PRUint32 *accessGranted)
+nsCacheEntry::CommonOpen(nsCacheRequest * request, nsCacheAccessMode *accessGranted)
 {
     nsresult  rv = NS_OK;
     
@@ -157,7 +157,9 @@ nsCacheEntry::CommonOpen(nsCacheRequest * request, PRUint32 *accessGranted)
         if (request->mStreamBased)  MarkStreamBased();
         mFetchCount = 1;
         MarkInitialized();
-        *accessGranted = request->mAccessRequested & ~nsICache::ACCESS_WRITE;
+        // why shouldn't the initial entry allow writing?
+        //*accessGranted = request->mAccessRequested & ~nsICache::ACCESS_WRITE;
+        *accessGranted = request->mAccessRequested;
         return rv;
     }
 
@@ -185,7 +187,7 @@ nsCacheEntry::Open(nsCacheRequest * request, nsICacheEntryDescriptor ** result)
 {
     if (!request)  return NS_ERROR_NULL_POINTER;
 
-    PRUint32  accessGranted;
+    nsCacheAccessMode  accessGranted;
     nsresult  rv = CommonOpen(request, &accessGranted);
     if (NS_SUCCEEDED(rv)) {
         //        rv = nsCacheEntryDescriptor::Create(this, accessGranted, result);
@@ -219,7 +221,7 @@ nsCacheEntry::AsyncOpen(nsCacheRequest * request)
 {
     if (!request)  return NS_ERROR_NULL_POINTER;
 
-    PRUint32  accessGranted;
+    nsCacheAccessMode  accessGranted;
     nsresult  rv = CommonOpen(request, &accessGranted);
     if (NS_SUCCEEDED(rv)) {
         nsICacheEntryDescriptor * descriptor;
