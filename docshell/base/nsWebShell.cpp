@@ -121,6 +121,9 @@
 #include "nsIExternalProtocolService.h"
 #include "nsCExternalHandlerService.h"
 
+// Used in the fixup code
+#include "prnetdb.h"
+
 #ifdef NS_DEBUG
 /**
  * Note: the log module is created during initialization which
@@ -857,6 +860,12 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
         // if we want keywords enabled...this is just a bandaid...
         if (keywordsEnabled && !scheme.IsEmpty() &&
            (scheme.Find("http") != 0)) {
+            keywordsEnabled = PR_FALSE;
+        }
+
+        // Don't perform fixup on an IP address
+        PRNetAddr addr;
+        if(PR_StringToNetAddr(host.get(), &addr) == PR_SUCCESS) {
             keywordsEnabled = PR_FALSE;
         }
 
