@@ -4762,14 +4762,17 @@ PresShell::UnsuppressAndInvalidate()
     }
   }
 
-  mPaintingSuppressed = PR_FALSE;
-  nsIFrame* rootFrame;
-  mFrameManager->GetRootFrame(&rootFrame);
-  if (rootFrame) {
-    nsRect rect;
-    rootFrame->GetRect(rect);
-    if (!rect.IsEmpty()) {
-      ((nsFrame*)rootFrame)->Invalidate(mPresContext, rect, PR_FALSE);
+  NS_ASSERTION(mFrameManager, "frameManager is already gone");
+  if (mFrameManager) {
+    mPaintingSuppressed = PR_FALSE;
+    nsIFrame* rootFrame;
+    mFrameManager->GetRootFrame(&rootFrame);
+    if (rootFrame) {
+      nsRect rect;
+      rootFrame->GetRect(rect);
+      if (!rect.IsEmpty()) {
+        ((nsFrame*)rootFrame)->Invalidate(mPresContext, rect, PR_FALSE);
+      }
     }
   }
 
