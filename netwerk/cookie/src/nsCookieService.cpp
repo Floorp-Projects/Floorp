@@ -91,23 +91,6 @@ static const PRUint32 kMaxBytesPerCookie = 4096;
 // the user can do something about it (e.g. whitelist the site).
 static const nsCookieStatus STATUS_REJECTED_WITH_ERROR = 5;
 
-// the following P3P constants are used to mangle one enumerated type into
-// another. we may be able to clean up the p3pservice to use consistent
-// types so these aren't required.
-// do we need P3P_UnknownPolicy? can't we default to P3P_NoPolicy?
-static const PRInt32 P3P_UnknownPolicy   = -1;
-static const PRInt32 P3P_NoPolicy        = 0;
-static const PRInt32 P3P_NoConsent       = 2;
-static const PRInt32 P3P_ImplicitConsent = 4;
-static const PRInt32 P3P_ExplicitConsent = 6;
-static const PRInt32 P3P_NoIdentInfo     = 8;
-
-static const char P3P_Unknown   = ' ';
-static const char P3P_Accept    = 'a';
-static const char P3P_Downgrade = 'd';
-static const char P3P_Reject    = 'r';
-static const char P3P_Flag      = 'f';
-
 // XXX these casts and constructs are horrible, but our nsInt64/nsTime
 // classes are lacking so we need them for now. see bug 198694.
 #define USEC_PER_SEC   (nsInt64(1000000))
@@ -121,8 +104,6 @@ static const PRUint32 BEHAVIOR_P3P           = 3;
 
 // pref string constants
 static const char kCookiesPermissions[] = "network.cookie.cookieBehavior";
-static const char kCookiesP3PString[] = "network.cookie.p3p";
-static const char kCookiesP3PString_Default[] = "drdraaaa";
 
 // struct for temporarily storing cookie attributes during header parsing
 struct nsCookieAttributes
@@ -386,6 +367,7 @@ nsCookieService::nsCookieService()
  : mCookieCount(0)
  , mCookieChanged(PR_FALSE)
  , mCookieIconVisible(PR_FALSE)
+ , mCookiesPermissions(BEHAVIOR_ACCEPT)
 {
 }
 
@@ -396,8 +378,16 @@ nsCookieService::Init()
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // cache and init the preferences observer
-  InitPrefObservers();
+  // init our pref and observer
+  nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefBranch) {
+    // add observers
+    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(prefBranch);
+    if (prefInternal)
+      prefInternal->AddObserver(kCookiesPermissions, this, PR_TRUE);
+
+    PrefChanged(prefBranch);
+  }
 
   // cache mCookieFile
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mCookieFile));
@@ -414,7 +404,6 @@ nsCookieService::Init()
     mObserverService->AddObserver(this, "cookieIcon", PR_TRUE);
   }
 
-  mP3PService = do_GetService(NS_COOKIECONSENT_CONTRACTID);
   mPermissionService = do_GetService(NS_COOKIEPERMISSION_CONTRACTID);
 
   return NS_OK;
@@ -436,8 +425,6 @@ nsCookieService::Observe(nsISupports     *aSubject,
                          const char      *aTopic,
                          const PRUnichar *aData)
 {
-  nsresult rv;
-
   // check the topic
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     // The profile is about to change,
@@ -462,10 +449,9 @@ nsCookieService::Observe(nsISupports     *aSubject,
     // The profile has already changed.    
     // Now just read them from the new profile location.
     // we also need to update the cached cookie file location
-    nsresult rv;
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mCookieFile));
+    nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(mCookieFile));
     if (NS_SUCCEEDED(rv)) {
-      rv = mCookieFile->AppendNative(NS_LITERAL_CSTRING(kCookieFileName));
+      mCookieFile->AppendNative(NS_LITERAL_CSTRING(kCookieFileName));
     }
     Read();
 
@@ -475,25 +461,9 @@ nsCookieService::Observe(nsISupports     *aSubject,
     mCookieIconVisible = (aData[0] == 'o' && aData[1] == 'n' && aData[2] == '\0');
 
   } else if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-    // which pref changed?
-    NS_LossyConvertUCS2toASCII pref(aData);
-    PRInt32 tempPrefValue;
-
-    if (pref.Equals(kCookiesPermissions)) {
-      rv = mPrefBranch->GetIntPref(kCookiesPermissions, &tempPrefValue);
-      if (NS_FAILED(rv) || tempPrefValue < 0 || tempPrefValue > 3) {
-        tempPrefValue = BEHAVIOR_REJECT;
-      }
-      mCookiesPermissions = tempPrefValue;
-
-    } else if (pref.Equals(kCookiesP3PString)) {
-      rv = mPrefBranch->GetCharPref(kCookiesP3PString, getter_Copies(mCookiesP3PString));
-      // check for a malformed string
-      if (NS_FAILED(rv) || mCookiesP3PString.Length() != 8) {
-        // reassign to default string
-        mCookiesP3PString = NS_LITERAL_CSTRING(kCookiesP3PString_Default);
-      }
-    }
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(aSubject);
+    if (prefBranch)
+      PrefChanged(prefBranch);
   }
 
   return NS_OK;
@@ -532,7 +502,8 @@ nsCookieService::GetCookieStringFromHttp(nsIURI     *aHostURI,
   }
 
   // check default prefs
-  nsCookieStatus cookieStatus = CheckPrefs(aHostURI, aFirstURI, aChannel, nsnull);
+  nsCookiePolicy cookiePolicy; // we don't use this here... just a placeholder
+  nsCookieStatus cookieStatus = CheckPrefs(aHostURI, aFirstURI, aChannel, nsnull, cookiePolicy);
   // for GetCookie(), we don't fire rejection notifications.
   switch (cookieStatus) {
   case nsICookie::STATUS_REJECTED:
@@ -692,7 +663,8 @@ nsCookieService::SetCookieStringFromHttp(nsIURI     *aHostURI,
   }
 
   // check default prefs
-  nsCookieStatus cookieStatus = CheckPrefs(aHostURI, aFirstURI, aChannel, aCookieHeader);
+  nsCookiePolicy cookiePolicy = nsICookie::POLICY_UNKNOWN;
+  nsCookieStatus cookieStatus = CheckPrefs(aHostURI, aFirstURI, aChannel, aCookieHeader, cookiePolicy);
   // fire a notification if cookie was rejected (but not if there was an error)
   switch (cookieStatus) {
   case nsICookie::STATUS_REJECTED:
@@ -700,8 +672,6 @@ nsCookieService::SetCookieStringFromHttp(nsIURI     *aHostURI,
   case STATUS_REJECTED_WITH_ERROR:
     return NS_OK;
   }
-  // get the site's p3p policy now (common to all cookies)
-  nsCookiePolicy cookiePolicy = GetP3PPolicy(SiteP3PPolicy(aHostURI, aChannel));
 
   // parse server local time. this is not just done here for efficiency
   // reasons - if there's an error parsing it, and we need to default it
@@ -811,56 +781,12 @@ nsCookieService::GetCookieIconIsVisible(PRBool *aIsVisible)
  ******************************************************************************/
 
 void
-nsCookieService::InitPrefObservers()
+nsCookieService::PrefChanged(nsIPrefBranch *aPrefBranch)
 {
-  nsresult rv;
-
-  // install and cache the preferences observer
-  mPrefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIPrefBranchInternal> prefInternal = do_QueryInterface(mPrefBranch, &rv);
-
-    // add observers
-    if (NS_SUCCEEDED(rv)) {
-      prefInternal->AddObserver(kCookiesPermissions, this, PR_TRUE);
-      prefInternal->AddObserver(kCookiesP3PString, this, PR_TRUE);
-    }
-
-    // initialize prefs
-    rv = ReadPrefs();
-    if (NS_FAILED(rv)) {
-      NS_WARNING("Error occured reading cookie preferences");
-    }
-
-  } else {
-    // only called if getting the prefbranch failed.
-    mCookiesPermissions = BEHAVIOR_ACCEPT;
-    mCookiesP3PString = NS_LITERAL_CSTRING(kCookiesP3PString_Default);
-  }
-}
-
-nsresult
-nsCookieService::ReadPrefs()
-{
-  nsresult rv, rv2 = NS_OK;
-  PRInt32 tempPrefValue;
-
-  rv = mPrefBranch->GetIntPref(kCookiesPermissions, &tempPrefValue);
-  if (NS_FAILED(rv)) {
-    tempPrefValue = BEHAVIOR_REJECT;
-    rv2 = rv;
-  }
-  mCookiesPermissions = tempPrefValue;
-
-  rv = mPrefBranch->GetCharPref(kCookiesP3PString, getter_Copies(mCookiesP3PString));
-  // check for a malformed string
-  if (NS_FAILED(rv) || mCookiesP3PString.Length() != 8) {
-    // reassign to default string
-    mCookiesP3PString = NS_LITERAL_CSTRING(kCookiesP3PString_Default);
-    rv2 = rv;
-  }
-
-  return rv2;
+  PRInt32 val;
+  if (NS_SUCCEEDED(aPrefBranch->GetIntPref(kCookiesPermissions, &val)) &&
+      val >= 0 && val <= 3)
+    mCookiesPermissions = val;
 }
 
 /******************************************************************************
@@ -1697,92 +1623,12 @@ nsCookieService::IsForeign(nsIURI *aHostURI,
   return !IsInDomain(NS_LITERAL_CSTRING(".") + firstHost, currentHost);
 }
 
-nsCookiePolicy
-nsCookieService::GetP3PPolicy(PRInt32 aPolicy)
-{
-  switch (aPolicy) {
-    case P3P_NoPolicy:
-      return nsICookie::POLICY_NONE;
-    case P3P_NoConsent:
-      return nsICookie::POLICY_NO_CONSENT;
-    case P3P_ImplicitConsent:
-      return nsICookie::POLICY_IMPLICIT_CONSENT;
-    case P3P_ExplicitConsent:
-      return nsICookie::POLICY_EXPLICIT_CONSENT;
-    case P3P_NoIdentInfo:
-      return nsICookie::POLICY_NO_II;
-    default:
-      return nsICookie::POLICY_UNKNOWN;
-  }
-}
-
-/*
- * returns P3P_NoPolicy, P3P_NoConsent, P3P_ImplicitConsent,
- * P3P_ExplicitConsent, or P3P_NoIdentInfo based on site
- */
-PRInt32
-nsCookieService::SiteP3PPolicy(nsIURI     *aCurrentURI,
-                               nsIChannel *aChannel)
-{
-  // default to P3P_NoPolicy if anything fails
-  PRInt32 consent = P3P_NoPolicy;
-
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (mP3PService && httpChannel) {
-    nsCAutoString currentURISpec;
-    if (NS_SUCCEEDED(aCurrentURI->GetAsciiSpec(currentURISpec))) {
-      mP3PService->GetConsent(currentURISpec.get(), httpChannel, &consent);
-    }
-  }
-  return consent;
-}
-
 nsCookieStatus
-nsCookieService::P3PDecision(nsIURI     *aHostURI,
-                             nsIURI     *aFirstURI,
-                             nsIChannel *aChannel)
-{
-  // get the site policy from aHttpChannel
-  PRInt32 policy = SiteP3PPolicy(aHostURI, aChannel);
-  // check if the cookie is foreign; if aFirstURI is null, default to foreign
-  PRInt32 isForeign = IsForeign(aHostURI, aFirstURI) == PR_TRUE;
-  
-  // if site does not collect identifiable info, then treat it as if it did and
-  // asked for explicit consent. this check is required, since there is no entry
-  // in mCookiesP3PString for it.
-  if (policy == P3P_NoIdentInfo) {
-    policy = P3P_ExplicitConsent;
-  }
-
-  // decide P3P_Accept, P3P_Downgrade, P3P_Flag, or P3P_Reject based on user's
-  // preferences.
-    // note: mCookiesP3PString can't be empty here, since we only execute this
-    // path if BEHAVIOR_P3P is set; this in turn can only occur
-    // if the p3p pref has been read (which is set to a default if the read
-    // fails). if cookie is foreign, [policy + 1] points to the appropriate
-    // pref; if cookie isn't foreign, [policy] points.
-  PRInt32 decision = mCookiesP3PString.CharAt(policy + isForeign);
-
-  switch (decision) {
-    case P3P_Unknown:
-      return nsICookie::STATUS_UNKNOWN;
-    case P3P_Accept:
-      return nsICookie::STATUS_ACCEPTED;
-    case P3P_Downgrade:
-      return nsICookie::STATUS_DOWNGRADED;
-    case P3P_Flag:
-      return nsICookie::STATUS_FLAGGED;
-    case P3P_Reject:
-      return nsICookie::STATUS_REJECTED;
-  }
-  return nsICookie::STATUS_UNKNOWN;
-}
-
-nsCookieStatus
-nsCookieService::CheckPrefs(nsIURI     *aHostURI,
-                            nsIURI     *aFirstURI,
-                            nsIChannel *aChannel,
-                            const char *aCookieHeader)
+nsCookieService::CheckPrefs(nsIURI         *aHostURI,
+                            nsIURI         *aFirstURI,
+                            nsIChannel     *aChannel,
+                            const char     *aCookieHeader,
+                            nsCookiePolicy &aPolicy)
 {
   // pref tree:
   // 0) get the scheme strings from the two URI's
@@ -1855,18 +1701,24 @@ nsCookieService::CheckPrefs(nsIURI     *aHostURI,
     }
 
   } else if (mCookiesPermissions == BEHAVIOR_P3P) {
-    // check to see if P3P conditions are satisfied.
-    // nsCookieStatus is an enumerated type, defined in nsCookie.idl (frozen interface):
-    // STATUS_UNKNOWN -- cookie collected in a previous session and this info no longer available
-    // STATUS_ACCEPTED -- cookie was accepted
-    // STATUS_DOWNGRADED -- cookie was accepted but downgraded to a session cookie
-    // STATUS_FLAGGED -- cookie was accepted with a warning being issued to the user
-    // STATUS_REJECTED
+    // check to see if P3P conditions are satisfied. see nsICookie.idl for
+    // P3P-related constants.
 
-    // to do this, at the moment, we need a channel, but we can live without
-    // the two URI's (as long as no foreign checks are required).
-    // if the channel is null, we can fall back on "no p3p policy" prefs.
-    nsCookieStatus p3pStatus = P3PDecision(aHostURI, aFirstURI, aChannel);
+    nsCookieStatus p3pStatus = nsICookie::STATUS_REJECTED;
+
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+    if (httpChannel) {
+      // lazily init the P3P service
+      if (!mP3PService)
+        mP3PService = do_GetService(NS_COOKIECONSENT_CONTRACTID);
+
+      if (mP3PService) {
+        // get the site policy and a status decision for the cookie
+        PRBool isForeign = IsForeign(aHostURI, aFirstURI);
+        mP3PService->GetConsent(aHostURI, httpChannel, isForeign, &aPolicy, &p3pStatus);
+      }
+    }
+
     if (p3pStatus == nsICookie::STATUS_REJECTED) {
       COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "P3P test failed");
     }

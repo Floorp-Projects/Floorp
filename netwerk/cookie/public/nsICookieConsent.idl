@@ -37,13 +37,38 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsICookie.idl"
 
+interface nsIURI;
 interface nsIHttpChannel;
 
 [scriptable,uuid(F5A34F50-1F39-11d6-A627-0010A401EB10)]
-interface nsICookieConsent : nsISupports {
- long getConsent(in string aURI, 
-                 in nsIHttpChannel aHttpChannel);
+interface nsICookieConsent : nsISupports
+{
+  /**
+   * getConsent
+   *
+   * gives a decision on what should be done with a cookie, based on a site's
+   * p3p policy and the user's preferences. the policy for the given URI and
+   * channel is also returned.
+   *
+   * @param uri
+   *        the URI to find the policy for
+   * @param httpChannel
+   *        the channel to extract the p3p headers from
+   * @param isForeign
+   *        true if the cookie originates from a third-party site. this is used
+   *        to decide the cookie status based on user preferences.
+   * @param policy
+   *        the policy for the given URI, or nsICookie::POLICY_UNKNOWN if one
+   *        cannot be found. valid values are defined in nsICookie.idl.
+   *
+   * @return nsCookieStatus value. valid values are defined in nsICookie.idl.
+   */
+  nsCookieStatus getConsent(in  nsIURI         uri,
+                            in  nsIHttpChannel httpChannel,
+                            in  boolean        isForeign,
+                            out nsCookiePolicy policy);
 };  
 
 %{C++
