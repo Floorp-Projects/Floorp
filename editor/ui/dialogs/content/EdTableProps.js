@@ -795,6 +795,22 @@ function ValidateTableData()
   newColCount = Number(ValidateNumber(dialog.TableColumnsInput, null, 1, maxColumns, null, null, true));
   if (gValidationError) return false;
 
+  // If user is deleting any cells, get confirmation
+  // (This is a global to the dialog and we ask only once per dialog session)
+  if ( !canDelete &&
+       (newRowCount < rowCount ||
+        newColCount < colCount) &&
+       ConfirmWithTitle(GetString("DeleteTableTitle"), 
+                          GetString("DeleteTableMsg"),
+                          GetString("DeleteCells")) )
+  {
+    canDelete = true;
+  }
+  else
+  {
+    SetTextboxFocus(newRowCount < rowCount ? dialog.TableRowsInput : dialog.TableColumnsInput);
+    return false;
+  }
 
   ValidateNumber(dialog.TableWidthInput, dialog.TableWidthUnits,
                  1, maxPixels, globalTableElement, "width");
@@ -944,16 +960,6 @@ function CloneAttribute(destElement, srcElement, attr)
     editorShell.SetAttribute(destElement, attr, value);
 }
 
-function ConfirmDeleteCells()
-{
-  if (0 == editorShell.ConfirmWithTitle(GetString("DeleteTableTitle"), GetString("DeleteTableMsg"),
-                                        GetString("DeleteCells"), ""))
-  {
-    return true;
-  }
-  return false;
-}
-
 function ApplyTableAttributes()
 {
   var newAlign = dialog.TableCaptionList.selectedItem.value;
@@ -1000,16 +1006,6 @@ function ApplyTableAttributes()
   var countDelta;
   var foundcell;
   var i;
-
-  // If user is deleting any cells and get confirmation
-  // (This is a global to the dialog and we ask only once per dialog session)
-  if ( !canDelete &&
-       (newRowCount < rowCount ||
-        newColCount < colCount) &&
-       ConfirmDeleteCells() )
-  {
-    canDelete = true;
-  }
 
   if (newRowCount != rowCount)
   {
