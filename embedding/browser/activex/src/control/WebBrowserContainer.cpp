@@ -147,6 +147,8 @@ NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, 
 
     NG_TRACE(_T("CWebBrowserContainer::OnStateChange(...)\n"));
 
+    BOOL doFireCommandStateChange = FALSE;
+
     // determine whether or not the document load has started or stopped.
     if (progressStateFlags & STATE_IS_DOCUMENT)
     {
@@ -213,13 +215,14 @@ NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, 
             SysFreeString(bstrStatus);
         }
 
+        // state change notifications
+        doFireCommandStateChange = TRUE;
     }
 
     if (progressStateFlags & STATE_IS_NETWORK)
     {
         if (progressStateFlags & STATE_START)
         {
-            // TODO 
         }
 
         if (progressStateFlags & STATE_STOP)
@@ -241,33 +244,34 @@ NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, 
 
             // Cleanup
             SysFreeString(bstrURI);
-
-            nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mOwner->mWebBrowser));
-
-            // Fire the new NavigateForward state
-            VARIANT_BOOL bEnableForward = VARIANT_FALSE;
-            PRBool aCanGoForward = PR_FALSE;
-            webNav->GetCanGoForward(&aCanGoForward);
-            if (aCanGoForward == PR_TRUE)
-            {
-                bEnableForward = VARIANT_TRUE;
-            }
-            mEvents2->Fire_CommandStateChange(CSC_NAVIGATEFORWARD, bEnableForward);
-
-            // Fire the new NavigateBack state
-            VARIANT_BOOL bEnableBack = VARIANT_FALSE;
-            PRBool aCanGoBack = PR_FALSE;
-            webNav->GetCanGoBack(&aCanGoBack);
-            if (aCanGoBack == PR_TRUE)
-            {
-                bEnableBack = VARIANT_TRUE;
-            }
-            mEvents2->Fire_CommandStateChange(CSC_NAVIGATEBACK, bEnableBack);
-
             mOwner->mBusyFlag = FALSE;
-
             mCurrentURI = nsnull;
         }
+    }
+
+    if (doFireCommandStateChange)
+    {
+        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mOwner->mWebBrowser));
+
+        // Fire the new NavigateForward state
+        VARIANT_BOOL bEnableForward = VARIANT_FALSE;
+        PRBool aCanGoForward = PR_FALSE;
+        webNav->GetCanGoForward(&aCanGoForward);
+        if (aCanGoForward == PR_TRUE)
+        {
+            bEnableForward = VARIANT_TRUE;
+        }
+        mEvents2->Fire_CommandStateChange(CSC_NAVIGATEFORWARD, bEnableForward);
+
+        // Fire the new NavigateBack state
+        VARIANT_BOOL bEnableBack = VARIANT_FALSE;
+        PRBool aCanGoBack = PR_FALSE;
+        webNav->GetCanGoBack(&aCanGoBack);
+        if (aCanGoBack == PR_TRUE)
+        {
+            bEnableBack = VARIANT_TRUE;
+        }
+        mEvents2->Fire_CommandStateChange(CSC_NAVIGATEBACK, bEnableBack);
     }
 
     return NS_OK;
