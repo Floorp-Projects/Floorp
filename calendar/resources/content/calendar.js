@@ -271,20 +271,6 @@ function launchPreferences()
     window.openDialog("chrome://calendar/content/pref/prefBird.xul", "PrefWindow", "chrome,titlebar,resizable=no");
 }
 
-
-/** 
-* Called to set up the date picker from the go to day button
-*/
-
-function prepareChooseDate()
-{
-   // the value attribute of the datePickerPopup is the initial date shown
-   
-   var datePickerPopup = document.getElementById( "oe-date-picker-popup" );   
-   
-   datePickerPopup.setAttribute( "value", gCalendarWindow.getSelectedDate() );
-}
-
 /** 
 * Called on double click in the day view all-day area
 * Could be used for week view too...

@@ -253,6 +253,11 @@
                    label="&goTodayCmd.label;"
                    accesskey="&goTodayCmd.accesskey;"
                    observes="go_today_command"/>
+         <menuitem id="calendar-go-menu-date"
+                   key="go_to_date_key"
+                   label="&goDateCmd.label;"
+                   accesskey="&goDateCmd.accesskey;"
+                   observes="go_date_command"/>
          <menuitem id="calendar-go-menu-previous"
                    key="go_backward_key"
                    label="&goPreviousCmd.label;"

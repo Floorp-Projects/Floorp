@@ -289,7 +289,24 @@ CalendarWindow.prototype.goToToday = function calWin_goToToday( )
    document.getElementById( "lefthandcalendar" ).value = Today;
 
 }
+/** PUBLIC
+*
+*   Choose a date, then go to that date in the current view.
+*/
 
+CalendarWindow.prototype.pickAndGoToDate = function calWin_pickAndGoToDate( )
+{
+  var currentView = this.currentView;
+  var args = new Object();
+  args.initialDate = this.getSelectedDate();  
+  args.onOk = function receiveAndGoToDate( pickedDate ) {
+    currentView.goToDay( pickedDate );
+    document.getElementById( "lefthandcalendar" ).value = pickedDate;
+  };
+  openDialog("chrome://calendar/content/goToDateDialog.xul",
+             "GoToDateDialog", // target= window name
+             "chrome,modal", args);
+}
 
 /** PUBLIC
 *
