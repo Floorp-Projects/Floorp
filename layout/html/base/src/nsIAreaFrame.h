@@ -20,6 +20,8 @@
 
 #include "nsIFrame.h"
 
+class nsISpaceManager;
+
 // 7327a0a0-bc8d-11d1-8539-00a02468fab6
 #define NS_IAREAFRAME_IID \
  { 0xa6cf90de, 0x15b3, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
@@ -36,6 +38,8 @@ public:
    * elements
    */
   NS_IMETHOD GetPositionedInfo(nscoord& aXMost, nscoord& aYMost) const = 0;
+
+  NS_IMETHOD GetSpaceManager(nsISpaceManager** aSpaceManagerResult) = 0;
 };
 
 #endif /* nsIAreaFrame_h___ */
