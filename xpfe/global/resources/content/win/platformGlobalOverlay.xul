@@ -8,8 +8,6 @@
 		 xmlns:html="http://www.w3.org/TR/REC-html40"
 		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:script language="JavaScript" src="chrome://global/content/platformGlobalOverlay.js"/>
-
 	<!-- close -->
 	<menuitem id="menu_close" value="&closeCmd.label;" key="key_close" observes="cmd_close"/>
 	<key id="key_close" command="true" key="&closeCmd.key;" observes="cmd_close"/>
