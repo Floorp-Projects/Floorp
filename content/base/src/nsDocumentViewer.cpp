@@ -1049,8 +1049,10 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
   {
     // get the DOM event receiver
     nsCOMPtr<nsIDOMEventReceiver> erP (do_QueryInterface(mDocument, &rv));
-    if(NS_FAILED(rv) || !erP)
-      return rv?rv:NS_ERROR_FAILURE;
+    if(NS_FAILED(rv)) 
+      return rv;
+    if(!erP)
+      return NS_ERROR_FAILURE;
 
     rv = erP->AddEventListenerByIID(mFocusListener, NS_GET_IID(nsIDOMFocusListener));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
