@@ -48,7 +48,6 @@
 #include <string.h>
 
 // XXX many of these statics need to be freed at shutdown time
-static PLHashTable* gFamilies = nsnull;
 static nsHashtable* gFontMetricsCache = nsnull;
 static nsCString **gFontNames = nsnull;
 static FontDetails *gFontDetails = nsnull;
@@ -359,32 +358,7 @@ static int CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure
 
 NS_IMETHODIMP nsFontEnumeratorPh::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
 {
-	if( aCount ) *aCount = 0;
-	else return NS_ERROR_NULL_POINTER;
-	if( aResult ) *aResult = nsnull;
-	else return NS_ERROR_NULL_POINTER;
-
-	if( gFamilies )
-	  {
-		  PRUnichar** array = (PRUnichar**) nsMemory::Alloc(gFamilies->nentries * sizeof(PRUnichar*));
-		  if( !array ) return NS_ERROR_OUT_OF_MEMORY;
-
-		  EnumerateFamilyInfo info = { array, 0 };
-		  PL_HashTableEnumerateEntries(gFamilies, EnumerateFamily, &info);
-		  if( !info.mIndex )
-			{
-				nsMemory::Free(array);
-				return NS_ERROR_OUT_OF_MEMORY;
-			}
-
-		  NS_QuickSort(array, gFamilies->nentries, sizeof(PRUnichar*),
-					   CompareFontNames, nsnull);
-
-		  *aCount = gFamilies->nentries;
-		  *aResult = array;
-		  return NS_OK;
-	  }
-	else return NS_ERROR_FAILURE;
+	return EnumerateFonts( nsnull, nsnull, aCount, aResult );
 }
 
 NS_IMETHODIMP nsFontEnumeratorPh::EnumerateFonts( const char* aLangGroup, const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult )
@@ -432,18 +406,20 @@ NS_IMETHODIMP nsFontEnumeratorPh::EnumerateFonts( const char* aLangGroup, const 
 		  int nCount = 0;
 		  for(i=0;i<gnFonts;i++)
 			{
-				if(!generic)
+				if(!generic) /* select all fonts */
 				  {
-					  array[nCount++] = ToNewUnicode(*gFontNames[i]);
+					  if (gFontDetails[i].flags & PHFONT_INFO_PROP) /* always use proportional fonts */
+					  	array[nCount++] = ToNewUnicode(*gFontNames[i]);
 				  }
 				else if(stricmp(generic, "monospace") == 0)
 				  {
 					  if(gFontDetails[i].flags & PHFONT_INFO_FIXED)
 						 array[nCount++] = ToNewUnicode(*gFontNames[i]);
 				  }
+				/* other possible vallues for generic are: serif, sans-serif, cursive, fantasy */
 				else
 				  {
-					  if (gFontDetails[i].flags & PHFONT_INFO_PROP)
+					  if (gFontDetails[i].flags & PHFONT_INFO_PROP) /* always use proportional fonts */
 						 array[nCount++] = ToNewUnicode(*gFontNames[i]);
 				  }
 			}
@@ -452,7 +428,7 @@ NS_IMETHODIMP nsFontEnumeratorPh::EnumerateFonts( const char* aLangGroup, const 
 		  return NS_OK;
 	  }
 
-	return EnumerateAllFonts( aCount, aResult );
+	return NS_OK;
 }
 
 NS_IMETHODIMP
