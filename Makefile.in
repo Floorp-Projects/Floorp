@@ -43,9 +43,6 @@ default: $(SUBMAKEFILES)
 	$(MAKE) tier_2
 	$(MAKE) tier_9
 	$(MAKE) tier_50
-ifdef MOZ_XPINSTALL
-	$(MAKE) tier_90
-endif
 ifdef MOZ_JSDEBUGGER
 	$(MAKE) tier_93
 endif
@@ -76,9 +73,6 @@ ifdef GC_LEAK_DETECTOR
 DIRS += gc/boehm
 endif
 
-ifdef MOZ_XPINSTALL
-DIRS += $(tier_90_dirs)
-endif
 ifdef MOZ_JSDEBUGGER
 DIRS += $(tier_93_dirs)
 endif
@@ -270,17 +264,14 @@ ifdef MOZ_PHOENIX
 tier_50_dirs    += browser/components/bookmarks/public
 endif
 
+# toolkit/xre/ depends on xpinstall, so it must be in tier 50
+ifdef MOZ_XPINSTALL
+tier_50_dirs     +=  xpinstall
+endif
+
 #
 # tier 9x - application features
 #
-
-ifdef MOZ_XPINSTALL
-ifdef MOZ_XUL_APP
-tier_50_dirs     +=  xpinstall
-else
-tier_90_dirs     +=  xpinstall
-endif
-endif
 
 ifdef MOZ_JSDEBUGGER
 tier_93_dirs	+= js/jsd
