@@ -37,6 +37,7 @@
 const nsICmdLineHandler     = Components.interfaces.nsICmdLineHandler;
 const nsIFactory            = Components.interfaces.nsIFactory;
 const nsISupports           = Components.interfaces.nsISupports;
+const nsIModule             = Components.interfaces.nsIModule;
 const nsIComponentRegistrar = Components.interfaces.nsIComponentRegistrar;
 const nsICategoryManager    = Components.interfaces.nsICategoryManager;
 
