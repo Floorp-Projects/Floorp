@@ -43,6 +43,7 @@ REQUIRES	= xpcom \
 		  mork \
 		  widget \
 		  dom \
+		  downloadmanager \
 		  pref \
 		  docshell \
 		  webshell \
