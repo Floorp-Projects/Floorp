@@ -197,10 +197,10 @@ public:
   virtual void Offset(PRInt32 aXOffset, PRInt32 aYOffset) = 0;
 
   /**
-  * does the region completely contain the rectangle?
+  * does the region intersect the rectangle?
   *
   * @param      rect to check for containment
-  * @return     true iff the rect is completely contained
+  * @return     true if the region intersects the rect
   *
   **/
 
