@@ -26,12 +26,6 @@
 #include "prtypes.h"
 #include "prio.h"
 
-PR_BEGIN_EXTERN_C
-
-//typedef PRFileDesc* (PR_CALLBACK *NSPRSocketFN)(void);  ??
-
-PR_EXTERN(PRFileDesc *) nsSSLIOLayerNewSocket(const char* hostName, PRFileDesc **fd, nsISupports **securityInfo);
-
-PR_END_EXTERN_C
+nsresult nsSSLIOLayerNewSocket(const char* hostName, PRFileDesc **fd, nsISupports **securityInfo);
 
 #endif /* _NSSSLIOLAYER_H */
