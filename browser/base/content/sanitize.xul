@@ -52,7 +52,7 @@
             style="width: 30em !important;"
             ondialogaccept="gSanitizePromptDialog.sanitize();">
 
-  <prefpane id="SanitizeDialogPane" onpaneload="gSanitizePromptDialog.init();">
+  <prefpane id="SanitizeDialogPane" onpaneload="gSanitizePromptDialog.init();" label="&sanitizeDialog.title;">
     <stringbundle id="bundleBrowser" src="chrome://browser/locale/browser.properties"/>
     
     <script type="application/x-javascript" src="chrome://browser/content/sanitize.js"/>
