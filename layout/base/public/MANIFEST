@@ -29,7 +29,6 @@ nsIPresState.h
 nsIPrintContext.h
 nsIPrintPreviewContext.h
 nsIReflowCallback.h
-nsIReflowCommand.h
 nsIScrollableFrame.h
 nsIScrollableViewProvider.h
 nsIStatefulFrame.h
@@ -37,5 +36,6 @@ nsIStyleContext.h
 nsIStyleFrameConstruction.h
 nsIStyleSet.h
 nsITextFrame.h
+nsReflowType.h
 nsStyleChangeList.h
 nsStyleConsts.h

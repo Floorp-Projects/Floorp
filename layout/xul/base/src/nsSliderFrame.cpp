@@ -53,7 +53,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
-#include "nsIReflowCommand.h"
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
 #include "nsStyleChangeList.h"

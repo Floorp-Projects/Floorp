@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsTableOuterFrame.h"
 #include "nsTableFrame.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
@@ -260,13 +260,11 @@ nsTableOuterFrame::AppendFrames(nsIPresContext* aPresContext,
 
       // Reflow the new caption frame. It's already marked dirty, so generate a reflow
       // command that tells us to reflow our dirty child frames
-      nsIReflowCommand* reflowCmd;
+      nsHTMLReflowCommand* reflowCmd;
   
-      rv = NS_NewHTMLReflowCommand(&reflowCmd, this, nsIReflowCommand::ReflowDirty);
-      if (NS_SUCCEEDED(rv)) {
+      rv = NS_NewHTMLReflowCommand(&reflowCmd, this, eReflowType_ReflowDirty);
+      if (NS_SUCCEEDED(rv))
         aPresShell.AppendReflowCommand(reflowCmd);
-        NS_RELEASE(reflowCmd);
-      }
     }
   }
   else {
@@ -319,13 +317,11 @@ nsTableOuterFrame::RemoveFrame(nsIPresContext* aPresContext,
   }
 
   // Generate a reflow command so we get reflowed
-  nsIReflowCommand* reflowCmd;
+  nsHTMLReflowCommand* reflowCmd;
 
-  rv = NS_NewHTMLReflowCommand(&reflowCmd, this, nsIReflowCommand::ReflowDirty);
-  if (NS_SUCCEEDED(rv)) {
+  rv = NS_NewHTMLReflowCommand(&reflowCmd, this, eReflowType_ReflowDirty);
+  if (NS_SUCCEEDED(rv))
     aPresShell.AppendReflowCommand(reflowCmd);
-    NS_RELEASE(reflowCmd);
-  }
 
   return NS_OK;
 }
@@ -1112,9 +1108,9 @@ nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext*           aPresContex
   nsSize   containSize = GetContainingBlockSize(aOuterRS);
 
   // for now just reflow the table if a style changed. This should be improved
-  nsIReflowCommand::ReflowType reflowCommandType;
+  nsReflowType reflowCommandType;
   aOuterRS.reflowCommand->GetType(reflowCommandType);
-  PRBool needInnerReflow = (nsIReflowCommand::StyleChanged == reflowCommandType)
+  PRBool needInnerReflow = (eReflowType_StyleChanged == reflowCommandType)
                             ? PR_TRUE : PR_FALSE;
 
   if (mMinCaptionWidth != captionMES.width) {  
@@ -1234,21 +1230,21 @@ nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext*           aPresContext
                                           nsReflowStatus&           aStatus)
 {
   nsresult rv = NS_OK;
-  nsIReflowCommand::ReflowType type;
+  nsReflowType type;
   aReflowState.reflowCommand->GetType(type);
   nsIFrame* objectFrame;
   aReflowState.reflowCommand->GetChildFrame(objectFrame); 
   switch (type) {
-  case nsIReflowCommand::ReflowDirty:
+  case eReflowType_ReflowDirty:
      rv = IR_ReflowDirty(aPresContext, aDesiredSize, aReflowState, aStatus);
     break;
 
-  case nsIReflowCommand::StyleChanged :    
-  case nsIReflowCommand::Timeout :    
+  case eReflowType_StyleChanged :    
+  case eReflowType_Timeout :    
     rv = IR_InnerTableReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
     break;
 
-  case nsIReflowCommand::ContentChanged :
+  case eReflowType_ContentChanged :
     NS_ASSERTION(PR_FALSE, "illegal reflow type: ContentChanged");
     rv = NS_ERROR_ILLEGAL_VALUE;
     break;
@@ -1288,9 +1284,9 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
   nsIFrame* target = nsnull;
   aOuterRS.reflowCommand->GetTarget(target);
   if (this == target) {
-    nsIReflowCommand::ReflowType type;
+    nsReflowType type;
     aOuterRS.reflowCommand->GetType(type);
-    if (nsIReflowCommand::StyleChanged == type) {
+    if (eReflowType_StyleChanged == type) {
       ReflowReason = eReflowReason_StyleChange;
     }
   }

@@ -42,7 +42,7 @@
 
 class nsIFrame;
 class nsIPresContext;
-class nsIReflowCommand;
+class nsHTMLReflowCommand;
 class nsIRenderingContext;
 class nsSpaceManager;
 class nsLineLayout;
@@ -140,7 +140,7 @@ struct nsHTMLReflowState {
   nsReflowReason      reason;
 
   // the reflow command. only set for a reflow reason of eReflowReason_Incremental
-  nsIReflowCommand*   reflowCommand;
+  nsHTMLReflowCommand* reflowCommand;
 
   // the available space in which to reflow the frame. The space represents the
   // amount of room for the frame's border, padding, and content area (not the
@@ -264,7 +264,7 @@ struct nsHTMLReflowState {
   // reflow.
   nsHTMLReflowState(nsIPresContext*          aPresContext,
                     nsIFrame*                aFrame,
-                    nsIReflowCommand&        aReflowCommand,
+                    nsHTMLReflowCommand&     aReflowCommand,
                     nsIRenderingContext*     aRenderingContext,
                     const nsSize&            aAvailableSpace);
 

@@ -52,7 +52,7 @@
 #include "nsIRenderingContext.h"
 #include "nsLayoutAtoms.h"
 #include "nsPlaceholderFrame.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
 #include "nsIContent.h"
@@ -942,11 +942,11 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       // it's target is the current span, then make sure we send
       // StyleChange reflow reasons down to the children so that they
       // don't over-optimize their reflow.
-      nsIReflowCommand* rc = rs->reflowCommand;
+      nsHTMLReflowCommand* rc = rs->reflowCommand;
       if (rc) {
-        nsIReflowCommand::ReflowType type;
+        nsReflowType type;
         rc->GetType(type);
-        if (type == nsIReflowCommand::StyleChanged) {
+        if (type == eReflowType_StyleChanged) {
           nsIFrame* parentFrame = psd->mFrame
             ? psd->mFrame->mFrame
             : mBlockReflowState->frame;
@@ -956,7 +956,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
             reason = eReflowReason_StyleChange;
           }
         }
-        else if (type == nsIReflowCommand::ReflowDirty &&
+        else if (type == eReflowType_ReflowDirty &&
                  (state & NS_FRAME_IS_DIRTY)) {          
           reason = eReflowReason_Dirty;
         }

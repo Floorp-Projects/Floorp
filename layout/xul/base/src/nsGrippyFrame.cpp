@@ -53,7 +53,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
-#include "nsIReflowCommand.h"
 //#include "nsSliderFrame.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"

@@ -108,7 +108,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
 // reflow.
 nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
                                      nsIFrame*            aFrame,
-                                     nsIReflowCommand&    aReflowCommand,
+                                     nsHTMLReflowCommand& aReflowCommand,
                                      nsIRenderingContext* aRenderingContext,
                                      const nsSize&        aAvailableSpace)
   : mReflowDepth(0)

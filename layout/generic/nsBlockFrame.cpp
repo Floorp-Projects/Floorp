@@ -54,7 +54,7 @@
 #include "nsIFrameManager.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsIView.h"
 #include "nsIFontMetrics.h"
@@ -84,6 +84,7 @@
 #include "nsIDOMHTMLHtmlElement.h"
 
 #ifdef DEBUG
+#include "nsPrintfCString.h"
 #include "nsBlockDebugFlags.h"
 
 
@@ -182,10 +183,11 @@ nsBlockFrame::InitDebugFlags()
 // Debugging support code
 
 #ifdef DEBUG
-static const char* kReflowCommandType[] = {
+const char* nsBlockFrame::kReflowCommandType[] = {
   "ContentChanged",
   "StyleChanged",
   "ReflowDirty",
+  "Timeout",
   "UserDefined",
 };
 #endif
@@ -600,10 +602,27 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
 #ifdef DEBUG
   if (gNoisyReflow) {
+    nsCAutoString reflow;
+    reflow.Append(nsHTMLReflowState::ReasonToString(aReflowState.reason));
+
+    if (aReflowState.reason == eReflowReason_Incremental) {
+      reflow += " (";
+
+      nsReflowType type;
+      aReflowState.reflowCommand->GetType(type);
+      reflow += kReflowCommandType[type];
+
+      nsIFrame* target;
+      aReflowState.reflowCommand->GetTarget(target);
+      reflow += nsPrintfCString("@%p", target);
+
+      reflow += ")";
+    }
+
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
     printf(": begin %s reflow availSize=%d,%d computedSize=%d,%d\n",
-           nsHTMLReflowState::ReasonToString(aReflowState.reason),
+           reflow.get(),
            aReflowState.availableWidth, aReflowState.availableHeight,
            aReflowState.mComputedWidth, aReflowState.mComputedHeight);
   }
@@ -759,24 +778,26 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     mState &= ~NS_FRAME_FIRST_REFLOW;
     break;  
 
-  case eReflowReason_Dirty:    
+  case eReflowReason_Dirty:
+    // Do nothing; the dirty lines will already have been marked.
     break;
 
   case eReflowReason_Incremental:  // should call GetNext() ?
     aReflowState.reflowCommand->GetTarget(target);
     if (this == target) {
-      nsIReflowCommand::ReflowType type;
+      nsReflowType type;
       aReflowState.reflowCommand->GetType(type);
 #ifdef NOISY_REFLOW_REASON
       ListTag(stdout);
       printf(": reflow=incremental type=%d\n", type);
 #endif
       switch (type) {
-      case nsIReflowCommand::StyleChanged:
+      case eReflowType_StyleChanged:
         rv = PrepareStyleChangedReflow(state);
         isStyleChange = PR_TRUE;
         break;
-      case nsIReflowCommand::ReflowDirty:
+      case eReflowType_ReflowDirty:
+        // Do nothing; the dirty lines will already have been marked.
         break;
       default:
         // Map any other incremental operations into full reflows
@@ -2032,7 +2053,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 #ifdef DEBUG
   if (gNoisyReflow) {
     if (aState.mReflowState.reason == eReflowReason_Incremental) {
-      nsIReflowCommand::ReflowType type;
+      nsReflowType type;
       aState.mReflowState.reflowCommand->GetType(type);
       IndentBy(stdout, gNoiseIndent);
       ListTag(stdout);
@@ -2837,15 +2858,13 @@ nsBlockFrame::AttributeChanged(nsIPresContext* aPresContext,
     nsCOMPtr<nsIPresShell> shell;
     aPresContext->GetShell(getter_AddRefs(shell));
     
-    nsIReflowCommand* reflowCmd;
+    nsHTMLReflowCommand* reflowCmd;
     rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
-                                 nsIReflowCommand::ContentChanged,
+                                 eReflowType_ContentChanged,
                                  nsnull,
                                  aAttribute);
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv))
       shell->AppendReflowCommand(reflowCmd);
-      NS_RELEASE(reflowCmd);
-    }
   }
   else if (nsHTMLAtoms::value == aAttribute) {
     const nsStyleDisplay* styleDisplay;
@@ -2875,15 +2894,13 @@ nsBlockFrame::AttributeChanged(nsIPresContext* aPresContext,
         nsCOMPtr<nsIPresShell> shell;
         aPresContext->GetShell(getter_AddRefs(shell));
         
-        nsIReflowCommand* reflowCmd;
+        nsHTMLReflowCommand* reflowCmd;
         rv = NS_NewHTMLReflowCommand(&reflowCmd, blockParent,
-                                     nsIReflowCommand::ContentChanged,
+                                     eReflowType_ContentChanged,
                                      nsnull,
                                      aAttribute);
-        if (NS_SUCCEEDED(rv)) {
+        if (NS_SUCCEEDED(rv))
           shell->AppendReflowCommand(reflowCmd);
-          NS_RELEASE(reflowCmd);
-        }
       }
     }
   }
@@ -5822,13 +5839,12 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
         // although we should. We can't use the NS_FRAME_HAS_DIRTY_CHILDREN
         // flag, because that's used to indicate whether in-flow children are
         // dirty...
-        nsIReflowCommand* reflowCmd;
+        nsHTMLReflowCommand* reflowCmd;
         nsresult          rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
-                                                       nsIReflowCommand::ReflowDirty);
+                                                       eReflowType_ReflowDirty);
         if (NS_SUCCEEDED(rv)) {
           reflowCmd->SetChildListName(nsLayoutAtoms::absoluteList);
           aPresShell->AppendReflowCommand(reflowCmd);
-          NS_RELEASE(reflowCmd);
         }
 
 #ifdef DEBUG
@@ -5870,7 +5886,7 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
     mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
 
     nsFrame::CreateAndPostReflowCommand(aPresShell, this, 
-      nsIReflowCommand::ReflowDirty, nsnull, nsnull, nsnull);
+      eReflowType_ReflowDirty, nsnull, nsnull, nsnull);
 
 #ifdef DEBUG
     if (gNoisyReflow) {
@@ -5885,7 +5901,7 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
       mState |= NS_FRAME_IS_DIRTY;
 
       // Cancel the dirty children reflow command you posted earlier
-      nsIReflowCommand::ReflowType type = nsIReflowCommand::ReflowDirty;
+      nsReflowType type = eReflowType_ReflowDirty;
       aPresShell->CancelReflowCommand(this, &type);
 
 #ifdef DEBUG

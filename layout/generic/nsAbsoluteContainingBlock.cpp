@@ -38,11 +38,10 @@
 #include "nsAbsoluteContainingBlock.h"
 #include "nsContainerFrame.h"
 #include "nsHTMLIIDs.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsIViewManager.h"
 #include "nsLayoutAtoms.h"
-#include "nsIReflowCommand.h"
 #include "nsIPresShell.h"
 #include "nsHTMLParts.h"
 #include "nsIPresContext.h"
@@ -88,12 +87,11 @@ nsAbsoluteContainingBlock::AppendFrames(nsIFrame*       aDelegatingFrame,
   mAbsoluteFrames.AppendFrames(nsnull, aFrameList);
 
   // Generate a reflow command to reflow the dirty frames
-  nsIReflowCommand* reflowCmd;
-  rv = NS_NewHTMLReflowCommand(&reflowCmd, aDelegatingFrame, nsIReflowCommand::ReflowDirty);
+  nsHTMLReflowCommand* reflowCmd;
+  rv = NS_NewHTMLReflowCommand(&reflowCmd, aDelegatingFrame, eReflowType_ReflowDirty);
   if (NS_SUCCEEDED(rv)) {
     reflowCmd->SetChildListName(nsLayoutAtoms::absoluteList);
     aPresShell.AppendReflowCommand(reflowCmd);
-    NS_RELEASE(reflowCmd);
   }
 
   return rv;
@@ -116,12 +114,11 @@ nsAbsoluteContainingBlock::InsertFrames(nsIFrame*       aDelegatingFrame,
   mAbsoluteFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
 
   // Generate a reflow command to reflow the dirty frames
-  nsIReflowCommand* reflowCmd;
-  rv = NS_NewHTMLReflowCommand(&reflowCmd, aDelegatingFrame, nsIReflowCommand::ReflowDirty);
+  nsHTMLReflowCommand* reflowCmd;
+  rv = NS_NewHTMLReflowCommand(&reflowCmd, aDelegatingFrame, eReflowType_ReflowDirty);
   if (NS_SUCCEEDED(rv)) {
     reflowCmd->SetChildListName(nsLayoutAtoms::absoluteList);
     aPresShell.AppendReflowCommand(reflowCmd);
-    NS_RELEASE(reflowCmd);
   }
 
   return rv;
@@ -306,14 +303,14 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
     NS_IF_RELEASE(listName);
 
     if (isAbsoluteChild) {
-      nsIReflowCommand::ReflowType  type;
+      nsReflowType  type;
 
       // Get the type of reflow command
       aReflowState.reflowCommand->GetType(type);
 
       // The only type of reflow command we expect is that we have dirty
       // child frames to reflow
-      NS_ASSERTION(nsIReflowCommand::ReflowDirty, "unexpected reflow type");
+      NS_ASSERTION(eReflowType_ReflowDirty, "unexpected reflow type");
 
       // Walk the positioned frames and reflow the dirty frames
       for (nsIFrame* f = mAbsoluteFrames.FirstChild(); f; f->GetNextSibling(&f)) {

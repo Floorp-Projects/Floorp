@@ -85,7 +85,7 @@
 #include "nsIDOMNSHTMLFormElement.h"
 #include "nsDOMError.h"
 #include "nsHTMLParts.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsICategoryManager.h"
 #include "nsIFormSubmitObserver.h"
 
@@ -665,12 +665,11 @@ nsFormFrame::StyleChangeReflow(nsIPresContext* aPresContext,
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
     
-  nsIReflowCommand* reflowCmd;
+  nsHTMLReflowCommand* reflowCmd;
   nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
-                                        nsIReflowCommand::StyleChanged);
+                                        eReflowType_StyleChanged);
   if (NS_SUCCEEDED(rv)) {
     shell->AppendReflowCommand(reflowCmd);
-    NS_RELEASE(reflowCmd);
   }
 }
 

@@ -37,7 +37,7 @@
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
 #include "nsIPresContext.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsIDeviceContext.h"
 #include "nsPageFrame.h"
 #include "nsViewsCID.h"
@@ -1371,7 +1371,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
 
           // force a reflow of the fixed children
           nsFrame::CreateAndPostReflowCommand(presShell, parentFrame,
-            nsIReflowCommand::UserDefined, nsnull, nsnull, nsLayoutAtoms::fixedList);
+            eReflowType_UserDefined, nsnull, nsnull, nsLayoutAtoms::fixedList);
         }
       }
     }

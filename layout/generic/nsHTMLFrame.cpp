@@ -39,7 +39,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsCSSRendering.h"
 #include "nsIDocument.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
 #include "nsViewsCID.h"
@@ -310,11 +310,10 @@ CanvasFrame::AppendFrames(nsIPresContext* aPresContext,
     mFrames.AppendFrame(nsnull, aFrameList);
 
     // Generate a reflow command to reflow the newly inserted frame
-    nsIReflowCommand* reflowCmd;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, this, nsIReflowCommand::ReflowDirty);
+    nsHTMLReflowCommand* reflowCmd;
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, this, eReflowType_ReflowDirty);
     if (NS_SUCCEEDED(rv)) {
       aPresShell.AppendReflowCommand(reflowCmd);
-      NS_RELEASE(reflowCmd);
     }
   }
 
@@ -366,11 +365,10 @@ CanvasFrame::RemoveFrame(nsIPresContext* aPresContext,
     mFrames.DestroyFrame(aPresContext, aOldFrame);
 
     // Generate a reflow command so we get reflowed
-    nsIReflowCommand* reflowCmd;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, this, nsIReflowCommand::ReflowDirty);
+    nsHTMLReflowCommand* reflowCmd;
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, this, eReflowType_ReflowDirty);
     if (NS_SUCCEEDED(rv)) {
       aPresShell.AppendReflowCommand(reflowCmd);
-      NS_RELEASE(reflowCmd);
     }
 
   } else {
@@ -417,7 +415,6 @@ CanvasFrame::Paint(nsIPresContext*      aPresContext,
 #endif
 
     if (mDoPaintFocus) {
-      PRBool clipEmpty;
       nsRect focusRect;
       GetRect(focusRect);
       /////////////////////
@@ -506,15 +503,15 @@ CanvasFrame::Reflow(nsIPresContext*          aPresContext,
     aReflowState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
       // Get the reflow type
-      nsIReflowCommand::ReflowType  reflowType;
+      nsReflowType  reflowType;
       aReflowState.reflowCommand->GetType(reflowType);
 
       switch (reflowType) {
-      case nsIReflowCommand::ReflowDirty:
+      case eReflowType_ReflowDirty:
         isDirtyChildReflow = PR_TRUE;
         break;
 
-      case nsIReflowCommand::StyleChanged:
+      case eReflowType_StyleChanged:
         // Remember it's a style change so we can set the reflow reason below
         isStyleChange = PR_TRUE;
         break;

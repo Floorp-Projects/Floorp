@@ -46,7 +46,7 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsIRenderingContext.h"
 #include "nsILoadGroup.h"
 #include "nsIURL.h"
@@ -1335,11 +1335,11 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsBulletFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
   if (eReflowReason_Incremental == aReflowState.reason) {
-    nsIReflowCommand::ReflowType type;
+    nsReflowType type;
     aReflowState.reflowCommand->GetType(type);
 
     /* if the style changed, see if we need to load a new url */
-    if (nsIReflowCommand::StyleChanged == type) {
+    if (eReflowType_StyleChanged == type) {
       nsCOMPtr<nsIURI> baseURI;
       GetBaseURI(getter_AddRefs(baseURI));
 

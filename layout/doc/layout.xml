@@ -221,7 +221,7 @@ following items are also included:
 has changed size) and 'eReflowReason_Incremental' (processing of an incremental
 reflow command).</Body>
 
-<Body>Reflow commands (see nsIReflowCommand in mozilla/layout/base/public) are used
+<Body>Reflow commands (see nsHTMLReflowCommand in mozilla/layout/html/base/src) are used
 to kick off an incremental reflow. They're generated either by the style system
 (in response to a style change) or by a frame itself (for example, if a frame has
 dirty child frames that need to be reflowed it will generate a reflow command).</Body>

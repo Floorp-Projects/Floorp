@@ -49,7 +49,6 @@
 #include "nsIAtom.h"
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
-#include "nsIReflowCommand.h"
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
 #include "nsLayoutAtoms.h"

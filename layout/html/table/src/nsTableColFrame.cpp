@@ -37,7 +37,6 @@
 #include "nsCOMPtr.h"
 #include "nsTableColFrame.h"
 #include "nsContainerFrame.h"
-#include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"

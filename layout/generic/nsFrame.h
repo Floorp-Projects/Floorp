@@ -47,7 +47,7 @@
 #endif
 
 #include "nsIPresShell.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsIFrameSelection.h"
 #include "nsHTMLReflowState.h"
 #include "nsHTMLReflowMetrics.h"
@@ -273,9 +273,9 @@ public:
                                   nsPeekOffsetStruct *aPos);
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
   NS_IMETHOD  ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
-  NS_IMETHOD  ReflowCommandNotify(nsIPresShell*     aPresShell,
-                                  nsIReflowCommand* aRC,
-                                  PRBool            aCommandAdded);
+  NS_IMETHOD  ReflowCommandNotify(nsIPresShell*        aPresShell,
+                                  nsHTMLReflowCommand* aRC,
+                                  PRBool               aCommandAdded);
 
 #ifdef ACCESSIBILITY
   NS_IMETHOD  GetAccessible(nsIAccessible** aAccessible);
@@ -368,12 +368,12 @@ public:
                                           nsIFrame *aFrame,
                                           nsIView **aView);
 
-  static nsresult CreateAndPostReflowCommand(nsIPresShell*                aPresShell,
-                                             nsIFrame*                    aTargetFrame,
-                                             nsIReflowCommand::ReflowType aReflowType,
-                                             nsIFrame*                    aChildFrame,
-                                             nsIAtom*                     aAttribute,
-                                             nsIAtom*                     aListName);
+  static nsresult CreateAndPostReflowCommand(nsIPresShell*                   aPresShell,
+                                             nsIFrame*                       aTargetFrame,
+                                             nsReflowType aReflowType,
+                                             nsIFrame*                       aChildFrame,
+                                             nsIAtom*                        aAttribute,
+                                             nsIAtom*                        aListName);
 
   //Mouse Capturing code used by the frames to tell the view to capture all the following events
   NS_IMETHOD CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents);

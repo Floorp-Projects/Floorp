@@ -36,60 +36,141 @@
  * ***** END LICENSE BLOCK ***** */
 #ifndef nsHTMLReflowCommand_h___
 #define nsHTMLReflowCommand_h___
-
-#include "nsIReflowCommand.h"
+#include "nsReflowType.h"
 #include "nsVoidArray.h"
 
-class nsIAtom;
+class  nsIAtom;
+class  nsIFrame;
+class  nsIPresContext;
+class  nsIRenderingContext;
+struct nsHTMLReflowMetrics;
+struct nsSize;
+
+// Reflow command flags
+#define NS_RC_CREATED_DURING_DOCUMENT_LOAD 0x0001
+
 
 /**
- * An HTML reflow command
+ * A reflow command is an object that is generated in response to a content
+ * model change notification. The reflow command is given to a presentation
+ * shell where it is queued and then dispatched by invoking the reflow
+ * commands's Dispatch() member function.
+ *
+ * Reflow command processing follows a path from the root frame down to the
+ * target frame (the frame for which the reflow command is destined). Reflow
+ * commands are processed by invoking the frame's Reflow() member function.
+ *
+ * The typical flow of control for a given reflow command starts with a content
+ * change notification. The content notifications are sent to document observers.
+ * The presentation shell forwards the notifications to the style set. The style
+ * system responds to the notifications by creating new frame (or destroying
+ * existing frames) as appropriate, and then generating a reflow command.
+ *
+ * @see nsIDocumentObserver
+ * @see nsIStyleSet
+ * @see nsIFrameReflow#Reflow()
+ * @see nsIPresShell#AppendReflowCommand()
+ * @see nsIPresShell#ProcessReflowCommands()
  */
-class nsHTMLReflowCommand : public nsIReflowCommand {
+class nsHTMLReflowCommand {
 public:
   /**
    * Construct an HTML reflow command of type aReflowType and with target
    * frame aTargetFrame. You can also specify an optional child frame, e.g.
    * to indicate the inserted child frame
    */
-  nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
-                      ReflowType aReflowType,
-                      nsIFrame*  aChildFrame = nsnull,
-                      nsIAtom*   aAttribute = nsnull);
+  nsHTMLReflowCommand(nsIFrame*    aTargetFrame,
+                      nsReflowType aReflowType,
+                      nsIFrame*    aChildFrame = nsnull,
+                      nsIAtom*     aAttribute = nsnull);
 
-  virtual ~nsHTMLReflowCommand();
+  ~nsHTMLReflowCommand();
 
-  // nsISupports
-  NS_DECL_ISUPPORTS
+  /**
+   * Dispatch the reflow command.
+   *
+   * Builds a path from the target frame back to the root frame, and then
+   * invokes the root frame's Reflow() member function.
+   *
+   * @see nsIFrame#Reflow()
+   */
+  nsresult Dispatch(nsIPresContext*      aPresContext,
+                    nsHTMLReflowMetrics& aDesiredSize,
+                    const nsSize&        aMaxSize,
+                    nsIRenderingContext& aRendContext);
 
-  // nsIReflowCommand
-  NS_IMETHOD Dispatch(nsIPresContext*      aPresContext,
-                      nsHTMLReflowMetrics& aDesiredSize,
-                      const nsSize&        aMaxSize,
-                      nsIRenderingContext& aRendContext);
-  NS_IMETHOD GetNext(nsIFrame*& aNextFrame, PRBool aRemove);
-  NS_IMETHOD GetTarget(nsIFrame*& aTargetFrame) const;
-  NS_IMETHOD SetTarget(nsIFrame* aTargetFrame);
-  NS_IMETHOD GetType(ReflowType& aReflowType) const;
+  /**
+   * Get the next frame in the command processing path. If requested removes the
+   * the frame from the path. You must remove the frame from the path before
+   * dispatching the reflow command to the next frame in the chain.
+   */
+  nsresult GetNext(nsIFrame*& aNextFrame, PRBool aRemove = PR_TRUE);
 
-  /** can return nsnull.  If nsnull is not returned, the caller must NS_RELEASE aAttribute */
-  NS_IMETHOD GetAttribute(nsIAtom *& aAttribute) const;
+  /**
+   * Get the target of the reflow command.
+   */
+  nsresult GetTarget(nsIFrame*& aTargetFrame) const;
 
-  NS_IMETHOD GetChildFrame(nsIFrame*& aChildFrame) const;
-  NS_IMETHOD GetChildListName(nsIAtom*& aListName) const;
-  NS_IMETHOD SetChildListName(nsIAtom* aListName);
-  NS_IMETHOD GetPrevSiblingFrame(nsIFrame*& aSiblingFrame) const;
-  NS_IMETHOD List(FILE* out) const;
+  /**
+   * Change the target of the reflow command.
+   */
+  nsresult SetTarget(nsIFrame* aTargetFrame);
 
-  NS_IMETHOD GetFlags(PRInt32* aFlags);
-  NS_IMETHOD SetFlags(PRInt32 aFlags);
+  /**
+   * Get the type of reflow command.
+   */
+  nsresult GetType(nsReflowType& aReflowType) const;
+
+  /**
+   * Can return nsnull.  If nsnull is not returned, the caller must NS_RELEASE aAttribute
+   */
+  nsresult GetAttribute(nsIAtom *& aAttribute) const;
+
+  /**
+   * Get the child frame associated with the reflow command.
+   */
+  nsresult GetChildFrame(nsIFrame*& aChildFrame) const;
+
+  /**
+   * Returns the name of the child list to which the child frame belongs.
+   * Only used for reflow command types FrameAppended, FrameInserted, and
+   * FrameRemoved
+   *
+   * Returns nsnull if the child frame is associated with the unnamed
+   * principal child list
+   */
+  nsresult GetChildListName(nsIAtom*& aListName) const;
+
+  /**
+   * Sets the name of the child list to which the child frame belongs.
+   * Only used for reflow command types FrameAppended, FrameInserted, and
+   * FrameRemoved
+   */
+  nsresult SetChildListName(nsIAtom* aListName);
+
+  /**
+   * Get the previous sibling frame associated with the reflow command.
+   * This is used for FrameInserted reflow commands.
+   */
+  nsresult GetPrevSiblingFrame(nsIFrame*& aSiblingFrame) const;
+
+  /**
+   * Dump out the reflow-command to out
+   */
+  nsresult List(FILE* out) const;
+
+  /**
+   * Get/set reflow command flags
+   */
+  nsresult GetFlags(PRInt32* aFlags);
+  nsresult SetFlags(PRInt32 aFlags);
 
 protected:
   void      BuildPath();
   nsIFrame* GetContainingBlock(nsIFrame* aFloater) const;
 
 private:
-  ReflowType      mType;
+  nsReflowType    mType;
   nsIFrame*       mTargetFrame;
   nsIFrame*       mChildFrame;
   nsIFrame*       mPrevSiblingFrame;

@@ -293,7 +293,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
    nsReflowReason reason = aReflowState.reason;
 
     if ( aReflowState.reason == eReflowReason_Incremental ) {
-        nsIReflowCommand::ReflowType  reflowType;
+        nsReflowType  reflowType;
         aReflowState.reflowCommand->GetType(reflowType);
 
         // See if it's targeted at us
@@ -303,7 +303,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
         if (this == targetFrame) {
             switch (reflowType) {
 
-              case nsIReflowCommand::StyleChanged: 
+              case eReflowType_StyleChanged: 
                   {
                     nsHTMLReflowState newState(aReflowState);
                     newState.reason = eReflowReason_StyleChange;
@@ -312,7 +312,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
                   break;
 
                   // if its a dirty type then reflow us with a dirty reflow
-                  case nsIReflowCommand::ReflowDirty: 
+                  case eReflowType_ReflowDirty: 
                   {
                     nsHTMLReflowState newState(aReflowState);
                     newState.reason = eReflowReason_Dirty;

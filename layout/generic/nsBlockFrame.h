@@ -519,6 +519,8 @@ public:
 
   static PRInt32 gNoiseIndent;
 
+  static const char* kReflowCommandType[];
+
 protected:
   static void InitDebugFlags();
 #endif

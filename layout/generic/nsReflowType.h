@@ -34,74 +34,44 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#include "nsAreaFrame.h"
-#include "nsBlockBandData.h"
-#include "nsIStyleContext.h"
-#include "nsStyleConsts.h"
-#include "nsIPresContext.h"
-#include "nsIViewManager.h"
-#include "nsHTMLAtoms.h"
-#include "nsIView.h"
-#include "nsHTMLIIDs.h"
-#include "nsHTMLValue.h"
-#include "nsHTMLParts.h"
-#include "nsLayoutAtoms.h"
-#include "nsISizeOfHandler.h"
 
-#undef NOISY_MAX_ELEMENT_SIZE
-#undef NOISY_FINAL_SIZE
+#ifndef nsReflowType_h__
+#define nsReflowType_h__
 
-nsresult
-NS_NewAreaFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags)
-{
-  NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsAreaFrame* it = new (aPresShell) nsAreaFrame;
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  it->SetFlags(aFlags);
-  *aNewFrame = it;
-  return NS_OK;
-}
+enum nsReflowType {
+  /**
+   * This reflow command is used when a leaf node's content changes
+   * (e.g. some text in a text run, an image's source, etc.). The
+   * target of the reflow command is the frame that changed (see
+   * nsIFrame#ContentChanged() for how the target frame is
+   * determined).
+   */
+  eReflowType_ContentChanged,
 
-nsAreaFrame::nsAreaFrame()
-{
-}
+  /**
+   * This reflow command is used when the style for a frame has
+   * changed. This also implies that if the frame is a container
+   * that its childrens style has also changed. The target of the
+   * reflow command is the frame that changed style.
+   */
+  eReflowType_StyleChanged,
 
-/////////////////////////////////////////////////////////////////////////////
-// nsIFrame
+  /**
+   * Reflow dirty stuff (really a per-frame extension)
+   */
+  eReflowType_ReflowDirty,
 
-NS_IMETHODIMP
-nsAreaFrame::GetFrameType(nsIAtom** aType) const
-{
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::areaFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
-}
+  /**
+   * The pres shell ran out of time but will guaranteed the reflow
+   * command gets processed.
+   */
+  eReflowType_Timeout,
 
-/////////////////////////////////////////////////////////////////////////////
-// Diagnostics
+  /**
+   * Trap door for extensions.
+   */
+  eReflowType_UserDefined
+};
 
-#ifdef NS_DEBUG
-NS_IMETHODIMP
-nsAreaFrame::GetFrameName(nsAString& aResult) const
-{
-  return MakeFrameName(NS_LITERAL_STRING("Area"), aResult);
-}
+#endif // nsReflowType_h__
 
-NS_IMETHODIMP
-nsAreaFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
-{
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsBlockFrame::SizeOf(aHandler, aResult);
-  *aResult += sizeof(*this) - sizeof(nsBlockFrame);
-
-  return NS_OK;
-}
-#endif

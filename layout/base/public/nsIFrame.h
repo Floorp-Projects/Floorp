@@ -68,7 +68,7 @@
  */
 
 struct nsHTMLReflowState;
-class nsIReflowCommand;
+class nsHTMLReflowCommand;
 struct nsHTMLReflowMetrics;
 
 class nsIAtom;
@@ -1059,7 +1059,7 @@ public:
   /**
    *  Called by a child frame on a parent frame to tell the parent frame that the child needs
    *  to be reflowed.  The parent should either propagate the request to its parent frame or 
-   *  handle the request by generating a nsIReflowCommand::ReflowDirtyChildren reflow command.
+   *  handle the request by generating a eReflowType_ReflowDirtyChildren reflow command.
    */
 
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild) = 0;
@@ -1079,9 +1079,9 @@ public:
    *  Called during appending or cancelling a reflow command to give frames notice
    *  of reflow commands that will be targeted below them. 
    */
-  NS_IMETHOD ReflowCommandNotify(nsIPresShell*     aShell,
-                                 nsIReflowCommand* aRC,
-                                 PRBool            aCommandAdded) = 0;
+  NS_IMETHOD ReflowCommandNotify(nsIPresShell*        aShell,
+                                 nsHTMLReflowCommand* aRC,
+                                 PRBool               aCommandAdded) = 0;
 
   /**
    * Called in style ReResolution to get the frame that contains the style context that is the

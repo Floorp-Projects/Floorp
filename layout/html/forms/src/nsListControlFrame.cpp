@@ -58,7 +58,7 @@
 #include "nsIScrollableView.h"
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsWidgetsCID.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsIPresShell.h"
 #include "nsHTMLParts.h"
 #include "nsIDOMEventReceiver.h"
@@ -784,7 +784,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     nsIFrame* targetFrame;
     firstPassState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
-      nsIReflowCommand::ReflowType type;
+      nsReflowType type;
       aReflowState.reflowCommand->GetType(type);
       firstPassState.reason = eReflowReason_StyleChange;
       firstPassState.reflowCommand = nsnull;
@@ -798,7 +798,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
         NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
         return res;
       }
-      nsIReflowCommand::ReflowType type;
+      nsReflowType type;
       aReflowState.reflowCommand->GetType(type);
       firstPassState.reason = eReflowReason_StyleChange;
       firstPassState.reflowCommand = nsnull;

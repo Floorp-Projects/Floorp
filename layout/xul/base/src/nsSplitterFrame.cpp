@@ -652,9 +652,9 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
             nsCOMPtr<nsIPresShell> shell;
             aPresContext->GetShell(getter_AddRefs(shell));
 
-            nsCOMPtr<nsIReflowCommand> reflowCmd;
+            nsCOMPtr<nsHTMLReflowCommand> reflowCmd;
             nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), mOuter->mParent,
-                                                  nsIReflowCommand::StyleChanged);
+                                                  eReflowType_StyleChanged);
             if (NS_SUCCEEDED(rv)) 
               shell->AppendReflowCommand(reflowCmd);
            

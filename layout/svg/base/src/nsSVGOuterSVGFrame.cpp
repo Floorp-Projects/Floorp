@@ -563,8 +563,8 @@ nsSVGOuterSVGFrame::AppendFrames(nsIPresContext* aPresContext,
   vm->EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
   
   // Generate a reflow command to reflow the dirty frames
-  //nsIReflowCommand* reflowCmd;
-  //rv = NS_NewHTMLReflowCommand(&reflowCmd, aDelegatingFrame, nsIReflowCommand::ReflowDirty);
+  //nsHTMLReflowCommand* reflowCmd;
+  //rv = NS_NewHTMLReflowCommand(&reflowCmd, aDelegatingFrame, eReflowType_ReflowDirty);
   //if (NS_SUCCEEDED(rv)) {
   //  reflowCmd->SetChildListName(nsLayoutAtoms::absoluteList);
   //  aPresShell.AppendReflowCommand(reflowCmd);
@@ -624,8 +624,8 @@ nsSVGOuterSVGFrame::InsertFrames(nsIPresContext* aPresContext,
   vm->EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
   
   // Generate a reflow command to reflow the dirty frames
-  //nsIReflowCommand* reflowCmd;
-  //rv = NS_NewHTMLReflowCommand(&reflowCmd, aDelegatingFrame, nsIReflowCommand::ReflowDirty);
+  //nsHTMLReflowCommand* reflowCmd;
+  //rv = NS_NewHTMLReflowCommand(&reflowCmd, aDelegatingFrame, eReflowType_ReflowDirty);
   //if (NS_SUCCEEDED(rv)) {
   //  reflowCmd->SetChildListName(nsLayoutAtoms::absoluteList);
   //  aPresShell.AppendReflowCommand(reflowCmd);
@@ -683,8 +683,8 @@ nsSVGOuterSVGFrame::RemoveFrame(nsIPresContext* aPresContext,
   vm->EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
   
   // Generate a reflow command to reflow the dirty frames
-  //nsIReflowCommand* reflowCmd;
-  //rv = NS_NewHTMLReflowCommand(&reflowCmd, aDelegatingFrame, nsIReflowCommand::ReflowDirty);
+  //nsHTMLReflowCommand* reflowCmd;
+  //rv = NS_NewHTMLReflowCommand(&reflowCmd, aDelegatingFrame, eReflowType_ReflowDirty);
   //if (NS_SUCCEEDED(rv)) {
   //  reflowCmd->SetChildListName(nsLayoutAtoms::absoluteList);
   //  aPresShell.AppendReflowCommand(reflowCmd);
@@ -1048,8 +1048,8 @@ void nsSVGOuterSVGFrame::InitiateReflow()
   mNeedsReflow = PR_FALSE;
   
   // Generate a reflow command to reflow ourselves
-  nsCOMPtr<nsIReflowCommand> reflowCmd;
-  NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this, nsIReflowCommand::ReflowDirty);
+  nsCOMPtr<nsHTMLReflowCommand> reflowCmd;
+  NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this, eReflowType_ReflowDirty);
   if (!reflowCmd) {
     NS_ERROR("error creating reflow command object");
     return;

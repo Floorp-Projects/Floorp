@@ -142,10 +142,10 @@ nsLeafFrame::ContentChanged(nsIPresContext* aPresContext,
 {
     /*
   // Generate a reflow command with this frame as the target frame
-  nsIReflowCommand* cmd;
+  nsHTMLReflowCommand* cmd;
   nsresult          rv;
                                                 
-  rv = NS_NewHTMLReflowCommand(&cmd, this, nsIReflowCommand::ContentChanged);
+  rv = NS_NewHTMLReflowCommand(&cmd, this, eReflowType_ContentChanged);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIPresShell> shell;
     rv = aPresContext->GetShell(getter_AddRefs(shell));

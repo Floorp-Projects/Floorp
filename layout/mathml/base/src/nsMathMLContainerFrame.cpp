@@ -1070,10 +1070,10 @@ nsMathMLContainerFrame::AttributeChanged(nsIPresContext* aPresContext,
                                                        aNameSpaceID, aAttribute, aModType, aHint);
   if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsIPresShell> shell;
-  nsCOMPtr<nsIReflowCommand> reflowCmd;
+  nsCOMPtr<nsHTMLReflowCommand> reflowCmd;
   aPresContext->GetShell(getter_AddRefs(shell));
   rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
-                               nsIReflowCommand::ContentChanged,
+                               eReflowType_ContentChanged,
                                nsnull, aAttribute);
   if (NS_SUCCEEDED(rv) && shell) shell->AppendReflowCommand(reflowCmd);
   return rv;

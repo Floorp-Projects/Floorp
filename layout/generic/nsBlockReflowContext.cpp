@@ -44,7 +44,7 @@
 #include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsIStyleContext.h"
-#include "nsIReflowCommand.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsBlockFrame.h"
 #include "nsIDOMHTMLTableCellElement.h"
@@ -282,18 +282,18 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
       // and it's target is the current block, then make sure we send
       // StyleChange reflow reasons down to all the children so that
       // they don't over-optimize their reflow.
-      nsIReflowCommand* rc = mOuterReflowState.reflowCommand;
+      nsHTMLReflowCommand* rc = mOuterReflowState.reflowCommand;
       if (rc) {
-        nsIReflowCommand::ReflowType type;
+        nsReflowType type;
         rc->GetType(type);
-        if (type == nsIReflowCommand::StyleChanged) {
+        if (type == eReflowType_StyleChanged) {
           nsIFrame* target;
           rc->GetTarget(target);
           if (target == mOuterReflowState.frame) {
             reason = eReflowReason_StyleChange;
           }
         }
-        else if (type == nsIReflowCommand::ReflowDirty &&
+        else if (type == eReflowType_ReflowDirty &&
                  (state & NS_FRAME_IS_DIRTY)) {
           reason = eReflowReason_Dirty;
         }

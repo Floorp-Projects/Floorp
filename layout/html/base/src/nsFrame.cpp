@@ -1850,13 +1850,11 @@ nsFrame::ContentChanged(nsIPresContext* aPresContext,
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
   if (NS_SUCCEEDED(rv) && shell) {
-    nsIReflowCommand* reflowCmd;
+    nsHTMLReflowCommand* reflowCmd;
     rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
-                                 nsIReflowCommand::ContentChanged);
-    if (NS_SUCCEEDED(rv)) {
+                                 eReflowType_ContentChanged);
+    if (NS_SUCCEEDED(rv))
       shell->AppendReflowCommand(reflowCmd);
-      NS_RELEASE(reflowCmd);
-    }
   }
   return rv;
 }
@@ -3859,9 +3857,9 @@ nsFrame::GetAccessible(nsIAccessible** aAccessible)
 #endif
 
 NS_IMETHODIMP
-nsFrame::ReflowCommandNotify(nsIPresShell*     aShell,
-                             nsIReflowCommand* aRC,
-                             PRBool            aCommandAdded)
+nsFrame::ReflowCommandNotify(nsIPresShell*        aShell,
+                             nsHTMLReflowCommand* aRC,
+                             PRBool               aCommandAdded)
 
 {
   return NS_OK;
@@ -3972,12 +3970,12 @@ nsFrame::GetFirstLeaf(nsIPresContext* aPresContext, nsIFrame **aFrame)
   }
 }
 
-nsresult nsFrame::CreateAndPostReflowCommand(nsIPresShell*                aPresShell,
-                                             nsIFrame*                    aTargetFrame,
-                                             nsIReflowCommand::ReflowType aReflowType,
-                                             nsIFrame*                    aChildFrame,
-                                             nsIAtom*                     aAttribute,
-                                             nsIAtom*                     aListName)
+nsresult nsFrame::CreateAndPostReflowCommand(nsIPresShell*                   aPresShell,
+                                             nsIFrame*                       aTargetFrame,
+                                             nsReflowType aReflowType,
+                                             nsIFrame*                       aChildFrame,
+                                             nsIAtom*                        aAttribute,
+                                             nsIAtom*                        aListName)
 {
   nsresult rv;
 
@@ -3985,8 +3983,8 @@ nsresult nsFrame::CreateAndPostReflowCommand(nsIPresShell*                aPresS
     rv = NS_ERROR_NULL_POINTER;
   }
   else {
-    nsCOMPtr<nsIReflowCommand> reflowCmd;
-    rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), aTargetFrame,
+    nsHTMLReflowCommand* reflowCmd;
+    rv = NS_NewHTMLReflowCommand(&reflowCmd, aTargetFrame,
                                  aReflowType, aChildFrame, 
                                  aAttribute);
     if (NS_SUCCEEDED(rv)) {
