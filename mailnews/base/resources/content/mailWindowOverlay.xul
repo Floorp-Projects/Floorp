@@ -550,7 +550,7 @@ END of Deprecated -->
             <menu id = "mailviewCharsetMenu" />
 		</menupopup>
 	</menu>
-	<menu value="&searchMenu.label;">
+	<menu value="&searchMenu.label;" accesskey="&searchMenu.accesskey;">
 		<menupopup>
 			<menuitem value="&findCmd.label;" oncommand="MsgFind();"/>
 			<menuitem value="&findAgainCmd.label;" oncommand="MsgFindAgain();"/>
@@ -563,7 +563,7 @@ END of Deprecated -->
 			<menuseparator/>
 			-->
 			<menuitem value="&searchInternetCmd.label;" disabled="true" oncommand="MsgSearchInternet();"/>
-			<menuitem value="&searchMailCmd.label;" disabled="true" oncommand="MsgSearchMessages();"/>
+			<menuitem value="&searchMailCmd.label;" oncommand="MsgSearchMessages();" accesskey="&searchMailCmd.accesskey;"/>
 			<menuitem value="&searchBookmarksCmd.label;" disabled="true" oncommand="MsgSearchBookmarks();"/>
 			<menuitem value="&searchPeopleCmd.label;" disabled="true" oncommand="MsgSearchPeople();"/>
 			<menuseparator/>

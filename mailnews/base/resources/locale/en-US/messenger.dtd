@@ -73,7 +73,7 @@ Rights Reserved.
 <!ENTITY selectThreadCmd.label ".Thread">  
 <!ENTITY selectFlaggedCmd.label ".Flagged Messages">  
 <!ENTITY spamFiltersCmd.label ".Junk Mail Filter">
-<!ENTITY filtersCmd.label ".Message Filters...">  
+<!ENTITY filtersCmd.label "Message Filters...">  
 <!ENTITY folderPropsCmd.label ".Folder Properties">  
 <!ENTITY accountManagerCmd.label "Mail/News Account Settings">
 <!ENTITY undoDeleteMsgCmd.label "Undo Delete Message">
@@ -185,6 +185,7 @@ Rights Reserved.
 <!ENTITY dcharCp1256Cmd.label "Arabic (Windows-1256)">
 
 <!-- Search Menu -->
+<!ENTITY searchMenu.accesskey "s">
 <!ENTITY searchMenu.label "Search">
 <!ENTITY findCmd.label "Find...">  
 <!ENTITY findAgainCmd.label "Find Again">
@@ -196,6 +197,7 @@ Rights Reserved.
 <!ENTITY searchParentParentCmd.label ".Search in &lt;parent parent&gt;">
 <!ENTITY searchInternetCmd.label ".Search the Internet...">
 <!ENTITY searchMailCmd.label ".Search all Mail">
+<!ENTITY searchMailCmd.accesskey "m">
 <!ENTITY searchBookmarksCmd.label ".Search Bookmarks...">
 <!ENTITY searchPeopleCmd.label ".Search People...">
 <!ENTITY searchLocalCmd.label ".Search on this Computer...">

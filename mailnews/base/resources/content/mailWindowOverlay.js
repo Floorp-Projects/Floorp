@@ -340,7 +340,7 @@ function MsgFindAgain() {
 }
 
 function MsgSearchMessages() {
-    window.openDialog("chrome://messenger/content/SearchDialog.xul", "SearchMail", "chrome");
+    window.openDialog("chrome://messenger/content/SearchDialog.xul", "SearchMail", "chrome,resizable");
 }
 
 function MsgFilters() {
