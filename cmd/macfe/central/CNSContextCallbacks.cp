@@ -640,7 +640,28 @@ XP_Bool CNSContextCallbacks::SelectDialog(
 {
 	CNSContext* theNSContext = ExtractNSContext(inContext);
 	Assert_(theNSContext != NULL);
-	return theNSContext->SelectDialog(pMessage, pList, pCount);
+	//return theNSContext->SelectDialog(pMessage, pList, pCount);
+	
+	// Temporary stub version until the real MacFE version is implemented
+    int16 i;
+    char *message = 0;
+    for (i = 0; i < *pCount; i++)
+    {
+        StrAllocCopy(message, pMessage);
+        StrAllocCat(message, " = ");
+        StrAllocCat(message, pList[i]);
+        if (theNSContext->Confirm(message))
+        {
+            /* user selected this one */
+            XP_FREE(message);
+            *pCount = i;
+            return TRUE;
+        }
+    }
+
+    /* user rejected all */
+    XP_FREE(message);
+    return FALSE;
 }
 
 char* CNSContextCallbacks::Prompt(

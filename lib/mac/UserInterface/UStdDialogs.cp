@@ -653,7 +653,10 @@ Boolean UStdDialogs::CheckConfirm(
 	LWindow*			inOverWindow,
 	LCommander*			inSuper)
 {
-	return false;
+	// temporary UI until FE implements this function as a single dialog box
+    Boolean userHasAccepted = AskOkCancel(pConfirmMessage);
+    *pChecked = (XP_Bool)AskOkCancel(pCheckMessage);
+    return userHasAccepted;	
 }
 
 
