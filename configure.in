@@ -4843,6 +4843,19 @@ if test "$MOZ_PROFILESHARING"; then
 fi
 
 dnl ========================================================
+dnl disable profile locking
+dnl ========================================================
+MOZ_PROFILELOCKING=1
+MOZ_ARG_DISABLE_BOOL(profilelocking,
+[  --disable-profilelocking           Disable profile locking],
+    MOZ_PROFILELOCKING=,
+    MOZ_PROFILELOCKING=1 )
+if test "$MOZ_PROFILELOCKING"; then
+  AC_DEFINE(MOZ_PROFILELOCKING)
+fi
+
+
+dnl ========================================================
 dnl necko configuration options
 dnl ========================================================
 
