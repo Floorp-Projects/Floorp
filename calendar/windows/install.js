@@ -30,6 +30,16 @@ if ( err == SUCCESS ) {
    var returnval = registerChrome(SKIN | DELAYED_CHROME, calendarSkin, "modern/");
    var returnval = registerChrome(SKIN | DELAYED_CHROME, calendarSkin, "classic/");
    var returnval = registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "en-US/");
+   var returnval = registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "fr-FR/");
+   var returnval = registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "cs-CZ/");
+   var returnval = registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "de-AT/");
+   var returnval = registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "hu-HU/");
+   var returnval = registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "ja-JP/");
+   var returnval = registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "nl-NL/");
+   var returnval = registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "pl-PL/");
+   var returnval = registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "pt-BR/");
+   var returnval = registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "sl-SI/");
+   var returnval = registerChrome(LOCALE | DELAYED_CHROME, calendarLocale, "wen-DE/");
   
    err = performInstall();
   
