@@ -105,6 +105,7 @@ $CLOBBER_LIBS			= 1;	# turn on to clobber existing libs and .xSYM files before
 # but leave the directory structure intact.
 $CLOBBER_DIST_ALL 		= 1;	# turn on to clobber all aliases/files inside dist (headers/xsym/libs)
 $CLOBBER_DIST_LIBS 		= 0;	# turn on to clobber only aliases/files for libraries/sym files in dist
+$CLOBBER_IDL_PROJECTS	= 0;	# turn on to clobber all IDL projects.
 
 #-----------------------------------------------
 # configuration variables that are preferences for the build style,
