@@ -88,8 +88,11 @@ static const char* kURI##prefix##_##name = ns #name
 #define NS_RDF_DATASOURCE_CONTRACTID_PREFIX         NS_RDF_DATASOURCE_CONTRACTID "?name="
 #define NS_RDF_RESOURCE_FACTORY_CONTRACTID          "@mozilla.org/rdf/resource-factory;1"
 #define NS_RDF_RESOURCE_FACTORY_CONTRACTID_PREFIX   NS_RDF_RESOURCE_FACTORY_CONTRACTID "?name="
-#define NS_RDF_DELEGATEFACTORY_CONTRACTID_PREFIX    "@mozilla.org/rdf/delegate-factory/"
 
+// contract ID is in the form
+// @mozilla.org/rdf/delegate-factory;1?key=<key>&scheme=<scheme>
+#define NS_RDF_DELEGATEFACTORY_CONTRACTID    "@mozilla.org/rdf/delegate-factory;1"
+#define NS_RDF_DELEGATEFACTORY_CONTRACTID_PREFIX    NS_RDF_DELEGATEFACTORY_CONTRACTID "?key="
 
 /*@}*/
 
