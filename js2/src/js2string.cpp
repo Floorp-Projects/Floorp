@@ -160,7 +160,7 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
     js2val S = STRING_TO_JS2VAL(meta->toString(thisValue));
 
     js2val regexp = argv[0];
-    if ((argc == 0) || (meta->objectType(thisValue) != meta->regexpClass)) {        
+    if ((argc == 0) || (meta->objectType(argv[0]) != meta->regexpClass)) {        
         regexp = JS2VAL_NULL;
         regexp = RegExp_Constructor(meta, regexp, argv, 1);
     }
@@ -172,12 +172,18 @@ static js2val String_match(JS2Metadata *meta, const js2val thisValue, js2val *ar
         return RegExp_exec(meta, regexp, &S, 1);                
     }
     else {
+        js2val globalMultilineVal;
+		js2val regexpClassVal = OBJECT_TO_JS2VAL(meta->regexpClass);
+        if (!meta->classClass->ReadPublic(meta, &regexpClassVal, meta->engine->allocStringPtr("multiline"), RunPhase, &globalMultilineVal))
+			ASSERT(false);
+		bool globalMultiline = meta->toBoolean(globalMultilineVal);
+
         ArrayInstance *A = new ArrayInstance(meta, meta->arrayClass->prototype, meta->arrayClass);
         DEFINE_ROOTKEEPER(rk, A);
         int32 index = 0;
         int32 lastIndex = 0;
         while (true) {
-            REMatchResult *match = REExecute(meta, re, JS2VAL_TO_STRING(S)->begin(), lastIndex, toInt32(JS2VAL_TO_STRING(S)->length()), false);
+            REMatchResult *match = REExecute(meta, re, JS2VAL_TO_STRING(S)->begin(), lastIndex, toInt32(JS2VAL_TO_STRING(S)->length()), globalMultiline);
             if (match == NULL)
                 break;
             if (lastIndex == match->endIndex)

@@ -57,11 +57,17 @@ namespace MetaData {
 
 js2val error_ConstructorCore(JS2Metadata *meta, JS2Class *errorClass, js2val arg)
 {
-    JS2Object *obj = new SimpleInstance(meta, OBJECT_TO_JS2VAL(errorClass->prototype), errorClass);
+	DEFINE_ROOTKEEPER(rk, arg);
+	JS2Object *obj = NULL;
+	DEFINE_ROOTKEEPER(rk1, obj);
+    obj = new SimpleInstance(meta, OBJECT_TO_JS2VAL(errorClass->prototype), errorClass);
     js2val thatValue = OBJECT_TO_JS2VAL(obj);
 
     if (!JS2VAL_IS_VOID(arg)) {
-        errorClass->WritePublic(meta, thatValue, &meta->world.identifiers["message"], true, meta->engine->allocString(meta->toString(arg)));
+		const String *str = NULL;
+		DEFINE_ROOTKEEPER(rk2, str);
+		str = meta->toString(arg);
+        errorClass->WritePublic(meta, thatValue, &meta->world.identifiers["message"], true, meta->engine->allocString(str));
     }
 
     return thatValue;

@@ -817,17 +817,18 @@ static js2val Date_format(JS2Metadata *meta, float64 date, formatspec format)
              * requires a PRMJTime... which only has 16-bit years.  Sub-ECMA.
              */
             /* Tue Oct 31 09:41:40 GMT-0800 (PST) 2000 */
-            printFormat(outf, "%s %s %.2d %.2d:%.2d:%.2d GMT%+.4d %s%s%.4d",
+            printFormat(outf,						
+                        "%s %s %.2d %.4d %.2d:%.2d:%.2d GMT%+.4d%s%s",
                         days[WeekDay(local)],
                         months[MonthFromTime(local)],
                         DateFromTime(local),
+                        YearFromTime(local),
                         HourFromTime(local),
                         MinFromTime(local),
                         SecFromTime(local),
                         offset,
-                        usetz ? tzbuf : "",
                         usetz ? " " : "",
-                        YearFromTime(local));
+                        usetz ? tzbuf : "");
             break;
           case FORMATSPEC_DATE:
             /* Tue Oct 31 2000 */

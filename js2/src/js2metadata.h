@@ -554,7 +554,7 @@ public:
 // The qualified name is to be inferred from the map where this binding is kept
 //    QualifiedName qname;        // The qualified name bound by this binding
 
-    virtual ~LocalBinding() { delete content; }
+    virtual ~LocalBinding() { /*delete content;*/ } // XXX what about aliases!!!
 
     AccessSet accesses;
     LocalMember *content;       // The member to which this qualified name was bound

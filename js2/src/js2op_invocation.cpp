@@ -180,6 +180,7 @@ doCall:
                 js2val exec_fnVal;
                 if (!meta->regexpClass->ReadPublic(meta, &b, &meta->world.identifiers["exec"], RunPhase, &exec_fnVal))
                     ASSERT(false);
+				a = b;
                 ASSERT(JS2VAL_IS_OBJECT(exec_fnVal));
                 fObj = JS2VAL_TO_OBJECT(exec_fnVal);
                 goto doCall;
