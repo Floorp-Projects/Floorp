@@ -59,6 +59,7 @@
 #include "nsMsgFolderFlags.h"
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
+#include "nsImapIncomingServer.h" // XXX Should this be here? - bug 63087
 
 #if defined(DEBUG_alecf_) || defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_ACCOUNTMANAGER 1

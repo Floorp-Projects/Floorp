@@ -37,7 +37,6 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsIUrlListener.h"
-#include "nsImapIncomingServer.h"
 
 class nsMsgAccountManager
 	: public nsIMsgAccountManager,

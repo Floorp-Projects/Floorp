@@ -22,4 +22,6 @@
 
 nsImapCore.h
 
+# XXX Should this file really be exported? - bug 63087
+nsImapIncomingServer.h
 
