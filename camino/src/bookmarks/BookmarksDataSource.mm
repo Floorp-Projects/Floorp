@@ -590,7 +590,7 @@
     
     for (int i = 0; i < count; i++)
       [draggedID addObject: [[toDrag objectAtIndex: i] contentID]];
-      
+    
     if (count == 1) {
       // if we have just one item, we add some more flavours
       [pboard declareTypes: [NSArray arrayWithObjects:
@@ -807,7 +807,7 @@
   nsCOMPtr<nsIContent> item = [self contentNode];
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(item));
   nsAutoString href;
-  element->GetAttribute(NS_LITERAL_STRING("name"), href);
+  element->GetAttribute(NS_LITERAL_STRING("href"), href);
   return [NSString stringWithCharacters: href.get() length: href.Length()];
 }
 
