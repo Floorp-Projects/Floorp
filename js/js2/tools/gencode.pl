@@ -7,6 +7,27 @@ my $class_decs = "";
 my @name_array;
 my $opcode_maxlen = 0;
 
+#
+# template definitions for compare, arithmetic, and conditional branch ops
+#
+# fields are:
+#
+# * super: Class to inherit from, if super is Instruction_(1|2|3), the script
+#          will automatically append the correct template info based on |params|
+# * super_has_print: Set to 1 if you want to inherit the print() method from the
+#                    superclass, set to 0 (or just don't set) otherwise.
+# * rem: Remark you want to show up after the enum def, and inside the class.
+# * params: The parameter list expected by the constructor, you can specify a
+#           default value, using the syntax, [ ("Type = default") ].
+#
+# class namea will be generated based on the opcode mnemonic.  See the
+# subroutine get_classname for the implementation.  Basically underscores will
+# be removes and the class name will be WordCapped, using the positions where the
+# underscores were as word boundries.  The only exception occurs when a word is
+# two characters, in which case both characters will be capped,
+# as in BRANCH_GT -> BranchGT.
+#
+
 my $compare_op =
   {
    super  => "Compare",
@@ -31,6 +52,10 @@ my $cbranch_op =
    params => [ ("Label*", "Register") ]
   };
 
+
+#
+# op defititions
+#
 my %ops;
 $ops{"NOP"} = 
   {
@@ -144,21 +169,29 @@ $ops{"CALL"} =
    params => [ ("Register" , "Register", "RegisterList") ]
   };
 
+#
+# nasty perl code, you probably don't need to muck around below this line
+#
+
 my $k;
 
 if (!$ARGV[0]) {
+    # no args, collect all opcodes
     for $k (sort(keys(%ops))) {
         &collect($k);
     }
 } else {
+    # collect defs for only the opcodes specified on the command line
     while ($k = pop(@ARGV)) {
-        &collect ($k);
+        &collect (uc($k));
     }
 }
 
 &spew;
 
 sub collect {
+    # grab the info from the $k record in $ops, and append it to
+    # $enum_decs, @name_aray, and $class_decs.
     my ($k) = @_;
 
     if (length($k) > $opcode_maxlen) {
@@ -166,6 +199,10 @@ sub collect {
     }
 
     my $c = $ops{$k};
+    if (!$c) {
+        die ("Unknown opcode, $k\n");
+    }
+
     my $opname = $k;
     my $cname = get_classname ($k);
     my $super = $c->{"super"};
@@ -207,6 +244,7 @@ sub collect {
 }
 
 sub spew {
+    # print the info in $enum_decs, @name_aray, and $class_decs to stdout.
     my $opname;
 
     print $tab . "enum ICodeOp {\n$enum_decs$tab};\n\n";
@@ -224,6 +262,7 @@ sub spew {
 }
 
 sub get_classname {
+    # munge an OPCODE_MNEMONIC into a ClassName
     my ($enum_name) = @_;
     my @words = split ("_", $enum_name);
     my $cname = "";
@@ -242,6 +281,8 @@ sub get_classname {
 }
 
 sub get_paramlists {
+    # parse the params entry (passed into @types) into various parameter lists
+    # used in the class declaration
     my @types = @_;
     my @dec;
     my @call;
@@ -274,6 +315,7 @@ sub get_paramlists {
 }
 
 sub get_printbody {
+    # generate the body of the print() function
     my (@types) = @_;
     my $type;
     my @oplist;
