@@ -80,7 +80,7 @@
     <text class="label" value="&pixels.label;"/>  
   </hbox>
   <!-- from EdDialogOverlay -->
-  <hbox id="AdvancedEdit"/>
+  <vbox id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
   <hbox id="okCancelButtons"/> 
 </window>

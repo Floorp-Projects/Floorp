@@ -136,7 +136,7 @@ editor.xul has these - do we need them?
 
   <hbox id="sidebar-parent" flex="1">
     <!-- From sidebarOverlay.xul -->
-    <hbox id="sidebar-box" class="chromeclass-extrachrome" hidden="true"/>
+    <vbox id="sidebar-box" class="chromeclass-extrachrome" hidden="true"/>
     <splitter id="sidebar-splitter" class="chromeclass-extrachrome" hidden="true"/>
     <vbox id="appcontent" flex="1">
 

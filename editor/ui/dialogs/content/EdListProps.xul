@@ -73,7 +73,7 @@
     <html id="StartExample" class="wrap" flex="1" style="width: 1em">&startingHelp.label;</html>
   </groupbox>
   <!-- from EdDialogOverlay -->
-  <hbox id="AdvancedEdit"/>
+  <vbox id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
   <hbox id="okCancelButtons"/> 
 
