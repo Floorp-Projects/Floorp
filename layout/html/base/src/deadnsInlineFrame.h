@@ -23,8 +23,7 @@
 class nsInlineState;
 
 // Inline container class. Does not support being used as a pseudo frame
-class nsInlineFrame : public nsHTMLContainerFrame
-{
+class nsInlineFrame : public nsHTMLContainerFrame {
 public:
   static nsresult NewFrame(nsIFrame**  aInstancePtrResult,
                            nsIContent* aContent,
@@ -47,6 +46,15 @@ protected:
 
   void InitializeState(nsIPresContext* aPresContext,
                        nsInlineState& aState);
+
+  PRBool DidFitChild(nsIPresContext*  aPresContext,
+                     nsInlineState&   aState,
+                     nsIFrame*        aChildFrame,
+                     nsReflowMetrics& aChildMetrics);
+
+  PRBool CanFitChild(nsIPresContext*  aPresContext,
+                     nsInlineState&   aState,
+                     nsIFrame*        aChildFrame);
 
   void ComputeFinalSize(nsIPresContext* aPresContext,
                         nsInlineState&   aState,
@@ -82,15 +90,6 @@ protected:
                                         nsInlineState&  aState,
                                         nsIFrame*       aChildFrame,
                                         PRInt32         aChildIndex);
-
-#if 0
-  nsReflowStatus AdjustChildren(nsIPresContext* aPresContext,
-                                nsReflowMetrics& aDesiredSize,
-                                nsInlineState& aState,
-                                nsIFrame* aKid,
-                                nsReflowMetrics& aKidMetrics,
-                                ReflowStatus aKidReflowStatus);
-#endif
 };
 
 #endif /* nsInlineFrame_h___ */
