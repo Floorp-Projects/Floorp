@@ -1325,6 +1325,7 @@ PRBool nsString::EqualsWithConversion(const PRUnichar* aString,PRBool aIgnoreCas
   return result;
 }
 
+PRInt32 Compare2To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
 /**
  * Compare this to given atom; note that we compare full strings here.
  * The optional length argument just lets us know how long the given string is.
@@ -1344,10 +1345,7 @@ PRBool nsString::EqualsAtom(/*FIX: const */nsIAtom* aAtom,PRBool aIgnoreCase) co
     const PRUnichar* unicode;
     if (aAtom->GetUnicode(&unicode) != NS_OK || unicode == nsnull)
         return PR_FALSE;
-    if (aIgnoreCase)
-      cmp=nsCRT::strcasecmp(mUStr,unicode);
-    else
-      cmp=nsCRT::strcmp(mUStr,unicode);
+    cmp=Compare2To2((const char*)mUStr,(const char*)unicode, nsCRT::strlen(mUStr), aIgnoreCase);
     result=PRBool(0==cmp);
   }
 
