@@ -38,6 +38,7 @@
 #include "nsString2.h"
 #include "nsVoidArray.h"
 #include "nsXULElement.h"
+#include "jscntxt.h"
 
 
 class nsXULPrototypeDocument : public nsIXULPrototypeDocument,
