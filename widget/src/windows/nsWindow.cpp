@@ -1437,7 +1437,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         case WM_CTLCOLORLISTBOX:
         case WM_CTLCOLOREDIT:
         case WM_CTLCOLORBTN:
-        case WM_CTLCOLORSCROLLBAR:
+        //case WM_CTLCOLORSCROLLBAR: //XXX causes a the scrollbar to be drawn incorrectly
         case WM_CTLCOLORSTATIC:
 	          if (lParam) {
               nsWindow* control = (nsWindow*)::GetWindowLong((HWND)lParam, GWL_USERDATA);
