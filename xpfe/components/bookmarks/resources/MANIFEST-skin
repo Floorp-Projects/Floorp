@@ -2,8 +2,12 @@ bm-panel.css
 bookmarks.css
 manage-bookmarks.css
 bookmark-folder-closed.gif
+bookmark-folder-closed-selected.gif
 bookmark-folder-open.gif
+bookmark-folder-open-selected.gif
 bookmark-item.gif
 iefavorite.gif
 personal-folder-closed.gif
+personal-folder-closed-selected.gif
 personal-folder-open.gif
+personal-folder-open-selected.gif
