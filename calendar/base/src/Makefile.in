@@ -60,14 +60,9 @@ REQUIRES = xpcom \
 #	   sqlite3 \
 #           $(NULL)
 
-CPPSRCS = \
-	calDateTime.cpp
-
-#CPPSRCS = \
-#	calItemBase.cpp \
-#	calEvent.cpp \
-#	calTodo.cpp \
-#	$(NULL)
+CPPSRCS = calDateTime.cpp \
+	  calICSService.cpp \
+	  $(NULL)
 
 
 EXTRA_COMPONENTS = \

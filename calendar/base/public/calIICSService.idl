@@ -44,7 +44,15 @@ interface calIItemBase;
 interface calIIcalComponent : nsISupports
 {
     calIIcalComponent getFirstSubcomponent(in PRUint32 componentType);
+    calIIcalComponent getNextSubcomponent(in PRUint32 componentType);
 
+    const PRUint32 ANY_COMPONENT = 1;
+    const PRUint32 XROOT_COMPONENT = 2;
+    const PRUint32 VEVENT_COMPONENT = 4;
+    const PRUint32 VTODO_COMPONENT = 5;
+    const PRUint32 VJOURNAL_COMPONENT = 6;
+    const PRUint32 VCALENDAR_COMPONENT = 7;
+    const PRUint32 VFREEBUSY_COMPONENT = 8;
     readonly attribute PRUint32 isA;
 
     attribute AUTF8String uid;
@@ -82,7 +90,7 @@ interface calIIcalComponent : nsISupports
     attribute AUTF8String description;
     attribute AUTF8String location;
     attribute AUTF8String categories;
-    attribute AUTF8String url;
+    attribute AUTF8String URL;
 
     attribute PRUint32 priority;
 
@@ -96,12 +104,5 @@ interface calIIcalComponent : nsISupports
 [scriptable,uuid(c788a1dc-0929-4029-9a14-e1bc654eafad)]
 interface calIICSService : nsISupports
 {
-    AUTF8String itemToICSString(in calIItemBase item);
-
-    void ICSStringToItems(in AUTF8String serialized,
-                          out PRUint32 itemCount,
-                          [array, size_is(itemCount), retval]
-                          out calIItemBase items);
-    
     calIIcalComponent parseICS(in AUTF8String serialized);
 };
