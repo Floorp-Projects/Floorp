@@ -1616,6 +1616,7 @@ void CRDFOutliner::OnMouseMove(UINT nFlags, CPoint point)
 			SelectItem( m_iSelection, OUTLINER_LBUTTONUP, nFlags );
         }
     }
+		
 	if (m_iTipState != TIP_SHOWING)
 		m_iTipState = TIP_WAITING;
 	HandleMouseMove( point );
@@ -2085,6 +2086,67 @@ GetSystem3DColors(COLORREF rgbBackground, COLORREF& rgbLightColor, COLORREF& rgb
 
 #define COLOR_DARK_THRESHOLD   51
 #define COLOR_LIGHT_THRESHOLD  204
+
+void DrawArrow(HDC hDC, COLORREF arrowColor, int type, CRect rect, BOOL enabled)
+{
+	HPEN hArrowPen = ::CreatePen(PS_SOLID, 1, arrowColor);
+	HPEN hOldPen = (HPEN)::SelectObject(hDC, hArrowPen);
+
+	int size = (type == UP_ARROW || type == DOWN_ARROW) ? rect.Width() : rect.Height();
+	int endPoint = (type == UP_ARROW || type == DOWN_ARROW) ? rect.left : rect.top;
+
+	if (type == UP_ARROW)
+	{
+        for (int j = 0; j < 4; j++)
+        {
+            int yPos = rect.top + (rect.Height()/2) - 2 + j;
+            int x1 = rect.left + (rect.Width()/2) - j;
+            int x2 = x1 + 2*j;
+			::MoveToEx(hDC, x1, yPos,NULL);
+			::LineTo(hDC, x2+1, yPos);
+        }
+
+    }
+	else if (type == DOWN_ARROW)
+	{
+        // Draw a down arrow.
+        for (int j = 0; j < 4; j++)
+        {
+            int yPos = rect.top + (rect.Height()/2) + 1 - j;
+            int x1 = rect.left + (rect.Width()/2) - j;
+            int x2 = x1 + 2*j;
+            ::MoveToEx(hDC,x1,yPos,NULL);
+			::LineTo(hDC,x2+1,yPos);
+        }
+	}
+	else if (type == LEFT_ARROW)
+	{
+        for (int j = 0; j < 4; j++)
+        {
+            int xPos = rect.left + (rect.Width()/2) - 2 + j;
+            int y1 = rect.top + (rect.Height()/2) - j;
+            int y2 = y1 + 2*j;
+			::MoveToEx(hDC,xPos,y1,NULL);
+			::LineTo(hDC,xPos,y2+1);
+        }
+
+    }
+	else if (type == RIGHT_ARROW)
+	{
+        // Draw a down arrow.
+        for (int j = 0; j < 4; j++)
+        {
+            int xPos = rect.left + (rect.Width()/2) + 1 - j;
+            int y1 = rect.top + (rect.Height()/2) - j;
+            int y2 = y1 + 2*j;
+            ::MoveToEx(hDC,xPos,y1,NULL);
+			::LineTo(hDC,xPos,y2+1);
+        }
+	}
+
+	::SelectObject(hDC, hOldPen);
+	VERIFY(::DeleteObject(hArrowPen));
+}
 
 void Compute3DColors(COLORREF rgbColor, COLORREF &rgbLight, COLORREF &rgbDark)
 {

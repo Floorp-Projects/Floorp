@@ -204,4 +204,13 @@ void Compute3DColors(COLORREF rgbColor, COLORREF &rgbLight, COLORREF &rgbDark);
 	// use against a custom background.
 
 void ResolveToPaletteColor(COLORREF& color, HPALETTE hPal);
+
+void DrawArrow(HDC hDC, COLORREF arrowColor, int type, CRect rect, BOOL enabled);
+	// Can be used to draw 4-pixel (1,3,5,7) arrowheads in any direction.
+
+const int LEFT_ARROW = 0;
+const int RIGHT_ARROW = 1;
+const int DOWN_ARROW = 2;
+const int UP_ARROW = 3;
+
 #endif // RDFACC_H

@@ -48,6 +48,10 @@ class CNavTitleBar : public CWnd, public CCustomImageObject
 
 	CRect cachedCloseRect;
 	CRect cachedModeRect;
+	BOOL m_bDrawCloseFrame;
+	BOOL m_bDrawModeFrame;
+
+	UINT m_hFocusTimer;
 
 public:
 	CNavTitleBar();
@@ -68,9 +72,14 @@ public:
 	afx_msg void OnLButtonUp (UINT nFlags, CPoint point );
 	afx_msg void OnMouseMove (UINT nFlags, CPoint point );
     afx_msg void OnSize( UINT nType, int cx, int cy );
+	afx_msg void OnTimer(UINT nIDEvent);
+
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
+
+#define IDT_STRIPFOCUS 30000
+#define STRIPFOCUS_DELAY_MS 10
 
 #endif // NAVBAR_H
 

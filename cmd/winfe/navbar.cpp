@@ -42,19 +42,20 @@ BEGIN_MESSAGE_MAP(CNavTitleBar, CWnd)
 	ON_WM_LBUTTONUP ( )
 	ON_WM_MOUSEMOVE()
 	ON_WM_PAINT()
+	ON_WM_TIMER()
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 CNavTitleBar::CNavTitleBar()
-:m_bHasFocus(FALSE) 
+:m_bHasFocus(FALSE), m_bDrawCloseFrame(FALSE), m_bDrawModeFrame(FALSE)
 {
 	m_pBackgroundImage = NULL;
 	m_View = NULL;
+	m_hFocusTimer = 0;
 }
 
 CNavTitleBar::~CNavTitleBar()
 {
-//	delete m_pMenuButton;
 }
 
 void CNavTitleBar::OnPaint( )
@@ -242,7 +243,7 @@ void CNavTitleBar::OnPaint( )
 	cachedModeRect.top = 0;
 	cachedModeRect.left = 0;
 	cachedModeRect.bottom = NAVBAR_CONTROLSTRIP_HEIGHT;
-	cachedModeRect.right = modeRect.right;
+	cachedModeRect.right = modeRect.right + 3;
 
 	// Now compute the close box rect.
 	CString closeText("close");
@@ -262,22 +263,40 @@ void CNavTitleBar::OnPaint( )
 	closeRect.top = modeRect.top;
 	closeRect.bottom = modeRect.bottom;
 
+	CRect arrowRect;
+	arrowRect.top = 0;
+	arrowRect.left = closeRect.left - 12;
+	arrowRect.right = arrowRect.left + 12;
+	arrowRect.bottom = NAVBAR_CONTROLSTRIP_HEIGHT;
+
+	DrawArrow(dc.m_hDC, m_ControlStripForegroundColor, LEFT_ARROW, arrowRect, TRUE);
+
 	// Cache the rect
 	cachedCloseRect.top = 0;
-	cachedCloseRect.left = 0;
+	cachedCloseRect.left = arrowRect.left;
 	cachedCloseRect.bottom = NAVBAR_CONTROLSTRIP_HEIGHT;
-	cachedCloseRect.right = closeRect.right;
+	cachedCloseRect.right = closeRect.right + 3;
 
 	// Draw the text
 	dc.SetTextColor(m_ControlStripForegroundColor);
 	dc.DrawText((LPCSTR)closeText, -1, &closeRect, nFormat);
 	dc.DrawText((LPCSTR)modeText, -1, &modeRect, nFormat);
 
+	// See if we're supposed to draw a framing rect.
+	
+	CBrush controlBrush(m_ControlStripForegroundColor);
+	if (m_bDrawCloseFrame)
+	{
+		dc.FrameRect(cachedCloseRect, &controlBrush);
+	}
+	if (m_bDrawModeFrame)
+	{
+		dc.FrameRect(cachedModeRect, &controlBrush);
+	}
+
 	dc.SetTextColor(oldColor);
 	dc.SetBkMode(nOldBkMode);
-	::SelectObject(dc.m_hDC, hOldFont);
-
-	
+	::SelectObject(dc.m_hDC, hOldFont);	
 }
 
 int CNavTitleBar::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -330,6 +349,28 @@ void CNavTitleBar::OnMouseMove(UINT nFlags, CPoint point)
 	}
 	else
 	{
+		BOOL oldCloseFrame = m_bDrawCloseFrame;
+		BOOL oldModeFrame = m_bDrawModeFrame;
+
+		m_bDrawCloseFrame = FALSE;
+		m_bDrawModeFrame = FALSE;
+
+		if (cachedCloseRect.PtInRect(point))
+		{
+			m_bDrawCloseFrame = TRUE;
+			m_hFocusTimer = SetTimer(IDT_STRIPFOCUS, STRIPFOCUS_DELAY_MS, NULL);
+		}
+		else if (cachedModeRect.PtInRect(point))
+		{
+			m_bDrawModeFrame = TRUE;
+			m_hFocusTimer = SetTimer(IDT_STRIPFOCUS, STRIPFOCUS_DELAY_MS, NULL);
+		}
+		
+		if (oldCloseFrame != m_bDrawCloseFrame)
+			InvalidateRect(cachedCloseRect);
+
+		if (oldModeFrame != m_bDrawModeFrame)
+			InvalidateRect(cachedModeRect);
 	}
 }
 
@@ -350,4 +391,32 @@ void CNavTitleBar::SetHTView(HT_View view)
 {
 	m_View = view;
 	Invalidate();
+}
+
+void CNavTitleBar::OnTimer(UINT nIDEvent)
+{
+	if (nIDEvent == IDT_STRIPFOCUS)
+	{
+		POINT point;
+
+		KillTimer(IDT_STRIPFOCUS);
+		m_hFocusTimer = 0;
+		
+		GetCursorPos(&point);
+
+		CRect rcClient;
+		GetWindowRect(&rcClient);
+
+		if (!rcClient.PtInRect(point))
+		{
+			m_bDrawCloseFrame = FALSE;
+			m_bDrawModeFrame = FALSE;
+			Invalidate();
+			UpdateWindow();
+		}
+		else
+			m_hFocusTimer = SetTimer(IDT_STRIPFOCUS, STRIPFOCUS_DELAY_MS, NULL);
+	}
+
+	CWnd::OnTimer(nIDEvent);
 }
