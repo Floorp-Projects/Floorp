@@ -42,9 +42,9 @@
 
 // IID for the nsISelectControlFrame class
 #define NS_ISELECTCONTROLFRAME_IID    \
-{ 0x162a2ae3, 0x5a79, 0x11d3,  \
-  { 0x96, 0xea, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56 } }
-// {162A2AE3-5A79-11d3-96EA-0060B0FB9956}
+{ 0x62a3bc8e, 0x1312, 0x42f3,  \
+  { 0x96, 0x7c, 0x37, 0x0f, 0x16, 0x9a, 0xd3, 0xbf } }
+// 62a3bc8e-1312-42f3-967c-370f169ad3bf
 
 class nsIDOMHTMLOptionElement;
 
@@ -98,6 +98,12 @@ public:
    */
   NS_IMETHOD GetDummyFrame(nsIFrame** aFrame) = 0;
   NS_IMETHOD SetDummyFrame(nsIFrame* aFrame) = 0;
+
+  /**
+   * Notify the frame when selectedIndex was changed
+   */
+  NS_IMETHOD OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex) = 0;
+
 };
 
 #endif

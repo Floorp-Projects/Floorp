@@ -2192,6 +2192,20 @@ nsListControlFrame::SetDummyFrame(nsIFrame* aFrame)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsListControlFrame::OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex)
+{
+  if (mComboboxFrame) {
+    mComboboxFrame->UpdateRecentIndex(aOldIndex);
+  }
+
+  ScrollToIndex(aNewIndex);
+  mStartSelectionIndex = aNewIndex;
+  mEndSelectionIndex = aNewIndex;
+
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------
 // End nsISelectControlFrame
 //----------------------------------------------------------------------

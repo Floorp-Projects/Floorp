@@ -186,6 +186,7 @@ public:
   NS_IMETHOD OnOptionTextChanged(nsIDOMHTMLOptionElement* option);
   NS_IMETHOD GetDummyFrame(nsIFrame** aFrame);
   NS_IMETHOD SetDummyFrame(nsIFrame* aFrame);
+  NS_IMETHOD OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex);
 
   // mouse event listeners
   nsresult MouseDown(nsIDOMEvent* aMouseEvent);
