@@ -21,7 +21,9 @@ LCFLAGS= $(LCFLAGS) -D__STDC__
 
 DEFINES= -DWIN32_LEAN_AND_MEAN
 LIBRARY_NAME= chardet
+!if "$(_MSC_VER)" != "1100"
 DIRS = windows
+!endif
 
 OBJS= \
 	$(NULL)
