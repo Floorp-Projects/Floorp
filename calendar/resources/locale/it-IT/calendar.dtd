@@ -139,7 +139,7 @@
 <!ENTITY newtodo.completed.label "Completato">
 <!ENTITY newtodo.duedate.label "Data richiesta">
 <!ENTITY newtodo.startdate.label "Data Inizio">
-<!ENTITY newtodo.priority.label "PrioritÃ ">
+<!ENTITY newtodo.priority.label "Priorit\u00E1 ">
 <!ENTITY newtodo.percentcomplete.label "&#037; completato">
 <!ENTITY newtodo.categories.label "Categorie">
 <!ENTITY newtodo.starttime.warning "La data di inizio e' posteriore alla data richiesta.">
@@ -153,7 +153,7 @@
 <!ENTITY newtodo.duedate.warning    "La data di inizio e' successiva alla data di fine.">
 <!ENTITY newtodo.repeatstart.warning "Data di inizio necessaria per ricorrenza">
 
-<!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
+<!ENTITY calendar.confirm.deleteallevents  "Sei sicuro di voler eliminare tutti gli eventi selezionati?" >
 <!ENTITY calendar.confirm.deleteevent "Sei sicuro di voler eliminare questo evento: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Sei sicuro di voler eliminare questo evento - senza titolo -?" >
 
@@ -227,7 +227,7 @@
 <!ENTITY calendar.events.filter.thisCalendarMonth.label "Eventi in questo Mese Calendario">
 
 <!ENTITY calendar.unifinder.tree.done.label          "Fatto">
-<!ENTITY calendar.unifinder.tree.priority.label      "PrioritÃ ">
+<!ENTITY calendar.unifinder.tree.priority.label      "Priorit\u00E1 ">
 <!ENTITY calendar.unifinder.tree.title.label         "Titolo">
 <!ENTITY calendar.unifinder.tree.percentcomplete.label "&#037; Completato">
 <!ENTITY calendar.unifinder.tree.startdate.label     "Inizio">
@@ -281,10 +281,10 @@
 <!ENTITY calendar.subscribe.button.label           "Sottoscrivi" >
 <!ENTITY calendar.publish.button.label             "Pubblica" >
 
-<!ENTITY calendar.localreload.button.label   "Local Reload" >
-<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
-<!ENTITY calendar.remotereload.button.label   "Reload" >
-<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
+<!ENTITY calendar.localreload.button.label   "Ricarica Locale" >
+<!ENTITY calendar.localreload.button.tooltip  "Ricarica tutti i calendari locali" >
+<!ENTITY calendar.remotereload.button.label   "Ricarica" >
+<!ENTITY calendar.remotereload.button.tooltip   "Ricarica tutti i calendari remoti" >
 
 <!ENTITY calendar.dayview.button.label          "Giorno" >
 <!ENTITY calendar.weekview.button.label         "Settimana" >
@@ -379,7 +379,7 @@
 <!-- Task Context Menu -->
 <!ENTITY calendar.context.progress.label              "Progresso ">
 <!ENTITY calendar.context.progress.accesskey          "P">
-<!ENTITY calendar.context.priority.label              "PrioritÃ  ">
+<!ENTITY calendar.context.priority.label              "Priorit\u00E1  ">
 <!ENTITY calendar.context.priority.accesskey          "r">
 
 <!ENTITY percnt "&#037;" ><!--=percent sign-->
@@ -462,18 +462,18 @@
                   copied from outlook csv file headers -->
 <!ENTITY calendar.importoutlook.dialog.title "Importazione Outlook CSV" >
 <!ENTITY calendar.importoutlook.mapconcepts.label "Per favore rimappa i seguenti concetti con gli equivalenti di Outlook CSV" >
-<!ENTITY calendar.importoutlook.outlooksubject.label "Soggetto" >
+<!ENTITY calendar.importoutlook.outlooksubject.label "Oggetto" >
 <!ENTITY calendar.importoutlook.outlookstartdate.label "Data inizio" >
 <!ENTITY calendar.importoutlook.outlookstarttime.label "Ora inizio" >
 <!ENTITY calendar.importoutlook.outlookenddate.label "Data fine" >
 <!ENTITY calendar.importoutlook.outlookendtime.label "Ora fine" >
 <!ENTITY calendar.importoutlook.outlooklocation.label "Luogo" >
 <!ENTITY calendar.importoutlook.outlookdescription.label "Descrizione" >
-<!ENTITY calendar.importoutlook.outlookallday.label "Evento Tutto il giorno" >
+<!ENTITY calendar.importoutlook.outlookallday.label "Giornata intera" >
 <!ENTITY calendar.importoutlook.outlookprivate.label "Privato" >
-<!ENTITY calendar.importoutlook.outlookalarm.label "Alarme attivato/disattivato" >
-<!ENTITY calendar.importoutlook.outlookalarmdate.label "Data alarme" >
-<!ENTITY calendar.importoutlook.outlookalarmtime.label "Alarme ora" >
+<!ENTITY calendar.importoutlook.outlookalarm.label "Promemoria attivato/disattivato" >
+<!ENTITY calendar.importoutlook.outlookalarmdate.label "Data promemoria" >
+<!ENTITY calendar.importoutlook.outlookalarmtime.label "Ora promemoria" >
 <!ENTITY calendar.importoutlook.outlookcategories.label "Categorie" >
 <!ENTITY calendar.importoutlook.selectmeaning.label "Scegliere il significato della seguente parola:" >
 <!ENTITY calendar.importoutlook.true.label "Vero" >
