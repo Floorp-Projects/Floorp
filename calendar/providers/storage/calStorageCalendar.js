@@ -450,7 +450,7 @@ calStorageCalendar.prototype = {
 
             dump ("RINFO: " + item.recurrenceInfo + "\n");
             if (item.recurrenceInfo && item.recurrenceInfo.recurType != 0) {
-                dump ("GETOCCURRENCESBETWEEN\n");
+                dump ("GETOCCURRENCESBETWEEN " + aRangeStart.jsDate + " -> " + aRangeEnd.jsDate + "\n");
                 iid = kCalIItemOccurrence;
                 items = item.recurrenceInfo.getOccurrencesBetween (item, aRangeStart, aRangeEnd, {});
                 dump ("items: " + items + "\n");
@@ -931,7 +931,8 @@ calStorageCalendar.prototype = {
                 this.mInsertRecurrence.reset();
 
                 // also set the item recurrence end
-                ip.recur_end = rec.recurEnd.jsDate;
+                if (rec.recurEnd)
+                    ip.recur_end = rec.recurEnd.jsDate;
             }
 
             ip.flags = flags;
