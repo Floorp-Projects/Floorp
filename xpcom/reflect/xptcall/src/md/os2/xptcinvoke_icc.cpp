@@ -127,10 +127,10 @@ invoke_count_words(PRUint32 paramCount, nsXPTCVariant* s)
              case nsXPTType::T_U64 : 
                 firsthalf = (uint32) (s->val.u64 >> 32);
                 secondhalf = (uint32) s->val.u32;
-                if( cpcount = 0 ) {
+                if( cpcount == 0 ) {
                     cparams[cpcount++] = secondhalf;
                     cparams[cpcount++] = firsthalf;
-                } else if( cpcount = 1 )
+                } else if( cpcount == 1 )
                     cparams[cpcount++] = secondhalf;
                 result += 2;
                 break;

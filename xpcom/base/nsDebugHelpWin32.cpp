@@ -203,7 +203,7 @@ DHWImportHooker::~DHWImportHooker()
     mHooking = PR_FALSE;
     PatchAllModules();
 
-    if(gHooks = this)
+    if(gHooks == this)
         gHooks = mNext;
     else
     {
