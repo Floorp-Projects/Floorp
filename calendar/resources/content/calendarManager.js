@@ -703,7 +703,7 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
       {
          window.setCursor( "default" );
          var retval = false;
-
+         result = String.fromCharCode.apply(this, result);
          //check to make sure its actually a calendar file, if not return.
          if( result.indexOf( "BEGIN:VCALENDAR" ) == -1 )
          {
