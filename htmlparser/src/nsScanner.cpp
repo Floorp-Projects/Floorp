@@ -733,14 +733,12 @@ nsresult nsScanner::SkipPast(nsString& aValidSet){
 }
 
 /**
- *  Consume characters until you did not find the terminal char
+ *  Consume characters until you run into space, a '<', a '>', or a '/'.
  *  
- *  @update  gess 3/25/98
  *  @param   aString - receives new data from stream
- *  @param   aIgnore - If set ignores ':','-','_','.'
  *  @return  error code
  */
-nsresult nsScanner::GetIdentifier(nsString& aString,PRBool allowPunct) {
+nsresult nsScanner::ReadTagIdentifier(nsString& aString) {
 
   if (!mSlidingBuffer) {
     return kEOF;
@@ -758,26 +756,28 @@ nsresult nsScanner::GetIdentifier(nsString& aString,PRBool allowPunct) {
  
     theChar=*current;
     if(theChar) {
-      found=PR_FALSE;
+      found = PR_TRUE;
       switch(theChar) {
-        case ':':
-        case '_':
-        case '-':
-        case '.':
-          found=allowPunct;
+        case '\n':
+        case '\r':
+        case ' ' :
+        case '\b':
+        case '\t':
+        case '\v':
+        case '<':
+        case '>':
+        case '/':
+          found = PR_FALSE;
           break;
         default:
-          found = ('a'<=theChar && theChar<='z') ||
-                  ('A'<=theChar && theChar<='Z') ||
-                  ('0'<=theChar && theChar<='9');
           break;
       }
 
       if(!found) {
         // If we the current character isn't a valid character for
-        // the identifier, we're done. Copy the results into
+        // the identifier, we're done. Append the results to
         // the string passed in.
-        CopyUnicodeTo(mCurrentPosition, current, aString);
+        AppendUnicodeTo(mCurrentPosition, current, aString);
         break;
       }
     }
@@ -795,14 +795,13 @@ nsresult nsScanner::GetIdentifier(nsString& aString,PRBool allowPunct) {
 }
 
 /**
- *  Consume characters until you did not find the terminal char
+ *  Consume characters until you run into a char that's not valid in an
+ *  entity name
  *  
- *  @update  gess 3/25/98
  *  @param   aString - receives new data from stream
- *  @param   allowPunct - If set ignores ':','-','_','.'
  *  @return  error code
  */
-nsresult nsScanner::ReadIdentifier(nsString& aString,PRBool allowPunct) {
+nsresult nsScanner::ReadEntityIdentifier(nsString& aString) {
 
   if (!mSlidingBuffer) {
     return kEOF;
@@ -823,11 +822,11 @@ nsresult nsScanner::ReadIdentifier(nsString& aString,PRBool allowPunct) {
     if(theChar) {
       found=PR_FALSE;
       switch(theChar) {
-        case ':':
         case '_':
         case '-':
         case '.':
-          found=allowPunct;
+          // Don't allow ':' in entity names.  See bug 23791
+          found = PR_TRUE;
           break;
         default:
           found = ('a'<=theChar && theChar<='z') ||
@@ -847,65 +846,6 @@ nsresult nsScanner::ReadIdentifier(nsString& aString,PRBool allowPunct) {
   SetPosition(current);
   if (current == end) {
     AppendUnicodeTo(origin, current, aString);
-    return Eof();
-  }
-
-  //DoErrTest(aString);
-
-  return result;
-}
-
-nsresult nsScanner::ReadIdentifier(nsScannerIterator& aStart,
-                                   nsScannerIterator& aEnd,
-                                   PRBool allowPunct) {
-
-  if (!mSlidingBuffer) {
-    return kEOF;
-  }
-
-  PRUnichar         theChar=0;
-  nsresult          result=Peek(theChar);
-  nsScannerIterator origin, current, end;
-  PRBool            found=PR_FALSE;  
-
-  origin = mCurrentPosition;
-  current = mCurrentPosition;
-  end = mEndPosition;
-
-  while(current != end) {
- 
-    theChar=*current;
-    if(theChar) {
-      found=PR_FALSE;
-      switch(theChar) {
-        case ':':
-        case '_':
-        case '-':
-          found=allowPunct;
-          break;
-        default:
-          if(('a'<=theChar) && (theChar<='z'))
-            found=PR_TRUE;
-          else if(('A'<=theChar) && (theChar<='Z'))
-            found=PR_TRUE;
-          else if(('0'<=theChar) && (theChar<='9'))
-            found=PR_TRUE;
-          break;
-      }
-
-      if(!found) {
-        aStart = mCurrentPosition;
-        aEnd = current;
-        break;
-      }
-    }
-    ++current;
-  }
-  
-  SetPosition(current);
-  if (current == end) {
-    aStart = origin;
-    aEnd = current;
     return Eof();
   }
 
