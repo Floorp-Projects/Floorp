@@ -491,6 +491,11 @@
   'const.CONTROLMAPMANDATORY', 
 ],
 
+'admin/keywords/confirm-delete.html.tmpl' => [
+  'keyword_id',
+  'bug_count',
+],
+
 'admin/flag-type/confirm-delete.html.tmpl' => [
   'flag_count', 
   'flag_type.id', 

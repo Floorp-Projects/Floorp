@@ -25,6 +25,8 @@ use lib ".";
 
 require "CGI.pl";
 
+use vars qw($template $vars);
+
 my $localtrailer = "<A HREF=\"editkeywords.cgi\">edit</A> more keywords";
 
 
@@ -126,6 +128,8 @@ unless (UserInGroup("editkeywords")) {
 
 
 my $action  = trim($::FORM{action}  || '');
+$vars->{'action'} = $action;
+
 detaint_natural($::FORM{id});
 
 
@@ -180,20 +184,12 @@ if ($action eq "") {
     
 
 if ($action eq 'add') {
-    PutHeader("Add keyword");
-    print "<FORM METHOD=POST ACTION=editkeywords.cgi>\n";
-    print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0>\n";
+    print Bugzilla->cgi->header();
 
-    EmitFormElements(-1, '', '');
+    $template->process("admin/keywords/create.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
 
-    print "</TABLE>\n<HR>\n";
-    print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"new\">\n";
-    print "</FORM>";
-
-    my $other = $localtrailer;
-    $other =~ s/more/other/;
-    PutTrailer($other);
     exit;
 }
 
@@ -308,8 +304,6 @@ if ($action eq 'edit') {
 #
 
 if ($action eq 'update') {
-    PutHeader("Update keyword");
-
     my $id = $::FORM{id};
     my $name  = trim($::FORM{name} || '');
     my $description  = trim($::FORM{description}  || '');
@@ -321,6 +315,8 @@ if ($action eq 'update') {
     my $tmp = FetchOneColumn();
 
     if ($tmp && $tmp != $id) {
+        PutHeader("Update keyword");
+
         print "The keyword '$name' already exists. Please press\n";
         print "<b>Back</b> and try again.\n";
         PutTrailer($localtrailer);
@@ -331,26 +327,27 @@ if ($action eq 'update') {
             ", description = " . SqlQuote($description) .
             " WHERE id = $id");
 
-    print "Keyword updated.<BR>\n";
-
-    &RebuildCacheWarning;
     # Make versioncache flush
     unlink "data/versioncache";
 
-    PutTrailer($localtrailer);
+    print Bugzilla->cgi->header();
+
+    $vars->{'name'} = $name;
+    $template->process("admin/keywords/rebuild-cache.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
+
     exit;
 }
 
 
 if ($action eq 'delete') {
-    PutHeader("Delete keyword");
     my $id = $::FORM{id};
 
     SendSQL("SELECT name FROM keyworddefs WHERE id=$id");
     my $name = FetchOneColumn();
 
     if (!$::FORM{reallydelete}) {
-
         SendSQL("SELECT count(*)
                  FROM keywords
                  WHERE keywordid = $id");
@@ -358,21 +355,16 @@ if ($action eq 'delete') {
         my $bugs = FetchOneColumn();
         
         if ($bugs) {
-            
-            
-            print qq{
-There are $bugs bugs which have this keyword set.  Are you <b>sure</b> you want
-to delete the <code>$name</code> keyword?
+            $vars->{'bug_count'} = $bugs;
+            $vars->{'keyword_id'} = $id;
+            $vars->{'name'} = $name;
 
-<FORM METHOD=POST ACTION=editkeywords.cgi>
-<INPUT TYPE=HIDDEN NAME="id" VALUE="$id">
-<INPUT TYPE=HIDDEN NAME="action" VALUE="delete">
-<INPUT TYPE=HIDDEN NAME="reallydelete" VALUE="1">
-<INPUT TYPE=SUBMIT VALUE="Yes, really delete the keyword">
-</FORM>
-};
+            print Bugzilla->cgi->header();
 
-            PutTrailer($localtrailer);
+            $template->process("admin/keywords/confirm-delete.html.tmpl",
+                               $vars)
+              || ThrowTemplateError($template->error());
+
             exit;
         }
     }
@@ -380,31 +372,17 @@ to delete the <code>$name</code> keyword?
     SendSQL("DELETE FROM keywords WHERE keywordid = $id");
     SendSQL("DELETE FROM keyworddefs WHERE id = $id");
 
-    print "Keyword $name deleted.\n";
-
-    &RebuildCacheWarning;
     # Make versioncache flush
     unlink "data/versioncache";
 
-    PutTrailer($localtrailer);
+    print Bugzilla->cgi->header();
+
+    $vars->{'name'} = $name;
+    $template->process("admin/keywords/rebuild-cache.html.tmpl",
+                       $vars)
+      || ThrowTemplateError($template->error());
+
     exit;
 }
 
-PutHeader("Error");
-print "I don't have a clue what you want.<BR>\n";
-
-foreach ( sort keys %::FORM) {
-    print "$_: $::FORM{$_}<BR>\n";
-}
-
-
-
-sub RebuildCacheWarning {
-
-    print "<BR><BR><B>You have deleted or modified a keyword. You must rebuild the keyword cache!<BR></B>";
-    print "You can rebuild the cache using sanitycheck.cgi. On very large installations of Bugzilla,<BR>";
-    print "This can take several minutes.<BR><BR><B><A HREF=\"sanitycheck.cgi?rebuildkeywordcache=1\">Rebuild cache</A><BR></B>";
-
-}
-
-
+ThrowCodeError("action_unrecognized", $vars);
