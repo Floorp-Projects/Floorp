@@ -549,13 +549,12 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
   nsIEnumerator* theEnum;
   result = service->EnumerateObserverList(theTopic.GetUnicode(), &theEnum);
   if (NS_SUCCEEDED(result) && theEnum){
-    nsIFormSubmitObserver* formSubmitObserver;
-    nsISupports *inst;
+    nsCOMPtr<nsISupports> inst;
       
     for (theEnum->First(); theEnum->IsDone() != NS_OK; theEnum->Next()) {
-      result = theEnum->CurrentItem(&inst);
+      result = theEnum->CurrentItem(getter_AddRefs(inst));
       if (NS_SUCCEEDED(result) && inst) {
-        result = inst->QueryInterface(NS_GET_IID(nsIFormSubmitObserver),(void**)&formSubmitObserver);
+        nsCOMPtr<nsIFormSubmitObserver> formSubmitObserver = do_QueryInterface(inst, &result);
         if (NS_SUCCEEDED(result) && formSubmitObserver) {
           formSubmitObserver->Notify(mContent);
         }
