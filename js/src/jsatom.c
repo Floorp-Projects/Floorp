@@ -501,8 +501,8 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 	    uint32 gen = state->tablegen;
 #endif
 	    JS_UNLOCK(&state->lock, cx);
-            str = ((flags & ATOM_NOCOPY) ? js_NewString : js_NewStringCopyN)
-                   (cx, str->chars, str->length, 0);
+            str = (JSString*)(((flags & ATOM_NOCOPY) ? js_NewString : js_NewStringCopyN)
+                   (cx, str->chars, str->length, 0));
 	    if (!str)
 		return NULL;
 	    key = STRING_TO_JSVAL(str);
