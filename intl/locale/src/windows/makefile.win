@@ -44,6 +44,7 @@ LINCS= \
         -I$(PUBLIC)\locale		\
         -I$(PUBLIC)\xpcom		\
         -I$(PUBLIC)\unicharutil \
+        -I$(PUBLIC)\uconv \
         -I$(PUBLIC)\raptor		\
         $(NULL)
 
