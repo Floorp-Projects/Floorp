@@ -1509,6 +1509,7 @@ nsHTMLFramesetBorderFrame::Paint(nsIPresContext&      aPresContext,
    lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetForeground,  fgColor);
    lookAndFeel->GetColor(nsILookAndFeel::eColor_Widget3DShadow,    sdwColor);
    lookAndFeel->GetColor(nsILookAndFeel::eColor_Widget3DHighlight, hltColor);
+   NS_RELEASE(lookAndFeel);
   }
 
   nscoord widthInPixels = NSTwipsToIntPixels(mWidth, aPresContext.GetTwipsToPixels());
