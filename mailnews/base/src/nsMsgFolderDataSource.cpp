@@ -1522,7 +1522,7 @@ nsresult nsMsgFolderDataSource::DoNewFolder(nsIMsgFolder *folder, nsISupportsArr
 		PRUnichar *name;
 		literal->GetValue(&name);
 		nsAutoString tempStr(name);
-		nsAutoCString nameStr(tempStr);
+		nsCAutoString nameStr(tempStr);
 
 		rv = folder->CreateSubfolder(nameStr);
 		nsAllocator::Free(name);

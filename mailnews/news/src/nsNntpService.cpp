@@ -308,7 +308,7 @@ nsresult nsNntpService::ConvertNewsMessageURI2NewsURI(const char *messageURI, ns
   newsURI += (const char*)messageId;
 
 #ifdef DEBUG_NEWS
-  printf("newsURI = %s\n", (const char *)nsAutoCString(newsURI));
+  printf("newsURI = %s\n", (const char *)nsCAutoString(newsURI));
 #endif
 
   return NS_OK;
