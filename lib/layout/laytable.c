@@ -3787,7 +3787,7 @@ lo_RelayoutCell(MWContext *context, lo_DocState *state,
 	 */
 	if (relayout == FALSE)
 	{
-		LO_PopStyleTagByIndex(context, &state, P_TABLE_DATA, 0);
+		/* LO_PopStyleTagByIndex(context, &state, P_TABLE_DATA, 0); */
 	}
 
 	return(cell_ele);
