@@ -35,7 +35,7 @@ REQUIRES	= xpcom
 CPPSRCS		= \
 		nsMIMEInfoImpl.cpp \
 		nsMIMEService.cpp \
-		nsMIMEServiceFactory.cpp \
+		nsMIMEServiceModule.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)

@@ -17,20 +17,21 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s): Judson Valeski
  */
 
  /* The MIME service is responsible for mapping file extensions to MIME-types
-  * (see RFC 2045).
+  * (see RFC 2045). It also provides access to nsIMIMEInfo interfaces and
+  * acts as a general convenience wrapper of nsIMIMEInfo interfaces.
+  *
+  * @see nsIMIMEInfo
   */
 
 #include "nsISupports.idl"
 #include "nsIMIMEInfo.idl"
 #include "nsIURI.idl"
 
-
 %{C++
-
 #define NS_MIMESERVICE_CID                           \
 { /* 03af31da-3109-11d3-8cd0-0060b0fc14a3 */         \
     0x03af31da,                                      \
@@ -38,25 +39,41 @@
     0x11d3,                                          \
     {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
-
 %}
 
 [scriptable, uuid(6C424C90-2FE7-11d3-A164-0050041CAF44)]
 interface nsIMIMEService : nsISupports {
-	// return a nsIMIMEInfo for the given file extension.
+    /* Retrieves a registered nsIMIMEInfo interface associated
+     * with the given file extension.
+     *
+     * @param  A file extension (excluding the dot ('.')).
+     * @return A nsIMIMEInfo interface.
+     */
 	nsIMIMEInfo GetFromExtension(in string aFileExt);
 
-    // return a string representing the content-type
-    void GetTypeFromExtension(in string aFileExt, out string aContentType);
-
-    void GetTypeFromURI(in nsIURI aURI, out string aContentType);
-
-	// return a nsIMIMEInfo for the given MIME type.
+    /* Retrieves a registered nsIMIMEInfo interface associated
+     * with the given MIME type.
+     *
+     * @param A MIME type.
+     * @return A nsIMIMEInfo interface.
+     */
 	nsIMIMEInfo GetFromMIMEType(in string aMIMEType);
 
-	// insert a nsIMIMEInfo in the the database.
-	void AddMIMEInfo(in nsIMIMEInfo aMIMEInfo);
+    /* Retrieves a string representation of the MIME type
+     * associated with this file extension.
+     *
+     * @param  A file extension (excluding the dot ('.')).
+     * @return The MIME type, if any.
+     */
+    string GetTypeFromExtension(in string aFileExt);
 
-	// remove a nsIMIMEInfo from the database.
-	void RemoveMIMEInfo(in nsIMIMEInfo aMIMEInfo);	
+    /* Retrieves a string representation of the MIME type
+     * associated with this URI. The association is purely
+     * file extension to MIME type based. No attempt to determine
+     * the type via server headers or byte scanning is made.
+     *
+     * @param  The URI the user wants MIME info on.
+     * @return The MIME type, if any.
+     */
+    string GetTypeFromURI(in nsIURI aURI);
 };

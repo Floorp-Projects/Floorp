@@ -17,25 +17,71 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s): Judson Valeski
  */
 
-/* An nsIMIMEInfo gives a user access to mime information
+/* An nsIMIMEInfo gives a user access to mime information.
+ * there is a one-to-many relationship between MIME types
+ * and file extensions. This means that a MIMEInfo object
+ * may have multiple file extensions associated with it.
+ * However, the reverse is not true.
  *
  */
 
 #include "nsISupports.idl"
+#include "nsIURI.idl"
 
 [scriptable, uuid(6A57EAE0-2FE8-11d3-A164-0050041CAF44)]
 interface nsIMIMEInfo : nsISupports {
-	// return the file extensions associated with this MIME type set.
-	attribute string FileExtensions;
+	/* Gives you an array of file types associated with this type.
+     *
+     * @return Number of elements in the array.
+     * @return Array of extensions.
+     */
+	void GetFileExtensions(out PRInt32 elementCount,
+                           [array, size_is(elementCount)] out string extensions);
 
-	// return the MIME types associated with this file extension set.
-	attribute string MIMEType;
+    /* Returns whether or not the given extension is
+     * associated with this MIME info.
+     *
+     * @return TRUE if the assocaition exists. 
+     */
 
-	// return the description of this MIME type set.
-	attribute wstring Description;
+    boolean ExtensionExists(in string aExtension);
 
+    /* Returns the first extension association in
+     * the internal set of extensions.
+     *
+     * @return The first extension.
+     */
+    string FirstExtension();
+
+	/* The MIME type of this MIMEInfo.
+     * 
+     * @return String representing the MIME type.
+     */
+	readonly attribute string MIMEType;
+
+	/* A human readable description of the MIME info
+     *
+     * @return The description
+     */
+	readonly attribute wstring Description;
+
+    /* Gives you arbitrary data about the MIMEInfo. An example
+     * of this is a generic image graphically representing
+     * this MIME info. This image can be used to generically
+     * and graphically represent the type.
+     *
+     * @return A URI representing the data location.
+     */
+    readonly attribute nsIURI DataURI;
+
+    /* Returns whether or not these two MIME infos are logically
+     * equivelent maintaining the one-to-many relationship between
+     * MIME types and file extensions.
+     *
+     * @returns TRUE if the two are considered equal
+     */
 	boolean Equals(in nsIMIMEInfo aMIMEInfo);
 };

@@ -17,54 +17,70 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s): Judson Valeski
  */
 
 #include "nsMIMEInfoImpl.h"
-#include "nsCRT.h"
-
+#include "nsXPIDLString.h"
 
 // nsISupports methods
 NS_IMPL_ISUPPORTS(nsMIMEInfoImpl, NS_GET_IID(nsIMIMEInfo));
 
 // nsMIMEInfoImpl methods
-nsMIMEInfoImpl::nsMIMEInfoImpl(const char *aMIMEType, const char *aFileExtensions, const char *aDescription) {
+nsMIMEInfoImpl::nsMIMEInfoImpl(const char *aMIMEType) {
     NS_INIT_REFCNT();
-    mMIMEType = NS_NewAtom(aMIMEType);
-    mFileExtensions.SetString(aFileExtensions);
-    mDescription.SetString(aDescription);
+    mMIMEType = getter_AddRefs(NS_NewAtom(aMIMEType));
 }
 
-nsMIMEInfoImpl::~nsMIMEInfoImpl() {
-    NS_RELEASE(mMIMEType);
-}
-
-PRBool
-nsMIMEInfoImpl::InExtensions(nsIAtom* anIAtom) {
-    nsAutoString extension;
-    anIAtom->ToString(extension);
-    
-    // XXX this is broken. need to use gessner's tokenizer stuff to delimit the commas
-    if (mFileExtensions.Find(extension) == -1)
-        return PR_FALSE;
-    return PR_TRUE;
-}
-
-// nsIMIMEInfo methods
 NS_IMETHODIMP
-nsMIMEInfoImpl::GetFileExtensions(char * *aFileExtensions) {
-    if (!aFileExtensions) return NS_ERROR_NULL_POINTER;
+nsMIMEInfoImpl::GetFileExtensions(PRInt32 *elementCount, char ***extensions) {
+    PRUint32 extCount = mExtensions.Count();
+    if (extCount < 1) return NS_ERROR_NOT_INITIALIZED;
 
-    *aFileExtensions = mFileExtensions.ToNewCString();
-    if (!*aFileExtensions)
-        return NS_ERROR_OUT_OF_MEMORY;
+    char **_retExts = (char**)nsAllocator::Alloc(extCount*2*sizeof(char*));
+    if (!_retExts) return NS_ERROR_OUT_OF_MEMORY;
+
+    for (PRUint8 i=0; i < extCount; i++) {
+        nsString* ext = (nsString*)mExtensions.StringAt(i);
+        _retExts[i] = ext->ToNewCString();
+        if (!_retExts[i]) return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    *elementCount = extCount;
+    *extensions   = _retExts;
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMIMEInfoImpl::SetFileExtensions(const char * aFileExtensions) {
-    mFileExtensions.SetString(aFileExtensions);
+nsMIMEInfoImpl::ExtensionExists(const char *aExtension, PRBool *_retval) {
+    NS_ASSERTION(aExtension, "no extension");
+    PRBool found = PR_FALSE;
+    PRUint32 extCount = mExtensions.Count();
+    if (extCount < 1) return NS_ERROR_NOT_INITIALIZED;
+
+    if (!aExtension) return NS_ERROR_NULL_POINTER;
+
+    for (PRUint8 i=0; i < extCount; i++) {
+        nsString* ext = (nsString*)mExtensions.StringAt(i);
+        if (ext->Equals(aExtension)) {
+            found = PR_TRUE;
+            break;
+        }
+    }
+
+    *_retval = found;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMIMEInfoImpl::FirstExtension(char **_retval) {
+    PRUint32 extCount = mExtensions.Count();
+    if (extCount < 1) return NS_ERROR_NOT_INITIALIZED;
+
+    *_retval = (mExtensions.StringAt(0))->ToNewCString();
+    if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;    
 }
 
 NS_IMETHODIMP
@@ -79,14 +95,6 @@ nsMIMEInfoImpl::GetMIMEType(char * *aMIMEType) {
 }
 
 NS_IMETHODIMP
-nsMIMEInfoImpl::SetMIMEType(const char * aMIMEType) {
-    NS_RELEASE(mMIMEType);
-    mMIMEType = NS_NewAtom(aMIMEType);
-    if (!mMIMEType) return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsMIMEInfoImpl::GetDescription(PRUnichar * *aDescription) {
     if (!aDescription) return NS_ERROR_NULL_POINTER;
 
@@ -96,12 +104,20 @@ nsMIMEInfoImpl::GetDescription(PRUnichar * *aDescription) {
 }
 
 NS_IMETHODIMP
-nsMIMEInfoImpl::SetDescription(const PRUnichar * aDescription) {
-    mDescription.SetString(aDescription);
-    return NS_OK;
+nsMIMEInfoImpl::GetDataURI(nsIURI * *aDataURI) {
+    return mURI->Clone(aDataURI);
 }
 
 NS_IMETHODIMP
 nsMIMEInfoImpl::Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (!aMIMEInfo) return NS_ERROR_NULL_POINTER;
+
+    nsXPIDLCString type;
+    nsresult rv = aMIMEInfo->GetMIMEType(getter_Copies(type));
+    if (NS_FAILED(rv)) return rv;
+
+    nsAutoString type1;
+    mMIMEType->ToString(type1);
+    *_retval = type1.Equals(type);
+    return NS_OK;
 }

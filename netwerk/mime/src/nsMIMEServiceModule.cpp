@@ -17,32 +17,18 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s): Judson Valeski
  */
 
-#include "nsIFactory.h"
+#include "nsIGenericFactory.h"
+#include "nsMIMEService.h"
 
-class nsMIMEServiceFactory : public nsIFactory
-{
-public:
-    nsMIMEServiceFactory(const nsCID &aClass, const char* className, const char* progID);
-
-    // nsISupports methods
-    NS_DECL_ISUPPORTS
-
-    // nsIFactory methods
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              const nsIID &aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
-
-protected:
-    virtual ~nsMIMEServiceFactory();
-
-protected:
-    nsCID       mClassID;
-    const char* mClassName;
-    const char* mProgID;
+static nsModuleComponentInfo gResComponents[] = {
+    { "The MIME mapping service", 
+      NS_MIMESERVICE_CID,
+      "component:||netscape|mime",
+      nsMIMEService::Create
+    }
 };
 
+NS_IMPL_NSGETMODULE("nsMIMEService", gResComponents)

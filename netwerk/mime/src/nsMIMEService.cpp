@@ -17,48 +17,56 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s): Judson Valeski
  */
 
 #include "nsMIMEService.h"
 #include "nsVoidArray.h"
-#include "nsEnumeratorUtils.h" // for nsArrayEnumerator
 #include "nsString2.h"
 #include "nsMIMEInfoImpl.h"
-#include "nsIMIMEInfo.h"
-#include "nsIFileSpec.h"
 #include "nsIURL.h"
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 
+// Hash table helper functions
 PRBool DeleteEntry(nsHashKey *aKey, void *aData, void* closure) {
     nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)aData;
-	NS_IF_RELEASE(entry);
+    NS_ASSERTION(entry, "mapping problem");
+	NS_RELEASE(entry);
     return PR_TRUE;   
 };
 
-PRBool FindMIMEType(nsHashKey *aKey, void *aData, void* closure) {
-    return PR_FALSE;
-}
-
-
 // nsISupports methods
-NS_IMPL_ISUPPORTS(nsMIMEService, NS_GET_IID(nsIMIMEService));
+NS_IMPL_ISUPPORTS1(nsMIMEService, nsIMIMEService);
 
+NS_METHOD
+nsMIMEService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult) {
+    nsMIMEService* service = new nsMIMEService();
+    if (!service) return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(service);
+    nsresult rv = service->Init();
+    if (NS_FAILED(rv)) return rv;
+    rv = service->QueryInterface(aIID, aResult);
+    NS_RELEASE(service);
+    return rv;
+}
 
 // nsMIMEService methods
 nsMIMEService::nsMIMEService() {
-
     NS_INIT_REFCNT();
-
-    mInfoHashtable = new nsHashtable();
-    InitFromHack(); // XXX bogus
-    //nsresult rv = InitializeMIMEMap(mInfoHashtable);
 }
 
 nsMIMEService::~nsMIMEService() {
-    mInfoHashtable->Enumerate(DeleteEntry, nsnull);
-    mInfoHashtable->Reset();
-    delete mInfoHashtable;
+    mInfoObjects->Reset(DeleteEntry, nsnull);
+    delete mInfoObjects;
+}
+
+nsresult
+nsMIMEService::Init() {
+    mInfoObjects = new nsHashtable();
+    if (!mInfoObjects) return NS_ERROR_OUT_OF_MEMORY;
+
+    return InitFromHack();
 }
 
  /* This bad boy needs to retrieve a url, and parse the data coming back, and
@@ -88,21 +96,53 @@ nsMIMEService::InitFromFile(const char *aFileName) {
 
 }
 
+// Call this first (perhaps only once) to create the initial nsMIMEInfo object
 nsresult
 nsMIMEService::AddMapping(const char* mimeType, 
                           const char* extension,
-                          const char* description)
+                          const char* description,
+                          nsIURI* dataURI)
 {
-    nsMIMEInfoImpl* anInfo = nsnull;
-    nsStringKey *extKey = nsnull;
-
-    anInfo = new nsMIMEInfoImpl(mimeType, extension, description);
+    // setup the new MIMEInfo object.
+    nsMIMEInfoImpl* anInfo = new nsMIMEInfoImpl(mimeType);
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+
+    anInfo->mExtensions.AppendString(extension);
+    anInfo->mDescription = description;
+    anInfo->mURI = dataURI;
+
+    // The entry is mapped many-to-one.
+
+    nsStringKey key(mimeType);
+    nsMIMEInfoImpl* oldInfo = (nsMIMEInfoImpl*)mInfoObjects->Put(&key, anInfo);
+    NS_IF_RELEASE(oldInfo);
     NS_ADDREF(anInfo);
-    extKey = new nsStringKey(extension);
-    if (!extKey) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoHashtable->Put(extKey, anInfo);
-    delete extKey;
+
+    key = extension;
+    oldInfo = (nsMIMEInfoImpl*)mInfoObjects->Put(&key, anInfo);
+    NS_IF_RELEASE(oldInfo);
+    NS_ADDREF(anInfo);
+
+    return NS_OK;
+}
+
+// Call this for subsequent extensions to be mapped to the MIME type.
+// You must call AddMapping() for a given MIME type *before* calling this.
+nsresult
+nsMIMEService::AppendExtension(const char* mimeType, const char* extension) {
+    nsStringKey key(mimeType);
+
+    nsMIMEInfoImpl* info = (nsMIMEInfoImpl*)mInfoObjects->Get(&key);
+    NS_ASSERTION(info, "only call AppendExtension *after* a call to AddMapping");
+
+    info->mExtensions.AppendString(extension);
+
+    // Add another mapping.
+    key = extension;
+    nsMIMEInfoImpl* oldInfo = (nsMIMEInfoImpl*)mInfoObjects->Put(&key, info);
+    NS_IF_RELEASE(oldInfo);
+    NS_ADDREF(info);
+
     return NS_OK;
 }
 
@@ -112,97 +152,57 @@ nsMIMEService::InitFromHack() {
 
     rv = AddMapping("text/plain", "txt", "Text File");
     if (NS_FAILED(rv)) return rv;
-    rv = AddMapping("text/plain", "text", "Text File");
+    rv = AppendExtension("text/plain", "text");
     if (NS_FAILED(rv)) return rv;
+
     rv = AddMapping("application/octet-stream", "exe", "Binary Executable");
     if (NS_FAILED(rv)) return rv;
-    rv = AddMapping("application/octet-stream", "bin", "Binary Executable");
+    rv = AppendExtension("application/octet-stream", "bin");
     if (NS_FAILED(rv)) return rv;
+
     rv = AddMapping("text/html", "htm", "Hyper Text Markup Language");
     if (NS_FAILED(rv)) return rv;
-    rv = AddMapping("text/html", "html", "Hyper Text Markup Language");
+    rv = AppendExtension("text/html", "html");
     if (NS_FAILED(rv)) return rv;
-    rv = AddMapping("text/html", "shtml", "Hyper Text Markup Language");
+    rv = AppendExtension("text/html", "shtml");
     if (NS_FAILED(rv)) return rv;
+
     rv = AddMapping("text/rdf", "rdf", "Resource Description Framework");
     if (NS_FAILED(rv)) return rv;
+
     rv = AddMapping("text/xul", "xul", "XML-Based User Interface Language");
     if (NS_FAILED(rv)) return rv;
+
     rv = AddMapping("text/xml", "xml", "Extensible Markup Language");
     if (NS_FAILED(rv)) return rv;
+
     rv = AddMapping("text/css", "css", "Style Sheet");
     if (NS_FAILED(rv)) return rv;
+
     rv = AddMapping("application/x-javascript", "js", "Javascript Source File");
     if (NS_FAILED(rv)) return rv;
+
     rv = AddMapping("message/rfc822", "eml", "RFC-822 data");
     if (NS_FAILED(rv)) return rv;
+
     rv = AddMapping("image/gif", "gif", "GIF Image");
     if (NS_FAILED(rv)) return rv;
+
     rv = AddMapping("image/jpeg", "jpeg", "JPEG Image");
     if (NS_FAILED(rv)) return rv;
-    rv = AddMapping("image/jpeg", "jpg", "JPEG Image");
+    rv = AppendExtension("image/jpeg", "jpg");
     if (NS_FAILED(rv)) return rv;
+
     rv = AddMapping("image/png", "png", "PNG Image");
     if (NS_FAILED(rv)) return rv;
+
     rv = AddMapping("image/x-jg", "art", "ART Image");
     if (NS_FAILED(rv)) return rv;
+
     rv = AddMapping("image/tiff", "tiff", "TIFF Image");
     if (NS_FAILED(rv)) return rv;
-    rv = AddMapping("image/tiff", "tif", "TIFF Image");
+    rv = AppendExtension("image/tiff", "tif");
     if (NS_FAILED(rv)) return rv;
-#if 0
-    anInfo = new nsMIMEInfoImpl("image/x-cmu-raster", "ras", "CMU Raster Image");
-    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
-    
-    anInfo = new nsMIMEInfoImpl("image/x-xbitmap", "xbm", "X Bitmap");
-    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
-    
-    anInfo = new nsMIMEInfoImpl("image/x-xpixmap", "xpm", "X Pixmap");
-    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
-    
-    anInfo = new nsMIMEInfoImpl("image/x-xwindowdump", "xwd", "X Window Dump Image");
-    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
-    
-    anInfo = new nsMIMEInfoImpl("image/x-portable-anymap", "pnm", "PBM Image");
-    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
-    
-    anInfo = new nsMIMEInfoImpl("image/x-portable-bitmap", "pbm", "PBM Image");
-    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
-    
-    anInfo = new nsMIMEInfoImpl("image/x-portable-graymap", "pgm", "PGM Image");
-    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
-    
-    anInfo = new nsMIMEInfoImpl("image/x-portable-pixmap", "ppm", "PPM Image");
-    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
-    
-    anInfo = new nsMIMEInfoImpl("image/x-rgb", "rgb", "RGB Image");
-    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
-    
-    anInfo = new nsMIMEInfoImpl("image/x-MS-bmp", "bmp", "Windows Bitmap");
-    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
-    
-     anInfo = new nsMIMEInfoImpl("image/x-photo-cd", "pcd", "PhotoCD Image");
-    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
-    
-     anInfo = new nsMIMEInfoImpl("image/ief", "ief", "");
-    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
-    
-     anInfo = new nsMIMEInfoImpl("application/fractals", "fif", "Fractal Image Format");
-    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
-#endif // 0
     
     return NS_OK;
 }
@@ -217,7 +217,7 @@ nsMIMEService::GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retval) {
 
     nsStringKey key(fileExt.GetBuffer());
 
-    nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)mInfoHashtable->Get(&key);
+    nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)mInfoObjects->Get(&key);
     if (!entry) return NS_ERROR_FAILURE;
     NS_ADDREF(entry);
     *_retval = NS_STATIC_CAST(nsIMIMEInfo*, entry);
@@ -226,13 +226,12 @@ nsMIMEService::GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retval) {
 
 NS_IMETHODIMP
 nsMIMEService::GetTypeFromExtension(const char *aFileExt, char **aContentType) {
-    nsresult rv;
-    nsIMIMEInfo *info = nsnull;
-    rv = GetFromExtension(aFileExt, &info);
+    nsresult rv = NS_OK;;
+    nsCOMPtr<nsIMIMEInfo> info;
+    rv = GetFromExtension(aFileExt, getter_AddRefs(info));
     if (NS_FAILED(rv)) return rv;
 
     rv = info->GetMIMEType(aContentType);
-    NS_RELEASE(info);
     return rv;
 }
 
@@ -243,21 +242,19 @@ nsMIMEService::GetTypeFromURI(nsIURI *aURI, char **aContentType) {
     // filename stuff (i.e. query string)
     nsCOMPtr<nsIURL> url = do_QueryInterface(aURI, &rv);
     if (NS_SUCCEEDED(rv)) {
-        char *ext = nsnull;
-        rv = url->GetFileExtension(&ext);
+        nsXPIDLCString ext;
+        rv = url->GetFileExtension(getter_Copies(ext));
         if (NS_FAILED(rv)) return rv;
         rv = GetTypeFromExtension(ext, aContentType);
-        nsAllocator::Free(ext);
         return rv;
     }
 
-    char *cStrSpec= nsnull;
+    nsXPIDLCString cStrSpec;
     // no url, let's give the raw spec a shot
-    rv = aURI->GetSpec(&cStrSpec);
+    rv = aURI->GetSpec(getter_Copies(cStrSpec));
     if (NS_FAILED(rv)) return rv;
 
     nsAutoString specStr(cStrSpec);
-    nsAllocator::Free(cStrSpec);
 
     // find the file extension (if any)
     nsAutoString extStr;
@@ -276,31 +273,14 @@ nsMIMEService::GetTypeFromURI(nsIURI *aURI, char **aContentType) {
 
 NS_IMETHODIMP
 nsMIMEService::GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo **_retval) {
+    nsCAutoString MIMEType(aMIMEType);
+    MIMEType.ToLowerCase();
 
-#if 0
-    // hashtable, here's it's a little trickier because we have to enumerate the hashtable
+    nsStringKey key(MIMEType.GetBuffer());
 
-    nsIAtom* MIMEType = NS_NewAtom(aMIMEType);
-    if (!MIMEType) return NS_ERROR_OUT_OF_MEMORY;
-
-    PRInt32 count = mInfoArray->Count();
-    for (int i = 0; i < count; i++) {
-        nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)mInfoArray->ElementAt(i);
-        if (entry->mMIMEType == MIMEType) {
-            *_retval = NS_STATIC_CAST(nsIMIMEInfo*, entry);
-            return NS_OK;
-        }
-    }
-#endif
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsMIMEService::AddMIMEInfo(nsIMIMEInfo *aMIMEInfo) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsMIMEService::RemoveMIMEInfo(nsIMIMEInfo *aMIMEInfo) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)mInfoObjects->Get(&key);
+    if (!entry) return NS_ERROR_FAILURE;
+    NS_ADDREF(entry);
+    *_retval = NS_STATIC_CAST(nsIMIMEInfo*, entry);
+    return NS_OK;
 }
