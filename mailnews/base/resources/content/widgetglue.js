@@ -94,18 +94,49 @@ var FolderPaneController =
 	
 	onEvent: function(event)
 	{
-		dump("onEvent("+event+")\n");
 		// on blur events set the menu item texts back to the normal values
 		if ( event == 'blur' )
-		{
 			goSetMenuValue('cmd_delete', 'valueDefault');
-		}
 	}
 };
 
 
 // Controller object for thread pane
 var ThreadPaneController =
+{
+   supportsCommand: function(command)
+	{
+		switch ( command )
+		{
+			default:
+				return false;
+		}
+	},
+
+	isCommandEnabled: function(command)
+	{
+		switch ( command )
+		{
+			default:
+				return false;
+		}
+	},
+
+	doCommand: function(command)
+	{
+		switch ( command )
+		{
+		}
+	},
+	
+	onEvent: function(event)
+	{
+		// on blur events set the menu item texts back to the normal values
+	}
+};
+
+// DefaultController object (handles commands when one of the trees does not have focus)
+var DefaultController =
 {
    supportsCommand: function(command)
 	{
@@ -125,7 +156,7 @@ var ThreadPaneController =
 
 	isCommandEnabled: function(command)
 	{
-        dump("ThreadPaneController.isCommandEnabled(" + command + ")\n");
+		dump("ThreadPaneController.isCommandEnabled\n");
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -153,6 +184,25 @@ var ThreadPaneController =
 				// they should be enabled, this hack of always enabled can then be fixed.
 				return true;
 
+/*			case "cmd_delete":
+			case "button_delete":
+				if ( !MessagePaneHasFocus() )
+					return false;
+
+				var threadTree = GetThreadTree();
+				dump("threadTree = " + threadTree + "\n");
+				var numSelected = 0;
+				if ( threadTree && threadTree.selectedItems )
+					numSelected = threadTree.selectedItems.length;
+				if ( command == "cmd_delete" )
+				{
+					if ( numSelected < 2 )
+						goSetMenuValue(command, 'valueMessage');
+					else
+						goSetMenuValue(command, 'valueMessages');
+				}
+				return ( numSelected > 0 );*/
+		
 			default:
 				return false;
 		}
@@ -191,14 +241,60 @@ var ThreadPaneController =
 	
 	onEvent: function(event)
 	{
-		dump("onEvent("+event+")\n");
 		// on blur events set the menu item texts back to the normal values
 		if ( event == 'blur' )
-		{
 			goSetMenuValue('cmd_delete', 'valueDefault');
-		}
 	}
 };
+
+
+function CommandUpdate_Mail()
+{
+	/*var messagePane = top.document.getElementById('messagePane');
+	var drawFocusBorder = messagePane.getAttribute('draw-focus-border');
+	
+	if ( MessagePaneHasFocus() )
+	{
+		if ( !drawFocusBorder )
+			messagePane.setAttribute('draw-focus-border', 'true');
+	}
+	else
+	{
+		if ( drawFocusBorder )
+			messagePane.removeAttribute('draw-focus-border');
+	}*/
+		
+	goUpdateCommand('button_delete');
+}
+
+/*function MessagePaneHasFocus()
+{
+	var focusedWindow = top.document.commandDispatcher.focusedWindow;
+	var messagePaneWindow = top.frames['messagepane'];
+	
+	if ( focusedWindow && messagePaneWindow && (focusedWindow != top) )
+	{
+		var hasFocus = IsSubWindowOf(focusedWindow, messagePaneWindow, false);
+		dump("...........Focus on MessagePane = " + hasFocus + "\n");
+		return hasFocus;
+	}
+	
+	return false;
+}
+
+function IsSubWindowOf(search, wind, found)
+{
+	//dump("IsSubWindowOf(" + search + ", " + wind + ", " + found + ")\n");
+	if ( found || (search == wind) )
+		return true;
+	
+	for ( index = 0; index < wind.frames.length; index++ )
+	{
+		if ( IsSubWindowOf(search, wind.frames[index], false) )
+			return true;
+	}
+	return false;
+}*/
 
 
 function SetupCommandUpdateHandlers()
@@ -216,6 +312,9 @@ function SetupCommandUpdateHandlers()
 	widget = GetThreadTree();
 	if ( widget )
 		widget.controllers.appendController(ThreadPaneController);
+		
+	top.controllers.appendController(DefaultController);
+
 }
 
 

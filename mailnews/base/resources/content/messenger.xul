@@ -32,7 +32,7 @@ Rights Reserved.
 <window id="messengerWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/TR/REC-html40"
-	xmlns:nc="http://home.netscape.com/NC-rdf#"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
 		title="&messengerWindow.title;"
         titlemodifier="&titleModifier.label;"
         titlemenuseparator="&titleSeperator.label;"
@@ -57,7 +57,7 @@ Rights Reserved.
 	<commandset id="CommandUpdate_Mail"
 				commandupdater="true"
 				events="focus,tree-select"
-				oncommandupdate="goUpdateCommand('button_delete')"/>
+				oncommandupdate="CommandUpdate_Mail()"/>
 
 	<commandset id="globalEditMenuItems"/>
 </commands>
