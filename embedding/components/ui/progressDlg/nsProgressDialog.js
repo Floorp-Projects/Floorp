@@ -72,6 +72,7 @@ function nsProgressDialog() {
     this.mPercent     = 0;
     this.mRate        = 0;
     this.mBundle      = null;
+    this.mCancelDownloadOnClose = true;
 }
 
 const nsIProgressDialog = Components.interfaces.nsIProgressDialog;
@@ -120,6 +121,8 @@ nsProgressDialog.prototype = {
     get percent()           { return this.mPercent; },
     get rate()              { return this.mRate; },
     get kRate()             { return this.mRate / 1024; },
+    get cancelDownloadOnClose() { return this.mCancelDownloadOnClose; },
+    set cancelDownloadOnClose(newval) { return this.mCancelDownloadOnClose = newval; },
 
     // These setters use functions that update the dialog.
     set paused(newval)      { return this.setPaused(newval); },
@@ -449,7 +452,9 @@ nsProgressDialog.prototype = {
             }
          }
          this.dialog = null; // The dialog is history.
-         this.onCancel();
+         if ( this.mCancelDownloadOnClose ) {
+             this.onCancel();
+         }
     },
 
     // onpause event means the user pressed the pause/resume button

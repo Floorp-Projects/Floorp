@@ -780,6 +780,8 @@ nsDownloadManager::OpenProgressDialogFor(const char* aPath, nsIDOMWindow* aParen
   nsCOMPtr<nsIProgressDialog> dialog(do_CreateInstance("@mozilla.org/progressdialog;1", &rv));
   if (NS_FAILED(rv)) return rv;
   
+  dialog->SetCancelDownloadOnClose(false);
+  
   nsCOMPtr<nsIDownload> dl = do_QueryInterface(dialog);
 
   // now give the dialog the necessary context
