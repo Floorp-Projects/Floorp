@@ -545,13 +545,13 @@ nsresult nsAutoConfig::getEmailAddr(nsACString & emailAddr)
         rv = mPrefBranch->GetCharPref(PromiseFlatCString(emailAddr).get(),
                                       getter_Copies(prefValue));
         if (NS_FAILED(rv) || (len = strlen(prefValue)) == 0) 
-            return rv;
+            return PromptForEMailAddress(emailAddr);
         emailAddr = NS_LITERAL_CSTRING("mail.identity.") + 
             nsDependentCString(prefValue, len) + NS_LITERAL_CSTRING(".useremail");
         rv = mPrefBranch->GetCharPref(PromiseFlatCString(emailAddr).get(),
                                       getter_Copies(prefValue));
         if (NS_FAILED(rv)  || (len = strlen(prefValue)) == 0) 
-            return rv;
+            return PromptForEMailAddress(emailAddr);
         emailAddr = nsDependentCString(prefValue, len);
     }
     else {
