@@ -138,7 +138,7 @@ function OpenURL(aWhere, event)
     return;
  
   var builder = gHistoryTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
-  var url = builder.getResourceAtIndex(currentIndex).Value;
+  var url = builder.getResourceAtIndex(currentIndex).ValueUTF8;
   
   if (!checkURLSecurity(url)) 
     return;
