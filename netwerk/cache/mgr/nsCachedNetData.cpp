@@ -1064,6 +1064,9 @@ public:
     nsresult Init(PRUint32 aStartingOffset) {
         nsresult rv;
 
+        // Just in case the protocol handler forgot to set this flag...
+        mCacheEntry->SetFlag(nsCachedNetData::UPDATE_IN_PROGRESS);
+
         rv = mCacheEntry->NewChannel(0, 0, getter_AddRefs(mChannel));
         if (NS_FAILED(rv)) return rv;
 
@@ -1083,7 +1086,7 @@ public:
         else
             mCacheEntry->ClearFlag(nsCachedNetData::TRUNCATED_CONTENT);
         mCacheEntry->ClearFlag(nsCachedNetData::VESTIGIAL);
-            
+        mCacheEntry->ClearFlag(nsCachedNetData::UPDATE_IN_PROGRESS);
         return mOriginalListener->OnStopRequest(channel, ctxt, status, errorMsg);
     }
 
@@ -1109,7 +1112,11 @@ public:
         rv = mOriginalStream->Read(buf, count, aActualBytes);
         if (NS_FAILED(rv)) return rv;
 
-        write(buf, *aActualBytes);
+        rv = write(buf, *aActualBytes);
+        
+        // If the cache fills up, mark entry as partial content
+        if (NS_FAILED(rv)) 
+            mCacheEntry->SetFlag(nsCachedNetData::TRUNCATED_CONTENT);
         return NS_OK;
     }
 
@@ -1145,9 +1152,6 @@ nsCachedNetData::InterceptAsyncRead(nsIStreamListener *aOriginalListener,
     
     rv = interceptListener->Init(aStartingOffset);
     if (NS_FAILED(rv)) return rv;
-
-    // Just in case the protocol handler forgot to set this flag...
-    SetFlag(UPDATE_IN_PROGRESS);
 
     NS_ADDREF(interceptListener);
     *aResult = interceptListener;
