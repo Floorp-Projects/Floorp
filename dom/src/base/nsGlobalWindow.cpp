@@ -1638,7 +1638,7 @@ GlobalWindowImpl::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   nsCOMPtr<nsIWebShellContainer> webShellContainer = do_QueryInterface(mWebShell);
   if (webShellContainer) {
     webShellContainer->CreatePopup(aElement, aPopupContent, aXPos, aYPos, aPopupType,
-                                   aPopupAlignment);
+                                   aPopupAlignment, this);
   }
   return NS_OK;
 }
