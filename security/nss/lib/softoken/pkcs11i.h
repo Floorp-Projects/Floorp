@@ -347,8 +347,7 @@ struct PK11SessionStr {
  * (head[]->refCount),  objectLock protects all elements of the token
  * object hash table (tokObjects[], tokenIDCount, and tokenHashTable),
  * and slotLock protects the remaining protected elements:
- * password, isLoggedIn, ssoLoggedIn, sessionIDCount, sessionCount,
- * and rwSessionCount.
+ * password, isLoggedIn, ssoLoggedIn, sessionCount, and rwSessionCount.
  */
 struct PK11SlotStr {
     CK_SLOT_ID		slotID;
@@ -365,7 +364,8 @@ struct PK11SlotStr {
     NSSLOWCERTCertDBHandle *certDB;
     NSSLOWKEYDBHandle	*keyDB;
     int			minimumPinLen;
-    int			sessionIDCount;
+    PRInt32		sessionIDCount;  /* atomically incremeneted */
+    int			sessionIDConflict;  /* not protected by a lock */
     int			sessionCount;
     int			rwSessionCount;
     int			tokenIDCount;

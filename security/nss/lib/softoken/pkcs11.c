@@ -2011,7 +2011,8 @@ PK11_SlotInit(char *configdir,pk11_token_parameters *params)
     }
     slot->password = NULL;
     slot->hasTokens = PR_FALSE;
-    slot->sessionIDCount = 1;
+    slot->sessionIDCount = 0;
+    slot->sessionIDConflict = 0;
     slot->sessionCount = 0;
     slot->rwSessionCount = 0;
     slot->tokenIDCount = 1;
@@ -2669,6 +2670,7 @@ CK_RV NSC_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags,
     PK11Slot *slot;
     CK_SESSION_HANDLE sessionID;
     PK11Session *session;
+    PK11Session *sameID;
 
     slot = pk11_SlotFromID(slotID);
     if (slot == NULL) return CKR_SLOT_ID_INVALID;
@@ -2679,7 +2681,6 @@ CK_RV NSC_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags,
     if (session == NULL) return CKR_HOST_MEMORY;
 
     PK11_USE_THREADS(PZ_Lock(slot->slotLock);)
-    sessionID = slot->sessionIDCount++ | (slot->index << 24);
     if (slot->readOnly && (flags & CKF_RW_SESSION)) {
 	/* NETSCAPE_SLOT_ID is Read ONLY */
 	session->info.flags &= ~CKF_RW_SESSION;
@@ -2690,11 +2691,22 @@ CK_RV NSC_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags,
     }
     PK11_USE_THREADS(PZ_Unlock(slot->slotLock);)
 
-    PK11_USE_THREADS(PZ_Lock(PK11_SESSION_LOCK(slot,sessionID));)
-    session->handle = sessionID;
-    pk11_update_state(slot, session);
-    pk11queue_add(session, sessionID, slot->head, SESSION_HASH_SIZE);
-    PK11_USE_THREADS(PZ_Unlock(PK11_SESSION_LOCK(slot,sessionID));)
+    do {
+        do {
+            sessionID = (PR_AtomicIncrement(&slot->sessionIDCount) & 0xffffff)
+                        | (slot->index << 24);
+        } while (sessionID == CK_INVALID_HANDLE);
+        PK11_USE_THREADS(PZ_Lock(PK11_SESSION_LOCK(slot,sessionID));)
+        pk11queue_find(sameID, sessionID, slot->head, SESSION_HASH_SIZE);
+        if (sameID == NULL) {
+            session->handle = sessionID;
+            pk11_update_state(slot, session);
+            pk11queue_add(session, sessionID, slot->head, SESSION_HASH_SIZE);
+        } else {
+            slot->sessionIDConflict++;  /* for debugging */
+        }
+        PK11_USE_THREADS(PZ_Unlock(PK11_SESSION_LOCK(slot,sessionID));)
+    } while (sameID != NULL);
 
     *phSession = sessionID;
     return CKR_OK;
