@@ -45,40 +45,40 @@ interface nsIWindowMediator: nsIRDFDataSource
 		iterates over all windows.  This enumerator returns domWindows.
 	*/
 	
-	nsISimpleEnumerator GetEnumerator( in wstring inType );
+	nsISimpleEnumerator getEnumerator( in wstring inType );
 
 	/*
 		iterates over the XUL windows of type inType in the order that they were created.  If 
 		inType is null iterates over all windows.  This enumerator returns xulWindows.
 	*/
 
-	nsISimpleEnumerator GetXULWindowEnumerator( in wstring inType); 
+	nsISimpleEnumerator getXULWindowEnumerator( in wstring inType); 
 
 	/*
 		Returns the window of type inType ( if null return any window type ) which has the most recent
 		time stamp
 	*/
-	nsIDOMWindow GetMostRecentWindow( in wstring inType );
+	nsIDOMWindow getMostRecentWindow( in wstring inType );
 	
 	/*
 		Get window given an RDF resource.
 	*/
-	nsIDOMWindow GetWindowForResource( in wstring inResource );
+	nsIDOMWindow getWindowForResource( in wstring inResource );
 	
 	/* */
-	nsIDOMWindow ConvertISupportsToDOMWindow( in nsISupports inWindow );
+	nsIDOMWindow convertISupportsToDOMWindow( in nsISupports inWindow );
 	
 	/* Add the webshellwindow to the list */
-	[noscript] void RegisterWindow( in nsIWebShellWindow inWindow);
+	[noscript] void registerWindow( in nsIWebShellWindow inWindow);
 	
 	/* remove the window from the list */
-	[noscript] void UnregisterWindow( in nsIWebShellWindow inWindow );
+	[noscript] void unregisterWindow( in nsIWebShellWindow inWindow );
 	
 	/* Call when the window gains focus. Used to determine the most recent window */
-	[noscript] void  UpdateWindowTimeStamp( in nsIWebShellWindow inWindow );
+	[noscript] void  updateWindowTimeStamp( in nsIWebShellWindow inWindow );
 	
 	/* */
-	[noscript] void UpdateWindowTitle(in nsIWebShellWindow inWindow, in wstring inTitle );
+	[noscript] void updateWindowTitle(in nsIWebShellWindow inWindow, in wstring inTitle );
 
 };
 
