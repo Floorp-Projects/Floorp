@@ -43,6 +43,7 @@
 #include "nsIBox.h"
 #include "nsBoxLayoutState.h"
 #include "nsIBoxToBlockAdaptor.h"
+#include "nsIScrollbarMediator.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIPresState.h"
 #include "nsButtonBoxFrame.h"
@@ -634,6 +635,14 @@ NS_IMETHODIMP
 nsScrollBoxFrame::SaveState(nsIPresContext* aPresContext,
                               nsIPresState** aState)
 {
+  nsCOMPtr<nsIScrollbarMediator> mediator;
+  nsIFrame* first = mFrames.FirstChild();
+  mediator = do_QueryInterface(first);
+  if (mediator) {
+    // Child manages its own scrolling. Bail.
+    return NS_OK;
+  }
+
   nsresult res = NS_OK;
   PRInt32 x,y;
   nsIScrollableView* scrollingView;

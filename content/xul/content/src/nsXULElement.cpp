@@ -4213,16 +4213,7 @@ nsXULElement::RemoveFocus(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsXULElement::GetBindingParent(nsIContent** aContent)
 {
-  nsCOMPtr<nsIAtom> tag;
-  GetTag(*getter_AddRefs(tag));
-  if (tag.get() == nsXULAtoms::scrollbar) {
-    if (!mParent) {
-      *aContent = (nsIStyledContent*)this;
-    }
-  }
-  else
-    *aContent = mBindingParent;
-  
+  *aContent = mBindingParent;
   NS_IF_ADDREF(*aContent);
   return NS_OK;
 }
