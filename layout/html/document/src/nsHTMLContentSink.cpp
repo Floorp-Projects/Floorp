@@ -127,6 +127,8 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 #define SINK_TRACE_NODE(_bit,_msg,_node,_sp,_obj)
 #endif
 
+#undef SINK_NO_INCREMENTAL
+
 //----------------------------------------------------------------------
 
 class SinkContext;
@@ -1581,7 +1583,6 @@ SinkContext::AddComment(const nsIParserNode& aNode)
 nsresult
 SinkContext::End()
 {
-  NS_ASSERTION(mStackPos == 1, "insufficient close container calls");
 
   for (PRInt32 i = 0; i < mStackPos; i++) {
     NS_RELEASE(mStack[i].mContent);
@@ -1698,9 +1699,6 @@ SinkContext::FlushTags()
     }
     mStack[stackPos].mFlags |= APPENDED;
 
-    if (eHTMLTag_iframe == mStack[mStackPos].mType) {
-      mSink->mNumOpenIFRAMES--;
-    }
     stackPos--;
   }
 
@@ -2061,7 +2059,11 @@ HTMLContentSink::WillInterrupt()
 {
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::WillInterrupt: this=%p", this));
+#ifdef SINK_NO_INCREMENTAL
+  return NS_OK;
+#else
   return mCurrentContext->FlushTags();
+#endif
 }
 
 NS_IMETHODIMP
