@@ -42,6 +42,8 @@
 #include "net.h"
 #include "xp.h"
 #include "xp_str.h"
+#include "libi18n.h"
+#include "csid.h"
 
 XP_BEGIN_PROTOS
 
@@ -89,6 +91,15 @@ XP_BEGIN_PROTOS
 #define MAX_URL_SIZE 300
 
 #define copyString(source) (source != NULL ? XP_STRDUP(source) : NULL)
+#define convertString2UTF8(charsetid, s) 	\
+   (s != NULL ? 				\
+    INTL_ConvertLineWithoutAutoDetect( 		\
+       (charsetid) , 				\
+       CS_UTF8, 				\
+       (unsigned char*)(s),			\
+       strlen(s)				\
+    ) : NULL)
+	
 #define stringEquals(x, y) (strcasecomp(x, y) ==0)
 /*#define stringAppend(x, y)   XP_AppendStr(x,y) */
 
@@ -326,6 +337,7 @@ PRBool inverseTV(PRBool tv);
 void createBootstrapResources();
 PRBool urlEquals(const char* url1,const  char* url2);
 char* append2Strings(const char* str1,const  char* str2);
+char* convertString2UTF8AndAppend(int16 charsetID, const char* str1,const  char* str2);
 PRBool substring(const char* pattern, const char* data);
 void stringAppend(char* in, const char* append);
 

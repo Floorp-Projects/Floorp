@@ -220,6 +220,18 @@ append2Strings (const char* str1, const char* str2)
 
 
 
+char *
+convertString2UTF8AndAppend (int16 charSetID, const char* str1, const char* str2)
+{
+  char* utf8str1 = (char*) INTL_ConvertLineWithoutAutoDetect(charSetID,
+		CS_UTF8, (unsigned char*) str1, strlen(str1));
+  char* newString = append2Strings( utf8str1, str2);
+  XP_FREEIF(utf8str1);
+  return newString;
+}
+
+
+
 void
 stringAppendBase (char* dest, const char* addition)
 {

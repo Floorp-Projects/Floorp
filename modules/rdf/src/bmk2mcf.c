@@ -84,6 +84,16 @@ createContainer (char* id)
 
 #ifdef MOZILLA_CLIENT
 
+int16 GetBmCharSetID();
+int16 GetBmCharSetID()
+{
+   /* we need to implement this in a better way */
+   static INTLCharSetID gBmCharSetID = CS_UNKNOWN;
+   if(CS_UNKNOWN == gBmCharSetID)
+	gBmCharSetID = INTL_GetCharSetID(INTL_DefaultTextWidgetCsidSel);
+   return gBmCharSetID;
+}
+
 char *
 resourceDescription (RDF rdf, RDF_Resource r)
 {
@@ -175,7 +185,7 @@ parseNextBkToken (RDFFile f, char* token)
       if ((f->db == gLocalStore) || (f->status != IN_TITLE))
 	{
 	      addSlotValue(f, f->lastItem, gCoreVocab->RDF_name, 
-			   copyString(token), RDF_STRING_TYPE, NULL);
+			   convertString2UTF8(GetBmCharSetID(),token), RDF_STRING_TYPE, NULL);
 	}
 /*
       if (startsWith("Personal Toolbar", token) && (containerp(f->lastItem)))
@@ -197,11 +207,11 @@ addDescription (RDFFile f, RDF_Resource r, char* token)
   char* desc = (char*)  nlocalStoreGetSlotValue(gLocalStore, r, gWebData->RDF_description, 
 				       RDF_STRING_TYPE, false, true);
   if (desc == NULL) {
-    addSlotValue(f, f->lastItem, gWebData->RDF_description, copyString(token),
+    addSlotValue(f, f->lastItem, gWebData->RDF_description, convertString2UTF8(GetBmCharSetID(), token),
 		 RDF_STRING_TYPE, NULL);
   } else {
    addSlotValue(f, f->lastItem, gWebData->RDF_description, 
-		 append2Strings(desc, token), RDF_STRING_TYPE, NULL); 
+		 convertString2UTF8AndAppend(GetBmCharSetID(),desc, token), RDF_STRING_TYPE, NULL); 
     nlocalStoreUnassert(gLocalStore, f->lastItem, gWebData->RDF_description, desc, RDF_STRING_TYPE);
   }
 }
