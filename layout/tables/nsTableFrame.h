@@ -436,6 +436,7 @@ public: /* ----- Cell Map public methods ----- */
     */
   virtual PRInt32 GetRowCount();
 
+  /** returns the number of columns in this table. */
   virtual PRInt32 GetColCount();
 
   /** adjust the col count for screwy table attributes.
@@ -443,11 +444,39 @@ public: /* ----- Cell Map public methods ----- */
     */
   virtual void SetEffectiveColCount();
 
+  /** return the column frame at colIndex.
+    * returns nsnull if the col frame has not yet been allocated, or if aColIndex is out of range
+    */
   nsTableColFrame * GetColFrame(PRInt32 aColIndex);
 
-  nsTableCellFrame * GetCellAt(PRInt32 aRowIndex, PRInt32 aColIndex);
+  /** return the cell frame at aRowIndex, aColIndex.
+    * returns nsnull if the cell frame has not yet been allocated, 
+    * or if aRowIndex or aColIndex is out of range
+    */
+  nsTableCellFrame * GetCellFrameAt(PRInt32 aRowIndex, PRInt32 aColIndex);
 
+  /** returns PR_TRUE if the row at aRowIndex has any cells that are the result
+    * of a row-spanning cell above it.
+	* @see nsCellMap::RowIsSpannedInto
+    */
+  PRBool RowIsSpannedInto(PRInt32 aRowIndex);
 
+  /** returns PR_TRUE if the row at aRowIndex has any cells that have a rowspan>1
+    * that originate in aRowIndex.
+    * @see nsCellMap::RowHasSpanningCells
+    */
+  PRBool RowHasSpanningCells(PRInt32 aRowIndex);
+
+	/** returns PR_TRUE if the col at aColIndex has any cells that are the result
+	  * of a col-spanning cell.
+	  * @see nsCellMap::ColIsSpannedInto
+	  */
+	PRBool ColIsSpannedInto(PRInt32 aColIndex);
+
+	/** returns PR_TRUE if the row at aColIndex has any cells that have a colspan>1
+	  * @see nsCellMap::ColHasSpanningCells
+	  */
+	PRBool ColHasSpanningCells(PRInt32 aColIndex);
 
 private:
   void DebugPrintCount() const; // Debugging routine

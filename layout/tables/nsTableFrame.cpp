@@ -429,7 +429,7 @@ nsTableColFrame * nsTableFrame::GetColFrame(PRInt32 aColIndex)
 }
 
 // can return nsnull
-nsTableCellFrame * nsTableFrame::GetCellAt(PRInt32 aRowIndex, PRInt32 aColIndex)
+nsTableCellFrame * nsTableFrame::GetCellFrameAt(PRInt32 aRowIndex, PRInt32 aColIndex)
 {
   nsTableCellFrame *result = nsnull;
   nsCellMap *cellMap = GetCellMap();
@@ -442,6 +442,73 @@ nsTableCellFrame * nsTableFrame::GetCellAt(PRInt32 aRowIndex, PRInt32 aColIndex)
       if (nsnull==result)
         result = cellData->mRealCell->mCell;
     }
+  }
+  return result;
+}
+
+/** returns PR_TRUE if the row at aRowIndex has any cells that are the result
+  * of a row-spanning cell.  
+  * @see nsCellMap::RowIsSpannedInto
+  */
+PRBool nsTableFrame::RowIsSpannedInto(PRInt32 aRowIndex)
+{
+  NS_PRECONDITION (0<=aRowIndex && aRowIndex<GetRowCount(), "bad row index arg");
+  PRBool result = PR_FALSE;
+  nsCellMap * cellMap = GetCellMap();
+  NS_PRECONDITION (nsnull!=cellMap, "bad call, cellMap not yet allocated.");
+  if (nsnull!=cellMap)
+  {
+		result = cellMap->RowIsSpannedInto(aRowIndex);
+  }
+  return result;
+}
+
+/** returns PR_TRUE if the row at aRowIndex has any cells that have a rowspan>1
+  * @see nsCellMap::RowHasSpanningCells
+  */
+PRBool nsTableFrame::RowHasSpanningCells(PRInt32 aRowIndex)
+{
+  NS_PRECONDITION (0<=aRowIndex && aRowIndex<GetRowCount(), "bad row index arg");
+  PRBool result = PR_FALSE;
+  nsCellMap * cellMap = GetCellMap();
+  NS_PRECONDITION (nsnull!=cellMap, "bad call, cellMap not yet allocated.");
+  if (nsnull!=cellMap)
+  {
+		result = cellMap->RowHasSpanningCells(aRowIndex);
+  }
+  return result;
+}
+
+
+/** returns PR_TRUE if the col at aColIndex has any cells that are the result
+  * of a col-spanning cell.  
+  * @see nsCellMap::ColIsSpannedInto
+  */
+PRBool nsTableFrame::ColIsSpannedInto(PRInt32 aColIndex)
+{
+  NS_PRECONDITION (0<=aColIndex && aColIndex<GetColCount(), "bad col index arg");
+  PRBool result = PR_FALSE;
+  nsCellMap * cellMap = GetCellMap();
+  NS_PRECONDITION (nsnull!=cellMap, "bad call, cellMap not yet allocated.");
+  if (nsnull!=cellMap)
+  {
+		result = cellMap->ColIsSpannedInto(aColIndex);
+  }
+  return result;
+}
+
+/** returns PR_TRUE if the row at aColIndex has any cells that have a colspan>1
+  * @see nsCellMap::ColHasSpanningCells
+  */
+PRBool nsTableFrame::ColHasSpanningCells(PRInt32 aColIndex)
+{
+  NS_PRECONDITION (0<=aColIndex && aColIndex<GetColCount(), "bad col index arg");
+  PRBool result = PR_FALSE;
+  nsCellMap * cellMap = GetCellMap();
+  NS_PRECONDITION (nsnull!=cellMap, "bad call, cellMap not yet allocated.");
+  if (nsnull!=cellMap)
+  {
+		result = cellMap->ColHasSpanningCells(aColIndex);
   }
   return result;
 }
@@ -499,7 +566,17 @@ PRInt32 nsTableFrame::GetEffectiveColSpan (PRInt32 aColIndex, nsTableCellFrame *
     result -= (minColSpanForCol - 1); // minColSpanForCol is always at least 1
                                       // and we want to treat default as 0 (no effect)
   }
-
+#ifdef NS_DEBUG
+  if (0>=result)
+  {
+    printf("ERROR!\n");
+    DumpCellMap();
+    printf("aColIndex=%d, cell->colIndex=%d\n", aColIndex, aCell->GetColIndex());
+    printf("aCell->colSpan=%d\n", aCell->GetColSpan());
+    printf("colCount=%d\n", mCellMap->GetColCount());
+  }
+#endif
+NS_ASSERTION(0<result, "bad effective col span");
   return result;
 }
 
@@ -890,21 +967,21 @@ void nsTableFrame::DumpCellMap ()
   if (nsnull != mCellMap)
   {
     PRInt32 rowCount = mCellMap->GetRowCount();
-    PRInt32 cols = mCellMap->GetColCount();
-    for (PRInt32 r = 0; r < rowCount; r++)
+    PRInt32 colCount = mCellMap->GetColCount();
+    for (PRInt32 rowIndex = 0; rowIndex < rowCount; rowIndex++)
     {
       if (gsDebug==PR_TRUE)
-      { printf("row %d", r);
+      { printf("row %d", rowIndex);
         printf(": ");
       }
-      for (PRInt32 c = 0; c < cols; c++)
+      for (PRInt32 colIndex = 0; colIndex < colCount; colIndex++)
       {
-        CellData *cd =mCellMap->GetCellAt(r, c);
+        CellData *cd =mCellMap->GetCellAt(rowIndex, colIndex);
         if (cd != nsnull)
         {
           if (cd->mCell != nsnull)
           {
-            printf("C%d,%d ", r, c);
+            printf("C%d,%d ", rowIndex, colIndex);
             printf("     ");
           }
           else
@@ -931,8 +1008,18 @@ void nsTableFrame::DumpCellMap ()
         else
           printf("----      ");
       }
-      printf("\n");
+      PRBool spanners = RowHasSpanningCells(rowIndex);
+      PRBool spannedInto = RowIsSpannedInto(rowIndex);
+      printf ("  spanners=%s spannedInto=%s\n", spanners?"T":"F", spannedInto?"T":"F");
     }
+		// output colspan info
+		for (PRInt32 colIndex=0; colIndex<colCount; colIndex++)
+		{
+			PRBool colSpanners = ColHasSpanningCells(colIndex);
+			PRBool colSpannedInto = ColIsSpannedInto(colIndex);
+			printf ("%d colSpanners=%s colSpannedInto=%s\n", 
+				      colIndex, colSpanners?"T":"F", colSpannedInto?"T":"F");
+		}
   }
   else
     printf ("[nsnull]");
@@ -993,12 +1080,12 @@ void nsTableFrame::BuildCellIntoMap (nsTableCellFrame *aCell, PRInt32 aRowIndex,
         {
           CellData *spanData = new CellData ();
           spanData->mRealCell = data;
-          if (gsDebug==PR_TRUE) printf("            null GetCellAt(%d, %d) so setting to spanData\n", workRow, workCol);
+          if (gsDebug==PR_TRUE) printf("            null GetCellFrameAt(%d, %d) so setting to spanData\n", workRow, workCol);
           mCellMap->SetCellAt(spanData, workRow, workCol);
         }
         else if ((0 < rowIndex) || (0 < colIndex))
         { // we overlap, replace existing data, it might be shared
-          if (gsDebug==PR_TRUE) printf("            overlapping Cell from GetCellAt(%d, %d) so setting to spanData\n", workRow, workCol);
+          if (gsDebug==PR_TRUE) printf("            overlapping Cell from GetCellFrameAt(%d, %d) so setting to spanData\n", workRow, workCol);
           CellData *overlap = new CellData ();
           overlap->mCell = testData->mCell;
           overlap->mRealCell = testData->mRealCell;
@@ -1623,6 +1710,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
                                                PRInt32 aMinCaptionWidth,
                                                PRInt32 mMaxCaptionWidth)
 {
+	//DumpCellMap();
   NS_PRECONDITION(aReflowState.frame == this, "bad reflow state");
   NS_PRECONDITION(aReflowState.parentReflowState->frame == mGeometricParent,
                   "bad parent reflow state");

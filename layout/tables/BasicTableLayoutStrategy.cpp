@@ -306,7 +306,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
     PRBool cellGrantingWidth=PR_TRUE;
     for (rowIndex = 0; rowIndex<numRows; rowIndex++)
     {
-      nsTableCellFrame * cellFrame = mTableFrame->GetCellAt(rowIndex, colIndex);
+      nsTableCellFrame * cellFrame = mTableFrame->GetCellFrameAt(rowIndex, colIndex);
       if (nsnull==cellFrame)
       { // there is no cell in this row that corresponds to this column
         continue;
@@ -704,7 +704,7 @@ void BasicTableLayoutStrategy::SetMinAndMaxTableWidths()
     for (colIndex = 0; colIndex<mNumCols; colIndex++)
     {
       if (gsDebug) printf("    col %d\n", colIndex);
-      nsTableCellFrame * cellFrame = mTableFrame->GetCellAt(rowIndex, colIndex);
+      nsTableCellFrame * cellFrame = mTableFrame->GetCellFrameAt(rowIndex, colIndex);
       rowMinWidth += colInset;
       rowMaxWidth += colInset;
       if (nsnull==cellFrame)
@@ -1053,7 +1053,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
     {
       for (rowIndex = 0; rowIndex<numRows; rowIndex++)
       { // this col has proportional width, so determine its width requirements
-        nsTableCellFrame * cellFrame = mTableFrame->GetCellAt(rowIndex, colIndex);
+        nsTableCellFrame * cellFrame = mTableFrame->GetCellFrameAt(rowIndex, colIndex);
         if (nsnull==cellFrame)
         { // there is no cell in this row that corresponds to this column
           continue;
@@ -1770,7 +1770,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState&
     {
       for (rowIndex = 0; rowIndex<numRows; rowIndex++)
       {
-        nsTableCellFrame * cellFrame = mTableFrame->GetCellAt(rowIndex, colIndex);
+        nsTableCellFrame * cellFrame = mTableFrame->GetCellFrameAt(rowIndex, colIndex);
         if (nsnull==cellFrame)
         { // there is no cell in this row that corresponds to this column
           continue;

@@ -44,7 +44,10 @@ protected:
   /** storage for rows */
   nsVoidArray *mRows;       
 
-  /** storage for CellData pointers */
+  /** storage for min col span info, just an int that gives the smallest
+    * colspan for all cells originating in each column.  If allocated,
+    * each entry must be >= 1.
+    */
   PRInt32 *mMinColSpans;
 
   /** a cache of the column frames, by col index */
@@ -62,8 +65,8 @@ protected:
 public:
   /** constructor 
     * @param aRows - initial number of rows
-	* @param aColumns - initial number of columns
-	*/
+	  * @param aColumns - initial number of columns
+	  */
   nsCellMap(PRInt32 aRows, PRInt32 aColumns);
 
   /** destructor
@@ -113,22 +116,69 @@ public:
 
   /** add a column frame to the list of column frames
     * column frames must be added in order
-	*/
+		*/
   void AppendColumnFrame(nsTableColFrame *aColFrame);
 
-  /** return PR_TRUE if aRowIndex has any cells with rowspan>1 contained
-    * within it (not just cells that are in the row, but cells that span
-	* into the row as well.
-	*/
-  PRBool RowImpactedBySpanningCell(PRInt32 aRowIndex);
+	/** returns PR_TRUE if the row at aRowIndex has any cells that are the result
+		* of a row-spanning cell above it.  So, given this table:<BR>
+		* <PRE>
+		* TABLE
+		*   TR
+		*    TD ROWSPAN=2
+		*    TD
+		*   TR
+		*    TD
+		* </PRE>
+		* RowIsSpannedInto(0) returns PR_FALSE, and RowIsSpannedInto(1) returns PR_TRUE.
+		* @see RowHasSpanningCells
+		*/
+  PRBool RowIsSpannedInto(PRInt32 aRowIndex);
 
-  /** return PR_TRUE if aColIndex has any cells with colspan>1 contained
-    * within it (not just cells that are in the col, but cells that span
-	* into the col as well.
-	*/
-  PRBool ColumnImpactedBySpanningCell(PRInt32 aColIndex);
+	/** returns PR_TRUE if the row at aRowIndex has any cells that have a rowspan>1
+		* So, given this table:<BR>
+		* <PRE>
+		* TABLE
+		*   TR
+		*    TD ROWSPAN=2
+		*    TD
+		*   TR
+		*    TD
+		* </PRE>
+		* RowHasSpanningCells(0) returns PR_TRUE, and RowHasSpanningCells(1) returns PR_FALSE.
+		* @see RowIsSpannedInto
+		*/
+  PRBool RowHasSpanningCells(PRInt32 aRowIndex);
 
-  /** for debugging */
+	/** returns PR_TRUE if the col at aColIndex has any cells that are the result
+		* of a col-spanning cell.  So, given this table:<BR>
+		* <PRE>
+		* TABLE
+		*   TR
+		*    TD COLSPAN=2
+		*    TD
+		*    TD
+		* </PRE>
+		* ColIsSpannedInto(0) returns PR_FALSE, ColIsSpannedInto(1) returns PR_TRUE,
+		* and ColIsSpannedInto(2) returns PR_FALSE.
+		* @see ColHasSpanningCells
+		*/
+	PRBool ColIsSpannedInto(PRInt32 aColIndex);
+
+	/** returns PR_TRUE if the row at aColIndex has any cells that have a colspan>1
+		* So, given this table:<BR>
+		* <PRE>
+		* TABLE
+		*   TR
+		*    TD COLSPAN=2
+		*    TD
+		* </PRE>
+		* ColHasSpanningCells(0) returns PR_TRUE, and ColHasSpanningCells(1) returns PR_FALSE.
+		* @see ColIsSpannedInto
+		*/
+	PRBool ColHasSpanningCells(PRInt32 aColIndex);
+
+
+  /** dump a representation of the cell map to stdout for debugging */
   void DumpCellMap() const;
 
 };

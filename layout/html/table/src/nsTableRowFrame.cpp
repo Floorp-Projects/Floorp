@@ -114,6 +114,11 @@ nsTableRowFrame::DidReflow(nsIPresContext& aPresContext,
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     // Resize and re-align the cell frames based on our row height
     nscoord           cellHeight = mRect.height - mCellMaxTopMargin - mCellMaxBottomMargin;
+
+// XXX
+    // every place in this module where we cast to nsTableCellFrame, 
+    // we first have to check the display-type of the frame and skip non-cells.
+
     nsTableCellFrame *cellFrame = (nsTableCellFrame*)mFirstChild;
     nsTableFrame*     tableFrame;
     mContentParent->GetContentParent((nsIFrame*&)tableFrame);
