@@ -484,6 +484,9 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(const nsHTMLReflowState& aR
                                                      PRBool                   aConsiderPct,
                                                      float                    aPixelToTwips)
 {
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugTimeNonPctColspans(*mTableFrame, (nsHTMLReflowState&)aReflowState, PR_TRUE);
+#endif
   PRInt32 numCols = mTableFrame->GetColCount();
   // zero out prior ADJ values 
 
@@ -549,6 +552,9 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(const nsHTMLReflowState& aR
       }
     }
   }
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugTimeNonPctColspans(*mTableFrame, (nsHTMLReflowState&)aReflowState, PR_FALSE);
+#endif
 }
 
 #ifdef DEBUG
@@ -843,6 +849,9 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
                                                    const nsHTMLReflowState& aReflowState,
                                                    float                    aPixelToTwips)
 {
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugTimeNonPctCols(*mTableFrame, (nsHTMLReflowState&)aReflowState, PR_TRUE);
+#endif
   if (gsDebugAssign) {printf("AssignNonPctColWidths en max=%d count=%d \n", aMaxWidth, gsDebugCount++); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
   PRBool rv = PR_FALSE;
   PRInt32 numRows = mTableFrame->GetRowCount();
@@ -1028,6 +1037,9 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
   }
 
   if (gsDebugAssign) {printf("AssignNonPctColWidths ex\n"); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugTimeNonPctCols(*mTableFrame, (nsHTMLReflowState&)aReflowState, PR_FALSE);
+#endif
   return rv;
 }
 
@@ -1064,6 +1076,9 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState aReflowS
                                                 PRBool                  aTableIsAutoWidth,
                                                 float                   aPixelToTwips)
 {
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugTimePctCols(*mTableFrame, (nsHTMLReflowState&)aReflowState, PR_TRUE);
+#endif
   mTableFrame->SetHasCellSpanningPctCol(PR_FALSE); // this gets refigured below
   PRInt32 numRows = mTableFrame->GetRowCount();
   PRInt32 numCols = mTableFrame->GetColCount(); // consider cols at end without orig cells 
@@ -1250,8 +1265,9 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState aReflowS
 
   // check to see if a cell spans a percentage col. This will cause the MIN_ADJ,
   // FIX_ADJ, and DES_ADJ values to be recomputed 
-  for (colX = 0; colX < numCols; colX++) { 
-    for (rowX = 0; rowX < numRows; rowX++) {
+  PRBool done = PR_FALSE;
+  for (colX = 0; (colX < numCols) && !done; colX++) { 
+    for (rowX = 0; (rowX < numRows) && !done; rowX++) {
       PRBool originates;
       PRInt32 colSpan;
       nsTableCellFrame* cellFrame = mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
@@ -1259,13 +1275,14 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState aReflowS
         continue;
       }
       // determine if the cell spans cols which have a pct value
-      for (PRInt32 spanX = 0; spanX < colSpan; spanX++) {
+      for (PRInt32 spanX = 0; (spanX < colSpan) && !done; spanX++) {
         nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX + spanX);
         if (!colFrame) continue;
         if (colFrame->GetWidth(PCT) > 0) {
           mTableFrame->SetHasCellSpanningPctCol(PR_TRUE);
           // recompute the MIN_ADJ, FIX_ADJ, and DES_ADJ values
           ComputeNonPctColspanWidths(aReflowState, PR_TRUE, aPixelToTwips);
+          done = PR_TRUE;
           break;
         }
       }
@@ -1362,6 +1379,9 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState aReflowS
     ReduceOverSpecifiedPctCols(NSToCoordRound(((float)(colPctTotal - 100)) * 0.01f * (float)basis));
   }
 
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugTimePctCols(*mTableFrame, (nsHTMLReflowState&)aReflowState, PR_FALSE);
+#endif
   return basis;
 }
 
