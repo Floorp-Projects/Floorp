@@ -22,13 +22,20 @@
 
 class CIEHtmlElement;
 
+
+
 class CIEHtmlElementCollection : public CComObjectRootEx<CComSingleThreadModel>,
 							  public IDispatchImpl<IHTMLElementCollection, &IID_IHTMLElementCollection, &LIBID_MSHTML>
 {
-	std::vector< CComQIPtr<IDispatch, &IID_IDispatch> > m_cNodeList;
+public:
+	typedef std::vector< CIPtr(IDispatch) > ElementList;
+
+private:
+	ElementList m_cNodeList;
 
 public:
 	CIEHtmlElementCollection();
+
 protected:
 	virtual ~CIEHtmlElementCollection();
 
@@ -43,7 +50,13 @@ public:
 	virtual HRESULT SetParentNode(IDispatch *pIDispParent);
 
 	// Helper method creates a collection from a parent node
-	static HRESULT CreateFromParentNode(CIEHtmlNode *pParentNode, CIEHtmlElementCollection **pInstance);
+	static HRESULT CreateFromParentNode(CIEHtmlNode *pParentNode, CIEHtmlElementCollection **pInstance, BOOL bRecurseChildren = FALSE);
+
+
+	ElementList &GetElements()
+	{
+		return m_cNodeList;
+	}
 
 BEGIN_COM_MAP(CIEHtmlElementCollection)
 	COM_INTERFACE_ENTRY_IID(IID_IDispatch, IHTMLElementCollection)

@@ -40,6 +40,30 @@ HRESULT CIEHtmlElement::GetIDispatch(IDispatch **pDispatch)
 	return QueryInterface(IID_IDispatch, (void **) pDispatch);
 }
 
+
+HRESULT CIEHtmlElement::GetChildren(CIEHtmlElementCollectionInstance **ppCollection)
+{
+	// Validate parameters
+	if (ppCollection == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	*ppCollection = NULL;
+
+	// Create a collection representing the children of this node
+	CIEHtmlElementCollectionInstance *pCollection = NULL;
+	CIEHtmlElementCollection::CreateFromParentNode(this, (CIEHtmlElementCollection **) &pCollection);
+	if (pCollection)
+	{
+		pCollection->AddRef();
+		*ppCollection = pCollection;
+	}
+
+	return S_OK;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // IHTMLElement implementation
 
@@ -626,14 +650,13 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_children(IDispatch __RPC_FAR *__RP
 
 	// Create a collection representing the children of this node
 	CIEHtmlElementCollectionInstance *pCollection = NULL;
-	CIEHtmlElementCollection::CreateFromParentNode(this, (CIEHtmlElementCollection **) &pCollection);
-	if (pCollection)
+	HRESULT hr = GetChildren(&pCollection);
+	if (SUCCEEDED(hr))
 	{
-		pCollection->AddRef();
 		*p = pCollection;
 	}
 
-	return S_OK;
+	return hr;
 }
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_all(IDispatch __RPC_FAR *__RPC_FAR *p)
