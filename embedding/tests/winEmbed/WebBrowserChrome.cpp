@@ -188,13 +188,16 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 aChromeFlags,
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
 
-  WebBrowserChrome *newChrome;
-  WebBrowserChrome *parent = aChromeFlags & nsIWebBrowserChrome::CHROME_DEPENDENT ? this : nsnull;
-  nsresult          rv;
+  nsresult                      rv;
+  nsCOMPtr<nsIWebBrowserChrome> parent;
+  nsCOMPtr<nsIWebBrowserChrome> newChrome;
 
-  rv = ::CreateBrowserWindow(aChromeFlags, parent, &newChrome);
+  parent = nsnull;
+  if (aChromeFlags & nsIWebBrowserChrome::CHROME_DEPENDENT)
+    parent = dont_QueryInterface(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
+  rv = ::CreateBrowserWindow(aChromeFlags, parent, getter_AddRefs(newChrome));
 
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv) && newChrome)
     newChrome->GetWebBrowser(_retval);
   return rv;
 }
