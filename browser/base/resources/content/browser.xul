@@ -794,6 +794,7 @@ Contributor(s): ______________________________________. -->
     <toolbar id="LocationToolbar" class="chromeclass-toolbar" persist="collapsed"
              tbalign="stretch" fullscreentoolbar="true">
       <hbox id="nav-bar-inner" flex="1">
+        <label value="&location.label;"/>
         <textbox id="urlbar" class="chromeclass-location" flex="1"
                  type="autocomplete" searchSessions="history" 
                  timeout="50" maxrows="6" alwaysopenpopup="true"
