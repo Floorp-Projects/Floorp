@@ -246,7 +246,7 @@ nsHashKey *nsMsgGroupView::AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr)
   return nsnull;
 }
 
-nsMsgGroupThread *nsMsgGroupView::AddHdrToThread(nsIMsgDBHdr *msgHdr)
+nsMsgGroupThread *nsMsgGroupView::AddHdrToThread(nsIMsgDBHdr *msgHdr, PRBool *pNewThread)
 {
   nsMsgKey msgKey;
   PRUint32 msgFlags;
@@ -259,6 +259,7 @@ nsMsgGroupThread *nsMsgGroupView::AddHdrToThread(nsIMsgDBHdr *msgHdr)
   if (hashKey)
     foundThread = (nsMsgGroupThread *) m_groupsTable.Get(hashKey);
   PRBool newThread = !foundThread;
+  *pNewThread = newThread;
   nsMsgViewIndex viewIndexOfThread;
   if (!foundThread)
   {
@@ -326,8 +327,9 @@ NS_IMETHODIMP nsMsgGroupView::OpenWithHdrs(nsISimpleEnumerator *aHeaders, nsMsgV
     rv = aHeaders->GetNext(getter_AddRefs(supports));
     if (NS_SUCCEEDED(rv) && supports)
     {
+      PRBool notUsed;
       msgHdr = do_QueryInterface(supports);
-      AddHdrToThread(msgHdr);
+      AddHdrToThread(msgHdr, &notUsed);
     }
   }
   *aCount = m_keys.GetSize();
@@ -350,7 +352,8 @@ NS_IMETHODIMP nsMsgGroupView::OpenWithHdrs(nsISimpleEnumerator *aHeaders, nsMsgV
 
 nsresult nsMsgGroupView::OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey aParentKey, PRBool /*ensureListed*/)
 {
-  nsMsgGroupThread *thread = AddHdrToThread(newHdr); 
+  PRBool newThread;
+  nsMsgGroupThread *thread = AddHdrToThread(newHdr, &newThread); 
   if (thread)
   {
     nsMsgKey msgKey;
@@ -359,28 +362,62 @@ nsresult nsMsgGroupView::OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey aParentKey, P
     newHdr->GetFlags(&msgFlags);
 
     nsMsgViewIndex threadIndex = ThreadIndexOfMsg(msgKey);
+    PRInt32 numRowsInserted = 1;
+    if (newThread && GroupViewUsesDummyRow())
+      numRowsInserted++;
     // may need to fix thread counts
     if (threadIndex != nsMsgViewIndex_None)
     {
+      if (newThread)
+        m_flags[threadIndex] &= ~MSG_FLAG_ELIDED;
+      else
+        m_flags[threadIndex] |= MSG_VIEW_FLAG_HASCHILDREN | MSG_VIEW_FLAG_ISTHREAD;
+
+      PRInt32 numRowsToInvalidate = 1;
       if (! (m_flags[threadIndex] & MSG_FLAG_ELIDED))
       {
         PRUint32 msgIndexInThread = thread->m_keys.IndexOf(msgKey);
-        m_keys.InsertAt(threadIndex + msgIndexInThread, msgKey);
-        m_flags.InsertAt(threadIndex + msgIndexInThread, msgFlags);
-        if (msgIndexInThread > 0)
+        if (!msgIndexInThread && GroupViewUsesDummyRow())
+          msgIndexInThread++;
+
+        if (!newThread || GroupViewUsesDummyRow())
         {
-          m_levels.InsertAt(threadIndex + msgIndexInThread, 1);
-        }
-        else // insert new header at level 0, and bump old level 0 to 1
-        {
-          m_levels.InsertAt(threadIndex, 0, 1);
-          m_levels.SetAt(threadIndex + 1, 1);
+          // this msg is the new parent of an expanded thread. AddHdrToThread already
+          // updated m_keys[threadIndex], so we need to insert the old parent as a child
+          // and update m_flags accordingly.
+          if (!newThread && (!msgIndexInThread || (msgIndexInThread == 1 && GroupViewUsesDummyRow())))
+          {
+            PRUint32 saveOldFlags = m_flags[threadIndex + msgIndexInThread] & ~(MSG_VIEW_FLAG_HASCHILDREN | MSG_VIEW_FLAG_ISTHREAD);
+            if (!msgIndexInThread)
+              msgFlags |= MSG_VIEW_FLAG_HASCHILDREN | MSG_VIEW_FLAG_ISTHREAD;
+
+            m_flags[threadIndex + msgIndexInThread] = msgFlags;
+            // this will cause us to insert the old header as the first child, with
+            // the right key and flags.
+            msgFlags = saveOldFlags; 
+            msgIndexInThread++;
+            msgKey = thread->m_keys[msgIndexInThread];
+          }
+
+          m_keys.InsertAt(threadIndex + msgIndexInThread, msgKey);
+          m_flags.InsertAt(threadIndex + msgIndexInThread, msgFlags);
+          if (msgIndexInThread > 0)
+          {
+            m_levels.InsertAt(threadIndex + msgIndexInThread, 1);
+          }
+          else // insert new header at level 0, and bump old level 0 to 1
+          {
+            m_levels.InsertAt(threadIndex, 0, 1);
+            m_levels.SetAt(threadIndex + 1, 1);
+          }
         }
         // the call to NoteChange() has to happen after we add the key
         // as NoteChange() will call RowCountChanged() which will call our GetRowCount()
-        NoteChange(threadIndex + msgIndexInThread, 1, nsMsgViewNotificationCode::insertOrDelete);
+        NoteChange((newThread && GroupViewUsesDummyRow()) ? threadIndex + msgIndexInThread - 1 : threadIndex + msgIndexInThread,
+                      numRowsInserted, nsMsgViewNotificationCode::insertOrDelete);
+        numRowsToInvalidate = msgIndexInThread;
       }
-      NoteChange(threadIndex, 1, nsMsgViewNotificationCode::changed);
+      NoteChange(threadIndex, numRowsToInvalidate, nsMsgViewNotificationCode::changed);
     }
   }
   // if thread is expanded, we need to add hdr to view...
@@ -593,7 +630,7 @@ nsMsgViewIndex nsMsgGroupView::ThreadIndexOfMsg(nsMsgKey msgKey,
                                             PRInt32 *pThreadCount /* = NULL */,
                                             PRUint32 *pFlags /* = NULL */)
 {
-  if (msgIndex != nsMsgViewIndex_None && m_sortType == nsMsgViewSortType::byDate)
+  if (msgIndex != nsMsgViewIndex_None && GroupViewUsesDummyRow())
   {
     // this case is all we care about at this point.
     if (m_flags[msgIndex] & MSG_VIEW_FLAG_ISTHREAD)

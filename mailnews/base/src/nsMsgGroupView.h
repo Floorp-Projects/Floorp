@@ -58,7 +58,7 @@ public:
   NS_IMETHOD GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aValue);
 
 protected:
-  nsMsgGroupThread *AddHdrToThread(nsIMsgDBHdr *msgHdr);
+  nsMsgGroupThread *AddHdrToThread(nsIMsgDBHdr *msgHdr, PRBool *pNewThread);
   nsHashKey *AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr); // caller must delete
   nsresult OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey aParentKey, PRBool /*ensureListed*/);
   virtual nsresult GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIMsgThread **pThread);
