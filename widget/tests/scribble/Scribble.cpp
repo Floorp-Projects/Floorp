@@ -92,7 +92,6 @@ static NS_DEFINE_IID(kCToolkitCID, NS_TOOLKIT_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-static NS_DEFINE_IID(kIWindowIID, NS_IWINDOW_IID);	//еее
 static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
 static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
@@ -547,7 +546,7 @@ nsresult CreateApplication(int * argc, char ** argv)
     //
     // create the main window
     //
-    nsComponentManager::CreateInstance(kCWindowCID, nsnull, kIWindowIID,
+    nsComponentManager::CreateInstance(kCWindowCID, nsnull, kIWidgetIID,
                                  (void **)&(scribbleData.mainWindow));
     nsRect rect(100, 100, 600, 700);
     scribbleData.mainWindow->Create((nsIWidget*)NULL, 

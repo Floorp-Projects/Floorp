@@ -167,7 +167,6 @@ static NS_DEFINE_IID(kCToolkitCID, NS_TOOLKIT_CID);
 
 
 // interface ids
-static NS_DEFINE_IID(kIWindowIID,         NS_IWINDOW_IID);
 static NS_DEFINE_IID(kISupportsIID,       NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWidgetIID,         NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIButtonIID,         NS_IBUTTON_IID);
@@ -1279,7 +1278,7 @@ nsresult WidgetTest(int *argc, char **argv)
     //
     // create the main window
     //
-    nsComponentManager::CreateInstance(kCWindowCID, nsnull, kIWindowIID, (void**)&window);
+    nsComponentManager::CreateInstance(kCWindowCID, nsnull, kIWidgetIID, (void**)&window);
     nsRect rect(100, 100, 600, 700);
     window->Create((nsIWidget*) nsnull, rect, HandleEvent, 
                    (nsIDeviceContext *) nsnull,

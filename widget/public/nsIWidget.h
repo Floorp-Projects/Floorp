@@ -69,20 +69,6 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 { 0x18032ad5, 0xb265, 0x11d1, \
 { 0xaa, 0x2a, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
 
-// The following definition should have been temporary. The plan was to create
-// a new class called "nsIWindow" and use it on all the platforms in order
-// to differentiate real user windows from simple widgets. The Mac needs it
-// and it appeared that it would make sense to have it on Windows and Unix too.
-// Well, it did not happen yet so we keep this temporary definition.
-#ifdef XP_MAC
-// {18032AD6-B265-11d1-AA2A-000000000000}
-#define NS_IWINDOW_IID \
-{ 0x18032ad6, 0xb265, 0x11d1, \
-{ 0xaa, 0x2a, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } }
-#else
-#define NS_IWINDOW_IID	NS_IWIDGET_IID
-#endif
-
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and api's. This is necessary
