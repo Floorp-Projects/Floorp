@@ -490,7 +490,6 @@ void StyleSpacingImpl::ResetFrom(const nsStyleSpacing* aParent, nsIPresContext* 
   mBorder.SetTop(medium);
   mBorder.SetRight(medium);
   mBorder.SetBottom(medium);
-
   
   mBorderStyle[0] = NS_STYLE_BORDER_STYLE_NONE;  
   mBorderStyle[1] = NS_STYLE_BORDER_STYLE_NONE; 
@@ -508,6 +507,8 @@ void StyleSpacingImpl::ResetFrom(const nsStyleSpacing* aParent, nsIPresContext* 
   mOutlineWidth = medium;
   mOutlineStyle = NS_STYLE_BORDER_STYLE_NONE;
   mOutlineColor = NS_RGB(0, 0, 0);
+
+  mCompatFloaterMargin.SetAutoValue(); // not inherited
 
   mFloatEdge = NS_STYLE_FLOAT_EDGE_CONTENT;
   
@@ -671,7 +672,8 @@ PRInt32 StyleSpacingImpl::CalcDifference(const StyleSpacingImpl& aOther) const
   if ((mMargin == aOther.mMargin) && 
       (mPadding == aOther.mPadding) && 
       (mBorder == aOther.mBorder) && 
-      (mFloatEdge == aOther.mFloatEdge)) {
+      (mFloatEdge == aOther.mFloatEdge) &&
+      (mCompatFloaterMargin == aOther.mCompatFloaterMargin)) {
     PRInt32 ix;
     for (ix = 0; ix < 4; ix++) {
       if ((mBorderStyle[ix] != aOther.mBorderStyle[ix]) || 

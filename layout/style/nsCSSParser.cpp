@@ -2892,6 +2892,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_margin_left:
   case eCSSProperty_margin_right:
   case eCSSProperty_margin_top:
+  case eCSSProperty__moz_compat_floater_margin:
     return ParseVariant(aErrorCode, aValue, VARIANT_AHLP, nsnull);
   case eCSSProperty_marker_offset:
     return ParseVariant(aErrorCode, aValue, VARIANT_AHL, nsnull);

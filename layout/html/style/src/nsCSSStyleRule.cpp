@@ -1964,6 +1964,11 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
                      SETCOORD_LPH, aFont->mFont, aPresContext)) {
       }
 
+      // -moz-compat-floater-margin: length, percent, auto, inherit
+      if (! SetCoord(ourMargin->mCompatFloaterMargin, spacing->mCompatFloaterMargin, parentSpacing->mCompatFloaterMargin,
+                     SETCOORD_LPAH, aFont->mFont, aPresContext)) {
+      }
+
       // outline-width: length, enum, inherit
       if (! SetCoord(ourMargin->mOutlineWidth, spacing->mOutlineWidth, parentSpacing->mOutlineWidth,
                      SETCOORD_LEH, aFont->mFont, aPresContext)) {
