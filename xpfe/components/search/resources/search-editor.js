@@ -99,13 +99,13 @@ function doLoad()
       if (categoryList)
       {
         categoryList.database.AddDataSource(catDS);
-        var ref = categoryList.getAttribute("ref");
-        if (ref)  categoryList.setAttribute("ref", ref);
+        categoryList.builder.rebuild();
       }
       var engineList = document.getElementById("engineList");
       if (engineList)
       {
         engineList.database.AddDataSource(catDS);
+        engineList.builder.rebuild();
       }
     }
   }
