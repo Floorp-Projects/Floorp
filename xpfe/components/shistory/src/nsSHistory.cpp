@@ -24,6 +24,8 @@
 #include "nsCOMPtr.h"
 #include "nsSHistory.h"
 #include "nsIGenericFactory.h"
+#include "nsXPIDLString.h"
+
 
 
 #ifdef XXX_NS_DEBUG       // XXX: we'll need a logging facility for debugging
@@ -54,7 +56,7 @@ nsSHistory::~nsSHistory()
  * increment the index to point to the new entry
  */
 NS_IMETHODIMP
-nsSHistory::Add(nsISHEntry * aSHEntry)
+nsSHistory::AddEntry(nsISHEntry * aSHEntry)
 {
 	nsresult rv;
 
@@ -62,7 +64,6 @@ nsSHistory::Add(nsISHEntry * aSHEntry)
     if (! aSHEntry)
       return NS_ERROR_NULL_POINTER;
 
-    //nsISHTransaction * txn=nsnull;
 	nsCOMPtr<nsISHTransaction>  txn;
     rv = nsComponentManager::CreateInstance(NS_SHTRANSACTION_PROGID,
 	                                      nsnull,
@@ -72,7 +73,7 @@ nsSHistory::Add(nsISHEntry * aSHEntry)
 
     if (NS_SUCCEEDED(rv) && txn) {		
 		if (mListRoot) {
-           GetTransactionForIndex(mIndex, getter_AddRefs(parent));
+           GetTransactionAtIndex(mIndex, getter_AddRefs(parent));
 		}
 		// Set the ShEntry and parent for the transaction. setting the 
 		// parent will properly set the parent child relationship
@@ -83,8 +84,7 @@ nsSHistory::Add(nsISHEntry * aSHEntry)
 		    // If this is the very first transaction, initialize the list
 		    if (!mListRoot)
 			   mListRoot = txn;
-			   //NS_ADDREF(txn);
-
+                      PrintHistory();
 		}
 	}
    return NS_OK;
@@ -108,26 +108,78 @@ nsSHistory::GetIndex(PRInt32 * aResult)
 	return NS_OK;
 }
 
+/* Get the root (the very first) entry in the history list */
 NS_IMETHODIMP
-nsSHistory::GetRootEntry(nsISHTransaction ** aResult)
+nsSHistory::GetRootEntry(nsISHEntry ** aResult)
 {
-    NS_ENSURE_ARG_POINTER(aResult);
+    nsresult rv;
 
-	*aResult = mListRoot;
-	NS_IF_ADDREF(*aResult);
-	return NS_OK;   
+      /* GetSHEntry ensures aResult is valid */
+      if (mListRoot) {
+        rv = mListRoot->GetSHEntry(aResult);
+        return rv;
+      }
+      return NS_ERROR_FAILURE;
 }
 
+/* Get the entry prior to the current index */
 NS_IMETHODIMP
-nsSHistory::GetTransactionForIndex(PRInt32 aIndex, nsISHTransaction ** aResult)
+nsSHistory::GetPreviousEntry(PRBool aModifyIndex, nsISHEntry ** aResult)
 {
-   nsresult rv;
-   NS_ENSURE_ARG_POINTER(aResult);
+    nsresult rv;
 
-   if (mLength <= 0)
+    /* GetEntryAtIndex ensures aResult is valid */
+      rv = GetEntryAtIndex((mIndex-1), aModifyIndex, aResult);
+      return rv;
+}
+
+/* Get the entry next to the current index */
+NS_IMETHODIMP
+nsSHistory::GetNextEntry(PRBool aModifyIndex, nsISHEntry ** aResult)
+{
+    nsresult rv;
+
+      /* GetEntryAtIndex ensures aResult is valid */
+      rv = GetEntryAtIndex((mIndex+1), aModifyIndex, aResult);
+    return rv;
+}
+
+
+/* Get the entry at a given index */
+NS_IMETHODIMP
+nsSHistory::GetEntryAtIndex(PRInt32 aIndex, PRBool aModifyIndex, nsISHEntry** aResult)
+{
+    nsresult rv;
+      nsCOMPtr<nsISHTransaction> txn;
+
+      /* GetTransactionAtIndex ensures aResult is valid and validates aIndex */
+      rv = GetTransactionAtIndex(aIndex, getter_AddRefs(txn));
+      if (NS_SUCCEEDED(rv) && txn) {
+         //Get the Entry from the transaction
+         rv = txn->GetSHEntry(aResult);
+         if (NS_SUCCEEDED(rv) && (*aResult)) {
+                 // Set mIndex to the requested index, if asked to do so..
+                 if (aModifyIndex) {
+                         mIndex = aIndex;
+                 }
+         } //entry
+      }  //Transaction
+      return rv;
+}
+
+/* Get the transaction at a given index */
+NS_IMETHODIMP
+nsSHistory::GetTransactionAtIndex(PRInt32 aIndex, nsISHTransaction ** aResult)
+{
+     nsresult rv;
+     NS_ENSURE_ARG_POINTER(aResult);
+
+     if ((mLength <= 0) || (aIndex < 0) || (aIndex >= mLength))
 	   return NS_ERROR_FAILURE;
 
-   if (mListRoot) {
+     if (!mListRoot) 
+         return NS_ERROR_FAILURE;
+
      if (aIndex == 0)
 	 {
 	    *aResult = mListRoot;
@@ -136,7 +188,10 @@ nsSHistory::GetTransactionForIndex(PRInt32 aIndex, nsISHTransaction ** aResult)
 	 } 
 	 PRInt32   cnt=0;
 	 nsCOMPtr<nsISHTransaction>  tempPtr;
-	 GetRootEntry(getter_AddRefs(tempPtr));
+       
+       rv = GetRootTransaction(getter_AddRefs(tempPtr));
+       if (!NS_SUCCEEDED(rv) || !tempPtr)
+               return NS_ERROR_FAILURE;
 
      while(1) {
        nsCOMPtr<nsISHTransaction> ptr;
@@ -149,17 +204,85 @@ nsSHistory::GetTransactionForIndex(PRInt32 aIndex, nsISHTransaction ** aResult)
 			  break;
 		  }
 		  else {
-			  // XXX Not sure if this will maintain reference
             tempPtr = ptr;
             continue;
 		  }
 	   }  //NS_SUCCEEDED
 	   else 
 		   return NS_ERROR_FAILURE;
-	 }  // while
-   } // mListRoot
+       }  // while 
+  
    return NS_OK;
 }
+
+NS_IMETHODIMP
+nsSHistory::PrintHistory()
+{
+
+      nsCOMPtr<nsISHTransaction>   txn;
+      PRInt32 index = 0;
+      nsresult rv;
+
+      if (!mListRoot) 
+              return NS_ERROR_FAILURE;
+
+      txn = mListRoot;
+    
+      while (1) {
+        nsCOMPtr<nsISHEntry>  entry;
+              rv = txn->GetSHEntry(getter_AddRefs(entry));
+              if (!NS_SUCCEEDED(rv) && !entry)
+                      return NS_ERROR_FAILURE;
+
+              nsCOMPtr<nsISupports> layoutHistoryState;
+              nsCOMPtr<nsIURI>  uri;
+              PRUnichar *  title;
+              char * titleCStr=nsnull;
+              nsXPIDLCString  url;
+
+              entry->GetLayoutHistoryState(getter_AddRefs(layoutHistoryState));
+              entry->GetUri(getter_AddRefs(uri));
+              entry->GetTitle(&title);
+
+              nsString titlestr(title);
+              titleCStr = titlestr.ToNewCString();
+              
+              uri->GetSpec(getter_Copies(url));
+
+              printf("**** SH Transaction #%d, Entry = %x\n", index, entry.get());
+              printf("\t\t URL = %s\n", url);
+              printf("\t\t Title = %s\n", titleCStr);
+              printf("\t\t layout History Data = %x\n", layoutHistoryState);
+      
+              Recycle(title);
+              Recycle(titleCStr);
+
+              nsCOMPtr<nsISHTransaction> child;
+              rv = txn->GetChild(getter_AddRefs(child));
+              if (NS_SUCCEEDED(rv) && child) {
+                      txn = child;
+                      index++;
+                      continue;
+              }
+              else
+                      break;
+      }
+      
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsSHistory::GetRootTransaction(nsISHTransaction ** aResult)
+{
+    nsCOMPtr<nsISHEntry>   entry;
+
+    NS_ENSURE_ARG_POINTER(aResult);
+    *aResult=mListRoot;
+      NS_IF_ADDREF(*aResult);
+      return NS_OK;
+}
+
 
 NS_IMETHODIMP
 NS_NewSHistory(nsISupports* aOuter, REFNSIID aIID, void** aResult)

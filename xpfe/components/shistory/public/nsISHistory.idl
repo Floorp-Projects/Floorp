@@ -39,7 +39,7 @@ interface nsISHistory: nsISupports
   /**
    * Add a new Entry to the History List
    */
-   void  add(in nsISHEntry aEntry);
+   void  addEntry(in nsISHEntry aEntry);
 
   /**
    * Get the length of the History list
@@ -51,9 +51,29 @@ interface nsISHistory: nsISupports
    */
    readonly attribute long index;
 
+  /** 
+   * Get Previous Entry
+   */
+   nsISHEntry getPreviousEntry(in boolean modifyIndex);
+
+  /**
+   * Get the next entry
+   */
+   nsISHEntry getNextEntry(in boolean modifyIndex);
+
+  /**
+   * Get the entry at a given index
+   */
+   nsISHEntry getEntryAtIndex(in long index, in boolean modifyIndex);
+
+  /**
+   * Get the root entry
+   */
+   readonly attribute nsISHEntry rootEntry;
+
    /** 
     * Get the Transaction for an index
     */
-    nsISHTransaction getTransactionForIndex(in long aIndex);
+    nsISHTransaction getTransactionAtIndex(in long aIndex);
 
 };
