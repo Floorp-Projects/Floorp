@@ -60,13 +60,9 @@ Rights Reserved.
     </vbox>
     <vbox class="wizard-box">
       <description>&selectDescription.label;</description>
-      <tree id="moduleList" flex="3" onselect="ImportSelectionChanged(); enableAdvance();" 
-            style="height: 0px;">
-        <treecolgroup>
-          <treecol flex="1"/>
-        </treecolgroup>
-        <treechildren id="bucketBody" flex="1"/>
-      </tree>
+      <listbox id="moduleList" flex="3"
+                onselect="ImportSelectionChanged(); enableAdvance();" 
+                style="height: 0px;"/>
       <description id="description" class="box-padded" flex="1"/>
     </vbox>
     <vbox class="wizard-box">

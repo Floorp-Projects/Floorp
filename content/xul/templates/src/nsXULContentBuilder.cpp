@@ -1533,10 +1533,9 @@ nsXULContentBuilder::IsLazyWidgetItem(nsIContent* aElement)
     if (nameSpaceID != kNameSpaceID_XUL)
         return PR_FALSE;
 
-    if ((tag.get() == nsXULAtoms::tree) || (tag.get() == nsXULAtoms::treeitem) ||
-        (tag.get() == nsXULAtoms::menu) || (tag.get() == nsXULAtoms::menulist) ||
+    if ((tag.get() == nsXULAtoms::menu) || (tag.get() == nsXULAtoms::menulist) ||
         (tag.get() == nsXULAtoms::menubutton) || (tag.get() == nsXULAtoms::toolbarbutton) ||
-        (tag.get() == nsXULAtoms::button) || (tag == nsXULAtoms::outlineritem))
+        (tag.get() == nsXULAtoms::button) || (tag == nsXULAtoms::treeitem))
         return PR_TRUE;
 
     return PR_FALSE;
@@ -2014,51 +2013,6 @@ nsXULContentBuilder::CloseContainer(nsIContent* aElement)
 
     nsCOMPtr<nsIAtom> tag;
     aElement->GetTag(*getter_AddRefs(tag));
-
-    if (tag.get() == nsXULAtoms::treeitem) {
-        // Find the tag that contains the children so that we can
-        // remove all of the children. This is a -total- hack, that is
-        // necessary for the tree control because...I'm not sure. But
-        // it's necessary. Maybe we should fix the tree control to
-        // reflow itself when the 'open' attribute changes on a
-        // treeitem.
-        //
-        // OTOH, we could treat this as a (premature?) optimization so
-        // that nodes which are not being displayed don't hang around
-        // taking up space. Unfortunately, the tree widget currently
-        // _relies_ on this behavior and will break if we don't do it
-        // :-(.
-
-        // Find the <treechildren> beneath the <treeitem>...
-        nsCOMPtr<nsIContent> insertionpoint;
-        nsXULContentUtils::FindChildByTag(aElement, kNameSpaceID_XUL,
-                                          nsXULAtoms::treechildren,
-                                          getter_AddRefs(insertionpoint));
-
-        if (insertionpoint) {
-            // ...and blow away all the generated content.
-            RemoveGeneratedContent(insertionpoint);
-        }
-
-        // Force the XUL element to remember that it needs to re-generate
-        // its kids next time around.
-        nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
-        NS_ASSERTION(xulcontent != nsnull, "not an nsIXULContent");
-        if (! xulcontent)
-            return NS_ERROR_UNEXPECTED;
-
-        xulcontent->SetLazyState(nsIXULContent::eChildrenMustBeRebuilt);
-
-        // Clear the contents-generated attribute so that the next time we
-        // come back, we'll regenerate the kids we just killed.
-        xulcontent->ClearLazyState(nsIXULContent::eContainerContentsBuilt);
-
-        // Remove any instantiations involving this element from the
-        // conflict set.
-        nsTemplateMatchSet firings(mConflictSet.GetPool());
-        nsTemplateMatchSet retractions(mConflictSet.GetPool());
-        mConflictSet.Remove(nsContentTestNode::Element(aElement), firings, retractions);
-    }
 
     return NS_OK;
 }

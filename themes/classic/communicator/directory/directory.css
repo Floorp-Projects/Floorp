@@ -1,4 +1,3 @@
-/* -*- Mode: C; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -20,6 +19,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Joe Hewitt <hewitt@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -35,13 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
+/* ===== directory.css ==================================================
+  == Styles specific to the directory listing window.
+  ======================================================================= */
 
-  Style rules specific to the directory listing window.
-
-*/
-
-@import url("chrome://communicator/skin/");
+@import url(chrome://communicator/skin/);
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
@@ -50,74 +48,45 @@
   border: none;
 }
 
-/* Hide twisty for files */
-.treecell-indent[type="FILE"] > .tree-cell-twisty 
-  {
-    list-style-image      : none;
-  }
-
-.treecell-filename
-  {
-    list-style-image      : url("chrome://communicator/skin/directory/file.gif");
-  }  
-  
-treeitem[container="true"] > treerow > .treecell-filename
-  {
-    list-style-image      : url("chrome://communicator/skin/directory/folder-clsd.gif");
-  }
-
-treeitem[container="true"][open="true"] > treerow > .treecell-filename
-  {
-    list-style-image      : url("chrome://communicator/skin/directory/folder-open.gif");
-  }
-
-/* Show an animated icon when a directory/symlink is loading */
-treeitem[type="SYMBOLIC-LINK"][loading="true"] > treerow > .treecell-filename > .tree-cell-twisty,
-treeitem[type="DIRECTORY"][loading="true"] > treerow > treecell > .tree-cell-twisty
-  {
-    list-style-image      : url("chrome://global/skin/loading.gif");
-  }
-
-/* Italicize a symbolic link and make it look like a link (it can be a dir or link) */
-.treecell-filename[type="SYMBOLIC-LINK"] 
-  {
-    color                 : inherit;
-    text-decoration       : inherit;
-    font-style            : italic;
-  }
-
-treerow
-  {
-    min-height            : 19px;
-  }
-
-/**
- * This fixes a bug. As you scroll down in a tree the computed column width
- * can change. That would make the columns shift durning scrolling.
- * So we give them inital preferred widths so they aren't computed.
- */
-#FilenameColumn {
-  width: 100px;
+treechildren:-moz-tree-image(FilenameColumn) {
+  margin-right: 2px;
+  list-style-image: url("chrome://communicator/skin/directory/file.gif");
 }
 
+treechildren:-moz-tree-image(FilenameColumn, container) {
+  list-style-image: url("chrome://communicator/skin/directory/folder-clsd.gif");
+}
+
+treechildren:-moz-tree-image(FilenameColumn, container, open) {
+  list-style-image: url("chrome://communicator/skin/directory/folder-open.gif");
+}
+
+treechildren:-moz-tree-image(FilenameColumn, loading) {
+  list-style-image: url("chrome://communicator/skin/icons/loading.gif");
+}
+
+treechildren:-moz-tree-cell-text(symbolic-link) {
+  font-style: italic;
+}
+
+/* ::::: column/row preferred sizes ::::: */
+
+#FilenameColumn,
+#LastModColumn,
 #ContentLengthColumn {
   width: 100px;
 }
 
-#LastModColumn {
-  width: 100px;
-}
-
-div.server     { 
-  color:    blue;
-  display:  block; 
+div.server { 
+  color: blue;
+  display: block; 
   font-size: 10pt;
   font-family: sans-serif;
 }
 
-div.client     { 
-  color:    red;
-  display:  block; 
+div.client { 
+  color: red;
+  display: block; 
   font-size: 10pt;
   font-family: sans-serif;
 }

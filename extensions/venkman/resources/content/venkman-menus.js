@@ -147,7 +147,7 @@ function initMenus()
                      checkedif: "console.throwMode == TMODE_BREAK"});
      
     /* Context menu for project view */
-    C("project-outliner", "project");
+    C("project-tree", "project");
      m("find-url");
      m("-");
      m("clear-all", {enabledif:
@@ -158,7 +158,7 @@ function initMenus()
      m("save-profile", {enabledif: "has('url')"});
 
     /* Context menu for source view */
-    C("source-outliner", "source");
+    C("source-tree", "source");
      m("save-source");
      m("-");
      m("break",  {enabledif: "cx.lineIsExecutable && !has('breakpointRec')"});
@@ -174,7 +174,7 @@ function initMenus()
                   checkedif: "console.sourceView.prettyPrint"});
 
     /* Context menu for script view */
-    C("script-list-outliner", "script");
+    C("script-list-tree", "script");
      m("find-url");
      m("find-script");
      m("clear-script", {enabledif: "cx.target.bpcount"});
@@ -183,7 +183,7 @@ function initMenus()
      m("clear-profile");
      
     /* Context menu for stack view */
-    C("stack-outliner", "stack");
+    C("stack-tree", "stack");
      m("frame",        {enabledif: "cx.target instanceof FrameRecord"});
      m("find-creator", {enabledif: "cx.target instanceof ValueRecord && " +
                                    "cx.target.jsType == jsdIValue.TYPE_OBJECT"});

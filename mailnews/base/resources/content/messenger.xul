@@ -114,8 +114,8 @@ Rights Reserved.
 
 <popup id="threadPaneContext"/>
 <popup id="folderPaneContext"/>
-<popup id="attachmentTreeContext"/>
-<tooltip id="attachmentTreeTooltip"/>
+<popup id="attachmentListContext"/>
+<tooltip id="attachmentListTooltip"/>
 
 <popup id="emailAddressPopup" popupanchor="bottomleft" onpopupshowing="goUpdateCommand('cmd_createFilterFromPopup')">
     <menuitem label="&AddToAddressBook.label;"
@@ -147,7 +147,7 @@ Rights Reserved.
 
   <hbox style="height:100px" flex="1">
     <vbox id="sidebar-box">
-      <outliner id="folderOutliner" persist="height width" flex="1" context="folderPaneContext"/>
+      <tree id="folderTree" persist="height width" flex="1" context="folderPaneContext"/>
     </vbox>
           
     <splitter id="sidebar-splitter"/>
@@ -159,7 +159,7 @@ Rights Reserved.
                   </vbox>
       <vbox id="messagesBox" flex="1">
       <hbox id="searchBox"/>
-      <outliner id="threadOutliner" flex="2" persist="height" style="height:0px" context="threadPaneContext"/>
+      <tree id="threadTree" flex="2" persist="height" style="height:0px" context="threadPaneContext"/>
 
       <!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
       <splitter collapse="after" persist="state" 

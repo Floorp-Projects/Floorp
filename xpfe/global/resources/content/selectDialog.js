@@ -87,7 +87,7 @@ function selectDialogOnLoad() {
     if (newString == "") {
       newString = "<>";
     }
-    elements[i-2] = AppendStringToTreelist(list, newString);
+    elements[i-2] = AppendStringToListbox(list, newString);
   }
   list.selectItem(elements[0]);
   list.focus();
@@ -130,26 +130,22 @@ function commonDialogOnDoubleClick() {
 
 // following routine should really be in a global utilities package
 
-function AppendStringToTreelist(tree, string)
+function AppendStringToListbox(tree, string)
 {
   if (tree)
   {
-    var treechildren = document.getElementById('child');
+    var listbox = document.getElementById('list');
 
-    var treeitem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treeitem");
-    var treerow = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treerow");
-    var treecell = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "treecell");
-    if (treeitem && treerow && treecell)
+    var listitem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "listitem");
+    if (listitem)
     {
-      treecell.setAttribute("label", string);
-      treecell.setAttribute("ondblclick","commonDialogOnDoubleClick()");
-      treerow.appendChild(treecell);
-      treeitem.appendChild(treerow);
-      treechildren.appendChild(treeitem)
+      listitem.setAttribute("label", string);
+      listitem.setAttribute("ondblclick","commonDialogOnDoubleClick()");
+      listbox.appendChild(listitem)
       var len = Number(tree.getAttribute("length"));
       if (!len) len = -1;
       tree.setAttribute("length",len+1);
-      return treeitem;
+      return listitem;
     }
   }
   return null;

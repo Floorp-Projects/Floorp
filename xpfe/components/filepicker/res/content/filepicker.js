@@ -27,10 +27,10 @@
 const nsIFilePicker       = Components.interfaces.nsIFilePicker;
 const nsIDirectoryServiceProvider = Components.interfaces.nsIDirectoryServiceProvider;
 const nsIDirectoryServiceProvider_CONTRACTID = "@mozilla.org/file/directory_service;1";
-const nsIOutlinerBoxObject = Components.interfaces.nsIOutlinerBoxObject;
+const nsITreeBoxObject = Components.interfaces.nsITreeBoxObject;
 const nsIFileView = Components.interfaces.nsIFileView;
 const nsFileView_CONTRACTID = "@mozilla.org/filepicker/fileview;1";
-const nsIOutlinerView = Components.interfaces.nsIOutlinerView;
+const nsITreeView = Components.interfaces.nsITreeView;
 const nsILocalFile = Components.interfaces.nsILocalFile;
 const nsLocalFile_CONTRACTID = "@mozilla.org/file/local;1";
 
@@ -38,7 +38,7 @@ var sfile = Components.classes[nsLocalFile_CONTRACTID].createInstance(nsILocalFi
 var retvals;
 var filePickerMode;
 var homeDir;
-var outlinerView;
+var treeView;
 
 var textInput;
 var okButton;
@@ -50,7 +50,7 @@ function filepickerLoad() {
 
   textInput = document.getElementById("textInput");
   okButton = document.documentElement.getButton("accept");
-  outlinerView = Components.classes[nsFileView_CONTRACTID].createInstance(nsIFileView);
+  treeView = Components.classes[nsFileView_CONTRACTID].createInstance(nsIFileView);
 
   if (window.arguments) {
     var o = window.arguments[0];
@@ -75,7 +75,7 @@ function filepickerLoad() {
   if ((filePickerMode == nsIFilePicker.modeOpen) ||
       (filePickerMode == nsIFilePicker.modeSave)) {
 
-    outlinerView.setFilter(filterTypes[0]);
+    treeView.setFilter(filterTypes[0]);
 
     /* build filter popup */
     var filterPopup = document.createElement("menupopup");
@@ -96,7 +96,7 @@ function filepickerLoad() {
 
     filterMenuList.selectedIndex = o.filterIndex;
   } else if (filePickerMode == nsIFilePicker.modeGetFolder) {
-    outlinerView.showOnlyDirectories = true;
+    treeView.showOnlyDirectories = true;
   }
 
   // start out with a filename sort
@@ -113,8 +113,8 @@ function filepickerLoad() {
   // setup the dialogOverlay.xul button handlers
   retvals.buttonStatus = nsIFilePicker.returnCancel;
 
-  var outliner = document.getElementById("directoryOutliner");
-  outliner.outlinerBoxObject.view = outlinerView;
+  var tree = document.getElementById("directoryTree");
+  tree.treeBoxObject.view = treeView;
 
   // Start out with the ok button disabled since nothing will be
   // selected and nothing will be in the text field.
@@ -157,7 +157,7 @@ function onFilterChanged(target)
 function changeFilter(filterTypes)
 {
   window.setCursor("wait");
-  outlinerView.setFilter(filterTypes);
+  treeView.setFilter(filterTypes);
   window.setCursor("auto");
 }
 
@@ -175,7 +175,7 @@ function showFilePermissionsErrorDialog(titleStrName, messageStrName, file)
 
 function openOnOK()
 {
-  var dir = outlinerView.getSelectedFile();
+  var dir = treeView.getSelectedFile();
   if (!dir.isReadable()) {
     showFilePermissionsErrorDialog("errorOpenFileDoesntExistTitle",
                                    "errorDirNotReadableMessage",
@@ -355,14 +355,14 @@ function onCancel()
 
 function onDblClick(e) {
   var t = e.originalTarget;
-  if (t.localName != "outlinerchildren")
+  if (t.localName != "treechildren")
     return;
 
   openSelectedFile();
 }
 
 function openSelectedFile() {
-  var file = outlinerView.getSelectedFile();
+  var file = treeView.getSelectedFile();
   if (!file)
     return;
 
@@ -374,7 +374,7 @@ function openSelectedFile() {
 
 function onClick(e) {
   var t = e.originalTarget;
-  if (t.localName == "outlinercol")
+  if (t.localName == "treecol")
     handleColumnClick(t.id);
 }
 
@@ -402,12 +402,12 @@ function convertColumnIDtoSortType(columnID) {
 
 function handleColumnClick(columnID) {
   var sortType = convertColumnIDtoSortType(columnID);
-  var sortOrder = (outlinerView.sortType == sortType) ? !outlinerView.reverseSort : false;
-  outlinerView.sort(sortType, sortOrder);
+  var sortOrder = (treeView.sortType == sortType) ? !treeView.reverseSort : false;
+  treeView.sort(sortType, sortOrder);
   
   // set the sort indicator on the column we are sorted by
   var sortedColumn = document.getElementById(columnID);
-  if (outlinerView.reverseSort) {
+  if (treeView.reverseSort) {
     sortedColumn.setAttribute("sortDirection", "descending");
   } else {
     sortedColumn.setAttribute("sortDirection", "ascending");
@@ -416,7 +416,7 @@ function handleColumnClick(columnID) {
   // remove the sort indicator from the rest of the columns
   var currCol = sortedColumn.parentNode.firstChild;
   while (currCol) {
-    if (currCol != sortedColumn && currCol.localName == "outlinercol")
+    if (currCol != sortedColumn && currCol.localName == "treecol")
       currCol.removeAttribute("sortDirection");
     currCol = currCol.nextSibling;
   }
@@ -426,7 +426,7 @@ function onKeypress(e) {
   if (e.keyCode == 8) /* backspace */
     goUp();
   else if (e.keyCode == 13) { /* enter */
-    var file = outlinerView.getSelectedFile();
+    var file = treeView.getSelectedFile();
     if (file) {
       if (file.isDirectory()) {
         gotoDirectory(file);
@@ -444,9 +444,9 @@ function doEnabling() {
   okButton.disabled = !enable;
 }
 
-function onOutlinerFocus(event) {
+function onTreeFocus(event) {
   // Reset the button label and enabled/disabled state.
-  onFileSelected(outlinerView.getSelectedFile());
+  onFileSelected(treeView.getSelectedFile());
 }
 
 function getOKAction(file) {
@@ -475,7 +475,7 @@ function getOKAction(file) {
 }
 
 function onSelect(event) {
-  onFileSelected(outlinerView.getSelectedFile());
+  onFileSelected(treeView.getSelectedFile());
 }
 
 function onFileSelected(file) {
@@ -562,7 +562,7 @@ function gotoDirectory(directory) {
   window.setCursor("wait");
   try {
     populateAncestorList(directory);
-    outlinerView.setDirectory(directory);
+    treeView.setDirectory(directory);
     document.getElementById("errorShower").selectedIndex = 0;
   } catch(ex) {
     document.getElementById("errorShower").selectedIndex = 1;
@@ -570,11 +570,11 @@ function gotoDirectory(directory) {
 
   window.setCursor("auto");
 
-  outlinerView.QueryInterface(nsIOutlinerView).selection.clearSelection();
+  treeView.QueryInterface(nsITreeView).selection.clearSelection();
   textInput.focus();
   sfile = directory;
 }
 
 function toggleShowHidden(event) {
-  outlinerView.showHiddenFiles = !outlinerView.showHiddenFiles;
+  treeView.showHiddenFiles = !treeView.showHiddenFiles;
 }

@@ -21,18 +21,16 @@
         }
       ]]>
     </script>
-    <script src="chrome://venkman/content/outliner-utils.js"/>    
+    <script src="chrome://venkman/content/tree-utils.js"/>    
     <script src="chrome://venkman/content/tests/tree.js"/>    
-    <outliner flex="1" id="sample-outliner">
-      <outlinercols>
-        <outlinercol id="sample-name" label="Name" primary="true" flex="1"
-          class="outlinercol-header outlinercol-inset-header"/>
+    <tree flex="1" id="sample-tree">
+      <treecols>
+        <treecol id="sample-name" label="Name" primary="true" flex="1"/>
         <splitter class="sample-splitter"/>
-        <outlinercol flex="1" id="sample-gender" label="Gender"
-          class="outlinercol-header outlinercol-inset-header"/>
-      </outlinercols>
-      <outlinerchildren id="sample-body"/>
-    </outliner>
+        <treecol flex="1" id="sample-gender" label="Gender"/>
+      </treecols>
+      <treechildren id="sample-body"/>
+    </tree>
 
   <button onclick="document.location.href=document.location.href" label="reload"/>
   <button onclick="toggleBetty()" label="toggle betty"/>

@@ -20,20 +20,20 @@
    
    Contributor(s): 
      Srilatha Moturi <srilatha@netscape.com>, original implementor
-     Håkan Waara <hwaara@chello.se>
+     Hkan Waara <hwaara@chello.se>
   -->
 
 <?xml-stylesheet href="chrome://messenger/skin/prefPanels.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/pref-directory-add.dtd">
 
-<window id="addDirectory"
-        class="dialog" style="width: 30em"
+<dialog id="addDirectory"
+        style="width: 30em"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&newDirectoryTitle.label;"
-        onload="Startup();">
+        onload="Startup();"
+        ondialogaccept="return onAccept();"
+        ondialogcancel="return onCancel();">
 
   <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory-add.js"/>
   <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
@@ -131,8 +131,6 @@
       </tabpanels>
     </tabbox>
   </vbox>
-
-  <hbox id="okCancelButtonsRight"/>
   
-</window>
+</dialog>
         

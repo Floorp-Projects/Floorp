@@ -287,48 +287,40 @@ function LoadDirectories(popup)
 
 function onInitEditDirectories()
 {
-  var directoriesTree_root = document.getElementById("directoriesTree_root");
+  var listbox = document.getElementById("directoriesList");
   gFromGlobalPref = window.arguments[0].fromGlobalPref;
-  if (directoriesTree_root) {
-    LoadDirectoriesTree(directoriesTree_root);
+  if (listbox) {
+    LoadDirectoriesList(listbox);
   }
 }
 
-function LoadDirectoriesTree(tree)
+function LoadDirectoriesList(listbox)
 {
-  var item;
-  var row;
-  var cell;
-  
   LoadDirectories();
-  if (tree && gAvailDirectories)
+  if (listbox && gAvailDirectories)
   {
     for (var i=0; i<gAvailDirectories.length; i++)
     {
-      item = document.createElement('treeitem');
-      row  = document.createElement('treerow');
-      cell = document.createElement('treecell');
+      var item = document.createElement('listitem');
 
-      cell.setAttribute('label', gAvailDirectories[i].label);
-      cell.setAttribute('string', gAvailDirectories[i].value);
+      item.setAttribute('label', gAvailDirectories[i].label);
+      item.setAttribute('string', gAvailDirectories[i].value);
 
-      row.appendChild(cell);
-      item.appendChild(row);
-      tree.appendChild(item);
+      listbox.appendChild(item);
     }
   }
 }
 
 function selectDirectory()
 {
-  var directoriesTree = document.getElementById("directoriesTree");
-  if(directoriesTree && directoriesTree.selectedItems 
-     && directoriesTree.selectedItems.length)
+  var directoriesList = document.getElementById("directoriesList");
+  if(directoriesList && directoriesList.selectedItems 
+     && directoriesList.selectedItems.length)
   {
     gCurrentDirectoryServer = 
-	  directoriesTree.selectedItems[0].firstChild.firstChild.getAttribute('label');
+	  directoriesList.selectedItems[0].getAttribute('label');
     gCurrentDirectoryServerId = 
-	  directoriesTree.selectedItems[0].firstChild.firstChild.getAttribute('string');
+	  directoriesList.selectedItems[0].getAttribute('string');
   }
   else
   {
@@ -353,17 +345,13 @@ function newDirectory()
   window.openDialog("chrome://messenger/content/addressbook/pref-directory-add.xul",
                     "addDirectory", "chrome,modal=yes,resizable=no");
   if(gUpdate && gNewServer && gNewServerString) {
-    var tree = document.getElementById("directoriesTree_root");
-    var item = document.createElement('treeitem');
-    var row  = document.createElement('treerow');
-    var cell = document.createElement('treecell');
+    var listbox = document.getElementById("directoriesList");
+    var item = document.createElement('listitem');
 
-    cell.setAttribute('label', gNewServer);
-    cell.setAttribute('string', gNewServerString);
+    item.setAttribute('label', gNewServer);
+    item.setAttribute('string', gNewServerString);
 
-    row.appendChild(cell);
-    item.appendChild(row);
-    tree.appendChild(item);
+    listbox.appendChild(item);
     gNewServer = null;
     gNewServerString = null;
     window.opener.gRefresh = true;
@@ -385,12 +373,10 @@ function editDirectory()
   {
     // directory server properties have changed. So, update the  
     // LDAP Directory Servers dialog.  
-    var directoriesTree = document.getElementById("directoriesTree"); 
-    var selectedNode = directoriesTree.selectedItems[0]; 
-    var row  =  selectedNode.firstChild; 
-    var cell =  row.firstChild; 
-    cell.setAttribute('label', gNewServer); 
-    cell.setAttribute('string', gNewServerString);
+    var directoriesList = document.getElementById("directoriesList"); 
+    var selectedNode = directoriesList.selectedItems[0]; 
+    selectedNode.setAttribute('label', gNewServer); 
+    selectedNode.setAttribute('string', gNewServerString);
     
     // window.opener is either global pref window or 
     // mail/news account settings window.
@@ -402,28 +388,21 @@ function editDirectory()
 
 function removeDirectory()
 {
-  var directoriesTree = document.getElementById("directoriesTree");
-  var directoriesTree_root = document.getElementById("directoriesTree_root");
-  var selectedNode = directoriesTree.selectedItems[0];
+  var directoriesList = document.getElementById("directoriesList");
+  var selectedNode = directoriesList.selectedItems[0];
     
   var nextNode = selectedNode.nextSibling;
   if (!nextNode)
     if (selectedNode.previousSibling)
       nextNode = selectedNode.previousSibling;
 
-  var row  =  selectedNode.firstChild;
-  var cell =  row.firstChild;
-
   if(gCurrentDirectoryServer && gCurrentDirectoryServerId) {
     var len= gDeletedDirectories.length;
     gDeletedDirectories[len] = gCurrentDirectoryServerId;
   }
-  row.removeChild(cell);
-  selectedNode.removeChild(row);
-  directoriesTree_root.removeChild(selectedNode);
-  if (nextNode) {
-    directoriesTree.selectItem(nextNode)
-  } 
+  directoriesList.removeChild(selectedNode);
+  if (nextNode)
+    directoriesList.selectItem(nextNode)
 }
 
 //  remove all the directories that are selected for deletion from preferences

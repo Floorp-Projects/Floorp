@@ -80,9 +80,9 @@ function init() {
   //cache panel references.
   helpWindow = document.getElementById("help");
   helpSearchPanel = document.getElementById("help-search-panel");
-  helpTocPanel = document.getElementById("help-toc-outliner");
-  helpIndexPanel = document.getElementById("help-index-outliner");
-  helpGlossaryPanel = document.getElementById("help-glossary-outliner");
+  helpTocPanel = document.getElementById("help-toc-tree");
+  helpIndexPanel = document.getElementById("help-index-tree");
+  helpGlossaryPanel = document.getElementById("help-glossary-tree");
   helpBrowser = document.getElementById("help-content");
 
   var URI = normalizeURI(decodeURIComponent(window.location.search));
@@ -168,12 +168,12 @@ function loadHelpRDF() {
         var datasources = getAttribute(helpFileDS, panelDef, NC_DATASOURCES, "rdf:none");
         datasources = normalizeLinks(helpBaseURI, datasources);
         // cache toc datasources for use by ID lookup.
-        var outliner = document.getElementById("help-" + panelID + "-outliner");
-        outliner.setAttribute("datasources", datasources);
+        var tree = document.getElementById("help-" + panelID + "-tree");
+        tree.setAttribute("datasources", datasources);
         //if (panelID == "toc") {
-          if (outliner.database) {
-            loadDatabases(outliner.database, datasources);
-            outliner.builder.rebuild();
+          if (tree.database) {
+            loadDatabases(tree.database, datasources);
+            tree.builder.rebuild();
           }
         //}
       }  
@@ -222,11 +222,11 @@ function getLink(ID) {
   // Note resources are stored in fileURL#ID format.
   // We have one possible source for an ID for each datasource in the composite datasource.
   // The first ID which matches is returned.
-  var tocOutliner = document.getElementById("help-toc-outliner");
-    tocDS = tocOutliner.database;
+  var tocTree = document.getElementById("help-toc-tree");
+    tocDS = tocTree.database;
     if (tocDS == null)
       return null;
-    var tocDatasources = tocOutliner.getAttribute("datasources");
+    var tocDatasources = tocTree.getAttribute("datasources");
   var ds = tocDatasources.split(/\s+/);
   for (var i=0; i < ds.length; i++) {
     if (ds[i] == "rdf:null" || ds[i] == "")
@@ -498,11 +498,11 @@ function showPanel(panelId) {
   thePanel.setAttribute("hidden","false");
 }
 
-function onselect_loadURI(outliner, columnName) {
+function onselect_loadURI(tree, columnName) {
   try {
-    var row = outliner.outlinerBoxObject.view.selection.currentIndex;
+    var row = tree.treeBoxObject.view.selection.currentIndex;
     var properties = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
-    outliner.outlinerBoxObject.view.getCellProperties(row, columnName, properties);
+    tree.treeBoxObject.view.getCellProperties(row, columnName, properties);
     if (!properties) return;
     var uri = getPropertyValue(properties, "link-");
     if (uri)
@@ -523,11 +523,11 @@ function getPropertyValue(properties, propName) {
 }
 
 function doFind() {
-  var searchOutliner = document.getElementById("help-search-outliner");
+  var searchTree = document.getElementById("help-search-tree");
   var findText = document.getElementById("findText");
 
   // clear any previous results.
-  clearDatabases(searchOutliner.database);
+  clearDatabases(searchTree.database);
 
   // split search string into separate terms and compile into regexp's
   RE = findText.value.split(/\s+/);
@@ -538,27 +538,27 @@ function doFind() {
   }
 
   var resultsDS =  Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].createInstance(Components.interfaces.nsIRDFDataSource);
-  var outliner = document.getElementById("help-toc-outliner");
-  var sourceDS = outliner.database;
+  var tree = document.getElementById("help-toc-tree");
+  var sourceDS = tree.database;
   doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
 
   // search index.
-  outliner = document.getElementById("help-index-outliner");
-  sourceDS = outliner.database;
+  tree = document.getElementById("help-index-tree");
+  sourceDS = tree.database;
   if (!sourceDS) // If the index has never been displayed this will be null (sigh!).
-    sourceDS = loadCompositeDS(outliner.datasources);
+    sourceDS = loadCompositeDS(tree.datasources);
   doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
 
   // search glossary.
-  outliner = document.getElementById("help-glossary-outliner");
-  sourceDS = outliner.database;
+  tree = document.getElementById("help-glossary-tree");
+  sourceDS = tree.database;
   if (!sourceDS) // If the glossary has never been displayed this will be null (sigh!).
-    sourceDS = loadCompositeDS(outliner.datasources);
+    sourceDS = loadCompositeDS(tree.datasources);
   doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
 
-  // Add the datasource to the search outliner
-  searchOutliner.database.AddDataSource(resultsDS);
-  searchOutliner.builder.rebuild();
+  // Add the datasource to the search tree
+  searchTree.database.AddDataSource(resultsDS);
+  searchTree.builder.rebuild();
 }
 
 function clearDatabases(compositeDataSource) {

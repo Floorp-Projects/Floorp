@@ -642,7 +642,7 @@ function cmdFindURL (e)
         line = e.lineNumber;
 
     console.sourceView.displaySourceText(sourceText);
-    console.sourceView.outliner.invalidate();
+    console.sourceView.tree.invalidate();
     if ("command" in e && e.command.name == "find-url-soft")
         console.sourceView.softScrollTo (line);
     else

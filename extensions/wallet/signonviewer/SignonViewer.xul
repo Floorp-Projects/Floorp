@@ -59,18 +59,18 @@
       <vbox id="savedsignons" flex="1">
           <description>&spiel.signonsstored.label;</description>
           <separator class="thin"/>
-          <outliner id="signonsOutliner" flex="1" style="height: 10em;"
-                    onkeypress="HandleSignonKeyPress(event)"
-                    onselect="SignonSelected();">
-            <outlinercols>
-              <outlinercol id="siteCol" label="&treehead.site.label;" flex="5"
+          <tree id="signonsTree" flex="1" style="height: 10em;" hidecolumnpicker="true"
+                onkeypress="HandleSignonKeyPress(event)"
+                onselect="SignonSelected();">
+            <treecols>
+              <treecol id="siteCol" label="&treehead.site.label;" flex="5"
                            onclick="SignonColumnSort('host');"/>
               <splitter class="tree-splitter"/>
-              <outlinercol id="userCol" label="&treehead.username.label;" flex="5"
+              <treecol id="userCol" label="&treehead.username.label;" flex="5"
                            onclick="SignonColumnSort('user');"/>
-            </outlinercols>
-            <outlinerchildren/>
-          </outliner>
+            </treecols>
+            <treechildren/>
+          </tree>
           <separator class="thin"/>
           <hbox>
             <button id="removeSignon" disabled="true"
@@ -84,15 +84,15 @@
       <vbox id="rejectedsites" flex="1">
           <description>&spiel.signonsnotstored.label;</description>
           <separator class="thin"/>
-          <outliner id="rejectsOutliner" flex="1" style="height: 10em;"
+          <tree id="rejectsTree" flex="1" style="height: 10em;" hidecolumnpicker="true"
                     onkeypress="HandleRejectKeyPress(event)"
                     onselect="RejectSelected();">
-            <outlinercols>
-              <outlinercol id="rejectCol" label="&treehead.site.label;" flex="5"
+            <treecols>
+              <treecol id="rejectCol" label="&treehead.site.label;" flex="5"
                            onclick="RejectColumnSort('host');"/>
-            </outlinercols>
-            <outlinerchildren/>
-          </outliner>
+            </treecols>
+            <treechildren/>
+          </tree>
           <separator class="thin"/>
           <hbox>
             <button id="removeReject" disabled="true"
@@ -106,15 +106,16 @@
       <vbox id="nopreviewforms" flex="1">
           <description>&spiel.nopreview.label;</description>
           <separator class="thin"/>
-          <outliner id="nopreviewsOutliner" flex="1" style="height: 10em;" multiple="true"
-                    onkeypress="HandleNopreviewKeyPress(event)"
-                    onselect="NopreviewSelected();">
-            <outlinercols>
-              <outlinercol id="nopreviewCol" label="&treehead.site.label;" flex="5"
+          <tree id="nopreviewsTree" flex="1" style="height: 10em;"
+                seltype="multiple" hidecolumnpicker="true"
+                onkeypress="HandleNopreviewKeyPress(event)"
+                onselect="NopreviewSelected();">
+            <treecols>
+              <treecol id="nopreviewCol" label="&treehead.site.label;" flex="5"
                            onclick="NopreviewColumnSort('host');"/>
-            </outlinercols>
-            <outlinerchildren/>
-          </outliner>
+            </treecols>
+            <treechildren/>
+          </tree>
           <separator class="thin"/>
           <hbox>
             <button id="removeNopreview" disabled="true"
@@ -128,15 +129,16 @@
       <vbox id="nocaptureforms" flex="1">
           <description>&spiel.nocapture.label;</description>
           <separator class="thin"/>
-          <outliner id="nocapturesOutliner" flex="1" style="height: 10em;" multiple="true"
-                    onkeypress="HandleNocaptureKeyPress(event)"
-                    onselect="NocaptureSelected();">
-            <outlinercols>
-              <outlinercol id="nocaptureCol" label="&treehead.site.label;" flex="5"
+          <tree id="nocapturesTree" flex="1" style="height: 10em;"
+                seltype="multiple" hidecolumnpicker="true"
+                onkeypress="HandleNocaptureKeyPress(event)"
+                onselect="NocaptureSelected();">
+            <treecols>
+              <treecol id="nocaptureCol" label="&treehead.site.label;" flex="5"
                            onclick="NocaptureColumnSort('host');"/>
-            </outlinercols>
-            <outlinerchildren/>
-          </outliner>
+            </treecols>
+            <treechildren/>
+          </tree>
           <separator class="thin"/>
           <hbox>
             <button id="removeNocapture" disabled="true"

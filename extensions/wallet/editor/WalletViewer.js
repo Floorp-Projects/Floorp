@@ -191,7 +191,8 @@ nsWalletViewer.prototype =
       switchPage:
         function() {
           var PanelTree = document.getElementById("panelTree");
-          var selectedItem = PanelTree.selectedItems[0];
+          if (PanelTree.view.selection.count == 0) return;
+          var selectedItem = PanelTree.contentView.getItemAtIndex(PanelTree.currentIndex);
 
           var oldURL = document.getElementById(this.contentFrame).getAttribute("src");
           var oldTag = document.getElementById(this.contentFrame).getAttribute("tag");
@@ -258,7 +259,8 @@ nsWalletViewer.prototype =
           }
         }
         var openItem = document.getElementById(aComponentName);
-        panelTree.selectItem(openItem);
+        var index = panelTree.contentView.getIndexOfItem(openItem);
+        panelTree.view.selection.select(index);
       }
 
   };

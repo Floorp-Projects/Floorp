@@ -86,7 +86,7 @@ Contributor(s):
     <hbox flex="1">    
 
        <vbox id="resultsBox" flex="4">
-         <outliner id="abResultsOutliner" flex="1" persist="height" />
+         <tree id="abResultsTree" flex="1" persist="height" />
        </vbox>
         
       <!--<splitter id="vertical-splitter" collapse="before"  persist="state"/>-->
@@ -107,13 +107,13 @@ Contributor(s):
         
       <vbox id="bucketBox" flex="1">
         <label value="&addressMessageTo.label;"/>
-        <tree id="addressBucket" flex="1" seltype="multiple"
+        <tree id="addressBucket" flex="1" seltype="multiple" hidecolumnpicker="true"
             ondragover="DragOverBucketPane(event);"
             ondragdrop="DropOnBucketPane(event);"
             onselect="DialogBucketPaneSelectionChanged();">
-          <treecolgroup>
-            <treecol flex="1"/>
-          </treecolgroup>
+          <treecols>
+            <treecol id="addressCol" flex="1" hideheader="true"/>
+          </treecols>
           <treechildren id="bucketBody" flex="1"/>
         </tree>
       </vbox>

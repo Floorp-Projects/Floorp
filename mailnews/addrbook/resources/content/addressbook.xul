@@ -66,7 +66,7 @@ Contributor(s):
 <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/msgPrintEngine.js"/>
 
-<commandset id="addressBook">
+  <commandset id="addressBook">
   <commandset id="CommandUpdate_AddressBook"
         commandupdater="true"
         events="focus,addrbook-select"
@@ -327,7 +327,7 @@ Contributor(s):
       </hbox>
 
       <!-- results pane -->
-      <outliner id="abResultsOutliner" flex="1" persist="height"/>
+      <tree id="abResultsTree" flex="1" persist="height"/>
       
       <splitter id="results-splitter" collapse="after" persist="state">
         <grippy/>

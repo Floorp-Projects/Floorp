@@ -38,10 +38,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsOutlinerSelection.h"
+#include "nsTreeSelection.h"
 #include "nsIBoxObject.h"
-#include "nsIOutlinerBoxObject.h"
-#include "nsIOutlinerView.h"
+#include "nsITreeBoxObject.h"
+#include "nsITreeView.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMClassInfo.h"
@@ -54,24 +54,24 @@
 #include "nsXULAtoms.h"
 
 // A helper class for managing our ranges of selection.
-struct nsOutlinerRange
+struct nsTreeRange
 {
-  nsOutlinerSelection* mSelection;
+  nsTreeSelection* mSelection;
 
-  nsOutlinerRange* mPrev;
-  nsOutlinerRange* mNext;
+  nsTreeRange* mPrev;
+  nsTreeRange* mNext;
 
   PRInt32 mMin;
   PRInt32 mMax;
 
-  nsOutlinerRange(nsOutlinerSelection* aSel, PRInt32 aSingleVal)
+  nsTreeRange(nsTreeSelection* aSel, PRInt32 aSingleVal)
     :mSelection(aSel), mPrev(nsnull), mNext(nsnull), mMin(aSingleVal), mMax(aSingleVal) {};
-  nsOutlinerRange(nsOutlinerSelection* aSel, PRInt32 aMin, PRInt32 aMax) 
+  nsTreeRange(nsTreeSelection* aSel, PRInt32 aMin, PRInt32 aMax) 
     :mSelection(aSel), mPrev(nsnull), mNext(nsnull), mMin(aMin), mMax(aMax) {};
 
-  ~nsOutlinerRange() { delete mNext; };
+  ~nsTreeRange() { delete mNext; };
 
-  void Connect(nsOutlinerRange* aPrev = nsnull, nsOutlinerRange* aNext = nsnull) {
+  void Connect(nsTreeRange* aPrev = nsnull, nsTreeRange* aNext = nsnull) {
     if (aPrev)
       aPrev->mNext = this;
     else
@@ -93,7 +93,7 @@ struct nsOutlinerRange
       else
         mSelection->mFirstRange = mNext;
         
-      nsOutlinerRange* next = mNext;
+      nsTreeRange* next = mNext;
       if (next)
         next->mPrev = mPrev;
       mPrev = mNext = nsnull;
@@ -112,7 +112,7 @@ struct nsOutlinerRange
         PRInt32 aNewStart = aEnd+1;
         PRInt32 aNewEnd = mMax;
         mMax = aStart-1;
-        nsOutlinerRange* range = new nsOutlinerRange(mSelection, aNewStart, aNewEnd);
+        nsTreeRange* range = new nsTreeRange(mSelection, aNewStart, aNewEnd);
         range->Connect(this, mNext);
         return; // We're done, since we were entirely contained within this range.
       }
@@ -146,7 +146,7 @@ struct nsOutlinerRange
           mPrev->mNext = mNext;
         if (mNext)
           mNext->mPrev = mPrev;
-        nsOutlinerRange* first = mSelection->mFirstRange;
+        nsTreeRange* first = mSelection->mFirstRange;
         if (first == this)
           mSelection->mFirstRange = mNext;
         mNext = mPrev = nsnull;
@@ -158,7 +158,7 @@ struct nsOutlinerRange
         mMax--;
       else {
         // We have to break this range.
-        nsOutlinerRange* newRange = new nsOutlinerRange(mSelection, aIndex + 1, mMax);
+        nsTreeRange* newRange = new nsTreeRange(mSelection, aIndex + 1, mMax);
         newRange->Connect(this, mNext);
         mMax = aIndex - 1;
       }
@@ -176,7 +176,7 @@ struct nsOutlinerRange
         mPrev->mMax = aIndex;
       else {
         // We have to create a new range.
-        nsOutlinerRange* newRange = new nsOutlinerRange(mSelection, aIndex);
+        nsTreeRange* newRange = new nsTreeRange(mSelection, aIndex);
         newRange->Connect(mPrev, this);
       }
     }
@@ -188,7 +188,7 @@ struct nsOutlinerRange
         mMax = aIndex;
       else {
         // We have to create a new range.
-        nsOutlinerRange* newRange = new nsOutlinerRange(mSelection, aIndex);
+        nsTreeRange* newRange = new nsTreeRange(mSelection, aIndex);
         newRange->Connect(this, nsnull);
       }
     }
@@ -212,7 +212,7 @@ struct nsOutlinerRange
   };
 
   void Invalidate() {
-    mSelection->mOutliner->InvalidateRange(mMin, mMax);
+    mSelection->mTree->InvalidateRange(mMin, mMax);
     if (mNext)
       mNext->Invalidate();
   };
@@ -226,7 +226,7 @@ struct nsOutlinerRange
       mMin = aIndex;
       mMax = aIndex;
       
-      nsOutlinerRange* first = mSelection->mFirstRange;
+      nsTreeRange* first = mSelection->mFirstRange;
       if (mPrev)
         mPrev->mNext = mNext;
       if (mNext)
@@ -242,7 +242,7 @@ struct nsOutlinerRange
       mNext->RemoveAllBut(aIndex);
   };
 
-  void Insert(nsOutlinerRange* aRange) {
+  void Insert(nsTreeRange* aRange) {
     if (mMin >= aRange->mMax)
       aRange->Connect(mPrev, this);
     else if (mNext)
@@ -252,45 +252,45 @@ struct nsOutlinerRange
   };
 };
 
-nsOutlinerSelection::nsOutlinerSelection(nsIOutlinerBoxObject* aOutliner)
+nsTreeSelection::nsTreeSelection(nsITreeBoxObject* aTree)
 {
   NS_INIT_ISUPPORTS();
-  mOutliner = aOutliner;
+  mTree = aTree;
   mSuppressed = PR_FALSE;
   mFirstRange = nsnull;
   mShiftSelectPivot = -1;
   mCurrentIndex = -1;
 }
 
-nsOutlinerSelection::~nsOutlinerSelection()
+nsTreeSelection::~nsTreeSelection()
 {
   delete mFirstRange;
 }
 
 // QueryInterface implementation for nsBoxObject
-NS_INTERFACE_MAP_BEGIN(nsOutlinerSelection)
-  NS_INTERFACE_MAP_ENTRY(nsIOutlinerSelection)
+NS_INTERFACE_MAP_BEGIN(nsTreeSelection)
+  NS_INTERFACE_MAP_ENTRY(nsITreeSelection)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(OutlinerSelection)
+  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(TreeSelection)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsOutlinerSelection)
-NS_IMPL_RELEASE(nsOutlinerSelection)
+NS_IMPL_ADDREF(nsTreeSelection)
+NS_IMPL_RELEASE(nsTreeSelection)
 
-NS_IMETHODIMP nsOutlinerSelection::GetOutliner(nsIOutlinerBoxObject * *aOutliner)
+NS_IMETHODIMP nsTreeSelection::GetTree(nsITreeBoxObject * *aTree)
 {
-  NS_IF_ADDREF(mOutliner);
-  *aOutliner = mOutliner;
+  NS_IF_ADDREF(mTree);
+  *aTree = mTree;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::SetOutliner(nsIOutlinerBoxObject * aOutliner)
+NS_IMETHODIMP nsTreeSelection::SetTree(nsITreeBoxObject * aTree)
 {
-  mOutliner = aOutliner; // WEAK
+  mTree = aTree; // WEAK
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::IsSelected(PRInt32 aIndex, PRBool* aResult)
+NS_IMETHODIMP nsTreeSelection::IsSelected(PRInt32 aIndex, PRBool* aResult)
 {
   if (mFirstRange)
     *aResult = mFirstRange->Contains(aIndex);
@@ -299,7 +299,7 @@ NS_IMETHODIMP nsOutlinerSelection::IsSelected(PRInt32 aIndex, PRBool* aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::TimedSelect(PRInt32 aIndex, PRInt32 aMsec)
+NS_IMETHODIMP nsTreeSelection::TimedSelect(PRInt32 aIndex, PRInt32 aMsec)
 {
   PRBool suppressSelect = mSuppressed;
 
@@ -325,9 +325,9 @@ NS_IMETHODIMP nsOutlinerSelection::TimedSelect(PRInt32 aIndex, PRInt32 aMsec)
 }
 
 void
-nsOutlinerSelection::SelectCallback(nsITimer *aTimer, void *aClosure)
+nsTreeSelection::SelectCallback(nsITimer *aTimer, void *aClosure)
 {
-  nsOutlinerSelection* self = NS_STATIC_CAST(nsOutlinerSelection*, aClosure);
+  nsTreeSelection* self = NS_STATIC_CAST(nsTreeSelection*, aClosure);
   if (self) {
     self->FireOnSelectHandler();
     aTimer->Cancel();
@@ -335,7 +335,7 @@ nsOutlinerSelection::SelectCallback(nsITimer *aTimer, void *aClosure)
   }
 }
 
-NS_IMETHODIMP nsOutlinerSelection::Select(PRInt32 aIndex)
+NS_IMETHODIMP nsTreeSelection::Select(PRInt32 aIndex)
 {
   mShiftSelectPivot = -1;
 
@@ -361,7 +361,7 @@ NS_IMETHODIMP nsOutlinerSelection::Select(PRInt32 aIndex)
   }
 
   // Create our new selection.
-  mFirstRange = new nsOutlinerRange(this, aIndex);
+  mFirstRange = new nsTreeRange(this, aIndex);
   mFirstRange->Invalidate();
 
   // Fire the select event
@@ -369,7 +369,7 @@ NS_IMETHODIMP nsOutlinerSelection::Select(PRInt32 aIndex)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::ToggleSelect(PRInt32 aIndex)
+NS_IMETHODIMP nsTreeSelection::ToggleSelect(PRInt32 aIndex)
 {
   // There are six cases that can occur on a ToggleSelect with our
   // range code.
@@ -392,7 +392,7 @@ NS_IMETHODIMP nsOutlinerSelection::ToggleSelect(PRInt32 aIndex)
     else
       mFirstRange->Remove(aIndex);
     
-    mOutliner->InvalidateRow(aIndex);
+    mTree->InvalidateRow(aIndex);
 
     FireOnSelectHandler();
   }
@@ -400,7 +400,7 @@ NS_IMETHODIMP nsOutlinerSelection::ToggleSelect(PRInt32 aIndex)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aAugment)
+NS_IMETHODIMP nsTreeSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aAugment)
 {
   if ((mFirstRange || (aStartIndex != aEndIndex)) && SingleSelection())
     return NS_OK;
@@ -431,7 +431,7 @@ NS_IMETHODIMP nsOutlinerSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEn
     mFirstRange->RemoveRange(start, end);
   }
 
-  nsOutlinerRange* range = new nsOutlinerRange(this, start, end);
+  nsTreeRange* range = new nsTreeRange(this, start, end);
   range->Invalidate();
 
   if (aAugment && mFirstRange)
@@ -444,7 +444,7 @@ NS_IMETHODIMP nsOutlinerSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEn
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::ClearRange(PRInt32 aStartIndex, PRInt32 aEndIndex)
+NS_IMETHODIMP nsTreeSelection::ClearRange(PRInt32 aStartIndex, PRInt32 aEndIndex)
 {
   SetCurrentIndex(aEndIndex);
 
@@ -454,13 +454,13 @@ NS_IMETHODIMP nsOutlinerSelection::ClearRange(PRInt32 aStartIndex, PRInt32 aEndI
 
     mFirstRange->RemoveRange(start, end);
 
-    mOutliner->InvalidateRange(start, end);
+    mTree->InvalidateRange(start, end);
   }
   
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::ClearSelection()
+NS_IMETHODIMP nsTreeSelection::ClearSelection()
 {
   if (mFirstRange) {
     mFirstRange->Invalidate();
@@ -474,15 +474,15 @@ NS_IMETHODIMP nsOutlinerSelection::ClearSelection()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::InvertSelection()
+NS_IMETHODIMP nsTreeSelection::InvertSelection()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::SelectAll()
+NS_IMETHODIMP nsTreeSelection::SelectAll()
 {
-  nsCOMPtr<nsIOutlinerView> view;
-  mOutliner->GetView(getter_AddRefs(view));
+  nsCOMPtr<nsITreeView> view;
+  mTree->GetView(getter_AddRefs(view));
   if (!view)
     return NS_OK;
 
@@ -497,7 +497,7 @@ NS_IMETHODIMP nsOutlinerSelection::SelectAll()
   // we're going to invalidate the world on the SelectAll.
   delete mFirstRange;
 
-  mFirstRange = new nsOutlinerRange(this, 0, rowCount-1);
+  mFirstRange = new nsTreeRange(this, 0, rowCount-1);
   mFirstRange->Invalidate();
 
   FireOnSelectHandler();
@@ -505,10 +505,10 @@ NS_IMETHODIMP nsOutlinerSelection::SelectAll()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::GetRangeCount(PRInt32* aResult)
+NS_IMETHODIMP nsTreeSelection::GetRangeCount(PRInt32* aResult)
 {
   PRInt32 count = 0;
-  nsOutlinerRange* curr = mFirstRange;
+  nsTreeRange* curr = mFirstRange;
   while (curr) {
     count++;
     curr = curr->mNext;
@@ -518,11 +518,11 @@ NS_IMETHODIMP nsOutlinerSelection::GetRangeCount(PRInt32* aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::GetRangeAt(PRInt32 aIndex, PRInt32* aMin, PRInt32* aMax)
+NS_IMETHODIMP nsTreeSelection::GetRangeAt(PRInt32 aIndex, PRInt32* aMin, PRInt32* aMax)
 {
   *aMin = *aMax = -1;
   PRInt32 i = -1;
-  nsOutlinerRange* curr = mFirstRange;
+  nsTreeRange* curr = mFirstRange;
   while (curr) {
     i++;
     if (i == aIndex) {
@@ -536,7 +536,7 @@ NS_IMETHODIMP nsOutlinerSelection::GetRangeAt(PRInt32 aIndex, PRInt32* aMin, PRI
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::GetCount(PRInt32 *count)
+NS_IMETHODIMP nsTreeSelection::GetCount(PRInt32 *count)
 {
   if (mFirstRange)
     *count = mFirstRange->Count();
@@ -546,13 +546,13 @@ NS_IMETHODIMP nsOutlinerSelection::GetCount(PRInt32 *count)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::GetSelectEventsSuppressed(PRBool *aSelectEventsSuppressed)
+NS_IMETHODIMP nsTreeSelection::GetSelectEventsSuppressed(PRBool *aSelectEventsSuppressed)
 {
   *aSelectEventsSuppressed = mSuppressed;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::SetSelectEventsSuppressed(PRBool aSelectEventsSuppressed)
+NS_IMETHODIMP nsTreeSelection::SetSelectEventsSuppressed(PRBool aSelectEventsSuppressed)
 {
   mSuppressed = aSelectEventsSuppressed;
   if (!mSuppressed)
@@ -560,28 +560,28 @@ NS_IMETHODIMP nsOutlinerSelection::SetSelectEventsSuppressed(PRBool aSelectEvent
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::GetCurrentIndex(PRInt32 *aCurrentIndex)
+NS_IMETHODIMP nsTreeSelection::GetCurrentIndex(PRInt32 *aCurrentIndex)
 {
   *aCurrentIndex = mCurrentIndex;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::SetCurrentIndex(PRInt32 aIndex)
+NS_IMETHODIMP nsTreeSelection::SetCurrentIndex(PRInt32 aIndex)
 {
   if (mCurrentIndex != -1)
-    mOutliner->InvalidateRow(mCurrentIndex);
+    mTree->InvalidateRow(mCurrentIndex);
   
   mCurrentIndex = aIndex;
   
   if (aIndex != -1)
-    mOutliner->InvalidateRow(aIndex);
+    mTree->InvalidateRow(aIndex);
 
   return NS_OK;
 }
 
 #define ADD_NEW_RANGE(macro_range, macro_selection, macro_start, macro_end) \
   { \
-    nsOutlinerRange* macro_new_range = new nsOutlinerRange(macro_selection, (macro_start), (macro_end)); \
+    nsTreeRange* macro_new_range = new nsTreeRange(macro_selection, (macro_start), (macro_end)); \
     if (macro_range) \
       macro_range->Insert(macro_new_range); \
     else \
@@ -589,7 +589,7 @@ NS_IMETHODIMP nsOutlinerSelection::SetCurrentIndex(PRInt32 aIndex)
   }
 
 NS_IMETHODIMP
-nsOutlinerSelection::AdjustSelection(PRInt32 aIndex, PRInt32 aCount)
+nsTreeSelection::AdjustSelection(PRInt32 aIndex, PRInt32 aCount)
 {
   NS_ASSERTION(aCount != 0, "adjusting by zero");
   if (!aCount) return NS_OK;
@@ -619,10 +619,10 @@ nsOutlinerSelection::AdjustSelection(PRInt32 aIndex, PRInt32 aCount)
   // no selection, so nothing to do.
   if (!mFirstRange) return NS_OK;
 
-  nsOutlinerRange* newRange = nsnull;
+  nsTreeRange* newRange = nsnull;
 
   PRBool selChanged = PR_FALSE;
-  nsOutlinerRange* curr = mFirstRange;
+  nsTreeRange* curr = mFirstRange;
   while (curr) {
     if (aCount > 0) {
       // inserting
@@ -690,7 +690,7 @@ nsOutlinerSelection::AdjustSelection(PRInt32 aIndex, PRInt32 aCount)
 }
 
 NS_IMETHODIMP
-nsOutlinerSelection::InvalidateSelection()
+nsTreeSelection::InvalidateSelection()
 {
   if (mFirstRange)
     mFirstRange->Invalidate();
@@ -698,19 +698,19 @@ nsOutlinerSelection::InvalidateSelection()
 }
 
 NS_IMETHODIMP
-nsOutlinerSelection::GetShiftSelectPivot(PRInt32* aIndex)
+nsTreeSelection::GetShiftSelectPivot(PRInt32* aIndex)
 {
   *aIndex = mShiftSelectPivot;
   return NS_OK;
 }
 
 nsresult
-nsOutlinerSelection::FireOnSelectHandler()
+nsTreeSelection::FireOnSelectHandler()
 {
   if (mSuppressed)
     return NS_OK;
 
-  nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mOutliner);
+  nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mTree);
   nsCOMPtr<nsIDOMElement> elt;
   boxObject->GetElement(getter_AddRefs(elt));
 
@@ -740,9 +740,9 @@ nsOutlinerSelection::FireOnSelectHandler()
   return NS_OK;
 }
 
-PRBool nsOutlinerSelection::SingleSelection()
+PRBool nsTreeSelection::SingleSelection()
 {
-  nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mOutliner);
+  nsCOMPtr<nsIBoxObject> boxObject = do_QueryInterface(mTree);
   nsCOMPtr<nsIDOMElement> element;
   boxObject->GetElement(getter_AddRefs(element));
   nsCOMPtr<nsIContent> content = do_QueryInterface(element);
@@ -757,9 +757,9 @@ PRBool nsOutlinerSelection::SingleSelection()
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewOutlinerSelection(nsIOutlinerBoxObject* aOutliner, nsIOutlinerSelection** aResult)
+NS_NewTreeSelection(nsITreeBoxObject* aTree, nsITreeSelection** aResult)
 {
-  *aResult = new nsOutlinerSelection(aOutliner);
+  *aResult = new nsTreeSelection(aTree);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);

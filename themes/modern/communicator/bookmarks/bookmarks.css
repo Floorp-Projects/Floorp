@@ -45,31 +45,29 @@
 
 /* ::::: bookmark items ::::: */
 
+treechildren:-moz-tree-image(Name) {
+  margin-right: 2px;
+}
+
 .bookmark-item,
-outlinerchildren:-moz-outliner-image(Name) {
+treechildren:-moz-tree-image(Name) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif");
 }
 
 .bookmark-item[container="true"],
-outlinerchildren:-moz-outliner-image(Name, container) {
+treechildren:-moz-tree-image(Name, container) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-closed.gif");
 }
 
 .bookmark-item[open="true"],
-outlinerchildren:-moz-outliner-image(Name, open) {
+treechildren:-moz-tree-image(Name, open) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-open.gif");
 }
 
-outlinerchildren:-moz-outliner-image(Name) {
-  padding-right: 2px;
-}
-
-outlinerchildren:-moz-outliner-twisty(group,hidetwisty) 
-{
+treechildren:-moz-tree-twisty(group, hidetwisty) {
   list-style-image: none;
 }
 
-outlinerchildren:-moz-outliner-image(Name, container, group) 
-{
+treechildren:-moz-tree-image(Name, container, group) {
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-group.gif");
 }

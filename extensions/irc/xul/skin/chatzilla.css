@@ -115,33 +115,23 @@ window {
 }
 
 .output-container {
-
     border: thin silver inset;
-
 }
 
 /* op image column */
-.op-image[state="true"] {
-
+treechildren:-moz-tree-image(usercol-op, state-true) {
     list-style-image: url(chrome://chatzilla/skin/images/is-op.gif)
-
 }
 
-.op-image[state="false"] {
-
+treechildren:-moz-tree-image(usercol-op, state-false) {
     list-style-image: url(chrome://chatzilla/skin/images/isnt-op.gif)
-
 }
 
 /* voice image column */
-.voice-image[state="true"] {
-
+treechildren:-moz-tree-image(usercol-voice, state-true) {
     list-style-image: url(chrome://chatzilla/skin/images/is-voice.gif)
-
 }
 
-.voice-image[state="false"] {
-
+treechildren:-moz-tree-image(usercol-voice, state-false) {
     list-style-image: url(chrome://chatzilla/skin/images/isnt-voice.gif)
-
 }

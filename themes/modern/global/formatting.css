@@ -45,6 +45,17 @@
   border: 1px inset #C7D0D9;
   margin: 0px 5px 5px 5px;
 }
+
+.box-inset {
+  margin: 2px 4px;
+  border: 2px solid;
+  -moz-border-top-colors: #BEC3D3 #5D616E;
+  -moz-border-right-colors: #F8FAFE #5D616E;
+  -moz-border-bottom-colors: #F8FAFE #5D616E;
+  -moz-border-left-colors: #BEC3D3 #5D616E;
+  background-color: #FFFFFF;
+  color: #000000;
+}
   
 /* ::::: formatting ::::: */
 

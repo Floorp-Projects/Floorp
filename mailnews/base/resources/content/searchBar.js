@@ -155,11 +155,11 @@ function removeGlobalListeners()
 }
 function onSearch()
 {
-    var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
-    if (outlinerView)
+    var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
+    if (treeView)
     {
-      var outliner = GetThreadOutliner();
-      outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = outlinerView;
+      var tree = GetThreadTree();
+      tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject).view = treeView;
     }
     createSearchTerms();
     gDBView.searchSession = gSearchSession;

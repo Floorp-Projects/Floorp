@@ -117,21 +117,18 @@ function onLoad() {
   prefService=prefService.QueryInterface(Components.interfaces.nsIPrefService);
   nsPrefBranch = prefService.getBranch(null);
 
-  doSetOKCancel(onOk, 0);
-
   addAccountButton = document.getElementById("addAccountButton");
   duplicateButton = document.getElementById("duplicateButton");
   removeButton = document.getElementById("removeButton");
   setDefaultButton = document.getElementById("setDefaultButton");
 
   sortAccountList(accounttree);
-  selectServer(selectedServer, selectPage);
+  setTimeout(selectServer, 0, selectedServer, selectPage);
 }
 
 function sortAccountList(accounttree)
 {
   var xulSortService = Components.classes["@mozilla.org/xul/xul-sort-service;1"].getService(Components.interfaces.nsIXULSortService);
-
   xulSortService.Sort(accounttree, 'http://home.netscape.com/NC-rdf#FolderTreeName?sort=true', 'ascending');
 }
 
@@ -148,7 +145,8 @@ function selectServer(server, selectPage)
   if (!selectedItem)
     selectedItem = getFirstAccount();
 
-  accounttree.selectItem(selectedItem);
+  var index = accounttree.contentView.getIndexOfItem(selectedItem);
+  accounttree.treeBoxObject.selection.select(index);
 
   var result = getServerIdAndPageIdFromTree(accounttree);
   if (result) {
@@ -203,7 +201,7 @@ function findFirstTreeItem(tree) {
   return null;
 }
 
-function onOk() {
+function onAccept() {
   // Check if user/host have been modified.
   if (!checkUserServerChanges(true))
     return false;
@@ -540,7 +538,7 @@ function updateButtons(tree,serverId) {
   canDuplicate = false;
   }
 
-  if (tree.selectedItems.length < 1)
+  if (tree.treeBoxObject.selection.count < 1)
     canDuplicate = canSetDefault = canDelete = false;
 
   // check for disabled preferences on the account buttons.  
@@ -1019,8 +1017,8 @@ function getServerIdAndPageIdFromTree(tree)
 {
   var serverId = null;
 
-  if (tree.selectedItems.length < 1) return null;
-  var node = tree.selectedItems[0];
+  if (tree.treeBoxObject.selection.count < 1) return null;
+  var node = tree.contentView.getItemAtIndex(tree.currentIndex);
 
   // get the page to load
   // (stored in the PageTag attribute of this node)
@@ -1035,7 +1033,5 @@ function getServerIdAndPageIdFromTree(tree)
   if (servernode.localName != "treeitem") {
     servernode = node;
   }
-  serverId = servernode.getAttribute('id');
-
-  return {"serverId": serverId, "pageId": pageId }
+  return {"serverId": servernode.id, "pageId": pageId }
 }

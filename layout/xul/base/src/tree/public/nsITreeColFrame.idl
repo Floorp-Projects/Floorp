@@ -36,13 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-interface nsIOutlinerBoxObject;
-interface nsIOutlinerRangeList;
+interface nsITreeBoxObject;
+interface nsITreeRangeList;
 
 #include "nsISupports.idl"
 
 [scriptable, uuid(16D18321-0E68-4238-B642-249BBF64FD9B)]
-interface nsIOutlinerColFrame : nsISupports
+interface nsITreeColFrame : nsISupports
 {
 };
 

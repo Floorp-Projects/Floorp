@@ -41,43 +41,44 @@
   </groupbox>
 
   <!-- category tree entries for mail/news -->
-  <outlinerchildren id="panelChildren">
-    <outlineritem container="true" id="mailnews" position="3">
-      <outlinerrow>       
-        <outlinercell url="chrome://messenger/content/pref-mailnews.xul" label="&mail.label;"/> 
-      </outlinerrow>
-      <outlinerchildren id="messengerChildren">
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://messenger/content/pref-viewing_messages.xul" label="&viewingMessages.label;"/> 
-          </outlinerrow>
-        </outlineritem>
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://messenger/content/messengercompose/pref-composing_messages.xul" label="&composingMessages.label;"/> 
-          </outlinerrow>
-        </outlineritem>
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://messenger/content/messengercompose/pref-formatting.xul" label="&format.label;"/> 
-          </outlinerrow>
-        </outlineritem>
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://messenger/content/addressbook/pref-addressing.xul" label="&address.label;"/> 
-          </outlinerrow>
-        </outlineritem>
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://messenger/content/pref-labels.xul" label="&labels.label;"/>
-          </outlinerrow>
-        </outlineritem>
-        <outlineritem>
-          <outlinerrow>
-            <outlinercell url="chrome://messenger/content/pref-receipts.xul" label="&return.label;"/>
-          </outlinerrow>
-        </outlineritem>      </outlinerchildren>
-    </outlineritem>
-  </outlinerchildren>
+  <treechildren id="panelChildren">
+    <treeitem container="true" id="mailnews" position="3">
+      <treerow>       
+        <treecell url="chrome://messenger/content/pref-mailnews.xul" label="&mail.label;"/> 
+      </treerow>
+      <treechildren id="messengerChildren">
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://messenger/content/pref-viewing_messages.xul" label="&viewingMessages.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://messenger/content/messengercompose/pref-composing_messages.xul" label="&composingMessages.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://messenger/content/messengercompose/pref-formatting.xul" label="&format.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://messenger/content/addressbook/pref-addressing.xul" label="&address.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://messenger/content/pref-labels.xul" label="&labels.label;"/>
+          </treerow>
+        </treeitem>
+        <treeitem>
+          <treerow>
+            <treecell url="chrome://messenger/content/pref-receipts.xul" label="&return.label;"/>
+          </treerow>
+        </treeitem>
+      </treechildren>
+    </treeitem>
+  </treechildren>
            
 </overlay>         

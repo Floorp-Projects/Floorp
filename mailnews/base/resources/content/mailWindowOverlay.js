@@ -1298,18 +1298,18 @@ function IsCompactFolderEnabled()
   if (!(server.canCompactFoldersOnServer))
     return false;
 
-    var folderOutliner = GetFolderOutliner();
-    var startIndex = {};
-    var endIndex = {};
-    folderOutliner.outlinerBoxObject.selection.getRangeAt(0, startIndex, endIndex);
-    if (startIndex.value < 0)
-         return false;
+  var folderTree = GetFolderTree();
+  var startIndex = {};
+  var endIndex = {};
+  folderTree.treeBoxObject.selection.getRangeAt(0, startIndex, endIndex);
+  if (startIndex.value < 0)
+        return false;
 
-    var folderResource = GetFolderResource(folderOutliner, startIndex.value);
-    if (! folderResource)
-         return false;
+  var folderResource = GetFolderResource(folderTree, startIndex.value);
+  if (! folderResource)
+        return false;
 
-    return GetFolderAttribute(folderOutliner, folderResource, "CanCompact") == "true" && isCommandEnabled("cmd_compactFolder");
+  return GetFolderAttribute(folderTree, folderResource, "CanCompact") == "true" && isCommandEnabled("cmd_compactFolder");
 }
 
 var gDeleteButton = null;

@@ -18,21 +18,20 @@ Communications Corporation. Portions created by Netscape are
  Copyright (C) 1998-1999 Netscape Communications Corporation. All
 Rights Reserved.
 
-Contributor(s):  Håkan Waara <hwaara@chello.se>
+Contributor(s):  Hkan Waara <hwaara@chello.se>
 
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/filterDialog.css" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/folderMenus.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/FilterListDialog.dtd">
-<window class="dialog" id="filterListDialog"
+<dialog id="filterListDialog"
   xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   windowtype="mailnews:filterlist"
   onload="onLoad();"
+  ondialogaccept="return onOk();"
   width="440"
   height="320"
   persist="width height screenX screenY"
@@ -79,46 +78,46 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
       
       <row flex="1">
         <vbox>
-          <tree id="filterTree" flex="1"
+          <tree id="filterTree" flex="1" hidecolumnpicker="true"
                 onselect="onFilterSelect(event);"
                 onkeypress="onFilterTreeKeyPress(event);"
+                onclick="onFilterClick(event);"
                 ondblclick="onFilterDoubleClick(event);"
-                datasources="rdf:msgfilters rdf:msgaccountmanager"
-                containment="http://home.netscape.com/NC-rdf#child">
+                datasources="rdf:msgfilters rdf:msgaccountmanager" flags="dont-build-content">
 
-            <treehead>
-              <treerow>
-                <treecell indent="true" class="treecell-header treecell-inset-header" 
-                          persist="width" label="&nameColumn.label;"/>
-                <treecell class="treecell-header treecell-inset-header" 
-                          persist="width" label="&activeColumn.label;"/>
-              </treerow>
-            </treehead>
+            <treecols>
+              <treecol id="nameColumn" flex="85%" resource="http://home.netscape.com/NC-rdf#Name" label="&nameColumn.label;"/>
+              <treecol id="activeColumn" flex="15%" fixed="true" label="&activeColumn.label;"/>
+            </treecols>
 
             <template>
               <rule>
-                <treechildren>
-                  <treeitem uri="..." open="true"
-                            Enabled="rdf:http://home.netscape.com/NC-rdf#Enabled">
-                    <treerow>
-                      <treecell indent="true" label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-                      <treecell allowevents="true" align="center"
-                                class="enabledcol treecell-image"
-                                Enabled="rdf:http://home.netscape.com/NC-rdf#Enabled"
-                                onclick="onToggleEnabled(event);"/>
-                    </treerow>
-                  </treeitem>
-                </treechildren>
+                <conditions>
+                  <treeitem uri="?container"/>
+                  <member container="?container" child="?member"/>
+                </conditions>
+                
+                <bindings>
+                  <binding subject="?member"
+                          predicate="http://home.netscape.com/NC-rdf#Name"
+                          object="?Name"/>
+                  <binding subject="?member"
+                          predicate="http://home.netscape.com/NC-rdf#Enabled"
+                          object="?Enabled"/>
+                </bindings>
+
+                <action>
+                  <treechildren>
+                    <treeitem uri="?member">
+                      <treerow>
+                        <treecell label="?Name"/>
+                        <treecell properties="Enabled-?Enabled"/>
+                      </treerow>
+                    </treeitem>
+                  </treechildren>
+                </action>
               </rule>
             </template>
-          
-            <treecolgroup>
-              <treecol flex="85%" resource="http://home.netscape.com/NC-rdf#Name" id="nameColumn"/>
-              <treecol flex="15%" id="activeColumn" fixed="true"/>
-            </treecolgroup>
-          
-            <treechildren flex="1"/>
-            
           </tree>
         </vbox>
 
@@ -142,6 +141,4 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
      
   <separator/>
 
-  <hbox id="okCancelButtonsRight"/>
-
-</window>
+</dialog>

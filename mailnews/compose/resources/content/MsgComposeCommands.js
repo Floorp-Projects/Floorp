@@ -2150,51 +2150,46 @@ function AddAttachment(attachment)
 {
   if (attachment && attachment.url)
   {
-    var bucketBody = document.getElementById("bucketBody");
-    var item = document.createElement("treeitem");
-    var row = document.createElement("treerow");
-    var cell = document.createElement("treecell");
+    var bucket = document.getElementById("attachmentBucket");
+    var item = document.createElement("listitem");
 
     if (!attachment.name)
       attachment.name = gMsgCompose.AttachmentPrettyName(attachment.url);
-    cell.setAttribute("label", attachment.name);    //use for display only
-    cell.attachment = attachment;   //full attachment object stored here
+    item.setAttribute("label", attachment.name);    //use for display only
+    item.attachment = attachment;   //full attachment object stored here
     try {
-      cell.setAttribute("tooltiptext", unescape(attachment.url));
+      item.setAttribute("tooltiptext", unescape(attachment.url));
+    } catch(e) {
+      item.setAttribute("tooltiptext", attachment.url);
     }
-    catch(e) {cell.setAttribute("tooltiptext", attachment.url);}
-    cell.setAttribute("class", "treecell-iconic");
-    cell.setAttribute("src", "moz-icon:" + attachment.url);
-    row.appendChild(cell);
-    item.appendChild(row);
-    bucketBody.appendChild(item);
+    item.setAttribute("class", "listitem-iconic");
+    item.setAttribute("image", "moz-icon:" + attachment.url);
+    bucket.appendChild(item);
   }
 }
 
 function SelectAllAttachments()
 {
-  var bucketTree = document.getElementById("attachmentBucket");
-  if (bucketTree)
-    bucketTree.selectAll();
+  var bucketList = document.getElementById("attachmentBucket");
+  if (bucketList)
+    bucketList.selectAll();
 }
 
 function MessageHasAttachments()
 {
-  var bucketTree = document.getElementById("attachmentBucket");
-  if (bucketTree)
-  {
-    var body = document.getElementById("bucketBody");
-    return (body && body.hasChildNodes() && (bucketTree == top.document.commandDispatcher.focusedElement));
+  var bucketList = document.getElementById("attachmentBucket");
+  if (bucketList) {
+    return (bucketList && bucketList.hasChildNodes() && (bucketList == top.document.commandDispatcher.focusedElement));
   }
   return false;
 }
 
 function MessageHasSelectedAttachments()
 {
-  var bucketTree = document.getElementById("attachmentBucket");
+  var bucketList = document.getElementById("attachmentBucket");
 
-  if (bucketTree)
-    return (MessageHasAttachments() && bucketTree.selectedItems.length);
+  if (bucketList)
+    return (MessageHasAttachments() && bucketList.selectedItems && bucketList.selectedItems.length);
   return false;
 }
 
@@ -2219,29 +2214,15 @@ function AttachPage()
 }
 function DuplicateFileCheck(FileUrl)
 {
-  var body = document.getElementById('bucketBody');
-  var item, row, cell, colon;
-  var attachment;
-
-  for (var index = 0; index < body.childNodes.length; index++)
+  var bucket = document.getElementById('attachmentBucket');
+  for (var index = 0; index < bucket.childNodes.length; index++)
   {
-    item = body.childNodes[index];
-    if (item.childNodes && item.childNodes.length)
+    var item = bucket.childNodes[index];
+    var attachment = item.attachment;
+    if (attachment)
     {
-      row = item.childNodes[0];
-      if (row.childNodes &&  row.childNodes.length)
-      {
-        cell = row.childNodes[0];
-        if (cell)
-        {
-          attachment = cell.attachment;
-          if (attachment)
-          {
-            if (FileUrl == attachment.url)
-               return true;
-          }
-        }
-      }
+      if (FileUrl == attachment.url)
+         return true;
     }
   }
 
@@ -2250,74 +2231,48 @@ function DuplicateFileCheck(FileUrl)
 
 function Attachments2CompFields(compFields)
 {
-  var body = document.getElementById('bucketBody');
-  var item, row, text, colon;
-  var attachment;
+  var bucket = document.getElementById('attachmentBucket');
 
   //First, we need to clear all attachment in the compose fields
   compFields.removeAttachments();
 
-  for (var index = 0; index < body.childNodes.length; index++)
+  for (var index = 0; index < bucket.childNodes.length; index++)
   {
-    item = body.childNodes[index];
-    if (item.childNodes && item.childNodes.length)
-    {
-      row = item.childNodes[0];
-      if (row.childNodes &&  row.childNodes.length)
-      {
-        cell = row.childNodes[0];
-        if (cell)
-          {
-          attachment = cell.attachment;
-          if (attachment)
-            compFields.addAttachment(attachment);
-        }
-      }
-    }
+    var item = bucket.childNodes[index];
+    var attachment = item.attachment;
+    if (attachment)
+      compFields.addAttachment(attachment);
   }
 }
 
 function RemoveAllAttachments()
 {
-	var bucketTree = document.getElementById("attachmentBucket");
-	if (bucketTree)  {
-		var body = document.getElementById("bucketBody");
-		for (var i = body.childNodes.length - 1; i >= 0; i--)
-				body.removeChild(body.childNodes[i]);
-	}
+	var bucket = document.getElementById("attachmentBucket");
+  for (var i = bucket.childNodes.length - 1; i >= 0; i--)
+	  bucket.removeChild(bucket.childNodes[i]);
 }
 
 function RemoveSelectedAttachment()
 {
-  var bucketTree = document.getElementById("attachmentBucket");
-  if ( bucketTree )
-  {
-    var body = document.getElementById("bucketBody");
-
-    if ( body && bucketTree.selectedItems && bucketTree.selectedItems.length )
-    {
-      for ( var item = bucketTree.selectedItems.length - 1; item >= 0; item-- )
-        body.removeChild(bucketTree.selectedItems[item]);
-
-      gContentChanged = true;
-    }
-    // Clear selection after removal
-    bucketTree.selectedItems.length = 0;
+  var bucket = document.getElementById("attachmentBucket");
+  if (bucket.selectedItems.length > 0) {
+    for (var item = bucket.selectedItems.length - 1; item >= 0; item-- )
+      bucket.removeChild(bucket.selectedItems[item]);
+    gContentChanged = true;
   }
 }
 
 function FocusOnFirstAttachment()
 {
-  var bucketTree = document.getElementById("attachmentBucket");
-  var body       = document.getElementById("bucketBody");
+  var bucketList = document.getElementById("attachmentBucket");
 
-  if (bucketTree && body && body.hasChildNodes())
-    bucketTree.selectItem(body.firstChild);
+  if (bucketList && bucketList.hasChildNodes())
+    bucketTree.selectItem(bucketList.firstChild);
 }
 
 function AttachmentElementHasItems()
 {
-  var element = document.getElementById("bucketBody");
+  var element = document.getElementById("bucketList");
 
   return element ? element.childNodes.length : 0;
 }  
@@ -2566,7 +2521,7 @@ function AttachmentBucketClicked(event)
   if (event.button != 0)
     return;
 
-  if (event.originalTarget.localName == 'treechildren')
+  if (event.originalTarget.localName == "listboxbody")
     goDoCommand('cmd_attachFile');
 }
 

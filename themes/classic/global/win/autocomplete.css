@@ -82,27 +82,27 @@ textbox {
   max-height: 180px;
 }
 
-/* ::::: outliner ::::: */
+/* ::::: tree ::::: */
 
-.autocomplete-outliner {
+.autocomplete-tree {
   border: none;
   background-color: transparent !important;
 }
 
-.autocomplete-outlinercol {
+.autocomplete-treecol {
   margin: 0 !important;
   border: none !important;
   padding: 0 !important;
 }
 
-.autocomplete-outlinerbody:-moz-outliner-cell-text {
+.autocomplete-treebody:-moz-tree-cell-text {
   padding-left: 8px;
 }
 
-.autocomplete-outlinerbody:-moz-outliner-row(menuactive) {
+.autocomplete-treebody:-moz-tree-row(menuactive) {
   background-color: Highlight;
 }
 
-.autocomplete-outlinerbody:-moz-outliner-cell-text(menuactive)  {
+.autocomplete-treebody:-moz-tree-cell-text(menuactive)  {
   color: HighlightText !important;
 }

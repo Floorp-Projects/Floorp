@@ -41,8 +41,8 @@
 
 #include "inIDOMView.h"
 
-#include "nsIOutlinerView.h"
-#include "nsIOutlinerSelection.h"
+#include "nsITreeView.h"
+#include "nsITreeSelection.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
@@ -51,13 +51,13 @@
 class inDOMViewNode;
 
 class inDOMView : public inIDOMView,
-                  public nsIOutlinerView,
+                  public nsITreeView,
                   public nsIDocumentObserver
 {
 public:
 	 NS_DECL_ISUPPORTS
 	 NS_DECL_INIDOMVIEW
-	 NS_DECL_NSIOUTLINERVIEW
+	 NS_DECL_NSITREEVIEW
 	
 	 inDOMView();
 	 virtual ~inDOMView();
@@ -131,8 +131,8 @@ protected:
   static nsIAtom* kDocumentFragmentNodeAtom;
   static nsIAtom* kNotationNodeAtom;
 
-  nsCOMPtr<nsIOutlinerBoxObject> mOutliner;
-  nsCOMPtr<nsIOutlinerSelection> mSelection;
+  nsCOMPtr<nsITreeBoxObject> mTree;
+  nsCOMPtr<nsITreeSelection> mSelection;
 
   PRBool mShowAnonymous;
   PRBool mShowSubDocuments;

@@ -1665,7 +1665,8 @@ function setCurrentObject (obj)
     userList = document.getElementById("user-list");
     /* Remove curently selection items before this tree gets rerooted,
      * because it seems to remember the selections for eternity if not. */
-    userList.clearSelection ();
+    if (userList.treeBoxObject.selection)
+      userList.treeBoxObject.selection.clearSelection ();
 
     if (obj.TYPE == "IRCChannel")
         client.rdf.setTreeRoot ("user-list", obj.getGraphResource());
@@ -2665,15 +2666,23 @@ function my_getselectedusers ()
     var cell; /* reference to each selected cell of the tree object */
     var rv_ary = new Array; /* return value arrray for CIRCChanUser objects */
 
-    for (var i = 0; i < tree.selectedItems.length; i++)
+    var rangeCount = tree.view.selection.getRangeCount();
+    for (var i = 0; i < rangeCount; ++i)
     {
-        /* First, set the reference to the XUL element. */
-        cell = tree.selectedItems[i].firstChild.childNodes[2].firstChild;
+        var start = {}, end = {};
+        tree.view.selection.getRangeAt(i, start, end);
+        for (var k = start.value; k <= end.value; ++k)
+        {
+            var item = tree.contentView.getItemAtIndex(k);
 
-        /* Now, create an instance of CIRCChaneUser by passing the text
-       *  of the cell to the getUser function of this CIRCChannel instance.
-       */
-        rv_ary[i] = this.getUser( cell.getAttribute("value") );
+            /* First, set the reference to the XUL element. */
+            cell = item.firstChild.childNodes[2];
+            
+            /* Now, create an instance of CIRCChaneUser by passing the text
+          *  of the cell to the getUser function of this CIRCChannel instance.
+          */
+            rv_ary[i] = this.getUser( cell.getAttribute("label") );
+        }
     }
 
     /* 

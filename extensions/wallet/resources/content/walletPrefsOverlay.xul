@@ -26,19 +26,19 @@
 <overlay id="walletPrefsOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <outlinerchildren id="securityChildren">
-    <outlineritem position="1">
-      <outlinerrow>
-        <outlinercell url="chrome://wallet/content/pref-wallet.xul"
+  <treechildren id="securityChildren">
+    <treeitem position="1">
+      <treerow>
+        <treecell url="chrome://wallet/content/pref-wallet.xul"
                       label="&wallet.label;"/> 
-      </outlinerrow>
-    </outlineritem>
-    <outlineritem position="2">
-      <outlinerrow>
-        <outlinercell url="chrome://wallet/content/pref-passwords.xul"
+      </treerow>
+    </treeitem>
+    <treeitem position="2">
+      <treerow>
+        <treecell url="chrome://wallet/content/pref-passwords.xul"
                       label="&passwords.label;"/> 
-      </outlinerrow>
-    </outlineritem>
-  </outlinerchildren>
+      </treerow>
+    </treeitem>
+  </treechildren>
     
 </overlay>

@@ -57,8 +57,13 @@
 
     <groupbox flex="1"><caption label="&documentCharsetTitle.label;"/>
         <label value="&documentCharsetDesc.label;"/>
-        <tree class="list" id="CharsetTree" rows="7" flex="1" onselect="SelectCharset();">
-            <treecolgroup><treecol flex="1"/></treecolgroup>
+        <tree id="CharsetTree" flex="1"
+              style="height: 14em;" hidecolumnpicker="true"
+              onselect="SelectCharset();">
+           <treecols>
+               <treecol id="CharsetCol" flex="1" hideheader="true"/>
+           </treecols>
+           <treechildren/>
         </tree>
     </groupbox>
 

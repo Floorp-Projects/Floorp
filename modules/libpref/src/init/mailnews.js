@@ -358,26 +358,26 @@ pref("mailnews.show_send_progress", true); //Will show a progress dialog when sa
 pref("mail.server.default.retainBy", 1);
 
 // for manual upgrades of certain UI features.
-// 1 -> 2 is for the folder pane outliner landing, to hide the
+// 1 -> 2 is for the folder pane tree landing, to hide the
 // unread and total columns, see msgMail3PaneWindow.js
 pref("mail.ui.folderpane.version", 1);                                          
 
 // for manual upgrades of certain UI features.
-// 1 -> 2 is for the thread pane outliner landing, to hide the
+// 1 -> 2 is for the thread pane tree landing, to hide the
 // labels column, see msgMail3PaneWindow.js
 pref("mailnews.ui.threadpane.version", 1);                                          
 // for manual upgrades of certain UI features.
-// 1 -> 2 is for the ab results pane outliner landing
+// 1 -> 2 is for the ab results pane tree landing
 // to hide the non default columns in the addressbook dialog
 // see abCommon.js and addressbook.js
 pref("mailnews.ui.addressbook_results.version", 1);                                          
 // for manual upgrades of certain UI features.
-// 1 -> 2 is for the ab results pane outliner landing
+// 1 -> 2 is for the ab results pane tree landing
 // to hide the non default columns in the addressbook sidebar panel
 // see abCommon.js and addressbook-panel.js
 pref("mailnews.ui.addressbook_panel_results.version", 1);                                          
 // for manual upgrades of certain UI features.
-// 1 -> 2 is for the ab results pane outliner landing
+// 1 -> 2 is for the ab results pane tree landing
 // to hide the non default columns in the select addresses dialog
 // see abCommon.js and abSelectAddressesDialog.js
 pref("mailnews.ui.select_addresses_results.version", 1); 

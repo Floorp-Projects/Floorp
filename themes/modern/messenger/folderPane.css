@@ -45,128 +45,111 @@
 
 /* ::::: mail folder ::::: */
 
-outlinerchildren:-moz-outliner-image(folderNameCol) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(folderNameCol) {
+  margin-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-closed.gif");
 }
 
-outlinerchildren:-moz-outliner-image(folderNameCol, newMessages-true) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(folderNameCol, newMessages-true) {
   list-style-image: url("chrome://messenger/skin/icons/folder-new.gif");
 }
 
 /* ..... Inbox ..... */
 
-outlinerchildren:-moz-outliner-image(folderNameCol, specialFolder-Inbox) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(folderNameCol, specialFolder-Inbox) {
   list-style-image: url("chrome://messenger/skin/icons/folder-inbox.gif");
 }
 
-outlinerchildren:-moz-outliner-image(folderNameCol, specialFolder-Inbox, newMessages-true) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(folderNameCol, specialFolder-Inbox, newMessages-true) {
   list-style-image: url("chrome://messenger/skin/icons/folder-inbox-new.gif");
 }
 
 /* ..... Sent ..... */
 
-outlinerchildren:-moz-outliner-image(folderNameCol, specialFolder-Sent) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(folderNameCol, specialFolder-Sent) {
   list-style-image: url("chrome://messenger/skin/icons/folder-sent.gif");
 }
 
 /* ..... Drafts ..... */
 
-outlinerchildren:-moz-outliner-image(folderNameCol, specialFolder-Drafts) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(folderNameCol, specialFolder-Drafts) {
   list-style-image: url("chrome://messenger/skin/icons/folder-draft.gif");
 }
 
 /* ..... Templates ..... */
 
-outlinerchildren:-moz-outliner-image(folderNameCol, specialFolder-Templates) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(folderNameCol, specialFolder-Templates) {
   list-style-image: url("chrome://messenger/skin/icons/folder-template.gif");
 }
 
 /* ..... Unsent Messages ..... */
 
-outlinerchildren:-moz-outliner-image(folderNameCol, specialFolder-Unsent Messages) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(folderNameCol, specialFolder-Unsent Messages) {
   list-style-image: url("chrome://messenger/skin/icons/folder-outbox.gif");
 }
 
 /* ..... Trash ..... */
 
-outlinerchildren:-moz-outliner-image(folderNameCol, specialFolder-Trash) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(folderNameCol, specialFolder-Trash) {
   list-style-image: url("chrome://messenger/skin/icons/folder-trash.gif");
 }
 
-outlinerchildren:-moz-outliner-image(folderNameCol, imapShared-true) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(folderNameCol, imapShared-true) {
   list-style-image: url("chrome://messenger/skin/icons/folder-share.gif");
 }
 
 
 /* ..... Server Folders ..... */
 
-outlinerchildren:-moz-outliner-image(folderNameCol, isServer-true) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(folderNameCol, isServer-true) {
   list-style-image: url("chrome://messenger/skin/icons/server-mail.gif");
 }
 
-outlinerchildren:-moz-outliner-image(folderNameCol, biffState-NewMail, isServer-true) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(folderNameCol, biffState-NewMail, isServer-true) {
   list-style-image: url("chrome://messenger/skin/icons/server-mail-new.gif");
 }
 
-outlinerchildren:-moz-outliner-image(folderNameCol, isServer-true, serverType-pop3, isSecure-true) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(folderNameCol, isServer-true, serverType-pop3, isSecure-true) {
   list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.gif");
 }
 
-outlinerchildren:-moz-outliner-image(folderNameCol, isServer-true, serverType-imap, isSecure-true) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(folderNameCol, isServer-true, serverType-imap, isSecure-true) {
   list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.gif");
 }
 
-outlinerchildren:-moz-outliner-image(folderNameCol, isServer-true, serverType-none) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(folderNameCol, isServer-true, serverType-none) {
   list-style-image: url("chrome://messenger/skin/icons/server-local.gif");
 }
 
 /* ..... News Folders ..... */
 
-outlinerchildren:-moz-outliner-image(folderNameCol, serverType-nntp) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(folderNameCol, serverType-nntp) {
   list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.gif");
 }
 
 /* ..... News Servers ..... */
 
-outlinerchildren:-moz-outliner-image(folderNameCol, isServer-true, serverType-nntp) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(folderNameCol, isServer-true, serverType-nntp) {
   list-style-image: url("chrome://messenger/skin/icons/server-news.gif");
 }
 
-outlinerchildren:-moz-outliner-image(folderNameCol, isServer-true, serverType-nntp, isSecure-true) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(folderNameCol, isServer-true, serverType-nntp, isSecure-true) {
   list-style-image: url("chrome://messenger/skin/icons/server-news-lock.gif");
 }
 
 /* ::::: All Servers ::::: */
 
-outlinerchildren:-moz-outliner-cell-text(closed, subfoldersHaveUnreadMessages-true)
+treechildren:-moz-tree-cell-text(closed, subfoldersHaveUnreadMessages-true)
 {
   font-weight: bold;
 }
 
-outlinerchildren:-moz-outliner-cell-text(folderNameCol, isServer-true),
-outlinerchildren:-moz-outliner-cell-text(hasUnreadMessages-true) {
+treechildren:-moz-tree-cell-text(folderNameCol, isServer-true),
+treechildren:-moz-tree-cell-text(hasUnreadMessages-true) {
   font-weight: bold;
 }
 
-outlinerchildren:-moz-outliner-cell-text(folderNameCol, noSelect-true) {
+treechildren:-moz-tree-cell-text(folderNameCol, noSelect-true) {
   color: gray;
   font-style: italic;
 }
@@ -175,15 +158,15 @@ outlinerchildren:-moz-outliner-cell-text(folderNameCol, noSelect-true) {
   list-style-image: none;
 }
 
-outlinerchildren:-moz-outliner-image(syncCol) {
+treechildren:-moz-tree-image(syncCol) {
   list-style-image: url("chrome://global/skin/checkbox/cbox.gif");
 }
 
-outlinerchildren:-moz-outliner-image(syncCol, synchronize-true) {
+treechildren:-moz-tree-image(syncCol, synchronize-true) {
   list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
 }
 
-outlinerchildren:-moz-outliner-image(syncCol, isServer-true) {
+treechildren:-moz-tree-image(syncCol, isServer-true) {
   list-style-image: none;
 }
 

@@ -40,11 +40,11 @@ function CreateProfileWizard()
 function CreateProfile( aProfName, aProfDir )
 {
   var profile = new Profile( aProfName, aProfDir, "yes" );
-  var item = AddItem( "profilekids", profile );
-  var profileTree = document.getElementById( "profiles" );
+  var item = AddItem( "profiles", profile );
+  var profileList = document.getElementById( "profiles" );
   if( item ) {
-    profileTree.selectItem( item );
-    profileTree.ensureElementIsVisible( item );
+    profileList.selectItem( item );
+    profileList.ensureElementIsVisible( item );
   }
 }
 
@@ -54,10 +54,10 @@ function RenameProfile()
   renameButton = document.getElementById("renbutton");
   if( renameButton.getAttribute("disabled") == "true" )
     return;
-  var profileTree = document.getElementById( "profiles" );
-  var selected = profileTree.selectedItems[0];
+  var profileList = document.getElementById( "profiles" );
+  var selected = profileList.selectedItems[0];
   var profilename = selected.getAttribute("profile_name");
-  if( selected.firstChild.firstChild.getAttribute("rowMigrate") == "no" ) {
+  if( selected.getAttribute("rowMigrate") == "no" ) {
     // migrate if the user wants to
     var lString = gProfileManagerBundle.getString("migratebeforerename");
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
@@ -105,10 +105,10 @@ function RenameProfile()
           }
         }
         
-        var migrate = selected.firstChild.firstChild.getAttribute("rowMigrate");
+        var migrate = selected.getAttribute("rowMigrate");
         try {
           profile.renameProfile(oldName, newName);
-          selected.firstChild.firstChild.setAttribute( "label", newName );
+          selected.setAttribute( "label", newName );
           selected.setAttribute( "rowName", newName );
           selected.setAttribute( "profile_name", newName );
         }
@@ -132,23 +132,22 @@ function ConfirmDelete()
   deleteButton = document.getElementById("delbutton");
   if( deleteButton.getAttribute("disabled") == "true" )
     return;
-  var profileTree = document.getElementById( "profiles" );
+  var profileList = document.getElementById( "profiles" );
 
-  var selected = profileTree.selectedItems[0];
+  var selected = profileList.selectedItems[0];
   var name = selected.getAttribute("rowName");
   
   var dialogTitle = gProfileManagerBundle.getString("deletetitle");
   var dialogText;
   
-  if( selected.firstChild.firstChild.getAttribute("rowMigrate") == "no" ) {
+  if( selected.getAttribute("rowMigrate") == "no" ) {
     var brandName = gBrandBundle.getString("brandShortName");
     dialogText = gProfileManagerBundle.getFormattedString("delete4xprofile", [brandName]);
     dialogText = dialogText.replace(/\s*<html:br\/>/g,"\n");
     
     if (promptService.confirm(window, dialogTitle, dialogText)) {
       profile.deleteProfile( name, false );
-      var profileKids = document.getElementById( "profilekids" )
-      profileKids.removeChild( selected );
+      profileList.removeChild( selected );
     }
     return;
   }
@@ -183,21 +182,20 @@ function ConfirmDelete()
 // Delete the profile, with the delete flag set as per instruction above.
 function DeleteProfile( deleteFiles )
 {
-  var profileTree = document.getElementById( "profiles" );
-  var profileKids = document.getElementById( "profilekids" )
-  if (profileTree.selectedItems && profileTree.selectedItems.length) {
-    var selected = profileTree.selectedItems[0];
+  var profileList = document.getElementById( "profiles" );
+  if (profileList.selectedItems && profileList.selectedItems.length) {
+    var selected = profileList.selectedItems[0];
     var firstAdjacent = selected.previousSibling;
     var name = selected.getAttribute( "rowName" );
     try {
       profile.deleteProfile( name, deleteFiles );
-      profileKids.removeChild( selected );
+      profileList.removeChild( selected );
     }
     catch (ex) {
     }
     if( firstAdjacent ) {
-      profileTree.selectItem( firstAdjacent );
-      profileTree.ensureElementIsVisible( firstAdjacent );
+      profileList.selectItem( firstAdjacent );
+      profileList.ensureElementIsVisible( firstAdjacent );
     }
     // set the button state
     DoEnabling();
@@ -264,15 +262,15 @@ function ChangeCaption( aCaption )
   window.title = aCaption;
 }
 
-// do button enabling based on tree selection
+// do button enabling based on listbox selection
 function DoEnabling()
 {
   var renbutton = document.getElementById( "renbutton" );
   var delbutton = document.getElementById( "delbutton" );
   var start     = document.getElementById( "ok" );
   
-  var profileTree = document.getElementById( "profiles" );
-  var items = profileTree.selectedItems;
+  var profileList = document.getElementById( "profiles" );
+  var items = profileList.selectedItems;
   if( items.length != 1 )
   {
     renbutton.setAttribute( "disabled", "true" );
@@ -289,7 +287,7 @@ function DoEnabling()
   }
 }
 
-// handle key event on trees
+// handle key event on listboxes
 function HandleKeyEvent( aEvent )
 {
   switch( aEvent.keyCode ) 
@@ -309,13 +307,11 @@ function HandleKeyEvent( aEvent )
 
 function HandleClickEvent( aEvent )
 {
-  if( aEvent.detail == 2 && aEvent.button == 0 ) {
-    if( aEvent.target.nodeName.toLowerCase() == "treecell" && 
-        aEvent.target.parentNode.parentNode.nodeName.toLowerCase() != "treehead" ) {
-          if (!onStart())
-            return false;
-          window.close();
-          return true;
-    } 
+  if( aEvent.detail == 2 && aEvent.button == 0 && aEvent.target.localName == "listitem") {
+    if (!onStart())
+      return false;
+    window.close();
+    return true;
   }
 }
+

@@ -112,8 +112,8 @@ Rights Reserved.
 
 <popup id="threadPaneContext"/>
 <popup id="folderPaneContext"/>
-<popup id="attachmentTreeContext"/>
-<tooltip id="attachmentTreeTooltip"/>
+<popup id="attachmentListContext"/>
+<tooltip id="attachmentListTooltip"/>
 
 <popup id="emailAddressPopup" popupanchor="bottomleft" onpopupshowing="goUpdateCommand('cmd_createFilterFromPopup')">
     <menuitem label="&AddToAddressBook.label;"
@@ -152,7 +152,7 @@ Rights Reserved.
     <vbox flex="1">
       <hbox id="mail3PaneVertLayoutBox" persist="collapsed height" flex="1">
         <vbox id="folderPaneBox" flex="1" autostretch="always" persist="width">
-          <outliner id="folderOutliner" flex="1" style="width:0px;" context="folderPaneContext" persist="collapsed width height"/>
+          <tree id="folderTree" flex="1" style="width:0px;" context="folderPaneContext" persist="collapsed width height"/>
         </vbox>
         <splitter id="gray_vertical_splitter" collapse="before"  persist="state">
           <grippy/>
@@ -163,7 +163,7 @@ Rights Reserved.
           <vbox id="searchAndthreadpaneBox" persist="width" flex ="1">
             <hbox id="searchBox"/>
             <vbox id="threadpaneBox" flex="1" persist="width">
-              <outliner id="threadOutliner" flex="1" persist="width" style="width:0px" context="threadPaneContext"/>
+              <tree id="threadTree" flex="1" persist="width" style="width:0px" context="threadPaneContext"/>
             </vbox>
           </vbox>
           <hbox id="accountCentralBox" flex="1" persist="width"> 

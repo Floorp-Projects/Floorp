@@ -41,8 +41,8 @@
 
 #include "nscore.h"
 #include "nsLeafBoxFrame.h"
-#include "nsIOutlinerBoxObject.h"
-#include "nsIOutlinerView.h"
+#include "nsITreeBoxObject.h"
+#include "nsITreeView.h"
 #include "nsICSSPseudoComparator.h"
 #include "nsIScrollbarMediator.h"
 #include "nsIRenderingContext.h"
@@ -106,11 +106,11 @@ public:
   }
 };
 
-class nsOutlinerStyleCache 
+class nsTreeStyleCache 
 {
 public:
-  nsOutlinerStyleCache() :mTransitionTable(nsnull), mCache(nsnull), mNextState(0) {};
-  virtual ~nsOutlinerStyleCache() { Clear(); };
+  nsTreeStyleCache() :mTransitionTable(nsnull), mCache(nsnull), mNextState(0) {};
+  virtual ~nsTreeStyleCache() { Clear(); };
 
   void Clear() { delete mTransitionTable; mTransitionTable = nsnull; delete mCache; mCache = nsnull; mNextState = 0; };
 
@@ -150,28 +150,13 @@ protected:
 
 // This class is our column info.  We use it to iterate our columns and to obtain
 // information about each column.
-class nsOutlinerColumn {
-  nsOutlinerColumn* mNext;
-
-  nsString mID;
-  nsCOMPtr<nsIAtom> mIDAtom;
-
-  PRUint32 mCropStyle;
-  PRUint32 mTextAlignment;
-  
-  PRPackedBool mIsPrimaryCol;
-  PRPackedBool mIsCyclerCol;
-
-  nsIFrame* mColFrame;
-  nsIContent* mColElement;
-
-  PRInt32 mColIndex;
+class nsTreeColumn {
 public:
-  nsOutlinerColumn(nsIContent* aColElement, nsIFrame* aFrame);
-  virtual ~nsOutlinerColumn() { delete mNext; };
+  nsTreeColumn(nsIContent* aColElement, nsIFrame* aFrame);
+  virtual ~nsTreeColumn() { delete mNext; };
 
-  void SetNext(nsOutlinerColumn* aNext) { mNext = aNext; };
-  nsOutlinerColumn* GetNext() { return mNext; };
+  void SetNext(nsTreeColumn* aNext) { mNext = aNext; };
+  nsTreeColumn* GetNext() { return mNext; };
 
   nsIContent* GetElement() { return mColElement; };
 
@@ -183,22 +168,47 @@ public:
   PRBool IsPrimary() { return mIsPrimaryCol; };
   PRBool IsCycler() { return mIsCyclerCol; };
 
+  enum Type {
+    eText = 0,
+    eCheckbox = 1,
+    eProgressMeter = 2
+  };
+  Type GetType() { return mType; };
+
   PRInt32 GetCropStyle() { return mCropStyle; };
   PRInt32 GetTextAlignment() { return mTextAlignment; };
 
   PRInt32 GetColIndex() { return mColIndex; };
+
+private:
+  nsTreeColumn* mNext;
+
+  nsString mID;
+  nsCOMPtr<nsIAtom> mIDAtom;
+
+  PRUint32 mCropStyle;
+  PRUint32 mTextAlignment;
+  
+  PRPackedBool mIsPrimaryCol;
+  PRPackedBool mIsCyclerCol;
+  Type mType;
+
+  nsIFrame* mColFrame;
+  nsIContent* mColElement;
+
+  PRInt32 mColIndex;
 };
 
 #ifdef USE_IMG2
 // The interface for our image listener.
 // {90586540-2D50-403e-8DCE-981CAA778444}
-#define NS_IOUTLINERIMAGELISTENER_IID \
+#define NS_ITREEIMAGELISTENER_IID \
 { 0x90586540, 0x2d50, 0x403e, { 0x8d, 0xce, 0x98, 0x1c, 0xaa, 0x77, 0x84, 0x44 } }
 
-class nsIOutlinerImageListener : public nsISupports
+class nsITreeImageListener : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IOUTLINERIMAGELISTENER_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_ITREEIMAGELISTENER_IID; return iid; }
 
 public:
   NS_IMETHOD AddRow(int aIndex)=0;
@@ -206,11 +216,11 @@ public:
 };
 
 // This class handles image load observation.
-class nsOutlinerImageListener : public imgIDecoderObserver, public nsIOutlinerImageListener
+class nsTreeImageListener : public imgIDecoderObserver, public nsITreeImageListener
 {
 public:
-  nsOutlinerImageListener(nsIOutlinerBoxObject* aOutliner, const PRUnichar* aColID);
-  virtual ~nsOutlinerImageListener();
+  nsTreeImageListener(nsITreeBoxObject* aTree, const PRUnichar* aColID);
+  virtual ~nsTreeImageListener();
 
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIDECODEROBSERVER
@@ -223,17 +233,17 @@ private:
   int mMin;
   int mMax;
   nsString mColID;
-  nsIOutlinerBoxObject* mOutliner;
+  nsITreeBoxObject* mTree;
 };
 #endif
 
 // The actual frame that paints the cells and rows.
-class nsOutlinerBodyFrame : public nsLeafBoxFrame, public nsIOutlinerBoxObject, public nsICSSPseudoComparator,
+class nsTreeBodyFrame : public nsLeafBoxFrame, public nsITreeBoxObject, public nsICSSPseudoComparator,
                             public nsIScrollbarMediator, public nsITimerCallback
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIOUTLINERBOXOBJECT
+  NS_DECL_NSITREEBOXOBJECT
 
   // nsIBox
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
@@ -261,33 +271,34 @@ public:
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
 
-  // This method paints a specific column background of the outliner.
-  NS_IMETHOD PaintColumn(nsOutlinerColumn*    aColumn,
-                         const nsRect& aCellRect,
+  // This method paints a specific column background of the tree.
+  NS_IMETHOD PaintColumn(nsTreeColumn*        aColumn,
+                         const nsRect&        aColumnRect,
                          nsIPresContext*      aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect&        aDirtyRect,
                          nsFramePaintLayer    aWhichLayer);
 
-  // This method paints a single row in the outliner.
-  NS_IMETHOD PaintRow(int aRowIndex, const nsRect& aRowRect,
+  // This method paints a single row in the tree.
+  NS_IMETHOD PaintRow(PRInt32              aRowIndex,
+                      const nsRect&        aRowRect,
                       nsIPresContext*      aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       const nsRect&        aDirtyRect,
                       nsFramePaintLayer    aWhichLayer);
 
-  // This method paints a specific cell in a given row of the outliner.
-  NS_IMETHOD PaintCell(int aRowIndex, 
-                       nsOutlinerColumn*    aColumn,
-                       const nsRect& aCellRect,
+  // This method paints a specific cell in a given row of the tree.
+  NS_IMETHOD PaintCell(PRInt32              aRowIndex, 
+                       nsTreeColumn*        aColumn,
+                       const nsRect&        aCellRect,
                        nsIPresContext*      aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        const nsRect&        aDirtyRect,
                        nsFramePaintLayer    aWhichLayer);
 
-  // This method paints the twisty inside a cell in the primary column of an outliner.
-  NS_IMETHOD PaintTwisty(int                  aRowIndex,
-                         nsOutlinerColumn*    aColumn,
+  // This method paints the twisty inside a cell in the primary column of an tree.
+  NS_IMETHOD PaintTwisty(PRInt32              aRowIndex,
+                         nsTreeColumn*        aColumn,
                          const nsRect&        aTwistyRect,
                          nsIPresContext*      aPresContext,
                          nsIRenderingContext& aRenderingContext,
@@ -296,9 +307,9 @@ public:
                          nscoord&             aRemainingWidth,
                          nscoord&             aCurrX);
 
-  // This method paints the image inside the cell of an outliner.
-  NS_IMETHOD PaintImage(int                  aRowIndex,
-                        nsOutlinerColumn*    aColumn,
+  // This method paints the image inside the cell of an tree.
+  NS_IMETHOD PaintImage(PRInt32              aRowIndex,
+                        nsTreeColumn*        aColumn,
                         const nsRect&        aImageRect,
                         nsIPresContext*      aPresContext,
                         nsIRenderingContext& aRenderingContext,
@@ -307,21 +318,38 @@ public:
                         nscoord&             aRemainingWidth,
                         nscoord&             aCurrX);
 
-  // This method paints the text string inside a particular cell of the outliner.
-  NS_IMETHOD PaintText(int aRowIndex, 
-                       nsOutlinerColumn*    aColumn,
-                       const nsRect& aTextRect,
+  // This method paints the text string inside a particular cell of the tree.
+  NS_IMETHOD PaintText(PRInt32              aRowIndex, 
+                       nsTreeColumn*        aColumn,
+                       const nsRect&        aTextRect,
                        nsIPresContext*      aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        const nsRect&        aDirtyRect,
                        nsFramePaintLayer    aWhichLayer);
 
-  // This method paints a drop feedback of the outliner.
+  // This method paints the checkbox inside a particular cell of the tree.
+  NS_IMETHOD PaintCheckbox(PRInt32              aRowIndex, 
+                           nsTreeColumn*        aColumn,
+                           const nsRect&        aCheckboxRect,
+                           nsIPresContext*      aPresContext,
+                           nsIRenderingContext& aRenderingContext,
+                           const nsRect&        aDirtyRect,
+                           nsFramePaintLayer    aWhichLayer);
+
+  // This method paints the progress meter inside a particular cell of the tree.
+  NS_IMETHOD PaintProgressMeter(PRInt32              aRowIndex, 
+                                nsTreeColumn*    aColumn,
+                                const nsRect&        aProgressMeterRect,
+                                nsIPresContext*      aPresContext,
+                                nsIRenderingContext& aRenderingContext,
+                                const nsRect&        aDirtyRect,
+                                nsFramePaintLayer    aWhichLayer);
+
+  // This method paints a drop feedback of the tree.
   NS_IMETHOD PaintDropFeedback(nsIPresContext*      aPresContext,
                                nsIRenderingContext& aRenderingContext,
                                const nsRect&        aDirtyRect,
-                               nsFramePaintLayer    aWhichLayer,
-                               PRUint32             aFlags = 0);
+                               nsFramePaintLayer    aWhichLayer);
 
   // This method is called with a specific style context and rect to
   // paint the background rect as if it were a full-blown frame.
@@ -329,38 +357,38 @@ public:
                                   nsIRenderingContext& aRenderingContext, 
                                   const nsRect& aRect, const nsRect& aDirtyRect);
 
-  // This method is called whenever an outlinercol is added or removed and
+  // This method is called whenever an treecol is added or removed and
   // the column cache needs to be rebuilt.
   void InvalidateColumnCache();
                                   
   // nsITimerCallback interface
   NS_IMETHOD_(void) Notify(nsITimer *timer);
 
-  friend nsresult NS_NewOutlinerBodyFrame(nsIPresShell* aPresShell, 
+  friend nsresult NS_NewTreeBodyFrame(nsIPresShell* aPresShell, 
                                           nsIFrame** aNewFrame);
 
-  friend class nsOutlinerBoxObject;
+  friend class nsTreeBoxObject;
 
 protected:
-  nsOutlinerBodyFrame(nsIPresShell* aPresShell);
-  virtual ~nsOutlinerBodyFrame();
+  nsTreeBodyFrame(nsIPresShell* aPresShell);
+  virtual ~nsTreeBodyFrame();
 
   // Caches our box object.
-  void SetBoxObject(nsIOutlinerBoxObject* aBoxObject) { mOutlinerBoxObject = aBoxObject; };
+  void SetBoxObject(nsITreeBoxObject* aBoxObject) { mTreeBoxObject = aBoxObject; };
 
   // A helper used when hit testing.
   nsresult GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect, PRInt32 aRowIndex,
-                               nsOutlinerColumn* aColumn, PRUnichar** aChildElt);
+                               nsTreeColumn* aColumn, PRUnichar** aChildElt);
 
 #ifdef USE_IMG2
   // Fetch an image from the image cache.
-  nsresult GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, 
+  nsresult GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUseContext,
                     nsIStyleContext* aStyleContext, imgIContainer** aResult);
 #endif
 
   // Returns the size of a given image.   This size *includes* border and
   // padding.  It does not include margins.
-  nsRect GetImageSize(PRInt32 aRowIndex, const PRUnichar* aColID, nsIStyleContext* aStyleContext);
+  nsRect GetImageSize(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUseContext, nsIStyleContext* aStyleContext);
 
   // Returns the height of rows in the tree.
   PRInt32 GetRowHeight();
@@ -389,7 +417,7 @@ protected:
 
   // Use to auto-fill some of the common properties without the view having to do it.
   // Examples include container, open, selected, and focus.
-  void PrefillPropertyArray(PRInt32 aRowIndex, nsOutlinerColumn* aCol);
+  void PrefillPropertyArray(PRInt32 aRowIndex, nsTreeColumn* aCol);
 
   // Our internal scroll method, used by all the public scroll methods.
   nsresult ScrollInternal(PRInt32 aRow);
@@ -403,7 +431,7 @@ protected:
   // Cache the box object
   void EnsureBoxObject();
 
-  // Get the base element, <outliner> or <select>
+  // Get the base element, <tree> or <select>
   nsresult GetBaseElement(nsIContent** aElement);
 
   void GetCellWidth(PRInt32 aRow, const nsAString& aColID, nscoord& aDesiredSize,
@@ -413,7 +441,7 @@ protected:
   // Calc the row and above/below/on status given where the mouse currently is hovering.
   void ComputeDropPosition(nsIDOMEvent* aEvent, PRInt32* aRow, PRInt16* aOrient);
 
-  // Calculate if we're in the region in which we want to auto-scroll the outliner.
+  // Calculate if we're in the region in which we want to auto-scroll the tree.
   PRBool IsInDragScrollRegion (nsIDOMEvent* aEvent, PRBool* aScrollUp);
 
 protected: // Data Members
@@ -421,34 +449,35 @@ protected: // Data Members
   nsIPresContext* mPresContext;
 
   // The cached box object parent.
-  nsCOMPtr<nsIOutlinerBoxObject> mOutlinerBoxObject;
+  nsCOMPtr<nsITreeBoxObject> mTreeBoxObject;
 
-  // The current view for this outliner widget.  We get all of our row and cell data
+  // The current view for this tree widget.  We get all of our row and cell data
   // from the view.
-  nsCOMPtr<nsIOutlinerView> mView;    
+  nsCOMPtr<nsITreeView> mView;    
   
   // A cache of all the style contexts we have seen for rows and cells of the tree.  This is a mapping from
   // a list of atoms to a corresponding style context.  This cache stores every combination that
   // occurs in the tree, so for n distinct properties, this cache could have 2 to the n entries
   // (the power set of all row properties).
-  nsOutlinerStyleCache mStyleCache;
+  nsTreeStyleCache mStyleCache;
 
-  // A hashtable that maps from style contexts to image requests.  The style context represents
-  // a resolved :-moz-outliner-cell-image (or twisty) pseudo-element.  It maps directly to an
-  // imgIRequest.  This allows us to avoid even wasting time checking URLs.
+  // A hashtable that maps from URLs to image requests.  The URL is provided
+  // by the view or by the style context. The style context represents
+  // a resolved :-moz-tree-cell-image (or twisty) pseudo-element.
+  // It maps directly to an imgIRequest.
   nsSupportsHashtable* mImageCache;
 
   // Cached column information.
-  nsOutlinerColumn* mColumns;
+  nsTreeColumn* mColumns;
 
   // Our vertical scrollbar.
   nsIFrame* mScrollbar;
 
-  // Our outliner widget.
-  nsCOMPtr<nsIWidget> mOutlinerWidget;
+  // Our tree widget.
+  nsCOMPtr<nsIWidget> mTreeWidget;
 
   // The index of the first visible row and the # of rows visible onscreen.  
-  // The outliner only examines onscreen rows, starting from
+  // The tree only examines onscreen rows, starting from
   // this index and going up to index+pageCount.
   PRInt32 mTopRowIndex;
   PRInt32 mPageCount;
@@ -488,4 +517,4 @@ protected: // Data Members
   // Timer for opening spring-loaded folders.
   nsCOMPtr<nsITimer> mOpenTimer;
 
-}; // class nsOutlinerBodyFrame
+}; // class nsTreeBodyFrame

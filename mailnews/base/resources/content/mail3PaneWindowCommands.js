@@ -58,20 +58,20 @@ var FolderPaneController =
 			case "button_delete":
 				if ( command == "cmd_delete" )
 					goSetMenuValue(command, 'valueFolder');
-                                var folderOutliner = GetFolderOutliner();
+                                var folderTree = GetFolderTree();
                                 var startIndex = {};
                                 var endIndex = {};
-                                folderOutliner.outlinerBoxObject.selection.getRangeAt(0, startIndex, endIndex);
+                                folderTree.treeBoxObject.selection.getRangeAt(0, startIndex, endIndex);
                                 if (startIndex.value >= 0) {
                                         var canDeleteThisFolder;
 					var specialFolder = null;
 					var isServer = null;
 					var serverType = null;
 					try {
-                                                var folderResource = GetFolderResource(folderOutliner, startIndex.value);
-                                                specialFolder = GetFolderAttribute(folderOutliner, folderResource, "SpecialFolder");
-                                                isServer = GetFolderAttribute(folderOutliner, folderResource, "IsServer");
-                                                serverType = GetFolderAttribute(folderOutliner, folderResource, "ServerType");
+                                                var folderResource = GetFolderResource(folderTree, startIndex.value);
+                                                specialFolder = GetFolderAttribute(folderTree, folderResource, "SpecialFolder");
+                                                isServer = GetFolderAttribute(folderTree, folderResource, "IsServer");
+                                                serverType = GetFolderAttribute(folderTree, folderResource, "ServerType");
                                                 if (serverType == "nntp") {
 			     	                        if ( command == "cmd_delete" ) {
 					                        goSetMenuValue(command, 'valueNewsgroup');
@@ -714,9 +714,9 @@ function FocusRingUpdate_Mail()
 
 function WhichPaneHasFocus()
 {
-  var threadOutliner = GetThreadOutliner();
+  var threadTree = GetThreadTree();
   var searchInput = GetSearchInput();
-  var folderOutliner = GetFolderOutliner();
+  var folderTree = GetFolderTree();
   var messagePane = GetMessagePane();
     
   if (top.document.commandDispatcher.focusedWindow == GetMessagePaneFrame())
@@ -724,9 +724,9 @@ function WhichPaneHasFocus()
 
 	var currentNode = top.document.commandDispatcher.focusedElement;	
 	while (currentNode) {
-    if (currentNode === threadOutliner ||
+    if (currentNode === threadTree ||
         currentNode === searchInput || 
-        currentNode === folderOutliner ||
+        currentNode === folderTree ||
         currentNode === messagePane)
       return currentNode;
     			
@@ -741,12 +741,12 @@ function SetupCommandUpdateHandlers()
 	var widget;
 	
 	// folder pane
-	widget = GetFolderOutliner();
+	widget = GetFolderTree();
 	if ( widget )
 		widget.controllers.appendController(FolderPaneController);
 	
 	// thread pane
-	widget = GetThreadOutliner();
+	widget = GetThreadTree();
 	if ( widget )
         widget.controllers.appendController(ThreadPaneController);
 		
@@ -795,15 +795,15 @@ function IsSendUnsentMsgsEnabled(folderResource)
 
 function IsRenameFolderEnabled()
 {
-    var folderOutliner = GetFolderOutliner();
-    var selection = folderOutliner.outlinerBoxObject.selection;
+    var folderTree = GetFolderTree();
+    var selection = folderTree.treeBoxObject.selection;
     if (selection.count == 1)
     {
         var startIndex = {};
         var endIndex = {};
         selection.getRangeAt(0, startIndex, endIndex);
-        var folderResource = GetFolderResource(folderOutliner, startIndex.value);
-        var canRename = GetFolderAttribute(folderOutliner, folderResource, "CanRename") == "true";
+        var folderResource = GetFolderResource(folderTree, startIndex.value);
+        var canRename = GetFolderAttribute(folderTree, folderResource, "CanRename") == "true";
         return canRename && isCommandEnabled("cmd_renameFolder");
     }
     else
@@ -826,10 +826,10 @@ function IsPropertiesEnabled(command)
    try 
    {
       var serverType;
-      var folderOutliner = GetFolderOutliner();
+      var folderTree = GetFolderTree();
       var folderResource = GetSelectedFolderResource();
       
-      serverType = GetFolderAttribute(folderOutliner, folderResource, "ServerType");
+      serverType = GetFolderAttribute(folderTree, folderResource, "ServerType");
    
       switch (serverType)
       {
@@ -860,15 +860,15 @@ function IsViewNavigationItemEnabled()
 
 function IsFolderSelected()
 {
-    var folderOutliner = GetFolderOutliner();
-    var selection = folderOutliner.outlinerBoxObject.selection;
+    var folderTree = GetFolderTree();
+    var selection = folderTree.treeBoxObject.selection;
     if (selection.count == 1)
     {
         var startIndex = {};
         var endIndex = {};
         selection.getRangeAt(0, startIndex, endIndex);
-        var folderResource = GetFolderResource(folderOutliner, startIndex.value);
-        return GetFolderAttribute(folderOutliner, folderResource, "IsServer") != "true";
+        var folderResource = GetFolderResource(folderTree, startIndex.value);
+        return GetFolderAttribute(folderTree, folderResource, "IsServer") != "true";
     }
     else
         return false;
@@ -881,13 +881,13 @@ function IsMessageDisplayedInMessagePane()
 
 function MsgDeleteFolder()
 {
-    var folderOutliner = GetFolderOutliner();
+    var folderTree = GetFolderTree();
     var selectedFolders = GetSelectedMsgFolders();
     for (var i = 0; i < selectedFolders.length; i++)
     {
         var selectedFolder = selectedFolders[i];
         var folderResource = selectedFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-        var specialFolder = GetFolderAttribute(folderOutliner, folderResource, "SpecialFolder");
+        var specialFolder = GetFolderAttribute(folderTree, folderResource, "SpecialFolder");
         if (specialFolder != "Inbox" && specialFolder != "Trash")
         {
             var protocolInfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + selectedFolder.server.type].getService(Components.interfaces.nsIMsgProtocolInfo);
@@ -923,7 +923,7 @@ function SetFocusThreadPaneIfNotOnMessagePane()
 {
   var focusedElement = WhichPaneHasFocus();
 
-  if((focusedElement != GetThreadOutliner()) &&
+  if((focusedElement != GetThreadTree()) &&
      (focusedElement != GetMessagePane()))
      SetFocusThreadPane();
 }
@@ -965,11 +965,11 @@ function MsgPreviousFlaggedMessage()
 	GoNextMessage(nsMsgNavigationType.previousFlagged, true);
 }
 
-function GetFolderNameFromUri(uri, outliner)
+function GetFolderNameFromUri(uri, tree)
 {
 	var folderResource = RDF.GetResource(uri);
 
-	var db = outliner.database;
+	var db = tree.database;
 
 	var nameProperty = RDF.GetResource('http://home.netscape.com/NC-rdf#Name');
 
@@ -1017,47 +1017,47 @@ function SearchBarToggled()
 function SwitchPaneFocus(event)
 {
   var focusedElement = WhichPaneHasFocus();
-  var folderOutliner = GetFolderOutliner();
-  var threadOutliner = GetThreadOutliner();
+  var folderTree = GetFolderTree();
+  var threadTree = GetThreadTree();
   var searchInput = GetSearchInput();
   var messagePane = GetMessagePane();
 
   if (event && event.shiftKey)
   {
-    if (focusedElement == threadOutliner && searchInput.parentNode.getAttribute('hidden') != 'true')
+    if (focusedElement == threadTree && searchInput.parentNode.getAttribute('hidden') != 'true')
       searchInput.focus();
-    else if ((focusedElement == threadOutliner || focusedElement == searchInput) && !IsFolderPaneCollapsed())
-      folderOutliner.focus();
+    else if ((focusedElement == threadTree || focusedElement == searchInput) && !IsFolderPaneCollapsed())
+      folderTree.focus();
     else if (focusedElement != messagePane && !IsThreadAndMessagePaneSplitterCollapsed())
       SetFocusMessagePane();
     else 
-      threadOutliner.focus();
+      threadTree.focus();
   }
   else
   {
     if (focusedElement == searchInput)
-      threadOutliner.focus();
-    else if (focusedElement == threadOutliner && !IsThreadAndMessagePaneSplitterCollapsed())
+      threadTree.focus();
+    else if (focusedElement == threadTree && !IsThreadAndMessagePaneSplitterCollapsed())
       SetFocusMessagePane();
-    else if (focusedElement != folderOutliner && !IsFolderPaneCollapsed())
-      folderOutliner.focus();
+    else if (focusedElement != folderTree && !IsFolderPaneCollapsed())
+      folderTree.focus();
     else if (searchInput.parentNode.getAttribute('hidden') != 'true')
       searchInput.focus();
     else
-      threadOutliner.focus();
+      threadTree.focus();
   }
 }
 
 function SetFocusFolderPane()
 {
-    var folderOutliner = GetFolderOutliner();
-    folderOutliner.focus();
+    var folderTree = GetFolderTree();
+    folderTree.focus();
 }
 
 function SetFocusThreadPane()
 {
-    var threadOutliner = GetThreadOutliner();
-    threadOutliner.focus();
+    var threadTree = GetThreadTree();
+    threadTree.focus();
 }
 
 function SetFocusMessagePane()

@@ -45,17 +45,11 @@
   list-style-image: url("chrome://communicator/skin/icons/loading.gif");
 }
 
-.searchpanel-outerbox {
-  padding: 8px 4px 4px 4px;
-}
+/* :::: undo regular search listbox selection look :::: */
 
-#searchengines {
-  margin: 0px;
-}
-
-/* :::: undo regular search tree selection look :::: */
-
-treeitem[selected="true"] > .searchresult {
-  background-color: transparent;
+.searchresult-item[selected="true"] {
+  border: none !important;
+  background-color: transparent !important;
+  color: inherit !important;
 }
 

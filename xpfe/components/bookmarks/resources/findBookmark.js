@@ -65,7 +65,7 @@ function find()
   
   // Update the root of the tree if we're using an existing search window. 
   if (!gCreatingNewWindow) 
-    bmWindow.document.getElementById("bookmarks-view").outliner.setAttribute("ref", searchURI);
+    bmWindow.document.getElementById("bookmarks-view").tree.setAttribute("ref", searchURI);
  
   bmWindow.focus();
 

@@ -23,7 +23,7 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=layoutxulbase_s 
 MODULE=layout_xul
-DIRS=outliner \
+DIRS=tree \
      grid
 
 REQUIRES	= xpcom \
@@ -56,7 +56,6 @@ CPP_OBJS=					\
   .\$(OBJDIR)\nsEditorBoxObject.obj \
   .\$(OBJDIR)\nsIFrameBoxObject.obj \
   .\$(OBJDIR)\nsBrowserBoxObject.obj \
-  .\$(OBJDIR)\nsTreeBoxObject.obj \
   .\$(OBJDIR)\nsListBoxObject.obj \
   .\$(OBJDIR)\nsScrollBoxObject.obj \
   .\$(OBJDIR)\nsPopupBoxObject.obj \
@@ -89,14 +88,6 @@ CPP_OBJS=					\
   .\$(OBJDIR)\nsGrippyFrame.obj    \
   .\$(OBJDIR)\nsDeckFrame.obj    \
   .\$(OBJDIR)\nsStackFrame.obj    \
-  .\$(OBJDIR)\nsTreeIndentationFrame.obj \
-  .\$(OBJDIR)\nsTreeItemDragCapturer.obj \
-  .\$(OBJDIR)\nsXULTreeFrame.obj \
-  .\$(OBJDIR)\nsXULTreeGroupFrame.obj \
-  .\$(OBJDIR)\nsXULTreeOuterGroupFrame.obj \
-  .\$(OBJDIR)\nsXULTreeSliceFrame.obj \
-  .\$(OBJDIR)\nsXULTreeCellFrame.obj \
-  .\$(OBJDIR)\nsTreeLayout.obj \
   .\$(OBJDIR)\nsScrollbarFrame.obj \
   .\$(OBJDIR)\nsScrollbarButtonFrame.obj \
   .\$(OBJDIR)\nsMenuPopupFrame.obj \

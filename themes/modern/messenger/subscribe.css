@@ -43,29 +43,28 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: margin adjustments :::::: */
-
-#subscribetree {
-  margin: 0px 0px 0px 0px !important;
-}
-
 /* ::::: subscribed icons  :::::: */
 
-.subscribedcol {
+treechildren:-moz-tree-image(SubscribedColumn),
+treechildren:-moz-tree-image(subscribedCol) {
   list-style-image: url("chrome://global/skin/checkbox/cbox.gif");
 }
 
-.subscribedcol[Subscribed="true"] {
+treechildren:-moz-tree-image(SubscribedColumn, Subscribed-true),
+treechildren:-moz-tree-image(subscribedCol, subscribed) {
   list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
 }
 
 /* ::::: folder icons :::::: */
 
-.tree-cell-subscribe-icon {
+treechildren:-moz-tree-image(NameColumn) {
+  margin-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-closed.gif");
 }
 
-.tree-cell-subscribe-icon[ServerType="nntp"] {
+treechildren:-moz-tree-image(NameColumn, ServerType-nntp),
+treechildren:-moz-tree-image(nameCol, nntp) {
+  margin-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.gif");
 }
 
@@ -93,19 +92,3 @@ statusbarpanel,
 .progressmeter-statusbar {
   border: none !important;
 }
-
-/* ::::: for search in subscribe ::::: */
-
-outlinerchildren:-moz-outliner-image(nameCol, nntp) {
- padding-right: 2px;
- list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.gif");
-}
-
-outlinerchildren:-moz-outliner-image(subscribedCol) {
-  list-style-image: url("chrome://global/skin/checkbox/cbox.gif");
-}
-
-outlinerchildren:-moz-outliner-image(subscribedCol, subscribed) {
-  list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
-}
-

@@ -296,11 +296,11 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
         oldFolder.setMsgDatabase(null);
   }
   // that should have initialized gDBView, now re-root the thread pane
-  var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
-  if (outlinerView)
+  var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
+  if (treeView)
   {
-    var outliner = GetThreadOutliner();
-    outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = outlinerView;
+    var tree = GetThreadTree();
+    tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject).view = treeView;
   }
 
   SetUpToolbarButtons(uri);
@@ -352,11 +352,11 @@ function SwitchView(command)
   }
 
   // that should have initialized gDBView, now re-root the thread pane
-  var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
-  if (outlinerView)
+  var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
+  if (treeView)
   {
-    var outliner = GetThreadOutliner();
-    outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = outlinerView;
+    var tree = GetThreadTree();
+    tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject).view = treeView;
   }
 }
 
@@ -526,7 +526,7 @@ var gCurViewFlags;
 var gCurSortType;
 
 // CreateDBView is called when we have a thread pane. CreateBareDBView is called when there is no
-// outliner associated with the view. CreateDBView will call into CreateBareDBView...
+// tree associated with the view. CreateDBView will call into CreateBareDBView...
 
 function CreateBareDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
 {
@@ -572,7 +572,7 @@ function CreateDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
   // call the inner create method
   CreateBareDBView(msgFolder, viewType, viewFlags, sortType, sortOrder);
 
-  // now do outliner specific work
+  // now do tree specific work
 
   // based on the collapsed state of the thread pane/message pane splitter,
   // suppress message display if appropriate.
@@ -615,8 +615,8 @@ function SortFolderPane(column)
 
   try 
   {
-    var folderOutliner = GetFolderOutliner();
-    folderOutliner.outlinerBoxObject.view.cycleHeader(column, node);
+    var folderTree = GetFolderTree();
+    folderTree.treeBoxObject.view.cycleHeader(column, node);
   }
   catch (ex) 
   {
@@ -627,11 +627,11 @@ function SortFolderPane(column)
 
 function GetSelectedFolderResource()
 {
-    var folderOutliner = GetFolderOutliner();
+    var folderTree = GetFolderTree();
     var startIndex = {};
     var endIndex = {};
-    folderOutliner.outlinerBoxObject.selection.getRangeAt(0, startIndex, endIndex);
-    return GetFolderResource(folderOutliner, startIndex.value);
+    folderTree.treeBoxObject.selection.getRangeAt(0, startIndex, endIndex);
+    return GetFolderResource(folderTree, startIndex.value);
 }
 
 function OnMouseUpThreadAndMessagePaneSplitter()
@@ -654,8 +654,8 @@ function OnClickThreadAndMessagePaneSplitterGrippy()
 
 function FolderPaneSelectionChange()
 {
-    var folderOutliner = GetFolderOutliner();
-    var folderSelection = folderOutliner.outlinerBoxObject.selection;
+    var folderTree = GetFolderTree();
+    var folderSelection = folderTree.treeBoxObject.selection;
 
     // This prevents a folder from being loaded in the case that the user
     // has right-clicked on a folder different from the one that was
@@ -676,7 +676,7 @@ function FolderPaneSelectionChange()
         var startIndex = {};
         var endIndex = {};
         folderSelection.getRangeAt(0, startIndex, endIndex);
-        var folderResource = GetFolderResource(folderOutliner, startIndex.value);
+        var folderResource = GetFolderResource(folderTree, startIndex.value);
         var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
         if (msgFolder == msgWindow.openFolder)
             return;

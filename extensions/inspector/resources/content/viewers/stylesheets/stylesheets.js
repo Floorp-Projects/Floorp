@@ -68,8 +68,8 @@ function StylesheetsViewer()
   this.mURL = window.location;
   this.mObsMan = new ObserverManager(this);
 
-  this.mOutliner = document.getElementById("olStyleSheets");
-  this.mOlBox = this.mOutliner.outlinerBoxObject;
+  this.mTree = document.getElementById("olStyleSheets");
+  this.mOlBox = this.mTree.treeBoxObject;
 }
 
 StylesheetsViewer.prototype = 
@@ -129,7 +129,7 @@ StylesheetsViewer.prototype =
   
   onItemSelected: function()
   {
-    var idx = this.mOutliner.currentIndex;
+    var idx = this.mTree.currentIndex;
     this.mSelection = this.mView.getSheet(idx);
     this.mObsMan.dispatchEvent("selectionChange", { selection: this.mSelection } );
   }
@@ -153,7 +153,7 @@ function StyleSheetsView(aDocument)
     this.insertSheet(ss[i], 0, -1);
 }
 
-StyleSheetsView.prototype = new inBaseOutlinerView();
+StyleSheetsView.prototype = new inBaseTreeView();
 
 StyleSheetsView.prototype.getSheet = 
 function(aRow)
@@ -285,6 +285,6 @@ function(aRow)
   }
   
   this.mOpen[aRow] = !this.mOpen[aRow];
-  this.mOutliner.rowCountChanged(aRow+1, this.mRowCount - oldRowCount);
+  this.mTree.rowCountChanged(aRow+1, this.mRowCount - oldRowCount);
 }
 

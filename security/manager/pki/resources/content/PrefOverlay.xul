@@ -28,30 +28,30 @@
 <overlay id="pipPrefOverlayID"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <outlinerchildren id="securityChildren">
-    <outlineritem id="masterpassItem">
-      <outlinerrow>
-        <outlinercell url="chrome://pippki/content/pref-masterpass.xul"
+  <treechildren id="securityChildren">
+    <treeitem id="masterpassItem">
+      <treerow>
+        <treecell url="chrome://pippki/content/pref-masterpass.xul"
                       label="&masterpass.label;"/>
-      </outlinerrow>
-    </outlineritem>
-    <outlineritem id="sslItem">
-      <outlinerrow>
-        <outlinercell url="chrome://pippki/content/pref-ssl.xul"
+      </treerow>
+    </treeitem>
+    <treeitem id="sslItem">
+      <treerow>
+        <treecell url="chrome://pippki/content/pref-ssl.xul"
                       label="&ssl.label;"/>
-      </outlinerrow>
-    </outlineritem>
-    <outlineritem id="certItem">
-      <outlinerrow>
-        <outlinercell url="chrome://pippki/content/pref-certs.xul"
+      </treerow>
+    </treeitem>
+    <treeitem id="certItem">
+      <treerow>
+        <treecell url="chrome://pippki/content/pref-certs.xul"
                       label="&certs.label;"/>
-      </outlinerrow>
-    </outlineritem>
-    <outlineritem id="validationItem">
-      <outlinerrow>
-        <outlinercell url="chrome://pippki/content/pref-validation.xul"
+      </treerow>
+    </treeitem>
+    <treeitem id="validationItem">
+      <treerow>
+        <treecell url="chrome://pippki/content/pref-validation.xul"
                       label="&validation.label;"/>
-      </outlinerrow>
-    </outlineritem>
-  </outlinerchildren>
+      </treerow>
+    </treeitem>
+  </treechildren>
 </overlay>

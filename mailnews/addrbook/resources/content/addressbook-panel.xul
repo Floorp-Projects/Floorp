@@ -83,19 +83,20 @@
       onkeypress="onAbSearchKeyPress(event);"/>
 	</hbox>
 
-<outliner id="abResultsOutliner" flex="1" context="composeMail" onclick="AbResultsPaneOnClick(event);" class="plain">
-  <outlinercols>
-  <!-- these column ids must match up to the mork column names, see nsIAddrDatabase.idl -->
-  <outlinercol id="GeneratedName" class="sortDirectionIndicator" 
-    persist="hidden ordinal width" flex="1" label="&GeneratedName.label;" primary="true"/>
-  <splitter class="tree-splitter"/>
-  <outlinercol id="PrimaryEmail" class="sortDirectionIndicator" 
-    persist="hidden ordinal width" 
-    hiddenbydefault="true"
-    flex="1" label="&PrimaryEmail.label;"/>
-  </outlinercols>
-  <outlinerchildren/>
-</outliner>
+<tree id="abResultsTree" flex="1" context="composeMail" onclick="AbResultsPaneOnClick(event);" class="plain">
+  <treecols>
+    <!-- these column ids must match up to the mork column names, see nsIAddrDatabase.idl -->
+    <treecol id="GeneratedName" class="sortDirectionIndicator" 
+      persist="hidden ordinal width" flex="1" label="&GeneratedName.label;" primary="true"/>
+    <splitter class="tree-splitter"/>
+    <treecol id="PrimaryEmail" class="sortDirectionIndicator" 
+      persist="hidden ordinal width" 
+      hiddenbydefault="true"
+      flex="1" label="&PrimaryEmail.label;"/>
+  </treecols>
+
+  <treechildren/>
+</tree>
 
   </vbox>
 </page>

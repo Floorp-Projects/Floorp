@@ -33,14 +33,12 @@ EXPORTS		= \
 		nsPIBoxObject.h \
 		nsIMenuFrame.h \
 		nsIPopupSetFrame.h \
-		nsITreeFrame.h \
 		$(NULL)
 
 XPIDLSRCS=      nsIBoxObject.idl                  \
                 nsIScrollBoxObject.idl              \
                 nsIBoxLayoutManager.idl              \
                 nsIBoxPaintManager.idl               \
-                nsITreeBoxObject.idl \
                 nsIScrollBoxObject.idl \
                 nsIPopupBoxObject.idl \
                 nsIMenuBoxObject.idl \

@@ -252,7 +252,7 @@ var messageHeaderSink = {
       gBuiltCollapsedView = false;
       gBuildAttachmentsForCurrentMsg = false;
       gBuildAttachmentPopupForCurrentMsg = true;
-      ClearAttachmentTreeList();
+      ClearAttachmentList();
       ClearEditMessageButton();
 
       for (index in gMessageListeners)
@@ -753,8 +753,8 @@ function printAttachmentAttachment(contentType, url, displayName, messageUri)
 function onShowAttachmentContextMenu()
 {
   // if no attachments are selected, disable the Open and Save...
-  var attachmentTree = document.getElementById('attachmentTree');
-  var selectedAttachments = attachmentTree.selectedItems;
+  var attachmentList = document.getElementById('attachmentList');
+  var selectedAttachments = attachmentList.selectedItems;
   var openMenu = document.getElementById('context-openAttachment');
   var saveMenu = document.getElementById('context-saveAttachment');
   if (selectedAttachments.length > 0)
@@ -769,36 +769,35 @@ function onShowAttachmentContextMenu()
   }
 }
 
-// this is our onclick handler for the attachment tree. 
-// A double click in a tree cell simulates "opening" the attachment....
-function attachmentTreeClick(event)
+// this is our onclick handler for the attachment list. 
+// A double click in a listitem simulates "opening" the attachment....
+function attachmentListClick(event)
 { 
     // we only care about button 0 (left click) events
     if (event.button != 0) return;
 
     if (event.detail == 2) // double click
     {
-      var target = event.originalTarget;
-      var item = target.parentNode.parentNode;
-      if (item.localName == "treeitem")
+      var target = event.target;
+      if (target.localName == "listitem")
       {
-	    var commandStringSuffix = item.getAttribute("commandSuffix");
+	    var commandStringSuffix = target.getAttribute("commandSuffix");
         var openString = 'openAttachment' + commandStringSuffix;
         eval(openString);
       }
     }
 }
 
-// on command handlers for the attachment tree context menu...
+// on command handlers for the attachment list context menu...
 // commandPrefix matches one of our existing functions (openAttachment, saveAttachment, etc.) which we'll add to the command suffix
-// found on the tree item....
+// found on the listitem....
 function handleAttachmentSelection(commandPrefix)
 {
   // get the selected attachment...and call openAttachment on it...
-  var attachmentTree = document.getElementById('attachmentTree');
-  var selectedAttachments = attachmentTree.selectedItems;
-  var treeItem = selectedAttachments[0];
-  var commandStringSuffix = treeItem.getAttribute("commandSuffix");
+  var attachmentList = document.getElementById('attachmentList');
+  var selectedAttachments = attachmentList.selectedItems;
+  var listItem = selectedAttachments[0];
+  var commandStringSuffix = listItem.getAttribute("commandSuffix");
   var openString = commandPrefix + commandStringSuffix;
   eval(openString);
 }
@@ -815,26 +814,21 @@ function displayAttachmentsForExpandedView()
   var numAttachments = currentAttachments.length;
   if (numAttachments > 0 && !gBuildAttachmentsForCurrentMsg)
   {
-    var attachmentList = document.getElementById('attachmentsBody');
-    var row, cell, item;
+    var attachmentList = document.getElementById('attachmentList');
     for (index in currentAttachments)
     {
       var attachment = currentAttachments[index];
-      // we need to create a tree item, a tree row and a tree cell to insert the attachment
-      // into the attachment tree..
+      // we need to create a listitem to insert the attachment
+      // into the attachment list..
 
-	  item = document.createElement("treeitem");
-	  row = document.createElement("treerow");
-	  cell = document.createElement("treecell");
+	    var item = document.createElement("listitem");
 
-      cell.setAttribute('class', "treecell-iconic"); 
-      cell.setAttribute("label", attachment.displayName);
-      cell.setAttribute("tooltip", "attachmentTreeTooltip");
-      item.setAttribute("commandSuffix", generateCommandSuffixForAttachment(attachment)); // set the command suffix on the tree item...
-      setApplicationIconForAttachment(attachment, cell);
-	  row.appendChild(cell);
-	  item.appendChild(row);
-	  attachmentList.appendChild(item);
+      item.setAttribute("class", "listitem-iconic"); 
+      item.setAttribute("label", attachment.displayName);
+      item.setAttribute("tooltip", "attachmentListTooltip");
+      item.setAttribute("commandSuffix", generateCommandSuffixForAttachment(attachment)); // set the command suffix on the listitem...
+      setApplicationIconForAttachment(attachment, item);
+  	  attachmentList.appendChild(item);
     } // for each attachment
     gBuildAttachmentsForCurrentMsg = true;
   }
@@ -844,11 +838,11 @@ function displayAttachmentsForExpandedView()
 }
 
 // attachment --> the attachment struct containing all the information on the attachment
-// treeCell --> the tree cell currently showing the attachment.
-function setApplicationIconForAttachment(attachment, treeCell)
+// listitem --> the listitem currently showing the attachment.
+function setApplicationIconForAttachment(attachment, listitem)
 {
    // generate a moz-icon url for the attachment so we'll show a nice icon next to it.
-   treeCell.setAttribute('src', "moz-icon:" + "//" + attachment.displayName + "?size=16&contentType=" + attachment.contentType);
+   listitem.setAttribute('image', "moz-icon:" + "//" + attachment.displayName + "?size=16&contentType=" + attachment.contentType);
 }
 
 function displayAttachmentsForCollapsedView()
@@ -862,7 +856,7 @@ function displayAttachmentsForCollapsedView()
 function FillInAttachmentTooltip(cellNode)
 {
   var attachmentName = cellNode.getAttribute("label");
-  var tooltipNode = document.getElementById("attachmentTreeTooltip");
+  var tooltipNode = document.getElementById("attachmentListTooltip");
   tooltipNode.setAttribute("label", attachmentName);
   return true;
 }
@@ -994,17 +988,14 @@ function SaveAllAttachments()
  }
 }
 
-function ClearAttachmentTreeList() 
+function ClearAttachmentList() 
 { 
   // clear selection
-  document.getElementById('attachmentTree').clearSelection();
+  var list = document.getElementById('attachmentList');
+  list.clearSelection();
 
-  var attachmentTreebody = document.getElementById("attachmentsBody"); 
-  if ( attachmentTreebody ) 
-  { 
-     while ( attachmentTreebody.childNodes.length ) 
-       attachmentTreebody.removeChild(attachmentTreebody.childNodes[0]); 
-  } 
+  while (list.childNodes.length) 
+    list.removeChild(list.firstChild);
 }
 
 function ShowEditMessageButton() 

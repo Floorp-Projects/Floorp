@@ -13,7 +13,7 @@
   
   <!--============================= SCRIPTS ============================= -->
 
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inBaseOutlinerView.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inBaseTreeView.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/styleRules/styleRules.js"/>
 
   <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
@@ -43,34 +43,34 @@
 
   <!--============================= CONTENT ============================== -->
 
-  <outliner id="olStyleRules" class="plain" flex="1" persist="height"
+  <tree id="olStyleRules" class="plain" flex="1" persist="height"
             onselect="viewer.onRuleSelect()">
-    <outlinercols>
-      <outlinercol id="olcRule" label="Rule" flex="1"/>
+    <treecols>
+      <treecol id="olcRule" label="Rule" flex="1"/>
       <splitter class="tree-splitter"/>
-      <outlinercol id="olcFileURL" label="File" flex="1"/>
+      <treecol id="olcFileURL" label="File" flex="1"/>
       <splitter class="tree-splitter"/>
-      <outlinercol id="olcWeight" label="Weight"/>
+      <treecol id="olcWeight" label="Weight"/>
       <splitter class="tree-splitter"/>
-      <outlinercol id="olcLine" label="Line"/>
-    </outlinercols>
-    <outlinerchildren id="olbStyleRules"/>
-  </outliner>
+      <treecol id="olcLine" label="Line"/>
+    </treecols>
+    <treechildren id="olbStyleRules"/>
+  </tree>
   
-  <splitter id="splOutliners" collapse="after" persist="state">
+  <splitter id="splTrees" collapse="after" persist="state">
     <grippy/>
   </splitter>
 
-  <outliner id="olStyleProps" class="plain" flex="1" persist="height"
+  <tree id="olStyleProps" class="plain" flex="1" persist="height"
             context="ppStylePropsContext">
-    <outlinercols>
-      <outlinercol id="olcPropPriority" label="Priority" class="outlinercol-image"/>
+    <treecols>
+      <treecol id="olcPropPriority" label="Priority" class="treecol-image"/>
       <splitter class="tree-splitter"/>
-      <outlinercol id="olcPropName" label="Style" flex="1"/>
+      <treecol id="olcPropName" label="Style" flex="1"/>
       <splitter class="tree-splitter"/>
-      <outlinercol id="olcPropValue" label="Value" flex="1"/>
-    </outlinercols>
-    <outlinerchildren id="olbStyleProps"/>
-  </outliner>
+      <treecol id="olcPropValue" label="Value" flex="1"/>
+    </treecols>
+    <treechildren id="olbStyleProps"/>
+  </tree>
 
 </page>

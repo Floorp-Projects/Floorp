@@ -31,22 +31,21 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <vbox class="box-padded" id="certPrettyPrint" flex="1">
   <label class="header" value="&certmgr.hierarchy.label;"/>
-  <tree id="treesetDump" rows="4"
-        onselect="updateCertDump();">
-    <treecolgroup>
-      <treecol flex="1"/>
-    </treecolgroup>
-    <treechildren id="chainDump"/>
+  <tree id="treesetDump" onselect="updateCertDump();"
+        hidecolumnpicker="true" style="height: 8em;">
+    <treecols>
+      <treecol id="dumpCol" flex="1" primary="true" hideheader="true"/>
+    </treecols>
   </tree>
-  <outliner id="prettyDumpOutliner" class="inset" style="height: 15em"
-            onselect="displaySelected();">
-    <outlinercols>
-      <outlinercol flex ="1" id="certDataCol" label="&certmgr.details.label;"
-                   ignoreincolumnpicker="true" class="header" primary="true"/>
-      <splitter/>
-    </outlinercols>
-    <outlinerchildren/>
-  </outliner>
+  
+  <tree id="prettyDumpTree" style="height: 15em"
+            onselect="displaySelected();" hidecolumnpicker="true">
+    <treecols>
+      <treecol flex ="1" id="certDataCol" label="&certmgr.details.label;" class="header" primary="true"/>
+    </treecols>
+    <treechildren/>
+  </tree>
+  
   <label class="header" value="&certmgr.fields.label;"/>
   <textbox class="inset" id="certDumpVal"  multiline="true" rows="8"
            readonly="true" style="font-family: -moz-fixed;"/>

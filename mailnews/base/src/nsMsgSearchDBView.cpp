@@ -180,8 +180,8 @@ nsMsgSearchDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
   m_flags.Add(msgFlags);
 
   // this needs to be called after we add the key, since RowCountChanged() will call our GetRowCount()
-  if (mOutliner)
-    mOutliner->RowCountChanged(GetSize() - 1, 1);
+  if (mTree)
+    mTree->RowCountChanged(GetSize() - 1, 1);
 
   return rv;
 }
@@ -213,8 +213,8 @@ nsMsgSearchDBView::OnNewSearch()
   m_flags.RemoveAll();
 
   // needs to happen after we remove the keys, since RowCountChanged() will call our GetRowCount()
-  if (mOutliner) 
-    mOutliner->RowCountChanged(0, -oldSize);
+  if (mTree) 
+    mTree->RowCountChanged(0, -oldSize);
 
 //    mSearchResults->Clear();
     return NS_OK;
@@ -471,13 +471,13 @@ NS_IMETHODIMP nsMsgSearchDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgView
     rv = nsMsgDBView::Sort(sortType,sortOrder);
 
     // the sort may have changed the number of rows
-    // before we restore the selection, tell the outliner
+    // before we restore the selection, tell the tree
     // do this before we call restore selection
     // this is safe when there is no selection. 
     rv = AdjustRowCount(rowCountBeforeSort, GetSize());
 
     RestoreSelection(&preservedSelection);
-    if (mOutliner) mOutliner->Invalidate();
+    if (mTree) mTree->Invalidate();
 
     NS_ENSURE_SUCCESS(rv,rv);
     return rv;
@@ -491,7 +491,7 @@ nsMsgSearchDBView::GetHdrForFirstSelectedMessage(nsIMsgDBHdr **hdr)
   NS_ENSURE_ARG_POINTER(hdr);
   PRInt32 index;
 
-  nsresult rv = mOutlinerSelection->GetCurrentIndex(&index);
+  nsresult rv = mTreeSelection->GetCurrentIndex(&index);
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = GetMsgHdrForViewIndex(index, hdr);

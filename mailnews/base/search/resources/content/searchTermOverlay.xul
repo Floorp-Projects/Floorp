@@ -20,7 +20,7 @@
 
  Contributor(s):
  Alec Flett <alecf@netscape.com>
- Håkan Waara <hwaara@chello.se>
+ Hkan Waara <hwaara@chello.se>
 -->
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/searchTermOverlay.dtd" >
@@ -39,48 +39,41 @@
     
     <hbox flex="1">
       <hbox id="searchterms"/>
-      <tree flex="1" id="searchTermTree">
-        <treecolgroup>
-          <treecol flex="1"/>
-          <treecol flex="4"/>
-          <treecol flex="0"/>
-          <treecol flex="4"/>
-          <treecol flex="0"/>
-          <treecol flex="4"/>
-          <treecol flex="0"/>
-        </treecolgroup>
+      <listbox flex="1" id="searchTermList">
+        <listcols>
+          <listcol flex="1"/>
+          <listcol flex="4"/>
+          <listcol flex="0"/>
+          <listcol flex="4"/>
+          <listcol flex="0"/>
+          <listcol flex="4"/>
+          <listcol flex="1"/>
+        </listcols>
 
-        <treechildren flex="1" id="searchTermList">
-
-        <!-- this is what the treerows will look like:
-          <treeitem id="searchListItem">
-            <treerow>
-              <treecell id="preSearchAttr"/>
-              <treecell allowevents="true">
-                <searchattribute id="searchAttr" for="searchOp,searchValue" flex="1"/>
-              </treecell>
-              <treecell id="preSearchOp"/>
-              <treecell allowevents="true">
-                <searchoperator id="searchOp" flex="1"/>
-              </treecell>
-              <treecell id="preSearchValue"/>
-              <treecell allowevents="true" >
-                <searchvalue id="searchValue" flex="1"/>
-              </treecell>
-              <treecell id="postSearchValue"/>
-            </treerow>
-          </treeitem>
-          <treeitem>
-            <treerow>
-              <treecell label="the.."/>
-              <treecell label="contains.."/>
-              <treecell label="text here"/>
-            </treerow>
-          </treeitem>
+        <!-- this is what the listitems will look like:
+          <listitem id="searchListItem">
+            <listcell id="preSearchAttr"/>
+            <listcell allowevents="true">
+              <searchattribute id="searchAttr" for="searchOp,searchValue" flex="1"/>
+            </listcell>
+            <listcell id="preSearchOp"/>
+            <listcell allowevents="true">
+              <searchoperator id="searchOp" flex="1"/>
+            </listcell>
+            <listcell id="preSearchValue"/>
+            <listcell allowevents="true" >
+              <searchvalue id="searchValue" flex="1"/>
+            </listcell>
+            <listcell id="postSearchValue"/>
+          </listitem>
+          <listitem>
+            <listcell label="the.."/>
+            <listcell label="contains.."/>
+            <listcell label="text here"/>
+          </listitem>
         -->
-        
-        </treechildren>
-      </tree>
+      </listbox>
+      
     </hbox>
     <hbox>
       <button id="more" label="&more.label;" oncommand="onMore(event);" accesskey="&more.label;"/>

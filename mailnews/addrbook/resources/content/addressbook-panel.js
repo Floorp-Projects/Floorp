@@ -92,7 +92,7 @@ function LoadPreviouslySelectedAB()
       }
     }
   }
-  ChangeDirectoryByDOMNode(abPopup.selectedItem);
+  ChangeDirectoryByURI(abPopup.selectedItem.id);
 }
 
 function AbPanelLoad() 

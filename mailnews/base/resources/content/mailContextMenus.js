@@ -29,27 +29,27 @@
 // outline/dotted without loading the contents of either rows.  This is
 // triggered when the context menu for a given row is hidden/closed
 // (onpopuphiding).
-function RestoreSelectionWithoutContentLoad(outliner)
+function RestoreSelectionWithoutContentLoad(tree)
 {
-    var outlinerBoxObj = outliner.outlinerBoxObject;
-    var outlinerSelection = outlinerBoxObj.selection;
+    var treeBoxObj = tree.treeBoxObject;
+    var treeSelection = treeBoxObj.selection;
 
     // make sure that currentIndex is valid so that we don't try to restore
     // a selection of an invalid row.
-    if((!outlinerSelection.isSelected(outlinerSelection.currentIndex)) &&
-       (outlinerSelection.currentIndex >= 0))
+    if((!treeSelection.isSelected(treeSelection.currentIndex)) &&
+       (treeSelection.currentIndex >= 0))
     {
-        outlinerSelection.selectEventsSuppressed = true;
-        outlinerSelection.select(outlinerSelection.currentIndex);
-        outlinerSelection.selectEventsSuppressed = false;
+        treeSelection.selectEventsSuppressed = true;
+        treeSelection.select(treeSelection.currentIndex);
+        treeSelection.selectEventsSuppressed = false;
 
         // Keep track of which row in the thread pane is currently selected.
         // This is currently only needed when deleting messages.  See
         // declaration of var in msgMail3PaneWindow.js.
-        if(outliner.id == "threadOutliner")
-          gThreadPaneCurrentSelectedIndex = outlinerSelection.currentIndex;
+        if(tree.id == "threadTree")
+          gThreadPaneCurrentSelectedIndex = treeSelection.currentIndex;
     }
-    else if(!gThreadPaneDeleteOrMoveOccurred && (outlinerSelection.currentIndex < 0))
+    else if(!gThreadPaneDeleteOrMoveOccurred && (treeSelection.currentIndex < 0))
         // Clear the selection in the case of when a folder has just been
         // loaded where the message pane does not have a message loaded yet.
         // When right-clicking a message in this case and dismissing the
@@ -57,13 +57,13 @@ function RestoreSelectionWithoutContentLoad(outliner)
         // somewhere else),  the selection needs to be cleared.
         // However, if the 'Delete Message' or 'Move To' menu item has been
         // selected, DO NOT clear the selection, else it will prevent the
-        // outliner view from refreshing.
-        outlinerSelection.clearSelection();
+        // tree view from refreshing.
+        treeSelection.clearSelection();
 }
 
 function threadPaneOnPopupHiding()
 {
-  RestoreSelectionWithoutContentLoad(GetThreadOutliner());
+  RestoreSelectionWithoutContentLoad(GetThreadTree());
 }
 
 function fillThreadPaneContextMenu()
@@ -215,23 +215,23 @@ function SetupDeleteMenuItem(menuID, numSelected, forceHide)
 
 function folderPaneOnPopupHiding()
 {
-  RestoreSelectionWithoutContentLoad(GetFolderOutliner());
+  RestoreSelectionWithoutContentLoad(GetFolderTree());
 }
 
 function fillFolderPaneContextMenu()
 {
-  var folderOutliner = GetFolderOutliner();
+  var folderTree = GetFolderTree();
   var startIndex = {};
   var endIndex = {};
-  folderOutliner.outlinerBoxObject.selection.getRangeAt(0, startIndex, endIndex);
+  folderTree.treeBoxObject.selection.getRangeAt(0, startIndex, endIndex);
   if (startIndex.value < 0)
     return false;
   var numSelected = endIndex.value - startIndex.value + 1;
-  var folderResource = GetFolderResource(folderOutliner, startIndex.value);
+  var folderResource = GetFolderResource(folderTree, startIndex.value);
 
-  var isServer = GetFolderAttribute(folderOutliner, folderResource, "IsServer") == 'true';
-  var serverType = GetFolderAttribute(folderOutliner, folderResource, "ServerType");
-  var specialFolder = GetFolderAttribute(folderOutliner, folderResource, "SpecialFolder");
+  var isServer = GetFolderAttribute(folderTree, folderResource, "IsServer") == 'true';
+  var serverType = GetFolderAttribute(folderTree, folderResource, "ServerType");
+  var specialFolder = GetFolderAttribute(folderTree, folderResource, "SpecialFolder");
   var canSubscribeToFolder = (serverType == "nntp") || (serverType == "imap");
   var isNewsgroup = !isServer && serverType == 'nntp';
   var canGetMessages =  (isServer && (serverType != "nntp") && (serverType !="none")) || isNewsgroup;
@@ -284,8 +284,8 @@ function SetupRenameMenuItem(folderResource, numSelected, isServer, serverType, 
 {
   var isSpecialFolder = specialFolder != 'none';
   var isMail = serverType != 'nntp';
-  var folderOutliner = GetFolderOutliner();
-  var canRename = GetFolderAttribute(folderOutliner, folderResource, "CanRename") == "true";
+  var folderTree = GetFolderTree();
+  var canRename = GetFolderAttribute(folderTree, folderResource, "CanRename") == "true";
 
   ShowMenuItem("folderPaneContext-rename", (numSelected <= 1) && !isServer && (specialFolder == "none") && canRename);
   var folder = GetMsgFolderFromResource(folderResource);
@@ -319,8 +319,8 @@ function SetupRemoveMenuItem(folderResource, numSelected, isServer, serverType, 
 
 function SetupCompactMenuItem(folderResource, numSelected)
 {
-  var folderOutliner = GetFolderOutliner();
-  var canCompact = GetFolderAttribute(folderOutliner, folderResource, "CanCompact") == "true";
+  var folderTree = GetFolderTree();
+  var canCompact = GetFolderAttribute(folderTree, folderResource, "CanCompact") == "true";
   ShowMenuItem("folderPaneContext-compact", (numSelected <=1) && canCompact);
   var folder = GetMsgFolderFromResource(folderResource);
   EnableMenuItem("folderPaneContext-compact", folder.isCommandEnabled("cmd_compactFolder"));
@@ -333,8 +333,8 @@ function SetupCompactMenuItem(folderResource, numSelected)
 
 function SetupNewMenuItem(folderResource, numSelected, isServer, serverType, specialFolder)
 {
-  var folderOutliner = GetFolderOutliner();
-  var canCreateNew = GetFolderAttribute(folderOutliner, folderResource, "CanCreateSubfolders") == "true";
+  var folderTree = GetFolderTree();
+  var canCreateNew = GetFolderAttribute(folderTree, folderResource, "CanCreateSubfolders") == "true";
   var isInbox = specialFolder == "Inbox";
 
   var showNew = ((numSelected <=1) && (serverType != 'nntp') && canCreateNew) || isInbox;

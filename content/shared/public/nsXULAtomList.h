@@ -72,20 +72,7 @@ XUL_ATOM(validate, "validate")
 XUL_ATOM(description, "description")
 
   // The tree atoms
-XUL_ATOM(tree, "tree") // The start of a tree view
-XUL_ATOM(treecaption, "treecaption") // The caption of a tree view
-XUL_ATOM(treehead, "treehead") // The header of the tree view
-XUL_ATOM(treerow, "treerow") // A row in the tree view
-XUL_ATOM(treerows, "treerows") // A row in the tree view
-XUL_ATOM(treecell, "treecell") // An item in the tree view
-XUL_ATOM(treeitem, "treeitem") // A cell in the tree view
-XUL_ATOM(treechildren, "treechildren") // The children of an item in the tree view
-XUL_ATOM(treeindentation, "treeindentation") // Specifies that the indentation for the level should occur here.
 XUL_ATOM(allowevents, "allowevents") // Lets events be handled on the cell contents or in menus.
-XUL_ATOM(treecol, "treecol") // A column in the tree view
-XUL_ATOM(treecolgroup, "treecolgroup") // A column group in the tree view
-XUL_ATOM(treecols, "treecols") // A column group in the tree view
-XUL_ATOM(treefoot, "treefoot") // The footer of the tree view
 XUL_ATOM(scrollbarlist, "scrollbarlist") // An atom for internal use by the tree view
 XUL_ATOM(indent, "indent") // indicates that a cell should be indented
 XUL_ATOM(outer, "outer") // indicates that a treechildren is the outermost rowgroup
@@ -95,14 +82,14 @@ XUL_ATOM(open, "open") // Whether or not a menu, tree, etc. is open
 XUL_ATOM(closed, "closed")
 XUL_ATOM(focus, "focus")
 
-XUL_ATOM(outliner, "outliner")
-XUL_ATOM(outlinercols, "outlinercols")
-XUL_ATOM(outlinercol, "outlinercol")
-XUL_ATOM(outlinerchildren, "outlinerchildren")
-XUL_ATOM(outlineritem, "outlineritem")
-XUL_ATOM(outlinerrow, "outlinerrow")
-XUL_ATOM(outlinerseparator, "outlinerseparator")
-XUL_ATOM(outlinercell, "outlinercell")
+XUL_ATOM(tree, "tree")
+XUL_ATOM(treecols, "treecols")
+XUL_ATOM(treecol, "treecol")
+XUL_ATOM(treechildren, "treechildren")
+XUL_ATOM(treeitem, "treeitem")
+XUL_ATOM(treerow, "treerow")
+XUL_ATOM(treeseparator, "treeseparator")
+XUL_ATOM(treecell, "treecell")
 
 XUL_ATOM(cycler, "cycler")
 XUL_ATOM(primary, "primary")
@@ -113,16 +100,21 @@ XUL_ATOM(dragSession, "dragSession")
 XUL_ATOM(dropOn, "dropOn")
 XUL_ATOM(dropBefore, "dropBefore")
 XUL_ATOM(dropAfter, "dropAfter")
-XUL_ATOM(mozoutlinerrow, ":-moz-outliner-row")
-XUL_ATOM(mozoutlinercell, ":-moz-outliner-cell")
-XUL_ATOM(mozoutlinercolumn, ":-moz-outliner-column")
-XUL_ATOM(mozoutlinercelltext, ":-moz-outliner-cell-text")
-XUL_ATOM(mozoutlinertwisty, ":-moz-outliner-twisty")
-XUL_ATOM(mozoutlinerindentation, ":-moz-outliner-indentation")
-XUL_ATOM(mozoutlinerline, ":-moz-outliner-line")
-XUL_ATOM(mozoutlinerimage, ":-moz-outliner-image")
-XUL_ATOM(mozoutlinerseparator, ":-moz-outliner-separator")
-XUL_ATOM(mozoutlinerdropfeedback, ":-moz-outliner-drop-feedback")
+XUL_ATOM(progressNormal, "progressNormal")
+XUL_ATOM(progressUndetermined, "progressUndetermined")
+XUL_ATOM(progressNone, "progressNone")
+
+XUL_ATOM(moztreerow, ":-moz-tree-row")
+XUL_ATOM(moztreecell, ":-moz-tree-cell")
+XUL_ATOM(moztreecolumn, ":-moz-tree-column")
+XUL_ATOM(moztreecelltext, ":-moz-tree-cell-text")
+XUL_ATOM(moztreetwisty, ":-moz-tree-twisty")
+XUL_ATOM(moztreeindentation, ":-moz-tree-indentation")
+XUL_ATOM(moztreeline, ":-moz-tree-line")
+XUL_ATOM(moztreeimage, ":-moz-tree-image")
+XUL_ATOM(moztreeseparator, ":-moz-tree-separator")
+XUL_ATOM(moztreedropfeedback, ":-moz-tree-drop-feedback")
+XUL_ATOM(moztreeprogressmeter, ":-moz-tree-progressmeter")
 
 XUL_ATOM(menubar, "menubar") // An XP menu bar.
 XUL_ATOM(menu, "menu") // Represents an XP menu

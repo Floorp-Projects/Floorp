@@ -33,7 +33,7 @@ Rights Reserved.
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 </stringbundleset>
 
-<popup id="attachmentTreeContext" onpopupshowing="return onShowAttachmentContextMenu();">
+<popup id="attachmentListContext" onpopupshowing="return onShowAttachmentContextMenu();">
   <menuitem id="context-openAttachment" label="&openAttachmentCmd.label;" accesskey="&openAttachmentCmd.accesskey;"
      oncommand="handleAttachmentSelection('openAttachment');"/>
   <menuitem id="context-saveAttachment" label="&saveAsAttachmentCmd.label;" accesskey="&saveAsAttachmentCmd.accesskey;"
@@ -47,7 +47,7 @@ Rights Reserved.
   <menuitem label="&saveAllAttachmentsCmd.label;" accesskey="&saveAllAttachmentsCmd.accesskey;" oncommand="SaveAllAttachments();"/>
 </popup>
 
-<tooltip id="attachmentTreeTooltip"
+<tooltip id="attachmentListTooltip"
          onpopupshowing="return FillInAttachmentTooltip(document.tooltipNode);"/> 
 
 <hbox id="msgHeaderView" persist="state">
@@ -117,13 +117,8 @@ Rights Reserved.
 
    <vbox id="expandedAttachmentBox" class="header-part1" collapsed="true">
      <label id="attachmentText" value="&attachmentsTree.label;" crop="right"/>
-     <tree id="attachmentTree" class="inset" flex="2"
-           onclick="attachmentTreeClick(event);" context="attachmentTreeContext">
-       <treecolgroup>
-         <treecol flex="1"/>
-       </treecolgroup>
-       <treechildren id="attachmentsBody" flex="1"/>
-     </tree>
+     <listbox id="attachmentList" flex="2"
+              onclick="attachmentListClick(event);" context="attachmentListContext"/>
    </vbox>
 
   </hbox>

@@ -42,7 +42,7 @@ const kBoolType = 2;
 
 var gTypeStrs = ["string","int","bool"];
 
-var gOutliner;
+var gTree;
 
 var view = ({
     rowCount : 0, 
@@ -72,7 +72,7 @@ var view = ({
       prop.AppendElement(gLockAtoms[baseArray[index]["lockCol"]]);
     },
     getColumnProperties : function(col, elt, prop) {},
-    outlinerbox : null,
+    treebox : null,
     selection : null,
     isContainer : function(index) { return false; },
     isContainerOpen : function(index) { return false; },
@@ -81,7 +81,7 @@ var view = ({
     canDropOn : function(index) { return false; },
     canDropBeforeAfter : function(index,before) { return false; },
     drop : function(row,orientation) {},
-    setOutliner : function(out) { this.outlinerbox = out; },
+    setTree : function(out) { this.treebox = out; },
     getParentIndex: function(rowIndex) { return -1 },
     hasNextSibling: function(rowIndex, afterIndex) { return false },
     getLevel: function(index) { return 1},
@@ -161,8 +161,8 @@ function onConfigLoad()
 
     view.rowCount = k + 1;
 
-    gOutliner = document.getElementById("configOutliner");
-    gOutliner.outlinerBoxObject.view = view;
+    gTree = document.getElementById("configTree");
+    gTree.treeBoxObject.view = view;
 }
 
 function htmlEscape(s) 
@@ -181,7 +181,7 @@ function ConfigOnClick(event)
 
     var t = event.originalTarget;
 
-    if (t.localName == "outlinercol") {
+    if (t.localName == "treecol") {
        HandleColumnClick(t.id);
     }
 }
@@ -255,7 +255,7 @@ function HandleColumnClick(id)
     gSortedColumn = id;
   }
 
-  gOutliner.outlinerBoxObject.invalidate();
+  gTree.treeBoxObject.invalidate();
 }
 
 

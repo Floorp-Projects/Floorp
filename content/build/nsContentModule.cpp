@@ -133,7 +133,7 @@ extern NS_IMETHODIMP
 NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 
 extern NS_IMETHODIMP
-NS_NewXULOutlinerBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+NS_NewXULTreeBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 #endif
 
 #ifdef MOZ_SVG
@@ -347,7 +347,7 @@ MAKE_CTOR(CreateComputedDOMStyle,         nsIComputedDOMStyle,         NS_NewCom
 #ifdef MOZ_XUL
 MAKE_CTOR(CreateXULSortService,           nsIXULSortService,           NS_NewXULSortService)
 // NS_NewXULContentBuilder
-// NS_NewXULOutlinerBuilder
+// NS_NewXULTreeBuilder
 MAKE_CTOR(CreateXULContentSink,           nsIXULContentSink,           NS_NewXULContentSink)
 MAKE_CTOR(CreateXULDocument,              nsIXULDocument,              NS_NewXULDocument)
 MAKE_CTOR(CreateXULPopupListener,         nsIXULPopupListener,         NS_NewXULPopupListener)
@@ -749,10 +749,10 @@ static const nsModuleComponentInfo gComponents[] = {
     "@mozilla.org/xul/xul-template-builder;1",
     NS_NewXULContentBuilder },
 
-  { "XUL Outliner Builder",
-    NS_XULOUTLINERBUILDER_CID,
-    "@mozilla.org/xul/xul-outliner-builder;1",
-    NS_NewXULOutlinerBuilder },
+  { "XUL Tree Builder",
+    NS_XULTREEBUILDER_CID,
+    "@mozilla.org/xul/xul-tree-builder;1",
+    NS_NewXULTreeBuilder },
 
   { "XUL Content Sink",
     NS_XULCONTENTSINK_CID,

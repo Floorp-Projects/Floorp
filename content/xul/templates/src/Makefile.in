@@ -56,8 +56,8 @@ CPPSRCS		= \
 		nsContentTagTestNode.cpp \
 		nsContentTestNode.cpp \
 		nsInstantiationNode.cpp \
-		nsOutlinerRowTestNode.cpp \
-		nsOutlinerRows.cpp \
+		nsTreeRowTestNode.cpp \
+		nsTreeRows.cpp \
 		nsRDFConInstanceTestNode.cpp \
 		nsRDFConMemberTestNode.cpp \
 		nsRDFPropertyTestNode.cpp \
@@ -68,7 +68,7 @@ CPPSRCS		= \
 		nsTemplateRule.cpp \
 		nsXULContentBuilder.cpp \
 		nsXULContentUtils.cpp \
-		nsXULOutlinerBuilder.cpp \
+		nsXULTreeBuilder.cpp \
 		nsXULSortService.cpp \
 		nsXULTemplateBuilder.cpp \
 		$(NULL)

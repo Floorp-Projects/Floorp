@@ -67,7 +67,6 @@ groupbox {
   font-size: 120%;
 }
 
-
 .narrow {
   width: 3em;
 }
@@ -308,14 +307,26 @@ tree.AttributesTree {
   min-height: 200px;
 }
 
+/* ::::: select edit dialog ::::: */
+
+#SelectTreeChildren:-moz-tree-cell(SelectSelCol, checked-false) {
+  background: url("chrome://global/skin/checkbox/cbox.gif") 50% 50% no-repeat;
+}
+
+#SelectTreeChildren:-moz-tree-cell(SelectSelCol, checked-true) {
+  background: url("chrome://global/skin/checkbox/cbox-check.gif") 50% 50% no-repeat;
+}
+
 /* ::::: Publishing Progress ::::: */
 
 .progressitem[progress="busy"] {
 	list-style-image: url("chrome://editor/skin/icons/progress-busy.gif");
 }
+
 .progressitem[progress="done"] {
 	list-style-image: url("chrome://editor/skin/icons/progress-done.gif");
 }
+
 .progressitem[progress="failed"] {
 	list-style-image: url("chrome://editor/skin/icons/progress-failed.gif");
 }

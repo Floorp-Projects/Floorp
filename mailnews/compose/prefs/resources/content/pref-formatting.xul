@@ -54,14 +54,8 @@
       <vbox id="html_box" flex="1">
         <description>&HTMLdomaintitle.label;</description>
         <hbox flex="1">
-          <tree id="html_domains" flex="1"
-            datasources="rdf:null" seltype="multiple"
-            onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveDomains(htmlobj);">
-            <treecolgroup>
-              <treecol flex="1"/>
-            </treecolgroup>
-            <treechildren id="html_domains_root" flex="1"/>
-          </tree>
+          <listbox id="html_domains" flex="1" seltype="multiple"
+            onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveDomains(htmlobj);"/>
           <vbox>
             <button label="&AddButton.label;" oncommand="AddDomain(htmlobj);">
               <observes element="mailhtmldomain" attribute="disabled"/>
@@ -75,14 +69,8 @@
       <vbox id="plaintext_box" flex="1">
         <description>&PlainTexttitle.label;</description>
         <hbox flex="1">
-          <tree id="plaintext_domains" flex="1"
-            datasources="rdf:null" seltype="multiple"
-            onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveDomains(plainobj);">
-            <treecolgroup>
-              <treecol flex="1"/>
-            </treecolgroup>
-            <treechildren id="plaintext_domains_root" flex="1"/>
-          </tree>
+          <listbox id="plaintext_domains" flex="1" seltype="multiple"
+            onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveDomains(plainobj);"/>
           <vbox>
             <button label="&AddButton.label;" oncommand="AddDomain(plainobj);">
               <observes element="mailplaintextdomain" attribute="disabled"/>

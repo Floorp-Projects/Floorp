@@ -3,14 +3,14 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         orient="vertical">
-  <outliner id="tree"
+  <tree id="tree"
             flex="1"
             datasources="rdf:ldap"
             ref="ldap://alpha.dante.org.uk:389/dc=dante,dc=org,dc=uk??one?(objectclass=*)"
             containment="http://home.netscape.com/NC-rdf#recursiveChild"
             flags="dont-build-content">
-    <outlinercols>
-      <outlinercol id="description"
+    <treecols>
+      <treecol id="description"
                    class="sortDirectionIndicator"
                    flex="1"
                    label="Description"
@@ -21,24 +21,24 @@
 
       <splitter class="tree-splitter" />
 
-      <outlinercol id="cn"
+      <treecol id="cn"
                    class="sortDirectionIndicator"
                    flex="1"
                    label="CN"
                    sort="rdf:http://www.mozilla.org/LDAPATTR-rdf#cn"
                    persist="width sortActive sortDirection" />
-    </outlinercols>
+    </treecols>
     <template>
-      <outlinerchildren>
-        <outlineritem uri="rdf:http://home.netscape.com/NC-rdf#recursiveChild">
-          <outlinerrow>
-            <outlinercell ref="description"
+      <treechildren>
+        <treeitem uri="rdf:http://home.netscape.com/NC-rdf#recursiveChild">
+          <treerow>
+            <treecell ref="description"
                           label="rdf:http://www.mozilla.org/LDAPATTR-rdf#description" />
-            <outlinercell ref="cn"
+            <treecell ref="cn"
                           label="rdf:http://www.mozilla.org/LDAPATTR-rdf#cn" />
-          </outlinerrow>
-        </outlineritem>
-      </outlinerchildren>
+          </treerow>
+        </treeitem>
+      </treechildren>
     </template>
-  </outliner>
+  </tree>
 </window>

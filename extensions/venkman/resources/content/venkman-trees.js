@@ -67,7 +67,7 @@ function dtree(tree)
     formatBranch(tree, "");
 }
 
-function initOutliners()
+function initTrees()
 {
     const ATOM_CTRID = "@mozilla.org/atom-service;1";
     const nsIAtomService = Components.interfaces.nsIAtomService;
@@ -85,8 +85,8 @@ function initOutliners()
     console.sourceView.atomPrettyPrint    = atomsvc.getAtom("prettyprint");
     console.sourceView.atomWhitespace     = atomsvc.getAtom("whitespace");
 
-    var outliner = document.getElementById("source-outliner");
-    outliner.outlinerBoxObject.view = console.sourceView;
+    var tree = document.getElementById("source-tree");
+    tree.treeBoxObject.view = console.sourceView;
 
     console.scriptsView.childData.setSortColumn("baseLineNumber");
     console.scriptsView.groupFiles  = true;
@@ -98,14 +98,14 @@ function initOutliners()
     console.scriptsView.atomGuessed = atomsvc.getAtom("fn-guessed");
     console.scriptsView.atomBreakpoint = atomsvc.getAtom("has-bp");
 
-    outliner = document.getElementById("script-list-outliner");
-    outliner.outlinerBoxObject.view = console.scriptsView;
-    outliner.setAttribute ("ondraggesture",
+    tree = document.getElementById("script-list-tree");
+    tree.treeBoxObject.view = console.scriptsView;
+    tree.setAttribute ("ondraggesture",
                            "nsDragAndDrop.startDrag(event, " +
                            "console.scriptsView);");
 
-    outliner = document.getElementById("stack-outliner");
-    outliner.outlinerBoxObject.view = console.stackView;
+    tree = document.getElementById("stack-tree");
+    tree.treeBoxObject.view = console.stackView;
 
     console.stackView.atomStack    = atomsvc.getAtom("w-stack");
     console.stackView.atomFrame    = atomsvc.getAtom("w-frame");
@@ -123,8 +123,8 @@ function initOutliners()
     console.stackView.childData.appendChild (console.stackView.stack);
     console.stackView.stack.hide();
 
-    outliner = document.getElementById("project-outliner");
-    outliner.outlinerBoxObject.view = console.projectView;
+    tree = document.getElementById("project-tree");
+    tree.treeBoxObject.view = console.projectView;
     
     console.projectView.atomBlacklist   = atomsvc.getAtom("pj-blacklist");
     console.projectView.atomBLItem      = atomsvc.getAtom("pj-bl-item");
@@ -154,12 +154,12 @@ function initOutliners()
     BLRecord.prototype.property = console.projectView.atomBLItem;    
 }
 
-function destroyOutliners()
+function destroyTrees()
 {
-    console.sourceView.outliner.view = null;
-    console.scriptsView.outliner.view = null;
-    console.stackView.outliner.view = null;
-    console.projectView.outliner.view = null;
+    console.sourceView.tree.view = null;
+    console.scriptsView.tree.view = null;
+    console.stackView.tree.view = null;
+    console.projectView.tree.view = null;
 }
 
 console.sourceView = new BasicOView();
@@ -189,7 +189,7 @@ function sv_scrollto (line, align)
 }
 
 /*
- * pass in a SourceText to be displayed on this outliner
+ * pass in a SourceText to be displayed on this tree
  */
 console.sourceView.displaySourceText =
 function sv_dsource (sourceText)
@@ -210,7 +210,7 @@ function sv_dsource (sourceText)
     /* save the current position before we change to another source */
     if ("childData" in this)
     {
-        this.childData.pendingScroll = this.outliner.getFirstVisibleRow() + 1;
+        this.childData.pendingScroll = this.tree.getFirstVisibleRow() + 1;
         this.childData.pendingScrollType = -1;
     }
     
@@ -218,8 +218,8 @@ function sv_dsource (sourceText)
     {
         delete this.childData;
         this.rowCount = 0;
-        this.outliner.rowCountChanged(0, 0);
-        this.outliner.invalidate();
+        this.tree.rowCountChanged(0, 0);
+        this.tree.invalidate();
         return;
     }
     
@@ -231,8 +231,8 @@ function sv_dsource (sourceText)
         /* clear the view while we wait for the source text */
         delete this.childData;
         this.rowCount = 0;
-        this.outliner.rowCountChanged(0, 0);
-        this.outliner.invalidate();
+        this.tree.rowCountChanged(0, 0);
+        this.tree.invalidate();
         /* load the source text, call the tryAgain function when it's done. */
         sourceText.pendingScroll = 0;
         sourceText.pendingScrollType = -1;
@@ -244,8 +244,8 @@ function sv_dsource (sourceText)
     this.childData = sourceText;
     this.rowCount = sourceText.lines.length;
     this.tabString = leftPadString ("", sourceText.tabWidth, " ");
-    this.outliner.rowCountChanged(0, this.rowCount);
-    this.outliner.invalidate();
+    this.tree.rowCountChanged(0, this.rowCount);
+    this.tree.invalidate();
 
     var hdr = document.getElementById("source-line-text");
     hdr.setAttribute ("label", sourceText.fileName);
@@ -285,13 +285,13 @@ function sv_lscroll (line)
     delete this.childData.pendingScroll;
     delete this.childData.pendingScrollType;
 
-    var first = this.outliner.getFirstVisibleRow();
-    var last = this.outliner.getLastVisibleRow();
+    var first = this.tree.getFirstVisibleRow();
+    var last = this.tree.getLastVisibleRow();
     var fuzz = 2;
     if (line < (first + fuzz) || line > (last - fuzz))
         this.scrollTo (line, 0);
     else
-        this.outliner.invalidate(); /* invalidate to show the new currentLine if
+        this.tree.invalidate(); /* invalidate to show the new currentLine if
                                      * we don't have to scroll. */
 
 }    
@@ -308,7 +308,7 @@ function sv_getcx(cx)
     var sourceText = this.childData;
     cx.fileName = sourceText.fileName;
     cx.lineIsExecutable = null;
-    var selection = this.outliner.selection;
+    var selection = this.tree.selection;
     var row = selection.currentIndex;
 
     if (row != -1)
@@ -326,7 +326,7 @@ function sv_getcx(cx)
     else
         dd ("no currentIndex");
     
-    var rangeCount = this.outliner.selection.getRangeCount();
+    var rangeCount = this.tree.selection.getRangeCount();
     if (rangeCount > 0 && !("lineNumberList" in cx))
     {
         cx.lineNumberList = new Array();
@@ -336,7 +336,7 @@ function sv_getcx(cx)
     {
         var min = new Object();
         var max = new Object();
-        this.outliner.selection.getRangeAt(range, min, max);
+        this.tree.selection.getRangeAt(range, min, max);
         min = min.value;
         max = max.value;
 
@@ -364,7 +364,7 @@ function sv_getcx(cx)
     return cx;
 }    
 
-/* nsIOutlinerView */
+/* nsITreeView */
 console.sourceView.getRowProperties =
 function sv_rowprops (row, properties)
 {
@@ -379,7 +379,7 @@ function sv_rowprops (row, properties)
     }
 }
 
-/* nsIOutlinerView */
+/* nsITreeView */
 console.sourceView.getCellProperties =
 function sv_cellprops (row, colID, properties)
 {
@@ -447,7 +447,7 @@ function sv_cellprops (row, colID, properties)
     }
 }
 
-/* nsIOutlinerView */
+/* nsITreeView */
 console.sourceView.getCellText =
 function sv_getcelltext (row, colID)
 {    
@@ -580,7 +580,7 @@ function scr_guessnames (sourceText)
     {
         this.childData[i].guessFunctionName(sourceText);
     }
-    console.scriptsView.outliner.invalidate();
+    console.scriptsView.tree.invalidate();
 }
 
 function ScriptRecord(script) 
@@ -734,7 +734,7 @@ function sr_guessname (sourceText)
                 if (cd.frame.script == this.script)
                 {
                     cd.functionName = this.functionName;
-                    wv.outliner.invalidateRow(cd.calculateVisualRow());
+                    wv.tree.invalidateRow(cd.calculateVisualRow());
                 }
             }
         }
@@ -753,7 +753,7 @@ function scv_dstart (e, transferData, dragAction)
     var colID = new Object();
     var childElt = new Object();
 
-    this.outliner.getCellAt(e.clientX, e.clientY, row, colID, childElt);
+    this.tree.getCellAt(e.clientX, e.clientY, row, colID, childElt);
     if (!colID.value)
         return false;
     
@@ -799,7 +799,7 @@ function scv_getcx(cx)
     if (!cx)
         cx = new Object();
 
-    var selection = this.outliner.selection;
+    var selection = this.tree.selection;
     var row = selection.currentIndex;
     var rec = this.childData.locateChildByVisualRow (row);
     var firstRec = rec;
@@ -826,7 +826,7 @@ function scv_getcx(cx)
         cx.rangeEnd   = rec.script.lineExtent + cx.lineNumber;
     }
 
-    var rangeCount = this.outliner.selection.getRangeCount();
+    var rangeCount = this.tree.selection.getRangeCount();
     if (rangeCount > 0 && !("lineNumberList" in cx))
     {
         cx.lineNumberList = new Array();
@@ -846,7 +846,7 @@ function scv_getcx(cx)
     {
         var min = new Object();
         var max = new Object();
-        this.outliner.selection.getRangeAt(range, min, max);
+        this.tree.selection.getRangeAt(range, min, max);
         min = min.value;
         max = max.value;
 
@@ -1295,7 +1295,7 @@ function sv_save ()
     }
         
     this.savedState = new Object();
-    this.savedState.firstVisible = this.outliner.getFirstVisibleRow() + 1;
+    this.savedState.firstVisible = this.tree.getFirstVisibleRow() + 1;
     saveBranch (this.savedState, this.stack.childData);
     //dd ("saved as\n" + dumpObjectTree(this.savedState, 10));
 }
@@ -1309,7 +1309,7 @@ function sv_getcx(cx)
     if (!cx)
         cx = new Object();
 
-    var selection = this.outliner.selection;
+    var selection = this.tree.selection;
 
     var rec = this.childData.locateChildByVisualRow(selection.currentIndex);
     
@@ -1330,7 +1330,7 @@ function sv_getcx(cx)
         cx.jsdValue = rec.value;
     }
 
-    var rangeCount = this.outliner.selection.getRangeCount();
+    var rangeCount = this.tree.selection.getRangeCount();
     if (rangeCount > 0)
         cx.jsdValueList = new Array();
     
@@ -1338,7 +1338,7 @@ function sv_getcx(cx)
     {
         var min = new Object();
         var max = new Object();
-        this.outliner.selection.getRangeAt(range, min, max);
+        this.tree.selection.getRangeAt(range, min, max);
         for (var i = min; i < max; ++i)
         {
             rec = this.childData.locateChildByVisualRow(i);
@@ -1374,8 +1374,8 @@ function sv_refresh()
     sk.visualFootprint += delta;
     this.childData.visualFootprint += delta;
     this.childData.invalidateCache();
-    this.outliner.rowCountChanged (0, sk.visualFootprint);
-    this.outliner.invalidate();
+    this.tree.rowCountChanged (0, sk.visualFootprint);
+    this.tree.invalidate();
 }
 
 console.stackView.getCellProperties =
@@ -1432,7 +1432,7 @@ function pv_getcx(cx)
     if (!cx)
         cx = new Object();
 
-    var selection = this.outliner.selection;
+    var selection = this.tree.selection;
 
     var rec = this.childData.locateChildByVisualRow(selection.currentIndex);
     
@@ -1463,7 +1463,7 @@ function pv_getcx(cx)
         cx.url = cx.fileName = rec.url;
     }
     
-    var rangeCount = this.outliner.selection.getRangeCount();
+    var rangeCount = this.tree.selection.getRangeCount();
     if (rangeCount > 0)
     {
         cx.breakpointRecList = new Array();
@@ -1475,7 +1475,7 @@ function pv_getcx(cx)
     {
         var min = new Object();
         var max = new Object();
-        this.outliner.selection.getRangeAt(range, min, max);
+        this.tree.selection.getRangeAt(range, min, max);
         min = min.value;
         max = max.value;
         for (var i = min; i <= max; ++i)

@@ -52,60 +52,48 @@
  
           <tree id="user-list" container="true" datasources="rdf:null" flex="1"
             containment="http://home.netscape.com/NC-irc#chanuser"
-            multiple="true" context="userlistPopup">
+            seltype="multiple" context="userlistPopup">
 
             <template>
-              <treechildren flex="1">
-                <treeitem uri="..." flex="1">
-                  <treerow crop="right">
-                      <treecell align="center">
-                        <image class="op-image"
-                          state="rdf:http://home.netscape.com/NC-irc#op"/>
-                      </treecell>
-                      <treecell align="center">
-                        <image class="voice-image"
-                          state="rdf:http://home.netscape.com/NC-irc#voice"/>
-                      </treecell>
-                      <treecell flex="1">
-                        <text class="user-nick"
-                          isop="rdf:http://home.netscape.com/NC-irc#op"
-                          isvoice="rdf:http://home.netscape.com/NC-irc#voice"
-                          value="rdf:http://home.netscape.com/NC-irc#nick"
-                          flex="1" crop="right"/>
-                      </treecell>
-                  </treerow>
-                </treeitem>
-              </treechildren>
+              <rule>
+                <conditions>
+                  <content uri="?container"/>
+                  <member container="?container" child="?member"/>
+                </conditions>
+                
+                <bindings>
+                  <binding subject="?member" predicate="http://home.netscape.com/NC-irc#op" object="?op"/>
+                  <binding subject="?member" predicate="http://home.netscape.com/NC-irc#voice" object="?voice"/>
+                  <binding subject="?member" predicate="http://home.netscape.com/NC-irc#nick" object="?nick"/>
+                </bindings>
+                
+                <action>
+                  <treechildren>
+                    <treeitem uri="?member" flex="1" properties="op-?op voice-?voice">
+                      <treerow>
+                          <treecell properties="state-?op"/>
+                          <treecell properties="state-?voice"/>
+                          <treecell label="?nick"/>
+                      </treerow>
+                    </treeitem>
+                  </treechildren>
+                </action>
+              </rule>
             </template>
     
-            <treecolgroup flex="1">
-              <treecol align="center"
+            <treecols>
+              <treecol id="usercol-op" label="O"
+                onclick="return onSortCol('usercol-op')"
                 resource="http://home.netscape.com/NC-irc#op" width="25"/>
               <splitter class="tree-splitter"/>
-              <treecol align="center"
+              <treecol id="usercol-voice" label="V"
+                onclick="return onSortCol('usercol-voice')"
                 resource="http://home.netscape.com/NC-irc#voice" width="25"/>
               <splitter class="tree-splitter"/>
-              <treecol flex="1"
+              <treecol id="usercol-nick" label="Nick" flex="1"
+                onclick="return onSortCol('usercol-nick')"
                 resource="http://home.netscape.com/NC-irc#nick"/>
-            </treecolgroup>
-    
-            <treehead>
-              <treerow crop="right">
-                <treecell id="usercol-op"
-                  resource="http://home.netscape.com/NC-irc#op"
-                  class="treecell-header" label="O"
-                  onclick="return onSortCol('usercol-op');"/>
-                <treecell id="usercol-voice"
-                  resource="http://home.netscape.com/NC-irc#voice"
-                  class="treecell-header" label="V"
-                  onclick="return onSortCol('usercol-voice');"/>
-                <treecell id="usercol-nick"
-                  resource="http://home.netscape.com/NC-irc#nick"
-                  class="treecell-header sortDirectionIndicator" label="Nick"
-                  onclick="return onSortCol('usercol-nick');"/>
-              </treerow>
-            </treehead>
-    
+            </treecols>
           </tree>
     
         </vbox> <!-- user-list-box -->

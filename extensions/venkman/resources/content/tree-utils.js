@@ -34,31 +34,31 @@
  */
 
 /*
- * BasicOView provides functionality of outliner whose elements have no children.
+ * BasicOView provides functionality of tree whose elements have no children.
  * Usage:
- * var myOutliner = new BasicOView()
- * myOutliner.setColumnNames (["col 1", "col 2"]);
- * myOutliner.data = [["row 1, col 1", "row 1, col 2"],
+ * var myTree = new BasicOView()
+ * myTree.setColumnNames (["col 1", "col 2"]);
+ * myTree.data = [["row 1, col 1", "row 1, col 2"],
  *                    ["row 2, col 1", "row 2, col 2"]];
  * { override get*Properties, etc, as suits your purpose. }
  *
- * outlinerBoxObject.view = myOutliner;
+ * treeBoxObject.view = myTree;
  * 
- * You'll need to make the appropriate myOutliner.outliner.invalidate calls
- * when myOutliner.data changes.
+ * You'll need to make the appropriate myTree.tree.invalidate calls
+ * when myTree.data changes.
  */
 
 function BasicOView()
 {}
 
-/* functions *you* should call to initialize and maintain the outliner state */
+/* functions *you* should call to initialize and maintain the tree state */
 
-/* scroll the line specified by |line| to the center of the outliner */
+/* scroll the line specified by |line| to the center of the tree */
 BasicOView.prototype.centerLine =
 function bov_ctrln (line)
 {
-    var first = this.outliner.getFirstVisibleRow();
-    var last = this.outliner.getLastVisibleRow();
+    var first = this.tree.getFirstVisibleRow();
+    var last = this.tree.getLastVisibleRow();
     this.scrollToRow(line - total / 2);
 }
 
@@ -85,15 +85,15 @@ function bov_scrollto (line, align)
 {
     var headerRows = 1;
     
-    var first = this.outliner.getFirstVisibleRow();
-    var last  = this.outliner.getLastVisibleRow();
+    var first = this.tree.getFirstVisibleRow();
+    var last  = this.tree.getLastVisibleRow();
     var viz   = last - first - headerRows; /* total number of visible rows */
 
     /* all rows are visible, nothing to scroll */
     if (first == 0 && last > this.rowCount)
         return;
     
-    /* outliner lines are 0 based, we accept one based lines, deal with it */
+    /* tree lines are 0 based, we accept one based lines, deal with it */
     --line;
 
     /* safety clamp */
@@ -106,7 +106,7 @@ function bov_scrollto (line, align)
     {
         if (line > this.rowCount - viz) /* overscroll, can't put a row from */
             line = this.rowCount - viz; /* last page at the top. */
-        this.outliner.scrollToRow(line);
+        this.tree.scrollToRow(line);
     }
     else if (align > 0)
     {
@@ -115,32 +115,32 @@ function bov_scrollto (line, align)
         else
             line = line - total_viz + headerRows;
         
-        this.outliner.scrollToRow(line);
+        this.tree.scrollToRow(line);
     }
     else
     {
         var half_viz = viz / 2;
-        /* lines past this line can't be centered without causing the outliner
+        /* lines past this line can't be centered without causing the tree
          * to show more rows than we have. */
         var lastCenterable = this.rowCount - half_viz;
         if (line > lastCenterable)
             line = lastCenterable;
-        /* lines before this can't be centered without causing the outliner
+        /* lines before this can't be centered without causing the tree
          * to attempt to display negative rows. */
         else if (line < half_viz)
             line = half_viz;
-        this.outliner.scrollToRow(line - half_viz);
+        this.tree.scrollToRow(line - half_viz);
     }                    
 }       
 
 BasicOView.prototype.__defineGetter__("selectedIndex", bov_getsel);
 function bov_getsel()
 {
-    if (!this.outliner || this.outliner.selection.getRangeCount() < 1)
+    if (!this.tree || this.tree.selection.getRangeCount() < 1)
         return -1;
 
     var min = new Object();
-    this.outliner.selection.getRangeAt(0, min, {});
+    this.tree.selection.getRangeAt(0, min, {});
     return min.value;
 }
 
@@ -148,14 +148,14 @@ BasicOView.prototype.__defineSetter__("selectedIndex", bov_setsel);
 function bov_setsel(i)
 {
     if (i == -1)
-        this.outliner.selection.clearSelection();
+        this.tree.selection.clearSelection();
     else
-        this.outliner.selection.timedSelect (i, 500);
+        this.tree.selection.timedSelect (i, 500);
     return i;
 }
 
 /*
- * functions the outliner will call to retrieve the list state (nsIOutlinerView.)
+ * functions the tree will call to retrieve the list state (nsITreeView.)
  */
 
 BasicOView.prototype.rowCount = 0;
@@ -238,6 +238,21 @@ function bov_getlvl (index)
     return 0;
 }
 
+BasicOView.prototype.getImageSrc =
+function bov_getimgsrc (row, colID)
+{
+}
+
+BasicOView.prototype.getProgressMode =
+function bov_getprgmode (row, colID)
+{
+}
+
+BasicOView.prototype.getCellValue =
+function bov_getcellval (row, colID)
+{
+}
+
 BasicOView.prototype.getCellText =
 function bov_getcelltxt (row, colID)
 {
@@ -252,10 +267,10 @@ function bov_getcelltxt (row, colID)
     return this.data[row][col];
 }
 
-BasicOView.prototype.setOutliner =
-function bov_seto (outliner)
+BasicOView.prototype.setTree =
+function bov_seto (tree)
 {
-    this.outliner = outliner;
+    this.tree = tree;
 }
 
 BasicOView.prototype.toggleOpenState =
@@ -428,7 +443,7 @@ function tovr_setdir (dir)
 }
 
 /*
- * invalidate this row in the outliner
+ * invalidate this row in the tree
  */
 TreeOViewRecord.prototype.invalidate =
 function tovr_invalidate()
@@ -438,7 +453,7 @@ function tovr_invalidate()
     {
         var row = this.calculateVisualRow();
         if (row != -1)
-            tree.outliner.invalidateRow(row);
+            tree.tree.invalidateRow(row);
     }
 }
 
@@ -512,14 +527,14 @@ function tovr_resort (leafSort)
     {
         this.invalidateCache();
         var tree = this.findContainerTree();
-        if (tree && tree.outliner)
+        if (tree && tree.tree)
         {
             var rowIndex = this.calculateVisualRow();
             /*
             dd ("invalidating " + rowIndex + " - " +
                 (rowIndex + this.visualFootprint - 1));
             */
-            tree.outliner.invalidateRange (rowIndex,
+            tree.tree.invalidateRange (rowIndex,
                                            rowIndex + this.visualFootprint - 1);
         }
     }
@@ -963,14 +978,14 @@ function torr_resort ()
             this.childData[i].sortIsInvalid = true;
     }
     
-    if ("_treeView" in this && "outliner" in this._treeView)
+    if ("_treeView" in this && "tree" in this._treeView)
     {
         /*
         dd ("root node: invalidating 0 - " + this.visualFootprint +
             " for sort");
         */
         this.invalidateCache();
-        this._treeView.outliner.invalidateRange (0, this.visualFootprint);
+        this._treeView.tree.invalidateRange (0, this.visualFootprint);
     }
 }
 
@@ -1015,12 +1030,12 @@ function torr_vfpchange (start, amount)
     {
         this.invalidateCache();
         this.visualFootprint += amount;
-        if ("_treeView" in this && "outliner" in this._treeView)
+        if ("_treeView" in this && "tree" in this._treeView)
         {
             if (amount != 0)
-                this._treeView.outliner.rowCountChanged (start, amount);
+                this._treeView.tree.rowCountChanged (start, amount);
             else
-                this._treeView.outliner.invalidateRow (start);
+                this._treeView.tree.invalidateRow (start);
         }
     }
     else
@@ -1038,7 +1053,7 @@ function torr_vfpchange (start, amount)
 }
 
 /*
- * TreeOView provides functionality of outliner whose elements have multiple
+ * TreeOView provides functionality of tree whose elements have multiple
  * levels of children.
  */
 
@@ -1049,10 +1064,10 @@ function TreeOView(share)
     this.frozen = 0;
 }
 
-/* functions *you* should call to initialize and maintain the outliner state */
+/* functions *you* should call to initialize and maintain the tree state */
 
 /*
- * Changes to the tree contents will not cause the outliner to be invalidated
+ * Changes to the tree contents will not cause the tree to be invalidated
  * until thaw() is called.  All changes will be pooled into a single invalidate
  * call.
  *
@@ -1100,25 +1115,25 @@ function tov_thaw ()
 
 }
 
-/* scroll the line specified by |line| to the center of the outliner */
+/* scroll the line specified by |line| to the center of the tree */
 TreeOView.prototype.centerLine =
 function tov_ctrln (line)
 {
-    var first = this.outliner.getFirstVisibleRow();
-    var last = this.outliner.getLastVisibleRow();
+    var first = this.tree.getFirstVisibleRow();
+    var last = this.tree.getLastVisibleRow();
     this.scrollToRow(line - total / 2);
 }
 
 /*
- * functions the outliner will call to retrieve the list state (nsIOutlinerView.)
+ * functions the tree will call to retrieve the list state (nsITreeView.)
  */
 
 TreeOView.prototype.__defineGetter__("rowCount", tov_getRowCount);
 function tov_getRowCount ()
 {
     if (!this.childData)
-        return 0;
-    
+      return 0;
+
     return this.childData.visualFootprint;
 }
 
@@ -1139,20 +1154,20 @@ function tov_isctr (index)
 TreeOView.prototype.__defineGetter__("selectedIndex", tov_getsel);
 function tov_getsel()
 {
-    if (!this.outliner || this.outliner.selection.getRangeCount() < 1)
+    if (!this.tree || this.tree.selection.getRangeCount() < 1)
         return -1;
 
     var min = new Object();
-    this.outliner.selection.getRangeAt(0, min, {});
+    this.tree.selection.getRangeAt(0, min, {});
     return min.value;
 }
 
 TreeOView.prototype.__defineSetter__("selectedIndex", tov_setsel);
 function tov_setsel(i)
 {
-    this.outliner.selection.clearSelection();
+    this.tree.selection.clearSelection();
     if (i != -1)
-        this.outliner.selection.timedSelect (i, 500);
+        this.tree.selection.timedSelect (i, 500);
     return i;
 }
 
@@ -1247,6 +1262,21 @@ function tov_getlvl (index)
     return row.level;
 }
 
+TreeOView.prototype.getImageSrc =
+function tov_getimgsrc (index, colID)
+{
+}
+
+TreeOView.prototype.getProgressMode =
+function tov_getprgmode (index, colID)
+{
+}
+
+TreeOView.prototype.getCellValue =
+function tov_getcellval (index, colID)
+{
+ }
+
 TreeOView.prototype.getCellText =
 function tov_getcelltxt (index, colID)
 {
@@ -1301,10 +1331,10 @@ function tov_drop (index, orientation)
     return (row && ("drop" in row) && row.drop(orientation));
 }
 
-TreeOView.prototype.setOutliner =
-function tov_seto (outliner)
+TreeOView.prototype.setTree =
+function tov_seto (tree)
 {
-    this.outliner = outliner;
+    this.tree = tree;
 }
 
 TreeOView.prototype.cycleHeader =

@@ -79,8 +79,8 @@ dump("entering startup\n");
   var element;
   if (isPasswordManager) {
 
-    signonsOutliner = document.getElementById("signonsOutliner");
-    rejectsOutliner = document.getElementById("rejectsOutliner");
+    signonsTree = document.getElementById("signonsTree");
+    rejectsTree = document.getElementById("rejectsTree");
 
     // set initial password-manager tab
     element = document.getElementById("signonsTab");
@@ -100,8 +100,8 @@ dump("entering startup\n");
 
   } else {
 
-    nopreviewsOutliner = document.getElementById("nopreviewsOutliner");
-    nocapturesOutliner = document.getElementById("nocapturesOutliner");
+    nopreviewsTree = document.getElementById("nopreviewsTree");
+    nocapturesTree = document.getElementById("nocapturesTree");
 
     // change title on window
     var wind = document.getElementById("signonviewer");
@@ -125,9 +125,12 @@ dump("entering startup\n");
 
 /*** =================== SAVED SIGNONS CODE =================== ***/
 
-var signonsOutlinerView = {
+var signonsTreeView = {
   rowCount : 0,
-  setOutliner : function(outliner){},
+  setTree : function(tree){},
+  getImageSrc : function(row,column) {},
+  getProgressMode : function(row,column) {},
+  getCellValue : function(row,column) {},
   getCellText : function(row,column){
     var rv="";
     if (column=="siteCol") {
@@ -145,7 +148,7 @@ var signonsOutlinerView = {
   getColumnProperties : function(column,columnElement,prop){},
   getCellProperties : function(row,prop){}
  };
-var signonsOutliner;
+var signonsTree;
 
 function Signon(number, host, user, rawuser) {
   this.number = number;
@@ -198,10 +201,10 @@ function LoadSignons() {
 
     signons[count] = new Signon(count++, host, user, rawuser);
   }
-  signonsOutlinerView.rowCount = signons.length;
+  signonsTreeView.rowCount = signons.length;
 
   // sort and display the table
-  signonsOutliner.outlinerBoxObject.view = signonsOutlinerView;
+  signonsTree.treeBoxObject.view = signonsTreeView;
   SignonColumnSort('host');
 
   // disable "remove all signons" button if there are no signons
@@ -212,20 +215,20 @@ function LoadSignons() {
 }
 
 function SignonSelected() {
-  var selections = GetOutlinerSelections(signonsOutliner);
+  var selections = GetTreeSelections(signonsTree);
   if (selections.length) {
     document.getElementById("removeSignon").removeAttribute("disabled");
   }
 }
 
 function DeleteSignon() {
-  DeleteSelectedItemFromOutliner(signonsOutliner, signonsOutlinerView,
+  DeleteSelectedItemFromTree(signonsTree, signonsTreeView,
                                  signons, deletedSignons,
                                  "removeSignon", "removeAllSignons");
 }
 
 function DeleteAllSignons() {
-  DeleteAllFromOutliner(signonsOutliner, signonsOutlinerView,
+  DeleteAllFromTree(signonsTree, signonsTreeView,
                         signons, deletedSignons,
                         "removeSignon", "removeAllSignons");
 }
@@ -241,16 +244,19 @@ var lastSignonSortAscending = false;
 
 function SignonColumnSort(column) {
   lastSignonSortAscending =
-    SortOutliner(signonsOutliner, signonsOutlinerView, signons,
+    SortTree(signonsTree, signonsTreeView, signons,
                  column, lastSignonSortColumn, lastSignonSortAscending);
   lastSignonSortColumn = column;
 }
 
 /*** =================== REJECTED SIGNONS CODE =================== ***/
 
-var rejectsOutlinerView = {
+var rejectsTreeView = {
   rowCount : 0,
-  setOutliner : function(outliner){},
+  setTree : function(tree){},
+  getImageSrc : function(row,column) {},
+  getProgressMode : function(row,column) {},
+  getCellValue : function(row,column) {},
   getCellText : function(row,column){
     var rv="";
     if (column=="rejectCol") {
@@ -266,7 +272,7 @@ var rejectsOutlinerView = {
   getColumnProperties : function(column,columnElement,prop){},
   getCellProperties : function(row,prop){}
  };
-var rejectsOutliner;
+var rejectsTree;
 
 function Reject(number, host) {
   this.number = number;
@@ -282,10 +288,10 @@ function LoadRejects() {
     var host = nextReject.host;
     rejects[count] = new Reject(count++, host);
   }
-  rejectsOutlinerView.rowCount = rejects.length;
+  rejectsTreeView.rowCount = rejects.length;
 
   // sort and display the table
-  rejectsOutliner.outlinerBoxObject.view = rejectsOutlinerView;
+  rejectsTree.treeBoxObject.view = rejectsTreeView;
   RejectColumnSort('host');
 
   if (rejects.length == 0) {
@@ -294,20 +300,20 @@ function LoadRejects() {
 }
 
 function RejectSelected() {
-  var selections = GetOutlinerSelections(rejectsOutliner);
+  var selections = GetTreeSelections(rejectsTree);
   if (selections.length) {
     document.getElementById("removeReject").removeAttribute("disabled");
   }
 }
 
 function DeleteReject() {
-  DeleteSelectedItemFromOutliner(rejectsOutliner, rejectsOutlinerView,
+  DeleteSelectedItemFromTree(rejectsTree, rejectsTreeView,
                                  rejects, deletedRejects,
                                  "removeReject", "removeAllRejects");
 }
 
 function DeleteAllRejects() {
-  DeleteAllFromOutliner(rejectsOutliner, rejectsOutlinerView,
+  DeleteAllFromTree(rejectsTree, rejectsTreeView,
                         rejects, deletedRejects,
                         "removeReject", "removeAllRejects");
 }
@@ -323,16 +329,19 @@ var lastRejectSortAscending = false;
 
 function RejectColumnSort(column) {
   lastRejectSortAscending =
-    SortOutliner(rejectsOutliner, rejectsOutlinerView, rejects,
+    SortTree(rejectsTree, rejectsTreeView, rejects,
                  column, lastRejectSortColumn, lastRejectSortAscending);
   lastRejectSortColumn = column;
 }
 
 /*** =================== NO PREVIEW FORMS CODE =================== ***/
 
-var nopreviewsOutlinerView = {
+var nopreviewsTreeView = {
   rowCount : 0,
-  setOutliner : function(outliner){},
+  setTree : function(tree){},
+  getImageSrc : function(row,column) {},
+  getProgressMode : function(row,column) {},
+  getCellValue : function(row,column) {},
   getCellText : function(row,column){
     var rv="";
     if (column=="nopreviewCol") {
@@ -348,7 +357,7 @@ var nopreviewsOutlinerView = {
   getColumnProperties : function(column,columnElement,prop){},
   getCellProperties : function(row,prop){}
  };
-var nopreviewsOutliner;
+var nopreviewsTree;
 
 function Nopreview(number, host) {
   this.number = number;
@@ -366,10 +375,10 @@ function LoadNopreview() {
     var host = TrimString(list[i]);
     nopreviews[count] = new Nopreview(count++, host);
   }
-  nopreviewsOutlinerView.rowCount = nopreviews.length;
+  nopreviewsTreeView.rowCount = nopreviews.length;
 
   // sort and display the table
-  nopreviewsOutliner.outlinerBoxObject.view = nopreviewsOutlinerView;
+  nopreviewsTree.treeBoxObject.view = nopreviewsTreeView;
   NopreviewColumnSort('host');
 
   if (nopreviews.length == 0) {
@@ -378,20 +387,20 @@ function LoadNopreview() {
 }
 
 function NopreviewSelected() {
-  var selections = GetOutlinerSelections(nopreviewsOutliner);
+  var selections = GetTreeSelections(nopreviewsTree);
   if (selections.length) {
     document.getElementById("removeNopreview").removeAttribute("disabled");
   }
 }
 
 function DeleteNopreview() {
-  DeleteSelectedItemFromOutliner(nopreviewsOutliner, nopreviewsOutlinerView,
+  DeleteSelectedItemFromTree(nopreviewsTree, nopreviewsTreeView,
                                  nopreviews, deletedNopreviews,
                                  "removeNopreview", "removeAllNopreviews");
 }
 
 function DeleteAllNopreviews() {
-  DeleteAllFromOutliner(nopreviewsOutliner, nopreviewsOutlinerView,
+  DeleteAllFromTree(nopreviewsTree, nopreviewsTreeView,
                         nopreviews, deletedNopreviews,
                         "removeNopreview", "removeAllNopreviews");
 }
@@ -407,7 +416,7 @@ var lastNopreviewSortAscending = false;
 
 function NopreviewColumnSort(column) {
   lastNopreviewSortAscending =
-    SortOutliner(nopreviewsOutliner, nopreviewsOutlinerView, nopreviews,
+    SortTree(nopreviewsTree, nopreviewsTreeView, nopreviews,
                  column, lastNopreviewSortColumn, lastNopreviewSortAscending);
   lastNopreviewSortColumn = column;
 }
@@ -415,9 +424,12 @@ function NopreviewColumnSort(column) {
 /*** =================== NO CAPTURE FORMS CODE =================== ***/
 
 
-var nocapturesOutlinerView = {
+var nocapturesTreeView = {
   rowCount : 0,
-  setOutliner : function(outliner){},
+  setTree : function(tree){},
+  getImageSrc : function(row,column) {},
+  getProgressMode : function(row,column) {},
+  getCellValue : function(row,column) {},
   getCellText : function(row,column){
     var rv="";
     if (column=="nocaptureCol") {
@@ -433,7 +445,7 @@ var nocapturesOutlinerView = {
   getColumnProperties : function(column,columnElement,prop){},
   getCellProperties : function(row,prop){}
  };
-var nocapturesOutliner;
+var nocapturesTree;
 
 function Nocapture(number, host) {
   this.number = number;
@@ -451,10 +463,10 @@ function LoadNocapture() {
     var host = TrimString(list[i]);
     nocaptures[count] = new Nocapture(count++, host);
   }
-  nocapturesOutlinerView.rowCount = nocaptures.length;
+  nocapturesTreeView.rowCount = nocaptures.length;
 
   // sort and display the table
-  nocapturesOutliner.outlinerBoxObject.view = nocapturesOutlinerView;
+  nocapturesTree.treeBoxObject.view = nocapturesTreeView;
   NocaptureColumnSort('host');
 
   if (nocaptures.length == 0) {
@@ -463,20 +475,20 @@ function LoadNocapture() {
 }
 
 function NocaptureSelected() {
-  var selections = GetOutlinerSelections(nocapturesOutliner);
+  var selections = GetTreeSelections(nocapturesTree);
   if (selections.length) {
     document.getElementById("removeNocapture").removeAttribute("disabled");
   }
 }
 
 function DeleteNocapture() {
-  DeleteSelectedItemFromOutliner(nocapturesOutliner, nocapturesOutlinerView,
+  DeleteSelectedItemFromTree(nocapturesTree, nocapturesTreeView,
                                  nocaptures, deletedNocaptures,
                                  "removeNocapture", "removeAllNocaptures");
 }
 
 function DeleteAllNocaptures() {
-  DeleteAllFromOutliner(nocapturesOutliner, nocapturesOutlinerView,
+  DeleteAllFromTree(nocapturesTree, nocapturesTreeView,
                         nocaptures, deletedNocaptures,
                         "removeNocapture", "removeAllNocaptures");
 }
@@ -492,7 +504,7 @@ var lastNocaptureSortAscending = false;
 
 function NocaptureColumnSort(column) {
   lastNocaptureSortAscending =
-    SortOutliner(nocapturesOutliner, nocapturesOutlinerView, nocaptures,
+    SortTree(nocapturesTree, nocapturesTreeView, nocaptures,
                  column, lastNocaptureSortColumn, lastNocaptureSortAscending);
   lastNocaptureSortColumn = column;
 }

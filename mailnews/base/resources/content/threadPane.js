@@ -31,23 +31,23 @@ function ThreadPaneOnClick(event)
     // so all we need to worry about here is double clicks
     // and column header.
     //
-    // we get in here for clicks on the "outlinercol" (headers)
+    // we get in here for clicks on the "treecol" (headers)
     // and the "scrollbarbutton" (scrollbar buttons)
     // we don't want those events to cause a "double click"
 
     var t = event.originalTarget;
 
-    if (t.localName == "outlinercol") {
+    if (t.localName == "treecol") {
        HandleColumnClick(t.id);
     }
-    else if (event.detail == 2 && t.localName == "outlinerchildren") {
+    else if (event.detail == 2 && t.localName == "treechildren") {
        var row = new Object;
        var colID = new Object;
        var childElt = new Object;
 
-       var outliner = GetThreadOutliner();
+       var tree = GetThreadTree();
        // figure out what cell the click was in
-       outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).getCellAt(event.clientX, event.clientY, row, colID, childElt);
+       tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
        if (row.value == -1)
          return;
 
@@ -59,7 +59,7 @@ function ThreadPaneOnClick(event)
          ThreadPaneDoubleClick();
          // double clicking should not toggle the open / close state of the 
          // thread.  this will happen if we don't prevent the event from
-         // bubbling to the default handler in outliner.xml
+         // bubbling to the default handler in tree.xml
 	 event.preventBubble();
        }
     }
@@ -272,7 +272,7 @@ function UpdateSortIndicators(sortType, sortOrder)
       // except the one we are sorted by
       var currCol = sortedColumn.parentNode.firstChild;
       while (currCol) {
-        if (currCol != sortedColumn && currCol.localName == "outlinercol")
+        if (currCol != sortedColumn && currCol.localName == "treecol")
           currCol.removeAttribute("sortDirection");
         currCol = currCol.nextSibling;
       }
@@ -286,11 +286,11 @@ function IsSpecialFolderSelected(flags)
   return IsSpecialFolder(selectedFolder, flags);
 }
 
-function GetThreadOutliner()
+function GetThreadTree()
 {
-  if (gThreadOutliner) return gThreadOutliner;
-	gThreadOutliner = document.getElementById('threadOutliner');
-	return gThreadOutliner;
+  if (gThreadTree) return gThreadTree;
+	gThreadTree = document.getElementById('threadTree');
+	return gThreadTree;
 }
 
 function GetThreadPaneFolder()
@@ -303,36 +303,36 @@ function GetThreadPaneFolder()
   }
 }
 
-function EnsureRowInThreadOutlinerIsVisible(index)
+function EnsureRowInThreadTreeIsVisible(index)
 {
   if (index < 0)
     return;
 
-  var outliner = GetThreadOutliner();
-  outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).ensureRowIsVisible(index); 
+  var tree = GetThreadTree();
+  tree.treeBoxObject.ensureRowIsVisible(index); 
 }
 
 function ThreadPaneOnLoad()
 {
-  var outliner = GetThreadOutliner();
+  var tree = GetThreadTree();
 
-  outliner.addEventListener("click",ThreadPaneOnClick,true);
+  tree.addEventListener("click",ThreadPaneOnClick,true);
 
   // The mousedown event listener below should only be added in the thread
   // pane of the mailnews 3pane window, not in the advanced search window.
-  if(outliner.parentNode.id == "searchResultListBox")
+  if(tree.parentNode.id == "searchResultListBox")
     return;
 
-  outliner.addEventListener("mousedown",OutlinerOnMouseDown,true);
+  tree.addEventListener("mousedown",TreeOnMouseDown,true);
 }
 
 function ThreadPaneSelectionChanged()
 {
-  var outlinerBoxObj = GetThreadOutliner().outlinerBoxObject;
-  var outlinerSelection = outlinerBoxObj.selection;
+  var treeBoxObj = GetThreadTree().treeBoxObject;
+  var treeSelection = treeBoxObj.selection;
 
-  if (outlinerSelection.isSelected(outlinerSelection.currentIndex))
-    outlinerBoxObj.view.selectionChanged();
+  if (treeSelection.isSelected(treeSelection.currentIndex))
+    treeBoxObj.view.selectionChanged();
 }
 
 addEventListener("load",ThreadPaneOnLoad,true);

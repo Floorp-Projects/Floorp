@@ -151,12 +151,13 @@ function Recipients2CompFields(msgCompFields)
 
 function CompFields2Recipients(msgCompFields, msgType)
 {
-  if (msgCompFields)
-  {
-      var treeChildren = document.getElementById('addressWidgetBody');
-      var newTreeChildrenNode = treeChildren.cloneNode(false);
-      var templateNode = treeChildren.firstChild;
-
+  if (msgCompFields) {
+    var listbox = document.getElementById('addressingWidget');
+    var newListBoxNode = listbox.cloneNode(false);
+    var listBoxColsClone = listbox.firstChild.cloneNode(true);
+    newListBoxNode.appendChild(listBoxColsClone);
+    var templateNode = listbox.getElementsByTagName("listitem")[0];
+    
     top.MAX_RECIPIENTS = 0;
     var msgReplyTo = msgCompFields.replyTo;
     var msgTo = msgCompFields.to;
@@ -166,28 +167,32 @@ function CompFields2Recipients(msgCompFields, msgType)
     var msgNewsgroups = msgCompFields.newsgroups;
     var msgFollowupTo = msgCompFields.followupTo;
     if(msgReplyTo)
-      awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgReplyTo, false), "addr_reply", newTreeChildrenNode, templateNode);
+      awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgReplyTo, false), 
+                                  "addr_reply", newListBoxNode, templateNode);
     if(msgTo)
-      awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgTo, false), "addr_to", newTreeChildrenNode, templateNode);
+      awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgTo, false), 
+                                  "addr_to", newListBoxNode, templateNode);
     if(msgCC)
-      awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCC, false), "addr_cc", newTreeChildrenNode, templateNode);
+      awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCC, false),
+                                  "addr_cc", newListBoxNode, templateNode);
     if(msgBCC)
-      awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgBCC, false), "addr_bcc", newTreeChildrenNode, templateNode);
+      awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgBCC, false),
+                                  "addr_bcc", newListBoxNode, templateNode);
     if(msgRandomHeaders)
-      awSetInputAndPopup(msgRandomHeaders, "addr_other", newTreeChildrenNode, templateNode);
+      awSetInputAndPopup(msgRandomHeaders, "addr_other", newListBoxNode, templateNode);
     if(msgNewsgroups)
-      awSetInputAndPopup(msgNewsgroups, "addr_newsgroups", newTreeChildrenNode, templateNode);
+      awSetInputAndPopup(msgNewsgroups, "addr_newsgroups", newListBoxNode, templateNode);
     if(msgFollowupTo)
-      awSetInputAndPopup(msgFollowupTo, "addr_followup", newTreeChildrenNode, templateNode);
+      awSetInputAndPopup(msgFollowupTo, "addr_followup", newListBoxNode, templateNode);
 
     //If it's a new message, we need to add an extrat empty recipient.
     if (!msgTo && !msgNewsgroups)
-      _awSetInputAndPopup("", "addr_to", newTreeChildrenNode, templateNode);
-      // dump("replacing child in comp fields 2 recips \n");
-      var parent = treeChildren.parentNode;
-      parent.replaceChild(newTreeChildrenNode, treeChildren);
-      awFitDummyRows(2);
-        setTimeout("awFinishCopyNodes();", 0);
+      _awSetInputAndPopup("", "addr_to", newListBoxNode, templateNode);
+    // dump("replacing child in comp fields 2 recips \n");
+    var parent = listbox.parentNode;
+    parent.replaceChild(newListBoxNode, listbox);
+    awFitDummyRows(2);
+    setTimeout("awFinishCopyNodes();", 0);
   }
 }
 
@@ -388,12 +393,14 @@ function awDeleteRow(rowToDelete, cols)
   awTestRowSequence();
 }
 
-function awClickEmptySpace(targ, setFocus)
+function awClickEmptySpace(target, setFocus)
 {
-  if (targ.localName != 'treechildren')
+  if (target == null ||
+      (target.localName != "listboxbody" &&
+      target.localName != "listcell" &&
+      target.localName != "listitem"))
     return;
 
-  // dump("awClickEmptySpace\n");
   var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
 
   if ( lastInput && lastInput.value )
@@ -463,63 +470,62 @@ function awInputChanged(inputElement)
 
 function awAppendNewRow(setFocus)
 {
-  var body = document.getElementById('addressWidgetBody');
-  var treeitem1 = awGetTreeItem(1);
+  var listbox = document.getElementById('addressingWidget');
+  var listitem1 = awGetListItem(1);
 
-  if ( body && treeitem1 )
+  if ( listbox && listitem1 )
   {
-      var lastRecipientType = awGetPopupElement(top.MAX_RECIPIENTS).selectedItem.getAttribute("value");
+    var lastRecipientType = awGetPopupElement(top.MAX_RECIPIENTS).selectedItem.getAttribute("value");
 
     var nextDummy = awGetNextDummyRow();
-    if (nextDummy)  {
-      body.removeChild(nextDummy);
-      nextDummy = awGetNextDummyRow();
-    }
-    var newNode = awCopyNode(treeitem1, body, nextDummy);
+    var newNode = listitem1.cloneNode(true);
+    if (nextDummy)
+      listbox.replaceChild(newNode, nextDummy);
+    else
+      listbox.appendChild(newNode);
 
     top.MAX_RECIPIENTS++;
 
-        var input = newNode.getElementsByTagName(awInputElementName());
-        if ( input && input.length == 1 )
-        {
-          input[0].setAttribute("value", "");
-          input[0].setAttribute("id", "addressCol2#" + top.MAX_RECIPIENTS);
+    var input = newNode.getElementsByTagName(awInputElementName());
+    if ( input && input.length == 1 )
+    {
+      input[0].setAttribute("value", "");
+      input[0].setAttribute("id", "addressCol2#" + top.MAX_RECIPIENTS);
+    
+      //this copies the autocomplete sessions list from recipient#1 
+      input[0].syncSessions(document.getElementById('addressCol2#1'));
 
-          //this copies the autocomplete sessions list from recipient#1 
-          input[0].syncSessions(document.getElementById('addressCol2#1'));
-
-	  // also clone the showCommentColumn setting
-	  //
-	  input[0].showCommentColumn = 
+  	  // also clone the showCommentColumn setting
+  	  //
+  	  input[0].showCommentColumn = 
 	      document.getElementById("addressCol2#1").showCommentColumn;
 
-          // We always clone the first row.  The problem is that the first row
-          // could be focused.  When we clone that row, we end up with a cloned
-          // XUL textbox that has a focused attribute set.  Therefore we think
-          // we're focused and don't properly refocus.  The best solution to this
-          // would be to clone a template row that didn't really have any presentation,
-          // rather than using the real visible first row of the tree.
-          //
-          // For now we'll just put in a hack that ensures the focused attribute
-          // is never copied when the node is cloned.
-          if (input[0].getAttribute('focused') != '')
-            input[0].removeAttribute('focused');
-        }
-        var select = newNode.getElementsByTagName(awSelectElementName());
-        if ( select && select.length == 1 )
-        {
-            select[0].selectedItem = select[0].childNodes[0].childNodes[awGetSelectItemIndex(lastRecipientType)];
-          select[0].setAttribute("id", "addressCol1#" + top.MAX_RECIPIENTS);
-          if (input)
-            _awSetAutoComplete(select[0], input[0]);
-      }
+      // We always clone the first row.  The problem is that the first row
+      // could be focused.  When we clone that row, we end up with a cloned
+      // XUL textbox that has a focused attribute set.  Therefore we think
+      // we're focused and don't properly refocus.  The best solution to this
+      // would be to clone a template row that didn't really have any presentation,
+      // rather than using the real visible first row of the listbox.
+      //
+      // For now we'll just put in a hack that ensures the focused attribute
+      // is never copied when the node is cloned.
+      if (input[0].getAttribute('focused') != '')
+        input[0].removeAttribute('focused');
+    }
+    var select = newNode.getElementsByTagName(awSelectElementName());
+    if ( select && select.length == 1 )
+    {
+      select[0].selectedItem = select[0].childNodes[0].childNodes[awGetSelectItemIndex(lastRecipientType)];
+      select[0].setAttribute("id", "addressCol1#" + top.MAX_RECIPIENTS);
+      if (input)
+        _awSetAutoComplete(select[0], input[0]);
+    }
 
     // focus on new input widget
     if (setFocus && input[0] )
       awSetFocus(top.MAX_RECIPIENTS, input[0]);
   }
 }
-
 
 // functions for accessing the elements in the addressing widget
 
@@ -539,49 +545,31 @@ function awGetElementByCol(row, col)
   return document.getElementById(colID);
 }
 
-function awGetTreeRow(row)
+function awGetListItem(row)
 {
-  var body = document.getElementById('addressWidgetBody');
+  var listbox = document.getElementById('addressingWidget');
 
-  if ( body && row > 0)
+  if ( listbox && row > 0)
   {
-    var treerows = body.getElementsByTagName('treerow');
-    if ( treerows && treerows.length >= row )
-      return treerows[row-1];
-  }
-  return 0;
-}
-
-function awGetTreeItem(row)
-{
-  var body = document.getElementById('addressWidgetBody');
-
-  if ( body && row > 0)
-  {
-    var treeitems = body.getElementsByTagName('treeitem');
-    if ( treeitems && treeitems.length >= row )
-      return treeitems[row-1];
+    var listitems = listbox.getElementsByTagName('listitem');
+    if ( listitems && listitems.length >= row )
+      return listitems[row-1];
   }
   return 0;
 }
 
 function awGetRowByInputElement(inputElement)
 {
-  if ( inputElement )
-  {
-    var treerow;
-    var inputElementTreerow = inputElement.parentNode.parentNode;
-
-    if ( inputElementTreerow )
-    {
-      for ( var row = 1;  (treerow = awGetTreeRow(row)); row++ )
-      {
-        if ( treerow == inputElementTreerow )
-          return row;
-      }
+  var row = 0;
+  if (inputElement) {
+    var listitem = inputElement.parentNode.parentNode;
+    while (listitem) {
+      if (listitem.localName == "listitem")
+        ++row;
+      listitem = listitem.previousSibling;
     }
   }
-  return 0;
+  return row;
 }
 
 
@@ -602,9 +590,9 @@ function awCopyNode(node, parentNode, beforeNode)
 
 function awRemoveRow(row, cols)
 {
-  var body = document.getElementById('addressWidgetBody');
+  var listbox = document.getElementById('addressingWidget');
 
-  awRemoveNodeAndChildren(body, awGetTreeItem(row));
+  awRemoveNodeAndChildren(listbox, awGetListItem(row));
   awFitDummyRows(cols);
 
   top.MAX_RECIPIENTS --;
@@ -612,17 +600,7 @@ function awRemoveRow(row, cols)
 
 function awRemoveNodeAndChildren(parent, nodeToRemove)
 {
-  // children of nodes
-  var childNode;
-
-  while ( nodeToRemove.childNodes && nodeToRemove.childNodes.length )
-  {
-    childNode = nodeToRemove.childNodes[0];
-
-    awRemoveNodeAndChildren(nodeToRemove, childNode);
-  }
-  
-  parent.removeChild(nodeToRemove);
+  nodeToRemove.parentNode.removeChild(nodeToRemove);
 }
 
 function awSetFocus(row, inputElement)
@@ -635,28 +613,28 @@ function awSetFocus(row, inputElement)
 
 function _awSetFocus()
 {
-  var tree = document.getElementById('addressingWidgetTree');
-  try
-  {
-    var theNewRow = awGetTreeRow(top.awRow);
+  var listbox = document.getElementById('addressingWidget');
+  //try
+  //{
+    var theNewRow = awGetListItem(top.awRow);
     //temporary patch for bug 26344
     awFinishCopyNode(theNewRow);
 
     //Warning: firstVisibleRow is zero base but top.awRow is one base!
-    var firstVisibleRow = tree.getIndexOfFirstVisibleRow();
-    var numOfVisibleRows = tree.getNumberOfVisibleRows();
+    var firstVisibleRow = listbox.getIndexOfFirstVisibleRow();
+    var numOfVisibleRows = listbox.getNumberOfVisibleRows();
 
     //Do we need to scroll in order to see the selected row?
     if (top.awRow <= firstVisibleRow)
-      tree.scrollToIndex(top.awRow - 1);
+      listbox.scrollToIndex(top.awRow - 1);
     else
       if (top.awRow - 1 >= (firstVisibleRow + numOfVisibleRows))
-        tree.scrollToIndex(top.awRow - numOfVisibleRows);
+        listbox.scrollToIndex(top.awRow - numOfVisibleRows);
 
     top.awInputElement.focus();
     // stop supressing command updating and update the toolbar, since focus has changed
     SuppressComposeCommandUpdating(false);
-  }
+  /*}
   catch(ex)
   {
     top.awFocusRetry ++;
@@ -667,7 +645,7 @@ function _awSetFocus()
     }
     else
       dump("_awSetFocus failed, forget about it!\n");
-  }
+  }*/
 }
 
 
@@ -681,13 +659,13 @@ function awFinishCopyNode(node)
 
 function awFinishCopyNodes()
 {
-  var treeChildren = document.getElementById('addressWidgetBody');
-  awFinishCopyNode(treeChildren);
+  var listbox = document.getElementById('addressingWidget');
+  awFinishCopyNode(listbox);
 }
 
 function awTabFromRecipient(element, event)
 {
-  //If we are le last element in the tree, we don't want to create a new row.
+  //If we are le last element in the listbox, we don't want to create a new row.
   if (element == awGetInputElement(top.MAX_RECIPIENTS))
     top.doNotCreateANewRow = true;
 }
@@ -697,7 +675,7 @@ function awGetNumberOfRecipients()
     return top.MAX_RECIPIENTS;
 }
 
-function DragOverTree(event)
+function DragOverAddressingWidget(event)
 {
   var validFlavor = false;
   var dragSession = dragSession = gDragService.getCurrentSession();
@@ -705,17 +683,11 @@ function DragOverTree(event)
   if (dragSession.isDataFlavorSupported("text/x-moz-address")) 
     validFlavor = true;
 
-  // touch the attribute on the rowgroup to trigger the repaint with the drop feedback.
   if (validFlavor)
-  {
-    //XXX this is really slow and likes to refresh N times per second.
-    var rowGroup = event.target.parentNode.parentNode;
-    rowGroup.setAttribute ( "dd-triggerrepaint", 0 );
     dragSession.canDrop = true;
-  }
 }
 
-function DropOnAddressingWidgetTree(event)
+function DropOnAddressingWidget(event)
 {
   var dragSession = gDragService.getCurrentSession();
   
@@ -745,10 +717,11 @@ function DropOnAddressingWidgetTree(event)
 
 function DropRecipient(target, recipient)
 {
-    awClickEmptySpace(target, true);    //that will automatically set the focus on a new available row, and make sure is visible
-    var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
-    lastInput.value = recipient;
-    awAppendNewRow(true);
+  // that will automatically set the focus on a new available row, and make sure is visible
+  awClickEmptySpace(null, true);
+  var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
+  lastInput.value = recipient;
+  awAppendNewRow(true);
 }
 
 function _awSetAutoComplete(selectElem, inputElem)
@@ -837,22 +810,22 @@ function awRecipientKeyDown(event, element, cols)
     */
     if (!element.value)
       awDeleteHit(element, cols);
-    event.preventBubble();  //We need to stop the event else the tree will receive it and the function
+    event.preventBubble();  //We need to stop the event else the listbox will receive it and the function
                             //awKeyDown will be executed!
     break;
   }
 }
 
-function awKeyDown(event, treeElement)
+function awKeyDown(event, listboxElement)
 {
   switch(event.keyCode) {
   case 46:
   case 8:
-    /* Warning, the treeElement.selectedItems will change everytime we delete a row */
-    var selItems = treeElement.selectedItems;
-    var length = treeElement.selectedItems.length;
+    /* Warning, the listboxElement.selectedItems will change everytime we delete a row */
+    var selItems = listboxElement.selectedItems;
+    var length = listboxElement.selectedItems.length;
     for (var i = 1; i <= length; i++) {
-      var inputs = treeElement.selectedItems[0].getElementsByTagName(awInputElementName());
+      var inputs = listboxElement.selectedItems[0].getElementsByTagName(awInputElementName());
       if (inputs && inputs.length == 1)
         awDeleteHit(inputs[0], 2);
     }
@@ -873,22 +846,22 @@ function awFitDummyRows(cols)
 
 function awCreateOrRemoveDummyRows(cols)
 {
-  var body = document.getElementById("addressWidgetBody");
-  var bodyHeight = body.boxObject.height;
+  var listbox = document.getElementById("addressingWidget");
+  var listboxHeight = listbox.boxObject.height;
 
   // remove rows to remove scrollbar
-  var kids = body.childNodes;
-  for (var i = kids.length-1; gAWContentHeight > bodyHeight && i >= 0; --i) {
+  var kids = listbox.childNodes;
+  for (var i = kids.length-1; gAWContentHeight > listboxHeight && i >= 0; --i) {
     if (kids[i].hasAttribute("_isDummyRow")) {
       gAWContentHeight -= gAWRowHeight;
-      body.removeChild(kids[i]);
+      listbox.removeChild(kids[i]);
     }
   }
 
   // add rows to fill space
   if (gAWRowHeight) {
-    while (gAWContentHeight+gAWRowHeight < bodyHeight) {
-      awCreateDummyItem(body, cols);
+    while (gAWContentHeight+gAWRowHeight < listboxHeight) {
+      awCreateDummyItem(listbox, cols);
       gAWContentHeight += gAWRowHeight;
     }
   }
@@ -896,35 +869,30 @@ function awCreateOrRemoveDummyRows(cols)
 
 function awCalcContentHeight()
 {
-  var body = document.getElementById("addressWidgetBody");
-  var kids = body.getElementsByTagName("treerow");
+  var listbox = document.getElementById("addressingWidget");
+  var items = listbox.getElementsByTagName("listitem");
 
   gAWContentHeight = 0;
-  if (kids.length > 0) {
-    // all rows are forced to a uniform height in xul trees, so
-    // find the first tree row with a boxObject and use it as precedent
+  if (items.length > 0) {
+    // all rows are forced to a uniform height in xul listboxes, so
+    // find the first listitem with a boxObject and use it as precedent
     var i = 0;
     do {
-      gAWRowHeight = kids[i].boxObject.height;
+      gAWRowHeight = items[i].boxObject.height;
       ++i;
-    } while (i < kids.length && !gAWRowHeight);
-    gAWContentHeight = gAWRowHeight*kids.length;
+    } while (i < items.length && !gAWRowHeight);
+    gAWContentHeight = gAWRowHeight*items.length;
   }
 }
 
 function awCreateDummyItem(aParent, cols)
 {
-  var titem = document.createElement("treeitem");
+  var titem = document.createElement("listitem");
   titem.setAttribute("_isDummyRow", "true");
+  titem.setAttribute("class", "dummy-row");
 
-  var trow = document.createElement("treerow");
-  trow.setAttribute("class", "dummy-row");
-  trow.setAttribute("onclick", "awDummyRow_onclick()");
-  titem.appendChild(trow);
-
-  for (var i = 0; i < cols; i++) {
-    awCreateDummyCell(trow);
-  }
+  awCreateDummyCell(titem);
+  awCreateDummyCell(titem);
 
   if (aParent)
     aParent.appendChild(titem);
@@ -934,24 +902,19 @@ function awCreateDummyItem(aParent, cols)
 
 function awCreateDummyCell(aParent)
 {
-  var cell = document.createElement("treecell");
-  cell.setAttribute("class", "treecell-addressingWidget dummy-row-cell");
+  var cell = document.createElement("listcell");
+  cell.setAttribute("class", "addressingWidgetCell dummy-row-cell");
   if (aParent)
     aParent.appendChild(cell);
 
   return cell;
 }
 
-function awDummyRow_onclick() {
-  // pass click event back to handler
-  awClickEmptySpace(document.getElementById("addressWidgetBody"), true);
-}
-
 function awGetNextDummyRow()
 {
   // gets the next row from the top down
-  var body = document.getElementById("addressWidgetBody");
-  var kids = body.childNodes;
+  var listbox = document.getElementById("addressingWidget");
+  var kids = listbox.childNodes;
   for (var i = 0; i < kids.length; ++i) {
     if (kids[i].hasAttribute("_isDummyRow"))
       return kids[i];

@@ -1,3 +1,4 @@
+#!nmake
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -17,26 +18,17 @@
 # Rights Reserved.
 #
 # Contributor(s): 
-#
 
-DEPTH		= ../../../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH=..\..\..\..\..\..
 
-include $(DEPTH)/config/autoconf.mk
-
-MODULE		= layout
-XPIDL_MODULE	= layout_xul_outliner
-
-XPIDLSRCS=      nsIOutlinerView.idl               \
-				nsIOutlinerSelection.idl    \
-                nsIOutlinerBoxObject.idl \
-				nsIOutlinerColFrame.idl \
-                nsIOutlinerContentView.idl \
+XPIDLSRCS=      .\nsITreeView.idl    \
+                .\nsITreeSelection.idl               \
+                .\nsITreeBoxObject.idl \
+                .\nsITreeColFrame.idl \
+                .\nsITreeContentView.idl \
                 $(NULL)
 
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
+MODULE=layout_xul
+XPIDL_MODULE=layout_xul_tree
 
-include $(topsrcdir)/config/rules.mk
-
+include <$(DEPTH)\config\rules.mak>

@@ -19,7 +19,7 @@ Rights Reserved.
 
 Contributors:
     dianesun@netscape.com
-    Håkan Waara <hwaara@chello.se>
+    Hkan Waara <hwaara@chello.se>
 
 -->
 
@@ -51,13 +51,13 @@ Contributors:
     <keyset id="keyset"/>
     <description class="desc">&MsgSelectDesc.label;</description>
 
-    <outliner id="synchronizeOutliner" flex="1" hidecolumnpicker="true"
+    <tree id="synchronizeTree" flex="1" hidecolumnpicker="true"
               datasources="rdf:msgaccountmanager rdf:mailnewsfolders" ref="msgaccounts:/" flags="dont-build-content"
               onclick="onSynchronizeClick(event);">
       <template>
         <rule>
           <conditions>
-            <outlineritem uri="?container"/>
+            <treeitem uri="?container"/>
             <member container="?container" child="?member"/>
             <triple subject="?member" predicate="http://home.netscape.com/NC-rdf#SupportsOffline" object="true"/>
           </conditions>
@@ -87,23 +87,23 @@ Contributors:
           </bindings>
              
           <action>
-            <outlinerchildren>
-              <outlineritem uri="?member">
-                <outlinerrow>
-                  <outlinercell label="?folderTreeName"
+            <treechildren>
+              <treeitem uri="?member">
+                <treerow>
+                  <treecell label="?folderTreeName"
                                 properties="specialFolder-?specialFolder isServer-?isServer isSecure-?isSecure serverType-?serverType"/>
-                  <outlinercell properties="synchronize-?synchronize isServer-?isServer"/>
-                </outlinerrow>
-              </outlineritem>
-            </outlinerchildren>
+                  <treecell properties="synchronize-?synchronize isServer-?isServer"/>
+                </treerow>
+              </treeitem>
+            </treechildren>
           </action>
         </rule>
       </template>
-      <outlinercols>
-        <outlinercol id="folderNameCol" flex="5" persist="hidden width" label="&MsgSelectItems.label;" primary="true" />
+      <treecols>
+        <treecol id="folderNameCol" flex="5" persist="hidden width" label="&MsgSelectItems.label;" primary="true" />
         <splitter class="tree-splitter"/>		  
-        <outlinercol id="syncCol" flex="1" persist="hidden width" label="&MsgSelectInd.label;"  />
-      </outlinercols>
-    </outliner>
+        <treecol id="syncCol" flex="1" persist="hidden width" label="&MsgSelectInd.label;"  />
+      </treecols>
+    </tree>
 
 </dialog>

@@ -21,7 +21,6 @@
  *   Ben Goodger <ben@netscape.com>
  */
 
-outlinerchildren {
+treechildren {
   cursor: pointer;  
 }
-

@@ -34,11 +34,11 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIOutlinerView.idl"
+#include "nsITreeView.idl"
 #include "nsIX509Cert.idl"
 
 [scriptable, uuid(c727b2f2-1dd1-11b2-95df-f63c15b4cd35)]
-interface nsIASN1Outliner : nsIOutlinerView {
+interface nsIASN1Tree : nsITreeView {
 
   void loadASN1Structure(in nsIASN1Object asn1Object);
 
@@ -48,7 +48,7 @@ interface nsIASN1Outliner : nsIOutlinerView {
 
 %{C++
 
-#define NS_ASN1OUTLINER_CONTRACTID "@mozilla.org/security/nsASN1Outliner;1"
+#define NS_ASN1TREE_CONTRACTID "@mozilla.org/security/nsASN1Tree;1"
 
 %}
 

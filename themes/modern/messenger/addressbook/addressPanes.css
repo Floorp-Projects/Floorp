@@ -44,14 +44,15 @@
 
 /* ::::: directory pane icons ::::: */
 
-.ab-directory-icon {
+treechildren:-moz-tree-image(DirCol) {
+  margin-right: 2px;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/myaddrbk.gif");
 }
 
-.ab-directory-icon[IsMailList="true"] {
+treechildren:-moz-tree-image(DirCol, IsMailList-true) {
   list-style-image: url("chrome://messenger/skin/addressbook/icons/list.gif");
 }
 
-.ab-directory-icon[IsRemote="true"] {
+treechildren:-moz-tree-image(DirCol, IsRemote-true) {
   list-style-image: url("chrome://messenger/skin/addressbook/icons/directory.gif");
 }

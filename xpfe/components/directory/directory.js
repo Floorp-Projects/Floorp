@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Bradley Baetz <bbaetz@student.usyd.edu.au>
+ *   Joe Hewitt <hewitt@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -39,8 +40,6 @@
 /*
    Script for the directory window
 */
-
-
 
 const RDFSERVICE_CONTRACTID     = "@mozilla.org/rdf/rdf-service;1";
 const DRAGSERVICE_CONTRACTID    = "@mozilla.org/widget/dragservice;1";
@@ -63,360 +62,245 @@ const nsIRDFLiteral         = Components.interfaces.nsIRDFLiteral;
 const nsISupportsArray      = Components.interfaces.nsISupportsArray;
 const nsISupportsWString    = Components.interfaces.nsISupportsWString;
 
-
-
 // By the time this runs, The 'HTTPIndex' variable will have been
 // magically set on the global object by the native code.
 
-
-
 function debug(msg)
 {
-    // Uncomment to print out debug info.
-    //dump(msg);
+  // Uncomment to print out debug info.
+  //dump(msg);
 }
-
-
 
 var loadingArc = null;
 var loadingLevel = 0;
 
-var	RDF_observer = new Object;
-
-RDF_observer =
+var	RDF_observer =
 {
-	onAssert   : function(ds, src, prop, target)
-		{
-		    if (prop == loadingArc)
-		    {
-		        if (loadingLevel++ == 0)
-		        {
-                    SetBusyCursor(window, true); 
-		        }
-                debug("Directory: assert: loading level is " + loadingLevel + " for " + src.Value + "\n");
-		    }
-		},
-	onUnassert : function(ds, src, prop, target)
-		{
-		    if (prop == loadingArc)
-		    {
-		        if (loadingLevel > 0)
-		        {
-    		        if (--loadingLevel == 0)
-    		        {
-                        SetBusyCursor(window, false); 
-    		        }
-		        }
-                debug("Directory: unassert: loading level is " + loadingLevel + " for " + src.Value + "\n");
-		    }
-		},
-	onChange   : function(ds, src, prop, old_target, new_target)
-		{
-		},
-	onMove     : function(ds, old_src, new_src, prop, target)
-		{
-		},
-	beginUpdateBatch : function(ds)
-		{
-		},
-	endUpdateBatch   : function(ds)
-		{
+	onAssert: function(ds, src, prop, target)
+	{
+		if (prop == loadingArc) {
+		  if (loadingLevel++ == 0)
+        SetBusyCursor(window, true); 
+      debug("Directory: assert: loading level is " + loadingLevel + " for " + src.Value + "\n");
 		}
-}
+	},
+		
+	onUnassert: function(ds, src, prop, target)
+	{
+		if (prop == loadingArc) {
+		  if (loadingLevel > 0)
+    	  if (--loadingLevel == 0)
+          SetBusyCursor(window, false); 
+      debug("Directory: unassert: loading level is " + loadingLevel + " for " + src.Value + "\n");
+		}
+	},
 
-
+	onChange: function(ds, src, prop, old_target, new_target) { },
+	onMove: function(ds, old_src, new_src, prop, target) { },
+	beginUpdateBatch: function(ds) { },
+	endUpdateBatch: function(ds) { }
+};
 
 function
 SetBusyCursor(window, enable)
 {
-    // Defensive check: setCursor() is only available for
-    // chrome windows. Since one of our frame might be a
-    // non-chrome window, make sure the window we treat has
-    // a setCursor method.
-    if("setCursor" in window)
-    {
-        if(enable == true)
-        {
-            window.setCursor("wait");
-            debug("Directory: cursor=busy\n");
-        }
-        else
-        {
-            window.setCursor("auto");
-            debug("Directory: cursor=notbusy\n");
-        }
+  // Defensive check: setCursor() is only available for
+  // chrome windows. Since one of our frame might be a
+  // non-chrome window, make sure the window we treat has
+  // a setCursor method.
+  if("setCursor" in window) {
+    if(enable == true) {
+      window.setCursor("wait");
+      debug("Directory: cursor=busy\n");
+    } else {
+      window.setCursor("auto");
+      debug("Directory: cursor=notbusy\n");
     }
+  }
 
-    var numFrames = window.frames.length;
-    for(var i = 0; i < numFrames; i++)
-    {
-        SetBusyCursor(window.frames[i], enable);
-    }
+  var numFrames = window.frames.length;
+  for (var i = 0; i < numFrames; i++)
+    SetBusyCursor(window.frames[i], enable);
 }
-
-
 
 // We need this hack because we've completely circumvented the onload() logic.
 function Boot()
 {
-    if (document.getElementById('tree')) {
-        Init();
-    }
-    else {
-        setTimeout("Boot()", 500);
-    }
+  if (document.getElementById('tree'))
+    Init();
+  else
+    setTimeout("Boot()", 500);
 }
-
-
 
 setTimeout("Boot()", 0);
 
-
-
 function Init()
 {
-    debug("directory.js: Init()\n");
+  debug("directory.js: Init()\n");
 
-    var tree = document.getElementById('tree');
+  var tree = document.getElementById('tree');
 
-    // Initialize the tree's base URL to whatever the HTTPIndex is rooted at
-    var baseURI = HTTPIndex.BaseURL;
+  // Initialize the tree's base URL to whatever the HTTPIndex is rooted at
+  var baseURI = HTTPIndex.BaseURL;
 
-    if (baseURI && (baseURI.indexOf("ftp://") == 0))
-    {
-        // fix bug # 37102: if its a FTP directory
-        // ensure it ends with a trailing slash
-    	if (baseURI.substr(baseURI.length - 1) != "/")
-    	{
-        	debug("append traiing slash to FTP directory URL\n");
-        	baseURI += "/";
-        }
-
-		// Lets also enable the loggin window.
-
-		var node = document.getElementById("main-splitter");
-		node.setAttribute("hidden", false);
-
-		node = document.getElementById("logbox");
-		node.setAttribute("hidden", false);
+  if (baseURI && (baseURI.indexOf("ftp://") == 0)) {
+    // fix bug # 37102: if its a FTP directory
+    // ensure it ends with a trailing slash
+    if (baseURI.substr(baseURI.length - 1) != "/") {
+      debug("append traiing slash to FTP directory URL\n");
+      baseURI += "/";
     }
 
-    if (baseURI && (baseURI.indexOf("file://") != 0)) {
-        // Note: DON'T add the HTTPIndex datasource into the tree
-        // for file URLs, only do it for FTP/Gopher/etc URLs; the "rdf:files"
-        // datasources handles file URLs
-        tree.database.AddDataSource(HTTPIndex);
+	  // Lets also enable the loggin window.
+
+	  var node = document.getElementById("main-splitter");
+	  node.setAttribute("hidden", false);
+
+	  node = document.getElementById("logbox");
+	  node.setAttribute("hidden", false);
+  }
+
+  if (baseURI && (baseURI.indexOf("file://") != 0)) {
+    // Note: DON'T add the HTTPIndex datasource into the tree
+    // for file URLs, only do it for FTP/Gopher/etc URLs; the "rdf:files"
+    // datasources handles file URLs
+    tree.database.AddDataSource(HTTPIndex);
+  }
+
+  // Note: set encoding BEFORE setting "ref" (important!)
+  var RDF = Components.classes[RDFSERVICE_CONTRACTID].getService();
+  if (RDF) RDF = RDF.QueryInterface(nsIRDFService);
+  if (RDF) {
+    loadingArc = RDF.GetResource(NC_LOADING, true);
+
+    var httpDS = HTTPIndex.DataSource;
+    if (httpDS) httpDS = httpDS.QueryInterface(nsIHTTPIndex);
+    if (httpDS) {
+      httpDS.encoding = "ISO-8859-1";
+
+      // Use a default character set.
+      if (window._content.defaultCharacterset)
+        httpDS.encoding = window._content.defaultCharacterset;
     }
+  }
 
-    // Note: set encoding BEFORE setting "ref" (important!)
-    var RDF = Components.classes[RDFSERVICE_CONTRACTID].getService();
-    if (RDF)    RDF = RDF.QueryInterface(nsIRDFService);
-    if (RDF)
-    {
-        loadingArc = RDF.GetResource(NC_LOADING, true);
+  // set window title
+  document.title = baseURI;
 
-        var httpDS = HTTPIndex.DataSource;
-        if (httpDS) httpDS = httpDS.QueryInterface(nsIHTTPIndex);
-        if (httpDS)
-        {
-            httpDS.encoding = "ISO-8859-1";
+  tree.database.AddObserver(RDF_observer);
+  debug("Directory: added observer\n");
 
-            // Use a default character set.
-            if (window._content.defaultCharacterset)
-            {
-                httpDS.encoding = window._content.defaultCharacterset;
-            }
-        }
-    }
-
-    // set window title
-    document.title = baseURI;
-
-    tree.database.AddObserver(RDF_observer);
-    debug("Directory: added observer\n");
-
-    // root the tree (do this last)
-    tree.setAttribute("ref", baseURI);
+  // root the tree (do this last)
+  tree.setAttribute("ref", baseURI);
 }
 
 function DoUnload()
 {
 	var tree = document.getElementById("tree");
-	if (tree)
-	{
+	if (tree) {
 		tree.database.RemoveDataSource(HTTPIndex);
 		tree.database.RemoveObserver(RDF_observer);
-	    debug("Directory: removed observer\n");
+    debug("Directory: removed observer\n");
 	}
 }
 
-function OnClick(event, node)
+function OnClick(event)
 {
-    if( event.type == "click" &&
-        ( event.button != 0 || event.detail != 2 || node.nodeName != "treeitem") )
-      return(false);
-    if( event.type == "keypress" && event.keyCode != 13 )
-      return(false);
+  if (event.target.localName != "treechildren")
+    return false;
+  if( event.type == "click" && (event.button != 0 || event.detail != 2))
+    return false;
+  if( event.type == "keypress" && event.keyCode != 13)
+    return false;
 
-    var tree = document.getElementById("tree");
-    if( tree.selectedItems.length == 1 ) {
-        var selectedItem = tree.selectedItems[0];
-        var url = selectedItem.getAttribute("URL");
-
-        window._content.location.href = url;
-        
-        // set window title
-        document.title = url;
-    }
+  var tree = document.getElementById("tree");
+  if (tree.currentIndex >= 0) {
+    var item = tree.contentView.getItemAtIndex(tree.currentIndex);
+    window._content.location.href = item.getAttributeNS(NC_NS, "url");
+  }
 }
 
-function OnMouseOver(event, node)
+function doSort(aTarget)
 {
-    if (node.nodeName != "treeitem")
-        return false;
-    var url = node.getAttribute("URL");
-    window._content.status = url;
-    return true;
-}
-
-function OnMouseOut(event, node)
-{
-    window._content.status = "";
-    return true;
-}
-
-function doSort(sortColName)
-{
-	var node = document.getElementById(sortColName);
-	if (!node) return(false);
-
+  if (aTarget.localName != "treecol")
+    return;
+    
 	// determine column resource to sort on
-	var sortResource = node.getAttribute('resource');
+	var sortResource = aTarget.getAttribute('resource');
 
 	// switch between ascending & descending sort (no natural order support)
-	var sortDirection="ascending";
-	var isSortActive = node.getAttribute('sortActive');
-	if (isSortActive == "true")
-	{
-		var currentDirection = node.getAttribute('sortDirection');
-		if (currentDirection == "ascending")
-		{
-			sortDirection = "descending";
-		}
-	}
+  var sortDirection = aTarget.getAttribute("sortDirection") == "ascending" ? "descending" : "ascending";
 
-	try
-	{
-		var isupports = Components.classes[XULSORTSERVICE_CONTRACTID].getService();
-		if (!isupports)    return(false);
-		var xulSortService = isupports.QueryInterface(nsIXULSortService);
-		if (!xulSortService)    return(false);
-		xulSortService.Sort(node, sortResource, sortDirection);
-	}
-	catch(ex)
-	{
-	}
-	return(false);
+	try {
+	  var sortService = Components.classes[XULSORTSERVICE_CONTRACTID].getService(nsIXULSortService);
+		sortService.Sort(aTarget, sortResource, sortDirection);
+	} catch(ex) { }
 }
 
-
-
-function BeginDragTree ( event )
+function BeginDragTree (event)
 {
-  var tree = document.getElementById("tree");
-  if ( event.target == tree )
-    return(true);         // continue propagating the event
-
-  // only <treeitem>s can be dragged out
-  if ( event.target.parentNode.parentNode.tagName != "treeitem")
-    return(false);
-
-  var database = tree.database;
-  if (!database)    return(false);
-
-  var RDF = 
-    Components.classes[RDFSERVICE_CONTRACTID].getService(nsIRDFService);
-  if (!RDF) return(false);
-
+  if (event.target.localName != "treechildren")
+    return true;
+    
   var dragStarted = false;
 
-  var transferable = 
-    Components.classes[TRANSFERABLE_CONTRACTID].createInstance(nsITransferable);
-  if ( !transferable ) return(false);
+  try {
+    // determine which treeitem was dragged
+    var tree = document.getElementById("tree");
+    var row = {}, colId = {}, child = {};
+    tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colId, child);
+    var item = tree.contentView.getItemAtIndex(row.value);
 
-  var genDataURL = 
-    Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
-  if (!genDataURL) return(false);
+    // get information from treeitem for drag
+    var url = item.getAttributeNS(NC_NS, "url");
+    var desc = item.getAttributeNS(NC_NS, "desc");
+    
+    var RDF = Components.classes[RDFSERVICE_CONTRACTID].getService(nsIRDFService);
+    var transferable = 
+      Components.classes[TRANSFERABLE_CONTRACTID].createInstance(nsITransferable);
+    var genDataURL = 
+      Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
+    var genDataHTML = 
+      Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
+    var genData = 
+      Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
+    var genDataURL = 
+      Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
 
-  var genDataHTML = 
-    Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
-  if (!genDataHTML) return(false);
+    transferable.addDataFlavor("text/x-moz-url");
+    transferable.addDataFlavor("text/html");
+    transferable.addDataFlavor("text/unicode");
+    
+    genDataURL.data = url + "\n" + desc;
+    genDataHTML.data = "<a href=\"" + url + "\">" + desc + "</a>";
+    genData.data = url;
 
-  var genData = 
-    Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
-  if (!genData) return(false);
+    transferable.setTransferData("text/x-moz-url", genDataURL, genDataURL.data.length * 2);
+    transferable.setTransferData("text/html", genDataHTML, genDataHTML.data.length * 2);
+    transferable.setTransferData("text/unicode", genData, genData.data.length * 2);
 
-  var genDataURL = 
-    Components.classes[WSTRING_CONTRACTID].createInstance(nsISupportsWString);
-  if (!genDataURL) return(false);
+    var transArray = 
+      Components.classes[ARRAY_CONTRACTID].createInstance(nsISupportsArray);
 
-  transferable.addDataFlavor("text/x-moz-url");
-  transferable.addDataFlavor("text/html");
-  transferable.addDataFlavor("text/unicode");
+    // put it into the transferable as an |nsISupports|
+    var genTrans = transferable.QueryInterface(Components.interfaces.nsISupports);
+    transArray.AppendElement(genTrans);
+    
+    var dragService = 
+      Components.classes[DRAGSERVICE_CONTRACTID].getService(nsIDragService);
+
+    dragService.invokeDragSession(event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
+                                  nsIDragService.DRAGDROP_ACTION_MOVE);
   
-  // ref/id (url) is on the <treeitem> which is two levels above the <treecell> which is
-  // the target of the event.
-  var id = event.target.parentNode.parentNode.getAttribute("ref");
-  if (!id || id=="")
-  {
-	id = event.target.parentNode.parentNode.getAttribute("id");
-  }
-
-  var src = RDF.GetResource(id, true);
-  var urlProp = RDF.GetResource(NC_URL, true);
-  var url = database.GetTarget(src, urlProp, true);
-  if (url) url = url.QueryInterface(nsIRDFLiteral);
-  if (url) url = url.Value;
-  if (!url || url=="")
-      return false;
-
-  var descProp = RDF.GetResource(NC_NAME, true);
-  var desc = database.GetTarget(src, descProp, true);
-  if (desc) desc = desc.QueryInterface(nsIRDFLiteral);
-  if (desc) desc = desc.Value;
-  if (!desc || desc=="")
-      return false;
-
-  genDataURL.data = url + "\n" + desc;
-  genDataHTML.data = "<a href=\"" + url + "\">" + desc + "</a>";
-  genData.data = url;
-
-  transferable.setTransferData ( "text/x-moz-url", genDataURL, genDataURL.data.length * 2);
-  transferable.setTransferData ( "text/html", genDataHTML, genDataHTML.data.length * 2);
-  transferable.setTransferData ( "text/unicode", genData, genData.data.length * 2);
-
-  var transArray = 
-    Components.classes[ARRAY_CONTRACTID].createInstance(nsISupportsArray);
-  if ( !transArray )  return(false);
-
-  // put it into the transferable as an |nsISupports|
-  var genTrans = transferable.QueryInterface(Components.interfaces.nsISupports);
-  transArray.AppendElement(genTrans);
+    dragStarted = true;
+  } catch (ex) { }
   
-  var dragService = 
-    Components.classes[DRAGSERVICE_CONTRACTID].getService(nsIDragService);
-  if ( !dragService ) return(false);
-
-  dragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
-                                     nsIDragService.DRAGDROP_ACTION_MOVE );
-  dragStarted = true;
-
-  return(!dragStarted);
+  return !dragStarted;
 }
 
 function scrollDown()
 {
-    window.frames[0].scrollTo(0, window.frames[0].document.height);
+  window.frames[0].scrollTo(0, window.frames[0].document.height);
 }
 
 function OnFTPControlLog( server, msg )

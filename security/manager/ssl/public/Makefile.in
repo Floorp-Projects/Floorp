@@ -52,7 +52,7 @@ XPIDLSRCS = \
     nsIPK11TokenDB.idl \
     nsINSSDialogs.idl \
     nsISSLStatus.idl \
-    nsICertOutliner.idl \
+    nsICertTree.idl \
     nsIKeygenThread.idl \
     nsICMSSecureMessage.idl \
     nsICMS.idl \

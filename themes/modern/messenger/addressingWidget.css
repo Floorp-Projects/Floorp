@@ -34,32 +34,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 /* ::::: addressing widget ::::: */
 
-#addressingWidgetTree {
+#addressingWidget {
   -moz-user-focus: none;
-  width: 0px;
+  width: 0;
 }  
 
-#listcol-addressingWidget {
+#typecol-addressingWidget {
   width: 9em;
   border-right: 1px solid #C4CADC;
 }
 
-#addressingWidgetTree > treechildren > treeitem > treerow,
-#addressingWidgetTree > treechildren > treeitem[selected="true"] > treerow {
-  border: none;
-  background-color: inherit;
-  color: inherit;
+.addressingWidgetItem,
+.dummy-row {
+  border: none !important;
+  background-color: inherit !important;
+  color: inherit !important;
 }
 
-.treecell-addressingWidget {
+.addressingWidgetCell {
   border-bottom: 1px solid #C4CADC;
   padding: 0px;
 }
 
-.treecell-addressingWidget:first-child {
+.addressingWidgetCell:first-child {
   border-top: none;
 }
 
@@ -69,7 +68,6 @@
 }
 
 .person-icon {
-  -moz-user-focus: ignore;
   cursor: default !important;
   margin: 2px 4px;
   border: none;

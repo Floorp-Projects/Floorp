@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsOutlinerRows_h__
-#define nsOutlinerRows_h__
+#ifndef nsTreeRows_h__
+#define nsTreeRows_h__
 
 #include "nsCOMPtr.h"
 #include "nsIRDFResource.h"
@@ -47,11 +47,11 @@ class nsConflictSet;
 class nsTemplateMatch;
 
 /**
- * This class maintains the state of the XUL outliner builder's
+ * This class maintains the state of the XUL tree builder's
  * rows. It maps a row number to the nsTemplateMatch object that
  * populates the row.
  */
-class nsOutlinerRows
+class nsTreeRows
 {
 public:
     class iterator;
@@ -76,7 +76,7 @@ public:
     class Subtree;
 
     /**
-     * A row in the outliner. Contains the match that the row
+     * A row in the tree. Contains the match that the row
      * corresponds to, and a pointer to the row's subtree, if there
      * are any.
      */
@@ -88,12 +88,12 @@ public:
     };
 
     /**
-     * A subtree in the outliner. A subtree contains rows, which may
+     * A subtree in the tree. A subtree contains rows, which may
      * contain other subtrees.
      */
     class Subtree {
     protected:
-        friend class nsOutlinerRows; // so that it can access members, for now
+        friend class nsTreeRows; // so that it can access members, for now
 
         /**
          * The parent subtree; null if we're the root
@@ -210,7 +210,7 @@ protected:
 
 public:
     /**
-     * An iterator that can be used to traverse the outliner view.
+     * An iterator that can be used to traverse the tree view.
      */
     class iterator {
     protected:
@@ -222,7 +222,7 @@ public:
         void Prev();
 
         friend class Subtree; // so InsertRowAt can initialize us
-        friend class nsOutlinerRows; // so nsOutlinerRows can initialize us
+        friend class nsTreeRows; // so nsTreeRows can initialize us
 
         /**
          * Used by operator[]() to initialize an iterator.
@@ -309,8 +309,8 @@ public:
      */
     iterator operator[](PRInt32 aIndex);
 
-    nsOutlinerRows() : mRoot(nsnull), mRootResource(nsnull) {}
-    ~nsOutlinerRows() {}
+    nsTreeRows() : mRoot(nsnull), mRootResource(nsnull) {}
+    ~nsTreeRows() {}
 
     /**
      * Ensure that a child subtree exists within the specified parent
@@ -402,7 +402,7 @@ public:
     void Clear();
 
     /**
-     * Return the total number of rows in the outliner view.
+     * Return the total number of rows in the tree view.
      */
     PRInt32 Count() const { return mRoot.GetSubtreeSize(); }
 
@@ -450,4 +450,4 @@ protected:
 };
 
 
-#endif // nsOutlinerRows_h__
+#endif // nsTreeRows_h__

@@ -86,8 +86,8 @@ function Startup() {
   }
 
   // load in the cookies and permissions
-  cookiesOutliner = document.getElementById("cookiesOutliner");
-  permissionsOutliner = document.getElementById("permissionsOutliner");
+  cookiesTree = document.getElementById("cookiesTree");
+  permissionsTree = document.getElementById("permissionsTree");
   if (!isImages) {
     loadCookies();
   }
@@ -100,9 +100,12 @@ function Startup() {
 
 const nsICookie = Components.interfaces.nsICookie;
 
-var cookiesOutlinerView = {
+var cookiesTreeView = {
   rowCount : 0,
-  setOutliner : function(outliner){},
+  setTree : function(tree){},
+  getImageSrc : function(row,column) {},
+  getProgressMode : function(row,column) {},
+  getCellValue : function(row,column) {},
   getCellText : function(row,column){
     var rv="";
     if (column=="domainCol") {
@@ -122,7 +125,7 @@ var cookiesOutlinerView = {
   getColumnProperties : function(column,columnElement,prop){},
   getCellProperties : function(row,prop){}
  };
-var cookiesOutliner;
+var cookiesTree;
 
 function Cookie(number,name,value,isDomain,host,rawHost,path,isSecure,expires,
                 status,policy) {
@@ -157,10 +160,10 @@ function loadCookies() {
                  nextCookie.path, nextCookie.isSecure, nextCookie.expires,
                  nextCookie.status, nextCookie.policy);
   }
-  cookiesOutlinerView.rowCount = cookies.length;
+  cookiesTreeView.rowCount = cookies.length;
 
   // sort and display the table
-  cookiesOutliner.outlinerBoxObject.view = cookiesOutlinerView;
+  cookiesTree.treeBoxObject.view = cookiesTreeView;
   if (window.arguments[0] == "cookieManagerFromIcon") { // came here by clicking on cookie icon
 
     // turn off the icon
@@ -228,7 +231,7 @@ function GetPolicyString(policy) {
 }
 
 function CookieSelected() {
-  var selections = GetOutlinerSelections(cookiesOutliner);
+  var selections = GetTreeSelections(cookiesTree);
   if (selections.length) {
     document.getElementById("removeCookie").removeAttribute("disabled");
   } else {
@@ -239,7 +242,7 @@ function CookieSelected() {
   var idx = selections[0];
   if (idx >= cookies.length) {
     // Something got out of synch.  See bug 119812 for details
-    dump("Outliner and viewer state are out of sync! " +
+    dump("Tree and viewer state are out of sync! " +
          "Help us figure out the problem in bug 119812");
     return;
   }
@@ -283,7 +286,7 @@ function ClearCookieProperties() {
 }
 
 function DeleteCookie() {
-  DeleteSelectedItemFromOutliner(cookiesOutliner, cookiesOutlinerView,
+  DeleteSelectedItemFromTree(cookiesTree, cookiesTreeView,
                                  cookies, deletedCookies,
                                  "removeCookie", "removeAllCookies");
   if (!cookies.length) {
@@ -293,7 +296,7 @@ function DeleteCookie() {
 
 function DeleteAllCookies() {
   ClearCookieProperties();
-  DeleteAllFromOutliner(cookiesOutliner, cookiesOutlinerView,
+  DeleteAllFromTree(cookiesTree, cookiesTreeView,
                         cookies, deletedCookies,
                         "removeCookie", "removeAllCookies");
 }
@@ -309,16 +312,19 @@ var lastCookieSortAscending = false;
 
 function CookieColumnSort(column) {
   lastCookieSortAscending =
-    SortOutliner(cookiesOutliner, cookiesOutlinerView, cookies,
+    SortTree(cookiesTree, cookiesTreeView, cookies,
                  column, lastCookieSortColumn, lastCookieSortAscending);
   lastCookieSortColumn = column;
 }
 
 /*** =================== PERMISSIONS CODE =================== ***/
 
-var permissionsOutlinerView = {
+var permissionsTreeView = {
   rowCount : 0,
-  setOutliner : function(outliner){},
+  setTree : function(tree){},
+  getImageSrc : function(row,column) {},
+  getProgressMode : function(row,column) {},
+  getCellValue : function(row,column) {},
   getCellText : function(row,column){
     var rv="";
     if (column=="siteCol") {
@@ -336,7 +342,7 @@ var permissionsOutlinerView = {
   getColumnProperties : function(column,columnElement,prop){},
   getCellProperties : function(row,prop){}
  };
-var permissionsOutliner;
+var permissionsTree;
 
 function Permission(number, host, rawHost, type, capability) {
   this.number = number;
@@ -371,10 +377,10 @@ function loadPermissions() {
                        cookieBundle.getString(nextPermission.capability?canStr:cannotStr));
     }
   }
-  permissionsOutlinerView.rowCount = permissions.length;
+  permissionsTreeView.rowCount = permissions.length;
 
   // sort and display the table
-  permissionsOutliner.outlinerBoxObject.view = permissionsOutlinerView;
+  permissionsTree.treeBoxObject.view = permissionsTreeView;
   PermissionColumnSort('rawHost');
 
   // disable "remove all" button if there are no cookies/images
@@ -385,20 +391,20 @@ function loadPermissions() {
 }
 
 function PermissionSelected() {
-  var selections = GetOutlinerSelections(permissionsOutliner);
+  var selections = GetTreeSelections(permissionsTree);
   if (selections.length) {
     document.getElementById("removePermission").removeAttribute("disabled");
   }
 }
 
 function DeletePermission() {
-  DeleteSelectedItemFromOutliner(permissionsOutliner, permissionsOutlinerView,
+  DeleteSelectedItemFromTree(permissionsTree, permissionsTreeView,
                                  permissions, deletedPermissions,
                                  "removePermission", "removeAllPermissions");
 }
 
 function DeleteAllPermissions() {
-  DeleteAllFromOutliner(permissionsOutliner, permissionsOutlinerView,
+  DeleteAllFromTree(permissionsTree, permissionsTreeView,
                         permissions, deletedPermissions,
                         "removePermission", "removeAllPermissions");
 }
@@ -414,7 +420,7 @@ var lastPermissionSortAscending = false;
 
 function PermissionColumnSort(column) {
   lastPermissionSortAscending =
-    SortOutliner(permissionsOutliner, permissionsOutlinerView, permissions,
+    SortTree(permissionsTree, permissionsTreeView, permissions,
                  column, lastPermissionSortColumn, lastPermissionSortAscending);
   lastPermissionSortColumn = column;
 }

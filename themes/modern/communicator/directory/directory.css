@@ -48,36 +48,25 @@
   border: none;
 }
 
-.treecell-filename {
+treechildren:-moz-tree-image(FilenameColumn) {
+  margin-right: 2px;
   list-style-image: url("chrome://communicator/skin/directory/file-icon.gif");
 }
 
-treeitem[container="true"] > treerow > .treecell-filename {
+treechildren:-moz-tree-image(FilenameColumn, container) {
   list-style-image: url("chrome://communicator/skin/directory/file-folder-closed.gif");
 }
 
-treeitem[container="true"][open="true"] > treerow > .treecell-filename {
+treechildren:-moz-tree-image(FilenameColumn, container, open) {
   list-style-image: url("chrome://communicator/skin/directory/file-folder-open.gif");
 }
 
-/* Show an animated icon when a directory/symlink is loading */
-treeitem[type="SYMBOLIC-LINK"][loading="true"] > treerow
-    > .treecell-filename > .tree-cell-twisty,
-treeitem[type="DIRECTORY"][loading="true"] > treerow
-    > treecell > .tree-cell-twisty
-{
+treechildren:-moz-tree-image(FilenameColumn, loading) {
   list-style-image: url("chrome://communicator/skin/icons/loading.gif");
 }
 
-/* Italicize a symbolic link and make it look like a link (it can be a dir or link) */
-.treecell-filename[type="SYMBOLIC-LINK"] {
-  color: inherit;
+treechildren:-moz-tree-cell-text(symbolic-link) {
   font-style: italic;
-  text-decoration: inherit;
-}
-
-.treecell-indent[type="FILE"] > .tree-cell-twisty {
-  list-style-image: none;
 }
 
 /* ::::: column/row preferred sizes ::::: */
@@ -88,20 +77,16 @@ treeitem[type="DIRECTORY"][loading="true"] > treerow
   width: 100px;
 }
 
-treerow {
-  min-height: 19px;
-}
-
-div.server     { 
-  color:    blue;
-  display:  block; 
+div.server { 
+  color: blue;
+  display: block; 
   font-size: 10pt;
   font-family: sans-serif;
 }
 
-div.client     { 
-  color:    red;
-  display:  block; 
+div.client { 
+  color: red;
+  display: block; 
   font-size: 10pt;
   font-family: sans-serif;
 }

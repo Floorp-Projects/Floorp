@@ -31,8 +31,8 @@ const nsIPKIParamBlock = Components.interfaces.nsIPKIParamBlock;
 const nsIASN1Object = Components.interfaces.nsIASN1Object;
 const nsIASN1Sequence = Components.interfaces.nsIASN1Sequence;
 const nsIASN1PrintableItem = Components.interfaces.nsIASN1PrintableItem;
-const nsIASN1Outliner = Components.interfaces.nsIASN1Outliner;
-const nsASN1Outliner = "@mozilla.org/security/nsASN1Outliner;1"
+const nsIASN1Tree = Components.interfaces.nsIASN1Tree;
+const nsASN1Tree = "@mozilla.org/security/nsASN1Tree;1"
 
 var bundle;
 
@@ -106,7 +106,7 @@ function setWindowName()
 
   //  The chain of trust
   var chain = cert.getChain();
-  AddCertChain("chainDump", chain,"dump_");
+  AddCertChain("treesetDump", chain, "dump_");
   DisplayGeneralDataFromCert(cert);
   BuildPrettyPrint(cert);
 }
@@ -129,7 +129,6 @@ function addTreeItemToTreeChild(treeChild,label,value,addTwistie)
   }
   var treeRow = document.createElement("treerow");
   var treeCell = document.createElement("treecell");
-  treeCell.setAttribute("class", "treecell-indent");
   treeCell.setAttribute("label",label);
   if (value)
     treeCell.setAttribute("display",value);
@@ -140,12 +139,12 @@ function addTreeItemToTreeChild(treeChild,label,value,addTwistie)
 }
 
 function displaySelected() {
-  var asn1Outliner = document.getElementById('prettyDumpOutliner').
-                     outlinerBoxObject.view.QueryInterface(nsIASN1Outliner);
-  var items = asn1Outliner.selection;
+  var asn1Tree = document.getElementById('prettyDumpTree').
+                     treeBoxObject.view.QueryInterface(nsIASN1Tree);
+  var items = asn1Tree.selection;
   var certDumpVal = document.getElementById('certDumpVal');
   if (items.currentIndex != -1) {
-    var value = asn1Outliner.getDisplayData(items.currentIndex);
+    var value = asn1Tree.getDisplayData(items.currentIndex);
     certDumpVal.value = value;
   } else {
     certDumpVal.value ="";
@@ -154,11 +153,11 @@ function displaySelected() {
 
 function BuildPrettyPrint(cert)
 {
-  var certDumpOutliner = Components.classes[nsASN1Outliner].
-                          createInstance(nsIASN1Outliner);
-  certDumpOutliner.loadASN1Structure(cert.ASN1Structure);
-  document.getElementById('prettyDumpOutliner').
-           outlinerBoxObject.view =  certDumpOutliner;
+  var certDumpTree = Components.classes[nsASN1Tree].
+                          createInstance(nsIASN1Tree);
+  certDumpTree.loadASN1Structure(cert.ASN1Structure);
+  document.getElementById('prettyDumpTree').
+           treeBoxObject.view =  certDumpTree;
 }
 
 function addAttributeFromCert(nodeName, value)
@@ -236,20 +235,19 @@ function DisplayGeneralDataFromCert(cert)
 
 function updateCertDump()
 {
-  var asn1Outliner = document.getElementById('prettyDumpOutliner').
-                     outlinerBoxObject.view.QueryInterface(nsIASN1Outliner);
+  var asn1Tree = document.getElementById('prettyDumpTree').
+                     treeBoxObject.view.QueryInterface(nsIASN1Tree);
 
   var tree = document.getElementById('treesetDump');
-  var items=tree.selectedItems;
-
-  if (items.length==0) {
+  if (tree.currentIndex < 0) {
     alert("No items are selected."); //This should never happen.
   } else {
-    var dbKey = items[0].firstChild.firstChild.getAttribute('display');
+    var item = tree.contentView.getItemAtIndex(tree.currentIndex);
+    var dbKey = item.firstChild.firstChild.getAttribute('display');
     //  Get the cert from the cert database
     var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
     var cert = certdb.getCertByDBKey(dbKey,null);
-    asn1Outliner.loadASN1Structure(cert.ASN1Structure);
+    asn1Tree.loadASN1Structure(cert.ASN1Structure);
   }
   displaySelected();
 }

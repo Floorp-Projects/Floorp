@@ -43,7 +43,7 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-#folderOutliner {
+#folderTree {
   border-bottom: 2px solid;
   border-left: 2px solid;
   -moz-border-bottom-colors: #DFE5EF #97A4B2 !important;

@@ -49,7 +49,7 @@ function debugDump(msg)
   //dump(msg+"\n");
 }
 
-function CanDropOnFolderOutliner(index)
+function CanDropOnFolderTree(index)
 {
     var dragSession = null;
     var dragFolder = false;
@@ -66,8 +66,8 @@ function CanDropOnFolderOutliner(index)
     if (! trans)
         return false;
  
-    var folderOutliner = GetFolderOutliner();
-    var targetResource = GetFolderResource(folderOutliner, index);
+    var folderTree = GetFolderTree();
+    var targetResource = GetFolderResource(folderTree, index);
     var targetUri = targetResource.Value;
     var targetFolder = targetResource.QueryInterface(Components.interfaces.nsIMsgFolder);
     var targetServer = targetFolder.server;
@@ -110,14 +110,14 @@ function CanDropOnFolderOutliner(index)
         catch(ex)
         {
             sourceResource = null;
-            var isServer = GetFolderAttribute(folderOutliner, targetResource, "IsServer");
+            var isServer = GetFolderAttribute(folderTree, targetResource, "IsServer");
             if (isServer == "true")
             {
                 debugDump("***isServer == true\n");
                 return false;
             }
             // canFileMessages checks no select, and acl, for imap.
-            var canFileMessages = GetFolderAttribute(folderOutliner, targetResource, "CanFileMessages");
+            var canFileMessages = GetFolderAttribute(folderTree, targetResource, "CanFileMessages");
             if (canFileMessages != "true")
             {
                 debugDump("***canFileMessages == false\n");
@@ -164,20 +164,20 @@ function CanDropOnFolderOutliner(index)
         if (dragSession.dragAction == nsIDragService.DRAGDROP_ACTION_COPY)
             return false;
 
-        var canCreateSubfolders = GetFolderAttribute(folderOutliner, targetResource, "CanCreateSubfolders");
+        var canCreateSubfolders = GetFolderAttribute(folderTree, targetResource, "CanCreateSubfolders");
         // if cannot create subfolders then a folder cannot be dropped here     
         if (canCreateSubfolders == "false")
         {
             debugDump("***canCreateSubfolders == false \n");
             return false;
         }
-        var serverType = GetFolderAttribute(folderOutliner, targetResource, "ServerType");
+        var serverType = GetFolderAttribute(folderTree, targetResource, "ServerType");
 
         // if we've got a folder that can't be renamed
         // allow us to drop it if we plan on dropping it on "Local Folders"
         // (but not within the same server, to prevent renaming folders on "Local Folders" that
         // should not be renamed)
-        var srcCanRename = GetFolderAttribute(folderOutliner, sourceResource, "CanRename");
+        var srcCanRename = GetFolderAttribute(folderTree, sourceResource, "CanRename");
         if (srcCanRename == "false") {
             if (sourceServer == targetServer)
                 return false;
@@ -196,18 +196,18 @@ function CanDropOnFolderOutliner(index)
     return false;
 }
 
-function CanDropBeforeAfterFolderOutliner(index, before)
+function CanDropBeforeAfterFolderTree(index, before)
 {
     return false;
 }
 
-function DropOnFolderOutliner(row, orientation)
+function DropOnFolderTree(row, orientation)
 {
-    if (orientation != Components.interfaces.nsIOutlinerView.inDropOn)
+    if (orientation != Components.interfaces.nsITreeView.inDropOn)
         return false;
 
-    var folderOutliner = GetFolderOutliner();
-    var targetResource = GetFolderResource(folderOutliner, row);
+    var folderTree = GetFolderTree();
+    var targetResource = GetFolderResource(folderTree, row);
 
     var targetUri = targetResource.Value;
     debugDump("***targetUri = " + targetUri + "\n");
@@ -327,45 +327,45 @@ function DropOnFolderOutliner(row, orientation)
     return true;
 }
 
-function BeginDragFolderOutliner(event)
+function BeginDragFolderTree(event)
 {
-    debugDump("BeginDragFolderOutliner\n");
+    debugDump("BeginDragFolderTree\n");
 
-    if (event.originalTarget.localName != "outlinerchildren")
+    if (event.originalTarget.localName != "treechildren")
       return false;
 
-    var folderOutliner = GetFolderOutliner();
+    var folderTree = GetFolderTree();
     var row = {};
     var col = {};
     var elt = {};
-    folderOutliner.outlinerBoxObject.getCellAt(event.clientX, event.clientY, row, col, elt);
+    folderTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, elt);
     if (row.value == -1)
       return false;
 
-    var folderResource = GetFolderResource(folderOutliner, row.value);
+    var folderResource = GetFolderResource(folderTree, row.value);
 
-    if (GetFolderAttribute(folderOutliner, folderResource, "IsServer") == "true")
+    if (GetFolderAttribute(folderTree, folderResource, "IsServer") == "true")
     {
       debugDump("***IsServer == true\n");
       return false;
     }
 
     // do not allow the drag when news is the source
-    if (GetFolderAttribute(folderOutliner, folderResource, "ServerType") == "nntp") 
+    if (GetFolderAttribute(folderTree, folderResource, "ServerType") == "nntp") 
     {
       debugDump("***ServerType == nntp\n");
       return false;
     }
 
     var selectedFolders = GetSelectedFolders();
-    return BeginDragOutliner(event, folderOutliner, selectedFolders, "text/x-moz-message-or-folder");
+    return BeginDragTree(event, folderTree, selectedFolders, "text/x-moz-message-or-folder");
 }
 
 function BeginDragThreadPane(event)
 {
     debugDump("BeginDragThreadPane\n");
 
-    var threadOutliner = GetThreadOutliner();
+    var threadTree = GetThreadTree();
     var selectedMessages = GetSelectedMessages();
 
     //A message can be dragged from one window and dropped on another window
@@ -373,10 +373,10 @@ function BeginDragThreadPane(event)
     //no major disadvantage even if it is a copy operation
 
     SetNextMessageAfterDelete();
-    return BeginDragOutliner(event, threadOutliner, selectedMessages, "text/x-moz-message-or-folder");
+    return BeginDragTree(event, threadTree, selectedMessages, "text/x-moz-message-or-folder");
 }
 
-function BeginDragOutliner(event, outliner, selArray, flavor)
+function BeginDragTree(event, tree, selArray, flavor)
 {
     var dragStarted = false;
 
@@ -389,8 +389,8 @@ function BeginDragOutliner(event, outliner, selArray, flavor)
     try {
       region = Components.classes["@mozilla.org/gfx/region;1"].createInstance(Components.interfaces.nsIScriptableRegion);
       region.init();
-      var obo = outliner.outlinerBoxObject;
-      var bo = obo.outlinerBody.boxObject;
+      var obo = tree.treeBoxObject;
+      var bo = obo.treeBody.boxObject;
       var obosel= obo.selection;
 
       var rowX = bo.x;

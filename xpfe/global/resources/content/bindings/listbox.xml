@@ -229,6 +229,9 @@
         <parameter name="item"/>
         <body>
         <![CDATA[
+          if (this.selType != "multiple" && this.selectedCount)
+            return;
+
           if (item.selected)
             return;
             
@@ -625,7 +628,9 @@
 
       <handler event="keypress" key=" ">
       <![CDATA[
-        if (this.currentItem && this.currentItem.getAttribute("type") == "checkbox")
+        if (this.currentItem &&
+            this.currentItem.getAttribute("type") == "checkbox" &&
+            !this.currentItem.disabled)
           this.currentItem.checked = !this.currentItem.checked;
       ]]>
       </handler>
@@ -657,21 +662,6 @@
         })
       ]]>
       </field>
-
-      <method name="_getMouseTargetItem">
-        <parameter name="event"/>
-        <body>
-        <![CDATA[
-          var p = event.originalTarget;
-          while (p) {
-            if (p.localName == "listitem")
-              return p;
-            p = p.parentNode;
-          }
-          return null;
-        ]]>
-        </body>
-      </method>
     </implementation>
 
     <handlers>
@@ -679,8 +669,8 @@
            click, so that drags work correctly. -->
       <handler event="mousedown">
       <![CDATA[
-        var targetItem = this._getMouseTargetItem(event);
-        if (targetItem && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
+        var targetItem = event.target;
+        if (targetItem.localName == "listitem" && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
           if (!targetItem.selected) {
             parentNode.selectItem(targetItem);
           }
@@ -694,7 +684,7 @@
       <handler event="click">
       <![CDATA[
         if (event.button != 0) return;
-        var targetItem = this._getMouseTargetItem(event);
+        var targetItem = event.target;
         if (targetItem) {
           if (event.ctrlKey || event.metaKey) {
             parentNode.toggleItemSelection(targetItem);
@@ -741,7 +731,7 @@
 
     <content>
       <children>
-        <xul:listcell inherits="label,crop,listboxbody"/>
+        <xul:listcell inherits="label,crop,disabled,flexlabel"/>
       </children>
     </content>
 
@@ -773,6 +763,9 @@
                              onset="this.setAttribute('value', val); return val;"/>
       <property name="label" onget="return this.getAttribute('label');"
                              onset="this.setAttribute('label', val); return val;"/>
+      
+      <property name="disabled" onget="return this.getAttribute('disabled') == 'true';"
+                                onset="if (val) this.setAttribute('disabled', 'true'); else this.removeAttribute('disabled');"/>
       
       <property name="selected" onget="return this.getAttribute('selected') == 'true';">
         <setter><![CDATA[
@@ -807,7 +800,7 @@
            extends="chrome://global/content/bindings/listbox.xml#listitem">
     <content>
       <children>
-        <xul:listcell class="listcell-iconic" inherits="label,image,crop"/>
+        <xul:listcell class="listcell-iconic" inherits="label,image,crop,disabled,flexlabel"/>
       </children>
     </content>
   </binding>
@@ -816,22 +809,36 @@
            extends="chrome://global/content/bindings/listbox.xml#listitem">
     <content>
       <children>
-        <xul:listcell type="checkbox" inherits="label,image,crop,checked"/>
+        <xul:listcell type="checkbox" inherits="label,crop,checked,disabled,flexlabel"/>
       </children>
     </content>
 
     <implementation>
       <property name="checked"
-                onget="return this.getAttribute('checked') == 'true';"
-                onset="if (val) this.setAttribute('checked', 'true'); else this.removeAttribute('checked'); return val;"/>
+                onget="return this.getAttribute('checked') == 'true';">
+        <setter><![CDATA[
+          if (val)
+            this.setAttribute('checked', 'true');
+          else
+            this.removeAttribute('checked');
+          var event = document.createEvent('Events');
+          event.initEvent('CheckboxStateChange', false, true);
+          this.dispatchEvent(event);
+          return val;
+        ]]></setter>
+      </property>
     </implementation>
+
+    <handlers> 
+      <handler event="mousedown" action="if (!this.disabled) this.checked = !this.checked;"/>
+    </handlers>
   </binding>
   
   <binding id="listitem-checkbox-iconic"
            extends="chrome://global/content/bindings/listbox.xml#listitem-checkbox">
     <content>
       <children>
-        <xul:listcell type="checkbox" class="listcell-iconic" inherits="label,image,crop,checked"/>
+        <xul:listcell type="checkbox" class="listcell-iconic" inherits="label,image,crop,checked,disabled,flexlabel"/>
       </children>
     </content>
   </binding>
@@ -840,7 +847,7 @@
            extends="chrome://global/content/bindings/listbox.xml#listbox-base">
     <content>
       <children>
-        <xul:label class="listcell-label" inherits="value=label,crop" flex="1" crop="right"/>
+        <xul:label class="listcell-label" inherits="value=label,flex=flexlabel,crop,disabled" flex="1" crop="right"/>
       </children>
     </content>
   </binding>
@@ -850,7 +857,7 @@
     <content>
       <children>
         <xul:image class="listcell-icon" inherits="src=image"/>
-        <xul:label class="listcell-label" inherits="value=label,crop" flex="1" crop="right"/>
+        <xul:label class="listcell-label" inherits="value=label,flex=flexlabel,crop,disabled" flex="1" crop="right"/>
       </children>
     </content>
   </binding>
@@ -859,23 +866,19 @@
            extends="chrome://global/content/bindings/listbox.xml#listcell">
     <content>
       <children>
-        <xul:image class="listcell-check" inherits="checked"/>
-        <xul:label class="listcell-label" inherits="value=label,crop" flex="1" crop="right"/>
+        <xul:image class="listcell-check" inherits="checked,disabled"/>
+        <xul:label class="listcell-label" inherits="value=label,flex=flexlabelcrop,disabled" flex="1" crop="right"/>
       </children>
     </content>
-    
-    <handlers>
-      <handler event="mousedown" action="parentNode.checked = !parentNode.checked;"/>
-    </handlers>
   </binding>
 
   <binding id="listcell-checkbox-iconic"
            extends="chrome://global/content/bindings/listbox.xml#listcell-checkbox">
     <content>
       <children>
-        <xul:image class="listcell-check" inherits="checked"/>
+        <xul:image class="listcell-check" inherits="checked,disabled"/>
         <xul:image class="listcell-icon" inherits="src=image"/>
-        <xul:label class="listcell-label" inherits="value=label,crop" flex="1" crop="right"/>
+        <xul:label class="listcell-label" inherits="value=label,flex=flexlabelcrop,disabled" flex="1" crop="right"/>
       </children>
     </content>
   </binding>
@@ -894,7 +897,7 @@
     <content>
       <xul:image class="listheader-icon"/>
       <xul:label class="listheader-label" inherits="value=label,crop" flex="1" crop="right"/>
-      <xul:image class="listheader-sortdirection" inherits="sortdirection"/>
+      <xul:image class="listheader-sortdirection" inherits="sortDirection"/>
     </content>
   </binding>
 

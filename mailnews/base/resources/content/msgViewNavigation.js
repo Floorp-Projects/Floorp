@@ -236,9 +236,9 @@ function CrossFolderNavigation(type, supportsFolderPane )
 function ScrollToMessage(type, wrap, selectMessage)
 {
   try {
-    var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
-    var outlinerSelection = outlinerView.selection;
-    var currentIndex = outlinerSelection.currentIndex;
+    var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
+    var treeSelection = treeView.selection;
+    var currentIndex = treeSelection.currentIndex;
 
     var resultId = new Object;
     var resultIndex = new Object;
@@ -249,9 +249,9 @@ function ScrollToMessage(type, wrap, selectMessage)
     // only scroll and select if we found something
     if ((resultId.value != nsMsgViewIndex_None) && (resultIndex.value != nsMsgViewIndex_None)) {
         if (selectMessage){
-            outlinerSelection.select(resultIndex.value);
+            treeSelection.select(resultIndex.value);
         }
-        EnsureRowInThreadOutlinerIsVisible(resultIndex.value);
+        EnsureRowInThreadTreeIsVisible(resultIndex.value);
         return true;
     }
     else {

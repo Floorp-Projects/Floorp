@@ -37,24 +37,24 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBoxFrame.h"
-#include "nsIOutlinerColFrame.h"
-#include "nsIOutlinerBoxObject.h"
+#include "nsITreeColFrame.h"
+#include "nsITreeBoxObject.h"
 
 class nsSupportsHashtable;
 
-nsresult NS_NewOutlinerColFrame(nsIPresShell* aPresShell, 
+nsresult NS_NewTreeColFrame(nsIPresShell* aPresShell, 
                                 nsIFrame** aNewFrame, 
                                 PRBool aIsRoot = PR_FALSE,
                                 nsIBoxLayout* aLayoutManager = nsnull);
 
 // The actual frame that paints the cells and rows.
-class nsOutlinerColFrame : public nsBoxFrame, public nsIOutlinerColFrame
+class nsTreeColFrame : public nsBoxFrame, public nsITreeColFrame
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIOUTLINERCOLFRAME
+  NS_DECL_NSITREECOLFRAME
 
-  friend nsresult NS_NewOutlinerColFrame(nsIPresShell* aPresShell, 
+  friend nsresult NS_NewTreeColFrame(nsIPresShell* aPresShell, 
                                          nsIFrame** aNewFrame, 
                                          PRBool aIsRoot,
                                          nsIBoxLayout* aLayoutManager);
@@ -79,14 +79,14 @@ public:
 
 
 protected:
-  nsOutlinerColFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
-  virtual ~nsOutlinerColFrame();
+  nsTreeColFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
+  virtual ~nsTreeColFrame();
 
 protected:
   // Members.
   
-  void EnsureOutliner();
+  void EnsureTree();
   void InvalidateColumnCache(nsIPresContext* aPresContext);
   
-  nsCOMPtr<nsIOutlinerBoxObject> mOutliner;
-}; // class nsOutlinerColFrame
+  nsCOMPtr<nsITreeBoxObject> mTree;
+}; // class nsTreeColFrame

@@ -77,7 +77,7 @@
   <commands id="commands">
     <commandset id="CommandUpdate_Bookmarks"
                 commandupdater="true"
-                events="focus,outliner-select"
+                events="focus,tree-select"
                 oncommandupdate="document.getElementById('bookmarks-view').onCommandUpdate();">
     </commandset>                
 
@@ -246,6 +246,7 @@
     </toolbar>
   </toolbox>
   
-  <bookmarks-outliner id="bookmarks-view" class="inset" flex="1"/>
+  <bookmarks-tree id="bookmarks-view" flex="1"/>
+
 </window>
 

@@ -23,7 +23,7 @@ var gSyncMail = false;
 var gSyncNews = false;
 var gSendMessage = true;
 var gWorkOffline = false;
-var gSynchronizeOutliner = null;
+var gSynchronizeTree = null;
 var gAccountManager = null;
 var gParentMsgWindow;
 var gMsgWindow;
@@ -111,7 +111,7 @@ function selectOnLoad()
     gMsgWindow.SetDOMWindow(window);
 
     gAccountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
-    gSynchronizeOutliner = document.getElementById('synchronizeOutliner');
+    gSynchronizeTree = document.getElementById('synchronizeTree');
 
     SortSynchronizePane('folderNameCol', '?folderTreeNameSort');
 } 
@@ -126,7 +126,7 @@ function SortSynchronizePane(column, sortKey)
 
     node.setAttribute("sort", sortKey);
     node.setAttribute("sortDirection", "natural");
-    gSynchronizeOutliner.outlinerBoxObject.view.cycleHeader(column, node);
+    gSynchronizeTree.treeBoxObject.view.cycleHeader(column, node);
 }
 
 function FindInWindow(currentWindow, id)
@@ -155,20 +155,20 @@ function onSynchronizeClick(event)
     var col = {}
     var elt = {}
 
-    gSynchronizeOutliner.outlinerBoxObject.getCellAt(event.clientX, event.clientY, row, col, elt);
+    gSynchronizeTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, elt);
     if (row.value == -1)
       return;
 
     if (elt.value == "twisty") {
-        var folderResource = GetFolderResource(gSynchronizeOutliner, row.value);
+        var folderResource = GetFolderResource(gSynchronizeTree, row.value);
         var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
 
-        if (!(gSynchronizeOutliner.outlinerBoxObject.view.isContainerOpen(row.value))) {
-            var serverType = GetFolderAttribute(gSynchronizeOutliner, folderResource, "ServerType");
+        if (!(gSynchronizeTree.treeBoxObject.view.isContainerOpen(row.value))) {
+            var serverType = GetFolderAttribute(gSynchronizeTree, folderResource, "ServerType");
             // imap is the only server type that does folder discovery
             if (serverType != "imap") return;
 
-            if (GetFolderAttribute(gSynchronizeOutliner, folderResource, "IsServer") == "true") {
+            if (GetFolderAttribute(gSynchronizeTree, folderResource, "IsServer") == "true") {
                 var server = msgFolder.server;
                 server.performExpand(gMsgWindow);
             }
@@ -182,7 +182,7 @@ function onSynchronizeClick(event)
     }
     else {
       if (col.value == "syncCol") {   
-        UpdateNode(GetFolderResource(gSynchronizeOutliner, row.value), row.value);
+        UpdateNode(GetFolderResource(gSynchronizeTree, row.value), row.value);
       }
     }
 }  

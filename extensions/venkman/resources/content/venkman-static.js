@@ -339,18 +339,18 @@ function setCurrentSource (url, line)
     var fileRec = console.scripts[url];
     ASSERT (fileRec, "Attempt to focus unknown source: " + url);
 
-    var lastFile = console._sourceOutlinerView.url
+    var lastFile = console._sourceTreeView.url
     if (lastFile)
     {
         var lastFileRec = console.scripts[lastFile];
         if (lastFileRec)
         {
             lastFileRec.lastLine = 
-                console._sourceOutlinerView.outliner.getFirstVisibleRow();
+                console._sourceTreeView.tree.getFirstVisibleRow();
         }
     }
     
-    console._sourceOutlinerView.setSourceArray(fileRec.source, url);
+    console._sourceTreeView.setSourceArray(fileRec.source, url);
     var hdr = document.getElementById("source-line-text");
     hdr.setAttribute ("label", url);
     hdr = document.getElementById("source-line-number");
@@ -361,9 +361,9 @@ function scrollSourceLineTop (url, lineNumber)
 {
     focusSource(url);
     if (toTop)
-        console._sourceOutlinerView.outliner.scrollToRow(lineNumber - 1);
+        console._sourceTreeView.tree.scrollToRow(lineNumber - 1);
     else
-        console._sourceOutlinerView.centerLine(lineNumber - 1);
+        console._sourceTreeView.centerLine(lineNumber - 1);
 }
 
 function evalInDebuggerScope (script)
@@ -465,7 +465,7 @@ function init()
     initPrefs();
     initCommands();
     initMenus();
-    initOutliners();
+    initTrees();
     
     disableDebugCommands();
     
@@ -519,7 +519,7 @@ function init()
 
 function destroy ()
 {
-    destroyOutliners();
+    destroyTrees();
     destroyHandlers();
     detachDebugger();
 }
@@ -964,9 +964,9 @@ function st_invalidate ()
             this.lastRowCount != this.lines.length)
         {
             this.lastRowCount = this.lines.length;
-            console.sourceView.outliner.rowCountChanged(0, this.lastRowCount);
+            console.sourceView.tree.rowCountChanged(0, this.lastRowCount);
         }    
-        console.sourceView.outliner.invalidate();
+        console.sourceView.tree.invalidate();
     }
 }
 
@@ -984,7 +984,7 @@ function st_marginclick (e, line)
         else
             setFutureBreakpoint (this.fileName, line);
     }
-    console.sourceView.outliner.invalidateRow(line - 1);
+    console.sourceView.tree.invalidateRow(line - 1);
 }
 
 SourceText.prototype.isLoaded = false;
@@ -1189,15 +1189,15 @@ function st_invalidate ()
     if ("childData" in console.sourceView &&
         console.sourceView.childData == this)
     {
-        var topRow = console.sourceView.outliner.getFirstVisibleRow() + 1;
+        var topRow = console.sourceView.tree.getFirstVisibleRow() + 1;
         if (!("lastRowCount" in this) || 
             this.lastRowCount != this.lines.length)
         {
             this.lastRowCount = this.lines.length;
-            console.sourceView.outliner.rowCountChanged(0, this.lastRowCount);
+            console.sourceView.tree.rowCountChanged(0, this.lastRowCount);
         }    
         console.sourceView.scrollTo(topRow, -1);
-        console.sourceView.outliner.invalidate();
+        console.sourceView.tree.invalidate();
     }
 }
 
@@ -1233,14 +1233,14 @@ function st_invalidate ()
     if ("childData" in console.sourceView &&
         console.sourceView.childData == this)
     {
-        var topRow = console.sourceView.outliner.getFirstVisibleRow() + 1;
+        var topRow = console.sourceView.tree.getFirstVisibleRow() + 1;
         if (!("lastRowCount" in this) || 
             this.lastRowCount != this.lines.length)
         {
             this.lastRowCount = this.lines.length;
-            console.sourceView.outliner.rowCountChanged(0, this.lastRowCount);
+            console.sourceView.tree.rowCountChanged(0, this.lastRowCount);
         }    
         console.sourceView.scrollTo(topRow, -1);
-        console.sourceView.outliner.invalidate();
+        console.sourceView.tree.invalidate();
     }
 }

@@ -43,7 +43,6 @@ var gParentURI;
 var gListCard;
 var gEditList;
 var gOkCallback = null;
-var hitReturnInList = false;
 var oldListName = "";
 var gAddressBookBundle;
 var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
@@ -53,11 +52,9 @@ gDragService = gDragService.QueryInterface(Components.interfaces.nsIDragService)
 
 function handleKeyPress(element, event)
 {
-  if (event.keyCode == 13)
-  {
-    hitReturnInList = true;
-    awReturnHit(element);
-  }
+  // allow dialog to close on enter if focused textbox has no value
+  if (element.value != "" && event.keyCode == 13)
+    event.preventBubble();
 }
 
 function mailingListExists(listname)
@@ -165,11 +162,6 @@ function GetListValue(mailList, doAdd)
 
 function MailListOKButton()
 {
-  if (hitReturnInList)
-  {
-    hitReturnInList = false;
-    return false;
-  }
   var popup = document.getElementById('abPopup');
   if ( popup )
   {
@@ -257,11 +249,6 @@ function OnLoadNewMailList()
 
 function EditListOKButton()
 {
-  if (hitReturnInList)
-  {
-    hitReturnInList = false;
-    return false;
-  }
   //edit mailing list in database
   if (GetListValue(gEditList, false))
   {
@@ -305,9 +292,9 @@ function OnLoadEditList()
     var total = gEditList.addressLists.Count();
     if (total)
     {
-      var treeChildren = document.getElementById('addressWidgetBody');
-      var newTreeChildrenNode = treeChildren.cloneNode(false);
-      var templateNode = treeChildren.firstChild;
+      var listbox = document.getElementById('addressingWidget');
+      var newListBoxNode = listbox.cloneNode(false);
+      var templateNode = listbox.getElementsByTagName("listitem")[0];
 
       top.MAX_RECIPIENTS = 0;
       for ( var i = 0;  i < total; i++ )
@@ -319,10 +306,10 @@ function OnLoadEditList()
           address = card.displayName + " <" + card.primaryEmail + ">";
         else
           address = card.primaryEmail;
-        SetInputValue(address, newTreeChildrenNode, templateNode);
+        SetInputValue(address, newListBoxNode, templateNode);
       }
-      var parent = treeChildren.parentNode;
-      parent.replaceChild(newTreeChildrenNode, treeChildren);
+      var parent = listbox.parentNode;
+      parent.replaceChild(newListBoxNode, listbox);
     }
   }
 
@@ -384,9 +371,12 @@ function awNotAnEmptyArea(event)
   event.preventBubble();
 }
 
-function awClickEmptySpace(targ, setFocus)
+function awClickEmptySpace(target, setFocus)
 {
-  if (targ.localName != 'treechildren')
+  if (target == null ||
+      (target.localName != "listboxbody" &&
+      target.localName != "listcell" &&
+      target.localName != "listitem"))
     return;
 
   var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
@@ -401,7 +391,6 @@ function awClickEmptySpace(targ, setFocus)
 function awReturnHit(inputElement)
 {
   var row = awGetRowByInputElement(inputElement);
-
   if ( inputElement.value )
   {
     var nextInput = awGetInputElement(row+1);
@@ -432,18 +421,17 @@ function awInputElementName()
 
 function awAppendNewRow(setFocus)
 {
-  var body = document.getElementById('addressWidgetBody');
-  var treeitem1 = awGetTreeItem(1);
+  var body = document.getElementById("addressingWidget");
+  var listitem1 = awGetListItem(1);
 
-  if ( body && treeitem1 )
+  if ( body && listitem1 )
   {  
     var nextDummy = awGetNextDummyRow();
-    if (nextDummy)  {
-      body.removeChild(nextDummy);
-      nextDummy = awGetNextDummyRow();
-    }
-    
-    var newNode = awCopyNode(treeitem1, body, nextDummy);
+    var newNode = listitem1.cloneNode(true);
+    if (nextDummy)
+      body.replaceChild(newNode, nextDummy);
+    else
+      body.appendChild(newNode);
     
     top.MAX_RECIPIENTS++;
 
@@ -473,14 +461,14 @@ function awGetInputElement(row)
 
 function _awSetFocus()
 {
-  var tree = document.getElementById('addressingWidgetTree');
+  var listbox = document.getElementById('addressingWidget');
   try
   {
-    var theNewRow = awGetTreeRow(top.awRow);
+    var theNewRow = awGetListItem(top.awRow);
     //temporary patch for bug 26344
 //    awFinishCopyNode(theNewRow);
 
-    tree.ensureElementIsVisible(theNewRow);
+    listbox.ensureElementIsVisible(theNewRow);
     top.awInputElement.focus();
   }
   catch(ex)
@@ -506,7 +494,7 @@ function awFinishCopyNode(node)
 
 function awTabFromRecipient(element, event)
 {
-  //If we are the last element in the tree, we don't want to create a new row.
+  //If we are the last element in the listbox, we don't want to create a new row.
   if (element == awGetInputElement(top.MAX_RECIPIENTS))
     top.doNotCreateANewRow = true;
 }

@@ -74,23 +74,17 @@
       <!--                        HTML Attributes                         -->
       <!-- ============================================================== -->
       <vbox>
-        <tree id="HTMLATree" 
-          class="AttributesTree inset" 
+        <tree id="HTMLATree"  class="AttributesTree"
+          hidecolumnpicker="true" seltype="single"
           onselect="onSelectHTMLTreeItem();"
           onclick="onSelectHTMLTreeItem();"
           ondblclick="editHTMLAttributeValue(event.target);">
-          <treecolgroup>
-            <treecol flex="35" width="0"/>
+          <treecols>
+            <treecol id="HTMLAttrCol" flex="35" label="&tree.attributeHeader.label;"/>
             <splitter class="tree-splitter"/>
-            <treecol flex="65" width="0"/>
-          </treecolgroup>
-          <treehead>
-            <treerow>
-              <treecell class="treecell-header treecell-inset-header" label="&tree.attributeHeader.label;"/>
-              <treecell class="treecell-header treecell-inset-header" label="&tree.valueHeader.label;"/>
-            </treerow>
-          </treehead>
-          <treechildren id="HTMLAList" flex="1"/>
+            <treecol id="HTMLValCol" flex="65" label="&tree.valueHeader.label;"/>
+          </treecols>
+          <treechildren id="HTMLAList" class="gridlines" flex="1"/>
         </tree>
         <hbox align="center">
           <label value="&editAttribute.label;"/>
@@ -130,22 +124,17 @@
       <!--                         CSS Attributes                         -->
       <!-- ============================================================== -->
       <vbox>
-        <tree id="CSSATree" class="AttributesTree inset"
+        <tree id="CSSATree" class="AttributesTree"
+          hidecolumnpicker="true" seltype="single"
           onselect="onSelectCSSTreeItem();"
           onclick="onSelectCSSTreeItem();"
           ondblclick="editCSSAttributeValue(event.target);">
-          <treecolgroup>
-            <treecol flex="35" width="0"/>
+          <treecols>
+            <treecol id="CSSPropCol" flex="35" label="&tree.propertyHeader.label;"/>
             <splitter class="tree-splitter"/>
-            <treecol flex="65" width="0"/>
-          </treecolgroup>
-          <treehead>
-            <treerow>
-              <treecell class="treecell-header treecell-inset-header" label="&tree.propertyHeader.label;"/>
-              <treecell class="treecell-header treecell-inset-header" label="&tree.valueHeader.label;"/>
-            </treerow>
-          </treehead>
-          <treechildren id="CSSAList" flex="1"/>
+            <treecol id="CSSValCol" flex="65" label="&tree.valueHeader.label;"/>
+          </treecols>
+          <treechildren id="CSSAList" class="gridlines" flex="1"/>
         </tree>
         <hbox align="center">
           <label value="&editAttribute.label;"/>
@@ -176,22 +165,17 @@
       <!--                    JavaScript Event Handlers                   -->
       <!-- ============================================================== -->
       <vbox>
-        <tree id="JSEATree" class="AttributesTree inset"
+        <tree id="JSEATree" class="AttributesTree"
+          hidecolumnpicker="true" seltype="single"
           onselect="onSelectJSETreeItem();"
           onclick="onSelectJSETreeItem();"
           ondblclick="editJSEAttributeValue(event.target);">
-          <treecolgroup>
-            <treecol flex="35" width="0"/>
+          <treecols>
+            <treecol id="AttrCol" flex="35" label="&tree.attributeHeader.label;"/>
             <splitter class="tree-splitter"/>
-            <treecol flex="65" wdith="0"/>
-          </treecolgroup>
-          <treehead>
-            <treerow>
-              <treecell class="treecell-header treecell-inset-header" label="&tree.attributeHeader.label;"/>
-              <treecell class="treecell-header treecell-inset-header" label="&tree.valueHeader.label;"/>
-            </treerow>
-          </treehead>
-          <treechildren id="JSEAList" flex="1"/>
+            <treecol id="HeaderCol" flex="65" label="&tree.valueHeader.label;"/>
+          </treecols>
+          <treechildren id="JSEAList" class="gridlines" flex="1"/>
         </tree>
         <hbox align="center">
           <label value="&editAttribute.label;"/>

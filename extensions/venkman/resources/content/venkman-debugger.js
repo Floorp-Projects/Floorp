@@ -849,7 +849,7 @@ function clearBreakpointByNumber (number)
     {
         delete sourceText.lines[line - 1].bpRecord;
         if (console.sourceView.childData.fileName == fileName)
-            console.sourceView.outliner.invalidateRow (line - 1);
+            console.sourceView.tree.invalidateRow (line - 1);
     }
     
     console.breakpoints.removeChildAtIndex(number);
@@ -900,7 +900,7 @@ function setBreakpoint (fileName, line)
     {
         scriptRec.sourceText.lines[line - 1].bpRecord = bpr;
         if (console.sourceView.childData.fileName == fileName)
-            console.sourceView.outliner.invalidateRow (line - 1);
+            console.sourceView.tree.invalidateRow (line - 1);
     }
     
     console.breakpoints.appendChild (bpr);
@@ -925,7 +925,7 @@ function setFutureBreakpoint (filePattern, line)
         {
             sourceText.lines[line - 1].bpRecord = bpr;
             if (console.sourceView.childData.fileName == filePattern)
-                console.sourceView.outliner.invalidateRow (line - 1);
+                console.sourceView.tree.invalidateRow (line - 1);
         }
     }
     

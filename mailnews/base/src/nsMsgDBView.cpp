@@ -109,7 +109,7 @@ NS_INTERFACE_MAP_BEGIN(nsMsgDBView)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgDBView)
    NS_INTERFACE_MAP_ENTRY(nsIMsgDBView)
    NS_INTERFACE_MAP_ENTRY(nsIDBChangeListener)
-   NS_INTERFACE_MAP_ENTRY(nsIOutlinerView)
+   NS_INTERFACE_MAP_ENTRY(nsITreeView)
    NS_INTERFACE_MAP_ENTRY(nsIMsgSearchNotify)
    NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END
@@ -350,9 +350,9 @@ NS_IMETHODIMP nsMsgDBView::Observe(nsISupports *aSubject, const char *aTopic, co
 
     if(matchFound) {
       NS_ENSURE_SUCCESS(rv,rv);
-      NS_ASSERTION(mOutliner, "no outliner, see bug #114956");
-      if(mOutliner)
-        mOutliner->Invalidate();
+      NS_ASSERTION(mTree, "no tree, see bug #114956");
+      if(mTree)
+        mTree->Invalidate();
     }
   }
   return NS_OK;
@@ -410,7 +410,7 @@ nsresult nsMsgDBView::GetLabelPrefStringAndAtom(const char *aPrefName, nsString&
   nsCOMPtr<nsIPrefService> prefService;
   nsCOMPtr<nsIPrefBranch> prefBranch;
   nsXPIDLCString csval;
-  nsCAutoString prefColorOutliner(LABEL_COLOR_STRING);
+  nsCAutoString prefColorTree(LABEL_COLOR_STRING);
 
   prefService = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -426,14 +426,14 @@ nsresult nsMsgDBView::GetLabelPrefStringAndAtom(const char *aPrefName, nsString&
   /* Build the color atom here.  This is where we cache it to be used
    * later in AppendLabelProperties() */
   NS_IF_RELEASE(*aColorAtom);
-  prefColorOutliner.AppendWithConversion(aColor.get() + 1);
-  *aColorAtom = NS_NewAtom(prefColorOutliner.get());
+  prefColorTree.AppendWithConversion(aColor.get() + 1);
+  *aColorAtom = NS_NewAtom(prefColorTree.get());
   NS_ENSURE_TRUE(*aColorAtom, NS_ERROR_FAILURE);
 
   return rv;
 }
 
-// helper function used to tell the outliner to apply a certain color style
+// helper function used to tell the tree to apply a certain color style
 // for fonts and highlights.
 nsresult nsMsgDBView::AppendLabelProperties(nsMsgLabelValue label, nsISupportsArray *aProperties)
 {
@@ -448,7 +448,7 @@ nsresult nsMsgDBView::AppendLabelProperties(nsMsgLabelValue label, nsISupportsAr
   return NS_OK;
 }
 
-// helper function used to tell the outliner to apply a certain color style
+// helper function used to tell the tree to apply a certain color style
 // for fonts when it is highlighted.
 nsresult nsMsgDBView::AppendSelectedTextColorProperties(nsMsgLabelValue label, nsISupportsArray *aProperties)
 {
@@ -469,7 +469,7 @@ nsresult nsMsgDBView::AppendSelectedTextColorProperties(nsMsgLabelValue label, n
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// nsIOutlinerView Implementation Methods (and helper methods)
+// nsITreeView Implementation Methods (and helper methods)
 ///////////////////////////////////////////////////////////////////////////
 
 nsresult nsMsgDBView::FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aSenderString)
@@ -701,11 +701,11 @@ nsresult nsMsgDBView::SaveAndClearSelection(nsMsgKeyArray *aMsgKeyArray)
   if (m_saveRestoreSelectionDepth != 1)
     return NS_OK;
   
-  if (!mOutlinerSelection)
+  if (!mTreeSelection)
     return NS_OK;
 
   // first, freeze selection.
-  mOutlinerSelection->SetSelectEventsSuppressed(PR_TRUE);
+  mTreeSelection->SetSelectEventsSuppressed(PR_TRUE);
 
   // second, get an array of view indices for the selection..
   nsUInt32Array selection;
@@ -721,8 +721,8 @@ nsresult nsMsgDBView::SaveAndClearSelection(nsMsgKeyArray *aMsgKeyArray)
   }
 
   // clear the selection, we'll manually restore it later.
-  if (mOutlinerSelection)
-    mOutlinerSelection->ClearSelection();
+  if (mTreeSelection)
+    mTreeSelection->ClearSelection();
 
   return NS_OK;
 }
@@ -734,7 +734,7 @@ nsresult nsMsgDBView::RestoreSelection(nsMsgKeyArray * aMsgKeyArray)
   if (m_saveRestoreSelectionDepth)
     return NS_OK;
 
-  if (!mOutlinerSelection)  // don't assert.
+  if (!mTreeSelection)  // don't assert.
     return NS_OK;
   
   // turn our message keys into corresponding view indices
@@ -759,12 +759,12 @@ nsresult nsMsgDBView::RestoreSelection(nsMsgKeyArray * aMsgKeyArray)
     currentViewPosition = FindKey(m_currentlyDisplayedMsgKey, PR_FALSE);
     if (currentViewPosition != nsMsgViewIndex_None)
     {
-      mOutlinerSelection->SetCurrentIndex(currentViewPosition);
-      mOutlinerSelection->RangedSelect(currentViewPosition, currentViewPosition, PR_TRUE /* augment */);
+      mTreeSelection->SetCurrentIndex(currentViewPosition);
+      mTreeSelection->RangedSelect(currentViewPosition, currentViewPosition, PR_TRUE /* augment */);
         
       // make sure the current message is once again visible in the thread pane
       // so we don't have to go search for it in the thread pane
-      if (mOutliner) mOutliner->EnsureRowIsVisible(currentViewPosition);
+      if (mTree) mTree->EnsureRowIsVisible(currentViewPosition);
     }
   }
 
@@ -774,11 +774,11 @@ nsresult nsMsgDBView::RestoreSelection(nsMsgKeyArray * aMsgKeyArray)
     // check to make sure newViewPosition is valid.
     // add the index back to the selection.
     if (newViewPosition != currentViewPosition) // don't re-add the current view
-      mOutlinerSelection->RangedSelect(newViewPosition, newViewPosition, PR_TRUE /* augment */);
+      mTreeSelection->RangedSelect(newViewPosition, newViewPosition, PR_TRUE /* augment */);
   }
 
   // unfreeze selection.
-  mOutlinerSelection->SetSelectEventsSuppressed(PR_FALSE);
+  mTreeSelection->SetSelectEventsSuppressed(PR_FALSE);
   return NS_OK;
 }
 
@@ -830,16 +830,16 @@ NS_IMETHODIMP nsMsgDBView::GetRowCount(PRInt32 *aRowCount)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBView::GetSelection(nsIOutlinerSelection * *aSelection)
+NS_IMETHODIMP nsMsgDBView::GetSelection(nsITreeSelection * *aSelection)
 {
-  *aSelection = mOutlinerSelection;
+  *aSelection = mTreeSelection;
   NS_IF_ADDREF(*aSelection);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBView::SetSelection(nsIOutlinerSelection * aSelection)
+NS_IMETHODIMP nsMsgDBView::SetSelection(nsITreeSelection * aSelection)
 {
-  mOutlinerSelection = aSelection;
+  mTreeSelection = aSelection;
   return NS_OK;
 }
 
@@ -917,8 +917,8 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
   {
     PRInt32 startRange;
     PRInt32 endRange;
-    nsresult rv = mOutlinerSelection->GetRangeAt(0, &startRange, &endRange);
-    NS_ENSURE_SUCCESS(rv, NS_OK); // outliner doesn't care if we failed
+    nsresult rv = mTreeSelection->GetRangeAt(0, &startRange, &endRange);
+    NS_ENSURE_SUCCESS(rv, NS_OK); // tree doesn't care if we failed
 
     if (startRange >= 0 && startRange == endRange && startRange < GetSize())
     {
@@ -972,15 +972,15 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
 
 nsresult nsMsgDBView::GetSelectedIndices(nsUInt32Array *selection)
 {
-  if (mOutlinerSelection)
+  if (mTreeSelection)
   {
     PRInt32 selectionCount; 
-    nsresult rv = mOutlinerSelection->GetRangeCount(&selectionCount);
+    nsresult rv = mTreeSelection->GetRangeCount(&selectionCount);
     for (PRInt32 i = 0; i < selectionCount; i++)
     {
       PRInt32 startRange;
       PRInt32 endRange;
-      rv = mOutlinerSelection->GetRangeAt(i, &startRange, &endRange);
+      rv = mTreeSelection->GetRangeAt(i, &startRange, &endRange);
       NS_ENSURE_SUCCESS(rv, NS_OK); 
       PRInt32 viewSize = GetSize();
       if (startRange >= 0 && startRange < viewSize)
@@ -992,7 +992,7 @@ nsresult nsMsgDBView::GetSelectedIndices(nsUInt32Array *selection)
   }
   else
   {
-    // if there is no outliner selection object then we must be in stand alone message mode.
+    // if there is no tree selection object then we must be in stand alone message mode.
     // in that case the selected indices are really just the current message key.
     nsMsgViewIndex viewIndex = FindViewIndex(m_currentlyDisplayedMsgKey);
     if (viewIndex != nsMsgViewIndex_None)
@@ -1008,7 +1008,7 @@ NS_IMETHODIMP nsMsgDBView::GetRowProperties(PRInt32 index, nsISupportsArray *pro
   if (!IsValidIndex(index))
     return NS_MSG_INVALID_DBVIEW_INDEX; 
 
-  // this is where we tell the outliner to apply styles to a particular row
+  // this is where we tell the tree to apply styles to a particular row
   nsCOMPtr <nsIMsgDBHdr> msgHdr;
   nsresult rv = NS_OK;
 
@@ -1047,7 +1047,7 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
   if (!IsValidIndex(aRow))
     return NS_MSG_INVALID_DBVIEW_INDEX; 
 
-  // this is where we tell the outliner to apply styles to a particular row
+  // this is where we tell the tree to apply styles to a particular row
   // i.e. if the row is an unread message...
 
   nsCOMPtr <nsIMsgDBHdr> msgHdr;
@@ -1306,6 +1306,22 @@ nsresult nsMsgDBView::GetDBForViewIndex(nsMsgViewIndex index, nsIMsgDatabase **d
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgDBView::GetImageSrc(PRInt32 aRow, const PRUnichar * aColID, nsAString& aValue)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgDBView::GetProgressMode(PRInt32 aRow, const PRUnichar * aColID, PRInt32* _retval)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDBView::GetCellValue(PRInt32 aRow, const PRUnichar * aColID, nsAString& aValue)
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, nsAString& aValue)
 {
   // remove once #116341 is fixed
@@ -1401,9 +1417,9 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, n
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBView::SetOutliner(nsIOutlinerBoxObject *outliner)
+NS_IMETHODIMP nsMsgDBView::SetTree(nsITreeBoxObject *tree)
 {
-  mOutliner = outliner;
+  mTree = tree;
   return NS_OK;
 }
 
@@ -1495,7 +1511,7 @@ NS_IMETHODIMP nsMsgDBView::PerformActionOnCell(const PRUnichar *action, PRInt32 
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// end nsIOutlinerView Implementation Methods
+// end nsITreeView Implementation Methods
 ///////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, nsMsgViewFlagsTypeValue viewFlags, PRInt32 *pCount)
@@ -1554,7 +1570,7 @@ NS_IMETHODIMP nsMsgDBView::Close()
   RemoveLabelPrefObservers();
 
   PRInt32 oldSize = GetSize();
-  // this is important, because the outliner will ask us for our
+  // this is important, because the tree will ask us for our
   // row count, which get determine from the number of keys.
   m_keys.RemoveAll();
   // be consistent
@@ -1562,8 +1578,8 @@ NS_IMETHODIMP nsMsgDBView::Close()
   m_levels.RemoveAll();
 
   // this needs to happen after we remove all the keys, since RowCountChanged() will call our GetRowCount()
-  if (mOutliner) 
-    mOutliner->RowCountChanged(0, -oldSize);
+  if (mTree) 
+    mTree->RowCountChanged(0, -oldSize);
 
   ClearHdrCache();
   if (m_db)
@@ -1798,13 +1814,13 @@ NS_IMETHODIMP nsMsgDBView::DoCommand(nsMsgViewCommandTypeValue command)
     NoteEndChange(nsMsgViewNotificationCode::none, 0, 0);
     break;
   case nsMsgViewCommandType::selectAll:
-    if (mOutlinerSelection && mOutliner) {
+    if (mTreeSelection && mTree) {
         // if in threaded mode, we need to expand all before selecting
         if (m_sortType == nsMsgViewSortType::byThread) {
             rv = ExpandAll();
         }
-        mOutlinerSelection->SelectAll();
-        mOutliner->Invalidate();
+        mTreeSelection->SelectAll();
+        mTree->Invalidate();
     }
     break;
   case nsMsgViewCommandType::selectThread:
@@ -1826,18 +1842,18 @@ NS_IMETHODIMP nsMsgDBView::DoCommand(nsMsgViewCommandTypeValue command)
     if (!mIsSearchView)  //ignore for search view
     {
       rv = ExpandAll();
-      NS_ASSERTION(mOutliner, "no outliner, see bug #114956");
-      if(mOutliner)
-        mOutliner->Invalidate();
+      NS_ASSERTION(mTree, "no tree, see bug #114956");
+      if(mTree)
+        mTree->Invalidate();
     }
     break;
   case nsMsgViewCommandType::collapseAll:
     if (!mIsSearchView)  //ignore for search view
     {
       rv = CollapseAll();
-      NS_ASSERTION(mOutliner, "no outliner, see bug #114956");
-      if(mOutliner)
-        mOutliner->Invalidate();
+      NS_ASSERTION(mTree, "no tree, see bug #114956");
+      if(mTree)
+        mTree->Invalidate();
     }
     break;
   default:
@@ -1855,7 +1871,7 @@ NS_IMETHODIMP nsMsgDBView::GetCommandStatus(nsMsgViewCommandTypeValue command, P
   PRBool haveSelection;
   PRInt32 rangeCount;
   // if range count is non-zero, we have at least one item selected, so we have a selection
-  if (mOutlinerSelection && NS_SUCCEEDED(mOutlinerSelection->GetRangeCount(&rangeCount)) && rangeCount > 0)
+  if (mTreeSelection && NS_SUCCEEDED(mTreeSelection->GetRangeCount(&rangeCount)) && rangeCount > 0)
     haveSelection = PR_TRUE;
   else 
     haveSelection = PR_FALSE;
@@ -3214,11 +3230,11 @@ nsresult nsMsgDBView::ExpandAndSelectThread()
 {
     nsresult rv;
 
-    NS_ASSERTION(mOutlinerSelection, "no outliner selection");
-    if (!mOutlinerSelection) return NS_ERROR_UNEXPECTED;
+    NS_ASSERTION(mTreeSelection, "no tree selection");
+    if (!mTreeSelection) return NS_ERROR_UNEXPECTED;
 
     PRInt32 index;
-    rv = mOutlinerSelection->GetCurrentIndex(&index);
+    rv = mTreeSelection->GetCurrentIndex(&index);
     NS_ENSURE_SUCCESS(rv,rv);
 
     rv = ExpandAndSelectThreadByIndex(index);
@@ -3266,18 +3282,18 @@ nsresult nsMsgDBView::ExpandAndSelectThreadByIndex(nsMsgViewIndex index)
 
   // update the selection
 
-  NS_ASSERTION(mOutlinerSelection, "no outliner selection");
-  if (!mOutlinerSelection) return NS_ERROR_UNEXPECTED;
+  NS_ASSERTION(mTreeSelection, "no tree selection");
+  if (!mTreeSelection) return NS_ERROR_UNEXPECTED;
 
   // clear the existing selection.
-  mOutlinerSelection->ClearSelection(); 
+  mTreeSelection->ClearSelection(); 
 
   // is this correct when we are selecting multiple items?
-  mOutlinerSelection->SetCurrentIndex(threadIndex); 
+  mTreeSelection->SetCurrentIndex(threadIndex); 
 
   // the count should be 1 or greater. if there was only one message in the thread, we just select it.
   // if more, we select all of them.
-  mOutlinerSelection->RangedSelect(threadIndex, threadIndex + count - 1, PR_TRUE /* augment */);
+  mTreeSelection->RangedSelect(threadIndex, threadIndex + count - 1, PR_TRUE /* augment */);
 
   if (count == 1) {
     // if we ended up selecting on message, this will cause us to load it.
@@ -3998,7 +4014,7 @@ NS_IMETHODIMP nsMsgDBView::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *instigator
 
   ClearHdrCache();
 
-  // this is important, because the outliner will ask us for our
+  // this is important, because the tree will ask us for our
   // row count, which get determine from the number of keys.
   m_keys.RemoveAll();
   // be consistent
@@ -4006,14 +4022,14 @@ NS_IMETHODIMP nsMsgDBView::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *instigator
   m_levels.RemoveAll();
 
   // clear the existing selection.
-  if (mOutlinerSelection) {
-    mOutlinerSelection->ClearSelection(); 
+  if (mTreeSelection) {
+    mTreeSelection->ClearSelection(); 
   }
 
-  // this will force the outliner to ask for the cell values
+  // this will force the tree to ask for the cell values
   // since we don't have a db and we don't have any keys, 
   // the thread pane goes blank
-  if (mOutliner) mOutliner->Invalidate();
+  if (mTree) mTree->Invalidate();
 
   return NS_OK;
 }
@@ -4039,19 +4055,19 @@ void	nsMsgDBView::DisableChangeUpdates()
 void	nsMsgDBView::NoteChange(nsMsgViewIndex firstLineChanged, PRInt32 numChanged, 
 							 nsMsgViewNotificationCodeValue changeType)
 {
-  if (mOutliner)
+  if (mTree)
   {
     switch (changeType)
     {
     case nsMsgViewNotificationCode::changed:
-      mOutliner->InvalidateRange(firstLineChanged, firstLineChanged + numChanged - 1);
+      mTree->InvalidateRange(firstLineChanged, firstLineChanged + numChanged - 1);
       break;
     case nsMsgViewNotificationCode::insertOrDelete:
       if (numChanged < 0)
         mRemovingRow = PR_TRUE;
       // the caller needs to have adjusted m_keys before getting here, since
       // RowCountChanged() will call our GetRowCount()
-      mOutliner->RowCountChanged(firstLineChanged, numChanged);
+      mTree->RowCountChanged(firstLineChanged, numChanged);
       mRemovingRow = PR_FALSE;
     case nsMsgViewNotificationCode::all:
       ClearHdrCache();
@@ -4192,13 +4208,13 @@ NS_IMETHODIMP nsMsgDBView::ViewNavigate(nsMsgNavigationTypeValue motion, nsMsgKe
     PRInt32 currentIndex; 
     nsMsgViewIndex startIndex;
 
-    if (!mOutlinerSelection) // we must be in stand alone message mode
+    if (!mTreeSelection) // we must be in stand alone message mode
     {
       currentIndex = FindViewIndex(m_currentlyDisplayedMsgKey);
     }
     else
     {         
-      nsresult rv = mOutlinerSelection->GetCurrentIndex(&currentIndex);
+      nsresult rv = mTreeSelection->GetCurrentIndex(&currentIndex);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     startIndex = currentIndex;
@@ -4404,7 +4420,7 @@ NS_IMETHODIMP nsMsgDBView::NavigateStatus(nsMsgNavigationTypeValue motion, PRBoo
     nsMsgKey resultKey = nsMsgKey_None;
     PRInt32 index;
     nsMsgViewIndex resultIndex = nsMsgViewIndex_None;
-    rv = mOutlinerSelection->GetCurrentIndex(&index);
+    rv = mTreeSelection->GetCurrentIndex(&index);
 
     // warning - we no longer validate index up front because fe passes in -1 for no
     // selection, so if you use index, be sure to validate it before using it
@@ -4816,14 +4832,14 @@ nsMsgDBView::GetNumSelected(PRUint32 *numSelected)
 { 
   NS_ENSURE_ARG_POINTER(numSelected);
     
-  if (!mOutlinerSelection) 
+  if (!mTreeSelection) 
   {
     *numSelected = 0;
     return NS_OK;
   }
   
   // We call this a lot from the front end JS, so make it fast.
-  return mOutlinerSelection->GetCount((PRInt32*)numSelected);
+  return mTreeSelection->GetCount((PRInt32*)numSelected);
 }
 
 NS_IMETHODIMP 
@@ -4831,9 +4847,9 @@ nsMsgDBView::GetMsgToSelectAfterDelete(nsMsgViewIndex *msgToSelectAfterDelete)
 {
   NS_ENSURE_ARG_POINTER(msgToSelectAfterDelete);
   *msgToSelectAfterDelete = nsMsgViewIndex_None;
-  if (!mOutlinerSelection) 
+  if (!mTreeSelection) 
   {
-    // if we don't have an outliner selection then we must be in stand alone mode.
+    // if we don't have an tree selection then we must be in stand alone mode.
     // return the index of the current message key as the first selected index.
     *msgToSelectAfterDelete = FindViewIndex(m_currentlyDisplayedMsgKey);
     return NS_OK;
@@ -4842,10 +4858,10 @@ nsMsgDBView::GetMsgToSelectAfterDelete(nsMsgViewIndex *msgToSelectAfterDelete)
   PRInt32 selectionCount;
   PRInt32 startRange;
   PRInt32 endRange;
-  nsresult rv = mOutlinerSelection->GetRangeCount(&selectionCount);
+  nsresult rv = mTreeSelection->GetRangeCount(&selectionCount);
   for (PRInt32 i = 0; i < selectionCount; i++) 
   {
-    rv = mOutlinerSelection->GetRangeAt(i, &startRange, &endRange);
+    rv = mTreeSelection->GetRangeAt(i, &startRange, &endRange);
     *msgToSelectAfterDelete = PR_MIN(*msgToSelectAfterDelete, startRange);
   }
   nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_folder);
@@ -4917,13 +4933,13 @@ nsMsgDBView::OnDeleteCompleted(PRBool aSucceeded)
 
       PRInt32 selectionCount; 
       //selection count cannot be zero, we would not be here
-      mOutlinerSelection->GetRangeCount(&selectionCount);  
+      mTreeSelection->GetRangeCount(&selectionCount);  
       NS_ASSERTION(selectionCount, "selected indices for deletion is 0");
       PRInt32 *startRangeArray = (PRInt32*) PR_MALLOC(selectionCount* sizeof(PRInt32));
       PRInt32 *endRangeArray = (PRInt32*) PR_MALLOC(selectionCount* sizeof(PRInt32));
       PRInt32 i;
       for (i=0; i<selectionCount; i++)
-        mOutlinerSelection->GetRangeAt(i, &startRangeArray[i], &endRangeArray[i]);
+        mTreeSelection->GetRangeAt(i, &startRangeArray[i], &endRangeArray[i]);
 
       PRInt32 delta=0; //keeps no of rows deleted.
       for (i=0; i<selectionCount; i++)
@@ -4975,15 +4991,15 @@ nsresult
 nsMsgDBView::GetKeyForFirstSelectedMessage(nsMsgKey *key)
 {
   NS_ENSURE_ARG_POINTER(key);
-  // if we don't have an outliner selection we must be in stand alone mode....
-  if (!mOutlinerSelection) 
+  // if we don't have an tree selection we must be in stand alone mode....
+  if (!mTreeSelection) 
   {
     *key = m_currentlyDisplayedMsgKey;
     return NS_OK;
   }
 
   PRInt32 currentIndex;
-  nsresult rv = mOutlinerSelection->GetCurrentIndex(&currentIndex);
+  nsresult rv = mTreeSelection->GetCurrentIndex(&currentIndex);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // check that the first index is valid, it may not be if nothing is selected
@@ -5015,8 +5031,8 @@ nsresult nsMsgDBView::AdjustRowCount(PRInt32 rowCountBeforeSort, PRInt32 rowCoun
     GetNumSelected(&numSelected);
     NS_ASSERTION(numSelected == 0, "it is not save to call AdjustRowCount() when you have a selection");
 
-    if (mOutliner)
-      mOutliner->RowCountChanged(0, rowChange);
+    if (mTree)
+      mTree->RowCountChanged(0, rowChange);
   }
   return NS_OK;
 }

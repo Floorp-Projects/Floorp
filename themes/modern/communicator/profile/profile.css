@@ -47,15 +47,11 @@
 
 /* ::::: Profile Selection dialog ::::: */
 
-#profiles > treechildren > treeitem > treerow > treecell
-    > .tree-cell-icon
-{
+#profiles > listitem {
   list-style-image: url("chrome://communicator/skin/profile/profile.gif");
 }
 
-#profiles > treechildren > treeitem > treerow > treecell[rowMigrate="no"]
-    > .tree-cell-icon
-{
+#profiles > listitem[rowMigrate="no"] {
   list-style-image: url("chrome://communicator/skin/profile/migrate.gif");
 }
 

@@ -71,7 +71,7 @@
       border-bottom: 1px solid ThreeDShadow;
     }    
 
-  bookmarks-outliner.inset
+  bookmarks-tree.inset
     {
       margin: 0px;
       -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow;

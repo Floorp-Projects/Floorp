@@ -20,14 +20,10 @@
 
 //Html Domain object
 var htmlobj = null //new Object();
-//htmlobj.tree_node = void 0;                       // the dom element of the htmldomain tree
-//htmlobj.treeroot_node = void 0;                   // dom element of the htmldomain treechildren
 //htmlobj.domain_pref = void 0;                     // dom element of the broadcaster mailhtmldomain
 
 //Plain Text Domain object
 var plainobj = null //new Object();
-//plainobj.tree_node = void 0;                      // dom element of plaintextdomain tree
-//plainobj.treeroot_node = void 0;                  //dom element of plaintextdomain treechildren
 //plainobj.domain_pref = void 0;                    // dom element of the broadcaster mailplaintextdomain
 
 var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
@@ -49,10 +45,8 @@ function Init()
   //Initialize the broadcaster value so that you can use it later
   htmlobj.domain_pref            = document.getElementById('mailhtmldomain');
   plainobj.domain_pref           = document.getElementById('mailplaintextdomain');
-  htmlobj.tree_node              = document.getElementById('html_domains');
-  htmlobj.treeroot_node          = document.getElementById('html_domains_root');
-  plainobj.tree_node             = document.getElementById('plaintext_domains');
-  plainobj.treeroot_node         = document.getElementById('plaintext_domains_root');
+  htmlobj.listbox              = document.getElementById('html_domains');
+  plainobj.listbox             = document.getElementById('plaintext_domains');
 
   //Get the values of the Add Domain Dlg boxes and store it in the objects
   var AddDomainDlg               = document.getElementById('domaindlg');
@@ -92,29 +86,25 @@ function AddDomain(obj)
       objPrime = htmlobj;
     if (!DomainAlreadyPresent(obj, DomainName, true))
       if(!DomainAlreadyPresent(objPrime, DomainName, false)) {
-      AddTreeItem(obj.treeroot_node, DomainName);
+      AddListItem(obj.listbox, DomainName);
     }
   }
 
   UpdateSavePrefString(obj);
 }
 
-function AddTreeItem(treeRoot, domainTitle)
+function AddListItem(listbox, domainTitle)
 {
   try {
 
-      // Create a treerow for the new Domain
-      var item = document.createElement('treeitem');
-      var row  = document.createElement('treerow');
-      var cell = document.createElement('treecell');
+      // Create a listitem for the new Domain
+      var item = document.createElement('listitem');
 
       // Copy over the attributes
-      cell.setAttribute('label', domainTitle);
+      item.setAttribute('label', domainTitle);
 
-      // Add it to the active languages tree
-      item.appendChild(row);
-      row.appendChild(cell);
-      treeRoot.appendChild(item);
+      // Add it to the active languages listbox
+      listbox.appendChild(item);
 
   } //try
 
@@ -163,12 +153,12 @@ function DomainAlreadyPresent(obj, domain_name, dup)
 function RemoveDomains(obj)
 {
   var nextNode = null;
-  var numSelected = obj.tree_node.selectedItems.length;
+  var numSelected = obj.listbox.selectedItems.length;
   var deleted_all = false;
 
-  while (obj.tree_node.selectedItems.length > 0) {
+  while (obj.listbox.selectedItems.length > 0) {
 
-  var selectedNode = obj.tree_node.selectedItems[0];
+  var selectedNode = obj.listbox.selectedItems[0];
     nextNode = selectedNode.nextSibling;
 
   if (!nextNode)
@@ -176,17 +166,12 @@ function RemoveDomains(obj)
     if (selectedNode.previousSibling)
     nextNode = selectedNode.previousSibling;
 
-    var row  =  selectedNode.firstChild;
-    var cell =  row.firstChild;
-
-    row.removeChild(cell);
-    selectedNode.removeChild(row);
-    obj.treeroot_node.removeChild(selectedNode);
+    obj.listbox.removeChild(selectedNode);
 
    } //while
 
   if (nextNode) {
-    obj.tree_node.selectItem(nextNode)
+    obj.listbox.selectItem(nextNode)
   } //if
 
   UpdateSavePrefString(obj);
@@ -206,7 +191,7 @@ function LoadDomains(obj)
 
       var str = arrayOfPrefs[i].replace(/ /g,"");
       if (str) {
-        AddTreeItem(obj.treeroot_node, str);
+        AddListItem(obj.listbox, str);
       } //if
     } //for
 }
@@ -216,11 +201,9 @@ function UpdateSavePrefString(obj)
   var num_domains = 0;
   var pref_string = "";
 
-  for (var item = obj.treeroot_node.firstChild; item != null; item = item.nextSibling) {
+  for (var item = obj.listbox.firstChild; item != null; item = item.nextSibling) {
 
-    var row  =  item.firstChild;
-    var cell =  row.firstChild;
-    var domainid = cell.getAttribute('label');
+    var domainid = item.getAttribute('label');
     if (domainid.length > 1) {
 
           num_domains++;

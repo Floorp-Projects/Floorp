@@ -72,8 +72,8 @@ function StartUp()
   catch(e) {
   }
 
-  var profileTree = document.getElementById("profiles");
-  profileTree.focus();
+  var profileList = document.getElementById("profiles");
+  profileList.focus();
 
   DoEnabling();
 }
@@ -98,26 +98,22 @@ function highlightCurrentProfile()
 }
 
 // function : <profileSelection.js>::AddItem();
-// purpose  : utility function for adding items to a tree.
+// purpose  : utility function for adding items to a listbox.
 function AddItem( aChildren, aProfileObject )
 {
   var kids    = document.getElementById(aChildren);
-  var item    = document.createElement("treeitem");
-  var row     = document.createElement("treerow");
-  var cell    = document.createElement("treecell");
-  cell.setAttribute("label", aProfileObject.mName );
-  cell.setAttribute("rowMigrate",  aProfileObject.mMigrated );
-  cell.setAttribute("class", "treecell-iconic");
-  row.appendChild(cell);
-  item.appendChild(row);
-  item.setAttribute("profile_name", aProfileObject.mName );
-  item.setAttribute("rowName", aProfileObject.mName );
-  item.setAttribute("id", ( "profileName_" + aProfileObject.mName ) );
+  var listitem = document.createElement("listitem");
+  listitem.setAttribute("label", aProfileObject.mName );
+  listitem.setAttribute("rowMigrate",  aProfileObject.mMigrated );
+  listitem.setAttribute("class", "listitem-iconic");
+  listitem.setAttribute("profile_name", aProfileObject.mName );
+  listitem.setAttribute("rowName", aProfileObject.mName );
+  listitem.setAttribute("id", ( "profileName_" + aProfileObject.mName ) );
   // 23/10/99 - no roaming access yet!
   //  var roaming = document.getElementById("roamingitem");
   //  kids.insertBefore(item,roaming);
-  kids.appendChild(item);
-  return item;
+  kids.appendChild(listitem);
+  return listitem;
 }
 
 function Profile ( aName, aMigrated )
@@ -127,7 +123,7 @@ function Profile ( aName, aMigrated )
 }
 
 // function : <profileSelection.js>::loadElements();
-// purpose  : load profiles into tree
+// purpose  : load profiles into listbox
 function loadElements()
 {
   try {
@@ -148,7 +144,7 @@ function loadElements()
 
       var migrated = Registry.getString( node.key, "migrated" );
 
-      AddItem( "profilekids", new Profile( node.name, migrated ) );
+      AddItem( "profiles", new Profile( node.name, migrated ) );
 
       regEnum.next();
     }
@@ -161,11 +157,11 @@ function loadElements()
 // purpose  : sets the current profile to the selected profile (user choice: "Start Mozilla")
 function onStart()
 {
-  var profileTree = document.getElementById("profiles");
-  var selected = profileTree.selectedItems[0];
+  var profileList = document.getElementById("profiles");
+  var selected = profileList.selectedItems[0];
 
   var profilename = selected.getAttribute("profile_name");
-  if( selected.firstChild.firstChild.getAttribute("rowMigrate") == "no" ) {
+  if( selected.getAttribute("rowMigrate") == "no" ) {
     var lString = gProfileManagerBundle.getString("migratebeforestart");
     lString = lString.replace(/\s*<html:br\/>/g,"\n");
     lString = lString.replace(/%brandShortName%/gi,

@@ -54,22 +54,26 @@
 
 /* ::::: file/directory items ::::: */
 
-outlinerchildren:-moz-outliner-image(FilenameColumn, directory) {
+treechildren:-moz-tree-image(FilenameColumn) {
+  margin-right: 2px;
+}
+
+treechildren:-moz-tree-image(FilenameColumn, directory) {
   list-style-image: url("chrome://global/skin/filepicker/dir-closed.gif");
 }
 
-outlinerchildren:-moz-outliner-image(FilenameColumn, file) {
+treechildren:-moz-tree-image(FilenameColumn, file) {
   list-style-image: url("chrome://global/skin/filepicker/blank.gif");
 }
 
 
 /* ::::: focus rules ::::: */
 
-#directoryOutliner > outlinerrows > .outliner-bodybox {
+#directoryTree > treerows > .tree-bodybox {
   border: 1px solid transparent;
 } 
 
-#directoryOutliner:focus > outlinerrows > .outliner-bodybox {
+#directoryTree:focus > treerows > .tree-bodybox {
   border-color: #000000;
 }
 

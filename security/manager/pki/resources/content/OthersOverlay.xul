@@ -47,21 +47,21 @@
   <vbox id="othersCerts">
     <description>&certmgr.others;</description>
     <separator class="thin"/>
-    <outliner id="email-outliner" flex="1"
+    <tree id="email-tree" flex="1"
               onselect="email_enableButtons()">
-      <outlinercols>
-        <outlinercol id="certcol" label="&certmgr.certname;" primary="true" 
+      <treecols>
+        <treecol id="certcol" label="&certmgr.certname;" primary="true" 
                      flex="1"/>
         <splitter class="tree-splitter"/>
-        <outlinercol id="emailcol" label="&certmgr.email;"
+        <treecol id="emailcol" label="&certmgr.email;"
                      flex="1"/>
         <splitter class="tree-splitter"/>
-        <outlinercol id="tokencol" label="&certmgr.tokenname;"
+        <treecol id="tokencol" label="&certmgr.tokenname;"
                      flex="1"/>
-<!--        <outlinercol id="certdbkeycol" collapsed="true" flex="1"/> -->
-      </outlinercols>
-      <outlinerchildren flex="1" ondblclick="viewCerts();"/>
-    </outliner>
+<!--        <treecol id="certdbkeycol" collapsed="true" flex="1"/> -->
+      </treecols>
+      <treechildren flex="1" ondblclick="viewCerts();"/>
+    </tree>
     <hbox>
       <button id="email_viewButton"
               label="&certmgr.view.label;"

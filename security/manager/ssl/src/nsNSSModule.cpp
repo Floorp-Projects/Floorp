@@ -36,7 +36,7 @@
 #include "nsPK11TokenDB.h"
 #include "nsPKCS11Slot.h"
 #include "nsNSSCertificate.h"
-#include "nsCertOutliner.h"
+#include "nsCertTree.h"
 #include "nsCrypto.h"
 //For the NS_CRYPTO_CONTRACTID define
 #include "nsDOMCID.h"
@@ -146,7 +146,7 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsPK11TokenDB)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsPKCS11ModuleDB)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(PR_FALSE, PSMContentListener, init)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsNSSCertificateDB)
-NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCertOutliner)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCertTree)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCrypto)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsPkcs11)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCMSSecureMessage)
@@ -279,10 +279,10 @@ static const nsModuleComponentInfo components[] =
   },
 
   {
-    "Certificate Outliner",
-    NS_CERTOUTLINER_CID,
-    NS_CERTOUTLINER_CONTRACTID,
-    nsCertOutlinerConstructor
+    "Certificate Tree",
+    NS_CERTTREE_CID,
+    NS_CERTTREE_CONTRACTID,
+    nsCertTreeConstructor
   },
 
   {

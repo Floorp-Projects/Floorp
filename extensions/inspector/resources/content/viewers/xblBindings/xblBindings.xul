@@ -11,7 +11,7 @@
       orient="vertical"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inBaseOutlinerView.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inBaseTreeView.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/xblBindings/xblBindings.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/hooks.js"/>
@@ -24,24 +24,24 @@
   
   <multipanelset id="mpsBinding" flex="1">
     <multipanel id="bxContent" label="Content" open="true" persist="open" onopen="if (viewer) {viewer.initContent();} else {gInitContent = true;}">
-      <outliner id="olContent" flex="1" class="plain">
-        <outlinercols>
-          <outlinercol id="colNodeName" primary="true" label="nodeName" flex="1"/>
+      <tree id="olContent" flex="1" class="plain">
+        <treecols>
+          <treecol id="colNodeName" primary="true" label="nodeName" flex="1"/>
           <splitter class="tree-splitter"/>
-          <outlinercol id="colNodeValue" label="nodeValue" flex="1"/>
-        </outlinercols>
-        <outlinerchildren id="olbContent"/>
-      </outliner>
+          <treecol id="colNodeValue" label="nodeValue" flex="1"/>
+        </treecols>
+        <treechildren id="olbContent"/>
+      </tree>
     </multipanel>
 
     <multipanel id="bxMethods" label="Methods" open="true" persist="open">
-      <outliner id="olMethods" class="outliner-list plain" flex="1"
+      <tree id="olMethods" class="tree-list plain" flex="1"
                 onselect="viewer.onMethodSelected()">
-        <outlinercols>
-          <outlinercol id="olcMethodName" flex="1"/>
-        </outlinercols>
-        <outlinerchildren id="olbMethods" context="ppDOMContext"/>
-      </outliner>
+        <treecols>
+          <treecol id="olcMethodName" flex="1"/>
+        </treecols>
+        <treechildren id="olbMethods" context="ppDOMContext"/>
+      </tree>
     </multipanel>
   
     <multipanel id="bxProps" label="Properties" open="true" persist="open">
@@ -50,35 +50,35 @@
           <radio id="raPropGetter" label="getter" selected="true" oncommand="viewer.onPropSelected()"/>
           <radio id="raPropSetter" label="setter" oncommand="viewer.onPropSelected()"/>
         </radiogroup>
-        <outliner id="olProps" class="outliner-list plain" flex="1"
+        <tree id="olProps" class="tree-list plain" flex="1"
                   onselect="viewer.onPropSelected()">
-          <outlinercols>
-            <outlinercol id="olcPropName" label="Property" flex="1"/>
-          </outlinercols>
-          <outlinerchildren id="olbProps" context="ppDOMContext"/>
-        </outliner>
+          <treecols>
+            <treecol id="olcPropName" label="Property" flex="1"/>
+          </treecols>
+          <treechildren id="olbProps" context="ppDOMContext"/>
+        </tree>
       </vbox>
     </multipanel>
 
     <multipanel id="bxHandlers" label="Handlers" persist="open">
-      <outliner id="olHandlers" class="outliner-list plain" flex="1"
+      <tree id="olHandlers" class="tree-list plain" flex="1"
                 onselect="viewer.onHandlerSelected()">
-        <outlinercols>
-          <outlinercol id="olcHandlerEvent" flex="1"/>
-          <outlinercol id="olcHandlerPhase"/>
-        </outlinercols>
-        <outlinerchildren id="olbHandlers" context="ppDOMContext"/>
-      </outliner>
+        <treecols>
+          <treecol id="olcHandlerEvent" flex="1"/>
+          <treecol id="olcHandlerPhase"/>
+        </treecols>
+        <treechildren id="olbHandlers" context="ppDOMContext"/>
+      </tree>
     </multipanel>
   
     <multipanel id="bxResources" label="Resources" persist="open">
-      <outliner id="olResources" class="outliner-list plain" flex="1">
-        <outlinercols>
-          <outlinercol id="olcResourceType" flex="1"/>
-          <outlinercol id="olcResourceSrc" flex="2"/>
-        </outlinercols>
-        <outlinerchildren id="olbResources" context="ppDOMContext"/>
-      </outliner>
+      <tree id="olResources" class="tree-list plain" flex="1">
+        <treecols>
+          <treecol id="olcResourceType" flex="1"/>
+          <treecol id="olcResourceSrc" flex="2"/>
+        </treecols>
+        <treechildren id="olbResources" context="ppDOMContext"/>
+      </tree>
     </multipanel>
 
     <multipanel id="bxFunction" label="Source Code" open="true" persist="open">

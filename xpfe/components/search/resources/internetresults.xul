@@ -2,7 +2,6 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/search/search.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/search/internetresults.css" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/search/icons.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/search/internetresults.dtd">
 
@@ -43,122 +42,81 @@
     <separator orient="vertical" class="thin"/>
   </hbox>
 
-  <popupset>
-    <popup id="contextual" onpopupshowing="return fillContextMenu('contextual', 'internetresultstree');" >
-      <menu/>
-    </popup>
-  </popupset>
-  <tree id="internetresultstree" ref="" flex="1" datasources="rdf:internetsearch" context="contextual"
-    onselect="treeSelect(event);" onclick="treeClick(event);">
+  <menupopup id="contextual" onpopupshowing="return fillContextMenu('contextual', 'resultsList');"/>
+  
+  <tree id="resultsList" flex="1" class="plain"
+           datasources="rdf:internetsearch" context="contextual"
+           onselect="listSelect(event);"
+           onclick="listClick(event);">
 
-  <treecolgroup>
-    <treecol id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
-    <splitter class="tree-splitter"/>
-    <treecol id="PageRankColumn" resource="http://home.netscape.com/NC-rdf#PageRank"
-             resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
-    <splitter class="tree-splitter"/>
-    <treecol id="RelevanceColumn" resource="http://home.netscape.com/NC-rdf#Relevance"
-             resource2="http://home.netscape.com/NC-rdf#Name"
-             hidden="true" flex="1"/>
-    <splitter class="tree-splitter"/>
-    <treecol id="PriceColumn" resource="http://home.netscape.com/NC-rdf#Price"
-             resource2="http://home.netscape.com/NC-rdf#Availability"
-             hidden="true" flex="1"/>
-    <splitter class="tree-splitter"/>
-    <treecol id="AvailabilityColumn" resource="http://home.netscape.com/NC-rdf#Availability"
-             resource2="http://home.netscape.com/NC-rdf#Price"
-             hidden="true" flex="1"/>
-    <splitter class="tree-splitter"/>
-    <treecol id="DateColumn" resource="http://home.netscape.com/NC-rdf#Date"
-             resource2="http://home.netscape.com/NC-rdf#Name"
-             hidden="true" flex="1"/>
-    <splitter class="tree-splitter"/>
-    <treecol id="SiteColumn" resource="http://home.netscape.com/NC-rdf#Site"
-             resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
-    <splitter class="tree-splitter"/>
-    <treecol id="EngineColumn" resource="http://home.netscape.com/NC-rdf#Engine"
-             resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
-  </treecolgroup>
+    <treecols onclick="doSort(event.target.id, 'http://home.netscape.com/NC-rdf#PageRank');">
+      <treecol id="NameColumn" primary="true" label="&name.column.label;"
+               resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="PageRankColumn" label="&pagerank.column.label;"
+               resource="http://home.netscape.com/NC-rdf#PageRank"
+               resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="RelevanceColumn" label="&relevance.column.label;"
+               resource="http://home.netscape.com/NC-rdf#Relevance"
+               resource2="http://home.netscape.com/NC-rdf#Name"
+               hidden="true" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="PriceColumn" label="&price.column.label;"
+               resource="http://home.netscape.com/NC-rdf#Price"
+               resource2="http://home.netscape.com/NC-rdf#Availability"
+               hidden="true" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="AvailabilityColumn" label="&availability.column.label;"
+               resource="http://home.netscape.com/NC-rdf#Availability"
+               resource2="http://home.netscape.com/NC-rdf#Price"
+               hidden="true" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="DateColumn" label="&date.column.label;"
+               resource="http://home.netscape.com/NC-rdf#Date"
+               resource2="http://home.netscape.com/NC-rdf#Name"
+               hidden="true" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="SiteColumn" label="&site.column.label;"
+               resource="http://home.netscape.com/NC-rdf#Site"
+               resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol id="EngineColumn" label="&engine.column.label;"
+               resource="http://home.netscape.com/NC-rdf#Engine"
+               resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+    </treecols>
 
     <template>
       <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-        <treechildren flex="1">
-          <treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-            <treerow>
-              <treecell>
-                <separator class="groove"/>
-              </treecell>
-            </treerow>
-          </treeitem>   
-        </treechildren> 
+        <treeseparator uri="..."/>
       </rule>
+      
       <rule>
-        <treechildren flex="1">
-          <treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+        <treechildren>
+          <treeitem uri="...">
             <treerow>
-              <treecell class="treecell-iconic" crop="right"
-                        src="rdf:http://home.netscape.com/NC-rdf#Icon" 
+              <treecell src="rdf:http://home.netscape.com/NC-rdf#Icon" 
                         label="rdf:http://home.netscape.com/NC-rdf#Name" />
-              <treecell crop="right" label="rdf:http://home.netscape.com/NC-rdf#PageRank" />
-              <treecell>
-                <progressmeter orient="horizontal" value="rdf:http://home.netscape.com/NC-rdf#Relevance" mode="normal" />
-                <label crop="right" value="rdf:http://home.netscape.com/NC-rdf#Relevance"/>
-              </treecell>
-              <treecell crop="right" label="rdf:http://home.netscape.com/NC-rdf#Price" />
-              <treecell crop="right" label="rdf:http://home.netscape.com/NC-rdf#Availability" />
-              <treecell crop="right" label="rdf:http://home.netscape.com/NC-rdf#Date" />
-              <treecell crop="right" label="rdf:http://home.netscape.com/NC-rdf#Site" />
-              <treecell crop="right" label="rdf:http://home.netscape.com/NC-rdf#Engine" />
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#PageRank"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Relevance"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Price"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Availability"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Date"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Site"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Engine"/>
             </treerow>
           </treeitem>
         </treechildren>
       </rule>
     </template>
 
-    <treehead>
-      <treerow>
-        <treecell id="NameCell" class="treecell-header sortDirectionIndicator"
-          label="&name.column.label;" observes="NameColumn"
-          resource="http://home.netscape.com/NC-rdf#Name"
-          onclick="return doSort('NameColumn', null);" />
-        <treecell id="PageRankCell" class="treecell-header sortDirectionIndicator"
-          label="&pagerank.column.label;" observes="PageRankColumn"
-          resource="http://home.netscape.com/NC-rdf#PageRank"
-          onclick="return doSort('PageRankColumn', null);" />
-        <treecell id="RelevanceCell" class="treecell-header sortDirectionIndicator"
-          label="&relevance.column.label;" observes="RelevanceColumn"
-          resource="http://home.netscape.com/NC-rdf#Relevance"
-          onclick="return doSort('RelevanceColumn', null);" />
-        <treecell id="PriceCell" class="treecell-header sortDirectionIndicator"
-          label="&price.column.label;" observes="PriceColumn"
-          resource="http://home.netscape.com/NC-rdf#Price"
-          onclick="return doSort('PriceColumn', null);" />
-        <treecell id="AvailabilityCell" class="treecell-header sortDirectionIndicator"
-          label="&availability.column.label;" observes="AvailabilityColumn"
-          resource="http://home.netscape.com/NC-rdf#Availability"
-          onclick="return doSort('AvailabilityColumn', null);" />
-        <treecell id="DateCell" class="treecell-header sortDirectionIndicator"
-          label="&date.column.label;" observes="DateColumn"
-          resource="http://home.netscape.com/NC-rdf#Date"
-          onclick="return doSort('DateColumn', null);" />
-        <treecell id="SiteCell" class="treecell-header sortDirectionIndicator"
-          label="&site.column.label;" observes="SiteColumn"
-          resource="http://home.netscape.com/NC-rdf#Site"
-          onclick="return doSort('SiteColumn', null);" />
-        <treecell id="EngineCell" class="treecell-header sortDirectionIndicator"
-          label="&engine.column.label;" observes="EngineColumn"
-          resource="http://home.netscape.com/NC-rdf#Engine"
-          onclick="return doSort('EngineColumn', null);" />
-
-      </treerow>
-    </treehead>
-
   </tree>
 
   <splitter id="results-splitter" persist="state" collapse="after">
     <grippy/>
   </splitter>
-  <hbox class="double-box-top" flex="1">
+  
+  <hbox flex="1">
     <iframe id="content" flex="1" src="chrome://communicator/locale/search/default.htm"/>
   </hbox>
   

@@ -33,13 +33,8 @@ Rights Reserved.
 
     <description>&directoriesText.label;</description>
     <hbox flex="1">
-      <tree id="directoriesTree" flex="1"
-            datasources="rdf:null" onselect="selectDirectory();">
-        <treecolgroup>
-          <treecol flex="1"/>
-        </treecolgroup>
-        <treechildren id="directoriesTree_root" flex="1"/>
-      </tree>
+      <listbox id="directoriesList" flex="1" onselect="selectDirectory();"/>
+
       <vbox>
         <button id="addButton" label="&addDirectory.label;" oncommand="newDirectory();"/>
         <button id="editButton" label="&editDirectory.label;" oncommand="editDirectory();" disabled="true"/>

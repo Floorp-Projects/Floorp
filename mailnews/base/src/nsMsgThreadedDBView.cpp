@@ -118,8 +118,8 @@ NS_IMETHODIMP nsMsgThreadedDBView::ReloadFolderAfterQuickSearch()
     m_levels.RemoveAll();
 
     // this needs to happen after we remove all the keys, since RowCountChanged() will call our GetRowCount()
-    if (mOutliner)
-      mOutliner->RowCountChanged(0, -oldSize);
+    if (mTree)
+      mTree->RowCountChanged(0, -oldSize);
 
     m_keys.InsertAt(0, &m_preSearchKeys);
     m_flags.InsertAt(0, &m_preSearchFlags);
@@ -130,8 +130,8 @@ NS_IMETHODIMP nsMsgThreadedDBView::ReloadFolderAfterQuickSearch()
 
     // now, account for adding all the pre search items back.
     // this needs to happen after we add back the keys, as RowCountChanged() will call our GetRowCount()
-    if (mOutliner)
-      mOutliner->RowCountChanged(0, GetSize());
+    if (mTree)
+      mTree->RowCountChanged(0, GetSize());
   }
   else
   {
@@ -260,13 +260,13 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
         m_sortValid = PR_TRUE;
         
         // the sort may have changed the number of rows
-        // before we restore the selection, tell the outliner
+        // before we restore the selection, tell the tree
         // do this before we call restore selection
         // this is safe when there is no selection.
         rv = AdjustRowCount(rowCountBeforeSort, GetSize());
         
         RestoreSelection(&preservedSelection);
-        if (mOutliner) mOutliner->Invalidate();
+        if (mTree) mTree->Invalidate();
         return NS_OK;
       }
       else
@@ -277,13 +277,13 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
           Sort(sortType, sortOrder);
         
         // the sort may have changed the number of rows
-        // before we update the selection, tell the outliner
+        // before we update the selection, tell the tree
         // do this before we call restore selection
         // this is safe when there is no selection.
         rv = AdjustRowCount(rowCountBeforeSort, GetSize());
         
         RestoreSelection(&preservedSelection);
-        if (mOutliner) mOutliner->Invalidate();
+        if (mTree) mTree->Invalidate();
         return NS_OK;
       }
     }
@@ -309,13 +309,13 @@ NS_IMETHODIMP nsMsgThreadedDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgVi
   rv = nsMsgDBView::Sort(sortType, sortOrder);
   SaveSortInfo(sortType, sortOrder);
   // the sort may have changed the number of rows
-  // before we restore the selection, tell the outliner
+  // before we restore the selection, tell the tree
   // do this before we call restore selection
   // this is safe when there is no selection.
   rv = AdjustRowCount(rowCountBeforeSort, GetSize());
 
   RestoreSelection(&preservedSelection);
-  if (mOutliner) mOutliner->Invalidate();
+  if (mTree) mTree->Invalidate();
   NS_ENSURE_SUCCESS(rv,rv);
   return NS_OK;
 }
@@ -815,8 +815,8 @@ nsMsgThreadedDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
   m_flags.Add(msgFlags);
 
   // this needs to happen after we add the key, as RowCountChanged() will call our GetRowCount()
-  if (mOutliner)
-    mOutliner->RowCountChanged(GetSize() - 1, 1);
+  if (mTree)
+    mTree->RowCountChanged(GetSize() - 1, 1);
 
   return NS_OK;
 }
@@ -847,8 +847,8 @@ nsMsgThreadedDBView::OnNewSearch()
   m_currentlyDisplayedMsgKey = nsMsgKey_None;   // need to clear this, so we won't restore it.
 
   // this needs to happen after we remove all the keys, since RowCountChanged() will call our GetRowCount()
-  if (mOutliner)
-    mOutliner->RowCountChanged(0, -oldSize);
+  if (mTree)
+    mTree->RowCountChanged(0, -oldSize);
 
   ClearPrevIdArray(); // previous cached info about non threaded display is not useful
   mIsSearchView = PR_TRUE;  

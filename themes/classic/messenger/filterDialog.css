@@ -31,10 +31,11 @@
 
 /* ::::: columns :::::: */
 
-.enabledcol {
+
+treechildren:-moz-tree-cell(activeColumn) {
   list-style-image: url("chrome://messenger/skin/icons/dot.gif");
 }
 
-.enabledcol[Enabled="true"] {
+treechildren:-moz-tree-cell(activeColumn, Enabled-true) {
  list-style-image: url("chrome://messenger/skin/icons/check.gif");
 }

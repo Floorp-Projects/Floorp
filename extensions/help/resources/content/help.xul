@@ -127,17 +127,17 @@
                   <textbox id="findText" flex="1"/>
                   <button id="findButton" label="&gobtn.label;" oncommand="doFind()" flex="0"/>
                 </hbox>
-                <outliner id="help-search-outliner"
-                  flex="1" hidecolumnpicker="true"
-            datasources="rdf:null"
-            containment="http://home.netscape.com/NC-rdf#child"
-            ref="urn:root"
-            flags="dont-build-content"
-            onselect="onselect_loadURI(this, 'ResultsColumn')">
+                <tree id="help-search-tree"
+                      flex="1" hidecolumnpicker="true"
+                      datasources="rdf:null"
+                      containment="http://home.netscape.com/NC-rdf#child"
+                      ref="urn:root"
+                      flags="dont-build-content"
+                      onselect="onselect_loadURI(this, 'ResultsColumn')">
             <template>
               <rule>
                 <conditions>
-                  <outlineritem uri="?uri"/>
+                  <treeitem uri="?uri"/>
                   <member container="?uri" child="?subheading" />
                 </conditions>
 
@@ -151,38 +151,37 @@
                 </bindings>
 
                 <action>
-                  <outlinerchildren>
-                    <outlineritem uri="?subheading">
-                     <outlinerrow>
-                      <outlinercell label="?name"
+                  <treechildren>
+                    <treeitem uri="?subheading">
+                     <treerow>
+                      <treecell label="?name"
                          properties="link-?link"/>
-                     </outlinerrow>
-                    </outlineritem>
-                  </outlinerchildren>
+                     </treerow>
+                    </treeitem>
+                  </treechildren>
                 </action>
               </rule>
             </template>
 
-                 <outlinercols>
-                    <outlinercol id="ResultsColumn" flex="1"
-                       ignoreincolumnpicker="true"
-                       primary="true"/>
-                 </outlinercols>
-          </outliner>
+                 <treecols>
+                    <treecol id="ResultsColumn" flex="1"
+                             hideheader="true" primary="true"/>
+                 </treecols>
+          </tree>
        </vbox>
 
        <button id="help-toc-btn" class="box-texttab texttab-sidebar"
-          label="&toctab.label;" oncommand="showPanel('help-toc-outliner')"/>
-          <outliner id="help-toc-outliner" flex="1"  hidecolumnpicker="true"
+          label="&toctab.label;" oncommand="showPanel('help-toc-tree')"/>
+          <tree id="help-toc-tree" flex="1"  hidecolumnpicker="true"
                 datasources="rdf:null"
-                  containment="http://home.netscape.com/NC-rdf#subheadings"
-                  ref="urn:root"
-                  flags="dont-build-content"
-                  onselect="onselect_loadURI(this, 'NameColumn')">
+                containment="http://home.netscape.com/NC-rdf#subheadings"
+                ref="urn:root"
+                flags="dont-build-content"
+                onselect="onselect_loadURI(this, 'NameColumn')">
           <template>
             <rule>
               <conditions>
-               <outlineritem uri="?uri"/>
+               <treeitem uri="?uri"/>
                <triple subject="?uri"
                  predicate="http://home.netscape.com/NC-rdf#subheadings"
                  object="?subheadings" />
@@ -199,29 +198,28 @@
               </bindings>
 
               <action>
-                <outlinerchildren>
-                  <outlineritem uri="?subheading">
-                    <outlinerrow>
-                      <outlinercell label="?name"
+                <treechildren>
+                  <treeitem uri="?subheading">
+                    <treerow>
+                      <treecell label="?name"
                           properties="link-?link"/>
-                    </outlinerrow>
-                  </outlineritem>
-              </outlinerchildren>
+                    </treerow>
+                  </treeitem>
+              </treechildren>
             </action>
           </rule>
         </template>
-            <outlinercols>
-               <outlinercol id="NameColumn" flex="1"
-                  ignoreincolumnpicker="true"
-                  primary="true"/>
-            </outlinercols>
-         </outliner>
+            <treecols>
+               <treecol id="NameColumn" flex="1"
+                        hideheader="true" primary="true"/>
+            </treecols>
+         </tree>
 
          <button id="help-index-btn" class="box-texttab texttab-sidebar"
-            label="&indextab.label;"  oncommand="showPanel('help-index-outliner')"/>
+            label="&indextab.label;"  oncommand="showPanel('help-index-tree')"/>
 
-         <outliner id="help-index-outliner" flex="1"   hidecolumnpicker="true" hidden="true"
-             datasources="rdf:null"
+         <tree id="help-index-tree" flex="1"
+               datasources="rdf:null" hidecolumnpicker="true" hidden="true"
                containment="http://home.netscape.com/NC-rdf#subheadings"
                ref="urn:root"
                flags="dont-build-content dont-test-empty"
@@ -229,7 +227,7 @@
         <template>
           <rule>
           <conditions>
-            <outlineritem uri="?uri"/>
+            <treeitem uri="?uri"/>
             <triple subject="?uri"
               predicate="http://home.netscape.com/NC-rdf#subheadings"
               object="?subheadings" />
@@ -246,30 +244,30 @@
           </bindings>
 
           <action>
-            <outlinerchildren>
-              <outlineritem uri="?subheading">
-                <outlinerrow>
-                  <outlinercell ref="IndexNameColumn" label="?name"
+            <treechildren>
+              <treeitem uri="?subheading">
+                <treerow>
+                  <treecell ref="IndexNameColumn" label="?name"
                       properties="link-?link"/>
-                </outlinerrow>
-              </outlineritem>
-            </outlinerchildren>
+                </treerow>
+              </treeitem>
+            </treechildren>
           </action>
           </rule>
         </template>
-            <outlinercols>
-               <outlinercol id="IndexNameColumn" flex="1"
-                  ignoreincolumnpicker="true"
+            <treecols>
+               <treecol id="IndexNameColumn" flex="1"
+                  hideheader="true"
                   primary="true"
                   sortActive="true"
                   sortDirection="ascending"
                   sort="?name"/>
-            </outlinercols>
-         </outliner>
+            </treecols>
+         </tree>
 
          <button id="help-glossary-btn" class="box-texttab texttab-sidebar"
-            label="&glossarytab.label;" oncommand="showPanel('help-glossary-outliner')"/>
-         <outliner id="help-glossary-outliner" flex="1" hidecolumnpicker="true" hidden="true"
+            label="&glossarytab.label;" oncommand="showPanel('help-glossary-tree')"/>
+         <tree id="help-glossary-tree" flex="1" hidecolumnpicker="true" hidden="true"
                datasources="rdf:null"
                containment="http://home.netscape.com/NC-rdf#subheadings"
                ref="urn:root"
@@ -278,7 +276,7 @@
         <template>
           <rule>
           <conditions>
-            <outlineritem uri="?uri"/>
+            <treeitem uri="?uri"/>
             <triple subject="?uri"
               predicate="http://home.netscape.com/NC-rdf#subheadings"
               object="?subheadings" />
@@ -295,26 +293,26 @@
           </bindings>
 
           <action>
-            <outlinerchildren>
-              <outlineritem uri="?subheading">
-                <outlinerrow>
-                  <outlinercell label="?name"
+            <treechildren>
+              <treeitem uri="?subheading">
+                <treerow>
+                  <treecell label="?name"
                     properties="link-?link"/>
-                </outlinerrow>
-              </outlineritem>
-            </outlinerchildren>
+                </treerow>
+              </treeitem>
+            </treechildren>
           </action>
           </rule>
         </template>
-            <outlinercols>
-               <outlinercol id="GlossaryNameColumn" flex="1"
-                  ignoreincolumnpicker="true"
+            <treecols>
+               <treecol id="GlossaryNameColumn" flex="1"
+                  hideheader="true"
                   primary="true"
                   sortActive="true"
                   sortDirection="ascending"
                   sort="?name"/>
-            </outlinercols>
-         </outliner>
+            </treecols>
+         </tree>
 
       </vbox>
 

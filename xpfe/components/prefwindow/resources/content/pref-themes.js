@@ -50,9 +50,9 @@ catch(e) {}
 function Startup()
 {
   gData = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-themes.xul"];
-  var tree = document.getElementById( "skinsTree" );
+  var list = document.getElementById( "skinsList" );
   if (gData.loaded) {
-    tree.selectedIndex = gData.themeIndex;    
+    list.selectedIndex = gData.themeIndex;    
     return;
   }
   gData.loaded = true;
@@ -68,17 +68,16 @@ function Startup()
                                      Components.interfaces.nsISupportsWString).data;
   } catch (e) {
   }
-  var theSkinKids = document.getElementById("theSkinKids");
   var matches;
-  for (var i = 0; i < theSkinKids.childNodes.length; ++i) {
-    var child = theSkinKids.childNodes[i];
+  for (var i = 0; i < list.childNodes.length; ++i) {
+    var child = list.childNodes[i];
     var name = child.getAttribute("name");
     if (!theme)
       matches = chromeRegistry.isSkinSelected(name, true) == Components.interfaces.nsIChromeRegistry.FULL;
     else
       matches = name == theme;
     if (matches) {
-      tree.selectItem(child);
+      list.selectItem(child);
       break;
     }      
   }
@@ -146,31 +145,31 @@ function applySkin()
 
 function uninstallSkin()
 {
-  var tree = document.getElementById("skinsTree");
-  var selectedSkinItem = tree.selectedItems[0];
+  var list = document.getElementById("skinsList");
+  var selectedSkinItem = list.selectedItems[0];
   var skinName = selectedSkinItem.getAttribute("name");
   var inUse = chromeRegistry.isSkinSelected(skinName, true);
   chromeRegistry.uninstallSkin(skinName, true);
   if (inUse)
     chromeRegistry.refreshSkins();
-  tree.selectedIndex = 0;
+  list.selectedIndex = 0;
 }
 
 function themeSelect()
 {
-  var tree = document.getElementById("skinsTree");
+  var list = document.getElementById("skinsList");
 
-  if (!tree)
+  if (!list)
     return;
 
   var prefbundle = document.getElementById("bundle_prefutilities");
 
-  var selectedItem = tree.selectedItems.length ? tree.selectedItems[0] : null;
+  var selectedItem = list.selectedItems.length ? list.selectedItems[0] : null;
   if (selectedItem && selectedItem.getAttribute("skin") == "true") {
     var themeName = selectedItem.getAttribute("displayName");
     var skinName = selectedItem.getAttribute("name");
     gData.name = skinName;
-    gData.themeIndex = tree.selectedIndex;
+    gData.themeIndex = list.selectedIndex;
 
     var oldTheme;
     try {

@@ -63,67 +63,67 @@
 
           <!-- project view -->
 
-          <outliner flex="1" id="project-outliner" persist="height"
+          <tree flex="1" id="project-tree" persist="height"
             ondblclick="console.onProjectSelect(event);">
 
-            <outlinercols>
-              <outlinercol id="project-col-0" label="" primary="true" flex="5"
+            <treecols>
+              <treecol id="project-col-0" label="" primary="true" flex="5"
                 persist="hidden width"/>
               <splitter class="tree-splitter"/>
-              <outlinercol id="project-col-1" flex="1" label = ""
+              <treecol id="project-col-1" flex="1" label = ""
                 persist="hidden width"/>
               <splitter class="tree-splitter"/>
-              <outlinercol id="project-col-2" flex="1" label = ""
+              <treecol id="project-col-2" flex="1" label = ""
                 persist="hidden width"/>
               <splitter class="tree-splitter"/>
-              <outlinercol id="project-col-3" flex="1" label = ""
+              <treecol id="project-col-3" flex="1" label = ""
                 persist="hidden width"/>
-            </outlinercols>
+            </treecols>
 
-            <outlinerchildren id="project-body"/>
-          </outliner>
+            <treechildren id="project-body"/>
+          </tree>
 
           <splitter collapse="before"><grippy/></splitter>
 
           <!-- script view -->
 
-          <outliner flex="1" id="script-list-outliner" persist="height"
+          <tree flex="1" id="script-list-tree" persist="height"
             ondblclick="console.onScriptSelect(event);"
             onclick="console.onScriptClick(event);">
 
-            <outlinercols>
-              <outlinercol id="script-name" label="&ScriptCol0.header;"
+            <treecols>
+              <treecol id="script-name" label="&ScriptCol0.header;"
                 primary="true" flex="5" persist="hidden width"/>
               <splitter class="tree-splitter"/>
-              <outlinercol flex="1" id="script-line-start"
+              <treecol flex="1" id="script-line-start"
                 label="&ScriptCol1.header;" persist="hidden width"/>
               <splitter class="tree-splitter"/>
-              <outlinercol flex="1" id="script-line-extent"
+              <treecol flex="1" id="script-line-extent"
                 label="&ScriptCol2.header;" persist="hidden width" hidden="true"/>
-            </outlinercols>
-            <outlinerchildren id="script-list-body"/>
-          </outliner>
+            </treecols>
+            <treechildren id="script-list-body"/>
+          </tree>
         </vbox>
 
         <splitter collapse="before"><grippy/></splitter>
 
         <!-- source view -->
 
-        <outliner id="source-outliner" flex="50" persist="width"
+        <tree id="source-tree" flex="50" persist="width"
           onselectXXX="console.onSourceSelect(event);"
           onclick="console.onSourceClick(event);">
-          <outlinercols>
-            <outlinercol id="breakpoint-col" flex="3"
+          <treecols>
+            <treecol id="breakpoint-col" flex="3"
               display="&SourceCol0.display;" persist="hidden width"/>
             <splitter class="tree-splitter"/>
-            <outlinercol id="source-line-number" flex="7"
+            <treecol id="source-line-number" flex="7"
               display="&SourceCol1.display;" persist="hidden width"/>
             <splitter class="tree-splitter"/>
-            <outlinercol id="source-line-text" flex="90"
+            <treecol id="source-line-text" flex="90"
               ignoreincolumnpicker="true" persist="hidden width"/>
-          </outlinercols>
-          <outlinerchildren id="source-outliner-body"/>
-        </outliner>
+          </treecols>
+          <treechildren id="source-tree-body"/>
+        </tree>
 
       </hbox>
 
@@ -133,28 +133,28 @@
 
         <!-- stack view -->
 
-        <outliner flex="2" id="stack-outliner" persist="width"
+        <tree flex="2" id="stack-tree" persist="width"
           ondblclick="console.onStackSelect(event);">
 
-          <outlinercols>
-            <outlinercol id="stack-col-0" flex="1" persist="hidden width"
+          <treecols>
+            <treecol id="stack-col-0" flex="1" persist="hidden width"
               primary="true" label="&StackCol0.header;"/>
             <splitter class="tree-splitter"/>
 
-            <outlinercol flex="2" id="stack-col-1" persist="hidden width"
+            <treecol flex="2" id="stack-col-1" persist="hidden width"
               hidden="true" label="&StackCol1.header;"/>
             <splitter class="tree-splitter"/>
 
-            <outlinercol flex="1" id="stack-col-2" persist="hidden width"
+            <treecol flex="1" id="stack-col-2" persist="hidden width"
               label="&StackCol2.header;"/>
             <splitter class="tree-splitter"/>
 
-            <outlinercol flex="1" id="stack-col-3" persist="hidden width"
+            <treecol flex="1" id="stack-col-3" persist="hidden width"
               label="&StackCol3.header;" hidden="true"/>
-          </outlinercols>
+          </treecols>
 
-          <outlinerchildren id="stack-body"/>
-        </outliner>
+          <treechildren id="stack-body"/>
+        </tree>
 
         <splitter collapse="after" persist="left"><grippy/></splitter>
 

@@ -11,18 +11,18 @@
       orient="vertical"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inBaseOutlinerView.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inBaseTreeView.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/computedStyle/computedStyle.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
   
-  <outliner id="olStyles" flex="1"  onselect="viewer.onItemSelected()" class="plain">
-    <outlinercols>
-      <outlinercol id="olcStyleName" label="Style" flex="1"/>
+  <tree id="olStyles" flex="1"  onselect="viewer.onItemSelected()" class="plain">
+    <treecols>
+      <treecol id="olcStyleName" label="Style" flex="1"/>
       <splitter class="tree-splitter"/>
-      <outlinercol id="olcStyleValue" label="Value" flex="1"/>
-    </outlinercols>
-    <outlinerchildren id="olbStyles"/>
-  </outliner>
+      <treecol id="olcStyleValue" label="Value" flex="1"/>
+    </treecols>
+    <treechildren id="olbStyles"/>
+  </tree>
 </page>

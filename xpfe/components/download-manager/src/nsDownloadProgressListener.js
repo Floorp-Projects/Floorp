@@ -62,14 +62,14 @@ nsDownloadProgressListener.prototype = {
         var aDownloadID = aDownload.target.persistentDescriptor;
         var elt = this.doc.getElementById(aDownloadID).firstChild.firstChild;
 
-        var progressCol = elt.nextSibling.firstChild;
-        progressCol.setAttribute("mode", "normal");
-        
         var timeRemainingCol = elt.nextSibling.nextSibling.nextSibling;
         timeRemainingCol.setAttribute("label", "");
         
         var speedCol = timeRemainingCol.nextSibling.nextSibling;
         speedCol.setAttribute("label", "");
+
+        var elapsedCol = speedCol.nextSibling;
+        elapsedCol.setAttribute("label", "");
       }
     },
 
@@ -104,7 +104,7 @@ nsDownloadProgressListener.prototype = {
       }
       // Calculate percentage.
       var percent;
-      var progressCol = elt.nextSibling.firstChild;
+      var progressCol = elt.nextSibling;
       if ( aMaxTotalProgress > 0)
       {
         percent = Math.floor((overallProgress*100.0)/aMaxTotalProgress);
@@ -113,6 +113,8 @@ nsDownloadProgressListener.prototype = {
 
         // Advance progress meter.
         progressCol.setAttribute( "value", percent );
+
+        progressCol.setAttribute("mode", "normal");
       }
       else
       {

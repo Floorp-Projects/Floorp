@@ -379,7 +379,7 @@ nsPrefWindow.prototype =
           var index = panelTree.contentView.getIndexOfItem( selectItem );
           if ( !panelTree.view.isContainerOpen( index ) )
             panelTree.view.toggleOpenState(index);
-          panelTree.outlinerBoxObject.selection.select( index );
+          panelTree.treeBoxObject.selection.select( index );
         }
 
   };

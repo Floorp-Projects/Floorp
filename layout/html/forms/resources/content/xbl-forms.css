@@ -62,16 +62,16 @@ select[size="1"] > option {
   -moz-binding: url("chrome://forms/content/select.xml#select-option");
 }
 
-xul|*.select-outlinercol {
+xul|*.select-treecol {
   -moz-binding: none;
 }
 
-xul|*.select-outlinerrows {
-  -moz-binding: url("chrome://forms/content/select.xml#select-outlinerrows");
+xul|*.select-treerows {
+  -moz-binding: url("chrome://forms/content/select.xml#select-treerows");
 }
 
-xul|*.select-outlinerbody {
-  -moz-binding: url("chrome://forms/content/select.xml#select-outlinerbody");
+xul|*.select-treebody {
+  -moz-binding: url("chrome://forms/content/select.xml#select-treebody");
   display: -moz-box;
 }
 

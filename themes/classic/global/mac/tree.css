@@ -1,280 +1,258 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
+
+/* ===== tree.css ===================================================
+  == Styles used by the XUL outline element.
+  ======================================================================= */
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/******** Tree widget **********/ 
+/* ::::: tree ::::: */
 
-/** basic tree ****************************************************
- *  basic tree widget for use in main windows where no decoration
- *  is required.
- **/
-tree 
-  {
-    border-spacing        : 0px;     
-    border-top            : 1px solid ThreeDShadow;                             
-    border-right          : 1px solid ThreeDHighlight;                          
-    border-bottom         : 1px solid ThreeDHighlight;                          
-    border-left           : 1px solid ThreeDShadow; 
-    background-color      : -moz-Field;
-    color                 : -moz-FieldText;
-    margin                : 1px 5px 2px 5px;
-  }
+tree {
+  -moz-appearance: treeview;
+  margin: 0px 4px;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  background-color: #EEEEEE;
+  color: -moz-DialogText;
+}
 
-.tree-container-treerows[dragover="true"][dragdroptree="true"]
-  {
-    border                : 2px solid Highlight;
-    padding               : 0px;
-  }  
-  
-.tree-container-treerows
-  {
-    border-top            : 1px solid ThreeDDarkShadow;
-    border-right          : 1px solid ThreeDLightShadow;
-    border-bottom         : 1px solid ThreeDLightShadow;
-    border-left           : 1px solid ThreeDDarkShadow;
-  }  
+/* ::::: tree rows ::::: */
 
-.tree-container-treerows[dragdroptree="true"]
-  {
-    padding               : 1px;
-  }  
-  
-treeitem[selected="true"] > treerow
-  {
-    color                 : -moz-DialogText;
-    background-color      : -moz-Dialog;
-  }
+treechildren:-moz-tree-row {
+  -moz-appearance: treeitem;
+  border-top: 1px solid -moz-Field;
+  height: 18px;
+}
 
-treeitem 
-  {
-    list-style-image      : none;
-  }
-  
-treerow 
-  {
-    border                : 1px solid transparent;
-  }
-  
-treehead > treeitem > treerow,
-treehead > treerow 
-  {
-    border                : none;
-  }
-  
-treecell 
-  { 
-    padding               : 0px 0px 1px 2px;
-    white-space           : nowrap;
-  } 
+treechildren:-moz-tree-row(selected, focus) {
+  background-color: Highlight;
+}
 
-tree:focus > treechildren treeitem[selected="true"] > treerow,
-treeitem[dd-dropon="true"] > treerow
-  {
-    background-color      : Highlight;
-    color                 : HighlightText;
-  }
+/* ::::: tree cells ::::: */
 
-tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow
-  {
-    /* this is not the right color, what we really need is a color complementary
-       to Highlight, but someone needs to implement that first */
-    border                : 1px dotted #F5DB95;
-  }
+treechildren:-moz-tree-cell {
+  padding: 0px 2px 0px 2px;
+}
 
-.treecell-header-image 
-  {
-    list-style-image      : inherit;
-  }
-  
-.treecell-header,
-.treecell-inset-header,
-.treecell-header-image
-  { 
-    -moz-appearance       : treeheadercell;
-    border-left           : 1px solid ThreeDHighlight !important;
-    border-top            : 1px solid ThreeDHighlight !important;
-    border-right          : 1px solid ThreeDDarkShadow !important;
-    border-bottom         : 1px solid ThreeDDarkShadow !important;
-    padding               : 0px;
-    background-color      : -moz-Dialog;
-    color                 : -moz-DialogText;
-  }
+treechildren:-moz-tree-cell-text {
+  color: inherit;
+}
 
-.treecell-header-box,
-.treecell-header-image-box 
-  {
-    border-left           : 1px solid ThreeDLightShadow;
-    border-top            : 1px solid ThreeDLightShadow;
-    border-right          : 1px solid ThreeDShadow;
-    border-bottom         : 1px solid ThreeDShadow;
-  }  
+treechildren:-moz-tree-cell-text(selected) {
+  color: -moz-DialogText;
+}
 
-.treecell-header-box
-  {
-    padding               : 0px 4px 0px 4px;
-  }
+treechildren:-moz-tree-cell-text(selected, focus) {
+  color: HighlightText;
+}
 
-.tree-header-text
-  {
-    margin                : 0px 0px 0px 0px !important;
-  }
 
-.treecell-header-image-box 
-  {
-    padding               : 0px 1px 0px 1px;
-  }
-  
-.treecell-header:hover:active,
-.treecell-header-image:hover:active,
-.treecell-inset-header:hover:active 
-  {
-    border                : 1px solid ThreeDShadow !important;
-  }
+/* ::::: lines connecting cells ::::: */
 
-.treecell-header:hover:active > .treecell-header-box,
-.treecell-inset-header:hover:active > .treecell-header-box,
-.treecell-header-image:hover:active > .treecell-header-image-box
-  {
-    border-top            : 1px solid transparent;
-    border-right          : none;
-    border-bottom         : none;
-    border-left           : 1px solid transparent;
-  }
-  
-.treecell-header:hover:active > .treecell-header-box,
-.treecell-inset-header:hover:active > .treecell-header-box
-  {
-    padding               : 1px 4px 0px 5px;
-  }
-  
-.treecell-header-image:hover:active > .treecell-header-image-box
-  {
-    padding               : 1px 1px 0px 2px;
-  }
-
-.treecell-image 
-  {
-    padding               : 0px;
-  }
-    
-/* slimline sidebar treeheaders */  
-.treecell-header.treecell-header-sidebarpanel,
-.treecell-inset-header.treecell-header-sidebarpanel
-  {
-    border-left           : none !important;
-    border-top            : 1px solid ThreeDHighlight !important;
-    border-bottom         : 1px solid ThreeDShadow !important;
-    border-right          : none !important;
-    padding               : 0px 1px 1px 3px;
-  }
-
-.treecell-header-sidebarpanel > .treecell-header-box
-  {
-    border                : none !important;
-    border-right          : 1px solid ThreeDLightShadow !important;
-  }
- 
-/** class="propertylist" ******************************************
- *  class for cells in grid-formatted property lists.
- **/
- 
-treecell.propertylist 
-  {
-    border-right          : 1px solid ThreeDLightShadow;
-    border-bottom         : 1px solid ThreeDLightShadow;
-    padding-left          : 5px;
-  }
-
-.tree-cell-primary-icon,
-.tree-cell-primary-icon-inline-edit-folder
-  {
-    list-style-image      : inherit;
-    padding-right         : 2px;
-  }
-
-.tree-cell-icon 
-  {
-    list-style-image      : inherit;
-    padding-right         : 2px;
-  }
-
-.tree-cell-twisty 
-  {
-    -moz-appearance       : treetwisty;
-    list-style-image      : url("chrome://global/skin/tree/twisty-clsd.gif");
-    -moz-user-focus       : ignore;
-    padding-right         : 2px;
-  }
-
-.treecell-indent > .tree-cell-primary-icon 
-  {
-    padding-left          : 14px;
-  }
-
-treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-icon 
-  {
-    padding-left          : 0px;
-  }
-
-.tree-cell-twisty[disabled="true"] 
-  {
-    list-style-image      : none;
-  }
-
-treeitem[container="true"][open="true"] > treerow > treecell > .tree-cell-twisty 
-  {
-    -moz-appearance       : treetwistyopen;
-    list-style-image      : url("chrome://global/skin/tree/twisty-open.gif");
-  }
-
-treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {               
+treechildren:-moz-tree-line {
+  /* XXX there should be no border on Mac, but trees currently
+         paint the line black by default, so I'll just leave this
+         for now. */
   visibility: hidden;
-}   
+  border: 1px dotted grey;
+}
 
-/* tree header with sort direction indicators */
 
-.tree-header-sortdirection 
-  {
-    list-style-image      : none;
-  }
+/* ::::: tree separator ::::: */
 
-.sortDirectionIndicator[sortDirection="ascending"]  > .treecell-header-box > .tree-header-sortdirection 
-  {
-    -moz-appearance       : treeheadersortarrow;
-    list-style-image      : url("chrome://global/skin/tree/sort-asc.gif");
-  }
+treechildren:-moz-tree-separator {
+  -moz-appearance: separator;
+  border-top: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDHighlight;
+}
 
-.sortDirectionIndicator[sortDirection="descending"] > .treecell-header-box > .tree-header-sortdirection 
-  {
-    -moz-appearance       : treeheadersortarrow;
-    list-style-image      : url("chrome://global/skin/tree/sort-dsc.gif");
-  }
 
-/* column selection popup menu icon */
+/* ::::: drop feedback ::::: */
 
-.treecell-popup-icon
-  {
-    list-style-image      : url("chrome://global/skin/tree/columnpicker.gif");
-  }
+treechildren:-moz-tree-cell-text(primary, dropOn) {
+  background-color: Highlight;
+  color: HighlightText;
+}
 
-/* Inline Editable Treecells */
+treechildren:-moz-tree-drop-feedback {
+  background-color: Highlight;
+  width: 50px;
+  height: 2px;
+  margin-left: 5px;
+}
 
-treerow[mode="inline-edit"] 
-  {
-    border-top            : none !important;
-    border-bottom         : none !important;
-    background-color      : transparent !important;
-  }
+/* ::::: tree progress meter ::::: */
 
-.inline-edit-cell-box
-  {
-    margin-left           : 2px;
-  }
+treechildren:-moz-tree-progressmeter {
+  margin: 2px 4px;
+  border: 2px solid;
+  -moz-border-top-colors: #AAAAAA #000000;
+  -moz-border-right-colors: #FFFFFF #000000;
+  -moz-border-bottom-colors: #FFFFFF #000000;
+  -moz-border-left-colors: #AAAAAA #000000;
+  list-style-image: url("chrome://global/skin/progressmeter/progressmeter-bar.gif");
+}
 
-.inline-edit-cell-box[mode="edit"] 
-  {
-    margin-left           : 0px;
-  }
+treechildren:-moz-tree-progressmeter(progressUndetermined) {
+  list-style-image: url("chrome://global/skin/progressmeter/progressmeter-busy.gif");
+}
 
-.tree-cell-text
-  {
-    margin: 0px 0px 0px 0px !important;
-  }
+treechildren:-moz-tree-cell-text(progressmeter) {
+  margin: 2px 4px;
+ }
+
+/* ::::: tree columns ::::: */
+
+treecol,
+treecolpicker { 
+  -moz-appearance: treeheadercell;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+  padding: 0px 4px;
+}
+
+.treecol-image {
+  padding: 0px 1px;
+}
+
+.treecol-text {
+  margin: 0px !important;
+}
+
+treecol[hideheader="true"] {
+  -moz-appearance: none;
+  border: none;
+  padding: 0;
+}
+
+/* ..... internal box ..... */
+
+treecol:hover:active,
+treecolpicker:hover:active {
+  border-top: 2px solid;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+  border-left: 2px solid;
+  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-right-colors: ThreeDDarkShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow;
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
+  background-color: #666666;
+  color: #FFFFFF;
+  padding: 1px 4px 0px 5px;
+}
+
+.treecol-image:hover:active {
+  padding: 1px 1px 0px 2px;
+}
+
+/* ::::: column drag and drop styles ::::: */
+
+treecol[dragging="true"] {
+  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow !important;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow!important;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow !important;
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow !important;
+  padding: 0px 4px !important;
+  background-color: ThreeDShadow !important;
+  color: ThreeDHighlight !important;
+}
+
+treecol[insertafter="true"] {
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+}
+
+treecol[insertbefore="true"] {
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
+}
+
+treechildren:-moz-tree-column(insertbefore) {
+  border-left: 1px solid ThreeDShadow;
+}
+
+treechildren:-moz-tree-column(insertafter) {
+  border-right: 1px solid ThreeDShadow;
+}
+
+/* ::::: sort direction indicator :::::  */
+
+.treecol-sortdirection {
+  -moz-appearance: treeheadersortarrow;
+  list-style-image: none;
+}
+
+.treecol-sortdirection[sortDirection="ascending"] {
+  list-style-image: url("chrome://global/skin/tree/sort-asc.gif");
+}
+
+.treecol-sortdirection[sortDirection="descending"] {
+  list-style-image: url("chrome://global/skin/tree/sort-dsc.gif");
+}
+
+/* ::::: column picker :::::  */
+
+.tree-columnpicker-icon {
+  list-style-image: url("chrome://global/skin/tree/columnpicker.gif");
+}
+
+/* ::::: twisty :::::  */
+
+treechildren:-moz-tree-twisty {
+  -moz-appearance: treetwisty;
+  padding-right: 2px;
+  width: 10px; /* The image's width is 10 pixels */
+  list-style-image: url("chrome://global/skin/tree/twisty-clsd.gif");
+}
+
+treechildren:-moz-tree-twisty(open) {
+  -moz-appearance: treetwistyopen;
+  width: 10px; /* The image's width is 10 pixels */
+  list-style-image: url("chrome://global/skin/tree/twisty-open.gif");
+}
+
+treechildren:-moz-tree-indentation {
+  width: 16px;
+}
+
+/* ::::: gridline style ::::: */
+
+treechildren.gridlines:-moz-tree-cell {
+  border-right: 1px solid GrayText;
+  border-bottom: 1px solid GrayText;
+}
+
+treechildren.gridlines:-moz-tree-row {
+  border: none;
+}

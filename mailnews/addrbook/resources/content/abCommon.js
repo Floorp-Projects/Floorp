@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gResultsOutliner = 0;
+var gResultsTree = 0;
 var dirTree = 0;
 var abList = 0;
 var gAbView = null;
@@ -153,15 +153,14 @@ var DirPaneController =
       case "button_delete":
         if (command == "cmd_delete")
           goSetMenuValue(command, "valueAddressBook");
-        if (dirTree && dirTree.selectedItems)
+        if (dirTree && dirTree.currentIndex >= 0)
           return true;
         else
           return false;
       case "button_edit":
-        var selectedItems = dirTree.selectedItems;
-        if (selectedItems.length == 1) {
-          var mailingListUri = selectedItems[0].getAttribute('id');
-          var directory = GetDirectoryFromURI(mailingListUri);
+        var selectedDir = GetSelectedDirectory();
+        if (selectedDir) {
+          var directory = GetDirectoryFromURI(selectedDir);
           if ((directory.isMailList) || 
               (!(directory.operations & directory.opWrite)))
              return true;
@@ -177,7 +176,7 @@ var DirPaneController =
     switch (command) {
       case "cmd_selectAll":
         if (dirTree)
-          dirTree.selectAll();
+          dirTree.treeBoxObject.selection.selectAll();
         break;
 
       case "cmd_delete":
@@ -201,13 +200,12 @@ var DirPaneController =
 
 function AbEditSelectedDirectory()
 {
-  var selectedItems = dirTree.selectedItems;
-  if (selectedItems.length == 1) {
-    var mailingListUri = selectedItems[0].getAttribute('id');
+  if (dirTree.treeBoxObject.selection.count == 1) {
+    var mailingListUri = GetSelectedDirectory();
     var directory = GetDirectoryFromURI(mailingListUri);
     if (directory.isMailList) {
-      var parentURI = selectedItems[0].parentNode.parentNode.getAttribute('id');
-      goEditListDialog(parentURI, null, mailingListUri, UpdateCardView);
+      var dirUri = GetParentDirectoryFromMailingListURI(mailingListUri);
+      goEditListDialog(dirUri, null, mailingListUri, UpdateCardView);
     }
     else if (!(directory.operations & directory.opWrite))
     {
@@ -223,15 +221,26 @@ function AbEditSelectedDirectory()
     }
   }
 }
+
+function GetParentRow(aTree, aRow)
+{
+  var level = aTree.view.getLevel(aRow);
+  var parentLevel = level;
+  while (aRow >= 0 && parentLevel >= level) {
+    parentLevel = aTree.view.getLevel(aRow);
+    --aRow;
+  }
+  return aRow;
+}
         
 function InitCommonJS()
 {
   dirTree = document.getElementById("dirTree");
   abList = document.getElementById("addressbookList");
-  gResultsOutliner = document.getElementById("abResultsOutliner");
+  gResultsTree = document.getElementById("abResultsTree");
 }
 
-// builds prior to 12-08-2001 did not use an outliner for
+// builds prior to 12-08-2001 did not use an tree for
 // the results pane.  so for any existing profiles will 
 // get all columns, whereas new profile only get a select few
 // because we hide them by default in localStore.rdf
@@ -266,8 +275,8 @@ function SetupAbCommandUpdateHandlers()
     dirTree.controllers.appendController(DirPaneController);
 
   // results pane
-  if (gResultsOutliner)
-    gResultsOutliner.controllers.appendController(ResultsPaneController);
+  if (gResultsTree)
+    gResultsTree.controllers.appendController(ResultsPaneController);
 }
 
 function AbDelete()
@@ -289,11 +298,11 @@ function GetSelectedCardIndex()
   if (!gAbView)
     return -1;
 
-  var outlinerSelection = gAbView.selection;
-  if (outlinerSelection.getRangeCount() == 1) {
+  var treeSelection = gAbView.selection;
+  if (treeSelection.getRangeCount() == 1) {
     var start = new Object;
     var end = new Object;
-    outlinerSelection.getRangeAt(0,start,end);
+    treeSelection.getRangeAt(0,start,end);
     if (start.value == end.value)
       return start.value;
   }
@@ -397,9 +406,9 @@ function GetSelectedAddressesFromDirTree()
 {
   var addresses = "";
 
-  var selectedItems = dirTree.selectedItems;
-  if (selectedItems.length == 1) {
-    var mailingListUri = selectedItems[0].getAttribute('id');
+  if (dirTree.currentIndex >= 0) {
+    var selected = dirTree.contentView.getItemAtIndex(dirTree.currentIndex);
+    var mailingListUri = selected.id;
     var directory = GetDirectoryFromURI(mailingListUri);
     if (directory.isMailList) {
       var listCardsCount = directory.addressLists.Count();
@@ -446,8 +455,8 @@ function GetAddressesForCards(cards)
 function GetNumSelectedCards()
 {
  try {
-   var outlinerSelection = gAbView.selection;
-   return outlinerSelection.count;
+   var treeSelection = gAbView.selection;
+   return treeSelection.count;
  }
  catch (ex) {
  }
@@ -509,25 +518,8 @@ function GetSelectedAbCards()
 
 function SelectFirstAddressBook()
 {
-  var children = dirTree.childNodes;
-
-  var treechildren;
-  for (var i=0;i<children.length; i++) {
-    if (children[i].localName == "treechildren") {
-      treechildren = children[i];
-      break;
-    }
-  }
-
-  children = treechildren.childNodes;
-  for (i=0; i<children.length; i++) {
-    if (children[i].localName == "treeitem") {
-      dirTree.selectItem(children[i]);
-      ChangeDirectoryByDOMNode(children[i]);
-      // ok, we've got the first treeitem, we can stop.
-      return;
-    }
-  }
+  dirTree.treeBoxObject.selection.select(0);
+  ChangeDirectoryByURI(GetSelectedDirectory());
 }
 
 function SelectFirstCard()
@@ -555,31 +547,30 @@ function DirPaneClick(event)
 
 function DirPaneDoubleClick()
 {
-  if (dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1))
+  if (dirTree && dirTree.treeBoxObject.selection && dirTree.treeBoxObject.selection.count == 1)
     AbEditSelectedDirectory();
 }
 
 function DirPaneSelectionChange()
 {
-  if (dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1)) 
-    ChangeDirectoryByDOMNode(dirTree.selectedItems[0]);
+  if (dirTree && dirTree.treeBoxObject.selection && dirTree.treeBoxObject.selection.count == 1)
+    ChangeDirectoryByURI(GetSelectedDirectory());
 }
 
 function GetAbResultsBoxObject()
 {
-  var outliner = GetAbResultsOutliner();
-  return outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
+  return GetAbResultsTree().treeBoxObject;
 }
 
-var gAbResultsOutliner = null;
+var gAbResultsTree = null;
 
-function GetAbResultsOutliner()
+function GetAbResultsTree()
 {
-  if (gAbResultsOutliner) 
-    return gAbResultsOutliner;
+  if (gAbResultsTree) 
+    return gAbResultsTree;
 
-  gAbResultsOutliner = document.getElementById('abResultsOutliner');
-  return gAbResultsOutliner;
+  gAbResultsTree = document.getElementById('abResultsTree');
+  return gAbResultsTree;
 }
 
 function CloseAbView()
@@ -608,7 +599,7 @@ function SetAbView(uri, sortColumn, sortDirection)
   var actualSortColumn = gAbView.init(uri, GetAbViewListener(), sortColumn, sortDirection);
   
   var boxObject = GetAbResultsBoxObject();
-  boxObject.view = gAbView.QueryInterface(Components.interfaces.nsIOutlinerView);
+  boxObject.view = gAbView.QueryInterface(Components.interfaces.nsITreeView);
   return actualSortColumn;
 }
 
@@ -625,18 +616,17 @@ function GetAbViewURI()
     return null;
 }
 
-function ChangeDirectoryByDOMNode(dirNode)
+function ChangeDirectoryByURI(uri)
 {
-  var uri = dirNode.getAttribute("id");
-
   if (!uri)
     uri = kPersonalAddressbookURI;
 
   if (gAbView && gAbView.URI == uri)
     return;
   
-  var sortColumn = dirNode.getAttribute("sortColumn");
-  var sortDirection = dirNode.getAttribute("sortDirection");
+  var dataNode = document.getElementById(uri);
+  var sortColumn = dataNode ? dataNode.getAttribute("sortColumn") : kDefaultSortColumn;
+  var sortDirection = dataNode ? dataNode.getAttribute("sortDirection") : kDefaultAscending;
   
   var actualSortColumn = SetAbView(uri, sortColumn, sortDirection);
 
@@ -726,9 +716,9 @@ function UpdateSortIndicators(colID, sortDirection)
 
   // remove the sort indicator from all the columns
   // except the one we are sorted by
-  var currCol = GetAbResultsOutliner().firstChild.firstChild;
+  var currCol = GetAbResultsTree().firstChild.firstChild;
   while (currCol) {
-    if (currCol != sortedColumn && currCol.localName == "outlinercol")
+    if (currCol != sortedColumn && currCol.localName == "treecol")
       currCol.removeAttribute("sortDirection");
     currCol = currCol.nextSibling;
   }
@@ -736,9 +726,9 @@ function UpdateSortIndicators(colID, sortDirection)
 
 function InvalidateResultsPane()
 {
-  var outliner = GetAbResultsOutliner();
-  if (outliner) {
-    outliner.boxObject.invalidate();
+  var tree = GetAbResultsTree();
+  if (tree) {
+    tree.treeBoxObject.invalidate();
   }
 }
 
@@ -754,14 +744,15 @@ function GetSelectedAddressBookDirID(abListItem)
   var selectedAB = 0;
   var abDirEntries = document.getElementById(abListItem);
 
-  if (abDirEntries && abDirEntries.selectedItems && (abDirEntries.selectedItems.length == 1))
-    selectedAB = abDirEntries.selectedItems[0].getAttribute("id");
+  if (abDirEntries && abDirEntries.localName == "tree" && abDirEntries.currentIndex >= 0) {
+    var selected = abDirEntries.contentView.getItemAtIndex(abDirEntries.currentIndex);
+    selectedAB = selected.id;
+  }
 
   // request could be coming from the context menu of addressbook panel in sidebar
   // addressbook dirs are listed as menu item. So, get the selected item id.
-  if (!selectedAB && abDirEntries && abDirEntries.selectedItem) {
+  if (!selectedAB && abDirEntries && abDirEntries.localName == "menulist" && abDirEntries.selectedItem)
     selectedAB = abDirEntries.selectedItem.getAttribute("id");
-  }
 
   return selectedAB;
 }
@@ -879,6 +870,15 @@ function DirPaneHasFocus()
   return (top.document.commandDispatcher.focusedElement == dirTree)
 }
 
+function GetSelectedDirectory()
+{
+  if (dirTree.currentIndex < 0)
+    return null;
+
+  var selected = dirTree.contentView.getItemAtIndex(dirTree.currentIndex);
+  return selected.id;
+}
+
 function onAbSearchKeyPress(event)
 {
   // 13 == return
@@ -920,4 +920,3 @@ function onAbClearSearch()
     gSearchInput.value ="";  //on input does not get fired for some reason
   onAbSearchInput(true);
 }
-

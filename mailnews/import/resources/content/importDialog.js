@@ -127,7 +127,7 @@ function GetStringBundle(aURL)
 
 function ImportDialogOKButton()
 {
-  var tree = document.getElementById('moduleList');
+  var listbox = document.getElementById('moduleList');
   var deck = document.getElementById("stateDeck");
   var header = document.getElementById("header");
   var progressMeterEl = document.getElementById("progressMeter");
@@ -140,11 +140,11 @@ function ImportDialogOKButton()
   var backButton = document.getElementById("back");
   backButton.setAttribute("disabled", "true");
 
-  if ( tree && tree.selectedItems && (tree.selectedItems.length == 1) )
+  if ( listbox && listbox.selectedItems && (listbox.selectedItems.length == 1) )
   {
     var importTypeRadioGroup = document.getElementById("importFields");
     importType = importTypeRadioGroup.selectedItem.getAttribute("value");
-    var index = tree.selectedItems[0].getAttribute('list-index');
+    var index = listbox.selectedItems[0].getAttribute('list-index');
     var module = importService.GetModule(importType, index);
     var name = importService.GetModuleName(importType, index);
     selectedModuleName = name;
@@ -288,10 +288,10 @@ function ContinueImportCallback()
 
 function ImportSelectionChanged()
 {
-  var tree = document.getElementById('moduleList');
-  if ( tree && tree.selectedItems && (tree.selectedItems.length == 1) )
+  var listbox = document.getElementById('moduleList');
+  if ( listbox && listbox.selectedItems && (listbox.selectedItems.length == 1) )
   {
-    var index = tree.selectedItems[0].getAttribute('list-index');
+    var index = listbox.selectedItems[0].getAttribute('list-index');
     SetDivText('description', top.importService.GetModuleDescription(top.importType, index));
   }
 }
@@ -309,7 +309,7 @@ function ListModules() {
   if (top.importService == null)
     return;
 
-  var body = document.getElementById( "bucketBody");
+  var body = document.getElementById( "moduleList");
   var max = body.childNodes.length - 1;
   while (max >= 0) {
     body.removeChild( body.childNodes[max]);
@@ -334,16 +334,12 @@ function ListModules() {
 
 function AddModuleToList(moduleName, index)
 {
-  var body = document.getElementById("bucketBody");
+  var body = document.getElementById("moduleList");
 
-  var item = document.createElement('treeitem');
-  var row = document.createElement('treerow');
-  var cell = document.createElement('treecell');
-  cell.setAttribute('label', moduleName);
+  var item = document.createElement('listitem');
+  item.setAttribute('label', moduleName);
   item.setAttribute('list-index', index);
 
-  row.appendChild(cell);
-  item.appendChild(row);
   body.appendChild(item);
 }
 
@@ -920,16 +916,16 @@ function ExportComm4x()
 
 function SelectFirstItem()
 {
-  var tree = document.getElementById("moduleList");
-  tree.selectedIndex = 0;
+  var listbox = document.getElementById("moduleList");
+  listbox.selectedIndex = 0;
   ImportSelectionChanged();
 }
 
 function enableAdvance()
 {
-  var tree = document.getElementById("moduleList");
+  var listbox = document.getElementById("moduleList");
   var nextButton = document.getElementById("forward");
-  if (tree.selectedItems.length)
+  if (listbox.selectedItems.length)
     nextButton.removeAttribute("disabled");
   else
     nextButton.setAttribute("disabled", "true");

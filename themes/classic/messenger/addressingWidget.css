@@ -34,45 +34,40 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
 /* ::::: addressing widget ::::: */
   
-#addressingWidgetTree {
-  width: 0px;
+#addressingWidget {
   -moz-user-focus: none;
-  background-color: -moz-field;
+  width: 0;
 }  
 
-#listcol-addressingWidget {
+#typecol-addressingWidget {
   width: 9em;
   border-right: 1px solid #CACAFF;
 }
 
-#addressingWidgetTree > treechildren > treeitem > treerow,
-#addressingWidgetTree > treechildren > treeitem[selected="true"] > treerow {
-  border: none;
-  background-color: inherit;
-  color: inherit;
+.addressingWidgetItem,
+.dummy-row {
+  border: none !important;
+  background-color: inherit !important;
+  color: inherit !important;
 }
 
-.treecell-addressingWidget {
+.addressingWidgetCell {
   border-bottom: 1px solid #CACAFF;
-  padding: 0px !important;
+  padding: 0px;
 }
 
-.treecell-addressingWidget:first-child {
+.addressingWidgetCell:first-child {
   border-top: none;
 }
 
-.textbox-addressingWidget {
-  -moz-box-align: center;
-}
-
 .dummy-row-cell:first-child {
+  border-top: none;
   border-bottom: 1px solid #CACAFF;
 }
 
 .person-icon {
+  margin: 0 3px;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/abcard.gif");
-  margin: 2px 3px;
 }

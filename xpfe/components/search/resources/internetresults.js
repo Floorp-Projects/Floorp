@@ -1,9 +1,8 @@
 function searchResultsOpenURL(event)
 {
-  var node = event.target.parentNode.parentNode;
-  if (node.localName != "treeitem" || node.getAttribute('container') == "true")
-    return false;
-
+  var tree = document.getElementById("resultsList");
+  var node = tree.contentView.getItemAtIndex(tree.currentIndex);
+  
   var url = node.id;
   var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
   if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
@@ -42,7 +41,7 @@ function onLoadInternetResults()
                           .getService(Components.interfaces.nsIInternetSearchService);
   iSearch.ClearResultSearchSites();
 
-  // the search URI is passed in as a parameter, so get it and them root the results tree
+  // the search URI is passed in as a parameter, so get it and them root the results list
   var searchURI = top._content.location.href;
   if (searchURI) {
     const lastSearchURIPref = "browser.search.lastMultipleSearchURI";
@@ -50,7 +49,7 @@ function onLoadInternetResults()
     if (offset > 0) {
       nsPreferences.setUnicharPref(lastSearchURIPref, searchURI); // evil
       searchURI = searchURI.substr(offset+1);
-      loadResultsTree(searchURI);
+      loadResultsList(searchURI);
     }
     else {
       searchURI = nsPreferences.copyUnicharPref(lastSearchURIPref, "");
@@ -58,16 +57,16 @@ function onLoadInternetResults()
       if (offset > 0) {
         nsPreferences.setUnicharPref(lastSearchURIPref, searchURI); // evil
         searchURI = searchURI.substr(offset+1);
-        loadResultsTree(searchURI);
+        loadResultsList(searchURI);
       }
     }
   }
   return true;
 }
 
-function loadResultsTree( aSearchURL )
+function loadResultsList( aSearchURL )
 {
-  var resultsTree = document.getElementById( "internetresultstree" );
+  var resultsTree = document.getElementById( "resultsList" );
   if (!resultsTree) return false;
   resultsTree.setAttribute("ref", unescape(aSearchURL));
   return true;
@@ -81,7 +80,7 @@ function doEngineClick( event, aNode )
 
   var html = null;
 
-  var resultsTree = document.getElementById("internetresultstree");
+  var resultsTree = document.getElementById("resultsList");
   var contentArea = document.getElementById("content");
   var splitter = document.getElementById("results-splitter");
   var engineURI = aNode.id;
@@ -192,18 +191,17 @@ function doResultClick(node)
   return(true);
 }
 
-function treeSelect(event)
+function listSelect(event)
 {
-  if (!event.target.selectedItems ||
-      event.target.selectedItems && event.target.selectedItems.length != 1)
+  var tree = document.getElementById("resultsList");
+  if (tree.view.selection.count != 1)
     return false;
-  doResultClick(event.target.selectedItems[0]);
+  var selection = tree.contentView.getItemAtIndex(tree.currentIndex);
+  doResultClick(selection);
 }
 
-function treeClick(event)
+function listClick(event)
 {
   if (event.detail == 2 && event.button == 0)
     searchResultsOpenURL(event);
-  else
-    treeSelect(event);
 }

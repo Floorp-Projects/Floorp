@@ -37,10 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 /***************************************************************
-* inOutlinerBuilder -------------------------------------------------
-*  Automatically builds up an outliner so that it will display a tabular
+* inTreeBuilder -------------------------------------------------
+*  Automatically builds up an tree so that it will display a tabular
 *  set of data with titled columns and optionally an icon for each row.
-*  The outliner that is supplied must have an outlinerchildren with an 
+*  The tree that is supplied must have an treechildren with an 
 *  empty template inside of it.
 * - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 * REQUIRED IMPORTS:
@@ -49,16 +49,16 @@
 
 //////////// global variables /////////////////////
 
-var inOutlinerBuilderPartCount = 0;
+var inTreeBuilderPartCount = 0;
 
 //////////// global constants ////////////////////
 
 ////////////////////////////////////////////////////////////////////////////
-//// class inOutlinerBuilder
+//// class inTreeBuilder
 
-function inOutlinerBuilder(aOutliner, aNameSpace, aArcName)
+function inTreeBuilder(aTree, aNameSpace, aArcName)
 {
-  this.outliner = aOutliner;
+  this.tree = aTree;
   this.nameSpace = aNameSpace;
   this.arcName = aArcName;
 
@@ -66,10 +66,10 @@ function inOutlinerBuilder(aOutliner, aNameSpace, aArcName)
   this.mExtras = [];
 }
 
-inOutlinerBuilder.prototype =
+inTreeBuilder.prototype =
 {
-  mOutliner: null,
-  mOutlinerBody: null,
+  mTree: null,
+  mTreeBody: null,
   // datasource stuff
   mNameSpace: null,
   mArcName: null,
@@ -90,13 +90,13 @@ inOutlinerBuilder.prototype =
   //// properties
 
   // the xul tree node we will construct
-  get outliner() { return this.mOutliner },
-  set outliner(aVal) 
+  get tree() { return this.mTree },
+  set tree(aVal) 
   { 
-    this.mOutliner = aVal;
+    this.mTree = aVal;
     if (aVal)
-      this.mOutlinerBody = aVal.getElementsByTagName("outlinerchildren")[0];
-    aVal._outlinerBuilder = this 
+      this.mTreeBody = aVal.getElementsByTagName("treechildren")[0];
+    aVal._treeBuilder = this 
   },
 
   // the namespace to use for all fields
@@ -160,7 +160,7 @@ inOutlinerBuilder.prototype =
 
   initTemplate: function()
   {
-    var template = this.mOutliner.getElementsByTagNameNS(kXULNSURI, "template")[0];
+    var template = this.mTree.getElementsByTagNameNS(kXULNSURI, "template")[0];
     this.mTemplate = template;
     this.clearChildren(template);
 
@@ -182,7 +182,7 @@ inOutlinerBuilder.prototype =
     var conditions = document.createElementNS(kXULNSURI, "conditions");
     this.mRule.appendChild(conditions);
 
-    var content = document.createElementNS(kXULNSURI, "outlinerrow");
+    var content = document.createElementNS(kXULNSURI, "treerow");
     content.setAttribute("uri", "?uri");
     conditions.appendChild(content);
 
@@ -201,10 +201,10 @@ inOutlinerBuilder.prototype =
     var action = document.createElementNS(kXULNSURI, "action");
     this.mRule.appendChild(action);
 
-    var orow = this.createTemplatePart("outlinerrow");
+    var orow = this.createTemplatePart("treerow");
     orow.setAttribute("uri", "?row");
     action.appendChild(orow);
-    this.mOutlinerRow = orow;
+    this.mTreeRow = orow;
 
     // assign the item attributes
     if (this.mRowAttrs)
@@ -223,7 +223,7 @@ inOutlinerBuilder.prototype =
         this.mBindings.appendChild(binding);
         props += key+"-?"+this.mRowFields[key]+" ";
       }
-      this.mOutlinerRow.setAttribute("properties", props);
+      this.mTreeRow.setAttribute("properties", props);
     }
   },
 
@@ -251,18 +251,18 @@ inOutlinerBuilder.prototype =
     this.mColumns = [];
     this.mIsIconic = false;
 
-    this.resetOutliner();
+    this.resetTree();
   },
 
-  resetOutliner: function()
+  resetTree: function()
   {
-    var kids = this.mOutliner.childNodes;
+    var kids = this.mTree.childNodes;
     for (var i = 0 ; i < kids.length; ++i)
-      if (kids[i].localName != "outlinerchildren")
-        this.mOutliner.removeChild(kids[i]);
+      if (kids[i].localName != "treechildren")
+        this.mTree.removeChild(kids[i]);
       
     this.clearChildren(this.mBindings);
-    this.clearChildren(this.mOutlinerRow);
+    this.clearChildren(this.mTreeRow);
     this.createDefaultBindings();
   },
 
@@ -279,11 +279,11 @@ inOutlinerBuilder.prototype =
   {
     if (this.mAllowDND) {
       // addEventListener doesn't work for dnd events, apparently... so we use the attributes
-      this.addDNDListener(this.mOutliner, "ondragenter");
-      this.addDNDListener(this.mOutliner, "ondragover");
-      this.addDNDListener(this.mOutliner, "ondragexit");
-      this.addDNDListener(this.mOutliner, "ondraggesture");
-      this.addDNDListener(this.mOutliner, "ondragdrop");
+      this.addDNDListener(this.mTree, "ondragenter");
+      this.addDNDListener(this.mTree, "ondragover");
+      this.addDNDListener(this.mTree, "ondragexit");
+      this.addDNDListener(this.mTree, "ondraggesture");
+      this.addDNDListener(this.mTree, "ondragdrop");
     }
   },
 
@@ -293,7 +293,7 @@ inOutlinerBuilder.prototype =
 
   onDragOver: function(aEvent)
   {
-    if (!DNDUtils.checkCanDrop("OutlinerBuilder/column-add"))
+    if (!DNDUtils.checkCanDrop("TreeBuilder/column-add"))
       return;
 
     var idx = this.getColumnIndexFromX(aEvent.clientX, 0.5);
@@ -316,11 +316,11 @@ inOutlinerBuilder.prototype =
     var dragService = XPCU.getService("@mozilla.org/widget/dragservice;1", "nsIDragService");
     var dragSession = dragService.getCurrentSession();
 
-    if (!dragSession.isDataFlavorSupported("OutlinerBuilder/column-add"))
+    if (!dragSession.isDataFlavorSupported("TreeBuilder/column-add"))
       return false;
 
     var trans = XPCU.createInstance("@mozilla.org/widget/transferable;1", "nsITransferable");
-    trans.addDataFlavor("OutlinerBuilder/column-add");
+    trans.addDataFlavor("TreeBuilder/column-add");
 
     dragSession.getData(trans, 0);
     var data = {};
@@ -342,8 +342,8 @@ inOutlinerBuilder.prototype =
     // bug 56270 - dragSession.sourceDocument is null --
     // causes me to code this very temporary, very nasty hack
     // to tell columnsDialog.js about the drop
-    if (this.mOutliner.onClientDrop) {
-      this.mOutliner.onClientDrop();
+    if (this.mTree.onClientDrop) {
+      this.mTree.onClientDrop();
     }
   },
 
@@ -367,7 +367,7 @@ inOutlinerBuilder.prototype =
       col.setAttribute("properties", "dnd-insert-"+aWhere);
     }
     
-    var bx = this.mOutliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
+    var bx = this.mTree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);
     bx.invalidate();
   },
 
@@ -388,7 +388,7 @@ inOutlinerBuilder.prototype =
 
   getColumnIndexFromHeader: function(aHeader)
   {
-    var headers = this.mOutliner.getElementsByTagName("outlinercol");
+    var headers = this.mTree.getElementsByTagName("treecol");
     for (var i = 0; i < headers.length; ++i) {
       if (headers[i] == aHeader)
         return i;
@@ -401,34 +401,34 @@ inOutlinerBuilder.prototype =
   onDragGesture: function(aEvent)
   {
     var target = aEvent.target;
-    if (target.parentNode == this.mOutliner) {
+    if (target.parentNode == this.mTree) {
       var column = target.getAttribute("label");
 
       var idx = this.getColumnIndexFromHeader(target);
       if (idx == -1) return;
       this.mColumnDragging = idx;
 
-      DNDUtils.invokeSession(target, ["OutlinerBuilder/column-remove"], [column]);
+      DNDUtils.invokeSession(target, ["TreeBuilder/column-remove"], [column]);
     }
   },
 
   addColumnDropTarget: function(aBox)
   {
-    aBox._outlinerBuilderDropTarget = this;
+    aBox._treeBuilderDropTarget = this;
     this.addDNDListener(aBox, "ondragover", "Target");
     this.addDNDListener(aBox, "ondragdrop", "Target");
   },
 
   removeColumnDropTarget: function(aBox)
   {
-    aBox._outlinerBuilderDropTarget = this;
+    aBox._treeBuilderDropTarget = this;
     this.removeDNDListener(aBox, "ondragover", "Target");
     this.removeDNDListener(aBox, "ondragdrop", "Target");
   },
 
   onDragOverTarget: function(aBox, aEvent)
   {
-    DNDUtils.checkCanDrop("OutlinerBuilder/column-remove");
+    DNDUtils.checkCanDrop("TreeBuilder/column-remove");
   },
 
   onDragDropTarget: function(aBox, aEvent)
@@ -444,7 +444,7 @@ inOutlinerBuilder.prototype =
 
   addDNDListener: function(aBox, aType, aModifier)
   {
-   var js = "inOutlinerBuilder_"+aType+(aModifier?"_"+aModifier:"")+"(this, event);";
+   var js = "inTreeBuilder_"+aType+(aModifier?"_"+aModifier:"")+"(this, event);";
 
    var attr = aBox.getAttribute(aType);
    attr = attr ? attr : "";
@@ -453,7 +453,7 @@ inOutlinerBuilder.prototype =
 
   removeDNDListener: function(aBox, aType, aModifier)
   {
-   var js = "inOutlinerBuilder_"+aType+(aModifier?"_"+aModifier:"")+"(this, event);";
+   var js = "inTreeBuilder_"+aType+(aModifier?"_"+aModifier:"")+"(this, event);";
 
    var attr = aBox.getAttribute(aType);
    var idx = attr.indexOf(js);
@@ -498,7 +498,7 @@ inOutlinerBuilder.prototype =
 
   getColumnAt: function(aIndex)
   {
-    var kids = this.mOutliner.getElementsByTagName("outlinercol");
+    var kids = this.mTree.getElementsByTagName("treecol");
     return aIndex < 0 || aIndex >= kids.length ? kids[kids.length-1] : kids[aIndex];
   },
 
@@ -528,33 +528,33 @@ inOutlinerBuilder.prototype =
   build: function(aBuildContent)
   {
     try {
-      this.resetOutliner();
+      this.resetTree();
       this.buildColumns();
       this.buildTemplate();
       if (aBuildContent)
         this.buildContent();
     } catch (ex) {
-      debug("### ERROR - inOutlinerBuilder::build failed.\n" + ex);
+      debug("### ERROR - inTreeBuilder::build failed.\n" + ex);
     }
 
-    //dumpDOM2(this.mOutliner);
+    //dumpDOM2(this.mTree);
 
   },
 
   buildContent: function()
   {
-    this.mOutlinerBody.builder.rebuild();
-    var bx = this.mOutliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
+    this.mTreeBody.builder.rebuild();
+    var bx = this.mTree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);
     setTimeout(function(a) { a.invalidate() }, 1, bx);
   },
 
   buildColumns: function()
   {
-    var cols = document.createElementNS(kXULNSURI, "outlinercols");
+    var cols = document.createElementNS(kXULNSURI, "treecols");
     var col, val, split;
     for (var i = 0; i < this.mColumns.length; i++) {
-      col = document.createElementNS(kXULNSURI, "outlinercol");
-      col.setAttribute("id", "outlinercol-"+this.mColumns[i].name);
+      col = document.createElementNS(kXULNSURI, "treecol");
+      col.setAttribute("id", "treecol-"+this.mColumns[i].name);
       col.setAttribute("persist", "width");
       col.setAttribute("label", this.mColumns[i].title);
 
@@ -577,14 +577,14 @@ inOutlinerBuilder.prototype =
         cols.appendChild(split);
       }
     }
-    this.mOutliner.appendChild(cols);
+    this.mTree.appendChild(cols);
   },
 
   buildTemplate: function()
   {
     var cols = this.mColumns;
     var bindings = this.mBindings;
-    var row = this.mOutlinerRow;
+    var row = this.mTreeRow;
     var cell, binding, val, extras, attrs, key, className;
 
     if (this.mIsIconic) {
@@ -597,7 +597,7 @@ inOutlinerBuilder.prototype =
       if (!val)
         throw "Column data is incomplete - missing name at index " + i + ".";
 
-      cell = this.createTemplatePart("outlinercell");
+      cell = this.createTemplatePart("treecell");
       className = "";
 
       // build the default value data field
@@ -605,7 +605,7 @@ inOutlinerBuilder.prototype =
       bindings.appendChild(binding);
       
       cell.setAttribute("label", "?" + val);
-      cell.setAttribute("ref", "outlinercol-"+cols[i].name);
+      cell.setAttribute("ref", "treecol-"+cols[i].name);
       cell.setAttribute("class", className);
       
       var props = "";
@@ -629,44 +629,44 @@ inOutlinerBuilder.prototype =
   createTemplatePart: function(aTagName)
   {
     var el = document.createElementNS(kXULNSURI, aTagName);
-    el.setAttribute("id", "templatePart"+inOutlinerBuilderPartCount);
-    inOutlinerBuilderPartCount++;
+    el.setAttribute("id", "templatePart"+inTreeBuilderPartCount);
+    inTreeBuilderPartCount++;
     return el;
   }
 
 };
 
-function inOutlinerBuilder_ondraggesture(aOutliner, aEvent)
+function inTreeBuilder_ondraggesture(aTree, aEvent)
 {
-  return aOutliner._outlinerBuilder.onDragGesture(aEvent);
+  return aTree._treeBuilder.onDragGesture(aEvent);
 }
 
-function inOutlinerBuilder_ondragenter(aOutliner, aEvent)
+function inTreeBuilder_ondragenter(aTree, aEvent)
 {
-  return aOutliner._outlinerBuilder.onDragEnter(aEvent);
+  return aTree._treeBuilder.onDragEnter(aEvent);
 }
 
-function inOutlinerBuilder_ondragover(aOutliner, aEvent)
+function inTreeBuilder_ondragover(aTree, aEvent)
 {
-  return aOutliner._outlinerBuilder.onDragOver(aEvent);
+  return aTree._treeBuilder.onDragOver(aEvent);
 }
 
-function inOutlinerBuilder_ondragexit(aOutliner, aEvent)
+function inTreeBuilder_ondragexit(aTree, aEvent)
 {
-  return aOutliner._outlinerBuilder.onDragExit(aEvent);
+  return aTree._treeBuilder.onDragExit(aEvent);
 }
 
-function inOutlinerBuilder_ondragdrop(aOutliner, aEvent)
+function inTreeBuilder_ondragdrop(aTree, aEvent)
 {
-  return aOutliner._outlinerBuilder.onDragDrop(aEvent);
+  return aTree._treeBuilder.onDragDrop(aEvent);
 }
 
-function inOutlinerBuilder_ondragover_Target(aBox, aEvent)
+function inTreeBuilder_ondragover_Target(aBox, aEvent)
 {
-  return aBox._outlinerBuilderDropTarget.onDragOverTarget(aBox, aEvent);
+  return aBox._treeBuilderDropTarget.onDragOverTarget(aBox, aEvent);
 }
 
-function inOutlinerBuilder_ondragdrop_Target(aBox, aEvent)
+function inTreeBuilder_ondragdrop_Target(aBox, aEvent)
 {
-  return aBox._outlinerBuilderDropTarget.onDragDropTarget(aBox, aEvent);
+  return aBox._treeBuilderDropTarget.onDragDropTarget(aBox, aEvent);
 }

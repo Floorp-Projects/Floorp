@@ -150,7 +150,7 @@ function onChangeHTMLAttribute()
 
 function ClearHTMLInputWidgets()
 {
-  gDialog.AddHTMLAttributeTree.clearSelection();
+  gDialog.AddHTMLAttributeTree.treeBoxObject.selection.clearSelection();
   gDialog.AddHTMLAttributeNameInput.value ="";
   gDialog.AddHTMLAttributeValueInput.value = "";
   SetTextboxFocus(gDialog.AddHTMLAttributeNameInput);
@@ -162,15 +162,16 @@ function onSelectHTMLTreeItem()
     return;
 
   var tree = gDialog.AddHTMLAttributeTree;
-  if (tree && tree.selectedItems && tree.selectedItems.length)
+  if (tree && tree.treeBoxObject.selection.count)
   {
     var inputName = TrimString(gDialog.AddHTMLAttributeNameInput.value).toLowerCase();
-    var selectedName = tree.selectedItems[0].firstChild.firstChild.getAttribute("label");
+    var selectedItem = getSelectedItem(tree);
+    var selectedName = selectedItem.firstChild.firstChild.getAttribute("label");
 
     if (inputName == selectedName)
     {
       // Already editing selected name - just update the value input
-      gDialog.AddHTMLAttributeValueInput.value = GetTreeItemValueStr(tree.selectedItems[0]);
+      gDialog.AddHTMLAttributeValueInput.value = GetTreeItemValueStr(selectedItem);
     }
     else
     {
@@ -372,9 +373,9 @@ function RemoveHTMLAttribute()
   var treechildren = gDialog.AddHTMLAttributeTree.lastChild;
 
   // We only allow 1 selected item
-  if (gDialog.AddHTMLAttributeTree.selectedItems.length)
+  if (gDialog.AddHTMLAttributeTree.treeBoxObject.selection.count)
   {
-    var item = gDialog.AddHTMLAttributeTree.selectedItems[0];
+    var item = getSelectedItem(gDialog.AddHTMLAttributeTree);
     var attr = GetTreeItemAttributeStr(item);
 
     // remove the item from the attribute array

@@ -54,7 +54,7 @@ broadcasterset, broadcaster, observes,
 keyset, key, 
 template, rule, conditions, action, 
 bindings, binding, content, member, triple,
-outlinerchildren, outlineritem, outlinerseparator, outlinerrow, outlinercell {
+treechildren, treeitem, treeseparator, treerow, treecell {
   display: none;
 }
 
@@ -65,7 +65,7 @@ checkbox,
 colorpicker[type="button"],
 menulist,
 radiogroup,
-outliner,
+tree,
 browser,
 editor,
 iframe {
@@ -76,8 +76,8 @@ menulist[editable] {
   -moz-user-focus: ignore;
 }
 
-outlinercol,
-outlinerrows,
+treecol,
+treerows,
 radio {
   -moz-user-focus: none;
 }
@@ -426,6 +426,10 @@ listbox {
   height: 200px;
 }
 
+listhead, listrows, listboxbody {
+  -moz-user-focus: none;
+}
+
 listhead {
   -moz-box-orient: vertical;
 }
@@ -452,101 +456,41 @@ listcell {
   -moz-box-align: center;
 }
 
-/******** tree **********/
+/******** tree ******/
 
 tree {
- -moz-binding: url("chrome://global/content/bindings/tree.xml#tree");
+  -moz-binding: url("chrome://global/content/bindings/tree.xml#tree");
 }
 
-treehead, treecol, treerows, treerow, treecolgroup, treechildren {
- -moz-binding: url("chrome://global/content/bindings/tree.xml#tree-base");
+treecols {
+  -moz-binding: url("chrome://global/content/bindings/tree.xml#treecols");
+}
+
+treecol {
+  -moz-binding: url("chrome://global/content/bindings/tree.xml#treecol");
+}
+
+treecol.treecol-image {
+  -moz-binding: url("chrome://global/content/bindings/tree.xml#treecol-image");
 }
 
 tree > treechildren {
- -moz-binding: url("chrome://global/content/bindings/tree.xml#treerows");
-}
-
-treeitem { 
- -moz-binding: url("chrome://global/content/bindings/tree.xml#treeitem");
-}
-
-/* treecells */
-
-treecell { 
- -moz-binding: url("chrome://global/content/bindings/tree.xml#treecell");
-} 
-
-.treecell-indent {
-  -moz-binding: url("chrome://global/content/bindings/tree.xml#treecell-indented-leaf");
-}
-
-treeitem[container="true"] > treerow > .treecell-indent {
-  -moz-binding: url("chrome://global/content/bindings/tree.xml#treecell-indented-folder");
-}
-
-.treecell-iconic {
- -moz-binding: url("chrome://global/content/bindings/tree.xml#treecell-iconic");
-}
-
-.treecell-image {
- -moz-binding: url("chrome://global/content/bindings/tree.xml#treecell-image");
-}
-
-.treecell-align-right {
-  -moz-binding: url("chrome://global/content/bindings/tree.xml#treecell-align-right");
-}
-
-/* tree headers */
-
-.treecell-header, .treecell-inset-header {
-  -moz-binding: url("chrome://global/content/bindings/tree.xml#treecell-header");
-}
-
-.treecell-header-image {
-  -moz-binding: url("chrome://global/content/bindings/tree.xml#treecell-header-image");
-}
-
-/* internal parts */
-
-.treecell-text { 
- -moz-binding: url("chrome://global/content/bindings/tree.xml#treecell-text");
-} 
-
-/******** outliner ******/
-
-outliner {
-  -moz-binding: url("chrome://global/content/bindings/outliner.xml#outliner");
-}
-
-outlinercols {
-  -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinercols");
-}
-
-outlinercol {
-  -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinercol");
-}
-
-outlinercol.outlinercol-image {
-  -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinercol-image");
-}
-
-outliner > outlinerchildren {
   display: -moz-box;
-  -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinerbody");
+  -moz-binding: url("chrome://global/content/bindings/tree.xml#treebody");
   -moz-user-focus: none;
   -moz-user-select: none;
   -moz-box-flex: 1;
 }
 
-outlinerrows {
-  -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinerrows");
+treerows {
+  -moz-binding: url("chrome://global/content/bindings/tree.xml#treerows");
 }
 
-outlinercolpicker {
-  -moz-binding: url("chrome://global/content/bindings/outliner.xml#columnpicker");
+treecolpicker {
+  -moz-binding: url("chrome://global/content/bindings/tree.xml#columnpicker");
 }
 
-outliner {
+tree {
   -moz-box-orient: vertical;
   -moz-user-select: none;
   min-width: 0px;
@@ -555,15 +499,15 @@ outliner {
   height: 10px;
 }
 
-outliner[hidecolumnpicker="true"] > outlinercols > outlinercolpicker {
+tree[hidecolumnpicker="true"] > treecols > treecolpicker {
   display: none;
 }
 
-outlinercol {
+treecol {
   min-width: 16px;
 }
 
-outlinercol[hidden="true"] {
+treecol[hidden="true"] {
   visibility: collapse;
   display: -moz-box;
 }
@@ -673,16 +617,16 @@ textbox[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-history-popup");
 }
 
-.autocomplete-outliner {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-outliner");
+.autocomplete-tree {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-tree");
 }
 
-.autocomplete-outlinerbody {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-outlinerbody");
+.autocomplete-treebody {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-treebody");
 }
 
-.autocomplete-outlinerrows {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-outlinerrows");
+.autocomplete-treerows {
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-treerows");
 }
 
 .autocomplete-history-dropmarker {

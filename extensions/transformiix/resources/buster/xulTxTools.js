@@ -26,7 +26,7 @@ var xalan_base, xalan_xml, xalan_elems, xalan_length, content_row, target;
 var matchRE, matchNameTag, matchFieldTag, startFieldTag, endFieldTag;
 var tests_run, tests_passed, tests_failed, tests_selected;
 var view = ({
-// nsIOutlinerView
+// nsITreeView
   rowCount : 0,
   getRowProperties : function(i, prop) {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
@@ -37,8 +37,8 @@ var view = ({
   getCellProperties : function(index, prop) {},
   isContainer : function(index) {return false;},
   isSeparator : function(index) {return false;},
-  outliner : null,
-  setOutliner : function(out) { this.outliner = out; },
+  tree : null,
+  setTree : function(out) { this.tree = out; },
   getCellText : function(i, col) {
     switch(col){
       case "name":
@@ -53,14 +53,14 @@ var view = ({
    },
 // nsIClassInfo
   flags : Components.interfaces.nsIClassInfo.DOM_OBJECT,
-  classDescription : "OutlinerView",
+  classDescription : "TreeView",
   getInterfaces: function() {},
   getHelperForLanguage: function(aLang) {},
 
   QueryInterface: function(iid) {
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     if (!iid.equals(Components.interfaces.nsISupports) &&
-        !iid.equals(Components.interfaces.nsIOutlinerView) &&
+        !iid.equals(Components.interfaces.nsITreeView) &&
         !iid.equals(Components.interfaces.nsIClassInfo))
       throw Components.results.NS_ERROR_NO_INTERFACE;
 
@@ -104,7 +104,7 @@ var view = ({
       }
       cur = cur.nextSibling;
     }
-    this.outliner.rowCountChanged(0,this.rowCount);
+    this.tree.rowCountChanged(0,this.rowCount);
     //dump((new Date()-startt)/1000+" secs in swallow for "+k+" items\n");
   },
   remove : function(first,last){
@@ -115,7 +115,7 @@ var view = ({
     this.comms.splice(first,last-first+1);
     this.success.splice(first,last-first+1);
     this.rowCount=this.names.length;
-    this.outliner.rowCountChanged(first,this.rowCount);
+    this.tree.rowCountChanged(first,this.rowCount);
   },
   getNames : function(first,last){
     last = Math.min(this.rowCount,last); 
@@ -127,8 +127,8 @@ var view = ({
   }
 });
 
-function setView(outliner, v) {
-  outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = v;
+function setView(tree, v) {
+  tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject).view = v;
 }
 
 function loaderstuff(eve) {
@@ -193,7 +193,7 @@ function handle_result(index,success){
   }
   view.unselect(index);
   netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  view.outliner.invalidateRow(index);
+  view.tree.invalidateRow(index);
 }
 
 function hide_checked(yes){

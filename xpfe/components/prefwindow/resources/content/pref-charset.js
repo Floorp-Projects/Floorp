@@ -47,7 +47,7 @@ function readRDFString(aDS,aRes,aProp)
 function LoadAvailableCharSets()
 {
   try {
-    var available_charsets_treeroot = document.getElementById('available_charsets_root');
+    var available_charsets_listbox = document.getElementById('available_charsets');
     var rdf=Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService); 
     var kNC_Root = rdf.GetResource("NC:DecodersRoot");
     var kNC_name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
@@ -64,8 +64,8 @@ function LoadAvailableCharSets()
       availCharsetDict[i][0] = readRDFString(rdfDataSource, charset, kNC_name);
       availCharsetDict[i][1] = charset.Value;
 
-      AddTreeItem(document,
-                  available_charsets_treeroot,
+      AddListItem(document,
+                  available_charsets_listbox,
                   availCharsetDict[i][1],
                   availCharsetDict[i][0]);
     }
@@ -115,7 +115,6 @@ function AddRemoveLatin1(action)
 function LoadActiveCharSets()
 {
   var active_charsets = document.getElementById('active_charsets');
-  var active_charsets_treeroot = document.getElementById('active_charsets_root');
   var arrayOfPrefs = [];
   var str;
   var tit;
@@ -127,7 +126,7 @@ function LoadActiveCharSets()
       str = arrayOfPrefs[i];
       tit = GetCharSetTitle(str);
       if (str && tit)
-        AddTreeItem(document, active_charsets_treeroot, str, tit);
+        AddListItem(document, active_charsets, str, tit);
     }
   }
 }
@@ -194,27 +193,18 @@ function update_buttons()
 function AddAvailableCharset()
 {
   var active_charsets = document.getElementById('active_charsets');
-  var active_charsets_treeroot = document.getElementById('active_charsets_root');
   var available_charsets = document.getElementById('available_charsets');
 
   for (var nodeIndex=0; nodeIndex < available_charsets.selectedItems.length;  nodeIndex++)
   {
     var selItem =  available_charsets.selectedItems[nodeIndex];
-    var selRow  =  selItem.firstChild;
-    var selCell =  selRow.firstChild;
-
-    var charsetname  = selCell.getAttribute('label');
-    var charsetid = selCell.getAttribute('id');
+    
+    var charsetname  = selItem.id;
+    var charsetid = selItem.id;
     var already_active = false;
 
-    for (var item = active_charsets_treeroot.firstChild; item != null; item = item.nextSibling) {
-
-      var row  =  item.firstChild;
-      var cell =  row.firstChild;
-      var active_charsetid = cell.getAttribute('id');
-
-      if (active_charsetid == charsetid)
-      {
+    for (var item = active_charsets.firstChild; item != null; item = item.nextSibling) {
+      if (charsetid == item.id) {
         already_active = true;
         break;
       }//if
@@ -222,7 +212,7 @@ function AddAvailableCharset()
     }//for
 
     if (already_active == false) {
-      AddTreeItem(document, active_charsets_treeroot, charsetid, charsetname);
+      AddListItem(document, active_charsets, charsetid, charsetname);
     }//if
 
   }//for
@@ -236,14 +226,14 @@ function AddAvailableCharset()
 
 function RemoveActiveCharset()
 {
-  var active_charsets_treeroot = document.getElementById('active_charsets_root');
-  var tree = document.getElementById('active_charsets');
+  var listbox = document.getElementById('active_charsets');
   var nextNode = null;
-  var numSelected = tree.selectedItems.length;
+  var numSelected = listbox.selectedItems.length;
   var deleted_all = false;
 
-  while (tree.selectedItems.length > 0) {
-    var selectedNode = tree.selectedItems[0];
+  while (listbox.selectedItems.length > 0) {
+    var selectedNode = listbox.selectedItems[0];
+    dump(selectedNode + " - " + listbox.selectedItems.length + "\n");
     nextNode = selectedNode.nextSibling;
 
     if (!nextNode) {
@@ -251,18 +241,13 @@ function RemoveActiveCharset()
         nextNode = selectedNode.previousSibling;
     }
 
-    var row  =  selectedNode.firstChild;
-    var cell =  row.firstChild;
-
-    row.removeChild(cell);
-    selectedNode.removeChild(row);
-    active_charsets_treeroot.removeChild(selectedNode);
+    listbox.removeChild(selectedNode);
   } //while
 
   if (nextNode) {
-    tree.selectItem(nextNode)
+    listbox.selectItem(nextNode)
   } else {
-    //tree.clearSelection();
+    //listbox.clearSelection();
   }
 
   enable_save();
@@ -276,19 +261,13 @@ function Save()
   // that the user has chosen.
 
   var active_charsets = document.getElementById('active_charsets');
-  var active_charsets_treeroot = document.getElementById('active_charsets_root');
 
-  var row          = null;
-  var cell         = null;
   var charsetid    = "";
   var num_charsets = 0;
   var pref_string_content = '';
 
-  for (var item = active_charsets_treeroot.firstChild; item != null; item = item.nextSibling) {
-
-    row  =  item.firstChild;
-    cell =  row.firstChild;
-    charsetid = cell.getAttribute('id');
+  for (var item = active_charsets.firstChild; item != null; item = item.nextSibling) {
+    charsetid = item.id;
 
     if (charsetid.length > 1) {
       num_charsets++;
@@ -316,14 +295,14 @@ function Save()
 
 
 function MoveUp() {
-  var tree = document.getElementById('active_charsets');
-  if (tree.selectedItems.length == 1) {
-    var selected = tree.selectedItems[0];
+  var listbox = document.getElementById('active_charsets');
+  if (listbox.selectedItems.length == 1) {
+    var selected = listbox.selectedItems[0];
     var before = selected.previousSibling
     if (before) {
-      before.parentNode.insertBefore(selected, before);
-      tree.selectItem(selected);
-      tree.ensureElementIsVisible(selected);
+      listbox.insertBefore(selected, before);
+      listbox.selectItem(selected);
+      listbox.ensureElementIsVisible(selected);
     }
   }
 
@@ -333,37 +312,29 @@ function MoveUp() {
 
 
 function MoveDown() {
-  var tree = document.getElementById('active_charsets');
-  if (tree.selectedItems.length == 1) {
-    var selected = tree.selectedItems[0];
+  var listbox = document.getElementById('active_charsets');
+  if (listbox.selectedItems.length == 1) {
+    var selected = listbox.selectedItems[0];
     if (selected.nextSibling) {
-      if (selected.nextSibling.nextSibling) {
-        selected.parentNode.insertBefore(selected, selected.nextSibling.nextSibling);
-      }
-      else {
+      if (selected.nextSibling.nextSibling)
+        listbox.insertBefore(selected, selected.nextSibling.nextSibling);
+      else
         selected.parentNode.appendChild(selected);
-      }
-      tree.selectItem(selected);
+      listbox.selectItem(selected);
     }
   }
 
   enable_save();
 } //MoveDown
 
-function AddTreeItem(doc, treeRoot, ID, UIstring)
+function AddListItem(doc, listbox, ID, UIstring)
 {
   // Create a treerow for the new item
-  var item = doc.createElement('treeitem');
-  var row  = doc.createElement('treerow');
-  var cell = doc.createElement('treecell');
+  var item = doc.createElement('listitem');
 
   // Copy over the attributes
-  cell.setAttribute('label', UIstring);
-  cell.setAttribute('id', ID);
+  item.setAttribute('label', UIstring);
+  item.setAttribute('id', ID);
 
-  // Add it to the tree
-  item.appendChild(row);
-  row.appendChild(cell);
-
-  treeRoot.appendChild(item);
+  listbox.appendChild(item);
 }

@@ -104,7 +104,7 @@ function DeleteCrlSelected() {
 
   // delete selected item
   var crltree = document.getElementById("crltree");
-  var i = crltree.selectedIndex;
+  var i = crltree.currentIndex;
   if(i<0){
     return;
   }
@@ -154,7 +154,7 @@ function DeleteCrlSelected() {
     //XXXXXXXXXXXX
   }
 
-  if( !crltree.selectedItems.length ) {
+  if( !crltree.view.selection.count) {
     if( !document.getElementById("deleteCrl").disabled ) {
       document.getElementById("deleteCrl").disabled = true;
       document.getElementById("editPrefs").disabled = true;
@@ -174,12 +174,17 @@ function DeleteItemSelected(tree, prefix, kids) {
   var delnarray = [];
   var rv = "";
   var cookietree = document.getElementById(tree);
-  var selitems = cookietree.selectedItems;
-  for(i = 0; i < selitems.length; i++) 
+  var rangeCount = cookietree.view.selection.getRangeCount();
+  for(i = 0; i < rangeCount; ++i) 
   { 
-    delnarray[i] = document.getElementById(selitems[i].getAttribute("id"));
-    var itemid = parseInt(selitems[i].getAttribute("id").substring(prefix.length,selitems[i].getAttribute("id").length));
-    rv += (itemid + ",");
+    var start = {}, end = {};
+    cookietree.view.selection.getRangeAt(i, start, end);
+    for (var k = start.value; k <= end.value; ++k) {
+      var item = cookietree.contentView.getItemAtIndex(k);
+      delnarray[i] = document.getElementById(item.id);
+      var itemid = parseInt(item.id.substring(prefix.length, item.id.length));
+      rv += (itemid + ",");
+    }
   }
   for(i = 0; i < delnarray.length; i++) 
   { 
@@ -193,7 +198,7 @@ function EditAutoUpdatePrefs() {
 
   // delete selected item
   var crltree = document.getElementById("crltree");
-  var i = crltree.selectedIndex;
+  var i = crltree.currentIndex;
   if(i<0){
     return;
   }
@@ -207,7 +212,7 @@ function EditAutoUpdatePrefs() {
 function UpdateCRL()
 {
   var crltree = document.getElementById("crltree");
-  var i = crltree.selectedIndex;
+  var i = crltree.currentIndex;
   if(i<0){
     return;
   }

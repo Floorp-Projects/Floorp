@@ -56,8 +56,8 @@
 #include "nsITimer.h"
 #include "nsFileStream.h"
 
-#include "nsIOutlinerView.h"
-#include "nsIOutlinerSelection.h"
+#include "nsITreeView.h"
+#include "nsITreeSelection.h"
 #include "nsIAtom.h"
 
 class nsINntpUrl;
@@ -69,7 +69,7 @@ class nsNntpIncomingServer : public nsMsgIncomingServer,
                              public nsIUrlListener,
                              public nsISubscribableServer,
                              public nsMsgLineBuffer,
-                             public nsIOutlinerView
+                             public nsITreeView
                              
 {
 public:
@@ -77,7 +77,7 @@ public:
     NS_DECL_NSINNTPINCOMINGSERVER
     NS_DECL_NSIURLLISTENER
     NS_DECL_NSISUBSCRIBABLESERVER
-    NS_DECL_NSIOUTLINERVIEW
+    NS_DECL_NSITREEVIEW
 
     nsNntpIncomingServer();
     virtual ~nsNntpIncomingServer();
@@ -127,8 +127,8 @@ private:
     nsCOMPtr<nsIAtom> mNntpAtom;
 
     nsCString mSearchValue;
-    nsCOMPtr<nsIOutlinerBoxObject> mOutliner;
-    nsCOMPtr<nsIOutlinerSelection> mOutlinerSelection;
+    nsCOMPtr<nsITreeBoxObject> mTree;
+    nsCOMPtr<nsITreeSelection> mTreeSelection;
 
     PRBool   mHasSeenBeginGroups;
     nsresult WriteHostInfoFile();

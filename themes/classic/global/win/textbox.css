@@ -75,6 +75,7 @@ textbox[disabled="true"] {
 /* ::::: plain textbox ::::: */
 
 textbox.plain {
+  -moz-appearance: none !important;
   padding: 0px !important;
   margin: 0px !important;
   border: none !important;

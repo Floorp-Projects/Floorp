@@ -36,11 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsOutlinerUtils.h"
+#include "nsTreeUtils.h"
 #include "nsChildIterator.h"
 
 nsresult
-nsOutlinerUtils::TokenizeProperties(const nsAString& aProperties, nsISupportsArray* aPropertiesArray)
+nsTreeUtils::TokenizeProperties(const nsAString& aProperties, nsISupportsArray* aPropertiesArray)
 {
   NS_PRECONDITION(aPropertiesArray != nsnull, "null ptr");
   if (! aPropertiesArray)
@@ -81,7 +81,7 @@ nsOutlinerUtils::TokenizeProperties(const nsAString& aProperties, nsISupportsArr
 }
 
 nsresult
-nsOutlinerUtils::GetImmediateChild(nsIContent* aContainer, nsIAtom* aTag, nsIContent** aResult)
+nsTreeUtils::GetImmediateChild(nsIContent* aContainer, nsIAtom* aTag, nsIContent** aResult)
 {
   ChildIterator iter, last;
   for (ChildIterator::Init(aContainer, &iter, &last); iter != last; ++iter) {

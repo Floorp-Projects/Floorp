@@ -20,7 +20,7 @@
    - 
    - Contributor(s):
    -   Ben Goodger <ben@netscape.com> (ass'td polish fixes)
-   -   Håkan Waara <hwaara@chello.se>
+   -   Hkan Waara <hwaara@chello.se>
   -->
 
 <?xml-stylesheet href="chrome://messenger/skin/messengercompose/messengercompose.css" type="text/css"?> 
@@ -410,41 +410,37 @@
        </hbox>
     </toolbar>
   
-    <toolbar id="MsgHeadersToolbar" persist="collapsed" tborient="vertical" tbalign="stretch" flex="1" grippytooltiptext="&addressBar.tooltip;">
+    <toolbar id="MsgHeadersToolbar" persist="collapsed" flex="1"
+             tborient="vertical" tbalign="stretch"
+             grippytooltiptext="&addressBar.tooltip;">
       <hbox id="msgheaderstoolbar-box" flex="1">
-        <vbox flex="75" id="addresses-box">
+        <vbox flex="1" id="addresses-box">
           <hbox align="center">
             <label value="&fromAddr.label;"/>
             <menulist id="msgIdentity" label="..." flex="1" oncommand="LoadIdentity(false);">
               <menupopup id="msgIdentityPopup"/>
             </menulist>
           </hbox> 
-          <tree id="addressingWidgetTree" flex="1"/>
+          <listbox id="addressingWidget" flex="1"/>
           <hbox align="center">
             <label value="&subject.label;" accesskey="&subject.accesskey;"/>
-            <textbox id="msgSubject" flex="1" class="toolbar" onkeyup="SetComposeWindowTitle(event.which);"
-                        oninput="gContentChanged=true;" disableonsend="true" onkeypress="subjectKeyPress(event);"/>
+            <textbox id="msgSubject" flex="1" class="toolbar" disableonsend="true"
+                     onkeyup="SetComposeWindowTitle(event.which);"
+                     onkeypress="subjectKeyPress(event);"
+                     oninput="gContentChanged=true;"/>
           </hbox>
         </vbox>
         <splitter id="attachmentbucket-sizer" collapse="after"/>
-        <vbox flex="25" id="attachments-box">
+        <vbox id="attachments-box">
           <label id="attachmentBucketText" value="&attachments.label;" crop="right"
                 accesskey="&attachments.accesskey;"/>
-          <tree id="attachmentBucket" class="inset toolbar" flex="1" style="height: 0px; width: 0px;"
-                seltype="multiple"
-                dragdroptree="true"
-                onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"
-                onclick="AttachmentBucketClicked(event);"
-                context="msgComposeAttachmentContext"
-                ondragover="nsDragAndDrop.dragOver(event, attachmentBucketObserver);"
-                ondragdrop="nsDragAndDrop.drop(event, attachmentBucketObserver);"
-                ondragexit="nsDragAndDrop.dragExit(event, attachmentBucketObserver);">
-                
-            <treecolgroup>
-              <treecol flex="1"/>
-            </treecolgroup>
-            <treechildren id="bucketBody" flex="1"/>
-          </tree>
+          <listbox id="attachmentBucket" flex="1" rows="4"
+                   context="msgComposeAttachmentContext"
+                   onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"
+                   onclick="AttachmentBucketClicked(event);"
+                   ondragover="nsDragAndDrop.dragOver(event, attachmentBucketObserver);"
+                   ondragdrop="nsDragAndDrop.drop(event, attachmentBucketObserver);"
+                   ondragexit="nsDragAndDrop.dragExit(event, attachmentBucketObserver);"/>
         </vbox>
       </hbox>
     </toolbar>

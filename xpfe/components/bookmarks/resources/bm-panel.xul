@@ -82,5 +82,6 @@
             oncommand="document.getElementById('bookmarks-view').openFindDialog();"/>
   </hbox>
   
-  <bookmarks-outliner class="sidebar" id="bookmarks-view" type="single-column" flex="1"/>
+  <bookmarks-tree id="bookmarks-view" class="sidebar" type="single-column" flex="1"/>
+
 </page>

@@ -79,28 +79,28 @@ textbox[type="autocomplete"] {
   max-height: 180px;
 }
 
-/* ::::: outliner ::::: */
+/* ::::: tree ::::: */
 
-.autocomplete-outliner {
+.autocomplete-tree {
   border: none;
   background-color: transparent !important;
 }
 
-.autocomplete-outlinercol {
+.autocomplete-treecol {
   margin: 0px !important;
   border: none !important;
   padding: 0px !important;
 }
 
-.autocomplete-outlinerbody:-moz-outliner-cell-text {
+.autocomplete-treebody:-moz-tree-cell-text {
   padding-left: 8px;
   color: #000000;
 }
 
-.autocomplete-outlinerbody:-moz-outliner-row(menuactive) {
+.autocomplete-treebody:-moz-tree-row(menuactive) {
   background-color: #9499AC;
 }
 
-.autocomplete-outlinerbody:-moz-outliner-cell-text(menuactive) {
+.autocomplete-treebody:-moz-tree-cell-text(menuactive) {
   color: #FFFFFF !important;
 }

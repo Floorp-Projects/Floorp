@@ -28,10 +28,10 @@
 const nsMsgViewIndex_None = 0xFFFFFFFF;
 
 
-var gFolderOutliner; 
+var gFolderTree; 
 var gMessagePane;
 var gMessagePaneFrame;
-var gThreadOutliner;
+var gThreadTree;
 var gSearchInput;
 
 var gThreadAndMessagePaneSplitter = null;
@@ -59,7 +59,7 @@ var gStartMsgKey = -1;
 var gThreadPaneCurrentSelectedIndex = -1;
 
 // Global var to keep track of if the 'Delete Message' or 'Move To' thread pane
-// context menu item was triggered.  This helps prevent the outliner view from
+// context menu item was triggered.  This helps prevent the tree view from
 // not updating on one of those menu item commands.
 var gThreadPaneDeleteOrMoveOccurred = false;
 
@@ -155,7 +155,7 @@ var folderListener = {
 
                    // now scroll to it
 	           var indicies = GetSelectedIndices(gDBView);
-                   EnsureRowInThreadOutlinerIsVisible(indicies[0]);
+                   EnsureRowInThreadTreeIsVisible(indicies[0]);
                    scrolled = true;
                  }
                  if (gNextMessageAfterLoad) {
@@ -177,7 +177,7 @@ var folderListener = {
                     
                  // if we failed to find a new message, scroll to the top
                  if (!scrolled) {
-                   EnsureRowInThreadOutlinerIsVisible(0);
+                   EnsureRowInThreadTreeIsVisible(0);
                  }
                }
                SetBusyCursor(window, false);
@@ -203,17 +203,17 @@ var folderListener = {
 var folderObserver = {
     canDropOn: function(index)
     {
-        return CanDropOnFolderOutliner(index);
+        return CanDropOnFolderTree(index);
     },
 
     canDropBeforeAfter: function(index, before)
     {
-        return CanDropBeforeAfterFolderOutliner(index, before);
+        return CanDropBeforeAfterFolderTree(index, before);
     },
 
     onDrop: function(row, orientation)
     {
-        DropOnFolderOutliner(row, orientation);
+        DropOnFolderTree(row, orientation);
     },
 
     onToggleOpenState: function()
@@ -275,11 +275,11 @@ function HandleDeleteOrMoveMsgCompleted(folder)
   {
     if (IsCurrentLoadedFolder(folder)) 
     {
-      var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
-      var outlinerSelection = outlinerView.selection;
+      var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
+      var treeSelection = treeView.selection;
       if (gNextMessageViewIndexAfterDelete != nsMsgViewIndex_None) 
       {
-        viewSize = outlinerView.rowCount;
+        viewSize = treeView.rowCount;
         if (gNextMessageViewIndexAfterDelete >= viewSize) 
         {
           if (viewSize > 0)
@@ -290,7 +290,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
 
             //there is nothing to select viewSize is 0
 
-            outlinerSelection.clearSelection();
+            treeSelection.clearSelection();
             setTitleFromFolder(folder,null);
             ClearMessagePane();
           }
@@ -309,21 +309,21 @@ function HandleDeleteOrMoveMsgCompleted(folder)
         // have the right update state...
         gDBView.suppressCommandUpdating = true;
 
-        // This check makes sure that the outliner does not perform a
+        // This check makes sure that the tree does not perform a
         // selection on a non selected row (row < 0), else assertions will
         // be thrown.
         if (gNextMessageViewIndexAfterDelete >= 0)
-          outlinerSelection.select(gNextMessageViewIndexAfterDelete);
+          treeSelection.select(gNextMessageViewIndexAfterDelete);
         
         // if gNextMessageViewIndexAfterDelete has the same value 
-        // as the last index we had selected, the outliner won't generate a
-        // selectionChanged notification for the outliner view. So force a manual
+        // as the last index we had selected, the tree won't generate a
+        // selectionChanged notification for the tree view. So force a manual
         // selection changed call. (don't worry it's cheap if we end up calling it twice).
-        if (outlinerView)
-          outlinerView.selectionChanged();
+        if (treeView)
+          treeView.selectionChanged();
 
 
-        EnsureRowInThreadOutlinerIsVisible(gNextMessageViewIndexAfterDelete); 
+        EnsureRowInThreadTreeIsVisible(gNextMessageViewIndexAfterDelete); 
         gDBView.suppressCommandUpdating = false;
       }
     }
@@ -364,12 +364,12 @@ function LoadCurrentlyDisplayedMessage()
 {
   if (gCurrentlyDisplayedMessage != nsMsgViewIndex_None)
   {
-    var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
-    var outlinerSelection = outlinerView.selection;
-    outlinerSelection.select(gCurrentlyDisplayedMessage);
-    if (outlinerView)
-      outlinerView.selectionChanged();
-    EnsureRowInThreadOutlinerIsVisible(gCurrentlyDisplayedMessage);
+    var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
+    var treeSelection = treeView.selection;
+    treeSelection.select(gCurrentlyDisplayedMessage);
+    if (treeView)
+      treeView.selectionChanged();
+    EnsureRowInThreadTreeIsVisible(gCurrentlyDisplayedMessage);
     SetFocusThreadPane();
     gCurrentlyDisplayedMessage = nsMsgViewIndex_None; //reset
   }
@@ -514,15 +514,15 @@ function Create3PaneGlobals()
 // PerformExpand() for all servers that are open at startup.            
 function PerformExpandForAllOpenServers()
 {
-    var folderOutliner = GetFolderOutliner();
-    var view = folderOutliner.outlinerBoxObject.view;
+    var folderTree = GetFolderTree();
+    var view = folderTree.treeBoxObject.view;
     for (var i = 0; i < view.rowCount; i++)
     {
         if (view.isContainer(i))
         {
-            var folderResource = GetFolderResource(folderOutliner, i);
+            var folderResource = GetFolderResource(folderTree, i);
             var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-            var isServer = GetFolderAttribute(folderOutliner, folderResource, "IsServer"); 
+            var isServer = GetFolderAttribute(folderTree, folderResource, "IsServer"); 
             if (isServer == "true")
             {
                 if (view.isContainerOpen(i))
@@ -539,7 +539,7 @@ function PerformExpandForAllOpenServers()
 
 function loadStartFolder(initialUri)
 {
-    var folderOutliner = GetFolderOutliner();
+    var folderTree = GetFolderTree();
     var defaultServer = null;
     var startFolderResource = null;
     var isLoginAtStartUpEnabled = false;
@@ -714,13 +714,13 @@ function OnLoadFolderPane()
 
     database.AddDataSource(accountManagerDataSource);
     database.AddDataSource(folderDataSource);
-    var folderOutliner = GetFolderOutliner();
-    folderOutliner.setAttribute("ref", "msgaccounts:/");
+    var folderTree = GetFolderTree();
+    folderTree.setAttribute("ref", "msgaccounts:/");
 
-    var folderOutlinerBuilder = folderOutliner.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
-    folderOutlinerBuilder.addObserver(folderObserver);
-    folderOutliner.addEventListener("click",FolderPaneOnClick,true);
-    folderOutliner.addEventListener("mousedown",OutlinerOnMouseDown,true);
+    var folderTreeBuilder = folderTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
+    folderTreeBuilder.addObserver(folderObserver);
+    folderTree.addEventListener("click",FolderPaneOnClick,true);
+    folderTree.addEventListener("mousedown",TreeOnMouseDown,true);
 }
 
 // builds prior to 12-08-2001 did not have the labels column
@@ -754,16 +754,16 @@ function OnLoadThreadPane()
 
 function GetFolderDatasource()
 {
-    var folderOutliner = GetFolderOutliner();
-    return folderOutliner.database;
+    var folderTree = GetFolderTree();
+    return folderTree.database;
 }
 
 /* Functions for accessing particular parts of the window*/
-function GetFolderOutliner()
+function GetFolderTree()
 {
-    if (! gFolderOutliner)
-        gFolderOutliner = document.getElementById("folderOutliner");
-    return gFolderOutliner;
+    if (! gFolderTree)
+        gFolderTree = document.getElementById("folderTree");
+    return gFolderTree;
 }
 
 function GetSearchInput()
@@ -839,7 +839,7 @@ function IsThreadAndMessagePaneSplitterCollapsed()
 
 function IsFolderPaneCollapsed()
 {
-  var folderPaneBox = GetFolderOutliner().parentNode;
+  var folderPaneBox = GetFolderTree().parentNode;
   return folderPaneBox.getAttribute("collapsed") == "true"
     || folderPaneBox.getAttribute("hidden") == "true";
 }
@@ -853,10 +853,10 @@ function ClearThreadPaneSelection()
 {
   try {
     if (gDBView) {
-      var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
-      var outlinerSelection = outlinerView.selection;
-      if (outlinerSelection) 
-        outlinerSelection.clearSelection(); 
+      var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
+      var treeSelection = treeView.selection;
+      if (treeSelection) 
+        treeSelection.clearSelection(); 
     }
   }
   catch (ex) {
@@ -880,44 +880,44 @@ function ClearMessagePane()
 
 function GetSelectedFolderIndex()
 {
-    var folderOutliner = GetFolderOutliner();
+    var folderTree = GetFolderTree();
     var startIndex = {};
     var endIndex = {};
-    folderOutliner.outlinerBoxObject.selection.getRangeAt(0, startIndex, endIndex);
+    folderTree.treeBoxObject.selection.getRangeAt(0, startIndex, endIndex);
     return startIndex.value;
 }
 
 // Function to change the highlighted row to where the mouse was clicked
 // without loading the contents of the selected row.
 // It will also keep the outline/dotted line in the original row.
-function ChangeSelectionWithoutContentLoad(event, outliner)
+function ChangeSelectionWithoutContentLoad(event, tree)
 {
     var row = {};
     var col = {};
     var elt = {};
-    var outlinerBoxObj = outliner.outlinerBoxObject;
-    var outlinerSelection = outlinerBoxObj.selection;
+    var treeBoxObj = tree.treeBoxObject;
+    var treeSelection = treeBoxObj.selection;
 
-    outlinerBoxObj.getCellAt(event.clientX, event.clientY, row, col, elt);
+    treeBoxObj.getCellAt(event.clientX, event.clientY, row, col, elt);
     // make sure that row.value is valid so that it doesn't mess up
     // the call to ensureRowIsVisible().
-    if((row.value >= 0) && !outlinerSelection.isSelected(row.value))
+    if((row.value >= 0) && !treeSelection.isSelected(row.value))
     {
-        var saveCurrentIndex = outlinerSelection.currentIndex;
-        outlinerSelection.selectEventsSuppressed = true;
-        outlinerSelection.select(row.value);
-        outlinerSelection.currentIndex = saveCurrentIndex;
-        outlinerBoxObj.ensureRowIsVisible(row.value);
-        outlinerSelection.selectEventsSuppressed = false;
+        var saveCurrentIndex = treeSelection.currentIndex;
+        treeSelection.selectEventsSuppressed = true;
+        treeSelection.select(row.value);
+        treeSelection.currentIndex = saveCurrentIndex;
+        treeBoxObj.ensureRowIsVisible(row.value);
+        treeSelection.selectEventsSuppressed = false;
 
         // Keep track of which row in the thread pane is currently selected.
-        if(outliner.id == "threadOutliner")
+        if(tree.id == "threadTree")
           gThreadPaneCurrentSelectedIndex = row.value;
     }
     event.preventBubble();
 }
 
-function OutlinerOnMouseDown(event)
+function TreeOnMouseDown(event)
 {
     // Detect right mouse click and change the highlight to the row
     // where the click happened without loading the message headers in
@@ -932,22 +932,22 @@ function FolderPaneOnClick(event)
     if (event.button != 0)
         return;
 
-    var folderOutliner = GetFolderOutliner();
+    var folderTree = GetFolderTree();
     var row = {};
     var col = {};
     var elt = {};
-    folderOutliner.outlinerBoxObject.getCellAt(event.clientX, event.clientY, row, col, elt);
+    folderTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, elt);
     if (row.value == -1)
       return;
 
     if (elt.value == "twisty")
     {
-        var folderResource = GetFolderResource(folderOutliner, row.value);
+        var folderResource = GetFolderResource(folderTree, row.value);
         var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
 
-        if (!(folderOutliner.outlinerBoxObject.view.isContainerOpen(row.value)))
+        if (!(folderTree.treeBoxObject.view.isContainerOpen(row.value)))
         {
-            var isServer = GetFolderAttribute(folderOutliner, folderResource, "IsServer");
+            var isServer = GetFolderAttribute(folderTree, folderResource, "IsServer");
             if (isServer == "true")
             {
                 var server = msgFolder.server;
@@ -955,7 +955,7 @@ function FolderPaneOnClick(event)
             }
             else
             {
-                var serverType = GetFolderAttribute(folderOutliner, folderResource, "ServerType");
+                var serverType = GetFolderAttribute(folderTree, folderResource, "ServerType");
                 if (serverType == "imap")
                 {
                     var imapFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgImapMailFolder);
@@ -964,7 +964,7 @@ function FolderPaneOnClick(event)
             }
         }
     }
-    else if ((event.originalTarget.localName == "outlinercol") ||
+    else if ((event.originalTarget.localName == "treecol") ||
              (event.originalTarget.localName == "slider") ||
              (event.originalTarget.localName == "scrollbarbutton")) {
       // clicking on the name column in the folder pane should not sort
@@ -982,14 +982,14 @@ function FolderPaneOnClick(event)
 
 function FolderPaneDoubleClick(folderIndex, event)
 {
-    var folderOutliner = GetFolderOutliner();
-    var folderResource = GetFolderResource(folderOutliner, folderIndex);
+    var folderTree = GetFolderTree();
+    var folderResource = GetFolderResource(folderTree, folderIndex);
     var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-    var isServer = GetFolderAttribute(folderOutliner, folderResource, "IsServer");
+    var isServer = GetFolderAttribute(folderTree, folderResource, "IsServer");
 
     if (isServer == "true")
     {
-      if (!(folderOutliner.outlinerBoxObject.view.isContainerOpen(folderIndex)))
+      if (!(folderTree.treeBoxObject.view.isContainerOpen(folderIndex)))
       {
         var server = msgFolder.server;
         server.performExpand(msgWindow);
@@ -1003,17 +1003,17 @@ function FolderPaneDoubleClick(folderIndex, event)
 
       // double clicking should not toggle the open / close state of the
       // folder.  this will happen if we don't prevent the event from
-      // bubbling to the default handler in outliner.xml
+      // bubbling to the default handler in tree.xml
       event.preventBubble();
     }
 }
 
-function ChangeSelection(outliner, newIndex)
+function ChangeSelection(tree, newIndex)
 {
     if(newIndex >= 0)
     {
-        outliner.outlinerBoxObject.selection.select(newIndex);
-        outliner.outlinerBoxObject.ensureRowIsVisible(newIndex);
+        tree.treeBoxObject.selection.select(newIndex);
+        tree.treeBoxObject.ensureRowIsVisible(newIndex);
     }
 }
 
@@ -1021,17 +1021,17 @@ function GetSelectedFolders()
 {
     var folderArray = [];
     var k = 0;
-    var folderOutliner = GetFolderOutliner();
-    var rangeCount = folderOutliner.outlinerBoxObject.selection.getRangeCount();
+    var folderTree = GetFolderTree();
+    var rangeCount = folderTree.treeBoxObject.selection.getRangeCount();
 
     for(var i = 0; i < rangeCount; i++)
     {
         var startIndex = {};
         var endIndex = {};
-        folderOutliner.outlinerBoxObject.selection.getRangeAt(i, startIndex, endIndex);
+        folderTree.treeBoxObject.selection.getRangeAt(i, startIndex, endIndex);
         for (var j = startIndex.value; j <= endIndex.value; j++)
         {
-            var folderResource = GetFolderResource(folderOutliner, j);
+            var folderResource = GetFolderResource(folderTree, j);
             folderArray[k++] = folderResource.Value;
         }
     }
@@ -1043,17 +1043,17 @@ function GetSelectedMsgFolders()
 {
     var folderArray = [];
     var k = 0;
-    var folderOutliner = GetFolderOutliner();
-    var rangeCount = folderOutliner.outlinerBoxObject.selection.getRangeCount();
+    var folderTree = GetFolderTree();
+    var rangeCount = folderTree.treeBoxObject.selection.getRangeCount();
 
     for(var i = 0; i < rangeCount; i++)
     {
         var startIndex = {};
         var endIndex = {};
-        folderOutliner.outlinerBoxObject.selection.getRangeAt(i, startIndex, endIndex);
+        folderTree.treeBoxObject.selection.getRangeAt(i, startIndex, endIndex);
         for (var j = startIndex.value; j <= endIndex.value; j++)
         {
-            var msgFolder = GetFolderResource(folderOutliner, j).QueryInterface(Components.interfaces.nsIMsgFolder);
+            var msgFolder = GetFolderResource(folderTree, j).QueryInterface(Components.interfaces.nsIMsgFolder);
             if(msgFolder)
                 folderArray[k++] = msgFolder;
         }
@@ -1135,12 +1135,12 @@ function GetCompositeDataSource(command)
 
 function SetNextMessageAfterDelete()
 {
-  var outlinerSelection = GetThreadOutliner().outlinerBoxObject.selection;
+  var treeSelection = GetThreadTree().treeBoxObject.selection;
 
   gThreadPaneDeleteOrMoveOccurred = true;
-  if (outlinerSelection.isSelected(outlinerSelection.currentIndex))
+  if (treeSelection.isSelected(treeSelection.currentIndex))
     gNextMessageViewIndexAfterDelete = gDBView.msgToSelectAfterDelete;
-  else if (outlinerSelection.currentIndex > gThreadPaneCurrentSelectedIndex)
+  else if (treeSelection.currentIndex > gThreadPaneCurrentSelectedIndex)
     // Since the currentIndex (the row with the outline/dotted line) is greater
     // than the currently selected row (the row that is highlighted), we need to
     // make sure that upon a Delete or Move of the selected row, the highlight
@@ -1148,15 +1148,15 @@ function SetNextMessageAfterDelete()
     // because the row being deleted is above the row with the currentIndex.
     // If the subtraction is not done, then the highlight will end up on the
     // row listed after the currentIndex'ed row.
-    gNextMessageViewIndexAfterDelete = outlinerSelection.currentIndex - 1;
+    gNextMessageViewIndexAfterDelete = treeSelection.currentIndex - 1;
   else
-    gNextMessageViewIndexAfterDelete = outlinerSelection.currentIndex;
+    gNextMessageViewIndexAfterDelete = treeSelection.currentIndex;
 }
 
-function EnsureAllAncestorsAreExpanded(outliner, resource)
+function EnsureAllAncestorsAreExpanded(tree, resource)
 {
     // get the parent of the desired folder, and then try to get
-    // the index of the parent in the outliner
+    // the index of the parent in the tree
     var folder = resource.QueryInterface(Components.interfaces.nsIFolder);
     
     // if this is a server, there are no ancestors, so stop.
@@ -1165,31 +1165,31 @@ function EnsureAllAncestorsAreExpanded(outliner, resource)
       return;
 
     var parentFolderResource = RDF.GetResource(folder.parent.URI);
-    var folderIndex = GetFolderIndex(outliner, parentFolderResource);
+    var folderIndex = GetFolderIndex(tree, parentFolderResource);
 
     if (folderIndex == -1) {
       // if we couldn't find the parent, recurse
-      EnsureAllAncestorsAreExpanded(outliner, parentFolderResource);
+      EnsureAllAncestorsAreExpanded(tree, parentFolderResource);
       // ok, now we should be able to find the parent
-      folderIndex = GetFolderIndex(outliner, parentFolderResource);
+      folderIndex = GetFolderIndex(tree, parentFolderResource);
     }
 
     // if the parent isn't open, open it
-    if (!(outliner.outlinerBoxObject.view.isContainerOpen(folderIndex)))
-      outliner.outlinerBoxObject.view.toggleOpenState(folderIndex);
+    if (!(tree.treeBoxObject.view.isContainerOpen(folderIndex)))
+      tree.treeBoxObject.view.toggleOpenState(folderIndex);
 }
 
 function SelectFolder(folderUri)
 {
-    var folderOutliner = GetFolderOutliner();
+    var folderTree = GetFolderTree();
     var folderResource = RDF.GetResource(folderUri);
 
     // before we can select a folder, we need to make sure it is "visible"
-    // in the outliner.  to do that, we need to ensure that all its
+    // in the tree.  to do that, we need to ensure that all its
     // ancestors are expanded
-    EnsureAllAncestorsAreExpanded(folderOutliner, folderResource);
-    var folderIndex = GetFolderIndex(folderOutliner, folderResource);
-    ChangeSelection(folderOutliner, folderIndex);
+    EnsureAllAncestorsAreExpanded(folderTree, folderResource);
+    var folderIndex = GetFolderIndex(folderTree, folderResource);
+    ChangeSelection(folderTree, folderIndex);
 }
 
 function SelectMessage(messageUri)
@@ -1227,22 +1227,20 @@ function GetDBView()
     return gDBView;
 }
 
-function GetFolderResource(outliner, index)
+function GetFolderResource(tree, index)
 {
-    var outlinerBuilder = outliner.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
-    return outlinerBuilder.getResourceAtIndex(index);
+    return tree.builderView.getResourceAtIndex(index);
 }
 
-function GetFolderIndex(outliner, resource)
+function GetFolderIndex(tree, resource)
 {
-    var outlinerBuilder = outliner.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
-    return outlinerBuilder.getIndexOfResource(resource);
+    return tree.builderView.getIndexOfResource(resource);
 }
 
-function GetFolderAttribute(outliner, source, attribute)
+function GetFolderAttribute(tree, source, attribute)
 {
     var property = RDF.GetResource("http://home.netscape.com/NC-rdf#" + attribute);
-    var target = outliner.database.GetTarget(source, property, true);
+    var target = tree.database.GetTarget(source, property, true);
     if (target)
         target = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
     return target;

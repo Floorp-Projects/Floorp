@@ -92,7 +92,7 @@ NS_INTERFACE_MAP_BEGIN(nsNntpIncomingServer)
     NS_INTERFACE_MAP_ENTRY(nsINntpIncomingServer)
     NS_INTERFACE_MAP_ENTRY(nsIUrlListener)
     NS_INTERFACE_MAP_ENTRY(nsISubscribableServer)
-    NS_INTERFACE_MAP_ENTRY(nsIOutlinerView)
+    NS_INTERFACE_MAP_ENTRY(nsITreeView)
 NS_INTERFACE_MAP_END_INHERITING(nsMsgIncomingServer)
 
 nsNntpIncomingServer::nsNntpIncomingServer() : nsMsgLineBuffer(nsnull, PR_FALSE)
@@ -1716,9 +1716,9 @@ nsNntpIncomingServer::SetSearchValue(const char *searchValue)
     mSubscribeSearchResult.Clear();
     mGroupsOnServer.EnumerateForwards((nsCStringArrayEnumFunc)buildSubscribeSearchResult, (void *)this);
 
-    if (mOutliner) {
-     mOutliner->Invalidate();
-     mOutliner->InvalidateScrollbar();
+    if (mTree) {
+     mTree->Invalidate();
+     mTree->InvalidateScrollbar();
     }
     return NS_OK;
 }
@@ -1738,17 +1738,17 @@ nsNntpIncomingServer::GetRowCount(PRInt32 *aRowCount)
 }
 
 NS_IMETHODIMP 
-nsNntpIncomingServer::GetSelection(nsIOutlinerSelection * *aSelection)
+nsNntpIncomingServer::GetSelection(nsITreeSelection * *aSelection)
 {
-  *aSelection = mOutlinerSelection;
+  *aSelection = mTreeSelection;
   NS_IF_ADDREF(*aSelection);
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsNntpIncomingServer::SetSelection(nsIOutlinerSelection * aSelection)
+nsNntpIncomingServer::SetSelection(nsITreeSelection * aSelection)
 {
-  mOutlinerSelection = aSelection;
+  mTreeSelection = aSelection;
   return NS_OK;
 }
 
@@ -1864,6 +1864,24 @@ nsNntpIncomingServer::IsValidRow(PRInt32 row)
 }
 
 NS_IMETHODIMP 
+nsNntpIncomingServer::GetImageSrc(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNntpIncomingServer::GetProgressMode(PRInt32 row, const PRUnichar *colID, PRInt32* _retval)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNntpIncomingServer::GetCellValue(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
 nsNntpIncomingServer::GetCellText(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
 {
     if (!IsValidRow(row))
@@ -1884,9 +1902,9 @@ nsNntpIncomingServer::GetCellText(PRInt32 row, const PRUnichar *colID, nsAString
 }
 
 NS_IMETHODIMP 
-nsNntpIncomingServer::SetOutliner(nsIOutlinerBoxObject *outliner)
+nsNntpIncomingServer::SetTree(nsITreeBoxObject *tree)
 {
-  mOutliner = outliner;
+  mTree = tree;
   return NS_OK;
 }
 

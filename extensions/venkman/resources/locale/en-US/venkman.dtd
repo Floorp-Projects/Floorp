@@ -76,16 +76,16 @@
 <!-- status bar -->
 <!ENTITY StatusText.label "Welcome to the JavaScript Debugger">
 
-<!-- source outliner -->
+<!-- source tree -->
 <!ENTITY SourceCol0.display "Margin">
 <!ENTITY SourceCol1.display "Line Number">
 
-<!-- script outliner -->
+<!-- script tree -->
 <!ENTITY ScriptCol0.header "Name">
 <!ENTITY ScriptCol1.header "Line">
 <!ENTITY ScriptCol2.header "Length">
 
-<!-- stack/expression outliner -->
+<!-- stack/expression tree -->
 <!ENTITY StackCol0.header "Name">
 <!ENTITY StackCol1.header "Type">
 <!ENTITY StackCol2.header "Value">

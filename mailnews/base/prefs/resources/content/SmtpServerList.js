@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 var smtpService;
-var serverList;                 // the root <tree> node
+var serverList;                 // the root <listbox> node
 
 var addButton;
 var editButton;
@@ -55,7 +55,7 @@ function onLoad()
         smtpService = Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
 
 
-    serverList = document.getElementById("smtpTree");
+    serverList = document.getElementById("smtpList");
     addButton        = document.getElementById("addButton");
     editButton       = document.getElementById("editButton");
     deleteButton     = document.getElementById("deleteButton");
@@ -137,14 +137,12 @@ function refreshServerList()
     for (var i=0; i< selectedItems.length; i++)
         oldSelectedIds[i] = selectedItems[0].id;
 
-    var treeChildren = document.getElementById("smtpTreeChildren");
-
     // remove all children
-    while (treeChildren.hasChildNodes())
-        treeChildren.removeChild(treeChildren.lastChild);
+    while (serverList.hasChildNodes())
+        serverList.removeChild(serverList.lastChild);
 
     var defaultServer = smtpService.defaultServer;
-    fillSmtpServers(treeChildren,smtpService.smtpServers, defaultServer);
+    fillSmtpServers(serverList,smtpService.smtpServers, defaultServer);
 
     // restore selection
     for (i=0; i< oldSelectedIds.length; i++) {
@@ -156,9 +154,9 @@ function refreshServerList()
 
 // helper functions
 
-function fillSmtpServers(treechildren, servers, defaultServer)
+function fillSmtpServers(listbox, servers, defaultServer)
 {
-    if (!treechildren) return;
+    if (!listbox) return;
     if (!servers) return;
 
     var serverCount = servers.Count();
@@ -168,19 +166,16 @@ function fillSmtpServers(treechildren, servers, defaultServer)
         //ToDoList: add code that allows for the redirector type to specify whether to show values or not
         if (!server.redirectorType) 
         {
-          var treeitem = createSmtpTreeItem(server, isDefault);
-          treechildren.appendChild(treeitem);
+          var listitem = createSmtpListItem(server, isDefault);
+          listbox.appendChild(listitem);
         }
-
     }
 
 }
 
-function createSmtpTreeItem(server, isDefault)
+function createSmtpListItem(server, isDefault)
 {
-    var treeitem = document.createElement("treeitem");
-    var treerow = document.createElement("treerow");
-    var treecell = document.createElement("treecell");
+    var listitem = document.createElement("listitem");
 
     var hostname = server.hostname;
     if (server.port) {
@@ -190,14 +185,12 @@ function createSmtpTreeItem(server, isDefault)
     if (isDefault)
         hostname += " " + gMessengerBundle.getString("defaultServerTag");
 
-    treecell.setAttribute("label", hostname);
-    treeitem.setAttribute("key", server.key);
+    listitem.setAttribute("label", hostname);
+    listitem.setAttribute("key", server.key);
     // give it some unique id
-    treeitem.id = "smtpServer." + server.key;
-    treerow.appendChild(treecell);
-    treeitem.appendChild(treerow);
+    listitem.id = "smtpServer." + server.key;
 
-    return treeitem;
+    return listitem;
 }
 
 function openServerEditor(serverarg)

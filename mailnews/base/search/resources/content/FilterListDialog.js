@@ -52,8 +52,6 @@ function onLoad()
     reorderUpButton = document.getElementById("reorderUpButton");
     reorderDownButton = document.getElementById("reorderDownButton");
 
-    doSetOKCancel(onOk, onCancel);
-
     updateButtons();
 
     moveToAlertPosition();
@@ -75,11 +73,6 @@ function onLoad()
         onNewFilter(window.arguments[0].prefillValue);
 }
 
-function onCancel()
-{
-  window.close();
-}
-  
 function onOk()
 {
   // make sure to save the filter to disk
@@ -113,18 +106,9 @@ function setServer(uri)
     updateButtons();
 }
 
-function onToggleEnabled(event)
-{
-    var item = event.target;
-    while (item && item.localName != "treeitem") {
-        item = item.parentNode;
-    }
-    toggleFilter(item.id);
-}
-
 function toggleFilter(aFilterURI)
 {
-    var filterResource = rdf.GetUnicodeResource(aFilterURI);
+    var filterResource = rdf.GetResource(aFilterURI);
     var filter = filterResource.GetDelegate("filter",
                                             Components.interfaces.nsIMsgFilter);
     filter.enabled = !filter.enabled;
@@ -143,15 +127,13 @@ function selectServer(uri)
 
 function currentFilter()
 {
-    var selection = gFilterTree.selectedItems;
-    if (!selection || selection.length <=0)
+    if (gFilterTree.currentIndex == -1)
         return null;
-
+    
     var filter;
     try {
-        var filterResource = rdf.GetUnicodeResource(selection[0].id);
-        filter = filterResource.GetDelegate("filter",
-                                            Components.interfaces.nsIMsgFilter);
+        filter = gFilterTree.builderView.getResourceAtIndex(gFilterTree.currentIndex);
+        filter = filter.GetDelegate("filter", Components.interfaces.nsIMsgFilter);
     } catch (ex) {
         dump(ex);
         dump("no filter selected!\n");
@@ -187,7 +169,7 @@ function onNewFilter(emailAddress)
   var curFilterList = currentFilterList();
   var args = {filterList: curFilterList};
   if(emailAddress) {
-    args.okCallback = onCancel;
+    args.okCallback = function() {};
     args.filterName = emailAddress;
   }
     
@@ -238,39 +220,31 @@ function refreshFilterList()
     if (!gFilterTree) 
       return;
 
-    var selection;
+    // store the selected resource before we rebuild the tree
+    var selectedRes = gFilterTree.currentIndex >= 0 ? gFilterTree.builderView.getResourceAtIndex(gFilterTree.currentIndex) : null;
 
-    var selectedItems = gFilterTree.selectedItems;
-    if (selectedItems && selectedItems.length >0)
-        selection = gFilterTree.selectedItems[0].id;
+    // rebuild the tree    
+    gFilterTree.view.selection.clearSelection();
+    gFilterTree.builder.rebuild();
 
-    gFilterTree.clearSelection();
-    gFilterTree.setAttribute("ref", gFilterTree.getAttribute("ref"));
-
-    if (selection) {
-        var newItem = document.getElementById(selection);
-
-        // sometimes the selected element is gone.
-        if (newItem) {
-            gFilterTree.selectItem(newItem);
-            gFilterTree.ensureElementIsVisible(newItem);
+    // restore selection to the previous selected resource
+    if (selectedRes) {
+        var previousSel = gFilterTree.builderView.getIndexOfResource(selectedRes);
+        if (previousSel >= 0) {
+            // sometimes the selected element is gone.
+            gFilterTree.treeBoxObject.selection.select(previousSel);
+            gFilterTree.treeBoxObject.ensureRowIsVisible(previousSel);
         }
     }
 }
 
 function updateButtons()
 {
-    var filters = document.getElementById("filterTree").selectedItems;
-    var filterSelected = (filters.length > 0)
+    var filterSelected = gFilterTree.view.selection.count > 0;
     editButton.disabled = !filterSelected;
     deleteButton.disabled = !filterSelected;
-    if (filterSelected) {
-        reorderUpButton.disabled = !filters[0].previousSibling;
-        reorderDownButton.disabled = !filters[0].nextSibling;
-    } else {
-        reorderUpButton.disabled = true;
-        reorderDownButton.disabled = true;
-    }
+    reorderUpButton.disabled = !(filterSelected && gFilterTree.currentIndex > 0);
+    reorderDownButton.disabled = !(filterSelected && gFilterTree.currentIndex < gFilterTree.view.rowCount-1);
 }
 
 /**
@@ -350,16 +324,29 @@ function getServerThatCanHaveFilters()
     return firstItem;
 }
 
+function onFilterClick(event)
+{
+    // we only care about button 0 (left click) events
+    if (event.button != 0 || event.originalTarget.localName != "treechildren") return;
+    var row = {}, colID = {}, childElt = {};
+    var filterTree = document.getElementById("filterTree");
+    filterTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
+    if (row.value == -1 || row.value > filterTree.view.rowCount-1)
+        return;
+        
+    if (colID.value == "activeColumn") {
+      var res = filterTree.builderView.getResourceAtIndex(row.value);
+      toggleFilter(res.Value);
+    }
+}
+
 function onFilterDoubleClick(event)
 {
     // we only care about button 0 (left click) events
-    if (event.button != 0) 
+    if (event.button != 0 || event.originalTarget.localName != "treechildren")
       return;
 
-    var t = event.originalTarget;
-
-    if (t.parentNode.parentNode.localName == "treeitem")
-        onEditFilter();
+    onEditFilter();
 }
 
 function onFilterTreeKeyPress(event)
@@ -368,8 +355,13 @@ function onFilterTreeKeyPress(event)
   if (event.keyCode != 0)
     return;
 
-  var selectedFilters = gFilterTree.selectedItems;
-
-  for (var i=0;i<selectedFilters.length;i++)
-    toggleFilter(selectedFilters[i].getAttribute("id"));
+  var rangeCount = gFilterTree.view.selection.getRangeCount();
+  for (var i = 0; i < rangeCount; ++i) {
+    var start = {}, end = {};
+    gFilterTree.view.selection.getRangeAt(i, start, end);
+    for (var k = start.value; k <= end.value; ++k) {
+      var res = gFilterTree.builderView.getResourceAtIndex(k);
+      toggleFilter(res.Value);
+    }
+  }
 }

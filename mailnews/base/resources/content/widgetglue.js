@@ -46,14 +46,14 @@ function ConvertDOMListToResourceArray(nodeList)
 
 function GetSelectedFolderURI()
 {
-    var folderOutliner = GetFolderOutliner();
-    var selection = folderOutliner.outlinerBoxObject.selection;
+    var folderTree = GetFolderTree();
+    var selection = folderTree.treeBoxObject.selection;
     if (selection.count == 1)
     {
         var startIndex = {};
         var endIndex = {};
         selection.getRangeAt(0, startIndex, endIndex);
-        var folderResource = GetFolderResource(folderOutliner, startIndex.value);
+        var folderResource = GetFolderResource(folderTree, startIndex.value);
         return folderResource.Value;
     }
 
@@ -63,9 +63,9 @@ function GetSelectedFolderURI()
 function MsgRenameFolder() 
 {
 	var preselectedURI = GetSelectedFolderURI();
-	var folderOutliner = GetFolderOutliner();
+	var folderTree = GetFolderTree();
 
-	var name = GetFolderNameFromUri(preselectedURI, folderOutliner);
+	var name = GetFolderNameFromUri(preselectedURI, folderTree);
 
 	dump("preselectedURI = " + preselectedURI + "\n");
 	var dialog = window.openDialog(
@@ -79,8 +79,8 @@ function MsgRenameFolder()
 function RenameFolder(name,uri)
 {
   dump("uri,name = " + uri + "," + name + "\n");
-  var folderOutliner = GetFolderOutliner();
-  if (folderOutliner)
+  var folderTree = GetFolderTree();
+  if (folderTree)
   {
     if (uri && (uri != "") && name && (name != "")) 
     {
@@ -90,7 +90,7 @@ function RenameFolder(name,uri)
 
       ClearThreadPane();
       ClearMessagePane();
-      folderOutliner.outlinerBoxObject.selection.clearSelection();
+      folderTree.treeBoxObject.selection.clearSelection();
 
       try
       {
@@ -116,13 +116,13 @@ function RenameFolder(name,uri)
 
 function MsgEmptyTrash() 
 {
-    var folderOutliner = GetFolderOutliner();
+    var folderTree = GetFolderTree();
     var startIndex = {};
     var endIndex = {};
-    folderOutliner.outlinerBoxObject.selection.getRangeAt(0, startIndex, endIndex);
+    folderTree.treeBoxObject.selection.getRangeAt(0, startIndex, endIndex);
     if (startIndex.value >= 0)
     {
-        var folderResource = GetFolderResource(folderOutliner, startIndex.value);
+        var folderResource = GetFolderResource(folderTree, startIndex.value);
         try {
             messenger.EmptyTrash(GetFolderDatasource(), folderResource);
         }
@@ -180,9 +180,9 @@ function MsgFolderProperties()
 {
 	var preselectedURI = GetSelectedFolderURI();
 	var serverType = GetMsgFolderFromUri(preselectedURI, true).server.type;
-	var folderOutliner = GetFolderOutliner();
+	var folderTree = GetFolderTree();
 
-	var name = GetFolderNameFromUri(preselectedURI, folderOutliner);
+	var name = GetFolderNameFromUri(preselectedURI, folderTree);
 
 	var windowTitle = gMessengerBundle.getString("folderProperties");
 	var dialog = window.openDialog(

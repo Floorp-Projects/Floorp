@@ -59,8 +59,7 @@ function InsertBefore(parent, before, after)
   parent.element.insertBefore(before.element, after.element);
   parent.treeChildren.insertBefore(before.treeItem, after.treeItem);
   gDialog.tree.focus();
-  gDialog.tree.selectItem(savedObject.treeItem);
-  gDialog.tree.ensureElementIsVisible(savedObject.treeItem);
+  selectTreeItem(savedObject.treeItem);
   gDialog.previousButton.disabled = !savedObject.canMoveUp();
   gDialog.nextButton.disabled = !savedObject.canMoveDown();
 }
@@ -72,8 +71,7 @@ function AppendChild(parent, option)
   parent.treeChildren.appendChild(option.treeItem);
   parent.element.appendChild(option.element);
   gDialog.tree.focus();
-  gDialog.tree.selectItem(savedObject.treeItem);
-  gDialog.tree.ensureElementIsVisible(savedObject.treeItem);
+  selectTreeItem(savedObject.treeItem);
   gDialog.previousButton.disabled = !savedObject.canMoveUp();
   gDialog.nextButton.disabled = !savedObject.canMoveDown();
 }
@@ -109,7 +107,6 @@ function optionObject(parent, option)
   this.treeCellText = createXUL("treecell");
   this.treeCellValue = createXUL("treecell");
   this.treeCellSelected = createXUL("treecell");
-  this.treeCellCheckbox = createXUL("checkbox");
   this.treeItem.setAttribute("index", this.globalIndex);
   this.treeItem.setAttribute("container", "true");
   this.treeItem.setAttribute("empty", "true");
@@ -120,10 +117,7 @@ function optionObject(parent, option)
     this.treeCellValue.setAttribute("label", option.value);
   else
     this.treeCellValue.setAttribute("label", option.text);
-  this.treeCellCheckbox.setAttribute("allowevents", "true");
-  this.treeCellCheckbox.setAttribute("checked", option.hasAttribute("selected"));
-  this.treeCellCheckbox.setAttribute("style", "-moz-user-focus: ignore; margin: 1px; ");
-  this.treeCellSelected.appendChild(this.treeCellCheckbox);
+  this.treeCellSelected.setAttribute("properties", "checked-"+option.hasAttribute("selected"));
   this.treeRow.appendChild(this.treeCellText);
   this.treeRow.appendChild(this.treeCellValue);
   this.treeRow.appendChild(this.treeCellSelected);
@@ -138,7 +132,7 @@ optionObject.prototype.onSpace = function onSpace()
   {
     selectedOptionCount--;
     this.element.removeAttribute("selected");
-    this.treeCellCheckbox.setAttribute("checked", "false");
+    this.treeCellSelected.setAttribute("properties", "checked-false");
     gDialog.optionSelected.setAttribute("checked", "false");
     selectedOption = 0;
   }
@@ -149,10 +143,10 @@ optionObject.prototype.onSpace = function onSpace()
     else
     {
       globalArray[selectedOption].element.removeAttribute("selected");
-      globalArray[selectedOption].treeCellCheckbox.setAttribute("checked", "false");
+      globalArray[selectedOption].treeCellSelected.setAttribute("properties", "checked-false");
     }
     this.element.setAttribute("selected", "");
-    this.treeCellCheckbox.setAttribute("checked", "true");
+    this.treeCellSelected.setAttribute("properties", "checked-true");
     gDialog.optionSelected.setAttribute("checked", "true");
     selectedOption = this.globalIndex;
   }
@@ -491,7 +485,7 @@ function Startup()
 
   UpdateSelectMultiple();
 
-  gDialog.tree.selectItem(gDialog.treeItem);
+  selectTreeItem(gDialog.treeItem);
   onNameInput();
 
   SetTextboxFocus(gDialog.selectName);
@@ -546,8 +540,7 @@ function AddOption()
 {
   var optionElement = editorShell.CreateElementWithDefaults("option");
   var optionObject = currentObject.appendChild(optionElement);
-  gDialog.tree.selectItem(optionObject.treeItem);
-  gDialog.tree.ensureElementIsVisible(optionObject.treeItem);
+  selectTreeItem(optionObject.treeItem);
   SetTextboxFocus(gDialog.optionText);
 }
 
@@ -555,8 +548,7 @@ function AddOptGroup()
 {
   var optgroupElement = editorShell.CreateElementWithDefaults("optgroup");
   var optgroupObject = gDialog.appendChild(optgroupElement);
-  gDialog.tree.selectItem(optgroupObject.treeItem);
-  gDialog.tree.ensureElementIsVisible(optgroupObject.treeItem);
+  selectTreeItem(optgroupObject.treeItem);
   SetTextboxFocus(gDialog.optgroupLabel);
 }
 
@@ -567,7 +559,7 @@ function RemoveElement()
     var selection = currentObject.treeItem;
     selection = selection.nextSibling || selection.previousSibling || selection.parentNode.parentNode;
     currentObject.destroy();
-    gDialog.tree.selectItem(selection);
+    selectTreeItem(selection);
     gDialog.tree.focus();
   }
 }
@@ -577,10 +569,10 @@ function onTreeSelect(event)
 {
   if (currentObject)
     currentObject.onBlur();
-  var selection = gDialog.tree.selectedItems;
-  if (selection.length)
+  var selectedItem = gDialog.tree.contentView.getItemAtIndex(gDialog.tree.currentIndex);
+  if (selectedItem)
   {
-    currentObject = globalArray[parseInt(selection[0].getAttribute("index"))];
+    currentObject = globalArray[parseInt(selectedItem.getAttribute("index"))];
     currentObject.onFocus();
   }
   else
@@ -599,12 +591,16 @@ function onTreeKeyUp(event)
 
 function onTreeClicked(event)
 {
-  if (event.target.localName == "checkbox")
-  {
-    var selection = event.target.parentNode.parentNode.parentNode;
-    gDialog.tree.selectItem(selection);
+  var row = {}, col = {}, obj = {};
+  gDialog.tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, obj);
+  
+  if (col.value == "SelectSelCol") {
+    var selection = gDialog.tree.contentView.getItemAtIndex(row.value);
     currentObject = globalArray[parseInt(selection.getAttribute("index"))];
-    currentObject.onSpace();
+    if ("treeCellSelected" in currentObject) {
+      selectTreeItem(selection);
+      currentObject.onSpace();
+    }
   }
   gDialog.tree.focus();
 }
@@ -703,4 +699,11 @@ function onSelectMultipleClick()
   if (!gDialog.selectMultiple.checked && selectedOptionCount == 1 && !selectedOption)
     while (!globalArray[selectedOption] || !globalArray[selectedOption].element.hasAttribute("selected"))
       selectedOption++;
+}
+
+function selectTreeItem(aItem)
+{
+  var itemIndex = gDialog.tree.contentView.getIndexOfItem(aItem);
+  gDialog.tree.treeBoxObject.selection.select(itemIndex);
+  gDialog.tree.treeBoxObject.ensureRowIsVisible(itemIndex);
 }

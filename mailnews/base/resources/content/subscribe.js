@@ -1,5 +1,5 @@
 var gSubscribeTree = null;
-var gSearchOutliner;
+var gSearchTree;
 var okCallback = null;
 var gChangeTable = {};
 var gServerURI = null;
@@ -11,11 +11,9 @@ var gFolderDelimiter = ".";
 var gStatusFeedback = new nsMsgStatusFeedback;
 var gSubscribeDeck = null;
 var gSearchView = null;
-var gSearchOutlinerBoxObject = null;
+var gSearchTreeBoxObject = null;
 // the rdf service
-var RDF = '@mozilla.org/rdf/rdf-service;1'
-RDF = Components.classes[RDF].getService();
-RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+var RDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService(Components.interfaces.nsIRDFService);
 var subscribeDS = RDF.GetDataSource("rdf:subscribe");
 
 // get the "subscribed" atom
@@ -45,7 +43,7 @@ function SetServerTypeSpecificTextValues()
     // set the server specific ui elements
     var stringName = "foldersheaderfor-" + serverType;
     var stringval = gSubscribeBundle.getString(stringName);
-    var element = document.getElementById("foldersheaderlabel");
+    var element = document.getElementById("NameColumn");
     element.setAttribute('label',stringval);
     element = document.getElementById("nameCol");
     element.setAttribute('label',stringval);
@@ -178,11 +176,12 @@ function SubscribeOnLoad()
   //dump("SubscribeOnLoad()\n");
   gSubscribeBundle = document.getElementById("bundle_subscribe");
 	
-  gSubscribeTree = document.getElementById("subscribetree");
-  gSearchOutliner = document.getElementById("searchOutliner");
-  gSearchOutlinerBoxObject = gSearchOutliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
+  gSubscribeTree = document.getElementById("subscribeTree");
+  gSearchTree = document.getElementById("searchTree");
+  gSearchTreeBoxObject = document.getElementById("searchTree").treeBoxObject;
   gNameField = document.getElementById("namefield");
   gNameFieldLabel = document.getElementById("namefieldlabel");
+
   gSubscribeDeck = document.getElementById("subscribedeck");
 
   msgWindow = Components.classes[msgWindowContractID].createInstance(Components.interfaces.nsIMsgWindow);
@@ -266,9 +265,8 @@ function subscribeCancel()
 function SetState(name,state)
 {
   var changed = gSubscribableServer.setState(name, state);
-  if (changed) {
+  if (changed)
     StateChanged(name,state);
-  }
 }
 
 function changeTableRecord(server, name, state) 
@@ -305,38 +303,27 @@ function InSearchMode()
 function SearchOnClick(event)
 {
   // we only care about button 0 (left click) events
-  if (event.button != 0) return;
+  if (event.button != 0 || event.originalTarget.localName != "treechildren") return;
 
-  var t = event.originalTarget;
+  var row = {}, colID = {}, childElt = {};
+  gSearchTreeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
+  if (row.value == -1 || row.value > gSearchView.rowCount-1)
+    return;
 
-  if (t.localName == "outlinerchildren") {
-    var row = new Object;
-    var colID = new Object;
-    var childElt = new Object;
-
-    gSearchOutlinerBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
-    if (row.value == -1)
-      return;
-
-    // if they are clicking on empty rows, drop the event 
-    if (row.value + 1 > gSearchView.rowCount) return;
-
-    if (colID.value == "subscribedCol") {
-      if (event.detail != 2) {
-        // single clicked on the check box 
-        // (in the "subscribedCol" column) reverse state
-        // if double click, do nothing
-        ReverseStateFromRow(row.value);
-      }
-    }
-    else if (event.detail == 2) {
-      // double clicked on a row, reverse state
+  if (colID.value == "subscribedCol") {
+    if (event.detail != 2) {
+      // single clicked on the check box 
+      // (in the "subscribedCol" column) reverse state
+      // if double click, do nothing
       ReverseStateFromRow(row.value);
     }
-
-    // invalidate the row
-    InvalidateSearchOutlinerRow(row.value);
+  } else if (event.detail == 2) {
+    // double clicked on a row, reverse state
+    ReverseStateFromRow(row.value);
   }
+
+  // invalidate the row
+  InvalidateSearchTreeRow(row.value);
 }
 
 function ReverseStateFromRow(row)
@@ -359,37 +346,23 @@ function ReverseStateFromRow(row)
 }
 
 function SetSubscribeState(state)
-    
-{   var i, name;
+{
   try {
-    if (InSearchMode()) {
-        // if we are in "search" mode, we need to iterate over the
-        // outliner selection, and set the state for all elements
-        // in the selection
-        
-        var outlinerSelection = gSearchView.selection; 
-        for (i=0;i<outlinerSelection.getRangeCount();i++) {
-          var start = new Object;
-          var end = new Object;
-          outlinerSelection.getRangeAt(i,start,end);
-          for (var k=start.value;k<=end.value;k++) {
-            name = gSearchView.getCellText(k,"nameCol");
-            // we need to escape the name because
-            // some news servers have newsgroups with non ASCII names
-            // we need to escape those name before calling SetState()
-            SetState(escape(name),state);
-          }
-        }
-        // force a repaint of the outliner since states have changed
-        InvalidateSearchOutliner();
-    }
-    else {
-      // we are in the "normal" mode
-      var groupList = gSubscribeTree.selectedItems;
-      for (i=0;i<groupList.length;i++) {
-        var group = groupList[i];
-        name = group.getAttribute('name');
-        SetState(name,state);
+    // we need to iterate over the tree selection, and set the state for 
+    // all rows in the selection
+    var view = InSearchMode() ? gSearchView : gSubscribeTree.view;
+    var colId = InSearchMode() ? "nameCol" : "NameColumn";
+    
+    var sel = view.selection;
+    for (var i = 0; i < sel.getRangeCount(); ++i) {
+      var start = {}, end = {};
+      sel.getRangeAt(i, start, end);
+      for (var k = start.value; k <= end.value; ++k) {
+        var name = view.getCellText(k, colId);
+        // we need to escape the name because
+        // some news servers have newsgroups with non ASCII names
+        // we need to escape those name before calling SetState()
+        SetState(escape(name), state);
       }
     }
   }
@@ -398,56 +371,53 @@ function SetSubscribeState(state)
   }
 }
 
-function ReverseStateFromNode(node)
+function ReverseStateFromNode(row)
 {
-  var state;
+  var rowRes = gSubscribeTree.builderView.getResourceAtIndex(row);
+  var isSubscribed = GetRDFProperty(rowRes, "Subscribed");
+  var name = GetRDFProperty(rowRes, "Name");
 
-  if (node.getAttribute('Subscribed') == "true") {
-    state = false;
-  }
-  else {
-    state = true;
-  }
- 
-  var uri = node.getAttribute('id');
-  var name = node.getAttribute('name');
-  SetState(name, state);
+  SetState(name, isSubscribed != "true");
 }
 
+function GetRDFProperty(aRes, aProp)
+{
+  var propRes = RDF.GetResource("http://home.netscape.com/NC-rdf#"+aProp);
+  var valueRes = gSubscribeTree.database.GetTarget(aRes, propRes, true);
+  return valueRes ? valueRes.QueryInterface(Components.interfaces.nsIRDFLiteral).Value : null;
+}
 
 function SubscribeOnClick(event)
 {
   // we only care about button 0 (left click) events
-  if (event.button != 0) return;
+  if (event.button != 0 || event.originalTarget.localName != "treechildren") return;
  
-  var t = event.originalTarget;
+  var row = {}, col = {}, obj = {};
+  gSubscribeTree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, col, obj);
+  if (row == -1 || row.value > gSubscribeTree.view.rowCount-1)
+    return;
 
 	if (event.detail == 2) {
-		ReverseStateFromNode(t.parentNode.parentNode);
-	}
-	else {
- 		if (t.getAttribute('twisty') == 'true') {
-        	var treeitem = t.parentNode.parentNode.parentNode;
-			var open = treeitem.getAttribute('open');
-			if(open == "true") {
-				var uri = treeitem.getAttribute("id");	
+	  // don't subscribe when double clicking a closed container to open it
+    if (gSubscribeTree.view.isContainer(row.value) && !gSubscribeTree.view.isContainerOpen(row.value))
+		  ReverseStateFromNode(row.value);
+	} else {
+ 		if (obj.value == "twisty") {
+			if (gSubscribeTree.view.isContainerOpen(row.value)) {
+				var uri = gSubscribeTree.builderView.getResourceAtIndex(row.value).Value;
 				
-				//dump("do twisty for " + uri + "\n");
-
 				gStatusFeedback.showProgress(0);
 				gStatusFeedback.showStatusString(gSubscribeBundle.getString("pleaseWaitString"));
-				gStatusBar.setAttribute("mode","undetermined");
+				gStatusBar.setAttribute("mode", "undetermined");
 
 				gSubscribableServer.startPopulatingWithUri(msgWindow, true /* force to server */, uri);
 			}
 		}
 		else {
-            // if the user clicks on the subscribe check box, we handle it here
-            if (t.localName == "image") {
-                ReverseStateFromNode(t.parentNode.parentNode.parentNode);
-                return;
-            }
-
+      // if the user clicks on the subscribe check box, we handle it here
+      if (col.value == "SubscribedColumn")
+        ReverseStateFromNode(row.value);
+        return;
 		}
 	}
 }
@@ -460,14 +430,14 @@ function Refresh()
         SetUpTree(true);
 }
 
-function InvalidateSearchOutlinerRow(row)
+function InvalidateSearchTreeRow(row)
 {
-    gSearchOutlinerBoxObject.invalidateRow(row);
+    gSearchTreeBoxObject.invalidateRow(row);
 }
 
-function InvalidateSearchOutliner()
+function InvalidateSearchTree()
 {
-    gSearchOutlinerBoxObject.invalidate();
+    gSearchTreeBoxObject.invalidate();
 }
 
 function SwitchToNormalView()
@@ -490,9 +460,9 @@ function Search()
     gSubscribableServer.setSearchValue(searchValue);
 
     if (!gSearchView && gSubscribableServer) {
-    gSearchView = gSubscribableServer.QueryInterface(Components.interfaces.nsIOutlinerView);
+    gSearchView = gSubscribableServer.QueryInterface(Components.interfaces.nsITreeView);
       gSearchView.selection = null;
-    gSearchOutlinerBoxObject.view = gSearchView;
+    gSearchTreeBoxObject.view = gSearchView;
   }
   }
   else {
@@ -508,33 +478,36 @@ function CleanUpSearchView()
   }
 }
 
-function onSearchOutlinerKeyPress(event)
+function onSearchTreeKeyPress(event)
 {
   // for now, only do something on space key
-  if (event.keyCode != 0)
+  if (event.keyCode != KeyEvent.DOM_VK_SPACE)
     return;
 
-  var outlinerSelection = gSearchView.selection; 
-  for (var i=0;i<outlinerSelection.getRangeCount();i++) {
-    var start = new Object;
-    var end = new Object;
-    outlinerSelection.getRangeAt(i,start,end);
+  var treeSelection = gSearchView.selection; 
+  for (var i=0;i<treeSelection.getRangeCount();i++) {
+    var start = {}, end = {};
+    treeSelection.getRangeAt(i,start,end);
     for (var k=start.value;k<=end.value;k++)
       ReverseStateFromRow(k);
 
     // force a repaint
-    InvalidateSearchOutliner();
+    InvalidateSearchTree();
   }
 }
 
 function onSubscribeTreeKeyPress(event)
 {
   // for now, only do something on space key
-  if (event.keyCode != 0)
+  if (event.keyCode != KeyEvent.DOM_VK_SPACE)
     return;
 
-  var groupList = gSubscribeTree.selectedItems;
-  for (var i=0;i<groupList.length;i++)
-    ReverseStateFromNode(groupList[i]);
+  var treeSelection = gSubscribeTree.view.selection; 
+  for (var i=0;i<treeSelection.getRangeCount();i++) {
+    var start = {}, end = {};
+    treeSelection.getRangeAt(i,start,end);
+    for (var k=start.value;k<=end.value;k++)
+      ReverseStateFromRow(k);
+  }
 }
 

@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsOutlinerRowTestNode.h"
-#include "nsOutlinerRows.h"
+#include "nsTreeRowTestNode.h"
+#include "nsTreeRows.h"
 #include "nsIRDFResource.h"
 #include "nsXULContentUtils.h"
 #include "nsConflictSet.h"
@@ -48,9 +48,9 @@
 extern PRLogModuleInfo* gXULTemplateLog;
 #endif
 
-nsOutlinerRowTestNode::nsOutlinerRowTestNode(InnerNode* aParent,
+nsTreeRowTestNode::nsTreeRowTestNode(InnerNode* aParent,
                                              nsConflictSet& aConflictSet,
-                                             nsOutlinerRows& aRows,
+                                             nsTreeRows& aRows,
                                              PRInt32 aIdVariable)
     : TestNode(aParent),
       mConflictSet(aConflictSet),
@@ -58,12 +58,12 @@ nsOutlinerRowTestNode::nsOutlinerRowTestNode(InnerNode* aParent,
       mIdVariable(aIdVariable)
 {
     PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-           ("nsOutlinerRowTestNode[%p]: parent=%p id-var=%d",
+           ("nsTreeRowTestNode[%p]: parent=%p id-var=%d",
             this, aParent, aIdVariable));
 }
 
 nsresult
-nsOutlinerRowTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const
+nsTreeRowTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const
 {
     InstantiationSet::Iterator last = aInstantiations.Last();
     for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
@@ -78,7 +78,7 @@ nsOutlinerRowTestNode::FilterInstantiations(InstantiationSet& aInstantiations, v
                 VALUE_TO_IRDFRESOURCE(idValue)->GetValueConst(&id);
 
             PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
-                   ("nsOutlinerRowTestNode[%p]: FilterInstantiations() id=[%s]",
+                   ("nsTreeRowTestNode[%p]: FilterInstantiations() id=[%s]",
                     this, id));
         }
 #endif
@@ -86,13 +86,13 @@ nsOutlinerRowTestNode::FilterInstantiations(InstantiationSet& aInstantiations, v
         if (hasIdBinding) {
             nsIRDFResource* container = VALUE_TO_IRDFRESOURCE(idValue);
 
-            // Is the row in the outliner?
+            // Is the row in the tree?
             if ((container == mRows.GetRootResource()) ||
                 (mRows.Find(mConflictSet, container) != mRows.Last())) {
 
                 PR_LOG(gXULTemplateLog, PR_LOG_DEBUG, ("    => passed"));
                 Element* element =
-                    nsOutlinerRowTestNode::Element::Create(mConflictSet.GetPool(), container);
+                    nsTreeRowTestNode::Element::Create(mConflictSet.GetPool(), container);
 
                 if (! element)
                     return NS_ERROR_OUT_OF_MEMORY;
@@ -111,7 +111,7 @@ nsOutlinerRowTestNode::FilterInstantiations(InstantiationSet& aInstantiations, v
 }
 
 nsresult
-nsOutlinerRowTestNode::GetAncestorVariables(VariableSet& aVariables) const
+nsTreeRowTestNode::GetAncestorVariables(VariableSet& aVariables) const
 {
     aVariables.Add(mIdVariable);
     return TestNode::GetAncestorVariables(aVariables);

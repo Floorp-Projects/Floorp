@@ -49,23 +49,23 @@
   it to take effect.
 
   files loaded are:
-    outliner-utils.js  General purpose outliner classes
+    tree-utils.js  General purpose tree classes
 
     cview-utils.js     generic utility functions.
     cview-rdf.js       RDF utility class (RDFHelper).
     cview-static.js    Non event-handler functions core to cview.
     cview-handlers.js  Event-handlers core to cview.
-    cview-outliners.js CView specific outliners
+    cview-trees.js CView specific trees
 -->
   <script>
     var DEBUG = true;
   </script>
-  <script src="chrome://cview/content/outliner-utils.js"/>
+  <script src="chrome://cview/content/tree-utils.js"/>
   <script src="chrome://cview/content/cview-utils.js"/>
   <script src="chrome://cview/content/cview-rdf.js"/>
   <script src="chrome://cview/content/cview-static.js"/>
   <script src="chrome://cview/content/cview-handlers.js"/>
-  <script src="chrome://cview/content/cview-outliners.js"/>
+  <script src="chrome://cview/content/cview-trees.js"/>
 
 <!--
   This popup is the context menu for elements in the interfaces list.
@@ -125,19 +125,19 @@
       <text id="component-label" value="Components..." crop="right"
         autostretch="never"/>
 
-      <outliner flex="1" id="component-outliner" persist="height"
+      <tree flex="1" id="component-tree" persist="height"
         primary="true" onselect="onComponentSelect(event);"
         onclick="onComponentClick(event);">
 
-        <outlinercols>
-          <outlinercol id="cmp-name" label="Name" primary="true" flex="1"
+        <treecols>
+          <treecol id="cmp-name" label="Name" primary="true" flex="1"
             persist="hidden width"/>
           <splitter class="tree-splitter"/>
-          <outlinercol id="cmp-number" flex="1" label="Number"
+          <treecol id="cmp-number" flex="1" label="Number"
             persist="hidden width"/>
-        </outlinercols>
-        <outlinerchildren id="project-body"/>
-      </outliner>
+        </treecols>
+        <treechildren id="project-body"/>
+      </tree>
 
     </vbox>
 
@@ -149,19 +149,19 @@
     <text id="interface-label" value="Interfaces..." crop="right"
       autostretch="never"/>
 
-      <outliner flex="1" id="interface-outliner" persist="height"
+      <tree flex="1" id="interface-tree" persist="height"
         onclick="onInterfaceClick(event);" context="interfacePopup"
         onselect="onInterfaceSelect(event);">
 
-        <outlinercols>
-          <outlinercol id="ifc-name" label="Name" primary="true" flex="1"
+        <treecols>
+          <treecol id="ifc-name" label="Name" primary="true" flex="1"
             persist="hidden width"/>
           <splitter class="tree-splitter"/>
-          <outlinercol id="ifc-number" flex="1" label="Number"
+          <treecol id="ifc-number" flex="1" label="Number"
             persist="hidden width"/>
-        </outlinercols>
-        <outlinerchildren id="project-body"/>
-      </outliner>
+        </treecols>
+        <treechildren id="project-body"/>
+      </tree>
 
     </vbox>
 

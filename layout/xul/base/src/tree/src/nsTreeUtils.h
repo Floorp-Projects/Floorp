@@ -36,14 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsOutlinerUtils_h__
-#define nsOutlinerUtils_h__
+#ifndef nsTreeUtils_h__
+#define nsTreeUtils_h__
 
 #include "nsString.h"
 #include "nsISupportsArray.h"
 #include "nsIContent.h"
 
-class nsOutlinerUtils
+class nsTreeUtils
 {
   public:
     /**
@@ -57,4 +57,4 @@ class nsOutlinerUtils
     GetImmediateChild(nsIContent* aContainer, nsIAtom* aTag, nsIContent** aResult);
 };
 
-#endif // nsOutlinerUtils_h__
+#endif // nsTreeUtils_h__

@@ -17,7 +17,6 @@ function Startup()
   else {
     fillDefaultSettings();
   }
-  doSetOKCancel(onOK, onCancel);
 }
 
 function DownloadNow()
@@ -182,7 +181,7 @@ function hasCharacters(number)
     return true;
 }
  
-function onOK()
+function onAccept()
 {
   var pref_string_content = "";
   var pref_string_title = "";
@@ -298,7 +297,6 @@ function onOK()
   // set window.opener.gUpdate to true so that LDAP Directory Servers
   // dialog gets updated
   window.opener.gUpdate = true; 
-  window.close();
   }
   else
   {
@@ -312,5 +310,4 @@ function onOK()
 function onCancel()
 {	  
   window.opener.gUpdate = false;
-  window.close();
 }

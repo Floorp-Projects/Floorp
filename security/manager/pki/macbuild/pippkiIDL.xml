@@ -87,7 +87,7 @@
                     </SETTING>
                     <SETTING>
                         <SETTING><NAME>SearchPath</NAME>
-                            <SETTING><NAME>Path</NAME><VALUE>:::::layout:xul:base:src:outliner:public:</VALUE></SETTING>
+                            <SETTING><NAME>Path</NAME><VALUE>:::::layout:xul:base:src:tree:public:</VALUE></SETTING>
                             <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
                             <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
                         </SETTING>
@@ -739,7 +739,7 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIASN1Outliner.idl</PATH>
+                    <PATH>nsIASN1Tree.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -753,7 +753,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIASN1Outliner.idl</PATH>
+                    <PATH>nsIASN1Tree.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -792,7 +792,7 @@
                     </SETTING>
                     <SETTING>
                         <SETTING><NAME>SearchPath</NAME>
-                            <SETTING><NAME>Path</NAME><VALUE>:::::layout:xul:base:src:outliner:public:</VALUE></SETTING>
+                            <SETTING><NAME>Path</NAME><VALUE>:::::layout:xul:base:src:tree:public:</VALUE></SETTING>
                             <SETTING><NAME>PathFormat</NAME><VALUE>MacOS</VALUE></SETTING>
                             <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
                         </SETTING>
@@ -1444,7 +1444,7 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIASN1Outliner.idl</PATH>
+                    <PATH>nsIASN1Tree.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -1458,7 +1458,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>nsIASN1Outliner.idl</PATH>
+                    <PATH>nsIASN1Tree.idl</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
             </LINKORDER>
@@ -1480,7 +1480,7 @@
         <FILEREF>
             <TARGETNAME>pippki.xpt</TARGETNAME>
             <PATHTYPE>Name</PATHTYPE>
-            <PATH>nsIASN1Outliner.idl</PATH>
+            <PATH>nsIASN1Tree.idl</PATH>
             <PATHFORMAT>MacOS</PATHFORMAT>
         </FILEREF>
     </GROUPLIST>

@@ -28,7 +28,7 @@
 
 function onLoad()
 {
-    initOutliners();
+    initTrees();
     cview.totalComponents = cview.visibleComponents = 
         cview.componentView.rowCount;
     cview.totalInterfaces = cview.visibleInterfaces = 
@@ -43,9 +43,9 @@ function onUnload()
 
 function onComponentClick(e)
 {
-    if (e.originalTarget.localName == "outlinercol")
+    if (e.originalTarget.localName == "treecol")
     {
-        onOutlinerResort(e, cview.componentView);
+        onTreeResort(e, cview.componentView);
     }
     else
     {
@@ -63,9 +63,9 @@ function onComponentClick(e)
 
 function onInterfaceClick(e)
 {
-    if (e.originalTarget.localName == "outlinercol")
+    if (e.originalTarget.localName == "treecol")
     {
-        onOutlinerResort(e, cview.interfaceView);
+        onTreeResort(e, cview.interfaceView);
     }
     else
     {
@@ -76,14 +76,14 @@ function onInterfaceClick(e)
     }
 }
 
-function onOutlinerResort (e, view)
+function onTreeResort (e, view)
 {
     /* resort by column */
     var rowIndex = new Object();
     var colID = new Object();
     var childElt = new Object();
     
-    var obo = view.outliner;
+    var obo = view.tree;
     obo.getCellAt(e.clientX, e.clientY, rowIndex, colID, childElt);
     if (row.value == -1)
       return;
@@ -107,7 +107,7 @@ function onOutlinerResort (e, view)
 
 function onComponentSelect (e)
 {
-    var index = cview.componentView.outliner.selection.currentIndex;
+    var index = cview.componentView.tree.selection.currentIndex;
     var row = cview.componentView.childData.locateChildByVisualRow (index);
     if (!row)
         return;
@@ -118,7 +118,7 @@ function onComponentSelect (e)
 
 function onInterfaceSelect (e)
 {
-    var index = cview.interfaceView.outliner.selection.currentIndex;
+    var index = cview.interfaceView.tree.selection.currentIndex;
     var row = cview.interfaceView.childData.locateChildByVisualRow (index);
     if (!row)
         return;
@@ -129,7 +129,7 @@ function onInterfaceSelect (e)
             
 function onLXRIFCLookup (e, type)
 {
-    var index = cview.interfaceView.outliner.selection.currentIndex;
+    var index = cview.interfaceView.tree.selection.currentIndex;
     var row = cview.interfaceView.childData.locateChildByVisualRow (index);
     if (!row)
         return;

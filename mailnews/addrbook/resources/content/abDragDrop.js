@@ -48,7 +48,7 @@ var abResultsPaneObserver = {
     },
 
   onDrop: function (aEvent, aXferData, aDragSession)
-{
+    {
     },
 
   onDragExit: function (aEvent, aDragSession)
@@ -62,29 +62,24 @@ var abResultsPaneObserver = {
   getSupportedFlavours: function ()
 	{
      return null;
-}
+  }
 };
 
 var abDirTreeObserver = {
   onDragStart: function (aEvent, aXferData, aDragAction)
-{
+    {
     },
 
   onDrop: function (aEvent, aXferData, aDragSession)
     {
 	    var xferData = aXferData.data.split("\n");
 
-      // XXX do we still need this check, since we do it in onDragOver?
-      if (aEvent.target.localName != "treecell") {
-         return;
-      }
-
-      // target is the <treecell>, and "id" is on the <treeitem> two levels above
-      var treeItem = aEvent.target.parentNode.parentNode;
-      if (!treeItem)  
-        return;
-
-      var targetURI = treeItem.getAttribute("id");
+      var row = {}, col = {}, obj = {};
+      dirTree.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, obj);
+      if (row.value >= dirTree.view.rowCount || row.value < 0) return;
+      
+      var item = dirTree.contentView.getItemAtIndex(row.value);
+      var targetURI = item.id;
       var directory = GetDirectoryFromURI(targetURI);
 
       var abView = GetAbView();
@@ -101,15 +96,15 @@ var abDirTreeObserver = {
       var result;
       var needToCopyCard = true;
       if (srcURI.length > targetURI.length) {
-        result = srcURI.split(targetURI); 
-        if (result != srcURI) {
+        result = srcURI.split(targetURI);
+        if (result[0] != srcURI) {
           // src directory is a mailing list on target directory, no need to copy card
           needToCopyCard = false;
         }
       }
       else {
         result = targetURI.split(srcURI);
-        if (result != targetURI) {
+        if (result[0] != targetURI) {
           // target directory is a mailing list on src directory, no need to copy card
           needToCopyCard = false;
         }
@@ -134,29 +129,29 @@ var abDirTreeObserver = {
     },
 
   onDragExit: function (aEvent, aDragSession)
-{
+    {
     },
 
   onDragOver: function (aEvent, aFlavour, aDragSession)
     {
-      if (aEvent.target.localName != "treecell") {
+      if (aEvent.target.localName != "treechildren") {
          aDragSession.canDrop = false;
         return false;
       }
-
-	// target is the <treecell>, and "id" is on the <treeitem> two levels above
-      var treeItem = aEvent.target.parentNode.parentNode;
-      if (!treeItem)  
-        return false;
-
-      var targetURI = treeItem.getAttribute("id");
+      
+      var row = {}, col = {}, obj = {};
+      dirTree.view.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, obj);
+      if (row.value >= dirTree.view.rowCount || row.value < 0) return;
+      
+      var item = dirTree.contentView.getItemAtIndex(row.value);
+      var targetURI = item.id;
       var srcURI = GetAbViewURI();
 
       // you can't drop a card onto the directory it comes from
       if (targetURI == srcURI) {
         aDragSession.canDrop = false;
         return false;
-	}
+      }
 
       // determine if we dragging from a mailing list on a directory x to the parent (directory x).
       // if so, don't allow the drop
@@ -164,15 +159,15 @@ var abDirTreeObserver = {
       if (result != srcURI) {
         aDragSession.canDrop = false;
         return false;
-}
+      }
       return true;
     },
 
   getSupportedFlavours: function ()
-{
+  {
       var flavourSet = new FlavourSet();
       flavourSet.appendFlavour("moz/abcard");
       return flavourSet;
-}
+  }
 };
 

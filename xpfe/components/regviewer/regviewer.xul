@@ -38,15 +38,15 @@
       <tree id="tree" style="width:100%;height:100%" datasources="rdf:null"
             containment="urn:mozilla-registry:subkeys"
             onselect="OnSelect(event);">
-        <treecolgroup>
-          <treecol flex="1"/>
-        </treecolgroup>
+        <treecols>
+          <treecol id="regCol" flex="1" primary="true"/>
+        </treecols>
 
         <template>
-          <treechildren flex="1">
+          <treechildren>
             <treeitem uri="rdf:*">
               <treerow>
-                <treecell indent="true" label="rdf:*" />
+                <treecell label="rdf:*" />
               </treerow>
             </treeitem>
           </treechildren>

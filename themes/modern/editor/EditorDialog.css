@@ -310,6 +310,16 @@ tree.list {
   min-height: 50px;
 }
 
+/* ::::: select edit dialog ::::: */
+
+#SelectTreeChildren:-moz-tree-cell(SelectSelCol, checked-false) {
+  background: url("chrome://global/skin/checkbox/cbox.gif") 50% 50% no-repeat;
+}
+
+#SelectTreeChildren:-moz-tree-cell(SelectSelCol, checked-true) {
+  background: url("chrome://global/skin/checkbox/cbox-check.gif") 50% 50% no-repeat;
+}
+
 /* ::::: Publishing Progress ::::: */
 
 .progressitem[progress="busy"] {

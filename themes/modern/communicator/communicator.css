@@ -82,3 +82,10 @@
   border: none;
   margin: 0px !important;
 }
+
+/* ::::: download manager ::::: */
+
+#downloadView > treechildren:-moz-tree-image(Name) {
+  margin-right: 2px;
+}
+

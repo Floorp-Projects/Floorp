@@ -341,12 +341,12 @@ function onEnterInSearchTerm()
 function onSearch()
 {
     // set the view.  do this on every search, to
-    // allow the outliner to reset itself
-    var outlinerView = gSearchView.QueryInterface(Components.interfaces.nsIOutlinerView);
-    if (outlinerView)
+    // allow the tree to reset itself
+    var treeView = gSearchView.QueryInterface(Components.interfaces.nsITreeView);
+    if (treeView)
     {
-      var outliner = GetThreadOutliner();
-      outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = outlinerView;
+      var tree = GetThreadTree();
+      tree.treeBoxObject.view = treeView;
     }
 
     gSearchSession.clearScopes();
@@ -550,9 +550,9 @@ function HandleDeleteOrMoveMessageFailed(folder)
 
 function HandleDeleteOrMoveMessageCompleted(folder)
 {
-        var outlinerView = gSearchView.QueryInterface(Components.interfaces.nsIOutlinerView);
-        var outlinerSelection = outlinerView.selection;
-        viewSize = outlinerView.rowCount;
+        var treeView = gSearchView.QueryInterface(Components.interfaces.nsITreeView);
+        var treeSelection = treeView.selection;
+        viewSize = treeView.rowCount;
 
         if (gNextMessageViewIndexAfterDelete != nsMsgViewIndex_None && gNextMessageViewIndexAfterDelete >= viewSize)
         {
@@ -562,7 +562,7 @@ function HandleDeleteOrMoveMessageCompleted(folder)
             {
                 gNextMessageViewIndexAfterDelete = nsMsgViewIndex_None;
                 //clear the selection
-                outlinerSelection.clearSelection();
+                treeSelection.clearSelection();
             }
         }
 
@@ -571,15 +571,15 @@ function HandleDeleteOrMoveMessageCompleted(folder)
         // an extra round of command updating notifications that we are trying to
         // optimize away.
         if (gNextMessageViewIndexAfterDelete != nsMsgViewIndex_None) {
-            outlinerSelection.select(gNextMessageViewIndexAfterDelete);
+            treeSelection.select(gNextMessageViewIndexAfterDelete);
             // since gNextMessageViewIndexAfterDelete probably has the same value
-            // as the last index we had selected, the outliner isn't generating a new
-            // selectionChanged notification for the outliner view. So we aren't loading the 
+            // as the last index we had selected, the tree isn't generating a new
+            // selectionChanged notification for the tree view. So we aren't loading the 
             // next message. to fix this, force the selection changed update.
-            if (outlinerView)
-                outlinerView.selectionChanged();
+            if (treeView)
+                treeView.selectionChanged();
 
-            EnsureRowInThreadOutlinerIsVisible(gNextMessageViewIndexAfterDelete); 
+            EnsureRowInThreadTreeIsVisible(gNextMessageViewIndexAfterDelete); 
         }
 
 }

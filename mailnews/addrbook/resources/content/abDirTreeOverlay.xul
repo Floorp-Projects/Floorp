@@ -34,31 +34,48 @@ Contributors:
 <script type="application/x-javascript" src="chrome://messenger/content/addressbook/abDragDrop.js"/>
 
   <!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
-  <tree id="dirTree" 
-      class="abDirectory" 
-      ref="moz-abdirectory://"
-      datasources="rdf:addressdirectory"
-      containment="http://home.netscape.com/NC-rdf#child"
+  <tree id="dirTree" class="abDirectory plain" seltype="single"
+      datasources="rdf:addressdirectory" ref="moz-abdirectory://"
+      hidecolumnpicker="true"
       onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('addrbook-select');"
       onclick="DirPaneClick(event);"
       ondblclick="DirPaneDoubleClick();"
       onblur="goOnEvent(this,'blur')"
       ondragover="nsDragAndDrop.dragOver(event, abDirTreeObserver);"
       ondragdrop="nsDragAndDrop.drop(event, abDirTreeObserver);">
-    <treecolgroup>
-      <treecol flex="1"/>
-    </treecolgroup>
+      
+    <treecols>
+      <treecol id="DirCol" flex="1" primary="true" hideheader="true"/>
+    </treecols>
+    
     <template>
       <rule>
-       <treechildren flex="1">
-        <treeitem uri="..." persist="sortColumn sortKey sortDirection">
-          <treerow>
-            <treecell indent="true" class="treecell-indent ab-directory-icon" label="rdf:http://home.netscape.com/NC-rdf#DirName"
-                     IsMailList="rdf:http://home.netscape.com/NC-rdf#IsMailList"
-                     IsRemote="rdf:http://home.netscape.com/NC-rdf#IsRemote"/>
-          </treerow>
-        </treeitem>
-            </treechildren>
+        <conditions>
+          <content uri="?container"/>
+          <member container="?container" child="?member"/>
+        </conditions>
+
+        <bindings>
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#DirName"
+                   object="?DirName"/>
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#IsMailList"
+                   object="?IsMailList"/>
+          <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#IsRemote"
+                   object="?IsRemote"/>
+        </bindings>
+        
+        <action>
+          <treechildren>
+            <treeitem uri="?member" persist="sortDirection sortColumn open">
+              <treerow>
+                <treecell label="?DirName" properties="IsMailList-?IsMailList IsRemote-?IsRemote"/>
+              </treerow>
+            </treeitem>
+          </treechildren>
+        </action>
       </rule>
     </template>
   </tree>

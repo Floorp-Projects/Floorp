@@ -79,10 +79,10 @@ function StyleRulesViewer() // implements inIViewer
   this.mObsMan = new ObserverManager();
   
   this.mURL = window.location;
-  this.mRuleOutliner = document.getElementById("olStyleRules");
-  this.mRuleBoxObject = this.mRuleOutliner.outlinerBoxObject;
-  this.mPropsOutliner = document.getElementById("olStyleProps");
-  this.mPropsBoxObject = this.mPropsOutliner.outlinerBoxObject;
+  this.mRuleTree = document.getElementById("olStyleRules");
+  this.mRuleBoxObject = this.mRuleTree.treeBoxObject;
+  this.mPropsTree = document.getElementById("olStyleProps");
+  this.mPropsBoxObject = this.mPropsTree.treeBoxObject;
 }
 
 StyleRulesViewer.prototype = 
@@ -107,10 +107,10 @@ StyleRulesViewer.prototype =
   set subject(aObject)
   {
     this.mSubject = aObject;
-    // update the rule outliner
+    // update the rule tree
     this.mRuleView = new StyleRuleView(aObject);
     this.mRuleBoxObject.view = this.mRuleView;
-    // clear the props outliner
+    // clear the props tree
     this.mPropsView = null;
     this.mPropsBoxObject.view = null;
     
@@ -167,7 +167,7 @@ StyleRulesViewer.prototype =
 
   cmdOpenSelectedFileInEditor: function()
   {
-    var item = this.mRuleOutliner.selectedItems[0];
+    var item = this.mRuleTree.selectedItems[0];
     if (item)
     {
       var path = null;
@@ -261,14 +261,14 @@ StyleRulesViewer.prototype =
 
   getSelectedRule: function()
   {
-    var idx = this.mRuleOutliner.currentIndex;
+    var idx = this.mRuleTree.currentIndex;
     return this.mRuleView.getRuleAt(idx);
   },
 
   getSelectedProp: function()
   {
     var rule = this.getSelectedRule();
-    var idx = this.mPropsOutliner.currentIndex;
+    var idx = this.mPropsTree.currentIndex;
     return rule.style.item(idx);
   },
   
@@ -321,7 +321,7 @@ function StyleRuleView(aObject)
   }
 }
 
-StyleRuleView.prototype = new inBaseOutlinerView();
+StyleRuleView.prototype = new inBaseTreeView();
 
 StyleRuleView.prototype.mSheetRules = null;
 StyleRuleView.prototype.mRules = null;
@@ -383,7 +383,7 @@ function StylePropsView(aRule)
   this.mDec = aRule.style;
 }
 
-StylePropsView.prototype = new inBaseOutlinerView();
+StylePropsView.prototype = new inBaseTreeView();
 
 StylePropsView.prototype.__defineGetter__("rowCount",
 function() 

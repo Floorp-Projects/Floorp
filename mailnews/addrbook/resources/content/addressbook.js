@@ -369,11 +369,9 @@ function AbPrintAddressBook()
 function AbExport()
 {
   try {
-    var selectedItems = dirTree.selectedItems;
-    if (selectedItems.length != 1)
-      return;
-
-    var selectedABURI = selectedItems[0].getAttribute('id');
+    var selectedABURI = GetSelectedDirectory();
+    if (!selectedABURI) return;
+    
     var directory = GetDirectoryFromURI(selectedABURI);
     addressbook.exportAddressBook(directory);
   }
@@ -403,33 +401,27 @@ function AbExport()
 
 function AbDeleteDirectory()
 {
-    var selArray = dirTree.selectedItems;
-    var count = selArray.length;
-    if (count != 1)
-        return;
+    var selectedABURI = GetSelectedDirectory();
+    if (!selectedABURI) return;
 
     var isPersonalOrCollectedAbsSelectedForDeletion = false;
     var parentArray = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
     if (!parentArray) 
       return; 
 
-    var selectedABURI = selArray[0].getAttribute("id");
-
     // check to see if personal or collected address books is selected for deletion.
     // if yes, prompt the user an appropriate message saying these cannot be deleted
     if ((selectedABURI != kCollectedAddressbookURI) &&
         (selectedABURI != kPersonalAddressbookURI)) {
-      var parent = selArray[0].parentNode.parentNode;
-      if (parent) {
-        var parentId;
-        if (parent == dirTree)
-          parentId = "moz-abdirectory://";
-        else	
-          parentId = parent.getAttribute("id");
+      var parentRow = GetParentRow(dirTree, dirTree.currentIndex);
+      var parentId;
+      if (parentRow == -1)
+        parentId = "moz-abdirectory://";
+      else	
+        parentId = dirTree.contentView.getItemAtIndex(parentRow).id;
 
-        var parentDir = GetDirectoryFromURI(parentId);
-        parentArray.AppendElement(parentDir);
-      }
+      var parentDir = GetDirectoryFromURI(parentId);
+      parentArray.AppendElement(parentDir);
     }
     else {
       var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
@@ -488,11 +480,8 @@ function AbResultsPaneDoubleClick(card)
 
 function onAdvancedAbSearch()
 {
-  var selectedItems = dirTree.selectedItems;
-  if (selectedItems.length != 1)
-    return;
-
-  var selectedABURI = selectedItems[0].getAttribute('id');
+  var selectedABURI = GetSelectedDirectory();
+  if (!selectedABURI) return;
 
   window.openDialog("chrome://messenger/content/ABSearchDialog.xul", "", 
                     "chrome,resizable,status,centerscreen,dialog=no", {directory: selectedABURI} );
@@ -502,18 +491,15 @@ function onEnterInSearchBar()
 {
   ClearCardViewPane();
 
-  var selectedItems = dirTree.selectedItems;
-  if (selectedItems.length != 1)
-    return;
-
-  if (!gQueryURIFormat) {
+  if (!gQueryURIFormat)
     gQueryURIFormat = gPrefs.getCharPref("mail.addr_book.quicksearchquery.format");
-  }
 
-  var selectedNode = selectedItems[0];
-  var sortColumn = selectedNode.getAttribute("sortColumn");
-  var sortDirection = selectedNode.getAttribute("sortDirection");
-  var searchURI = selectedNode.getAttribute("id");
+  var searchURI = GetSelectedDirectory();
+  if (!searchURI) return;
+
+  var dataNode = document.getElementById(searchURI);
+  var sortColumn = dataNode.getAttribute("sortColumn");
+  var sortDirection = dataNode.getAttribute("sortDirection");
 
   /*
    XXX todo, handle the case where the LDAP url

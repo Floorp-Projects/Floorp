@@ -298,18 +298,6 @@ BookmarksToolbar.prototype = {
     return [document.popupNode];
   },
 
-  getBestItem: function ()
-  {
-    var seln = this.getSelection ();
-    if (seln.length < 1) {
-      var kids = ContentUtils.childByLocalName(this.tree, "treechildren");
-      if (kids) return kids.lastChild;
-    }
-    else
-      return seln[0];
-    return null;
-  },
-
   /////////////////////////////////////////////////////////////////////////////
   // Return a set of DOM nodes that represent the selection in the tree widget.
   // This method is takes a node parameter which is the popupNode for the

@@ -48,7 +48,7 @@
 #include "nsIPopupBoxObject.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
-#include "nsIOutlinerView.h"
+#include "nsITreeView.h"
 #include "nsGUIEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIPresContext.h"
@@ -63,8 +63,8 @@ nsXULTooltipListener::nsXULTooltipListener()
   : mSourceNode(nsnull), mTargetNode(nsnull),
     mCurrentTooltip(nsnull),
     mMouseClientX(0), mMouseClientY(0),
-    mIsSourceOutliner(PR_FALSE), mNeedTitletip(PR_FALSE),
-    mLastOutlinerRow(-1)
+    mIsSourceTree(PR_FALSE), mNeedTitletip(PR_FALSE),
+    mLastTreeRow(-1)
 {
 	 NS_INIT_REFCNT();
 }
@@ -141,10 +141,10 @@ nsXULTooltipListener::MouseOut(nsIDOMEvent* aMouseEvent)
     if (tooltipNode == targetNode) {
       HideTooltip();
 
-      // reset special outliner tracking
-      if (mIsSourceOutliner) {
-        mLastOutlinerRow = -1;
-        mLastOutlinerCol.Truncate();
+      // reset special tree tracking
+      if (mIsSourceTree) {
+        mLastTreeRow = -1;
+        mLastTreeCol.Truncate();
       }
     }
   }
@@ -174,8 +174,8 @@ nsXULTooltipListener::MouseMove(nsIDOMEvent* aMouseEvent)
   mMouseClientX = newMouseX;
   mMouseClientY = newMouseY;
 
-  if (mIsSourceOutliner)
-    CheckOutlinerBodyMove(mouseEvent);
+  if (mIsSourceTree)
+    CheckTreeBodyMove(mouseEvent);
 
   // as the mouse moves, we want to make sure we reset the timer to show it, 
   // so that the delay is from when the mouse stops moving, not when it enters
@@ -251,11 +251,11 @@ nsXULTooltipListener::Init(nsIContent* aSourceNode, nsIRootBox* aRootBox)
   mSourceNode = aSourceNode;
   AddTooltipSupport(aSourceNode);
   
-  // if the target is an outlinerchildren, we may have some special
+  // if the target is an treechildren, we may have some special
   // case handling to do
   nsCOMPtr<nsIAtom> tag;
   mSourceNode->GetTag(*getter_AddRefs(tag));
-  mIsSourceOutliner = tag == nsXULAtoms::outlinerchildren;
+  mIsSourceTree = tag == nsXULAtoms::treechildren;
 
   static PRBool prefChangeRegistered = PR_FALSE;
 
@@ -304,10 +304,10 @@ nsXULTooltipListener::RemoveTooltipSupport(nsIContent* aNode)
 }
 
 void
-nsXULTooltipListener::CheckOutlinerBodyMove(nsIDOMMouseEvent* aMouseEvent)
+nsXULTooltipListener::CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent)
 {
-  nsCOMPtr<nsIOutlinerBoxObject> obx;
-  GetSourceOutlinerBoxObject(getter_AddRefs(obx));
+  nsCOMPtr<nsITreeBoxObject> obx;
+  GetSourceTreeBoxObject(getter_AddRefs(obx));
   if (obx) {
     PRInt32 x, y;
     aMouseEvent->GetClientX(&x);
@@ -318,11 +318,11 @@ nsXULTooltipListener::CheckOutlinerBodyMove(nsIDOMMouseEvent* aMouseEvent)
     obx->GetCellAt(x, y, &row, getter_Copies(colId), getter_Copies(obj));
     
     // determine if we are going to need a titletip
-    // XXX check the disabletitletips attribute on the outliner content
+    // XXX check the disabletitletips attribute on the tree content
     mNeedTitletip = PR_FALSE;
 #ifdef DEBUG_crap
     if (row >= 0 && obj.Equals(NS_LITERAL_STRING("text"))) {
-      nsCOMPtr<nsIOutlinerView> view;
+      nsCOMPtr<nsITreeView> view;
       obx->GetView(getter_AddRefs(view));
       PRBool isCropped;
       obx->IsCellCropped(row, colId, &isCropped);
@@ -331,12 +331,12 @@ nsXULTooltipListener::CheckOutlinerBodyMove(nsIDOMMouseEvent* aMouseEvent)
 #endif
 
     if (mCurrentTooltip && 
-        (row != mLastOutlinerRow || !mLastOutlinerCol.Equals(colId))) {
+        (row != mLastTreeRow || !mLastTreeCol.Equals(colId))) {
       HideTooltip();
     } 
 
-    mLastOutlinerRow = row;
-    mLastOutlinerCol.Assign(colId);
+    mLastTreeRow = row;
+    mLastTreeCol.Assign(colId);
   }
 }
 
@@ -358,9 +358,9 @@ nsXULTooltipListener::ShowTooltip()
     nsCOMPtr<nsIDocument> targetDoc;
     mSourceNode->GetDocument(*getter_AddRefs(targetDoc));
     if (targetDoc) {
-      if (!mIsSourceOutliner) {
-        mLastOutlinerRow = -1;
-        mLastOutlinerCol.Truncate();
+      if (!mIsSourceTree) {
+        mLastTreeRow = -1;
+        mLastTreeCol.Truncate();
       }
 
       nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(mTargetNode));
@@ -405,12 +405,12 @@ nsXULTooltipListener::ShowTooltip()
 }
 
 static void
-GetOutlinerCellCoords(nsIOutlinerBoxObject* aOutlinerBox, nsIContent* aSourceNode, 
-                      PRInt32 aRow, nsAutoString aCol, PRInt32* aX, PRInt32* aY)
+GetTreeCellCoords(nsITreeBoxObject* aTreeBox, nsIContent* aSourceNode, 
+                  PRInt32 aRow, nsAutoString aCol, PRInt32* aX, PRInt32* aY)
 {
   PRInt32 junk;
   const PRUnichar empty[] = {'\0'};
-  aOutlinerBox->GetCoordsForCellItem(aRow, aCol.get(), empty, aX, aY, &junk, &junk);
+  aTreeBox->GetCoordsForCellItem(aRow, aCol.get(), empty, aX, aY, &junk, &junk);
   nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(aSourceNode));
   nsCOMPtr<nsIBoxObject> bx;
   xulEl->GetBoxObject(getter_AddRefs(bx));
@@ -422,11 +422,11 @@ GetOutlinerCellCoords(nsIOutlinerBoxObject* aOutlinerBox, nsIContent* aSourceNod
 }
 
 static void
-SetTitletipLabel(nsIOutlinerBoxObject* aOutlinerBox, nsIContent* aTooltip,
+SetTitletipLabel(nsITreeBoxObject* aTreeBox, nsIContent* aTooltip,
                  PRInt32 aRow, nsAutoString aCol)
 {
-  nsCOMPtr<nsIOutlinerView> view;
-  aOutlinerBox->GetView(getter_AddRefs(view));
+  nsCOMPtr<nsITreeView> view;
+  aTreeBox->GetView(getter_AddRefs(view));
 
   nsAutoString label;
   view->GetCellText(aRow, aCol.get(), label);
@@ -455,12 +455,12 @@ nsXULTooltipListener::LaunchTooltip(nsIContent* aTarget, PRInt32 aX, PRInt32 aY)
     PRInt32 x = aX;
     PRInt32 y = aY;
     if (mNeedTitletip) {
-      nsCOMPtr<nsIOutlinerBoxObject> obx;
-      GetSourceOutlinerBoxObject(getter_AddRefs(obx));
-      GetOutlinerCellCoords(obx, mSourceNode,
-                            mLastOutlinerRow, mLastOutlinerCol, &x, &y);
+      nsCOMPtr<nsITreeBoxObject> obx;
+      GetSourceTreeBoxObject(getter_AddRefs(obx));
+      GetTreeCellCoords(obx, mSourceNode,
+                            mLastTreeRow, mLastTreeCol, &x, &y);
 
-      SetTitletipLabel(obx, mCurrentTooltip, mLastOutlinerRow, mLastOutlinerCol);
+      SetTitletipLabel(obx, mCurrentTooltip, mLastTreeRow, mLastTreeCol);
       mCurrentTooltip->SetAttr(nsnull, nsXULAtoms::titletip, NS_LITERAL_STRING("true"), PR_FALSE);
     } else
       mCurrentTooltip->UnsetAttr(nsnull, nsXULAtoms::titletip, PR_FALSE);
@@ -580,7 +580,7 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
         }
 
         // titletips should just use the default tooltip
-        if (mIsSourceOutliner && mNeedTitletip) {
+        if (mIsSourceTree && mNeedTitletip) {
           mRootBox->GetDefaultTooltip(aTooltip);
           NS_IF_ADDREF(*aTooltip);
           return NS_OK;
@@ -683,18 +683,18 @@ nsXULTooltipListener::sTooltipPrefChanged(const char* aPref, void* aData)
 }
 
 nsresult
-nsXULTooltipListener::GetSourceOutlinerBoxObject(nsIOutlinerBoxObject** aBoxObject)
+nsXULTooltipListener::GetSourceTreeBoxObject(nsITreeBoxObject** aBoxObject)
 {
   *aBoxObject = nsnull;
 
-  if (mIsSourceOutliner && mSourceNode) {
-    nsCOMPtr<nsIContent> outlinerParent;
-    mSourceNode->GetParent(*getter_AddRefs(outlinerParent));
-    nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(outlinerParent));
+  if (mIsSourceTree && mSourceNode) {
+    nsCOMPtr<nsIContent> treeParent;
+    mSourceNode->GetParent(*getter_AddRefs(treeParent));
+    nsCOMPtr<nsIDOMXULElement> xulEl(do_QueryInterface(treeParent));
     if (xulEl) {
       nsCOMPtr<nsIBoxObject> bx;
       xulEl->GetBoxObject(getter_AddRefs(bx));
-      nsCOMPtr<nsIOutlinerBoxObject> obx(do_QueryInterface(bx));
+      nsCOMPtr<nsITreeBoxObject> obx(do_QueryInterface(bx));
       if (obx) {
         *aBoxObject = obx;
         NS_ADDREF(*aBoxObject);

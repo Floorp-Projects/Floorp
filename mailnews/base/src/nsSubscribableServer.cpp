@@ -722,7 +722,7 @@ nsSubscribableServer::GetLeafName(const char *path, PRUnichar **aLeafName)
     // for imap, the node name is in modified UTF7
     // for news, the path is escaped UTF8
     //
-    // when we switch to using the outliner, this hack will go away.
+    // when we switch to using the tree, this hack will go away.
     if (mShowFullName) {
 	rv = NS_MsgDecodeUnescapeURLPath(path, aLeafName);
     }

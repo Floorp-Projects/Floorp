@@ -251,11 +251,18 @@ function RemoveSelectedFromBucket()
   if ( bucketTree )
   {
     var body = document.getElementById("bucketBody");
+    var selection = bucketTree.view.selection;
+    var rangeCount = selection.getRangeCount();
 
-    if ( body && bucketTree.selectedItems && bucketTree.selectedItems.length )
+    for (i = rangeCount-1; i >= 0; --i)
     {
-      for ( var item = bucketTree.selectedItems.length - 1; item >= 0; item-- )
-        body.removeChild(bucketTree.selectedItems[item]);
+      var start = {}, end = {};
+      selection.getRangeAt(i,start,end);
+      for (j = end.value; j >= start.value; --j)
+      {
+        var item = bucketTree.contentView.getItemAtIndex(j);
+        body.removeChild(item);
+      }
     }
   }
 }
@@ -311,10 +318,7 @@ function DialogBucketPaneSelectionChanged()
   var bucketTree = document.getElementById("addressBucket");
   var removeButton = document.getElementById("remove");
 
-  if (removeButton && bucketTree && bucketTree.selectedItems && bucketTree.selectedItems.length)
-    removeButton.removeAttribute("disabled");
-  else
-    removeButton.setAttribute("disabled", "true");
+  removeButton.disabled = bucketTree.view.selection.count == 0;
 }
 
 function AbResultsPaneDoubleClick(card)
@@ -406,7 +410,7 @@ function onEnterInSearchBar()
 
 function SelectFirstAddressBookMenulist()
 {
-  ChangeDirectoryByDOMNode(abList.selectedItem);
+  ChangeDirectoryByURI(abList.selectedItem.id);
   return;
 }
 
@@ -416,6 +420,6 @@ function DirPaneSelectionChangeMenulist()
     if (gSearchInput.value && (gSearchInput.value != "")) 
       onEnterInSearchBar();
     else
-      ChangeDirectoryByDOMNode(abList.selectedItem);
+      ChangeDirectoryByURI(abList.selectedItem.id);
   }
 }

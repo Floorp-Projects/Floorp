@@ -2,16 +2,14 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/AccountManager.dtd" >
-<window id="account-manager" 
+<dialog id="account-manager" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&accountManagerTitle.label;"
-        class="dialog"
         width="&account-manager.width;" height="&account-manager.height;"
         persist="screenX screenY width height"
-        onload="onLoad(event);">
+        onload="onLoad(event);"
+        ondialogaccept="return onAccept();">
 
 <stringbundle id="bundle_prefs" src="chrome://messenger/locale/prefs.properties"/>
 <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
@@ -20,8 +18,6 @@
 <script type="application/x-javascript" src="chrome://messenger/content/am-help.js"/>
 <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
-  <keyset id="dialogKeys"/>
-
   <hbox flex="1">
     <vbox flex="1">
       <tree datasources="rdf:msgaccountmanager" style="width:0px" flex="1"
@@ -29,13 +25,13 @@
             onselect="onAccountClick(event.target)" id="accounttree"
             sortResource="http://home.netscape.com/NC-rdf#Name?sort=true"
             sortDirection="ascending"
-            ref="msgaccounts:/">
-        <treecolgroup>
-          <treecol flex="1"/>
-        </treecolgroup>
+            ref="msgaccounts:/" hidecolumnpicker="true">
+        <treecols>
+          <treecol id="AccountCol" flex="1" primary="true" hideheader="true"/>
+        </treecols>
         <template>
           <rule>
-            <treechildren flex="1">
+            <treechildren>
               <treeitem uri="..." open="true"
                         sort="rdf:http://home.netscape.com/NC-rdf#FolderTreeName?sort=true"
                         IsDefaultServer="rdf:http://home.netscape.com/NC-rdf#IsDefaultServer"
@@ -49,6 +45,7 @@
           </rule>
         </template>
       </tree>
+      
       <button label="&addAccountButton.label;" oncommand="onAddAccount(event);" id="addAccountButton"
               prefstring="mail.accountmanager.accounts"/>
       <button label="&setDefaultButton.label;" oncommand="onSetDefault(event);" disabled="true" id="setDefaultButton"
@@ -65,7 +62,5 @@
   </hbox>
   
   <separator/>
-  
-  <hbox id="okCancelHelpButtonsRight"/>
 
-</window>
+</dialog>

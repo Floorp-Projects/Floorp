@@ -136,7 +136,7 @@ OBJS = \
     .\$(OBJDIR)\nsNSSCertificate.obj \
     .\$(OBJDIR)\nsPKCS12Blob.obj \
     .\$(OBJDIR)\nsKeygenHandler.obj \
-    .\$(OBJDIR)\nsCertOutliner.obj \
+    .\$(OBJDIR)\nsCertTree.obj \
     .\$(OBJDIR)\nsNSSASN1Object.obj \
     .\$(OBJDIR)\nsCrypto.obj \
     .\$(OBJDIR)\nsPKCS11Slot.obj \

@@ -28,34 +28,34 @@
 @import url("chrome://global/skin/");
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: outliner rows ::::: */
+/* ::::: tree rows ::::: */
 
-outliner:focus > .outliner-bodybox
+tree:focus > .tree-bodybox
 {
   border: 1px solid black;
 }
 
-outliner > .outliner-bodybox
+tree > .tree-bodybox
 {
   border: 1px solid transparent;
 }
 
-outlinerchildren:-moz-outliner-cell-text(prefCol)
+treechildren:-moz-tree-cell-text(prefCol)
 {
   font-weight: bold;
 }
 
-outlinerchildren:-moz-outliner-cell-text(user)
+treechildren:-moz-tree-cell-text(user)
 {
   color: blue;
 }
 
-outlinerchildren:-moz-outliner-cell-text(default)
+treechildren:-moz-tree-cell-text(default)
 {
   color: green;
 }
 
-outlinerchildren:-moz-outliner-cell-text(locked)
+treechildren:-moz-tree-cell-text(locked)
 {
   color: red;
 }

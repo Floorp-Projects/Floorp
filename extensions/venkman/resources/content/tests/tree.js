@@ -62,8 +62,8 @@ sampleTree.childData.appendChild (new SampleRecord ("joey", "male"));
 function onload ()
 {
 
-    var outliner = document.getElementById("sample-outliner");
-    outliner.outlinerBoxObject.view = sampleTree;
+    var tree = document.getElementById("sample-tree");
+    tree.treeBoxObject.view = sampleTree;
     dt();
     //    debugger;
 }

@@ -31,19 +31,13 @@
 
 listbox {
   margin: 2px 4px;
-  border-top: 1px solid ThreeDShadow;
-  border-right: 1px solid ThreeDHighlight;
-  border-bottom: 1px solid ThreeDHighlight;
-  border-left: 1px solid ThreeDShadow;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
   background-color: -moz-Field;
   color: -moz-FieldText;
-}
-
-listrows {
-  border-top: 1px solid ThreeDDarkShadow;
-  border-right: 1px solid ThreeDLightShadow;
-  border-bottom: 1px solid ThreeDLightShadow;
-  border-left: 1px solid ThreeDDarkShadow;
 }
 
 /* ::::: listitem ::::: */
@@ -106,12 +100,12 @@ listheader[sortable="true"]:hover:active {
   list-style-image: none;
 }
 
-.listheader-sortdirection[sortdirection="ascending"] {
-  list-style-image: url("chrome://global/skin/sortAscending.gif");
+.listheader-sortdirection[sortDirection="ascending"] {
+  list-style-image: url("chrome://global/skin/tree/sort-asc.gif");
 }
 
-.listheader-sortdirection[sortdirection="descending"] {
-  list-style-image: url("chrome://global/skin/sortDescending.gif");
+.listheader-sortdirection[sortDirection="descending"] {
+  list-style-image: url("chrome://global/skin/tree/sort-dsc.gif");
 }
 
 /* ::::: listcell ::::: */
@@ -126,17 +120,31 @@ listheader[sortable="true"]:hover:active {
   margin-right: 2px;
 }
 
+.listcell-label[disabled="true"] {
+  color: GrayText;
+}
+
 /* ::::: listcell checkbox ::::: */
 
 .listcell-check {
   -moz-appearance: checkbox;
+  -moz-box-align: center;
   margin: 0px 2px;
   border: 1px solid -moz-DialogText;
-  padding: 2px;
-  width: 7px;
+  min-width: 13px;
+  min-height: 13px;
+  background: -moz-Field no-repeat 50% 50%;
 }
 
 .listcell-check[checked="true"] {
-  width: 0px;
-  list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
+  background-image: url("chrome://global/skin/checkbox/cbox-check.gif");
+}
+
+.listcell-check[disabled="true"] {
+  border-color: GrayText;
+  background-image: url("chrome://global/skin/checkbox/cbox-dis.gif");
+}
+
+.listcell-check[disabled="true"][checked="true"] {
+  background-image: url("chrome://global/skin/checkbox/cbox-check-dis.gif");
 }

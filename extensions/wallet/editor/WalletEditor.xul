@@ -47,10 +47,10 @@
           <label value="&treehead.schemaname.label;"/>
           <tree seltype="multiple" id="schematree"
              style="height: 250px;" onclick="ViewEntries();">
-            <treecolgroup>
-              <treecol flex="1"/>
-            </treecolgroup>
-            <treechildren id="schemalist" flex="1"/>
+            <treecols>
+              <treecol id="schemacol" flex="1"/>
+            </treecols>
+            <treechildren id="schemalist"/>
           </tree>
           <hbox>
             <button id="removeSchema" disabled="true" label="&button.remove.label;" oncommand="DeleteSchema();"/>
@@ -62,19 +62,19 @@
           <label id="entrytext" value2="&treehead.entries.label;" value3="&treehead.entries1.label;"/>
           <tree seltype="multiple" id="entrytree" class="inset"
             style="height: 113px;" orient="vertical" onclick="ViewSynonyms();">
-            <treecolgroup>
-              <treecol flex="1"/>
-            </treecolgroup>
-            <treechildren flex="1" id="entrieslist"/>
+            <treecols>
+              <treecol id="entrycol" flex="1"/>
+            </treecols>
+            <treechildren id="entrieslist"/>
           </tree>
           <spacer style="height: 7px;"/>
           <label id="synonymtext" value2="&treehead.synonyms.label;" value3="&treehead.synonymsoff.label;" value4="&treehead.synonyms1.label;"/>
           <tree seltype="multiple" id="synonymtree"
             style="height: 113px;" orient="vertical" onclick="SynonymSelected();">
-            <treecolgroup>
-              <treecol flex="1"/>
-            </treecolgroup>
-            <treechildren flex="1" id="synonymslist"/>
+            <treecols>
+              <treecol id="synonymcol" flex="1"/>
+            </treecols>
+            <treechildren id="synonymslist"/>
           </tree>
         </vbox>
         <spacer style="width: 7px;"/>

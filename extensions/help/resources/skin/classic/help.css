@@ -105,9 +105,3 @@
 #helpHomeButton:hover:active {
   list-style-image: url("chrome://communicator/skin/bookmarks/home-active.gif");
 }
-
-outlinercol-header
-{
-     border : 0px;
-     max-height : 0px;
-}

@@ -148,7 +148,7 @@ console.onDebugContinue =
 function con_ondc ()
 {
     console.popStatus();
-    console.sourceView.outliner.invalidate();
+    console.sourceView.tree.invalidate();
 }
 
 console.onLoad =
@@ -416,14 +416,14 @@ function con_scptsel (e)
 console.onScriptClick =
 function con_scptclick (e)
 {
-    if (e.originalTarget.localName == "outlinercol")
+    if (e.originalTarget.localName == "treecol")
     {
         /* resort by column */
         var rowIndex = new Object();
         var colID = new Object();
         var childElt = new Object();
         
-        var obo = console.scriptsView.outliner;
+        var obo = console.scriptsView.tree;
         obo.getCellAt(e.clientX, e.clientY, rowIndex, colID, childElt);
         var prop;
         switch (colID.value)
@@ -463,14 +463,14 @@ function con_sourceclick (e)
 {
     var target = e.originalTarget;
     
-    if (target.localName == "outlinerchildren")
+    if (target.localName == "treechildren")
     {
         var row = new Object();
         var colID = new Object();
         var childElt = new Object();
         
-        var outliner = console.sourceView.outliner;
-        outliner.getCellAt(e.clientX, e.clientY, row, colID, childElt);
+        var tree = console.sourceView.tree;
+        tree.getCellAt(e.clientX, e.clientY, row, colID, childElt);
         if (row.value == -1)
           return;
         

@@ -15,29 +15,20 @@
 
     <separator class="thin" />
     
-    <tree id="langList" flex="1" rows="5" 
+    <listbox id="langList" flex="1" rows="5" 
           ref="urn:mozilla:locale:root" datasources="rdf:chrome"
           sortResource="http://www.mozilla.org/rdf/chrome#name"
           sortDirection="ascending">
-      <treecolgroup>
-        <treecol flex="1"/>
-      </treecolgroup>
       
       <template xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
-        <rule chrome:localeType="region">
-        </rule>
+        <rule chrome:localeType="region"/>
         <rule>
-          <treechildren flex="1">
-            <treeitem id="treechildren" uri="...">
-              <treerow>
-                <treecell label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
-                          value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
-              </treerow>
-            </treeitem>
-          </treechildren>
+          <listitem id="treechildren" uri="..." 
+                    label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                    value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
         </rule>
       </template>
-    </tree>
+    </listbox>
 
     <separator class="thin" />
 

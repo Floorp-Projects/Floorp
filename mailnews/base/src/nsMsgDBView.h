@@ -47,9 +47,9 @@
 #include "nsMsgKeyArray.h"
 #include "nsUint8Array.h"
 #include "nsIDBChangeListener.h"
-#include "nsIOutlinerView.h"
-#include "nsIOutlinerBoxObject.h"
-#include "nsIOutlinerSelection.h"
+#include "nsITreeView.h"
+#include "nsITreeBoxObject.h"
+#include "nsITreeSelection.h"
 #include "nsVoidArray.h"
 #include "nsIMsgFolder.h"
 #include "nsIDateTimeFormat.h"
@@ -86,9 +86,9 @@ enum eFieldType {
 #define LABEL_COLOR_WHITE_STRING "#FFFFFF"
 
 // I think this will be an abstract implementation class.
-// The classes that implement the outliner support will probably
+// The classes that implement the tree support will probably
 // inherit from this class.
-class nsMsgDBView : public nsIMsgDBView, public nsIDBChangeListener, public nsIOutlinerView, public nsIMsgSearchNotify, public nsIObserver
+class nsMsgDBView : public nsIMsgDBView, public nsIDBChangeListener, public nsITreeView, public nsIMsgSearchNotify, public nsIObserver
 {
 public:
   nsMsgDBView();
@@ -97,7 +97,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGDBVIEW
   NS_DECL_NSIDBCHANGELISTENER
-  NS_DECL_NSIOUTLINERVIEW
+  NS_DECL_NSITREEVIEW
   NS_DECL_NSIMSGSEARCHNOTIFY
   NS_DECL_NSIOBSERVER
 
@@ -138,8 +138,8 @@ protected:
   static PRUnichar* kForwardedString;
   static PRUnichar* kNewString;
 
-  nsCOMPtr<nsIOutlinerBoxObject> mOutliner;
-  nsCOMPtr<nsIOutlinerSelection> mOutlinerSelection;
+  nsCOMPtr<nsITreeBoxObject> mTree;
+  nsCOMPtr<nsITreeSelection> mTreeSelection;
   PRUint32 mNumSelectedRows; // we cache this to determine when to push command status notifications.
   PRPackedBool   mSuppressMsgDisplay; // set when the message pane is collapsed
   PRPackedBool   mSuppressCommandUpdating;

@@ -211,15 +211,10 @@ static FrameCtorDebugFlags gFlags[] = {
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
-#include "nsTreeIndentationFrame.h"
 
-#include "nsXULTreeFrame.h"
-#include "nsXULTreeOuterGroupFrame.h"
-#include "nsXULTreeSliceFrame.h"
-#include "nsXULTreeCellFrame.h"
 #include "nsMenuFrame.h"
 #include "nsPopupSetFrame.h"
-#include "nsOutlinerColFrame.h"
+#include "nsTreeColFrame.h"
 #include "nsIBoxObject.h"
 #include "nsIListBoxObject.h"
 #include "nsListBoxBodyFrame.h"
@@ -310,13 +305,10 @@ nsresult
 NS_NewMenuBarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
-NS_NewTreeScrollPortFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
-
-nsresult
 NS_NewListBoxScrollPortFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
-NS_NewOutlinerBodyFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+NS_NewTreeBodyFrame (nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 // grid
 nsresult
@@ -329,9 +321,6 @@ nsresult
 NS_NewGridRowGroupLayout ( nsIPresShell* aPresShell, nsIBoxLayout** aNewLayout );
 nsresult
 NS_NewGridRowGroupFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot, nsIBoxLayout* aLayout);
-
-nsresult
-NS_NewTreeLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
 
 nsresult
 NS_NewListBoxLayout ( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout );
@@ -5255,14 +5244,14 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         isReplaced = PR_TRUE;
         rv = NS_NewSpringFrame(aPresShell, &newFrame);
       }
-       else if (aTag == nsXULAtoms::outlinerchildren) {
+       else if (aTag == nsXULAtoms::treechildren) {
         isReplaced = PR_TRUE;
-        rv = NS_NewOutlinerBodyFrame(aPresShell, &newFrame);
+        rv = NS_NewTreeBodyFrame(aPresShell, &newFrame);
       }
-      else if (aTag == nsXULAtoms::outlinercol) {
+      else if (aTag == nsXULAtoms::treecol) {
         isReplaced = PR_TRUE;
         processChildren = PR_TRUE;
-        rv = NS_NewOutlinerColFrame(aPresShell, &newFrame);
+        rv = NS_NewTreeColFrame(aPresShell, &newFrame);
       }
       // TEXT CONSTRUCTION
       else if (aTag == nsXULAtoms::text || aTag == nsHTMLAtoms::label ||
@@ -5341,12 +5330,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
            rv = NS_NewHTMLFrameOuterFrame(aPresShell, &newFrame);
         }
       }
-      else if (aTag == nsXULAtoms::treeindentation)
-      {
-        rv = NS_NewTreeIndentationFrame(aPresShell, &newFrame);
-      }
-      // End of TREE CONSTRUCTION code here (there's more later on in the function)
-
       // PROGRESS METER CONSTRUCTION
       else if (aTag == nsXULAtoms::progressmeter) {
         processChildren = PR_TRUE;
@@ -5404,10 +5387,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         processChildren = PR_TRUE;
         isReplaced = PR_TRUE;
 
-        if (aTag == nsXULAtoms::treecell)
-          rv = NS_NewXULTreeCellFrame(aPresShell, &newFrame);
-        else
-          rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, nsnull);
+        rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, nsnull);
 
         // Boxes can scroll.
         if (IsScrollable(aPresContext, display)) {
@@ -5429,26 +5409,12 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       // ------- Begin Grid ---------
       else if ((!aXBLBaseTag && (display->mDisplay == NS_STYLE_DISPLAY_INLINE_GRID ||
                                  display->mDisplay == NS_STYLE_DISPLAY_GRID)) ||
-                aTag == nsXULAtoms::grid || aTag == nsXULAtoms::tree) {
+                aTag == nsXULAtoms::grid) {
         processChildren = PR_TRUE;
         isReplaced = PR_TRUE;
         nsCOMPtr<nsIBoxLayout> layout;
         NS_NewGridLayout2(aPresShell, getter_AddRefs(layout));
-        if (aTag == nsXULAtoms::tree) {
-          rv = NS_NewXULTreeFrame(aPresShell, &newFrame, PR_FALSE, layout);
-          if (aXBLBaseTag) {
-            // In this scenario, someone has extended the tree with a custom
-            // tag name.  Although this is a complete and total hack, we're
-            // going to assume that the extender is simplifying the syntax
-            // of the tree and that the direct explicit children of the 
-            // tree are actually rows or items (and thus they shouldn't be
-            // built yet).
-            processChildren = PR_FALSE;
-            processAnonymousChildren = PR_TRUE;
-          }
-        }
-        else
-          rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
+        rv = NS_NewBoxFrame(aPresShell, &newFrame, PR_FALSE, layout);
 
         // Boxes can scroll.
         if (IsScrollable(aPresContext, display)) {
@@ -5474,31 +5440,14 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
         nsCOMPtr<nsIBoxLayout> layout;
       
-        PRBool treeScrollPort = PR_FALSE;
+        PRBool listboxScrollPort = PR_FALSE;
         
         if (aTag == nsXULAtoms::listboxbody) {
           NS_NewListBoxLayout(aPresShell, layout);
 
           rv = NS_NewListBoxBodyFrame(aPresShell, &newFrame, PR_FALSE, layout);
           ((nsListBoxBodyFrame*)newFrame)->InitGroup(this, aPresContext);
-          treeScrollPort = PR_TRUE;
-
-          processChildren = PR_FALSE;
-        }
-        else if (aTag == nsXULAtoms::treechildren || aTag == nsXULAtoms::treeitem) {
-          NS_NewTreeLayout(aPresShell, layout);
-
-          nsAutoString outer;
-          rv = aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::outer, outer); 
-          if (outer.EqualsIgnoreCase("true")) {
-            rv = NS_NewXULTreeOuterGroupFrame(aPresShell, &newFrame, PR_FALSE, layout);
-            ((nsXULTreeGroupFrame*)newFrame)->InitGroup(this, aPresContext, (nsXULTreeOuterGroupFrame*) newFrame);
-            treeScrollPort = PR_TRUE;
-          }
-          else {
-            rv = NS_NewXULTreeGroupFrame(aPresShell, &newFrame, PR_FALSE, layout);
-            ((nsXULTreeGroupFrame*)newFrame)->InitGroup(this, aPresContext, ((nsXULTreeGroupFrame*)aParentFrame)->GetOuterFrame());
-          }
+          listboxScrollPort = PR_TRUE;
 
           processChildren = PR_FALSE;
         }
@@ -5512,11 +5461,8 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         if (IsScrollable(aPresContext, display)) {
 
           nsIFrame* scrollPort = nsnull;
-          if (treeScrollPort) {
-            if (aTag == nsXULAtoms::listboxbody)
-              NS_NewListBoxScrollPortFrame(aPresShell, &scrollPort);
-            else
-              NS_NewTreeScrollPortFrame(aPresShell, &scrollPort);
+          if (listboxScrollPort) {
+            NS_NewListBoxScrollPortFrame(aPresShell, &scrollPort);
           }
           // set the top to be the newly created scrollframe
           BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, newFrame, aParentFrame,
@@ -5544,8 +5490,6 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
         if (aTag == nsXULAtoms::listitem)
           rv = NS_NewListItemFrame(aPresShell, &newFrame, PR_FALSE, layout);
-        else if (aTag == nsXULAtoms::treerow)
-          rv = NS_NewXULTreeSliceFrame(aPresShell, &newFrame, PR_FALSE, layout);
         else
           rv = NS_NewGridRowLeafFrame(aPresShell, &newFrame, PR_FALSE, layout);
 
@@ -5769,7 +5713,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 
   // register tooltip support if needed
   nsAutoString value;
-  if (aTag == nsXULAtoms::outlinerchildren || // outliners always need titletips
+  if (aTag == nsXULAtoms::treechildren || // trees always need titletips
       aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::tooltiptext, value) !=
         NS_CONTENT_ATTR_NOT_THERE ||
       aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::tooltip, value) !=
@@ -7989,10 +7933,10 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
     PRInt32 namespaceID;
     bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
 
-    // Just ignore outliner tags, anyway we don't create any frames for them.
-    if (tag == nsXULAtoms::outlinerchildren ||
-        tag == nsXULAtoms::outlineritem ||
-        tag == nsXULAtoms::outlinerrow)
+    // Just ignore tree tags, anyway we don't create any frames for them.
+    if (tag == nsXULAtoms::treechildren ||
+        tag == nsXULAtoms::treeitem ||
+        tag == nsXULAtoms::treerow)
       return NS_OK;
 
     // Ignore option elements inside a select (size > 1), if we are using XBL forms
@@ -8005,74 +7949,6 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
           PRInt32 err;
           if (selSize.ToInteger(&err) > 1)
             return NS_OK;
-        }
-      }
-    }
-
-    PRBool treeChildren = tag.get() == nsXULAtoms::treechildren;
-    PRBool treeItem = tag.get() == nsXULAtoms::treeitem;
-
-    if (treeChildren || treeItem) {
-      // Walk up to the outermost tree row group frame and tell it that
-      // content was added.
-      nsCOMPtr<nsIContent> content(dont_QueryInterface(aContainer));
-      while (content) {
-        bindingManager->ResolveTag(content, &namespaceID, getter_AddRefs(tag));
-        if (tag.get() == nsXULAtoms::tree) 
-          break;
-        nsCOMPtr<nsIContent> temp = content;
-        temp->GetParent(*getter_AddRefs(content));
-      }
-
-	    if (!content)
-		    return NS_OK;
-
-      nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, content);
-      if (outerFrame) {
-        // We found it.  Get the primary frame.
-        nsXULTreeFrame* tree = NS_STATIC_CAST(nsXULTreeFrame*, outerFrame);
-        
-        // Convert to a tree row group frame.
-        nsXULTreeOuterGroupFrame* treeRowGroup;
-        tree->GetTreeBody(&treeRowGroup);
-        if (treeRowGroup) {
-
-          // Get the primary frame for the parent of the child that's being added.
-          nsIFrame* innerFrame = GetFrameFor(shell, aPresContext, aContainer);
-   
-          nsBoxLayoutState state(aPresContext);
-            
-          nsXULTreeGroupFrame* innerGroup = (nsXULTreeGroupFrame*) innerFrame;
-          if (innerGroup) {
-            innerGroup->MarkDirtyChildren(state);
-          }
-          else {
-            treeRowGroup->MarkDirtyChildren(state);
-            
-            // Resolve our style context to find out if we need to clear out our
-            // undisplayed content.
-            if (treeChildren) {
-              nsCOMPtr<nsIContent> parent;
-              aContainer->GetParent(*getter_AddRefs(parent));
-              if (parent) {
-                nsAutoString open;
-                parent->GetAttr(kNameSpaceID_None, nsXULAtoms::open, open);
-                if (open.EqualsIgnoreCase("true")) {
-                  // Clear our undisplayed content.
-                  nsCOMPtr<nsIFrameManager> frameManager;
-                  shell->GetFrameManager(getter_AddRefs(frameManager));
-                  frameManager->ClearUndisplayedContentIn(aContainer, parent);
-                }
-              }
-            }
-          }
-
-          treeRowGroup->RegenerateRowGroupInfo(0);
-         
-          if (!treeRowGroup->IsBatching())
-            shell->FlushPendingNotifications(PR_FALSE);
-
-          return NS_OK;
         }
       }
     }
@@ -8621,10 +8497,10 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
     PRInt32 namespaceID;
     bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
 
-    // Just ignore outliner tags, anyway we don't create any frames for them.
-    if (tag == nsXULAtoms::outlinerchildren ||
-        tag == nsXULAtoms::outlineritem ||
-        tag == nsXULAtoms::outlinerrow)
+    // Just ignore tree tags, anyway we don't create any frames for them.
+    if (tag == nsXULAtoms::treechildren ||
+        tag == nsXULAtoms::treeitem ||
+        tag == nsXULAtoms::treerow)
       return NS_OK;
 
     // Ignore option elements inside a select (size > 1), if we are using XBL forms
@@ -8637,94 +8513,6 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
           PRInt32 err;
           if (selSize.ToInteger(&err) > 1)
             return NS_OK;
-        }
-      }
-    }
-
-    PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;
-    PRBool treeItem = tag && tag.get() == nsXULAtoms::treeitem;
-    if (treeChildren || treeItem) {
-      // Walk up to the outermost tree row group frame and tell it that
-      // content was added.
-      nsCOMPtr<nsIContent> content = dont_QueryInterface(aContainer);
-      while (content) {
-        bindingManager->ResolveTag(content, &namespaceID, getter_AddRefs(tag));
-        if (tag.get() == nsXULAtoms::tree) 
-          break;
-        nsCOMPtr<nsIContent> temp = content;
-        temp->GetParent(*getter_AddRefs(content));
-      }
-
-      if (!content)
-		    return NS_OK;
-
-      nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, content);
-      if (outerFrame) {
-        // We found it.  Get the primary frame.
-        nsXULTreeFrame* tree = NS_STATIC_CAST(nsXULTreeFrame*, outerFrame);
-        
-        // Convert to a tree row group frame.
-        nsXULTreeOuterGroupFrame* treeRowGroup;
-        tree->GetTreeBody(&treeRowGroup);
-        if (treeRowGroup) {
-          // Don't bother with the odd XBL case of anonymous content.
-          if (aIndexInContainer == -1)
-            return NS_OK;
-
-          // Get the primary frame for the parent of the child that's being added.
-          nsIFrame* innerFrame = GetFrameFor(shell, aPresContext, aContainer);
-  
-          // See if there's a previous sibling.
-          nsIFrame* prevSibling = FindPreviousSibling(shell,
-                                                       aContainer,
-                                                       aIndexInContainer);
-          if (innerFrame) {
-            // We're onscreen, but because of the fact that we can be called to
-            // "kill" a displayed frame (e.g., when you close a tree node), we
-            // have to see if this slaying is taking place.  If so, then we don't
-            // really want to do anything.  Instead we need to add our node to
-            // the undisplayed content list so that the style system will know
-            // to check it for subsequent display changes (e.g., when you next
-            // reopen).
-            nsCOMPtr<nsIStyleContext> styleContext;
-            ResolveStyleContext(aPresContext, innerFrame, aChild,
-                                getter_AddRefs(styleContext));
-
-            // Pre-check for display "none" - if we find that, don't reflow at all.
-            const nsStyleDisplay* display = (const nsStyleDisplay*)
-              styleContext->GetStyleData(eStyleStruct_Display);
-
-            // XXX: perf question: why do we build "state" here?
-            nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
-                                    GetAbsoluteContainingBlock(aPresContext, innerFrame),
-                                    GetFloaterContainingBlock(aPresContext, innerFrame),
-                                    aFrameState);
-
-            if (NS_STYLE_DISPLAY_NONE == display->mDisplay && treeItem) {
-              state.mFrameManager->SetUndisplayedContent(aChild, styleContext);
-              return NS_OK;
-            }
-          }
-
-          if (prevSibling || innerFrame) {
-            nsXULTreeGroupFrame* innerGroup = (nsXULTreeGroupFrame*) innerFrame;
-            nsBoxLayoutState state(aPresContext);
-            
-            if (innerGroup) {
-              // Good call.  Make sure a full reflow happens.
-              nsIFrame* nextSibling = FindNextSibling(shell, aContainer, aIndexInContainer);
-              if (nextSibling)
-                innerGroup->OnContentInserted(aPresContext, nextSibling, aIndexInContainer);
-              else innerGroup->MarkDirtyChildren(state);
-            }
-
-            treeRowGroup->RegenerateRowGroupInfo(0);
-            treeRowGroup->MarkDirtyChildren(state);
-          }
-
-          if (!treeRowGroup->IsBatching())
-            shell->FlushPendingNotifications(PR_FALSE);
-          return NS_OK;
         }
       }
     }
@@ -9545,10 +9333,10 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     PRInt32 namespaceID;
     bindingManager->ResolveTag(aContainer, &namespaceID, getter_AddRefs(tag));
 
-    // Just ignore outliner tags, anyway we don't create any frames for them.
-    if (tag == nsXULAtoms::outlinerchildren ||
-        tag == nsXULAtoms::outlineritem ||
-        tag == nsXULAtoms::outlinerrow)
+    // Just ignore tree tags, anyway we don't create any frames for them.
+    if (tag == nsXULAtoms::treechildren ||
+        tag == nsXULAtoms::treeitem ||
+        tag == nsXULAtoms::treerow)
       return NS_OK;
 
     // Ignore option elements inside a select (size > 1), if we are using XBL forms
@@ -9561,61 +9349,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
           PRInt32 err;
           if (selSize.ToInteger(&err) > 1)
             return NS_OK;
-        }
-      }
-    }
-
-    PRBool treeChildren = tag && tag.get() == nsXULAtoms::treechildren;
-    PRBool treeItem = tag && tag.get() == nsXULAtoms::treeitem;
-    if (treeChildren || treeItem) {
-      PRInt32 onScreenDelta = 0;
-      if (childFrame) {
-        // Convert to a tree row group frame.
-        nsIFrame* parentFrame;
-        childFrame->GetParent(&parentFrame);
-        nsXULTreeGroupFrame* treeRowGroup = (nsXULTreeGroupFrame*)parentFrame;
-        if (treeRowGroup) {
-          treeRowGroup->OnContentRemoved(aPresContext, childFrame, aIndexInContainer, onScreenDelta);
-        }
-      }
-      {
-        // Ensure that we notify the outermost row group that the item
-        // has been removed (so that we can update the scrollbar state).
-        // Walk up to the outermost tree row group frame and tell it that
-        // the scrollbar thumb should be updated.
-        nsCOMPtr<nsIContent> content = dont_QueryInterface(aContainer);
-        while (content) {
-          bindingManager->ResolveTag(content, &namespaceID, getter_AddRefs(tag));
-          if (tag.get() == nsXULAtoms::tree) 
-            break;
-          nsCOMPtr<nsIContent> temp = content;
-          temp->GetParent(*getter_AddRefs(content));
-        }
-
-        if (!content)
-		      return NS_OK;
-
-        nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, content);
-        if (outerFrame) {
-          // We found it.  Get the primary frame.
-          nsXULTreeFrame* tree = NS_STATIC_CAST(nsXULTreeFrame*, outerFrame);
-        
-          // Convert to a tree row group frame.
-          nsXULTreeOuterGroupFrame* treeRowGroup;
-          tree->GetTreeBody(&treeRowGroup);
-          if (treeRowGroup) {
-            // If a tree item is removed, try to find an item we can use
-            // to detect if the removed item was above our current scroll
-            // position.
-            treeRowGroup->RegenerateRowGroupInfo(onScreenDelta);
-            
-            nsBoxLayoutState state(aPresContext);
-            treeRowGroup->MarkDirtyChildren(state);
-
-            if (!treeRowGroup->IsBatching())
-              shell->FlushPendingNotifications(PR_FALSE);
-          }
-          return NS_OK;
         }
       }
     }
@@ -10556,7 +10289,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
   }
 
 #ifdef INCLUDE_XUL
-  // The following tree widget trap prevents offscreen tree widget
+  // The following listbox widget trap prevents offscreen listbox widget
   // content from being removed and re-inserted (which is what would
   // happen otherwise).
   if (!primaryFrame && !reframe) {
@@ -10567,10 +10300,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
     nsCOMPtr<nsIAtom> tag;
     bindingManager->ResolveTag(aContent, &namespaceID, getter_AddRefs(tag));
 
-    if (tag && (tag.get() == nsXULAtoms::treechildren ||
-      (tag.get() == nsXULAtoms::treeitem && aAttribute != nsXULAtoms::open) ||
-      tag.get() == nsXULAtoms::treerow || tag.get() == nsXULAtoms::treecell ||
-      tag.get() == nsXULAtoms::listitem || tag.get() == nsXULAtoms::listcell))
+    if (tag && (tag.get() == nsXULAtoms::listitem || tag.get() == nsXULAtoms::listcell))
       return NS_OK;
   }
 
@@ -13238,109 +12968,6 @@ nsCSSFrameConstructor::RecoverLetterFrames(nsIPresShell* aPresShell, nsIPresCont
     }
   }
   return rv;
-}
-
-//----------------------------------------------------------------------
-
-// Tree Widget Routines
-
-NS_IMETHODIMP
-nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
-                                               nsIFrame*       aParentFrame,
-                                               nsIFrame*       aPrevFrame,
-                                               nsIContent*     aChild,
-                                               nsIFrame**      aNewFrame,
-                                               PRBool          aIsAppend,
-                                               PRBool          aIsScrollbar,
-                                               nsILayoutHistoryState* aFrameState)
-{
-#ifdef INCLUDE_XUL
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  nsresult rv = NS_OK;
-
-  // Construct a new frame
-  if (nsnull != aParentFrame) {
-    nsFrameItems            frameItems;
-    nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
-                                  GetAbsoluteContainingBlock(aPresContext, aParentFrame),
-                                  GetFloaterContainingBlock(aPresContext, aParentFrame), 
-                                  mTempFrameTreeState); // XXXldb not |aFrameState|?
-
-    nsCOMPtr<nsIStyleContext> styleContext;
-    rv = ResolveStyleContext(aPresContext, aParentFrame, aChild,
-                             getter_AddRefs(styleContext));
-
-    if (NS_SUCCEEDED(rv)) {
-      // Pre-check for display "none" - only if we find that, do we create
-      // any frame at all
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-        styleContext->GetStyleData(eStyleStruct_Display);
-
-      if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
-        *aNewFrame = nsnull;
-        return NS_OK;
-      }
-    }
-
-    nsCOMPtr<nsIAtom> tag;
-    aChild->GetTag(*getter_AddRefs(tag));
-
-    PRInt32 namespaceID;
-    aChild->GetNameSpaceID(namespaceID);
-
-    rv = ConstructFrameInternal(shell, aPresContext, state, aChild, aParentFrame, tag, namespaceID, 
-                                styleContext, frameItems, PR_FALSE);
-    
-    nsIFrame* newFrame = frameItems.childList;
-    *aNewFrame = newFrame;
-
-    if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
-      nsCOMPtr<nsIBindingManager> bm;
-      mDocument->GetBindingManager(getter_AddRefs(bm));
-      bm->ProcessAttachedQueue();
-
-      // Notify the parent frame
-      if (aIsAppend)
-        rv = ((nsXULTreeGroupFrame*)aParentFrame)->TreeAppendFrames(newFrame);
-      else
-        rv = ((nsXULTreeGroupFrame*)aParentFrame)->TreeInsertFrames(aPrevFrame, newFrame);
-      // If there are new absolutely positioned child frames, then notify
-      // the parent
-      // XXX We can't just assume these frames are being appended, we need to
-      // determine where in the list they should be inserted...
-      if (state.mAbsoluteItems.childList) {
-        rv = state.mAbsoluteItems.containingBlock->AppendFrames(aPresContext, *shell,
-                                                         nsLayoutAtoms::absoluteList,
-                                                         state.mAbsoluteItems.childList);
-      }
-      
-      // If there are new fixed positioned child frames, then notify
-      // the parent
-      // XXX We can't just assume these frames are being appended, we need to
-      // determine where in the list they should be inserted...
-      if (state.mFixedItems.childList) {
-        rv = state.mFixedItems.containingBlock->AppendFrames(aPresContext, *shell,
-                                                      nsLayoutAtoms::fixedList,
-                                                      state.mFixedItems.childList);
-      }
-      
-      // If there are new floating child frames, then notify
-      // the parent
-      // XXX We can't just assume these frames are being appended, we need to
-      // determine where in the list they should be inserted...
-      if (state.mFloatedItems.childList) {
-        rv = state.mFloatedItems.containingBlock->AppendFrames(aPresContext, *shell,
-                                                    nsLayoutAtoms::floaterList,
-                                                    state.mFloatedItems.childList);
-      }
-    }
-  }
-
-  return rv;
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 //----------------------------------------------------------------------

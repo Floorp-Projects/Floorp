@@ -49,31 +49,22 @@
   
   <description>&installedThemes.label;</description>
   
-  <tree id="skinsTree" datasources="rdf:chrome" 
+  <listbox id="skinsList" datasources="rdf:chrome" 
         onselect="themeSelect();"
         ref="urn:mozilla:skin:root" rows="5">
-    <treecolgroup>
-      <treecol flex="1"/>
-    </treecolgroup>
     <template>
       <rule>
-        <treechildren>
-          <treeitem uri="..." skin="true"
-                    author="rdf:http://www.mozilla.org/rdf/chrome#author"
-                    displayName="rdf:http://www.mozilla.org/rdf/chrome#displayName"
-                    name="rdf:http://www.mozilla.org/rdf/chrome#name"
-                    description="rdf:http://www.mozilla.org/rdf/chrome#description"
-                    image="rdf:http://www.mozilla.org/rdf/chrome#image"
-          loctype="rdf:http://www.mozilla.org/rdf/chrome#locType">
-            <treerow>
-              <treecell label="rdf:http://www.mozilla.org/rdf/chrome#displayName"/>
-            </treerow>
-          </treeitem>
-        </treechildren>
+        <listitem uri="..." skin="true"
+                  label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                  author="rdf:http://www.mozilla.org/rdf/chrome#author"
+                  displayName="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                  name="rdf:http://www.mozilla.org/rdf/chrome#name"
+                  description="rdf:http://www.mozilla.org/rdf/chrome#description"
+                  image="rdf:http://www.mozilla.org/rdf/chrome#image"
+                  loctype="rdf:http://www.mozilla.org/rdf/chrome#locType"/>
       </rule>
     </template>
-    <treechildren id="theSkinKids" flex="1"/>
-  </tree>
+  </listbox>
 
   <separator class="thin"/>
   

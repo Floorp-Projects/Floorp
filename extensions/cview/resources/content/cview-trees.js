@@ -21,7 +21,7 @@
  *   Robert Ginda, rginda@netscape.com, original author
  */
 
-function initOutliners()
+function initTrees()
 {
     const ATOM_CTRID = "@mozilla.org/atom-service;1";
     const nsIAtomService = Components.interfaces.nsIAtomService;
@@ -56,11 +56,11 @@ function initOutliners()
     cview.componentView.childData.setSortColumn ("cmp-name");
     cview.componentView.childData.appendChildren (ary, true);
        
-    var outliner = document.getElementById("component-outliner");
-    outliner.outlinerBoxObject.view = cview.componentView;
+    var tree = document.getElementById("component-tree");
+    tree.treeBoxObject.view = cview.componentView;
 
-    outliner = document.getElementById("interface-outliner");
-    outliner.outlinerBoxObject.view = cview.interfaceView;
+    tree = document.getElementById("interface-tree");
+    tree.treeBoxObject.view = cview.interfaceView;
 
 }
 

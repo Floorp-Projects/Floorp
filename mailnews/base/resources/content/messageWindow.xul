@@ -119,7 +119,7 @@ Rights Reserved.
     <popup id="messagePaneContext"/>
   </popupset>
 
-  <popup id="attachmentTreeContext"/>
+  <popup id="attachmentListContext"/>
 
   <toolbox id="mailToolbarToolbox">
     <menubar id="mailMenubar"/>

@@ -20,9 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Peter Annema <disttsc@bart.nl>
- *   Blake Ross <blakeross@telocity.com>
- *   Alec Flett <alecf@netscape.com>
+ *   Blake Ross <blaker@netscape.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -39,419 +37,284 @@
  * ***** END LICENSE BLOCK ***** */
 
 // helper routines, for doing rdf-based cut/copy/paste/etc
+// this needs to be more generic!
 
-const NC_NS  = "http://home.netscape.com/NC-rdf#";
-const RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 const nsTransferable_contractid = "@mozilla.org/widget/transferable;1";
 const clipboard_contractid = "@mozilla.org/widget/clipboard;1";
 const rdf_contractid = "@mozilla.org/rdf/rdf-service;1";
-const SEPARATOR_URI = NC_NS + "BookmarkSeparator";
 const supportswstring_contractid = "@mozilla.org/supports-wstring;1";
 const rdfc_contractid = "@mozilla.org/rdf/container;1";
 
-// some oft-used interfaces
 const nsISupportsWString = Components.interfaces.nsISupportsWString;
 const nsIClipboard = Components.interfaces.nsIClipboard;
 const nsITransferable = Components.interfaces.nsITransferable;
 const nsIRDFLiteral = Components.interfaces.nsIRDFLiteral;
 const nsIRDFContainer = Components.interfaces.nsIRDFContainer;
 
-var Clipboard = Components.classes[clipboard_contractid].getService(Components.interfaces.nsIClipboard);
-var RDF = Components.classes[rdf_contractid].getService(Components.interfaces.nsIRDFService);
+var gRDF;
+var gClipboard;
 
-var nameResource = RDF.GetResource(NC_NS + "Name");
-var typeRes = RDF.GetResource(RDF_NS + "type");
-var bmTypeRes = RDF.GetResource(NC_NS + "Bookmark");
-// this is a hack for now - just assume containment
-var containment = RDF.GetResource(NC_NS + "child");
-
-function isContainer(node)
+function isContainer(tree, index)
 {
-    return node.getAttribute("container") == "true";
+  return tree.treeBoxObject.view.isContainer(index);
 }
 
-function getWStringData(wstring, len)
+function isContainerOpen(tree, index)
 {
-    wstring = wstring.QueryInterface(nsISupportsWString);
-    var result = wstring.data.substring(0, len/2);
-    return result;
+  return tree.treeBoxObject.view.isContainerOpen(index);
 }
 
 function nsTreeController_SetTransferData(transferable, flavor, text)
 {
-    if (!text) return;
-    var textData = Components.classes[supportswstring_contractid].createInstance(nsISupportsWString);
-    textData.data = text;
+  if (!text)
+    return;
+  var textData = Components.classes[supportswstring_contractid].createInstance(nsISupportsWString);
+  textData.data = text;
 
-    transferable.addDataFlavor(flavor);
-    transferable.setTransferData(flavor, textData, text.length*2);
+  transferable.addDataFlavor(flavor);
+  transferable.setTransferData(flavor, textData, text.length*2);
 }
 
-function nsTreeController_copy(tree)
+function nsTreeController_copy()
 {
-    var select_list = tree.selectedItems;
-    if (!select_list) return false;
-    if (select_list.length < 1) return false;
-    
-    var datasource = tree.database;
+  var rangeCount = this.treeSelection.getRangeCount();
+  if (rangeCount < 1)
+    return false;
+   
+  // Build a url that encodes all the select nodes 
+  // as well as their parent nodes
+  var url = "";
+  var text = "";
+  var html = "";
+  var min = new Object();
+  var max = new Object();
 
-    // Build a url that encodes all the select nodes 
-    // as well as their parent nodes
-    var url = "";
-    var text = "";
-    var html = "";
+  for (var i = rangeCount - 1; i >= 0; --i) {
+    this.treeSelection.getRangeAt(i, min, max);
+    for (var k = max.value; k >= min.value; --k) {
+      // If one of the selected items is
+      // a container, ignore it.
+      if (isContainer(this.tree, k))
+        continue;
+      var pageUrl  = this.treeView.getCellText(k, "URL");        
+      var pageName = this.treeView.getCellText(k, "Name");
 
-    for (var nodeIndex = 0; nodeIndex < select_list.length; nodeIndex++)
-    {
-        var node = select_list[nodeIndex];
-        if (!node) continue;
+      url += "ID:{" + pageUrl + "};";
+      url += "NAME:{" + pageName + "};";
 
-        // for now just use the .id attribute.. at some point we should support
-        // the #URL property for anonymous resources (see bookmarks.js)
-        //var ID = getAbsoluteID("bookmarksTree", node);
-        var ID = node.id;
-        
-        var IDRes = RDF.GetResource(ID);
+      text += pageUrl + "\r";
+      html += "<a href='" + pageUrl + "'>";
+      if (pageName) html += pageName;
+        html += "</a><p>";
+    } 
+  }
 
-        var nameNode = datasource.GetTarget(IDRes, nameResource, true);
-        nameNode =
-            nameNode.QueryInterface(nsIRDFLiteral);
-        
-        var theName = nameNode.Value;
+  if (!url)
+    return false;
 
-        url += "ID:{" + ID + "};";
-        url += "NAME:{" + theName + "};";
+  // get some useful components
+  var trans = Components.classes[nsTransferable_contractid].createInstance(nsITransferable);
+  
+  if (!gClipboard)
+    gClipboard = Components.classes[clipboard_contractid].getService(Components.interfaces.nsIClipboard);
 
-        if (isContainer(node))
-        {
-            // gack, need to generalize this
-            var type = node.getAttribute("type");
-            if (type == SEPARATOR_URI)
-            {
-                // Note: can't encode separators in text, just html
-                html += "<hr><p>";
-            }
-            else
-            {
-                text += ID + "\r";
-            
-                html += "<a href='" + ID + "'>";
-                if (theName) html += theName;
-                html += "</a><p>";
-            }
-        }
-    }
+  gClipboard.emptyClipboard(nsIClipboard.kGlobalClipboard);
 
-    if (url == "") return false;
+  this.SetTransferData(trans, "text/unicode", text);
+  this.SetTransferData(trans, "moz/bookmarkclipboarditem", url);
+  this.SetTransferData(trans, "text/html", html);
 
-    // get some useful components
-    var trans = Components.classes[nsTransferable_contractid].createInstance(nsITransferable);
-
-    Clipboard.emptyClipboard(nsIClipboard.kGlobalClipboard);
-
-    this.SetTransferData(trans, "moz/bookmarkclipboarditem", url);
-    this.SetTransferData(trans, "text/unicode", text);
-    this.SetTransferData(trans, "text/html", html);
-
-    Clipboard.setData(trans, null, nsIClipboard.kGlobalClipboard);
-    return true;
+  gClipboard.setData(trans, null, nsIClipboard.kGlobalClipboard);
+  return true;
 }
 
-function nsTreeController_cut(tree)
+function nsTreeController_cut()
 {
-    if (this.copy(tree)) {
-        this.doDelete(tree);
-        return true;            // copy succeeded, don't care if delete failed
-    } else
-        return false;           // copy failed, so did cut
+  if (this.copy()) {
+    this.doDelete();
+    return true;            // copy succeeded, don't care if delete failed
+  }
+  return false;             // copy failed, so did cut
 }
 
-function nsTreeController_paste(tree)
+function nsTreeController_selectAll()
 {
-    var select_list = tree.selectedItems;
-    if (!select_list) return false;
-    if (select_list.length != 1) return false;
-    
-    var datasource = tree.database;
-    
-    var pasteNodeID = select_list[0].id;
-    var isContainerFlag = isContainer(select_list[0]);
-
-
-    var trans_uri = "@mozilla.org/widget/transferable;1";
-    var trans = Components.classes[nsTransferable_contractid].createInstance(nsITransferable);
-    trans.addDataFlavor("moz/bookmarkclipboarditem");
-
-    Clipboard.getData(trans, nsIClipboard.kGlobalClipboard);
-    var data = new Object();
-    var dataLen = new Object();
-    trans.getTransferData("moz/bookmarkclipboarditem", data, dataLen);
-    
-    var url = getWStringData(data.value, dataLen.value);
-    if (!url) return false;
-
-    var strings = url.split(";");
-    if (!strings) return false;
-
-    var RDFC = Components.classes[rdfc_contractid].getService(nsIRDFContainer);
-    
-    var nameRes = RDF.GetResource(NC_NS + "Name");
-    if (!nameRes) return false;
-
-    pasteNodeRes = RDF.GetResource(pasteNodeID);
-    if (!pasteNodeRes) return false;
-    
-    var pasteContainerRes = null;
-    var pasteNodeIndex = -1;
-    if (isContainerFlag == true)
-    {
-        pasteContainerRes = pasteNodeRes;
-    }
-    else
-    {
-        var parID = select_list[0].parentNode.parentNode.getAttribute("ref");
-        if (!parID) {
-            parID = select_list[0].parentNode.parentNode.getAttribute("id");
-        }
-        if (!parID) return false;
-        pasteContainerRes = RDF.GetResource(parID);
-        if (!pasteContainerRes) return false;
-    }
-    RDFC.Init(datasource, pasteContainerRes);
-
-    if (isContainerFlag == false)
-    {
-        pasteNodeIndex = RDFC.IndexOf(pasteNodeRes);
-        if (pasteNodeIndex < 0) return false; // how did that happen?
-    }
-
-    var dirty = false;
-    for (var x=0; x<strings.length; x=x+2)
-    {
-        var theID = strings[x];
-        var theName = strings[x+1];
-
-        // make sure we have a real name/id combo
-        if ((theID.indexOf("ID:{") != 0) ||
-            (theName.indexOf("NAME:{") != 0))
-            continue;
-        
-        theID = theID.substr(4, theID.length-5);
-        theName = theName.substr(6, theName.length-7);
-        
-        var IDRes = RDF.GetResource(theID);
-        if (!IDRes) continue;
-        
-        if (RDFC.IndexOf(IDRes) > 0)
-        {
-            continue;
-        }
-        
-        // assert the name into the DS
-        if (theName)
-        {
-            var NameLiteral = RDF.GetLiteral(theName);
-            datasource.Assert(IDRes, nameRes, NameLiteral, true);
-            dirty = true;
-        }
-
-        // add the element at the appropriate location
-        if (isContainerFlag == true)
-        {
-            RDFC.AppendElement(IDRes);
-        }
-        else
-        {
-            RDFC.InsertElementAt(IDRes, pasteNodeIndex++, true);
-        }
-        dirty = true;
-
-            // make sure appropriate bookmark type is set
-        var bmTypeNode = datasource.GetTarget( IDRes, typeRes, true );
-        if (!bmTypeNode)
-        {
-            // set default bookmark type
-            datasource.Assert(IDRes, typeRes, bmTypeRes, true);
-        }
-    }
-    
-    if (dirty)
-    {
-        var remote = datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-        if (remote)
-        {
-            remote.Flush();
-        }
-    }
-    return true;
+  this.treeSelection.selectAll();
 }
 
-function nsTreeController_delete(tree)
-{
-    // this should eventually be a parameter to this function
-    var promptFlag = false;
-        
-    if (!tree) return false;
-    var select_list = tree.selectedItems;
-    if (!select_list) return false;
-    if (select_list.length < 1) return false;
-    
-    var datasource = tree.database;
+function nsTreeController_delete()
+{  
+  var rangeCount = this.treeSelection.getRangeCount();
+  if (rangeCount < 1)
+    return false;      
+  
+  var datasource = this.tree.database;
+  var dsEnum = datasource.GetDataSources(); 
+  dsEnum.getNext();
+  var ds = dsEnum.getNext();
 
-    if (promptFlag == true)
-    {
-        var deleteStr = '';
-        if (select_list.length == 1) {
-            deleteStr = get_localized_string("DeleteItem");
-        } else {
-            deleteStr = get_localized_string("DeleteItems");
-        }
-        var ok = confirm(deleteStr);
-        if (!ok) return false;
+  var count = this.treeSelection.count;
+  
+  // XXX 9 is a random number, just looking for a sweetspot
+  // don't want to rebuild tree content for just a few items
+  if (count > 9)
+    ds.QueryInterface(Components.interfaces.nsIBrowserHistory).startBatchUpdate();
+
+  var min = new Object(); 
+  var max = new Object();
+  var dirty = false;
+  for (var i = rangeCount - 1; i >= 0; --i) {
+    this.treeSelection.getRangeAt(i, min, max);
+    for (var k = max.value; k >= min.value; --k) {
+      if (!gRDF)
+        gRDF = Components.classes[rdf_contractid].getService(Components.interfaces.nsIRDFService);
+
+      var IDRes = this.treeBuilder.getResourceAtIndex(k);
+      if (!IDRes)
+        continue;
+
+      var root = this.tree.getAttribute('ref');
+      var parentIDRes;
+      try {
+        parentIDRes = this.treeBuilder.getResourceAtIndex(this.treeView.getParentIndex(k));
+      }
+      catch(ex) {
+        parentIDRes = gRDF.GetResource(root);
+      }
+      if (!parentIDRes)
+        continue;
+      
+      // otherwise remove the parent/child assertion then
+      var containment = gRDF.GetResource("http://home.netscape.com/NC-rdf#child");
+      ds.QueryInterface(Components.interfaces.nsIRDFDataSource).Unassert(parentIDRes, containment, IDRes);
+      dirty = true;
+    }
+  }
+
+  if (dirty) {    
+    if (count > 9) {
+      ds.QueryInterface(Components.interfaces.nsIBrowserHistory).endBatchUpdate();
+      this.tree.builder.rebuild();
     }
 
-    var RDFC = Components.classes[rdfc_contractid].getService(nsIRDFContainer);
-
-
-    var dirty = false;
-
-    // note: backwards delete so that we handle odd deletion cases such as
-    //       deleting a child of a folder as well as the folder itself
-    for (var nodeIndex=select_list.length-1; nodeIndex>=0; nodeIndex--)
-    {
-        var node = select_list[nodeIndex];
-        if (!node) continue;
-        var ID = node.id;
-        if (!ID) continue;
-
-        // XXX - make tree templates flag special folders as read-only
-        // don't allow deletion of various "special" folders
-        if ((ID == "NC:BookmarksRoot") || (ID == "NC:IEFavoritesRoot"))
-        {
-            continue;
-        }
-
-        var parentID = node.parentNode.parentNode.getAttribute("ref");
-        if (!parentID)
-            parentID = node.parentNode.parentNode.id;
-        if (!parentID) continue;
-
-        var IDRes = RDF.GetResource(ID);
-        if (!IDRes) continue;
-        var parentIDRes = RDF.GetResource(parentID);
-        if (!parentIDRes) continue;
-
-        try {
-            // first try a container-based approach
-            RDFC.Init(datasource, parentIDRes);
-            RDFC.RemoveElement(IDRes, true);
-        } catch (ex) {
-            // nope! just remove the parent/child assertion then
-            datasource.Unassert(parentIDRes, containment, IDRes);
-
-        }
-        dirty = true;
+    try {
+      var remote = datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+      remote.Flush();
+    } catch (ex) {
     }
-
-    if (dirty == true)
-    {
-        try {
-            var remote = datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-            remote.Flush();
-        } catch (ex) {
-        }
-    }
-
-    return true;
-
+  }
+  if (max.value) {
+    var newIndex = max.value - (max.value - min.value);
+    if (newIndex >= this.treeView.rowCount)
+      --newIndex;
+    this.treeSelection.select(newIndex);
+  }
+  return true;
 }
 
 function nsTreeController(tree)
 {
-    this.treeId = tree.id;
-    tree.controllers.appendController(this);
+  this._tree = tree;
+  tree.controllers.appendController(this);
 }
 
-nsTreeController.prototype =
+nsTreeController.prototype = 
 {
-    // store the tree's Id, rather than the tree,
-    // to avoid holding a strong ref
-    treeId: null,
-    getTree : function()
-    {
-        return document.getElementById(this.treeId);
-    },
-    SetTransferData : nsTreeController_SetTransferData,
+  _treeSelection: null,
+  _treeView: null,
+  _treeBuilder: null,
+  _treeBoxObject: null,
+  _tree: null,
+  get tree()
+  {
+    return this._tree;
+  },
+  get treeBoxObject()
+  {
+    if (this._treeBoxObject)
+      return this._treeBoxObject;
+    return this._treeBoxObject = this.tree.treeBoxObject;
+  },
+  get treeView()
+  {
+    if (this._treeView)
+      return this._treeView;
+    return this._treeView = this.tree.treeBoxObject.view;
+  },
+  get treeSelection()
+  {
+    if (this._treeSelection)
+      return this._treeSelection;
+    return this._treeSelection = this.tree.treeBoxObject.view.selection;
+  },
+  get treeBuilder()
+  {
+    if (this._treeBuilder)
+      return this._treeBuilder;
+    return this._treeBuilder = this.tree.builder.
+                                   QueryInterface(Components.interfaces.nsIXULTreeBuilder);
+  },
+  SetTransferData : nsTreeController_SetTransferData,
 
-    supportsCommand: function(command)
+  supportsCommand: function(command)
+  {
+    switch(command)
     {
-        switch(command)
-        {
-            case "cmd_cut":
-            case "cmd_copy":
-            case "cmd_paste":
-            case "cmd_delete":
-            case "cmd_selectAll":
-                return true;
-            default:
-                return false;
-        }
-    },
-
-    isCommandEnabled: function(command)
-    {
-        var haveCommand;
-        switch (command)
-        {
-            // commands which do not require selection
-            case "cmd_paste":
-                return (this.doPaste != undefined);
-                
-            case "cmd_selectAll":
-                // we can always select all
-                return true;
-                
-            // these commands require selection
-            case "cmd_cut":
-                haveCommand = (this.cut != undefined);
-                break;
-            case "cmd_copy":
-                haveCommand = (this.copy != undefined);
-                break;
-            case "cmd_delete":
-                haveCommand = (this.doDelete != undefined);
-                break;
-        }
-        
-        // if we get here, then we have a command that requires selection
-        var tree = this.getTree();
-        var haveSelection = (tree.selectedItems.length > 0);
-        return (haveCommand && haveSelection);
-    },
-    doCommand: function(command)
-    {
-        switch(command)
-        {
-            case "cmd_cut":
-                return this.cut(this.getTree());
-            
-            case "cmd_copy":
-                return this.copy(this.getTree());
-            
-            case "cmd_paste":
-                return this.paste(this.getTree());
-
-            case "cmd_delete":
-                return this.doDelete(this.getTree());
-            
-            case "cmd_selectAll":
-                return this.getTree().selectAll();
-        }
+      case "cmd_cut":
+      case "cmd_copy":
+      case "cmd_delete":
+      case "cmd_selectAll":
+        return true;
+      default:
         return false;
-    },
-    copy: nsTreeController_copy,
-    cut: nsTreeController_cut,
-    paste: nsTreeController_paste,
-    doDelete: nsTreeController_delete
+    }
+  },
+
+  isCommandEnabled: function(command)
+  {
+    var haveCommand;
+    switch (command)
+    {
+      // commands which do not require selection              
+      case "cmd_selectAll":
+        var treeView = this.treeView;
+        return (treeView.rowCount !=  treeView.selection.count);
+                
+      // these commands require selection
+      case "cmd_cut":
+        haveCommand = (this.cut != undefined);
+        break;
+      case "cmd_copy":
+        haveCommand = (this.copy != undefined);
+        break;
+      case "cmd_delete":
+        haveCommand = (this.doDelete != undefined);
+        break;
+    }
+        
+    // if we get here, then we have a command that requires selection
+    var haveSelection = (this.treeSelection.count);
+    return (haveCommand && haveSelection);
+  },
+
+  doCommand: function(command)
+  {
+    switch(command)
+    {
+      case "cmd_cut":
+        return this.cut();
+      case "cmd_copy":
+        return this.copy();
+      case "cmd_delete":
+        return this.doDelete();        
+      case "cmd_selectAll":
+        return this.selectAll();
+    }
+    return false;
+  },
+  copy: nsTreeController_copy,
+  cut: nsTreeController_cut,
+  doDelete: nsTreeController_delete,
+  selectAll: nsTreeController_selectAll
 }
 

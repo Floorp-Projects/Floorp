@@ -34,7 +34,7 @@
  */
 
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
-#include "nsCertOutliner.h"
+#include "nsCertTree.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
 #include "nsXPIDLString.h"
@@ -47,33 +47,33 @@ extern PRLogModuleInfo* gPIPNSSLog;
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
-// outlinerArrayElStr
+// treeArrayElStr
 //
-// structure used to hold map of outliner.  Each thread (an organization
+// structure used to hold map of tree.  Each thread (an organization
 // field from a cert) has an element in the array.  The numChildren field
 // stores the number of certs corresponding to that thread.
-struct outlinerArrayElStr {
+struct treeArrayElStr {
   PRUnichar *orgName;     /* heading for thread                   */
   PRBool     open;        /* toggle open state for thread         */
   PRInt32    certIndex;   /* index into cert array for 1st cert   */
   PRInt32    numChildren; /* number of chidren (certs) for thread */
 };
 
-NS_IMPL_ISUPPORTS2(nsCertOutliner, nsICertOutliner, nsIOutlinerView)
+NS_IMPL_ISUPPORTS2(nsCertTree, nsICertTree, nsITreeView)
 
-nsCertOutliner::nsCertOutliner() : mOutlinerArray(NULL)
+nsCertTree::nsCertTree() : mTreeArray(NULL)
 {
   NS_INIT_ISUPPORTS();
 }
 
-nsCertOutliner::~nsCertOutliner()
+nsCertTree::~nsCertTree()
 {
-  if (mOutlinerArray)
-    nsMemory::Free(mOutlinerArray);
+  if (mTreeArray)
+    nsMemory::Free(mTreeArray);
 }
 
 void
-nsCertOutliner::FreeCertArray()
+nsCertTree::FreeCertArray()
 {
   if (mCertArray) {
     PRUint32 count;
@@ -91,7 +91,7 @@ nsCertOutliner::FreeCertArray()
 // Compare two certificate by their token name.  Returns -1, 0, 1 as
 // in strcmp.  No token name (null) is treated as <.
 PRInt32
-nsCertOutliner::CmpByToken(nsIX509Cert *a, nsIX509Cert *b)
+nsCertTree::CmpByToken(nsIX509Cert *a, nsIX509Cert *b)
 {
   PRInt32 cmp1;
   nsXPIDLString aTok, bTok;
@@ -110,7 +110,7 @@ nsCertOutliner::CmpByToken(nsIX509Cert *a, nsIX509Cert *b)
 // Compare two certificates by their O= field.  Returns -1, 0, 1 as
 // in strcmp.  No organization (null) is treated as <.
 PRInt32
-nsCertOutliner::CmpByIssuerOrg(nsIX509Cert *a, nsIX509Cert *b)
+nsCertTree::CmpByIssuerOrg(nsIX509Cert *a, nsIX509Cert *b)
 {
   PRInt32 cmp1;
   nsXPIDLString aOrg, bOrg;
@@ -129,7 +129,7 @@ nsCertOutliner::CmpByIssuerOrg(nsIX509Cert *a, nsIX509Cert *b)
 // Compare two certificates by their CN= field.  Returns -1, 0, 1 as
 // in strcmp.  No common name (null) is treated as <.
 PRInt32
-nsCertOutliner::CmpByName(nsIX509Cert *a, nsIX509Cert *b)
+nsCertTree::CmpByName(nsIX509Cert *a, nsIX509Cert *b)
 {
   PRInt32 cmp1;
   nsXPIDLString aName, bName;
@@ -148,7 +148,7 @@ nsCertOutliner::CmpByName(nsIX509Cert *a, nsIX509Cert *b)
 // Compare two certificates by token name, issuer organization, 
 // and common name, in that order.  Used to sort cert list.
 PRInt32
-nsCertOutliner::CmpByTok_IssuerOrg_Name(nsIX509Cert *a, nsIX509Cert *b)
+nsCertTree::CmpByTok_IssuerOrg_Name(nsIX509Cert *a, nsIX509Cert *b)
 {
   PRInt32 cmp;
   cmp = CmpByToken(a, b);
@@ -164,7 +164,7 @@ nsCertOutliner::CmpByTok_IssuerOrg_Name(nsIX509Cert *a, nsIX509Cert *b)
 // list.  Note that the same organization of a different token is counted
 // seperately.
 PRInt32
-nsCertOutliner::CountOrganizations()
+nsCertTree::CountOrganizations()
 {
   PRUint32 i, certCount;
   nsresult rv = mCertArray->Count(&certCount);
@@ -190,19 +190,19 @@ nsCertOutliner::CountOrganizations()
 //
 // If the row at index is an organization thread, return the collection
 // associated with that thread.  Otherwise, return null.
-outlinerArrayEl *
-nsCertOutliner::GetThreadDescAtIndex(PRInt32 index)
+treeArrayEl *
+nsCertTree::GetThreadDescAtIndex(PRInt32 index)
 {
   int i, idx=0;
   if (index < 0) return nsnull;
   for (i=0; i<mNumOrgs; i++) {
     if (index == idx) {
-      return &mOutlinerArray[i];
+      return &mTreeArray[i];
     }
-    if (mOutlinerArray[i].open == PR_FALSE) {
+    if (mTreeArray[i].open == PR_FALSE) {
       idx++;
     } else {
-      idx += mOutlinerArray[i].numChildren + 1;
+      idx += mTreeArray[i].numChildren + 1;
     }
     if (idx > index) break;
   }
@@ -213,7 +213,7 @@ nsCertOutliner::GetThreadDescAtIndex(PRInt32 index)
 //
 //  If the row at index is a cert, return that cert.  Otherwise, return null.
 nsIX509Cert *
-nsCertOutliner::GetCertAtIndex(PRInt32 index)
+nsCertTree::GetCertAtIndex(PRInt32 index)
 {
   int i, idx = 0, cIndex = 0, nc;
   nsIX509Cert *rawPtr = nsnull;
@@ -222,7 +222,7 @@ nsCertOutliner::GetCertAtIndex(PRInt32 index)
   for (i=0; i<mNumOrgs; i++) {
     if (index == idx) return nsnull; // index is for thread
     idx++; // get past the thread
-    nc = (mOutlinerArray[i].open) ? mOutlinerArray[i].numChildren : 0;
+    nc = (mTreeArray[i].open) ? mTreeArray[i].numChildren : 0;
     if (index < idx + nc) { // cert is within range of this thread
       PRInt32 certIndex = cIndex + index - idx;
       nsCOMPtr<nsISupports> isupport = 
@@ -232,9 +232,9 @@ nsCertOutliner::GetCertAtIndex(PRInt32 index)
       NS_IF_ADDREF(rawPtr);
       break;
     }
-    if (mOutlinerArray[i].open)
-      idx += mOutlinerArray[i].numChildren;
-    cIndex += mOutlinerArray[i].numChildren;
+    if (mTreeArray[i].open)
+      idx += mTreeArray[i].numChildren;
+    cIndex += mTreeArray[i].numChildren;
     if (idx > index) break;
   }
   return rawPtr;
@@ -245,15 +245,15 @@ nsCertOutliner::GetCertAtIndex(PRInt32 index)
 // Load all of the certificates in the DB for this type.  Sort them
 // by token, organization, then common name.
 NS_IMETHODIMP 
-nsCertOutliner::LoadCerts(PRUint32 aType)
+nsCertTree::LoadCerts(PRUint32 aType)
 {
   nsresult rv;
   PRBool rowsChanged = PR_FALSE;
   PRInt32 numChanged = 0;
-  if (mOutlinerArray) {
+  if (mTreeArray) {
     FreeCertArray();
-    nsMemory::Free(mOutlinerArray);
-    mOutlinerArray = NULL;
+    nsMemory::Free(mTreeArray);
+    mTreeArray = NULL;
     rowsChanged = PR_TRUE;
     numChanged = mNumRows;
     mNumRows = 0;
@@ -268,21 +268,21 @@ nsCertOutliner::LoadCerts(PRUint32 aType)
   rv = mCertArray->Count(&count);
   if (NS_FAILED(rv)) return rv;
   mNumOrgs = CountOrganizations();
-  mOutlinerArray = (outlinerArrayEl *)nsMemory::Alloc(
-                                           sizeof(outlinerArrayEl) * mNumOrgs);
+  mTreeArray = (treeArrayEl *)nsMemory::Alloc(
+                                           sizeof(treeArrayEl) * mNumOrgs);
   PRUint32 j = 0;
   nsCOMPtr<nsISupports> isupport = dont_AddRef(mCertArray->ElementAt(j));
   nsCOMPtr<nsIX509Cert> orgCert = do_QueryInterface(isupport);
   for (PRInt32 i=0; i<mNumOrgs; i++) {
-    orgCert->GetIssuerOrganization(&mOutlinerArray[i].orgName);
-    mOutlinerArray[i].open = PR_TRUE;
-    mOutlinerArray[i].certIndex = j;
-    mOutlinerArray[i].numChildren = 1;
+    orgCert->GetIssuerOrganization(&mTreeArray[i].orgName);
+    mTreeArray[i].open = PR_TRUE;
+    mTreeArray[i].certIndex = j;
+    mTreeArray[i].numChildren = 1;
     if (++j >= count) break;
     isupport = dont_AddRef(mCertArray->ElementAt(j));
     nsCOMPtr<nsIX509Cert> nextCert = do_QueryInterface(isupport);
     while (CmpByIssuerOrg(orgCert, nextCert) == 0) {
-      mOutlinerArray[i].numChildren++;
+      mTreeArray[i].numChildren++;
       if (++j >= count) break;
       isupport = dont_AddRef(mCertArray->ElementAt(j));
       nextCert = do_QueryInterface(isupport);
@@ -293,20 +293,20 @@ nsCertOutliner::LoadCerts(PRUint32 aType)
   if (rowsChanged) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%d,%d]", mNumRows, numChanged));
     numChanged = mNumRows - numChanged;
-    if (mOutliner) mOutliner->RowCountChanged(0, numChanged);
+    if (mTree) mTree->RowCountChanged(0, numChanged);
   }
   return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////////////
 //
-//  Begin nsIOutlinerView methods
+//  Begin nsITreeView methods
 //
 /////////////////////////////////////////////////////////////////////////////
 
 /* nsIX509Cert getCert(in unsigned long index); */
 NS_IMETHODIMP
-nsCertOutliner::GetCert(PRUint32 aIndex, nsIX509Cert **_cert)
+nsCertTree::GetCert(PRUint32 aIndex, nsIX509Cert **_cert)
 {
   NS_ENSURE_ARG(_cert);
   *_cert = GetCertAtIndex(aIndex);
@@ -320,12 +320,12 @@ nsCertOutliner::GetCert(PRUint32 aIndex, nsIX509Cert **_cert)
 
 /* readonly attribute long rowCount; */
 NS_IMETHODIMP 
-nsCertOutliner::GetRowCount(PRInt32 *aRowCount)
+nsCertTree::GetRowCount(PRInt32 *aRowCount)
 {
   PRUint32 count = 0;
   for (PRInt32 i=0; i<mNumOrgs; i++) {
-    if (mOutlinerArray[i].open == PR_TRUE) {
-      count += mOutlinerArray[i].numChildren + 1;
+    if (mTreeArray[i].open == PR_TRUE) {
+      count += mTreeArray[i].numChildren + 1;
     } else {
       count++;
     }
@@ -334,9 +334,9 @@ nsCertOutliner::GetRowCount(PRInt32 *aRowCount)
   return NS_OK;
 }
 
-/* attribute nsIOutlinerSelection selection; */
+/* attribute nsITreeSelection selection; */
 NS_IMETHODIMP 
-nsCertOutliner::GetSelection(nsIOutlinerSelection * *aSelection)
+nsCertTree::GetSelection(nsITreeSelection * *aSelection)
 {
   *aSelection = mSelection;
   NS_IF_ADDREF(*aSelection);
@@ -344,7 +344,7 @@ nsCertOutliner::GetSelection(nsIOutlinerSelection * *aSelection)
 }
 
 NS_IMETHODIMP 
-nsCertOutliner::SetSelection(nsIOutlinerSelection * aSelection)
+nsCertTree::SetSelection(nsITreeSelection * aSelection)
 {
   mSelection = aSelection;
   return NS_OK;
@@ -352,7 +352,7 @@ nsCertOutliner::SetSelection(nsIOutlinerSelection * aSelection)
 
 /* void getRowProperties (in long index, in nsISupportsArray properties); */
 NS_IMETHODIMP 
-nsCertOutliner::GetRowProperties(PRInt32 index, nsISupportsArray *properties)
+nsCertTree::GetRowProperties(PRInt32 index, nsISupportsArray *properties)
 {
   return NS_OK;
 }
@@ -361,7 +361,7 @@ nsCertOutliner::GetRowProperties(PRInt32 index, nsISupportsArray *properties)
  *                           in nsISupportsArray properties); 
  */
 NS_IMETHODIMP 
-nsCertOutliner::GetCellProperties(PRInt32 row, const PRUnichar *colID, 
+nsCertTree::GetCellProperties(PRInt32 row, const PRUnichar *colID, 
                                   nsISupportsArray *properties)
 {
   return NS_OK;
@@ -372,7 +372,7 @@ nsCertOutliner::GetCellProperties(PRInt32 row, const PRUnichar *colID,
  *                           in nsISupportsArray properties); 
  */
 NS_IMETHODIMP 
-nsCertOutliner::GetColumnProperties(const PRUnichar *colID, 
+nsCertTree::GetColumnProperties(const PRUnichar *colID, 
                                     nsIDOMElement *colElt, 
                                     nsISupportsArray *properties)
 {
@@ -381,9 +381,9 @@ nsCertOutliner::GetColumnProperties(const PRUnichar *colID,
 
 /* boolean isContainer (in long index); */
 NS_IMETHODIMP 
-nsCertOutliner::IsContainer(PRInt32 index, PRBool *_retval)
+nsCertTree::IsContainer(PRInt32 index, PRBool *_retval)
 {
-  outlinerArrayEl *el = GetThreadDescAtIndex(index);
+  treeArrayEl *el = GetThreadDescAtIndex(index);
   if (el) {
     *_retval = PR_TRUE;
   } else {
@@ -394,9 +394,9 @@ nsCertOutliner::IsContainer(PRInt32 index, PRBool *_retval)
 
 /* boolean isContainerOpen (in long index); */
 NS_IMETHODIMP 
-nsCertOutliner::IsContainerOpen(PRInt32 index, PRBool *_retval)
+nsCertTree::IsContainerOpen(PRInt32 index, PRBool *_retval)
 {
-  outlinerArrayEl *el = GetThreadDescAtIndex(index);
+  treeArrayEl *el = GetThreadDescAtIndex(index);
   if (el && el->open == PR_TRUE) {
     *_retval = PR_TRUE;
   } else {
@@ -407,7 +407,7 @@ nsCertOutliner::IsContainerOpen(PRInt32 index, PRBool *_retval)
 
 /* boolean isContainerEmpty (in long index); */
 NS_IMETHODIMP 
-nsCertOutliner::IsContainerEmpty(PRInt32 index, PRBool *_retval)
+nsCertTree::IsContainerEmpty(PRInt32 index, PRBool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
@@ -415,7 +415,7 @@ nsCertOutliner::IsContainerEmpty(PRInt32 index, PRBool *_retval)
 
 /* boolean isSeparator (in long index); */
 NS_IMETHODIMP 
-nsCertOutliner::IsSeparator(PRInt32 index, PRBool *_retval)
+nsCertTree::IsSeparator(PRInt32 index, PRBool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
@@ -423,16 +423,16 @@ nsCertOutliner::IsSeparator(PRInt32 index, PRBool *_retval)
 
 /* long getParentIndex (in long rowIndex); */
 NS_IMETHODIMP 
-nsCertOutliner::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
+nsCertTree::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
 {
   int i, idx = 0;
   for (i=0; i<mNumOrgs; i++) {
     if (rowIndex == idx) break; // index is for thread
-    if (rowIndex < idx + mOutlinerArray[i].numChildren + 1) {
+    if (rowIndex < idx + mTreeArray[i].numChildren + 1) {
       *_retval = idx;
       return NS_OK;
     }
-    idx += mOutlinerArray[i].numChildren + 1;
+    idx += mTreeArray[i].numChildren + 1;
     if (idx > rowIndex) break;
   }
   *_retval = -1;
@@ -441,7 +441,7 @@ nsCertOutliner::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
 
 /* boolean hasNextSibling (in long rowIndex, in long afterIndex); */
 NS_IMETHODIMP 
-nsCertOutliner::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, 
+nsCertTree::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, 
                                PRBool *_retval)
 {
   *_retval = PR_FALSE;
@@ -450,9 +450,9 @@ nsCertOutliner::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex,
 
 /* long getLevel (in long index); */
 NS_IMETHODIMP 
-nsCertOutliner::GetLevel(PRInt32 index, PRInt32 *_retval)
+nsCertTree::GetLevel(PRInt32 index, PRInt32 *_retval)
 {
-  outlinerArrayEl *el = GetThreadDescAtIndex(index);
+  treeArrayEl *el = GetThreadDescAtIndex(index);
   if (el) {
     *_retval = 0;
   } else {
@@ -461,15 +461,38 @@ nsCertOutliner::GetLevel(PRInt32 index, PRInt32 *_retval)
   return NS_OK;
 }
 
-/* wstring getCellText (in long row, in wstring colID); */
+/* Astring getImageSrc (in long row, in wstring colID); */
 NS_IMETHODIMP 
-nsCertOutliner::GetCellText(PRInt32 row, const PRUnichar *colID, 
+nsCertTree::GetImageSrc(PRInt32 row, const PRUnichar *colID, 
                             nsAString& _retval)
+{
+  return NS_OK;
+}
+
+/* long getProgressMode (in long row, in wstring colID); */
+NS_IMETHODIMP
+nsCertTree::GetProgressMode(PRInt32 row, const PRUnichar *colID, PRInt32* _retval)
+{
+  return NS_OK;
+}
+
+/* Astring getCellValue (in long row, in wstring colID); */
+NS_IMETHODIMP 
+nsCertTree::GetCellValue(PRInt32 row, const PRUnichar *colID, 
+                             nsAString& _retval)
+{
+  return NS_OK;
+}
+
+/* Astring getCellText (in long row, in wstring colID); */
+NS_IMETHODIMP 
+nsCertTree::GetCellText(PRInt32 row, const PRUnichar *colID, 
+                        nsAString& _retval)
 {
   nsresult rv;
   NS_ConvertUCS2toUTF8 aUtf8ColID(colID);
   const char *col = aUtf8ColID.get();
-  outlinerArrayEl *el = GetThreadDescAtIndex(row);
+  treeArrayEl *el = GetThreadDescAtIndex(row);
   if (el != nsnull) {
     if (strcmp(col, "certcol") == 0)
       _retval.Assign(el->orgName);
@@ -565,50 +588,50 @@ nsCertOutliner::GetCellText(PRInt32 row, const PRUnichar *colID,
   return rv;
 }
 
-/* void setOutliner (in nsIOutlinerBoxObject outliner); */
+/* void setTree (in nsITreeBoxObject tree); */
 NS_IMETHODIMP 
-nsCertOutliner::SetOutliner(nsIOutlinerBoxObject *outliner)
+nsCertTree::SetTree(nsITreeBoxObject *tree)
 {
-  mOutliner = outliner;
+  mTree = tree;
   return NS_OK;
 }
 
 /* void toggleOpenState (in long index); */
 NS_IMETHODIMP 
-nsCertOutliner::ToggleOpenState(PRInt32 index)
+nsCertTree::ToggleOpenState(PRInt32 index)
 {
-  outlinerArrayEl *el = GetThreadDescAtIndex(index);
+  treeArrayEl *el = GetThreadDescAtIndex(index);
   if (el) el->open = !el->open;
   PRInt32 fac = (el->open) ? 1 : -1;
-  if (mOutliner) mOutliner->RowCountChanged(index, fac * el->numChildren);
+  if (mTree) mTree->RowCountChanged(index, fac * el->numChildren);
   mSelection->Select(index);
   return NS_OK;
 }
 
 /* void cycleHeader (in wstring colID, in nsIDOMElement elt); */
 NS_IMETHODIMP 
-nsCertOutliner::CycleHeader(const PRUnichar *colID, nsIDOMElement *elt)
+nsCertTree::CycleHeader(const PRUnichar *colID, nsIDOMElement *elt)
 {
   return NS_OK;
 }
 
 /* void selectionChanged (); */
 NS_IMETHODIMP 
-nsCertOutliner::SelectionChanged()
+nsCertTree::SelectionChanged()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* void cycleCell (in long row, in wstring colID); */
 NS_IMETHODIMP 
-nsCertOutliner::CycleCell(PRInt32 row, const PRUnichar *colID)
+nsCertTree::CycleCell(PRInt32 row, const PRUnichar *colID)
 {
   return NS_OK;
 }
 
 /* boolean isEditable (in long row, in wstring colID); */
 NS_IMETHODIMP 
-nsCertOutliner::IsEditable(PRInt32 row, const PRUnichar *colID, PRBool *_retval)
+nsCertTree::IsEditable(PRInt32 row, const PRUnichar *colID, PRBool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;
@@ -616,7 +639,7 @@ nsCertOutliner::IsEditable(PRInt32 row, const PRUnichar *colID, PRBool *_retval)
 
 /* void setCellText (in long row, in wstring colID, in wstring value); */
 NS_IMETHODIMP 
-nsCertOutliner::SetCellText(PRInt32 row, const PRUnichar *colID, 
+nsCertTree::SetCellText(PRInt32 row, const PRUnichar *colID, 
                             const PRUnichar *value)
 {
   return NS_OK;
@@ -624,14 +647,14 @@ nsCertOutliner::SetCellText(PRInt32 row, const PRUnichar *colID,
 
 /* void performAction (in wstring action); */
 NS_IMETHODIMP 
-nsCertOutliner::PerformAction(const PRUnichar *action)
+nsCertTree::PerformAction(const PRUnichar *action)
 {
   return NS_OK;
 }
 
 /* void performActionOnRow (in wstring action, in long row); */
 NS_IMETHODIMP 
-nsCertOutliner::PerformActionOnRow(const PRUnichar *action, PRInt32 row)
+nsCertTree::PerformActionOnRow(const PRUnichar *action, PRInt32 row)
 {
   return NS_OK;
 }
@@ -640,25 +663,25 @@ nsCertOutliner::PerformActionOnRow(const PRUnichar *action, PRInt32 row)
  *                           in wstring colID); 
  */
 NS_IMETHODIMP 
-nsCertOutliner::PerformActionOnCell(const PRUnichar *action, PRInt32 row, 
+nsCertTree::PerformActionOnCell(const PRUnichar *action, PRInt32 row, 
                                     const PRUnichar *colID)
 {
   return NS_OK;
 }
 
-#ifdef DEBUG_CERT_OUTLINER
+#ifdef DEBUG_CERT_TREE
 void
-nsCertOutliner::dumpMap()
+nsCertTree::dumpMap()
 {
   for (int i=0; i<mNumOrgs; i++) {
-    nsAutoString org(mOutlinerArray[i].orgName);
+    nsAutoString org(mTreeArray[i].orgName);
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("ORG[%s]", NS_LossyConvertUCS2toASCII(org).get()));
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("OPEN[%d]", mOutlinerArray[i].open));
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("INDEX[%d]", mOutlinerArray[i].certIndex));
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NCHILD[%d]", mOutlinerArray[i].numChildren));
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("OPEN[%d]", mTreeArray[i].open));
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("INDEX[%d]", mTreeArray[i].certIndex));
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NCHILD[%d]", mTreeArray[i].numChildren));
   }
   for (int i=0; i<mNumRows; i++) {
-    outlinerArrayEl *el = GetThreadDescAtIndex(i);
+    treeArrayEl *el = GetThreadDescAtIndex(i);
     if (el != nsnull) {
       nsAutoString td(el->orgName);
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("thread desc[%d]: %s", i, NS_LossyConvertUCS2toASCII(td).get()));
@@ -679,7 +702,7 @@ nsCertOutliner::dumpMap()
 //
 // Can't drop on the thread pane.
 //
-NS_IMETHODIMP nsCertOutliner::CanDropOn(PRInt32 index, PRBool *_retval)
+NS_IMETHODIMP nsCertTree::CanDropOn(PRInt32 index, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -692,7 +715,7 @@ NS_IMETHODIMP nsCertOutliner::CanDropOn(PRInt32 index, PRBool *_retval)
 //
 // Can't drop on the thread pane.
 //
-NS_IMETHODIMP nsCertOutliner::CanDropBeforeAfter(PRInt32 index, PRBool before, PRBool *_retval)
+NS_IMETHODIMP nsCertTree::CanDropBeforeAfter(PRInt32 index, PRBool before, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = PR_FALSE;
@@ -706,7 +729,7 @@ NS_IMETHODIMP nsCertOutliner::CanDropBeforeAfter(PRInt32 index, PRBool before, P
 //
 // Can't drop on the thread pane.
 //
-NS_IMETHODIMP nsCertOutliner::Drop(PRInt32 row, PRInt32 orient)
+NS_IMETHODIMP nsCertTree::Drop(PRInt32 row, PRInt32 orient)
 {
   return NS_OK;
 }
@@ -717,7 +740,7 @@ NS_IMETHODIMP nsCertOutliner::Drop(PRInt32 row, PRInt32 orient)
 //
 // ...
 //
-NS_IMETHODIMP nsCertOutliner::IsSorted(PRBool *_retval)
+NS_IMETHODIMP nsCertTree::IsSorted(PRBool *_retval)
 {
   *_retval = PR_FALSE;
   return NS_OK;

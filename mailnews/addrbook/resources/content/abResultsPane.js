@@ -42,13 +42,13 @@ function AbResultsPaneOnClick(event)
     // all we need to worry about here is double clicks
     // and column header clicks.
     //
-    // we get in here for clicks on the "outlinercol" (headers)
+    // we get in here for clicks on the "treecol" (headers)
     // and the "scrollbarbutton" (scrollbar buttons)
     // we don't want those events to cause a "double click"
 
     var t = event.originalTarget;
 
-    if (t.localName == "outlinercol") {
+    if (t.localName == "treecol") {
       var sortDirection = kDefaultDescending;
 
       if (gAbView) {
@@ -63,14 +63,14 @@ function AbResultsPaneOnClick(event)
       }
       SortAndUpdateIndicators(t.id, sortDirection);
     }
-    else if (t.localName == "outlinerchildren") {
+    else if (t.localName == "treechildren") {
        var row = new Object;
        var colID = new Object;
        var childElt = new Object;
 
-       var outliner = GetAbResultsOutliner();
+       var tree = GetAbResultsTree();
        // figure out what cell the click was in
-       outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).getCellAt(event.clientX, event.clientY, row, colID, childElt);
+       tree.treeBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
        if (row.value == -1)
          return;
 

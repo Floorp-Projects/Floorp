@@ -41,7 +41,7 @@
 #include "nsMsgDBView.h"
 
 // this class should probably inherit from the class that
-// implements the outliner. Since I don't know what that is yet,
+// implements the tree. Since I don't know what that is yet,
 // I'll just make it inherit from nsMsgDBView for now.
 class nsMsgThreadedDBView : public nsMsgDBView
 {

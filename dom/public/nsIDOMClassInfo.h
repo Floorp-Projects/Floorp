@@ -178,8 +178,8 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_XULAttr_id,
   eDOMClassInfo_XULControllers_id,
   eDOMClassInfo_BoxObject_id,
-  eDOMClassInfo_OutlinerSelection_id,
-  eDOMClassInfo_OutlinerContentView_id,
+  eDOMClassInfo_TreeSelection_id,
+  eDOMClassInfo_TreeContentView_id,
 
   // Crypto classes
   eDOMClassInfo_Crypto_id,

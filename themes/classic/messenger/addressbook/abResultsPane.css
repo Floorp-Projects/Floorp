@@ -37,13 +37,13 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-outlinerchildren:-moz-outliner-image(GeneratedName) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(GeneratedName) {
+  margin-right: 2px;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/abcard.gif");
 }
 
-outlinerchildren:-moz-outliner-image(GeneratedName, MailList) {
-  padding-right: 2px;
+treechildren:-moz-tree-image(GeneratedName, MailList) {
+  margin-right: 2px;
   list-style-image: url("chrome://messenger/skin/addressbook/icons/ablist.gif");
 }
 

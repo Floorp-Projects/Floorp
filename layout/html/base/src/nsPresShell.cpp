@@ -153,8 +153,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIBindingManager.h"
 #include "nsIMenuFrame.h"
-#include "nsITreeFrame.h"
-#include "nsIOutlinerBoxObject.h"
+#include "nsITreeBoxObject.h"
 #include "nsIXBLBinding.h"
 #include "nsPlaceholderFrame.h"
 
@@ -5263,25 +5262,17 @@ BuildFramechangeList(nsIFrame *aFrame, void *aClosure)
     }
   }
 
-  nsCOMPtr<nsITreeFrame> treeFrame(do_QueryInterface(aFrame));
-  if (treeFrame) {
-    // Trees are problematic.  Always flush them out on a skin switch.
-    nsCOMPtr<nsIContent> content;
-    aFrame->GetContent(getter_AddRefs(content));
-    changeList->AppendChange(aFrame, content, NS_STYLE_HINT_FRAMECHANGE);
-    return PR_FALSE;
-  }
   return PR_TRUE;
 }
 
 PR_STATIC_CALLBACK(PRBool)
-ReResolveMenusAndOutliners(nsIFrame *aFrame, void *aClosure)
+ReResolveMenusAndTrees(nsIFrame *aFrame, void *aClosure)
 {
-  // Outliners have a special style cache that needs to be flushed when
+  // Trees have a special style cache that needs to be flushed when
   // the theme changes.
-  nsCOMPtr<nsIOutlinerBoxObject> outlinerBox(do_QueryInterface(aFrame));
-  if (outlinerBox)
-    outlinerBox->ClearStyleAndImageCaches();
+  nsCOMPtr<nsITreeBoxObject> treeBox(do_QueryInterface(aFrame));
+  if (treeBox)
+    treeBox->ClearStyleAndImageCaches();
 
   // We deliberately don't re-resolve style on a menu's popup
   // sub-content, since doing so slows menus to a crawl.  That means we
@@ -5388,7 +5379,7 @@ PresShell::ReconstructStyleData(PRBool aRebuildRuleTree)
     if (aRebuildRuleTree) {
       GetRootFrame(&rootFrame);
       WalkFramesThroughPlaceholders(mPresContext, rootFrame,
-                                    &ReResolveMenusAndOutliners, nsnull);
+                                    &ReResolveMenusAndTrees, nsnull);
     }
   }
 

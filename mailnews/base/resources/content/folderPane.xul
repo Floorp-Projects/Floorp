@@ -21,7 +21,7 @@
 
  Contributor(s):
    Jan Varga <varga@utcru.sk>
-   Håkan Waara <hwaara@chello.se>
+   Hkan Waara <hwaara@chello.se>
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/folderPane.css" type="text/css"?>
@@ -31,16 +31,16 @@
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <outliner id="folderOutliner" class="plain" flex="1" seltype="single"
+  <tree id="folderTree" class="plain" flex="1" seltype="single"
             datasources="rdf:null"
             statedatasource="rdf:mailnewsfolders"
             flags="dont-build-content"
-            ondraggesture="BeginDragFolderOutliner(event);"
+            ondraggesture="BeginDragFolderTree(event);"
             onselect="FolderPaneSelectionChange();">
     <template>
       <rule>
         <conditions>
-          <outlineritem uri="?container"/>
+          <treeitem uri="?container"/>
           <member container="?container" child="?member" />
         </conditions>
 
@@ -93,24 +93,24 @@
         </bindings>
 
         <action>
-          <outlinerchildren>
-            <outlineritem uri="?member">
-              <outlinerrow>
-                <outlinercell id="folderNameCell"
+          <treechildren>
+            <treeitem uri="?member">
+              <treerow>
+                <treecell id="folderNameCell"
                               label="?folderTreeName"
                               properties="specialFolder-?specialFolder biffState-?biffState isServer-?isServer newMessages-?newMessages hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages isSecure-?isSecure serverType-?serverType noSelect-?noSelect imapShared-?imapShared"/>
-                <outlinercell label="?unreadCount"
+                <treecell label="?unreadCount"
                               properties="hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages"/>
-                <outlinercell label="?totalCount"
+                <treecell label="?totalCount"
                               properties="hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages"/>
-              </outlinerrow>
-            </outlineritem>
-          </outlinerchildren>
+              </treerow>
+            </treeitem>
+          </treechildren>
         </action>
       </rule>
     </template>
-    <outlinercols>
-      <outlinercol id="folderNameCol"
+    <treecols>
+      <treecol id="folderNameCol"
                    flex="5"
                    label="&nameColumn.label;"
                    crop="center"
@@ -119,15 +119,15 @@
                    primary="true"
                    sort="?folderTreeNameSort"/>
       <splitter class="tree-splitter"/>
-      <outlinercol id="folderUnreadCol"
+      <treecol id="folderUnreadCol"
                    persist="hidden width"
                    flex="1"
                    label="&unreadColumn.label;"/>
       <splitter class="tree-splitter"/>
-      <outlinercol id="folderTotalCol"
+      <treecol id="folderTotalCol"
                    persist="hidden width"
                    flex="1"
                    label="&totalColumn.label;"/>
-    </outlinercols>
-  </outliner>
+    </treecols>
+  </tree>
 </overlay>

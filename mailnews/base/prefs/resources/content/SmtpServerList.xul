@@ -44,12 +44,8 @@
 <separator class="thin"/>
 
 <hbox>
-  <tree id="smtpTree" onselect="onSelectionChange(event);" flex="1" style="height: 0px;">
-    <treecolgroup>
-      <treecol flex="1"/>
-    </treecolgroup>
-    <treechildren id="smtpTreeChildren" flex="1"/>
-  </tree>
+  <listbox id="smtpList" onselect="onSelectionChange(event);" flex="1" style="height: 0px;"/>
+
   <vbox>
     <button id="addButton"
        oncommand="onAdd(event);" label="&smtpListAdd.label;"/>

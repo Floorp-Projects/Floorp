@@ -72,13 +72,13 @@
 </groupbox>  
 <spacer flex="1" /></hbox>
 
-<outliner id="out" flex="1" onselect="sel_change()">
-  <outlinercols>
-    <outlinercol id="name" label="Name" flex="1"/>
-    <outlinercol id="purp" label="Purpose" flex="2"/>
-    <outlinercol id="comm" label="Comment" flex="1"/>
-  </outlinercols>
-  <outlinerchildren/>
-</outliner>
+<tree id="out" flex="1" onselect="sel_change()">
+  <treecols>
+    <treecol id="name" label="Name" flex="1"/>
+    <treecol id="purp" label="Purpose" flex="2"/>
+    <treecol id="comm" label="Comment" flex="1"/>
+  </treecols>
+  <treechildren/>
+</tree>
 
 </window>

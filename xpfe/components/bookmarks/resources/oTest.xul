@@ -5,7 +5,7 @@
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
-<window id="bookmarksOutlinerTest" width="640" height="480"
+<window id="bookmarksTreeTest" width="640" height="480"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         orient="vertical"
@@ -55,15 +55,15 @@
 
     function Startup()
     {
-      var outliner = document.getElementById("tree");
-      var builder = outliner.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
+      var tree = document.getElementById("tree");
+      var builder = tree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
       builder.addObserver(bookmarksBuilderObserver);
     }
 
     function getItemRect(aEvent)
     {
-      var outliner = document.getElementById("outliner-proper");
-      var obo = outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);  
+      var tree = document.getElementById("tree-proper");
+      var obo = tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);  
       var row = { };
       var col = { };
       var elt = { };
@@ -81,21 +81,21 @@
     const kRDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
     function createContextMenu (aEvent)
     {
-      var outliner = document.getElementById("outliner-proper");
-      var obo = outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
+      var tree = document.getElementById("tree-proper");
+      var obo = tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);
       var row = { };
       var col = { };
       var elt = { };
       obo.getCellAt(aEvent.clientX, aEvent.clientY, row, col, elt);
       dump("*** row.value = " + row.value + "\n") 
       
-      var outlinerBody = document.getElementById("tree");
-      var rowResource = outlinerBody.builder.getResourceAtIndex(row.value);
+      var treeBody = document.getElementById("tree");
+      var rowResource = treeBody.builder.getResourceAtIndex(row.value);
       
       const kRDFSvcContractID = "@mozilla.org/rdf/rdf-service;1";
       const kRDFSvcIID = Components.interfaces.nsIRDFService;
       const kRDFSvc = Components.classes[kRDFSvcContractID].getService(kRDFSvcIID);
-      var database = outlinerBody.database;
+      var database = treeBody.database;
 
       const krType = kRDFSvc.GetResource(kRDF_NS + "type");
       var typeNode = kDatabase.GetTarget(rowResource, krType, true);
@@ -105,9 +105,6 @@
     }
   ]]>
   </script>
-
-  <!-- tooltips -->
-  <popupset id="aTooltipSet"/>
 
   <popupset id="contextSet">
     <popup id="bookmarkContextMenu" onpopupshowing="createContextMenu(event);"/>
@@ -126,10 +123,10 @@
     </bulletinboard>  
   </stack>
 
-  <outliner flex="1" flags="dont-test-empty" id="outliner-proper">
-    <outlinercols>
-      <outlinercol id="NameColumn"
-                   class="outlinercol-header outlinercol-inset-header sortDirectionIndicator"
+  <tree flex="1" flags="dont-test-empty" id="tree-proper">
+    <treecols>
+      <treecol id="NameColumn"
+                   class="treecol-header treecol-inset-header sortDirectionIndicator"
                    flex="1"
                    sort="rdf:http://home.netscape.com/NC-rdf#Name"
                    sortActive="true"
@@ -139,27 +136,27 @@
 
       <splitter class="tree-splitter"/>
 
-      <outlinercol id="URLColumn"
-                   class="outlinercol-header outlinercol-inset-header sortDirectionIndicator"
+      <treecol id="URLColumn"
+                   class="treecol-header treecol-inset-header sortDirectionIndicator"
                    flex="1"
                    sort="rdf:http://home.netscape.com/NC-rdf#URL"
                    label="Location"
                    persist="width hidden sortActive sortDirection" />
-    </outlinercols>
+    </treecols>
 
-    <outlinerbody id="tree" datasources="rdf:bookmarks rdf:internetsearch rdf:files" flex="1"
+    <treebody id="tree" datasources="rdf:bookmarks rdf:internetsearch rdf:files" flex="1"
                   onclick="getItemRect(event);" ref="NC:BookmarksRoot">
       <template>
-        <outlinerrow uri="rdf:*" properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading">
-          <outlinercell ref="NameColumn"
+        <treerow uri="rdf:*" properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading">
+          <treecell ref="NameColumn"
                         label="rdf:http://home.netscape.com/NC-rdf#Name" />
 
-          <outlinercell ref="URLColumn"
+          <treecell ref="URLColumn"
                         label="rdf:http://home.netscape.com/NC-rdf#URL" />
-        </outlinerrow>
+        </treerow>
       </template>
-    </outlinerbody>
-  </outliner>
+    </treebody>
+  </tree>
 
 </window>
 

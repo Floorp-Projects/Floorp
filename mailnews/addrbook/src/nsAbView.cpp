@@ -65,7 +65,7 @@
 
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 
-NS_IMPL_ISUPPORTS4(nsAbView, nsIAbView, nsIOutlinerView, nsIAbListener, nsIObserver);
+NS_IMPL_ISUPPORTS4(nsAbView, nsIAbView, nsITreeView, nsIAbListener, nsIObserver);
 
 nsAbView::nsAbView()
 {
@@ -90,8 +90,8 @@ NS_IMETHODIMP nsAbView::Close()
   mURI = "";
   mDirectory = nsnull;
   mAbViewListener = nsnull;
-  mOutliner = nsnull;
-  mOutlinerSelection = nsnull;
+  mTree = nsnull;
+  mTreeSelection = nsnull;
 
   nsresult rv = NS_OK;
 
@@ -318,15 +318,15 @@ NS_IMETHODIMP nsAbView::GetRowCount(PRInt32 *aRowCount)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAbView::GetSelection(nsIOutlinerSelection * *aSelection)
+NS_IMETHODIMP nsAbView::GetSelection(nsITreeSelection * *aSelection)
 {
-  NS_IF_ADDREF(*aSelection = mOutlinerSelection);
+  NS_IF_ADDREF(*aSelection = mTreeSelection);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAbView::SetSelection(nsIOutlinerSelection * aSelection)
+NS_IMETHODIMP nsAbView::SetSelection(nsITreeSelection * aSelection)
 {
-  mOutlinerSelection = aSelection;
+  mTreeSelection = aSelection;
   return NS_OK;
 }
 
@@ -409,7 +409,7 @@ NS_IMETHODIMP nsAbView::Drop(PRInt32 row, PRInt32 orientation)
 
 NS_IMETHODIMP nsAbView::GetParentIndex(PRInt32 rowIndex, PRInt32 *_retval)
 {
-  *_retval = 0;
+  *_retval = -1;
   return NS_OK;
 }
 
@@ -421,6 +421,21 @@ NS_IMETHODIMP nsAbView::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, PRB
 NS_IMETHODIMP nsAbView::GetLevel(PRInt32 index, PRInt32 *_retval)
 {
   *_retval = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbView::GetImageSrc(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbView::GetProgressMode(PRInt32 row, const PRUnichar *colID, PRInt32* _retval)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsAbView::GetCellValue(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
+{
   return NS_OK;
 }
 
@@ -461,9 +476,9 @@ NS_IMETHODIMP nsAbView::GetCellText(PRInt32 row, const PRUnichar *colID, nsAStri
   return rv;
 }
 
-NS_IMETHODIMP nsAbView::SetOutliner(nsIOutlinerBoxObject *outliner)
+NS_IMETHODIMP nsAbView::SetTree(nsITreeBoxObject *tree)
 {
-  mOutliner = outliner;
+  mTree = tree;
   return NS_OK;
 }
 
@@ -477,15 +492,15 @@ NS_IMETHODIMP nsAbView::CycleHeader(const PRUnichar *colID, nsIDOMElement *elt)
   return NS_OK;
 }
 
-nsresult nsAbView::InvalidateOutliner(PRInt32 row)
+nsresult nsAbView::InvalidateTree(PRInt32 row)
 {
-  if (!mOutliner)
+  if (!mTree)
     return NS_OK;
   
   if (row == ALL_ROWS)
-    return mOutliner->Invalidate();
+    return mTree->Invalidate();
   else
-    return mOutliner->InvalidateRow(row);
+    return mTree->InvalidateRow(row);
 }
 
 NS_IMETHODIMP nsAbView::SelectionChanged()
@@ -653,10 +668,10 @@ NS_IMETHODIMP nsAbView::SortBy(const PRUnichar *colID, const PRUnichar *sortDir)
 
     nsCOMPtr<nsIAbCard> indexCard;
 
-    if (mOutlinerSelection) {
+    if (mTreeSelection) {
       PRInt32 currentIndex = -1;
 
-      rv = mOutlinerSelection->GetCurrentIndex(&currentIndex);
+      rv = mTreeSelection->GetCurrentIndex(&currentIndex);
       NS_ENSURE_SUCCESS(rv,rv);
 
       if (currentIndex != -1) {
@@ -674,7 +689,7 @@ NS_IMETHODIMP nsAbView::SortBy(const PRUnichar *colID, const PRUnichar *sortDir)
     mSortDirection = sortDirection.get();
   }
 
-  rv = InvalidateOutliner(ALL_ROWS);
+  rv = InvalidateTree(ALL_ROWS);
   NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }
@@ -819,7 +834,7 @@ NS_IMETHODIMP nsAbView::Observe(nsISupports *aSubject, const char *aTopic, const
         rv = SortBy(mSortColumn.get(), mSortDirection.get());
       }
       else {
-        rv = InvalidateOutliner(ALL_ROWS);
+        rv = InvalidateTree(ALL_ROWS);
       }
       NS_ENSURE_SUCCESS(rv,rv);
     }
@@ -837,12 +852,12 @@ nsresult nsAbView::AddCard(AbCard *abcard, PRBool selectCardAfterAdding, PRInt32
   NS_ENSURE_SUCCESS(rv,rv);
     
   // this needs to happen after we insert the card, as RowCountChanged() will call GetRowCount()
-  if (mOutliner)
-    rv = mOutliner->RowCountChanged(*index, 1);
+  if (mTree)
+    rv = mTree->RowCountChanged(*index, 1);
 
-  if (selectCardAfterAdding && mOutlinerSelection) {
-    mOutlinerSelection->SetCurrentIndex(*index);
-    mOutlinerSelection->RangedSelect(*index, *index, PR_FALSE /* augment */);
+  if (selectCardAfterAdding && mTreeSelection) {
+    mTreeSelection->SetCurrentIndex(*index);
+    mTreeSelection->RangedSelect(*index, *index, PR_FALSE /* augment */);
   }
 
   if (mAbViewListener && !mSuppressCountChange) {
@@ -897,11 +912,11 @@ nsresult nsAbView::RemoveCardAndSelectNextCard(nsISupports *item)
     PRInt32 index = FindIndexForCard(card);
     if (index != CARD_NOT_FOUND) {
       PRBool selectNextCard = PR_FALSE;
-      if (mOutlinerSelection) {
+      if (mTreeSelection) {
         PRInt32 selectedIndex;
         // XXX todo
         // make sure it works if nothing selected
-        mOutlinerSelection->GetCurrentIndex(&selectedIndex);
+        mTreeSelection->GetCurrentIndex(&selectedIndex);
         if (index == selectedIndex)
           selectNextCard = PR_TRUE;
       }
@@ -910,20 +925,20 @@ nsresult nsAbView::RemoveCardAndSelectNextCard(nsISupports *item)
       NS_ENSURE_SUCCESS(rv,rv);
 
       // this needs to happen after we remove the card, as RowCountChanged() will call GetRowCount()
-      if (mOutliner) {
-        rv = mOutliner->RowCountChanged(index, -1);
+      if (mTree) {
+        rv = mTree->RowCountChanged(index, -1);
       NS_ENSURE_SUCCESS(rv,rv);
       }
 
       if (selectNextCard) {
       PRInt32 count = mCards.Count();
-      if (count && mOutlinerSelection) {
+      if (count && mTreeSelection) {
         // if we deleted the last card, adjust so we select the new "last" card
         if (index >= (count - 1)) {
           index = count -1;
         }
-        mOutlinerSelection->SetCurrentIndex(index);
-        mOutlinerSelection->RangedSelect(index, index, PR_FALSE /* augment */);
+        mTreeSelection->SetCurrentIndex(index);
+        mTreeSelection->RangedSelect(index, index, PR_FALSE /* augment */);
       }
     }
   }
@@ -988,14 +1003,14 @@ NS_IMETHODIMP nsAbView::OnItemPropertyChanged(nsISupports *item, const char *pro
     PR_FREEIF(newCard);
 
     // still need to invalidate, as the other columns may have changed
-    rv = InvalidateOutliner(index);
+    rv = InvalidateTree(index);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   else {
     PRBool cardWasSelected = PR_FALSE;
 
-    if (mOutlinerSelection) {
-      rv = mOutlinerSelection->IsSelected(index, &cardWasSelected);
+    if (mTreeSelection) {
+      rv = mTreeSelection->IsSelected(index, &cardWasSelected);
       NS_ENSURE_SUCCESS(rv,rv);
     }
     
@@ -1014,17 +1029,17 @@ NS_IMETHODIMP nsAbView::OnItemPropertyChanged(nsISupports *item, const char *pro
     mSuppressCountChange = PR_FALSE;
 
     // ensure restored selection is visible
-    if (cardWasSelected && mOutliner) 
-      mOutliner->EnsureRowIsVisible(index);
+    if (cardWasSelected && mTree) 
+      mTree->EnsureRowIsVisible(index);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP nsAbView::SelectAll()
 {
-  if (mOutlinerSelection && mOutliner) {
-    mOutlinerSelection->SelectAll();
-    mOutliner->Invalidate();
+  if (mTreeSelection && mTree) {
+    mTreeSelection->SelectAll();
+    mTree->Invalidate();
   }
   return NS_OK;
 }
@@ -1046,10 +1061,10 @@ nsresult nsAbView::ReselectCards(nsISupportsArray *cards, nsIAbCard *indexCard)
   PRUint32 count;
   PRUint32 i;
 
-  if (!mOutlinerSelection || !cards)
+  if (!mTreeSelection || !cards)
     return NS_OK;
 
-  nsresult rv = mOutlinerSelection->ClearSelection();
+  nsresult rv = mTreeSelection->ClearSelection();
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = cards->Count(&count);
@@ -1062,7 +1077,7 @@ nsresult nsAbView::ReselectCards(nsISupportsArray *cards, nsIAbCard *indexCard)
     if (card) {
       PRInt32 index = FindIndexForCard(card);
       if (index != CARD_NOT_FOUND) {
-        mOutlinerSelection->RangedSelect(index, index, PR_TRUE /* augment */);
+        mTreeSelection->RangedSelect(index, index, PR_TRUE /* augment */);
       }
     }
   }
@@ -1070,11 +1085,11 @@ nsresult nsAbView::ReselectCards(nsISupportsArray *cards, nsIAbCard *indexCard)
   // reset the index card, and ensure it is visible
   if (indexCard) {
     PRInt32 currentIndex = FindIndexForCard(indexCard);
-    rv = mOutlinerSelection->SetCurrentIndex(currentIndex);
+    rv = mTreeSelection->SetCurrentIndex(currentIndex);
     NS_ENSURE_SUCCESS(rv, rv);
   
-    if (mOutliner) {
-      rv = mOutliner->EnsureRowIsVisible(currentIndex);
+    if (mTree) {
+      rv = mTree->EnsureRowIsVisible(currentIndex);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -1101,11 +1116,11 @@ NS_IMETHODIMP nsAbView::DeleteSelectedCards()
 nsresult nsAbView::GetSelectedCards(nsISupportsArray **selectedCards)
 {
   *selectedCards = nsnull;
-  if (!mOutlinerSelection)
+  if (!mTreeSelection)
     return NS_OK;
   
   PRInt32 selectionCount; 
-  nsresult rv = mOutlinerSelection->GetRangeCount(&selectionCount);
+  nsresult rv = mTreeSelection->GetRangeCount(&selectionCount);
   NS_ENSURE_SUCCESS(rv,rv);
   
   if (!selectionCount)
@@ -1118,7 +1133,7 @@ nsresult nsAbView::GetSelectedCards(nsISupportsArray **selectedCards)
   {
     PRInt32 startRange;
     PRInt32 endRange;
-    rv = mOutlinerSelection->GetRangeAt(i, &startRange, &endRange);
+    rv = mTreeSelection->GetRangeAt(i, &startRange, &endRange);
     NS_ENSURE_SUCCESS(rv, NS_OK); 
     PRInt32 totalCards = mCards.Count();
     if (startRange >= 0 && startRange < totalCards)

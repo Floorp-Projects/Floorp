@@ -5,13 +5,13 @@
 <overlay id="contentPackPrefOverlay"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <outlinerchildren id="appearanceChildren">
-    <outlineritem id="content-packs-panel" insertafter="themes-panel">
-      <outlinerrow>
-        <outlinercell url="chrome://content-packs/content/pref-contentpacks.xul" label="&content.label;"/>
-      </outlinerrow>
-    </outlineritem>
-  </outlinerchildren>
+  <treechildren id="appearanceChildren">
+    <treeitem id="content-packs-panel" insertafter="themes-panel">
+      <treerow>
+        <treecell url="chrome://content-packs/content/pref-contentpacks.xul" label="&content.label;"/>
+      </treerow>
+    </treeitem>
+  </treechildren>
         
 </overlay>
 

@@ -987,7 +987,7 @@
         ]]></body>
       </method>
 
-      <!-- ::::::::::::: popup and outliner ::::::::::::: -->
+      <!-- ::::::::::::: popup and tree ::::::::::::: -->
 
       <!--  -->
       <method name="openResultPopup">
@@ -1094,20 +1094,20 @@
         </body>
       </method>
 
-      <!-- =================== OUTLINER VIEW =================== -->
+      <!-- =================== TREE VIEW =================== -->
 
       <field name="view"><![CDATA[
         ({
           mTextbox: this,
-          mOutliner: null,
+          mTree: null,
           mBoxObject: null,
           mResults: [],
           mRowCount: 0,
           mSelectedIndex: null,
           
-          get outlinerBoxObject()
+          get treeBoxObject()
           {
-            return this.mOutliner;
+            return this.mTree;
           },
           
           set selectedIndex(aRow)
@@ -1136,8 +1136,8 @@
             this.mRowCount = 0;  
             this.mResults = [];
             
-            if (aInvalidate && this.mOutliner)
-              this.mOutliner.invalidate();
+            if (aInvalidate && this.mTree)
+              this.mTree.invalidate();
           },
           
           addResults: function(aResults)
@@ -1146,8 +1146,8 @@
             var oldCount = this.mRowCount;
             this.mRowCount += aResults.items.Count();
             
-            if (this.mOutliner)
-              this.mOutliner.rowCountChanged(oldCount, this.mRowCount);
+            if (this.mTree)
+              this.mTree.rowCountChanged(oldCount, this.mRowCount);
           },
           
           createAtom: function(aVal)
@@ -1161,7 +1161,7 @@
           },
 
           //////////////////////////////////////////////////////////
-          // nsIOutlinerView interface
+          // nsITreeView interface
           
           get rowCount() {
             return this.mRowCount;
@@ -1171,12 +1171,12 @@
           // get selection() {},
           // set selection(aVal) { },
           
-          setOutliner: function(aOutliner)
+          setTree: function(aTree)
           {
-            this.mOutliner = aOutliner;
+            this.mTree = aTree;
             
-            if (aOutliner) {
-              this.mBoxObject = this.mTextbox.resultsPopup.outliner.outlinerBoxObject;
+            if (aTree) {
+              this.mBoxObject = this.mTextbox.resultsPopup.tree.treeBoxObject;
             
               // cache atoms for pseudoelement properties
               this.mAtomSelected = this.createAtom("menuactive")
@@ -1223,6 +1223,9 @@
           getParentIndex: function(aRowIndex) { },
           hasNextSibling: function(aRowIndex, aAfterIndex) { },
           getLevel: function(aIndex) {},
+          getImageSrc: function(aRow, aColId) {},
+          getProgressMode: function(aRow, aColId) {},
+          getCellValue: function(aRow, aColId) {},
           isContainer: function(aIndex) {},
           isContainerOpen: function(aIndex) {},
           isContainerEmpty: function(aIndex) {},
@@ -1259,10 +1262,10 @@
 
   <binding id="autocomplete-result-popup" extends="chrome://global/content/bindings/popup.xml#popup">
     <content>
-      <xul:outliner anonid="outliner" class="autocomplete-outliner plain" flex="1">
-        <xul:outlinercols anonid="outlinercols"/>
-        <xul:outlinerchildren anonid="outlinerbody" class="autocomplete-outlinerbody"/>
-      </xul:outliner>
+      <xul:tree anonid="tree" class="autocomplete-tree plain" flex="1">
+        <xul:treecols anonid="treecols"/>
+        <xul:treechildren anonid="treebody" class="autocomplete-treebody"/>
+      </xul:tree>
     </content>
     
     <implementation>
@@ -1274,29 +1277,29 @@
      <property name="textbox"
                 onget="return '__AUTOCOMPLETE_BOX__' in this ? this.__AUTOCOMPLETE_BOX__ : null;"/>
       
-      <field name="outliner">
-        document.getAnonymousElementByAttribute(this, "anonid", "outliner");
+      <field name="tree">
+        document.getAnonymousElementByAttribute(this, "anonid", "tree");
       </field>
 
-      <field name="outlinercols">
-        document.getAnonymousElementByAttribute(this, "anonid", "outlinercols");
+      <field name="treecols">
+        document.getAnonymousElementByAttribute(this, "anonid", "treecols");
       </field>
 
-      <field name="outlinerbody">
-        document.getAnonymousElementByAttribute(this, "anonid", "outlinerbody");
+      <field name="treebody">
+        document.getAnonymousElementByAttribute(this, "anonid", "treebody");
       </field>
 
       <property name="view" onget="return this.mView;">
         <setter><![CDATA[
           this.mView = val;
-          var bx = this.outliner.boxObject;
-          bx = bx.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
+          var bx = this.tree.boxObject;
+          bx = bx.QueryInterface(Components.interfaces.nsITreeBoxObject);
           bx.view = val;
         ]]></setter>
       </property>
 
      <property name="pageCount"
-               onget="return this.outliner.outlinerBoxObject.getPageCount();"/>
+               onget="return this.tree.treeBoxObject.getPageCount();"/>
 
       <property name="selectedIndex"
                 onget="return this.textbox.view.selectedIndex"
@@ -1306,8 +1309,8 @@
 
       <method name="initialize">
         <body><![CDATA[
-        this.outliner.__AUTOCOMPLETE_BOX__ = this.textbox;
-        this.outlinerbody.__AUTOCOMPLETE_BOX__ = this.textbox;
+        this.tree.__AUTOCOMPLETE_BOX__ = this.textbox;
+        this.treebody.__AUTOCOMPLETE_BOX__ = this.textbox;
 
         this._selectedIndex = null;
 
@@ -1316,7 +1319,7 @@
         ]]></body>
       </method>
 
-      <!-- initialize the columns in the outliner -->
+      <!-- initialize the columns in the tree -->
       <method name="initColumns">
         <body><![CDATA[
           if (this.textbox.showCommentColumn) {
@@ -1330,28 +1333,28 @@
       <method name="addColumn">
         <parameter name="aAttrs"/>
         <body><![CDATA[
-          var col = document.createElement("outlinercol");
-          col.setAttribute("class", "autocomplete-outlinercol");
+          var col = document.createElement("treecol");
+          col.setAttribute("class", "autocomplete-treecol");
           for (var name in aAttrs)
             col.setAttribute(name, aAttrs[name]);
-          this.outlinercols.appendChild(col);
+          this.treecols.appendChild(col);
           return col;
         ]]></body>
       </method>
 
-      <!-- remove a single column from the outliner, specified by
+      <!-- remove a single column from the tree, specified by
            element id -->
       <method name="removeColumn">
         <parameter name="aColId"/>
         <body><![CDATA[
-          return this.outliner.removeChild(document.getElementById(aColId));
+          return this.tree.removeChild(document.getElementById(aColId));
         ]]></body>
       </method>
 
       <method name="adjustHeight">
         <body><![CDATA[
-          // detect the desired height of the outliner
-          var bx = this.outliner.outlinerBoxObject;
+          // detect the desired height of the tree
+          var bx = this.tree.treeBoxObject;
           var view = this.textbox.view;
           var rows = this.textbox.maxRows;
           if (!view.rowCount || (rows && view.rowCount < rows))
@@ -1360,13 +1363,13 @@
           var height = rows * bx.rowHeight;
           
           if (height == 0)
-            this.outliner.setAttribute("collapsed", "true");
+            this.tree.setAttribute("collapsed", "true");
           else {
-            if (this.outliner.hasAttribute("collapsed"))
-              this.outliner.removeAttribute("collapsed");
-            this.outliner.setAttribute("height", height);
+            if (this.tree.hasAttribute("collapsed"))
+              this.tree.removeAttribute("collapsed");
+            this.tree.setAttribute("height", height);
           }
-          this.outliner.setAttribute("hidescrollbar", view.rowCount <= rows);
+          this.tree.setAttribute("hidescrollbar", view.rowCount <= rows);
         ]]></body>
       </method>
 
@@ -1375,7 +1378,7 @@
         <parameter name="aAmount"/>
         <body><![CDATA[
           try {
-            var bx = this.outliner.outlinerBoxObject;
+            var bx = this.tree.treeBoxObject;
             var view = bx.view;
             this.selectedIndex = this.getNextIndex(aDir, aAmount, this.selectedIndex, view.rowCount-1);
   
@@ -1436,12 +1439,12 @@
     </handlers>
   </binding>
 
-  <binding id="autocomplete-outliner" extends="chrome://global/content/bindings/outliner.xml#outliner">
+  <binding id="autocomplete-tree" extends="chrome://global/content/bindings/tree.xml#tree">
     <content>
-      <children includes="outlinercols"/>
-      <xul:outlinerrows class="autocomplete-outlinerrows outliner-rows" inherits="hidescrollbar" flex="1">
+      <children includes="treecols"/>
+      <xul:treerows class="autocomplete-treerows tree-rows" inherits="hidescrollbar" flex="1">
         <children/>
-      </xul:outlinerrows>
+      </xul:treerows>
     </content>
 
     <implementation>
@@ -1450,7 +1453,7 @@
     </implementation>
   </binding>
 
-  <binding id="autocomplete-outlinerbody">
+  <binding id="autocomplete-treebody">
     <implementation>
       <property name="textbox"
                 onget="return this.__AUTOCOMPLETE_BOX__;"/>
@@ -1463,7 +1466,7 @@
            var row = {}; var col = {}; var obj = {};
            var x = aEvent.screenX - this.boxObject.screenX + this.boxObject.x;
            var y = aEvent.screenY - this.boxObject.screenY + this.boxObject.y;
-           this.textbox.view.outlinerBoxObject.getCellAt(x, y, row, col, obj);
+           this.textbox.view.treeBoxObject.getCellAt(x, y, row, col, obj);
            if (row.value >= 0)
              return {row: row.value, column: col.value};
            else
@@ -1487,12 +1490,12 @@
     </handlers>
   </binding>
 
-  <binding id="autocomplete-outlinerrows">
+  <binding id="autocomplete-treerows">
     <content onmousedown="event.preventDefault()">
-      <xul:hbox flex="1" class="outliner-bodybox">
+      <xul:hbox flex="1" class="tree-bodybox">
         <children/>
       </xul:hbox>
-      <xul:scrollbar inherits="hidescrollbar" orient="vertical" class="outliner-scrollbar"/>
+      <xul:scrollbar inherits="hidescrollbar" orient="vertical" class="tree-scrollbar"/>
     </content>
   </binding>
 

@@ -37,20 +37,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-interface nsIOutlinerBoxObject;
+interface nsITreeBoxObject;
 
 #include "nsISupports.idl"
 
 [scriptable, uuid(F848D7CF-F3D6-4775-8C9F-135546E61E1E)]
-interface nsIOutlinerSelection : nsISupports
+interface nsITreeSelection : nsISupports
 {
   /**
-   * The outliner widget for this selection.
+   * The tree widget for this selection.
    */
-  attribute nsIOutlinerBoxObject outliner;
+  attribute nsITreeBoxObject tree;
 
   /**
-   * The number of rows currently selected in this outliner.
+   * The number of rows currently selected in this tree.
    */
   readonly attribute long count;
 

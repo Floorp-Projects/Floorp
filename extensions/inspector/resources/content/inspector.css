@@ -59,8 +59,8 @@ domi-panel {
   display: none;
 }
 
-.outliner-list > outlinercol,
-.outliner-list > .outliner-columns > outlinercol {
+.tree-list > treecol,
+.tree-list > .tree-columns > treecol {
   -moz-binding: none;
   background-color: transparent !important;
   margin: 0px !important;
@@ -68,6 +68,6 @@ domi-panel {
   padding: 0px !important;
 }
 
-.outliner-nocolpicker > .outliner-columns > .outliner-columnpicker {
+.tree-nocolpicker > .tree-columns > .tree-columnpicker {
   visibility: collapse;
 }

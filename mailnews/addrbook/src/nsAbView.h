@@ -42,9 +42,9 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIAbView.h"
-#include "nsIOutlinerView.h"
-#include "nsIOutlinerBoxObject.h"
-#include "nsIOutlinerSelection.h"
+#include "nsITreeView.h"
+#include "nsITreeBoxObject.h"
+#include "nsITreeSelection.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsIAbDirectory.h"
@@ -63,7 +63,7 @@ typedef struct AbCard
 } AbCard;
 
 
-class nsAbView : public nsIAbView, public nsIOutlinerView, public nsIAbListener, public nsIObserver
+class nsAbView : public nsIAbView, public nsITreeView, public nsIAbListener, public nsIObserver
 {
 public:
   nsAbView();
@@ -71,20 +71,20 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIABVIEW
-  NS_DECL_NSIOUTLINERVIEW
+  NS_DECL_NSITREEVIEW
   NS_DECL_NSIABLISTENER
   NS_DECL_NSIOBSERVER
   
   PRInt32 CompareCollationKeys(PRUint8 *key1, PRUint32 len1, PRUint8 *key2, PRUint32 len2);
 
 private:
-  nsCOMPtr<nsIOutlinerBoxObject> mOutliner;
-  nsCOMPtr<nsIOutlinerSelection> mOutlinerSelection;
+  nsCOMPtr<nsITreeBoxObject> mTree;
+  nsCOMPtr<nsITreeSelection> mTreeSelection;
   nsresult CreateCollationKey(const PRUnichar *aSource, PRUint8 **aKey, PRUint32 *aKenLen);
   PRInt32 FindIndexForInsert(AbCard *abcard);
   PRInt32 FindIndexForCard(nsIAbCard *card);
   nsresult GenerateCollationKeysForCard(const PRUnichar *colID, AbCard *abcard);
-  nsresult InvalidateOutliner(PRInt32 row);
+  nsresult InvalidateTree(PRInt32 row);
   nsresult RemoveCardAt(PRInt32 row);
   nsresult AddCard(AbCard *abcard, PRBool selectCardAfterAdding, PRInt32 *index);
   nsresult RemoveCardAndSelectNextCard(nsISupports *item);

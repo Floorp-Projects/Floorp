@@ -47,7 +47,7 @@
 #include "nsIDOMElement.h"
 #include "nsITimer.h"
 #include "nsIRootBox.h"
-#include "nsIOutlinerBoxObject.h"
+#include "nsITreeBoxObject.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 
@@ -109,8 +109,8 @@ protected:
   void KillTooltipTimer();
   void CreateAutoHideTimer();
 
-  void CheckOutlinerBodyMove(nsIDOMMouseEvent* aMouseEvent);
-  nsresult GetSourceOutlinerBoxObject(nsIOutlinerBoxObject** aBoxObject);
+  void CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent);
+  nsresult GetSourceTreeBoxObject(nsITreeBoxObject** aBoxObject);
 
   nsresult ShowTooltip();
   nsresult LaunchTooltip(nsIContent* aTarget, PRInt32 aX, PRInt32 aY);
@@ -138,11 +138,11 @@ protected:
     kTooltipShowTime = 500             // 500ms = 0.5 seconds
   };
 
-  // special members for handling outliners
-  PRBool mIsSourceOutliner;
+  // special members for handling trees
+  PRBool mIsSourceTree;
   PRBool mNeedTitletip;
-  PRInt32 mLastOutlinerRow;
-  nsAutoString mLastOutlinerCol;
+  PRInt32 mLastTreeRow;
+  nsAutoString mLastTreeCol;
 };
 
 #endif // nsXULTooltipListener

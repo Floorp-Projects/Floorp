@@ -103,7 +103,7 @@
     </implementation>
   </binding>
 
-  <binding id="bookmarks-outliner"
+  <binding id="bookmarks-tree"
            extends="chrome://communicator/content/bookmarks/bookmarks.xml#bookmarksBase">
     <implementation>
       <constructor><![CDATA[
@@ -112,9 +112,9 @@
         bookmarksSvc.ReadBookmarks();
         
         // We implement nsIController
-        this.outliner.controllers.appendController(this.controller);
-        var olb = document.getAnonymousElementByAttribute(this, "anonid", "bookmarks-outliner");
-        olb = olb.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
+        this.tree.controllers.appendController(this.controller);
+        var olb = document.getAnonymousElementByAttribute(this, "anonid", "bookmarks-tree");
+        olb = olb.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
         olb.addObserver(this.builderObserver);
         
         // need to create string bundle manually instead of using <xul:stringbundle/>
@@ -162,8 +162,8 @@
       ]]></constructor>
       <destructor><![CDATA[
         
-        this.outlinerBuilder.removeObserver(this.builderObserver);
-        this.outliner.controllers.removeController(this.controller);
+        this.treeBuilder.removeObserver(this.builderObserver);
+        this.tree.controllers.removeController(this.controller);
 
         // Save column settings and sort info to persisted attribute
         var persistString = "";
@@ -171,8 +171,8 @@
         var sortResource = this.NC_NS + "Name";
         var sortDirection = "none";
 
-        var outlinercols = document.getAnonymousElementByAttribute(this, "anonid", "outlinercols");
-        var child = outlinercols.firstChild;
+        var treecols = document.getAnonymousElementByAttribute(this, "anonid", "treecols");
+        var child = treecols.firstChild;
         while (child) {
           if (child.localName != "splitter") {
             var formatString = " col:%1%?width=%2%&hidden=%3%&ordinal=%6%";
@@ -196,7 +196,7 @@
         
         document.persist(this.id, "colinfo");
         
-        // Unhook the sort change observer for this outliner
+        // Unhook the sort change observer for this tree
         const kPrefSvcContractID = "@mozilla.org/preferences;1";
         const kPrefSvcIID = Components.interfaces.nsIPrefService;
         var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
@@ -233,7 +233,7 @@
           var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
           var bookmarksSortPrefs = prefSvc.getBranch("browser.bookmarks.sort.");
           
-          // This ensures that we don't sort twice in the outliner that is clicked on 
+          // This ensures that we don't sort twice in the tree that is clicked on 
           // as a result of 1) the click and 2) the pref listener. 
           if (!this.sorted) {
             try {
@@ -242,14 +242,14 @@
           
               // Walk the columns, when we find a column with a sort resource that matches the supplied
               // data, stop and make sure it's sort active. 
-              var outlinercols = document.getAnonymousElementByAttribute(this, "anonid", "outlinercols");
-              var child = outlinercols.firstChild;
+              var treecols = document.getAnonymousElementByAttribute(this, "anonid", "treecols");
+              var child = treecols.firstChild;
               while (child) {
                 if (child.localName != "splitter") {
                   if (child.getAttribute("sort") == sortResource) {
                     child.setAttribute("sortActive", "true");
                     child.setAttribute("sortDirection", sortDirection);
-                    this.outlinerBuilder.sort(child, false);
+                    this.treeBuilder.sort(child, false);
                     break;
                   }
                 }          
@@ -270,8 +270,8 @@
         <![CDATA[
           var cols = [];
         
-          var outlinercols = document.getAnonymousElementByAttribute(this, "anonid", "outlinercols");
-          var child = outlinercols.firstChild;
+          var treecols = document.getAnonymousElementByAttribute(this, "anonid", "treecols");
+          var child = treecols.firstChild;
           while (child) {
             if (child.localName != "splitter") {
               var obj = {
@@ -303,33 +303,33 @@
       </method>
       
 
-      <property name="outlinerBoxObject">
+      <property name="treeBoxObject">
         <getter><![CDATA[
-          return this.outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
+          return this.tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);
         ]]></getter>
       </property>
 
-      <property name="outlinerBuilder">
+      <property name="treeBuilder">
         <getter><![CDATA[
-          return this.outliner.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
+          return this.tree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
         ]]></getter>
       </property>
 
-      <property name="outliner">
+      <property name="tree">
         <getter><![CDATA[
-          return document.getAnonymousElementByAttribute(this, "anonid", "bookmarks-outliner");
+          return document.getAnonymousElementByAttribute(this, "anonid", "bookmarks-tree");
         ]]></getter>
       </property>
 
       <property name="currentIndex">
         <getter><![CDATA[
-          return this.outlinerBoxObject.selection.currentIndex;
+          return this.treeBoxObject.selection.currentIndex;
         ]]></getter>
       </property>
 
       <property name="currentRes">
         <getter><![CDATA[
-          return this.outlinerBuilder.getResourceAtIndex(this.currentIndex);
+          return this.treeBuilder.getResourceAtIndex(this.currentIndex);
         ]]></getter>
       </property>
 
@@ -340,9 +340,9 @@
           if (currIndex == -1)
             return this.rdf.GetResource("NC:BookmarksRoot");
 
-          var parentIndex = this.outlinerBoxObject.view.getParentIndex(currIndex);
+          var parentIndex = this.treeBoxObject.view.getParentIndex(currIndex);
           if (parentIndex != -1)
-            return this.outlinerBuilder.getResourceAtIndex(parentIndex)
+            return this.treeBuilder.getResourceAtIndex(parentIndex)
           return this.rdf.GetResource("NC:BookmarksRoot"); // assume its parent is the root
         ]]></getter>
       </property>
@@ -350,14 +350,14 @@
       <property name="firstSelectedIndex">
         <getter><![CDATA[
           var first = { };
-          this.outlinerBoxObject.selection.getRangeAt(0, first, { });
+          this.treeBoxObject.selection.getRangeAt(0, first, { });
           return first.value;
         ]]></getter>
       </property>
 
       <property name="lastSelectedIndex">
         <getter><![CDATA[
-          var bo = this.outlinerBoxObject;
+          var bo = this.treeBoxObject;
           var last = { };
           var rangeCount = bo.selection.getRangeCount();
           bo.selection.getRangeAt(rangeCount - 1, { }, last);
@@ -404,7 +404,7 @@
            adjacent to the current selection. -->
       <method name="getNextRowIndex">
         <body><![CDATA[
-          var bo = this.outlinerBoxObject;
+          var bo = this.treeBoxObject;
           var rangeCount = bo.selection.getRangeCount();
           var currLevel, lastIndex = 0;
           if (!rangeCount) 
@@ -437,7 +437,7 @@
         <parameter name="aIndex" />
         <body><![CDATA[
           try {
-            return this.resolveType(this.outlinerBuilder.getResourceAtIndex(aIndex));
+            return this.resolveType(this.treeBuilder.getResourceAtIndex(aIndex));
           }
           catch(ex) {
             return null;
@@ -475,22 +475,22 @@
         mOuter: this,
         onDragStart: function (aEvent, aXferData, aDragAction)
         {
-          if (this.mOuter.outliner.getAttribute("sortActive") == "true")
+          if (this.mOuter.tree.getAttribute("sortActive") == "true")
             throw Components.results.NS_OK; 
           aXferData.data = new TransferDataSet();
-          var rangeCount = this.mOuter.outlinerBoxObject.selection.getRangeCount();
+          var rangeCount = this.mOuter.treeBoxObject.selection.getRangeCount();
           for (var i = rangeCount - 1; i >= 0; --i) {
             var rangeMin = { };
             var rangeMax = { };
-            this.mOuter.outlinerBoxObject.selection.getRangeAt(i, rangeMin, rangeMax);
+            this.mOuter.treeBoxObject.selection.getRangeAt(i, rangeMin, rangeMax);
             for (var j = rangeMax.value; j >= rangeMin.value; --j) {
-              var currRes = this.mOuter.outlinerBuilder.getResourceAtIndex(j); 
-              var parentIndex = this.mOuter.outlinerBoxObject.view.getParentIndex(j);
+              var currRes = this.mOuter.treeBuilder.getResourceAtIndex(j); 
+              var parentIndex = this.mOuter.treeBoxObject.view.getParentIndex(j);
               var parentRes;
               if (parentIndex == -1)
                 parentRes = this.mOuter.rdf.GetResource("NC:BookmarksRoot");
               else
-                parentRes = this.mOuter.outlinerBuilder.getResourceAtIndex(parentIndex);
+                parentRes = this.mOuter.treeBuilder.getResourceAtIndex(parentIndex);
     
               var type = this.mOuter.db.GetTarget(currRes, this.mOuter.rdf.GetResource(this.mOuter.RDF_NS + "type"), true);
               type = type.QueryInterface(Components.interfaces.nsIRDFResource).Value;
@@ -561,7 +561,7 @@
         
         isCommandEnabled: function BMOLController_isCommandEnabled(aCommand)
         {
-          var bo = this.mOuter.outlinerBoxObject;
+          var bo = this.mOuter.treeBoxObject;
           var type;   // The bookmark's RDF:type arc
           
           switch (aCommand) {
@@ -627,7 +627,7 @@
             else
               folderURI = "NC:NewSearchFolder";
             return (this.mOuter.getTypeAtIndex(this.mOuter.firstSelectedIndex) == this.mOuter.NC_NS + "Folder")
-                   && (this.mOuter.outlinerBuilder.getResourceAtIndex(this.mOuter.firstSelectedIndex).Value != folderURI);
+                   && (this.mOuter.treeBuilder.getResourceAtIndex(this.mOuter.firstSelectedIndex).Value != folderURI);
           case "cmd_bm_import":
           case "cmd_bm_export":
             return true;
@@ -664,7 +664,7 @@
             this.mOuter.openItem(null, false, false);
             break;
           case "cmd_bm_openfolder":
-            this.mOuter.outlinerBoxObject.view.toggleOpenState(this.mOuter.currentIndex);
+            this.mOuter.treeBoxObject.view.toggleOpenState(this.mOuter.currentIndex);
             break;
           case "cmd_bm_openinnewwindow":
             var type = this.mOuter.getTypeAtIndex(this.mOuter.currentIndex);
@@ -740,7 +740,7 @@
         ]]></body>
       </method>
 
-      <!-- nsIXULOutlinerBuilderObserver -->
+      <!-- nsIXULTreeBuilderObserver -->
       <field name="builderObserver"><![CDATA[
       ({
         mOuter: this,
@@ -761,13 +761,13 @@
           const kRDFCContractID = "@mozilla.org/rdf/container;1";
           const kRDFIID = Components.interfaces.nsIRDFContainer;
           var RDFC = Components.classes[kRDFCContractID].getService(kRDFIID);
-          var rTarget = this.mOuter.outlinerBuilder.getResourceAtIndex(row);
-          var parentIndex = this.mOuter.outlinerBoxObject.view.getParentIndex(row);
+          var rTarget = this.mOuter.treeBuilder.getResourceAtIndex(row);
+          var parentIndex = this.mOuter.treeBoxObject.view.getParentIndex(row);
           var rContainer;
           if (parentIndex == -1)
             rContainer = this.mOuter.rdf.GetResource("NC:BookmarksRoot");
           else
-            rContainer = this.mOuter.outlinerBuilder.getResourceAtIndex(parentIndex);
+            rContainer = this.mOuter.treeBuilder.getResourceAtIndex(parentIndex);
           var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
           var rBookmark = this.mOuter.rdf.GetResource(this.mOuter.NC_NS + "Bookmark");
           trans.addDataFlavor("moz/rdfitem");
@@ -826,8 +826,8 @@
             if (bmType == this.mOuter.NC_NS + "Folder") {
               var currRow = row;
               do {
-                var currURI = this.mOuter.outlinerBuilder.getResourceAtIndex(currRow).Value;
-                currRow = this.mOuter.outlinerBoxObject.view.getParentIndex(currRow);
+                var currURI = this.mOuter.treeBuilder.getResourceAtIndex(currRow).Value;
+                currRow = this.mOuter.treeBoxObject.view.getParentIndex(currRow);
               }
               while (currRow != -1 && currURI != "NC:BookmarksRoot" && currURI != rSource.Value);
               if (currURI == rSource.Value)
@@ -845,7 +845,7 @@
                   RDFC.Init(kBMDS, rParent);
                   ix = RDFC.IndexOf(rSource);
                   if (ix >= 1) {
-                    var index = this.mOuter.outlinerBuilder.getIndexOfResource(rSource);
+                    var index = this.mOuter.treeBuilder.getIndexOfResource(rSource);
                     RDFC.RemoveElementAt(ix, true);
                     // only need to decrement the target row if the index of the resource
                     // we're removing is before it 
@@ -863,14 +863,14 @@
               if (dragSession.dragAction & kCopyAction)
                 rSource = BookmarksUtils.cloneFolder(rSource, rContainer, rTarget);
             }
-            if (orientation == Components.interfaces.nsIOutlinerView.inDropBefore ||
-                orientation == Components.interfaces.nsIOutlinerView.inDropAfter) {
+            if (orientation == Components.interfaces.nsITreeView.inDropBefore ||
+                orientation == Components.interfaces.nsITreeView.inDropAfter) {
               if (dropIx == -1) break;
               RDFC.Init(kBMDS, rContainer);
-              RDFC.InsertElementAt(rSource, rParent ? dropIx : (orientation == Components.interfaces.nsIOutlinerView.inDropAfter ? ++dropIx : dropIx), true);
+              RDFC.InsertElementAt(rSource, rParent ? dropIx : (orientation == Components.interfaces.nsITreeView.inDropAfter ? ++dropIx : dropIx), true);
             }
             else {
-              var cont = this.mOuter.outlinerBuilder.getResourceAtIndex(row);
+              var cont = this.mOuter.treeBuilder.getResourceAtIndex(row);
               RDFC.Init(kBMDS, cont);
               RDFC.AppendElement(rSource); // drop on
             }
@@ -927,12 +927,12 @@
           const kStatusBar = document.getAnonymousElementByAttribute(this.mOuter, "anonid", "statusbar-text");
           const currentIndex = this.mOuter.currentIndex;
           var displayValue = "";
-          if (kStatusBar && this.mOuter.outlinerBoxObject.selection.count == 1) {
-            if (this.mOuter.outlinerBoxObject.view.isContainer(currentIndex)) {
+          if (kStatusBar && this.mOuter.treeBoxObject.selection.count == 1) {
+            if (this.mOuter.treeBoxObject.view.isContainer(currentIndex)) {
               const kRDFCContractID = "@mozilla.org/rdf/container;1";
               const kRDFCIID = Components.interfaces.nsIRDFContainer;
               const kRDFC = Components.classes[kRDFCContractID].getService(kRDFCIID);
-              const krSrc = this.mOuter.outlinerBuilder.getResourceAtIndex(currentIndex);
+              const krSrc = this.mOuter.treeBuilder.getResourceAtIndex(currentIndex);
               try {
                 kRDFC.Init(this.mOuter.db, krSrc);
                 var count = kRDFC.GetCount();
@@ -944,7 +944,7 @@
             }
             else {
               try {
-                displayValue = this.mOuter.db.GetTarget(this.mOuter.outlinerBuilder.getResourceAtIndex(currentIndex), this.mOuter.rdf.GetResource(this.mOuter.NC_NS + "URL"), true);
+                displayValue = this.mOuter.db.GetTarget(this.mOuter.treeBuilder.getResourceAtIndex(currentIndex), this.mOuter.rdf.GetResource(this.mOuter.NC_NS + "URL"), true);
                 displayValue = displayValue.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
               }
               catch (e) {
@@ -982,7 +982,7 @@
       <!-- RDF utility functions required by base binding -->
       <property name="db">
         <getter><![CDATA[
-          return this.outliner.database;
+          return this.tree.database;
         ]]></getter>
       </property>
       
@@ -1020,7 +1020,7 @@
       
       <method name="selectAll">
         <body><![CDATA[
-          this.outlinerBoxObject.selection.selectAll();
+          this.treeBoxObject.selection.selectAll();
         ]]></body>
       </method>
 
@@ -1061,10 +1061,10 @@
           const ksRDF = Components.classes[kRDFContractID].getService(kRDFIID);
           var parentRes;
           const currentIndex = this.currentIndex;
-          if (!this.outlinerBoxObject.view.isContainer(currentIndex))
+          if (!this.treeBoxObject.view.isContainer(currentIndex))
             parentRes = this.parentRes;
           else
-            parentRes = this.outlinerBuilder.getResourceAtIndex(currentIndex);
+            parentRes = this.treeBuilder.getResourceAtIndex(currentIndex);
 
           const currentRes = this.currentRes;
           const kRDFCContractID = "@mozilla.org/rdf/container;1";
@@ -1134,13 +1134,13 @@
           var htmlstring = Components.classes[kSuppWStringContractID].createInstance(kSuppWStringIID);
         
           var sBookmarkItem = ""; var sTextUnicode = ""; var sTextHTML = "";
-          var rangeCount = this.outlinerBoxObject.selection.getRangeCount();
+          var rangeCount = this.treeBoxObject.selection.getRangeCount();
           for (var i = rangeCount - 1; i >= 0; --i) {
             var rangeMin = {};
             var rangeMax = {};
-            this.outlinerBoxObject.selection.getRangeAt(i, rangeMin, rangeMax);
+            this.treeBoxObject.selection.getRangeAt(i, rangeMin, rangeMax);
             for (var j = rangeMax.value; j >= rangeMin.value; --j) {
-              var res = this.outlinerBuilder.getResourceAtIndex(j);
+              var res = this.treeBuilder.getResourceAtIndex(j);
               var urlRes = ksRDF.GetResource("http://home.netscape.com/NC-rdf#URL");
               var nameRes = ksRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
               var url = this.db.GetTarget(res, urlRes, true);
@@ -1193,9 +1193,9 @@
           // Whether or not the selection contains items which cannot be deleted.                             
           // var selectionContainsImmutableItems = false;
 
-          var boxObject = this.outlinerBoxObject;
-          var outlinerBuilder = this.outlinerBuilder;
-          var rangeCount = this.outlinerBoxObject.selection.getRangeCount();
+          var boxObject = this.treeBoxObject;
+          var treeBuilder = this.treeBuilder;
+          var rangeCount = this.treeBoxObject.selection.getRangeCount();
           
           var rangeMax = { };
           var rangeMin = { };
@@ -1218,7 +1218,7 @@
           for (var i = rangeCount - 1; i >= 0; --i) {
             boxObject.selection.getRangeAt(i, rangeMin, rangeMax);
             for (var j = rangeMax.value; j >= rangeMin.value; --j) {
-              var resource = outlinerBuilder.getResourceAtIndex(j);
+              var resource = treeBuilder.getResourceAtIndex(j);
               var type = this.getTypeAtIndex(j);
               if (resource.Value == "NC:BookmarksRoot" || type == this.NC_NS + "IEFavoriteFolder")
                 continue;
@@ -1274,7 +1274,7 @@
             boxObject.selection.getRangeAt(i, rangeMin, rangeMax);
 
             for (var j = rangeMax.value; j >= rangeMin.value; --j) {
-              var resource = outlinerBuilder.getResourceAtIndex(j);
+              var resource = treeBuilder.getResourceAtIndex(j);
               if (resource.Value == "NC:BookmarksRoot")
                 continue;
               // If we're removing the static root, make sure we set the pref that 
@@ -1294,7 +1294,7 @@
               var parentIndex = boxObject.view.getParentIndex(j);
               var parent;
               if (parentIndex != -1)
-                parent = outlinerBuilder.getResourceAtIndex(parentIndex);
+                parent = treeBuilder.getResourceAtIndex(parentIndex);
               else {
                 // assume its parent is the root
                 parent = ksRDF.GetResource("NC:BookmarksRoot");
@@ -1318,9 +1318,9 @@
       </method>
       <method name="canSendLink">
         <body><![CDATA[
-          var selectedIndex = this.outlinerBoxObject.selection.currentIndex;
-          return (this.outlinerBoxObject.selection.count == 1 &&
-                  !this.outlinerBoxObject.view.isContainer(selectedIndex) &&
+          var selectedIndex = this.treeBoxObject.selection.currentIndex;
+          return (this.treeBoxObject.selection.count == 1 &&
+                  !this.treeBoxObject.view.isContainer(selectedIndex) &&
                   this.getTypeAtIndex(selectedIndex) != this.NC_NS + "BookmarkSeparator");
         ]]></body>
       </method>
@@ -1445,7 +1445,7 @@
             xulElement.setAttribute("default", "true");
             break;
           case this.NC_NS_CMD + "bm_openfolder":
-            aDisplayName = this.outlinerBoxObject.view.isContainerOpen(aSelectedIndex) ? this._bundle.GetStringFromName("cmd_bm_openfolder2") : aDisplayName;
+            aDisplayName = this.treeBoxObject.view.isContainerOpen(aSelectedIndex) ? this._bundle.GetStringFromName("cmd_bm_openfolder2") : aDisplayName;
             xulElement.setAttribute("label", aDisplayName);
             xulElement.setAttribute("default", "true");
             break;
@@ -1496,13 +1496,13 @@
           
           var popupNode = document.popupNode;
           var commonCommands = [];
-          var rangeCount = this.outlinerBoxObject.selection.getRangeCount();
+          var rangeCount = this.treeBoxObject.selection.getRangeCount();
           for (var i = rangeCount - 1; i >= 0; --i) {
             var minRange = {};
             var maxRange = {};
-            this.outlinerBoxObject.selection.getRangeAt(i, minRange, maxRange);          
+            this.treeBoxObject.selection.getRangeAt(i, minRange, maxRange);          
             for (var j = maxRange.value; j >= minRange.value; --j) {
-              var nodeURI = this.outlinerBuilder.getResourceAtIndex(j).Value;
+              var nodeURI = this.treeBuilder.getResourceAtIndex(j).Value;
               var commands = this.getAllCmds(nodeURI);
               if (!commands) {
                 aEvent.preventDefault();
@@ -1526,7 +1526,7 @@
             var element = null;
             if (currCommand != this.NC_NS_CMD + "bm_separator") {
               var commandName = this.getCommandName(currCommand);
-              var selectedIndex = this.outlinerBoxObject.selection.currentIndex;
+              var selectedIndex = this.treeBoxObject.selection.currentIndex;
               element = this.createMenuItem(commandName, currCommand, selectedIndex);
             }
             else if (i != 0 && i < commonCommands.length-1) {
@@ -1543,7 +1543,7 @@
       <method name="openPropertiesForItem">
         <body><![CDATA[
           // XXX if not bookmarks separator
-          var itemURI = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.selection.currentIndex).Value;
+          var itemURI = this.treeBuilder.getResourceAtIndex(this.treeBoxObject.selection.currentIndex).Value;
           openDialog("chrome://communicator/content/bookmarks/bm-props.xul",
                      "", "centerscreen,chrome,dialog=no,resizable=no,dependent", 
                      itemURI);
@@ -1551,7 +1551,7 @@
       </method>
       <method name="setAsPersonalToolbarFolder">
         <body><![CDATA[
-          var selectedURI = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.selection.currentIndex).Value;
+          var selectedURI = this.treeBuilder.getResourceAtIndex(this.treeBoxObject.selection.currentIndex).Value;
           var args = [];
           this.doBookmarksCommand(selectedURI, this.NC_NS_CMD + "setpersonaltoolbarfolder", args);
 
@@ -1559,14 +1559,14 @@
       </method>
       <method name="setAsNewSearchFolder">
         <body><![CDATA[
-          var selectedURI = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.selection.currentIndex).Value;
+          var selectedURI = this.treeBuilder.getResourceAtIndex(this.treeBoxObject.selection.currentIndex).Value;
           var args = [];
           this.doBookmarksCommand(selectedURI, this.NC_NS_CMD + "setnewsearchfolder", args);
         ]]></body>
       </method>
       <method name="setAsNewBookmarkFolder">
         <body><![CDATA[
-          var selectedURI = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.selection.currentIndex).Value;
+          var selectedURI = this.treeBuilder.getResourceAtIndex(this.treeBoxObject.selection.currentIndex).Value;
           var args = [];
           this.doBookmarksCommand(selectedURI, this.NC_NS_CMD + "setnewbookmarkfolder", args);
         ]]></body>
@@ -1576,11 +1576,11 @@
           const currentIndex = this.currentIndex;
 
           var parentIndex;
-          if (this.outlinerBoxObject.view.rowCount) {
-            if (this.outlinerBoxObject.view.isContainerOpen(currentIndex))
+          if (this.treeBoxObject.view.rowCount) {
+            if (this.treeBoxObject.view.isContainerOpen(currentIndex))
               parentIndex = currentIndex;
             else
-              parentIndex = this.outlinerBoxObject.view.getParentIndex(currentIndex);
+              parentIndex = this.treeBoxObject.view.getParentIndex(currentIndex);
           }
           else
             parentIndex = -1;
@@ -1588,7 +1588,7 @@
           if (parentIndex == -1)
             parentURI = this.rdf.GetResource("NC:BookmarksRoot").Value;
           else
-            parentURI = this.outlinerBuilder.getResourceAtIndex(parentIndex).Value;
+            parentURI = this.treeBuilder.getResourceAtIndex(parentIndex).Value;
           openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
                      "centerscreen,chrome,modal=yes,dialog=yes,resizable=no", null, null, parentURI, null, "newBookmark");
         ]]></body>
@@ -1600,22 +1600,22 @@
           openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
                      "centerscreen,chrome,modal=yes,dialog=yes,resizable=yes", null, null, null, null, "selectFolder", rv);
           if (rv.selectedFolder) {
-            var rangeCount = this.outlinerBoxObject.selection.getRangeCount();
+            var rangeCount = this.treeBoxObject.selection.getRangeCount();
             for (var k = rangeCount - 1; k >= 0; --k) {
               var rangeMin = {};
               var rangeMax = {};
-              this.outlinerBoxObject.selection.getRangeAt(k, rangeMin, rangeMax);
+              this.treeBoxObject.selection.getRangeAt(k, rangeMin, rangeMax);
               for (var i = rangeMax.value; i >= rangeMin.value; --i) {
-                var selected = this.outlinerBuilder.getResourceAtIndex(i);
+                var selected = this.treeBuilder.getResourceAtIndex(i);
                 if (selected.Value == rv.selectedFolder) 
                   return; // Selection contains the target folder. Just fail silently.
                 var additiveFlag = false;
-                var parentIndex = this.outlinerBoxObject.view.getParentIndex(i);
+                var parentIndex = this.treeBoxObject.view.getParentIndex(i);
                 var parentURI;
                 if (parentIndex == -1)
                   parentURI = this.rdf.GetResource("NC:BookmarksRoot").Value;
                 else
-                  parentURI = this.outlinerBuilder.getResourceAtIndex(parentIndex).Value;
+                  parentURI = this.treeBuilder.getResourceAtIndex(parentIndex).Value;
                 this.moveBookmark(selected.Value, parentURI, rv.selectedFolder);
                // gBookmarksShell.selectFolderItem(rv.selectedFolder, selected.Value, additiveFlag);
                 if (!additiveFlag) additiveFlag = true;
@@ -1664,7 +1664,7 @@
           }
           var seln = null;
           try {
-            seln = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.selection.currentIndex).Value;
+            seln = this.treeBuilder.getResourceAtIndex(this.treeBoxObject.selection.currentIndex).Value;
           }
           catch(ex) {
             seln = this.rdf.GetResource("NC:BookmarksRoot").Value;
@@ -1696,7 +1696,7 @@
           }
           var seln = null;
           try {
-            seln = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.selection.currentIndex).Value;
+            seln = this.treeBuilder.getResourceAtIndex(this.treeBoxObject.selection.currentIndex).Value;
           }
           catch(ex) {
             seln = this.rdf.GetResource("NC:BookmarksRoot").Value;
@@ -1707,8 +1707,8 @@
       </method>
       <method name="openFolderInNewWindow">
         <body><![CDATA[
-          var selectedIndex = this.outlinerBoxObject.selection.currentIndex;
-          var selectedURI = this.outlinerBuilder.getResourceAtIndex(selectedIndex).Value;
+          var selectedIndex = this.treeBoxObject.selection.currentIndex;
+          var selectedURI = this.treeBuilder.getResourceAtIndex(selectedIndex).Value;
           openDialog("chrome://communicator/content/bookmarks/bookmarks.xul", 
                      "", "chrome,all,dialog=no", selectedURI);
         ]]>
@@ -1716,18 +1716,18 @@
       </method>
       <method name="createNewSeparator">
         <body><![CDATA[
-          var currIndex = this.outlinerBoxObject.selection.currentIndex;
+          var currIndex = this.treeBoxObject.selection.currentIndex;
           if (currIndex == -1)
-            currIndex = this.outlinerBoxObject.view.rowCount - 1;
-          var parentIndex = this.outlinerBoxObject.view.getParentIndex(currIndex);
+            currIndex = this.treeBoxObject.view.rowCount - 1;
+          var parentIndex = this.treeBoxObject.view.getParentIndex(currIndex);
           var parentValue;
           if (parentIndex == -1)
             parentValue = this.rdf.GetResource("NC:BookmarksRoot").Value;
           else
-            parentValue = this.outlinerBuilder.getResourceAtIndex(parentIndex).Value;
+            parentValue = this.treeBuilder.getResourceAtIndex(parentIndex).Value;
           args = [{ property: this.NC_NS + "parent", 
                     resource: parentValue }];
-          this.doBookmarksCommand(this.outlinerBuilder.getResourceAtIndex(currIndex).Value, 
+          this.doBookmarksCommand(this.treeBuilder.getResourceAtIndex(currIndex).Value, 
                                   this.NC_NS_CMD + "newseparator", args);
         ]]></body>
       </method>
@@ -1745,18 +1745,18 @@
           var parentRes;
           var isParent = false;
           if (kPromptSvc.prompt(window, dialogTitle, dialogMsg, stringValue, null, { value: 0 })) {
-            if (currentIndex != -1 && currentIndex < this.outlinerBoxObject.view.rowCount) {
+            if (currentIndex != -1 && currentIndex < this.treeBoxObject.view.rowCount) {
               // If it's an open container, the relative index should be that of the last child. 
-              if (this.outlinerBoxObject.view.isContainerOpen(currentIndex)) {
+              if (this.treeBoxObject.view.isContainerOpen(currentIndex)) {
                 isParent = true;
                 var index = currentIndex + 1;
-                while (index < this.outlinerBoxObject.view.rowCount
-                       && this.outlinerBoxObject.view.getParentIndex(index) == currentIndex)
+                while (index < this.treeBoxObject.view.rowCount
+                       && this.treeBoxObject.view.getParentIndex(index) == currentIndex)
                     ++index;
                   relativeIndex = index - 1;
               }
               if (isParent) {
-                parentRes = this.outlinerBuilder.getResourceAtIndex(currentIndex);
+                parentRes = this.treeBuilder.getResourceAtIndex(currentIndex);
               } else {
                 parentRes = this.parentRes;
               }
@@ -1772,7 +1772,7 @@
             this.bookmarksDS.AddObserver(this.newFolderRDFObserver);
             var relativeRes;
             if (relativeIndex != -1)
-              relativeRes = this.outlinerBuilder.getResourceAtIndex(relativeIndex).Value;
+              relativeRes = this.treeBuilder.getResourceAtIndex(relativeIndex).Value;
             else
               relativeRes = this.rdf.GetResource("NC:BookmarksRoot").Value;
    
@@ -1785,12 +1785,12 @@
       <method name="validOpenClickConditions">
       <parameter name="aEvent"/>
         <body><![CDATA[
-          if (aEvent.button != 0 || aEvent.originalTarget.localName != "outlinerchildren")
+          if (aEvent.button != 0 || aEvent.originalTarget.localName != "treechildren")
             return false;
           var row = {};
           var col = {};
           var obj = {};
-          this.outlinerBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, obj);
+          this.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, obj);
           if (row.value == -1 || obj.value == "twisty")
             return false;
           return true;
@@ -1804,20 +1804,20 @@
       <parameter name="aOpenGroups"/>
         <body><![CDATA[
           var groupRes = this.rdf.GetResource(this.NC_NS + "FolderGroup");  
-          var groupTarget = this.db.GetTarget(this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.selection.currentIndex), 
+          var groupTarget = this.db.GetTarget(this.treeBuilder.getResourceAtIndex(this.treeBoxObject.selection.currentIndex), 
                                               groupRes, true);
 
           if (groupTarget && !aOpenGroups)
             return;
           
-          if (!groupTarget && this.outlinerBoxObject.view.isContainer(this.outlinerBoxObject.selection.currentIndex)) {
+          if (!groupTarget && this.treeBoxObject.view.isContainer(this.treeBoxObject.selection.currentIndex)) {
             if (this.clickCount == 1) {
               var row = { };
               var col = { };
               var elt = { };
-              this.outlinerBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, elt);
+              this.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, elt);
               if (row.value >= 0) 
-                this.outlinerBoxObject.view.toggleOpenState(row.value);
+                this.treeBoxObject.view.toggleOpenState(row.value);
             }
             return;
           }
@@ -1826,19 +1826,19 @@
           if (aEvent && aEvent.altKey)
             this.openPropertiesForItem();
           else if (aInNewWindow) {
-            var seln = this.outlinerBoxObject.selection;
+            var seln = this.treeBoxObject.selection;
             var rangeCount = seln.getRangeCount();
             for (var i = rangeCount - 1; i >= 0; --i) {
               var rangeMin = { };
               var rangeMax = { };
               seln.getRangeAt(i, rangeMin, rangeMax);
               for (var k = rangeMax.value; k >= rangeMin.value; --k) {
-                groupTarget = this.db.GetTarget(this.outlinerBuilder.getResourceAtIndex(k), 
+                groupTarget = this.db.GetTarget(this.treeBuilder.getResourceAtIndex(k), 
                                                 groupRes, true);
           
                 if (!groupTarget) {
                   urlRes = this.rdf.GetResource(this.NC_NS + "URL");
-                  urlValue = this.db.GetTarget(this.outlinerBuilder.getResourceAtIndex(k), urlRes, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+                  urlValue = this.db.GetTarget(this.treeBuilder.getResourceAtIndex(k), urlRes, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
                   // Ignore "NC:" and empty urls
                   if (!urlValue || urlValue.substring(0,3) == "NC:") return;
                 }
@@ -1847,7 +1847,7 @@
                 
                 var w = openDialog (this._browserURL, "_blank", "chrome,all,dialog=no", urlValue);
                 if (groupTarget)
-                  w.OpenBookmarkGroupFromResource(this.outlinerBuilder.getResourceAtIndex(k),
+                  w.OpenBookmarkGroupFromResource(this.treeBuilder.getResourceAtIndex(k),
                                                   this.db, this.rdf);
               }
             }
@@ -1879,98 +1879,98 @@
       </method>
     </implementation>
   </binding>
-  <!-- Full Bookmarks Outliner, multi-columned -->
+  <!-- Full Bookmarks Tree, multi-columned -->
   <!-- Localize column labels! -->
-  <binding id="bookmarks-outliner-full" extends="chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-outliner">
+  <binding id="bookmarks-tree-full" extends="chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-tree">
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:xbl="http://www.mozilla.org/xbl"
                  contextmenu="_child">
       <!-- XXXben need focus event handler for cmd update -->
         <menupopup id="bmContext" 
                    onpopupshowing="this.parentNode.createContextMenu(event);"/>
       <vbox flex="1">
-        <outliner anonid="bookmarks-outliner" flex="1" class="plain" enableColumnDrag="true"
+        <tree anonid="bookmarks-tree" flex="1" class="plain" enableColumnDrag="true"
                   datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" ref="NC:BookmarksRoot" flags="dont-build-content"
                   onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.openItem(event, false, false);"
                   ondblclick="if (this.parentNode.parentNode.validOpenClickConditions(event)) this.parentNode.parentNode.openItem(event, false, false);"
-                  ondraggesture="if (event.originalTarget.localName == 'outlinerchildren') nsDragAndDrop.startDrag(event, this.parentNode.parentNode.DNDObserver);"
-                  onselect="this.outlinerBoxObject.view.selectionChanged();">
+                  ondraggesture="if (event.originalTarget.localName == 'treechildren') nsDragAndDrop.startDrag(event, this.parentNode.parentNode.DNDObserver);"
+                  onselect="this.treeBoxObject.view.selectionChanged();">
           <template xmlns:nc="http://home.netscape.com/NC-rdf#">
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-              <outlinerchildren>
-                <outlineritem uri="rdf:*">
-                  <outlinerrow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type separator"/>
-                </outlineritem>
-              </outlinerchildren>
+              <treechildren>
+                <treeitem uri="rdf:*">
+                  <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type separator"/>
+                </treeitem>
+              </treechildren>
             </rule>
             <rule nc:FolderGroup="true">
-              <outlinerchildren>
-                <outlineritem uri="rdf:*">
-                  <outlinerrow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
-                    <outlinercell properties="group" label="rdf:http://home.netscape.com/NC-rdf#Name" />
-                    <outlinercell label="rdf:http://home.netscape.com/NC-rdf#URL" />
-                    <outlinercell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
-                    <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Description" />
-                    <outlinercell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
-                    <outlinercell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
-                    <outlinercell label="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" />
-                  </outlinerrow>
-                </outlineritem>
-              </outlinerchildren>
+              <treechildren>
+                <treeitem uri="rdf:*">
+                  <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
+                    <treecell properties="group" label="rdf:http://home.netscape.com/NC-rdf#Name" />
+                    <treecell label="rdf:http://home.netscape.com/NC-rdf#URL" />
+                    <treecell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
+                    <treecell label="rdf:http://home.netscape.com/NC-rdf#Description" />
+                    <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
+                    <treecell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
+                    <treecell label="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" />
+                  </treerow>
+                </treeitem>
+              </treechildren>
             </rule>
             <rule>
-              <outlinerchildren>
-                <outlineritem uri="rdf:*">
-                  <outlinerrow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
-                    <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Name" />
-                    <outlinercell label="rdf:http://home.netscape.com/NC-rdf#URL" />
-                    <outlinercell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
-                    <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Description" />
-                    <outlinercell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
-                    <outlinercell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
-                    <outlinercell label="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" />
-                  </outlinerrow>
-                </outlineritem>
-              </outlinerchildren>
+              <treechildren>
+                <treeitem uri="rdf:*">
+                  <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
+                    <treecell label="rdf:http://home.netscape.com/NC-rdf#Name" />
+                    <treecell label="rdf:http://home.netscape.com/NC-rdf#URL" />
+                    <treecell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
+                    <treecell label="rdf:http://home.netscape.com/NC-rdf#Description" />
+                    <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
+                    <treecell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
+                    <treecell label="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" />
+                  </treerow>
+                </treeitem>
+              </treechildren>
             </rule>
           </template>
-          <outlinercols anonid="outlinercols">
-            <outlinercol id="Name" label="&outlinercol.name.label;" flex="1" primary="true" 
+          <treecols anonid="treecols">
+            <treecol id="Name" label="&treecol.name.label;" flex="1" primary="true" 
                          class="sortDirectionIndicator" 
                          persist="width hidden sortActive sortDirection ordinal" 
                          sort="rdf:http://home.netscape.com/NC-rdf#Name"
                          sortActive="true" sortDirection="none"/>
             <splitter class="tree-splitter" />
-            <outlinercol id="URL" label="&outlinercol.url.label;" 
+            <treecol id="URL" label="&treecol.url.label;" 
                          flex="1" class="sortDirectionIndicator" 
                          sort="rdf:http://home.netscape.com/NC-rdf#URL" 
                          persist="width hidden sortActive sortDirection ordinal" />
             <splitter class="tree-splitter" />
-            <outlinercol id="ShortcutURL" label="&outlinercol.shortcut.label;" 
+            <treecol id="ShortcutURL" label="&treecol.shortcut.label;" 
                          hidden="true" flex="1" class="sortDirectionIndicator" 
                          persist="hidden width sortActive sortDirection ordinal" 
                          sort="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
             <splitter class="tree-splitter"/>
-            <outlinercol id="Description" label="&outlinercol.description.label;" 
+            <treecol id="Description" label="&treecol.description.label;" 
                          hidden="true" flex="1" class="sortDirectionIndicator" 
                          persist="hidden width sortActive sortDirection ordinal" 
                          sort="rdf:http://home.netscape.com/NC-rdf#Description"/>
             <splitter class="tree-splitter"/>
-            <outlinercol id="AddDate" label="&outlinercol.addedon.label;" 
+            <treecol id="AddDate" label="&treecol.addedon.label;" 
                          hidden="true" flex="1" class="sortDirectionIndicator" 
                          sort="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" 
                          persist="width hidden sortActive sortDirection ordinal" />
             <splitter class="tree-splitter" />
-            <outlinercol id="LastModDate" label="&outlinercol.lastmod.label;" 
+            <treecol id="LastModDate" label="&treecol.lastmod.label;" 
                          hidden="true" flex="1" class="sortDirectionIndicator" 
                          sort="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" 
                          persist="width hidden sortActive sortDirection ordinal" />
             <splitter class="tree-splitter" />
-            <outlinercol id="LastVisitDate" label="&outlinercol.lastvisit.label;" 
+            <treecol id="LastVisitDate" label="&treecol.lastvisit.label;" 
                          hidden="true" flex="1" class="sortDirectionIndicator" 
                          sort="rdf:http://home.netscape.com/NC-rdf#LastVisitDate" 
                          persist="width hidden sortActive sortDirection ordinal" />
-          </outlinercols>
-        </outliner>
+          </treecols>
+        </tree>
         <statusbar class="chromeclass-status" inherits="hidden=hidestatusbar" hidden="false">
           <statusbarpanel anonid="statusbar-text" flex="1"/>
         </statusbar>
@@ -1980,119 +1980,119 @@
       <field name="clickCount">2</field>
     </implementation>
   </binding>
-  <!-- Single column outliner -->
-  <binding id="bookmarks-outliner-name" extends="chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-outliner">
+  <!-- Single column tree -->
+  <binding id="bookmarks-tree-name" extends="chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-tree">
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
                  xmlns:xbl="http://www.mozilla.org/xbl" contextmenu="_child">
       <menupopup id="bmContext" 
                  onpopupshowing="this.parentNode.createContextMenu(event);"/>
-      <outliner anonid="bookmarks-outliner" flex="1" hidecolumnpicker="true" class="plain"
+      <tree anonid="bookmarks-tree" flex="1" hidecolumnpicker="true" class="plain"
                 datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" ref="NC:BookmarksRoot" flags="dont-build-content"
                 onkeypress="if (event.keyCode == 13) this.parentNode.openItem(event, false, true);"
-                ondraggesture="if (event.originalTarget.localName == 'outlinerchildren') nsDragAndDrop.startDrag(event, this.parentNode.DNDObserver);"
+                ondraggesture="if (event.originalTarget.localName == 'treechildren') nsDragAndDrop.startDrag(event, this.parentNode.DNDObserver);"
                 onclick="if (this.parentNode.validOpenClickConditions(event)) this.parentNode.openItem(event, false, true);"
-                onselect="this.parentNode.outlinerBoxObject.view.selectionChanged();">
+                onselect="this.parentNode.treeBoxObject.view.selectionChanged();">
         <template xmlns:nc="http://home.netscape.com/NC-rdf#">
           <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-            <outlinerchildren>
-              <outlineritem uri="rdf:*">
-                <outlinerrow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type separator" />
-              </outlineritem>
-            </outlinerchildren>
+            <treechildren>
+              <treeitem uri="rdf:*">
+                <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type separator" />
+              </treeitem>
+            </treechildren>
           </rule>
           <rule nc:FolderGroup="true">
-            <outlinerchildren>
-              <outlineritem uri="rdf:*">
-                <outlinerrow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
-                  <outlinercell properties="group hidetwisty" label="rdf:http://home.netscape.com/NC-rdf#Name" />
-                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#URL" />
-                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
-                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Description" />
-                  <outlinercell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
-                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
-                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" />
-                </outlinerrow>
-              </outlineritem>
-            </outlinerchildren>
+            <treechildren>
+              <treeitem uri="rdf:*">
+                <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
+                  <treecell properties="group hidetwisty" label="rdf:http://home.netscape.com/NC-rdf#Name" />
+                  <treecell label="rdf:http://home.netscape.com/NC-rdf#URL" />
+                  <treecell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
+                  <treecell label="rdf:http://home.netscape.com/NC-rdf#Description" />
+                  <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
+                  <treecell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
+                  <treecell label="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" />
+                </treerow>
+              </treeitem>
+            </treechildren>
           </rule>
           <rule>
-            <outlinerchildren>
-              <outlineritem uri="rdf:*">
-                <outlinerrow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
-                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Name" />
-                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#URL" />
-                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
-                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Description" />
-                  <outlinercell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
-                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
-                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" />
-                </outlinerrow>
-              </outlineritem>
-            </outlinerchildren>
+            <treechildren>
+              <treeitem uri="rdf:*">
+                <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
+                  <treecell label="rdf:http://home.netscape.com/NC-rdf#Name" />
+                  <treecell label="rdf:http://home.netscape.com/NC-rdf#URL" />
+                  <treecell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
+                  <treecell label="rdf:http://home.netscape.com/NC-rdf#Description" />
+                  <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
+                  <treecell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
+                  <treecell label="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" />
+                </treerow>
+              </treeitem>
+            </treechildren>
           </rule>
         </template>
-        <outlinercols anonid="outlinercols">
-          <outlinercol id="Name" label="&outlinercol.name.label;" flex="1" primary="true" 
+        <treecols anonid="treecols">
+          <treecol id="Name" label="&treecol.name.label;" flex="1" primary="true" 
                         class="sortDirectionIndicator" 
                         persist="width hidden sortActive sortDirection ordinal" 
                         sort="rdf:http://home.netscape.com/NC-rdf#Name"
                         sortActive="true" sortDirection="none"/>
           <splitter class="tree-splitter" />
-          <outlinercol id="URL" label="&outlinercol.url.label;" 
+          <treecol id="URL" label="&treecol.url.label;" 
                         flex="1" class="sortDirectionIndicator" 
                         sort="rdf:http://home.netscape.com/NC-rdf#URL" 
                         hidden="true"/>
           <splitter class="tree-splitter" />
-          <outlinercol id="ShortcutURL" label="&outlinercol.shortcut.label;" 
+          <treecol id="ShortcutURL" label="&treecol.shortcut.label;" 
                         hidden="true" flex="1" class="sortDirectionIndicator" 
                         sort="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
           <splitter class="tree-splitter" />
-          <outlinercol id="Description" label="&outlinercol.description.label;" 
+          <treecol id="Description" label="&treecol.description.label;" 
                         hidden="true" flex="1" class="sortDirectionIndicator" 
                         sort="rdf:http://home.netscape.com/NC-rdf#Description"/>
           <splitter class="tree-splitter" />
-          <outlinercol id="AddDate" label="&outlinercol.addedon.label;" 
+          <treecol id="AddDate" label="&treecol.addedon.label;" 
                         hidden="true" flex="1" class="sortDirectionIndicator" 
                         sort="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
           <splitter class="tree-splitter" />
-          <outlinercol id="LastModDate" label="&outlinercol.lastmod.label;" 
+          <treecol id="LastModDate" label="&treecol.lastmod.label;" 
                         hidden="true" flex="1" class="sortDirectionIndicator" 
                         sort="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate"  />
           <splitter class="tree-splitter" />
-          <outlinercol id="LastVisitDate" label="&outlinercol.lastvisit.label;" 
+          <treecol id="LastVisitDate" label="&treecol.lastvisit.label;" 
                         hidden="true" flex="1" class="sortDirectionIndicator" 
                         sort="rdf:http://home.netscape.com/NC-rdf#LastVisitDate" />
-        </outlinercols>
-      </outliner>
+        </treecols>
+      </tree>
     </xbl:content>
     <implementation>
       <field name="clickCount">1</field>
     </implementation>
   </binding>
-  <!-- Outliner with folders only -->
-  <binding id="bookmarks-outliner-folders" extends="chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-outliner">
+  <!-- Tree with folders only -->
+  <binding id="bookmarks-tree-folders" extends="chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-tree">
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:xbl="http://www.mozilla.org/xbl">
-      <outliner anonid="bookmarks-outliner" flex="1" hidecolumnpicker="true"
+      <tree anonid="bookmarks-tree" flex="1" hidecolumnpicker="true"
                 datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" ref="NC:BookmarksRoot" flags="dont-build-content"
-                onselect="this.parentNode.outlinerBoxObject.view.selectionChanged();">
+                onselect="this.parentNode.treeBoxObject.view.selectionChanged();">
         <template>
           <rule iscontainer="true">
-            <outlinerchildren>
-              <outlineritem uri="rdf:*">
-                <outlinerrow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
-                  <outlinercell label="rdf:http://home.netscape.com/NC-rdf#Name" />
-                </outlinerrow>
-              </outlineritem>
-            </outlinerchildren>
+            <treechildren>
+              <treeitem uri="rdf:*">
+                <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
+                  <treecell label="rdf:http://home.netscape.com/NC-rdf#Name" />
+                </treerow>
+              </treeitem>
+            </treechildren>
           </rule>
         </template>
-        <outlinercols>
-          <outlinercol id="Name" label="&outlinercol.name.label;" flex="1" primary="true"
+        <treecols>
+          <treecol id="Name" label="&treecol.name.label;" flex="1" primary="true"
                        class="sortDirectionIndicator" persist="width hidden sortActive sortDirection"
                        sort="rdf:http://home.netscape.com/NC-rdf#Name"
                        sortActive="true" sortDirection="none"/>
-        </outlinercols>
-      </outliner>
+        </treecols>
+      </tree>
     </xbl:content>
     <implementation>
       <field name="clickCount">1</field>
@@ -2116,7 +2116,7 @@ API:
 //-->
 <!-- 
   ILE: 
-    - impl ILE on outliner.xml
+    - impl ILE on tree.xml
 //-->
 <!--
   Command handling:

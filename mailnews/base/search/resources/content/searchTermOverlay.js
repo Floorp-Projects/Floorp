@@ -38,13 +38,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 var gTotalSearchTerms=0;
-var gSearchRowContainer;
+var gSearchTermList;
 var gSearchTerms = new Array;
 var gSearchRemovedTerms = new Array;
 var gSearchScope;
 var gSearchLessButton;
 var gSearchBooleanRadiogroup;
-var gSearchTermTree;
 
 //
 function searchTermContainer() {}
@@ -165,8 +164,7 @@ var nsIMsgSearchTerm = Components.interfaces.nsIMsgSearchTerm;
 
 function initializeSearchWidgets() {
     gSearchBooleanRadiogroup = document.getElementById("booleanAndGroup");
-    gSearchRowContainer = document.getElementById("searchTermList");
-    gSearchTermTree = document.getElementById("searchTermTree");
+    gSearchTermList = document.getElementById("searchTermList");
     gSearchLessButton = document.getElementById("less");
     if (!gSearchLessButton)
         dump("I couldn't find less button!");
@@ -202,13 +200,13 @@ function initializeSearchRows(scope, searchTerms)
 function scrollToLastSearchTerm(index)
 {
     if (index > 0)
-      gSearchTermTree.ensureIndexIsVisible(index-1);
+      gSearchTermList.ensureIndexIsVisible(index-1);
 }
  
 function onMore(event)
 {
     if(gTotalSearchTerms==1)
-      gSearchLessButton .removeAttribute("disabled", "false");
+      gSearchLessButton.removeAttribute("disabled", "false");
     createSearchRow(gTotalSearchTerms++, gSearchScope, null);
     // the user just added a term, so scroll to it
     scrollToLastSearchTerm(gTotalSearchTerms);
@@ -288,18 +286,18 @@ function createSearchRow(index, scope, searchTerm)
 
     // and/or string handling:
     // this is scary - basically we want to take every other
-    // treecell, (note the i+=2) which will be a text label,
+    // listcell, (note the i+=2) which will be a text label,
     // and set the searchTermObj's
     // booleanNodes to that
     var stringNodes = new Array;
-    var treecells = searchrow.firstChild.childNodes;
+    var listcells = searchrow.childNodes;
     var j=0;
-    for (var i=0; i<treecells.length; i+=2) {
-        stringNodes[j++] = treecells[i];
+    for (var i=0; i<listcells.length; i+=2) {
+        stringNodes[j++] = listcells[i];
     }
     searchTermObj.booleanNodes = stringNodes;
 
-    gSearchRowContainer.appendChild(searchrow);
+    gSearchTermList.appendChild(searchrow);
 }
 
 function initializeTermFromId(id)
@@ -329,25 +327,23 @@ function initializeTermFromIndex(index)
     gSearchTerms[index].initialized = true;
 }
 
-// creates a <treerow> using the array treeCellChildren as
-// the children of each treecell
-function constructRow(treeCellChildren)
+// creates a <listitem> using the array children as
+// the children of each listcell
+function constructRow(children)
 {
-    var treeitem = document.createElement("treeitem");
-    var row = document.createElement("treerow");
-    for (var i = 0; i<treeCellChildren.length; i++) {
-      var treecell = document.createElement("treecell");
+    var listitem = document.createElement("listitem");
+    listitem.setAttribute("allowevents", "true");
+    for (var i = 0; i < children.length; i++) {
+      var listcell = document.createElement("listcell");
 
       // it's ok to have empty cells
-      if (treeCellChildren[i]) {
-          treecell.setAttribute("allowevents", "true");
-          treeCellChildren[i].setAttribute("flex", "1");
-          treecell.appendChild(treeCellChildren[i]);
+      if (children[i]) {
+          children[i].setAttribute("flex", "1");
+          listcell.appendChild(children[i]);
       }
-      row.appendChild(treecell);
+      listitem.appendChild(listcell);
     }
-    treeitem.appendChild(row);
-    return treeitem;
+    return listitem;
 }
 
 function removeSearchRow(index)
@@ -362,16 +358,16 @@ function removeSearchRow(index)
     if (!gSearchTerms[index].searchTerm && !gSearchTerms[index].initialized)
         initializeTermFromIndex(index);
 
-    // need to remove row from tree, so walk upwards from the
-    // searchattribute to find the first <treeitem>
-    var treeItemRow = searchTermObj.searchattribute;
-    while (treeItemRow) {
-        if (treeItemRow.localName == "treeitem") break;
-        treeItemRow = treeItemRow.parentNode;
+    // need to remove row from list, so walk upwards from the
+    // searchattribute to find the first <listitem>
+    var listitem = searchTermObj.searchattribute;
+    while (listitem) {
+        if (listitem.localName == "listitem") break;
+        listitem = listitem.parentNode;
     }
 
-    if (!treeItemRow) {
-        dump("Error: couldn't find parent treeitem!\n");
+    if (!listitem) {
+        dump("Error: couldn't find parent listitem!\n");
         return;
     }
 
@@ -382,7 +378,7 @@ function removeSearchRow(index)
         //dump("That wasn't real. ignoring \n");
     }
 
-    treeItemRow.parentNode.removeChild(treeItemRow);
+    listitem.parentNode.removeChild(listitem);
     // remove it from the list of terms - XXX this does it?
     // remove the last element
     gSearchTerms.length--;

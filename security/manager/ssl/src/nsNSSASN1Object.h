@@ -36,9 +36,9 @@
 
 #include "nscore.h"
 #include "nsIX509Cert.h"
-#include "nsIASN1Outliner.h"
-#include "nsIOutlinerView.h"
-#include "nsIOutlinerSelection.h"
+#include "nsIASN1Tree.h"
+#include "nsITreeView.h"
+#include "nsITreeSelection.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 

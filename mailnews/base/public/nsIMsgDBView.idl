@@ -296,7 +296,7 @@ interface nsIMsgDBView : nsISupports
 	//to tell us if we are in the search view
 	attribute boolean isSearchView;
 
-	//to notify outliner that rows are going away
+	//to notify tree that rows are going away
     void onDeleteCompleted(in boolean succeeded);
 
     readonly attribute nsIMsgDatabase db;
