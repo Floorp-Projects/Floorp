@@ -357,8 +357,9 @@ NS_IMETHODIMP nsImageFrame::OnStartContainer(imgIRequest *aRequest, nsIPresConte
   if (mIntrinsicSize != newsize) {
     mIntrinsicSize = newsize;
 
-    if (mComputedSize.width != 0 && mComputedSize.height != 0)
-      mTransform.SetToScale((float(mIntrinsicSize.width) / float(mComputedSize.width)), (float(mIntrinsicSize.height) / float(mComputedSize.height)));
+    if (mIntrinsicSize.width != 0 && mIntrinsicSize.height != 0)
+      mTransform.SetToScale((float(mComputedSize.width) / float(mIntrinsicSize.width)),
+                            (float(mComputedSize.height) / float(mIntrinsicSize.height)));
 
     if (!mSizeConstrained) {
       nsCOMPtr<nsIPresShell> presShell;
@@ -708,9 +709,9 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
   if (mComputedSize == mIntrinsicSize) {
     mTransform.SetToIdentity();
   } else {
-    if (mComputedSize.width != 0 && mComputedSize.height != 0) {
-      mTransform.SetToScale(float(mIntrinsicSize.width) / float(mComputedSize.width),
-                            float(mIntrinsicSize.height) / float(mComputedSize.height));
+    if (mIntrinsicSize.width != 0 && mIntrinsicSize.height != 0) {
+      mTransform.SetToScale(float(mComputedSize.width) / float(mIntrinsicSize.width),
+                            float(mComputedSize.height) / float(mIntrinsicSize.height));
     }
   }
 
@@ -1116,7 +1117,7 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
             trans.SetToScale((float(mIntrinsicSize.width) / float(inner.width)),
                              (float(mIntrinsicSize.height) / float(inner.height)));
 
-            nsRect r(inner.x, inner.y, inner.width, inner.height);
+            nsRect r(0, 0, inner.width, inner.height);
 
             trans.TransformCoord(&r.x, &r.y, &r.width, &r.height);
 
