@@ -1018,20 +1018,20 @@ static void TileImage(GdkWindow *dest, GdkGC *gc, GdkWindow *src, nsRect &aSrcRe
  */
 NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
                                    nsDrawingSurface aSurface,
-                                   nscoord aX0, nscoord aY0,
-                                   nscoord aX1, nscoord aY1,
-                                   nscoord aWidth, nscoord aHeight)
+                                   nsRect &aSrcRect,
+                                   nsRect &aTileRect)
 {
-  mWidth = aX1 - aX0;
-  mHeight = aY1 - aY0;
+  mWidth = aSrcRect.width;
+  mHeight = aSrcRect.height;
 
-  printf("nsImageGTK::DrawTile((0, 0, %d, %d), %d, %d) %p\n", mWidth, mHeight, aWidth, aHeight, this);
+  printf("nsImageGTK::DrawTile((src: %d, %d), (tile: %d, %d) %p\n", mWidth, mHeight,
+         aTileRect.width, aTileRect.height, this);
 
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
 
   GdkGC *copyGC;
   copyGC = gdk_gc_new(drawing->GetDrawable());
-  gdk_gc_copy(copyGC, ((nsRenderingContextGTK&)aContext).GetGC());
+  //  gdk_gc_copy(copyGC, ((nsRenderingContextGTK&)aContext).GetGC());
 
   CreateOffscreenPixmap(mWidth, mHeight);
 
@@ -1041,25 +1041,31 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
 
     SetupGCForAlpha(copyGC, 0, 0);
 
-    nsRect srcRect(0, 0, mWidth, mHeight);
-    TileImage(drawing->GetDrawable(), copyGC, mImagePixmap, srcRect, aWidth, aHeight);
+    TileImage(drawing->GetDrawable(), copyGC, mImagePixmap, aSrcRect, aTileRect.width, aTileRect.height);
   }
 
   else {
     // XXX we should properly handle the image not being completly decoded here
-    
-    DrawImageOffscreen(0, 0, mWidth, mHeight);
+    DrawImageOffscreen(0, 0,
+                       PR_MIN(mDecodedX2-mDecodedX1, mWidth),
+                       PR_MIN(mDecodedY2-mDecodedY1, mHeight));
 
     XGCValues xvalues;
     memset(&xvalues, 0, sizeof(XGCValues));
     unsigned long xvalues_mask = 0;
     xvalues.fill_style = FillTiled;
     xvalues.tile = GDK_WINDOW_XWINDOW(mImagePixmap);
-    xvalues_mask = GCFillRule | GCTile;
+    xvalues_mask = GCFillStyle | GCTile;
     XChangeGC(GDK_DISPLAY(), GDK_GC_XGC(copyGC), xvalues_mask, &xvalues);
 
     // draw onscreen
-    gdk_draw_rectangle(drawing->GetDrawable(), copyGC, PR_TRUE, aX0, aY0, aWidth, aHeight);
+    printf("gdk_draw_rectangle(..., %d, %d, %d, %d)\n",
+           aTileRect.x, aTileRect.y, 
+           aTileRect.width, aTileRect.height);
+
+    gdk_draw_rectangle(drawing->GetDrawable(), copyGC, PR_TRUE,
+                       aTileRect.x, aTileRect.y, 
+                       aTileRect.width, aTileRect.height);
   }
 
  gdk_gc_unref(copyGC);

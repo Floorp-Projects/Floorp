@@ -1488,7 +1488,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
 }
 
 
-#if 0
+#ifdef USE_NATIVE_TILING
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
  *	@update 3/16/00 dwc
@@ -1502,12 +1502,14 @@ nsRenderingContextGTK::DrawTile(nsIImage *aImage,
 
   printf("nsRenderingContextGTK::DrawTile()\n");
 
-  // convert to pixels
-  mTMatrix->TransformCoord(&aX0,&aY0);
-  mTMatrix->TransformCoord(&aX1,&aY1);
-  mTMatrix->TransformCoord(&aWidth,&aHeight);
+  nsRect srcRect (0, 0, aWidth,  aHeight);
+  nsRect tileRect(aX0, aY0, aX1-aX0, aY1-aY0);
 
-  ((nsImageGTK*)aImage)->DrawTile(*this,mSurface,aX0,aY0,aX1,aY1,aWidth,aHeight);
+  // convert to pixels
+  mTMatrix->TransformCoord(&srcRect.width, &srcRect.height);
+  mTMatrix->TransformCoord(&tileRect.x, &tileRect.y, &tileRect.width, &tileRect.height);
+
+  ((nsImageGTK*)aImage)->DrawTile(*this, mSurface, srcRect, tileRect);
 
   return NS_OK;
 }
