@@ -147,14 +147,14 @@ protected:
   virtual ~nsOutlinerBodyFrame();
 
   // Returns the height of rows in the tree.
-  PRInt32 GetRowHeight();
+  PRInt32 GetRowHeight(nsIPresContext* aPresContext);
 
   // Returns our height once border and padding have been removed.
   PRInt32 GetTotalHeight();
 
   // Looks up a style context in the style cache.  On a cache miss we resolve
   // the pseudo-styles passed in and place them into the cache.
-  nsresult GetPseudoStyleContext(nsIStyleContext** aResult);
+  nsresult GetPseudoStyleContext(nsIPresContext* aPresContext, nsIStyleContext** aResult);
 
 protected: // Data Members
   // The current view for this outliner widget.  We get all of our row and cell data

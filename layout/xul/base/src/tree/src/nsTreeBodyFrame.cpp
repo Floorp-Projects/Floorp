@@ -214,13 +214,13 @@ NS_IMETHODIMP nsOutlinerBodyFrame::RowsRemoved(PRInt32 index, PRInt32 count)
   return NS_OK;
 }
 
-PRInt32 nsOutlinerBodyFrame::GetRowHeight()
+PRInt32 nsOutlinerBodyFrame::GetRowHeight(nsIPresContext* aPresContext)
 {
   // Look up the correct height in our cache.
   nsCOMPtr<nsIStyleContext> rowContext;
   mScratchArray->Clear();
   mScratchArray->AppendElement(nsXULAtoms::mozoutlinerrow);
-  GetPseudoStyleContext(getter_AddRefs(rowContext));
+  GetPseudoStyleContext(aPresContext, getter_AddRefs(rowContext));
   if (rowContext) {
     const nsStylePosition* myPosition = (const nsStylePosition*)
           rowContext->GetStyleData(eStyleStruct_Position);
@@ -259,7 +259,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
   if (NS_FAILED(rv)) return rv;
 
   // Update our page count, our available height and our row height.
-  mRowHeight = GetRowHeight();
+  mRowHeight = GetRowHeight(aPresContext);
   mTotalHeight = GetTotalHeight();
   mPageCount = mTotalHeight/mRowHeight;
   PRInt32 rowCount = 0;
@@ -295,10 +295,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex,
 
 // The style cache.
 nsresult 
-nsOutlinerBodyFrame::GetPseudoStyleContext(nsIStyleContext** aResult)
+nsOutlinerBodyFrame::GetPseudoStyleContext(nsIPresContext* aPresContext, nsIStyleContext** aResult)
 {
-  *aResult = nsnull;
-  return NS_OK;
+  return mStyleCache.GetStyleContext(aPresContext, mContent, mStyleContext, mScratchArray, aResult);
 }
 
 //
