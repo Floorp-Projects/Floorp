@@ -134,8 +134,6 @@ protected:
 
     eCharsetReloadState mCharsetReloadState;
 
-    nsISupports* mHistoryState; // Weak reference.  Session history owns this.
-
     nsresult CreateViewer(nsIRequest* request,
         const char* aContentType,
         const char* aCommand,
