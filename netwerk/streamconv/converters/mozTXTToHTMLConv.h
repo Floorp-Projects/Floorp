@@ -258,7 +258,7 @@ private:
  * @return A valid URL could be found (and creation of HTML successful)
  */
   PRBool CheckURLAndCreateHTML(
-       const nsString& txtURL, const nsString& desc,
+       const nsString& txtURL, const nsString& desc, const modetype mode,
        nsString& outputHTML);
 
 /**

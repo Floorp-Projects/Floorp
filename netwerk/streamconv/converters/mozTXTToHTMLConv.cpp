@@ -84,7 +84,7 @@ mozTXTToHTMLConv::EscapeStr(nsString& aInString)
   //aInString.ReplaceSubstring("&", "&amp;");
   //aInString.ReplaceSubstring("<", "&lt;");
   //aInString.ReplaceSubstring(">", "&gt;");
-  for (PRUint32 i = 0; PRInt32(i) < aInString.Length();)
+  for (PRUint32 i = 0; i < aInString.Length();)
   {
     switch (aInString[i])
     {
@@ -347,7 +347,7 @@ mozTXTToHTMLConv::CalculateURLBoundaries(const PRUnichar * aInString, PRInt32 aI
 
 PRBool
 mozTXTToHTMLConv::CheckURLAndCreateHTML(
-     const nsString& txtURL, const nsString& desc,
+     const nsString& txtURL, const nsString& desc, const modetype mode,
      nsString& outputHTML)
 {
   // Create *uri from txtURL
@@ -371,16 +371,28 @@ mozTXTToHTMLConv::CheckURLAndCreateHTML(
   // Real work
   if (NS_SUCCEEDED(rv) && uri)
   {
-    //PRUnichar* validURL;
-    //uri->ToString(&validURL);
-
-    outputHTML.AssignWithConversion("<a href=\"");
-    //outputHTML += validURL;
+    outputHTML.AssignWithConversion("<a class=\"txt-link txt-link-");
+    switch(mode)
+    {
+    case RFC1738:
+      outputHTML.AppendWithConversion("rfc1738");
+      break;
+    case RFC2396E:
+      outputHTML.AppendWithConversion("rfc2396E");
+      break;
+    case freetext:
+      outputHTML.AppendWithConversion("freetext");
+      break;
+    case abbreviated:
+      outputHTML.AppendWithConversion("abbreviated");
+      break;
+    default: break;
+    }
+    outputHTML.AppendWithConversion("\" href=\"");
     outputHTML += txtURL;
     outputHTML.AppendWithConversion("\">");
     outputHTML += desc;
     outputHTML.AppendWithConversion("</a>");
-    //Recycle(validURL);
     return PR_TRUE;
   }
   else
@@ -456,7 +468,8 @@ mozTXTToHTMLConv::FindURL(const PRUnichar * aInString, PRInt32 aInLength, const 
         CompleteAbbreviatedURL(temp.GetUnicode(),temp.Length(), pos - start, txtURL);
       }
 
-      if (!txtURL.IsEmpty() && CheckURLAndCreateHTML(txtURL, desc, outputHTML))
+      if (!txtURL.IsEmpty() && CheckURLAndCreateHTML(txtURL, desc, check,
+                                                     outputHTML))
       {
         replaceBefore = resultReplaceBefore;
         replaceAfter = resultReplaceAfter;
@@ -575,8 +588,9 @@ mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInString
     aOutString.AppendWithConversion(tagHTML);
     aOutString.AppendWithConversion(' ');
     aOutString.AppendWithConversion(attributeHTML);
-    aOutString.AppendWithConversion('>');
+    aOutString.AppendWithConversion("><span class=txt-tag>");
     aOutString.AppendWithConversion(tagTXT);
+    aOutString.AppendWithConversion("</span>");
     return PR_TRUE;
   }
 
@@ -585,8 +599,9 @@ mozTXTToHTMLConv::StructPhraseHit(const PRUnichar * aInString, PRInt32 aInString
        && ItMatchesDelimited(aInString, aInStringLength, tagTXT, aTagTXTLen, LT_ALPHA, LT_DELIMITER))
   {
     openTags--;
+    aOutString.AppendWithConversion("<span class=txt-tag>");
     aOutString.AppendWithConversion(tagTXT);
-    aOutString.AppendWithConversion("</");
+    aOutString.AppendWithConversion("</span></");
     aOutString.AppendWithConversion(tagHTML);
     aOutString.AppendWithConversion('>');
     return PR_TRUE;
@@ -664,12 +679,13 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
       )
       &&
         (
-          SmilyHit(aInString, aInLength, col0, ":-)", 3, "<img SRC=\"chrome://messenger/skin/smile.gif\" alt=\":-)\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, col0, ":)",  2, "<img SRC=\"chrome://messenger/skin/smile.gif\" alt=\":)\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, col0, ":-(", 3, "<img SRC=\"chrome://messenger/skin/frown.gif\" alt=\":-(\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, col0, ":(",  2, "<img SRC=\"chrome://messenger/skin/frown.gif\" alt=\":(\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, col0, ";-)", 3, "<img SRC=\"chrome://messenger/skin/wink.gif\" alt=\";-)\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, col0, ";-P", 3, "<img SRC=\"chrome://messenger/skin/sick.gif\" alt=\";-P\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
+          SmilyHit(aInString, aInLength, col0, ":-)", 3, "<img src=\"chrome://messenger/skin/smile.gif\" alt=\":-)\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, col0, ":)",  2, "<img src=\"chrome://messenger/skin/smile.gif\" alt=\":)\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, col0, ":-(", 3, "<img src=\"chrome://messenger/skin/frown.gif\" alt=\":-(\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, col0, ":(",  2, "<img src=\"chrome://messenger/skin/frown.gif\" alt=\":(\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, col0, ";-)", 3, "<img src=\"chrome://messenger/skin/wink.gif\" alt=\";-)\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, col0, ";)", 2, "<img src=\"chrome://messenger/skin/wink.gif\" alt=\";)\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, col0, ";-P", 3, "<img src=\"chrome://messenger/skin/sick.gif\" alt=\";-P\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
         )
     )
   {
@@ -689,36 +705,18 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
       )
       &&
         (
-          SmilyHit(aInString, aInLength, PR_FALSE, ":-)", 3, "<img SRC=\"chrome://messenger/skin/smile.gif\" alt=\":-)\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ":)",  2, "<img SRC=\"chrome://messenger/skin/smile.gif\" alt=\":)\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ":-(", 3, "<img SRC=\"chrome://messenger/skin/frown.gif\" alt=\":-(\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ":(",  2, "<img SRC=\"chrome://messenger/skin/frown.gif\" alt=\":(\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ";-)", 3, "<img SRC=\"chrome://messenger/skin/wink.gif\" alt=\";-P\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
-          SmilyHit(aInString, aInLength, PR_FALSE, ";-P", 3, "<img SRC=\"chrome://messenger/skin/sick.gif\" alt=\";-P\" height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
+          SmilyHit(aInString, aInLength, PR_FALSE, ":-)", 3, "<img src=\"chrome://messenger/skin/smile.gif\" alt=\":-)\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, PR_FALSE, ":)",  2, "<img src=\"chrome://messenger/skin/smile.gif\" alt=\":)\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, PR_FALSE, ":-(", 3, "<img src=\"chrome://messenger/skin/frown.gif\" alt=\":-(\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, PR_FALSE, ":(",  2, "<img src=\"chrome://messenger/skin/frown.gif\" alt=\":(\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, PR_FALSE, ";-)", 3, "<img src=\"chrome://messenger/skin/wink.gif\" alt=\";-)\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, PR_FALSE, ";)", 2, "<img src=\"chrome://messenger/skin/wink.gif\" alt=\";)\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen) ||
+          SmilyHit(aInString, aInLength, PR_FALSE, ";-P", 3, "<img src=\"chrome://messenger/skin/sick.gif\" alt=\";-P\" class=txt-smily height=17 width=17 align=ABSCENTER>", outputHTML, glyphTextLen)
         )
     )
   {
     MOZ_TIMER_STOP(mGlyphHitTimer);
     return PR_TRUE;
-  }
-  if (text0 == '(')
-  {
-    if (ItMatchesDelimited(aInString, aInLength, "(c)", 3, LT_IGNORE, LT_DELIMITER))
-         // Note: ItMatchesDelimited compares case-insensitive
-    {
-      aOutputString.AppendWithConversion("&copy;");
-      glyphTextLen = 3;
-      MOZ_TIMER_STOP(mGlyphHitTimer);
-      return PR_TRUE;
-    }
-    if (ItMatchesDelimited(aInString,aInLength,  "(r)", 3, LT_IGNORE, LT_DELIMITER))
-         // see above
-    {
-      aOutputString.AppendWithConversion("&reg;");
-      glyphTextLen = 3;
-      MOZ_TIMER_STOP(mGlyphHitTimer);
-      return PR_TRUE;
-    }
   }
   if (text0 == '+' || text1 == '+')
   {
@@ -765,7 +763,7 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
 
     outputHTML.Truncate();
     outputHTML += text0;
-    outputHTML.AppendWithConversion("<sup>");
+    outputHTML.AppendWithConversion("<sup class=txt-sup>");
 
     aOutputString.Append(outputHTML);
     aOutputString.Append(&aInString[2], delimPos - 2);
@@ -830,32 +828,48 @@ mozTXTToHTMLConv::CiteLevelTXT(const PRUnichar *line,
   PRBool moreCites = PR_TRUE;
   while (moreCites)
   {
-    /* E.g. the following counts as quote:
+    /* E.g. the following lines count as quote:
 
-       >text
        > text
-       ] text
+       //#ifdef QUOTE_RECOGNITION_AGGRESSIVE
+       >text
+       //#ifdef QUOTE_RECOGNITION_AGGRESSIVE
            > text
+       ] text
        USER> text
-       user] text
+       USER] text
+       //#endif
 
        logLineStart is the position of "t" in this example
     */
     PRUint32 i = logLineStart;
+
+#ifdef QUOTE_RECOGNITION_AGGRESSIVE
     for (; PRInt32(i) < lineLength && nsCRT::IsAsciiSpace(line[i]); i++)
       ;
-    for (; PRInt32(i) < lineLength && nsCRT::IsAsciiAlpha(line[i]); i++)
+    for (; PRInt32(i) < lineLength && nsCRT::IsAsciiAlpha(line[i])
+                                   && nsCRT::IsUpper(line[i])   ; i++)
       ;
-    if (line[i] == '>' || line[i] == ']')
+    if (PRInt32(i) < lineLength && (line[i] == '>' || line[i] == ']'))
+#else
+    if (PRInt32(i) < lineLength && line[i] == '>')
+#endif
     {
-      // Sendmail
+      i++;
+      if (PRInt32(i) < lineLength && line[i] == ' ')
+        i++;
+      // sendmail/mbox
+      // Placed here for performance increase
       const PRUnichar * indexString = &line[logLineStart];
-      if (!nsCRT::strncasecmp(indexString, ">From ", MinInt(6, nsCRT::strlen(indexString)))) //XXX RFC2646
+           // here, |logLineStart < lineLength| is always true
+      if (!nsCRT::strncasecmp(indexString, ">From ",
+                              MinInt(6, nsCRT::strlen(indexString))))
+                              //XXX RFC2646
         moreCites = PR_FALSE;
       else
       {
         result++;
-        logLineStart = i + 1;
+        logLineStart = i;
       }
     }
     else
@@ -877,8 +891,12 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
   //doStructPhrase = PR_FALSE;
 
 #ifdef DEBUG_BenB
+  {
   printf("ScanTXT orginal: ");
-  printf(aInString.ToNewCString());
+  nsCString tmp;
+  tmp.AssignWithConversion(aInString);
+  printf(tmp.ToNewCString());
+  }
 #endif
 
   MOZ_TIMER_START(mScanTXTTimer);
@@ -916,7 +934,7 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
       {
       case '*':
         if (StructPhraseHit(newOffset, newLength, i == 0,
-                 "*", 1, "strong", "class=txt_star",
+                 "*", 1, "strong", "class=txt-star",
                  aOutString, structPhrase_strong))
         {
           i++;
@@ -925,7 +943,7 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
         break;
       case '_':
         if (StructPhraseHit(newOffset, newLength, i == 0,
-                 "_", 1, "em" /* <u> is deprecated */, "class=txt_underscore",
+                 "_", 1, "span" /* <u> is deprecated */, "class=txt-underscore",
                  aOutString, structPhrase_underline))
         {
           i++;
@@ -934,7 +952,7 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
         break;
       case '/':
         if (StructPhraseHit(newOffset, newLength, i == 0,
-                 "/", 1, "em", "class=txt_slash",
+                 "/", 1, "em", "class=txt-slash",
                  aOutString, structPhrase_italic))
         {
           i++;
@@ -943,7 +961,7 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
         break;
       case '|':
         if (StructPhraseHit(newOffset, newLength, i == 0,
-                 "|", 1, "code", "class=txt_verticalline",
+                 "|", 1, "code", "class=txt-verticalline",
                  aOutString, structPhrase_code))
         {
           i++;
@@ -998,9 +1016,13 @@ mozTXTToHTMLConv::ScanTXT(const PRUnichar * aInString, PRInt32 aInStringLength, 
   }
 
 #ifdef DEBUG_BenB
+  {
   printf("ScanTXT result:  ");
-  printf(result.ToNewCString());
+  nsCString tmp;
+  tmp.AssignWithConversion(aOutString);
+  printf(tmp.ToNewCString());
   printf("\n");
+  }
 #endif
 
   MOZ_TIMER_STOP(mScanTXTTimer);
@@ -1015,9 +1037,13 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
   const PRUnichar * uniBuffer = aInString.GetUnicode();
 
 #ifdef DEBUG_BenB
+  {
   printf("ScanHTML orginal: ");
-  printf(aInString.ToNewCString());
+  nsCString tmp;
+  tmp.AssignWithConversion(aInString);
+  printf(tmp.ToNewCString());
   printf("\n");
+  }
 #endif
 #ifdef DEBUG_BenB_Perf
   PRTime parsing_start = PR_IntervalNow();
@@ -1026,7 +1052,7 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
   // Look for simple entities not included in a tags and scan them.
   /* Skip all tags ("<[...]>") and content in an a tag ("<a[...]</a>").
      Unescape the rest (text between tags) and pass it to ScanTXT. */
-  for (PRUint32 i = 0; i < aInString.Length();)
+  for (PRInt32 i = 0; PRUint32(i) < aInString.Length();)
   {
     if (aInString[i] == '<')  // html tag
     {
@@ -1066,9 +1092,13 @@ mozTXTToHTMLConv::ScanHTML(nsString& aInString, PRUint32 whattodo, nsString &aOu
   }
 
 #ifdef DEBUG_BenB
+  {
   printf("ScanHTML result:  ");
-  printf(aOutString.ToNewCString());
+  nsCString tmp;
+  tmp.AssignWithConversion(aOutString);
+  printf(tmp.ToNewCString());
   printf("\n");
+  }
 #endif
 #ifdef DEBUG_BenB_Perf
   printf("ScanHTML time:    %d ms\n", PR_IntervalToMilliseconds(PR_IntervalNow() - parsing_start));
