@@ -3146,9 +3146,7 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
         return ShiftFocusInternal(aForward, oldFocus);
       }
 
-      if (docHasFocus)
-        docShell->SetCanvasHasFocus(PR_FALSE);
-      else
+      if (!docHasFocus)
         docShell->SetHasFocus(PR_TRUE);
     }
   } else {
@@ -3890,6 +3888,16 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
       NS_IF_ADDREF(gLastFocusedContent);
       // only raise window if the the focus controller is active
       SendFocusBlur(mPresContext, aContent, fcActive); 
+
+      // If we now have focused content, ensure that the canvas focus ring
+      // is removed.
+      if (mDocument) {
+        nsCOMPtr<nsIDocShell> docShell =
+          do_QueryInterface(nsCOMPtr<nsISupports>(mDocument->GetContainer()));
+
+        if (docShell && mCurrentFocus)
+          docShell->SetCanvasHasFocus(PR_FALSE);
+      }
     }
   }
 
