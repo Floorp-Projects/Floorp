@@ -42,6 +42,10 @@
 
 #ifdef MOZ_ACCESSIBILITY_ATK
 
+#include "nsCOMPtr.h"
+
+class nsIAccessible;
+
 struct AtkStateChange {
   PRUint32 state;
   PRBool   enable;
@@ -78,7 +82,7 @@ struct AtkChildrenChange {
 };
 
 struct AtkTextChange {
-  PRUint32 start;
+  PRInt32  start;
   PRUint32 length;
   PRBool   add;     // true for add, false for delete
 };

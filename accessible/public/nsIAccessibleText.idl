@@ -67,6 +67,11 @@ interface nsIAccessibleText : nsISupports
                            out long startOffset,
                            out long endOffset);
 
+  AString getTextBeforeOffset (in long offset,
+                               in nsAccessibleTextBoundary boundaryType,
+                               out long startOffset,
+                               out long endOffset);
+
     /**
       * It would be better to return an unsigned long here,
       * to allow unicode chars > 16 bits
@@ -76,11 +81,6 @@ interface nsIAccessibleText : nsISupports
   nsISupports getAttributeRange (in long offset,
                                  out long rangeStartOffset,
                                  out long rangeEndOffset);
-
-  AString getTextBeforeOffset (in long offset,
-                               in nsAccessibleTextBoundary boundaryType,
-                               out long startOffset,
-                               out long endOffset);
 
   void getCharacterExtents (in long offset,
                             out long x,
@@ -109,23 +109,21 @@ interface nsIAccessibleText : nsISupports
  Assumptions:
 
  Using wstring (UCS2) instead of string encoded in UTF-8.
-        Multibyte encodings (or at least potentially multi-byte
-        encodings) would be preferred for the reasons cited above.
+ Multibyte encodings (or at least potentially multi-byte
+ encodings) would be preferred for the reasons cited above.
 
- The following methods will throw an exception
- on failure (since not every text component will allow
-        every operation):
- setSelectionBounds, addSelection, removeSelection,
-        setCaretOffset.
+ The following methods will throw an exception on failure
+ (since not every text component will allow every operation):
+ setSelectionBounds, addSelection, removeSelection, setCaretOffset.
 
  getRangeAttributes defined to return an nsISupports
  interface instead of a pango specific data structure.
-        It may be that some other return type is more appropriate
-        for mozilla text attributes.
+ It may be that some other return type is more appropriate
+ for mozilla text attributes.
 
-        we assume that all text components support the idea of
-        a caret offset, whether visible or "virtual".  If this
-        isn't the case, caretOffset can be made readonly and
-        a setCaretOffset method provided which throws an exception
-        on failure (as with *selection methods above).
+ we assume that all text components support the idea of
+ a caret offset, whether visible or "virtual".  If this
+ isn't the case, caretOffset can be made readonly and
+ a setCaretOffset method provided which throws an exception
+ on failure (as with *selection methods above).
 */

@@ -56,7 +56,6 @@
 #include "nsIEditor.h"
 #include "nsIEventStateManager.h"
 #include "nsIFrame.h"
-#include "nsITextControlFrame.h"
 #include "nsIPlaintextEditor.h"
 #include "nsISelectionController.h"
 #include "nsReadableUtils.h"
