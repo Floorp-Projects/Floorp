@@ -68,6 +68,7 @@ LLIBS=					\
  $(DIST)\lib\raptorgfx.lib		\
  $(DIST)\lib\raptorhtmlpars.lib		\
  $(DIST)\lib\jsdom.lib		        \
+ $(DIST)\lib\netlib.lib		        \
  $(DIST)\lib\libplc21.lib		\
  $(LIBNSPR)
 
