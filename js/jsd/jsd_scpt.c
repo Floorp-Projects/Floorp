@@ -153,6 +153,14 @@ _destroyJSDScript(JSDContext*  jsdc,
 /***************************************************************************/
 
 #ifdef JSD_DUMP
+#ifndef XP_WIN
+void
+OutputDebugString (char *buf)
+{
+    fprintf (stderr, "%s", buf);
+}
+#endif
+
 static void
 _dumpJSDScript(JSDContext* jsdc, JSDScript* jsdscript, const char* leadingtext)
 {

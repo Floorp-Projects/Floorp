@@ -67,6 +67,7 @@ JS_BEGIN_EXTERN_C
 #include "jsapi.h"
 #include "jsobj.h"
 #include "jsfun.h"
+#include "jsscope.h"
 #include "jsdbgapi.h"
 #include "jsd_lock.h"
 #include <stdio.h>
