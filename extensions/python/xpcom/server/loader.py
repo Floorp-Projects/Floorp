@@ -18,7 +18,6 @@
 import xpcom
 from xpcom import components
 
-import factory
 import module
 
 import glob, os, types
@@ -65,6 +64,7 @@ class PythonComponentLoader:
 
     def __init__(self):
         self.com_modules = {} # Keyed by module's FQN as obtained from nsIFile.path
+        self.moduleFactory = module.Module
 
     def _getCOMModuleForLocation(self, componentFile):
         fqn = componentFile.path
@@ -82,7 +82,7 @@ class PythonComponentLoader:
 
         # Make and remember the COM module.
         comps = FindCOMComponents(py_mod)
-        mod = module.Module(comps)
+        mod = self.moduleFactory(comps)
         
         self.com_modules[fqn] = mod
         return mod
