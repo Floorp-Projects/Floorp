@@ -273,7 +273,7 @@ typedef int boolean;
 #define D_MULTISCAN_FILES_SUPPORTED /* Multiple-scan JPEG files? */
 #define D_PROGRESSIVE_SUPPORTED	    /* Progressive JPEG? (Requires MULTISCAN)*/
 #define BLOCK_SMOOTHING_SUPPORTED   /* Block smoothing? (Progressive only) */
-#define IDCT_SCALING_SUPPORTED	    /* Output rescaling via IDCT? */
+#undef IDCT_SCALING_SUPPORTED	    /* Output rescaling via IDCT? */
 #undef  UPSAMPLE_SCALING_SUPPORTED  /* Output rescaling at upsample stage? */
 #define UPSAMPLE_MERGING_SUPPORTED  /* Fast path for sloppy upsampling? */
 #define QUANT_1PASS_SUPPORTED	    /* 1-pass color quantization? */
