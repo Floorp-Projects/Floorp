@@ -46,7 +46,8 @@
 <RDF:Description about="urn:mozilla:package:forms"
         chrome:displayName="Forms"
         chrome:author="mozilla.org"
-        chrome:name="forms">
+        chrome:name="forms"
+        chrome:skinVersion="0.9.4">
 </RDF:Description>
 
 </RDF:RDF>
