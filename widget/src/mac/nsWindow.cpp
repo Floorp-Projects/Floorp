@@ -17,15 +17,8 @@
  */
 
 #include "nsWindow.h"
-#include "nsMacWindow.h"
 #include "nsIFontMetrics.h"
-#include "nsGUIEvent.h"
-#include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
-#include "nsRect.h"
-#include "nsTransform2D.h"
-#include "nsGfxCIID.h"
-#include "nsMacEventHandler.h"
 #include "nsFontMetricsMac.h"
 
 NS_IMPL_ADDREF(ChildWindow)
@@ -53,14 +46,17 @@ nsWindow::nsWindow() : nsBaseWidget()
   mEnabled = PR_TRUE;
 	SetPreferredSize(0,0);
 
-	SetBackgroundColor(NS_RGB(255, 255, 255));
-	SetForegroundColor(NS_RGB(0, 0, 0));
-
 	mFontMetrics = nsnull;
-  mMenuBar = nsnull;
+	mMenuBar = nsnull;
+	mTempRenderingContext = nsnull;
+
   mWindowRegion = nsnull;
   mWindowPtr = nsnull;
   mPainting = PR_FALSE;
+	mDestroyCalled = PR_FALSE;
+
+	SetBackgroundColor(NS_RGB(255, 255, 255));
+	SetForegroundColor(NS_RGB(0, 0, 0));
 }
 
 
@@ -161,17 +157,23 @@ NS_IMETHODIMP nsWindow::Create(nsNativeWidget aNativeParent,		// this is a nsWin
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::Destroy()
 {
+	if (mDestroyCalled)
+		return NS_OK;
+	mDestroyCalled = PR_TRUE;
+
+	nsBaseWidget::OnDestroy();
+	nsBaseWidget::Destroy();
+
+	ReportDestroyEvent();
+  mEventCallback = nsnull;	 // prevent the widget from causing additional events
+
 	if (mWindowRegion != nsnull)
 	{
 		::DisposeRgn(mWindowRegion);
 		mWindowRegion = nsnull;	
 	}
 
-	nsBaseWidget::Destroy();
-
-	nsBaseWidget::OnDestroy();
-
-	ReportDestroyEvent();
+	NS_IF_RELEASE(mTempRenderingContext);
 
 	return NS_OK;
 }
@@ -488,15 +490,25 @@ NS_IMETHODIMP nsWindow::Invalidate(PRBool aIsSynchronous)
 
 
 //-------------------------------------------------------------------------
-//	PrepareToDraw
+//	StartDraw
 //		Initialize graphic attributes.
 //		When they receive a Paint event, XP Widgets rely
 //		on these attributes to be set.
 //
 //-------------------------------------------------------------------------
 //¥TODO: some of that work is done by the rendering context -> do some cleanup
-void nsWindow::PrepareToDraw()
+void nsWindow::StartDraw(nsIRenderingContext* aRenderingContext)
 {
+	if (aRenderingContext == nsnull)
+		mTempRenderingContext = GetRenderingContext();
+	else
+	{
+		NS_IF_ADDREF(aRenderingContext);
+		mTempRenderingContext = aRenderingContext;
+	}
+	if (mTempRenderingContext)
+		mTempRenderingContext->PushState();
+		
 	// set the font
 	if (mFontMetrics)
 	{
@@ -521,6 +533,17 @@ void nsWindow::PrepareToDraw()
 	::RGBForeColor(&macColor);
 }
 
+
+//-------------------------------------------------------------------------
+//	EndDraw
+//
+//-------------------------------------------------------------------------
+void nsWindow::EndDraw()
+{
+	PRBool clipEmpty;
+	mTempRenderingContext->PopState(clipEmpty);
+	NS_RELEASE(mTempRenderingContext);
+}
 
 //-------------------------------------------------------------------------
 //
@@ -549,7 +572,6 @@ NS_IMETHODIMP	nsWindow::Update()
 		if (renderingContext)
 		{
 			// initialize the paint event for that widget
-      PRBool bClipEmpty;
 			nsRect rect;
 			Rect macRect;
 			GetBounds(rect);					//¥TODO¥: for complex objects, maybe we should clip to the widgetRgn
@@ -573,13 +595,11 @@ NS_IMETHODIMP	nsWindow::Update()
 			paintEvent.renderingContext	= renderingContext;
 			paintEvent.rect							= &rect;
 
-
 			// draw the widget
-			renderingContext->PushState();
-			PrepareToDraw();
+			StartDraw(renderingContext);
 			OnPaint(paintEvent);
 			DispatchWindowEvent(paintEvent);
-			renderingContext->PopState(bClipEmpty);
+			EndDraw();
 
 			// recursively scan through its children to draw them too
 			nsIEnumerator* children = GetChildren();
@@ -939,6 +959,7 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 }
 
 #pragma mark -
+#pragma mark - will be sorted -
 //-------------------------------------------------------------------------
 //
 // 
