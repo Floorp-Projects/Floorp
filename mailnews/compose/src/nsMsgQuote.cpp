@@ -230,15 +230,22 @@ SaveQuoteMessageCompleteCallback(nsIURL *aURL, nsresult aExitCode, void *tagData
   
   // This is the producer stream that will deliver data from the disk file...
   // ...someday, we'll just get streams from Necko.
-  nsCOMPtr<FileInputStreamImpl> in = do_QueryInterface(new FileInputStreamImpl());
-  if (!in)
+  // mscott --> the type for a nsCOMPtr needs to be an interface.
+  // but this class (which is only temporary anyway) is mixing and matching
+  // interface calls and implementation calls....so you really can't use a
+  // com ptr. to get around it, I'm using fileStream to make calls on the
+  // methods that aren't supported by the nsIInputStream and "in" for
+  // methods that are supported as part of the interface...
+  FileInputStreamImpl * fileStream = new FileInputStreamImpl();
+  nsCOMPtr<nsIInputStream> in = do_QueryInterface(fileStream);
+  if (!in || !fileStream)
   {
     NS_RELEASE(ptr);
     printf("Failed to create nsIInputStream\n");
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_FAILED(in->OpenDiskFile(*(ptr->mTmpFileSpec))))
+  if (NS_FAILED(fileStream->OpenDiskFile(*(ptr->mTmpFileSpec))))
   {
     NS_RELEASE(ptr);
     printf("Unable to open input file\n");
@@ -257,7 +264,7 @@ SaveQuoteMessageCompleteCallback(nsIURL *aURL, nsresult aExitCode, void *tagData
   mimeParser->OnStartBinding(aURL, MESSAGE_RFC822);
 
   // Just pump all of the data from the file into libmime...
-  while (NS_SUCCEEDED(in->PumpFileStream()))
+  while (NS_SUCCEEDED(fileStream->PumpFileStream()))
   {
     PRUint32    len;
     in->GetLength(&len);
