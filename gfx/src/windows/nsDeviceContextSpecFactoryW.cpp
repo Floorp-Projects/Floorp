@@ -155,10 +155,10 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
     printService->GetHowToEnableFrameUI(&howToEnableFrameUI);
   }
 
-  prntdlg.nFromPage           = 1;
-  prntdlg.nToPage             = 1;
-  prntdlg.nMinPage            = 0;
-  prntdlg.nMaxPage            = 1000;
+  prntdlg.nFromPage           = 0xFFFF;
+  prntdlg.nToPage             = 0xFFFF;
+  prntdlg.nMinPage            = 1;
+  prntdlg.nMaxPage            = 0xFFFF;
   prntdlg.nCopies             = 1;
   prntdlg.hInstance           = hInstance;
   prntdlg.lCustData           = (DWORD)howToEnableFrameUI;
@@ -171,7 +171,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
 
 
   if(PR_TRUE == aQuiet){
-    prntdlg.Flags = PD_RETURNDEFAULT;
+    prntdlg.Flags = PD_ALLPAGES | PD_RETURNDEFAULT;
   }
 
   BOOL res = ::PrintDlg(&prntdlg);
