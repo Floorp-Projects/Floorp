@@ -221,7 +221,7 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
   nsresult rv;
   PRTime endLoadTime = PR_Now();
 
-  if (loader != mDocLoader) {
+  if (loader != mDocLoader.get()) {
     // This notifications is not for the "main" document...
     return NS_OK;
   }
