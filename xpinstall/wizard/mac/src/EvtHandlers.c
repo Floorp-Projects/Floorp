@@ -173,7 +173,7 @@ void HandleUpdateEvt(EventRecord* evt)
 		
 		if (gControls->nextB)
 		{
-			HLockHi( (Handle) gControls->nextB);
+			HLock( (Handle) gControls->nextB);
 	
 			bounds = (*(gControls->nextB))->contrlRect;
 			PenMode(patCopy);

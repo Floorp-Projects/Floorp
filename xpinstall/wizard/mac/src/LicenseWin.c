@@ -287,10 +287,9 @@ InLicenseContent(EventRecord* evt, WindowPtr wCurrPtr)
 				}
 			}
 			return;
-			break; /* <--- what is this for? */
 	}
 	
-	HLockHi((Handle)gControls->backB);
+	HLock((Handle)gControls->backB);
 	r = (**(gControls->backB)).contrlRect;
 	HUnlock((Handle)gControls->backB);
 	if (PtInRect( localPt, &r))
@@ -300,7 +299,7 @@ InLicenseContent(EventRecord* evt, WindowPtr wCurrPtr)
 			gDone = true;  /* Decline pressed */
 	}
 	
-	HLockHi((Handle)gControls->nextB);			
+	HLock((Handle)gControls->nextB);			
 	r = (**(gControls->nextB)).contrlRect;
 	HUnlock((Handle)gControls->nextB);
 	if (PtInRect( localPt, &r))

@@ -59,8 +59,11 @@ if (NS_FAILED(rv))				\
 	return rv;						\
 }
 
-/* XXX temporary... */
+#ifdef DEBUG
 #define XPISTUB_DLL "\pxpistubDebug.shlb"	
+#else
+#define XPISTUB_DLL "\pxpistub.shlb"
+#endif
  
 
 void 		
@@ -99,9 +102,9 @@ RunAllXPIs(short vRefNum, long dirID)
 	err = FSMakeFSSpec(vRefNum, dirID, "\pmozilla.jar", &xpiSpec);
 	err = FSMakeFSSpec(vRefNum, dirID, 0, &tgtDirSpec);
 	if (err==noErr)
-		err = RunXPI(xpiSpec, tgtDirSpec);
+		err =  RunXPI(xpiSpec, tgtDirSpec);
 	else
-		ErrorHandler();
+		ErrorHandler(); 
 		
 	return err;
 }

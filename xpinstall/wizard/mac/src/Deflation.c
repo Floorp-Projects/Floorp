@@ -47,6 +47,7 @@ ExtractCoreFile(void)
  	PRInt32					rv;
 	Boolean 				bFoundAll = false, isDir;
  	char					filename[255] = "\0", dir[255] = "\0", *lastslash;
+ 	Ptr						fullPathStr;
  	FSSpec					coreDirFSp, extractedFSp, outFSp, extractedDir;
  	long					coreDirID, tgtDirID, extractedDirID;
  	
@@ -55,14 +56,14 @@ ExtractCoreFile(void)
  	tgtVRefNum = gControls->opt->vRefNum;
  	
 	/* if there's a core file... */
-	HLockHi(gControls->cfg->coreFile);
+	HLock(gControls->cfg->coreFile);
 	if (*gControls->cfg->coreFile != NULL)
 	{
 		/* make local copy and unlock handle */
 		coreFile = CToPascal(*gControls->cfg->coreFile);
 		if (!coreFile)
 		{
-			err= memFullErr;
+			err = memFullErr;
 			goto cleanup;
 		}
 	}
@@ -104,9 +105,13 @@ ExtractCoreFile(void)
 	}
 
 	HLock(fullPathH);
-	*(*fullPathH+fullPathLen) = '\0';
-	rv = ZIP_OpenArchive( *fullPathH, &hZip );
+	fullPathStr = NewPtrClear(fullPathLen+1);
+	strncat(fullPathStr, *fullPathH, fullPathLen);
+	*(fullPathStr+fullPathLen) = '\0';
+	rv = ZIP_OpenArchive( fullPathStr, &hZip );
 	HUnlock(fullPathH);
+	DisposeHandle(fullPathH);
+	DisposePtr(fullPathStr);
 	if (rv!=ZIP_OK) return rv;
 	
 	hFind = ZIP_FindInit( hZip, NULL ); /* NULL to match all files in archive */
@@ -120,7 +125,7 @@ ExtractCoreFile(void)
 		}
 		else if (rv!=ZIP_OK)
 			return rv;
-		
+
 		lastslash = strrchr(filename, '/');
 		if (lastslash == (&filename[0] + strlen(filename) - 1)) /* dir entry encountered */
 			continue;
@@ -130,11 +135,14 @@ ExtractCoreFile(void)
 		if (err!=noErr)
 			return err;
 		HLock(fullPathH);
-		strcat(*fullPathH, filename);	/* tack on filename to dirpath */
-		fullPathLen += strlen(filename);
-		*(*fullPathH+fullPathLen) = '\0';
-		rv = ZIP_ExtractFile( hZip, filename, *fullPathH );
+		fullPathStr = NewPtrClear(fullPathLen + strlen(filename) + 1);
+		strcat(fullPathStr, *fullPathH);
+		strcat(fullPathStr, filename);	/* tack on filename to dirpath */
+		*(fullPathStr+fullPathLen+strlen(filename)) = '\0';
+		rv = ZIP_ExtractFile( hZip, filename, fullPathStr );
 		HUnlock(fullPathH);
+		DisposeHandle(fullPathH);
+		DisposePtr(fullPathStr);
 		if (rv!=ZIP_OK)
 			return rv;
 		
@@ -206,7 +214,9 @@ ExtractCoreFile(void)
 	}
 	
 cleanup:							
-	// dispose of coreFile, coreDirPath
+	// dispose of coreFile, coreDirPath, hFind opaque handle
+	if (hFind)
+		rv = ZIP_FindFree( hFind );
 	if (coreFile)
 		DisposePtr((Ptr) coreFile);
 	if (coreDirPath)
@@ -230,7 +240,10 @@ AppleSingleDecode(FSSpecPtr fd, FSSpecPtr outfd)
 			
 		ERR_CHECK_RET(decoder->Decode(), err);
 	}
-		
+	
+	if (decoder)
+		delete decoder;
+			
 	return err;
 }
 
@@ -251,7 +264,7 @@ ResolveDirs(char *fname, char *dir)
 	if (delimFound)
 	{
 		strncpy(dir, fname, dirpath-fname);
-		*(dir+  (dirpath-fname)+1) = 0; // NULL terminate
+		*(dir + (dirpath-fname)+1) = 0; // NULL terminate
 	}
 }
 
@@ -265,7 +278,7 @@ ForceMoveFile(short vRefNum, long parID, ConstStr255Param name, long newDirID)
 	if (err == dupFNErr)
 	{
 		// handle for stomping over old file
-		err = FSMakeFSSpec(vRefNum, parID, name, &tmpFSp);
+		err = FSMakeFSSpec(vRefNum, newDirID, name, &tmpFSp);
 		err = FSpDelete(&tmpFSp);
 		err = CatMove(vRefNum, parID, name, newDirID, nil);
 	}

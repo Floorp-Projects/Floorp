@@ -55,7 +55,10 @@ ShowComponentsWin(void)
 	if (reserr == noErr && listBoxRect != NULL)
 	{
 		HLock((Handle)listBoxRect);
-		gControls->cw->compListBox = (Rect) **((Rect **)listBoxRect);
+		SetRect(&gControls->cw->compListBox, 	((Rect*)*listBoxRect)->left,
+												((Rect*)*listBoxRect)->top,
+												((Rect*)*listBoxRect)->right,
+												((Rect*)*listBoxRect)->bottom);
 		HUnlock((Handle)listBoxRect);
 	}
 	else
@@ -63,7 +66,13 @@ ShowComponentsWin(void)
 		ErrorHandler();
 		return;
 	}
+	gControls->cw->compDescBox = NULL;
 	gControls->cw->compDescBox = GetNewControl(rCompDescBox, gWPtr);
+	if (!gControls->cw->compDescBox)
+	{
+		ErrorHandler();
+		return;
+	}
 
 	gControls->cw->compListBox.right -= kScrollBarWidth;
 	SetRect(&dataBounds, 0, 0, 1, gControls->cfg->numComps);
@@ -79,7 +88,7 @@ ShowComponentsWin(void)
 	SetControlTitle(gControls->cw->compDescBox, compDescTitle);
 	
 	MoveTo( gControls->cw->compListBox.left, gControls->cw->compListBox.top - kInterWidgetPad);
-	HLockHi(gControls->cfg->selCompMsg);
+	HLock(gControls->cfg->selCompMsg);
 	selCompMsg = CToPascal(*gControls->cfg->selCompMsg);
 	if (selCompMsg)
 		DrawString( selCompMsg );
@@ -95,6 +104,9 @@ ShowComponentsWin(void)
 	else
 		DrawDiskSpaceMsgs( gControls->opt->vRefNum );
 
+	//if (selCompMsg)
+	//	DisposePtr((Ptr) selCompMsg);
+	
 	SetPort(oldPort);
 }
 
@@ -108,11 +120,11 @@ PopulateCompInfo(void)
 	
 	for (i=0; i<gControls->cfg->numComps; i++)
 	{
-		HLockHi(gControls->cfg->comp[i].shortDesc);
+		HLock(gControls->cfg->comp[i].shortDesc);
 		currDesc = *gControls->cfg->comp[i].shortDesc;
-		HUnlock(gControls->cfg->comp[i].shortDesc);
 		SetPt(&currCell, 0, i);	
 		LSetCell( currDesc, strlen(currDesc), currCell, gControls->cw->compList);
+		HUnlock(gControls->cfg->comp[i].shortDesc);
 		if (gControls->opt->compSelected[i] == kSelected)
 		{
 			LSetSelect(true, currCell, gControls->cw->compList);
@@ -134,7 +146,7 @@ UpdateCompWin(void)
 	SetPort(gWPtr);
 	
 	MoveTo( gControls->cw->compListBox.left, gControls->cw->compListBox.top - kInterWidgetPad + 1);
-	HLockHi(gControls->cfg->selCompMsg);
+	HLock(gControls->cfg->selCompMsg);
 	DrawString( CToPascal(*gControls->cfg->selCompMsg));
 	HUnlock(gControls->cfg->selCompMsg);
 	LUpdate( (*gControls->cw->compList)->port->visRgn, 
@@ -144,8 +156,11 @@ UpdateCompWin(void)
 	SetPt(&c, 0, 0);
 	if (LGetSelect(true, &c, gControls->cw->compList))
 	{
-		HLockHi((Handle)gControls->cw->compDescTxt);
-		r = (*gControls->cw->compDescTxt)->viewRect;
+		HLock((Handle)gControls->cw->compDescTxt);
+		SetRect(&r, (*gControls->cw->compDescTxt)->viewRect.left,
+					(*gControls->cw->compDescTxt)->viewRect.top,
+					(*gControls->cw->compDescTxt)->viewRect.right,
+					(*gControls->cw->compDescTxt)->viewRect.bottom);
 		HUnlock((Handle)gControls->cw->compDescTxt);
 		TEUpdate(&r, gControls->cw->compDescTxt);	
 	}
@@ -174,7 +189,7 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 		SetOptInfo();
 	}
 			
-	HLockHi((Handle)gControls->backB);
+	HLock((Handle)gControls->backB);
 	r = (**(gControls->backB)).contrlRect;
 	HUnlock((Handle)gControls->backB);
 	if (PtInRect( localPt, &r))
@@ -195,7 +210,7 @@ InComponentsContent(EventRecord* evt, WindowPtr wCurrPtr)
 		}
 	}
 			
-	HLockHi((Handle)gControls->nextB);			
+	HLock((Handle)gControls->nextB);			
 	r = (**(gControls->nextB)).contrlRect;
 	HUnlock((Handle)gControls->nextB);
 	if (PtInRect( localPt, &r))
@@ -223,8 +238,11 @@ SetOptInfo(void)
 	int			i;
 	Rect		viewRect;
 	
-	HLockHi((Handle)gControls->cw->compDescBox);
-	viewRect = (*gControls->cw->compDescBox)->contrlRect;
+	HLock((Handle)gControls->cw->compDescBox);
+	SetRect(&viewRect, (*gControls->cw->compDescBox)->contrlRect.left,
+					   (*gControls->cw->compDescBox)->contrlRect.top,
+					   (*gControls->cw->compDescBox)->contrlRect.right,
+					   (*gControls->cw->compDescBox)->contrlRect.bottom);
 	HUnlock((Handle)gControls->cw->compDescBox);
 	viewRect.top += kInterWidgetPad;
 	SetRect(&viewRect, viewRect.left + kTxtRectPad,
@@ -253,7 +271,7 @@ SetOptInfo(void)
 			TextFont(applFont);
 			TextSize(10);
 			gControls->cw->compDescTxt = TENew(&viewRect, &viewRect);
-			HLockHi(gControls->cfg->comp[i].longDesc);
+			HLock(gControls->cfg->comp[i].longDesc);
 			TESetText( *gControls->cfg->comp[i].longDesc, 
 						strlen(*gControls->cfg->comp[i].longDesc), gControls->cw->compDescTxt);
 			TEUpdate( &viewRect, gControls->cw->compDescTxt);
