@@ -298,10 +298,13 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
 
       // LOAD_BYPASS_CACHE - Always re-fetch
       if (requestFlags & nsIRequest::LOAD_BYPASS_CACHE) {
-        entry->Doom(); // doom this thing.
+        // doom cache entry; be sure to break the reference cycle between the
+        // request and cache entry.  NOTE: the request might not own the cache
+        // entry at this point, so we explicitly Doom |entry| just in case.
+        entry->Doom();
         entry = nsnull;
+        request->RemoveFromCache();
         NS_RELEASE(request);
-        request = nsnull;
       } else {
         // Determine whether the cache entry must be revalidated...
         bValidateRequest = RevalidateEntry(entry, requestFlags, bHasExpired);
@@ -580,8 +583,12 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
     }
 
     if (!bUseCacheCopy) {
-      entry->Doom(); // doom this thing.
+      // doom cache entry; be sure to break the reference cycle between the
+      // request and cache entry.  NOTE: the request might not own the cache
+      // entry at this point, so we explicitly Doom |entry| just in case.
+      entry->Doom();
       entry = nsnull;
+      request->RemoveFromCache();
       NS_RELEASE(request);
     }
   }
@@ -931,8 +938,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   nsCOMPtr<nsIURI> uri;
 
   // Doom the old request's cache entry
-  if (mRequest->mCacheEntry)
-    mRequest->mCacheEntry->Doom();
+  mRequest->RemoveFromCache();
 
   mRequest->GetURI(getter_AddRefs(uri));
 
