@@ -2072,7 +2072,7 @@ then
     fi
 
 	case "$target" in
-	    *-*-freebsd*|*-*-openbsd*)
+	    *-*-freebsd*|*-*-openbsd*|*-*-bsdi*)
 			AC_DEFINE(_REENTRANT)
 			AC_DEFINE(_THREAD_SAFE)
 			dnl -pthread links in -lc_r, so don't specify it explicitly.
@@ -3011,6 +3011,7 @@ case "$target" in
     *-*-linux*)   MOZ_MONOLITHIC_TOOLKIT= ;;
     *-*-solaris*) MOZ_MONOLITHIC_TOOLKIT= ;;
     *-openvms*)   MOZ_MONOLITHIC_TOOLKIT= ;;
+    *-bsdi*)      MOZ_MONOLITHIC_TOOLKIT= ;;
     *-freebsd*)   MOZ_MONOLITHIC_TOOLKIT= ;;
     *-netbsd*)    MOZ_MONOLITHIC_TOOLKIT= ;;
     *-openbsd*)   MOZ_MONOLITHIC_TOOLKIT= ;;
