@@ -201,40 +201,44 @@ void nsSimpleCharString::ReleaseData()
 } // nsSimpleCharString::ReleaseData
 
 //----------------------------------------------------------------------------------------
+inline PRUint32 CalculateAllocLength(PRUint32 logicalLength)
+// Round up to the next multiple of 256.
+//----------------------------------------------------------------------------------------
+{
+    return ((1 + (logicalLength >> 8)) << 8);
+}
+
+//----------------------------------------------------------------------------------------
 void nsSimpleCharString::ReallocData(PRUint32 inLength)
 // Reallocate mData to a new length.  Since this presumably precedes a change to the string,
 // we want to detach ourselves if the data is shared by another string, even if the length
 // requested would not otherwise require a reallocation.
 //----------------------------------------------------------------------------------------
 {
-    // We always allocate for a string of at least kMinStringSize, to prevent a lot of small
-    // reallocations.
-    const PRUint32 kMinStringSize = 127;
-
+    PRUint32 newAllocLength = CalculateAllocLength(inLength);
+    PRUint32 oldAllocLength = CalculateAllocLength(Length());
     if (mData)
     {
-	    // Re
 	    NS_ASSERTION(mData->mRefCount > 0, "String deleted too many times!");
 	    if (mData->mRefCount == 1)
 	    {
 	        // We are the sole owner, so just change its length, if necessary.
-	        if (inLength > mData->mLength && inLength > kMinStringSize)
-		        mData = (Data*)PR_Realloc(mData, inLength + sizeof(Data));
+	        if (newAllocLength > oldAllocLength)
+		        mData = (Data*)PR_Realloc(mData, newAllocLength + sizeof(Data));
 	        mData->mLength = inLength;
+	        mData->mString[inLength] = '\0'; // we may be truncating
 	        return;
 	    }
     }
-    PRUint32 allocLength = inLength;
-    if (allocLength < kMinStringSize)
-        allocLength = kMinStringSize;
-	if (allocLength < Length())	// make sure we're not truncating the result.
-		allocLength = Length();
-    Data* newData = (Data*)PR_Malloc(allocLength + sizeof(Data));
+	PRUint32 copyLength = Length();
+	if (inLength < copyLength)
+	    copyLength = inLength;
+    Data* newData = (Data*)PR_Malloc(newAllocLength + sizeof(Data));
     // If data was already allocated when we get to here, then we are cloning the data
     // from a shared pointer.
     if (mData)
     {
-        memcpy(newData, mData, sizeof(Data) + Length());
+        memcpy(newData, mData, sizeof(Data) + copyLength);
         mData->mRefCount--; // Say goodbye
     }
     else
@@ -1110,9 +1114,15 @@ nsInputStream& operator >> (nsInputStream& s, nsPersistentFileDescriptor& d)
 	bigBuffer[8] = '\0';
 	sscanf(bigBuffer, "%x", (PRUint32*)&bytesRead);
 	if (bytesRead > MAX_PERSISTENT_DATA_SIZE)
-		return s; // preposterous.
-	// Now we know how many bytes to read, do it.
-	s.read(bigBuffer, bytesRead);
+	{
+	    // Try to tolerate encoded values with no length header
+        bytesRead = 8 + s.read(bigBuffer + 8, MAX_PERSISTENT_DATA_SIZE - 8);
+	}
+	else
+	{
+		// Now we know how many bytes to read, do it.
+		bytesRead = s.read(bigBuffer, bytesRead);
+	}
 	d.SetData(bigBuffer, bytesRead);
 	return s;
 }
