@@ -349,7 +349,8 @@ nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
   nsIView* view;
   GetView(view);
 
-  nsIWidget*     widget = view->GetWidget();
+  nsIWidget*     widget;
+  view->GetWidget(widget);
   nsIListWidget* list;
   if ((nsnull == widget) || NS_FAILED(widget->QueryInterface(kListWidgetIID, (void **) &list))) {
     NS_ASSERTION(PR_FALSE, "invalid widget");

@@ -228,7 +228,8 @@ RootContentFrame::RootContentFrame(nsIContent* aContent, nsIFrame* aParent)
                                                  (void **)&view);
   if (NS_OK == result) {
     nsIView*        rootView = parView;
-    nsIViewManager* viewManager = rootView->GetViewManager();
+    nsIViewManager* viewManager;
+    rootView->GetViewManager(viewManager);
 
     // Initialize the view
     NS_ASSERTION(nsnull != viewManager, "null view manager");

@@ -1570,9 +1570,10 @@ HTMLContentSink::StartLayout()
             nsIScrollableView* sview = nsnull;
             rootView->QueryInterface(kIScrollableViewIID, (void**) &sview);
             if (nsnull != sview) {
-              mOriginalScrollPreference = (topLevelFrameset) 
-                ? nsScrollPreference_kNeverScroll 
-                : sview->GetScrollPreference();
+              if (topLevelFrameset)
+                mOriginalScrollPreference = nsScrollPreference_kNeverScroll;
+              else
+                sview->GetScrollPreference(mOriginalScrollPreference);
               sview->SetScrollPreference(nsScrollPreference_kNeverScroll);
             }
           }

@@ -423,7 +423,8 @@ void TextTimer::Notify(nsITimer *timer)
     text->GetRect(bounds);
     nsIView* view;
     text->GetOffsetFromView(offset, view);
-    nsIViewManager* vm = view->GetViewManager();
+    nsIViewManager* vm;
+    view->GetViewManager(vm);
     bounds.x = offset.x;
     bounds.y = offset.y;
     vm->UpdateView(view, bounds, 0);

@@ -527,7 +527,7 @@ nsresult DocumentViewerImpl::MakeWindow(nsNativeWidget aNativeParent,
 
     // Setup hierarchical relationship in view manager
     mViewManager->SetRootView(mView);
-    mWindow = mView->GetWidget();
+    mView->GetWidget(mWindow);
 
     //set frame rate to 25 fps
     mViewManager->SetFrameRate(25);

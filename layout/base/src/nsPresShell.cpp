@@ -821,12 +821,14 @@ NS_IMETHODIMP PresShell :: Paint(nsIView              *aView,
                                  nsIRenderingContext& aRenderingContext,
                                  const nsRect&        aDirtyRect)
 {
-  nsIFrame  *frame;
-  nsresult rv;
+  void*     clientData;
+  nsIFrame* frame;
+  nsresult  rv;
 
   NS_ASSERTION(!(nsnull == aView), "null view");
 
-  frame = (nsIFrame *)aView->GetClientData();
+  aView->GetClientData(clientData);
+  frame = (nsIFrame *)clientData;
 
   if (nsnull != frame)
     rv = frame->Paint(*mPresContext, aRenderingContext, aDirtyRect);
@@ -840,12 +842,14 @@ NS_IMETHODIMP PresShell :: HandleEvent(nsIView         *aView,
                                        nsGUIEvent*     aEvent,
                                        nsEventStatus&  aEventStatus)
 {
-  nsIFrame  *frame;
+  void*     clientData;
+  nsIFrame* frame;
   nsresult  rv;
   
   NS_ASSERTION(!(nsnull == aView), "null view");
 
-  frame = (nsIFrame *)aView->GetClientData();
+  aView->GetClientData(clientData);
+  frame = (nsIFrame *)clientData;
 
   if (nsnull != frame)
     rv = frame->HandleEvent(*mPresContext, aEvent, aEventStatus);
@@ -857,12 +861,14 @@ NS_IMETHODIMP PresShell :: HandleEvent(nsIView         *aView,
 
 NS_IMETHODIMP PresShell :: Scrolled(nsIView *aView)
 {
-  nsIFrame  *frame;
+  void*     clientData;
+  nsIFrame* frame;
   nsresult  rv;
   
   NS_ASSERTION(!(nsnull == aView), "null view");
 
-  frame = (nsIFrame *)aView->GetClientData();
+  aView->GetClientData(clientData);
+  frame = (nsIFrame *)clientData;
 
   if (nsnull != frame)
   {
@@ -949,8 +955,8 @@ CompareTrees(nsIFrame* aA, nsIFrame* aB)
         v2->GetBounds(r2);
         NS_ASSERTION(r1 == r2, "child views are different sizes");
 
-        w1 = v1->GetWidget();
-        w2 = v2->GetWidget();
+        v1->GetWidget(w1);
+        v2->GetWidget(w2);
         if (nsnull != w1) {
           NS_ASSERTION(nsnull != w2, "child widgets are not matched");
           w1->GetBounds(r1);
@@ -1083,9 +1089,10 @@ PresShell::VerifyIncrementalReflow()
   nsIScrollableView* scrollView;
   rv = rootView->QueryInterface(kScrollViewIID, (void**)&scrollView);
   if (NS_OK == rv) {
-    scrolling = scrollView->GetScrollPreference();
+    scrollView->GetScrollPreference(scrolling);
   }
-  nsIWidget* rootWidget = rootView->GetWidget();
+  nsIWidget* rootWidget;
+  rootView->GetWidget(rootWidget);
   void* nativeParentWidget = rootWidget->GetNativeData(NS_NATIVE_WIDGET);
 
   // Create a new view manager.

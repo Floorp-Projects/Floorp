@@ -132,7 +132,8 @@ NS_IMETHODIMP DeviceContextImpl :: GetDevUnitsToAppUnits(float &aDevUnits) const
 NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext)
 {
   nsIRenderingContext *pContext;
-  nsIWidget           *win = aView->GetWidget();
+  nsIWidget           *win;
+  aView->GetWidget(win);
   nsresult             rv;
 
   static NS_DEFINE_IID(kRCCID, NS_RENDERING_CONTEXT_CID);

@@ -53,10 +53,11 @@ GetWindowTemp(nsIView *aView)
 
   nsIView *ancestor = aView;
   while (nsnull != ancestor) {
-	  if (nsnull != (window = ancestor->GetWidget())) {
+    ancestor->GetWidget(window);
+	  if (nsnull != window) {
 	    return window;
 	  }
-	  ancestor = ancestor->GetParent();
+	  ancestor->GetParent(ancestor);
   }
   return nsnull;
 }
@@ -78,7 +79,9 @@ void nsInputFileFrame::MouseClicked(nsIPresContext* aPresContext)
   if (NS_OK != textFrame->GetWidget(textView, (nsIWidget **)&textWidget)) {
     return;
   }
-  nsIWidget* parentWidget = GetWindowTemp(textView->GetParent());
+  nsIView*   parentView;
+  textView->GetParent(parentView);
+  nsIWidget* parentWidget = GetWindowTemp(parentView);
  
   nsIFileWidget *fileWidget;
 

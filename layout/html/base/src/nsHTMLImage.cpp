@@ -894,7 +894,8 @@ ImageFrame::ContentChanged(nsIPresShell*   aShell,
         nsPoint offset;
         nsIView* view;
         GetOffsetFromView(offset, view);
-        nsIViewManager* vm = view->GetViewManager();
+        nsIViewManager* vm;
+        view->GetViewManager(vm);
         bounds.x = offset.x;
         bounds.y = offset.y;
         bounds.width = mRect.width;

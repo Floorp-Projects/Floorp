@@ -821,7 +821,8 @@ nsIView* nsBodyFrame::CreateAbsoluteView(const nsStylePosition* aPosition,
     }
   
     // Initialize the view
-    nsIViewManager* viewManager = containingView->GetViewManager();
+    nsIViewManager* viewManager;
+    containingView->GetViewManager(viewManager);
     NS_ASSERTION(nsnull != viewManager, "null view manager");
 
     // Is there a clip rect specified?

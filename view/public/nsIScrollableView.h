@@ -42,14 +42,14 @@ public:
   /**
    * Compute the size of the scrolled contanier.
    */
-  virtual void ComputeContainerSize(void) = 0;
+  NS_IMETHOD  ComputeContainerSize(void) = 0;
 
   /**
    * Get the dimensions of the container
    * @param aWidth return value for width of container
    * @param aHeight return value for height of container
    */
-  virtual void GetContainerSize(nscoord *aWidth, nscoord *aHeight) = 0;
+  NS_IMETHOD  GetContainerSize(nscoord *aWidth, nscoord *aHeight) = 0;
 
   /**
    * Set the offset into the container of the
@@ -57,53 +57,53 @@ public:
    * @param aOffsetX X offset in twips
    * @param aOffsetY Y offset in twips
    */
-  virtual void SetVisibleOffset(nscoord aOffsetX, nscoord aOffsetY) = 0;
+  NS_IMETHOD  SetVisibleOffset(nscoord aOffsetX, nscoord aOffsetY) = 0;
 
   /**
    * Get the offset of the top/left most visible coordinate
    * @param aOffsetX return value for X coordinate in twips
    * @param aOffsetY return value for Y coordinate in twips
    */
-  virtual void GetVisibleOffset(nscoord *aOffsetX, nscoord *aOffsetY) = 0;
+  NS_IMETHOD  GetVisibleOffset(nscoord *aOffsetX, nscoord *aOffsetY) = 0;
 
   /**
    * Get the view that we are scrolling within the
    * scrolling view. 
    * @result child view
    */
-  virtual nsIView * GetScrolledView(void) = 0;
+  NS_IMETHOD  GetScrolledView(nsIView *&aScrolledView) = 0;
 
   /**
    * Select whether quality level should be displayed in view frame
    * @param aShow if PR_TRUE, quality level will be displayed, else hidden
    */
-  virtual void ShowQuality(PRBool aShow) = 0;
+  NS_IMETHOD  ShowQuality(PRBool aShow) = 0;
 
   /**
    * Query whether quality level should be displayed in view frame
    * @return if PR_TRUE, quality level will be displayed, else hidden
    */
-  virtual PRBool GetShowQuality(void) = 0;
+  NS_IMETHOD  GetShowQuality(PRBool &aShow) = 0;
 
   /**
    * Select whether quality level should be displayed in view frame
    * @param aShow if PR_TRUE, quality level will be displayed, else hidden
    */
-  virtual void SetQuality(nsContentQuality aQuality) = 0;
+  NS_IMETHOD  SetQuality(nsContentQuality aQuality) = 0;
 
   /**
    * Select whether scroll bars should be displayed all the time, never or
    * only when necessary.
    * @param aPref desired scrollbar selection
    */
-  virtual void SetScrollPreference(nsScrollPreference aPref) = 0;
+  NS_IMETHOD  SetScrollPreference(nsScrollPreference aPref) = 0;
 
   /**
    * Query whether scroll bars should be displayed all the time, never or
    * only when necessary.
    * @return current scrollbar selection
    */
-  virtual nsScrollPreference GetScrollPreference(void) = 0;
+  NS_IMETHOD  GetScrollPreference(nsScrollPreference& aScrollPreference) = 0;
 
   /**
    * Scroll the view to the given x,y, update's the scrollbar's thumb

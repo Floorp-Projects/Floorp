@@ -270,7 +270,7 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
 
                 GetView(view);
 
-                widget = view->GetWidget();
+                view->GetWidget(widget);
                 widget->GetBounds(wrect);
 
                 nsAutoString src, base, fullurl;
