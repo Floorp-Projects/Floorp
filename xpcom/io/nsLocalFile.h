@@ -27,7 +27,7 @@
 
 #define NS_LOCAL_FILE_CID {0x2e23e220, 0x60be, 0x11d3, {0x8c, 0x4a, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74}}
 
-// nsXPComInit needs to know about how we are implmented,
+// nsXPComInit needs to know about how we are implemented,
 // so here we will export it.  Other users should not depend
 // on this.
 
@@ -37,7 +37,11 @@
 #ifdef XP_UNIX
 #include "nsLocalFileUnix.h"
 #else
+#ifdef XP_MAC
+#include "nsLocalFileMac.h"
+#else
 #error NOT_IMPLEMENTED
+#endif /* XP_MAC */
 #endif /* XP_UNIX */
 #endif /* XP_PC */
 #endif
