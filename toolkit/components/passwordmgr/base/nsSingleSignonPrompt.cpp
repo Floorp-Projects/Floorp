@@ -79,8 +79,12 @@ nsSingleSignonPrompt::Prompt(const PRUnichar* aDialogTitle,
                                    outUser,
                                    outPassword);
 
-    value = ToNewUnicode(outUser);
+    if (!outUser.IsEmpty())
+      value = ToNewUnicode(outUser);
   }
+
+  if (!value && aDefaultText)
+    value = ToNewUnicode(nsDependentString(aDefaultText));
 
   mPrompt->Prompt(aDialogTitle,
                   aText,
