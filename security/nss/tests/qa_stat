@@ -99,10 +99,6 @@ watch_rsh()
 ########################################################################
 find_qa_systems()
 {
-#FIXME remaining bugs: 
-#when only debug but not opt is being run this is not recognized. 
-#it should also examine the directory (.1) for files 
-
 for QA_SYS in `ls $RESULTDIR | grep '\.1$' | sed -e "s/\..*//" | sort -u`
 do
     NO_RSH="FALSE"
@@ -152,7 +148,7 @@ qa_stat_init()
             Debug "Using alternate resultfile $RFILE"
         #elif [ $O_CRON = ON ]
         #then
-             #find ${RESULTDIR} -exec chmod a+rw {} \;    #FIXME - umask 
+             ##find ${RESULTDIR} -exec chmod a+rw {} \;    #FIXME - umask 
                             ##doesn't seem to work - this is a tmp workaround
         fi
     
@@ -429,9 +425,11 @@ qa_errorlist()
         "PKCS12 decode not verified"   ${MACHINES_TO_CHECK}*/output.log
 
     if [ -n "${MACHINES_TO_CHECK}" ] ; then
-        find ${MACHINES_TO_CHECK}* -name core -print 2>/dev/null
+        find ${MACHINES_TO_CHECK}* -name core -print 2>/dev/null |
+            grep -v bc_bins | grep -v bc_libs
     else
-        find . -name core -print 2>/dev/null
+        find . -name core -print 2>/dev/null |
+            grep -v bc_bins | grep -v bc_libs
     fi
 }
 
@@ -470,7 +468,7 @@ platformlist()
     for  MB in `cat $TMPFILE` ; do
         MACHINE=`echo $MB | sed -e "s/---.*//"`
         BUILDPLATFORM=`echo $MB | sed -e "s/.*---//"`
-        grep $MACHINE $ERRORLIST >/dev/null
+        grep "${MACHINE}[^0-9]" $ERRORLIST >/dev/null
         ret=$?
         setQAsysvars
         if [ $ret -eq 0 ]
@@ -651,7 +649,7 @@ CURRENT_TABLE="BC"   #so html_line can determine which fields to write
   platformlist  
   echo '</table>' >>$TMP_HTML_FILE
 
-  cat $BCERRORLIST | sed -e 's/<[^>]*>//g' -e "s/^/<br>/" 
+  #cat $BCERRORLIST | sed -e 's/<[^>]*>//g' -e "s/^/<br>/" 
 
 }
 
