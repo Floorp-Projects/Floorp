@@ -457,7 +457,7 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 	Boolean bSuccess = true;
 	OSErr 	err;
 	short	refNum, instChoice;
-	long 	count, compsDone, i, j, len;
+	long 	count, compsDone, i, j, k, len;
 	char 	ch, siteDomain[255];
 	Ptr 	buf, keybuf, fnum;
 	Str255	pfnum, pkeybuf;
@@ -561,13 +561,43 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 						strncpy(siteDomain, *(gControls->cfg->site[gControls->opt->siteChoice-1].domain),
 								(len < 255) ? len : 255);
 						HUnlock(gControls->cfg->site[gControls->opt->siteChoice-1].domain);
-					}
-							
-					// iterate over gControls->cfg->comp[i].numURLs
-					for (j=0; j<gControls->cfg->comp[i].numURLs; j++)
+		
+    					// iterate over gControls->cfg->comp[i].numURLs
+    					for (j=0; j<gControls->cfg->comp[i].numURLs; j++)
+    					{
+    						// write out \tnumURLs+1= from STR# resource
+    						GetIndString(pkeybuf, rIndices, j+2); // j+2 since 1-based idx, not 0-based
+    						keybuf = PascalToC(pkeybuf);
+    						ch = '\t';
+    						strncat(buf, &ch, 1);					// \t
+    						strncat(buf, keybuf, strlen(keybuf));	// \t<n>
+    						ch = '=';
+    						strncat(buf, &ch, 1);					// \t<n>=
+    						if (keybuf)
+    							DisposePtr(keybuf);
+    							
+    						// use selected DomainX to replace Domain0 in curr ComponentX section
+    						strncat(buf, siteDomain, strlen(siteDomain));
+
+    						// tack on server path for this index
+    						HLock(gControls->cfg->comp[i].serverPath[j]);
+    						strncat(buf, *gControls->cfg->comp[i].serverPath[j], strlen(*gControls->cfg->comp[i].serverPath[j]));
+    						HUnlock(gControls->cfg->comp[i].serverPath[j]);						
+    						
+    						// tack on 'archive\r'
+    						HLock(gControls->cfg->comp[i].archive);
+    						strncat(buf, *gControls->cfg->comp[i].archive, strlen(*gControls->cfg->comp[i].archive));
+    						HUnlock(gControls->cfg->comp[i].archive);
+    						ch = '\r';
+    						strncat(buf, &ch, 1);
+    					}
+                    }
+                    
+                    // now tack on failovers from ComponentX section
+                    for (k=0; k<gControls->cfg->comp[i].numURLs; k++)
 					{
 						// write out \tnumURLs+1= from STR# resource
-						GetIndString(pkeybuf, rIndices, j+2); // j+2 since 1-based idx, not 0-based
+						GetIndString(pkeybuf, rIndices, k+j+2); // j+2 since 1-based idx, not 0-based
 						keybuf = PascalToC(pkeybuf);
 						ch = '\t';
 						strncat(buf, &ch, 1);					// \t
@@ -577,24 +607,15 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 						if (keybuf)
 							DisposePtr(keybuf);
 							
-						// if [Site Selector] section exists
-						if (gControls->cfg->numSites > 0 && j == 0)
-						{
-							// use selected DomainX to replace Domain0 im curr ComponentX section
-							strncat(buf, siteDomain, strlen(siteDomain));
-						}
-						else
-						{
-							// get domain for this index
-							HLock(gControls->cfg->comp[i].domain[j]);
-							strncat(buf, *gControls->cfg->comp[i].domain[j], strlen(*gControls->cfg->comp[i].domain[j]));
-							HUnlock(gControls->cfg->comp[i].domain[j]);
-						}
+						// get domain for this index
+						HLock(gControls->cfg->comp[i].domain[k]);
+						strncat(buf, *gControls->cfg->comp[i].domain[k], strlen(*gControls->cfg->comp[i].domain[k]));
+						HUnlock(gControls->cfg->comp[i].domain[k]);
 
 						// tack on server path for this index
-						HLock(gControls->cfg->comp[i].serverPath[j]);
-						strncat(buf, *gControls->cfg->comp[i].serverPath[j], strlen(*gControls->cfg->comp[i].serverPath[j]));
-						HUnlock(gControls->cfg->comp[i].serverPath[j]);						
+						HLock(gControls->cfg->comp[i].serverPath[k]);
+						strncat(buf, *gControls->cfg->comp[i].serverPath[k], strlen(*gControls->cfg->comp[i].serverPath[k]));
+						HUnlock(gControls->cfg->comp[i].serverPath[k]);						
 						
 						// tack on 'archive\r'
 						HLock(gControls->cfg->comp[i].archive);

@@ -355,6 +355,7 @@ InsertCompList(int instChoice)
 	int compsDone, i, len;
 	InstComp currComp;
 	char compName[128];
+	Boolean didOneComp = false;
 	
 	// if not cutsom setup type show components list
 	if (gControls->opt->instChoice < gControls->cfg->numSetupTypes)
@@ -371,10 +372,13 @@ InsertCompList(int instChoice)
 				HLock(currComp.shortDesc);
 				len = strlen(*currComp.shortDesc) + 4;
 				memset(compName, 0, 128);
-				if (compsDone == gControls->cfg->st[instChoice].numComps - 1)
-				    sprintf(compName, "%s", *currComp.shortDesc);
+				if (didOneComp)
+				    sprintf(compName, ", %s", *currComp.shortDesc);
 				else
-				    sprintf(compName, "%s, ", *currComp.shortDesc);
+				{
+				    sprintf(compName, "%s", *currComp.shortDesc);
+				    didOneComp = true;
+				}
 				TEInsert(compName, len, gControls->stw->instDescTxt);
 				HUnlock(currComp.shortDesc);
 			}
