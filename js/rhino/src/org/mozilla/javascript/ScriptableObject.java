@@ -794,6 +794,7 @@ public abstract class ScriptableObject implements Scriptable {
         final String setterPrefix = "jsSet_";
         final String ctorName = "jsConstructor";
 
+        boolean hasPrefix = false;
         Method[] ctorMeths = FunctionObject.findMethods(clazz, ctorName);
         Member ctorMember = null;
         if (ctorMeths != null) {
@@ -803,11 +804,11 @@ public abstract class ScriptableObject implements Scriptable {
                                         ctorMeths[0], ctorMeths[1]));
             }
             ctorMember = ctorMeths[0];
+            hasPrefix = true;
         }
 
         // Deprecated: look for functions with the same name as the class
         // and consider them constructors.
-        boolean hasPrefix = false;
         for (int i=0; i < methods.length; i++) {
             String name = methods[i].getName();
             String prefix = null;

@@ -1,4 +1,4 @@
-/* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: java; tab-width: 4; indent-tabs-mode: 1; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -19,6 +19,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Norris Boyd
+ * Igor Bukanov
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -39,119 +41,241 @@ package org.mozilla.javascript;
  * See ECMA 15.8.
  * @author Norris Boyd
  */
-public class NativeMath extends ScriptableObject {
 
-    public static Scriptable init(Scriptable scope)
-        throws PropertyException
-    {
+public class NativeMath extends ScriptableObject 
+    implements IdFunction.Master
+{
+
+    public static Scriptable init(Scriptable scope) {
         NativeMath m = new NativeMath();
-        m.setPrototype(getObjectPrototype(scope));
-        m.setParentScope(scope);
-
-        String[] names = { "atan", "atan2", "ceil",
-                           "cos", "floor", "random",
-                           "sin", "sqrt", "tan" };
-
-        m.defineFunctionProperties(names, java.lang.Math.class,
-                                   ScriptableObject.DONTENUM);
-
-        // These functions exist in java.lang.Math, but
-        // are overloaded. Define our own wrappers.
-        String[] localNames = { "acos", "asin", "abs", "exp", "max", "min",
-                                "round", "pow", "log" };
-
-        m.defineFunctionProperties(localNames, NativeMath.class,
-                                   ScriptableObject.DONTENUM);
-
-        /*
-            have to fix up the length property for max & min
-            which are varargs form, but need to have a length of 2
-        */
-        ((FunctionObject)m.get("max", scope)).setLength((short)2);
-        ((FunctionObject)m.get("min", scope)).setLength((short)2);
-
-        final int attr = ScriptableObject.DONTENUM  |
-                         ScriptableObject.PERMANENT |
-                         ScriptableObject.READONLY;
-
-        m.defineProperty("E", new Double(Math.E), attr);
-        m.defineProperty("PI", new Double(Math.PI), attr);
-        m.defineProperty("LN10", new Double(2.302585092994046), attr);
-        m.defineProperty("LN2", new Double(0.6931471805599453), attr);
-        m.defineProperty("LOG2E", new Double(1.4426950408889634), attr);
-        m.defineProperty("LOG10E", new Double(0.4342944819032518), attr);
-        m.defineProperty("SQRT1_2", new Double(0.7071067811865476), attr);
-        m.defineProperty("SQRT2", new Double(1.4142135623730951), attr);
-
+        Context cx = Context.getContext();
         // We know that scope is a Scriptable object since we
         // constrained the type on initStandardObjects.
-        ScriptableObject global = (ScriptableObject) scope;
-        global.defineProperty("Math", m, ScriptableObject.DONTENUM);
-
+        m.initForGlobal(cx, (ScriptableObject)scope, false);
         return m;
     }
+
+    public NativeMath() { }
     
-    public NativeMath() {
-    }
-
-    public String getClassName() {
-        return "Math";
-    }
-
-    public static double abs(double d) {
-        if (d == 0.0)
-            return 0.0; // abs(-0.0) should be 0.0, but -0.0 < 0.0 == false
-        else if (d < 0.0)
-            return -d;
-        else
-            return d;
-    }
-
-    public static double acos(double d) {
-        if ((d != d) 
-                || (d > 1.0)
-                || (d < -1.0))
-            return Double.NaN;
-        return Math.acos(d);
-    }
-
-    public static double asin(double d) {
-        if ((d != d) 
-                || (d > 1.0)
-                || (d < -1.0))
-            return Double.NaN;
-        return Math.asin(d);
-    }
-
-    public static double max(Context cx, Scriptable thisObj, 
-                             Object[] args, Function funObj) 
-    {        
-        double result = Double.NEGATIVE_INFINITY;
-        if (args.length == 0)
-            return result;
-        for (int i = 0; i < args.length; i++) {
-            double d = ScriptRuntime.toNumber(args[i]);
-            if (d != d) return d;
-            result = Math.max(result, d);
-        }
-        return result;
-    }
-
-    public static double min(Context cx, Scriptable thisObj,
-                             Object[] args, Function funObj)
+    public void initForGlobal(Context cx, ScriptableObject global, 
+                              boolean sealed) 
     {
-        double result = Double.POSITIVE_INFINITY;
-        if (args.length == 0)
-            return result;
-        for (int i = 0; i < args.length; i++) {
-            double d = ScriptRuntime.toNumber(args[i]);
-            if (d != d) return d;
-            result = Math.min(result, d);
-        }
-        return result;
+      setPrototype(getObjectPrototype(global));
+      setParentScope(global);
+      if (sealed) {
+        sealObject();
+      }
+      global.defineProperty("Math", this, ScriptableObject.DONTENUM);
     }
 
-    public static double round(double d) {
+    public String getClassName() { return "Math"; }
+
+    public boolean has(String name, Scriptable start) {
+        int id = nameToId(name);
+        if (0 != id && !wasOverwritten(id)) { return true; }
+        return super.has(name, start);
+    }
+
+    public Object get(String name, Scriptable start) {
+	// ALERT: cache the last used value like ScriptableObject does.
+	// But what about thread safety then?
+        int id = nameToId(name);
+        if (0 != id && !wasOverwritten(id)) {
+            return (id > LAST_METHOD_ID) 
+                ? getField(id) : wrapMethod(name, id);
+        }
+        return super.get(name, start);
+    }
+
+    public void put(String name, Scriptable start, Object value) {
+        if (markAsModified(name)) {
+            super.put(name, start, value);
+        }
+    }
+
+    public void delete(String name) {
+        if (markAsModified(name)) {
+            super.delete(name);
+        }
+    }
+    
+    private boolean wasOverwritten(int id) {
+        return 0 != (overwritten_flags & (1 << id));
+    }
+
+    // Return if field or method was marked as overwritten
+    private boolean markAsModified(String name) {
+        int id = nameToId(name);
+        if (0 != id && !wasOverwritten(id)) {
+            if (isSealed() || id > LAST_METHOD_ID) { 
+                // Read only Math constant, ignore modifications
+                return false;
+            }
+            overwritten_flags |= (1 << id);
+            function_cache[id - 1] = null;
+        }
+        return true;
+    } 
+    
+    private Object wrapMethod(String name, int id) {
+        IdFunction f = function_cache[id - 1];
+        if (f == null) {
+            synchronized (this) {
+                if (function_cache[id - 1] == null) {
+                    function_cache[id - 1] = new IdFunction(this, name, id);
+                    f = function_cache[id - 1];
+                }
+            }
+        }
+        return f;
+    }
+    
+    private Object getField(int fieldId) {
+        switch (fieldId) {
+            case Id_E:       return E;
+            case Id_PI:      return PI;
+            case Id_LN10:    return LN10; 
+            case Id_LN2:     return LN2; 
+            case Id_LOG2E:   return LOG2E; 
+            case Id_LOG10E:  return LOG10E; 
+            case Id_SQRT1_2: return SQRT1_2; 
+            case Id_SQRT2:   return SQRT2; 
+        }
+        return null;
+    }
+    
+    public int methodArity(int methodId, IdFunction function) {
+        switch (methodId) {        
+            case Id_atan2:
+            case Id_max: 
+            case Id_min: 
+            case Id_pow:    
+                return 2;
+            case Id_random: 
+                return 0;
+        }
+        return 1;
+    }
+    
+    public Object execMethod
+        (int methodId, IdFunction function,
+         Context cx, Scriptable scope, Scriptable thisObj, Object[] args)
+        throws JavaScriptException
+    {
+        switch (methodId) {        
+            case Id_abs: return wrap_dbl(js_abs(to_dbl(args, 0)));
+            case Id_acos: return wrap_dbl(js_acos(to_dbl(args, 0)));
+            case Id_asin: return wrap_dbl(js_asin(to_dbl(args, 0)));
+            case Id_atan: return wrap_dbl(js_atan(to_dbl(args, 0)));
+            case Id_atan2: return wrap_dbl
+                (js_atan2(to_dbl(args, 0), to_dbl(args, 1)));
+            case Id_ceil: return wrap_dbl(js_ceil(to_dbl(args, 0)));
+            case Id_cos: return wrap_dbl(js_cos(to_dbl(args, 0)));
+            case Id_exp: return wrap_dbl(js_exp(to_dbl(args, 0)));
+            case Id_floor: return wrap_dbl(js_floor(to_dbl(args, 0)));
+            case Id_log: return wrap_dbl(js_log(to_dbl(args, 0)));
+            case Id_max: return wrap_dbl(js_max(args));
+            case Id_min: return wrap_dbl(js_min(args));
+            case Id_pow: return wrap_dbl
+                (js_pow(to_dbl(args, 0), to_dbl(args, 1)));
+            case Id_random: return wrap_dbl(js_random());
+            case Id_round: return wrap_dbl(js_round(to_dbl(args, 0)));
+            case Id_sin: return wrap_dbl(js_sin(to_dbl(args, 0)));
+            case Id_sqrt: return wrap_dbl(js_sqrt(to_dbl(args, 0)));
+            case Id_tan: return wrap_dbl(js_tan(to_dbl(args, 0)));
+        }
+        return null;
+    }
+    
+    private double to_dbl(Object[] args, int index) {
+        return ScriptRuntime.toNumber(args, index);
+    }
+
+    private double to_dbl(Object arg) {
+        return ScriptRuntime.toNumber(arg);
+    }
+
+    private Double wrap_dbl(double x) {
+        return (x == x) ? new Double(x) : ScriptRuntime.NaNobj;
+    }
+    
+    private double js_abs(double x) { 
+        // abs(-0.0) should be 0.0, but -0.0 < 0.0 == false
+        return (x == 0.0) ? 0.0 : (x < 0.0) ? -x : x;
+    }
+
+    private double js_acos(double x) {  
+        return (x == x && -1.0 <= x && x <= 1.0) ? Math.acos(x) : Double.NaN;
+    }
+    
+    private double js_asin(double x) { 
+        return (x == x && -1.0 <= x && x <= 1.0) ? Math.asin(x) : Double.NaN;
+    }
+    
+    private double js_atan(double x) { return Math.atan(x); }
+
+    private double js_atan2(double x, double y) { return Math.atan2(x, y); }
+
+    private double js_ceil(double x) { return Math.ceil(x); }
+
+    private double js_cos(double x) { return Math.cos(x); }
+
+    private double js_exp(double x) {
+        return (x == Double.POSITIVE_INFINITY) ? x 
+            : (x == Double.NEGATIVE_INFINITY) ? 0.0
+            : Math.exp(x);
+    }
+
+    private double js_floor(double x) { return Math.floor(x); }
+
+    private double js_log(double x) { 
+        // Java's log(<0) = -Infinity; we need NaN
+        return (x < 0) ? Double.NaN : Math.log(x); 
+    }
+
+    private double js_max(Object[] args) { 
+      double result = Double.NEGATIVE_INFINITY;
+      if (args.length == 0)
+        return result;
+      for (int i = 0; i < args.length; i++) {
+        double d = ScriptRuntime.toNumber(args[i]);
+        if (d != d) return d;
+        result = Math.max(result, d);
+      }
+      return result;
+    }
+
+    private double js_min(Object[] args) { 
+      double result = Double.POSITIVE_INFINITY;
+      if (args.length == 0)
+        return result;
+      for (int i = 0; i < args.length; i++) {
+        double d = ScriptRuntime.toNumber(args[i]);
+        if (d != d) return d;
+        result = Math.min(result, d);
+      }
+      return result;
+    }
+    
+    private double js_pow(double x, double y) { 
+        if (y == 0) return 1.0;   // Java's pow(NaN, 0) = NaN; we need 1
+        if ((x == 0) && (y < 0)) {
+            if (1 / x > 0) { 
+                // x is +0, Java is -oo, we need +oo
+                return Double.POSITIVE_INFINITY;    
+            }
+            /* if x is -0 and y is an odd integer, -oo */
+            int y_int = (int)y;
+            if (y_int == y && (y_int & 0x1) != 0)
+                return Double.NEGATIVE_INFINITY;
+            return Double.POSITIVE_INFINITY;
+        }
+        return Math.pow(x, y);
+    }
+    
+    private double js_random() { return Math.random(); }
+
+    private double js_round(double d) { 
         if (d != d)
             return d;   // NaN
         if (d == Double.POSITIVE_INFINITY || d == Double.NEGATIVE_INFINITY)
@@ -164,35 +288,120 @@ public class NativeMath extends ScriptableObject {
             return d == 0.0 ? d : 0.0;
         }
         return (double) l;
-    }
+	}
 
-    public static double pow(double x, double y) {
-        if (y == 0)
-            return 1.0;   // Java's pow(NaN, 0) = NaN; we need 1
-        if ((x == 0) && (y < 0)) {
-            Double d = new Double(x);
-            if (d.equals(new Double(0)))            // x is +0
-                return Double.POSITIVE_INFINITY;    // Java is -Infinity
-            /* if x is -0 and y is an odd integer, -Infinity */
-            if (((int)y == y) && (((int)y & 0x1) == 1))
-                return Double.NEGATIVE_INFINITY;
-            return Double.POSITIVE_INFINITY;
+    private double js_sin(double x) { return Math.sin(x); }
+
+    private double js_sqrt(double x) { return Math.sqrt(x); }
+
+    private double js_tan(double x) { return Math.tan(x); }
+
+    private static int nameToId(String s) {
+        int c;
+        int id = 0;
+        String guess = null;
+        L:switch (s.length()) {
+        case 1: if (s.charAt(0)=='E') return Id_E; 
+            break L;
+        case 2: if (s.charAt(0)=='P'&&s.charAt(1)=='I') return Id_PI; 
+            break L;
+        case 3:    switch (s.charAt(0)) {
+            case 'L': if (s.charAt(1)=='N'&&s.charAt(2)=='2') return Id_LN2;
+                break L;
+            case 'a': if (s.charAt(1)=='b'&&s.charAt(2)=='s') return Id_abs; 
+                break L;
+            case 'c': if (s.charAt(1)=='o'&&s.charAt(2)=='s') return Id_cos; 
+                break L;
+            case 'e': if (s.charAt(1)=='x'&&s.charAt(2)=='p') return Id_exp; 
+                break L;
+            case 'l': if (s.charAt(1)=='o'&&s.charAt(2)=='g') return Id_log; 
+                break L;
+            case 'm': c=s.charAt(1);
+                if (c=='a') { if (s.charAt(2)=='x') return Id_max; } 
+                else if (c=='i') { if (s.charAt(2)=='n') return Id_min; } 
+                break L;
+            case 'p': if (s.charAt(1)=='o'&&s.charAt(2)=='w') return Id_pow; 
+                break L;
+            case 's': if (s.charAt(1)=='i'&&s.charAt(2)=='n') return Id_sin; 
+                break L;
+            case 't': if (s.charAt(1)=='a'&&s.charAt(2)=='n') return Id_tan; 
+                break L;
+            }
+            break L;
+        case 4: switch (s.charAt(1)) {
+            case 'N': guess="LN10";id=Id_LN10; break L;
+            case 'c': guess="acos";id=Id_acos; break L;
+            case 's': guess="asin";id=Id_asin; break L;
+            case 't': guess="atan";id=Id_atan; break L;
+            case 'e': guess="ceil";id=Id_ceil; break L;
+            case 'q': guess="sqrt";id=Id_sqrt; break L;
+            }
+            break L;
+        case 5: switch (s.charAt(0)) {
+            case 'S': guess="SQRT2";id=Id_SQRT2; break L;
+            case 'L': guess="LOG2E";id=Id_LOG2E; break L;
+            case 'a': guess="atan2";id=Id_atan2; break L;
+            case 'f': guess="floor";id=Id_floor; break L;
+            case 'r': guess="round";id=Id_round; break L;
+            }
+            break L;
+        case 6: c=s.charAt(0);
+            if (c=='L') { guess="LOG10E";id=Id_LOG10E; }
+            else if (c=='r') { guess="random";id=Id_random; }
+            break L;
+        case 7: guess="SQRT1_2";id=Id_SQRT1_2;
+            break L;
         }
-        return Math.pow(x, y);
-    }
-    
-    public static double exp(double d) {
-        if (d == Double.POSITIVE_INFINITY)
-            return d;
-        if (d == Double.NEGATIVE_INFINITY)
-            return 0.0;
-        return Math.exp(d);
-    }
 
-    public static double log(double x) {
-        if (x < 0)
-            return Double.NaN;   // Java's log(<0) = -Infinity; we need NaN
-        return Math.log(x);
+        return (guess != null && s.equals(guess)) ? id : 0;
     }
+        
+    private static final int 
+        Id_abs          =  1,
+        Id_acos         =  2,
+        Id_asin         =  3,
+        Id_atan         =  4,
+        Id_atan2        =  5,
+        Id_ceil         =  6,
+        Id_cos          =  7,
+        Id_exp          =  8,
+        Id_floor        =  9,
+        Id_log          = 10,
+        Id_max          = 11,
+        Id_min          = 12,
+        Id_pow          = 13,
+        Id_random       = 14,
+        Id_round        = 15,
+        Id_sin          = 16,
+        Id_sqrt         = 17,
+        Id_tan          = 18,
+        
+        LAST_METHOD_ID  = 18,
+    
+        Id_E            = 19,
+        Id_PI           = 20,
+        Id_LN10         = 21,
+        Id_LN2          = 22,
+        Id_LOG2E        = 23,
+        Id_LOG10E       = 24,
+        Id_SQRT1_2      = 25,
+        Id_SQRT2        = 26;
+        
+    private static final Double 
+        E       = new Double(Math.E),
+        PI      = new Double(Math.PI),
+        LN10    = new Double(2.302585092994046),
+        LN2     = new Double(0.6931471805599453),
+        LOG2E   = new Double(1.4426950408889634),
+        LOG10E  = new Double(0.4342944819032518),
+        SQRT1_2 = new Double(0.7071067811865476),
+        SQRT2   = new Double(1.4142135623730951);
+
+    // Indicates that field or method was overwritten
+    private int overwritten_flags;
+    
+    // Cache of constructed wrappers for methods
+    private IdFunction[] function_cache = new IdFunction[LAST_METHOD_ID];
     
 }
+

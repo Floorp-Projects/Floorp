@@ -120,14 +120,14 @@ public class ScriptRuntime {
      * See ECMA 9.3.
      */
     public static double toNumber(Object val) {
-        if (val != null && val instanceof Scriptable) {
+        if (val == null) 
+            return +0.0;
+        if (val instanceof Scriptable) {
             val = ((Scriptable) val).getDefaultValue(NumberClass);
             if (val != null && val instanceof Scriptable)
                 throw errorWithClassName("msg.primitive.expected", val);
             // fall through
         }
-        if (val == null)
-            return +0.0;
         if (val instanceof String)
             return toNumber((String) val);
         if (val instanceof Number)
@@ -137,6 +137,11 @@ public class ScriptRuntime {
         throw errorWithClassName("msg.invalid.type", val);
     }
 
+    public static double toNumber(Object[] args, int index) {
+        return (0 <= index && index < args.length) 
+            ? toNumber(args[index]) : NaN;
+    }
+    
     // This definition of NaN is identical to that in java.lang.Double
     // except that it is not final. This is a workaround for a bug in
     // the Microsoft VM, versions 2.01 and 3.0P1, that causes some uses
@@ -421,6 +426,11 @@ public class ScriptRuntime {
         }
     }
 
+    public static String toString(Object[] args, int index) {
+        return (0 <= index && index < args.length) 
+            ? toString(args[index]) : "undefined";
+    }
+
     public static String numberToString(double d, int base) {
         if (d != d)
             return "NaN";
@@ -575,6 +585,11 @@ public class ScriptRuntime {
             return (int)(d - two32);
         else
             return (int)d;
+    }
+
+    public static int toInt32(Object[] args, int index) {
+        return (0 <= index && index < args.length) 
+            ? toInt32(args[index]) : 0;
     }
 
     public static int toInt32(double d) {
@@ -1205,14 +1220,20 @@ public class ScriptRuntime {
                                            String filename, int lineNumber)
         throws JavaScriptException
     {
-        if (fun instanceof FunctionObject) {
+        if (fun instanceof IdFunction) {
+            IdFunction f = (IdFunction)fun;
+            String name = f.methodName;
+            Class cl = f.master.getClass();
+            if (name.equals("eval") && cl == NativeGlobal.class) {
+                return NativeGlobal.evalSpecial(cx, scope, thisArg, args,
+                                                filename, lineNumber);
+            }
+        }
+        else if (fun instanceof FunctionObject) {
             FunctionObject fo = (FunctionObject) fun;
             Member m = fo.method;
             Class cl = m.getDeclaringClass();
             String name = m.getName();
-            if (name.equals("eval") && cl == NativeGlobal.class)
-                return NativeGlobal.evalSpecial(cx, scope, thisArg, args,
-                                                filename, lineNumber);
             if (name.equals("With") && cl == NativeWith.class)
                 return NativeWith.newWithSpecial(cx, args, fo, !isCall);
             if (name.equals("jsFunction_exec") && cl == NativeScript.class)

@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  * Norris Boyd
+ * Igor Bukanov
  * Mike McCabe
  *
  * Alternatively, the contents of this file may be used under the
@@ -49,34 +50,84 @@ import java.lang.reflect.Method;
  * @author Mike Shaver
  */
 
-public class NativeGlobal {
+public class NativeGlobal implements IdFunction.Master {
 
     public static void init(Scriptable scope)
         throws PropertyException,
                NotAFunctionException,
                JavaScriptException
     {
-
-        String names[] = { "eval",
-                           "parseInt",
-                           "parseFloat",
-                           "escape",
-                           "unescape",
-                           "isNaN",
-                           "isFinite",
-                           "decodeURI",
-                           "decodeURIComponent",
-                           "encodeURI",
-                           "encodeURIComponent"
-                         };
-
+        NativeGlobal instance = new NativeGlobal();
+        Context cx = Context.getContext();
         // We can downcast here because Context.initStandardObjects
         // takes a ScriptableObject scope.
-        ScriptableObject global = (ScriptableObject) scope;
-        global.defineFunctionProperties(names, NativeGlobal.class,
-                                        ScriptableObject.DONTENUM);
+        instance.initForGlobal(cx, (ScriptableObject) scope, false);
+    }
 
-        global.defineProperty("NaN", ScriptRuntime.NaNobj, 
+    public Object execMethod(int methodId, IdFunction function, Context cx,
+                             Scriptable scope, Scriptable thisObj, 
+                             Object[] args)
+        throws JavaScriptException
+    {
+        switch (methodId) {
+            case Id_decodeURI:          return js_decodeURI(cx, args);
+            case Id_decodeURIComponent: return js_decodeURIComponent(cx, args);
+            case Id_encodeURI:          return js_encodeURI(cx, args);
+            case Id_encodeURIComponent: return js_encodeURIComponent(cx, args);
+            case Id_escape:             return js_escape(cx, args);
+            case Id_eval:               return js_eval(cx, scope, args);
+            case Id_isFinite:           return js_isFinite(cx, args);
+            case Id_isNaN:              return js_isNaN(cx, args);
+            case Id_parseFloat:         return js_parseFloat(cx, args);
+            case Id_parseInt:           return js_parseInt(cx, args);
+            case Id_unescape:           return js_unescape(cx, args);
+
+            case Id_new_CommonError:    
+                return new_CommonError(function, cx, scope, args);
+        }
+        return null;
+    }
+
+    public int methodArity(int methodId, IdFunction function) {
+        if (methodId == Id_parseInt) { return 2; }
+        return 1;
+    }
+
+    public Scriptable getParentScope() { return null; }
+
+    private String getMethodName(int methodId) {
+        switch (methodId) {
+            case Id_decodeURI:           return "decodeURI";
+            case Id_decodeURIComponent:  return "decodeURIComponent";
+            case Id_encodeURI:           return "encodeURI";
+            case Id_encodeURIComponent:  return "encodeURIComponent";
+            case Id_escape:              return "escape";
+            case Id_eval:                return "eval";
+            case Id_isFinite:            return "isFinite";
+            case Id_isNaN:               return "isNaN";
+            case Id_parseFloat:          return "parseFloat";
+            case Id_parseInt:            return "parseInt";
+            case Id_unescape:            return "unescape";
+        }
+        return null;
+    }
+
+
+    public void initForGlobal(Context cx, ScriptableObject global, 
+                              boolean sealed) 
+        throws PropertyException,
+               NotAFunctionException,
+               JavaScriptException
+    {
+        for (int id = 1; id <= LAST_METHOD_ID; ++id) {
+            String name = getMethodName(id);
+            IdFunction f = new IdFunction(this, name, id);
+            f.setParentScope(global);
+            if (sealed) { f.sealObject(); }
+            global.defineProperty(name, f, ScriptableObject.DONTENUM);
+        }
+
+        global.defineProperty("NaN", ScriptRuntime.NaNobj,
                               ScriptableObject.DONTENUM);
         global.defineProperty("Infinity", new Double(Double.POSITIVE_INFINITY),
                               ScriptableObject.DONTENUM);
@@ -91,28 +142,36 @@ public class NativeGlobal {
                                   "TypeError",
                                   "URIError"
                                 };          
-        Method[] m = FunctionObject.findMethods(NativeGlobal.class, 
-                                                "CommonError");
-        Context cx = Context.getContext();
+     
         /*
             Each error constructor gets its own Error object as a prototype,
             with the 'name' property set to the name of the error.
         */
         for (int i = 0; i < errorMethods.length; i++) {
             String name = errorMethods[i];
-            FunctionObject ctor = new FunctionObject(name, m[0], global);
+            IdFunction ctor = new IdFunction(this, name, Id_new_CommonError);
+            ctor.setFunctionType(IdFunction.FUNCTION_AND_CONSTRUCTOR);
             global.defineProperty(name, ctor, ScriptableObject.DONTENUM);
-            Scriptable errorProto = cx.newObject(scope, "Error");
+
+            Scriptable errorProto = cx.newObject(global, "Error");
             errorProto.put("name", errorProto, name);
             ctor.put("prototype", ctor, errorProto);
+            if (sealed) {
+                ctor.sealObject();
+                if (errorProto instanceof ScriptableObject) {
+                    ((ScriptableObject)errorProto).sealObject();    
+                }
+            }
         }
-    
     }
 
     /**
      * The global method parseInt, as per ECMA-262 15.1.2.2.
      */
-    public static Object parseInt(String s, int radix) {
+    private Object js_parseInt(Context cx, Object[] args) {
+        String s = ScriptRuntime.toString(args, 0);
+        int radix = ScriptRuntime.toInt32(args, 1);
+        
         int len = s.length();
         if (len == 0)
             return ScriptRuntime.NaNobj;
@@ -135,9 +194,7 @@ public class NativeGlobal {
             radix = NO_RADIX;
         } else if (radix < 2 || radix > 36) {
             return ScriptRuntime.NaNobj;
-        } else if (radix == 16 && len - start > 1 &&
-                 s.charAt(start) == '0')
-        {
+        } else if (radix == 16 && len - start > 1 && s.charAt(start) == '0') {
             c = s.charAt(start+1);
             if (c == 'x' || c == 'X')
                 start += 2;
@@ -169,9 +226,7 @@ public class NativeGlobal {
      * @param args the arguments to parseFloat, ignoring args[>=1]
      * @param funObj unused
      */
-    public static Object parseFloat(Context cx, Scriptable thisObj,
-                                    Object[] args, Function funObj)
-    {
+    private Object js_parseFloat(Context cx, Object[] args) {
         if (args.length < 1)
             return ScriptRuntime.NaNobj;
         String s = ScriptRuntime.toString(args[0]);
@@ -252,21 +307,14 @@ public class NativeGlobal {
      * method, which used to be part of the browser imbedding.  Blame
      * for the strange constant names should be directed there.
      */
-    private static int
-        URL_XALPHAS = 1,
-        URL_XPALPHAS = 2,
-        URL_PATH = 4;
 
-    public static Object escape(Context cx, Scriptable thisObj,
-                                Object[] args, Function funObj)
-    {
-        char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7',
-                         '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
-        
-        if (args.length < 1)
-            args = ScriptRuntime.padArguments(args, 1);
-	
-        String s = ScriptRuntime.toString(args[0]);
+    private Object js_escape(Context cx, Object[] args) {
+        final int
+            URL_XALPHAS = 1,
+            URL_XPALPHAS = 2,
+            URL_PATH = 4;
+
+        String s = ScriptRuntime.toString(args, 0);
 
         int mask = URL_XALPHAS | URL_XPALPHAS | URL_PATH;
         if (args.length > 1) { // the 'mask' argument.  Non-ECMA.
@@ -274,105 +322,99 @@ public class NativeGlobal {
             if (d != d || ((mask = (int) d) != d) ||
                 0 != (mask & ~(URL_XALPHAS | URL_XPALPHAS | URL_PATH)))
             {
-                String message = Context.getMessage
-                    ("msg.bad.esc.mask", null);
+                String message = Context.getMessage0("msg.bad.esc.mask");
                 cx.reportError(message);
                 // do the ecma thing, in case reportError returns.
                 mask = URL_XALPHAS | URL_XPALPHAS | URL_PATH;
             }
         }
 
-	StringBuffer R = new StringBuffer();
-	for (int k = 0; k < s.length(); k++) {
-	    char c = s.charAt(k);
-	    if (mask != 0 && 
-                ((c >= '0' && c <= '9') ||
-		(c >= 'A' && c <= 'Z') ||
-		(c >= 'a' && c <= 'z') ||
-		c == '@' || c == '*' || c == '_' ||
+        StringBuffer R = new StringBuffer();
+        for (int k = 0; k < s.length(); k++) {
+            int c = s.charAt(k), d;
+            if (mask != 0 && ((c >= '0' && c <= '9') ||
+                (c >= 'A' && c <= 'Z') ||
+                (c >= 'a' && c <= 'z') ||
+                c == '@' || c == '*' || c == '_' ||
                 c == '-' || c == '.' ||
-		((c == '/' || c == '+') && mask > 3)))
-		R.append(c);
-	    else if (c < 256) {
+                ((c == '/' || c == '+') && mask > 3)))
+                R.append((char)c);
+            else if (c < 256) {
                 if (c == ' ' && mask == URL_XPALPHAS) {
                     R.append('+');
                 } else {
                     R.append('%');
-                    R.append(digits[c >> 4]);
-                    R.append(digits[c & 0xF]);
+                    R.append(hex_digit_to_char(c >>> 4));
+                    R.append(hex_digit_to_char(c & 0xF));
                 }
-	    } else {
+            } else {
                 R.append('%');
                 R.append('u');
-                R.append(digits[c >> 12]);
-                R.append(digits[(c & 0xF00) >> 8]);
-                R.append(digits[(c & 0xF0) >> 4]);
-                R.append(digits[c & 0xF]);
-	    }
-	}
-	return R.toString();
+                R.append(hex_digit_to_char(c >>> 12));
+                R.append(hex_digit_to_char((c & 0xF00) >>> 8));
+                R.append(hex_digit_to_char((c & 0xF0) >>> 4));
+                R.append(hex_digit_to_char(c & 0xF));
+            }
+        }
+        return R.toString();
+    }
+    
+    private static char hex_digit_to_char(int x) {
+        return (char)(x <= 9 ? x + '0' : x + ('A' - 10));
     }
 
     /**
      * The global unescape method, as per ECMA-262 15.1.2.5.
      */
 
-    public static Object unescape(Context cx, Scriptable thisObj,
-                                  Object[] args, Function funObj)
+    private Object js_unescape(Context cx, Object[] args)
     {
-	if (args.length < 1)
-            args = ScriptRuntime.padArguments(args, 1);
+        String s = ScriptRuntime.toString(args, 0);
+        StringBuffer R = new StringBuffer();
+        stringIter: for (int k = 0; k < s.length(); k++) {
+            char c = s.charAt(k);
+            if (c != '%' || k == s.length() -1) {
+                R.append(c);
+                continue;
+            }
+            String hex;
+            int end, start;
+            if (s.charAt(k+1) == 'u') {
+                start = k+2;
+                end = k+6;
+            } else {
+                start = k+1;
+                end = k+3;
+            }
+            if (end > s.length()) {
+                R.append('%');
+                continue;
+            }
+            hex = s.substring(start, end);
+            for (int i = 0; i < hex.length(); i++)
+                if (!TokenStream.isXDigit(hex.charAt(i))) {
+                    R.append('%');
+                    continue stringIter;
+                }
+            k = end - 1;
+            R.append((new Character((char) Integer.valueOf(hex, 16).intValue())));
+        }
 
-	String s = ScriptRuntime.toString(args[0]);
-	StringBuffer R = new StringBuffer();
-	stringIter: for (int k = 0; k < s.length(); k++) {
-	    char c = s.charAt(k);
-	    if (c != '%' || k == s.length() -1) {
-		R.append(c);
-		continue;
-	    }
-	    String hex;
-	    int end, start;
-	    if (s.charAt(k+1) == 'u') {
-		start = k+2;
-		end = k+6;
-	    } else {
-		start = k+1;
-		end = k+3;
-	    }
-	    if (end > s.length()) {
-		R.append('%');
-		continue;
-	    }
-	    hex = s.substring(start, end);
-	    for (int i = 0; i < hex.length(); i++)
-		if (!TokenStream.isXDigit(hex.charAt(i))) {
-		    R.append('%');
-		    continue stringIter;
-		}
-	    k = end - 1;
-	    R.append((new Character((char) Integer.valueOf(hex, 16).intValue())));
-	}
-
-	return R.toString();
+        return R.toString();
     }
 
     /**
      * The global method isNaN, as per ECMA-262 15.1.2.6.
      */
 
-    public static Object isNaN(Context cx, Scriptable thisObj,
-                               Object[] args, Function funObj)
-    {
+    private Object js_isNaN(Context cx, Object[] args) {
         if (args.length < 1)
             return Boolean.TRUE;
         double d = ScriptRuntime.toNumber(args[0]);
         return (d != d) ? Boolean.TRUE : Boolean.FALSE;
     }
 
-    public static Object isFinite(Context cx, Scriptable thisObj,
-                                  Object[] args, Function funObj)
-    {
+    private Object js_isFinite(Context cx, Object[] args) {
         if (args.length < 1)
             return Boolean.FALSE;
         double d = ScriptRuntime.toNumber(args[0]);
@@ -382,12 +424,11 @@ public class NativeGlobal {
                : Boolean.TRUE;
     }
 
-    public static Object eval(Context cx, Scriptable thisObj,
-                              Object[] args, Function funObj)
+    private Object js_eval(Context cx, Scriptable scope, Object[] args)
         throws JavaScriptException
     {
         String m = ScriptRuntime.getMessage1("msg.cant.call.indirect", "eval");
-        throw NativeGlobal.constructError(cx, "EvalError", m, funObj);
+        throw NativeGlobal.constructError(cx, "EvalError", m, scope);
     }
     
     /**
@@ -520,12 +561,12 @@ public class NativeGlobal {
      * The implementation of all the ECMA error constructors (SyntaxError, 
      * TypeError, etc.)
      */
-    public static Object CommonError(Context cx, Object[] args, 
-                                     Function ctorObj, boolean inNewExpr)
+    private Object new_CommonError(IdFunction ctorObj, Context cx, 
+                                   Scriptable scope, Object[] args)
     {
         Scriptable newInstance = new NativeError();
         newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
-        newInstance.setParentScope(cx.ctorScope);
+        newInstance.setParentScope(scope);
         if (args.length > 0)
             newInstance.put("message", newInstance, args[0]);
         return newInstance;
@@ -578,7 +619,7 @@ public class NativeGlobal {
             }
             k++;
         }
-        return R.toString();			
+        return R.toString();            
     }
 
     private static boolean isHex(char c) {
@@ -672,33 +713,25 @@ public class NativeGlobal {
     private static String uriUnescaped = 
                                         "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_.!~*'()";
 
-    public static String decodeURI(Context cx, Scriptable thisObj,
-                                   Object[] args, Function funObj)
-    {
-        String str = ScriptRuntime.toString(args[0]);
+    private String js_decodeURI(Context cx, Object[] args) {
+        String str = ScriptRuntime.toString(args, 0);
         return decode(cx, str, uriReservedPlusPound);
-    }	
+    }    
     
-    public static String decodeURIComponent(Context cx, Scriptable thisObj,
-                                            Object[] args, Function funObj)
-    {
-        String str = ScriptRuntime.toString(args[0]);
+    private String js_decodeURIComponent(Context cx, Object[] args) {
+        String str = ScriptRuntime.toString(args, 0);
         return decode(cx, str, "");
-    }	
+    }    
     
-    public static Object encodeURI(Context cx, Scriptable thisObj,
-                                   Object[] args, Function funObj)
-    {
-        String str = ScriptRuntime.toString(args[0]);
+    private Object js_encodeURI(Context cx, Object[] args) {
+        String str = ScriptRuntime.toString(args, 0);
         return encode(cx, str, uriReservedPlusPound + uriUnescaped);
-    }	
+    }    
     
-    public static String encodeURIComponent(Context cx, Scriptable thisObj,
-                                            Object[] args, Function funObj)
-    {
-        String str = ScriptRuntime.toString(args[0]);
+    private String js_encodeURIComponent(Context cx, Object[] args) {
+        String str = ScriptRuntime.toString(args, 0);
         return encode(cx, str, uriUnescaped);
-    }	
+    }    
     
     /* Convert one UCS-4 char and write it into a UTF-8 buffer, which must be
     * at least 6 bytes long.  Return the number of UTF-8 bytes of data written.
@@ -707,7 +740,7 @@ public class NativeGlobal {
         int utf8Length = 1;
 
         //JS_ASSERT(ucs4Char <= 0x7FFFFFFF);
-        if ((ucs4Char < 0x80) && (ucs4Char >= 0))
+        if ((ucs4Char & ~0x7F) == 0)
             utf8Buffer[0] = (char)ucs4Char;
         else {
             int i;
@@ -737,7 +770,7 @@ public class NativeGlobal {
         //JS_ASSERT(utf8Length >= 1 && utf8Length <= 6);
         if (utf8Length == 1) {
             ucs4Char = utf8Buffer[0];
-            //			JS_ASSERT(!(ucs4Char & 0x80));
+            //            JS_ASSERT(!(ucs4Char & 0x80));
         } else {
             //JS_ASSERT((*utf8Buffer & (0x100 - (1 << (7-utf8Length)))) == (0x100 - (1 << (8-utf8Length))));
             ucs4Char = utf8Buffer[k++] & ((1<<(7-utf8Length))-1);
@@ -749,4 +782,20 @@ public class NativeGlobal {
         return ucs4Char;
     }
 
+    private static final int    
+        Id_decodeURI           =  1,
+        Id_decodeURIComponent  =  2,
+        Id_encodeURI           =  3,
+        Id_encodeURIComponent  =  4,
+        Id_escape              =  5,
+        Id_eval                =  6,
+        Id_isFinite            =  7,
+        Id_isNaN               =  8,
+        Id_parseFloat          =  9,
+        Id_parseInt            = 10,
+        Id_unescape            = 11,
+        
+        LAST_METHOD_ID         = 11,
+        
+        Id_new_CommonError     = 12;
 }
