@@ -124,7 +124,7 @@ static js2val Array_toString(JS2Metadata *meta, const js2val thisValue, js2val *
         js2val result;
         String *s = new String();
         for (uint32 i = 0; i < length; i++) {
-            mn.name = meta->toString(i);
+            mn.name = numberToString(i);
             if (meta->readDynamicProperty(arrInst, &mn, &lookup, RunPhase, &result)
                     && !JS2VAL_IS_UNDEFINED(result))
                 s->append(*meta->toString(result));
@@ -155,7 +155,7 @@ static js2val Array_toSource(JS2Metadata *meta, const js2val thisValue, js2val *
         js2val result;
         String *s = new String();
         for (uint32 i = 0; i < length; i++) {
-            mn.name = meta->toString(i);
+            mn.name = numberToString(i);
             if (meta->readDynamicProperty(arrInst, &mn, &lookup, RunPhase, &result)
                     && !JS2VAL_IS_UNDEFINED(result))
                 s->append(*meta->toString(result));
@@ -179,7 +179,7 @@ static js2val Array_push(JS2Metadata *meta, const js2val thisValue, js2val *argv
 
     Multiname mn(NULL, meta->publicNamespace);
     for (uint32 i = 0; i < argc; i++) {
-        mn.name = meta->toString(i);
+        mn.name = numberToString(i + length);
         meta->writeDynamicProperty(thisObj, &mn, true, argv[i], RunPhase);
         delete mn.name;
     }
@@ -193,9 +193,9 @@ static js2val Array_pop(JS2Metadata *meta, const js2val thisValue, js2val * /*ar
     uint32 length = getLength(meta, thisObj);
 
     if (length > 0) {
-        Multiname mn(meta->toString(length - 1), meta->publicNamespace);
+        Multiname mn(numberToString(length - 1), meta->publicNamespace);
         LookupKind lookup(false, NULL);
-        const String *id = meta->toString(length - 1);
+        const String *id = numberToString(length - 1);
         js2val result = JS2VAL_UNDEFINED;
         bool deleteResult;
         meta->readDynamicProperty(thisObj, &mn, &lookup, RunPhase, &result);
@@ -221,7 +221,7 @@ js2val Array_concat(JS2Metadata *meta, const js2val thisValue, js2val *argv, uin
 
     do {
         if (meta->objectType(E) != meta->arrayClass) {
-            mn.name = meta->toString(n++);
+            mn.name = numberToString(n++);
             meta->writeDynamicProperty(A, &mn, true, E, RunPhase);
             delete mn.name;
         }
@@ -230,11 +230,11 @@ js2val Array_concat(JS2Metadata *meta, const js2val thisValue, js2val *argv, uin
             JS2Object *arrObj = JS2VAL_TO_OBJECT(E);
             uint32 length = getLength(meta, arrObj);
             for (uint32 k = 0; k < length; k++) {
-                mn.name = meta->toString(k);
+                mn.name = numberToString(k);
                 js2val rval = JS2VAL_UNDEFINED;
                 meta->readDynamicProperty(arrObj, &mn, &lookup, RunPhase, &rval);
                 delete mn.name;
-                mn.name = meta->toString(n++);
+                mn.name = numberToString(n++);
                 meta->writeDynamicProperty(A, &mn, true, rval, RunPhase);
                 delete mn.name;
             }
@@ -263,7 +263,7 @@ static js2val Array_join(JS2Metadata *meta, const js2val thisValue, js2val *argv
 
     for (uint32 k = 0; k < length; k++) {
         js2val result = JS2VAL_UNDEFINED;
-        mn.name = meta->toString(k);
+        mn.name = numberToString(k);
         meta->readDynamicProperty(thisObj, &mn, &lookup, RunPhase, &result);
         if (!JS2VAL_IS_UNDEFINED(result) && !JS2VAL_IS_NULL(result))
             *S += *meta->toString(result);
@@ -292,8 +292,8 @@ static js2val Array_reverse(JS2Metadata *meta, const js2val thisValue, js2val * 
         bool deleteResult;
         js2val result1 = JS2VAL_UNDEFINED;
         js2val result2 = JS2VAL_UNDEFINED;
-        mn1.name = meta->toString(k);
-        mn2.name = meta->toString(length - k - 1);
+        mn1.name = numberToString(k);
+        mn2.name = numberToString(length - k - 1);
 
         if (meta->hasOwnProperty(thisObj, mn1.name)) {
             if (meta->hasOwnProperty(thisObj, mn2.name)) {
@@ -342,13 +342,13 @@ static js2val Array_shift(JS2Metadata *meta, const js2val thisValue, js2val * /*
     LookupKind lookup(false, NULL);
     js2val result;
     bool deleteResult;
-    mn1.name = meta->toString((int32)0);
+    mn1.name = numberToString((int32)0);
     meta->readDynamicProperty(thisObj, &mn1, &lookup, RunPhase, &result);
     delete mn1.name;
 
     for (uint32 k = 1; k < length; k++) {
-        mn1.name = meta->toString(k);
-        mn2.name = meta->toString(k - 1);
+        mn1.name = numberToString(k);
+        mn2.name = numberToString(k - 1);
 
         if (meta->hasOwnProperty(thisObj, mn1.name)) {
             meta->readDynamicProperty(thisObj, &mn1, &lookup, RunPhase, &result);
@@ -360,7 +360,7 @@ static js2val Array_shift(JS2Metadata *meta, const js2val thisValue, js2val * /*
         delete mn2.name;
     }
 
-    mn1.name = meta->toString(length - 1);
+    mn1.name = numberToString(length - 1);
     meta->deleteProperty(thisValue, &mn2, &lookup, RunPhase, &deleteResult);
     delete mn1.name;
     setLength(meta, thisObj, length - 1);
@@ -421,10 +421,10 @@ static js2val Array_slice(JS2Metadata *meta, const js2val thisValue, js2val *arg
     LookupKind lookup(false, NULL);
     uint32 n = 0;
     while (start < end) {
-        mn1.name = meta->toString(start);
+        mn1.name = numberToString(start);
         if (meta->hasOwnProperty(thisObj, mn1.name)) {
             js2val rval;
-            mn2.name = meta->toString(n);
+            mn2.name = numberToString(n);
             meta->readDynamicProperty(thisObj, &mn1, &lookup, RunPhase, &rval);
             meta->writeDynamicProperty(A, &mn2, true, rval, RunPhase);
             delete mn2.name;
@@ -576,7 +576,7 @@ static js2val Array_sort(JS2Metadata *meta, const js2val thisValue, js2val *argv
         Multiname mn(NULL, meta->publicNamespace);
         LookupKind lookup(false, NULL);
         for (i = 0; i < length; i++) {
-            mn.name = meta->toString(i);
+            mn.name = numberToString(i);
             meta->readDynamicProperty(thisObj, &mn, &lookup, RunPhase, &vec[i]);
             delete mn.name;
         }
@@ -584,7 +584,7 @@ static js2val Array_sort(JS2Metadata *meta, const js2val thisValue, js2val *argv
         js_qsort(vec, length, &ca);
 
         for (i = 0; i < length; i++) {
-            mn.name = meta->toString(i);
+            mn.name = numberToString(i);
             meta->writeDynamicProperty(thisObj, &mn, true, vec[i], RunPhase);
             delete mn.name;
         }
@@ -635,10 +635,10 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
         Multiname mn2(NULL, meta->publicNamespace);
         LookupKind lookup(false, NULL);
         for (k = 0; k < deleteCount; k++) {
-            mn1.name = meta->toString(start + k);
+            mn1.name = numberToString(start + k);
             if (meta->hasOwnProperty(thisObj, mn1.name)) {
                 js2val rval;
-                mn2.name = meta->toString(k);
+                mn2.name = numberToString(k);
                 meta->readDynamicProperty(thisObj, &mn1, &lookup, RunPhase, &rval);
                 meta->writeDynamicProperty(A, &mn2, true, rval, RunPhase);
                 delete mn2.name;
@@ -651,8 +651,8 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
         if (newItemCount < deleteCount) {
             bool deleteResult;
             for (k = start; k < (length - deleteCount); k++) {
-                mn1.name = meta->toString(k + deleteCount);
-                mn2.name = meta->toString(k + newItemCount);
+                mn1.name = numberToString(k + deleteCount);
+                mn2.name = numberToString(k + newItemCount);
                 if (meta->hasOwnProperty(thisObj, mn1.name)) {
                     js2val rval;
                     meta->readDynamicProperty(thisObj, &mn1, &lookup, RunPhase, &rval);
@@ -664,7 +664,7 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
                 delete mn2.name;
             }
             for (k = length; k > (length - deleteCount + newItemCount); k--) {
-                mn1.name = meta->toString(k - 1);
+                mn1.name = numberToString(k - 1);
                 meta->deleteProperty(thisValue, &mn1, &lookup, RunPhase, &deleteResult);
                 delete mn1.name;
             }
@@ -673,8 +673,8 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
             if (newItemCount > deleteCount) {
                 for (k = length - deleteCount; k > start; k--) {
                     bool deleteResult;
-                    mn1.name = meta->toString(k + deleteCount - 1);
-                    mn1.name = meta->toString(k + newItemCount - 1);
+                    mn1.name = numberToString(k + deleteCount - 1);
+                    mn1.name = numberToString(k + newItemCount - 1);
                     if (meta->hasOwnProperty(thisObj, mn1.name)) {
                         js2val rval;
                         meta->readDynamicProperty(thisObj, &mn1, &lookup, RunPhase, &rval);
@@ -689,7 +689,7 @@ static js2val Array_splice(JS2Metadata *meta, const js2val thisValue, js2val *ar
         }
         k = start;
         for (uint32 i = 2; i < argc; i++) {
-            mn1.name = meta->toString(k++);
+            mn1.name = numberToString(k++);
             meta->writeDynamicProperty(A, &mn2, true, argv[i], RunPhase);
             delete mn1.name;
         }
@@ -714,8 +714,8 @@ static js2val Array_unshift(JS2Metadata *meta, const js2val thisValue, js2val *a
 
     for (k = length; k > 0; k--) {
         bool deleteResult;
-        mn1.name = meta->toString(k - 1);
-        mn2.name = meta->toString(k + argc - 1);
+        mn1.name = numberToString(k - 1);
+        mn2.name = numberToString(k + argc - 1);
         if (meta->hasOwnProperty(thisObj, mn1.name)) {
             js2val rval;
             meta->readDynamicProperty(thisObj, &mn1, &lookup, RunPhase, &rval);
@@ -728,7 +728,7 @@ static js2val Array_unshift(JS2Metadata *meta, const js2val thisValue, js2val *a
     }
 
     for (k = 0; k < argc; k++) {
-        mn1.name = meta->toString(k);
+        mn1.name = numberToString(k);
         meta->writeDynamicProperty(thisObj, &mn1, true, argv[k], RunPhase);
         delete mn1.name;
     }
@@ -739,9 +739,9 @@ static js2val Array_unshift(JS2Metadata *meta, const js2val thisValue, js2val *a
 
 #if 0
 // An index has to pass the test that :
-//   meta->toString(ToUint32(meta->toString(index))) == meta->toString(index)     
+//   toString(ToUint32(toString(index))) == toString(index)     
 //
-//  the 'meta->toString(index)' operation is the default behaviour of '[]'
+//  the 'toString(index)' operation is the default behaviour of '[]'
 //
 //  isArrayIndex() is called when we know that index is a Number
 //

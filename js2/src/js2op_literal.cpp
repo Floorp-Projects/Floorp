@@ -116,3 +116,20 @@
         }
         break;
 
+    case eNewArray:
+        {
+            uint16 argCount = BytecodeContainer::getShort(pc);
+            pc += sizeof(uint16);
+            ArrayInstance *aInst = new ArrayInstance(meta->arrayClass);
+            baseVal = OBJECT_TO_JS2VAL(aInst);
+            for (uint16 i = 0; i < argCount; i++) {
+                b = pop();
+                const DynamicPropertyMap::value_type e(*numberToString((argCount - 1) - i), b);
+                aInst->dynamicProperties.insert(e);
+            }
+            setLength(meta, aInst, argCount);
+            push(baseVal);
+            baseVal = JS2VAL_VOID;
+        }
+        break;
+

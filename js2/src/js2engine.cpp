@@ -528,6 +528,7 @@ namespace MetaData {
         JS2Object::mark(object_StringAtom);
         JS2Object::mark(Empty_StringAtom);
         JS2Object::mark(Dollar_StringAtom);
+        JS2Object::mark(length_StringAtom);
     }
 
     //

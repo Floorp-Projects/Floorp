@@ -1353,6 +1353,7 @@ namespace MetaData {
         case ExprNode::Null:
         case ExprNode::number:
         case ExprNode::regExp:
+        case ExprNode::arrayLiteral:
         case ExprNode::numUnit:
         case ExprNode::string:
         case ExprNode::boolean:
@@ -1906,6 +1907,23 @@ doUnary:
                 bCon->emitOp(eTrue, p->pos);
             else 
                 bCon->emitOp(eFalse, p->pos);
+            break;
+        case ExprNode::arrayLiteral:
+            {
+                uint32 argCount = 0;
+                PairListExprNode *plen = checked_cast<PairListExprNode *>(p);
+                ExprPairList *e = plen->pairs;
+                while (e) {
+                    if (e->value) {
+                        Reference *rVal = EvalExprNode(env, phase, e->value);
+                        if (rVal) rVal->emitReadBytecode(bCon, p->pos);
+                    }
+                    argCount++;
+                    e = e->next;
+                }
+                bCon->emitOp(eNewArray, p->pos, -argCount + 1);    // pop argCount args and push a new array
+                bCon->addShort(argCount);
+            }
             break;
         case ExprNode::objectLiteral:
             {
