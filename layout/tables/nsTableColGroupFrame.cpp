@@ -30,6 +30,7 @@
 #include "nsHTMLIIDs.h"
 #include "nsCOMPtr.h"
 #include "nsCSSRendering.h"
+#include "nsIPresShell.h"
 
 NS_DEF_PTR(nsIContent);
 
@@ -135,6 +136,151 @@ nsTableColGroupFrame::SetInitialChildList(nsIPresContext& aPresContext,
   if (NS_OK==result)
     result = InitNewFrames(aPresContext, aChildList);
   return result;
+}
+
+// Helper function. It marks the table frame as dirty and generates
+// a reflow command
+nsresult
+nsTableColGroupFrame::AddTableDirtyReflowCommand(nsIPresContext& aPresContext,
+                                                 nsIPresShell&   aPresShell,
+                                                 nsIFrame*       aTableFrame)
+{
+  nsFrameState      frameState;
+  nsIFrame*         tableParentFrame;
+  nsIReflowCommand* reflowCmd;
+  nsresult          rv;
+
+  // Mark the table frame as dirty
+  aTableFrame->GetFrameState(&frameState);
+  frameState |= NS_FRAME_IS_DIRTY;
+  aTableFrame->SetFrameState(frameState);
+
+  // Target the reflow comamnd at its parent frame
+  aTableFrame->GetParent(&tableParentFrame);
+  rv = NS_NewHTMLReflowCommand(&reflowCmd, tableParentFrame,
+                               nsIReflowCommand::ReflowDirty);
+  if (NS_SUCCEEDED(rv)) {
+    // Add the reflow command
+    rv = aPresShell.AppendReflowCommand(reflowCmd);
+    NS_RELEASE(reflowCmd);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsTableColGroupFrame::AppendFrames(nsIPresContext& aPresContext,
+                                   nsIPresShell&   aPresShell,
+                                   nsIAtom*        aListName,
+                                   nsIFrame*       aFrameList)
+{
+  // Append the new frames to our child list
+  mFrames.AppendFrames(nsnull, aFrameList);
+  
+  // Reset the starting column index of the col groups that follow
+  PRInt32 startingColIndex = mStartColIndex;
+  startingColIndex += GetColumnCount(); // has the side effect of resetting all column indexes
+
+  nsIFrame *nextColGroupFrame=nsnull;
+  GetNextSibling(&nextColGroupFrame);
+  while (nextColGroupFrame)
+  {
+    const nsStyleDisplay *display;
+    nextColGroupFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
+    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)
+    {
+      startingColIndex += ((nsTableColGroupFrame *)nextColGroupFrame)->SetStartColumnIndex(startingColIndex);
+    }
+    nextColGroupFrame->GetNextSibling(&nextColGroupFrame);
+  }
+
+  // Today we need to rebuild the whole column cache.
+  // If the table frame is ever recoded to build the column cache incrementally,
+  // we could take advantage of that here
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(this, tableFrame);
+  tableFrame->InvalidateColumnCache();
+  
+  // Generate a reflow command so we reflow the table
+  AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTableColGroupFrame::InsertFrames(nsIPresContext& aPresContext,
+                                   nsIPresShell&   aPresShell,
+                                   nsIAtom*        aListName,
+                                   nsIFrame*       aPrevFrame,
+                                   nsIFrame*       aFrameList)
+{
+  // Insert the new frames into our child list
+  mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
+
+  // Reset the starting column index of the col groups that follow
+  PRInt32 startingColIndex=mStartColIndex;
+  startingColIndex += GetColumnCount(); // has the side effect of resetting all column indexes
+
+  nsIFrame *nextColGroupFrame=nsnull;
+  GetNextSibling(&nextColGroupFrame);
+  while (nextColGroupFrame)
+  {
+    const nsStyleDisplay *display;
+    nextColGroupFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
+    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)
+    {
+      startingColIndex += ((nsTableColGroupFrame *)nextColGroupFrame)->SetStartColumnIndex(startingColIndex);
+    }
+    nextColGroupFrame->GetNextSibling(&nextColGroupFrame);
+  }
+
+  // Today we need to rebuild the whole column cache.
+  // If the table frame is ever recoded to build the column cache incrementally,
+  // we could take advantage of that here.
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(this, tableFrame);
+  tableFrame->InvalidateColumnCache();
+
+  // Generate a reflow command so we reflow the table
+  AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTableColGroupFrame::RemoveFrame(nsIPresContext& aPresContext,
+                                  nsIPresShell&   aPresShell,
+                                  nsIAtom*        aListName,
+                                  nsIFrame*       aOldFrame)
+{
+  // Remove the frame from our child list
+  mFrames.DestroyFrame(aPresContext, aOldFrame);
+
+  // Reset the starting column index of the col groups that follow
+  PRInt32 startingColIndex=mStartColIndex;
+  startingColIndex += GetColumnCount(); // has the side effect of resetting all column indexes
+
+  nsIFrame *nextColGroupFrame=nsnull;
+  GetNextSibling(&nextColGroupFrame);
+  while (nextColGroupFrame)
+  {
+    const nsStyleDisplay *display;
+    nextColGroupFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
+    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)
+    {
+      startingColIndex += ((nsTableColGroupFrame *)nextColGroupFrame)->SetStartColumnIndex(startingColIndex);
+    }
+    nextColGroupFrame->GetNextSibling(&nextColGroupFrame);
+  }
+
+  // Today we need to rebuild the whole column cache.
+  // If the table frame is ever recoded to build the column cache incrementally,
+  // we could take advantage of that here
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(this, tableFrame);
+  tableFrame->InvalidateColumnCache();
+
+  // Generate a reflow command so we reflow the table
+  AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
+  return NS_OK;
 }
 
 NS_METHOD nsTableColGroupFrame::Paint(nsIPresContext&      aPresContext,
@@ -263,54 +409,6 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext&          aPresCont
   if (PR_TRUE==gsDebugIR) printf("nTCGF IR: IncrementalReflow_TargetIsMe with type=%d\n", type);
   switch (type)
   {
-  case nsIReflowCommand::FrameInserted :
-    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
-    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN == childDisplay->mDisplay)
-    {
-      rv = IR_ColInserted(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                          (nsTableColFrame*)objectFrame, PR_FALSE);
-    }
-    else
-    {
-      rv = AddFrame(aReflowState, objectFrame);
-    }
-    break;
-  
-  case nsIReflowCommand::FrameAppended :
-    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
-    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
-    {
-      rv = IR_ColAppended(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                         (nsTableColFrame*)objectFrame);
-    }
-    else
-    { // no optimization to be done for Unknown frame types, so just reuse the Inserted method
-      rv = AddFrame(aReflowState, objectFrame);
-    }
-    break;
-
-  /*
-  case nsIReflowCommand::FrameReplaced :
-
-  */
-
-  case nsIReflowCommand::FrameRemoved :
-    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
-    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
-    {
-      rv = IR_ColRemoved(aPresContext, aDesiredSize, aReflowState, aStatus, 
-                         (nsTableColFrame*)objectFrame);
-    }
-    else
-    {
-
-      rv = mFrames.DestroyFrame(aPresContext, objectFrame);
-    }
-    break;
-
   case nsIReflowCommand::StyleChanged :
     rv = IR_StyleChanged(aPresContext, aDesiredSize, aReflowState, aStatus);
     break;
@@ -320,135 +418,13 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext&          aPresCont
     rv = NS_ERROR_ILLEGAL_VALUE;
     break;
   
-  case nsIReflowCommand::PullupReflow:
-  case nsIReflowCommand::PushReflow:
-  case nsIReflowCommand::CheckPullupReflow :
-  case nsIReflowCommand::UserDefined :
-    NS_NOTYETIMPLEMENTED("unimplemented reflow command type");
+  default:
+    NS_NOTYETIMPLEMENTED("unexpected reflow command type");
     rv = NS_ERROR_NOT_IMPLEMENTED;
-    if (PR_TRUE==gsDebugIR) printf("TCGF IR: reflow command not implemented.\n");
+    if (PR_TRUE==gsDebugIR) printf("TCGF IR: unexpected reflow command not implemented.\n");
     break;
   }
 
-  return rv;
-}
-
-NS_METHOD nsTableColGroupFrame::IR_ColInserted(nsIPresContext&          aPresContext,
-                                               nsHTMLReflowMetrics&     aDesiredSize,
-                                               const nsHTMLReflowState& aReflowState,
-                                               nsReflowStatus&          aStatus,
-                                               nsTableColFrame *        aInsertedFrame,
-                                               PRBool                   aReplace)
-{
-  nsresult rv=NS_OK;
-  rv = AddFrame(aReflowState, (nsIFrame *)aInsertedFrame);
-  if (NS_FAILED(rv))
-    return rv;
-  PRInt32 startingColIndex=mStartColIndex;
-  startingColIndex += GetColumnCount(); // has the side effect of resetting all column indexes
-
-  nsIFrame *childFrame=nsnull;
-  GetNextSibling(&childFrame);
-  while ((NS_SUCCEEDED(rv)) && (nsnull!=childFrame))
-  {
-    const nsStyleDisplay *display;
-    childFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)
-    {
-      startingColIndex += ((nsTableColGroupFrame *)childFrame)->SetStartColumnIndex(startingColIndex);
-    }
-    rv = childFrame->GetNextSibling(&childFrame);
-  }
-
-  nsTableFrame* tableFrame=nsnull;
-  rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
-    tableFrame->InvalidateColumnCache();
-  //XXX: what we want to do here is determine if the new COL information changes anything about layout
-  //     if not, we can skip rebalancing the columns
-  return rv;
-}
-
-NS_METHOD nsTableColGroupFrame::IR_ColAppended(nsIPresContext&          aPresContext,
-                                               nsHTMLReflowMetrics&     aDesiredSize,
-                                               const nsHTMLReflowState& aReflowState,
-                                               nsReflowStatus&          aStatus,
-                                               nsTableColFrame *        aAppendedFrame)
-{
-  nsresult rv=NS_OK;
-  rv = AddFrame(aReflowState, (nsIFrame*)aAppendedFrame);
-  if (NS_FAILED(rv))
-    return rv;
-  PRInt32 startingColIndex=mStartColIndex;
-  // this could be optimized
-  startingColIndex += GetColumnCount(); // has the side effect of resetting all column indexes
-
-  nsIFrame *childFrame=nsnull;
-  GetNextSibling(&childFrame);
-  while ((NS_SUCCEEDED(rv)) && (nsnull!=childFrame))
-  {
-    const nsStyleDisplay *display;
-    childFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)
-    {
-      startingColIndex += ((nsTableColGroupFrame *)childFrame)->SetStartColumnIndex(startingColIndex);
-    }
-    rv = childFrame->GetNextSibling(&childFrame);
-  }
-
-  // today we need to rebuild the whole column cache
-  // if the table frame is ever recoded to build the column cache incrementally, we could take
-  // advantage of that here.
-  nsTableFrame* tableFrame=nsnull;
-  rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
-    tableFrame->InvalidateColumnCache();
-  return rv;
-}
-
-
-NS_METHOD nsTableColGroupFrame::IR_ColRemoved(nsIPresContext&          aPresContext,
-                                              nsHTMLReflowMetrics&     aDesiredSize,
-                                              const nsHTMLReflowState& aReflowState,
-                                              nsReflowStatus&          aStatus,
-                                              nsTableColFrame *        aDeletedFrame)
-{
-  nsresult rv=NS_OK;
-  PRInt32 startingColIndex=mStartColIndex;
-  nsIFrame *childFrame=mFrames.FirstChild();
-  nsIFrame *prevSib=nsnull;
-  while ((NS_SUCCEEDED(rv)) && (nsnull!=childFrame))
-  {
-    // XXX change to use mFrames.DeleteFrame; and why does it keep
-    // looping after finding it?
-    if (childFrame==aDeletedFrame)
-    {
-      nsIFrame *deleteFrameNextSib=nsnull;
-      aDeletedFrame->GetNextSibling(&deleteFrameNextSib);
-      if (nsnull!=prevSib)
-        prevSib->SetNextSibling(deleteFrameNextSib);
-      else
-        mFrames.SetFrames(deleteFrameNextSib);
-      startingColIndex += GetColumnCount(); // resets all column indexes
-    }
-    const nsStyleDisplay *display;
-    childFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)
-    {
-      // we've removed aDeletedFrame, now adjust the starting col index of all subsequent col groups
-      startingColIndex += ((nsTableColGroupFrame *)childFrame)->SetStartColumnIndex(startingColIndex);
-    }
-    prevSib=childFrame;
-    rv = childFrame->GetNextSibling(&childFrame);
-  }
-
-  // today we need to rebuild the whole column cache
-  // if the table frame is ever recoded to build the column cache incrementally, we could take
-  // advantage of that here.
-  nsTableFrame* tableFrame=nsnull;
-  rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
-    tableFrame->InvalidateColumnCache();
   return rv;
 }
 
