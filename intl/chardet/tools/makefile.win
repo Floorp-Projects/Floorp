@@ -28,7 +28,11 @@ PROG1 = .\$(OBJDIR)\GenCyrillicClass.exe
 PROGRAMS = $(PROG1)
 
 LCFLAGS=-DUSE_NSREG
-
+REQUIRES=\
+	xpcom \
+	string \
+	unicharutil \
+	uconv
 
 LLIBS= \
  $(DIST)\lib\xpcom.lib \

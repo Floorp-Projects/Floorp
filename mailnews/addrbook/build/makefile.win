@@ -40,7 +40,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  mork \
 		  appcomps \
-		  raptor \
 		  mozldap \
 		  $(NULL)
 
@@ -70,6 +69,7 @@ LLIBS=								\
 	$(DIST)\lib\xpcom.lib			\
     $(LIBNSPR)						\
     $(DIST)\lib\rdfutil_s.lib		\
+	$(DIST)\lib\unicharutil_s.lib	\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -66,6 +66,7 @@ LLIBS=											\
 			$(DIST)\lib\xpcom.lib				\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 			$(DIST)\lib\msgbsutl.lib			\
+			$(DIST)\lib\unicharutil_s.lib       \
 			$(LIBNSPR)							\
 			$(NULL)
 

@@ -33,6 +33,7 @@ REQUIRES	= xpcom \
 		  rdf \
 		  msglocal \
 		  intl \
+		  unicharutil \
 		  pref \
 		  timer \
 		  msgnews \

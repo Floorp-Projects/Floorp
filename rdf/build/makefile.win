@@ -49,6 +49,7 @@ SUB_LIBRARIES=\
 LLIBS=\
  $(DIST)\lib\xpcom.lib   \
  $(DIST)\lib\timer_s.lib \
+ $(DIST)\lib\unicharutil_s.lib \
  $(LIBNSPR)  
 
 # XXX Note dependencies on implementation dirs for factory methods.

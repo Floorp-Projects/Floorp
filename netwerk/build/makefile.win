@@ -33,7 +33,7 @@ REQUIRES	= xpcom \
 		  jar \
 		  locale \
 		  intl \
-                  uconv \
+		  uconv \
 		  zlib \
 		  $(NULL)
 
@@ -67,6 +67,7 @@ SUB_LIBRARIES=                        \
         $(NULL)
 
 LLIBS=                                \
+		$(DIST)\lib\unicharutil_s.lib \
 !ifdef MOZ_PERF
         $(DIST)\lib\util.lib          \
 !endif

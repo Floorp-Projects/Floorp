@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  msgdb \
 		  msglocal \
 		  mimetype \
+	      unicharutil \
 		  $(NULL)
 LIBRARY_NAME    = $(MODULE)
 META_COMPONENT  = mail
@@ -59,6 +60,7 @@ CPP_OBJS=\
 
 LLIBS=\
         $(DIST)\lib\xpcom.lib       \
+		$(DIST)\lib\unicharutil_s.lib \
 		$(LIBNSPR)  				\
         $(NULL)
 
