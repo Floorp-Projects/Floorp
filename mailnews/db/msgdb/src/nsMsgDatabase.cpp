@@ -556,10 +556,15 @@ NS_IMETHODIMP nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 
 				{
 					nsIOFileStream *dbStream = new nsIOFileStream(nsFileSpec(dbName));
-					PRInt32 bytesRead = dbStream->read(bufFirst512Bytes, sizeof(bufFirst512Bytes));
-					first512Bytes.mYarn_Fill = bytesRead;
-					dbStream->close();
-					delete dbStream;
+					if (dbStream)
+					{
+						PRInt32 bytesRead = dbStream->read(bufFirst512Bytes, sizeof(bufFirst512Bytes));
+						first512Bytes.mYarn_Fill = bytesRead;
+						dbStream->close();
+						delete dbStream;
+					}
+					else
+						return NS_ERROR_OUT_OF_MEMORY;
 				}
 				ret = myMDBFactory->CanOpenFilePort(m_mdbEnv, nativeFileName, // the file to investigate
 					&first512Bytes,	&canOpen, &outFormatVersion);

@@ -32,7 +32,7 @@ nsresult
 NS_NewMsgFilterService(const nsIID& iid, void **result)
 {
 	nsMsgFilterService *ids = new nsMsgFilterService();
-	return ids->QueryInterface(iid, result);
+	return (ids) ? ids->QueryInterface(iid, result) : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_END_EXTERN_C
