@@ -5423,7 +5423,7 @@ nsHTMLEditRules::UpdateDocChangeRange(nsIDOMRange *aRange)
     // compare starts of ranges
     res = mDocChangeRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START, aRange, &result);
     if (NS_FAILED(res)) return res;
-    if (result < 0)  // negative result means aRange start is before mDocChangeRange start
+    if (result > 0)  // positive result means mDocChangeRange start is after aRange start
     {
       nsCOMPtr<nsIDOMNode> startNode;
       PRInt32 startOffset;
@@ -5438,7 +5438,7 @@ nsHTMLEditRules::UpdateDocChangeRange(nsIDOMRange *aRange)
     // compare ends of ranges
     res = mDocChangeRange->CompareBoundaryPoints(nsIDOMRange::END_TO_END, aRange, &result);
     if (NS_FAILED(res)) return res;
-    if (result > 0)  // positive result means aRange end is after mDocChangeRange end
+    if (result < 0)  // negative result means mDocChangeRange end is before aRange end
     {
       nsCOMPtr<nsIDOMNode> endNode;
       PRInt32 endOffset;
