@@ -51,7 +51,7 @@
 #include "windows.h"
 #endif /* _WIN32 */
 
-#define PREFS_HEADER_LINE_1 "// Mozilla User Preferences"
+#define PREFS_HEADER_LINE_1 "# Mozilla User Preferences"
 #define PREFS_HEADER_LINE_2	"// This is a generated file!"
 
 #include "prefapi_private_data.h"
@@ -1275,6 +1275,7 @@ extern "C" JSBool pref_InitInitialObjects()
 		NS_RELEASE(specialChild2);
 	}
 done:
+    NS_RELEASE(i);
 	NS_RELEASE(specialChild);
     return JS_TRUE;
 }
