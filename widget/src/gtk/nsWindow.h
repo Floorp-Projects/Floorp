@@ -106,14 +106,6 @@ public:
 
   virtual PRBool IsChild() const;
 
-  void SetIsDestroying(PRBool val) {
-    mIsDestroyingWindow = val;
-  }
-
-  PRBool IsDestroying() const {
-    return mIsDestroyingWindow;
-  }
-
   // Utility methods
   virtual  PRBool OnExpose(nsPaintEvent &event);
   virtual  PRBool OnDraw(nsPaintEvent &event);
@@ -174,7 +166,6 @@ protected:
   nsIFontMetrics *mFontMetrics;
   PRBool      mVisible;
   PRBool      mDisplayed;
-  PRBool      mIsDestroyingWindow;
   PRBool      mIsTooSmall;
 
   // XXX Temporary, should not be caching the font
