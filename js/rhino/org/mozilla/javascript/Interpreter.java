@@ -1221,11 +1221,13 @@ public class Interpreter extends LabelTable {
                         case TokenStream.CLOSURE :
                         case TokenStream.NEW :
                         case TokenStream.CALL : {
-                                int count = (iCode[pc + 1] << 8) | (iCode[pc + 2] & 0xFF);
+                                int count = (iCode[pc + 3] << 8) | (iCode[pc + 4] & 0xFF);
                                 out.println(
                                     TokenStream.tokenToName(iCode[pc] & 0xff) +
-                                    " " + count);
-                                pc += 2;
+                                    " " + count + " \"" + 
+                                    getString(theData.itsStringTable, iCode, 
+                                              pc + 1) + "\"");
+                                pc += 4;
                             }
                             break;
                         case TokenStream.NUMBER :
