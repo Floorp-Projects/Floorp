@@ -685,7 +685,8 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
       NS_NAMED_LITERAL_STRING(classAttr, "class");
       PRBool hasStyleAttr = HasAttr(aNode, &styleAttr);
       PRBool hasClassAtrr = HasAttr(aNode, &classAttr);
-      if (hasStyleAttr || hasClassAtrr) {
+      if (aProperty &&
+          (hasStyleAttr || hasClassAtrr)) {
         // aNode carries inline styles or a class attribute so we can't
         // just remove the element... We need to create above the element
         // a span that will carry those styles or class, then we can delete
@@ -701,6 +702,20 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
         res = CloneAttribute(classAttr, spanNode, aNode);
         if (NS_FAILED(res))
           return res;
+        if (hasStyleAttr)
+        {
+          // we need to remove the styles property corresponding to
+          // aProperty (bug 215406)
+          nsAutoString propertyValue;
+          mHTMLCSSUtils->RemoveCSSEquivalentToHTMLStyle(spanNode,
+                                                        aProperty,
+                                                        aAttribute,
+                                                        &propertyValue,
+                                                        PR_FALSE);
+          // remove the span if it's useless
+          nsCOMPtr<nsIDOMElement> element = do_QueryInterface(spanNode);
+          res = RemoveElementIfNoStyleOrIdOrClass(element, nsEditProperty::span);
+        }
       }
       res = RemoveContainer(aNode);
     }
