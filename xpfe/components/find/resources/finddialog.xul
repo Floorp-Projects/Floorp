@@ -52,6 +52,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   buttonpack="center"
   ondialogaccept="return onAccept();"
+  buttonlabelaccept="&findButton.label;"
   windowtype="findInPage"
   onload="onLoad();"
   onunload="onUnload();"
@@ -87,8 +88,4 @@
       </row>
     </rows>
   </grid>
-
-  <!-- used to store the find text -->
-  <data style="display:none;" id="fBLT" label="&findButton.label;" accesskey="&findButton.accesskey;"/>
-  
 </dialog>

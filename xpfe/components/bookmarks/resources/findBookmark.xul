@@ -51,7 +51,8 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&findBookmark.title;" 
         onload="Startup();"
-        ondialogaccept="return find();">
+        ondialogaccept="return find();"
+        buttonlabelaccept="&findButton.label;">
 
   <stringbundle id="bookmarksBundle" src="chrome://communicator/locale/bookmarks/bookmarks.properties"/>
   

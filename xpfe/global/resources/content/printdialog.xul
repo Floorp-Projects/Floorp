@@ -46,8 +46,10 @@
 <!DOCTYPE dialog SYSTEM "chrome://global/locale/printdialog.dtd">
 
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  id="printDialog"
   onload="onLoad();"
   ondialogaccept="return onAccept();"
+  buttonlabelaccept="&printButton.label;"
   oncancel="return onCancel();"
   title="&printDialog.title;"
   persist="screenX screenY"
@@ -136,8 +138,7 @@
     </radiogroup>
   </groupbox>
 
-  <!-- used to store titles and labels -->
-  <data style="display:none;" id="printButton" label="&printButton.label;"/>
+  <!-- used to store the title of the filepicker -->
   <data style="display:none;" id="fpDialog" label="&fpDialog.title;"/>
 
 </dialog>

@@ -49,7 +49,8 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&findHistory.title;" 
         onload="Startup();"
-        ondialogaccept="return find();">
+        ondialogaccept="return find();"
+        buttonlabelaccept="&findButton.label;">
 
   <stringbundle id="historyBundle" src="chrome://communicator/locale/history/history.properties"/>
 

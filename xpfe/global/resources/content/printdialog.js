@@ -91,8 +91,7 @@ function initDialog()
 
   dialog.printButton     = document.documentElement.getButton("accept");
 
-  // <data> elements
-  dialog.printName       = document.getElementById("printButton");
+  // <data> element
   dialog.fpDialog        = document.getElementById("fpDialog");
 
   dialog.enabled         = false;
@@ -379,8 +378,6 @@ function loadDialog()
     dialog.eachframesepRadio.setAttribute("disabled","true");
     dialog.printframeGroupLabel.setAttribute("disabled","true");
   }
-
-  dialog.printButton.label = dialog.printName.getAttribute("label");
 }
 
 //---------------------------------------------------
