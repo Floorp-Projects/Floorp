@@ -1136,20 +1136,25 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
 
     nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(component);
 
-    if (!localFile)
-        return nsnull;
-
     char *location;             // declare before first jump to out:
     jsval retval;
     nsXPIDLCString displayPath;
     FILE* fileHandle;
+    JSScript *script = nsnull;
     
+    if (!localFile) {
+        global = nsnull;
+        goto out;
+    }
+
     localFile->GetURL(getter_Copies(displayPath));   
     rv = localFile->OpenANSIFileDesc("r", &fileHandle);
-    if (NS_FAILED(rv))
-        return nsnull;
+    if (NS_FAILED(rv)) {
+        global = nsnull;
+        goto out;
+    }
 
-    JSScript *script = 
+    script = 
         JS_CompileFileHandleForPrincipals(cx, global,
                                           (const char *)displayPath, 
                                           fileHandle, jsPrincipals);
