@@ -46,9 +46,11 @@
 
 #ifdef MOZ_ACCESSIBILITY_ATK
 
-class nsAccessibleHyperText : public nsIAccessibleText
+class nsAccessibleHyperText : public nsIAccessibleHyperText,
+                              public nsIAccessibleText
 {
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIACCESSIBLEHYPERTEXT
   NS_DECL_NSIACCESSIBLETEXT
 
 public:

@@ -95,6 +95,8 @@ public:
   NS_IMETHOD AccTakeFocus(void); 
   NS_IMETHOD AccGetDOMNode(nsIDOMNode **_retval); 
 
+  NS_IMETHOD GetFocusedNode(nsIDOMNode **aFocusedNode);
+
 #ifdef MOZ_ACCESSIBILITY_ATK
     static nsresult GetParentBlockNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aBlockNode);
 #endif
@@ -112,7 +114,6 @@ protected:
   NS_IMETHOD AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString);
   NS_IMETHOD AppendFlatStringFromContentNode(nsIContent *aContent, nsAString *aFlatString);
   NS_IMETHOD AppendStringWithSpaces(nsAString *aFlatString, const nsAString& textEquivalent);
-  NS_IMETHOD GetFocusedNode(nsIDOMNode **aFocusedNode);
   NS_IMETHOD CacheOptimizations(nsIAccessible *aParent, PRInt32 aSiblingIndex, nsIDOMNodeList *aSiblingList);
   NS_IMETHOD HandleEvent(PRUint32 aEvent, nsIAccessible *aTarget, void * aData);
   // helper method to verify frames
