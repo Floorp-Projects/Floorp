@@ -72,7 +72,7 @@ protected:
     nsresult    BuildRecipientsFromArray(const char *names, const char *addresses, PRUint32 numAddresses, nsCAutoString& allRecipients);
 
 	// reference and threading stuff.
-	nsresult	ParseReferences(nsCString &references);
+	nsresult	ParseReferences(const char *references);
 	const char*	GetNextReference(const char *startNextRef, nsCString &reference);
 	const char* GetPrevReference(const char *prevRef, nsCString &reference);
 

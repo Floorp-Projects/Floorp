@@ -307,9 +307,9 @@ NS_IMETHODIMP nsMsgHdr::GetNumReferences(PRUint16 *result)
 	return NS_OK;
 }
 
-nsresult nsMsgHdr::ParseReferences(nsCString &references)
+nsresult nsMsgHdr::ParseReferences(const char *references)
 {
-	const char *startNextRef = references.get();
+	const char *startNextRef = references;
 	nsCAutoString resultReference;
 
 	while (startNextRef && *startNextRef)
@@ -331,7 +331,7 @@ NS_IMETHODIMP nsMsgHdr::GetStringReference(PRInt32 refNum, nsCString &resultRefe
 		
 		if(NS_SUCCEEDED(err))
 		{
-			ParseReferences(references);
+			ParseReferences(references.get());
 			m_initedValues |= REFERENCES_INITED;
 		}
 	}
@@ -366,15 +366,18 @@ NS_IMETHODIMP nsMsgHdr::SetAuthor(const char *author)
 
 NS_IMETHODIMP nsMsgHdr::SetReferences(const char *references)
 {
-	nsCAutoString CStrReference(references);
-	ParseReferences(CStrReference);
-
-	m_numReferences = m_references.Count();
-	SetUInt32Column(m_numReferences, m_mdb->m_numReferencesColumnToken);
-
-	m_initedValues |= REFERENCES_INITED;
-
-	return SetStringColumn(references, m_mdb->m_referencesColumnToken);
+  if (*references == '\0') {
+    m_numReferences = 0;
+  }
+  else {
+    ParseReferences(references);
+    m_numReferences = m_references.Count();
+  }
+	
+  SetUInt32Column(m_numReferences, m_mdb->m_numReferencesColumnToken);
+  m_initedValues |= REFERENCES_INITED;
+	
+  return SetStringColumn(references, m_mdb->m_referencesColumnToken);
 }
 
 NS_IMETHODIMP nsMsgHdr::SetRecipients(const char *recipients)
