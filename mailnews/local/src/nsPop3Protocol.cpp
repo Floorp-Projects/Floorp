@@ -223,7 +223,7 @@ static PRBool
 hash_empty(XP_HashTable hash)
 {
   PRBool result = PR_TRUE;
-  XP_Maphash(hash, (char (*) (xp_HashTable *, const void *, void*, void *))
+  XP_Maphash(hash, (XP_Bool (*) (xp_HashTable *, const void *, void*, void *))
              hash_empty_mapper, &result);
   return result;
 }
@@ -272,7 +272,7 @@ net_pop3_write_state(Pop3UidlHost* host, const char* mailDirectory)
         outFileStream << host->user;
         outFileStream << LINEBREAK;
         XP_Maphash(host->hash,
-                   (char (*) (xp_HashTable *, const void *, void*, void *)) 
+                   (XP_Bool (*) (xp_HashTable *, const void *, void*, void *)) 
                    net_pop3_write_mapper, &outFileStream);
     }
   }
@@ -1311,7 +1311,7 @@ nsPop3Protocol::StartUseTopForFakeUidl()
 	
     /* may set delete_server_message_during_top_traversal to true */
     XP_Maphash(m_pop3ConData->uidlinfo->hash,
-               (char (*)(xp_HashTable *, const void *, void *, void *))
+               (XP_Bool (*)(xp_HashTable *, const void *, void *, void *))
                net_pop3_check_for_hash_messages_marked_delete, m_pop3ConData);
 	
     return (SendFakeUidlTop());
