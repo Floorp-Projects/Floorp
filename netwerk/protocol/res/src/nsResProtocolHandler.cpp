@@ -61,6 +61,10 @@ nsResProtocolHandler::Init()
     rv = SetSpecialDir("ProgramDir", nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
     if (NS_FAILED(rv)) return rv;
 
+    // make "res:///" == "resource:/"
+    rv = SetSpecialDir("", nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+    if (NS_FAILED(rv)) return rv;
+
     rv = SetSpecialDir("CurrentDir", nsSpecialSystemDirectory::OS_CurrentWorkingDirectory);
     if (NS_FAILED(rv)) return rv;
 
@@ -84,7 +88,7 @@ nsResProtocolHandler::Init()
                        );
     if (NS_FAILED(rv)) return rv;
 
-    return NS_OK;
+    return rv;
 }
 
 nsResProtocolHandler::~nsResProtocolHandler()
