@@ -4805,7 +4805,7 @@ case "$host" in
 
 *os2*)
     HOST_CFLAGS="$HOST_CFLAGS -DXP_OS2 -DNO_X11"
-    HOST_NSPR_MDCPUCFG='\"md/_winnt.cfg\"'
+    HOST_NSPR_MDCPUCFG='\"md/_os2.cfg\"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     ;;
 
@@ -5394,7 +5394,7 @@ EOF
     ;;
 
 
-*-*-os2*)
+*-os2*)
     MOZ_BUILD_ROOT=`pwd -D`
     USE_SHORT_LIBNAME=1
     BIN_SUFFIX='.exe'
