@@ -179,11 +179,11 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
 // set up the pallete to the passed in color array, RGB only in this array
 void nsImageWin :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
+  // XXX Any gamma correction should be done in the image library, and not
+  // here...
+#if 0
   if (aFlags & nsImageUpdateFlags_kColorMapChanged)
   {
-    // The entries for the color cube have been gamma corrected in the
-    // HPALETTE, so we don't need to worry about gamma correction here...
-#if 0
     PRUint8 *gamma = aContext->GetGammaTable();
 
     if (mColorMap->NumColors > 0)
@@ -198,7 +198,6 @@ void nsImageWin :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRe
 		    *cpointer++ = 0;
       }
     }
-#endif
   }
   else if ((aFlags & nsImageUpdateFlags_kBitsChanged) &&
            (nsnull != aUpdateRect))
@@ -234,6 +233,7 @@ void nsImageWin :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRe
       }
     }
   }
+#endif
 }
 
 //------------------------------------------------------------
