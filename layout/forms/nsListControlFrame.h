@@ -375,25 +375,26 @@ protected:
   PRInt32      mSelectedIndexWhenPoppedDown;
   PRInt32      mStartExtendedIndex;
   PRInt32      mEndExtendedIndex;
-  PRBool       mIsInitializedFromContent;
+  PRPackedBool mIsInitializedFromContent;
   nsIComboboxControlFrame *mComboboxFrame;
-  PRBool       mButtonDown;
+  PRPackedBool mButtonDown;
   nscoord      mMaxWidth;
   nscoord      mMaxHeight;
-  PRBool       mIsCapturingMouseEvents;
+  PRPackedBool mIsCapturingMouseEvents;
   PRInt32      mNumDisplayRows;
 
   nsVoidArray  * mSelectionCache;
   PRInt32        mSelectionCacheLength;
 
   PRBool       mIsAllContentHere;
-  PRBool       mIsAllFramesHere;
-  PRBool       mHasBeenInitialized;
+  PRPackedBool mIsAllFramesHere;
+  PRPackedBool mHasBeenInitialized;
+  PRPackedBool mDoneWithInitialReflow;
 
-  PRBool       mOverrideReflowOpt;
+  PRPackedBool mOverrideReflowOpt;
 
   PRInt32      mDelayedIndexSetting;
-  PRBool       mDelayedValueSetting;
+  PRPackedBool mDelayedValueSetting;
 
   nsIPresContext* mPresContext;             // XXX: Remove the need to cache the pres context.
 
@@ -403,7 +404,7 @@ protected:
   nsCWeakReferent mWeakReferent; // so this obj can be used as a weak ptr
 
   // XXX temprary only until full system mouse capture works
-  PRBool mIsScrollbarVisible;
+  PRPackedBool mIsScrollbarVisible;
 
   PRInt16 mPassId;
   nsSize mCachedDesiredMaxSize;
