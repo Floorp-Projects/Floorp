@@ -165,14 +165,17 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
 nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl, 
-                                      nsString& aControllerIID, nsIStreamObserver* anObserver)
+                                      nsString& aControllerIID, nsIStreamObserver* anObserver,
+                                      PRInt32 aInitialWidth, PRInt32 aInitialHeight)
 {
-  return Initialize(nsnull, aShell, aUrl, aControllerIID, anObserver);
+  return Initialize(nsnull, aShell, aUrl, aControllerIID, anObserver,
+                    aInitialWidth, aInitialHeight);
 }
 
 nsresult nsWebShellWindow::Initialize(nsIWidget* aParent,
                                       nsIAppShell* aShell, nsIURL* aUrl, 
-                                      nsString& aControllerIID, nsIStreamObserver* anObserver)
+                                      nsString& aControllerIID, nsIStreamObserver* anObserver,
+                                      PRInt32 aInitialWidth, PRInt32 aInitialHeight)
 {
   nsresult rv;
 
@@ -183,7 +186,7 @@ nsresult nsWebShellWindow::Initialize(nsIWidget* aParent,
 
 
   // XXX: need to get the default window size from prefs...
-  nsRect r(0, 0, 650, 618);
+  nsRect r(0, 0, aInitialWidth, aInitialHeight);
   
   nsWidgetInitData initData;
 

@@ -50,11 +50,13 @@ public:
 
   NS_IMETHOD CreateTopLevelWindow(nsIURL* aUrl, 
                                   nsString& aControllerIID,
-                                  nsIWidget*& aResult, nsIStreamObserver* anObserver) = 0;
+                                  nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight) = 0;
   NS_IMETHOD CreateDialogWindow(nsIWidget * aParent,
                                 nsIURL* aUrl, 
                                 nsString& aControllerIID,
-                                nsIWidget*& aResult, nsIStreamObserver* anObserver) = 0;
+                                nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                  PRInt32 aInitialWidth, PRInt32 aInitialHeight) = 0;
   NS_IMETHOD CloseTopLevelWindow(nsIWidget* aWindow) = 0;
   NS_IMETHOD RegisterTopLevelWindow(nsIWidget* aWindow) = 0;
   NS_IMETHOD UnregisterTopLevelWindow(nsIWidget* aWindow) = 0;

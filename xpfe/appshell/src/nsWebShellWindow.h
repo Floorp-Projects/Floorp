@@ -89,8 +89,10 @@ public:
   NS_IMETHOD GetWidget(nsIWidget *& aWidget);
 
   // nsWebShellWindow methods...
-  nsresult Initialize(nsIAppShell* aShell, nsIURL* aUrl, nsString& aControllerIID, nsIStreamObserver* anObserver);
-  nsresult Initialize(nsIWidget * aParent, nsIAppShell* aShell, nsIURL* aUrl, nsString& aControllerIID, nsIStreamObserver* anObserver);
+  nsresult Initialize(nsIAppShell* aShell, nsIURL* aUrl, nsString& aControllerIID, nsIStreamObserver* anObserver,
+                      PRInt32 aInitialWidth, PRInt32 aInitialHeight);
+  nsresult Initialize(nsIWidget * aParent, nsIAppShell* aShell, nsIURL* aUrl, nsString& aControllerIID, nsIStreamObserver* anObserver,
+                      PRInt32 aInitialWidth, PRInt32 aInitialHeight);
   nsIWidget* GetWidget(void) { return mWindow; }
 
   // nsIDocumentLoaderObserver
