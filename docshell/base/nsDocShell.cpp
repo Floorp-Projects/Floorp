@@ -594,10 +594,20 @@ nsDocShell::LoadURI(nsIURI * aURI,
                             shEntry = nsnull;
                         }
                     }   
-                    else {
-                        // The child frame inherits the parent's loadType for 
-                        // LOAD_BYPASS_HISTORY, LOAD_REFRESH, all types of reloads 
-                        // and history loads.
+                    else if (parentLoadType == LOAD_REFRESH) {
+                        // Clear shEntry. For refresh loads, we have to load
+                        // what comes thro' the pipe, not what's in history.
+                        shEntry = nsnull;
+                    }
+                    else if ((parentLoadType == LOAD_BYPASS_HISTORY) ||
+                              (shEntry && 
+                               ((parentLoadType & LOAD_CMD_HISTORY) || 
+                                (parentLoadType == LOAD_RELOAD_NORMAL) || 
+                                (parentLoadType == LOAD_RELOAD_CHARSET_CHANGE)))) {
+                        // If the parent url, bypassed history or was loaded from
+                        // history, pass on the parent's loadType to the new child 
+                        // frame too, so that the child frame will also
+                        // avoid getting into history. 
                         loadType = parentLoadType;
                     }
                 }
@@ -5589,7 +5599,8 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
     // Determine if this type of load should update history.    
     if (aLoadType == LOAD_BYPASS_HISTORY ||
          aLoadType & LOAD_CMD_HISTORY ||
-         aLoadType == LOAD_RELOAD_NORMAL)         
+         aLoadType == LOAD_RELOAD_NORMAL ||
+         aLoadType == LOAD_RELOAD_CHARSET_CHANGE)         
         updateHistory = PR_FALSE;
 
     // Check if the url to be loaded is the same as the one already loaded. 
