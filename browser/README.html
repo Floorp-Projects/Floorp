@@ -119,19 +119,12 @@
   to compete on that platform.</p>
   
 
-  <h2>Getting the Source</h2>
-
-  <ol>
-   <li>Go to the root of your mozilla tree.</li>
-   <li><kbd>cvs up -Pd browser and toolkit</kbd></li>
-  </ol>
-
-  <h2>Building mozilla/browser </h2>
+  <h2>Getting and Building the Source</h2>
 
   <h3>UNIX, Windows (gmake), Mac (mach-o)</h3>
 
   <ol>
-   <li>Ensure that MOZ_PHOENIX is set to 1 in your .mozconfig file. A good .mozconfig file is shown below:<br>
+   <li>Create a .mozconfig file in your home directory, or in the mozilla directory, containing the following:<br>
        <br>
        <code>
         export MOZ_PHOENIX=1<br>
@@ -142,9 +135,14 @@
         ac_add_options --disable-mailnews<br>
         ac_add_options --disable-composer<br>
         ac_add_options --enable-optimize=-O2<br>
+        ac_add_options --disable-ldap<br>
+        ac_add_options --disable-mailnews<br>
+        ac_add_options --enable-extensions=default,-inspector,-irc,-venkman,-content-packs,-help<br>
+        ac_add_options --enable-plaintext-editor-only<br>
         <br>
        </code>
-   <li>Run the mozbrowser executable that is left in dist/bin</li>
+   <li>Pull from CVS and build as described in the <a href="http://www.mozilla.org/build/unix.html">Mozilla build instructions</a>.
+   <li>Run the phoenix executable that is left in dist/bin</li>
   </ol>
 
   <h2>Mac (CodeWarrior)</h2>
