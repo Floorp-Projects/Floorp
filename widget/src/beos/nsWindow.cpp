@@ -479,7 +479,6 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     }
 
     mView = CreateBeOSView();
-	mView->Hide();
 	if(parent)
 	{
 		bool mustunlock;
@@ -501,10 +500,13 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 		winrect.OffsetBy( 10, 30 );
 		nsWindowBeOS *w = new nsWindowBeOS(this,
 				winrect,
-				"Gecko", B_TITLED_WINDOW_LOOK, B_NORMAL_WINDOW_FEEL, B_ASYNCHRONOUS_CONTROLS);
+				"", B_TITLED_WINDOW_LOOK, B_NORMAL_WINDOW_FEEL, B_ASYNCHRONOUS_CONTROLS);
 		w->AddChild(mView);
+
+		// FIXME: we have to use the window size because
+		// the window might not like sizes less then 30x30 or something like that
 		mView->MoveTo(0, 0);
-		mView->ResizeTo(aRect.width, GetHeight(aRect.height));
+		mView->ResizeTo(w->Bounds().Width(), w->Bounds().Height());
 		mView->SetResizingMode(B_FOLLOW_ALL);
 		w->Run();
 	}
