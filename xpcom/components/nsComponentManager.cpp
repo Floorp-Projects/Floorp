@@ -60,7 +60,6 @@ const char mozillaKeyName[]="Software/Mozilla";
 const char classesKeyName[]="Classes";
 const char classIDKeyName[]="CLSID";
 const char classesClassIDKeyName[]="Classes/CLSID";
-const char componentLoadersKeyName[]="ComponentLoaders";
 
 // Common Value Names
 const char classIDValueName[]="CLSID";
@@ -72,7 +71,9 @@ const char progIDValueName[]="ProgID";
 const char classNameValueName[]="ClassName";
 const char inprocServerValueName[]="InprocServer";
 const char componentTypeValueName[]="ComponentType";
-const char nativeComponentType[]="application/x-mozilla-native";
+const char nativeComponentType[]="application/x-moz-native";
+const char componentLoaderProgIDPrefix[]=
+  "component://mozilla/xpcom/component-loader?type=";
 
 // We define a CID that is used to indicate the non-existence of a
 // progid in the hash table.
@@ -278,7 +279,7 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
 
 }
 
-NS_IMPL_ISUPPORTS(nsComponentManagerImpl, NS_GET_IID(nsIComponentManager));
+NS_IMPL_ISUPPORTS(nsComponentManagerImpl, nsIComponentManager::GetIID());
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsComponentManagerImpl: Platform methods
@@ -484,10 +485,6 @@ nsComponentManagerImpl::PlatformVersionCheck()
                ("nsComponentManager: platformVersionCheck() passed."));
     }
 
-    rv = mRegistry->GetSubtree(mXPCOMKey, componentLoadersKeyName, &mLoadersKey);
-    if (NS_FAILED(rv))
-        return rv;
-
     return NS_OK;
 }
 
@@ -659,9 +656,7 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
 
     nsCOMPtr<nsIComponentLoader> loader;
 
-    rv = GetLoaderForType(componentType, getter_AddRefs(loader));
-    if (NS_FAILED(rv))
-        return rv;
+    GetLoaderForType(componentType, getter_AddRefs(loader));
 
     nsFactoryEntry *res = new nsFactoryEntry(aCID, library, componentType,
                                              loader);
@@ -1121,7 +1116,7 @@ nsComponentManagerImpl::ProgIDToCLSID(const char *aProgID, nsCID *aClass)
 #endif /* USE_REGISTRY */
 
     if (PR_LOG_TEST(nsComponentManagerLog, PR_LOG_ALWAYS)) {
-        char *buf = 0;
+        char *buf;
         if (NS_SUCCEEDED(res))
             buf = aClass->ToString();
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
@@ -1514,47 +1509,20 @@ nsComponentManagerImpl::GetLoaderForType(const char *aType,
 	return NS_OK;
     }
 
-    nsIRegistry::Key loaderKey;
-    rv = mRegistry->GetSubtreeRaw(mLoadersKey, aType, &loaderKey);
-    if (NS_FAILED(rv))
-        return rv;
-    
-    char *progID;
-    rv = mRegistry->GetString(loaderKey, progIDValueName, &progID);
-    if (NS_FAILED(rv))
-        return rv;
-
 #ifdef DEBUG_shaver
-    fprintf(stderr, "nCMI: constructing loader for type %s = %s\n", aType, progID);
+    fprintf(stderr, "nCMI: constructing loader for type %s\n", aType);
 #endif
 
-    rv = CreateInstance(progID, nsnull, NS_GET_IID(nsIComponentLoader),	(void **)&loader);
-    PR_FREEIF(progID);
+    /* how many copies am I doing here?  I don't really know. */
+    nsString progID(componentLoaderProgIDPrefix, eOneByte);
+    progID += aType;
 
+    rv = CreateInstance(progID.mStr, nsnull, NS_GET_IID(nsIComponentLoader),
+			(void **)&loader);
     if (NS_SUCCEEDED(rv)) {
 	mLoaders->Put(&typeKey, loader);
 	*aLoader = loader;
     }
-    return rv;
-}
-
-nsresult
-nsComponentManagerImpl::RegisterComponentLoader(const char *aType, const char *aProgID,
-                                                PRBool aReplace)
-{
-    nsIRegistry::Key loaderKey;
-    nsresult rv = mRegistry->GetSubtreeRaw(mLoadersKey, aType, &loaderKey);
-    if (NS_FAILED(rv))
-        return rv;
-
-    /* XXX honour aReplace */
-    
-    rv = mRegistry->SetString(loaderKey, progIDValueName, aProgID);
-
-#ifdef DEBUG_shaver
-    fprintf(stderr, "nNCI: registered %s as component loader for %s\n",
-            aProgID, aType);
-#endif
     return rv;
 }
 
@@ -1827,50 +1795,6 @@ nsComponentManagerImpl::AutoRegister(RegistrationTime when, nsIFileSpec *inDirSp
     rv = mNativeComponentLoader->AutoRegisterComponents((PRInt32)when, dir);
     if (NS_FAILED(rv))
 	return rv;
-
-    /* XXX eagerly instantiate all known loaders */
-    nsCOMPtr<nsIEnumerator> loaderEnum;
-    rv = mRegistry->EnumerateSubtrees(mLoadersKey, getter_AddRefs(loaderEnum));
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = loaderEnum->First();
-    if (NS_FAILED(rv))
-        return rv;
-
-    for (; NS_SUCCEEDED(rv) && !loaderEnum->IsDone();
-         (rv = loaderEnum->Next())) {
-        nsCOMPtr<nsISupports> base;
-        rv = loaderEnum->CurrentItem(getter_AddRefs(base));
-        if (NS_FAILED(rv))
-            return rv;
-
-        // Narrow
-        nsCOMPtr<nsIRegistryNode> node;
-        node = do_QueryInterface(base, &rv);
-        if (NS_FAILED(rv))
-            continue;
-
-        char *type;
-        rv = node->GetName(&type);
-        if (NS_FAILED(rv))
-            continue;
-        autoStringFree del_type(type, autoStringFree::nsCRT_String_Delete);
-        
-        nsStringKey typeKey(type);
-        nsCOMPtr<nsIComponentLoader> loader =
-            (nsIComponentLoader *)mLoaders->Get(&typeKey);
-        if (loader.get())
-            continue;
-        
-#ifdef DEBUG_shaver
-        fprintf(stderr, "nCMI: creating %s loader for enumeration\n",
-                type);
-#endif
-        /* this will get it added to the hashtable and stuff */
-        GetLoaderForType(type, getter_AddRefs(loader));
-        continue;
-    }
 
     /* iterate over all known loaders and ask them to autoregister. */
     struct AutoReg_closure closure;
