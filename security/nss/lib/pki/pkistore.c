@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.9 $ $Date: 2002/02/08 16:26:07 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.10 $ $Date: 2002/02/13 16:58:05 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -348,11 +348,7 @@ nssCertificateStore_FindCertificatesBySubject
     PZ_Lock(store->lock);
     subjectList = (nssList *)nssHash_Lookup(store->subject, subject);
     if (subjectList) {
-	/* get references before leaving the store's lock protection */
 	nssCertificateList_AddReferences(subjectList);
-    }
-    PZ_Unlock(store->lock);
-    if (subjectList) {
 	count = nssList_Count(subjectList);
 	if (maximumOpt > 0) {
 	    count = PR_MIN(maximumOpt, count);
@@ -361,12 +357,12 @@ nssCertificateStore_FindCertificatesBySubject
 	    nssList_GetArray(subjectList, (void **)rvOpt, count);
 	} else {
 	    rvArray = nss_ZNEWARRAY(arenaOpt, NSSCertificate *, count + 1);
-	    if (!rvArray) {
-		return (NSSCertificate **)NULL;
+	    if (rvArray) {
+		nssList_GetArray(subjectList, (void **)rvArray, count);
 	    }
-	    nssList_GetArray(subjectList, (void **)rvArray, count);
 	}
     }
+    PZ_Unlock(store->lock);
     return rvArray;
 }
 
@@ -422,11 +418,7 @@ nssCertificateStore_FindCertificatesByNickname
     PZ_Lock(store->lock);
     nssHash_Iterate(store->subject, match_nickname, &nt);
     if (nt.subjectList) {
-	/* get references before leaving the store's lock protection */
 	nssCertificateList_AddReferences(nt.subjectList);
-    }
-    PZ_Unlock(store->lock);
-    if (nt.subjectList) {
 	count = nssList_Count(nt.subjectList);
 	if (maximumOpt > 0) {
 	    count = PR_MIN(maximumOpt, count);
@@ -435,12 +427,12 @@ nssCertificateStore_FindCertificatesByNickname
 	    nssList_GetArray(nt.subjectList, (void **)rvOpt, count);
 	} else {
 	    rvArray = nss_ZNEWARRAY(arenaOpt, NSSCertificate *, count + 1);
-	    if (!rvArray) {
-		return (NSSCertificate **)NULL;
+	    if (rvArray) {
+		nssList_GetArray(nt.subjectList, (void **)rvArray, count);
 	    }
-	    nssList_GetArray(nt.subjectList, (void **)rvArray, count);
 	}
     }
+    PZ_Unlock(store->lock);
     return rvArray;
 }
 
