@@ -2189,17 +2189,7 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
     if (NS_FAILED(rv)) return rv;
     rv = channel->SetOriginalURI(mOriginalURI);
     if (NS_FAILED(rv)) return rv;
-/*
-    if (mLoadGroup) {
-        nsCOMPtr<nsIRequest> tempRequest;
-        rv = mLoadGroup->GetDefaultLoadRequest(getter_AddRefs(tempRequest));
-        if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsIChannel> tempChannel = do_QueryInterface(tempRequest);
-            if (tempChannel == this)
-                mLoadGroup->SetDefaultLoadRequest(channel);
-        }
-    }
-*/
+
     // Convey the referrer if one was used for this channel to the next one-
     nsXPIDLCString referrer;
     GetRequestHeader(nsHTTPAtoms::Referer, getter_Copies(referrer));
