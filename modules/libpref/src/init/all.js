@@ -311,7 +311,6 @@ pref("capability.policy.default.Window.Components", "allAccess");
 pref("capability.policy.default.Window.document", "allAccess");
 pref("capability.policy.default.Window.focus", "allAccess");
 pref("capability.policy.default.Window.frames", "allAccess");
-pref("capability.policy.default.Window.fullScreen", "noAccess");
 pref("capability.policy.default.Window.history", "allAccess");
 pref("capability.policy.default.Window.length", "allAccess");
 pref("capability.policy.default.Window.location", "allAccess");

@@ -1893,8 +1893,10 @@ GlobalWindowImpl::GetLength(PRUint32* aLength)
 
 NS_IMETHODIMP GlobalWindowImpl::SetFullScreen(PRBool aFullScreen)
 {
-  if (aFullScreen == mFullScreen)
+  // Only chrome can change our fullScreen mode.
+  if (aFullScreen == mFullScreen || !IsCallerChrome()) {
     return NS_OK;
+  }
 
   // SetFullScreen needs to be called on the root window, so get that
   // via the DocShell tree, and if we are not already the root,
