@@ -711,26 +711,46 @@ nsAbSync::ThisCardHasChanged(nsIAbCard *aCard, syncMappingRecord *newSyncRecord,
   if ( (!historyRecord) || (historyRecord->CRC != newSyncRecord->CRC) )
   {      
     PRUint32    aKey;
-    if (NS_FAILED(aCard->GetKey(&aKey)))
-      return PR_FALSE;
-    
-    // Needs to be negative, so make it so!
-    char *tVal = PR_smprintf("%d", (aKey * -1));
-    if (tVal)
-    {
-      protLine.Append(NS_ConvertASCIItoUCS2("%26cid%3D"));
-      protLine.Append(NS_ConvertASCIItoUCS2(tVal));
-      protLine.Append(tempProtocolLine);
-      nsCRT::free(tVal);
-    }
-    else
-      return PR_FALSE;
 
     if (!historyRecord)
+    {
       newSyncRecord->flags |= SYNC_ADD;
+
+      if (NS_FAILED(aCard->GetKey(&aKey)))
+        return PR_FALSE;
+      
+      // Needs to be negative, so make it so!
+      char *tVal = PR_smprintf("%d", (aKey * -1));
+      if (tVal)
+      {
+        protLine.Append(NS_ConvertASCIItoUCS2("%26cid%3D"));
+        protLine.Append(NS_ConvertASCIItoUCS2(tVal));
+        protLine.Append(tempProtocolLine);
+        nsCRT::free(tVal);
+      }
+      else
+      {
+        return PR_FALSE;
+      }
+    }
     else
+    {
       newSyncRecord->flags |= SYNC_MODIFIED;
-    
+
+      char *tVal2 = PR_smprintf("%d", historyRecord->serverID);
+      if (tVal2)
+      {
+        protLine.Append(NS_ConvertASCIItoUCS2("%26id%3D"));
+        protLine.Append(NS_ConvertASCIItoUCS2(tVal2));
+        protLine.Append(tempProtocolLine);
+        nsCRT::free(tVal2);
+      }
+      else
+      {
+        return PR_FALSE;
+      }
+    }
+
     return PR_TRUE;
   }
   else  // This is the same record as before.
@@ -905,7 +925,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
           if (!mPostString.IsEmpty())
             mPostString.Append(NS_ConvertASCIItoUCS2("&"));
 
-          if (mNewSyncMapingTable[workCounter].flags && SYNC_ADD)
+          if (mNewSyncMapingTable[workCounter].flags & SYNC_ADD)
           {
 #ifdef DEBUG_rhp
   char *t = singleProtocolLine.ToNewCString();
@@ -925,7 +945,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
             PR_FREEIF(tVal3);
             mCurrentPostRecord++;
           }
-          else if (mNewSyncMapingTable[workCounter].flags && SYNC_MODIFIED)
+          else if (mNewSyncMapingTable[workCounter].flags & SYNC_MODIFIED)
           {
 #ifdef DEBUG_rhp
   char *t = singleProtocolLine.ToNewCString();
