@@ -15,7 +15,7 @@
  */
 package org.mozilla.pluglet;
 import org.mozilla.pluglet.mozilla.*;
-import java.awt.Panel;
+import java.awt.Frame;
 import java.awt.print.PrinterJob;
 
 public interface PlugletInstance {
@@ -59,7 +59,7 @@ public interface PlugletInstance {
      *
      * @param frame the pluglet panel
      */
-    void setWindow(Panel frame);
+    void setWindow(Frame frame);
      /**
      * Called to instruct the pluglet instance to print itself to a printer.
      *

@@ -34,7 +34,7 @@ static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 #define PLUGIN_MIME_DESCRIPTION "*:*:Pluglet Engine"
 
-//nsJVMManager * PlugletEngine::jvmManager = NULL;
+nsJVMManager * PlugletEngine::jvmManager = NULL;
 int PlugletEngine::objectCount = 0;
 PlugletsDir * PlugletEngine::dir = NULL;
 PRInt32 PlugletEngine::lockCount = 0;
@@ -95,6 +95,21 @@ NS_METHOD PlugletEngine::LockFactory(PRBool aLock) {
     return NS_OK;
 }
 
+char *ToString(jobject obj,JNIEnv *env) {
+	static jmethodID toStringID = NULL;
+	if (!toStringID) {
+	    jclass clazz = env->FindClass("java/lang/Object");
+	    toStringID = env->GetMethodID(clazz,"toString","()Ljava/lang/String;");
+	}
+	jstring jstr = (jstring) env->CallObjectMethod(obj,toStringID);
+	const char * str = NULL;
+	str = env->GetStringUTFChars(jstr,NULL);
+	char * res = new char[strlen(str)];
+	strcpy(res,str);
+	env->ReleaseStringUTFChars(jstr,str);
+	return res;
+}
+
 PlugletEngine::PlugletEngine(nsISupports* aService) {
     NS_INIT_REFCNT();
     dir = new PlugletsDir();
@@ -106,13 +121,13 @@ PlugletEngine::PlugletEngine(nsISupports* aService) {
 	return;
     }
     res = sm->GetService(kPluginManagerCID,kIPluginManagerIID,(nsISupports**)&pluginManager);
-#if 0
+    if (NS_FAILED(res)) {
+      return;
+    }
     res = sm->GetService(kJVMManagerCID,kIJVMManagerIID,(nsISupports**)&jvmManager);
-    //nb 
     if (NS_FAILED(res)) {
 	jvmManager = NULL;
     }
-#endif 
     NS_RELEASE(sm);
     engine = this;
     objectCount++;
@@ -148,21 +163,21 @@ static void StartJVM() {
 
 JNIEnv * PlugletEngine::GetJNIEnv(void) {
    JNIEnv * res;
-#if 0
+   //#if 0
    if (!jvmManager) {
        //nb it is bad :(
        return NULL;
    }
    jvmManager->CreateProxyJNI(NULL,&res);
    //nb error handling
-#endif
-//#if 0
+   //#endif
+#if 0
     if (!jvm) {
            printf(":) starting jvm\n");
 	   StartJVM();
    }
    jvm->AttachCurrentThread(&res,NULL);
-//#endif
+#endif
    return res;
 }
 

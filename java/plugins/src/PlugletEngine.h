@@ -46,7 +46,7 @@ class PlugletEngine : public nsIPlugin {
     static PRInt32 lockCount;
     static PlugletsDir *dir;
     static PlugletEngine * engine;
-    //nb static nsJVMManager * jvmManager;
+    static nsJVMManager * jvmManager;
     static  nsIPluginManager *pluginManager;
     static jobject plugletManager;
 };    

@@ -18,6 +18,7 @@
 #include "PlugletStreamListener.h"
 #include "PlugletInstancePeer.h"
 
+
 jmethodID PlugletInstance::initializeMID = NULL;
 jmethodID PlugletInstance::startMID = NULL;
 jmethodID PlugletInstance::stopMID = NULL;
@@ -35,6 +36,7 @@ PlugletInstance::PlugletInstance(jobject object) {
     jthis = PlugletEngine::GetJNIEnv()->NewGlobalRef(object);
     //nb check for null
     peer = NULL;
+    view = new PlugletInstanceView();
 }
 
 PlugletInstance::~PlugletInstance() {
@@ -43,7 +45,7 @@ PlugletInstance::~PlugletInstance() {
 }
 
 NS_METHOD PlugletInstance::HandleEvent(nsPluginEvent* event, PRBool* handled) {
-    //nb
+    //nb we do not need it under win32
     return NS_OK;
 }
 
@@ -57,7 +59,7 @@ NS_METHOD PlugletInstance::Initialize(nsIPluginInstancePeer* _peer) {
 	stopMID = env->GetMethodID(clazz,"stop","()V");
 	destroyMID = env->GetMethodID(clazz,"destroy","()V");
 	newStreamMID = env->GetMethodID(clazz,"newStream","()Lorg/mozilla/pluglet/PlugletStreamListener;");
-	setWindowMID = env->GetMethodID(clazz,"setWindow","(Ljava/awt/Panel;)V");
+	setWindowMID = env->GetMethodID(clazz,"setWindow","(Ljava/awt/Frame;)V");
 	printMID = env->GetMethodID(clazz,"print","(Ljava/awt/print/PrinterJob;)V");
     }
     peer = _peer;
@@ -113,7 +115,10 @@ NS_METHOD PlugletInstance::GetValue(nsPluginInstanceVariable variable, void *val
 }
 
 NS_METHOD PlugletInstance::SetWindow(nsPluginWindow* window) {
-    //nb
+    JNIEnv *env = PlugletEngine::GetJNIEnv();
+    if (view->SetWindow(window)) {
+      env->CallVoidMethod(jthis,setWindowMID,view->GetJObject());
+    }
     return NS_OK;
 }
 
@@ -121,5 +126,13 @@ NS_METHOD PlugletInstance::Print(nsPluginPrint* platformPrint) {
     //nb
     return NS_OK;
 }
+
+
+
+
+
+
+
+
 
 

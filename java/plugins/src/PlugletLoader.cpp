@@ -13,10 +13,9 @@
  * Inc. Portions created by Sun are Copyright (C) 1999 Sun Microsystems,
  * Inc. All Rights Reserved. 
  */
-#include "PlugletLoader.h"
-#include "PlugletEngine.h"
 #include "string.h"
-
+#include "PlugletEngine.h"
+#include "PlugletLoader.h"
 jclass PlugletLoader::clazz = NULL;
 jmethodID PlugletLoader::getMIMEDescriptionMID = NULL;
 jmethodID PlugletLoader::getPlugletMID = NULL;
@@ -114,11 +113,3 @@ jobject PlugletLoader::GetPluglet(const char * path) {
     }
     return jpluglet;
 }
-
-
-
-
-
-
-
-

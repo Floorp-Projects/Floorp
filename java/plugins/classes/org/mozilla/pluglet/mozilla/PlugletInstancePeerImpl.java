@@ -17,9 +17,9 @@ package org.mozilla.pluglet.mozilla;
 import java.io.OutputStream;
 
 
-class PlugletInstancePeerImpl implements PlugletInstancePeer {
+public class PlugletInstancePeerImpl implements PlugletInstancePeer {
     private long peer = 0;
-    private PlugletInstancePeerImpl(long peer) {
+    public PlugletInstancePeerImpl(long peer) {
 	this.peer = peer;
 	nativeInitialize();
     }

@@ -16,9 +16,9 @@
 package org.mozilla.pluglet.mozilla;
 import org.mozilla.pluglet.*;
 import java.net.URL;
-class PlugletManagerImpl implements PlugletManager {
+public class PlugletManagerImpl implements PlugletManager {
     private long peer = 0; 
-    private PlugletManagerImpl(long _peer) {
+    public PlugletManagerImpl(long _peer) {
 	peer = _peer;
 	nativeInitialize();
     }

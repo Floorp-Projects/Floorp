@@ -1,9 +1,97 @@
 Index: nsPluginHostImpl.cpp
 ===================================================================
 RCS file: /cvsroot/mozilla/modules/plugin/nglsrc/nsPluginHostImpl.cpp,v
-retrieving revision 1.73
-diff -r1.73 nsPluginHostImpl.cpp
-1867a1868,1870
-> 	if (NS_FAILED(result)) {
-> 	  result = plugin->CreatePluginInstance(NULL, kIPluginInstanceIID,mimeType, (void **)&instance);
-> 	}
+retrieving revision 1.76
+diff -C3 -r1.76 nsPluginHostImpl.cpp
+*** nsPluginHostImpl.cpp	1999/09/16 01:15:58	1.76
+--- nsPluginHostImpl.cpp	1999/09/17 03:49:37
+***************
+*** 1863,1868 ****
+--- 1863,1872 ----
+        result = GetPluginFactory(mimetype, &plugin);
+        if(!NS_FAILED(result)){
+          result = plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)&instance);
++         if (NS_FAILED(result)) {
++           result = plugin->CreatePluginInstance(NULL, kIPluginInstanceIID,aMimeType, (void **)&instance);
++         }
++ 
+          NS_RELEASE(plugin);
+        }
+      }
+***************
+*** 1911,1917 ****
+  
+        for (cnt = 0; cnt < variants; cnt++)
+        {
+!         if (0 == strcmp(plugins->mMimeTypeArray[cnt], aMimeType))
+            return NS_OK;
+        }
+  
+--- 1915,1922 ----
+  
+        for (cnt = 0; cnt < variants; cnt++)
+        {
+!         if (0 == strcmp(plugins->mMimeTypeArray[cnt], aMimeType)
+!             || 0 == strcmp(plugins->mMimeTypeArray[cnt],"*"))
+            return NS_OK;
+        }
+  
+***************
+*** 2138,2144 ****
+  {
+    nsPluginTag *plugins = nsnull;
+    PRInt32     variants, cnt;
+! 
+    aPlugin = nsnull;
+  
+    if (PR_FALSE == mPluginsLoaded)
+--- 2143,2149 ----
+  {
+    nsPluginTag *plugins = nsnull;
+    PRInt32     variants, cnt;
+!   nsPluginTag *starPlugin = nsnull;
+    aPlugin = nsnull;
+  
+    if (PR_FALSE == mPluginsLoaded)
+***************
+*** 2160,2166 ****
+            aPlugin = plugins;
+  			    return NS_OK;
+  		    }
+! 	    }
+  
+        if (cnt < variants)
+          break;
+--- 2165,2175 ----
+            aPlugin = plugins;
+  			    return NS_OK;
+  		    }
+!         if (0 == strcmp(plugins->mMimeTypeArray[cnt],"*")) 
+!         {
+!           starPlugin = plugins;
+!         }
+!       }
+  
+        if (cnt < variants)
+          break;
+***************
+*** 2168,2174 ****
+        plugins = plugins->mNext;
+      }
+    }
+! 
+    return NS_ERROR_FAILURE;
+  }
+  
+--- 2177,2187 ----
+        plugins = plugins->mNext;
+      }
+    }
+!   if (starPlugin != nsnull) 
+!   {
+!     aPlugin = starPlugin;
+!     return NS_OK;
+!   }
+    return NS_ERROR_FAILURE;
+  }
+  

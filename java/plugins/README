@@ -21,7 +21,7 @@ Requirements:
 
 * built M8 mozilla tree for WinNT4.0
 
-* JDK1.2 or greater
+* JDK1.3
 
 * Perl 5 perl.exe must be in your path
 
@@ -40,10 +40,13 @@ How To Build:
 How to Run:
 
 * Add following directories to to your path:
-  %MOZILLA_FIVE_HOME%, %JDKHOME%\jre\bin\classic
+  %MOZILLA_FIVE_HOME%
 
 How to build and run test
 * go to the test directory and type "nmake /f makefile.win"
+
+* add context of java.zip to JRE\1.3\lib\rt.jar (this is a hack. It would be 
+  removed soon)		
 
 * Set PLUGLET environment to the  directory you have test.jar
 

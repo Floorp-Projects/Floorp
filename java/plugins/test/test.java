@@ -1,4 +1,4 @@
-/* 
+ /* 
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -16,10 +16,14 @@
 import org.mozilla.pluglet.*;
 import org.mozilla.pluglet.mozilla.*;
 import java.awt.*;
+import java.awt.event.*;
 import java.awt.print.*;
 import java.io.*;
 
 public class test implements Pluglet {
+    public test() {
+	org.mozilla.util.Debug.print("--test.test()\n");
+    }
     /**
      * Creates a new pluglet instance, based on a MIME type. This
      * allows different impelementations to be created depending on
@@ -45,7 +49,33 @@ public class test implements Pluglet {
     }
 }
 
-class TestInstance implements PlugletInstance{
+class TestInstance implements PlugletInstance {
+    Panel panel;
+    Button button;
+    List list;
+    public TestInstance() {
+	org.mozilla.util.Debug.print("--TestInstance.TestInstance() \n");
+	panel = new Panel();
+	button = new Button("Press me :)");
+	button.addActionListener(new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+		    int t = list.getSelectedIndex();
+		    t++; 
+		    if (t >= list.getItemCount()) {
+			t = 0;
+		    }
+		    list.select(t);
+		}
+	    }
+				 );
+	panel.add(button);
+	list = new List(4,false);
+	list.add("Pluglet");
+	list.add("not");
+	list.add("bad");
+	list.select(0);
+	panel.add(list);
+    }
     /**
      * Initializes a newly created pluglet instance, passing to it the pluglet
      * instance peer which it should use for all communication back to the browser.
@@ -57,8 +87,9 @@ class TestInstance implements PlugletInstance{
 	org.mozilla.util.Debug.print("--TestInstance.initialize\n");
 	peer.showStatus("Hello world");
 	org.mozilla.util.Debug.print("--TestInstance.initialize  "+peer.getMIMEType());
+	/*
 	try {
-	    OutputStreamWriter out = new OutputStreamWriter(peer.newStream("text/plain","test"));
+	    OutputStreamWriter out = new OutputStreamWriter(peer.newStream("text/plain","_new"));
 	    String msg = "Hello, world";
 	    out.write(msg,0,msg.length());
 	    out.flush();
@@ -66,6 +97,7 @@ class TestInstance implements PlugletInstance{
 	} catch (Exception e) {
 	    ;
 	}
+	*/
     }
     /**
      * Called to instruct the pluglet instance to start. This will be called after
@@ -108,7 +140,11 @@ class TestInstance implements PlugletInstance{
      *
      * @param frame the pluglet panel
      */
-    public void setWindow(Panel frame) {
+    public void setWindow(Frame frame) {
+	org.mozilla.util.Debug.print("--Test...SetWindow "+frame);
+	frame.add(panel);
+	frame.pack();
+	frame.show();
     }
      /**
      * Called to instruct the pluglet instance to print itself to a printer.
@@ -120,6 +156,9 @@ class TestInstance implements PlugletInstance{
 }
 
 class TestStreamListener implements PlugletStreamListener {
+    public TestStreamListener() {
+	org.mozilla.util.Debug.print("--TestStreamListener.TestStreamListener()\n");
+    }
     /**
      * Notify the observer that the URL has started to load.  This method is
      * called only once, at the beginning of a URL load.<BR><BR>

@@ -15,8 +15,8 @@
  */
 package org.mozilla.pluglet.mozilla;
 
-class  PlugletStreamInfoImpl implements PlugletStreamInfo {
-    private PlugletStreamInfoImpl(long peer) {
+public class  PlugletStreamInfoImpl implements PlugletStreamInfo {
+    public PlugletStreamInfoImpl(long peer) {
 	this.peer = peer;
         nativeInitialize();
     }

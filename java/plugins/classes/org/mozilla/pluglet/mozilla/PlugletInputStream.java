@@ -17,11 +17,11 @@ package org.mozilla.pluglet.mozilla;
 
 import java.io.*;
 
-class PlugletInputStream extends InputStream {
+public class PlugletInputStream extends InputStream {
     private long peer;
     private byte buf[] = new byte[1];
 
-    private PlugletInputStream(long peer) {
+    public PlugletInputStream(long peer) {
 	this.peer = peer;
 	nativeInitialize();
     }

@@ -16,9 +16,9 @@
 package org.mozilla.pluglet.mozilla;
 import java.util.*;
 
-class PlugletTagInfo2Impl implements PlugletTagInfo2  {
+public class PlugletTagInfo2Impl implements PlugletTagInfo2  {
     private long peer = 0;
-    private PlugletTagInfo2Impl(long _peer) {
+    public PlugletTagInfo2Impl(long _peer) {
 	peer = _peer;
 	nativeInitialize();
     }

@@ -19,7 +19,7 @@ import java.io.*;
 class PlugletOutputStream extends OutputStream {
     private long peer;
     private byte buf[] = new byte[1];
-    private PlugletOutputStream(long peer) {
+    public PlugletOutputStream(long peer) {
 	this.peer = peer;
 	nativeInitialize();
     }

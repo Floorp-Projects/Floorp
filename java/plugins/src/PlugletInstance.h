@@ -17,6 +17,7 @@
 #define __PlugletInstance_h__
 #include "jni.h"
 #include "nsplugin.h"
+#include "PlugletInstanceView.h"
 
 class PlugletInstance : public nsIPluginInstance {
  public:
@@ -45,6 +46,7 @@ class PlugletInstance : public nsIPluginInstance {
     static  jmethodID printMID; 
     static  jmethodID getValueMID;
     nsIPluginInstancePeer *peer;
+    PlugletInstanceView *view;
 };
 #endif /* __PlugletInstance_h__ */
 

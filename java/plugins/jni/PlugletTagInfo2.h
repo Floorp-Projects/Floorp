@@ -13,9 +13,20 @@
  * Inc. Portions created by Sun are Copyright (C) 1999 Sun Microsystems,
  * Inc. All Rights Reserved. 
  */
-#ifndef __PlugletView_h__
-#define __PlugletView_h__
-class PlugletView {
-    //nb
+#ifndef __PlugletTagInfo2_h__
+#define __PlugletTagInfo2_h__
+#include "nsIPluginTagInfo2.h"
+#include "jni.h"
+
+class PlugletTagInfo2 {
+ public:
+    static jobject GetJObject(JNIEnv* env,const nsIPluginTagInfo2 *info);
+ private:
+    static void Initialize(JNIEnv* env);
+    static void Destroy(JNIEnv *env);
+    static jclass    clazz;
+    static jmethodID initMID;
+
 };
-#endif /* __PlugletView_h__ */
+#endif /*  __PlugletTagInfo2__h__ */
+

@@ -56,13 +56,14 @@ nsresult PlugletsDir::GetPluglet(const char * mimeType, Pluglet **pluglet) {
 	return NS_ERROR_NULL_POINTER;
     }
     *pluglet = NULL;
-    nsresult res = NS_OK;
+    nsresult res = NS_ERROR_FAILURE;
     if(!list) {
 	LoadPluglets();
     }
     for (PlugletListIterator *iter = list->GetIterator();iter->Get();iter->Next()) {
 	if(iter->Get()->Compare(mimeType)) {
 	    *pluglet = iter->Get();
+	    res = NS_OK;
 	    break;
 	}
     }
