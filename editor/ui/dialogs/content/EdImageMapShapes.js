@@ -50,8 +50,9 @@ var frameDoc = null;
 var buttonArray = new Array();
 var resize = false;
 var currentZoom = 1;
+var clipBoard = new Array();
 
-function Rect(coords, href, target, title, construct){
+function Rect(coords, href, target, alt, construct){
   newRect = frameDoc.createElement("div");
   newRect.setAttribute("class", "rect");
   newRect.setAttribute("id", "rect"+rectCount++);
@@ -106,17 +107,17 @@ function Rect(coords, href, target, title, construct){
     currentRect.style.width = (parseInt(coordArray[2])-parseInt(coordArray[0]))+"px";
     currentRect.style.height = (parseInt(coordArray[3])-parseInt(coordArray[1]))+"px";
     if (href)
-      currentRect.setAttribute("href", href);
+      currentRect.setAttribute("hsHref", href);
     if (target)
-      currentRect.setAttribute("target", target);
-    if (title)
-      currentRect.setAttribute("title", title);
+      currentRect.setAttribute("hsTarget", target);
+    if (alt)
+      currentRect.setAttribute("hsAlt", alt);
   }
   if (construct)
     currentRect = null;
 }
 
-function Circle(coords, href, target, title, construct){
+function Circle(coords, href, target, alt, construct){
   newCir = frameDoc.createElement("div");
   newCir.setAttribute("class", "cir");
   newCir.setAttribute("id", "cir"+cirCount++);
@@ -155,25 +156,25 @@ function Circle(coords, href, target, title, construct){
     currentCir.style.width = (radius*2)+"px";
     currentCir.style.height = (radius*2)+"px";
     if (href)
-      currentCir.setAttribute("href", href);
+      currentCir.setAttribute("hsHref", href);
     if (target)
-      currentCir.setAttribute("target", target);
-    if (title)
-      currentCir.setAttribute("title", title);
+      currentCir.setAttribute("hsTarget", target);
+    if (alt)
+      currentCir.setAttribute("hsAlt", alt);
   }
   if (construct)
     currentCir = null;
 
-  /*cirImg = frameDoc.createElement("img");
-  cirImg.setAttribute("src", "circleobject.gif");
-  cirImg.setAttribute("name", "hotspot");
-  cirImg.setAttribute("cir", "true");
-  cirImg.style.width = "100%";
-  cirImg.style.height = "100%";
-  currentCir.appendChild(cirImg);*/
+  //cirImg = frameDoc.createElement("img");
+  //cirImg.setAttribute("src", "chrome://editor/skin/images/Map_circleObject.gif");
+  //cirImg.setAttribute("name", "hotspot");
+  //cirImg.setAttribute("cir", "true");
+  //cirImg.style.width = "100%";
+  //cirImg.style.height = "100%";
+  //currentCir.appendChild(cirImg);
 }
 
-function Poly(coords, href, target, title, construct){
+function Poly(coords, href, target, alt, construct){
   dump('Poly Called\n');
   newPoly = frameDoc.createElement("div");
   newPoly.setAttribute("class", "poly");
@@ -193,11 +194,11 @@ function Poly(coords, href, target, title, construct){
       i++;
     }
     if (href)
-      currentPoly.setAttribute("href", href);
+      currentPoly.setAttribute("hsHref", href);
     if (target)
-      currentPoly.setAttribute("target", target);
-    if (title)
-      currentPoly.setAttribute("title", title);
+      currentPoly.setAttribute("hsTarget", target);
+    if (alt)
+      currentPoly.setAttribute("hsAlt", alt);
     polyFinish(null, construct);
   }
 }
@@ -291,6 +292,16 @@ function deleteElement(el){
   }
 }
 
+function selectAll(){
+  objList = frameDoc.getElementsByName("hotspot");
+  listLen = objList.length;
+  var objCount = 0;
+  for(a=0; a<listLen; a++){
+     selectElement(objList[a], objCount);
+     objCount++;
+  }
+}
+
 function selectElement(el, add){
   if (add){
     if (currentElement[0].getAttribute("class") != "poly"){
@@ -299,6 +310,8 @@ function selectElement(el, add){
         currentElement[0].childNodes[i].style.visibility = "hidden";
     }
     currentElement.push(el);
+    document.getElementById("Map:Cut").setAttribute("disabled", "false");
+    document.getElementById("Map:Copy").setAttribute("disabled", "false");
     return currentElement[currentElement.length-1];
   }
   else{
@@ -312,12 +325,20 @@ function selectElement(el, add){
     currentElement = null;
     currentElement = new Array();
     currentElement[0] = el;
+    if (el != null){
     if (currentElement[0].getAttribute("class") != "poly"){
       len = currentElement[0].childNodes.length;
       for(i=0; i<len; i++)
         currentElement[0].childNodes[i].style.visibility = "visible";
     }
+      document.getElementById("Map:Cut").setAttribute("disabled", "false");
+      document.getElementById("Map:Copy").setAttribute("disabled", "false");
     return currentElement[0];
+  }
+    else{
+      document.getElementById("Map:Cut").setAttribute("disabled", "true");
+      document.getElementById("Map:Copy").setAttribute("disabled", "true");
+    }
   }
 }
 
@@ -331,7 +352,14 @@ function deSelectElement(el){
       j++;
   }
   currentElement.pop();
-  dump(currentElement.length+"\n");
+  if (currentElement.length >= 1){
+    document.getElementById("Map:Cut").setAttribute("disabled", "false");
+    document.getElementById("Map:Copy").setAttribute("disabled", "false");
+  }
+  else{
+    document.getElementById("Map:Cut").setAttribute("disabled", "true");
+    document.getElementById("Map:Copy").setAttribute("disabled", "true");
+  }
 }
 
 function marqueeSelect(){
@@ -340,22 +368,22 @@ function marqueeSelect(){
   marRight = parseInt(marquee.style.width)+marLeft;
   marBottom = parseInt(marquee.style.height)+marTop;
   marquee.style.visibility = "hidden";
-  marquee.style.top = "1px";
-  marquee.style.left = "1px";
+  marquee.style.top = "-5px";
+  marquee.style.left = "-5px";
   marquee.style.width = "1px";
   marquee.style.height = "1px";
   marquee = null;
   objList = frameDoc.getElementsByName("hotspot");
-  len = objList.length;
+  listLen = objList.length;
   var objCount = 0;
-  for(i=0; i<len; i++){
-    objTop = parseInt(objList[i].style.top);
-    objLeft = parseInt(objList[i].style.left);
-    objRight = parseInt(objList[i].style.width)+objLeft;
-    objBottom = parseInt(objList[i].style.height)+objTop;
+  for(a=0; a<listLen; a++){
+    objTop = parseInt(objList[a].style.top);
+    objLeft = parseInt(objList[a].style.left);
+    objRight = parseInt(objList[a].style.width)+objLeft;
+    objBottom = parseInt(objList[a].style.height)+objTop;
     if ((objTop >= marTop) && (objLeft >= marLeft) && (objBottom <= marBottom) && (objRight <= marRight)){
        //objList[i].style.borderColor = "#ffff00";
-       selectElement(objList[i], objCount);
+       selectElement(objList[a], objCount);
        objCount++;
     }
   }
@@ -482,7 +510,7 @@ function moveMouse(event){
         }
         else{
           marquee = frameDoc.getElementById("marquee");
-          marquee.style.visibility = "inherit";
+          marquee.style.visibility = "visible";
           dragActive = true;
         }
       }
@@ -610,7 +638,7 @@ function downMouse(event){
 function clickMouse(event){
   if (event.button == 1){
     dump("body clicked\n");
-    dump(window.frames[0].pageXOffset+'\n');
+    //alert(frameDoc.+'\n');
     startX = event.clientX;
     startY = event.clientY;
     if (currentTool == "poly"){
@@ -631,6 +659,13 @@ function changeTool(event, what){
     currentTool = what;
     dump(what+" selected\n");
   }
+  else {
+    for(i=0; i<4; i++){
+      if (event.target == buttonArray[i]){
+        buttonArray[i].setAttribute("toggled", 1);
+      }
+    }
+  }
 }
 
 function zoom(direction, ratio){
@@ -642,6 +677,28 @@ function zoom(direction, ratio){
 
   if (ratio > 4 || ratio < 1 || ratio == currentZoom)
     return;
+
+  if (ratio == 1){
+    document.getElementById('Map:ZoomIn').setAttribute('disabled', 'false');
+    document.getElementById('Map:ZoomOut').setAttribute('disabled', 'true');
+    document.getElementById('Map:Apercent').setAttribute('checked', 'true');
+    document.getElementById('Map:Bpercent').setAttribute('checked', 'false');
+    document.getElementById('Map:Cpercent').setAttribute('checked', 'false');
+  }
+  else if (ratio == 4){
+    document.getElementById('Map:ZoomIn').setAttribute('disabled', 'true');
+    document.getElementById('Map:ZoomOut').setAttribute('disabled', 'false');
+    document.getElementById('Map:Apercent').setAttribute('checked', 'false');
+    document.getElementById('Map:Bpercent').setAttribute('checked', 'false');
+    document.getElementById('Map:Cpercent').setAttribute('checked', 'true');
+  }
+  else {
+    document.getElementById('Map:ZoomIn').setAttribute('disabled', 'false');
+    document.getElementById('Map:ZoomOut').setAttribute('disabled', 'false');
+    document.getElementById('Map:Apercent').setAttribute('checked', 'false');
+    document.getElementById('Map:Bpercent').setAttribute('checked', 'true');
+    document.getElementById('Map:Cpercent').setAttribute('checked', 'false');
+  }
 
   objList = frameDoc.getElementsByName("hotspot");
   len = objList.length;
@@ -685,10 +742,63 @@ function zoom(direction, ratio){
   if (ratio > currentZoom){
     imgEl.setAttribute("width", (parseInt(imgEl.getAttribute("width"))*(ratio/currentZoom)));
     imgEl.setAttribute("height", (parseInt(imgEl.getAttribute("height"))*(ratio/currentZoom)));
+    frameDoc.getElementById("bgDiv").style.width = (parseInt(frameDoc.getElementById("bgDiv").style.width)*(ratio/currentZoom));
   }
   else{
     imgEl.setAttribute("width", (parseInt(imgEl.getAttribute("width"))/(currentZoom/ratio)));
     imgEl.setAttribute("height", (parseInt(imgEl.getAttribute("height"))/(currentZoom/ratio)));
+    frameDoc.getElementById("bgDiv").style.width = (parseInt(frameDoc.getElementById("bgDiv").style.width)*(ratio/currentZoom));
   }
   currentZoom = ratio;  
 }
+
+function cutCopy(cut){
+  len = currentElement.length;
+  if (len >= 1){
+    clipBoard = new Array();
+    for (i=0; i<len; i++){
+      el = currentElement[i];
+      if (el.className == 'rect'){
+        coords = parseInt(el.style.left)+","+parseInt(el.style.top)+","+(parseInt(el.style.left)+parseInt(el.style.width))+","+(parseInt(el.style.top)+parseInt(el.style.height));
+        href = el.getAttribute('hsHref');
+        target = el.getAttribute('hsTarget');
+        alt = el.getAttribute('hsAlt');
+        clipBoard[i] = 'Rect(\"'+coords+'\", \"'+href+'\", \"'+target+'\", \"'+alt+'\", true)';
+      }
+      else if (el.className == 'cir'){
+        radius = Math.floor(parseInt(el.style.width)/2);
+        coords = (parseInt(el.style.left)+radius)+","+(parseInt(el.style.top)+radius)+","+radius;
+        href = el.getAttribute('href');
+        target = el.getAttribute('hsTarget');
+        alt = el.getAttribute('hsAlt');
+        clipBoard[i] = 'Circle(\"'+coords+'\", \"'+href+'\", \"'+target+'\", \"'+alt+'\", true)';
+      }
+      else{
+        var coords = '';
+        var pointlen = el.childNodes.length;
+        for(j=0; j<pointlen; j++){
+          coords += (parseInt(el.style.left)+parseInt(el.childNodes[j].style.left))+","+(parseInt(el.style.top)+parseInt(el.childNodes[j].style.top))+",";
+        }
+        coords = coords.substring(0, (coords.length-1));
+        href = el.getAttribute('href');
+        target = el.getAttribute('hsTarget');
+        alt = el.getAttribute('hsAlt');
+        clipBoard[i] = 'Poly(\"'+coords+'\", \"'+href+'\", \"'+target+'\", \"'+alt+'\", true)';
+      }
+      if (cut){
+        deleteElement(el);
+      }
+    }
+    document.getElementById('Map:Paste').setAttribute('disabled', 'false');
+  }
+}
+
+function paste(){
+  len = clipBoard.length;
+  func = '';
+  for (i=0; i<len; i++){
+    func += clipBoard[i]+'\;';
+  }
+  eval(func);
+}
+  

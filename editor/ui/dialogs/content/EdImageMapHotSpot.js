@@ -14,7 +14,7 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1999-2000 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
  * Contributor(s): 
@@ -34,30 +34,54 @@ function Startup()
   // Create dialog object to store controls for easy access
   dialog = new Object;
   dialog.urlInput = document.getElementById("urlInput");
+  dialog.targetInput = document.getElementById("targetInput");
+  dialog.altInput = document.getElementById("altInput");
+  dialog.commonInput = document.getElementById("commonInput");
 
-  dialog.url = window.arguments[0].getAttribute("href");
+  dialog.hsHref = window.arguments[0].getAttribute("hsHref");
+  if (dialog.hsHref != '')
+    dialog.urlInput.value = dialog.hsHref;
 
-  if (dialog.url != '')
-    dialog.urlInput.value = dialog.url;
+  dialog.hsAlt = window.arguments[0].getAttribute("hsAlt");
+  if (dialog.hsAlt != '')
+    dialog.altInput.value = dialog.hsAlt;
 
-  // Kinda clunky: Message was wrapped in a <p>,
-  // so actual message is a child text node
-  //dialog.srcMessage = (document.getElementById("srcMessage")).firstChild;
-
-  //if (null == dialog.srcInput ||
-  //    null == dialog.srcMessage )
-  //{
-  //  dump("Not all dialog controls were found!!!\n");
-  //}
-
-  // Set initial focus
+  dialog.hsTarget = window.arguments[0].getAttribute("hsTarget");
+  if (dialog.hsTarget != ''){
+    dialog.targetInput.value = dialog.hsTarget;
+    len = dialog.commonInput.length;
+    for (i=0; i<len; i++){
+      if (dialog.hsTarget == dialog.commonInput.options[i].value)
+        dialog.commonInput.options[i].selected = "true";
+    }
+  }
 
   dialog.urlInput.focus();
+  dialog.urlInput.select();
 }
 
 function onOK()
 {
   dump(window.arguments[0].id+"\n");
-  window.arguments[0].setAttribute("href", dialog.urlInput.value);
+  window.arguments[0].setAttribute("hsHref", dialog.urlInput.value);
+  window.arguments[0].setAttribute("hsAlt", dialog.altInput.value);
+  window.arguments[0].setAttribute("hsTarget", dialog.targetInput.value);
   window.close();
+}
+
+function changeTarget() {
+  dialog.targetInput.value = dialog.commonInput.options[dialog.commonInput.selectedIndex].value;
+}
+
+function chooseFile()
+{
+  // Get a local file, converted into URL format
+
+  fileName = editorShell.GetLocalFileURL(window, "img");
+  if (fileName && fileName != "") {
+    dialog.urlInput.value = fileName;
+  }
+
+  // Put focus into the input field
+  dialog.urlInput.focus();
 }
