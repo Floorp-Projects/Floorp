@@ -339,8 +339,52 @@ public:
     static void DisposeUPP(UPP_t upp) { return DisposeThemeButtonDrawUPP(upp); }
 };
 
-static nsresult drawThemeButton(ThemeButtonKind kind, Arguments& args, nsIInputStream **result, PRInt32 *length)
+struct ButtonEntry {
+    const char* name;
+    ThemeButtonKind kind;
+};
+
+static ButtonEntry kButtonEntries[] = {
+    "pushButton", kThemePushButton,
+    "checkBox", kThemeCheckBox,
+    "radioButton", kThemeRadioButton,
+    "bevelButton", kThemeBevelButton,
+    "arrowButton", kThemeArrowButton,
+    "popupButton", kThemePopupButton,
+    "disclosureButton", kThemeDisclosureButton,
+    "incDecButton", kThemeIncDecButton,
+    "smallBevelButton", kThemeSmallBevelButton,
+    "mediumBevelButton", kThemeMediumBevelButton,
+    "largeBevelButton", kThemeLargeBevelButton
+};
+
+class ButtonMap : public map<string, ThemeButtonKind> {
+public:
+    ButtonMap(ButtonEntry entries[], size_t count)
+    {
+        ButtonEntry* limit = entries + count;
+        for (ButtonEntry* entry = entries; entry < limit; ++entry)
+            (*this)[entry->name] = entry->kind;
+    }
+};
+
+static ButtonMap gButtonKinds(kButtonEntries, sizeof(kButtonEntries) / sizeof(ButtonEntry));
+
+static ThemeButtonKind getButtonKind(const Arguments& args, const char* name, ThemeButtonKind defaultKind)
 {
+    const char* kind = getArgument(args, name, NULL);
+    if (kind != NULL) {
+        ButtonMap::const_iterator i = gButtonKinds.find(kind);
+        if (i != gButtonKinds.end()) {
+            return i->second;
+        }
+    }
+    return defaultKind;
+}
+
+static nsresult drawThemeButton(Arguments& args, nsIInputStream **result, PRInt32 *length)
+{
+    ThemeButtonKind kind = getButtonKind(args, "kind", kThemePushButton);
     int width = getIntArgument(args, "width", 58);
     int height = getIntArgument(args, "height", 20);
     bool isActive = getBoolArgument(args, "active", true);
@@ -688,41 +732,54 @@ static nsresult drawThemeScrollbar(Arguments& args, nsIInputStream **result, PRI
     return rv;
 }
 
-/*
-    Dispatch Tables for mapping between theme:object URIs and
-    the button kind / action functions.
- */
+static nsresult drawThemeProgressbar(Arguments& args, nsIInputStream **result, PRInt32 *length)
+{
+    bool isHorizontal = getBoolArgument(args, "horizontal", true);
+    int width = getIntArgument(args, "width", (isHorizontal ? 200 : 16));
+    int height = getIntArgument(args, "height", (isHorizontal ? 16 : 200));
+    int phase = getIntArgument(args, "phase", 0);
+    int min = getIntArgument(args, "min", 0);
+    int max = getIntArgument(args, "max", 100);
+    int value = getIntArgument(args, "value", 50);
+    bool isActive = getBoolArgument(args, "active", true);
 
-struct ButtonEntry {
-    const char* name;
-    ThemeButtonKind kind;
-};
+    nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+    OSStatus status;
+    
+    ThemeTrackEnableState enableState = (isActive ? kThemeTrackActive : kThemeTrackInactive);
+    ThemeTrackPressState pressState = 0;
+    ThemeTrackAttributes attributes = (isHorizontal ? kThemeTrackHorizontal : 0);
+    Rect progressbarBounds = { 0, 0, (short) height , (short) width };
 
-static ButtonEntry kButtonEntries[] = {
-    "button", kThemePushButton,
-    "checkBox", kThemeCheckBox,
-    "radioButton", kThemeRadioButton,
-    "bevelButton", kThemeBevelButton,
-    "arrowButton", kThemeArrowButton,
-    "popupButton", kThemePopupButton,
-    "disclosureButton", kThemeDisclosureButton,
-    "incDecButton", kThemeIncDecButton,
-    "smallBevelButton", kThemeSmallBevelButton,
-    "mediumBevelButton", kThemeMediumBevelButton,
-    "largeBevelButton", kThemeLargeBevelButton
-};
+    ThemeTrackDrawInfo drawInfo;
+    drawInfo.kind = (phase == 0 ? kThemeProgressBar : kThemeIndeterminateBar);
+    drawInfo.bounds = progressbarBounds;
+    drawInfo.min = min, drawInfo.max = max, drawInfo.value = value;
+    drawInfo.reserved = 0;
+    drawInfo.attributes = attributes;
+    drawInfo.enableState = enableState;
+    drawInfo.trackInfo.progress.phase = phase;
 
-class ButtonMap : public map<string, ThemeButtonKind> {
-public:
-    ButtonMap(ButtonEntry entries[], size_t count)
-    {
-        ButtonEntry* limit = entries + count;
-        for (ButtonEntry* entry = entries; entry < limit; ++entry)
-            (*this)[entry->name] = entry->kind;
+    status = ::GetThemeTrackBounds(&drawInfo, &progressbarBounds);
+
+    TempGWorld world(progressbarBounds);
+    if (world.valid()) {
+        startImaging(world);
+
+        status = ::DrawThemeTrack(&drawInfo, NULL, NULL, 0);
+
+        // now, encode the image as a 'PNGf' image, and return the encoded image
+        // as an nsIInputStream.
+        stopImaging(world);
+        rv = encodeGWorld(world, 'PNGf', result, length);
     }
-};
+    
+    return rv;
+}
 
-static ButtonMap gButtonKinds(kButtonEntries, sizeof(kButtonEntries) / sizeof(ButtonEntry));
+/*
+    Dispatch Tables for mapping between theme:object URIs and action functions.
+ */
 
 typedef nsresult (*ThemeAction) (Arguments& args, nsIInputStream **result, PRInt32 *length);
 
@@ -732,10 +789,12 @@ struct ThemeEntry {
 };
 
 static ThemeEntry kThemeEntries[] = {
+    "button", &drawThemeButton,
     "menu", &drawThemeMenu,
     "menuitem", &drawThemeMenuItem,
     "menuseperator", &drawThemeMenuSeperator,
-    "scrollbar", &drawThemeScrollbar
+    "scrollbar", &drawThemeScrollbar,
+    "progressbar", &drawThemeProgressbar
 };
 
 class ThemeMap : public map<string, ThemeAction> {
@@ -761,7 +820,7 @@ nsThemeHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 {
     nsresult rv;
     Arguments args;
-    string object;
+    string widget;
     {
         nsXPIDLCString buffer;
         rv = url->GetPath(getter_Copies(buffer));
@@ -771,26 +830,21 @@ nsThemeHandler::NewChannel(nsIURI* url, nsIChannel* *result)
         if (NS_FAILED(rv)) return rv;
         string::size_type questionMark = path.find('?');
         if (questionMark != string::npos) {
-            object.resize(questionMark);
-            copy(path.begin(), path.begin() + questionMark, object.begin());
+            widget.resize(questionMark);
+            copy(path.begin(), path.begin() + questionMark, widget.begin());
         } else {
-            object = path;
+            widget = path;
         }
     }
     
     PRInt32 contentLength = 0;
     nsCOMPtr<nsIInputStream> input;
 
-    ButtonMap::const_iterator buttonKind = gButtonKinds.find(object);
-    if (buttonKind != gButtonKinds.end()) {
-        rv = drawThemeButton(buttonKind->second, args, getter_AddRefs(input), &contentLength);
+    ThemeMap::const_iterator themeAction = gThemeActions.find(widget);
+    if (themeAction != gThemeActions.end()) {
+        rv = (themeAction->second) (args, getter_AddRefs(input), &contentLength);
     } else {
-        ThemeMap::const_iterator themeAction = gThemeActions.find(object);
-        if (themeAction != gThemeActions.end()) {
-            rv = (themeAction->second) (args, getter_AddRefs(input), &contentLength);
-        } else {
-            rv = NS_ERROR_NOT_IMPLEMENTED;
-        }
+        rv = NS_ERROR_NOT_IMPLEMENTED;
     }
     if (NS_FAILED(rv)) return rv;
     
