@@ -390,6 +390,32 @@ Message Download=Setup will now download and install the following components:
 ;*** LOCALIZE ME BABY ***
 Message0=Click Install to continue.
 
+[Dialog Downloading]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=Downloading
+;*** LOCALIZE ME BABY ***
+Sub Title=XXXben Downloading Blah Blah Downloading. 
+;*** LOCALIZE ME BABY ***
+Blurb=Setup is downloading the files required to install $ProductName$.
+;*** LOCALIZE ME BABY ***
+File Name=Currently Downloading:
+;*** LOCALIZE ME BABY ***
+Time Remaining=Time Remaining:
+
+[Dialog Installing]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=Installing
+;*** LOCALIZE ME BABY ***
+Sub Title=XXXben Installing Blah Blah Installing. 
+;*** LOCALIZE ME BABY ***
+Blurb=Setup is installing application files. 
+;*** LOCALIZE ME BABY ***
+Status File=Preparing File:
+;*** LOCALIZE ME BABY ***
+Status Component=Currently Installing:
+
 [Dialog Download]
 Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
