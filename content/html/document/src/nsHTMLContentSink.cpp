@@ -316,7 +316,7 @@ public:
   PRBool   IsAncestorContainer(nsHTMLTag mType);
   nsIHTMLContent* GetCurrentContainer();
 
-  void DidAddContent(nsIContent* aContent);
+  void DidAddContent(nsIContent* aContent, PRBool aDidNotify=PR_FALSE);
   void UpdateChildCounts();
 
   HTMLContentSink* mSink;
@@ -1045,8 +1045,18 @@ SinkContext::GetCurrentContainer()
 }
 
 void
-SinkContext::DidAddContent(nsIContent* aContent)
+SinkContext::DidAddContent(nsIContent* aContent, PRBool aDidNotify)
 {
+  PRInt32 childCount;
+
+  // If there was a notification done for this content, update the
+  // parent's notification count.
+  if (aDidNotify && (0 < mStackPos)) {
+    nsIContent* parent = mStack[mStackPos-1].mContent;
+    parent->ChildCount(childCount);
+    mStack[mStackPos-1].mNumFlushed = childCount;
+  }
+
   if ((2 == mStackPos) &&
       (mSink->mBody == mStack[1].mContent)) {
     // We just finished adding something to the body
@@ -1059,7 +1069,6 @@ SinkContext::DidAddContent(nsIContent* aContent)
   if ((0 < mStackPos) && 
       (mStack[mStackPos-1].mInsertionPoint != -1)) {
     nsIContent* parent = mStack[mStackPos-1].mContent;
-    PRInt32 childCount;
 
 #ifdef NS_DEBUG
     // Tracing code
@@ -1233,7 +1242,7 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
     mNotifyLevel = mStackPos-1;
   }
 
-  DidAddContent(content);
+  DidAddContent(content, mSink->IsInScript());
 
   NS_IF_RELEASE(content);
 
@@ -1481,7 +1490,7 @@ SinkContext::AddLeaf(nsIHTMLContent* aContent)
     parent->AppendChildTo(aContent, mSink->IsInScript());
   }
 
-  DidAddContent(aContent);
+  DidAddContent(aContent, mSink->IsInScript());
 
 #ifdef DEBUG
   if (mPreAppend && 
@@ -1533,7 +1542,7 @@ SinkContext::AddComment(const nsIParserNode& aNode)
         parent->AppendChildTo(comment, mSink->IsInScript());
       }
       
-      DidAddContent(comment);
+      DidAddContent(comment, mSink->IsInScript());
 
 #ifdef DEBUG
       if (mPreAppend && 
@@ -1787,7 +1796,7 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
 
         mLastTextNode = content;
 
-        DidAddContent(content);
+        DidAddContent(content, mSink->IsInScript());
       }
     }
     mTextLength = 0;
