@@ -102,6 +102,7 @@
 #include "nsIDocumentCharsetInfo.h"
 #include "nsIDocumentEncoder.h" //for outputting selection
 #include "nsIBookmarksService.h"
+#include "nsIXMLContent.h" //for createelementNS
 
 #define DETECTOR_PROGID_MAX 127
 static char g_detector_progid[DETECTOR_PROGID_MAX + 1];
@@ -2181,11 +2182,37 @@ nsHTMLDocument::ImportNode(nsIDOMNode* aImportedNode,
 
 NS_IMETHODIMP
 nsHTMLDocument::CreateElementNS(const nsString& aNamespaceURI,
-                                const nsString& aQualifiedName,
-                                nsIDOMElement** aReturn)
+                               const nsString& aQualifiedName,
+                               nsIDOMElement** aReturn)
 {
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsINodeInfo> nodeInfo;
+  rv = mNodeInfoManager->GetNodeInfo(aQualifiedName, aNamespaceURI,
+                                     *getter_AddRefs(nodeInfo));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 namespaceID;
+  nodeInfo->GetNamespaceID(namespaceID);
+
+  nsIContent* content;
+  if (namespaceID == kNameSpaceID_HTML) {
+    nsIHTMLContent* htmlContent;
+
+    rv = NS_CreateHTMLElement(&htmlContent, nodeInfo);
+    content = (nsIContent*)htmlContent;
+  }
+  else {
+    nsIXMLContent* xmlContent;
+    rv = NS_NewXMLElement(&xmlContent, nodeInfo);
+    content = NS_STATIC_CAST(nsIXMLContent *, xmlContent);
+  }
+
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  content->SetContentID(mNextContentID++);
+
+  return content->QueryInterface(kIDOMElementIID, (void**)aReturn);
 }
 
 NS_IMETHODIMP
@@ -3902,16 +3929,19 @@ nsHTMLDocument::IsInSelection(nsIDOMSelection* aSelection,
 {
   // HTML document has to include body in the selection,
   // so that output can see style nodes on the body.
+#if 0 //this was here to pass the wrap col around. this is NOT necessary any more
   nsIAtom* tag;
   nsresult rv = aContent->GetTag(tag);
   PRBool retval = (NS_SUCCEEDED(rv) && tag == nsHTMLAtoms::body);
   NS_IF_RELEASE(tag);
   if (retval)
     return retval;
+#endif
 
   // If it's a block node, return true if the node itself
   // is in the selection.  If it's inline, return true if
   // the node or any of its children is in the selection.
+  PRBool retval;
   nsCOMPtr<nsIDOMNode> node (do_QueryInterface((nsIContent*)aContent));
   if (NodeIsBlock(node, PR_FALSE))
     aSelection->ContainsNode(node, PR_FALSE, &retval);
