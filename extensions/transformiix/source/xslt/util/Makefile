@@ -14,13 +14,14 @@ ALL_OBJS = \
 
 
 
-INCLUDE_PATH = -I.           \
-			   -I$(BASE)     \
-			   -I$(XPATH)    \
-			   -I$(XML)      \
-			   -I$(XML_UTIL) \
-			   -I$(DOM)      \
-			   -I$(XSLT)
+INCLUDE_PATH = -I.                 \
+			   -I$(BASE)           \
+			   -I$(XPATH)          \
+			   -I$(XML)            \
+			   -I$(XML_UTIL)       \
+			   -I$(DOM)            \
+			   -I$(XSLT)           \
+               -I$(XSLT)/functions
 
 target: $(ALL_OBJS)
 
