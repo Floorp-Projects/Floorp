@@ -1,5 +1,6 @@
 [General]
 Subfolder=Mozilla Folder
+URL=ftp://sweetlou.mcom.com/products/client/seamonkey/macos/8.x/ppc/<#buildID>/
 
 
 [Dialog License]
@@ -50,8 +51,6 @@ Description Short=XPCOM
 Description Long=Installer technology software
 Archive=xpcom.xpi
 Install Size=<#xpcom_size>
-Domain0=http://sweetlou.mcom.com/
-Server Path0=products/client/seamonkey/macos/8.x/ppc/<#buildID>/
 Attributes=SELECTED|INVISIBLE
 
 [Component1]
@@ -60,8 +59,6 @@ Description Short=Navigator
 Description Long=Web browser software
 Archive=browser.xpi
 Install Size=<#browser_size>
-Domain0=http://sweetlou.mcom.com/
-Server Path0=products/client/seamonkey/macos/8.x/ppc/<#buildID>/
 Attributes=SELECTED
 
 [Component2]
@@ -70,8 +67,6 @@ Description Short=Mail & News
 Description Long=Email and Newsgroup software
 Archive=mail.xpi
 Install Size=<#mail_size>
-Domain0=http://sweetlou.mcom.com/
-Server Path0=products/client/seamonkey/macos/8.x/ppc/<#buildID>/
 Attributes=SELECTED
 
 [Component3]
@@ -80,8 +75,6 @@ Description Short=Chatzilla
 Description Long=Chatzilla IRC client
 Archive=chatzilla.xpi
 Install Size=(#chatzilla_size)
-Domain0=http://sweetlou.mcom.com/
-Server Path0=products/client/seamonkey/macos/8.x/ppc/(#buildID)/
 Attributes=SELECTED
 
 [Component4]
@@ -90,8 +83,6 @@ Description Short=English US Language Pack
 Description Long=English US Language Pack
 Archive=deflenus.xpi
 Install Size=(#deflenus_size)
-Domain0=http://sweetlou.mcom.com/
-Server Path0=products/client/seamonkey/macos/8.x/ppc/(#buildID)/
 Attributes=SELECTED|INVISIBLE
 
 [Component5]
@@ -100,8 +91,6 @@ Description Short=English US Language Pack
 Description Long=English US Language Pack
 Archive=langenus.xpi
 Install Size=(#langenus_size)
-Domain0=http://sweetlou.mcom.com/
-Server Path0=products/client/seamonkey/macos/8.x/ppc/(#buildID)/
 Attributes=SELECTED|INVISIBLE
 
 [Dialog Start Install]
