@@ -113,17 +113,17 @@
     <content flex="1"/>
     <handlers>
       <handler type="click" shift="false" primary="false"
-               value="if (event.target.tagName == 'treecell') 
+               value="if (event.target.localName == 'treecell') 
                         parentNode.selectItem(event.target.parentNode.parentNode);"/>
       <handler type="click" shift="false" primary="true"
-               value="if (event.target.tagName == 'treecell') 
+               value="if (event.target.localName == 'treecell') 
                         parentNode.toggleItemSelection(event.target.parentNode.parentNode);"/>
       <handler type="click" shift="true" primary="false"
-               value="if (event.target.tagName == 'treecell') 
+               value="if (event.target.localName == 'treecell') 
                         parentNode.selectItemRange(null, event.target.parentNode.parentNode);"/>
       <handler type="click" shift="false" primary="false" clickcount="2">
       <![CDATA[
-         if (event.target.tagName == 'treecell') {
+         if (event.target.localName == 'treecell') {
            var n = event.target.parentNode.parentNode;
            n.toggleOpenState();
          }
