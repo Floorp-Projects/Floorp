@@ -1635,15 +1635,6 @@ void CFrontApp::ProperStartup( FSSpec* file, short fileType )
     EDTPLUG_RegisterEditURLCallback(&OpenEditURL);
 #endif // EDITOR && MOZ_JAVA
 
-	/*	Okay, this is hacky, but necessary.  It is extremely
-		important that the Macintosh reclaims memory.  So,
-		we want the finalizer to be at as high a priority as
-		possible. */	
-
-	if ((PR_GetGCInfo() != NULL) && (PR_GetGCInfo()->finalizer != NULL))
-
-	PR_SetThreadPriority(PR_GetGCInfo()->finalizer, PR_PRIORITY_URGENT);
-
 	DestroySplashScreen();
 	if ( abortStartup == CPrefs::eRunAccountSetup )
 		file = NULL;
