@@ -88,14 +88,14 @@ var historyDNDObserver = {
     var title = aEvent.target.getAttribute("value");
     var uri = aEvent.target.parentNode.parentNode.id;
     dump("*** title = " + title + "; uri = " + uri + "\n");
-    if ( title == "" && uri == "" )     // make sure we have something to drag
+    if ( aEvent.target.localName != "treecell" )     // make sure we have something to drag
       return null;
       
     var htmlString = "<A HREF='" + uri + "'>" + title + "</A>";
     var flavourList = { };
     flavourList["text/unicode"] = { width: 2, data: uri };
     flavourList["text/html"] = { width: 2, data: htmlString };
-    flavourList["text/x-moz-url"] = { width: 2, data: uri + " " + "[ TEMP TITLE ]" };
+    flavourList["text/x-moz-url"] = { width: 2, data: uri + " " + title };
     return flavourList;
   },
 
