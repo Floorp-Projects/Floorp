@@ -649,7 +649,8 @@ void HTMLContentSink::StartLayout()
       nsIPresShell* shell = mDocument->GetShellAt(i);
       if (nsnull != shell) {
         nsIPresContext* cx = shell->GetPresContext();
-        nsRect r = cx->GetVisibleArea();
+        nsRect r;
+        cx->GetVisibleArea(r);
         shell->ResizeReflow(r.width, r.height);
         NS_RELEASE(cx);
         NS_RELEASE(shell);
