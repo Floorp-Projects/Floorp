@@ -4564,7 +4564,7 @@ nsXULDocument::StartFastLoad()
 #ifdef DEBUG
             file->MoveTo(nsnull, "Invalid.mfasl");
 #else
-            file->Delete(PR_FALSE);
+            file->Remove(PR_FALSE);
 #endif
             exists = PR_FALSE;
         }
