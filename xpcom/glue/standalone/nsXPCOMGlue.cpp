@@ -49,6 +49,7 @@
 
 #if XP_WIN32
 #include <windows.h>
+#include <mbstring.h>
 #endif
 
 void GRE_AddGREToEnvironment();
@@ -109,8 +110,28 @@ nsresult XPCOMGlueStartup(const char* xpcomFile)
         libSpec.type = PR_LibSpec_Pathname;
         if (!xpcomFile)
             libSpec.value.pathname = XPCOM_DLL;
-        else
+        else {
             libSpec.value.pathname = xpcomFile;
+#ifdef XP_WIN32
+            // Add directory containing xpcomFile to the DLL search path.  This
+            // is done so that the OS knows where to find xpcom_core.dll and
+            // any other dependent libs.
+            const char *lastSlash =
+                    (const char *) _mbsrchr((const unsigned char *) xpcomFile, '\\');
+            if (lastSlash) {
+                char path[32767];
+                DWORD pathLen = GetEnvironmentVariable("PATH", path, sizeof(path));
+                if (pathLen != 0)
+                    path[pathLen++] = ';';
+                DWORD dirLen = lastSlash - xpcomFile;
+                if (sizeof(path) - pathLen > dirLen) {
+                    memcpy(&path[pathLen], xpcomFile, dirLen);
+                    path[pathLen + dirLen] = '\0';
+                    SetEnvironmentVariable("PATH", path);
+                }
+            }
+#endif
+        }
 
         xpcomLib = PR_LoadLibraryWithFlags(libSpec, PR_LD_LAZY|PR_LD_GLOBAL);
         if (!xpcomLib)
