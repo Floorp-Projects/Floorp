@@ -1438,7 +1438,8 @@ nsObjectFrame::HandleChild(nsPresContext*           aPresContext,
 PRBool
 nsObjectFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
 {
-  *aTabIndex = -1;
+  if (aTabIndex)
+    *aTabIndex = -1;
   if (IsBroken()) {
     // Inner anchor for "click to install plugin" is focusable,
     // but not the object frame itself
