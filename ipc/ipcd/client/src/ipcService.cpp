@@ -1,3 +1,4 @@
+/* vim:set ts=4 sw=4 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -19,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Darin Fisher <darin@netscape.com>
+ *   Darin Fisher <darin@meer.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -164,24 +165,59 @@ ipcService::~ipcService()
 nsresult
 ipcService::Init()
 {
-    nsresult rv;
-
     nsCOMPtr<nsIObserverService> observ(do_GetService("@mozilla.org/observer-service;1"));
-    if (observ) {
+    if (observ)
         observ->AddObserver(this, "xpcom-shutdown", PR_FALSE);
-        observ->AddObserver(this, "profile-change-net-teardown", PR_FALSE);
-        observ->AddObserver(this, "profile-change-net-restore", PR_FALSE);
-    }
 
+    nsresult rv;
     mTransport = new ipcTransport();
     if (!mTransport)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(mTransport);
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    else {
+        rv = mTransport->Init(this, &mClientID);
+        if (NS_FAILED(rv))
+            mTransport = nsnull;
+        else {
+            //
+            // broadcast IPC startup...
+            //
+            NS_CreateServicesFromCategory(IPC_SERVICE_STARTUP_CATEGORY,
+                                          NS_STATIC_CAST(ipcIService *, this),
+                                          IPC_SERVICE_STARTUP_TOPIC);
+        }
+    }
+    return rv;
+}
 
-    rv = mTransport->Init(this);
-    if (NS_FAILED(rv)) return rv;
+void
+ipcService::Shutdown()
+{
+    //
+    // broadcast IPC shutdown...
+    //
+    nsCOMPtr<nsIObserverService> observ(
+            do_GetService("@mozilla.org/observer-service;1"));
+    if (observ)
+        observ->NotifyObservers(NS_STATIC_CAST(ipcIService *, this),
+                                IPC_SERVICE_SHUTDOWN_TOPIC, nsnull);
 
-    return NS_OK;
+    // error out any pending queries
+    while (mQueryQ.First()) {
+        ipcClientQuery *query = mQueryQ.First();
+        query->OnQueryComplete(NS_ERROR_ABORT, NULL);
+        mQueryQ.DeleteFirst();
+    }
+
+    // disconnect any message observers
+    mObserverDB.Reset(ipcReleaseMessageObserver, nsnull);
+
+    // drop daemon connection
+    if (mTransport) {
+        mTransport->Shutdown();
+        mTransport = nsnull;
+    }
+
+    mClientID = 0;
 }
 
 void
@@ -246,44 +282,6 @@ ipcService::OnIPCMError(const ipcmMessageError *msg)
 }
 
 //-----------------------------------------------------------------------------
-
-ipcService::
-ProcessDelayedMsgQ_Event::ProcessDelayedMsgQ_Event(ipcService *serv,
-                                                   ipcMessageQ *msgQ)
-{
-    NS_ADDREF(mServ = serv);
-    mMsgQ = msgQ;
-}
-
-ipcService::
-ProcessDelayedMsgQ_Event::~ProcessDelayedMsgQ_Event()
-{
-    NS_RELEASE(mServ);
-}
-
-void * PR_CALLBACK
-ipcService::ProcessDelayedMsgQ_EventHandler(PLEvent *plevent)
-{
-    LOG(("ipcService::ProcessDelayedMsgQ_EventHandler\n"));
-
-    ProcessDelayedMsgQ_Event *ev = (ProcessDelayedMsgQ_Event *) plevent;
-
-    while (!ev->mMsgQ->IsEmpty()) {
-        ipcMessage *msg = ev->mMsgQ->First();
-        ev->mMsgQ->RemoveFirst();
-        ev->mServ->OnMessageAvailable(msg);
-        delete msg;
-    }
-    return nsnull;
-}
-
-void PR_CALLBACK
-ipcService::ProcessDelayedMsgQ_EventCleanup(PLEvent *plevent)
-{
-    delete (ProcessDelayedMsgQ_Event *) plevent;
-}
-
-//-----------------------------------------------------------------------------
 // interface impl
 //-----------------------------------------------------------------------------
 
@@ -292,8 +290,7 @@ NS_IMPL_ISUPPORTS2(ipcService, ipcIService, nsIObserver)
 NS_IMETHODIMP
 ipcService::GetClientID(PRUint32 *clientID)
 {
-    if (mClientID == 0)
-        return NS_ERROR_NOT_AVAILABLE;
+    NS_ENSURE_TRUE(mClientID != 0, NS_ERROR_NOT_INITIALIZED);
 
     *clientID = mClientID;
     return NS_OK;
@@ -464,21 +461,8 @@ ipcService::SendMessage(PRUint32 clientID,
 NS_IMETHODIMP
 ipcService::Observe(nsISupports *subject, const char *topic, const PRUnichar *data)
 {
-    if (strcmp(topic, "xpcom-shutdown") == 0 ||
-        strcmp(topic, "profile-change-net-teardown") == 0) {
-        // disconnect any message observers
-        mObserverDB.Reset(ipcReleaseMessageObserver, nsnull);
-
-        // drop daemon connection
-        if (mTransport) {
-            mTransport->Shutdown();
-            NS_RELEASE(mTransport);
-        }
-    }
-    else if (strcmp(topic, "profile-change-net-restore") == 0) {
-        if (mTransport)
-            mTransport->Init(this);
-    }
+    if (strcmp(topic, "xpcom-shutdown") == 0)
+        Shutdown();
     return NS_OK;
 }
 
@@ -487,42 +471,9 @@ ipcService::Observe(nsISupports *subject, const char *topic, const PRUnichar *da
 //-----------------------------------------------------------------------------
 
 void
-ipcService::OnConnectionEstablished(PRUint32 clientID)
-{
-    LOG(("ipcService::OnConnectionEstablished [cid=%u]\n", clientID));
-
-    mClientID = clientID;
-
-    //
-    // enumerate ipc startup category...
-    //
-    NS_CreateServicesFromCategory(IPC_SERVICE_STARTUP_CATEGORY,
-                                  NS_STATIC_CAST(ipcIService *, this),
-                                  IPC_SERVICE_STARTUP_TOPIC);
-}
-
-void
 ipcService::OnConnectionLost()
 {
-    mClientID = 0;
-
-    //
-    // error out any pending queries
-    //
-    while (mQueryQ.First()) {
-        ipcClientQuery *query = mQueryQ.First();
-        query->OnQueryComplete(NS_ERROR_ABORT, NULL);
-        mQueryQ.DeleteFirst();
-    }
-
-    //
-    // broadcast ipc shutdown...
-    //
-    nsCOMPtr<nsIObserverService> observ(
-            do_GetService("@mozilla.org/observer-service;1"));
-    if (observ)
-        observ->NotifyObservers(NS_STATIC_CAST(ipcIService *, this),
-                                IPC_SERVICE_SHUTDOWN_TOPIC, nsnull);
+    Shutdown();
 }
 
 void
