@@ -118,8 +118,6 @@ protected: // slots
  
   // } end morkProbeMap slots
     
-  friend class morkProbeMapIter; // for access to protected slots
-
 public: // lazy clear on add
 
   mork_bool need_lazy_init() const 
