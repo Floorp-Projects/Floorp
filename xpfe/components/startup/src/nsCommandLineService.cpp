@@ -46,7 +46,7 @@ public:
   NS_IMETHOD GetURLToLoad(char ** aResult);
   NS_IMETHOD GetProgramName(char ** aResult);
   NS_IMETHOD GetArgc(PRInt32  *  aResult);
-  NS_IMETHOD GetArgv(char ** aResult[]);
+  NS_IMETHOD GetArgv(char *** aResult);
 
 protected:
   virtual ~nsCmdLineService();
@@ -230,7 +230,7 @@ nsCmdLineService::GetArgc(PRInt32 * aResult)
 }
 
 NS_IMETHODIMP
-nsCmdLineService::GetArgv(char ** aResult[])
+nsCmdLineService::GetArgv(char *** aResult)
 {
     if (nsnull == aResult)
       return NS_ERROR_NULL_POINTER;
