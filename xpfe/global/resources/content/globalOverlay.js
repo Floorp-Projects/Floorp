@@ -271,6 +271,23 @@ function NewEditorFromDraft()
 {
   dump("NOT IMPLEMENTED: Write NewEditorFromDraft()!\n")
 }
+function NewEditorFromDraft()
+{
+  dump("NOT IMPLEMENTED: Write NewEditorFromDraft()!\n")
+}
+
+
+function helpMenuCreate()
+{
+	var BrandBundle = srGetStrBundle("chrome://global/locale/brand.properties");
+	dump(BrandBundle.GetStringFromName("brandShortName"));
+	var BrandName = BrandBundle.GetStringFromName("brandShortName");
+	var aboutItem = document.getElementById( "releaseName" );
+	var aboutName = aboutItem.getAttribute("name");
+	var aboutStrName = aboutName + " " + BrandName;
+	aboutItem.setAttribute("value", aboutStrName);
+}
+
 function SendPage()
 {
   var pageUrl = window.content.location.href;
