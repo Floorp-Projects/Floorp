@@ -296,17 +296,12 @@ nsXMLDocument::OnRedirect(nsIHttpChannel *aHttpChannel, nsIChannel *aNewChannel)
 {
   NS_ENSURE_ARG_POINTER(aNewChannel);
 
-  nsresult rv;
-
-  nsCOMPtr<nsIScriptSecurityManager> secMan = 
-           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) 
-    return rv;
-
   nsCOMPtr<nsIURI> newLocation;
-  rv = aNewChannel->GetURI(getter_AddRefs(newLocation)); // The redirected URI
+  nsresult rv = aNewChannel->GetURI(getter_AddRefs(newLocation)); // The redirected URI
   if (NS_FAILED(rv)) 
     return rv;
+
+  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
 
   if (mScriptContext && !mCrossSiteAccessEnabled) {
     nsCOMPtr<nsIJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1", & rv));

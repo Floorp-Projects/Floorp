@@ -708,13 +708,12 @@ nsHTMLInputElement::SetValue(const nsAString& aValue)
 {
   //check secuity
   if (mType == NS_FORM_INPUT_FILE) {
-    nsresult rv;
-    nsCOMPtr<nsIScriptSecurityManager> securityManager =
-             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsIScriptSecurityManager *securityManager =
+      nsContentUtils::GetSecurityManager();
 
     PRBool enabled;
-    rv = securityManager->IsCapabilityEnabled("UniversalFileRead", &enabled);
+    nsresult rv =
+      securityManager->IsCapabilityEnabled("UniversalFileRead", &enabled);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!enabled) {

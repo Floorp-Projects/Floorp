@@ -57,6 +57,7 @@
 #include "nsIDocShellLoadInfo.h"
 #include "nsIBaseWindow.h"
 #include "nsIWebShell.h"
+#include "nsContentUtils.h"
 
 #include "nsIScriptSecurityManager.h"
 
@@ -182,14 +183,12 @@ nsFrameLoader::LoadFrame()
                  PromiseFlatCString(doc_charset).get(), base_uri);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Check for security
-  nsCOMPtr<nsIScriptSecurityManager> secMan =
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
   mDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
   NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
+
+  // Check for security
+  nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
 
   // Get referring URL
   nsCOMPtr<nsIURI> referrer;

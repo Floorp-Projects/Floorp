@@ -2619,9 +2619,7 @@ nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
     // document for security purposes. Thus a document.write of a script tag
     // ends up producing a script with the same principals as the script
     // that performed the write.
-    nsCOMPtr<nsIScriptSecurityManager> secMan =
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
 
     nsCOMPtr<nsIPrincipal> subject;
     rv = secMan->GetSubjectPrincipal(getter_AddRefs(subject));
@@ -3884,11 +3882,8 @@ nsHTMLDocument::SetDesignMode(const nsAString & aDesignMode)
   if (!url.Equals("about:blank")) {
     // If we're 'about:blank' then we don't care who can edit us.
     // If we're not about:blank, then we need to check sameOrigin.
-    nsCOMPtr<nsIScriptSecurityManager> secMan =
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = secMan->CheckSameOrigin(nsnull, mDocumentURL);
+    rv = nsContentUtils::GetSecurityManager()->CheckSameOrigin(nsnull,
+                                                               mDocumentURL);
     if (NS_FAILED(rv))
       return rv;
   }
@@ -4129,10 +4124,6 @@ nsHTMLDocument::DoClipboardSecurityCheck(PRBool aPaste)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIScriptSecurityManager> secMan =
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1");
 
@@ -4141,6 +4132,9 @@ nsHTMLDocument::DoClipboardSecurityCheck(PRBool aPaste)
     stack->Peek(&cx);
 
     NS_NAMED_LITERAL_CSTRING(classNameStr, "Clipboard");
+
+    nsIScriptSecurityManager *secMan =
+      nsContentUtils::GetSecurityManager();
 
     if (aPaste) {
       if (nsHTMLDocument::sPasteInternal_id == JSVAL_VOID) {

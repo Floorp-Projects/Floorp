@@ -25,6 +25,7 @@
 #include "nsILoadGroup.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
+#include "nsContentUtils.h"
 #include "nsICacheService.h"
 #include "nsICacheSession.h"
 
@@ -191,11 +192,10 @@ nsWyciwygChannel::GetOwner(nsISupports **aOwner)
     NS_ENSURE_TRUE(mOriginalURI, NS_ERROR_FAILURE); // without an owner or an original URI!
 
     nsCOMPtr<nsIPrincipal> principal;
-    nsCOMPtr<nsIScriptSecurityManager> secMan(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
-    if (secMan) {
-      rv = secMan->GetCodebasePrincipal(mOriginalURI, getter_AddRefs(principal));
-      if (NS_SUCCEEDED(rv))
-        mOwner = principal;
+    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
+    rv = secMan->GetCodebasePrincipal(mOriginalURI, getter_AddRefs(principal));
+    if (NS_SUCCEEDED(rv)) {
+      mOwner = principal;
     }
   }
 

@@ -4450,9 +4450,8 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent,
     if (innerEvent && (innerEvent->eventStructType == NS_KEY_EVENT ||
         innerEvent->eventStructType == NS_MOUSE_EVENT)) {
       //Check security state to determine if dispatcher is trusted
-      nsCOMPtr<nsIScriptSecurityManager>
-      securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-      NS_ENSURE_TRUE(securityManager, NS_ERROR_FAILURE);
+      nsIScriptSecurityManager *securityManager =
+        nsContentUtils::GetSecurityManager();
 
       PRBool enabled;
       nsresult res = securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);

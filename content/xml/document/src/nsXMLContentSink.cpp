@@ -657,10 +657,7 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
     rv = NS_NewURI(getter_AddRefs(url), aHref, nsnull, mDocumentBaseURL);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIScriptSecurityManager> secMan =
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, NS_OK);
-
+    nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
     rv = secMan->CheckLoadURI(mDocumentURL, url,
                               nsIScriptSecurityManager::ALLOW_CHROME);
     NS_ENSURE_SUCCESS(rv, NS_OK);

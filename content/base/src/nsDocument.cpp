@@ -839,14 +839,12 @@ nsDocument::SetBaseURL(nsIURI* aURL)
   nsresult rv = NS_OK;
 
   if (aURL) {
-    nsCOMPtr<nsIScriptSecurityManager> securityManager =
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    nsIScriptSecurityManager* securityManager =
+      nsContentUtils::GetSecurityManager();
+    rv = securityManager->CheckLoadURI(mDocumentURL, aURL,
+                                       nsIScriptSecurityManager::STANDARD);
     if (NS_SUCCEEDED(rv)) {
-      rv = securityManager->CheckLoadURI(mDocumentURL, aURL,
-                                         nsIScriptSecurityManager::STANDARD);
-      if (NS_SUCCEEDED(rv)) {
-        mDocumentBaseURL = aURL;
-      }
+      mDocumentBaseURL = aURL;
     }
   } else {
     mDocumentBaseURL = nsnull;

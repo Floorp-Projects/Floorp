@@ -1309,12 +1309,8 @@ nsHTMLFormElement::GetActionURL(nsIURI** aActionURL)
   //
   // Get security manager, check to see if access to action URI is allowed.
   //
-  // XXX This code has not been tested.  mailto: does not work in forms.
-  //
-  nsCOMPtr<nsIScriptSecurityManager> securityManager =
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  nsIScriptSecurityManager *securityManager =
+      nsContentUtils::GetSecurityManager();
   rv = securityManager->CheckLoadURI(docURL, actionURL,
                                      nsIScriptSecurityManager::STANDARD);
   NS_ENSURE_SUCCESS(rv, rv);

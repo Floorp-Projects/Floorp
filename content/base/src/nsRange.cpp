@@ -2571,11 +2571,11 @@ nsRange::CreateContextualFragment(const nsAString& aFragment,
       // so that event handlers in the fragment do not get 
       // compiled with the system principal.
       nsCOMPtr<nsIJSContextStack> ContextStack;
-      nsCOMPtr<nsIScriptSecurityManager> secMan;
-      secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &result);
-      if (document && NS_SUCCEEDED(result)) {
+      if (document) {
         nsCOMPtr<nsIPrincipal> sysPrin;
         nsCOMPtr<nsIPrincipal> subjectPrin;
+
+        nsIScriptSecurityManager *secMan = nsContentUtils::GetSecurityManager();
 
         // Just to compare, not to use!
         result = secMan->GetSystemPrincipal(getter_AddRefs(sysPrin));
