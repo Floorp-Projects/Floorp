@@ -22,6 +22,18 @@
 #include "xpt_struct.h"
 #include <string.h>
 
+#ifdef XP_MAC
+static char *strdup(const char *c)
+{
+	char	*newStr = malloc(strlen(c) + 1);
+	if (newStr)
+	{
+		strcpy(newStr, c);
+	}
+	return newStr;
+}
+#endif
+
 static PRBool
 DoInterfaceDirectoryEntry(XPTCursor *cursor,
                           XPTInterfaceDirectoryEntry *ide, uint16 index);
