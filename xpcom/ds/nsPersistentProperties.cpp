@@ -266,10 +266,6 @@ nsPersistentProperties::GetStringProperty(const nsString& aKey, nsString& aValue
 
   const PRUnichar *key = aKey.GetUnicode();
 
-  if (!mTable) {
-    return NS_ERROR_FAILURE;
-  }
-
   PRUint32 len;
   PRUint32 hashValue = nsCRT::HashCode(key, &len);
   PLHashEntry **hep = PL_HashTableRawLookup(mTable, hashValue, key);
