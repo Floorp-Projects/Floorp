@@ -443,8 +443,19 @@ function ShowSeparator(aSeparatorID)
 {
   var separator = document.getElementById(aSeparatorID);
   var sibling = separator.previousSibling;
+  var siblingID;
+  var siblingNextHiddenAttrib = separator.nextSibling.getAttribute("hidden");
+
   while (sibling && sibling.localName != "menuseparator") {
-    if (sibling.getAttribute("hidden") != "true")
+    siblingID = sibling.getAttribute("id");
+    // for some reason, context-blockimage and context-unblockimage is not
+    // hidden on the very first time the context menu is invoked.  It's only
+    // hidden on subsequent triggers of the context menu.  Since we're not
+    // using these two menuitems in mailnews, we can ignore it if encountered.
+    if ((sibling.getAttribute("hidden") != "true") && 
+        (siblingNextHiddenAttrib != "true") &&
+        (siblingID != "context-blockimage") &&
+        (siblingID != "context-unblockimage"))
       return true;
     sibling = sibling.previousSibling;
   }
