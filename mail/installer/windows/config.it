@@ -1106,9 +1106,128 @@ Overwrite Key=TRUE
 Overwrite Name=TRUE
 Timing=post smartupdate
 
+[Windows Registry14]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
+Name=DisplayIcon
+Name Value=[SETUP PATH]\$MainExeFile$,0
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post smartupdate
+
+[Windows Registry15]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
+Name=DisplayVersion
+Name Value=$UserAgent$
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post smartupdate
+
+[Windows Registry16]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
+Name=Comment
+Name Value=Reclaim Your Inbox.
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post smartupdate
+
+[Windows Registry17]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
+Name=InstallLocation
+Name Value=[SETUP PATH]
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post smartupdate
+
+[Windows Registry18]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
+Name=NoModify
+Name Value=1
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post smartupdate
+
+[Windows Registry19]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
+Name=NoRepair
+Name Value=1
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post smartupdate
+
+[Windows Registry20]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
+Name=Publisher
+Name Value=$CompanyName$
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post smartupdate
+
+[Windows Registry21]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
+Name=URLInfoAbout
+;*** LOCALIZE ME BABY ***
+Name Value=http://www.mozilla.org/
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post smartupdate
+
+[Windows Registry22]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
+Name=URLUpdateInfo
+;*** LOCALIZE ME BABY ***
+Name Value=http://www.mozilla.org/products/thunderbird/
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post smartupdate
+
 ; The following keys are to help JRE's installer locate where mozilla gets
 ; installed to.  It has not been updated to look for the new keys.
-[Windows Registry14]
+[Windows Registry23]
 Root Key=HKEY_LOCAL_MACHINE
 Key=Software\Mozilla
 Name=
