@@ -856,8 +856,9 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
     nsAutoString url;
     PRBool hasURL = GetURL(content, url);
 
-    // if the size is not 0 and there is a src, create the web shell
-    if ((aReflowState.availableWidth >= 0) && (aReflowState.availableHeight >= 0) && hasURL) {
+    // if there is a src, create the web shell
+    // we do this even if the size is not positive (bug 11762)
+    if (hasURL) {
       if (!mWebShell) {
         nsSize  maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
         rv = CreateWebShell(aPresContext, maxSize);
