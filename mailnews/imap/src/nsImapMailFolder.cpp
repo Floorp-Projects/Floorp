@@ -5434,14 +5434,13 @@ nsImapMailFolder::CopyStreamMessage(nsIMsgDBHdr* message,
 
     if (NS_SUCCEEDED(rv) && m_copyState->m_msgService)
     {
-        nsIURI * url = nsnull;
     nsCOMPtr<nsIStreamListener>
             streamListener(do_QueryInterface(copyStreamListener, &rv));
     if(NS_FAILED(rv) || !streamListener)
       return NS_ERROR_NO_INTERFACE;
 
         rv = m_copyState->m_msgService->CopyMessage(uri, streamListener,
-                                                     isMove && !m_copyState->m_isCrossServerOp, nsnull, aMsgWindow, &url);
+                                                     isMove && !m_copyState->m_isCrossServerOp, nsnull, aMsgWindow, nsnull);
   }
     return rv;
 }
