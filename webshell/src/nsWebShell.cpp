@@ -945,6 +945,12 @@ nsWebShell::LoadURL(const nsString& aURLSpec,
 NS_IMETHODIMP
 nsWebShell::Reload()
 {
+  nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
+  if (nsnull != s) {
+    // XXX What about the post data?
+    return LoadURL(*s, nsnull, PR_FALSE);
+  }
+
   return NS_OK;
 }
 
