@@ -467,7 +467,8 @@ nsXPCComponents_InterfacesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
        nsnull != (name = JS_GetStringChars(JSVAL_TO_STRING(id))))
     {
         nsID iid;
-        if (!iid.Parse(NS_ConvertUCS2toUTF8(name).get()))
+        if (!iid.Parse(NS_ConvertUCS2toUTF8(NS_REINTERPRET_CAST(const PRUnichar*,
+name)).get()))
             return NS_OK;
 
         nsCOMPtr<nsIInterfaceInfo> info;
