@@ -31,7 +31,7 @@ sub Cleanup
 sub JarIt
 {
     my ($jarfile, $args) = @_;
-    system "zip -u $jarfile $args\n" || die "zip failed";
+    system "zip $jarfile $args\n" || die "zip failed";
     my $cwd = cwd();
     print "+++ jarred $cwd => $jarfile\n";
     Cleanup();
