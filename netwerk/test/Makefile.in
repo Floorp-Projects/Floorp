@@ -56,6 +56,7 @@ CPPSRCS		= \
 		TestIDN.cpp \
         TestURLParser.cpp \
         TestStandardURL.cpp \
+        TestPerf.cpp \
 		$(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
@@ -76,3 +77,4 @@ DEFINES		+= -DUSE_NSREG
 libs:: $(TARGETS)
 	$(INSTALL) $(srcdir)/urlparse.dat $(DIST)/bin/res
 	$(INSTALL) $(srcdir)/urlparse_unx.dat $(DIST)/bin/res
+	$(INSTALL) $(srcdir)/jarlist.dat $(DIST)/bin/res
