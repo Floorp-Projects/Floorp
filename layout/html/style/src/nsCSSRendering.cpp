@@ -520,13 +520,13 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
 //XXX dashes which span more than two edges are not handled properly MMP
 void nsCSSRendering::DrawDashedSides(PRIntn startSide,
                                      nsIRenderingContext& aContext,
-                                     const nsRect& aDirtyRect,
+                   /* XXX unused */  const nsRect& aDirtyRect,
                                      const PRUint8 borderStyles[],  
                                      const nscolor borderColors[],  
                                      const nsRect& borderOutside,
                                      const nsRect& borderInside,
                                      PRIntn aSkipSides,
-                                     nsRect* aGap)
+                   /* XXX unused */  nsRect* aGap)
 {
 PRIntn  dashLength;
 nsRect  dashRect, firstRect, currRect;
@@ -534,24 +534,6 @@ PRBool  bSolid = PR_TRUE;
 float   over = 0.0f;
 PRUint8 style = borderStyles[startSide];  
 PRBool  skippedSide = PR_FALSE;
-nscoord xstart,xwidth,ystart,ywidth;
-
-  // find out were x and y start
-  if(aDirtyRect.x > borderInside.x) {
-    xstart = aDirtyRect.x;
-  } else {
-    xstart = borderInside.x;
-  }
-
-  if(aDirtyRect.y > borderInside.y) {
-    ystart = aDirtyRect.y;
-  } else {
-    ystart = aDirtyRect.y;
-  }
-
-  // find the x and y width
-  xwidth = aDirtyRect.XMost();
-  ywidth = aDirtyRect.YMost();
 
   for (PRIntn whichSide = startSide; whichSide < 4; whichSide++) {
     PRUint8 prevStyle = style;
@@ -780,12 +762,12 @@ void nsCSSRendering::DrawDashedSides(PRIntn startSide,
                                      const nsRect& borderOutside,
                                      const nsRect& borderInside,
                                      PRIntn aSkipSides,
-                                     nsRect* aGap)
+                   /* XXX unused */  nsRect* aGap)
 {
 
 PRIntn  dashLength;
 nsRect  dashRect, currRect;
-nscoord xstart,xwidth,ystart,ywidth,temp,temp1,adjust;
+nscoord temp, temp1, adjust;
 PRBool  bSolid = PR_TRUE;
 float   over = 0.0f;
 PRBool  skippedSide = PR_FALSE;
@@ -797,23 +779,12 @@ const nscolor kBlackColor = NS_RGB(0,0,0);
                   : aBorderStyle->GetBorderStyle(startSide);  
 
   // find out were x and y start
-  if(aDirtyRect.x > borderInside.x) {
-    xstart = aDirtyRect.x;
-  } else {
-    xstart = borderInside.x;
-  }
-
-  if(aDirtyRect.y > borderInside.y) {
-    ystart = aDirtyRect.y;
-  } else {
-    ystart = borderInside.y;
-  }
-
+  nscoord xstart = PR_MAX(aDirtyRect.x, borderInside.x);
+  nscoord ystart = PR_MAX(aDirtyRect.y, borderInside.y);
 
   // find the x and y width
-  xwidth = aDirtyRect.XMost();
-  ywidth = aDirtyRect.YMost();
-
+  nscoord xwidth = aDirtyRect.XMost();
+  nscoord ywidth = aDirtyRect.YMost();
 
   for (PRIntn whichSide = startSide; whichSide < 4; whichSide++) {
     PRUint8 prevStyle = style;
@@ -1013,7 +984,7 @@ void nsCSSRendering::DrawDashedSegments(nsIRenderingContext& aContext,
                                         const nsRect& aBounds,
                                         nsBorderEdges * aBorderEdges,
                                         PRIntn aSkipSides,
-                                        nsRect* aGap)
+                      /* XXX unused */  nsRect* aGap)
 {
 PRIntn dashLength;
 nsRect dashRect, currRect;
