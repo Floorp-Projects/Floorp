@@ -205,7 +205,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
 			aServiceMgr->GetService(kMemoryCID, kIMemoryIID, (nsISupports**)&gMalloc);
 	}
 
-#ifdef NS_DEBUG
+#ifdef DEBUG_edburns
     printf("debug: edburns ns4xPlugin::CreatePlugin\n");
 #endif
 
@@ -217,7 +217,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
     memset((void*) &callbacks, 0, sizeof(callbacks));
     callbacks.size = sizeof(callbacks);
 
-#ifdef NS_DEBUG
+#ifdef DEBUG_edburns
     printf("debug: edburns ns4xPlugin::CreatePlugin: cleared callbacks\n");
 #endif
 
@@ -246,7 +246,7 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
 	if (pfnInitialize(&(ns4xPlugin::CALLBACKS),&callbacks) != NS_OK)
 		return NS_ERROR_UNEXPECTED;
 
-#ifdef NS_DEBUG
+#ifdef DEBUG_edburns
 	printf("debug: edburns: ns4xPlugin::CreatePlugin: callbacks->newstream: %p\n",
 	       callbacks.newstream);
 #endif
