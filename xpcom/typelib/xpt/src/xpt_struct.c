@@ -97,8 +97,10 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
         header = PR_NEWZAP(XPTHeader);
         if (!header)
             return PR_FALSE;
-    } 
-    *headerp = header;
+        *headerp = header;
+    } else {
+        header = *headerp;
+    }
 
     if (mode == XPT_ENCODE) {
         /* IDEs appear after header, including annotations */
