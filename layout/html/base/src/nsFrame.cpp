@@ -430,35 +430,6 @@ nsFrame::SetAdditionalStyleContext(PRInt32 aIndex,
   return ((aIndex < 0) ? NS_ERROR_INVALID_ARG : NS_OK);
 }
 
-void nsFrame::CaptureStyleChangeFor(nsIFrame* aFrame,
-                                    nsIStyleContext* aOldContext, 
-                                    nsIStyleContext* aNewContext,
-                                    PRInt32 aParentChange,
-                                    nsStyleChangeList* aChangeList,
-                                    PRInt32* aLocalChange)
-{
-  if (aChangeList && aLocalChange) {  // does caller really want change data?
-    PRInt32 change = NS_STYLE_HINT_NONE;
-    if (aOldContext) {
-      aNewContext->CalcStyleDifference(aOldContext, change);
-    }
-    else {
-      nsIStyleContext* parent = aNewContext->GetParent();
-      if (parent) {
-        aNewContext->CalcStyleDifference(parent, change);
-        NS_RELEASE(parent);
-      }
-    }
-    if (aParentChange < change) { // found larger change, record it
-      aChangeList->AppendChange(aFrame, change);
-      *aLocalChange = change;
-    }
-    else {
-      *aLocalChange = aParentChange;
-    }
-  }
-}
-
 // Geometric parent member functions
 
 NS_IMETHODIMP nsFrame::GetParent(nsIFrame** aParent) const

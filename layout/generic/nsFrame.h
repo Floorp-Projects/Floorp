@@ -293,15 +293,6 @@ public:
   // object. Returns -1 on error or if the frame doesn't have a content object
   static PRInt32 ContentIndexInContainer(const nsIFrame* aFrame);
 
-  // Helper function to compute an capture style change information
-  // call this when replacing style contexts within ReResilveStyleContext
-  static void CaptureStyleChangeFor(nsIFrame* aFrame,
-                                    nsIStyleContext* aOldContext, 
-                                    nsIStyleContext* aNewContext,
-                                    PRInt32 aParentChange,
-                                    nsStyleChangeList* aChangeList,
-                                    PRInt32* aLocalChange);
-
   // Helper function that tests if the frame tree is too deep; if it
   // is it marks the frame as "unflowable" and zeros out the metrics
   // and returns PR_TRUE. Otherwise, the frame is unmarked
