@@ -56,15 +56,14 @@ int main( int argc, char *argv[] ) {
 
 
 #ifdef __MWERKS__
-	// Hack in some arguments.  A NULL registry name is supposed to tell libreg
-	// to use the default registry (which does seem to work).
-	argc = 2;
-	const char* myArgs[] =
-	{
-		"regExport"
-	,	NULL
-	};
-	argv = const_cast<char**>(myArgs);
+    // Hack in some arguments.  A NULL registry name is supposed to tell libreg
+    // to use the default registry (which does seem to work).
+    argc = 1;
+    const char* myArgs[] =
+    {
+        "regExport"
+    };
+    argv = const_cast<char**>(myArgs);
 #endif
 
     nsresult rv;
@@ -78,75 +77,79 @@ int main( int argc, char *argv[] ) {
         printf("Cannot initialize XPCOM. Exit. [rv=0x%08X]\n", (int)rv);
         exit(-1);
     }
-
-    // Get the component manager
-    static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-    nsCOMPtr<nsIComponentManager> compMgr = do_GetService(kComponentManagerCID, &rv);
-    if (NS_FAILED(rv))
     {
-        // Cant get component manager
-        printf("Cannot get component manager from service manager.. Exit. [rv=0x%08X]\n", (int)rv);
-        exit(-1);
-    }
-
-    // Create the registry
-    nsIRegistry *reg;
-    rv = compMgr->CreateInstanceByContractID(NS_REGISTRY_CONTRACTID, NULL,
-                                         NS_GET_IID(nsIRegistry),
-                                         (void **) &reg);
-
-    // Check result.
-    if ( NS_FAILED(rv) )
-    {   
-        printf( "Error opening registry file %s, rv=0x%08X\n", argv[1] ? argv[1] : "<default>", (int)rv );
-        return rv;
-    }
-    
-    // Open it against the input file name.
-    nsCOMPtr<nsILocalFile> regFile;
-    rv = NS_NewNativeLocalFile( nsDependentCString(argv[1]), PR_FALSE, getter_AddRefs(regFile) );
-    if ( NS_FAILED(rv) ) {
-        printf( "Error instantiating local file for %s, rv=0x%08X\n", argv[1] ? argv[1] : "<default>", (int)rv );
-        return rv;
-    }
-
-    rv = reg->Open( regFile );
-    
-    if ( rv == NS_OK ) 
-    {
-        printf( "Registry %s opened OK.\n", argv[1] ? argv[1] : "<default>" );
-            
-        // Recurse over all 3 branches.
-        display( reg, nsIRegistry::Common, "nsRegistry::Common" );
-        display( reg, nsIRegistry::Users, "nsRegistry::Users" );
-    }
-    NS_RELEASE(reg);
-
-    if (argc == 1) 
-    {
-        // Called with no arguments. Print both the default registry and 
-        // the components registry. We already printed the default regsitry.
-        // So just do the component registry.
-        rv = compMgr->CreateInstanceByContractID(NS_REGISTRY_CONTRACTID, NULL,
-                                             NS_GET_IID(nsIRegistry),
-                                             (void **) &reg);
-
-        // Check result.
-        if ( NS_FAILED(rv) )
-        {   
-            printf( "Error opening creating registry instance, rv=0x%08X\n", (int)rv );
-            return rv;
+        // Get the component manager
+        static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+        nsCOMPtr<nsIComponentManager> compMgr = do_GetService(kComponentManagerCID, &rv);
+        if (NS_FAILED(rv))
+        {
+            // Cant get component manager
+            printf("Cannot get component manager from service manager.. Exit. [rv=0x%08X]\n", (int)rv);
+            exit(-1);
         }
-        rv = reg->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
-        if ( rv == NS_OK ) {
 
-            printf( "\n\n\nRegistry %s opened OK.\n", "<Application Component Registry>\n" );
+        nsIRegistry *reg;
+
+        if (argc>1) {
+            // Create the registry
+            rv = compMgr->CreateInstanceByContractID(NS_REGISTRY_CONTRACTID, NULL,
+                                                 NS_GET_IID(nsIRegistry),
+                                                 (void **) &reg);
+            // Check result.
+            if ( NS_FAILED(rv) )
+    	    {   
+                printf( "Error opening registry file %s, rv=0x%08X\n", argv[1] , (int)rv );
+                return rv;
+		    }
+            // Open it against the input file name.
+            nsCOMPtr<nsILocalFile> regFile;
+            rv = NS_NewNativeLocalFile( nsDependentCString(argv[1]), PR_FALSE, getter_AddRefs(regFile) );
+            if ( NS_FAILED(rv) ) {
+                printf( "Error instantiating local file for %s, rv=0x%08X\n", argv[1], (int)rv );
+                return rv;
+            }
+
+            rv = reg->Open( regFile );
+    
+            if ( rv == NS_OK ) 
+            {
+                printf( "Registry %s opened OK.\n", argv[1] );
             
-            // Recurse over all 3 branches.
-            display( reg, nsIRegistry::Common, "nsRegistry::Common" );
-            display( reg, nsIRegistry::Users, "nsRegistry::Users" );
+                // Recurse over all 3 branches.
+                display( reg, nsIRegistry::Common, "nsRegistry::Common" );
+                display( reg, nsIRegistry::Users, "nsRegistry::Users" );
+            }
+            NS_RELEASE(reg);
         }
-        NS_RELEASE(reg);
+        else
+        {
+            // Called with no arguments. Print both the default registry and 
+            // the components registry. We already printed the default regsitry.
+            // So just do the component registry.
+            rv = compMgr->CreateInstanceByContractID(NS_REGISTRY_CONTRACTID, NULL,
+                                                 NS_GET_IID(nsIRegistry),
+                                                 (void **) &reg);
+
+            // Check result.
+            if ( NS_FAILED(rv) )
+            {   
+                printf( "Error opening creating registry instance, rv=0x%08X\n", (int)rv );
+                return rv;
+            }
+            rv = reg->OpenWellKnownRegistry(nsIRegistry::ApplicationComponentRegistry);
+            if ( rv == NS_ERROR_REG_BADTYPE ) {
+                printf( "\n\n\nThere is no <Application Component Registry>\n" );
+            }
+            else if ( rv == NS_OK ) {
+
+                printf( "\n\n\nRegistry %s opened OK.\n", "<Application Component Registry>\n" );
+            
+                // Recurse over all 3 branches.
+                display( reg, nsIRegistry::Common, "nsRegistry::Common" );
+                display( reg, nsIRegistry::Users, "nsRegistry::Users" );
+            }
+            NS_RELEASE(reg);
+        }
     }
     NS_ShutdownXPCOM( servMgr );
 
