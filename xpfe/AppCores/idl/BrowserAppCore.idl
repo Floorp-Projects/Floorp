@@ -11,6 +11,9 @@ interface BrowserAppCore : BaseAppCore
 	void stop();
 	void loadUrl(in wstring url);
 	void loadInitialPage();
+	void backButtonPopup();
+	void forwardButtonPopup();
+	void gotoHistoryIndex(in int index);
 
 	void walletPreview(in Window win, in Window form);
 	void cookieViewer(in Window win);
