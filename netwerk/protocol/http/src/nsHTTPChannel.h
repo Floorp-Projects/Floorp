@@ -35,6 +35,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsHTTPResponseListener.h"
+#include "nsIStreamObserver.h"
 
 class nsHTTPRequest;
 /* 
