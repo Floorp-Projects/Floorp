@@ -23,7 +23,7 @@
 /*
  * Implementation of nsHashEnumerator.
  * Use it to expose nsIEnumerator interfaces around nsHashtable objects.  
- * Contributed by Rob Ginda, rginda@ix.netcom.com
+ * Contributed by Rob Ginda, rginda@ix.netcom.com 
  */
 
 #include "nscore.h"
