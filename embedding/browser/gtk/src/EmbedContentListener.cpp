@@ -27,6 +27,9 @@
 #include "EmbedContentListener.h"
 #include "EmbedPrivate.h"
 
+#include "nsICategoryManager.h"
+#include "nsIServiceManagerUtils.h"
+
 EmbedContentListener::EmbedContentListener(void)
 {
   mOwner = nsnull;
@@ -84,27 +87,8 @@ EmbedContentListener::IsPreferred(const char        *aContentType,
 				  char             **aDesiredContentType,
 				  PRBool            *aCanHandleContent)
 {
-  if (aContentType &&
-      (!strcasecmp(aContentType, "text/html")   ||
-       !strcasecmp(aContentType, "text/plain")  ||
-       !strcasecmp(aContentType, "application/vnd.mozilla.xul+xml")    ||
-       !strcasecmp(aContentType, "text/rdf")    ||
-       !strcasecmp(aContentType, "text/xml")    ||
-       !strcasecmp(aContentType, "application/xml")    ||
-       !strcasecmp(aContentType, "application/xhtml+xml")    ||
-       !strcasecmp(aContentType, "text/css")    ||
-       !strcasecmp(aContentType, "image/gif")   ||
-       !strcasecmp(aContentType, "image/jpeg")  ||
-       !strcasecmp(aContentType, "image/png")   ||
-       !strcasecmp(aContentType, "image/tiff")  ||
-       !strcasecmp(aContentType, "application/http-index-format"))) {
-    *aCanHandleContent = PR_TRUE;
-  }
-  else {
-    *aCanHandleContent = PR_FALSE;
-  }
-
-  return NS_OK;
+  return CanHandleContent(aContentType, PR_TRUE, aDesiredContentType,
+			  aCanHandleContent);
 }
 
 NS_IMETHODIMP
@@ -113,7 +97,29 @@ EmbedContentListener::CanHandleContent(const char        *aContentType,
 				       char             **aDesiredContentType,
 				       PRBool            *_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *_retval = PR_FALSE;
+  
+  if (aContentType) {
+    nsCOMPtr<nsICategoryManager> catMgr;
+    nsresult rv;
+    catMgr = do_GetService("@mozilla.org/categorymanager;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsXPIDLCString value;
+    rv = catMgr->GetCategoryEntry("Gecko-Content-Viewers",
+				  aContentType, 
+				  getter_Copies(value));
+
+    // If the category manager can't find what we're looking for
+    // it returns NS_ERROR_NOT_AVAILABLE, we don't want to propagate
+    // that to the caller since it's really not a failure
+
+    if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE)
+      return rv;
+
+    if (value && *value)
+      *_retval = PR_TRUE;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP

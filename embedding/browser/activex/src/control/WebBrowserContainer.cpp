@@ -401,11 +401,14 @@ NS_IMETHODIMP CWebBrowserContainer::IsPreferred(const char *aContentType, char *
 /* boolean canHandleContent (in string aContentType, in PRBool aIsContentPreferred, out string aDesiredContentType); */
 NS_IMETHODIMP CWebBrowserContainer::CanHandleContent(const char *aContentType, PRBool aIsContentPreferred, char **aDesiredContentType, PRBool *_retval)
 {
+    *_retval = PR_FALSE;
+    
     if (aContentType)
     {
         nsCOMPtr<nsICategoryManager> catMgr;
         nsresult rv;
         catMgr = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
         nsXPIDLCString value;
         rv = catMgr->GetCategoryEntry("Gecko-Content-Viewers",
             aContentType, 
