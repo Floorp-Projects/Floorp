@@ -41,6 +41,7 @@
 #include "nsIPresShell.h"
 #include "nsHTMLIIDs.h"
 #include "nsIEventStateManager.h"
+#include "nsIFocusTracker.h"
 
 // Some Misc #defines
 #define SELECTION_DEBUG        0
@@ -191,7 +192,7 @@ nsIFrame::GetLogModuleInfo()
 //----------------------------------------------------------------------
 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
-
+static NS_DEFINE_IID(kIFocusTracker, NS_IFOCUSTRACKER_IID);
 nsresult
 NS_NewEmptyFrame(nsIFrame**  aInstancePtrResult)
 {
@@ -218,6 +219,7 @@ void* nsFrame::operator new(size_t size)
 nsFrame::nsFrame()
 {
   mState = NS_FRAME_FIRST_REFLOW | NS_FRAME_SYNC_FRAME_AND_VIEW;
+  mSelected = PR_FALSE;
 }
 
 nsFrame::~nsFrame()
@@ -574,9 +576,7 @@ NS_IMETHODIMP nsFrame::Paint(nsIPresContext&      aPresContext,
     return NS_OK;
   }
 
-  nsIPresShell       * shell     = aPresContext.GetShell();
-  nsIDocument        * doc       = shell->GetDocument();
-  if (content && doc && doc->IsInSelection(content)) {
+  if (content && mSelected) {
     nsRect rect;
     GetRect(rect);
     rect.width--;
@@ -588,8 +588,6 @@ NS_IMETHODIMP nsFrame::Paint(nsIPresContext&      aPresContext,
   }
 
   NS_IF_RELEASE(content);
-  NS_IF_RELEASE(doc);
-  NS_IF_RELEASE(shell);
 
   return NS_OK;
 }
@@ -649,6 +647,31 @@ NS_IMETHODIMP nsFrame::HandlePress(nsIPresContext& aPresContext,
   {
     aEventStatus = nsEventStatus_eIgnore;
     return NS_OK;
+  }
+
+  mDoingSelection = PR_TRUE;
+  mDidDrag        = PR_FALSE;
+  nsIPresShell *shell = aPresContext.GetShell();
+  if (shell){
+    nsIRenderingContext * acx;      
+    if (NS_SUCCEEDED(shell->CreateRenderingContext(this, acx))){
+      PRInt32 startPos = 0;
+      PRUint32 contentOffset = 0;
+      if (NS_SUCCEEDED(GetPosition(aPresContext, acx, aEvent, this, contentOffset, startPos))){
+        nsISelection *selection = nsnull;
+        if (NS_SUCCEEDED(shell->GetSelection(&selection))){
+          nsIFocusTracker *tracker;
+          if (NS_SUCCEEDED(shell->QueryInterface(kIFocusTracker,(void **)&tracker))){
+            selection->TakeFocus(tracker, this, startPos, contentOffset, PR_FALSE);
+            NS_RELEASE(tracker);
+          }
+          NS_RELEASE(selection);
+        }
+        //no release 
+      }
+      NS_RELEASE(acx);
+    }
+    NS_RELEASE(shell);
   }
 
 #if 0
@@ -834,6 +857,36 @@ NS_IMETHODIMP nsFrame::HandleDrag(nsIPresContext& aPresContext,
                               nsGUIEvent*     aEvent,
                               nsEventStatus&  aEventStatus)
 {
+  if (DisplaySelection(aPresContext, PR_TRUE) == PR_FALSE)
+  {
+    aEventStatus = nsEventStatus_eIgnore;
+    return NS_OK;
+  }
+
+  mDoingSelection = PR_TRUE;
+  mDidDrag        = PR_FALSE;
+  nsIPresShell *shell = aPresContext.GetShell();
+  if (shell){
+    nsIRenderingContext * acx;      
+    if (NS_SUCCEEDED(shell->CreateRenderingContext(this, acx))){
+      PRInt32 startPos = 0;
+      PRUint32 contentOffset = 0;
+      if (NS_SUCCEEDED(GetPosition(aPresContext, acx, aEvent, this, contentOffset, startPos))){
+        nsISelection *selection = nsnull;
+        if (NS_SUCCEEDED(shell->GetSelection(&selection))){
+          nsIFocusTracker *tracker;
+          if (NS_SUCCEEDED(shell->QueryInterface(kIFocusTracker,(void **)&tracker))){
+            selection->TakeFocus(tracker, this, startPos, contentOffset, PR_TRUE); //TRUE IS THE DIFFERENCE
+            NS_RELEASE(tracker);
+          }
+          NS_RELEASE(selection);
+        }
+        //no release 
+      }
+      NS_RELEASE(acx);
+    }
+    NS_RELEASE(shell);
+  }
 #if 0
 //DEBUG MJUDGE
   if (DisplaySelection(aPresContext) == PR_FALSE)
@@ -1691,6 +1744,29 @@ NS_IMETHODIMP
 nsFrame::VerifyTree() const
 {
   NS_ASSERTION(0 == (mState & NS_FRAME_IN_REFLOW), "frame is in reflow");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrame::SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset, PRBool aForceRedraw)
+{
+  if (mSelected != aSelected || aForceRedraw)
+  {
+    nsRect  damageRect;
+    GetRect(damageRect);
+    ForceDrawFrame(this);
+    mSelected = aSelected;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrame::GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset)
+{
+  if (!aSelected || !aBeginOffset || !aEndOffset || !aBeginContentOffset)
+    return NS_ERROR_NULL_POINTER;
+  *aSelected = mSelected;
+  *aBeginContentOffset = 0;
   return NS_OK;
 }
 

@@ -41,7 +41,12 @@
 #include "nsDOMEvent.h"
 #include "nsHTMLParts.h"
 #include "nsISelection.h"
+#include "nsICollection.h"
 #include "nsLayoutCID.h"
+#include "nsIDOMRange.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMElement.h"
 
 static PRBool gsNoisyRefs = PR_FALSE;
 #undef NOISY
@@ -148,9 +153,16 @@ static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 static NS_DEFINE_IID(kIViewObserverIID, NS_IVIEWOBSERVER_IID);
 static NS_DEFINE_IID(kRangeListCID, NS_RANGELIST_CID);
 static NS_DEFINE_IID(kISelectionIID, NS_ISELECTION_IID);
+static NS_DEFINE_IID(kICollectionIID, NS_ICOLLECTION_IID);
+static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
+static NS_DEFINE_IID(kCRangeCID, NS_RANGE_CID);
+static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
+static NS_DEFINE_IID(kIFocusTrackerIID, NS_IFOCUSTRACKER_IID);
+
 
 class PresShell : public nsIPresShell, public nsIViewObserver,
-                  private nsIDocumentObserver
+                  private nsIDocumentObserver, public nsIFocusTracker
 
 {
 public:
@@ -221,7 +233,6 @@ public:
   virtual nsIPresContext* GetPresContext();
   virtual nsIViewManager* GetViewManager();
   virtual nsIStyleSet* GetStyleSet();
-  virtual nsresult SetFocus(nsIFrame *aFrame);
   virtual nsresult GetSelection(nsISelection **aSelection);
   NS_IMETHOD EnterReflowLock();
   NS_IMETHOD ExitReflowLock();
@@ -249,6 +260,11 @@ public:
   NS_IMETHOD Scrolled(nsIView *aView);
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
 
+  //nsIFocusTracker interface
+  virtual nsresult SetFocus(nsIFrame *aFrame, nsIFrame *aAnchorFrame){mFocusEventFrame = aFrame; mAnchorEventFrame = aAnchorFrame; return NS_OK;}
+
+  virtual nsresult GetFocus(nsIFrame **aFrame, nsIFrame **aAnchorFrame){if (!aFrame || !aAnchorFrame) return NS_ERROR_NULL_POINTER;*aFrame = mFocusEventFrame;
+      *aAnchorFrame = mAnchorEventFrame; return NS_OK;}
 protected:
   ~PresShell();
 
@@ -270,6 +286,7 @@ protected:
   PRBool mIsDestroying;
   nsIFrame* mCurrentEventFrame;
   nsIFrame* mFocusEventFrame; //keeps track of which frame has focus. 
+  nsIFrame* mAnchorEventFrame; //keeps track of which frame has focus. 
   nsISelection *mSelection;
 };
 
@@ -332,7 +349,6 @@ PresShell::PresShell()
 {
   //XXX joki 11/17 - temporary event hack.
   mIsDestroying = PR_FALSE;
-  nsRepository::CreateInstance(kRangeListCID, nsnull, kISelectionIID, (void **) &mSelection);
 }
 
 #ifdef NS_DEBUG
@@ -376,6 +392,12 @@ PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIViewObserverIID)) {
     nsIViewObserver* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIFocusTrackerIID)) {
+    nsIFocusTracker* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -446,6 +468,40 @@ PresShell::Init(nsIDocument* aDocument,
   mStyleSet = aStyleSet;
   NS_ADDREF(aStyleSet);
 
+  nsICollection *selection;
+  nsresult result = nsRepository::CreateInstance(kRangeListCID, nsnull, kICollectionIID, (void **) &selection);
+  if (!NS_SUCCEEDED(result))
+    return result;
+  selection->Clear();//clear all old selection
+  nsICollection *collection = nsnull;
+  nsIDOMRange *range = nsnull;
+  if (NS_SUCCEEDED(nsRepository::CreateInstance(kCRangeCID, nsnull, kIDOMRangeIID, (void **)&range))){ //create an irange
+    nsIDocument *doc = GetDocument();
+    nsIDOMDocument *domDoc = nsnull;
+    if (doc && NS_SUCCEEDED(doc->QueryInterface(kIDOMDocumentIID,(void **)&domDoc))){
+      nsIDOMElement *domElement = nsnull;
+      if (NS_SUCCEEDED(domDoc->GetDocumentElement(&domElement))) {//get the first element from the dom
+        nsIDOMNode *domNode;
+        if (NS_SUCCEEDED(domElement->QueryInterface(kIDOMNodeIID,(void **)&domNode))) {//get the node interface for the range object
+          range->SetStart(domNode,0);
+          range->SetEnd(domNode,0);
+          nsISupports *rangeISupports;
+          if (NS_SUCCEEDED(range->QueryInterface(kISupportsIID,(void **)&rangeISupports))) {
+            selection->AddItem(rangeISupports);
+            NS_IF_RELEASE(rangeISupports);
+          }
+          NS_IF_RELEASE(domNode);
+        }
+        NS_IF_RELEASE(domElement);
+      }
+      NS_IF_RELEASE(domDoc);
+      NS_IF_RELEASE(doc);
+    }
+    NS_IF_RELEASE(range);//allready referenced in the selection now.
+  }
+  selection->QueryInterface(kISelectionIID, (void **)&mSelection);
+  NS_RELEASE(selection);
+
   return NS_OK;
 }
 
@@ -494,16 +550,6 @@ PresShell::GetStyleSet()
   NS_IF_ADDREF(mStyleSet);
   return mStyleSet;
 }
-
-nsresult 
-PresShell::SetFocus(nsIFrame *aFrame)
-{
-  if (!aFrame)
-    return NS_ERROR_NULL_POINTER;
-  mFocusEventFrame = aFrame;
-  return NS_OK;
-}
-
 
 
 nsresult

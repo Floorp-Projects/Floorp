@@ -23,6 +23,7 @@ EXPORTS =				\
 	nsIDocument.h			\
 	nsIDocumentContainer.h		\
 	nsIDocumentObserver.h		\
+	nsIFocusTracker.h			\
 	nsIFrame.h			\
 	nsIFrameImageLoader.h		\
 	nsINameSpace.h		\

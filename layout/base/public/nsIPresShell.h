@@ -32,6 +32,7 @@ class nsIReflowCommand;
 class nsIDeviceContext;
 class nsIRenderingContext;
 class nsIPageSequenceFrame;
+class nsISelection;
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \
@@ -63,7 +64,10 @@ public:
 
   virtual nsIStyleSet* GetStyleSet() = 0;
 
-  virtual nsresult SetFocus(nsIFrame *aFrame) = 0;
+  /** GetSelection will return the selection that the presentation shell may implement.
+   *  @param aSelection will hold the return value
+   */
+  virtual nsresult GetSelection(nsISelection **aSelection) = 0;
 
   NS_IMETHOD EnterReflowLock() = 0;
 

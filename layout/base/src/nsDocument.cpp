@@ -411,9 +411,6 @@ nsDocument::nsDocument()
   mListenerManager = nsnull;
   mDisplaySelection = PR_FALSE;
   mInDestructor = PR_FALSE;
-  if (!NS_SUCCEEDED(nsRepository::CreateInstance(kCRangeListCID, nsnull, kICollectionIID, (void **)&mSelection))){
-    printf("*************** Error: nsDocument::nsDocument - Creation of Selection failed!\n");
-  }
   mDOMStyleSheets = nsnull;
   mNameSpaceManager = nsnull;
 
@@ -461,7 +458,6 @@ nsDocument::~nsDocument()
   }
 
   NS_IF_RELEASE(mArena);
-  NS_IF_RELEASE(mSelection);
   NS_IF_RELEASE(mScriptContextOwner);
   NS_IF_RELEASE(mListenerManager);
   NS_IF_RELEASE(mDOMStyleSheets);
@@ -1540,13 +1536,6 @@ void      nsDocument::Finalize(JSContext *aContext)
 NS_IMETHODIMP nsDocument::GetSelection(nsICollection ** aSelection) {
   if (!aSelection)
     return NS_ERROR_NULL_POINTER;
-  if (mSelection != nsnull) {
-    NS_ADDREF(mSelection);
-    *aSelection = mSelection;
-    return NS_OK;
-  } else {
-    *aSelection = nsnull;
-  }
   return NS_ERROR_FAILURE;
 }
 
@@ -1609,30 +1598,6 @@ NS_IMETHODIMP nsDocument::SelectAll() {
 
   //NS_RELEASE(start);
   //NS_RELEASE(end);
-  mSelection->Clear();//clear all old selection
-  nsIDOMRange *range = nsnull;
-  if (NS_SUCCEEDED(nsRepository::CreateInstance(kCRangeCID, nsnull, kIDOMRange, (void **)&range))){ //create an irange
-    nsIDOMDocument *domDoc;
-    if (NS_SUCCEEDED(QueryInterface(kIDOMDocumentIID, (void **)&domDoc))){//get the dom doc from this
-      nsIDOMElement *domElement = nsnull;
-      if (NS_SUCCEEDED(domDoc->GetDocumentElement(&domElement))) {//get the first element from the dom
-        nsIDOMNode *domNode;
-        if (NS_SUCCEEDED(domElement->QueryInterface(kIDOMNodeIID,(void **)&domNode))) {//get the node interface for the range object
-          range->SetStart(domNode,0);
-          range->SetEnd(domNode,0);
-          nsISupports *rangeISupports;
-          if (NS_SUCCEEDED(range->QueryInterface(kISupportsIID,(void **)&rangeISupports))) {
-            mSelection->AddItem(rangeISupports);
-            NS_IF_RELEASE(rangeISupports);
-          }
-          NS_IF_RELEASE(domNode);
-        }
-        NS_IF_RELEASE(domElement);
-      }
-      NS_IF_RELEASE(domDoc);
-    }
-    NS_IF_RELEASE(range);//allready referenced in the selection now.
-  }
   SetDisplaySelection(PR_TRUE);
 
   return NS_OK;
@@ -1814,6 +1779,9 @@ PRBool nsDocument::IsInRange(const nsIContent *aStartContent, const nsIContent* 
 
 PRBool nsDocument::IsInSelection(const nsIContent* aContent) const
 {
+  return PR_FALSE;
+#if 0
+  //DEBUG MJUDGE
   PRBool  result = PR_FALSE;
 
   //travers through an iterator to see if the acontent is in the ranges
@@ -1829,7 +1797,7 @@ PRBool nsDocument::IsInSelection(const nsIContent* aContent) const
     }
   }
   return result;
-
+#endif
 }
 
 
