@@ -50,14 +50,8 @@
 #include "nsString.h"
 #include "nsWidgetsCID.h"
 #include "nsXIFFormatConverter.h"
+#include "nsPrimitiveHelpers.h"
 
-
-// unicode conversion
-#define NS_IMPL_IDS
-#  include "nsIPlatformCharset.h"
-#undef NS_IMPL_IDS
-#include "nsISaveAsCharset.h"
-  
 
 static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);  // don't panic. NS_PARSER_IID just has the wrong name.
 
@@ -142,9 +136,6 @@ nsXIFFormatConverter::GetOutputDataFlavors(nsISupportsArray **_retval)
     rv = AddFlavorToList ( *_retval, kUnicodeMime );
     if ( NS_FAILED(rv) )
       return rv;
-    rv = AddFlavorToList ( *_retval, kTextMime );
-    if ( NS_FAILED(rv) )
-      return rv;
   }
   return rv;
 
@@ -191,9 +182,7 @@ nsXIFFormatConverter::CanConvert(const char *aFromDataFlavor, const char *aToDat
   nsAutoString fromFlavor ( aFromDataFlavor );
   if ( fromFlavor.Equals(kXIFMime) ) {
     nsAutoString toFlavor ( aToDataFlavor );
-    if ( toFlavor.Equals(kTextMime) )
-      *_retval = PR_TRUE;
-    else if ( toFlavor.Equals(kHTMLMime) )
+    if ( toFlavor.Equals(kHTMLMime) )
       *_retval = PR_TRUE;
     else if ( toFlavor.Equals(kUnicodeMime) )
       *_retval = PR_TRUE;
@@ -246,22 +235,9 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
         PRUnichar* castedData = NS_CONST_CAST(PRUnichar*, NS_STATIC_CAST(const PRUnichar*, data));
         nsAutoString dataStr ( CBufDescriptor(castedData, PR_TRUE, aDataLen) );  //еее try not to copy the data
 
-        if ( toFlavor.Equals(kTextMime) ) {
-          nsCAutoString outStr;
-          if ( NS_SUCCEEDED(ConvertFromXIFToText(dataStr, outStr)) ) {
-            nsCOMPtr<nsISupportsString> dataWrapper;
-            nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
-                                                NS_GET_IID(nsISupportsString), getter_AddRefs(dataWrapper) );
-            if ( dataWrapper ) {
-              dataWrapper->SetData ( outStr.GetBuffer() );
-              nsCOMPtr<nsISupports> genericDataWrapper ( do_QueryInterface(dataWrapper) );
-              *aToData = genericDataWrapper;
-              NS_ADDREF(*aToData);
-              *aDataToLen = outStr.Length();
-            }
-          }
-        } // if plain text
-        else if ( toFlavor.Equals(kHTMLMime) || toFlavor.Equals(kUnicodeMime) ) {
+        // note: conversion to text/plain is done inside the clipboard. we do not need to worry 
+        // about it here.
+        if ( toFlavor.Equals(kHTMLMime) || toFlavor.Equals(kUnicodeMime) ) {
           nsAutoString outStr;
           nsresult res;
           if (toFlavor.Equals(kHTMLMime))
@@ -269,31 +245,19 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
           else
             res = ConvertFromXIFToUnicode(dataStr, outStr);
           if ( NS_SUCCEEDED(res) ) {
-            nsCOMPtr<nsISupportsWString> dataWrapper;
-            nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
-                                                NS_GET_IID(nsISupportsWString), getter_AddRefs(dataWrapper) );
-            if ( dataWrapper ) {
-              dataWrapper->SetData ( NS_CONST_CAST(PRUnichar*,outStr.GetUnicode()) );  //еее COPY #2
-              nsCOMPtr<nsISupports> genericDataWrapper ( do_QueryInterface(dataWrapper) );
-              *aToData = genericDataWrapper;
-              NS_ADDREF(*aToData);
-              *aDataToLen = outStr.Length() * 2;
-            }
+            PRInt32 dataLen = outStr.Length() * 2;
+            nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor, (void*)outStr.GetUnicode(), dataLen, aToData );
+            if ( *aToData ) 
+              *aDataToLen = dataLen;
           }
-        } // else if HTML
+        } // else if HTML or Unicode
         else if ( toFlavor.Equals(kAOLMailMime) ) {
           nsAutoString outStr;
-          if ( NS_SUCCEEDED(ConvertFromXIFToAOLMail(dataStr, outStr)) ) {  //еее COPY #2
-            nsCOMPtr<nsISupportsWString> dataWrapper;
-            nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
-                                                NS_GET_IID(nsISupportsWString), getter_AddRefs(dataWrapper) );
-            if ( dataWrapper ) {
-              dataWrapper->SetData ( NS_CONST_CAST(PRUnichar*,outStr.GetUnicode()) );  //еее COPY #3
-              nsCOMPtr<nsISupports> genericDataWrapper ( do_QueryInterface(dataWrapper) );
-              *aToData = genericDataWrapper;
-              NS_ADDREF(*aToData);
-              *aDataToLen = outStr.Length() * 2;
-            }
+          if ( NS_SUCCEEDED(ConvertFromXIFToAOLMail(dataStr, outStr)) ) {
+            PRInt32 dataLen = outStr.Length() * 2;
+            nsPrimitiveHelpers::CreatePrimitiveForData ( toFlavor, (void*)outStr.GetUnicode(), dataLen, aToData );
+            if ( *aToData ) 
+              *aDataToLen = dataLen;
           }
         } // else if AOL mail
         else {
@@ -313,10 +277,14 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
 } // Convert
 
 
+#if USE_PLAIN_TEXT
 //
 // ConvertFromXIFToText
 //
 // Takes XIF and converts it to plain text using the correct charset for the platform/OS/language.
+//
+// *** This code is now obsolete, but I'm leaving it around for reference about how to do 
+// *** charset conversion with streams
 //
 NS_IMETHODIMP
 nsXIFFormatConverter::ConvertFromXIFToText(const nsAutoString & aFromStr, nsCAutoString & aToStr)
@@ -374,6 +342,7 @@ nsXIFFormatConverter::ConvertFromXIFToText(const nsAutoString & aFromStr, nsCAut
 
   return NS_OK;
 } // ConvertFromXIFToText
+#endif
 
 
 //

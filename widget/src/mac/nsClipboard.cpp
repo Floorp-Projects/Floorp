@@ -125,6 +125,21 @@ nsClipboard :: SetNativeClipboardData()
       if ( numBytes != noErr )
         errCode = NS_ERROR_FAILURE;
         
+      // if the flavor was unicode, then we also need to put it on as 'TEXT' after
+      // doing the conversion to the platform charset.
+      if ( strcmp(flavorStr,kUnicodeMime) == 0 ) {
+        char* plainTextData = nsnull;
+        PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, data);
+        PRInt32 plainTextLen = 0;
+        nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( castedUnicode, dataSize / 2, &plainTextData, &plainTextLen );
+        if ( plainTextData ) {
+          long numTextBytes = ::PutScrap ( plainTextLen, 'TEXT', plainTextData );
+          if ( numTextBytes != noErr )
+            errCode = NS_ERROR_FAILURE;         
+          nsAllocator::Free ( plainTextData ); 
+        }      
+      } // if unicode
+        
       nsAllocator::Free ( data );
     }
   } // foreach flavor in transferable
