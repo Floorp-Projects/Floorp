@@ -44,5 +44,10 @@ CPPSRCS = \
 CSRCS = \
 	font_metrics.c \
 
+EXPORTS =                               \
+        nsIDeviceContextSpecPS.h \
+        nsPostScriptObj.h
+
+
 include $(topsrcdir)/config/rules.mk
 

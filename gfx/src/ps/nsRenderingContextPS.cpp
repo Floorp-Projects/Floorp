@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-
 #include "nsRenderingContextPS.h"
 #include "nsFontMetricsPS.h"
 #include <math.h>
@@ -79,9 +78,7 @@ PS_State :: PS_State()
  *  Default Constructor for the state
  *	@update 12/21/98 dwc
  */
-PS_State :: PS_State(PS_State &aState) :
-                               mMatrix(&aState.mMatrix),
-                               mLocalClip(aState.mLocalClip)
+PS_State :: PS_State(PS_State &aState):mMatrix(&aState.mMatrix),mLocalClip(aState.mLocalClip)
 {
   mNext = &aState;
   //mClipRegion = NULL;
@@ -773,7 +770,6 @@ nsRenderingContextPS :: FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 const nsPoint*  np;
 nsPoint         pp;
 
-
   mPSObj->newpath();
 
   // point np to the polypoints
@@ -971,7 +967,6 @@ nsRenderingContextPS :: GetWidth(const char* aString,PRUint32 aLength,nscoord& a
 
   if (nsnull != mFontMetrics){
     ((nsFontMetricsPS*)mFontMetrics)->GetStringWidth(aString,aWidth,aLength);
-    aWidth = NSToCoordRound(float(aWidth) * mP2T);
     return NS_OK;
   } else {
     return NS_ERROR_FAILURE;
@@ -999,7 +994,6 @@ nsRenderingContextPS :: GetWidth(const PRUnichar *aString,PRUint32 aLength,nscoo
 
   if (nsnull != mFontMetrics){
     ((nsFontMetricsPS*)mFontMetrics)->GetStringWidth(aString,aWidth,aLength);
-    aWidth = NSToCoordRound(float(aWidth) * mP2T);
     return NS_OK;
   } else {
     return NS_ERROR_FAILURE;
@@ -1029,6 +1023,11 @@ PRInt32       y = aY;
     }
     mTMatrix->ScaleXCoords(aSpacing, aLength, dx0);
   }
+
+	// substract ascent since drawing specifies baseline
+	nscoord ascent = 0;
+	mFontMetrics->GetMaxAscent(ascent);
+	y += ascent;
 
 	mTMatrix->TransformCoord(&x, &y);
   PostscriptTextOut(aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aLength, (const nscoord*) (aSpacing ? dx0 : NULL), FALSE);
@@ -1079,12 +1078,20 @@ nsIFontMetrics  *fMetrics;
     while (aString < end){
       x = aX;
       y = aY;
+	    // substract ascent since drawing specifies baseline
+	    nscoord ascent = 0;
+	    mFontMetrics->GetMaxAscent(ascent);
+	    y += ascent;
       mTMatrix->TransformCoord(&x, &y);
 	    PostscriptTextOut((const char *)aString, 1, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aFontID, aSpacing, PR_TRUE);
       aX += *aSpacing++;
       aString++;
     }
   } else {
+	  // substract ascent since drawing specifies baseline
+	  nscoord ascent = 0;
+	  mFontMetrics->GetMaxAscent(ascent);
+	  y += ascent;
     mTMatrix->TransformCoord(&x, &y);
 	  PostscriptTextOut((const char *)aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aFontID, aSpacing, PR_TRUE);
   }
@@ -1208,7 +1215,6 @@ NS_IMETHODIMP nsRenderingContextPS :: CopyOffScreenBits(nsDrawingSurface aSrcSur
   return NS_OK;
 }
 
-
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
  *	@update 12/21/98 dwc
@@ -1217,24 +1223,24 @@ void
 nsRenderingContextPS :: SetupFontAndColor(void)
 {
 nscoord         fontHeight = 0;
-const nsFont          *font;
-nsFontHandle    fontHandle;       // WINDOWS ONLY
+PRInt16         fontIndex;
+const nsFont    *font;
+nsFontHandle    fontHandle; 
+nsAutoString    fontFamily;
 
   mFontMetrics->GetHeight(fontHeight);
   mFontMetrics->GetFont(font);
-
-
   mFontMetrics->GetFontHandle(fontHandle);
-
-  //HFONT         tfont = (HFONT)fontHandle;                      // WINDOWS ONLY
-  //::SelectObject(((nsDeviceContextPS*)mContext)->mDC, tfont);    // WINDOWS ONLY
 
   //mStates->mFont = mCurrFont = tfont;
   mStates->mFontMetrics = mFontMetrics;
 
-  mPSObj->setscriptfont(fontHeight,font->style,font->variant,font->weight,font->decorations);
-}
+  // get the fontfamily we are using, not what we want, but what we are using
+  fontFamily.SetString(((nsFontMetricsPS*)mFontMetrics)->mAFMInfo->mPSFontInfo->mFamilyName);
+  fontIndex = ((nsFontMetricsPS*)mFontMetrics)->GetFontIndex();
 
+  mPSObj->setscriptfont(fontIndex,fontFamily,fontHeight,font->style,font->variant,font->weight,font->decorations);
+}
 
 /** ---------------------------------------------------
  *  See documentation in nsRenderingContextPS.h
@@ -1249,13 +1255,21 @@ int             ptr = 0;
 unsigned int    i;
 char            *buf = 0;
 nscoord         fontHeight = 0,yCoord;
-const nsFont          *font;
+const nsFont    *font;
 
   mFontMetrics->GetHeight(fontHeight);
   mFontMetrics->GetFont(font);
 
-  yCoord = aY + (fontHeight / 2);
-  mPSObj->moveto(aX, yCoord);
+  //yCoord = aY + (fontHeight / 2);
+	//nscoord ascent = 0;
+	//mFontMetrics->GetMaxAscent(ascent);
+  // convert the ascent to points
+  //ascent = ascent/20;
+
+
+  //yCoord = aY + ascent;
+
+  mPSObj->moveto(aX, aY);
   if (PR_TRUE == aIsUnicode) {
     //XXX: Investigate how to really do unicode with Postscript
 	  // Just remove the extra byte per character and draw that instead

@@ -25,6 +25,7 @@
 #include "nsIView.h"
 #include "nsIRenderingContext.h"
 
+#include "nsOldDrawingSurfaceGTK.h"
 #include "nsRenderingContextGTK.h"
 
 class nsDeviceContextGTK : public DeviceContextImpl

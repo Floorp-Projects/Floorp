@@ -27,7 +27,9 @@
 #include "net.h"
 #include "nsColor.h"
 #include "nsCoord.h"
+#include "nsString.h"
 
+#include "nsIDeviceContextSpecPS.h"
 
 class nsIImage;
 
@@ -35,6 +37,7 @@ class nsIImage;
 #define NS_LETTER_SIZE    0
 #define NS_LEGAL_SIZE     1
 #define NS_EXECUTIVE_SIZE 2
+#define NS_A4_SIZE	  3
 
 #define PAGE_WIDTH 612 // Points
 #define PAGE_HEIGHT 792 //Points
@@ -182,8 +185,13 @@ class nsPostScriptObj
 public:
   nsPostScriptObj();
   ~nsPostScriptObj();
-
-
+  
+  
+  /** ---------------------------------------------------
+   *  Init PostScript Object 
+   *	@update 3/19/99 dwc
+   */
+  nsresult Init( nsIDeviceContextSpecPS *aSpec);
   /** ---------------------------------------------------
    *  Start a postscript page
    *	@update 2/1/99 dwc
@@ -343,7 +351,7 @@ public:
    *  Set up the font
    *	@update 2/1/99 dwc
    */
-  void setscriptfont(nscoord aHeight, PRUint8 aStyle, PRUint8 aVariant, PRUint16 aWeight, PRUint8 decorations);
+  void setscriptfont(PRInt16 aFontIndex,const nsString &aFamily,nscoord aHeight, PRUint8 aStyle, PRUint8 aVariant, PRUint16 aWeight, PRUint8 decorations);
   /** ---------------------------------------------------
    *  output a postscript comment
    *	@update 2/1/99 dwc
@@ -355,6 +363,7 @@ private:
   PSContext             *mPrintContext;
   PrintSetup            *mPrintSetup;
   PRUint16              mPageNumber;
+
 
 
   /** ---------------------------------------------------

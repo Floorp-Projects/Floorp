@@ -41,6 +41,12 @@ nsFontMetricsPS :: ~nsFontMetricsPS()
     mFont = nsnull;
   }
 
+  if(nsnull != mAFMInfo){
+    delete mAFMInfo;
+    mAFMInfo = nsnull;
+  }
+
+
   mDeviceContext = nsnull;
 }
 
@@ -108,13 +114,27 @@ NS_IMPL_ISUPPORTS(nsFontMetricsPS, kIFontMetricsIID)
 NS_IMETHODIMP
 nsFontMetricsPS :: Init(const nsFont& aFont, nsIDeviceContext *aContext)
 {
+
   mFont = new nsFont(aFont);
   //don't addref this to avoid circular refs
   mDeviceContext = (nsDeviceContextPS *)aContext;
 
   // get the AFM information
   mAFMInfo = new nsAFMObject();
-  mAFMInfo->Init("Helvetica",mFont->size/20);
+  mAFMInfo->Init(mFont->size/20);
+
+  // first see if the primary font is available
+  mFontIndex = mAFMInfo->CheckBasicFonts(aFont,PR_TRUE);
+  if( mFontIndex < 0){
+    // look in an AFM file for the primary font
+    if (PR_FALSE == mAFMInfo->AFM_ReadFile(aFont) ) {
+      // look for secondary fonts
+      mFontIndex = mAFMInfo->CheckBasicFonts(aFont,PR_FALSE);
+      if( mFontIndex < 0){
+        mFontIndex = mAFMInfo->CreateSubstituteFont(aFont);
+      }
+    }
+  }
 
   RealizeFont();
   return NS_OK;
@@ -137,23 +157,50 @@ nsFontMetricsPS::RealizeFont()
 {  
 float fontsize;
 float dev2app;
+float offset;
 
   mDeviceContext->GetDevUnitsToAppUnits(dev2app);
   nscoord onePixel = NSToCoordRound(1 * dev2app);
 
+  // convert the font size which is in twips to points
   fontsize = mFont->size/20.0f;
 
-  mXHeight = NSToCoordRound((float)((fontsize*mAFMInfo->mPSFontInfo->mXHeight)/1000.0)*dev2app);
+  offset=NSFloatPointsToTwips(fontsize*mAFMInfo->mPSFontInfo->mXHeight)/1000.0f;
+  mXHeight = NSToCoordRound(offset);
+  //mXHeight = NSToCoordRound((float)((fontsize*mAFMInfo->mPSFontInfo->mXHeight)/1000.0)*dev2app);
+
   mSuperscriptOffset = mXHeight;
   mSubscriptOffset = mXHeight;
 
   mStrikeoutSize = onePixel;
   mStrikeoutOffset = (nscoord)(mXHeight / 2.0f);
   mUnderlineSize = onePixel;
-  mUnderlineOffset = (nscoord)(NSToCoordRound((float)((fabs(fontsize*mAFMInfo->mPSFontInfo->mUnderlinePosition))/1000)*dev2app));
+
+
+  offset=NSFloatPointsToTwips(fontsize*mAFMInfo->mPSFontInfo->mUnderlinePosition)/1000.0f;
+  mUnderlineOffset = NSToCoordRound(offset);
+  //mUnderlineOffset = (nscoord)(NSToCoordRound((float)((fabs(fontsize*mAFMInfo->mPSFontInfo->mUnderlinePosition))/1000)*dev2app));
+
+  //offset = mAFMInfo->mPSFontInfo->mFontBBox_ury-mAFMInfo->mPSFontInfo->mFontBBox_lly;
+  //offset = NSFloatPointsToTwips(fontsize*offset)/1000.0f;
+  //mHeight = NSToCoordRound(offset);
   mHeight = NSToCoordRound(fontsize * dev2app);
-  mAscent = NSToCoordRound((float)((fontsize*mAFMInfo->mPSFontInfo->mAscender)/1000)*dev2app);
-  mDescent = NSToCoordRound((float)((fabs(fontsize*mAFMInfo->mPSFontInfo->mDescender))/1000)*dev2app);
+
+
+  offset=NSFloatPointsToTwips(fontsize*mAFMInfo->mPSFontInfo->mAscender)/1000.0f;
+  mAscent = NSToCoordRound(offset);
+  //mAscent = NSToCoordRound((float)((fontsize*mAFMInfo->mPSFontInfo->mAscender)/1000)*dev2app);
+
+  offset=NSFloatPointsToTwips(fontsize*mAFMInfo->mPSFontInfo->mDescender)/1000.0f;
+  mDescent = NSToCoordRound(offset);
+  //mDescent = NSToCoordRound((float)((fabs(fontsize*mAFMInfo->mPSFontInfo->mDescender))/1000)*dev2app);
+
+  offset=NSFloatPointsToTwips(fontsize*mAFMInfo->mPSFontInfo->mDescender)/1000.0f;
+  mDescent = NSToCoordRound(offset);
+
+  //mHeight = mAscent + -mDescent;
+
+
   mLeading = 0;
   mMaxAscent = mAscent;
   mMaxDescent = mDescent;

@@ -17,8 +17,45 @@
  */
 
 #include "nsAFMObject.h"
+#include "Helvetica.h"
+#include "Helvetica-Bold.h"
+#include "Helvetica-BoldOblique.h"
+#include "Helvetica-Oblique.h"
+#include "Times-Roman.h"
+#include "Times-Bold.h"
+#include "Times-BoldItalic.h"
+#include "Times-Italic.h"
+#include "Courier.h"
+#include "Courier-Bold.h"
+#include "Courier-BoldOblique.h"
+#include "Courier-Oblique.h"
+#include "Symbol.h"
 
 
+
+// this is the basic font set supported currently
+DefFonts gSubstituteFonts[] = 
+{
+  {"Times-Roman","Times",400,0,&Times_RomanAFM,AFMTimes_RomanChars,-1},
+  {"Times-Bold","Times",700,0,&Times_BoldAFM,AFMTimes_RomanChars,-1},
+  {"Times-BoldItalic","Times",700,1,&Times_BoldItalicAFM,AFMTimes_RomanChars,-1},
+  {"Times-Italic","Times",400,1,&Times_ItalicAFM,AFMTimes_RomanChars,-1},
+  {"Helvetica","Helvetica",400,0,&HelveticaAFM,AFMHelveticaChars,-1},
+  {"Helvetica-Bold","Helvetica",700,0,&Helvetica_BoldAFM,AFMHelveticaChars,-1},
+  {"Helvetica-BoldOblique","Helvetica",700,2,&Helvetica_BoldObliqueAFM,AFMHelveticaChars,-1},
+  {"Helvetica_Oblique","Helvetica",400,2,&Helvetica_ObliqueAFM,AFMHelveticaChars,-1},
+  {"Courier","Courier",400,0,&CourierAFM,AFMCourierChars,-1},
+  {"Courier-Bold","Courier",700,0,&Courier_BoldAFM,AFMCourierChars,-1},
+  {"Courier-BoldOblique","Courier",700,2,&Courier_BoldObliqueAFM,AFMCourierChars,-1},
+  {"Courier-Oblique","Courier",400,2,&Courier_ObliqueAFM,AFMCourierChars,-1},
+  {"Symbol","Symbol",400,0,&SymbolAFM,AFMSymbolChars,-1}
+};
+
+
+/** ---------------------------------------------------
+ *  A static structure initialized AFM font keyword definitions
+ *	@update 3/12/99 dwc
+ */
 static struct keyname_st
 {
   char *name;
@@ -124,6 +161,7 @@ static struct keyname_st
  */
 nsAFMObject :: nsAFMObject()
 {
+  mPSFontInfo = nsnull;
 }
 
 /** ---------------------------------------------------
@@ -133,6 +171,13 @@ nsAFMObject :: nsAFMObject()
 nsAFMObject :: ~nsAFMObject()
 {
 
+  if(mPSFontInfo->mAFMCharMetrics){
+    delete [] mPSFontInfo->mAFMCharMetrics;
+  }
+
+  if(mPSFontInfo){
+    delete mPSFontInfo;
+  }
 }
 
 /** ---------------------------------------------------
@@ -140,41 +185,119 @@ nsAFMObject :: ~nsAFMObject()
  *	@update 2/25/99 dwc
  */
 void
-nsAFMObject :: Init(char *aFontName,PRInt32 aFontHeight)
+nsAFMObject :: Init(PRInt32 aFontHeight)
 {
-
-  //mFontHeight = mFont->size/20;  // convert the font size to twips
-  // read in the Helvetica font
-  AFM_ReadFile();
+  // read the file asked for
   mFontHeight = aFontHeight;
-
 }
 
 /** ---------------------------------------------------
  *  See documentation in nsAFMParser.h
  *	@update 2/25/99 dwc
  */
-void
-nsAFMObject::AFM_ReadFile()
+PRInt16
+nsAFMObject::CheckBasicFonts(const nsFont &aFont,PRBool aPrimaryOnly)
 {
-PRBool              done=PR_FALSE;
-PRBool              bvalue;
-AFMKey              key;
-double              value;
-PRInt32             ivalue;
-AFMFontInformation  *fontinfo;
+PRInt16     ourfont = -1;
+PRInt32     i,curIndex,score;
+nsString    psfontname;
+
+  // have to find the correct fontfamily, weight and style
+  psfontname.SetString(aFont.name);
+  
+  // look in the font table for one of the fonts in the passed in list
+  for(i=0,curIndex=-1;i<NUM_AFM_FONTS;i++){
+    gSubstituteFonts[i].mIndex = psfontname.RFind((const char*)gSubstituteFonts[i].mFamily,PR_TRUE);
+
+    // if a font was found matching this criteria
+    if((gSubstituteFonts[i].mIndex==0) || (!aPrimaryOnly && gSubstituteFonts[i].mIndex>=0)){
+      // give it a score
+      score = abs(aFont.weight-gSubstituteFonts[i].mWeight);
+      score+= abs(aFont.style-gSubstituteFonts[i].mStyle);
+      if(score == 0){
+        curIndex = i;
+        break;
+      }
+      gSubstituteFonts[i].mIndex = score;
+    }
+  }
+  
+  // if its ok to look for the second best, and we did not find a perfect match
+  score = 32000;
+  if((PR_FALSE == aPrimaryOnly)&&(curIndex !=0)) {
+    for(i=0;i<NUM_AFM_FONTS;i++){
+      if((gSubstituteFonts[i].mIndex>0) && (gSubstituteFonts[i].mIndex<score)){
+        score = gSubstituteFonts[i].mIndex;
+        curIndex = i;
+      }   
+    }
+  }
+
+
+  if(curIndex>=0){
+    mPSFontInfo = new AFMFontInformation;
+    memset(mPSFontInfo,0,sizeof(AFMFontInformation));
+    
+    memcpy(mPSFontInfo,(gSubstituteFonts[curIndex].mFontInfo),sizeof(AFMFontInformation));
+    mPSFontInfo->mAFMCharMetrics = new AFMscm[mPSFontInfo->mNumCharacters];
+    memset(mPSFontInfo->mAFMCharMetrics,0,sizeof(AFMscm)*mPSFontInfo->mNumCharacters);
+    memcpy(mPSFontInfo->mAFMCharMetrics,gSubstituteFonts[curIndex].mCharInfo,gSubstituteFonts[curIndex].mFontInfo->mNumCharacters*sizeof(AFMscm));
+    ourfont = curIndex;
+  }
+  
+  return ourfont;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsAFMParser.h
+ *	@update 2/25/99 dwc
+ */
+PRInt16
+nsAFMObject::CreateSubstituteFont(const nsFont &aFontName)
+{
+PRInt16     ourfont = 0;
 
   mPSFontInfo = new AFMFontInformation;
-  fontinfo = mPSFontInfo;
+  memset(mPSFontInfo,0,sizeof(AFMFontInformation));
 
-  // Open the file
-  mAFMFile = fopen("hv.afm","r");
+  // put in default AFM data, can't find the correct AFM file
+  memcpy(mPSFontInfo,&Times_RomanAFM,sizeof(AFMFontInformation));
+  mPSFontInfo->mAFMCharMetrics = new AFMscm[mPSFontInfo->mNumCharacters];
+  memset(mPSFontInfo->mAFMCharMetrics,0,sizeof(AFMscm)*mPSFontInfo->mNumCharacters);
+  memcpy(mPSFontInfo->mAFMCharMetrics,AFMTimes_RomanChars,Times_RomanAFM.mNumCharacters*sizeof(AFMscm));
+  return ourfont;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsAFMParser.h
+ *	@update 2/25/99 dwc
+ */
+PRBool
+nsAFMObject::AFM_ReadFile(const nsFont &aFontName)
+{
+PRBool  done=PR_FALSE;
+PRBool  success = PR_FALSE;
+PRBool  bvalue;
+AFMKey  key;
+double  value;
+PRInt32 ivalue;
+char    *AFMFileName;     // file we will open
+
+
+  AFMFileName = aFontName.name.ToNewCString();
   
+  // Open the file
+  mAFMFile = fopen(AFMFileName,"r");
+
   if(nsnull != mAFMFile) {
+    // create the structure to put the information in
+    mPSFontInfo = new AFMFontInformation;
+    memset(mPSFontInfo,0,sizeof(AFMFontInformation));
+
     // Check for valid AFM file
     GetKey(&key);
     if(key == kStartFontMetrics){
-      GetAFMNumber(&fontinfo->mFontVersion);
+      GetAFMNumber(&mPSFontInfo->mFontVersion);
 
       while(!done){
         GetKey(&key);
@@ -183,7 +306,7 @@ AFMFontInformation  *fontinfo;
             GetLine();
             break;
           case kStartFontMetrics:
-            GetAFMNumber(&fontinfo->mFontVersion);
+            GetAFMNumber(&mPSFontInfo->mFontVersion);
             break;
           case kEndFontMetrics:
             done = PR_TRUE;
@@ -194,77 +317,77 @@ AFMFontInformation  *fontinfo;
           case kEndMasterFontMetrics:
             break;
           case kFontName:
-            fontinfo->mFontName = GetAFMString();
+            mPSFontInfo->mFontName = GetAFMString();
             break;
           case kFullName:
-            fontinfo->mFullName = GetAFMString();
+            mPSFontInfo->mFullName = GetAFMString();
             break;
           case kFamilyName:
-            fontinfo->mFamilyName = GetAFMString();
+            mPSFontInfo->mFamilyName = GetAFMString();
             break;
           case kWeight:
-            fontinfo->mWeight = GetAFMString();
+            mPSFontInfo->mWeight = GetAFMString();
             break;
           case kFontBBox:
-            GetAFMNumber(&fontinfo->mFontBBox_llx);
-            GetAFMNumber(&fontinfo->mFontBBox_lly);
-            GetAFMNumber(&fontinfo->mFontBBox_urx);
-            GetAFMNumber(&fontinfo->mFontBBox_ury);
+            GetAFMNumber(&mPSFontInfo->mFontBBox_llx);
+            GetAFMNumber(&mPSFontInfo->mFontBBox_lly);
+            GetAFMNumber(&mPSFontInfo->mFontBBox_urx);
+            GetAFMNumber(&mPSFontInfo->mFontBBox_ury);
             break;
           case kVersion:
-            fontinfo->mVersion = GetAFMString();
+            mPSFontInfo->mVersion = GetAFMString();
             break;
 	        case kNotice:
-	          fontinfo->mNotice = GetAFMString();
+	          mPSFontInfo->mNotice = GetAFMString();
             // we really dont want to keep this around...
-            delete [] fontinfo->mNotice;
-            fontinfo->mNotice = 0;
+            delete [] mPSFontInfo->mNotice;
+            mPSFontInfo->mNotice = 0;
 	          break;
 	        case kEncodingScheme:
-	          fontinfo->mEncodingScheme = GetAFMString();
+	          mPSFontInfo->mEncodingScheme = GetAFMString();
 	          break;
 	        case kMappingScheme:
-	          GetAFMInt(&fontinfo->mMappingScheme);
+	          GetAFMInt(&mPSFontInfo->mMappingScheme);
 	          break;
 	        case kEscChar:
-	          GetAFMInt(&fontinfo->mEscChar);
+	          GetAFMInt(&mPSFontInfo->mEscChar);
 	          break;
 	        case kCharacterSet:
-	          fontinfo->mCharacterSet = GetAFMString();
+	          mPSFontInfo->mCharacterSet = GetAFMString();
 	          break;
 	        case kCharacters:
-	          GetAFMInt(&fontinfo->mCharacters);
+	          GetAFMInt(&mPSFontInfo->mCharacters);
 	          break;
 	        case kIsBaseFont:
-	          GetAFMBool (&fontinfo->mIsBaseFont);
+	          GetAFMBool (&mPSFontInfo->mIsBaseFont);
 	          break;
 	        case kVVector:
-	          GetAFMNumber(&fontinfo->mVVector_0);
-	          GetAFMNumber(&fontinfo->mVVector_1);
+	          GetAFMNumber(&mPSFontInfo->mVVector_0);
+	          GetAFMNumber(&mPSFontInfo->mVVector_1);
 	          break;
 	        case kIsFixedV:
-	          GetAFMBool (&fontinfo->mIsFixedV);
+	          GetAFMBool (&mPSFontInfo->mIsFixedV);
 	          break;
 	        case kCapHeight:
-	          GetAFMNumber(&fontinfo->mCapHeight);
+	          GetAFMNumber(&mPSFontInfo->mCapHeight);
 	          break;
 	        case kXHeight:
-	          GetAFMNumber(&fontinfo->mXHeight);
+	          GetAFMNumber(&mPSFontInfo->mXHeight);
 	          break;
 	        case kAscender:
-	          GetAFMNumber(&fontinfo->mAscender);
+	          GetAFMNumber(&mPSFontInfo->mAscender);
 	          break;
 	        case kDescender:
-	          GetAFMNumber(&fontinfo->mDescender);
+	          GetAFMNumber(&mPSFontInfo->mDescender);
 	          break;
 	        case kStartDirection:
 	          GetAFMInt(&ivalue);
 	          break;
 	        case kUnderlinePosition:
-	          GetAFMNumber(&fontinfo->mUnderlinePosition);
+	          GetAFMNumber(&mPSFontInfo->mUnderlinePosition);
 	          break;
 	        case kUnderlineThickness:
-	          GetAFMNumber(&fontinfo->mUnderlineThickness);
+	          GetAFMNumber(&mPSFontInfo->mUnderlineThickness);
 	          break;
 	        case kItalicAngle:
 	          GetAFMNumber(&value);
@@ -279,9 +402,10 @@ AFMFontInformation  *fontinfo;
 	        case kEndDirection:
 	          break;
 	        case kStartCharMetrics:
-	          GetAFMInt(&ivalue);     // number of charaters that follow
-            fontinfo->AFMCharMetrics = new AFMscm[ivalue];
-	          ReadCharMetrics (fontinfo,ivalue);
+	          GetAFMInt(&mPSFontInfo->mNumCharacters);     // number of charaters that follow
+            mPSFontInfo->mAFMCharMetrics = new AFMscm[mPSFontInfo->mNumCharacters];
+            memset(mPSFontInfo->mAFMCharMetrics,0,sizeof(AFMscm)*mPSFontInfo->mNumCharacters);
+	          ReadCharMetrics (mPSFontInfo,mPSFontInfo->mNumCharacters);
 	          break;
 	        case kStartKernData:
 	          break;
@@ -291,7 +415,17 @@ AFMFontInformation  *fontinfo;
       }
     }
   fclose(mAFMFile);
+  success = PR_TRUE;
+  } else {
+  // put in default AFM data, can't find the correct AFM file
+  //memcpy(mPSFontInfo,&HelveticaAFM,sizeof(AFMFontInformation));
+ // mPSFontInfo->mAFMCharMetrics = new AFMscm[mPSFontInfo->mNumCharacters];
+  //memset(mPSFontInfo->mAFMCharMetrics,0,sizeof(AFMscm)*mPSFontInfo->mNumCharacters);
+  //memcpy(mPSFontInfo->mAFMCharMetrics,AFMHelveticaChars,HelveticaAFM.mNumCharacters*sizeof(AFMscm));
   }
+
+  delete [] AFMFileName;
+  return(success);
 }
 
 /** ---------------------------------------------------
@@ -360,9 +494,9 @@ PRBool  found = PR_FALSE;
 PRInt32
 nsAFMObject::GetToken()
 {
-PRInt32 ch;
-PRInt32 i;
-PRInt32  len;
+PRInt32   ch;
+PRInt32   i;
+PRInt32   len;
 
   // skip leading whitespace
   while((ch=getc(mAFMFile)) != EOF) {
@@ -376,9 +510,9 @@ PRInt32  len;
   ungetc(ch,mAFMFile);
 
   // get name
-  for(i=0,ch=getc(mAFMFile);i<sizeof(mToken) && ch!=EOF && !ISSPACE(ch);i++,ch=getc(mAFMFile)){
-    len = (PRInt32)sizeof(mToken);
-    mToken[i] = ch;
+  len = (PRInt32)sizeof(mToken);
+  for(i=0,ch=getc(mAFMFile);i<len && ch!=EOF && !ISSPACE(ch);i++,ch=getc(mAFMFile)){
+      mToken[i] = ch;
   }
 
   // is line longer than the AFM specifications
@@ -458,6 +592,8 @@ PRInt32 i = 0,ivalue,first=1;
 AFMscm  *cm = NULL;
 AFMKey  key;
 PRBool  done = PR_FALSE;
+double  notyet;
+char    *name;
 
   while (done!=PR_TRUE && i<aNumCharacters){
     GetKey (&key);
@@ -473,7 +609,7 @@ PRBool  done = PR_FALSE;
           //parse_error (handle, AFM_ERROR_SYNTAX);
         }
 
-        cm = &(aFontInfo->AFMCharMetrics[i]);
+        cm = &(aFontInfo->mAFMCharMetrics[i]);
         // character code
         GetAFMInt(&ivalue);          // character code
         cm->mCharacter_Code = ivalue;
@@ -511,11 +647,15 @@ PRBool  done = PR_FALSE;
         GetAFMNumber(&(cm->mW1y));
         break;
       case kVV:
-        GetAFMNumber(&(cm->mVv_x));
-        GetAFMNumber(&(cm->mVv_y));
+        //GetAFMNumber(&(cm->mVv_x));
+        //GetAFMNumber(&(cm->mVv_y));
+        GetAFMNumber(&notyet);
+        GetAFMNumber(&notyet);
         break;
       case kN:
-        cm->mName = GetAFMName();
+        //cm->mName = GetAFMName();
+        name = GetAFMName();
+        delete [] name;
         break;
 
       case kB:
@@ -576,50 +716,132 @@ char    *thestring;
 
 /** ---------------------------------------------------
  *  See documentation in nsAFMParser.h
- *	@update 2/1/99 dwc
+ *	@update 2/01/99 dwc
  */
 void
 nsAFMObject :: GetStringWidth(const char *aString,nscoord& aWidth,nscoord aLength)
 {
 char    *cptr;
 PRInt32 i,fwidth,index;
-PRInt32 totallen=0;
+float   totallen=0.0f;
 
+  // add up the length of the character widths, in floating to avoid roundoff
   aWidth = 0;
   cptr = (char*) aString;
-
   for(i=0;i<aLength;i++,cptr++){
     index = *cptr-32;
-    fwidth = mPSFontInfo->AFMCharMetrics[index].mW0x;
-    totallen += (fwidth*mFontHeight)/1000;
+    fwidth = (PRInt32)(mPSFontInfo->mAFMCharMetrics[index].mW0x);
+    totallen += fwidth;
   }
 
-  aWidth = totallen;
+  // total length is in points, so convert to twips, divide by the 1000 scaling of the
+  // afm measurements, and round the result.
+  totallen = NSFloatPointsToTwips(totallen * mFontHeight)/1000.0f;
+
+  aWidth = NSToIntRound(totallen);
 }
 
 
 /** ---------------------------------------------------
  *  See documentation in nsAFMParser.h
- *	@update 2/1/99 dwc
+ *	@update 2/01/99 dwc
  */
 void
 nsAFMObject :: GetStringWidth(const PRUnichar *aString,nscoord& aWidth,nscoord aLength)
 {
-PRUint8       asciichar;
-PRUnichar     *cptr;
-PRInt32       i ,fwidth,index;
-PRInt32       totallen=0;
+PRUint8   asciichar;
+PRUnichar *cptr;
+PRInt32   i ,fwidth,index;
+float     totallen=0.0f;
 
- //XXX This is not handle correctly yet!!  DWC
-  aWidth = 0;
+ //XXX This needs to get the aString converted to a normal cstring  DWC
+ aWidth = 0;
  cptr = (PRUnichar*)aString;
 
   for(i=0;i<aLength;i++,cptr++){
     asciichar = (*cptr)&0x00ff;
     index = asciichar-32;
-    fwidth = mPSFontInfo->AFMCharMetrics[index].mW0x;
-    totallen += (fwidth*mFontHeight)/1000;
+    fwidth = (PRInt32)(mPSFontInfo->mAFMCharMetrics[index].mW0x);
+    totallen += fwidth;
   }
 
-  aWidth = totallen;
+  totallen = NSFloatPointsToTwips(totallen * mFontHeight)/1000.0f;
+  aWidth = NSToIntRound(totallen);
 }
+
+
+
+#define CORRECTSTRING(d)  (d?d:"")
+#define BOOLOUT(B)        (mPSFontInfo->mIsBaseFont==PR_TRUE?"PR_TRUE":"PR_FALSE")
+
+/** ---------------------------------------------------
+ *  See documentation in nsAFMParser.h
+ *	@update 3/05/99 dwc
+ */
+void    
+nsAFMObject :: WriteFontHeaderInformation(FILE *aOutFile)
+{
+
+  // main information of the font
+  fprintf(aOutFile,"%f,\n",mPSFontInfo->mFontVersion);
+  fprintf(aOutFile,"\"%s\",\n",CORRECTSTRING(mPSFontInfo->mFontName));
+  fprintf(aOutFile,"\"%s\",\n",CORRECTSTRING(mPSFontInfo->mFullName));
+  fprintf(aOutFile,"\"%s\",\n",CORRECTSTRING(mPSFontInfo->mFamilyName));
+  fprintf(aOutFile,"\"%s\",\n",CORRECTSTRING(mPSFontInfo->mWeight));
+  fprintf(aOutFile,"%f,\n",mPSFontInfo->mFontBBox_llx);
+  fprintf(aOutFile,"%f,\n",mPSFontInfo->mFontBBox_lly);
+  fprintf(aOutFile,"%f,\n",mPSFontInfo->mFontBBox_urx);
+  fprintf(aOutFile,"%f,\n",mPSFontInfo->mFontBBox_ury);
+  fprintf(aOutFile,"\"%s\",\n",CORRECTSTRING(mPSFontInfo->mVersion));
+  fprintf(aOutFile,"\"%s\",\n",CORRECTSTRING(mPSFontInfo->mNotice));
+  fprintf(aOutFile,"\"%s\",\n",CORRECTSTRING(mPSFontInfo->mEncodingScheme));
+  fprintf(aOutFile,"%ld,\n",mPSFontInfo->mMappingScheme);
+  fprintf(aOutFile,"%ld,\n",mPSFontInfo->mEscChar);
+  fprintf(aOutFile,"\"%s\",\n", CORRECTSTRING(mPSFontInfo->mCharacterSet));
+  fprintf(aOutFile,"%ld,\n",mPSFontInfo->mCharacters);
+  fprintf(aOutFile,"%s,\n",BOOLOUT(mPSFontInfo->mIsBaseFont));
+  fprintf(aOutFile,"%f,\n",mPSFontInfo->mVVector_0);
+  fprintf(aOutFile,"%f,\n",mPSFontInfo->mVVector_1);
+  fprintf(aOutFile,"%s,\n",BOOLOUT(mPSFontInfo->mIsFixedV));
+  fprintf(aOutFile,"%f,\n",mPSFontInfo->mCapHeight);
+  fprintf(aOutFile,"%f,\n",mPSFontInfo->mXHeight);
+  fprintf(aOutFile,"%f,\n",mPSFontInfo->mAscender);
+  fprintf(aOutFile,"%f,\n",mPSFontInfo->mDescender);
+  fprintf(aOutFile,"%f,\n",mPSFontInfo->mUnderlinePosition);
+  fprintf(aOutFile,"%f,\n",mPSFontInfo->mUnderlineThickness);
+  fprintf(aOutFile,"%ld\n",mPSFontInfo->mNumCharacters);
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsAFMParser.h
+ *	@update 3/05/99 dwc
+ */
+void    
+nsAFMObject :: WriteFontCharInformation(FILE *aOutFile)
+{
+PRInt32 i;
+
+
+  // individual font characteristics
+  for(i=0;i<mPSFontInfo->mNumCharacters;i++) {
+    fprintf(aOutFile,"{\n");
+    fprintf(aOutFile,"%ld, \n",mPSFontInfo->mAFMCharMetrics[i].mCharacter_Code);
+    fprintf(aOutFile,"%f, \n",mPSFontInfo->mAFMCharMetrics[i].mW0x);
+    fprintf(aOutFile,"%f, \n",mPSFontInfo->mAFMCharMetrics[i].mW0y);
+    fprintf(aOutFile,"%f, \n",mPSFontInfo->mAFMCharMetrics[i].mW1x);
+    fprintf(aOutFile,"%f, \n",mPSFontInfo->mAFMCharMetrics[i].mW1y);
+    //fprintf(aOutFile,"\"%s\", \n", CORRECTSTRING(mPSFontInfo->mAFMCharMetrics[i].mName));
+    //fprintf(aOutFile,"%f, \n",mPSFontInfo->mAFMCharMetrics[i].mVv_x);
+    //fprintf(aOutFile,"%f, \n",mPSFontInfo->mAFMCharMetrics[i].mVv_y);
+    fprintf(aOutFile,"%f, \n",mPSFontInfo->mAFMCharMetrics[i].mLlx);
+    fprintf(aOutFile,"%f, \n",mPSFontInfo->mAFMCharMetrics[i].mLly);
+    fprintf(aOutFile,"%f, \n",mPSFontInfo->mAFMCharMetrics[i].mUrx);
+    fprintf(aOutFile,"%f \n",mPSFontInfo->mAFMCharMetrics[i].mUry);
+    //fprintf(aOutFile,"%f, \n",mPSFontInfo->mAFMCharMetrics[i].num_ligatures);
+    fprintf(aOutFile,"}\n");
+    if ( i != mPSFontInfo->mNumCharacters - 1 )
+	fputc( ',', aOutFile ); 
+    fputc( '\n', aOutFile );
+  }
+}
+

@@ -29,6 +29,7 @@
 #include "nsRegionGTK.h"
 #include "nsDeviceContextSpecG.h"
 #include "nsDeviceContextSpecFactoryG.h" 
+#include "nsIDeviceContextSpecPS.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
@@ -146,7 +147,7 @@ nsresult nsGfxFactoryGTK::CreateInstance(nsISupports *aOuter,
   else if (mClassID.Equals(kCDeviceContextSpec)) {
     nsDeviceContextSpecGTK* dcs;
     NS_NEWXPCOM(dcs, nsDeviceContextSpecGTK);
-    inst = (nsISupports *)dcs;
+    inst = (nsISupports *)((nsIDeviceContextSpecPS *)dcs);
   }
   else if (mClassID.Equals(kCDeviceContextSpecFactory)) {
     nsDeviceContextSpecFactoryGTK* dcs;

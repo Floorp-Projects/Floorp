@@ -58,6 +58,8 @@ public:
   NS_IMETHOD  GetStringWidth(const char *String,nscoord &aWidth,nscoord aLength);
   NS_IMETHOD  GetStringWidth(const PRUnichar *aString,nscoord &aWidth,nscoord aLength);
 
+  PRInt16 GetFontIndex() { return mFontIndex; }
+
 protected:
   void RealizeFont();
 
@@ -77,6 +79,9 @@ protected:
   nscoord             mStrikeoutOffset;
   nscoord             mUnderlineSize;
   nscoord             mUnderlineOffset;
+  PRInt16             mFontIndex;
+
+public:
   nsAFMObject         *mAFMInfo;
 };
 

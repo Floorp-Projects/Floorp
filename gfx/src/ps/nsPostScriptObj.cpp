@@ -23,6 +23,7 @@
 #include "isotab.c"
 #include "nsFont.h"
 #include "nsIImage.h"
+#include "nsAFMObject.h"
 
  
 extern "C" PS_FontInfo *PSFE_MaskToFI[N_FONTS];   // need fontmetrics.c
@@ -40,92 +41,12 @@ extern "C" PS_FontInfo *PSFE_MaskToFI[N_FONTS];   // need fontmetrics.c
  */
 char* paper_string[]={ "Letter", "Legal", "Executive", "A4" };
 
-
 /** ---------------------------------------------------
  *  Default Constructor
  *	@update 2/1/99 dwc
  */
 nsPostScriptObj::nsPostScriptObj()
 {
-PrintInfo* pi = new PrintInfo();
-PrintSetup* ps = new PrintSetup();
-
-  mPrintContext = new PSContext();
-  memset(mPrintContext, 0, sizeof(struct PSContext_));
-  memset(ps, 0, sizeof(struct PrintSetup_));
-  memset(pi, 0, sizeof(struct PrintInfo_));
- 
-  ps->top = 0;                      // Margins  (PostScript Only) 
-  ps->bottom = 0;
-  ps->left = 0;
-  ps->right = 0;
-  ps->width = PAGE_WIDTH;           // Paper size, # of cols for text xlate 
-  ps->height = PAGE_HEIGHT;
-  ps->header = "header";
-  ps->footer = "footer";
-  ps->sizes = NULL;
-  ps->reverse = 0;                  // Output order, 0 is acsending 
-  ps->color = TRUE;                 // Image output 
-  ps->deep_color = TRUE;            // 24 bit color output 
-  ps->landscape = FALSE;            // Rotated output 
-  ps->underline = TRUE;             // underline links 
-  ps->scale_images = TRUE;          // Scale unsized images which are too big 
-  ps->scale_pre = FALSE;		        // do the pre-scaling thing 
-  ps->dpi = 72.0f;                  // dpi for externally sized items 
-  ps->rules = 1.0f;			            // Scale factor for rulers 
-  ps->n_up = 0;                     // cool page combining 
-  ps->bigger = 1;                   // Used to init sizes if sizesin NULL 
-  ps->paper_size = NS_LEGAL_SIZE;   // Paper Size(letter,legal,exec,a4) 
-  ps->prefix = "";                  // For text xlate, prepended to each line 
-  ps->eol = "";			                // For text translation, line terminator 
-  ps->bullet = "+";                 // What char to use for bullets 
-
-  URL_Struct_* url = new URL_Struct_;
-  memset(url, 0, sizeof(URL_Struct_));
-  ps->url = url;                    // url of doc being translated 
-  char filename[30];
-  static char g_nsPostscriptFileCount = 0;    //('a');
-  char ext[30];
-  sprintf(ext,"%d",g_nsPostscriptFileCount);
-  sprintf(filename,"file%s.ps", ext); 
-  g_nsPostscriptFileCount++;
-  ps->out = fopen(filename , "w");  // Where to send the output 
-  ps->filename = filename;          // output file name, if any 
-  ps->completion = NULL;            // Called when translation finished 
-  ps->carg = NULL;                  // Data saved for completion routine 
-  ps->status = 0;                   // Status of URL on completion 
-	                                  // "other" font is for encodings other than iso-8859-1 
-  ps->otherFontName[0] = NULL;		   
-  				                          // name of "other" PostScript font 
-  ps->otherFontInfo[0] = NULL;	   
-  // font info parsed from "other" afm file 
-  ps->otherFontCharSetID = 0;	      // charset ID of "other" font 
-  //ps->cx = NULL;                  // original context, if available 
-
-  pi->page_height=PAGE_HEIGHT * 10;	// Size of printable area on page 
-  pi->page_width = PAGE_WIDTH * 10;	// Size of printable area on page 
-  pi->page_break = 0;	              // Current page bottom 
-  pi->page_topy = 0;	              // Current page top 
-  pi->phase = 0;
-
- 
-  pi->pages=NULL;		                // Contains extents of each page 
-
-  pi->pt_size = 0;		              // Size of above table 
-  pi->n_pages = 0;	        	      // # of valid entries in above table 
-
-  pi->doc_title="Test Title";	      // best guess at title 
-  pi->doc_width = 0;	              // Total document width 
-  pi->doc_height = 0;	              // Total document height 
-
-  mPrintContext->prInfo = pi;
-
-  // begin the document
-  initialize_translation(ps);
-
-  begin_document();	
-  mPrintSetup = ps;
-  mPageNumber = 1;                  // we are on the first page
 }
 
 /** ---------------------------------------------------
@@ -134,13 +55,13 @@ PrintSetup* ps = new PrintSetup();
  */
 nsPostScriptObj::~nsPostScriptObj()
 {
-
   // end the document
   end_document();
-
   finalize_translation();
-
-
+  if ( mPrintSetup->filename != (char *) NULL )
+	fclose( mPrintSetup->out );
+  else
+	pclose( mPrintSetup->out );
   // Cleanup things allocated along the way
   if (nsnull != mPrintContext){
     if (nsnull != mPrintContext->prInfo){
@@ -161,11 +82,123 @@ nsPostScriptObj::~nsPostScriptObj()
  *  See documentation in nsPostScriptObj.h
  *	@update 2/1/99 dwc
  */
+nsresult 
+nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
+{
+  PrintInfo* pi = new PrintInfo();
+  PRBool isGray, isAPrinter, isFirstPageFirst;
+  int printSize;
+  char *buf;
+  
+  mPrintSetup = new PrintSetup();
+  memset(mPrintSetup, 0, sizeof(struct PrintSetup_));
+
+  mPrintSetup->color = PR_TRUE;              // Image output 
+  mPrintSetup->deep_color = PR_TRUE;         // 24 bit color output 
+  mPrintSetup->paper_size = NS_LEGAL_SIZE;   // Paper Size(letter,legal,exec,a4)
+  mPrintSetup->reverse = 0;                  // Output order, 0 is acsending 
+  if ( aSpec != nsnull ) {
+    aSpec->GetGrayscale( isGray );
+    if ( isGray == PR_TRUE ) {
+      mPrintSetup->color = PR_FALSE; 
+      mPrintSetup->deep_color = PR_FALSE; 
+    }
+    aSpec->GetFirstPageFirst( isFirstPageFirst );
+    if ( isFirstPageFirst == PR_FALSE )
+      mPrintSetup->reverse = 1;
+    aSpec->GetSize( printSize );
+    mPrintSetup->paper_size = printSize;
+    aSpec->GetToPrinter( isAPrinter );
+    if ( isAPrinter == PR_TRUE ) {
+      aSpec->GetCommand( &buf );
+      mPrintSetup->out = popen( buf, "w" );
+      mPrintSetup->filename = (char *) NULL;  
+    } else {
+      aSpec->GetPath( &buf );
+      mPrintSetup->filename = buf;          
+      mPrintSetup->out = fopen(mPrintSetup->filename, "w");  
+    }
+  } else 
+      return NS_ERROR_FAILURE;
+
+  /* make sure the open worked */
+
+  if ( mPrintSetup->out < 0 )
+    return NS_ERROR_FAILURE;
+  mPrintContext = new PSContext();
+  memset(mPrintContext, 0, sizeof(struct PSContext_));
+  memset(pi, 0, sizeof(struct PrintInfo_));
+ 
+  mPrintSetup->top = 32;                      // Margins  (PostScript Only) 
+  mPrintSetup->bottom = 0;
+  mPrintSetup->left = 32;
+  mPrintSetup->right = 0;
+  mPrintSetup->width = PAGE_WIDTH;           // Paper size, # of cols for text xlate 
+  mPrintSetup->height = PAGE_HEIGHT;
+  mPrintSetup->header = "header";
+  mPrintSetup->footer = "footer";
+  mPrintSetup->sizes = NULL;
+  mPrintSetup->landscape = FALSE;            // Rotated output 
+  mPrintSetup->underline = TRUE;             // underline links 
+  mPrintSetup->scale_images = TRUE;          // Scale unsized images which are too big 
+  mPrintSetup->scale_pre = FALSE;		        // do the pre-scaling thing 
+  mPrintSetup->dpi = 72.0f;                  // dpi for externally sized items 
+  mPrintSetup->rules = 1.0f;			            // Scale factor for rulers 
+  mPrintSetup->n_up = 0;                     // cool page combining 
+  mPrintSetup->bigger = 1;                   // Used to init sizes if sizesin NULL 
+  mPrintSetup->prefix = "";                  // For text xlate, prepended to each line 
+  mPrintSetup->eol = "";			    // For text translation, line terminator 
+  mPrintSetup->bullet = "+";                 // What char to use for bullets 
+
+  URL_Struct_* url = new URL_Struct_;
+  memset(url, 0, sizeof(URL_Struct_));
+  mPrintSetup->url = url;                    // url of doc being translated 
+  mPrintSetup->completion = NULL;            // Called when translation finished 
+  mPrintSetup->carg = NULL;                  // Data saved for completion routine 
+  mPrintSetup->status = 0;                   // Status of URL on completion 
+	                                  // "other" font is for encodings other than iso-8859-1 
+  mPrintSetup->otherFontName[0] = NULL;		   
+  				                          // name of "other" PostScript font 
+  mPrintSetup->otherFontInfo[0] = NULL;	   
+  // font info parsed from "other" afm file 
+  mPrintSetup->otherFontCharSetID = 0;	      // charset ID of "other" font 
+  //mPrintSetup->cx = NULL;                  // original context, if available 
+
+  pi->page_height=PAGE_HEIGHT * 10;	// Size of printable area on page 
+  pi->page_width = PAGE_WIDTH * 10;	// Size of printable area on page 
+  pi->page_break = 0;	              // Current page bottom 
+  pi->page_topy = 0;	              // Current page top 
+  pi->phase = 0;
+
+ 
+  pi->pages=NULL;		                // Contains extents of each page 
+
+  pi->pt_size = 0;		              // Size of above table 
+  pi->n_pages = 0;	        	      // # of valid entries in above table 
+
+  pi->doc_title="Test Title";	      // best guess at title 
+  pi->doc_width = 0;	              // Total document width 
+  pi->doc_height = 0;	              // Total document height 
+
+  mPrintContext->prInfo = pi;
+
+  // begin the document
+  initialize_translation(mPrintSetup);
+
+  begin_document();	
+  mPageNumber = 1;                  // we are on the first page
+  return NS_OK;
+}
+
+/** ---------------------------------------------------
+ *  See documentation in nsPostScriptObj.h
+ *	@update 2/1/99 dwc
+ */
 void 
 nsPostScriptObj::finalize_translation()
 {
-    XP_DELETE(mPrintContext->prSetup);
-    mPrintContext->prSetup = NULL;
+  XP_DELETE(mPrintContext->prSetup);
+  mPrintContext->prSetup = NULL;
 }
 
 /** ---------------------------------------------------
@@ -257,7 +290,9 @@ char* charset_name = NULL;
   }
 
   XP_FilePrintf(f, "] /isolatin1encoding exch def\n");
-    
+
+#ifdef OLDFONTS
+  // output the fonts supported here    
   for (i = 0; i < N_FONTS; i++){
     XP_FilePrintf(f, 
 	          "/F%d\n"
@@ -279,6 +314,26 @@ char* charset_name = NULL;
             //XP_FilePrintf(f, "/of /of1;\n", mPrintContext->prSetup->otherFontName); 
     }
   }
+#else
+  for(i=0;i<NUM_AFM_FONTS;i++){
+    XP_FilePrintf(f, 
+	          "/F%d\n"
+	          "    /%s findfont\n"
+	          "    dup length dict begin\n"
+	          "	{1 index /FID ne {def} {pop pop} ifelse} forall\n"
+	          "	/Encoding isolatin1encoding def\n"
+	          "    currentdict end\n"
+	          "definefont pop\n"
+	          "/f%d { /F%d findfont exch scalefont setfont } bind def\n",
+		        i, gSubstituteFonts[i].mPSName, i, i);
+
+  }
+#endif
+
+
+
+
+
 
   XP_FilePrintf(f, "/rhc {\n");
   XP_FilePrintf(f, "    {\n");
@@ -409,7 +464,6 @@ nsPostScriptObj::end_document()
 {
   XP_FilePrintf(mPrintContext->prSetup->out, "%%%%EOF\n");
 }
-
 
 /** ---------------------------------------------------
  *  See documentation in nsPostScriptObj.h
@@ -687,7 +741,7 @@ nsPostScriptObj::fill()
 void
 nsPostScriptObj::graphics_save()
 {
-   XP_FilePrintf(mPrintContext->prSetup->out, " gsave \n");
+  XP_FilePrintf(mPrintContext->prSetup->out, " gsave \n");
 }
 
 /** ---------------------------------------------------
@@ -791,20 +845,29 @@ nsPostScriptObj::setcolor(nscolor aColor)
  *	@update 2/1/98 dwc
  */
 void 
-nsPostScriptObj::setscriptfont(nscoord aHeight, PRUint8 aStyle, 
+nsPostScriptObj::setscriptfont(PRInt16 aFontIndex,const nsString &aFamily,nscoord aHeight, PRUint8 aStyle, 
 											 PRUint8 aVariant, PRUint16 aWeight, PRUint8 decorations)
 {
 int postscriptFont = 0;
 
   XP_FilePrintf(mPrintContext->prSetup->out,"%d",NS_TWIPS_TO_POINTS(aHeight));
 	
+  
+  if( aFontIndex >= 0) {
+    postscriptFont = aFontIndex;
+  } else {
+    postscriptFont = 0;
+  }
+
+
+#ifdef NOTNOW
   //XXX:PS Add bold, italic and other settings here
 	switch(aStyle){
 	  case NS_FONT_STYLE_NORMAL :
 		  if (NS_IS_BOLD(aWeight)) {
 		    postscriptFont = 1;   // NORMAL BOLD
       }else{
-	        postscriptFont = 0; // NORMAL
+        postscriptFont = 0; // Times Normal
 		  }
 	  break;
 
@@ -818,12 +881,13 @@ int postscriptFont = 0;
 
 	  case NS_FONT_STYLE_OBLIQUE:
 		  if (NS_IS_BOLD(aWeight)) {	
-	        postscriptFont = 7;   // COURIER-BOLD OBLIQUE
+        postscriptFont = 7;   // COURIER-BOLD OBLIQUE
       }else{	
-	        postscriptFont = 6;   // COURIER OBLIQUE
+        postscriptFont = 6;   // COURIER OBLIQUE
 		  }
 	    break;
 	}
+#endif
 
 	 XP_FilePrintf(mPrintContext->prSetup->out, " f%d\n", postscriptFont);
 
