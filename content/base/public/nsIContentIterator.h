@@ -68,6 +68,18 @@ public:
    */
   NS_IMETHOD IsDone()=0;
 
+  /** PositionAt will position the iterator to the supplied node
+   */
+  NS_IMETHOD PositionAt(nsIContent* aCurNode)=0;
+
+  /** MakePre will make the iterator a pre-order iterator
+   */
+  NS_IMETHOD MakePre()=0;
+
+  /** MakePost will make the iterator a post-order iterator
+   */
+  NS_IMETHOD MakePost()=0;
+
 };
 
 
