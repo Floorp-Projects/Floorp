@@ -683,7 +683,7 @@ AC_HEADER_TIME
 dnl the unistd.h check is redundant, because AC_FUNC_MMAP already does it.
 dnl AC_CHECK_HEADERS(fcntl.h limits.h malloc.h paths.h strings.h unistd.h)
 AC_CHECK_HEADERS(fcntl.h limits.h malloc.h paths.h strings.h)
-AC_CHECK_HEADERS(sys/bittypes.h sys/file.h sys/ioctl.h sys/time.h)
+AC_CHECK_HEADERS(sys/bittypes.h sys/byteorder.h sys/file.h sys/ioctl.h sys/time.h)
 AC_CHECK_HEADERS(getopt.h ioctl.h filio.h systeminfo.h compat.h)
 
 dnl These are all the places some variant of statfs can be hiding.
