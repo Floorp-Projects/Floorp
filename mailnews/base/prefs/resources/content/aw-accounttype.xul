@@ -28,11 +28,13 @@ Rights Reserved.
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     class="dialog"
     onload="parent.wizardManager.onPageLoad('accounttype');"
+    orient="vertical"
     onunload="onUnload();">
 
-<script src="aw-accounttype.js"/>
-<box align="vertical" style="width: 100%; height: 100%" flex="100%">
-  <box type="largeheader" value="&accountTypeTitle.label;"/>
+  <script src="aw-accounttype.js"/>
+  <text value="before"/>
+  <box class="box-header" value="&accountTypeTitle.label;"/>
+  <text value="after"/>
 
   <html class="desc">&accountTypeDesc.label;</html>
   <spring class="spacer"/>
@@ -68,6 +70,5 @@ Rights Reserved.
     <html:input type="radio" name="acctyperadio" id="newsaccount" value="news"/>
     <html:label for="newsaccount">&accountTypeNews.label;</html:label>
   </box>
-</box>
 </box>
 </window>

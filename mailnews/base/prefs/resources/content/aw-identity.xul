@@ -33,7 +33,7 @@ Rights Reserved.
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
 <script language="JavaScript" src="chrome://messenger/content/aw-identity.js"/> 
 
-  <box type="largeheader" value="&identityTitle.label;"/>
+  <box class="box-header" value="&identityTitle.label;"/>
   <html>&identityDesc.label;</html>
 
   <spring class="spacer"/>
