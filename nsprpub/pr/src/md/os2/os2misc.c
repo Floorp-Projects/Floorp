@@ -122,7 +122,6 @@ static int assembleCmdLine(char *const *argv, char **cmdLine)
     int cmdLineSize;
     int numBackslashes;
     int i;
-    int argNeedQuotes;
 
     /*
      * Find out how large the command line buffer should be.
@@ -138,7 +137,6 @@ static int assembleCmdLine(char *const *argv, char **cmdLine)
          * of command line.
          */
         cmdLineSize += 2 * strlen(*arg)  /* \ and " need to be escaped */
-                + 2                      /* we quote every argument */
                 + 4;                     /* space in between, or final nulls */
     }
     p = *cmdLine = PR_MALLOC(cmdLineSize);
@@ -153,16 +151,7 @@ static int assembleCmdLine(char *const *argv, char **cmdLine)
         }
         q = *arg;
         numBackslashes = 0;
-        argNeedQuotes = 0;
 
-        /* If the argument contains white space, it needs to be quoted. */
-        if (strpbrk(*arg, " \f\n\r\t\v")) {
-            argNeedQuotes = 1;
-        }
-
-        if (argNeedQuotes) {
-            *p++ = '"';
-        }
         while (*q) {
             if (*q == '\\') {
                 numBackslashes++;
@@ -198,19 +187,9 @@ static int assembleCmdLine(char *const *argv, char **cmdLine)
 
         /* Now we are at the end of this argument */
         if (numBackslashes) {
-            /*
-             * Double the backslashes if we have a quote string
-             * delimiter at the end.
-             */
-            if (argNeedQuotes) {
-                numBackslashes *= 2;
-            }
             for (i = 0; i < numBackslashes; i++) {
                 *p++ = '\\';
             }
-        }
-        if (argNeedQuotes) {
-            *p++ = '"';
         }
         if(arg == argv)
            *p++ = ' ';
