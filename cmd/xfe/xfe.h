@@ -405,6 +405,8 @@ extern void fe_HistoryItemAction (Widget, XEvent *, String *, Cardinal *);
 extern MWContext * fe_findcommand_context();
 extern void fe_unset_findcommand_context();
 extern void fe_FindDialog (MWContext *context, Boolean really_do_it_p);
+extern void fe_FindAndReplaceDialog (MWContext *context,
+                                     Boolean really_do_it_p);
 extern void fe_FindReset (MWContext *context);
 extern void fe_PrintDialog (MWContext *context);
 extern void fe_Print (MWContext *context, URL_Struct *url,
@@ -722,10 +724,13 @@ typedef struct
   MWContext *context_to_find;	/* used for which frame cell to find in. */
   Boolean find_in_headers;
   Boolean case_sensitive_p, backward_p;
+  Boolean replace_all;
   char *string;
   Widget shell, text, case_sensitive, backward, msg_head, msg_body;
   LO_Element *start_element, *end_element;
   int32 start_pos, end_pos;
+  char *replace_string;
+  Widget replace_text;
 } fe_FindData;
 
 

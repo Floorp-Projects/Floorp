@@ -1169,7 +1169,7 @@ fe_EditorFind(MWContext* context)
 
     fe_UserActivity(top_context);
 
-    fe_FindDialog(top_context, False);
+    fe_FindAndReplaceDialog(top_context, False);
 }
 
 Boolean
@@ -1198,7 +1198,7 @@ fe_EditorFindAgain(MWContext* context)
     find_data = CONTEXT_DATA(top_context)->find_data;
 
   if (fe_EditorCanFindAgain(top_context))
-      fe_FindDialog(top_context, TRUE);
+      fe_FindAndReplaceDialog(top_context, TRUE);
   else
       fe_Bell(context);
 }

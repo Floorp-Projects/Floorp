@@ -82,6 +82,7 @@ CPPSRCS		= \
 		  DownloadFrame.cpp \
 		  DragDrop.cpp \
 		  EditHdrDialog.cpp \
+		  FindDialog.cpp \
 		  FrameListMenu.cpp \
 		  Frame.cpp \
 		  HTMLDialogFrame.cpp \
