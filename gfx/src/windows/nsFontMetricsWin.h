@@ -163,9 +163,12 @@ public:
 
   nscoord             mSpaceWidth;
 
+  static PRUint32*    gEmptyMap;
   static PLHashTable* gFontMaps;
   static nsGlobalFont* gGlobalFonts;
   static int gGlobalFontsCount;
+  static PLHashTable* gFamilyNames;
+  static PLHashTable* gFontWeights;
 
   static nsGlobalFont* InitializeGlobalFonts(HDC aDC);
 
@@ -223,8 +226,6 @@ protected:
   HFONT               mFontHandle;
 
   static PLHashTable* InitializeFamilyNames(void);
-  static PLHashTable* gFamilyNames;
-  static PLHashTable* gFontWeights;
 
   static PRUint32* GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUint8* aCharset);
 };
