@@ -237,7 +237,7 @@ pre[wrap], pre[cols], pre[width] {
   font-size: 1px;
   line-height: 0;
   content: "\A  ";
-  margin-right: 40px;
+  -moz-margin-end: 40px;
 }
 
 
@@ -245,7 +245,7 @@ pre[wrap], pre[cols], pre[width] {
 
 dl > dl {
   display: block;
-  margin-left: 40px;
+  -moz-margin-start: 40px;
 }
 
 
