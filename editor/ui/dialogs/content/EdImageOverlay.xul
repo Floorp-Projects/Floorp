@@ -124,7 +124,7 @@
       <spacer flex="1"/>
     </hbox>
     <spacer class="spacer"/>
-    <grid class="big-left-margin">
+    <grid class="indent">
       <columns><column/><column/><column flex="1"/></columns>
       <rows>
         <row align="center">
