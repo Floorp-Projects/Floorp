@@ -256,8 +256,6 @@ STDMETHODIMP nsDataObj::QueryGetData(LPFORMATETC pFE)
   PRNTDEBUG("nsDataObj::QueryGetData  ");
   PRNTDEBUG3("format: %d  Text: %d\n", pFE->cfFormat, CF_TEXT);
 
-  PRUint32 dfInx = 0;
-
   ULONG count;
   FORMATETC fe;
   m_enumFE->Reset();
@@ -653,7 +651,7 @@ HRESULT nsDataObj::GetPreferredDropEffect ( FORMATETC& aFE, STGMEDIUM& aSTG )
     // our IDataObject implementation doesn't implement SetData.  It adds data
     // to the data object lazily only when the drop target asks for it.
     *pdw = (DWORD) DROPEFFECT_MOVE;
-    BOOL status = ::GlobalUnlock(hGlobalMemory);
+    ::GlobalUnlock(hGlobalMemory);
   }
   else {
     res = E_OUTOFMEMORY;
@@ -683,7 +681,6 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
     return ResultFromScode(E_FAIL);
   nsPrimitiveHelpers::CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, len );
   HGLOBAL     hGlobalMemory = NULL;
-  PSTR        pGlobalMemory = NULL;
 
   aSTG.tymed          = TYMED_HGLOBAL;
   aSTG.pUnkForRelease = NULL;
@@ -748,7 +745,7 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
     char* dest = NS_REINTERPRET_CAST(char*, ::GlobalLock(hGlobalMemory));
     char* source = NS_REINTERPRET_CAST(char*, data);
     memcpy ( dest, source, allocLen );                         // copies the null as well
-    BOOL status = ::GlobalUnlock(hGlobalMemory);
+    ::GlobalUnlock(hGlobalMemory);
   }
   aSTG.hGlobal = hGlobalMemory;
 
@@ -801,7 +798,6 @@ HRESULT nsDataObj::GetFile(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
     aSTG.pUnkForRelease = NULL;    
     hGlobalMemory = ::GlobalAlloc(GMEM_MOVEABLE, sizeof(DROPFILES) + allocLen);
     if (hGlobalMemory) {      
-      BOOL status;
       DROPFILES* pDropFile = NS_REINTERPRET_CAST(DROPFILES*, ::GlobalLock(hGlobalMemory));
 
       // First, populate drop file structure
@@ -822,7 +818,7 @@ HRESULT nsDataObj::GetFile(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
       // Add the second null character right after the first one.
       dest[allocLen - 1] = '\0';
 
-      status = ::GlobalUnlock(hGlobalMemory);
+      ::GlobalUnlock(hGlobalMemory);
     }
     else {
       res = E_OUTOFMEMORY;
@@ -1099,7 +1095,6 @@ nsDataObj::ExtractUniformResourceLocator(FORMATETC& aFE, STGMEDIUM& aSTG)
 
   // setup format structure
   static CLIPFORMAT UniformResourceLocator = ::RegisterClipboardFormat( CFSTR_SHELLURL );
-  FORMATETC fmetc = { UniformResourceLocator, NULL, DVASPECT_CONTENT, 0,TYMED_HGLOBAL };
 
   // create a global memory area and build up the file contents w/in it
   const int totalLen = urlC.Length()+1;
