@@ -699,7 +699,7 @@ nsWebCrawler::LoadNextURL()
           nsIWebShell* webShell;
           mBrowser->GetWebShell(webShell);
           mCurrentURL = *url;
-          webShell->LoadURL(*url);
+          webShell->LoadURL(url->GetUnicode());
           NS_RELEASE(webShell);
 
           if (mMaxPages > 0) {

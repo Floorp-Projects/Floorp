@@ -260,7 +260,7 @@ nsresult nsXPBaseWindow::Init(nsXPBaseWindowType aType,
   mDialogURL = aDialogURL;
   LoadURL(mDialogURL);
 
-  SetTitle(aTitle);
+  SetTitle(aTitle.GetUnicode());
 
   return NS_OK;
 }
@@ -379,14 +379,14 @@ NS_IMETHODIMP nsXPBaseWindow::SetTitle(const PRUnichar* aTitle)
 //---------------------------------------------------------------
 NS_IMETHODIMP nsXPBaseWindow::GetTitle(const PRUnichar** aResult)
 {
-  *aResult = mTitle;
+  *aResult = mTitle.GetUnicode();
   return NS_OK;
 }
 
 //---------------------------------------------------------------
 NS_IMETHODIMP nsXPBaseWindow::LoadURL(const nsString& aURL)
 {
-  mWebShell->LoadURL(aURL);
+  mWebShell->LoadURL(aURL.GetUnicode());
   return NS_OK;
 }
 
