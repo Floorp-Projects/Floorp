@@ -51,6 +51,7 @@ CPPSRCS		= \
 		nsISO88598IToUnicode.cpp \
 		nsISO88599ToUnicode.cpp \
 		nsISO885910ToUnicode.cpp \
+		nsISO885911ToUnicode.cpp \
 		nsISO885913ToUnicode.cpp \
 		nsISO885914ToUnicode.cpp \
 		nsISO885915ToUnicode.cpp \
@@ -66,6 +67,7 @@ CPPSRCS		= \
 		nsCP1258ToUnicode.cpp \
 		nsCP866ToUnicode.cpp \
 		nsCP874ToUnicode.cpp \
+		nsTIS620ToUnicode.cpp \
 		nsKOI8UToUnicode.cpp \
 		nsKOI8RToUnicode.cpp \
 		nsMacCEToUnicode.cpp \
@@ -111,6 +113,7 @@ CPPSRCS		= \
 		nsUnicodeToISO88598I.cpp \
 		nsUnicodeToISO88599.cpp \
 		nsUnicodeToISO885910.cpp \
+		nsUnicodeToISO885911.cpp \
 		nsUnicodeToISO885913.cpp \
 		nsUnicodeToISO885914.cpp \
 		nsUnicodeToISO885915.cpp \
@@ -125,6 +128,7 @@ CPPSRCS		= \
 		nsUnicodeToCP1257.cpp \
 		nsUnicodeToCP1258.cpp \
 		nsUnicodeToCP874.cpp \
+		nsUnicodeToTIS620.cpp \
 		nsUnicodeToCP866.cpp \
 		nsUnicodeToKOI8R.cpp \
 		nsUnicodeToKOI8U.cpp \
