@@ -69,6 +69,8 @@ mailnews/extensions/smime/public/Makefile
 mailnews/extensions/smoketest/Makefile
 mailnews/extensions/smoketest/resources/Makefile
 mailnews/extensions/smoketest/resources/content/Makefile
+mailnews/extensions/mdn/Makefile
+mailnews/extensions/mdn/src/Makefile
 mailnews/mapi/Makefile
 mailnews/mapi/resources/content/Makefile
 mailnews/mapi/resources/locale/en-US/Makefile
