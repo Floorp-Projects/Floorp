@@ -17,6 +17,9 @@
  */
 
 #include "nsButton.h"
+#if TARGET_CARBON
+#include <ControlDefinitions.h>
+#endif
 
 NS_IMPL_ADDREF(nsButton);
 NS_IMPL_RELEASE(nsButton);
