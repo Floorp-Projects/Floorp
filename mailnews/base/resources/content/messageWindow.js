@@ -271,12 +271,26 @@ function OnLoadMessageWindow()
 
   CreateView(originalView)
  
-  setTimeout("var msgKey = extractMsgKeyFromURI(gCurrentMessageUri); gDBView.loadMessageByMsgKey(msgKey); gNextMessageViewIndexAfterDelete = gDBView.msgToSelectAfterDelete; UpdateStandAloneMessageCounts();", 0);
+  setTimeout(OnLoadMessageWindowDelayed, 0);
   
   SetupCommandUpdateHandlers();
-  var messagePaneFrame = top.frames['messagepane'];
-  if (messagePaneFrame)
-	  messagePaneFrame.focus();
+}
+
+function OnLoadMessageWindowDelayed()
+{
+  var msgKey = extractMsgKeyFromURI(gCurrentMessageUri); 
+  gDBView.loadMessageByMsgKey(msgKey); 
+  gNextMessageViewIndexAfterDelete = gDBView.msgToSelectAfterDelete; 
+  UpdateStandAloneMessageCounts();
+   
+  // set focus to the message pane
+  window.content.focus();
+
+  // since we just changed the pane with focus we need to update the toolbar to reflect this
+  // XXX TODO
+  // can we optimize
+  // and just update cmd_delete and button_delete?
+  UpdateMailToolbar("focus");
 }
 
 function CreateView(originalView)
