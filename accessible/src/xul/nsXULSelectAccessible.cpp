@@ -385,7 +385,7 @@ NS_IMETHODIMP nsXULListboxAccessible::GetAccValue(nsAString& _retval)
     nsCOMPtr<nsIDOMXULSelectControlItemElement> selectedItem;
     select->GetSelectedItem(getter_AddRefs(selectedItem));
     if (selectedItem)
-      return selectedItem->GetValue(_retval);
+      return selectedItem->GetLabel(_retval);
   }
   return NS_ERROR_FAILURE;
 }
@@ -527,16 +527,14 @@ NS_IMETHODIMP nsXULComboboxAccessible::GetAccState(PRUint32 *_retval)
 }
 
 /**
-  * Our value is the value of our ( first ) selected child. nsIDOMXULSelectElement
+  * Our value is the name of our ( first ) selected child. nsIDOMXULSelectElement
   *     returns this by default with GetValue().
   */
 NS_IMETHODIMP nsXULComboboxAccessible::GetAccValue(nsAString& _retval)
 {
-  nsCOMPtr<nsIDOMXULSelectControlElement> select(do_QueryInterface(mDOMNode));
-  if (select) {
-    nsCOMPtr<nsIDOMXULSelectControlItemElement> selectedItem;
-    select->GetSelectedItem(getter_AddRefs(selectedItem));
-    return selectedItem->GetValue(_retval);
-  }
-  return NS_ERROR_FAILURE;
+  // The first accessible child is the text accessible that contains the name of the selected element.
+  // This is our value
+  nsCOMPtr<nsIAccessible> firstChild;
+  GetAccFirstChild(getter_AddRefs(firstChild));
+  return firstChild->GetAccName(_retval);
 }

@@ -51,6 +51,8 @@
     <implementation>
       <property name="value" onset="this.setAttribute('value',val); return val;"
                             onget="return this.getAttribute('value');"/>
+      <property name="label" onget="return this.getAttribute('label');"
+                             onset="this.setAttribute('label', val); return val;"/>
     </implementation>  
   </binding>
 
