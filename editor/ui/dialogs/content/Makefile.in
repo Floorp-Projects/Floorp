@@ -44,6 +44,8 @@ EXPORT_RESOURCE_CONTENT = \
   $(srcdir)/EdNamedAnchorProps.js  \
   $(srcdir)/EdInsertTable.xul \
   $(srcdir)/EdInsertTable.js \
+  $(srcdir)/EdTableProps.xul \
+  $(srcdir)/EdTableProps.js \
   $(srcdir)/EdMessage.xul \
   $(srcdir)/EdMessage.js \
 	$(NULL)

@@ -45,7 +45,8 @@
 #include "nsICaret.h"
 */
 
-#include "nsITableCellLayout.h"   // for temp method GetColIndexForCell, to be removed
+#include "nsITableCellLayout.h" // For efficient access to table cell
+#include "nsITableLayout.h"     //  data owned by the table and cell frames
 
 // transactions the editor knows how to build
 #include "TransactionFactory.h"
@@ -136,6 +137,9 @@ nsHTMLEditor::GetCellIndexes(nsIDOMElement *aCell, PRInt32 &aColIndex, PRInt32 &
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   aColIndex=0; // initialize out params
   aRowIndex=0;
+  if (!aCell)
+    return result;
+
   result = NS_ERROR_FAILURE;        // we return an error unless we get the index
   nsISupports *layoutObject=nsnull; // frames are not ref counted, so don't use an nsCOMPtr
 
@@ -157,85 +161,80 @@ nsHTMLEditor::GetCellIndexes(nsIDOMElement *aCell, PRInt32 &aColIndex, PRInt32 &
   return result;
 }
 
-NS_IMETHODIMP 
-nsHTMLEditor::GetRowIndex(nsIDOMElement *aCell, PRInt32 &aRowIndex)
+NS_IMETHODIMP
+nsHTMLEditor::GetTableLayoutObject(nsIDOMElement* aTable, nsITableLayout **tableLayoutObject)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  aRowIndex=0;
-  result = NS_ERROR_FAILURE;        // we return an error unless we get the index
-  nsISupports *layoutObject=nsnull; // frames are not ref counted, so don't use an nsCOMPtr
-
-  result = nsEditor::GetLayoutObject(aCell, &layoutObject);
-
-  if ((NS_SUCCEEDED(result)) && (nsnull!=layoutObject))
-  { // get the table cell interface from the frame
-    nsITableCellLayout *cellLayoutObject=nsnull; // again, frames are not ref-counted
-    result = layoutObject->QueryInterface(nsITableCellLayout::GetIID(), (void**)(&cellLayoutObject));
-    if ((NS_SUCCEEDED(result)) && (nsnull!=cellLayoutObject))
-    { // get the index
-      result = cellLayoutObject->GetRowIndex(aRowIndex);
-    }
+  *tableLayoutObject=nsnull;
+  if (!aTable)
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  // frames are not ref counted, so don't use an nsCOMPtr
+  nsISupports *layoutObject=nsnull;
+  nsresult result = nsEditor::GetLayoutObject(aTable, &layoutObject); 
+  if ((NS_SUCCEEDED(result)) && (nsnull!=layoutObject)) 
+  { // get the table interface from the frame 
+    
+    result = layoutObject->QueryInterface(nsITableLayout::GetIID(), 
+                            (void**)(tableLayoutObject)); 
   }
   return result;
 }
 
-
-NS_IMETHODIMP 
-nsHTMLEditor::GetColumnIndex(nsIDOMElement *aCell, PRInt32 &aColIndex)
+/* Not scriptable: For convenience in C++ */
+NS_IMETHODIMP
+nsHTMLEditor::GetTableSize(nsIDOMElement *aTable, PRInt32& aRowCount, PRInt32& aColCount)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  aColIndex=0; // initialize out params
-  result = NS_ERROR_FAILURE;        // we return an error unless we get the index
-  nsISupports *layoutObject=nsnull; // frames are not ref counted, so don't use an nsCOMPtr
-
-  result = nsEditor::GetLayoutObject(aCell, &layoutObject);
-
-  if ((NS_SUCCEEDED(result)) && (nsnull!=layoutObject))
-  { // get the table cell interface from the frame
-    nsITableCellLayout *cellLayoutObject=nsnull; // again, frames are not ref-counted
-    result = layoutObject->QueryInterface(nsITableCellLayout::GetIID(), (void**)(&cellLayoutObject));
-    if ((NS_SUCCEEDED(result)) && (nsnull!=cellLayoutObject))
-    { // get the index
-     result = cellLayoutObject->GetColIndex(aColIndex);
-    }
+  aRowCount = 0;
+  aColCount = 0;
+  if (!aTable)
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  // frames are not ref counted, so don't use an nsCOMPtr
+  nsITableLayout *tableLayoutObject;
+  nsresult result = GetTableLayoutObject(aTable, &tableLayoutObject);
+  if ((NS_SUCCEEDED(result)) && (nsnull!=tableLayoutObject)) 
+  {
+    result = tableLayoutObject->GetTableSize(aRowCount, aColCount); 
   }
   return result;
-}
-
-NS_IMETHODIMP 
-nsHTMLEditor::GetColumnCellCount(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32& aCount)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsHTMLEditor::GetRowCellCount(nsIDOMElement* aTable, PRInt32 aColIndex, PRInt32& aCount)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsHTMLEditor::GetMaxColumnCellCount(nsIDOMElement* aTable, PRInt32& aCount)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsHTMLEditor::GetMaxRowCellCount(nsIDOMElement* aTable, PRInt32& aCount)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//TODO: This should be implemented by layout for efficiency
-NS_IMETHODIMP 
-nsHTMLEditor::GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP 
 nsHTMLEditor::GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell, 
-                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex, PRInt32& aRowSpan, PRInt32& aColSpan)
+                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
+                            PRInt32& aRowSpan, PRInt32& aColSpan, PRBool& aIsSelected)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  aCell = nsnull;
+  aStartRowIndex = 0;
+  aStartColIndex = 0;
+  aRowSpan = 0;
+  aColSpan = 0;
+  aIsSelected = PR_FALSE;
+
+  if (!aTable)
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  // frames are not ref counted, so don't use an nsCOMPtr
+  nsITableLayout *tableLayoutObject;
+  nsresult result = GetTableLayoutObject(aTable, &tableLayoutObject);
+  if ((NS_SUCCEEDED(result)) && (nsnull!=tableLayoutObject)) 
+  {
+    // Note that this returns NS_TABLELAYOUT_CELL_NOT_FOUND when
+    //  the index(es) are out of bounds
+    result = tableLayoutObject->GetCellDataAt(aRowIndex, aColIndex, aCell, 
+                                              aStartRowIndex, aStartColIndex,
+                                              aRowSpan, aColSpan, aIsSelected);
+  } 
+  return result;
 }
+
+// When all you want is the cell
+NS_IMETHODIMP 
+nsHTMLEditor::GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell)
+{
+  PRInt32 aStartRowIndex, aStartColIndex, aRowSpan, aColSpan;
+  PRBool  aIsSelected;
+  return GetCellDataAt(aTable, aRowIndex, aColIndex, aCell, 
+                       aStartRowIndex, aStartColIndex, aRowSpan, aColSpan, aIsSelected);
+}
+

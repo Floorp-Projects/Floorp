@@ -595,54 +595,6 @@ nsJSEditorLog::RemoveParent(const nsString &aParentTag)
 }
 
 NS_IMETHODIMP
-nsJSEditorLog::InsertLink(nsString& aURL)
-{
-  if (mLocked)
-    return NS_OK;
-
-  PrintSelection();
-
-  Write("window.editorShell.InsertLink(\"");
-  PrintUnicode(aURL);
-  Write("\");\n");
-  Flush();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsJSEditorLog::InsertImage(nsString& aURL, nsString& aWidth, nsString& aHeight,
-                           nsString& aHspace, nsString& aVspace, nsString& aBorder,
-                           nsString& aAlt, nsString& aAlignment)
-{
-  if (mLocked)
-    return NS_OK;
-
-  PrintSelection();
-
-  Write("window.editorShell.InsertImage(\"");
-  PrintUnicode(aURL);
-  Write("\", \"");
-  PrintUnicode(aWidth);
-  Write("\", \"");
-  PrintUnicode(aHeight);
-  Write("\", \"");
-  PrintUnicode(aHspace);
-  Write("\", \"");
-  PrintUnicode(aVspace);
-  Write("\", \"");
-  PrintUnicode(aBorder);
-  Write("\", \"");
-  PrintUnicode(aAlt);
-  Write("\", \"");
-  PrintUnicode(aAlignment);
-  Write("\");\n");
-  Flush();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsJSEditorLog::InsertList(const nsString& aListType)
 {
   if (mLocked)
@@ -833,43 +785,11 @@ nsJSEditorLog::GetCellIndexes(nsIDOMElement *aCell, PRInt32 &aColIndex, PRInt32 
 }
 
 NS_IMETHODIMP 
-nsJSEditorLog::GetRowIndex(nsIDOMElement *aCell, PRInt32 &aRowIndex)
+nsJSEditorLog::GetTableSize(nsIDOMElement *aTable, PRInt32 &aRowCount, PRInt32 &aColCount)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
-NS_IMETHODIMP 
-nsJSEditorLog::GetColumnIndex(nsIDOMElement *aCell, PRInt32 &aColIndex)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsJSEditorLog::GetColumnCellCount(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32& aCount)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsJSEditorLog::GetRowCellCount(nsIDOMElement* aTable, PRInt32 aColIndex, PRInt32& aCount)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsJSEditorLog::GetMaxColumnCellCount(nsIDOMElement* aTable, PRInt32& aCount)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP 
-nsJSEditorLog::GetMaxRowCellCount(nsIDOMElement* aTable, PRInt32& aCount)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//TODO: This should be implemented by layout for efficiency
 NS_IMETHODIMP 
 nsJSEditorLog::GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell)
 {
@@ -878,7 +798,7 @@ nsJSEditorLog::GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColI
 
 NS_IMETHODIMP 
 nsJSEditorLog::GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell, 
-                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex, PRInt32& aRowSpan, PRInt32& aColSpan)
+                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex, PRInt32& aRowSpan, PRInt32& aColSpan, PRBool& aIsSelected)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

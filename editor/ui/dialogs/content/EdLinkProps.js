@@ -16,16 +16,18 @@ function Startup()
 {
   if (!InitEditorShell())
     return;
+  dump("Starting Link Properties Dialog\n");
   
+  // Message was wrapped in a <label> or <div>, so actual text is a child text node
+  linkCaption      = (document.getElementById("linkTextCaption")).firstChild;
+  linkMessage      = (document.getElementById("linkTextMessage")).firstChild;
   linkTextInput    = document.getElementById("linkTextInput");
   hrefInput        = document.getElementById("hrefInput");
 
-  // Message was wrapped in a <p>, so actual message is a child text node
-  linkMessage      = (document.getElementById("linkMessage")).firstChild;
-
-  if (null == linkTextInput || 
-      null == hrefInput ||
-      null == linkMessage )
+  if (!linkTextInput || 
+      !hrefInput ||
+      !linkMessage ||
+      !linkCaption)
   {
     dump("Not all dialog controls were found!!!\n");
   }
@@ -37,6 +39,7 @@ function Startup()
 
   if (insertNew) {
     dump("Setting focus to linkTextInput\n");
+    // We will be using the HREF inputbox, so text message
     linkTextInput.focus();
   } else {
     dump("Setting focus to linkTextInput\n");
@@ -89,6 +92,8 @@ function initDialog()
       if (parent) {
         anchorElement = parent;
         insertNew = false;
+        // GET THIS FROM STRING BUNDLE
+        linkCaption.data = "Link image:"
         // Link source string is the source URL of image
         // TODO: THIS STILL DOESN'T HANDLE MULTIPLE SELECTED IMAGES!
         linkMessage.data = imageElement.getAttribute("src");;
@@ -104,6 +109,8 @@ function initDialog()
       //   or an image, then shouldn't we clear the selection and insert new text?
       insertNew = selection.isCollapsed;
       dump("insertNew is " + insertNew + "\n");
+      linkCaption.data = "Enter text for the link:"
+      linkMessage.data = "";
     }
   }
   if(!anchorElement)
@@ -121,6 +128,8 @@ function initDialog()
       dump("Selected text for link source not found. Non-text elements selected?\n");
     }
     linkMessage.data = selectedText;
+    // The label above the selected text:
+    linkCaption.data = "Link text:"
   }
 
   if (!selection.isCollapsed)

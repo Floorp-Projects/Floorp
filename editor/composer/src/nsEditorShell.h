@@ -131,8 +131,6 @@ class nsEditorShell :   public nsIEditorShell,
 	  NS_IMETHOD InsertText(const PRUnichar *textToInsert);
 	  NS_IMETHOD InsertSource(const PRUnichar *sourceToInsert);
     NS_IMETHOD InsertBreak();
-	  NS_IMETHOD InsertLink();
-	  NS_IMETHOD InsertImage();
 	  NS_IMETHOD InsertList(const PRUnichar *listType);
 
 	  /* void Indent (in string indent); */
@@ -149,14 +147,20 @@ class nsEditorShell :   public nsIEditorShell,
 	  NS_IMETHOD SelectElement(nsIDOMElement *element);
 	  NS_IMETHOD SetSelectionAfterElement(nsIDOMElement *element);
 
-    // Return just 1 value -- for Java Script
-    NS_IMETHOD GetRowIndex(nsIDOMElement *aCell, PRInt32 *aRowIndex);
-    NS_IMETHOD GetColumnIndex(nsIDOMElement *aCell, PRInt32 *aColIndex);
-    NS_IMETHOD GetColumnCellCount(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 *aCount);
-    NS_IMETHOD GetRowCellCount(nsIDOMElement* aTable, PRInt32 aColIndex, PRInt32 *aCount);
-    NS_IMETHOD GetMaxColumnCellCount(nsIDOMElement* aTable, PRInt32 *aCount);
-    NS_IMETHOD GetMaxRowCellCount(nsIDOMElement* aTable, PRInt32 *aCount);
+    /* Get the row and col indexes in layout's cellmap */
+    NS_IMETHOD GetRowIndex(nsIDOMElement *aCell, PRInt32 *_retval);
+    NS_IMETHOD GetColumnIndex(nsIDOMElement *aCell, PRInt32 *_retval);
+    /** Get the number of rows in a table from the layout's cellmap */
+    NS_IMETHOD GetTableRowCount(nsIDOMElement *aTable, PRInt32 *_retval);
+    /** Get the number of columns in a table from the layout's cellmap */
+    NS_IMETHOD GetTableColumnCount(nsIDOMElement *aTable, PRInt32 *_retval);
+
+    /* Get a cell and associated data from the layout frame  based on cell map coordinates (0 index) */
     NS_IMETHOD GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement **_retval);
+    /* Note that the return param in the IDL must be the LAST out param here (_retval) */
+    NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex,
+                             PRInt32 *aStartRowIndex, PRInt32 *aStartColIndex,
+                             PRInt32 *aRowSpan, PRInt32 *aColSpan, PRBool *aIsSelected, nsIDOMElement **_retval);
 
     /* Get list of embedded objects, e.g. for mail compose */
     NS_IMETHOD GetEmbeddedObjects(nsISupportsArray **aObjectArray);
@@ -167,8 +171,8 @@ class nsEditorShell :   public nsIEditorShell,
 
 	  /* void SetTextProperty (in string prop, in string attr, in string value); */
 	  NS_IMETHOD SetTextProperty(const PRUnichar *prop, const PRUnichar *attr, const PRUnichar *value);
-	  NS_IMETHOD GetTextProperty(const PRUnichar *prop, const PRUnichar *attr, const PRUnichar *value, PRUnichar **firstHas, PRUnichar **anyHas, PRUnichar **allHas);
-	  NS_IMETHOD RemoveTextProperty(const PRUnichar *prop, const PRUnichar *attr);
+	  NS_IMETHOD GetTextProperty(const PRUnichar *prop, const PRUnichar *attr, const PRUnichar *value, PRBool *firstHas, PRBool *anyHas, PRBool *allHas);
+    NS_IMETHOD RemoveTextProperty(const PRUnichar *prop, const PRUnichar *attr);
 
 	  /* void SetBodyAttribute (in string attr, in string value); */
 	  NS_IMETHOD SetBodyAttribute(const PRUnichar *attr, const PRUnichar *value);

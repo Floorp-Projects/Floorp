@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 <!DOCTYPE window
 [
@@ -37,7 +37,7 @@
 
 <!ENTITY OKButton.label "OK">
 <!ENTITY CancelButton.label "Cancel">
-<!ENTITY advancedButton.label "Advanced Edit">
+<!ENTITY MoreOrLessButton.label "More">
 
 ]>
 
@@ -87,11 +87,11 @@
     </tr>
     <tr>
       <td>
-        <button class="spaced" id="AdvancedButton" onclick="onAdvanced()" width="50"> &advancedButton.label; </button>  
+        <button class="spaced" id="MoreOrLessButton" onclick="onMoreOrLess()" width="50"> &MoreOrLessButton.label; </button>  
       </td>
       <td/>
     </tr>
-    <tr id="AdvancedRow">
+    <tr id="MoreOrLessRow">
       <td>
         <fieldset id="imagedimensionsFieldset" ><legend align="left"> &dimensionsFieldset.label; </legend>
           <table cellspacing="0" cellpadding="0">
@@ -125,8 +125,8 @@
 			          		onkeypress="constrainProportions(this.id, 'imageheightInput')" onchange="doValueChanged()" />
 			        </td>
 			        <td>
-                <xul:titledbutton class="popup PixelOrPercent" id="widthunitSelect" value="&pixelsPopup.value;" 
-                     align="left" popup="PixelOrPercentMenu1" onchange="doValueChanged()" />
+                <xul:titledbutton class="popup" id="widthunitSelect" value="&pixelsPopup.value;" 
+                     align="right" popup="PixelOrPercentMenu1" popupanchor="bottomleft" onchange="doValueChanged()" />
 	            </td>
 	          </tr>
                     
@@ -141,8 +141,8 @@
 	              		onkeypress="constrainProportions(this.id, 'imagewidthInput')" onchange="doValueChanged()" />
 			        </td>
 			        <td>
-                <xul:titledbutton class="popup PixelOrPercent" id="heightunitSelect" value="&pixelsPopup.value;" 
-                     align="left" popup="PixelOrPercentMenu2" onchange="doValueChanged()" />
+                <xul:titledbutton class="popup" id="heightunitSelect" value="&pixelsPopup.value;" 
+                     align="right" popup="PixelOrPercentMenu2" popupanchor="bottomleft" onchange="doValueChanged()" />
 	            </td>
 	          </tr>
 
@@ -162,7 +162,7 @@
       <td>
 							<!-- IMAGE ALIGNMENT -->
         <label class="disabled" for="image.alignType" id="imagealignmentLabel"> &alignment.label; </label>
-        <xul:titledbutton class="popup PixelOrPercent" id="image.alignType" value="&bottomPopup.value;" align="left" 
+        <xul:titledbutton class="popup" id="image.alignType" value="&bottomPopup.value;" align="right" 
              popup="ImageTextAlignment" onchange="doValueChanged()"/>
 
         <br/>
@@ -222,25 +222,25 @@
 
 <xul:popup id="PixelOrPercentMenu1">
   <xul:menu>
-    <xul:menuitem name="&pixelsPopup.value;" onclick="SetPixelOrPercentByID('widthunitSelect', '')"/>
-    <xul:menuitem name="&percentPopup.value;" onclick="SetPixelOrPercentByID('widthunitSelect', '%')"/>
+    <xul:menuitem value="&pixelsPopup.value;" onclick="SetPixelOrPercentByID('widthunitSelect', '')"/>
+    <xul:menuitem value="&percentPopup.value;" onclick="SetPixelOrPercentByID('widthunitSelect', '%')"/>
   </xul:menu>
 </xul:popup>
 
 <xul:popup id="PixelOrPercentMenu2">
   <xul:menu>
-    <xul:menuitem name="&pixelsPopup.value;" onclick="SetPixelOrPercentByID('heightunitSelect', '')"/>
-    <xul:menuitem name="&percentPopup.value;" onclick="SetPixelOrPercentByID('heightunitSelect', '%')"/>
+    <xul:menuitem value="&pixelsPopup.value;" onclick="SetPixelOrPercentByID('heightunitSelect', '')"/>
+    <xul:menuitem value="&percentPopup.value;" onclick="SetPixelOrPercentByID('heightunitSelect', '%')"/>
   </xul:menu>
 </xul:popup>
 
 <xul:popup id="ImageTextAlignment">
   <xul:menu>
-    <xul:menuitem name="&topPopup.value;" onclick="SetImageAlignment('^')"/>
-    <xul:menuitem name="&centerPopup.value;" onclick="SetImageAlignment('.')"/>
-    <xul:menuitem name="&bottomPopup.value;" onclick="SetImageAlignment('v')"/>
-    <xul:menuitem name="&wrapRightPopup.value;" onclick="SetImageAlignment(']')"/>
-    <xul:menuitem name="&wrapLeftPopup.value;" onclick="SetImageAlignment('[')"/>
+    <xul:menuitem value="&topPopup.value;" onclick="SetImageAlignment('^')"/>
+    <xul:menuitem value="&centerPopup.value;" onclick="SetImageAlignment('.')"/>
+    <xul:menuitem value="&bottomPopup.value;" onclick="SetImageAlignment('v')"/>
+    <xul:menuitem value="&wrapRightPopup.value;" onclick="SetImageAlignment(']')"/>
+    <xul:menuitem value="&wrapLeftPopup.value;" onclick="SetImageAlignment('[')"/>
   </xul:menu>
 </xul:popup>
 

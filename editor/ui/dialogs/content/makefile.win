@@ -35,6 +35,8 @@ install::
 	$(MAKE_INSTALL) EdNamedAnchorProps.js  $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EdInsertTable.xul      $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EdInsertTable.js       $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) EdTableProps.xul       $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) EdTableProps.js        $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EdInsSrc.xul           $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EdInsSrc.js            $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EdMessage.xul          $(DIST)\bin\chrome\editor\content\default
@@ -55,6 +57,8 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\content\default\EdNamedAnchorProps.xul
   rm -f $(DIST)\bin\chrome\editor\content\default\EdNamedAnchorProps.js
   rm -f $(DIST)\bin\chrome\editor\content\default\EdInsertTable.xul
+  rm -f $(DIST)\bin\chrome\editor\content\default\EdTableProps.js
+  rm -f $(DIST)\bin\chrome\editor\content\default\EdTableProps.xul
   rm -f $(DIST)\bin\chrome\editor\content\default\EdInsertTable.js
   rm -f $(DIST)\bin\chrome\editor\content\default\EdInsSrc.xul
   rm -f $(DIST)\bin\chrome\editor\content\default\EdInsSrc.js

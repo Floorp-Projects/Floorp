@@ -92,8 +92,6 @@ interface nsIEditorShell : nsISupports
   void InsertSource(in wstring textToInsert);
   void InsertBreak();
   
-  void InsertLink();
-  void InsertImage();
   void InsertList(in wstring listType);
   void Indent(in wstring indent);
   void Align(in wstring align);
@@ -103,28 +101,46 @@ interface nsIEditorShell : nsISupports
   /* returns the element conversion of supplied node or a parent of required type */
   nsIDOMElement GetElementOrParentByTagName(in wstring tagName, in nsIDOMNode node);
   nsIDOMElement CreateElementWithDefaults(in wstring tagName);
-  void    InsertElement(in nsIDOMElement element, in boolean deleteSelection);
-  void    SaveHLineSettings(in nsIDOMElement element);
-  void    InsertLinkAroundSelection(in nsIDOMElement anchorElement);
-  void    SelectElement(in nsIDOMElement element);
-  void    SetSelectionAfterElement(in nsIDOMElement element);
+  void InsertElement(in nsIDOMElement element, in boolean deleteSelection);
+  void SaveHLineSettings(in nsIDOMElement element);
+  void InsertLinkAroundSelection(in nsIDOMElement anchorElement);
+  void SelectElement(in nsIDOMElement element);
+  void SetSelectionAfterElement(in nsIDOMElement element);
 
-  /* Table editing */
+  /***** Table editing *****/
+
+  /* Get the indexes from layout's cellmap */
   PRInt32 GetRowIndex(in nsIDOMElement cellElement);
   PRInt32 GetColumnIndex(in nsIDOMElement cellElement);
+
+  /** Get the number of rows in a table from the layout's cellmap 
+    * If tableElement is null, it will try to find enclosing table of selection anchor
+    */
+  PRInt32 GetTableRowCount(in nsIDOMElement tableElement);
+
+  /* Get the number of columns in a table from the layout's cellmap
+    * If tableElement is null, it will try to find enclosing table of selection anchor
+    */
+  PRInt32 GetTableColumnCount(in nsIDOMElement tableElement);
+
+  /* Get cell at a location in the layout's cellmap
+     returns null when past last cell in a row or column */
   nsIDOMElement GetCellAt(in nsIDOMElement tableElement, in PRInt32 rowIndex, in PRInt32 colIndex);
-  PRInt32 GetRowCellCount(in nsIDOMElement tableElement, in PRInt32 colIndex);
-  PRInt32 GetColumnCellCount(in nsIDOMElement tableElement, in PRInt32 rowIndex);
-  PRInt32 GetMaxRowCellCount(in nsIDOMElement tableElement);
-  PRInt32 GetMaxColumnCellCount(in nsIDOMElement tableElement);
+  /* Get cell at a location in the layout's cellmap with associated data 
+     returns null when past last cell in a row or column */
+  nsIDOMElement GetCellDataAt(in nsIDOMElement tableElement, in PRInt32 rowIndex, in PRInt32 colIndex,
+                              out PRInt32 startRowIndex, out PRInt32 startColIndex,
+                              out PRInt32 rowSpan, out PRInt32 colSpan, out boolean isSelected);
   
+  /**** end of table editing *****/
+
   /* Get list of embedded objects, e.g. for mail compose */
   nsISupportsArray GetEmbeddedObjects();
 
   /* Formatting */
   void SetTextProperty(in wstring prop, in wstring attr, in wstring value);
   void RemoveTextProperty(in wstring prop, in wstring attr);
-  void GetTextProperty(in wstring prop, in wstring attr, in wstring value, out wstring firstHas, out wstring anyHas, out wstring allHas);
+  void GetTextProperty(in wstring prop, in wstring attr, in wstring value, out boolean firstHas, out boolean anyHas, out boolean allHas);
   void SetBodyAttribute(in wstring attr, in wstring value);
   void SetBackgroundColor(in wstring color);
 

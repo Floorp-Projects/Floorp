@@ -24,6 +24,7 @@
 #include "nsIHTMLEditor.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
+#include "nsITableLayout.h"
 
 /**
  * The HTML editor implementation.<br>
@@ -143,12 +144,6 @@ public:
 
   NS_IMETHOD Indent(const nsString& aIndent);
   NS_IMETHOD Align(const nsString& aAlign);
-  NS_IMETHOD InsertLink(nsString& aURL);
-  NS_IMETHOD InsertImage(nsString& aURL,
-                         nsString& aWidth, nsString& aHeight,
-                         nsString& aHspace, nsString& aVspace,
-                         nsString& aBorder,
-                         nsString& aAlt, nsString& aAlignment);
   NS_IMETHOD InsertList(const nsString& aListType);
 
 // MHTML helper methods
@@ -167,17 +162,21 @@ public:
   PRBool     IsElementInBody(nsIDOMElement* aElement);
 
 // Table Editing (implemented in EditTable.cpp)
-  NS_IMETHOD GetCellIndexes(nsIDOMElement *aCell, PRInt32 &aColIndex, PRInt32 &aRowIndex);
-  // Return just 1 value -- for Java Script
-  NS_IMETHOD GetRowIndex(nsIDOMElement *aCell, PRInt32 &aRowIndex);
-  NS_IMETHOD GetColumnIndex(nsIDOMElement *aCell, PRInt32 &aColIndex);
-  NS_IMETHOD GetColumnCellCount(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32& aCount);
-  NS_IMETHOD GetRowCellCount(nsIDOMElement* aTable, PRInt32 aColIndex, PRInt32& aCount);
-  NS_IMETHOD GetMaxColumnCellCount(nsIDOMElement* aTable, PRInt32& aCount);
-  NS_IMETHOD GetMaxRowCellCount(nsIDOMElement* aTable, PRInt32& aCount);
+
+  // Helper used to get nsITableLayout interface for methods implemented in nsTableFrame
+  NS_IMETHOD GetTableLayoutObject(nsIDOMElement* aTable, nsITableLayout **tableLayoutObject);
+  /** Get the row an column index from the layout's cellmap */
+  NS_IMETHOD GetCellIndexes(nsIDOMElement *aCell, PRInt32 & aRowIndex, PRInt32 &aColIndex);
+  /** Get the number of rows and columns in a table from the layout's cellmap */
+  NS_IMETHOD GetTableSize(nsIDOMElement *aTable, PRInt32& aRowCount, PRInt32& aColCount);
+
+  /* Get cell at a cellmap location. Returns NS_TABLELAYOUT_CELL_NOT_FOUND if past end of row or col */
   NS_IMETHOD GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell);
+  /* Get cell and associated data */
   NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell, 
-                           PRInt32& aStartRowIndex, PRInt32& aStartColIndex, PRInt32& aRowSpan, PRInt32& aColSpan);
+                           PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
+                           PRInt32& aRowSpan, PRInt32& aColSpan, PRBool& aIsSelected);
+
   NS_IMETHOD InsertTable();
   NS_IMETHOD InsertTableCell(PRInt32 aNumber, PRBool aAfter);
   NS_IMETHOD InsertTableColumn(PRInt32 aNumber, PRBool aAfter);

@@ -190,6 +190,7 @@
 <!ENTITY outputXIFCmd.label "Output XIF">
 <!ENTITY insertTextCmd.label "Insert Text">
 <!ENTITY testSelectionCmd.label "Test Selection">
+<!ENTITY testTableLayoutCmd.label "Test Table Layout">
 <!ENTITY showEmbeddedCmd.label "Show Embedded Objects">
 <!ENTITY dumpContentCmd.label "Dump Content Tree">
 <!ENTITY testDocumentCmd.label "Test Document">
@@ -526,6 +527,7 @@
       <menuitem value="&insertTextCmd.label;" onaction="EditorInsertText('All good things come to those who wait. ')"/>
       <menuseparator />
       <menuitem value="&testSelectionCmd.label;" onaction="EditorTestSelection()"/>
+      <menuitem value="&testTableLayoutCmd.label;" onaction="EditorTestTableLayout()"/>
       <menuitem value="&showEmbeddedCmd.label;" onaction="EditorShowEmbeddedObjects()"/>
       <menuitem value="&dumpContentCmd.label;" onaction="EditorDumpContent()"/>
       <menuitem value="&testDocumentCmd.label;" onaction="EditorTestDocument()"/>
@@ -545,31 +547,31 @@
   </menubar>
 
       <toolbar id="EditToolbar">
-	      <titledbutton src="&newEditorIcon.url;" align="top" value="&newToolbarCmd.label;" class="popup" onclick="EditorNew()"/>
-	      <titledbutton src="&openEditorIcon.url;" align="top" value="&openToolbarCmd.label;" class="popup" onclick="EditorOpen()"/>
+	      <titledbutton src="&newEditorIcon.url;" value="&newToolbarCmd.label;" class="popup" onclick="EditorNew()"/>
+	      <titledbutton src="&openEditorIcon.url;" value="&openToolbarCmd.label;" class="popup" onclick="EditorOpen()"/>
 
-	      <titledbutton id="SaveButton" src="&saveIcon.url;" align="top" value="&saveCmd.label;" class="popup" onclick="EditorSave()">
+	      <titledbutton id="SaveButton" src="&saveIcon.url;" value="&saveCmd.label;" class="popup" onclick="EditorSave()">
 	        <observes element="Editor:Document:Dirty" attribute="dirty" onchange="onDirtyChange()"/>
 	      </titledbutton>
 <!-- Not supporting publishing (yet?) -->
-<!--      <titledbutton src="&publishIcon.url;" align="top" value="&publishToolbarCmd.label;" class="popup"/> -->
-	      <titledbutton src="&printIcon.url;" align="top" value="&printToolbarCmd.label;" class="popup"/>
-	      <titledbutton src="&findIcon.url;" align="top" value="&findToolbarCmd.label;" onclick="EditorFind()"/>
-	      <titledbutton src="&linkIcon.url;" align="top" value="&linkToolbarCmd.label;" onclick="EditorInsertLink()"/>
-	      <titledbutton src="&imageIcon.url;" align="top" value="&imageToolbarCmd.label;" onclick="EditorInsertImage()"/>
-	      <titledbutton src="&targetIcon.url;" align="top" value="&anchorToolbarCmd.label;" onclick="EditorInsertNamedAnchor()"/>
-	      <titledbutton src="&hlineIcon.url;" align="top" value="&hruleToolbarCmd.label;" onclick="EditorInsertHLine()"/>
-	      <titledbutton src="&tableIcon.url;" align="top" value="&tableToolbarCmd.label;" onclick="EditorInsertTable()"/>
-	      <titledbutton src="&spellingIcon.url;" align="top" value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
+<!--      <titledbutton src="&publishIcon.url;" value="&publishToolbarCmd.label;" class="popup"/> -->
+	      <titledbutton src="&printIcon.url;" value="&printToolbarCmd.label;" class="popup"/>
+	      <titledbutton src="&findIcon.url;" value="&findToolbarCmd.label;" onclick="EditorFind()"/>
+	      <titledbutton src="&linkIcon.url;" value="&linkToolbarCmd.label;" onclick="EditorInsertLink()"/>
+	      <titledbutton src="&imageIcon.url;" value="&imageToolbarCmd.label;" onclick="EditorInsertImage()"/>
+	      <titledbutton src="&targetIcon.url;" value="&anchorToolbarCmd.label;" onclick="EditorInsertNamedAnchor()"/>
+	      <titledbutton src="&hlineIcon.url;" value="&hruleToolbarCmd.label;" onclick="EditorInsertHLine()"/>
+	      <titledbutton src="&tableIcon.url;" value="&tableToolbarCmd.label;" onclick="EditorInsertTable()"/>
+	      <titledbutton src="&spellingIcon.url;" value="&spellToolbarCmd.label;" onclick="CheckSpelling()"/>
   		  <spring flex="100%"/>
-	      <titledbutton id="DisplayStyleButton" src="&previewIcon.url;" align="top" value="&previewToolbarCmd.label;" class="popup" onclick="EditorToggleDisplayStyle()"/>
+	      <titledbutton id="DisplayStyleButton" src="&previewIcon.url;" value="&previewToolbarCmd.label;" class="popup" onclick="EditorToggleDisplayStyle()"/>
 	  </toolbar>
       <toolbar id="FormatToolbar">
-		    <titledbutton id="ParagraphPopup" value="&paragraphToolbarMenu.label;" class="popup" align="left" popup="ParagraphMenu" popupanchor="bottomleft">
+		    <titledbutton id="ParagraphPopup" value="&paragraphToolbarMenu.label;" class="popup" align="right" popup="ParagraphMenu" popupanchor="bottomleft">
           <observes element="Editor:Paragraph:Format" attribute="format" onchange="onParagraphFormatChange()"/>
         </titledbutton>
-		    <titledbutton id="FontFacePopup" value="&fontToolbarMenu.label;" class="popup" align="left" popup="FontFaceMenu" popupanchor="bottomleft"/>
-		    <titledbutton id="FontSizePopup" value="&sizeToolbarMenu.label;" class="popup" align="left" popup="FontSizeMenu" popupanchor="bottomleft"/>
+		    <titledbutton id="FontFacePopup" value="&fontToolbarMenu.label;" class="popup" align="right" popup="FontFaceMenu" popupanchor="bottomleft"/>
+		    <titledbutton id="FontSizePopup" value="&sizeToolbarMenu.label;" class="popup" align="right" popup="FontSizeMenu" popupanchor="bottomleft"/>
 		    <titledbutton id="TextColorPopup" src="chrome://editor/skin/images/ED_TextColor.gif" class="popup" popup="TextColorMenu" popupanchor="bottomleft"/>
 		    <titledbutton id="BackColorPopup" src="chrome://editor/skin/images/ED_BackColor.gif" class="popup" popup="BackColorMenu" popupanchor="bottomleft"/>
 

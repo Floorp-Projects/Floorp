@@ -298,15 +298,27 @@ function EditorSetFontSize(size)
 
 function EditorSetFontFace(fontFace)
 {
-  if( fontFace == "" || fontFace == "normal") {
-    editorShell.RemoveTextProperty("font", "face");
-  } else if( fontFace == "tt") {
+/* Testing returning out params
+  var first = new Object();
+  var all = new Object();
+  var any = new Object();
+  editorShell.GetTextProperty("tt", "", "", first, any, all);
+  dump("GetTextProperty: first: "+first.value+", any: "+any.value+", all: "+all.value+"\n");
+*/
+  if( fontFace == "tt") {
     // The old "teletype" attribute
     editorShell.SetTextProperty("tt", "", "");  
     // Clear existing font face
     editorShell.RemoveTextProperty("font", "face");
   } else {
-    editorShell.SetTextProperty("font", "face", fontFace);
+    // Remove any existing TT nodes
+    editorShell.RemoveTextProperty("tt", "", "");  
+
+    if( fontFace == "" || fontFace == "normal") {
+      editorShell.RemoveTextProperty("font", "face");
+    } else {
+      editorShell.SetTextProperty("font", "face", fontFace);
+    }
   }        
   contentWindow.focus();
 }
@@ -430,9 +442,26 @@ function EditorInsertImage()
   contentWindow.focus();
 }
 
+function EditorInsertOrEditTable()
+{
+  var selection = editorShell.editorSelection;
+  dump("Selection: Anchor: "+selection.anchorNode+selection.anchorOffset+" Focus: "+selection.focusNode+selection.focusOffset+"\n");
+
+  var table = editorShell.GetElementOrParentByTagName("table", null);
+  if (table) {
+    // Edit properties of existing table
+    dump("Existing table found ... Editing its properties\n");
+
+    window.openDialog("chrome://editor/content/EdTableProps.xul", "TableDlg", "chrome", "");
+    contentWindow.focus();
+  } else {
+    EditorInsertTable();
+  }
+}
+
 function EditorInsertTable()
 {
-  dump("Insert Table Dialog starting.\n");
+  // Insert a new table
   window.openDialog("chrome://editor/content/EdInsertTable.xul", "TableDlg", "chrome", "");
   contentWindow.focus();
 }
@@ -756,6 +785,101 @@ function EditorTestSelection()
   dump("====== Selection as HTML ======================\n");
   output = editorShell.GetContentsAs("text/html", 1);
   dump(output + "\n\n");
+}
+
+function EditorTestTableLayout()
+{
+  var table = editorShell.GetElementOrParentByTagName("table", null);
+  if (!table) {
+    dump("Enclosing Table not found: Place caret in a table cell to do this test\n\n");
+    return;
+  }
+    
+  var cell;
+  var startRowIndexObj = new Object();
+  var startColIndexObj = new Object();
+  var rowSpanObj = new Object();
+  var colSpanObj = new Object();
+  var isSelectedObj = new Object();
+  var startRowIndex = 0;
+  var startColIndex = 0;
+  var rowSpan;
+  var colSpan;
+  var isSelected;
+  var col = 0;
+  var row = 0;
+  var rowCount = 0;
+  var maxColCount = 0;
+  var doneWithRow = false;
+  var doneWithCol = false;
+
+  dump("\n\n\n************ Starting Table Layout test ************\n");
+
+  // Note: We could also get the number of rows, cols and use for loops,
+  //   but this tests using out-of-bounds offsets to detect end of row or column
+
+  while (!doneWithRow)  // Iterate through rows
+  {  
+    while(!doneWithCol)  // Iterate through cells in the row
+    {
+      try {
+        cell = editorShell.GetCellDataAt(table, row, col, startRowIndexObj, startColIndexObj,
+                                         rowSpanObj, colSpanObj, isSelectedObj);
+
+        if (cell)
+        {
+          rowSpan = rowSpanObj.value;
+          colSpan = colSpanObj.value;
+          isSelected = isSelectedObj.value;
+          
+          dump("Row,Col: "+row+","+col+" StartRow,StartCol: "+startRowIndexObj.value+","+startColIndexObj.value+" RowSpan="+rowSpan+" ColSpan="+colSpan);
+          if (isSelected)
+            dump("  Cell is selected\n");
+          else
+            dump("  Cell is NOT selected\n");
+
+          // Save the indexes of a cell that will span across the cellmap grid
+          if (rowSpan > 1)
+            startRowIndex = startRowIndexObj.value;
+          if (colSpan > 1)
+            startColIndex = startColIndexObj.value;
+
+          // Initialize these for efficient spanned-cell search
+          startRowIndexObj.value = startRowIndex;
+          startColIndexObj.value = startColIndex;
+
+          col++;
+        } else {
+          doneWithCol = true;
+          // Get maximum number of cells in any row
+          if (col > maxColCount)
+            maxColCount = col;
+          dump(" End of row found\n\n");
+        }
+      }
+      catch (e) {
+        dump("  *** GetCellDataAt barfed at Row,Col:"+row+","+col+" ***\n\n");
+        col++;
+      }
+    }
+    if (col == 0) {
+      // Didn't find a cell in the first col of a row,
+      // thus no more rows in table
+      doneWithRow = true;
+      rowCount = row;
+      dump("No more rows in table\n\n");
+    } else {
+      // Setup for next row
+      col = 0;
+      row++;
+      doneWithCol = false;
+      dump("Setup for next row\n");
+    }      
+  }
+  dump("Counted during scan: Number of rows="+rowCount+" Number of Columns="+maxColCount+"\n");
+  rowCount = editorShell.GetTableRowCount(table);
+  maxColCount = editorShell.GetTableColumnCount(table);
+  dump("From nsITableLayout: Number of rows="+rowCount+" Number of Columns="+maxColCount+"\n****** End of Table Layout Test *****\n\n");
 }
 
 function EditorShowEmbeddedObjects()
