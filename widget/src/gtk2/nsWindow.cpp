@@ -41,35 +41,47 @@
 #include <gtk/gtkwindow.h>
 #include <gdk/gdkx.h>
 
-static gboolean expose_event_cb         (GtkWidget *widget,
-					 GdkEventExpose *event);
-static gboolean configure_event_cb      (GtkWidget *widget,
-					 GdkEventConfigure *event);
-static void     size_allocate_cb        (GtkWidget *widget,
-					 GtkAllocation *allocation);
-static gboolean delete_event_cb         (GtkWidget *widget,
-					 GdkEventAny *event);
-static gboolean enter_notify_event_cb   (GtkWidget *widget,
-					 GdkEventCrossing *event);
-static gboolean leave_notify_event_cb   (GtkWidget *widget,
-				         GdkEventCrossing *event);
-static gboolean motion_notify_event_cb  (GtkWidget *widget,
-				         GdkEventMotion *event);
-static gboolean button_press_event_cb   (GtkWidget *widget,
-				         GdkEventButton *event);
-static gboolean button_release_event_cb (GtkWidget *widget,
-					 GdkEventButton *event);
+static nsWindow *get_window_for_gtk_widget(GtkWidget *widget);
+static nsWindow *get_window_for_gdk_window(GdkWindow *window);
+
+static gboolean expose_event_cb           (GtkWidget *widget,
+					   GdkEventExpose *event);
+static gboolean configure_event_cb        (GtkWidget *widget,
+					   GdkEventConfigure *event);
+static void     size_allocate_cb          (GtkWidget *widget,
+					   GtkAllocation *allocation);
+static gboolean delete_event_cb           (GtkWidget *widget,
+					   GdkEventAny *event);
+static gboolean enter_notify_event_cb     (GtkWidget *widget,
+					   GdkEventCrossing *event);
+static gboolean leave_notify_event_cb     (GtkWidget *widget,
+					   GdkEventCrossing *event);
+static gboolean motion_notify_event_cb    (GtkWidget *widget,
+					   GdkEventMotion *event);
+static gboolean button_press_event_cb     (GtkWidget *widget,
+					   GdkEventButton *event);
+static gboolean button_release_event_cb   (GtkWidget *widget,
+					   GdkEventButton *event);
+static gboolean container_focus_in_event  (GtkWidget *widget,
+					   GdkEventFocus *event);
+static gboolean container_focus_out_event (GtkWidget *widget,
+					   GdkEventFocus *event);
 
 nsWindow::nsWindow()
 {
-  mContainer       = nsnull;
-  mDrawingarea     = nsnull;
-  mShell           = nsnull;
-  mIsTopLevel      = PR_FALSE;
-  mIsDestroyed     = PR_FALSE;
-  mWindowType      = eWindowType_child;
-  mPreferredWidth  = 0;
-  mPreferredHeight = 0;
+  mContainer           = nsnull;
+  mDrawingarea         = nsnull;
+  mShell               = nsnull;
+  mIsTopLevel          = PR_FALSE;
+  mIsDestroyed         = PR_FALSE;
+  mWindowType          = eWindowType_child;
+  mPreferredWidth      = 0;
+  mPreferredHeight     = 0;
+  mContainerGotFocus   = PR_FALSE;
+  mContainerLostFocus  = PR_FALSE;
+  mContainerBlockFocus = PR_FALSE;
+  mHasFocus            = PR_FALSE;
+  mFocusChild          = nsnull;
 }
 
 nsWindow::~nsWindow()
@@ -110,6 +122,14 @@ nsWindow::Destroy(void)
     return NS_OK;
 
   mIsDestroyed = PR_TRUE;
+
+  // make sure that we remove ourself as the focus window
+  if (mHasFocus) {
+    mHasFocus = PR_FALSE;
+    nsWindow *owningWindow =
+      get_window_for_gdk_window(mDrawingarea->inner_window);
+    owningWindow->mFocusChild = nsnull;
+  }
 
   if (mShell) {
     gtk_widget_destroy(mShell);
@@ -281,7 +301,52 @@ nsWindow::Enable(PRBool aState)
 NS_IMETHODIMP
 nsWindow::SetFocus(PRBool aRaise)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // Make sure that our owning widget has focus.  If it doesn't try to
+  // grab it.  Note that we don't set our focus flag in this case.
+  
+  printf("SetFocus [%p]\n", (void *)this);
+  gpointer user_data = NULL;
+  gdk_window_get_user_data(mDrawingarea->inner_window, &user_data);
+  if (!user_data)
+    return NS_ERROR_FAILURE;
+
+  GtkWidget *owningWidget = GTK_WIDGET(user_data);
+  nsWindow  *owningWindow = get_window_for_gtk_widget(owningWidget);
+  if (!owningWindow)
+    return NS_ERROR_FAILURE;
+
+  if (!GTK_WIDGET_HAS_FOCUS(owningWidget)) {
+    owningWindow->mContainerBlockFocus = PR_TRUE;
+    gtk_widget_grab_focus(owningWidget);
+    owningWindow->mContainerBlockFocus = PR_FALSE;
+    DispatchGotFocusEvent();
+  }
+
+  // Raise the window if someone passed in PR_TRUE and the prefs are
+  // set properly.
+  // XXX do this
+
+  // If this is the widget that already has focus, return.
+  if (mHasFocus) {
+    printf("already have focus...\n");
+    return NS_OK;
+  }
+  
+  // If there is already a focued child window, dispatch a LOSTFOCUS
+  // event from that widget and unset its got focus flag.
+  if (owningWindow->mFocusChild) {
+    printf("removing focus child %p\n", (void *)owningWindow->mFocusChild);
+    owningWindow->mFocusChild->mHasFocus = PR_FALSE;
+    owningWindow->mFocusChild->DispatchLostFocusEvent();
+  }
+
+  // Set this window to be the focused child window, update our has
+  // focus flag and dispatch a GOTFOCUS event.
+  owningWindow->mFocusChild = this;
+  mHasFocus = PR_TRUE;
+  DispatchGotFocusEvent();
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -662,6 +727,8 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
   event.point.x = aEvent->x;
   event.point.y = aEvent->y;
 
+  // XXX mozilla will invalidate the entire window after this move
+  // complete.  wtf?
   nsEventStatus status;
   DispatchEvent(&event, status);
 
@@ -831,6 +898,34 @@ nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 }
 
 void
+nsWindow::OnContainerFocusInEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
+{
+  // Return if someone has blocked events for this widget.  This will
+  // happen if someone has called gtk_widget_grab_focus() from
+  // nsWindow::SetFocus() and will prevent recursion.
+  if (mContainerBlockFocus)
+    return;
+
+  // dispatch a got focus event
+  DispatchGotFocusEvent();
+
+  // dispatch an ACTIVATE event
+  DispatchActivateEvent();
+}
+
+void
+nsWindow::OnContainerFocusOutEvent(GtkWidget *aWidget, GdkEventFocus *aEvent)
+{
+  // send a lost focus event for the child window
+  if (mFocusChild) {
+    mFocusChild->mHasFocus = PR_FALSE;
+    mFocusChild->DispatchLostFocusEvent();
+    mFocusChild->DispatchDeactivateEvent();
+    mFocusChild = nsnull;
+  }
+}
+
+void
 nsWindow::SendResizeEvent(nsRect &aRect, nsEventStatus &aStatus)
 {
   nsSizeEvent event;
@@ -938,7 +1033,10 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
       mContainer = MOZ_CONTAINER(moz_container_new());
       gtk_container_add(GTK_CONTAINER(mShell), GTK_WIDGET(mContainer));
       gtk_widget_realize(GTK_WIDGET(mContainer));
-      
+
+      // make sure this is the focus widget in the container
+      gtk_window_set_focus(GTK_WINDOW(mShell), GTK_WIDGET(mContainer));
+
       // and the drawing area
       mDrawingarea = moz_drawingarea_new(nsnull, mContainer);
     }
@@ -992,7 +1090,10 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 		     G_CALLBACK(button_press_event_cb), NULL);
     g_signal_connect(G_OBJECT(mContainer), "button_release_event",
 		     G_CALLBACK(button_release_event_cb), NULL);
-
+    g_signal_connect(G_OBJECT(mContainer), "focus_in_event",
+		     G_CALLBACK(container_focus_in_event), NULL);
+    g_signal_connect(G_OBJECT(mContainer), "focus_out_event",
+		     G_CALLBACK(container_focus_out_event), NULL);
   }
 
   printf("nsWindow [%p]\n", (void *)this);
@@ -1013,19 +1114,41 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
   return NS_OK;
 }
 
+/* static */
+nsWindow *
+get_window_for_gtk_widget(GtkWidget *widget)
+{
+  gpointer user_data;
+  user_data = g_object_get_data(G_OBJECT(widget), "nsWindow");
+
+  if (!user_data)
+    return nsnull;
+
+  return NS_STATIC_CAST(nsWindow *, user_data);
+}
+
+/* static */
+nsWindow *
+get_window_for_gdk_window(GdkWindow *window)
+{
+  gpointer user_data;
+  user_data = g_object_get_data(G_OBJECT(window), "nsWindow");
+
+  if (!user_data)
+    return nsnull;
+  
+  return NS_STATIC_CAST(nsWindow *, user_data);
+}
+
 // gtk callbacks
 
 /* static */
 gboolean
 expose_event_cb(GtkWidget *widget, GdkEventExpose *event)
 {
-  gpointer user_data;
-  user_data = g_object_get_data(G_OBJECT(event->window), "nsWindow");
-
-  if (!user_data)
+  nsWindow *window = get_window_for_gdk_window(event->window);
+  if (!window)
     return FALSE;
-
-  nsWindow *window = NS_STATIC_CAST(nsWindow *, user_data);
 
   return window->OnExposeEvent(widget, event);
 }
@@ -1035,13 +1158,9 @@ gboolean
 configure_event_cb(GtkWidget *widget,
 		   GdkEventConfigure *event)
 {
-  gpointer user_data;
-  user_data = g_object_get_data(G_OBJECT(widget), "nsWindow");
-
-  if (!user_data)
+  nsWindow *window = get_window_for_gtk_widget(widget);
+  if (!window)
     return FALSE;
-
-  nsWindow *window = NS_STATIC_CAST(nsWindow *, user_data);
   
   return window->OnConfigureEvent(widget, event);
 }
@@ -1050,13 +1169,9 @@ configure_event_cb(GtkWidget *widget,
 void
 size_allocate_cb (GtkWidget *widget, GtkAllocation *allocation)
 {
-  gpointer user_data;
-  user_data = g_object_get_data(G_OBJECT(widget), "nsWindow");
-
-  if (!user_data)
+  nsWindow *window = get_window_for_gtk_widget(widget);
+  if (!window)
     return;
-
-  nsWindow *window = NS_STATIC_CAST(nsWindow *, user_data);
 
   window->OnSizeAllocate(widget, allocation);
 }
@@ -1065,13 +1180,9 @@ size_allocate_cb (GtkWidget *widget, GtkAllocation *allocation)
 gboolean
 delete_event_cb(GtkWidget *widget, GdkEventAny *event)
 {
-  gpointer user_data;
-  user_data = g_object_get_data(G_OBJECT(widget), "nsWindow");
-  
-  if (!user_data)
+  nsWindow *window = get_window_for_gtk_widget(widget);
+  if (!window)
     return FALSE;
-
-  nsWindow *window = NS_STATIC_CAST(nsWindow *, user_data);
 
   window->OnDeleteEvent(widget, event);
 
@@ -1083,30 +1194,23 @@ gboolean
 enter_notify_event_cb (GtkWidget *widget,
 				GdkEventCrossing *event)
 {
-  gpointer user_data;
-  user_data = g_object_get_data(G_OBJECT(event->window), "nsWindow");
-
-  if (!user_data)
+  nsWindow *window = get_window_for_gdk_window(event->window);
+  if (!window)
     return TRUE;
-
-  nsWindow *window = NS_STATIC_CAST(nsWindow *, user_data);
   
   window->OnEnterNotifyEvent(widget, event);
 
   return TRUE;
 }
+
 /* static */
 gboolean
 leave_notify_event_cb (GtkWidget *widget,
 				GdkEventCrossing *event)
 {
-  gpointer user_data;
-  user_data = g_object_get_data(G_OBJECT(event->window), "nsWindow");
-
-  if (!user_data)
+  nsWindow *window = get_window_for_gdk_window(event->window);
+  if (!window)
     return TRUE;
-
-  nsWindow *window = NS_STATIC_CAST(nsWindow *, user_data);
   
   window->OnLeaveNotifyEvent(widget, event);
 
@@ -1117,13 +1221,9 @@ leave_notify_event_cb (GtkWidget *widget,
 gboolean
 motion_notify_event_cb (GtkWidget *widget, GdkEventMotion *event)
 {
-  gpointer user_data;
-  user_data = g_object_get_data(G_OBJECT(event->window), "nsWindow");
-
-  if (!user_data)
+  nsWindow *window = get_window_for_gdk_window(event->window);
+  if (!window)
     return TRUE;
-
-  nsWindow *window = NS_STATIC_CAST(nsWindow *, user_data);
 
   window->OnMotionNotifyEvent(widget, event);
 
@@ -1134,13 +1234,9 @@ motion_notify_event_cb (GtkWidget *widget, GdkEventMotion *event)
 gboolean
 button_press_event_cb   (GtkWidget *widget, GdkEventButton *event)
 {
-  gpointer user_data;
-  user_data = g_object_get_data(G_OBJECT(event->window), "nsWindow");
-  
-  if (!user_data)
+  nsWindow *window = get_window_for_gdk_window(event->window);
+  if (!window)
     return TRUE;
-
-  nsWindow *window = NS_STATIC_CAST(nsWindow *, user_data);
 
   window->OnButtonPressEvent(widget, event);
 
@@ -1151,17 +1247,39 @@ button_press_event_cb   (GtkWidget *widget, GdkEventButton *event)
 gboolean
 button_release_event_cb (GtkWidget *widget, GdkEventButton *event)
 {
-  gpointer user_data;
-  user_data = g_object_get_data(G_OBJECT(event->window), "nsWindow");
-  
-  if (!user_data)
+  nsWindow *window = get_window_for_gdk_window(event->window);
+  if (!window)
     return TRUE;
-
-  nsWindow *window = NS_STATIC_CAST(nsWindow *, user_data);
 
   window->OnButtonReleaseEvent(widget, event);
 
   return TRUE;
+}
+
+/* static */
+gboolean
+container_focus_in_event  (GtkWidget *widget, GdkEventFocus *event)
+{
+  nsWindow *window = get_window_for_gtk_widget(widget);
+  if (!window)
+    return FALSE;
+
+  window->OnContainerFocusInEvent(widget, event);
+
+  return FALSE;
+}
+
+/* static */
+gboolean
+container_focus_out_event (GtkWidget *widget, GdkEventFocus *event)
+{
+  nsWindow *window = get_window_for_gtk_widget(widget);
+  if (!window)
+    return FALSE;
+
+  window->OnContainerFocusOutEvent(widget, event);
+
+  return FALSE;
 }
 
 // nsChildWindow class

@@ -135,11 +135,50 @@ nsCommonWidget::InitMouseScrollEvent(nsMouseScrollEvent &aEvent, PRUint32 aMsg)
   aEvent.widget = NS_STATIC_CAST(nsIWidget *, this);
 }
 
+void
+nsCommonWidget::DispatchGotFocusEvent(void)
+{
+  nsGUIEvent event;
+  InitGUIEvent(event, NS_GOTFOCUS);
+  nsEventStatus status;
+  DispatchEvent(&event, status);
+}
+
+void
+nsCommonWidget::DispatchLostFocusEvent(void)
+{
+  nsGUIEvent event;
+  InitGUIEvent(event, NS_LOSTFOCUS);
+  nsEventStatus status;
+  DispatchEvent(&event, status);
+}
+
+void
+nsCommonWidget::DispatchActivateEvent(void)
+{
+  nsGUIEvent event;
+  InitGUIEvent(event, NS_ACTIVATE);
+  nsEventStatus status;
+  DispatchEvent(&event, status);
+}
+
+void
+nsCommonWidget::DispatchDeactivateEvent(void)
+{
+  nsGUIEvent event;
+  InitGUIEvent(event, NS_DEACTIVATE);
+  nsEventStatus status;
+  DispatchEvent(&event, status);
+}
+
 NS_IMETHODIMP
 nsCommonWidget::DispatchEvent(nsGUIEvent *aEvent,
 			      nsEventStatus &aStatus)
 {
   aStatus = nsEventStatus_eIgnore;
+
+  // hold a widget reference while we dispatch this event
+  NS_ADDREF(aEvent->widget);
 
   // send it to the standard callback
   if (mEventCallback)
@@ -148,6 +187,8 @@ nsCommonWidget::DispatchEvent(nsGUIEvent *aEvent,
   // dispatch to event listener if event was not consumed
   if ((aStatus != nsEventStatus_eIgnore) && mEventListener)
     aStatus = mEventListener->ProcessEvent(*aEvent);
+
+  NS_RELEASE(aEvent->widget);
 
   return NS_OK;
 }

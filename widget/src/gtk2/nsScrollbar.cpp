@@ -35,8 +35,11 @@
 
 #include "nsScrollbar.h"
 
+#include <gtk/gtkscrollbar.h>
+
 nsScrollbar::nsScrollbar()
 {
+  mScrollbar = nsnull;
 }
 
 nsScrollbar::~nsScrollbar()
