@@ -527,6 +527,10 @@ function HideAccountCentral()
             case 1:
                 window.frames["accountCentralPane"].location = "about:blank";
                 accountCentralBox.setAttribute("collapsed", "true");
+                // XXX todo
+                // the code below that always removes the collapsed attribute
+                // makes it so in this pane config, you can't keep the message pane hidden
+                // see bug #188393
                 var messagePaneBox = document.getElementById("messagepanebox");
                 messagePaneBox.removeAttribute("collapsed");
                 var searchAndThreadPaneBox = document.getElementById("searchAndthreadpaneBox");
