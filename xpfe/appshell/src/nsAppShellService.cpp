@@ -651,10 +651,15 @@ nsAppShellService::JustCreateTopWindow(nsIWebShellWindow *aParent,
 
       // this does the AddRef of the return value
       rv = window->QueryInterface(kIWebShellWindowIID, (void **) aResult);
-
-      // if intrinsically sized, don't show until we have the size figured out
+#if 0
+      // If intrinsically sized, don't show until we have the size figured out
+      // (6 Dec 99: this is causing new windows opened from anchor links to
+      // be visible too early. All windows should (and appear to in testing)
+      // become visible in nsWebShellWindow::OnEndDocumentLoad. Timidly
+      // commenting out for now.)
       if (aShowWindow && !intrinsicallySized)
         window->Show(PR_TRUE);
+#endif
 
     }
   }
