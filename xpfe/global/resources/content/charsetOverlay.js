@@ -136,7 +136,7 @@ function UpdateCurrentCharset()
 function UpdateCurrentMailCharset()
 {
     var charset = msgWindow.mailCharacterSet;
-    dump("UPdate current mail charset: " + charset + " \n");
+    dump("Update current mail charset: " + charset + " \n");
 
     var menuitem = document.getElementById('charset.' + charset);
 
@@ -199,21 +199,18 @@ function charsetLoadListener (event)
     // weird assertion!
 }
 
+var gCharsetMenu = Components.classes['@mozilla.org/rdf/datasource;1?name=charset-menu'].getService().QueryInterface(Components.interfaces.nsICurrentCharsetListener);
+var gLastCurrentCharset = null;
+
 function mailCharsetLoadListener (event)
 {
-    var menu = Components.classes['@mozilla.org/rdf/datasource;1?name=charset-menu'];
-
-    if (menu) {
-        menu = menu.getService();
-        menu = menu.QueryInterface(Components.interfaces.nsICurrentCharsetListener);
-        
-        if (msgWindow) {
+    if (msgWindow) {
             var charset = msgWindow.mailCharacterSet;
-            if (charset.length > 0) {
-                menu.SetCurrentMailCharset(charset);
+            if (charset.length > 0 && (charset != gLastCurrentCharset)) {
+                gCharsetMenu.SetCurrentMailCharset(charset);
+                gLastCurrentCharset = charset;
                 dump("mailCharsetLoadListener: " + charset + " \n");
             }
-        }
     }
 }
 
