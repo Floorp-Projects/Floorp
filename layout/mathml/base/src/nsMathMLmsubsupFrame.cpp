@@ -274,7 +274,8 @@ nsMathMLmsubsupFrame::Place(nsIPresContext*      aPresContext,
 
   nscoord aRuleSize, dummy;
   // XXX need to do update this ...
-  fm->GetStrikeout (dummy, aRuleSize);
+  GetRuleThickness (fm, aRuleSize);
+//   aRuleSize /= 2;
   nscoord gap = 
     (aSupScriptShift - bmSupScript.descent) - 
     (bmSubScript.ascent - aSubScriptShift);

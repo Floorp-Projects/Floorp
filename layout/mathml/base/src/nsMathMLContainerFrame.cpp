@@ -756,7 +756,7 @@ nsMathMLContainerFrame::Paint(nsIPresContext*      aPresContext,
   // ----------------
   // if you want to see your bounding box, make sure to properly fill
   // your mBoundingMetrics and mReference point, and set
-  // mPresentationData.flags |= NS_MATHML_BOUNDING_METRICS
+  // mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS
   // in the Init() of your sub-class
 
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
@@ -1268,7 +1268,7 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
     childFrame->GetNextSibling(&childFrame);
   }
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-  
+
   if (aPlaceOrigin) {
     nsRect rect;
   

@@ -204,45 +204,41 @@ nsMathMLmsupFrame::Place(nsIPresContext*      aPresContext,
     // everything else = T,S,SS
     aSupScriptShift = aSupScriptShift2;
   }
-  
+
   // get actual supscriptshift to be used
   // Rule 18c, App. G, TeXbook
   nscoord actualSupScriptShift = 
     PR_MAX(minSupScriptShift,PR_MAX(aSupScriptShift,minShiftFromXHeight));
 
+  // bounding box
   mBoundingMetrics.ascent =
     PR_MAX(bmBase.ascent, (bmSupScript.ascent + actualSupScriptShift));
   mBoundingMetrics.descent =
     PR_MAX(bmBase.descent, (bmSupScript.descent - actualSupScriptShift));
   // add mScriptSpace between base and supscript
   mBoundingMetrics.width = bmBase.width + mScriptSpace + bmSupScript.width;
+  mBoundingMetrics.leftBearing = bmBase.leftBearing;
+  mBoundingMetrics.rightBearing = bmBase.width + mScriptSpace + bmSupScript.rightBearing;
 
-  // to be simplified ...
-  nscoord dyBase = mBoundingMetrics.ascent - bmBase.ascent;
-  nscoord dySupScript = mBoundingMetrics.ascent - bmSupScript.ascent - actualSupScriptShift;
-
-  nscoord baseTop = mBoundingMetrics.ascent - dyBase - bmBase.ascent + baseSize.ascent;
-  nscoord supScriptTop = mBoundingMetrics.ascent - dySupScript - bmSupScript.ascent + supScriptSize.ascent;
-
-  aDesiredSize.ascent = PR_MAX(baseTop, supScriptTop);
-  aDesiredSize.descent = PR_MAX(baseSize.height-baseTop, supScriptSize.height-supScriptTop);
+  // reflow metrics
+  aDesiredSize.ascent =
+    PR_MAX(baseSize.ascent, (supScriptSize.ascent + actualSupScriptShift));
+  aDesiredSize.descent =
+    PR_MAX(baseSize.descent, (supScriptSize.descent - actualSupScriptShift));
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-
-  aDesiredSize.width = mBoundingMetrics.width;
+  aDesiredSize.width = baseSize.width + mScriptSpace + supScriptSize.width;
 
   mReference.x = 0;
   mReference.y = aDesiredSize.ascent - mBoundingMetrics.ascent;
-  mBoundingMetrics.leftBearing = bmBase.leftBearing;
-  mBoundingMetrics.rightBearing = baseSize.width + mScriptSpace + bmSupScript.rightBearing;
 
   if (aPlaceOrigin) {
     nscoord dx, dy;
     // now place the base ...
-    dx = 0; dy = aDesiredSize.ascent - baseTop;
+    dx = 0; dy = aDesiredSize.ascent - baseSize.ascent;
     FinishReflowChild (baseFrame, aPresContext, baseSize, dx, dy, 0);
     // ... and supscript
-    dx = baseSize.width + mScriptSpace; 
-    dy = aDesiredSize.ascent - supScriptTop;
+    dx = baseSize.width + mScriptSpace;
+    dy = aDesiredSize.ascent - (supScriptSize.ascent + actualSupScriptShift);
     FinishReflowChild (supScriptFrame, aPresContext, supScriptSize, dx, dy, 0);
   }
 
