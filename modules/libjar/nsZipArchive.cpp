@@ -310,6 +310,9 @@ PRInt32 nsZipArchive::ReadInit(const char* aFilename, nsZipRead** aRead)
   if (aRead == 0)
     return ZIP_ERR_MEMORY;
 
+  //-- initialize crc
+  (*aRead)->mCRC32 = crc32(0L, Z_NULL, 0);
+
   //-- If file is deflated, do the inflation now.
   //   We save the complete inflated item in mInflatedFileBuffer
   //   to be copied later.
@@ -345,7 +348,7 @@ PRInt32 nsZipArchive::Read(nsZipRead* aRead, char* aBuf,
   {
     case STORED:
       //-- Read from the zip file directly into the caller's buffer
-      return ReadItem( aRead->mItem, aBuf, &(aRead->mCurPos), aCount, aBytesRead);
+      return ReadItem( aRead, aBuf, aCount, aBytesRead );
 
     case DEFLATED:
       //-- We've already done the inflation; copy from mInflatedFileBuffer
@@ -786,29 +789,44 @@ PRInt32  nsZipArchive::ReadInitImpl(const char* aFilename, nsZipItem** aItem)
   if ( PR_Seek( mFd, (*aItem)->offset, PR_SEEK_SET ) != 0)
 #endif
     return  ZIP_ERR_CORRUPT;
-  
+
   return ZIP_OK;
 }
 
 //---------------------------------------------
 // nsZipArchive::ReadItem
 //---------------------------------------------
-PRInt32 nsZipArchive::ReadItem(const nsZipItem* aItem, char* aBuf, 
-                           PRUint32* aCurPos, PRUint32 aCount, PRUint32* actual)
+PRInt32 nsZipArchive::ReadItem( nsZipRead* aRead, char* aBuf, 
+                                PRUint32 aCount, PRUint32* aActual)
 {
   PRUint32    chunk;
-  PR_ASSERT(aBuf != 0 && aItem != 0);
+  nsZipItem   *item = aRead->mItem;
+  PRUint32    *curpos = &(aRead->mCurPos);
+  PRUint32    *crc = &(aRead->mCRC32);
+
+  PR_ASSERT(aBuf != 0 && item != 0);
 
   // Seek to position in file
-  if ( PR_Seek( mFd, (PROffset32)(aItem->offset + aCurPos), PR_SEEK_SET ) != 
-                     (PROffset32)(aItem->offset + aCurPos) )
+  if ( PR_Seek( mFd, (PROffset32)(item->offset + *curpos), PR_SEEK_SET ) != 
+                     (PROffset32)(item->offset + *curpos) )
     return  ZIP_ERR_CORRUPT;
 
   //-- Read from file
-  chunk = (aCount <= ((aItem->size) - *aCurPos) ) ? aCount
-                                                  : ((aItem->size) - *aCurPos);
-  *actual = PR_Read( mFd, aBuf, chunk );
-  *aCurPos += *actual;
+  chunk = (aCount <= ((item->size) - *curpos) ) ? aCount
+                                                  : ((item->size) - *curpos);
+  *aActual = PR_Read( mFd, aBuf, chunk );
+  *curpos += *aActual;
+
+  //-- incrementally update crc32
+  *crc = crc32(*crc,(const unsigned char*)aBuf, chunk);
+
+  //-- verify crc32
+  if (0 == (item->size - *curpos)) // eof
+  {
+      if (*crc != item->crc32)
+          return ZIP_ERR_CORRUPT;
+  }
+
   return ZIP_OK;
 }
 
@@ -816,10 +834,10 @@ PRInt32 nsZipArchive::ReadItem(const nsZipItem* aItem, char* aBuf,
 //---------------------------------------------
 // nsZipArchive::CopyItemToDisk
 //---------------------------------------------
-PRInt32 nsZipArchive::CopyItemToDisk( const nsZipItem* aItem, const char* aOutname)
+PRInt32 nsZipArchive::CopyItemToDisk( const nsZipItem* aItem, const char* aOutname )
 {
   PRInt32     status = ZIP_OK;
-  PRUint32    chunk, pos, size;
+  PRUint32    chunk, pos, size, crc;
   PRFileDesc* fOut = 0;
 
   PR_ASSERT( aItem != 0 && aOutname != 0 );
@@ -830,6 +848,9 @@ PRInt32 nsZipArchive::CopyItemToDisk( const nsZipItem* aItem, const char* aOutna
 
   //-- We should already be at the correct spot in the archive.
   //-- ReadInitImpl did the seek().
+
+  //-- initialize crc
+  crc = crc32(0L, Z_NULL, 0);
 
   //-- open output file
   fOut = PR_Open( aOutname, ZFILE_CREATE , 0644);
@@ -852,6 +873,9 @@ PRInt32 nsZipArchive::CopyItemToDisk( const nsZipItem* aItem, const char* aOutna
       break;
     }
 
+    //-- incrementally update crc32
+    crc = crc32(crc, (const unsigned char*)buf, chunk);
+
     if ( PR_Write( fOut, buf, chunk ) < (READTYPE)chunk ) 
     {
       //-- Couldn't write all the data (disk full?)
@@ -859,6 +883,10 @@ PRInt32 nsZipArchive::CopyItemToDisk( const nsZipItem* aItem, const char* aOutna
       break;
     }
   }
+
+  //-- verify crc32
+  if ( (status == ZIP_OK) && (crc != aItem->crc32) )
+      status = ZIP_ERR_CORRUPT;
 
 cleanup:
   if ( fOut != 0 )
@@ -887,7 +915,7 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, const char* aOutname,
  */
 {
   PRInt32     status = ZIP_OK;    
-  PRUint32    chunk, inpos, outpos, size;
+  PRUint32    chunk, inpos, outpos, size, crc;
   PRUint32    bigBufSize;
   PRFileDesc* fOut = 0;
   z_stream    zs;
@@ -923,6 +951,9 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, const char* aOutname,
     status = ZIP_ERR_MEMORY;
     goto cleanup;
   }
+
+  //-- initialize crc
+  crc = crc32(0L, Z_NULL, 0);
 
   //-- We should already be at the correct spot in the archive.
   //-- ReadInitImpl did the seek().
@@ -973,6 +1004,7 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, const char* aOutname,
         status = ZIP_ERR_CORRUPT;
         break;
       }
+
       zs.next_in  = inbuf;
       zs.avail_in = chunk;
       bRead       = PR_TRUE;
@@ -997,7 +1029,8 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, const char* aOutname,
         PR_ASSERT( outpos + ZIP_BUFLEN <= bigBufSize);
         char* copyStart = bigBuf + outpos;
         memcpy(copyStart, outbuf, ZIP_BUFLEN);
-      }    
+      }  
+      
       outpos = zs.total_out;
       zs.next_out  = outbuf;
       zs.avail_out = ZIP_BUFLEN;
@@ -1009,6 +1042,9 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, const char* aOutname,
     else
       zerr = Z_STREAM_END;
 
+    //-- incrementally update crc32
+    crc = crc32(crc, (const unsigned char*)outbuf, zs.total_out - outpos);
+
 #if defined STANDALONE && defined WIN32
     while(PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
     {
@@ -1017,6 +1053,13 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, const char* aOutname,
     }
 #endif /* STANDALONE */
   } // while
+
+  //-- verify crc32
+  if ( (status == ZIP_OK) && (crc != aItem->crc32) )
+  {
+      status = ZIP_ERR_CORRUPT;
+      goto cleanup;
+  }
 
   //-- write last inflated bit to disk
   if ( zerr == Z_STREAM_END && outpos < zs.total_out )
@@ -1062,7 +1105,7 @@ cleanup:
 //------------------------------------------
 // nsZipArchive::ReadInflatedItem
 //------------------------------------------
-PRInt32 nsZipArchive::ReadInflatedItem( nsZipItem* aItem, 
+PRInt32 nsZipArchive::ReadInflatedItem( const nsZipItem* aItem, 
                                         char* inflatedBuf, 
                                         char* outbuf, 
                                         PRUint32* aCurPos,

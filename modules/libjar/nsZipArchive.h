@@ -126,7 +126,7 @@ public:
    */
   PRInt32 Read(nsZipRead* aRead, char* buf, PRUint32 count, PRUint32* actual );
 
- /**
+  /**
    * Available
    *
    * Returns the number of bytes left to be read from the
@@ -184,13 +184,13 @@ private:
   PRUint32          HashName( const char* aName );
 
   PRInt32           ReadInitImpl(const char* aFilename, nsZipItem** aItem);
-  PRInt32           ReadItem( const nsZipItem* aItem, char* buf, 
-                              PRUint32* aCurPos, PRUint32 count, PRUint32* actual );
+  PRInt32           ReadItem( nsZipRead* aRead, char* aBuf, 
+                              PRUint32 aCount, PRUint32* aActual );
   PRInt32           CopyItemToDisk( const nsZipItem* aItem, const char* aOutname );
   PRInt32           InflateItem( const nsZipItem* aItem, 
                                  const char* aOutname,
-                                 char* buf);
-  PRInt32           ReadInflatedItem( nsZipItem* aItem, 
+                                 char* buf );
+  PRInt32           ReadInflatedItem( const nsZipItem* aItem, 
                                       char* inflatedBuf, char* outbuf, 
                                       PRUint32* aCurPos, PRUint32 count, PRUint32* actual);
 };
@@ -214,6 +214,7 @@ private:
   nsZipItem*    mItem;
   PRUint32      mCurPos;
   char*         mInflatedFileBuffer;
+  PRUint32      mCRC32;
 
   //-- prevent copies and assignments
   nsZipRead& operator=(const nsZipRead& rhs);
