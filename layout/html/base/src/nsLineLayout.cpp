@@ -244,13 +244,11 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": Init: bad caller: width WAS %d(0x%x)\n",
            aWidth, aWidth);
-    aWidth = NS_UNCONSTRAINEDSIZE;
   }
   if ((aHeight != NS_UNCONSTRAINEDSIZE) && CRAZY_HEIGHT(aHeight)) {
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": Init: bad caller: height WAS %d(0x%x)\n",
            aHeight, aHeight);
-    aHeight = NS_UNCONSTRAINEDSIZE;
   }
 #endif
 #ifdef NOISY_REFLOW
@@ -395,13 +393,11 @@ nsLineLayout::UpdateBand(nscoord aX, nscoord aY,
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": UpdateBand: bad caller: width WAS %d(0x%x)\n",
            aWidth, aWidth);
-    aWidth = NS_UNCONSTRAINEDSIZE;
   }
   if ((aHeight != NS_UNCONSTRAINEDSIZE) && CRAZY_HEIGHT(aHeight)) {
     nsFrame::ListTag(stdout, mBlockReflowState->frame);
     printf(": UpdateBand: bad caller: height WAS %d(0x%x)\n",
            aHeight, aHeight);
-    aHeight = NS_UNCONSTRAINEDSIZE;
   }
 #endif
 
@@ -1654,6 +1650,7 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
 
   // Advance to next X coordinate
   psd->mX = pfd->mBounds.XMost() + pfd->mMargin.right;
+  psd->mRightEdge = PR_MAX(psd->mRightEdge, psd->mX);
 
   // If the frame is a not aware of white-space and it takes up some
   // width, disable leading white-space compression for the next frame

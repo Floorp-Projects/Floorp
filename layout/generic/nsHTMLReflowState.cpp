@@ -1156,10 +1156,11 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext* aPresContext,
           // The width is shrink-to-fit but constrained by the containing block width
           mComputedWidth = NS_SHRINKWRAPWIDTH;
           
-          PRInt32 maxWidth = containingBlockWidth - mComputedOffsets.left -
-                             mComputedMargin.left - mComputedBorderPadding.left -
-                             mComputedBorderPadding.right - mComputedMargin.right -
-                             mComputedOffsets.right;
+          PRInt32 maxWidth = containingBlockWidth;
+          if (NS_UNCONSTRAINEDSIZE != maxWidth) {
+            maxWidth -= mComputedOffsets.left + mComputedMargin.left + mComputedBorderPadding.left +
+                        mComputedBorderPadding.right + mComputedMargin.right + mComputedOffsets.right;
+          }
           if (maxWidth <= 0) {
             maxWidth = 1;
           }
@@ -1891,9 +1892,11 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
           mComputedWidth = NS_SHRINKWRAPWIDTH;
 
           // Limnit the width to the containing block width
-          nscoord widthFromCB = aContainingBlockWidth - 
-                  mComputedBorderPadding.left - mComputedBorderPadding.right -
-                  mComputedMargin.left - mComputedMargin.right;
+          nscoord widthFromCB = aContainingBlockWidth;
+          if (NS_UNCONSTRAINEDSIZE != widthFromCB) {
+            widthFromCB -= mComputedBorderPadding.left + mComputedBorderPadding.right +
+                           mComputedMargin.left + mComputedMargin.right;
+          }
           if (mComputedMaxWidth > widthFromCB) {
             mComputedMaxWidth = widthFromCB;
           }
@@ -2038,10 +2041,11 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext* aPresContext,
 
         // Let its content area be as wide as the containing block's max width
         // minus any margin and border/padding
-        nscoord maxWidth = cbrs->mComputedMaxWidth - mComputedMargin.left -
-                           mComputedBorderPadding.left - mComputedMargin.right -
-                           mComputedBorderPadding.right;
-
+        nscoord maxWidth = cbrs->mComputedMaxWidth;
+        if (NS_UNCONSTRAINEDSIZE != maxWidth) {
+          maxWidth -= mComputedMargin.left + mComputedBorderPadding.left + 
+                      mComputedMargin.right + mComputedBorderPadding.right;
+        }
         if (maxWidth < mComputedMaxWidth) {
           mComputedMaxWidth = maxWidth;
         }
