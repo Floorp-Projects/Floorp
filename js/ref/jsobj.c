@@ -1533,6 +1533,9 @@ js_FindVariableScope(JSContext *cx, JSFunction **funp)
 	    ;
 	if (fp)
 	    obj = js_GetCallObject(cx, fp, parent, withobj);
+    } else if (clasp == &js_CallClass) {
+        fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
+        fun = fp->fun;
     }
 #endif
 
@@ -2451,9 +2454,6 @@ out:
 
 #endif /* JS_HAS_XDR */
 
-/* WIN16 has no stderr! --MLM */
-#if !defined XP_PC || !defined _MSC_VER || _MSC_VER > 800 
-
 #ifdef DEBUG
 
 /* Routines to print out values during debugging. */
@@ -2509,4 +2509,3 @@ void printAtom(JSAtom *atom) {
 
 #endif
 
-#endif

@@ -85,6 +85,12 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp, JSObject *parent,
 extern JSBool
 js_PutCallObject(JSContext *cx, JSStackFrame *fp);
 
+extern JSBool
+js_GetCallVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+
+extern JSBool
+js_SetCallVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+
 extern JSObject *
 js_GetArgsObject(JSContext *cx, JSStackFrame *fp);
 

@@ -1464,6 +1464,17 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSScopeProperty *sprop;
     JSBool ok;
 
+    /**
+     * The tricky part of this code is to create special 
+     * parsenode opcodes for getting and setting variables 
+     * (which will be stored as special slots in the frame). 
+     * The complex special case is an eval() inside a 
+     * function. If the evaluated string references variables in
+     * the enclosing function, then we need to generate
+     * the special variable opcodes.
+     * We determine this by looking up the variable id in the 
+     * current variable scope.
+     */
     PR_ASSERT(ts->token.type == TOK_VAR);
     pn = NewParseNode(cx, &ts->token, PN_LIST);
     if (!pn)
@@ -1476,8 +1487,13 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	return NULL;
     clasp = OBJ_GET_CLASS(cx, obj);
     if (fun && clasp == &js_FunctionClass) {
+        /* We are compiling code inside a function */
 	getter = js_GetLocalVariable;
 	setter = js_SetLocalVariable;
+    } else if (fun && clasp == &js_CallClass) {
+        /* We are compiling code from an eval inside a function */
+	getter = js_GetCallVariable;
+	setter = js_SetCallVariable;
     } else {
 	getter = clasp->getProperty;
 	setter = clasp->setProperty;
@@ -1518,7 +1534,23 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 			PR_ASSERT(sprop->getter == js_GetLocalVariable);
 			PR_ASSERT(JSVAL_IS_INT(sprop->id) &&
 				  JSVAL_TO_INT(sprop->id) < fun->nvars);
-		    }
+                    } else if (clasp == &js_CallClass) {
+                        if (sprop->getter == js_GetCallVariable) {
+                            /* Referencing a variable introduced by a var
+                             * statement in the enclosing function. Check
+                             * that the slot number we have is in range.
+                             */
+			    PR_ASSERT(JSVAL_IS_INT(sprop->id) &&
+				      JSVAL_TO_INT(sprop->id) < fun->nvars);
+                        } else {
+                            /* A variable introduced through another eval:
+                             * don't use the special getters and setters
+                             * since we can't allocate a slot in the frame.
+                             */
+                            getter = sprop->getter;
+                            setter = sprop->setter;
+                        }
+                    }
 		} else {
 		    /* Global var: (re-)set id a la js_DefineProperty. */
 		    sprop->id = ATOM_KEY(atom);
@@ -1529,11 +1561,21 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 		sprop->attrs &= ~JSPROP_READONLY;
 	    }
 	} else {
+            /* Property not found in current variable scope: we have not 
+             * seen this variable before.
+             * Define a new variable by adding a property to the current
+             * scope, or by allocating more slots in the function's frame.
+             */
 	    sprop = NULL;
 	    if (prop) {
 		OBJ_DROP_PROPERTY(cx, pobj, prop);
 		prop = NULL;
 	    }
+            if (getter == js_GetCallVariable) {
+                /* Can't increase fun->nvars in an active frame! */
+	        getter = js_GetProperty;
+	        setter = js_SetProperty;
+            }
 	    ok = OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID,
 				     getter, setter,
 				     JSPROP_ENUMERATE | JSPROP_PERMANENT,
@@ -1541,9 +1583,13 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    if (ok && prop) {
 		pobj = obj;
 		if (getter == js_GetLocalVariable) {
+                    /* Allocate more room for variables in the 
+                     * function's frame. We can only do this 
+                     * before the function is called.
+                     */
 		    sprop = (JSScopeProperty *)prop;
 		    sprop->id = INT_TO_JSVAL(fun->nvars++);
-		}
+                }
 	    }
 	}
 
@@ -1561,21 +1607,28 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    }
 	}
 
-	if (ok && fun && clasp == &js_FunctionClass && !InWithStatement(tc)) {
-	    PR_ASSERT(sprop);
+	if (ok && fun && (clasp == &js_FunctionClass ||
+                          clasp == &js_CallClass) && 
+            !InWithStatement(tc)) 
+        {
+            /* Depending on the value of the getter, change the 
+             * opcodes to the forms for arguments and variables.
+             */
 	    if (getter == js_GetArgument) {
 		PR_ASSERT(sprop && JSVAL_IS_INT(sprop->id));
 		pn2->pn_op = (pn2->pn_op == JSOP_NAME)
 			     ? JSOP_GETARG
 			     : JSOP_SETARG;
 		pn2->pn_slot = JSVAL_TO_INT(sprop->id);
-	    } else if (getter == js_GetLocalVariable) {
+	    } else if (getter == js_GetLocalVariable || 
+                       getter == js_GetCallVariable)
+            {
 		PR_ASSERT(sprop && JSVAL_IS_INT(sprop->id));
 		pn2->pn_op = (pn2->pn_op == JSOP_NAME)
 			     ? JSOP_GETVAR
 			     : JSOP_SETVAR;
 		pn2->pn_slot = JSVAL_TO_INT(sprop->id);
-	    }
+            }
 	}
 
 	if (prop)
@@ -1619,11 +1672,13 @@ LookupArgOrVar(JSContext *cx, JSAtom *atom, JSTreeContext *tc,
 	       JSOp *opp, jsint *slotp)
 {
     JSObject *obj, *pobj;
+    JSClass *clasp;
     JSFunction *fun;
     JSScopeProperty *sprop;
 
     obj = js_FindVariableScope(cx, &fun);
-    if (OBJ_GET_CLASS(cx, obj) != &js_FunctionClass)
+    clasp = OBJ_GET_CLASS(cx, obj);
+    if (clasp != &js_FunctionClass && clasp != &js_CallClass)
     	return JS_TRUE;
     if (InWithStatement(tc))
     	return JS_TRUE;
@@ -1635,7 +1690,9 @@ LookupArgOrVar(JSContext *cx, JSAtom *atom, JSTreeContext *tc,
 	if (sprop->getter == js_GetArgument) {
 	    *opp = JSOP_GETARG;
 	    *slotp = JSVAL_TO_INT(sprop->id);
-	} else if (sprop->getter == js_GetLocalVariable) {
+	} else if (sprop->getter == js_GetLocalVariable || 
+                   sprop->getter == js_GetCallVariable) 
+        {
 	    *opp = JSOP_GETVAR;
 	    *slotp = JSVAL_TO_INT(sprop->id);
 	}

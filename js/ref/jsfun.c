@@ -436,8 +436,8 @@ call_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-static JSBool
-call_getVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+JSBool
+js_GetCallVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSStackFrame *fp;
 
@@ -451,8 +451,8 @@ call_getVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-static JSBool
-call_setVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+JSBool
+js_SetCallVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSStackFrame *fp;
 
@@ -546,8 +546,8 @@ call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 	} else if (getter == js_GetLocalVariable) {
 	    vp = fp->vars;
 	    nslots = fp->nvars;
-	    getter = call_getVariable;
-	    setter = call_setVariable;
+	    getter = js_GetCallVariable;
+	    setter = js_SetCallVariable;
 	}
 	if (vp) {
 	    slot = (uintN)JSVAL_TO_INT(propid);
