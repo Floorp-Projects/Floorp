@@ -22,6 +22,7 @@
 #include "nsIRegistry.h"
 #include "nsISupports.h"
 #include "nsIXPConnect.h"
+#include "nsIModule.h"
 
 extern const char mozJSComponentLoaderProgID[];
 extern const char jsComponentTypeName[];
