@@ -571,3 +571,8 @@ function BrowserSetForcedCharacterSet(aCharset)
   var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
   PageLoader.LoadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
 }
+
+function getMarkupDocumentViewer()
+{
+  return gBrowser.markupDocumentViewer;
+}

@@ -24,6 +24,10 @@
 <!ENTITY closeCmd.accesskey "C">
 <!ENTITY closeCmd.commandkey "W">
 
+<!ENTITY textEnlarge.commandkey "+">
+<!ENTITY textReduce.commandkey "-">
+<!ENTITY textReset.commandkey "0">
+
 <!ENTITY goToLineCmd.label "Go to Line...">
 <!ENTITY goToLineCmd.accesskey "G">
 <!ENTITY goToLineCmd.commandkey "l">
@@ -34,3 +38,7 @@
 <!ENTITY menu_wrapLongLines.accesskey "W">
 <!ENTITY menu_highlightSyntax.label "Syntax Highlighting">
 <!ENTITY menu_highlightSyntax.accesskey "H">
+<!ENTITY menu_textEnlarge.label "Increase Text Size">
+<!ENTITY menu_textEnlarge.accesskey "I">
+<!ENTITY menu_textReduce.label "Decrease Text Size">
+<!ENTITY menu_textReduce.accesskey "D">
