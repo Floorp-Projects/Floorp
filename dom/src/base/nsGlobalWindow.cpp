@@ -104,8 +104,8 @@ GlobalWindowImpl::GlobalWindowImpl() : mScriptObject(nsnull),
    mPersonalbar(nsnull), mStatusbar(nsnull), mScrollbars(nsnull),
    mTimeouts(nsnull), mTimeoutInsertionPoint(nsnull), mRunningTimeout(nsnull),
    mTimeoutPublicIdCounter(1), mTimeoutFiringDepth(0), 
-   mFirstDocumentLoad(PR_TRUE), mGlobalObjectOwner(nsnull), 
-   mDocShell(nsnull), mChromeEventHandler(nsnull)
+   mFirstDocumentLoad(PR_TRUE), mXPConnectObjectHash(nsnull),
+   mGlobalObjectOwner(nsnull), mDocShell(nsnull), mChromeEventHandler(nsnull)
 {
    NS_INIT_REFCNT();
 }
@@ -131,6 +131,11 @@ void GlobalWindowImpl::CleanUp()
    NS_IF_RELEASE(mLocation);
    NS_IF_RELEASE(mFrames);
    mOpener = nsnull; // Forces Release
+   if(mXPConnectObjectHash)
+      {
+      delete mXPConnectObjectHash;
+      mXPConnectObjectHash = nsnull;
+      }
 }
 
 //*****************************************************************************
@@ -1769,25 +1774,40 @@ NS_IMETHODIMP GlobalWindowImpl::Unescape(const nsString& aStr, nsString& aReturn
 NS_IMETHODIMP GlobalWindowImpl::AddXPConnectObject(const nsString& aId, 
    nsISupports* aXPConnectObj)
 {
-   // XXXTAB Implement me.
-   NS_ERROR("Not yet Implemented");
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_SUCCESS(EnsureXPConnectObjectHash(), NS_ERROR_FAILURE);
+
+   nsStringKey key(aId);
+
+   mXPConnectObjectHash->Put(&key, aXPConnectObj);
+
+   return NS_OK;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::RemoveXPConnectObject(const nsString& aId,
-   nsISupports* aXPConnectObj)
+NS_IMETHODIMP GlobalWindowImpl::RemoveXPConnectObject(const nsString& aId)
 {
-   // XXXTAB Implement me.
-   NS_ERROR("Not yet Implemented");
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(mXPConnectObjectHash);
+
+   nsStringKey key(aId);
+    
+   mXPConnectObjectHash->Remove(&key);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP GlobalWindowImpl::GetXPConnectObject(const nsString& aId,
    nsISupports** aXPConnectObj)
 {
-   // XXXTAB Implement me.
-   NS_ERROR("Not yet Implemented");
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_ARG_POINTER(aXPConnectObj);
+   *aXPConnectObj = nsnull;
+
+   if(!mXPConnectObjectHash)
+      return NS_OK;
+
+   nsStringKey key(aId);
+
+   *aXPConnectObj = (nsISupports*)mXPConnectObjectHash->Get(&key);
+   NS_IF_ADDREF(*aXPConnectObj);
+   return NS_OK;
 }
 
 //*****************************************************************************
@@ -2789,7 +2809,7 @@ NS_IMETHODIMP GlobalWindowImpl::ReadyOpenedDocShellItem(nsIDocShellTreeItem *aDo
 
 NS_IMETHODIMP GlobalWindowImpl::CheckWindowName(JSContext* cx, nsString& aName)
 {
-   PRInt32 strIndex;
+   PRUint32 strIndex;
    PRUnichar mChar;
 
    for(strIndex = 0; strIndex < aName.Length(); strIndex++)
@@ -3418,6 +3438,17 @@ NS_IMETHODIMP GlobalWindowImpl::GetWebBrowserChrome(nsIWebBrowserChrome**
    nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(treeOwner));
    *aBrowserChrome = browserChrome;
    NS_IF_ADDREF(*aBrowserChrome);
+   return NS_OK;
+}
+
+NS_IMETHODIMP GlobalWindowImpl::EnsureXPConnectObjectHash()
+{
+   if(mXPConnectObjectHash)
+      return NS_OK;
+
+   mXPConnectObjectHash = new nsSupportsHashtable();
+   NS_ENSURE_TRUE(mXPConnectObjectHash, NS_ERROR_OUT_OF_MEMORY);
+
    return NS_OK;
 }
 

@@ -80,7 +80,7 @@
         DOMString unescape(in DOMString str);
 
 		  void addXPConnectObject(in DOMString id, in xpidl nsISupports XPConnectObj);
-		  void removeXPConnectObject(in DOMString id, in xpidl nsISupports XPConnectObj);
+		  void removeXPConnectObject(in DOMString id);
 		  xpidl nsISupports getXPConnectObject(in DOMString id);
       };
 

@@ -2413,7 +2413,6 @@ WindowRemoveXPConnectObject(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsresult result = NS_OK;
   nsAutoString b0;
-  nsCOMPtr<nsISupports> b1;
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -2428,17 +2427,13 @@ WindowRemoveXPConnectObject(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (argc < 2) {
+    if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject(getter_AddRefs(b1),
-                                           kISupportsIID, cx, argv[1])) {
-      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_XPC_OBJECT_ERR);
-    }
 
-    result = nativeThis->RemoveXPConnectObject(b0, b1);
+    result = nativeThis->RemoveXPConnectObject(b0);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -2711,7 +2706,7 @@ static JSFunctionSpec WindowMethods[] =
   {"escape",          WindowEscape,     1},
   {"unescape",          WindowUnescape,     1},
   {"addXPConnectObject",          WindowAddXPConnectObject,     2},
-  {"removeXPConnectObject",          WindowRemoveXPConnectObject,     2},
+  {"removeXPConnectObject",          WindowRemoveXPConnectObject,     1},
   {"getXPConnectObject",          WindowGetXPConnectObject,     1},
   {"addEventListener",          EventTargetAddEventListener,     3},
   {"removeEventListener",          EventTargetRemoveEventListener,     3},

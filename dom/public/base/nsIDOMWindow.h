@@ -203,7 +203,7 @@ public:
 
   NS_IMETHOD    AddXPConnectObject(const nsString& aId, nsISupports* aXPConnectObj)=0;
 
-  NS_IMETHOD    RemoveXPConnectObject(const nsString& aId, nsISupports* aXPConnectObj)=0;
+  NS_IMETHOD    RemoveXPConnectObject(const nsString& aId)=0;
 
   NS_IMETHOD    GetXPConnectObject(const nsString& aId, nsISupports** aReturn)=0;
 };
@@ -293,7 +293,7 @@ public:
   NS_IMETHOD    Escape(const nsString& aStr, nsString& aReturn);  \
   NS_IMETHOD    Unescape(const nsString& aStr, nsString& aReturn);  \
   NS_IMETHOD    AddXPConnectObject(const nsString& aId, nsISupports* aXPConnectObj);  \
-  NS_IMETHOD    RemoveXPConnectObject(const nsString& aId, nsISupports* aXPConnectObj);  \
+  NS_IMETHOD    RemoveXPConnectObject(const nsString& aId);  \
   NS_IMETHOD    GetXPConnectObject(const nsString& aId, nsISupports** aReturn);  \
 
 
@@ -382,7 +382,7 @@ public:
   NS_IMETHOD    Escape(const nsString& aStr, nsString& aReturn) { return _to Escape(aStr, aReturn); }  \
   NS_IMETHOD    Unescape(const nsString& aStr, nsString& aReturn) { return _to Unescape(aStr, aReturn); }  \
   NS_IMETHOD    AddXPConnectObject(const nsString& aId, nsISupports* aXPConnectObj) { return _to AddXPConnectObject(aId, aXPConnectObj); }  \
-  NS_IMETHOD    RemoveXPConnectObject(const nsString& aId, nsISupports* aXPConnectObj) { return _to RemoveXPConnectObject(aId, aXPConnectObj); }  \
+  NS_IMETHOD    RemoveXPConnectObject(const nsString& aId) { return _to RemoveXPConnectObject(aId); }  \
   NS_IMETHOD    GetXPConnectObject(const nsString& aId, nsISupports** aReturn) { return _to GetXPConnectObject(aId, aReturn); }  \
 
 
