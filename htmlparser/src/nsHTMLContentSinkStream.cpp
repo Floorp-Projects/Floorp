@@ -360,8 +360,7 @@ nsHTMLContentSinkStream::InitEncoder()
   // SaveAsCharset requires a const char* in its first argument:
   nsCAutoString charsetCString (charsetName);
   res = mUnicodeEncoder->Init(charsetCString,
-                              nsISaveAsCharset::attr_EntityBeforeCharsetConv
-                                | nsISaveAsCharset::attr_FallbackDecimalNCR,
+                              nsISaveAsCharset::attr_htmlTextDefault,
                               nsIEntityConverter::html40);
   return res;
 }
