@@ -14,6 +14,9 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
+ *
+ * This Unicode to HZ converter is a contribution from Intel Corporation
+ * to the mozilla project.
  */
  /**
  * A character set converter from Unicode to HZ.
@@ -21,91 +24,123 @@
  *
  * @created         08/Sept/1999
  * @author  Yueheng Xu, Yueheng.Xu@intel.com
+ * Revision History
+ * 04/Oct/1999. Yueheng Xu: Fixed line continuation problem when line 
+ *                          ended by '~';
+ *              Used table UnicodeToGBK[] to speed up the mapping.
  */
 
 #include "nsUnicodeToHZ.h"
 #include "nsUCvCnDll.h"
 
-
 #define _GBKU_TABLE_		// to use a shared GBKU table
 #include "gbku.h"
 
 //----------------------------------------------------------------------
-// Global functions and data [declaration]
-
-//----------------------------------------------------------------------
 // Class nsUnicodeToGBK [implementation]
-
 
 #define TRUE 1
 #define FALSE 0
 
 void  nsUnicodeToHZ::UnicodeToGBK(PRUnichar SrcUnicode, DByte *pGBCode)
 {
-	short int iRet = FALSE;
-	short int i = 0;
-	short int iGBKToUnicodeIndex = 0;
+  PRUnichar unicode;
+  PRUint8 left, right;
 
-
-	for ( i=0; i<MAX_GBK_LENGTH; i++)
-	{
-		if ( SrcUnicode == GBKToUnicodeTable[i] )
-		{
-			iGBKToUnicodeIndex = i;
-			iRet = TRUE;
-			break;
-		}
-	}
-
-	if ( iRet )
-	{
-		//convert from one dimensional index to (left, right) pair
-		if(pGBCode)
-		{
-		pGBCode->leftbyte =  (char) ( iGBKToUnicodeIndex / 0x00BF + 0x0081)  ;
-		pGBCode->leftbyte |= 0x80;
-		pGBCode->rightbyte = (char) ( iGBKToUnicodeIndex % 0x00BF+ 0x0040);
-		pGBCode->rightbyte |= 0x80;
-		}
-	}
-
-
+  unicode = SrcUnicode;
+  
+  //if unicode's hi byte has something, it is not ASCII, must be a GB
+  NS_ASSERTION( unicode & 0xff00, "expect a GB" );
+    
+  // To reduce the UnicodeToGBKTable size, we only use direct table mapping 
+  // for unicode between 0x4E00 - 0xA000
+  if ( (unicode >= 0x4E00 ) && ( unicode <= 0xA000 ) )
+    {
+      unicode -= 0x4E00; 
+      left =  UnicodeToGBKTable[unicode].leftbyte ;                
+      right = UnicodeToGBKTable[unicode].rightbyte ;  
+      pGBCode->leftbyte = left;  
+      pGBCode->rightbyte = right;  
+    }
+  else  
+    {
+      // other ones we search in GBK to Unicode table
+      for ( PRUint16 i=0; i<MAX_GBK_LENGTH; i++)
+        {
+          if ( unicode  == GBKToUnicodeTable[i] )
+            {
+              left = (PRUint8) ( i / 0x00BF + 0x0081) | 0x80  ;
+              right = (PRUint8) ( i % 0x00BF+ 0x0040) | 0x80;
+              pGBCode->leftbyte = left;  
+              pGBCode->rightbyte = right;  
+            }
+        }
+    }   
 }
 
-
-#define TRUE 1
-#define FALSE 0
 
 void nsUnicodeToHZ::UnicodeToHZ(PRUnichar SrcUnicode, DByte *pGBCode)
 {
-	short int iRet = FALSE;
-	short int i = 0;
-	short int iGBKToUnicodeIndex = 0;
+  PRUnichar unicode;
+  PRUint8 left, right;
 
-
-	for ( i=0; i<MAX_GBK_LENGTH; i++)
-	{
-		if ( SrcUnicode == GBKToUnicodeTable[i] )
-		{
-			iGBKToUnicodeIndex = i;
-			iRet = TRUE;
-			break;
-		}
-	}
-
-	if ( iRet )
-	{
-		//convert from one dimensional index to (left, right) pair
-		if(pGBCode)
-		{
-		pGBCode->leftbyte =  (char) ( iGBKToUnicodeIndex / 0x00BF + 0x0081);
-		pGBCode->rightbyte = (char) ( iGBKToUnicodeIndex % 0x00BF+ 0x0040);
-		}
-	}
-
-
+  unicode = SrcUnicode;
+  
+  //if unicode's hi byte has something, it is not ASCII, must be a GB
+  NS_ASSERTION( unicode & 0xff00, "expect a GB" );
+    
+  // To reduce the UnicodeToGBKTable size, we only use direct table mapping 
+  // for unicode between 0x4E00 - 0xA000
+  if ( (unicode >= 0x4E00 ) && ( unicode <= 0xA000 ) )
+    {
+      unicode -= 0x4E00; 
+      left =  UnicodeToGBKTable[unicode].leftbyte  ;                
+      right = UnicodeToGBKTable[unicode].rightbyte ;  
+      pGBCode->leftbyte =  left & 0x7F ;                
+      pGBCode->rightbyte = right & 0x7F ;  
+    }
+  else  
+    {
+      // other ones we search in GBK to Unicode table
+      for ( PRUint16 i=0; i<MAX_GBK_LENGTH; i++)
+        {
+          if ( unicode  == GBKToUnicodeTable[i] )
+            {
+              left = (PRUint8) ( i / 0x00BF + 0x0081);
+              right = (PRUint8) ( i % 0x00BF+ 0x0040);
+              pGBCode->leftbyte = left;  
+              pGBCode->rightbyte = right;  
+            }
+        }
+    }   
 }
 
+nsUnicodeToHZ::nsUnicodeToHZ()
+{
+   PRUint8 left, right;
+   PRUnichar unicode;
+   PRUnichar i;
+
+   for ( i=0; i<MAX_GBK_LENGTH; i++ )
+     {
+   
+       left = (PRUint8) ( i / 0x00BF + 0x0081);
+       right = (PRUint8)( i % 0x00BF+ 0x0040);
+       unicode = GBKToUnicodeTable[i];
+
+       // to reduce size of UnicodeToGBKTable, we only do direct unicode to GB 
+       // table mapping between unicode 0x4E00 and 0xA000. Others by searching
+       // GBKToUnicodeTable. There is a trade off between memory usage and speed.
+       if ( (unicode >= 0x4E00 ) && ( unicode <= 0xA000 ))
+         {
+           unicode -= 0x4E00; // we start using table at 0x4E00 
+           UnicodeToGBKTable[unicode].leftbyte = left;
+           UnicodeToGBKTable[unicode].rightbyte = right; 
+         }
+     } 
+}
+
+  
 
 NS_IMETHODIMP nsUnicodeToHZ::ConvertNoBuff(const PRUnichar * aSrc, 
 										PRInt32 * aSrcLength, 
@@ -120,144 +155,133 @@ NS_IMETHODIMP nsUnicodeToHZ::ConvertNoBuff(const PRUnichar * aSrc,
 #define HZLEAD3 '}'
 #define UNICODE_TILD	0x007E
 
-	static	int hz_state = HZ_STATE_ASCII;	// per HZ spec, default to HZ mode
-	PRInt32 i=0;
-	PRInt32 iSrcLength = *aSrcLength;
-    DByte *pDestDBCode;
-    //    DByte *pSrcDBCode; 
-	PRInt32 iDestLength = 0;
+  static PRUint16 hz_state = HZ_STATE_ASCII;	// per HZ spec, default to HZ mode
+  PRInt32 i=0;
+  PRInt32 iSrcLength = *aSrcLength;
+  DByte *pDestDBCode; 
+  PRInt32 iDestLength = 0;
 
-	PRUnichar *pSrc = (PRUnichar *)aSrc;
+  PRUnichar *pSrc = (PRUnichar *)aSrc;
 
-	pDestDBCode = (DByte *)aDest;
+  pDestDBCode = (DByte *)aDest;
 
-    for (i=0;i< iSrcLength;i++)
+  for (i=0;i< iSrcLength;i++)
 	{
-		pDestDBCode = (DByte *)aDest;
+      pDestDBCode = (DByte *)aDest;
 
-		if( (*pSrc) & 0xff00 )
+      if( (*pSrc) & 0xff00 )
 		{
-		// hi byte has something, it is not ASCII, must be a GB
-
-			if ( hz_state != HZ_STATE_GB )
+          // hi byte has something, it is not ASCII, process as a GB
+          
+          if ( hz_state != HZ_STATE_GB )
 			{
-				// we are adding a '~{' ESC sequence to star a HZ string
-				hz_state = HZ_STATE_GB;
-				pDestDBCode->leftbyte  = '~';
-				pDestDBCode->rightbyte = '{';
-				aDest += 2;	// increment 2 bytes
-				pDestDBCode = (DByte *)aDest;
-				iDestLength +=2;
+              // we are adding a '~{' ESC sequence to star a HZ string
+              hz_state = HZ_STATE_GB;
+              pDestDBCode->leftbyte  = '~';
+              pDestDBCode->rightbyte = '{';
+              aDest += 2;	// increment 2 bytes
+              pDestDBCode = (DByte *)aDest;
+              iDestLength +=2;
 			}
 
-			UnicodeToHZ( *pSrc, pDestDBCode);
-			aDest += 2;	// increment 2 bytes
-			pDestDBCode = (DByte *)aDest;
-			iDestLength +=2;
+          UnicodeToHZ( *pSrc, pDestDBCode);
+          aDest += 2;	// increment 2 bytes
+          pDestDBCode = (DByte *)aDest;
+          iDestLength +=2;
 		}
-		else
+      else
 		{
-		// this is an ASCII
+          // this is an ASCII
 
-			// if we are in HZ mode, end it by adding a '~}' ESC sequence
-			if ( hz_state == HZ_STATE_GB )
+          // if we are in HZ mode, end it by adding a '~}' ESC sequence
+          if ( hz_state == HZ_STATE_GB )
 			{
-				hz_state = HZ_STATE_ASCII;
-				pDestDBCode->leftbyte  = '~';
-				pDestDBCode->rightbyte = '}';
-				aDest += 2;	// increment 2 bytes
-				pDestDBCode = (DByte *)aDest;
-				iDestLength +=2;
+              hz_state = HZ_STATE_ASCII;
+              pDestDBCode->leftbyte  = '~';
+              pDestDBCode->rightbyte = '}';
+              aDest += 2;	// increment 2 bytes
+              pDestDBCode = (DByte *)aDest;
+              iDestLength +=2;
 			}
-
-			// if this is a regular char '~' , convert it to two '~'
-			if ( *pSrc == UNICODE_TILD )
+          
+          // if this is a regular char '~' , convert it to two '~'
+          if ( *pSrc == UNICODE_TILD )
 			{
-				pDestDBCode->leftbyte  = '~';
-				pDestDBCode->rightbyte = '~';
-				aDest += 2;	// increment 2 bytes
-				pDestDBCode = (DByte *)aDest;
-				iDestLength +=2;
+              pDestDBCode->leftbyte  = '~';
+              pDestDBCode->rightbyte = '~';
+              aDest += 2;	// increment 2 bytes
+              pDestDBCode = (DByte *)aDest;
+              iDestLength +=2;
 			}
-			else 
+          else 
 			{
-			// other regular ASCII chars convert by normal ways
+              // other regular ASCII chars convert by normal ways
 			
-				// Is this works for both little endian and big endian machines ?
-				*aDest = (char) ( (PRUnichar)(*pSrc) );
-
-				aDest++; // increment 1 byte
-				iDestLength +=1;
+              // Is this works for both little endian and big endian machines ?
+              *aDest = (char) ( (PRUnichar)(*pSrc) );
+              
+              aDest++; // increment 1 byte
+              iDestLength +=1;
 			}
 		}
-		pSrc++;	 // increment 2 bytes
+      pSrc++;	 // increment 2 bytes
 
-		if ( iDestLength >= (*aDestLength) )
+      if ( iDestLength >= (*aDestLength) )
 		{
-			break;
+          break;
 		}
 	}
 
-	*aDestLength = iDestLength;
-	*aSrcLength = i;
-
-    return NS_OK;
+  *aDestLength = iDestLength;
+  *aSrcLength = i;
+  
+  return NS_OK;
 }
 
 #define SET_REPRESENTABLE(info, c)  (info)[(c) >> 5] |= (1L << ((c) & 0x1f))
 
 NS_IMETHODIMP nsUnicodeToHZ::FillInfo(PRUint32 *aInfo)
 {
-	short int i,j;
+	PRUint16 i,j, k;
     PRUnichar SrcUnicode;
-    PRUint16 k;
 
-
-    for ( k=0; k++;k<65536)
-    {
-        aInfo[k] = 0x0000;
-    }
+    // aInfo should already been initialized as 2048 element array of 32 bit by caller
+    NS_ASSERTION( sizeof(aInfo[0]) == 4, "aInfo size incorrect" );
 
     // valid GBK rows are in 0x81 to 0xFE
-    for ( i=0x81;i++;i<0xFE) 
-    {
-      // HZ and GB2312 starts at row 0x21|0x80
-      if ( i < ( 0x21 | 0x80))
-      continue;
-
-      // valid GBK columns are in 0x41 to 0xFE
-      for( j=0x41; j++; j<0xFE)
+    for (i=0x81; i<0xFE; i++) 
       {
-        //HZ and GB2312 starts at col 0x21 | 0x80
-        if ( j < (0x21 | 0x80))
-        continue;
+        // HZ and GB2312 starts at row 0x21|0x80 = 0xA1
+        if ( i <  0xA1 )
+          continue;
+
+        // valid GBK columns are in 0x41 to 0xFE
+        for( j=0x41; j<0xFE; j++)
+          {
+            //HZ and GB2312 starts at col 0x21 | 0x80 = 0xA1
+            if ( j < 0xA1 )
+              continue;
  
-        // k is index in GBKU.H table
-         k = (i - 0x81)*(0xFE - 0x80)+(j-0x41);
+            // k is index in GBKU.H table
+            k = (i - 0x81)*(0xFE - 0x80)+(j-0x41);
 
-         // sanity check
-         if ( (k>=0) && ( k < MAX_GBK_LENGTH))
-         {	
-        	SrcUnicode = GBKToUnicodeTable[i];
+            SrcUnicode = GBKToUnicodeTable[i];
             if (( SrcUnicode != 0xFFFF ) && (SrcUnicode != 0xFFFD) )
-		    {
-			    SET_REPRESENTABLE(aInfo, SrcUnicode);
-		    }            
-         }   
-      }
-   }                   
-
-
-
-   return NS_OK;
+              {
+                SET_REPRESENTABLE(aInfo, SrcUnicode);
+              }            
+            
+          }
+      }                   
+    return NS_OK;
 }
 
 nsresult nsUnicodeToHZ::CreateInstance(nsISupports ** aResult) 
 {
   nsIUnicodeEncoder *p = new nsUnicodeToHZ();
   if(p) {
-   *aResult = p;
-   return NS_OK;
+    *aResult = p;
+    return NS_OK;
   }
   return NS_ERROR_OUT_OF_MEMORY;
 }

@@ -14,9 +14,12 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
+ * 
+ * This HZ to Unicode converter is a contribution from Intel Corporation to the mozilla 
+ * project.
  */
 /**
- * A character set converter from GBK to Unicode.
+ * A character set converter from HZ to Unicode.
  * 
  *
  * @created         08/Sept/1999
@@ -40,19 +43,13 @@
 
 
 #include "nsUCvCnDll.h"
-
 #include "nsHZToUnicode.h"
-
 
 #define _GBKU_TABLE_		// to use a shared GBKU table
 #include "gbku.h"
 
 //----------------------------------------------------------------------
-// Global functions and data [declaration]
-
-//----------------------------------------------------------------------
 // Class nsHZToUnicode [implementation]
-
 
 nsresult nsHZToUnicode::CreateInstance(nsISupports ** aResult) 
 {
@@ -72,41 +69,44 @@ NS_IMETHODIMP nsHZToUnicode::GetMaxLength(const char * aSrc,
 }
  
 
-
 //convert the 7-bit HZ into an 8-bit GB index of the GBK table and get its unicode
 void nsHZToUnicode::HZToUnicode(DByte *pGBCode, PRUnichar * pUnicode)
 {
+  //we are re-using the GBK's GB to Unicode mapping table.
+  PRUint16 iGBKToUnicodeIndex = 0; 
+  PRUint8 left, right;
 
-    //we are re-using the GBK's GB to Unicode mapping table.
-	PRInt16  iGBKToUnicodeIndex;
-
-    if(pGBCode)	
-	iGBKToUnicodeIndex = ( (short int)(pGBCode->leftbyte) | 0x80- 0x81)*0xbf +( (short int)(pGBCode->rightbyte) | 0x80 - 0x40);
-
-	if( (iGBKToUnicodeIndex >= 0 ) && ( iGBKToUnicodeIndex < MAX_GBK_LENGTH) )
-	{
-		*pUnicode = GBKToUnicodeTable[iGBKToUnicodeIndex];
-	}
-	else
-		*pUnicode = GB_UNDEFINED;
+  *pUnicode = 0xFFFF;
+ 
+  if(pGBCode)	
+    {
+      left = pGBCode->leftbyte | 0x80; 
+      right = pGBCode->rightbyte | 0x80;
+      iGBKToUnicodeIndex = (left - 0x0081)*0x00BF + (right - 0x0040);
+    }
+ 
+  *pUnicode = GBKToUnicodeTable[iGBKToUnicodeIndex];
+  
 }
 
 //convert the 8-bit GB index to its unicode by GBK table
 void nsHZToUnicode::GBToUnicode(DByte *pGBCode, PRUnichar * pUnicode)
 {
+  //we are re-using the GBK's GB to Unicode mapping table.
+  PRUint16 iGBKToUnicodeIndex = 0; 
+  PRUint8 left, right;
 
-    //we are re-using the GBK's GB to Unicode mapping table.
-	PRInt16  iGBKToUnicodeIndex;
+  *pUnicode = 0xFFFF;
+  
+  if(pGBCode)	
+    {
+      left = pGBCode->leftbyte; 
+      right = pGBCode->rightbyte;    
+      iGBKToUnicodeIndex = (left - 0x0081)*0x00BF + (right - 0x0040);
+    }
 
-    if(pGBCode)	
-	iGBKToUnicodeIndex = ( (short int)pGBCode->leftbyte - 0x81)*0xbf +( (short int)pGBCode->rightbyte  - 0x40);
-
-	if( (iGBKToUnicodeIndex >= 0 ) && ( iGBKToUnicodeIndex < MAX_GBK_LENGTH) )
-	{
-		*pUnicode = GBKToUnicodeTable[iGBKToUnicodeIndex];
-	}
-	else
-		*pUnicode = GB_UNDEFINED;
+  *pUnicode = GBKToUnicodeTable[iGBKToUnicodeIndex];
+ 
 }
 
 
@@ -123,46 +123,48 @@ NS_IMETHODIMP nsHZToUnicode::ConvertNoBuff(const char* aSrc,
 #define HZLEAD1 '~'
 #define HZLEAD2 '{'
 #define HZLEAD3 '}'
+#define HZLEAD4 '\n'
 
-	static PRInt16 hz_state = HZ_STATE_ASCII;	// per HZ spec, default to ASCII state 
-	short int i=0;
-	short int iSrcLength = (short int)(*aSrcLength);
-	DByte *pSrcDBCode = (DByte *)aSrc;
-    PRUnichar *pDestDBCode = (PRUnichar *)aDest;
-	int iDestlen = 0;
-	char ch1, ch2;
-	nsresult res = NS_OK;
+  static PRInt16 hz_state = HZ_STATE_ASCII;	// per HZ spec, default to ASCII state 
+  PRInt32 i=0;
+  PRInt32 iSrcLength = *aSrcLength;
 
-    for (i=0;i<iSrcLength;i++)
+  DByte *pSrcDBCode = (DByte *)aSrc;
+  PRUnichar *pDestDBCode = (PRUnichar *)aDest;
+  PRInt32 iDestlen = 0;
+  PRUint8 ch1, ch2;
+  nsresult res = NS_OK;
+
+  for (i=0;i<iSrcLength;i++)
 	{
-		pSrcDBCode = (DByte *)aSrc;
-		pDestDBCode = aDest;
-
-		if ( iDestlen >= (*aDestLength) )
+      pSrcDBCode = (DByte *)aSrc;
+      pDestDBCode = aDest;
+      
+      if ( iDestlen >= (*aDestLength) )
 		{
-		    res = NS_OK_UDEC_MOREOUTPUT;
-			break;
+          res = NS_OK_UDEC_MOREOUTPUT;
+          break;
 		}
-
-        if ( *aSrc & 0x80 ) // if it is a 8-bit byte
+      
+      if ( *aSrc & 0x80 ) // if it is a 8-bit byte
 		{
-			// The source is a 8-bit GBCode
-			GBToUnicode(pSrcDBCode, pDestDBCode);
-			aSrc += 2;
-			i++;
-            iDestlen++;
-            aDest++;
-            *aSrcLength = i+1;
-            continue;
+          // The source is a 8-bit GBCode
+          GBToUnicode(pSrcDBCode, pDestDBCode);
+          aSrc += 2;
+          i++;
+          iDestlen++;
+          aDest++;
+          *aSrcLength = i+1;
+          continue;
 		}
-  
-        // otherwise, it is a 7-bit byte 
-        // The source will be an ASCII or a 7-bit HZ code depending on ch1
- 
-        ch1 = *aSrc;
-        ch2	= *(aSrc+1);
-        
-        if (ch1 == HZLEAD1 )  // if it is lead by '~'
+      
+      // otherwise, it is a 7-bit byte 
+      // The source will be an ASCII or a 7-bit HZ code depending on ch1
+      
+      ch1 = *aSrc;
+      ch2	= *(aSrc+1);
+      
+      if (ch1 == HZLEAD1 )  // if it is lead by '~'
         {
           switch (ch2)
             {
@@ -182,8 +184,14 @@ NS_IMETHODIMP nsHZToUnicode::ConvertNoBuff(const char* aSrc,
               aSrc++;
               *pDestDBCode = (PRUnichar) ( ((char)(*aSrc) )& 0x00ff);
               aSrc++;
+              i++;
               iDestlen++;
               aDest++;
+              break;
+            case HZLEAD4:	// we got a "~\n", it means maintain double byte mode cross lines, ignore the '~' itself
+              //  hz_state = HZ_STATE_GB; // I find that "~\n" should interpreted as line continuation without mode change
+                                          // It should not be interpreted as line continuation with double byte mode on
+              aSrc++;
               break;
             default:
               // undefined ESC sequence '~X' are ignored since this is a illegal combination 
@@ -216,13 +224,13 @@ NS_IMETHODIMP nsHZToUnicode::ConvertNoBuff(const char* aSrc,
               break;
           }
 
-          *aSrcLength = i+1;
+        *aSrcLength = i+1;
 
     }// for loop
 
-        *aDestLength = iDestlen;
-	
-        return NS_OK;
+  *aDestLength = iDestlen;
+        
+  return NS_OK;
 }
 
 

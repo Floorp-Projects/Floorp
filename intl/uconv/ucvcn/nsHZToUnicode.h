@@ -63,8 +63,8 @@ private:
 
 typedef struct
 {
-    char leftbyte;
-    char rightbyte;
+  PRUint8 leftbyte;
+  PRUint8 rightbyte;
 
 } DByte;
   void HZToUnicode(DByte *pGBCode, PRUnichar * pUnicode);

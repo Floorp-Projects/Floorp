@@ -39,7 +39,7 @@ public:
   /**
    * Class constructor.
    */
-  nsUnicodeToHZ(){};
+  nsUnicodeToHZ();
   virtual ~nsUnicodeToHZ(){};
 
   /**
@@ -72,8 +72,8 @@ private:
 
 typedef struct
 {
-    char leftbyte;
-    char rightbyte;
+  PRUint8 leftbyte;
+  PRUint8 rightbyte;
 
 } DByte;
   void UnicodeToHZ(PRUnichar SrcUnicode, DByte *pGBCode);
