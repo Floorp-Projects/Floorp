@@ -67,6 +67,7 @@
 #include "nsIPop3IncomingServer.h"
 #include "nsTextFormatter.h"
 #include "nsIStringBundle.h"
+#include "nsIPrompt.h"
 
 #define MESSENGER_STRING_URL       "chrome://messenger/locale/messenger.properties"
 
@@ -2098,8 +2099,36 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
   rv = folderArray->Count(&cnt);
   if (NS_FAILED(rv)) return rv;
   if (cnt > 0)
+  {
+    nsCOMPtr<nsIMsgFolder> folderToDelete = do_QueryElementAt(folderArray, 0);
+    PRUint32 folderFlags = 0;
+    if (folderToDelete)
+    {
+      folderToDelete->GetFlags(&folderFlags);
+      if (folderFlags & MSG_FOLDER_FLAG_VIRTUAL)
+      {
+        nsCOMPtr<nsIStringBundleService> sBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+        nsCOMPtr<nsIStringBundle> sMessengerStringBundle;
+        nsXPIDLString confirmMsg;
+
+        if (NS_SUCCEEDED(rv) && sBundleService) 
+          rv = sBundleService->CreateBundle(MESSENGER_STRING_URL, getter_AddRefs(sMessengerStringBundle));
+        NS_ENSURE_SUCCESS(rv, rv);
+        sMessengerStringBundle->GetStringFromName(NS_LITERAL_STRING("confirmSavedSearchDeleteMessage").get(), getter_Copies(confirmMsg));
+
+        nsCOMPtr<nsIPrompt> dialog;
+        rv = msgWindow->GetPromptDialog(getter_AddRefs(dialog));
+        if (NS_SUCCEEDED(rv))
+        {
+          PRBool dialogResult;
+          rv = dialog->Confirm(nsnull, confirmMsg, &dialogResult);
+          if (!dialogResult)
+            return NS_OK;
+        }
+      }
+    }
     rv = folder->DeleteSubFolders(folderArray, msgWindow);
-  
+  }
   return rv;
 }
 
