@@ -835,7 +835,20 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
         }
         case NT:
         {
-			char *date, *size_s, *name;
+		    // don't bother w/ these lines.
+            if(!PL_strncmp(line, "total ", 6)
+                || !PL_strncmp(line, "ls: total", 9)
+				|| (PL_strstr(line, "Permission denied") != NULL)
+                || (PL_strstr(line, "not available") != NULL)) {
+                NS_DELETEXPCOM(thisEntry);
+                if (cr)
+                    line = eol+2;
+                else
+                    line = eol+1;
+                continue;
+            }
+    
+            char *date, *size_s, *name;
 
 			if(PL_strlen(line) > 37) {
 				date = line;
@@ -906,11 +919,11 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
                     case 's':
                       flagsize = 1;
                       size = 0;
-                      while (*++line && (*line != ','))
+                      while (*++line && nsCRT::IsAsciiDigit(*line))
                           size = size * 10 + (*line - '0');
                       break;
                     case 'm':
-                      while (*++line && (*line != ','))
+                      while (*++line && nsCRT::IsAsciiDigit(*line))
                           when = when * 10 + (*line - '0');
                       break;
                     case '/':

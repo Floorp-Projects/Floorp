@@ -1085,9 +1085,17 @@ nsFtpState::R_syst() {
             mServerType = FTP_UNIX_TYPE;
             mList = PR_TRUE;
         }
-        else if (mResponseMsg.Find("windows", PR_TRUE) > -1) {
-            // treat any server w/ "windows" in it as a dos based NT server.
+        else if ( ( mResponseMsg.Find("WIN32", PR_TRUE) > -1) ||
+                  ( mResponseMsg.Find("windows", PR_TRUE) > -1) )
+        {
             mServerType = FTP_NT_TYPE;
+            mList = PR_TRUE;
+        }
+        else
+        {
+            NS_ASSERTION(0, "Guessing FTP server type.");
+            // No clue.  We will just hope it is UNIX type server.
+            mServerType = FTP_UNIX_TYPE;
             mList = PR_TRUE;
         }
     }
