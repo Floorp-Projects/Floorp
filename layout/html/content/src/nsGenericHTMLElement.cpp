@@ -224,10 +224,11 @@ static nsresult EnsureWritableAttributes(nsIHTMLContent* aContent,
 
   if (nsnull == aAttributes) {
     if (PR_TRUE == aCreate) {
+      nsMapAttributesFunc fontMapFunc;
       nsMapAttributesFunc mapFunc;
-      result = aContent->GetAttributeMappingFunction(mapFunc);
+      result = aContent->GetAttributeMappingFunctions(fontMapFunc, mapFunc);
       if (NS_OK == result) {
-        result = NS_NewHTMLAttributes(&aAttributes, nsnull, mapFunc);
+        result = NS_NewHTMLAttributes(&aAttributes, nsnull, fontMapFunc, mapFunc);
         if (NS_OK == result) {
           aAttributes->AddContentRef();
         }

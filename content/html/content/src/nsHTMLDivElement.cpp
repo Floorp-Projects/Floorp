@@ -185,8 +185,10 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 }
 
 NS_IMETHODIMP
-nsHTMLDivElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+nsHTMLDivElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
+                                               nsMapAttributesFunc& aMapFunc) const
 {
+  aFontMapFunc = nsnull;
   aMapFunc = &MapAttributesInto;
   return NS_OK;
 }

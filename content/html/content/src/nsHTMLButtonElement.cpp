@@ -349,8 +349,10 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 }
 
 NS_IMETHODIMP
-nsHTMLButtonElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+nsHTMLButtonElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
+                                                  nsMapAttributesFunc& aMapFunc) const
 {
+  aFontMapFunc = nsnull;
   aMapFunc = &MapAttributesInto;
   return NS_OK;
 }

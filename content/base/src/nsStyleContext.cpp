@@ -1715,6 +1715,14 @@ struct MapStyleData {
   nsIPresContext*   mPresContext;
 };
 
+static PRBool MapStyleRuleFont(nsISupports* aRule, void* aData)
+{
+  nsIStyleRule* rule = (nsIStyleRule*)aRule;
+  MapStyleData* data = (MapStyleData*)aData;
+  rule->MapFontStyleInto(data->mStyleContext, data->mPresContext);
+  return PR_TRUE;
+}
+
 static PRBool MapStyleRule(nsISupports* aRule, void* aData)
 {
   nsIStyleRule* rule = (nsIStyleRule*)aRule;
@@ -1748,6 +1756,7 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
 
   if ((nsnull != mRules) && (0 < mRules->Count())) {
     MapStyleData  data(this, aPresContext);
+    mRules->EnumerateForwards(MapStyleRuleFont, &data);
     mRules->EnumerateForwards(MapStyleRule, &data);
   }
   if (-1 == mDataCode) {
@@ -1778,6 +1787,7 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
 
       if ((nsnull != mRules) && (0 < mRules->Count())) {
         MapStyleData  data(this, aPresContext);
+        mRules->EnumerateForwards(MapStyleRuleFont, &data);
         mRules->EnumerateForwards(MapStyleRule, &data);
       }
       // reset all font data for tables again

@@ -63,6 +63,8 @@ public:
   // Strength is an out-of-band weighting, always 0 here
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
+  NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext,
+                              nsIPresContext* aPresContext);
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext,
                           nsIPresContext* aPresContext);
 
@@ -87,6 +89,8 @@ public:
   // Strength is an out-of-band weighting, always maxint here
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
 
+  NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext, 
+                              nsIPresContext* aPresContext);
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, 
                           nsIPresContext* aPresContext);
 
@@ -251,6 +255,22 @@ BodyRule::GetStrength(PRInt32& aStrength) const
 }
 
 NS_IMETHODIMP
+BodyRule::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  // set up the basefont (defaults to 3)
+  nsStyleFont* font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
+  const nsFont& defaultFont = aPresContext->GetDefaultFontDeprecated(); 
+  const nsFont& defaultFixedFont = aPresContext->GetDefaultFixedFontDeprecated(); 
+  PRInt32 scaler;
+  aPresContext->GetFontScaler(&scaler);
+  float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
+  font->mFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)defaultFont.size, scaleFactor);
+  font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)defaultFixedFont.size, scaleFactor);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
 {
   if (nsnull != mPart) {
@@ -295,8 +315,9 @@ BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
         }
 
         if (count < attrCount) {  // more to go...
+          nsMapAttributesFunc fontFunc;
           nsMapAttributesFunc func;
-          mPart->GetAttributeMappingFunction(func);
+          mPart->GetAttributeMappingFunctions(fontFunc, func);
           (*func)(mPart->mInner.mAttributes, aContext, aPresContext);
         }
       }
@@ -444,6 +465,12 @@ NS_IMETHODIMP
 BodyFixupRule::GetStrength(PRInt32& aStrength) const
 {
   aStrength = 2000000000;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BodyFixupRule::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+{
   return NS_OK;
 }
 
@@ -723,22 +750,15 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       spacing->mPadding.SetBottom(c);
     }
 
-    // set up the basefont (defaults to 3)
-    nsStyleFont* font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
-    const nsFont& defaultFont = aPresContext->GetDefaultFontDeprecated(); 
-    const nsFont& defaultFixedFont = aPresContext->GetDefaultFixedFontDeprecated(); 
-    PRInt32 scaler;
-    aPresContext->GetFontScaler(&scaler);
-    float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
-    font->mFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)defaultFont.size, scaleFactor);
-    font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)defaultFixedFont.size, scaleFactor);
   }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
 
 NS_IMETHODIMP
-nsHTMLBodyElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+nsHTMLBodyElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, 
+                                                nsMapAttributesFunc& aMapFunc) const
 {
+  aFontMapFunc = nsnull;
   aMapFunc = &MapAttributesInto;
   return NS_OK;
 }

@@ -183,7 +183,9 @@ public:
   void* operator new(size_t size, nsIArena* aArena);
   void operator delete(void* ptr);
 
-  HTMLAttributesImpl(nsIHTMLStyleSheet* aSheet, nsMapAttributesFunc aMapFunc);
+  HTMLAttributesImpl(nsIHTMLStyleSheet* aSheet, 
+                     nsMapAttributesFunc aFontMapFunc,
+                     nsMapAttributesFunc aMapFunc);
   HTMLAttributesImpl(const HTMLAttributesImpl& aCopy);
   ~HTMLAttributesImpl(void);
 
@@ -218,7 +220,7 @@ public:
 
   NS_IMETHOD Clone(nsIHTMLAttributes** aInstancePtrResult) const;
   NS_IMETHOD Reset(void);
-  NS_IMETHOD SetMappingFunction(nsMapAttributesFunc aMapFunc);
+  NS_IMETHOD SetMappingFunctions(nsMapAttributesFunc aFontMapFunc, nsMapAttributesFunc aMapFunc);
 
   // nsIStyleRule 
   NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const;
@@ -226,6 +228,7 @@ public:
   NS_IMETHOD SetStyleSheet(nsIHTMLStyleSheet* aSheet);
   // Strength is an out-of-band weighting, always 0 here
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
+  NS_IMETHOD MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
 
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
@@ -244,6 +247,7 @@ protected:
   HTMLAttribute       mFirst;
   nsIAtom*            mID;
   nsClassList*        mClassList;
+  nsMapAttributesFunc mFontMapper;
   nsMapAttributesFunc mMapper;
 
 #ifdef DEBUG_REFS
@@ -294,6 +298,7 @@ void HTMLAttributesImpl::operator delete(void* ptr)
 
 
 HTMLAttributesImpl::HTMLAttributesImpl(nsIHTMLStyleSheet* aSheet, 
+                                       nsMapAttributesFunc aFontMapFunc,
                                        nsMapAttributesFunc aMapFunc)
   : mSheet(aSheet),
     mFirst(),
@@ -301,6 +306,7 @@ HTMLAttributesImpl::HTMLAttributesImpl(nsIHTMLStyleSheet* aSheet,
     mID(nsnull),
     mClassList(nsnull),
     mContentRefCount(0),
+    mFontMapper(aFontMapFunc),
     mMapper(aMapFunc)
 {
   NS_INIT_REFCNT();
@@ -318,6 +324,7 @@ HTMLAttributesImpl::HTMLAttributesImpl(const HTMLAttributesImpl& aCopy)
     mID(aCopy.mID),
     mClassList(nsnull),
     mContentRefCount(0),
+    mFontMapper(aCopy.mFontMapper),
     mMapper(aCopy.mMapper)
 {
   NS_INIT_REFCNT();
@@ -789,14 +796,27 @@ HTMLAttributesImpl::Reset(void)
     delete mClassList;
     mClassList = nsnull;
   }
+  mFontMapper = nsnull;
   mMapper = nsnull;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLAttributesImpl::SetMappingFunction(nsMapAttributesFunc aMapFunc)
+HTMLAttributesImpl::SetMappingFunctions(nsMapAttributesFunc aFontMapFunc, nsMapAttributesFunc aMapFunc)
 {
+  mFontMapper = aFontMapFunc;
   mMapper = aMapFunc;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLAttributesImpl::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  if (0 < mCount) {
+    if (nsnull != mFontMapper) {
+      (*mFontMapper)(this, aContext, aPresContext);
+    }
+  }
   return NS_OK;
 }
 
@@ -804,7 +824,7 @@ NS_IMETHODIMP
 HTMLAttributesImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
 {
   if (0 < mCount) {
-    NS_ASSERTION(nsnull != mMapper, "no mapping function");
+    NS_ASSERTION(mMapper || mFontMapper, "no mapping function");
     if (nsnull != mMapper) {
       (*mMapper)(this, aContext, aPresContext);
     }
@@ -853,13 +873,13 @@ HTMLAttributesImpl::List(FILE* out, PRInt32 aIndent) const
 
 extern NS_HTML nsresult
   NS_NewHTMLAttributes(nsIHTMLAttributes** aInstancePtrResult, nsIHTMLStyleSheet* aSheet,
-                       nsMapAttributesFunc aMapFunc)
+                       nsMapAttributesFunc aFontMapFunc, nsMapAttributesFunc aMapFunc)
 {
   if (aInstancePtrResult == nsnull) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  HTMLAttributesImpl  *it = new HTMLAttributesImpl(aSheet, aMapFunc);
+  HTMLAttributesImpl  *it = new HTMLAttributesImpl(aSheet, aFontMapFunc, aMapFunc);
 
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;

@@ -455,7 +455,8 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,                    \
                                const nsHTMLValue& aValue,              \
                                nsString& aResult) const;               \
-  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;  \
+  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,  \
+                                          nsMapAttributesFunc& aMapFunc) const;  \
   NS_IMETHOD GetStyleHintForAttributeChange(const nsIAtom* aAttribute, \
                                             PRInt32 *aHint) const;                                             
   
@@ -500,7 +501,8 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,                    \
                                const nsHTMLValue& aValue,              \
                                nsString& aResult) const;               \
-  NS_IMETHOD GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const;  \
+  NS_IMETHOD GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc, \
+                                          nsMapAttributesFunc& aMapFunc) const;  \
   NS_IMETHOD GetStyleHintForAttributeChange(const nsIAtom* aAttribute, \
                                             PRInt32 *aHint) const;
 

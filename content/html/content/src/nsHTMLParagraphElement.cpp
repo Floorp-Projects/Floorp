@@ -177,8 +177,10 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 }
 
 NS_IMETHODIMP
-nsHTMLParagraphElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+nsHTMLParagraphElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
+                                                     nsMapAttributesFunc& aMapFunc) const
 {
+  aFontMapFunc = nsnull;
   aMapFunc = &MapAttributesInto;
   return NS_OK;
 }

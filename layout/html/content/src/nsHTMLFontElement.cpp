@@ -188,9 +188,9 @@ nsHTMLFontElement::AttributeToString(nsIAtom* aAttribute,
 }
 
 static void
-MapAttributesInto(nsIHTMLAttributes* aAttributes,
-                  nsIStyleContext* aContext,
-                  nsIPresContext* aPresContext)
+MapFontAttributesInto(nsIHTMLAttributes* aAttributes,
+                      nsIStyleContext* aContext,
+                      nsIPresContext* aPresContext)
 {
   if (nsnull != aAttributes) {
     nsHTMLValue value;
@@ -292,8 +292,22 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       font->mFixedFont.weight = weight;
     }
 
+    NS_IF_RELEASE(parentContext);
+  }
+}
+
+static void
+MapAttributesInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext)
+{
+  if (nsnull != aAttributes) {
+    nsHTMLValue value;
+
     // color: color
     if (NS_CONTENT_ATTR_NOT_THERE != aAttributes->GetAttribute(nsHTMLAtoms::color, value)) {
+      const nsStyleFont* font = (const nsStyleFont*)
+        aContext->GetStyleData(eStyleStruct_Font);
       nsStyleColor* color = (nsStyleColor*)
         aContext->GetMutableStyleData(eStyleStruct_Color);
       nsStyleText* text = (nsStyleText*)
@@ -312,15 +326,15 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
         text->mTextDecoration = font->mFont.decorations;  // re-apply inherited text decoration, so colors sync
       }
     }
-
-    NS_IF_RELEASE(parentContext);
   }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);
 }
 
 NS_IMETHODIMP
-nsHTMLFontElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) const
+nsHTMLFontElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
+                                                nsMapAttributesFunc& aMapFunc) const
 {
+  aFontMapFunc = &MapFontAttributesInto;
   aMapFunc = &MapAttributesInto;
   return NS_OK;
 }
