@@ -425,6 +425,15 @@ IFRAME {
 INPUT {
   vertical-align: bottom;
 }
+INPUT[type=checkbox] {
+  width:11px;
+  height:11px;
+  background-color:white;
+  border-color:gray; 
+  border-style:inset;
+  color:black;
+  border-width: 2px;
+}
 LABEL {
   display: inline;
   vertical-align: bottom;
