@@ -70,7 +70,7 @@
 // XXX misnamed header file, but oh well
 #include "nsHTMLTokens.h"  
 
-static char kNameSpaceSeparator[] = ":";
+static char kNameSpaceSeparator = ':';
 static char kNameSpaceDef[] = "xmlns";
 static char kStyleSheetPI[] = "xml-stylesheet";
 static char kCSSType[] = "text/css";
@@ -512,7 +512,7 @@ GetAttributeValueAt(const nsIParserNode& aNode,
           continue;
         }
         *cp = '\0';
-        PRInt32 ch = NS_EntityToUnicode(cbuf);
+        PRInt32 ch = nsHTMLEntities::EntityToUnicode(nsSubsumeCStr(cbuf, PR_FALSE));
         if (ch < 0) {
           continue;
         }
@@ -644,7 +644,7 @@ nsXMLContentSink::PushNameSpacesFrom(const nsIParserNode& aNode)
 nsIAtom*  nsXMLContentSink::CutNameSpacePrefix(nsString& aString)
 {
   nsAutoString  prefix;
-  PRInt32 nsoffset = aString.Find(kNameSpaceSeparator);
+  PRInt32 nsoffset = aString.FindChar(kNameSpaceSeparator);
   if (-1 != nsoffset) {
     aString.Left(prefix, nsoffset);
     aString.Cut(0, nsoffset+1);
