@@ -43,8 +43,6 @@ LIBS		= \
 		-lxp \
 		-lmozjs \
 		-lraptorgfx \
-		-limg \
-		-lmozutil \
 		$(DIST)/lib/libmsgnews_s.a \
 		-lmsgbaseutil \
 		$(MOZ_TIMER_LIBS) \

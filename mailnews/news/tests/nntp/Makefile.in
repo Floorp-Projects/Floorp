@@ -30,8 +30,6 @@ LIBS = \
 	-lmozdbm	\
 	-lxp	\
 	-lmozjs	\
-	-limg	\
-	-lmozutil	\
 	-lmsgbaseutil \
 	$(MOZ_TIMER_LIBS) \
 	$(ZLIB_LIBS) \

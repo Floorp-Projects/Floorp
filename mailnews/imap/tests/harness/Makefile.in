@@ -34,14 +34,11 @@ LIBS =	\
 		-lmozdbm \
 		-lxp \
 		-lmozjs \
-		-limg \
-		-lmozutil \
 		-lmsgbaseutil \
 		$(MOZ_TIMER_LIBS) \
 		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \
-		-lneckoutil_s \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

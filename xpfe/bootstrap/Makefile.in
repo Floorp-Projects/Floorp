@@ -67,21 +67,15 @@ endif
 BASE_LIBS =\
 		-lmozjs \
 		-lxpcom \
-		-lmozutil \
 		$(NULL)
 
 GECKO_LIBS =\
 		-lraptorgfx \
 		$(NULL)
 
-IMGLIB_LIBS =\
-		-limg \
-		$(NULL)
-
 XP_DIST_LIBS = \
 		$(GECKO_LIBS) \
 		$(NETLIB_LIBS) \
-		$(IMGLIB_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		$(BASE_LIBS) \
 		$(OJI_LIBS) \

@@ -35,9 +35,6 @@ LIBS = \
 	$(MOZ_TIMER_LIBS) \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
-	-limg		\
-	-lmozutil	\
-	-lneckoutil_s \
 	$(TK_LIBS) \
 	$(NULL)
 

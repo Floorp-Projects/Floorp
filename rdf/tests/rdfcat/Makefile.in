@@ -26,10 +26,8 @@ PROGRAM		= rdfcat
 CPPSRCS		= rdfcat.cpp
 
 BASE_LIBS	= \
-		$(ZLIB_LIBS) \
 		-lmozjs \
 		-lxpcom \
-		-lmozutil \
 		$(NULL)
 
 ifndef NECKO
@@ -54,9 +52,6 @@ NETLIB_LIBS	= \
 else
 NETLIB_LIBS	= \
 		-lneckoutil_s \
-		-lxp \
-		-ljsurl \
-		-lmozdbm \
 		$(NULL)
 endif
 

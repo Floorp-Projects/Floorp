@@ -50,8 +50,6 @@ NET_LIBS	= \
 endif
 
 LIBS		= \
-		-lmozutil \
-		-limg \
 		-lxpcom \
 		-lmozjs \
 		-lwidgetsupport_s \

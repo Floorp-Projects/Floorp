@@ -48,8 +48,6 @@ NET_LIBS	= \
 		-lnetwork \
 		-lsockstuburl \
 		$(NULL)
-else
-NET_LIBS	= -lneckoutil_s
 endif
 
 GECKO_LIBS = \
@@ -64,8 +62,6 @@ GECKO_LIBS = \
 
 LIBS		= \
 		$(GECKO_LIBS) \
-		-limg \
-		-lmozutil \
 		-lmozjs \
 		-ljsdom \
 		-lraptorgfx \

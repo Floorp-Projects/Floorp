@@ -34,10 +34,7 @@ LOST_SYM_LIBS	= -lxpcomds_s -lxptinfo
 endif
 
 LIBS		= \
-		-L$(DIST)/bin \
-		-L$(DIST)/lib \
 		-lxpcom \
-		-lmozutil \
 		$(LOST_SYM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)

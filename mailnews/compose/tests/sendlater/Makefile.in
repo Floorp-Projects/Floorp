@@ -48,8 +48,6 @@ LIBS		= \
 		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		-lraptorgfx \
-		-limg \
-		-lmozutil \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

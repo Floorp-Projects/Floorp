@@ -32,7 +32,6 @@ CPPSRCS		= \
 BASE_LIBS	= \
 		-lmozjs \
 		-lxpcom \
-		-lmozutil \
 		$(NULL)
 
 GECKO_LIBS	= \

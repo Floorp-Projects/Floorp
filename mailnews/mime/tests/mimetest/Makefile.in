@@ -28,15 +28,10 @@ CPPSRCS		= mimetest.cpp
 BASE_LIBS	= \
 		-lmozjs \
 		-lxpcom \
-		-lmozutil \
 		$(NULL)
 
 GECKO_LIBS	= \
 		-lraptorplugin \
-		$(NULL)
-
-IMGLIB_LIBS	= \
-		-limg \
 		$(NULL)
 
 NETLIB_LIBS	= \
@@ -61,7 +56,6 @@ LIBS		= \
 		$(GECKO_LIBS) \
 		$(NETLIB_LIBS) \
 		$(MOZ_TIMER_LIBS) \
-		$(IMGLIB_LIBS) \
 		$(BASE_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \

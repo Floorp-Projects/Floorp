@@ -85,15 +85,12 @@ NETLIB_LIBS	= -lneckoutil_s
 endif
 
 LIBS		+= \
-		-limg \
-		-lmozutil \
-		$(NETLIB_LIBS) \
 		-lmozjs \
 		-lxp \
 		-lxpcom \
+		$(NETLIB_LIBS) \
 		$(MOZ_TIMER_LIBS) \
 		$(TK_LIBS) \
-		$(ZLIB_LIBS) \
 		$(LOST_SYM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)

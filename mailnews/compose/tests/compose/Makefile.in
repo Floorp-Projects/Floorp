@@ -35,10 +35,7 @@ LIBS = \
 		$(MOZ_TIMER_LIBS) \
         $(ZLIB_LIBS) \
         $(NSPR_LIBS) \
-        -limg           \
-        -lmozutil       \
         $(TK_LIBS) \
-		-lneckoutil_s \
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk

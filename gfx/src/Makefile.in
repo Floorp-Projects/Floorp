@@ -83,7 +83,9 @@ CPPSRCS =\
 
 EXTRA_DSO_LDOPTS =\
 				-L$(DIST)/lib \
+				-limg_s \
 				-lneckoutil_s \
+				-lmozutil_s \
 				$(NULL)
 
 include $(topsrcdir)/config/rules.mk
