@@ -417,7 +417,7 @@ function SaveAsFile(uri)
     var filename = null;
     try {
       var subject = messenger.messageServiceFromURI(uri)
-                             .messageURIToMsgHdr(uri).subject;
+                             .messageURIToMsgHdr(uri).mime2DecodedSubject;
       filename = GenerateValidFilename(subject, ".eml");
     }
     catch (ex) {}
