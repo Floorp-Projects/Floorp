@@ -365,7 +365,7 @@ var DefaultController =
       case "cmd_collapseAllThreads":
         if (!gDBView || !gDBView.supportsThreading) 
           return false;
-        return (gDBView.sortType == nsMsgViewSortType.byThread);
+        return (gDBView.viewFlags & nsMsgViewFlagsType.kThreadedDisplay);
         break;
       case "cmd_nextFlaggedMsg":
       case "cmd_previousFlaggedMsg":
@@ -463,7 +463,7 @@ var DefaultController =
 				break;
       case "cmd_createFilterFromMenu":
         MsgCreateFilter();
-        break;        
+        break;   
       case "cmd_createFilterFromPopup":
         break;// This does nothing because the createfilter is invoked from the popupnode oncommand.
 			case "button_delete":

@@ -77,11 +77,13 @@ interface nsMsgViewFlagsType
     const nsMsgViewFlagsTypeValue kThreadedDisplay = 0x1;
     const nsMsgViewFlagsTypeValue kShowIgnored = 0x8;
     const nsMsgViewFlagsTypeValue kUnreadOnly = 0x10;
+    const nsMsgViewFlagsTypeValue kExpandAll = 0x20;
 };
 
 [scriptable, uuid(b2f31bca-fd18-11d4-a5be-0060b0fc04b7)]
 interface nsMsgViewSortType
 {
+  const nsMsgViewSortTypeValue byNone = 0x11; /* not sorted */
 	const nsMsgViewSortTypeValue byDate = 0x12;
 	const nsMsgViewSortTypeValue bySubject = 0x13;
 	const nsMsgViewSortTypeValue byAuthor = 0x14;
@@ -93,7 +95,7 @@ interface nsMsgViewSortType
 	const nsMsgViewSortTypeValue byFlagged = 0x1a;
 	const nsMsgViewSortTypeValue byUnread = 0x1b;
 	const nsMsgViewSortTypeValue byRecipient = 0x1c;
-    const nsMsgViewSortTypeValue byLocation = 0x1d;
+  const nsMsgViewSortTypeValue byLocation = 0x1d;
 	const nsMsgViewSortTypeValue byLabel = 0x1e;
 	const nsMsgViewSortTypeValue byJunkStatus = 0x1f;
 };

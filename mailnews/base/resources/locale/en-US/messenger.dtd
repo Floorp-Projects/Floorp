@@ -178,6 +178,8 @@ Rights Reserved.
 <!ENTITY sortDescending.accesskey "D">
 <!ENTITY msgsMenu.label "Messages">
 <!ENTITY msgsMenu.accesskey "M">
+<!ENTITY viewThreaded.label "Threaded">
+<!ENTITY viewThreaded.accesskey "T">
 <!ENTITY viewAll.label "All">
 <!ENTITY viewUnread.label "Unread">
 <!ENTITY viewAll.accesskey "A">

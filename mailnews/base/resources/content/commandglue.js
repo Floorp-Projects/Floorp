@@ -274,8 +274,6 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
   //Set the window's new open folder.
   msgWindow.openFolder = newFolder;
 
-  SetViewFlags(viewFlags);
-
   //the new folder being selected should have its biff state get cleared.
   if(newFolder)
   {
@@ -334,7 +332,7 @@ function SwitchView(command)
   // now switch views
   var oldSortType = gDBView ? gDBView.sortType : nsMsgViewSortType.byThread;
   var oldSortOrder = gDBView ? gDBView.sortOrder : nsMsgViewSortOrder.ascending;
-  var viewFlags = gCurViewFlags;
+  var viewFlags = gDBView ? gDBView.viewFlags : gCurViewFlags;
 
   // close existing view.
   if (gDBView) {
@@ -624,12 +622,6 @@ function CreateDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
   gDBView.suppressMsgDisplay = IsThreadAndMessagePaneSplitterCollapsed();
 
   UpdateSortIndicators(gCurSortType, sortOrder);
-}
-
-function SetViewFlags(viewFlags)
-{
-    if (!gDBView) return;
-    gDBView.viewFlags = viewFlags;
 }
 
 //------------------------------------------------------------

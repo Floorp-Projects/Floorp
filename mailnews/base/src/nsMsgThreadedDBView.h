@@ -65,12 +65,12 @@ protected:
   virtual nsresult OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, PRBool ensureListed);
   virtual nsresult AddMsgToThreadNotInView(nsIMsgThread *threadHdr, nsIMsgDBHdr *msgHdr, PRBool ensureListed);
   nsresult ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnly, nsMsgKey *pOutput, PRInt32 *pFlags, char *pLevels, 
-									 PRInt32 numToList, PRInt32 *pNumListed, PRInt32 *pTotalHeaders);
+                        PRInt32 numToList, PRInt32 *pNumListed, PRInt32 *pTotalHeaders);
   nsresult InitSort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
-  nsresult ExpandAll();
-  virtual void	    OnExtraFlagChanged(nsMsgViewIndex index, PRUint32 extraFlag);
+  nsresult SortThreads(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder);
+  virtual void  OnExtraFlagChanged(nsMsgViewIndex index, PRUint32 extraFlag);
   virtual void OnHeaderAddedOrDeleted();
-	void			ClearPrevIdArray();
+	void    ClearPrevIdArray();
   virtual nsresult RemoveByIndex(nsMsgViewIndex index);
   nsMsgViewIndex GetInsertInfoForNewHdr(nsIMsgDBHdr *newHdr, nsMsgViewIndex threadIndex, PRInt32 targetLevel);
 

@@ -122,6 +122,14 @@ function HandleColumnClick(columnID)
     MsgReverseSortThreadPane();
   }
   else {
+    try {
+      var flatSort = pref.getBoolPref("mailnews.thread_pane_column_unthreads"); 
+      if (flatSort)
+        dbview.viewFlags &= ~nsMsgViewFlagsType.kThreadedDisplay;
+    }
+    catch (ex) {
+    }
+
     MsgSortThreadPane(sortType);
   }
 }
@@ -253,6 +261,15 @@ function MsgReverseSortThreadPane()
   }
 }
 
+function MsgToggleThreaded()
+{
+  var dbview = GetDBView();
+	curFlags = dbview.viewFlags;
+	dbview.viewFlags = dbview.viewFlags ^ nsMsgViewFlagsType.kThreadedDisplay;
+	dbview.sort(dbview.sortType, dbview.sortOrder); // resort
+  UpdateSortIndicators(dbview.sortType, nsMsgViewSortOrder.ascending);
+}
+
 function MsgSortAscending()
 {
   var dbview = GetDBView();
@@ -271,7 +288,7 @@ function UpdateSortIndicators(sortType, sortOrder)
 {
   // show the twisties if the view is threaded
   var currCol = document.getElementById("subjectCol");
-  var primary = (sortType == nsMsgViewSortType.byThread) && gDBView.supportsThreading;
+  var primary = (gDBView.viewFlags & nsMsgViewFlagsType.kThreadedDisplay) && gDBView.supportsThreading;
   currCol.setAttribute("primary", primary);
 
   // remove the sort indicator from all the columns
@@ -292,6 +309,17 @@ function UpdateSortIndicators(sortType, sortOrder)
       else {
         sortedColumn.setAttribute("sortDirection","descending");
       }
+			if (sortedColumn != "threadCol")
+			{
+			  currCol = document.getElementById("threadCol");
+				if (currCol)
+				{
+					if (gDBView.viewFlags & nsMsgViewFlagsType.kThreadedDisplay)
+						currCol.setAttribute("sortDirection", "ascending");
+					else
+						currCol.removeAttribute("sortDirection");
+				}
+			}
     }
   }
 }

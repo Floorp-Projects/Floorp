@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001-2002
+ * Portions created by the Initial Developer are Copyright (C) 2001-2003
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -153,6 +153,7 @@ protected:
   PRPackedBool   mRemovingRow; // set when we're telling the outline a row is being removed. used to suppress msg loading.
                         // during delete/move operations.
   PRPackedBool  mCommandsNeedDisablingBecauseOffline;
+  PRPackedBool  mSuppressChangeNotification;
   virtual const char * GetViewName(void) {return "MsgDBView"; }
   nsresult FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aAuthorString);
   nsresult FetchSubject(nsIMsgHdr * aMsgHdr, PRUint32 aFlags, PRUnichar ** aValue);
@@ -183,7 +184,6 @@ protected:
   nsresult GetSelectedIndices(nsUInt32Array *selection);
   nsresult GenerateURIForMsgKey(nsMsgKey aMsgKey, nsIMsgFolder *folder, char ** aURI);
 // routines used in building up view
-  virtual nsresult AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortTypeValue sortType, PRInt32 numKeysToAdd);
   virtual PRBool WantsThisThread(nsIMsgThread * thread);
   virtual nsresult	AddHdr(nsIMsgDBHdr *msgHdr);
   PRBool GetShowingIgnored() {return (m_viewFlags & nsMsgViewFlagsType::kShowIgnored) != 0;}
