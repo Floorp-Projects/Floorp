@@ -133,15 +133,19 @@ public:
 
   nsFontGTK*  FindFont(PRUnichar aChar);
   nsFontGTK*  FindUserDefinedFont(PRUnichar aChar);
-  nsFontGTK*  FindLocalFont(PRUnichar aChar);
-  nsFontGTK*  FindGenericFont(PRUnichar aChar);
-  nsFontGTK*  FindGlobalFont(PRUnichar aChar);
+  nsFontGTK*  FindStyleSheetSpecificFont(PRUnichar aChar);
+  nsFontGTK*  FindStyleSheetGenericFont(PRUnichar aChar);
+  nsFontGTK*  FindLangGroupPrefFont(nsIAtom* aLangGroup, PRUnichar aChar);
+  nsFontGTK*  FindLangGroupFont(nsIAtom* aLangGroup, PRUnichar aChar, nsCString* aName);
+  nsFontGTK*  FindAnyFont(PRUnichar aChar);
   nsFontGTK*  FindSubstituteFont(PRUnichar aChar);
 
   nsFontGTK*  SearchNode(nsFontNode* aNode, PRUnichar aChar);
   nsFontGTK*  TryAliases(nsCString* aName, PRUnichar aChar);
   nsFontGTK*  TryFamily(nsCString* aName, PRUnichar aChar);
   nsFontGTK*  TryNode(nsCString* aName, PRUnichar aChar);
+  nsFontGTK*  TryNodes(nsAWritableCString &aFFREName, PRUnichar aChar);
+  nsFontGTK*  TryLangGroup(nsIAtom* aLangGroup, nsCString* aName, PRUnichar aChar);
 
   nsFontGTK*  PickASizeAndLoad(nsFontStretch* aStretch,
                                nsFontCharSetInfo* aCharSet, PRUnichar aChar);
