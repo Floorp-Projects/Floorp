@@ -227,8 +227,8 @@ nsTriStateCheckboxFrame::HandleEvent(nsIPresContext& aPresContext,
 
     case NS_MOUSE_EXIT:
       // clear "depressed" state so css redraws us
-      if ( NS_SUCCEEDED(mContent->UnsetAttribute(kNameSpaceID_None, sDepressAtom, PR_TRUE)) )
-        Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_TRUE);
+//      if ( NS_SUCCEEDED(mContent->UnsetAttribute(kNameSpaceID_None, sDepressAtom, PR_TRUE)) )
+//        Invalidate(nsRect(0, 0, mRect.width, mRect.height), PR_TRUE);
       mMouseDownOnCheckbox = PR_FALSE;
       break;
 
