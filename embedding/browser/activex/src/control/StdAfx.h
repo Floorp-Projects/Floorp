@@ -71,6 +71,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsIDocumentLoader.h"
 #include "nsIContentViewer.h"
+#include "nsIContentViewerEdit.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPresShell.h"
 #include "nsCOMPtr.h"
@@ -98,11 +99,13 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
+#include "nsIDOMMouseEvent.h"
 #include "nsIDOMEventReceiver.h"
 
 #define _WIN32_WINNT 0x0400
 #define _ATL_APARTMENT_THREADED
 #define _ATL_STATIC_REGISTRY
+#define _ATL_DEBUG_INTERFACES
 
 // ATL headers
 #include <atlbase.h>
