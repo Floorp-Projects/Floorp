@@ -76,8 +76,8 @@ protected:
 
 public:
 
-  const static char* nsEditor::kMOZEditorBogusNodeAttr;
-  const static char* nsEditor::kMOZEditorBogusNodeValue;
+  const static char* kMOZEditorBogusNodeAttr;
+  const static char* kMOZEditorBogusNodeValue;
 
   /** The default constructor. This should suffice. the setting of the interfaces is done
    *  after the construction of the editor class.
