@@ -1895,30 +1895,6 @@ dnl Note that we assume that mac & win32 have short wchar (see nscore.h)
     AC_LANG_RESTORE
 fi
 
-dnl check for wcrtomb/mbrtowc
-dnl =======================================================================
-
-AC_LANG_CPLUSPLUS
-AC_CACHE_CHECK(for wcrtomb,
-    ac_cv_have_wcrtomb,
-    [AC_TRY_LINK([#include <wchar.h>],
-                 [mbstate_t ps={0};wcrtomb(0,'f',&ps);],
-                 ac_cv_have_wcrtomb="yes",
-                 ac_cv_have_wcrtomb="no")])
-if test "$ac_cv_have_wcrtomb" = "yes"; then
-    AC_DEFINE(HAVE_WCRTOMB)
-fi
-AC_CACHE_CHECK(for mbrtowc,
-    ac_cv_have_mbrtowc,
-    [AC_TRY_LINK([#include <wchar.h>],
-                 [mbstate_t ps={0};mbrtowc(0,0,0,&ps);],
-                 ac_cv_have_mbrtowc="yes",
-                 ac_cv_have_mbrtowc="no")])
-if test "$ac_cv_have_mbrtowc" = "yes"; then
-    AC_DEFINE(HAVE_MBRTOWC)
-fi
-AC_LANG_C
-
 dnl Check for .hidden assembler directive and visibility attribute.
 dnl Borrowed from glibc configure.in
 dnl ===============================================================
@@ -2342,6 +2318,32 @@ AC_CHECK_FUNCS(nl_langinfo flockfile getpagesize)
 dnl localtime_r and strtok_r are only present on MacOS version 10.2 and higher
 if test -z "$MACOS_DEPLOYMENT_TARGET" || test "$MACOS_DEPLOYMENT_TARGET" -ge "100200"; then
   AC_CHECK_FUNCS(localtime_r strtok_r)
+fi
+
+dnl check for wcrtomb/mbrtowc
+dnl =======================================================================
+if test -z "$MACOS_DEPLOYMENT_TARGET" || test "$MACOS_DEPLOYMENT_TARGET" -ge "100300"; then
+AC_LANG_SAVE
+AC_LANG_CPLUSPLUS
+AC_CACHE_CHECK(for wcrtomb,
+    ac_cv_have_wcrtomb,
+    [AC_TRY_LINK([#include <wchar.h>],
+                 [mbstate_t ps={0};wcrtomb(0,'f',&ps);],
+                 ac_cv_have_wcrtomb="yes",
+                 ac_cv_have_wcrtomb="no")])
+if test "$ac_cv_have_wcrtomb" = "yes"; then
+    AC_DEFINE(HAVE_WCRTOMB)
+fi
+AC_CACHE_CHECK(for mbrtowc,
+    ac_cv_have_mbrtowc,
+    [AC_TRY_LINK([#include <wchar.h>],
+                 [mbstate_t ps={0};mbrtowc(0,0,0,&ps);],
+                 ac_cv_have_mbrtowc="yes",
+                 ac_cv_have_mbrtowc="no")])
+if test "$ac_cv_have_mbrtowc" = "yes"; then
+    AC_DEFINE(HAVE_MBRTOWC)
+fi
+AC_LANG_RESTORE
 fi
 
 AC_CACHE_CHECK(
