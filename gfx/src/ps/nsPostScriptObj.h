@@ -205,33 +205,172 @@ public:
   ~nsPostScriptObj();
 
 
+  /** ---------------------------------------------------
+   *  Start a postscript page
+   *	@update 2/1/99 dwc
+   */
   void begin_page();
+  /** ---------------------------------------------------
+   *  end the current postscript page
+   *	@update 2/1/99 dwc
+   */
   void end_page();
+  /** ---------------------------------------------------
+   *  start the current document
+   *	@update 2/1/99 dwc
+   */
+  void begin_document();
+
+  /** ---------------------------------------------------
+   *  end the current document
+   *	@update 2/1/99 dwc
+   */
   void end_document();
-  void moveto(int x, int y);
-  void moveto_loc(int x, int y);
-  void lineto(int x1, int y1);
+  /** ---------------------------------------------------
+   *  move the cursor to this location
+   *	@update 2/1/99 dwc
+   */
+  void moveto(int aX, int aY);
+  /** ---------------------------------------------------
+   *  move the cursor to this location
+   *	@update 2/1/99 dwc
+   */
+  void moveto_loc(int aX, int aY);
+  /** ---------------------------------------------------
+   *  put down a line from the current cursor to the x and y location
+   *	@update 2/1/99 dwc
+   */
+  void lineto(int aX, int aY);
+  /** ---------------------------------------------------
+   *  close the current postscript path, basically will return to the starting point
+   *	@update 2/1/99 dwc
+   */
   void closepath();
-  void circle(int w, int h);
-  void box(int w, int h);
-  void box_subtract(int w, int h);
-  void line(int x1, int y1, int x2, int y2, int thick);
+  /** ---------------------------------------------------
+   *  create an elliptical path
+   *	@update 2/1/99 dwc
+   *  @param aWidth - Width of the ellipse
+   *  @param aHeight - Height of the ellipse
+   */
+  void ellipse(int aWidth, int aHeight);
+  /** ---------------------------------------------------
+   *  create an elliptical path
+   *	@update 2/1/99 dwc
+   *  @param aWidth - Width of the ellipse
+   *  @param aHeight - Height of the ellipse
+   */
+  void arc(int aWidth, int aHeight,float aStartAngle,float aEndAngle);
+  /** ---------------------------------------------------
+   *  create a retangular path
+   *	@update 2/1/99 dwc
+   */
+  void box(int aWidth, int aHeight);
+  /** ---------------------------------------------------
+   *  create a retangular path, but winding the opposite way of a normal path, for clipping
+   *	@update 2/1/99 dwc
+   */
+  void box_subtract(int aWidth, int aHeight);
+  /** ---------------------------------------------------
+   *  Draw a postscript line
+   *	@update 2/1/99 dwc
+   */
+  void line(int aX1, int aY1, int aX2, int aY2, int aThink);
+  /** ---------------------------------------------------
+   *  strock the current path
+   *	@update 2/1/99 dwc
+   */
   void stroke();
+  /** ---------------------------------------------------
+   *  fill the current path
+   *	@update 2/1/99 dwc
+   */
   void fill();
+  /** ---------------------------------------------------
+   *  push the current graphics state onto the postscript stack
+   *	@update 2/1/99 dwc
+   */
   void graphics_save();
+  /** ---------------------------------------------------
+   *  pop the graphics state off of the postscript stack
+   *	@update 2/1/99 dwc
+   */
   void graphics_restore();
-  void colorimage(nsIImage *aImage,int x, int y, int w, int h);
-  void begin_squished_text( float);
+  /** ---------------------------------------------------
+   *  output a color postscript image
+   *	@update 2/1/99 dwc
+   */
+  void colorimage(nsIImage *aImage,int aX, int aY, int aWidth, int aHeight);
+  /** ---------------------------------------------------
+   *  ???
+   *	@update 2/1/99 dwc
+   */
+  void begin_squished_text( float aSqeeze);
+  /** ---------------------------------------------------
+   *  ???
+   *	@update 2/1/99 dwc
+   */
   void end_squished_text();
+  /** ---------------------------------------------------
+   *  Get rid of data structures for the postscript
+   *	@update 2/1/99 dwc
+   */
   void finalize_translation();
+  /** ---------------------------------------------------
+   *  ???
+   *	@update 2/1/99 dwc
+   */
   void annotate_page( char*, int, int, int);
-  void translate(int x, int y);
-  void show(char* txt, int len, char *align);
+  /** ---------------------------------------------------
+   *  translate the current coordinate system
+   *	@update 2/1/99 dwc
+   */
+  void translate(int aX, int aY);
+  /** ---------------------------------------------------
+   *  Issue a PS show command, which causes image to be rastered
+   *	@update 2/1/99 dwc
+   */
+  void show(char* aText, int aLen, char *aAlign);
+  /** ---------------------------------------------------
+   *  set the clipping path to the current path using the winding rule
+   *	@update 2/1/99 dwc
+   */
   void clip();
+  /** ---------------------------------------------------
+   *  set the clipping path to the current path using the even/odd rule
+   *	@update 2/1/99 dwc
+   */
+  void eoclip(); 
+  /** ---------------------------------------------------
+   *  start a new path
+   *	@update 2/1/99 dwc
+   */
   void newpath();
+  /** ---------------------------------------------------
+   *  reset the current postsript clip path to the page
+   *	@update 2/1/99 dwc
+   */
   void initclip();
+  /** ---------------------------------------------------
+   *  make the current postscript path the current postscript clip path
+   *	@update 2/1/99 dwc
+   */
+  void clippath();
+  /** ---------------------------------------------------
+   *  set the color
+   *	@update 2/1/99 dwc
+   */
   void setcolor(nscolor aTheColor);
+  /** ---------------------------------------------------
+   *  Set up the font
+   *	@update 2/1/99 dwc
+   */
   void setscriptfont(nscoord aHeight, PRUint8 aStyle, PRUint8 aVariant, PRUint16 aWeight, PRUint8 decorations);
+  /** ---------------------------------------------------
+   *  output a postscript comment
+   *	@update 2/1/99 dwc
+   */
+  void comment(char *aTheComment);
+
 
 private:
   PSContext             *mPrintContext;
@@ -239,8 +378,11 @@ private:
   PRUint16              mPageNumber;
 
 
-  void initialize_translation(PrintSetup* pi);
-  void begin_document();
+  /** ---------------------------------------------------
+   *  Set up the postscript
+   *	@update 2/1/99 dwc
+   */
+    void initialize_translation(PrintSetup* aPi);
 
 };
 
