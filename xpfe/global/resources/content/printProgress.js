@@ -73,13 +73,15 @@ var progressListener = {
       {
         var docTitleStr = progressParams.docTitle;
         if (docTitleStr != docTitle) {
-          SetTitle(docTitleStr);
           docTitle = docTitleStr;
+          dialog.status.value = docTitle;
         }
         var docURLStr = progressParams.docURL;
         if (docURLStr != docURL && dialog.status != null) {
-          dialog.status.value = docURLStr;
           docURL = docURLStr;
+          if (docTitle == "") {
+            dialog.status.value = docURLStr;
+          }
         }
       }
 
@@ -195,7 +197,7 @@ function onLoad() {
     dialog.progressText = document.getElementById("dialog.progressText");
     dialog.cancel       = document.getElementById("cancel");
 
-    dialog.status.value = docURL;
+    dialog.status.value = docTitle;
 
     // Set up dialog button callbacks.
     var object = this;
@@ -207,9 +209,6 @@ function onLoad() {
     // set our web progress listener on the helper app launcher
     printProgress.registerListener(progressListener);
     moveToAlertPosition();
-
-    //We need to delay the set title else dom will overwrite it
-    window.setTimeout(SetTitle, 0, docTitle);
 }
 
 function onUnload() 
@@ -224,12 +223,6 @@ function onUnload()
     
    catch( exception ) {}
   }
-}
-
-function SetTitle(str)
-{
-  var prefix = getString("titlePrefixPrint");
-  window.title = prefix + " " + str;
 }
 
 // If the user presses cancel, tell the app launcher and close the dialog...

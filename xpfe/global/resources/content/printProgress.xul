@@ -48,7 +48,6 @@ Contributor(s):
     -->
   
     <data id="dialog.strings.dialogCloseLabel">&dialogClose.label;</data>
-    <data id="dialog.strings.titlePrefixPrint">&titlePrefixPrint;</data>
     <data id="dialog.strings.printComplete">&printComplete;</data>
     <data id="dialog.strings.progressText">&percentPrint;</data>
 
