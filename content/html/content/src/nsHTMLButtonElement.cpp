@@ -33,6 +33,7 @@
 #include "nsIURL.h"
 #include "nsIFocusableContent.h"
 
+#include "nsIFormControlFrame.h"
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
 
@@ -273,15 +274,26 @@ NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Value, value)
 NS_IMETHODIMP
 nsHTMLButtonElement::Blur()
 {
-  // XXX write me
-  return NS_OK;
+  nsIFormControlFrame* formControlFrame = nsnull;
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv)) {
+     // Ask the frame to Deselect focus (i.e Blur).
+    formControlFrame->SetFocus(PR_FALSE, PR_TRUE);
+    return NS_OK;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
 nsHTMLButtonElement::Focus()
 {
-  // XXX write me
-  return NS_OK;
+  nsIFormControlFrame* formControlFrame = nsnull;
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv)) {
+    formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+    return NS_OK;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -298,14 +310,19 @@ nsHTMLButtonElement::SetFocus(nsIPresContext* aPresContext)
     NS_RELEASE(esm);
   }
 
-  // XXX write me
-  return NS_OK;
+  Focus();
+  nsIFormControlFrame* formControlFrame = nsnull;
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv)) {
+    formControlFrame->ScrollIntoView(aPresContext);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
 nsHTMLButtonElement::RemoveFocus(nsIPresContext* aPresContext)
 {
-  // XXX write me
+  Blur();
   return NS_OK;
 }
 

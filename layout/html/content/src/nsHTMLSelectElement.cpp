@@ -148,6 +148,8 @@ public:
   NS_IMETHOD Remove(PRInt32 aIndex);
   NS_IMETHOD Blur();
   NS_IMETHOD Focus();
+
+  // nsIDOMNSHTMLSelectElement
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
 
   // nsIScriptObjectOwner
@@ -605,7 +607,12 @@ nsHTMLSelectElement::SetFocus(nsIPresContext* aPresContext)
 
   // XXX Should focus only this presContext
   Focus();
-  return NS_OK;
+  nsIFormControlFrame* formControlFrame = nsnull;
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv)) {
+    formControlFrame->ScrollIntoView(aPresContext);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -622,10 +629,10 @@ nsHTMLSelectElement::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
   *aReturn=nsnull;
   nsresult result = NS_OK;
 
-  if (nsnull == mOptions) {
+  if (!mOptions) {
     Init();
   }
-
+  
   result = mOptions->Item(aIndex, aReturn);
   return result;
 }
