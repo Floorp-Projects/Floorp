@@ -26,7 +26,8 @@
 /**
  * Native GTK+ Label wrapper
  */
-class nsLabel :  public nsWidget,
+#define nsLabelSuper nsWidget
+class nsLabel :  public nsLabelSuper,
                  public nsILabel
 {
 

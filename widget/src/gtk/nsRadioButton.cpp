@@ -26,8 +26,8 @@
 
 #include "nsGtkEventHandler.h"
 
-NS_IMPL_ADDREF(nsRadioButton)
-NS_IMPL_RELEASE(nsRadioButton)
+NS_IMPL_ADDREF_INHERITED(nsRadioButton, nsRadioButtonSuper)
+NS_IMPL_RELEASE_INHERITED(nsRadioButton, nsRadioButtonSuper)
 
 //-------------------------------------------------------------------------
 //
@@ -48,8 +48,10 @@ nsRadioButton::nsRadioButton() : nsWidget(), nsIRadioButton()
 //-------------------------------------------------------------------------
 nsRadioButton::~nsRadioButton()
 {
+#if 0
   if (mLabel)
     gtk_widget_destroy(mLabel);
+#endif
 }
 
 

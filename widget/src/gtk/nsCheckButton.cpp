@@ -22,8 +22,8 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 
-NS_IMPL_ADDREF(nsCheckButton)
-NS_IMPL_RELEASE(nsCheckButton)
+NS_IMPL_ADDREF_INHERITED(nsCheckButton, nsCheckButtonSuper)
+NS_IMPL_RELEASE_INHERITED(nsCheckButton, nsCheckButtonSuper)
 
 //-------------------------------------------------------------------------
 //

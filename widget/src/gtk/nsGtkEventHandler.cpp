@@ -137,7 +137,6 @@ void InitAllocationEvent(GtkAllocation *aAlloc,
 {
   anEvent.message = aEventType;
   anEvent.widget  = (nsWidget *) p;
-  NS_ADDREF(anEvent.widget);
 
   anEvent.eventStructType = NS_SIZE_EVENT;
 
@@ -161,7 +160,6 @@ void InitConfigureEvent(GdkEventConfigure *aConf,
 {
   anEvent.message = aEventType;
   anEvent.widget  = (nsWidget *) p;
-  NS_ADDREF(anEvent.widget);
 
   anEvent.eventStructType = NS_SIZE_EVENT;
 
@@ -187,7 +185,6 @@ void InitMouseEvent(GdkEventButton *aGEB,
 {
   anEvent.message = aEventType;
   anEvent.widget  = (nsWidget *) p;
-  NS_ADDREF(anEvent.widget);
 
   anEvent.eventStructType = NS_MOUSE_EVENT;
 
@@ -234,7 +231,6 @@ void InitDrawEvent(GdkRectangle *area,
 {
   anEvent.message = aEventType;
   anEvent.widget  = (nsWidget *) p;
-  NS_ADDREF(anEvent.widget);
 
   anEvent.eventStructType = NS_PAINT_EVENT;
 
@@ -265,7 +261,6 @@ void InitExposeEvent(GdkEventExpose *aGEE,
 {
   anEvent.message = aEventType;
   anEvent.widget  = (nsWidget *) p;
-  NS_ADDREF(anEvent.widget);
 
   anEvent.eventStructType = NS_PAINT_EVENT;
 
@@ -296,7 +291,6 @@ void InitMotionEvent(GdkEventMotion *aGEM,
 {
   anEvent.message = aEventType;
   anEvent.widget  = (nsWidget *) p;
-  NS_ADDREF(anEvent.widget);
 
   anEvent.eventStructType = NS_MOUSE_EVENT;
 
@@ -323,7 +317,6 @@ void InitCrossingEvent(GdkEventCrossing *aGEC,
 {
   anEvent.message = aEventType;
   anEvent.widget  = (nsWidget *) p;
-  NS_ADDREF(anEvent.widget);
 
   anEvent.eventStructType = NS_MOUSE_EVENT;
 
@@ -350,7 +343,6 @@ void InitKeyEvent(GdkEventKey *aGEK,
 {
   anEvent.message = aEventType;
   anEvent.widget  = (nsWidget *) p;
-  NS_ADDREF(anEvent.widget);
 
   anEvent.eventStructType = NS_KEY_EVENT;
 
@@ -389,7 +381,6 @@ void InitFocusEvent(GdkEventFocus *aGEF,
 {
   anEvent.message = aEventType;
   anEvent.widget  = (nsWidget *) p;
-  NS_ADDREF(anEvent.widget);
 
   anEvent.eventStructType = NS_GUI_EVENT;
 
@@ -487,8 +478,9 @@ gint handle_configure_event(GtkWidget *w, GdkEventConfigure *conf, gpointer p)
   InitConfigureEvent(conf, p, sevent, NS_SIZE);
 
   nsWindow *win = (nsWindow *)p;
-
+  win->AddRef();
   win->OnResize(sevent);
+  win->Release();
 
   return PR_FALSE;
 }
@@ -500,8 +492,9 @@ gint handle_draw_event(GtkWidget *w, GdkRectangle *area, gpointer p)
   InitDrawEvent(area, p, pevent, NS_PAINT);
 
   nsWindow *win = (nsWindow *)p;
-
+  win->AddRef();
   win->OnPaint(pevent);
+  win->Release();
 
   UninitDrawEvent(area, p, pevent, NS_PAINT);
 
@@ -517,8 +510,9 @@ gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p)
   InitExposeEvent(event, p, pevent, NS_PAINT);
 
   nsWindow *win = (nsWindow *)p;
-
+  win->AddRef();
   win->OnPaint(pevent);
+  win->Release();
 
   UninitExposeEvent(event, p, pevent, NS_PAINT);
 
@@ -581,7 +575,9 @@ gint handle_button_press_event(GtkWidget *w, GdkEventButton * event, gpointer p)
   InitMouseEvent(event, p, mevent, b);
 
   nsWindow *win = (nsWindow *)p;
+  win->AddRef();
   win->DispatchMouseEvent(mevent);
+  win->Release();
 
   UninitMouseEvent(event, p, mevent, b);
 
@@ -612,7 +608,9 @@ gint handle_button_release_event(GtkWidget *w, GdkEventButton * event, gpointer 
   InitMouseEvent(event, p, mevent, b);
 
   nsWindow *win = (nsWindow *)p;
+  win->AddRef();
   win->DispatchMouseEvent(mevent);
+  win->Release();
 
   UninitMouseEvent(event, p, mevent, b);
 
@@ -626,7 +624,9 @@ gint handle_motion_notify_event(GtkWidget *w, GdkEventMotion * event, gpointer p
   InitMotionEvent(event, p, mevent, NS_MOUSE_MOVE);
 
   nsWindow *win = (nsWindow *)p;
+  win->AddRef();
   win->DispatchMouseEvent(mevent);
+  win->Release();
 
   UninitMotionEvent(event, p, mevent, NS_MOUSE_MOVE);
 
@@ -640,7 +640,9 @@ gint handle_enter_notify_event(GtkWidget *w, GdkEventCrossing * event, gpointer 
   InitCrossingEvent(event, p, mevent, NS_MOUSE_ENTER);
 
   nsWindow *win = (nsWindow *)p;
+  win->AddRef();
   win->DispatchMouseEvent(mevent);
+  win->Release();
 
   UninitCrossingEvent(event, p, mevent, NS_MOUSE_ENTER);
 
@@ -654,7 +656,9 @@ gint handle_leave_notify_event(GtkWidget *w, GdkEventCrossing * event, gpointer 
   InitCrossingEvent(event, p, mevent, NS_MOUSE_EXIT);
 
   nsWindow *win = (nsWindow *)p;
+  win->AddRef();
   win->DispatchMouseEvent(mevent);
+  win->Release();
 
   return PR_TRUE;
 }
@@ -662,28 +666,34 @@ gint handle_leave_notify_event(GtkWidget *w, GdkEventCrossing * event, gpointer 
 //==============================================================
 gint handle_focus_in_event(GtkWidget *w, GdkEventFocus * event, gpointer p)
 {
-  nsGUIEvent gevent;
-  InitFocusEvent(event, p, gevent, NS_GOTFOCUS);
-
   nsWindow *win = (nsWindow *)p;
-  win->DispatchFocus(gevent);
+  if (!win->IsDestroying()) {
+    nsGUIEvent gevent;
+    InitFocusEvent(event, p, gevent, NS_GOTFOCUS);
 
-  UninitFocusEvent(event, p, gevent, NS_GOTFOCUS);
+    win->AddRef();
+    win->DispatchFocus(gevent);
+    win->Release();
 
+    UninitFocusEvent(event, p, gevent, NS_GOTFOCUS);
+  }
   return PR_TRUE;
 }
 
 //==============================================================
 gint handle_focus_out_event(GtkWidget *w, GdkEventFocus * event, gpointer p)
 {
-  nsGUIEvent gevent;
-  InitFocusEvent(event, p, gevent, NS_LOSTFOCUS);
-
   nsWindow *win = (nsWindow *)p;
-  win->DispatchFocus(gevent);
+  if (!win->IsDestroying()) {
+    nsGUIEvent gevent;
+    InitFocusEvent(event, p, gevent, NS_LOSTFOCUS);
 
-  UninitFocusEvent(event, p, gevent, NS_LOSTFOCUS);
+    win->AddRef();
+    win->DispatchFocus(gevent);
+    win->Release();
 
+    UninitFocusEvent(event, p, gevent, NS_LOSTFOCUS);
+  }
   return PR_TRUE;
 }
 
@@ -694,8 +704,6 @@ void menu_item_activate_handler(GtkWidget *w, gpointer p)
 
   nsIMenuListener *menuListener = nsnull;
   nsIMenuItem *menuItem = (nsIMenuItem *)p;
-  NS_ADDREF(menuItem);
-  
   if (menuItem != NULL) {
     nsMenuEvent mevent;
     mevent.message = NS_MENU_SELECTED;
@@ -721,85 +729,6 @@ void menu_item_activate_handler(GtkWidget *w, gpointer p)
   }
 }
 
-#if 0
-//==============================================================
-gint nsGtkWidget_Focus_Callback(GtkWidget *w, gpointer p)
-{
-  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
-  nsWindow * widgetWindow = (nsWindow *) p ;
-
-  XmAnyCallbackStruct * cbs = (XmAnyCallbackStruct*)call_data;
-  nsGUIEvent event;
-  nsGtkWidget_InitNSEvent(cbs->event, p, event,
-                         cbs->reason == XmCR_FOCUS?NS_GOTFOCUS:NS_LOSTFOCUS);
-  widgetWindow->DispatchFocus(event);
-
-  return PR_FALSE;
-}
-#endif
-
-#if 0
-//==============================================================
-gint nsGtkWidget_Toggle_Callback(GtkWidget *w, gpointer p)
-{
-  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
-  nsWindow * widgetWindow = (nsWindow *) p ;
-  if (DBG) fprintf(stderr, "***************** nsGtkWidget_Scrollbar_Callback\n");
-
-  nsScrollbarEvent sevent;
-  XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
-
-  return PR_FALSE;
-}
-#endif
-
-#if 0
-//==============================================================
-gint nsGtkWidget_CheckButton_Toggle_Callback(GtkWidget *w, gpointer p)
-{
-  nsCheckButton *checkBtn = (nsCheckButton*)gtk_object_get_user_data(GTK_OBJECT(w));
-  if (GTK_TOGGLE_BUTTON(w)->active)
-    checkBtn->Armed();
-  else
-    checkBtn->DisArmed();
-
-  return PR_FALSE;
-}
-#endif
-
-#if 0
-//==============================================================
-gint nsGtkWidget_RadioButton_ArmCallback(GtkWidget *w, gpointer p)
-{
-  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
-  nsRadioButton * radioBtn = (nsRadioButton *) p ;
-  XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
-  radioBtn->Armed();
-  nsMouseEvent mevent;
-  nsGtkWidget_InitNSMouseEvent(cbs->event, p, mevent, NS_MOUSE_LEFT_BUTTON_DOWN);
-  radioBtn->DispatchMouseEvent(mevent);
-
-  return PR_FALSE;
-}
-#endif
-
-#if 0
-//==============================================================
-gint nsGtkWidget_RadioButton_DisArmCallback(GtkWidget *w, gpointer p)
-{
-  nsWindow *widgetWindow = (nsWindow*)gtk_object_get_user_data(GTK_OBJECT(w));
-  nsRadioButton * radioBtn = (nsRadioButton *) p ;
-  nsScrollbarEvent sevent;
-  XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
-  radioBtn->DisArmed();
-  nsMouseEvent mevent;
-  nsGtkWidget_InitNSMouseEvent(cbs->event, p, mevent, NS_MOUSE_LEFT_BUTTON_UP);
-  radioBtn->DispatchMouseEvent(mevent);
-
-  return PR_FALSE;
-}
-#endif
-
 
 //==============================================================
 void handle_scrollbar_value_changed(GtkAdjustment *adj, gpointer p)
@@ -818,7 +747,9 @@ void handle_scrollbar_value_changed(GtkAdjustment *adj, gpointer p)
   widget->ReleaseNativeData(NS_NATIVE_WINDOW);
 #endif
 
+  widget->AddRef();
   widget->OnScroll(sevent, adj->value);
+  widget->Release();
 
 /* FIXME we need to set point.* from the event stuff. */
 #if 0
@@ -882,7 +813,9 @@ gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   InitKeyEvent(event, p, kevent, NS_KEY_UP);
 
   nsWindow * win = (nsWindow *) p;
+  win->AddRef();
   win->OnKey(kevent);
+  win->Release();
 
   return PR_TRUE;
 }
@@ -903,7 +836,9 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   InitKeyEvent(event, p, kevent, NS_KEY_DOWN);
 
   nsWindow * win = (nsWindow *) p;
+  win->AddRef();
   win->OnKey(kevent);
+  win->Release();
 
   return PR_TRUE;
 }

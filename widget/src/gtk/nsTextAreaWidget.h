@@ -34,9 +34,7 @@ public:
   nsTextAreaWidget();
   virtual ~nsTextAreaWidget();
 
-   // nsISupports
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
+  // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   virtual PRBool  OnPaint(nsPaintEvent & aEvent);

@@ -24,8 +24,8 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 
-NS_IMPL_ADDREF(nsListBox)
-NS_IMPL_RELEASE(nsListBox)
+NS_IMPL_ADDREF_INHERITED(nsListBox, nsListBoxSuper)
+NS_IMPL_RELEASE_INHERITED(nsListBox, nsListBoxSuper)
 
 //-------------------------------------------------------------------------
 //
@@ -36,6 +36,7 @@ nsListBox::nsListBox() : nsWidget(), nsIListWidget(), nsIListBox()
 {
   NS_INIT_REFCNT();
   mMultiSelect = PR_FALSE;
+  mCList = nsnull;
 //  mBackground  = NS_RGB(124, 124, 124);
 }
 
@@ -46,11 +47,13 @@ nsListBox::nsListBox() : nsWidget(), nsIListWidget(), nsIListBox()
 //-------------------------------------------------------------------------
 nsListBox::~nsListBox()
 {
+#if 0
   if (mCList)
   {
     ::gtk_widget_destroy(mCList);
     mCList = nsnull;
   }
+#endif
 }
 
 //-------------------------------------------------------------------------

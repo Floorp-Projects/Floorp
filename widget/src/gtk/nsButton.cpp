@@ -27,8 +27,8 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 
-NS_IMPL_ADDREF(nsButton)
-NS_IMPL_RELEASE(nsButton)
+NS_IMPL_ADDREF_INHERITED(nsButton, nsButtonSuper)
+NS_IMPL_RELEASE_INHERITED(nsButton, nsButtonSuper)
 
 //-------------------------------------------------------------------------
 //
@@ -63,16 +63,17 @@ nsButton::~nsButton()
 void nsButton::InitCallbacks(char * aName)
 {
   nsWidget::InitCallbacks();
+
   /* FIXME: we need to unconnect the signals connected from
    * nsWidget::InitCallbacks that we provide here */
   gtk_signal_connect(GTK_OBJECT(mWidget),
-                       "button_press_event",
-                        GTK_SIGNAL_FUNC(handle_button_press_event),
-	                this);
+                     "button_press_event",
+                     GTK_SIGNAL_FUNC(handle_button_press_event),
+                     this);
   gtk_signal_connect(GTK_OBJECT(mWidget),
-                       "button_release_event",
-                        GTK_SIGNAL_FUNC(handle_button_release_event),
-                        this);
+                     "button_release_event",
+                     GTK_SIGNAL_FUNC(handle_button_release_event),
+                     this);
 }
 
 /**

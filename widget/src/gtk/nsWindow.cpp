@@ -39,10 +39,6 @@
 
 //#define DBG 0
 
-// for nsISupports
-NS_IMPL_ADDREF(nsWindow)
-NS_IMPL_RELEASE(nsWindow)
-
 /**
  * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
  * @modify gpk 8/4/98
@@ -98,12 +94,14 @@ nsWindow::nsWindow()
 nsWindow::~nsWindow()
 {
   mIsDestroying = PR_TRUE;
-  if (mShell)
-  {
-    if (GTK_IS_WIDGET(mShell))
-      gtk_widget_destroy(mShell);
-    mShell = nsnull;
+  if (nsnull != mShell) {
+    Destroy();
   }
+}
+
+PRBool nsWindow::IsChild() const
+{
+  return PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -146,13 +144,10 @@ NS_METHOD nsWindow::RemoveTooltips()
 
 NS_METHOD nsWindow::Destroy()
 {
-  // disconnect from the parent
-
+  // Call base class first...
+  nsWidget::Destroy();
 
   if (mIsDestroying == PR_TRUE) {
-    nsBaseWidget::Destroy();
-    if (PR_FALSE == mOnDestroyCalled)
-	OnDestroy();
     if (mShell) {
     	if (GTK_IS_WIDGET(mShell))
      		gtk_widget_destroy(mShell);
@@ -161,24 +156,6 @@ NS_METHOD nsWindow::Destroy()
   }
 
   return NS_OK;
-}
-
-void nsWindow::OnDestroy()
-{
-    mOnDestroyCalled = PR_TRUE;
-
-    // release references to children, device context, toolkit, and app shell
-    nsBaseWidget::OnDestroy();
-
-    // dispatch the event
-    if (mIsDestroying == PR_TRUE) {
-      // dispatching of the event may cause the reference count to drop to 0
-      // and result in this object being destroyed. To avoid that, add a reference
-      // and then release it after dispatching the event
-      AddRef();
-      DispatchStandardEvent(NS_DESTROY);
-      Release();
-    }
 }
 
 
@@ -287,53 +264,53 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 void nsWindow::InitCallbacks(char * aName)
 {
   gtk_signal_connect_after(GTK_OBJECT(mWidget),
-                     "size_allocate",
-                     GTK_SIGNAL_FUNC(handle_size_allocate),
-                     this);
+                           "size_allocate",
+                           GTK_SIGNAL_FUNC(handle_size_allocate),
+                           this);
   gtk_signal_connect_after(GTK_OBJECT(mWidget),
-                     "button_press_event",
-		     GTK_SIGNAL_FUNC(handle_button_press_event),
-		     this);
+                           "button_press_event",
+                           GTK_SIGNAL_FUNC(handle_button_press_event),
+                           this);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "button_release_event",
-		     GTK_SIGNAL_FUNC(handle_button_release_event),
-		     this);
+                     GTK_SIGNAL_FUNC(handle_button_release_event),
+                     this);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "motion_notify_event",
-		     GTK_SIGNAL_FUNC(handle_motion_notify_event),
-		     this);
+                     GTK_SIGNAL_FUNC(handle_motion_notify_event),
+                     this);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "enter_notify_event",
-		     GTK_SIGNAL_FUNC(handle_enter_notify_event),
-		     this);
+                     GTK_SIGNAL_FUNC(handle_enter_notify_event),
+                     this);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "leave_notify_event",
-		     GTK_SIGNAL_FUNC(handle_leave_notify_event),
-		     this);
+                     GTK_SIGNAL_FUNC(handle_leave_notify_event),
+                     this);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "draw",
-		     GTK_SIGNAL_FUNC(handle_draw_event),
-		     this);
+                     GTK_SIGNAL_FUNC(handle_draw_event),
+                     this);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "expose_event",
-		     GTK_SIGNAL_FUNC(handle_expose_event),
-		     this);
+                     GTK_SIGNAL_FUNC(handle_expose_event),
+                     this);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "key_press_event",
-		     GTK_SIGNAL_FUNC(handle_key_press_event),
-		     this);
+                     GTK_SIGNAL_FUNC(handle_key_press_event),
+                     this);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "key_release_event",
-		     GTK_SIGNAL_FUNC(handle_key_release_event),
-		     this);
+                     GTK_SIGNAL_FUNC(handle_key_release_event),
+                     this);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "focus_in_event",
-		     GTK_SIGNAL_FUNC(handle_focus_in_event),
-		     this);
+                     GTK_SIGNAL_FUNC(handle_focus_in_event),
+                     this);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "focus_out_event",
-		     GTK_SIGNAL_FUNC(handle_focus_out_event),
-		     this);
+                     GTK_SIGNAL_FUNC(handle_focus_out_event),
+                     this);
 }
 
 //-------------------------------------------------------------------------
@@ -507,4 +484,15 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
   gtk_box_reorder_child(GTK_BOX(mVBox), menubar, 0);
 
   return NS_OK;
+}
+
+//----------------------------------------------------------------------
+
+ChildWindow::ChildWindow()
+{
+}
+
+PRBool ChildWindow::IsChild() const
+{
+  return PR_TRUE;
 }

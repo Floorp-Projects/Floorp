@@ -24,8 +24,8 @@
 #include "nsStringUtil.h"
 
 
-NS_IMPL_ADDREF(nsTabWidget)
-NS_IMPL_RELEASE(nsTabWidget)
+NS_IMPL_ADDREF_INHERITED(nsTabWidget, nsTabWidgetSuper)
+NS_IMPL_RELEASE_INHERITED(nsTabWidget, nsTabWidgetSuper)
 
 //-------------------------------------------------------------------------
 //

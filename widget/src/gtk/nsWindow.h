@@ -45,8 +45,6 @@ public:
     virtual ~nsWindow();
 
     // nsIsupports
-    NS_IMETHOD_(nsrefcnt) AddRef();
-    NS_IMETHOD_(nsrefcnt) Release();
     NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   
 
@@ -71,8 +69,15 @@ public:
     NS_IMETHOD            Destroy(void);
 
 
-    virtual PRBool IsChild() { return(PR_FALSE); };
-    virtual void SetIsDestroying( PRBool val) { mIsDestroying = val; };
+    virtual PRBool IsChild() const;
+
+    void SetIsDestroying(PRBool val) {
+      mIsDestroying = val;
+    }
+
+    PRBool IsDestroying() const {
+      return mIsDestroying;
+    }
 
      // Utility methods
     virtual  PRBool OnPaint(nsPaintEvent &event);
@@ -85,7 +90,6 @@ public:
     char gInstanceClassName[256];
   
 protected:
-    virtual void            OnDestroy();
 
   virtual void InitCallbacks(char * aName = nsnull);
   NS_IMETHOD CreateNative(GtkWidget *parentWidget);
@@ -113,9 +117,9 @@ protected:
 // A child window is a window with different style
 //
 class ChildWindow : public nsWindow {
-  public:
-    ChildWindow() {};
-    virtual PRBool IsChild() { return(PR_TRUE); };
+public:
+    ChildWindow();
+    virtual PRBool IsChild() const;
 };
 
 #endif // Window_h__
