@@ -32,7 +32,7 @@
 
     <text class="label" value="&conditionDesc.label;"/>
 
-    <radiogroup class="indent" id="booleanAndGroup" orient="vertical" autostretch="never"
+    <radiogroup class="indent" id="booleanAndGroup" autostretch="never"
                 selectedItem="or" oncommand="booleanChanged(event);">
       <radio group="booleanAndGroup" data="and" value="&matchAll.label;"/>
       <radio group="booleanAndGroup" checked="true" data="or" value="&matchAny.label;"/>
@@ -42,7 +42,7 @@
     
     <box flex="1">
       <box id="searchterms"/>
-      <tree class="inset" flex="1" id="searchTermTree" style="height: 0px;">
+      <tree class="inset" flex="1" id="searchTermTree" style="height: 100px; min-height: 50px;">
         <treecolgroup>
           <treecol flex="1"/>
           <treecol flex="4"/>
