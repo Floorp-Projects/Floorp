@@ -127,8 +127,6 @@ NS_IMETHODIMP nsSOAPMessage::GetVersion(PRUint16 *aVersion)
 /* Internal method for getting  envelope and  version */
 unsigned short nsSOAPMessage::GetEnvelopeWithVersion(nsIDOMElement * *aEnvelope)
 {
-  NS_ENSURE_ARG_POINTER(aEnvelope);
-
   if (mMessage) {
     nsCOMPtr<nsIDOMElement> root;
     mMessage->GetDocumentElement(getter_AddRefs(root));
@@ -439,10 +437,12 @@ NS_IMETHODIMP nsSOAPMessage::GetHeaderBlocks(PRUint32 *aCount, nsISOAPHeaderBloc
     }
     element = next;
     header = new nsSOAPHeaderBlock();
-    if (NS_FAILED(rv)) return rv;
-    // XXX can't addref a COMPTr
-    //NS_ADDREF(header);
-    (*aHeaderBlocks)[(*aCount)++] = header;
+    if (!header) return NS_ERROR_OUT_OF_MEMORY;
+
+    (*aHeaderBlocks)[(*aCount)] = header;
+    NS_ADDREF((*aHeaderBlocks)[(*aCount)]);
+    (*aCount)++;
+
     rv = header->SetElement(element);
     if (NS_FAILED(rv)) return rv;
     nsSOAPUtils::GetNextSiblingElement(element, getter_AddRefs(next));
@@ -480,10 +480,12 @@ NS_IMETHODIMP nsSOAPMessage::GetParameters(PRBool aDocumentStyle, PRUint32 *aCou
     }
     element = next;
     param = new nsSOAPParameter();
-    if (NS_FAILED(rv)) return rv;
-    // XXX can't addref a COMPTr
-    //NS_ADDREF(param);
-    (*aParameters)[(*aCount)++] = param;
+    if (!param) return NS_ERROR_OUT_OF_MEMORY;
+
+    (*aParameters)[(*aCount)] = param;
+    NS_ADDREF((*aParameters)[(*aCount)]);
+    (*aCount)++;
+
     rv = param->SetElement(element);
     if (NS_FAILED(rv)) return rv;
     nsSOAPUtils::GetNextSiblingElement(element, getter_AddRefs(next));
