@@ -40,7 +40,7 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../src \
 		$(NULL)
 
-EXTRA_DSO_LIBS	= gkgfx gkbase_s
+EXTRA_DSO_LIBS	= gkbase_s gkgfx
 
 LIBS		+= \
 		$(LIBS_DIR) \
