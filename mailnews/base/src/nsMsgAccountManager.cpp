@@ -253,6 +253,10 @@ typedef struct _findServerEntry {
   nsIMsgIncomingServer *server;
 } findServerEntry;
 
+typedef struct _findServerByKeyEntry {
+  const char *key;
+  PRInt32 index;
+} findServerByKeyEntry;
 
 // use this to search for all servers that match "server" and
 // put all identities in "identities"
@@ -270,6 +274,7 @@ typedef struct _findAccountByKeyEntry {
     const char* key;
     nsIMsgAccount* account;
 } findAccountByKeyEntry;
+
 
 
 class nsMsgAccountManager : public nsIMsgAccountManager,
@@ -304,7 +309,7 @@ private:
   nsHashtable m_incomingServers;
   nsCOMPtr<nsIMsgAccount> m_defaultAccount;
 
-  nsCString accountKeyList;
+  nsCAutoString accountKeyList;
   
   /* internal creation routines - updates m_identities and m_incomingServers */
   nsresult createKeyedAccount(const char* key,
@@ -345,6 +350,7 @@ private:
   // find the servers that correspond to the given identity
   static PRBool findServersForIdentity (nsISupports *element, void *aData);
 
+  static PRBool findServerIndexByServer(nsISupports *element, void *aData);
   // find the account with the given key
   static PRBool findAccountByKey (nsISupports *element, void *aData);
 
@@ -1031,7 +1037,7 @@ PRBool
 nsMsgAccountManager::getAccountList(nsISupports *element, void *aData)
 {
   nsresult rv;
-  nsCString* accountList = (nsCString*) aData;
+  nsCAutoString* accountList = (nsCAutoString*) aData;
   nsCOMPtr<nsIMsgAccount> account = do_QueryInterface(element, &rv);
   if (NS_FAILED(rv)) return PR_TRUE;
   
@@ -1138,6 +1144,57 @@ nsMsgAccountManager::GetAccount(const char* key,
 
     // not found, create on demand
     return createKeyedAccount(key, _retval);
+}
+
+nsresult
+nsMsgAccountManager::FindServerIndex(nsIMsgIncomingServer* server,
+                                     PRInt32* result)
+{
+  nsresult rv;
+  
+  nsXPIDLCString key;
+  rv = server->GetKey(getter_Copies(key));
+
+  findServerByKeyEntry findEntry;
+  findEntry.key = key;
+  findEntry.index = -1;
+  
+  // do this by account because the account list is in order
+  m_accounts->EnumerateForwards(findServerIndexByServer, (void *)&findEntry);
+
+  // even if the search failed, we can return index.
+  // this means that all servers not in the array return an index higher
+  // than all "registered" servers
+  *result = findEntry.index;
+  
+  return NS_OK;
+}
+
+PRBool
+nsMsgAccountManager::findServerIndexByServer(nsISupports *element, void *aData)
+{
+  nsresult rv;
+  
+  nsCOMPtr<nsIMsgAccount> account = do_QueryInterface(element);
+  findServerByKeyEntry *entry = (findServerByKeyEntry*) aData;
+
+  // increment the index;
+  entry->index++;
+  
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = account->GetIncomingServer(getter_AddRefs(server));
+  if (NS_FAILED(rv)) return PR_TRUE;
+  
+  nsXPIDLCString key;
+  rv = server->GetKey(getter_Copies(key));
+  if (NS_FAILED(rv)) return PR_TRUE;
+
+  // stop when found,
+  // index will be set to the current index 
+  if (nsCRT::strcmp(key, entry->key)==0)
+    return PR_FALSE;
+  
+  return PR_TRUE;
 }
 
 PRBool

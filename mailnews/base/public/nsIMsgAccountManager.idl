@@ -64,7 +64,8 @@ interface nsIMsgAccountManager : nsISupports {
    * account already in the account manager */
   attribute nsIMsgAccount defaultAccount;
 
-  /* ordered list of all accounts
+  /**
+   * ordered list of all accounts, by the order they are in the prefs
    * array of nsIMsgAccount
    */
   readonly attribute nsISupportsArray accounts;
@@ -86,6 +87,11 @@ interface nsIMsgAccountManager : nsISupports {
    */
   nsIMsgIncomingServer
       FindServer(in string userName, in string hostname, in string type);
+
+  /**
+   * find the index of this server in the (ordered) list of accounts
+   */
+  long FindServerIndex(in nsIMsgIncomingServer server);
 
   nsIMsgAccount
       FindAccountForServer(in nsIMsgIncomingServer server);
