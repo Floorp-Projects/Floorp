@@ -47,18 +47,18 @@ const JSValue kTrue = JSValue(true);
 const JSValue kFalse = JSValue(false);
 const JSValue kNull = JSValue((JSObject*)NULL);
 
-const JSType Any_Type = JSType(NULL);
-const JSType Integer_Type = JSType(&Any_Type);
-const JSType Number_Type = JSType(&Integer_Type);
-const JSType Character_Type = JSType(&Any_Type);
-const JSType String_Type = JSType(&Character_Type);
-const JSType Function_Type = JSType(&Any_Type);
-const JSType Array_Type = JSType(&Any_Type);
-const JSType Type_Type = JSType(&Any_Type);
-const JSType Boolean_Type = JSType(&Any_Type);
-const JSType Null_Type = JSType(&Any_Type);
-const JSType Void_Type = JSType(&Any_Type);
-const JSType None_Type = JSType(&Any_Type);
+const JSType Any_Type = JSType(widenCString("any"), NULL);
+const JSType Integer_Type = JSType(widenCString("Integer"), &Any_Type);
+const JSType Number_Type = JSType(widenCString("Number"), &Integer_Type);
+const JSType Character_Type = JSType(widenCString("Character"), &Any_Type);
+const JSType String_Type = JSType(widenCString("String"), &Character_Type);
+const JSType Function_Type = JSType(widenCString("Function"), &Any_Type);
+const JSType Array_Type = JSType(widenCString("Array"), &Any_Type);
+const JSType Type_Type = JSType(widenCString("Type"), &Any_Type);
+const JSType Boolean_Type = JSType(widenCString("Boolean"), &Any_Type);
+const JSType Null_Type = JSType(widenCString("Null"), &Any_Type);
+const JSType Void_Type = JSType(widenCString("void"), &Any_Type);
+const JSType None_Type = JSType(widenCString("none"), &Any_Type);
 
 
 #ifdef IS_LITTLE_ENDIAN
@@ -204,32 +204,7 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
         f << "undefined";
         break;
     case JSValue::type_tag:
-        if (value.type == &Any_Type)        // yuck (see yuck comment below)
-            f << "Any_Type";
-        else if (value.type == &Integer_Type)
-            f << "Integer_Type";
-        else if (value.type == &Number_Type)
-            f << "Number_Type";
-        else if (value.type == &Character_Type)
-            f << "Character_Type";
-        else if (value.type == &String_Type)
-            f << "String_Type";
-        else if (value.type == &Function_Type)
-            f << "Function_Type";
-        else if (value.type == &Array_Type)
-            f << "Array_Type";
-        else if (value.type == &Type_Type)
-            f << "Type_Type";
-        else if (value.type == &Boolean_Type)
-            f << "Boolean_Type";
-        else if (value.type == &Null_Type)
-            f << "Null_Type";
-        else if (value.type == &Void_Type)
-            f << "Void_Type";
-        else if (value.type == &None_Type)
-            f << "None_Type";
-        else
-            f << "Unknown_Type";
+        f << value.type->getName();
         break;
     default:
         NOT_REACHED("Bad tag");
@@ -532,9 +507,9 @@ int32 JSType::distance(const JSType *other) const
 {
     if (other == this) 
         return 0; 
-    if (baseType == NULL)
+    if (mBaseType == NULL)
         return NoRelation;
-    int32 baseDistance = baseType->distance(other);
+    int32 baseDistance = mBaseType->distance(other);
     if (baseDistance != NoRelation)
         ++baseDistance;
     return baseDistance;

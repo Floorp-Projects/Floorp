@@ -483,13 +483,6 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             assert(mPC != endPC);
             Instruction* instruction = *mPC;
             switch (instruction->op()) {
-            case FUNCTION:
-                {
-                    FunctionDef* fnDef = static_cast<FunctionDef*>(instruction);
-                    mGlobal->defineFunction(fnDef->name, fnDef->code);
-                }
-                break;
-
             case METHOD_CALL:
                 {
                     MethodCall* call = static_cast<MethodCall*>(instruction);
@@ -499,7 +492,6 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     JSValue prop;
                     if (op2(call).first == NotARegister) {
                         base = mGlobal->getReference(prop, *((*registers)[op3(call).first].string));
-                    
                     }
                     else {
                         base = (*registers)[op2(call).first];
@@ -650,7 +642,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 {
                     GetProp* gp = static_cast<GetProp*>(instruction);
                     JSValue& value = (*registers)[src1(gp).first];
-                    if (value.tag == JSValue::object_tag) {
+                    if (value.isObject()) {
                         JSObject* object = value.object;
                         (*registers)[dst(gp).first] = object->getProperty(*src2(gp));
                     }
@@ -661,7 +653,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 {
                     SetProp* sp = static_cast<SetProp*>(instruction);
                     JSValue& value = (*registers)[dst(sp).first];
-                    if (value.tag == JSValue::object_tag) {
+                    if (value.isObject()) {
                         JSObject* object = value.object;
                         object->setProperty(*src1(sp), (*registers)[src2(sp).first]);
                     }

@@ -276,10 +276,6 @@ $ops{"WITHOUT"} =
    super  => "Instruction",
    rem    => "without this object",
   };
-$ops{"FUNCTION"} =
-  {
-   rem    => "Defines a function",
-  };
 
 #
 # nasty perl code, you probably don't need to muck around below this line

@@ -69,7 +69,6 @@ namespace VM {
         DEBUGGER, /* drop to the debugger */
         DIVIDE, /* dest, source1, source2 */
         ELEM_XCR, /* dest, base, index, value */
-        FUNCTION, /* Defines a function */
         GET_ELEMENT, /* dest, base, index */
         GET_PROP, /* dest, object, prop name */
         INSTANCEOF, /* dest, source1, source2 */
@@ -134,7 +133,6 @@ namespace VM {
         "DEBUGGER      ",
         "DIVIDE        ",
         "ELEM_XCR      ",
-        "FUNCTION      ",
         "GET_ELEMENT   ",
         "GET_PROP      ",
         "INSTANCEOF    ",
@@ -206,23 +204,6 @@ namespace VM {
     protected:
         ICodeOp mOpcode;
         
-    };
-
-
-    class FunctionDef : public Instruction
-    {
-    public:
-        const StringAtom &name;
-        ICG::ICodeModule *code;
-
-        virtual Formatter& print(Formatter& f)
-        {
-            f << opcodeNames[mOpcode] << "\t" << name;
-            return f;
-        }
-
-        FunctionDef(const StringAtom& name, ICG::ICodeModule *code) 
-            : Instruction(FUNCTION), name(name), code(code) { }
     };
 
     /********************************************************************/
