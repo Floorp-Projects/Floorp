@@ -224,7 +224,7 @@ public class Codegen extends Interpreter {
         if (e != null)
             throw new RuntimeException("Malformed optimizer package " + e);
 
-        if (inFunction) {
+        if (fnCurrent != null) {
             NativeFunction f;
             try {
                 Constructor ctor = result.getConstructors()[0];
@@ -282,23 +282,19 @@ public class Codegen extends Interpreter {
         String superClassName;
         this.scriptOrFn = scriptOrFn;
         if (scriptOrFn.getType() == Token.FUNCTION) {
-            inFunction = true;
             fnCurrent = (OptFunctionNode)scriptOrFn;
-            inDirectCallFunction = fnCurrent.isTargetOfDirectCall();
             generatedClassName = fnCurrent.getClassName();
             superClassName = FUNCTION_SUPER_CLASS_NAME;
         } else {
             // better be a script
             if (scriptOrFn.getType() != Token.SCRIPT) badTree();
-            inFunction = false;
+            fnCurrent = null;
             boolean isPrimary = (nameHelper.getTargetExtends() == null
                                  && nameHelper.getTargetImplements() == null);
             generatedClassName = getScriptClassName(null, isPrimary);
             superClassName = SCRIPT_SUPER_CLASS_NAME;
         }
         generatedClassSignature = classNameToSignature(generatedClassName);
-
-        itsUseDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
 
         itsSourceFile = null;
         // default is to generate debug info
@@ -320,9 +316,9 @@ public class Codegen extends Interpreter {
                                   itsSourceFile);
 
         Node codegenBase;
-        if (inFunction) {
+        if (fnCurrent != null) {
             generateInit(cx, superClassName);
-            if (inDirectCallFunction) {
+            if (fnCurrent.isTargetOfDirectCall()) {
                 cfw.startMethod("call",
                                 "(Lorg/mozilla/javascript/Context;" +
                                 "Lorg/mozilla/javascript/Scriptable;" +
@@ -360,17 +356,7 @@ public class Codegen extends Interpreter {
                 // 1 for this, 1 for js this, 1 for args[]
 
                 emitDirectConstructor();
-
-                startCodeBodyMethod("callDirect",
-                                    fnCurrent.getDirectCallMethodSignature());
-            } else {
-                startCodeBodyMethod("call",
-                                    "(Lorg/mozilla/javascript/Context;"
-                                    +"Lorg/mozilla/javascript/Scriptable;"
-                                    +"Lorg/mozilla/javascript/Scriptable;"
-                                    +"[Ljava/lang/Object;)Ljava/lang/Object;");
             }
-            codegenBase = scriptOrFn.getLastChild();
         } else {
             // script
             cfw.addInterface("org/mozilla/javascript/Script");
@@ -378,18 +364,9 @@ public class Codegen extends Interpreter {
             generateScriptCtor(cx, superClassName);
             generateMain(cx);
             generateExecute(cx);
-            startCodeBodyMethod("call",
-                                "(Lorg/mozilla/javascript/Context;"
-                                +"Lorg/mozilla/javascript/Scriptable;"
-                                +"Lorg/mozilla/javascript/Scriptable;"
-                                +"[Ljava/lang/Object;)Ljava/lang/Object;");
-            codegenBase = scriptOrFn;
         }
 
-        generatePrologue(cx);
-        generateCodeFromNode(codegenBase, null);
-        generateEpilogue();
-        finishMethod(cx, debugVars);
+        generateBodyCode(cx);
 
         emitConstantDudeInitializers();
 
@@ -545,7 +522,7 @@ public class Codegen extends Interpreter {
 
     private void generateInit(Context cx, String superClassName)
     {
-        String methodName = (inFunction) ? "<init>" :  "initScript";
+        String methodName = (fnCurrent != null) ? "<init>" :  "initScript";
         cfw.startMethod(methodName,
                         "(Lorg/mozilla/javascript/Scriptable;"
                         +"Lorg/mozilla/javascript/Context;)V",
@@ -554,7 +531,7 @@ public class Codegen extends Interpreter {
         final byte ALOAD_SCOPE = ByteCode.ALOAD_1;
         final byte ALOAD_CONTEXT = ByteCode.ALOAD_2;
 
-        if (inFunction) {
+        if (fnCurrent != null) {
             cfw.add(ByteCode.ALOAD_0);
             addSpecialInvoke(superClassName, "<init>", "()V");
 
@@ -602,7 +579,7 @@ public class Codegen extends Interpreter {
 
         int parmCount = scriptOrFn.getParamCount();
         if (parmCount != 0) {
-            if (!inFunction) Context.codeBug();
+            if (fnCurrent == null) Context.codeBug();
             cfw.add(ByteCode.ALOAD_0);
             cfw.addPush(parmCount);
             cfw.add(ByteCode.PUTFIELD,
@@ -625,7 +602,7 @@ public class Codegen extends Interpreter {
             for (int i = 0; i != regexpCount; ++i) {
                 String fieldName = getRegexpFieldName(i);
                 short flags = ClassFileWriter.ACC_PRIVATE;
-                if (inFunction) { flags |= ClassFileWriter.ACC_FINAL; }
+                if (fnCurrent != null) { flags |= ClassFileWriter.ACC_FINAL; }
                 cfw.addField(
                     fieldName,
                     "Lorg/mozilla/javascript/regexp/NativeRegExp;",
@@ -721,6 +698,87 @@ public class Codegen extends Interpreter {
             }
         }
     }
+    
+    private void emitConstantDudeInitializers() {
+        int N = itsConstantListSize;
+        if (N == 0)
+            return;
+
+        cfw.startMethod("<clinit>", "()V",
+            (short)(ClassFileWriter.ACC_STATIC + ClassFileWriter.ACC_FINAL));
+
+        double[] array = itsConstantList;
+        for (int i = 0; i != N; ++i) {
+            double num = array[i];
+            String constantName = "jsK_" + i;
+            String constantType = getStaticConstantWrapperType(num);
+            cfw.addField(constantName, constantType,
+                               ClassFileWriter.ACC_STATIC);
+            pushAsWrapperObject(num);
+            cfw.add(ByteCode.PUTSTATIC,
+                          cfw.fullyQualifiedForm(generatedClassName),
+                          constantName, constantType);
+        }
+
+        cfw.add(ByteCode.RETURN);
+        cfw.stopMethod((short)0, null);
+    }
+
+    private void generateBodyCode(Context cx)
+    {
+        initBodyGeneration(cx);
+    
+        String methodName, methodDesc;
+        if (inDirectCallFunction) {
+            methodName = "callDirect";
+            methodDesc = fnCurrent.getDirectCallMethodSignature();
+        } else {
+            methodName = "call";
+            methodDesc = "(Lorg/mozilla/javascript/Context;"
+                         +"Lorg/mozilla/javascript/Scriptable;"
+                         +"Lorg/mozilla/javascript/Scriptable;"
+                         +"[Ljava/lang/Object;)Ljava/lang/Object;";
+        }
+        cfw.startMethod(methodName, methodDesc,
+                        (short)(ClassFileWriter.ACC_PUBLIC
+                                | ClassFileWriter.ACC_FINAL));
+
+        generatePrologue(cx);
+
+        Node codegenBase;
+        if (fnCurrent != null) {
+            codegenBase = scriptOrFn.getLastChild();
+        } else {
+            codegenBase = scriptOrFn;
+        }
+        generateCodeFromNode(codegenBase, null);
+
+        generateEpilogue();
+
+        cfw.stopMethod((short)(localsMax + 1), debugVars);
+    }
+
+    private void initBodyGeneration(Context cx)
+    {
+        inDirectCallFunction = (fnCurrent == null) ? false
+                                   : fnCurrent.isTargetOfDirectCall();
+        itsUseDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
+
+        locals = new boolean[MAX_LOCALS];
+
+        funObjLocal = 0;
+        contextLocal = 1;
+        variableObjectLocal = 2;
+        thisObjLocal = 3;
+        localsMax = (short) 4;  // number of parms + "this"
+        firstFreeLocal = 4;
+
+        scriptResultLocal = -1;
+        argsLocal = -1;
+        itsZeroArgArray = -1;
+        itsOneArgArray = -1;
+        epilogueLabel = -1;
+    }
 
     /**
      * Generate the prologue for a function or script.
@@ -762,7 +820,9 @@ public class Codegen extends Interpreter {
             }
         }
 
-        if (inFunction && !itsUseDynamicScope && directParameterCount == -1) {
+        if (fnCurrent != null && !itsUseDynamicScope 
+            && directParameterCount == -1) 
+        {
             // Unless we're either using dynamic scope or we're in a
             // direct call, use the enclosing scope of the function as our
             // variable object.
@@ -792,7 +852,7 @@ public class Codegen extends Interpreter {
             }
         }
 
-        if (inFunction && fnCurrent.getCheckThis()) {
+        if (fnCurrent != null && fnCurrent.getCheckThis()) {
             // Nested functions must check their 'this' value to
             //  insure it is not an activation object:
             //  see 10.1.6 Activation Object
@@ -803,11 +863,11 @@ public class Codegen extends Interpreter {
             cfw.addAStore(thisObjLocal);
         }
 
-        hasVarsInRegs = inFunction && !fnCurrent.requiresActivation();
+        hasVarsInRegs = (fnCurrent != null && !fnCurrent.requiresActivation());
         if (hasVarsInRegs) {
             // No need to create activation. Pad arguments if need be.
             int parmCount = scriptOrFn.getParamCount();
-            if (inFunction && parmCount > 0 && directParameterCount < 0) {
+            if (parmCount > 0 && directParameterCount < 0) {
                 // Set up args array
                 // check length of arguments, pad if need be
                 cfw.addALoad(argsLocal);
@@ -883,7 +943,7 @@ public class Codegen extends Interpreter {
         }
 
         String debugVariableName;
-        if (inFunction) {
+        if (fnCurrent != null) {
             cfw.addALoad(contextLocal);
             cfw.addALoad(variableObjectLocal);
             cfw.addALoad(funObjLocal);
@@ -933,7 +993,7 @@ public class Codegen extends Interpreter {
             debugVars[0] = lv;
         }
 
-        if (!inFunction) {
+        if (fnCurrent == null) {
             // OPT: use dataflow to prove that this assignment is dead
             scriptResultLocal = getNewWordLocal();
             pushUndefined();
@@ -964,41 +1024,16 @@ public class Codegen extends Interpreter {
         if (epilogueLabel != -1) {
             cfw.markLabel(epilogueLabel);
         }
-        if (!hasVarsInRegs || !inFunction) {
+        if (!hasVarsInRegs || fnCurrent == null) {
             // restore caller's activation
             cfw.addALoad(contextLocal);
             addScriptRuntimeInvoke("popActivation",
                                    "(Lorg/mozilla/javascript/Context;)V");
-        }
-        if (!inFunction) {
-            cfw.addALoad(scriptResultLocal);
+            if (fnCurrent == null) {
+                cfw.addALoad(scriptResultLocal);
+            }
         }
         cfw.add(ByteCode.ARETURN);
-    }
-
-    private void emitConstantDudeInitializers() {
-        int N = itsConstantListSize;
-        if (N == 0)
-            return;
-
-        cfw.startMethod("<clinit>", "()V",
-            (short)(ClassFileWriter.ACC_STATIC + ClassFileWriter.ACC_FINAL));
-
-        double[] array = itsConstantList;
-        for (int i = 0; i != N; ++i) {
-            double num = array[i];
-            String constantName = "jsK_" + i;
-            String constantType = getStaticConstantWrapperType(num);
-            cfw.addField(constantName, constantType,
-                               ClassFileWriter.ACC_STATIC);
-            pushAsWrapperObject(num);
-            cfw.add(ByteCode.PUTSTATIC,
-                          cfw.fullyQualifiedForm(generatedClassName),
-                          constantName, constantType);
-        }
-
-        cfw.add(ByteCode.RETURN);
-        cfw.stopMethod((short)0, null);
     }
 
     private void generateCodeFromNode(Node node, Node parent)
@@ -1035,7 +1070,7 @@ public class Codegen extends Interpreter {
                 break;
 
               case Token.FUNCTION:
-                if (inFunction || parent.getType() != Token.SCRIPT) {
+                if (fnCurrent != null || parent.getType() != Token.SCRIPT) {
                     int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
                     OptFunctionNode fn;
                     fn = (OptFunctionNode)scriptOrFn.getFunctionNode(fnIndex);
@@ -2257,7 +2292,7 @@ public class Codegen extends Interpreter {
                 generateCodeFromNode(child, node);
                 child = child.getNext();
             } while (child != null);
-        } else if (inFunction) {
+        } else if (fnCurrent != null) {
             pushUndefined();
         } else {
             cfw.addALoad(scriptResultLocal);
@@ -3419,33 +3454,6 @@ public class Codegen extends Interpreter {
         return N;
     }
 
-    private void startCodeBodyMethod(String methodName, String methodDesc)
-    {
-        cfw.startMethod(methodName, methodDesc,
-                              (short)(ClassFileWriter.ACC_PUBLIC
-                                      | ClassFileWriter.ACC_FINAL));
-
-        locals = new boolean[MAX_LOCALS];
-
-        funObjLocal = 0;
-        contextLocal = 1;
-        variableObjectLocal = 2;
-        thisObjLocal = 3;
-        localsMax = (short) 4;  // number of parms + "this"
-        firstFreeLocal = 4;
-
-        scriptResultLocal = -1;
-        argsLocal = -1;
-        itsZeroArgArray = -1;
-        itsOneArgArray = -1;
-        epilogueLabel = -1;
-    }
-
-    private void finishMethod(Context cx, OptLocalVariable[] array)
-    {
-        cfw.stopMethod((short)(localsMax + 1), array);
-    }
-
     private void addVirtualInvoke(String className, String methodName,
                                   String methodSignature)
     {
@@ -3653,7 +3661,6 @@ public class Codegen extends Interpreter {
 
     private String generatedClassName;
     private String generatedClassSignature;
-    boolean inFunction;
     boolean inDirectCallFunction;
     private ClassFileWriter cfw;
     private int version;
@@ -3662,9 +3669,6 @@ public class Codegen extends Interpreter {
     private int itsLineNumber;
 
     private String encodedSource;
-
-    private int stackDepth;
-    private int stackDepthMax;
 
     private static final int MAX_LOCALS = 256;
     private boolean[] locals;
@@ -3675,7 +3679,7 @@ public class Codegen extends Interpreter {
     private int itsConstantListSize;
 
     // special known locals. If you add a new local here, be sure
-    // to initialize it to -1 in startCodeBodyMethod
+    // to initialize it to -1 in initBodyGeneration
     private short variableObjectLocal;
     private short scriptResultLocal;
     private short contextLocal;
