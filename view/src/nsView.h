@@ -274,7 +274,6 @@ public:
   void SetPositionIgnoringChildWidgets(nscoord aX, nscoord aY);
   nsresult LoadWidget(const nsCID &aClassIID);
 
-protected:
   virtual ~nsView();
 
 protected:
