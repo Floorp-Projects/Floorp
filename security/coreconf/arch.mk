@@ -174,9 +174,7 @@ endif
 #
 # The following hack allows one to build on a WIN95 machine (as if
 # s/he were cross-compiling on a WINNT host for a WIN95 target).
-# It also accomodates for MKS's uname.exe.  If you never intend
-# to do development on a WIN95 machine, you don't need this. It doesn't
-# work any more anyway.
+# It also accomodates for MKS's and Cygwin's uname.exe.
 #
 ifeq ($(OS_ARCH),WIN95)
 	OS_ARCH   = WINNT
@@ -184,6 +182,14 @@ ifeq ($(OS_ARCH),WIN95)
 endif
 ifeq ($(OS_ARCH),Windows_95)
 	OS_ARCH   = Windows_NT
+	OS_TARGET = WIN95
+endif
+ifeq ($(OS_ARCH),CYGWIN_95-4.0)
+	OS_ARCH   = CYGWIN_NT-4.0
+	OS_TARGET = WIN95
+endif
+ifeq ($(OS_ARCH),CYGWIN_98-4.10)
+	OS_ARCH   = CYGWIN_NT-4.0
 	OS_TARGET = WIN95
 endif
 
@@ -218,6 +224,21 @@ ifeq ($(OS_ARCH), Windows_NT)
 	#
 	ifneq (,$(findstring 86,$(CPU_ARCH)))
 		CPU_ARCH = x386
+	endif
+endif
+#
+# If uname -s returns "CYGWIN_NT-4.0", we assume that we are using
+# the uname.exe in the Cygwin tools.
+#
+ifeq (CYGWIN_NT,$(findstring CYGWIN_NT,$(OS_ARCH)))
+	OS_RELEASE := $(patsubst CYGWIN_NT-%,%,$(OS_ARCH))
+	OS_ARCH = WINNT
+	CPU_ARCH := $(shell uname -m)
+	#
+	# Cygwin's uname -m returns "i686" on a Pentium Pro machine.
+	#
+	ifneq (,$(findstring 86,$(CPU_ARCH)))
+		CPU_ARCH = x86
 	endif
 endif
 endif
