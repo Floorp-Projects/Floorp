@@ -218,6 +218,7 @@
 				F564872E023B954E010001CA,
 				F50EA33D02BAAAB701000103,
 				089C165CFE840E0CC02AAC07,
+				F52CE65C02BFA8B701026D5D,
 				F51B70B4026EC8A601A80166,
 			);
 			isa = PBXGroup;
@@ -514,6 +515,7 @@
 				F50EA34902BAAAB701000103,
 				F50EA34A02BAAAB701000103,
 				F50EA34B02BAAAB701000103,
+				F52CE65D02BFA8B701026D5D,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -1868,6 +1870,33 @@
 		};
 		F528E21B020FD9620168DE43 = {
 			fileRef = F528E21A020FD9620168DE43;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52CE65902BFA88701026D5D = {
+			isa = PBXFileReference;
+			name = English;
+			path = English.lproj/Localizable.strings;
+			refType = 4;
+		};
+		F52CE65C02BFA8B701026D5D = {
+			children = (
+				F52CE65902BFA88701026D5D,
+			);
+			isa = PBXVariantGroup;
+			name = Localizable.strings;
+			path = "";
+			refType = 4;
+		};
+		F52CE65D02BFA8B701026D5D = {
+			fileRef = F52CE65C02BFA8B701026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52CE65E02BFA8B701026D5D = {
+			fileRef = F52CE65C02BFA8B701026D5D;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -4356,6 +4385,7 @@
 				F50EA35002BAB1E401000103,
 				F50EA35102BAB1E401000103,
 				F50EA35202BAB1E401000103,
+				F52CE65E02BFA8B701026D5D,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
