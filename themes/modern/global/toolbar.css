@@ -134,6 +134,7 @@ menubar > toolbargrippy:hover:active > .toolbargrippy-btm {
 }
 
 toolbargrippy[tbgrippy-collapsed="true"] {
+  -moz-box-orient: horizontal;
   background-image: none;
   width: 200px;
 }

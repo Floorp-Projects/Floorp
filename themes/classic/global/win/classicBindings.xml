@@ -25,7 +25,7 @@
 
   <binding id="toolbargrippy-collapsed" extends="chrome://global/content/bindings/toolbar.xml#toolbargrippy">
     <content>
-      <xul:hbox align="center" pack="center">
+      <xul:hbox align="center">
         <xul:image class="toolbargrippy-twisty-collapsed"/>
       </xul:hbox>
       <xul:spring class="toolbargrippy-texture-collapsed" flex="1"/>

@@ -73,6 +73,11 @@ toolbargrippy:hover
   {
     background-color      : #CCCCFF;
   }
+
+toolbargrippy[tbgrippy-collapsed="true"] 
+  {
+    -moz-box-orient       : horizontal;
+  }
   
 toolbar[collapsed="true"] > toolbargrippy
   {

@@ -62,6 +62,7 @@ toolbargrippy
 
 toolbargrippy[tbgrippy-collapsed="true"] 
   {
+    -moz-box-orient       : horizontal;
     border-left           : 1px solid ThreeDHighlight;
     border-top            : 1px solid ThreeDHighlight;
     border-right          : 1px solid ThreeDShadow;
