@@ -66,7 +66,8 @@ class nsMsgLocalMailFolder : public nsMsgDBFolder,
 public:
 	nsMsgLocalMailFolder(void);
 	virtual ~nsMsgLocalMailFolder(void);
-
+  NS_DECL_NSICOPYMESSAGELISTENER
+  NS_DECL_NSIMSGLOCALMAILFOLDER
   NS_DECL_ISUPPORTS_INHERITED
 #if 0
   static nsresult GetRoot(nsIMsgFolder* *result);
@@ -129,11 +130,6 @@ public:
 
 	// nsIMsgMailFolder
 	NS_IMETHOD GetPath(nsIFileSpec ** aPathName);
-
-	//nsICopyMessageListener
-	NS_IMETHOD BeginCopy(nsIMessage *message);
-	NS_IMETHOD CopyData(nsIInputStream *aIStream, PRInt32 aLength);
-	NS_IMETHOD EndCopy(PRBool copySucceeded);
 
 	NS_IMETHOD FindSubFolder(const char *subFolderName, nsIFolder **folder);
 

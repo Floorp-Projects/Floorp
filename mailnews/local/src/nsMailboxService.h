@@ -40,45 +40,9 @@ public:
 	virtual ~nsMailboxService();
 	
 	NS_DECL_ISUPPORTS
-
-	////////////////////////////////////////////////////////////////////////////////////////
-	// we suppport the nsIMailboxService Interface 
-	////////////////////////////////////////////////////////////////////////////////////////
-
-	NS_IMETHOD ParseMailbox(nsFileSpec& aMailboxPath, nsIStreamListener * aMailboxParser, 
-							nsIUrlListener * aUrlListener, nsIURI ** aURL);
-	
-
-	NS_IMETHOD DisplayMessageNumber(const char *url,
-                                    PRUint32 aMessageNumber,
-                                    nsISupports * aDisplayConsumer,
-									nsIUrlListener * aUrlListener,
-                                    nsIURI ** aURL);
-
-	////////////////////////////////////////////////////////////////////////////////////////
-	// End suppport for the nsIMailboxService Interface
-	////////////////////////////////////////////////////////////////////////////////////////
-
-	////////////////////////////////////////////////////////////////////////////////////////
-	// we suppport the nsIMsgMessageService Interface 
-	////////////////////////////////////////////////////////////////////////////////////////
-	NS_IMETHOD CopyMessage(const char * aSrcMailboxURI, nsIStreamListener * aMailboxCopy, PRBool moveMessage,
-						   nsIUrlListener * aUrlListener, nsIURI **aURL);
-
-	NS_IMETHOD DisplayMessage(const char* aMessageURI, nsISupports * aDisplayConsumer, 
-							  nsIUrlListener * aUrlListener, nsIURI ** aURL);
-
-	NS_IMETHOD SaveMessageToDisk(const char *aMessageURI, nsIFileSpec *aFile, PRBool aAppendToFile, 
-								 nsIUrlListener *aUrlListener, nsIURI **aURL);
-
-	////////////////////////////////////////////////////////////////////////////////////////
-	// we suppport the nsIProtocolHandler Interface 
-	////////////////////////////////////////////////////////////////////////////////////////
+    NS_DECL_NSIMAILBOXSERVICE
+    NS_DECL_NSIMSGMESSAGESERVICE
     NS_DECL_NSIPROTOCOLHANDLER
-	////////////////////////////////////////////////////////////////////////////////////////
-	// End support of nsIProtocolHandler interface 
-	////////////////////////////////////////////////////////////////////////////////////////
-
 
 protected:
 	// helper functions used by the service

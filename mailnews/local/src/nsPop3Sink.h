@@ -39,29 +39,8 @@ public:
     virtual ~nsPop3Sink();
 
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD SetUserAuthenticated(PRBool authed);
-    NS_IMETHOD GetUserAuthenticated(PRBool *authed);
-    NS_IMETHOD SetMailAccountURL(char* urlString);
-    NS_IMETHOD GetMailAccountURL(char* *urlString);
-    NS_IMETHOD BeginMailDelivery(PRBool *aBool);
-    NS_IMETHOD EndMailDelivery();
-    NS_IMETHOD AbortMailDelivery();
-    NS_IMETHOD IncorporateBegin(const char* uidlString, nsIURI* aURL, 
-                                PRUint32 flags, void** closure);
-    NS_IMETHOD IncorporateWrite(void* closure, const char* block,
-                                PRInt32 length);
-    NS_IMETHOD IncorporateComplete(void* closure);
-    NS_IMETHOD IncorporateAbort(void* closure, PRInt32 status);
-    NS_IMETHOD BiffGetNewMail();
-    NS_IMETHOD SetBiffStateAndUpdateFE(PRUint32 aBiffState, PRInt32 numNewMessages);
-    NS_IMETHOD SetSenderAuthedFlag(void* closure, PRBool authed);
-    NS_IMETHOD SetPopServer(nsIPop3IncomingServer *server);
-    NS_IMETHOD GetPopServer(nsIPop3IncomingServer* *server);
-	NS_IMETHOD GetFolder(nsIMsgFolder * *folder);
-	NS_IMETHOD SetFolder(nsIMsgFolder * folder);
-
-	nsresult	GetServerFolder(nsIFolder **aFolder);
+    NS_DECL_NSIPOP3SINK
+    nsresult	GetServerFolder(nsIFolder **aFolder);
 
     static char*  GetDummyEnvelope(void);
     

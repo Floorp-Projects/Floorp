@@ -49,13 +49,10 @@ public:
 	NS_IMETHOD SetMessageFile(nsIFileSpec * aFileSpec);
 	NS_IMETHOD GetMessageFile(nsIFileSpec ** aFileSpec);
 
-	// from nsIMsgUriUrl
-	NS_IMETHOD GetURI(char ** aURI); 
-
     // nsMailboxUrl
     nsMailboxUrl();
 	virtual ~nsMailboxUrl();
-
+    NS_DECL_NSIMSGURIURL
     NS_DECL_ISUPPORTS_INHERITED
 
 

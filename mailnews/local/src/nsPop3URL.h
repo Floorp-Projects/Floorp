@@ -27,13 +27,7 @@
 class nsPop3URL : public nsIPop3URL, public nsMsgMailNewsUrl
 {
 public:
-	// From nsIPop3URL
-
-    NS_IMETHOD SetPop3Sink(nsIPop3Sink* aPop3Sink);
-    NS_IMETHOD GetPop3Sink(nsIPop3Sink** aPop3Sink);
-
-	NS_IMETHOD SetUsername(const char *aUserName);
-
+    NS_DECL_NSIPOP3URL
     nsPop3URL();
 	
     NS_DECL_ISUPPORTS_INHERITED

@@ -66,18 +66,10 @@ class nsParseMailMessageState : public nsIMsgParseMailMsgState
 {
 public:
 	NS_DECL_ISUPPORTS
+    NS_DECL_NSIMSGPARSEMAILMSGSTATE
 					nsParseMailMessageState();
 	virtual			~nsParseMailMessageState();
 	
-	// nsIMsgParseMailMsgState support
-	NS_IMETHOD SetMailDB(nsIMsgDatabase * aDatabase);
-	NS_IMETHOD Clear();
-	NS_IMETHOD SetState(nsMailboxParseState aState);
-	NS_IMETHOD SetEnvelopePos(PRUint32 aEnvelopePos);
-	NS_IMETHOD ParseAFolderLine(const char *line, PRUint32 lineLength);
-	NS_IMETHOD GetNewMsgHdr(nsIMsgDBHdr ** aMsgHeader);
-	NS_IMETHOD FinishHeader();
-	NS_IMETHOD GetAllHeaders(char **headers, PRInt32 *headersSize);
 	void			Init(PRUint32 fileposition);
 	virtual PRInt32	ParseFolderLine(const char *line, PRUint32 lineLength);
 	virtual int		StartNewEnvelope(const char *line, PRUint32 lineLength);
@@ -339,3 +331,8 @@ protected:
  
 
 #endif
+
+
+
+
+
