@@ -2,6 +2,13 @@
 <?xml-stylesheet href="resource:/res/rdf/sidebar.css" type="text/css"?>
 <?xml-stylesheet href="resource:/res/rdf/flash.css" type="text/css"?>
 
+<!DOCTYPE window
+[
+<!ENTITY tree.header.source.label      "Source">
+<!ENTITY tree.header.description.label "Description">
+<!ENTITY tree.header.time.label        "Time">
+]>
+
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -21,9 +28,9 @@
     <!-- XXX We probably won't have a treehead in the end, but we'll put it here for now... -->
     <treehead>
       <treeitem>
-        <treecell>Source</treecell>
-        <treecell>Description</treecell>
-        <treecell>Time</treecell>
+        <treecell>&tree.header.source.label;</treecell>
+        <treecell>&tree.header.description.label;</treecell>
+        <treecell>&tree.header.time.label;</treecell>
       </treeitem>
     </treehead>
 
