@@ -65,10 +65,6 @@ OBJS=   \
 	.\$(OBJDIR)\nsJSProtocolHandler.obj	\
 	$(NULL)
 
-CPPSRCS = \
-	nsJSProtocolHandler.cpp	\
-	$(NULL)
-
 XPIDLSRCS = \
     .\nsIEvaluateStringProxy.idl \
     $(NULL) 

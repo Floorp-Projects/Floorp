@@ -34,13 +34,6 @@ REQUIRES	= xpcom \
 LIBRARY_NAME=txtsvc
 MODULE_NAME=nsTextServicesModule
 
-CPPSRCS =				\
-	nsFindAndReplace.cpp	\
-	nsTextServicesDocument.cpp	\
-	nsTextServicesFactory.cpp	\
-	nsTSDNotifier.cpp	\
-	$(NULL)
-
 CPP_OBJS =					\
 	.\$(OBJDIR)\nsFindAndReplace.obj	\
 	.\$(OBJDIR)\nsTextServicesDocument.obj	\

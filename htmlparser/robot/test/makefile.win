@@ -39,12 +39,9 @@ WIN_LIBS= shell32.lib
 
 LLFLAGS=-SUBSYSTEM:CONSOLE
 
-CPPSRCS=			\
- RobotMain.cpp			\
- $(NULL)
-
 CPP_OBJS=			\
- .\$(OBJDIR)\RobotMain.obj
+ .\$(OBJDIR)\RobotMain.obj      \
+ $(NULL)
 
 LINCS=-I.. 
 

@@ -50,13 +50,6 @@ include <$(DEPTH)\config\config.mak>
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=    nsEventListenerManager.cpp  \
-	    nsEventStateManager.cpp  \
-	    nsDOMEvent.cpp		\
-	    nsDOMMutationEvent.cpp \
-	    nsPrivateTextRange.cpp		\
-	    $(NULL)
-
 CPP_OBJS=   .\$(OBJDIR)\nsEventListenerManager.obj  \
 	    .\$(OBJDIR)\nsEventStateManager.obj  \
 	    .\$(OBJDIR)\nsDOMEvent.obj	    \

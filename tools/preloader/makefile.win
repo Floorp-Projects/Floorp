@@ -33,9 +33,6 @@ CPP_OBJS =                      \
  .\$(OBJDIR)\preloader.obj      \
  $(NULL)
 
-CPPSRCS =                       \
- preloader.cpp                  \
- $(NULL)
 
 MAKE_OBJ_TYPE = exe
 

@@ -36,11 +36,6 @@ OBJS= \
 CSRCS= \
 	$(NULL)
 
-CPPSRCS= \
-         nsClassicCharDetDll.cpp \
-         nsClassicDetectors.cpp \
-	$(NULL)
-
 CPP_OBJS= \
         .\$(OBJDIR)\nsClassicCharDetDll.obj \
         .\$(OBJDIR)\nsClassicDetectors.obj \

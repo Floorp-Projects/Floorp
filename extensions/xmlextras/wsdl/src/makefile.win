@@ -38,12 +38,6 @@ REQUIRES = xpcom \
 	   necko \
 	   $(NULL)
 
-CPPSRCS=					\
-	nsWSDLLoader.cpp			\
-	nsWSDLDefinitions.cpp			\
-	nsWSDLInterfaceInfo.cpp			\
-	$(NULL)
-
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsWSDLLoader.obj		\
 	.\$(OBJDIR)\nsWSDLDefinitions.obj	\

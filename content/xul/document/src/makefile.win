@@ -52,17 +52,6 @@ REQUIRES	= xpcom \
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=					\
-        nsControllerCommandManager.cpp          \
-        nsElementMap.cpp                        \
-        nsXULCommandDispatcher.cpp              \
-        nsXULContentSink.cpp                    \
-        nsXULControllers.cpp                    \
-        nsXULDocument.cpp                       \
-        nsXULPrototypeCache.cpp                 \
-        nsXULPrototypeDocument.cpp              \
-	$(NULL)
-
 CPP_OBJS=					        \
         .\$(OBJDIR)\nsControllerCommandManager.obj      \
         .\$(OBJDIR)\nsElementMap.obj                    \

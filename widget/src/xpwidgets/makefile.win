@@ -40,22 +40,9 @@ REQUIRES	= xpcom \
 LIBRARY_NAME = raptorbasewidget_s
 DEFINES =-D_IMPL_NS_WIDGET -DUSE_TLS_FOR_TOOLKIT
 
-
-CPPSRCS = \
-	nsBaseDragService.cpp      \
-	nsBaseWidget.cpp      \
-	nsBaseFilePicker.cpp	\
-	nsBaseClipboard.cpp         \
-	nsClipboardHelper.cpp         \
-	nsTransferable.cpp         \
-	nsHTMLFormatConverter.cpp         \
-	nsPrimitiveHelpers.cpp         \
-	nsXPLookAndFeel.cpp         \
-	$(NULL)
-
 MODULE=widget
 
-OBJS= \
+CPP_OBJS= \
 	.\$(OBJDIR)\nsBaseDragService.obj  \
 	.\$(OBJDIR)\nsBaseWidget.obj  \
 	.\$(OBJDIR)\nsBaseFilePicker.obj  \

@@ -40,33 +40,6 @@ REQUIRES    = xpcom \
 
 DEFINES= -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=          nsMathMLChar.cpp                      \
-                  nsMathMLFrame.cpp		\
-                  nsMathMLContainerFrame.cpp		\
-                  nsMathMLmrowFrame.obj 		\
-                  nsMathMLmphantomFrame.cpp		\
-                  nsMathMLmfencedFrame.cpp		\
-                  nsMathMLmfracFrame.cpp		\
-                  nsMathMLmsubFrame.cpp			\
-                  nsMathMLmiFrame.cpp			\
-                  nsMathMLmtextFrame.cpp		\
-                  nsMathMLmsubsupFrame.cpp		\
-                  nsMathMLmmultiscriptsFrame.cpp	\
-                  nsMathMLmsupFrame.cpp			\
-                  nsMathMLmtableFrame.cpp		\
-                  nsMathMLmoFrame.cpp			\
-                  nsMathMLmunderFrame.cpp		\
-                  nsMathMLmoverFrame.cpp		\
-                  nsMathMLmunderoverFrame.cpp		\
-                  nsMathMLmpaddedFrame.cpp		\
-                  nsMathMLmspaceFrame.cpp		\
-                  nsMathMLmsFrame.cpp			\
-                  nsMathMLmstyleFrame.cpp		\
-                  nsMathMLmsqrtFrame.cpp		\
-                  nsMathMLmrootFrame.cpp		\
-                  nsMathMLmactionFrame.cpp		\
-                  $(NULL)
-
 CPP_OBJS= .\$(OBJDIR)\nsMathMLChar.obj		        \
           .\$(OBJDIR)\nsMathMLFrame.obj        \
           .\$(OBJDIR)\nsMathMLContainerFrame.obj        \

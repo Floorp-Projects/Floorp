@@ -42,28 +42,18 @@ DEFINES		=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN -DoffDEBUG_TABLE_REFLOW \
                 -DoffDEBUG_TABLE_STRATEGY \
 		$(NULL)
 
-CPPSRCS= nsCellMap.cpp			\
-    nsTableCellFrame.cpp		\
-	nsTableColFrame.cpp			\
-    nsTableColGroupFrame.cpp	\
-	nsTableFrame.cpp			\
-    nsTableOuterFrame.cpp		\
-	nsTableRowFrame.cpp			\
-	nsTableRowGroupFrame.cpp	\
-	BasicTableLayoutStrategy.cpp \
-	FixedTableLayoutStrategy.cpp \
-	nsTableBorderCollapser
-
 CPP_OBJS= .\$(OBJDIR)\nsCellMap.obj \
-    .\$(OBJDIR)\nsTableCellFrame.obj .\$(OBJDIR)\nsTableColFrame.obj \
+    .\$(OBJDIR)\nsTableCellFrame.obj \
+    .\$(OBJDIR)\nsTableColFrame.obj \
     .\$(OBJDIR)\nsTableColGroupFrame.obj \
     .\$(OBJDIR)\nsTableFrame.obj \
     .\$(OBJDIR)\nsTableOuterFrame.obj  \
     .\$(OBJDIR)\nsTableRowFrame.obj \
     .\$(OBJDIR)\nsTableRowGroupFrame.obj \
-	.\$(OBJDIR)\BasicTableLayoutStrategy.obj \
-	.\$(OBJDIR)\FixedTableLayoutStrategy.obj \
-	.\$(OBJDIR)\nsTableBorderCollapser.obj
+    .\$(OBJDIR)\BasicTableLayoutStrategy.obj \
+    .\$(OBJDIR)\FixedTableLayoutStrategy.obj \
+    .\$(OBJDIR)\nsTableBorderCollapser.obj \
+    $(NULL)
 
 LINCS=-I..\..\base\src -I..\..\style\src -I..\..\content\src \
   -I..\..\..\base\src

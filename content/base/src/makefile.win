@@ -27,43 +27,6 @@ DEFINES=-D_IMPL_NS_LAYOUT -DWIN32_LEAN_AND_MEAN
 DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 !endif
 
-CPPSRCS =				\
-	nsStyleContext.cpp		\
-	nsStyleSet.cpp			\
-	nsCommentNode.cpp		\
-	nsGenericElement.cpp		\
-	nsGenericDOMDataNode.cpp	\
-	nsGenericDOMNodeList.cpp	\
-	nsContentList.cpp		\
-	nsContentIterator.cpp		\
-	nsContentPolicy.cpp		\
-	nsDocument.cpp			\
-	nsDocumentEncoder.cpp		\
-	nsDocumentFragment.cpp		\
-	nsDocumentViewer.cpp		\
-	nsDOMAttribute.cpp		\
-	nsDOMAttributeMap.cpp		\
-	nsDOMDocumentType.cpp		\
-	nsGeneratedIterator.cpp		\
-	nsNameSpaceManager.cpp		\
-	nsNodeInfo.cpp			\
-	nsNodeInfoManager.cpp		\
-	nsTextFragment.cpp		\
-	nsSelection.cpp			\
-	nsRange.cpp			\
-	nsRuleNode.cpp			\
-	nsTextContentChangeData.cpp	\
-	nsTextNode.cpp			\
-	nsTreeWalker.cpp		\
-	nsXMLContentSerializer.cpp	\
-	nsHTMLContentSerializer.cpp	\
-	nsParserUtils.cpp		\
-	nsPlainTextSerializer.cpp	\
-	nsContentUtils.cpp 		\
-	nsScriptLoader.cpp		\
-	nsStyleLinkElement.cpp		\
-	$(NULL)
-
 MODULE=content
 REQUIRES	= xpcom \
 		  string \

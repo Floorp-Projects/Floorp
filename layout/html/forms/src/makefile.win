@@ -52,26 +52,6 @@ REQUIRES	= xpcom \
 		  content_xul \
 		  $(NULL)
 
-CPPSRCS= \
-  nsFormControlHelper.cpp \
-  nsComboboxControlFrame.cpp \
-  nsListControlFrame.cpp \
-  nsFormFrame.cpp \
-  nsFormControlFrame.cpp \
-  nsFileControlFrame.cpp \
-  nsGfxTextControlFrame2.cpp \
-  nsFieldSetFrame.cpp \
-  nsLegendFrame.cpp \
-  nsHTMLButtonControlFrame.cpp \
-  nsLabelFrame.cpp \
-  nsButtonFrameRenderer.cpp \
-  nsImageControlFrame.cpp \
-  nsGfxButtonControlFrame.cpp \
-  nsGfxCheckboxControlFrame.cpp \
-  nsGfxRadioControlFrame.cpp \
-  nsIsIndexFrame.cpp \
-  nsRadioControlGroup.cpp
-
 CPP_OBJS= \
   .\$(OBJDIR)\nsFormControlHelper.obj \
   .\$(OBJDIR)\nsComboboxControlFrame.obj \

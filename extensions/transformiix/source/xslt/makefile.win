@@ -37,15 +37,6 @@ DIRS=util functions
 DEFINES= $(DEFINES) -DTX_EXE
 !endif
 
-CPPSRCS=					\
-	Names.cpp				\
-	Numbering.cpp				\
-	OutputFormat.cpp			\
-	ProcessorState.cpp			\
-	VariableBinding.cpp			\
-	XSLTProcessor.cpp			\
-	$(NULL)
-
 CPP_OBJS=					\
 	.\$(OBJDIR)\Names.obj			\
 	.\$(OBJDIR)\Numbering.obj		\

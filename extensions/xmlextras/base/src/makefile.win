@@ -42,14 +42,6 @@ REQUIRES	= xpcom \
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=					\
-	nsDOMSerializer.cpp			\
-	nsXMLHttpRequest.cpp			\
-	nsDOMParser.cpp				\
-	nsLoadListenerProxy.cpp				\
-	$(NULL)
-
-
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsDOMSerializer.obj		\
 	.\$(OBJDIR)\nsXMLHttpRequest.obj	\

@@ -50,16 +50,6 @@ REQUIRES = xpcom \
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=					\
-	nsSchema.cpp				\
-	nsSchemaComponentBase.cpp		\
-	nsSchemaSimpleTypes.cpp			\
-	nsSchemaComplexType.cpp			\
-	nsSchemaParticles.cpp			\
-	nsSchemaAttributes.cpp			\
-	nsSchemaLoader.cpp			\
-	$(NULL)
-
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsSchema.obj		\
 	.\$(OBJDIR)\nsSchemaComponentBase.obj	\

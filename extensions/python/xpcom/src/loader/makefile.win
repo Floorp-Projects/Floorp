@@ -35,10 +35,6 @@ CPP_OBJS= \
 	$(NULL)
 
 
-CPPSRCS = \
-	pyloader.cpp \
-	$(NULL)
-
 MODULE=pyloader
 EXPORTS= $(NULL)
 

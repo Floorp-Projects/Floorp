@@ -37,11 +37,6 @@ CSRCS=				\
  lablpars.c	\
  $(NULL)
 
-CPPSRCS=				\
- nsPICS.cpp			\
- nsPICSElementObserver.cpp			\
- $(NULL)
-
 C_OBJS=				\
  .\$(OBJDIR)\cslabel.obj	\
  .\$(OBJDIR)\csparse.obj	\

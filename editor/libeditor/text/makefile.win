@@ -39,18 +39,6 @@ REQUIRES        = xpcom \
                   widget \
                   $(NULL)
 
-CPPSRCS =                             \
-          nsAOLCiter.cpp              \
-          nsEditorEventListeners.cpp  \
-          nsInternetCiter.cpp         \
-          nsPlaintextDataTransfer.cpp \
-          nsPlaintextEditor.cpp       \
-          nsTextEditRules.cpp         \
-          nsTextEditRulesBidi.cpp     \
-          nsTextEditUtils.cpp         \
-          nsWrapUtils.cpp             \
-          $(NULL)
-
 CPP_OBJS =                                         \
            .\$(OBJDIR)\nsAOLCiter.obj              \
            .\$(OBJDIR)\nsEditorEventListeners.obj  \

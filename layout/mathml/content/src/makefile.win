@@ -34,11 +34,6 @@ REQUIRES    = string \
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=					\
-	nsMathMLAtoms.cpp			\
-	nsMathMLOperators.cpp			\
-	$(NULL)
-
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsMathMLAtoms.obj		\
 	.\$(OBJDIR)\nsMathMLOperators.obj	\

@@ -74,31 +74,6 @@ CPP_OBJS     =                                  \
 		.\$(OBJDIR)\nsP3PSimpleEnumerator.obj   \
 		$(NULL)
 
-CPPSRCS      =                      \
-		nsP3PModule.cpp             \
-		nsP3PService.cpp            \
-		nsP3PUIService.cpp          \
-		nsP3PHTTPNotify.cpp         \
-		nsP3PObserverHTML.cpp       \
-		nsP3PObserverXML.cpp        \
-		nsP3PObserverUtils.cpp      \
-		nsP3PObserverLayout.cpp     \
-		nsP3PObserverFormSubmit.cpp \
-		nsP3PURIInformation.cpp     \
-		nsP3PReference.cpp          \
-		nsP3PXMLProcessor.cpp       \
-		nsP3PPoliycRefFile.cpp      \
-		nsP3PPolicy.cpp             \
-		nsP3PDataSchema.cpp         \
-		nsP3PPrivacyResult.cpp      \
-		nsP3PTags.cpp               \
-		nsP3PDataStruct.cpp         \
-		nsP3PXMLUtils.cpp           \
-		nsP3PPreferences.cpp        \
-		nsP3PUI.cpp                 \
-		nsP3PSimpleEnumerator.cpp   \
-		$(NULL)
-
 LLIBS        =                 \
 		$(LLIBS)               \
 		$(LIBNSPR)             \

@@ -33,48 +33,6 @@ include <$(DEPTH)/config/config.mak>
 DEFINES=$(DEFINES) -DTX_EXE
 !endif
 
-CPPSRCS=				\
-	AdditiveExpr.cpp		\
-	AttributeExpr.cpp		\
-	AttributeValueTemplate.cpp	\
-	BasicNodeExpr.cpp		\
-	BooleanExpr.cpp		        \
-	BooleanFunctionCall.cpp		\
-	BooleanResult.cpp		\
-	ElementExpr.cpp			\
-	ErrorFunctionCall.cpp		\
-	Expr.cpp			\
-	ExprLexer.cpp			\
-	ExprLexerChars.cpp		\
-	ExprParser.cpp			\
-	ExtensionFunctionCall.cpp	\
-	FilterExpr.cpp			\
-	FunctionCall.cpp		\
-	LocationStep.cpp		\
-	MultiplicativeExpr.cpp		\
-	NodeSet.cpp			\
-	NodeSetFunctionCall.cpp		\
-	NumberExpr.cpp			\
-	NumberFunctionCall.cpp		\
-	NumberResult.cpp		\
-	PathExpr.cpp			\
-	PredicateList.cpp		\
-	RelationalExpr.cpp		\
-	RootExpr.cpp			\
-	StringExpr.cpp			\
-	StringFunctionCall.cpp		\
-	StringResult.cpp		\
-	TextExpr.cpp			\
-	UnionExpr.cpp			\
-	UnaryExpr.cpp			\
-	VariableRefExpr.cpp		\
-	XPathNames.cpp			\
-!if !defined(TX_EXE)
-	nsNodeSet.cpp			\
-	XPathProcessor.cpp		\
-!endif
-	$(NULL)
-
 CPP_OBJS=						\
 	.\$(OBJDIR)\AdditiveExpr.obj			\
 	.\$(OBJDIR)\AttributeExpr.obj			\

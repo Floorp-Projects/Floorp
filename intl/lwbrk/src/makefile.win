@@ -34,13 +34,6 @@ CSRCS= \
         rulebrk.c \
 	$(NULL)
 
-CPPSRCS= \
-	nsJISx4501LineBreaker.cpp \
-	nsLWBreakerFImp.cpp \
-	nsLWBrkModule.cpp \
-	nsSampleWordBreaker.cpp \
-	$(NULL)
-
 CPP_OBJS= \
 	.\$(OBJDIR)\nsJISx4501LineBreaker.obj \
 	.\$(OBJDIR)\nsLWBreakerFImp.obj \

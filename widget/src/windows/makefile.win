@@ -50,31 +50,7 @@ EXPORTS = \
 	nsdefs.h \
 	$(NULL)
 
-CPPSRCS =              \
-!ifdef ACCESSIBILITY
-	Accessible.cpp      \
-	SimpleDOMNode.cpp      \
-!endif
-	nsNativeDragTarget.cpp      \
-	nsNativeDragSource.cpp      \
-	nsDragService.cpp      \
-	Ienumfe.cpp      \
-	nsDataObj.cpp      \
-	nsDataObjCollection.cpp      \
-	nsClipboard.cpp      \
-	nsWindow.cpp         \
-	nsFilePicker.cpp     \
-	nsScrollbar.cpp      \
-	nsAppShell.cpp       \
-	nsLookAndFeel.cpp    \
-	nsToolkit.cpp        \
-	nsSound.cpp          \
-	nsImageClipboard.cpp \
-	nsBidiKeyboard.cpp   \
-	$(NULL)
-
-
-OBJS =                             \
+CPP_OBJS =                             \
 !ifdef ACCESSIBILITY
 	.\$(OBJDIR)\Accessible.obj  \
 	.\$(OBJDIR)\SimpleDOMNode.obj  \

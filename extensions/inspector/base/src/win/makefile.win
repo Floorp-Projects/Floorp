@@ -41,11 +41,6 @@ INCS = $(INCS)                  \
         -I..\       	         	\
 		$(NULL)
 
-CPPSRCS=					               \
-	inScreenCapturer.cpp              \
-	$(NULL)
-
-
 CPP_OBJS=					                      \
 	.\$(OBJDIR)\inScreenCapturer.obj		      \
 	$(NULL)

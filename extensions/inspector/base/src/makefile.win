@@ -50,25 +50,6 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 DIRS=win
 
-CPPSRCS= \
-  .\inDOMView.cpp \
-  .\inDeepTreeWalker.cpp \
-  .\inFlasher.cpp \
-  .\inSearchLoop.cpp \
-  .\inFileSearch.cpp \
-  .\inCSSValueSearch.cpp \
-  .\inDOMUtils.cpp \
-  .\inLayoutUtils.cpp \
-  .\inBitmap.cpp \
-  .\inBitmapDepot.cpp \
-  .\inBitmapDecoder.cpp \
-  .\inBitmapProtocolHandler.cpp \
-  .\inBitmapChannel.cpp \
-  .\inBitmapURI.cpp \
-  .\inPNGEncoder.cpp \
-  $(NULL)
-
-
 CPP_OBJS= \
   .\$(OBJDIR)\inDOMView.obj \
   .\$(OBJDIR)\inDeepTreeWalker.obj \

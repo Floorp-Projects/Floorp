@@ -45,11 +45,6 @@ LLIBS=				\
 !endif
  $(NULL)
 
-CPPSRCS=			\
- nsRobotSink.cpp		\
- nsDebugRobot.cpp		\
- $(NULL)
-
 CPP_OBJS=			\
  .\$(OBJDIR)\nsRobotSink.obj	\
  .\$(OBJDIR)\nsDebugRobot.obj  \

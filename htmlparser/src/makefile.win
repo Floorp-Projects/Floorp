@@ -43,32 +43,6 @@ DEFINES=-D_IMPL_NS_HTMLPARS -DWIN32_LEAN_AND_MEAN -DXML_DTD
 LIBRARY_NAME   = gkparser
 MODULE_NAME	   = nsParserModule
 
-CPPSRCS =               \
-	nsDTDUtils.cpp      \
-	nsHTMLTokenizer.cpp \
-	nsExpatTokenizer.cpp\
-	nsElementTable.cpp  \
-	CNavDTD.cpp         \
-	COtherDTD.cpp       \
-	nsHTMLEntities.cpp  \
-	nsHTMLTags.cpp      \
-	nsHTMLTokens.cpp    \
-	nsParser.cpp        \
-	CParserContext.cpp  \
-	nsParserNode.cpp    \
-	nsScanner.cpp       \
-	nsToken.cpp         \
-	nsWellFormedDTD.cpp \
-	nsViewSourceHTML.cpp\
-	nsParserService.cpp \
-	nsParserModule.cpp  \
-	nsParserMsgUtils.cpp  \
-!ifdef MOZ_DEBUG
-	nsLoggingSink.cpp   \
-	nsHTMLNullSink.cpp  \
-!endif
-	$(NULL)
-
 CPP_OBJS =                          \
 	.\$(OBJDIR)\nsDTDUtils.obj      \
 	.\$(OBJDIR)\nsHTMLTokenizer.obj \

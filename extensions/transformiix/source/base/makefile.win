@@ -30,30 +30,6 @@ include <$(DEPTH)/config/config.mak>
 DEFINES= $(DEFINES) -DTX_EXE
 !endif
 
-CPPSRCS=				\
-	ArrayList.cpp 			\
-	Double.cpp			\
-	List.cpp			\
-	TxObjectWrapper.cpp		\
-	NamedMap.cpp			\
-	SimpleErrorObserver.cpp		\
-	Stack.cpp			\
-	Map.cpp				\
-	StringList.cpp			\
-	Tokenizer.cpp			\
-	txAtoms.cpp
-
-!ifndef TX_EXE
-CPPSRCS = $(CPPSRCS)			\
-	MozillaString.cpp		\
-	$(NULL)
-!else
-CPPSRCS = $(CPPSRCS)		\
-	CommandLineUtils.cpp	\
-	TxString.cpp			\
-	$(NULL)
-!endif
-
 CPP_OBJS=                                       \
 	.\$(OBJDIR)\ArrayList.obj 		\
 	.\$(OBJDIR)\Double.obj			\

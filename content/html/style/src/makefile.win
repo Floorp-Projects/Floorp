@@ -61,26 +61,6 @@ EXPORTS =			\
 	nsIHTMLAttributes.h 	\
 	$(NULL)
 
-CPPSRCS=				\
-	nsHTMLStyleSheet.cpp 	\
-	nsCSSDeclaration.cpp 		\
-	nsCSSLoader.cpp   \
-	nsCSSOMFactory.cpp 		\
-	nsCSSParser.cpp 		\
-	nsCSSScanner.cpp 		\
-	nsCSSRule.cpp 		\
-	nsCSSStyleRule.cpp 		\
-	nsCSSRules.cpp 		\
-	nsCSSStyleSheet.cpp 		\
-	nsCSSValue.cpp			\
-	nsHTMLAttributes.cpp 		\
-	nsHTMLCSSStyleSheet.cpp		\
-	nsDOMCSSAttrDeclaration.cpp	\
-	nsDOMCSSDeclaration.cpp		\
-	nsComputedDOMStyle.cpp		\
-	nsROCSSPrimitiveValue.cpp	\
-  $(NULL)
-
 CPP_OBJS =					\
 	.\$(OBJDIR)\nsHTMLStyleSheet.obj 		\
 	.\$(OBJDIR)\nsCSSDeclaration.obj 	\

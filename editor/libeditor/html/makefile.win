@@ -38,20 +38,6 @@ REQUIRES        = xpcom \
                   widget \
                   $(NULL)
 
-CPPSRCS =                        \
-          TypeInState.cpp        \
-          nsEditProperty.cpp     \
-          nsHTMLDataTransfer.cpp \
-          nsHTMLEditRules.cpp    \
-          nsHTMLEditUtils.cpp    \
-          nsHTMLEditor.cpp       \
-          nsHTMLEditorStyle.cpp  \
-          nsHTMLURIRefObject.cpp \
-          nsTableEditor.cpp      \
-          nsWSRunObject.cpp      \
-          TextEditorTest.cpp     \
-          $(NULL)
-
 CPP_OBJS =                                    \
            .\$(OBJDIR)\TypeInState.obj        \
            .\$(OBJDIR)\nsEditProperty.obj     \
@@ -71,12 +57,6 @@ CPP_OBJS =                                    \
 ENABLE_EDITOR_API_LOG=1
 
 !if defined(ENABLE_EDITOR_API_LOG)
-
-CPPSRCS =                     \
-          $(CPPSRCS)          \
-          nsEditorTxnLog.cpp  \
-          nsHTMLEditorLog.cpp \
-          $(NULL)
 
 CPP_OBJS =                                 \
            $(CPP_OBJS)                     \

@@ -31,15 +31,7 @@ LIBRARY_NAME=raptornativewidgets_s
 
 DEFINES=-DWIN32_LEAN_AND_MEAN
 
-CPPSRCS= \
-	nsButton.cpp         \
-	nsTextWidget.cpp     \
-	nsTextHelper.cpp     \
-	nsLabel.cpp     \
-	nsCheckButton.cpp     \
-	$(NULL)
-
-OBJS =                                      \
+CPP_OBJS =                                      \
 	.\$(OBJDIR)\nsButton.obj           \
 	.\$(OBJDIR)\nsCheckButton.obj           \
 	.\$(OBJDIR)\nsTextWidget.obj           \

@@ -38,13 +38,6 @@ REQUIRES = xpcom \
 	   necko \
 	   $(NULL)
 
-CPPSRCS=					\
-	wspproxy.cpp				\
-	wspfactory.cpp				\
-	wspcomplextypewrapper.cpp		\
-	wsppropertybagwrapper.cpp		\
-	$(NULL)
-
 CPP_OBJS=					\
 	.\$(OBJDIR)\wspproxy.obj		\
 	.\$(OBJDIR)\wspfactory.obj		\

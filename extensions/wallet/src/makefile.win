@@ -53,15 +53,6 @@ CPP_OBJS= .\$(OBJDIR)\wallet.obj		\
 	.\$(OBJDIR)\nsBasicStreamGenerator.obj		\
 	$(NULL)
 
-CPPSRCS = \
-	nsWalletFactory.cpp		\
-	nsWalletService.cpp		\
-	wallet.cpp			\
-	singsign.cpp			\
-	nsPassword.cpp			\
-	nsPasswordManager.cpp		\
-	$(NULL)
-
 MODULE=wallet
 EXPORTS= $(NULL)
 

@@ -25,16 +25,16 @@ DIRS = windows
 
 MODULE=gfx
 
-REQUIRES= 	xpcom \
-			string \
-			widget \
+REQUIRES=   xpcom \
+            string \
+            widget \
             locale \
             view \
             pref \
             gfx2 \
-			imglib2 \
-			unicharutil \
-			$(NULL)
+            imglib2 \
+            unicharutil \
+            $(NULL)
 
 include <$(DEPTH)\config\config.mak>
 
@@ -45,18 +45,18 @@ EXPORT_LIBRARY=1
 
 DEFINES=-D_IMPL_NS_GFX -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=nsColor.cpp nsColorNames.cpp nsFont.cpp nsFontList.cpp \
-    nsRect.cpp nsTransform2D.cpp nsBlender.cpp \
-	nsDeviceContext.cpp nsScriptableRegion.cpp nsPrintOptionsImpl.cpp
-
-CPP_OBJS=.\$(OBJDIR)\nsColor.obj .\$(OBJDIR)\nsColorNames.obj \
-    .\$(OBJDIR)\nsFont.obj .\$(OBJDIR)\nsFontList.obj \
-    .\$(OBJDIR)\nsRect.obj .\$(OBJDIR)\nsTransform2D.obj \
-    .\$(OBJDIR)\nsDeviceContext.obj \
-	.\$(OBJDIR)\nsBlender.obj \
-  .\$(OBJDIR)\nsRenderingContextImpl.obj\
-	.\$(OBJDIR)\nsScriptableRegion.obj\
-  .\$(OBJDIR)\nsPrintOptionsImpl.obj
+CPP_OBJS=.\$(OBJDIR)\nsColor.obj \
+         .\$(OBJDIR)\nsColorNames.obj \
+         .\$(OBJDIR)\nsFont.obj \
+         .\$(OBJDIR)\nsFontList.obj \
+         .\$(OBJDIR)\nsRect.obj \
+         .\$(OBJDIR)\nsTransform2D.obj \
+         .\$(OBJDIR)\nsDeviceContext.obj \
+	 .\$(OBJDIR)\nsBlender.obj \
+         .\$(OBJDIR)\nsRenderingContextImpl.obj \
+	 .\$(OBJDIR)\nsScriptableRegion.obj \
+         .\$(OBJDIR)\nsPrintOptionsImpl.obj \
+         $(NULL)
 
 
 LCFLAGS = \
@@ -67,7 +67,7 @@ LCFLAGS = \
 LLIBS=				                \
         $(DIST)\lib\util.lib                    \
         $(DIST)\lib\xpcom.lib	                \
-		$(DIST)\lib\unicharutil_s.lib			\
+        $(DIST)\lib\unicharutil_s.lib           \
         $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>

@@ -40,11 +40,6 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 XPIDLSRCS=	.\nsIDocumentTransformer.idl \
             $(NULL)
 
-CPPSRCS=					\
-	nsXSLContentSink.cpp			\
-	nsTransformMediator.cpp			\
-	$(NULL)
-
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsXSLContentSink.obj	\
 	.\$(OBJDIR)\nsTransformMediator.obj     \

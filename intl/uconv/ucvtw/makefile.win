@@ -30,19 +30,6 @@ REQUIRES	= xpcom \
 LIBRARY_NAME=ucvtw
 MODULE_NAME=nsUCvTWModule
 
-CPPSRCS =				\
-	nsBIG5ToUnicode.cpp		\
-	nsUnicodeToBIG5.cpp		\
-	nsBIG5HKSCSToUnicode.cpp		\
-	nsUnicodeToBIG5HKSCS.cpp		\
-	nsUnicodeToHKSCS.cpp		\
-	nsCP950ToUnicode.cpp		\
-	nsUnicodeToCP950.cpp		\
-	nsUnicodeToBIG5NoAscii.cpp		\
-	nsUCvTWSupport.cpp		\
-	nsUCvTwModule.cpp			\
-	$(NULL)
-
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsBIG5ToUnicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeToBIG5.obj			\

@@ -25,10 +25,6 @@ DEPTH=..\..\..
 LIBRARY_NAME = widgetsupport_s
 #DEFINES =-D_IMPL_NS_WIDGET
 
-CPPSRCS = \
-	nsWidgetSupport.cpp      \
-	$(NULL)
-
 EXPORTS = \
 	nsWidgetSupport.h \
 	$(NULL)
@@ -39,7 +35,7 @@ REQUIRES	= xpcom \
 		  gfx \
 		  $(NULL)
 
-OBJS= \
+CPP_OBJS= \
 	.\$(OBJDIR)\nsWidgetSupport.obj  \
 	$(NULL)
 

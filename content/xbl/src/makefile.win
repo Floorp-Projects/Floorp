@@ -50,38 +50,6 @@ REQUIRES	= xpcom \
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=					\
-  nsXBLBinding.cpp \
-  nsXBLPrototypeBinding.cpp \
-  nsXBLPrototypeResources.cpp \
-  nsXBLResourceLoader.cpp \
-  nsXBLDocumentInfo.cpp \
-  nsXBLContentSink.cpp \
-  nsXBLService.cpp \
-  nsXBLEventHandler.cpp \
-  nsXBLWindowHandler.cpp \
-  nsXBLWindowKeyHandler.cpp \
-  nsXBLWindowDragHandler.cpp \
-  nsXBLKeyHandler.cpp \
-  nsXBLMouseHandler.cpp \
-  nsXBLMouseMotionHandler.cpp \
-  nsXBLMutationHandler.cpp \
-  nsXBLDragHandler.cpp \
-  nsXBLFocusHandler.cpp \
-  nsXBLXULHandler.cpp \
-  nsXBLScrollHandler.cpp \
-  nsXBLFormHandler.cpp \
-  nsXBLLoadHandler.cpp \
-  nsXBLContextMenuHandler.cpp \
-  nsXBLPrototypeHandler.cpp \
-  nsBindingManager.cpp \
-  nsXBLInsertionPoint.cpp \
-  nsXBLProtoImplProperty.cpp \
-  nsXBLProtoImplMethod.cpp \
-  nsXBLProtoImplField.cpp \
-  nsXBLProtoImpl.cpp \
-	$(NULL)
-
 CPP_OBJS=					\
   .\$(OBJDIR)\nsXBLBinding.obj \
   .\$(OBJDIR)\nsXBLPrototypeBinding.obj \

@@ -42,25 +42,6 @@ REQUIRES	= xpcom \
 LIBRARY_NAME=ucvibm
 MODULE_NAME=nsUCvIBMModule
 
-CPPSRCS =				\
-	nsCP850ToUnicode.cpp		\
-	nsCP852ToUnicode.cpp		\
-	nsCP855ToUnicode.cpp		\
-	nsCP857ToUnicode.cpp		\
-	nsCP862ToUnicode.cpp		\
-	nsCP864ToUnicode.cpp		\
-	nsCP864iToUnicode.cpp		\
-	nsUnicodeToCP850.cpp		\
-	nsUnicodeToCP852.cpp		\
-	nsUnicodeToCP855.cpp		\
-	nsUnicodeToCP857.cpp		\
-	nsUnicodeToCP862.cpp		\
-	nsUnicodeToCP864.cpp		\
-	nsUnicodeToCP864i.cpp		\
-	nsUCvIBMSupport.cpp		\
-	nsUCvIBMModule.cpp		\
-	$(NULL)
-
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsCP850ToUnicode.obj 		\
 	.\$(OBJDIR)\nsCP852ToUnicode.obj 		\

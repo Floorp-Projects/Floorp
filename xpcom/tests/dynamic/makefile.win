@@ -33,10 +33,6 @@ LLIBS=				\
  $(DIST)\lib\xpcom.lib	\
  $(LIBNSPR)
 
-CPPSRCS =				\
-	TestDynamic.cpp			\
-	$(NULL)
-
 CPP_OBJS = \
 	.\$(OBJDIR)\TestDynamic.obj	\
 	$(NULL)

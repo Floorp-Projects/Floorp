@@ -31,21 +31,6 @@ REQUIRES         =	xpcom \
                     string \
                     $(NULL)
 
-CPPSRCS =				\
-	nsUnicodeToTeXCMRttf.cpp 	\
-	nsUnicodeToTeXCMMIttf.cpp 	\
-	nsUnicodeToTeXCMSYttf.cpp 	\
-	nsUnicodeToTeXCMEXttf.cpp 	\
-	nsUnicodeToMathematica1.cpp 	\
-	nsUnicodeToMathematica2.cpp 	\
-	nsUnicodeToMathematica3.cpp 	\
-	nsUnicodeToMathematica4.cpp 	\
-	nsUnicodeToMathematica5.cpp 	\
-	nsUnicodeToMTExtra.cpp 	\
-	nsUCvMathSupport.cpp		\
-	nsUCvMathModule.cpp		\
-	$(NULL)
-
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToTeXCMRttf.obj		\
 	.\$(OBJDIR)\nsUnicodeToTeXCMMIttf.obj		\

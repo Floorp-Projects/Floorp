@@ -43,9 +43,6 @@ include <$(DEPTH)/config/config.mak>
 DEFINES=-D_IMPL_NS_DOM
 LINCS=-I..\base
 
-CPPSRCS = nsDOMFactory.cpp      	\
-	  nsScriptNameSpaceManager.cpp
-
 CPP_OBJS = .\$(OBJDIR)\nsDOMFactory.obj			\
 	   .\$(OBJDIR)\nsScriptNameSpaceManager.obj 
 

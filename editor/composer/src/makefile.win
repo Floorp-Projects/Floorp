@@ -25,16 +25,6 @@ MODULE=editor
 LIBRARY_NAME=composer
 MODULE_NAME=nsComposerModule
 
-CPPSRCS =                                \
-          nsEditorShell.cpp              \
-          nsEditorShellMouseListener.cpp \
-          nsInterfaceState.cpp           \
-          nsComposerController.cpp       \
-          nsComposerCommands.cpp         \
-          nsComposerRegistration.cpp     \
-          nsEditorParserObserver.cpp     \
-          $(NULL)
-
 CPP_OBJS =                                            \
           .\$(OBJDIR)\nsEditorShell.obj              \
           .\$(OBJDIR)\nsEditorShellMouseListener.obj \
