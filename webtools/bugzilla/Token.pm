@@ -100,6 +100,7 @@ sub MailPasswordToken {
 
     my $urlbase = &::Param("urlbase");
     my $emailsuffix = &::Param('emailsuffix');
+    $token = &::url_quote($token);
 
     open SENDMAIL, "|/usr/lib/sendmail -t";
 
