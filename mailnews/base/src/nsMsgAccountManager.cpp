@@ -546,37 +546,32 @@ nsMsgAccountManager::LoadAccounts()
     nsCOMPtr<nsIMsgAccount> account;
     char *token = nsnull;
     char *rest = accountList;
-    nsString str = "";
-    char *accountKey = nsnull;
+    nsString str("",eOneByte);
 
     token = nsCRT::strtok(rest, ",", &rest);
     while (token && *token) {
       str = token;
       str.StripWhitespace();
-      accountKey = str.ToNewCString();
       
-      if (accountKey != nsnull) {
+      if (str != "") {
 #ifdef DEBUG_sspitzer
-        printf("accountKey = %s\n", accountKey);
+        printf("accountKey = %s\n", str.GetBuffer());
 #endif
-        account = getter_AddRefs(LoadAccount(accountKey));
+        account = getter_AddRefs(LoadAccount((char *)str.GetBuffer()));
         if (account) {
           addAccount(account);
         }
         else {
           PR_Free(accountList);
-          delete [] accountKey;
           return NS_ERROR_NULL_POINTER;
         }
+        str = "";
       }
+#ifdef DEBUG_sspitzer
       else {
-        PR_Free(accountList);
-        return NS_ERROR_NULL_POINTER;
+        printf("nothing between two commas. ignore and keep going...\n");
       }
-      
-      delete [] accountKey;
-      accountKey = nsnull;
-      str = "";
+#endif
       token = nsCRT::strtok(rest, ",", &rest);
     }
 
