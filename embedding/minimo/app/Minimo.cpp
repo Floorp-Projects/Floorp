@@ -855,8 +855,10 @@ void update_toolbar(MinimoBrowser *browser)
 }
 
 
-static gboolean update_throbber(MinimoBrowser *browser)
+static gboolean update_throbber(gpointer data)
 {
+  MinimoBrowser *browser = (MinimoBrowser*)data;
+
   GdkPixmap *val;
   GdkBitmap *mask;
 
