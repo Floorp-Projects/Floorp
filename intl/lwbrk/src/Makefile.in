@@ -33,7 +33,7 @@ CSRCS		= rulebrk.c
 CPPSRCS		= \
 		nsJISx4501LineBreaker.cpp \
 		nsLWBreakerFImp.cpp \
-		nsLWBrk.cpp \
+		nsLWBrkModule.cpp \
 		nsSampleWordBreaker.cpp \
 		$(NULL)
 
