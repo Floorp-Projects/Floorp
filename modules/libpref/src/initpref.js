@@ -1,20 +1,19 @@
-/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
- *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
- */
+// -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+
+// The contents of this file are subject to the Netscape Public License
+// Version 1.0 (the "NPL"); you may not use this file except in
+// compliance with the NPL.  You may obtain a copy of the NPL at
+// http://www.mozilla.org/NPL/
+//
+// Software distributed under the NPL is distributed on an "AS IS" basis,
+// WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+// for the specific language governing rights and limitations under the
+// NPL.
+//
+// The Initial Developer of this code under the NPL is Netscape
+// Communications Corporation.  Portions created by Netscape are
+// Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+// Reserved.
 
 // Style note 3/3:
 // internal objects & functions are in under_score form.
@@ -27,27 +26,25 @@ function plat() {
     this.mac=false;
     this.unix=false;
 };
+
 platform = new plat();
 
-/* --- Preference initialization functions ---
+// --- Preference initialization functions ---
+//
+//    Moved to native functions:
+//    pref        -> pref_NativeDefaultPref
+//    defaultPref -> ""
+//    userPref    -> pref_NativeUserPref
+//    lockPref    -> pref_NativeLockPref
+//    unlockPref  -> pref_NativeUnlockPref
+//    getPref     -> pref_NativeGetPref
+//    config      -> pref_NativeDefaultPref   (?)
 
-    Moved to native functions:
-    pref        -> pref_NativeDefaultPref
-    defaultPref -> "
-    userPref    -> pref_NativeUserPref
-    lockPref    -> pref_NativeLockPref
-    unlockPref  -> pref_NativeUnlockPref
-    getPref     -> pref_NativeGetPref
-    config      -> pref_NativeDefaultPref   (?)
-*/
-
-// stubs for compatability
+// stubs for compatibility
 var default_pref = defaultPref;
 var lock_pref = lockPref;
 var unlock_pref = unlockPref;
 var userPref = user_pref;
-
-// -------------------------
 
 function mime_type(root, mimetype, extension, load_action, appname, appsig, filetype)
 {
@@ -93,4 +90,3 @@ function end_mime_def()
    var now = new Date();
    pref("mime.types.all_defined", now.toString());
 }
-
