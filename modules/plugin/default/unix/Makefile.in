@@ -60,8 +60,9 @@ CXXFLAGS	+= $(TK_CFLAGS)
 CFLAGS		+= $(TK_CFLAGS)
 endif
 
-install-plugin: libnullplugin.so
-	$(INSTALL) libnullplugin.so $(DIST)/bin/plugins
+install-plugin: $(SHARED_LIBRARY)
+	$(INSTALL) $(SHARED_LIBRARY) $(DIST)/bin/plugins
+
 install:: install-plugin
 
 
