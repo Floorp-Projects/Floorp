@@ -197,7 +197,9 @@ interface nsIBaseWindow : nsISupports
 	it's parent.  Note an object should not take focus for itself by giving it
 	to a child.  In most cases this function is being called because the child
 	is trying to give up focus. */
-	void focusAvailable(in nsIBaseWindow aCurrentFocus, out boolean aTookFocus);
+	void focusAvailable(in nsIBaseWindow aCurrentFocus,
+                      in boolean aForward,
+                      out boolean aTookFocus);
 
 	/*
 	Title of the window.
