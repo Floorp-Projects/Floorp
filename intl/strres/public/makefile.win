@@ -19,10 +19,10 @@ DEPTH=..\..\..
 
 IGNORE_MANIFEST=1
 
-EXPORTS =            \
-  nsIStringBundle.h \
-  $(NULL)
-
 MODULE = intl
+
+XPIDLSRCS = \
+	.\nsIStringBundle.idl \
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
