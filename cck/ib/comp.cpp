@@ -142,7 +142,6 @@ int GenerateComponentList(CString parms, WIDGET *curWidget)
 			tnscpxpilinuxPath.Insert(0,"/cygdrive/");
 			CString command = "gzip -d " + tarfile;
 			ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
-//			command = "tar -xvf " + tarfile1 + " -C " + tnscpxpilinuxPath;
 			command = "tar -xvf " + tarfile1 + " -C " + quotes + tnscpxpilinuxPath + quotes;
 			ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 			command = "gzip " + tarfile1;
