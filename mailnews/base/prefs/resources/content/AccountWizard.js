@@ -75,6 +75,7 @@ var contentWindow;
 var smtpService;
 var am;
 var accountm = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
+var gPrefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
 
 var accounts = accountm.accounts;
 
@@ -454,6 +455,24 @@ function finishAccount(account, accountData) {
         destIdentity.valid=true;
     }
 
+    /**
+     * If signature file need to be set, get the path to the signature file.
+     * Signature files, if exist, are placed under default location. Get
+     * default files location for messenger using directory service. Signature 
+     * file name should be extracted from the account data to build the complete
+     * path for signature file. Once the path is built, set the identity's signature pref. 
+     */
+    if (destIdentity.attachSignature)
+    {
+        var sigFileName = accountData.signatureFileName;
+        var dirServ = Components.classes['@mozilla.org/file/directory_service;1'].createInstance();
+        dirServ = dirServ.QueryInterface(Components.interfaces.nsIProperties);
+        
+        var sigFile = dirServ.get("AMessenger", Components.interfaces.nsIFile);
+        sigFile.appendUnicode(sigFileName);
+        destIdentity.signature = sigFile;
+    }
+
     // don't try to create an smtp server if we already have one.
     if (!destIdentity.smtpServerKey)
     {
@@ -477,6 +496,34 @@ function finishAccount(account, accountData) {
         if (accountData.smtpUsePreferredServer && destIdentity)
             destIdentity.smtpServerKey = smtpServer.key;
      }
+
+    // Add any global html domains (i.e., set mailnwes.html_domains pref) which need to 
+    // be excluded from Send Format dialog requirement
+    if (accountData.addGlobalHtmlDomains) {
+        // Check to see if we have already added the 
+        // domain list on a previous account creation process
+        var isDomainListAdded = gPrefs.GetBoolPref("mailnews.global_html_domains.added");
+        if (!isDomainListAdded) {
+            var globalHtmlDomainList = gPrefs.CopyCharPref("mailnews.global_html_domains");
+            var currentHtmlDomainList = gPrefs.CopyCharPref("mailnews.html_domains");
+            var currentPlaintextDomainList = gPrefs.CopyCharPref("mailnews.plaintext_domains");
+            // If there is a list already, we need to preserve that
+            if (currentHtmlDomainList || currentPlaintextDomainList) {
+                // Avoid duplication in adding domains. Check both HTML and PlainText domains
+                var globalHtmlDomainListArray = globalHtmlDomainList.split(',');
+                for (var i=0; i < globalHtmlDomainListArray.length; i++) {
+                    if ((currentHtmlDomainList.indexOf(globalHtmlDomainListArray[i]) == -1) && 
+                        (currentPlaintextDomainList.indexOf(globalHtmlDomainListArray[i]) == -1))
+                        currentHtmlDomainList = currentHtmlDomainList + "," + globalHtmlDomainListArray[i];
+                }
+            }
+            else
+                currentHtmlDomainList = globalHtmlDomainList;
+
+            gPrefs.SetCharPref("mailnews.html_domains", currentHtmlDomainList);
+            gPrefs.SetBoolPref("mailnews.global_html_domains.added", true);
+        }
+    }
 
      if (this.FinishAccountHook != undefined) {
          FinishAccountHook(accountData.domain);
@@ -873,9 +920,8 @@ function getInterfaceForType(type) {
 
 // flush the XUL cache - just for debugging purposes - not called
 function onFlush() {
-        var prefs = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
-        prefs.SetBoolPref("nglayout.debug.disable_xul_cache", true);
-        prefs.SetBoolPref("nglayout.debug.disable_xul_cache", false);
+        gPrefs.SetBoolPref("nglayout.debug.disable_xul_cache", true);
+        gPrefs.SetBoolPref("nglayout.debug.disable_xul_cache", false);
 
 }
 
