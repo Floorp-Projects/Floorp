@@ -108,10 +108,10 @@ class nsInstall
             UNEXPECTED_ERROR            = -201,
             ACCESS_DENIED               = -202,
             TOO_MANY_CERTIFICATES       = -203,
-            NO_INSTALLER_CERTIFICATE    = -204,
+            NO_INSTALL_SCRIPT           = -204,
             NO_CERTIFICATE              = -205,
             NO_MATCHING_CERTIFICATE     = -206,
-            UNKNOWN_JAR_FILE            = -207,
+            CANT_READ_ARCHIVE           = -207,
             INVALID_ARGUMENTS           = -208,
             ILLEGAL_RELATIVE_PATH       = -209,
             USER_CANCELLED              = -210,
@@ -132,6 +132,8 @@ class nsInstall
             EXTRACTION_FAILED           = -225,
             FILENAME_ALREADY_USED       = -226,
             ABORT_INSTALL               = -227,
+            DOWNLOAD_ERROR              = -228,
+            SCRIPT_ERROR                = -229,
             
             OUT_OF_MEMORY               = -299,
 
@@ -236,6 +238,8 @@ class nsInstall
 
         void       GetInstallURL(nsString& url);
         void       SetInstallURL(const nsString& url);
+
+        PRBool     GetStatusSent() { return mStatusSent; }
         
         PRInt32    Alert(nsString& string);
         PRInt32    Confirm(nsString& string, PRBool* aReturn);
@@ -256,6 +260,7 @@ class nsInstall
         nsString            mPackageFolder;
 
         PRBool              mUserCancelled;
+        PRBool              mStatusSent;
         
         PRBool              mUninstallPackage;
         PRBool              mRegisterPackage;

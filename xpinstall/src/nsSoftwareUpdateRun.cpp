@@ -141,15 +141,11 @@ GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *
     // Open the jarfile
     if (hZip)
         rv = hZip->Open( jarFile, &result );
-    if (NS_FAILED(rv))
+
+    if ( NS_FAILED(rv) || result != 0 )
     {
         NS_IF_RELEASE(hZip);
-        return rv;
-    }
-    if (result != 0)
-    {
-        NS_IF_RELEASE(hZip);
-        return NS_ERROR_FAILURE;
+        return nsInstall::CANT_READ_ARCHIVE;
     }
 
 
@@ -163,15 +159,10 @@ GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *
 
     // Extract the install.js file.
     rv = hZip->Extract( "install.js", nsNSPRPath(installJSFileSpec), &result );
-    if (NS_FAILED(rv))
+    if ( NS_FAILED(rv) || result != 0 )
     {
         NS_IF_RELEASE( hZip );
-        return rv;
-    }
-    if (result != 0)
-    {
-        NS_IF_RELEASE(hZip);
-        return NS_ERROR_FAILURE;
+        return nsInstall::NO_INSTALL_SCRIPT;
     }
 
     // Read it into a buffer
@@ -184,7 +175,7 @@ GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *
     buffer = new char[bufferLength + 1];
     
     if (buffer == nsnull)
-        return NS_ERROR_FAILURE;
+        return nsInstall::CANT_READ_ARCHIVE;
 
     rv = (fileStream.GetIStream())->Read(buffer, bufferLength, &readLength);
 
@@ -195,6 +186,7 @@ GetInstallScriptFromJarfile(const char* jarFile, char** scriptBuffer, PRUint32 *
     }
     else
     {
+        rv = nsInstall::CANT_READ_ARCHIVE;
         delete [] buffer;
     }
 
@@ -311,6 +303,9 @@ extern "C" void RunInstallOnThread(void *data)
 	JSContext   *cx;
     JSObject    *glob;
 
+    PRInt32     finalStatus;
+    PRBool      sendStatus = PR_FALSE;
+
     nsIXPINotifier *notifier;
     nsresult    rv;
 
@@ -334,49 +329,88 @@ extern "C" void RunInstallOnThread(void *data)
     nsString args;
     installInfo->GetArguments(args);
 
-    char *jarpath;
+    char *jarpath; // XXX this should be an nsIFileSpec or moral equivalent
     installInfo->GetLocalFile(&jarpath);
+    if (jarpath)
+    {
+        rv = GetInstallScriptFromJarfile( jarpath, 
+                                          &scriptBuffer, 
+                                          &scriptLength);
 
-    if (!jarpath)
-        goto bail;
+        if ( rv == NS_OK && scriptBuffer )
+        {
+            rv = SetupInstallContext( jarpath, 
+                                      url.GetUnicode(),
+                                      args.GetUnicode(), 
+                                      &rt, &cx, &glob);
 
-    rv = GetInstallScriptFromJarfile( jarpath, 
-                                      &scriptBuffer, 
-                                      &scriptLength);
+            if (NS_SUCCEEDED(rv))
+            {
+                // Go ahead and run!!
+                jsval rval;
 
-    // XXX memory leaks!
-    if (NS_FAILED(rv) || scriptBuffer == nsnull)
-        goto bail;
+                PRBool ok = JS_EvaluateScript(  cx, 
+                                                glob,
+                                                scriptBuffer, 
+                                                scriptLength,
+                                                nsnull,
+                                                0,
+                                                &rval);
 
-    rv = SetupInstallContext(   jarpath, 
-                                url.GetUnicode(),
-                                args.GetUnicode(), 
-                                &rt, &cx, &glob);
-    if (NS_FAILED(rv))
-        goto bail; // TODO need to log that this failed!
-    
-    // Go ahead and run!!
-    jsval rval;
+                if (!ok)
+                {
+                    // problem compiling or running script
+                    sendStatus = PR_TRUE;
+                    finalStatus = nsInstall::SCRIPT_ERROR;
+                }
+                else
+                {
+                    // check to make sure the script sent back a status
+                    jsval sent;
+                    if ( !JS_GetProperty( cx, glob, "_statusSent", &sent ) ||
+                         ! JSVAL_TO_BOOLEAN(sent) )
+                    {
+                        sendStatus = PR_TRUE;
+                        finalStatus = nsInstall::SCRIPT_ERROR;
+                    }
+                }
 
-    JS_EvaluateScript(cx, 
-                      glob,
-                      scriptBuffer, 
-                      scriptLength,
-                      nsnull,
-                      0,
-                      &rval);
+                JS_DestroyContext(cx);
+                JS_DestroyRuntime(rt);
+            }
+            else
+            {
+                // couldn't initialize install context
+                sendStatus = PR_TRUE;
+                finalStatus = nsInstall::UNEXPECTED_ERROR;
+            }
+        }
+        else
+        {
+            // could not extract script
+            sendStatus = PR_TRUE;
+            finalStatus = (rv != NS_OK) ? rv : nsInstall::NO_INSTALL_SCRIPT;
+        }
+    }
+    else 
+    {
+        // no path to local jar archive
+        sendStatus = PR_TRUE;
+        finalStatus = nsInstall::DOWNLOAD_ERROR;
+    }
 
-    JS_DestroyContext(cx);
-    JS_DestroyRuntime(rt);
-
-bail:
     if(notifier) 
+    {
+        if ( sendStatus )
+            notifier->FinalStatus( url.GetUnicode(), finalStatus );
+
         notifier->AfterJavascriptEvaluation( url.GetUnicode() );
+    }
 
     if (scriptBuffer) delete [] scriptBuffer;
     if (jarpath) 
     {
-        if ( !url.Equals("file://",7) )
+        if ( !url.Equals("file:/",PR_FALSE,6) )
         {
             // delete the jarfile only if we've downloaded it
             PR_Delete(jarpath);

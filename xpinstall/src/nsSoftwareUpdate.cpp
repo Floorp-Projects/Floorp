@@ -352,7 +352,8 @@ nsSoftwareUpdate::RunNextInstall()
                 mInstalling = PR_TRUE;
             else 
             {
-                NS_ERROR("leaking all nsInstallInfos left in queue");
+                // bogus elements got into the queue
+                NS_ERROR("leaks remaining nsInstallInfos, please file bug!");
                 rv = NS_ERROR_NULL_POINTER;
                 VR_Close();
             }
@@ -386,7 +387,7 @@ nsSoftwareUpdate::SetProgramDirectory(nsIFileSpec *aDir)
 
     // fix GetFolder return path
     mProgramDir = aDir;
-    mProgramDir->AddRef();
+    NS_ADDREF(mProgramDir);
 
     // setup version registry path
     char*    path;

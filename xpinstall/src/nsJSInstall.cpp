@@ -48,7 +48,8 @@ enum Install_slots
   INSTALL_FORCE           = -5,
   INSTALL_ARGUMENTS       = -6,
   INSTALL_URL             = -7,
-  INSTALL_INSTALL         = -8
+  INSTALL_STATUSSENT      = -8,
+  INSTALL_INSTALL         = -9
 };
 
 /***********************************************************************/
@@ -123,6 +124,10 @@ GetInstallProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         
         break;
       }
+
+      case INSTALL_STATUSSENT:
+          *vp = BOOLEAN_TO_JSVAL( a->GetStatusSent() );
+          break;
 
       case INSTALL_INSTALL:
           *vp = OBJECT_TO_JSVAL(obj);
@@ -2398,20 +2403,21 @@ static JSPropertySpec InstallProperties[] =
   {"jarfile",           INSTALL_JARFILE,            JSPROP_ENUMERATE | JSPROP_READONLY},
   {"arguments",         INSTALL_ARGUMENTS,          JSPROP_ENUMERATE | JSPROP_READONLY},
   {"url",               INSTALL_URL,                JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"Install",           INSTALL_INSTALL,            JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"_statusSent",       INSTALL_STATUSSENT,         JSPROP_READONLY},
+  {"Install",           INSTALL_INSTALL,            JSPROP_READONLY},
   {0}
 };
 
 
 static JSConstDoubleSpec install_constants[] = 
 {
-    { nsInstall::BAD_PACKAGE_NAME,           "BAD_PACKAGE_NAME"              },
-    { nsInstall::UNEXPECTED_ERROR,           "UNEXPECTED_ERROR"              },
+    { nsInstall::BAD_PACKAGE_NAME,           "BAD_PACKAGE_NAME"             },
+    { nsInstall::UNEXPECTED_ERROR,           "UNEXPECTED_ERROR"             },
     { nsInstall::ACCESS_DENIED,              "ACCESS_DENIED"                },
-    { nsInstall::NO_INSTALLER_CERTIFICATE,   "NO_INSTALLER_CERTIFICATE"     },
+    { nsInstall::NO_INSTALL_SCRIPT,          "NO_INSTALL_SCRIPT"            },
     { nsInstall::NO_CERTIFICATE,             "NO_CERTIFICATE"               },
     { nsInstall::NO_MATCHING_CERTIFICATE,    "NO_MATCHING_CERTIFICATE"      },
-    { nsInstall::UNKNOWN_JAR_FILE,           "UNKNOWN_JAR_FILE"             },
+    { nsInstall::CANT_READ_ARCHIVE,          "CANT_READ_ARCHIVE"            },
     { nsInstall::INVALID_ARGUMENTS,          "INVALID_ARGUMENTS"            },
     { nsInstall::ILLEGAL_RELATIVE_PATH,      "ILLEGAL_RELATIVE_PATH"        },
     { nsInstall::USER_CANCELLED,             "USER_CANCELLED"               },
@@ -2432,6 +2438,8 @@ static JSConstDoubleSpec install_constants[] =
     { nsInstall::EXTRACTION_FAILED,          "EXTRACTION_FAILED"            },
     { nsInstall::FILENAME_ALREADY_USED,      "FILENAME_ALREADY_USED"        },
     { nsInstall::ABORT_INSTALL,              "ABORT_INSTALL"                },
+    { nsInstall::DOWNLOAD_ERROR,             "DOWNLOAD_ERROR"               },
+    { nsInstall::SCRIPT_ERROR,               "SCRIPT_ERROR"                 },
 
     { nsInstall::GESTALT_UNKNOWN_ERR,        "GESTALT_UNKNOWN_ERR"          },
     { nsInstall::GESTALT_INVALID_ARGUMENT,   "GESTALT_INVALID_ARGUMENT"     },
@@ -2497,6 +2505,49 @@ static JSFunctionSpec InstallMethods[] =
   {"LogComment",                InstallLogComment,                     1},
   {"Alert",                     InstallAlert,                          1},
   {"Confirm",                   InstallConfirm,                        2},
+  // -- new forms that match prevailing javascript style --
+  {"abortInstall",              InstallAbortInstall,            0},
+  {"addDirectory",              InstallAddDirectory,            6},
+  {"addFile",                   InstallAddSubcomponent,         6},
+  {"alert",                     InstallAlert,                   1},
+  {"confirm",                   InstallConfirm,                 2},
+  {"deleteRegisteredFile",      InstallDeleteComponent,         1},
+  {"execute",                   InstallExecute,                 2},
+  {"finalizeInstall",           InstallFinalizeInstall,         0},
+  {"gestalt",                   InstallGestalt,                 1},
+  {"getComponentFolder",        InstallGetComponentFolder,      2},
+  {"getFolder",                 InstallGetFolder,               2},
+  {"getLastError",              InstallGetLastError,            0},
+  {"getWinProfile",             InstallGetWinProfile,           2},
+  {"getWinRegistry",            InstallGetWinRegistry,          0},
+  {"loadResources",             InstallLoadResources,           1},
+  {"logComment",                InstallLogComment,              1},
+  {"patch",                     InstallPatch,                   5},
+  {"resetError",                InstallResetError,              0},
+  {"setPackageFolder",          InstallSetPackageFolder,        1},
+  {"startInstall",              InstallStartInstall,            4},
+  {"uninstall",                 InstallUninstall,               1},
+  // -- new forms for the file/dir methods --
+  {"dirCreate",                 InstallFileOpDirCreate,                1},
+  {"dirGetParent",              InstallFileOpDirGetParent,             1},
+  {"dirRemove",                 InstallFileOpDirRemove,                2},
+  {"dirRename",                 InstallFileOpDirRename,                2},
+  {"fileCopy",                  InstallFileOpFileCopy,                 2},
+  {"fileDelete",                InstallFileOpFileDelete,               2},
+  {"fileExists",                InstallFileOpFileExists,               1},
+  {"fileExecute",               InstallFileOpFileExecute,              2},
+  {"fileGetNativeVersion",      InstallFileOpFileGetNativeVersion,     1},
+  {"fileGetDiskSpaceAvailable", InstallFileOpFileGetDiskSpaceAvailable,1},
+  {"fileGetModDate",            InstallFileOpFileGetModDate,           1},
+  {"fileGetSize",               InstallFileOpFileGetSize,              1},
+  {"fileIsDirectory",           InstallFileOpFileIsDirectory,          1},
+  {"fileIsFile",                InstallFileOpFileIsFile,               1},
+  {"fileModDateChanged",        InstallFileOpFileModDateChanged,       2},
+  {"fileMove",                  InstallFileOpFileMove,                 2},
+  {"fileRename",                InstallFileOpFileRename,               2},
+  {"fileWindowsShortcut",       InstallFileOpFileWindowsShortcut,      7},
+  {"fileMacAlias",              InstallFileOpFileMacAlias,             2},
+  {"fileUnixLink",              InstallFileOpFileUnixLink,             2},
   {0}
 };
 

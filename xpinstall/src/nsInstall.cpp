@@ -144,6 +144,7 @@ nsInstall::nsInstall()
 
     mUninstallPackage = PR_FALSE;
     mRegisterPackage  = PR_FALSE;
+    mStatusSent       = PR_FALSE;
 
     mJarFileLocation    = "";
     mInstallArguments   = "";
@@ -236,7 +237,10 @@ void
 nsInstall::InternalAbort(PRInt32 errcode)
 {
     if (mNotifier)
+    {
         mNotifier->FinalStatus(mInstallURL.GetUnicode(), errcode);
+        mStatusSent = PR_TRUE;
+    }
 
     nsInstallObject* ie;
     if (mInstalledFiles != nsnull) 
@@ -728,12 +732,15 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
     {
         SaveError( *aReturn );
         if (mNotifier)
+        {
             mNotifier->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
+            mStatusSent = PR_TRUE;
+        }
         return NS_OK;
     }
     
 
-    if ( mInstalledFiles == NULL || mInstalledFiles->Count() > 0 )
+    if ( mInstalledFiles != NULL && mInstalledFiles->Count() > 0 )
     {
         if ( mUninstallPackage )
         {
@@ -798,17 +805,22 @@ nsInstall::FinalizeInstall(PRInt32* aReturn)
             *aReturn = SaveError( REBOOT_NEEDED );
 
         if (mNotifier)
+        {
             mNotifier->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
-
+            mStatusSent = PR_TRUE;
+        }
     } 
-    else if ( mInstalledFiles == NULL || mInstalledFiles->Count() == 0 ) 
+    else
     {
         // no actions queued: don't register the package version
         // and no need for user confirmation
     
         if (mNotifier)
+        {
             mNotifier->FinalStatus(mInstallURL.GetUnicode(), *aReturn);
-    }
+            mStatusSent = PR_TRUE;
+        }
+   }
 
     CleanUp();
 

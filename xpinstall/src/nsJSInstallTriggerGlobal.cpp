@@ -548,6 +548,13 @@ static JSFunctionSpec InstallTriggerGlobalMethods[] =
   {"ConditionalSoftwareUpdate", InstallTriggerGlobalConditionalSoftwareUpdate, 5},
   {"CompareVersion",            InstallTriggerGlobalCompareVersion,            5},
   {"GetVersion",                InstallTriggerGlobalGetVersion,                2},
+  // -- new forms to match JS style --
+  {"updateEnabled",             InstallTriggerGlobalUpdateEnabled,             0},
+  {"install",                   InstallTriggerGlobalInstall,                   2},
+  {"startSoftwareUpdate",       InstallTriggerGlobalStartSoftwareUpdate,       2},
+  {"conditionalSoftwareUpdate", InstallTriggerGlobalConditionalSoftwareUpdate, 5},
+  {"compareVersion",            InstallTriggerGlobalCompareVersion,            5},
+  {"getVersion",                InstallTriggerGlobalGetVersion,                2},
   {0}
 };
 
