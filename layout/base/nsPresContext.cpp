@@ -448,7 +448,10 @@ nsPresContext::SetImageAnimationMode(nsImageAnimation aMode)
   return NS_OK;
 }
 
-
+/* This function has now been depricated.  It is no longer necesary to
+ * hold on to presContext just to get a nsLookAndFeel.  nsLookAndFeel is
+ * now a service provided by ServiceManager.
+ */
 NS_IMETHODIMP
 nsPresContext::GetLookAndFeel(nsILookAndFeel** aLookAndFeel)
 {
