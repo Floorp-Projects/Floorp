@@ -61,10 +61,11 @@ public class Global extends ImporterTopLevel {
         super(cx, Main.sealedStdLib);
         String[] names = { "print", "quit", "version", "load", "help",
                            "loadClass", "defineClass", "spawn", "sync",
-                           "serialize", "deserialize", "runCommand" };
+                           "serialize", "deserialize", "runCommand",
+                           "seal" };
         try {
             defineFunctionProperties(names, Global.class,
-                                           ScriptableObject.DONTENUM);
+                                     ScriptableObject.DONTENUM);
         } catch (PropertyException e) {
             throw new Error();  // shouldn't occur.
         }
@@ -481,6 +482,31 @@ public class Global extends ImporterTopLevel {
         }
 
         return new Integer(exitCode);
+    }
+
+    /**
+     * The seal function seals all supplied arguments.
+     */
+    public static void seal(Context cx, Scriptable thisObj, Object[] args,
+                            Function funObj)
+    {
+        for (int i = 0; i != args.length; ++i) {
+            Object arg = args[i];
+            if (!(arg instanceof ScriptableObject) || arg == Undefined.instance)
+            {
+                if (!(arg instanceof Scriptable) || arg == Undefined.instance)
+                {
+                    throw reportRuntimeError("msg.shell.seal.not.object");
+                } else {
+                    throw reportRuntimeError("msg.shell.seal.not.scriptable");
+                }
+            }
+        }
+
+        for (int i = 0; i != args.length; ++i) {
+            Object arg = args[i];
+            ((ScriptableObject)arg).sealObject();
+        }
     }
 
     public InputStream getIn() {
