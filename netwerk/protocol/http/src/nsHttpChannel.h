@@ -97,6 +97,7 @@ private:
     nsresult ReadFromCache();
     nsresult CloseCacheEntry(nsresult status);
     nsresult InitCacheEntry();
+    nsresult FinalizeCacheEntry();
     nsresult InstallCacheListener();
 
     // auth specific methods
@@ -151,6 +152,7 @@ private:
     PRPackedBool                      mTriedCredentialsFromPrehost;
     PRPackedBool                      mFromCacheOnly;
     PRPackedBool                      mCachedContentIsValid;
+    PRPackedBool                      mResponseHeadersModified;
 };
 
 #endif // nsHttpChannel_h__
