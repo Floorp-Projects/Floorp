@@ -2003,4 +2003,7 @@ nsresult nsDocShell::GetPrimaryFrameFor(nsIContent* content, nsIFrame** frame)
    return NS_ERROR_FAILURE;
 }
 
-
+NS_IMETHODIMP nsDocShell::QueryCapability(const nsIID& anIID, void** aSink)
+{
+  return QueryInterface(anIID, aSink);
+}
