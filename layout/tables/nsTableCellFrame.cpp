@@ -529,8 +529,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   /* XXX: remove tableFrame when border-collapse inherits */
   nsTableFrame* tableFrame=nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  nsMargin borderPadding;
-  spacing->GetPadding(borderPadding);
+  nsMargin padding;
+  spacing->GetPadding(padding);
+  nsMargin borderPadding = padding;
   nsMargin border;
   GetCellBorder(border, tableFrame);
   if ((NS_UNCONSTRAINEDSIZE == availSize.width) || !GetContentEmpty()) {
@@ -606,12 +607,14 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   DebugCheckChildSize(firstKid, kidSize, availSize, (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth));
 #endif
 
+  PRBool useInsets = PR_TRUE;
   // 0 dimensioned cells need to be treated specially in Standard/NavQuirks mode 
-  // see testcase "cellHeight.html"
+  // see testcase "emptyCells.html"
   if (NS_UNCONSTRAINEDSIZE == kidReflowState.availableWidth) {
     if ((0 == kidSize.width) || (0 == kidSize.height)) {
     //if ((0 == kidSize.width) && (0 == kidSize.height)) { // XXX why was this &&
       SetContentEmpty(PR_TRUE);
+      useInsets = PR_FALSE;
       // need to reduce the insets by border if the cell is empty
       leftInset   -= border.left;
       rightInset  -= border.right;
@@ -621,19 +624,45 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
     else 
       SetContentEmpty(PR_FALSE);
   }
+
+  const nsStylePosition* pos;
+  GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)pos));
+
+  // calculate the min cell width
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t); 
+  nscoord smallestMinWidth = onePixel;
+  if (eCompatibility_NavQuirks == compatMode) {
+    if ((pos->mWidth.GetUnit() != eStyleUnit_Coord)   &&
+        (pos->mWidth.GetUnit() != eStyleUnit_Percent)) {
+      if (border.left > 0) 
+        smallestMinWidth += onePixel;
+      if (border.right > 0) 
+        smallestMinWidth += onePixel;
+    }
+    PRInt32 colspan = GetColSpan();
+    if (colspan > 1) {
+      smallestMinWidth = PR_MAX(smallestMinWidth, colspan * onePixel);
+      nscoord spacingX = tableFrame->GetCellSpacingX();
+      nscoord spacingExtra = spacingX * (colspan - 1);
+      smallestMinWidth += spacingExtra;
+      if (padding.left > 0) {
+        smallestMinWidth -= onePixel;
+      }
+    }
+  }
+
   if (0 == kidSize.width) {
     if (NS_UNCONSTRAINEDSIZE == kidReflowState.availableWidth) {
-      const nsStylePosition* pos;
-      GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)pos));
-      if ((pos->mWidth.GetUnit() != eStyleUnit_Coord)   &&
-          (pos->mWidth.GetUnit() != eStyleUnit_Percent)) {
-        float p2t;
-        aPresContext.GetScaledPixelsToTwips(&p2t);
-        PRInt32 pixWidth = (eCompatibility_Standard == compatMode) ? 1 : 3;
-        kidSize.width = NSIntPixelsToTwips(pixWidth, p2t);
-        if ((nsnull != aDesiredSize.maxElementSize) && (0 == pMaxElementSize->width))
-          pMaxElementSize->width = kidSize.width;
-      }
+//    const nsStylePosition* pos;
+//    GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)pos));
+//      if ((pos->mWidth.GetUnit() != eStyleUnit_Coord)   &&
+//          (pos->mWidth.GetUnit() != eStyleUnit_Percent)) {
+//      kidSize.width = minCellWidth;
+//      if ((nsnull != aDesiredSize.maxElementSize) && (0 == pMaxElementSize->width))
+//        pMaxElementSize->width = kidSize.width;
+//      }
     }
     else  // empty content has to be forced to the assigned width for resize or incremental reflow
       kidSize.width = kidReflowState.availableWidth;
@@ -643,8 +672,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
     GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)pos));
     if ((pos->mHeight.GetUnit() != eStyleUnit_Coord) &&
         (pos->mHeight.GetUnit() != eStyleUnit_Percent)) {
-      float p2t;
-      aPresContext.GetScaledPixelsToTwips(&p2t);
       // Standard mode should probably be 0 pixels high instead of 1
       PRInt32 pixHeight = (eCompatibility_Standard == compatMode) ? 1 : 2;
       kidSize.height = NSIntPixelsToTwips(pixHeight, p2t);
@@ -653,6 +680,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
   // end 0 dimensioned cells
+
+  kidSize.width = PR_MAX(kidSize.width, smallestMinWidth); 
 
   // Place the child
   //////////////////////////////// HACK //////////////////////////////
@@ -682,8 +711,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
     *aDesiredSize.maxElementSize = *pMaxElementSize;
     if (0!=pMaxElementSize->height)
       aDesiredSize.maxElementSize->height += topInset + bottomInset;
-    if (0!=pMaxElementSize->width)
-      aDesiredSize.maxElementSize->width += leftInset + rightInset;
+    //if (0!=pMaxElementSize->width)
+    aDesiredSize.maxElementSize->width = PR_MAX(smallestMinWidth, aDesiredSize.maxElementSize->width); 
+    aDesiredSize.maxElementSize->width += leftInset + rightInset;
   }
   // remember my desired size for this reflow
   SetDesiredSize(aDesiredSize);
