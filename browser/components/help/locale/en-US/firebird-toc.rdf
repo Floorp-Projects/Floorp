@@ -1,18 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE rdf:RDF [
+    <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+    %brandDTD;
+]>
+
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns:nc="http://home.netscape.com/NC-rdf#">
 
   <rdf:Description about="urn:root">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="using-firebird" nc:name="Using Mozilla Firebird" nc:link="using_firebird.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="firefox-help" nc:name="&brandFullName; Help" nc:link="firefox_welcome.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="using-firebird" nc:name="Using &brandFullName;" nc:link="using_firebird.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="using-download-manager" nc:name="Using &brandFullName;'s Download Manager" nc:link="download_manager.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="customize-firebird" nc:name="Customization" nc:link="customization.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="prefs" nc:name="Preferences" nc:link="prefs.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="prefs" nc:name="Options" nc:link="prefs.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="popup-blocker" nc:name="Controlling Popups" nc:link="popup.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cookies" nc:name="Managing Cookies" nc:link="cookies.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="firebird-keyboard-shortcuts" nc:name="Keyboard Shortcuts" nc:link="shortcuts.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="firebird-mouse-shortcuts" nc:name="Mouse Shortcuts" nc:link="mouse_shortcuts.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu" nc:name="Mozilla Firebird Menu Reference" nc:link="menu_reference.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu" nc:name="&brandFullName; Menu Reference" nc:link="menu_reference.xhtml"/> </rdf:li>
      	<rdf:li> <rdf:Description ID="ieusers" nc:name="Help for Internet Explorer Users" nc:link="forieusers.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -24,6 +32,17 @@
         <rdf:li> <rdf:Description ID="using-firebird-navigating-web-pages" nc:name="Navigating Web Pages" nc:link="using_firebird.xhtml#navigating_web_pages"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-firebird-searching" nc:name="Searching" nc:link="using_firebird.xhtml#searching"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-firebird-improving-speed-and-efficiency" nc:name="Improving Speed and Efficiency" nc:link="using_firebird.xhtml#improving_speed_and_efficiency"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="#using-download-manager">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="using-download-manager-whatis" nc:name="What is the Download Manager?" nc:link="download_manager.xhtml#what_is_download_manager"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="using-download-manager-can-i-do" nc:name="What can I do with the Download Manager?" nc:link="download_manager.xhtml#do_with_download_manager"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="using-download-manager-options" nc:name="Download Manager Options" nc:link="download_manager.xhtml#download_manager_options"/> </rdf:li>
+
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -92,7 +111,7 @@
       <nc:subheadings>
         <rdf:Seq>
           <rdf:li> <rdf:Description ID="customize-toolbar-how-do-i-customize-adding" nc:name="Adding/Removing Toolbars" nc:link="customization.xhtml#adding_removing_toolbars"/> </rdf:li>
-          <rdf:li> <rdf:Description ID="customize-toolbar-how-do-i-customize-rearrange" nc:name="Re-arrange toolbar items" nc:link="customization.xhtml#rearranging_toolbar_items"/> </rdf:li>
+          <rdf:li> <rdf:Description ID="customize-toolbar-how-do-i-customize-rearrange" nc:name="Rearrange toolbar items" nc:link="customization.xhtml#rearranging_toolbar_items"/> </rdf:li>
           <rdf:li> <rdf:Description ID="customize-toolbar-how-do-i-customize-special" nc:name="Special toolbar items" nc:link="customization.xhtml#special_toolbar_items"/> </rdf:li>
         </rdf:Seq>
       </nc:subheadings>
@@ -131,7 +150,7 @@
       <nc:subheadings>
         <rdf:Seq>
           <rdf:li> <rdf:Description ID="popup-blocker-what-are-popups" nc:name="What are Popups?" nc:link="popup.xhtml#what_are_popups"/> </rdf:li>
-          <rdf:li> <rdf:Description ID="popup-blocker-preferences" nc:name="Popup Blocker Preferences" nc:link="popup.xhtml#popup_blocker_preferences"/> </rdf:li>
+          <rdf:li> <rdf:Description ID="popup-blocker-preferences" nc:name="Popup Blocker Options" nc:link="popup.xhtml#popup_blocker_preferences"/> </rdf:li>
         </rdf:Seq>
       </nc:subheadings>
   </rdf:Description>
@@ -252,6 +271,8 @@
         <rdf:li> <rdf:Description ID="menu-file-page-setup" nc:name="Page Setup..." nc:link="menu_reference.xhtml#page_setup"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-file-print-preview" nc:name="Print Preview" nc:link="menu_reference.xhtml#print_preview"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-file-print" nc:name="Print..." nc:link="menu_reference.xhtml#print"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-file-import" nc:name="Import..." nc:link="menu_reference.xhtml#import"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-file-work-offline" nc:name="Work Offline" nc:link="menu_reference.xhtml#work_offline"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-exit" nc:name="Exit" nc:link="menu_reference.xhtml#exit"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
@@ -302,7 +323,6 @@
   <rdf:Description about="#menu-view-sidebar">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="menu-view-sidebar-downloads" nc:name="Downloads" nc:link="menu_reference.xhtml#downloads"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-sidebar-bookmarks" nc:name="Bookmarks" nc:link="menu_reference.xhtml#bookmarks_sidebar"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-view-sidebar-history" nc:name="History" nc:link="menu_reference.xhtml#history"/> </rdf:li>
       </rdf:Seq>
@@ -331,6 +351,7 @@
   <rdf:Description about="#menu-tools">
     <nc:subheadings>
       <rdf:Seq>
+        <rdf:li> <rdf:Description ID="menu-tools-downloads" nc:name="Downloads" nc:link="menu_reference.xhtml#downloads"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-javascript-console" nc:name="JavaScript Console" nc:link="menu_reference.xhtml#javascript_console"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-page-info" nc:name="Page Info" nc:link="menu_reference.xhtml#page_info"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-tools-options" nc:name="Options" nc:link="menu_reference.xhtml#options"/> </rdf:li>
@@ -344,7 +365,7 @@
         <rdf:li> <rdf:Description ID="menu-help-help-contents" nc:name="Help Contents" nc:link="menu_reference.xhtml#help_contents"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-help-release-notes" nc:name="Release Notes" nc:link="menu_reference.xhtml#release_notes"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu-help-for-ie-users" nc:name="For Internet Explorer Users" nc:link="menu_reference.xhtml#for_ie_users"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="menu-help-about-mozilla-firebird" nc:name="About Mozilla Firebird" nc:link="menu_reference.xhtml#about_mozilla_firebird"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="menu-help-about-mozilla-firebird" nc:name="About &brandFullName;" nc:link="menu_reference.xhtml#about_mozilla_firebird"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -352,9 +373,9 @@
   <rdf:Description about="#ieusers">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="ieusers-firebird-ie-terminology-differences" nc:name="Mozilla Firebird and Internet Explorer Terminology Differences" nc:link="forieusers.xhtml#firebird_and_internet_explorer_terminology_differences"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="ieusers-about-your-ie-favorites" nc:name="About Your IE Favorites" nc:link="forieusers.xhtml#about_your_ie_favorites"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="ieusers-firebirds-features" nc:name="Mozilla Firebird's Features" nc:link="forieusers.xhtml#firebirds_features"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="ieusers-firebird-ie-terminology-differences" nc:name="&brandFullName; and Internet Explorer Terminology Differences" nc:link="forieusers.xhtml#firebird_and_internet_explorer_terminology_differences"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="ieusers-about-your-ie-settings" nc:name="About Your IE Settings" nc:link="forieusers.xhtml#about_your_ie_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="ieusers-firebirds-features" nc:name="&brandFullName;'s Features" nc:link="forieusers.xhtml#firebirds_features"/> </rdf:li>
         <rdf:li> <rdf:Description ID="ieusers-keyboard-shortcuts" nc:name="Keyboard Shortcuts" nc:link="forieusers.xhtml#keyboard_shortcuts"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>

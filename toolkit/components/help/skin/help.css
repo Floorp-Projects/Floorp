@@ -52,62 +52,56 @@ menubutton:not([disabled="true"]):hover:active {
 
 /*** BEGIN TOOLBAR BUTTON CODE ***/
 
-#zoom-large-button,
-#zoom-small-button {
+#help-zoom-large-button,
+#help-zoom-small-button {
 	list-style-image: url("chrome://help/skin/zoomImg.png");
 }
 
-#find-button,
-#sidebar-button,
-#customize-toolbar-button {
+#help-find-button,
+#help-sidebar-button {
 	-moz-image-region: rect(0px 256px 32px 224px);
 }
 
-#find-button:hover,
-#sidebar-button,
-#customize-toolbar-button:hover {
+#help-find-button:hover,
+#help-sidebar-button:hover {
 	-moz-image-region: rect(32px 256px 64px 224px);
 }
 
-#back-button { -moz-image-region: rect(0px 32px 32px 0px); }
-#back-button[buttonover="true"] { -moz-image-region: rect(32px 32px 64px 0px); }
-#back-button[disabled="true"] { -moz-image-region: rect(64px 32px 96px 0px); }
-
-#forward-button { -moz-image-region: rect(0px 64px 32px 32px); }
-#forward-button[buttonover="true"] { -moz-image-region: rect(32px 64px 64px 32px); }
-#forward-button[disabled="true"] { -moz-image-region: rect(64px 64px 96px 32px) !important; }
-
-#home-button { -moz-image-region: rect(0px 160px 32px 128px); }
-#home-button:hover { -moz-image-region: rect(32px 160px 64px 128px); }
-#home-button[disabled="true"] {	-moz-image-region: rect(64px 160px 96px 128px) !important; }
-
-#print-button {	-moz-image-region: rect(0px 288px 32px 256px); }
-#print-button:hover { -moz-image-region: rect(32px 288px 64px 256px); }
-#print-button[disabled="true"] { -moz-image-region: rect(64px 288px 96px 256px); }
-
-#zoom-small-button { -moz-image-region: rect(0px 30px 30px 0px); }
-#zoom-small-button:hover { -moz-image-region: rect(30px 30px 60px 0px); }
-#zoom-small-button[disabled="true"] { -moz-image-region: rect(60px 30px 90px 0px); }
-
-#zoom-large-button { -moz-image-region: rect(0px 60px 30px 30px); }
-#zoom-large-button:hover { -moz-image-region: rect(30px 60px 60px 30px); }
-#zoom-large-button[disabled="true"] { -moz-image-region: rect(60px 60px 90px 30px); }
-
-/*** THROBBER ***/
-#navigator-throbber {
-	-moz-appearance: none;
-	-moz-user-focus: ignore;
-	margin: 0 !important;
-	border: none !important;
-	padding: 0px !important;
-	min-width: 0;
-	background-color: transparent;
-	list-style-image: url("chrome://browser/skin/Throbber.png");
+#help-toolbar-customization {
+	-moz-image-region: rect(0px 352px 32px 320px);
 }
 
-#navigator-throbber[busy="true"] {
-	list-style-image: url("chrome://browser/skin/Throbber.gif");
+#help-toolbar-customization:hover {
+	-moz-image-region: rect(32px 352px 64px 320px);
 }
+
+#help-toolbar-customization[disabled="true"] {
+	-moz-image-region: rect(64px 352px 96px 320px);
+}
+
+#help-back-button { -moz-image-region: rect(0px 32px 32px 0px); }
+#help-back-button[buttonover="true"] { -moz-image-region: rect(32px 32px 64px 0px); }
+#help-back-button[disabled="true"] { -moz-image-region: rect(64px 32px 96px 0px); }
+
+#help-forward-button { -moz-image-region: rect(0px 64px 32px 32px); }
+#help-forward-button[buttonover="true"] { -moz-image-region: rect(32px 64px 64px 32px); }
+#help-forward-button[disabled="true"] { -moz-image-region: rect(64px 64px 96px 32px) !important; }
+
+#help-home-button { -moz-image-region: rect(0px 160px 32px 128px); }
+#help-home-button:hover { -moz-image-region: rect(32px 160px 64px 128px); }
+#help-home-button[disabled="true"] {	-moz-image-region: rect(64px 160px 96px 128px) !important; }
+
+#help-print-button { -moz-image-region: rect(0px 288px 32px 256px); }
+#help-print-button:hover { -moz-image-region: rect(32px 288px 64px 256px); }
+#help-print-button[disabled="true"] { -moz-image-region: rect(64px 288px 96px 256px); }
+
+#help-zoom-small-button { -moz-image-region: rect(0px 30px 30px 0px); }
+#help-zoom-small-button:hover { -moz-image-region: rect(30px 30px 60px 0px); }
+#help-zoom-small-button[disabled="true"] { -moz-image-region: rect(60px 30px 90px 0px); }
+
+#help-zoom-large-button { -moz-image-region: rect(0px 60px 30px 30px); }
+#help-zoom-large-button:hover { -moz-image-region: rect(30px 60px 60px 30px); }
+#help-zoom-large-button[disabled="true"] { -moz-image-region: rect(60px 60px 90px 30px); }
 
 /** Toolbar Customization stuff **/
 toolbar[mode="icons"] > toolbarbutton > .toolbarbutton-icon,
@@ -127,8 +121,7 @@ toolbar[mode="icons"] > toolbarbutton > toolbarbutton > .toolbarbutton-text {
 /* Small icons are not supported. */
 #smallicons { display: none; }
 
-/* Throbber */
-
+/*** THROBBER ***/
 #help-throbber {
   -moz-appearance: none;
   -moz-user-focus: ignore;

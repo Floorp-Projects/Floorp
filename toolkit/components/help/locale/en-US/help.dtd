@@ -1,0 +1,42 @@
+<!ENTITY printCmd.commandkey            "p" >
+
+<!ENTITY viewCustomizeToolbar.label     "Customize Toolbar..." >
+<!ENTITY viewCustomizeToolbar.accesskey "C" >
+
+<!ENTITY findOnCmd.commandkey           "F" >
+<!ENTITY findAgainCmd.commandkey        "G" >
+
+<!ENTITY backButton.label               "Back" >
+<!ENTITY backButton.tooltip             "Go back one page">
+<!ENTITY forwardButton.label            "Forward" >
+<!ENTITY forwardButton.tooltip          "Go forward one page">
+<!ENTITY homeButton.label               "Home">
+<!ENTITY homeButton.tooltip             "Go to the Help Start Page">
+<!ENTITY printButton.label              "Print">
+<!ENTITY printButton.tooltip            "Print this page">
+<!ENTITY findBtn.label		  	"Find">
+<!ENTITY sidebarBtn.label               "Toggle Sidebar">
+<!ENTITY sidebarBtn.tooltip             "Show or Hide the Help Sidebar">
+<!ENTITY textZoomReduceBtn.label 	"Shrink Text">
+<!ENTITY textZoomReduceBtn.tooltip      "Decrease the size of the text in the Help documents.">
+<!ENTITY textZoomEnlargeBtn.label 	"Enlarge Text">
+<!ENTITY textZoomEnlargeBtn.tooltip     "Increase the size of the text in the Help documents.">
+<!ENTITY customizeButton.tooltip        "Customize which buttons are shown on the Help toolbar.">
+
+<!ENTITY throbberItem.title             "Activity Indicator">
+<!ENTITY throbber.tooltip               "Go to the Help on Help section">
+
+<!ENTITY cmd_CustomizeToolbars.label    "Customize" >
+
+<!ENTITY searchtab.label    	  	"Search">
+<!ENTITY searchbtn.label    	  	"Find">
+<!ENTITY toctab.label       	  	"Contents">
+<!ENTITY indextab.label     	  	"Index">
+<!ENTITY ixname.label       	  	"Name">
+<!ENTITY glossarytab.label  	  	"Glossary">
+<!ENTITY glossname.label    	  	"Name">
+<!ENTITY gobtn.label        	  	"Search">
+<!ENTITY name.label	    	  	"Item">
+
+<!ENTITY textZoomReduceCmd.commandkey	"-">
+<!ENTITY textZoomEnlargeCmd.commandkey	"+">

@@ -10,8 +10,8 @@
 
     <!-- MOZILLA MASTER HELP DOCUMENT -->
     <rdf:Description about="urn:root"
-            nc:title="&brandShortName; Help"
-            nc:defaulttopic="using-firebird"
+            nc:title="&brandFullName; Help"
+            nc:defaulttopic="firefox-help"
             nc:base="chrome://help/locale/">
         <nc:panellist>
             <rdf:Seq>

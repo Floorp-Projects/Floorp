@@ -1,0 +1,5 @@
+help.jar:
+	locale/en-US/help/glossary.xhtml                (locale/en-US/glossary.xhtml)
+	locale/en-US/help/help-toc.rdf                  (locale/en-US/help-toc.rdf)
+	locale/en-US/help/firebird-glossary.rdf	        (locale/en-US/firebird-glossary.rdf)
+	locale/en-US/help/welcome.xhtml                 (locale/en-US/welcome.xhtml)

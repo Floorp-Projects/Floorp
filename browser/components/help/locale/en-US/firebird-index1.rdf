@@ -38,7 +38,7 @@
     <rdf:Description about="#a">
         <nc:subheadings>
             <rdf:Seq>
-                <rdf:li><rdf:Description ID="advanced-options" nc:name="Advanced Preferences" nc:link="prefs.xhtml#advanced_options"/></rdf:li>
+                <rdf:li><rdf:Description ID="advanced-options" nc:name="Advanced Options" nc:link="prefs.xhtml#advanced_options"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
@@ -57,6 +57,7 @@
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="bookmarks-defined" nc:name="defined" nc:link="glossary.xhtml#bookmark"/></rdf:li>
                 <rdf:li><rdf:Description ID="bookmarks-importing" nc:name="Importing Internet Explorer Favorites" nc:link="forieusers.xhtml#about_your_ie_favorites"/></rdf:li>
+                <rdf:li><rdf:Description ID="settings-importing" nc:name="Importing Internet Explorer Settings" nc:link="forieusers.xhtml#about_your_ie_settings"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
@@ -86,7 +87,7 @@
         <nc:subheadings>
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="default-browser" nc:name="Default Browser" nc:link="using_firebird.xhtml#making_firebird_your_default_browser"/></rdf:li>
-                <rdf:li><rdf:Description ID="download-options" nc:name="Download Preferences" nc:link="prefs.xhtml#downloads_options"/></rdf:li>
+                <rdf:li><rdf:Description ID="download-options" nc:name="Download Options" nc:link="prefs.xhtml#downloads_options"/></rdf:li>
                 <rdf:li><rdf:Description ID="downloading" nc:name="Downloading" nc:link="using_firebird.xhtml#download_manager_sidebar"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
@@ -96,7 +97,7 @@
         <nc:subheadings>
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="extensions" nc:name="Extensions" nc:link="customization.xhtml#extensions"/></rdf:li>
-                <rdf:li><rdf:Description ID="extensions-options" nc:name="Extensions Preferences" nc:link="prefs.xhtml#extensions_options"/></rdf:li>
+                <rdf:li><rdf:Description ID="extensions-options" nc:name="Extensions Options" nc:link="prefs.xhtml#extensions_options"/></rdf:li>
 
           </rdf:Seq>
         </nc:subheadings>
@@ -117,7 +118,7 @@
         <nc:subheadings>
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="forward-button" nc:name="Forward Button" nc:link="using_firebird.xhtml#retracing_your_steps"/></rdf:li>
-                <rdf:li><rdf:Description ID="firebird-using" nc:name="Firebird, Using" nc:link="using_firebird.xhtml"/></rdf:li>
+                <rdf:li><rdf:Description ID="firebird-using" nc:name="Firefox, Using" nc:link="using_firebird.xhtml"/></rdf:li>
                 <rdf:li><rdf:Description ID="importing-ie-favorites" nc:name="Favorites, Importing" nc:link="forieusers.xhtml#about_your_ie_favorites"/></rdf:li>
 	    </rdf:Seq>
         </nc:subheadings>
@@ -127,7 +128,7 @@
         <nc:subheadings>
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="go-menu" nc:name="Go menu" nc:link="menu_reference.xhtml#go"/></rdf:li>
-                <rdf:li><rdf:Description ID="general-prefs" nc:name="General Preferences" nc:link="prefs.xhtml#general_options"/></rdf:li>
+                <rdf:li><rdf:Description ID="general-prefs" nc:name="General Options" nc:link="prefs.xhtml#general_options"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
@@ -176,7 +177,7 @@
     <rdf:Description about="#ie-help">
         <nc:subheadings>
             <rdf:Seq>
-                <rdf:li><rdf:Description ID="ie-help-compared" nc:name="Compared with Firebird" nc:link="forieusers.xhtml#firebirds_features"/></rdf:li>
+                <rdf:li><rdf:Description ID="ie-help-compared" nc:name="Compared with Firefox" nc:link="forieusers.xhtml#firebirds_features"/></rdf:li>
 				<rdf:li><rdf:Description ID="ie-help-favorites" nc:name="Importing IE Favorites" nc:link="forieusers.xhtml#about_your_ie_favorites"/></rdf:li>
                 <rdf:li><rdf:Description ID="ie-help-terminology" nc:name="Terminology Differences" nc:link="forieusers.xhtml#firebird_and_internet_explorer_terminology_differences"/></rdf:li>
             </rdf:Seq>
@@ -218,7 +219,7 @@
             <rdf:Seq>
                 <rdf:li><rdf:Description ID="plugins" nc:name="Plugins" nc:link="using_firebird.xhtml#managing_different_file_types"/></rdf:li>
                 <rdf:li><rdf:Description ID="popups" nc:name="Popups" nc:link="popup.xhtml"/></rdf:li>
-                <rdf:li><rdf:Description ID="preferences" nc:name="Preferences" nc:link="prefs.xhtml"/></rdf:li>
+                <rdf:li><rdf:Description ID="preferences" nc:name="Options" nc:link="prefs.xhtml"/></rdf:li>
 				<rdf:li><rdf:Description ID="printing" nc:name="Printing" nc:link="using_firebird.xhtml#printing_a_page"/></rdf:li>
                 <rdf:li><rdf:Description ID="privacy-options" nc:name="Privacy Options" nc:link="prefs.xhtml#privacy_options"/></rdf:li>
                 <rdf:li><rdf:Description ID="profiles" nc:name="Profiles" nc:link="profiles.xhtml"/></rdf:li>
@@ -345,7 +346,7 @@
     <rdf:Description about="#w">
         <nc:subheadings>
             <rdf:Seq>
-                <rdf:li><rdf:Description ID="web-features-options" nc:name="Web Features Preferences" nc:link="prefs.xhtml#web_features_options"/></rdf:li>
+                <rdf:li><rdf:Description ID="web-features-options" nc:name="Web Features Options" nc:link="prefs.xhtml#web_features_options"/></rdf:li>
             </rdf:Seq>
         </nc:subheadings>
     </rdf:Description>
