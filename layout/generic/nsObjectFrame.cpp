@@ -1712,7 +1712,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
             rv = lh->OnLinkClick(content, eLinkVerb_Replace, 
                                  fullurl.GetUnicode(), 
                                  unitarget.GetUnicode(), 
-                                 postDataStream ? postDataStream.get() : nsnull);
+                                 postDataStream);
             NS_IF_RELEASE(content);
           }
           NS_RELEASE(lh);
