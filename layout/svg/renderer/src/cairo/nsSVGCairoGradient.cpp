@@ -169,7 +169,7 @@ CairoGradient(cairo_t *ctx, nsISVGGradient *aGrad, cairo_text_extents_t *extent)
   aGrad->GetGradientTransform(getter_AddRefs(svgMatrix));
   NS_ASSERTION(svgMatrix, "CairoGradient: GetGradientTransform returns null");
 
-  cairo_matrix *aTransMatrix =  SVGToMatrix(svgMatrix);
+  cairo_matrix_t *aTransMatrix =  SVGToMatrix(svgMatrix);
   cairo_matrix_multiply(patternMatrix, aTransMatrix, patternMatrix);
   cairo_matrix_destroy(aTransMatrix);
 
