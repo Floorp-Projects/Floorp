@@ -390,7 +390,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
              disp.get(), NS_ConvertUTF16toUTF8(filename).get()));
         PRInt32 pointPos = filename.RFindChar('.');
         if (pointPos != kNotFound) {
-          const nsAString & ext = Substring(filename, pointPos + 1, filename.Length() - pointPos);
+          const nsAString & ext = Substring(filename, pointPos + 1, filename.Length() - pointPos - 1);
           CopyUTF16toUTF8(ext, fileExtension);
           LOG(("...found extension '%s'\n", fileExtension.get()));
         }
