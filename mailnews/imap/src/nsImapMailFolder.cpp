@@ -193,6 +193,7 @@ nsImapMailFolder::nsImapMailFolder() :
     m_urlRunning(PR_FALSE),
   m_verifiedAsOnlineFolder(PR_FALSE),
   m_explicitlyVerify(PR_FALSE),
+  m_folderIsNamespace(PR_FALSE),
     m_folderNeedsSubscribing(PR_FALSE),
     m_folderNeedsAdded(PR_FALSE),
     m_folderNeedsACLListed(PR_TRUE),
@@ -225,6 +226,7 @@ nsImapMailFolder::nsImapMailFolder() :
   m_hierarchyDelimiter = kOnlineHierarchySeparatorUnknown;
   m_pathName = nsnull;
   m_folderACL = nsnull;
+  m_aclFlags = 0;
   m_namespace = nsnull;
   m_numFilterClassifyRequests = 0; 
 }
@@ -386,15 +388,13 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
         flags |= MSG_FOLDER_FLAG_TRASH;
     }
 #if 0
-		// the logic for this has been moved into 
-		// SetFlagsOnDefaultMailboxes()
-    else if(name->EqualsIgnoreCase(NS_LITERAL_STRING("Sent")))
+    else if(name->Equals(NS_LITERAL_STRING("Sent"), nsCaseInsensitiveStringComparator()))
       folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
-    else if(name->EqualsIgnoreCase(NS_LITERAL_STRING("Drafts")))
+    else if(name->Equals(NS_LITERAL_STRING("Drafts"), nsCaseInsensitiveStringComparator()))
       folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
-    else if (name->EqualsIgnoreCase(NS_LITERAL_STRING("Templates")));
+    else if (name->Equals(NS_LITERAL_STRING("Templates"), nsCaseInsensitiveStringComparator()))
       folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
-#endif 
+#endif
   }
 
     folder->SetFlags(flags);
@@ -587,19 +587,6 @@ NS_IMETHODIMP nsImapMailFolder::GetSubFolders(nsIEnumerator* *result)
   }
   rv = mSubFolders->Enumerate(result);
   return rv;
-}
-
-NS_IMETHODIMP nsImapMailFolder::AddUnique(nsISupports* element)
-{
-    nsresult rv = NS_ERROR_FAILURE;
-    return rv;
-}
-
-NS_IMETHODIMP nsImapMailFolder::ReplaceElement(nsISupports* element,
-                                               nsISupports* newElement)
-{
-    nsresult rv = NS_ERROR_FAILURE;
-    return rv;
 }
 
 //Makes sure the database is open and exists.  If the database is valid then
@@ -898,10 +885,10 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         }
       }
 
-            unusedDB->SetSummaryValid(PR_TRUE);
+      unusedDB->SetSummaryValid(PR_TRUE);
       unusedDB->Commit(nsMsgDBCommitType::kLargeCommit);
-            unusedDB->Close(PR_TRUE);
-        }
+      unusedDB->Close(PR_TRUE);
+    }
   }
   if (!suppressNotification)
   {
@@ -1695,6 +1682,9 @@ NS_IMETHODIMP nsImapMailFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement
   rv = element->GetStringProperty("onlineName", getter_Copies(onlineName));
   if (NS_SUCCEEDED(rv) && (const char *) onlineName && strlen((const char *) onlineName))
     m_onlineFolderName.Assign(onlineName);
+
+  m_aclFlags = -1; // init to invalid value.
+  element->GetInt32Property("aclFlags", (PRInt32 *) &m_aclFlags);
 #ifdef DEBUG_bienvenu
   if (!nsCRT::strcasecmp((const char *) onlineName, "Sent"))
     printf("loading folder cache elem for %s flags = %lx", (const char *) onlineName, mFlags);
@@ -1710,6 +1700,7 @@ NS_IMETHODIMP nsImapMailFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElement 
   element->SetInt32Property("boxFlags", m_boxFlags);
   element->SetInt32Property("hierDelim", (PRInt32) m_hierarchyDelimiter);
   element->SetStringProperty("onlineName", m_onlineFolderName.get());
+  element->SetInt32Property("aclFlags", (PRInt32) m_aclFlags);
   return rv;
 }
 
@@ -5049,6 +5040,7 @@ NS_IMETHODIMP nsImapMailFolder::SetAclFlags(PRUint32 aclFlags)
   nsCOMPtr<nsIDBFolderInfo> dbFolderInfo;
   nsresult rv = GetDatabase(nsnull);
 
+  m_aclFlags = aclFlags;
   if (mDatabase)
   {
     rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
@@ -5064,16 +5056,26 @@ NS_IMETHODIMP nsImapMailFolder::GetAclFlags(PRUint32 *aclFlags)
 {
   NS_ENSURE_ARG_POINTER(aclFlags);
 
-  nsCOMPtr<nsIDBFolderInfo> dbFolderInfo;
-  nsresult rv = GetDatabase(nsnull);
+  nsresult rv = NS_OK;
 
-  if (mDatabase)
+  ReadDBFolderInfo(PR_FALSE); // update cache first.
+  if (m_aclFlags == -1) // -1 means invalid value, so get it from db.
   {
-    rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
-    if (NS_SUCCEEDED(rv) && dbFolderInfo)
-      rv = dbFolderInfo->GetUint32Property("aclFlags", aclFlags, 0);
-  }
+    nsCOMPtr<nsIDBFolderInfo> dbFolderInfo;
+    rv = GetDatabase(nsnull);
 
+    if (mDatabase)
+    {
+      rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+      if (NS_SUCCEEDED(rv) && dbFolderInfo)
+      {
+        rv = dbFolderInfo->GetUint32Property("aclFlags", aclFlags, 0);
+        m_aclFlags = *aclFlags;
+      }
+    }
+  }
+  else
+    *aclFlags = m_aclFlags;
   return rv;
 }
 
@@ -6606,10 +6608,10 @@ nsresult nsImapMailFolder::CreateACLRightsStringForFolder(PRUnichar **rightsStri
 NS_IMETHODIMP nsImapMailFolder::GetFolderNeedsACLListed(PRBool *bVal)
 {
   NS_ENSURE_ARG_POINTER(bVal);
-  PRBool dontNeedACLListed = PR_TRUE;
-  // if we haven't acl listed, and it's not a no select folder, then we'll
-  // list the acl if it's not a namespace.
-  if (m_folderNeedsACLListed && !(mFlags & MSG_FOLDER_FLAG_IMAP_NOSELECT))
+  PRBool dontNeedACLListed = !m_folderNeedsACLListed;
+  // if we haven't acl listed, and it's not a no select folder or the inbox,
+  //  then we'll list the acl if it's not a namespace.
+  if (m_folderNeedsACLListed && !(mFlags & MSG_FOLDER_FLAG_IMAP_NOSELECT | MSG_FOLDER_FLAG_INBOX))
     GetIsNamespace(&dontNeedACLListed);
 
   *bVal = !dontNeedACLListed;
@@ -6688,7 +6690,7 @@ NS_IMETHODIMP nsImapMailFolder::ResetNamespaceReferences()
   PRUnichar hierarchyDelimiter;
   GetHierarchyDelimiter(&hierarchyDelimiter);
   m_namespace = nsIMAPNamespaceList::GetNamespaceForFolder(serverKey.get(), onlineName.get(), (char) hierarchyDelimiter);
-  NS_ASSERTION(m_namespace, "resetting null namespace");
+//  NS_ASSERTION(m_namespace, "resetting null namespace");
   if (m_namespace)
     m_folderIsNamespace = nsIMAPNamespaceList::GetFolderIsNamespace(serverKey.get(), onlineName.get(), (char) hierarchyDelimiter, m_namespace);
   else
