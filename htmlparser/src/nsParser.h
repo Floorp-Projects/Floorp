@@ -213,7 +213,7 @@ class nsParser : public nsIParser,
      *  @param   aState determines whether we parse/tokenize or just cache.
      *  @return  current state
      */
-    virtual nsresult  ResumeParsing();
+    virtual nsresult  ContinueParsing();
     virtual void      BlockParser();
     virtual void      UnblockParser();
     virtual nsresult  Terminate(void);

@@ -1561,7 +1561,7 @@ NS_IMETHODIMP
 nsXMLContentSink::ResumeParsing()
 {
   if (mParser) {
-    mParser->ResumeParsing();
+    mParser->ContinueParsing();
   }
 
   return NS_OK;
@@ -1684,7 +1684,10 @@ nsXMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
     if (NS_FAILED(rv)) return rv;
   }
 
-  rv = ResumeParsing();
+  if(mParser && mParser->IsParserEnabled()){
+    rv=mParser->ContinueParsing();
+  }
+
   if (NS_FAILED(rv)) return rv;
 
   return rv;
