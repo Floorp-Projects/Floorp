@@ -204,7 +204,7 @@ nsOutlinerRows::Subtree::Clear()
     delete[] mRows;
 
     mRows = nsnull;
-    mCount = mCapacity = 0;
+    mCount = mCapacity = mSubtreeSize = 0;
 }
 
 PRBool
