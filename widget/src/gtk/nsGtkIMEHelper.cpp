@@ -56,6 +56,10 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 nsIMEStatus *nsIMEGtkIC::gStatus = 0;
 nsWindow *nsIMEGtkIC::gGlobalFocusWindow = 0;
+
+#ifdef _AIX
+GdkIMStyle nsIMEGtkIC::gIMStyle = (GdkIMStyle)0; 
+#endif // _AIX
 #endif // USE_XIM 
 
 nsGtkIMEHelper* nsGtkIMEHelper::gSingleton = nsnull;
@@ -1213,6 +1217,43 @@ nsIMEGtkIC::GetInputStyle() {
   return ret_style;
 #endif
 
+#ifdef _AIX
+  if (!gIMStyle) {
+    XIM input_method = XOpenIM(GDK_DISPLAY(), NULL, NULL, NULL);
+
+    if (input_method) {
+      XIMStyles* supported_styles = NULL;
+      // Query styles supported by the current IM server.
+      XGetIMValues(input_method, XNQueryInputStyle, &supported_styles, NULL);
+
+      if (supported_styles) {
+        XIMStyle curr_style;
+    
+        // Create a bit mask of all allowed styles.
+        const XIMStyle best_style = XIMPreeditCallbacks | XIMStatusCallbacks
+                                  | XIMPreeditArea      | XIMStatusArea
+                                  | XIMPreeditNothing   | XIMStatusNothing
+                                  | XIMPreeditNone      | XIMStatusNone
+                                  | XIMPreeditPosition;
+
+        for (int i = 0; i < supported_styles->count_styles; i++) {
+          curr_style = supported_styles->supported_styles[i];
+          // Ensure that curr_style only contains allowed styles
+          if ((curr_style & best_style) == curr_style) {
+            gIMStyle = (GdkIMStyle)curr_style;
+            break;
+          }
+        }
+        XFree(supported_styles);
+      }
+      XCloseIM(input_method);
+    }
+    if (!gIMStyle)
+      gIMStyle = (GdkIMStyle)(GDK_IM_PREEDIT_NONE | GDK_IM_STATUS_NONE);
+  }
+  return gIMStyle;
+#endif // _AIX
+
   nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
   if (NS_SUCCEEDED(rv) && (prefs)) {
     char *input_style;
@@ -1494,6 +1535,11 @@ nsIMEGtkIC::nsIMEGtkIC(nsWindow *aFocusWindow, GdkFont *aFontSet,
       attrmask = (GdkICAttributesType) (attrmask | GDK_IC_STATUS_FONTSET);
     }
   }
+
+#ifdef _AIX
+  if (mInputStyle & GDK_IM_STATUS_AREA)
+    attrmask = (GdkICAttributesType)(attrmask | GDK_IC_STATUS_AREA);
+#endif // _AIX
 
   GdkICPrivate *IC = (GdkICPrivate *)gdk_ic_new(attr, attrmask);
 

@@ -146,6 +146,10 @@ class nsIMEGtkIC {
   GdkICPrivate *mIC_backup;
   nsIMEPreedit *mPreedit;
   GdkFont      *mStatusFontset;
+#ifdef _AIX
+  static GdkIMStyle gIMStyle;
+#endif // _AIX
+
  public:
   nsIMEPreedit *GetPreedit() {return mPreedit;}
   ~nsIMEGtkIC();
