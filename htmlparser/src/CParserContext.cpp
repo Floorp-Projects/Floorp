@@ -25,6 +25,7 @@
 #include "nsToken.h"
 
 MOZ_DECL_CTOR_COUNTER(CParserContext);
+
 /**
  * Your friendly little constructor. Ok, it's not the friendly, but the only guy
  * using it is the parser.
@@ -33,27 +34,68 @@ MOZ_DECL_CTOR_COUNTER(CParserContext);
  * @param   aKey
  * @param   aListener
  */
-CParserContext::CParserContext(nsScanner* aScanner,void* aKey,nsIStreamObserver* aListener,PRBool aCopyUnused) :
-  mSourceType()
+CParserContext::CParserContext(nsScanner* aScanner, 
+                               void *aKey, 
+                               nsIStreamObserver* aListener, 
+                               nsIDTD *aDTD, 
+                               eAutoDetectResult aStatus, 
+                               PRBool aCopyUnused) : 
+  mSourceType() 
+  //,mTokenDeque(gTokenDeallocator) 
+{ 
+  MOZ_COUNT_CTOR(CParserContext); 
+
+  mScanner=aScanner; 
+  mKey=aKey; 
+  mPrevContext=0; 
+  mListener=aListener; 
+  NS_IF_ADDREF(mListener); 
+  mParseMode=eParseMode_unknown; 
+  mAutoDetectStatus=aStatus; 
+  mTransferBuffer=0; 
+  mDTD=aDTD; 
+  NS_IF_ADDREF(mDTD); 
+  mTransferBufferSize=eTransferBufferSize; 
+  mParserEnabled=PR_TRUE; 
+  mStreamListenerState=eNone; 
+  mMultipart=PR_TRUE; 
+  mContextType=eCTNone; 
+  mCopyUnused=aCopyUnused; 
+} 
+
+/**
+ * Your friendly little constructor. Ok, it's not the friendly, but the only guy
+ * using it is the parser.
+ * @update	gess7/23/98
+ * @param   aScanner
+ * @param   aKey
+ * @param   aListener
+ */
+CParserContext::CParserContext(const CParserContext &aContext) :
+  mSourceType(aContext.mSourceType)
   //,mTokenDeque(gTokenDeallocator)
 {
   MOZ_COUNT_CTOR(CParserContext);
 
-  mScanner=aScanner;
-  mKey=aKey;
+  mScanner=aContext.mScanner;
+  mKey=aContext.mKey;
   mPrevContext=0;
-  mListener=aListener;
+  mListener=aContext.mListener;
   NS_IF_ADDREF(mListener);
-  mParseMode=eParseMode_unknown;
-  mAutoDetectStatus=eUnknownDetect;
-  mTransferBuffer=0;
-  mDTD=0;
+
+  mParseMode=aContext.mParseMode;
+  mAutoDetectStatus=aContext.mAutoDetectStatus;
+  mTransferBuffer=aContext.mTransferBuffer;
+  mDTD=aContext.mDTD;
+  NS_IF_ADDREF(mDTD);
+
   mTransferBufferSize=eTransferBufferSize;
-  mParserEnabled=PR_TRUE;
-  mStreamListenerState=eNone;
-  mMultipart=PR_TRUE;
-  mContextType=eCTNone;
-  mCopyUnused=aCopyUnused;
+  mParserEnabled=aContext.mParserEnabled;
+  mStreamListenerState=aContext.mStreamListenerState;
+  mMultipart=aContext.mMultipart;
+  mContextType=aContext.mContextType;
+  mCopyUnused;
+  mRefCount=2;
 }
 
 
@@ -66,11 +108,14 @@ CParserContext::~CParserContext(){
 
   MOZ_COUNT_DTOR(CParserContext);
 
-  if(mScanner)
-    delete mScanner;
+  mRefCount--;
+  if(0==mRefCount) {
+    if(mScanner)
+      delete mScanner;
 
-  if(mTransferBuffer)
-    delete [] mTransferBuffer;
+    if(mTransferBuffer)
+      delete [] mTransferBuffer;
+  }
 
   NS_IF_RELEASE(mDTD);
 
