@@ -20,15 +20,15 @@
   <spring style="height: 1em;"/>
   <box align="horizontal" flex="100%" style="width: 400px;">
     <spring style="width: 1em"/>
-    <html:div style="width: 40px; margin: 5px;">
-      <titledbutton class="message-icon"/>
-    </html:div>
+	  <box autostretch="never">
+      <image class="message-icon"/>
+	  </box>
     <spring style="width: 1em"/>
     <box align="vertical" flex="100%">
-      <html:div id="info.header" style="font-weight: bold;">&dialogTitle.label;</html:div>
+      <text id="info.header" style="font-weight: bold;" value="&dialogTitle.label;" />
       <spring style="height: 1em;"/>
-      <html:div id="info.txt" flex="100%">&currentlyProcessing.text;</html:div>
-      <html:div id="info.txt" flex="100%">&downloadBeforeUpdate.text;</html:div>
+      <text id="info1" flex="100%" value="&currentlyProcessing.text;" />
+      <text id="info2" flex="100%" value="&downloadBeforeUpdate.text;" />
       <spring style="height: 1em;"/>
       <box id="pm-box" align="horizontal">
         <progressmeter id="dialog.progress" mode="undetermined" flex="100%"/>
