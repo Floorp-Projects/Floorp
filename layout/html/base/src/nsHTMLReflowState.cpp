@@ -2185,27 +2185,14 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext* aPresContext,
                                   nsIRenderingContext* aRenderingContext,
                                   nsIFrame* aFrame)
 {
-  nscoord lineHeight = -1;
-  nsStyleContext* sc = aFrame->GetStyleContext();
-  if (sc) {
-    lineHeight = ComputeLineHeight(aPresContext, aRenderingContext, sc);
-  }
-  if (lineHeight < 0) {
-    // Negative line-heights are not allowed by the spec. Translate
-    // them into "normal" when found.
-    const nsStyleFont* font = sc->GetStyleFont();
-    if (UseComputedHeight()) {
-      lineHeight = font->mFont.size;
-    }
-    else {
-      SetFontFromStyle(aRenderingContext, sc);
-      nsCOMPtr<nsIFontMetrics> fm;
-      aRenderingContext->GetFontMetrics(*getter_AddRefs(fm));
-      if (fm) {
-        lineHeight = GetNormalLineHeight(fm);
-      }
-    }
-  }
+  NS_ASSERTION(aFrame && aFrame->GetStyleContext(),
+               "Bogus data passed in to CalcLineHeight");
+
+  nscoord lineHeight = ComputeLineHeight(aPresContext, aRenderingContext,
+                                         aFrame->GetStyleContext());
+
+  NS_ASSERTION(lineHeight >= 0, "ComputeLineHeight screwed up");
+
   return lineHeight;
 }
 

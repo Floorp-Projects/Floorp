@@ -5197,7 +5197,9 @@ PRBool CSSParserImpl::ParseFont(nsresult& aErrorCode)
   // Get optional "/" line-height
   nsCSSValue  lineHeight;
   if (ExpectSymbol(aErrorCode, '/', PR_TRUE)) {
-    if (! ParseVariant(aErrorCode, lineHeight, VARIANT_NUMBER | VARIANT_LP | VARIANT_NORMAL, nsnull)) {
+    if (! ParsePositiveVariant(aErrorCode, lineHeight,
+                               VARIANT_NUMBER | VARIANT_LP | VARIANT_NORMAL,
+                               nsnull)) {
       return PR_FALSE;
     }
   }
