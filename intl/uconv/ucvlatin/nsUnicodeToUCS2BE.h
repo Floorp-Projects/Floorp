@@ -41,34 +41,6 @@
 
 #include "nsUCSupport.h"
 
-//----------------------------------------------------------------------
-// Class nsUnicodeToUCS2BE [declaration]
-
-/**
- * A character set converter from Unicode to UCS2BE.
- *
- * @created         05/Apr/1999
- * @author  Catalin Rotaru [CATA]
- */
-class nsUnicodeToUCS2BE : public nsTableEncoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUnicodeToUCS2BE();
-  
-  NS_IMETHOD FillInfo(PRUint32* aInfo);
-
-};
-
-nsresult NEW_UnicodeToUTF16BE(nsISupports **Result);
-nsresult NEW_UnicodeToUTF16LE(nsISupports **Result);
-nsresult NEW_UnicodeToUTF16(nsISupports **Result);
-
-//============== above code is obsolete ==============================
-
 class nsUnicodeToUTF16BE: public nsBasicEncoder
 {
 public:
@@ -104,7 +76,15 @@ protected:
   NS_IMETHOD CopyData(char* aDest, const PRUnichar* aSrc, PRInt32 aLen  );
 };
 
+// XXX In theory, we have to check the endianness at run-time because some
+// modern RISC processors can be run at both LE and BE. 
+#ifdef IS_LITTLE_ENDIAN
+class nsUnicodeToUTF16: public nsUnicodeToUTF16LE
+#elif defined(IS_BIG_ENDIAN)
 class nsUnicodeToUTF16: public nsUnicodeToUTF16BE
+#else
+#error "Unknown endianness"
+#endif
 {
 public:
   nsUnicodeToUTF16() { mBOM = 0xFEFF;};

@@ -42,81 +42,59 @@
 #include "nsISupports.h"
 #include "nsUCSupport.h"
 
-//----------------------------------------------------------------------
-// Class nsUCS2BEToUnicode [declaration]
-
-/**
- * A character set converter from UCS2BE to Unicode.
- *
- * @created         18/Mar/1998
- * @author  Catalin Rotaru [CATA]
- */
-class nsUCS2BEToUnicode : public nsTableDecoderSupport
+// internal base class
+class nsUTF16ToUnicodeBase : public nsBasicDecoderSupport
 {
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUCS2BEToUnicode();
-
 protected:
+  // ctor accessible only by child classes
+  nsUTF16ToUnicodeBase() { Reset();};
 
+public: 
   //--------------------------------------------------------------------
   // Subclassing of nsDecoderSupport class [declaration]
 
   NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
       PRInt32 * aDestLength);
-};
-
-//============== above code is obsolete ==============================
-
-class nsUTF16BEToUnicode : public nsBasicDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUTF16BEToUnicode() { Reset();};
-
-  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
-      PRUnichar * aDest, PRInt32 * aDestLength); 
   NS_IMETHOD Reset();
 
-protected:
-  //--------------------------------------------------------------------
-  // Subclassing of nsDecoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
 protected:
   PRUint8 mState;
   PRUint8 mData;
 };
 
-class nsUTF16LEToUnicode : public nsBasicDecoderSupport
+// UTF-16 big endian
+class nsUTF16BEToUnicode : public nsUTF16ToUnicodeBase
 {
 public:
 
-  /**
-   * Class constructor.
-   */
-  nsUTF16LEToUnicode() { Reset();};
+  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
+      PRUnichar * aDest, PRInt32 * aDestLength); 
+};
+
+// UTF-16 little endian
+class nsUTF16LEToUnicode : public nsUTF16ToUnicodeBase
+{
+public:
 
   NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
       PRUnichar * aDest, PRInt32 * aDestLength); 
+};
+
+// UTF-16 with BOM
+class nsUTF16ToUnicode : public nsUTF16ToUnicodeBase
+{
+public:
+
+  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
+      PRUnichar * aDest, PRInt32 * aDestLength); 
+
   NS_IMETHOD Reset();
 
-protected:
-  //--------------------------------------------------------------------
-  // Subclassing of nsDecoderSupport class [declaration]
+private:
 
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
-protected:
-  PRUint8 mState;
-  PRUint8 mData;
+  enum Endian {kUnknown, kBigEndian, kLittleEndian};
+  Endian  mEndian; 
+  PRBool  mFoundBOM;
 };
 
 #endif /* nsUCS2BEToUnicode_h___ */

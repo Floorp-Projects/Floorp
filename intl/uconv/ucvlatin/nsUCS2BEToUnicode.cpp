@@ -41,200 +41,26 @@
 #include "nsUCvLatinDll.h"
 #include <string.h>
 #include "prtypes.h"
-//----------------------------------------------------------------------
-// Global functions and data [declaration]
 
-static const PRUint16 g_UCS2BEMappingTable[] = {
-  0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0xFFFF, 0x0000
-};
-
-static const PRInt16 g_UCS2BEShiftTable[] =  {
-  0, u2BytesCharset, 
-  ShiftCell(0,       0, 0, 0, 0, 0, 0, 0), 
-};
-
-//----------------------------------------------------------------------
-// Class nsUCS2BEToUnicode [implementation]
-
-nsUCS2BEToUnicode::nsUCS2BEToUnicode() 
-: nsTableDecoderSupport((uShiftTable*) &g_UCS2BEShiftTable, 
-                        (uMappingTable*) &g_UCS2BEMappingTable, 0)
-{
-}
-
-//----------------------------------------------------------------------
-// Subclassing of nsTableDecoderSupport class [implementation]
-
-NS_IMETHODIMP nsUCS2BEToUnicode::GetMaxLength(const char * aSrc, 
-                                            PRInt32 aSrcLength, 
-                                            PRInt32 * aDestLength)
-{
-  if(0 == (aSrcLength % 2)) 
-  {
-    *aDestLength = aSrcLength / 2;
-    return NS_OK_UENC_EXACTLENGTH;
-  } else {
-    *aDestLength = (aSrcLength  + 1) / 2;
-    return NS_OK;
-  }
-}
-
-
-class nsUTF16SameEndianToUnicode : public nsBasicDecoderSupport
-{
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsUTF16SameEndianToUnicode() { Reset();};
-
-  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
-      PRUnichar * aDest, PRInt32 * aDestLength); 
-  NS_IMETHOD Reset();
-
-protected:
-  //--------------------------------------------------------------------
-  // Subclassing of nsDecoderSupport class [declaration]
-
-  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
-protected:
-  PRUint8 mState;
-  PRUint8 mData;
-};
-
-
-//----------------------------------------------------------------------
-// Subclassing of nsTableDecoderSupport class [implementation]
-
-NS_IMETHODIMP nsUTF16SameEndianToUnicode::GetMaxLength(const char * aSrc, 
-                                            PRInt32 aSrcLength, 
-                                            PRInt32 * aDestLength)
-{
-  *aDestLength = (aSrcLength + ((1==mState)?1:0))/2;
-  return NS_OK;
-}
-NS_IMETHODIMP nsUTF16SameEndianToUnicode::Convert(
-      const char * aSrc, PRInt32 * aSrcLength,
-      PRUnichar * aDest, PRInt32 * aDestLength)
+// XXX : illegal surrogate code points are just passed through !!
+static nsresult
+UTF16ConvertToUnicode(PRUint8& aState, PRUint8& aData, const char * aSrc,
+                      PRInt32 * aSrcLength, PRUnichar * aDest,
+                      PRInt32 * aDestLength)
 {
   const char* src = aSrc;
   const char* srcEnd = aSrc + *aSrcLength;
   PRUnichar* dest = aDest;
   PRUnichar* destEnd = aDest + *aDestLength;
-  PRInt32 copybytes;
-
-  if(2 == mState) // first time called
-  {
-    // eleminate BOM
-    if(0xFEFF == *((PRUnichar*)src)) {
-      src+=2;
-    } else if(0xFFFE == *((PRUnichar*)src)) {
-      *aSrcLength=0;
-      *aDestLength=0;
-      return NS_ERROR_ILLEGAL_INPUT;
-    }  
-    mState=0;
-  }
-
-  if((1 == mState) && (src < srcEnd))
-  {
-    if(dest >= destEnd)
-      goto error;
-    if(src>=srcEnd)
-      goto done;
-    char tmpbuf[2];
-    PRUnichar * up = (PRUnichar*) &tmpbuf[0];
-    tmpbuf[0]= mData;
-    tmpbuf[1]= *src++;
-    *dest++ = *up;
-  }
-  
-  copybytes = (destEnd-dest)*2;
-  if(copybytes > (0xFFFE & (srcEnd-src)))
-      copybytes = 0xFFFE & (srcEnd-src);
-  memcpy(dest,src,copybytes);
-  src +=copybytes;
-  dest +=(copybytes/2);
-  if(srcEnd==src)  {
-     mState = 0;
-  } else if(1 == (srcEnd-src) ) {
-     mState = 1;
-     mData  = *src++;
-  } else  {
-     goto error;
-  }
-  
-done:
-  *aDestLength = dest - aDest;
-  *aSrcLength =  src  - aSrc; 
-  return NS_OK;
-
-error:
-  *aDestLength = dest - aDest;
-  *aSrcLength =  src  - aSrc; 
-  return  NS_OK_UDEC_MOREOUTPUT;
-}
-
-NS_IMETHODIMP nsUTF16SameEndianToUnicode::Reset()
-{
-  mState =2;
-  mData=0;
-  return NS_OK;
-}
-class nsUTF16DiffEndianToUnicode : public nsUTF16SameEndianToUnicode
-{
-public:
-  nsUTF16DiffEndianToUnicode() {};
-  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength,
-      PRUnichar * aDest, PRInt32 * aDestLength); 
-};
-
-NS_IMETHODIMP nsUTF16DiffEndianToUnicode::Convert(
-      const char * aSrc, PRInt32 * aSrcLength,
-      PRUnichar * aDest, PRInt32 * aDestLength)
-{
-  if(2 == mState) // first time called
-  {
-    if(0xFFFE == *((PRUnichar*)aSrc)) {
-      aSrc+=2;
-      *aSrcLength-=2;
-    } else if(0xFEFF == *((PRUnichar*)aSrc)) {
-      // eleminate BOM
-      *aSrcLength=0;
-      *aDestLength=0;
-      return NS_ERROR_ILLEGAL_INPUT;
-    }  
-    mState=0;
-  }
-  nsresult res = nsUTF16SameEndianToUnicode::Convert(aSrc,aSrcLength, aDest, aDestLength);
-  PRInt32 i;
-
-  // copy
-  char* p;
-  p=(char*)aDest;
-  for(i=*aDestLength; i>0 ;i--,p+=2)
-  {
-     char tmp = *(p+1);
-     *(p+1) = *p;
-     *(p)= tmp;
-  }
-
-  return res;
-}
-
-static nsresult UTF16ConvertToUnicode(PRUint8& aState, PRUint8& aData, const char * aSrc, PRInt32 * aSrcLength, PRUnichar * aDest, PRInt32 * aDestLength)
-{
-  const char* src = aSrc;
-  const char* srcEnd = aSrc + *aSrcLength;
-  PRUnichar* dest = aDest;
-  PRUnichar* destEnd = aDest + *aDestLength;
-  PRInt32 copybytes;
 
   if(2 == aState) // first time called
   {
-    // eleminate BOM
+    NS_ASSERTION(*aSrcLength >= 2, "Too few bytes in input");
+
+    // Eliminate BOM (0xFEFF). Note that different endian case is taken care of
+    // in |Convert| of LE and BE converters. Here, we only have to
+    // deal with the same endian case. That is, 0xFFFE (byte-swapped BOM) is
+    // illegal.
     if(0xFEFF == *((PRUnichar*)src)) {
       src+=2;
     } else if(0xFFFE == *((PRUnichar*)src)) {
@@ -245,13 +71,19 @@ static nsresult UTF16ConvertToUnicode(PRUint8& aState, PRUint8& aData, const cha
     aState=0;
   }
 
+  PRInt32 copybytes;
+
   if((1 == aState) && (src < srcEnd))
   {
     if(dest >= destEnd)
       goto error;
-    if(src>=srcEnd)
-      goto done;
+
     char tmpbuf[2];
+
+    // the 1st byte of a 16-bit code unit was stored in |aData| in the previous
+    // run while the 2nd byte has to come from |*src|. We just have to copy
+    // 'byte-by-byte'. Byte-swapping, if necessary, will be done in |Convert| of
+    // LE and BE converters.
     PRUnichar * up = (PRUnichar*) &tmpbuf[0];
     tmpbuf[0]= aData;
     tmpbuf[1]= *src++;
@@ -259,21 +91,21 @@ static nsresult UTF16ConvertToUnicode(PRUint8& aState, PRUint8& aData, const cha
   }
   
   copybytes = (destEnd-dest)*2;
-  if(copybytes > (0xFFFE & (srcEnd-src)))
-      copybytes = 0xFFFE & (srcEnd-src);
+  // if |srcEnd-src| is odd, we copy one fewer bytes.
+  if(copybytes > (~1 & (srcEnd - src)))
+      copybytes = ~1 & (srcEnd - src);
   memcpy(dest,src,copybytes);
   src +=copybytes;
   dest +=(copybytes/2);
-  if(srcEnd==src)  {
+  if(srcEnd == src)  { // srcLength was even.
      aState = 0;
-  } else if(1 == (srcEnd-src) ) {
+  } else if(1 == (srcEnd - src) ) { // srcLength was odd. 
      aState = 1;
-     aData  = *src++;
+     aData  = *src++;  // store the lead byte of a 16-bit unit for the next run.
   } else  {
      goto error;
   }
   
-done:
   *aDestLength = dest - aDest;
   *aSrcLength =  src  - aSrc; 
   return NS_OK;
@@ -284,25 +116,46 @@ error:
   return  NS_OK_UDEC_MOREOUTPUT;
 }
 
-NS_IMETHODIMP nsUTF16BEToUnicode::Reset()
+static void
+SwapBytes(PRUnichar *aDest, PRInt32 aLen)
 {
-  mState =2;
-  mData=0;
+  for (PRUnichar *p = aDest; aLen > 0; ++p, --aLen)
+     *p = ((*p & 0xff) << 8) | ((*p >> 8) & 0xff);
+}
+
+NS_IMETHODIMP
+nsUTF16ToUnicodeBase::Reset()
+{
+  mState = 2;
+  mData = 0;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsUTF16BEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
-      PRUnichar * aDest, PRInt32 * aDestLength)
+NS_IMETHODIMP
+nsUTF16ToUnicodeBase::GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
+                                   PRInt32 * aDestLength)
+{
+  // the left-over byte of the previous run has to be taken into account.
+  *aDestLength = (aSrcLength + ((1 == mState) ? 1 : 0)) / 2;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsUTF16BEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
+                            PRUnichar * aDest, PRInt32 * aDestLength)
 {
 #ifdef IS_LITTLE_ENDIAN
-    // process nsUTF16DiffEndianToUnicode
-    if(2 == mState) // first time called
+    // Remove the BOM if we're little-endian. The 'same endian' case with the
+    // leading BOM will be taken care of by |UTF16ConvertToUnicode|.
+    if(2 == mState) // Called for the first time.
     {
+      NS_ASSERTION(*aSrcLength >= 2, "Too few bytes in input");
       if(0xFFFE == *((PRUnichar*)aSrc)) {
+        // eliminate BOM (on LE machines, BE BOM is 0xFFFE)
         aSrc+=2;
         *aSrcLength-=2;
       } else if(0xFEFF == *((PRUnichar*)aSrc)) {
-        // eleminate BOM
         *aSrcLength=0;
         *aDestLength=0;
         return NS_ERROR_ILLEGAL_INPUT;
@@ -311,51 +164,30 @@ NS_IMETHODIMP nsUTF16BEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLengt
     }
 #endif
 
-  nsresult res = UTF16ConvertToUnicode(mState, mData, aSrc, aSrcLength, aDest, aDestLength);
+  nsresult rv = UTF16ConvertToUnicode(mState, mData, aSrc, aSrcLength,
+                                      aDest, aDestLength);
 
 #ifdef IS_LITTLE_ENDIAN
-    // process nsUTF16DiffEndianToUnicode
-    PRInt32 i;
-
-    // copy
-    char* p;
-    p=(char*)aDest;
-    for(i=*aDestLength; i>0 ;i--,p+=2)
-    {
-       char tmp = *(p+1);
-       *(p+1) = *p;
-       *(p)= tmp;
-    }
+  SwapBytes(aDest, *aDestLength);
 #endif
-  return res;
+  return rv;
 }
 
-NS_IMETHODIMP nsUTF16BEToUnicode::GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength)
-{
-  *aDestLength = (aSrcLength + ((1==mState)?1:0))/2;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsUTF16LEToUnicode::Reset()
-{
-  mState =2;
-  mData=0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsUTF16LEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
-      PRUnichar * aDest, PRInt32 * aDestLength)
+NS_IMETHODIMP
+nsUTF16LEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
+                            PRUnichar * aDest, PRInt32 * aDestLength)
 {
 #ifdef IS_BIG_ENDIAN
-    // process nsUTF16DiffEndianToUnicode
+    // Remove the BOM if we're big-endian. The 'same endian' case with the
+    // leading BOM will be taken care of by |UTF16ConvertToUnicode|.
     if(2 == mState) // first time called
     {
+      NS_ASSERTION(*aSrcLength >= 2, "Too few bytes in input");
       if(0xFFFE == *((PRUnichar*)aSrc)) {
+        // eliminate BOM (on BE machines, LE BOM is 0xFFFE)
         aSrc+=2;
         *aSrcLength-=2;
       } else if(0xFEFF == *((PRUnichar*)aSrc)) {
-        // eleminate BOM
         *aSrcLength=0;
         *aDestLength=0;
         return NS_ERROR_ILLEGAL_INPUT;
@@ -364,28 +196,78 @@ NS_IMETHODIMP nsUTF16LEToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLengt
     }
 #endif
     
-  nsresult res = UTF16ConvertToUnicode(mState, mData, aSrc, aSrcLength, aDest, aDestLength);
+  nsresult rv = UTF16ConvertToUnicode(mState, mData, aSrc, aSrcLength, aDest,
+                                      aDestLength);
 
 #ifdef IS_BIG_ENDIAN
-    // process nsUTF16DiffEndianToUnicode
-    PRInt32 i;
-
-    // copy
-    char* p;
-    p=(char*)aDest;
-    for(i=*aDestLength; i>0 ;i--,p+=2)
-    {
-       char tmp = *(p+1);
-       *(p+1) = *p;
-       *(p)= tmp;
-    }
+  SwapBytes(aDest, *aDestLength);
 #endif
-  return res;
+  return rv;
 }
 
-NS_IMETHODIMP nsUTF16LEToUnicode::GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength)
+NS_IMETHODIMP
+nsUTF16ToUnicode::Reset()
 {
-  *aDestLength = (aSrcLength + ((1==mState)?1:0))/2;
-  return NS_OK;
+  mEndian = kUnknown;
+  mFoundBOM = PR_FALSE;
+  return nsUTF16ToUnicodeBase::Reset();
+}
+
+NS_IMETHODIMP
+nsUTF16ToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLength,
+                          PRUnichar * aDest, PRInt32 * aDestLength)
+{
+    if(2 == mState) // first time called
+    {
+      NS_ASSERTION(*aSrcLength >= 2, "Too few bytes in input");
+
+      // check if BOM (0xFEFF) is at the beginning, remove it if found, and
+      // set mEndian accordingly.
+      if(0xFF == PRUint8(aSrc[0]) && 0xFE == PRUint8(aSrc[1])) {
+        aSrc += 2;
+        *aSrcLength -= 2;
+        mState = 0;
+        mEndian = kLittleEndian;
+        mFoundBOM = PR_TRUE;
+      }
+      else if(0xFE == PRUint8(aSrc[0]) && 0xFF == PRUint8(aSrc[1])) {
+        aSrc += 2;
+        *aSrcLength -= 2;
+        mState = 0;
+        mEndian = kBigEndian;
+        mFoundBOM = PR_TRUE;
+      }
+      // BOM is not found, but we can use a simple heuristic to determine
+      // the endianness. Assume the first character is [U+0001, U+00FF].
+      // Not always valid, but it's very likely to hold for html/xml/css. 
+      else if(!aSrc[0] && aSrc[1]) {  // 0x00 0xhh (hh != 00)
+        mState = 0;                   
+        mEndian = kBigEndian;
+      }
+      else if(aSrc[0] && !aSrc[1]) {  // 0xhh 0x00 (hh != 00)
+        mState = 0;
+        mEndian = kLittleEndian;
+      }
+      else { // Neither BOM nor 'plausible' byte patterns at the beginning
+        *aSrcLength = 0;
+        *aDestLength = 0;
+        return NS_ERROR_ILLEGAL_INPUT;
+      }
+    }
+    
+    nsresult rv = UTF16ConvertToUnicode(mState, mData, aSrc, aSrcLength, aDest,
+                                        aDestLength);
+
+#ifdef IS_BIG_ENDIAN
+    if (mEndian == kLittleEndian)
+#elif defined(IS_LITTLE_ENDIAN)
+    if (mEndian == kBigEndian)
+#else
+    #error "Unknown edinanness"
+#endif
+      SwapBytes(aDest, *aDestLength);
+
+    // If BOM is not found and we're to return NS_OK, signal that BOM
+    // is not found. Otherwise, return |rv| from |UTF16ConvertToUnicode|
+    return (rv == NS_OK && !mFoundBOM) ? NS_OK_UDEC_NOBOMFOUND : rv;
 }
