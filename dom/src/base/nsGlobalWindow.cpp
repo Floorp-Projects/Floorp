@@ -278,10 +278,10 @@ NS_IMETHODIMP GlobalWindowImpl::SetContext(nsIScriptContext* aContext)
   mContext = aContext;
 
   if (mContext) {
-    nsCOMPtr<nsIDOMWindow> parent;
-    GetParent(getter_AddRefs(parent));
+    nsCOMPtr<nsIDOMWindowInternal> parent;
+    GetParentInternal(getter_AddRefs(parent));
 
-    if (parent && parent != NS_STATIC_CAST(nsIDOMWindow *, this)) {
+    if (parent) {
       // This window is a [i]frame, don't bother GC'ing when the
       // frame's context is destroyed since a GC will happen when the
       // frameset or host document is destroyed anyway.
@@ -727,11 +727,11 @@ NS_IMETHODIMP GlobalWindowImpl::GetPrincipal(nsIPrincipal** result)
   // loading a frameset that has a <frame src="javascript:xxx">, in
   // that case the global window is used in JS before we've loaded
   // a document into the window.
-  nsCOMPtr<nsIDOMWindow> parent;
+  nsCOMPtr<nsIDOMWindowInternal> parent;
 
-  GetParent(getter_AddRefs(parent));
+  GetParentInternal(getter_AddRefs(parent));
 
-  if (parent && (parent.get() != NS_STATIC_CAST(nsIDOMWindow *, this))) {
+  if (parent) {
     nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal(do_QueryInterface(parent));
 
     if (objPrincipal) {
@@ -1190,6 +1190,17 @@ GlobalWindowImpl::SetTitle(const nsAReadableString& aTitle)
 
 NS_IMETHODIMP GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
 {
+  nsCOMPtr<nsIDOMWindowInternal> parent;
+
+  GetParentInternal(getter_AddRefs(parent));
+
+  if (parent) {
+    PRInt32 dummy;
+
+    // Force a flush in the parent
+    parent->GetInnerWidth(&dummy);
+  }
+
   FlushPendingNotifications();
 
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
@@ -1230,6 +1241,17 @@ NS_IMETHODIMP GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
 
 NS_IMETHODIMP GlobalWindowImpl::GetInnerHeight(PRInt32* aInnerHeight)
 {
+  nsCOMPtr<nsIDOMWindowInternal> parent;
+
+  GetParentInternal(getter_AddRefs(parent));
+
+  if (parent) {
+    PRInt32 dummy;
+
+    // Force a flush in the parent
+    parent->GetInnerHeight(&dummy);
+  }
+
   FlushPendingNotifications();
 
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
@@ -1271,6 +1293,17 @@ NS_IMETHODIMP GlobalWindowImpl::SetInnerHeight(PRInt32 aInnerHeight)
 
 NS_IMETHODIMP GlobalWindowImpl::GetOuterWidth(PRInt32* aOuterWidth)
 {
+  nsCOMPtr<nsIDOMWindowInternal> parent;
+
+  GetParentInternal(getter_AddRefs(parent));
+
+  if (parent) {
+    PRInt32 dummy;
+
+    // Force a flush in the parent
+    parent->GetOuterWidth(&dummy);
+  }
+
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
@@ -1303,6 +1336,17 @@ NS_IMETHODIMP GlobalWindowImpl::SetOuterWidth(PRInt32 aOuterWidth)
 
 NS_IMETHODIMP GlobalWindowImpl::GetOuterHeight(PRInt32* aOuterHeight)
 {
+  nsCOMPtr<nsIDOMWindowInternal> parent;
+
+  GetParentInternal(getter_AddRefs(parent));
+
+  if (parent) {
+    PRInt32 dummy;
+
+    // Force a flush in the parent
+    parent->GetOuterHeight(&dummy);
+  }
+
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
@@ -1339,8 +1383,6 @@ NS_IMETHODIMP GlobalWindowImpl::GetScreenX(PRInt32* aScreenX)
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
-  FlushPendingNotifications();
-
   PRInt32 y;
 
   NS_ENSURE_SUCCESS(treeOwnerAsWin->GetPosition(aScreenX, &y),
@@ -1373,8 +1415,6 @@ NS_IMETHODIMP GlobalWindowImpl::GetScreenY(PRInt32* aScreenY)
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
-
-  FlushPendingNotifications();
 
   PRInt32 x;
 
@@ -3306,6 +3346,21 @@ NS_IMETHODIMP GlobalWindowImpl::GetInterface(const nsIID & aIID, void **aSink)
 // GlobalWindowImpl: Window Control Functions
 //*****************************************************************************
 
+void
+GlobalWindowImpl::GetParentInternal(nsIDOMWindowInternal **aParent)
+{
+  *aParent = nsnull;
+
+  nsCOMPtr<nsIDOMWindow> parent;
+
+  GetParent(getter_AddRefs(parent));
+
+  if (parent && parent != NS_STATIC_CAST(nsIDOMWindow *, this)) {
+    CallQueryInterface(parent, aParent);
+    NS_ASSERTION(*aParent, "Huh, parent not an nsIDOMWindowInternal?");
+  }
+}
+
 NS_IMETHODIMP
 GlobalWindowImpl::OpenInternal(const nsAReadableString& aUrl,
                                const nsAReadableString& aName,
@@ -4095,6 +4150,17 @@ GlobalWindowImpl::GetScrollInfo(nsIScrollableView **aScrollableView,
                                 float *aP2T, float *aT2P)
 {
   *aScrollableView = nsnull;
+
+  nsCOMPtr<nsIDOMWindowInternal> parent;
+
+  GetParentInternal(getter_AddRefs(parent));
+
+  if (parent) {
+    PRInt32 dummy;
+
+    // Force a flush in the parent
+    parent->GetScrollX(&dummy);
+  }
 
   // Flush pending notifications so that the presentation is up to
   // date.
