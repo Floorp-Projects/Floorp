@@ -344,7 +344,7 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
                 table->entryCount--;
             }
             if (op & JS_DHASH_STOP)
-                return j;
+                break;
         }
         entryAddr += entrySize;
     }
