@@ -575,47 +575,55 @@ nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
 {
   NS_ENSURE_ARG_POINTER(aEvent);
 
+  // If this is the bubble stage, there is a nested form below us which received
+  // a submit event.  We do *not* want to handle the submit event for this form
+  // too.  So to avert a disaster, we stop the bubbling altogether.
+  if ((aFlags & NS_EVENT_FLAG_BUBBLE) &&
+      (aEvent->message == NS_FORM_RESET || aEvent->message == NS_FORM_SUBMIT)) {
+    return NS_OK;
+  }
+
   // Ignore recursive calls to submit and reset
-  if (NS_FORM_SUBMIT == aEvent->message) {
+  if (aEvent->message == NS_FORM_SUBMIT) {
     if (mGeneratingSubmit) {
       return NS_OK;
     }
     mGeneratingSubmit = PR_TRUE;
   }
-  else if (NS_FORM_RESET == aEvent->message) {
+  else if (aEvent->message == NS_FORM_RESET) {
     if (mGeneratingReset) {
       return NS_OK;
     }
     mGeneratingReset = PR_TRUE;
   }
 
-  nsresult ret = nsGenericHTMLContainerElement::HandleDOMEvent(aPresContext,
-                                                               aEvent,
-                                                               aDOMEvent,
-                                                               aFlags,
-                                                               aEventStatus);
+  nsresult rv = nsGenericHTMLContainerElement::HandleDOMEvent(aPresContext,
+                                                              aEvent,
+                                                              aDOMEvent,
+                                                              aFlags,
+                                                              aEventStatus);
 
-  if ((NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
+  if (NS_SUCCEEDED(rv) && (*aEventStatus == nsEventStatus_eIgnore) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
 
     switch (aEvent->message) {
       case NS_FORM_RESET:
       case NS_FORM_SUBMIT:
       {
-        ret = DoSubmitOrReset(aPresContext, aEvent, aEvent->message);
+        rv = DoSubmitOrReset(aPresContext, aEvent, aEvent->message);
       }
       break;
     }
   }
 
-  if (NS_FORM_SUBMIT == aEvent->message) {
+  if (aEvent->message == NS_FORM_SUBMIT) {
     mGeneratingSubmit = PR_FALSE;
   }
-  else if (NS_FORM_RESET == aEvent->message) {
+  else if (aEvent->message == NS_FORM_RESET) {
     mGeneratingReset = PR_FALSE;
   }
 
-  return ret;
+  return rv;
 }
 
 nsresult
