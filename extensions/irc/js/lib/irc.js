@@ -181,7 +181,7 @@ function net_doconnect(e)
     var connected = false;
     
     if (c.connect (this.serverList[host].name, this.serverList[host].port,
-                   (void 0), true))
+                   (void 0), true, null))
     {
         var ex;
         ev = new CEvent ("network", "connect", this, "onConnect");
@@ -213,6 +213,7 @@ function net_doconnect(e)
     return true;
 
 }
+
 
 /*
  * What to do when the client connects to it's primary server
@@ -257,7 +258,7 @@ function CIRCServer (parent, connection)
     s.lag = -1;    
     s.usersStable = true;
 
-    if (typeof connection.startAsyncRead == "function")
+    if (jsenv.HAS_NSPR_EVENTQ)
         connection.startAsyncRead(s);
     else
         s.parent.eventPump.addEvent(new CEvent ("server", "poll", s,
@@ -278,6 +279,62 @@ CIRCServer.prototype.DEFAULT_REASON = "no reason";
 
 CIRCServer.prototype.TYPE = "IRCServer";
 
+CIRCServer.prototype.onStreamDataAvailable = 
+function serv_sda (request, inStream, sourceOffset, count)
+{
+    var ev = new CEvent ("server", "data-available", this,
+                         "onDataAvailable");
+
+    ev.line = this.connection.readData(0, count);
+    /* route data-available as we get it.  the data-available handler does
+     * not do much, so we can probably get away with this without starving
+     * the UI even under heavy input traffic.
+     */
+    this.parent.eventPump.routeEvent (ev);
+}
+
+CIRCServer.prototype.onStreamClose = 
+function serv_sockdiscon(status)
+{
+    
+    this.connection.isConnected = false;
+
+    var ev = new CEvent ("server", "disconnect", this, "onDisconnect");
+    ev.disconnectStatus = status;
+    this.parent.eventPump.addEvent (ev);
+    
+    var msg;
+
+    switch (status)
+    {
+        case NS_ERROR_CONNECTION_REFUSED:
+            msg = "Connection to " + this.connection.host + ":" +
+                this.connection.port + " refused.";
+            break;
+
+        case NS_ERROR_NET_TIMEOUT:
+            msg = "Connection to " + this.connection.host + ":" +
+                this.connection.port + " timed out.";
+            break;
+
+        case NS_ERROR_UNKNOWN_HOST:
+            msg = "Unknown host: " + this.connection.host;
+            break;
+            
+        default:
+            msg = "Connection to " + this.connection.host + ":" +
+                this.connection.port + " closed with status " + status + ".";
+            break;
+            
+    }
+    
+    var ev = new CEvent ("network", "info", this.parent, "onInfo");
+    ev.msg = msg;
+    this.parent.eventPump.addEvent (ev);
+    
+}
+
+    
 CIRCServer.prototype.flushSendQueue =
 function serv_flush()
 {
@@ -496,15 +553,6 @@ function serv_onsenddata (e)
 {
     var d = new Date();
 
-    if (!this.connection.isConnected)
-    {
-        var ev = new CEvent ("server", "disconnect", this,
-                             "onDisconnect");
-        ev.reason = "unknown";
-        this.parent.eventPump.addEvent (ev);
-        return false;
-    }
-
     this.sendsThisRound = 0;
 
     if (((d - this.lastSend) >= this.MS_BETWEEN_SENDS) &&
@@ -550,7 +598,7 @@ function serv_poll(e)
             dd("### catching a ThreadDeath");
             throw(ex);
         }
-        else if (typeof ex != "undefined")
+        else
         {
             ev = new CEvent ("server", "disconnect", this, "onDisconnect");
             ev.reason = "error";
@@ -558,8 +606,6 @@ function serv_poll(e)
             this.parent.eventPump.addEvent (ev);
             return false;
         }
-        else
-            line = ""
     }
         
     this.parent.eventPump.addEvent (new CEvent ("server", "poll", this,
@@ -1537,7 +1583,7 @@ CIRCChannel.prototype.setTopic =
 function chan_topic (str)
 {
     if ((!this.mode.publicTopic) && 
-        (!this.parent.me.isOp))
+        (!this.users[this.parent.me.nick].isOp))
         return false;
     
     str = String(str).split("\n");
