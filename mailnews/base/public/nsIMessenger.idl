@@ -28,8 +28,12 @@
 #include "nsIDOMXULElement.h"
 %}
 
+interface nsITransactionManager;
+
 [scriptable, uuid(4f7966d0-c14f-11d2-b7f2-00805f05ffa5)]
 interface nsIMessenger : nsISupports {
+
+    readonly attribute nsITransactionManager transactionManager;
 
     void GetNewMessages(in nsIRDFCompositeDataSource database, in nsIDOMXULElement folder);
 	void Open3PaneWindow();
