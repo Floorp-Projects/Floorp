@@ -111,10 +111,10 @@ private:
 
 @interface NativeScrollbarView : NSScroller
 {
-  // Our window [WEAK]
+    // Our window [WEAK]
   NSWindow* mWindow;
   
-    // the nsChildView that created the view. It retains this NSView, so
+    // the nsChildView that created this view. It retains this NSView, so
     // the link back to it must be weak.
   nsChildView* mGeckoChild;
   
@@ -125,7 +125,14 @@ private:
   NSTrackingRectTag mMouseEnterExitTag;
 }
 
-- (void)drawRect:(NSRect)aRect;
+  // default initializer
+- (id)initWithFrame:(NSRect)frameRect geckoChild:(nsChildView*)inChild;
+  // overridden parent class initializer
+- (id)initWithFrame:(NSRect)frameRect;
+
+  // access the nsIWidget associated with this view. DOES NOT ADDREF.
+- (nsIWidget*) widget;
+
 - (NSWindow*) getNativeWindow;
 - (void) setNativeWindow: (NSWindow*)aWindow;
 @end

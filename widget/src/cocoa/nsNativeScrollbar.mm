@@ -127,8 +127,7 @@ nsNativeScrollbar::CreateCocoaView ( )
     orientation.size.width = 100;
     orientation.size.height = 20;
   }
-  return [[[NativeScrollbarView alloc] initWithFrame:orientation] autorelease];
-
+  return [[[NativeScrollbarView alloc] initWithFrame:orientation geckoChild:this] autorelease];
 }
 
 GrafPtr
@@ -502,6 +501,35 @@ nsNativeScrollbar::IsEnabled(PRBool *aState)
 
 @implementation NativeScrollbarView
 
+
+//
+// -initWithFrame:geckoChild
+// Designated Initializer
+//
+// Init our superclass and make the connection to the gecko nsIWidget we're
+// mirroring
+//
+- (id)initWithFrame:(NSRect)frameRect geckoChild:(nsChildView*)inChild
+{
+  [super initWithFrame:frameRect];
+
+  NS_ASSERTION(inChild, "Need to provide a tether between this and a nsChildView class");
+  mGeckoChild = inChild;
+}
+
+
+//
+// -initWithFrame
+//
+// overridden parent class initializer
+//
+- (id)initWithFrame:(NSRect)frameRect
+{
+  NS_WARNING("You're calling the wrong initializer. You really want -initWithFrame:geckoChild");
+  [self initWithFrame:frameRect geckoChild:nsnull];
+}
+
+
 - (NSWindow*) getNativeWindow
 {
   NSWindow* currWin = [self window];
@@ -536,6 +564,30 @@ nsNativeScrollbar::IsEnabled(PRBool *aState)
   return YES;
 }
 
+
+//
+// -widget
+//
+// return our gecko child view widget. Note this does not AddRef.
+//
+- (nsIWidget*) widget
+{
+  return NS_STATIC_CAST(nsIWidget*, mGeckoChild);
+}
+
+
+//
+// -mouseMoved
+//
+// our parent view will try to forward this message down to us. The
+// default behavior for NSResponder is to forward it up the chain. Can you
+// say "infinite recursion"? I thought so. Just stub out the action to
+// break the cycle of madness.
+//
+- (void)mouseMoved:(NSEvent*)theEvent
+{
+  // do nothing
+}
 
 @end
 
