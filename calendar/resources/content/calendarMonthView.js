@@ -839,29 +839,3 @@ MonthView.getViewHeight = function( ){
     toReturn = parseInt( toReturn ); //strip off the px at the end
     return toReturn;
 }
-
-/*Creates a background attribute on month-grid-box and all the month-day-box classes, 
-  if one exists it flips the value between true and false*/
-MonthView.toggleBackground = function( ){
-    var vboxen = document.getElementsByTagName("vbox");
-    //do the outer grid box
-    if(document.getElementById("month-grid-box").getAttribute("background")){
-	if(document.getElementById("month-grid-box").getAttribute("background") == "true"){
-	    document.getElementById("month-grid-box").removeAttribute("background");
-	}else{
-	    document.getElementById("month-grid-box").setAttribute("background", "true");
-	}
-    }else{
-	document.getElementById("month-grid-box").setAttribute("background", "true");
-    }
-    //do all the month-day-boxes
-    for(var i = 0; i < vboxen.length; i++){
-	if(vboxen[i].className == "month-day-box-class" || vboxen[i].className == "month-day-box-class weekend" || vboxen[i].className == "month-day-box-class weekend saturday"){
-	    if(vboxen[i].getAttribute("background")){
-		vboxen[i].setAttribute("background", vboxen[i].getAttribute("background") == "true" ? "false" : "true");
-	    }else{
-		vboxen[i].setAttribute("background","true");
-	    }
-	}
-    }
-}
