@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.39 2001/04/08 14:32:16 peterv%netscape.com Exp $
+ * $Id: XSLTProcessor.cpp,v 1.40 2001/04/11 15:01:05 axel%pike.org Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -66,7 +66,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.39 $ $Date: 2001/04/08 14:32:16 $
+ * @version $Revision: 1.40 $ $Date: 2001/04/11 15:01:05 $
 **/
 
 /**
@@ -1295,16 +1295,6 @@ void XSLTProcessor::processAction
                     break;
                 }
                 exprResult->stringValue(value);
-                //-- handle whitespace stripping
-                if ( exprResult->getResultType() == ExprResult::NODESET) {
-                    NodeSet* nodes = (NodeSet*)exprResult;
-                    if ( nodes->size() > 0) {
-                        Node* node = nodes->get(0);
-                        if ( ps->isStripSpaceAllowed(node) && 
-                             XMLUtils::shouldStripTextnode(value))
-                            value.clear();
-                    }
-                }
                 if (value.length()>0)
                     ps->addToResultTree(resultDoc->createTextNode(value));
                 delete exprResult;

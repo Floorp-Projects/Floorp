@@ -25,13 +25,13 @@
  *   -- added code in ::resolveFunctionCall to support the
  *      document() function.
  *
- * $Id: ProcessorState.cpp,v 1.23 2001/04/08 14:32:37 peterv%netscape.com Exp $
+ * $Id: ProcessorState.cpp,v 1.24 2001/04/11 15:01:05 axel%pike.org Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.23 $ $Date: 2001/04/08 14:32:37 $
+ * @version $Revision: 1.24 $ $Date: 2001/04/11 15:01:05 $
 **/
 
 #include "ProcessorState.h"
@@ -792,7 +792,11 @@ MBool ProcessorState::isStripSpaceAllowed(Node* node) {
             break;
         }
         case Node::TEXT_NODE:
+            if (!XMLUtils::shouldStripTextnode(node->getNodeValue()))
+                return MB_FALSE;
             return isStripSpaceAllowed(node->getParentNode());
+        case Node::DOCUMENT_NODE:
+            return MB_TRUE;
         default:
             break;
     }

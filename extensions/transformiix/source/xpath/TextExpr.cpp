@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: TextExpr.cpp,v 1.2 2001/01/12 20:06:37 axel%pike.org Exp $
+ * $Id: TextExpr.cpp,v 1.3 2001/04/11 15:01:03 axel%pike.org Exp $
  */
 
 #include "Expr.h"
@@ -74,7 +74,8 @@ short TextExpr::getType() {
 **/
 MBool TextExpr::matches(Node* node, Node* context, ContextState* cs) {
     if ( node ) {
-        return (MBool) (node->getNodeType() == Node::TEXT_NODE);
+        if(node->getNodeType() == Node::TEXT_NODE)
+            return !cs->isStripSpaceAllowed(node);
     }
     return MB_FALSE;
 } //-- matches

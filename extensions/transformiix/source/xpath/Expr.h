@@ -25,7 +25,7 @@
  *     - changed constant short declarations in many of the classes
  *       with enumerations, commented with //--LF
  *
- * $Id: Expr.h,v 1.10 2001/04/08 14:33:45 peterv%netscape.com Exp $
+ * $Id: Expr.h,v 1.11 2001/04/11 15:00:57 axel%pike.org Exp $
  */
 
 
@@ -46,7 +46,7 @@
 /*
   XPath class definitions.
   Much of this code was ported from XSL:P.
-  @version $Revision: 1.10 $ $Date: 2001/04/08 14:33:45 $
+  @version $Revision: 1.11 $ $Date: 2001/04/11 15:00:57 $
 */
 
 //necessary prototypes
@@ -930,6 +930,7 @@ private:
   short     axisIdentifier;
 
     void fromDescendants(Node* context, ContextState* cs, NodeSet* nodes);
+    void fromDescendantsRev(Node* context, ContextState* cs, NodeSet* nodes);
 
 }; //-- LocationStep
 
