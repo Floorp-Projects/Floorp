@@ -21,9 +21,6 @@ IGNORE_MANIFEST=1
 DIRS=public        \
      src           \
      tests         \
-!if "$(MSSDK)" != ""
      embed         \
-!endif
      $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
