@@ -82,7 +82,7 @@ static PhRect_t gConsoleRect;
 static PRBool gConsoleRectValid = PR_FALSE;
 #define QueryVisible( )	{\
 													if( gConsoleRectValid == PR_FALSE ) { \
-															PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, 1, &gConsoleRect ); \
+															PhWindowQueryVisible( Ph_QUERY_IG_POINTER, 0, 1, &gConsoleRect ); \
 															gConsoleRectValid = PR_TRUE;\
 															} \
 													}
