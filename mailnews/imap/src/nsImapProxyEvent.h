@@ -28,7 +28,8 @@
 #include "nsIImapMessageSink.h"
 #include "nsIImapExtensionSink.h"
 #include "nsIImapMiscellaneousSink.h"
-
+#include "nsIImapIncomingServer.h"
+#include "nsCOMPtr.h"
 class nsImapProxyBase
 {
 public:
@@ -237,6 +238,8 @@ public:
     NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
                              TunnelInfo *aInfo);
 
+    NS_IMETHOD LoadNextQueuedUrl(nsIImapProtocol* aProtocol,
+                             nsIImapIncomingServer *aInfo);
     nsIImapMiscellaneousSink* m_realImapMiscellaneousSink;
 };
 
@@ -773,5 +776,15 @@ struct ProcessTunnelProxyEvent : public nsImapMiscellaneousSinkProxyEvent
     NS_IMETHOD HandleEvent();
     TunnelInfo m_tunnelInfo;
 };
+
+struct LoadNextQueuedUrlProxyEvent : public nsImapMiscellaneousSinkProxyEvent
+{
+    LoadNextQueuedUrlProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
+                            nsIImapIncomingServer *aInfo);
+    virtual ~LoadNextQueuedUrlProxyEvent();
+    NS_IMETHOD HandleEvent();
+    nsCOMPtr <nsIImapIncomingServer> m_imapIncomingServer;
+};
+
 
 #endif

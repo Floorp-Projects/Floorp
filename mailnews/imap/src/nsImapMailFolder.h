@@ -248,6 +248,7 @@ public:
                                msg_line_info* aInfo);
 	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
                              TunnelInfo *aInfo);
+	NS_IMETHOD LoadNextQueuedUrl(nsIImapProtocol* aProtocol, nsIImapIncomingServer *aInfo);
 
 #ifdef DOING_FILTERS
 	// nsIMsgFilterHitNotification method(s)
@@ -272,8 +273,9 @@ protected:
 
 	void SetIMAPDeletedFlag(nsIMsgDatabase *mailDB, const nsMsgKeyArray &msgids, PRBool markDeleted);
 	virtual PRBool ShowDeletedMessages();
-
+	virtual PRBool DeleteIsMoveToTrash();
 	void ParseUidString(char *uidString, nsMsgKeyArray &keys);
+	nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
 
     nsresult AddDirectorySeparator(nsFileSpec &path);
     nsresult CreateDirectoryForFolder(nsFileSpec &path);

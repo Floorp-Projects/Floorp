@@ -39,6 +39,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgLocalCID.h"
 #include "nsImapUndoTxn.h"
+#include "nsIImapHostSessionList.h"
 
 #ifdef DOING_FILTERS
 #include "nsIMsgFilter.h"
@@ -60,6 +61,7 @@ static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kParseMailMsgStateCID, NS_PARSEMAILMSGSTATE_CID);
+static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 // for temp message hack
@@ -772,7 +774,7 @@ NS_IMETHODIMP nsImapMailFolder::GetHostName(char** hostName)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
 
-    NS_PRECONDITION (hostName, "Oops ... null userName pointer");
+    NS_PRECONDITION (hostName, "Oops ... null hostName pointer");
     if (!hostName)
         return rv;
     else
@@ -1508,6 +1510,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 		{
 			PRUint32 msgFlags;
 			nsMsgKey		msgKey;
+			nsString trashNameVal(eOneByte);
 
 			msgHdr->GetFlags(&msgFlags);
 			msgHdr->GetMessageKey(&msgKey);
@@ -1516,35 +1519,39 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 			{
 			case nsMsgFilterActionDelete:
 			{
-#ifdef DOING_DELETE
-				MSG_IMAPFolderInfoMail *imapFolder = m_folder->GetIMAPFolderInfoMail();
-				PRBool serverIsImap  = GetMaster()->GetPrefs()->GetMailServerIsIMAP4();
-				PRBool deleteToTrash = !imapFolder || imapFolder->DeleteIsMoveToTrash();
-				PRBool showDeletedMessages = (!imapFolder) || imapFolder->ShowDeletedMessages();
-				if (deleteToTrash || !serverIsImap)
+				PRBool deleteToTrash = DeleteIsMoveToTrash();
+				PRBool showDeletedMessages = ShowDeletedMessages();
+				if (deleteToTrash)
 				{
 					// set value to trash folder
-					MSG_FolderInfoMail *mailTrash = GetTrashFolder();
-					if (mailTrash)
-						value = (void *) mailTrash->GetPathname();
+					nsCOMPtr <nsIMsgFolder> mailTrash;
+					rv = GetTrashFolder(getter_AddRefs(mailTrash));;
+					if (NS_SUCCEEDED(rv) && mailTrash)
+					{
+						// this sucks - but we need value to live past this scope
+						// so we use an nsString from above.
+						char *folderName = nsnull;
+						rv = mailTrash->GetName(&folderName);
+						trashNameVal = folderName;
+						PR_FREEIF(folderName);
+						value = (void *) trashNameVal.GetBuffer();
+					}
 
-					msgHdr->OrFlags(MSG_FLAG_READ);	// mark read in trash.
+					msgHdr->OrFlags(MSG_FLAG_READ, &newFlags);	// mark read in trash.
 				}
-				else	// (!deleteToTrash && serverIsImap)
+				else	// (!deleteToTrash)
 				{
-					msgHdr->OrFlags(MSG_FLAG_READ | MSG_FLAG_IMAP_DELETED);
+					msgHdr->OrFlags(MSG_FLAG_READ | MSG_FLAG_IMAP_DELETED, &newFlags);
 					nsMsgKeyArray	keysToFlag;
 
-					keysToFlag.Add(msgHdr->GetMessageKey());
-					if (imapFolder)
-						imapFolder->StoreImapFlags(m_pane, kImapMsgSeenFlag | kImapMsgDeletedFlag, TRUE, keysToFlag, ((ParseIMAPMailboxState *) this)->GetFilterUrlQueue());
-					if (!showDeletedMessages)
-						msgMoved = TRUE;	// this will prevent us from adding the header to the db.
+					keysToFlag.Add(msgKey);
+					StoreImapFlags(kImapMsgSeenFlag | kImapMsgDeletedFlag, TRUE, keysToFlag);
+//					if (!showDeletedMessages)
+//						msgMoved = TRUE;	// this will prevent us from adding the header to the db.
 
 				}
-				*applyMore = PR_FALSE;
-#endif // DOING_DELETE
 			}
+			// note that delete falls through to move.
 			case nsMsgFilterActionMoveToFolder:
 			{
 				// if moving to a different file, do it.
@@ -1741,7 +1748,7 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 
 			if (sourceDB && msgFolder)
 			{
-				PRBool imapDeleteIsMoveToTrash = PR_TRUE /* ### DMB m_host->GetDeleteIsMoveToTrash() */;
+				PRBool imapDeleteIsMoveToTrash = DeleteIsMoveToTrash();
 
 				m_moveCoalescer->AddMove (msgFolder, keyToFilter);
 				// For each folder, we need to keep track of the ids we want to move to that
@@ -1780,7 +1787,7 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 // both of these algorithms assume that key arrays and flag states are sorted by increasing key.
 void nsImapMailFolder::FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToDelete, nsImapFlagAndUidState *flagState)
 {
-	PRBool imapDeleteIsMoveToTrash = /* DeleteIsMoveToTrash() */ PR_TRUE;
+	PRBool imapDeleteIsMoveToTrash = DeleteIsMoveToTrash();
 	PRUint32 total = existingKeys.GetSize();
 	PRInt32 messageIndex;
 
@@ -1819,7 +1826,7 @@ void nsImapMailFolder::FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsg
 
 void nsImapMailFolder::FindKeysToAdd(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToFetch, nsImapFlagAndUidState *flagState)
 {
-	PRBool showDeletedMessages = PR_FALSE /* ShowDeletedMessages() */;
+	PRBool showDeletedMessages = ShowDeletedMessages();
 
 	int dbIndex=0; // current index into existingKeys
 	PRInt32 existTotal, numberOfKnownKeys;
@@ -2132,10 +2139,64 @@ nsImapMailFolder::NotifyMessageDeleted(nsIImapProtocol* aProtocol,
 
 PRBool nsImapMailFolder::ShowDeletedMessages()
 {
+	nsresult err;
 //	return (m_host->GetIMAPDeleteModel() == MSG_IMAPDeleteIsIMAPDelete);
-	return PR_FALSE;
+    NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
+                    kCImapHostSessionList, &err);
+	PRBool rv = PR_FALSE;
+
+    if (NS_SUCCEEDED(err) && hostSession)
+	{
+        char *hostName = nsnull;
+		char *userName = nsnull;
+        GetHostName(&hostName);
+		GetUsersName(&userName);
+        err = hostSession->GetShowDeletedMessagesForHost(hostName, userName, rv);
+        PR_FREEIF(hostName);
+		PR_FREEIF(userName);
+	}
+	return rv;
 }
 
+
+PRBool nsImapMailFolder::DeleteIsMoveToTrash()
+{
+//	return (m_host->GetIMAPDeleteModel() == MSG_IMAPDeleteIsIMAPDelete);
+	nsresult err;
+    NS_WITH_SERVICE(nsIImapHostSessionList, hostSession,
+                    kCImapHostSessionList, &err);
+	PRBool rv = PR_TRUE;
+
+    if (NS_SUCCEEDED(err) && hostSession)
+	{
+        char *hostName = nsnull;
+		char *userName = nsnull;
+        GetHostName(&hostName);
+		GetUsersName(&userName);
+        nsresult err = hostSession->GetDeleteIsMoveToTrashForHost(hostName, userName, rv);
+        PR_FREEIF(hostName);
+		PR_FREEIF(userName);
+	}
+	return rv;
+}
+
+nsresult nsImapMailFolder::GetTrashFolder(nsIMsgFolder **pTrashFolder)
+{
+	if (!pTrashFolder)
+		return NS_ERROR_NULL_POINTER;
+
+	nsIMsgFolder *foundTrash = NULL;
+	nsCOMPtr<nsIMsgFolder> rootFolder;
+	nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
+	if(NS_SUCCEEDED(rv))
+	{
+		PRUint32 numFolders;
+		rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, pTrashFolder, 1, &numFolders);
+		if (*pTrashFolder)
+			NS_ADDREF(*pTrashFolder);
+	}
+	return rv;
+}
 
 void nsImapMailFolder::ParseUidString(char *uidString, nsMsgKeyArray &keys)
 {
@@ -2467,6 +2528,13 @@ nsImapMailFolder::ProcessTunnel(nsIImapProtocol* aProtocol,
                                 TunnelInfo *aInfo)
 {
     return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsImapMailFolder::LoadNextQueuedUrl(nsIImapProtocol* aProtocol,
+													 nsIImapIncomingServer *incomingServer)
+{
+    return incomingServer->LoadNextQueuedUrl();
 }
 
 nsresult

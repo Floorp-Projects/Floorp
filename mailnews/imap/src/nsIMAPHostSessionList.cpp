@@ -45,6 +45,7 @@ nsIMAPHostInfo::nsIMAPHostInfo(const char *hostName, const char *userName)
 	fShellCache = nsIMAPBodyShellCache::Create();
 	fPasswordVerifiedOnline = PR_FALSE;
     fDeleteIsMoveToTrash = PR_TRUE;
+	fShowDeletedMessages = PR_FALSE;
     fGotNamespaces = PR_FALSE;
 	fNamespacesOverridable = PR_TRUE;
 }
@@ -257,6 +258,17 @@ NS_IMETHODIMP nsIMAPHostSessionList::GetDeleteIsMoveToTrashForHost(
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }
 
+NS_IMETHODIMP nsIMAPHostSessionList::GetShowDeletedMessagesForHost(
+    const char *hostName, const char *userName, PRBool &result)
+{
+	PR_EnterMonitor(gCachedHostInfoMonitor);
+	nsIMAPHostInfo *host = FindHost(hostName, userName);
+	if (host)
+        result = host->fShowDeletedMessages;
+	PR_ExitMonitor(gCachedHostInfoMonitor);
+	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
+}
+
 NS_IMETHODIMP nsIMAPHostSessionList::SetDeleteIsMoveToTrashForHost(
     const char *hostName, const char *userName, PRBool isMoveToTrash)
 {
@@ -264,6 +276,17 @@ NS_IMETHODIMP nsIMAPHostSessionList::SetDeleteIsMoveToTrashForHost(
 	nsIMAPHostInfo *host = FindHost(hostName, userName);
 	if (host)
 		host->fDeleteIsMoveToTrash = isMoveToTrash;
+	PR_ExitMonitor(gCachedHostInfoMonitor);
+	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
+}
+
+NS_IMETHODIMP nsIMAPHostSessionList::SetShowDeletedMessagesForHost(
+    const char *hostName, const char *userName, PRBool showDeletedMessages)
+{
+	PR_EnterMonitor(gCachedHostInfoMonitor);
+	nsIMAPHostInfo *host = FindHost(hostName, userName);
+	if (host)
+		host->fShowDeletedMessages = showDeletedMessages;
 	PR_ExitMonitor(gCachedHostInfoMonitor);
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }

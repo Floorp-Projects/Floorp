@@ -24,6 +24,8 @@
 #include "nsIImapProtocol.h"
 #include "MailNewsTypes.h"
 
+class nsIImapIncomingServer;
+
 /* 22e3e664-e789-11d2-af83-001083002da8 */
 
 #define NS_IIMAPMISCELLANEOUSSINK_IID \
@@ -78,6 +80,8 @@ public:
 														 msg_line_info* aInfo) = 0;
 	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
 													 TunnelInfo *aInfo) = 0;
+	NS_IMETHOD LoadNextQueuedUrl(nsIImapProtocol* aProtocol,
+													 nsIImapIncomingServer *incomingServer) = 0;
 };
 
 

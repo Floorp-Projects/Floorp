@@ -50,6 +50,7 @@ protected:
 	PRBool			fHaveAdminURL;
 	PRBool			fPasswordVerifiedOnline;
 	PRBool			fDeleteIsMoveToTrash;
+	PRBool			fShowDeletedMessages;
 	PRBool			fGotNamespaces;
 	nsIMAPBodyShellCache	*fShellCache;
 };
@@ -93,6 +94,11 @@ public:
                                              *userName, PRBool &result);
     NS_IMETHOD SetDeleteIsMoveToTrashForHost(const char *hostName, const char
                                              *userName, PRBool isMoveToTrash);
+	// imap delete model (or not)
+	NS_IMETHOD GetShowDeletedMessagesForHost(const char *hostName, 
+											const char *userName, PRBool &result);
+    NS_IMETHOD SetShowDeletedMessagesForHost(const char *hostName, const char
+                                             *userName, PRBool showDeletedMessages);
 
     // Get namespaces
     NS_IMETHOD GetGotNamespacesForHost(const char *hostName, const char

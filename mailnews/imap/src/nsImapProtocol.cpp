@@ -871,14 +871,6 @@ void nsImapProtocol::ProcessCurrentURL()
         }
         else
         {
-            if (m_server)
-            {
-                nsresult rv;
-                nsCOMPtr<nsIImapIncomingServer>
-                    aImapServer(do_QueryInterface(m_server, &rv));
-                if (NS_SUCCEEDED(rv))
-                    aImapServer->LoadNextQueuedUrl();
-            }
         }
 	}
     else if (!logonFailed)
@@ -889,6 +881,21 @@ void nsImapProtocol::ProcessCurrentURL()
     m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
 	PseudoInterrupt(FALSE);	// clear this, because we must be done interrupting?
 
+	// release this by hand so that we can load the next queued url without thinking
+	// this connection is busy running a url.
+	m_runningUrl = null_nsCOMPtr();
+
+	// now try queued urls, now that we've released this connection.
+	if (m_server && m_imapMiscellaneousSink)
+	{
+		nsresult rv;
+		nsCOMPtr<nsIImapIncomingServer>
+			aImapServer(do_QueryInterface(m_server, &rv));
+		if (NS_SUCCEEDED(rv))
+		{
+			rv = m_imapMiscellaneousSink->LoadNextQueuedUrl(this, aImapServer);
+		}
+	}
 	// release the url as we are done with it...
 	ReleaseUrlState();
 }

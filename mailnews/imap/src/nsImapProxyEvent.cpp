@@ -1716,6 +1716,32 @@ nsImapMiscellaneousSinkProxy::ProcessTunnel(nsIImapProtocol* aProtocol,
     return res;
 }
 
+NS_IMETHODIMP
+nsImapMiscellaneousSinkProxy::LoadNextQueuedUrl(nsIImapProtocol* aProtocol,
+													 nsIImapIncomingServer *aInfo)
+{
+    nsresult res = NS_OK;
+    NS_PRECONDITION (aInfo, "Oops... null aInfo");
+    if(!aInfo)
+        return NS_ERROR_NULL_POINTER;
+    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
+
+    if (PR_GetCurrentThread() == m_thread)
+    {
+        LoadNextQueuedUrlProxyEvent *ev =
+            new LoadNextQueuedUrlProxyEvent(this, aInfo);
+        if(nsnull == ev)
+            res = NS_ERROR_OUT_OF_MEMORY;
+        else
+            ev->PostEvent(m_eventQueue);
+    }
+    else
+    {
+        res = m_realImapMiscellaneousSink->LoadNextQueuedUrl(aProtocol, aInfo);
+    }
+    return res;
+}
+
 nsImapMailFolderSinkProxyEvent::nsImapMailFolderSinkProxyEvent(nsImapMailFolderSinkProxy*
                                                        aProxy)
 {
@@ -3433,6 +3459,30 @@ ProcessTunnelProxyEvent::HandleEvent()
 {
     nsresult res = m_proxy->m_realImapMiscellaneousSink->ProcessTunnel(
         m_proxy->m_protocol, &m_tunnelInfo);
+    if (m_notifyCompletion)
+        m_proxy->m_protocol->NotifyFEEventCompletion();
+    return res;
+}
+
+LoadNextQueuedUrlProxyEvent::LoadNextQueuedUrlProxyEvent(
+    nsImapMiscellaneousSinkProxy* aProxy, nsIImapIncomingServer *aInfo) :
+    nsImapMiscellaneousSinkProxyEvent(aProxy)
+{
+    NS_ASSERTION (aInfo, "Oops... a null nsImapIncomingServer info");
+	// potential ownership/lifetime problem here, but incoming server
+	// shouldn't be deleted while urls are running.
+    m_imapIncomingServer = aInfo;
+}
+
+LoadNextQueuedUrlProxyEvent::~LoadNextQueuedUrlProxyEvent()
+{
+}
+
+NS_IMETHODIMP
+LoadNextQueuedUrlProxyEvent::HandleEvent()
+{
+    nsresult res = m_proxy->m_realImapMiscellaneousSink->LoadNextQueuedUrl(
+        m_proxy->m_protocol, m_imapIncomingServer);
     if (m_notifyCompletion)
         m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;

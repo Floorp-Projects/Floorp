@@ -202,6 +202,8 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue*
     return rv;
 }
 
+// checks to see if there are any queued urls on this incoming server,
+// and if so, tries to run the oldest one.
 NS_IMETHODIMP
 nsImapIncomingServer::LoadNextQueuedUrl()
 {

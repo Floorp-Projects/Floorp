@@ -70,6 +70,12 @@ public:
     NS_IMETHOD SetDeleteIsMoveToTrashForHost(const char *hostName, const char
                                              *userName, PRBool isMoveToTrash)
         = 0;
+	NS_IMETHOD GetShowDeletedMessagesForHost(const char *hostName, 
+											const char *userName, PRBool &result) = 0;
+
+    NS_IMETHOD SetShowDeletedMessagesForHost(const char *hostName, const char
+                                             *userName, PRBool showDeletedMessages)
+        = 0;
 
     // Get namespaces
     NS_IMETHOD GetGotNamespacesForHost(const char *hostName, const char
