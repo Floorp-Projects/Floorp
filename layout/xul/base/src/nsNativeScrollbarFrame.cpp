@@ -117,7 +117,7 @@ nsNativeScrollbarFrame::Init(nsIPresContext* aPresContext, nsIContent* aContent,
     nsCOMPtr<nsIDeviceContext> devContext;
     aPresContext->GetDeviceContext(getter_AddRefs(devContext));
     nsRect bounds(0,0,0,0);
-    rv = mScrollbar->Create(parentWidget, bounds, nsnull, devContext);
+    rv = mScrollbar->Create(NS_STATIC_CAST(nsIWidget*,parentWidget), bounds, nsnull, devContext);
     mScrollbar->Show(PR_TRUE);
     
     // defer telling the scrollbar about the mediator and the content
