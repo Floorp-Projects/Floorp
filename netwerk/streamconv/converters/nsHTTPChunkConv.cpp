@@ -273,13 +273,11 @@ nsHTTPChunkConv::OnDataAvailable (
 					if (isxdigit (c))
 						mLenBuf[mLenBufCnt++] = c;
 					else
+                    if (c == '\r')
 					{
 						mLenBuf[mLenBufCnt] = 0;
 						sscanf (mLenBuf, "%x", &mChunkBufferLength);
 
-						if (c != '\r')
-							return NS_ERROR_FAILURE;
-				
 						mState = CHUNK_STATE_LF;
 					}
 					break;
