@@ -539,7 +539,10 @@ var treeView =
             return( startText );
          
          case "unifinder-search-results-tree-col-enddate":
-            var eventEndDate = new Date( calendarEvent.end.getTime() );
+            var eventEndDate = getNextOrPreviousRecurrence( calendarEvent );
+            var eventLength = calendarEvent.end.getTime() - calendarEvent.start.getTime();
+            var actualEndDate = eventEndDate.getTime() + eventLength;
+            var eventEndDate = new Date( actualEndDate );
             var endTime = formatUnifinderEventTime( eventEndDate );
             var endDate = formatUnifinderEventDate( eventEndDate );
             if( calendarEvent.allDay )
