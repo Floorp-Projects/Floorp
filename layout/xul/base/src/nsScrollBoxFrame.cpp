@@ -286,7 +286,9 @@ nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
     scrollingView->SetScrollPreference(nsScrollPreference_kNeverScroll);
 
     // Have the scrolling view create its internal widgets
-    scrollingView->CreateScrollControls(); 
+    if (NeedsClipWidget()) {
+      scrollingView->CreateScrollControls(); 
+    }
 
     // Set the scrolling view's insets to whatever our border is
     nsMargin border;
