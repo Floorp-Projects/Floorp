@@ -117,6 +117,7 @@ DIST_DIRS =			\
   lib\xp			\
   lib\libpwcac			\
   network			\
+  xpfe				\
 !if defined(NGPREFS)
   cmd\wincom			\
   cmd\winfe\prefs		\
