@@ -322,6 +322,8 @@ GZIP = gzip
 TARBALL = $(MOZ_SRC)\raptor-win-src-04-15-98.tar
 TARBALL_ZIP = $(MOZ_SRC)\raptor-win-src-04-15-98.zip
 
+tarballs: tarball_zip tarball_gz
+
 tarball: prepare_for_tarballing
     @echo Making $(TARBALL)
     cd $(MOZ_SRC)\.
