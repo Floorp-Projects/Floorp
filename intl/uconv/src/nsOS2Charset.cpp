@@ -1,50 +1,43 @@
-/*
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific language governing rights and limitations
- * under the License.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
  *
- * The Original Code is the Mozilla OS/2 libraries.
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
- * The Initial Developer of the Original Code is John Fairhurst,
- * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
- * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
+ * The Original Code is Mozilla Communicator client code.
  *
- * Contributor(s):  Henry Sobotka <sobotka@axess.com>
- *                  00/01: general review and update against Win/Unix versions
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
  *
- * This Original Code has been modified by IBM Corporation.
- * Modifications made by IBM described herein are
- * Copyright (c) International Business Machines
- * Corporation, 2000
- *
- * Modifications to Mozilla code or documentation
- * identified per MPL Section 3.3
- *
- * Date             Modified by     Description of modification
- * 06/01/2000       IBM Corp.       Fixed querying of locale charset
+ * Contributor(s): 
+ *   John Fairhurst
+ *   Henry Sobotka
+ *   IBM Corp.
  */
-
 #include "nsIPlatformCharset.h"
-#include "pratom.h"
 #include "nsURLProperties.h"
-#include "nsCOMPtr.h"
-#include "nsIOS2Locale.h"
-#include "nsLocaleCID.h"
+#include "pratom.h"
+#define INCL_PM
+#include <os2.h>
 #include "nsUConvDll.h"
+#include "nsIOS2Locale.h"
+#include "nsCOMPtr.h"
+#include "nsLocaleCID.h"
 #include "nsIComponentManager.h"
-#include <unidef.h>
-#include <ulsitem.h>
 
 NS_DEFINE_IID(kIOS2LocaleIID,NS_IOS2LOCALE_IID);
 NS_DEFINE_CID(kOS2LocaleFactoryCID,NS_OS2LOCALEFACTORY_CID);
 
-// 90% copied from the unix version
+static nsURLProperties *gInfo = nsnull;
+static PRInt32 gCnt= 0;
 
 class nsOS2Charset : public nsIPlatformCharset
 {
@@ -55,77 +48,45 @@ public:
   nsOS2Charset();
   virtual ~nsOS2Charset();
 
-  NS_IMETHOD GetCharset( nsPlatformCharsetSel selector, nsString& oResult);
+  NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsString& oResult);
   NS_IMETHOD GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue);
-
 private:
   nsString mCharset;
 };
 
-NS_IMPL_ISUPPORTS(nsOS2Charset, kIPlatformCharsetIID);
-
-static nsURLProperties *gInfo = nsnull;
-static PRInt32 gCnt=0;
+NS_IMPL_ISUPPORTS1(nsOS2Charset, nsIPlatformCharset);
 
 nsOS2Charset::nsOS2Charset()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
-  PR_AtomicIncrement(&gCnt);
+  PR_AtomicIncrement(&gCnt); // count for gInfo
 
-  // XXX we should make the following block critical section
+  // XXX We should make the following block critical section
   if(nsnull == gInfo)
   {
-      nsAutoString propertyURL;
-      propertyURL.AssignWithConversion("resource:/res/os2charset.properties");
-      nsURLProperties *info = new nsURLProperties( propertyURL );
-      NS_ASSERTION( info, "cannot create nsURLProperties");
-      gInfo = info;
+     nsAutoString propertyURL; propertyURL.AssignWithConversion("resource:/res/os2charset.properties");
+
+     nsURLProperties *info = new nsURLProperties( propertyURL );
+     NS_ASSERTION( info , " cannot create nsURLProperties");
+     gInfo = info;
   }
-
-  // Probably ought to go via the localefactory, but hey...
-  LocaleObject locale_object = 0;
-  UniCreateLocaleObject( UNI_UCS_STRING_POINTER,
-                         (UniChar*)L"", &locale_object);
-
-  if(gInfo && locale_object)
+  NS_ASSERTION(gInfo, "Cannot open property file");
+  if( gInfo ) 
   {
-      UniChar *pString = 0;
+    UINT acp = ::WinQueryCp(HMQ_CURRENT);
+    PRInt32 acpint = (PRInt32)(acp & 0x00FFFF);
+    nsAutoString acpKey; acpKey.AssignWithConversion("os2.");
+    acpKey.AppendInt(acpint, 10);
 
-      nsAutoString platformLocaleKey;
-      platformLocaleKey.AssignWithConversion("locale." OSTYPE ".");
-      UniQueryLocaleItem( locale_object, LocaleItem(100), &pString); // locale name (e.g. "en_US")
-      platformLocaleKey.Append((PRUnichar *)pString);
-      UniFreeMem( pString);
-      platformLocaleKey.AppendWithConversion(".");
-      UniQueryLocaleItem( locale_object, LocaleItem(109), &pString); // ULS codepage (e.g. "iso8859-1")
-      platformLocaleKey.Append((PRUnichar *)pString);
-      UniFreeMem( pString);
+    nsresult res = gInfo->Get(acpKey, mCharset);
+    if(NS_FAILED(res)) {
+      mCharset.AssignWithConversion("IBM850");
+    }
 
-      nsresult res = gInfo->Get(platformLocaleKey, mCharset);
-      if(NS_FAILED(res))
-      {
-         nsAutoString localeKey;
-         localeKey.AssignWithConversion("locale.all.");
-         UniQueryLocaleItem( locale_object, LocaleItem(100), &pString); // locale name (e.g. "en_US")
-         localeKey.Append((PRUnichar *)pString);
-         UniFreeMem( pString);
-         localeKey.AppendWithConversion(".");
-         UniQueryLocaleItem( locale_object, LocaleItem(109), &pString); // ULS codepage (e.g. "iso8859-1")
-         localeKey.Append((PRUnichar *)pString);
-         UniFreeMem( pString);
-         res = gInfo->Get(localeKey, mCharset);
-      }
-
-      UniFreeLocaleObject( locale_object);
-
-      if(NS_SUCCEEDED(res))
-      {
-         return; // succeeded
-      }
+  } else {
+    mCharset.AssignWithConversion("IBM850");
   }
-  mCharset.AssignWithConversion("ISO-8859-1");
-  return; // failed
 }
 
 nsOS2Charset::~nsOS2Charset()
@@ -145,13 +106,6 @@ nsOS2Charset::GetCharset(nsPlatformCharsetSel selector, nsString& oResult)
    return NS_OK;
 }
 
-// XXXX STUB
-NS_IMETHODIMP
-nsOS2Charset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
-{
-  // OS2TODO
-  return NS_OK;
-}
 
 class nsOS2CharsetFactory : public nsIFactory {
    NS_DECL_ISUPPORTS
@@ -201,10 +155,14 @@ NS_IMETHODIMP nsOS2CharsetFactory::LockFactory(PRBool aLock)
   return NS_OK;
 }
 
-nsIFactory* NEW_PLATFORMCHARSETFACTORY()
+NS_IMETHODIMP
+nsOS2Charset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar** _retValue)
 {
-  return new nsOS2CharsetFactory();
+  // OS2TODO
+  return NS_OK;
 }
+
+//----------------------------------------------------------------------
 
 NS_IMETHODIMP
 NS_NewPlatformCharset(nsISupports* aOuter,
