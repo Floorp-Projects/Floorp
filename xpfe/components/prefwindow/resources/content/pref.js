@@ -89,11 +89,13 @@ function PREF_onok()
   var extras  = ["pref", "preftype", "prefstring", "prefindex"];
   window.handle.wsm.SavePageData( tag, extras, false, false );      // save data from the current page. 
   window.handle.DoSavePrefs();
+  window.opener.prefWindow = 0;
   window.close();
 }
 
 function PREF_oncancel()
 {
+  window.opener.prefWindow = 0;
   window.close();
 }
 
@@ -104,6 +106,8 @@ function PREF_DoSavePrefs()
       window.handle.ParsePref( k, window.handle.wsm.PageData[i][k] );
     }
   }
+  // actually save the prefs file. 
+  this.pref.SavePrefFile();
 }
 
 function PREF_ParsePref( elementID, elementObject )
@@ -113,7 +117,8 @@ function PREF_ParsePref( elementID, elementObject )
   // since we no longer use the convoluted id strings, we now use the id passed
   // in as an argument to this function to grab the appropriate element in the
   if( elementObject.pref ) {
-    switch( elementObject.preftype ) {
+    switch( elementObject.preftype ) 
+    {
       case "bool":
         if( elementObject.prefindex === "true" || elementObject.prefindex === "false" ) {
           // bool prefs with a prefindex, e.g. boolean radios. the value we set
@@ -125,30 +130,67 @@ function PREF_ParsePref( elementID, elementObject )
               else
                 elementObject.prefindex = false;
             }
-            dump("*** going to set a " + typeof( elementObject.prefindex ) + " pref: " + elementObject.prefindex + "\n");
-            var tempPref = elementObject.prefindex;
-            whp.SetBoolPref( elementObject.prefstring, tempPref );  // bool pref
-            dump("*** just set a " + typeof( tempPref ) + " pref: " + tempPref + "\n");
+            // only set a pref if it is different to the current value. 
+            try { 
+              var oldPref = whp.GetBoolPref( elementObject.prefstring )
+            } 
+            catch(e) {
+              var oldPref = false;
+            }
+            if( oldPref != elementObject.prefindex );
+              whp.SetBoolPref( elementObject.prefstring, elementObject.prefindex );  // bool pref
             break;
           }
         }
-        whp.SetBoolPref( elementObject.prefstring, elementObject.value );  // bool pref
-        break;
-      case "int":
-        if( elementObject.value ) { // only want checked radio items! 
-          if( !elementObject.prefindex ) {
-            // element object does not have a prefindex (e.g. select widgets)
-            var prefvalue = elementObject.value;
-          }
-          else {
-            // element object has prefindex attribute (e.g. radio buttons)
-            var prefvalue = elementObject.prefindex;
-          }
-          whp.SetIntPref( elementObject.prefstring, prefvalue );  // integer pref
+        try { 
+          var oldPref = whp.GetBoolPref( elementObject.prefstring )
+        } 
+        catch(e) {
+          var oldPref = false;
         }
+        if( oldPref != elementObject.prefindex );
+          whp.SetBoolPref( elementObject.prefstring, elementObject.value );  // bool pref
         break;
+
+      case "int":
+        dump("*** elementObject.elType = " + elementObject.elType + "\n");
+        if( elementObject.elType.toLowerCase() == "radio" && !elementObject.value )
+          return false; // ignore, go to next
+        if( !elementObject.prefindex ) {
+          // element object does not have a prefindex (e.g. select widgets)
+          var prefvalue = elementObject.value;
+        }
+        else {
+          // element object has prefindex attribute (e.g. radio buttons)
+          var prefvalue = elementObject.prefindex;
+        }
+        try {
+          var oldPref = whp.GetIntPref( elementObject.prefstring );
+        }
+        catch(e) {
+          var oldPref = 0;  // no default pref found, default int prefs to zero
+        }
+        dump("*** going to set int pref: " + elementObject.prefstring + " = " + prefvalue + "\n");
+        if( oldPref != prefvalue ) 
+          whp.SetIntPref( elementObject.prefstring, prefvalue );  // integer pref
+        break;
+
       case "string":
-        whp.SetCharPref( elementObject.prefstring, elementObject.value );  // string pref
+      case "color":
+        try {
+          var charPref = whp.CopyCharPref( elementObject.prefstring );
+        }
+        catch(e) {
+          var charPref = "";
+        }
+        // we cannot set a color pref to "" or else all hell will break loose.
+        // we must REFUSE to set this pref if there is an empty string.
+        if( elementObject.preftype == "color" && charPref == "" ) {
+          dump("*** empty string color pref was going to be set, but we're avoiding this just in the nick of time...\n");
+          break;
+        }
+        if( charPref != elementObject.value )   // do we care about whitespace? 
+          whp.SetCharPref( elementObject.prefstring, elementObject.value );  // string pref
         break;
       default:
         // TODO: insert implementation for other pref types;
@@ -219,16 +261,11 @@ function PREF_onpageload( tag )
             dump("*** user prefs\n");
           }
           catch(e) {
-            try {
-              var prefvalue = this.pref.GetDefaultBoolPref( prefstring );
-            }
-            catch(e) {
-              // radio elements need to have at least one element be set.
-              dump("*** failed in default prefs\n")
-              if( prefElements[i].nodeName.toLowerCase() == "radio" )
-                dump("*** NO DEFAULT PREF for " + prefstring + ", and one IS needed for radio items.\n");
-              continue;
-            }
+            // radio elements need to have at least one element be set.
+            dump("*** failed in default prefs\n")
+            if( prefElements[i].nodeName.toLowerCase() == "radio" )
+              dump("*** NO DEFAULT PREF for " + prefstring + ", and one IS needed for radio items.\n");
+            continue;
           }
           break;
         case "int":
@@ -236,28 +273,19 @@ function PREF_onpageload( tag )
             var prefvalue = this.pref.GetIntPref( prefstring );
           }
           catch(e) {
-            try {
-              var prefvalue = this.pref.GetDefaultIntPref( prefstring );
-            }
-            catch(e) {
-              // radio elements need at least one value to be set.
-              if( prefElements[i].nodeName.toLowerCase() == "radio" )
-                dump("*** NO DEFAULT PREF for " + prefstring + ", and one IS needed for radio items.\n");
-              continue;
-            }
+            // radio elements need at least one value to be set.
+            if( prefElements[i].nodeName.toLowerCase() == "radio" )
+              dump("*** NO DEFAULT PREF for " + prefstring + ", and one IS needed for radio items.\n");
+            continue;
           }
           break;
         case "string":
+        case "color":
           try {
             var prefvalue = this.pref.CopyCharPref( prefstring );
           } 
           catch(e) {
-            try {
-              var prefvalue = this.pref.CopyDefaultCharPref( prefstring );
-            }
-            catch(e) {
-              continue;
-            }
+            continue;
           }
           break;
         default:
