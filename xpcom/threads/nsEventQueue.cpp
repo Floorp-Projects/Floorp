@@ -160,7 +160,9 @@ void
 nsEventQueueImpl::NotifyObservers(const char *aTopic)
 {
   nsresult rv;
-  nsAutoString topic(aTopic);
+  nsAutoString topic;
+  topic.AssignWithConversion(aTopic);
+
   nsISupports *us = NS_STATIC_CAST(nsISupports *,(NS_STATIC_CAST(nsIEventQueue *,this)));
 
   NS_WITH_SERVICE(nsIObserverService, os, NS_OBSERVERSERVICE_PROGID, &rv);

@@ -44,6 +44,7 @@
 
 #include "nsFileSpec.h"
 #include "nsEscape.h"
+#include "nsXPIDLString.h"
 
 
 #ifndef RHAPSODY
@@ -1283,7 +1284,8 @@ nsFilePath::nsFilePath(const nsString& inString, PRBool inCreateDirs)
 void nsFilePath::operator = (const char* inString)
 //----------------------------------------------------------------------------------------
 {
-	AssignFromPath(*this, nsAutoCString(inString), PR_FALSE);
+  nsXPIDLCString temp; temp = inString;
+	AssignFromPath(*this, temp, PR_FALSE);
 }
 
 //----------------------------------------------------------------------------------------

@@ -95,7 +95,9 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
   PRInt32  c;
   nsresult ret;
 
-  nsAutoString uesc("x-u-escaped");
+  nsAutoString uesc;
+  uesc.AssignWithConversion("x-u-escaped");
+
   ret = NS_NewConverterStream(&mIn, nsnull, aIn, 0, &uesc);
   if (ret != NS_OK) {
 #ifdef NS_DEBUG
@@ -114,7 +116,7 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
       continue;
     }
     else {
-      nsAutoString key("");
+      nsAutoString key;
       while ((c >= 0) && (c != '=') && (c != ':')) {
         key.Append((PRUnichar) c);
         c = Read();
@@ -125,7 +127,7 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
       char *trimThese = " \t";
       key.Trim(trimThese, PR_FALSE, PR_TRUE);
       c = Read();
-      nsAutoString value("");
+      nsAutoString value;
       while ((c >= 0) && (c != '\r') && (c != '\n')) {
         if (c == '\\') {
           c = Read();
@@ -140,7 +142,7 @@ nsPersistentProperties::Load(nsIInputStream *aIn)
         c = Read();
       }
       value.Trim(trimThese, PR_TRUE, PR_TRUE);
-      nsAutoString oldValue("");
+      nsAutoString oldValue;
       mSubclass->SetStringProperty(key, value, oldValue);
     }
   }

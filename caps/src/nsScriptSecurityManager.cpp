@@ -784,7 +784,9 @@ Localize(char *genericString, nsString &result)
     }
     
     /* localize the given string */
-    nsAutoString strtmp(genericString);
+    nsAutoString strtmp;
+    strtmp.AssignWithConversion(genericString);
+
     PRUnichar *ptrv = nsnull;
     ret = bundle->GetStringFromName(strtmp.GetUnicode(), &ptrv);
     NS_RELEASE(bundle);

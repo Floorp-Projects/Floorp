@@ -44,7 +44,10 @@ NSBASEPRINCIPALS_RELEASE(nsSystemPrincipal);
 NS_IMETHODIMP
 nsSystemPrincipal::ToString(char **result)
 {
-    nsAutoString buf("[System]");
+      // STRING USE WARNING: perhaps |buf| should be an |nsCAutoString|? -- scc
+    nsAutoString buf;
+    buf.AssignWithConversion("[System]");
+
     *result = buf.ToNewCString();
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
