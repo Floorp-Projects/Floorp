@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 
 <!-- 
    - The contents of this file are subject to the Mozilla Public
@@ -13,11 +13,11 @@
    - 
    - The Original Code is Mozilla.org code.
    - 
-   - The Initial Developer of the Original Code is Håkan Waara.
-   - Portions created by Håkan Waara are Copyright (C),
-   - Håkan Waara.  All Rights Reserved.
+   - The Initial Developer of the Original Code is HÃ¥kan Waara.
+   - Portions created by HÃ¥kan Waara are Copyright (C),
+   - HÃ¥kan Waara.  All Rights Reserved.
    - 
-   - Contributor(s): Håkan Waara (Original Author)
+   - Contributor(s): HÃ¥kan Waara (Original Author)
   -->
 
 <bindings id="spinbuttonsBindings"
