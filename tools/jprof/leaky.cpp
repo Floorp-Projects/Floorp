@@ -431,17 +431,30 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count)
     }
   }
 
+  // Pre-count up total counter hits, to get a percentage.
+  // I wanted the total before walking the list, if this
+  // double-pass over externalSymbols gets slow we can
+  // do single-pass and print this out after the loop finishes.
+  int totalTimerHits = 0;
+  for(i=0;
+    i<usefulSymbols && externalSymbols[rankingTable[i]].timerHit>0; i++) {
+    Symbol *sp=&externalSymbols[rankingTable[i]];
+    totalTimerHits += sp->timerHit;
+  }
+
   fprintf(fp,"<h2><A NAME=flat></A><center><a href=\"http://lxr.mozilla.org/mozilla/source/tools/jprof/README.html#flat\">Flat Profile</a></center></h2><br>\n");
   fprintf(fp, "<pre>\n");
-  fprintf(fp, "Count   Function Name\n");
+
+  fprintf(fp, "Total hit count: %d\n", totalTimerHits);
+  fprintf(fp, "Count %%Total  Function Name\n");
   // Now loop for as long as we have timer hits
   for(i=0;
     i<usefulSymbols && externalSymbols[rankingTable[i]].timerHit>0; i++) {
 
     Symbol *sp=&externalSymbols[rankingTable[i]];
     
-    fprintf(fp, "%3d     <A href=\"#%d\">%s</a>\n",
-    sp->timerHit, rankingTable[i], sp->name);
+    fprintf(fp, "%3d   %-2.1f     <A href=\"#%d\">%s</a>\n",
+    sp->timerHit, ((float)sp->timerHit/(float)totalTimerHits)*100.0, rankingTable[i], sp->name);
   }
 
   fprintf(fp,"</pre></body></html>\n");
