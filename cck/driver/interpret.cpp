@@ -1404,9 +1404,12 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
         ((CPrefEditView*)w->control)->SetFocus();
       }
 
-      else if (strcmp(pcmd, "CheckHomePageURL") == 0)
+      else if (strcmp(pcmd, "CheckCustPage1Settings") == 0)
       {
      	  CString str;
+
+        // check home page url settings
+
         str = GetGlobal("HomePageURL");
 
         // if URL is set (and not the default string), don't show recapture dlg)
@@ -1420,6 +1423,23 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
           SetGlobal("ShowHomepageOption","TRUE");
           SetGlobal("RecaptureHomepage","TRUE");
         }
+
+        // check quicklaunch settings
+
+        str = GetGlobal("QuickLauncher");
+
+        
+        if (str[0] == '1')
+        {
+          SetGlobal("QuicklaunchDialog","TRUE");
+          SetGlobal("QuicklaunchEnabled","TRUE");
+        }
+        else
+        {
+          SetGlobal("QuicklaunchDialog","FALSE");
+          SetGlobal("QuicklaunchEnabled","FALSE");
+        }
+
       }
 
       else if (strcmp(pcmd, "SynchHomeURLLockRemote") == 0)
