@@ -904,7 +904,7 @@ class nsGetterAddRefs
      ~nsGetterAddRefs()
         {
 #ifdef NSCAP_LOG_EXTERNAL_ASSIGNMENT
-          NSCAP_LOG_ASSIGNMENT(this, mRawPtr);
+          NSCAP_LOG_ASSIGNMENT(mTargetSmartPtr, mTargetSmartPtr.get());
 #endif
 
 #ifdef NSCAP_FEATURE_TEST_DONTQUERY_CASES
@@ -953,7 +953,7 @@ class nsGetterAddRefs<nsISupports>
 #ifdef NSCAP_LOG_EXTERNAL_ASSIGNMENT
      ~nsGetterAddRefs()
         {
-          NSCAP_LOG_ASSIGNMENT(this, mRawPtr);
+          NSCAP_LOG_ASSIGNMENT(mTargetSmartPtr, mTargetSmartPtr.get());
         }
 #endif
 
