@@ -4,8 +4,8 @@
 # Tracking system and its relationship to the tinderbox trees.
 
 
-# $Revision: 1.7 $ 
-# $Date: 2001/08/13 20:01:36 $ 
+# $Revision: 1.8 $ 
+# $Date: 2002/04/26 22:33:53 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BTData.pm,v $ 
 # $Name:  $ 
@@ -135,10 +135,10 @@ $STATUS_FIELD_NAME = 'Status';
                     'DUPLICATE' => 'Progress',
                     'WORKSFORME' => 'Progress',
 
-		    'REOPENED' => 'Slipage',
-		    'FAILED' => 'Slipage',
-		    'OPENED' => 'Slipage',
-		    'NEW' => 'Slipage',
+		    'REOPENED' => 'Slippage',
+		    'FAILED' => 'Slippage',
+		    'OPENED' => 'Slippage',
+		    'NEW' => 'Slippage',
 		   );
 
 
