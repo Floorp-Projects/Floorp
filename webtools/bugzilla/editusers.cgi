@@ -207,8 +207,11 @@ sub EmitFormElements ($$$$)
 
 sub PutTrailer (@)
 {
-    my (@links) = ("Back to the <A HREF=\"./\">index</A>",
-        "<A HREF=\"editusers.cgi?action=add\">Add a new user</A>", @_);
+    my (@links) = ("Back to the <A HREF=\"./\">index</A>");
+    if($editall && Bugzilla::Auth->can_edit) {
+          push(@links, "<A HREF=\"editusers.cgi?action=add\">Add a new user</A>");
+    }
+    push(@links, @_);
 
     my $count = $#links;
     my $num = 0;
