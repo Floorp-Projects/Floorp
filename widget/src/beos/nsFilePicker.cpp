@@ -43,6 +43,10 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
+#ifdef FILEPICKER_SAVE_LAST_DIR
+char nsFilePicker::mLastUsedDirectory[B_PATH_NAME_LENGTH+1] = { 0 };
+#endif
+
 //-------------------------------------------------------------------------
 //
 // nsFilePicker constructor
@@ -129,8 +133,19 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 	nsCAutoString initialDir;
 	mDisplayDirectory->GetNativePath(initialDir);
 	if(initialDir.IsEmpty()) {
+#ifdef FILEPICKER_SAVE_LAST_DIR		
+		if (strlen(mLastUsedDirectory) < 2)
+			initialDir.Assign("/boot/home");
+		else
+			initialDir.Assign(mLastUsedDirectory);
+#else
 		ppanel->SetPanelDirectory(initialDir.get());
+#endif			
 	}
+
+#ifdef FILEPICKER_SAVE_LAST_DIR
+	ppanel->SetPanelDirectory(initialDir.get());
+#endif
 
 	// set modal feel
 	if (ppanel->LockLooper()) {
@@ -204,6 +219,11 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
 	if (result) {
 		PRInt16 returnOKorReplace = returnOK;
+
+#ifdef FILEPICKER_SAVE_LAST_DIR
+		strncpy(mLastUsedDirectory, dir_path.Path(), B_PATH_NAME_LENGTH+1);
+		mDisplayDirectory->InitWithNativePath( nsDependentCString(mLastUsedDirectory) );
+#endif
 
 		if (mMode == modeSave) {
 			//   we must check if file already exists
