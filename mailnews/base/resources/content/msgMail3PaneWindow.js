@@ -618,7 +618,7 @@ function loadStartFolder(initialUri)
 
     if (!initialUri) 
     {
-        MsgGetMessagesForAllServers(defaultServer);
+        MsgGetMessagesForAllServers(null);
     }
 }
 

@@ -70,6 +70,9 @@
           </menulist>
         </hbox> 
         <checkbox class="indent" id="folderCharsetOverride" label="&folderCharsetOverride.label;" />
+        <checkbox hidable="true" hidefor="pop3,none,nntp"
+                  class="indent" id="folderCheckForNewMessages"
+                  label="&folderCheckForNewMessages.label;" />
       </vbox>
     </vbox>
  

@@ -146,4 +146,6 @@
 
 #define MSG_FOLDER_FLAG_OFFLINEEVENTS 0x10000000 /* this folder has offline events to play back */
 
+#define MSG_FOLDER_FLAG_CHECK_NEW 0x20000000 /* this folder is checked for new messages */
+
 #endif

@@ -2168,35 +2168,22 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlList
       imapServer->GetDownloadBodiesOnGetNewMail(&m_downloadingFolderForOfflineUse);
 
     // Check preferences to see if we should check all folders for new 
-    // messages, or just the inbox.
+    // messages, or just the inbox and marked ones
   	PRBool checkAllFolders = PR_FALSE;
 
     nsCOMPtr <nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv) && prefs)
     {
-
       nsCOMPtr<nsIPrefBranch> prefBranch; 
       rv = prefs->GetBranch("", getter_AddRefs(prefBranch)); 
 
-
-      // This pref might not exist, which is OK. We'll only check INBOX in that 
-      // case.
+      // This pref might not exist, which is OK. We'll only check inbox and marked ones
       if (NS_SUCCEEDED(rv) && prefBranch)
 	      rv = prefBranch->GetBoolPref("mail.check_all_imap_folders_for_new", &checkAllFolders); 
     }
-
     m_urlListener = aListener;                                                  
 
-    if (checkAllFolders) {
-
-      // Get new messages in all folders (except trash).
-      if (imapServer)
-        imapServer->GetNewMessagesAllFolders(rootFolder, aWindow);
-    }
-
-    else {
-
-      // Get new messages in inbox only.
+    // Get new messages for inbox
       PRUint32 numFolders;
       nsCOMPtr<nsIMsgFolder> inbox;
       rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
@@ -2206,8 +2193,9 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlList
         rv = inbox->UpdateFolder(aWindow);
       }
 
-    }
-    
+    // Get new messages for other folders if marked, or all of them if the pref is set
+    if (NS_SUCCEEDED(rv) && imapServer)
+      rv = imapServer->GetNewMessagesForNonInboxFolders(rootFolder, aWindow, checkAllFolders);
   }
 
   return rv;

@@ -26,6 +26,7 @@
 <!ENTITY folderCharsetOverride.label  "Apply default to all messages in the folder (individual message character coding settings and auto-detection will be ignored).">
 <!ENTITY folderOfflineTab.label                             "Offline">
 <!ENTITY folderOfflineTab.accesskey                         "o">
+<!ENTITY folderCheckForNewMessages.label                    "Check this folder for new messages">
 
 <!ENTITY offlineFolder.check.label                          "Select this folder for offline use">
 <!ENTITY offlineFolder.button.label                         "Download Now">

@@ -3564,26 +3564,27 @@ nsImapIncomingServer::GetSearchScope(nsMsgSearchScopeValue *searchScope)
    return NS_OK;
 }
 
-// Gets new messages (imap /Select) for this folder and all subfolders except 
-// Trash. This is a recursive function. Gets new messages for current folder
-// first, then calls self recursively for each subfolder.
+// This is a recursive function. It gets new messages for current folder
+// first if it is marked, then calls itself recursively for each subfolder.
 NS_IMETHODIMP 
-nsImapIncomingServer::GetNewMessagesAllFolders(nsIMsgFolder *aRootFolder, nsIMsgWindow *aWindow)
+nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aRootFolder,
+                                                       nsIMsgWindow *aWindow,
+                                                       PRBool forceAllFolders)
 {
   nsresult retval = NS_OK;
 
   if (!aRootFolder)
     return retval;
 
-  // If this is the trash folder, we don't need to do anything here or with
-  // any subfolders.
+  // Check this folder for new messages if it is marked to be checked
+  // or if we are forced to check all folders
   PRUint32 flags = 0;
   aRootFolder->GetFlags(&flags);
-  if (flags & MSG_FOLDER_FLAG_TRASH)
-    return retval;
-
+  if ((forceAllFolders && !(flags & MSG_FOLDER_FLAG_INBOX)) || (flags & MSG_FOLDER_FLAG_CHECK_NEW))
+  {
   // Get new messages for this folder. 
   aRootFolder->UpdateFolder(aWindow);
+  }
 
   // Loop through all subfolders to get new messages for them.
   nsCOMPtr<nsIEnumerator> aEnumerator;
@@ -3603,7 +3604,7 @@ nsImapIncomingServer::GetNewMessagesAllFolders(nsIMsgFolder *aRootFolder, nsIMsg
     nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(aSupport, &rv);
     NS_ASSERTION((NS_SUCCEEDED(rv) && msgFolder), "nsIMsgFolder service not found.");
 
-    retval = GetNewMessagesAllFolders(msgFolder, aWindow);
+    retval = GetNewMessagesForNonInboxFolders(msgFolder, aWindow, forceAllFolders);
 
     more = aEnumerator->Next();
   }

@@ -98,7 +98,9 @@ interface nsIImapIncomingServer : nsISupports {
   nsIURI subscribeToFolder(in wstring name, in boolean subscribe);
   nsIMsgFolder GetReadMailPFC(in boolean createIfMissing);
   nsIMsgFolder GetSentMailPFC(in boolean createIfMissing);
-  void GetNewMessagesAllFolders(in nsIMsgFolder aRootFolder, in nsIMsgWindow aWindow); 
+  void GetNewMessagesForNonInboxFolders(in nsIMsgFolder aRootFolder,
+                                        in nsIMsgWindow aWindow,
+                                        in boolean forceAllFolders);
   attribute boolean doingLsub;
 
   void allowFolderConversion(out boolean allowConversion);

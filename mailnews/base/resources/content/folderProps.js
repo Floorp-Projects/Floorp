@@ -9,6 +9,12 @@ var RDF;
 // corresponds to MSG_FOLDER_FLAG_OFFLINE
 const MSG_FOLDER_FLAG_OFFLINE = 0x8000000
 
+// corresponds to MSG_FOLDER_FLAG_CHECK_NEW
+const MSG_FOLDER_FLAG_CHECK_NEW = 0x20000000
+
+// corresponds to MSG_FOLDER_FLAG_INBOX
+const MSG_FOLDER_FLAG_INBOX = 0x1000
+
 // The folderPropsSink is the class that gets notified of an imap folder's properties
 
 var gFolderPropsSink = {
@@ -56,6 +62,11 @@ function folderPropsOKButtonCallback()
       gMsgFolder.setFlag(MSG_FOLDER_FLAG_OFFLINE);
     else
       gMsgFolder.clearFlag(MSG_FOLDER_FLAG_OFFLINE);
+
+    if(document.getElementById("folderCheckForNewMessages").checked)
+      gMsgFolder.setFlag(MSG_FOLDER_FLAG_CHECK_NEW);
+    else
+      gMsgFolder.clearFlag(MSG_FOLDER_FLAG_CHECK_NEW);
   }
   window.close();
 }
@@ -143,6 +154,9 @@ function folderPropsOnLoad()
 
     // set override checkbox
     document.getElementById("folderCharsetOverride").checked = gMsgFolder.charsetOverride;
+
+    // set check for new mail checkbox
+    document.getElementById("folderCheckForNewMessages").checked = gMsgFolder.flags & MSG_FOLDER_FLAG_CHECK_NEW;
   }
 
   if (gServerTypeFolder == "imap")
@@ -213,6 +227,16 @@ function hideShowControls(serverType)
         privilegesButton.setAttribute("hidden", "true");
     }
   }
+
+  // hide "check for new mail" checkbox if this is inbox
+  if (gMsgFolder)
+  {
+    if (gMsgFolder.flags & MSG_FOLDER_FLAG_INBOX)
+    {
+      document.getElementById("folderCheckForNewMessages").setAttribute("hidden", "true");
+    }
+  }
+
 }
 
 function getEnclosingContainer(startNode) 
