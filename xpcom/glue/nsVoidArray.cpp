@@ -66,6 +66,7 @@ nsVoidArray::nsVoidArray()
 }
 
 nsVoidArray::nsVoidArray(PRInt32 aCount)
+  : mInfo(0)
 {
   MOZ_COUNT_CTOR(nsVoidArray);
   NS_PRECONDITION(aCount > 0, "bad count");
