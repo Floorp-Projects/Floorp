@@ -35,14 +35,12 @@
 #include "nsIFileLocator.h"
 #include "nsIFileSpec.h"
 
-#include "nsISessionHistory.h"
 #include "rdf.h"
 #include "nsIWindowMediator.h"
 #include "nsICommonDialogs.h"
 #include "nsIDialogParamBlock.h"
 // #include "nsAbout.h"
 #include "nsIAboutModule.h"
-static NS_DEFINE_CID(kSessionHistoryCID,   NS_SESSIONHISTORY_CID);
 static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 #ifdef XP_OS2
 
