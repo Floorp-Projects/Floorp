@@ -6578,7 +6578,7 @@ function setNewEmailCertAndShowAlert()
 {
   top.default_email_cert = "%1$s";
   PopUpAlert("{multi_cert_backup_success}");
-  window.location = "get?baseRef=cert_mine";  
+  window.location = "get?baseRef=cert_mine&target=%2$d";  
 }
 
 </script>
