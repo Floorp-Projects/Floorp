@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include <gtk/gtk.h>
+
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
@@ -24,7 +26,7 @@
 #include "nsRenderingContextGTK.h"
 #include "nsImageGTK.h"
 #include "nsDeviceContextGTK.h"
-#include <gtk/gtk.h>
+
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
