@@ -38,13 +38,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "IMETextTxn.h"
-#include "nsEditor.h"
 #include "nsIDOMCharacterData.h"
+#include "nsIDOMRange.h"
 #include "nsIPrivateTextRange.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
-#include "nsIPresShell.h"
-#include "EditAggregateTxn.h"
 #include "nsLayoutCID.h"
 #include "nsISelectionController.h"
 
@@ -56,7 +54,7 @@ nsIAtom *IMETextTxn::gIMETextTxnName = nsnull;
 
 nsresult IMETextTxn::ClassInit()
 {
-  if (nsnull==gIMETextTxnName)
+  if (!gIMETextTxnName)
     gIMETextTxnName = NS_NewAtom("NS_IMETextTxn");
   return NS_OK;
 }
@@ -86,7 +84,7 @@ NS_IMETHODIMP IMETextTxn::Init(nsIDOMCharacterData     *aElement,
 {
   NS_ASSERTION(aElement, "illegal value- null ptr- aElement");
   NS_ASSERTION(aTextRangeList, "illegal value- null ptr - aTextRangeList");
-  if((nsnull == aElement) || (nsnull == aTextRangeList))
+  if (!aElement || !aTextRangeList)
      return NS_ERROR_NULL_POINTER;
   mElement = do_QueryInterface(aElement);
   mOffset = aOffset;
@@ -109,11 +107,11 @@ NS_IMETHODIMP IMETextTxn::DoTransaction(void)
   if (!selCon) return NS_ERROR_NOT_INITIALIZED;
 
   // advance caret: This requires the presentation shell to get the selection.
-  nsresult result = NS_OK;
-  if (mReplaceLength==0) {
-      result = mElement->InsertData(mOffset,mStringToInsert);
+  nsresult result;
+  if (mReplaceLength == 0) {
+    result = mElement->InsertData(mOffset, mStringToInsert);
   } else {
-      result = mElement->ReplaceData(mOffset,mReplaceLength,mStringToInsert);
+    result = mElement->ReplaceData(mOffset, mReplaceLength, mStringToInsert);
   }
   if (NS_SUCCEEDED(result)) {
     result = CollapseTextSelection();
@@ -131,9 +129,7 @@ NS_IMETHODIMP IMETextTxn::UndoTransaction(void)
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
   if (!selCon) return NS_ERROR_NOT_INITIALIZED;
 
-  nsresult result;
-  PRUint32 length = mStringToInsert.Length();
-  result = mElement->DeleteData(mOffset, length);
+  nsresult result = mElement->DeleteData(mOffset, mStringToInsert.Length());
   if (NS_SUCCEEDED(result))
   { // set the selection to the insertion point where the string was removed
     nsCOMPtr<nsISelection> selection;
@@ -150,21 +146,12 @@ NS_IMETHODIMP IMETextTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
 {
   NS_ASSERTION(aDidMerge, "illegal vaule- null ptr- aDidMerge");
   NS_ASSERTION(aTransaction, "illegal vaule- null ptr- aTransaction");
-  if((nsnull == aDidMerge) || (nsnull == aTransaction))
-  	return NS_ERROR_NULL_POINTER;
+  if (!aDidMerge || !aTransaction)
+    return NS_ERROR_NULL_POINTER;
     
-  nsresult  result;
 #ifdef DEBUG_IMETXN
   printf("Merge IME Text element = %p\n", mElement.get());
 #endif
-
-  //
-  // check to make sure we have valid return pointers
-  //
-  if ((nsnull==aDidMerge) && (nsnull==aTransaction))
-  {
-    return NS_OK;
-  }
 
   // 
   // check to make sure we aren't fixed, if we are then nothing get's absorbed
@@ -175,14 +162,14 @@ NS_IMETHODIMP IMETextTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
   }
 
   //
-  // if aTransaction is another IMETextTxn then absorbe it
+  // if aTransaction is another IMETextTxn then absorb it
   //
   IMETextTxn*  otherTxn = nsnull;
-  result = aTransaction->QueryInterface(IMETextTxn::GetCID(),(void**)&otherTxn);
+  nsresult result = aTransaction->QueryInterface(IMETextTxn::GetCID(),(void**)&otherTxn);
   if (otherTxn && NS_SUCCEEDED(result))
   {
     //
-    //  we absorbe the next IME transaction by adopting it's insert string as our own
+    //  we absorb the next IME transaction by adopting its insert string as our own
     //
     nsIPrivateTextRangeList* newTextRangeList;
     otherTxn->GetData(mStringToInsert,&newTextRangeList);
@@ -250,8 +237,8 @@ static SelectionType TextRangeToSelection(int aTextRangeType)
 NS_IMETHODIMP IMETextTxn::GetData(nsString& aResult,nsIPrivateTextRangeList** aTextRangeList)
 {
   NS_ASSERTION(aTextRangeList, "illegal value- null ptr- aTextRangeList");
-  if(nsnull == aTextRangeList)
-  	return NS_ERROR_NULL_POINTER;
+  if (!aTextRangeList)
+    return NS_ERROR_NULL_POINTER;
   aResult = mStringToInsert;
   *aTextRangeList = mRangeList;
   return NS_OK;
@@ -268,16 +255,13 @@ static SelectionType sel[4]=
 NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
 {
     nsresult      result;
-    PRUint16      textRangeListLength,selectionStart,selectionEnd,
-                  textRangeType, i;
-    nsIPrivateTextRange*  textRange;
-    
+    PRUint16      i;
 
 #ifdef DEBUG_IMETXN
     PRUint16 listlen,start,stop,type;
-    nsIPrivateTextRange* rangePtr;
     result = mRangeList->GetLength(&listlen);
     printf("nsIPrivateTextRangeList[%p]\n",mRangeList);
+    nsIPrivateTextRange* rangePtr;
     for (i=0;i<listlen;i++) {
       (void)mRangeList->Item(i,&rangePtr);
       rangePtr->GetRangeStart(&start);
@@ -304,28 +288,33 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
     nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
     if (!selCon) return NS_ERROR_NOT_INITIALIZED;
 
+    PRUint16      textRangeListLength,selectionStart,selectionEnd,
+                  textRangeType;
+    
     result = mRangeList->GetLength(&textRangeListLength);
     if(NS_FAILED(result))
         return result;
     nsCOMPtr<nsISelection> selection;
     result = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
-    nsCOMPtr<nsISelection> imeSel;
     if(NS_SUCCEEDED(result))
     {
       nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
       result = selPriv->StartBatchChanges();
       if (NS_SUCCEEDED(result))
       {
+        nsCOMPtr<nsISelection> imeSel;
         for(PRInt8 selIdx = 0; selIdx < 4;selIdx++)
         {
           result = selCon->GetSelection(sel[selIdx], getter_AddRefs(imeSel));
-            if(NS_SUCCEEDED(result))
-            {
-               result = imeSel->RemoveAllRanges();
-               NS_ASSERTION(NS_SUCCEEDED(result), "Cannot ClearSelection");
-               // we just ignore the result and clean up the next one here
-            }
+          if (NS_SUCCEEDED(result))
+          {
+            result = imeSel->RemoveAllRanges();
+            NS_ASSERTION(NS_SUCCEEDED(result), "Cannot ClearSelection");
+            // we just ignore the result and clean up the next one here
+          }
         }
+
+        nsIPrivateTextRange*  textRange;
         PRBool setCaret=PR_FALSE;
         for(i=0;i<textRangeListLength;i++)
         {
