@@ -1,0 +1,14 @@
+#include "nsISupports.idl"
+#include "nsIMsgFilter.idl"
+
+/**
+ * The nsIWinMsgFilter defines what a message filter looks like on the Windows 
+ * Platform.    
+ */						  
+
+[scriptable, uuid(2EFB5006-4508-11d3-AEDA-00A024FFC08C)]
+interface nsIWinMsgFilter : nsIMsgFilter
+{
+	//XXX Place the contents of a Windows MSG struct here.
+	//As well as other needed filtering criteria.
+};

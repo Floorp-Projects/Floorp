@@ -1,0 +1,11 @@
+#include "nsISupports.idl"
+
+/**
+ * The nsIMsgFilter serves as a base interface for the platform specific 
+ * interfaces that define what a filter message looks like.    
+ */
+
+[scriptable, uuid(2EFB5003-4508-11d3-AEDA-00A024FFC08C)]
+interface nsIMsgFilter : nsISupports
+{
+};
