@@ -62,6 +62,122 @@
     [% title = "Change columns" %]
     Resubmitting your query with new columns...
 
+  [% ELSIF message_tag == "account_disabled" %]
+    [% title = "Account Disabled" %]
+    [% disabledreason %]
+    <hr>
+    If you believe your account should be restored, please 
+    send email to [% Param("maintainer") %] explaining why.
+            
+  [% ELSIF message_tag == "account_exists" %]
+    [% title = "Account Already Exists" %]
+    That account already exists.
+                  
+  [% ELSIF message_tag == "alias_has_comma_or_space" %]
+    [% title = "Invalid Characters In Alias" %]
+    The alias you entered, <em>[% alias FILTER html %]</em>,
+    contains one or more commas or spaces.  Aliases cannot contain
+    commas or spaces because those characters are used to separate
+    aliases from each other in lists.  Please choose another alias
+    that does not contain commas and spaces.
+                  
+  [% ELSIF message_tag == "alias_in_use" %]
+    [% title = "Alias In Use" %]
+    [% bug_link %] has already taken the alias 
+    <em>[% alias FILTER html %]</em>.  Please choose another one.
+    
+  [% ELSIF message_tag == "alias_is_numeric" %]
+    [% title = "Alias Is Numeric" %]
+    You tried to give this bug the alias <em>[% alias FILTER html %]</em>,
+    but aliases cannot be merely numbers, since they could
+    then be confused with bug IDs.  Please choose another
+    alias containing at least one letter.    
+    
+  [% ELSIF message_tag == "alias_too_long" %]
+    [% title = "Alias Too Long" %]
+    Bug aliases cannot be longer than 20 characters.
+    Please choose a shorter alias.
+
+  [% ELSIF message_tag == "bugs_not_changed" %]
+    [% title = "Bugs Not Changed" %]
+    Um, you apparently did not change anything on the selected bugs.
+                        
+  [% ELSIF message_tag == "comment_required" %]
+    [% title = "Comment Required" %]
+    You have to specify a <b>comment</b> on this change.  
+    Please give some words on the reason for your change.
+
+  [% ELSIF message_tag == "dependency_loop_multi" %]
+    [% title = "Dependency Loop Detected" %]
+    The following bug(s) would appear on both the "depends on"
+    and "blocks" parts of the dependency tree if these changes
+    are committed: [% both %]. This would create a circular 
+    dependency, which is not allowed.
+                            
+  [% ELSIF message_tag == "dependency_loop_single" %]
+    [% title = "Dependency Loop Detected" %]
+    You can't make a bug blocked or dependent on itself.
+
+  [% ELSIF message_tag == "dupe_invalid_bug_id" %]
+    [% title = "Valid Bug Number Required" %]
+     You must specify a valid bug number of which this bug
+     is a duplicate.  The bug has not been changed.
+     
+  [% ELSIF message_tag == "dupe_of_self_disallowed" %]
+    [% title = "Nice Try..." %]
+    Nice try, [% user.login FILTER html %], but it doesn't 
+    really make sense to mark a bug as a duplicate of itself, 
+    does it?  
+    
+  [% ELSIF message_tag == "illegal_at_least_x_votes" %]
+    [% title = "Your Query Makes No Sense" %]
+    The <em>At least ___ votes</em> field must be a simple number. 
+    You entered <tt>[% value FILTER html %]</tt>, which isn't.
+    
+  [% ELSIF message_tag == "illegal_attachment_is_patch" %]
+    [% title = "Your Query Makes No Sense" %]
+     The only legal values for the <em>Attachment is patch</em> field are
+     0 and 1.
+         
+  [% ELSIF message_tag == "illegal_change" %]
+    You tried to change the <strong>[% field %]</strong> field 
+    from <em>[% oldvalue FILTER html %]</em> to 
+    <em>[% newvalue FILTER html %]</em>, 
+    but only the owner or submitter of the bug, or a 
+    sufficiently empowered user, may change that field.
+  
+  [% ELSIF message_tag == "illegal_changed_in_last_x_days" %]
+    [% title = "Your Query Makes No Sense" %]
+    The <em>Changed in last ___ days</em> field must be a simple number. 
+    You entered <tt>[% value FILTER html %]</tt>, which isn't.
+    
+  [% ELSIF message_tag == "illegal_date" %]
+    [% title = "Your Query Makes No Sense" %]
+    '<tt>[% date %]</tt>' is not a legal date.
+    
+  [% ELSIF message_tag == "illegal_is_obsolete" %]
+    [% title = "Your Query Makes No Sense" %]
+     The only legal values for the <em>Attachment is obsolete</em> field are
+     0 and 1.
+         
+  [% ELSIF message_tag == "invalid_bug_id" %]
+    [% title = "Invalid Bug ID" %]
+    The bug id [% bug_id FILTER html %] is invalid.
+
+  [% ELSIF message_tag == "invalid_email_address" %]
+    [% title = "Invalid Email Address" %]
+    The e-mail address you entered(<b>[% addr FILTER html %]</b>) 
+    didn't pass our syntax checking for a legal email address. 
+    [% Param('emailregexpdesc') %]
+    It must also not contain any of these special characters:
+    <tt>\ ( ) &amp; &lt; &gt; , ; : &quot; [ ]</tt>, or any whitespace.
+    
+  [% ELSIF message_tag == "invalid_username" %]
+    [% title = "Invalid Username" %]
+    The name <tt>[% name FILTER html %]</tt> is not a valid username.  
+    Either you misspelled it, or the person has not
+    registered for a Bugzilla account.
+                    
   [% ELSIF message_tag == "logged_out" %]
     [% title = "Logged Out" %]
     [% url = "query.cgi?GoAheadAndLogIn=1" %]
@@ -78,6 +194,45 @@
     [% title = "Page not found" %]
     The page you requested cannot be found.
 
+  [% ELSIF message_tag == "milestone_required" %]
+    [% title = "Milestone Required" %]
+    You must determine a target milestone for bug [% bug_id %]
+    if you are going to accept it.  Part of accepting 
+    a bug is giving an estimate of when it will be fixed.
+
+  [% ELSIF message_tag == "missing_email_type" %]
+    [% title = "Your Query Makes No Sense" %]
+    You must specify one or more fields in which to search for
+    <tt>[% email %]</tt>.
+    
+  [% ELSIF message_tag == "need_component" %]
+    [% title = "Component Required" %]
+    You must specify a component to help determine the new owner of these bugs.                            
+  [% ELSIF message_tag == "need_product" %]
+    [% title = "Product Required" %]
+    You must specify a product to help determine the new owner of these bugs.                 
+  [% ELSIF message_tag == "no_bugs_chosen" %]
+    [% title = "No Bugs Chosen" %]
+    You apparently didn't choose any bugs to modify.
+
+  [% ELSIF message_tag == "no_dupe_stats" %]
+    [% title = "Cannot Find Duplicate Statistics" %]
+    There are no duplicate statistics for today ([% today %]) or yesterday.
+    
+  [% ELSIF message_tag == "no_dupe_stats_error_today" %]
+    [% title = "Error Reading Today's Dupes File" %]
+    An error occurred opening today's dupes file: [% error_msg FILTER html %].
+
+  [% ELSIF message_tag == "no_dupe_stats_error_whenever" %]
+    [% title = "Error Reading Previous Dupes File" %]
+    An error occurred opening $changedsince days ago ($whenever)'s dupes file:
+    [% error_msg FILTER html %].
+     
+  [% ELSIF message_tag == "no_dupe_stats_error_yesterday" %]
+    [% title = "Error Reading Yesterday's Dupes File" %]
+    There are no duplicate statistics for today ([% today %]), and an error
+    occurred opening yesterday's dupes file: [% error_msg FILTER html %].
+    
   [% ELSIF message_tag == "password_changed" %]
     [% title = "Password Changed" %]
     Your password has been changed.
@@ -91,11 +246,26 @@
     A token for changing your password has been emailed to you.
     Follow the instructions in that email to change your password.
 
+  [% ELSIF message_tag == "reassign_to_empty" %]
+    [% title = "Illegal Reassignment" %]
+    You cannot reassign to a bug to nobody. Unless you
+    intentionally cleared out the "Reassign bug to" 
+    field, [% Param("browserbugmessage") %]
+
+  [% ELSIF message_tag == "unknown_keyword" %]
+    [% title = "Unknown Keyword" %]
+    <code>[% keyword FILTER html %]</code> is not a known keyword. 
+    The legal keyword names are <a href="describekeywords.cgi">listed here</a>.
+    
   [% ELSE %]
-    [%# Cope with legacy calling convention, where "message" was the string
-      # to print. 
+    [%# Give sensible error if error functions are used incorrectly.
       #%]        
-    [% message_tag %]
+    You are using Bugzilla's error-reporting functions incorrectly. You
+    passed in the string '[% message_tag %]'. The correct use is to pass
+    in a tag, and define that tag in the file messages.html.tmpl.<br>
+    <br>
+    If you are a Bugzilla end-user seeing this message, please save this
+    page and send it to [% Param('maintainer') %].
     
   [% END %]
 [% END %]

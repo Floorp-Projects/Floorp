@@ -92,21 +92,17 @@ if (!tie(%dbmcount, 'AnyDBM_File', "data/duplicates/dupes$today",
     if ($!{ENOENT}) {
         if (!tie(%dbmcount, 'AnyDBM_File', "data/duplicates/dupes$yesterday",
                  O_RDONLY, 0644)) {
+            $vars->{'today'} = $today;
             if ($!{ENOENT}) {
-                ThrowUserError("There are no duplicate statistics for today " .
-                               "($today) or yesterday.",
-                               "Cannot find duplicate statistics");
+                ThrowUserError("no_dupe_stats");
             } else {
-                ThrowUserError("There are no duplicate statistics for today " .
-                               "($today), and an error occurred when " .
-                               "accessing yesterday's dupes file: $!.",
-                               "Error reading yesterday's dupes file");
+                $vars->{'error_msg'} = $!;
+                ThrowUserError("no_dupe_stats_error_yesterday");
             }
         }
     } else {
-        ThrowUserError("An error occurred when accessing today ($today)'s " .
-                       "dupes file: $!.",
-                       "Error reading today's dupes file");
+        $vars->{'error_msg'} = $!;
+        ThrowUserError("no_dupe_stats_error_today");
     }
 }
 
@@ -133,9 +129,10 @@ if (!tie(%before, 'AnyDBM_File', "data/duplicates/dupes$whenever",
          O_RDONLY, 0644)) {
     # Ignore file not found errors
     if (!$!{ENOENT}) {
-        ThrowUserError("Can't open $changedsince days ago ($whenever)'s " .
-                       "dupes file: $!",
-                       "Error reading previous dupes file");
+        $vars->{'error_msg'} = $!;
+        $vars->{'changedsince'} = $changedsince;
+        $vars->{'whenever'} = $whenever;    
+        ThrowUserError("no_dupe_stats_error_whenever");
     }
 } else {
     # Calculate the deltas

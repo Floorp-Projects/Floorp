@@ -557,12 +557,8 @@ sub CheckEmailSyntax {
     my ($addr) = (@_);
     my $match = Param('emailregexp');
     if ($addr !~ /$match/ || $addr =~ /[\\\(\)<>&,;:"\[\] \t\r\n]/) {
-        ThrowUserError("The e-mail address you entered(<b>" .
-        html_quote($addr) . "</b>) didn't pass our syntax checking 
-        for a legal email address. " . Param('emailregexpdesc') .
-        ' It must also not contain any of these special characters:
-        <tt>\ ( ) &amp; &lt; &gt; , ; : " [ ]</tt>, or any whitespace.', 
-        "Check e-mail address syntax");
+        $vars->{'addr'} = $addr;
+        ThrowUserError("illegal_email_address");
     }
 }
 
@@ -616,7 +612,7 @@ sub confirm_login {
         if ( defined $::FORM{"PleaseMailAPassword"} && !$userid ) {
             # Ensure the new login is valid
             if(!ValidateNewUser($enteredlogin)) {
-                ThrowUserError("That account already exists.");
+                ThrowUserError("account_exists");
             }
 
             my $password = InsertNewUser($enteredlogin, "");
@@ -805,10 +801,8 @@ Set-Cookie: Bugzilla_logincookie= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:
 Content-type: text/html
 
 ";
-            ThrowUserError($::disabledreason . "<hr>" .
-            "If you believe your account should be restored, please " .
-            "send email to " . Param("maintainer") . " explaining why.",
-            "Your account has been disabled");
+            $vars->{'disabled_reason'} = $::disabledreason;
+            ThrowUserError("account_disabled");
         }
         
         if (!defined $nexturl || $nexturl eq "") {
@@ -897,7 +891,7 @@ sub ThrowCodeError {
 # undef as the second parameter and $unlock_tables as the third.
 # The second parameter will eventually go away.
 sub ThrowUserError {
-  ($vars->{'error'}, $vars->{'title'}, my $unlock_tables) = (@_);
+  ($vars->{'error'}, my $unlock_tables) = (@_);
 
   SendSQL("UNLOCK TABLES") if $unlock_tables;
   

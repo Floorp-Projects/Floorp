@@ -946,10 +946,8 @@ sub DBNameToIdAndCheck {
         return $result;
     }
 
-    $name = html_quote($name);
-    ThrowUserError("The name <tt>$name</tt> is not a valid username.  
-                    Either you misspelled it, or the person has not
-                    registered for a Bugzilla account.");
+    $::vars->{'name'} = $name;
+    ThrowUserError("invalid_username");
 }
 
 sub get_product_id {

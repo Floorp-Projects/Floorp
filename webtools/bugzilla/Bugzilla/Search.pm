@@ -95,10 +95,8 @@ sub init {
         my $c = &::trim($F{'votes'});
         if ($c ne "") {
             if ($c !~ /^[0-9]*$/) {
-                my $htmlc = html_quote($c);
-                &::ThrowUserError("The <em>At least ___ votes</em> field must 
-                                   be a simple number.  You entered
-                                   <tt>$htmlc</tt>, which doesn't cut it.");
+                $vars->{'value'} = $c;
+                &::ThrowUserError("illegal_at_least_x_votes");
             }
             push(@specialchart, ["votes", "greaterthan", $c - 1]);
         }
@@ -181,9 +179,8 @@ sub init {
         if (@clist) {
             push(@specialchart, \@clist);
         } else {
-            my $htmlemail = html_quote($email);
-            &::ThrowUserError("You must specify one or more fields in which
-                               to search for <tt>$htmlemail</tt>.");
+            $vars->{'email'} = $email;
+            &::ThrowUserError("missing_email_type");
         }
     }
 
@@ -192,10 +189,8 @@ sub init {
         my $c = &::trim($F{'changedin'});
         if ($c ne "") {
             if ($c !~ /^[0-9]*$/) {
-                my $htmlc = &::html_quote($c);
-                &::ThrowUserError("The <em>changed in last ___ days</em> field
-                                   must be a simple number.  You entered
-                                   <tt>$htmlc</tt>, which doesn't cut it.");
+                $vars->{'value'} = $c;
+                &::ThrowUserError("illegal_changed_in_last_x_days");
             }
             push(@specialchart, ["changedin",
                                  "lessthan", $c + 1]);
@@ -341,14 +336,10 @@ sub init {
                  $t = "greaterthan";
              }
              if ($field eq "ispatch" && $v ne "0" && $v ne "1") {
-                 &::ThrowUserError("The only legal values for the 
-                                    <em>Attachment is patch</em> field are 
-                                    0 and 1.");
+                 &::ThrowUserError("illegal_attachment_is_patch");
              }
              if ($field eq "isobsolete" && $v ne "0" && $v ne "1") {
-                 &::ThrowUserError("The only legal values for the 
-                                    <em>Attachment is obsolete</em> field are 
-                                    0 and 1.");
+                 &::ThrowUserError("illegal_is_obsolete");
              }
              $f = "$table.$field";
          },
@@ -446,11 +437,8 @@ sub init {
                      push(@list, "$table.keywordid = $id");
                  }
                  else {
-                     my $htmlv = &::html_quote($v);
-                     &::ThrowUserError("There is no keyword named<code>$htmlv
-                                        </code>. To search for keywords, consult
-                                        the <a href='describekeywords.cgi'>list
-                                        of legal keywords</a>.");
+                     $vars->{'keyword'} = $v;
+                     &::ThrowUserError("unknown_keyword");
                  }
              }
              my $haveawordterm;
@@ -854,9 +842,8 @@ sub SqlifyDate {
     }
     my $date = str2time($str);
     if (!defined($date)) {
-        my $htmlstr = html_quote($str);
-        ThrowUserError("The string <tt>$htmlstr</tt> is not a legal date.");
-        exit;
+        $vars->{'date'} = $str;
+        ThrowUserError("illegal_date");
     }
     return time2str("%Y-%m-%d %H:%M:%S", $date);
 }
