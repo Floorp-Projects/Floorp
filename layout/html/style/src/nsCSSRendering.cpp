@@ -25,6 +25,7 @@
 #include "nsIViewManager.h"
 #include "nsIPresShell.h"
 #include "nsIFrameImageLoader.h"
+#include "nsGlobalVariables.h"
 
 #define BORDER_FULL    0        //entire side
 #define BORDER_INSIDE  1        //inside half
@@ -33,6 +34,59 @@
 //thickness of dashed line relative to dotted line
 #define DOT_LENGTH  1           //square
 #define DASH_LENGTH 3           //3 times longer than dot
+
+
+
+// Weird color computing code stolen from winfe which was stolen
+// from the xfe which was written originally by Eric Bina. So there.
+
+const int nsCSSRendering::RED_LUMINOSITY = 30;
+const int nsCSSRendering::GREEN_LUMINOSITY = 59;
+const int nsCSSRendering::BLUE_LUMINOSITY = 11;
+const int nsCSSRendering::INTENSITY_FACTOR = 25;
+const int nsCSSRendering::LIGHT_FACTOR = 0;
+const int nsCSSRendering::LUMINOSITY_FACTOR = 75;
+const int nsCSSRendering::MAX_COLOR = 255;
+const int nsCSSRendering::COLOR_DARK_THRESHOLD = 51;
+const int nsCSSRendering::COLOR_LIGHT_THRESHOLD = 204;
+ 
+
+void nsCSSRendering::Get3DColors(nscolor aResult[2], nscolor aColor)
+{
+  int rb = NS_GET_R(aColor);
+  int gb = NS_GET_G(aColor);
+  int bb = NS_GET_B(aColor);
+  int intensity = (rb + gb + bb) / 3;
+  int luminosity =
+    ((RED_LUMINOSITY * rb) / 100) +
+    ((GREEN_LUMINOSITY * gb) / 100) +
+    ((BLUE_LUMINOSITY * bb) / 100);
+  int brightness = ((intensity * INTENSITY_FACTOR) +
+                    (luminosity * LUMINOSITY_FACTOR)) / 100;
+  int f0, f1;
+  if (brightness < COLOR_DARK_THRESHOLD) {
+    f0 = 30;
+    f1 = 50;
+  } else if (brightness > COLOR_LIGHT_THRESHOLD) {
+    f0 = 45;
+    f1 = 50;
+  } else {
+    f0 = 30 + (brightness * (45 - 30) / MAX_COLOR);
+    f1 = f0;
+  }
+  int r = rb - (f0 * rb / 100);
+  int g = gb - (f0 * gb / 100);
+  int b = bb - (f0 * bb / 100);
+  aResult[0] = NS_RGB(r, g, b);
+  r = rb + (f1 * (MAX_COLOR - rb) / 100);
+  if (r > 255) r = 255;
+  g = gb + (f1 * (MAX_COLOR - gb) / 100);
+  if (g > 255) g = 255;
+  b = bb + (f1 * (MAX_COLOR - bb) / 100);
+  if (b > 255) b = 255;
+  aResult[1] = NS_RGB(r, g, b);
+}
+
 
 /**
  * Special method to brighten a Color and have it shift to white when
@@ -170,9 +224,27 @@ nscolor nsCSSRendering::Darken(nscolor inColor)
  * Make a bevel color
  */
 nscolor nsCSSRendering::MakeBevelColor(PRIntn whichSide, PRUint8 style,
-                                       nscolor baseColor)
+                                       nscolor baseColor,
+                                       PRBool printing)
 {
-  nscolor theColor = baseColor;
+
+  PRBool blackLines = nsGlobalVariables::Instance()->GetBlackLines();
+  nscolor colors[2];
+  nscolor theColor;
+
+  // Get the background color that applies to this HR
+  if (printing && blackLines)
+  {
+    colors[0] = NS_RGB(0,0,0);
+    colors[1] = colors[0];
+  }
+  else
+  {
+    // Given a background color and a border color
+    // calculate the color used for the shading
+    Get3DColors(colors, baseColor);
+  }
+ 
 
   if ((style == NS_STYLE_BORDER_STYLE_OUTSET) ||
       (style == NS_STYLE_BORDER_STYLE_RIDGE)) {
@@ -187,16 +259,16 @@ nscolor nsCSSRendering::MakeBevelColor(PRIntn whichSide, PRUint8 style,
 
   switch (whichSide) {
   case NS_SIDE_BOTTOM:
-    theColor = Brighten(Brighten(baseColor));
+    theColor = colors[1];
     break;
   case NS_SIDE_RIGHT:
-    theColor = Brighten(baseColor);
+    theColor = colors[1];
     break;
   case NS_SIDE_TOP:
-    theColor = Darken(Darken(baseColor));
+    theColor = colors[0];
     break;
   case NS_SIDE_LEFT:
-    theColor = Darken(baseColor);
+    theColor = colors[0];
     break;
   }
   return theColor;
@@ -355,7 +427,8 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
                               const PRUint8 borderStyles[],
                               const nscolor borderColors[],
                               const nsRect& borderOutside,
-                              const nsRect& borderInside)
+                              const nsRect& borderInside,
+                              PRBool printing)
 {
   nsPoint theSide[MAX_POLY_POINTS];
   nscolor theColor = borderColors[whichSide];
@@ -374,14 +447,14 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
   case NS_STYLE_BORDER_STYLE_RIDGE:
     np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
                    BORDER_INSIDE, 0.5f);
-    aContext.SetColor ( MakeBevelColor (whichSide, theStyle, theColor));
+    aContext.SetColor ( MakeBevelColor (whichSide, theStyle, theColor, printing));
     aContext.FillPolygon (theSide, np);
     np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
                    BORDER_OUTSIDE, 0.5f);
     aContext.SetColor ( MakeBevelColor (whichSide,
        (theStyle == NS_STYLE_BORDER_STYLE_RIDGE)
           ? NS_STYLE_BORDER_STYLE_GROOVE
-          : NS_STYLE_BORDER_STYLE_RIDGE, theColor));
+          : NS_STYLE_BORDER_STYLE_RIDGE, theColor,printing));
     aContext.FillPolygon (theSide, np);
     break;
 
@@ -406,7 +479,7 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
   case NS_STYLE_BORDER_STYLE_INSET:
     np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
                    BORDER_FULL, 1.0f);
-    aContext.SetColor ( MakeBevelColor (whichSide, theStyle, theColor));
+    aContext.SetColor ( MakeBevelColor (whichSide, theStyle, theColor,printing));
     aContext.FillPolygon (theSide, np);
     break;
   }
@@ -653,14 +726,17 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
                                  const nsStyleSpacing& aStyle,
                                  PRIntn aSkipSides)
 {
-  PRIntn cnt;
-  nsMargin border;
+  PRIntn    cnt;
+  nsMargin  border;
+  PRBool    printing = nsGlobalVariables::Instance()->GetPrinting(&aPresContext);
+
   aStyle.CalcBorderFor(aForFrame, border);
   if ((0 == border.left) && (0 == border.right) &&
       (0 == border.top) && (0 == border.bottom)) {
     // Empty border area
     return;
   }
+
 
   nsRect inside(0, 0, aBounds.width, aBounds.height);
   nsRect outside(inside);
@@ -683,19 +759,19 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
   // Draw all the other sides
   if (0 == (aSkipSides & (1<<NS_SIDE_TOP))) {
     DrawSide(aRenderingContext, NS_SIDE_TOP, aStyle.mBorderStyle,
-             aStyle.mBorderColor, inside, outside);
+             aStyle.mBorderColor, inside, outside, printing);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_LEFT))) {
     DrawSide(aRenderingContext, NS_SIDE_LEFT, aStyle.mBorderStyle, 
-             aStyle.mBorderColor, inside, outside);
+             aStyle.mBorderColor, inside, outside, printing);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_BOTTOM))) {
     DrawSide(aRenderingContext, NS_SIDE_BOTTOM, aStyle.mBorderStyle,
-             aStyle.mBorderColor, inside, outside);
+             aStyle.mBorderColor, inside, outside, printing);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_RIGHT))) {
     DrawSide(aRenderingContext, NS_SIDE_RIGHT, aStyle.mBorderStyle,
-             aStyle.mBorderColor, inside, outside);
+             aStyle.mBorderColor, inside, outside, printing);
   }
 }
 

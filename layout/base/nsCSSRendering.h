@@ -60,9 +60,23 @@ public:
    */
   static nscolor Darken(nscolor inColor);
 
+  // Weird color computing code stolen from winfe which was stolen
+  // from the xfe which was written originally by Eric Bina. So there.
+	static void Get3DColors(nscolor aResult[2], nscolor aColor);
+  static const int RED_LUMINOSITY;
+  static const int GREEN_LUMINOSITY;
+  static const int BLUE_LUMINOSITY;
+  static const int INTENSITY_FACTOR;
+  static const int LIGHT_FACTOR;
+  static const int LUMINOSITY_FACTOR;
+  static const int MAX_COLOR;
+  static const int COLOR_DARK_THRESHOLD;
+  static const int COLOR_LIGHT_THRESHOLD;
+
 protected:
   static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,
-                                nscolor baseColor);
+                                nscolor baseColor,
+                                PRBool printing);
 
   static PRIntn MakeSide(nsPoint aPoints[],
                          nsIRenderingContext& aContext,
@@ -75,7 +89,8 @@ protected:
                        const PRUint8 borderStyles[],
                        const nscolor borderColors[],
                        const nsRect& borderOutside,
-                       const nsRect& borderInside);
+                       const nsRect& borderInside,
+                       PRBool printing);
 
   static void DrawDashedSides(PRIntn startSide,
                               nsIRenderingContext& aContext,
