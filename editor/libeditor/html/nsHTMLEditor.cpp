@@ -779,7 +779,7 @@ nsHTMLEditor::ReParentBlockContent(nsIDOMNode  *aNode,
         {
           nsCOMPtr<nsIAtom> brContentTag;
           brContent->GetTag(*getter_AddRefs(brContentTag));
-          if (nsIEditProperty::br==brContentTag) {
+          if (nsIEditProperty::br==brContentTag.get()) {
             result = DeleteNode(brNode);
           }
         }
@@ -796,7 +796,7 @@ nsHTMLEditor::ReParentBlockContent(nsIDOMNode  *aNode,
           {
             nsCOMPtr<nsIAtom> brContentTag;
             brContent->GetTag(*getter_AddRefs(brContentTag));
-            if (nsIEditProperty::br==brContentTag) {
+            if (nsIEditProperty::br==brContentTag.get()) {
               result = DeleteNode(brNode);
             }
           }
