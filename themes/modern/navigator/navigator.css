@@ -122,7 +122,7 @@
 } 
 
 #print-button {
-  list-style-image: url("chrome://communicator/skin/btn1/print.gif");
+  list-style-image: url("chrome://navigator/skin/btn1/print.gif");
 }
 
 #print-button[disabled="true"],
@@ -131,15 +131,15 @@
 #print-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button,
 #print-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
 #print-button[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
-  list-style-image: url("chrome://communicator/skin/btn1/print-dis.gif");
+  list-style-image: url("chrome://navigator/skin/btn1/print-dis.gif");
 }
 
 #print-button > .menubutton-dual-stack > .menubutton-dual-button:hover {
-  list-style-image: url("chrome://communicator/skin/btn1/print-hov.gif");
+  list-style-image: url("chrome://navigator/skin/btn1/print-hov.gif");
 }
 
 #print-button > .menubutton-dual-stack > .menubutton-dual-button:hover:active {
-  list-style-image: url("chrome://communicator/skin/btn1/print-act.gif");
+  list-style-image: url("chrome://navigator/skin/btn1/print-act.gif");
 }
 
 /* Hides text below the above buttons */
@@ -181,7 +181,7 @@
 }
 
 #reload-button {
-  margin-right: 5px; /* balance out extra dropmarker space  */
+  margin-right: 3px; /* balance out extra dropmarker space  */
 }
 
 /* ::::: navbar-inner - the grooved area around the urlbar ::::: */

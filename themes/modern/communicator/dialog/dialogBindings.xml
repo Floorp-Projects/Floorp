@@ -7,6 +7,7 @@
   <binding id="smallheader" extends="chrome://communicator/content/dialogBindings.xml#smallheader">
     <content>
       <xul:box class="box-smallheader-text-container" autostretch="never" flex="1">
+        <children/>
         <xul:text class="box-smallheader-left" inherits="value=title"/>
         <xul:spring flex="1"/>
         <xul:text class="box-smallheader-right" inherits="value=description"/>
@@ -21,6 +22,7 @@
           <xul:spring flex="1"/>
           <xul:text class="largeheader-header-text" inherits="value=title" crop="right"/>
           <xul:html class="largeheader-desc-text" inherits="value=description"/>
+          <children/>
           <xul:spring flex="1"/>
         </xul:box>
         <xul:spring flex="1"/>
