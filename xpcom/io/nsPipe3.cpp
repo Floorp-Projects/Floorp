@@ -206,7 +206,7 @@ public:
     // methods below may only be called while inside the pipe's monitor
     //
 
-    nsresult PeekSegment(PRUint32 n, char *&cursor, char *&limit);
+    void PeekSegment(PRUint32 n, char *&cursor, char *&limit);
 
     //
     // methods below may be called while outside the pipe's monitor
@@ -239,6 +239,39 @@ protected:
 
     nsresult            mStatus;
 };
+
+//
+// NOTES on buffer architecture:
+//
+//       +-----------------+ - - mBuffer.GetSegment(0)
+//       |                 |
+//       + - - - - - - - - + - - mReadCursor
+//       |/////////////////|
+//       |/////////////////|
+//       |/////////////////|
+//       |/////////////////|
+//       +-----------------+ - - mReadLimit
+//                |
+//       +-----------------+
+//       |/////////////////|
+//       |/////////////////|
+//       |/////////////////|
+//       |/////////////////|
+//       |/////////////////|
+//       |/////////////////|
+//       +-----------------+
+//                |
+//       +-----------------+ - - mBuffer.GetSegment(mWriteSegment)
+//       |/////////////////|
+//       |/////////////////|
+//       |/////////////////|
+//       + - - - - - - - - + - - mWriteCursor
+//       |                 |
+//       |                 |
+//       +-----------------+ - - mWriteLimit
+//
+// (shaded region contains data)
+//
 
 //-----------------------------------------------------------------------------
 // nsPipe methods:
@@ -310,27 +343,26 @@ nsPipe::GetOutputStream(nsIAsyncOutputStream **aOutputStream)
     return NS_OK;
 }
 
-nsresult
+void
 nsPipe::PeekSegment(PRUint32 index, char *&cursor, char *&limit)
 {
-    if (mReadCursor == mWriteCursor)
-        return NS_FAILED(mStatus) ? mStatus : NS_BASE_STREAM_WOULD_BLOCK;
-    
-    if (index == 0 && mReadCursor) {
+    if (index == 0) {
+        NS_ASSERTION(!mReadCursor || mBuffer.GetSegmentCount(), "unexpected state");
         cursor = mReadCursor;
         limit = mReadLimit;
     }
     else {
         PRUint32 numSegments = mBuffer.GetSegmentCount();
         if (index >= numSegments)
-            return NS_FAILED(mStatus) ? mStatus : NS_BASE_STREAM_WOULD_BLOCK;
-        cursor = mBuffer.GetSegment(index);
-        if (mWriteSegment == (PRInt32) index)
-            limit = mWriteCursor;
-        else
-            limit = cursor + mBuffer.GetSegmentSize();
+            cursor = limit = nsnull;
+        else {
+            cursor = mBuffer.GetSegment(index);
+            if (mWriteSegment == (PRInt32) index)
+                limit = mWriteCursor;
+            else
+                limit = cursor + mBuffer.GetSegmentSize();
+        }
     }
-    return NS_OK;
 }
 
 nsresult
@@ -338,16 +370,8 @@ nsPipe::GetReadSegment(const char *&segment, PRUint32 &segmentLen)
 {
     nsAutoMonitor mon(mMonitor);
 
-    char *cursor, *limit;
-    nsresult rv = PeekSegment(0, cursor, limit);
-    if (NS_FAILED(rv)) return rv;
-
-    if (mReadCursor == nsnull) {
-        mReadCursor = cursor;
-        mReadLimit = limit;
-    }
-
-    NS_ASSERTION(mReadCursor && mReadLimit, "WTF");
+    if (mReadCursor == mReadLimit)
+        return NS_FAILED(mStatus) ? mStatus : NS_BASE_STREAM_WOULD_BLOCK;
 
     segment    = mReadCursor;
     segmentLen = mReadLimit - mReadCursor;
@@ -368,31 +392,44 @@ nsPipe::AdvanceReadCursor(PRUint32 bytesRead)
         mReadCursor += bytesRead;
         NS_ASSERTION(mReadCursor <= mReadLimit, "read cursor exceeds limit");
 
-        if ((mWriteSegment == 0) && (mReadCursor > mWriteCursor))
-            NS_ERROR("read cursor exceeds write cursor");
-
         InputStream()->ReduceAvailable(bytesRead);
 
         if (mReadCursor == mReadLimit) {
-            // if still writing in this segment then bail
+            // we've reached the limit of how much we can read from this segment.
+            // if at the end of this segment, then we must discard this segment.
+
+            // if still writing in this segment then bail because we're not done
+            // with the segment and have to wait for now...
             if (mWriteSegment == 0 && mWriteLimit > mWriteCursor) {
-                // reset write cursor to start of segment
-                mWriteCursor = mBuffer.GetSegment(0);
-                mReadCursor = nsnull;
-                mReadLimit = nsnull;
+                NS_ASSERTION(mReadLimit == mWriteCursor, "unexpected state");
                 return;
             }
+
+            // shift write segment index (-1 indicates an empty buffer).
+            --mWriteSegment;
 
             // done with this segment
             mBuffer.DeleteFirstSegment();
             LOG(("III deleting first segment\n"));
 
-            mReadCursor = nsnull;
-            mReadLimit = nsnull;
-            
-            --mWriteSegment; // can become -1
+            if (mWriteSegment == -1) {
+                // buffer is completely empty
+                mReadCursor = nsnull;
+                mReadLimit = nsnull;
+                mWriteCursor = nsnull;
+                mWriteLimit = nsnull;
+            }
+            else {
+                // advance read cursor and limit to next buffer segment
+                mReadCursor = mBuffer.GetSegment(0);
+                if (mWriteSegment == 0)
+                    mReadLimit = mWriteCursor;
+                else
+                    mReadLimit = mReadCursor + mBuffer.GetSegmentSize();
+            }
 
-            // notify output stream that pipe is writable
+            // we've free'd up a segment, so notify output stream that pipe has
+            // room for a new segment.
             if (OutputStream()->OnOutputWritable(events))
                 mon.Notify();
         }
@@ -407,6 +444,7 @@ nsPipe::GetWriteSegment(char *&segment, PRUint32 &segmentLen)
     if (NS_FAILED(mStatus))
         return mStatus;
 
+    // write cursor and limit may both be null indicating an empty buffer.
     if (mWriteCursor == mWriteLimit) {
         char *seg = mBuffer.AppendNewSegment();
         // pipe is full
@@ -417,6 +455,13 @@ nsPipe::GetWriteSegment(char *&segment, PRUint32 &segmentLen)
         mWriteLimit = mWriteCursor + mBuffer.GetSegmentSize();
         ++mWriteSegment;
     }
+
+    // make sure read cursor is initialized
+    if (mReadCursor == nsnull) {
+        NS_ASSERTION(mWriteSegment == 0, "unexpected null read cursor");
+        mReadCursor = mReadLimit = mWriteCursor;
+    }
+
     segment    = mWriteCursor;
     segmentLen = mWriteLimit - mWriteCursor;
     return NS_OK;
@@ -442,8 +487,7 @@ nsPipe::AdvanceWriteCursor(PRUint32 bytesWritten)
 
         mWriteCursor = newWriteCursor;
 
-        if (mReadCursor == mWriteCursor)
-            NS_ERROR("read cursor is bad");
+        NS_ASSERTION(mReadCursor != mWriteCursor, "read cursor is bad");
 
         // update the writable flag on the output stream
         if (mWriteCursor == mWriteLimit) {
@@ -795,8 +839,8 @@ nsPipeInputStream::Search(const char *forString,
     PRUint32 index = 0, offset = 0;
     PRUint32 strLen = strlen(forString);
 
-    rv = mPipe->PeekSegment(0, cursor1, limit1);
-    if (NS_FAILED(rv) || cursor1 == limit1) {
+    mPipe->PeekSegment(0, cursor1, limit1);
+    if (cursor1 == limit1) {
         *found = PR_FALSE;
         *offsetSearchedTo = 0;
         LOG(("  result [found=%u offset=%u]\n", *found, *offsetSearchedTo));
@@ -823,8 +867,8 @@ nsPipeInputStream::Search(const char *forString,
         index++;
         offset += len1;
 
-        rv = mPipe->PeekSegment(index, cursor2, limit2);
-        if (NS_FAILED(rv) || cursor2 == limit2) {
+        mPipe->PeekSegment(index, cursor2, limit2);
+        if (cursor2 == limit2) {
             *found = PR_FALSE;
             // if we're unable to get the next segment because of some pipe
             // exception, then we should just inform that caller that all
