@@ -380,6 +380,12 @@ Extra Cmd Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\$MainExeFi
 Extra Cmd Reg Name=
 Extra Cmd Parameter=-kill
 
+[Check Instance1]
+Class Name=MozillaWindowClass
+Window Name=
+;*** LOCALIZE ME BABY ***
+Message=Setup has detected that $ProductName$ is currently running.  Please quit $ProductName$ before continuing Setup.  Click Retry to perform the check again, or Cancel to exit Setup.
+
 
 
 
