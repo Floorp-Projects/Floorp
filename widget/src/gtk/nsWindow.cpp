@@ -885,7 +885,7 @@ NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
         break;
 
       default:
-        NS_ASSERTION(PR_FALSE, "Invalid cursor type");
+        NS_ASSERTION(aCursor, "Invalid cursor type");
         break;
     }
 
@@ -1897,53 +1897,73 @@ NS_IMETHODIMP nsWindow::ScrollRect(nsRect &aSrcRect, PRInt32 aDx, PRInt32 aDy)
   return NS_OK;
 }
 
-
-
 NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
 {
   if (!mShell)
     return NS_ERROR_FAILURE;
 
-  nsresult result;
-  static nsCOMPtr<nsIUnicodeEncoder> converter;
-  static int initialized = 0;
-  if (!initialized) {
-    initialized = 1;
-    result = NS_ERROR_FAILURE;
-    nsCOMPtr<nsIPlatformCharset> platform = do_GetService(NS_PLATFORMCHARSET_PROGID);
-    if (platform) {
-      nsAutoString charset;
-      result = platform->GetCharset(kPlatformCharsetSel_WindowManager, charset);
-      if (NS_SUCCEEDED(result) && (charset.Length() > 0)) {
-        nsCOMPtr<nsICharsetConverterManager> manager = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID);
-        if (manager) {
-          result = manager->GetUnicodeEncoder(&charset, getter_AddRefs(converter));
-          if (NS_FAILED(result) && converter) {
-            converter = nsnull;
-          } else if (converter) {
-            result = converter->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
-          }
-        }
-      }
+
+  nsresult rv;
+  char *platformText;
+  PRInt32 platformLen;
+
+  static nsCOMPtr<nsIUnicodeEncoder> encoder;
+  static PRBool hasConverter = PR_FALSE;
+  if (!hasConverter) {
+    // get the charset
+    nsAutoString platformCharset;
+    nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+    if (NS_SUCCEEDED(rv))
+      rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
+    if (NS_FAILED(rv))
+      platformCharset.AssignWithConversion("ISO-8859-1");
+    
+    // get the encoder
+    NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_PROGID, &rv);  
+    rv = ccm->GetUnicodeEncoder(&platformCharset, getter_AddRefs(encoder));
+
+    hasConverter = PR_TRUE;
+  }
+
+  // Estimate out length and allocate the buffer based on a worst-case estimate, then do
+  // the conversion.
+  PRInt32 len = (PRInt32)aTitle.Length();
+  encoder->GetMaxLength(aTitle.GetUnicode(), len, &platformLen);
+  if (platformLen) {
+    platformText = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(platformLen + sizeof(char)));
+    if (platformText) {
+      rv = encoder->Convert(aTitle.GetUnicode(), &len, platformText, &platformLen);
+      (platformText)[platformLen] = '\0';  // null terminate. Convert() doesn't do it for us
     }
-    NS_ASSERTION(converter, "cannot get convert for window title");
-  }
+  } // if valid length
 
+  if (platformLen > 0) {
+    int status = 0;
+    XTextProperty prop;
 
-  if (converter) {
-    char titleStr[256];
-    titleStr[0] = 0;
-    PRInt32 srcLen = aTitle.Length() + 1;
-    PRInt32 destLen = sizeof(titleStr) - 1;
-    result = converter->Convert(aTitle.GetUnicode(), &srcLen, titleStr,
-                                &destLen);
-    NS_ASSERTION(NS_SUCCEEDED(result), "cannot convert title string");
-    if (titleStr[0] && NS_SUCCEEDED(result)) {
-      titleStr[destLen] = 0;
-      gtk_window_set_title(GTK_WINDOW(mShell), titleStr);
+#ifdef DEBUG_TITLE
+    g_print("\nConverted text from unicode to platform locale\n");
+    g_print("platformText is %s\n", platformText);
+    g_print("platformLen is %d\n", platformLen);
+#endif
+    
+    status = XmbTextListToTextProperty(GDK_DISPLAY(), &platformText, 1, XCompoundTextStyle,
+                                       &prop);
+
+    if (status == Success) {
+#ifdef DEBUG_TITLE
+      g_print("\nXmbTextListToTextProperty succeeded\n  text is %s\n  length is %d\n", prop.value,
+              prop.nitems);
+#endif
+      XSetWMProperties(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mShell->window),
+                       &prop, &prop, NULL, 0, NULL, NULL, NULL);
+
+      nsMemory::Free(platformText);
+      // free properties list?
       return NS_OK;
-    } 
+    }
   }
+
   // fallback to use bad conversion
   gtk_window_set_title(GTK_WINDOW(mShell), nsAutoCString(aTitle));
   return NS_OK;
