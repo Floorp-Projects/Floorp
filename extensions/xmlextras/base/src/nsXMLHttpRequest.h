@@ -94,6 +94,14 @@ protected:
   nsresult GetStreamForWString(const PRUnichar* aStr,
                                PRInt32 aLength,
                                nsIInputStream** aStream);
+  nsresult DetectCharset(nsAWritableString& aCharset);
+  nsresult ConvertBodyToText(PRUnichar **aOutBuffer);
+  static NS_METHOD StreamReaderFunc(nsIInputStream* in,
+                void* closure,
+                const char* fromRawSegment,
+                PRUint32 toOffset,
+                PRUint32 count,
+                PRUint32 *writeCount);
 
   nsCOMPtr<nsISupports> mContext;
   nsCOMPtr<nsIHttpChannel> mChannel;
@@ -111,15 +119,6 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mOnLoadListener;
   nsCOMPtr<nsIDOMEventListener> mOnErrorListener;
   
-  nsresult DetectCharset(nsAWritableString& aCharset);
-  nsresult ConvertBodyToText(PRUnichar **aOutBuffer);
-  static NS_METHOD StreamReaderFunc(nsIInputStream* in,
-                void* closure,
-                const char* fromRawSegment,
-                PRUint32 toOffset,
-                PRUint32 count,
-                PRUint32 *writeCount);
-
   // used to implement getAllResponseHeaders()
   class nsHeaderVisitor : public nsIHttpHeaderVisitor {
   public:
