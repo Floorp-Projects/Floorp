@@ -37,7 +37,7 @@
 
 #include "nsVoidArray.h"
 
-#define NS_IMAGEREQUEST_CID \
+#define NS_IMGREQUEST_CID \
 { /* 9f733dd6-1dd1-11b2-8cdf-effb70d1ea71 */         \
      0x9f733dd6,                                     \
      0x1dd1,                                         \
