@@ -155,6 +155,17 @@
 ; Return:
 ;   :less if n<m;
 ;   :equal if n=m;
+;   :greater if n>m.
+(defun rational-compare (n m)
+  (cond
+   ((< n m) :less)
+   ((> n m) :greater)
+   (t :equal)))
+
+
+; Return:
+;   :less if n<m;
+;   :equal if n=m;
 ;   :greater if n>m;
 ;   :unordered if either n or m is :nan.
 (defun float64-compare (n m)
@@ -1100,11 +1111,13 @@
 ;
 ;A union type must have:
 ;  at least two types
-;  only types with kinds :integer, :rational, :finite64, :character, :string, or :tag
+;  only types with kinds :integer, :rational, :finite64, :character, :->, :string, :vector, :list-set, or :tag
 ;  no type that is a duplicate or subtype of another type in the union
-;  types sorted by ascending type-serial-number.
+;  at most one type each with kind :->
+;  at most one type each with kind :vector or :list-set; furthermore, if such a type is present, then only keyword :tag types may be present
+;  types sorted by ascending type-serial-number, except that :-> is given the serial number -1 and :vector and :list-set -2.
 ;
-;Note that types with the above kinds never change their serial-numbers during unite-types, so
+;Note that types with the above kinds (not including :->, :vector, or :list-set) never change their serial-numbers during unite-types, so
 ;unite-types does not need to worry about unions differing only in the order of their parameters.
 
 
@@ -1324,10 +1337,15 @@
                   (if (or (member type supertype-types) (member (world-rational-type world) supertype-types))
                     code
                     (type-mismatch)))
-                 ((:rational :character :string :tag)
+                 ((:rational :character :-> :string :tag)
                   (if (member type supertype-types)
                     code
                     (type-mismatch)))
+                 ((:vector :list-set)
+                  (let ((super-collection-type (find kind supertype-types :key #'type-kind)))
+                    (if super-collection-type
+                      (widening-coercion-code world super-collection-type type code expr)
+                      (type-mismatch))))
                  (:finite64
                   (cond
                    ((member type supertype-types) code)
@@ -1338,7 +1356,7 @@
                     (dolist (type-type (type-parameters type))
                       (unless (case (type-kind type-type)
                                 (:integer (or (member type-type supertype-types) (member (world-rational-type world) supertype-types)))
-                                ((:rational :character :string :tag) (member type-type supertype-types))
+                                ((:rational :character :-> :string :tag :vector :list-set) (member type-type supertype-types))
                                 (:finite64
                                  (or (member type-type supertype-types)
                                      (and (member (world-rational-type world) supertype-types) (setq convert-finite64-to-rational t)))))
@@ -1377,12 +1395,20 @@
 (defun type-to-union (world type)
   (ecase (type-kind type)
     (:boolean (type-parameters (world-boxed-boolean-type world)))
-    ((:integer :rational :finite64 :character :string :tag) (list type))
+    ((:integer :rational :finite64 :character :-> :string :vector :list-set :tag) (list type))
     (:denormalized-tag (make-tag-type world (type-tag type)))
     (:union (type-parameters type))))
 
 
-; Merge the two lists of types sorted by ascending serial numbers.
+; Return the type's serial number, except that types with kind :-> are given the serial number -1
+; and :vector and :list-set -2.
+(defun type-union-serial-number (type)
+  (or (cdr (assoc (type-kind type) '((:-> . -1) (:vector . -2) (:list-set . -2))))
+      (type-serial-number type)))
+
+
+; Merge the two lists of types sorted by ascending serial numbers, except that types with kind :-> are given the serial number -1
+; and :vector and :list-set -2.
 ; The result is also sorted by ascending serial numbers and contains no duplicates.
 (defun merge-type-lists (types1 types2)
   (cond
@@ -1392,26 +1418,28 @@
             (type2 (first types2)))
         (if (type= type1 type2)
           (cons type1 (merge-type-lists (rest types1) (rest types2)))
-          (let ((serial-number1 (type-serial-number type1))
-                (serial-number2 (type-serial-number type2)))
-            (assert-true (/= serial-number1 serial-number2))
+          (let ((serial-number1 (type-union-serial-number type1))
+                (serial-number2 (type-union-serial-number type2)))
+            (when (= serial-number1 serial-number2)
+              (error "Duplicate function, vector, or set subtype of union: ~S ~S" type1 type2))
             (if (< serial-number1 serial-number2)
               (cons type1 (merge-type-lists (rest types1) types2))
               (cons type2 (merge-type-lists types1 (rest types2))))))))))
 
 
-; Return true if the list of types is sorted by serial number.
+; Return true if the list of types is sorted by serial number, except that types with kind :-> are given the serial number -1
+; and :vector and :list-set -2.
 (defun type-list-sorted (types)
-  (let ((n (type-serial-number (first types))))
+  (let ((n (type-union-serial-number (first types))))
     (dolist (type (rest types) t)
-      (let ((n2 (type-serial-number type)))
+      (let ((n2 (type-union-serial-number type)))
         (unless (< n n2)
           (return nil))
         (setq n n2)))))
 
 
 (defun coercable-to-union-kind (kind)
-  (member kind '(:boolean :integer :rational :finite64 :character :string :tag :denormalized-tag :union)))
+  (member kind '(:boolean :integer :rational :finite64 :character :-> :string :vector :list-set :tag :denormalized-tag :union)))
 
 
 ; types is a list of distinct, non-overlapping types appropriate for inclusion in a union and
@@ -1448,6 +1476,10 @@
          ((eq kind1 :bottom) type2)
          ((eq kind2 :bottom) type1)
          ((and (numeric-kind kind1) (numeric-kind kind2)) (world-rational-type world))
+         ((and (eq kind1 :vector) (eq kind2 :vector))
+          (make-vector-type world (type-union world (vector-element-type type1) (vector-element-type type2))))
+         ((and (eq kind1 :list-set) (eq kind2 :list-set))
+          (make-list-set-type world (type-union world (set-element-type type1) (set-element-type type2))))
          ((and (coercable-to-union-kind kind1) (coercable-to-union-kind kind2))
           (let ((types (merge-type-lists (type-to-union world type1) (type-to-union world type2))))
             (when (> (count-if #'numeric-type types) 1)
@@ -1455,10 +1487,6 @@
               (setq types (merge-type-lists (remove-if #'numeric-type types) (list (world-rational-type world)))))
             (assert-true (type-list-sorted types))
             (reduce-union-type world types t)))
-         ((and (eq kind1 :vector) (eq kind2 :vector))
-          (make-vector-type world (type-union world (vector-element-type type1) (vector-element-type type2))))
-         ((and (eq kind1 :list-set) (eq kind2 :list-set))
-          (make-list-set-type world (type-union world (set-element-type type1) (set-element-type type2))))
          (t (error "No union of types ~A and ~A" (print-type-to-string type1) (print-type-to-string type2))))))))
 
 
@@ -1524,6 +1552,10 @@
           ((type= subtype (world-boxed-boolean-type world))
            (values type (world-bottom-type world)))
           (t (type-mismatch))))
+        (:rational
+         (if (type= subtype (world-integer-type world))
+           (values subtype 'fractional)
+           (type-mismatch)))
         (:tag
           (if (and (eq (type-kind subtype) :denormalized-tag) (eq (type-tag type) (type-tag subtype)))
             (values type (world-bottom-type world))
@@ -1555,26 +1587,35 @@
 
 
 ; types must be a list of types suitable for inclusion in a :union type's parameters.  Return the following values:
-;    a list of integerp, rationalp, floatp, characterp, and/or stringp, depending on whether types include the
-;       :integer, :rational, :finite64, :character, and/or :string member kinds;
+;    a list of integerp, rationalp, floatp, characterp, functionp, stringp, and/or listp depending on whether types include the
+;       :integer, :rational, :finite64, :character, :->, :string and/or :vector or :list-set member kinds;
 ;    a list of keywords used by non-list tags in the types;
 ;    a list of tag names used by list tags in the types
 (defun analyze-union-types (types)
   (let ((atom-tests nil)
         (keywords nil)
-        (list-tag-names nil))
+        (list-tag-names nil)
+        (has-listp nil))
     (dolist (type types)
       (ecase (type-kind type)
         (:integer (push 'integerp atom-tests))
         (:rational (push 'rationalp atom-tests))
         (:finite64 (push 'floatp atom-tests))
         (:character (push 'characterp atom-tests))
+        (:-> (push 'functionp atom-tests))
         (:string (push 'stringp atom-tests))
+        ((:vector :list-set)
+         (when has-listp
+           (error "Unable to discriminate among the constituents in the union ~S" types))
+         (setq has-listp t)
+         (push 'listp atom-tests))
         (:tag (let* ((tag (type-tag type))
                      (keyword (tag-keyword tag)))
                 (if keyword
                   (push keyword keywords)
                   (push (tag-name tag) list-tag-names))))))
+    (when (and has-listp list-tag-names)
+      (error "Unable to discriminate among the constituents in the union ~S" types))
     (values
      (nreverse atom-tests)
      (nreverse keywords)
@@ -1596,6 +1637,10 @@
         ((or (type= subtype (world-true-type world)) (type= subtype (world-denormalized-true-type world)))
          code)
         (t (error "Bad type-member-test-code"))))
+      (:rational
+       (if (type= subtype (world-integer-type world))
+         (list 'integerp code)
+         (error "Bad type-member-test-code")))
       ((:tag :denormalized-tag) t)
       (:union
        (multiple-value-bind (type-atom-tests type-keywords type-list-tag-names) (analyze-union-types (type-parameters type))
@@ -1618,16 +1663,6 @@
                                                   (and (or type-atom-tests type-keywords) (list (list 'consp code)))
                                                   (list (gen-member-test (list 'car code) subtype-list-tag-names))))))))))))))
 
-
-
-; Return true if type1's serial-number is less than type2's serial-number;
-; however, unnamed types' serial numbers are considered to be positive infinity.
-(defun type-named-serial-number-< (type1 type2)
-  (let ((name1 (if (type-name type1) 0 1))
-        (name2 (if (type-name type2) 0 1)))
-    (or (< name1 name2)
-        (and (= name1 name2)
-             (< (type-serial-number type1) (type-serial-number type2))))))
 
 
 ; Print the type nicely on the given stream.  If expand1 is true then print
@@ -1781,6 +1816,19 @@
     (unless (eq (type-kind type) expected-type-kind)
       (error "Expected ~(~A~) but got ~A" expected-type-kind (print-type-to-string type)))
     type))
+
+
+; (integer-range <low-limit> <high-limit>)
+; <low-limit> and <high-limit> must be constant expressions.
+; ***** Currently the ranges are not checked, so this type is equivalent to integer except for display purposes.
+(defun scan-integer-range (world allow-forward-references low-limit-expr high-limit-expr)
+  (declare (ignore allow-forward-references))
+  (let* ((integer-type (world-integer-type world))
+         (low-limit (eval (scan-typed-value world (make-type-env nil nil) low-limit-expr integer-type)))
+         (high-limit (eval (scan-typed-value world (make-type-env nil nil) high-limit-expr integer-type))))
+    (unless (and (integerp low-limit) (integerp high-limit) (<= low-limit high-limit))
+      (error "Bad integer range ~S .. ~S" low-limit-expr high-limit-expr))
+    integer-type))
 
 
 ; (-> (<arg-type1> ... <arg-typen>) <result-type>)
@@ -1940,6 +1988,16 @@
            (visit-type type))))
     (setf (world-types-reverse world) types-reverse)))
 
+
+
+; Return true if type1's serial-number is less than type2's serial-number;
+; however, unnamed types' serial numbers are considered to be positive infinity.
+(defun type-named-serial-number-< (type1 type2)
+  (let ((name1 (if (type-name type1) 0 1))
+        (name2 (if (type-name type2) 0 1)))
+    (or (< name1 name2)
+        (and (= name1 name2)
+             (< (type-serial-number type1) (type-serial-number type2))))))
 
 
 ; Make all equivalent types be eq.  Only types reachable from some type name
@@ -2990,16 +3048,15 @@
 
 ;;; Constants
 
-(defun eval-bottom ()
-  (error "Reached a BOTTOM expression"))
+(defun eval-todo ()
+  (error "Reached a TODO expression"))
 
-; (bottom)
 ; (todo)
 ; Raises an error.
-(defun scan-bottom (world type-env special-form)
+(defun scan-todo (world type-env special-form)
   (declare (ignore type-env))
   (values
-   '(eval-bottom)
+   '(eval-todo)
    (world-bottom-type world)
    (list 'expr-annotation:special-form special-form)))
 
@@ -3978,14 +4035,19 @@
 ;;; Unions
 
 ; (in <expr> <type>)
+; In addition to the standard queries, this specially allows the case where <expr> has type nonzero-finite-float64
+; and <type> is integer.
 (defun scan-in (world type-env special-form value-expr type-expr)
   (let ((type (scan-type world type-expr)))
     (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world type-env value-expr)
-      (type-difference world value-type type)
       (values
-       (let ((var (gen-local-var value-code)))
-         (let-local-var var value-code
-           (type-member-test-code world type value-type var)))
+       (if (and (type= value-type (world-finite64-type world)) (type= type (world-integer-type world)))
+         `(zerop (nth-value 1 (floor ,value-code)))
+         (progn
+           (type-difference world value-type type)
+           (let ((var (gen-local-var value-code)))
+             (let-local-var var value-code
+               (type-member-test-code world type value-type var)))))
        (world-boolean-type world)
        (list 'expr-annotation:special-form special-form value-annotated-expr type type-expr)))))
 
@@ -4051,18 +4113,29 @@
 
 ; (assert-in <expr> <type>)
 ; Returns the value of <expr>.
+; In addition to the standard queries, this specially allows the case where <expr> has type nonzero-finite-float64
+; and <type> is integer.
 (defun scan-assert-in (world type-env special-form value-expr type-expr)
   (let ((type (scan-type world type-expr)))
     (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world type-env value-expr)
-      (multiple-value-bind (true-type false-type) (type-difference world value-type type)
-        (declare (ignore false-type))
+      (if (and (type= value-type (world-finite64-type world)) (type= type (world-integer-type world)))
         (values
-         (let ((var (gen-local-var value-code)))
-           (let-local-var var value-code
-             (list 'assert (type-member-test-code world type value-type var))
-             var))
-         true-type
-         (list 'expr-annotation:special-form special-form value-annotated-expr type type-expr))))))
+         (let ((q (gensym "QUO"))
+               (r (gensym "REM")))
+           `(multiple-value-bind (,q ,r) (floor ,value-code)
+              (assert (zerop ,r))
+              ,q))
+         type
+         (list 'expr-annotation:special-form special-form value-annotated-expr type type-expr))
+        (multiple-value-bind (true-type false-type) (type-difference world value-type type)
+          (declare (ignore false-type))
+          (values
+           (let ((var (gen-local-var value-code)))
+             (let-local-var var value-code
+               (list 'assert (type-member-test-code world type value-type var))
+               var))
+           true-type
+           (list 'expr-annotation:special-form special-form value-annotated-expr type type-expr)))))))
 
 
 ; (assert-not-in <expr> <type>)
@@ -4320,6 +4393,20 @@
             (cons (list special-form) rest-annotated-stmts))))
 
 
+(defun eval-bottom ()
+  (error "Reached a BOTTOM statement"))
+
+; (bottom . <styled-text>)
+; Raises an error.
+(defun scan-bottom (world type-env rest-statements last special-form &rest text)
+  (declare (ignore type-env))
+  (scan-statements world nil rest-statements last)
+  (values
+   (list '(eval-bottom))
+   :dead
+   (list (cons special-form text))))
+
+
 ; (assert <condition-expr> . <styled-text>)
 ; Used to declare conditions that are known to be true if the semantics function correctly.  Don't use this to
 ; verify user input.
@@ -4417,7 +4504,7 @@
 ; Mutate the local or global variable.
 (defun scan-<- (world type-env rest-statements last special-form name value-expr &optional end-narrow)
   (unless (member end-narrow '(nil :end-narrow))
-    (error "Bad flag ~S given to <-"))
+    (error "Bad flag ~S given to <-" end-narrow))
   (let* ((symbol (scan-name world name))
          (symbol-binding (type-env-get-local type-env symbol))
          (type-env2 type-env)
@@ -5035,6 +5122,7 @@
      (// scan-// depict-//)
      (/* scan-/* depict-//)
      (*/ scan-*/ depict-*/)
+     (bottom scan-bottom depict-bottom)
      (assert scan-assert depict-assert)
      (exec scan-exec depict-exec)
      (const scan-const depict-var)
@@ -5058,8 +5146,7 @@
     
     (:special-form
      ;;Constants
-     (bottom scan-bottom depict-bottom)
-     (todo scan-bottom depict-todo)
+     (todo scan-todo depict-todo)
      (hex scan-hex depict-hex)
      
      ;;Expressions
@@ -5131,6 +5218,7 @@
      (not-in scan-not-in-condition))
     
     (:type-constructor
+     (integer-range scan-integer-range depict-integer-range)
      (-> scan--> depict-->)
      (vector scan-vector depict-vector)
      (list-set scan-list-set depict-set)
@@ -5148,6 +5236,7 @@
     (+ (-> (integer integer) integer) #'+ :infix "+" t %term% %term% %term%)
     (- (-> (integer integer) integer) #'- :infix :minus t %term% %term% %factor%)
     
+    (rational-compare (-> (rational rational) order) #'rational-compare)
     (rat-neg (-> (rational) rational) #'- :unary "-" nil %suffix% %suffix%)
     (rat* (-> (rational rational) rational) #'* :infix :cartesian-product-10 nil %factor% %factor% %factor%)
     (rat/ (-> (rational rational) rational) #'/ :infix "/" nil %factor% %factor% %unary%)
@@ -5198,7 +5287,7 @@
 (def-partial-order-element *primitive-level* %not% %unary%)                                      ;not
 (def-partial-order-element *primitive-level* %factor% %unary%)                                   ;/, *, intersection
 (def-partial-order-element *primitive-level* %term% %factor%)                                    ;+, -, append, union, set difference
-(def-partial-order-element *primitive-level* %relational% %term% %min-max% %not%)                ;<, <=, >, >=, =, /=, is, member
+(def-partial-order-element *primitive-level* %relational% %term% %min-max% %not%)                ;<, <=, >, >=, =, /=, is, member, ...
 (def-partial-order-element *primitive-level* %logical% %relational%)                             ;and, or, xor
 (def-partial-order-element *primitive-level* %expr% %logical%)                                   ;?:, some, every, elt-of, unique-elt-of
 
@@ -5487,6 +5576,7 @@
 ; This method can only be called once.
 (defun eval-commands (world commands)
   (defer-mcl-warnings
+    (define-primitives world)
     (ensure-proper-form commands)
     (assert-true (null (world-commands-source world)))
     (setf (world-commands-source world) commands)
@@ -5494,7 +5584,6 @@
       (scan-commands world grammar-info-var commands))
     (unite-types world)
     (eval-tags-types world)
-    (define-primitives world)
     (eval-action-declarations world)
     (eval-variables world)
     (eval-action-definitions world)))
