@@ -795,6 +795,51 @@ sub GetEnterableProducts {
     return (@products);
 }
 
+# GetEnterableProductHash
+# returns a hash containing 
+# legal_products => an enterable product list
+# legal_components => the list of components of enterable products
+# components => a hash of component lists for each enterable product
+sub GetEnterableProductHash {
+    my $query = "SELECT products.name, components.name " .
+                "FROM products " .
+                "LEFT JOIN components " .
+                "ON components.product_id = products.id " .
+                "LEFT JOIN group_control_map " .
+                "ON group_control_map.product_id = products.id " .
+                "AND group_control_map.entry != 0 ";
+    if ((defined @{$::vars->{user}{groupids}}) 
+        && (@{$::vars->{user}{groupids}} > 0)) {
+        $query .= "AND group_id NOT IN(" . 
+                   join(',', @{$::vars->{user}{groupids}}) . ") ";
+    }
+    $query .= "WHERE group_id IS NULL " .
+              "ORDER BY products.name, components.name";
+    PushGlobalSQLState();
+    SendSQL($query);
+    my @products = ();
+    my %components = ();
+    my %components_by_product = ();
+    while (MoreSQLData()) {
+        my ($product, $component) = FetchSQLData();
+        if (!grep($_ eq $product, @products)) {
+            push @products, $product;
+        }
+        if ($component) {
+            $components{$component} = 1;
+            push @{$components_by_product{$product}}, $component;
+        }
+    }
+    PopGlobalSQLState();
+    my @componentlist = (sort keys %components);
+    return {
+        legal_products => \@products,
+        legal_components => \@componentlist,
+        components => \%components_by_product,
+    };
+}
+
+
 sub CanSeeBug {
 
     my ($id, $userid) = @_;
