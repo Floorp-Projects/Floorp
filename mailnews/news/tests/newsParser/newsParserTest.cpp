@@ -21,7 +21,7 @@
 
 #ifdef XP_PC
 #include <windows.h>
-#endif
+#endif /* XP_PC */
 
 #include "plstr.h"
 #include "plevent.h"
@@ -57,10 +57,9 @@
 #define NETLIB_DLL "libnetlib.so"
 #define XPCOM_DLL  "libxpcom.so"
 #define PREF_DLL   "libpref.so"
-//#define APPCORES_DLL  "libappcores.so"
 #define APPSHELL_DLL "libnsappshell.so"
-#endif
-#endif
+#endif /* XP_MAC */
+#endif /* XP_PC */
 
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -72,7 +71,7 @@ public:
 	newsTestDriver();
 	virtual ~newsTestDriver();
 	nsresult RunDriver();
-    nsresult GetDatabase();
+    nsresult GetDatabase(const char *uri);
     nsresult GetPath(const char *uri, nsFileSpec& aPathName);
     nsresult AddNewHeader(const char *subject, const char *author, const char *id, PRUint32 key);
 
@@ -99,7 +98,7 @@ nsresult newsTestDriver::RunDriver()
 {
     nsresult rv = NS_OK;
 
-    rv = GetDatabase();
+    rv = GetDatabase("news://news.mozilla.org/netscape.public.mozilla.mail-news");
 
     if (NS_SUCCEEDED(rv) && m_newsDB) {
         rv = AddNewHeader("praising with faint damnation","David McCusker <davidmc@netscape.com>","372A0615.F03C44C2@netscape.com", 0);
@@ -171,11 +170,11 @@ nsresult newsTestDriver::GetPath(const char *uri, nsFileSpec& aPathName)
   return rv;
 }
 
-nsresult newsTestDriver::GetDatabase()
+nsresult newsTestDriver::GetDatabase(const char *uri)
 {
     if (m_newsDB == nsnull) {
         nsNativeFileSpec path;
-		nsresult rv = GetPath("news://news.mozilla.org/netscape.public.mozilla.mail-news", path);
+		nsresult rv = GetPath(uri, path);
 		if (NS_FAILED(rv)) return rv;
 
         nsresult newsDBOpen = NS_OK;
