@@ -21,7 +21,7 @@
 DEPTH=..\..
 
 
-DIRS= idl public src tables \
+DIRS= idl public util src tables \
 !if !defined(DISABLE_TESTS)
      tests \
 !endif

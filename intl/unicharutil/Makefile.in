@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= idl public src tables
+DIRS		= idl public util src tables
 
 ifdef ENABLE_TESTS
 DIRS		+= tests
