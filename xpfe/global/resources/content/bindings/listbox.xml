@@ -154,7 +154,7 @@
         <setter>
           <![CDATA[
             var kids = this.getElementsByAttribute("value", val);
-            if (kids && kids.length)
+            if (kids && kids.item(0))
               this.selectItem(kids[0]);
             return val;
           ]]>

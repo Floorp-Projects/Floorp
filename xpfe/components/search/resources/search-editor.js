@@ -494,7 +494,7 @@ function NewCategory()
   // try and select the new category
   var categoryList = document.getElementById( "categoryList" );
   var select_list = categoryList.getElementsByAttribute("id", categoryID);
-  if (select_list && select_list.length > 0)
+  if (select_list && select_list.item(0))
   {
     categoryList.selectedItem = select_list[0];
     chooseCategory(categoryList.selectedItem);

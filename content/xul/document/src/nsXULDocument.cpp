@@ -1411,24 +1411,19 @@ nsXULDocument::GetElementsByAttribute(const nsAString& aAttribute,
                                       const nsAString& aValue,
                                       nsIDOMNodeList** aReturn)
 {
-    // XXX This should use nsContentList, but that does not support
-    // _two_ strings being passed to the match func.  Ah, the ability
-    // to create real closures, where art thou?
-    nsRDFDOMNodeList* elements = new nsRDFDOMNodeList();
-    NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
-    NS_ADDREF(elements);
+    nsCOMPtr<nsIAtom> attrAtom(do_GetAtom(aAttribute));
+    NS_ENSURE_TRUE(attrAtom, NS_ERROR_OUT_OF_MEMORY);
 
-    nsCOMPtr<nsIDOMNode> domRoot = do_QueryInterface(mRootContent);
-    NS_ASSERTION(domRoot, "no doc root");
+    nsCOMPtr<nsIContentList> list = new nsContentList(this,
+                                                      MatchAttribute,
+                                                      aValue,
+                                                      nsnull,
+                                                      PR_TRUE,
+                                                      attrAtom,
+                                                      kNameSpaceID_None);
+    NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
 
-    nsresult rv = NS_OK;
-    if (domRoot) {
-        rv = GetElementsByAttribute(domRoot, aAttribute, aValue, elements);
-    }
-
-    *aReturn = elements;
-
-    return rv;
+    return CallQueryInterface(list, aReturn);
 }
 
 
@@ -2187,66 +2182,30 @@ nsXULDocument::StartLayout(void)
 }
 
 
-nsresult
-nsXULDocument::GetElementsByAttribute(nsIDOMNode* aNode,
-                                        const nsAString& aAttribute,
-                                        const nsAString& aValue,
-                                        nsRDFDOMNodeList* aElements)
+/* static */
+PRBool
+nsXULDocument::MatchAttribute(nsIContent* aContent,
+                              PRInt32 aNamespaceID,
+                              nsIAtom* aAttrName,
+                              const nsAString& aAttrValue)
 {
-    nsresult rv;
-
-    nsCOMPtr<nsIDOMElement> element;
-    element = do_QueryInterface(aNode);
-    if (!element)
-        return NS_OK;
-
-    nsAutoString attrValue;
-    if (NS_FAILED(rv = element->GetAttribute(aAttribute, attrValue))) {
-        NS_ERROR("unable to get attribute value");
-        return rv;
+    NS_PRECONDITION(aContent, "Must have content node to work with!");
+  
+    // Getting attrs is expensive, so use HasAttr() first.
+    if (!aContent->HasAttr(aNamespaceID, aAttrName)) {
+        return PR_FALSE;
     }
 
-    if ((attrValue.Equals(aValue)) ||
-        (!attrValue.IsEmpty() && aValue.Equals(NS_LITERAL_STRING("*")))) {
-        if (NS_FAILED(rv = aElements->AppendNode(aNode))) {
-            NS_ERROR("unable to append element to node list");
-            return rv;
-        }
+    if (aAttrValue == NS_LITERAL_STRING("*")) {
+        // Wildcard.  We already know we have this attr, so we match
+        return PR_TRUE;
     }
 
-    nsCOMPtr<nsIDOMNodeList> children;
-    if (NS_FAILED(rv = aNode->GetChildNodes( getter_AddRefs(children) ))) {
-        NS_ERROR("unable to get node's children");
-        return rv;
-    }
+    nsAutoString value;
+    nsresult rv = aContent->GetAttr(aNamespaceID, aAttrName, value);
 
-    // no kids: terminate the recursion
-    if (! children)
-        return NS_OK;
-
-    PRUint32 length;
-    if (NS_FAILED(children->GetLength(&length))) {
-        NS_ERROR("unable to get node list's length");
-        return rv;
-    }
-
-    for (PRUint32 i = 0; i < length; ++i) {
-        nsCOMPtr<nsIDOMNode> child;
-        if (NS_FAILED(rv = children->Item(i, getter_AddRefs(child) ))) {
-            NS_ERROR("unable to get child from list");
-            return rv;
-        }
-
-        if (NS_FAILED(rv = GetElementsByAttribute(child, aAttribute, aValue,
-                                                  aElements))) {
-            NS_ERROR("unable to recursively get elements by attribute");
-            return rv;
-        }
-    }
-
-    return NS_OK;
+    return NS_SUCCEEDED(rv) && value.Equals(aAttrValue);
 }
-
 
 nsresult
 nsXULDocument::PrepareToLoad(nsISupports* aContainer,

@@ -557,13 +557,6 @@ protected:
     static nsresult
     ExecuteJSCode(nsIDOMElement* anElement, nsEvent* aEvent);
 
-    // Static helpers
-    static nsresult
-    GetElementsByAttribute(nsIDOMNode* aNode,
-                           const nsAString& aAttributeName,
-                           const nsAString& aAttributeValue,
-                           nsRDFDOMNodeList* aElements);
-
     static PRBool IsAncestor(nsIDOMNode* aParentNode, nsIDOMNode* aChildNode);
 
     // Helper routine that crawls a parent chain looking for a tree element.

@@ -49,10 +49,10 @@
             if (popup) {
               var arr = popup.getElementsByAttribute('selected', 'true');
 
-              if (!arr.length && this.value)
+              if (!arr.item(0) && this.value)
                 arr = popup.getElementsByAttribute('value', this.value);
                 
-              if (arr.length)
+              if (arr.item(0))
                 this.selectedItem = arr[0];
               else
                 this.selectedIndex = 0;
@@ -69,7 +69,7 @@
             if (popup)
               arr = popup.getElementsByAttribute('value', val);
 
-            if (arr && arr.length)
+            if (arr && arr.item(0))
               this.selectedItem = arr[0];
             else
               this.setAttribute('value', val);
@@ -279,10 +279,7 @@
           if (popup)
             arr = popup.getElementsByAttribute('label', this.inputField.value);
 
-          if (arr && arr.length)
-            this.setSelectionInternal(arr[0]);
-          else
-            this.setSelectionInternal(null);
+          this.setSelectionInternal(arr ? arr.item(0) : null);
         ]]>
         </body>
       </method>

@@ -226,11 +226,14 @@ protected:
   virtual nsIStyleSheet* InternalGetStyleSheetAt(PRInt32 aIndex) const;
   virtual PRInt32 InternalGetNumberOfStyleSheets() const;
 
-  static PRBool MatchLinks(nsIContent *aContent, nsString* aData);
-  static PRBool MatchAnchors(nsIContent *aContent, nsString* aData);
-  static PRBool MatchLayers(nsIContent *aContent, nsString* aData);
-  static PRBool MatchNameAttribute(nsIContent* aContent, nsString* aData);
-  static PRBool MatchFormControls(nsIContent* aContent, nsString* aData);
+  static PRBool MatchLinks(nsIContent *aContent, PRInt32 aNamespaceID,
+                           nsIAtom* aAtom, const nsAString& aData);
+  static PRBool MatchAnchors(nsIContent *aContent, PRInt32 aNamespaceID,
+                             nsIAtom* aAtom, const nsAString& aData);
+  static PRBool MatchNameAttribute(nsIContent* aContent, PRInt32 aNamespaceID,
+                                   nsIAtom* aAtom, const nsAString& aData);
+  static PRBool MatchFormControls(nsIContent* aContent, PRInt32 aNamespaceID,
+                                  nsIAtom* aAtom, const nsAString& aData);
 
   static nsresult GetSourceDocumentURI(nsIURI** sourceURI);
 

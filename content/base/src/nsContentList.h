@@ -46,9 +46,16 @@
 #include "nsStubDocumentObserver.h"
 #include "nsIContentList.h"
 #include "nsIAtom.h"
+#include "nsINameSpaceManager.h"
 
+// This is a callback function type that can be used to implement an
+// arbitrary matching algorithm.  aContent is the content that may
+// match the list, while aNamespaceID, aAtom, and aData are whatever
+// was passed to the list's constructor.
 typedef PRBool (*nsContentListMatchFunc)(nsIContent* aContent,
-                                         nsString* aData);
+                                         PRInt32 aNamespaceID,
+                                         nsIAtom* aAtom,
+                                         const nsAString& aData);
 
 class nsIDocument;
 class nsIDOMHTMLFormElement;
@@ -167,7 +174,9 @@ public:
                 nsContentListMatchFunc aFunc,
                 const nsAString& aData,
                 nsIContent* aRootContent = nsnull,
-                PRBool aDeep = PR_TRUE);
+                PRBool aDeep = PR_TRUE,
+                nsIAtom* aMatchAtom = nsnull,
+                PRInt32 aMatchNameSpaceId = kNameSpaceID_None);
   virtual ~nsContentList();
 
   // nsIDOMHTMLCollection
@@ -182,6 +191,9 @@ public:
   virtual void RootDestroyed();
 
   // nsIDocumentObserver
+  virtual void AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
+                                PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                                PRInt32 aModType);
   virtual void ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
                                PRInt32 aNewIndexInContainer);
   virtual void ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
@@ -263,7 +275,6 @@ protected:
   /**
    * @param  aContainer a content node which could be a descendant of
    *         mRootContent
-
    * @return PR_TRUE if mRootContent is null, PR_FALSE if aContainer
    *         is null, PR_TRUE if aContainer is a descendant of mRootContent
    *         (though if mDeep is false, only aContainer == mRootContent
@@ -295,7 +306,7 @@ protected:
   /**
    * Closure data to pass to mFunc when we call it
    */
-  nsString* mData;
+  const nsAFlatString* mData;
   /**
    * True if we are looking for elements named "*"
    */
