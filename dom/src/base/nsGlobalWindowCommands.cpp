@@ -691,7 +691,7 @@ nsWebNavigationBaseCommand::DoCommand(const char *aCommandName,
   GetWebNavigationFromContext(aCommandContext, getter_AddRefs(webNav));
   NS_ENSURE_TRUE(webNav, NS_ERROR_INVALID_ARG);
   
-  return DoCommand(aCommandName, webNav);
+  return DoWebNavCommand(aCommandName, webNav);
 }
 
 /* void doCommandParams (in string aCommandName, in nsICommandParams aParams, in nsISupports aCommandContext); */
