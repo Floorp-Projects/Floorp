@@ -35,8 +35,8 @@
 
  ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY chooseAddressBook.label                "Add to: ">
-<!ENTITY chooseAddressBook.accesskey            "A">
+<!ENTITY chooseAddressBook.label         "Add to: ">
+<!ENTITY chooseAddressBook.accesskey     "A">
 
 <!ENTITY Contact.tab                     "Contact"> 
 <!ENTITY Name.box                        "Name"> 
@@ -94,7 +94,6 @@
 <!ENTITY CellularNumber.label           "Mobile:">
 <!ENTITY CellularNumber.accesskey       "M">
 
-
 <!ENTITY Address.tab                    "Address"> 
 <!ENTITY Home.box                       "Home"> 
 <!ENTITY HomeAddress.label              "Address:"> 
@@ -115,7 +114,6 @@
 <!ENTITY WorkZipCode.label              "ZIP/Postal Code:"> 
 <!ENTITY WorkCountry.label              "Country:">
 <!ENTITY WorkWebPage.label              "Web Page:"> 
-
 
 <!ENTITY Other.tab                      "Other">
 <!ENTITY Custom1.label                  "Custom 1:">
