@@ -1447,7 +1447,7 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
     JSBool inLRS;
     JSString *str;
     uint32 length, n, i;
-    JSParseNode *pn2, *next, **pnp;
+    JSParseNode *pn2, *pn3, *head, **pnp;
     JSXMLNamespace *ns;
     JSXMLQName *qn;
     JSXMLClass xml_class;
@@ -1478,8 +1478,7 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
 
         i = 0;
         while ((pn2 = pn2->pn_next) != NULL) {
-            next = pn2->pn_next;
-            if (!next) {
+            if (!pn2->pn_next) {
                 /* Don't append the end tag! */
                 JS_ASSERT(pn2->pn_type == TOK_XMLETAGO);
                 break;
@@ -1586,12 +1585,25 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
         JS_ASSERT(pn->pn_count >= 1);
         n = pn->pn_count - 1;
         pnp = &pn2->pn_next;
+        head = *pnp;
         while ((pn2 = *pnp) != NULL) {
             size_t length;
             const jschar *chars;
 
             if (pn2->pn_type != TOK_XMLNAME || pn2->pn_arity != PN_NULLARY)
                 goto syntax;
+
+            /* Enforce "Well-formedness constraint: Unique Att Spec". */
+            for (pn3 = head; pn3 != pn2; pn3 = pn3->pn_next->pn_next) {
+                if (pn3->pn_atom == pn2->pn_atom) {
+                    js_ReportCompileErrorNumber(cx, pn2,
+                                                JSREPORT_PN | JSREPORT_ERROR,
+                                                JSMSG_DUPLICATE_XML_ATTR,
+                                                js_ValueToPrintableString(cx,
+                                                    ATOM_KEY(pn2->pn_atom)));
+                    return NULL;
+                }
+            }
 
             str = ATOM_TO_STRING(pn2->pn_atom);
             pn2 = pn2->pn_next;
@@ -2830,7 +2842,7 @@ ToAttributeName(JSContext *cx, jsval v)
             name = js_DecompileValueGenerator(cx, JSDVG_IGNORE_STACK, v, NULL);
             if (name) {
                 JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_BAD_XML_ATTRIBUTE_NAME,
+                                     JSMSG_BAD_XML_ATTR_NAME,
                                      JS_GetStringBytes(name));
             }
             return NULL;

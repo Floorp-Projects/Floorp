@@ -257,7 +257,7 @@ MSG_DEF(JSMSG_BRACKET_AFTER_ATTR_EXPR,174, 0, JSEXN_SYNTAXERR, "missing ] after 
 MSG_DEF(JSMSG_NAME_AFTER_DBLDOT,      175, 0, JSEXN_SYNTAXERR, "missing name after .. operator")
 MSG_DEF(JSMSG_CURLY_IN_XML_EXPR,      176, 0, JSEXN_SYNTAXERR, "missing } in XML expression")
 MSG_DEF(JSMSG_BAD_XML_NAMESPACE,      177, 1, JSEXN_TYPEERR, "invalid XML namespace {0}")
-MSG_DEF(JSMSG_BAD_XML_ATTRIBUTE_NAME, 178, 1, JSEXN_TYPEERR, "invalid XML attribute name {0}")
+MSG_DEF(JSMSG_BAD_XML_ATTR_NAME,      178, 1, JSEXN_TYPEERR, "invalid XML attribute name {0}")
 MSG_DEF(JSMSG_BAD_XML_NAME,           179, 1, JSEXN_TYPEERR, "invalid XML name {0}")
 MSG_DEF(JSMSG_BAD_XML_CONVERSION,     180, 1, JSEXN_TYPEERR, "can't convert {0} to XML")
 MSG_DEF(JSMSG_BAD_XMLLIST_CONVERSION, 181, 1, JSEXN_TYPEERR, "can't convert {0} to XMLList")
@@ -277,3 +277,4 @@ MSG_DEF(JSMSG_BAD_XMLLIST_PUT,        194, 1, JSEXN_TYPEERR, "can't set property
 MSG_DEF(JSMSG_UNKNOWN_XML_ENTITY,     195, 1, JSEXN_TYPEERR, "unknown XML entity {0}")
 MSG_DEF(JSMSG_BAD_XML_NCR,            196, 1, JSEXN_TYPEERR, "malformed XML character {0}")
 MSG_DEF(JSMSG_UNDEFINED_XML_NAME,     197, 1, JSEXN_TYPEERR, "reference to undefined XML name {0}")
+MSG_DEF(JSMSG_DUPLICATE_XML_ATTR,     198, 1, JSEXN_TYPEERR, "duplicate XML attribute {0}")
