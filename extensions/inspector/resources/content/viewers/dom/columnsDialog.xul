@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE overlay SYSTEM "chrome://inspector/locale/viewers/dom.dtd">
+<!DOCTYPE window SYSTEM "chrome://inspector/locale/viewers/dom.dtd">
 
 <?xml-stylesheet href="chrome://inspector/skin/viewers/dom/columnsDialog.css" type="text/css"?>
 

@@ -1,6 +1,6 @@
 <?xml version="1.0"?> 
 
-<!DOCTYPE window SYSTEM "chrome://inspector/locale/tasksOverlay.dtd" >
+<!DOCTYPE overlay SYSTEM "chrome://inspector/locale/tasksOverlay.dtd" >
 
 <overlay id="ovBrowser"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

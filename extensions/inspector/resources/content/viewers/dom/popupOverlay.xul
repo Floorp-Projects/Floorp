@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE rdf SYSTEM "chrome://inspector/locale/viewers/dom.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://inspector/locale/viewers/dom.dtd">
 
 <overlay id="ovDOMViewerPopup"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

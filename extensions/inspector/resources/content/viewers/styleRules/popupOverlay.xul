@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE rdf SYSTEM "chrome://inspector/locale/viewers/styleRules.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://inspector/locale/viewers/styleRules.dtd">
 
 <overlay id="ovStyleRulesViewerPopup"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
