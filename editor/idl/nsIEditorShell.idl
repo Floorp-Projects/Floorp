@@ -148,7 +148,7 @@ interface nsIEditorShell : nsISupports
   
   void InsertAsQuotation(in wstring quotedText, out nsIDOMNode nodeInserted);
   void InsertAsCitedQuotation(in wstring quotedText, in wstring cite,
-                              in wstring charset,
+                              in boolean insertHTML, in wstring charset,
                               out nsIDOMNode nodeInserted);
   
   void SelectAll();

@@ -413,12 +413,6 @@ function EditorPasteAsQuotation()
   contentWindow.focus();
 }
 
-function EditorPasteAsQuotationCited(citeString)
-{
-  editorShell.PasteAsCitedQuotation(CiteString);
-  contentWindow.focus();
-}
-
 function EditorSelectAll()
 {
   editorShell.SelectAll();
@@ -438,7 +432,7 @@ function EditorFindNext()
 
 function EditorShowClipboard()
 {
-  dump("In EditorShowClipboard...\n");
+  dump("EditorShowClipboard not implemented\n");
 }
 
 // --------------------------- View menu ---------------------------

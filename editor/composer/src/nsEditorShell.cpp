@@ -2131,6 +2131,7 @@ nsEditorShell::InsertAsQuotation(const PRUnichar *quotedText,
 NS_IMETHODIMP    
 nsEditorShell::InsertAsCitedQuotation(const PRUnichar *quotedText,
                                       const PRUnichar *cite,
+                                      PRBool aInsertHTML,
                                       const PRUnichar *charset,
                                       nsIDOMNode** aNodeInserted)
 {  
@@ -2152,6 +2153,7 @@ nsEditorShell::InsertAsCitedQuotation(const PRUnichar *quotedText,
 
     case eHTMLTextEditorType:
       err = mailEditor->InsertAsCitedQuotation(aQuotedText, aCiteString,
+                                               aInsertHTML,
                                                aCharset, aNodeInserted);
       break;
 
