@@ -71,9 +71,6 @@ typedef void (*nsMapRuleToAttributesFunc)(const nsMappedAttributes* aAttributes,
                                           nsRuleData* aData);
 
 
-#define NS_GENERICHTMLELEMENT_IID \
-{0x362256e8,0x64fa,0x11d9,{0x9f,0x6b,0x00,0x0a,0x95,0xd5,0x35,0xfa}}
-
 /**
  * A common superclass for HTML elements
  */
@@ -85,9 +82,6 @@ public:
   {
   }
 
-  /* Support QI directly to this class. */
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_GENERICHTMLELEMENT_IID)
-
   /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
   static nsGenericHTMLElement* FromContent(nsIContent *aContent)
   {
@@ -98,9 +92,6 @@ public:
 
   /** Call on shutdown to release globals */
   static void Shutdown();
-
-  // nsISupports
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   /**
    * Handle QI for the standard DOM interfaces (DOMNode, DOMElement,
