@@ -499,6 +499,10 @@
             if (this.mCurrentBrowser) {
               this.mCurrentBrowser.focusedWindow = document.commandDispatcher.focusedWindow;
               this.mCurrentBrowser.focusedElement = document.commandDispatcher.focusedElement;
+              if (this.mCurrentBrowser.focusedElement) {
+                // Clear focus outline before we draw on top of it
+                this.mCurrentBrowser.focusedElement.blur();
+              }
               this.mCurrentBrowser.setAttribute("type", "content");
             }
 
@@ -557,23 +561,34 @@
               }
             }
 
+            if (document.commandDispatcher.focusedElement && 
+                document.commandDispatcher.focusedElement.parentNode == 
+                this.mCurrentTab.parentNode) {
+              // The focus is on a tab in the same tab panel
+              return;  // If focus was on a tab, switching tabs focuses the new tab
+            }
+            
+            var whatToFocus = window.content;
+
+            // Focus the previously focused element or window
+            if (newBrowser.focusedElement) {
+              if (newBrowser.focusedElement.parentNode != 
+                  this.mCurrentTab.parentNode) {
+                // Focus the remembered element unless it's in the current tab panel
+                whatToFocus = newBrowser.focusedElement;
+              }
+            }
+            else if (newBrowser.focusedWindow) {
+              whatToFocus = newBrowser.focusedWindow;
+            }
+
             function setFocus(element) {
               Components.lookupMethod(element, "focus").call(element);
             }
 
-            // Focus the previously focused element or window
             document.commandDispatcher.suppressFocusScroll = true;
-            if (newBrowser.focusedElement) {
-              try {
-                setFocus(newBrowser.focusedElement);
-              } catch (e) {
-                setFocus(newBrowser.focusedWindow);
-              }
-            }
-            else if (newBrowser.focusedWindow)
-              setFocus(newBrowser.focusedWindow);
-            else // new tab, focus our new content area
-              setTimeout(setFocus, 0, window.content);
+            // Use setTimeout to avoid focus outline ghosting.
+            setTimeout(setFocus, 0, whatToFocus);
             document.commandDispatcher.suppressFocusScroll = false;
           ]]>
         </body>
