@@ -4016,81 +4016,6 @@ nsDocShell::PersistLayoutHistoryState()
 	return rv;
 }
 
-#if 0
-NS_IMETHODIMP
-nsDocShell::CloneAndReplace(nsISHEntry * src, nsISHEntry * cloneRef,
-							nsISHEntry * replaceEntry, nsISHEntry * dest)
-{
-	nsresult result;
-	if (!src || !replaceEntry || !cloneRef || !dest)
-		return NS_ERROR_FAILURE;
-//    NS_ENSURE_ARG_POINTER(dest, NS_ERROR_FAILURE);
-//	static  PRBool firstTime = PR_TRUE;
-//	static nsISHEntry * rootSHEntry = nsnull;
-  
-	if (src == cloneRef) {
-		// release the original object before assigning a new one.
-	   NS_RELEASE(dest);
-       dest = replaceEntry;
-	}
-	else {
-    nsCOMPtr<nsIURI> uri;
-	nsCOMPtr<nsIInputStream> postdata;
-	nsCOMPtr<nsILayoutHistoryState> LHS;
-	PRUnichar * title=nsnull;
-	nsCOMPtr<nsISHEntry> parent;
-
-	src->GetURI(getter_AddRefs(uri));
-	src->GetPostData(getter_AddRefs(postdata));
-	src->GetTitle(&title);
-	src->GetLayoutHistoryState(getter_AddRefs(LHS));
-	//XXX Is this correct? parent is a weak ref in nsISHEntry
-	src->GetParent(getter_AddRefs(parent));
-
-	// XXX do we care much about valid values for these uri, title etc....
-	dest->SetURI(uri);
-	dest->SetPostData(postdata);
-	dest->SetLayoutHistoryState(LHS);
-	dest->SetTitle(title);
-	dest->SetParent(parent);
-	}
-	/*
-	if (firstTime) {
-		// Save the root of the hierarchy in the result parameter
-		rootSHEntry = dest;
-		firstTime = PR_FALSE;
-	}
-    */
-	PRInt32 childCount= 0;
-
-	nsCOMPtr<nsISHContainer> srcContainer(do_QueryInterface(src));
-	if (!srcContainer)
-		return NS_ERROR_FAILURE;
-	nsCOMPtr<nsISHContainer> destContainer(do_QueryInterface(dest));
-	if (!destContainer)
-		return NS_ERROR_FAILURE;
-	srcContainer->GetChildCount(&childCount);
-	for(PRInt32 i = 0; i<childCount; i++) {
-		nsCOMPtr<nsISHEntry> srcChild;
-		srcContainer->GetChildAt(i, getter_AddRefs(srcChild));
-		if (!srcChild)
-			return NS_ERROR_FAILURE;
-		nsCOMPtr<nsISHEntry>  destChild(do_CreateInstance(NS_SHENTRY_CONTRACTID));
-		if (!NS_SUCCEEDED(result))
-			return result;
-		result = CloneAndReplace(srcChild, cloneRef, replaceEntry, destChild);
-		if (!NS_SUCCEEDED(result))
-			return result;
-		result = destContainer->AddChild(destChild, i);
-		if (!NS_SUCCEEDED(result))
-			return result;
-	}
-
-    
-	return result;
-
-}
-#else
 NS_IMETHODIMP
 nsDocShell::CloneAndReplace(nsISHEntry * src, nsISHEntry * cloneRef,
 							nsISHEntry * replaceEntry, nsISHEntry ** resultEntry)
@@ -4099,15 +4024,9 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, nsISHEntry * cloneRef,
 	NS_ENSURE_ARG_POINTER(resultEntry);
 	if (!src || !replaceEntry || !cloneRef)
 		return NS_ERROR_FAILURE;
-//    NS_ENSURE_ARG_POINTER(dest, NS_ERROR_FAILURE);
-//	static  PRBool firstTime = PR_TRUE;
-//	static nsISHEntry * rootSHEntry = nsnull;
-    nsISHEntry * dest = *resultEntry;
-	dest = (nsISHEntry *) nsnull;
+    nsISHEntry * dest = (nsISHEntry *) nsnull;
 
 	if (src == cloneRef) {
-		// release the original object before assigning a new one.
-	   //NS_RELEASE(dest);
 		
       dest = replaceEntry;
 	  *resultEntry = dest;
@@ -4138,16 +4057,7 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, nsISHEntry * cloneRef,
 	dest->SetTitle(title);
 	dest->SetParent(parent);
 	*resultEntry = dest;
-	
-	}
-	*resultEntry = dest;
-	/*
-	if (firstTime) {
-		// Save the root of the hierarchy in the result parameter
-		rootSHEntry = dest;
-		firstTime = PR_FALSE;
-	}
-    */
+
 	PRInt32 childCount= 0;
 
 	nsCOMPtr<nsISHContainer> srcContainer(do_QueryInterface(src));
@@ -4173,11 +4083,11 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, nsISHEntry * cloneRef,
 			return result;
 	}
 
+	}
     
 	return result;
 
 }
-#endif  /* 0 */
 
 //*****************************************************************************
 // nsDocShell: Global History
