@@ -70,6 +70,7 @@ protected:
     PRBool              m_bFirstLineParsed;
     nsHTTPResponse*     m_pResponse;
     nsIHTTPChannel*     m_pConnection;
+    PRUint32            m_ReadLength; // Already read
 };
 
 #endif /* _nsHTTPResponseListener_h_ */

@@ -267,7 +267,7 @@ main(int argc, char* argv[])
         {
             if (pURL)
             {
-                nsCOMPtr<nsIChannel> pConnection;
+                nsCOMPtr<nsIChannel> pChannel;
                 /* Flavour Two */
                 nsEventSinkGetter* pMyConsumer = new nsEventSinkGetter();
                 if (!pMyConsumer)
@@ -277,32 +277,33 @@ main(int argc, char* argv[])
                 }
                 // Async reading thru the calls of the event sink interface
                 if (NS_OK == pService->NewChannelFromURI("load", pURL, pMyConsumer, 
-                                                         getter_AddRefs(pConnection)))
+                                                         getter_AddRefs(pChannel)))
                 {
-                    if (pConnection)
+                    if (pChannel)
                     {
                         /* 
                             You may optionally add/set other headers on this
                             request object. This is done by QI for the specific
                             protocolConnection.
                         */
-                        nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(pConnection));
+                        nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(pChannel));
 
                         if (pHTTPCon)
                         {
                             // Setting a sample user agent string.
-                            if (NS_OK == pHTTPCon->SetRequestHeader("User-Agent", "Mozilla/5.0 [en] (Win98; U)"))
-                            {
-                            }
+                            rv = pHTTPCon->SetRequestHeader("User-Agent", "Mozilla/5.0 [en] (Win98; U)");
+                            if (NS_FAILED(rv)) return rv;
                         }
                     
                         // But calling the open is required!
-//                        pConnection->Open();
-                        pConnection->AsyncRead(0,           // staring position
-                                               -1,          // number of bytes to read
-                                               nsnull,      // ISupports context
-                                               gEventQ,     // nsIEventQ for marshalling
-                                               nsnull);     // IStreamListener consumer
+                        pChannel->Open();
+/*
+                        pChannel->AsyncRead(0,           // staring position
+                                       -1,          // number of bytes to read
+                                       nsnull,      // ISupports context
+                                       gEventQ,     // nsIEventQ for marshalling
+                                       nsnull);     // IStreamListener consumer
+*/
                     }
                 } else {
                     printf("NewChannelFromURI failed!\n");

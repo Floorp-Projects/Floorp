@@ -32,6 +32,7 @@
 #include "nsIServiceManager.h"
 #include "nsINetModuleMgr.h"
 #include "nsIEventQueueService.h"
+#include "nsIBuffer.h"
 
 static const int kMAX_FIRST_LINE_SIZE= 256;
 
@@ -39,6 +40,7 @@ nsHTTPResponseListener::nsHTTPResponseListener():
     m_pConnection(nsnull),
     m_bFirstLineParsed(PR_FALSE),
     m_pResponse(nsnull),
+    m_ReadLength(0),
     m_bHeadersDone(PR_FALSE)
 {
     NS_INIT_REFCNT();
@@ -64,20 +66,19 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
                                         PRUint32 i_SourceOffset,
                                         PRUint32 i_Length)
 {
-    nsIInputStream* inStr = nsnull;
-
     // Should I save this as a member variable? yes... todo
     nsIHTTPEventSink* pSink= nsnull;
     m_pConnection->GetEventSink(&pSink);
     NS_VERIFY(pSink, "No HTTP Event Sink!");
 
     NS_ASSERTION(i_pStream, "Fake stream!");
+    NS_ASSERTION(i_SourceOffset == 0, "Source shifted already?!");
     // Set up the response
     if (!m_pResponse)
     {
  
         // why do I need the connection in the constructor... get rid.. TODO
-        m_pResponse = new nsHTTPResponse (m_pConnection, /* inStr */ i_pStream);
+        m_pResponse = new nsHTTPResponse (m_pConnection, i_pStream);
         if (!m_pResponse)
         {
             NS_ERROR("Failed to create the response object!");
@@ -88,11 +89,6 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
         pTestCon->SetResponse(m_pResponse);
     }
  
-    //printf("nsHTTPResponseListener::OnDataAvailable...\n");
-
-    char extrabuffer[kMAX_FIRST_LINE_SIZE];
-    int extrabufferlen = 0;
-    
     char partHeader[kMAX_FIRST_LINE_SIZE];
     int partHeaderLen = 0;
 
@@ -102,75 +98,84 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
         char buffer[kMAX_FIRST_LINE_SIZE];  
         PRUint32 length;
 
-        nsresult stat = i_pStream->Read(buffer, kMAX_FIRST_LINE_SIZE, &length);
-        NS_ASSERTION(buffer, "Argh...");
-
-        char* p = buffer;
-        while (buffer+length > p)
+        nsCOMPtr<nsIBuffer> pBuffer;
+        nsresult stat = i_pStream->GetBuffer(getter_AddRefs(pBuffer));
+        if (NS_FAILED(stat)) return stat;
+    
+        PRBool bFoundEnd = PR_FALSE;
+        PRUint32 offsetSearchedTo = 260;
+        stat = pBuffer->Search("\r\n\r\n", PR_FALSE, &bFoundEnd, &offsetSearchedTo);
+        if (NS_FAILED(stat)) return stat;
+        if (!bFoundEnd)
         {
-            char* lineStart = p;
-            if (*lineStart == '\0' || *lineStart == CR)
-            {
-                m_bHeadersDone = PR_TRUE;
-                // we read extra so save it for the other headers
-                if (buffer+length > p)
-                {
-                    extrabufferlen = length - (buffer - p);
-                    PL_strncpy(extrabuffer, p, extrabufferlen);
-                }
-                
-                //TODO process headers here. 
-
-                pSink->OnHeadersAvailable(context);
-
-                break; // break off this buffer while
-            }
-            while ((*p != LF) && (buffer+length > p))
-                ++p;
-            if (!m_bFirstLineParsed)
-            {
-                char server_version[8]; // HTTP/1.1 
-                PRUint32 stat = 0;
-                char stat_str[kMAX_FIRST_LINE_SIZE];
-                *p = '\0';
-                sscanf(lineStart, "%8s %d %s", server_version, &stat, stat_str);
-                m_pResponse->SetServerVersion(server_version);
-                m_pResponse->SetStatus(stat);
-                m_pResponse->SetStatusString(stat_str);
-                p++;
-                m_bFirstLineParsed = PR_TRUE;
-            }
-            else
-            {
-                char* header = lineStart;
-                char* value = PL_strchr(lineStart, ':');
-                *p = '\0';
-                if(value)
-                {
-                    *value = '\0';
-                    value++;
-                    if (partHeaderLen == 0)
-                        m_pResponse->SetHeaderInternal(header, value);
-                    else
-                    {
-                        //append the header to the partheader
-                        header = PL_strcat(partHeader, header);
-                        m_pResponse->SetHeaderInternal(header, value);
-                        //Reset partHeader now
-                        partHeader[0]='\0';
-                        partHeaderLen = 0;
-                    }
-
-                }
-                else // this is just a part of the header so save it for later use...
-                {
-                    partHeaderLen = p-header;
-                    PL_strncpy(partHeader, lineStart, partHeaderLen);
-                }
-                p++;
-            }
-        
+            stat = pBuffer->Search("\n\n", PR_FALSE, &bFoundEnd, &offsetSearchedTo);
+            if (NS_FAILED(stat)) return stat;
         }
+
+        //if (bFoundEnd) // how does this matter if offset is all we care about anyway?
+        //{
+            stat = pBuffer->Read(buffer, offsetSearchedTo, &length);
+            length = offsetSearchedTo;
+            char* p = buffer;
+            while (buffer+length > p)
+            {
+                char* lineStart = p;
+                if (*lineStart == '\0' || *lineStart == CR)
+                {
+                    m_bHeadersDone = PR_TRUE;
+
+                    //TODO process headers here. 
+
+                    pSink->OnHeadersAvailable(context);
+
+                    break; // break off this buffer while
+                }
+                while ((*p != LF) && (buffer+length > p))
+                    ++p;
+                if (!m_bFirstLineParsed)
+                {
+                    char server_version[8]; // HTTP/1.1 
+                    PRUint32 stat = 0;
+                    char stat_str[kMAX_FIRST_LINE_SIZE];
+                    *p = '\0';
+                    sscanf(lineStart, "%8s %d %s", server_version, &stat, stat_str);
+                    m_pResponse->SetServerVersion(server_version);
+                    m_pResponse->SetStatus(stat);
+                    m_pResponse->SetStatusString(stat_str);
+                    p++;
+                    m_bFirstLineParsed = PR_TRUE;
+                }
+                else
+                {
+                    char* header = lineStart;
+                    char* value = PL_strchr(lineStart, ':');
+                    *p = '\0';
+                    if(value)
+                    {
+                        *value = '\0';
+                        value++;
+                        if (partHeaderLen == 0)
+                            m_pResponse->SetHeaderInternal(header, value);
+                        else
+                        {
+                            //append the header to the partheader
+                            header = PL_strcat(partHeader, header);
+                            m_pResponse->SetHeaderInternal(header, value);
+                            //Reset partHeader now
+                            partHeader[0]='\0';
+                            partHeaderLen = 0;
+                        }
+
+                    }
+                    else // this is just a part of the header so save it for later use...
+                    {
+                        partHeaderLen = p-header;
+                        PL_strncpy(partHeader, lineStart, partHeaderLen);
+                    }
+                    p++;
+                }
+            }
+        //}
     }
 
     if (m_bHeadersDone)
@@ -272,14 +277,16 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
         if (internalListener) {
             // post the data to the stream listener
             // XXX this is the wrong data and offsets I think.
-            rv = internalListener->OnDataAvailable(context, i_pStream, i_SourceOffset, i_Length);
+            rv = internalListener->OnDataAvailable(context, i_pStream, 0, i_Length);
             NS_RELEASE(internalListener);
             if (NS_FAILED(rv))
                 return rv;
         }
 
         // do whatever we want for the event sink
-        return pSink->OnDataAvailable(context, /* inStr */i_pStream, i_SourceOffset, i_Length);
+        rv = pSink->OnDataAvailable(context, i_pStream, 0, i_Length);
+        return rv;
+
     }
 
     return NS_OK;

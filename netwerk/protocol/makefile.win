@@ -20,8 +20,8 @@ DEPTH = ..\..
 MODULE = netwerk
 
 DIRS=        \
-	file \
-	ftp  \
+file \
+ftp  \
         http \
 	$(NULL)
 
