@@ -545,7 +545,9 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
         int pathLen = strlen(workingFilePath);
         const char* leaf = workingFilePath + pathLen - 4;
     
-        if (pathLen < 4 || (strcmp(leaf, ".lnk") != 0))
+        // if we found the file and we are not following symlinks, then return success.
+ 
+        if (!mFollowSymlinks || pathLen < 4 || (strcmp(leaf, ".lnk") != 0))
         {
 		    mDirty = PR_FALSE;
             return NS_OK;
@@ -1163,7 +1165,7 @@ nsLocalFile::Delete(PRBool recursive)
         return rv;
 
     const char *filePath = mResolvedPath.get();
-
+ 
     if (isDir)
     {
         if (recursive)
