@@ -882,14 +882,6 @@ XULSortServiceImpl::SortTreeChildren(nsIContent *container, PRInt32 colIndex, so
 					nsAutoString	type;
 					if (NS_OK == flatArray[loop]->GetAttribute(kNameSpaceID_None, kRDF_type, type))
 					{
-					
-						char *	crap = type.ToNewCString();
-						if (crap)
-						{
-							delete []crap;
-							crap = nsnull;
-						}
-
 						if (type.EqualsIgnoreCase(kURINC_BookmarkSeparator))
 						{
 							if (loop > startIndex+1)
