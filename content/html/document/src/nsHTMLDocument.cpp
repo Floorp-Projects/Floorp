@@ -36,6 +36,7 @@
 #include "nsIPostToServer.h"  
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
+#include "nsIURLGroup.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIWebShell.h"
 #include "nsIDocumentLoader.h"
@@ -200,6 +201,7 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
   NS_IF_RELEASE(mAttrStyleSheet);
   NS_IF_RELEASE(mStyleAttrStyleSheet);
   NS_IF_RELEASE(mDocumentURL);
+  NS_IF_RELEASE(mDocumentURLGroup);
   if (nsnull != mDocumentTitle) {
     delete mDocumentTitle;
     mDocumentTitle = nsnull;
@@ -207,6 +209,8 @@ nsHTMLDocument::StartDocumentLoad(nsIURL *aURL,
 
   mDocumentURL = aURL;
   NS_ADDREF(aURL);
+
+  mDocumentURLGroup = aURL->GetURLGroup();
 
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
