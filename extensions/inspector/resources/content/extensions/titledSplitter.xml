@@ -74,13 +74,11 @@
         ]]></body>
       </method>
     
+	  <constructor><![CDATA[
+        this.mOpened = false;
+      ]]></constructor>
     </implementation>
     
-    <handlers>
-      <handler event="bindingattached"><![CDATA[
-        this.mOpened = false;
-      ]]></handler>
-    </handlers>
   </binding>
 
 </bindings>

@@ -108,30 +108,28 @@
 	    ]]>
 	    </body>
       </method>
+	  <constructor>
+		  <![CDATA[
+			// first and last tabs need to be able to have unique styles
+			// and also need to select first tab on startup.
+			var tabs = this.getElementsByTagNameNS(
+										"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+										"tab");
+			if (tabs.length) {
+			  if (tabs.length > 1) {
+				tabs[0].setAttribute("first-tab", "true");
+				tabs[tabs.length - 1].setAttribute("last-tab", "true");
+			  }
+			  else if (tabs.length == 1)
+				tabs[0].setAttribute("first-tab", "true");
+			}
+			this.selectedTab = tabs[0];
+			var o = this.getAttribute("orient");
+			if (!o)
+			  this.setAttribute("orient", "horizontal");
+		  ]]>
+      </constructor>
     </implementation>
-    <handlers>
-      <handler event="bindingattached">
-      <![CDATA[
-        // first and last tabs need to be able to have unique styles
-        // and also need to select first tab on startup.
-        var tabs = this.getElementsByTagNameNS(
-									"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-									"tab");
-        if (tabs.length) {
-          if (tabs.length > 1) {
-            tabs[0].setAttribute("first-tab", "true");
-            tabs[tabs.length - 1].setAttribute("last-tab", "true");
-          }
-          else if (tabs.length == 1)
-            tabs[0].setAttribute("first-tab", "true");
-        }
-        this.selectedTab = tabs[0];
-        var o = this.getAttribute("orient");
-        if (!o)
-          this.setAttribute("orient", "horizontal");
-      ]]>
-      </handler>
-    </handlers>
   </binding>
   
   <binding id="tabpanel" extends="xul:deck">

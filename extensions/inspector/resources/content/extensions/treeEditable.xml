@@ -91,16 +91,15 @@
         ]]></body>
       </method>
 
-    </implementation>
-
-    <handlers>
-      <handler event="bindingattached"><![CDATA[
+      <constructor><![CDATA[
         this.mEditorCache = {};
         this.mEditing = false;
         this.mEditingCell = null;
         this.mEditingEditor = null;
-      ]]></handler>
+      ]]></constructor>
+    </implementation>
 
+    <handlers>
       <handler event="mousedown"><![CDATA[
         if (this.mEditing && event.target != this.mEditingEditor)
           this.stopEdit();

@@ -1095,16 +1095,17 @@ CSSLoaderImpl::InsertSheetInDoc(nsICSSStyleSheet* aSheet, PRInt32 aDocIndex,
 
   if (sheetMap) {
     PRInt32 insertIndex = sheetMap->Count();
+    PRBool insertedSheet = PR_FALSE;
     while (0 <= --insertIndex) {
       PRInt32 targetIndex = (PRInt32)sheetMap->ElementAt(insertIndex);
       if (targetIndex < aDocIndex) {
         mDocument->InsertStyleSheetAt(aSheet, insertIndex + 1, aNotify);
         sheetMap->InsertElementAt((void*)aDocIndex, insertIndex + 1);
-        aSheet = nsnull;
+        insertedSheet = PR_TRUE;
         break;
       }
     }
-    if (nsnull != aSheet) { // didn't insert yet
+    if (!insertedSheet) { // didn't insert yet
       mDocument->InsertStyleSheetAt(aSheet, 0, aNotify);
       sheetMap->InsertElementAt((void*)aDocIndex, 0);
     }

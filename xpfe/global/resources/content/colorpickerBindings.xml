@@ -238,13 +238,13 @@
         ]]></body>
       </method>
       
+	  <constructor><![CDATA[
+        this.initialize();
+      ]]></constructor>
+
     </implementation>    
     
     <handlers>
-      <handler event="bindingattached"><![CDATA[
-        this.initialize();
-      ]]></handler>
-      
       <handler event="mouseover"><![CDATA[
         this.hoverCell(event.originalTarget);
       ]]></handler>
@@ -399,13 +399,13 @@
         ]]></body>
       </method>
 
+      <constructor><![CDATA[
+        this.initialize();
+      ]]></constructor>
+      
     </implementation>
 
     <handlers>
-      <handler event="bindingattached"><![CDATA[
-        this.initialize();
-      ]]></handler>
-      
       <handler event="keydown"><![CDATA[
         // open popup if key is up/left/right/down and popup is closed
         if (event.keyCode > 36 && event.keyCode < 41 && !this.mOpen)

@@ -53,6 +53,12 @@
 #include "nsFixedSizeAllocator.h"
 #include "xptinfo.h"
 #include "nsIInterfaceInfoManager.h"
+#include "nsIPresShell.h"
+#include "nsIDocumentObserver.h"
+#include "nsHTMLAtoms.h"
+
+#include "nsICSSLoader.h"
+#include "nsIStyleRuleProcessor.h"
 
 #ifdef USE_IMG2
 #include "imgILoader.h"
@@ -185,12 +191,14 @@ nsIAtom* nsXBLPrototypeBinding::kIncludesAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kContentAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kResourcesAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kResourceAtom = nsnull;
-nsIAtom* nsXBLPrototypeBinding::kTypeAtom = nsnull;
+nsIAtom* nsXBLPrototypeBinding::kStyleSheetAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kSrcAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kInheritsAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kHTMLAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kValueAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kXBLTextAtom = nsnull;
+nsIAtom* nsXBLPrototypeBinding::kConstructorAtom = nsnull;
+nsIAtom* nsXBLPrototypeBinding::kDestructorAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kImplementationAtom = nsnull;
 nsIAtom* nsXBLPrototypeBinding::kImplementsAtom = nsnull;
 nsFixedSizeAllocator nsXBLPrototypeBinding::kAttrPool;
@@ -215,7 +223,7 @@ static const PRInt32 kInsInitialSize = (NS_SIZE_IN_HEAP(sizeof(nsXBLInsertionPoi
 // Implementation /////////////////////////////////////////////////////////////////
 
 // Implement our nsISupports methods
-NS_IMPL_ISUPPORTS1(nsXBLPrototypeBinding, nsIXBLPrototypeBinding)
+NS_IMPL_ISUPPORTS2(nsXBLPrototypeBinding, nsIXBLPrototypeBinding, nsICSSLoaderObserver)
 
 // Constructors/Destructors
 nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsAReadableCString& aID, nsIContent* aElement,
@@ -223,10 +231,12 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsAReadableCString& aID, nsIC
 : mID(aID), 
   mInheritStyle(PR_TRUE), 
   mHasBaseProto(PR_TRUE),
-  mLoadedResources(PR_FALSE),
+  mLoadingResources(PR_FALSE),
+  mPendingSheets(0),
   mAttributeTable(nsnull), 
   mInsertionPointTable(nsnull),
-  mInterfaceTable(nsnull)
+  mInterfaceTable(nsnull),
+  mStyleSheetList(nsnull)
 {
   NS_INIT_REFCNT();
   
@@ -245,13 +255,15 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsAReadableCString& aID, nsIC
     kContentAtom = NS_NewAtom("content");
     kResourcesAtom = NS_NewAtom("resources");
     kResourceAtom = NS_NewAtom("resource");
-    kTypeAtom = NS_NewAtom("type");
+    kStyleSheetAtom = NS_NewAtom("stylesheet");
     kSrcAtom = NS_NewAtom("src");
     kIncludesAtom = NS_NewAtom("includes");
     kInheritsAtom = NS_NewAtom("inherits");
     kHTMLAtom = NS_NewAtom("html");
     kValueAtom = NS_NewAtom("value");
     kXBLTextAtom = NS_NewAtom("xbl:text");
+    kConstructorAtom = NS_NewAtom("constructor");
+    kDestructorAtom = NS_NewAtom("destructor");
     kImplementationAtom = NS_NewAtom("implementation");
     kImplementsAtom = NS_NewAtom("implements");
   }
@@ -293,13 +305,15 @@ nsXBLPrototypeBinding::~nsXBLPrototypeBinding(void)
     NS_RELEASE(kContentAtom);
     NS_RELEASE(kResourcesAtom);
     NS_RELEASE(kResourceAtom);
-    NS_RELEASE(kTypeAtom);
+    NS_RELEASE(kStyleSheetAtom);
     NS_RELEASE(kSrcAtom);
     NS_RELEASE(kIncludesAtom);
     NS_RELEASE(kInheritsAtom);
     NS_RELEASE(kHTMLAtom);
     NS_RELEASE(kValueAtom);
     NS_RELEASE(kXBLTextAtom);
+    NS_RELEASE(kConstructorAtom);
+    NS_RELEASE(kDestructorAtom);
     NS_RELEASE(kImplementationAtom);
     NS_RELEASE(kImplementsAtom);
   }
@@ -396,49 +410,92 @@ nsXBLPrototypeBinding::GetAllowScripts(PRBool* aResult)
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeBinding::LoadResources()
+nsXBLPrototypeBinding::LoadResources(PRBool* aResult)
 {
-  if (mLoadedResources)
+  if (mLoadingResources) {
+    *aResult = (mPendingSheets == 0);
     return NS_OK;
+  }
 
-  mLoadedResources = PR_TRUE;
+  mLoadingResources = PR_TRUE;
+  *aResult = PR_TRUE;
 
+  nsresult rv = NS_OK;
   nsCOMPtr<nsIContent> content;
   GetImmediateChild(kResourcesAtom, getter_AddRefs(content));
   if (content) {
 #ifdef USE_IMG2
-    // Get the image loader.
-    nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
-    if (!il) return NS_ERROR_FAILURE;
-
+    // Declare our loaders.
+    nsCOMPtr<imgILoader> il;
+#endif
+    nsCOMPtr<nsICSSLoader> cssLoader;
+ 
     PRInt32 childCount;
     content->ChildCount(childCount);
+
+    nsCOMPtr<nsIXBLDocumentInfo> info;
+    GetXBLDocumentInfo(nsnull, getter_AddRefs(info));
+    if (!info)
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDocument> doc;
+    info->GetDocument(getter_AddRefs(doc));
+
+    nsCOMPtr<nsIURI> docURL = getter_AddRefs(doc->GetDocumentURL());
+
     for (PRInt32 i = 0; i < childCount; i++) {
       nsCOMPtr<nsIContent> resource;
       content->ChildAt(i, *getter_AddRefs(resource));
 
-      nsAutoString type;
-      resource->GetAttribute(kNameSpaceID_None, kTypeAtom, type);
-      if (type.EqualsIgnoreCase("image")) {
-        // Obtain our src attribute.
-        nsAutoString src;
-        resource->GetAttribute(kNameSpaceID_None, kSrcAtom, src);
+      nsCOMPtr<nsIAtom> tag;
+      resource->GetTag(*getter_AddRefs(tag));
+
+      nsAutoString src;
+      resource->GetAttribute(kNameSpaceID_None, kSrcAtom, src);
         
+      if (src.Length() == 0)
+        continue;
+
+      nsCOMPtr<nsIURI> url;
+      rv = NS_NewURI(getter_AddRefs(url), src, docURL);
+      if (NS_FAILED(rv))
+        continue;
+
+#ifdef USE_IMG2
+      if (tag.get() == nsHTMLAtoms::image) {
+        // Obtain our src attribute.  
         // Construct a URI out of our src attribute.
-        if (src.Length() > 0) {
-          nsCAutoString csrc; csrc.AssignWithConversion(src);
-
-          nsCOMPtr<nsIURL> uri;
-          nsComponentManager::CreateInstance("@mozilla.org/network/standard-url;1",
-                                             nsnull,
-                                             NS_GET_IID(nsIURL),
-                                             getter_AddRefs(uri));
-          uri->SetSpec(csrc);
-
-          // Now kick off the image load
-          nsCOMPtr<imgIRequest> req;
-          il->LoadImage(uri, nsnull, nsnull, nsnull, getter_AddRefs(req));
+        // We need to ensure the image loader is constructed.
+        if (!il) {
+          il = do_GetService("@mozilla.org/image/loader;1");
+          if (!il) continue;
         }
+
+        // Now kick off the image load
+        nsCOMPtr<imgIRequest> req;
+        il->LoadImage(url, nsnull, nsnull, nsnull, getter_AddRefs(req));
+      }
+      else 
+#endif
+      if (tag.get() == kStyleSheetAtom) {
+        if (!cssLoader) {
+          nsCOMPtr<nsIHTMLContentContainer> htmlContent(do_QueryInterface(doc));
+          htmlContent->GetCSSLoader(*getter_AddRefs(cssLoader));
+        }
+
+        if (!cssLoader)
+          continue;
+
+        // Kick off the load of the stylesheet.
+        PRBool doneLoading;
+        nsAutoString empty, media;
+        resource->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::media, media);
+        rv = cssLoader->LoadStyleLink(nsnull, url, empty, media, kNameSpaceID_Unknown,
+                                      doc->GetNumberOfStyleSheets(),
+                                      nsnull,
+                                      doneLoading, this);
+        if (NS_SUCCEEDED(rv))
+          mPendingSheets++;
       }
     }
 
@@ -447,24 +504,25 @@ nsXBLPrototypeBinding::LoadResources()
     PRInt32 index;
     mBinding->IndexOf(content, index);
     mBinding->RemoveChildAt(index, PR_FALSE);
-#endif
   }
+
+  *aResult = (mPendingSheets == 0);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXBLPrototypeBinding::BindingAttached(nsIDOMEventReceiver* aReceiver)
 {
-  if (mSpecialHandler)
-    return mSpecialHandler->BindingAttached(aReceiver);
+  if (mConstructor)
+    return mConstructor->BindingAttached(aReceiver);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXBLPrototypeBinding::BindingDetached(nsIDOMEventReceiver* aReceiver)
 {
-  if (mSpecialHandler)
-    return mSpecialHandler->BindingDetached(aReceiver);
+  if (mDestructor)
+    return mDestructor->BindingDetached(aReceiver);
   return NS_OK;
 }
 
@@ -503,22 +561,17 @@ nsXBLPrototypeBinding::SetHasBasePrototype(PRBool aHasBase)
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeBinding::GetPrototypeHandlers(nsIXBLPrototypeHandler** aResult,
-                                            nsIXBLPrototypeHandler** aSpecialResult)
+nsXBLPrototypeBinding::GetPrototypeHandlers(nsIXBLPrototypeHandler** aResult)
 {
   *aResult = mPrototypeHandler;
-  *aSpecialResult = mSpecialHandler;
   NS_IF_ADDREF(*aResult);
-  NS_IF_ADDREF(*aSpecialResult);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsXBLPrototypeBinding::SetPrototypeHandlers(nsIXBLPrototypeHandler* aHandler,
-                                            nsIXBLPrototypeHandler* aSpecialHandler)
+nsXBLPrototypeBinding::SetPrototypeHandlers(nsIXBLPrototypeHandler* aHandler)
 {
   mPrototypeHandler = aHandler;
-  mSpecialHandler = aSpecialHandler;
   return NS_OK;
 }
 
@@ -838,7 +891,29 @@ nsXBLPrototypeBinding::ConstructHandlers()
   nsCOMPtr<nsIContent> handlers;
   GetImmediateChild(kHandlersAtom, getter_AddRefs(handlers));
   if (handlers)
-    nsXBLService::BuildHandlerChain(handlers, getter_AddRefs(mPrototypeHandler), getter_AddRefs(mSpecialHandler));
+    nsXBLService::BuildHandlerChain(handlers, getter_AddRefs(mPrototypeHandler));
+
+  nsCOMPtr<nsIContent> impl;
+  GetImmediateChild(kImplementationAtom, getter_AddRefs(impl));
+  if (impl) {
+    // Look for <constructor> and <destructor>.
+    PRInt32 count;
+    impl->ChildCount(count);
+    for (PRInt32 i = 0; i < count; i++) {
+      nsCOMPtr<nsIContent> child;
+      impl->ChildAt(i, *getter_AddRefs(child));
+      nsCOMPtr<nsIAtom> tag;
+      child->GetTag(*getter_AddRefs(tag));
+      if (tag.get() == kConstructorAtom) {
+        NS_NewXBLPrototypeHandler(child, getter_AddRefs(mConstructor));
+        mConstructor->SetEventName(tag);
+      }
+      else if (tag.get() == kDestructorAtom) {
+        NS_NewXBLPrototypeHandler(child, getter_AddRefs(mDestructor));
+        mDestructor->SetEventName(tag);
+      }
+    }
+  }
 }
 
 void
@@ -951,6 +1026,14 @@ nsXBLPrototypeBinding::SetInitialAttributes(nsIContent* aBoundElement, nsIConten
     nsXBLAttrChangeData data(this, aBoundElement, aAnonymousContent);
     mAttributeTable->Enumerate(SetAttrs, (void*)&data);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLPrototypeBinding::GetRuleProcessors(nsISupportsArray** aResult)
+{
+  *aResult = mRuleProcessors;
+  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
@@ -1203,6 +1286,97 @@ nsXBLPrototypeBinding::GetNestedChildren(nsIAtom* aTag, nsIContent* aContent, ns
     else
       GetNestedChildren(aTag, child, aList);
   }
+}
+
+NS_IMETHODIMP
+nsXBLPrototypeBinding::AddResourceListener(nsIContent* aBoundElement)
+{
+  if (!mBoundElements)
+    NS_NewISupportsArray(getter_AddRefs(mBoundElements));
+
+  mBoundElements->AppendElement(aBoundElement);
+  return NS_OK;
+}
+
+// nsICSSLoaderObserver
+NS_IMETHODIMP
+nsXBLPrototypeBinding::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify)
+{
+  if (!mStyleSheetList)
+    NS_NewISupportsArray(getter_AddRefs(mStyleSheetList));
+
+  mStyleSheetList->AppendElement(aSheet);
+  mPendingSheets--;
+  if (mPendingSheets == 0) {
+    // All stylesheets are loaded.  
+    nsCOMPtr<nsIStyleRuleProcessor> prevProcessor;
+    NS_NewISupportsArray(getter_AddRefs(mRuleProcessors));
+    PRUint32 count;
+    mStyleSheetList->Count(&count);
+    for (PRUint32 i = 0; i < count; i++) {
+      nsCOMPtr<nsISupports> supp = getter_AddRefs(mStyleSheetList->ElementAt(i));
+      nsCOMPtr<nsICSSStyleSheet> sheet(do_QueryInterface(supp));
+
+      nsCOMPtr<nsIStyleRuleProcessor> processor;
+      sheet->GetStyleRuleProcessor(*getter_AddRefs(processor), prevProcessor);
+      if (processor != prevProcessor) {
+        mRuleProcessors->AppendElement(processor);
+        prevProcessor = processor;
+      }
+    }
+
+    // XXX Check for mPendingScripts when scripts also come online.
+    NotifyBoundElements();
+  }
+  return NS_OK;
+}
+
+void
+nsXBLPrototypeBinding::NotifyBoundElements()
+{
+  nsCOMPtr<nsIXBLService> xblService(do_GetService("@mozilla.org/xbl;1"));
+  nsCAutoString bindingURI;
+  GetBindingURI(bindingURI);
+
+  PRUint32 eltCount;
+  mBoundElements->Count(&eltCount);
+  for (PRUint32 j = 0; j < eltCount; j++) {
+    nsCOMPtr<nsISupports> supp = getter_AddRefs(mBoundElements->ElementAt(j));
+    nsCOMPtr<nsIContent> content(do_QueryInterface(supp));
+    
+    PRBool ready = PR_FALSE;
+    xblService->BindingReady(content, bindingURI, &ready);
+
+    if (ready) {
+      nsCOMPtr<nsIDocument> doc;
+      content->GetDocument(*getter_AddRefs(doc));
+    
+      // Flush first
+      doc->FlushPendingNotifications();
+
+      // Notify
+      nsCOMPtr<nsIContent> parent;
+      content->GetParent(*getter_AddRefs(parent));
+      PRInt32 index = 0;
+      if (parent)
+        parent->IndexOf(content, index);
+        
+      nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(0));
+      if (shell) {
+        nsIFrame* childFrame;
+        shell->GetPrimaryFrameFor(content, &childFrame);
+        nsCOMPtr<nsIDocumentObserver> obs(do_QueryInterface(shell));
+        if (!childFrame)
+          obs->ContentInserted(doc, parent, content, index);
+      }
+
+      // Flush again
+      doc->FlushPendingNotifications();
+    }
+  }
+
+  // Clear out the whole array.
+  mBoundElements = nsnull;
 }
 
 // Creation Routine ///////////////////////////////////////////////////////////////////////

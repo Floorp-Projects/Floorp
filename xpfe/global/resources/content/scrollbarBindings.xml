@@ -64,10 +64,10 @@
         ]]>
         </body>
       </method>
+	  <constructor>
+	    this.initScrollbar();
+	  </constructor>
     </implementation>
-    <handlers>
-      <handler event="bindingattached" action="this.initScrollbar();"/>
-    </handlers>
   </binding>
 
 

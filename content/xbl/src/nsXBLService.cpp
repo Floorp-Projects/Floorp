@@ -692,17 +692,17 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsAReadableString& aURL, 
   newBinding->GenerateAnonymousContent();
 
   // Tell the binding to install event handlers
-  newBinding->InstallEventHandlers(aBinding);
+  newBinding->InstallEventHandlers();
 
   // Set up our properties
   newBinding->InstallProperties();
 
-  // Load our resources.
-  newBinding->LoadResources();
+  // Figure out if we need to execute a constructor.
+  newBinding->GetFirstBindingWithConstructor(aBinding);
 
   // Figure out if we have any scoped sheets.  If so, we do a second resolve.
   newBinding->HasStyleSheets(aResolveStyle);
-
+  
   return NS_OK; 
 }
 
@@ -964,6 +964,16 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
   NS_ASSERTION(protoBinding, "Unable to locate an XBL binding.");
   if (!protoBinding)
     return NS_ERROR_FAILURE;
+
+  // Our prototype binding must have all its resources loaded.
+  PRBool ready;
+  protoBinding->LoadResources(&ready);
+  if (!ready) {
+    // Add our bound element to the protos list of elts that should
+    // be notified when the stylesheets and scripts finish loading.
+    protoBinding->AddResourceListener(aBoundElement);
+    return NS_ERROR_FAILURE; // The binding isn't ready yet.
+  }
 
   // If our prototype already has a base, then don't check for an "extends" attribute.
   nsCOMPtr<nsIXBLBinding> baseBinding;
@@ -1345,52 +1355,34 @@ static void GetImmediateChild(nsIAtom* aTag, nsIContent* aParent, nsIContent** a
 }
 
 nsresult
-nsXBLService::BuildHandlerChain(nsIContent* aContent, nsIXBLPrototypeHandler** aResult,
-                                nsIXBLPrototypeHandler** aSpecialResult)
+nsXBLService::BuildHandlerChain(nsIContent* aContent, nsIXBLPrototypeHandler** aResult)
 {
   nsCOMPtr<nsIXBLPrototypeHandler> firstHandler;
   nsCOMPtr<nsIXBLPrototypeHandler> currHandler;
   
-  nsCOMPtr<nsIXBLPrototypeHandler> firstSpecialHandler;
-  nsCOMPtr<nsIXBLPrototypeHandler> currSpecialHandler;
-
   PRInt32 handlerCount;
   aContent->ChildCount(handlerCount);
   for (PRInt32 j = 0; j < handlerCount; j++) {
     nsCOMPtr<nsIContent> handler;
     aContent->ChildAt(j, *getter_AddRefs(handler));
     
-    PRBool special = PR_FALSE;
     nsAutoString event;
     handler->GetAttribute(kNameSpaceID_None, kEventAtom, event);
-    if (event.Equals(NS_LITERAL_STRING("bindingattached")) || 
-        event.Equals(NS_LITERAL_STRING("bindingdetached")))
-      special = PR_TRUE;
-
+    
     nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
     NS_NewXBLPrototypeHandler(handler, getter_AddRefs(newHandler));
     
     if (newHandler) {
-      if (special) {
-        if (currSpecialHandler)
-          currSpecialHandler->SetNextHandler(newHandler);
-        else firstSpecialHandler = newHandler;
-        currSpecialHandler = newHandler;
-      }
-      else {
-        if (currHandler)
-          currHandler->SetNextHandler(newHandler);
-        else firstHandler = newHandler;
-        currHandler = newHandler;
-      }
+      if (currHandler)
+        currHandler->SetNextHandler(newHandler);
+      else firstHandler = newHandler;
+      currHandler = newHandler;
     }
   }
 
   *aResult = firstHandler;
-  *aSpecialResult = firstSpecialHandler;
   NS_IF_ADDREF(*aResult);
-  NS_IF_ADDREF(*aSpecialResult);
- 
+  
   return NS_OK;
 }
 

@@ -148,10 +148,8 @@ nsXBLSpecialDocInfo::GetHandlers(nsIXBLDocumentInfo* aInfo,
     }
   }
 
-  if (binding) {
-    nsCOMPtr<nsIXBLPrototypeHandler> dummy;
-    binding->GetPrototypeHandlers(aResult, getter_AddRefs(dummy)); // Addref happens here.
-  }
+  if (binding)
+    binding->GetPrototypeHandlers(aResult); // Addref happens here.
 } // GetHandlers
 
 void

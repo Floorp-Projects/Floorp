@@ -321,14 +321,12 @@
           }
         ]]></body>
       </method>
-      
+
+      <constructor> this.init(); </constructor>
+      <destructor> this.destroy(); </destructor>
     </implementation>
     
     <handlers>
-      <handler event="bindingattached"> this.init(); </handler>
-
-      <handler event="bindingdetached"> this.destroy(); </handler>
-
       <handler event="mousedown"><![CDATA[
         if (event.button == 0 || event.button == 2) {
           var target = event.originalTarget;

@@ -387,17 +387,15 @@
           ]]>
         </body>
       </method>
-    </implementation>
-    <handlers>
-      <handler event="bindingattached">
+	  <constructor>
       <![CDATA[
         // initialize strings
         var bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
         this.fillStringsForChildren(document.getAnonymousNodes(this)[1].firstChild, bundle);
         this.fillStringsForChildren(document.getAnonymousNodes(this)[2].firstChild, bundle);
       ]]>
-      </handler>
-    </handlers>
+      </constructor>
+    </implementation>
   </binding>
   <binding id="searchterm" name="searchTerm" extends="xul:box">
     <implementation>

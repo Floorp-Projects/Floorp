@@ -80,7 +80,6 @@ public:
   virtual ~nsXBLDocumentInfo();
   
   NS_IMETHOD GetDocument(nsIDocument** aResult) { *aResult = mDocument; NS_IF_ADDREF(*aResult); return NS_OK; };
-  NS_IMETHOD GetRuleProcessors(nsISupportsArray** aResult);
   
   NS_IMETHOD GetScriptAccess(PRBool* aResult) { *aResult = mScriptAccess; return NS_OK; };
   NS_IMETHOD SetScriptAccess(PRBool aAccess) { mScriptAccess = aAccess; return NS_OK; };
@@ -93,7 +92,6 @@ public:
 private:
   nsCOMPtr<nsIDocument> mDocument;
   nsCString mDocURI;
-  nsCOMPtr<nsISupportsArray> mRuleProcessors;
   PRBool mScriptAccess;
   nsSupportsHashtable* mBindingTable;
 };
@@ -115,42 +113,6 @@ nsXBLDocumentInfo::~nsXBLDocumentInfo()
 {
   /* destructor code */
   delete mBindingTable;
-}
-
-NS_IMETHODIMP
-nsXBLDocumentInfo::GetRuleProcessors(nsISupportsArray** aResult)
-{
-  if (!mRuleProcessors) {
-    // Gather the rule processors.
-    PRInt32 count = mDocument->GetNumberOfStyleSheets();
-    if (count > 2) {
-      nsCOMPtr<nsIHTMLContentContainer> container(do_QueryInterface(mDocument));
-      nsCOMPtr<nsIHTMLCSSStyleSheet> inlineSheet;
-      container->GetInlineStyleSheet(getter_AddRefs(inlineSheet));
-      nsCOMPtr<nsIHTMLStyleSheet> attrSheet;
-      container->GetAttributeStyleSheet(getter_AddRefs(attrSheet));
-      nsCOMPtr<nsIStyleSheet> inlineCSS(do_QueryInterface(inlineSheet));
-      nsCOMPtr<nsIStyleSheet> attrCSS(do_QueryInterface(attrSheet));
-      NS_NewISupportsArray(getter_AddRefs(mRuleProcessors));
-      nsCOMPtr<nsIStyleRuleProcessor> prevProcessor;
-      for (PRInt32 i = 0; i < count; i++) {
-        nsCOMPtr<nsIStyleSheet> sheet = getter_AddRefs(mDocument->GetStyleSheetAt(i));
-        if (sheet == inlineCSS || sheet == attrCSS)
-          continue;
-
-        nsCOMPtr<nsIStyleRuleProcessor> processor;
-        sheet->GetStyleRuleProcessor(*getter_AddRefs(processor), prevProcessor);
-        if (processor != prevProcessor) {
-          mRuleProcessors->AppendElement(processor);
-          prevProcessor = processor;
-        }
-      }
-    }
-  }
-  
-  *aResult = mRuleProcessors;
-  NS_IF_ADDREF(*aResult);
-  return NS_OK;
 }
 
 NS_IMETHODIMP

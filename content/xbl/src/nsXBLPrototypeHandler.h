@@ -55,6 +55,7 @@ public:
   NS_IMETHOD ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEvent* aEvent);
 
   NS_IMETHOD GetEventName(nsIAtom** aResult);
+  NS_IMETHOD SetEventName(nsIAtom* aName) { mEventName = aName; return NS_OK; };
 
   NS_IMETHOD BindingAttached(nsIDOMEventReceiver* aReceiver);
   NS_IMETHOD BindingDetached(nsIDOMEventReceiver* aReceiver);
