@@ -94,6 +94,7 @@ void nsMailboxProtocol::Initialize(nsIURL * aURL)
 	m_runningUrl = nsnull; // initialize to NULL
 	m_transport = nsnull;
 	m_displayConsumer = nsnull;
+	m_mailboxCopyHandler = nsnull;
 
 	if (aURL)
 	{
@@ -309,16 +310,10 @@ PRInt32 nsMailboxProtocol::SendData(const char * dataBuffer)
 	return status;
 }
 
-PRInt32 nsMailboxProtocol::SetupReadMessage()
+PRInt32 nsMailboxProtocol::SetupMessageExtraction()
 {
-	// (1) create a temp file to write the message into. We need to do this because
-	// we don't have pluggable converters yet. We want to let mkfile do the work of 
-	// converting the message from RFC-822 to HTML before displaying it...
-	// (2) Determine the number of bytes we are going to need to read out of the 
+	// Determine the number of bytes we are going to need to read out of the 
 	// mailbox url....
-
-	PR_Delete(MESSAGE_PATH);
-	m_tempMessageFile = PR_Open(MESSAGE_PATH, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
 
 	nsMsgKey messageKey;
 	PRUint32 messageSize = 0;
@@ -382,9 +377,20 @@ PRInt32 nsMailboxProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 					break;
 
 				case nsMailboxActionDisplayMessage:
-					SetupReadMessage();
-					// i may need to modify the url spec to remove the search part and just have a file
-					// path...
+					// create a temp file to write the message into. We need to do this because
+					// we don't have pluggable converters yet. We want to let mkfile do the work of 
+					// converting the message from RFC-822 to HTML before displaying it...
+					PR_Delete(MESSAGE_PATH);
+					m_tempMessageFile = PR_Open(MESSAGE_PATH, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);						
+					SetupMessageExtraction();
+					m_nextState = MAILBOX_READ_MESSAGE;
+					break;
+
+				case nsMailboxActionCopyMessage:
+				case nsMailboxActionMoveMessage:
+					NS_IF_RELEASE(m_mailboxCopyHandler);
+					rv = m_runningUrl->GetMailboxCopyHandler(&m_mailboxCopyHandler);
+					SetupMessageExtraction();
 					m_nextState = MAILBOX_READ_MESSAGE;
 					break;
 
@@ -450,66 +456,78 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 	char *line;
 	PRInt32 status = 0;
 	nsresult rv = NS_OK;
-	char outputBuffer[OUTPUT_BUFFER_SIZE];
-	do
+
+	// if we are doing a move or a copy, forward the data onto the copy handler...
+	// if we want to display the message then parse the incoming data...
+
+	if (m_mailboxAction == nsMailboxActionCopyMessage || m_mailboxAction == nsMailboxActionMoveMessage) 
 	{
-		status = ReadLine(inputStream, length, &line);
-		if(status == 0)
-		{
-			m_nextState = MAILBOX_ERROR_DONE;
-			ClearFlag(MAILBOX_PAUSE_FOR_READ);
-			m_runningUrl->SetErrorMessage("error message not implemented yet");
-			return status;
-		}
-
-		if (status > length)
-			length = 0;
-		else
-			length -= status; 
-
-		if(!line)
-			return(status);  /* no line yet or error */
-	
-		if (!line || (line[0] == '.' && line[1] == 0))
-		{
-			m_nextState = MAILBOX_DONE;
-			// and close the article file if it was open....
-			if (m_tempMessageFile)
-				PR_Close(m_tempMessageFile);
-
-			// mscott: hack alert...now that the file is done...turn around and fire a file url 
-			// to display the message....
-			char * fileUrl = PR_smprintf("file:///%s", MESSAGE_PATH_URL);
-			if (m_displayConsumer)
-				m_displayConsumer->LoadURL(nsAutoString(fileUrl), nsnull, PR_TRUE, nsURLReload, 0);
-
-			ClearFlag(MAILBOX_PAUSE_FOR_READ);
-		} // otherwise process the line
-		else
-		{
-			if (line[0] == '.')
-				PL_strcpy (outputBuffer, line + 1);
-			else
-				PL_strcpy (outputBuffer, line);
-
-			/* When we're sending this line to a converter (ie,
-				it's a message/rfc822) use the local line termination
-				convention, not CRLF.  This makes text articles get
-				saved with the local line terminators.  Since SMTP
-				and NNTP mandate the use of CRLF, it is expected that
-				the local system will convert that to the local line
-				terminator as it is read.
-			*/
-		
-			PL_strcat (outputBuffer, LINEBREAK);
-
-			if (m_tempMessageFile)
-				PR_Write(m_tempMessageFile,(void *) outputBuffer,PL_strlen(outputBuffer));
-		} 
-
-
+		if (m_mailboxCopyHandler)
+			rv = m_mailboxCopyHandler->OnDataAvailable(m_runningUrl, inputStream, length);
 	}
-	while (length > 0 && status > 0);
+	else
+	{
+		char outputBuffer[OUTPUT_BUFFER_SIZE];
+		do
+		{
+			status = ReadLine(inputStream, length, &line);
+			if(status == 0)
+			{
+				m_nextState = MAILBOX_ERROR_DONE;
+				ClearFlag(MAILBOX_PAUSE_FOR_READ);
+				m_runningUrl->SetErrorMessage("error message not implemented yet");
+				return status;
+			}
+
+			if (status > length)
+				length = 0;
+			else
+				length -= status; 
+
+			if(!line)
+				return(status);  /* no line yet or error */
+		
+			if (!line || (line[0] == '.' && line[1] == 0))
+			{
+				m_nextState = MAILBOX_DONE;
+				// and close the article file if it was open....
+				if (m_tempMessageFile)
+					PR_Close(m_tempMessageFile);
+
+				// mscott: hack alert...now that the file is done...turn around and fire a file url 
+				// to display the message....
+				char * fileUrl = PR_smprintf("file:///%s", MESSAGE_PATH_URL);
+				if (m_displayConsumer)
+					m_displayConsumer->LoadURL(nsAutoString(fileUrl), nsnull, PR_TRUE, nsURLReload, 0);
+
+				ClearFlag(MAILBOX_PAUSE_FOR_READ);
+			} // otherwise process the line
+			else
+			{
+				if (line[0] == '.')
+					PL_strcpy (outputBuffer, line + 1);
+				else
+					PL_strcpy (outputBuffer, line);
+
+				/* When we're sending this line to a converter (ie,
+					it's a message/rfc822) use the local line termination
+					convention, not CRLF.  This makes text articles get
+					saved with the local line terminators.  Since SMTP
+					and NNTP mandate the use of CRLF, it is expected that
+					the local system will convert that to the local line
+					terminator as it is read.
+				*/
+			
+				PL_strcat (outputBuffer, LINEBREAK);
+
+				if (m_tempMessageFile)
+					PR_Write(m_tempMessageFile,(void *) outputBuffer,PL_strlen(outputBuffer));
+			} 
+
+
+		}
+		while (length > 0 && status > 0);
+	}
 
 	SetFlag(MAILBOX_PAUSE_FOR_READ); // wait for more data to become available...
 
