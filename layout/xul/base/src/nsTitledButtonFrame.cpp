@@ -260,6 +260,7 @@ nsTitledButtonFrame::UpdateAttributes(nsIPresContext&  aPresContext)
   else 
 	  mAlign = NS_SIDE_BOTTOM;
 
+  value = "";
 	mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
   mTitle = value;
 
