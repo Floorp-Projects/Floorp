@@ -39,11 +39,11 @@
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 
-#define kIndentStr "  "
+#define kIndentStr NS_LITERAL_STRING("  ")
 #define kMozStr "_moz"
-#define kLessThan "<"
-#define kGreaterThan ">"
-#define kEndTag "</"
+#define kLessThan NS_LITERAL_STRING("<")
+#define kGreaterThan NS_LITERAL_STRING(">")
+#define kEndTag NS_LITERAL_STRING("</")
 
 static const PRInt32 kLongLineLen = 128;
 
@@ -257,7 +257,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   
   StartIndentation(name, hasDirtyAttr, aStr);
 
-  AppendToString(NS_LITERAL_STRING(kLessThan), aStr);
+  AppendToString(kLessThan, aStr);
 
   nsXPIDLString sharedName;
   name->GetUnicode(getter_Shares(sharedName));
@@ -265,7 +265,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
   SerializeAttributes(content, name, aStr);
 
-  AppendToString(NS_LITERAL_STRING(kGreaterThan), aStr);
+  AppendToString(kGreaterThan, aStr);
 
   if (LineBreakAfterOpen(name, hasDirtyAttr)) {
     AppendToString(mLineBreak, aStr);
@@ -313,9 +313,9 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
 
   EndIndentation(name, hasDirtyAttr, aStr);
 
-  AppendToString(NS_LITERAL_STRING(kEndTag), aStr);
+  AppendToString(kEndTag, aStr);
   AppendToString(sharedName, -1, aStr);
-  AppendToString(NS_LITERAL_STRING(kGreaterThan), aStr);
+  AppendToString(kGreaterThan, aStr);
 
   if (LineBreakAfterClose(name, hasDirtyAttr)) {
     AppendToString(mLineBreak, aStr);
@@ -575,7 +575,7 @@ nsHTMLContentSerializer::StartIndentation(nsIAtom* aName,
 {
   if ((mDoFormat || aHasDirtyAttr) && !mPreLevel && !mColPos) {
     for (PRInt32 i = mIndent; --i >= 0; ) {
-      AppendToString(NS_ConvertASCIItoUCS2(kIndentStr), -1, 
+      AppendToString(kIndentStr, -1, 
                      aStr);
     }
   }
@@ -610,7 +610,7 @@ nsHTMLContentSerializer::EndIndentation(nsIAtom* aName,
 
   if ((mDoFormat || aHasDirtyAttr) && !mPreLevel && !mColPos) {
     for (PRInt32 i = mIndent; --i >= 0; ) {
-      AppendToString(NS_ConvertASCIItoUCS2(kIndentStr), -1,
+      AppendToString(kIndentStr, -1,
                      aStr);
     }
   }
