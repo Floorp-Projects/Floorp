@@ -23,6 +23,15 @@
 
 // the actual filter that we're editing
 var gFilter;
+
+// cache the key elements we need
+var gFilterNameElement;
+var gActionElement;
+
+// search stuff (move to overlay)
+var gSearchRowContainer;
+var gSearchTermContainer;
+
 var nsIMsgSearchValidityManager = Components.interfaces.nsIMsgSearchValidityManager;
 
 function filterEditorOnLoad()
@@ -48,26 +57,15 @@ function onOk()
     window.close();
 }
 
+// move to overlay
 // set scope on all visible searhattribute tags
 function setScope(scope) {
-    var searchAttributes = document.getElementsByTagName("searchattribute");
-    for (var i = 0; i<searchAttributes.length; i++) {
-        searchAttributes[i].searchScope = scope;
+    var searchTermElements = gSearchTermContainer.childNodes;
+    for (var i=0; i<searchTerms.length; i++) {
+        searchTermElements[i].searchattribute.searchScope = scope;
     }
 }
 
-
-function scopeChanged(event)
-{
-    var menuitem = event.target;
-
-    var searchattr = document.getElementById("searchAttr");
-    try {
-      searchattr.searchScope = menuitem.data;
-    } catch (ex) {
-        
-    }
-}
 
 function getScopeFromFilterList(filterList)
 {
@@ -82,31 +80,35 @@ function getScope(filter) {
 
 function initializeDialog(filter)
 {
-    var filterName = document.getElementById("filterName");
-    filterName.value = filter.filterName;
+    gFilterNameElement = document.getElementById("filterName");
+    gFilterNameElement.value = filter.filterName;
 
-    var actionElement = document.getElementById("actionMenu");
-    actionElement.selectedItem=actionElement.getElementsByAttribute("data", filter.action)[0];
+    gActionElement = document.getElementById("actionMenu");
+    gActionElement.selectedItem=gActionElement.getElementsByAttribute("data", filter.action)[0];
 
-    
-    // now test by initializing the psuedo <searchterm>
     var scope = getScope(filter);
-    var filterRowContainer = document.getElementById("filterTermList");
-    var searchTerms = filter.searchTerms;
+    
+    initializeSearchRows(scope, filter.searchTerms)
+}
+
+// move to overlay
+function initializeSearchRows(scope, searchTerms)
+{
+    gSearchRowContainer = document.getElementById("searchTermList");
+    gSearchTermContainer = document.getElementById("searchterms");
+    dump("gSearchTermContainer = " + gSearchTermContainer + "\n");
     var numTerms = searchTerms.Count();
     for (var i=0; i<numTerms; i++) {
-      var filterRow = createFilterRow(i);
-      filterRowContainer.appendChild(filterRow);
+        createSearchRow(i);
 
       // now that it's been added to the document, we can initialize it.
-      var filterTermObject = document.getElementById("searchTerm" + i);
+      var searchTermElement = document.getElementById("searchTerm" + i);
 
-      if (filterTermObject) {
-          filterTermObject.searchScope = scope;
+      if (searchTermElement) {
+          searchTermElement.searchScope = scope;
           var searchTerm =
-              filter.searchTerms.QueryElementAt(i, Components.interfaces.nsIMsgSearchTerm);
-          if (searchTerm) filterTermObject.searchTerm = searchTerm;
-
+              searchTerms.QueryElementAt(i, Components.interfaces.nsIMsgSearchTerm);
+          if (searchTerm) searchTermElement.searchTerm = searchTerm;
       }
       else {
 
@@ -116,7 +118,8 @@ function initializeDialog(filter)
 
 }
 
-function createFilterRow(index)
+// move to overlay
+function createSearchRow(index)
 {
     var searchAttr = document.createElement("searchattribute");
     var searchOp = document.createElement("searchoperator");
@@ -139,13 +142,9 @@ function createFilterRow(index)
 
     // should this be done with XBL or just straight JS?
     // probably straight JS but I don't know how that's done.
-    var searchtermContainer = document.getElementById("searchterms");
     var searchTerm = document.createElement("searchterm");
-
-    // need to add it to the document before we can do anything about it
     searchTerm.id = "searchTerm" + index;
-    searchtermContainer.appendChild(searchTerm);
-    // now re-find the inserted element
+    gSearchTermContainer.appendChild(searchTerm);
     searchTerm = document.getElementById(searchTerm.id);
     
     searchTerm.searchattribute = searchAttr;
@@ -163,9 +162,7 @@ function createFilterRow(index)
     }
     searchTerm.booleanNodes = stringNodes;
     
-
-    // now return the row
-    return searchrow;
+    gSearchRowContainer.appendChild(searchrow);
 }
 
 // creates a <treerow> using the array treeCellChildren as 
@@ -190,7 +187,11 @@ function constructRow(treeCellChildren)
 }
 
 function saveFilter() {
-    // first save each row
+
+    var filterName = document.getElementById("filterName");
+    filterName.value = gFilter.filterName;
+
+
     var searchTermElements =
         document.getElementById("searchterms").childNodes;
     

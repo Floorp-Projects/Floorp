@@ -63,10 +63,10 @@ Rights Reserved.
       <treecol width="4*"/>
       <treecol width="0*"/>
         
-      <treechildren id="filterTermList">
+      <treechildren id="searchTermList">
 
 <!-- this is what the treerows will look like:
-        <treeitem id="filterListItem">
+        <treeitem id="searchListItem">
           <treerow>
             <treecell id="preSearchAttr"/>
             <treecell allowevents="true">
