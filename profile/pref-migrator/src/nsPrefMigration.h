@@ -114,7 +114,9 @@ class nsPrefMigration: public nsIPrefMigration
       nsresult RenameAndMove4xImapFilterFile(nsIFileSpec *profilePath, const char *hostname);
       nsresult RenameAndMove4xImapFilterFiles(nsIFileSpec *profilePath);
 #endif /* IMAP_MAIL_FILTER_FILE_NAME_FORMAT_IN_4x */
+	  nsresult RenameAndMove4xPopStateFile(nsIFileSpec *profilePath);
       nsresult RenameAndMove4xPopFilterFile(nsIFileSpec *profilePath);
+	  nsresult RenameAndMove4xPopFile(nsIFileSpec * profilePath, const char *fileNameIn4x, const char *fileNameIn5x);
   
       nsresult SetPremigratedFilePref(const char *pref_name, nsIFileSpec *filePath);
 #ifdef NEED_TO_COPY_AND_RENAME_NEWSRC_FILES
