@@ -449,8 +449,8 @@ CertReq(SECKEYPrivateKey *privk, SECKEYPublicKey *pubk, KeyType keyType,
         PORT_FreeArena (arena, PR_FALSE);
 	return SECFailure;
     }
-    if (AddExtensions(extHandle, emailAddrs, PR_FALSE, PR_FALSE, PR_FALSE,
-                      PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE)
+    if (AddExtensions(extHandle, emailAddrs, dnsNames, keyUsage, extKeyUsage,
+                      basicConstraint, authKeyID, crlDistPoints, nscpCertType)
                   != SECSuccess) {
         PORT_FreeArena (arena, PR_FALSE);
         return SECFailure;
@@ -1704,21 +1704,16 @@ AddNscpCertType (void *extHandle)
 }
 
 static SECStatus 
-AddSubjectAltNames(void *extHandle, const char *names, CERTGeneralNameType type)
+AddSubjectAltNames(PRArenaPool *arena, CERTGeneralName **existingListp,
+                    const char *names, CERTGeneralNameType type)
 {
-    SECItem item = { 0, NULL, 0 };
     CERTGeneralName *nameList = NULL;
     CERTGeneralName *current = NULL;
     PRCList *prev = NULL;
-    PRArenaPool *arena;
     const char *cp;
     char *tbuf;
     SECStatus rv = SECSuccess;
 
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if (arena == NULL) {
-	return SECFailure;
-    }
 	
     /*
      * walk down the comma separated list of names. NOTE: there is
@@ -1755,37 +1750,40 @@ AddSubjectAltNames(void *extHandle, const char *names, CERTGeneralNameType type)
 	current->name.other.len = PORT_Strlen(tbuf);
 	prev = &(current->l);
     }
-    if (rv != SECSuccess) {
-	goto loser;
+    /* at this point nameList points to the head of a doubly linked, but not yet 
+       circular, list and current points to its tail. */
+    if (rv == SECSuccess && nameList) {
+        if (*existingListp != NULL) {
+            PRCList *existingprev;
+            /* add nameList to the end of the existing list */
+            existingprev = (*existingListp)->l.prev;
+            (*existingListp)->l.prev = &(current->l);
+            nameList->l.prev = existingprev;
+            existingprev->next = &(nameList->l);
+            current->l.next = &((*existingListp)->l);
+        }
+        else {
+            /* make nameList circular and set it as the new existingList */
+            nameList->l.prev = prev;
+            current->l.next = &(nameList->l);
+            *existingListp = nameList;
+        }
     }
-    /* no email address */
-    if (!nameList) {
-	/*rv=SECSuccess; We know rv is SECSuccess because of the previous if*/
-	goto done; 
-    }
-    nameList->l.prev = prev;
-    current->l.next = &(nameList->l);
-
-    CERT_EncodeAltNameExtension(arena, nameList, &item);
-    rv = CERT_AddExtension (extHandle, SEC_OID_X509_SUBJECT_ALT_NAME, &item, 
-							PR_FALSE, PR_TRUE);
-done:
-loser:
-    PORT_FreeArena(arena, PR_FALSE);
     return rv;
-
 }
 
 static SECStatus 
-AddEmailSubjectAlt(void *extHandle, const char *emailAddrs)
+AddEmailSubjectAlt(PRArenaPool *arena, CERTGeneralName **existingListp,
+                    const char *emailAddrs)
 {
-    return AddSubjectAltNames(extHandle, emailAddrs, certRFC822Name);
+    return AddSubjectAltNames(arena, existingListp, emailAddrs, certRFC822Name);
 }
 
 static SECStatus 
-AddDNSSubjectAlt(void *extHandle, const char *dnsNames)
+AddDNSSubjectAlt(PRArenaPool *arena, CERTGeneralName **existingListp,
+                    const char *dnsNames)
 {
-    return AddSubjectAltNames(extHandle, dnsNames, certDNSName);
+    return AddSubjectAltNames(arena, existingListp, dnsNames, certDNSName);
 }
 
 
@@ -2156,16 +2154,30 @@ AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
 		break;
 	}
 
-	if (emailAddrs != NULL) {
-	    rv = AddEmailSubjectAlt(extHandle,emailAddrs);
-	    if (rv)
-		break;
-	}
+	if (emailAddrs || dnsNames) {
+            PRArenaPool *arena;
+            CERTGeneralName *namelist = NULL;
+            SECItem item = { 0, NULL, 0 };
+            
+            arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+            if (arena == NULL) {
+                rv = SECFailure;
+                break;
+            }
 
-	if (dnsNames != NULL) {
-	    rv = AddDNSSubjectAlt(extHandle,dnsNames);
-	    if (rv)
-		break;
+	    rv = AddEmailSubjectAlt(arena, &namelist, emailAddrs);
+
+	    rv |= AddDNSSubjectAlt(arena, &namelist, dnsNames);
+
+            if (rv == SECSuccess) {
+                rv = CERT_EncodeAltNameExtension(arena, namelist, &item);
+                if (rv == SECSuccess) {
+                   rv = CERT_AddExtension(extHandle,
+                                           SEC_OID_X509_SUBJECT_ALT_NAME,
+                                           &item, PR_FALSE, PR_TRUE);
+                }
+            }
+            PORT_FreeArena(arena, PR_FALSE);
 	}
     } while (0);
     return rv;
