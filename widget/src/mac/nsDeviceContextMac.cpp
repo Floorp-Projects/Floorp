@@ -25,6 +25,7 @@
 #include <TextCommon.h>
 #include <StringCompare.h>
 #include <Fonts.h>
+#include <Resources.h>
 #include "il_util.h"
 #include <FixMath.h>
 
