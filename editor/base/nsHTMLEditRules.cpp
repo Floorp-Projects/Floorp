@@ -460,7 +460,7 @@ nsHTMLEditRules::GetParagraphState(PRBool &aMixed, nsString &outFormat)
     
     if (mEditor->IsInlineNode(curNode))
       format.AssignWithConversion("");
-    else if (nsIEditProperty::p == atom)
+    else if (nsIEditProperty::p == atom.get())
       format.AssignWithConversion("P");
     else if (nsHTMLEditUtils::IsHeader(curNode))
     {
@@ -469,15 +469,15 @@ nsHTMLEditRules::GetParagraphState(PRBool &aMixed, nsString &outFormat)
       tag.ToUpperCase();
       format = tag;
     }
-    else if (nsIEditProperty::blockquote == atom)
+    else if (nsIEditProperty::blockquote == atom.get())
       format.AssignWithConversion("BLOCKQUOTE");
-    else if (nsIEditProperty::address == atom)
+    else if (nsIEditProperty::address == atom.get())
       format.AssignWithConversion("ADDRESS");
-    else if (nsIEditProperty::pre == atom)
+    else if (nsIEditProperty::pre == atom.get())
       format.AssignWithConversion("PRE");
-    else if (nsIEditProperty::dt == atom)
+    else if (nsIEditProperty::dt == atom.get())
       format.AssignWithConversion("DT");
-    else if (nsIEditProperty::dd == atom)
+    else if (nsIEditProperty::dd == atom.get())
       format.AssignWithConversion("DD");
     
     // if this is the first node, we've found, remember it as the format
