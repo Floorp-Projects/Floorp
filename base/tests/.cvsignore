@@ -3,3 +3,5 @@ TestAtoms
 TestCRT
 FilesTest
 CvtURL
+PropertiesTest
+TestAutoLock
