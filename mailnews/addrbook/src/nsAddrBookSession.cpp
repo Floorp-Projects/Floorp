@@ -48,8 +48,7 @@
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAddrBookSession, nsIAddrBookSession)
     
-nsAddrBookSession::nsAddrBookSession():
-  mRefCnt(0)
+nsAddrBookSession::nsAddrBookSession()
 {
   NS_INIT_ISUPPORTS();
 }
@@ -254,3 +253,5 @@ NS_IMETHODIMP nsAddrBookSession::GenerateNameFromCard(nsIAbCard *card, PRInt32 g
 
   return NS_OK;
 }
+
+

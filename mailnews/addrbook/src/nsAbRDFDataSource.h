@@ -56,8 +56,6 @@ public:
 
 	nsAbRDFDataSource();
 	virtual ~nsAbRDFDataSource();
-
-	virtual nsresult Init();
   
 protected:
 
@@ -89,10 +87,6 @@ protected:
 private:
 	nsCOMPtr<nsISupportsArray> mObservers;
 	nsCOMPtr<nsISupportsArray> mProxyObservers;
-	PRBool mInitialized;
-
-	// The cached service managers
-	nsIRDFService*	mRDFService;
 
 	PRLock* mLock;
 };

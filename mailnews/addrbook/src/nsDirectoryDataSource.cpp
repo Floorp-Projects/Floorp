@@ -48,31 +48,12 @@
 #include "nsRDFCID.h"
 #include "nsIRDFNode.h"
 #include "nsEnumeratorUtils.h"
-#include "nsIServiceManager.h"
+#include "nsIObserverService.h"
 
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
-
-// this is used for notification of observers using nsVoidArray
-typedef struct _nsAbRDFNotification {
-  nsIRDFResource *subject;
-  nsIRDFResource *property;
-  nsIRDFNode *object;
-} nsAbRDFNotification;
                                                 
-nsIRDFResource* nsAbDirectoryDataSource::kNC_Child = nsnull;
-nsIRDFResource* nsAbDirectoryDataSource::kNC_DirName = nsnull;
-nsIRDFResource* nsAbDirectoryDataSource::kNC_CardChild = nsnull;
-nsIRDFResource* nsAbDirectoryDataSource::kNC_DirUri = nsnull;
-nsIRDFResource* nsAbDirectoryDataSource::kNC_IsMailList = nsnull;
-nsIRDFResource* nsAbDirectoryDataSource::kNC_IsRemote = nsnull;
-nsIRDFResource* nsAbDirectoryDataSource::kNC_IsWriteable = nsnull;
-
-// commands
-nsIRDFResource* nsAbDirectoryDataSource::kNC_Delete = nsnull;
-nsIRDFResource* nsAbDirectoryDataSource::kNC_DeleteCards = nsnull;
-
 #define NC_RDF_CHILD				"http://home.netscape.com/NC-rdf#child"
 #define NC_RDF_DIRNAME			    "http://home.netscape.com/NC-rdf#DirName"
 #define NC_RDF_CARDCHILD			"http://home.netscape.com/NC-rdf#CardChild"
@@ -88,55 +69,56 @@ nsIRDFResource* nsAbDirectoryDataSource::kNC_DeleteCards = nsnull;
 
 ////////////////////////////////////////////////////////////////////////
 
-nsAbDirectoryDataSource::nsAbDirectoryDataSource():
-  mInitialized(PR_FALSE),
-  mRDFService(nsnull)
+nsAbDirectoryDataSource::nsAbDirectoryDataSource()
 {
 }
 
-nsAbDirectoryDataSource::~nsAbDirectoryDataSource (void)
+nsAbDirectoryDataSource::~nsAbDirectoryDataSource()
 {
+}
 
-	if (mRDFService)
-	{
-		mRDFService->UnregisterDataSource(this);
-		nsServiceManager::ReleaseService("@mozilla.org/rdf/rdf-service;1", mRDFService); 
-		mRDFService = nsnull;
-	}
-	
-	nsresult rv = NS_OK;
-	nsCOMPtr<nsIAddrBookSession> abSession = 
-	         do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
-	if(NS_SUCCEEDED(rv))
-		abSession->RemoveAddressBookListener(this);
+nsresult nsAbDirectoryDataSource::Cleanup()
+{
+  nsresult rv;
+  nsCOMPtr <nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-	nsrefcnt refcnt;
-	NS_RELEASE2(kNC_Child, refcnt);
-	NS_RELEASE2(kNC_DirName, refcnt);
-	NS_RELEASE2(kNC_CardChild, refcnt);
-	NS_RELEASE2(kNC_DirUri, refcnt);
-	NS_RELEASE2(kNC_IsMailList, refcnt);
-	NS_RELEASE2(kNC_IsRemote, refcnt);
-	NS_RELEASE2(kNC_IsWriteable, refcnt);
+  rv = rdf->UnregisterDataSource(this);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-	NS_RELEASE2(kNC_Delete, refcnt);
-	NS_RELEASE2(kNC_DeleteCards, refcnt);
+  nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-	/* free all directories */
-	DIR_ShutDown();
+  rv = abSession->RemoveAddressBookListener(this);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAbDirectoryDataSource::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
+{
+  if (!strcmp(aTopic,"profile-do-change")) {
+    /* the nsDirPrefs code caches all the directories that it got 
+     * from the first profiles prefs.js
+     * When we profile switch, we need to force it to shut down.
+     * we'll re-load all the directories from the second profiles prefs.js 
+     * that happens in nsAbBSDirectory::GetChildNodes()
+     * when we call DIR_GetDirectories()
+     */
+    DIR_ShutDown();
+    return NS_OK;
+  }
+  else if (!strcmp(aTopic,NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    return Cleanup();
+  }
+  return NS_OK;
 }
 
 nsresult
 nsAbDirectoryDataSource::Init()
 {
-	if (mInitialized)
-		return NS_ERROR_ALREADY_INITIALIZED;
-
-	nsresult rv = nsServiceManager::GetService("@mozilla.org/rdf/rdf-service;1",
-											 NS_GET_IID(nsIRDFService),
-											 (nsISupports**) &mRDFService); 
-	NS_ENSURE_SUCCESS(rv, rv);
-
+  nsresult rv;
   nsCOMPtr<nsIAddrBookSession> abSession = 
     do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
   NS_ENSURE_SUCCESS(rv,rv);
@@ -144,30 +126,51 @@ nsAbDirectoryDataSource::Init()
   // this listener cares about all events
   rv = abSession->AddAddressBookListener(this, nsIAbListener::all);
   NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr <nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
   
-	mRDFService->RegisterDataSource(this, PR_FALSE);
+  rv = rdf->RegisterDataSource(this, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = rdf->GetResource(NC_RDF_CHILD, getter_AddRefs(kNC_Child));
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = rdf->GetResource(NC_RDF_DIRNAME, getter_AddRefs(kNC_DirName));
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = rdf->GetResource(NC_RDF_CARDCHILD, getter_AddRefs(kNC_CardChild));
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = rdf->GetResource(NC_RDF_DIRURI, getter_AddRefs(kNC_DirUri));
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = rdf->GetResource(NC_RDF_ISMAILLIST, getter_AddRefs(kNC_IsMailList));
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = rdf->GetResource(NC_RDF_ISREMOTE, getter_AddRefs(kNC_IsRemote));
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = rdf->GetResource(NC_RDF_ISWRITEABLE, getter_AddRefs(kNC_IsWriteable));
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = rdf->GetResource(NC_RDF_DELETE, getter_AddRefs(kNC_Delete));  
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = rdf->GetResource(NC_RDF_DELETECARDS, getter_AddRefs(kNC_DeleteCards));
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = createNode(NS_LITERAL_STRING("true").get(), getter_AddRefs(kTrueLiteral));
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = createNode(NS_LITERAL_STRING("false").get(), getter_AddRefs(kFalseLiteral));
+  NS_ENSURE_SUCCESS(rv,rv);
 
-	if (!kNC_Child)
-	{
-		mRDFService->GetResource(NC_RDF_CHILD, &kNC_Child);
-		mRDFService->GetResource(NC_RDF_DIRNAME, &kNC_DirName);
-		mRDFService->GetResource(NC_RDF_CARDCHILD, &kNC_CardChild);
-		mRDFService->GetResource(NC_RDF_DIRURI, &kNC_DirUri);
-		mRDFService->GetResource(NC_RDF_ISMAILLIST, &kNC_IsMailList);
-		mRDFService->GetResource(NC_RDF_ISREMOTE, &kNC_IsRemote);
-		mRDFService->GetResource(NC_RDF_ISWRITEABLE, &kNC_IsWriteable);
+  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-		mRDFService->GetResource(NC_RDF_DELETE, &kNC_Delete);
-		mRDFService->GetResource(NC_RDF_DELETECARDS, &kNC_DeleteCards);
-	}
-
-	CreateLiterals(mRDFService);
-
-	mInitialized = PR_TRUE;
-	return NS_OK;
+  // since the observer (this) supports weak ref, 
+  // and we call AddObserver() with PR_TRUE for ownsWeak
+  // we don't need to remove our observer from the from the observer service
+  rv = observerService->AddObserver(this, "profile-do-change", PR_TRUE);
+  NS_ENSURE_SUCCESS(rv,rv);
+  rv = observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsAbDirectoryDataSource, nsAbRDFDataSource, nsIAbListener)
+NS_IMPL_ISUPPORTS_INHERITED3(nsAbDirectoryDataSource, nsAbRDFDataSource, nsIAbListener, nsIObserver, nsISupportsWeakReference)
 
  // nsIRDFDataSource methods
 NS_IMETHODIMP nsAbDirectoryDataSource::GetURI(char* *uri)
@@ -189,11 +192,10 @@ NS_IMETHODIMP nsAbDirectoryDataSource::GetTarget(nsIRDFResource* source,
     return NS_RDF_NO_VALUE;
 
   nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(source, &rv));
-  if (NS_SUCCEEDED(rv) && directory) {
+  if (NS_SUCCEEDED(rv) && directory)
     rv = createDirectoryNode(directory, property, target);
-  }
   else
-	  return NS_RDF_NO_VALUE;
+    return NS_RDF_NO_VALUE;
   return rv;
 }
 
@@ -204,8 +206,7 @@ NS_IMETHODIMP nsAbDirectoryDataSource::GetTargets(nsIRDFResource* source,
                                                 nsISimpleEnumerator** targets)
 {
   nsresult rv = NS_RDF_NO_VALUE;
-  if(!targets)
-	  return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(targets);
 
   nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv) && directory)
@@ -315,7 +316,6 @@ NS_IMETHODIMP nsAbDirectoryDataSource::ArcLabelsOut(nsIRDFResource* source,
 
   nsCOMPtr<nsIAbDirectory> directory(do_QueryInterface(source, &rv));
   if (NS_SUCCEEDED(rv)) {
-    // fflush(stdout); // huh?
     rv = getDirectoryArcLabelsOut(directory, getter_AddRefs(arcs));
   }
   else {
@@ -339,18 +339,18 @@ nsresult
 nsAbDirectoryDataSource::getDirectoryArcLabelsOut(nsIAbDirectory *directory,
                                              nsISupportsArray **arcs)
 {
-	nsresult rv;
-	rv = NS_NewISupportsArray(arcs);
-	NS_ENSURE_SUCCESS(rv, rv);
-	
-	(*arcs)->AppendElement(kNC_DirName);
-	(*arcs)->AppendElement(kNC_Child);
-	(*arcs)->AppendElement(kNC_CardChild);
-	(*arcs)->AppendElement(kNC_DirUri);
-	(*arcs)->AppendElement(kNC_IsMailList);
-	(*arcs)->AppendElement(kNC_IsRemote);
-	(*arcs)->AppendElement(kNC_IsWriteable);
-	return NS_OK;
+  nsresult rv;
+  rv = NS_NewISupportsArray(arcs);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  (*arcs)->AppendElement(kNC_DirName);
+  (*arcs)->AppendElement(kNC_Child);
+  (*arcs)->AppendElement(kNC_CardChild);
+  (*arcs)->AppendElement(kNC_DirUri);
+  (*arcs)->AppendElement(kNC_IsMailList);
+  (*arcs)->AppendElement(kNC_IsRemote);
+  (*arcs)->AppendElement(kNC_IsWriteable);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -644,17 +644,6 @@ nsAbDirectoryDataSource::createDirectoryIsMailListNode(nsIAbDirectory* directory
 	else
 		*target = kFalseLiteral;
 	NS_IF_ADDREF(*target);
-	return NS_OK;
-}
-
-nsresult nsAbDirectoryDataSource::CreateLiterals(nsIRDFService *rdf)
-{
-	nsresult rv = createNode(NS_LITERAL_STRING("true").get(), getter_AddRefs(kTrueLiteral));
-  NS_ENSURE_SUCCESS(rv,rv);
-
-	rv = createNode(NS_LITERAL_STRING("false").get(), getter_AddRefs(kFalseLiteral));
-  NS_ENSURE_SUCCESS(rv,rv);
-
 	return NS_OK;
 }
 

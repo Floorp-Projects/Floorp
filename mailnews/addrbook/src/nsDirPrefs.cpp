@@ -367,7 +367,6 @@ static nsresult dir_ConvertToMabFileName()
 		}
 	}
 	return NS_OK;
-
 }
 
 nsresult DIR_ShutDown()  /* FEs should call this when the app is shutting down. It frees all DIR_Servers regardless of ref count values! */
@@ -389,6 +388,19 @@ nsresult DIR_ShutDown()  /* FEs should call this when the app is shutting down. 
 		delete dir_ServerList;
 		dir_ServerList = nsnull;
 	}
+
+  /* unregister the preference call back, if necessary.
+   * we need to do this as DIR_Shutdown() is called when switching profiles
+   * when using turbo.  (see nsAbDirectoryDataSource::Observe())
+   * When switching profiles, prefs get unloaded and then re-loaded
+   * we don't want our callback to get called for all that.
+   * We'll reset our callback the first time DIR_GetDirServers() is called
+   * after we've switched profiles.
+   */
+  if (dir_ServerPrefCallbackRegistered) {
+    pPref->UnregisterCallback(PREF_LDAP_SERVER_TREE_NAME, dir_ServerPrefCallback, nsnull);
+    dir_ServerPrefCallbackRegistered = PR_FALSE;
+  }
 
 	return NS_OK;
 }

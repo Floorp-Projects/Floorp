@@ -46,23 +46,25 @@
 #include "nsDirPrefs.h"
 #include "nsIAbListener.h"
 #include "nsISupportsArray.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
+
 
 /**
  * The addressbook data source.
  */
 class nsAbDirectoryDataSource : public nsAbRDFDataSource,
-							    public nsIAbListener
+							    public nsIAbListener, public nsIObserver, public nsSupportsWeakReference
 {
 private:
 	PRBool	mInitialized;
-
-	// The cached service managers
-	nsIRDFService* mRDFService;
 
 public:
   
 	NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIABLISTENER
+  NS_DECL_NSIOBSERVER
+
 	nsAbDirectoryDataSource(void);
 	virtual ~nsAbDirectoryDataSource (void);
 	virtual nsresult Init();
@@ -123,7 +125,7 @@ protected:
     nsIRDFNode **target);
 	nsresult createDirectoryIsWriteableNode(nsIAbDirectory *directory,
                                             nsIRDFNode **target);
-	static nsresult getDirectoryArcLabelsOut(nsIAbDirectory *directory,
+	nsresult getDirectoryArcLabelsOut(nsIAbDirectory *directory,
 										   nsISupportsArray **arcs);
 
 	nsresult DoDeleteFromDirectory(nsISupportsArray *parentDirs,
@@ -137,25 +139,27 @@ protected:
 							 nsIRDFResource *property, nsIRDFNode *target,
 							 PRBool tv, PRBool *hasAssertion);
 
-	nsresult CreateLiterals(nsIRDFService *rdf);
 	nsresult GetTargetHasAssertion(nsIRDFDataSource *dataSource, nsIRDFResource* dirResource,
 							   nsIRDFResource *property,PRBool tv, nsIRDFNode *target,PRBool* hasAssertion);
 
-	static nsIRDFResource* kNC_Child;
-	static nsIRDFResource* kNC_DirName;
-	static nsIRDFResource* kNC_CardChild;
-	static nsIRDFResource* kNC_DirUri;
-	static nsIRDFResource* kNC_IsMailList;
-  static nsIRDFResource* kNC_IsRemote;
-	static nsIRDFResource* kNC_IsWriteable;
+  nsCOMPtr<nsIRDFResource> kNC_Child;
+  nsCOMPtr<nsIRDFResource> kNC_DirName;
+  nsCOMPtr<nsIRDFResource> kNC_CardChild;
+  nsCOMPtr<nsIRDFResource> kNC_DirUri;
+  nsCOMPtr<nsIRDFResource> kNC_IsMailList;
+  nsCOMPtr<nsIRDFResource> kNC_IsRemote;
+  nsCOMPtr<nsIRDFResource> kNC_IsWriteable;
+  
+  // commands
+  nsCOMPtr<nsIRDFResource> kNC_Delete;
+  nsCOMPtr<nsIRDFResource> kNC_DeleteCards;
+  
+  //Cached literals
+  nsCOMPtr<nsIRDFNode> kTrueLiteral;
+  nsCOMPtr<nsIRDFNode> kFalseLiteral;
 
-	// commands
-	static nsIRDFResource* kNC_Delete;
-	static nsIRDFResource* kNC_DeleteCards;
-
-	//Cached literals
-	nsCOMPtr<nsIRDFNode> kTrueLiteral;
-	nsCOMPtr<nsIRDFNode> kFalseLiteral;
+private:
+  nsresult Cleanup();
 };
 
 nsresult NS_NewAbDirectoryDataSource(const nsIID& iid, void **result);

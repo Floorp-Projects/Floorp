@@ -48,7 +48,6 @@
 #include "nsRDFCID.h"
 #include "nsIRDFNode.h"
 #include "nsEnumeratorUtils.h"
-#include "nsIServiceManager.h"
 #include "nsIThread.h"
 #include "nsIEventQueueService.h"
 #include "nsIProxyObjectManager.h"
@@ -290,8 +289,6 @@ nsresult nsAbRDFDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
 nsAbRDFDataSource::nsAbRDFDataSource():
   mObservers(nsnull),
   mProxyObservers(nsnull),
-  mInitialized(PR_FALSE),
-  mRDFService(nsnull),
   mLock(nsnull)
 {
   NS_INIT_ISUPPORTS();
@@ -300,28 +297,8 @@ nsAbRDFDataSource::nsAbRDFDataSource():
 
 nsAbRDFDataSource::~nsAbRDFDataSource (void)
 {
-	if (mRDFService)
-	{
-		mRDFService->UnregisterDataSource(this);
-		nsServiceManager::ReleaseService("@mozilla.org/rdf/rdf-service;1", mRDFService); 
-		mRDFService = nsnull;
-	}
-
 	if(mLock)
 		PR_DestroyLock (mLock);
-}
-
-nsresult nsAbRDFDataSource::Init()
-{
-
-	nsresult rv = nsServiceManager::GetService("@mozilla.org/rdf/rdf-service;1",
-		NS_GET_IID(nsIRDFService),
-		(nsISupports**) &mRDFService); 
-	NS_ENSURE_SUCCESS(rv, rv);
-
-	mRDFService->RegisterDataSource(this, PR_FALSE);
-	
-	return NS_OK;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbRDFDataSource, nsIRDFDataSource)
