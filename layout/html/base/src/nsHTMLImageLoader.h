@@ -130,6 +130,7 @@ public:
     PRUint32 mHaveComputedSize : 1;
     PRUint32 mSquelchCallback : 1;
     PRUint32 mNeedSizeNotification : 1;
+    PRUint32 mInRecalcMode : 1; // a special flag used only in very rare circumstances, see nsHTMLImageLoader::GetDesiredSize
   } ;
 
 protected:

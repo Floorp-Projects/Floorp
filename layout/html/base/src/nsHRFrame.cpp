@@ -179,27 +179,35 @@ HRuleFrame::Reflow(nsIPresContext*          aPresContext,
   DO_GLOBAL_REFLOW_COUNT("HRuleFrame", aReflowState.reason);
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
+  // bug 18754: In compat mode, we treat HR's as inline elements
+  //            with break-before and break-after semantics
+  //            achieved in quirks.css using :before and :after
+  //            In standard mode, HR is still just a block, no special handling
+  nsCompatibility mode;
+  aPresContext->GetCompatibilityMode(&mode);
+
   // Compute the width
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t);  // get the rounding right
   if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
     aDesiredSize.width = aReflowState.mComputedWidth;
   }
   else {
     if (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) {
-      aDesiredSize.width = nscoord(p2t);
+      aDesiredSize.width = onePixel;
     }
     else {
       aDesiredSize.width = aReflowState.availableWidth;
     }
   }
-  aDesiredSize.width += aReflowState.mComputedBorderPadding.left +
-    aReflowState.mComputedBorderPadding.right;
+
 
   // Get the thickness of the rule. Note that this specifies the
   // height of the rule, not the height of the frame.
   nscoord thickness;
-  if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) {
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) 
+  {
     thickness = aReflowState.mComputedHeight;
   }
   else {
@@ -229,7 +237,6 @@ HRuleFrame::Reflow(nsIPresContext*          aPresContext,
   // specified otherwise tables behave badly. This makes sense -- they
   // are springy.
   if (nsnull != aDesiredSize.maxElementSize) {
-    nscoord onePixel = NSIntPixelsToTwips(1, p2t);
     if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
       nsStyleUnit widthUnit = aReflowState.mStylePosition->mWidth.GetUnit();
       if ((eStyleUnit_Percent == widthUnit) || 
@@ -245,6 +252,7 @@ HRuleFrame::Reflow(nsIPresContext*          aPresContext,
     else {
       aDesiredSize.maxElementSize->width = onePixel;
     }
+    NS_ASSERTION(aDesiredSize.maxElementSize->width <= aDesiredSize.width, "bad max-element-size width");
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
 

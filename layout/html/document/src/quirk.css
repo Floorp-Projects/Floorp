@@ -79,3 +79,22 @@ input[type="text"] {
   padding-left:   0px;
   padding-right:  0px;
 } 
+
+/* HR  see bug 18754                                                     */
+/* there is code in nsLineLayout.cpp and nsHRFrame.cpp to make this work */
+/* in a backwards-compatible way with HRs and floats                     */
+
+hr {
+  display: inline;
+	box-sizing: border-box;
+}
+	
+hr:after {
+  white-space: pre;
+  content: "\A";
+}
+
+hr:before {
+  white-space: pre;
+  content: "\A";
+}
