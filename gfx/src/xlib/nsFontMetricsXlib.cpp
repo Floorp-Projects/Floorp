@@ -1248,7 +1248,7 @@ nsFontMetricsXlibContext::Init(nsIDeviceContext *aDevice, PRBool aPrintermode)
   if (NS_SUCCEEDED(rv))
     mAllowDoubleByteSpecialChars = val;
 
-  /* Make sure we allocate/copy enougth (see http://bugzilla.mozilla.org/show_bug.cgi?id=235913#c12)*/
+  /* Make sure we allocate/copy enough (see bug 235913, comment 12)*/
   PRUint32 dbmapSize = sizeof(gDoubleByteSpecialCharsCCMapUnion);
   mDoubleByteSpecialCharsCCMap = (PRUint16*)PR_Malloc(dbmapSize);
   if (!mDoubleByteSpecialCharsCCMap)
