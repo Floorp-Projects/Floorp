@@ -402,20 +402,12 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
     localcx->SelectOffScreenDrawingSurface(ds);
   }
 
-  if (aUpdateFlags & NS_VMREFRESH_SCREEN_RECT)
-    localcx->SetClipRect(*rect, nsClipCombine_kReplace);
-
   GetWindowOffsets(aView, &xoff, &yoff);
 
   nsRect trect = *rect;
 
-  if (aUpdateFlags & NS_VMREFRESH_SCREEN_RECT)
-    trect.MoveBy(xoff, yoff);
-  else
-  {
-    trect.MoveBy(-xoff, -yoff);
-    localcx->SetClipRect(trect, nsClipCombine_kReplace);
-  }
+  trect.MoveBy(-xoff, -yoff);
+  localcx->SetClipRect(trect, nsClipCombine_kReplace);
 
   PRBool  result;
   aView->Paint(*localcx, trect, 0, result);
@@ -502,7 +494,6 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, nsIRegion *aRegion, PR
 NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags)
 {
   NS_PRECONDITION(nsnull != aView, "null view");
-  NS_PRECONDITION(0 == (aUpdateFlags & NS_VMREFRESH_SCREEN_RECT), "bad update flag");
 
   // Ignore any silly requests...
   if ((aRect.width == 0) || (aRect.height == 0))
