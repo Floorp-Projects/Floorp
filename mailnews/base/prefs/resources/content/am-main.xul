@@ -7,90 +7,74 @@
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-     flex="100%"
-     class="dialog"
+     flex="1" class="color-dialog"
      onload="parent.onPanelLoaded('am-main.xul');"
-     align="vertical">
+     orient="vertical">
 
     <script src="chrome://global/content/strres.js"/>
     <script src="chrome://communicator/content/pref/prefutilities.js"/>
     <script src="chrome://messenger/content/am-main.js"/>
+
     <box class="box-smallheader" title="&accountTitle.label;"/>
+    
+    <html class="secDesc">&accountSettingsDesc.label;</html>
+    <box autostretch="never">
+      <text class="label" value="&accountName.label;" for="server.prettyName"/>
+      <textfield wsm_persist="true" type="text" size="30" id="server.prettyName" flex="1"/>
+    </box>
+    
+    <separator class="thin"/>
+    
+    <titledbox orient="vertical" flex="1">
+      <title value="&identityTitle.label;"/>
+      <html class="secDesc">&identityDesc.label;</html>
+      <separator class="thin"/>
+      <grid flex="1">
+        <columns>
+          <column/>
+          <column flex="1"/>
+        </columns>
+        <rows>
+          <row>
+            <text class="label" value="&name.label;" for="identity.fullName"/>
+            <textfield wsm_persist="true" id="identity.fullName" size="30"/>
+          </row>
+          <row>
+            <text class="label" value="&email.label;" for="identity.email"/>
+            <textfield wsm_persist="true" id="identity.email" />
+          </row>
+          <row>
+            <text class="label" value="&replyTo.label;" for="identity.replyTo"/>
+            <textfield wsm_persist="true" id="identity.replyTo"/>
+          </row>
+          <row>
+            <text class="label" value="&organization.label;" for="identity.organization"/>
+            <textfield wsm_persist="true" id="identity.organization"/>
+          </row>
+        </rows>
+      </grid>
 
-	    <html class="secDesc">&accountSettingsDesc.label;</html>
-	    <html>&accountNameDesc.label;</html>
-        <grid width="100%">
-          <columns>
-            <column flex="1"/>
-            <column flex="2"/>
-          </columns>
-          <rows>
-            <row autostretch="never">
-              <text class="label" value="&accountName.label;" for="server.prettyName"/>
-              <textfield wsm_persist="true" type="text" size="30" id="server.prettyName" flex="100%"/>
-            </row>
-          </rows>
-        </grid>
-    <spring class="spacer"/>
-    <titledbox orient="vertical">
-    <title><text class="header label" value="&identityTitle.label;"/></title>
-
-    <html class="secDesc">&identityDesc.label;</html>
-    <grid width="100%">
-    <columns>
-      <column flex="2"/>
-      <column flex="3"/>
-    </columns>
-    <rows>
-      <row autostretch="never">
-        <text class="label" value="&name.label;" for="identity.fullName"/>
-        <textfield wsm_persist="true" id="identity.fullName" size="30"/>
-      </row>
-      <row autostretch="never">
-        <text class="label" value="&email.label;" for="identity.email"/>
-        <textfield wsm_persist="true" id="identity.email" />
-      </row>
-      <row autostretch="never">
-        <text class="label" value="&replyTo.label;" for="identity.replyTo"/>
-        <textfield wsm_persist="true" id="identity.replyTo"/>
-      </row>
-      <row autostretch="never">
-        <text class="label" value="&organization.label;" for="identity.organization"/>
-        <textfield wsm_persist="true" id="identity.organization"/>
-      </row>
-    </rows>
-    </grid>
-    </titledbox>
-<!-- no vcard in PR1
-    <row class="checkboxrow">
-      <html:td colspan="2">
-        <checkbox wsm_persist="true" id="identity.attachVCard" type="checkbox" value="&attachVCard.label;"/>
-      <button value="&editVCard.label;"/>
-      </html:td>
-      </row>    
--->
       <box orient="horizontal" autostretch="never">
         <checkbox wsm_persist="true" id="identity.attachSignature" value="&signature.label;" flex="1"/>
+      </box>
+      <box autostretch="never">
         <textfield wsm_persist="true" id="identity.signature" datatype="nsIFileSpec" flex="1" name="identity.signature"/>
-        <button class="dialog push" name="browse" type="button" value="&choose.label;" onclick="prefNavSelectFile('identity.signature', 'choosefile', true)"/>
+        <button class="dialog push" name="browse" type="button" value="&choose.label;"  
+                oncommand="prefNavSelectFile('identity.signature', 'choosefile', true)"/>
       </box>
 
-<!--
-      <html:select wsm_persist="true" flex="100%">
-         <html:option value="sig1">&sampleSig1.label;</html:option>
-         <html:option value="sig2">&sampleSig2.label;</html:option>
-         <html:option value="sig3">&sampleSig3.label;</html:option>
-      </html:select>
-      <button value="&edit.label;"/>
+      <box autostretch="never">
+        <checkbox wsm_persist="true" id="identity.composeHtml" value="&useHtml.label;"/>
+      </box>
 
--->
-
-    <checkbox wsm_persist="true" id="identity.composeHtml"
-              value="&useHtml.label;"/>
-
-    <box orient="horizontal">
       <spring flex="1"/>
-      <button onclick="onAdvanced();" value="&advancedButton.label;"/>
-      <text hidden="true" wsm_persist="true" id="identity.smtpServerKey"/>
-    </box>
+
+      <box>
+        <spring flex="1"/>
+        <button onclick="onAdvanced();" value="&advancedButton.label;"/>
+        <text hidden="true" wsm_persist="true" id="identity.smtpServerKey"/>
+      </box>
+
+    </titledbox>
+
 </window>

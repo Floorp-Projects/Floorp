@@ -41,7 +41,7 @@
 <script language="javascript" src="SmtpServerEdit.js"/>
 <keyset id="keyset"/>
 <box id="smtpServerEditor"/>
-<separator class="groove"/>
-<box id="okCancelButtons"/>
+<separator/>
+<box id="okCancelButtonsRight"/>
 
 </window>

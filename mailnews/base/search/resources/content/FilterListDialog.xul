@@ -28,92 +28,111 @@ Rights Reserved.
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   orient="vertical"
   onload="onLoad();"
+  style="width: 34em;"
   title="&window.title;">
 
-<script language="JavaScript" src="chrome://messenger/content/FilterListDialog.js"/>
-<script language="JavaScript" src="chrome://global/content/strres.js"/>
-<!-- <script src="resource:/res/samples/DumpDOM.js"/> -->
-<keyset id="keyset"/>
+  <script language="JavaScript" src="chrome://messenger/content/FilterListDialog.js"/>
+  <script language="JavaScript" src="chrome://global/content/strres.js"/>
 
-  <box orient="horizontal">
-    <text class="label" value="&filtersForPrefix.label;"/>
-    <menulist oncommand="onServerClick(event);" id="serverMenu">
-      <menupopup rdf:datasources="rdf:msgaccountmanager"
-                 rdf:containment="http://home.netscape.com/NC-rdf#child"
-                 ref="msgaccounts:/">
-        <template>
-          <menuitem uri="..." data="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-        </template>
-      </menupopup>
-    </menulist>
-    <text class="label" value="&filtersForPostfix.label;"/>
-  </box>
-  <box orient="horizontal" >
-    <box orient="vertical" style="width:100%;" >
-    <text value="&filterHeader.label;"/>
-    <box orient="horizontal" style="min-height: 200px; min-width: 200px">
-    <tree id="filterTree" class="inset" flex="1"
-       onselect="onFilterSelect(event);"
-       rdf:datasources="rdf:msgfilters rdf:msgaccountmanager "
-       rdf:containment="http://home.netscape.com/NC-rdf#child">
-          <template>
-          <rule>
-            <treechildren flex="1">
-            <treeitem uri="..." open="true"
-                   Enabled="rdf:http://home.netscape.com/NC-rdf#Enabled">
-                  <treerow >
-                    <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-                    <treecell allowevents="true"
-                              class="enabledcol treecell-image"
-                              value="rdf:http://home.netscape.com/NC-rdf#Enabled"
-                              onclick="onToggleEnabled(event);"/>
-                  </treerow>
-            </treeitem>
-            </treechildren>
-          </rule>
-          </template>
+  <!-- <script src="resource:/res/samples/DumpDOM.js"/> -->
 
-      <treecolgroup>
-        <treecol style="width: 0px" flex="85" rdf:resource="http://home.netscape.com/NC-rdf#Name" id="nameColumn"/>
-        <treecol style="width: 0px" flex="15" id="activeColumn"/>
-      </treecolgroup>
+  <keyset id="keyset"/>
 
-      <treehead>
-        <treerow>
-           <treecell persist="hidden width" class="treecell-header treecell-inset-header" value="&nameColumn.label;"/>
-           <treecell persist="hidden width" class="treecell-header treecell-inset-header" value="&activeColumn.label;"/>
-        </treerow>
-      </treehead>
-      </tree>
+  <grid flex="1">
+    <columns>
+      <column flex="1"/>
+      <column/>
+      <column/>
+    </columns>
+    <rows>
+      <row>
+        <text class="label" value="&filtersForPrefix.label;"/>
+        <spring/>
+        <spring/>
+      </row>
+      <row>
+        <menulist oncommand="onServerClick(event);" id="serverMenu">
+          <menupopup rdf:datasources="rdf:msgaccountmanager"
+                     rdf:containment="http://home.netscape.com/NC-rdf#child"
+                     ref="msgaccounts:/">
+            <template>
+              <menuitem uri="..." data="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+            </template>
+          </menupopup>
+        </menulist>
+        <spring/>
+        <spring/>
+      </row>
+      <row>
+        <separator class="thin"/>
+        <spring/>
+        <spring/>
+      </row>
+      <row>
+        <box orient="vertical">
+          <html>&filterHeader.label;</html>
+          <tree id="filterTree" class="inset" flex="1"
+                onselect="onFilterSelect(event);"
+                rdf:datasources="rdf:msgfilters rdf:msgaccountmanager "
+                rdf:containment="http://home.netscape.com/NC-rdf#child">
 
->
-    <box orient="vertical">
-      <spring flex="3"/>
-      <scrollbarbutton type="increment" oncommand="onUp(event)">
-        <image src="chrome://global/skin/scroll-up.gif"/>
-      </scrollbarbutton>
-      <spring flex="1"/>
-      <scrollbarbutton type="decrement" oncommand="onDown(event)">
-        <image src="chrome://global/skin/scroll-down.gif"/>
-      </scrollbarbutton>
-      <spring flex="3"/>
-    </box>
-    </box>
-    </box>
-    <box orient="vertical">
-      <button id="newButton" value="&newButton.label;" onclick="onNewFilter();"/>
-      <button id="editButton" value="&editButton.label;" onclick="onEditFilter();"/>
-      <button id="deleteButton" value="&deleteButton.label;" onclick="onDeleteFilter();"/>
-    </box>
-  </box>
-<!--
-  take out for PR2
-  <box orient="horizontal">
-    <button value="&runFiltersNow.label;" width="0em"/>
-  </box>
--->
-<!--  <button onclick="DumpDOM(document.getElementById('filterTree'));" value="dump"/> -->
-  <separator class="groove"/>
-  <box id="okCancelButtons"/>
+            <treehead>
+              <treerow>
+                <treecell class="treecell-header treecell-inset-header" 
+                          persist="hidden width" value="&nameColumn.label;"/>
+                <treecell class="treecell-header treecell-inset-header" 
+                          persist="hidden width" value="&activeColumn.label;"/>
+              </treerow>
+            </treehead>
+
+            <template>
+              <rule>
+                <treechildren>
+                  <treeitem uri="..." open="true"
+                            Enabled="rdf:http://home.netscape.com/NC-rdf#Enabled">
+                    <treerow >
+                      <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                      <treecell allowevents="true"
+                                class="enabledcol treecell-image"
+                                value="rdf:http://home.netscape.com/NC-rdf#Enabled"
+                                onclick="onToggleEnabled(event);"/>
+                    </treerow>
+                  </treeitem>
+                </treechildren>
+              </rule>
+            </template>
+          
+            <treecolgroup>
+              <treecol style="width: 0px" flex="75" rdf:resource="http://home.netscape.com/NC-rdf#Name" id="nameColumn"/>
+              <treecol style="width: 0px" flex="25" id="activeColumn"/>
+            </treecolgroup>
+          
+            <treechildren flex="1"/>
+            
+          </tree>
+        </box>
+        <box orient="vertical">
+          <spring flex="1"/>
+          <button class="reorder-up top" oncommand="onUp(event);"/>
+          <button class="reorder-down top" oncommand="onDown(event);"/>
+          <spring flex="1"/>
+        </box>
+        <box orient="vertical">
+          <button id="newButton" value="&newButton.label;" onclick="onNewFilter();"/>
+          <button id="editButton" value="&editButton.label;" onclick="onEditFilter();"/>
+          <button id="deleteButton" value="&deleteButton.label;" onclick="onDeleteFilter();"/>
+          <spring flex="1"/>
+          <!-- take out for PR2
+            <button value="&runFiltersNow.label;" width="0em"/>
+            <button onclick="DumpDOM(document.getElementById('filterTree'));" value="dump"/>
+          -->
+        </box>
+      </row>
+    </rows>
+  </grid>
+     
+  <separator/>
+
+  <box id="okCancelButtonsRight"/>
 
 </window>

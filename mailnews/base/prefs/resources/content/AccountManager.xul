@@ -20,7 +20,7 @@
 
 	<keyset id="keyset"/>
 
-	<box orient="horizontal" flex="1" style="padding: 5px">
+	<box flex="1">
 		<box orient="vertical" flex="1">
          <tree rdf:datasources="rdf:msgaccountmanager" style="width:0px" flex="1"
           rdf:containment="http://home.netscape.com/NC-rdf#Settings"
@@ -60,6 +60,5 @@
         <spring style="width: 5px"/>
         <iframe name="contentFrame" flex="6" style="width: 0px"/>
 	</box>
-    <separator class="groove"/>
-    <box id="okCancelButtons"/>
+    <box id="okCancelButtonsRight"/>
 </window>

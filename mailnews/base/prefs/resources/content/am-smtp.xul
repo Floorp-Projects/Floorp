@@ -9,20 +9,29 @@
 <window xmlns:html="http://www.w3.org/1999/xhtml"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	flex="100%"
-	class="dialog"
-    onload="onLoad();"
-	align="vertical">
+	class="color-dialog"
+  onload="onLoad();"
+	orient="vertical">
 
   <script language="javascript" src="am-smtp.js"/>
 
   <box class="box-smallheader" title="&smtpServer.label;"/>
 
+  <titledbox orient="vertical">
+
   <html>&smtpDesc.label;</html>
+
+  <separator/>
 
   <box id="smtpServerEditor"/>
 
-  <box align="horizontal">
-    <spring flex="100%"/>
+  <separator/>
+  
+  <box>
+    <spring flex="1"/>
     <button value="&advanced.label;" oncommand="onAdvanced(event);"/>
   </box>
+  
+  </titledbox>
+  
 </window>

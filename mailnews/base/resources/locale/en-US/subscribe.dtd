@@ -20,8 +20,8 @@ Rights Reserved.
 
 <!ENTITY subscribeButton.label				"Subscribe">
 <!ENTITY unsubscribeButton.label			"Unsubscribe">
-<!ENTITY refreshButton.label				"Refresh">
-<!ENTITY stopButton.label				"Stop">
-<!ENTITY server.label						"Server:">
+<!ENTITY refreshButton.label          "Refresh">
+<!ENTITY stopButton.label             "Stop">
+<!ENTITY server.label                 "Server:">
 <!ENTITY subscribedHeader.label				"Subscribe">
-<!ENTITY messagesHeader.label				"Messages">
+<!ENTITY messagesHeader.label         "Messages">

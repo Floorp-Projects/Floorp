@@ -26,6 +26,7 @@ Rights Reserved.
 <?xul-overlay href="chrome://messenger/content/searchTermOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/mailWindowOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/SearchDialog.dtd" >
 
@@ -33,34 +34,46 @@ Rights Reserved.
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="searchOnLoad();"
     title="&searchDialogTitle.label;"
-    class="dialog"
+    width="620" height="470"
+    persist="screenX screenY width height"
     orient="vertical">
 
+  <keyset id="keyset"/>
+  
   <script src="chrome://global/content/strres.js"/>
   <script src="chrome://messenger/content/mailWindow.js"/>
   <script src="chrome://messenger/content/SearchDialog.js"/>
-  <box>
-    <text class="label" value="&searchHeading.label;"/>
-    <menulist id="searchableFolders" flex="2"
-              oncommand="onChooseFolder(event)"/>
-    <spring flex="1"/>
-<!--
-    <checkbox value="&searchSubfolders.label;"/>
--->
-  </box>
+  
+  <box orient="vertical" class="dialog box-padded">
+    <box autostretch="never">
+      <text class="label" value="&searchHeading.label;"/>
+      <menulist id="searchableFolders" flex="2"
+                oncommand="onChooseFolder(event)"/>
+      <spring flex="1"/>
+      <!--
+        <checkbox value="&searchSubfolders.label;"/>
+      -->
+    </box>
 
-  <box>
-    <titledbox id="searchTermListBox" flex="1"/>
-    <box orient="vertical">
-      <button value="&searchButton.label;" oncommand="onSearch(event)"/>
-      <button value="&resetButton.label;" oncommand="onReset(event)"/>
+    <box flex="1">
+      <titledbox id="searchTermListBox" flex="1"/>
+      <box orient="vertical">
+        <button value="&searchButton.label;" oncommand="onSearch(event)"/>
+        <button value="&resetButton.label;" oncommand="onReset(event)"/>
+        <spring flex="1"/>
+        <button value="&closeButton.label;" onclick="window.close()"/>
+        <separator class="thin"/>
+      </box>
     </box>
   </box>
+    
+  <splitter id="searchfields-splitter" collapse="before" persist="state hidden"
+            autostretch="never" orient="vertical">
+    <grippy/>
+  </splitter>
+  
+  <tree id="threadTree" flex="1" style="height: 0px" context="threadPaneContext"/>
 
-  <tree id="threadTree" class="inset" flex="1" style="height: 50px" context="threadPaneContext"/>
-  <box>
-    <spring flex="100%"/>
-    <button value="&closeButton.label;" onclick="window.close()"/>
-  </box>
-  <box id="status-bar"/>
+  <statusbar id="status-bar"/>
+  
 </window>

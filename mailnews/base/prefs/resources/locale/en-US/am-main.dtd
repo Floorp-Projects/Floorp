@@ -10,7 +10,7 @@
 <!ENTITY email.label "Email Address:">
 <!ENTITY replyTo.label "Reply-to Address:">
 <!ENTITY organization.label "Organization:">
-<!ENTITY signature.label "Attach this signature">
+<!ENTITY signature.label "Attach this signature:">
 <!ENTITY edit.label "Edit...">
 <!ENTITY choose.label "Choose...">
 <!-- LOCALIZATION NOTE (editVCard.label) : do not translate "vCard" in below line -->

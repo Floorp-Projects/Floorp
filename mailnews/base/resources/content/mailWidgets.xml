@@ -42,8 +42,8 @@
 
   <binding id="search-menulist-abstract" name="searchMenulistAbstract" extends="xul:box">
     <content>
-      <xul:menulist inherits="flex" oncommand="this.parentNode.onSelect(event)">
-        <xul:menupopup/>
+      <xul:menulist class="search-menulist" inherits="flex" oncommand="this.parentNode.onSelect(event)">
+        <xul:menupopup class="search-menulist-popup"/>
       </xul:menulist>
     </content>
 
@@ -232,20 +232,20 @@
   <binding id="searchvalue" name="searchValue" extends="xul:deck">
     <!-- yeah yeah, this stuff needs to be localized. I'm working on it! -->
     <content>
-      <xul:textfield flex="1" />
-      <xul:menulist flex="1" >
-        <xul:menupopup>
-          <xul:menuitem value="Lowest"/>
-          <xul:menuitem value="Low"/>
-          <xul:menuitem value="Normal"/>
-          <xul:menuitem value="High"/>
-          <xul:menuitem value="Highest"/>
+      <xul:textfield flex="1" class="search-value-textfield"/>
+      <xul:menulist flex="1" class="search-value-menulist">
+        <xul:menupopup class="search-value-popup">
+          <xul:menuitem value="Lowest" class="search-value-menuitem"/>
+          <xul:menuitem value="Low" class="search-value-menuitem"/>
+          <xul:menuitem value="Normal" class="search-value-menuitem"/>
+          <xul:menuitem value="High" class="search-value-menuitem"/>
+          <xul:menuitem value="Highest" class="search-value-menuitem"/>
         </xul:menupopup>
       </xul:menulist>
-      <xul:menulist flex="1" >
-        <xul:menupopup>
-          <xul:menuitem value="read"/>
-          <xul:menuitem value="replied"/>
+      <xul:menulist flex="1" class="search-value-menulist">
+        <xul:menupopup class="search-value-popup">
+          <xul:menuitem value="read" class="search-value-menuitem"/>
+          <xul:menuitem value="replied" class="search-value-menuitem"/>
         </xul:menupopup>
       </xul:menulist>
     </content>

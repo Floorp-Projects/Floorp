@@ -32,21 +32,23 @@
   <script src="smtpEditOverlay.js"/>
 
   <box id="smtpServerEditor" orient="vertical">
-    <box orient="horizontal" autostretch="never">
+    <box autostretch="never">
       <text class="label" value="&serverName.label;"/>
-      <textfield wsm_persist="true" id="smtp.hostname"/>
+      <textfield wsm_persist="true" id="smtp.hostname" flex="1"/>
     </box>
     <!-- use a grid here when it's implemented -->
     <box orient="vertical">
       <!-- This hidden one will hold the integer version
            of smtp.useUsername -->
       <text hidden="true" id="smtp.authMethod" wsm_persist="true"/>
+      <box autostretch="never">
       <checkbox id="smtp.useUsername" value="&alwaysUseUsername.label;"
                 oncommand="onUseUsername(event.target,true);"/>
+      </box>                
       <box orient="vertical" style="margin-left: 2em">
-        <box orient="horizontal" autostretch="never">
+        <box autostretch="never">
           <text class="label" value="&userName.label;"/>
-          <textfield wsm_persist="true" id="smtp.username"/>
+          <textfield wsm_persist="true" id="smtp.username" flex="1"/>
         </box>
       </box>
      </box>

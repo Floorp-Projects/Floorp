@@ -31,17 +31,20 @@ Rights Reserved.
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&window.title;"
   orient="vertical"
-  persist="width heigh screenX screenY"
+  style="width: 40em;"
+  persist="width height screenX screenY"
   onload="filterEditorOnLoad('msgFccFolderPicker');">
 
-<script language="JavaScript" src="chrome://global/content/strres.js"/>
-<script language="JavaScript" src="chrome://messenger/content/FilterEditor.js"/>
+  <script language="JavaScript" src="chrome://global/content/strres.js"/>
+  <script language="JavaScript" src="chrome://messenger/content/FilterEditor.js"/>
 
-<keyset id="keyset"/>
-  <box orient="horizontal" class="padded">
-    <text value="&filterName.label;"/>
+  <keyset id="keyset"/>
+  
+  <box autostretch="never">
+    <text class="label" value="&filterName.label;"/>
     <textfield flex="1" id="filterName"/>
   </box>
+
   <titledbox id="searchTermListBox"/>
   <titledbox>
     <title>
@@ -59,19 +62,40 @@ Rights Reserved.
       <menulist id="actionTargetFolder" flex="1"
                 oncommand="onTargetFolderSelected(event);"/>
 
-      <menulist id="actionValuePriority">
+  <titledbox id="searchTermListBox" flex="1"/>
+
+  <titledbox autostretch="never">
+    <title value="&filterAction.label;"/>
+    
+      <menulist id="actionMenu" flex="1" oncommand="onActionChanged(event)">
         <menupopup>
-          <!-- see MailNewsTypes2.idl -->
-          <menuitem data="6" value="&highestPriorityCmd.label;"/>
-          <menuitem data="5" value="&highPriorityCmd.label;"/>
-          <menuitem data="4" value="&normalPriorityCmd.label;"/>
-          <menuitem data="3" value="&lowPriorityCmd.label;"/>
-          <menuitem data="2" value="&lowestPriorityCmd.label;"/>
+          <menuitem data="1" actionvalueindex="0" value="&moveToFolder.label;"/>
+          <menuitem data="2" actionvalueindex="1" value="&changePriority.label;"/>
+          <menuitem data="3" actionvalueindex="2" value="&delete.label;"/>
+          <menuitem data="4" actionvalueindex="2" value="&markRead.label;"/>
+          <menuitem data="5" actionvalueindex="2" value="&ignoreThread.label;"/>
+          <menuitem data="6" actionvalueindex="2" value="&watchThread.label;"/>
         </menupopup>
       </menulist>
-      <text id="actionValueNone"/>
-    </deck>
+      <deck id="actionValueDeck" flex="1">
+        <menulist id="actionTargetFolder" flex="1"
+                  oncommand="onTargetFolderSelected(event);"/>
+        <menulist id="actionValuePriority">
+          <menupopup>
+            <!-- see MailNewsTypes2.idl -->
+            <menuitem data="6" value="&highestPriorityCmd.label;"/>
+            <menuitem data="5" value="&highPriorityCmd.label;"/>
+            <menuitem data="4" value="&normalPriorityCmd.label;"/>
+            <menuitem data="3" value="&lowPriorityCmd.label;"/>
+            <menuitem data="2" value="&lowestPriorityCmd.label;"/>
+          </menupopup>
+        </menulist>
+        <text id="actionValueNone"/>
+      </deck>
   </titledbox>
-  <separator class="groove"/>
-  <box id="okCancelButtons"/>
+
+  <separator/>
+
+  <box id="okCancelButtonsRight"/>
+
 </window>

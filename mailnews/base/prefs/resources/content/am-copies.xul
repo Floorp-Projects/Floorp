@@ -8,7 +8,7 @@
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-copies.dtd" >
 <window xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      class="dialog"
+      class="color-dialog"
       onload="parent.onPanelLoaded('am-copies.xul');"
       align="vertical">
 
@@ -23,7 +23,7 @@
 
   <box class="box-smallheader" title="&copyAndFolderTitle.label;"/>
   <titledbox orient="vertical">
-  <title><text class="header label" value="&sendingPrefix.label;"/></title>
+  <title value="&sendingPrefix.label;"/>
 
   <box>
     <checkbox wsm_persist="true" id="identity.doFcc"
@@ -45,7 +45,7 @@
   </titledbox>
 
 <titledbox orient="vertical">
-<title><text class="header label" value="&specialFolderTitle.label;"/></title>
+<title value="&specialFolderTitle.label;"/>
 <grid>
   <columns>
     <column flex="1"/>

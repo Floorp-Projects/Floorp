@@ -33,9 +33,9 @@
   title="&smtpListTitle.label;"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  align="vertical"
+  orient="vertical"
   onload="onLoad();"
-  width="30em"
+  style="width: 30em;"
 >
 
 <script language="javascript" src="chrome://global/content/strres.js"/>
@@ -43,17 +43,18 @@
 
 <keyset id="keyset"/>
 
-<box align="horizontal">
-  <html flex="1">&smtpListDesc.label;</html>
-</box>
-<box align="horizontal" style="min-height: 10em; min-width: 30em">
-  <tree id="smtpTree" onselect="onSelectionChange(event);" class="inset" flex="1" style="height: 30px">
+<html flex="1">&smtpListDesc.label;</html>
+
+<separator class="thin"/>
+
+<box>
+  <tree id="smtpTree" onselect="onSelectionChange(event);" class="inset" flex="1" style="height: 0px;">
     <treecolgroup>
       <treecol flex="1"/>
     </treecolgroup>
     <treechildren id="smtpTreeChildren" flex="1"/>
   </tree>
-  <box align="vertical">
+  <box orient="vertical">
     <button id="addButton"
        oncommand="onAdd(event);" value="&smtpListAdd.label;"/>
     <button id="editButton" disabled="true"
@@ -64,6 +65,9 @@
        oncommand="onSetDefault(event);" value="&smtpListSetDefault.label;"/>
   </box>
 </box>
-<separator class="groove"/>
-<box id="okCancelButtons" />
+
+<separator/>
+
+<box id="okCancelButtonsRight" />
+
 </window>

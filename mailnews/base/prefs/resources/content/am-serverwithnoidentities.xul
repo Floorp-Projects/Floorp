@@ -7,7 +7,7 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
-        class="dialog"
+        class="color-dialog"
         onload="parent.onPanelLoaded('am-serverwithnoidentities.xul');"
         align="vertical">
 

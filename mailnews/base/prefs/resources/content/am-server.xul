@@ -6,7 +6,7 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
-        class="dialog"
+        class="color-dialog"
         onload="parent.onPanelLoaded('am-server.xul');"
         orient="vertical">
 
@@ -44,9 +44,10 @@
     </rows>
   </grid>
   <spring class="spacer"/>
+
   <titledbox>
-  <title><text class="header label" value="&serverSettings.label;"/></title>
-  <box id="serverPrefContainer" orient="vertical">
+  <title value="&serverSettings.label;"/>
+  <box id="serverPrefContainer" orient="vertical" flex="1">
 
   <checkbox wsm_persist="true" id="server.isSecure" value="&isSecure.label;" hidefor="pop3"/>
 <!--
@@ -89,11 +90,11 @@
   <checkbox wsm_persist="true" id="server.emptyTrashOnExit" iscontrolcontainer="true"
             value="&emptyTrashOnExit.label;" hidefor="nntp"/>
 
-  <box iscontrolcontainer="true">
-    <box orient="horizontal">
-      <spring flex="100%"/>
+  <box iscontrolcontainer="true" flex="1">
+    <box flex="1">
+      <spring flex="1"/>
       <button value="&advancedButton.label;"
-                    onclick="openImapAdvanced(event);"/>
+              oncommand="openImapAdvanced(event);"/>
     </box>
 
     <checkbox hidden="true" wsm_persist="true" id="imap.dualUseFolders"/>

@@ -79,6 +79,10 @@ Rights Reserved.
         </grid>
         <spring/>
       </row>
+      <row>
+        <separator class="thin"/>
+        <spring/>
+      </row>
 	    <row flex="1">
         <tree class="inset"	flex="1"
               id="subscribetree"
@@ -116,19 +120,20 @@ Rights Reserved.
           <button id="subscribe" class="dialog" value="&subscribeButton.label;" oncommand="SetSubscribeState(true)"/>
           <button id="unsubscribe" class="dialog" value="&unsubscribeButton.label;" oncommand="SetSubscribeState(false)"/>
           <button id="refresh" class="dialog" value="&refreshButton.label;" oncommand="RefreshList()"/>
+          <spring flex="1"/>
           <button id="stop" class="dialog" value="&stopButton.label;" oncommand="Stop()"/>
         </box>
       </row>
     </rows>
   </grid>
 
-  <separator class="groove"/>
+  <separator/>
+
+  <box autostretch="never">
+    <progressmeter id="statusbar-icon" value="0"/>
+    <text id="statusText" value="this space for rent" crop="right" flex="1"/>
+    <spring flex="1"/>
+    <box id="okCancelButtonsRight"/>
+  </box>  
   
-  <statusbar id="status-bar" class="chromeclass-status">
-    <statusbarpanel id="offline-status"/>
-    <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0" style="width:100px;height:10px"/>
-    <statusbarpanel id="statusText" value="this space for rent" crop="right" flex="1"/>
-    <statusbarpanel id="security-button"/>
-    <box id="okCancelButtons"/>
-  </statusbar>
 </window>
