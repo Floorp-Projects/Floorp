@@ -916,12 +916,6 @@ nsXULElement::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMN
             rv = InsertChildAt(newcontent, pos, PR_TRUE);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to insert aNewChild");
             if (NS_FAILED(rv)) return rv;
-
-            // Because InsertChildAt() only does a "shallow"
-            // SetDocument(), we need to ensure that a "deep" one is
-            // done now...
-            rv = newcontent->SetDocument(mDocument, PR_TRUE);
-            if (NS_FAILED(rv)) return rv;
         }
 
         // XXX Hmm. There's a case here that we handle ambiguously, I
@@ -932,12 +926,6 @@ nsXULElement::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMN
     else {
         rv = AppendChildTo(newcontent, PR_TRUE);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to append a aNewChild");
-        if (NS_FAILED(rv)) return rv;
-
-        // Because AppendChildTo() only does a "shallow"
-        // SetDocument(), we need to ensure that a "deep" one is done
-        // now...
-        rv = newcontent->SetDocument(mDocument, PR_TRUE);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -975,12 +963,6 @@ nsXULElement::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMN
             if (newelement) {
                 rv = ReplaceChildAt(newelement, pos, PR_TRUE);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "unable to replace old child");
-
-                // Because ReplaceChildAt() only does a "shallow"
-                // SetDocument(), we need to ensure that a "deep" one
-                // is done now...
-                rv = newelement->SetDocument(mDocument, PR_TRUE);
-                if (NS_FAILED(rv)) return rv;
             }
         }
     }
@@ -1874,39 +1856,40 @@ nsXULElement::GetDocument(nsIDocument*& aResult) const
 NS_IMETHODIMP
 nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 {
+    if (aDocument == mDocument)
+        return NS_OK;
+
     nsresult rv;
 
-    if (aDocument != mDocument) {
-        nsCOMPtr<nsIXULDocument> rdfDoc;
-        if (mDocument) {
-            // Release the named reference to the script object so it can
-            // be garbage collected.
-            if (mScriptObject) {
-                nsCOMPtr<nsIScriptGlobalObject> global;
-                mDocument->GetScriptGlobalObject(getter_AddRefs(global));
-                if (global) {
-                    nsCOMPtr<nsIScriptContext> context;
-                    global->GetContext(getter_AddRefs(context));
-                    if (context) {
-                        context->RemoveReference((void*) &mScriptObject, mScriptObject);
-                    }
+    nsCOMPtr<nsIXULDocument> rdfDoc;
+    if (mDocument) {
+        // Release the named reference to the script object so it can
+        // be garbage collected.
+        if (mScriptObject) {
+            nsCOMPtr<nsIScriptGlobalObject> global;
+            mDocument->GetScriptGlobalObject(getter_AddRefs(global));
+            if (global) {
+                nsCOMPtr<nsIScriptContext> context;
+                global->GetContext(getter_AddRefs(context));
+                if (context) {
+                    context->RemoveReference((void*) &mScriptObject, mScriptObject);
                 }
             }
         }
+    }
 
-        mDocument = aDocument; // not refcounted
+    mDocument = aDocument; // not refcounted
 
-        if (mDocument) {
-            // Add a named reference to the script object.
-            if (mScriptObject) {
-                nsCOMPtr<nsIScriptGlobalObject> global;
-                mDocument->GetScriptGlobalObject(getter_AddRefs(global));
-                if (global) {
-                    nsCOMPtr<nsIScriptContext> context;
-                    global->GetContext(getter_AddRefs(context));
-                    if (context) {
-                        context->AddNamedReference((void*) &mScriptObject, mScriptObject, "nsXULElement::mScriptObject");
-                    }
+    if (mDocument) {
+        // Add a named reference to the script object.
+        if (mScriptObject) {
+            nsCOMPtr<nsIScriptGlobalObject> global;
+            mDocument->GetScriptGlobalObject(getter_AddRefs(global));
+            if (global) {
+                nsCOMPtr<nsIScriptContext> context;
+                global->GetContext(getter_AddRefs(context));
+                if (context) {
+                    context->AddNamedReference((void*) &mScriptObject, mScriptObject, "nsXULElement::mScriptObject");
                 }
             }
         }
@@ -1933,7 +1916,6 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep)
             child->SetDocument(aDocument, aDeep);
         }
     }
-
     return NS_OK;
 }
 
@@ -2028,10 +2010,10 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         //nsRange::OwnerChildInserted(this, aIndex);
 
-        // N.B. that this is "shallow"!
-        aKid->SetDocument(mDocument, PR_FALSE);
+        //XXXwaterson this should be shallow
+        aKid->SetDocument(mDocument, PR_TRUE);
 
-        if (aNotify && mDocument) {
+        if (aNotify && ElementIsInDocument()) {
                 mDocument->ContentInserted(NS_STATIC_CAST(nsIStyledContent*, this), aKid, aIndex);
         }
     }
@@ -2070,17 +2052,18 @@ nsXULElement::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         //nsRange::OwnerChildReplaced(this, aIndex, oldKid);
 
-        // N.B. that we only do a "shallow" SetDocument()
-        // here. Callers beware!
-        aKid->SetDocument(mDocument, PR_FALSE);
+        //XXXwaterson this should be shallow
+        aKid->SetDocument(mDocument, PR_TRUE);
 
-        if (aNotify && mDocument) {
+        if (aNotify && ElementIsInDocument()) {
             mDocument->ContentReplaced(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aKid, aIndex);
         }
 
+#if 0 //XXXwaterson put this in eventually.
         // This will cause the script object to be unrooted for each
         // element in the subtree.
         oldKid->SetDocument(nsnull, PR_TRUE);
+#endif
 
         // We've got no mo' parent.
         oldKid->SetParent(nsnull);
@@ -2107,10 +2090,10 @@ nsXULElement::AppendChildTo(nsIContent* aKid, PRBool aNotify)
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         // ranges don't need adjustment since new child is at end of list
 
-        // N.B. that this is only "shallow". Callers beware!
-        aKid->SetDocument(mDocument, PR_FALSE);
+        //XXXwaterson this should be shallow
+        aKid->SetDocument(mDocument, PR_TRUE);
 
-        if (aNotify && mDocument) {
+        if (aNotify && ElementIsInDocument()) {
             PRUint32 cnt;
             rv = mChildren->Count(&cnt);
             if (NS_FAILED(rv)) return rv;
@@ -2211,13 +2194,15 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
         nsIDocument* doc = mDocument;
         PRBool removeOk = mChildren->RemoveElementAt(aIndex);
         //nsRange::OwnerChildRemoved(this, aIndex, oldKid);
-        if (aNotify && removeOk && mDocument) {
+        if (aNotify && removeOk && ElementIsInDocument()) {
             doc->ContentRemoved(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aIndex);
         }
 
+#if 0 //XXXwaterson put this in eventually
         // This will cause the script object to be unrooted for each
         // element in the subtree.
         oldKid->SetDocument(nsnull, PR_TRUE);
+#endif
 
         // We've got no mo' parent.
         oldKid->SetParent(nsnull);
@@ -3262,6 +3247,37 @@ nsXULElement::ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsString
     return NS_OK;
 }
 
+
+PRBool
+nsXULElement::ElementIsInDocument()
+{
+    // Check to see if the element is really _in_ the document; that
+    // is, that it actually is in the tree rooted at the document's
+    // root content.
+    if (! mDocument)
+        return PR_FALSE;
+
+    nsresult rv;
+
+    nsCOMPtr<nsIContent> root = dont_AddRef( mDocument->GetRootContent() );
+    if (! root)
+        return PR_FALSE;
+
+    // Hack to get off scc's evil-use-of-do_QueryInterface() radar.
+    nsIStyledContent* p = NS_STATIC_CAST(nsIStyledContent*, this);
+    nsCOMPtr<nsIContent> node = do_QueryInterface(p);
+
+    while (node) {
+        if (node == root)
+            return PR_TRUE;
+
+        nsCOMPtr<nsIContent> oldNode = node;
+        rv = oldNode->GetParent(*getter_AddRefs(node));
+        if (NS_FAILED(rv)) return PR_FALSE;
+    }
+
+    return PR_FALSE;
+}
 
 nsresult
 nsXULElement::ExecuteJSCode(nsIDOMElement* anElement, nsEvent* aEvent)
