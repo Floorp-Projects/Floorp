@@ -17,6 +17,8 @@
 
 DEPTH = ../..
 
+DIRS= viewer 
+
 include $(DEPTH)/config/config.mk
 
 include $(DEPTH)/config/rules.mk
