@@ -49,6 +49,8 @@ nsMacControl::nsMacControl() : nsWindow()
 	mLastBounds.SetRect(0,0,0,0);
 	mLastValue = 0;
 	mLastHilite = 0;
+
+	AcceptFocusOnClick(PR_FALSE);
 }
 
 /**-------------------------------------------------------------------------
@@ -248,6 +250,16 @@ void  nsMacControl::ControlChanged(PRInt32 aNewValue)
 
 
 #pragma mark -
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsMacControl::Enable(PRBool bState)
+{
+  Inherited::Enable(bState);
+  Invalidate(PR_FALSE);
+  return NS_OK;
+}
 //-------------------------------------------------------------------------
 //
 //
