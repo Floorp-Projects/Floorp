@@ -5042,15 +5042,24 @@ nsWindow::HandleTextEvent(HIMC hIMEContext,PRBool aCheckAttr)
   //
   // Post process event
   //
-  candForm.dwIndex = 0;
-  candForm.dwStyle = CFS_EXCLUDE;
-  candForm.ptCurrentPos.x = event.theReply.mCursorPosition.x;
-  candForm.ptCurrentPos.y = event.theReply.mCursorPosition.y;
-  candForm.rcArea.right = candForm.rcArea.left = candForm.ptCurrentPos.x;
-  candForm.rcArea.top = candForm.ptCurrentPos.y;
-  candForm.rcArea.bottom = candForm.ptCurrentPos.y+event.theReply.mCursorPosition.height;
+  if((0 != event.theReply.mCursorPosition.width) ||
+     (0 != event.theReply.mCursorPosition.height) )
+  {
+    candForm.dwIndex = 0;
+    candForm.dwStyle = CFS_EXCLUDE;
+    candForm.ptCurrentPos.x = event.theReply.mCursorPosition.x;
+    candForm.ptCurrentPos.y = event.theReply.mCursorPosition.y;
+    candForm.rcArea.right = candForm.rcArea.left = candForm.ptCurrentPos.x;
+    candForm.rcArea.top = candForm.ptCurrentPos.y;
+    candForm.rcArea.bottom = candForm.ptCurrentPos.y + 
+                             event.theReply.mCursorPosition.height;
  
-  NS_IMM_SETCANDIDATEWINDOW(hIMEContext,&candForm);
+    NS_IMM_SETCANDIDATEWINDOW(hIMEContext,&candForm);
+  } else {
+    // for some reason we don't know yet, theReply may contains invalid result
+    // need more debugging in nsCaret to find out the reason
+    // the best we can do now is to ignore the invalid result
+  }
 
 }
 
@@ -5073,15 +5082,27 @@ nsWindow::HandleStartComposition(HIMC hIMEContext)
 	//
 	// Post process event
 	//
-	candForm.dwIndex = 0;
-	candForm.dwStyle = CFS_CANDIDATEPOS;
-	candForm.ptCurrentPos.x = event.theReply.mCursorPosition.x + IME_X_OFFSET;
-	candForm.ptCurrentPos.y = event.theReply.mCursorPosition.y + IME_Y_OFFSET
-	                        + event.theReply.mCursorPosition.height;
+  if((0 != event.theReply.mCursorPosition.width) ||
+     (0 != event.theReply.mCursorPosition.height) )
+  {
+    candForm.dwIndex = 0;
+    candForm.dwStyle = CFS_CANDIDATEPOS;
+    candForm.ptCurrentPos.x = event.theReply.mCursorPosition.x + IME_X_OFFSET;
+    candForm.ptCurrentPos.y = event.theReply.mCursorPosition.y + IME_Y_OFFSET
+                              + event.theReply.mCursorPosition.height;
+    candForm.rcArea.right = 0;
+    candForm.rcArea.left = 0;
+    candForm.rcArea.top = 0;
+    candForm.rcArea.bottom = 0;
 #ifdef DEBUG_IME2
-	printf("Candidate window position: x=%d, y=%d\n",candForm.ptCurrentPos.x,candForm.ptCurrentPos.y);
+    printf("Candidate window position: x=%d, y=%d\n",candForm.ptCurrentPos.x,candForm.ptCurrentPos.y);
 #endif
-	NS_IMM_SETCANDIDATEWINDOW(hIMEContext, &candForm);
+    NS_IMM_SETCANDIDATEWINDOW(hIMEContext, &candForm);
+  } else {
+    // for some reason we don't know yet, theReply may contains invalid result
+    // need more debugging in nsCaret to find out the reason
+    // the best we can do now is to ignore the invalid result
+  }
 	NS_RELEASE(event.widget);
 
 	if(nsnull == mIMECompString)
