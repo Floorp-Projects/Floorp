@@ -16,6 +16,8 @@
     (production :identifier ($identifier) identifier-identifier)
     (production :identifier (get) identifier-get)
     (production :identifier (set) identifier-set)
+    (? js2
+      (production :identifier (include) identifier-include))
     
     (production :qualifier (:identifier) qualifier-identifier)
     (production :qualifier (public) qualifier-public)
@@ -48,7 +50,7 @@
     (production :primary-expression (:array-literal) primary-expression-array-literal)
     (production :primary-expression (:object-literal) primary-expression-object-literal)
     (production :primary-expression (:function-expression) primary-expression-function-expression)
-    (production :primary-expression (eval :parenthesized-expression) primary-expression-eval)
+    ;(production :primary-expression (eval :parenthesized-expression) primary-expression-eval)
     
     (production :parenthesized-expression (\( (:assignment-expression allow-in) \)) parenthesized-expression-assignment-expression)
     
@@ -138,6 +140,7 @@
     
     
     (production :dot-operator (\. :qualified-identifier) dot-operator-qualified-identifier)
+    (production :dot-operator (\. class) dot-operator-class)
     
     (production :brackets ([ :argument-list ]) brackets-argument-list)
     
@@ -157,14 +160,12 @@
     (production :unary-expression (delete :postfix-expression) unary-expression-delete)
     (production :unary-expression (void :unary-expression) unary-expression-void)
     (production :unary-expression (typeof :unary-expression) unary-expression-typeof)
-    (production :unary-expression (classof :unary-expression) unary-expression-classof)
     (production :unary-expression (++ :postfix-expression) unary-expression-increment)
     (production :unary-expression (-- :postfix-expression) unary-expression-decrement)
     (production :unary-expression (+ :unary-expression) unary-expression-plus)
     (production :unary-expression (- :unary-expression) unary-expression-minus)
     (production :unary-expression (~ :unary-expression) unary-expression-bitwise-not)
     (production :unary-expression (! :unary-expression) unary-expression-logical-not)
-    ;(production :unary-expression (? :unary-expression) unary-expression-question)
     
     
     (%subsection "Multiplicative Operators")
@@ -277,7 +278,6 @@
     (grammar-argument :omega_2 abbrev full)
     
     (production (:top-statement :omega_2) ((:statement :omega_2)) top-statement-statement)
-    ;(production (:top-statement :omega_2) (:attribute-definition (:noninsertable-semicolon :omega_2)) top-statement-attribute-definition)
     (production (:top-statement :omega_2) (:language-declaration (:noninsertable-semicolon :omega_2)) top-statement-language-declaration)
     (production (:top-statement :omega_2) (:package-definition) top-statement-package-definition)
     
@@ -422,7 +422,7 @@
     
     (? js2
       (%subsection "Include Statement")
-      (production :include-statement (include :no-line-break (:list-expression allow-in)) include-statement-include))
+      (production :include-statement (include :no-line-break $string) include-statement-include))
     
     
     (%section "Definitions")
@@ -449,10 +449,8 @@
     
     
     (%subsection "Import Definition")
-    (production :import-definition (import :import-list) import-definition-import)
-    
-    (production :import-list (:import-binding) import-list-one)
-    (production :import-list (:import-list \, :import-binding) import-list-more)
+    (production :import-definition (import :import-binding) import-definition-import)
+    (production :import-definition (import :import-binding \: :nonassignment-expression-list) import-definition-import-and-use)
     
     (production :import-binding (:import-item) import-binding-import-item)
     (production :import-binding (:identifier = :import-item) import-binding-named-import-item)
@@ -497,7 +495,6 @@
     (production (:function-definition :omega) (:function-declaration (:semicolon :omega)) function-definition-declaration)
     
     (production :function-declaration (function :function-name :function-signature) function-declaration-signature-and-body)
-    ;(production :function-declaration (constructor :identifier :function-signature) function-declaration-constructor)
     
     (production :function-name (:identifier) function-name-function)
     (production :function-name (get :no-line-break :identifier) function-name-getter)
@@ -692,7 +689,7 @@
            (terminals (remove-if #'lf-terminal? all-terminals)))
       (assert-true (= (length all-terminals) (1- (* 2 (length terminals)))))
       (setf (svref bins 2) (list '\# '&&= '-> '@ '^^ '^^= '\|\|=))
-      (setf (svref bins 4) (list 'abstract 'class 'const 'debugger 'enum 'export 'extends 'final 'goto 'implements 'import 'include
+      (setf (svref bins 4) (list 'abstract 'class 'const 'debugger 'enum 'export 'extends 'final 'goto 'implements 'import
                                  'interface 'native 'package 'private 'protected 'public 'static 'super 'synchronized
                                  'throws 'transient 'volatile))
       ; Used to be reserved in JavaScript 1.5: 'boolean 'byte 'char 'double 'float 'int 'long 'short
