@@ -22,10 +22,16 @@
 */
 
 #import "CHBookmarksButton.h"
-#include "nsIDOMElement.h"
+#include "nsCOMPtr.h"
 #include "nsIContent.h"
+#include "nsIDOMElement.h"
+#include "nsINamespaceManager.h"
+#include "nsIPrefBranch.h"
+#include "nsIServiceManager.h"
 #include "nsString.h"
 #include "nsCRT.h"
+#import "BookmarkInfoController.h"
+#import "BookmarksDataSource.h"
 #import "BookmarksService.h"
 
 @implementation CHBookmarksButton
@@ -67,6 +73,73 @@
   [[[[[self window] windowController] getBrowserWrapper] getBrowserView] setActive: YES];
 }
 
+-(IBAction)openBookmarkInNewTab:(id)aSender
+{
+  nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
+  if (!pref)
+   return; // Something bad happened if we can't get prefs.
+
+  // Get the href attribute.  This is the URL we want to load.
+  nsAutoString hrefAttr;
+  mElement->GetAttribute(NS_LITERAL_STRING("href"), hrefAttr);
+  NSString* hrefStr = [NSString stringWithCharacters:hrefAttr.get() length:hrefAttr.Length()];
+
+  PRBool loadInBackground;
+  pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
+
+  [[[self window] windowController] openNewTabWithURL: hrefStr referrer:nil loadInBackground: loadInBackground];
+}
+
+-(IBAction)openBookmarkInNewWindow:(id)aSender
+{
+  nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
+  if (!pref)
+    return; // Something bad happened if we can't get prefs.
+
+  // Get the href attribute.  This is the URL we want to load.
+  nsAutoString hrefAttr;
+  mElement->GetAttribute(NS_LITERAL_STRING("href"), hrefAttr);
+  NSString* hrefStr = [NSString stringWithCharacters:hrefAttr.get() length:hrefAttr.Length()];
+
+  PRBool loadInBackground;
+  pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
+
+  nsAutoString group;
+  mElement->GetAttribute(NS_LITERAL_STRING("group"), group);
+  if (group.IsEmpty()) 
+    [[[self window] windowController] openNewWindowWithURL: hrefStr referrer: nil loadInBackground: loadInBackground];
+  else
+    [[[self window] windowController] openNewWindowWithGroup: mElement loadInBackground: loadInBackground];
+}
+
+-(IBAction)showBookmarkInfo:(id)aSender
+{
+  BookmarkInfoController *bic = [BookmarkInfoController sharedBookmarkInfoController]; 
+
+  [bic showWindow:bic];
+  [bic setBookmark:mBookmarkItem];
+}
+
+-(IBAction)deleteBookmarks: (id)aSender
+{
+  if (mElement == BookmarksService::gToolbarRoot)
+    return; // Don't allow the personal toolbar to be deleted.
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
+  
+  nsCOMPtr<nsIDOMNode> parent;
+  mElement->GetParentNode(getter_AddRefs(parent));
+  nsCOMPtr<nsIContent> parentContent(do_QueryInterface(parent));
+  nsCOMPtr<nsIDOMNode> dummy;
+  if (parent)
+    parent->RemoveChild(mElement, getter_AddRefs(dummy));
+  BookmarksService::BookmarkRemoved(parentContent, content);
+}
+
+-(IBAction)addFolder:(id)aSender
+{
+  // TODO
+}
+
 -(void)drawRect:(NSRect)aRect
 {
   [super drawRect: aRect];
@@ -74,7 +147,36 @@
 
 -(NSMenu*)menuForEvent:(NSEvent*)aEvent
 {
-  return [[self superview] menu];
+  // Make a copy of the context menu but change it to target us
+  // FIXME - this will stop to work as soon as we add items to the context menu
+  // that have different targets. In that case, we probably should add code to
+  // CHBookmarksToolbar that manages the context menu for the CHBookmarksButtons.
+  
+  NSMenu* myMenu = [[[self superview] menu] copy];
+  [[myMenu itemArray] makeObjectsPerformSelector:@selector(setTarget:) withObject: self];
+  [myMenu update];
+  return [myMenu autorelease];
+}
+
+-(BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
+{
+  if (!mBookmarkItem)
+    return NO;
+  BOOL isBookmark = [mBookmarkItem isFolder] == NO;
+  
+  nsAutoString group;
+  mElement->GetAttribute(NS_LITERAL_STRING("group"), group);
+  BOOL isGroup = !group.IsEmpty();
+
+  if (([aMenuItem action] == @selector(openBookmarkInNewWindow:))) {
+    // Bookmarks and Bookmark Groups can be opened in a new window
+    return (isBookmark || isGroup);
+  }
+  else if (([aMenuItem action] == @selector(openBookmarkInNewTab:))) {
+    // Only Bookmarks can be opened in new tabs
+    return isBookmark;
+  }
+  return YES;
 }
 
 -(void)mouseDown:(NSEvent*)aEvent
@@ -120,6 +222,9 @@
   nsAutoString name;
   mElement->GetAttribute(NS_LITERAL_STRING("name"), name);
   [self setTitle: [NSString stringWithCharacters: name.get() length: nsCRT::strlen(name.get())]];
+  
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
+  mBookmarkItem = BookmarksService::GetWrapperFor(content);
 }
 
 -(nsIDOMElement*)element

@@ -40,6 +40,18 @@
 
 @implementation BookmarkInfoController
 
+/* BookmarkInfoController singelton */
+static BookmarkInfoController *sharedBookmarkInfoController = nil;
+
++ (id)sharedBookmarkInfoController
+{
+  if (!sharedBookmarkInfoController) {
+    sharedBookmarkInfoController = [[BookmarkInfoController alloc] init];
+  }
+  
+  return sharedBookmarkInfoController;
+}
+
 -(id) init
 {
   [super initWithWindowNibName:@"BookmarkInfoPanel"];
@@ -52,15 +64,11 @@
   return self;
 }
 
--(id) initWithOutlineView: (id)aOutlineView
-{
-  mOutlineView = aOutlineView;
-  
-  return [self init];
-}
-
 -(void)dealloc
 {
+  if (self == sharedBookmarkInfoController)
+    sharedBookmarkInfoController = nil;
+
   [mFieldEditor release];
   [super dealloc];
 }
@@ -99,7 +107,6 @@
     [self commitField:mDescriptionField toProperty:BookmarksService::gDescriptionAtom];
 
   [[mFieldEditor undoManager] removeAllActions];
-  [mOutlineView reloadItem: mBookmarkItem reloadChildren: NO];
   BookmarksService::BookmarkChanged([mBookmarkItem contentNode], TRUE);
 }
 
@@ -130,7 +137,7 @@
   nsAutoString group;
   [aBookmark contentNode]->GetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, group);
   BOOL isGroup = !group.IsEmpty();
-  BOOL isFolder = !isGroup && [mOutlineView isExpandable: aBookmark];
+  BOOL isFolder = !isGroup && [aBookmark isFolder];
 
   // First, Show/Hide the appropriate UI
   if (isGroup) {
