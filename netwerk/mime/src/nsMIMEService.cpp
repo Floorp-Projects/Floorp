@@ -24,6 +24,17 @@
 #include "nsIMIMEInfo.h"
 #include "nsIFileSpec.h"
 
+PRBool DeleteEntry(nsHashKey *aKey, void *aData, void* closure) {
+    nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)aData;
+    delete entry;
+    entry = nsnull;
+    return PR_TRUE;   
+};
+
+PRBool FindMIMEType(nsHashKey *aKey, void *aData, void* closure) {
+    return PR_FALSE;
+}
+
 
 // nsISupports methods
 NS_IMPL_ISUPPORTS(nsMIMEService, nsCOMTypeInfo<nsIMIMEService>::GetIID());
@@ -34,17 +45,15 @@ nsMIMEService::nsMIMEService() {
 
     NS_INIT_REFCNT();
 
-    mInfoArray = new nsVoidArray();
+    mInfoHashtable = new nsHashtable();
     InitFromHack(); // XXX bogus
+    //nsresult rv = InitializeMIMEMap(mInfoHashtable);
 }
 
 nsMIMEService::~nsMIMEService() {
-    PRInt32 count = mInfoArray->Count();
-    for (int i = 0; i < count; i++) {
-        nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)mInfoArray->ElementAt(i);
-        mInfoArray->RemoveElementAt(i);
-        //    delete entry;
-    }
+    mInfoHashtable->Enumerate(DeleteEntry, nsnull);
+    mInfoHashtable->Reset();
+    delete mInfoHashtable;
 }
 
  /* This bad boy needs to retrieve a url, and parse the data coming back, and
@@ -76,56 +85,108 @@ nsMIMEService::InitFromFile(const char *aFileName) {
 
 nsresult
 nsMIMEService::InitFromHack() {
-
     nsMIMEInfoImpl* anInfo = nsnull;
-    anInfo = new nsMIMEInfoImpl("text/html", "htm,html", "Hyper Text Markup Language");
+    nsCStringKey *extKey = nsnull;
+
+    anInfo = new nsMIMEInfoImpl("text/html", "htm", "Hyper Text Markup Language");
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
+    extKey = new nsCStringKey("htm");
+    if (!extKey) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoHashtable->Put(extKey, anInfo);
+    delete extKey;
+
+    anInfo = new nsMIMEInfoImpl("text/html", "html", "Hyper Text Markup Language");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    extKey = new nsCStringKey("html");
+    if (!extKey) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoHashtable->Put(extKey, anInfo);
+    delete extKey;
 
     anInfo = new nsMIMEInfoImpl("text/rdf", "rdf", "Resource Description Framework");
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
+    extKey = new nsCStringKey("rdf");
+    if (!extKey) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoHashtable->Put(extKey, anInfo);
+    delete extKey;
 
     anInfo = new nsMIMEInfoImpl("text/xul", "xul", "XML-Based User Interface Language");
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
+    extKey = new nsCStringKey("xul");
+    if (!extKey) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoHashtable->Put(extKey, anInfo);
+    delete extKey;
 
     anInfo = new nsMIMEInfoImpl("text/xml", "xml", "Extensible Markup Language");
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
+    extKey = new nsCStringKey("xml");
+    if (!extKey) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoHashtable->Put(extKey, anInfo);
+    delete extKey;
 
     anInfo = new nsMIMEInfoImpl("text/css", "css", "Style Sheet");
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
+    extKey = new nsCStringKey("css");
+    if (!extKey) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoHashtable->Put(extKey, anInfo);
+    delete extKey;
 
     anInfo = new nsMIMEInfoImpl("application/x-javascript", "js", "Javascript Source File");
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
+    extKey = new nsCStringKey("js");
+    if (!extKey) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoHashtable->Put(extKey, anInfo);
+    delete extKey;
 
-	 anInfo = new nsMIMEInfoImpl("message/rfc822", "eml", "RFC-822 data");
+    anInfo = new nsMIMEInfoImpl("message/rfc822", "eml", "RFC-822 data");
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
-
-    /////////////////
-    // Images
-    /////////////////
+    extKey = new nsCStringKey("eml");
+    if (!extKey) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoHashtable->Put(extKey, anInfo);
+    delete extKey;
 
     anInfo = new nsMIMEInfoImpl("image/gif", "gif", "GIF Image");
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
+    extKey = new nsCStringKey("gif");
+    if (!extKey) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoHashtable->Put(extKey, anInfo);
+    delete extKey;
 
-    anInfo = new nsMIMEInfoImpl("image/jpeg", "jpeg,jpg,jpe,jfif,pjpeg,pjp", "JPEG Image");
+    anInfo = new nsMIMEInfoImpl("image/jpeg", "jpeg", "JPEG Image");
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
+    extKey = new nsCStringKey("jpeg");
+    if (!extKey) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoHashtable->Put(extKey, anInfo);
+    delete extKey;
+
+    anInfo = new nsMIMEInfoImpl("image/jpeg", "jpg", "JPEG Image");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    extKey = new nsCStringKey("jpg");
+    if (!extKey) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoHashtable->Put(extKey, anInfo);
+    delete extKey;
 
     anInfo = new nsMIMEInfoImpl("image/png", "png", "PNG Image");
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
+    extKey = new nsCStringKey("png");
+    if (!extKey) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoHashtable->Put(extKey, anInfo);
+    delete extKey;
 
-    anInfo = new nsMIMEInfoImpl("image/tiff", "tiff,tif", "TIFF Image");
+    anInfo = new nsMIMEInfoImpl("image/tiff", "tiff", "TIFF Image");
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
-    mInfoArray->AppendElement(anInfo);
-    
+    extKey = new nsCStringKey("tiff");
+    if (!extKey) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoHashtable->Put(extKey, anInfo);
+    delete extKey;
+
+    anInfo = new nsMIMEInfoImpl("image/tiff", "tif", "TIFF Image");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    extKey = new nsCStringKey("tif");
+    if (!extKey) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoHashtable->Put(extKey, anInfo);
+    delete extKey;
+
+#if 0
     anInfo = new nsMIMEInfoImpl("image/x-cmu-raster", "ras", "CMU Raster Image");
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
     mInfoArray->AppendElement(anInfo);
@@ -177,6 +238,7 @@ nsMIMEService::InitFromHack() {
      anInfo = new nsMIMEInfoImpl("application/fractals", "fif", "Fractal Image Format");
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
     mInfoArray->AppendElement(anInfo);
+#endif // 0
     
     return NS_OK;
 }
@@ -184,23 +246,22 @@ nsMIMEService::InitFromHack() {
 
 // nsIMIMEService methods
 NS_IMETHODIMP
-nsMIMEService::GetFromExtension(const PRUnichar *aFileExt, nsIMIMEInfo **_retval) {
-    nsIAtom* extension = NS_NewAtom(aFileExt);
-    if (!extension) return NS_ERROR_OUT_OF_MEMORY;
+nsMIMEService::GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retval) {
+    nsCStringKey key(aFileExt);
 
-    PRInt32 count = mInfoArray->Count();
-    for (int i = 0; i < count; i++) {
-        nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)mInfoArray->ElementAt(i);
-        if (entry->InExtensions(extension)) {
-            *_retval = NS_STATIC_CAST(nsIMIMEInfo*, entry);
-            return NS_OK;
-        }
-    }
-    return NS_ERROR_FAILURE;
+    nsMIMEInfoImpl *entry = (nsMIMEInfoImpl*)mInfoHashtable->Get(&key);
+    if (!entry) return NS_ERROR_FAILURE;
+
+    *_retval = NS_STATIC_CAST(nsIMIMEInfo*, entry);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMIMEService::GetFromMIMEType(const PRUnichar *aMIMEType, nsIMIMEInfo **_retval) {
+nsMIMEService::GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo **_retval) {
+
+#if 0
+    // hashtable, here's it's a little trickier because we have to enumerate the hashtable
+
     nsIAtom* MIMEType = NS_NewAtom(aMIMEType);
     if (!MIMEType) return NS_ERROR_OUT_OF_MEMORY;
 
@@ -212,7 +273,8 @@ nsMIMEService::GetFromMIMEType(const PRUnichar *aMIMEType, nsIMIMEInfo **_retval
             return NS_OK;
         }
     }
-    return NS_ERROR_FAILURE;
+#endif
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

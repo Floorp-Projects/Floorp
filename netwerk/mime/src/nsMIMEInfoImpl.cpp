@@ -31,7 +31,6 @@ nsMIMEInfoImpl::nsMIMEInfoImpl(const char *aMIMEType, const char *aFileExtension
 }
 
 nsMIMEInfoImpl::~nsMIMEInfoImpl() {
-    delete mMIMEType;
 }
 
 PRBool

@@ -26,7 +26,8 @@
 
 #include "nsIMIMEService.h"
 #include "nsIURI.h"
-class nsVoidArray;
+#include "nsHashtable.h"
+
 
 class nsMIMEService : public nsIMIMEService {
 
@@ -38,8 +39,9 @@ class nsMIMEService : public nsIMIMEService {
     virtual ~nsMIMEService();
 
     // nsIMIMEService methods
-    NS_IMETHOD GetFromExtension(const PRUnichar *aFileExt, nsIMIMEInfo **_retval);
-    NS_IMETHOD GetFromMIMEType(const PRUnichar *aMIMEType, nsIMIMEInfo **_retval);
+    NS_IMETHOD GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retval);
+    NS_IMETHOD GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo **_retval);
+
     NS_IMETHOD AddMIMEInfo(nsIMIMEInfo *aMIMEInfo);
     NS_IMETHOD RemoveMIMEInfo(nsIMIMEInfo *aMIMEInfo);
 
@@ -48,7 +50,8 @@ private:
     nsresult InitFromFile(const char *aFileName);
     nsresult InitFromHack();
 
-    nsVoidArray*            mInfoArray;
+    
+    nsHashtable             *mInfoHashtable;
 };
 
 #endif // ___nsIMIMEService__h___

@@ -39,10 +39,10 @@
 [scriptable, uuid(6C424C90-2FE7-11d3-A164-0050041CAF44)]
 interface nsIMIMEService : nsISupports {
 	// return a nsIMIMEInfo for the given file extension.
-	nsIMIMEInfo GetFromExtension(in wstring aFileExt);
+	nsIMIMEInfo GetFromExtension(in string aFileExt);
 
 	// return a nsIMIMEInfo for the given MIME type.
-	nsIMIMEInfo GetFromMIMEType(in wstring aMIMEType);
+	nsIMIMEInfo GetFromMIMEType(in string aMIMEType);
 
 	// insert a nsIMIMEInfo in the the database.
 	void AddMIMEInfo(in nsIMIMEInfo aMIMEInfo);
