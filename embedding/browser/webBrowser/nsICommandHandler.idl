@@ -1,0 +1,47 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *    Adam Lock <adamlock@netscape.com>
+ */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+
+[scriptable, uuid(731C6C50-67D6-11d4-9529-0020183BF181)]
+interface nsICommandHandlerInit : nsISupports
+{
+	attribute nsIDOMWindow window;
+};
+
+[scriptable, uuid(34A4FCF0-66FC-11d4-9528-0020183BF181)]
+interface nsICommandHandler : nsISupports
+{
+    void exec(in string aCommand, in string aStatus);
+    void query(in string aCommand, in string aStatus, out string aResult);
+};
+
+
+%{ C++
+//	{3A449110-66FD-11d4-9528-0020183BF181} - 
+#define NS_COMMANDHANDLER_CID \
+{ 0x3a449110, 0x66fd, 0x11d4, { 0x95, 0x28, 0x0, 0x20, 0x18, 0x3b, 0xf1, 0x81 } }
+#define NS_COMMANDHANDLER_PROGID \
+"component://netscape/embedding/browser/nsCommandHandler"
+%}
