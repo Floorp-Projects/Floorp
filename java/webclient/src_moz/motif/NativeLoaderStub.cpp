@@ -119,6 +119,7 @@ jstring (* nativeGetSource) (JNIEnv *, jobject);
 jbyteArray (* nativeGetSourceBytes) (JNIEnv *, jobject, jint, jboolean);
 void (* nativeResetFind) (JNIEnv *, jobject, jint);
 void (* nativeSelectAll) (JNIEnv *, jobject, jint);
+jobject (* nativeGetDOM) (JNIEnv *, jobject, jint);
 // from HistoryImpl.h
 void (* nativeBack) (JNIEnv *, jobject, jint);
 jboolean (* nativeCanBack) (JNIEnv *, jobject, jint);
@@ -364,6 +365,11 @@ void locateBrowserControlStubFunctions(void * dll) {
     printf("got dlsym error %s\n", dlerror());
   }
 
+  nativeGetDOM = (jobject (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetDOM");
+  if (!nativeGetDOM) {
+    printf("got dlsym error %s\n", dlerror());
+  }
+
   nativeGetBookmarks = (jint (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_BookmarksImpl_nativeGetBookmarks");
   if (!nativeGetBookmarks) {
     printf("got dlsym error %s\n", dlerror());
@@ -547,6 +553,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeSelectAll
 (JNIEnv * env, jobject obj, jint webShellPtr) {
   (* nativeSelectAll) (env, obj, webShellPtr);
+}
+
+JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetDOM
+(JNIEnv *env, jobject obj, jint webShellPtr) {
+    return (* nativeGetDOM) (env, obj, webShellPtr);
 }
 
 
