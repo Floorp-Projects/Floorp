@@ -945,11 +945,17 @@ nsHTMLReflowState::ComputeMarginFor(nsIFrame* aFrame,
       if (nsnull != rs) {
         nsStyleCoord left, right;
         nscoord containingBlockWidth = rs->computedWidth;
-        ComputeHorizontalValue(containingBlockWidth, spacing->mMargin.GetLeftUnit(),
-                               spacing->mMargin.GetLeft(left), aResult.left);
-        ComputeHorizontalValue(containingBlockWidth, spacing->mMargin.GetRightUnit(),
-                               spacing->mMargin.GetRight(right),
-                               aResult.right);
+        if (NS_UNCONSTRAINEDSIZE == containingBlockWidth) {
+          aResult.left = 0;
+          aResult.right = 0;
+
+        } else {
+          ComputeHorizontalValue(containingBlockWidth, spacing->mMargin.GetLeftUnit(),
+                                 spacing->mMargin.GetLeft(left), aResult.left);
+          ComputeHorizontalValue(containingBlockWidth, spacing->mMargin.GetRightUnit(),
+                                 spacing->mMargin.GetRight(right),
+                                 aResult.right);
+        }
       }
       else {
         aResult.left = 0;
@@ -973,11 +979,17 @@ nsHTMLReflowState::ComputeMarginFor(nsIFrame* aFrame,
         // calculated with respect to the *width* of the containing
         // block, even for margin-top and margin-bottom.
         nscoord containingBlockWidth = rs->computedWidth;
-        ComputeHorizontalValue(containingBlockWidth, spacing->mMargin.GetTopUnit(),
-                               spacing->mMargin.GetTop(top), aResult.top);
-        ComputeHorizontalValue(containingBlockWidth, spacing->mMargin.GetBottomUnit(),
-                               spacing->mMargin.GetBottom(bottom),
-                               aResult.bottom);
+        if (NS_UNCONSTRAINEDSIZE == containingBlockWidth) {
+          aResult.top = 0;
+          aResult.bottom = 0;
+
+        } else {
+          ComputeHorizontalValue(containingBlockWidth, spacing->mMargin.GetTopUnit(),
+                                 spacing->mMargin.GetTop(top), aResult.top);
+          ComputeHorizontalValue(containingBlockWidth, spacing->mMargin.GetBottomUnit(),
+                                 spacing->mMargin.GetBottom(bottom),
+                                 aResult.bottom);
+        }
       }
       else {
         aResult.top = 0;
