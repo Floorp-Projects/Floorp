@@ -256,7 +256,8 @@ static PRIntn pt_TimedWait(
 
     /* NSPR doesn't report timeouts */
 #ifdef _PR_DCETHREADS
-    return (rv == -1 && errno == EAGAIN) ? 0 : rv;
+    if (rv == -1) return (errno == EAGAIN) ? 0 : errno;
+    else return rv;
 #else
     return (rv == ETIMEDOUT) ? 0 : rv;
 #endif
@@ -384,7 +385,12 @@ PR_IMPLEMENT(PRStatus) PR_WaitCondVar(PRCondVar *cvar, PRIntervalTime timeout)
     PR_ASSERT(0 == cvar->lock->notified.length);
     thred->waiting = NULL;  /* and now we're not */
     if (_PT_THREAD_INTERRUPTED(thred)) goto aborted;
-    return (rv == 0) ? PR_SUCCESS : PR_FAILURE;
+    if (rv != 0)
+    {
+        _PR_MD_MAP_DEFAULT_ERROR(rv);
+        return PR_FAILURE;
+    }
+    return PR_SUCCESS;
 
 aborted:
     PR_SetError(PR_PENDING_INTERRUPT_ERROR, 0);
@@ -1081,7 +1087,12 @@ PR_IMPLEMENT(PRStatus) PRP_NakedWait(
         rv = pthread_cond_wait(&cvar->cv, &ml->mutex);
     else
         rv = pt_TimedWait(&cvar->cv, &ml->mutex, timeout);
-    return (rv == 0) ? PR_SUCCESS : PR_FAILURE;
+    if (rv != 0)
+    {
+        _PR_MD_MAP_DEFAULT_ERROR(rv);
+        return PR_FAILURE;
+    }
+    return PR_SUCCESS;
 }  /* PRP_NakedWait */
 
 PR_IMPLEMENT(PRStatus) PRP_NakedNotify(PRCondVar *cvar)
