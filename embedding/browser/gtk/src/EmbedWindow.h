@@ -26,7 +26,6 @@
 #include <nsIWebBrowserChromeFocus.h>
 #include <nsIEmbeddingSiteWindow.h>
 #include <nsITooltipListener.h>
-#include <nsIPrompt.h>
 #include <nsISupports.h>
 #include <nsIWebBrowser.h>
 #include <nsIBaseWindow.h>
@@ -41,7 +40,6 @@ class EmbedWindow : public nsIWebBrowserChrome,
 		    public nsIWebBrowserChromeFocus,
                     public nsIEmbeddingSiteWindow,
                     public nsITooltipListener,
-                    public nsIPrompt,
 		    public nsIInterfaceRequestor
 {
 
@@ -64,8 +62,6 @@ class EmbedWindow : public nsIWebBrowserChrome,
 
   NS_DECL_NSITOOLTIPLISTENER
 
-  NS_DECL_NSIPROMPT
-
   NS_DECL_NSIINTERFACEREQUESTOR
 
   nsString                 mTitle;
@@ -79,6 +75,7 @@ private:
   nsCOMPtr<nsIBaseWindow>  mBaseWindow; // [OWNER]
   static GtkWidget        *sTipWindow;
   PRBool                   mVisibility;
+  PRBool                   mIsModal;
 
 };
   

@@ -58,12 +58,28 @@
 #include "nsIWebNavigation.h"
 #include "nsIWindowCreator.h"
 #include "nsIXPConnect.h"
+
+#ifdef XP_UNIX
+// please see bug 78421 for the eventual "right" fix for this
+#define HAVE_LAME_APPSHELL
+#endif
+
+#ifdef HAVE_LAME_APPSHELL
+#include "nsIAppShell.h"
+// for NS_APPSHELL_CID
+#include <nsWidgetsCID.h>
+#endif
+
 #ifdef USEWEAKREFS
 #include "nsIWeakReference.h"
 #endif
 
 #define NOTIFICATION_OPENED NS_LITERAL_STRING("domwindowopened")
 #define NOTIFICATION_CLOSED NS_LITERAL_STRING("domwindowclosed")
+
+#ifdef HAVE_LAME_APPSHELL
+static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+#endif
 
 static const char *sJSStackContractID="@mozilla.org/js/xpc/ContextStack;1";
 
@@ -242,6 +258,9 @@ public:
 protected:
   nsCOMPtr<nsIEventQueueService> mService;
   nsCOMPtr<nsIEventQueue>        mQueue;
+#ifdef HAVE_LAME_APPSHELL
+  nsCOMPtr<nsIAppShell>          mAppShell;
+#endif
 };
 
 EventQueueAutoPopper::EventQueueAutoPopper() : mQueue(nsnull)
@@ -250,6 +269,15 @@ EventQueueAutoPopper::EventQueueAutoPopper() : mQueue(nsnull)
 
 EventQueueAutoPopper::~EventQueueAutoPopper()
 {
+#ifdef HAVE_LAME_APPSHELL
+  if (mAppShell) {
+    if (mQueue)
+      mAppShell->ListenToEventQueue(mQueue, PR_FALSE);
+    mAppShell->Spindown();
+    mAppShell = nsnull;
+  }
+#endif
+
   if(mQueue)
     mService->PopThreadEventQueue(mQueue);
 }
@@ -260,9 +288,28 @@ nsresult EventQueueAutoPopper::Push()
     return NS_ERROR_FAILURE;
 
   mService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
-  if(mService)
-    mService->PushThreadEventQueue(getter_AddRefs(mQueue));
-  return mQueue ? NS_OK : NS_ERROR_FAILURE; 
+  if (!mService)
+    return NS_ERROR_FAILURE;
+
+  // push a new queue onto it
+  mService->PushThreadEventQueue(getter_AddRefs(mQueue));
+  if (!mQueue)
+    return NS_ERROR_FAILURE;
+
+#ifdef HAVE_LAME_APPSHELL
+  // listen to the event queue
+  mAppShell = do_CreateInstance(kAppShellCID);
+  if (!mAppShell)
+    return NS_ERROR_FAILURE;
+
+  mAppShell->Create(0, nsnull);
+  mAppShell->Spinup();
+
+  // listen to the new queue
+  mAppShell->ListenToEventQueue(mQueue, PR_TRUE);
+#endif
+
+  return NS_OK;
 }
 
 /****************************************************************
