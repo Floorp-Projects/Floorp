@@ -1507,9 +1507,6 @@ PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
                     /* In child: set up stdin, parse args, and exec. */
                     int maxargc, nargc;
                     char **nargv, *token;
-#if HAVE_STRTOK_R
-                    char *newstr = NULL;
-#endif
 
                     if (pipefds[0] != 0) {
                         dup2(pipefds[0], 0);
@@ -1517,23 +1514,13 @@ PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
                     }
                     close(pipefds[1]);
 
-#ifdef HAVE_STRTOK_R
-                    tmlogname = strtok_r(tmlogname + 1, " \t", &newstr);
-#else
                     tmlogname = strtok(tmlogname + 1, " \t");
-#endif
                     maxargc = 3;
                     nargv = (char **) malloc((maxargc+1) * sizeof(char *));
                     if (!nargv) exit(1);
                     nargc = 0;
                     nargv[nargc++] = tmlogname;
-                    while (
-#ifdef HAVE_STRTOK_R
-                           (token = strtok_r(newstr, " \t", &newstr))
-#else
-                           (token = strtok(NULL, " \t"))
-#endif
-                           != NULL) {
+                    while ((token = strtok(NULL, " \t")) != NULL) {
                         if (nargc == maxargc) {
                             maxargc *= 2;
                             nargv = (char**)
