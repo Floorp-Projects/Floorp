@@ -397,7 +397,7 @@ NS_IMETHODIMP oeICalEventImpl::GetSyncId(char * *aRetVal)
 #ifdef ICAL_DEBUG_ALL
     printf( "GetSyncId()\n" );
 #endif
-    if( m_alarmunits ) {
+    if( m_syncid ) {
         *aRetVal= (char*) nsMemory::Clone( m_syncid, strlen(m_syncid)+1);
         if( *aRetVal == nsnull )
             return  NS_ERROR_OUT_OF_MEMORY;
