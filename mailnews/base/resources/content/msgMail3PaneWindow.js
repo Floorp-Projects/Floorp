@@ -1109,12 +1109,9 @@ function SelectFolder(folderUri)
 
 function SelectMessage(messageUri)
 {
-  // this isn't going to work anymore
-  dump("XXX fix this or remove SelectMessage()\n");
-  // if you need this to work, do something like this:
-  // from the messageUri, get the nsIMsgDBHdr
-  // from the hdr, get the key, then do:
-  // gDBView.selectMsgByKey(key);
+  var msgHdr = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
+  if (msgHdr)
+    gDBView.selectMsgByKey(msgHdr.messageKey);
 }
 
 function ReloadMessage()
