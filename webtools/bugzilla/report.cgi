@@ -37,7 +37,7 @@ my $cgi = Bugzilla->cgi;
 if (grep(/^cmd-/, $cgi->param())) {
     my $params = $cgi->canonicalise_query("format", "ctype");
     my $location = "query.cgi?format=" . $cgi->param('query_format') . 
-      ($params ? "&$params" : "") . "\n\n";
+      ($params ? "&$params" : "");
 
     print $cgi->redirect($location);
     exit;
