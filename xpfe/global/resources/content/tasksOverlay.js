@@ -137,7 +137,15 @@ function CycleWindow( inType, inChromeURL )
 	dump( "topWindowOfType = " + topWindowOfType + "\n");
 	if ( topWindowOfType == null )
 	{
-		OpenBrowserWindow();
+	  if ( inType == "navigator:browser" )
+      OpenBrowserWindow();
+    else if ( inType == "composer:html" ) /* open editor window */
+      NewEditorWindow();
+    else
+    {
+        /* what to do here? */
+    }
+    
 		return;
 	}
 	
@@ -180,15 +188,20 @@ function CycleWindow( inType, inChromeURL )
 	else
 	{
 		dump("open window \n");
-		window.OpenBrowserWindow();
+	  if ( inType == "navigator:browser" )
+      window.OpenBrowserWindow();
+    else if ( inType == "composer:html" ) /* open editor window */
+      NewEditorWindow();
+    else
+    {
+        /* what to do here? */
+    }
 	}
 }
 
 function toEditor()
 {
-  //TODO: Find and existing editor window using CycleWindow()
-  // For now, just start a new blank document
-  window.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", "about:blank");
+	CycleWindow('composer:html', 'chrome://editor/content/');
 }
 
 function ShowWindowFromResource( node )
