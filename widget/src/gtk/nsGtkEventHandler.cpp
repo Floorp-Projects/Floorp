@@ -483,7 +483,7 @@ gint handle_button_press_event(GtkWidget *w, GdkEventButton * event, gpointer p)
     break;
 
   default:
-    printf("handle_button_press_event(): Unhandled event type\n");
+    break;
   }
   InitMouseEvent(event, p, mevent, b);
 
