@@ -3310,27 +3310,39 @@ nsXULDocument::StartLayout(void)
       // Resize-reflow this time
       nsCOMPtr<nsIPresContext> cx;
       shell->GetPresContext(getter_AddRefs(cx));
+      NS_ASSERTION(cx != nsnull, "no pres context");
+      if (! cx)
+          return NS_ERROR_UNEXPECTED;
+
+
+      nsCOMPtr<nsISupports> container;
+      cx->GetContainer(getter_AddRefs(container));
+      NS_ASSERTION(container != nsnull, "pres context has no container");
+      if (! container)
+          return NS_ERROR_UNEXPECTED;
+
+      nsCOMPtr<nsIWebShell> webShell;
+      webShell = do_QueryInterface(container);
+      NS_ASSERTION(webShell != nsnull, "container is not a webshell");
+      if (! webShell)
+          return NS_ERROR_UNEXPECTED;
+
+      webShell->SetScrolling(NS_STYLE_OVERFLOW_HIDDEN);
+
+      nsCOMPtr<nsIWebShellContainer> webShellContainer;
+      webShell->GetContainer(*getter_AddRefs(webShellContainer));
+      NS_ASSERTION(webShellContainer != nsnull, "webshell has no container");
+      if (! webShellContainer)
+          return NS_ERROR_UNEXPECTED;
 
       PRBool intrinsic = PR_FALSE;
-      nsCOMPtr<nsIWebShell> webShell;
       nsCOMPtr<nsIBrowserWindow> browser;
-
-      if (cx) {
-          nsCOMPtr<nsISupports> container;
-          cx->GetContainer(getter_AddRefs(container));
-          if (container) {
-              webShell = do_QueryInterface(container);
-              if (webShell) {
-                  webShell->SetScrolling(NS_STYLE_OVERFLOW_HIDDEN);
-                  nsCOMPtr<nsIWebShellContainer> webShellContainer;
-                  webShell->GetContainer(*getter_AddRefs(webShellContainer));
-                  if (webShellContainer) {
-                      browser = do_QueryInterface(webShellContainer);
-                      if (browser)
-                          browser->IsIntrinsicallySized(intrinsic);
-                  }
-              }
-          }
+      browser = do_QueryInterface(webShellContainer);
+      if (browser) {
+          browser->IsIntrinsicallySized(intrinsic);
+      }
+      else {
+          // XXX we're XUL embedded inside an iframe?
       }
 
       nsRect r;
