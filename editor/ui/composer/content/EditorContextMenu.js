@@ -41,9 +41,8 @@ function EditorFillContextMenu(event, contextMenuNode)
   // Set appropriate text for join cells command
   InitJoinCellMenuitem("joinTableCells_cm");
 
-  goUpdateCommand("cmd_JoinTableCells");
-  goUpdateCommand("cmd_SplitTableCell");
-  goUpdateCommand("cmd_TableOrCellColor");
+  // Update enable states for all table commands  
+  goUpdateTableMenuItems(document.getElementById("composerTableMenuItems"));
 
   // Loop through all children to hide disabled items
   var children = contextMenuNode.childNodes;
