@@ -239,8 +239,10 @@ function registerZoomManager()
     menuItem.setAttribute("name", "textZoom");
 
     var label;
-    if (zoomFactors[i] == 100)
+    if (zoomFactors[i] == 100) {
       label = zoom.bundle.getString("labelOriginal");
+      menuItem.setAttribute("key", "key_textZoomReset");
+    }
     else
       label = zoom.bundle.getString("label");
 
