@@ -168,6 +168,7 @@ viewer:chrome:htmlBindings.xml
 viewer:chrome:menulistBindings.xml
 viewer:chrome:platformHTMLBindings.xml
 viewer:chrome:radioBindings.xml
+viewer:chrome:treeBindings.xml
 viewer:chrome:xul.css
 viewer:chrome:xulBindings.xml
 
