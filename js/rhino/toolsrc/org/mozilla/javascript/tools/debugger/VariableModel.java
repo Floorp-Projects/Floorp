@@ -136,7 +136,7 @@ public class VariableModel extends AbstractTreeTableModel
                     return "null";
                 }
                 if(value instanceof NativeCall) {
-                    value = ((NativeCall)value).getFunctionObject();
+                    return "[object Call]";
                 }
                 String result;
                 try {
@@ -249,7 +249,14 @@ class VariableNode {
 		Scriptable proto = scrip.getPrototype();
 		Scriptable parent = scrip.getParentScope();
                 if(value instanceof NativeCall) {
-                    if(!(parent instanceof NativeCall)) {
+                    if(name != null && name.equals("this")) {
+                        // this is the local variables table root
+                        // don't show the __parent__ property
+                        parent = null;
+                    } else if(!(parent instanceof NativeCall)) {
+                        // don't bother showing [object Global] as
+                        // the __parent__ property which just creates
+                        // more noise
                         parent = null;
                     }
                 }

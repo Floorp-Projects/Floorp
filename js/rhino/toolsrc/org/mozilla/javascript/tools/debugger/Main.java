@@ -588,6 +588,16 @@ class MoreWindows extends JDialog implements ActionListener {
     contentPane.add(listPane, BorderLayout.CENTER);
     contentPane.add(buttonPane, BorderLayout.SOUTH);
     pack();
+    addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent e) {
+                int code = e.getKeyCode();
+                if(code == KeyEvent.VK_ESCAPE) {
+                    e.consume();
+                    value = null;
+                    setVisible(false);
+                }
+            }
+        });
   }
 };
 
@@ -648,9 +658,15 @@ class FindFunction extends JDialog implements ActionListener {
 		    w.setPosition(-1);
 		}
 		int start = w.getPosition(lineNumber-1);
-		w.select(start, start);
+                int end = w.getPosition(lineNumber)-1;
+                w.textArea.select(start);
+		w.textArea.setCaretPosition(start);
+                w.textArea.moveCaretPosition(end);
 		try {
 		    w.show();
+                    db.requestFocus();
+                    w.requestFocus();
+                    w.textArea.requestFocus();
 		} catch(Exception exc) {
 		}
 	    }
@@ -729,6 +745,16 @@ class FindFunction extends JDialog implements ActionListener {
 	contentPane.add(listPane, BorderLayout.CENTER);
 	contentPane.add(buttonPane, BorderLayout.SOUTH);
 	pack();
+	addKeyListener(new KeyAdapter() {
+		public void keyPressed(KeyEvent e) {
+		    int code = e.getKeyCode();
+		    if(code == KeyEvent.VK_ESCAPE) {
+			e.consume();
+                        value = null;
+                        setVisible(false);
+		    }
+		}
+	    });
     }
 };
 
@@ -2011,17 +2037,19 @@ public class Main extends JFrame implements Debugger, ContextListener {
     static Thread mainThread; // thread used to run the shell
 
     public void contextCreated(Context cx) {
-	DebuggableEngine engine = cx.getDebuggableEngine();
-	engine.setDebugger(this);
-	cx.setGeneratingDebug(true);
-	cx.setOptimizationLevel(-1);
-	// if the user pressed "Break" or if this thread is the shell's 
-	// Main then set the break flag so that when the debugger is run
-	// with a file argument on the command line it will
-	// break at the start of the file
-	if(breakFlag || Thread.currentThread() == mainThread) {
-	    engine.setBreakNextLine(true);
-	}
+        synchronized(contexts) {
+            DebuggableEngine engine = cx.getDebuggableEngine();
+            engine.setDebugger(this);
+            cx.setGeneratingDebug(true);
+            cx.setOptimizationLevel(-1);
+            // if the user pressed "Break" or if this thread is the shell's 
+            // Main then set the break flag so that when the debugger is run
+            // with a file argument on the command line it will
+            // break at the start of the file
+            if(breakFlag || Thread.currentThread() == mainThread) {
+                engine.setBreakNextLine(true);
+            }
+        }
     }
     
     public void contextEntered(Context cx) {
@@ -2029,18 +2057,22 @@ public class Main extends JFrame implements Debugger, ContextListener {
 	// keep a reference to it even if it was detached
 	// from its thread (we cause that to happen below
 	// in interrupted)
-	if(!contexts.contains(cx)) {
-	    if(cx.getDebuggableEngine().getDebugger() == this) {
-		contexts.add(cx);
-	    }
-	}
+        synchronized(contexts) {
+            if(!contexts.contains(cx)) {
+                if(cx.getDebuggableEngine().getDebugger() == this) {
+                    contexts.add(cx);
+                }
+            }
+        }
     }
     
     public void contextExited(Context cx) {
     }
     
     public void contextReleased(Context cx) {
-	contexts.remove(cx);
+        synchronized(contexts) {
+            contexts.remove(cx);
+        }
     }
 
     /* end ContextListener interface */
@@ -2203,32 +2235,48 @@ public class Main extends JFrame implements Debugger, ContextListener {
 	JButton button;
 	JButton breakButton, goButton, stepIntoButton,
 	    stepOverButton, stepOutButton;
+        String [] toolTips = {"Break (Pause)", 
+                              "Go (F5)",
+                              "Step Into (F11)",
+                              "Step Over (F7)",
+                              "Step Out (F8)"};
+        int count = 0;
 	button = breakButton = new JButton("Break");
 	JButton focusButton = button;
 	button.setToolTipText("Break");
 	button.setActionCommand("Break");
 	button.addActionListener(menubar);
 	button.setEnabled(true);
+        button.setToolTipText(toolTips[count++]);
+
 	button = goButton = new JButton("Go");
 	button.setToolTipText("Go");
 	button.setActionCommand("Go");
 	button.addActionListener(menubar);
 	button.setEnabled(false);
+        button.setToolTipText(toolTips[count++]);
+
 	button = stepIntoButton = new JButton("Step Into");
 	button.setToolTipText("Step Into");
 	button.setActionCommand("Step Into");
 	button.addActionListener(menubar);
 	button.setEnabled(false);
+        button.setToolTipText(toolTips[count++]);
+
 	button = stepOverButton = new JButton("Step Over");
 	button.setToolTipText("Step Over");
 	button.setActionCommand("Step Over");
 	button.setEnabled(false);
 	button.addActionListener(menubar);
+        button.setToolTipText(toolTips[count++]);
+
 	button = stepOutButton = new JButton("Step Out");
 	button.setToolTipText("Step Out");
 	button.setActionCommand("Step Out");
 	button.setEnabled(false);
 	button.addActionListener(menubar);
+        button.setToolTipText(toolTips[count++]);
+
 	Dimension dim = stepOverButton.getPreferredSize();
 	breakButton.setPreferredSize(dim);
 	breakButton.setMinimumSize(dim);
