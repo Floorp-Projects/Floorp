@@ -24,7 +24,7 @@ import mozLock;
 
 my $objdir = getcwd;
 
-getopts("d:s:f:avl");
+getopts("d:s:f:avlD:p:");
 
 my $baseFilesDir = ".";
 if (defined($::opt_s)) {
@@ -66,6 +66,16 @@ if (defined($::opt_l)) {
 my $autoreg = 1;
 if (defined($::opt_a)) {
     $autoreg = 0;
+}
+
+my $preprocessor = "";
+if (defined($::opt_p)) {
+    $preprocessor = $::opt_p;
+}
+
+my $defines = "";
+while (@ARGV) {
+    $defines = "$defines ".shift(@ARGV);
 }
 
 if ($verbose) {
@@ -250,7 +260,7 @@ sub RegIt
 
 sub EnsureFileInDir
 {
-    my ($destPath, $srcPath, $destFile, $srcFile, $override) = @_;
+    my ($destPath, $srcPath, $destFile, $srcFile, $override, $preproc) = @_;
 
     #print "EnsureFileInDir($destPath, $srcPath, $destFile, $srcFile, $override)\n";
 
@@ -314,7 +324,13 @@ sub EnsureFileInDir
             mkpath($dir, 0, 0775) || die "can't mkpath $dir: $!";
         }
         unlink $destPath;       # in case we had a symlink on unix
-        copy($file, $destPath) || die "copy($file, $destPath) failed: $!";
+        if ($preproc) {
+            if (system("$preprocessor $defines < $file > $destPath") != 0) {
+                die "Preprocessing of $file failed: $!";
+            }
+        } else {
+            copy($file, $destPath) || die "copy($file, $destPath) failed: $!";
+        }
 
         # fix the mod date so we don't jar everything (is this faster than just jarring everything?)
         my $mtime = stat($file)->mtime || die $!;
@@ -340,7 +356,7 @@ while (<STDIN>) {
             if (/^\s+([\w\d.\-\_\\\/\+]+)\s*(\([\w\d.\-\_\\\/]+\))?$\s*/) {
                 my $dest = $1;
                 my $srcPath = defined($2) ? substr($2, 1, -1) : $2;
-		EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 0);
+		EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 0, 0);
                 $args = "$args$dest ";
 		if (!foreignPlatformFile($jarfile)  && $autoreg && $dest =~ /([\w\d.\-\_\+]+)\/([\w\d.\-\_\\\/]+)contents.rdf/)
 		{
@@ -351,7 +367,7 @@ while (<STDIN>) {
             } elsif (/^\+\s+([\w\d.\-\_\\\/\+]+)\s*(\([\w\d.\-\_\\\/]+\))?$\s*/) {
                 my $dest = $1;
                 my $srcPath = defined($2) ? substr($2, 1, -1) : $2;
-                EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 1);
+                EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 1, 0);
                 $overrides = "$overrides$dest ";
 		if (!foreignPlatformFile($jarfile)  && $autoreg && $dest =~ /([\w\d.\-\_\+]+)\/([\w\d.\-\_\\\/]+)contents.rdf/)
 		{
@@ -359,6 +375,16 @@ while (<STDIN>) {
 		    my $pkg_name = $2;
 		    RegIt($chromeDir, $jarfile, $chrome_type, $pkg_name);
 		}
+	    } elsif (/^\*\s+([\w\d.\-\_\\\/\+]+)\s*(\([\w\d.\-\_\\\/]+\))?$\s*/) {
+		# preprocessed, no override
+		my $dest = $1;
+		my $srcPath = defined($2) ? substr($2, 1, -1) : $2;
+		EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 0, 1);
+	    } elsif (/^\*\+\s+([\w\d.\-\_\\\/\+]+)\s*(\([\w\d.\-\_\\\/]+\))?$\s*/) {
+		# preprocessed, override
+		my $dest = $1;
+		my $srcPath = defined($2) ? substr($2, 1, -1) : $2;
+		EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 1, 1);
             } elsif (/^\s*$/) {
                 # end with blank line
                 last;
