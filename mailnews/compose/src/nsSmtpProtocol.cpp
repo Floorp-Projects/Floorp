@@ -349,7 +349,7 @@ NS_IMETHODIMP nsSmtpProtocol::OnStopRequest(nsIRequest *request, nsISupports *ct
 
 	// okay, we've been told that the send is done and the connection is going away. So 
 	// we need to release all of our state
-	return CloseSocket();
+  return nsMsgAsyncWriteProtocol::CloseSocket();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -1499,8 +1499,8 @@ nsresult nsSmtpProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
         
 			case SMTP_FREE:
 				// smtp is a one time use connection so kill it if we get here...
-				CloseSocket(); 
-                return NS_OK; /* final end */
+        nsMsgAsyncWriteProtocol::CloseSocket(); 
+        return NS_OK; /* final end */
        
 			default: /* should never happen !!! */
 				m_nextState = SMTP_ERROR_DONE;

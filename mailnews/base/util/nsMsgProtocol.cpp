@@ -779,6 +779,7 @@ public:
   virtual ~nsMsgFilePostHelper() {}
   nsCOMPtr<nsIRequest> mPostFileRequest;
   PRBool mSuspendedPostFileRead;
+  void CloseSocket() { mProtInstance = nsnull; }
 protected:
   nsCOMPtr<nsIOutputStream> mOutStream;
   nsMsgAsyncWriteProtocol * mProtInstance;
@@ -828,6 +829,8 @@ NS_IMETHODIMP nsMsgFilePostHelper::OnStopRequest(nsIRequest * aChannel, nsISuppo
 
 NS_IMETHODIMP nsMsgFilePostHelper::OnDataAvailable(nsIRequest * /* aChannel */, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
 {
+  if (!mProtInstance) return NS_OK; 
+
   if (mSuspendedPostFileRead)
   {
     mProtInstance->UpdateSuspendedReadBytes(count, mProtInstance->mInsertPeriodRequired);
@@ -953,6 +956,8 @@ nsresult nsMsgAsyncWriteProtocol::PostDataFinished()
 
 nsresult nsMsgAsyncWriteProtocol::ProcessIncomingPostData(nsIInputStream *inStr, PRUint32 count)
 {
+  if (!m_socketIsOpen) return NS_OK; // kick out if the socket was canceled
+
   // We need to quote any '.' that occur at the beginning of a line.
   // but I don't want to waste time reading out the data into a buffer and searching
   // let's try to leverage nsIBufferedInputStream and see if we can "peek" into the 
@@ -1021,6 +1026,9 @@ nsresult nsMsgAsyncWriteProtocol::ProcessIncomingPostData(nsIInputStream *inStr,
 nsresult nsMsgAsyncWriteProtocol::UnblockPostReader()
 {
   PRUint32 amountWritten = 0;
+  
+  if (!m_socketIsOpen) return NS_OK; // kick out if the socket was canceled
+
   if (mSuspendedRead)
   {
     // (1) attempt to write out any remaining read bytes we need in order to unblock the reader
@@ -1097,6 +1105,25 @@ nsresult nsMsgAsyncWriteProtocol::SetupTransportState()
     if (NS_FAILED(rv)) return rv;
 	} // if m_transport
 
+	return rv;
+}
+
+nsresult nsMsgAsyncWriteProtocol::CloseSocket()
+{
+	nsresult rv = NS_OK;
+  nsMsgProtocol::CloseSocket(); 
+
+	// we need to call Cancel so that we remove the socket transport from the mActiveTransportList.  see bug #30648
+	if (m_WriteRequest) 
+		rv = m_WriteRequest->Cancel(NS_BINDING_ABORTED);
+
+  if (mFilePostHelper)
+  {
+    mFilePostHelper->CloseSocket();
+    mFilePostHelper = nsnull;
+  }
+
+  m_WriteRequest = 0;
 	return rv;
 }
 

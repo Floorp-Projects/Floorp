@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -63,8 +63,8 @@ public:
 	NS_DECL_NSICHANNEL
 	NS_DECL_NSIREQUEST
   
-    NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIREQUESTOBSERVER
 
 	// LoadUrl -- A protocol typically overrides this function, sets up any local state for the url and
 	// then calls the base class which opens the socket if it needs opened. If the socket is 
@@ -84,16 +84,16 @@ protected:
 	// mscott -okay this is lame. I should break this up into a file protocol and a socket based
 	// protocool class instead of cheating and putting both methods here...
 
-        // open a connection on this url
-        virtual nsresult OpenNetworkSocket(nsIURI * aURL,
-                                           const char *connectionType,
-                                           nsIInterfaceRequestor* callbacks);
+  // open a connection on this url
+  virtual nsresult OpenNetworkSocket(nsIURI * aURL,
+                                     const char *connectionType,
+                                     nsIInterfaceRequestor* callbacks);
 
-        // open a connection with a specific host and port
-        virtual nsresult OpenNetworkSocketWithInfo(const char * aHostName,
-                                                   PRInt32 aGetPort,
-                                                   const char *connectionType,
-                                                   nsIInterfaceRequestor* callbacks);
+  // open a connection with a specific host and port
+  virtual nsresult OpenNetworkSocketWithInfo(const char * aHostName,
+                                             PRInt32 aGetPort,
+                                             const char *connectionType,
+                                             nsIInterfaceRequestor* callbacks);
   // helper routine
   nsresult GetFileFromURL(nsIURI * aURL, nsIFile **aResult);
 	virtual nsresult OpenFileSocket(nsIURI * aURL, PRUint32 aStartPosition, PRInt32 aReadCount); // used to open a file socket connection
@@ -183,8 +183,8 @@ public:
   // because we are reading the post data in asychronously, it's possible that we aren't sending it 
   // out fast enough and the reading gets blocked. The following set of state variables are used to 
   // track this.
-  PRBool                    mSuspendedRead;
-  PRBool                    mInsertPeriodRequired; // do we need to insert a '.' as part of the unblocking process
+  PRBool  mSuspendedRead;
+  PRBool  mInsertPeriodRequired; // do we need to insert a '.' as part of the unblocking process
    
   nsresult ProcessIncomingPostData(nsIInputStream *inStr, PRUint32 count);
   nsresult UnblockPostReader();
@@ -203,12 +203,13 @@ protected:
   // the streams for the pipe used to queue up data for the async write calls to the server.
   // we actually re-use the same mOutStream variable in our parent class for the output
   // stream to the socket channel. So no need for a new variable here.
-  nsCOMPtr<nsIInputStream> mInStream;    
+  nsCOMPtr<nsIInputStream>  mInStream;    
   nsCOMPtr<nsIInputStream>  mPostDataStream;
   PRUint32                  mSuspendedReadBytes;   // remaining # of bytes we need to read before   
                                                    // the input stream becomes unblocked
   PRUint32                  mSuspendedReadBytesPostPeriod; // # of bytes which need processed after we insert a '.' before 
                                                            // the input stream becomes unblocked.
+  virtual nsresult CloseSocket(); 
 };
 
 #endif /* nsMsgProtocol_h__ */
