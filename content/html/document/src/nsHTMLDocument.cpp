@@ -113,6 +113,10 @@
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
 #include "nsIPrompt.h"
+//AHMED 12-2 
+#ifdef IBMBIDI
+#include "nsIUBidiUtils.h"
+#endif
 
 #define DETECTOR_CONTRACTID_MAX 127
 static char g_detector_contractid[DETECTOR_CONTRACTID_MAX + 1];
@@ -624,7 +628,15 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
   nsCOMPtr<nsIDocumentCharsetInfo> dcInfo;
   docShell->GetDocumentCharsetInfo(getter_AddRefs(dcInfo));  
-
+#ifdef IBMBIDI
+  nsCOMPtr<nsIPresContext> cx;
+  docShell->GetPresContext(getter_AddRefs(cx));
+  if(cx){
+    PRUint32 mBidiOption;
+    cx->GetBidi(&mBidiOption);
+    mTexttype = GET_BIDI_OPTION_TEXTTYPE(mBidiOption);
+  }
+#endif // IBMBIDI
   //
   // The following logic is mirrored in nsWebShell::Embed!
   //
@@ -853,6 +865,12 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   if (NS_FAILED(rv)) {
     return rv;
   }
+//ahmed
+#ifdef IBMBIDI
+  // Check if 864 but in Implicit mode !
+  if( (mTexttype == IBMBIDI_TEXTTYPE_LOGICAL)&&(charset.EqualsIgnoreCase("ibm864")) )
+    charset.AssignWithConversion("IBM864i");
+#endif // IBMBIDI
 
   rv = this->SetDocumentCharacterSet(charset);
   if (NS_FAILED(rv)) {

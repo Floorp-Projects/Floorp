@@ -77,4 +77,72 @@ interface nsIMarkupDocumentViewer : nsISupports
 	* Tell the container to shrink-to-fit or grow-to-fit its contents
 	*/
 	void sizeToContent();
+
+  /**
+   * Options for Bidi presentation.
+   *
+   * Use these attributes to access the individual Bidi options.
+   */
+
+  /**
+   * bidiTextDirection: the default direction for the layout of bidirectional text.
+   *                    1 - left to right
+   *                    2 - right to left
+   */
+  attribute octet bidiTextDirection;
+  
+  /**
+   * bidiTextType: the ordering of bidirectional text. This may be either "logical"
+   * or "visual". Logical text will be reordered for presentation using the Unicode
+   * Bidi Algorithm. Visual text will be displayed without reordering. 
+   *               1 - the default order for the charset
+   *               2 - logical order
+   *               3 - visual order
+   */
+  attribute octet bidiTextType;
+
+  /**
+   * bidiControlsTextMode: the order of bidirectional text in form controls.
+   *                       1 - logical
+   *                       2 - visual
+   *                       3 - like the containing document
+   */
+  attribute octet bidiControlsTextMode;
+
+  /**
+   * bidiClipboardTextMode: the order in which text is transferred to the clipboard.
+   *                        1 - logical
+   *                        2 - visual
+   *                        3 - as source (unchanged)
+   */
+  attribute octet bidiClipboardTextMode;
+
+  /**
+   * bidiNumeral: the type of numerals to display. 
+   *              1 - depending on context, default is Arabic numerals
+   *              2 - depending on context, default is Hindi numerals
+   *              3 - Arabic numerals
+   *              4 - Hindi numerals
+   */
+  attribute octet bidiNumeral;
+
+  /**
+   * bidiSupport: whether to use platform bidi support or Mozilla's bidi support
+   *              1 - Use Mozilla's bidi support
+   *              2 - Use the platform bidi support
+   *              3 - Disable bidi support
+   */
+  attribute octet bidiSupport;
+
+  /**
+   * bidiCharacterSet: whether to force the user's character set
+   *                   1 - use the document character set
+   *                   2 - use the character set chosen by the user
+   */
+  attribute octet bidiCharacterSet;  
+  
+  /**
+   * Use this attribute to access all the Bidi options in one operation
+   */
+  attribute PRUint32 bidiOptions;
 };

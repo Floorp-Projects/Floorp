@@ -2100,11 +2100,38 @@ nsGenericHTMLElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
   return NS_OK;
 }
 
+#ifdef IBMBIDI
+/**
+ * Handle attributes on the BDO element
+ */
+static void
+MapBdoAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
+                     nsIMutableStyleContext* aStyleContext,
+                     nsIPresContext* aPresContext)
+{
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aStyleContext,
+                                                aPresContext);
+  nsHTMLValue value;
+  // Get dir attribute
+  aAttributes->GetAttribute(nsHTMLAtoms::dir, value);
+  if (eHTMLUnit_Enumerated == value.GetUnit() ) {
+    nsStyleText* text = (nsStyleText*)
+                        aStyleContext->GetMutableStyleData(eStyleStruct_Text);
+    text->mUnicodeBidi = NS_STYLE_UNICODE_BIDI_OVERRIDE;
+  }
+}
+#endif // IBMBIDI
+
 NS_IMETHODIMP
 nsGenericHTMLElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc,
                                                    nsMapAttributesFunc& aMapFunc) const
 {
   aFontMapFunc = nsnull;
+#ifdef IBMBIDI
+  if (mNodeInfo->Equals(nsHTMLAtoms::bdo) )
+    aMapFunc = &MapBdoAttributesInto;
+  else
+#endif // IBMBIDI
   aMapFunc = &MapCommonAttributesInto;
   return NS_OK;
 }
@@ -2886,6 +2913,13 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAt
     nsStyleDisplay* display = (nsStyleDisplay*)
       aStyleContext->GetMutableStyleData(eStyleStruct_Display);
     display->mDirection = value.GetIntValue();
+#ifdef IBMBIDI
+    display->mExplicitDirection = display->mDirection;
+
+    if (NS_STYLE_DIRECTION_RTL == display->mDirection) {
+      aPresContext->EnableBidi();
+    }
+#endif // IBMBIDI
   }
   aAttributes->GetAttribute(nsHTMLAtoms::lang, value);
   if (value.GetUnit() == eHTMLUnit_String) {

@@ -946,6 +946,15 @@ nsGenericDOMDataNode::SetText(nsIContent *aOuterContent,
   if (aNotify && (nsnull != mDocument)) {
     mDocument->BeginUpdate();
   }
+#ifdef IBMBIDI
+  if (mDocument != nsnull) {
+    PRBool bidiEnabled = mText.SetTo(aBuffer, aLength);
+    if (bidiEnabled) {
+      mDocument->SetBidiEnabled(PR_TRUE);
+    }
+  }
+  else
+#endif // IBMBIDI
   mText.SetTo(aBuffer, aLength);
 
   if (mDocument && nsGenericElement::HasMutationListeners(aOuterContent, NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED)) {

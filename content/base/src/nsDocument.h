@@ -277,6 +277,18 @@ public:
    */
   NS_IMETHOD RemoveCharSetObserver(nsIObserver* aObserver);
 
+#ifdef IBMBIDI
+  /**
+   *  Check if the document contains bidi data.
+   *  If so, we have to apply the Unicode Bidi Algorithm.
+   */
+  NS_IMETHOD GetBidiEnabled(PRBool* aBidiEnabled) const;
+  /**
+   *  Indicate the document contains RTL characters.
+   */
+  NS_IMETHOD SetBidiEnabled(PRBool aBidiEnabled);
+#endif // IBMBIDI
+
   /**
    * Return the Line Breaker for the document
    */
@@ -457,7 +469,15 @@ public:
   NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins);
   NS_IMETHOD    GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult);
   NS_IMETHOD    SetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject* aBoxObject);
+
+  /**
+   *  Retrieve the "direction" property of the document.
+   */
   NS_IMETHOD    GetDir(nsAWritableString& aDirection);
+
+  /**
+   *  Set the "direction" property of the document.
+   */
   NS_IMETHOD    SetDir(const nsAReadableString& aDirection);
  
   // nsIDOMNode interface
@@ -562,6 +582,10 @@ protected:
   // A content ID counter used to give a monotonically increasing ID to the content
   // objects in the document's content model
   PRInt32 mNextContentID;
+
+#ifdef IBMBIDI
+  PRBool        mBidiEnabled;
+#endif // IBMBIDI
 
   // disk file members
   nsCOMPtr<nsIFile>   mFileSpec;
