@@ -330,6 +330,7 @@ MultiweekView.prototype.refreshEvents = function multiweekView_refreshEvents( )
 
          if ( calendarEventDisplay.event.allDay == true )
          {
+            eventBox.setAttribute( "allday", "true" );
             eventBoxText.setAttribute( "value", calendarEventDisplay.event.title );
             // Create an image
             var newImage = document.createElement("image");
