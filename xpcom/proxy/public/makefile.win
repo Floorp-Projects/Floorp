@@ -24,6 +24,7 @@ MODULE=xpcom
 EXPORTS =                        \
     nsProxyEvent.h               \
     nsProxyObjectManager.h        \
+    nsProxiedService.h		\
     $(NULL)
 
 XPIDL_MODULE = proxyObjInst
