@@ -131,13 +131,14 @@ namespace ICG {
                     ParameterList *parameters,
                     uint32 maxRegister,
                     InstructionMap *instructionMap, 
-                    JSType *resultType) :
+                    JSType *resultType, uint32 exceptionRegister) :
             its_iCode(iCode), itsVariables(variables), itsParameters(parameters),
             itsMaxRegister(maxRegister),
             mID(++sMaxID), mInstructionMap(instructionMap), 
             mParameterInit(NULL), 
             mEntryPoint(0),
-            mResultType(resultType)
+            mResultType(resultType),
+            mExceptionRegister(exceptionRegister)
         {
         }
 
@@ -163,6 +164,7 @@ namespace ICG {
         uint32 *mParameterInit;
         uint32 mEntryPoint;
         JSType *mResultType;
+        uint32 mExceptionRegister;
 
         static uint32 sMaxID;
         
@@ -323,6 +325,12 @@ namespace ICG {
         TypedRegister allocateVariable(const StringAtom& name, JSType *type)
         { 
             TypedRegister r = allocateRegister(type);
+            variableList->add(name, r);
+            return r;
+        }
+        
+        TypedRegister allocateVariable(const StringAtom& name, TypedRegister r)
+        { 
             variableList->add(name, r);
             return r;
         }

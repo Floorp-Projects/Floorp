@@ -255,15 +255,6 @@ static JSValue add_Default(const JSValue& r1, const JSValue& r2)
     }
 }
 
-/*
-static JSValue add_String1(const JSValue& r1, const JSValue& r2)
-{
-    JSValue num1(r1.toNumber());
-    JSValue num2(r2.toNumber());
-    return JSValue(num1.f64 + num2.f64);
-}
-*/
-
 static JSValue subtract_Default(const JSValue& r1, const JSValue& r2)
 {
     JSValue num1(r1.toNumber());
@@ -970,7 +961,6 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                             if (getter) {
                                 if (getter->isNative()) {
                                     JSValues argv(1);
-                                    JSValues::size_type i = 1;
                                     argv[0] = value;
                                     JSValue result = static_cast<JSNativeFunction*>(getter)->mCode(this, argv);
                                     if (dst(gp).first != NotARegister)
@@ -1078,7 +1068,6 @@ using JSString throughout.
                                 JSFunction* getter = inst->getter(src2(gs));
                                 if (getter->isNative()) {
                                     JSValues argv(1);
-                                    JSValues::size_type i = 1;
                                     argv[0] = value;
                                     JSValue result = static_cast<JSNativeFunction*>(getter)->mCode(this, argv);
                                     if (dst(gs).first != NotARegister)
@@ -1122,7 +1111,6 @@ using JSString throughout.
                                 JSFunction* setter = inst->setter(src1(ss));
                                 if (setter->isNative()) {
                                     JSValues argv(2);
-                                    JSValues::size_type i = 1;
                                     argv[0] = value;
                                     argv[1] = (*registers)[src2(ss).first];
                                     JSValue result = static_cast<JSNativeFunction*>(setter)->mCode(this, argv);
@@ -1583,9 +1571,13 @@ using JSString throughout.
                     Linkage *pLinkage = mLinkage;
                     for (; pLinkage != NULL; pLinkage = pLinkage->mNext) {
                         if (!pLinkage->mActivation->catchStack.empty()) {
+                            mLinkage = pLinkage;
                             mActivation = pLinkage->mActivation;
-                            Handler *h = mActivation->catchStack.back();
+                            mGlobal = pLinkage->mScope;
+                            mICode = pLinkage->mICode;
                             registers = &mActivation->mRegisters;
+                            (*registers)[mICode->mExceptionRegister] = x->value;
+                            Handler *h = mActivation->catchStack.back();
                             if (h->catchTarget) {
                                 mPC = mICode->its_iCode->begin() + h->catchTarget->mOffset;
                             }
@@ -1593,7 +1585,7 @@ using JSString throughout.
                                 ASSERT(h->finallyTarget);
                                 mPC = mICode->its_iCode->begin() + h->finallyTarget->mOffset;
                             }
-                            mLinkage = pLinkage;
+                            endPC = mICode->its_iCode->end();
                             break;
                         }
                     }
