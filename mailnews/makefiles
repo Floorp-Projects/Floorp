@@ -38,6 +38,7 @@ mailnews/news/src/Makefile
 mailnews/news/build/Makefile
 mailnews/news/tests/Makefile
 mailnews/news/tests/nntp/Makefile
+mailnews/news/tests/newsParser/Makefile
 mailnews/mime/Makefile
 mailnews/mime/cthandlers/Makefile
 mailnews/mime/cthandlers/vcard/Makefile
