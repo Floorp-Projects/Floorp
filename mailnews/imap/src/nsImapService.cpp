@@ -215,6 +215,7 @@ NS_IMETHODIMP nsImapService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL
       nsCAutoString urlSpec;
       rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, nsnull, urlSpec);
       if (NS_FAILED(rv)) return rv;
+	  imapUrl->SetImapMessageSink(imapMessageSink);
 
       nsCOMPtr<nsIURI> url = do_QueryInterface(imapUrl);
       nsXPIDLCString currentSpec;
