@@ -619,26 +619,30 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
 
       mLoads[1].mRequest = nsnull;
 
-      if (!mSizeConstrained && (mLoads[0].mIntrinsicSize != mIntrinsicSize)) {
-        nsCOMPtr<nsIPresShell> presShell;
-        aPresContext->GetShell(getter_AddRefs(presShell));
-        NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
-        NS_ASSERTION(presShell, "No PresShell.");
-        if (mParent && presShell && mGotInitialReflow) { // don't reflow if we havn't gotten the inital reflow yet
-          mState |= NS_FRAME_IS_DIRTY;
-          mParent->ReflowDirtyChild(presShell, NS_STATIC_CAST(nsIFrame*, this));
-        }
-      } else {
-        nsSize s;
-        GetSize(s);
-        nsRect r(0,0, s.width, s.height);
-        if (!r.IsEmpty()) {
-          Invalidate(aPresContext, r, PR_FALSE);
-        }
-      }
-
     } else {
+      // load failed, we need to reset mLoads[0] to get an broken icon
+      // since the src attribute changed
+      mLoads[0].mRequest = nsnull;
       mLoads[1].mRequest = nsnull;
+      imageFailedToLoad = PR_TRUE;
+    }
+
+    if (!mSizeConstrained && (mLoads[0].mIntrinsicSize != mIntrinsicSize)) {
+      nsCOMPtr<nsIPresShell> presShell;
+      aPresContext->GetShell(getter_AddRefs(presShell));
+      NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
+      NS_ASSERTION(presShell, "No PresShell.");
+      if (mParent && presShell && mGotInitialReflow) { // don't reflow if we havn't gotten the inital reflow yet
+        mState |= NS_FRAME_IS_DIRTY;
+        mParent->ReflowDirtyChild(presShell, NS_STATIC_CAST(nsIFrame*, this));
+      }
+    } else {
+      nsSize s;
+      GetSize(s);
+      nsRect r(0,0, s.width, s.height);
+      if (!r.IsEmpty()) {
+        Invalidate(aPresContext, r, PR_FALSE);
+      }
     }
 
   } else if (NS_FAILED(aStatus)) {
