@@ -68,18 +68,17 @@ nsMathMLmstyleFrame::~nsMathMLmstyleFrame()
 
 // mstyle needs special care for its scriptlevel and displaystyle attributes
 NS_IMETHODIMP
-nsMathMLmstyleFrame::Init(nsIPresContext*  aPresContext,
-                          nsIContent*      aContent,
-                          nsIFrame*        aParent,
-                          nsIStyleContext* aContext,
-                          nsIFrame*        aPrevInFlow)
+nsMathMLmstyleFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+                                          nsIFrame*       aParent) 
 {
-  nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  // let the base class get the default from our parent
+  nsMathMLContainerFrame::InheritAutomaticData(aPresContext, aParent);
 
-  mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
+  // sync with our current state
+
   mPresentationData.mstyle = this;
 
-  // cache the values that we would have if we were not special...
+  // cache these values that we would have if we were not special...
   // In the event of dynamic updates, e.g., if our displastyle and/or
   // scriptlevel attributes are removed, we will recover our state using
   // these cached values
@@ -116,11 +115,35 @@ nsMathMLmstyleFrame::Init(nsIPresContext*  aPresContext,
     }
   }
 
+  return NS_OK;
+}
 
-// TODO:
-// Examine all other attributes
+// mstyle needs special care for its scriptlevel and displaystyle attributes
+NS_IMETHODIMP
+nsMathMLmstyleFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+{
+  mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
 
-  return rv;
+  // figure out our current presentation data
+  nsPresentationData oldData = mPresentationData;
+
+  InheritAutomaticData(aPresContext, mParent);
+
+  // propagate to our children if something changed
+  if (oldData.flags != mPresentationData.flags ||
+      oldData.scriptLevel != mPresentationData.scriptLevel) {
+    PRUint32 whichFlags = NS_MATHML_DISPLAYSTYLE;
+    PRUint32 newValues = NS_MATHML_DISPLAYSTYLE & mPresentationData.flags;
+    if (newValues == (oldData.flags & NS_MATHML_DISPLAYSTYLE)) {
+      newValues = 0;
+      whichFlags = 0;
+    }
+    // use the base method here because we really want to reflect any updates
+    nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(aPresContext, 0, -1, 
+      mPresentationData.scriptLevel - oldData.scriptLevel, newValues, whichFlags);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP

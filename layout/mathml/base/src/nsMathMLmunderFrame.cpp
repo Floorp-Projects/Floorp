@@ -70,23 +70,6 @@ nsMathMLmunderFrame::~nsMathMLmunderFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmunderFrame::Init(nsIPresContext*  aPresContext,
-                          nsIContent*      aContent,
-                          nsIFrame*        aParent,
-                          nsIStyleContext* aContext,
-                          nsIFrame*        aPrevInFlow)
-{
-  nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-
-  mEmbellishData.flags = NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
-
-#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
-  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
-#endif
-  return rv;
-}
-
-NS_IMETHODIMP
 nsMathMLmunderFrame::UpdatePresentationData(nsIPresContext* aPresContext,
                                             PRInt32         aScriptLevelIncrement,
                                             PRUint32        aFlagsValues,
@@ -147,12 +130,13 @@ nsMathMLmunderFrame::UpdatePresentationDataFromChildAt(nsIPresContext* aPresCont
 }
 
 NS_IMETHODIMP
-nsMathMLmunderFrame::SetInitialChildList(nsIPresContext* aPresContext,
-                                         nsIAtom*        aListName,
-                                         nsIFrame*       aChildList)
+nsMathMLmunderFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 {
-  nsresult rv;
-  rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+#endif
+
+  mEmbellishData.flags = NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
 
   // check whether or not this is an embellished operator
   EmbellishOperator();
@@ -205,8 +189,8 @@ XXX The winner is the outermost setting in conflicting settings like these:
       }
     }
     else { // no attribute, get the value from the core
-      rv = mEmbellishData.coreFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-      if (NS_SUCCEEDED(rv) && mathMLFrame) {
+      mEmbellishData.coreFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+      if (mathMLFrame) {
         mathMLFrame->GetEmbellishData(embellishData);
         if (NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(embellishData.flags)) {
           mPresentationData.flags |= NS_MATHML_MOVABLELIMITS;
@@ -214,16 +198,16 @@ XXX The winner is the outermost setting in conflicting settings like these:
       }
     }
   }
-  
+
   // see if the underscriptFrame is <mo> or an embellished operator
   if (underscriptFrame) {
-    rv = underscriptFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&underscriptMathMLFrame);
-    if (NS_SUCCEEDED(rv) && underscriptMathMLFrame) {
+    underscriptFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&underscriptMathMLFrame);
+    if (underscriptMathMLFrame) {
       underscriptMathMLFrame->GetEmbellishData(embellishData);
       // core of the underscriptFrame
       if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) && embellishData.coreFrame) {
-        rv = embellishData.coreFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-        if (NS_SUCCEEDED(rv) && mathMLFrame) {
+        embellishData.coreFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+        if (mathMLFrame) {
           mathMLFrame->GetEmbellishData(embellishData);
           // if we have the accentunder attribute, tell the core to behave as 
           // requested (otherwise leave the core with its default behavior)
@@ -268,7 +252,7 @@ XXX The winner is the outermost setting in conflicting settings like these:
     mEmbellishData.flags &= ~NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
   }
 
-  return rv;
+  return NS_OK;
 }
 
 /*

@@ -87,12 +87,12 @@ public:
         PRUint32             aFlags = 0);
 
   NS_IMETHOD
-  SetInitialChildList(nsIPresContext* aPresContext,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aChildList)
+  TransmitAutomaticData(nsIPresContext* aPresContext)
   {
-    nsresult rv;
-    rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+    mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+#endif
+    mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
     // 1. The REC says:
     //    The <msqrt> element leaves both attributes [displaystyle and scriptlevel]
     //    unchanged within all its arguments.
@@ -100,7 +100,7 @@ public:
     UpdatePresentationDataFromChildAt(aPresContext, 0, -1, 0,
        NS_MATHML_COMPRESSED,
        NS_MATHML_COMPRESSED);
-    return rv;
+    return NS_OK;
   }
 
 protected:

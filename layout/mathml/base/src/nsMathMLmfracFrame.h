@@ -113,6 +113,9 @@ public:
         PRUint32             aFlags = 0);
 
   NS_IMETHOD
+  TransmitAutomaticData(nsIPresContext* aPresContext);
+
+  NS_IMETHOD
   UpdatePresentationData(nsIPresContext* aPresContext,
                          PRInt32         aScriptLevelIncrement,
                          PRUint32        aFlagsValues,
@@ -125,38 +128,6 @@ public:
                                     PRInt32         aScriptLevelIncrement,
                                     PRUint32        aFlagsValues,
                                     PRUint32        aFlagsToUpdate);
-
-  NS_IMETHOD
-  SetInitialChildList(nsIPresContext* aPresContext,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aChildList)
-  {
-    nsresult rv;
-    rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    // 1. The REC says:
-    //    The <mfrac> element sets displaystyle to "false", or if it was already
-    //    false increments scriptlevel by 1, within numerator and denominator.
-    // 2. The TeXbook (Ch 17. p.141) says the numerator inherits the compression
-    //    while the denominator is compressed
-    PRInt32 increment =
-       NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags) ? 0 : 1;
-    mInnerScriptLevel = mPresentationData.scriptLevel + increment;
-    UpdatePresentationDataFromChildAt(aPresContext, 0, -1, increment,
-      ~NS_MATHML_DISPLAYSTYLE,
-       NS_MATHML_DISPLAYSTYLE);
-    UpdatePresentationDataFromChildAt(aPresContext, 1,  1, 0,
-       NS_MATHML_COMPRESSED,
-       NS_MATHML_COMPRESSED);
-    // check whether or not this is an embellished operator
-    EmbellishOperator();
-    // even when embellished, we need to record that <mfrac> won't fire
-    // Stretch() on its embellished child
-    mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
-    // break the embellished hierarchy to stop propagating the stretching
-    // process, but keep access to mEmbellishData.coreFrame for convenience
-    mEmbellishData.nextFrame = nsnull;
-    return rv;
-  }
 
   // helper to translate the thickness attribute into a usable form
   static nscoord 

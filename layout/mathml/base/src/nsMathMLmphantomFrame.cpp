@@ -67,16 +67,10 @@ nsMathMLmphantomFrame::~nsMathMLmphantomFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmphantomFrame::Init(nsIPresContext*  aPresContext,
-                            nsIContent*      aContent,
-                            nsIFrame*        aParent,
-                            nsIStyleContext* aContext,
-                            nsIFrame*        aPrevInFlow)
+nsMathMLmphantomFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 {
-  nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-
   mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
-  return rv;
+  return NS_OK;
 }
 
 NS_METHOD

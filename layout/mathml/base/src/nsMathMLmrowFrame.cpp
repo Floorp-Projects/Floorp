@@ -67,18 +67,13 @@ nsMathMLmrowFrame::~nsMathMLmrowFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmrowFrame::Init(nsIPresContext*  aPresContext,
-                        nsIContent*      aContent,
-                        nsIFrame*        aParent,
-                        nsIStyleContext* aContext,
-                        nsIFrame*        aPrevInFlow)
+nsMathMLmrowFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
 {
-  nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-
-  mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
-
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
   mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
 #endif
-  return rv;
+
+  mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
+
+  return NS_OK;
 }

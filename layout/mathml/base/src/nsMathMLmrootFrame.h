@@ -50,12 +50,11 @@ public:
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
-  SetInitialChildList(nsIPresContext* aPresContext,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aChildList)
+  TransmitAutomaticData(nsIPresContext* aPresContext)
   {
-    nsresult rv;
-    rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+    mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+#endif
     // 1. The REC says:
     //    The <mroot> element increments scriptlevel by 2, and sets displaystyle to
     //    "false", within index, but leaves both attributes unchanged within base.
@@ -65,7 +64,7 @@ public:
        NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED);
     UpdatePresentationDataFromChildAt(aPresContext, 0, 0, 0,
        NS_MATHML_COMPRESSED, NS_MATHML_COMPRESSED);
-    return rv;
+    return NS_OK;
   }
 
   NS_IMETHOD

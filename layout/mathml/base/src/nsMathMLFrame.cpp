@@ -26,6 +26,25 @@
 NS_IMPL_QUERY_INTERFACE1(nsMathMLFrame, nsIMathMLFrame)
 
 NS_IMETHODIMP
+nsMathMLFrame::InheritAutomaticData(nsIPresContext* aPresContext,
+                                    nsIFrame*       aParent) 
+{
+  mPresentationData.flags = 0;
+  mPresentationData.mstyle = nsnull;
+  mPresentationData.scriptLevel = 0;
+  mEmbellishData.flags = 0;
+
+  mEmbellishData.nextFrame = nsnull;
+  mEmbellishData.coreFrame = nsnull;
+  mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
+  mEmbellishData.leftSpace = mEmbellishData.rightSpace = 0;
+
+  // by default, just inherit the display & scriptlevel of our parent
+  GetPresentationDataFrom(aParent, mPresentationData);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMathMLFrame::UpdatePresentationData(nsIPresContext* aPresContext,
                                       PRInt32         aScriptLevelIncrement,
                                       PRUint32        aFlagsValues,

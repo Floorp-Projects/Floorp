@@ -95,12 +95,8 @@ nsMathMLmfracFrame::Init(nsIPresContext*  aPresContext,
                          nsIStyleContext* aContext,
                          nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = NS_OK;
-
-  rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  if (NS_FAILED(rv)) return rv;
 
   if (IsBevelled()) {
     // enable the bevelled rendering
@@ -112,10 +108,39 @@ nsMathMLmfracFrame::Init(nsIPresContext*  aPresContext,
     }
   }
 
+  return rv;
+}
+
+NS_IMETHODIMP
+nsMathMLmfracFrame::TransmitAutomaticData(nsIPresContext* aPresContext)
+{
 #if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
   mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
 #endif
-  return rv;
+
+  // 1. The REC says:
+  //    The <mfrac> element sets displaystyle to "false", or if it was already
+  //    false increments scriptlevel by 1, within numerator and denominator.
+  // 2. The TeXbook (Ch 17. p.141) says the numerator inherits the compression
+  //    while the denominator is compressed
+  PRInt32 increment =
+     NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags) ? 0 : 1;
+  mInnerScriptLevel = mPresentationData.scriptLevel + increment;
+  UpdatePresentationDataFromChildAt(aPresContext, 0, -1, increment,
+    ~NS_MATHML_DISPLAYSTYLE,
+     NS_MATHML_DISPLAYSTYLE);
+  UpdatePresentationDataFromChildAt(aPresContext, 1,  1, 0,
+     NS_MATHML_COMPRESSED,
+     NS_MATHML_COMPRESSED);
+  // check whether or not this is an embellished operator
+  EmbellishOperator();
+  // even when embellished, we need to record that <mfrac> won't fire
+  // Stretch() on its embellished child
+  mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
+  // break the embellished hierarchy to stop propagating the stretching
+  // process, but keep access to mEmbellishData.coreFrame for convenience
+  mEmbellishData.nextFrame = nsnull;
+  return NS_OK;
 }
 
 nscoord 

@@ -43,11 +43,11 @@ public:
                    PRInt32         aHint);
 
   NS_IMETHOD
-  Init(nsIPresContext*  aPresContext,
-       nsIContent*      aContent,
-       nsIFrame*        aParent,
-       nsIStyleContext* aContext,
-       nsIFrame*        aPrevInFlow);
+  InheritAutomaticData(nsIPresContext* aPresContext,
+                       nsIFrame*       aParent);
+
+  NS_IMETHOD
+  TransmitAutomaticData(nsIPresContext* aPresContext);
 
   NS_IMETHOD
   UpdatePresentationData(nsIPresContext* aPresContext,
@@ -62,20 +62,6 @@ public:
                                     PRInt32         aScriptLevelIncrement,
                                     PRUint32        aFlagsValues,
                                     PRUint32        aFlagsToUpdate);
-
-  NS_IMETHOD
-  SetInitialChildList(nsIPresContext* aPresContext,
-                      nsIAtom*        aListName,
-                      nsIFrame*       aChildList)
-  {
-    nsresult rv;
-    rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    // This call is peculiar to <mstyle> and will quickly return if there is nothing to update
-    UpdatePresentationDataFromChildAt(aPresContext, 0, -1, 0,
-       NS_MATHML_DISPLAYSTYLE & mPresentationData.flags,
-       NS_MATHML_DISPLAYSTYLE);
-    return rv;
-  }
 
 protected:
   nsMathMLmstyleFrame();
