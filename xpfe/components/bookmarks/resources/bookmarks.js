@@ -23,8 +23,8 @@
 
 function debug(msg)
 {
-  // uncomment for noise
-  //dump(msg+"\n");
+	// uncomment for noise
+	// dump(msg+"\n");
 }
 
 
@@ -49,12 +49,14 @@ function copySelectionToClipboard()
 
 	// build a url that encodes all the select nodes as well as their parent nodes
 	var url="";
+	var text="";
 
 	for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
 	{
 		var node = select_list[nodeIndex];
 		if (!node)    continue;
-		var ID = node.getAttribute("id");
+
+		var ID = getAbsoluteID("bookmarksTree", node);
 		if (!ID)    continue;
 		
 		var IDRes = RDF.GetResource(ID);
@@ -67,7 +69,18 @@ function copySelectionToClipboard()
 		debug("Node " + nodeIndex + ": " + ID + "    name: " + theName);
 		url += "ID:{" + ID + "};";
 		url += "NAME:{" + theName + "};";
+
+		var isContainerFlag = node.getAttribute("container") == "true" ? true:false;
+		if (isContainerFlag == false)
+		{
+			var type = node.getAttribute("type");
+			if (type != "http://home.netscape.com/NC-rdf#BookmarkSeparator")
+			{
+				text += ID + "\r";
+			}
+		}
 	}
+
 	if (url == "")	return(false);
 	debug("Copy URL: " + url);
 
@@ -75,7 +88,6 @@ function copySelectionToClipboard()
 	var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
 	if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
 	if ( !trans )	return(false);
-	trans.addDataFlavor("text/unicode");
 
 	var clip = Components.classes["component://netscape/widget/clipboard"].createInstance();
 	if ( clip ) clip = clip.QueryInterface(Components.interfaces.nsIClipboard);
@@ -83,13 +95,25 @@ function copySelectionToClipboard()
 	clip.emptyClipboard();
 
 	// save bookmark's ID
+	trans.addDataFlavor("moz/bookmarkclipboarditem");
 	var data = Components.classes["component://netscape/supports-wstring"].createInstance();
 	if ( data )	data = data.QueryInterface(Components.interfaces.nsISupportsWString);
 	if (!data)	return(false);
 	data.data = url;
-	trans.setTransferData ( "text/unicode", data, url.length*2 );			// double byte data
+	trans.setTransferData ( "moz/bookmarkclipboarditem", data, url.length*2 );			// double byte data
 
+	if (text != "")
+	{
+		trans.addDataFlavor("text/unicode");
+
+		var textData = Components.classes["component://netscape/supports-wstring"].createInstance();
+		if ( textData )	textData = textData.QueryInterface(Components.interfaces.nsISupportsWString);
+		if (!textData)	return(false);
+		textData.data = text;
+		trans.setTransferData ( "text/unicode", textData, text.length*2 );			// double byte data
+	}
 	clip.setData(trans, null);
+
 	return(true);
 }
 
@@ -134,12 +158,12 @@ function doPaste()
 	var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
 	if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
 	if ( !trans )	return(false);
-	trans.addDataFlavor("text/unicode");
+	trans.addDataFlavor("moz/bookmarkclipboarditem");
 
 	clip.getData(trans);
 	var data = new Object();
 	var dataLen = new Object();
-	trans.getTransferData("text/unicode", data, dataLen);
+	trans.getTransferData("moz/bookmarkclipboarditem", data, dataLen);
 	if (data)	data = data.value.QueryInterface(Components.interfaces.nsISupportsWString);
 	var url=null;
 	if (data)	url = data.data.substring(0, dataLen.value / 2);	// double byte data
