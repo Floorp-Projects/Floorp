@@ -386,6 +386,7 @@ static const char kDOMStringBundleURL[] =
 
 #define EXTERNAL_OBJ_SCRIPTABLE_FLAGS                                         \
   (ELEMENT_SCRIPTABLE_FLAGS & ~nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY | \
+   nsIXPCScriptable::WANT_GETPROPERTY |                                       \
    nsIXPCScriptable::WANT_SETPROPERTY |                                       \
    nsIXPCScriptable::WANT_CALL)
 
@@ -7074,27 +7075,79 @@ nsHTMLExternalObjSH::PostCreate(nsIXPConnectWrappedNative *wrapper,
 
 
 NS_IMETHODIMP
-nsHTMLExternalObjSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
+nsHTMLExternalObjSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
                                  JSContext *cx, JSObject *obj, jsval id,
                                  jsval *vp, PRBool *_retval)
 {
-  JSString *id_str = ::JS_ValueToString(cx, id);
-  if (!id_str) {
-    *_retval = JS_FALSE;
-    return NS_ERROR_FAILURE;
-  }
-
   JSObject *pi_obj = ::JS_GetPrototype(cx, obj);
-  const jschar *id_chars = ::JS_GetStringChars(id_str);
-  size_t id_length = ::JS_GetStringLength(id_str);
+
+  const jschar *id_chars = nsnull;
+  size_t id_length = 0;
 
   JSBool found;
-  if (!::JS_HasUCProperty(cx, pi_obj, id_chars, id_length, &found)) {
+
+  if (JSVAL_IS_STRING(id)) {
+    JSString *id_str = JSVAL_TO_STRING(id);
+
+    id_chars = ::JS_GetStringChars(id_str);
+    id_length = ::JS_GetStringLength(id_str);
+
+    *_retval = ::JS_HasUCProperty(cx, pi_obj, id_chars, id_length, &found);
+  } else {
+    *_retval = JS_HasElement(cx, pi_obj, JSVAL_TO_INT(id), &found);
+  }
+
+  if (!*_retval) {
     return NS_ERROR_UNEXPECTED;
   }
 
   if (found) {
-    *_retval = ::JS_SetUCProperty(cx, pi_obj, id_chars, id_length, vp);
+    if (JSVAL_IS_STRING(id)) {
+      *_retval = ::JS_GetUCProperty(cx, pi_obj, id_chars, id_length, vp);
+    } else {
+      *_retval = ::JS_GetElement(cx, pi_obj, JSVAL_TO_INT(id), vp);
+    }
+
+    return *_retval ? NS_OK : NS_ERROR_FAILURE;
+  }
+
+  return nsElementSH::GetProperty(wrapper, cx, obj, id, vp, _retval);
+}
+
+NS_IMETHODIMP
+nsHTMLExternalObjSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
+                                 JSContext *cx, JSObject *obj, jsval id,
+                                 jsval *vp, PRBool *_retval)
+{
+  JSObject *pi_obj = ::JS_GetPrototype(cx, obj);
+
+  const jschar *id_chars = nsnull;
+  size_t id_length = 0;
+
+  JSBool found;
+
+  if (JSVAL_IS_STRING(id)) {
+    JSString *id_str = JSVAL_TO_STRING(id);
+
+    id_chars = ::JS_GetStringChars(id_str);
+    id_length = ::JS_GetStringLength(id_str);
+
+    *_retval = ::JS_HasUCProperty(cx, pi_obj, id_chars, id_length, &found);
+  } else {
+    *_retval = JS_HasElement(cx, pi_obj, JSVAL_TO_INT(id), &found);
+  }
+
+  if (!*_retval) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (found) {
+    if (JSVAL_IS_STRING(id)) {
+      *_retval = ::JS_SetUCProperty(cx, pi_obj, id_chars, id_length, vp);
+    } else {
+      *_retval = ::JS_SetElement(cx, pi_obj, JSVAL_TO_INT(id), vp);
+    }
+
     return *_retval ? NS_OK : NS_ERROR_FAILURE;
   }
 
