@@ -189,11 +189,10 @@ nsIView* nsView::GetViewFor(nsIWidget* aWidget)
 
 NS_IMETHODIMP nsView :: Init(nsIViewManager* aManager,
                              const nsRect &aBounds,
-                             nsIView *aParent,
+                             const nsIView *aParent,
                              const nsCID *aWindowCIID,
                              nsWidgetInitData *aWidgetInitData,
                              nsNativeWidget aNative,
-                             PRInt32 aZIndex,
                              const nsViewClip *aClip,
                              float aOpacity,
                              nsViewVisibility aVisibilityFlag)
@@ -220,12 +219,11 @@ NS_IMETHODIMP nsView :: Init(nsIViewManager* aManager,
   }
 
   mOpacity = aOpacity;
-  mZindex = aZIndex;
-
-  // assign the parent view
-  SetParent(aParent);
 
   SetBounds(aBounds);
+
+  //temporarily set it...
+  SetParent((nsIView *)aParent);
 
   // check if a real window has to be created
   if (aWindowCIID)
@@ -256,6 +254,9 @@ NS_IMETHODIMP nsView :: Init(nsIViewManager* aManager,
   }
 
   SetVisibility(aVisibilityFlag);
+
+  //clear this again...
+  SetParent(nsnull);
 
   return NS_OK;
 }

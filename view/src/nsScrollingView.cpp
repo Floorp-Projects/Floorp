@@ -398,11 +398,10 @@ nsrefcnt nsScrollingView :: Release()
 
 NS_IMETHODIMP nsScrollingView :: Init(nsIViewManager* aManager,
                             					const nsRect &aBounds,
-                            					nsIView *aParent,
+                                      const nsIView *aParent,
                             					const nsIID *aWindowIID,
                                       nsWidgetInitData *aWidgetInitData,
                             					nsNativeWidget aNative,
-                            					PRInt32 aZIndex,
                             					const nsViewClip *aClip,
                             					float aOpacity,
                             					nsViewVisibility aVisibilityFlag)
@@ -410,7 +409,7 @@ NS_IMETHODIMP nsScrollingView :: Init(nsIViewManager* aManager,
   nsresult rv;
 
   rv = nsView :: Init(aManager, aBounds, aParent, aWindowIID, aWidgetInitData,
-                      aNative, aZIndex, aClip, aOpacity, aVisibilityFlag);
+                      aNative, aClip, aOpacity, aVisibilityFlag);
 
   if (rv == NS_OK)
   {
@@ -427,7 +426,7 @@ NS_IMETHODIMP nsScrollingView :: Init(nsIViewManager* aManager,
       // of 0.0f (completely transparent)
       // XXX The clip widget should be created on demand only...
       rv = mClipView->Init(mViewManager, aBounds, this, &kWidgetCID, nsnull,
-                           mWindow ? nsnull : aNative, -1, nsnull, 0.0f);
+                           mWindow ? nsnull : aNative, nsnull, 0.0f);
       mViewManager->InsertChild(this, mClipView, -1);
     }
 
@@ -446,7 +445,7 @@ NS_IMETHODIMP nsScrollingView :: Init(nsIViewManager* aManager,
       trect.y = aBounds.y + aBounds.YMost() - trect.height;
 
       rv = mCornerView->Init(mViewManager, trect, this, nsnull, nsnull, nsnull,
-                             -1, nsnull, 1.0f, nsViewVisibility_kHide);
+                             nsnull, 1.0f, nsViewVisibility_kHide);
       mViewManager->InsertChild(this, mCornerView, -1);
     }
 
@@ -466,7 +465,7 @@ NS_IMETHODIMP nsScrollingView :: Init(nsIViewManager* aManager,
       static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
 
       rv = mVScrollBarView->Init(mViewManager, trect, this, &kCScrollbarIID, nsnull,
-                                 mWindow ? nsnull : aNative, -3);
+                                 mWindow ? nsnull : aNative);
       mViewManager->InsertChild(this, mVScrollBarView, -3);
     }
 
@@ -486,7 +485,7 @@ NS_IMETHODIMP nsScrollingView :: Init(nsIViewManager* aManager,
       static NS_DEFINE_IID(kCHScrollbarIID, NS_HORZSCROLLBAR_CID);
 
       rv = mHScrollBarView->Init(mViewManager, trect, this, &kCHScrollbarIID, nsnull,
-                                 mWindow ? nsnull : aNative, -3);
+                                 mWindow ? nsnull : aNative);
       mViewManager->InsertChild(this, mHScrollBarView, -3);
     }
 

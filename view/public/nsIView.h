@@ -81,7 +81,9 @@ public:
    * @param aManager view manager that "owns" the view. The view does NOT
    *        hold a reference to the view manager
    * @param aBounds initial bounds for view
-   * @param aParent parent view
+   * @param aParent intended parent for view. this is not actually set in the
+   *        nsIView through this method. it is only used by the initialization
+   *        code to walk up the view tree, if necessary, to find resources.
    * @param aWindowIID IID for Widget type that this view
    *        should have associated with it. if nsull, then no
    *        width will be created for this view
@@ -90,7 +92,6 @@ public:
    * @param aNative native window that will be used as parent of
    *        aWindowIID. if nsnull, then parent will be derived from
    *        parent view and it's ancestors
-   * @param aZIndex initial z depth of view
    * @param aCilpRect initial clip rect of view
    * @param aOpacity initial opacity of view
    * @param aVisibilityFlag initial visibility state of view
@@ -98,11 +99,10 @@ public:
    */
   NS_IMETHOD  Init(nsIViewManager* aManager,
 						       const nsRect &aBounds,
-        					 nsIView *aParent,
+                   const nsIView *aParent,
         					 const nsIID *aWindowIID = nsnull,
                    nsWidgetInitData *aWidgetInitData = nsnull,
         					 nsNativeWidget aNative = nsnull,
-        					 PRInt32 aZIndex = 0,
         					 const nsViewClip *aClip = nsnull,
         					 float aOpacity = 1.0f,
         					 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow) = 0;
