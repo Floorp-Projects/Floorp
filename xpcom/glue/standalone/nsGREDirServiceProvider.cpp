@@ -97,10 +97,7 @@ NS_IMPL_ISUPPORTS1(nsGREDirServiceProvider, nsIDirectoryServiceProvider)
 
 NS_IMETHODIMP
 nsGREDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
-{    
-  nsCOMPtr<nsILocalFile> localFile;
-  nsresult rv = NS_ERROR_FAILURE;
-
+{
   *_retval = nsnull;
   *persistant = PR_TRUE;
 
@@ -110,20 +107,15 @@ nsGREDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
   // with which it's compatible with and intends to be "run against"
   // that GRE.
   //
-  // Please see http://www.mozilla.org/projects/embedding/MRE.html
+  // Please see http://www.mozilla.org/projects/embedding/GRE.html
   // for more info on GRE.
   //---------------------------------------------------------------
   if(strcmp(prop, NS_GRE_DIR) == 0)
   {
-    rv = GRE_GetGREDirectory(getter_AddRefs(localFile));
-  }    
-  
-  NS_ENSURE_SUCCESS(rv, rv);
+    return GRE_GetGREDirectory(_retval);
+  }
 
-  if (!localFile)
-    return NS_ERROR_UNEXPECTED;
-
-  return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
+  return NS_ERROR_FAILURE;
 }
 
 //*****************************************************************************
