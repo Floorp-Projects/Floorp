@@ -58,7 +58,7 @@ void __ctordtorInit( void );
 void __ctordtorTerm( void );
 }
 
-unsigned long _System _DLL_InitTerm(unsigned long hModule, unsigned long ulFlag) 
+extern "C" unsigned long _System _DLL_InitTerm(unsigned long hModule, unsigned long ulFlag)
 {
  APIRET rc; 
 
