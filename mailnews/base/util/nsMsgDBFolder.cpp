@@ -152,6 +152,20 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 	
 }
 
+nsresult nsMsgDBFolder::SendFlagNotifications(nsISupports *item, PRUint32 oldFlags, PRUint32 newFlags)
+{
+	nsresult rv = NS_OK;
+
+	PRUint32 changedFlags = oldFlags ^ newFlags;
+	if((changedFlags & MSG_FLAG_READ) || (changedFlags & MSG_FLAG_REPLIED)
+		|| (changedFlags & MSG_FLAG_MARKED) || (changedFlags & MSG_FLAG_FORWARDED)
+		|| (changedFlags & MSG_FLAG_NEW))
+	{
+		rv = NotifyPropertyFlagChanged(item, "Status", oldFlags, newFlags);
+	}
+	return rv;
+}
+
 NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
                          nsIDBChangeListener * aInstigator)
 {
@@ -166,7 +180,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlag
 			nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(message, &rv));
 			if(NS_SUCCEEDED(rv))
 			{
-				NotifyPropertyFlagChanged(msgSupports, "Status", aOldFlags, aNewFlags);
+				SendFlagNotifications(msgSupports, aOldFlags, aNewFlags);
 			}
 			UpdateSummaryTotals();
 		}

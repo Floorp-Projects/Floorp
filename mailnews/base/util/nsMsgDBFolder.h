@@ -56,6 +56,7 @@ public:
 protected:
 	virtual nsresult ReadDBFolderInfo(PRBool force);
 	virtual nsresult GetDatabase() = 0;
+	virtual nsresult SendFlagNotifications(nsISupports *item, PRUint32 oldFlags, PRUint32 newFlags);
 
 protected:
 	nsCOMPtr<nsIMsgDatabase> mDatabase;  
