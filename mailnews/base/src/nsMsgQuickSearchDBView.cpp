@@ -146,13 +146,8 @@ nsMsgQuickSearchDBView::OnSearchDone(nsresult status)
 {
   if (m_sortType != nsMsgViewSortType::byThread)//we do not find levels for the results.
   {
-    nsMsgKeyArray preservedSelection;
-    SaveAndClearSelection(&preservedSelection);
     m_sortValid = PR_FALSE;       //sort the results 
     Sort(m_sortType, m_sortOrder);
-    RestoreSelection(&preservedSelection);
-    if (mTree) 
-      mTree->Invalidate();
   }
   return NS_OK;
 }
@@ -174,3 +169,14 @@ nsMsgQuickSearchDBView::OnNewSearch()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgQuickSearchDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder)
+{
+  nsMsgKeyArray preservedSelection;
+  SaveAndClearSelection(&preservedSelection);
+  nsMsgDBView::Sort(sortType, sortOrder);
+  RestoreSelection(&preservedSelection);
+  if (mTree) 
+    mTree->Invalidate();
+  return NS_OK;
+}
