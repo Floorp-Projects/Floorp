@@ -495,8 +495,6 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
     m_fetchMsgListMonitor = PR_NewMonitor();
     m_fetchBodyListMonitor = PR_NewMonitor();
 
-    SetFlag(IMAP_FIRST_PASS_IN_THREAD);
- 
     nsresult rv = NS_NewThread(getter_AddRefs(m_iThread), this);
     if (NS_FAILED(rv)) 
     {
@@ -763,6 +761,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
         aURL->GetPort(&port);
         server->GetRealHostName(getter_Copies(hostName));
 
+        Log("SetupWithUrl", nsnull, "clearing IMAP_CONNECTION_IS_OPEN");
         ClearFlag(IMAP_CONNECTION_IS_OPEN); 
         PRBool isSecure = PR_FALSE;
         const char *connectionType = nsnull;
@@ -805,7 +804,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
             NS_GetMainEventQ(getter_AddRefs(eventQ));
             m_transport->SetEventSink(sink, eventQ);
           }
-        
+
           // open buffered, asynchronous input stream
           rv = m_transport->OpenInputStream(0, 0, 0, getter_AddRefs(m_inputStream));
           if (NS_FAILED(rv)) return rv;
@@ -1075,6 +1074,8 @@ nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
     }
   }
 
+  Log("TellThreadToDie", nsnull, "close socket connection");
+
   // kill the socket connection
   if (m_transport)
     m_transport->Close(NS_ERROR_ABORT);
@@ -1152,33 +1153,27 @@ nsImapProtocol::PseudoInterruptMsgLoad(nsIMsgFolder *aImapFolder, nsIMsgWindow *
 void
 nsImapProtocol::ImapThreadMainLoop()
 {
+  PR_LOG(IMAP, PR_LOG_DEBUG, ("ImapThreadMainLoop entering [this=%x]\n", this));
+
   PRIntervalTime sleepTime = kImapSleepTime;
     // ****** please implement PR_LOG 'ing ******
   while (ImapThreadIsRunning() && !DeathSignalReceived())
   {
-  // if we are making our first pass through this loop and
-  // we already have a url to process then jump right in and
-  // process the current url. Don't try to wait for the monitor
-  // the first time because it may have already been signaled.
-  // But make sure we have a channel first, or ProcessCurrentUrl will fail.
-    if (TestFlag(IMAP_FIRST_PASS_IN_THREAD) && m_runningUrl && m_transport)
+    nsresult rv = NS_OK;
+    PRBool readyToRun;
+
+    // wait for an URL to process...
     {
-      // if we launched another url, just loop around and process it.
-      if (ProcessCurrentURL())
-        continue;
-      ClearFlag(IMAP_FIRST_PASS_IN_THREAD);
+      nsAutoMonitor mon(m_urlReadyToRunMonitor);
+
+      while (NS_SUCCEEDED(rv) && ImapThreadIsRunning() && !DeathSignalReceived() && !m_nextUrlReadyToRun)
+        rv = mon.Wait(sleepTime);
+
+      readyToRun = m_nextUrlReadyToRun;
+      m_nextUrlReadyToRun = PR_FALSE;
     }
 
-    if (DeathSignalReceived()) break;
-
-    PR_EnterMonitor(m_urlReadyToRunMonitor);
-
-    PRStatus err;
-
-    err = PR_Wait(m_urlReadyToRunMonitor, sleepTime);
-
-    PR_ExitMonitor(m_urlReadyToRunMonitor);
-    if (err == PR_FAILURE && PR_PENDING_INTERRUPT_ERROR == PR_GetError()) 
+    if (NS_FAILED(rv) && PR_PENDING_INTERRUPT_ERROR == PR_GetError()) 
     {
       printf("error waiting for monitor\n");
       break;
@@ -1186,15 +1181,22 @@ nsImapProtocol::ImapThreadMainLoop()
 
     // in the case of the server dropping the connection, this call is reputed
     // to make it so that we process the :OnStop notification.
-      m_eventQueue->ProcessPendingEvents();
+    m_eventQueue->ProcessPendingEvents();
 
-    if (m_nextUrlReadyToRun && m_runningUrl)
+    if (readyToRun && m_runningUrl)
     {
-      m_nextUrlReadyToRun = PR_FALSE;
-      ProcessCurrentURL();
+      //
+      // NOTE: Though we cleared m_nextUrlReadyToRun above, it may have been
+      //       set by LoadUrl, which runs on the main thread.  Because of this,
+      //       we must not try to clear m_nextUrlReadyToRun here.
+      //
+      if (ProcessCurrentURL())
+        m_nextUrlReadyToRun = PR_TRUE;
     }
   }
   m_imapThreadIsRunning = PR_FALSE;
+
+  PR_LOG(IMAP, PR_LOG_DEBUG, ("ImapThreadMainLoop leaving [this=%x]\n", this));
 }
 
 void nsImapProtocol::EstablishServerConnection()
@@ -1244,6 +1246,8 @@ void nsImapProtocol::EstablishServerConnection()
 // returns PR_TRUE if another url was run, PR_FALSE otherwise.
 PRBool nsImapProtocol::ProcessCurrentURL()
 {
+  Log("ProcessCurrentURL", nsnull, "entering");
+
   PRBool  logonFailed = PR_FALSE;
   PRBool anotherUrlRun = PR_FALSE;
 
@@ -1255,12 +1259,16 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 
   if (!TestFlag(IMAP_CONNECTION_IS_OPEN) && m_inputStream)
   {
+    Log("ProcessCurrentURL", nsnull, "creating nsInputStreamPump");
+
     rv = NS_NewInputStreamPump(getter_AddRefs(m_pump), m_inputStream);
     if (NS_SUCCEEDED(rv))
     {
       rv = m_pump->AsyncRead(this /* stream listener */, nsnull);
-      if (NS_SUCCEEDED(rv))
+      if (NS_SUCCEEDED(rv)) {
+        Log("ProcessCurrentURL", nsnull, "setting IMAP_CONNECTION_IS_OPEN");
         SetFlag(IMAP_CONNECTION_IS_OPEN);
+      }
     }
   }
   if (m_runningUrl)
@@ -1433,10 +1441,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   if (m_imapServerSink)
   {
     if (GetConnectionStatus() >= 0)
-    {
       rv = m_imapServerSink->LoadNextQueuedUrl(&anotherUrlRun);
-      SetFlag(IMAP_FIRST_PASS_IN_THREAD);
-    }
     else // if we don't do this, they'll just sit and spin until
           // we run some other url on this server.
       rv = m_imapServerSink->AbortQueuedUrls();
@@ -1567,6 +1572,7 @@ NS_IMETHODIMP nsImapProtocol::OnStopRequest(nsIRequest *request, nsISupports *ct
   m_pump = nsnull; // don't need to cache this anymore, it's going away
   if (killThread == PR_TRUE) 
   {
+    Log("OnStopRequest", nsnull, "clearing IMAP_CONNECTION_IS_OPEN");
     ClearFlag(IMAP_CONNECTION_IS_OPEN);
     TellThreadToDie(PR_FALSE);
   }
@@ -1617,6 +1623,7 @@ nsresult nsImapProtocol::SendData(const char * dataBuffer, PRBool aSuppressLoggi
 
   if (!m_transport)
   {
+      Log("SendData", nsnull, "clearing IMAP_CONNECTION_IS_OPEN");
       // the connection died unexpectedly! so clear the open connection flag
       ClearFlag(IMAP_CONNECTION_IS_OPEN); 
       TellThreadToDie(PR_FALSE);
@@ -1637,6 +1644,7 @@ nsresult nsImapProtocol::SendData(const char * dataBuffer, PRBool aSuppressLoggi
 
     if (NS_FAILED(rv))
     {
+      Log("SendData", nsnull, "clearing IMAP_CONNECTION_IS_OPEN");
       // the connection died unexpectedly! so clear the open connection flag
       ClearFlag(IMAP_CONNECTION_IS_OPEN); 
       TellThreadToDie(PR_FALSE);
@@ -3760,9 +3768,9 @@ void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const ch
       if (m_runningUrl)
       {
         if (extraInfo)
-          PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s-%s:%s:%s: %s", hostName,selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, extraInfo, logData));
+          PR_LOG(IMAP, PR_LOG_ALWAYS, ("%x:%s:%s-%s:%s:%s: %s", this,hostName,selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, extraInfo, logData));
         else
-          PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s-%s:%s: %s", hostName,selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, logData));
+          PR_LOG(IMAP, PR_LOG_ALWAYS, ("%x:%s:%s-%s:%s: %s", this,hostName,selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, logData));
       }
       return;
       break;
@@ -3782,9 +3790,9 @@ void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const ch
     if (m_runningUrl)
     {
       if (extraInfo)
-        PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s:%s:%s: %s", hostName,stateName,logSubName,extraInfo,logData));
+        PR_LOG(IMAP, PR_LOG_ALWAYS, ("%x:%s:%s:%s:%s: %s", this,hostName,stateName,logSubName,extraInfo,logData));
       else
-        PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s:%s: %s",hostName,stateName,logSubName,logData));
+        PR_LOG(IMAP, PR_LOG_ALWAYS, ("%x:%s:%s:%s: %s",this,hostName,stateName,logSubName,logData));
     }
   }
 }

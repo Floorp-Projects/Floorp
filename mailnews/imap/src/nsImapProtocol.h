@@ -143,7 +143,6 @@ public:
 // of creating PRBools for everything....
 
 #define IMAP_RECEIVED_GREETING		      0x00000001  /* should we pause for the next read */
-#define IMAP_FIRST_PASS_IN_THREAD       0x00000002  /* entering thread for the first time? */
 #define	IMAP_CONNECTION_IS_OPEN		      0x00000004  /* is the connection currently open? */
 #define IMAP_WAITING_FOR_DATA		        0x00000008
 #define IMAP_CLEAN_UP_URL_STATE         0x00000010 // processing clean up url state
