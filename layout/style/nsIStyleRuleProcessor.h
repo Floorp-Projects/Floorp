@@ -87,13 +87,13 @@ struct RuleProcessorData {
   nsIAtom*          mContentTag;    // if content, then content->GetTag()
   nsIAtom*          mContentID;     // if styled content, then styledcontent->GetID()
   nsIStyledContent* mStyledContent; // if content, content->QI(nsIStyledContent)
-  PRBool            mIsHTMLContent; // if content, then does QI on HTMLContent, true or false
-  PRBool            mIsHTMLLink;    // if content, calls nsStyleUtil::IsHTMLLink
-  PRBool            mIsSimpleXLink; // if content, calls nsStyleUtil::IsSimpleXLink
+  PRPackedBool      mIsHTMLContent; // if content, then does QI on HTMLContent, true or false
+  PRPackedBool      mIsHTMLLink;    // if content, calls nsStyleUtil::IsHTMLLink
+  PRPackedBool      mIsSimpleXLink; // if content, calls nsStyleUtil::IsSimpleXLink
   nsLinkState       mLinkState;     // if a link, this is the state, otherwise unknown
-  PRBool            mIsQuirkMode;   // Possibly remove use of this in SelectorMatches?
+  PRPackedBool      mIsQuirkMode;   // Possibly remove use of this in SelectorMatches?
+  PRPackedBool      mHasAttributes; // if content, content->GetAttrCount() > 0
   PRInt32           mEventState;    // if content, eventStateMgr->GetContentState()
-  PRBool            mHasAttributes; // if content, content->GetAttrCount() > 0
   PRInt32           mNameSpaceID;   // if content, content->GetNameSapce()
   RuleProcessorData* mPreviousSiblingData;
   RuleProcessorData* mParentData;
