@@ -60,6 +60,8 @@ public:
     return NS_OK;
   }
 
+  NS_IMETHOD ListTag(FILE* out) const;
+
 protected:
   virtual PRIntn GetSkipSides() const;
 };
@@ -232,4 +234,16 @@ RootFrame::HandleEvent(nsIPresContext& aPresContext,
 #endif
   return NS_OK;
 }
+
+// Output the frame's tag
+NS_IMETHODIMP
+RootFrame::ListTag(FILE* out) const
+{
+  if (nsnull == mContent) {
+    fprintf(out, "*Root(-1)@%p", this);
+  } else {
+    return nsFrame::ListTag(out);
+  }
+}
+
 
