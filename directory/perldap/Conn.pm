@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Conn.pm,v 1.21 1999/03/30 01:16:45 leif%netscape.com Exp $
+# $Id: Conn.pm,v 1.22 1999/03/30 01:35:42 leif%netscape.com Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -505,7 +505,7 @@ sub update
       if (defined($entry->{"_${key}_modified_"}))
 	{
 	  undef @vals;
-	  @vals = @{$entry->{$key}} if (defined($entry->{$key});
+	  @vals = @{$entry->{$key}} if (defined($entry->{$key}));
 	  if ($#vals == $[)
 	    {
 	      $mod{$key} = { "rb", [$vals[$[]] };
