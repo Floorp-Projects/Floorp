@@ -28,12 +28,11 @@ class nsXULTreeElement : public nsXULElement,
                          public nsIDOMXULTreeElement
 {
 private:
-    nsIRDFCompositeDataSource* mDatabase;
+    nsCOMPtr<nsIRDFCompositeDataSource> mDatabase;
 
 public:
     nsXULTreeElement(nsIDOMXULElement* aOuter)
-        : nsXULElement(aOuter),
-          mDatabase(nsnull)
+        : nsXULElement(aOuter)
     {
     }
 
@@ -50,10 +49,6 @@ public:
 
     // nsIDOMXULTreeElement interface
     NS_DECL_IDOMXULTREEELEMENT
-
-    virtual const nsIID& GetDOMIID() {
-        return nsIDOMXULTreeElement::GetIID();
-    }
 };
 
 

@@ -32,8 +32,8 @@ nsXULTreeElement::GetDatabase(nsIRDFCompositeDataSource** aDatabase)
     if (! aDatabase)
         return NS_ERROR_NULL_POINTER;
 
-    NS_IF_ADDREF(mDatabase);
     *aDatabase = mDatabase;
+    NS_IF_ADDREF(*aDatabase);
     return NS_OK;
 }
 
@@ -47,7 +47,6 @@ nsXULTreeElement::SetDatabase(nsIRDFCompositeDataSource* aDatabase)
         return NS_ERROR_ALREADY_INITIALIZED;
 
     mDatabase = aDatabase;
-    NS_IF_ADDREF(aDatabase);
 
     // XXX reconstruct the entire tree now!
 
