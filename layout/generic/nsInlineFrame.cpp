@@ -32,9 +32,15 @@
 #include "nsAbsoluteContainingBlock.h"
 #include "nsLayoutAtoms.h"
 
-#undef NOISY_FINAL_SIZE
+#ifdef DEBUG
+#undef NOISY_PUSHING
+#endif
 
 nsIID nsInlineFrame::kInlineFrameCID = NS_INLINE_FRAME_CID;
+
+
+
+
 
 //////////////////////////////////////////////////////////////////////
 
@@ -426,6 +432,9 @@ nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
       PRBool reflowingFirstLetter = lineLayout->GetFirstLetterStyleOK();
       PRBool isComplete;
       frame = PullOneFrame(aPresContext, irs, &isComplete);
+#ifdef NOISY_PUSHING
+      printf("%p pulled up %p\n", this, frame);
+#endif
       if (nsnull == frame) {
         if (!isComplete) {
           aStatus = NS_FRAME_NOT_COMPLETE;
@@ -668,6 +677,10 @@ nsInlineFrame::PushFrames(nsIPresContext* aPresContext,
   NS_PRECONDITION(prevNextSibling == aFromChild, "bad prev sibling");
 #endif
 
+#ifdef NOISY_PUSHING
+      printf("%p pushing aFromChild %p, disconnecting from prev sib %p\n", 
+             this, aFromChild, aPrevSibling);
+#endif
   // Disconnect aFromChild from its previous sibling
   aPrevSibling->SetNextSibling(nsnull);
 

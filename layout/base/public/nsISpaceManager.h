@@ -65,6 +65,17 @@ struct nsBandTrapezoid {
 
   // Set the trapezoid from a rectangle
   void operator=(const nsRect& aRect);
+
+  /** does a binary compare of this object with aTrap */
+  PRBool Equals(const nsBandTrapezoid aTrap) const;
+
+  /** does a semantic compare only of geometric data in this object and aTrap */
+  PRBool EqualGeometry(const nsBandTrapezoid aTrap) const;
+
+  nsBandTrapezoid() {
+    mTopY = mBottomY = mTopLeftX = mBottomLeftX = mTopRightX = mBottomRightX = 0;
+    mFrame = nsnull;
+  }
 };
 
 /**
@@ -212,6 +223,32 @@ inline void nsBandTrapezoid::operator=(const nsRect& aRect)
   mTopRightX = mBottomRightX = aRect.XMost();
   mTopY = aRect.y;
   mBottomY = aRect.YMost();
+}
+
+inline PRBool nsBandTrapezoid::Equals(const nsBandTrapezoid aTrap) const
+{
+  return (
+    mTopLeftX == aTrap.mTopLeftX &&
+    mBottomLeftX == aTrap.mBottomLeftX &&
+    mTopRightX == aTrap.mTopRightX &&
+    mBottomRightX == aTrap.mBottomRightX &&
+    mTopY == aTrap.mTopY &&
+    mBottomY == aTrap.mBottomY &&
+    mState == aTrap.mState &&
+    mFrame == aTrap.mFrame    
+  );
+}
+
+inline PRBool nsBandTrapezoid::EqualGeometry(const nsBandTrapezoid aTrap) const
+{
+  return (
+    mTopLeftX == aTrap.mTopLeftX &&
+    mBottomLeftX == aTrap.mBottomLeftX &&
+    mTopRightX == aTrap.mTopRightX &&
+    mBottomRightX == aTrap.mBottomRightX &&
+    mTopY == aTrap.mTopY &&
+    mBottomY == aTrap.mBottomY
+  );
 }
 
 #endif /* nsISpaceManager_h___ */

@@ -153,8 +153,8 @@ nsLineBox::StateToString(char* aBuf, PRInt32 aBufSize) const
 {
   PR_snprintf(aBuf, aBufSize, "%s,%s,%s,%s[0x%x]",
               IsBlock() ? "block" : "inline",
-              IsDirty() ? "dirty" : "",
-              IsImpactedByFloater() ? "impacted" : "",
+              IsDirty() ? "dirty" : "clean",
+              IsImpactedByFloater() ? "IMPACTED" : "NOT Impacted",
               IsTrimmed() ? "trimmed" : "",
               mAllFlags);
   return aBuf;
@@ -353,16 +353,15 @@ nsLineBox::FreeFloaters(nsFloaterCacheFreeList& aFreeList)
 
 void
 nsLineBox::RemoveFloatersFromSpaceManager(nsISpaceManager* aSpaceManager)
-{
+{ 
   if (IsInline()) {
     if (mInlineData) {
       nsFloaterCache* floaterCache = mInlineData->mFloaters.Head();
 
       while (floaterCache) {
         nsIFrame* floater = floaterCache->mPlaceholder->GetOutOfFlowFrame();
-
         aSpaceManager->RemoveRegion(floater);
-        floaterCache = floaterCache->Next();
+        floaterCache = floaterCache->Next();        
       }
     }
   }
@@ -370,7 +369,7 @@ nsLineBox::RemoveFloatersFromSpaceManager(nsISpaceManager* aSpaceManager)
 
 void
 nsLineBox::AppendFloaters(nsFloaterCacheFreeList& aFreeList)
-{
+{ 
   NS_ABORT_IF_FALSE(IsInline(), "block line can't have floaters");
   if (IsInline()) {
     if (aFreeList.NotEmpty()) {
@@ -404,7 +403,7 @@ nsLineBox::RemoveFloater(nsIFrame* aFrame)
 
 void
 nsLineBox::SetCombinedArea(const nsRect& aCombinedArea)
-{
+{  
   NS_ASSERTION(aCombinedArea.width >= 0, "illegal width for combined area");
   NS_ASSERTION(aCombinedArea.height >= 0, "illegal height for combined area");
   if (aCombinedArea != mBounds) {
@@ -428,13 +427,22 @@ nsLineBox::SetCombinedArea(const nsRect& aCombinedArea)
     }
     MaybeFreeData();
   }
+#ifdef VERY_NOISY_REFLOW
+  printf("nsLB::SetCombinedArea(1) %p (%d, %d, %d, %d)\n", 
+         this, aCombinedArea.x, aCombinedArea.y, aCombinedArea.width, aCombinedArea.height);
+#endif
 }
 
 void
 nsLineBox::GetCombinedArea(nsRect* aResult)
 {
+  NS_ASSERTION(aResult, "null arg");
   if (aResult) {
     *aResult = mData ? mData->mCombinedArea : mBounds;
+#ifdef VERY_NOISY_REFLOW
+    printf("nsLB::SetCombinedArea(1) %p (%d, %d, %d, %d)\n", 
+         this, aResult->x, aResult->y, aResult->width, aResult->height);
+#endif
   }
 }
 

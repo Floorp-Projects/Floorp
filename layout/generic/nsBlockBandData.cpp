@@ -133,6 +133,9 @@ nsBlockBandData::GetBandData(nscoord aY)
 void
 nsBlockBandData::ComputeAvailSpaceRect()
 {
+#ifdef REALLY_NOISY_COMPUTEAVAILSPACERECT
+  printf("nsBlockBandData::ComputeAvailSpaceRect %p \n", this);
+#endif
   if (0 == mCount) {
     mAvailSpace.x = 0;
     mAvailSpace.y = 0;
@@ -157,6 +160,9 @@ nsBlockBandData::ComputeAvailSpaceRect()
     for (i = 0; i < mCount; i++) {
       trapezoid = &mTrapezoids[i];
       if (trapezoid->mState != nsBandTrapezoid::Available) {
+#ifdef REALLY_NOISY_COMPUTEAVAILSPACERECT
+        printf("band %p checking !Avail trap %p with frame %p\n", this, trapezoid, trapezoid->mFrame);
+#endif
         const nsStyleDisplay* display;
         if (nsBandTrapezoid::OccupiedMultiple == trapezoid->mState) {
           PRInt32 j, numFrames = trapezoid->mFrames->Count();
@@ -195,6 +201,9 @@ nsBlockBandData::ComputeAvailSpaceRect()
     // We have a floater using up all the available space
     leftFloaters = 1;
   }
+#ifdef REALLY_NOISY_COMPUTEAVAILSPACERECT
+  printf("band %p has floaters %d, %d\n", this, leftFloaters, rightFloaters);
+#endif
   mLeftFloaters = leftFloaters;
   mRightFloaters = rightFloaters;
 

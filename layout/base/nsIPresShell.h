@@ -72,6 +72,16 @@ typedef enum SelectionRegion{SELECTION_ANCHOR_REGION = 0,
                              SELECTION_FOCUS_REGION,
                              NUM_SELECTION_REGIONS} SelectionRegion;
 
+// debug VerifyReflow flags
+#define VERIFY_REFLOW_ON              0x01
+#define VERIFY_REFLOW_NOISY           0x02
+#define VERIFY_REFLOW_ALL             0x04
+#define VERIFY_REFLOW_DUMP_COMMANDS   0x08
+#define VERIFY_REFLOW_NOISY_RC        0x10
+#define VERIFY_REFLOW_REALLY_NOISY_RC 0x20
+#define VERIFY_REFLOW_INCLUDE_SPACE_MANAGER 0x40
+#define VERIFY_REFLOW_DURING_RESIZE_REFLOW  0x80
+
 
 /**
  * Presentation shell interface. Presentation shells are the
@@ -416,6 +426,10 @@ public:
    */
   static NS_LAYOUT void SetVerifyReflowEnable(PRBool aEnabled);
 
+  /**
+   * Get the flags associated with the VerifyReflow debug tool
+   */
+  static NS_LAYOUT PRInt32 GetVerifyReflowFlags();
 };
 
 /**
