@@ -48,7 +48,8 @@ public:
                      PRUint32 aLen,
                      PRUint32 *aWriteLength);
 
-    NS_IMETHOD Write(nsIInputStream* fromStream, PRUint32 *aWriteCount) {
+    NS_IMETHOD WriteFrom(nsIInputStream* fromStream, PRUint32 count,
+                         PRUint32 *aWriteCount) {
         return NS_ERROR_NOT_IMPLEMENTED;
     } 
 

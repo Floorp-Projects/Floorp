@@ -1,0 +1,53 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsIBaseStream.idl"
+#include "nsIInputStream.idl"
+
+[scriptable, uuid(7f13b870-e95f-11d1-beae-00805f8a66dc)]
+interface nsIOutputStream : nsIBaseStream
+{
+    /** Write data into the stream.
+     *  @param aBuf the buffer from which the data is read
+     *  @param aCount the maximum number of bytes to write
+     *  @return aWriteCount out parameter to hold the number of
+     *         bytes written. if an error occurs, the writecount
+     *         is undefined
+     */
+    unsigned long Write(in string buf, in unsigned long count);
+
+    /**
+     * Writes data into the stream from an input stream.
+     * Implementer's note: This method is defined by this interface in order
+     * to allow the output stream to efficiently copy the data from the input
+     * stream into its internal buffer (if any). If this method was provide
+     * as an external facility, a separate char* buffer would need to be used
+     * in order to call the output stream's other Write method.
+     * @param fromStream the stream from which the data is read
+     * @param count the maximun number of bytes to write
+     * @return aWriteCount out parameter to hold the number of
+     *         bytes written. if an error occurs, the writecount
+     *         is undefined
+     */
+    unsigned long WriteFrom(in nsIInputStream inStr, in unsigned long count);
+
+    /**
+     * Flushes the stream.
+     */
+    void Flush();
+};
