@@ -90,6 +90,7 @@
 #include "nsIDOMElement.h"
 #include "nsIChromeEventHandler.h"
 #include "nsIContent.h"
+#include "imgICache.h"
 
 static char kChromePrefix[] = "chrome://";
 static char kAllPackagesName[] = "all-packages.rdf";
@@ -1123,10 +1124,16 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
     }
   }
 
-  // Flush the image cache.
+  // Flush the old image cache.
   NS_WITH_SERVICE(nsIImageManager, imageManager, kImageManagerCID, &rv);
   if (imageManager)
     rv = imageManager->FlushCache(1);
+
+  // Flush the new imagelib image chrome cache.
+  NS_WITH_SERVICE(imgICache, imageCache, "@mozilla.org/image/cache;1", &rv);
+  if (NS_SUCCEEDED(rv) && imageCache) {
+    imageCache->ClearCache(PR_TRUE);
+  }
 
   return rv;
 }
