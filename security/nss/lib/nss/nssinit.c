@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.13 2001/02/04 05:52:42 wtc%netscape.com Exp $
+ # $Id: nssinit.c,v 1.14 2001/02/08 23:43:00 javi%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -51,7 +51,17 @@
 #include "cdbhdl.h"	/* ??? */
 #include "pk11func.h"
 
-
+#ifdef macintosh
+#define PATH_SEPARATOR ":"
+#define SECMOD_DB "Security Modules"
+#define CERT_DB_FMT "%sCertificates%s"
+#define KEY_DB_FMT "%sKey Database%s"
+#else
+#define PATH_SEPARATOR "/"
+#define SECMOD_DB "secmod.db"
+#define CERT_DB_FMT "%scert%s.db"
+#define KEY_DB_FMT "%skey%s.db"
+#endif
 
 static char *
 nss_certdb_name_cb(void *arg, int dbVersion)
@@ -75,7 +85,7 @@ nss_certdb_name_cb(void *arg, int dbVersion)
 	break;
     }
 
-    return PR_smprintf("%scert%s.db", configdir, dbver);
+    return PR_smprintf(CERT_DB_FMT, configdir, dbver);
 }
     
 static char *
@@ -94,7 +104,7 @@ nss_keydb_name_cb(void *arg, int dbVersion)
 	break;
     }
 
-    return PR_smprintf("%skey%s.db", configdir, dbver);
+    return PR_smprintf(KEY_DB_FMT, configdir, dbver);
 }
 
 static SECStatus 
@@ -108,7 +118,7 @@ nss_OpenCertDB(const char * configdir,  const char *prefix, PRBool readOnly)
     if (certdb)
     	return SECSuccess;	/* idempotency */
 
-    name = PR_smprintf("%s/%s",configdir,prefix);
+    name = PR_smprintf("%s" PATH_SEPARATOR "%s",configdir,prefix);
     if (name == NULL) goto loser;
 
     certdb = (CERTCertDBHandle*)PORT_ZAlloc(sizeof(CERTCertDBHandle));
@@ -136,7 +146,7 @@ nss_OpenKeyDB(const char * configdir, const char *prefix, PRBool readOnly)
     keydb = SECKEY_GetDefaultKeyDB();
     if (keydb)
     	return SECSuccess;
-    name = PR_smprintf("%s/%s",configdir,prefix);
+    name = PR_smprintf("%s" PATH_SEPARATOR "%s",configdir,prefix);	
     if (name == NULL) 
 	return SECFailure;
     keydb = SECKEY_OpenKeyDB(readOnly, nss_keydb_name_cb, (void *)name);
@@ -157,7 +167,7 @@ nss_OpenSecModDB(const char * configdir,const char *dbname)
      */
     if (secmodname)
     	return SECSuccess;
-    secmodname = PR_smprintf("%s/%s", configdir,dbname);
+    secmodname = PR_smprintf("%s" PATH_SEPARATOR "%s", configdir,dbname);
     if (secmodname == NULL)
 	return SECFailure;
     SECMOD_init(secmodname);
@@ -241,13 +251,13 @@ loser:
 SECStatus
 NSS_Init(const char *configdir)
 {
-    return nss_Init(configdir, "", "", "secmod.db", PR_TRUE, PR_FALSE);
+    return nss_Init(configdir, "", "", SECMOD_DB, PR_TRUE, PR_FALSE);
 }
 
 SECStatus
 NSS_InitReadWrite(const char *configdir)
 {
-    return nss_Init(configdir, "", "", "secmod.db", PR_FALSE, PR_FALSE);
+    return nss_Init(configdir, "", "", SECMOD_DB, PR_FALSE, PR_FALSE);
 }
 
 SECStatus
