@@ -53,9 +53,13 @@
                    class="outlinercol-header outlinercell-inset-header" 
                    persist="hidden width ordinal" flex="1"/>
       <splitter class="tree-splitter"/>
-      <outlinercol id="issuedcol" label="&certmgr.issued;"
+      <outlinercol id="serialnumcol" label="&certmgr.serial;"
                    class="outlinercol-header outlinercell-inset-header" 
                    persist="hidden width ordinal" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <outlinercol id="issuedcol" label="&certmgr.issued;"
+                   class="outlinercol-header outlinercell-inset-header" 
+                   hidden="true" persist="hidden width ordinal" flex="1"/>
       <splitter class="tree-splitter"/>
       <outlinercol id="expiredcol" label="&certmgr.expires;"
                    class="outlinercol-header outlinercell-inset-header" 
