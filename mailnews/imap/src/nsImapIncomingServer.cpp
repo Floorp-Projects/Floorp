@@ -1119,7 +1119,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
           PRInt32 j=0;
           for (PRInt32 i=offset;i <(offset+5);i++)
             inbox.SetCharAt(parentName.CharAt(i), j++);
-          if (nsCRT::strcmp(inbox,"INBOX") != 0 )
+          if (nsCRT::strcmp(inbox,"INBOX") != 0)
           {
             nsCAutoString INBOX("INBOX");
             dupFolderPath.ReplaceSubstring(inbox,INBOX);
@@ -1387,30 +1387,27 @@ nsresult nsImapIncomingServer::GetFolder(const char* name, nsIMsgFolder** pFolde
     rv = GetRootFolder(getter_AddRefs(rootFolder));
     if (NS_SUCCEEDED(rv) && rootFolder)
     {
-        char* uri = nsnull;
-        rv = rootFolder->GetURI(&uri);
+        nsXPIDLCString uri;
+        rv = rootFolder->GetURI(getter_Copies(uri));
         if (NS_SUCCEEDED(rv) && uri)
         {
-            nsAutoString uriAutoString; uriAutoString.AssignWithConversion(uri);
-            uriAutoString.AppendWithConversion('/');
-            uriAutoString.AppendWithConversion(name);
-            nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
-            if (NS_FAILED(rv)) return rv;
-            char* uriString = uriAutoString.ToNewCString();
-            nsCOMPtr<nsIRDFResource> res;
-            rv = rdf->GetResource(uriString, getter_AddRefs(res));
-            if (NS_SUCCEEDED(rv))
-            {
-                nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
-                if (NS_SUCCEEDED(rv) && folder)
-                {
-                    *pFolder = folder;
-                    NS_ADDREF(*pFolder);
-                }
-            }
-            delete [] uriString;
+          nsCAutoString uriString(uri);
+          uriString.Append('/');
+          uriString.Append(name);
+          nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
+          if (NS_FAILED(rv)) return rv;
+          nsCOMPtr<nsIRDFResource> res;
+          rv = rdf->GetResource(uriString, getter_AddRefs(res));
+          if (NS_SUCCEEDED(rv))
+          {
+              nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
+              if (NS_SUCCEEDED(rv) && folder)
+              {
+                  *pFolder = folder;
+                  NS_ADDREF(*pFolder);
+              }
+          }
         }
-        PR_FREEIF(uri);
     }
     return rv;
 }
