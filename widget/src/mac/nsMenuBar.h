@@ -132,7 +132,7 @@ public:
   NS_IMETHOD GetNativeData(void*& aData);
   NS_IMETHOD Paint();
   NS_IMETHOD SetNativeData(void* aData);
-  
+    
 protected:
 
   nsHashtable           mObserverTable;   // stores observers for content change notification
@@ -153,7 +153,7 @@ protected:
   Handle      mMacMBarHandle;
   Handle      mOriginalMacMBarHandle;
   UnicodeToTextRunInfo mUnicodeTextRunConverter;
-  void NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsString& nsString);
+  void NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsString& menuString);
   
 };
 

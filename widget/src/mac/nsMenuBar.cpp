@@ -615,8 +615,12 @@ NS_METHOD nsMenuBar::GetNativeData(void *& aData)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::SetNativeData(void* aData)
 {
-  if(mMacMBarHandle) ::DisposeHandle(mMacMBarHandle);
-  mMacMBarHandle = (Handle) aData;
+  Handle  menubarHandle = (Handle)aData;
+  
+  if(mMacMBarHandle && mMacMBarHandle != menubarHandle)
+     ::DisposeHandle(mMacMBarHandle);
+  
+  mMacMBarHandle = menubarHandle;
   return NS_OK;
 }
 
@@ -653,6 +657,8 @@ NS_METHOD nsMenuBar::Paint()
   ::DrawMenuBar();
   return NS_OK;
 }
+
+
 //-------------------------------------------------------------------------
 void InstallDefProc(
   short dpPath, 
