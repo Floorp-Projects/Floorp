@@ -29,7 +29,29 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= msgimap
 LIBRARY_NAME	= msgimap_s
 META_COMPONENT = mail
-REQUIRES	= xpcom string mailnews rdf msgbase msgbaseutil rdfutil necko msgdb uconv mime pref intl nkcache timer txmgr dom docshell msglocal msgnews mimetype windowwatcher
+REQUIRES	= xpcom \
+		  string \
+		  mailnews \
+		  rdf \
+		  msgbase \
+		  msgbaseutil \
+		  rdfutil \
+		  necko \
+		  msgdb \
+		  uconv \
+		  mime \
+		  pref \
+		  intl \
+		  nkcache \
+		  timer \
+		  txmgr \
+		  dom \
+		  docshell \
+		  msglocal \
+		  msgnews \
+		  mimetype \
+		  windowwatcher \
+		  $(NULL)
 
 EXPORTS		= \
 		nsIMAPBodyShell.h \

@@ -29,7 +29,21 @@ XPIDL_MODULE	= embed_base
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES	= xpcom string widget view dom necko rdf appshell uriloader gfx editor intl chrome embedcomponents
+REQUIRES	= xpcom \
+		  string \
+		  widget \
+		  view \
+		  dom \
+		  necko \
+		  rdf \
+		  appshell \
+		  uriloader \
+		  gfx \
+		  editor \
+		  intl \
+		  chrome \
+		  embedcomponents \
+		  $(NULL)
 
 EXPORTS         = \
                 nsEmbedAPI.h \

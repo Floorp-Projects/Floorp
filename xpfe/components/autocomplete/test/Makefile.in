@@ -27,7 +27,13 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= appcomps
-REQUIRES	= xpcom gfx layout content dom js
+REQUIRES	= xpcom \
+		  gfx \
+		  layout \
+		  content \
+		  dom \
+		  js \
+		  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

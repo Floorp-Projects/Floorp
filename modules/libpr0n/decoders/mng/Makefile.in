@@ -29,7 +29,10 @@ LIBRARY_NAME	= imgmng
 IS_COMPONENT	= 1
 MODULE_NAME	= nsMNGDecoderModule
 
-REQUIRES	= $(MNG_REQUIRES) $(JPEG_REQUIRES) $(ZLIB_REQUIRES)
+REQUIRES	= $(MNG_REQUIRES) \
+		  $(JPEG_REQUIRES) \
+		  $(ZLIB_REQUIRES) \
+		  $(NULL)
 
 CPPSRCS		= nsMNGDecoder.cpp nsMNGFactory.cpp imgContainerMNG.cpp
 

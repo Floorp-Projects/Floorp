@@ -29,7 +29,31 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= msgnews
 LIBRARY_NAME	= msgnews_s
 META_COMPONENT = mail
-REQUIRES	= xpcom string mailnews msgbase msgbaseutil necko msgdb locale mork dom rdf docshell layout pref uriloader appshell mime intl timer webshell wallet rdfutil nkcache windowwatcher
+REQUIRES	= xpcom \
+		  string \
+		  mailnews \
+		  msgbase \
+		  msgbaseutil \
+		  necko \
+		  msgdb \
+		  locale \
+		  mork \
+		  dom \
+		  rdf \
+		  docshell \
+		  layout \
+		  pref \
+		  uriloader \
+		  appshell \
+		  mime \
+		  intl \
+		  timer \
+		  webshell \
+		  wallet \
+		  rdfutil \
+		  nkcache \
+		  windowwatcher \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsNNTPArticleList.cpp \

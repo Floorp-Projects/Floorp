@@ -28,7 +28,11 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= nkcache 
 LIBRARY_NAME	= nkcachemgr_s
-REQUIRES	= xpcom string necko pref
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  pref \
+		  $(NULL)
 
 EXPORTS		= \
 		nsCacheManager.h \

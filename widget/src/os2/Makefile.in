@@ -30,7 +30,12 @@ MODULE_NAME	= nsWidgetOS2Module
 
 EXTRA_DSO_LIBS	= gkgfx
 
-REQUIRES	= util img xpcom raptor netlib
+REQUIRES	= util \
+		  img \
+		  xpcom \
+		  raptor \
+		  netlib \
+		  $(NULL)
 
 DIRS		= res
 

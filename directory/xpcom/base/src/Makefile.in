@@ -44,7 +44,10 @@ SHORT_LIBNAME	= mozldap
 EXPORT_LIBRARY	= 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsLDAPProtocolModule
-REQUIRES	= xpcom string necko
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  $(NULL)
 
 
 CPPSRCS		= \

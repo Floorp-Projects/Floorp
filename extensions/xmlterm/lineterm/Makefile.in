@@ -76,7 +76,7 @@ EXPORTS = lineterm.h tracelog.h unistring.h ptystream.h
 MODULE = xmlterm
 LIBRARY_NAME = lineterm_s
 
-REQUIRES     =
+REQUIRES	= $(NULL)
 
 FORCE_STATIC_LIB = 1
 

@@ -29,7 +29,43 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= msgbase
 LIBRARY_NAME	= msgbase_s
 META_COMPONENT = mail
-REQUIRES	= xpcom string necko dom appshell appcomps uconv intl htmlparser widget docshell rdf editor gfx layout content mailnews locale msgbaseutil webshell txmgr msgcompose msgdb uriloader pref msglocal msgimap timer mork msgnews addrbook prefmigr chrome mime mimetype windowwatcher
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  dom \
+		  appshell \
+		  appcomps \
+		  uconv \
+		  intl \
+		  htmlparser \
+		  widget \
+		  docshell \
+		  rdf \
+		  editor \
+		  gfx \
+		  layout \
+		  content \
+		  mailnews \
+		  locale \
+		  msgbaseutil \
+		  webshell \
+		  txmgr \
+		  msgcompose \
+		  msgdb \
+		  uriloader \
+		  pref \
+		  msglocal \
+		  msgimap \
+		  timer \
+		  mork \
+		  msgnews \
+		  addrbook \
+		  prefmigr \
+		  chrome \
+		  mime \
+		  mimetype \
+		  windowwatcher \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsMessenger.cpp \

@@ -29,7 +29,28 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= mime
 LIBRARY_NAME	= mime_s
 META_COMPONENT = mail
-REQUIRES	= xpcom string msgbase msgbaseutil pref js necko uconv msgcompose editor dom intl msgimap exthandler mailnews msgdb chardet caps mimetype uriloader xpconnect
+REQUIRES	= xpcom \
+		  string \
+		  msgbase \
+		  msgbaseutil \
+		  pref \
+		  js \
+		  necko \
+		  uconv \
+		  msgcompose \
+		  editor \
+		  dom \
+		  intl \
+		  msgimap \
+		  exthandler \
+		  mailnews \
+		  msgdb \
+		  chardet \
+		  caps \
+		  mimetype \
+		  uriloader \
+		  xpconnect \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsMimeObjectClassAccess.cpp \

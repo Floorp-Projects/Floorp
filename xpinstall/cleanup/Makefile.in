@@ -30,7 +30,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpinstall
 PROGRAM		= xpicleanup$(BIN_SUFFIX)
-REQUIRES	= libreg
+REQUIRES	= libreg \
+		  $(NULL)
 
 CPPSRCS		= \
         InstallCleanup.cpp \

@@ -40,7 +40,12 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= TestXPC
 SIMPLE_PROGRAMS = TestXPC$(BIN_SUFFIX)
-REQUIRES	= xpconnect xpcom string js xpconnect_tests
+REQUIRES	= xpconnect \
+		  xpcom \
+		  string \
+		  js \
+		  xpconnect_tests \
+		  $(NULL)
 
 DIRS		= idl components
 

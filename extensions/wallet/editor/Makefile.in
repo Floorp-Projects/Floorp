@@ -29,7 +29,14 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= walletviewers
 LIBRARY_NAME	= walleteditor_s
 XPIDL_MODULE	= walleteditor
-REQUIRES	= xpcom string wallet dom docshell necko widget
+REQUIRES	= xpcom \
+		  string \
+		  wallet \
+		  dom \
+		  docshell \
+		  necko \
+		  widget \
+		  $(NULL)
 
 CPPSRCS		= nsWalletEditor.cpp
 

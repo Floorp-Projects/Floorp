@@ -28,7 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= rdf
 LIBRARY_NAME	= rdfdatasource_s
-REQUIRES	= xpcom string necko
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsLocalStore.cpp \

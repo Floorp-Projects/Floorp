@@ -32,7 +32,15 @@ EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= urildr
 IS_COMPONENT	= 1
 MODULE_NAME	= nsURILoaderModule
-REQUIRES	= xpcom string necko mimetype exthandler rdf helperAppDlg dom
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  mimetype \
+		  exthandler \
+		  rdf \
+		  helperAppDlg \
+		  dom \
+		  $(NULL)
 
 CPPSRCS		= nsURILoaderModule.cpp
 

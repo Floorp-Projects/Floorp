@@ -28,7 +28,14 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= DebugRobot
 SHORT_LIBNAME	= dbgrobot
-REQUIRES	= xpcom string htmlparser necko docshell dom uriloader
+REQUIRES	= xpcom \
+		  string \
+		  htmlparser \
+		  necko \
+		  docshell \
+		  dom \
+		  uriloader \
+		  $(NULL)
 
 CPPSRCS		= nsDebugRobot.cpp nsRobotSink.cpp
 

@@ -28,7 +28,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 DIRS		= dynamic services
-REQUIRES	= necko string
+REQUIRES	= necko \
+		  string \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsIFileTest.cpp \

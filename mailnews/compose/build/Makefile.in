@@ -33,7 +33,24 @@ EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= msgcompo
 IS_COMPONENT	= 1
 MODULE_NAME	= nsMsgComposeModule
-REQUIRES	= xpcom string msgbase msgbaseutil editor necko dom uriloader mime addrbook rdf intl mailnews widget msgdb appshell nkcache
+REQUIRES	= xpcom \
+		  string \
+		  msgbase \
+		  msgbaseutil \
+		  editor \
+		  necko \
+		  dom \
+		  uriloader \
+		  mime \
+		  addrbook \
+		  rdf \
+		  intl \
+		  mailnews \
+		  widget \
+		  msgdb \
+		  appshell \
+		  nkcache \
+		  $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS = msgbsutl

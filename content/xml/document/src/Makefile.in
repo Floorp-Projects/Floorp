@@ -28,7 +28,28 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= content
 LIBRARY_NAME	= gkconxmldoc_s
-REQUIRES	= xpcom string js dom gfx layout widget caps htmlparser necko view docshell webshell uriloader pref xpconnect uconv chardet lwbrk exthandler mimetype
+REQUIRES	= xpcom \
+		  string \
+		  js \
+		  dom \
+		  gfx \
+		  layout \
+		  widget \
+		  caps \
+		  htmlparser \
+		  necko \
+		  view \
+		  docshell \
+		  webshell \
+		  uriloader \
+		  pref \
+		  xpconnect \
+		  uconv \
+		  chardet \
+		  lwbrk \
+		  exthandler \
+		  mimetype \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsXMLContentSink.cpp \

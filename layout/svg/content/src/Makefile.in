@@ -28,7 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gksvgcon_s
-REQUIRES	= xpcom string content
+REQUIRES	= xpcom \
+		  string \
+		  content \
+		  $(NULL)
 
 CPPSRCS		= nsSVGAtoms.cpp
 

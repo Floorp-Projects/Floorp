@@ -28,7 +28,15 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= appcomps
 LIBRARY_NAME	= history_s
-REQUIRES	= xpcom string rdf mork pref necko intl timer
+REQUIRES	= xpcom \
+		  string \
+		  rdf \
+		  mork \
+		  pref \
+		  necko \
+		  intl \
+		  timer \
+		  $(NULL)
 
 CPPSRCS		= nsGlobalHistory.cpp  \
             $(NULL)

@@ -29,7 +29,13 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= walletviewers
 LIBRARY_NAME	= signonviewer_s
 XPIDL_MODULE	= signonviewer
-REQUIRES	= xpcom string wallet dom widget necko
+REQUIRES	= xpcom \
+		  string \
+		  wallet \
+		  dom \
+		  widget \
+		  necko \
+		  $(NULL)
 
 CPPSRCS		= nsSignonViewer.cpp
 

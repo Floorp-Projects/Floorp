@@ -29,7 +29,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 XPIDL_MODULE	= xpcom_ds
 LIBRARY_NAME	= xpcomds_s
-REQUIRES	= unicharutil string
+REQUIRES	= unicharutil \
+		  string \
+		  $(NULL)
 
 CSRCS = \
 		pldhash.c \

@@ -26,7 +26,23 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= embedcomponents
 LIBRARY_NAME	= windowwatcher_s
-REQUIRES	= xpcom string dom windowwatcher widget js xpconnect caps layout content necko docshell webbrwsr embed_base wallet intl
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  windowwatcher \
+		  widget \
+		  js \
+		  xpconnect \
+		  caps \
+		  layout \
+		  content \
+		  necko \
+		  docshell \
+		  webbrwsr \
+		  embed_base \
+		  wallet \
+		  intl \
+		  $(NULL)
 
 CPPSRCS		= nsDialogParamBlock.cpp \
                   nsPrompt.cpp \

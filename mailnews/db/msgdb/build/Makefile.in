@@ -32,7 +32,16 @@ META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsMsgDBModule
-REQUIRES	= xpcom string mailnews locale mork mime msgbase msgbaseutil necko
+REQUIRES	= xpcom \
+		  string \
+		  mailnews \
+		  locale \
+		  mork \
+		  mime \
+		  msgbase \
+		  msgbaseutil \
+		  necko \
+		  $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS = msgbsutl

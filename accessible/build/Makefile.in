@@ -32,7 +32,10 @@ EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= access
 IS_COMPONENT	= 1
 MODULE_NAME	= nsAccessibilityModule
-REQUIRES	= xpcom string dom
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  $(NULL)
 
 CPPSRCS		= nsAccessibilityFactory.cpp
 

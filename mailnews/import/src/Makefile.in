@@ -32,7 +32,19 @@ META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsImportServiceModule
-REQUIRES	= xpcom string mailnews addrbook uconv mork msgbase msgbaseutil intl necko rdf msgdb
+REQUIRES	= xpcom \
+		  string \
+		  mailnews \
+		  addrbook \
+		  uconv \
+		  mork \
+		  msgbase \
+		  msgbaseutil \
+		  intl \
+		  necko \
+		  rdf \
+		  msgdb \
+		  $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS = msgbsutl

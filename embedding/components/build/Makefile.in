@@ -29,7 +29,16 @@ EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= embedcmp
 IS_COMPONENT	= 1
 MODULE_NAME	= embedcomponents
-REQUIRES	= js xpcom string windowwatcher jsconsole find embed_base dom txtsvc
+REQUIRES	= js \
+		  xpcom \
+		  string \
+		  windowwatcher \
+		  jsconsole \
+		  find \
+		  embed_base \
+		  dom \
+		  txtsvc \
+		  $(NULL)
 
 CPPSRCS		= nsModule.cpp
 

@@ -31,7 +31,16 @@ LIBRARY_NAME	= pref
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsPrefModule
-REQUIRES	= xpcom string js xpconnect caps intl timer necko profile
+REQUIRES	= xpcom \
+		  string \
+		  js \
+		  xpconnect \
+		  caps \
+		  intl \
+		  timer \
+		  necko \
+		  profile \
+		  $(NULL)
 
 include $(topsrcdir)/config/config.mk
 

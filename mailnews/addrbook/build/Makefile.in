@@ -32,7 +32,22 @@ META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsAbModule
-REQUIRES	= xpcom string necko msgcompose mime msgbase rdf rdfutil docshell appshell dom widget locale mork appcomps
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  msgcompose \
+		  mime \
+		  msgbase \
+		  rdf \
+		  rdfutil \
+		  docshell \
+		  appshell \
+		  dom \
+		  widget \
+		  locale \
+		  mork \
+		  appcomps \
+		  $(NULL)
 
 CPPSRCS		= nsAbFactory.cpp
 EXPORTS		= nsAbBaseCID.h

@@ -32,7 +32,13 @@ META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= mime_services
-REQUIRES	= xpcom string necko msgbase pref uconv
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  msgbase \
+		  pref \
+		  uconv \
+		  $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS = msgbsutl

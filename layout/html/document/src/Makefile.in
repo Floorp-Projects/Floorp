@@ -28,7 +28,25 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gkhtmldoc_s
-REQUIRES	= xpcom string content gfx widget dom necko locale view js webshell docshell caps pref uriloader shistory xpconnect accessibility
+REQUIRES	= xpcom \
+		  string \
+		  content \
+		  gfx \
+		  widget \
+		  dom \
+		  necko \
+		  locale \
+		  view \
+		  js \
+		  webshell \
+		  docshell \
+		  caps \
+		  pref \
+		  uriloader \
+		  shistory \
+		  xpconnect \
+		  accessibility \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsFrameFrame.cpp \

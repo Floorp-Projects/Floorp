@@ -28,7 +28,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 LIBRARY_NAME	= xpcomproxy_s
-REQUIRES	= string
+REQUIRES	= string \
+		  $(NULL)
 
 
 CPPSRCS		= \

@@ -32,7 +32,15 @@ META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsTextImportModule
-REQUIRES	= xpcom string import intl necko addrbook pref mork
+REQUIRES	= xpcom \
+		  string \
+		  import \
+		  intl \
+		  necko \
+		  addrbook \
+		  pref \
+		  mork \
+		  $(NULL)
 
 CPPSRCS		= 	nsTextFactory.cpp 				\
         		nsTextStringBundle.cpp			\

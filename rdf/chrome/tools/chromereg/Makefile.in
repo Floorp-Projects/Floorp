@@ -26,7 +26,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-REQUIRES	= xpcom chrome necko
+REQUIRES	= xpcom \
+		  chrome \
+		  necko \
+		  $(NULL)
 
 CPPSRCS		= regchrome.cpp
 

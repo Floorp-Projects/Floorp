@@ -31,7 +31,10 @@ LIBRARY_NAME	= ucvtw2
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsUCvTW2Module
-REQUIRES	= xpcom string uconv
+REQUIRES	= xpcom \
+		  string \
+		  uconv \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsEUCTWToUnicode.cpp \

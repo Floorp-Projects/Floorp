@@ -28,7 +28,13 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xmlextras
 LIBRARY_NAME	= xmlextraswsdl_s
-REQUIRES	= xpcom string dom caps necko xpconnect
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  caps \
+		  necko \
+		  xpconnect \
+		  $(NULL)
 
 CPPSRCS	= 				\
 		nsWSDLLoader.cpp	\

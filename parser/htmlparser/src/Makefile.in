@@ -32,7 +32,20 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT   = 1
 MODULE_NAME	   = nsParserModule
 SHORT_LIBNAME  = gkparser
-REQUIRES       = xpcom string necko util uconv expat layout content dom pref nkcache intl widget
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  util \
+		  uconv \
+		  expat \
+		  layout \
+		  content \
+		  dom \
+		  pref \
+		  nkcache \
+		  intl \
+		  widget \
+		  $(NULL)
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libexpat_s.$(LIB_SUFFIX) \

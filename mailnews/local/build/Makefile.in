@@ -33,7 +33,21 @@ EXPORT_LIBRARY = 1
 SHORT_LIBNAME 	= msglocal
 IS_COMPONENT	= 1
 MODULE_NAME	= local_mail_services
-REQUIRES	= xpcom string mailnews msgbase msgbaseutil msgdb necko txmgr rdf rdfutil mime intl pref nkcache
+REQUIRES	= xpcom \
+		  string \
+		  mailnews \
+		  msgbase \
+		  msgbaseutil \
+		  msgdb \
+		  necko \
+		  txmgr \
+		  rdf \
+		  rdfutil \
+		  mime \
+		  intl \
+		  pref \
+		  nkcache \
+		  $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS = msgbsutl

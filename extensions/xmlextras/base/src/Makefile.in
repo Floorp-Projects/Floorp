@@ -28,22 +28,22 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xmlextras
 LIBRARY_NAME	= xmlextrasbase_s
-REQUIRES	= \
-		xpcom \
-		string \
-		dom \
-		js \
-		gfx \
-		layout \
-		content \
-		widget \
-		caps \
-		uconv \
-		necko \
-		docshell \
-		xpconnect \
-		webbrwsr \
-		htmlparser
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  js \
+		  gfx \
+		  layout \
+		  content \
+		  widget \
+		  caps \
+		  uconv \
+		  necko \
+		  docshell \
+		  xpconnect \
+		  webbrwsr \
+		  htmlparser \
+		  $(NULL)
 
 CPPSRCS	= 				\
 		nsDOMSerializer.cpp	\

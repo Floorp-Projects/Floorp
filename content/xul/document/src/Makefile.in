@@ -28,7 +28,32 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xuldoc
 LIBRARY_NAME	= gkconxuldoc_s
-REQUIRES	= xpcom string exthandler mimetype gfx layout content widget dom rdf js xpconnect caps locale view necko uriloader htmlparser lwbrk timer chrome docshell pref xul xultmpl
+REQUIRES	= xpcom \
+		  string \
+		  exthandler \
+		  mimetype \
+		  gfx \
+		  layout \
+		  content \
+		  widget \
+		  dom \
+		  rdf \
+		  js \
+		  xpconnect \
+		  caps \
+		  locale \
+		  view \
+		  necko \
+		  uriloader \
+		  htmlparser \
+		  lwbrk \
+		  timer \
+		  chrome \
+		  docshell \
+		  pref \
+		  xul \
+		  xultmpl \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsControllerCommandManager.cpp \

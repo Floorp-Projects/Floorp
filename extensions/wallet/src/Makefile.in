@@ -31,7 +31,22 @@ LIBRARY_NAME	= wallet
 EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsWalletModule
-REQUIRES	= xpcom string necko dom gfx layout content widget uriloader pref webshell docshell appshell intl windowwatcher
+REQUIRES	= xpcom \
+		  string \
+		  necko \
+		  dom \
+		  gfx \
+		  layout \
+		  content \
+		  widget \
+		  uriloader \
+		  pref \
+		  webshell \
+		  docshell \
+		  appshell \
+		  intl \
+		  windowwatcher \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsWalletFactory.cpp \

@@ -33,7 +33,15 @@ EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= emitter
 IS_COMPONENT	= 1
 MODULE_NAME	= nsMimeEmitterModule
-REQUIRES	= xpcom string mime necko pref intl locale msgbase
+REQUIRES	= xpcom \
+		  string \
+		  mime \
+		  necko \
+		  pref \
+		  intl \
+		  locale \
+		  msgbase \
+		  $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS = msgbsutl

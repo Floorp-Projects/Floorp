@@ -28,7 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= rdfutil
 LIBRARY_NAME	= rdfutil_s
-REQUIRES	= xpcom string rdf
+REQUIRES	= xpcom \
+		  string \
+		  rdf \
+		  $(NULL)
 
 CPPSRCS		= nsRDFResource.cpp
 
