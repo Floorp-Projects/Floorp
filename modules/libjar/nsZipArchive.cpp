@@ -21,6 +21,7 @@
  * Contributors:
  *     Daniel Veditz <dveditz@netscape.com>
  *     Samir Gehani <sgehani@netscape.com>
+ *     Mitch Stoltz <mstoltz@netscape.com>
  */
 
 /* 
@@ -31,7 +32,7 @@
  */
 
 
-#ifndef STANDALONE 
+#ifndef STANDALONE
 
 #include "nscore.h"
 #include "prmem.h"
@@ -282,7 +283,85 @@ PRInt32 nsZipArchive::OpenArchive( const char * aArchiveName )
   return BuildFileList();
 }
 
+//---------------------------------------------
+// nsZipArchive::ReadInit
+//---------------------------------------------
+PRInt32 nsZipArchive::ReadInit( const char* aFilename )
+{
+  PRInt32 status;
+  //-- Parameter validity check
+  if (aFilename == 0)
+    return ZIP_ERR_PARAM;
 
+  //-- find item and seek to file position
+  status = ReadInitImpl(aFilename, &mCurItem);
+  if (status != ZIP_OK) return status;
+  mCurPos = 0; // Signifies beginning of item  
+
+  //-- If file is deflated, do the inflation now.
+  //   We save the complete inflated item in mInflatedFileBuffer
+  //   to be copied later.
+  if (mCurItem->compression == DEFLATED)
+  {
+    PR_FREEIF(mInflatedFileBuffer);
+    mInflatedFileBuffer = (char*)PR_Malloc(mCurItem->realsize);
+    status = InflateItem( mCurItem, 0, mInflatedFileBuffer);
+    if (status != ZIP_OK) return status;
+  }
+
+  return ZIP_OK;
+}
+  
+
+//---------------------------------------------
+// nsZipArchive::Read
+//---------------------------------------------
+PRInt32 nsZipArchive::Read(char* aBuf,
+                           PRUint32 aCount, PRUint32* aBytesRead)
+{
+  //-- Parameter validity check
+  if (aBuf == 0 || aBytesRead == 0)
+    return ZIP_ERR_PARAM;
+
+  //-- Make sure we've run ReadInit already
+  if (mCurItem == 0)
+  {
+    *aBytesRead = 0;
+    return ZIP_ERR_GENERAL;
+  }
+
+  //-- extract the file using appropriate method
+  switch( mCurItem->compression )
+  {
+    case STORED:
+      //-- Read from the zip file directly into the caller's buffer
+      return ReadItem( mCurItem, aBuf, &mCurPos, aCount, aBytesRead);
+
+    case DEFLATED:
+      //-- We've already done the inflation; copy from mInflatedFileBuffer
+      //   into the caller's buffer
+      return ReadInflatedItem( mCurItem, mInflatedFileBuffer, aBuf, 
+                               &mCurPos, aCount, aBytesRead);
+
+    default:
+      //-- unsupported compression type
+      return ZIP_ERR_UNSUPPORTED;
+  }
+}
+
+
+//---------------------------------------------
+// nsZipArchive::Available
+//---------------------------------------------
+PRUint32 nsZipArchive::Available()
+{
+  if (mCurItem == 0)
+    return 0;
+  else if (mCurItem->compression == DEFLATED)
+    return mCurItem->realsize - mCurPos;
+  else
+    return mCurItem->size - mCurPos;
+}
 
 //---------------------------------------------
 // nsZipArchive::ExtractFile
@@ -293,19 +372,22 @@ PRInt32 nsZipArchive::ExtractFile(const char* aFilename, const char* aOutname)
   if ( aFilename == 0 || aOutname == 0 )
     return ZIP_ERR_PARAM;
 
-  //-- find file information
-  const nsZipItem* item = GetFileItem( aFilename );
-  if ( item == 0 )
-    return ZIP_ERR_FNF;
+  PRInt32 status;
+  nsZipItem* item;
+  
+  //-- Find item in archive and seek to it
+  status = ReadInitImpl( aFilename, &item );
+  if (status != ZIP_OK)
+    return status;
 
-  //-- extract the file using appropriate method
+  //-- extract the file using the appropriate method
   switch( item->compression )
   {
     case STORED:
       return CopyItemToDisk( item, aOutname );
 
     case DEFLATED:
-      return InflateItemToDisk( item, aOutname );
+      return InflateItem( item, aOutname, 0 );
 
     default:
       //-- unsupported compression type
@@ -313,8 +395,7 @@ PRInt32 nsZipArchive::ExtractFile(const char* aFilename, const char* aOutname)
   }
 }
 
-
-
+   
 //---------------------------------------------
 // nsZipArchive::FindInit
 //---------------------------------------------
@@ -544,13 +625,90 @@ PRInt32 nsZipArchive::BuildFileList()
 
   return status;
 }
+  
+//---------------------------------------------
+// nsZipArchive::GetFileItem
+//---------------------------------------------
+const nsZipItem*  nsZipArchive::GetFileItem( const char * aFilename )
+{
+  PR_ASSERT( aFilename != 0 );
 
+  nsZipItem* item = mFiles[ HashName(aFilename) ];
+
+  for ( ; item != 0; item = item->next )
+  {
+    if ( 0 == PL_strcmp( aFilename, item->name ) ) 
+      break; //-- found it
+  }
+
+  return item;
+}
+
+
+//---------------------------------------------
+// nsZipArchive::HashName
+//---------------------------------------------
+PRUint32 nsZipArchive::HashName( const char* aName )
+{
+  PRUint32 val = 0;
+  PRUint8* c;
+
+  PR_ASSERT( aName != 0 );
+
+  for ( c = (PRUint8*)aName; *c != 0; c++ ) {
+    val = val*37 + *c;
+  }
+
+  return (val % ZIP_TABSIZE);
+}
+
+//---------------------------------------------
+// nsZipArchive::ReadInitImpl
+//---------------------------------------------
+PRInt32  nsZipArchive::ReadInitImpl(const char* aFilename, nsZipItem** aItem)
+{
+  PR_ASSERT (aFilename != 0);
+
+  //-- find file information
+  *aItem = GetFileItem( aFilename );
+  if ( *aItem == 0 )
+    return ZIP_ERR_FNF;
+
+  //-- find start of file in archive
+#ifndef STANDALONE 
+  if ( PR_Seek( mFd, (*aItem)->offset, PR_SEEK_SET ) != (PRInt32)(*aItem)->offset )
+#else
+  // For standalone, PR_Seek() is stubbed with fseek(), which returns 0
+  // if successfull, otherwise a non-zero.
+  if ( PR_Seek( mFd, (*aItem)->offset, PR_SEEK_SET ) != 0)
+#endif
+    return  ZIP_ERR_CORRUPT;
+  
+  return ZIP_OK;
+}
+
+//---------------------------------------------
+// nsZipArchive::ReadItem
+//---------------------------------------------
+PRInt32 nsZipArchive::ReadItem(const nsZipItem* aItem, char* aBuf, 
+                           PRUint32* aCurPos, PRUint32 aCount, PRUint32* actual)
+{
+  PRUint32    chunk;
+  PR_ASSERT(aBuf != 0 && aItem != 0);
+
+  //-- Read from file
+  chunk = (aCount <= ((aItem->size) - *aCurPos) ) ? aCount
+                                                  : ((aItem->size) - *aCurPos);
+  *actual = PR_Read( mFd, aBuf, chunk );
+  *aCurPos += *actual;
+  return ZIP_OK;
+}
 
 
 //---------------------------------------------
 // nsZipArchive::CopyItemToDisk
 //---------------------------------------------
-PRInt32 nsZipArchive::CopyItemToDisk( const nsZipItem* aItem, const char* aOutname )
+PRInt32 nsZipArchive::CopyItemToDisk( const nsZipItem* aItem, const char* aOutname)
 {
   PRInt32     status = ZIP_OK;
   PRUint32    chunk, pos, size;
@@ -562,19 +720,8 @@ PRInt32 nsZipArchive::CopyItemToDisk( const nsZipItem* aItem, const char* aOutna
   if ( buf == 0 )
     return ZIP_ERR_MEMORY;
 
-  //-- find start of file in archive
-
-#ifndef STANDALONE 
-  if ( PR_Seek( mFd, aItem->offset, PR_SEEK_SET ) != (PRInt32)aItem->offset )
-#else
-  // For standalone, PR_Seek() is stubbed with fseek(), which returns 0
-  // if successfull, otherwise a non-zero.
-  if ( PR_Seek( mFd, aItem->offset, PR_SEEK_SET ) != 0)
-#endif
-  {
-    status = ZIP_ERR_CORRUPT;
-    goto cleanup;
-  }
+  //-- We should already be at the correct spot in the archive.
+  //-- ReadInitImpl did the seek().
 
   //-- open output file
   fOut = PR_Open( aOutname, ZFILE_CREATE , 0644);
@@ -614,66 +761,52 @@ cleanup:
 }
 
 
-  
 //---------------------------------------------
-// nsZipArchive::GetFileItem
+// nsZipArchive::InflateItem
 //---------------------------------------------
-const nsZipItem*  nsZipArchive::GetFileItem( const char * aFilename )
-{
-  PR_ASSERT( aFilename != 0 );
-
-  nsZipItem* item = mFiles[ HashName(aFilename) ];
-
-  for ( ; item != 0; item = item->next )
-  {
-    if ( 0 == PL_strcmp( aFilename, item->name ) ) 
-      break; //-- found it
-  }
-
-  return item;
-}
-
-
-
-//---------------------------------------------
-// nsZipArchive::HashName
-//---------------------------------------------
-PRUint32 nsZipArchive::HashName( const char* aName )
-{
-  PRUint32 val = 0;
-  PRUint8* c;
-
-  PR_ASSERT( aName != 0 );
-
-  for ( c = (PRUint8*)aName; *c != 0; c++ ) {
-    val = val*37 + *c;
-  }
-
-  return (val % ZIP_TABSIZE);
-}
-
-
-
-//---------------------------------------------
-// nsZipArchive::InflateItemToDisk
-//---------------------------------------------
-PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOutname )
+PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, const char* aOutname,
+                                   char* bigBuf )
+/*
+ * This function either inflates an archive item to disk, to the 
+ * file specified by aOutname, or into a buffer specified by
+ * bigBuf. bigBuf then gets copied into the "real" output
+ * buffer a chunk at a time by ReadInflatedItem(). Memory-wise,
+ * this is inefficient, since it stores an entire copy of the
+ * decompressed item in memory, then copies it to the caller's
+ * buffer. A more memory-efficient implementation is possible,
+ * in which the outbuf in this function could be returned
+ * directly, but implementing it would be complex.
+ */
 {
   PRInt32     status = ZIP_OK;    
   PRUint32    chunk, inpos, outpos, size;
+  PRUint32    bigBufSize;
   PRFileDesc* fOut = 0;
   z_stream    zs;
   int         zerr;
   PRBool      bInflating = PR_FALSE;
   PRBool      bRead;
   PRBool      bWrote;
+  PRBool      bToFile;
 
 #if defined STANDALONE && defined WIN32
   MSG msg;
 #endif /* STANDALONE */
 
-  PR_ASSERT( aItem != 0 && aOutname != 0 );
-
+  // -- if aOutname is null, we'll be writing to a buffer instead of a file
+  if (aOutname != 0)
+  {
+    PR_ASSERT( aItem != 0 );
+    bToFile = PR_TRUE;
+  }
+  else
+  {
+    // -- Writing to a buffer, so bigBuf must not be null.
+    PR_ASSERT( aItem != 0 && bigBuf != 0 );
+    bToFile = PR_FALSE;
+    bigBufSize = aItem->realsize;
+  }
+  
   //-- allocate deflation buffers
   Bytef *inbuf  = (Bytef*)PR_Malloc(ZIP_BUFLEN);
   Bytef *outbuf = (Bytef*)PR_Malloc(ZIP_BUFLEN);
@@ -683,25 +816,18 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
     goto cleanup;
   }
 
-  //-- find start of file in archive
-#ifndef STANDALONE 
-  if ( PR_Seek( mFd, aItem->offset, PR_SEEK_SET ) != (PRInt32)aItem->offset )
-#else
-  // For standalone, PR_Seek() is stubbed with fseek(), which returns 0
-  // if successfull, otherwise a non-zero.
-  if ( PR_Seek( mFd, aItem->offset, PR_SEEK_SET ) != 0)
-#endif
-  {
-    status = ZIP_ERR_CORRUPT;
-    goto cleanup;
-  }
+  //-- We should already be at the correct spot in the archive.
+  //-- ReadInitImpl did the seek().
 
-  //-- open output file
-  fOut = PR_Open( aOutname, ZFILE_CREATE, 0644);
-  if ( fOut == 0 )
+  if (bToFile)
   {
-    status = ZIP_ERR_DISK;
-    goto cleanup;
+    //-- open output file
+    fOut = PR_Open( aOutname, ZFILE_CREATE, 0644);
+    if ( fOut == 0 )
+    {
+      status = ZIP_ERR_DISK;
+      goto cleanup;
+    }
   }
 
   //-- set up the inflate
@@ -746,15 +872,25 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
 
     if ( zs.avail_out == 0 )
     {
-      //-- write inflated buffer to disk and make space
-      if ( PR_Write( fOut, outbuf, ZIP_BUFLEN ) < ZIP_BUFLEN ) 
+      if (bToFile)
       {
-        //-- Couldn't write all the data (disk full?)
-        status = ZIP_ERR_DISK;
-        break;
+        //-- write inflated buffer to disk and make space
+        if ( PR_Write( fOut, outbuf, ZIP_BUFLEN ) < ZIP_BUFLEN ) 
+        {
+          //-- Couldn't write all the data (disk full?)
+          status = ZIP_ERR_DISK;
+          break;
+        }
       }
+      else
+      {
+        //-- copy inflated buffer to our big buffer
+        // Assertion makes sure we don't overflow bigBuf
+        PR_ASSERT( outpos + ZIP_BUFLEN <= bigBufSize);
+        for (PRUint32 c = 0; c < ZIP_BUFLEN; c++)
+          bigBuf[outpos + c] = (char)outbuf[c];
+      }    
       outpos = zs.total_out;
-
       zs.next_out  = outbuf;
       zs.avail_out = ZIP_BUFLEN;
       bWrote       = PR_TRUE;
@@ -778,9 +914,16 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
   if ( zerr == Z_STREAM_END && outpos < zs.total_out )
   {
     chunk = zs.total_out - outpos;
-    if ( PR_Write( fOut, outbuf, chunk ) < (READTYPE)chunk ) 
+    if (bToFile)
     {
-      status = ZIP_ERR_DISK;
+      if ( PR_Write( fOut, outbuf, chunk ) < (READTYPE)chunk ) 
+        status = ZIP_ERR_DISK;
+    }
+    else
+    {
+      PR_ASSERT( (outpos + chunk) <= bigBufSize );
+      for (PRUint32 c = 0; c < chunk; c++)
+        bigBuf[outpos + c] = (char)outbuf[c];
     }
   }
 
@@ -795,21 +938,46 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
   PR_ASSERT( status != ZIP_OK || zs.total_out == aItem->realsize );
 
 cleanup:
-  if ( bInflating )
+  if ( bInflating ) 
   {
     //-- free zlib internal state
     inflateEnd( &zs );
   }
 
-  if ( fOut != 0 )
+  if (fOut != 0 )
     PR_Close( fOut );
-
   PR_FREEIF( inbuf );
   PR_FREEIF( outbuf );
-
   return status;
 }
 
+//------------------------------------------
+// nsZipArchive::ReadInflatedItem
+//------------------------------------------
+PRInt32 nsZipArchive::ReadInflatedItem( nsZipItem* aItem, 
+                                        char* inflatedBuf, 
+                                        char* outbuf, 
+                                        PRUint32* aCurPos,
+                                        PRUint32 count, 
+                                        PRUint32* actual)
+{
+  //-- Parameter check
+  PR_ASSERT(inflatedBuf != 0 && outbuf != 0 && aItem != 0); 
+
+  //-- Set up the copy
+  PRUint32 bigBufSize = aItem->realsize;
+  PRUint32 c  = ((*aCurPos + count) < bigBufSize) ? count : bigBufSize - *aCurPos;
+  *actual = c;
+  char* src = inflatedBuf + (*aCurPos);
+  char* dest = outbuf; 
+
+  //-- Do the copy and record number of bytes copied
+  for( ; c; dest++, src++, c-- )
+    *dest = *src;
+  *aCurPos += *actual;
+
+  return ZIP_OK;
+}
 
 
 //------------------------------------------
@@ -823,6 +991,11 @@ nsZipArchive::nsZipArchive()
   for ( int i = 0; i < ZIP_TABSIZE; ++i) {
     mFiles[i] = 0;
   }
+
+  // initialize internal state
+  mCurItem = 0;
+  mInflatedFileBuffer = 0;
+  mCurPos = 0;
 }
 
 nsZipArchive::~nsZipArchive()
@@ -844,6 +1017,9 @@ nsZipArchive::~nsZipArchive()
       pItem = mFiles[i];
     }
   }
+
+  // Free inflated file buffer if necessary
+  PR_FREEIF(mInflatedFileBuffer);
 }
 
 

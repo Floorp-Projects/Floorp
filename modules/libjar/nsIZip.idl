@@ -22,10 +22,12 @@
  *     Daniel Veditz <dveditz@netscape.com>
  *     Don Bragg <dbragg@netscape.com>
  *     Samir Gehani <sgehani@netscape.com>
+ *     Mitch Stoltz <mstoltz@netscape.com>
  */
 
 #include "nsISupports.idl"
 #include "nsIEnumerator.idl"
+#include "nsIInputStream.idl"
 
 %{C++
 #include "nsIFactory.h"
@@ -45,5 +47,6 @@ interface nsIZip : nsISupports
 	PRInt32 Open(in string aZipFileName);
 	PRInt32 Extract(in string aFilename, in string aOutname);
 	nsISimpleEnumerator Find(in string aPattern);
+    nsIInputStream GetInputStream(in string aFilename);
 };
 

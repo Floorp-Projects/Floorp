@@ -27,13 +27,16 @@ LIBRARY_NAME	= jar$(VERSION_NUMBER)
 IS_COMPONENT	= 1
 
 CPPSRCS		= \
+                nsJARInputStream.cpp \
 		nsZipArchive.cpp \
 		nsJAR.cpp \
 		nsJARFactory.cpp \
 		nsWildCard.cpp \
 		$(NULL)
 
-EXPORTS		= zipfile.h
+EXPORTS		= zipfile.h \
+                $(NULL)
+
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 XPIDLSRCS	= \
