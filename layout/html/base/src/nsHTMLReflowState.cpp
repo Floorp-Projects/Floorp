@@ -2130,10 +2130,12 @@ ComputeLineHeight(nsIRenderingContext* aRenderingContext,
     aRenderingContext->SetFont(font->mFont);
     nsCOMPtr<nsIFontMetrics> fm;
     aRenderingContext->GetFontMetrics(*getter_AddRefs(fm));
+#ifdef NEW_FONT_HEIGHT_APIS
     if (fm) {
       fm->GetEmHeight(emHeight);
       fm->GetNormalLineHeight(normalLineHeight);
     }
+#endif
     float factor;
     if (eStyleUnit_Factor == unit) {
       factor = text->mLineHeight.GetFactorValue();
@@ -2183,9 +2185,11 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext* aPresContext,
       aRenderingContext->SetFont(font->mFont);
       nsCOMPtr<nsIFontMetrics> fm;
       aRenderingContext->GetFontMetrics(*getter_AddRefs(fm));
+#ifdef NEW_FONT_HEIGHT_APIS
       if (fm) {
         fm->GetNormalLineHeight(lineHeight);
       }
+#endif
     }
   }
   return lineHeight;
