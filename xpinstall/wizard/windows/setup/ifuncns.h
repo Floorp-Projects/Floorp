@@ -101,6 +101,7 @@ void        AppendWinReg(HKEY hkRootKey,
 HRESULT     CleanupArgsRegistry();
 void        ProcessFileOpsForSelectedComponents(DWORD dwTiming);
 void        ProcessFileOpsForAll(DWORD dwTiming);
+HRESULT     DirHasWriteAccess(char *szPath);
 
 #define KEY_INFO_ROOT          0x00000001
 #define KEY_INFO_SUBKEY        0x00000002

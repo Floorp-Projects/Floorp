@@ -101,6 +101,7 @@ Refresh Icons=FALSE
 ; If this key is set to 'Local', make
 ; sure to provide a GRE Private Key= below!
 GRE Type=Shared
+GRE ID=$GreUniqueID$
 
 ; Private key that overrides the default shared key
 ; (HKEY_LOCAL_MACHINE\Software\mozilla.org\GRE) set by GRE's installer.
@@ -578,7 +579,7 @@ SupersedeMaxVersion=
 ;Setup.exe needs to know to calculate the disk space required for this folder.
 ;This section overrides the default user-chosen path for GRE only.
 [Component GRE-Destination Path0]
-Path=[COMMONFILESDIR]
+Path=[COMMONFILESDIR]\mozilla.org\GRE\$GreUniqueID$
 
 [Component Navigator]
 Description Short=Navigator

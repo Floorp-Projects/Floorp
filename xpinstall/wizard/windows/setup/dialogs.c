@@ -487,7 +487,7 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
             {
               char szBuf2[MAX_PATH];
 
-              if(CreateDirectoriesAll(szBuf, ADD_TO_UNINSTALL_LOG) == FALSE)
+              if(CreateDirectoriesAll(szBuf, ADD_TO_UNINSTALL_LOG) != WIZ_OK)
               {
                 char szECreateDirectory[MAX_BUF];
                 char szEMessageTitle[MAX_BUF];
@@ -858,7 +858,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
             {
               char szBuf2[MAX_PATH];
 
-              if(CreateDirectoriesAll(szBuf, ADD_TO_UNINSTALL_LOG) == FALSE)
+              if(CreateDirectoriesAll(szBuf, ADD_TO_UNINSTALL_LOG) != WIZ_OK)
               {
                 char szECreateDirectory[MAX_BUF];
                 char szEMessageTitle[MAX_BUF];
@@ -2909,7 +2909,23 @@ void CommitInstall(void)
 
   /* Create the destination path here in case it had not been created,
    * as in the case of silent or auto mode installs */
-  CreateDirectoriesAll(szDestPath, ADD_TO_UNINSTALL_LOG);
+  if(CreateDirectoriesAll(szDestPath, ADD_TO_UNINSTALL_LOG) != WIZ_OK)
+  {
+    char buf[MAX_BUF];
+    char errorCreateDir[MAX_BUF];
+    char pathToShow[MAX_PATH];
+
+    /* reformat the path to display so that it'll be readable in the
+     * error dialog shown */
+    _snprintf(pathToShow, sizeof(pathToShow), "\"%s\" ", szDestPath);
+    pathToShow[sizeof(pathToShow) - 1] = '\0';
+    if(GetPrivateProfileString("Messages", "ERROR_CREATE_DIRECTORY", "", errorCreateDir, sizeof(errorCreateDir), szFileIniInstall))
+      wsprintf(buf, errorCreateDir, pathToShow);
+    assert(*buf != '\0');
+    PrintError(buf, ERROR_CODE_HIDE);
+    PostQuitMessage(1);
+    return;
+  }
 
   /* Set global var, that determines where the log file is to update, to
    * not use the TEMP dir *before* the FileCopy() calls because we want
@@ -3014,13 +3030,6 @@ void CommitInstall(void)
         ProcessFileOpsForAll(T_PRE_LAUNCHAPP);
 
         LaunchApps();
-
-        // XXX ignore.  Part of testings.
-        /* Prepend GRE's path to the application's App Paths key
-         * in the windows registry.  If this install instance happens
-         * to be installing GRE, the function will not prepend the
-         * GRE path. */
-        //AddGrePathToApplicationAppPathsKey();
 
         // Refresh system icons if necessary
         if(gSystemInfo.bRefreshIcons)

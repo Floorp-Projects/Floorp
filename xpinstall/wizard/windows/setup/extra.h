@@ -223,9 +223,9 @@ void              NeedToInstallFiles(LPSTR szProdDir);
 void              LaunchOneComponent(siC *siCObject, greInfo *aGre);
 HRESULT           ProcessXpinstallEngine(void);
 void              GetXpinstallPath(char *aPath, int aPathBufSize);
-int               AddGrePathToApplicationAppPathsKey(void);
 BOOL              GreInstallerNeedsReboot(void);
 void              ReplacePrivateProfileStrCR(LPSTR aInputOutputStr);
+void              UpdateGREAppInstallerProgress(int percent);
 
 #endif /* _EXTRA_H_ */
 

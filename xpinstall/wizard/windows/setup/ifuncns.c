@@ -1148,12 +1148,59 @@ void UpdateJSProxyInfo()
   }
 }
 
+/* Function: DirHasWriteAccess()
+ *
+ *       in: char *aPath - path to check for write access
+ *
+ *  purpose: To determine if aPath has write access.  It does this by
+ *           simply creating the directory.  If the path already exists
+ *           then it will attempt to create a directory within the path.
+ *           This function will cleanup all the directories it created.
+ */
+HRESULT DirHasWriteAccess(char *aPath)
+{
+  int     i;
+  int     iLen = lstrlen(aPath);
+  char    szCreatePath[MAX_BUF];
+
+  ZeroMemory(szCreatePath, sizeof(szCreatePath));
+  memcpy(szCreatePath, aPath, iLen);
+  for(i = 0; i < iLen; i++)
+  {
+    if((iLen > 1) &&
+      ((i != 0) && ((aPath[i] == '\\') || (aPath[i] == '/'))) &&
+      (!((aPath[0] == '\\') && (i == 1)) && !((aPath[1] == ':') && (i == 2))))
+    {
+      szCreatePath[i] = '\0';
+      if(FileExists(szCreatePath) == FALSE)
+      {
+        if(!CreateDirectory(szCreatePath, NULL))
+          return(WIZ_ERROR_CREATE_DIRECTORY);
+
+        RemoveDirectory(szCreatePath);
+        return(WIZ_OK);
+      }
+      szCreatePath[i] = aPath[i];
+    }
+  }
+
+  /* All the dirs exist, so no test has been done.  Create a test dir within
+   * aPath to verify if we have write access or not */
+  AppendBackSlash(szCreatePath, sizeof(szCreatePath));
+  lstrcat(szCreatePath, "testdir");
+  if(!CreateDirectory(szCreatePath, NULL))
+    return(WIZ_ERROR_CREATE_DIRECTORY);
+
+  RemoveDirectory(szCreatePath);
+  return(WIZ_OK);
+}
+
 HRESULT CreateDirectoriesAll(char* szPath, BOOL bLogForUninstall)
 {
   int     i;
   int     iLen = lstrlen(szPath);
   char    szCreatePath[MAX_BUF];
-  HRESULT hrResult = 0;
+  HRESULT hrResult = WIZ_OK;
 
   ZeroMemory(szCreatePath, MAX_BUF);
   memcpy(szCreatePath, szPath, iLen);
@@ -1166,7 +1213,8 @@ HRESULT CreateDirectoriesAll(char* szPath, BOOL bLogForUninstall)
       szCreatePath[i] = '\0';
       if(FileExists(szCreatePath) == FALSE)
       {
-        hrResult = CreateDirectory(szCreatePath, NULL);
+        if(!CreateDirectory(szCreatePath, NULL))
+          return(WIZ_ERROR_CREATE_DIRECTORY);
 
         if(bLogForUninstall)
           UpdateInstallLog(KEY_CREATE_FOLDER, szCreatePath, FALSE);
