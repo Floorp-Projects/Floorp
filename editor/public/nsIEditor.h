@@ -20,6 +20,7 @@
 #define nsIEditor_h__
 #include "nsISupports.h"
 #include "nscore.h"
+#include "nsIDiskDocument.h"
 
 #define NS_IEDITOR_IID \
 {/* A3C5EE71-742E-11d2-8F2C-006008310194*/ \
@@ -44,8 +45,6 @@ class nsIEditor  : public nsISupports
 {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IEDITOR_IID; return iid; }
-
-	typedef enum {eSaveFileText = 0, eSaveFileHTML = 1 } ESaveFileType;
 
   /* An enum used to describe how to collpase a non-collapsed selection */
   typedef enum {
@@ -132,7 +131,7 @@ public:
    *          This would correspond to a 'Save Copy As' menu command
    *          (currently not in our UI)
    */
-  NS_IMETHOD SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, ESaveFileType aSaveFileType)=0;
+  NS_IMETHOD SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, nsIDiskDocument::ESaveFileType aSaveFileType)=0;
 
   /* ------------ Transaction methods -------------- */
 
@@ -242,7 +241,7 @@ public:
    *
    * @param aNode      the node to test
    */
-  NS_IMETHOD IsNodeBlock(nsIDOMNode *aNode, PRBool *aIsBlock)=0;
+  NS_IMETHOD NodeIsBlock(nsIDOMNode *aNode, PRBool &aIsBlock)=0;
 
   /**
    * SetAttribute() sets the attribute of aElement.

@@ -295,7 +295,7 @@ interface nsIEditorShell : nsISupports
    * Tests if a node is a BLOCK element according the the HTML 4.0 DTD
    *   This does NOT consider CSS effect on display type
    */
-  boolean IsNodeBlock(in nsIDOMNode node);
+  boolean NodeIsBlock(in nsIDOMNode node);
 
   void BeginBatchChanges();
   void EndBatchChanges();

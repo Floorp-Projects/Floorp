@@ -42,6 +42,10 @@ install::
 	$(MAKE_INSTALL) EdMessage.xul          $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EdMessage.js           $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EdDialogOverlay.xul    $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) EdAdvancedEdit.xul     $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) EdAdvancedEdit.js      $(DIST)\bin\chrome\editor\content\default
+
+
 
 clobber::
   rm -f $(DIST)\bin\chrome\editor\content\default\EdDialogCommon.js
@@ -66,3 +70,5 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\content\default\EdMessage.xul
   rm -f $(DIST)\bin\chrome\editor\content\default\EdMessage.js
   rm -f $(DIST)\bin\chrome\editor\content\default\EdDialogOverlay.xul
+  rm -f $(DIST)\bin\chrome\editor\content\default\EdAdvancedEdit.xul
+  rm -f $(DIST)\bin\chrome\editor\content\default\EdAdvancedEdit.js

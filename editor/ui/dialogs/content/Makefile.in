@@ -49,6 +49,8 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/EdMessage.xul \
 	$(srcdir)/EdMessage.js \
 	$(srcdir)/EdDialogOverlay.xul \
+	$(srcdir)/EdAdvancedEdit.xul \
+  $(srcdir)/EdAdvancedEdit.js \
 	$(NULL)
 
 install::

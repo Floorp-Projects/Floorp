@@ -44,3 +44,5 @@ EdInsSrc.js
 EdMessage.xul
 EdMessage.js
 EdDialogOverlay.xul
+EdAdvancedEdit.xul
+EdAdvancedEdit.js

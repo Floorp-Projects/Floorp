@@ -37,6 +37,7 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/EditorTableProperties.dtd \
 	$(srcdir)/EdNamedAnchorProperties.dtd \
 	$(srcdir)/EdDialogOverlay.dtd \
+  $(srcdir)/EdAdvancedEdit.dtd \
 	$(NULL)
 
 install::

@@ -27,6 +27,7 @@
 #include "nsIEditorIMESupport.h"
 
 #include "nsIDOMDocument.h"
+#include "nsIDiskDocument.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMEventListener.h"
@@ -124,7 +125,7 @@ public:
   NS_IMETHOD GetDocumentModified(PRBool *outDocModified);
   NS_IMETHOD GetDocumentCharacterSet(PRUnichar** characterSet);
   NS_IMETHOD SetDocumentCharacterSet(const PRUnichar* characterSet);
-  NS_IMETHOD SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, ESaveFileType aSaveFileType);
+  NS_IMETHOD SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, nsIDiskDocument::ESaveFileType aSaveFileType);
 
   // these are pure virtual in this base class
   NS_IMETHOD Cut() = 0;
@@ -412,7 +413,7 @@ public:
   static nsresult IsNodeBlock(nsIDOMNode *aNode, PRBool &aIsBlock);
 
   /** This version is for exposure to JavaScript */
-  NS_IMETHOD IsNodeBlock(nsIDOMNode *aNode, PRBool *aIsBlock);
+  NS_IMETHOD NodeIsBlock(nsIDOMNode *aNode, PRBool &aIsBlock);
 
   /** returns the closest block parent of aNode, not including aNode itself.
     * can return null, for example if aNode is in a document fragment.
