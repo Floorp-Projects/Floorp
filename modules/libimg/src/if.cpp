@@ -1232,134 +1232,149 @@ il_image_complete(il_container *ic)
     IL_DisplayType display_type = ic->display_type;
 	ilINetReader *reader;
 
-	if (ic->state == IC_ABORT_PENDING) {
-        /* It could be that layout aborted image loading by calling
-           IL_DestroyImage() before the netlib finished transferring data.
-           Don't do anything. */
-        il_scour_container(ic);
-    }
-    else if (ic->state < IC_SIZED) {
-        /* If we didn't size the image, but the stream finished loading, the
-           image must be corrupt or truncated. */
-        ic->state = IC_BAD;
-        il_bad_container(ic);
-	}
-	else {
-		PR_ASSERT(ic->state == IC_SIZED || ic->state == IC_MULTI);
-		PR_ASSERT(ic->image && ic->image->bits);
 
-		ILTRACE(1,("il: complete %d image width %d (%d) height %d,"
-                   " depth %d, %d colors",
-				   ic->multi,
-				   ic->image->header.width,
-                   ic->image->header.widthBytes,
-                   ic->image->header.height,
-                   ic->image->header.color_space->pixmap_depth, 
-				   ic->image->header.color_space->cmap.num_colors));
+    switch( ic->state ){
 
-		/* 3 cases: simple, multipart MIME, multi-image animation */
-		if (!ic->loop_count && !ic->is_multipart) {
-            /* A single frame, single part image. */
-            il_container_complete(ic);
-        }
-        else {
-            /* Display the rest of the last image before starting a new one */
-			il_flush_image_data(ic);
-
-            /* Force new colormap to be loaded in case its different from the
-             * LOSRC or previous images in the multipart message.
-             * XXX - fur - Shouldn't do this for COLORMAP case.
-             */
-            il_reset_palette(ic);
-
-            FREE_IF_NOT_NULL(src_header->color_space->cmap.map);
-            FREE_IF_NOT_NULL(src_header->transparent_pixel);
-			il_destroy_image_transparent_pixel(ic);
-            FREE_IF_NOT_NULL(ic->comment);
-            ic->comment_length = 0;
-
-            /* Handle looping, which can be used to replay an animation. */
-            if (ic->loop_count) {
-                int is_infinite_loop = (ic->loop_count == -1);
-                ilIURL *netRequest = NULL;                
-                if (!is_infinite_loop)
-                    ic->loop_count--;
-                
-                ILTRACE(1,("il: loop %s", ic->url_address));
-
-                netRequest = ic->net_cx->CreateURL(ic->fetch_url, NET_DONT_RELOAD);
-                if (!netRequest) {   /* OOM */
-                    il_container_complete(ic);
-                    goto done;
-                }
-                
-                /* Only loop if the image stream is available locally.
-                   Also, if the user hit the "stop" button, don't
-                   allow the animation to loop. */
-#ifdef NU_CACHE
-                if ((ic->net_cx->IsLocalFileURL(ic->fetch_url)   ||
-                     ic->net_cx->IsURLInCache(netRequest))          &&
-                    (!il_image_stopped(ic))                &&
-                    ic->net_cx &&
-                    (display_type == IL_Console))
-#else
-                if ((ic->net_cx->IsLocalFileURL(ic->fetch_url)   ||
-                     ic->net_cx->IsURLInMemCache(netRequest)       ||
-                     ic->net_cx->IsURLInDiskCache(netRequest))          &&
-                    (!il_image_stopped(ic))                &&
-                    ic->net_cx &&
-                    (display_type == IL_Console))
-#endif
-                {
-                    if (!ic->is_looping) {
-                        /* If this is the end of the first pass of the
-                           animation, then set the state of the container
-                           to indicate that we have started looping. */
-                        ic->is_looping = TRUE;
-
-                        /* At this point the animation is considered to have
-                           loaded, so we need to tell the client contexts that
-                           the container has loaded. */
-                        il_container_loaded(ic);
-
-                        /* This is also the point at which the animation is
-                           considered to have started looping, so inform the
-                           client contexts accordingly. */
-                        il_container_looping(ic);
-                    }
-                    
-                    ic->bytes_consumed = 0;
-                    ic->state = IC_START;
-
-                    /* This is to deal with a weird timer bug, see the comment at the
-                       end of IL_NetRequestDone. */
-                    NS_IF_RELEASE(ic->url);
-
-                    ic->url = netRequest;
-                    /* Record the fact that we are calling NetLib to load a URL. */
-                    ic->is_url_loading = PR_TRUE;
-
-                    /* Suppress thermo & progress bar */
-					netRequest->SetBackgroundLoad(PR_TRUE);
-					reader = IL_NewNetReader(ic);
-                    (void) ic->net_cx->GetURL(ic->url, NET_DONT_RELOAD, 
-											  reader);
-                    /* Release reader, GetURL will keep a ref to it. */
-                    NS_RELEASE(reader);
-                } else {
-                    ic->loop_count = 0;
-                    NS_RELEASE(netRequest);
-                    il_container_complete(ic);
-                }
-            }
-            else if (ic->is_multipart) {
-				ic->multi++;
-				ic->state = IC_MULTI;
-			}
-		}
-	}
+        case IC_ABORT_PENDING:
+            /* It could be that layout aborted image loading by calling
+               IL_DestroyImage() before the netlib finished transferring data.
+               Don't do anything. */
+            il_scour_container(ic);
+            break;
     
-  done:
+        case IC_VIRGIN:
+        case IC_START:
+        case IC_STREAM:
+            /* If we didn't size the image, but the stream finished loading, the
+               image must be corrupt or truncated. */
+            ic->state = IC_BAD;
+            il_bad_container(ic);
+            break;
+
+        case IC_SIZED:
+        case IC_MULTI:
+         
+		    PR_ASSERT(ic->image && ic->image->bits);
+
+		    ILTRACE(1,("il: complete %d image width %d (%d) height %d,"
+                       " depth %d, %d colors",
+				       ic->multi,
+				       ic->image->header.width,
+                       ic->image->header.widthBytes,
+                       ic->image->header.height,
+                       ic->image->header.color_space->pixmap_depth, 
+				       ic->image->header.color_space->cmap.num_colors));
+
+		    /* 3 cases: simple, multipart MIME, multi-image animation */
+		    if (!ic->loop_count && !ic->is_multipart) {
+                /* A single frame, single part image. */
+                il_container_complete(ic);
+            }
+            else {
+                /* Display the rest of the last image before starting a new one */
+			    il_flush_image_data(ic);
+
+                /* Force new colormap to be loaded in case its different from the
+                 * LOSRC or previous images in the multipart message.
+                 * XXX - fur - Shouldn't do this for COLORMAP case.
+                 */
+                il_reset_palette(ic);
+
+                FREE_IF_NOT_NULL(src_header->color_space->cmap.map);
+                FREE_IF_NOT_NULL(src_header->transparent_pixel);
+			    il_destroy_image_transparent_pixel(ic);
+                FREE_IF_NOT_NULL(ic->comment);
+                ic->comment_length = 0;
+
+                /* Handle looping, which can be used to replay an animation. */
+                if (ic->loop_count) {
+                    int is_infinite_loop = (ic->loop_count == -1);
+                    ilIURL *netRequest = NULL;                
+                    if (!is_infinite_loop)
+                        ic->loop_count--;
+                
+                    ILTRACE(1,("il: loop %s", ic->url_address));
+
+                    netRequest = ic->net_cx->CreateURL(ic->fetch_url, NET_DONT_RELOAD);
+                    if (!netRequest) {   /* OOM */
+                        il_container_complete(ic);
+                        break;
+                    }
+                
+                    /* Only loop if the image stream is available locally.
+                       Also, if the user hit the "stop" button, don't
+                       allow the animation to loop. */
+    #ifdef NU_CACHE
+                    if ((ic->net_cx->IsLocalFileURL(ic->fetch_url)   ||
+                         ic->net_cx->IsURLInCache(netRequest))          &&
+                        (!il_image_stopped(ic))                &&
+                        ic->net_cx &&
+                        (display_type == IL_Console))
+    #else
+                    if ((ic->net_cx->IsLocalFileURL(ic->fetch_url)   ||
+                         ic->net_cx->IsURLInMemCache(netRequest)       ||
+                         ic->net_cx->IsURLInDiskCache(netRequest))          &&
+                        (!il_image_stopped(ic))                &&
+                        ic->net_cx &&
+                        (display_type == IL_Console))
+    #endif
+                    {
+                        if (!ic->is_looping) {
+                            /* If this is the end of the first pass of the
+                               animation, then set the state of the container
+                               to indicate that we have started looping. */
+                            ic->is_looping = TRUE;
+
+                            /* At this point the animation is considered to have
+                               loaded, so we need to tell the client contexts that
+                               the container has loaded. */
+                            il_container_loaded(ic);
+
+                            /* This is also the point at which the animation is
+                               considered to have started looping, so inform the
+                               client contexts accordingly. */
+                            il_container_looping(ic);
+                        }
+                    
+                        ic->bytes_consumed = 0;
+                        ic->state = IC_START;
+
+                        /* This is to deal with a weird timer bug, see the comment at the
+                           end of IL_NetRequestDone. */
+                        NS_IF_RELEASE(ic->url);
+
+                        ic->url = netRequest;
+                        /* Record the fact that we are calling NetLib to load a URL. */
+                        ic->is_url_loading = PR_TRUE;
+
+                        /* Suppress thermo & progress bar */
+					    netRequest->SetBackgroundLoad(PR_TRUE);
+					    reader = IL_NewNetReader(ic);
+                        (void) ic->net_cx->GetURL(ic->url, NET_DONT_RELOAD, 
+											      reader);
+                        /* Release reader, GetURL will keep a ref to it. */
+                        NS_RELEASE(reader);
+                    } else {
+                        ic->loop_count = 0;
+                        NS_RELEASE(netRequest);
+                        il_container_complete(ic);
+                    }
+                }
+                else if (ic->is_multipart) {
+				    ic->multi++;
+				    ic->state = IC_MULTI;
+			    }
+            }
+		    break;
+        
+        case IC_MISSING:
+        case IC_NOCACHE:
+
+        default:
+            break;
+
+	}/*switch*/
+    
     
     /* Clear any pending timeouts */
     if (ic->row_output_timeout) {
