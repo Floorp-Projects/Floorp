@@ -25,15 +25,14 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.9 $
-# $Date: 2002/02/22 21:41:37 $
+# $Revision: 1.10 $
+# $Date: 2002/05/10 21:21:59 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
 
 use File::Basename;
 use Sys::Hostname;
-use Sys::Syslog;
 use Getopt::Long;
 
 
