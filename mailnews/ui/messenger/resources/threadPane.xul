@@ -10,21 +10,23 @@
 
 
 <tree rdf:datasources="rdf:mailnews" id="threadTree" onclick="return parent.parent.LoadMessage(event.target.parentNode)" rdf:containment="http://home.netscape.com/NC-rdf#MessageChild">
-  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
-  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
-  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
-  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
+  <treecol id="SubjectColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
+  <treecol id="AuthorColumn" rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
+  <treecol id="DateColumn" rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
+  <treecol "id="StatusColumn" rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
   <treehead>
     <treeitem>
-      <treecell>Subject</treecell>
-      <treecell>Sender</treecell>
-      <treecell>Date</treecell>
-	  <treecell>Status</treecell>
+		<treecell onclick="return parent.parent.SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject');">
+			Subject
+		</treecell>
+		<treecell onclick="return parent.parent.SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender');">Sender</treecell>
+		<treecell onclick="return parent.parent.SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date');">Date</treecell>
+		<treecell onclick="return parent.parent.SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status');">Status</treecell>
     </treeitem>
   </treehead>
   
 
-  <treebody id="mailbox://Inbox" name="threadTreeBody">
+  <treebody name="threadTreeBody">
     <treeitem  open="true">
     </treeitem>
   </treebody>

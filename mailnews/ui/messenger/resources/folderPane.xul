@@ -9,7 +9,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 
-<tree rdf:datasources="rdf:mailnews" onclick="return parent.parent.ChangeFolder(event.target.parentNode)">
+<tree rdf:datasources="rdf:mailnews" onclick="return parent.parent.ChangeFolderByDOMNode(event.target.parentNode)">
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treehead>
     <treeitem>

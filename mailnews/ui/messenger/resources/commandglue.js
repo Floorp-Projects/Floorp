@@ -68,10 +68,15 @@ function LoadMessage(messageNode)
   OpenURL(uri);
 }
 
-function ChangeFolder(folderNode)
+function ChangeFolderByDOMNode(folderNode)
 {
   var uri = folderNode.getAttribute('id');
   dump(uri);
+  ChangeFolderByURI(uri);
+}
+
+function ChangeFolderByURI(uri)
+{
   var tree = frames[0].frames[1].document.getElementById('threadTree');
   tree.childNodes[5].setAttribute('id', uri);
 }
@@ -91,4 +96,31 @@ function ComposeMessageWithType(type)
       appCore.SetWindow(window);
       ComposeMessage(tree, nodeList, appCore, type);
   }
+}
+
+function SortThreadPane(column, sortKey)
+{
+	var node = frames[0].frames[1].document.getElementById(column);
+	if(!node)
+		return false;
+
+	var rdfCore = XPAppCoresManager.Find("RDFCore");
+	if (!rdfCore)
+	{
+		rdfCore = new RDFCore();
+		if (!rdfCore)
+		{
+			return(false);
+		}
+
+		rdfCore.Init("RDFCore");
+
+	}
+
+	// sort!!!
+    rdfCore.doSort(node, sortKey, "ascending");
+
+    return(true);
+
+
 }

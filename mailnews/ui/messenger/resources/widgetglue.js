@@ -4,8 +4,13 @@ function MsgStartUp()
   dump("StartUp: MsgAppCore\n");
   var appCore = FindMsgAppCore();
   if (appCore != null) {
+	dump("In MsgStartUp()");
     dump("Initializing AppCore and setting Window\n");
     appCore.SetWindow(window);
+	ChangeFolderByURI("mailbox://Inbox");
+	//In the future we'll want to read this in from a preference.
+	MsgViewAllMsgs();
+
   }
 }
 
@@ -130,6 +135,63 @@ function MsgMoveMessage(destFolder)
 	}	
 }
 
+function MsgViewAllMsgs() 
+{
+	dump("MsgViewAllMsgs");
+
+    var tree = frames[0].frames[1].document.getElementById('threadTree'); 
+
+	var appCore = FindMsgAppCore();
+	if (appCore != null) {
+	    appCore.SetWindow(window);
+		appCore.ViewAllMessages(tree.database);
+	}
+
+	//hack to make it get new view.  
+	var currentFolder = tree.childNodes[5].getAttribute('id');
+	tree.childNodes[5].setAttribute('id', currentFolder);
+
+}
+
+function MsgViewUnreadMsg()
+{
+	dump("MsgViewUnreadMsgs");
+
+    var tree = frames[0].frames[1].document.getElementById('threadTree'); 
+
+	var appCore = FindMsgAppCore();
+	if (appCore != null) {
+	    appCore.SetWindow(window);
+		appCore.ViewUnreadMessages(tree.database);
+	}
+
+	//hack to make it get new view.  
+	var currentFolder = tree.childNodes[5].getAttribute('id');
+	tree.childNodes[5].setAttribute('id', currentFolder);
+
+
+}
+
+function MsgSortByDate()
+{
+	SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date');
+}
+
+function MsgSortBySender()
+{
+	SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender');
+}
+
+function MsgSortByStatus()
+{
+	SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status');
+}
+
+function MsgSortBySubject()
+{
+	SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject');
+}
+
 function MsgNewFolder() {}
 function MsgOpenAttachment() {}
 function MsgSaveAsFile() {}
@@ -163,20 +225,14 @@ function MsgShowMsgToolbar() {}
 function MsgShowLocationbar() {}
 function MsgShowMessage() {}
 function MsgShowFolders() {}
-function MsgSortByDate() {}
 function MsgSortByFlag() {}
 function MsgSortByPriority() {}
-function MsgSortBySender() {}
 function MsgSortBySize() {}
-function MsgSortByStatus() {}
-function MsgSortBySubject() {}
 function MsgSortByThread() {}
 function MsgSortByUnread() {}
 function MsgSortByOrderReceived() {}
 function MsgSortAscending() {}
 function MsgSortDescending() {}
-function MsgViewAllMsgs() {}
-function MsgViewUnreadMsg() {}
 function MsgViewThreadsUnread() {}
 function MsgViewWatchedThreadsUnread() {}
 function MsgViewIgnoreThread() {}
