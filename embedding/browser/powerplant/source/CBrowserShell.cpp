@@ -341,7 +341,7 @@ NS_IMETHODIMP CBrowserShell::CommonConstruct()
 }
 
 /**
- * It is a nescesary evil to create a top level window widget in order to
+ * It is a necessary evil to create a top level window widget in order to
  * have a parent for our nsIBaseWindow. In order to not put that responsibility
  * onto the PowerPlant window which contains us, we do it ourselves here by
  * creating the widget if it does not exist and storing it as a window property.
