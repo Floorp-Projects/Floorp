@@ -201,7 +201,7 @@ checkout:
 ####################################
 # Web configure
 
-WEBCONFIG_URL   := http://cvs-mirror.mozilla.org/webtools/build/config.cgi
+WEBCONFIG_URL   := http://webtools.mozilla.org/build/config.cgi
 WEBCONFIG_FILE  := $(HOME)/.mozconfig
 
 MOZCONFIG2URL := build/autoconf/mozconfig2url.sh

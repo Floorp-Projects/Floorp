@@ -75,7 +75,7 @@
 
 		  <popup id="mozillaPopup">
 		    <menu>
-		    	<menuitem value="&bonsai.label;" oncommand="OpenTaskURL('http://cvs-mirror.mozilla.org/webtools/bonsai/toplevel.cgi?treeid=SeaMonkey');"/>
+		    	<menuitem value="&bonsai.label;" oncommand="OpenTaskURL('http://bonsai.mozilla.org/toplevel.cgi?treeid=SeaMonkey');"/>
 		    	<menuitem value="&bugzillaButton.label;" oncommand="OpenTaskURL('http://bugzilla.mozilla.org');"/>
 		    </menu>
 		  </popup>
