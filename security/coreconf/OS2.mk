@@ -59,10 +59,6 @@ PROG_SUFFIX = .exe
 
 ifdef XP_OS2_EMX
 
-#
-# On OS/2 we proudly support gbash...
-#
-SHELL = GBASH.EXE
 CCC			= gcc
 LINK			= gcc
 AR                      = emxomfar -p256 r $@
@@ -119,10 +115,6 @@ endif   # BUILD_OPT
 
 else    # XP_OS2_VACPP
 
-#
-# On OS/2 we proudly support gbash...
-#
-SHELL = GBASH.EXE
 AS = alp.exe
 ifdef BUILD_OPT
 ASFLAGS = -Od
