@@ -78,7 +78,9 @@
  *
  * TODO
  * - XXXbe patrol
+ * - fix function::foo vs. x.(foo == 42) collision using proper namespacing
  * - JSCLASS_DOCUMENT_OBSERVER support -- live two-way binding to Gecko's DOM!
+ * - optimize to avoid reparsing when TCF_HAS_DEFXMLNS in js_FoldConstants
  * - JS_TypeOfValue sure could use a cleaner interface to "types"
  */
 
@@ -1640,7 +1642,8 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
 
                 uri = ATOM_TO_STRING(pn2->pn_atom);
                 if (length == 5) {
-                    prefix = IS_EMPTY(uri) ? uri : NULL;
+                    /* 10.3.2.1. Step 6(h)(i)(1)(a). */
+                    prefix = cx->runtime->emptyString;
                 } else {
                     prefix = js_NewStringCopyN(cx, chars + 6, length - 6, 0);
                     if (!prefix)
@@ -1692,6 +1695,8 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
         if (flags & XSF_PRECOMPILED_ROOT) {
             JS_ASSERT(length >= 1);
             ns = XMLARRAY_MEMBER(inScopeNSes, 0, JSXMLNamespace);
+            JS_ASSERT(!XMLARRAY_HAS_MEMBER(&xml->xml_namespaces, ns,
+                                           namespace_identity));
             ns = js_NewXMLNamespace(cx, ns->prefix, ns->uri, JS_FALSE);
             if (!ns)
                 goto fail;
@@ -2314,10 +2319,27 @@ GetNamespace(JSContext *cx, JSXMLQName *qn, JSXMLArray *inScopeNSes)
     if (inScopeNSes) {
         for (i = 0, n = inScopeNSes->length; i < n; i++) {
             ns = XMLARRAY_MEMBER(inScopeNSes, i, JSXMLNamespace);
+
+            /*
+             * Very tricky, and not clearly specified in ECMA-357 13.3.5.4:
+             * if we preserve prefixes, we must match null qn->prefix against
+             * an empty ns->prefix, in order to avoid generating redundant
+             * prefixed and default namespaces for cases such as:
+             *
+             *   x = <t xmlns="http://foo.com"/>
+             *   print(x.toXMLString());
+             *
+             * Per 10.3.2.1, the namespace attribute in t has an empty string
+             * prefix (*not* a null prefix).  But t's name has a null prefix.
+             *
+             * XXXbe can we assert that ns->prefix is non-null here?
+             */
             if (!js_CompareStrings(ns->uri, qn->uri) &&
                 (ns->prefix == qn->prefix ||
-                 (ns->prefix && qn->prefix &&
-                  !js_CompareStrings(ns->prefix, qn->prefix)))) {
+                 (ns->prefix &&
+                  (qn->prefix
+                   ? !js_CompareStrings(ns->prefix, qn->prefix)
+                   : IS_EMPTY(ns->prefix))))) {
                 match = ns;
                 break;
             }
@@ -2363,8 +2385,8 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
      */
     start = JSSTRING_CHARS(uri);
     cp = end = start + JSSTRING_LENGTH(uri);
-    while (--cp >= start) {
-        if (*cp == '.' || *cp == '/') {
+    while (--cp > start) {
+        if (*cp == '.' || *cp == '/' || *cp == ':') {
             ++cp;
             if (IsXMLName(cp, PTRDIFF(end, cp, jschar)))
                 break;
@@ -2400,7 +2422,7 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
                 }
 
                 ++serial;
-                JS_ASSERT(serial < n);
+                JS_ASSERT(serial <= n);
                 dp = bp + length + 2 + (size_t) log10(serial);
                 *dp = 0;
                 for (m = serial; m != 0; m /= 10)
