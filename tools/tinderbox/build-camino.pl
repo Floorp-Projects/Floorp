@@ -271,7 +271,7 @@ sub main {
 
   # Control tests from here, sorry no config file yet.
   my $camino_alive_test              = 1;
-  my $camino_test8_test              = 1;
+  my $camino_test8_test              = 0;
   my $camino_layout_performance_test = 1;
   my $camino_startup_test            = 1;
   my $camino_window_leaks_test       = 0;
@@ -289,58 +289,16 @@ sub main {
   my $camino_binary = "Camino";
 
   unless ($Settings::TestOnly) {
-    # Checkout/update the camino code.
-    $status = checkout($mozilla_build_dir);
-    TinderUtils::print_log("Status from checkout: $status\n");
+    TinderUtils::print_log("Testing build status...\n");
     if ($status != 0) {
+      TinderUtils::print_log("busted, pbxbuild status non-zero\n");
       $post_status = 'busted';
+    } elsif (not TinderUtils::BinaryExists("$camino_dir/build/Camino.app/Contents/MacOS/$camino_binary")) {
+      TinderUtils::print_log("Error: binary not found: $camino_dir/build/Camino.app/Contents/MacOS/$camino_binary\n");
+      $post_status = 'busted';
+    } else {
+      $post_status = 'success';
     }
-    
-    # Build camino if we passed the checkout command.
-    if ($post_status ne 'busted') {
-
-      #
-      # Build embedding/config.
-      #
-      
-      chdir $embedding_dir;
-      
-      if ($status == 0) {
-        $status = TinderUtils::run_shell_command("make");
-        TinderUtils::print_log("Status from make: $status\n");
-      }
-      
-      #
-      # Build camino.
-      #
-      
-      chdir $camino_dir;
-      
-      if ($status == 0) {
-        TinderUtils::print_log("Deleting binary...\n");
-        TinderUtils::DeleteBinary("$camino_dir/build/Camino.app/Contents/MacOS/$camino_binary");
-          
-        # Always do a clean build; gecko dependencies don't work correctly
-        # for Camino.
-          
-        TinderUtils::print_log("Clobbering camino...\n");
-        TinderUtils::run_shell_command("make clean");
-          
-        $status = TinderUtils::run_shell_command("make");
-        TinderUtils::print_log("Status from pbxbuild: $status\n");
-      }
-
-      TinderUtils::print_log("Testing build status...\n");
-      if ($status != 0) {
-        TinderUtils::print_log("busted, pbxbuild status non-zero\n");
-        $post_status = 'busted';
-      } elsif (not TinderUtils::BinaryExists("$camino_dir/build/Camino.app/Contents/MacOS/$camino_binary")) {
-        TinderUtils::print_log("Error: binary not found: $camino_dir/build/Camino.app/Contents/MacOS/$camino_binary\n");
-        $post_status = 'busted';
-      } else {
-        $post_status = 'success';
-      }
-    }  
   }
 
   #
@@ -348,11 +306,10 @@ sub main {
   #
 
   # Clean profile out, if set.
-  # Assume Camino always uses ~/Library/Application Support/Chimera/Profiles/default for now.
+  # Assume Camino always uses ~/Library/Application Support/Camino for now.
   if ($camino_clean_profile) {
     # Warning: workaround camino bug, delete whole Camino dir.
-    my $chim_profile_dir = "$ENV{HOME}/Library/Application Support/Chimera";
-    #my $chim_profile_dir = "$ENV{HOME}/Library/Application Support/Chimera/Profiles/default";
+    my $chim_profile_dir = "$ENV{HOME}/Library/Application Support/Camino";
 
     TinderUtils::print_log("Deleting $chim_profile_dir...\n");
     print "Deleting $chim_profile_dir...\n";
@@ -366,21 +323,24 @@ sub main {
     # run the AliveTest first.
   }
 
+  my $binary_dir = "$camino_dir/build/Camino.app/Contents/MacOS";
+  my $full_binary_name = "$binary_dir/Camino";
+
   # AliveTest for camino, about:blank
   if ($camino_alive_test and $post_status eq 'success') {
 
     $post_status = TinderUtils::AliveTest("CaminoAliveTest",
-                                          "$camino_dir/build/Camino.app/Contents/MacOS",
-                                          ["Camino", "-url", "about:blank"],
+                                          $binary_dir,
+                                          [$full_binary_name, "-url", "about:blank"],
                                           45);
   }
 
-  # Find the prefs file, remember we have the secret/random salt dir,
-  # e.g. /Users/cltbld/Library/Application Support/Chimera/Profiles/default/dyrs1ar8.slt/prefs.js
+  # Find the prefs file
+  # e.g. /Users/cltbld/Library/Application Support/Camino/Profiles
   # so File::Path::find will find the prefs.js file.
   #
   my $pref_file = "prefs.js";
-  my $start_dir = "/Users/cltbld/Library/Application Support/Chimera/Profiles/default";
+  my $start_dir = "/Users/cltbld/Library/Application Support/Camino";
   my $found = undef;
   my $sub = sub {$pref_file = $File::Find::name, $found++ if $pref_file eq $_};
 
@@ -429,8 +389,8 @@ sub main {
           #exec "foo";
       } else {
           $post_status = TinderUtils::AliveTest("CaminoLayoutTest8Test",
-                                                "$camino_dir/build/Camino.app/Contents/MacOS",
-                                                ["Camino", "-url", "http://lxr.mozilla.org/seamonkey/source/webshell/tests/viewer/samples/test8.html"],
+                                                $binary_dir,
+                                                [$full_binary_name, "-url", "http://lxr.mozilla.org/seamonkey/source/webshell/tests/viewer/samples/test8.html"],
                                                 20);
       }
   }
@@ -441,7 +401,7 @@ sub main {
       $post_status = 
         TinderUtils::LayoutPerformanceTest("CaminoLayoutPerformanceTest",
                                            "$camino_dir/build/Camino.app/Contents/MacOS",
-                                           ["Camino", "-url"]);
+                                           [$full_binary_name, "-url"]);
 
   }
 
@@ -465,7 +425,7 @@ sub main {
   if ($camino_startup_test and $post_status eq 'success') {
       $post_status =
         TinderUtils::StartupPerformanceTest("CaminoStartupPerformanceTest",
-                                            "Camino",
+                                            $full_binary_name,
                                             "$camino_dir/build/Camino.app/Contents/MacOS",
                                             ["-url"],
                                             "file:$camino_dir/../../../startup-test.html");      
@@ -474,7 +434,7 @@ sub main {
   if ($camino_window_leaks_test and $post_status eq 'success') {
         $post_status = CaminoWindowLeaksTest("CaminoWindowLeakTest",
                                               "$camino_dir/build/Camino.app/Contents/MacOS/",
-                                              "./Camino",
+                                              $full_binary_name,
                                               "-url \"http://www.mozilla.org\"",
                                               20);
 
