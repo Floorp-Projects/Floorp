@@ -310,7 +310,7 @@ function tovr_gettree ()
     
     while (parent)
     {
-        if (parent._treeView)
+        if ("_treeView" in parent)
             return parent._treeView;
         parent = parent.parentRecord
     }
@@ -324,7 +324,8 @@ function tovr_getLevel ()
 {
     var rv = 0;
     var parentRecord = this.parentRecord;
-    while ((parentRecord = parentRecord.parentRecord)) ++rv;
+    while ("parentRecord" in parentRecord &&
+           (parentRecord = parentRecord.parentRecord)) ++rv;
     return rv;
 }
 
@@ -349,7 +350,7 @@ function tovr_setcol (colID, propertyName)
         return newValue;
     }
 
-    if (!this._colValues)
+    if (!("_colValues" in this))
         this._colValues = new Object();
     
     if (typeof propertyName == "function")
@@ -414,15 +415,14 @@ function tovr_killcache()
 
 /*
  * default comparator function for sorts.  if you want a custom sort, override
- * this method.
+ * this method.  We declare tovr_sortcmp as a top level function, instead of
+ * a function expression so we can refer to it later.
  */
-TreeOViewRecord.prototype.sortCompare =
+TreeOViewRecord.prototype.sortCompare = tovr_sortcmp;
 function tovr_sortcmp (a, b)
 {
-    var sc, sd;
-    
-    if (!(sc = a._share.sortColumn) || (sd = a._share.sortDirection) == 0)
-        return 0;
+    var sc = a._share.sortColumn;
+    var sd = a._share.sortDirection;    
     
     a = a[sc];
     b = b[sc];
@@ -447,15 +447,21 @@ function tovr_sortcmp (a, b)
 TreeOViewRecord.prototype.resort =
 function tovr_resort (leafSort)
 {
-    if (!this.childData || this.childData.length < 1)
+    if (!("childData" in this) || this.childData.length < 1 ||
+        this.childData[0].sortCompare != tovr_sortcmp ||
+        !("sortColumn" in this._share) || this._share.sortDirection == 0)
+    {
+        /* if we have no children, or we have the default sort compare and no
+         * sort flags, then just exit */
         return;
-    
+    }
+
     this.childData.sort(this.childData[0].sortCompare);
     
     for (var i = 0; i < this.childData.length; ++i)
     {
         this.childData[i].childIndex = i;
-        if (this.childData[i].isContainerOpen)
+        if ("isContainerOpen" in this && this.childData[i].isContainerOpen)
             this.childData[i].resort(true);
         else
             this.childData[i].sortIsInvalid = true;
@@ -490,8 +496,10 @@ function tovr_resort (leafSort)
 TreeOViewRecord.prototype.reserveChildren =
 function tovr_rkids ()
 {
-    if (!this.childData)
+    if (!("childData" in this))
         this.childData = new Array();
+    if (!("isContainerOpen" in this))
+        this.isContainerOpen = false;
 }
 
 /*
@@ -513,7 +521,7 @@ function tovr_appchild (child)
     child.childIndex = this.childData.length;
     this.childData.push(child);
     
-    if (this.isContainerOpen)
+    if ("isContainerOpen" in this && this.isContainerOpen)
     {
         if (this.calculateVisualRow() >= 0)
         {
@@ -586,7 +594,7 @@ function tovr_open ()
     if (this.isContainerOpen)
         return;
 
-    if (this.onPreOpen)
+    if ("onPreOpen" in this)
         this.onPreOpen();
     
     this.isContainerOpen = true;
@@ -599,7 +607,7 @@ function tovr_open ()
 
     this.resort(true);
     this.visualFootprint += delta;
-    if (this.parentRecord)
+    if ("parentRecord" in this)
         this.parentRecord.onVisualFootprintChanged(this.calculateVisualRow(),
                                                    delta);
 }
@@ -636,13 +644,13 @@ function tovr_vpchange (start, amount)
     if (start == -1 && !this.isHidden)
     {
         
-        dd ("vfp change (" + amount + ") from hidden node ignored.");
+        //dd ("vfp change (" + amount + ") from hidden node ignored.");
         return;
     }
     
     this.visualFootprint += amount;
 
-    if (this.parentRecord)
+    if ("parentRecord" in this)
         this.parentRecord.onVisualFootprintChanged(start, amount);
 }
 
@@ -669,7 +677,7 @@ function tovr_calcrow ()
     var vrow;
 
         /* if this is an uninserted or hidden node, or... */
-    if ((!this.parentRecord) || (this.isHidden) ||
+    if (!("parentRecord" in this) || (this.isHidden) ||
         /* if parent isn't open, or... */
         (!this.parentRecord.isContainerOpen) ||
         /* parent isn't visible */
@@ -710,9 +718,8 @@ function tovr_calcrow ()
 TreeOViewRecord.prototype.locateChildByVisualRow =
 function tovr_find (targetRow, myRow)
 {
-    var t;
-    if ((t = this._share.rowCache[targetRow]))
-        return t;
+    if (targetRow in this._share.rowCache)
+        return this._share.rowCache[targetRow];
 
     else if (0) {
         /* XXX take this out later */
@@ -829,21 +836,28 @@ function torr_calcrow ()
 TORootRecord.prototype.resort =
 function torr_resort ()
 {
-    if (!this.childData || this.childData.length < 1)
+    if (!("childData" in this) || this.childData.length < 1 ||
+        this.childData[0].sortCompare != tovr_sortcmp ||
+        !("sortColumn" in this._share) || this._share.sortDirection == 0)
+    {
+        /* if we have no children, or we have the default sort compare but we're
+         * missing a sort flag, then just exit */
         return;
+    }
     
     this.childData.sort(this.childData[0].sortCompare);
     
     for (var i = 0; i < this.childData.length; ++i)
     {
         this.childData[i].childIndex = i;
-        if (this.childData[i].isContainerOpen)
+        if ("isContainerOpen" in this.childData[i] &&
+            this.childData[i].isContainerOpen)
             this.childData[i].resort(true);
         else
             this.childData[i].sortIsInvalid = true;
     }
     
-    if (this._treeView && this._treeView.outliner)
+    if ("_treeView" in this && "outliner" in this._treeView)
     {
         /*
         dd ("root node: invalidating 0 - " + this.visualFootprint +
@@ -857,9 +871,8 @@ function torr_resort ()
 TORootRecord.prototype.locateChildByVisualRow =
 function torr_find (targetRow)
 {
-    var t;
-    if ((t = this._share.rowCache[targetRow]))
-        return t;
+    if (targetRow in this._share.rowCache)
+        return this._share.rowCache[targetRow];
 
     var childStart = -1; /* childStart represents the starting visual row
                           * for the child we're examining. */
@@ -894,7 +907,7 @@ function torr_vfpchange (start, amount)
 {
     this.invalidateCache();
     this.visualFootprint += amount;
-    if (this._treeView && this._treeView.outliner)
+    if ("_treeView" in this && "outliner" in this._treeView)
     {
         if (amount != 0)
             this._treeView.outliner.rowCountChanged (start, amount);
@@ -985,24 +998,15 @@ function tov_isctropen (index)
 TreeOView.prototype.toggleOpenState =
 function tov_toggleopen (index)
 {
-    dd ("toggleOpenState: locating");
     var row = this.childData.locateChildByVisualRow (index);
     //ASSERT(row, "bogus row");
     if (row)
     {
         if (row.isContainerOpen)
-        {
-            dd ("toggleOpenState: closing");
             row.close();
-        }
         else
-        {
-            dd ("toggleOpenState: opening");
             row.open();
-        }
     }
-
-    dd ("toggleOpenState: done.");
 }
 
 TreeOView.prototype.isContainerEmpty =
