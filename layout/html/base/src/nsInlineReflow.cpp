@@ -1033,7 +1033,8 @@ nsInlineReflow::HorizontalAlignFrames(nsRect& aLineBox, PRBool aIsLastLine)
 void
 nsInlineReflow::RelativePositionFrames(nsRect& aCombinedArea)
 {
-  nscoord x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+  nscoord x0 = mLeftEdge, y0 = mTopEdge;
+  nscoord x1 = x0, y1 = y0;
   nsPoint origin;
   PerFrameData* pfd = mFrameDataBase;
   PerFrameData* end = pfd + mFrameNum;
