@@ -1132,10 +1132,19 @@ nsHTMLToTXTSinkStream::EndLine(PRBool softlinebreak)
     }
     if(mCurrentLine.Length()>0)
       mEmptyLines=-1;
+
     // Output current line
-    // Remove SPACE from the end of the line.
-    while(' ' == mCurrentLine[mCurrentLine.Length()-1])
+    // Remove SPACE from the end of the line, unless we got
+    // "-- " in a format=flowed output. "-- " is the sig delimiter
+    // by convention and shouldn't be touched even in format=flowed
+    // (see RFC 2646).
+    nsAutoString sig_delimiter;
+    sig_delimiter.AssignWithConversion("-- ");
+    while((' ' == mCurrentLine[mCurrentLine.Length()-1]) &&
+          ((sig_delimiter != mCurrentLine) ||
+           !(mFlags & nsIDocumentEncoder::OutputFormatFlowed)))
       mCurrentLine.SetLength(mCurrentLine.Length()-1);
+    
     mCurrentLine.AppendWithConversion(NS_LINEBREAK);
     WriteSimple(mCurrentLine);
     mCurrentLine.Truncate();

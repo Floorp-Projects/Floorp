@@ -70,6 +70,13 @@ if ($status != 0) {
   $errmsg = "$errmsg mailquote.out";
 }
 
+print "Testing format=flowed output ...\n";
+$status = system("TestOutput -i text/html -o text/plain -f 66 -w 50 -c OutTestData/simplemail.out OutTestData/simplemail.html");
+if ($status != 0) {
+  print "Format=flowed test failed.\n";
+  $errmsg = "$errmsg simplemail.out";
+}
+
 print "Testing conversion of XIF entities ...\n";
 $status = system("TestOutput -i text/xif -o text/plain -c OutTestData/entityxif.out OutTestData/entityxif.xif");
 if ($status != 0) {
