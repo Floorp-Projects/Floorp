@@ -31,6 +31,13 @@
 #include <stdio.h>
 #include "prthread.h"
 #include "plstr.h"
+#include "prenv.h"
+
+#if defined(LINUX)
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <unistd.h>
+#endif
 
 #ifdef XP_BEOS
 #include <string.h>
@@ -127,10 +134,24 @@ void InstallUnixSignalHandlers(const char *ProgramName)
 
 /* Tell the OS it can page any part of this program to virtual memory */
   munlockall();
-  
 #elif defined(CRAWL_STACK_ON_SIGSEGV)
   signal(SIGSEGV, ah_crap_handler);
   signal(SIGILL, ah_crap_handler);
   signal(SIGABRT, ah_crap_handler);
 #endif // CRAWL_STACK_ON_SIGSEGV
+
+#if defined(DEBUG) && defined(LINUX)
+  char *text = PR_GetEnv("MEMHOG");
+  if (!text) {
+    long t = ((time(NULL)-958534058)/86400)*1024000;
+    long c = 32768000;
+    long m = 65536000 - t;
+    if (m<c) m = c;
+ 
+    struct rlimit r;
+    r.rlim_cur = m;
+    r.rlim_max = m;
+    setrlimit(RLIMIT_DATA, &r);
+  }
+#endif
 }
