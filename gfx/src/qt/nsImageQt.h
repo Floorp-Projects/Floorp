@@ -45,7 +45,6 @@
 #include "nsRect.h"
 
 #include <qpixmap.h>
-#include <qimage.h>
 
 #undef Bool
 
