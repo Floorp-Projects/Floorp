@@ -86,6 +86,7 @@ EXTRA_DSO_LDOPTS =	\
 	-limg_s		\
 	-lneckoutil_s	\
 	-lmozutil_s	\
+	$(MOZ_TIMER_LIBS) \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
