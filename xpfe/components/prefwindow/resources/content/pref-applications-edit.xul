@@ -37,6 +37,7 @@
 
     <stringbundle id="bundle_prefApplications"
                   src="chrome://communicator/locale/pref/pref-applications.properties"/>
+    <stringbundle id="bundle_Brand" src="chrome://global/locale/brand.properties"/>
 
 <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js"/>
 <script type="application/x-javascript" src="chrome://communicator/content/pref/overrideHandler.js"/>
@@ -295,6 +296,35 @@
       }
       getDS();
       gMIMEField.value = gMIMEField.value.toLowerCase();
+      // Get the promptservice, we will need it
+      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+      // Check if Mozilla can handle this type internally, in which case
+      // an entry would have no effect
+      try {
+        var categoryManager = Components.classes["@mozilla.org/categorymanager;1"]
+                                        .getService(Components.interfaces.nsICategoryManager);
+        if (categoryManager.getCategoryEntry("Gecko-Content-Viewers", gMIMEField.value)) {
+          var brandBundle = document.getElementById("bundle_Brand");
+          var text = gPrefApplicationsBundle.getString("canHandleInternally");
+          text = text.replace(/%brand%/g, brandBundle.getString("brandShortName"));
+          if (promptService.confirmEx(
+              window,
+              gPrefApplicationsBundle.getString("canHandleInternallyTitle"),
+              text,
+               (Components.interfaces.nsIPromptService.BUTTON_POS_1 *
+                Components.interfaces.nsIPromptService.BUTTON_TITLE_IS_STRING) |
+               (Components.interfaces.nsIPromptService.BUTTON_POS_0 *
+                Components.interfaces.nsIPromptService.BUTTON_TITLE_CANCEL),
+              null,
+              gPrefApplicationsBundle.getString("canHandleInternallyContinue"),
+              null,
+              null,
+              {}
+              ) == 0)
+          return false;
+        }
+      }
+      catch (ex) {}
       // figure out if this mime type already exists. 
       if (gMIMEField.value != gOldMIME) {
         var exists = mimeHandlerExists(gMIMEField.value);
@@ -302,7 +332,6 @@
           var titleMsg = gPrefApplicationsBundle.getString("handlerExistsTitle");
           var dialogMsg = gPrefApplicationsBundle.getString("handlerExists");
           dialogMsg = dialogMsg.replace(/%mime%/g, gMIMEField.value);
-          var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
           var replace = promptService.confirm(window, titleMsg, dialogMsg);
           if (!replace)
             window.close();
