@@ -3,48 +3,148 @@
 /********* XP Scrollbar *********/
 
 scrollbar {
-   -moz-binding: url("chrome://global/content/xulBindings.xml#scrollbar");
+   -moz-binding: url("chrome://global/skin/globalBindings.xml#scrollbar");
 }
 
-/********* XP Scrollbar *********/
+slider {
+   -moz-user-focus: ignore;
+   -moz-user-select: none;
+   background: url("chrome://global/skin/scroll-track-horz-middle.gif") repeat-x;
+   height: 15px;
+   border-top: 1px solid #4D5971;
+   border-bottom: 1px solid #4D5971;
+}
+
+slider[align="vertical"] {
+   -moz-user-focus: ignore;
+   -moz-user-select: none;
+   background: url("chrome://global/skin/scroll-track-vert-middle.gif") repeat-y;
+   width: 15px;
+   border-left: 1px solid #4D5971;
+   border-right: 1px solid #4D5971;
+   border-top: 0px;
+   border-bottom: 0px;
+}
+
+/* Horizontal Thumb */
 
 thumb {
-  -moz-binding: url(chrome://global/content/xulBindings.xml#thumb);
-  background-color: #CCCCCC;
-  border: 1px outset #CCCCCC;
-  list-style-image: url("chrome://global/skin/scroll-thumb-horiz.gif")
+  -moz-binding: url(chrome://global/skin/globalBindings.xml#thumb-horizontal);
+  -moz-user-focus: ignore;
+  -moz-user-select: none;
 }
 
-thumb[disabled="true"] {
-   list-style-image: url("chrome://global/skin/scroll-thumb-horiz-disabled.gif");
+.thumb-horz-spring-left {
+  background: url(chrome://global/skin/scroll-thumb-horz-left.gif) no-repeat;
+  width: 7px;
+  height: 13px;
 }
+
+.thumb-horz-box-middle {
+  background: url(chrome://global/skin/scroll-thumb-horz-expand.gif) repeat-x;
+  height: 13px;
+}
+
+.thumb-horz-spring-right {
+  background: url(chrome://global/skin/scroll-thumb-horz-right.gif) no-repeat;
+  width: 6px;
+  height: 13px;
+}
+
+.thumb-horz-grippy {
+  list-style-image: url(chrome://global/skin/scroll-thumb-horz-grippy.gif);
+}
+
+/* Thumb Clicked States */
+
+thumb:active > .thumb-horz-spring-left {
+  background: url(chrome://global/skin/scroll-thumb-horz-cl-left.gif) no-repeat;
+  width: 7px;
+  height: 13px;
+}
+
+thumb:active > .thumb-horz-box-middle {
+  background: url(chrome://global/skin/scroll-thumb-horz-cl-expand.gif) repeat-x;
+  height: 13px;
+}
+
+thumb:active > .thumb-horz-spring-right {
+  background: url(chrome://global/skin/scroll-thumb-horz-cl-right.gif) no-repeat;
+  width: 6px;
+  height: 13px;
+}
+
+thumb:active > .thumb-horz-box-middle > .thumb-horz-grippy {
+  list-style-image: url(chrome://global/skin/scroll-thumb-horz-cl-grippy.gif);
+}
+
+/* Vertical Thumb */
 
 thumb[align="vertical"] {
-   list-style-image: url("chrome://global/skin/scroll-thumb-vert.gif")
+  -moz-binding: url(chrome://global/skin/globalBindings.xml#thumb-vertical);
+  -moz-user-focus: ignore;
+  -moz-user-select: none;
 }
+
+.thumb-vert-spring-top {
+  background: url(chrome://global/skin/scroll-thumb-vert-top.gif) no-repeat;
+  height: 7px;
+  width: 13px;
+}
+
+.thumb-vert-box-middle {
+  background: url(chrome://global/skin/scroll-thumb-vert-expand.gif) repeat-y;
+  width: 13px;
+}
+
+.thumb-vert-spring-bottom {
+  background: url(chrome://global/skin/scroll-thumb-vert-bottom.gif) no-repeat;
+  height: 6px;
+  width: 13px;
+}
+
+.thumb-vert-grippy {
+  list-style-image: url(chrome://global/skin/scroll-thumb-vert-grippy.gif);
+}
+
+/* Thumb Clicked States */
+
+thumb:active > .thumb-vert-spring-top {
+  background: url(chrome://global/skin/scroll-thumb-vert-cl-top.gif) no-repeat;
+  height: 7px;
+  width: 13px;
+}
+
+thumb:active > .thumb-vert-box-middle {
+  background: url(chrome://global/skin/scroll-thumb-vert-cl-expand.gif) repeat-y;
+  width: 13px;
+}
+
+thumb:active > .thumb-vert-spring-bottom {
+  background: url(chrome://global/skin/scroll-thumb-vert-cl-bottom.gif) no-repeat;
+  height: 6px;
+  width: 13px;
+}
+
+thumb:active > .thumb-vert-box-middle > .thumb-vert-grippy {
+  list-style-image: url(chrome://global/skin/scroll-thumb-vert-cl-grippy.gif);
+}
+
+/* Scrollbar Buttons */
 
 scrollbarbutton {
+  -moz-user-focus: ignore;
+  -moz-user-select: none;
   vertical-align: bottom;
   cursor: default;
-
-  border: 1px outset white;
-  background-color: #CCCCCC;
-  color:black; 
-
-  padding: 1px;
-}
-
-scrollbarbutton:active {
-  border-style: inset;
-
-  padding-left: 2px;
-  padding-right: 0px;
-  padding-top: 2px;
-  padding-bottom: 0px;
 }
 
 scrollbarbutton[type="decrement"] {
    list-style-image: url("chrome://global/skin/scroll-left.gif")
+}
+
+scrollbarbutton[type="decrement"]:hover:active {
+   list-style-image: url("chrome://global/skin/scroll-left-clicked.gif")
 }
 
 scrollbarbutton[type="decrement"][disabled="true"] {
@@ -55,32 +155,34 @@ scrollbarbutton[type="increment"] {
    list-style-image: url("chrome://global/skin/scroll-right.gif")
 }
 
+scrollbarbutton[type="increment"]:hover:active {
+   list-style-image: url("chrome://global/skin/scroll-right-clicked.gif")
+}
 
 scrollbarbutton[type="increment"][disabled="true"] {
    list-style-image: url("chrome://global/skin/scroll-right-disabled.gif") 
 }
 
-
-scrollbar[align="vertical"] scrollbarbutton[type="decrement"] {
+scrollbar[align="vertical"] > scrollbarbutton[type="decrement"] {
    list-style-image: url("chrome://global/skin/scroll-up.gif")
 }
 
-scrollbar[align="vertical"] scrollbarbutton[type="decrement"][disabled="true"] {
+scrollbar[align="vertical"] > scrollbarbutton[type="decrement"]:hover:active {
+   list-style-image: url("chrome://global/skin/scroll-up-clicked.gif")
+}
+
+scrollbar[align="vertical"] > scrollbarbutton[type="decrement"][disabled="true"] {
    list-style-image: url("chrome://global/skin/scroll-up-disabled.gif") 
 }
 
-scrollbar[align="vertical"] scrollbarbutton[type="increment"] {
+scrollbar[align="vertical"] > scrollbarbutton[type="increment"] {
    list-style-image: url("chrome://global/skin/scroll-down.gif")
 }
 
-scrollbar[align="vertical"] scrollbarbutton[type="increment"][disabled="true"] {
+scrollbar[align="vertical"] > scrollbarbutton[type="increment"]:hover:active {
+   list-style-image: url("chrome://global/skin/scroll-down-clicked.gif")
+}
+
+scrollbar[align="vertical"] > scrollbarbutton[type="increment"][disabled="true"] {
    list-style-image: url("chrome://global/skin/scroll-down-disabled.gif") 
-}
-
-slider[align="vertical"] thumb:active {
-   background-color: #CCCCCC;
-}
-
-slider {
-   background-color: #999999;
 }

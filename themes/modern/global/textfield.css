@@ -7,16 +7,16 @@
 /* outer frame */
   textfield
     {
-      border              : 1px inset #CCCCCC;
+      -moz-binding		  : url(chrome://global/skin/globalBindings.xml#textfield);
       font                : inherit;
       color               : #000000;
       padding             : 0px;
-      margin              : 1px 3px 2px 4px;
+      margin              : 2px 4px 2px 4px;
       background-color    : #FFFFFF;
-      -moz-border-radius  : 3px 2px 2px 3px;
+      -moz-border-radius  : 4px 4px 3px 6px;
       cursor              : text;
     }
-    
+
   textfield[readonly="true"]
     {
       background-color    : #CCCCCC;
@@ -24,15 +24,71 @@
   
   textfield[focused="true"]
     {
-      border              : 2px solid #6699cc;
-      margin              : 0px 2px 1px 3px;
+      border              : 2px solid #F2C34F;
+      margin              : 0px 2px 0px 2px;
+      -moz-border-radius  : 7px 7px 4px 6px;
     }
-    
+   
   textfield[focused="true"][readonly="true"]
     {
       border              : 1px inset #CCCCCC;
-      margin              : 1px 3px 2px 4px;
+      margin              : 2px 4px 2px 4px;
     }
+
+/* Border Pieces */
+
+  .textfield-left-top 
+  	{
+  	  background		  : url(chrome://global/skin/textfield-left-top.gif) no-repeat;
+  	  width				  : 4px;
+  	  height			  : 4px;
+  	}
+
+  .textfield-left-middle
+    {
+  	  background		  : url(chrome://global/skin/textfield-left-middle.gif) repeat-y;
+  	  width				  : 4px;
+    }
+
+  .textfield-left-bottom 
+  	{
+  	  background		  : url(chrome://global/skin/textfield-left-bottom.gif) no-repeat;
+  	  width				  : 4px;
+  	  height			  : 4px;
+  	}
+
+  .textfield-middle-top
+    {
+  	  background		  : url(chrome://global/skin/textfield-middle-top.gif) repeat-x;
+  	  height			  : 4px;
+    }
+
+  .textfield-middle-bottom
+    {
+  	  background		  : url(chrome://global/skin/textfield-middle-bottom.gif) repeat-x;
+  	  height			  : 2px;
+    }
+
+  .textfield-right-top 
+  	{
+  	  background		  : url(chrome://global/skin/textfield-right-top.gif) no-repeat;
+  	  width				  : 3px;
+  	  height			  : 4px;
+  	}
+
+  .textfield-right-middle
+    {
+  	  background		  : url(chrome://global/skin/textfield-right-middle.gif) repeat-y right;
+  	  width				  : 2px;
+    }
+
+  .textfield-right-bottom 
+  	{
+  	  background		  : url(chrome://global/skin/textfield-right-bottom.gif) no-repeat;
+  	  width				  : 2px;
+  	  height			  : 2px;
+  	}
+
 
 /* internal frame */
   .textfield-internal-box 
@@ -40,14 +96,12 @@
       margin              : 0px;
       padding             : 1px 2px 1px 2px;
       cursor              : text;
-      border              : 1px solid #000000;
       background-color    : inherit;
       color               : inherit;
     }
   
   textfield[disabled="true"] > .textfield-internal-box
     {
-      border              : 1px solid #999999;
       background-color    : threedface;
     }
   
