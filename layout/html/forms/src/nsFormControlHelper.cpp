@@ -90,11 +90,6 @@ static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
                                               // it a synonym for "soft" 
 #define kTextControl_Wrap_Off  "OFF"
 
-// Temporary - Test of full time Standard mode for forms (Bug 91602)
-#include "nsIPref.h"
-PRPackedBool nsFormControlHelper::mCompatFirstTime = PR_TRUE;
-PRPackedBool nsFormControlHelper::mUseEitherMode  = PR_FALSE;
-
 
 MOZ_DECL_CTOR_COUNTER(nsFormControlHelper)
 
@@ -155,22 +150,6 @@ void nsFormControlHelper::GetBoolString(const PRBool aValue,
     aResult.Assign(NS_STRING_FALSE);
 }
 
-
-nsCompatibility
-nsFormControlHelper::GetRepChars(nsIPresContext* aPresContext, char& char1, char& char2) 
-{
-  nsCompatibility mode;
-  nsFormControlHelper::GetFormCompatibilityMode(aPresContext, mode);
-  if (eCompatibility_Standard == mode) {
-    char1 = 'W';
-    char2 = 'w';
-    return eCompatibility_Standard;
-  } else {
-    char1 = 'W';
-    char2 = 'w';
-    return eCompatibility_NavQuirks;
-  }
-}
 
 nsresult nsFormControlHelper::GetFrameFontFM(nsIPresContext* aPresContext, 
                                          nsIFormControlFrame * aFrame,
@@ -259,7 +238,7 @@ nsFormControlHelper::CalcNavQuirkSizing(nsIPresContext*      aPresContext,
   maxCharWidth = NSToCoordRound(maxCharWidth * t2p);
 
   char char1, char2;
-  GetRepChars(aPresContext, char1, char2);
+  GetRepChars(char1, char2);
 
   nscoord char1Width, char2Width;
   aRendContext->GetWidth(char1, char1Width);
@@ -379,16 +358,12 @@ nsFormControlHelper::GetTextSize(nsIPresContext* aPresContext, nsIFormControlFra
   }
 
   char char1, char2;
-  nsCompatibility mode = GetRepChars(aPresContext, char1, char2);
+  GetRepChars(char1, char2);
   nscoord char1Width, char2Width;
   aRendContext->GetWidth(char1, char1Width);
   aRendContext->GetWidth(char2, char2Width);
 
-  if (eCompatibility_Standard == mode) {
-    return ((char1Width + char2Width) / 2) + 1;
-  } else {
-    return (char1Width + char2Width) / 2;
-  }
+  return ((char1Width + char2Width) / 2) + 1;
 }  
   
 nscoord
@@ -398,7 +373,7 @@ nsFormControlHelper::GetTextSize(nsIPresContext* aPresContext, nsIFormControlFra
 {
   nsAutoString val;
   char char1, char2;
-  GetRepChars(aPresContext, char1, char2);
+  GetRepChars(char1, char2);
   int i;
   for (i = 0; i < aNumChars; i+=2) {
     val.Append(PRUnichar(char1));
@@ -472,9 +447,6 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
   }
 #endif
 
-  nsCompatibility qMode;
-  nsFormControlHelper::GetFormCompatibilityMode(aPresContext, qMode);
-
   // determine the width, char height, row height
   if (NS_CONTENT_ATTR_HAS_VALUE == colStatus) {  // col attr will provide width
     PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
@@ -486,23 +458,9 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
       aDesiredSize.width = NSIntPixelsToTwips(col, p2t);
     } else {
       col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
-      if (eCompatibility_NavQuirks == qMode) {
-        nsCOMPtr<nsIFontMetrics> fontMet;
-        nsresult res = GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
-        if (NS_SUCCEEDED(res) && fontMet) {
-          aRendContext->SetFont(fontMet);
-          aSpec.mColDefaultSize = col;
-          charWidth = CalcNavQuirkSizing(aPresContext, aRendContext, fontMet, 
-                                         aFrame, aSpec, aDesiredSize);
-        } else {
-          charWidth = GetTextSize(aPresContext, aFrame, col, aDesiredSize, aRendContext);
-        }
-      }
     }
-    if (eCompatibility_Standard == qMode) {
-      if (aSpec.mColSizeAttrInPixels) {
-        aWidthExplicit = PR_TRUE;
-      }
+    if (aSpec.mColSizeAttrInPixels) {
+      aWidthExplicit = PR_TRUE;
     }
     aMinSize.width = aDesiredSize.width;
   } else {
@@ -515,22 +473,7 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
       charWidth = GetTextSize(aPresContext, aFrame, 1, aDesiredSize, aRendContext);
       aDesiredSize.width = aSpec.mColDefaultSize;
     } else  {                                     // use default width in num characters
-      if (eCompatibility_NavQuirks == qMode) {
-        nsCOMPtr<nsIFontMetrics> fontMet;
-        nsresult res = GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
-        if (NS_SUCCEEDED(res) && fontMet) {
-          aRendContext->SetFont(fontMet);
-          // this passes in a 
-          charWidth = CalcNavQuirkSizing(aPresContext, aRendContext, fontMet, 
-                                         aFrame, aSpec, aDesiredSize);
-        } else {
-          NS_ASSERTION(fontMet, "Couldn't get Font Metrics"); 
-          aDesiredSize.width = 300;  // arbitrary values
-          aDesiredSize.width = 1500;
-        }
-      } else {
-        charWidth = GetTextSize(aPresContext, aFrame, aSpec.mColDefaultSize, aDesiredSize, aRendContext); 
-      }
+      charWidth = GetTextSize(aPresContext, aFrame, aSpec.mColDefaultSize, aDesiredSize, aRendContext); 
     }
     aMinSize.width = aDesiredSize.width;
     if (CSS_NOTSET != aCSSSize.width) {  // css provides width
@@ -545,25 +488,23 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
   aMinSize.height = aDesiredSize.height;
 
   // determine the height
-  if (eCompatibility_Standard == qMode) {
-    nsHTMLValue rowAttr;
-    nsresult rowStatus = NS_CONTENT_ATTR_NOT_THERE;
-    if (nsnull != aSpec.mRowSizeAttr) {
-      rowStatus = hContent->GetHTMLAttribute(aSpec.mRowSizeAttr, rowAttr);
-    }
-    if (NS_CONTENT_ATTR_HAS_VALUE == rowStatus) { // row attr will provide height
-      PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) 
-                              ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
-      numRows = (rowAttrInt > 0) ? rowAttrInt : 1;
-      aDesiredSize.height = aDesiredSize.height * numRows;
-    } else {
-      aDesiredSize.height = aDesiredSize.height * aSpec.mRowDefaultSize;
-      if (CSS_NOTSET != aCSSSize.height) {  // css provides height
-        NS_ASSERTION(aCSSSize.height > 0, "form control's computed height is <= 0"); 
-        if (NS_INTRINSICSIZE != aCSSSize.height) {
-          aDesiredSize.height = PR_MAX(aDesiredSize.height,aCSSSize.height);
-          aHeightExplicit = PR_TRUE;
-        }
+  nsHTMLValue rowAttr;
+  nsresult rowStatus = NS_CONTENT_ATTR_NOT_THERE;
+  if (nsnull != aSpec.mRowSizeAttr) {
+    rowStatus = hContent->GetHTMLAttribute(aSpec.mRowSizeAttr, rowAttr);
+  }
+  if (NS_CONTENT_ATTR_HAS_VALUE == rowStatus) { // row attr will provide height
+    PRInt32 rowAttrInt = ((rowAttr.GetUnit() == eHTMLUnit_Pixel) 
+                            ? rowAttr.GetPixelValue() : rowAttr.GetIntValue());
+    numRows = (rowAttrInt > 0) ? rowAttrInt : 1;
+    aDesiredSize.height = aDesiredSize.height * numRows;
+  } else {
+    aDesiredSize.height = aDesiredSize.height * aSpec.mRowDefaultSize;
+    if (CSS_NOTSET != aCSSSize.height) {  // css provides height
+      NS_ASSERTION(aCSSSize.height > 0, "form control's computed height is <= 0"); 
+      if (NS_INTRINSICSIZE != aCSSSize.height) {
+        aDesiredSize.height = PR_MAX(aDesiredSize.height,aCSSSize.height);
+        aHeightExplicit = PR_TRUE;
       }
     }
   }
@@ -579,7 +520,6 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
 }
 
 
-// this handles all of the input types rather than having them do it.
 nsresult  
 nsFormControlHelper::GetFont(nsIFormControlFrame * aFormFrame,
                              nsIPresContext*       aPresContext, 
@@ -588,69 +528,7 @@ nsFormControlHelper::GetFont(nsIFormControlFrame * aFormFrame,
 {
   const nsStyleFont* styleFont = (const nsStyleFont*)aStyleContext->GetStyleData(eStyleStruct_Font);
 
-  nsWidgetRendering m;
-  aPresContext->GetWidgetRenderingMode(&m);
-
-  // only add in padding if we are not Gfx, excluding the text widgets
-  PRBool requiresWidget = PR_FALSE;
-  aFormFrame->RequiresWidget(requiresWidget);
-
-  PRInt32 type;
-  aFormFrame->GetType(&type);
-
-  if (type!=NS_FORM_INPUT_TEXT &&
-      type!=NS_FORM_TEXTAREA   &&
-      type!=NS_FORM_INPUT_PASSWORD) {
-    if (PR_TRUE != requiresWidget && eWidgetRendering_Gfx == m) {
-      aFont = &styleFont->mFont;
-      return NS_OK;
-    }
-  }
-
-  nsCompatibility mode;
-  nsFormControlHelper::GetFormCompatibilityMode(aPresContext, mode);
-
-  if (eCompatibility_Standard == mode) {
-    aFont = &styleFont->mFont;
-    return NS_OK;
-  }
-
-  switch (type) {
-    case NS_FORM_INPUT_TEXT:
-    case NS_FORM_TEXTAREA:
-    case NS_FORM_INPUT_PASSWORD:
-      aFont = &styleFont->mFont;
-      break;
-    case NS_FORM_INPUT_BUTTON:
-    case NS_FORM_INPUT_SUBMIT:
-    case NS_FORM_INPUT_RESET:
-    case NS_FORM_SELECT:
-      NS_ASSERTION(0, "getting the font here has been predicated");
-#if 0
-      if ((styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT) || 
-          (styleFont->mFlags & NS_STYLE_FONT_SIZE_EXPLICIT)) {
-        aFont = styleFont->mFixedFont;
-        aFont.weight = NS_FONT_WEIGHT_NORMAL;  // always normal weight
-        aFont.size = styleFont->mFont.size;    // normal font size
-        if (0 == (styleFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT)) {
-          aFont.name = "Arial";  // XXX windows specific font
-        }
-      } else {
-        // use arial, scaled down one HTML size
-        // italics, decoration & variant(?) get used
-        aFont = styleFont->mFont;
-        aFont.name = "Arial";  // XXX windows specific font
-        aFont.weight = NS_FONT_WEIGHT_NORMAL; 
-        const nsFont& normal = aPresContext->GetDefaultFontDeprecated();
-        PRInt32 scaler;
-        aPresContext->GetFontScaler(&scaler);
-        float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
-        PRInt32 fontIndex = nsStyleUtil::FindNextSmallerFontSize(aFont.size, (PRInt32)normal.size, scaleFactor, aPresContext);
-        aFont.size = nsStyleUtil::CalcFontPointSize(fontIndex, (PRInt32)normal.size, scaleFactor, aPresContext);
-      }
-#endif
-      break;
-  }
+  aFont = &styleFont->mFont;
   return NS_OK;
 }
 
@@ -997,31 +875,6 @@ nsFormControlHelper::DoManualSubmitOrReset(nsIPresContext* aPresContext,
     }
   }
   return result;
-}
-
-// Temporary - Test of full time Standard mode for forms (Bug 91602)
-//
-void nsFormControlHelper::GetFormCompatibilityMode(nsIPresContext* aPresContext, 
-                                                   nsCompatibility& aCompatMode)
-{
-  if (mCompatFirstTime) {
-    nsCOMPtr<nsIPref> prefService(do_GetService(NS_PREF_CONTRACTID));
-    if (prefService) {
-      PRBool useEitherMode;
-      if (NS_SUCCEEDED(prefService->GetBoolPref("layout.forms.use_standard_or_quirks", &useEitherMode))) {
-        if (useEitherMode) {
-          mUseEitherMode = PR_TRUE;
-        }
-      }
-    }
-    mCompatFirstTime = PR_FALSE;
-  }
-
-  if (mUseEitherMode) {
-    aPresContext->GetCompatibilityMode(&aCompatMode);
-  } else {
-    aCompatMode = eCompatibility_Standard;
-  }
 }
 
 nsresult

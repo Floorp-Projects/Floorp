@@ -217,54 +217,6 @@ pre[wrap], pre[cols], pre[width] {
 }
 
 
-/* Temporary - Test of full time Standard mode for forms Bug 91602 
-input[type="text"] {
-  padding: 1px 0 0 0;
-} 
-
-input[type="radio"] {
-  margin: 2px 5px 4px 3px;
-  vertical-align: bottom;
-}
-
-input[type="checkbox"] {
-  margin: 3px 4px 3px 3px;
-  vertical-align: bottom;
-}
-
-button, 
-input[type="reset"],
-input[type="button"],
-input[type="submit"] { 
-  vertical-align: bottom;
-}
-
-td select[size] {
-  margin-top: 0px;
-  margin-bottom: 1px;
-}
-
-td select, td select[size="1"] {
-  margin-top: 2px;
-  margin-bottom: 2px;
-}
-
-td input[type="text"], input[type="password"] {
-  margin-top: 1px;
-  margin-bottom: 1px;
-}
-
-td input[type="checkbox"],
-td input[type="radio"] {
-  margin-bottom: 1px;
-}
-
-td textarea {
-  margin-top: 1px;
-  margin-bottom: 2px;
-}
-*/
-
 /* Quirk: HRs avoid floats (b=18754) */
 
 hr {

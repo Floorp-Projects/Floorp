@@ -225,25 +225,6 @@ protected:
                                   nsMargin&             aPadding,
                                   PRBool                aIsUsingDefSize);
 
-  PRInt32 CalculateSizeNavQuirks (nsIPresContext*       aPresContext, 
-                                  nsIRenderingContext*  aRendContext,
-                                  nsIFormControlFrame*  aFrame,
-                                  nsInputDimensionSpec& aSpec, 
-                                  nsSize&               aDesiredSize, 
-                                  nsSize&               aMinSize, 
-                                  nscoord&              aRowHeight,
-                                  nsMargin&             aBorder,
-                                  nsMargin&             aPadding,
-                                  PRBool                aIsUsingDefSize);
-
-
-  NS_IMETHOD ReflowNavQuirks(nsIPresContext*          aPresContext,
-                              nsSize&                 aDesiredSize,
-                              const nsHTMLReflowState& aReflowState,
-                              nsReflowStatus&          aStatus,
-                              nsMargin&                aBorder,
-                              nsMargin&                aPadding);
-
   NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
                                nsIContent *      aContent,
                                nsIFrame**        aFrame);
