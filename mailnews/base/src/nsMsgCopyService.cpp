@@ -258,8 +258,7 @@ nsMsgCopyService::DoNextCopy()
           }
       }
     }
-    if (NS_FAILED(rv))
-        ClearRequest(copyRequest, rv);
+    // Don't clear copy request in failure case - notify completion should do that.
     return rv;
 }
 
@@ -453,9 +452,9 @@ nsMsgCopyService::NotifyCompletion(nsISupports* aSupport,
   rv = DoNextCopy();
   nsCopyRequest* copyRequest = FindRequest(aSupport, dstFolder);
   if (copyRequest && copyRequest->m_processed)
-	{
+  {
     ClearRequest(copyRequest, result);
-	}
+  }
 
   return rv;
 }
