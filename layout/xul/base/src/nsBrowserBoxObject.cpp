@@ -27,6 +27,7 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsIDocShell.h"
+#include "nsXPIDLString.h"
 
 class nsBrowserBoxObject : public nsIBrowserBoxObject, public nsBoxObject
 {
@@ -38,6 +39,7 @@ public:
   virtual ~nsBrowserBoxObject();
   
 protected:
+  nsString* mSrcURL;
 };
 
 /* Implementation file */
@@ -60,6 +62,7 @@ nsBrowserBoxObject::QueryInterface(REFNSIID iid, void** aResult)
 }
   
 nsBrowserBoxObject::nsBrowserBoxObject()
+:mSrcURL(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -67,6 +70,7 @@ nsBrowserBoxObject::nsBrowserBoxObject()
 nsBrowserBoxObject::~nsBrowserBoxObject()
 {
   /* destructor code */
+  delete mSrcURL;
 }
 
 /* void openBrowser (in boolean openFlag); */

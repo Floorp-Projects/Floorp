@@ -36,6 +36,12 @@ interface nsIBoxObject : nsISupports
   readonly attribute long y;
   readonly attribute long width;
   readonly attribute long height;
+
+  nsISupports getPropertyAsSupports(in wstring propertyName);
+  void setPropertyAsSupports(in wstring propertyName, in nsISupports value);
+  wstring getProperty(in wstring propertyName);
+  void setProperty(in wstring propertyName, in wstring propertyValue);
+  void removeProperty(in wstring propertyName);
 };
 
 %{C++

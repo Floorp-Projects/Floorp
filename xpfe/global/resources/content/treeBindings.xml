@@ -419,7 +419,7 @@
       <handler event="click" clickcount="2">
       <![CDATA[
          if (event.originalTarget.localName == 'treecell') {
-           var n = event.target.parentNode.parentNode;
+           var n = event.originalTarget.parentNode.parentNode;
            n.toggleOpenState();
          }
       ]]>

@@ -18,6 +18,8 @@ class nsPresState: public nsIPresState
   NS_IMETHOD GetStateProperty(const nsAReadableString& aProperty, nsAWritableString& aResult);
   NS_IMETHOD SetStateProperty(const nsAReadableString& aProperty, const nsAReadableString& aValue);
 
+  NS_IMETHOD RemoveStateProperty(const nsAReadableString& aProperty);
+
 public:
   nsPresState();
   virtual ~nsPresState();
@@ -94,6 +96,19 @@ nsPresState::SetStateProperty(const nsAReadableString& aName, const nsAReadableS
   supportsStr->SetData(nsPromiseFlatString(aValue).get());
 
   mPropertyTable->Put(&key, supportsStr);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresState::RemoveStateProperty(const nsAReadableString& aName)
+{
+  if (!mPropertyTable)
+    return NS_OK;
+
+  nsAutoString keyStr(aName);
+  nsStringKey key(keyStr);
+
+  mPropertyTable->Remove(&key);
   return NS_OK;
 }
 

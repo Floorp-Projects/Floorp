@@ -21,6 +21,8 @@ public:
 			      nsAWritableString& aResult) = 0;
   NS_IMETHOD SetStateProperty(const nsAReadableString& aProperty,
 			      const nsAReadableString& aValue) = 0;
+
+  NS_IMETHOD RemoveStateProperty(const nsAReadableString& aName) = 0;
 };
 
 extern nsresult

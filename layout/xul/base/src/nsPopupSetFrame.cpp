@@ -569,7 +569,7 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
 
   }
   else {
-    if (!OnDestroy())
+    if (mCreateHandlerSucceeded && !OnDestroy())
       return;
 
     // Unregister, but not if we're a tooltip
