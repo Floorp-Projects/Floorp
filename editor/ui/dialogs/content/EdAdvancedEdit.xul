@@ -34,11 +34,10 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EdAdvancedEdit.dtd">
 <window class="dialog" title="&WindowTitle.label;"
-    width="450" height="390"
-    persist="width height"
+    style="width: 40em;"
     xmlns ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/1999/xhtml"
-    onload = "Startup()"
+    onload="Startup()"
     orient="vertical">
 
   <keyset id="keyset"/>
@@ -89,12 +88,13 @@
             context="attlistPopup">
             <treecols>
               <treecol flex="35" width="0"/>
+              <splitter class="tree-splitter"/>
               <treecol flex="65" width="0"/>
             </treecols>
             <treehead>
               <treerow>
-                <treecell class="treecell-outset-header" value="&tree.attributeHeader.label;"/>
-                <treecell class="treecell-outset-header" value="&tree.valueHeader.label;"/>
+                <treecell class="treecell-inset-header" value="&tree.attributeHeader.label;"/>
+                <treecell class="treecell-inset-header" value="&tree.valueHeader.label;"/>
               </treerow>
             </treehead>
             <treechildren id="HTMLAList" flex="1"/>
@@ -120,12 +120,13 @@
           <tree id="CSSATree" class="AttributesTree inset" flex="1" context="attlistPopup">
             <treecolgroup>
               <treecol flex="35" width="0"/>
+              <splitter class="tree-splitter"/>
               <treecol flex="65" width="0"/>
             </treecolgroup>
             <treehead>
               <treerow>
-                <treecell class="treecell-outset-header" value="&tree.attributeHeader.label;"/>
-                <treecell class="treecell-outset-header" value="&tree.valueHeader.label;"/>
+                <treecell class="treecell-inset-header" value="&tree.attributeHeader.label;"/>
+                <treecell class="treecell-inset-header" value="&tree.valueHeader.label;"/>
               </treerow>
             </treehead>
             <treechildren id="CSSAList" flex="1"/>
@@ -151,12 +152,13 @@
           <tree id="JSEATree" class="AttributesTree inset" flex="1" context="attlistPopup">
             <treecolgroup>
               <treecol flex="35" width="0"/>
+              <splitter class="tree-splitter"/>
               <treecol flex="65" wdith="0"/>
             </treecolgroup>
             <treehead>
               <treerow>
-                <treecell class="treecell-outset-header" value="&tree.attributeHeader.label;"/>
-                <treecell class="treecell-outset-header" value="&tree.valueHeader.label;"/>
+                <treecell class="treecell-inset-header" value="&tree.attributeHeader.label;"/>
+                <treecell class="treecell-inset-header" value="&tree.valueHeader.label;"/>
               </treerow>
             </treehead>
             <treechildren id="JSEAList" flex="1"/>
@@ -179,6 +181,8 @@
     </tabpanel>
   </tabcontrol>
 
+  <separator/>
+  
   <box id="okCancelButtonsRight"/> 
 
 </window>

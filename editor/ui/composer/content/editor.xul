@@ -158,7 +158,8 @@
     <button id="namedAnchorButton"/>
     <spring flex="1"/>
 
-    <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("editor.throbber.url")'>
+    <button id="navigator-throbber" oncommand="goClickThrobber('editor.throbber.url')">
+      <!-- tooltip="aTooltip" tooltiptext="&throbber.tooltip; -->
       <observes element="Editor:Throbber" attribute="busy"/>
     </button>
   </toolbar>
@@ -233,25 +234,17 @@
     </toolbar>
 
     <!-- Some of this is from globarOverlay.xul -->
-    <box id="status-bar" class="chromeclass-status">
-      <box flex="1" style="min-width: 1px">
-        <box orient="vertical" style="width:100px">
-          <spring flex="1"/>
-          <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0">
-              <observes element="Editor:Throbber" attribute="busy"/>
-          </progressmeter>
-          <spring flex="1"/>
-        </box>
-        <spring style="width: 1em"/>
-        <text id="statusText" class="status-bar" align="left" flex="1" 
-          value="&statusText.label;"  style="min-width: 1px"/>
-        <!-- This is used for buildID in browser --> 
-        <text class="status-bar" align="left"/>
-        <text id="lock-button" class="borderless" align="left"/>    
-      </box>
-    </box><!-- status-bar -->
+    <statusbar id="status-bar">
+      <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
+      <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0">
+          <observes element="Editor:Throbber" attribute="busy"/>
+      </progressmeter>
+      <statusbarpanel id="statusText" value="&statusText.label;" flex="1" crop="right"/>
+    </statusbar>
+    
   </box> <!-- appcontent -->
 </box><!-- sidebar-parent -->
+
 <box id="taskbar" class="toolbox-bottom"/>
 
 </window>
