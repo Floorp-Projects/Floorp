@@ -51,6 +51,7 @@
 #include "nsUCvCnDll.h"
 #include "gbku.h"
 #include "uconvutil.h"
+#include "nsUnicharUtils.h"
 
 //-------------------------------------------------------------
 // Global table initialization function defined in gbku.h
@@ -149,8 +150,6 @@ NS_IMETHODIMP nsUnicodeToGB18030::GetMaxLength(const PRUnichar * aSrc,
   *aDestLength = 4 * aSrcLength;
   return NS_OK;
 }
-#define IS_HIGH_SURROGATE(u) (((PRUnichar)0xD800 <= (u)) && ((u) <= (PRUnichar)0xDBFF))
-#define IS_LOW_SURROGATE(u) (((PRUnichar)0xDC00 <= (u)) && ((u) <= (PRUnichar)0xDFFF))
 PRBool nsUnicodeToGB18030::EncodeSurrogate(
   PRUnichar aSurrogateHigh,
   PRUnichar aSurrogateLow,
