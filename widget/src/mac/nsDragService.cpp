@@ -245,8 +245,8 @@ printf("**** created drag ref %ld\n", theDragRef);
   // see it if you're paying attention, but who pays such close attention?
   Rect dragRect;
   ::GetRegionBounds(theDragRgn, &dragRect);
-  theEvent.where.v = round(dragRect.top + (dragRect.bottom - dragRect.top) / 2);
-  theEvent.where.h = round(dragRect.left + (dragRect.right - dragRect.left) / 2);
+  theEvent.where.v = rint(dragRect.top + (dragRect.bottom - dragRect.top) / 2);
+  theEvent.where.h = rint(dragRect.left + (dragRect.right - dragRect.left) / 2);
 
   // register drag send proc which will call us back when asked for the actual
   // flavor data (instead of placing it all into the drag manager)
