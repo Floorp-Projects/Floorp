@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
   char *  iconic_state=nsnull;
 
   PRInt32 widthVal  = 615;
-  PRInt32 heightVal = 650;
+  PRInt32 heightVal = 480;
 
   nsIAppShellService* appShell;
   nsIDOMAppCoresManager *appCoresManager;
