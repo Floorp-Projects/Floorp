@@ -71,6 +71,7 @@
 #include "nsIDOMUIEvent.h"
 #include "nsIPresShell.h"
 #include "nsIEventStateManager.h"
+#include "nsStyleUtil.h"
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kTextCID, NS_TEXTFIELD_CID);
@@ -98,10 +99,6 @@ static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
 //#define NOISY
 const nscoord kSuggestedNotSet = -1;
-
-#define kTextControl_Wrap_Soft "SOFT"
-#define kTextControl_Wrap_Hard "HARD"
-#define kTextControl_Wrap_Off  "OFF"
 
 
 extern nsresult NS_NewNativeTextControlFrame(nsIFrame** aNewFrame); 
@@ -630,12 +627,11 @@ void nsGfxTextControlFrame::GetTextControlFrameState(nsString& aValue)
       flags |= nsIDocumentEncoder::OutputBodyOnly;   // OutputNoDoctype if head info needed
     }
 
-    nsString wrap;
-    nsresult result = GetWrapProperty(wrap);
+    nsFormControlHelper::nsHTMLTextWrap wrapProp;
+    nsresult result = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
     if (NS_CONTENT_ATTR_NOT_THERE != result) 
     {
-      nsAutoString wrapHard(kTextControl_Wrap_Hard);
-      if (wrap.EqualsIgnoreCase(wrapHard))
+      if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Hard)
       {
         flags |= nsIDocumentEncoder::OutputFormatted;
       }
@@ -947,6 +943,31 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
       spacing->CalcPaddingFor(this, padding);
       aDesiredSize.width  += padding.left + padding.right;
       aDesiredSize.height += padding.top + padding.bottom;
+      // check to see if style was responsible 
+      // for setting the height or the width
+      PRBool addBorder = PR_FALSE;
+      PRInt32 width;
+      if (NS_CONTENT_ATTR_HAS_VALUE == GetSizeFromContent(&width)) {
+        addBorder = (width < GetDefaultColumnWidth());
+      }
+
+      if (addBorder) {
+        nsSize styleSize;
+        GetStyleSize(aPresContext, aReflowState, styleSize);
+        if (CSS_NOTSET != styleSize.width || 
+            CSS_NOTSET != styleSize.height) {  // css provides width
+          nsMargin border;
+          border.SizeTo(0, 0, 0, 0);
+          spacing->CalcBorderFor(this, border);
+          if (CSS_NOTSET != styleSize.width) {  // css provides width
+            aDesiredSize.width  += border.left + border.right;
+          }
+          if (CSS_NOTSET != styleSize.height) {  // css provides heigth
+            aDesiredSize.height += border.top + border.bottom;
+          }
+        }
+      }
+
     } else {
       rv = nsLeafFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
     }
@@ -1008,15 +1029,60 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
                  ("exit nsGfxTextControlFrame::Reflow: size=%d,%d",
                   aDesiredSize.width, aDesiredSize.height));
 
-
+// This code below will soon be changed over for NSPR logging
+// It is used to figure out what font and font size the textarea or text field
+// are and compares it to the know NavQuirks size
 #ifdef DEBUG_rods
   {
-    PRInt32 type;
-    GetType(&type);
-    if (NS_FORM_TEXTAREA == type) {
-      COMPARE_QUIRK_SIZE("nsGfxText(textarea)", 184, 48)  // text area
+    nsFont font(aPresContext.GetDefaultFixedFontDeprecated());
+    GetFont(&aPresContext, font);
+    nsCOMPtr<nsIDeviceContext> deviceContext;
+    aPresContext.GetDeviceContext(getter_AddRefs(deviceContext));
+
+    nsIFontMetrics* fontMet;
+    deviceContext->GetMetricsFor(font, fontMet);
+
+    const nsFont& normal = aPresContext.GetDefaultFixedFontDeprecated();
+    PRInt32 scaler;
+    aPresContext.GetFontScaler(&scaler);
+    float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
+    PRInt32 fontSize = nsStyleUtil::FindNextSmallerFontSize(font.size, (PRInt32)normal.size, 
+                                                            scaleFactor)+1;
+    PRBool doMeasure = PR_FALSE;
+    nsILookAndFeel::nsMetricNavFontID fontId;
+
+    nsFont defFont(aPresContext.GetDefaultFixedFontDeprecated());
+    if (font.name == defFont.name) {
+      fontId    = nsILookAndFeel::eMetricSize_Courier;
+      doMeasure = PR_TRUE;
     } else {
-      COMPARE_QUIRK_SIZE("nsGfxText(field)", 176, 24)  // text field
+      nsAutoString sansSerif("sans-serif");
+      if (font.name == sansSerif) {
+        fontId    = nsILookAndFeel::eMetricSize_SansSerif;
+        doMeasure = PR_TRUE;
+      }
+    }
+    NS_RELEASE(fontMet);
+
+    if (doMeasure) {
+      nsCOMPtr<nsILookAndFeel> lf;
+      aPresContext.GetLookAndFeel(getter_AddRefs(lf));
+
+      PRInt32 type;
+      GetType(&type);
+      if (NS_FORM_TEXTAREA == type) {
+        if (fontSize > -1) {
+          nsSize size;
+          lf->GetNavSize(nsILookAndFeel::eMetricSize_TextArea, fontId, fontSize, size);
+          COMPARE_QUIRK_SIZE("nsGfxText(textarea)", size.width, size.height)  // text area
+        }
+      } else {
+        if (fontSize > -1) {
+          nsSize size;
+          lf->GetNavSize(nsILookAndFeel::eMetricSize_TextField, fontId, fontSize, size);
+          COMPARE_QUIRK_SIZE("nsGfxText(field)", size.width, size.height)  // text field
+        }
+      }
     }
   }
 #endif
@@ -1387,18 +1453,16 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
     }
     else
     { // if WRAP="OFF", turn wrapping off in the editor
-      nsString wrap;
-      result = GetWrapProperty(wrap);
+      nsFormControlHelper::nsHTMLTextWrap wrapProp;
+      nsresult result = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
       if (NS_CONTENT_ATTR_NOT_THERE != result) 
       {
-        nsAutoString wrapOff(kTextControl_Wrap_Off);
-        if (wrap.EqualsIgnoreCase(wrapOff))
+        if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Off)
         {
           result = mailEditor->SetBodyWrapWidth(-1);
           wrapToContainerWidth = PR_FALSE;
         }
-        nsAutoString wrapHard(kTextControl_Wrap_Hard);
-        if (wrap.EqualsIgnoreCase(wrapHard))
+        if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Hard)
         {
           PRInt32 widthInCharacters = GetWidthInCharacters();
           result = mailEditor->SetBodyWrapWidth(widthInCharacters);
