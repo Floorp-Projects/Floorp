@@ -41,6 +41,8 @@ public:
 	NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIMESSAGE
   NS_DECL_NSIDBMESSAGE
+
+	NS_IMETHOD Init(const char *aURI);
 	//nsIMsgHdr
 	NS_IMETHOD GetProperty(const char *propertyName, nsString &resultProperty);
     NS_IMETHOD SetProperty(const char *propertyName, nsString &propertyStr);

@@ -52,6 +52,14 @@ NS_IMETHODIMP nsMessage::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 	return nsRDFResource::QueryInterface(aIID, aInstancePtr);
 }
 
+NS_IMETHODIMP
+nsMessage::Init(const char* aURI)
+{
+
+	return nsRDFResource::Init(aURI);
+}
+
+
 NS_IMETHODIMP nsMessage::GetProperty(const char *propertyName, nsString &resultProperty)
 {
 	if(mMsgHdr)
