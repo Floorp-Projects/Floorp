@@ -75,7 +75,7 @@ protected:
 class FrameLoadingInfo : public nsISupports
 {
 public:
-  FrameLoadingInfo(nsSize& aSize);
+  FrameLoadingInfo(const nsSize& aSize);
 
   // nsISupports interface...
   NS_DECL_ISUPPORTS
@@ -131,8 +131,6 @@ protected:
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
                               nsReflowMetrics& aDesiredSize);
-
-  void CreateWebWidget(nsSize aSize, nsString& aURL); 
 
   nsIWebWidget* mWebWidget;
   nsIDocumentLoader* mDocLoader;
@@ -301,78 +299,6 @@ void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
   NS_IF_RELEASE(docURL);
 }
 
-void nsHTMLIFrameFrame::CreateWebWidget(nsSize aSize, nsString& aURL) 
-{
-  nsHTMLIFrame* content = (nsHTMLIFrame*)mContent;
-
-  // create the web widget, set its name
-  NSRepository::CreateInstance(kCWebWidgetCID, nsnull, kIWebWidgetIID, (void**)&mWebWidget);
-  if (nsnull != mWebWidget) {
-    nsString frameName;
-    if (content->GetName(frameName)) {
-      mWebWidget->SetName(frameName);
-    }
-  }
-  else {
-    NS_ASSERTION(0, "could not create web widget");
-    return;
-  }
-
-  nsresult result;
-
-  // set the web widget parentage
-  nsIWebWidget* parentWebWidget = content->mParentWebWidget;
-  parentWebWidget->AddChild(mWebWidget);
-
-
-  // Get the view manager, conversion
-  float t2p = 0.0f;
-  nsIViewManager* viewMan = nsnull;
-
-  nsIPresContext* presContext = parentWebWidget->GetPresContext();
-  t2p = presContext->GetTwipsToPixels();
-  nsIPresShell *presShell = presContext->GetShell();     
-	viewMan = presShell->GetViewManager();  
-  NS_RELEASE(presShell);
-  NS_RELEASE(presContext);
-  //NS_RELEASE(parentWebWidget);
-
-
-  // create, init, set the parent of the view
-  nsIView* view;
-	result = NSRepository::CreateInstance(kCViewCID, nsnull, kIViewIID,
-                                        (void **)&view);
-	if (NS_OK != result) {
-	  NS_ASSERTION(0, "Could not create view for nsHTMLIFrame"); 
-    return;
-	}
-
-  nsIView* parView;
-  nsPoint origin;
-  GetOffsetFromView(origin, parView);  
-  nsRect viewBounds(origin.x, origin.y, aSize.width, aSize.height);
-
-  result = view->Init(viewMan, viewBounds, parView, &kCChildCID);
-  viewMan->InsertChild(parView, view, 0);
-  NS_RELEASE(viewMan);
-  SetView(view);
-  NS_RELEASE(parView);
- 
-  // init the web widget
-  nsIWidget* widget = view->GetWidget();
-  NS_RELEASE(view);
-  nsRect webBounds(0, 0, NS_TO_INT_ROUND(aSize.width * t2p), 
-                   NS_TO_INT_ROUND(aSize.height * t2p));
-  mWebWidget->Init(widget->GetNativeData(NS_NATIVE_WIDGET), webBounds, 
-                   content->GetScrolling());
-  NS_RELEASE(widget);
-
-  // load the document
-  nsString absURL;
-  TempMakeAbsURL(mContent, aURL, absURL);
-  mWebWidget->LoadURL(absURL, mTempObserver);
-}
-
 NS_IMETHODIMP
 nsHTMLIFrameFrame::Embed(nsIDocumentWidget* aDocViewer, 
                          const char* aCommand,
@@ -438,6 +364,7 @@ nsHTMLIFrameFrame::Embed(nsIDocumentWidget* aDocViewer,
   rv = view->Init(viewMan, viewBounds, parView, &kCChildCID);
   viewMan->InsertChild(parView, view, 0);
   NS_RELEASE(viewMan);
+  SetView(view);
   NS_RELEASE(parView);
 
   // init the web widget
@@ -466,6 +393,9 @@ nsHTMLIFrameFrame::Reflow(nsIPresContext*      aPresContext,
 {
   nsresult rv = NS_OK;
 
+  // Always get the size so that the caller knows how big we are
+  GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
+
   if ((nsnull == mWebWidget) && (!mCreatingViewer)) {
     FrameLoadingInfo *frameInfo;
 
@@ -473,11 +403,7 @@ nsHTMLIFrameFrame::Reflow(nsIPresContext*      aPresContext,
     nsAutoString url;
     content->GetURL(url);
     nsSize size;
-/// nsSize size(aDesiredSize.width, aDesiredSize.height);
-/// CreateWebWidget(size, url);
-/// mWebWidget->Show();
 
-    GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
     size.SizeTo(aDesiredSize.width, aDesiredSize.height);
 
     frameInfo = new FrameLoadingInfo(size);
@@ -642,7 +568,7 @@ NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
 
 
 
-FrameLoadingInfo::FrameLoadingInfo(nsSize& aSize)
+FrameLoadingInfo::FrameLoadingInfo(const nsSize& aSize)
 {
   NS_INIT_REFCNT();
 
