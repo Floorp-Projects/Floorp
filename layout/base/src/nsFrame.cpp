@@ -28,6 +28,9 @@
 #include "nsStyleConsts.h"
 #include "nsReflowCommand.h"
 #include "nsIPresShell.h"
+#include "prlog.h"
+#include "prprf.h"
+#include <stdarg.h>
 
 #define DO_SELECTION 0
 
@@ -75,8 +78,6 @@ void PrintIndex(char * aStr, nsIContent * aContent);
 
 
 
-static PRBool gShowFrameBorders = PR_FALSE;
-
 
 // Initialize Global Selection Data
 nsIFrame *  nsFrame::mCurrentFrame   = nsnull;
@@ -91,6 +92,9 @@ nsISelection     * nsFrame::mSelection           = nsnull;
 nsSelectionPoint * nsFrame::mStartSelectionPoint = nsnull;
 nsSelectionPoint * nsFrame::mEndSelectionPoint   = nsnull;
 
+//----------------------------------------------------------------------
+
+static PRBool gShowFrameBorders = PR_FALSE;
 
 NS_LAYOUT void nsIFrame::ShowFrameBorders(PRBool aEnable)
 {
@@ -101,6 +105,46 @@ NS_LAYOUT PRBool nsIFrame::GetShowFrameBorders()
 {
   return gShowFrameBorders;
 }
+
+/**
+ * Note: the log module is created during library initialization which
+ * means that you cannot perform logging before then.
+ */
+PRLogModuleInfo* nsIFrame::gLogModule = PR_NewLogModule("frame");
+
+static PRLogModuleInfo* gFrameVerifyTreeLogModuleInfo;
+
+static PRBool gFrameVerifyTreeEnable = PRBool(0x55);
+
+NS_LAYOUT PRBool
+nsIFrame::GetVerifyTreeEnable()
+{
+#ifdef NS_DEBUG
+  if (gFrameVerifyTreeEnable == PRBool(0x55)) {
+    if (nsnull == gFrameVerifyTreeLogModuleInfo) {
+      gFrameVerifyTreeLogModuleInfo = PR_NewLogModule("frameverifytree");
+      gFrameVerifyTreeEnable = 0 != gFrameVerifyTreeLogModuleInfo->level;
+      printf("Note: frameverifytree is %sabled\n",
+             gFrameVerifyTreeEnable ? "en" : "dis");
+    }
+  }
+#endif
+  return gFrameVerifyTreeEnable;
+}
+
+NS_LAYOUT void
+nsIFrame::SetVerifyTreeEnable(PRBool aEnabled)
+{
+  gFrameVerifyTreeEnable = aEnabled;
+}
+
+NS_LAYOUT PRLogModuleInfo*
+nsIFrame::GetLogModuleInfo()
+{
+  return gLogModule;
+}
+
+//----------------------------------------------------------------------
 
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
@@ -132,7 +176,6 @@ void* nsFrame::operator new(size_t size)
 nsFrame::nsFrame(nsIContent* aContent, nsIFrame*   aParent)
   : mContent(aContent), mContentParent(aParent), mGeometricParent(aParent)
 {
-
   NS_ADDREF(mContent);
 }
 
@@ -947,6 +990,7 @@ nsFrame::SetFrameState(nsFrameState aNewState)
 NS_METHOD
 nsFrame::WillReflow(nsIPresContext& aPresContext)
 {
+  NS_FRAME_TRACE_MSG(("WillReflow: oldState=%x", mState));
   mState |= NS_FRAME_IN_REFLOW;
   return NS_OK;
 }
@@ -955,6 +999,7 @@ NS_METHOD
 nsFrame::DidReflow(nsIPresContext& aPresContext,
                    nsDidReflowStatus aStatus)
 {
+  NS_FRAME_TRACE_MSG(("nsFrame::DidReflow: aStatus=%d", aStatus));
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     mState &= ~NS_FRAME_IN_REFLOW;
   }
@@ -1761,6 +1806,7 @@ void RefreshFromContentTrackers(nsIPresContext& aPresContext) {
   fflush(fd);
   fclose(fd);*/
 
+
   PRInt32 i;
   nsIPresShell * shell = aPresContext.GetShell();
   for (i=0;i<fTrackerRemoveListMax;i++) {
@@ -1835,3 +1881,63 @@ void PrintIndex(char * aStr, nsIContent * aContent) {
     }
   }
 }
+
+#ifdef NS_DEBUG
+static void
+GetTagName(nsFrame* aFrame, nsIContent* aContent, PRIntn aResultSize,
+           char* aResult)
+{
+  char namebuf[40];
+  namebuf[0] = 0;
+  if (nsnull != aContent) {
+    nsIAtom* tag = aContent->GetTag();
+    if (nsnull != tag) {
+      nsAutoString tmp;
+      tag->ToString(tmp);
+      tmp.ToCString(namebuf, sizeof(namebuf));
+      NS_RELEASE(tag);
+    }
+  }
+  PR_snprintf(aResult, aResultSize, "%s@%p", namebuf, aFrame);
+}
+
+void
+nsFrame::Trace(const char* aMethod, PRBool aEnter)
+{
+  if (NS_FRAME_LOG_TEST(gLogModule, NS_FRAME_TRACE_CALLS)) {
+    char tagbuf[40];
+    GetTagName(this, mContent, sizeof(tagbuf), tagbuf);
+    PR_LogPrint("%s: %s %s", tagbuf, aEnter ? "enter" : "exit", aMethod);
+  }
+}
+
+void
+nsFrame::Trace(const char* aMethod, PRBool aEnter, nsReflowStatus aStatus)
+{
+  if (NS_FRAME_LOG_TEST(gLogModule, NS_FRAME_TRACE_CALLS)) {
+    char tagbuf[40];
+    GetTagName(this, mContent, sizeof(tagbuf), tagbuf);
+    PR_LogPrint("%s: %s %s, status=%scomplete%s",
+                tagbuf, aEnter ? "enter" : "exit", aMethod,
+                NS_FRAME_IS_NOT_COMPLETE(aStatus) ? "not" : "",
+                (NS_FRAME_REFLOW_NEXTINFLOW & aStatus) ? "+reflow" : "");
+  }
+}
+
+void
+nsFrame::TraceMsg(const char* aFormatString, ...)
+{
+  if (NS_FRAME_LOG_TEST(gLogModule, NS_FRAME_TRACE_CALLS)) {
+    // Format arguments into a buffer
+    char argbuf[200];
+    va_list ap;
+    va_start(ap, aFormatString);
+    PR_vsnprintf(argbuf, sizeof(argbuf), aFormatString, ap);
+    va_end(ap);
+
+    char tagbuf[40];
+    GetTagName(this, mContent, sizeof(tagbuf), tagbuf);
+    PR_LogPrint("%s: %s", tagbuf, argbuf);
+  }
+}
+#endif
