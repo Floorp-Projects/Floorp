@@ -113,6 +113,8 @@ function CompFields2Recipients(msgCompFields, msgType)
 	    var newTreeChildrenNode = treeChildren.cloneNode(false);
 	    var templateNode = treeChildren.firstChild;
 		
+		top.MAX_RECIPIENTS = 0;
+
 		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.GetReplyTo(), false), "addr_reply", newTreeChildrenNode, templateNode);
 		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.GetTo(), false), "addr_to", newTreeChildrenNode, templateNode);
 		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.GetCc(), false), "addr_cc", newTreeChildrenNode, templateNode);
