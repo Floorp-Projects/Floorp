@@ -496,6 +496,64 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 
 			case inZoomIn:
 			case inZoomOut:
+				GrafPtr		savePort;
+				WindowPeek	wPeek = (WindowPeek)whichWindow;
+				GDHandle	gdNthDevice;
+				GDHandle	gdZoomDevice;
+				Rect		windRect;
+				Rect		theSect;
+				Rect		tempRect;
+				Rect		zoomRect;
+				short		wTitleHeight;
+				long		sectArea, greatestArea = 0;
+				Boolean		sectFlag;
+				
+				GetPort(&savePort);
+				SetPort(whichWindow);
+				EraseRect(&whichWindow->portRect);
+				
+				if (partCode == inZoomOut)
+				{
+					windRect = whichWindow->portRect;
+					LocalToGlobal((Point *)&windRect.top);
+					LocalToGlobal((Point *)&windRect.bottom);
+					wTitleHeight = windRect.top - 1 - (*(wPeek->strucRgn))->rgnBBox.top;
+					windRect.top -= wTitleHeight;
+					gdNthDevice = GetDeviceList();
+					while (gdNthDevice)
+					{
+						if (TestDeviceAttribute(gdNthDevice, screenDevice))
+							if (TestDeviceAttribute(gdNthDevice, screenActive))
+							{
+								sectFlag = SectRect(&windRect, &(**gdNthDevice).gdRect, &theSect);
+								sectArea = (theSect.right - theSect.left) * (theSect.bottom - theSect.top);
+								if (sectArea > greatestArea)
+								{
+									greatestArea = sectArea;
+									gdZoomDevice = gdNthDevice;
+								}
+							}
+						gdNthDevice = GetNextDevice(gdNthDevice);
+					}
+					if (gdZoomDevice == GetMainDevice())
+						wTitleHeight += GetMBarHeight();
+					tempRect = (**gdZoomDevice).gdRect;
+					SetRect(&zoomRect,
+						tempRect.left + 3,
+						tempRect.top + wTitleHeight + 3,
+						tempRect.right - 64,
+						tempRect.bottom - 3);
+					(**(WStateDataHandle)(wPeek->dataHandle)).stdState = zoomRect;
+				}
+				
+				SetPort(savePort);
+				
+				// !!!	Do not call ZoomWindow before calling DispatchOSEventToRaptor
+				// 		otherwise nsMacEventHandler::HandleMouseDownEvent won't get
+				//		the right partcode for the click location
+				
+				DispatchOSEventToRaptor(anEvent, whichWindow);
+				
 				break;
 	}
 }
