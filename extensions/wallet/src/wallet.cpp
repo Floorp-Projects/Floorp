@@ -1050,7 +1050,7 @@ Wallet_Encrypt (nsAutoString text, nsAutoString& crypt) {
   }
   
   /* encrypt text to crypt */
-  char * cryptCString;
+  char * cryptCString = nsnull;
   char * UTF8textCString = UTF8text.ToNewCString();
 #if TESTING_CRYPTO
   nsresult rv = EncryptString(UTF8textCString, cryptCString);
