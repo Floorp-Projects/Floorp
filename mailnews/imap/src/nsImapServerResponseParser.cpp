@@ -418,11 +418,10 @@ void nsImapServerResponseParser::ProcessOkCommand(const char *commandToken)
 				{
 					PR_LOG(IMAP, PR_LOG_ALWAYS, 
                            ("BODYSHELL:  Adding shell to cache."));
-                    char *userName = fServerConnection.GetImapUserName();
+                    const char *userName = fServerConnection.GetImapUserName();
 					fHostSessionList->AddShellToCacheForHost(
                         fServerConnection.GetImapHostName(), userName,
                         m_shell);
-                    PR_FREEIF(userName);
 				}
 			}
 			else
@@ -790,7 +789,7 @@ void nsImapServerResponseParser::mailbox_list(PRBool discoveredFromLsub)
 void nsImapServerResponseParser::mailbox(mailbox_spec *boxSpec)
 {
 	char *boxname = nsnull;
-    char *userName = fServerConnection.GetImapUserName();
+    const char *userName = fServerConnection.GetImapUserName();
     const char* hostName = fServerConnection.GetImapHostName();
 	
 	if (!PL_strcasecmp(fNextToken, "INBOX"))
@@ -868,7 +867,6 @@ void nsImapServerResponseParser::mailbox(mailbox_spec *boxSpec)
 		if (fServerConnection.GetConnectionStatus() < 0)
 			SetConnected(PR_FALSE);
 	}
-    PR_FREEIF(userName);
 }
 
 
@@ -1652,14 +1650,13 @@ void nsImapServerResponseParser::capability_data()
 			 !at_end_of_line() &&
 			 ContinueParse());
 
-    char* userName = fServerConnection.GetImapUserName();
+    const char* userName = fServerConnection.GetImapUserName();
 
     if (fHostSessionList)
         fHostSessionList->SetCapabilityForHost(
             fServerConnection.GetImapHostName(), 
             userName,
             fCapabilityFlag);
-    PR_FREEIF(userName);
 	nsImapProtocol *navCon = &fServerConnection;
 	NS_ASSERTION(navCon, "null imap protocol connection while parsing capability response");	// we should always have this
 	if (navCon)
@@ -1727,7 +1724,7 @@ void nsImapServerResponseParser::namespace_data()
 	EIMAPNamespaceType namespaceType = kPersonalNamespace;
 	PRBool namespacesCommitted = PR_FALSE;
     const char* hostName = fServerConnection.GetImapHostName();
-    char* userName = fServerConnection.GetImapUserName();
+    const char* userName = fServerConnection.GetImapUserName();
 	while ((namespaceType != kUnknownNamespace) && ContinueParse())
 	{
 		fNextToken = GetNextToken();
@@ -1830,8 +1827,6 @@ void nsImapServerResponseParser::namespace_data()
                                                             userName,
                                                             success);
 	}
-
-    PR_FREEIF(userName);
 }
 
 void nsImapServerResponseParser::myrights_data()
@@ -2057,12 +2052,11 @@ void nsImapServerResponseParser::ResetCapabilityFlag()
 {
     if (fHostSessionList)
     {
-        char* userName = fServerConnection.GetImapUserName();
+        const char* userName = fServerConnection.GetImapUserName();
 
         fHostSessionList->SetCapabilityForHost(
             fServerConnection.GetImapHostName(), userName,
             kCapabilityUndefined);
-        PR_FREEIF(userName);
     }
 }
 
@@ -2229,11 +2223,10 @@ struct mailbox_spec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const 
 			nsIMAPNamespace *ns = nsnull;
 			if (host != nsnull && fHostSessionList)
 			{
-                char* userName = fServerConnection.GetImapUserName();
+                const char* userName = fServerConnection.GetImapUserName();
 				fHostSessionList->GetNamespaceForMailboxForHost(host, 
                            userName, mailboxNameToConvert, ns);	// for
                                                                 // delimiter
-                PR_FREEIF(userName);
 			}
 
 			if (ns)
