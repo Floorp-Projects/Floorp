@@ -197,8 +197,8 @@ const int kDisableAllCookies = 2;
     nsCOMPtr<nsISupports> rowItem = dont_AddRef(mCachedPermissions->ElementAt(row));
     nsCOMPtr<nsIPermission> perm ( do_QueryInterface(rowItem) );
     if ( perm ) {
-      nsXPIDLCString host;
-      perm->GetHost(getter_Copies(host));
+      nsCAutoString host;
+      perm->GetHost(host);
       mManager->Remove(host, 0);           // could this api _be_ any worse? Come on!
       
       mCachedPermissions->RemoveElementAt(row);
@@ -230,15 +230,15 @@ const int kDisableAllCookies = 2;
     if ( perm ) {
       if ( [[aTableColumn identifier] isEqualToString:@"Website"] ) {
         // website url column
-        nsXPIDLCString host;
-        perm->GetHost(getter_Copies(host));
+        nsCAutoString host;
+        perm->GetHost(host);
         retVal = [NSString stringWithCString:host];
       }
       else {
         // allow/deny column
-        PRBool capability = PR_FALSE;			// false = deny, true = accept;
+        PRUInt32 capability = PR_FALSE;
         perm->GetCapability(&capability);
-        if ( capability )
+        if ( capability == nsIPermissionManager::ALLOW_ACTION)
           retVal = [self getLocalizedString:@"Allow"];
         else
           retVal = [self getLocalizedString:@"Deny"];
