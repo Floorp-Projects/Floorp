@@ -15,7 +15,7 @@
 
 <!ENTITY OKButton.label "OK">
 <!ENTITY CancelButton.label "Cancel">
-<!ENTITY MoreAttributesButton.label "More Attributes...">
+<!ENTITY AdvancedEditButton.label "Advanced Edit...">
 
 <!-- This button is for the progressive disclosure of additional editing functionality -->
 <!ENTITY AdditionalEditingButton.label "Advanced">
@@ -25,13 +25,14 @@
 <!ENTITY windowTitle.label "Link Properties">
 
 <!-- These are in the link source fieldset. -->
-<!ENTITY LinkSourceFieldset.label "Link Source">
-<!ENTITY LinkSourceText.label "Enter text to display for a new link:">
+<!ENTITY LinkText.label "Link text:">
+<!ENTITY LinkTextInput.label "Enter text to display for a new link:">
 
 <!-- These controls are in the Dimensions Fieldset of the advanced area -->
 <!ENTITY LinkURLFieldset.label "Link To">
 <!ENTITY LinkURLEditField.label "Enter a web page location or local file:">
 <!ENTITY LinkChooseFileButton.label "Choose File...">
+<!ENTITY RemoveLinkButton.label "Remove Link">
 
 ]>
 
@@ -49,29 +50,30 @@
   </script>
   <xul:broadcaster id="args" value=""/>
 
-  <fieldset><legend align="left"> &LinkSourceFieldset.label; </legend>
-    <xul:box align="vertical">
-      <xul:box> align="horizontal">
-  	    <label class="smallmargin" id="linkMessage" for="linkTextInput"> &LinkSourceText.label; </label>
-	    </xul:box>
-	    <input type="text" size="25" length="25" id="linkTextInput"></input>
-    </xul:box>
-  </fieldset>
+  <xul:box align="vertical">
+    <xul:box> align="horizontal">
+  	  <label class="smallmargin" id="linkMessage" for="linkTextMessage"> &LinkTextInput.label; </label>
+	  </xul:box>
+	  <input type="text" size="25" length="25" id="linkTextInput"></input>
+  </xul:box>
 
   <fieldset><legend align="left"> &LinkURLFieldset.label; </legend>
     <xul:box align="vertical">
       <xul:box align="horizontal">
   	    <label class="smallmargin" for="ChooseFile"> &LinkURLEditField.label; </label>
+        <xul:spring flex="100%"/>
+	      <button id="RemoveLink" onclick="RemoveLink()"> &RemoveLinkButton.label; </button>
 	    </xul:box>
 	    <xul:box align="horizontal">
   	    <input type="text" size="25" length="25" id="hrefInput"></input>
+        <xul:spring flex="100%"/>
 	      <button class="ChooseFile" id="ChooseFile" onclick="ChooseFile()"> &LinkChooseFileButton.label; </button>
       </xul:box>
     </xul:box>
  </fieldset>
 
   <xul:box>
-    <xul:titledbutton class="spaced" id="MoreAttributes" onclick="onMoreAttributes()" value="&MoreAttributesButton.label;"/>
+    <xul:titledbutton class="spaced" id="AdvancedEdit" onclick="onAdvancedEdit()" value="&AdvancedEditButton.label;"/>
     <xul:spring flex="100%"/>    
     <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="&OKButton.label;"/>  
     <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="&CancelButton.label;"/>

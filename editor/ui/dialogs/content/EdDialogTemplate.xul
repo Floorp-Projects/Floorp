@@ -19,7 +19,7 @@
   <xul:broadcaster id="args" value=""/>
   <hr width="100%"/>
   <xul:box>
-    <xul:titledbutton class="spaced" id="Advanced" onclick="onAdvanced()" value="More Attributes..."/>
+    <xul:titledbutton class="spaced" id="AdvancedEdit" onclick="onAdvanced()" value="Advanced Edit..."/>
     <xul:spring flex="100%"/>    
     <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="OK"/>  
     <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="Cancel"/>

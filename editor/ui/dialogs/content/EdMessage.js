@@ -10,15 +10,18 @@ function Startup()
 
   // Message is wrapped in a <div>
   // We will add child text node(s)
-  messageParent = (document.getElementById("message"));
-  messageText = window.arguments[1];
-  if (messageText && messageText.length > 0)
-  {
+  var messageParent = (document.getElementById("message"));
+  var messageText = String(window.arguments[1]);
+
+  if (StringExists(messageText)) {
+    var messageFragment;
+
     // Let the caller use "\n" to cause breaks
     // Translate these into <br> tags
+
     done = false;
     while (!done) {
-      breakIndex =   messageText.search(/\n/);
+      breakIndex =   messageText.indexOf('\n');
       if (breakIndex == 0) {
         // Ignore break at the first character
         messageText = messageText.slice(1);
@@ -48,77 +51,42 @@ function Startup()
     // We must have a message
     window.close();
   }
-  titleText = window.arguments[2];
-  if (titleText.length > 0) {
+
+  titleText = String(window.arguments[2]);
+  if (StringExists(titleText)) {
     dump(titleText+" is the message dialog title\n");
     window.title = titleText;
   }
-  
-  button1 = document.getElementById("button1");
-  button2 = document.getElementById("button2");
-  button3 = document.getElementById("button3");
-  button4 = document.getElementById("button4");
-  // All buttons must have the same parent
-  buttonParent = button1.parentNode;
+  // Set the button text from dialog arguments  
+  //  if first button doesn't have text, use "OK"
+  InitButton(3,"button1", true);
+  InitButton(4,"button2", false);
+  InitButton(5,"button3", false);
+  InitButton(6,"button4", false);
+}
 
-  button1Text = window.arguments[3];
-  if (button1Text && button1Text.length > 0)
-  {
-    dump(button1Text+"\n");
-    button1.setAttribute("value", button1Text);
-  } else {
-    // We must have at least one button!
-    window.close();
+function InitButton(argIndex, buttonID, useOK)
+{
+  var button = document.getElementById(buttonID);
+  var text = String(window.arguments[argIndex]);
+  var exists = StringExists(text);
+  if (!exists && useOK) {
+    text = "OK";
+    exists = true;
   }
 
-  button2Text = window.arguments[4];
-  if (button2Text && button2Text.length > 0)
+  if (exists)
   {
-    dump(button2Text+"\n");
-    button2.setAttribute("value", button2Text);
+    dump(text+"\n");
+    button.setAttribute("value", text);
   } else {
-    buttonParent.removeChild(button2);
-  }
-
-  button3Text = window.arguments[5];
-  if (button3Text && button3Text.length > 0)
-  {
-    dump(button3Text+"\n");
-    button3.setAttribute("value", button3Text);
-  } else {
-    buttonParent.removeChild(button3);
-  }
-
-  button4Text = window.arguments[6];
-  if (button4Text && button4Text.length > 0)
-  {
-    dump(button4Text+"\n");
-    button4.setAttribute("value", button4Text);
-  } else {
-    buttonParent.removeChild(button4);
+    var buttonParent = document.getElementById(buttonID).parentNode;
+    buttonParent.removeChild(button);
   }
 }
 
-function onButton1()
+function onButton(buttonNumber)
 {
-  window.opener.msgResult = 1;
-  window.close();
-}
-
-function onButton2()
-{
-  window.opener.msgResult = 2;
-  window.close();
-}
-
-function onButton3()
-{
-  window.opener.msgResult = 3;
-  window.close();
-}
-
-function onButton3()
-{
-  window.opener.msgResult = 4;
+  window.opener.msgResult = buttonNumber;
   window.close();
 }

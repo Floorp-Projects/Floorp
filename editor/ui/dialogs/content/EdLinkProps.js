@@ -4,11 +4,13 @@ var insertNew = true;
 var needLinkText = false;
 var selection;
 var insertLinkAroundSelection = false;
+var linkTextInput;
+var hrefInput;
+var linkMessage;
 
 // NOTE: Use "href" instead of "a" to distinguish from Named Anchor
 // The returned node is has an "a" tagName
 var tagName = "href";
-var dialog;
 
 // dialog initialization code
 function Startup()
@@ -16,17 +18,15 @@ function Startup()
   if (!InitEditorShell())
     return;
   
-  // Create dialog object to store controls for easy access
-  dialog = new Object;
-  dialog.linkTextInput    = document.getElementById("linkTextInput");
-  dialog.hrefInput        = document.getElementById("hrefInput");
+  linkTextInput    = document.getElementById("linkTextInput");
+  hrefInput        = document.getElementById("hrefInput");
 
-  // Kinda clunky: Message was wrapped in a <p>, so actual message is a child text node
-  dialog.linkMessage      = (document.getElementById("linkMessage")).firstChild;
+  // Message was wrapped in a <p>, so actual message is a child text node
+  linkMessage      = (document.getElementById("linkMessage")).firstChild;
 
-  if (null == dialog.linkTextInput || 
-      null == dialog.hrefInput ||
-      null == dialog.linkMessage )
+  if (null == linkTextInput || 
+      null == hrefInput ||
+      null == linkMessage )
   {
     dump("Not all dialog controls were found!!!\n");
   }
@@ -38,17 +38,17 @@ function Startup()
 
   if (insertNew) {
     dump("Setting focus to linkTextInput\n");
-    dialog.linkTextInput.focus();
+    linkTextInput.focus();
   } else {
     dump("Setting focus to linkTextInput\n");
-    dialog.hrefInput.focus();
+    hrefInput.focus();
 
     // We will not insert a new link at caret, so remove link text input field
-    parentNode = dialog.linkTextInput.parentNode;
+    parentNode = linkTextInput.parentNode;
     if (parentNode) {
       dump("Removing link text input field.\n");
-      parentNode.removeChild(dialog.linkTextInput);
-      dialog.linkTextInput = null;
+      parentNode.removeChild(linkTextInput);
+      linkTextInput = null;
     }
   }
 }
@@ -83,7 +83,7 @@ function initDialog()
         insertNew = false;
         // Link source string is the source URL of image
         // TODO: THIS STILL DOESN'T HANDLE MULTIPLE SELECTED IMAGES!
-        dialog.linkMessage.data = imageElement.getAttribute("src");;
+        linkMessage.data = imageElement.getAttribute("src");;
       }
     } else {
       // We don't have an element selected, 
@@ -112,7 +112,7 @@ function initDialog()
     } else {
       dump("Selected text for link source not found. Non-text elements selected?\n");
     }
-    dialog.linkMessage.data = selectedText;
+    linkMessage.data = selectedText;
   }
 
   if (!selection.isCollapsed)
@@ -133,17 +133,23 @@ function chooseFile()
   // Get a local file, converted into URL format
   fileName = editorShell.GetLocalFileURL(window, "html");
   if (fileName != "") {
-    dialog.hrefInput.value = fileName;
+    hrefInput.value = fileName;
   }
   // Put focus into the input field
-  dialog.hrefInput.focus();
+  hrefInput.focus();
+}
+
+function RemoveLink()
+{
+  // Simple clear the input field!
+  hrefInput.value = "";
 }
 
 function onOK()
 {
   // TODO: VALIDATE FIELDS BEFORE COMMITING CHANGES
 
-  href = TrimString(dialog.hrefInput.value);
+  href = TrimString(hrefInput.value);
   if (href.length > 0) {
     // Coalesce into one undo transaction
     editorShell.BeginBatchChanges();
@@ -157,10 +163,10 @@ function onOK()
       // Append the link text as the last child node 
       //   of the anchor node
       dump("Creating text node\n");
-      newText = TrimString(dialog.linkTextInput.value);
+      newText = TrimString(linkTextInput.value);
       if (newText.length == 0) {
         ShowInputErrorMessage("You must enter some text for this link.");
-        dialog.linkTextInput.focus();
+        linkTextInput.focus();
         return;
       }
       textNode = editorShell.editorDocument.createTextNode(newText);

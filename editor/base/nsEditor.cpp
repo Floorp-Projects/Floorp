@@ -2108,14 +2108,7 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
       PRUint32 selectedNodeContentCount=0;
       nsCOMPtr<nsIDOMCharacterData>selectedParentNodeAsText;
       selectedParentNodeAsText = do_QueryInterface(parentSelectedNode);
-#ifdef DEBUG_cmanske
-      // What is the parent node for the selection?
-      nsAutoString tag;
-      parentSelectedNode->GetNodeName(tag);
-      printf("DeleteSelectionAndPrepareToCreateNode: Parent of selected node: ");
-      wprintf(tag.GetUnicode());
-      printf("\n");
-#endif
+
       /* if the selection is a text node, split the text node if necesary
          and compute where to put the new node
       */
@@ -2159,14 +2152,6 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNod
           result = parentChildList->Item(offsetOfSelectedNode, getter_AddRefs(selectedNode));
           if ((NS_SUCCEEDED(result)) && selectedNode)
           {
-#if 0 //def DEBUG_cmanske
-            // What is the item at the selected offset?
-            nsAutoString tag;
-            selectedNode->GetNodeName(tag);
-            printf("Selected Node's name = ");
-            wprintf(tag.GetUnicode());
-            printf("\n");
-#endif
             nsCOMPtr<nsIDOMCharacterData>selectedNodeAsText;
             selectedNodeAsText = do_QueryInterface(selectedNode);
             nsCOMPtr<nsIDOMNodeList>childList;
