@@ -6,7 +6,7 @@
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
-<!ENTITY % deleteProfileDTD SYSTEM "chrome://communicator/locale/profileManagerDelete.dtd" >
+<!ENTITY % deleteProfileDTD SYSTEM "chrome://communicator/locale/profile/profileManagerDelete.dtd" >
 %deleteProfileDTD;
 ]>
 
