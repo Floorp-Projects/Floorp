@@ -1,0 +1,19 @@
+To install 
+
+1) read and edit the variables found in the files ./src/lib/*,
+	 particularly TreeData.pm and FileStructure.pm
+
+2) run ./configure
+
+3) run make
+
+4) run make install
+
+5) set up a cron job to run $prefix/bin/tinder.cgi --daemon-mode 
+	every five minutes
+
+6) set up $prefix/bin/processmail to recieve the incoming tinderbox mail
+
+7) setup the build machines to mail their build logs 
+	(with tinderbox variables on the top) to the web server machine.
+

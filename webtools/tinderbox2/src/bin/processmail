@@ -1,0 +1,1133 @@
+#!#perl# --
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
+
+# processmail - the mail processing engine for tinderbox.  The build
+# machines (clients) send their build logs to the server to report on
+# the status of the builds and this program accepts the mail (via an
+# MTA like sendmail) and acts as the MDA (mail delivery agent).  This
+# program process the build logs for the tinderbox server (tinder.cgi)
+# and enforms the server of any status updates.  It also stores the
+# logs in compressed form for future reference.
+
+
+# $Revision: 1.1 $ 
+# $Date: 2000/06/22 04:11:37 $ 
+# $Author: mcafee%netscape.com $ 
+# $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/Attic/processmail,v $ 
+# $Name:  $ 
+
+
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is the Tinderbox build tool.
+#
+# The Initial Developer of the Original Code is Netscape Communications
+# Corporation. Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+
+# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# Contributor(s): 
+
+
+# Standard perl libraries
+use File::Basename;
+use Sys::Syslog;
+use Sys::Hostname;
+use File::stat;
+
+# Tinderbox libraries
+use lib '#tinder_libdir#';
+
+use TreeData;
+use HTMLPopUp;
+use VCDisplay;
+use Error_Parse;
+use Utils;
+use Persistence;
+use TinderDB::Build;
+
+
+
+
+sub usage {
+
+
+    my $usage =<<EOF;
+
+$0	[--version] [--help]  
+$0	[filename]
+
+
+
+Informational Arguments
+
+
+--version	Print version information for this program
+
+--help		Show this usage page
+
+
+Synopsis
+
+
+This program handles mail acceptance for the tinderbox system.  The
+mail transerfer agent runs this program to deliver the mail.  Mail is
+recived on stdin, this makes it particularly easy to test this script.
+The script accepts no arguments and will exit with return code of zero
+if successful.  Mail messages are parsed to extract the tinderbox
+variables and database update files are written for the tinderbox
+server to pickup when it next wakes up.  The tinderbox variables must
+be at the top of the mail and the last variable must be 'END'.  We
+ignore the line following the variables, it should be blank.  Any
+uuencoded binaries in the mail message are extracted and uudecoded and
+stored on disk.  The build logs are converted into HTML and are split
+into full and summary form and stored on the disk.  Both logs basnames
+are the same unique id which is found by using the time this program
+was stared and its pid.  The logs are stored in separate directories
+and compressed.  The server knows how to contruct URLS to the log
+files because that information is passed in the database update files.
+There may be serveral instances of this program running so each
+database update file is written to the disk with a unique name.  No
+locks are held by this code.
+
+Should errors occur during the processing of the mail message, the
+message is bounced by exiting with a non zero exit code and the error
+is written to the error log.
+
+By convention all database update files are stored in a file name
+which matches the module name which will accept them.  We are creating
+information for the database controled by the module TinderDB::Build
+so its update file must be named
+$TinderConfig::FILE{'TinderDB::Build::Update'} with some unique id
+placed on the end.  This file contains all the tinderbox variable
+information extracted from the mail message and any new variables
+derived while parsing the log file.
+
+
+
+Tinderbox Variables:
+
+Tinderbox variables are name/value pairs which appear at the top of
+the mail message.  Lines can appear in any order but END should be the
+last line followed by one blank line. If the tinderbox variable name
+is repeated on different lines, then its value is taken to be the
+concatination of all values listed.
+
+The required tinderbox variable:
+
+	tinderbox: administrator : {the mailing address of the maintainer
+	                             of this build machine}
+	tinderbox: builddate : {the time the build was started in time()
+	                          format, this is effectively the build number}
+	tinderbox: buildname : {the official name of the build}
+	tinderbox: errorparser : {the error parser to use when 
+	                            processing the log file}
+	tinderbox: status :{the results of the build, must be a valid status 
+				as determined by
+			TinderDB::Build::is_status_valid(); }
+	tinderbox: timenow : {the time the update was sent, in time() format.
+				There can be several updates for a given build
+				as long as they return the status 'building'
+				it is legal to mail the log file at different 
+				stages of the build.}
+	tinderbox: tree : {the name of the tree this build was for.  Must be
+				a valid tree as termined by:
+                                  TreeData::tree_exists();
+			}
+	tinderbox: END
+
+
+
+Binaries:
+
+If there is a tinderbox variable:
+
+  tinderbox: binaryname 
+
+and there is uuencoded text in the build log then the text is
+extracted uudecoded and stored in the directory
+FileStructure::get_filename(\$tree, 'build_bin_dir') with the basename
+as found by the basename of the tinderbox variable 'binaryname'.
+
+
+
+Bloat Statistics:
+
+The bloat statistics are a Mozilla specific test.  They help track the
+amount of leaked memory in an application.  The bloat statistics are
+found between lines which match:
+
+	m/^\#+ BLOAT STATISTICS/)
+	m/^--NEW-BLOAT--/ )
+
+Their line has this format:
+
+	TOTAL <absolute leaks> <% leaks delta> <absolute bloat> <% bloat delta>
+
+The leakage information is removed from this line, formated into valid
+HTML and passed to the Tinderbox server for displaying on the Status
+page.  The rendered HTML is found in the 
+
+  tinderbox: bloatdata : 
+
+entry of the update file.
+
+
+
+Log Files
+
+The basename of the log files is passed to the tinderbox server via
+the tinderbox variables:
+
+	tinderbox: full-log
+	tinderbox: brief-log
+
+The files are found in the directories
+
+	FileStructure::get_filename(\$tree, 'full-log')
+	FileStructure::get_filename(\$tree, 'brief-log')
+
+
+
+
+Files:
+
+File names for the output files are contructed from the values returned by:
+
+	FileStructure::get_filename(\$tree, 'brief-log')
+	FileStructure::get_filename(\$tree, 'build_bin_dir')
+	FileStructure::get_filename(\$tree, 'full-log')
+	FileStructure::get_filename(\$tree, 'brief-log')
+	FileStructure::get_filename(\$tree, 'TinderDB_Dir')
+
+
+
+EOF
+
+    print $usage;
+    exit 0;
+
+} # usage
+
+
+
+sub fatal_mailprocessing_error {
+# all fatal errors come through this function
+
+  foreach $error (@_) {
+    foreach (split /\n+/, $error) {
+      s/\t/   /g; 
+      syslog('err', $_);
+      warn "$PROGRAM: $_\n";
+    }
+  }
+  closelog();
+  exit 9; 
+}
+
+
+
+sub set_filenames{
+
+  #  $TMP_FILE{'buildupdate'} $FILE{'buildupdate'} must be on the
+  #  same  filesystem so that renaming them is atomic.
+
+  # These are temporary files, used by the mail processsor and will be
+  # erased before the program exits.  We use filenames which end in
+  # html for debugging the mail processor in isolation.  We do not
+  # glob on the prefix in the mailprocessor.
+
+  my ($tree) = $TINDERBOX{'tree'};
+
+  %TMP_FILE = (
+               'errorpick' => (FileStructure::get_filename($tree, 'brief-log').
+                               "$tree_dir/Tmp.header.$main::UID.html"),
+               
+               'binaryfile' => (FileStructure::get_filename($tree, 'build_bin_dir').
+                                "/Tmp.$main::UID.html"),
+
+               'full-log' => (FileStructure::get_filename($tree, 'full-log').
+                              "/Tmp.$main::UID.html"),
+               
+               'brief-log' => (FileStructure::get_filename($tree, 'brief-log').
+                               "/Tmp.$main::UID.html"),
+
+               'update_file' => (FileStructure::get_filename($tree, 'TinderDB_Dir').
+                                 "Tmp.Build.Update.$uid"),
+
+              );
+
+
+  %FILE = (
+
+           'binaryfile' => (FileStructure::get_filename($tree, 'build_bin_dir')gzip.
+                            "/$main::UID.html"),
+               
+           'full-log' => (FileStructure::get_filename($tree, 'full-log').
+                          "/$main::UID.html"),
+           
+           'brief-log' => (FileStructure::get_filename($tree, 'brief-log').
+                               "/$main::UID.html"),
+
+           'update_file' => (FileStructure::get_filename($tree, 'TinderDB_Dir').
+                             "Build.Update.$uid"),
+
+              );
+
+  foreach $file ( (values %FILE), (values %TMP_FILE) ) {
+    main::mkdir_R(dirname($file));
+  }
+
+  # set the URL for how to get to the logfiles we will generate.
+
+  # We can not end the cgibin calls in '.html.gz' or IE will think we
+  # are returning a gziped file. Gunzip knows to add the extension and
+  # to add the dirname to find the file.
+
+
+  $TINDERBOX{'brieflog'} = 
+    ("$FileStructure::URLS{'gunzip'}?".
+     "tree=$tree&brief-log=$main::UID"),
+      
+      $TINDERBOX{'fulllog'} = 
+        ("$FileStructure::URLS{'gunzip'}?".
+         "tree=$tree&full-log=$main::UID"),
+          
+
+  return 1;
+}
+
+
+
+sub parse_mail_header {
+
+# remove the headers from the input stream. Currently only use is in
+# error handling for external trees.  
+
+# This function does not use any other functions and can not fail.
+
+# I hope to put some sanity checks into the code. 
+
+# 1) build machines should not lie in the buildname line about their
+#    hostname
+
+# 2) check the time the mail was sent with the time we recieved it
+
+  my $line = '';
+  my $name = '';
+  my ($header, $value) = ();
+  while (defined($line = <>) ) {
+    chomp($line);
+
+    # if line is empty, there are no more headers
+
+    !($line) &&
+      return;
+
+    # if the line does not begin with a tab and has a colon then it is
+    # of the form header: value.  The header may contain _, -, and god
+    # knows what else.
+
+    if( $line =~ /^([-_\w]*)\:[ \t]+([^\n]*)$/ ){
+      ($header, $value)=(lc($1), $2);
+      $MAIL_HEADER{$header} .= $value;
+    }
+
+    # if the line begins with a tab then it is just a continuation of
+    # the Received: header
+
+    if( $line =~ /^\t/ ){
+      $MAIL_HEADER{$header} .= $line;
+    }
+  }
+
+  # not reached
+  return ;
+}
+
+
+
+sub parse_tinderbox_vars {
+
+# Ignore all lines in the mail till we find the tinderbox lines, so
+# the lines we want should be at the top of the mail.  We ignore the
+# line following the variables and hope it is blank.
+
+# This function does not use any other functions and failures are
+# expected to be rare.
+
+  my ($found_vars)= 0;
+  my ($line) = '';
+
+  while(defined($line = <>)) {
+    
+    if ( $line =~ m/^\s*tinderbox\:\s*([^:]*)\:\s*(.*)\n$/ ) {
+      $TINDERBOX{$1} .= $2;
+      $found_vars= 1;
+    } elsif ( $line =~ m/^tinderbox\:\s*END\b/ ) {
+      return ;
+    } elsif ($found_vars) {
+      return ;
+    }
+
+  }
+
+  # bounce the mail message
+
+  die("No Tinderbox variables found in message.\n");
+}
+
+
+
+# create a string which shows the contents of the tinderbox variables.
+# this output is appended to the log file, to show what values were
+# generated from the log.
+
+sub format_tinder_vars {
+
+  my $output ='';
+  
+  foreach $key (sort keys %TINDERBOX) {    
+    $output .= HTMLPopUp::escapeHTML("tinderbox\: $key\: $TINDERBOX{$key}\n");
+  }
+
+  return $output
+}
+
+
+
+
+
+=pod
+
+"errorparser" is a bad name, we want a "buildtools" which discribes
+the compilers and make programs.  The buildtools module is shared with
+the buildscript and the logparser.  We might want to have the
+configure output drive the choice of errorparser or tell configure
+what choices to make based on the error parser.  Notice that if we
+take this to extremes we need to have a set of Object Oriented parsers
+(cc, cpp, make, perl) each looking for errors it knows how to handle.
+
+
+May want further checks on who can submit what information to
+tinderbox.
+
+need to also check that the current time on the server agrees with
+current time on client within 10 minutes.
+
+need to check that this update either 
+
+  1) has the same starttime as the last update of this tree/build
+  2) has a starttime grater then min time between builds.
+
+=cut
+  ;
+
+
+# The next set of functions wrap all implementations from package
+# Error_Parse.  They change their implementations based on the global
+# variable $TINDERBOX{'errorparser'}, so this value must be extracted
+# from the message before they are called.
+
+
+sub check_required_vars {
+
+  my ($err_string) = '';
+  
+  
+  
+  my $build_start = '';
+  my $stamp_file = $FILE{'build_update_time_stamp'};
+
+  if (-r $stamp_file) {
+    open (STAMP, "<$stamp_file") ||
+      die("Could not open file: $stamp_file, $!\n");
+    
+    $build_start = <STAMP>;
+    chmop $build_start;
+    
+    close (STAMP) ||
+      die("Could not close file: $stamp_file, $!\n");
+    
+    ($build_start > $TINDERBOX{'builddate'} ) ||
+      die("New build started before the previous one.  ".
+          "Something is very wrong with the clock on the build machine, ".
+          "time is going backwards.\n");
+
+    # Keep the spacing between builds greater then our minumum HTML
+    # grid spacing.  There can be very frequent updates but different
+    # builds must be spaced apart.
+
+    ($build_start > ($TinderDB::MIN_TABLE_SPACING + (60*2)) ) ||
+       die("New build started too frequently.  Builds must start".
+           "atleast ".($TinderDB::MIN_TABLE_SPACING + (60*2)).
+           " seconds apart.  Build not accepted.\n");
+  }      
+  
+  if ($build_start != $TINDERBOX{'builddate'} ) {
+    overwrite_file( $stamp_file, 
+                    "$TINDERBOX{'builddate'}\n");
+  }
+  
+  if( $TINDERBOX{'tree'} eq ''){
+    $err_string .= "Variable: 'tinderbox: tree' not set.\n";
+  }
+  elsif( !(TreeData::tree_exists($TINDERBOX{'tree'})) ){
+
+    $err_string .= "Variable: 'tinderbox: tree' ".
+      "is not set to a valid tree.\n";
+  }
+  elsif(($MAIL_HEADER{'to'} =~ m/external/i ||
+         $MAIL_HEADER{'cc'} =~ m/external/i) &&
+        $TINDERBOX{'tree'} !~ m/external/i) {
+    $err_string .= "Data from an external source didn't specify ".
+      "an 'external' tree.\n";
+  }
+  
+  ($TINDERBOX{'timenow'}) ||
+    ($err_string .= "Variable: 'timenow' not set.\n");
+  
+  ($TINDERBOX{'buildname'}) ||
+    ($err_string .= "Variable: 'tinderbox:buildname' not set.\n");
+  
+  ($TINDERBOX{'administrator'}) ||
+    ($err_string .= "Variable: 'BuildAdministrator' not set.\n");
+  
+  ($TINDERBOX{'errorparser'}) ||
+    ($err_string .= "Variable: 'tinderbox:errorparser' not set.\n");
+  
+  my ($func) = "Error_Parse::$TINDERBOX{'errorparser'}::parse_errorline";
+  my ($ignore) = eval &$func(@_);    
+  
+  ($@) &&
+    ($err_string .= (
+                     "Errorparser: ".
+                     "'$TINDERBOX{'errorparser'}::parse_errorline'".
+                     " does not exist.\n"
+                    ));
+
+  my ($func) = "Error_Parse::$TINDERBOX{'errorparser'}::line_type";
+  my ($ignore) = eval &$func(@_);    
+  
+  ($@) &&
+    ($err_string .= "Errorparser: '$TINDERBOX{'errorparser'}::line_type'".
+     " does not exist.\n");
+  
+  # Note at this point we could have sourced only the implementation
+  # of the error parser that we need.  I think programs which use an
+  # autoload for libaraies are messy since they cause variable run
+  # time requirements.
+  
+  #
+  # Grab the date in the form of mm/dd/yy hh:mm:ss
+  #
+  # Or a GMT unix date
+  #
+  if( $TINDERBOX{'builddate'} eq ''){
+    $err_string .= "Variable: 'tinderbox:builddate' not set.\n";
+  } else {
+    if( $TINDERBOX{'builddate'} =~ 
+        /([0-9]*)\/([0-9]*)\/([0-9]*)[ \t]*([0-9]*)\:([0-9]*)\:([0-9]*)/ ){
+      
+      $builddate = timelocal($6,$5,$4,$2,$1-1,$3);
+      
+    }
+    elsif( abs($TINDERBOX{'builddate'} - $TIME) < 60*60 ){
+      $builddate = $TINDERBOX{'builddate'};
+    }
+    else {
+      $err_string .= ("Variable: 'tinderbox:builddate',".
+                      " is not of the form ".
+                      "MM/DD/YY HH:MM:SS, or unix date, ".
+                      "or your clock is set incorrectly, ".
+                      "or the mail was delayed for a long time.\n");
+    }
+    
+  }
+  
+  # Build Status
+  
+  ($TINDERBOX{'status'}) ||
+    ($err_string .= "Variable: 'tinderbox:status' not set.\n");
+  
+     ( TinderDB::Build::is_status_valid($TINDERBOX{'status'}) ) ||
+     ($err_string .= "Variable: 'tinderbox:status' must be one of: ".
+      join( ', ', TinderDB::Build::get_all_status()).
+     "\n");
+  
+  # Report errors by bouncing mail
+  
+  ($err_string) &&
+    die($err_string);
+  
+}
+
+
+sub format_bloat_delta {
+  my ($value,) = @_;
+  my $units = ' ';
+  $value = $value || 0;
+
+  if ($value >= 1000000) {
+    $value = int($value / 1000000);
+    $min =   int($min / 1000000);
+    $units = 'M';
+  } elsif ($value >= 1000) {
+    $value = int($value / 1000);
+    $min =   int($min / 1000);
+    $units = 'K';
+  }
+
+  return "$value$units";
+}
+
+
+
+
+# prepare bloat data for display
+
+sub process_bloat_data {
+  my ($line, $func_line_type,) = @_;
+  
+  # we have to call &highlight_errors() even thought there are no
+  # errors, or the line numbers will get messed up
+  
+  my ($line_type) = &$func_line_type($line);
+  @html = &highlight_errors($line, $line_type, $lineno, \$next_err, 
+                            $func_parse_errorline);
+  print FULL $html[1];
+  if ( $line =~ m/^TOTAL/) {
+    # Line format:
+    #  TOTAL <absolute leaks> <% leaks delta> <absolute bloat> <% bloat delta>
+    chomp;
+    my ($leaks, $bloat) = (split /\s+/, $line)[1,3];
+    my $bloat_string = (
+                        "<br>Lk:". format_bloat_delta($leaks).
+                        "<br>Bl:". format_bloat_delta($bloat,)
+                       );
+    
+    $TINDERBOX{'bloatdata'} = $bloat_string;
+  }
+  return ;
+}
+
+
+
+# create the HTML file headers for both the full and brief log
+# files. This must run after the message body has been parsed as some
+# of the data comes from there.
+
+sub log_header {
+  my ($logtype) = @_;
+  
+  my ($out) = '';
+  my ($tree) = $TINDERBOX{'tree'};
+
+  $out .= HTMLPopUp::page_header('title'=>"$logtype Build Log ".
+                                 "for tree: $tree ");
+
+  my $notlogtype = ( $logtype eq 'full' ? "brief" : "full");
+
+  $out .= "\n";
+  $out .= "<font size=\"+1\">\n";
+  $out .= "<dt>";
+  $out .= HTMLPopUp::Link(
+                          "linktxt"=>"Show <b>$notlogtype</b> Log\n", 
+                          "href"=> ("$FileStructure::URLS{'gunzip'}?".
+                                    "tree=$tree&".
+                                    "$notlogtype-log=$main::UID.html"),
+                         );
+  $out .= "<dt>";
+  $out .= HTMLPopUp::Link(
+                          "linktxt"=>("Return to the $TINDERBOX{'tree'} ".
+                                      "Status Page\n"), 
+                          "href"=>(FileStructure::get_filename($tree, 
+                                                               'tree_URL').
+                                   "/status\.html"),
+                         );
+  $out .= "</font>\n";
+  
+  $out .= "\n";
+  $out .= "<H2>Build Data</H2>\n";
+  
+  $out .= "<pre>\n";
+  
+  # notice that since we generate this output after processing the
+  # whole log file the tinderbox variables may contain 'derived' data
+  # which was not in the original mail message.
+
+  $out .= format_tinder_vars();
+  $out .= "</pre>\n";
+  
+  $out .= "<H2>Pick an error message to see Log</H2>\n";
+
+  return $out;
+
+}
+
+
+# create the HTML links for errors this is for both 
+# 1) the $headerline,  which will appear in the error picklist 
+#      at the top of the log file and points to the error 
+#      in the same HTML file.
+# 2) the $logline which is the actual error displayed as a HTML 
+#     link which points to the CVS file and line which is the problem.
+
+
+sub highlight_errors {
+  my( $line, $line_type, $lineno, 
+      $next_err_ref, $func_parse_errorline) = @_;
+  
+  my( @error ) = ();
+  
+  # clean up any embedded HTML in the mail
+  $line = HTMLPopUp::escapeHTML($line);
+  
+  my ($logline) = '';
+  my ($headerline) = '';
+  
+  # All log lines get line numbers so users can send mail pointing to
+  # any line in the log file, example:
+  #         Someone should look at the Makefile, this 
+  #           make line <LINK> 
+  #           is the same as this one <LINK>
+
+  # line numbers start AFTER the tinderbox variables have been read.
+
+  $logline .= HTMLPopUp::Link(
+                              "name"=>$lineno,
+                              "linktxt"=>$lineno,
+                              "href"=>"\#$lineno",
+                             );
+
+  # add spaces so line numbers are left justified to 6 chars
+
+  $logline .= (' ' x ($Error_Parse::LINENO_COLUMN-length($lineno)));
+
+  if ( ( $line_type eq 'error' ) && ( !($last_was_error) ) ) {
+    
+    my ($err_ref) = $$next_err_ref;
+    $$next_err_ref++;
+    
+    # tag this line and link to next error line
+    
+    $logline .= HTMLPopUp::Link(
+                                "name"=>"err".($err_ref),
+                                "linktxt"=>"NEXT", 
+                                "href"=>"\#err".($$next_err_ref),
+                               );
+    
+    $headerline .= HTMLPopUp::Link(
+                                   "linktxt"=>$line, 
+                                   "href"=>"\#err".($err_ref),
+                                  );
+    
+  } else {
+    
+    # indent, so first column can be the 'next' link 
+    
+    $logline .= (" " x length("NEXT"));
+    $headerline .= '';
+    
+  }
+  
+  # separate the logs from "NEXT" just a bit more.
+  
+  $logline .= "    ";
+  
+  # markup the line if it looks interesting
+  
+  if ($line_type ne 'info') {
+    @error= &$func_parse_errorline($line);
+    if ("@error") {
+      $line = VCDisplay::guess
+        (
+         'tree' => $TINDERBOX{'tree'}, 
+         'file' => $error[0],
+         'line' => $error[1],
+         'linktxt' =>  $line, 
+        );
+    }
+    
+    my $color = $Error_Parser::LINE_TYPE2COLOR{$line_type};
+    ($color) &&
+      ($color = "color=$color");
+
+    $logline .=  ("<font $color>".
+                  $line.
+                  "</font>");
+  } else {
+    $logline .= $line;
+  }
+  
+  
+  return ($headerline, $logline);
+}
+
+
+sub parse_mail_body {
+
+  # create several files with a single pass over the mail message:
+  
+  # BINARY:      the uuencoded file, if present, in the mailmessage.
+  # FULL:        a complete copy of the logfile with HTML markup.
+  # BRIEF:       contains only the error messages with some lines of 
+  #                 surrounding context and HTML markup.
+  # ERROR_PICK:  a list of html links to error messages, this will apear
+  #                 on the top of both brief and full when our 
+  #                 processing is complete. 
+
+  # it is a bug in processing should this function be called before
+  # the tinderbox variables are set. We intentionally leave off the \n
+  # on some of thed die's to get tracebacks of internal errors.
+
+  # We must use HTMLPopUp::escapeHTML to clean up any embedded HTML in the
+  # mail messege to prevent attacks.  Though it may be more friendly
+  # to let compilers and things embed URLS in their error messages:
+
+  # http://www.ciac.org/ciac/bulletins/k-021.shtml
+  
+  #   When a victim with scripts enabled in their browser reads this
+  #   message, the malicious code may be executed
+  #   unexpectedly. Scripting tags that can be embedded in this way
+  #   include <SCRIPT>, <OBJECT>, <APPLET>, and <EMBED>.
+  
+  
+
+  # It is a bit cleaner to convert these symbolic references to hard
+  # references in the eval at the top of the function instead of
+  # calling the symbolic reference to the function continually.  This
+  # is also how we check that the function exists.
+
+  my ($func) = "Error_Parse::$TINDERBOX{'errorparser'}::line_type";
+  my($func_line_type) = '';
+
+  my ($out) = eval "\$func_line_type = \\&${func};";
+
+  ($@) &&
+    die("Errorparser is not set. $@");
+  
+  my ($func) = "Error_Parse::$TINDERBOX{'errorparser'}::parse_errorline";
+  my ($func_parse_errorline) = "";
+  
+  my ($out) = eval "\$func_parse_errorline = \\&${func};";
+  
+  ($@) &&
+    die("Errorparser is not set. $@");
+  
+  open(BINARY, ">$TMP_FILE{'binaryfile'}") ||
+    die("Could not write to file: '$TMP_FILE{'binaryfile'}'. $!\n");
+  open(FULL, ">$TMP_FILE{'full-log'}") ||
+    die("Could not write to file: '$TMP_FILE{'full-log'}'. $!\n");
+  open(BRIEF, ">$TMP_FILE{'brief-log'}") ||
+    die("Could not write to file: '$TMP_FILE{'brief-log'}'. $!\n");
+  open(ERROR_PICK, ">$TMP_FILE{'errorpick'}") ||
+    die("Could not write to file: '$TMP_FILE{'errorpick'}'. $!\n");
+
+  print ERROR_PICK "<!-- error pick menu -->\n<pre>\n";
+
+  my ($next_err) = 1;
+  my ($lines_since_error) = 0;
+  my (@lastlines) = ();
+
+  while (defined($line = <>)) {
+
+    $lineno++;
+
+    my (@html) = '';
+
+    # uuencoded binaries get pulled out into a special file
+
+    if ( ( $line =~ m/^begin [0-7][0-7][0-7] / ) ..  
+         ( $line =~ m/^end\n/ ) 
+       ) {
+
+      print BINARY $line;
+      next;
+    }
+
+    # process bloat statistics 
+
+    if ( ($line =~ m/^\#+ BLOAT STATISTICS/) ..  
+         ( $line =~ m/^--NEW-BLOAT--/ ) 
+       ) {
+      process_bloat_data($line,$func_line_type,);
+      next;
+    }
+
+    $lines_since_error++;
+
+    # prepare the line for browser display
+    my ($line_type) = &$func_line_type($line);
+    
+    @html = &highlight_errors($line, $line_type, $lineno, \$next_err, 
+                                   $func_parse_errorline);
+
+
+    print FULL $html[1];
+
+    # brief log processing
+
+    if ($html[0]) {
+
+      my ($lines_context) = min( ($lines_since_error - $Error_Parse::LINES_AFTER_ERROR - 2),
+                                 $Error_Parse::LINES_BEFORE_ERROR);
+      my ($context_index) = max($#lastlines - $lines_context, 0);
+      my ($lines_skiped)  = max ( $lines_since_error - 
+                                  ($Error_Parse::LINES_BEFORE_ERROR + $Error_Parse::LINES_AFTER_ERROR+1), 
+                                  0);
+      
+      print ERROR_PICK $html[0];
+
+      if ($lines_skiped) {
+        print BRIEF ("\n<i><font size=\"+1\">".
+                     " Skipping $lines_skiped Lines...".
+                     "</font></i>\n\n");
+
+      }
+
+      print BRIEF @lastlines[$context_index .. $#lastlines];
+
+      $print_to_brief = 1 + $Error_Parse::LINES_AFTER_ERROR;
+
+      $lines_since_error = 0;
+    } 
+
+    if ($print_to_brief) {
+      print BRIEF $html[1];
+      $print_to_brief--;
+    }
+    
+
+    push @lastlines, $html[1];
+    
+    # don't keep more lines of history then we need
+    
+    if ( !( $#lastlines & 127 ) ){
+      my ($first) = $#lastlines - $Error_Parse::LINES_BEFORE_ERROR; 
+      my ($last) = $#lastlines;
+      @lastlines = @lastlines[ $first .. $last ];      
+    }
+
+  } # while
+       
+       
+  my ($last_errline) = ("</pre><p>".
+                        "<font size=\"+1\">".
+                        HTMLPopUp::Link(
+                                   "name"=>"err".($next_err_ref),
+                                   "linktxt"=>"No More Errors", 
+                                   "href"=>"\#err".(1),
+                                  ).
+                        "</font><br>");
+  
+  print BRIEF $last_errline;
+  print FULL  $last_errline;
+  
+  print ERROR_PICK "\n";
+  print ERROR_PICK "<!-- end error pick menu -->\n";
+  print ERROR_PICK "\n";
+  print ERROR_PICK "<H2>Build Log</H2>\n\n";
+
+  close(BINARY) ||
+    die("Could not close file: '$TMP_FILE{'binaryfile'}'. $!\n");
+  close(FULL) ||                 
+    die("Could not close file: '$TMP_FILE{'full-log'}'. $!\n");
+  close(BRIEF) ||                
+    die("Could not close file: '$TMP_FILE{'brief-log'}'. $!\n");
+  close(ERROR_PICK) ||           
+    die("Could not close file: '$TMP_FILE{'errorpick'}'. $!\n");
+
+  return ;  
+}
+
+
+
+sub assemble_files {
+
+# piece together the permanent files from the temparary ones.
+
+# much of this could be done in shell scripts (cat) but we have more
+# error control in perl and it is more portable to non-unix OS.
+
+  my $tree = $TINDERBOX{'tree'};
+
+
+  {
+
+    # append the headers to the top of the full log and compress the result
+    
+    open(ERROR_PICK, "<$TMP_FILE{'errorpick'}") ||
+      die("Could not write to file: '$TMP_FILE{'errorpick'}'.\n");
+    open(TMP_FULL, "<$TMP_FILE{'full-log'}") ||
+      die("Could not write to file: '$TMP_FILE{'full-log'}'.\n");
+    open(FULL, ">$FILE{'full-log'}") ||
+      die("Could not write to file: '$TMP_FILE{'full-log'}'.\n");
+    
+    print FULL log_header('full');
+    
+    while (defined($line=<ERROR_PICK>)) {
+      print FULL $line;
+    }
+    
+    while (defined($line=<TMP_FULL>)) {
+      print FULL $line;
+    }
+    
+    close(FULL) ||
+      die("Could not close file: '$FILE{'full-log'}': waitstaus: $? : $! \n");
+    close(TMP_FULL) ||
+      die("Could not close file: '$TMP_FILE{'full-log'}': $! \n");
+    close(ERROR_PICK) ||
+      die("Could not close file: '$TMP_FILE{'errorpick'}': $! \n");
+  }
+  
+  {
+
+    # append the headers to the top of the brief log
+
+    open(ERROR_PICK, "<$TMP_FILE{'errorpick'}") ||
+      die("Could not write to file: '$TMP_FILE{'errorpick'}'.\n");
+    open(TMP_BRIEF, "<$TMP_FILE{'brief-log'}") ||
+      die("Could not write to file: '$TMP_FILE{'brief-log'}'.\n");
+    open(BRIEF, ">$FILE{'brief-log'}") ||
+      die("Could not write to file: '$TMP_FILE{'brief-log'}'.\n");
+    
+    print BRIEF log_header('brief');
+
+    while (defined($line=<ERROR_PICK>)) {
+      print BRIEF $line;
+    }
+    while (defined($line=<TMP_BRIEF>)) {
+      print BRIEF $line;
+    }
+    
+    close(BRIEF) ||
+      die("Could not close file: '$FILE{'brief-log'}'.\n");
+    close(TMP_BRIEF) ||            
+      die("Could not close file: '$TMP_FILE{'brief-log'}'.\n");
+    close(ERROR_PICK) ||           
+      die("Could not close file: '$TMP_FILE{'errorpick'}'.\n");
+    
+  }
+  
+  $TINDERBOX{'full-log'} = File::Basename::basename($FILE{'full-log'});
+  $TINDERBOX{'brief-log'} = File::Basename::basename($FILE{'brief-log'});
+  
+  if( 
+     ($TINDERBOX{binaryname}) && 
+     (!(-z $TMP_FILE{'binaryfile'})) 
+    ) {
+    my $bin_dir = FileStructure::get_filename($tree, 'build_bin_dir');
+    $bin_dir =~ s/ //g;
+    
+    mkdir_R($bin_dir);
+    
+    $TINDERBOX{binaryname} = File::Basename::basename($TINDERBOX{binaryname});
+    my $outfile = "$bin_dir/".$TINDERBOX{binaryname};
+
+    my (@cmd) = (
+                 @UUDECODE,
+                 $outfile,
+                 $TMP_FILE{'binaryfile'},
+                );
+
+    system(@cmd) ||
+      die("Could not run cmd: '@cmd'. $!\n");
+    
+    # the builder tells us the basename of the binary, we tell the
+    # server the full path name of the binary.
+
+  }
+  
+    my (@cmd) = (@GZIP, $FILE{'full-log'});
+    system(@cmd) &&
+      die("Could not run '@cmd'. $!\n");
+
+    my (@cmd) = (@GZIP, $FILE{'brief-log'});
+    system(@cmd) &&
+      die("Could not run '@cmd'. $!\n");
+
+  return ;
+}
+
+
+sub write_update_file {
+
+  # write out an build update file so that the server to know about
+  # the new info.
+
+  # Notice that we write this out after the WHOLE log has been parsed.
+  # We may add to and modify the hash during the processing of the log.
+  
+  my ($tree) = $TINDERBOX{'tree'};
+  my ($uid) = join('.', 
+                   $tree,
+                   $TINDERBOX{'buildname'},
+                   $TINDERBOX{'timenow'}
+                  );
+
+  my ($update_file) = (FileStructure::get_filename($tree, 'TinderDB_Dir').
+                       "/Build.Update.$uid");
+  my ($tmp_update_file) = (FileStructure::get_filename($tree, 'TinderDB_Dir').
+                           "/Tmp.Build.Update.$uid");
+
+  Persistence::save_structure( 
+                              [\%TINDERBOX],
+                              ['build_record'],
+                              $tmp_update_file,
+                             );
+                               
+  # We are done, tell the tinderserver about this build.  
+
+  # Rename is atomic on the same unix filesystem, so the server never
+  # sees partially processed updates.
+
+  rename ($tmp_update_file, $update_file) || 
+    die("Could not rename: '$tmp_update_file".
+        "to '$update_file'. $!\n");
+
+  # clean up all the temp files created in this script
+  
+  foreach $tmpfile (values %TMP_FILE) {
+
+    (!(-e $tmpfile)) ||
+      unlink($tmpfile) ||
+        die("Could not unlink: '$tmpfile'. $!\n");    
+
+  }
+  return ;
+}
+
+
+# --------------------main-------------------------
+{
+  set_static_vars();
+  get_env();
+
+  $SIG{'__DIE__'} = \&fatal_mailprocessing_error;
+
+  parse_mail_header();
+  parse_tinderbox_vars();
+  set_filenames();
+
+#  check_required_vars();
+
+  parse_mail_body();
+  assemble_files();
+  write_update_file();
+
+  exit 0;
+}
+

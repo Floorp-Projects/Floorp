@@ -1,0 +1,552 @@
+#!#perl# --
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
+
+# $Revision: 1.1 $ 
+# $Date: 2000/06/22 04:10:42 $ 
+# $Author: mcafee%netscape.com $ 
+# $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
+# $Name:  $ 
+
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is the Tinderbox build tool.
+#
+# The Initial Developer of the Original Code is Netscape Communications
+# Corporation. Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+
+# complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
+# Contributor(s): 
+
+
+
+# Standard perl libraries
+use CGI ':standard';
+
+# Tinderbox libraries
+
+use lib '#tinder_libdir#';
+
+use TreeData;
+use FileStructure;
+use Persistence;
+use TinderHeader;
+use Utils;
+
+
+# Normally we filter user input for 'tainting' and to prevent this:
+
+# http://www.ciac.org/ciac/bulletins/k-021.shtml
+
+#   When a victim with scripts enabled in their browser reads this
+#   message, the malicious code may be executed
+#   unexpectedly. Scripting tags that can be embedded in this way
+#   include <SCRIPT>, <OBJECT>, <APPLET>, and <EMBED>.
+
+#    note that since we want some tags to be allowed (href) but not #
+#    others.  This requirement breaks the taint perl mechanisms for #
+#    checking as we can not escape every '<>'.
+
+# However we trust our administrators not do put bad things in the web
+# pages and we wish to allow them to embed scripts.
+
+
+sub get_params {
+
+  $TREE = param("tree");
+  (TreeData::tree_exists($TREE)) ||
+    die("tree: $TREE does not exist\n");    
+
+  $MAILADDR = ( param("mailaddr") ||
+                cookie(-name=>"tinderbox_mailaddr"));
+  $NEW_MOTD = param("motd");
+  $NEW_TREE_STATE = param("tree_state");
+  $NEW_ADMIN = param("newadmin");
+  $USE_COOKIE = param("use_cookie");
+  $REMOTE_HOST = remote_host();
+  $PASSWD = ( param("passwd") ||
+              cookie(-name=>"tinderbox_password_$TREE"));
+  
+  $NEW_PASSWD1 = param('newpasswd1');
+  $NEW_PASSWD2 = param('newpasswd2');
+  
+  @NEW_IGNORE_BUILDS = param("ignore_builds");
+  @NEW_IGNORE_BUILDS = uniq(@NEW_IGNORE_BUILDS);
+
+  return ;
+}
+
+
+
+sub setup_environment {
+
+  $CURRENT_TREE_STATE = TinderHeader::gettree_header('TreeState', $TREE);
+  
+  @CURRENT_IGNORE_BUILDS = get_current_ignore_builds($TREE);
+
+  $CURRENT_MOTD = TinderHeader::gettree_header('MOTD', $TREE);
+  
+  get_passwd_table();
+
+  return ;
+}
+
+
+
+
+sub encrypt_passwd {
+  my $passswd = @_;
+
+  # The man page for Crypt says:
+
+  #     KEY is the input string to encrypt, for instance, a user's
+  #     typed password.  Only the first eight characters are used; the
+  #     rest are ignored.
+
+  my $salt = 'aa';
+  my $encoded = crypt($passd, $salt);
+
+  return $encoded;  
+}
+
+
+
+sub get_passwd_table {
+
+  my ($file) = FileStructure::get_filename($TREE, 'passwd');
+
+  (-r $file) &&
+    require $file;
+
+    # supply a default passwd so we can use the system.
+
+  ($PASSWD_TABLE{$TREE}) ||
+    ( $PASSWD_TABLE{$TREE}{'tinderbox@mozilla.org'} = 
+      encrypt_passwd('tinderbox') );
+
+  return ; 
+}
+
+
+
+# peek inside TinderDB::Build to get the names of the builds for this
+# tree
+
+sub get_build_names  {
+  my ($tree) = @_;
+  my (@build_names);
+
+  # we need an eval since the builds may not be configured 
+
+  eval {
+    local $SIG{'__DIE__'} = sub { };
+    
+    my ($build_obj) = TinderDB::Build->new();
+    
+    $build_obj->loadtree_db($tree);
+    
+    @build_names = sort $build_obj->all_build_names($tree);
+  };
+
+  return @build_names;
+}
+
+
+
+sub get_current_ignore_builds  {
+  my ($tree) = @_;
+  my (@ignore_builds) = ();
+
+  @ignore_builds = split(
+                         /\s+/, 
+                         TinderHeader::gettree_header('IgnoreBuilds', $TREE)
+                        );
+  
+  @ignore_builds = uniq(@ignore_builds);
+  
+  # It is possible that the current ignore_builds for this tree are
+  # not a subset of the current settings of buildnames, since the
+  # two are not maintained together.  Remove settings which no
+  # longer apply.
+  
+  my (@build_names) = get_build_names($tree);
+  my ($pat) = "\^".join("\$\|\^", @build_names)."\$";
+  @ignore_builds = grep(/$pat/, @ignore_builds);
+
+  
+  return @ignore_builds;
+}
+
+
+
+
+sub format_input_page {
+  my ($tree)= @_;
+  my (@build_names) = get_build_names($tree);
+  my (@tree_states) = TreeData::get_all_tree_states($tree);
+  my ($title) = "Tinderbox Adminstration for Tree: $tree";
+  my (@out);
+
+  push @out, (
+              start_html(-title=>$title),
+              h2({-align=>'CENTER'},
+                 $title),
+              start_form
+             );
+
+  push @out, ("<A HREF=$FileStructure::URLS{'treepages'}/$tree/index\.html>".
+              "Return to tree: $tree</A>",
+              p());  
+  
+  push @out, (
+
+              # if we know mailaddr send it back as the default to
+              # show we know the user, do not bother to send the
+              # passwd back in the form.
+
+              h3("Login",),
+              "Email address: ",
+              textfield(-name=>'mailaddr',
+                        -default=>$MAILADDR,
+                        -size=>30,),
+              "Password: ".
+              password_field(-name=>'passwd', -size=>8,),
+              p(),
+              checkbox( -label=>("If correct, ".
+                                 "remember password and email ".
+                                 "as a cookie"),
+                        -name=>'use_cookie'),
+              p(),
+             );
+  
+  push @out, ( 
+              h3("Change Password",),
+              "Enter the new password twice: <br>\n",
+              "(Only the first eight characters are significant)<p>\n",
+              p(),
+              password_field(-name=>'newpasswd1', -size=>8,),
+              password_field(-name=>'newpasswd2', -size=>8,),
+              p(),
+             );
+  
+  push @out, ( 
+              h3("Add New Administrator",),
+              "Enter the new administrators Email Address: <br>\n",
+              "(default password will be same as administrators name)<p>\n",
+              p(),
+              textfield(-name=>'newadmin', -size=>30,),
+              p(),
+             );
+  
+  if (@tree_states) {
+    
+    push @out, ( 
+                h3("Tree State"),
+                "Change the State of the Tree:",
+                p(),
+                radio_group(-name=>'tree_state', 
+                            -value=>[@tree_states], 
+                            -default=>$CURRENT_TREE_STATE,),
+                p(),
+               )
+  } # end if
+  
+  if (@build_names) {
+    push @out, ( 
+                h3("Unmonitored Builds"),
+                "The set of Builds which will not normally be displayed: ",
+                p(),
+                checkbox_group(-name=>'ignore_builds', 
+                               -value=>[@build_names], 
+                               -default=>[@CURRENT_IGNORE_BUILDS],),
+                p(),
+               )
+  } # end if
+  
+  push @out, (
+              h3("Message of the Day"),
+              "New Message of the Day",p(),
+              textarea(-name=>'motd', -default=>$CURRENT_MOTD,
+                       -rows=>30, -cols=>75, -wrap=>'physical',),
+              p(),
+             );
+  
+  push @out, ( 
+# the default does not work because the tree gets reset to null
+#              defaults(-name=>'Defaults',),
+              submit(-name=>'Submit'),
+              p(),
+             );
+  
+  # We need the post operation to remember all the parameters which
+  # were passed as arguments as well as those passed as form
+  # variables.
+
+  foreach $param ( param() ) {
+    push @out, hidden($param)."\n";
+  }
+
+
+  push @out, end_form;
+    
+  return @out;
+}
+
+
+
+
+
+sub save_passwd_table {
+  my ($file) = FileStructure::get_filename($TREE, 'passwd');
+
+  delete $PASSWD_TABLE{$TREE}{'tinderbox@mozilla.org'};
+
+  Persistence::save_structure( 
+                               [ 
+                                $PASSWD_TABLE{$TREE},
+                               ],
+                               [
+                                "\$PASSWD_TABLE{'$TREE'}", 
+                               ],
+                               $file);
+  return ;
+}
+
+
+
+sub change_passwd {
+  my (@results) = ();
+
+  my ($encoded) = encrypt_passwd($PASSWD);
+
+  if ( ($encoded eq $PASSWD_TABLE{$TREE}{$MAILADDR}) && 
+       ($NEWPASSWD1) && 
+       ($NEWPASSWD1 ne $PASSWD ) ) {
+    
+    if ($NEWPASSWD1 eq $NEWPASSWD2) {
+      my ($newencoded1) = encrypt_passwd($NEWPASSWD1);
+      $PASSWD_TABLE{$TREE}{$MAILADDR} = $newencoded1;
+      save_passwd_table();
+      push @results, "Password changed.\n";
+    } else {
+      push @results, ("New passwords do not match, ".
+                      "password not changed.\n");
+    }
+
+  }
+
+  return @results;  
+}
+
+
+sub add_new_administrator {
+  my (@results) =();
+
+  ($NEW_ADMIN) ||
+    return ;
+
+  ($NEW_ADMIN !~ m!\@!) &&
+    return("New administrator: $NEW_ADMIN does not have an '\@' ".
+           "in the email address.\n");
+
+  # we need to reload the password table so that the check against
+  # existing administrators is nearly atomic.
+
+  get_passwd_table();
+
+  ($PASSWD_TABLE{$TREE}{$NEW_ADMIN}) &&
+    return("New administrator: $NEW_ADMIN already has an account.\n");
+ 
+  
+  $PASSWD_TABLE{$TREE}{$NEW_ADMIN} = encrypt_passwd($NEW_ADMIN);
+  save_passwd_table();
+  push @results, ("Added administrator: $NEW_ADMIN \n".
+                  "(default passwd is same as admin name)\n");
+
+  return @results;  
+}
+
+
+
+
+
+sub change_tree_state {
+  my (@results) =();
+
+  ($NEW_TREE_STATE) ||
+    return ;
+
+  ($NEW_TREE_STATE eq $CURRENT_TREE_STATE) &&
+  return ;
+
+  TinderHeader::savetree_header('TreeState', $TREE, $NEW_TREE_STATE);
+  push @results, "Tree_State changed: $NEW_TREE_STATE\n";
+  
+  return @results;  
+}
+
+
+
+sub change_ignore_builds {
+  my (@results) = ();
+  my (@out);
+  my ($file) = FileStructure::get_filename($TREE, 'ignore_builds');
+
+  ("@NEW_IGNORE_BUILDS" eq "@CURRENT_IGNORE_BUILDS") &&
+    return ;
+
+  TinderHeader::savetree_header('IgnoreBuilds', $TREE, "@NEW_IGNORE_BUILDS");
+
+  push @results, "ignore_builds changed: @NEW_IGNORE_BUILDS \n";
+
+  return @results;
+}
+
+
+
+sub change_motd {
+  my (@results) = ();
+  
+  ($NEW_MOTD) ||
+    return ;
+  
+  ($NEW_MOTD eq $CURRENT_MOTD) &&
+    return ;
+
+  TinderHeader::savetree_header('MOTD', $TREE, $NEW_MOTD);
+  push @results, "MOTD changed: \n\t'\n$NEW_MOTD\n\t' \n";
+    
+  return @results;  
+}
+
+
+
+# return empty if there is no security problem otherwise return a list
+# of strings explaining the problem
+
+sub security_problem {
+  my @out = ();
+
+  ($PASSWD) ||
+  (push @out, "Error, No Password\n");
+
+  ($MAILADDR) ||
+    (push @out, "Error, No Mail Address\n");
+
+  (!$MAILADDR) ||
+  ($MAILADDR =~ m!\@!) ||
+    (push @out, "Error, Mail Address must have '\@' in it.\n");
+
+  (!$PASSWD) ||
+    ($PASSWD ne $PASSWD_TABLE{$TREE}{$MAILADDR}) ||
+      (push @out, "Error, Password Not Valid\n");
+
+  return @out;
+}
+
+
+
+# perform all the updates which have been requested.
+
+sub make_all_changes {
+  my (@results) = ();
+
+  my $submit = param("Submit");
+
+  if ($submit) {
+    @results = security_problem();
+    my ($security_problems) = scalar(@results);
+
+    if (!($security_problems)) {
+      push @results, change_passwd();
+      push @results, add_new_administrator();
+      push @results, change_tree_state();
+      push @results, change_ignore_builds();
+      push @results, change_motd();
+      push @results, ("Check changes are correct on the status page, ".
+                      "different administrators can cange ".
+                      "the settings at the same time.");
+    } else {
+      push @results, "No changes attempted due to security issues.";
+    }
+    
+    if ( ($USE_COOKIE)  && (!($security_problems)) ) {
+    # this must be called before header()
+
+      my ($cookie1, $cookie2);
+      my ($expires) = 'Sun, 1-Mar-2020 00:00:00 GMT';
+      my ($passwd) = param('passwd');
+      my ($mailaddr) = param('mailaddr');
+      
+      $cookie1 = cookie( 
+                        -name=>"tinderbox_password_$TREE",
+                        -value=>$passwd,
+                        -expires => $expires,
+                        -path=>'/',
+                       );
+      $cookie2 = cookie( 
+                        -name=>"tinderbox_mailaddr",
+                        -value=>$mailaddr,
+                        -expires => $expires,
+                        -path=>'/',
+                       );
+      $SET_COOKIES = [$cookie1, $cookie2];
+    }
+    
+    if (@results) {
+      @results =  (
+                   h2("Update Results"),
+                   p()."\n",
+                   join (p(), (
+                               "Remote host: $REMOTE_HOST\n",
+                               "Local Time: $LOCALTIME\n",
+                               "Mail Address: $MAILADDR\n",
+                               @results,
+                              )
+                        ),
+                   "\n\n",
+                  );
+      log_warning(@results);
+    }
+  }
+  
+  return @results;
+}
+
+
+
+
+#       Main        
+{
+  set_static_vars();
+  get_env();
+  
+  get_params();
+
+  setup_environment();
+
+  my (@out) = make_all_changes();
+  
+  print header(-cookie=>$SET_COOKIES);
+
+  push @out, format_input_page($TREE);
+
+  print @out;
+
+  print end_html();
+
+  print "\n\n\n";
+
+  exit 0;
+}

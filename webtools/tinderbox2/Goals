@@ -1,0 +1,68 @@
+
+highly configurable design with multiple Version Control systems
+possible (bonsai, raw cvs, perforce, continuious, clearcase) and
+multiple modes of running possible (with no version control system
+with no builds display).
+
+clear programatic interfaces and better separation of functionality
+into separate modules.
+
+It should be possible to add hooks so that users get beeped when the
+next good build goes through or that trouble tickets are automatically
+opened when the builds fail.
+
+Greater flexibility in setting status of builds.  We may need more
+gradations of failure then just 'busted' or 'test-failed' to
+distinguish the types of tests which have failed.
+
+It should be possible to watch projects milestone progress via
+tinderbox.  Each milestone could be recoreded as a column which tests
+for the features in the milestone.  When milestones are hit the column
+turns green.  The project is over when all columns turn green.
+
+generated html must be readable and help isolate programming errors.
+
+all programmable configuration parameters should be stored easy change
+and configure for novice users.
+
+make better use of the perl data structures to mirror the way we wish
+to use the data.  This will allow easier maintainabilty and allow for
+more expansion of features.
+
+popup windows should not be netscape specific.
+
+Permanent data should be stored via datadumper so that the data and
+datastrucutres are easy to read and debug. Currently this is a
+performance bottle neck with a large percentage of our cpu time during
+testing being spent in Data::Dumper::Dump.  I expect this to improve
+when we install the newest version of perl.  The perl module Storable
+is rumored to be much faster.  I wish to not add additional module
+requirements at this time this will be configurable.
+
+# dprofpp says that:
+#	%64.8 of elapsed real time which is 66.25 seconds 
+#	(out of 102.15 Seconds)
+#	was spent in 3 calls to TinderDB::VC::apply_db_updates()
+
+#	%58.0 of user time which is 11.05 seconds 
+#	(out of 19.03 User/102.15 Elapsed Seconds)
+#	was spend in 32878 calls to Data::Dumper::_dump()
+
+#	System Time was negligable at 2.49 Seconds
+
+All errors should be trapped and sent to log files.  Strange program
+states should be explicitly checked for.
+
+Databases should update atomically, no information should be lost due
+to race conditions.
+
+All modules (processmail, build, VC, Notices) should be able to be run
+individually.  Modules should accept well defined text files as input
+and produce text files as output.  This will greatly inhance the
+ability to test each module in isolation and to quickly port modules
+to new architectures.
+
+The source code should be able to run using the standard Perl
+libraries, as it can be difficult for some users to add libraries onto
+production machines.
+
