@@ -1,0 +1,57 @@
+ACTION               VALUE X
+ATTACH               FMTTYPE ENCODING VALUE X
+ATTENDEE             CN CUTYPE DELEGATED-FROM DELEGATED-TO DIR LANGUAGE MEMBER PARTSTAT ROLE RSVP SENT-BY X
+CALSCALE             X
+CATEGORIES           LANGUAGE X
+CLASS                X
+CMD		     ACTIONPARAM ID LATENCY LOCALIZE OPTIONS X
+COMMENT              ALTREP LANGUAGE X
+COMPLETED            X
+CONTACT              ALTREP LANGUAGE X
+CREATED              X
+DESCRIPTION          ALTREP LANGUAGE X
+DTEND                VALUE TZID X
+DTSTAMP              X
+DTSTART              VALUE TZID X
+DUE                  VALUE TZID X
+DURATION             X
+EXDATE               VALUE TZID X
+EXRULE               X
+FREEBUSY             FBTYPE X
+GEO                  X
+LAST-MODIFIED        X
+LOCATION             ALTREP LANGUAGE X
+METHOD               X
+ORGANIZER            CN DIR LANGUAGE SENT-BY X
+PERCENT-COMPLETE     X
+PRIORITY             X
+PRODID               X
+RDATE                VALUE TZID X
+RECURRENCE-ID        VALUE RANGE TZID X
+RELATED-TO           RELTYPE X
+REPEAT               X
+REQUEST-STATUS       LANGUAGE X
+RESOURCES            ALTREP LANGUAGE X
+RRULE                X
+SEQUENCE             LOCAL X
+STATUS               X
+SUMMARY              ALTREP LANGUAGE X
+TRANSP               X
+TRIGGER              ENABLE VALUE RELATED X
+TZID                 X
+TZNAME               LANGUAGE X
+TZOFFSETFROM         X
+TZOFFSETTO           X
+TZURL                X
+UID                  X
+URL                  X
+VERSION              X
+XPROP                LANGUAGE X
+X-LIC-ERROR	     XLICEERRORTYPE X
+SCOPE                X
+MAXRESULTS           X
+MAXRESULTSSIZE       X
+QUERY                X
+QUERYNAME            X
+TARGET               X
+EXPAND               X

@@ -1,0 +1,544 @@
+BEGIN:VCALENDAR
+METHOD
+ :REPLY
+VERSION
+ :2.0
+PRODID
+ :-//SoftwareStudio//NONSGML libical 0.21 //EN
+BEGIN:VEVENT
+DTSTAMP
+ :20001121T170735Z
+UID
+ :calsrv.example.com-873970198738703@example.com
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+SUMMARY
+ : Overlap  1
+SEQUENCE
+ :0
+COMMENT
+ :I can make it to this meeting
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ ;PARTSTAT=ACCEPTED
+ :Mailto:alice@cal.softwarestudio.org
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REPLY
+VERSION
+ :2.0
+PRODID
+ :-//SoftwareStudio//NONSGML libical 0.21 //EN
+BEGIN:VEVENT
+DTSTAMP
+ :20001121T170735Z
+UID
+ :calsrv.example.com-873970198738704@example.com
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+SUMMARY
+ :Overlap  2
+SEQUENCE
+ :0
+COMMENT
+ :I can make it to this meeting
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ ;PARTSTAT=ACCEPTED
+ :Mailto:alice@cal.softwarestudio.org
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REPLY
+VERSION
+ :2.0
+PRODID
+ :-//SoftwareStudio//NONSGML libical 0.21 //EN
+BEGIN:VEVENT
+DTSTAMP
+ :20001121T170735Z
+UID
+ :calsrv.example.com-873970198738705@example.com
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+SUMMARY
+ :Overlap  3
+SEQUENCE
+ :0
+COMMENT
+ :I can make it to this meeting
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ ;PARTSTAT=ACCEPTED
+ :Mailto:alice@cal.softwarestudio.org
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REPLY
+VERSION
+ :2.0
+PRODID
+ :-//SoftwareStudio//NONSGML libical 0.21 //EN
+BEGIN:VEVENT
+DTSTAMP
+ :20001121T170953Z
+UID
+ :calsrv.example.com-873970198738703@example.com
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+SUMMARY
+ : Overlap  1
+SEQUENCE
+ :0
+COMMENT
+ :I can make it to this meeting
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ ;PARTSTAT=ACCEPTED
+ :Mailto:alice@cal.softwarestudio.org
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REPLY
+VERSION
+ :2.0
+PRODID
+ :-//SoftwareStudio//NONSGML libical 0.21 //EN
+BEGIN:VEVENT
+DTSTAMP
+ :20001121T170953Z
+UID
+ :calsrv.example.com-873970198738704@example.com
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+SUMMARY
+ :Overlap  2
+SEQUENCE
+ :0
+COMMENT
+ :I can make it to this meeting
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ ;PARTSTAT=ACCEPTED
+ :Mailto:alice@cal.softwarestudio.org
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REPLY
+VERSION
+ :2.0
+PRODID
+ :-//SoftwareStudio//NONSGML libical 0.21 //EN
+BEGIN:VEVENT
+DTSTAMP
+ :20001121T170953Z
+UID
+ :calsrv.example.com-873970198738705@example.com
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+SUMMARY
+ :Overlap  3
+SEQUENCE
+ :0
+COMMENT
+ :I can make it to this meeting
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ ;PARTSTAT=ACCEPTED
+ :Mailto:alice@cal.softwarestudio.org
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REPLY
+VERSION
+ :2.0
+PRODID
+ :-//SoftwareStudio//NONSGML libical 0.21 //EN
+BEGIN:VEVENT
+DTSTAMP
+ :20001121T171147Z
+UID
+ :calsrv.example.com-873970198738703@example.com
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+SUMMARY
+ : Overlap  1
+SEQUENCE
+ :0
+COMMENT
+ :Unfortunately\, I have another commitment that conflicts with this 
+ meeting. I am delegating my attendance to Bob. 
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ ;PARTSTAT=DELEGATED
+ ;DELEGATED-TO=bob@cal.softwarestudio.org
+ :Mailto:alice@cal.softwarestudio.org
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+X-LIC-NOTE
+ : Overlap with Slot 2\, 1300 to 1400\, should be counterproposed
+METHOD
+ :REQUEST
+VERSION
+ :2.0
+BEGIN:VEVENT
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ :Mailto:alice@cal.softwarestudio.org
+ATTENDEE
+ ;RSVP=TRUE
+ ;CUTYPE=INDIVIDUAL
+ ;CN=B
+ :Mailto:B@example.com
+DTSTAMP
+ :19970611T040000Z
+DTSTART
+ :19970701T070000
+DTEND
+ :19970701T080000
+SUMMARY
+ :Overlap  2
+UID
+ :calsrv.example.com-873970198738704@example.com
+SEQUENCE
+ :0
+STATUS
+ :CONFIRMED
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REPLY
+VERSION
+ :2.0
+PRODID
+ :-//SoftwareStudio//NONSGML libical 0.21 //EN
+BEGIN:VEVENT
+DTSTAMP
+ :20001121T171147Z
+UID
+ :calsrv.example.com-873970198738705@example.com
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+SUMMARY
+ :Overlap  3
+SEQUENCE
+ :0
+COMMENT
+ :I can't make it to this meeting
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ ;PARTSTAT=DECLINED
+ :Mailto:alice@cal.softwarestudio.org
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REPLY
+VERSION
+ :2.0
+PRODID
+ :-//SoftwareStudio//NONSGML libical 0.21 //EN
+BEGIN:VEVENT
+DTSTAMP
+ :20001121T171154Z
+UID
+ :calsrv.example.com-873970198738703@example.com
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+SUMMARY
+ : Overlap  1
+SEQUENCE
+ :0
+COMMENT
+ :Unfortunately\, I have another commitment that conflicts with this 
+ meeting. I am delegating my attendance to Bob. 
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ ;PARTSTAT=DELEGATED
+ ;DELEGATED-TO=bob@cal.softwarestudio.org
+ :Mailto:alice@cal.softwarestudio.org
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+X-LIC-NOTE
+ : Overlap with Slot 2\, 1300 to 1400\, should be counterproposed
+METHOD
+ :REQUEST
+VERSION
+ :2.0
+BEGIN:VEVENT
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ :Mailto:alice@cal.softwarestudio.org
+ATTENDEE
+ ;RSVP=TRUE
+ ;CUTYPE=INDIVIDUAL
+ ;CN=B
+ :Mailto:B@example.com
+DTSTAMP
+ :19970611T040000Z
+DTSTART
+ :19970701T070000
+DTEND
+ :19970701T080000
+SUMMARY
+ :Overlap  2
+UID
+ :calsrv.example.com-873970198738704@example.com
+SEQUENCE
+ :0
+STATUS
+ :CONFIRMED
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REPLY
+VERSION
+ :2.0
+PRODID
+ :-//SoftwareStudio//NONSGML libical 0.21 //EN
+BEGIN:VEVENT
+DTSTAMP
+ :20001121T171154Z
+UID
+ :calsrv.example.com-873970198738705@example.com
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+SUMMARY
+ :Overlap  3
+SEQUENCE
+ :0
+COMMENT
+ :I can't make it to this meeting
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ ;PARTSTAT=DECLINED
+ :Mailto:alice@cal.softwarestudio.org
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REPLY
+VERSION
+ :2.0
+PRODID
+ :-//SoftwareStudio//NONSGML libical 0.21 //EN
+BEGIN:VEVENT
+DTSTAMP
+ :20001121T144324Z
+UID
+ :calsrv.example.com-873970198738703@example.com
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+SUMMARY
+ : Overlap  1
+SEQUENCE
+ :0
+COMMENT
+ :Unfortunately\, I have another commitment that conflicts with this 
+ meeting. I am delegating my attendance to Bob. 
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ ;PARTSTAT=DELEGATED
+ ;DELEGATED-TO=bob@cal.softwarestudio.org
+ :Mailto:alice@cal.softwarestudio.org
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+X-LIC-NOTE
+ : Overlap with Slot 2\, 1300 to 1400\, should be counterproposed
+METHOD
+ :REQUEST
+VERSION
+ :2.0
+BEGIN:VEVENT
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ :Mailto:alice@cal.softwarestudio.org
+ATTENDEE
+ ;RSVP=TRUE
+ ;CUTYPE=INDIVIDUAL
+ ;CN=B
+ :Mailto:B@example.com
+DTSTAMP
+ :19970611T040000Z
+DTSTART
+ :19970701T230000
+DTEND
+ :19970702T000000
+SUMMARY
+ :Overlap  2
+UID
+ :calsrv.example.com-873970198738704@example.com
+SEQUENCE
+ :0
+STATUS
+ :CONFIRMED
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REPLY
+VERSION
+ :2.0
+PRODID
+ :-//SoftwareStudio//NONSGML libical 0.21 //EN
+BEGIN:VEVENT
+DTSTAMP
+ :20001121T144324Z
+UID
+ :calsrv.example.com-873970198738705@example.com
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+SUMMARY
+ :Overlap  3
+SEQUENCE
+ :0
+COMMENT
+ :I can't make it to this meeting
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ ;PARTSTAT=DECLINED
+ :Mailto:alice@cal.softwarestudio.org
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REPLY
+VERSION
+ :2.0
+PRODID
+ :-//SoftwareStudio//NONSGML libical 0.21 //EN
+BEGIN:VEVENT
+DTSTAMP
+ :20001121T144412Z
+UID
+ :calsrv.example.com-873970198738703@example.com
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+SUMMARY
+ : Overlap  1
+SEQUENCE
+ :0
+COMMENT
+ :Unfortunately\, I have another commitment that conflicts with this 
+ meeting. I am delegating my attendance to Bob. 
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ ;PARTSTAT=DELEGATED
+ ;DELEGATED-TO=bob@cal.softwarestudio.org
+ :Mailto:alice@cal.softwarestudio.org
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+X-LIC-NOTE
+ : Overlap with Slot 2\, 1300 to 1400\, should be counterproposed
+METHOD
+ :REQUEST
+VERSION
+ :2.0
+BEGIN:VEVENT
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ :Mailto:alice@cal.softwarestudio.org
+ATTENDEE
+ ;RSVP=TRUE
+ ;CUTYPE=INDIVIDUAL
+ ;CN=B
+ :Mailto:B@example.com
+DTSTAMP
+ :19970611T040000Z
+DTSTART
+ :19970701T230000
+DTEND
+ :19970702T000000
+SUMMARY
+ :Overlap  2
+UID
+ :calsrv.example.com-873970198738704@example.com
+SEQUENCE
+ :0
+STATUS
+ :CONFIRMED
+END:VEVENT
+END:VCALENDAR
+BEGIN:VCALENDAR
+METHOD
+ :REPLY
+VERSION
+ :2.0
+PRODID
+ :-//SoftwareStudio//NONSGML libical 0.21 //EN
+BEGIN:VEVENT
+DTSTAMP
+ :20001121T144412Z
+UID
+ :calsrv.example.com-873970198738705@example.com
+ORGANIZER
+ :Mailto:bob@cal.softwarestudio.org
+SUMMARY
+ :Overlap  3
+SEQUENCE
+ :0
+COMMENT
+ :I can't make it to this meeting
+ATTENDEE
+ ;ROLE=CHAIR
+ ;CUTYPE=INDIVIDUAL
+ ;CN=Alice
+ ;PARTSTAT=DECLINED
+ :Mailto:alice@cal.softwarestudio.org
+END:VEVENT
+END:VCALENDAR
