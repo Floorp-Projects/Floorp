@@ -107,8 +107,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   char *title = ConvertToFileSystemCharset(mTitle.get());
   if (nsnull == title)
     title = ToNewCString(mTitle);
-  char *initialDir;
-  mDisplayDirectory->GetPath(&initialDir);
+  nsCAutoString initialDir;
+  mDisplayDirectory->GetNativePath(initialDir);
 
   mFile.SetLength(0);
 
@@ -128,7 +128,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     *tempptr = '\0';
     if (filedlg.lReturn == DID_OK) {
       result = PR_TRUE;
-      mDisplayDirectory->InitWithPath(filedlg.szFullFile);
+      mDisplayDirectory->InitWithNativePath(nsDependentCString(filedlg.szFullFile));
       mFile.Append(filedlg.szFullFile);
     }
   }
@@ -144,8 +144,8 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     memset(pmydata, 0, sizeof(MYDATA));
     filedlg.ulUser = (ULONG)pmydata;
     filedlg.pfnDlgProc = FileDialogProc;
-    if (initialDir[0]) {
-      strcpy(filedlg.szFullFile, initialDir);
+    if (!initialDir.IsEmpty()) {
+      strcpy(filedlg.szFullFile, initialDir.get());
       strcat(filedlg.szFullFile, "\\");
     } else if (lastPath[0]) {
       strcpy(filedlg.szFullFile, lastPath);
@@ -238,7 +238,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
       strcpy(lastPath, filedlg.szFullFile);
 
       // Store the current directory in mDisplayDirectory
-      mDisplayDirectory->InitWithPath(filedlg.szFullFile);
+      mDisplayDirectory->InitWitNativehPath(nsDependentCString(filedlg.szFullFile));
       mSelectedType = (PRInt16)pmydata->ulCurExt;
     }
 
@@ -269,7 +269,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 
       NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
-      file->InitWithPath(mFile.get());
+      file->InitWithNativePath(mFile);
 
       PRBool exists = PR_FALSE;
       file->Exists(&exists);
@@ -297,7 +297,7 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
     
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
 
-  file->InitWithPath(mFile.get());
+  file->InitWithNativePath(mFile);
 
   NS_ADDREF(*aFile = file);
 
@@ -309,7 +309,7 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
 {
   nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
   NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
-  file->InitWithPath(mFile.get());
+  file->InitWithNativePath(mFile);
 
   nsCOMPtr<nsIURI> uri;
   NS_NewFileURI(getter_AddRefs(uri), file);
