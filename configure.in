@@ -4123,7 +4123,11 @@ fi
 
 if test "$MOZ_LDAP_XPCOM"; then
     LDAP_CFLAGS='-I${DIST}/include/ldap'
-    LDAP_LIBS='-L${DIST}/bin -L${DIST}/lib -lldap40 -llber40'
+    if test "$_WIN32_MSVC"; then
+        LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)nsldap32v40.${LIB_SUFFIX}'
+    else
+        LDAP_LIBS='-L${DIST}/bin -L${DIST}/lib -lldap40 -llber40'
+    fi
 fi
 
 dnl make sure that we compile in multi-processor support
