@@ -52,21 +52,48 @@ class nsHTTPChannel;
 */
 class nsHTTPResponseListener : public nsIStreamListener
 {
-
 public:
-
     nsHTTPResponseListener(nsHTTPChannel* aConnection);
     virtual ~nsHTTPResponseListener();
 
+    // nsISupport methods...
     NS_DECL_ISUPPORTS
+
+
+    // abstract methods implemented by the various ResponseListener
+    // subclasses...
+    virtual nsresult FireSingleOnData(nsIStreamListener *aListener, 
+                                      nsISupports *aContext) = 0;
+    virtual nsresult Abort() = 0;
+
+    void SetListener(nsIStreamListener *aListener);
+
+protected:
+    nsCOMPtr<nsIStreamListener>  mResponseDataListener;
+    nsHTTPChannel*               mChannel;
+};
+
+
+/*
+ * This class pocesses responses from HTTP servers...
+ */
+class nsHTTPServerListener : public nsHTTPResponseListener
+{
+
+public:
+
+    nsHTTPServerListener(nsHTTPChannel* aConnection);
+    virtual ~nsHTTPServerListener();
+
     NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
-    nsresult FireSingleOnData(nsIStreamListener *aListener, nsISupports *aContext);
-    nsresult Abort();
-    void     SetResponseDataListener(nsIStreamListener *aListener) {
-      mResponseDataListener = aListener;
-    }
+    virtual nsresult FireSingleOnData(nsIStreamListener *aListener, 
+                                      nsISupports *aContext);
+    virtual nsresult Abort();
+
+    nsresult Discard304Response(void);
+
 
 protected:
     // nsHTTPResponseListener methods...
@@ -80,15 +107,35 @@ protected:
                              PRUint32* aBytesRead);
 
 protected:
-    nsCOMPtr<nsIStreamListener> mResponseDataListener;
     nsCString                   mHeaderBuffer;
-    nsHTTPChannel*      	      mChannel;
     nsHTTPResponse*             mResponse;
-    PRBool              	      mFirstLineParsed;
-    PRBool              	      mHeadersDone;
+    PRBool                      mFirstLineParsed;
+    PRBool                      mHeadersDone;
 
     nsCOMPtr<nsIInputStream>    mDataStream;
     PRUint32                    mBytesReceived; 
 };
+
+
+/*
+ * This class processes responses from the cache...
+ */
+class nsHTTPCacheListener : public nsHTTPResponseListener
+{
+public:
+  nsHTTPCacheListener(nsHTTPChannel* aChannel);
+  virtual ~nsHTTPCacheListener();
+
+  // nsIStreamObserver methods...
+  NS_DECL_NSISTREAMOBSERVER
+
+  // nsIStreamListener methods...
+  NS_DECL_NSISTREAMLISTENER
+
+  virtual nsresult FireSingleOnData(nsIStreamListener *aListener, 
+                                    nsISupports *aContext);
+  virtual nsresult Abort();
+};
+
 
 #endif /* _nsHTTPResponseListener_h_ */

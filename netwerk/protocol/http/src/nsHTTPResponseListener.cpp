@@ -55,34 +55,51 @@ extern PRLogModuleInfo* gHTTPLog;
 static const int kMAX_HEADER_SIZE = 60000;
 
 
-nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel* aConnection):
-    mResponse(nsnull),
-    mFirstLineParsed(PR_FALSE),
-    mHeadersDone(PR_FALSE),
-    mBytesReceived(0)
+///////////////////////////////////////////////////////////////////////////////
+//
+// nsHTTPResponseListener Implementation (abstract base class)
+//
+///////////////////////////////////////////////////////////////////////////////
+nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel *aChannel)
+                       : mChannel(aChannel)
 {
-    NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 
-    NS_ASSERTION(aConnection, "HTTPChannel is null.");
-    mChannel = aConnection;
-    NS_ADDREF(mChannel);
-    mChannel->mRawResponseListener = this;
+  // mChannel is not an interface pointer, so COMPtrs cannot be used :-(
+  NS_ASSERTION(aChannel, "HTTPChannel is null.");
+  NS_ADDREF(mChannel);
 
-    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("Creating nsHTTPResponseListener [this=%x].\n", this));
+#if defined(PR_LOGGING)
+  nsCOMPtr<nsIURI> url;
+  nsXPIDLCString urlCString; 
+
+  aChannel->GetURI(getter_AddRefs(url));
+  if (url) {
+    url->GetSpec(getter_Copies(urlCString));
+  }
+  
+  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+         ("Creating nsHTTPResponseListener [this=%x] for URI: %s.\n", 
+           this, (const char *)urlCString));
+#endif
+
 
 }
 
 nsHTTPResponseListener::~nsHTTPResponseListener()
 {
-    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("Deleting nsHTTPResponseListener [this=%x].\n", this));
-
-    // These two should go away in the OnStopRequest() callback.
-    // But, just in case...
-    NS_IF_RELEASE(mChannel);
-    NS_IF_RELEASE(mResponse);
+  // mChannel is not an interface pointer, so COMPtrs cannot be used :-(
+  NS_IF_RELEASE(mChannel);
 }
+
+
+void nsHTTPResponseListener::SetListener(nsIStreamListener *aListener)
+{
+  mResponseDataListener = aListener;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsISupports methods:
 
 NS_IMPL_THREADSAFE_ADDREF(nsHTTPResponseListener)
 NS_IMPL_THREADSAFE_RELEASE(nsHTTPResponseListener)
@@ -90,6 +107,135 @@ NS_IMPL_THREADSAFE_RELEASE(nsHTTPResponseListener)
 NS_IMPL_QUERY_INTERFACE2(nsHTTPResponseListener, 
                          nsIStreamListener, 
                          nsIStreamObserver);
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// nsHTTPCacheListener Implementation
+//
+// This subclass of nsHTTPResponseListener processes responses from
+// the cache.
+//
+///////////////////////////////////////////////////////////////////////////////
+nsHTTPCacheListener::nsHTTPCacheListener(nsHTTPChannel* aChannel)
+                   : nsHTTPResponseListener(aChannel)
+{
+  PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+         ("Creating nsHTTPCacheListener [this=%x].\n", this));
+
+}
+
+nsHTTPCacheListener::~nsHTTPCacheListener()
+{
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+           ("Deleting nsHTTPCacheListener [this=%x].\n", this));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIStreamObserver methods:
+
+NS_IMETHODIMP
+nsHTTPCacheListener::OnStartRequest(nsIChannel *aChannel,
+                                    nsISupports *aContext)
+{
+  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+         ("nsHTTPCacheListener::OnStartRequest [this=%x].\n",
+          this));
+
+  return mResponseDataListener->OnStartRequest(mChannel, aContext);
+}
+
+NS_IMETHODIMP
+nsHTTPCacheListener::OnStopRequest(nsIChannel *aChannel,
+                                   nsISupports *aContext,
+                                   nsresult aStatus,
+                                   const PRUnichar *aErrorMsg)
+{
+  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+         ("nsHTTPCacheListener::OnStopRequest [this=%x]."
+          "\tStatus = %x\n", this, aStatus));
+
+  //
+  // Notify the channel that the response has finished.  Since there
+  // is no socket transport involved nsnull is passed as the
+  // transport...
+  //
+  return mChannel->ResponseCompleted(mResponseDataListener, 
+                                     aStatus, 
+                                     aErrorMsg);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIStreamListener methods:
+
+NS_IMETHODIMP
+nsHTTPCacheListener::OnDataAvailable(nsIChannel *aChannel,
+                                     nsISupports *aContext,
+                                     nsIInputStream *aStream,
+                                     PRUint32 aSourceOffset,
+                                     PRUint32 aCount)
+{
+  return mResponseDataListener->OnDataAvailable(mChannel, 
+                                                aContext,
+                                                aStream,
+                                                aSourceOffset,
+                                                aCount);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsHTTPResponseListener methods:
+
+nsresult
+nsHTTPCacheListener::FireSingleOnData(nsIStreamListener *aListener, 
+                                      nsISupports *aContext)
+{
+  NS_ASSERTION(0, "nsHTTPCacheListener::FireSingleOnData(...) "
+                  "should never be called.");
+ 
+  return NS_ERROR_FAILURE;
+}
+
+nsresult nsHTTPCacheListener::Abort()
+{
+  NS_ASSERTION(0, "nsHTTPCachedResponseListener::Abort() "
+                  "should never be called.");
+ 
+  return NS_ERROR_FAILURE;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// nsHTTPServerListener Implementation
+//
+// This subclass of nsHTTPResponseListener processes responses from
+// HTTP servers.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+nsHTTPServerListener::nsHTTPServerListener(nsHTTPChannel* aChannel)
+                    : nsHTTPResponseListener(aChannel),
+                      mResponse(nsnull),
+                      mFirstLineParsed(PR_FALSE),
+                      mHeadersDone(PR_FALSE),
+                      mBytesReceived(0)
+{
+    mChannel->mHTTPServerListener = this;
+
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+           ("Creating nsHTTPServerListener [this=%x].\n", this));
+}
+
+nsHTTPServerListener::~nsHTTPServerListener()
+{
+    PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
+           ("Deleting nsHTTPServerListener [this=%x].\n", this));
+
+    // These two should go away in the OnStopRequest() callback.
+    // But, just in case...
+    NS_IF_RELEASE(mResponse);
+}
 
 static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
@@ -99,11 +245,11 @@ static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
 // nsIStreamListener methods:
 
 NS_IMETHODIMP
-nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
-                                        nsISupports* context,
-                                        nsIInputStream *i_pStream, 
-                                        PRUint32 i_SourceOffset,
-                                        PRUint32 i_Length)
+nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
+                                      nsISupports* context,
+                                      nsIInputStream *i_pStream, 
+                                      PRUint32 i_SourceOffset,
+                                      PRUint32 i_Length)
 {
     nsresult rv = NS_OK;
     PRUint32 actualBytesRead;
@@ -111,7 +257,7 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
     nsCOMPtr<nsIBufferInputStream> bufferInStream = do_QueryInterface(i_pStream);
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("nsHTTPResponseListener::OnDataAvailable [this=%x].\n"
+           ("nsHTTPServerListener::OnDataAvailable [this=%x].\n"
             "\tstream=%x. \toffset=%d. \tlength=%d.\n",
             this, i_pStream, i_SourceOffset, i_Length));
 
@@ -211,10 +357,10 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
 
 
 NS_IMETHODIMP
-nsHTTPResponseListener::OnStartRequest(nsIChannel* channel, nsISupports* i_pContext)
+nsHTTPServerListener::OnStartRequest(nsIChannel* channel, nsISupports* i_pContext)
 {
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("nsHTTPResponseListener::OnStartRequest [this=%x].\n", this));
+           ("nsHTTPServerListener::OnStartRequest [this=%x].\n", this));
 
     // Initialize header varaibles...  
     mHeadersDone     = PR_FALSE;
@@ -224,15 +370,15 @@ nsHTTPResponseListener::OnStartRequest(nsIChannel* channel, nsISupports* i_pCont
 }
 
 NS_IMETHODIMP
-nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
-                                      nsISupports* i_pContext,
-                                      nsresult i_Status,
-                                      const PRUnichar* i_pMsg)
+nsHTTPServerListener::OnStopRequest(nsIChannel* channel,
+                                    nsISupports* i_pContext,
+                                    nsresult i_Status,
+                                    const PRUnichar* i_pMsg)
 {
     nsresult rv = NS_OK;
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-           ("nsHTTPResponseListener::OnStopRequest [this=%x]."
+           ("nsHTTPServerListener::OnStopRequest [this=%x]."
             "\tStatus = %x\n", this, i_Status));
 
     if (NS_SUCCEEDED(rv) && !mHeadersDone) {
@@ -253,11 +399,23 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
     // Notify the HTTPChannel that the response has completed...
     NS_ASSERTION(mChannel, "HTTPChannel is null.");
     if (mChannel) {
-        mChannel->ResponseCompleted(channel, mResponseDataListener, 
-                                    i_Status, i_pMsg);
+        PRUint32 status = 0;
 
-        // The HTTPChannel is no longer needed...
-        mChannel->mRawResponseListener = 0;
+        if (mResponse) {
+            mResponse->GetStatus(&status);
+        }
+
+        if (status != 304) {
+            mChannel->ResponseCompleted(mResponseDataListener, 
+                                        i_Status, i_pMsg);
+            // The HTTPChannel no longer needs a reference to this object.
+            mChannel->mHTTPServerListener = 0;
+        } else {
+            PR_LOG(gHTTPLog, PR_LOG_DEBUG,
+                  ("nsHTTPServerListener::OnStopRequest [this=%x]. "
+                   "Discarding 304 response\n", this));
+        }
+        mChannel->ReleaseTransport(channel);
     }
 
     NS_IF_RELEASE(mChannel);
@@ -267,12 +425,12 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsHTTPResponseListener methods:
+// nsHTTPServerListener methods:
 
-nsresult nsHTTPResponseListener::Abort()
+nsresult nsHTTPServerListener::Abort()
 {
   PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-         ("nsHTTPResponseListener::Abort [this=%x].", this));
+         ("nsHTTPServerListener::Abort [this=%x].", this));
 
   //
   // Clearing the data consumer will cause the response to abort.  This
@@ -284,7 +442,7 @@ nsresult nsHTTPResponseListener::Abort()
 }
 
 
-nsresult nsHTTPResponseListener::FireSingleOnData(nsIStreamListener *aListener, nsISupports *aContext)
+nsresult nsHTTPServerListener::FireSingleOnData(nsIStreamListener *aListener, nsISupports *aContext)
 {
     nsresult rv;
 
@@ -318,9 +476,9 @@ nsWriteToString(void* closure,
 }
 
 
-nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in, 
-                                                 PRUint32 aLength,
-                                                 PRUint32 *aBytesRead)
+nsresult nsHTTPServerListener::ParseStatusLine(nsIBufferInputStream* in, 
+                                               PRUint32 aLength,
+                                               PRUint32 *aBytesRead)
 {
   nsresult rv = NS_OK;
 
@@ -328,7 +486,7 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in,
   PRUint32 offsetOfEnd, totalBytesToRead, actualBytesRead;
 
   PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
-         ("nsHTTPResponseListener::ParseStatusLine [this=%x].\taLength=%d\n", 
+         ("nsHTTPServerListener::ParseStatusLine [this=%x].\taLength=%d\n", 
           this, aLength));
 
   *aBytesRead = 0;
@@ -405,9 +563,9 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in,
 
 
 
-nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBufferInputStream* in,
-                                                 PRUint32 aLength,
-                                                 PRUint32 *aBytesRead)
+nsresult nsHTTPServerListener::ParseHTTPHeader(nsIBufferInputStream* in,
+                                               PRUint32 aLength,
+                                               PRUint32 *aBytesRead)
 {
   nsresult rv = NS_OK;
 
@@ -508,7 +666,7 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBufferInputStream* in,
   return mResponse->ParseHeader(mHeaderBuffer);
 }
 
-nsresult nsHTTPResponseListener::FinishedResponseHeaders(void)
+nsresult nsHTTPServerListener::FinishedResponseHeaders(void)
 {
   nsresult rv;
 
@@ -529,3 +687,6 @@ nsresult nsHTTPResponseListener::FinishedResponseHeaders(void)
 
   return rv;
 }
+
+
+
