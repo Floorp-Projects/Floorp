@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.52 $ $Date: 2002/05/07 20:38:57 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.53 $ $Date: 2002/05/09 22:42:23 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -85,16 +85,6 @@ NSSCryptoContext *
 STAN_GetDefaultCryptoContext()
 {
     return g_default_crypto_context;
-}
-
-NSS_IMPLEMENT NSSToken *
-STAN_GetDefaultCryptoToken
-(
-  void
-)
-{
-    PK11SlotInfo *pk11slot = PK11_GetInternalSlot();
-    return PK11Slot_GetNSSToken(pk11slot);
 }
 
 NSS_IMPLEMENT PRStatus
