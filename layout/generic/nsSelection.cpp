@@ -435,7 +435,7 @@ private:
 
   void ResizeBuffer(PRUint32 aNewBufSize);
 /*HELPER METHODS*/
-  nsresult     MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aAmount);
+  nsresult     MoveCaret(PRUint32 aKeycode, PRBool aContinueSelection, nsSelectionAmount aAmount);
 
   nsresult     FetchDesiredX(nscoord &aDesiredX); //the x position requested by the Key Handling for up down
   void         InvalidateDesiredX(); //do not listen to mDesiredX you must get another.
@@ -1291,7 +1291,7 @@ nsSelection::HandleTextEvent(nsGUIEvent *aGUIEvent)
 
 
 nsresult
-nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aAmount)
+nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinueSelection, nsSelectionAmount aAmount)
 {
   nsPresContext *context = mShell->GetPresContext();
   if (!context)
@@ -1313,44 +1313,6 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
     if (NS_FAILED(result))
       return result;
     SetDesiredX(desiredX);
-  }
-
-  if (!isCollapsed && !aContinue) {
-    switch (aKeycode){
-      case nsIDOMKeyEvent::DOM_VK_LEFT  : 
-      case nsIDOMKeyEvent::DOM_VK_UP    : {
-          if ((mDomSelections[index]->GetDirection() == eDirPrevious)) { //f,a
-            offsetused = mDomSelections[index]->FetchFocusOffset();
-            weakNodeUsed = mDomSelections[index]->FetchFocusNode();
-          }
-          else {
-            offsetused = mDomSelections[index]->FetchAnchorOffset();
-            weakNodeUsed = mDomSelections[index]->FetchAnchorNode();
-          }
-          result = mDomSelections[index]->Collapse(weakNodeUsed,offsetused);
-          mDomSelections[index]->ScrollIntoView();
-          mHint = HINTRIGHT;
-          return NS_OK;
-         } break;
-      case nsIDOMKeyEvent::DOM_VK_RIGHT : 
-      case nsIDOMKeyEvent::DOM_VK_DOWN  : {
-          if ((mDomSelections[index]->GetDirection() == eDirPrevious)) { //f,a
-            offsetused = mDomSelections[index]->FetchAnchorOffset();
-            weakNodeUsed = mDomSelections[index]->FetchAnchorNode();
-          }
-          else {
-            offsetused = mDomSelections[index]->FetchFocusOffset();
-            weakNodeUsed = mDomSelections[index]->FetchFocusNode();
-          }
-          result = mDomSelections[index]->Collapse(weakNodeUsed,offsetused);
-          mDomSelections[index]->ScrollIntoView();
-          mHint = HINTLEFT;
-          return NS_OK;
-         } break;
-      
-    }
-//      if (keyEvent->keyCode == nsIDOMKeyEvent::DOM_VK_UP || keyEvent->keyCode == nsIDOMKeyEvent::DOM_VK_DOWN)
-//        SetDesiredX(desiredX);
   }
 
   nsCOMPtr<nsICaret> caret;
@@ -1465,20 +1427,25 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
       }
 #ifdef VISUALSELECTION
       // Handle visual selection
-      if (aContinue)
+      if (aContinueSelection)
       {
         result = VisualSelectFrames(context, theFrame, pos);
         if (NS_FAILED(result)) // Back out by collapsing the selection to the current position
           result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, PR_FALSE, PR_FALSE);
       }    
       else
-        result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinue, PR_FALSE);
+        result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinueSelection, PR_FALSE);
     }
     else
 #else
     }
 #endif // VISUALSELECTION
-    result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinue, PR_FALSE);
+    result = TakeFocus(pos.mResultContent, pos.mContentOffset, pos.mContentOffset, aContinueSelection, PR_FALSE);
+  } else if (aKeycode == nsIDOMKeyEvent::DOM_VK_RIGHT && !aContinueSelection) {
+    // Collapse selection if PeekOffset failed because we bumped into the BRFrame, bug 207623.
+    mDomSelections[index]->Collapse(weakNodeUsed, offsetused);
+    tHint = mHint; // make the line below restore the original hint
+    result = NS_OK;
   }
   if (NS_SUCCEEDED(result))
   {
