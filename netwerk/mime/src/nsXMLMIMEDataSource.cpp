@@ -719,7 +719,7 @@ nsXMLMIMEDataSource::InitFromFile( nsIFile*  aFile  )
 			}
 			else
 			{
-				prevCharRight =false;
+				prevCharRight = PR_FALSE;
 			}
 		}
 		else
