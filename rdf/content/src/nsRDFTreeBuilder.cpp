@@ -66,6 +66,7 @@
 #include "nsVoidArray.h"
 #include "rdf_qsort.h"
 #include "nsRDFGenericBuilder.h"
+#include "prtime.h"
 
 ////////////////////////////////////////////////////////////////////////
 
