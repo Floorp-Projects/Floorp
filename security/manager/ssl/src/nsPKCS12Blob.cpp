@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.1 2001/03/20 18:00:43 mcgreer%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.2 2001/03/20 22:41:35 bryner%uiuc.edu Exp $
  */
 
 #include "prmem.h"
@@ -65,7 +65,7 @@ char *
 pk11PasswordPrompt(PK11SlotInfo *slot, PRBool retry, void *arg)
 {
   nsresult rv = NS_OK;
-  PRUnichar *tokenName;
+  const PRUnichar *tokenName;
   PRUnichar *password;
   PRBool canceled;
   int *retries = (int *)arg;
