@@ -212,11 +212,7 @@ nsToolboxFrame::Init(nsIPresContext&  aPresContext,
 
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
 
-  if (NS_OK == reciever->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMDragListener*, mDragListenerDelegate), nsIDOMDragListener::GetIID())) {
-#ifdef DEBUG_rods
-    printf("Toolbar registered as Drag Listener\n");
-#endif
-  }
+  reciever->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMDragListener*, mDragListenerDelegate), nsIDOMDragListener::GetIID());
 
   return rv;
 }
@@ -884,7 +880,7 @@ nsToolboxFrame::DragDrop(nsIDOMEvent* aMouseEvent)
               // Get the string data out of the transferable as a nsISupportsString.
               nsCOMPtr<nsISupports> data;
               PRUint32 len;
-              char* whichFlavor;
+              char* whichFlavor = nsnull;
               trans->GetAnyTransferData(&whichFlavor, getter_AddRefs(data), &len);
               nsCOMPtr<nsISupportsString> dataAsString ( do_QueryInterface(data) );
 
@@ -896,7 +892,7 @@ nsToolboxFrame::DragDrop(nsIDOMEvent* aMouseEvent)
                 dragSession->SetCanDrop(PR_TRUE);
               }
               
-              delete [] whichFlavor;
+              nsAllocator::Free ( whichFlavor );
             }
           } // foreach drag item
         }
