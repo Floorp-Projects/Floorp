@@ -2644,23 +2644,23 @@ nsHTMLSelectElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
 {
   int32 n = GetArrayIndexFromId(cx, id);
 
-  if (n < 0) {
-    return NS_OK;
+  if (n >= 0) {
+    nsCOMPtr<nsISupports> native;
+    wrapper->GetNative(getter_AddRefs(native));
+
+    nsCOMPtr<nsIDOMHTMLSelectElement> select(do_QueryInterface(native));
+    NS_ENSURE_TRUE(select, NS_ERROR_UNEXPECTED);
+
+    nsCOMPtr<nsIDOMHTMLCollection> options;
+    select->GetOptions(getter_AddRefs(options));
+
+    nsCOMPtr<nsIDOMNSHTMLOptionCollection> oc(do_QueryInterface(options));
+    NS_ENSURE_TRUE(oc, NS_ERROR_UNEXPECTED);
+
+    return SetOption(cx, vp, n, oc);
   }
 
-  nsCOMPtr<nsISupports> native;
-  wrapper->GetNative(getter_AddRefs(native));
-
-  nsCOMPtr<nsIDOMHTMLSelectElement> select(do_QueryInterface(native));
-  NS_ENSURE_TRUE(select, NS_ERROR_UNEXPECTED);
-
-  nsCOMPtr<nsIDOMHTMLCollection> options;
-  select->GetOptions(getter_AddRefs(options));
-
-  nsCOMPtr<nsIDOMNSHTMLOptionCollection> oc(do_QueryInterface(options));
-  NS_ENSURE_TRUE(oc, NS_ERROR_UNEXPECTED);
-
-  return SetOption(cx, vp, n, oc);
+  return nsElementSH::SetProperty(wrapper, cx, obj, id, vp, _retval);
 }
 
 
