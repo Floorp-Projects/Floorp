@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslauth.c,v 1.4 2001/02/09 02:11:30 nelsonb%netscape.com Exp $
+ * $Id: sslauth.c,v 1.5 2001/03/16 23:26:02 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -84,7 +84,7 @@ SSL_SecurityStatus(PRFileDesc *fd, int *op, char **cp, int *kp0, int *kp1,
 	*op = SSL_SECURITY_STATUS_OFF;
     }
 
-    if (ss->useSecurity && ss->connected) {
+    if (ss->useSecurity && ss->firstHsDone) {
 	PORT_Assert(ss->sec != 0);
 	sec = ss->sec;
 

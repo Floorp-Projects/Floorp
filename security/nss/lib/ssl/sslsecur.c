@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsecur.c,v 1.7 2001/02/09 02:11:30 nelsonb%netscape.com Exp $
+ * $Id: sslsecur.c,v 1.8 2001/03/16 23:26:05 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -143,12 +143,12 @@ ssl_Do1stHandshake(sslSocket *ss)
 	    /* for v3 this is done in ssl3_HandleFinished() */
 	    if ((ss->sec != NULL) &&               /* used SSL */
 	        (ss->handshakeCallback != NULL) && /* has callback */
-		(!ss->connected) &&                /* only first time */
+		(!ss->firstHsDone) &&              /* only first time */
 		(ss->version < SSL_LIBRARY_VERSION_3_0)) {  /* not ssl3 */
-		ss->connected       = PR_TRUE;
+		ss->firstHsDone     = PR_TRUE;
 		(ss->handshakeCallback)(ss->fd, ss->handshakeCallbackData);
 	    }
-	    ss->connected           = PR_TRUE;
+	    ss->firstHsDone         = PR_TRUE;
 	    ss->gather->writeOffset = 0;
 	    ss->gather->readOffset  = 0;
 	    break;
@@ -187,7 +187,7 @@ AlwaysBlock(sslSocket *ss)
 void
 ssl_SetAlwaysBlock(sslSocket *ss)
 {
-    if (!ss->connected) {
+    if (!ss->firstHsDone) {
 	ss->handshake = AlwaysBlock;
 	ss->nextHandshake = 0;
     }
@@ -200,6 +200,7 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
 {
     sslSocket *ss;
     SECStatus rv;
+    PRNetAddr addr;
 
     ss = ssl_FindSocket(s);
     if (!ss) {
@@ -218,9 +219,14 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
     ssl_Get1stHandshakeLock(ss);
     ssl_GetSSL3HandshakeLock(ss);
 
-    ss->connected = PR_FALSE;
-    ss->handshake = asServer ? ssl2_BeginServerHandshake
-	                     : ssl2_BeginClientHandshake;
+    ss->firstHsDone = PR_FALSE;
+    if ( asServer ) {
+	ss->securityHandshake = ssl2_BeginServerHandshake;
+	ss->handshaking = sslHandshakingAsServer;
+    } else {
+	ss->securityHandshake = ssl2_BeginClientHandshake;
+	ss->handshaking = sslHandshakingAsClient;
+    }
     ss->nextHandshake       = 0;
     ss->securityHandshake   = 0;
 
@@ -243,6 +249,9 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
 
     ssl_ReleaseSSL3HandshakeLock(ss);
     ssl_Release1stHandshakeLock(ss);
+
+    if (!ss->TCPconnected)
+	ss->TCPconnected = (PR_SUCCESS == ssl_DefGetpeername(ss, &addr));
 
     SSL_UNLOCK_WRITER(ss);
     SSL_UNLOCK_READER(ss);
@@ -369,10 +378,11 @@ SSL_ForceHandshake(PRFileDesc *fd)
 	} else if (gatherResult == SECWouldBlock) {
 	    PORT_SetError(PR_WOULD_BLOCK_ERROR);
 	}
-    } else if (!ss->connected) {
+    } else if (!ss->firstHsDone) {
 	rv = ssl_Do1stHandshake(ss);
     } else {
-	/* tried to force handshake on a connected SSL 2 socket. */
+	/* tried to force handshake on an SSL 2 socket that has 
+	** already completed the handshake. */
     	rv = SECSuccess;	/* just pretend we did it. */
     }
 
@@ -882,32 +892,29 @@ ssl_SecureConnect(sslSocket *ss, const PRNetAddr *sa)
 
     PORT_Assert(ss->sec != 0);
 
-    /* First connect to server */
-    rv = osfd->methods->connect(osfd, sa, ss->cTimeout);
-    if (rv < 0) {
-	int olderrno = PR_GetError();
-	SSL_DBG(("%d: SSL[%d]: connect failed, errno=%d",
-		 SSL_GETPID(), ss->fd, olderrno));
-	if ((olderrno == PR_IS_CONNECTED_ERROR) ||
-	    (olderrno == PR_IN_PROGRESS_ERROR)) {
-	    /*
-	    ** Connected or trying to connect.  Caller is Using a non-blocking
-	    ** connect. Go ahead and set things up.
-	    */
-	} else {
-	    return rv;
-	}
-    }
-
-    SSL_TRC(5, ("%d: SSL[%d]: secure connect completed, setting up handshake",
-		SSL_GETPID(), ss->fd));
-
     if ( ss->handshakeAsServer ) {
 	ss->securityHandshake = ssl2_BeginServerHandshake;
+	ss->handshaking = sslHandshakingAsServer;
     } else {
 	ss->securityHandshake = ssl2_BeginClientHandshake;
+	ss->handshaking = sslHandshakingAsClient;
     }
-    
+
+    /* connect to server */
+    rv = osfd->methods->connect(osfd, sa, ss->cTimeout);
+    if (rv == PR_SUCCESS) {
+	ss->TCPconnected = 1;
+    } else {
+	int err = PR_GetError();
+	SSL_DBG(("%d: SSL[%d]: connect failed, errno=%d",
+		 SSL_GETPID(), ss->fd, err));
+	if (err == PR_IS_CONNECTED_ERROR) {
+	    ss->TCPconnected = 1;
+	} 
+    }
+
+    SSL_TRC(5, ("%d: SSL[%d]: secure connect completed, rv == %d",
+		SSL_GETPID(), ss->fd, rv));
     return rv;
 }
 
@@ -917,8 +924,9 @@ ssl_SecureClose(sslSocket *ss)
     int rv;
 
     if (ss->version >= SSL_LIBRARY_VERSION_3_0 	&&
-    	ss->connected 				&& 
+    	ss->firstHsDone 			&& 
 	!(ss->shutdownHow & ssl_SHUTDOWN_SEND)	&&
+	!ss->recvdCloseNotify                   &&
 	(ss->ssl3 != NULL)) {
 
 	(void) SSL3_SendAlert(ss, alert_warning, close_notify);
@@ -943,7 +951,8 @@ ssl_SecureShutdown(sslSocket *ss, int nsprHow)
     if ((sslHow & ssl_SHUTDOWN_SEND) != 0 		&&
 	!(ss->shutdownHow & ssl_SHUTDOWN_SEND)		&&
     	(ss->version >= SSL_LIBRARY_VERSION_3_0)	&&
-	ss->connected 					&& 
+	ss->firstHsDone 				&& 
+	!ss->recvdCloseNotify                   	&&
 	(ss->ssl3 != NULL)) {
 
 	(void) SSL3_SendAlert(ss, alert_warning, close_notify);
@@ -992,7 +1001,7 @@ ssl_SecureRecv(sslSocket *ss, unsigned char *buf, int len, int flags)
     
     rv = 0;
     /* If any of these is non-zero, the initial handshake is not done. */
-    if (!ss->connected) {
+    if (!ss->firstHsDone) {
 	ssl_Get1stHandshakeLock(ss);
 	if (ss->handshake || ss->nextHandshake || ss->securityHandshake) {
 	    rv = ssl_Do1stHandshake(ss);
@@ -1054,7 +1063,7 @@ ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
     if (len > 0) 
     	ss->writerThread = PR_GetCurrentThread();
     /* If any of these is non-zero, the initial handshake is not done. */
-    if (!ss->connected) {
+    if (!ss->firstHsDone) {
 	ssl_Get1stHandshakeLock(ss);
 	if (ss->handshake || ss->nextHandshake || ss->securityHandshake) {
 	    rv = ssl_Do1stHandshake(ss);
@@ -1214,7 +1223,7 @@ SSL_GetSessionID(PRFileDesc *fd)
 	ssl_Get1stHandshakeLock(ss);
 	ssl_GetSSL3HandshakeLock(ss);
 
-	if (ss->useSecurity && ss->connected && ss->sec && ss->sec->ci.sid) {
+	if (ss->useSecurity && ss->firstHsDone && ss->sec && ss->sec->ci.sid) {
 	    sid = ss->sec->ci.sid;
 	    item = (SECItem *)PORT_Alloc(sizeof(SECItem));
 	    if (sid->version < SSL_LIBRARY_VERSION_3_0) {

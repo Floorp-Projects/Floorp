@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssldef.c,v 1.2 2000/10/07 02:22:22 nelsonb%netscape.com Exp $
+ * $Id: ssldef.c,v 1.3 2001/03/16 23:26:03 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -115,8 +115,10 @@ int ssl_DefSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
 	if (rv < 0) {
 	    PRErrorCode err = PR_GetError();
 	    if (err == PR_WOULD_BLOCK_ERROR) {
+		ss->lastWriteBlocked = 1;
 		return count ? count : rv;
 	    }
+	    ss->lastWriteBlocked = 0;
 	    MAP_ERROR(PR_CONNECT_ABORTED_ERROR, PR_CONNECT_RESET_ERROR)
 	    /* Loser */
 	    return rv;
@@ -130,6 +132,7 @@ int ssl_DefSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
 	}
 	break;
     }
+    ss->lastWriteBlocked = 0;
     return count;
 }
 
@@ -157,8 +160,10 @@ int ssl_DefWrite(sslSocket *ss, const unsigned char *buf, int len)
 	if (rv < 0) {
 	    PRErrorCode err = PR_GetError();
 	    if (err == PR_WOULD_BLOCK_ERROR) {
+		ss->lastWriteBlocked = 1;
 		return count ? count : rv;
 	    }
+	    ss->lastWriteBlocked = 0;
 	    MAP_ERROR(PR_CONNECT_ABORTED_ERROR, PR_CONNECT_RESET_ERROR)
 	    /* Loser */
 	    return rv;
@@ -172,6 +177,7 @@ int ssl_DefWrite(sslSocket *ss, const unsigned char *buf, int len)
 	}
 	break;
     }
+    ss->lastWriteBlocked = 0;
     return count;
 }
 

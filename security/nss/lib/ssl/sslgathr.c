@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslgathr.c,v 1.2 2000/12/02 00:54:01 nelsonb%netscape.com Exp $
+ * $Id: sslgathr.c,v 1.3 2001/03/16 23:26:04 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "ssl.h"
@@ -139,7 +139,7 @@ ssl2_GatherData(sslSocket *ss, sslGather *gs, int flags)
 	/* Probably finished this piece */
 	switch (gs->state) {
 	case GS_HEADER: 
-	    if ((ss->enableSSL3 || ss->enableTLS) && !ss->connected) {
+	    if ((ss->enableSSL3 || ss->enableTLS) && !ss->firstHsDone) {
 
 		PORT_Assert( ssl_Have1stHandshakeLock(ss) );
 
@@ -183,7 +183,7 @@ ssl2_GatherData(sslSocket *ss, sslGather *gs, int flags)
 			return SECFailure;
 		    }
 		}
-	    }	/* ((ss->enableSSL3 || ss->enableTLS) && !ss->connected) */
+	    }	/* ((ss->enableSSL3 || ss->enableTLS) && !ss->firstHsDone) */
 
 	    /* we've got the first 3 bytes.  The header may be two or three. */
 	    if (gs->hdr[0] & 0x80) {
