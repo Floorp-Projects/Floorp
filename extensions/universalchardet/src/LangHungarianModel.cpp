@@ -200,5 +200,5 @@ SequenceModel Win1250HungarianModel =
   win1250HungarianCharToOrderMap,
   HungarianLangModel,
   PR_TRUE,
-  "Windows-1250"
+  "windows-1250"
 };

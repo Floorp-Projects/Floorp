@@ -203,5 +203,5 @@ SequenceModel Win1251BulgarianModel =
   win1251BulgarianCharToOrderMap,
   BulgarianLangModel,
   PR_FALSE,
-  "Windows-1251"
+  "windows-1251"
 };
