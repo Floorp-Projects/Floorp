@@ -1163,7 +1163,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     fputs("^\n", stderr);
 }
 
-#if defined DEBUG && defined XP_UNIX
+#if defined(SHELL_HACK) && defined(DEBUG) && defined(XP_UNIX)
 static JSBool
 Exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
