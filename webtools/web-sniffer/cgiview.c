@@ -80,14 +80,16 @@ reportHTMLAttributeValue(void *a, HTML *html, Input *input)
 {
 	URL	*url;
 	View	*view;
+	char	*urlstring;
 
 	view = a;
 
 	if (html->currentAttributeIsURL)
 	{
 		url = urlRelative(html->base, html->currentAttribute->value);
-		fprintf(view->out, "<a href=%s%s>", me,
-			url ? (char*) url->url : "");
+		urlstring = escapeHTML(url ? (char*) url->url : "");
+		fprintf(view->out, "<a href=\"%s%s\">", me, urlstring);
+		free(urlstring);
 		urlFree(url);
 	}
 	viewHTMLAttributeValue(view, input);
@@ -151,12 +153,15 @@ void
 reportHTTPHeaderValue(void *a, Input *input, unsigned char *url)
 {
 	View	*view;
+	char	*urlstring;
 
 	view = a;
 
 	if (url)
 	{
-		fprintf(view->out, "<a href=%s%s>", me, url);
+		urlstring = escapeHTML(url);
+		fprintf(view->out, "<a href=\"%s%s\">", me, urlstring);
+		free(urlstring);
 	}
 	viewHTTPHeaderValue(view, input);
 	if (url)

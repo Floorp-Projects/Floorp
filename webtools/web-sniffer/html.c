@@ -899,6 +899,9 @@ escapeHTML(unsigned char *str)
 			case '&':
 				replacement = "&amp;";
 				break;
+			case '"':
+				replacement = "&quot;";
+				break;
 			default:
 				replacement = buf;
 				buf[0] = str[j];
