@@ -93,7 +93,6 @@
 #include "nsNetUtil.h"
 #include "nsGUIEvent.h"
 
-#include "nsFormControlHelper.h"
 #include "nsContentUtils.h"
 
 #define ONLOAD_CALLED_TOO_EARLY 1
