@@ -236,6 +236,19 @@ static PRBool IsValidNetAddrLen(const PRNetAddr *addr, PRInt32 addr_len)
     if ((addr != NULL)
             && (addr->raw.family != AF_UNIX)
             && (PR_NETADDR_SIZE(addr) != addr_len)) {
+#if defined(LINUX)
+        /*
+         * In glibc 2.1, struct sockaddr_in6 is 24 bytes.  In glibc 2.2
+         * and in the 2.4 kernel, struct sockaddr_in6 has the scope_id
+         * field and is 28 bytes.  It is possible for socket functions
+         * to return an addr_len greater than sizeof(struct sockaddr_in6).
+         * We need to allow that.  (Bugzilla bug #77264)
+         */
+        if ((PR_AF_INET6 == addr->raw.family)
+                && (sizeof(addr->ipv6) == addr_len)) {
+            return PR_TRUE;
+        }
+#endif
         return PR_FALSE;
     }
     return PR_TRUE;
