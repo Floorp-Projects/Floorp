@@ -56,59 +56,9 @@
 #include "intl_csi.h"
 */
 
-extern "C"
-{
-extern int MK_MSG_MSG_COMPOSITION;
-
-extern int MK_COMMUNICATIONS_ERROR;
-extern int MK_OUT_OF_MEMORY;
-
-extern int MK_MSG_EMPTY_MESSAGE;
-extern int MK_MSG_DOUBLE_INCLUDE;
-
-extern int MK_MSG_WHY_QUEUE_SPECIAL;
-extern int MK_MSG_WHY_QUEUE_SPECIAL_OLD;
-extern int MK_MSG_NOT_AS_SENT_FOLDER;
-
-extern int MK_MSG_MISSING_SUBJECT;
-HJ64582
-
-extern int MK_MSG_SEND;
-extern int MK_MSG_SEND_LATER;
-extern int MK_MSG_ATTACH_ETC;
-extern int MK_MSG_QUOTE_MESSAGE;
-extern int MK_MSG_FROM;
-extern int MK_MSG_REPLY_TO;
-extern int MK_MSG_MAIL_TO;
-extern int MK_MSG_MAIL_CC;
-extern int MK_MSG_MAIL_BCC;
-extern int MK_MSG_FILE_CC;
-extern int MK_MSG_POST_TO;
-extern int MK_MSG_FOLLOWUPS_TO;
-extern int MK_MSG_SUBJECT;
-extern int MK_MSG_ATTACHMENT;
-extern int MK_MSG_ATTACH_AS_TEXT;
-extern int MK_MSG_SAVE_DRAFT;
-extern int MK_MSG_SAVE_TEMPLATE;
-extern int MK_ADDR_BOOK_CARD;
-
-extern int MK_MSG_ASK_HTML_MAIL;
-extern int MK_MSG_ASK_HTML_MAIL_TITLE;
-extern int MK_MSG_HTML_RECIPIENTS;
-extern int MK_MSG_HTML_RECIPIENTS_TITLE;
-extern int MK_MSG_EVERYONE;
-
-HJ26763
-extern int MK_MSG_ENTER_NAME_FOR_TEMPLATE;
-extern int MK_MSG_INVALID_NEWS_HEADER;
-extern int MK_MSG_INVALID_FOLLOWUP_TO_HEADER;
-extern int MK_MSG_OUTBOX_L10N_NAME_OLD;
-
-#include "xp_help.h"
-}
-
-
+#ifdef UNREADY_CODE
 HJ04305
+#endif
 
 #define ALL_HEADERS (MSG_FROM_HEADER_MASK |			\
 					 MSG_REPLY_TO_HEADER_MASK |		\
@@ -430,7 +380,9 @@ nsMsgCompose::nsMsgCompose()
 	m_callbackclosure = NULL;
 	m_lineWidth = 0;
 
+#ifdef UNREADY_CODE
 	HJ58932
+#endif
 
 	/* the following macro is used to initialize the ref counting data */
 	NS_INIT_REFCNT();
@@ -478,8 +430,9 @@ nsresult nsMsgCompose::Initialize(/*MWContext**/PRInt32 old_context, nsIMsgCompF
 /*JFD
 	m_print = new PrintSetup;
 */
-
+#ifdef UNREADY_CODE
 	HJ22867
+#endif
 
 	InitializeHeaders((MWContext*)old_context, fields);
 	m_visible_headers = GetInterestingHeaders();
@@ -524,7 +477,9 @@ nsresult nsMsgCompose::Dispose()
 	}
 */
 
+#ifdef UNREADY_CODE
 	HJ09384
+#endif
 
 	if (m_context)
 		FE_DestroyMailCompositionContext(m_context);
@@ -587,7 +542,9 @@ int nsMsgCompose::CreateVcardAttachment ()
 			if (pCompPrefs.GetUserFullName()) 
 				name = PL_strdup (pCompPrefs.GetUserFullName());
 			// write out a content description string
+#ifdef UNREADY_CODE
 			XP_SPRINTF (buf, XP_GetString (MK_ADDR_BOOK_CARD), name);
+#endif
 			PR_FREEIF(name);
 
 
@@ -718,6 +675,7 @@ nsMsgCompose::CheckForLosingFcc(const char* fcc)
 			   as their fcc folder, too.  Tell them why. */
 
 			const char *q = MSG_GetQueueFolderName();
+#ifdef UNREADY_CODE
 			if (q) {
 				if (!PL_strcasecmp(q,QUEUE_FOLDER_NAME_OLD))
 					buf = PR_smprintf("%s%s", XP_GetString(MK_MSG_WHY_QUEUE_SPECIAL_OLD),
@@ -731,6 +689,7 @@ nsMsgCompose::CheckForLosingFcc(const char* fcc)
 				FE_Alert(m_context, buf);
 				PR_Free(buf);
 			}
+#endif
 
 			/* Now ignore the FCC file they passed in. */
 			fcc = 0;
@@ -760,81 +719,113 @@ nsMsgCompose::GetCommandStatus(MSG_CommandType command,
 	{
 	case MSG_AttachAsText:
 		// the WinFE uses this for lots of update, so pretend we handle it.
+#ifdef UNREADY_CODE
 		display_string = XP_GetString(MK_MSG_ATTACH_AS_TEXT);
+#endif
 		break;
 	case MSG_SendMessage:
+#ifdef UNREADY_CODE
 		display_string = XP_GetString(MK_MSG_SEND);
+#endif
         if (m_attachmentInProgress || m_deliveryInProgress)
             selectable_p = PR_FALSE;
 		break;
 	case MSG_SendMessageLater:
+#ifdef UNREADY_CODE
 		display_string = XP_GetString(MK_MSG_SEND_LATER);
+#endif
         if (m_attachmentInProgress || m_deliveryInProgress)
             selectable_p = PR_FALSE;
 		break;
 	case MSG_Save:
 	case MSG_SaveDraft:
 	case MSG_SaveDraftThenClose:
+#ifdef UNREADY_CODE
 	    display_string = XP_GetString(MK_MSG_SAVE_DRAFT);
+#endif
         if (m_attachmentInProgress || m_deliveryInProgress)
             selectable_p = PR_FALSE;
 		break;
 	case MSG_SaveTemplate:
+#ifdef UNREADY_CODE
 	    display_string = XP_GetString(MK_MSG_SAVE_TEMPLATE);
+#endif
         if (m_attachmentInProgress || m_deliveryInProgress)
             selectable_p = PR_FALSE;
 		break;
 	case MSG_Attach:
+#ifdef UNREADY_CODE
 		display_string = XP_GetString(MK_MSG_ATTACH_ETC);
+#endif
 		break;
 
 	case MSG_ShowFrom:
+#ifdef UNREADY_CODE
 		display_string = XP_GetString(MK_MSG_FROM);
+#endif
 		selected_p = ShowingCompositionHeader(MSG_FROM_HEADER_MASK);
 		selected_used_p = PR_TRUE;
 		break;
 	case MSG_ShowReplyTo:
+#ifdef UNREADY_CODE
 		display_string = XP_GetString(MK_MSG_REPLY_TO);
+#endif
 		selected_p = ShowingCompositionHeader(MSG_REPLY_TO_HEADER_MASK);
 		selected_used_p = PR_TRUE;
 		break;
 	case MSG_ShowTo:
+#ifdef UNREADY_CODE
 		display_string = XP_GetString(MK_MSG_MAIL_TO);
+#endif
 		selected_p = ShowingCompositionHeader(MSG_TO_HEADER_MASK);
 		selected_used_p = PR_TRUE;
 		break;
 	case MSG_ShowCC:
+#ifdef UNREADY_CODE
 		display_string = XP_GetString(MK_MSG_MAIL_CC);
+#endif
 		selected_p = ShowingCompositionHeader(MSG_CC_HEADER_MASK);
 		selected_used_p = PR_TRUE;
 		break;
 	case MSG_ShowBCC:
+#ifdef UNREADY_CODE
 		display_string = XP_GetString(MK_MSG_MAIL_BCC);
+#endif
 		selected_p = ShowingCompositionHeader(MSG_BCC_HEADER_MASK);
 		selected_used_p = PR_TRUE;
 		break;
 	case MSG_ShowFCC:
+#ifdef UNREADY_CODE
 		display_string = XP_GetString(MK_MSG_FILE_CC);
+#endif
 		selected_p = ShowingCompositionHeader(MSG_FCC_HEADER_MASK);
 		selected_used_p = PR_TRUE;
 		break;
 	case MSG_ShowPostTo:
+#ifdef UNREADY_CODE
 		display_string = XP_GetString(MK_MSG_POST_TO);
+#endif
 		selected_p = ShowingCompositionHeader(MSG_NEWSGROUPS_HEADER_MASK);
 		selected_used_p = PR_TRUE;
 		break;
 	case MSG_ShowFollowupTo:
+#ifdef UNREADY_CODE
 		display_string = XP_GetString(MK_MSG_FOLLOWUPS_TO);
+#endif
 		selected_p = ShowingCompositionHeader(MSG_FOLLOWUP_TO_HEADER_MASK);
 		selected_used_p = PR_TRUE;
 		break;
 	case MSG_ShowSubject:
+#ifdef UNREADY_CODE
 		display_string = XP_GetString(MK_MSG_SUBJECT);
+#endif
 		selected_p = ShowingCompositionHeader(MSG_SUBJECT_HEADER_MASK);
 		selected_used_p = PR_TRUE;
 		break;
 	case MSG_ShowAttachments:
+#ifdef UNREADY_CODE
 		display_string = XP_GetString(MK_MSG_ATTACHMENT);
+#endif
 		selected_p = ShowingCompositionHeader(MSG_ATTACHMENTS_HEADER_MASK);
 		selected_used_p = PR_TRUE;
 		break;
@@ -968,8 +959,10 @@ nsMsgCompose::SetCallbacks(MSG_CompositionPaneCallbacks* callbacks,
 	return 0;
 }
 
+#ifdef UNREADY_CODE
 HJ99161
 HJ73123
+#endif
 
 void
 nsMsgCompose::InitializeHeaders(MWContext* old_context, const nsIMsgCompFields* fields)
@@ -1119,7 +1112,9 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context, const nsIMsgCompFields* 
 	}
 
 
+#ifdef UNREADY_CODE
 	HJ77855
+#endif
 
 	if (!*m_fields->GetOrganization()) {
 		m_fields->SetOrganization((char *)pCompPrefs.GetOrganization(), NULL);
@@ -1900,7 +1895,9 @@ nsMsgCompose::SetAttachmentList(struct MSG_AttachmentData* list)
 		m_attachData = (MSG_AttachmentData*)
 			PR_Malloc((count + 1) * sizeof(MSG_AttachmentData));
 		if (!m_attachData) {
+#ifdef UNREADY_CODE
 			FE_Alert(m_context, XP_GetString(MK_OUT_OF_MEMORY));
+#endif
 			return MK_OUT_OF_MEMORY;
 		}
 
@@ -2085,7 +2082,9 @@ nsMsgCompose::DownloadAttachments()
 		downloads = (MSG_AttachmentData *)
 			PR_Malloc(sizeof(MSG_AttachmentData) * (new_download_count + 1));
 		if (!downloads) {
+#ifdef UNREADY_CODE
 			FE_Alert(m_context, XP_GetString(MK_OUT_OF_MEMORY));
+#endif
 			return MK_OUT_OF_MEMORY;
 		}
 		memset(downloads, 0, sizeof(*downloads) * (new_download_count + 1));
@@ -2177,7 +2176,9 @@ nsMsgCompose::DownloadAttachmentsDone(MWContext* context, int status,
 
 	if (!newd) {
 		status = MK_OUT_OF_MEMORY;
+#ifdef UNREADY_CODE
 		error_message = XP_GetString(status);
+#endif
 		goto FAIL;
 	}
 	m_attachedFiles = newd;
@@ -2222,11 +2223,13 @@ FAIL:
 	}
 	else if (status != MK_INTERRUPTED) {
 		char *errmsg;
+#ifdef UNREADY_CODE
 		errmsg = PR_smprintf(XP_GetString(MK_COMMUNICATIONS_ERROR), status);
 		if (errmsg) {
 			FE_Alert(context, errmsg);
 			PR_Free(errmsg);
 		}
+#endif
 	}
 }
 
@@ -2535,7 +2538,11 @@ nsMsgCompose::GetWindowTitle()
 	} else if (*m_fields->GetNewsgroups()) {
 		s = m_fields->GetNewsgroups();
 	} else {
+#ifdef UNREADY_CODE
 		s = XP_GetString(MK_MSG_MSG_COMPOSITION);
+#else
+		s = PL_strdup("not implemented");
+#endif
 	}
 	return s;
 }
@@ -2593,14 +2600,18 @@ nsMsgCompose::SanityCheck(int skippast)
 {
 	const char* body = m_fields->GetBody();
 	const char* sub = m_fields->GetSubject();
+#ifdef UNREADY_CODE
 	HJ85617
+#endif
 	const char *newsgroups = NULL;
 
 	if (skippast == MK_MSG_DOUBLE_INCLUDE) goto AFTER_DOUBLE_INCLUDE;
 	if (skippast == MK_MSG_EMPTY_MESSAGE) goto AFTER_EMPTY_MESSAGE;
 	if (skippast == MK_MSG_MISSING_SUBJECT) goto AFTER_MISSING_SUBJECT;
+#ifdef UNREADY_CODE
 	HJ69290
 	HJ43055
+#endif
 	if (skippast == MK_MSG_INVALID_NEWS_HEADER) goto AFTER_INVALID_NEWS_HEADER;
 	if (skippast == MK_MSG_INVALID_FOLLOWUP_TO_HEADER) goto AFTER_INVALID_FOLLOWUP_TO_HEADER;
 
@@ -2645,8 +2656,10 @@ AFTER_EMPTY_MESSAGE:
 	}
 
 AFTER_MISSING_SUBJECT:
+#ifdef UNREADY_CODE
 	HJ32538
 	HJ83505
+#endif
 
 	newsgroups = m_fields->GetHeader (MSG_NEWSGROUPS_HEADER_MASK);
 	if (!SanityCheckNewsgroups (newsgroups))
@@ -2740,6 +2753,7 @@ nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 		if (error_message) {
 			FE_Alert(context, error_message);
 		} else if (status != MK_INTERRUPTED) {
+#ifdef UNREADY_CODE
 			char *errmsg;
 			errmsg = PR_smprintf(XP_GetString(MK_COMMUNICATIONS_ERROR),
 								 status);
@@ -2747,6 +2761,7 @@ nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 				FE_Alert(context, errmsg);
 				PR_Free(errmsg);
 			}
+#endif
 		}
     } else {
 		/* ### jht bug 45220 -- do following only when successfully deliver the message */
@@ -3024,7 +3039,9 @@ nsMsgCompose::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
 	CheckExpansion(MSG_CC_HEADER_MASK);
 	CheckExpansion(MSG_BCC_HEADER_MASK);
 
+#ifdef UNREADY_CODE
 	HJ74362
+#endif
 
 	const char* body = m_fields->GetBody();
 	PRUint32 body_length = PL_strlen(body);
@@ -3213,9 +3230,11 @@ nsMsgCompose::SaveMessageAsTemplate()
 #ifdef SUPPORT_X_TEMPLATE_NAME
   char *defaultName = NULL;
 
+#ifdef UNREADY_CODE
   defaultName = FE_Prompt (GetContext(),
 						   XP_GetString(MK_MSG_ENTER_NAME_FOR_TEMPLATE), 
 						   m_fields->GetSubject());
+#endif
   if (defaultName && *defaultName)
   {
 	  m_fields->SetTemplateName(defaultName);
@@ -3429,7 +3448,9 @@ nsMsgCompose::RemoveNoCertRecipientsFromList(MSG_HEADER_SET header)
 					*ptr = '\0';
 				}
 				if (oldptr) {
+#ifdef UNREADY_CODE
 					HJ38714
+#endif
 					if (ptr != NULL) {
 						oldptr = ptr + 1;
 					}
@@ -3448,7 +3469,9 @@ nsMsgCompose::RemoveNoCertRecipientsFromList(MSG_HEADER_SET header)
 }
 
 
+#ifdef UNREADY_CODE
 HJ53211
+#endif
 
 int 
 nsMsgCompose::SetPreloadedAttachments ( MWContext *context,
@@ -3468,7 +3491,9 @@ nsMsgCompose::SetPreloadedAttachments ( MWContext *context,
   m_attachData = (MSG_AttachmentData *) PR_Malloc ( (attachments_count+1) *
 												   sizeof (MSG_AttachmentData) );
   if ( !m_attachData ) {
+#ifdef UNREADY_CODE
 	FE_Alert ( m_context, XP_GetString ( MK_OUT_OF_MEMORY ) );
+#endif
 	return MK_OUT_OF_MEMORY;
   }
 
@@ -4050,9 +4075,11 @@ nsMsgCompose::MungeThroughRecipients(PRBool* someNonHTML,
 						}
 					}
 				}
+#ifdef UNREADY_CODE
 				char* tmp = PR_smprintf("%s@%s",
 										XP_GetString(MK_MSG_EVERYONE),
 										domain);
+#endif
 				if (!tmp) return MK_OUT_OF_MEMORY;
 				status = m_htmlrecip->AddOne(domain, tmp, Domain, found);
 				PR_Free(tmp);
@@ -4183,7 +4210,9 @@ MSG_NewsHost *nsMsgCompose::InferNewsHost (const char *group)
 
 	// No news host was specified. Use our bag of tricks to try to find one
 	char* host_and_port = NULL;
+#ifdef UNREADY_CODE
 	HJ19119
+#endif
 
 	// Trick #1: Do we have a URL for the host in the header fields? This can happen
 	// if we're posting, or if the user has typed a news URL into the newsgroups field
@@ -4191,9 +4220,11 @@ MSG_NewsHost *nsMsgCompose::InferNewsHost (const char *group)
 	if (posturl && *posturl) 
 	{
 		host_and_port = NET_ParseURL(posturl, GET_HOST_PART);
+#ifdef UNREADY_CODE
 		HJ96829
 		if (host_and_port && *host_and_port) 
 			HJ89510
+#endif
 	}
 
 	if (!retHost)
@@ -4226,11 +4257,13 @@ MSG_NewsHost *nsMsgCompose::InferNewsHost (const char *group)
 }
 
 
-
+#ifdef UNREADY_CODE
 HJ91549
 HJ27863
 
 HJ75043
+#endif
+
 
 
 
