@@ -1862,6 +1862,11 @@ void nsCString::DebugDump(void) const {
 void
 NS_ConvertUCS2toUTF8::Init( const PRUnichar* aString, PRUint32 aLength )
   {
+    // Handle null string by just leaving us as a brand-new
+    // uninitialized nsCAutoString.
+    if (! aString)
+      return;
+
     // Caculate how many bytes we need
     const PRUnichar* p;
     PRInt32 count, utf8len;
