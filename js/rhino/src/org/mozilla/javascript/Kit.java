@@ -297,6 +297,42 @@ public class Kit
         return initialValue;
     }
 
+    private final static class ComplexKey
+    {
+        private Object key1;
+        private Object key2;
+        private int hash;
+
+        ComplexKey(Object key1, Object key2)
+        {
+            this.key1 = key1;
+            this.key2 = key2;
+        }
+
+        public boolean equals(Object anotherObj)
+        {
+            if (!(anotherObj instanceof ComplexKey))
+                return false;
+            ComplexKey another = (ComplexKey)anotherObj;
+            return key1.equals(another.key1) && key2.equals(another.key2);
+        }
+
+        public int hashCode()
+        {
+            if (hash == 0) {
+                hash = key1.hashCode() ^ key2.hashCode();
+            }
+            return hash;
+        }
+    }
+
+    public static Object makeHashKeyFromPair(Object key1, Object key2)
+    {
+        if (key1 == null) throw new IllegalArgumentException();
+        if (key2 == null) throw new IllegalArgumentException();
+        return new ComplexKey(key1, key2);
+    }
+
     public static String readReader(Reader r)
         throws IOException
     {
