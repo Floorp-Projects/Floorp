@@ -186,6 +186,7 @@ protected:
 	afx_msg void OnUpdateViewCommandToolbar(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewLocationToolbar(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateViewCustomToolbar(CCmdUI* pCmdUI);
+	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 #ifdef ENDER
     afx_msg LONG OnToolController(UINT,LONG);
 #endif 

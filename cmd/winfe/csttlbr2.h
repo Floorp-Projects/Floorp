@@ -139,7 +139,7 @@ protected:
 public:
 	CDragToolbar();
 	~CDragToolbar();
-	int Create(CWnd *pParent, CToolbarWindow *pToolbar);
+	virtual int Create(CWnd *pParent, CToolbarWindow *pToolbar);
 
 	virtual BOOL ShouldClipChildren() { return TRUE; }
 
@@ -149,7 +149,7 @@ public:
 	void SetMouseOffsetWithinToolbar(int y) { m_mouseDownPoint.y = y; }
 	void SetShowing(BOOL bIsShowing) { m_bIsShowing = bIsShowing; }
 	BOOL GetShowing(void) { return m_bIsShowing; }
-	void SetOpen(BOOL bIsOpen) { m_bIsOpen = bIsOpen; }
+	virtual void SetOpen(BOOL bIsOpen);
 	BOOL GetOpen(void) { return m_bIsOpen;}
 	void SetTabTip(CString tabTip); 
 	CString &GetTabTip (void) { return m_tabTip; }
@@ -158,6 +158,7 @@ public:
 	void SetToolbarID(int nToolbarID) {m_nToolbarID = nToolbarID;}
 	UINT GetToolbarID(void) { return m_nToolbarID;}
 	void SetToolbarStyle(int nToolbarStyle);
+	virtual void BeActiveToolbar() {}
 	void SetAnimation(CAnimationBar2 *pAnimation);
 	HTAB_BITMAP GetHTabType(void) { return m_eHTabType;}
 	void OnUpdateCmdUI( CFrameWnd* pTarget, BOOL bDisableIfNoHndler );
@@ -245,9 +246,13 @@ public:
 		//Creation
 	int Create(CFrameWnd* pParent, BOOL bHasAnimation);
 
-	void AddNewWindow(UINT nToolbarID, CToolbarWindow* pWindow,  int nPosition, int nNoviceHeight, int nAdvancedHeight,
-					  UINT nTabBitmapIndex, CString tabTip, BOOL bIsNoviceMode, BOOL bIsOpen,
-					  BOOL bIsAnimation);
+	inline void AddNewWindow(UINT nToolbarID, CToolbarWindow* pWindow,  int nPosition, int nNoviceHeight, int nAdvancedHeight,
+					  UINT nTabBitmapIndex, CString tabTip, BOOL bIsNoviceMode, BOOL bIsOpen, BOOL bIsAnimation)
+			{ AddNewWindowGuts(nToolbarID, pWindow, nPosition, tabTip, TRUE, bIsOpen); }
+	inline void AddNewWindow(UINT nToolbarID, CToolbarWindow* pWindow,  int nPosition, int nNoviceHeight, int nAdvancedHeight,
+					  UINT nTabBitmapIndex, CString tabTip, BOOL bIsNoviceMode, BOOL bIsAnimation)
+			{ AddNewWindowGuts(nToolbarID, pWindow, nPosition, tabTip, FALSE, FALSE); }
+
 	// Call this function when you are finished adding the toolbars that go in the
 	// customizable toolbar. 
 	void FinishedAddingNewWindows(void){}
@@ -258,6 +263,7 @@ public:
     void StopAnimation();
 	void StartAnimation();
 	void SetToolbarStyle(int nToolbarStyle);
+	void BeActiveToolbar();
 
 	BOOL IsWindowShowing(CWnd *pToolbar);
 	BOOL IsWindowShowing(UINT nToolbarID);
@@ -321,6 +327,8 @@ public:
 protected:
 //	virtual BOOL OnNotify( WPARAM wParam, LPARAM lParam, LRESULT* pResult );
  
+	void AddNewWindowGuts(UINT nToolbarID, CToolbarWindow* pWindow, int nPosition,
+						  CString tabTip, BOOL bForceOpen, BOOL bIsOpen);
 	int  CheckOpenButtons(CPoint point);
 	int	 CheckClosedButtons(CPoint point);
 	BOOL PointInClosedTab(CPoint point, HTAB_BITMAP tabType, int nNumClosedButtons, int nStartX,

@@ -1015,6 +1015,12 @@ void CGenericChrome::SetToolbarStyle( int nToolbarStyle )
 	}
 }
 
+void CGenericChrome::ToolbarActivation()
+{
+	if (m_pCustToolbar != NULL)
+		m_pCustToolbar->BeActiveToolbar();
+}
+
 BOOL CGenericChrome::CustToolbarShowing(void)
 {
 	return m_pCustToolbar->IsWindowVisible();

@@ -261,6 +261,7 @@ public:
 	virtual void RenameCustomizableToolbar(UINT nStringID);
 	virtual void FinishedAddingBrowserToolbars();
 	virtual void SetToolbarStyle( int nToolbarStyle );
+	virtual void ToolbarActivation();
 	virtual BOOL CustToolbarShowing();
 	virtual void ViewCustToolbar(BOOL bShow);
 	virtual void Customize();

@@ -69,6 +69,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CGenericFrame)
     ON_WM_INITMENUPOPUP()
     ON_WM_MENUSELECT()
     ON_WM_SHOWWINDOW()
+	ON_WM_ACTIVATE()
     ON_COMMAND(ID_OPTIONS_TITLELOCATION_BAR, OnOptionsTitlelocationBar)
     ON_UPDATE_COMMAND_UI(ID_OPTIONS_TITLELOCATION_BAR, OnUpdateOptionsTitlelocationBar)
     ON_WM_TIMER()
@@ -585,6 +586,14 @@ void CMainFrame::OnShowWindow (BOOL bShow, UINT nStatus)
     // We don't seem to draw correctly as a child window on the initial pass.
     if(theApp.m_bChildWindow)
 	RecalcLayout();
+}
+
+void CMainFrame::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
+{
+	CGenericFrame::OnActivate(nState, pWndOther, bMinimized);
+	IChrome *chrome = GetChrome();
+	if (chrome)
+		chrome->ToolbarActivation();
 }
 
 // returns TRUE if something was added to the folder, false otherwise

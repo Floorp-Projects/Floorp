@@ -312,6 +312,11 @@ int  CDragToolbar::GetToolbarHeight(void)
 	return height;
 }
 
+void CDragToolbar::SetOpen(BOOL bIsOpen)
+{
+	m_bIsOpen = bIsOpen;
+}
+
 void CDragToolbar::SetToolbarStyle(int nToolbarStyle)
 {
 	m_pToolbar->SetToolbarStyle(nToolbarStyle);
@@ -927,11 +932,11 @@ CDragToolbar* CCustToolbar::CreateDragBar()
 	return new CDragToolbar();
 }
 
-void CCustToolbar::AddNewWindow(UINT nToolbarID, CToolbarWindow* pWindow, int nPosition, int nNoviceHeight, int nAdvancedHeight,
-								UINT nTabBitmapIndex, CString tabTip, BOOL bIsNoviceMode, BOOL bIsOpen, BOOL bIsAnimation)
+void CCustToolbar::AddNewWindowGuts(UINT nToolbarID, CToolbarWindow* pWindow, int nPosition,
+								CString tabTip, BOOL bForceOpen, BOOL bIsOpen)
 {
 
-	if(m_pToolbarArray[nPosition] != NULL || nPosition < 0 || nPosition >= m_nNumToolbars)
+	if(nPosition < 0 || nPosition >= m_nNumToolbars || m_pToolbarArray[nPosition] != NULL)
 		nPosition = FindFirstAvailablePosition();
 
 	CDragToolbar *pDragToolbar = CreateDragBar();
@@ -941,7 +946,10 @@ void CCustToolbar::AddNewWindow(UINT nToolbarID, CToolbarWindow* pWindow, int nP
 		m_nNumShowing++;
 		m_pToolbarArray[nPosition] = pDragToolbar;
 		pWindow->GetToolbar()->ShowWindow(SW_SHOW);
-		pDragToolbar->SetOpen(bIsOpen);
+		if (bForceOpen)
+			pDragToolbar->SetOpen(bIsOpen);
+		else
+			bIsOpen = pDragToolbar->GetOpen();
 		pDragToolbar->SetTabTip(tabTip);
 		pDragToolbar->SetToolbarID(nToolbarID);
 
@@ -1189,8 +1197,13 @@ void CCustToolbar::SetToolbarStyle(int nToolbarStyle)
     
 	m_pParent->RecalcLayout();
 	RedrawWindow();
+}
 
-
+void CCustToolbar::BeActiveToolbar()
+{
+	for(int i = 0; i < m_nNumToolbars; i++)
+		if(m_pToolbarArray[i] != NULL)
+			m_pToolbarArray[i]->BeActiveToolbar();
 }
 
 void CCustToolbar::OnUpdateCmdUI( CFrameWnd* pTarget, BOOL bDisableIfNoHndler )

@@ -346,6 +346,14 @@ class CRDFDragToolbar : public CDragToolbar
 {
 public:
 	
+	virtual int Create(CWnd *pParent, CToolbarWindow *pToolbar);
+	virtual void SetOpen(BOOL bIsOpen);
+	virtual void BeActiveToolbar();
+
+protected:
+	void CopySettingsToRDF(void);
+
+public:
 	// Generated message map functions
 	//{{AFX_MSG(CDragToolbar)
 	afx_msg void OnPaint(void);

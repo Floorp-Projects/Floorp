@@ -1366,7 +1366,7 @@ static void toolbarNotifyProcedure (HT_Notification ns, HT_Resource n, HT_Event 
 										theApp.m_pToolbarStyle, 43, 27, eSMALL_HTAB);
 		
 		theToolbarHolder->AddNewWindow(ID_PERSONAL_TOOLBAR+toolbarIDCounter, pWindow, toolbarIDCounter, 43, 27, 1, 
-				HT_GetNodeName(HT_TopNode(theNewToolbar->GetHTView())),theApp.m_pToolbarStyle, TRUE, FALSE);
+				HT_GetNodeName(HT_TopNode(theNewToolbar->GetHTView())),theApp.m_pToolbarStyle, FALSE);
 		toolbarIDCounter++;
 		theToolbarHolder->GetCachedParentWindow()->RecalcLayout();
 	}
@@ -1533,6 +1533,7 @@ int CRDFToolbar::Create(CWnd *pParent)
 	BOOL fixedSize = FALSE;
 
 	void* data;
+
 	HT_GetTemplateData(topNode, gNavCenter->toolbarButtonsFixedSize, HT_COLUMN_STRING, &data);
 	if (data)
 	{
@@ -1683,7 +1684,8 @@ void CRDFToolbar::ChangeButtonSizes(void)
 
 /* RDF toolbars get their style info from RDF.  App preference settings
    make their way into RDF elsewhere. */
-void CRDFToolbar::SetToolbarStyle(int nToolbarStyle) {
+void CRDFToolbar::SetToolbarStyle(int nToolbarStyle)
+{
 	CNSToolbar2::SetToolbarStyle(GetDisplayMode());
 }
 
@@ -2459,6 +2461,44 @@ END_MESSAGE_MAP()
 #define HTAB_BOTTOM_HEIGHT 3
 
 extern HBITMAP				m_hTabBitmap;
+
+int CRDFDragToolbar::Create(CWnd *pParent, CToolbarWindow *pToolbar)
+{
+	int	rtnval = CDragToolbar::Create(pParent, pToolbar);
+
+	if (rtnval)
+	{
+		char *data;
+		CRDFToolbar* pToolbar = (CRDFToolbar*)m_pToolbar->GetToolbar();
+		HT_Resource top = HT_TopNode(pToolbar->GetHTView());
+		HT_GetNodeData(top, gNavCenter->toolbarCollapsed, HT_COLUMN_STRING, (void **)&data);
+		if (data)
+		{
+			if (data[0] == 'y' || data[0] == 'Y')
+				SetOpen(FALSE);
+		}
+	}
+	return rtnval;
+}
+
+void CRDFDragToolbar::SetOpen(BOOL bIsOpen)
+{
+	CDragToolbar::SetOpen(bIsOpen);
+	CopySettingsToRDF();
+}
+
+void CRDFDragToolbar::BeActiveToolbar()
+{
+	CopySettingsToRDF();
+}
+
+void CRDFDragToolbar::CopySettingsToRDF(void)
+{
+	char	*data = GetOpen() ? "no" : "yes";
+	CRDFToolbar* pToolbar = (CRDFToolbar*)m_pToolbar->GetToolbar();
+	HT_Resource top = HT_TopNode(pToolbar->GetHTView());
+	HT_SetNodeData(top, gNavCenter->toolbarCollapsed, HT_COLUMN_STRING, data);
+}
 
 void CRDFDragToolbar::OnPaint(void)
 {
