@@ -40,6 +40,7 @@
 #include "nsIStreamTransportService.h"
 #include "nsIEventQueueService.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsISeekableStream.h"
 #include "nsITransport.h"
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
@@ -381,12 +382,48 @@ nsInputStreamPump::OnStateTransfer()
             if (avail > 16384)
                 avail = 16384;
 
-            LOG(("  calling OnDataAvailable [offset=%u count=%u]\n", mStreamOffset, avail));
+            // NOTE: ok, so the story is as follows.  OnDataAvailable impls
+            //       are by contract supposed to consume exactly |avail| bytes.
+            //       however, many do not... mailnews... stream converters...
+            //       cough, cough.  the input stream pump is fairly tolerant
+            //       in this regard; however, if an ODA does not consume any
+            //       data from the stream, then we could potentially end up in
+            //       an infinite loop.  we do our best here to try to catch
+            //       such an error.  (see bug 189672)
 
+            // in most cases this QI will succeed (mAsyncStream is almost always
+            // a nsPipeInputStream, which implements nsISeekableStream::Tell).
+            PRUint32 offsetBefore;
+            nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mAsyncStream);
+            if (seekable)
+                seekable->Tell(&offsetBefore);
+
+            LOG(("  calling OnDataAvailable [offset=%u count=%u]\n", mStreamOffset, avail));
             rv = mListener->OnDataAvailable(this, mListenerContext, mAsyncStream, mStreamOffset, avail);
 
-            if (NS_SUCCEEDED(rv))
-                mStreamOffset += avail;
+            // don't enter this code if ODA failed or called Cancel
+            if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(mStatus)) {
+                // test to see if this ODA failed to consume data
+                if (seekable) {
+                    PRUint32 offsetAfter;
+                    seekable->Tell(&offsetAfter);
+                    if (offsetAfter > offsetBefore)
+                        mStreamOffset += (offsetAfter - offsetBefore);
+                    else if (mSuspendCount == 0) {
+                        //
+                        // possible infinite loop if we continue pumping data!
+                        //
+                        // NOTE: although not allowed by nsIStreamListener, we
+                        // will allow the ODA impl to Suspend the pump.  IMAP
+                        // does this :-(
+                        //
+                        NS_ERROR("OnDataAvailable implementation consumed no data");
+                        mStatus = NS_ERROR_UNEXPECTED;
+                    }
+                }
+                else
+                    mStreamOffset += avail; // assume ODA behaved well
+            }
         }
     }
 
