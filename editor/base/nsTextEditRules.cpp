@@ -1052,31 +1052,13 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsIDOMSelection *aSelection)
   }
   if (PR_TRUE==needsBogusContent)
   {
-    // set mBogusNode to be the newly created <div>
-    res = mEditor->CreateNode(nsAutoString("div"), bodyNode, 0, 
+    // set mBogusNode to be the newly created <br>
+    res = mEditor->CreateNode(nsAutoString("br"), bodyNode, 0, 
                                  getter_AddRefs(mBogusNode));
-		if (NS_FAILED(res)) return res;
-		if (!mBogusNode) return NS_ERROR_NULL_POINTER;
-
-    nsCOMPtr<nsIDOMNode>newTNode;
-    nsAutoString textNodeTag;
-    res = nsEditor::GetTextNodeTag(textNodeTag);
-    if (NS_FAILED(res)) { return res; }
-    res = mEditor->CreateNode(textNodeTag, mBogusNode, 0, 
-                                 getter_AddRefs(newTNode));
     if (NS_FAILED(res)) return res;
-    if (!newTNode) return NS_ERROR_NULL_POINTER;
+    if (!mBogusNode) return NS_ERROR_NULL_POINTER;
 
-    nsCOMPtr<nsIDOMCharacterData>newNodeAsText;
-    newNodeAsText = do_QueryInterface(newTNode);
-    if (newNodeAsText)
-    {
-      nsAutoString data;
-      data += 160;
-      newNodeAsText->SetData(data);
-      aSelection->Collapse(newTNode, 0);
-    }
-    // make sure we know the PNode is bogus
+    // give it a special attribute
     nsCOMPtr<nsIDOMElement>newPElement;
     newPElement = do_QueryInterface(mBogusNode);
     if (newPElement)
