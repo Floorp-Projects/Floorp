@@ -564,34 +564,6 @@ Overwrite Key=TRUE
 Overwrite Name=TRUE
 Timing=post smartupdate
 
-[Windows Registry2]
-Root Key=HKEY_LOCAL_MACHINE
-Key=[REGPATH]\$UserAgentShort$\AppList\[APP_ID]
-Name=Name
-;*** LOCALIZE ME BABY ***
-Name Value=[APP_ID]
-Type=REG_SZ
-Decrypt Key=TRUE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=post smartupdate
-
-[Windows Registry3]
-Root Key=HKEY_LOCAL_MACHINE
-Key=[REGPATH]\$UserAgentShort$\AppList\[APP_ID]
-Name=PathToExe
-;*** LOCALIZE ME BABY ***
-Name Value=[PATH_TO_APP]
-Type=REG_SZ
-Decrypt Key=TRUE
-Decrypt Name=FALSE
-Decrypt Name Value=TRUE
-Overwrite Key=TRUE
-Overwrite Name=TRUE
-Timing=post smartupdate
-
 ; Values for Show Folder:
 ;   HIDE             Hides the window and activates another window.
 ;   MAXIMIZE         Maximizes the specified window.
