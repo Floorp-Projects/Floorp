@@ -183,16 +183,17 @@ MimeInlineTextHTML_parse_line (char *line, PRInt32 length, MimeObject *obj)
         char *cp1 = PL_strncasestr(workLine, "CHARSET", length);
         if (cp1)
         {
-          char *cp = PL_strncasestr(cp1, "=", (length - (int)(cp1-line)) ) + 1; 
-
-          char seps[]   = " \"\'"; 
-          char *token; 
-          char* newStr; 
-          token = nsCRT::strtok(cp, seps, &newStr); 
-          if (token != NULL) 
-          { 
-            textHTML->charset = nsCRT::strdup(token); 
-          } 
+          char *cp = PL_strncasestr(cp1, "=", (length - (int)(cp1-workLine)));
+          if (cp) {
+            char seps[]   = " \"\'"; 
+            char *token; 
+            char* newStr; 
+            token = nsCRT::strtok(cp, seps, &newStr); 
+            if (token != NULL) 
+              { 
+                textHTML->charset = nsCRT::strdup(token); 
+              } 
+          }
         }
 
         PR_FREEIF(workLine);
