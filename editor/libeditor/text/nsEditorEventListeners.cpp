@@ -104,7 +104,75 @@ nsTextEditorKeyListener::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
+#ifdef DEBUG_TAGUE
+nsresult
+nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
+{
+  PRUint32 keyCode;
+  PRBool   isShift;
+  PRBool   ctrlKey;
 
+  nsCOMPtr<nsIDOMUIEvent>uiEvent;
+  uiEvent = do_QueryInterface(aKeyEvent);
+  if (!uiEvent) {
+    //non-key event passed to keydown.  bad things.
+    return NS_OK;
+  }
+
+  if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)) && 
+      NS_SUCCEEDED(uiEvent->GetShiftKey(&isShift)) &&
+      NS_SUCCEEDED(uiEvent->GetCtrlKey(&ctrlKey))
+      ) {
+    PRBool keyProcessed;
+    ProcessShortCutKeys(aKeyEvent, keyProcessed);
+    if (PR_FALSE==keyProcessed)
+    {
+      switch(keyCode) {
+      case nsIDOMUIEvent::VK_BACK:
+        mEditor->DeleteSelection(nsIEditor::eDeleteLeft);
+        break;
+
+      case nsIDOMUIEvent::VK_DELETE:
+        mEditor->DeleteSelection(nsIEditor::eDeleteRight);
+        break;
+
+      case nsIDOMUIEvent::VK_RETURN:
+      //case nsIDOMUIEvent::VK_ENTER:			// why does this not exist?
+        // Need to implement creation of either <P> or <BR> nodes.
+        mEditor->InsertBreak();
+        break;
+      
+      case nsIDOMUIEvent::VK_LEFT:
+      case nsIDOMUIEvent::VK_RIGHT:
+      case nsIDOMUIEvent::VK_UP:
+      case nsIDOMUIEvent::VK_DOWN:
+      	// these have already been handled in nsRangeList. Why are we getting them
+      	// again here (Mac)? In switch to avoid putting in bogus chars.
+
+        //return NS_OK to allow page scrolling.
+        return NS_OK;
+      	break;
+      
+      case nsIDOMUIEvent::VK_HOME:
+      case nsIDOMUIEvent::VK_END:
+      	// who handles these?
+#if DEBUG
+		printf("Key not handled\n");
+#endif
+        break;
+
+      case nsIDOMUIEvent::VK_PAGE_UP:
+      case nsIDOMUIEvent::VK_PAGE_DOWN:
+        //return NS_OK to allow page scrolling.
+        return NS_OK;
+      	break;
+      }
+    }
+  }
+  
+  return NS_ERROR_BASE;
+}
+#else
 nsresult
 nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
@@ -186,7 +254,7 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
   
   return NS_ERROR_BASE;
 }
-
+#endif
 
 
 nsresult
@@ -196,12 +264,43 @@ nsTextEditorKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
 }
 
 
+#ifdef DEBUG_TAGUE
+nsresult
+nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
+{
+	nsAutoString  key;
+	PRUint32     character;
 
+	nsCOMPtr<nsIDOMUIEvent>uiEvent;
+	uiEvent = do_QueryInterface(aKeyEvent);
+	if (!uiEvent) {
+		//non-key event passed to keydown.  bad things.
+		return NS_OK;
+	}
+
+ 	if (NS_SUCCEEDED(uiEvent->GetCharCode(&character)))
+ 	{
+		//
+		// this is a temporary hack to get around the re-firing of key_downs as key_presses
+		// in nsEventStateManager
+		//
+		if (character<0x20) { return NS_OK; }
+ 		key += character;
+ 		if (0!=character)
+ 			return mEditor->InsertText(key);
+ 	}
+
+	return NS_ERROR_BASE;
+  
+}
+#else
 nsresult
 nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
   return NS_OK;
 }
+#endif
+
 
 /* these includes are for debug only.  this module should never instantiate it's own transactions */
 #include "SplitElementTxn.h"

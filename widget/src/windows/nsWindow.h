@@ -169,7 +169,12 @@ protected:
     virtual PRBool          OnPaint();
     virtual PRBool          OnResize(nsRect &aWindowRect);
 
-    BOOL                    OnChar(UINT aVirtualKeyCode);
+#ifdef DEBUG_TAGUE
+    BOOL                    OnChar(UINT aVirtualKeyCode, bool isMultibyte);
+#else
+   BOOL                    OnChar(UINT aVirtualKeyCode);
+#endif
+
     BOOL                    OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode);
     BOOL                    OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode);
     ULONG                   IsSpecialChar(UINT aVirtualKeyCode, WORD *aAsciiKey);
@@ -230,6 +235,10 @@ protected:
 	PRUnichar*	mIMECompositionUniString;
 	PRInt32		mIMECompositionStringLength;
 	PRInt32		mIMECompositionStringSize;
+#ifdef DEBUG_TAGUE
+	BOOL		mHaveDBCSLeadByte;
+	unsigned char mDBCSLeadByte;
+#endif
 
     // Drag & Drop
 
