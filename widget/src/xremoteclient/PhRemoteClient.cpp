@@ -97,9 +97,6 @@ XRemoteClient::SendCommand (const char *aProgram, const char *aUsername,
 
 	char *RemoteServerName;
 
-	/* ATENTIE: register connections based on ProfileName and find the appropiate connection
-		based on the aProfile argument */
-
 	if( !strncmp( aCommand, "mping", 5 ) ) {
 		RemoteServerName = MailRemoteServerName;
 		aCommand++;
