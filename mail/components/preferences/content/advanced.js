@@ -72,7 +72,7 @@ var gAdvancedPane = {
   
   showOCSP: function ()
   {
-    document.documentElement.openSubDialog("chrome://messenger/content/preferences/ocsp.xul",
+    document.documentElement.openSubDialog("chrome://mozapps/content/preferences/ocsp.xul",
                                            "", null);
   },
   

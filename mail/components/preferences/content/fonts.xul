@@ -63,7 +63,7 @@
     </preferences>
 
     <stringbundle id="bundlePreferences" src="chrome://messenger/locale/preferences/preferences.properties"/>
-    <script type="application/x-javascript" src="chrome://messenger/content/preferences/fontbuilder.js"/>
+    <script type="application/x-javascript" src="chrome://mozapps/content/preferences/fontbuilder.js"/>
     <script type="application/x-javascript" src="chrome://messenger/content/preferences/fonts.js"/>
     
     <groupbox>

@@ -92,7 +92,7 @@ var gPrivacyPane = {
 
   changeMasterPassword: function ()
   {
-    document.documentElement.openSubDialog("chrome://messenger/content/preferences/changemp.xul",
+    document.documentElement.openSubDialog("chrome://mozapps/content/preferences/changemp.xul",
                                            "", null);
     this.updateMasterPasswordButton();
   },
@@ -131,7 +131,7 @@ var gPrivacyPane = {
     }
     else 
     {
-      document.documentElement.openSubDialog("chrome://messenger/content/preferences/removemp.xul",
+      document.documentElement.openSubDialog("chrome://mozapps/content/preferences/removemp.xul",
                                              "", null);
       this.updateMasterPasswordButton();
       document.getElementById("setMasterPassword").focus();

@@ -34,6 +34,7 @@ locale/en-US/necko,                                             en-US/locale/en-
 locale/en-US/mozapps,                                           en-US/locale/en-US/mozapps
 locale/en-US/mozapps/downloads,                                 en-US/locale/en-US/mozapps/downloads
 locale/en-US/mozapps/extensions,                                en-US/locale/en-US/mozapps/extensions
+locale/en-US/mozapps/preferences,                               en-US/locale/en-US/mozapps/preferences
 locale/en-US/mozapps/profile,                                   en-US/locale/en-US/mozapps/profile
 locale/en-US/mozapps/update,                                    en-US/locale/en-US/mozapps/update
 locale/en-US/mozapps/xpinstall,                                 en-US/locale/en-US/mozapps/xpinstall

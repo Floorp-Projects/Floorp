@@ -16,7 +16,7 @@ content/messenger-smime,                             msg/content/messenger-smime
 content/messenger-views,                             msg/content/messenger-views
 content/messenger/messengercompose,                  msg/content/messenger/messengercompose
 content/messenger/preferences,                       msg/content/messenger/preferences
-content/editor/images,				           msg/content/editor/images
+content/editor/images,				                       msg/content/editor/images
 content/messenger/addressbook,                       msg/content/messenger/addressbook
 content/messenger/migration,                         msg/content/messenger/migration
 content/branding,                                    msg/content/branding
@@ -135,6 +135,7 @@ content/mozapps/extensions,                           toolkit/content/mozapps/ex
 content/mozapps/update,                               toolkit/content/mozapps/update
 content/mozapps/shared,                               toolkit/content/mozapps/shared
 content/mozapps/xpinstall,                            toolkit/content/mozapps/xpinstall
+content/mozapps/preferences,                          toolkit/content/mozapps/preferences
 content/mozapps/contents.rdf,                         toolkit/content/mozapps/contents.rdf
 
 # from xpfe\components

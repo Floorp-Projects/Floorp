@@ -175,7 +175,7 @@ var gFontsDialog = {
 
     if (aMenulist.selectedItem.value == "choose") {
       var rv = { newdpi: -1 };
-      document.documentElement.openSubDialog("chrome://messenger/content/preferences/fontscaling.xul",
+      document.documentElement.openSubDialog("chrome://mozapps/content/preferences/fontscaling.xul",
                                              "", rv);
       if (rv.newdpi != -1) {
         this._setResolution(rv.newdpi);

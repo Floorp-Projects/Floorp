@@ -119,10 +119,6 @@
     <hbox align="center">
       <button label="&managecerts.button;" oncommand="openCertManager();" id="openCertManagerButton"
               accesskey="&managecerts.accesskey;" prefstring="security.disable_button.openCertManager"/> 
-        <button label="&viewCRLs.button;" oncommand="openCRLManager();" id="viewCRLsButton"
-                accesskey="&viewCRLs.accesskey;"/>
-        <button label="&viewOCSP.button;" oncommand="openOCSPDialog();" id="viewOCSPButton"
-                accesskey="&viewOCSP.accesskey;"/>
       <button label="&managedevices.button;" oncommand="openDeviceManager();" id="openDeviceManagerButton" 
               accesskey="&managedevices.accesskey;" prefstring="security.disable_button.openDeviceManager"/>
     </hbox>

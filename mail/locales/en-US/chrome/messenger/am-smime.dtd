@@ -18,7 +18,3 @@
 <!ENTITY managecerts.accesskey  "V">
 <!ENTITY managedevices.button   "Security Devices">
 <!ENTITY managedevices.accesskey "S">
-<!ENTITY viewCRLs.button         "Revocation Lists">
-<!ENTITY viewCRLs.accesskey      "e">
-<!ENTITY viewOCSP.button         "Verification">
-<!ENTITY viewOCSP.accesskey      "i">
