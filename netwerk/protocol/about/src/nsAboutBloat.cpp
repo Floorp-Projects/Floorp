@@ -90,7 +90,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
         rv = NS_NewCStringInputStream(getter_AddRefs(inStr), nsDependentCString(msg));
         if (NS_FAILED(rv)) return rv;
 
-        size = nsCRT::strlen(msg);
+        size = strlen(msg);
     }
     else if (leaks) {
         // dump the current set of leaks.
@@ -100,7 +100,7 @@ nsAboutBloat::NewChannel(nsIURI *aURI, nsIChannel **result)
         rv = NS_NewCStringInputStream(getter_AddRefs(inStr), nsDependentCString(msg));
         if (NS_FAILED(rv)) return rv;
 
-        size = nsCRT::strlen(msg);
+        size = strlen(msg);
     }
     else {
         nsCOMPtr<nsIFile> file;

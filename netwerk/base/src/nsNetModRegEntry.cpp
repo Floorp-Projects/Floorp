@@ -111,7 +111,7 @@ nsNetModRegEntry::GetTopic(char **topic)
 
     if (mTopic) 
     {
-        *topic = (char *) nsMemory::Clone(mTopic, nsCRT::strlen(mTopic) + 1);
+        *topic = (char *) nsMemory::Clone(mTopic, strlen(mTopic) + 1);
         return NS_OK;
     }
     return NS_ERROR_NULL_POINTER;

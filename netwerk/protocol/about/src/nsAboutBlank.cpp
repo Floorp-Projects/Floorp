@@ -57,7 +57,7 @@ nsAboutBlank::NewChannel(nsIURI *aURI, nsIChannel **result)
     if (NS_FAILED(rv)) return rv;
 
     rv = NS_NewInputStreamChannel(&channel, aURI, in, "text/html", 
-                                  nsCRT::strlen(kBlankPage));
+                                  strlen(kBlankPage));
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;

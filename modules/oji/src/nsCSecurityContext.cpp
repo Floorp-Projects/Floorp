@@ -166,7 +166,7 @@ nsCSecurityContext::GetOrigin(char* buf, int buflen)
     codebase->GetOrigin(&origin);
 
     if (origin) {
-        PRInt32 originlen = (PRInt32) nsCRT::strlen(origin);
+        PRInt32 originlen = (PRInt32) strlen(origin);
         if (!buf || buflen<=originlen) {
             if (origin) {
                 nsCRT::free(origin);
@@ -209,7 +209,7 @@ nsCSecurityContext::GetCertificateID(char* buf, int buflen)
     cprincipal->GetCertificateID(&certificate);
 
     if (certificate) {
-        PRInt32 certlen = (PRInt32) nsCRT::strlen(certificate);
+        PRInt32 certlen = (PRInt32) strlen(certificate);
         if( buflen<=certlen ) {
             nsCRT::free(certificate);
             return NS_ERROR_FAILURE;

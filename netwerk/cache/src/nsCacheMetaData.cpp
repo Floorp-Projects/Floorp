@@ -185,11 +185,11 @@ nsCacheMetaData::UnflattenMetaData(char * data, PRUint32 size)
     char* limit = data + size;
     while (data < limit) {
         const char* name = data;
-        PRUint32 nameSize = nsCRT::strlen(name);
+        PRUint32 nameSize = strlen(name);
         data += 1 + nameSize;
         if (data < limit) {
             const char* value = data;
-            PRUint32 valueSize = nsCRT::strlen(value);
+            PRUint32 valueSize = strlen(value);
             data += 1 + valueSize;
             rv = SetElement(nsDependentCString(name, nameSize),
                                    nsDependentCString(value, valueSize));

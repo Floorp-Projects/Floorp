@@ -1310,7 +1310,7 @@ nsProfile::AddLevelOfIndirection(nsIFile *aDir)
         nsXPIDLCString leafName;
         rv = dirEntry->GetLeafName(getter_Copies(leafName));
 	 	if (NS_SUCCEEDED(rv) && (const char *)leafName) {
-		  PRUint32 length = nsCRT::strlen((const char *)leafName);
+		  PRUint32 length = strlen((const char *)leafName);
 		  // check if the filename is the right length, len("xxxxxxxx.slt")
 		  if (length == (SALT_SIZE + kSaltExtensionCString.Length())) {
 			// check that the filename ends with ".slt"

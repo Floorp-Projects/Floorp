@@ -194,7 +194,7 @@ NS_IMETHODIMP nsMIMEService::GetTypeFromFile( nsIFile* aFile, char **aContentTyp
     rv = aFile->GetLeafName(&fileName);
     if (NS_FAILED(rv)) return rv;
     if (fileName != nsnull) {
-      PRInt32 len = nsCRT::strlen(fileName); 
+      PRInt32 len = strlen(fileName); 
       for (PRInt32 i = len; i >= 0; i--) {
           if (fileName[i] == '.') {
               ext = &fileName[i + 1];

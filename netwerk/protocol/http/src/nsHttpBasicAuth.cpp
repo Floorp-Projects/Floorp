@@ -102,7 +102,7 @@ nsHttpBasicAuth::GenerateCredentials(nsIHttpChannel *httpChannel,
         return NS_ERROR_OUT_OF_MEMORY;
 
     // allocate a buffer sizeof("Basic" + " " + b64userpass + "\0")
-    *creds = (char *) malloc(6 + nsCRT::strlen(b64userpass) + 1);
+    *creds = (char *) malloc(6 + strlen(b64userpass) + 1);
     if (!*creds)
         return NS_ERROR_OUT_OF_MEMORY;
 

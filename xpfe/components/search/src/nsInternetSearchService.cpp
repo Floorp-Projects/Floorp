@@ -5123,7 +5123,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 			if (quoteStartOffset < hrefOffset)
 			{
 				// handle case where HREF isn't quoted
-				quoteStartOffset = hrefOffset + nsCRT::strlen("HREF=");
+				quoteStartOffset = hrefOffset + strlen("HREF=");
 				quoteEndOffset = resultItem.FindCharInSet(">", quoteStartOffset);
 				if (quoteEndOffset < quoteStartOffset)	continue;
 			}
@@ -5133,7 +5133,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 				{
 					// handle case where HREF isn't quoted
 					quoteEndOffset = quoteStartOffset;
-					quoteStartOffset = hrefOffset + nsCRT::strlen("HREF=") -1;
+					quoteStartOffset = hrefOffset + strlen("HREF=") -1;
 				}
 				else
 				{

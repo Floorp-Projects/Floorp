@@ -1138,7 +1138,7 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
   
             if (aLine.Find(field->mName, PR_TRUE, attrStart, 1) == attrStart)
             {
-                attrStart += nsCRT::strlen(field->mName);
+                attrStart += strlen(field->mName);
 
                 // skip to terminating quote of string
                 PRInt32 termQuote = aLine.FindChar(PRUnichar('\"'), attrStart);

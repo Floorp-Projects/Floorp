@@ -650,7 +650,7 @@ nsDNSLookup::HostnameIsIPAddress()
     // slam the IP in and move on.
     mHostEntry.bufLen = PR_NETDB_BUF_SIZE;
 
-    PRUint32 hostNameLen = nsCRT::strlen(mHostName);
+    PRUint32 hostNameLen = strlen(mHostName);
     mHostEntry.hostEnt.h_name = (char*)BufAlloc(hostNameLen + 1,
                                                 (char**)&mHostEntry.bufPtr,
                                                 &mHostEntry.bufLen,

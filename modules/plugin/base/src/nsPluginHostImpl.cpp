@@ -2987,10 +2987,10 @@ NS_IMETHODIMP nsPluginHostImpl::RegisterPlugin(REFNSIID aCID,
 
   // we use SetBytes instead of SetString to address special character issue, see Mozilla bug 108246
   if(aPluginName)
-    registry->SetBytesUTF8(pluginKey, kPluginsNameKey, nsCRT::strlen(aPluginName) + 1, (PRUint8 *)aPluginName);
+    registry->SetBytesUTF8(pluginKey, kPluginsNameKey, strlen(aPluginName) + 1, (PRUint8 *)aPluginName);
 
   if(aDescription)
-    registry->SetBytesUTF8(pluginKey, kPluginsDescKey, nsCRT::strlen(aDescription) + 1, (PRUint8 *)aDescription);
+    registry->SetBytesUTF8(pluginKey, kPluginsDescKey, strlen(aDescription) + 1, (PRUint8 *)aDescription);
 
   for (PRInt32 i = 0; i < aCount; ++i) {
     nsCAutoString mimepath;
@@ -3003,7 +3003,7 @@ NS_IMETHODIMP nsPluginHostImpl::RegisterPlugin(REFNSIID aCID,
 
     if(aMimeDescriptions && aMimeDescriptions[i])
       registry->SetBytesUTF8(key, kPluginsMimeDescKey, 
-                             nsCRT::strlen(aMimeDescriptions[i]) + 1, 
+                             strlen(aMimeDescriptions[i]) + 1, 
                              (PRUint8 *)aMimeDescriptions[i]);
 
     registry->SetStringUTF8(key, kPluginsMimeExtKey, aFileExtensions[i]);
@@ -4108,7 +4108,7 @@ static nsresult DoCharsetConversion(nsIUnicodeDecoder *aUnicodeDecoder,
   NS_ENSURE_TRUE(aANSIString, NS_ERROR_FAILURE);
   nsresult rv;
 
-  PRInt32 numberOfBytes = nsCRT::strlen(aANSIString);
+  PRInt32 numberOfBytes = strlen(aANSIString);
   PRInt32 outUnicodeLen;
   nsAutoString buffer;
   rv = aUnicodeDecoder->GetMaxLength(aANSIString, numberOfBytes, &outUnicodeLen);
@@ -5234,10 +5234,10 @@ AddPluginInfoToRegistry(nsIRegistry* registry, nsRegistryKey top,
 
   // we use SetBytes instead of SetString to address special character issue, see Mozilla bug 108246
   if(tag->mName)
-    registry->SetBytesUTF8(pluginKey, kPluginsNameKey, nsCRT::strlen(tag->mName) + 1, (PRUint8 *)tag->mName);
+    registry->SetBytesUTF8(pluginKey, kPluginsNameKey, strlen(tag->mName) + 1, (PRUint8 *)tag->mName);
   
   if(tag->mDescription)
-    registry->SetBytesUTF8(pluginKey, kPluginsDescKey, nsCRT::strlen(tag->mDescription) + 1, (PRUint8 *)tag->mDescription);
+    registry->SetBytesUTF8(pluginKey, kPluginsDescKey, strlen(tag->mDescription) + 1, (PRUint8 *)tag->mDescription);
 
   registry->SetLongLong(pluginKey, kPluginsModTimeKey, &(tag->mLastModifiedTime));
   registry->SetInt(pluginKey, kPluginsCanUnload, tag->mCanUnloadLibrary);
@@ -5254,7 +5254,7 @@ AddPluginInfoToRegistry(nsIRegistry* registry, nsRegistryKey top,
 
     if(tag->mMimeDescriptionArray && tag->mMimeDescriptionArray[i])
       registry->SetBytesUTF8(mimetypeKey, kPluginsMimeDescKey, 
-                             nsCRT::strlen(tag->mMimeDescriptionArray[i]) + 1, 
+                             strlen(tag->mMimeDescriptionArray[i]) + 1, 
                              (PRUint8 *)tag->mMimeDescriptionArray[i]);
 
     registry->SetStringUTF8(mimetypeKey, kPluginsMimeExtKey, tag->mExtensionsArray[i]);

@@ -842,7 +842,7 @@ PRInt32 nsCString::Find(const char* aCString,PRBool aIgnoreCase,PRInt32 anOffset
   if(aCString) {
     nsStr temp;
     nsStrPrivate::Initialize(temp,eOneByte);
-    temp.mLength = nsCRT::strlen(aCString);
+    temp.mLength = strlen(aCString);
     temp.mStr=(char*)aCString;
     result=nsStrPrivate::FindSubstr1in1(*this,temp,aIgnoreCase,anOffset,aCount);
   }
@@ -925,7 +925,7 @@ PRInt32 nsCString::FindCharInSet(const char* aCStringSet,PRInt32 anOffset) const
   if(aCStringSet) {
     nsStr temp;
     nsStrPrivate::Initialize(temp,eOneByte);
-    temp.mLength=nsCRT::strlen(aCStringSet);
+    temp.mLength=strlen(aCStringSet);
     temp.mStr=(char*)aCStringSet;
     result=nsStrPrivate::FindCharInSet1(*this,temp,PR_FALSE,anOffset);
   }
@@ -1012,7 +1012,7 @@ PRInt32 nsCString::RFind(const char* aString,PRBool aIgnoreCase,PRInt32 anOffset
   if(aString) {
     nsStr temp;
     nsStrPrivate::Initialize(temp,eOneByte);
-    temp.mLength=nsCRT::strlen(aString);
+    temp.mLength=strlen(aString);
     temp.mStr=(char*)aString;
     result=nsStrPrivate::RFindSubstr1in1(*this,temp,aIgnoreCase,anOffset,aCount);
   }
@@ -1049,7 +1049,7 @@ PRInt32 nsCString::RFindCharInSet(const char* aCStringSet,PRInt32 anOffset) cons
   if(aCStringSet) {
     nsStr temp;
     nsStrPrivate::Initialize(temp,eOneByte);
-    temp.mLength=nsCRT::strlen(aCStringSet);
+    temp.mLength=strlen(aCStringSet);
     temp.mStr=(char*)aCStringSet;
     result=nsStrPrivate::RFindCharInSet1(*this,temp,PR_FALSE,anOffset);
   }
@@ -1138,7 +1138,7 @@ PRInt32 nsCString::CompareWithConversion(const char *aCString,PRBool aIgnoreCase
   if(aCString) {
     nsStr temp;
     nsStrPrivate::Initialize(temp,eOneByte);
-    temp.mLength=nsCRT::strlen(aCString);
+    temp.mLength=strlen(aCString);
     temp.mStr=(char*)aCString;
     return nsStrPrivate::StrCompare1To1(*this,temp,aCount,aIgnoreCase);
   }
