@@ -42,6 +42,7 @@ public:
   // nsIMenu Methods
   NS_IMETHOD GetParent(nsISupports *&aParent);
   NS_IMETHOD GetLabel(nsString &aText);
+  NS_IMETHOD SetLabel(nsString &aText);
   NS_IMETHOD AddItem(const nsString &aText);
   NS_IMETHOD AddItem(nsIMenuItem * aMenuItem);
   NS_IMETHOD AddMenu(nsIMenu * aMenu);

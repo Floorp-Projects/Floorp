@@ -20,6 +20,7 @@
 #define nsMenu_h__
 
 #include "nsIMenu.h"
+#include <Menus.h>
 
 class nsIMenuBar;
 
@@ -42,6 +43,7 @@ public:
   // nsIMenu Methods
   NS_IMETHOD GetParent(nsISupports *&aParent);
   NS_IMETHOD GetLabel(nsString &aText);
+  NS_IMETHOD SetLabel(nsString &aText);
   NS_IMETHOD AddItem(const nsString &aText);
   NS_IMETHOD AddItem(nsIMenuItem * aMenuItem);
   NS_IMETHOD AddMenu(nsIMenu * aMenu);
@@ -61,11 +63,12 @@ protected:
 
   nsString     mLabel;
   PRUint32     mNumMenuItems;
-  //Widget       mMenu;
 
   nsIMenu    * mMenuParent;
   nsIMenuBar * mMenuBarParent;
 
+  // MacSpecific
+  MenuHandle   mMacMenuHandle;
 };
 
 #endif // nsMenu_h__

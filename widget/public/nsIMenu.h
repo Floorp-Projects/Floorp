@@ -64,6 +64,12 @@ class nsIMenu : public nsISupports {
     NS_IMETHOD GetLabel(nsString &aText) = 0;
 
    /**
+    * Set the Menu label
+    *
+    */
+    NS_IMETHOD SetLabel(nsString &aText) = 0;
+
+   /**
     * Adds a Menu Item
     *
     */
