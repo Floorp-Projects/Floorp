@@ -629,7 +629,7 @@ function doSearch()
     }
     else {
       debug("*** multiple search engines present, selecting the netscape search engine\n");
-      for( var i = 0; i < engineBoxchildNodes.length; i++ )
+      for( var i = 0; i < engineBox.childNodes.length; i++ )
       {
         var checkbox = engineBox.childNodes[i];
         debug("*** the current URI is = " + checkbox.getAttribute("id") + "\n");

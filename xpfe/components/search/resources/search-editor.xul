@@ -25,7 +25,7 @@
 
 -->
 
-<?xml-stylesheet href="chrome://communicator/skin/search/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/search/search.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/search/search-editor.css" type="text/css"?>
 
