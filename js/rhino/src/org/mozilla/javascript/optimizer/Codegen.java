@@ -3732,34 +3732,12 @@ public class Codegen extends Interpreter {
 
     private void push(int i)
     {
-        if ((byte)i == i) {
-            if (i == -1) {
-                addByteCode(ByteCode.ICONST_M1);
-            } else if (0 <= i && i <= 5) {
-                addByteCode((byte) (ByteCode.ICONST_0 + i));
-            } else {
-                addByteCode(ByteCode.BIPUSH, (byte) i);
-            }
-        } else if ((short)i == i) {
-            addByteCode(ByteCode.SIPUSH, (short) i);
-        } else {
-            classFile.addLoadConstant(i);
-        }
+        classFile.addPush(i);
     }
 
     private void push(double d)
     {
-        if (d == 0.0) {
-            addByteCode(ByteCode.DCONST_0);
-        } else if (d == 1.0) {
-            addByteCode(ByteCode.DCONST_1);
-        /* XXX this breaks all sorts of simple math.
-        } else if (Float.MIN_VALUE <= d && d <= Float.MAX_VALUE) {
-        loadWordConstant(classFile.addFloatConstant((float) d));
-        */
-        } else {
-            classFile.addLoadConstant((double)d);
-        }
+        classFile.addPush(d);
     }
 
     private void pushAsWrapperObject(double num)
