@@ -158,6 +158,9 @@ sub directive_ok {
     $directive =~ s/^[+-]?\s*//;
     $directive =~ s/\s*[+-]?$//;
 
+    # Empty directives are ok; they are usually line break helpers
+    return 1 if $directive eq '';
+
     # Exclude those on the nofilter list
     if (defined($safe{$file}{$directive})) {
         $safe{$file}{$directive}++;

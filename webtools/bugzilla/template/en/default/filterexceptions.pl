@@ -136,8 +136,6 @@
   'num_bugs',
   'data.$tbl.$col.$row',
   'title',
-  '', # This is not a bug in the filter exceptions - this template has an 
-      # empty directive which is necessary for it to work properly.
 ],
 
 'reports/report-table.html.tmpl' => [
