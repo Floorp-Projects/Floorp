@@ -657,6 +657,7 @@ nsMsgDBFolder::SetMsgDatabase(nsIMsgDatabase *aMsgDatabase)
     mDatabase->ClearCachedHdrs();
   }
   mDatabase = aMsgDatabase;
+
   if (aMsgDatabase)
     aMsgDatabase->AddListener(this);
   return NS_OK;
@@ -1343,6 +1344,9 @@ nsresult nsMsgDBFolder::EndNewOfflineMessage()
   PRUint32 curStorePos;
   PRUint32 messageOffset;
   nsMsgKey messageKey;
+
+  nsresult rv = GetDatabase(nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   m_offlineHeader->GetMessageKey(&messageKey);
   if (m_tempMessageStream)
