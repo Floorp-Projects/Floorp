@@ -35,8 +35,8 @@
 *
 *
 * Date:    19 Mar 2002
-* SUMMARY: Function declarations in global or function scope are [DontDelete].
-*          Function declarations in eval scope are not [DontDelete].
+* SUMMARY: Function declarations in global or function scope are {DontDelete}.
+*          Function declarations in eval scope are not {DontDelete}.
 *
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=131964
 *
@@ -44,7 +44,7 @@
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug =   131964;
-var summary = 'Function defined in global or function scope are [DontDelete]';
+var summary = 'Function defined in global or function scope are {DontDelete}';
 var status = '';
 var statusitems = [];
 var actual = '';
@@ -137,6 +137,8 @@ s += '{ ';
 s += '  return "k lives!";';
 s += '}';
 eval(s);
+
+delete k;
 
 try
 {
