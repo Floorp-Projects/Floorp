@@ -3883,8 +3883,8 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
                                                       nsIPluginInstanceOwner *aOwner)
 {
   nsresult result = NS_ERROR_FAILURE;
-  nsIPluginInstance* instance = NULL;
-  nsCOMPtr<nsIPlugin> plugin = NULL;
+  nsCOMPtr<nsIPluginInstance> instance;
+  nsCOMPtr<nsIPlugin> plugin;
 
   if(!aURL)
     return NS_ERROR_FAILURE;
@@ -3895,14 +3895,15 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
 
   GetPluginFactory("*", getter_AddRefs(plugin));
 
-  result = CallCreateInstance(NS_INLINE_PLUGIN_CONTRACTID_PREFIX "*",
-                              &instance);
+  instance = do_CreateInstance(NS_INLINE_PLUGIN_CONTRACTID_PREFIX "*",
+                               &result);
 
   // couldn't create an XPCOM plugin, try to create wrapper for a legacy plugin
   if (NS_FAILED(result)) 
   {
     if(plugin)
-      result = plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)&instance);
+      result = plugin->CreateInstance(NULL, kIPluginInstanceIID,
+                                      getter_AddRefs(instance));
   }
 
   // neither an XPCOM or legacy plugin could be instantiated, so return the failure
@@ -3947,9 +3948,6 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
 
   // instance and peer will be addreffed here
   result = AddInstanceToActiveList(plugin, instance, aURL, PR_TRUE, pIpeer);
-
-  //release what was addreffed in Create(Plugin)Instance
-  NS_RELEASE(instance);
 
   return result;
 }
