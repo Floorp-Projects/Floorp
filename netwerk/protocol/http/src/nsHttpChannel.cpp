@@ -1123,6 +1123,18 @@ nsHttpChannel::CheckCache()
             (buf.IsEmpty() && mRequestHead.PeekHeader(nsHttp::Authorization));
     }
 
+    if (!doValidation) {
+        // Sites redirect back to the original URI after setting a session/tracking
+        // cookie. In such cases, force revalidation so that we hit the net and do not
+        // cycle thru cached responses.
+        PRInt16 status = mCachedResponseHead->Status();
+        const char* cookie = mRequestHead.PeekHeader(nsHttp::Cookie);
+        if (cookie && 
+            (status == 300 || status == 301 || status == 302 ||
+             status == 303 || status == 307))
+             doValidation = PR_TRUE;
+    }
+
     mCachedContentIsValid = !doValidation;
 
     // add validation headers unless the cached response is marked no-store...
