@@ -180,19 +180,6 @@ extern Boolean
 XfeToolBoxIsNeeded				(Widget			w);
 /*----------------------------------------------------------------------*/
 
-/*----------------------------------------------------------------------*/
-/*																		*/
-/* Hackery crap which should go sway real soon							*/
-/*																		*/
-/*----------------------------------------------------------------------*/
-extern void
-XfeToolBoxAddLayoutSupport		(Widget			form,
-								 Widget			tool_box);
-/*----------------------------------------------------------------------*/
-extern void
-XfeToolBoxFormDoLayout			(Widget			form);
-/*----------------------------------------------------------------------*/
-
 #ifdef __cplusplus								/* end C++				*/
 }
 #endif
