@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.3 $ 
-# $Date: 2002/05/01 02:23:55 $ 
+# $Revision: 1.4 $ 
+# $Date: 2002/05/01 02:31:22 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/regenerate.cgi,v $ 
 # $Name:  $ 
@@ -60,7 +60,6 @@ use FileStructure;
 
     $out = <<EOF;
 Content-type: text/html
-
 <TITLE>tinderbox</TITLE>
 <META HTTP-EQUIV="Refresh" CONTENT="0; URL=$url">
 <BODY   BGCOLOR="#FFFFFF" TEXT="#000000"
@@ -68,7 +67,8 @@ Content-type: text/html
 <CENTER>
 <TABLE BORDER=0 WIDTH="100%" HEIGHT="100%"><TR><TD ALIGN=CENTER VALIGN=CENTER>
 <FONT SIZE="+2">
-Regenerating HTML now.
+Regenerating HTML now.<br>
+Sending you to the <A HREF="$url">default Tinderbox page</A>.
 </FONT>
 </TD></TR></TABLE>
 </CENTER>
