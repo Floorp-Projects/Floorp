@@ -65,7 +65,7 @@ nsNntpUrl::~nsNntpUrl()
 	NS_IF_RELEASE(m_newsgroup);
 	NS_IF_RELEASE(m_offlineNews);
 	NS_IF_RELEASE(m_newsgroupList);
-    PR_FREEIF(m_newsgroupPost);
+    NS_IF_RELEASE(m_newsgroupPost);
     PR_FREEIF(m_newsgroupName);
 }
   
@@ -362,7 +362,6 @@ NS_IMETHODIMP nsNntpUrl::SetNewsgroupName(const char * aNewsgroupName)
     if (!aNewsgroupName) return NS_ERROR_NULL_POINTER;
 
     PR_FREEIF(m_newsgroupName);
-    m_newsgroupName = nsnull;
     
     m_newsgroupName = PL_strdup(aNewsgroupName);
     if (!m_newsgroupName) {
@@ -375,7 +374,7 @@ NS_IMETHODIMP nsNntpUrl::SetNewsgroupName(const char * aNewsgroupName)
 
 NS_IMETHODIMP nsNntpUrl::GetNewsgroupName(char ** aNewsgroupName)
 {
-    if (!*aNewsgroupName) return NS_ERROR_NULL_POINTER;
+    if (!aNewsgroupName) return NS_ERROR_NULL_POINTER;
 
     NS_ASSERTION(m_newsgroupName, "null ptr");
     if (!m_newsgroupName) return NS_ERROR_FAILURE;
