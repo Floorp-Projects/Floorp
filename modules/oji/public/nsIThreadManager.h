@@ -27,10 +27,20 @@
 // Thread Manager
 // This interface provides thread primitives.
 
+#define NS_ITHREADMANAGER_IID                           \
+{ /* 97bb54c0-6846-11d2-801f-00805f71101c */            \
+	0x97bb54c0,											\
+	0x6846,												\
+	0x11d2,												\
+	{0x80, 0x1f, 0x00, 0x80, 0x5f, 0x71, 0x10, 0x1c}	\
+}
+
 class nsIRunnable;
 
 class nsIThreadManager : public nsISupports {
 public:
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITHREADMANAGER_IID)
+	
 	/**
 	 * Returns a unique identifier for the "current" system thread.
 	 */
@@ -78,34 +88,26 @@ public:
 	NotifyAll(void* address) = 0;
 
 	/**
-	 * Thread creation primitives.
+	 * Creates a new thread, calling the specified runnable's Run method (a la Java).
 	 */
 	NS_IMETHOD
 	CreateThread(PRUint32* threadID, nsIRunnable* runnable) = 0;
+	
+	/**
+	 * Posts an event to specified thread, calling the runnable from that thread.
+	 * @param threadID thread to call runnable from
+	 * @param runnable object to invoke from thread
+	 * @param async if true, won't block current thread waiting for result
+	 */
+	NS_IMETHOD
+	PostEvent(PRUint32 threadID, nsIRunnable* runnable, PRBool async) = 0;
 };
-
-#define NS_ITHREADMANAGER_IID                           \
-{ /* 97bb54c0-6846-11d2-801f-00805f71101c */            \
-	0x97bb54c0,											\
-	0x6846,												\
-	0x11d2,												\
-	{0x80, 0x1f, 0x00, 0x80, 0x5f, 0x71, 0x10, 0x1c}	\
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 // Runnable
 // This interface represents the invocation of a new thread.
-
-class nsIRunnable : public nsISupports {
-public:
-	/**
-	 * Defines an entry point for a newly created thread.
-	 */
-	NS_IMETHOD
-	Run() = 0;
-};
 
 #define NS_IRUNNABLE_IID								\
 { /* 930f3d70-6849-11d2-801f-00805f71101c */			\
@@ -114,5 +116,16 @@ public:
 	0x11d2,												\
 	{0x80, 0x1f, 0x00, 0x80, 0x5f, 0x71, 0x10, 0x1c}	\
 }
+
+class nsIRunnable : public nsISupports {
+public:
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IRUNNABLE_IID)
+
+	/**
+	 * Defines an entry point for a newly created thread.
+	 */
+	NS_IMETHOD
+	Run() = 0;
+};
 
 #endif /* nsIThreadManager_h___ */
