@@ -71,6 +71,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsILocalFile.h"
+#include "nsITextControlElement.h"
 
 #include "nsContentCID.h"
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
@@ -114,6 +115,23 @@ nsFileControlFrame::~nsFileControlFrame()
     delete mCachedState;
     mCachedState = nsnull;
   }
+}
+
+NS_IMETHODIMP 
+nsFileControlFrame::Destroy(nsIPresContext* aPresContext)
+{
+  // Toss the value into the control from the anonymous content, which is about
+  // to get lost.
+  if (mTextContent) {
+    nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(mTextContent);
+    nsAutoString value;
+    input->GetValue(value);
+
+    // Have it take the value, just like when input type=text goes away
+    nsCOMPtr<nsITextControlElement> fileInput = do_QueryInterface(mContent);
+    fileInput->TakeTextFrameValue(value);
+  }
+  return nsAreaFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
