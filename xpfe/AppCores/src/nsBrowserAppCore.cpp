@@ -457,19 +457,34 @@ nsBrowserAppCore::WalletSafeFillin(nsIDOMWindow* aWin)
   scriptGlobalObject = do_QueryInterface(aWin); 
   scriptGlobalObject->GetWebShell(getter_AddRefs(webcontent)); 
 
+  nsresult res;
+  nsString urlString = nsString("");
+  if ( mContentAreaWebShell ) {
+    const PRUnichar *url = 0;
+    PRInt32 history;
+    res = mContentAreaWebShell->GetHistoryIndex(history);
+    if (NS_SUCCEEDED(res)) {
+      res = mContentAreaWebShell->GetURL( history, &url );
+      if (NS_SUCCEEDED(res)) {
+        urlString = nsString(url);
+      }
+    }
+  }
+
   shell = GetPresShellFor(webcontent);
   nsIWalletService *walletservice;
-  nsresult res;
   res = nsServiceManager::GetService(kWalletServiceCID,
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
-  if ((NS_OK == res) && (nsnull != walletservice)) {
-    res = walletservice->WALLET_Prefill(shell, PR_FALSE);
+  if (NS_SUCCEEDED(res) && (nsnull != walletservice)) {
+    res = walletservice->WALLET_Prefill(shell, urlString, PR_FALSE);
     nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
   }
 
 #ifndef HTMLDialogs 
-  return newWind("file:///htmldlgs.htm");
+  if (NS_SUCCEEDED(res)) {
+    return newWind("file:///htmldlgs.htm");
+  }
 #endif
 
   return NS_OK;
@@ -499,7 +514,8 @@ nsBrowserAppCore::WalletQuickFillin(nsIDOMWindow* aWin)
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
-    res = walletservice->WALLET_Prefill(shell, PR_TRUE);
+    nsString urlString = nsString("");
+    res = walletservice->WALLET_Prefill(shell, urlString, PR_TRUE);
     nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
   }
 
