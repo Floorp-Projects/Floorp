@@ -1438,6 +1438,9 @@ ChromeContextMenuListener :: ContextMenu ( nsIDOMEvent* aMouseEvent )
   if (!node)
     return NS_OK;
 
+  // Stop the context menu event going to other windows (bug 78396)
+  aMouseEvent->PreventDefault();
+
   // Find the first node to be an element starting with this node and
   // working up through its parents.
 
