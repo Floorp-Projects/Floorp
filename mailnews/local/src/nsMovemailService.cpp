@@ -278,7 +278,7 @@ LocateSpoolFile(nsACString & spoolPath)
     nsresult rv;
 
     nsCOMPtr<nsILocalFile> spoolFile;
-    rv = NS_NewNativeLocalFile(nsCString(), PR_TRUE, getter_AddRefs(spoolFile));
+    rv = NS_NewNativeLocalFile(EmptyCString(), PR_TRUE, getter_AddRefs(spoolFile));
     NS_ENSURE_SUCCESS(rv, rv);
 
     char * mailEnv = PR_GetEnv("MAIL");

@@ -78,7 +78,7 @@ nsHTMLTableCaptionAccessible::GetState(PRUint32 *aResult)
 NS_IMETHODIMP
 nsHTMLTableCaptionAccessible::GetValue(nsAString& aResult)
 {
-  aResult.Assign(NS_LITERAL_STRING(""));  // Default name is blank
+  aResult.Truncate();  // Default name is blank
 
   nsCOMPtr<nsIContent> captionContent(do_QueryInterface(mDOMNode));
   AppendFlatStringFromSubtree(captionContent, &aResult);
@@ -109,7 +109,7 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetState(PRUint32 *aResult)
 
 NS_IMETHODIMP nsHTMLTableAccessible::GetName(nsAString& aResult)
 {
-  aResult.Assign(NS_LITERAL_STRING(""));  // Default name is blank
+  aResult.Truncate();  // Default name is blank
 
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   if (element) {

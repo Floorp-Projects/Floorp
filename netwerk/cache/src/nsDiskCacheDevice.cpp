@@ -1063,7 +1063,7 @@ nsDiskCacheDevice::MoveCacheToTrash(nsIFile ** result)
     rv = mCacheDirectory->GetParent(getter_AddRefs(parentDir));
     if (NS_FAILED(rv))  return rv;
     
-    rv = mCacheDirectory->MoveToNative(uniqueDir, nsCString());
+    rv = mCacheDirectory->MoveToNative(uniqueDir, EmptyCString());
     if (NS_FAILED(rv))  return rv;
     
     // set mCacheDirectory to point to parentDir/Cache/ again

@@ -958,7 +958,7 @@ txStartElement::execute(txExecutionState& aEs)
     else {
         // we call characters with an empty string to "close" any element to
         // make sure that no attributes are added
-        aEs.mResultHandler->characters(nsString(), PR_FALSE);
+        aEs.mResultHandler->characters(EmptyString(), PR_FALSE);
     }
 
     rv = aEs.pushString(name);

@@ -158,7 +158,7 @@ NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDi
 #ifdef DEBUG_sspitzer
     printf("copy default %s\n",folderNameOnDisk);
 #endif
-    rv = defaultMessagesFile->CopyTo(localParentDir, nsString());
+    rv = defaultMessagesFile->CopyTo(localParentDir, EmptyString());
     if (NS_FAILED(rv)) return rv;
   }
   return NS_OK;

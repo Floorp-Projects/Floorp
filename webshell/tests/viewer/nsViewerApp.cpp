@@ -1418,7 +1418,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
 #endif
     NS_CreateLabel(mSiteDialog,mSiteLabel,rect,HandleSiteEvent,&font);
     mSiteLabel->SetAlignment(eAlign_Left);
-    mSiteLabel->SetLabel(nsAutoString());
+    mSiteLabel->SetLabel(EmptyString());
 
     y += 34;
     w = 75;
