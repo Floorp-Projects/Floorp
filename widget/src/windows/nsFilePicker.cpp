@@ -193,11 +193,11 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     if (mMode == modeOpen) {
       // FILE MUST EXIST!
       ofn.Flags |= OFN_FILEMUSTEXIST;
-      result = ::GetOpenFileNameW(&ofn);
+      result = nsToolkit::mGetOpenFileName(&ofn);
     }
     else if (mMode == modeSave) {
       ofn.Flags |= OFN_NOREADONLYRETURN;
-      result = ::GetSaveFileNameW(&ofn);
+      result = nsToolkit::mGetSaveFileName(&ofn);
       if (!result) {
         // Error, find out what kind.
         if (::GetLastError() == ERROR_INVALID_PARAMETER ||
@@ -205,7 +205,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
           // probably the default file name is too long or contains illegal characters!
           // Try again, without a starting file name.
           ofn.lpstrFile[0] = 0;
-          result = ::GetSaveFileNameW(&ofn);
+          result = nsToolkit::mGetSaveFileName(&ofn);
         }
       }
     }
