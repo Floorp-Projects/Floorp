@@ -3238,51 +3238,61 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
     nsresult ret = NS_OK;
 
     PRBool retarget = PR_FALSE;
+    PRBool externalDOMEvent = PR_FALSE;
     nsCOMPtr<nsIDOMEventTarget> oldTarget;
 
     nsIDOMEvent* domEvent = nsnull;
     if (NS_EVENT_FLAG_INIT & aFlags) {
-        aDOMEvent = &domEvent;
+        if (aDOMEvent) {
+            if (*aDOMEvent)
+              externalDOMEvent = PR_TRUE;
+        }
+        else
+          aDOMEvent = &domEvent;
+
         aEvent->flags = aFlags;
         aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
-        // In order for the event to have a proper target for events that don't go through
-        // the presshell (onselect, oncommand, oncreate, ondestroy) we need to set our target
-        // ourselves. Also, key sets and menus don't have frames and therefore need their
-        // targets explicitly specified.
-        //
-        // We need this for drag&drop as well since the mouse may have moved into a different
-        // frame between the initial mouseDown and the generation of the drag gesture.
-        // Obviously, the target should be the content/frame where the mouse was depressed,
-        // not one computed by the current mouse location.
-        nsAutoString tagName;
-        NodeInfo()->GetName(tagName); // Local name only
-        if (aEvent->message == NS_XUL_COMMAND || aEvent->message == NS_XUL_POPUP_SHOWING ||
-            aEvent->message == NS_XUL_POPUP_SHOWN || aEvent->message == NS_XUL_POPUP_HIDING ||
-            aEvent->message == NS_XUL_POPUP_HIDDEN || aEvent->message == NS_FORM_SELECTED ||
-            aEvent->message == NS_XUL_BROADCAST || aEvent->message == NS_XUL_COMMAND_UPDATE ||
-            aEvent->message == NS_DRAGDROP_GESTURE ||
-            tagName == NS_LITERAL_STRING("menu") || tagName == NS_LITERAL_STRING("menuitem") || tagName == NS_LITERAL_STRING("menulist") ||
-            tagName == NS_LITERAL_STRING("menubar") || tagName == NS_LITERAL_STRING("menupopup") || tagName == NS_LITERAL_STRING("key") || tagName == NS_LITERAL_STRING("keyset")) {
-            nsCOMPtr<nsIEventListenerManager> listenerManager;
-            if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
-                NS_ERROR("Unable to instantiate a listener manager on this event.");
-                return ret;
-            }
-            nsAutoString empty;
-            if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext, aEvent, empty, aDOMEvent))) {
-                NS_ERROR("This event will fail without the ability to create the event early.");
-                return ret;
-            }
 
-            // We need to explicitly set the target here, because the
-            // DOM implementation will try to compute the target from
-            // the frame. If we don't have a frame (e.g., we're a
-            // menu), then that breaks.
-            nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(domEvent);
-            if (privateEvent) {
-              privateEvent->SetTarget(this);
+        if (!externalDOMEvent) {
+            // In order for the event to have a proper target for events that don't go through
+            // the presshell (onselect, oncommand, oncreate, ondestroy) we need to set our target
+            // ourselves. Also, key sets and menus don't have frames and therefore need their
+            // targets explicitly specified.
+            //
+            // We need this for drag&drop as well since the mouse may have moved into a different
+            // frame between the initial mouseDown and the generation of the drag gesture.
+            // Obviously, the target should be the content/frame where the mouse was depressed,
+            // not one computed by the current mouse location.
+            nsAutoString tagName;
+            NodeInfo()->GetName(tagName); // Local name only
+            if (aEvent->message == NS_XUL_COMMAND || aEvent->message == NS_XUL_POPUP_SHOWING ||
+                aEvent->message == NS_XUL_POPUP_SHOWN || aEvent->message == NS_XUL_POPUP_HIDING ||
+                aEvent->message == NS_XUL_POPUP_HIDDEN || aEvent->message == NS_FORM_SELECTED ||
+                aEvent->message == NS_XUL_BROADCAST || aEvent->message == NS_XUL_COMMAND_UPDATE ||
+                aEvent->message == NS_DRAGDROP_GESTURE ||
+                tagName == NS_LITERAL_STRING("menu") || tagName == NS_LITERAL_STRING("menuitem") || tagName == NS_LITERAL_STRING("menulist") ||
+                tagName == NS_LITERAL_STRING("menubar") || tagName == NS_LITERAL_STRING("menupopup") || tagName == NS_LITERAL_STRING("key") || tagName == NS_LITERAL_STRING("keyset")) {
+                nsCOMPtr<nsIEventListenerManager> listenerManager;
+                if (NS_FAILED(ret = GetListenerManager(getter_AddRefs(listenerManager)))) {
+                    NS_ERROR("Unable to instantiate a listener manager on this event.");
+                    return ret;
+                }
+                nsAutoString empty;
+                if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext, aEvent, empty, aDOMEvent))) {
+                    NS_ERROR("This event will fail without the ability to create the event early.");
+                    return ret;
+                }
+
+                // We need to explicitly set the target here, because the
+                // DOM implementation will try to compute the target from
+                // the frame. If we don't have a frame (e.g., we're a
+                // menu), then that breaks.
+                nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(domEvent);
+                if (privateEvent) {
+                  privateEvent->SetTarget(this);
+                }
+                else return NS_ERROR_FAILURE;
             }
-            else return NS_ERROR_FAILURE;
         }
     }
     else if (aEvent->message == NS_IMAGE_LOAD)
@@ -3425,25 +3435,27 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
 
     if (NS_EVENT_FLAG_INIT & aFlags) {
-        // We're leaving the DOM event loop so if we created a DOM event,
-        // release here.
-        if (nsnull != *aDOMEvent) {
-            nsrefcnt rc;
-            NS_RELEASE2(*aDOMEvent, rc);
-            if (0 != rc) {
-                // Okay, so someone in the DOM loop (a listener, JS object)
-                // still has a ref to the DOM Event but the internal data
-                // hasn't been malloc'd.  Force a copy of the data here so the
-                // DOM Event is still valid.
-                nsIPrivateDOMEvent *privateEvent;
-                if (NS_OK == (*aDOMEvent)->QueryInterface(NS_GET_IID(nsIPrivateDOMEvent), (void**)&privateEvent)) {
-                    privateEvent->DuplicatePrivateData();
-                    NS_RELEASE(privateEvent);
-                }
-            }
+      // We're leaving the DOM event loop so if we created a DOM event,
+      // release here.  If externalDOMEvent is set the event was passed in
+      // and we don't own it
+      if (*aDOMEvent && !externalDOMEvent) {
+        nsrefcnt rc;
+        NS_RELEASE2(*aDOMEvent, rc);
+        if (0 != rc) {
+          // Okay, so someone in the DOM loop (a listener, JS object)
+          // still has a ref to the DOM Event but the internal data
+          // hasn't been malloc'd.  Force a copy of the data here so the
+          // DOM Event is still valid.
+          nsIPrivateDOMEvent *privateEvent;
+          if (NS_OK == (*aDOMEvent)->QueryInterface(NS_GET_IID(nsIPrivateDOMEvent), (void**)&privateEvent)) {
+            privateEvent->DuplicatePrivateData();
+            NS_RELEASE(privateEvent);
+          }
         }
         aDOMEvent = nsnull;
+      }
     }
+    
     return ret;
 }
 
