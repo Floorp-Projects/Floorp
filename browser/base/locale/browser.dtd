@@ -54,17 +54,12 @@
 <!ENTITY themePreferencesCmd.accesskey "T"> 
 <!ENTITY getNewThemesCmd.label "Get New Themes">
 <!ENTITY getNewThemesCmd.accesskey "G">
-<!ENTITY searchMenu.label "Search">
-<!ENTITY searchMenu.accesskey "S">
 <!ENTITY findOnCmd.label "Find in This Page...">
-<!ENTITY findOnCmd.accesskey "f">
+<!ENTITY findOnCmd.accesskey "F">
 <!ENTITY findOnCmd.commandkey "f">
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY findAgainCmd.accesskey "g">
 <!ENTITY findAgainCmd.commandkey "g">
-
-<!ENTITY goHomeCmd.label "Home">
-<!ENTITY goHomeCmd.accesskey "h">
 
 <!ENTITY bookmarksMenu.label "Bookmarks">
 <!ENTITY bookmarksMenu.accesskey "B">
