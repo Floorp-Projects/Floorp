@@ -850,7 +850,7 @@ function saveAttachment(aAttachment)
 {
   messenger.saveAttachment(aAttachment.contentType, 
                            aAttachment.url, 
-                           aAttachment.displayName, 
+                           escape(aAttachment.displayName), 
                            aAttachment.messageUri);
 }
 
@@ -858,7 +858,7 @@ function openAttachment(aAttachment)
 {
   messenger.openAttachment(aAttachment.contentType, 
                            aAttachment.url, 
-                           aAttachment.displayName, 
+                           escape(aAttachment.displayName), 
                            aAttachment.messageUri);
 }
 
@@ -867,7 +867,7 @@ function printAttachment(aAttachment)
   /* we haven't implemented the ability to print attachments yet...
   messenger.printAttachment(aAttachment.contentType, 
                             aAttachment.url, 
-                            aAttachment.displayName, 
+                            escape(aAttachment.displayName), 
                             aAttachment.messageUri);
   */
 }
