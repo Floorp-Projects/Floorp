@@ -825,6 +825,19 @@ nsresult nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
   return result;
 }
 
+nsresult nsEditor::CreateTxnToHandleEnterKey(nsIDOMCharacterData *aElement,
+                                             PRUint32             aOffset,
+                                             PRUint32             aLength)
+{
+  DeleteTextTxn *txn;
+  nsresult result = CreateTxnForDeleteText(aElement, aOffset, aLength, &txn);
+  if (NS_SUCCEEDED(result))  {
+    result = Do(txn);  
+  }
+  return result;
+}
+
+
 nsresult 
 nsEditor::DeleteSelection(nsIEditor::Direction aDir)
 {
@@ -868,7 +881,7 @@ nsresult nsEditor::CreateTxnForDeleteSelection(nsIEditor::Direction aDir,
           {
             DeleteRangeTxn *txn;
             result = TransactionFactory::GetNewTransaction(kDeleteRangeTxnIID, (EditTxn **)&txn);
-            if (nsnull!=txn)
+            if ((NS_SUCCEEDED(result)) && (nsnull!=txn))
             {
               txn->Init(range);
               (*aTxn)->AppendChild(txn);
@@ -959,8 +972,10 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
         if (0<length)
         {
           DeleteTextTxn *txn;
-          result = CreateTxnForDeleteText(priorNodeAsText, length-1, length, &txn);
-          aTxn->AppendChild(txn);
+          result = CreateTxnForDeleteText(priorNodeAsText, length-1, 1, &txn);
+          if (NS_SUCCEEDED(result)) {
+            aTxn->AppendChild(txn);
+          }
         }
         else
         { // XXX: can you have an empty text node?  If so, what do you do?
@@ -970,11 +985,59 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
       }
       else
       { // priorNode is not text, so tell it's parent to delete it
+        nsCOMPtr<nsIDOMNode> parent;
+        result = priorNode->GetParentNode(getter_AddRefs(parent));
+        if ((NS_SUCCEEDED(result)) && parent)
+        {
+          DeleteElementTxn *txn;
+          result = CreateTxnForDeleteElement(parent, priorNode, &txn);
+          if (NS_SUCCEEDED(result)) {
+            aTxn->AppendChild(txn);
+          }
+        }
       }
     }
   }
   else if ((nsIEditor::eLTR==aDir) && (PR_TRUE==isLast))
-  {
+  { // we're deleting from the end of the node.  Delete the first thing to our right
+    nsCOMPtr<nsIDOMNode> nextNode;
+    result = GetNextNode(node, getter_AddRefs(nextNode));
+    if ((NS_SUCCEEDED(result)) && nextNode)
+    { // there is a priorNode, so delete it's last child (if text content, delete the last char.)
+      // if it has no children, delete it
+      nsCOMPtr<nsIDOMCharacterData> nextNodeAsText(nextNode);
+      if (nextNodeAsText)
+      {
+        PRUint32 length=0;
+        nextNodeAsText->GetLength(&length);
+        if (0<length)
+        {
+          DeleteTextTxn *txn;
+          result = CreateTxnForDeleteText(nextNodeAsText, 0, 1, &txn);
+          if (NS_SUCCEEDED(result)) {
+            aTxn->AppendChild(txn);
+          }
+        }
+        else
+        { // XXX: can you have an empty text node?  If so, what do you do?
+          printf("ERROR: found a text node with 0 characters\n");
+          result = NS_ERROR_UNEXPECTED;
+        }
+      }
+      else
+      { // nextNode is not text, so tell it's parent to delete it
+        nsCOMPtr<nsIDOMNode> parent;
+        result = nextNode->GetParentNode(getter_AddRefs(parent));
+        if ((NS_SUCCEEDED(result)) && parent)
+        {
+          DeleteElementTxn *txn;
+          result = CreateTxnForDeleteElement(parent, nextNode, &txn);
+          if (NS_SUCCEEDED(result)) {
+            aTxn->AppendChild(txn);
+          }
+        }
+      }
+    }
   }
   else
   {
@@ -985,7 +1048,9 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
       }
       DeleteTextTxn *txn;
       result = CreateTxnForDeleteText(nodeAsText, offset, length, &txn);
-      aTxn->AppendChild(txn);
+      if (NS_SUCCEEDED(result)) {
+        aTxn->AppendChild(txn);
+      }
     }
     else
     { // we're deleting a node
@@ -1016,6 +1081,7 @@ nsEditor::GetPriorNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
       result = parent->GetPreviousSibling(getter_AddRefs(node));
       if ((NS_SUCCEEDED(result)) && node)
       {
+
         return GetRightmostChild(node, aResultNode);
       }
     }
@@ -1028,6 +1094,29 @@ nsresult
 nsEditor::GetNextNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
 {
   nsresult result;
+  *aResultNode = nsnull;
+  // if aCurrentNode has a left sibling, return that sibling's rightmost child (or itself if it has no children)
+  result = aCurrentNode->GetNextSibling(aResultNode);
+  if ((NS_SUCCEEDED(result)) && *aResultNode)
+    return GetLeftmostChild(*aResultNode, aResultNode);
+  
+  // otherwise, walk up the parent change until there is a child that comes before 
+  // the ancestor of aCurrentNode.  Then return that node's rightmost child
+
+  nsCOMPtr<nsIDOMNode> parent(aCurrentNode);
+  do {
+    nsCOMPtr<nsIDOMNode> node(parent);
+    result = node->GetParentNode(getter_AddRefs(parent));
+    if ((NS_SUCCEEDED(result)) && parent)
+    {
+      result = parent->GetNextSibling(getter_AddRefs(node));
+      if ((NS_SUCCEEDED(result)) && node)
+      {
+        return GetLeftmostChild(node, aResultNode);
+      }
+    }
+  } while ((NS_SUCCEEDED(result)) && parent);
+
   return result;
 }
 
@@ -1035,7 +1124,20 @@ nsresult
 nsEditor::GetRightmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
 {
   nsresult result = NS_OK;
-  *aResultNode = aCurrentNode;
+  nsCOMPtr<nsIDOMNode> resultNode(aCurrentNode);
+  PRBool hasChildren;
+  resultNode->HasChildNodes(&hasChildren);
+  while ((NS_SUCCEEDED(result)) && (PR_TRUE==hasChildren))
+  {
+    nsCOMPtr<nsIDOMNode> temp(resultNode);
+    temp->GetLastChild(getter_AddRefs(resultNode));
+    resultNode->HasChildNodes(&hasChildren);
+  }
+
+  if (NS_SUCCEEDED(result)) {
+    *aResultNode = resultNode;
+    NS_ADDREF(*aResultNode);
+  }
   return result;
 }
 
@@ -1043,7 +1145,20 @@ nsresult
 nsEditor::GetLeftmostChild(nsIDOMNode *aCurrentNode, nsIDOMNode **aResultNode)
 {
   nsresult result = NS_OK;
-  *aResultNode = aCurrentNode;
+  nsCOMPtr<nsIDOMNode> resultNode(aCurrentNode);
+  PRBool hasChildren;
+  resultNode->HasChildNodes(&hasChildren);
+  while ((NS_SUCCEEDED(result)) && (PR_TRUE==hasChildren))
+  {
+    nsCOMPtr<nsIDOMNode> temp(resultNode);
+    temp->GetFirstChild(getter_AddRefs(resultNode));
+    resultNode->HasChildNodes(&hasChildren);
+  }
+
+  if (NS_SUCCEEDED(result)) {
+    *aResultNode = resultNode;
+    NS_ADDREF(*aResultNode);
+  }
   return result;
 }
 
