@@ -657,7 +657,7 @@ nsDocFactoryImpl::CreateXULDocumentFromStream( nsIInputStream& aXULStream,
 
 				status = loader->LoadFromStream(aXULStream, aContainer, aCommand);
 			}
-		while ( false );
+		while (0);
 
 		return status;
 	}

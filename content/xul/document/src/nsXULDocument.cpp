@@ -1197,7 +1197,7 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
 
 				parser->Parse(aURL);
 			}
-		while(false);
+		while(0);
    
     return status;
 }
