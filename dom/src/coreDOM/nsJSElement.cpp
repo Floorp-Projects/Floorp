@@ -75,7 +75,7 @@ GetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case ELEMENT_TAGNAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "element.tagname", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "element.tagname", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -183,7 +183,7 @@ ElementGetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "element.getattribute", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "element.getattribute",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -233,7 +233,7 @@ ElementSetAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "element.setattribute", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "element.setattribute",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -283,7 +283,7 @@ ElementRemoveAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "element.removeattribute", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "element.removeattribute",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -333,7 +333,7 @@ ElementGetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "element.getattributenode", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "element.getattributenode",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -383,7 +383,7 @@ ElementSetAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "element.setattributenode", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "element.setattributenode",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -439,7 +439,7 @@ ElementRemoveAttributeNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "element.removeattributenode", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "element.removeattributenode",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -495,7 +495,7 @@ ElementGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "element.getelementsbytagname", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "element.getelementsbytagname",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -543,7 +543,7 @@ ElementNormalize(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "element.normalize", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "element.normalize",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

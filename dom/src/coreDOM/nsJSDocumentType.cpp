@@ -74,7 +74,7 @@ GetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case DOCUMENTTYPE_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "documenttype.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "documenttype.name", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -91,7 +91,7 @@ GetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case DOCUMENTTYPE_ENTITIES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "documenttype.entities", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "documenttype.entities", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -109,7 +109,7 @@ GetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case DOCUMENTTYPE_NOTATIONS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "documenttype.notations", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "documenttype.notations", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

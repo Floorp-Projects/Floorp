@@ -94,7 +94,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSELECTELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.type", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -111,7 +111,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSELECTELEMENT_SELECTEDINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.selectedindex", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.selectedindex", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -128,7 +128,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSELECTELEMENT_VALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.value", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.value", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -145,7 +145,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSELECTELEMENT_LENGTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.length", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.length", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -162,7 +162,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSELECTELEMENT_FORM:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.form", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.form", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -180,7 +180,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSELECTELEMENT_OPTIONS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.options", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.options", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -198,7 +198,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSELECTELEMENT_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.disabled", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.disabled", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -215,7 +215,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSELECTELEMENT_MULTIPLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.multiple", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.multiple", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -232,7 +232,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSELECTELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.name", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -249,7 +249,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSELECTELEMENT_SIZE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.size", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.size", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -266,7 +266,7 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSELECTELEMENT_TABINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.tabindex", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.tabindex", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -333,7 +333,7 @@ SetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSELECTELEMENT_SELECTEDINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.selectedindex", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.selectedindex", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -355,7 +355,7 @@ SetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSELECTELEMENT_VALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.value", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.value", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -370,7 +370,7 @@ SetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSELECTELEMENT_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.disabled", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.disabled", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -387,7 +387,7 @@ SetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSELECTELEMENT_MULTIPLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.multiple", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.multiple", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -404,7 +404,7 @@ SetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSELECTELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.name", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -419,7 +419,7 @@ SetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSELECTELEMENT_SIZE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.size", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.size", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -441,7 +441,7 @@ SetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSELECTELEMENT_TABINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.tabindex", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.tabindex", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -521,7 +521,7 @@ HTMLSelectElementAdd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.add", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.add",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -583,7 +583,7 @@ HTMLSelectElementRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.remove", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.remove",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -634,7 +634,7 @@ HTMLSelectElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.blur", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.blur",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -676,7 +676,7 @@ HTMLSelectElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.focus", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmlselectelement.focus",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -726,7 +726,7 @@ NSHTMLSelectElementItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmlselectelement.item", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmlselectelement.item",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

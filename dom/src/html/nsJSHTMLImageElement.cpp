@@ -88,7 +88,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_LOWSRC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.lowsrc", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.lowsrc", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -105,7 +105,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.name", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -122,7 +122,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.align", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -139,7 +139,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_ALT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.alt", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.alt", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -156,7 +156,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_BORDER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.border", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.border", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -173,7 +173,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_HEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.height", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.height", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -190,7 +190,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_HSPACE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.hspace", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.hspace", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -207,7 +207,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_ISMAP:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.ismap", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.ismap", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -224,7 +224,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_LONGDESC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.longdesc", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.longdesc", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -241,7 +241,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_SRC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.src", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.src", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -258,7 +258,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_USEMAP:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.usemap", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.usemap", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -275,7 +275,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_VSPACE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.vspace", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.vspace", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -292,7 +292,7 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_WIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.width", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.width", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -341,7 +341,7 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_LOWSRC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.lowsrc", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.lowsrc", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -356,7 +356,7 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.name", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -371,7 +371,7 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.align", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -386,7 +386,7 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_ALT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.alt", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.alt", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -401,7 +401,7 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_BORDER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.border", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.border", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -416,7 +416,7 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_HEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.height", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.height", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -431,7 +431,7 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_HSPACE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.hspace", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.hspace", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -446,7 +446,7 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_ISMAP:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.ismap", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.ismap", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -463,7 +463,7 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_LONGDESC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.longdesc", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.longdesc", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -478,7 +478,7 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_SRC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.src", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.src", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -493,7 +493,7 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_USEMAP:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.usemap", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.usemap", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -508,7 +508,7 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_VSPACE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.vspace", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.vspace", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -523,7 +523,7 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIMAGEELEMENT_WIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.width", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlimageelement.width", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

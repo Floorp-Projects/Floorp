@@ -74,7 +74,7 @@ GetWindowCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOWCOLLECTION_LENGTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "windowcollection.length", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "windowcollection.length", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -219,7 +219,7 @@ WindowCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "windowcollection.item", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "windowcollection.item",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -272,7 +272,7 @@ WindowCollectionNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "windowcollection.nameditem", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "windowcollection.nameditem",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

@@ -83,7 +83,7 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSSTYLESHEET_OWNINGNODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssstylesheet.owningnode", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssstylesheet.owningnode", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -101,7 +101,7 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSSTYLESHEET_PARENTSTYLESHEET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssstylesheet.parentstylesheet", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssstylesheet.parentstylesheet", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -119,7 +119,7 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSSTYLESHEET_HREF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssstylesheet.href", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssstylesheet.href", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -136,7 +136,7 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSSTYLESHEET_TITLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssstylesheet.title", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssstylesheet.title", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -153,7 +153,7 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSSTYLESHEET_MEDIA:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssstylesheet.media", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssstylesheet.media", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -170,7 +170,7 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSSTYLESHEET_CSSRULES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssstylesheet.cssrules", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssstylesheet.cssrules", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -280,7 +280,7 @@ CSSStyleSheetInsertRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "cssstylesheet.insertrule", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "cssstylesheet.insertrule",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -333,7 +333,7 @@ CSSStyleSheetDeleteRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "cssstylesheet.deleterule", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "cssstylesheet.deleterule",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

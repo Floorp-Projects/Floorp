@@ -74,7 +74,7 @@ GetHTMLLabelElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLABELELEMENT_FORM:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllabelelement.form", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllabelelement.form", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -92,7 +92,7 @@ GetHTMLLabelElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLABELELEMENT_ACCESSKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllabelelement.accesskey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllabelelement.accesskey", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -109,7 +109,7 @@ GetHTMLLabelElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLABELELEMENT_HTMLFOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllabelelement.htmlfor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllabelelement.htmlfor", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -158,7 +158,7 @@ SetHTMLLabelElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLABELELEMENT_ACCESSKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllabelelement.accesskey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllabelelement.accesskey", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -173,7 +173,7 @@ SetHTMLLabelElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLABELELEMENT_HTMLFOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllabelelement.htmlfor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllabelelement.htmlfor", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

@@ -71,7 +71,7 @@ GetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSTYLEELEMENT_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlstyleelement.disabled", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlstyleelement.disabled", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -88,7 +88,7 @@ GetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSTYLEELEMENT_MEDIA:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlstyleelement.media", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlstyleelement.media", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -105,7 +105,7 @@ GetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSTYLEELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlstyleelement.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlstyleelement.type", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -154,7 +154,7 @@ SetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSTYLEELEMENT_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlstyleelement.disabled", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlstyleelement.disabled", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -171,7 +171,7 @@ SetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSTYLEELEMENT_MEDIA:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlstyleelement.media", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlstyleelement.media", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -186,7 +186,7 @@ SetHTMLStyleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSTYLEELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlstyleelement.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlstyleelement.type", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

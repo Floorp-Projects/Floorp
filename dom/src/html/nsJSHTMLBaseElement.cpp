@@ -70,7 +70,7 @@ GetHTMLBaseElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBASEELEMENT_HREF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbaseelement.href", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbaseelement.href", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -87,7 +87,7 @@ GetHTMLBaseElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBASEELEMENT_TARGET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbaseelement.target", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbaseelement.target", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -136,7 +136,7 @@ SetHTMLBaseElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBASEELEMENT_HREF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbaseelement.href", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbaseelement.href", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -151,7 +151,7 @@ SetHTMLBaseElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBASEELEMENT_TARGET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbaseelement.target", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbaseelement.target", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

@@ -73,7 +73,7 @@ GetCSSPageRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSPAGERULE_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "csspagerule.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "csspagerule.name", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -90,7 +90,7 @@ GetCSSPageRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSPAGERULE_STYLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "csspagerule.style", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "csspagerule.style", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -140,7 +140,7 @@ SetCSSPageRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSPAGERULE_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "csspagerule.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "csspagerule.name", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -155,7 +155,7 @@ SetCSSPageRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSPAGERULE_STYLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "csspagerule.style", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "csspagerule.style", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

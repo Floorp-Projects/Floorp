@@ -76,7 +76,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_ACCESSKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.accesskey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.accesskey", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -93,7 +93,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_ALT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.alt", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.alt", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -110,7 +110,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_COORDS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.coords", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.coords", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -127,7 +127,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_HREF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.href", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.href", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -144,7 +144,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_NOHREF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.nohref", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.nohref", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -161,7 +161,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_SHAPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.shape", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.shape", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -178,7 +178,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_TABINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.tabindex", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.tabindex", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -195,7 +195,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_TARGET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.target", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.target", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -244,7 +244,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_ACCESSKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.accesskey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.accesskey", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -259,7 +259,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_ALT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.alt", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.alt", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -274,7 +274,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_COORDS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.coords", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.coords", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -289,7 +289,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_HREF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.href", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.href", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -304,7 +304,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_NOHREF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.nohref", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.nohref", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -321,7 +321,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_SHAPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.shape", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.shape", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -336,7 +336,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_TABINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.tabindex", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.tabindex", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -358,7 +358,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_TARGET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.target", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.target", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

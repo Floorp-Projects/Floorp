@@ -25,6 +25,7 @@
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
+#include "nsCOMPtr.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMBrowserAppCore.h"
@@ -61,8 +62,8 @@ GetBrowserAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
@@ -70,7 +71,6 @@ GetBrowserAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -95,8 +95,8 @@ SetBrowserAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-    nsIScriptSecurityManager *secMan;
-    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+    nsCOMPtr<nsIScriptSecurityManager> secMan;
+    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
       return JS_FALSE;
     }
     switch(JSVAL_TO_INT(id)) {
@@ -104,7 +104,6 @@ SetBrowserAppCoreProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
-    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -155,18 +154,17 @@ BrowserAppCoreBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.back", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.back",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -198,18 +196,17 @@ BrowserAppCoreForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.forward", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.forward",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -242,18 +239,17 @@ BrowserAppCoreReload(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.reload", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.reload",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -294,18 +290,17 @@ BrowserAppCoreStop(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.stop", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.stop",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -338,18 +333,17 @@ BrowserAppCoreLoadUrl(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.loadurl", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.loadurl",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -387,18 +381,17 @@ BrowserAppCoreLoadInitialPage(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.loadinitialpage", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.loadinitialpage",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -430,18 +423,17 @@ BrowserAppCoreBackButtonPopup(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.backbuttonpopup", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.backbuttonpopup",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -473,18 +465,17 @@ BrowserAppCoreForwardButtonPopup(JSContext *cx, JSObject *obj, uintN argc, jsval
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.forwardbuttonpopup", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.forwardbuttonpopup",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -517,18 +508,17 @@ BrowserAppCoreGotoHistoryIndex(JSContext *cx, JSObject *obj, uintN argc, jsval *
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.gotohistoryindex", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.gotohistoryindex",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -571,18 +561,17 @@ BrowserAppCoreWalletPreview(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.walletpreview", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.walletpreview",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -634,18 +623,17 @@ BrowserAppCoreCookieViewer(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.cookieviewer", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.cookieviewer",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -690,18 +678,17 @@ BrowserAppCoreSignonViewer(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.signonviewer", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.signonviewer",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -746,18 +733,17 @@ BrowserAppCoreWalletEditor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.walleteditor", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.walleteditor",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -801,18 +787,17 @@ BrowserAppCoreWalletChangePassword(JSContext *cx, JSObject *obj, uintN argc, jsv
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.walletchangepassword", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.walletchangepassword",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -845,18 +830,17 @@ BrowserAppCoreWalletQuickFillin(JSContext *cx, JSObject *obj, uintN argc, jsval 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.walletquickfillin", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.walletquickfillin",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -901,18 +885,17 @@ BrowserAppCoreWalletRequestToCapture(JSContext *cx, JSObject *obj, uintN argc, j
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.walletrequesttocapture", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.walletrequesttocapture",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -956,18 +939,17 @@ BrowserAppCoreWalletSamples(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.walletsamples", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.walletsamples",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -1000,18 +982,17 @@ BrowserAppCoreSetToolbarWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.settoolbarwindow", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.settoolbarwindow",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -1056,18 +1037,17 @@ BrowserAppCoreSetContentWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.setcontentwindow", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.setcontentwindow",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -1112,18 +1092,17 @@ BrowserAppCoreSetWebShellWindow(JSContext *cx, JSObject *obj, uintN argc, jsval 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.setwebshellwindow", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.setwebshellwindow",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -1167,18 +1146,17 @@ BrowserAppCoreNewWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.newwindow", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.newwindow",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -1210,18 +1188,17 @@ BrowserAppCoreOpenWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.openwindow", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.openwindow",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -1253,18 +1230,17 @@ BrowserAppCorePrintPreview(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.printpreview", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.printpreview",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -1296,18 +1272,17 @@ BrowserAppCoreCopy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.copy", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.copy",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -1339,18 +1314,17 @@ BrowserAppCorePrint(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.print", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.print",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -1382,18 +1356,17 @@ BrowserAppCoreClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.close", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.close",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -1425,18 +1398,17 @@ BrowserAppCoreExit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.exit", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.exit",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -1468,18 +1440,17 @@ BrowserAppCoreFind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.find", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.find",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore
@@ -1511,18 +1482,17 @@ BrowserAppCoreFindNext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-  nsIScriptSecurityManager *secMan;
-  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
     return JS_FALSE;
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.findnext", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "browserappcore.findnext",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
     }
-    NS_RELEASE(secMan);
   }
 
   // If there's no private data, this must be the prototype, so ignore

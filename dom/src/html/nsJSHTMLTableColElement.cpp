@@ -74,7 +74,7 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTABLECOLELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.align", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -91,7 +91,7 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTABLECOLELEMENT_CH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.ch", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.ch", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -108,7 +108,7 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTABLECOLELEMENT_CHOFF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.choff", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.choff", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -125,7 +125,7 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTABLECOLELEMENT_SPAN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.span", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.span", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -142,7 +142,7 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTABLECOLELEMENT_VALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.valign", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.valign", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -159,7 +159,7 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTABLECOLELEMENT_WIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.width", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.width", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -208,7 +208,7 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTABLECOLELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.align", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -223,7 +223,7 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTABLECOLELEMENT_CH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.ch", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.ch", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -238,7 +238,7 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTABLECOLELEMENT_CHOFF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.choff", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.choff", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -253,7 +253,7 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTABLECOLELEMENT_SPAN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.span", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.span", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -275,7 +275,7 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTABLECOLELEMENT_VALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.valign", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.valign", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -290,7 +290,7 @@ SetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTABLECOLELEMENT_WIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.width", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecolelement.width", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

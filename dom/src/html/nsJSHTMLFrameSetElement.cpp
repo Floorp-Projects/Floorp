@@ -70,7 +70,7 @@ GetHTMLFrameSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLFRAMESETELEMENT_COLS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframesetelement.cols", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframesetelement.cols", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -87,7 +87,7 @@ GetHTMLFrameSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLFRAMESETELEMENT_ROWS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframesetelement.rows", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframesetelement.rows", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -136,7 +136,7 @@ SetHTMLFrameSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLFRAMESETELEMENT_COLS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframesetelement.cols", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframesetelement.cols", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -151,7 +151,7 @@ SetHTMLFrameSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLFRAMESETELEMENT_ROWS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframesetelement.rows", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframesetelement.rows", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

@@ -94,7 +94,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_CAPTION:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.caption", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.caption", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -112,7 +112,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_THEAD:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.thead", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.thead", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -130,7 +130,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_TFOOT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.tfoot", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.tfoot", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -148,7 +148,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_ROWS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.rows", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.rows", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -166,7 +166,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_TBODIES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.tbodies", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.tbodies", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -184,7 +184,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.align", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -201,7 +201,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_BGCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.bgcolor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.bgcolor", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -218,7 +218,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_BORDER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.border", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.border", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -235,7 +235,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_CELLPADDING:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.cellpadding", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.cellpadding", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -252,7 +252,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_CELLSPACING:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.cellspacing", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.cellspacing", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -269,7 +269,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_FRAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.frame", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.frame", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -286,7 +286,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_RULES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.rules", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.rules", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -303,7 +303,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_SUMMARY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.summary", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.summary", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -320,7 +320,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_WIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.width", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.width", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -369,7 +369,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_CAPTION:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.caption", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.caption", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -388,7 +388,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_THEAD:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.thead", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.thead", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -407,7 +407,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_TFOOT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.tfoot", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.tfoot", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -426,7 +426,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.align", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -441,7 +441,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_BGCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.bgcolor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.bgcolor", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -456,7 +456,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_BORDER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.border", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.border", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -471,7 +471,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_CELLPADDING:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.cellpadding", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.cellpadding", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -486,7 +486,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_CELLSPACING:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.cellspacing", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.cellspacing", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -501,7 +501,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_FRAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.frame", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.frame", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -516,7 +516,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_RULES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.rules", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.rules", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -531,7 +531,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_SUMMARY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.summary", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.summary", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -546,7 +546,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_WIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.width", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.width", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -618,7 +618,7 @@ HTMLTableElementCreateTHead(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.createthead", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.createthead",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -660,7 +660,7 @@ HTMLTableElementDeleteTHead(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.deletethead", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.deletethead",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -703,7 +703,7 @@ HTMLTableElementCreateTFoot(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.createtfoot", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.createtfoot",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -745,7 +745,7 @@ HTMLTableElementDeleteTFoot(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.deletetfoot", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.deletetfoot",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -788,7 +788,7 @@ HTMLTableElementCreateCaption(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.createcaption", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.createcaption",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -830,7 +830,7 @@ HTMLTableElementDeleteCaption(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.deletecaption", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.deletecaption",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -874,7 +874,7 @@ HTMLTableElementInsertRow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.insertrow", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.insertrow",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -926,7 +926,7 @@ HTMLTableElementDeleteRow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.deleterow", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.deleterow",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

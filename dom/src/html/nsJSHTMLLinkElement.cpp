@@ -77,7 +77,7 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLINKELEMENT_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.disabled", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.disabled", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -94,7 +94,7 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLINKELEMENT_CHARSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.charset", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.charset", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -111,7 +111,7 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLINKELEMENT_HREF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.href", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.href", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -128,7 +128,7 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLINKELEMENT_HREFLANG:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.hreflang", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.hreflang", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -145,7 +145,7 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLINKELEMENT_MEDIA:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.media", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.media", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -162,7 +162,7 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLINKELEMENT_REL:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.rel", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.rel", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -179,7 +179,7 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLINKELEMENT_REV:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.rev", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.rev", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -196,7 +196,7 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLINKELEMENT_TARGET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.target", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.target", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -213,7 +213,7 @@ GetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLINKELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.type", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -262,7 +262,7 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLINKELEMENT_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.disabled", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.disabled", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -279,7 +279,7 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLINKELEMENT_CHARSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.charset", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.charset", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -294,7 +294,7 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLINKELEMENT_HREF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.href", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.href", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -309,7 +309,7 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLINKELEMENT_HREFLANG:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.hreflang", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.hreflang", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -324,7 +324,7 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLINKELEMENT_MEDIA:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.media", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.media", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -339,7 +339,7 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLINKELEMENT_REL:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.rel", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.rel", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -354,7 +354,7 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLINKELEMENT_REV:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.rev", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.rev", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -369,7 +369,7 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLINKELEMENT_TARGET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.target", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.target", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -384,7 +384,7 @@ SetHTMLLinkElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLINKELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllinkelement.type", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

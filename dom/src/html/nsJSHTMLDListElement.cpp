@@ -69,7 +69,7 @@ GetHTMLDListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDLISTELEMENT_COMPACT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldlistelement.compact", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldlistelement.compact", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -118,7 +118,7 @@ SetHTMLDListElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDLISTELEMENT_COMPACT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldlistelement.compact", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldlistelement.compact", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

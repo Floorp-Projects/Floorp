@@ -69,7 +69,7 @@ GetHTMLHeadingElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLHEADINGELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlheadingelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlheadingelement.align", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -118,7 +118,7 @@ SetHTMLHeadingElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLHEADINGELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlheadingelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlheadingelement.align", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

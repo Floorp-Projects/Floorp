@@ -74,7 +74,7 @@ GetHTMLCollectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLCOLLECTION_LENGTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlcollection.length", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlcollection.length", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -219,7 +219,7 @@ HTMLCollectionItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmlcollection.item", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmlcollection.item",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -272,7 +272,7 @@ HTMLCollectionNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmlcollection.nameditem", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmlcollection.nameditem",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

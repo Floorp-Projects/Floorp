@@ -82,7 +82,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_DEFAULTVALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.defaultvalue", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.defaultvalue", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -99,7 +99,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_FORM:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.form", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.form", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -117,7 +117,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_ACCESSKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.accesskey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.accesskey", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -134,7 +134,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_COLS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.cols", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.cols", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -151,7 +151,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.disabled", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.disabled", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -168,7 +168,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.name", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -185,7 +185,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_READONLY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.readonly", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.readonly", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -202,7 +202,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_ROWS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.rows", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.rows", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -219,7 +219,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_TABINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.tabindex", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.tabindex", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -236,7 +236,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.type", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -253,7 +253,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_VALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.value", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.value", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -302,7 +302,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_DEFAULTVALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.defaultvalue", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.defaultvalue", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -317,7 +317,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_ACCESSKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.accesskey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.accesskey", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -332,7 +332,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_COLS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.cols", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.cols", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -354,7 +354,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.disabled", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.disabled", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -371,7 +371,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.name", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -386,7 +386,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_READONLY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.readonly", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.readonly", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -403,7 +403,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_ROWS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.rows", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.rows", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -425,7 +425,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_TABINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.tabindex", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.tabindex", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -447,7 +447,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_VALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.value", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.value", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -518,7 +518,7 @@ HTMLTextAreaElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.blur", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.blur",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -560,7 +560,7 @@ HTMLTextAreaElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.focus", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.focus",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -602,7 +602,7 @@ HTMLTextAreaElementSelect(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.select", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.select",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

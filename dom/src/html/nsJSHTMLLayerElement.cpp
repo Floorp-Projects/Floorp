@@ -79,7 +79,7 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLAYERELEMENT_TOP:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.top", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.top", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -96,7 +96,7 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLAYERELEMENT_LEFT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.left", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.left", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -113,7 +113,7 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLAYERELEMENT_VISIBILITY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.visibility", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.visibility", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -130,7 +130,7 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLAYERELEMENT_BACKGROUND:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.background", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.background", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -147,7 +147,7 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLAYERELEMENT_BGCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.bgcolor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.bgcolor", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -164,7 +164,7 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLAYERELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.name", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -181,7 +181,7 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLAYERELEMENT_ZINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.zindex", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.zindex", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -198,7 +198,7 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLAYERELEMENT_DOCUMENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.document", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.document", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -248,7 +248,7 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLAYERELEMENT_TOP:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.top", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.top", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -270,7 +270,7 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLAYERELEMENT_LEFT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.left", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.left", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -292,7 +292,7 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLAYERELEMENT_VISIBILITY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.visibility", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.visibility", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -307,7 +307,7 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLAYERELEMENT_BACKGROUND:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.background", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.background", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -322,7 +322,7 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLAYERELEMENT_BGCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.bgcolor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.bgcolor", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -337,7 +337,7 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLAYERELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.name", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -352,7 +352,7 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLAYERELEMENT_ZINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.zindex", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllayerelement.zindex", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

@@ -76,7 +76,7 @@ GetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFRAMEELEMENT_FRAMEBORDER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.frameborder", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.frameborder", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -93,7 +93,7 @@ GetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFRAMEELEMENT_LONGDESC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.longdesc", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.longdesc", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -110,7 +110,7 @@ GetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFRAMEELEMENT_MARGINHEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.marginheight", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.marginheight", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -127,7 +127,7 @@ GetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFRAMEELEMENT_MARGINWIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.marginwidth", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.marginwidth", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -144,7 +144,7 @@ GetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFRAMEELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.name", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -161,7 +161,7 @@ GetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFRAMEELEMENT_NORESIZE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.noresize", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.noresize", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -178,7 +178,7 @@ GetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFRAMEELEMENT_SCROLLING:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.scrolling", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.scrolling", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -195,7 +195,7 @@ GetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFRAMEELEMENT_SRC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.src", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.src", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -244,7 +244,7 @@ SetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFRAMEELEMENT_FRAMEBORDER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.frameborder", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.frameborder", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -259,7 +259,7 @@ SetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFRAMEELEMENT_LONGDESC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.longdesc", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.longdesc", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -274,7 +274,7 @@ SetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFRAMEELEMENT_MARGINHEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.marginheight", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.marginheight", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -289,7 +289,7 @@ SetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFRAMEELEMENT_MARGINWIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.marginwidth", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.marginwidth", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -304,7 +304,7 @@ SetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFRAMEELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.name", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -319,7 +319,7 @@ SetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFRAMEELEMENT_NORESIZE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.noresize", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.noresize", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -336,7 +336,7 @@ SetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFRAMEELEMENT_SCROLLING:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.scrolling", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.scrolling", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -351,7 +351,7 @@ SetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLFRAMEELEMENT_SRC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.src", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.src", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

@@ -69,7 +69,7 @@ GetHTMLTableCaptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       case HTMLTABLECAPTIONELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecaptionelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecaptionelement.align", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -118,7 +118,7 @@ SetHTMLTableCaptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       case HTMLTABLECAPTIONELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecaptionelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablecaptionelement.align", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

@@ -74,7 +74,7 @@ GetHTMLLegendElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLEGENDELEMENT_FORM:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllegendelement.form", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllegendelement.form", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -92,7 +92,7 @@ GetHTMLLegendElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLEGENDELEMENT_ACCESSKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllegendelement.accesskey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllegendelement.accesskey", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -109,7 +109,7 @@ GetHTMLLegendElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLEGENDELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllegendelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllegendelement.align", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -158,7 +158,7 @@ SetHTMLLegendElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLEGENDELEMENT_ACCESSKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllegendelement.accesskey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllegendelement.accesskey", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -173,7 +173,7 @@ SetHTMLLegendElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLEGENDELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllegendelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllegendelement.align", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

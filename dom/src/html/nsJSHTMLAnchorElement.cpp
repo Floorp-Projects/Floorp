@@ -80,7 +80,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_ACCESSKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.accesskey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.accesskey", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -97,7 +97,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_CHARSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.charset", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.charset", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -114,7 +114,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_COORDS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.coords", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.coords", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -131,7 +131,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_HREF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.href", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.href", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -148,7 +148,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_HREFLANG:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.hreflang", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.hreflang", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -165,7 +165,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.name", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -182,7 +182,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_REL:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.rel", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.rel", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -199,7 +199,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_REV:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.rev", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.rev", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -216,7 +216,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_SHAPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.shape", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.shape", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -233,7 +233,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_TABINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.tabindex", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.tabindex", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -250,7 +250,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_TARGET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.target", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.target", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -267,7 +267,7 @@ GetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.type", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -316,7 +316,7 @@ SetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_ACCESSKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.accesskey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.accesskey", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -331,7 +331,7 @@ SetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_CHARSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.charset", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.charset", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -346,7 +346,7 @@ SetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_COORDS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.coords", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.coords", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -361,7 +361,7 @@ SetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_HREF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.href", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.href", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -376,7 +376,7 @@ SetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_HREFLANG:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.hreflang", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.hreflang", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -391,7 +391,7 @@ SetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.name", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -406,7 +406,7 @@ SetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_REL:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.rel", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.rel", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -421,7 +421,7 @@ SetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_REV:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.rev", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.rev", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -436,7 +436,7 @@ SetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_SHAPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.shape", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.shape", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -451,7 +451,7 @@ SetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_TABINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.tabindex", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.tabindex", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -473,7 +473,7 @@ SetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_TARGET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.target", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.target", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -488,7 +488,7 @@ SetHTMLAnchorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLANCHORELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.type", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -559,7 +559,7 @@ HTMLAnchorElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.blur", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.blur",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -601,7 +601,7 @@ HTMLAnchorElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.focus", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmlanchorelement.focus",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

@@ -83,7 +83,7 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NAVIGATOR_APPCODENAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "navigator.appcodename", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "navigator.appcodename", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -100,7 +100,7 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NAVIGATOR_APPNAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "navigator.appname", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "navigator.appname", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -117,7 +117,7 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NAVIGATOR_APPVERSION:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "navigator.appversion", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "navigator.appversion", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -134,7 +134,7 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NAVIGATOR_LANGUAGE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "navigator.language", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "navigator.language", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -151,7 +151,7 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NAVIGATOR_MIMETYPES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "navigator.mimetypes", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "navigator.mimetypes", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -169,7 +169,7 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NAVIGATOR_PLATFORM:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "navigator.platform", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "navigator.platform", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -186,7 +186,7 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NAVIGATOR_PLUGINS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "navigator.plugins", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "navigator.plugins", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -204,7 +204,7 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NAVIGATOR_SECURITYPOLICY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "navigator.securitypolicy", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "navigator.securitypolicy", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -221,7 +221,7 @@ GetNavigatorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NAVIGATOR_USERAGENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "navigator.useragent", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "navigator.useragent", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -328,7 +328,7 @@ NavigatorJavaEnabled(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "navigator.javaenabled", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "navigator.javaenabled",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -371,7 +371,7 @@ NavigatorTaintEnabled(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "navigator.taintenabled", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "navigator.taintenabled",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -414,7 +414,7 @@ NavigatorPreference(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "navigator.preference", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "navigator.preference",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

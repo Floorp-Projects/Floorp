@@ -78,7 +78,7 @@ GetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.align", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -95,7 +95,7 @@ GetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_FRAMEBORDER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.frameborder", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.frameborder", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -112,7 +112,7 @@ GetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_HEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.height", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.height", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -129,7 +129,7 @@ GetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_LONGDESC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.longdesc", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.longdesc", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -146,7 +146,7 @@ GetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_MARGINHEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.marginheight", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.marginheight", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -163,7 +163,7 @@ GetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_MARGINWIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.marginwidth", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.marginwidth", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -180,7 +180,7 @@ GetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.name", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -197,7 +197,7 @@ GetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_SCROLLING:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.scrolling", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.scrolling", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -214,7 +214,7 @@ GetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_SRC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.src", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.src", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -231,7 +231,7 @@ GetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_WIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.width", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.width", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -280,7 +280,7 @@ SetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.align", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -295,7 +295,7 @@ SetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_FRAMEBORDER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.frameborder", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.frameborder", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -310,7 +310,7 @@ SetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_HEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.height", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.height", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -325,7 +325,7 @@ SetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_LONGDESC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.longdesc", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.longdesc", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -340,7 +340,7 @@ SetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_MARGINHEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.marginheight", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.marginheight", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -355,7 +355,7 @@ SetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_MARGINWIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.marginwidth", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.marginwidth", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -370,7 +370,7 @@ SetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.name", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -385,7 +385,7 @@ SetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_SCROLLING:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.scrolling", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.scrolling", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -400,7 +400,7 @@ SetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_SRC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.src", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.src", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -415,7 +415,7 @@ SetHTMLIFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLIFRAMEELEMENT_WIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.width", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmliframeelement.width", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

@@ -117,7 +117,7 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case DOCUMENT_DOCTYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "document.doctype", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "document.doctype", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -135,7 +135,7 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case DOCUMENT_IMPLEMENTATION:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "document.implementation", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "document.implementation", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -153,7 +153,7 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case DOCUMENT_DOCUMENTELEMENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "document.documentelement", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "document.documentelement", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -171,7 +171,7 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSDOCUMENT_STYLESHEETS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nsdocument.stylesheets", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "nsdocument.stylesheets", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -289,7 +289,7 @@ DocumentCreateElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "document.createelement", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "document.createelement",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -338,7 +338,7 @@ DocumentCreateDocumentFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "document.createdocumentfragment", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "document.createdocumentfragment",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -382,7 +382,7 @@ DocumentCreateTextNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "document.createtextnode", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "document.createtextnode",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -432,7 +432,7 @@ DocumentCreateComment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "document.createcomment", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "document.createcomment",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -482,7 +482,7 @@ DocumentCreateCDATASection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "document.createcdatasection", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "document.createcdatasection",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -533,7 +533,7 @@ DocumentCreateProcessingInstruction(JSContext *cx, JSObject *obj, uintN argc, js
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "document.createprocessinginstruction", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "document.createprocessinginstruction",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -584,7 +584,7 @@ DocumentCreateAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "document.createattribute", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "document.createattribute",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -634,7 +634,7 @@ DocumentCreateEntityReference(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "document.createentityreference", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "document.createentityreference",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -684,7 +684,7 @@ DocumentGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "document.getelementsbytagname", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "document.getelementsbytagname",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -741,7 +741,7 @@ NSDocumentCreateElementWithNameSpace(JSContext *cx, JSObject *obj, uintN argc, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nsdocument.createelementwithnamespace", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nsdocument.createelementwithnamespace",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -797,7 +797,7 @@ NSDocumentCreateRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nsdocument.createrange", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nsdocument.createrange",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -846,7 +846,7 @@ EventCapturerCaptureEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "eventcapturer.captureevent", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "eventcapturer.captureevent",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -901,7 +901,7 @@ EventCapturerReleaseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "eventcapturer.releaseevent", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "eventcapturer.releaseevent",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

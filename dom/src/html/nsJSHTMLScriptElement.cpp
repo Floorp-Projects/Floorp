@@ -75,7 +75,7 @@ GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSCRIPTELEMENT_TEXT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.text", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.text", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -92,7 +92,7 @@ GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSCRIPTELEMENT_HTMLFOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.htmlfor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.htmlfor", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -109,7 +109,7 @@ GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSCRIPTELEMENT_EVENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.event", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.event", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -126,7 +126,7 @@ GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSCRIPTELEMENT_CHARSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.charset", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.charset", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -143,7 +143,7 @@ GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSCRIPTELEMENT_DEFER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.defer", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.defer", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -160,7 +160,7 @@ GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSCRIPTELEMENT_SRC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.src", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.src", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -177,7 +177,7 @@ GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSCRIPTELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.type", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -226,7 +226,7 @@ SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSCRIPTELEMENT_TEXT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.text", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.text", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -241,7 +241,7 @@ SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSCRIPTELEMENT_HTMLFOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.htmlfor", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.htmlfor", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -256,7 +256,7 @@ SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSCRIPTELEMENT_EVENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.event", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.event", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -271,7 +271,7 @@ SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSCRIPTELEMENT_CHARSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.charset", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.charset", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -286,7 +286,7 @@ SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSCRIPTELEMENT_DEFER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.defer", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.defer", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -303,7 +303,7 @@ SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSCRIPTELEMENT_SRC:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.src", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.src", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -318,7 +318,7 @@ SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLSCRIPTELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.type", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

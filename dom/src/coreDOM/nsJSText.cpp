@@ -155,7 +155,7 @@ TextSplitText(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "text.splittext", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "text.splittext",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

@@ -69,7 +69,7 @@ GetHTMLHeadElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLHEADELEMENT_PROFILE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlheadelement.profile", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlheadelement.profile", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -118,7 +118,7 @@ SetHTMLHeadElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLHEADELEMENT_PROFILE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlheadelement.profile", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlheadelement.profile", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

@@ -70,7 +70,7 @@ GetHTMLOptGroupElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLOPTGROUPELEMENT_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmloptgroupelement.disabled", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmloptgroupelement.disabled", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -87,7 +87,7 @@ GetHTMLOptGroupElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLOPTGROUPELEMENT_LABEL:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmloptgroupelement.label", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmloptgroupelement.label", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -136,7 +136,7 @@ SetHTMLOptGroupElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLOPTGROUPELEMENT_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmloptgroupelement.disabled", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmloptgroupelement.disabled", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -153,7 +153,7 @@ SetHTMLOptGroupElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLOPTGROUPELEMENT_LABEL:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmloptgroupelement.label", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmloptgroupelement.label", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

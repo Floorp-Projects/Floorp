@@ -73,7 +73,7 @@ GetCSSMediaRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSMEDIARULE_MEDIATYPES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssmediarule.mediatypes", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssmediarule.mediatypes", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -90,7 +90,7 @@ GetCSSMediaRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSMEDIARULE_CSSRULES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssmediarule.cssrules", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssmediarule.cssrules", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -140,7 +140,7 @@ SetCSSMediaRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSMEDIARULE_MEDIATYPES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssmediarule.mediatypes", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssmediarule.mediatypes", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -214,7 +214,7 @@ CSSMediaRuleInsertRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "cssmediarule.insertrule", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "cssmediarule.insertrule",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -267,7 +267,7 @@ CSSMediaRuleDeleteRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "cssmediarule.deleterule", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "cssmediarule.deleterule",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

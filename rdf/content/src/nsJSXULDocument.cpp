@@ -80,7 +80,7 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULDOCUMENT_POPUPELEMENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.popupelement", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.popupelement", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -98,7 +98,7 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULDOCUMENT_TOOLTIPELEMENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.tooltipelement", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.tooltipelement", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -116,7 +116,7 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULDOCUMENT_COMMANDDISPATCHER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.commanddispatcher", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.commanddispatcher", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -166,7 +166,7 @@ SetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULDOCUMENT_POPUPELEMENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.popupelement", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.popupelement", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -185,7 +185,7 @@ SetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULDOCUMENT_TOOLTIPELEMENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.tooltipelement", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.tooltipelement", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -262,7 +262,7 @@ XULDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.getelementbyid", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.getelementbyid",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -313,7 +313,7 @@ XULDocumentGetElementsByAttribute(JSContext *cx, JSObject *obj, uintN argc, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.getelementsbyattribute", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.getelementsbyattribute",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

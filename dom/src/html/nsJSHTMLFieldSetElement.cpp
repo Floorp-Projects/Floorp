@@ -72,7 +72,7 @@ GetHTMLFieldSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLFIELDSETELEMENT_FORM:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlfieldsetelement.form", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlfieldsetelement.form", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

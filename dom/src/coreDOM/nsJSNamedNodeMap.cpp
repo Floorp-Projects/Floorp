@@ -72,7 +72,7 @@ GetNamedNodeMapProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NAMEDNODEMAP_LENGTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "namednodemap.length", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "namednodemap.length", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -189,7 +189,7 @@ NamedNodeMapGetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "namednodemap.getnameditem", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "namednodemap.getnameditem",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -239,7 +239,7 @@ NamedNodeMapSetNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "namednodemap.setnameditem", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "namednodemap.setnameditem",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -295,7 +295,7 @@ NamedNodeMapRemoveNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "namednodemap.removenameditem", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "namednodemap.removenameditem",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -345,7 +345,7 @@ NamedNodeMapItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "namednodemap.item", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "namednodemap.item",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

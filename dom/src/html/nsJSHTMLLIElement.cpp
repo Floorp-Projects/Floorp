@@ -70,7 +70,7 @@ GetHTMLLIElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLIELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllielement.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllielement.type", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -87,7 +87,7 @@ GetHTMLLIElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLIELEMENT_VALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllielement.value", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllielement.value", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -136,7 +136,7 @@ SetHTMLLIElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLIELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllielement.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllielement.type", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -151,7 +151,7 @@ SetHTMLLIElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLLIELEMENT_VALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmllielement.value", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmllielement.value", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

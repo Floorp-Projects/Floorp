@@ -76,7 +76,7 @@ GetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULTREEELEMENT_SELECTEDITEMS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selecteditems", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selecteditems", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -94,7 +94,7 @@ GetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULTREEELEMENT_SELECTEDCELLS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectedcells", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectedcells", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -202,7 +202,7 @@ XULTreeElementSelectItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectitem", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectitem",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -257,7 +257,7 @@ XULTreeElementSelectCell(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectcell", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectcell",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -311,7 +311,7 @@ XULTreeElementClearItemSelection(JSContext *cx, JSObject *obj, uintN argc, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.clearitemselection", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.clearitemselection",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -353,7 +353,7 @@ XULTreeElementClearCellSelection(JSContext *cx, JSObject *obj, uintN argc, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.clearcellselection", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.clearcellselection",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -396,7 +396,7 @@ XULTreeElementAddItemToSelection(JSContext *cx, JSObject *obj, uintN argc, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.additemtoselection", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.additemtoselection",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -451,7 +451,7 @@ XULTreeElementRemoveItemFromSelection(JSContext *cx, JSObject *obj, uintN argc, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.removeitemfromselection", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.removeitemfromselection",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -506,7 +506,7 @@ XULTreeElementAddCellToSelection(JSContext *cx, JSObject *obj, uintN argc, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.addcelltoselection", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.addcelltoselection",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -561,7 +561,7 @@ XULTreeElementRemoveCellFromSelection(JSContext *cx, JSObject *obj, uintN argc, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.removecellfromselection", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.removecellfromselection",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -616,7 +616,7 @@ XULTreeElementToggleItemSelection(JSContext *cx, JSObject *obj, uintN argc, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.toggleitemselection", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.toggleitemselection",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -671,7 +671,7 @@ XULTreeElementToggleCellSelection(JSContext *cx, JSObject *obj, uintN argc, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.togglecellselection", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.togglecellselection",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -727,7 +727,7 @@ XULTreeElementSelectItemRange(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectitemrange", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectitemrange",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -790,7 +790,7 @@ XULTreeElementSelectCellRange(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectcellrange", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectcellrange",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -851,7 +851,7 @@ XULTreeElementSelectAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectall", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectall",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -893,7 +893,7 @@ XULTreeElementInvertSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.invertselection", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.invertselection",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

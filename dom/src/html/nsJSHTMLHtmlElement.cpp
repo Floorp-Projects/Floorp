@@ -69,7 +69,7 @@ GetHTMLHtmlElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLHTMLELEMENT_VERSION:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlhtmlelement.version", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlhtmlelement.version", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -118,7 +118,7 @@ SetHTMLHtmlElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLHTMLELEMENT_VERSION:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlhtmlelement.version", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlhtmlelement.version", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

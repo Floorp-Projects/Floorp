@@ -73,7 +73,7 @@ GetHTMLMapElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMAPELEMENT_AREAS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlmapelement.areas", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmapelement.areas", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -91,7 +91,7 @@ GetHTMLMapElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMAPELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlmapelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmapelement.name", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -140,7 +140,7 @@ SetHTMLMapElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLMAPELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlmapelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlmapelement.name", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

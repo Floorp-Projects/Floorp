@@ -69,7 +69,7 @@ GetHTMLDirectoryElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       case HTMLDIRECTORYELEMENT_COMPACT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldirectoryelement.compact", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldirectoryelement.compact", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -118,7 +118,7 @@ SetHTMLDirectoryElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
       case HTMLDIRECTORYELEMENT_COMPACT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldirectoryelement.compact", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldirectoryelement.compact", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

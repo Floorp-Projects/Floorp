@@ -81,7 +81,7 @@ GetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBUTTONELEMENT_FORM:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.form", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.form", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -99,7 +99,7 @@ GetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBUTTONELEMENT_ACCESSKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.accesskey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.accesskey", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -116,7 +116,7 @@ GetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBUTTONELEMENT_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.disabled", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.disabled", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -133,7 +133,7 @@ GetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBUTTONELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.name", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -150,7 +150,7 @@ GetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBUTTONELEMENT_TABINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.tabindex", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.tabindex", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -167,7 +167,7 @@ GetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBUTTONELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.type", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -184,7 +184,7 @@ GetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBUTTONELEMENT_VALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.value", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.value", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -233,7 +233,7 @@ SetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBUTTONELEMENT_ACCESSKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.accesskey", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.accesskey", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -248,7 +248,7 @@ SetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBUTTONELEMENT_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.disabled", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.disabled", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -265,7 +265,7 @@ SetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBUTTONELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.name", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.name", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -280,7 +280,7 @@ SetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBUTTONELEMENT_TABINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.tabindex", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.tabindex", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -302,7 +302,7 @@ SetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLBUTTONELEMENT_VALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.value", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlbuttonelement.value", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -379,7 +379,7 @@ NSHTMLButtonElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmlbuttonelement.blur", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmlbuttonelement.blur",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -427,7 +427,7 @@ NSHTMLButtonElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmlbuttonelement.focus", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmlbuttonelement.focus",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

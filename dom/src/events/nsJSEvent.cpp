@@ -75,7 +75,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case EVENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "event.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "event.type", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -92,7 +92,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case EVENT_TARGET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "event.target", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "event.target", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -110,7 +110,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case EVENT_CURRENTNODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "event.currentnode", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "event.currentnode", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -128,7 +128,7 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case EVENT_EVENTPHASE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "event.eventphase", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "event.eventphase", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -234,7 +234,7 @@ EventPreventBubble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "event.preventbubble", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "event.preventbubble",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -276,7 +276,7 @@ EventPreventCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "event.preventcapture", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "event.preventcapture",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -318,7 +318,7 @@ EventPreventDefault(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "event.preventdefault", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "event.preventdefault",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

@@ -49,9 +49,9 @@ public:
 
 
 #define NS_FORWARD_IDOMBASEAPPCORE(_to)  \
-  NS_IMETHOD    GetId(nsString& aId) { return _to##GetId(aId); } \
-  NS_IMETHOD    Init(const nsString& aId) { return _to##Init(aId); }  \
-  NS_IMETHOD    SetDocumentCharset(const nsString& aCharset) { return _to##SetDocumentCharset(aCharset); }  \
+  NS_IMETHOD    GetId(nsString& aId) { return _to GetId(aId); } \
+  NS_IMETHOD    Init(const nsString& aId) { return _to Init(aId); }  \
+  NS_IMETHOD    SetDocumentCharset(const nsString& aCharset) { return _to SetDocumentCharset(aCharset); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitBaseAppCoreClass(nsIScriptContext *aContext, void **aPrototype);

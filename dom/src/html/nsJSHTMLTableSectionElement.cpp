@@ -79,7 +79,7 @@ GetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       case HTMLTABLESECTIONELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.align", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -96,7 +96,7 @@ GetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       case HTMLTABLESECTIONELEMENT_CH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.ch", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.ch", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -113,7 +113,7 @@ GetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       case HTMLTABLESECTIONELEMENT_CHOFF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.choff", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.choff", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -130,7 +130,7 @@ GetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       case HTMLTABLESECTIONELEMENT_VALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.valign", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.valign", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -147,7 +147,7 @@ GetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       case HTMLTABLESECTIONELEMENT_ROWS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.rows", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.rows", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -197,7 +197,7 @@ SetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       case HTMLTABLESECTIONELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.align", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.align", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -212,7 +212,7 @@ SetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       case HTMLTABLESECTIONELEMENT_CH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.ch", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.ch", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -227,7 +227,7 @@ SetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       case HTMLTABLESECTIONELEMENT_CHOFF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.choff", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.choff", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -242,7 +242,7 @@ SetHTMLTableSectionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval
       case HTMLTABLESECTIONELEMENT_VALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.valign", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.valign", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -315,7 +315,7 @@ HTMLTableSectionElementInsertRow(JSContext *cx, JSObject *obj, uintN argc, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.insertrow", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.insertrow",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;
@@ -367,7 +367,7 @@ HTMLTableSectionElementDeleteRow(JSContext *cx, JSObject *obj, uintN argc, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.deleterow", &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, "htmltablesectionelement.deleterow",PR_FALSE , &ok);
     if (!ok) {
       //Need to throw error here
       return JS_FALSE;

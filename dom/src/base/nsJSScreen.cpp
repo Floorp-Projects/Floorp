@@ -76,7 +76,7 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SCREEN_WIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "screen.width", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "screen.width", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -93,7 +93,7 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SCREEN_HEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "screen.height", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "screen.height", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -110,7 +110,7 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SCREEN_PIXELDEPTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "screen.pixeldepth", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "screen.pixeldepth", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -127,7 +127,7 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SCREEN_COLORDEPTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "screen.colordepth", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "screen.colordepth", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -144,7 +144,7 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SCREEN_AVAILWIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "screen.availwidth", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "screen.availwidth", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -161,7 +161,7 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SCREEN_AVAILHEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "screen.availheight", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "screen.availheight", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -178,7 +178,7 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SCREEN_AVAILLEFT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "screen.availleft", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "screen.availleft", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -195,7 +195,7 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SCREEN_AVAILTOP:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "screen.availtop", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "screen.availtop", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

@@ -69,7 +69,7 @@ GetHTMLTitleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTITLEELEMENT_TEXT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltitleelement.text", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltitleelement.text", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -118,7 +118,7 @@ SetHTMLTitleElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTITLEELEMENT_TEXT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltitleelement.text", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "htmltitleelement.text", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

@@ -73,7 +73,7 @@ GetCSSStyleRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSSTYLERULE_SELECTORTEXT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssstylerule.selectortext", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssstylerule.selectortext", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -90,7 +90,7 @@ GetCSSStyleRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSSTYLERULE_STYLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssstylerule.style", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssstylerule.style", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -140,7 +140,7 @@ SetCSSStyleRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSSTYLERULE_SELECTORTEXT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssstylerule.selectortext", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssstylerule.selectortext", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -155,7 +155,7 @@ SetCSSStyleRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case CSSSTYLERULE_STYLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "cssstylerule.style", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "cssstylerule.style", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;

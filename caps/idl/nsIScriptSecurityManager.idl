@@ -56,7 +56,8 @@ interface nsIScriptSecurityManager : nsISupports
 	const short eJSTarget_Max=8;
 
 	void CheckScriptAccess(in nsIScriptContext cx, in voidStar obj, 
-	                       [const] in string prop, out boolean res);
+	                       [const] in string prop, in boolean isWrite, 
+                         out boolean res);
 	void CanAccessTarget(in JSContext cx, in short target, out boolean res);
 };
 

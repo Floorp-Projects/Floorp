@@ -71,7 +71,7 @@ GetStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case STYLESHEET_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "stylesheet.type", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "stylesheet.type", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -88,7 +88,7 @@ GetStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case STYLESHEET_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "stylesheet.disabled", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "stylesheet.disabled", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -105,7 +105,7 @@ GetStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case STYLESHEET_READONLY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "stylesheet.readonly", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "stylesheet.readonly", PR_FALSE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
@@ -154,7 +154,7 @@ SetStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case STYLESHEET_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "stylesheet.disabled", &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "stylesheet.disabled", PR_TRUE, &ok);
         if (!ok) {
           //Need to throw error here
           return JS_FALSE;
