@@ -338,6 +338,15 @@ nsMsgDatabase::nsMsgDatabase()
 nsMsgDatabase::~nsMsgDatabase()
 {
 //	Close(FALSE);	// better have already been closed.
+	RemoveFromCache(this);
+#ifdef DEBUG_bienvenu1
+	if (GetNumInCache() != 0)
+	{
+		XP_Trace("closing %s\n", m_dbName);
+		DumpCache();
+	}
+#endif
+	NS_IF_RELEASE(m_dbFolderInfo);
 	if (m_HeaderParser)
 	{
 		NS_RELEASE(m_HeaderParser);
@@ -346,6 +355,10 @@ nsMsgDatabase::~nsMsgDatabase()
 	if (m_mdbAllMsgHeadersTable)
 		m_mdbAllMsgHeadersTable->Release();
 
+	if (m_mdbStore)
+	{
+		m_mdbStore->CloseMdbObject(m_mdbEnv);
+	}
 	if (m_mdbEnv)
 	{
 		m_mdbEnv->CutStrongRef(m_mdbEnv); //??? is this right?
@@ -375,31 +388,7 @@ nsMsgDatabase::~nsMsgDatabase()
 
 NS_IMPL_ADDREF(nsMsgDatabase)
 
-NS_IMETHODIMP_(nsrefcnt) nsMsgDatabase::Release(void)                    
-{                                                      
-	NS_PRECONDITION(0 != mRefCnt, "dup release");     
-	if (--mRefCnt == 0)	// OK, the cache is no longer holding onto this, so we really want to delete it, 
-	{						// after removing it from the cache.
-		RemoveFromCache(this);
-#ifdef DEBUG_bienvenu1
-		if (GetNumInCache() != 0)
-		{
-			XP_Trace("closing %s\n", m_dbName);
-			DumpCache();
-		}
-#endif
-		if (m_mdbStore)
-		{
-			m_mdbStore->CloseMdbObject(m_mdbEnv);
-		}
-		NS_DELETEXPCOM(this);                              
-		return 0;                                          
-	}
-	NS_LOG_RELEASE(this, mRefCnt,"nsMsgDatabase"); 
-	return mRefCnt;                                      
-}
-
-// NS_IMPL_RELEASE(nsMsgDatabase)
+NS_IMPL_RELEASE(nsMsgDatabase)
 
 NS_IMETHODIMP nsMsgDatabase::QueryInterface(REFNSIID aIID, void** aResult)
 {   

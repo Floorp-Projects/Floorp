@@ -116,7 +116,7 @@ nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterTypeType filterType,
                                    PRUint32 headersSize,
                                    nsIMsgFilterHitNotify *listener)
 {
-	nsIMsgFilter	*filter;
+	nsCOMPtr <nsIMsgFilter>	filter;
 	PRUint32		filterCount = 0;
 	nsresult		ret = NS_OK;
 
@@ -124,7 +124,7 @@ nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterTypeType filterType,
 
 	for (PRUint32 filterIndex = 0; filterIndex < filterCount; filterIndex++)
 	{
-		if (NS_SUCCEEDED(GetFilterAt(filterIndex, &filter)))
+		if (NS_SUCCEEDED(GetFilterAt(filterIndex, getter_AddRefs(filter))))
 		{
 			PRBool isEnabled;
 			nsMsgFilterTypeType curFilterType;
@@ -614,6 +614,7 @@ nsresult nsMsgFilterList::SaveTextFilters()
 			filter->SetFilterList(this);
 			if ((err = filter->SaveToTextFile(m_fileStream)) != NS_OK)
 				break;
+			NS_RELEASE(filter);
 		}
 		else
 			break;
@@ -772,7 +773,10 @@ void nsMsgFilterList::Dump()
 	{
 		nsMsgFilter *filter;
 		if (GetMsgFilterAt(i, &filter) == NS_OK)
+		{
 			filter->Dump();
+			NS_RELEASE(filter);
+		}
 	}
 
 }

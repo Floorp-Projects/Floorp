@@ -1915,7 +1915,8 @@ VCardGetStringByID(PRInt32 aMsgId)
     {
       nsAutoString v("");
       v = ptrv;
-			tempString = v.ToNewUTF8String();
+	  PR_FREEIF(ptrv);
+      tempString = v.ToNewUTF8String();
     }
 	}
 
