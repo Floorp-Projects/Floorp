@@ -68,13 +68,13 @@ protected:
                                      PRBool aIsOverlay, PRBool aUseProfile, PRBool aRemove);
   NS_IMETHOD UpdateDynamicDataSources(nsIRDFDataSource *aDataSource, PRBool aIsOverlay, 
                                       PRBool aUseProfile, PRBool aRemove);
-  NS_IMETHOD WriteInfoToDataSource(char *aDocURI, const PRUnichar *aOverlayURI,
+  NS_IMETHOD WriteInfoToDataSource(const char *aDocURI, const PRUnichar *aOverlayURI,
                                    PRBool aIsOverlay, PRBool aUseProfile, PRBool aRemove);
  
-  void LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCString & aURL);
-  void LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet** aSheet);
+  nsresult LoadStyleSheet(nsICSSStyleSheet** aSheet, const nsCString & aURL);
+  nsresult LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet** aSheet);
   
-  void GetUserSheetURL(nsCString & aURL);
+  nsresult GetUserSheetURL(nsCString & aURL);
 
 private:
   NS_IMETHOD LoadDataSource(const nsCString &aFileName, nsIRDFDataSource **aResult,
@@ -130,7 +130,7 @@ private:
                              const nsCString& aBaseURL,
                              PRBool aUseProfile, PRBool aAllowScripts, PRBool aRemove);
 
-  void ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength);
+  nsresult ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength);
 
 protected:
   PRBool mInstallInitialized;
