@@ -59,92 +59,100 @@
 #endif
 
 /* static */
-const PRUnichar XPCReadableJSStringWrapper::sEmptyString = PRUnichar(0);
+PRUnichar XPCReadableJSStringWrapper::sEmptyString = PRUnichar(0);
+
 
 XPCReadableJSStringWrapper::~XPCReadableJSStringWrapper()
 {
-    if (mBufferHandle)
+    if (mSharedBufferHandle)
     {
-        if (mHandleIsShared)
-        {
-            mBufferHandle->ReleaseReference();
-        }
-        else
-        {
-            delete mBufferHandle;
-        }
+        mSharedBufferHandle->ReleaseReference();
     }
 }
 
+const nsBufferHandle<PRUnichar>*
+XPCReadableJSStringWrapper::GetBufferHandle() const
+{
+    return &mBufferHandle;
+}
+
+const nsBufferHandle<PRUnichar>*
+XPCReadableJSStringWrapper::GetFlatBufferHandle() const
+{
+    return &mBufferHandle;
+}
+
 const nsSharedBufferHandle<PRUnichar>*
-XPCReadableJSStringWrapper::BufferHandle(JSBool shared) const
+XPCReadableJSStringWrapper::GetSharedBufferHandle() const
 {
     if (!mStr) {
         // This is a "void" string, so return a shared empty buffer handle.
-        static char_type null_char = char_type(0);
         static shared_buffer_handle_type* sBufferHandle = nsnull;
         if (!sBufferHandle) {
-            sBufferHandle = new nsNonDestructingSharedBufferHandle<char_type>(&null_char, &null_char, 1);
-            sBufferHandle->AcquireReference(); // To avoid the |Destroy|
-                                   // mechanism unless threads race to
-                                   // set the refcount, in which case
-                                   // we'll pull the same trick in
-                                   // |Destroy|.
+            sBufferHandle = new
+                nsNonDestructingSharedBufferHandle<char_type>(&sEmptyString,
+                                                              &sEmptyString,
+                                                              1);
+            // To avoid the |Destroy| mechanism unless threads race to
+            // set the refcount, in which case we'll pull the same
+            // trick in |Destroy|.
+            sBufferHandle->AcquireReference();
         }
+
         return sBufferHandle;
     }
 
     XPCReadableJSStringWrapper * mutable_this =
         NS_CONST_CAST(XPCReadableJSStringWrapper *, this);
 
-    if (!mBufferHandle)
-    {
-        mutable_this->mBufferHandle =
-            new WrapperBufferHandle(mutable_this, mStr);
+    if (!mSharedBufferHandle) {
+        PRUnichar *chars =
+            NS_REINTERPRET_CAST(PRUnichar *, JS_GetStringChars(mStr));
 
+        mutable_this->mSharedBufferHandle =
+            new SharedWrapperBufferHandle(mStr, chars,
+                                          JS_GetStringLength(mStr));
+
+        if (!mSharedBufferHandle) {
+            // Out of memory
+            return nsnull;
+        }
+
+        mutable_this->mSharedBufferHandle->RootString();
     }
 
-    if (shared && !mHandleIsShared)
-    {
-        mutable_this->mBufferHandle->AcquireReference();
-        mutable_this->mBufferHandle->mAllocator.RootString();
-        mutable_this->mHandleIsShared = JS_TRUE;
-    }
+    mutable_this->mSharedBufferHandle->AcquireReference();
 
-    return mBufferHandle;
+    return mSharedBufferHandle;
 }
 
 void
-XPCReadableJSStringWrapper::WrapperBufferHandle::Allocator::
-Deallocate(PRUnichar *) const
+XPCReadableJSStringWrapper::SharedWrapperBufferHandle::Destroy()
 {
-    if (JSVAL_IS_STRING(mStr))
+    // unroot
+    JSRuntime *rt;
+    nsCOMPtr<nsIJSRuntimeService> rtsvc =
+        dont_AddRef(NS_STATIC_CAST(nsIJSRuntimeService*,
+                                   nsJSRuntimeServiceImpl::GetSingleton()));
+    if (rtsvc && NS_SUCCEEDED(rtsvc->GetRuntime(&rt)))
     {
-        // unroot
-        JSRuntime *rt;
-        nsCOMPtr<nsIJSRuntimeService> rtsvc =
-            dont_AddRef(NS_STATIC_CAST(nsIJSRuntimeService*,
-                                     nsJSRuntimeServiceImpl::GetSingleton()));
-        if (rtsvc && NS_SUCCEEDED(rtsvc->GetRuntime(&rt)))
-        {
-            JS_RemoveRootRT(rt,
-                            NS_CONST_CAST(void **,
-                                          NS_REINTERPRET_CAST(void * const *,
+        JS_RemoveRootRT(rt,
+                        NS_CONST_CAST(void **,
+                                      NS_REINTERPRET_CAST(void * const *,
                                                           &mStr)));
-            Allocator *mutable_this = NS_CONST_CAST(Allocator *, this);
-            // store untagged to indicate that we're not rooted
-            mutable_this->mStr = NS_REINTERPRET_CAST(jsval,
-                                                     JSVAL_TO_STRING(mStr));
-        }
-        else
-        {
-            NS_ERROR("Unable to unroot mStr!  Prepare for leak or crash!");
-        }
+        // store untagged to indicate that we're not rooted
+        mStr = NS_REINTERPRET_CAST(jsval, JSVAL_TO_STRING(mStr));
     }
+    else
+    {
+        NS_ERROR("Unable to unroot mStr!  Prepare for leak or crash!");
+    }
+
+    delete this;
 }
 
 JSBool
-XPCReadableJSStringWrapper::WrapperBufferHandle::Allocator::RootString()
+XPCReadableJSStringWrapper::SharedWrapperBufferHandle::RootString()
 {
     JSRuntime *rt;
     nsCOMPtr<nsIJSRuntimeService> rtsvc =
@@ -156,7 +164,7 @@ XPCReadableJSStringWrapper::WrapperBufferHandle::Allocator::RootString()
                           NS_CONST_CAST(void **,
                                         NS_REINTERPRET_CAST(void * const *,
                                                             &mStr)),
-                          "WrapperBufferHandle.mAllocator.mStr");
+                          "WrapperBufferHandle.mStr");
     if (ok)
     {
         // Indicate that we've rooted the string by storing it as a
@@ -315,5 +323,9 @@ XPCStringConvert::ReadableToJSString(JSContext *cx,
 XPCReadableJSStringWrapper *
 XPCStringConvert::JSStringToReadable(JSString *str)
 {
-    return new XPCReadableJSStringWrapper(str);
+    return new
+        XPCReadableJSStringWrapper(str,
+                                   NS_REINTERPRET_CAST(PRUnichar *,
+                                                       JS_GetStringChars(str)),
+                                   JS_GetStringLength(str));
 }
