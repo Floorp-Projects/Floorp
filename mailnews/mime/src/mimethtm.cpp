@@ -66,8 +66,8 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
     PRInt32 fontSizePercentage;   // size percentage
     if (NS_SUCCEEDED(GetMailNewsFont(obj, PR_FALSE, fontName, sizeof(fontName), &fontSize, &fontSizePercentage)))
     {
-      PR_snprintf(buf, 256, "<div class=\"moz-text-html\" style=\"font-family: %s; font-size: %d%;\">", 
-                  (const char *) fontName, fontSizePercentage);
+      PR_snprintf(buf, 256, "<div class=\"moz-text-html\" style=\"font-family: %s;\">", 
+                  (const char *) fontName);
       status = MimeObject_write(obj, buf, nsCRT::strlen(buf), PR_FALSE);
     }
     else
