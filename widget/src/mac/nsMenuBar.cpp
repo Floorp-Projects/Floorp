@@ -440,7 +440,8 @@ NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 
 		if (appleMenu)
 		{
-		  ::AppendMenu(appleMenu, "\pAbout Apprunner…");
+			// XXX This should come from a string bundle
+		  ::AppendMenu(appleMenu, "\pAbout MozillaÉ");
 		  ::AppendMenu(appleMenu, "\p-");
 		  ::AppendResMenu(appleMenu, 'DRVR');
       ::InsertMenu(appleMenu, 0);
