@@ -244,7 +244,9 @@ NS_IMETHODIMP
 nsPluginStreamToFile::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
 {
 	// write the data to the file and update the target
-	nsCOMPtr<nsIFile>(do_QueryInterface(mFileThing))->Open(mFileSpec, (PR_RDWR|PR_APPEND), 0700);
+	nsCOMPtr<nsIFile> thing;
+	thing = do_QueryInterface(mFileThing);
+	thing->Open(mFileSpec, (PR_RDWR|PR_APPEND), 0700);
 	PRUint32 actualCount;
 	mFileThing->Write(aBuf, aCount, &actualCount);
 	mFileThing->Close();
