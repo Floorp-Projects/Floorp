@@ -73,3 +73,4 @@ install:: $(TARGETS)
 	$(INSTALL) $(srcdir)/../resources/bookmarks.xul $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/bookmarks.css $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/bookmarks.html $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/History/h1.hst $(DIST)/bin/res/rdf/History

@@ -25,8 +25,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = rdf
 
 EXPORTS =				\
-	nsIXULContentSink.h		\
 	nsIRDFFileSystem.h		\
+	nsIRDFHistory.h			\
+	nsIXULContentSink.h		\
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

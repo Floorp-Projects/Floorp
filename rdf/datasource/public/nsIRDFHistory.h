@@ -24,20 +24,21 @@
 
 // {115CE051-A59D-11d2-80B6-006097B76B8E}
 #define NS_IRDFWEBPAGE_IID \
-{ 0x115ce051, 0xa59d, 0x11d2, { 0x80, 0xb6, 0x0, 0x60, 0x97, 0xb7, 0x6b, 0x8e } };
+{ 0x115ce051, 0xa59d, 0x11d2, { 0x80, 0xb6, 0x0, 0x60, 0x97, 0xb7, 0x6b, 0x8e } }
 
 // {1A880051-A59D-11d2-80B6-006097B76B8E}
 #define NS_IRDFHISTORYDATASOURCE_IID \
-{ 0x1a880051, 0xa59d, 0x11d2, { 0x80, 0xb6, 0x0, 0x60, 0x97, 0xb7, 0x6b, 0x8e } };
+{ 0x1a880051, 0xa59d, 0x11d2, { 0x80, 0xb6, 0x0, 0x60, 0x97, 0xb7, 0x6b, 0x8e } }
 
 
 class nsIRDFHistoryDataSource : public nsIRDFDataSource {
 public:
+    static const nsIID& GetIID() { static nsIID iid = NS_IRDFHISTORYDATASOURCE_IID; return iid; }
 
     /**
      * Add the specified item to history
      */
-    NS_IMETHOD AddPage (const char* uri) = 0;
+    NS_IMETHOD AddPage (const char* uri, const char* referer, PRTime date) = 0;
 
     /**
      * Set the title of the page
@@ -52,5 +53,19 @@ public:
     /**
      * Get the uri's last visit date
      */
-    NS_IMETHOD LastVisitDate (const char* uri, unit32 *date) = 0;
+    NS_IMETHOD LastVisitDate (const char* uri, uint32 *date) = 0;
+
+    /** 
+     * Get the preferred completion 
+     */
+    NS_IMETHOD CompleteURL (const char* prefix, char** preferredCompletion) = 0;
 };
+
+#endif nsIRDFHistory_h
+
+
+
+
+
+
+

@@ -36,6 +36,7 @@ class nsIRDFArcsOutCursor;
 class nsIRDFAssertionCursor;
 class nsIRDFCursor;
 class nsIRDFDataSource;
+class nsIRDFResource;
 class nsIRDFNode;
 class nsIRDFResource;
 class nsString;
@@ -235,7 +236,7 @@ NS_NewEmptyRDFArcsInCursor(nsIRDFArcsInCursor** result);
 PR_EXTERN(nsresult)
 NS_NewEmptyRDFArcsOutCursor(nsIRDFArcsOutCursor** result);
 
-
+PR_EXTERN(void) SHTtest ();
 // XXX need to move nsEmptyCursor stuff here.
                        
 #endif // rdfutil_h__

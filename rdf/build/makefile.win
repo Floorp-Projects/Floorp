@@ -74,6 +74,8 @@ install:: $(DLL)
 	$(MAKE_INSTALL) ..\resources\bookmarks.xul $(DIST)\bin\res\rdf
 	$(MAKE_INSTALL) ..\resources\bookmarks.css $(DIST)\bin\res\rdf
 	$(MAKE_INSTALL) ..\resources\bookmarks.html $(DIST)\bin\res\rdf
+	$(MAKE_INSTALL) ..\resources\History\h1.hst $(DIST)\bin\res\rdf\History
+
 
 
 

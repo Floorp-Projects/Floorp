@@ -73,7 +73,7 @@ parseQuery (char* query, RDF_Resource *root, int *numSegments) {
       freeMem(surl);
       ans[count] = nq;
       if (nquery) {
-		query = nquery+1;
+        query = nquery+1;
       } else break;
     }
     return ans;
@@ -112,7 +112,7 @@ processRDFQuery (char* query) {
       currentValArray = newValArray;
       newValArray = (char**) getMem(4096 * sizeof(RDF_Resource));
     }
-	freeMem(newValArray);
+    freeMem(newValArray);
     if (count > 0) {
       ans = (char**)getMem((count+1) * sizeof(char*));
       memcpy(ans, currentValArray, (count * sizeof(char*)));
