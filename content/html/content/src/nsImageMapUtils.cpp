@@ -55,24 +55,42 @@ nsresult nsImageMapUtils::FindImageMap(nsIDocument *aDocument,
   NS_ENSURE_ARG_POINTER(aMap);
   *aMap = nsnull;
 
-  nsresult rv = NS_OK;
-
-  nsAutoString usemap(aUsemap);
-
   /* we used to strip the whitespace from the usemap value as a Quirk, but it was too quirky and
      didn't really work correctly - see bug 87050 
    */
 
-  if (!usemap.IsEmpty() && usemap.First() == '#') {
-    usemap.Cut(0, 1);
+  if (aUsemap.IsEmpty())
+    return NS_OK;
+
+  PRInt32 hash = aUsemap.FindChar('#');
+  nsAString::const_iterator start, end;
+  if (hash > -1) {
+    aUsemap.BeginReading(start);
+    aUsemap.EndReading(end);
+    start.advance(hash + 1);
+    if (start == end)
+      return NS_OK; // aUsemap == "#"
   }
 
-  if (usemap.IsEmpty())
-    return rv;
+  // At this point, if hash < 0, then there was no '#'
+  // so aUsemap IS the ref. Otherwise the ref starts
+  // from 'start'
+
+  // NOTE!
+  // I'd really like to do this, but it won't compile, and casting
+  // Substring return to (const nsAString&) will cause a runtime crash.
+  // Therefore, to avoid doing needless work, this pattern is replicated
+  // below where we actually call functions with 'usemap' values.
+  //const nsAString &usemap = (hash < 0) ? aUsemap : Substring(start, end);
 
   nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(aDocument));
   if (htmlDoc) {
-    htmlDoc->GetImageMap(usemap,aMap);
+    // See above NOTE
+    if (hash < 0) {
+      htmlDoc->GetImageMap(aUsemap, aMap);
+    } else {
+      htmlDoc->GetImageMap(Substring(start, end), aMap);
+    }
   } else {
     // XHTML requires that where a name attribute was used in HTML 4.01,
     // the ID attribute must be used in XHTML. name is officially deprecated.
@@ -81,12 +99,17 @@ nsresult nsImageMapUtils::FindImageMap(nsIDocument *aDocument,
     nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(aDocument));
     if (domDoc) {
       nsCOMPtr<nsIDOMElement> element;
-      domDoc->GetElementById(usemap,getter_AddRefs(element));
+      // See above NOTE
+      if (hash < 0) {
+        domDoc->GetElementById(aUsemap, getter_AddRefs(element));
+      } else {
+        domDoc->GetElementById(Substring(start, end), getter_AddRefs(element));
+      }
       if (element) {
         CallQueryInterface(element, aMap);
       }
     }
   }
   
-  return rv;
+  return NS_OK;
 }
