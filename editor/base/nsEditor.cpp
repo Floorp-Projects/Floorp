@@ -1235,7 +1235,7 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndCreateNode(const nsString& aTag, nsIDO
         }
       }
       else {
-        offsetOfNewNode = selectedNodeContentCount;
+        offsetOfNewNode = offsetOfSelectedNode;
       }
 
       if (NS_SUCCEEDED(result))

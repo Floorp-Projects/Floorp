@@ -270,7 +270,7 @@ nsTextEditRules::DidInsertBreak(nsIDOMSelection *aSelection, nsresult aResult)
                   if (PR_TRUE==NodeIsType(nextNode, brTag))
                   { // the previous node is a BR, check it's siblings
                     nsCOMPtr<nsIDOMNode> rightNode;
-                    result = prevNode->GetNextSibling(getter_AddRefs(rightNode));
+                    result = nextNode->GetNextSibling(getter_AddRefs(rightNode));
                     if ((NS_SUCCEEDED(result)) && rightNode)
                     {
                       if (PR_TRUE==NodeIsType(rightNode, brTag))
