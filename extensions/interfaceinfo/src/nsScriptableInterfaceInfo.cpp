@@ -499,15 +499,88 @@ nsScriptableInterfaceInfo::GetInfo(nsIInterfaceInfo * *aInfo)
 NS_IMETHODIMP
 nsScriptableInterfaceInfo::SetInfo(nsIInterfaceInfo * aInfo)
 {
+    if(mInfo)
+        return NS_ERROR_ALREADY_INITIALIZED;
     mInfo = aInfo;
     return NS_OK;
 }
+
+/***************************************************************************/
+
+typedef PRBool (*InfoTester)(nsIInterfaceInfoManager* manager, const void* data,
+                             nsIInterfaceInfo** info);
+
+static PRBool IIDTester(nsIInterfaceInfoManager* manager, const void* data,
+                        nsIInterfaceInfo** info)
+{
+    return NS_SUCCEEDED(manager->GetInfoForIID((const nsIID *) data, info)) &&
+           *info;
+}
+
+static PRBool NameTester(nsIInterfaceInfoManager* manager, const void* data,
+                      nsIInterfaceInfo** info)
+{
+    return NS_SUCCEEDED(manager->GetInfoForName((const char *) data, info)) &&
+           *info;
+}
+
+static nsresult FindInfo(InfoTester tester, const void* data, nsIInterfaceInfo** info)
+{
+    nsCOMPtr<nsIInterfaceInfoManager> iim = 
+        dont_AddRef(XPTI_GetInterfaceInfoManager());
+    
+    if(!iim)
+        return NS_ERROR_UNEXPECTED;
+
+    if(tester(iim, data, info))
+        return NS_OK;
+    
+    // If not found, then let's ask additional managers.
+
+    PRBool yes;
+    nsCOMPtr<nsISimpleEnumerator> list;
+    nsCOMPtr<nsIInterfaceInfoSuperManager> iism;
+
+    if((nsnull != (iism = do_QueryInterface(iim))) &&
+       NS_SUCCEEDED(iism->HasAdditionalManagers(&yes)) && yes &&
+       NS_SUCCEEDED(iism->EnumerateAdditionalManagers(getter_AddRefs(list))) &&
+       list)
+    {
+        PRBool more;
+        nsCOMPtr<nsIInterfaceInfoManager> current;
+
+        while(NS_SUCCEEDED(list->HasMoreElements(&more)) && more &&
+              NS_SUCCEEDED(list->GetNext(getter_AddRefs(current))) && current)
+        {
+            if(tester(current, data, info))
+                return NS_OK;
+        }
+    }
+    
+    return NS_ERROR_NO_INTERFACE;
+}    
+
+/***************************************************************************/
+
 
 /* void Init (in nsIIDPtr aIID); */
 NS_IMETHODIMP 
 nsScriptableInterfaceInfo::Init(const nsIID * aIID)
 {
-    return SetInterfaceID(aIID);
+    if(mInfo)
+        return NS_ERROR_ALREADY_INITIALIZED;
+
+    return FindInfo(IIDTester, aIID, getter_AddRefs(mInfo));
+}
+
+/* void initWithName (in string name); */
+NS_IMETHODIMP 
+nsScriptableInterfaceInfo::InitWithName(const char *name)
+{
+    if(mInfo)
+        return NS_ERROR_ALREADY_INITIALIZED;
+
+    return FindInfo(NameTester, name, getter_AddRefs(mInfo));
 }
 
 /* readonly attribute string name; */
@@ -520,7 +593,7 @@ nsScriptableInterfaceInfo::GetName(char * *aName)
     return mInfo->GetName(aName);
 }
 
-/* attribute nsIIDPtr interfaceID; */
+/* readonly attribute nsIIDPtr interfaceID; */
 NS_IMETHODIMP 
 nsScriptableInterfaceInfo::GetInterfaceID(nsIID * *aInterfaceID)
 {
@@ -528,47 +601,6 @@ nsScriptableInterfaceInfo::GetInterfaceID(nsIID * *aInterfaceID)
         return NS_ERROR_NOT_INITIALIZED;
 
     return mInfo->GetIID(aInterfaceID);
-}
-
-NS_IMETHODIMP 
-nsScriptableInterfaceInfo::SetInterfaceID(const nsIID * aInterfaceID)
-{
-    nsCOMPtr<nsIInterfaceInfoManager> iim = 
-        dont_AddRef(XPTI_GetInterfaceInfoManager());
-    if(!iim)
-        return NS_ERROR_UNEXPECTED;
-    mInfo = nsnull;
-    iim->GetInfoForIID(aInterfaceID, getter_AddRefs(mInfo));
-    
-    // If not found, then let's ask additional managers.
-
-    // This entire block assumes the additional manager support from:
-    // http://bugzilla.mozilla.org/show_bug.cgi?id=103805
-    // Disable it by setting '#if 0'.
-#if 0
-    PRBool yes;
-    nsCOMPtr<nsISimpleEnumerator> list;
-    nsCOMPtr<nsIInterfaceInfoSuperManager> iism;
-
-    if(!mInfo && (nsnull != (iism = do_QueryInterface(iim))) &&
-       NS_SUCCEEDED(iism->HasAdditionalManagers(&yes)) && yes &&
-       NS_SUCCEEDED(iism->EnumerateAdditionalManagers(getter_AddRefs(list))) &&
-       list)
-    {
-        PRBool more;
-        nsCOMPtr<nsIInterfaceInfoManager> current;
-
-        while(NS_SUCCEEDED(list->HasMoreElements(&more)) && more &&
-              NS_SUCCEEDED(list->GetNext(getter_AddRefs(current))) && current)
-        {
-            current->GetInfoForIID(aInterfaceID, getter_AddRefs(mInfo));
-            if(mInfo)
-                break;
-        }
-    }
-#endif    
-
-    return mInfo ? NS_OK : NS_ERROR_NO_INTERFACE;
 }
 
 /* readonly attribute PRBool isValid; */
