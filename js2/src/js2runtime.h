@@ -2039,6 +2039,9 @@ XXX ...couldn't get this to work...
 
         Reader *mReader;
 
+
+        void *mErrorReporter;
+
     private:
         JSObject **mGlobal;
 

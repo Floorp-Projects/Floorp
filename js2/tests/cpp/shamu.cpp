@@ -14,9 +14,11 @@
 #include "reader.h"
 #include "parser.h"
 #include "js2runtime.h"
+#include "bytecodegen.h"
 
 #include "shamu.h"
 
+/*
 jsval convertJS2ValueToJSValue(JSContext *cx, JavaScript::JS2Runtime::js2val v)
 {
     jsval result = JSVAL_VOID;
@@ -47,6 +49,12 @@ JavaScript::JS2Runtime::js2val convertJSValueToJS2Value(JSContext *cx, jsval v)
 
     return JavaScript::JS2Runtime::kUndefinedValue;
 }
+*/
+
+void nyi()
+{
+    throw "Not Yet Implemented";
+}
 
 JavaScript::JS2Runtime::js2val callSpiderMonkeyNative(JavaScript::JS2Runtime::JSFunction::NativeCode *js2target, 
                         JavaScript::JS2Runtime::Context *js2cx, 
@@ -57,12 +65,12 @@ JavaScript::JS2Runtime::js2val callSpiderMonkeyNative(JavaScript::JS2Runtime::JS
     jsval result;
     jsval *args = new jsval[argc];
     for (uint32 i = 0; i < argc; i++) {
-        args[i] = convertJS2ValueToJSValue((JSContext *)js2cx, argv[i]);
+        args[i] = argv[i]; // convertJS2ValueToJSValue((JSContext *)js2cx, argv[i]);
     }
 
     target( (JSContext *)js2cx, (JSObject *)(JavaScript::JS2Runtime::JSValue::object(thisValue)), argc, args, &result);
 
-    return convertJSValueToJS2Value((JSContext *)js2cx, result);
+    return result; //convertJSValueToJS2Value((JSContext *)js2cx, result);
 }
 
 
@@ -110,6 +118,7 @@ static JSBool
 TryArgumentFormatter(JSContext *cx, const char **formatp, JSBool fromJS,
                      jsval **vpp, va_list *app)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -117,6 +126,7 @@ JS_PUBLIC_API(JSBool)
 JS_ConvertArguments(JSContext *cx, uintN argc, jsval *argv, const char *format,
                     ...)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -124,36 +134,42 @@ JS_PUBLIC_API(JSBool)
 JS_ConvertArgumentsVA(JSContext *cx, uintN argc, jsval *argv,
                       const char *format, va_list ap)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(jsval *)
 JS_PushArguments(JSContext *cx, void **markp, const char *format, ...)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(jsval *)
 JS_PushArgumentsVA(JSContext *cx, void **markp, const char *format, va_list ap)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(void)
 JS_PopArguments(JSContext *cx, void *mark)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(JSBool)
 JS_AddArgumentFormatter(JSContext *cx, const char *format,
                         JSArgumentFormatter formatter)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(void)
 JS_RemoveArgumentFormatter(JSContext *cx, const char *format)
 {
+    nyi();
 }
 
 #endif
@@ -162,12 +178,14 @@ JS_RemoveArgumentFormatter(JSContext *cx, const char *format)
 JS_PUBLIC_API(JSBool)
 JS_ConvertValue(JSContext *cx, jsval v, JSType type, jsval *vp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_ValueToObject(JSContext *cx, jsval v, JSObject **objp)
 {
+    nyi();
     CHECK_REQUEST(cx);
     return JS_FALSE;
 }
@@ -175,6 +193,7 @@ JS_ValueToObject(JSContext *cx, jsval v, JSObject **objp)
 JS_PUBLIC_API(JSFunction *)
 JS_ValueToFunction(JSContext *cx, jsval v)
 {
+    nyi();
     CHECK_REQUEST(cx);
     return NULL;
 }
@@ -182,6 +201,7 @@ JS_ValueToFunction(JSContext *cx, jsval v)
 JS_PUBLIC_API(JSFunction *)
 JS_ValueToConstructor(JSContext *cx, jsval v)
 {
+    nyi();
     CHECK_REQUEST(cx);
     return NULL;
 }
@@ -190,7 +210,7 @@ JS_PUBLIC_API(JSString *)
 JS_ValueToString(JSContext *cx, jsval v)
 {
     JavaScript::JS2Runtime::Context *js2cx = (JavaScript::JS2Runtime::Context *)cx;
-    JavaScript::JS2Runtime::js2val js2value = convertJSValueToJS2Value(cx, v);
+    JavaScript::JS2Runtime::js2val js2value = v;//convertJSValueToJS2Value(cx, v);
     
     return (JSString *)JavaScript::JS2Runtime::JSValue::string(JavaScript::JS2Runtime::JSValue::toString(js2cx, js2value));
 }
@@ -198,6 +218,7 @@ JS_ValueToString(JSContext *cx, jsval v)
 JS_PUBLIC_API(JSBool)
 JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
 {
+    nyi();
     CHECK_REQUEST(cx);
     return JS_FALSE;
 }
@@ -205,6 +226,7 @@ JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
 JS_PUBLIC_API(JSBool)
 JS_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip)
 {
+    nyi();
     CHECK_REQUEST(cx);
     return JS_FALSE;
 }
@@ -212,6 +234,7 @@ JS_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip)
 JS_PUBLIC_API(JSBool)
 JS_ValueToECMAUint32(JSContext *cx, jsval v, uint32 *ip)
 {
+    nyi();
     CHECK_REQUEST(cx);
     return JS_FALSE;
 }
@@ -219,6 +242,7 @@ JS_ValueToECMAUint32(JSContext *cx, jsval v, uint32 *ip)
 JS_PUBLIC_API(JSBool)
 JS_ValueToInt32(JSContext *cx, jsval v, int32 *ip)
 {
+    nyi();
     CHECK_REQUEST(cx);
     return JS_FALSE;
 }
@@ -226,6 +250,7 @@ JS_ValueToInt32(JSContext *cx, jsval v, int32 *ip)
 JS_PUBLIC_API(JSBool)
 JS_ValueToUint16(JSContext *cx, jsval v, uint16 *ip)
 {
+    nyi();
     CHECK_REQUEST(cx);
     return JS_FALSE;
 }
@@ -233,6 +258,7 @@ JS_ValueToUint16(JSContext *cx, jsval v, uint16 *ip)
 JS_PUBLIC_API(JSBool)
 JS_ValueToBoolean(JSContext *cx, jsval v, JSBool *bp)
 {
+    nyi();
     CHECK_REQUEST(cx);
     return JS_FALSE;
 }
@@ -330,6 +356,7 @@ JS_GetRuntimePrivate(JSRuntime *rt)
 JS_PUBLIC_API(void)
 JS_SetRuntimePrivate(JSRuntime *rt, void *data)
 {
+    nyi();
 }
 
 #ifdef JS_THREADSAFE
@@ -462,11 +489,13 @@ JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth)
 JS_PUBLIC_API(void)
 JS_Lock(JSRuntime *rt)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(void)
 JS_Unlock(JSRuntime *rt)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(JSContext *)
@@ -499,29 +528,34 @@ JS_GetContextPrivate(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_SetContextPrivate(JSContext *cx, void *data)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(JSRuntime *)
 JS_GetRuntime(JSContext *cx)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSContext *)
 JS_ContextIterator(JSRuntime *rt, JSContext **iterp)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSVersion)
 JS_GetVersion(JSContext *cx)
 {
+    nyi();
     return JSVERSION_UNKNOWN;
 }
 
 JS_PUBLIC_API(JSVersion)
 JS_SetVersion(JSContext *cx, JSVersion version)
 {
+    nyi();
     return JSVERSION_UNKNOWN;
 }
 
@@ -564,48 +598,59 @@ JS_StringToVersion(const char *string)
 JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx)
 {
+    nyi();
     return 0;
 }
 
 JS_PUBLIC_API(uint32)
 JS_SetOptions(JSContext *cx, uint32 options)
 {
+    nyi();
     return 0;
 }
 
 JS_PUBLIC_API(uint32)
 JS_ToggleOptions(JSContext *cx, uint32 options)
 {
+    nyi();
     return 0;
 }
 
 JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void)
 {
-    return "JavaScript DikDik Shim";
+    return "'Shamu' The Incredible JavaScript DikDik Shim";
 }
 
 
 JS_PUBLIC_API(JSObject *)
 JS_GetGlobalObject(JSContext *cx)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(void)
 JS_SetGlobalObject(JSContext *cx, JSObject *obj)
 {
+//
+//  suppressing the nyi for now, the global object is built into
+//  the context initialization
+//    nyi();
+
 }
 
 static JSObject *
 InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 {
+    nyi();
     return JS_TRUE;
 }
 
@@ -613,12 +658,14 @@ JS_PUBLIC_API(JSBool)
 JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
                         JSBool *resolved)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -626,29 +673,34 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
 JS_PUBLIC_API(JSObject *)
 JS_GetScopeChain(JSContext *cx)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(void *)
 JS_malloc(JSContext *cx, size_t nbytes)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(void *)
 JS_realloc(JSContext *cx, void *p, size_t nbytes)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(void)
 JS_free(JSContext *cx, void *p)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(char *)
 JS_strdup(JSContext *cx, const char *s)
 {
+    nyi();
     return NULL;
 }
 
@@ -678,30 +730,35 @@ JS_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval)
 JS_PUBLIC_API(JSBool)
 JS_AddRoot(JSContext *cx, void *rp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_AddNamedRootRT(JSRuntime *rt, void *rp, const char *name)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_RemoveRoot(JSContext *cx, void *rp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_RemoveRootRT(JSRuntime *rt, void *rp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_AddNamedRoot(JSContext *cx, void *rp, const char *name)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -719,81 +776,95 @@ JS_STATIC_DLL_CALLBACK(JSDHashOperator)
 js_gcroot_mapper(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
                  void *arg)
 {
+    nyi();
     return JSDHashOperator(0);
 }
 
 JS_PUBLIC_API(uint32)
 JS_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
 {
+    nyi();
     return 0;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_LockGCThing(JSContext *cx, void *thing)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_UnlockGCThing(JSContext *cx, void *thing)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(void)
 JS_MarkGCThing(JSContext *cx, void *thing, const char *name, void *arg)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(void)
 JS_GC(JSContext *cx)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(void)
 JS_MaybeGC(JSContext *cx)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(JSGCCallback)
 JS_SetGCCallback(JSContext *cx, JSGCCallback cb)
 {
+    nyi();
     return cb;
 }
 
 JS_PUBLIC_API(JSGCCallback)
 JS_SetGCCallbackRT(JSRuntime *rt, JSGCCallback cb)
 {
+    nyi();
     return cb;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_IsAboutToBeFinalized(JSContext *cx, void *thing)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(intN)
 JS_AddExternalStringFinalizer(JSStringFinalizeOp finalizer)
 {
+    nyi();
     return 0;
 }
 
 JS_PUBLIC_API(intN)
 JS_RemoveExternalStringFinalizer(JSStringFinalizeOp finalizer)
 {
+    nyi();
     return 0;
 }
 
 JS_PUBLIC_API(JSString *)
 JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(intN)
 JS_GetExternalStringGCType(JSRuntime *rt, JSString *str)
 {
+    nyi();
     return 0;
 }
 
@@ -802,47 +873,55 @@ JS_GetExternalStringGCType(JSRuntime *rt, JSString *str)
 JS_PUBLIC_API(void)
 JS_DestroyIdArray(JSContext *cx, JSIdArray *ida)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(JSBool)
 JS_ValueToId(JSContext *cx, jsval v, jsid *idp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_IdToValue(JSContext *cx, jsid id, jsval *vp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_PropertyStub(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
+    nyi();
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_EnumerateStub(JSContext *cx, JSObject *obj)
 {
+    nyi();
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_ResolveStub(JSContext *cx, JSObject *obj, jsval id)
 {
+    nyi();
     return JS_TRUE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_ConvertStub(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(void)
 JS_FinalizeStub(JSContext *cx, JSObject *obj)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(JSObject *)
@@ -851,6 +930,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
              JSPropertySpec *ps, JSFunctionSpec *fs,
              JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
 {
+    nyi();
     return NULL;
 }
 
@@ -858,6 +938,7 @@ JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
 JS_PUBLIC_API(JSClass *)
 JS_GetClass(JSContext *cx, JSObject *obj)
 {
+    nyi();
     return (JSClass *)
         JSVAL_TO_PRIVATE(GC_AWARE_GET_SLOT(cx, obj, JSSLOT_CLASS));
 }
@@ -865,6 +946,7 @@ JS_GetClass(JSContext *cx, JSObject *obj)
 JS_PUBLIC_API(JSClass *)
 JS_GetClass(JSObject *obj)
 {
+    nyi();
     return NULL;
 }
 #endif
@@ -872,18 +954,21 @@ JS_GetClass(JSObject *obj)
 JS_PUBLIC_API(JSBool)
 JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(void *)
 JS_GetPrivate(JSContext *cx, JSObject *obj)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetPrivate(JSContext *cx, JSObject *obj, void *data)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -891,36 +976,42 @@ JS_PUBLIC_API(void *)
 JS_GetInstancePrivate(JSContext *cx, JSObject *obj, JSClass *clasp,
                       jsval *argv)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSObject *)
 JS_GetPrototype(JSContext *cx, JSObject *obj)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSObject *)
 JS_GetParent(JSContext *cx, JSObject *obj)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetParent(JSContext *cx, JSObject *obj, JSObject *parent)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSObject *)
 JS_GetConstructor(JSContext *cx, JSObject *proto)
 {
+    nyi();
     return NULL;
 }
 
@@ -935,6 +1026,7 @@ JS_PUBLIC_API(JSObject *)
 JS_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
                    JSObject *parent)
 {
+    nyi();
     return NULL;
 }
 
@@ -942,6 +1034,7 @@ JS_PUBLIC_API(JSObject *)
 JS_ConstructObjectWithArguments(JSContext *cx, JSClass *clasp, JSObject *proto,
                                 JSObject *parent, uintN argc, jsval *argv)
 {
+    nyi();
     return NULL;
 }
 
@@ -959,6 +1052,7 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *clasp,
 JS_PUBLIC_API(JSBool)
 JS_DefineConstDoubles(JSContext *cx, JSObject *obj, JSConstDoubleSpec *cds)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -980,7 +1074,7 @@ JS_DefineProperty(JSContext *cx, JSObject *obj, const char *name, jsval value,
 {
     JavaScript::JS2Runtime::Context *js2cx = (JavaScript::JS2Runtime::Context *)cx;
     JavaScript::JS2Runtime::JSObject *js2obj = (JavaScript::JS2Runtime::JSObject *)obj;
-    js2obj->setProperty(js2cx, JavaScript::widenCString(name), NULL, convertJSValueToJS2Value(cx, value));
+    js2obj->setProperty(js2cx, JavaScript::widenCString(name), NULL, value /*convertJSValueToJS2Value(cx, value) */);
     return JS_TRUE;
 }
 
@@ -990,6 +1084,7 @@ JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name,
                             JSPropertyOp getter, JSPropertyOp setter,
                             uintN attrs)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -997,6 +1092,7 @@ JS_PUBLIC_API(JSBool)
 JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
                  const char *alias)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1005,6 +1101,7 @@ JS_PUBLIC_API(JSBool)
 JS_GetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
                          uintN *attrsp, JSBool *foundp)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1012,30 +1109,35 @@ JS_PUBLIC_API(JSBool)
 JS_SetPropertyAttributes(JSContext *cx, JSObject *obj, const char *name,
                          uintN attrs, JSBool *foundp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_LookupProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_GetProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetProperty(JSContext *cx, JSObject *obj, const char *name, jsval *vp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_DeleteProperty(JSContext *cx, JSObject *obj, const char *name)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1043,6 +1145,7 @@ JS_PUBLIC_API(JSBool)
 JS_DeleteProperty2(JSContext *cx, JSObject *obj, const char *name,
                    jsval *rval)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1052,6 +1155,7 @@ JS_DefineUCProperty(JSContext *cx, JSObject *obj,
                     JSPropertyOp getter, JSPropertyOp setter,
                     uintN attrs)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1060,6 +1164,7 @@ JS_GetUCPropertyAttributes(JSContext *cx, JSObject *obj,
                            const jschar *name, size_t namelen,
                            uintN *attrsp, JSBool *foundp)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1068,6 +1173,7 @@ JS_SetUCPropertyAttributes(JSContext *cx, JSObject *obj,
                            const jschar *name, size_t namelen,
                            uintN attrs, JSBool *foundp)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1078,6 +1184,7 @@ JS_DefineUCPropertyWithTinyId(JSContext *cx, JSObject *obj,
                               JSPropertyOp getter, JSPropertyOp setter,
                               uintN attrs)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1086,6 +1193,7 @@ JS_LookupUCProperty(JSContext *cx, JSObject *obj,
                     const jschar *name, size_t namelen,
                     jsval *vp)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1094,6 +1202,7 @@ JS_GetUCProperty(JSContext *cx, JSObject *obj,
                  const jschar *name, size_t namelen,
                  jsval *vp)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1102,6 +1211,7 @@ JS_SetUCProperty(JSContext *cx, JSObject *obj,
                  const jschar *name, size_t namelen,
                  jsval *vp)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1110,6 +1220,7 @@ JS_DeleteUCProperty2(JSContext *cx, JSObject *obj,
                      const jschar *name, size_t namelen,
                      jsval *rval)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1123,24 +1234,28 @@ JS_NewArrayObject(JSContext *cx, jsint length, jsval *vector)
 JS_PUBLIC_API(JSBool)
 JS_IsArrayObject(JSContext *cx, JSObject *obj)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_GetArrayLength(JSContext *cx, JSObject *obj, jsuint *lengthp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetArrayLength(JSContext *cx, JSObject *obj, jsuint length)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_HasArrayLength(JSContext *cx, JSObject *obj, jsuint *lengthp)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1148,53 +1263,62 @@ JS_PUBLIC_API(JSBool)
 JS_DefineElement(JSContext *cx, JSObject *obj, jsint index, jsval value,
                  JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_AliasElement(JSContext *cx, JSObject *obj, const char *name, jsint alias)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_LookupElement(JSContext *cx, JSObject *obj, jsint index, jsval *vp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_GetElement(JSContext *cx, JSObject *obj, jsint index, jsval *vp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetElement(JSContext *cx, JSObject *obj, jsint index, jsval *vp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_DeleteElement(JSContext *cx, JSObject *obj, jsint index)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_DeleteElement2(JSContext *cx, JSObject *obj, jsint index, jsval *rval)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(void)
 JS_ClearScope(JSContext *cx, JSObject *obj)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(JSIdArray *)
 JS_Enumerate(JSContext *cx, JSObject *obj)
 {
+    nyi();
     return NULL;
 }
 
@@ -1202,30 +1326,35 @@ JS_PUBLIC_API(JSBool)
 JS_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
                jsval *vp, uintN *attrsp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSCheckAccessOp)
 JS_SetCheckObjectAccessCallback(JSRuntime *rt, JSCheckAccessOp acb)
 {
+    nyi();
     return acb;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval *vp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, jsval v)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSPrincipalsTranscoder)
 JS_SetPrincipalsTranscoder(JSRuntime *rt, JSPrincipalsTranscoder px)
 {
+    nyi();
     return px;
 }
 
@@ -1233,24 +1362,28 @@ JS_PUBLIC_API(JSFunction *)
 JS_NewFunction(JSContext *cx, JSNative native, uintN nargs, uintN flags,
                JSObject *parent, const char *name)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSObject *)
 JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSObject *)
 JS_GetFunctionObject(JSFunction *fun)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(const char *)
 JS_GetFunctionName(JSFunction *fun)
 {
+    nyi();
     return NULL;
 }
 
@@ -1282,6 +1415,7 @@ JS_PUBLIC_API(JSFunction *)
 JS_DefineFunction(JSContext *cx, JSObject *obj, const char *name, JSNative call,
                   uintN nargs, uintN attrs)
 {
+    nyi();
     return NULL;
 }
 
@@ -1316,6 +1450,7 @@ JS_CompileScriptForPrincipals(JSContext *cx, JSObject *obj,
                               const char *bytes, size_t length,
                               const char *filename, uintN lineno)
 {
+    nyi();
     return NULL;
 }
 
@@ -1324,6 +1459,7 @@ JS_CompileUCScript(JSContext *cx, JSObject *obj,
                    const jschar *chars, size_t length,
                    const char *filename, uintN lineno)
 {
+    nyi();
     return NULL;
 }
 
@@ -1333,6 +1469,7 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                 const jschar *chars, size_t length,
                                 const char *filename, uintN lineno)
 {
+    nyi();
     return NULL;
 }
 
@@ -1362,6 +1499,7 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
 JS_PUBLIC_API(JSScript *)
 JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
 {
+    nyi();
     return NULL;
 }
 
@@ -1369,6 +1507,7 @@ JS_PUBLIC_API(JSScript *)
 JS_CompileFileHandle(JSContext *cx, JSObject *obj, const char *filename,
                      FILE *file)
 {
+    nyi();
     return NULL;
 }
 
@@ -1377,18 +1516,23 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
                                   const char *filename, FILE *file,
                                   JSPrincipals *principals)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSObject *)
 JS_NewScriptObject(JSContext *cx, JSScript *script)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(void)
 JS_DestroyScript(JSContext *cx, JSScript *script)
 {
+    JavaScript::JS2Runtime::Context *js2cx = (JavaScript::JS2Runtime::Context *)cx;
+    JavaScript::JS2Runtime::ByteCodeModule *bcm = (JavaScript::JS2Runtime::ByteCodeModule *)script;
+    delete bcm;
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -1397,6 +1541,7 @@ JS_CompileFunction(JSContext *cx, JSObject *obj, const char *name,
                    const char *bytes, size_t length,
                    const char *filename, uintN lineno)
 {
+    nyi();
     return NULL;
 }
 
@@ -1407,6 +1552,7 @@ JS_CompileFunctionForPrincipals(JSContext *cx, JSObject *obj,
                                 const char *bytes, size_t length,
                                 const char *filename, uintN lineno)
 {
+    nyi();
     return NULL;
 }
 
@@ -1416,6 +1562,7 @@ JS_CompileUCFunction(JSContext *cx, JSObject *obj, const char *name,
                      const jschar *chars, size_t length,
                      const char *filename, uintN lineno)
 {
+    nyi();
     return NULL;
 }
 
@@ -1426,18 +1573,21 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
                                   const jschar *chars, size_t length,
                                   const char *filename, uintN lineno)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSString *)
 JS_DecompileFunction(JSContext *cx, JSFunction *fun, uintN indent)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSString *)
 JS_DecompileFunctionBody(JSContext *cx, JSFunction *fun, uintN indent)
 {
+    nyi();
     return NULL;
 }
 
@@ -1448,7 +1598,7 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSScript *script, jsval *rval)
     JavaScript::JS2Runtime::ByteCodeModule *bcm = (JavaScript::JS2Runtime::ByteCodeModule *)script;
 
     JavaScript::JS2Runtime::js2val result = js2cx->interpret(bcm, 0, NULL, JavaScript::JS2Runtime::JSValue::newObject(js2cx->getGlobalObject()), NULL, 0);
-    *rval = convertJS2ValueToJSValue(cx, result);
+    *rval = result; //convertJS2ValueToJSValue(cx, result);
     return JS_TRUE;
 }
 
@@ -1456,6 +1606,7 @@ JS_PUBLIC_API(JSBool)
 JS_ExecuteScriptPart(JSContext *cx, JSObject *obj, JSScript *script,
                      JSExecPart part, jsval *rval)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1465,6 +1616,7 @@ JS_EvaluateScript(JSContext *cx, JSObject *obj,
                   const char *filename, uintN lineno,
                   jsval *rval)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1475,6 +1627,7 @@ JS_EvaluateScriptForPrincipals(JSContext *cx, JSObject *obj,
                                const char *filename, uintN lineno,
                                jsval *rval)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1484,6 +1637,7 @@ JS_EvaluateUCScript(JSContext *cx, JSObject *obj,
                     const char *filename, uintN lineno,
                     jsval *rval)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1494,6 +1648,7 @@ JS_EvaluateUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                  const char *filename, uintN lineno,
                                  jsval *rval)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1501,6 +1656,7 @@ JS_PUBLIC_API(JSBool)
 JS_CallFunction(JSContext *cx, JSObject *obj, JSFunction *fun, uintN argc,
                 jsval *argv, jsval *rval)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1508,6 +1664,7 @@ JS_PUBLIC_API(JSBool)
 JS_CallFunctionName(JSContext *cx, JSObject *obj, const char *name, uintN argc,
                     jsval *argv, jsval *rval)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1515,36 +1672,42 @@ JS_PUBLIC_API(JSBool)
 JS_CallFunctionValue(JSContext *cx, JSObject *obj, jsval fval, uintN argc,
                      jsval *argv, jsval *rval)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBranchCallback)
 JS_SetBranchCallback(JSContext *cx, JSBranchCallback cb)
 {
+    nyi();
     return cb;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_IsRunning(JSContext *cx)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_IsConstructing(JSContext *cx)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_FRIEND_API(JSBool)
 JS_IsAssigning(JSContext *cx)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(void)
 JS_SetCallReturnValue2(JSContext *cx, jsval v)
 {
+    nyi();
 }
 
 /************************************************************************/
@@ -1552,54 +1715,63 @@ JS_SetCallReturnValue2(JSContext *cx, jsval v)
 JS_PUBLIC_API(JSString *)
 JS_NewString(JSContext *cx, char *bytes, size_t length)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSString *)
 JS_NewStringCopyN(JSContext *cx, const char *s, size_t n)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSString *)
 JS_NewStringCopyZ(JSContext *cx, const char *s)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSString *)
 JS_InternString(JSContext *cx, const char *s)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSString *)
 JS_NewUCString(JSContext *cx, jschar *chars, size_t length)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSString *)
 JS_NewUCStringCopyN(JSContext *cx, const jschar *s, size_t n)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSString *)
 JS_NewUCStringCopyZ(JSContext *cx, const jschar *s)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSString *)
 JS_InternUCStringN(JSContext *cx, const jschar *s, size_t length)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSString *)
 JS_InternUCString(JSContext *cx, const jschar *s)
 {
+    nyi();
     return NULL;
 }
 
@@ -1626,18 +1798,22 @@ JS_GetStringChars(JSString *str)
 JS_PUBLIC_API(size_t)
 JS_GetStringLength(JSString *str)
 {
-    return 0;
+    JavaScript::String *js2str = (JavaScript::String *)str;
+    return js2str->length();
 }
 
 JS_PUBLIC_API(intN)
 JS_CompareStrings(JSString *str1, JSString *str2)
 {
-    return 0;
+    JavaScript::String *js2str1 = (JavaScript::String *)str1;
+    JavaScript::String *js2str2 = (JavaScript::String *)str2;
+    return js2str1->compare(*js2str2);
 }
 
 JS_PUBLIC_API(JSString *)
 JS_NewGrowableString(JSContext *cx, jschar *chars, size_t length)
 {
+    nyi();
     return NULL;
 }
 
@@ -1645,24 +1821,28 @@ JS_PUBLIC_API(JSString *)
 JS_NewDependentString(JSContext *cx, JSString *str, size_t start,
                       size_t length)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSString *)
 JS_ConcatStrings(JSContext *cx, JSString *left, JSString *right)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(const jschar *)
 JS_UndependString(JSContext *cx, JSString *str)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_MakeStringImmutable(JSContext *cx, JSString *str)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1671,23 +1851,27 @@ JS_MakeStringImmutable(JSContext *cx, JSString *str)
 JS_PUBLIC_API(void)
 JS_ReportError(JSContext *cx, const char *format, ...)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(void)
 JS_ReportErrorNumber(JSContext *cx, JSErrorCallback errorCallback,
                      void *userRef, const uintN errorNumber, ...)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(void)
 JS_ReportErrorNumberUC(JSContext *cx, JSErrorCallback errorCallback,
                      void *userRef, const uintN errorNumber, ...)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(JSBool)
 JS_ReportWarning(JSContext *cx, const char *format, ...)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1696,6 +1880,7 @@ JS_ReportErrorFlagsAndNumber(JSContext *cx, uintN flags,
                              JSErrorCallback errorCallback, void *userRef,
                              const uintN errorNumber, ...)
 {
+    nyi();
     return JS_FALSE;
 }
 
@@ -1704,18 +1889,23 @@ JS_ReportErrorFlagsAndNumberUC(JSContext *cx, uintN flags,
                                JSErrorCallback errorCallback, void *userRef,
                                const uintN errorNumber, ...)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(void)
 JS_ReportOutOfMemory(JSContext *cx)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(JSErrorReporter)
 JS_SetErrorReporter(JSContext *cx, JSErrorReporter er)
 {
-    return er;
+    JavaScript::JS2Runtime::Context *js2cx = (JavaScript::JS2Runtime::Context *)cx;
+    JSErrorReporter oldEr = (JSErrorReporter)(js2cx->mErrorReporter);
+    js2cx->mErrorReporter = er;
+    return oldEr;
 }
 
 /************************************************************************/
@@ -1726,28 +1916,33 @@ JS_SetErrorReporter(JSContext *cx, JSErrorReporter er)
 JS_PUBLIC_API(JSObject *)
 JS_NewRegExpObject(JSContext *cx, char *bytes, size_t length, uintN flags)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(JSObject *)
 JS_NewUCRegExpObject(JSContext *cx, jschar *chars, size_t length, uintN flags)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(void)
 JS_SetRegExpInput(JSContext *cx, JSString *input, JSBool multiline)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(void)
 JS_ClearRegExpStatics(JSContext *cx)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(void)
 JS_ClearRegExpRoots(JSContext *cx)
 {
+    nyi();
 }
 
 /* TODO: compile, execute, get/set other statics... */
@@ -1757,11 +1952,13 @@ JS_ClearRegExpRoots(JSContext *cx)
 JS_PUBLIC_API(void)
 JS_SetLocaleCallbacks(JSContext *cx, JSLocaleCallbacks *callbacks)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(JSLocaleCallbacks *)
 JS_GetLocaleCallbacks(JSContext *cx)
 {
+    nyi();
     return NULL;
 }
 
@@ -1770,44 +1967,53 @@ JS_GetLocaleCallbacks(JSContext *cx)
 JS_PUBLIC_API(JSBool)
 JS_IsExceptionPending(JSContext *cx)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(JSBool)
 JS_GetPendingException(JSContext *cx, jsval *vp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_PUBLIC_API(void)
 JS_SetPendingException(JSContext *cx, jsval v)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(void)
 JS_ClearPendingException(JSContext *cx)
 {
+//  DikDik uses C++ exceptions internally.
+//    nyi();
 }
 
 JS_PUBLIC_API(JSExceptionState *)
 JS_SaveExceptionState(JSContext *cx)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(void)
 JS_RestoreExceptionState(JSContext *cx, JSExceptionState *state)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(void)
 JS_DropExceptionState(JSContext *cx, JSExceptionState *state)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(JSErrorReport *)
 JS_ErrorFromException(JSContext *cx, jsval v)
 {
+    nyi();
     return NULL;
 }
 
@@ -1815,12 +2021,14 @@ JS_ErrorFromException(JSContext *cx, jsval v)
 JS_PUBLIC_API(intN)
 JS_GetContextThread(JSContext *cx)
 {
+    nyi();
     return cx->thread;
 }
 
 JS_PUBLIC_API(intN)
 JS_SetContextThread(JSContext *cx)
 {
+    nyi();
     intN old = cx->thread;
     cx->thread = js_CurrentThreadId();
     return old;
@@ -1829,6 +2037,7 @@ JS_SetContextThread(JSContext *cx)
 JS_PUBLIC_API(intN)
 JS_ClearContextThread(JSContext *cx)
 {
+    nyi();
     intN old = cx->thread;
     cx->thread = 0;
     return old;
@@ -1925,6 +2134,7 @@ struct JSTrapHandler { };
 extern JS_PUBLIC_API(intN)
 JS_HashTableDump(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
 {
+    nyi();
     return 0;
 }
 
@@ -1932,17 +2142,20 @@ JS_FRIEND_API(uintN)
 js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
 		JSBool lines, FILE *fp)
 {
+    nyi();
     return 0;
 }
 
 JS_FRIEND_API(void)
 js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, FILE *fp)
 {
+    nyi();
 }
 
 JS_FRIEND_API(JSAtom *)
 js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags)
 {
+    nyi();
     return NULL;
 }
 
@@ -1951,11 +2164,13 @@ JS_FRIEND_DATA(JSObjectOps) js_ObjectOps;
 
 JS_PUBLIC_API(char *)JS_smprintf(const char *fmt, ...)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(char *) JS_sprintf_append(char *last, const char *fmt, ...)
 {
+    nyi();
     return NULL;
 }
 
@@ -1978,12 +2193,14 @@ JS_FRIEND_API(JSBool)
 js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
                 JSProperty **propp)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_FRIEND_API(JSAtom *)
 js_GetAtom(JSContext *cx, JSAtomMap *map, jsatomid i)
 {
+    nyi();
     return NULL;
 }
 
@@ -1995,24 +2212,28 @@ JS_FRIEND_DATA(JSClass) js_ScriptClass = { 0 };
 JS_FRIEND_API(uintN)
 js_SrcNoteLength(jssrcnote *sn)
 {
+    nyi();
     return 0;
 }
 
 JS_FRIEND_API(ptrdiff_t)
 js_GetSrcNoteOffset(jssrcnote *sn, uintN which)
 {
+    nyi();
     return 0;
 }
 
 JS_PUBLIC_API(jsbytecode *)
 JS_LineNumberToPC(JSContext *cx, JSScript *script, uintN lineno)
 {
+    nyi();
     return NULL;
 }
 
 JS_PUBLIC_API(uintN)
 JS_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
+    nyi();
     return 0;
 }
 
@@ -2025,18 +2246,21 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 JS_FRIEND_API(void)
 js_ForceGC(JSContext *cx)
 {
+    nyi();
 }
 
 JS_PUBLIC_API(JSBool)
 JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
            JSTrapHandler handler, void *closure)
 {
+    nyi();
     return JS_FALSE;
 }
 
 JS_FRIEND_API(JSScopeProperty **)
 js_SearchScope(JSScope *scope, jsid id, JSBool adding)
 {
+    nyi();
     return NULL;
 }
 
