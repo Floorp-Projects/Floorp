@@ -388,7 +388,10 @@ nsCSSInlineFrame::InitialReflow(nsCSSInlineReflowState& aState)
   NS_PRECONDITION(nsnull == mNextInFlow, "bad frame-appended-reflow");
   NS_PRECONDITION(mLastContentIsComplete == PR_TRUE, "bad state");
 
-  // Create any frames that need creating; note that they should have been 
+#if XXX
+  // Create any frames that need creating; note that they should have
+  // been created during FindTextRuns which should have been called
+  // before this, but we check anyway.
   if ((nsnull == mPrevInFlow) && (nsnull == mNextInFlow) &&
       (0 == mChildCount)) {
     nsresult rv = CreateNewFrames(aState.mPresContext);
@@ -396,6 +399,7 @@ nsCSSInlineFrame::InitialReflow(nsCSSInlineReflowState& aState)
       return rv;
     }
   }
+#endif
 
   nsInlineReflowStatus rs = NS_FRAME_COMPLETE;
   if (0 != mChildCount) {
@@ -412,11 +416,13 @@ nsCSSInlineFrame::FrameAppendedReflow(nsCSSInlineReflowState& aState)
   NS_PRECONDITION(nsnull == mNextInFlow, "bad frame-appended-reflow");
   NS_PRECONDITION(mLastContentIsComplete == PR_TRUE, "bad state");
 
+#if XXX
   // Create any frames that need creating
   nsresult rv = CreateNewFrames(aState.mPresContext);
   if (NS_OK != rv) {
     return rv;
   }
+#endif
 
   nsInlineReflowStatus rs = NS_FRAME_COMPLETE;
   if (0 != mChildCount) {
