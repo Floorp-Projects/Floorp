@@ -999,6 +999,18 @@ function calendarColorStyleRuleUpdate( ThisCalendarObject )
 
 	   // insert the new calendar color rule
 	   tempStyleSheets[j].insertRule("." + containerName + " { background-color:" +ThisCalendarObject.color + " !important;}",1);
+
+           var calcColor = ThisCalendarObject.color.replace( /#/g, "" );
+           var red = calcColor.substring( 0, 2 );
+           var green = calcColor.substring( 2, 4 );
+           var blue = calcColor.substring( 4, 6 );
+
+           // sum is between 3 * 255 = 765 and 0.
+           var sum = parseInt( red, 16 ) + parseInt( green, 16 ) + parseInt( blue, 16 );
+           // Consider all colors with a sum lower than 256 as dark backgrounds
+           // and use white as the foreground color.
+           if ( sum < 256 )
+              tempStyleSheets[j].insertRule( "." + containerName + " { color:" + " white" + "!important;}", 1 );
 	}
 }
 

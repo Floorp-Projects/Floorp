@@ -206,6 +206,20 @@ function calendarInit()
      if (calendarColor != null)
      {
        gCalendarStyleSheet.insertRule("." + containerName + " { background-color:" + calendarColor + "!important;}", 1);
+
+       var calcColor = calendarColor.replace(/#/g, "");
+       var red = calcColor.substring(0, 2);
+       var green = calcColor.substring(2, 4);
+       var blue = calcColor.substring(4, 6);
+
+       // sum is between 3 * 255 = 765 and 0.
+       var sum = parseInt(red, 16) + parseInt(green, 16) + parseInt(blue, 16);
+
+       // Consider all colors with a sum lower than 256 as dark backgrounds
+       // and use white as the foreground color.
+       if (sum < 256)
+         gCalendarStyleSheet.insertRule("." + containerName + " { color:" + " white" + "!important;}", 1);
+
        var calListItem = calListItems[i+1];
        if (calListItem && calListItem.childNodes[0]) {
          calListItem.childNodes[0].setAttribute("class", "calendar-list-item-class " + containerName);
