@@ -395,9 +395,15 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
   char* pageURLString = nsnull;
   if (aUrl)
   {
+    char* pageURLString = nsnull;                                               
+    char* pageScheme = nsnull;                                                  
+    aUrl->GetScheme(&pageScheme);                                               
     aUrl->GetSpec(&pageURLString);
-    // Don't save the name if we're a new blank document
-    if (0 != nsCRT::strncmp(pageURLString,"about:blank",nsCRT::strlen(pageURLString)))
+
+    // only save the file spec if this is a local file, and is not              
+    // about:blank                                                              
+    if (nsCRT::strncmp(pageScheme, "file", 4) == 0 &&                           
+        nsCRT::strncmp(pageURLString,"about:blank", 11) != 0)                   
     {
       nsFileURL    pageURL(pageURLString);
       nsFileSpec   pageSpec(pageURL);
@@ -414,6 +420,8 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
     }
     if (pageURLString)
       nsCRT::free(pageURLString);
+    if (pageScheme)
+      nsCRT::free(pageScheme);
   }
   // Set the editor-specific Window caption
   UpdateWindowTitle();

@@ -71,7 +71,7 @@ nsHTMLEditor::InsertTableCell(PRInt32 aNumber, PRBool aAfter)
     }
     SetCaretAfterTableEdit(table, startRow, startCol, ePreviousColumn);  
   }
-  return res;
+  return res;                                                         
 }
 
 NS_IMETHODIMP

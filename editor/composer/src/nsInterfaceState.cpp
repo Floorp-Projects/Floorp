@@ -296,10 +296,9 @@ nsInterfaceState::UpdateFontFace(const char* observerName, const char* attribute
   // TODO: HANDLE "MIXED" STATE
   if (thisFace != mFontString)
   {
-    nsresult rv = SetNodeAttribute(observerName, faceStr.GetBuffer(), thisFace);
-    if (NS_FAILED(rv)) return rv;
-  
-    mFontString = thisFace;
+    rv = SetNodeAttribute(observerName, faceStr.GetBuffer(), thisFace);
+    if (NS_SUCCEEDED(rv))
+      mFontString = thisFace;
   }
   return rv;
 }
