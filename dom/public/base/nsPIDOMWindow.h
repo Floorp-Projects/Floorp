@@ -136,7 +136,7 @@ protected:
 
 #ifdef _IMPL_NS_LAYOUT
 PopupControlState
-PushPopupControlState(PopupControlState aState);
+PushPopupControlState(PopupControlState aState, PRBool aForce);
 
 void
 PopPopupControlState(PopupControlState aState);
@@ -150,8 +150,8 @@ class nsAutoPopupStatePusher
 {
 public:
 #ifdef _IMPL_NS_LAYOUT
-  nsAutoPopupStatePusher(PopupControlState aState)
-    : mOldState(::PushPopupControlState(aState))
+  nsAutoPopupStatePusher(PopupControlState aState, PRBool aForce = PR_FALSE)
+    : mOldState(::PushPopupControlState(aState, aForce))
   {
   }
 
