@@ -28,7 +28,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
-#include "nsIDOMElement.h"
 #include "nsString.h"
 #include "nsCRT.h"
 
@@ -62,11 +61,11 @@
   return self;
 }
 
--(id)initWithFrame:(NSRect)frame element:(nsIDOMElement*)element
+-(id)initWithFrame:(NSRect)frame item:(BookmarkItem*)item
 {
   if ( (self = [self initWithFrame:frame]) )
   {
-    [self setElement:element];
+    [self setItem:item];
   }
   return self;
 }
@@ -97,12 +96,7 @@
 
 -(IBAction)openBookmarkInNewTab:(id)aSender
 {
-  if (!mElement) return;
-
-  // Get the href attribute.  This is the URL we want to load.
-  nsAutoString hrefAttr;
-  mElement->GetAttribute(NS_LITERAL_STRING("href"), hrefAttr);
-  NSString* hrefStr = [NSString stringWith_nsAString:hrefAttr];
+  NSString* hrefStr = [mBookmarkItem url];
 
   BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
 
@@ -112,23 +106,13 @@
 
 -(IBAction)openBookmarkInNewWindow:(id)aSender
 {
-  if (!mElement) return;
-
-  // Get the href attribute.  This is the URL we want to load.
-  nsAutoString hrefAttr;
-  mElement->GetAttribute(NS_LITERAL_STRING("href"), hrefAttr);
-  NSString* hrefStr = [NSString stringWith_nsAString:hrefAttr];
-
   BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
 
-  nsAutoString group;
-  mElement->GetAttribute(NS_LITERAL_STRING("group"), group);
-
   BrowserWindowController* brController = [[self window] windowController];
-  if (group.IsEmpty()) 
-    [brController openNewWindowWithURL: hrefStr referrer: nil loadInBackground: loadInBackground];
-  else
+  if ([mBookmarkItem isGroup]) 
     [brController openNewWindowWithGroup:[mBookmarkItem contentNode] loadInBackground: loadInBackground];
+  else
+    [brController openNewWindowWithURL:[mBookmarkItem url] referrer: nil loadInBackground: loadInBackground];
 }
 
 -(IBAction)showBookmarkInfo:(id)aSender
@@ -148,7 +132,6 @@
 
   [mBookmarkItem remove];
   mBookmarkItem = nil;
-  mElement = nil;
 }
 
 -(IBAction)addFolder:(id)aSender
@@ -179,14 +162,11 @@
 
 -(BOOL)validateMenuItem:(NSMenuItem*)aMenuItem
 {
-  if (!mBookmarkItem || !mElement)
+  if (!mBookmarkItem)
     return NO;
   
   BOOL isBookmark = [mBookmarkItem isFolder] == NO;
-  
-  nsAutoString group;
-  mElement->GetAttribute(NS_LITERAL_STRING("group"), group);
-  BOOL isGroup = !group.IsEmpty();
+  BOOL isGroup = [mBookmarkItem isGroup];
 
   if (([aMenuItem action] == @selector(openBookmarkInNewWindow:))) {
     // Bookmarks and Bookmark Groups can be opened in a new window
@@ -204,12 +184,11 @@
 {
   // pop up a "context menu" on folders showing their contents. we check
   // for single click to fix issues with dblclicks (bug 162367)
-  if (mElement && mIsFolder && [aEvent clickCount] == 1)
+  if (mBookmarkItem && mIsFolder && [aEvent clickCount] == 1)
   {
-    nsCOMPtr<nsIContent> content = do_QueryInterface(mElement);
     NSMenu* popupMenu = [[NSMenu alloc] init];
     // make a temporary BookmarksMenu to build the menu
-    BookmarksMenu* bmMenu = [[BookmarksMenu alloc] initWithMenu:popupMenu firstItem:0 rootContent:content watchedFolder:eBookmarksFolderNormal];
+    BookmarksMenu* bmMenu = [[BookmarksMenu alloc] initWithMenu:popupMenu firstItem:0 rootContent:[mBookmarkItem contentNode] watchedFolder:eBookmarksFolderNormal];
     [NSMenu popUpContextMenu: popupMenu withEvent: aEvent forView: self];
     
     [bmMenu release];
@@ -219,52 +198,40 @@
     [super mouseDown:aEvent];
 }
 
--(void)setElement: (nsIDOMElement*)aElt
+- (void)setItem:(BookmarkItem*)inItem
 {
-  mElement = aElt;		// not addreffed
+  if (!inItem) return;
   
-  if (!mElement) return;
+  mBookmarkItem = inItem;		// we don't hold a ref to this.
   
-  nsAutoString tag;
-  mElement->GetLocalName(tag);
-
-  NSImage* bookmarkImage = BookmarksService::CreateIconForBookmark(aElt, PR_TRUE);
-  
-  nsAutoString group;
-  mElement->GetAttribute(NS_LITERAL_STRING("group"), group);
-  
-  if (!group.IsEmpty()) {
+  NSImage* bookmarkImage = [[BookmarksManager sharedBookmarksManager] createIconForBookmarkItem:mBookmarkItem useSiteIcon:YES];
+  if ([mBookmarkItem isGroup])
+  {
     mIsFolder = NO;
     [self setImage: bookmarkImage];
     [self setAction: @selector(openBookmark:)];
     [self setTarget: self];
   }
-  else if (tag.Equals(NS_LITERAL_STRING("folder"))) {
+  else if ([mBookmarkItem isFolder])
+  {
     [self setImage: bookmarkImage];
     mIsFolder = YES;
   }
-  else {
+  else
+  {
     mIsFolder = NO;
     [self setImage: bookmarkImage];
     [self setAction: @selector(openBookmark:)];
     [self setTarget: self];
-    nsAutoString href;
-    mElement->GetAttribute(NS_LITERAL_STRING("href"), href);
-    NSString* helpText = [NSString stringWith_nsAString:href];
-    [self setToolTip: helpText];
+    [self setToolTip: [mBookmarkItem url]];
   }
   
-  nsAutoString name;
-  mElement->GetAttribute(NS_LITERAL_STRING("name"), name);
-  [self setTitle: [NSString stringWith_nsAString: name]];
-  
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
-  mBookmarkItem = BookmarksService::GetWrapperFor(content);
+  [self setTitle: [mBookmarkItem name]];
 }
 
--(nsIDOMElement*)element
+- (BookmarkItem*)getItem
 {
-  return mElement;
+  return mBookmarkItem;
 }
 
 - (unsigned int)draggingSourceOperationMaskForLocal:(BOOL)localFlag
@@ -276,27 +243,19 @@
 }
 
 - (void) mouseDragged: (NSEvent*) aEvent
-{
-  if (!mElement) return;
-  
-  // Get the href attribute.  This is the URL we want to load.
-  nsAutoString hrefStr;
-  mElement->GetAttribute(NS_LITERAL_STRING("href"), hrefStr);
-  if (hrefStr.IsEmpty())
+{  
+  if ([[mBookmarkItem url] length] == 0)
     return;
 
-  nsAutoString titleStr;
-  mElement->GetAttribute(NS_LITERAL_STRING("name"), titleStr);
-  
   NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
   [pboard declareURLPasteboardWithAdditionalTypes:[NSArray arrayWithObjects:@"MozBookmarkType", nil] owner:self];
 
-  NSString     *url = [NSString stringWith_nsAString: hrefStr];
-  NSString     *title = [NSString stringWith_nsAString: titleStr];
+  NSString     *url 	= [mBookmarkItem url];
+  NSString     *title = [mBookmarkItem name];
   NSString     *cleanedTitle = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
 
   // MozBookmarkType
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mElement);
+  nsCOMPtr<nsIContent> content = [mBookmarkItem contentNode];
   if (content)
   {
     PRUint32 contentID;

@@ -18,9 +18,11 @@
 * Rights Reserved.
 *
 * Contributor(s):
-*   Ben Goodger <ben@netscape.com> (Original Author)
-*   David Haas <haasd@cae.wisc.edu>
+*   Ben Goodger   <ben@netscape.com> (Original Author)
+*   Simon Fraser  <sfraser@netscape.com>
+*   David Haas    <haasd@cae.wisc.edu>
 */
+
 #import <AppKit/AppKit.h>
 #import "BookmarksService.h"
 

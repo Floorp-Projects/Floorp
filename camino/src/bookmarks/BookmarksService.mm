@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Simon Fraser	<sfraser@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -369,8 +370,14 @@ BookmarksService::BookmarkRemoved(nsIContent* aContainer, nsIContent* aChild, bo
 {
   NotifyDescendents(aContainer, aChild, PR_TRUE, NotifyBookmarkRemoved);
 
+  // remove the bookmark item after everyone has been notified
+  PRUint32 contentID = 0;
+  aChild->GetContentID(&contentID);
+  // the BookmarkItem is released here
+  [gBookmarkItemDictionary removeObjectForKey:[NSNumber numberWithInt:contentID]];
+
   if (shouldFlush)
-      FlushBookmarks(); 
+      FlushBookmarks();
 }
 
 void
@@ -567,13 +574,13 @@ BookmarksService::ReadBookmarks()
   // behaviour.
   nsCOMPtr<nsIDOMDocument> bookmarksDOMDoc;
   nsCOMPtr<nsISyncLoadDOMService> loader = do_GetService("@mozilla.org/content/syncload-dom-service;1");
-  if (loader) {
+  if (loader)
+  {
     nsCOMPtr<nsIChannel> channel;
     NS_NewChannel(getter_AddRefs(channel), uri, nsnull, nsnull);
-    if (channel) {
-      loader->LoadLocalDocument(channel, nsnull,
-                                getter_AddRefs(bookmarksDOMDoc));
-
+    if (channel)
+    {
+      loader->LoadLocalDocument(channel, nsnull, getter_AddRefs(bookmarksDOMDoc));
       if (bookmarksDOMDoc)
         CallQueryInterface(bookmarksDOMDoc, &gBookmarksDocument);  // addrefs
     }
@@ -583,8 +590,9 @@ BookmarksService::ReadBookmarks()
   // that has a <parsererror> node as the root.
   BOOL validBookmarksFile = CheckXMLDocumentParseSuccessful(bookmarksDOMDoc);
   
-  if (!validBookmarksFile) {
-    // uh oh, parser error. Throw some UI
+  if (!validBookmarksFile)
+  {
+    // uh oh, parser error, or we just failed to load it. Throw some UI
     NSString *alert     = NSLocalizedString(@"CorruptedBookmarksAlert",@"");
     NSString *message   = NSLocalizedString(@"CorruptedBookmarksMsg",@"");
     NSString *okButton  = NSLocalizedString(@"OKButtonText",@"");
@@ -1534,8 +1542,6 @@ BookmarksService::PerformURLDrop(BookmarkItem* parentItem, BookmarkItem* beforeI
 
 @interface BookmarkItem(Private)
 
-- (NSString*)getAttributeValue:(nsIAtom*)atom;
-
 @end
 
 
@@ -1577,6 +1583,16 @@ BookmarksService::PerformURLDrop(BookmarkItem* parentItem, BookmarkItem* beforeI
   return @"";
 }
 
+- (void)setAttribute:(nsIAtom*)atom toValue:(NSString*)value
+{
+  if (mContentNode)
+  {
+    nsAutoString attrString;
+    [value assignTo_nsAString:attrString];
+    mContentNode->SetAttr(kNameSpaceID_None, atom, attrString, PR_TRUE);
+  }
+}
+
 - (NSString *)description
 {
   NSString* info = [self getAttributeValue:BookmarksService::gNameAtom];
@@ -1601,6 +1617,26 @@ BookmarksService::PerformURLDrop(BookmarkItem* parentItem, BookmarkItem* beforeI
 - (NSString*)descriptionString
 {
   return [self getAttributeValue:BookmarksService::gDescriptionAtom];
+}
+
+- (void)setName:(NSString*)inName
+{
+  [self setAttribute:BookmarksService::gNameAtom toValue:inName];
+}
+
+- (void)setUrl:(NSString*)inName
+{
+  [self setAttribute:BookmarksService::gHrefAtom toValue:inName];
+}
+
+- (void)setKeyword:(NSString*)inName
+{
+  [self setAttribute:BookmarksService::gKeywordAtom toValue:inName];
+}
+
+- (void)setDescriptionString:(NSString*)inName
+{
+  [self setAttribute:BookmarksService::gDescriptionAtom toValue:inName];
 }
 
 - (void)setSiteIcon:(NSImage*)image
@@ -1657,6 +1693,27 @@ BookmarksService::PerformURLDrop(BookmarkItem* parentItem, BookmarkItem* beforeI
   return !group.IsEmpty();
 }
 
+- (void)setIsGroup:(BOOL)isGroup
+{
+  if (isGroup)
+    mContentNode->SetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, NS_LITERAL_STRING("true"), PR_TRUE);
+  else
+    mContentNode->UnsetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, PR_TRUE);
+}
+
+- (BOOL)isExpanded
+{
+  return (BOOL)mContentNode->HasAttr(kNameSpaceID_None, BookmarksService::gOpenAtom);
+}
+
+- (void)setIsExpanded:(BOOL)isExpanded
+{
+  if (isExpanded)
+    mContentNode->SetAttr(kNameSpaceID_None, BookmarksService::gOpenAtom, NS_LITERAL_STRING("true"), PR_FALSE);  
+  else
+    mContentNode->UnsetAttr(kNameSpaceID_None, BookmarksService::gOpenAtom, PR_FALSE);
+}
+
 - (BOOL)isToobarRoot
 {
   nsCOMPtr<nsIContent> toolbarRoot = do_QueryInterface(BookmarksService::gToolbarRoot);
@@ -1686,6 +1743,31 @@ BookmarksService::PerformURLDrop(BookmarkItem* parentItem, BookmarkItem* beforeI
   }
   
   return nil;
+}
+
+- (NSArray*)getChildren
+{
+  PRInt32 numChildren;
+  mContentNode->ChildCount(numChildren);
+  if (numChildren == 0)
+    return nil;
+
+  NSMutableArray* array = [[[NSMutableArray alloc] initWithCapacity:numChildren] autorelease];
+  for (PRInt32 i = 0; i < numChildren; i ++)
+  {
+    nsCOMPtr<nsIContent> childContent;
+    mContentNode->ChildAt(i, *getter_AddRefs(childContent));
+    [array addObject:BookmarksService::GetWrapperFor(childContent)];
+  }
+  
+  return array;
+}
+
+- (int)getNumberOfChildren
+{
+  PRInt32 numChildren;
+  mContentNode->ChildCount(numChildren);
+  return numChildren;
 }
 
 @end
@@ -1936,6 +2018,25 @@ static BOOL gMadeBMManager;
   return rootAsContent;
 }
 
+- (BookmarkItem*)getRootItem
+{
+  nsCOMPtr<nsIContent> rootContent;
+  BookmarksService::GetRootContent(getter_AddRefs(rootContent));
+  return BookmarksService::GetWrapperFor(rootContent);
+}
+
+- (BookmarkItem*)getToolbarRootItem
+{
+  nsCOMPtr<nsIContent> toolbarRoot = do_QueryInterface(BookmarksService::gToolbarRoot);
+  return BookmarksService::GetWrapperFor(toolbarRoot);
+}
+
+- (BookmarkItem*)getDockMenuRootItem
+{
+  nsCOMPtr<nsIContent> dockRoot = do_QueryInterface(BookmarksService::gDockMenuRoot);
+  return BookmarksService::GetWrapperFor(dockRoot);
+}
+
 - (nsIDOMDocument*)getBookmarksDocument
 {
   nsIDOMDocument* domDoc = NULL;
@@ -2052,6 +2153,28 @@ static BOOL gMadeBMManager;
   // default return: just the string
   return [NSArray arrayWithObject:locationString];
 }
+
+- (NSImage*)createIconForBookmarkItem:(BookmarkItem*)inItem useSiteIcon:(BOOL)useSiteIcon
+{
+  if ([inItem isGroup])
+    return [NSImage imageNamed:@"groupbookmark"];
+
+  if ([inItem isFolder])
+    return [NSImage imageNamed:@"folder"];
+
+  // fire off a site icon load
+  if (useSiteIcon && [self useSiteIcons])
+  {
+    if ([inItem siteIcon])
+      return [inItem siteIcon];
+
+    NSString* url = [inItem url];
+    if ([url length] > 0)
+      [self loadProxyImageFor:inItem withURI:url];
+  }
+  return [NSImage imageNamed:@"smallbookmark"];
+}
+
 
 // return value is addreffed
 // XXX factor this code with BookmarksService code
@@ -2273,9 +2396,6 @@ static BOOL gMadeBMManager;
     if ([siteBookmarks count] == 0)
       [gBookmarkFaviconURLDictionary removeObjectForKey:faviconURL];	// release the dict too
   }
-  
-  [[bmItem retain] autorelease];		// keep the bm item alive until autorelease time
-  [gBookmarkItemDictionary removeObjectForKey:[NSNumber numberWithInt:contentID]];
 }
 
 - (void)bookmarkChanged:(nsIContent*)bookmark

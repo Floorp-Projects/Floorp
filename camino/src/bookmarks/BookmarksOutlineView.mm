@@ -26,9 +26,6 @@
 #import "BookmarksDataSource.h"
 
 #include "nsCOMPtr.h"
-#include "nsIDOMElement.h"
-#include "nsIContent.h"
-#include "nsIDOMNode.h"
 
 @implementation BookmarksOutlineView
 

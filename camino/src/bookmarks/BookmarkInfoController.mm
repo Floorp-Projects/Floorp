@@ -18,8 +18,9 @@
 * Rights Reserved.
 *
 * Contributor(s):
-*   Ben Goodger <ben@netscape.com> (Original Author)
-*   David Haas  <haasd@cae.wisc.edu>
+*   Ben Goodger   <ben@netscape.com> (Original Author)
+*   Simon Fraser  <sfraser@netscape.com>
+*   David Haas    <haasd@cae.wisc.edu>
 */
 
 #import "NSString+Utils.h"
@@ -27,8 +28,6 @@
 #import "BookmarkInfoController.h"
 
 #include "nsIContent.h"
-#include "nsINamespaceManager.h"
-
 
 @interface BookmarkInfoController(Private)
 
@@ -167,15 +166,12 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
 // return YES if changed
 - (BOOL)commitField:(id)textField toProperty:(nsIAtom*)propertyAtom
 {
-  nsAutoString attributeString;
-  [[textField stringValue] assignTo_nsAString:attributeString];
+  NSString* newValue = [textField stringValue];
+  NSString* oldValue = [mBookmarkItem getAttributeValue:propertyAtom];
   
-  nsAutoString oldAttribValue;
-  [mBookmarkItem contentNode]->GetAttr(kNameSpaceID_None, propertyAtom, oldAttribValue);
-  
-  if (!attributeString.Equals(oldAttribValue))
+  if (![newValue isEqualToString:oldValue])
   {
-    [mBookmarkItem contentNode]->SetAttr(kNameSpaceID_None, propertyAtom, attributeString, PR_TRUE);
+    [mBookmarkItem setAttribute:propertyAtom toValue:newValue];
     return YES;
   }
 
@@ -192,10 +188,7 @@ static BookmarkInfoController *sharedBookmarkInfoController = nil;
 
 - (IBAction)tabGroupCheckboxClicked:(id)sender
 {
-  if ([sender state] == NSOnState)
-    [mBookmarkItem contentNode]->SetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, NS_LITERAL_STRING("true"), PR_TRUE);
-  else
-    [mBookmarkItem contentNode]->UnsetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, PR_TRUE);
+  [mBookmarkItem setIsGroup:[sender state] == NSOnState];
   [mBookmarkItem itemChanged:YES];
 }
 

@@ -24,22 +24,20 @@
 #import <Foundation/Foundation.h>
 #import <Appkit/Appkit.h>
 
-class nsIDOMElement;
 class BookmarksService;
 
 @class BookmarkItem;
 
 @interface BookmarksButton : NSButton
 {
-  nsIDOMElement*    mElement;
   BookmarkItem*     mBookmarkItem;
   BOOL              mIsFolder;
 }
 
--(id)initWithFrame:(NSRect)frame element:(nsIDOMElement*)element;
+-(id)initWithFrame:(NSRect)frame item:(BookmarkItem*)item;
 
--(void)setElement: (nsIDOMElement*)aElt;
--(nsIDOMElement*)element;
+- (void)setItem:(BookmarkItem*)inItem;
+- (BookmarkItem*)getItem;
 
 -(IBAction)openBookmark:(id)aSender;
 -(IBAction)openBookmarkInNewTab:(id)aSender;

@@ -41,9 +41,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
-#include "nsIDOMElement.h"
-#include "nsINameSpaceManager.h"
-#include "nsIAtom.h"
 
 @interface BookmarksMenu(Private)
 
@@ -104,28 +101,17 @@
 {
   if (!child) return;
     
-  nsAutoString name;
-  child->GetAttr(kNameSpaceID_None, BookmarksService::gNameAtom, name);
-  NSString* title = [[NSString stringWith_nsAString: name] stringByTruncatingTo:80 at:kTruncateAtMiddle];
+  BookmarksManager* bmManager = [BookmarksManager sharedBookmarksManager];
 
-  nsCOMPtr<nsIDOMElement> elt = do_QueryInterface(child);
-  NSImage* menuItemImage = BookmarksService::CreateIconForBookmark(elt);
-  
-  // ensure a wrapper exists
-  [[BookmarksManager sharedBookmarksManager] getWrapperForContent:child];
+  BookmarkItem* bmItem 		= [bmManager getWrapperForContent:child];
+  NSImage* menuItemImage 	= [bmManager createIconForBookmarkItem:bmItem useSiteIcon:NO];
+  NSString* title 				= [[bmItem name] stringByTruncatingTo:80 at:kTruncateAtMiddle];
 
-  nsCOMPtr<nsIAtom> tagName;
-  child->GetTag(*getter_AddRefs(tagName));
-
-  nsAutoString group;
-  if (tagName == BookmarksService::gFolderAtom)
-    child->GetAttr(kNameSpaceID_None, BookmarksService::gGroupAtom, group);
-
-  BOOL isFolder = (tagName == BookmarksService::gFolderAtom);
-  BOOL isGroup  = isFolder && !group.IsEmpty();
+  BOOL isFolder = [bmItem isFolder];
+  BOOL isGroup  = [bmItem isGroup];
 
   // Create a menu or menu item for the child.
-  NSMenuItem* menuItem = [[[NSMenuItem alloc] initWithTitle: title action: NULL keyEquivalent: @""] autorelease];
+  NSMenuItem* menuItem = [[[NSMenuItem alloc] initWithTitle:title action: NULL keyEquivalent: @""] autorelease];
   if (index == -1)
     [menu addItem: menuItem];
   else
@@ -137,9 +123,7 @@
     [menu insertItem:menuItem atIndex:insertIndex];
   }
 
-  PRUint32 contentID;
-  child->GetContentID(&contentID);
-  [menuItem setTag: contentID];
+  [menuItem setTag: [bmItem intContentID]];
   
   if (isFolder && !isGroup) // folder
   {
@@ -223,25 +207,24 @@
 {
   if (!bookmark) return;
 
+  BookmarksManager* bmManager = [BookmarksManager sharedBookmarksManager];
+
+  BookmarkItem* bmItem 		= [bmManager getWrapperForContent:bookmark];
+
+  // XXX fix to not use nsIContent
   nsCOMPtr<nsIContent> parent;
   bookmark->GetParent(*getter_AddRefs(parent));
 
-  PRUint32 contentID = 0;
-  bookmark->GetContentID(&contentID);
   NSMenu* menu = [self locateMenuForContent:parent];
   if (!menu) return;
   
-  NSMenuItem* menuItem = [menu itemWithTag: contentID];
+  NSMenuItem* menuItem = [menu itemWithTag: [bmItem intContentID]];
 
-  nsAutoString name;
-  bookmark->GetAttr(kNameSpaceID_None, BookmarksService::gNameAtom, name);
-
-  NSString* bookmarkTitle = [[NSString stringWith_nsAString: name] stringByTruncatingTo:80 at:kTruncateAtMiddle];
+  NSString* bookmarkTitle = [[bmItem name] stringByTruncatingTo:80 at:kTruncateAtMiddle];
   [menuItem setTitle: bookmarkTitle];
   
   // and reset the image
-  nsCOMPtr<nsIDOMElement> elt = do_QueryInterface(bookmark);
-  NSImage* menuItemImage = BookmarksService::CreateIconForBookmark(elt);
+  NSImage* menuItemImage 	= [bmManager createIconForBookmarkItem:bmItem useSiteIcon:NO];
   [menuItem setImage:menuItemImage];
 }
 

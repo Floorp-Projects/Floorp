@@ -42,9 +42,9 @@ class nsIDOMElement;
 
 // Called to construct & edit the initial set of personal toolbar buttons.
 -(void)buildButtonList;
--(void)addButton: (nsIDOMElement*)aElt atIndex: (int)aIndex;
--(void)editButton: (nsIDOMElement*)aElt;
--(void)removeButton: (nsIDOMElement*)aElt;
+-(void)addButton:(BookmarkItem*)aItem atIndex:(int)aIndex;
+-(void)editButton:(BookmarkItem*)aItem;
+-(void)removeButton:(BookmarkItem*)aItem;
 
 // Called to lay out the buttons on the toolbar.
 -(void)reflowButtons;

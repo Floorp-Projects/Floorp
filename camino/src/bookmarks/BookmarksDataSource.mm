@@ -45,11 +45,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
-#include "nsIDocument.h"
-#include "nsIDocumentObserver.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
-#include "nsINamespaceManager.h"
 
 #include "nsVoidArray.h"
 
@@ -472,11 +467,7 @@ const int kBookmarksRootItemTag = -2;
 
     if (item)
     {
-      nsCOMPtr<nsIContent> content;
-      content = [item contentNode];
-  
-      PRBool isOpen = content && content->HasAttr(kNameSpaceID_None, BookmarksService::gOpenAtom);
-      if (isOpen)
+      if ([item isExpanded])
         [mOutlineView expandItem: item];
       else
         [mOutlineView collapseItem: item];
@@ -595,13 +586,9 @@ const int kBookmarksRootItemTag = -2;
       NSFileWrapper     *fileWrapper       = [[NSFileWrapper alloc] initRegularFileWithContents:nil];
       NSTextAttachment  *textAttachment    = [[NSTextAttachment alloc] initWithFileWrapper:fileWrapper];
 
-      nsIContent* content = [item contentNode];
-      nsAutoString nameAttr;
-      content->GetAttr(kNameSpaceID_None, BookmarksService::gNameAtom, nameAttr);
-      
       //Set cell's textual contents
       //[cellValue replaceCharactersInRange:NSMakeRange(0, [cellValue length]) withString:[NSString stringWith_nsAString: nameAttr]];
-      cellValue = [[[NSMutableAttributedString alloc] initWithString:[NSString stringWith_nsAString: nameAttr]] autorelease];
+      cellValue = [[[NSMutableAttributedString alloc] initWithString:[item name]] autorelease];
       
       //Create an attributed string to hold the empty attachment, then release the components.
       NSMutableAttributedString* attachmentAttrString = [NSMutableAttributedString attributedStringWithAttachment:textAttachment];
@@ -611,8 +598,7 @@ const int kBookmarksRootItemTag = -2;
       //Get the cell of the text attachment.
       NSCell* attachmentAttrStringCell = (NSCell *)[(NSTextAttachment *)[attachmentAttrString attribute:NSAttachmentAttributeName atIndex:0 effectiveRange:nil] attachmentCell];
 
-      nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(content));
-      NSImage* bookmarkImage = BookmarksService::CreateIconForBookmark(elt);
+      NSImage* bookmarkImage = [[BookmarksManager sharedBookmarksManager] createIconForBookmarkItem:item useSiteIcon:NO];
       [attachmentAttrStringCell setImage:bookmarkImage];
       
       //Insert the image
@@ -637,15 +623,8 @@ const int kBookmarksRootItemTag = -2;
     NSMutableString* mutableString = [NSMutableString stringWithString:object];
     [mutableString replaceOccurrencesOfString:[NSString stringWithCharacters:&kAttachmentCharacter length:1] withString:@"" options:0 range:NSMakeRange(0, [mutableString length])];
 
-    nsAutoString nameAttr;
-    [mutableString assignTo_nsAString:nameAttr];
-    
-    // stash it into the DOM
     BookmarkItem* bmItem = (BookmarkItem*)item;
-    nsIContent* content = [bmItem contentNode];
-    if (content)
-      content->SetAttr(kNameSpaceID_None, BookmarksService::gNameAtom, nameAttr, PR_TRUE);
-    
+    [bmItem setName:mutableString];
     [bmItem itemChanged:YES];
   }
 }
@@ -762,25 +741,22 @@ const int kBookmarksRootItemTag = -2;
 
   NSString* descStr = nil;
   NSString* hrefStr = nil;
-  nsIContent* content = [item contentNode];
-  nsAutoString value;
 
-  content->GetAttr(kNameSpaceID_None, BookmarksService::gDescriptionAtom, value);
-  if (value.Length())
-    descStr = [NSString stringWith_nsAString:value];
+  if ([[item descriptionString] length] > 0)
+    descStr = [item descriptionString];
 
   // Only description for folders
   if ([item isFolder])
     return descStr;
   
   // Extract the URL from the item
-  content->GetAttr(kNameSpaceID_None, BookmarksService::gHrefAtom, value);
-  if (value.Length())
-    hrefStr = [NSString stringWith_nsAString:value];
+  if ([[item url] length] > 0)
+    hrefStr = [item url];
 
   if (!hrefStr)
     return descStr;
-  else if (!descStr)
+  
+  if (!descStr)
     return hrefStr;
 
   // Display both URL and description
@@ -870,13 +846,13 @@ const int kBookmarksRootItemTag = -2;
 - (void)outlineViewItemWillExpand:(NSNotification *)notification
 {
   BookmarkItem* item = [[notification userInfo] objectForKey:[[[notification userInfo] allKeys] objectAtIndex: 0]];
-  [item contentNode]->SetAttr(kNameSpaceID_None, BookmarksService::gOpenAtom, NS_LITERAL_STRING("true"), PR_FALSE);
+  [item setIsExpanded:YES];
 }
 
 - (void)outlineViewItemWillCollapse:(NSNotification *)notification
 {
   BookmarkItem* item = [[notification userInfo] objectForKey:[[[notification userInfo] allKeys] objectAtIndex: 0]];
-  [item contentNode]->UnsetAttr(kNameSpaceID_None, BookmarksService::gOpenAtom, PR_FALSE);
+  [item setIsExpanded:NO];
 }
 
 @end

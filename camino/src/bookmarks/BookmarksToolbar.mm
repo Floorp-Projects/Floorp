@@ -30,7 +30,6 @@
 #import "BrowserWindowController.h"
 #import "BookmarksDataSource.h"
 
-#include "nsIDOMElement.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
 
@@ -40,7 +39,7 @@
 - (void)registerForShutdownNotification;
 - (void)setButtonInsertionPoint:(id <NSDraggingInfo>)sender;
 - (NSRect)insertionRectForButton:(NSView*)aButton position:(int)aPosition;
-- (BookmarksButton*)makeNewButtonWithElement:(nsIDOMElement*)element;
+- (BookmarksButton*)makeNewButtonWithItem:(BookmarkItem*)aItem;
 
 @end
 
@@ -122,25 +121,15 @@
 
 -(void)buildButtonList
 {
-  // gToolbarRoot may be nil
-  if (BookmarksService::gToolbarRoot)
+  NSArray* toolbarChildren = [[[BookmarksManager sharedBookmarksManager] getToolbarRootItem] getChildren];
+
+  for (unsigned int i = 0; i < [toolbarChildren count]; i ++)
   {
-    // Build the buttons, and then lay them all out.
-    nsCOMPtr<nsIDOMNode> child;
-    BookmarksService::gToolbarRoot->GetFirstChild(getter_AddRefs(child));
-    while (child) {
-      nsCOMPtr<nsIDOMElement> childElt(do_QueryInterface(child));
-      if (childElt) {
-        BookmarksButton* button = [self makeNewButtonWithElement:childElt];
-        [self addSubview: button];
-        [mButtons addObject: button];
-      }
-  
-      nsCOMPtr<nsIDOMNode> temp = child;
-      temp->GetNextSibling(getter_AddRefs(child));
-    }
+    BookmarksButton* button = [self makeNewButtonWithItem:[toolbarChildren objectAtIndex:i]];
+    [self addSubview: button];
+    [mButtons addObject: button];
   }
-  
+
   if ([self isShown])
     [self reflowButtons];
 }
@@ -158,22 +147,24 @@
   [self setNeedsDisplay:YES];
 }
 
--(void)addButton: (nsIDOMElement*)aElt atIndex: (int)aIndex
+-(void)addButton:(BookmarkItem*)aItem atIndex:(int)aIndex
 {
-  BookmarksButton* button = [self makeNewButtonWithElement:aElt];
+  BookmarksButton* button = [self makeNewButtonWithItem:aItem];
   [self addSubview: button];
   [mButtons insertObject: button atIndex: aIndex];
   if ([self isShown])
     [self reflowButtonsStartingAtIndex: aIndex];
 }
 
--(void)editButton: (nsIDOMElement*)aElt
+-(void)editButton:(BookmarkItem*)aItem
 {
   int count = [mButtons count];
-  for (int i = 0; i < count; i++) {
+  for (int i = 0; i < count; i++)
+  {
     BookmarksButton* button = [mButtons objectAtIndex: i];
-    if ([button element] == aElt) {
-      [button setElement: aElt];
+    if ([button getItem] == aItem)
+    {
+      [button setItem: aItem];
       if (count > i && [self isShown])
         [self reflowButtonsStartingAtIndex: i];
       break;
@@ -183,12 +174,15 @@
   [self setNeedsDisplay:YES];
 }
 
--(void)removeButton: (nsIDOMElement*)aElt
+-(void)removeButton:(BookmarkItem*)aItem
 {
   int count = [mButtons count];
-  for (int i = 0; i < count; i++) {
+  for (int i = 0; i < count; i++)
+  {
     BookmarksButton* button = [mButtons objectAtIndex: i];
-    if ([button element] == aElt) {
+    NSLog(@"Looking at button with item %x, %@, for item %x", [button getItem], [button getItem], aItem);
+    if ([button getItem] == aItem)
+    {
       [mButtons removeObjectAtIndex: i];
       [button removeFromSuperview];
       if (count > i && [self isShown])
@@ -388,12 +382,9 @@
   if (foundView && [foundView isMemberOfClass:[BookmarksButton class]])
   {
     BookmarksButton* targetButton = foundView;
-
-    nsCOMPtr<nsIAtom> tagName;
-    nsCOMPtr<nsIContent> contentNode = do_QueryInterface([targetButton element]);
-    contentNode->GetTag(*getter_AddRefs(tagName));
-
-    if (tagName == BookmarksService::gFolderAtom)
+    BookmarkItem*    targetItem 	= [targetButton getItem];
+    
+    if ([targetItem isFolder])
     {
       mDragInsertionButton = targetButton;
       mDragInsertionPosition = BookmarksService::CHInsertInto;
@@ -431,29 +422,26 @@
   {
     NSArray *draggedIDs = [draggingPasteboard propertyListForType: @"MozBookmarkType"];
     
-    nsCOMPtr<nsIContent> destinationContent;
+    BookmarkItem* destItem = nil;
     int index = 0;
     
     if (mDragInsertionPosition == BookmarksService::CHInsertInto)						// drop onto folder
     {
-      nsCOMPtr<nsIDOMElement> parentElt = [mDragInsertionButton element];
-      destinationContent = do_QueryInterface(parentElt);
+      destItem = [mDragInsertionButton getItem];
       index = 0;
     }
     else if (mDragInsertionPosition == BookmarksService::CHInsertBefore ||
              mDragInsertionPosition == BookmarksService::CHInsertAfter)		// drop onto toolbar
     {
-      nsCOMPtr<nsIDOMElement> toolbarRoot = BookmarksService::gToolbarRoot;
-      destinationContent = do_QueryInterface(toolbarRoot);
-      index = [mButtons indexOfObject: mDragInsertionButton];
+      destItem = [[BookmarksManager sharedBookmarksManager] getToolbarRootItem];
+      index = [mButtons indexOfObject:mDragInsertionButton];
       if (mDragInsertionPosition == BookmarksService::CHInsertAfter)
         ++index;
     }
 
     // we rely on IsBookmarkDropValid to filter out drops where the source
     // and destination are the same. 
-    BookmarkItem* toolbarFolderItem = BookmarksService::GetWrapperFor(destinationContent);
-    if (!BookmarksService::IsBookmarkDropValid(toolbarFolderItem, index, draggedIDs, isCopy)) {
+    if (!BookmarksService::IsBookmarkDropValid(destItem, index, draggedIDs, isCopy)) {
       return NO;
     }
   }
@@ -513,7 +501,7 @@
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
-  BookmarkItem* parent = nsnull;
+  BookmarkItem* parent = nil;
   int index = 0;
 
   if (!BookmarksService::gToolbarRoot)
@@ -521,20 +509,16 @@
   
   if (mDragInsertionPosition == BookmarksService::CHInsertInto)							// drop onto folder
   {
-    nsCOMPtr<nsIDOMElement> parentElt = [mDragInsertionButton element];
-    nsCOMPtr<nsIContent> parentContent(do_QueryInterface(parentElt));
-    parent = BookmarksService::GetWrapperFor(parentContent);
+    parent = [mDragInsertionButton getItem];
     index = 0;
   }
   else if (mDragInsertionPosition == BookmarksService::CHInsertBefore ||
            mDragInsertionPosition == BookmarksService::CHInsertAfter)				// drop onto toolbar
   {
-    nsCOMPtr<nsIDOMElement> rootElt = BookmarksService::gToolbarRoot;
-    nsCOMPtr<nsIContent> rootContent(do_QueryInterface(rootElt));
-    parent = BookmarksService::GetWrapperFor(rootContent);
+    parent = [[BookmarksManager sharedBookmarksManager] getToolbarRootItem];
     index = [mButtons indexOfObject: mDragInsertionButton];
     if (index == NSNotFound)
-      rootContent->ChildCount(index);
+      index = [parent getNumberOfChildren];
     else if (mDragInsertionPosition == BookmarksService::CHInsertAfter)
       index++;
   }
@@ -595,44 +579,45 @@
   }
 }
 
-- (BookmarksButton*)makeNewButtonWithElement:(nsIDOMElement*)element
+- (BookmarksButton*)makeNewButtonWithItem:(BookmarkItem*)aItem
 {
-	return [[[BookmarksButton alloc] initWithFrame: NSMakeRect(2, 1, 100, 17) element:element] autorelease];
+	return [[[BookmarksButton alloc] initWithFrame: NSMakeRect(2, 1, 100, 17) item:aItem] autorelease];
 }
 
 #pragma mark -
 
 - (void)bookmarkAdded:(nsIContent*)bookmark inContainer:(nsIContent*)container isChangedRoot:(BOOL)isRoot
 {
-  //NSLog(@"Toolbar notified that %x added in %x, is root %d", bookmark, container, isRoot);
+  NSLog(@"Toolbar notified that %x added in %x, is root %d", bookmark, container, isRoot);
   nsCOMPtr<nsIContent>	toolbarRootContent = getter_AddRefs([[BookmarksManager sharedBookmarksManager] getToolbarRoot]);
   if (container == toolbarRootContent.get())
   {
-    // We only care about changes that occur to the personal toolbar's immediate
-    // children.
+    // We only care about changes that occur to the personal toolbar's immediate children.
     PRInt32 index = -1;
     container->IndexOf(bookmark, index);
-    nsCOMPtr<nsIDOMElement> elt = do_QueryInterface(bookmark);
-    [self addButton: elt atIndex:index];
+    BookmarkItem* item = BookmarksService::GetWrapperFor(bookmark);
+    [self addButton:item atIndex:index];
   }
 }
 
 - (void)bookmarkRemoved:(nsIContent*)bookmark inContainer:(nsIContent*)container isChangedRoot:(BOOL)isRoot
 {
+  NSLog(@"Toolbar notified that %x removed in %x, is root %d", bookmark, container, isRoot);
+
   nsCOMPtr<nsIContent>	toolbarRootContent = getter_AddRefs([[BookmarksManager sharedBookmarksManager] getToolbarRoot]);
   if (container == toolbarRootContent.get())
   {
     // We only care about changes that occur to the personal toolbar's immediate
     // children.
-    nsCOMPtr<nsIDOMElement> childElt = do_QueryInterface(bookmark);
-    [self removeButton: childElt];
+    BookmarkItem* item = BookmarksService::GetWrapperFor(bookmark);
+    [self removeButton:item];
   }
 }
 
 - (void)bookmarkChanged:(nsIContent*)bookmark
 {
-  nsCOMPtr<nsIDOMElement> elt = do_QueryInterface(bookmark);
-  [self editButton:elt];
+  BookmarkItem* item = BookmarksService::GetWrapperFor(bookmark);
+  [self editButton:item];
 }
 
 - (void)specialFolder:(EBookmarksFolderType)folderType changedTo:(nsIContent*)newFolderContent

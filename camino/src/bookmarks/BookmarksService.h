@@ -189,16 +189,32 @@ protected:
 - (NSString*)keyword;
 - (NSString*)descriptionString;
 
+- (void)setName:(NSString*)inName;
+- (void)setUrl:(NSString*)inName;
+- (void)setKeyword:(NSString*)inName;
+- (void)setDescriptionString:(NSString*)inName;
+
+- (NSString*)getAttributeValue:(nsIAtom*)atom;
+- (void)setAttribute:(nsIAtom*)atom toValue:(NSString*)value;
+
 - (NSImage*)siteIcon;
 - (NSNumber*)contentID;
 - (int)intContentID;
 - (BOOL)isFolder;
+
 - (BOOL)isGroup;
+- (void)setIsGroup:(BOOL)isGroup;
+
+// only applicable for folders
+- (BOOL)isExpanded;
+- (void)setIsExpanded:(BOOL)isExpanded;
 
 - (BOOL)isToobarRoot;
 - (BOOL)isDockMenuRoot;
 
 - (BookmarkItem*)parentItem;
+- (NSArray*)getChildren;
+- (int)getNumberOfChildren;
 
 @end
 
@@ -224,6 +240,10 @@ protected:
 - (nsIContent*)getToolbarRoot;		// addrefs return value
 - (nsIContent*)getDockMenuRoot;		// addrefs return value
 
+- (BookmarkItem*)getRootItem;
+- (BookmarkItem*)getToolbarRootItem;
+- (BookmarkItem*)getDockMenuRootItem;
+
 - (nsIDOMDocument*)getBookmarksDocument;	// addrefs
 
 - (NSArray*)getBookmarkGroupURIs:(BookmarkItem*)item;
@@ -233,6 +253,8 @@ protected:
 
 - (void)addNewBookmark:(NSString*)url title:(NSString*)title withParent:(nsIContent*)parent;
 - (void)addNewBookmarkFolder:(NSString*)title withParent:(nsIContent*)parent;
+
+- (NSImage*)createIconForBookmarkItem:(BookmarkItem*)inItem useSiteIcon:(BOOL)useSiteIcon;
 
 // itemsArray is an array of NSDictionaries, with "href" and "title" entries
 - (void)addNewBookmarkGroup:(NSString*)titleString items:(NSArray*)itemsArray withParent:(nsIContent*)parent;
