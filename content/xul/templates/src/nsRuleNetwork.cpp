@@ -171,7 +171,7 @@ Value::operator=(const PRUnichar* aString)
 
 Value::~Value()
 {
-    MOZ_COUNT_CTOR(Value);
+    MOZ_COUNT_DTOR(Value);
     Clear();
 }
 

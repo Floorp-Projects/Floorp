@@ -1169,6 +1169,8 @@ class InstantiationNode : public ReteNode
 public:
     InstantiationNode(Rule* aRule, ConflictSet* aConflictSet)
         : mRule(aRule), mConflictSet(aConflictSet) {}
+
+    ~InstantiationNode();
         
     // "downward" propogations
     virtual nsresult Propogate(const InstantiationSet& aInstantiations, void* aClosure);
@@ -1177,6 +1179,12 @@ protected:
     Rule*        mRule;
     ConflictSet* mConflictSet;
 };
+
+
+InstantiationNode::~InstantiationNode()
+{
+    delete mRule;
+}
 
 
 nsresult
