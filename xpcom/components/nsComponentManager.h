@@ -300,43 +300,42 @@ protected:
 class nsFactoryEntry {
 public:
     nsFactoryEntry(const nsCID &aClass,
-                   const char *location, PRUint32 locationlen, int aType);
-    nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory);
+                   const char *location, PRUint32 locationlen, int aType, class nsFactoryEntry* parent = nsnull);
+    nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory, class nsFactoryEntry* parent = nsnull);
     ~nsFactoryEntry();
 
     nsresult ReInit(const nsCID &aClass, const char *location, int aType);
-    nsresult ReInit(const nsCID &aClass, nsIFactory *aFactory);
 
     nsresult GetFactory(nsIFactory **aFactory, 
                         nsComponentManagerImpl * mgr) {
-        if (factory) {
-            *aFactory = factory.get();
+        if (mFactory) {
+            *aFactory = mFactory.get();
             NS_ADDREF(*aFactory);
             return NS_OK;
         }
 
-        if (typeIndex < 0)
+        if (mTypeIndex < 0)
             return NS_ERROR_FAILURE;
 
         nsresult rv;
         nsCOMPtr<nsIComponentLoader> loader;
-        rv = mgr->GetLoaderForType(typeIndex, getter_AddRefs(loader));
+        rv = mgr->GetLoaderForType(mTypeIndex, getter_AddRefs(loader));
         if(NS_FAILED(rv))
             return rv;
 
-        rv = loader->GetFactory(cid, location, mgr->mLoaderData[typeIndex].type, aFactory);
+        rv = loader->GetFactory(mCid, mLocation, mgr->mLoaderData[mTypeIndex].type, aFactory);
         if (NS_SUCCEEDED(rv))
-            factory = do_QueryInterface(*aFactory);
+            mFactory = do_QueryInterface(*aFactory);
         return rv;
     }
 
-    nsCID cid;
-    nsCOMPtr<nsIFactory> factory;
+    nsCID mCid;
+    nsCOMPtr<nsIFactory> mFactory;
     // This is an index into the mLoaderData array that holds the type string and the loader 
-    int typeIndex;
+    int mTypeIndex;
     nsCOMPtr<nsISupports> mServiceObject;
-
-    char* location;
+    char* mLocation;
+    class nsFactoryEntry* mParent;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
