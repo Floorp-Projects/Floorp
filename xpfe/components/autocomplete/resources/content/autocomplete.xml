@@ -33,7 +33,7 @@
       <children includes="menupopup"/>
     </content>
 
-    <implementation>
+    <implementation implements="nsIDOMXULMenuListElement, nsIAccessibleProvider">
 
       <constructor><![CDATA[
         // set default property values
@@ -209,6 +209,47 @@
         elt.__AUTOCOMPLETE_BOX__ = this;
         elt;
       ]]></field>
+
+      <!-- nsIAccessibleProvider --> 
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULComboboxAccessible(this);
+          ]]>
+        </getter>
+      </property>
+
+      <!-- nsIDOMXULMenuListElement properties -->
+
+      <property name="editable" readonly="true" onget="return true;" />  
+
+      <property name="crop" onset="this.setAttribute('crop',val); return val;"
+                            onget="return this.getAttribute('crop');"/>
+
+      <property name="label" onset="this.setAttribute('label',val); return val;"
+                             onget="return this.getAttribute('label');"/>
+
+      <property name="open">
+        <getter>
+          <![CDATA[
+            return this.getAttribute('open') == 'true';
+          ]]>
+        </getter>
+        <setter>
+          <![CDATA[
+            var historyPopup = this.getElementsByTagName("menupopup").item(0);
+            if (val) {
+              this.setAttribute('open',true); 
+              historyPopup.showPopup();
+            }
+            else {
+              this.removeAttribute('open');
+              historyPopup.hidePopup();
+            }
+          ]]>
+        </setter>
+      </property>
 
       <!-- =================== PRIVATE PROPERTIES =================== -->
 
@@ -1458,24 +1499,33 @@
       <xul:image class="dropmarker-image"/>
     </content>
       
-      <implementation>
-        <method name="showPopup">
-          <body><![CDATA[
-            var textbox = document.getBindingParent(this);
-            var kids = textbox.getElementsByTagName("menupopup");
-            if (kids.length) {
-              kids[0].showPopup(textbox, -1, -1, "popup", "bottomleft", "topleft");
-              textbox.setAttribute("open", true);
-            }
-          ]]></body>
-        </method>
-      </implementation>
-      
-      <handlers>
-        <handler event="mousedown"><![CDATA[
-          this.showPopup();
-        ]]></handler>
-      </handlers>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULDropmarkerAccessible(this);
+          ]]>
+        </getter>
+      </property>
+
+      <method name="showPopup">
+        <body><![CDATA[
+          var textbox = document.getBindingParent(this);
+          var kids = textbox.getElementsByTagName("menupopup");
+          if (kids.length) {
+            kids[0].showPopup(textbox, -1, -1, "popup", "bottomleft", "topleft");
+            textbox.setAttribute("open", true);
+          }
+        ]]></body>
+      </method>
+    </implementation>
+    
+    <handlers>
+      <handler event="mousedown"><![CDATA[
+        this.showPopup();
+      ]]></handler>
+    </handlers>
   </binding>
 
 </bindings>
