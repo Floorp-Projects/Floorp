@@ -117,9 +117,13 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
     (const String& attValue, txIParseContext* aContext)
 {
     AttributeValueTemplate* avt = new AttributeValueTemplate();
+    if (!avt) {
+        // XXX ErrorReport: out of memory
+        return 0;
+    }
 
     if (attValue.isEmpty())
-        return avt; //XXX should return 0, but that causes crash in lre12
+        return avt;
 
     PRUint32 size = attValue.length();
     PRUint32 cc = 0;
@@ -160,8 +164,15 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
                         nextCh = cc != size ? attValue.charAt(cc) : 0;
                     }
                     else {
-                        if (!buffer.isEmpty())
-                            avt->addExpr(new StringExpr(buffer));
+                        if (!buffer.isEmpty()) {
+                            Expr* strExpr = new StringExpr(buffer);
+                            if (!strExpr) {
+                                // XXX ErrorReport: out of memory
+                                delete avt;
+                                return 0;
+                            }
+                            avt->addExpr(strExpr);
+                        }
                         buffer.clear();
                         inExpr = MB_TRUE;
                     }
@@ -204,8 +215,15 @@ AttributeValueTemplate* ExprParser::createAttributeValueTemplate
         return 0;
     }
 
-    if (!buffer.isEmpty())
-        avt->addExpr(new StringExpr(buffer));
+    if (!buffer.isEmpty()) {
+        Expr* strExpr = new StringExpr(buffer);
+        if (!strExpr) {
+            // XXX ErrorReport: out of memory
+            delete avt;
+            return 0;
+        }
+        avt->addExpr(strExpr);
+    }
 
     return avt;
 
@@ -270,7 +288,6 @@ Expr* ExprParser::createBinaryExpr   (Expr* left, Expr* right, Token* op) {
 
     }
     return 0;
-    //return new ErrorExpr();
 } //-- createBinaryExpr
 
 
@@ -295,8 +312,15 @@ Expr* ExprParser::createExpr(ExprLexer& lexer, txIParseContext* aContext)
         if (!expr)
             break;
 
-        if (unary)
-            expr = new UnaryExpr(expr);
+        if (unary) {
+            Expr* uExpr = new UnaryExpr(expr);
+            if (!uExpr) {
+                // XXX ErrorReport: out of memory
+                delete expr;
+                return 0;
+            }
+            expr = uExpr;
+        }
 
         Token* tok = lexer.nextToken();
         switch (tok->type) {
@@ -404,12 +428,19 @@ Expr* ExprParser::createFilterExpr(ExprLexer& lexer, txIParseContext* aContext)
             return 0;
             break;
     }
-    if (!expr)
+    if (!expr) {
+        // XXX ErrorReport: out of memory
         return 0;
+    }
 
     if (lexer.peek()->type == Token::L_BRACKET) {
 
         FilterExpr* filterExpr = new FilterExpr(expr);
+        if (!filterExpr) {
+            // XXX ErrorReport: out of memory
+            delete expr;
+            return 0;
+        }
 
         //-- handle predicates
         if (!parsePredicates(filterExpr, lexer, aContext)) {
@@ -531,23 +562,36 @@ Expr* ExprParser::createFunctionCall(ExprLexer& lexer,
         rv = aContext->resolveFunctionCall(lName, namespaceID, fnCall);
         TX_IF_RELEASE_ATOM(prefix);
         TX_IF_RELEASE_ATOM(lName);
-        if (NS_FAILED(rv) && rv != NS_ERROR_NOT_IMPLEMENTED) {
-            // XXX report error unknown function call
+
+        // XXX this should be removed once we don't return
+        // NS_ERROR_NOT_IMPLEMENTED for unparsed-entity-uri(). As should the
+        // code in parseParameters that deals with fnCall = 0.
+        // Bug 65981
+        if (rv == NS_ERROR_NOT_IMPLEMENTED) {
+            NS_ASSERTION(!fnCall, "Now is it implemented or not?");
+            if (!parseParameters(0, lexer, aContext)) {
+                return 0;
+            }
+            String err(tok->value);
+            err.append(" not implemented.");
+            return new StringExpr(err);
+        }
+
+        if (NS_FAILED(rv)) {
             return 0;
         }
+    }
+
+    // check that internal functions got created properly
+    if (!fnCall) {
+        // XXX ErrorReport: out of memory
+        return 0;
     }
     
     //-- handle parametes
     if (!parseParameters(fnCall, lexer, aContext)) {
         delete fnCall;
         return 0;
-    }
-
-    if (rv == NS_ERROR_NOT_IMPLEMENTED) {
-        NS_ASSERTION(!fnCall, "Now is it implemented or not?");
-        String err(tok->value);
-        err.append(" not implemented.");
-        return new StringExpr(err);
     }
 
     return fnCall;
@@ -852,6 +896,11 @@ Expr* ExprParser::createUnionExpr(ExprLexer& lexer, txIParseContext* aContext)
         return expr;
 
     UnionExpr* unionExpr = new UnionExpr();
+    if (!unionExpr) {
+        // XXX ErrorReport: out of memory
+        delete expr;
+        return 0;
+    }
     unionExpr->addExpr(expr);
 
     while (lexer.peek()->type == Token::UNION_OP) {
@@ -967,6 +1016,8 @@ MBool ExprParser::parseParameters(FunctionCall* fnCall, ExprLexer& lexer,
 
         if (fnCall)
             fnCall->addParam(expr);
+        else
+            delete expr;
             
         switch (lexer.nextToken()->type) {
             case Token::R_PAREN :

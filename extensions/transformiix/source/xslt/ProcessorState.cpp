@@ -1106,18 +1106,22 @@ nsresult ProcessorState::resolveFunctionCall(txAtom* aName, PRInt32 aID,
    }
    if (CHECK_FN(document)) {
        aFunction = new DocumentFunctionCall(this, aElem);
+       NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
        return NS_OK;
    }
    if (CHECK_FN(key)) {
        aFunction = new txKeyFunctionCall(this, aElem);
+       NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
        return NS_OK;
    }
    if (CHECK_FN(formatNumber)) {
        aFunction = new txFormatNumberFunctionCall(this, aElem);
+       NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
        return NS_OK;
    }
    if (CHECK_FN(current)) {
        aFunction = new CurrentFunctionCall(this);
+       NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
        return NS_OK;
    }
    if (CHECK_FN(unparsedEntityUri)) {
@@ -1125,18 +1129,22 @@ nsresult ProcessorState::resolveFunctionCall(txAtom* aName, PRInt32 aID,
    }
    if (CHECK_FN(generateId)) {
        aFunction = new GenerateIdFunctionCall();
+       NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
        return NS_OK;
    }
    if (CHECK_FN(systemProperty)) {
        aFunction = new SystemPropertyFunctionCall(aElem);
+       NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
        return NS_OK;
    }
    if (CHECK_FN(elementAvailable)) {
        aFunction = new ElementAvailableFunctionCall(aElem);
+       NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
        return NS_OK;
    }
    if (CHECK_FN(functionAvailable)) {
        aFunction = new FunctionAvailableFunctionCall(aElem);
+       NS_ENSURE_TRUE(aFunction, NS_ERROR_OUT_OF_MEMORY);
        return NS_OK;
    }
 
