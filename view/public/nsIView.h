@@ -514,10 +514,4 @@ private:
 //or scrolled and instead must be repainted
 #define NS_VIEW_PUBLIC_FLAG_DONT_BITBLT          0x0010
 
-#define ALL_VIEW_FLAGS        (NS_VIEW_FLAG_DONT_CHECK_CHILDREN | \
-                               NS_VIEW_FLAG_DYING | \
-                               NS_VIEW_FLAG_TRANSPARENT | \
-                               NS_VIEW_FLAG_DONT_ZOOM | \
-                               NS_VIEW_FLAG_DONT_BITBLT)
-
 #endif
