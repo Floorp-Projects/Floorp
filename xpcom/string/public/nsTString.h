@@ -434,8 +434,22 @@ class nsTString_CharT : public nsTSubstring_CharT
         /**
          * Append the given integer to this string 
          */
-
       NS_COM void AppendInt( PRInt32 aInteger, PRInt32 aRadix=kRadix10 ); //radix=8,10 or 16
+
+        /**
+         * Append the given unsigned integer to this string
+         */
+      NS_COM void AppendInt( PRUint32 aInteger, PRInt32 aRadix = kRadix10 )
+        {
+          return AppendInt(PRInt32(aInteger), aRadix);
+        }
+
+        /**
+         * Append the given 64-bit integer to this string.
+         * @param aInteger The integer to append
+         * @param aRadix   The radix to use; can be 8, 10 or 16.
+         */
+      NS_COM void AppendInt( PRInt64 aInteger, PRInt32 aRadix=kRadix10 );
 
         /**
          * Append the given float to this string 

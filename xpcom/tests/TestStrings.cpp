@@ -464,6 +464,57 @@ PRBool test_substring()
     return PR_TRUE;
   }
 
+PRBool test_appendint64()
+  {
+    nsCString str;
+
+    PRInt64 max = LL_MaxInt();
+    static const char max_expected[] = "9223372036854775807";
+    PRInt64 min = LL_MinInt();
+    static const char min_expected[] = "-9223372036854775808";
+    static const char min_expected_oct[] = "1000000000000000000000";
+    PRInt64 maxint_plus1 = LL_INIT(1, 0);
+    static const char maxint_plus1_expected[] = "4294967296";
+    static const char maxint_plus1_expected_x[] = "100000000";
+
+    str.AppendInt(max);
+
+    if (!str.Equals(max_expected)) {
+      fprintf(stderr, "Error appending LL_MaxInt(): Got %s\n", str.get());
+      return PR_FALSE;
+    }
+
+    str.Truncate();
+    str.AppendInt(min);
+    if (!str.Equals(min_expected)) {
+      fprintf(stderr, "Error appending LL_MinInt(): Got %s\n", str.get());
+      return PR_FALSE;
+    }
+    str.Truncate();
+    str.AppendInt(min, 8);
+    if (!str.Equals(min_expected_oct)) {
+      fprintf(stderr, "Error appending LL_MinInt() (oct): Got %s\n", str.get());
+      return PR_FALSE;
+    }
+
+
+    str.Truncate();
+    str.AppendInt(maxint_plus1);
+    if (!str.Equals(maxint_plus1_expected)) {
+      fprintf(stderr, "Error appending PR_UINT32_MAX + 1: Got %s\n", str.get());
+      return PR_FALSE;
+    }
+    str.Truncate();
+    str.AppendInt(maxint_plus1, 16);
+    if (!str.Equals(maxint_plus1_expected_x)) {
+      fprintf(stderr, "Error appending PR_UINT32_MAX + 1 (hex): Got %s\n", str.get());
+      return PR_FALSE;
+    }
+
+
+    return PR_TRUE;
+  }
+
 //----
 
 typedef PRBool (*TestFunc)();
@@ -498,6 +549,7 @@ tests[] =
     { "test_empty_assign", test_empty_assign },
     { "test_set_length", test_set_length },
     { "test_substring", test_substring },
+    { "test_appendint64", test_appendint64 },
     { nsnull, nsnull }
   };
 
