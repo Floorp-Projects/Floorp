@@ -369,11 +369,14 @@
     ((:left-angle-quote 1) #x00AB)
     ((:right-angle-quote 1) #x00BB)
     ((:bottom-10 1) (:script "document.write(U_perp)"))                 ;#x22A5
+    ((:vector-assign-10 1) (:script "document.write(U_larr)"))          ;#x2190
     ((:up-arrow-10 1) (:script "document.write(U_uarr)"))               ;#x2191
     ((:function-arrow-10 2) (:script "document.write(U_rarr)"))         ;#x2192
     ((:cartesian-product-10 2) (:script "document.write(U_times)"))     ;#x00D7
     ((:identical-10 2) (:script "document.write(U_equiv)"))             ;#x2261
     ((:circle-plus-10 2) (:script "document.write(U_oplus)"))           ;#x2295
+    ((:intersection-10 1) (:script "document.write(U_cap)"))            ;#x2229
+    ((:union-10 1) (:script "document.write(U_cup)"))                   ;#x222A
     ((:member-10 2) (:script "document.write(U_isin)"))                 ;#x2208
     ((:derives-10 2) (:script "document.write(U_rArr)"))                ;#x21D2
     ((:left-triangle-bracket-10 1) (:script "document.write(U_lang)"))  ;#x2329
