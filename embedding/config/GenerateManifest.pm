@@ -87,11 +87,18 @@ sub dump_output_manifest ($$$$$$$) {
 
     # this code previously used |ls -1| to get a dir listing, but that
     # doesn't work in MacPerl. Instead just use opendir() to get the 
-    # file list.
-    opendir(CHROMEDIR, $ls_path);
-    my(@dirList) = readdir(CHROMEDIR);
-    closedir(CHROMEDIR);
-
+    # file list (if it's a directory), or add the single file to our list
+    # if it's called out individually in the manifest.
+    my(@dirList) = ();
+    if ( $is_file ) {
+      @dirList = ($ls_path);
+    }
+    else {
+      opendir(CHROMEDIR, $ls_path);
+      @dirList = readdir(CHROMEDIR);
+      closedir(CHROMEDIR);
+    }
+    
     my($chrome_file) = "";
     my($real_file) = "";
     foreach (@dirList) {
