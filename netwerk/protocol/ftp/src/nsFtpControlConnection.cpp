@@ -154,10 +154,10 @@ nsFtpControlConnection::Connect(nsIProxyInfo* proxyInfo)
     
     rv = NS_NewPipe(getter_AddRefs(inStream),
                     getter_AddRefs(mOutStream),
-                    64,  // segmentSize
+                    1024,  // segmentSize
                     256, // maxSize
                     PR_TRUE, 
-                        PR_TRUE);
+                    PR_TRUE);
     
     if (NS_FAILED(rv)) return rv;
     
