@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rijndael.c,v 1.1 2000/12/19 23:43:09 mcgreer%netscape.com Exp $
+ * $Id: rijndael.c,v 1.2 2001/01/02 16:57:47 mcgreer%netscape.com Exp $
  */
 
 #include "prerr.h"
@@ -399,27 +399,27 @@ rijndael_decryptBlock128(AESContext *cx,
 	COLUMN_0(clone) = COLUMN_0(output) ^ *roundkeyw--;
     }
     /* inverse sub */
-    clone[ 0] = SBOXINV(clone[ 0]);
-    clone[ 1] = SBOXINV(clone[ 1]);
-    clone[ 2] = SBOXINV(clone[ 2]);
-    clone[ 3] = SBOXINV(clone[ 3]);
-    clone[ 4] = SBOXINV(clone[ 4]);
-    clone[ 5] = SBOXINV(clone[ 5]);
-    clone[ 6] = SBOXINV(clone[ 6]);
-    clone[ 7] = SBOXINV(clone[ 7]);
-    clone[ 8] = SBOXINV(clone[ 8]);
-    clone[ 9] = SBOXINV(clone[ 9]);
-    clone[10] = SBOXINV(clone[10]);
-    clone[11] = SBOXINV(clone[11]);
-    clone[12] = SBOXINV(clone[12]);
-    clone[13] = SBOXINV(clone[13]);
-    clone[14] = SBOXINV(clone[14]);
-    clone[15] = SBOXINV(clone[15]);
+    output[ 0] = SBOXINV(clone[ 0]);
+    output[ 1] = SBOXINV(clone[13]);
+    output[ 2] = SBOXINV(clone[10]);
+    output[ 3] = SBOXINV(clone[ 7]);
+    output[ 4] = SBOXINV(clone[ 4]);
+    output[ 5] = SBOXINV(clone[ 1]);
+    output[ 6] = SBOXINV(clone[14]);
+    output[ 7] = SBOXINV(clone[11]);
+    output[ 8] = SBOXINV(clone[ 8]);
+    output[ 9] = SBOXINV(clone[ 5]);
+    output[10] = SBOXINV(clone[ 2]);
+    output[11] = SBOXINV(clone[15]);
+    output[12] = SBOXINV(clone[12]);
+    output[13] = SBOXINV(clone[ 9]);
+    output[14] = SBOXINV(clone[ 6]);
+    output[15] = SBOXINV(clone[ 3]);
     /* final key addition */
-    COLUMN_3(output) = COLUMN_3(clone) ^ *roundkeyw--;
-    COLUMN_2(output) = COLUMN_2(clone) ^ *roundkeyw--;
-    COLUMN_1(output) = COLUMN_1(clone) ^ *roundkeyw--;
-    COLUMN_0(output) = COLUMN_0(clone) ^ *roundkeyw--;
+    COLUMN_3(output) ^= *roundkeyw--;
+    COLUMN_2(output) ^= *roundkeyw--;
+    COLUMN_1(output) ^= *roundkeyw--;
+    COLUMN_0(output) ^= *roundkeyw--;
     return SECSuccess;
 }
 
@@ -501,16 +501,16 @@ rijndael_decryptBlock(AESContext *cx,
 	}
 	/* Invert the key addition step */
 	for (j=4*Nb; j>=0; j-=4) {
-	    COLUMN(clone, j) = COLUMN(input, j) ^ *roundkeyw--;
+	    COLUMN(clone, j) = COLUMN(output, j) ^ *roundkeyw--;
 	}
     }
     /* inverse sub */
     for (j=0; j<4*Nb; ++j) {
-	clone[j] = SBOXINV(clone[j]);
+	output[j] = SBOXINV(clone[j]);
     }
     /* final key addition */
     for (j=4*Nb; j>=0; j-=4) {
-	COLUMN(clone, j) = COLUMN(input, j) ^ *roundkeyw--;
+	COLUMN(output, j) ^= *roundkeyw--;
     }
     return SECSuccess;
 }
