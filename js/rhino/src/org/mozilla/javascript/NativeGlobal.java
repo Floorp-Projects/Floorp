@@ -455,6 +455,24 @@ public class NativeGlobal {
                                            String message,
                                            Object scope)
     {
+        int[] linep = { 0 };
+        String filename = cx.getSourcePositionFromStack(linep);
+        return constructError(cx, error, message, scope,
+                              filename, linep[0]);
+    }
+    
+    /**
+     * The NativeError functions
+     *
+     * See ECMA 15.11.6
+     */
+    public static EcmaError constructError(Context cx, 
+                                           String error, 
+                                           String message,
+                                           Object scope,
+                                           String sourceName,
+                                           int lineNumber)
+    {
         Scriptable scopeObject;
         try {
             scopeObject = (Scriptable) scope;
@@ -466,7 +484,8 @@ public class NativeGlobal {
         Object args[] = { message };
         try {
             Object errorObject = cx.newObject(scopeObject, error, args);
-            return new EcmaError((NativeError)errorObject);
+            return new EcmaError((NativeError)errorObject, sourceName, 
+                                 lineNumber);
         }
         catch (PropertyException x) {
             throw new RuntimeException(x.toString());

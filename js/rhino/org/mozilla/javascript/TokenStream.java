@@ -1305,8 +1305,8 @@ public class TokenStream {
         if (scope != null) {
             throw NativeGlobal.constructError(
                             Context.getContext(), "SyntaxError",
-                            message,
-                            scope);
+                            message, scope, getSourceName(),
+                            getLineno());
         } else {
             flags |= TSF_ERROR;
             Context.reportError(message, getSourceName(),

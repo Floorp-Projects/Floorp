@@ -360,9 +360,17 @@ public class Main {
                 we.printStackTrace();
             }
             catch (EcmaError ee) {
-                Context.reportError(ToolErrorReporter.getMessage(
-                    "msg.uncaughtJSException",
-                    ee.toString()));
+                if (ee.getSourceName() != null) {
+                    Object[] args = { ee.getSourceName(), 
+                                      new Integer(ee.getLineNumber()),
+                                      ee.toString() };
+                    Context.reportError(ToolErrorReporter.getMessage(
+                        "msg.uncaughtJSExceptionLine", args));
+                } else {
+                    Context.reportError(ToolErrorReporter.getMessage(
+                        "msg.uncaughtJSException",
+                        ee.toString()));
+                }
             }
             catch (EvaluatorException ee) {
                 // Already printed message, so just fall through.

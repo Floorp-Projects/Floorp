@@ -51,9 +51,13 @@ public class EcmaError extends RuntimeException {
      *
      * @param nativeError the NativeError object constructed for this error
      */
-    public EcmaError(NativeError nativeError) {
+    public EcmaError(NativeError nativeError, String sourceName, 
+                     int lineNumber) 
+    {
         super("EcmaError");
         errorObject = nativeError;
+        this.sourceName = sourceName;
+        this.lineNumber = lineNumber;
     }
     
     /**
@@ -91,6 +95,14 @@ public class EcmaError extends RuntimeException {
         return errorObject.getMessage();
     }
     
+    public String getSourceName() {
+        return sourceName;
+    }
+    
+    public int getLineNumber() {
+        return lineNumber;
+    }
+    
     /**
      * Get the error object corresponding to this exception.
      */
@@ -99,4 +111,6 @@ public class EcmaError extends RuntimeException {
     }
     
     private NativeError errorObject;
+    private String sourceName;
+    private int lineNumber;
 }
