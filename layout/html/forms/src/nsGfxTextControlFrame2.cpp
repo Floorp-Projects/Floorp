@@ -3193,23 +3193,37 @@ nsGfxTextControlFrame2::SubmitAttempt()
       nsCOMPtr<nsIPresContext> context;
       if (NS_SUCCEEDED(presShell->GetPresContext(getter_AddRefs(context))) && context)
       {
-        // We got here because somebody press <return> instead a text input
-        // Bug 99920 - Finds the first submit button and how many text inputs there
-        // if there is only one text input or password then submission can take place
-        // or it can take place if it finds at least one submit button
-        //
-        // Here we change the submitter frame to the submit button it found (if it found one)
-        // so the button gets included as part of the "post data"
-        nsIFrame* originFrame = this;
+        /*
+         * We got here because somebody pressed <return> in a text
+         * input.
+         *
+         * Bug 99920 and bug 109463 -- Find the first submit button
+         * and how many text inputs there are. If there is only one
+         * text input, submit the form but do _not_ send the submit
+         * button value (if any).  If there are multiple text inputs,
+         * we must have a submit button to submit and we want to
+         * trigger a click event on the submit button.  Triggering
+         * this click eevent will fire the button's onclick handler
+         * and submit the form.
+         */
         PRInt32 inputTxtCnt;
         nsIFrame* submitBtn = mFormFrame->GetFirstSubmitButtonAndTxtCnt(inputTxtCnt);
-        if (submitBtn != nsnull) {
-          originFrame = submitBtn;
-        }
-        if (inputTxtCnt == 1 || submitBtn != nsnull) {
+        if (submitBtn && inputTxtCnt > 1) {
+          // IE actually fires the button's onclick handler.  Dispatch
+          // the click event and let the button handle submitting the
+          // form.
+          nsCOMPtr<nsIContent> buttonContent;
+          submitBtn->GetContent(getter_AddRefs(buttonContent));
+          nsGUIEvent event;
+          event.eventStructType = NS_MOUSE_EVENT;
+          event.message = NS_MOUSE_LEFT_CLICK;
+          event.widget = nsnull;
+          nsEventStatus status = nsEventStatus_eIgnore;
+          presShell->HandleDOMEventWithTarget(buttonContent, &event, &status);
+        } else if (inputTxtCnt == 1) {
           // do Submit & Frame processing of event
           nsFormControlHelper::DoManualSubmitOrReset(context, presShell, mFormFrame, 
-                                                     originFrame, PR_TRUE, PR_FALSE); 
+                                                     this, PR_TRUE, PR_FALSE);
         }
       }
     }
