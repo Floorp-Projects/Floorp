@@ -16,6 +16,15 @@ class ArithmeticNode extends BinaryNode {
         if (op == "-")
             theEnv.theStack.push(new StackValue(dL - dR));
         else
+        if (op == "*")
+            theEnv.theStack.push(new StackValue(dL * dR));
+        else
+        if (op == "/")
+            theEnv.theStack.push(new StackValue(dL / dR));
+        else
+        if (op == "%")
+            theEnv.theStack.push(new StackValue(dL % dR));
+        else
             System.out.println("missing arithmetic op " + op);
     }
 

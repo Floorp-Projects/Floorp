@@ -127,7 +127,7 @@ class ControlNodeGroup {
         {
             ControlNode c = (ControlNode)(breakTails.elementAt(i));
             ExpressionNode e = c.getExpression();
-            String tgt = (e == null) ? null : ((JSValue)e).value;
+            String tgt = (e == null) ? null : ((JSObject)e).value;
             if ((tgt == null) || tgt.equals(label)) {
                 tails.addElement(c);
                 breakTails.removeElementAt(i);
