@@ -28,6 +28,7 @@
 #include "IENUMFE.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
+#include "nsPrimitiveHelpers.h"
 
 #include "OLE2.h"
 #include "URLMON.h"
@@ -46,12 +47,6 @@ ULONG nsDataObj::g_cRef = 0;
 
 EXTERN_C GUID CDECL CLSID_nsDataObj =
 	{ 0x1bba7640, 0xdf52, 0x11cf, { 0x82, 0x7b, 0, 0xa0, 0x24, 0x3a, 0xe5, 0x05 } };
-
-
-// I don't like having to define these here, but all this should be going away for a generic
-// mechanism at some point in the future.
-void CreateDataFromPrimitive ( const char* aFlavor, nsISupports* aPrimitive, void** aDataBuff, PRUint32 aDataLen ) ;
-void CreatePrimitiveForData ( const char* aFlavor, void* aDataBuff, PRUint32 aDataLen, nsISupports** aPrimitive ) ;
 
 
 /*
@@ -350,7 +345,7 @@ HRESULT nsDataObj::GetText(nsString * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
   if (0 == len) {
 	  return ResultFromScode(E_FAIL);
   }
-  CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, len );
+  nsPrimitiveHelpers::CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, len );
   nsAllocator::Free(flavorStr);
 
   HGLOBAL     hGlobalMemory = NULL;
@@ -359,14 +354,15 @@ HRESULT nsDataObj::GetText(nsString * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
   aSTG.tymed          = TYMED_HGLOBAL;
   aSTG.pUnkForRelease = NULL;
 
-  // the transferable gives us data that is not null-terminated, but windoze apps
-  // expect that CF_TEXT and CF_UNICODETEXT	be so. Bump the data buffer by the appropriate
-  // size to account for the null (one byte for CF_TEXT, two bytes for CF_UNICODETEXT).
+  // The transferable gives us data that is null-terminated, but this isn't reflected in
+  // the |len| parameter. Windoze apps expect this null to be there so bump our data buffer
+  // by the appropriate size to account for the null (one char for CF_TEXT, one PRUnichar for
+  // CF_UNICODETEXT).
   DWORD allocLen = (DWORD)len;
   if ( CF_TEXT == aFE.cfFormat )
     allocLen += sizeof(char);
   else if ( CF_UNICODETEXT == aFE.cfFormat)
-    allocLen += sizeof(char) * 2;
+    allocLen += sizeof(PRUnichar);
 
   // GHND zeroes the memory
   hGlobalMemory = (HGLOBAL)::GlobalAlloc(GHND, allocLen); 
@@ -375,7 +371,7 @@ HRESULT nsDataObj::GetText(nsString * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
   if (hGlobalMemory != NULL) {
     char* dest = NS_REINTERPRET_CAST(char*, ::GlobalLock(hGlobalMemory));
     char* source = NS_REINTERPRET_CAST(char*, data);
-    memcpy ( dest, source, len );
+    memcpy ( dest, source, allocLen );                    // copies the null as well
     BOOL status = ::GlobalUnlock(hGlobalMemory);
   }
 
@@ -469,59 +465,5 @@ void nsDataObj::SetTransferable(nsITransferable * aTransferable)
   NS_ADDREF(mTransferable);
 
   return;
-}
-
-
-//XXX skanky hack until i can correctly re-create primitives from native data. i know this code sucks,
-//XXX please forgive me.
-void
-CreatePrimitiveForData ( const char* aFlavor, void* aDataBuff, PRUint32 aDataLen, nsISupports** aPrimitive )
-{
-  if ( !aPrimitive )
-    return;
-
-  if ( strcmp(aFlavor,kTextMime) == 0 ) {
-    nsCOMPtr<nsISupportsString> primitive;
-    nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
-                                                      NS_GET_IID(nsISupportsString), getter_AddRefs(primitive));
-    if ( primitive ) {
-      primitive->SetData ( (char*)aDataBuff );
-      nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );
-      *aPrimitive = genericPrimitive;
-      NS_ADDREF(*aPrimitive);
-    }
-  }
-  else {
-    nsCOMPtr<nsISupportsWString> primitive;
-    nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_PROGID, nsnull, 
-                                                      NS_GET_IID(nsISupportsWString), getter_AddRefs(primitive));
-    if ( primitive ) {
-      primitive->SetData ( (unsigned short*)aDataBuff );
-      nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );
-      *aPrimitive = genericPrimitive;
-      NS_ADDREF(*aPrimitive);
-    }  
-  }
-
-} // CreatePrimitiveForData
-
-
-void
-CreateDataFromPrimitive ( const char* aFlavor, nsISupports* aPrimitive, void** aDataBuff, PRUint32 aDataLen )
-{
-  if ( !aDataBuff )
-    return;
-
-  if ( strcmp(aFlavor,kTextMime) == 0 ) {
-    nsCOMPtr<nsISupportsString> plainText ( do_QueryInterface(aPrimitive) );
-    if ( plainText )
-      plainText->GetData ( (char**)aDataBuff );
-  }
-  else {
-    nsCOMPtr<nsISupportsWString> doubleByteText ( do_QueryInterface(aPrimitive) );
-    if ( doubleByteText )
-      doubleByteText->GetData ( (unsigned short**)aDataBuff );
-  }
-
 }
 
