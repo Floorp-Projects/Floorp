@@ -507,13 +507,16 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
   aWindow->GetDocument(getter_AddRefs(dom_doc));
 
   nsCOMPtr<nsIDOMNSHTMLDocument> html_doc(do_QueryInterface(dom_doc));
-  nsAutoString designMode;
+  PRBool isMidas = PR_FALSE;
 
   if (html_doc) {
+    nsAutoString designMode;
     html_doc->GetDesignMode(designMode);
+
+    isMidas = designMode.EqualsLiteral("on");
   }
 
-  if (designMode.EqualsLiteral("on")) {
+  if (isMidas) {
     // We're tearing down a midas editor, unregister callbacks since
     // we're all done editing here.
 
@@ -621,18 +624,20 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
     mHTMLCommandControllerId = 0;
   }
 
-  // Make things the way they were before we started editing.
-  if (mScriptsEnabled) {
-    docShell->SetAllowJavascript(PR_TRUE);
-  }
+  if (isMidas) {
+    // Make things the way they were before we started editing.
+    if (mScriptsEnabled) {
+      docShell->SetAllowJavascript(PR_TRUE);
+    }
 
-  if (mPluginsEnabled) {
-    docShell->SetAllowPlugins(PR_TRUE);
-  }
+    if (mPluginsEnabled) {
+      docShell->SetAllowPlugins(PR_TRUE);
+    }
 
-  nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
-  if (utils)
-    utils->SetImageAnimationMode(mImageAnimationMode);
+    nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));
+    if (utils)
+      utils->SetImageAnimationMode(mImageAnimationMode);
+  }
 
   return rv;
 }
