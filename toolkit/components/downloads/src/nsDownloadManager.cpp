@@ -69,7 +69,7 @@
   
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static PRBool gEnumeratingDownloads = PR_FALSE;
+static PRBool gStoppingDownloads = PR_FALSE;
 
 #define DOWNLOAD_MANAGER_FE_URL "chrome://mozapps/content/downloads/downloads.xul"
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://mozapps/locale/downloads/downloads.properties"
@@ -266,7 +266,7 @@ nsDownloadManager::DownloadEnded(const PRUnichar* aPath, const PRUnichar* aMessa
     nsDownload* download = NS_STATIC_CAST(nsDownload*, mCurrDownloads.Get(&key));
     NS_RELEASE(download);
 
-    if (!gEnumeratingDownloads)
+    if (!gStoppingDownloads)
       mCurrDownloads.Remove(&key);
   }
 
@@ -1169,7 +1169,7 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
     }
   }
   else if (nsCRT::strcmp(aTopic, "quit-application") == 0 && mCurrDownloads.Count()) {
-    gEnumeratingDownloads = PR_TRUE;
+    gStoppingDownloads = PR_TRUE;
     mCurrDownloads.Enumerate(CancelAllDownloads, this);
 
     // Download Manager is shutting down! Tell the XPInstallManager to stop
@@ -1249,9 +1249,14 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
     PRBool data;
     cancelDownloads->GetData(&data);
     if (!data) {
-      gEnumeratingDownloads = PR_TRUE;
+      gStoppingDownloads = PR_TRUE;
+
+      // Network is going down! Tell the XPInstallManager to stop
+      // transferring any files that may have been being downloaded. 
+      gObserverService->NotifyObservers(mXPIProgress, "xpinstall-progress", NS_LITERAL_STRING("cancel").get());
+    
       mCurrDownloads.Enumerate(CancelAllDownloads, this);
-      gEnumeratingDownloads = PR_FALSE;
+      gStoppingDownloads = PR_FALSE;
     }
   }
   return NS_OK;
@@ -1440,19 +1445,21 @@ nsXPIProgressListener::OnStateChange(PRUint32 aIndex, PRInt16 aState, PRInt32 aV
     // Close now, if we're allowed to. 
     gObserverService->NotifyObservers(nsnull, "xpinstall-dialog-close", nsnull);                     
 
-    nsCOMPtr<nsIStringBundleService> sbs(do_GetService("@mozilla.org/intl/stringbundle;1"));
-    nsCOMPtr<nsIStringBundle> brandBundle, xpinstallBundle;
-    sbs->CreateBundle("chrome://global/locale/brand.properties", getter_AddRefs(brandBundle));
-    sbs->CreateBundle("chrome://mozapps/locale/xpinstall/xpinstallConfirm.properties", getter_AddRefs(xpinstallBundle));
+    if (!gStoppingDownloads) {
+      nsCOMPtr<nsIStringBundleService> sbs(do_GetService("@mozilla.org/intl/stringbundle;1"));
+      nsCOMPtr<nsIStringBundle> brandBundle, xpinstallBundle;
+      sbs->CreateBundle("chrome://global/locale/brand.properties", getter_AddRefs(brandBundle));
+      sbs->CreateBundle("chrome://mozapps/locale/xpinstall/xpinstallConfirm.properties", getter_AddRefs(xpinstallBundle));
 
-    nsXPIDLString brandShortName, message, title;
-    brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(), getter_Copies(brandShortName));
-    const PRUnichar* strings[1] = { brandShortName.get() };
-    xpinstallBundle->FormatStringFromName(NS_LITERAL_STRING("installComplete").get(), strings, 1, getter_Copies(message));
-    xpinstallBundle->GetStringFromName(NS_LITERAL_STRING("installCompleteTitle").get(), getter_Copies(title));
+      nsXPIDLString brandShortName, message, title;
+      brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(), getter_Copies(brandShortName));
+      const PRUnichar* strings[1] = { brandShortName.get() };
+      xpinstallBundle->FormatStringFromName(NS_LITERAL_STRING("installComplete").get(), strings, 1, getter_Copies(message));
+      xpinstallBundle->GetStringFromName(NS_LITERAL_STRING("installCompleteTitle").get(), getter_Copies(title));
 
-    nsCOMPtr<nsIPromptService> ps(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
-    ps->Alert(nsnull, title, message);
+      nsCOMPtr<nsIPromptService> ps(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+      ps->Alert(nsnull, title, message);
+    }
 
     break;
   }
