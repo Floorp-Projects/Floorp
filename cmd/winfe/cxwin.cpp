@@ -4622,7 +4622,7 @@ void CWinCX::AllConnectionsComplete(MWContext *pContext)
 #ifdef LAYPROBE_API
 	{
 		// Send a notification when all network activity for this page is over.		   
-		XP_List* pList = GetCallbackFuncList((int32)BROWSER_NAVIGATION_COMPLETE);
+		XP_List* pList = LAPIGetCallbackFuncList((int32)BROWSER_NAVIGATION_COMPLETE);
 		
 		if (pList)
 		{
