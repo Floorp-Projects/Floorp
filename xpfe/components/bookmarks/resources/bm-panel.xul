@@ -24,6 +24,7 @@
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebarListView.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarksWindow.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/content/bookmarks/bookmarks.css" type="text/css"?>
 

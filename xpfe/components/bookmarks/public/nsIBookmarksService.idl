@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Ben Goodger              <ben@netscape.com> 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -35,11 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
-
-  The Browser Bookmarks service
-
-*/
+/**
+ * The Browser Bookmarks service
+ */
 
 #include "nsISupports.idl"
 
@@ -55,26 +54,25 @@ interface nsIBookmarksService : nsISupports
     boolean ReadBookmarks();
     boolean IsBookmarked(in string aURI);
 
-    void AddBookmark(in string aURI, in wstring aTitle, in long bmType, in wstring docCharset);
+    void addBookmarkImmediately(in string aURI, in wstring aTitle, in long bmType, in wstring docCharset);
         
-    void AddBookmarkToFolder(in string aURI, in nsIRDFResource aFolder, 
-                             in wstring aTitle, in wstring docCharSet);
+    nsIRDFResource createFolder(in wstring aName, in nsIRDFResource aParentFolder);
+    nsIRDFResource createFolderEx(in wstring aName, in nsIRDFResource aParentFolder, in long aIndex);
 
-    void insertBookmarkInFolder(in string aURI, in wstring aTitle, in wstring docCharSet, 
-                                in nsIRDFResource aFolder, in long aIndex);
+    nsIRDFResource createBookmark(in wstring aName, in string aURL, in nsIRDFResource aParentFolder);
+    nsIRDFResource createBookmarkEx(in wstring aName, in string aURI, in wstring docCharSet, 
+                                    in nsIRDFResource aFolder, in long aIndex);
 
-    void UpdateBookmarkIcon(in string aURL, in wstring iconURL);
+    void updateBookmarkIcon(in string aURL, in wstring iconURL);
+    void removeBookmarkIcon(in string aURL, in wstring iconURL);
 
-    void RemoveBookmarkIcon(in string aURL, in wstring iconURL);
-
-    void UpdateBookmarkLastVisitedDate(in string aURL, in wstring docCharset);
+    void updateLastVisitedDate(in string aURL, in wstring docCharset);
     
-    string FindShortcut(in wstring aName);
+    string resolveKeyword(in wstring aName);
     
-    wstring GetLastCharset(in string aURI);
+    wstring getLastCharset(in string aURI);
 
-    nsIRDFResource GetAnonymousResource();  
-
+    void importSystemBookmarks(in nsIRDFResource aParentFolder);
 };
 
 %{C++

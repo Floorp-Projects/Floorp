@@ -846,16 +846,20 @@ var BookmarksUtils = {
   
   createFolderWithID: function (aTitle, aRelativeItem, aParentFolder)
   {
-    const krBMDS = this.RDF.GetDataSource("rdf:bookmarks");
-    const kBMSvc = krBMDS.QueryInterface(Components.interfaces.nsIBookmarksService);
-    const krAnonymous = kBMSvc.GetAnonymousResource();
-    
-    var args = [{ property: NC_NS + "parent", resource: aParentFolder },
-                { property: NC_NS + "Name",   literal:  aTitle },
-                { property: NC_NS + "URL",    literal:  krAnonymous.Value}];
-    this.doBookmarksCommand(aRelativeItem, NC_NS_CMD + "newfolder", args);
+    const kRDFCContractID = "@mozilla.org/rdf/container;1";
+    const kRDFCIID = Components.interfaces.nsIRDFContainer;
+    var RDFC = Components.classes[kRDFCContractID].createInstance(kRDFCIID);
+    var BMDS = this.RDF.GetDataSource("rdf:bookmarks");
+    try {
+      RDFC.Init(BMDS, aParentFolder);
+    }
+    catch (e) {
+      return;
+    }
+    var ix = kRDFC.IndexOf(aRelativeItem);
 
-    return krAnonymous;
+    var BMSvc = BMDS.QueryInterface(Components.interfaces.nsIBookmarksService);
+    return BMSvc.createFolderEx(aTitle, aParentFolder, ix);
   },
 
   addBookmarkForBrowser: function (aDocShell, aShowDialog)
@@ -894,7 +898,7 @@ var BookmarksUtils = {
       const kBMSvcContractID = "@mozilla.org/browser/bookmarks-service;1";
       const kBMSvcIID = Components.interfaces.nsIBookmarksService;
       const kBMSvc = Components.classes[kBMSvcContractID].getService(kBMSvcIID);
-      kBMSvc.AddBookmark(aURL, aTitle, kBMSvcIID.BOOKMARK_DEFAULT_TYPE, aCharset);
+      kBMSvc.addBookmarkImmediately(aURL, aTitle, kBMSvcIID.BOOKMARK_DEFAULT_TYPE, aCharset);
     }
   }
 };

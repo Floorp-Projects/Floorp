@@ -98,3 +98,15 @@ function sendBookmarksLink()
   var outliner = document.getElementById("bookmarks-view");
   outliner.sendLink();
 }
+
+function importIEFavorites()
+{
+  var bookmarksView = document.getElementById("bookmarks-view");
+  var RDFS = bookmarksView.rdf;
+  
+  var BMDS = bookmarksView.bookmarksDS;
+  var BMSvc = BMDS.QueryInterface(Components.interfaces.nsIBookmarksService);
+  var favFolder = BMSvc.createFolder("Imported IE Favorites", RDFS.GetResource("NC:BookmarksRoot"));
+  BMSvc.importSystemBookmarks(favFolder)
+}
+
