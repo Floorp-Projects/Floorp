@@ -960,6 +960,17 @@ nsCachedNetData::SetStoredContentLength(PRUint32 aStoredContentLength)
 }
 
 NS_IMETHODIMP
+nsCachedNetData::GetLogicalLength(PRUint32 *aLogicalLength)
+{
+    CHECK_AVAILABILITY();
+    if (mLogicalLength)
+        *aLogicalLength = mLogicalLength;
+    else
+        *aLogicalLength = 0;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsCachedNetData::GetSecurityInfo (nsISupports ** o_SecurityInfo)
 {
     CHECK_AVAILABILITY();
