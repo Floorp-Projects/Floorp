@@ -1,5 +1,5 @@
 # Sherlock Plugin for Netscape Open Directory
-# Copyright (c) 1999 Netscape Communications Corp.
+# Copyright (c) 2000 Netscape Communications Corp.
 # Author - Myron Rosmarin
 # 
 
@@ -7,7 +7,7 @@
      name        = "Music - Artist"
      description = "Music - Artist"
      method      = "GET"
-     action      = "http://info.netscape.com/fwd/sidb1/http://rollingstone.netscape.com/artist/list.btq"
+     action      = "http://rollingstone.netscape.com/artist/list.btq"
 >
 
 <INPUT NAME="s" user> 

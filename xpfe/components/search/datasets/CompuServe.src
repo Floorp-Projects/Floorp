@@ -5,7 +5,7 @@
 	name="CompuServe"
 	description="Search the Web"
 	method="GET"
-	action="http://info.netscape.com/fwd/sidb1csi/http://cissearch.compuserve.com/search/cssearch/cssearch-results.adp"
+	action="http://cissearch.compuserve.com/search/cssearch/cssearch-results.adp"
 >
 
 <INPUT NAME="Type" VALUE="I">

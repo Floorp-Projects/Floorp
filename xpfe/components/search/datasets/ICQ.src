@@ -5,7 +5,7 @@
 	NAME="ICQ"
 	DESCRIPTION= "ICQ Web Search"
 	METHOD="GET"
-	ACTION="http://info.netscape.com/fwd/sidb1icq/http://search.icq.com/dirsearch.adp"
+	ACTION="http://search.icq.com/dirsearch.adp"
 >
 
 <INPUT NAME="query" user>
@@ -13,11 +13,11 @@
 <INPUT NAME="users" VALUE="1">
 
 <INTERPRET
-	bannerStart="<td rowspan="2" valign="bottom" width="133">"
+	bannerStart='<td rowspan="2" valign="bottom" width="133">'
 	bannerEnd="</a></td>"
 	resultListStart="ICQ.com Search results"
 	resultListEnd="<!-- /// Results -->"
-	resultItemStart="<font face="arial" size="-1">"
+	resultItemStart='<font face="arial" size="-1">'
 	resultListEnd="</a></font><br>"
 >
 

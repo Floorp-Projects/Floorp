@@ -31,10 +31,6 @@
 
   <RDF:Seq about="NC:SearchCategoryRoot">
   	<RDF:li>
-  		<RDF:Description about="urn:search:category:1">
-			<NC:title>Internet</NC:title>
-  		</RDF:Description>
-
   		<RDF:Description about="urn:search:category:2">
 			<NC:title>Jobs</NC:title>
   		</RDF:Description>
@@ -51,6 +47,9 @@
 			<NC:title>Tech News</NC:title>
   		</RDF:Description>
 
+  		<RDF:Description about="urn:search:category:1">
+			<NC:title>Web</NC:title>
+  		</RDF:Description>
   	</RDF:li>
   </RDF:Seq>
 
@@ -100,7 +99,7 @@
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:4">
-	<NC:Name>.Netscape</NC:Name>
+	<NC:Name>Netscape</NC:Name>
 </RDF:Description>
 
 <RDF:Description about="NC:SearchCategory?engine=urn:search:engine:5">
