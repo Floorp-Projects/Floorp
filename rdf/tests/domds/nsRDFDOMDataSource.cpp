@@ -53,6 +53,10 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 
+#ifdef DEBUG
+#include "nsIFrameDebug.h"
+#endif
+
 #include "prprf.h"
 
 #define NC_RDF_Name  NC_NAMESPACE_URI "Name"
@@ -179,8 +183,15 @@ nsRDFDOMDataSource::createFrameTarget(nsIFrame *frame,
                                         nsIRDFNode **aResult)
 {
   nsAutoString str;
-  if (aProperty == kNC_Name)
-    //frame->GetFrameName(str);
+  if (aProperty == kNC_Name) {
+#ifdef DEBUG
+    nsIFrameDebug*  frameDebug;
+
+    if (NS_SUCCEEDED(frame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+      frameDebug->GetFrameName(str);
+    }
+#endif
+  }
   else if (aProperty == kNC_Type)
     str = "frame";
 
@@ -1237,7 +1248,13 @@ nsRDFDOMDataSource::SetWindow(nsIDOMWindow *window) {
   }
   
   nsAutoString framename;
-  mRootFrame->GetFrameName(framename);
+#ifdef DEBUG
+  nsIFrameDebug*  frameDebug;
+
+  if (NS_SUCCEEDED(mRootFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
+    frameDebug->GetFrameName(framename);
+  }
+#endif
 
   printf("Got root frame: %s\n", framename.ToNewCString());
   return rv;
