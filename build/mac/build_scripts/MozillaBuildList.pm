@@ -297,6 +297,7 @@ sub InstallComponentFiles()
 
     # embedding UI
     InstallResources(":mozilla:embedding:components:ui:helperAppDlg:MANIFEST",             "$components_dir");
+    InstallResources(":mozilla:embedding:components:ui:progressDlg:MANIFEST",              "$components_dir");
 
     # intl
     InstallResources(":mozilla:embedding:components:intl:MANIFEST",                        "$components_dir");
@@ -676,6 +677,7 @@ sub BuildClientDist()
     #InstallFromManifest(":mozilla:netwerk:protocol:file:public:MANIFEST_IDL",     "$distdirectory:idl:");
     InstallFromManifest(":mozilla:netwerk:protocol:http:public:MANIFEST_IDL",      "$distdirectory:idl:");
     InstallFromManifest(":mozilla:netwerk:protocol:http:public:MANIFEST",          "$distdirectory:netwerk:");
+    InstallFromManifest(":mozilla:netwerk:protocol:ftp:public:MANIFEST",           "$distdirectory:netwerk:");    
     InstallFromManifest(":mozilla:netwerk:protocol:jar:public:MANIFEST_IDL",       "$distdirectory:idl:");
     InstallFromManifest(":mozilla:netwerk:protocol:res:public:MANIFEST_IDL",       "$distdirectory:idl:");
     InstallFromManifest(":mozilla:netwerk:mime:public:MANIFEST",                   "$distdirectory:netwerk:");
@@ -789,6 +791,8 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:embedding:components:jsconsole:public:MANIFEST_IDL", "$distdirectory:idl:");
     InstallFromManifest(":mozilla:embedding:components:appstartup:src:MANIFEST",   "$distdirectory:embedding:components:");
     InstallFromManifest(":mozilla:embedding:components:find:public:MANIFEST_IDL",  "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:embedding:components:ui:helperAppDlg:MANIFEST_IDL", "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:embedding:components:ui:progressDlg:MANIFEST_IDL", "$distdirectory:idl:");
 
     #WIDGET
     InstallFromManifest(":mozilla:widget:public:MANIFEST",                         "$distdirectory:widget:");
