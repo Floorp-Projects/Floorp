@@ -3624,7 +3624,6 @@ crl_dialog_main_content:
 </select>
 </div></td>
 <td><div align=left>
-<input type=button value='{text_delete}'>
 </div></td>
 </tr>
 </table>
