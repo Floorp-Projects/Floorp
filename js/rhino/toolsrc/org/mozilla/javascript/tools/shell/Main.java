@@ -174,19 +174,9 @@ public class Main {
                 global.processStdin = false;
                 if (++i == args.length)
                     usage(arg);
-                try {
-                    cx.evaluateString(global, args[i], "command line", 1, 
-                                      null);
-                }
-                catch (EvaluatorException ee) {
-                    break;
-                }
-                catch (JavaScriptException jse) {
-                    Context.reportError(ToolErrorReporter.getMessage(
-                        "msg.uncaughtJSException",
-                        jse.getMessage()));
-                    break;
-                }
+                Reader reader = new StringReader(args[i]);
+                Object result = evaluateReader(cx, global, reader, 
+                                               "<command>", 1);
                 continue;
             }
             if (arg.equals("-w")) {
@@ -259,63 +249,35 @@ public class Main {
                 if (filename == null)
                     err.print("js> ");
                 err.flush();
-                try {
-                    String source = "";
+                String source = "";
                     
-                    // Collect lines of source to compile.
-                    while(true) {
-                        String newline;
+                // Collect lines of source to compile.
+                while (true) {
+                    String newline;
+                    try {
                         newline = in.readLine();
-                        if (newline == null) {
-                            hitEOF = true;
-                            break;
-                        }
-                        source = source + newline + "\n";
-                        lineno++;
-                        if (cx.stringIsCompilableUnit(source))
-                            break;
                     }
-                    Object result = cx.evaluateString(global, source,
-                                                      "<stdin>", startline,
-                                                      null);
-                    if (result != cx.getUndefinedValue()) {
-                        err.println(cx.toString(result));
+                    catch (IOException ioe) {
+                        err.println(ioe.toString());
+                        break;
                     }
-                    NativeArray h = global.history;
-                    h.put((int)h.jsGet_length(), h, source);
-                }
-                catch (WrappedException we) {
-                    // Some form of exception was caught by JavaScript and
-                    // propagated up.
-                    err.println(we.getWrappedException().toString());
-                    we.printStackTrace();
-                }
-                catch (EvaluatorException ee) {
-                    // Some form of JavaScript error.
-                    // Already printed message, so just fall through.
-                }
-                catch (EcmaError ee) {
-                    String msg = ToolErrorReporter.getMessage(
-                        "msg.uncaughtJSException", ee.toString());
-                    if (ee.getSourceName() != null) {
-                        Context.reportError(msg, ee.getSourceName(), 
-                                            ee.getLineNumber(), null, 0);
-                    } else {
-                        Context.reportError(msg);
+                    if (newline == null) {
+                        hitEOF = true;
+                        break;
                     }
+                    source = source + newline + "\n";
+                    lineno++;
+                    if (cx.stringIsCompilableUnit(source))
+                        break;
                 }
-                catch (JavaScriptException jse) {
-                	// Need to propagate ThreadDeath exceptions.
-                	Object value = jse.getValue();
-                	if (value instanceof ThreadDeath)
-                		throw (ThreadDeath) value;
-                    Context.reportError(ToolErrorReporter.getMessage(
-                        "msg.uncaughtJSException",
-                        jse.getMessage()));
+                Reader reader = new StringReader(source);
+                Object result = evaluateReader(cx, global, reader, 
+                                               "<stdin>", startline);
+                if (result != cx.getUndefinedValue()) {
+                    err.println(cx.toString(result));
                 }
-                catch (IOException ioe) {
-                    err.println(ioe.toString());
-                }
+                NativeArray h = global.history;
+                h.put((int)h.jsGet_length(), h, source);
                 if (global.quitting) {
                     // The user executed the quit() function.
                     break;
@@ -345,7 +307,7 @@ public class Main {
                     in.close();
                     in = new FileReader(filename);
                 }
-                if(null != stm)
+                if (null != stm)
                     in = new DebugReader(in, stm, filename);           
             }
             catch (FileNotFoundException ex) {
@@ -356,52 +318,61 @@ public class Main {
             } catch (IOException ioe) {
                 err.println(ioe.toString());
             }
-
+            
+            // Here we evalute the entire contents of the file as
+            // a script. Text is printed only if the print() function
+            // is called.
+            evaluateReader(cx, global, in, filename, 1);
+        }
+        System.gc();
+    }
+    
+    private static Object evaluateReader(Context cx, Scriptable scope, 
+                                         Reader in, String sourceName, 
+                                         int lineno)
+    {
+        Object result = cx.getUndefinedValue();
+        try {
+            result = cx.evaluateReader(scope, in, sourceName, lineno, null);
+        }
+        catch (WrappedException we) {
+            err.println(we.getWrappedException().toString());
+            we.printStackTrace();
+        }
+        catch (EcmaError ee) {
+            String msg = ToolErrorReporter.getMessage(
+                "msg.uncaughtJSException", ee.toString());
+            if (ee.getSourceName() != null) {
+                Context.reportError(msg, ee.getSourceName(), 
+                                    ee.getLineNumber(), null, 0);
+            } else {
+                Context.reportError(msg);
+            }
+        }
+        catch (EvaluatorException ee) {
+            // Already printed message, so just fall through.
+        }
+        catch (JavaScriptException jse) {
+	    	// Need to propagate ThreadDeath exceptions.
+	    	Object value = jse.getValue();
+	    	if (value instanceof ThreadDeath)
+	    		throw (ThreadDeath) value;
+            Context.reportError(ToolErrorReporter.getMessage(
+                "msg.uncaughtJSException",
+                jse.getMessage()));
+        }
+        catch (IOException ioe) {
+            err.println(ioe.toString());
+        }
+        finally {
             try {
-                // Here we evalute the entire contents of the file as
-                // a script. Text is printed only if the print() function
-                // is called.
-                cx.evaluateReader(global, in, filename, 1, null);
-            }
-            catch (WrappedException we) {
-                err.println(we.getWrappedException().toString());
-                we.printStackTrace();
-            }
-            catch (EcmaError ee) {
-                String msg = ToolErrorReporter.getMessage(
-                    "msg.uncaughtJSException", ee.toString());
-                if (ee.getSourceName() != null) {
-                    Context.reportError(msg, ee.getSourceName(), 
-                                        ee.getLineNumber(), null, 0);
-                } else {
-                    Context.reportError(msg);
-                }
-            }
-            catch (EvaluatorException ee) {
-                // Already printed message, so just fall through.
-            }
-            catch (JavaScriptException jse) {
-	        	// Need to propagate ThreadDeath exceptions.
-	        	Object value = jse.getValue();
-	        	if (value instanceof ThreadDeath)
-	        		throw (ThreadDeath) value;
-                Context.reportError(ToolErrorReporter.getMessage(
-                    "msg.uncaughtJSException",
-                    jse.getMessage()));
+                in.close();
             }
             catch (IOException ioe) {
                 err.println(ioe.toString());
             }
-            finally {
-                try {
-                    in.close();
-                }
-                catch (IOException ioe) {
-                    err.println(ioe.toString());
-                }
-            }
         }
-        System.gc();
+        return result;
     }
 
     private static void p(String s) {
