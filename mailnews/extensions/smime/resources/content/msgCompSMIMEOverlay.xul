@@ -61,7 +61,7 @@
   <hbox id="toolbar_button_box">
     <toolbarbutton id="button-security" type="menu-button" insertbefore="saveSeparator"
                    oncommand="doSecurityButton();" class="toolbarbutton-1"
-                   label="&securityButton.label;">
+                   label="&securityButton.label;" tooltiptext="&securityButton.tooltip;">
       <menupopup onpopupshowing="setSecuritySettings(2)">
         <menuitem id="menu_securityNoEncryption2" type="radio" name="encryptmessage" 
           accesskey="&menu_securityNoEncryption.accesskey;" label="&menu_securityNoEncryption.label;" oncommand="setNextCommand('noEncryption');"/>

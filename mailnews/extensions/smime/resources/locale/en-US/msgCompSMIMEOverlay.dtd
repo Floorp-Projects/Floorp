@@ -19,6 +19,7 @@
 <!ENTITY menu_securityStatus.accesskey "M">
 
 <!ENTITY securityButton.label "Security">
+<!ENTITY securityButton.tooltip "View or change security settings">
 
 <!ENTITY menu_viewSecurityStatus.label "Message Security Info">
 <!ENTITY menu_viewSecurityStatus.accesskey "I">
