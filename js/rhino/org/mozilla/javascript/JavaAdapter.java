@@ -56,8 +56,15 @@ public class JavaAdapter extends ScriptableObject {
     public static Object convertResult(Object result, String classname)
         throws ClassNotFoundException 
     {
-        return NativeJavaObject.coerceType(Class.forName(classname),
-                                           result);
+        Class c = ScriptRuntime.loadClassName(classname);
+        if (result == Undefined.instance && 
+            (c != ScriptRuntime.ObjectClass && 
+             c != ScriptRuntime.StringClass))
+        {
+            // Avoid an error for an undefined value; return null instead.
+            return null;
+        }
+        return NativeJavaObject.coerceType(c, result);
     }
     
     public static Object js_JavaAdapter(Context cx, Object[] args, 
