@@ -87,18 +87,33 @@ rdf_MakeRelativeName(const nsString& aBaseURI, nsString& aURI)
 }
 
 
+static PRBool
+rdf_RequiresAbsoluteURI(const nsString& uri)
+{
+    // cheap shot at figuring out if this requires an absolute url translation
+    if (Substring(uri, 0, 4).Equals(NS_LITERAL_STRING("urn:")) ||
+        Substring(uri, 0, 9).Equals(NS_LITERAL_STRING("chrome:")) ||
+        !Compare(Substring(uri, 0, 3), NS_LITERAL_STRING("nc:"),
+                 nsCaseInsensitiveStringComparator())) {
+        return PR_FALSE;
+     }
+     return PR_TRUE;
+}
+
 nsresult
 rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI)
 {
     nsresult rv;
     nsAutoString result;
 
+    if (!rdf_RequiresAbsoluteURI(aURI))
+        return NS_OK;
+    
     nsCOMPtr<nsIURI> base;
     rv = NS_NewURI(getter_AddRefs(base), aBaseURI);
     if (NS_FAILED(rv)) return rv;
 
     rv = NS_MakeAbsoluteURI(result, aURI, base);
-    if (NS_FAILED(rv)) return rv;
 
     if (NS_SUCCEEDED(rv)) {
         aURI = result;
@@ -114,12 +129,16 @@ rdf_MakeAbsoluteURI(const nsString& aBaseURI, nsString& aURI)
 
 
 nsresult
-rdf_MakeAbsoluteURI(nsIURI* aURL, nsString& aURI)
+rdf_MakeAbsoluteURI(nsIURI* aBase, nsString& aURI)
 {
     nsresult rv;
+
+    if (!rdf_RequiresAbsoluteURI(aURI))
+        return NS_OK;
+
     nsAutoString result;
 
-    rv = NS_MakeAbsoluteURI(result, aURI, aURL);
+    rv = NS_MakeAbsoluteURI(result, aURI, aBase);
 
     if (NS_SUCCEEDED(rv)) {
         aURI = result;
@@ -134,12 +153,12 @@ rdf_MakeAbsoluteURI(nsIURI* aURL, nsString& aURI)
 }
 
 nsresult
-rdf_MakeAbsoluteURI(nsIURI* aURL, nsCString& aURI)
+rdf_MakeAbsoluteURI(nsIURI* aBase, nsCString& aURI)
 {
     nsresult rv;
     nsXPIDLCString result;
 
-    rv = NS_MakeAbsoluteURI(getter_Copies(result), aURI.get(), aURL);
+    rv = NS_MakeAbsoluteURI(getter_Copies(result), aURI.get(), aBase);
 
     if (NS_SUCCEEDED(rv)) {
         aURI.Assign(result);
