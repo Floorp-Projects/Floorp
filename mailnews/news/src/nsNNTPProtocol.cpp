@@ -1220,7 +1220,10 @@ void nsNNTPProtocol::FinishMemCacheEntry(PRBool valid)
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIRequest *request, nsISupports * aContext, nsresult aStatus)
 {
-    FinishMemCacheEntry(NS_SUCCEEDED(aStatus)); // either remove mem cache entry, or mark it valid
+    // either remove mem cache entry, or mark it valid if url successful and 
+    // command succeeded
+    FinishMemCacheEntry(NS_SUCCEEDED(aStatus) 
+      && MK_NNTP_RESPONSE_TYPE(m_responseCode) == MK_NNTP_RESPONSE_TYPE_OK);
 
     nsMsgProtocol::OnStopRequest(request, aContext, aStatus);
 
@@ -2489,7 +2492,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
     return DisplayArticle(inputStream, length);
   
   
-  char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+  char *line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData, nsnull, PR_TRUE);
   if (m_newsFolder && line)
     m_newsFolder->NotifyDownloadedLine(line, m_key);
   
@@ -2523,7 +2526,7 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
     return MK_NNTP_CANCEL_ERROR;
   }
   
-  if (line[0] == '.' && line[1] == 0)
+  if (line[0] == '.' && line[MSG_LINEBREAK_LEN + 1] == 0)
   {
     if (m_typeWanted == CANCEL_WANTED)
       m_nextState = NEWS_START_CANCEL;
@@ -5122,7 +5125,9 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
       * again.  But only if we didn't have any successful protocol
       * dialog at all.
       */
-      return CloseConnection();
+      FinishMemCacheEntry(PR_FALSE);  // cleanup mem cache entry
+      if (m_responseCode != MK_NNTP_RESPONSE_ARTICLE_NOTFOUND && m_responseCode != MK_NNTP_RESPONSE_ARTICLE_NONEXIST)
+        return CloseConnection();
     case NEWS_FREE:
       m_lastActiveTimeStamp = PR_Now(); // remmeber when we last used this connection.
       return CleanupAfterRunningUrl();
