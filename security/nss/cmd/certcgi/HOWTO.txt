@@ -1,0 +1,168 @@
+        How to setup your very own Cert-O-Matic Root CA server
+
+***** BEGIN LICENSE BLOCK *****
+Version: MPL 1.1/GPL 2.0/LGPL 2.1
+
+The contents of this file are subject to the Mozilla Public License Version 
+1.1 (the "License"); you may not use this file except in compliance with 
+the License. You may obtain a copy of the License at 
+http://www.mozilla.org/MPL/
+
+Software distributed under the License is distributed on an "AS IS" basis,
+WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+for the specific language governing rights and limitations under the
+License.
+
+The Original Code is Netscape security libraries.
+
+The Initial Developer of the Original Code is Netscape Communications 
+Corporation.  Portions created by the Initial Developer are 
+Copyright (C) 2001 the Initial Developer. All Rights Reserved.
+
+Contributor(s):
+
+Alternatively, the contents of this file may be used under the terms of
+either the GNU General Public License Version 2 or later (the "GPL"), or
+the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+in which case the provisions of the GPL or the LGPL are applicable instead
+of those above. If you wish to allow use of your version of this file only
+under the terms of either the GPL or the LGPL, and not to allow others to
+use your version of this file under the terms of the MPL, indicate your
+decision by deleting the provisions above and replace them with the notice
+and other provisions required by the GPL or the LGPL. If you do not delete
+the provisions above, a recipient may use your version of this file under
+the terms of any one of the MPL, the GPL or the LGPL.
+
+***** END LICENSE BLOCK *****
+
+        How to setup your very own Cert-O-Matic Root CA server
+
+The program certcgi is part of a small test CA that is used inside 
+Netscape by the NSS development team.  That CA is affectionately known
+as "Cert-O-Matic" or "Cert-O-Matic II".  It presently runs on a server
+named interzone.mcom.com inside Netscape's firewall.
+
+If you wish to setup your own Cert-O-Matic, here are directions.
+
+Disclaimer:  This program does not follow good practices for root CAs.
+It should be used only for playing/testing and never for production use.
+Remember, you've been warned!
+
+Cert-O-Matic consists of some html files, shell scripts, one executable
+program that uses NSS and NSPR, the usual set of NSS .db files, and a file
+in which to remember the serial number of the last cert issued.  The 
+html files and the source to the executable program are in this directory.
+Sample shell scripts are shown below.  
+
+The shell scripts and executable program run as CGI "scripts".  The
+entire thing runs on an ordinary http web server.  It would also run on
+an https web server.  The shell scripts and html files must be
+customized for the server on which they run.
+
+The package assumes you have a "document root" directory $DOCROOT, and a
+"cgi-bin" directory $CGIBIN.  In this example, the document root is
+assumed to be located in /var/www/htdocs, and the cgi-bin directory in
+/var/www/cgi-bin.
+
+The server is assumed to run all cgi scripts as the user "nobody".
+The names of the cgi scripts run directly by the server all end in .cgi
+because some servers like it that way.
+
+Instructions:
+
+- Create directory $DOCROOT/certomatic
+- Copy the following files from nss/cmd/certcgi to $DOCROOT/certomatic
+        ca.html index.html main.html nscp_ext_form.html stnd_ext_form.html
+- Edit the html files, substituting the name of your own server for the
+  server named in those files.
+- In some web page (e.g. your server's home page), provide an html link to
+  $DOCROOT/certomatic/index.html. This is where users start to get their
+  own certs from certomatic.
+- give these files and directories appropriate permissions.
+
+- Create directories $CGIBIN/certomatic and $CGIBIN/certomatic/bin
+  make sure that $CGIBIN/certomatic is writable by "nobody"
+
+- Create a new set of NSS db files there with the following command:
+
+        certutil -N -d $CGIBIN/certomatic
+
+- when certutil prompts you for the password, enter the word foo
+  because that is compiled into the certcgi program.
+
+- Create the new Root CA cert with this command
+
+        certutil -S -x -d $CGIBIN/certomatic -n "Cert-O-Matic II" \
+        -s "CN=Cert-O-Matic II, O=Cert-O-Matic II" -t TCu,cu,cu -k rsa \
+        -g 1024 -m 10001 -v 60
+
+  (adjust the -g, -m and -v parameters to taste.  -s and -x must be as
+shown.)
+
+- dump out the new root CA cert in base64 encoding:
+
+        certutil -d $CGIBIN/certomatic -L -n "Cert-O-Matic II" -a > \
+          $CGIBIN/certomatic/root.cacert
+
+- In $CGIBIN/certomatic/bin add two shell scripts - one to download the
+  root CA cert on demand, and one to run the certcgi program.
+
+download.cgi, the script to install the root CA cert into a browser on
+demand, is this:
+
+#!/bin/sh
+echo "Content-type: application/x-x509-ca-cert"
+echo
+cat $CGIBIN/certomatic/root.cacert
+
+You'll have to put the real path into that cat command because CGIBIN
+won't be defined when this script is run by the server.
+
+certcgi.cgi, the script to run the certcgi program is similar to this:
+
+#!/bin/sh
+cd $CGIBIN/certomatic/bin
+LD_LIBRARY_PATH=$PLATFORM/lib
+export LD_LIBRARY_PATH
+$PLATFORM/bin/certcgi $* 2>&1
+
+Where $PLATFORM/lib is where the NSPR nad NSS DSOs are located, and
+$PLATFORM/bin is where certcgi is located.  PLATFORM is not defined when 
+the server runs this script, so you'll have to substitute the right value 
+in your script.  certcgi requires that the working directory be one level 
+below the NSS DBs, that is, the DBs are accessed in the directory "..".
+
+You'll want to provide an html link somewhere to the script that downloads
+the root.cacert file.  You'll probably want to put that next to the link
+that loads the index.html page.  On interzone, this is done with the 
+following html:
+
+<a href="/certomatic/index.html">Cert-O-Matic II Root CA server</a>
+<p>
+<a href="/cgi-bin/certomatic/bin/download.cgi">Download and trust Root CA
+certificate</a>
+
+The index.html file in this directory invokes the certcgi.cgi script with 
+the form post method, so if you change the name of the certcgi.cgi script, 
+you'll also have to change the index.html file in $DOCROOT/certomatic
+
+The 4 files used by the certcgi program (the 3 NSS DBs, and the serial
+number file) are not required to live in $CGIBIN/certomatic, but they are
+required to live in $CWD/.. when certcgi starts.
+
+Known bugs:
+
+1. Because multiple of these CAs exist simultaneously, it would be best if 
+they didn't all have to be called "Cert-O-Matic II", but that string is 
+presently hard coded into certcgi.c.
+
+2. the html files in this directory contain numerous extraneous <FORM> tags
+which appear to use the post method and have action URLS that are never
+actually used.  burp.cgi and echoform.cgi are never actually used.  This
+should be cleaned up.
+
+3. The html files use <layer> tags which are supported only in Netscape 
+Navigator and Netscape Communication 4.x browsers.  The html files do 
+not work as intended with Netscape 6.x, Mozilla or Microsoft IE browsers.
+The html files should be fixed to work with all those named browsers.
+
