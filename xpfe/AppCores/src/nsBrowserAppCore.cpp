@@ -282,19 +282,21 @@ nsBrowserAppCore::Init(const nsString& aId)
   nsresult rv = nsServiceManager::GetService(kAppCoresManagerCID,
                                              kIDOMAppCoresManagerIID,
                                              (nsISupports**)&appCoreManager);
-  if (NS_OK == rv) {
+  if (NS_SUCCEEDED(rv)) {
 	  appCoreManager->Add((nsIDOMBaseAppCore *)(nsBaseAppCore *)this);
     nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoreManager);
   }
 
   // Get the Global history service  
-  nsServiceManager::GetService(kCGlobalHistoryCID, kIGlobalHistoryIID,
+  rv = nsServiceManager::GetService(kCGlobalHistoryCID, kIGlobalHistoryIID,
 					(nsISupports **)&mGHistory);
+  if (NS_FAILED(rv)) return rv;
 
   rv = nsComponentManager::CreateInstance(kCSessionHistoryCID,
                                           nsnull,
                                           kISessionHistoryIID,
                                           (void **) &mSHistory);
+  if (NS_FAILED(rv)) return rv;
 
   BeginObserving();
 
@@ -338,7 +340,7 @@ nsBrowserAppCore::Reload(PRInt32  aType)
 	return NS_OK;
 }   
 
-NS_IMETHODIMP    
+NS_IMETHODIMP
 nsBrowserAppCore::Forward()
 {
   GoForward(mContentAreaWebShell);
