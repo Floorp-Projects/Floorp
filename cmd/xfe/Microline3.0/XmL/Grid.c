@@ -10841,7 +10841,8 @@ SizeColumnsToFit(XmLGridWidget g, int starting_at)
             
             if (colp->grid.sizePolicy != XmCONSTANT) 
                 {
-                    XmLWarning((Widget)g, "SizeColumnsToFit() - only valid for XmNcolumnSizePolicy == XmCONSTANT");
+                    if (g->grid.debugLevel)
+                        XmLWarning((Widget)g, "SizeColumnsToFit() - only valid for XmNcolumnSizePolicy == XmCONSTANT");
                     colp->grid.sizePolicy = XmCONSTANT;
                 }
             if (!g->grid.visibleCols || ii < g->grid.visibleCols) 
