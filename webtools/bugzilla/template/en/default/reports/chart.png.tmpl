@@ -22,7 +22,7 @@
 [% y_label = "Bugs" %]
 [% x_label = "Time" %]
 
-[% IF cumulate %]
+[% IF chart.cumulate %]
   [% USE graph = GD.Graph.area(width, height) %]
   [% graph.set(cumulate => "true") %]
 [% ELSE %]

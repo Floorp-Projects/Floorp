@@ -89,6 +89,9 @@ sub init {
     $self->{'datefrom'} = $cgi->param('datefrom');
     $self->{'dateto'}   = $cgi->param('dateto');
     
+    # If we are cumulating, a grand total makes no sense
+    $self->{'gt'} = 0 if $self->{'cumulate'};
+    
     # Make sure the dates are ones we are able to interpret
     foreach my $date ('datefrom', 'dateto') {
         if ($self->{$date}) {

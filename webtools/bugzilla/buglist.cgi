@@ -280,7 +280,7 @@ if ($::FORM{'cmdtype'} eq "dorem") {
     }
     elsif ($::FORM{'remaction'} eq "runseries") {
         $::buffer = LookupSeries($::FORM{"series_id"});
-        $vars->{'title'} = "Bug List: $::FORM{'namedcmd'}";
+        $vars->{'searchname'} = $::FORM{'namedcmd'};
         $params = new Bugzilla::CGI($::buffer);
         $order = $params->param('order') || $order;
     }

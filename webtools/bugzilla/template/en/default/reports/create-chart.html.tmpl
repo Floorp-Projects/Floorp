@@ -139,11 +139,11 @@ function subcatSelected() {
   [% IF chart.lines.size > 0 %]
     <table cellspacing="2" cellpadding="2">
       <tr>
-        <th>Select</th>
+        <th style="width: 5em;">Select</th>
         <th>Label</th>
         <th></th>
         <th>Data Set</th>
-        <th>Subs</th>
+        <th></th>
         <th></th>
       </tr>
       
@@ -182,34 +182,35 @@ function subcatSelected() {
             </td>
 
             <td>
-              <a href="buglist.cgi?cmdtype=dorem&amp;namedcmd=
-                [% series.category FILTER html %]-
-                [% series.subcategory FILTER html %]-
-                [% series.name FILTER html -%]&amp;series_id=
-                [% series.series_id %]&amp;remaction=runseries">
               [% series.category FILTER html %] / 
               [%+ series.subcategory FILTER html %] /
               [%+ series.name FILTER html %]
-              </a>
               <input type="hidden" name="line[% newidx %]" 
                      value="[% series.series_id %]">
             </td>
 
             <td align="center">
-              [% IF series.creator != 0 AND series.isSubscribed(user.id) %]
-                <input type="submit" value="Unsubscribe" style="width: 12ex;"
-                       name="action-unsubscribe[% series.series_id %]">
-              [% ELSE %]
-                <input type="submit" value="Subscribe" style="width: 12ex;"
-                       name="action-subscribe[% series.series_id %]">
+              [% IF series.creator != 0 %]
+                [% IF series.isSubscribed(user.id) %]
+                  <input type="submit" value="Unsubscribe" style="width: 12ex;"
+                         name="action-unsubscribe[% series.series_id %]">
+                [% ELSE %]
+                  <input type="submit" value="Subscribe" style="width: 12ex;"
+                         name="action-subscribe[% series.series_id %]">
+                [% END %]
               [% END %]
             </td>
 
             <td align="center">
               [% IF user.id == series.creator OR UserInGroup("admin") %]
                <a href="chart.cgi?action=edit&series_id=
-                       [% series.series_id %]">Edit</a>
+                       [% series.series_id %]">Edit</a> |
               [% END %]
+              <a href="buglist.cgi?cmdtype=dorem&amp;namedcmd=
+                [% series.category FILTER html %]%20/%20
+                [% series.subcategory FILTER html %]%20/%20
+                [% series.name FILTER html -%]&amp;series_id=
+                [% series.series_id %]&amp;remaction=runseries">Run Search</a>
             </td>        
           </tr>
         [% END %]
@@ -249,7 +250,8 @@ function subcatSelected() {
 
         <td style="text-align: right; vertical-align: bottom;">
           <b>Cumulate:</b> 
-          <input type="checkbox" name="cumulate" value="1">
+          <input type="checkbox" name="cumulate" value="1"
+          [% " checked" IF chart.cumulate %]>
         </td>
 
         <td></td>
