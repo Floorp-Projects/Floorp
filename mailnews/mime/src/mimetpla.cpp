@@ -158,11 +158,11 @@ MimeInlineTextPlain_parse_begin (MimeObject *obj)
       // For quoting, keep it simple...
       if ( (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting) ||
            (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting) )
-        PR_snprintf(buf, 256, "<pre %s style=\"font-family: %s; font-size: %dpt;\">", 
+        PR_snprintf(buf, 256, "<pre %s style=\"font-family: %s; font-size: %dpx;\">", 
                     obj->options->wrap_long_lines_p ? "wrap" : "",
                     (const char *) fontName, fontSize);
       else
-        PR_snprintf(buf, 256, "<pre %s style=\"font-family: %s; font-size: %dpt;\">", 
+        PR_snprintf(buf, 256, "<pre %s style=\"font-family: %s; font-size: %dpx;\">", 
                     obj->options->wrap_long_lines_p ? "wrap" : "",
                     (const char *) fontName, fontSize);
     }

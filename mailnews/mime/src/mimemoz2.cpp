@@ -1778,14 +1778,13 @@ ResetChannelCharset(MimeObject *obj)
   ////////////////////////////////////////////////////////////
 
 
-nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRUint32 nameBuffSize, PRInt32 *fontSize)
+nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRUint32 nameBuffSize, PRInt32 *fontPixelSize)
 {
   nsresult rv = NS_OK;
 
   nsIPref *aPrefs = GetPrefServiceManager(obj->options);
   if (aPrefs) {
     MimeInlineText  *text = (MimeInlineText *) obj;
-    PRInt32 screenRes;
     nsCAutoString aCharset;
     PRUnichar *unicode = nsnull;
     nsCAutoString convertedStr;
@@ -1793,13 +1792,9 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRU
 
     // get a charset
     if (!text->charset || !(*text->charset))
-      return NS_ERROR_FAILURE;
-    aCharset.Assign(text->charset);
-
-    // get a screen resolution
-    rv = aPrefs->GetIntPref("browser.screen_resolution", &screenRes);
-    if (NS_FAILED(rv))
-      return rv;
+      aCharset.Assign("us-ascii");
+    else
+      aCharset.Assign(text->charset);
 
     // get variable font type
     char* variable_font_type = nsnull;
@@ -1867,11 +1862,10 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRU
       // get a font size from pref
       aPrefStr.Assign(!styleFixed ? "font.size.variable." : "font.size.fixed.");
       aPrefStr.AppendWithConversion(langGroup);
-      rv = aPrefs->GetIntPref(aPrefStr, fontSize);
+      rv = aPrefs->GetIntPref(aPrefStr, fontPixelSize);
       if (NS_FAILED(rv))
         return rv;
 
-      *fontSize = *fontSize * 72 / screenRes;
     }
     // otherwise, use the mailnews font setting from pref
     else {
@@ -1893,11 +1887,10 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRU
       PL_strcpy(fontName, convertedStr.GetBuffer());
 
       // get a font size from pref
-      rv = aPrefs->GetIntPref(!styleFixed ? "mailnews.font.size.html" : "mailnews.font.size.plain", fontSize);
+      rv = aPrefs->GetIntPref(!styleFixed ? "mailnews.font.size.html" : "mailnews.font.size.plain", fontPixelSize);
       if (NS_FAILED(rv))
         return rv;
 
-      *fontSize = *fontSize * 72 / screenRes;
     }
   }
 
