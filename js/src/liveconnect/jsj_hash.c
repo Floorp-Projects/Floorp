@@ -31,12 +31,8 @@
 
 #include "jsj_hash.h"
 #include "prtypes.h"
-#ifdef NSPR20
 #    include "prlog.h"
 #    include "prbit.h"
-#else
-#    include "prassert.h"
-#endif
 
 /* Compute the number of buckets in ht */
 #define NBUCKETS(ht)    (1 << (JSJ_HASH_BITS - (ht)->shift))
