@@ -83,32 +83,22 @@ function open() {
 	}
 
 	var url = dialog.input.value;
-
-	if ( dialog.topWindow.checked ) {
-		/* Load url in opener. */
-		try {
-		    browser.loadUrl( url );
-        } catch ( exception1 ) {
-            // Rats.  Probably was a local path, try loading that.
-            try {
-                // Construct file spec from local path.
-                var fileSpec = createInstance( "component://netscape/filespecwithui", "nsIFileSpecWithUI" );
-                fileSpec.nativePath = url;
-                browser.loadUrl( fileSpec.URLString );
-            } catch( exception2 ) {
-                // Give up.
-                // XXX Need to show alert!
-                return false;
-            }
+	    
+	try {
+	    if ( dialog.topWindow.checked ) {
+	        // Open the URL.
+	        browser.loadUrl( url );
+	    } else if ( dialog.newWindow.checked ) {
+		    /* User wants new window. */
+            window.opener.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "all,dialog=no", url );
+	    } else if ( dialog.editNewWindow.checked ) {
+            window.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", url );
         }
-
-	} else if ( dialog.newWindow.checked ) {
-		/* User wants new window. */
-    window.opener.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "all,dialog=no", url );
-
-	} else if ( dialog.editNewWindow.checked ) {
-    window.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", url );
-  }
+    } catch( exception ) {
+	    // XXX l10n
+	    alert( "Error opening location." );
+	    return false;
+	}
 
    // Delay closing slightly to avoid timing bug on Linux.
    window.setTimeout( "window.close()", 10 );
@@ -127,7 +117,7 @@ function onChooseFile() {
         fileSpec.parentWindow = window;
         var url = fileSpec.chooseFile( document.getElementById("chooseFileTitle").getAttribute("value") );
         fileSpec.parentWindow = null;
-        dialog.input.value = fileSpec.nativePath;
+        dialog.input.value = fileSpec.URLString;
     }
     catch( exception ) {
         // Just a cancel, probably.
