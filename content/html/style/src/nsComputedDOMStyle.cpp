@@ -2438,6 +2438,9 @@ nsComputedDOMStyle::GetStaticOffset(PRUint8 aSide, nsIFrame* aFrame,
       case eStyleUnit_Percent:
         val->SetPercent(coord.GetPercentValue());
         break;
+      case eStyleUnit_Auto:
+        val->SetString(NS_LITERAL_STRING("auto"));
+        break;
       default:
         NS_WARNING("double check the unit");
         val->SetTwips(0);

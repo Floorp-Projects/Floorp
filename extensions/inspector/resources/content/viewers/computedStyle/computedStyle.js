@@ -154,10 +154,6 @@ function(aRow, aColId)
     // implemented properly, and trying to fetch them results in
     // a hailstorm of assertions.
     switch (prop) {
-      case "left":
-      case "right":
-      case "top":
-      case "bottom":
       case "-moz-outline-width":
       case "marker-offset":
         return "";
