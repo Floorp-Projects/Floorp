@@ -137,7 +137,7 @@ nsHTMLDocument::nsHTMLDocument()
   mNamedItems = nsnull;
   mParser = nsnull;
   nsHTMLAtoms::AddrefAtoms();
-  mDTDMode = eDTDMode_NoQuirks;
+  mDTDMode = eDTDMode_Nav;
   mCSSLoader = nsnull;
 
   // Find/Search Init
@@ -297,6 +297,25 @@ nsHTMLDocument::GetContentType(nsString& aContentType) const
 {
   aContentType.SetString("text/html");
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::CreateShell(nsIPresContext* aContext,
+                            nsIViewManager* aViewManager,
+                            nsIStyleSet* aStyleSet,
+                            nsIPresShell** aInstancePtrResult)
+{
+  nsresult result = nsMarkupDocument::CreateShell(aContext,
+                                                  aViewManager,
+                                                  aStyleSet,
+                                                  aInstancePtrResult);
+
+  if (NS_SUCCEEDED(result)) {
+    aContext->SetCompatibilityMode(((eDTDMode_NoQuirks == mDTDMode) ? 
+                                    eCompatibility_Standard : 
+                                    eCompatibility_NavQuirks));
+  }
+  return result;
 }
 
 NS_IMETHODIMP
@@ -631,6 +650,10 @@ nsHTMLDocument::GetCSSLoader(nsICSSLoader*& aLoader)
   if (! mCSSLoader) {
     result = NS_NewCSSLoader(this, &mCSSLoader);
   }
+  if (mCSSLoader) {
+    mCSSLoader->SetCaseSensitive(PR_FALSE);
+    mCSSLoader->SetQuirkMode(PRBool(eDTDMode_NoQuirks != mDTDMode));
+  }
   aLoader = mCSSLoader;
   NS_IF_ADDREF(aLoader);
   return result;
@@ -648,6 +671,9 @@ NS_IMETHODIMP
 nsHTMLDocument::SetDTDMode(nsDTDMode aMode)
 {
   mDTDMode = aMode;
+  if (mCSSLoader) {
+    mCSSLoader->SetQuirkMode(PRBool(eDTDMode_NoQuirks != mDTDMode));
+  }
   return NS_OK;
 }
 
