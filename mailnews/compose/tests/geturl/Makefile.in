@@ -41,21 +41,11 @@ BASE_LIBS =	     \
 	$(NULL)
 
 GECKO_LIBS =		      \
-	-lraptorwebwidget     \
-	-lraptorgfx 	\
-	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 	-lraptorhtmlpars      \
 	-lexpat \
 	-lxmltok \
-	-lraptorview	      \
 	-ljsdom		      \
 	-lraptorplugin	      \
-	$(NULL)
-
-IMGLIB_LIBS =	     \
-	-limg	     \
-	$(JPEG_LIBS) \
-	$(PNG_LIBS)  \
 	$(NULL)
 
 NETLIB_LIBS =	      \
@@ -80,7 +70,7 @@ NETLIB_LIBS =	      \
 LIBS		= \
 	$(GECKO_LIBS) \
 	$(NETLIB_LIBS) \
-	$(IMGLIB_LIBS) \
+	$(TIMER_LIBS) \
 	$(BASE_LIBS) \
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \

@@ -44,7 +44,6 @@ CPPSRCS = \
 	nsRenderingContextBeOS.cpp \
 	nsImageBeOS.cpp \
 	nsRegionBeOS.cpp \
-        nsTimer.cpp \
 	$(NULL)
 
 #        nsGraphicsStateGTK.cpp \

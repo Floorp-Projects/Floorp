@@ -66,6 +66,7 @@ LIBS = \
 	$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
 	-lraptorgfx \
 	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
+	-ltimer_s \
 	-lxp \
 	-lraptorhtmlpars \
 	-lexpat \

@@ -59,13 +59,9 @@ LIBS = \
 	-ljsdom	\
 	-ljsurl	\
 	-limg	\
-	$(PNG_LIBS)     \
-	$(JPEG_LIBS)    \
-	$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
-	-lraptorgfx 	\
-	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 	-lmozutil	\
 	-lmsgbaseutil \
+	$(TIMER_LIBS) \
 	$(ZLIB_LIBS) \
 	$(DIST)/lib/librdfbase_s.a \
 	$(NSPR_LIBS) \

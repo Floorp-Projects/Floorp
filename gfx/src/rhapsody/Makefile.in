@@ -42,7 +42,6 @@ MODULE=raptor
 	nsGfxFactoryUnix.cpp \
 	nsRenderingContextUnix.cpp \
 	nsRegionUnix.cpp \
-	nsTimer.cpp \
 	nsImageUnix.cpp
 
 include $(topsrcdir)/config/rules.mk

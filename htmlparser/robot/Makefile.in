@@ -54,12 +54,11 @@ LIBS		= \
 		-lhttpurl \
 		-lpwcac \
 		-l$(MOZ_LIB_JS_PREFIX)js \
-		-lraptorgfx 	\
-		$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 		-limg	\
 		-lmozutil \
 		-lxpcom \
 		-lreg \
+		$(TIMER_LIBS) \
 		$(TK_LIBS) \
 		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \

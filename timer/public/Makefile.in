@@ -25,7 +25,6 @@ include $(DEPTH)/config/autoconf.mk
 EXPORTS =				\
   nsITimer.h \
   nsITimerCallback.h \
-  nsTimerCIID.h \
   $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

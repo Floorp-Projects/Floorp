@@ -59,17 +59,15 @@ LIBS = \
 	-lxmltok \
 	-lraptorgfx \
 	-limg \
-	-lgfx$(MOZ_GFX_TOOLKIT)	\
-	-lraptorgfx	\
 	-lmozutil \
 	$(DIST)/lib/libmsgnews_s.a	\
 	-lmsgbaseutil \
+	-ltimer_s \
 	-lxpcom	\
 	$(JPEG_LIBS) \
 	$(PNG_LIBS)  \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
-	$(TK_LIBS) \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk

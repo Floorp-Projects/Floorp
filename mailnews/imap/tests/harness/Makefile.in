@@ -58,12 +58,9 @@ LIBS =	\
 		-lexpat \
 		-lxmltok \
 		-limg \
-		-lraptorgfx 	\
-		$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 		-lmozutil \
 		-lmsgbaseutil \
-		$(JPEG_LIBS) \
-		$(PNG_LIBS)  \
+		$(TIMER_LIBS) \
 		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \
 		$(TK_LIBS) \

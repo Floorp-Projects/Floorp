@@ -50,12 +50,12 @@ LIBS = \
 	-lpref \
 	-lsecfree \
 	-lraptorgfx \
-	-lgfx$(MOZ_GFX_TOOLKIT) \
 	-limg \
 	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	$(PNG_LIBS) \
 	$(JPEG_LIBS) \
 	-l$(MOZ_LIB_JS_PREFIX)js \
+	-ltimer_s \
 	-lxpcom \
 	-lreg \
 	-lxp \
@@ -64,7 +64,6 @@ LIBS = \
 	-lxmltok \
 	-ljsurl \
 	-ljsdom \
-	-lraptorgfx \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \

@@ -96,13 +96,12 @@ MOZ_LIB_UTIL_PREFIX = moz
 
 ZLIB_LIBS = -lz
 
-BASE_LIBS =          -lpref               $(ZLIB_LIBS)         -lreg                -l$(MOZ_LIB_JS_PREFIX)js                     -lxpcom              -lsecfree            -l$(MOZ_LIB_UTIL_PREFIX)util            $(NULL)
+BASE_LIBS =          -lpref               $(ZLIB_LIBS)         -lreg                -l$(MOZ_LIB_JS_PREFIX)js             		-ltimer_s         -lxpcom              -lsecfree            -l$(MOZ_LIB_UTIL_PREFIX)util            $(NULL)
 
 
 MOZ_WIDGET_TOOLKIT_LDFLAGS = -lwidgetgtk
-MOZ_GFX_TOOLKIT_LDFLAGS = -lgfxgtk
 
-GECKO_LIBS =          -lraptorwebwidget     		$(MOZ_WIDGET_TOOLKIT_LDFLAGS) 		-lraptorgfx 			$(MOZ_GFX_TOOLKIT_LDFLAGS)         -lraptorhtmlpars              -lexpat         -lxmltok         -ljsdom                       $(NULL)
+GECKO_LIBS =          -lraptorwebwidget     		$(MOZ_WIDGET_TOOLKIT_LDFLAGS) 		-lraptorgfx 	        -lraptorhtmlpars              -lexpat         -lxmltok         -ljsdom                       $(NULL)
 
 
 JPEG_LIBS = -ljpeg

@@ -66,7 +66,6 @@ LIBS = \
 	-l$(MOZ_LIB_JS_PREFIX)js \
 	-ljsdom \
 	-lraptorgfx 	\
-	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
 	-lxpcom \
 	-lxp \
 	-lraptorhtmlpars \
@@ -74,6 +73,7 @@ LIBS = \
 	-lexpat \
 	-lxmltok \
 	-ljsurl \
+	$(TIMER_LIBS) \
 	$(TK_LIBS) \
 	$(NET_LIBS) \
 	$(ZLIB_LIBS) \

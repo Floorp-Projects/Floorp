@@ -56,10 +56,9 @@ LIBS = \
         -ljsdom \
         -ljsurl \
         -lsecfree \
+		$(TIMER_LIBS) \
         $(ZLIB_LIBS) \
         $(NSPR_LIBS) \
-		-lraptorgfx 	\
-		$(MOZ_GFX_TOOLKIT_LDFLAGS) \
         -limg           \
         -lmozutil       \
         $(TK_LIBS) \

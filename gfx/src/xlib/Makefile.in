@@ -47,9 +47,6 @@ CPPSRCS =\
 	nsRenderingContextXlib.cpp \
 	$(NULL)
 
-CPPSRCS +=\
-	nsTimer_$(MOZ_WIDGET_TOOLKIT).cpp
-
 include $(topsrcdir)/config/rules.mk
 
 

@@ -46,9 +46,10 @@ LIBS = \
         -lnetwork \
         -lnetlib \
         -lreg   \
+		-ltimer_s \
         -lxpcom \
         -lpwcac \
-        -lmozdbm        \
+        -lmozdbm \
         -lxp    \
         -lpref  \
         -lmozjs \
@@ -57,11 +58,9 @@ LIBS = \
         -lsecfree \
         $(ZLIB_LIBS) \
         $(NSPR_LIBS) \
-        -lgfx$(MOZ_GFX_TOOLKIT)     \
         -lraptorgfx     \
         -limg           \
         -lmozutil       \
-        $(TK_LIBS) \
         $(NULL)
 
 include $(topsrcdir)/config/config.mk
