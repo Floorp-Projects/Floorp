@@ -58,7 +58,7 @@ RCDATA NP_INFO_ProductName       { "Mozilla Default Plug-in\0" }
 // Dialog
 //
 
-DLGTEMPLATE IDD_PLUGIN_DOWNLOAD DISCARDABLE  
+DLGTEMPLATE IDD_PLUGIN_DOWNLOAD DISCARDABLE
 BEGIN
   DIALOG "Title", IDD_PLUGIN_DOWNLOAD,   0, 125, 225, 122,
   WS_VISIBLE | FS_DLGBORDER | FS_SCREENALIGN,
@@ -90,19 +90,19 @@ ICON            IDI_PLUGICON    DISCARDABLE     "npnulos2.ico"
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_INFO                "Information on this page requires a plug-in for:"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LOCATION            "Navigator can retrieve the plug-in for you from:"
+    IDS_LOCATION            "You can retrieve the plug-in from:"
     IDS_TITLE               "Plug-in Not Loaded"
     IDS_QUESTION            "What would you like to do?"
-    IDS_WARNING_JS          "The SmartUpdate feature makes it easy to install new plug-ins. To take advantage of SmartUpdate, you must enable Java, JavaScript and AutoInstall in the Advanced panel of the Preferences, then click the plug-in icon on the page."
-    IDS_WARNING_OFFLINE     "However, you are currently offline. If you would like to get the plug-in, click Cancel, select ""Go Online"" from the File menu, then click the plug-in icon on the page."
-    IDS_FINDER_PAGE         "Netscape's Plug-in Finder page"
+    IDS_WARNING_JS          "To retrieve the plug-in now, click the Get the Plug-in button and then select the plug-in you need from the page that appears."
+    IDS_WARNING_OFFLINE     "However, you are currently offline. If you would like to get the plug-in, click Cancel, select ""Work Online"" from the File menu, then click the plug-in icon on the page."
+    IDS_FINDER_PAGE         "Plug-in Finder page"
     IDS_CLICK_TO_GET        "Click here to get the plugin"
-    IDS_CLICK_WHEN_DONE     "Click here after installing the plugin"
+    IDS_CLICK_WHEN_DONE     "After installing the plugin, click here."
 END
