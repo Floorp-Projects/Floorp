@@ -367,6 +367,7 @@ private:
     static nsCString ParseDDEArg( HSZ args, int index );
     static void ActivateLastWindow();
     static HDDEDATA CreateDDEData( DWORD value );
+    static HDDEDATA CreateDDEData( LPBYTE value, DWORD len );
     static PRBool   InitTopicStrings();
     static int      FindTopic( HSZ topic );
     static nsresult GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResult );
@@ -386,6 +387,7 @@ private:
         topicVersion,
         topicRegisterViewer,
         topicUnRegisterViewer,
+        topicGetWindowInfo,
         // Note: Insert new values above this line!!!!!
         topicCount // Count of the number of real topics
     };
@@ -725,7 +727,8 @@ const char * const topicNames[] = { "WWW_OpenURL",
                                     "WWW_CancelProgress",
                                     "WWW_Version",
                                     "WWW_RegisterViewer",
-                                    "WWW_UnRegisterViewer" };
+                                    "WWW_UnRegisterViewer",
+                                    "WWW_GetWindowInfo" };
 
 // Static member definitions.
 int   nsNativeAppSupportWin::mConversations = 0;
@@ -1169,6 +1172,25 @@ static nsCString hszValue( DWORD, HSZ ) {
 #endif
 
 
+// Utility function to escape double-quotes within a string.
+static void escapeQuotes( nsAString &aString ) {
+    PRInt32 offset = -1;
+    while( 1 ) {
+       // Find next '"'.
+       offset = aString.FindChar( '"', ++offset );
+       if ( offset == kNotFound ) {
+           // No more quotes, exit.
+           break;
+       } else {
+           // Insert back-slash ahead of the '"'.
+           aString.Insert( PRUnichar('\\'), offset );
+           // Increment offset because we just inserted a slash
+           offset++;
+       }
+    }
+    return;
+}
+
 HDDEDATA CALLBACK
 nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction type
                                               UINT uFmt,        // clipboard data format
@@ -1210,16 +1232,126 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
             switch ( FindTopic( hsz1 ) ) {
                 case topicOpenURL: {
                     // Open a given URL...
-                    nsCString url = ParseDDEArg( hsz2, 0 );
+
+                    // Default is to open in current window.
+                    PRBool new_window = PR_FALSE;
+
+                    // Get the URL from the first argument in the command.
+                    nsCAutoString url( ParseDDEArg( hsz2, 0 ) );
+
+                    // Read the 3rd argument in the command to determine if a
+                    // new window is to be used.
+                    nsCAutoString windowID( ParseDDEArg( hsz2, 2 ) );
+
+                    // "0" means to open the URL in a new window.
+                    if ( windowID.Equals( "0" ) ) {
+                        new_window = PR_TRUE;
+                    }
+
                     // Make it look like command line args.
                     url.Insert( "mozilla -url ", 0 );
 #if MOZ_DEBUG_DDE
                     printf( "Handling dde XTYP_REQUEST request: [%s]...\n", url.get() );
 #endif
                     // Now handle it.
-                    HandleRequest( LPBYTE( url.get() ), PR_FALSE );
+                    HandleRequest( LPBYTE( url.get() ), new_window );
                     // Return pseudo window ID.
                     result = CreateDDEData( 1 );
+                    break;
+                }
+                case topicGetWindowInfo: {
+                    // This topic has to get the current URL, get the current
+                    // page title and then format the output into the DDE
+                    // return string.  The return value is "URL","Page Title",
+                    // "Window ID" however the window ID is not used for this
+                    // command, therefore it is returned as a null string
+
+                    // This isn't really a loop.  We just use "break"
+                    // statements to bypass the remaining steps when
+                    // something goes wrong.
+                    do {
+                        // Get most recently used Nav window.
+                        nsCOMPtr<nsIDOMWindowInternal> navWin;
+                        GetMostRecentWindow( NS_LITERAL_STRING( "navigator:browser" ).get(),
+                                             getter_AddRefs( navWin ) );
+                        if ( !navWin ) {
+                            // There is not a window open
+                            break;
+                        }
+                        // Get content window.
+                        nsCOMPtr<nsIDOMWindow> content;
+                        navWin->GetContent( getter_AddRefs( content ) );
+                        if ( !content ) {
+                            break;
+                        }
+                        // Convert that to internal interface.
+                        nsCOMPtr<nsIDOMWindowInternal> internalContent( do_QueryInterface( content ) );
+                        if ( !internalContent ) {
+                            break;
+                        }
+                        // Get location.
+                        nsCOMPtr<nsIDOMLocation> location;
+                        internalContent->GetLocation( getter_AddRefs( location ) );
+                        if ( !location ) {
+                            break;
+                        }
+                        // Get href for URL.
+                        nsAutoString url;
+                        if ( NS_FAILED( location->GetHref( url ) ) ) {
+                            break;
+                        }
+                        // Escape any double-quotes.
+                        escapeQuotes( url );
+
+                        // Now for the title; first, get the "window" JS object.
+                        nsCOMPtr<nsIScriptGlobalObject> scrGlobalObj( do_QueryInterface( internalContent ) );
+                        if ( !scrGlobalObj ) {
+                            break;
+                        }
+                        // Then the doc shell...
+                        nsCOMPtr<nsIDocShell> docShell;
+                        scrGlobalObj->GetDocShell( getter_AddRefs( docShell ) );
+                        if ( !docShell ) {
+                            break;
+                        }
+                        // And from that the base window...
+                        nsCOMPtr<nsIBaseWindow> baseWindow( do_QueryInterface( docShell ) );
+                        if ( !baseWindow ) {
+                            break;
+                        }
+                        // And from the base window we can get the title.
+                        nsXPIDLString title;
+                        if(!baseWindow) {
+                            break;
+                        }
+                        baseWindow->GetTitle(getter_Copies(title));
+                        // Escape any double-quotes in the title.
+                        escapeQuotes( title );
+
+                        // Use a string buffer for the output data, first
+                        // save a quote.
+                        nsCAutoString   outpt( NS_LITERAL_CSTRING("\"") );
+                        // Now copy the URL converting the Unicode string
+                        // to a single-byte ASCII string
+                        outpt.Append( NS_LossyConvertUCS2toASCII( url ) );
+                        // Add the "," used to separate the URL and the page
+                        // title
+                        outpt.Append( NS_LITERAL_CSTRING("\",\"") );
+                        // Now copy the current page title to the return string
+                        outpt.Append( NS_LossyConvertUCS2toASCII( title.get() ));
+                        // Fill out the return string with the remainin ",""
+                        outpt.Append( NS_LITERAL_CSTRING( "\",\"\"" ));
+
+                        // Create a DDE handle to a char string for the data
+                        // being returned, this copies and creates a "shared"
+                        // copy of the DDE response until the calling APP
+                        // reads it and says it can be freed.
+                        result = CreateDDEData( (LPBYTE)(const char*)outpt.get(),
+                                                outpt.Length() + 1 );
+#ifdef MOZ_DEBUG_DDE
+                        printf( "WWW_GetWindowInfo->%s\n", outpt.get() );
+#endif
+                    } while ( PR_FALSE );
                     break;
                 }
                 case topicActivate: {
@@ -1290,6 +1422,27 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
     return result;
 }
 
+// Utility function to advance to end of quoted string.
+// p+offset must point to the comma preceding the arg on entry.
+// On return, p+result points to the closing '"' (or end of the string
+// if the closing '"' is missing) if the arg is quoted.  If the arg
+// is not quoted, then p+result will point to the first character
+// of the arg.
+static PRInt32 advanceToEndOfQuotedArg( const char *p, PRInt32 offset, PRInt32 len ) {
+    // Check whether the current arg is quoted.
+    if ( p[++offset] == '"' ) {
+        // Advance past the closing quote.
+        while ( offset < len && p[++offset] != '"' ) {
+            // If the current character is a backslash, then the
+            // next character can't be a *real* '"', so skip it.
+            if ( p[offset] == '\\' ) {
+                offset++;
+            }
+        }
+    }
+    return offset;
+}
+
 // Utility to parse out argument from a DDE item string.
 nsCString nsNativeAppSupportWin::ParseDDEArg( HSZ args, int index ) {
     nsCString result;
@@ -1300,22 +1453,39 @@ nsCString nsNativeAppSupportWin::ParseDDEArg( HSZ args, int index ) {
         temp.SetLength( argLen + 1 );
         // Now get the string contents.
         DdeQueryString( mInstance, args, (char*)temp.get(), temp.Length(), CP_WINANSI );
-        // Parse out the given arg.  We assume there's no commas within quoted strings
-        // (which may not be accurate, but makes life so much easier).
+        // Parse out the given arg.
         const char *p = temp.get();
-        // Skip index commas.
-        PRInt32 offset = index ? temp.FindChar( ',', 0, index ) : 0;
-        if ( offset != -1 ) {
-            // Desired argument starts there and ends at next comma.
-            PRInt32 end = temp.FindChar( ',', offset+1 );
-            if ( end == -1 ) {
-                // Rest of string.
-                end = temp.Length();
+        // offset points to the comma preceding the desired arg.
+        PRInt32 offset = -1;
+        // Skip commas till we get to the arg we want.
+        while( index-- ) {
+            // If this arg is quoted, then go to closing quote.
+            offset = advanceToEndOfQuotedArg( p, offset, argLen );
+            // Find next comma.
+            offset = temp.FindChar( ',', offset );
+            if ( offset == kNotFound ) {
+                // No more commas, give up.
+                return result;
             }
-            // Extract result.
-            result.Assign( temp.get() + offset, end - offset );
         }
 
+        // The desired argument starts just past the preceding comma,
+        // which offset points to, and extends until the following
+        // comma (or the end of the string).
+        //
+        // Since the argument might be enclosed in quotes, we need to
+        // deal with that before searching for the terminating comma.
+        // We advance offset so it ends up pointing to the start of
+        // the argument we want.
+        PRInt32 end = advanceToEndOfQuotedArg( p, offset++, argLen );
+        // Find next comma (or end of string).
+        end = temp.FindChar( ',', end );
+        if ( end == kNotFound ) {
+            // Arg is the rest of the string.
+            end = argLen;
+        }
+        // Extract result.
+        result.Assign( p + offset, end - offset );
     }
     return result;
 }
@@ -1333,9 +1503,13 @@ void nsNativeAppSupportWin::ActivateLastWindow() {
 }
 
 HDDEDATA nsNativeAppSupportWin::CreateDDEData( DWORD value ) {
+    return CreateDDEData( (LPBYTE)&value, sizeof value );
+}
+
+HDDEDATA nsNativeAppSupportWin::CreateDDEData( LPBYTE value, DWORD len ) {
     HDDEDATA result = DdeCreateDataHandle( mInstance,
-                                           (LPBYTE)&value,
-                                           sizeof value,
+                                           value,
+                                           len,
                                            0,
                                            mApplication,
                                            CF_TEXT,
