@@ -597,7 +597,7 @@ nsLDAPMessage::GetBinaryValues(const char *aAttr, PRUint32 *aCount,
                      " creating nsBERValue object");
             NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, aValues);
             ldap_value_free_len(values);
-            return rv == NS_ERROR_OUT_OF_MEMORY ? rv : NS_ERROR_UNEXPECTED;
+            return NS_ERROR_OUT_OF_MEMORY;
         }
 
         // copy the value from the struct into the nsBERValue
