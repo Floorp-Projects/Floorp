@@ -163,12 +163,10 @@ var downloadViewController = {
       // XXX we should probably prompt the user
       for (i = 0; i < selection.length; ++i)
         gDownloadManager.cancelDownload(selection[i].id);
-
       break;
     case "cmd_remove":
       for (i = 0; i < selection.length; ++i)
         gDownloadManager.removeDownload(selection[i].id);
-      
       break;
     case "cmd_selectAll":
       gDownloadView.selectAll();

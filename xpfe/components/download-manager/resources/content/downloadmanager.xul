@@ -113,10 +113,7 @@
          which is good, but we need to specify it ourselves here -->
     <key id="key_selectAll" command="cmd_selectAll"/>
 
-    <!-- We need to provide our own delete key binding because the key_delete
-         handler in platformGlobalOverlay.xul maps command to "cmd_delete" which
-         is NOT what we want! -->
-    <key id="key_delete" command="cmd_remove"/>
+    <key id="key_remove" keycode="VK_DELETE" command="cmd_remove"/>
 
     <key id="key_properties" key="&cmd.properties.keybinding;"
          command="cmd_properties" modifiers="accel"/>

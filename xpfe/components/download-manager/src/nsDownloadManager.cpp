@@ -961,7 +961,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
     mDialogListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
 
   if (aStateFlags & STATE_STOP) {
-    if (mDownloadState == DOWNLOADING && mPercentComplete == 100)
+    if ((mDownloadState == DOWNLOADING && mPercentComplete == 100) || mDownloadState == NOTSTARTED)
       mDownloadState = FINISHED;
 
     char* persistentDescriptor;
