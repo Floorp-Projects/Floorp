@@ -95,6 +95,9 @@ nsHttpUrlImpl::nsHttpUrlImpl(nsISupports* outer)
 nsHttpUrlImpl::~nsHttpUrlImpl()
 {
     if (nsnull != m_PostBuffer) PR_Free(m_PostBuffer);
+    if (nsnull != m_URL_s) {
+        NET_DropURLStruct(m_URL_s);
+    }
 }
 
 
@@ -142,7 +145,8 @@ NS_METHOD nsHttpUrlImpl::InitializeURLInfo(URL_Struct *URL_s)
     nsresult result = NS_OK;
 
     /* Hook us up with the world. */
-    m_URL_s                  = URL_s;
+    m_URL_s = URL_s;
+    NET_HoldURLStruct(URL_s);
 
     if (Send_None != m_PostType) {
         /* Free any existing POST data hanging off the URL_Struct */
