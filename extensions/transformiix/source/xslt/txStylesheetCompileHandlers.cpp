@@ -193,7 +193,7 @@ getExprAttr(txStylesheetAttr* aAttributes,
                                   getter_Transfers(aExpr));
     if (NS_FAILED(rv) && !aRequired && aState.fcp()) {
         // use default value in fcp for not required exprs
-        aExpr = nsnull:
+        aExpr = nsnull;
         return NS_OK;
     }
 
