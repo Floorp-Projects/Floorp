@@ -74,6 +74,18 @@ public:
                               nsIContent* aContent,
                               nsIAtom* aAttribute,
                               PRInt32 aHint) = 0;
+
+  // Style change notifications
+  NS_IMETHOD StyleRuleChanged(nsIPresContext* aPresContext,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule,
+                              PRInt32 aHint) = 0; // See nsStyleConsts fot hint values
+  NS_IMETHOD StyleRuleAdded(nsIPresContext* aPresContext,
+                            nsIStyleSheet* aStyleSheet,
+                            nsIStyleRule* aStyleRule) = 0;
+  NS_IMETHOD StyleRuleRemoved(nsIPresContext* aPresContext,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule) = 0;
 };
 
 #endif /* nsIStyleFrameConstruction_h___ */
