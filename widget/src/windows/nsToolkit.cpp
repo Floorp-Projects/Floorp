@@ -285,7 +285,25 @@ BOOL CallOpenSaveFileNameA(LPOPENFILENAMEW aFileNameW, BOOL aOpen)
     return 0;
 
   if (ofnA.lpstrFile) {
-    ConvertAtoW(ofnA.lpstrFile, MAX_PATH, aFileNameW->lpstrFile);
+    if ((ofnA.Flags & OFN_ALLOWMULTISELECT) && (ofnA.Flags & OFN_EXPLORER)) {
+      // lpstrFile contains the directory and file name strings 
+      // which are NULL separated, with an extra NULL character after the last file name. 
+      int lenA = 0;
+      while ((ofnA.lpstrFile[lenA]) || (ofnA.lpstrFile[lenA+1]))
+      {
+        ++lenA;
+      }
+      // get the size of required Wide Char and make sure aFileNameW->lpstrFile has enough space
+      int lenW = MultiByteToWideChar(CP_ACP, 0, ofnA.lpstrFile, lenA, 0, 0);
+      if (aFileNameW->nMaxFile < lenW+2)
+        return 0; // doesn't have enough allocated space
+      MultiByteToWideChar(CP_ACP, 0, ofnA.lpstrFile, lenA, aFileNameW->lpstrFile, aFileNameW->nMaxFile);
+      aFileNameW->lpstrFile[lenW] = '\0';
+      aFileNameW->lpstrFile[lenW+1] = '\0';
+    }
+    else  { 
+      ConvertAtoW(ofnA.lpstrFile, aFileNameW->nMaxFile, aFileNameW->lpstrFile);
+    }
   }
 
   aFileNameW->nFilterIndex = ofnA.nFilterIndex;
