@@ -32,40 +32,28 @@
 
 #include <unidef.h>     // for UniStrlen
 
-// The relation between mozilla's mime formats and those understood by the
-// clipboard is a little hazy, mostly in the areas of images.
-//
-// Could be a lot cleverer & use delayed rendering or something to provide
-// a consumer with text when what we've got is unicode, or whatever.
-
-struct FormatEntry
+inline ULONG RegisterClipboardFormat(PCSZ pcszFormat)
 {
-  const char   *szMimeType;
-  ULONG         ulClipboardFmt;
-  const char   *szFmtName;
-};
+  ATOM atom = WinFindAtom(WinQuerySystemAtomTable(), pcszFormat);
+  if (!atom) {
+    atom = WinAddAtom(WinQuerySystemAtomTable(), pcszFormat); 
+  }
+  return atom;
+}
 
-FormatEntry formatEntries[] = 
-{
-  { kTextMime,      CF_TEXT, 0      },
-  { kUnicodeMime,   0, "CF_UNICODE" },
-  { kHTMLMime,      0, "CF_HTML"    },
-  { kPNGImageMime,  0, "CF_PNG"     },
-  { kGIFImageMime,  0, "CF_GIF"     },
-  { kJPEGImageMime, 0, "CF_JPEG"    },
-  { kAOLMailMime,   0, "CF_AOLMAIL" },
-  { kFileMime,      0, "CF_FILE"    },
-  { kURLMime,       0, "CF_URL"     }
-};
-
-// scaffolding
 nsClipboard::nsClipboard() : nsBaseClipboard()
 {
-  for (int cnt=0 ; cnt < sizeof(formatEntries) / sizeof(formatEntries[0]) ; cnt++)
-  {
-    if (formatEntries[cnt].ulClipboardFmt == 0)  // Not yet registered
-      formatEntries[cnt].ulClipboardFmt = gWidgetModuleData->GetAtom( formatEntries[cnt].szFmtName );
-  }
+  RegisterClipboardFormat(kTextMime);
+  RegisterClipboardFormat(kUnicodeMime);
+  RegisterClipboardFormat(kHTMLMime);
+  RegisterClipboardFormat(kAOLMailMime);
+  RegisterClipboardFormat(kPNGImageMime);
+  RegisterClipboardFormat(kJPEGImageMime);
+  RegisterClipboardFormat(kGIFImageMime);
+  RegisterClipboardFormat(kFileMime);
+  RegisterClipboardFormat(kURLMime);
+  RegisterClipboardFormat(kNativeImageMime);
+  RegisterClipboardFormat(kNativeHTMLMime);
 }
 
 nsClipboard::~nsClipboard()
@@ -349,15 +337,10 @@ nsresult nsClipboard::DoClipboardAction(ClipboardAction aAction)
 // get the format ID for a given mimetype
 ULONG nsClipboard::GetFormatID(const char *aMimeStr)
 {
-  for (int cnt=0 ; cnt < sizeof(formatEntries) / sizeof(formatEntries[0]) ; cnt++)
-  {
-    if (!strcmp( aMimeStr, formatEntries[cnt].szMimeType ))
-    {
-      return formatEntries[cnt].ulClipboardFmt;  // Found the known flavor
-    }
-  }
- 
-  return gWidgetModuleData->GetAtom( aMimeStr );        // Unknown flavor. Register it in OS/2 atom table as is
+  if (strcmp(aMimeStr, kTextMime) == 0)
+    return CF_TEXT;
+
+  return RegisterClipboardFormat(aMimeStr);
 }
 
 NS_IMETHODIMP nsClipboard::ForceDataToClipboard(PRInt32 aWhichClipboard)
