@@ -55,6 +55,7 @@
 #include "nsIPrompt.h"
 #include "nsIGenericFactory.h"
 #include "nsISupportsArray.h"
+#include "nsPluginNativeWindow.h"
 
 class ns4xPlugin;
 class nsFileSpec;
@@ -362,6 +363,12 @@ public:
   
   NS_IMETHOD
   CreateTmpFileToPost(const char *postDataURL, char **pTmpFileName);
+
+  NS_IMETHOD
+  NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow);
+
+  NS_IMETHOD
+  DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindow);
 
   /* Called by GetURL and PostURL */
 

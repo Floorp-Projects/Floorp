@@ -163,6 +163,7 @@
 #include "nsIWebNavigation.h"
 #include "nsISupportsArray.h"
 #include "nsIDocShell.h"
+#include "nsPluginNativeWindow.h"
 
 #ifdef XP_UNIX
 #if defined(MOZ_WIDGET_GTK) || defined (MOZ_WIDGET_GTK2)
@@ -3624,28 +3625,27 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
 
   if (NS_OK == rv)
   {
-    nsIPluginInstance *instance = nsnull;
-    nsPluginWindow    *window = nsnull;
+    nsCOMPtr<nsIPluginInstance> instance;
+    nsPluginWindow * win = nsnull;
 
-    aOwner->GetInstance(instance);
-    aOwner->GetWindow(window);
+    aOwner->GetInstance(*getter_AddRefs(instance));
+    aOwner->GetWindow(win);
 
-    if (nsnull != instance)
+    if (win && instance)
     {
       instance->Start();
       aOwner->CreateWidget();
 
       // If we've got a native window, the let the plugin know about it.
+      nsPluginNativeWindow * window = (nsPluginNativeWindow *)win;
       if (window->window)
-        instance->SetWindow(window);
+        window->CallSetWindow(instance);
 
       rv = NewFullPagePluginStream(aStreamListener, instance);
 
       // If we've got a native window, the let the plugin know about it.
       if (window->window)
-        instance->SetWindow(window);
-
-      NS_RELEASE(instance);
+        window->CallSetWindow(instance);
     }
   }
 
@@ -5729,7 +5729,7 @@ nsPluginHostImpl::AddHeadersToChannel(const char *aHeadersData,
     // FINALLY: we can set the header!
     // 
     
-    rv =aChannel->SetRequestHeader(headerName, headerValue);
+    rv = aChannel->SetRequestHeader(headerName, headerValue);
     if (NS_FAILED(rv)) {
       rv = NS_ERROR_NULL_POINTER;
       return rv;
@@ -6034,8 +6034,13 @@ NS_IMETHODIMP nsPluginHostImpl::Observe(nsISupports *aSubject,
 }
 
 ////////////////////////////////////////////////////////////////////////
-NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *instance)
+NS_IMETHODIMP 
+nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *aInstance)
 {
+  // the |aLibrary| parameter is not needed anymore, after we added |aInstance| which
+  // can also be used to look up the plugin name, but we cannot get rid of it because
+  // the |nsIPluginHost| interface is deprecated which in fact means 'frozen'
+
   nsresult rv = NS_OK;
 
   NS_ASSERTION(PR_FALSE, "Plugin performed illegal operation");
@@ -6045,9 +6050,9 @@ NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginIn
           
   nsCOMPtr<nsIPluginInstanceOwner> owner;
   
-  if (instance) {
+  if (aInstance) {
     nsCOMPtr<nsIPluginInstancePeer> peer;
-    rv =instance->GetPeer(getter_AddRefs(peer));
+    rv = aInstance->GetPeer(getter_AddRefs(peer));
     if (NS_SUCCEEDED(rv) && peer) {        
       nsCOMPtr<nsPIPluginInstancePeer> privpeer(do_QueryInterface(peer));
       privpeer->GetOwner(getter_AddRefs(owner));
@@ -6081,8 +6086,10 @@ NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginIn
                            
     // add plugin name to the message
     char * pluginname = nsnull;
-    for (nsPluginTag * tag = mPlugins; tag; tag = tag->mNext) {
-      if (tag->mLibrary == aLibrary) {
+    nsActivePlugin * p = mActivePluginList.find(aInstance);
+    if (p) {
+      nsPluginTag * tag = p->mPluginTag;
+      if (tag) {
         if (tag->mName)
           pluginname = tag->mName;
         else
@@ -6110,9 +6117,10 @@ NS_IMETHODIMP nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginIn
   return rv;
 }
 
-// nsPIPluginHost interface
+/**
+ *  nsPIPluginHost interface
+ */
 
-////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP 
 nsPluginHostImpl::SetIsScriptableInstance(nsCOMPtr<nsIPluginInstance> aPluginInstance, 
                                         PRBool aScriptable)
@@ -6128,8 +6136,6 @@ nsPluginHostImpl::SetIsScriptableInstance(nsCOMPtr<nsIPluginInstance> aPluginIns
   return NS_OK;
 }
 
-
-////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
 nsPluginHostImpl::ParsePostBufferToFixHeaders(
                             const char *inPostData, PRUint32 inPostDataLen, 
@@ -6284,7 +6290,6 @@ nsPluginHostImpl::ParsePostBufferToFixHeaders(
   return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
 nsPluginHostImpl::CreateTmpFileToPost(const char *postDataURL, char **pTmpFileName) 
 {
@@ -6399,6 +6404,20 @@ nsPluginHostImpl::CreateTmpFileToPost(const char *postDataURL, char **pTmpFileNa
   }
   return rv;
 }
+
+NS_IMETHODIMP
+nsPluginHostImpl::NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow)
+{
+  return PLUG_NewPluginNativeWindow(aPluginNativeWindow);
+}
+
+NS_IMETHODIMP
+nsPluginHostImpl::DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindow)
+{
+  return PLUG_DeletePluginNativeWindow(aPluginNativeWindow);
+}
+
+/* ----- end of nsPIPluginHost implementation ----- */
 
 nsresult
 nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManager)

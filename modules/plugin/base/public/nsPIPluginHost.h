@@ -39,6 +39,7 @@
 #define nsPIPluginHost_h___
 
 #include "nsIPluginInstance.h"
+#include "nsPluginNativeWindow.h"
 
 #define NS_PIPLUGINHOST_IID                        \
 {/* 8e3d71e6-2319-11d5-9cf8-0060b0fbd8ac */        \
@@ -87,8 +88,20 @@ public:
  /*
   * To create tmp file with Content len header in, it will use by http POST
   */
-   NS_IMETHOD
+  NS_IMETHOD
   CreateTmpFileToPost(const char *postDataURL, char **pTmpFileName) = 0;
+
+ /**
+  *  Creates a new plugin native window object
+  */
+  NS_IMETHOD
+  NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow) = 0;
+
+ /**
+  *  Deletes plugin native window object created by NewPluginNativeWindow
+  */
+  NS_IMETHOD
+  DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindow) = 0;
 };
 
 #endif /* nsPIPluginHost_h___ */
