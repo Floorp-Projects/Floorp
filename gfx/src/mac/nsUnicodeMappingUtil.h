@@ -69,18 +69,20 @@ public:
 	}
     inline nsUnicodeFontMappingCache* GetFontMappingCache() { return gCache; };
 	
+  ScriptCode MapLangGroupToScriptCode(const char* aLangGroup);
 	static nsUnicodeMappingUtil* GetSingleton();
+	nsString *mGenericFontMapping[smUninterp][kUknownGenericFontName];
 	
 protected:
 	void InitScriptEnabled();
     void InitGenericFontMapping();
     void InitBlockToScriptMapping();
     void InitScriptFontMapping();
-    
+    void InitFromPref();
+   
 private:
 	PRUint32 mScriptEnabled;
-	nsString *mGenericFontMapping[32][5];
-	short 	 mScriptFontMapping[32];
+	short 	 mScriptFontMapping[smUninterp];
 	PRInt8   mBlockToScriptMapping[kUnicodeBlockSize];
 	nsUnicodeFontMappingCache*	gCache;
 	

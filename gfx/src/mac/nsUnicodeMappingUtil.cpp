@@ -19,8 +19,14 @@
  *
  * Contributor(s): 
  */
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
+#include "nsTextFormater.h"
 #include "nsUnicodeMappingUtil.h"
 #include "nsUnicodeFontMappingCache.h"
+#include "nsDeviceContextMac.h"
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
 #define BAD_FONT_NUM -1 
 //--------------------------------------------------------------------------
 
@@ -31,6 +37,7 @@ nsUnicodeMappingUtil::nsUnicodeMappingUtil()
 {
 	InitScriptEnabled();
 	InitGenericFontMapping();
+	InitFromPref();
 	InitScriptFontMapping();
 	InitBlockToScriptMapping(); // this must be called after InitScriptEnabled()
 	gCache = new nsUnicodeFontMappingCache();
@@ -42,7 +49,7 @@ nsUnicodeMappingUtil::~nsUnicodeMappingUtil()
 	for(int i= 0 ; i < 32; i ++) {
 		for(int j=0; j < 5; j++) {
 			if(mGenericFontMapping[i][j])
-	  		 delete mGenericFontMapping[i][j];
+	  		 nsString::Recycle(mGenericFontMapping[i][j]);
 	  	}
 	}
 	if(gCache)
@@ -75,16 +82,11 @@ void nsUnicodeMappingUtil::InitGenericFontMapping()
 
 	// We probabaly should put the following info into resource ....
 	// smRoman
-	static nsAutoString times_str("Times");
-	static nsAutoString helvetica_str("Helvetica");
-	static nsAutoString courier_str("Courier");
-	static nsAutoString zapfChancery_str("Zapf Chancery");
-	static nsAutoString newCenturySchlbk_str("New Century Schlbk");
-	mGenericFontMapping[smRoman][kSerif] = & times_str;
-	mGenericFontMapping[smRoman][kSansSerif] = & helvetica_str; // note: MRJ use Geneva for Sans-Serif
-	mGenericFontMapping[smRoman][kMonospace] = & courier_str;
-	mGenericFontMapping[smRoman][kCursive] = & zapfChancery_str;
-	mGenericFontMapping[smRoman][kFantasy] = & newCenturySchlbk_str;
+	mGenericFontMapping[smRoman][kSerif]     = new nsAutoString("Times");
+	mGenericFontMapping[smRoman][kSansSerif] = new nsAutoString("Helvetica"); // note: MRJ use Geneva for Sans-Serif
+	mGenericFontMapping[smRoman][kMonospace] = new nsAutoString("Courier");
+	mGenericFontMapping[smRoman][kCursive]   =  new nsAutoString("Zapf Chancery");
+	mGenericFontMapping[smRoman][kFantasy]   = new nsAutoString("New Century Schlbk");
 
 	// smJapanese
 	static PRUnichar jfontname1[] = {
@@ -96,26 +98,20 @@ void nsUnicodeMappingUtil::InitGenericFontMapping()
 	static PRUnichar jfontname3[] = {
 	0x004F, 0x0073, 0x0061, 0x006B, 0x0061, 0x2212, 0x7B49, 0x5E45, 0x0000 //    Osaka|“™•
 	};   
-	static nsAutoString nsJFont1(jfontname1);
-	static nsAutoString nsJFont2(jfontname2);
-	static nsAutoString nsJFont3(jfontname3);
-	mGenericFontMapping[smJapanese][kSerif] = &nsJFont1;
-	mGenericFontMapping[smJapanese][kSansSerif] = &nsJFont2; 
-	mGenericFontMapping[smJapanese][kMonospace] = &nsJFont3;
+
+	mGenericFontMapping[smJapanese][kSerif]     = new nsAutoString(jfontname1);
+	mGenericFontMapping[smJapanese][kSansSerif] = new nsAutoString(jfontname2); 
+	mGenericFontMapping[smJapanese][kMonospace] = new nsAutoString(jfontname3);
 
 	// smTradChinese
-	static nsAutoString appleLiSungLight_str("Apple LiSung Light");
-	static nsAutoString appleLiGothicMedium_str("Apple LiGothic Medium");
-	mGenericFontMapping[smTradChinese][kSerif] = & appleLiSungLight_str;
-	mGenericFontMapping[smTradChinese][kSansSerif] 
-	= mGenericFontMapping[smTradChinese][kMonospace] = & appleLiGothicMedium_str;
+	mGenericFontMapping[smTradChinese][kSerif]     = new nsAutoString("Apple LiSung Light");
+	mGenericFontMapping[smTradChinese][kSansSerif] = new nsAutoString("Apple LiGothic Medium");
+	mGenericFontMapping[smTradChinese][kMonospace] = new nsAutoString("Apple LiGothic Medium");
 
 	// smKorean
-	static nsAutoString appleMyungjo_str("AppleMyungjo");
-	static nsAutoString appleGothic_str("AppleGothic");
-	mGenericFontMapping[smKorean][kSerif] = & appleMyungjo_str;
-	mGenericFontMapping[smKorean][kSansSerif]
-	= mGenericFontMapping[smKorean][kMonospace] = &appleGothic_str;
+	mGenericFontMapping[smKorean][kSerif]     = new nsAutoString("AppleMyungjo");
+	mGenericFontMapping[smKorean][kSansSerif] = new nsAutoString("AppleGothic");
+	mGenericFontMapping[smKorean][kMonospace] = new nsAutoString("AppleGothic");
 
 	// smArabic
 	static PRUnichar afontname1[] = {
@@ -127,12 +123,9 @@ void nsUnicodeMappingUtil::InitGenericFontMapping()
 	static PRUnichar afontname3[] = {
 	0x062C, 0x064A, 0x0632, 0x0629, 0x0000 //    ÌêÒÉ
 	};   
-	static nsAutoString nsAFont1(afontname1);
-	static nsAutoString nsAFont2(afontname2);
-	static nsAutoString nsAFont3(afontname3);
-	mGenericFontMapping[smArabic][kSerif] = &nsAFont1;
-	mGenericFontMapping[smArabic][kSansSerif] = &nsAFont2; 
-	mGenericFontMapping[smArabic][kMonospace] = &nsAFont3;
+	mGenericFontMapping[smArabic][kSerif]     = new nsAutoString(afontname1);
+	mGenericFontMapping[smArabic][kSansSerif] = new nsAutoString(afontname2);
+	mGenericFontMapping[smArabic][kMonospace] = new nsAutoString(afontname3);
 
 	// smHebrew
 	static PRUnichar hfontname1[] = {
@@ -141,60 +134,164 @@ void nsUnicodeMappingUtil::InitGenericFontMapping()
 	static PRUnichar hfontname2[] = {
 	0x05D0, 0x05E8, 0x05D9, 0x05D0, 0x05DC, 0x0000 //    àøéàì
 	};
-	static nsAutoString nsHFont1(hfontname1);
-	static nsAutoString nsHFont2(hfontname2);
-	mGenericFontMapping[smHebrew][kSerif] = & nsHFont1;
-	mGenericFontMapping[smHebrew][kSansSerif]
-	= mGenericFontMapping[smHebrew][kMonospace] = & nsHFont2;
+
+	mGenericFontMapping[smHebrew][kSerif]     = new nsAutoString(hfontname1);
+	mGenericFontMapping[smHebrew][kSansSerif] = new nsAutoString(hfontname2);
+	mGenericFontMapping[smHebrew][kMonospace] = new nsAutoString(hfontname2);
 
 	// smCyrillic
-	static nsAutoString latinski_str("Latinski");
-	static nsAutoString pryamoyProp_str("Pryamoy Prop");
-	static nsAutoString apcCourier_str("APC Courier");
-	mGenericFontMapping[smCyrillic][kSerif] = &latinski_str;
-	mGenericFontMapping[smCyrillic][kSansSerif] = &pryamoyProp_str;
-	mGenericFontMapping[smCyrillic][kMonospace] = &apcCourier_str;
+	mGenericFontMapping[smCyrillic][kSerif]     = new nsAutoString("Latinski");
+	mGenericFontMapping[smCyrillic][kSansSerif] = new nsAutoString("Pryamoy Prop");
+	mGenericFontMapping[smCyrillic][kMonospace] = new nsAutoString("APC Courier");
 
 	// smDevanagari
-	static nsAutoString devanagariMT_str("Devanagari MT");
-	mGenericFontMapping[smDevanagari][kSerif]
-	= mGenericFontMapping[smDevanagari][kSansSerif]
-	= mGenericFontMapping[smDevanagari][kMonospace] = & devanagariMT_str;
+	mGenericFontMapping[smDevanagari][kSerif]     = new nsAutoString("Devanagari MT");
+	mGenericFontMapping[smDevanagari][kSansSerif] = new nsAutoString("Devanagari MT");
+	mGenericFontMapping[smDevanagari][kMonospace] = new nsAutoString("Devanagari MT");
 
 	// smGurmukhi
 	static nsAutoString gurukhiMT_str("Gurmukhi MT");
-	mGenericFontMapping[smGurmukhi][kSerif]
-	= mGenericFontMapping[smGurmukhi][kSansSerif]
-	= mGenericFontMapping[smGurmukhi][kMonospace] = & gurukhiMT_str;
+	mGenericFontMapping[smGurmukhi][kSerif]     = new nsAutoString("Gurmukhi MT");
+	mGenericFontMapping[smGurmukhi][kSansSerif] = new nsAutoString("Gurmukhi MT");
+	mGenericFontMapping[smGurmukhi][kMonospace] = new nsAutoString("Gurmukhi MT");
 
 	// smGujarati
-	static nsAutoString gujaratiMT_str("Gujarati MT");
-	mGenericFontMapping[smGujarati][kSerif]
-	= mGenericFontMapping[smGujarati][kSansSerif]
-	= mGenericFontMapping[smGujarati][kMonospace] = & gujaratiMT_str;
+	mGenericFontMapping[smGujarati][kSerif]     = new nsAutoString("Gujarati MT");
+	mGenericFontMapping[smGujarati][kSansSerif] = new nsAutoString("Gujarati MT");
+	mGenericFontMapping[smGujarati][kMonospace] = new nsAutoString("Gujarati MT");
 
 	// smThai
-	static nsAutoString thonburi_str("Thonburi");
-	static nsAutoString krungthep_str("Krungthep");
-	static nsAutoString ayuthaya_str("Ayuthaya");
-	mGenericFontMapping[smThai][kSerif] = &thonburi_str;
-	mGenericFontMapping[smThai][kSansSerif] = &krungthep_str;
-	mGenericFontMapping[smThai][kMonospace] = &ayuthaya_str;
+	mGenericFontMapping[smThai][kSerif]     = new nsAutoString("Thonburi");
+	mGenericFontMapping[smThai][kSansSerif] = new nsAutoString("Krungthep");
+	mGenericFontMapping[smThai][kMonospace] = new nsAutoString("Ayuthaya");
 
 	// smSimpChinese
-	static nsAutoString song_str("Song");
-	static nsAutoString hei_str("Hei");
-	mGenericFontMapping[smSimpChinese][kSerif] = &song_str;
-	mGenericFontMapping[smSimpChinese][kSansSerif]
-	= mGenericFontMapping[smSimpChinese][kMonospace] = & hei_str;
+	mGenericFontMapping[smSimpChinese][kSerif]     = new nsAutoString("Song");
+	mGenericFontMapping[smSimpChinese][kSansSerif] = new nsAutoString("Hei");
+	mGenericFontMapping[smSimpChinese][kMonospace] = new nsAutoString("Hei");
 
 	// smCentralEuroRoman
-	static nsAutoString timesCE_str("Times CE");
-	static nsAutoString helveticaCE_str("Helvetica CE");
-	static nsAutoString courierCE_str("Courier CE");
-	mGenericFontMapping[smCentralEuroRoman][kSerif] = &timesCE_str;
-	mGenericFontMapping[smCentralEuroRoman][kSansSerif] = &helveticaCE_str;
-	mGenericFontMapping[smCentralEuroRoman][kMonospace] = &courierCE_str;
+	mGenericFontMapping[smCentralEuroRoman][kSerif]     = new nsAutoString("Times CE");
+	mGenericFontMapping[smCentralEuroRoman][kSansSerif] = new nsAutoString("Helvetica CE");
+	mGenericFontMapping[smCentralEuroRoman][kMonospace] = new nsAutoString("Courier CE");
+}
+//--------------------------------------------------------------------------
+
+ScriptCode nsUnicodeMappingUtil::MapLangGroupToScriptCode(const char* aLangGroup)
+{
+	if(0==nsCRT::strcmp(aLangGroup,  "x-western")) {
+		return smRoman;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "x-central-euro")) {
+		return smCentralEuroRoman;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "x-cyrillic")) {
+		return smCyrillic;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "el")) {
+		return smGreek;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "tr")) {
+		return smRoman;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "he")) {
+		return smHebrew;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "ar")) {
+		return smArabic;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "x-baltic")) {
+		return smRoman;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "th")) {
+		return smThai;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "ja")) {
+		return smJapanese;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "zh-CN")) {
+		return smSimpChinese;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "ko")) {
+		return smKorean;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "zh-TW")) {
+		return smTradChinese;
+	} else 
+	{
+		return smRoman;
+	}
+}
+static nsIPref* gPref = nsnull;
+
+#define FACESIZE 255 // font name is Str255 in Mac script code
+void
+PrefEnumCallback(const char* aName, void* aClosure)
+{
+	
+	nsUnicodeMappingUtil* Self = (nsUnicodeMappingUtil*)aClosure;
+  nsCAutoString curPrefName(aName);
+  
+  PRInt32 p1 = curPrefName.RFindChar('.', PR_TRUE);
+  if(-1==p1)
+  	return;
+  PRInt32 p2 = curPrefName.RFindChar('.', PR_TRUE, p1-1);
+  if(-1==p1)
+  	return;
+  
+  nsCAutoString genName("");
+  nsCAutoString langGroup("");
+  
+  curPrefName.Mid(langGroup,  p1+1, curPrefName.Length()-p1-1);
+  curPrefName.Mid(genName, p2+1, p1-p2-1);
+  
+  if(langGroup == "x-unicode")
+  	return;
+  ScriptCode script = Self->MapLangGroupToScriptCode(langGroup);
+  if(script >= smUninterp)
+  	return;
+  
+  nsGenericFontNameType type = Self->MapGenericFontNameType(genName);
+  if(type >= kUknownGenericFontName)
+  	return;
+  	
+  char* valueInUTF8 = nsnull;
+  gPref->CopyCharPref(aName, &valueInUTF8);
+  if((nsnull == valueInUTF8) || (PL_strlen(valueInUTF8) == 0))
+  {
+	  Recycle(valueInUTF8);
+  	return;
+  }
+  PRUnichar valueInUCS2[FACESIZE]= { 0 };
+  PRUnichar format[] = { '%', 's', 0 };
+  PRUint32 n = nsTextFormater::snprintf(valueInUCS2, FACESIZE, format, valueInUTF8);
+  Recycle(valueInUTF8);
+  if(n == 0)
+  	return;     
+  nsString *fontname = new nsAutoString(valueInUCS2);
+  if(nsnull == fontname)
+  	return;
+  short fontID=0;
+  if( (! nsDeviceContextMac::GetMacFontNumber(*fontname, fontID)) ||
+  	  ( ::FontToScript(fontID) != script ))
+  {
+  	nsString::Recycle(fontname);
+  	return;
+  }
+  if( Self->mGenericFontMapping[script][type] )
+  	nsString::Recycle(Self->mGenericFontMapping[script][type]);
+  Self->mGenericFontMapping[script][type] = fontname;
+}
+void nsUnicodeMappingUtil::InitFromPref()
+{
+  if (!gPref) {
+    nsServiceManager::GetService(kPrefCID,
+      nsCOMTypeInfo<nsIPref>::GetIID(), (nsISupports**) &gPref);
+    if (!gPref) {
+      return;
+    }
+  }	  
+  gPref->EnumerateChildren("font.name.", PrefEnumCallback, this);
 }
 //--------------------------------------------------------------------------
 

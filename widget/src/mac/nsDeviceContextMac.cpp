@@ -713,51 +713,6 @@ typedef struct EnumerateFontInfo
 
 
 
-static ScriptCode MapLangGroupToScriptCode(const char* aLangGroup)
-{
-	if(0==nsCRT::strcmp(aLangGroup,  "x-western")) {
-		return smRoman;
-	} else 
-	if(0==nsCRT::strcmp(aLangGroup,  "x-central-euro")) {
-		return smCentralEuroRoman;
-	} else 
-	if(0==nsCRT::strcmp(aLangGroup,  "x-cyrillic")) {
-		return smCyrillic;
-	} else 
-	if(0==nsCRT::strcmp(aLangGroup,  "el")) {
-		return smGreek;
-	} else 
-	if(0==nsCRT::strcmp(aLangGroup,  "tr")) {
-		return smRoman;
-	} else 
-	if(0==nsCRT::strcmp(aLangGroup,  "he")) {
-		return smHebrew;
-	} else 
-	if(0==nsCRT::strcmp(aLangGroup,  "ar")) {
-		return smArabic;
-	} else 
-	if(0==nsCRT::strcmp(aLangGroup,  "x-baltic")) {
-		return smRoman;
-	} else 
-	if(0==nsCRT::strcmp(aLangGroup,  "th")) {
-		return smThai;
-	} else 
-	if(0==nsCRT::strcmp(aLangGroup,  "ja")) {
-		return smJapanese;
-	} else 
-	if(0==nsCRT::strcmp(aLangGroup,  "zh-CN")) {
-		return smSimpChinese;
-	} else 
-	if(0==nsCRT::strcmp(aLangGroup,  "ko")) {
-		return smKorean;
-	} else 
-	if(0==nsCRT::strcmp(aLangGroup,  "zh-TW")) {
-		return smTradChinese;
-	} else 
-	{
-		return smRoman;
-	}
-}
 static int
 CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
 {
@@ -902,7 +857,7 @@ nsFontEnumeratorMac::EnumerateFonts(const char* aLangGroup,
 	}
   
   nsAutoString GenName(aGeneric);
-  EnumerateFontInfo info = { array, 0 , 0, MapLangGroupToScriptCode(aLangGroup) ,gUtil->MapGenericFontNameType(GenName) };
+  EnumerateFontInfo info = { array, 0 , 0, gUtil->MapLangGroupToScriptCode(aLangGroup) ,gUtil->MapGenericFontNameType(GenName) };
   list->Enumerate ( EnumerateFont, &info);
   if (!info.mIndex) {
     nsAllocator::Free(array);
