@@ -219,6 +219,9 @@ PRBool
 nsslowcert_hasTrust(NSSLOWCERTCertTrust *trust);
 
 void
+nsslowcert_DestroyFreeLists(void);
+
+void
 nsslowcert_DestroyGlobalLocks(void);
 
 void
