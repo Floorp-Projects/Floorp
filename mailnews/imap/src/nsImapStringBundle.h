@@ -136,4 +136,5 @@ PR_END_EXTERN_C
 #define	IMAP_OUT_OF_MEMORY                          5100
 #define IMAP_AUTH_SECURE_NOTSUPPORTED               5102
 #define IMAP_COPYING_MESSAGE_OF                     5103
+#define IMAP_LOGIN_DISABLED                         5104
 #endif /* _nsImapStringBundle_H__ */

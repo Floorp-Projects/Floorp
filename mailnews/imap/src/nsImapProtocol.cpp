@@ -7419,6 +7419,11 @@ PRBool nsImapProtocol::TryToLogon()
           break;
         }
 
+        if (GetServerStateParser().GetCapabilityFlag() & kLoginDisabled)
+        {
+          AlertUserEventUsingId(IMAP_LOGIN_DISABLED);
+          break;
+        }
         if (password.IsEmpty() && m_imapServerSink)
         {
           if (!aMsgWindow)
