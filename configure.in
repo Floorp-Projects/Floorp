@@ -739,6 +739,12 @@ MOZ_ARG_ENABLE_BOOL(tests,
 [  --enable-tests          Enable test stubs],
   ENABLE_TESTS=1)
 
+dnl Build browsing profile by default
+MOZ_BRPROF=1
+MOZ_ARG_DISABLE_BOOL(brprof,
+[  --disable-brprof        Disable browsing profile cookie],
+  [MOZ_BRPROF= ] )
+
 useRhapsody=`echo $target_os | egrep "^Rhapsody"`
 MOZ_ARG_ENABLE_STRING(toolkit,
 [  --enable-toolkit=\$val   Enable \$val fe (defaults to gtk)],
@@ -941,6 +947,7 @@ AC_SUBST(MOZ_BUILD_XPFE)
 AC_SUBST(MOZ_BUILD_NSPR)
 dnl AC_SUBST(MOZ_LDAP)
 AC_SUBST(MOZ_EDITOR)
+AC_SUBST(MOZ_BRPROF)
 
 dnl Remove this once clipboard is working.
 AC_SUBST(NEW_CLIPBOARD_SUPPORT)
