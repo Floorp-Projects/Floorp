@@ -2119,6 +2119,5 @@ nsresult nsProfile::CloneProfileDirectorySpec(nsILocalFile **aLocalFile)
     rv = aFile->QueryInterface(NS_GET_IID(nsILocalFile), (void **)aLocalFile);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    NS_ADDREF(*aLocalFile);
     return NS_OK;
 }
