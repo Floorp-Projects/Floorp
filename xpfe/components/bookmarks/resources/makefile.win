@@ -43,12 +43,16 @@ CHROME_CONTENT = \
 
 CHROME_SKIN = \
 	.\bookmark-folder-closed.gif \
+	.\bookmark-folder-closed-sel.gif \
 	.\bookmark-folder-open.gif \
+	.\bookmark-folder-open-sel.gif \
 	.\bookmark-item.gif \
 	.\bookmarks.css \
 	.\iefavorite.gif \
 	.\personal-folder-closed.gif \
+	.\personal-folder-closed-sel.gif \
 	.\personal-folder-open.gif \
+	.\personal-folder-open-sel.gif \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
