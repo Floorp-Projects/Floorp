@@ -114,10 +114,8 @@
 #include "jsapi.h"
 
 // XXX temporary for Mac double buffering pref
-#if defined(XP_MAC) || defined(XP_MACOSX)
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
-#endif
 
 // XXX For temporary paint code
 #include "nsIStyleContext.h"
