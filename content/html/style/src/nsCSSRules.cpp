@@ -396,10 +396,8 @@ CSSImportRuleImpl::CSSImportRuleImpl(const CSSImportRuleImpl& aCopy)
 {
   
   if (aCopy.mChildSheet) {
-    aCopy.mChildSheet->Clone(*getter_AddRefs(mChildSheet));
-    if (mChildSheet) {
-      mChildSheet->SetOwnerRule(this);
-    }      
+    aCopy.mChildSheet->Clone(nsnull, this, nsnull, nsnull,
+                             getter_AddRefs(mChildSheet));
   }
 
   NS_NewMediaList(getter_AddRefs(mMedia));
