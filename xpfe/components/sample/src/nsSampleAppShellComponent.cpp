@@ -118,15 +118,16 @@ nsSampleAppShellComponent::DoDialogTests( nsISupports *parent, nsIObserver *obse
                             // Get a jsval corresponding to the wrapped object.
                             jsval arg = OBJECT_TO_JSVAL( obj );
                             void *stackPtr;
-                            jsval *argv = JS_PushArguments( jsContext, &stackPtr, "ssso",
+                            jsval *argv = JS_PushArguments( jsContext, &stackPtr, "sssv",
                                                             "resource:/res/samples/nsSampleAppShellComponent.xul",
-                                                            "",
+                                                            "foobar",
                                                             "chrome",
                                                             arg );
                             if ( argv ) {
                                 nsIDOMWindow *newWindow;
                                 rv = parentWindow->OpenDialog( jsContext, argv, 4, &newWindow );
                                 if ( NS_SUCCEEDED( rv ) ) {
+                                    newWindow->Release();
                                 } else {
                                 }
                                 JS_PopArguments( jsContext, stackPtr );

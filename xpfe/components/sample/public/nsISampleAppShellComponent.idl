@@ -18,7 +18,8 @@
 
 #include "nsIAppShellComponent.idl"
 
-interface nsIObserver;
+//interface nsIObserver;
+#include "nsIObserver.idl"
 
 /*------------------------ nsISampleAppShellComponent --------------------------
 | This file describes the interface for a sample "application shell            |
