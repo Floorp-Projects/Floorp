@@ -14,7 +14,6 @@
         <rdf:li> <rdf:Description ID="comp" nc:name="Creating Web Pages"  nc:link="chrome://help/locale/composer_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust" nc:name="Customizing Mozilla"  nc:link="chrome://help/locale/customize_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-priv-help" nc:name="Using Privacy Features" nc:link="chrome://help/locale/privacy_help.xhtml"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="privacy-doc" nc:name="Privacy on the Internet" nc:link="chrome://help/locale/privacy_help.xhtml#privacy_on_the_internet"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-help-certs" nc:name="Using Certificates" nc:link="chrome://help/locale/using_certs_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="profile-help" nc:name="Managing Profiles" nc:link="chrome://help/locale/profiles_help.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="shortcuts" nc:name="Mozilla Keyboard Shortcuts" nc:link="chrome://help/locale/shortcuts.xhtml"/> </rdf:li>
@@ -669,7 +668,7 @@
         <rdf:li> <rdf:Description ID="cust-sidebar-define" nc:name="What is Sidebar?"  nc:link="chrome://help/locale/customize_help.xhtml#what_is_sidebar"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-sidebar-using" nc:name="Using Sidebar"  nc:link="chrome://help/locale/customize_help.xhtml#using_sidebar"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-sidebar-adding" nc:name="Adding Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#adding_sidebar_tabs"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="cust-sidebar-indiv" nc:name="Customizing Individual Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#cust_individual_sidebar_tabs"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="cust-sidebar-indiv" nc:name="Customizing Individual Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#customizing_individual_sidebar_tabs"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-sidebar-reorg" nc:name="Reorganizing Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#reorganizing_sidebar_tabs"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-sidebar-removing" nc:name="Removing Sidebar Tabs"  nc:link="chrome://help/locale/customize_help.xhtml#removing_sidebar_tabs"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust-sidebar-openclose" nc:name="Opening, Closing, and Resizing"  nc:link="chrome://help/locale/customize_help.xhtml#opening_closing_and_resizing_sidebar"/> </rdf:li>
@@ -796,20 +795,10 @@
 
 
 <!-- USING PRIVACY FEATURES CONTENT -->
-<rdf:Description about="#privacy-doc">
-    <nc:subheadings>
-      <rdf:Seq>
-        <rdf:li><rdf:Description ID="privacy-doc-visit" nc:name="What Information Does My Browser Give to a Website?"  		nc:link="chrome://help/locale/privacy_help.xhtml#what_information_does_my_browser_give_to_a_web_site"/> </rdf:li>
-        <rdf:li><rdf:Description ID="privacy-doc-cookies" nc:name="What Are Cookies, and How Do They Work?"  		nc:link="chrome://help/locale/privacy_help.xhtml#what_are_cookies_and_how_do_they_work"/> </rdf:li>
-        <rdf:li><rdf:Description ID="privacy-doc-email" nc:name="How Can I Control Web Pages in Email Messages?"  		nc:link="chrome://help/locale/privacy_help.xhtml#how_can_i_control_web_pages_in_email_messages"/> </rdf:li>
-        <rdf:li><rdf:Description ID="privacy-doc-unauth" nc:name="How Do I Make Sure Unauthorized People Don't Use Information About Me?"  		nc:link="chrome://help/locale/privacy_help.xhtml#how_do_i_make_sure_unauthorized_people_dont_use_information_about_me"/> </rdf:li>
-      </rdf:Seq>
-    </nc:subheadings>
-  </rdf:Description>
-
 <rdf:Description about="#using-priv-help">
     <nc:subheadings>
       <rdf:Seq>
+        <rdf:li><rdf:Description ID="privacy-doc" nc:name="Privacy on the Internet" nc:link="chrome://help/locale/privacy_help.xhtml#privacy_on_the_internet"/> </rdf:li>
         <rdf:li><rdf:Description ID="using-priv-help-cookies" nc:name="Using the Cookie Manager" nc:link="chrome://help/locale/using_priv_help.xhtml#using_the_cookie_manager"/> </rdf:li>
         <rdf:li><rdf:Description ID="using-priv-help-password" nc:name="Using the Password Manager" nc:link="chrome://help/locale/using_priv_help.xhtml#using_the_password_manager"/> </rdf:li>
         <rdf:li><rdf:Description ID="using-priv-help-forms" nc:name="Using the Form Manager" nc:link="chrome://help/locale/using_priv_help.xhtml#using_the_form_manager"/> </rdf:li>
@@ -817,6 +806,17 @@
         <rdf:li><rdf:Description ID="images-help-managing" nc:name="Managing Images" nc:link="chrome://help/locale/using_priv_help.xhtml#managing_images"/> </rdf:li>
         <rdf:li><rdf:Description ID="pop_up_blocking" nc:name="Controlling Popups" nc:link="chrome://help/locale/cs_priv_prefs_popup.xhtml"/> </rdf:li>
         <rdf:li><rdf:Description ID="sec_gen" nc:name="Privacy &amp; Security Preferences" nc:link="chrome://help/locale/privsec_help.xhtml"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="#privacy-doc">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li><rdf:Description ID="privacy-doc-visit" nc:name="What Information Does My Browser Give to a Website?"  		nc:link="chrome://help/locale/privacy_help.xhtml#what_information_does_my_browser_give_to_a_web_site"/> </rdf:li>
+        <rdf:li><rdf:Description ID="privacy-doc-cookies" nc:name="What Are Cookies, and How Do They Work?"  		nc:link="chrome://help/locale/privacy_help.xhtml#what_are_cookies_and_how_do_they_work"/> </rdf:li>
+        <rdf:li><rdf:Description ID="privacy-doc-email" nc:name="How Can I Control Web Pages in Email Messages?"  		nc:link="chrome://help/locale/privacy_help.xhtml#how_can_i_control_web_pages_in_email_messages"/> </rdf:li>
+        <rdf:li><rdf:Description ID="privacy-doc-unauth" nc:name="How Do I Make Sure Unauthorized People Don't Use Information About Me?"  		nc:link="chrome://help/locale/privacy_help.xhtml#how_do_i_make_sure_unauthorized_people_dont_use_information_about_me"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
