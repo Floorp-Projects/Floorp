@@ -33,7 +33,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
-#include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"
 #include "nsIDOMElement.h"
 #include "nsIDocumentViewer.h"

@@ -30,7 +30,6 @@
 
 class nsIInputStream;
 class nsIContentViewer;
-class nsIContentViewerContainer;
 
 /* 9188bc80-f92e-11d2-81ef-0060083a0bcf */
 #define NS_IDOCSTREAMLOADERFACTORY_IID \
@@ -44,7 +43,7 @@ public:
   NS_IMETHOD CreateInstance(nsIInputStream& aInputStream,
 			    const char* aContentType,
 			    const char* aCommand,
-			    nsIContentViewerContainer* aContainer,
+			    nsISupports* aContainer,
 			    nsISupports* aExtraInfo,
 			    nsIContentViewer** aDocViewer) = 0;
 };

@@ -953,7 +953,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   }
 
   // Set the webshell as the default IContentViewerContainer for the loader...
-  mDocLoader->SetContainer(this);
+  mDocLoader->SetContainer(NS_STATIC_CAST(nsIContentViewerContainer*, this));
 
   //Register ourselves as an observer for the new doc loader
   mDocLoader->AddObserver((nsIDocumentLoaderObserver*)this);
@@ -1858,7 +1858,7 @@ nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc, nsIDOMElement *aRootNode)
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDoc);
   if (!doc) { return NS_ERROR_NULL_POINTER; }
 
-  NS_ENSURE_SUCCESS(docFactory->CreateInstanceForDocument(this,
+  NS_ENSURE_SUCCESS(docFactory->CreateInstanceForDocument(NS_STATIC_CAST(nsIContentViewerContainer*, this),
                                                           doc,
                                                           "view",
                                                           getter_AddRefs(documentViewer)),
@@ -2130,7 +2130,7 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
   */
   rv = mDocLoader->LoadDocument(aUri,        // URL string
                                   aCommand,        // Command
-                                  this,            // Container
+                                  NS_STATIC_CAST(nsIContentViewerContainer*, this),// Container
                                   aPostDataStream, // Post Data
                                   nsnull,          // Extra Info...
                                   aType,           // reload type

@@ -1401,19 +1401,17 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
 
   // Check if this notification is for a frame
   PRBool isFrame=PR_FALSE;
-  nsIContentViewerContainer *   container=nsnull;
-  aLoader->GetContainer(&container);
+  nsCOMPtr<nsISupports> container;
+  aLoader->GetContainer(getter_AddRefs(container));
   if (container) {
      nsCOMPtr<nsIWebShell>   ws(do_QueryInterface(container));
 	 if (ws) {
-		 nsIWebShell *  parent=nsnull;
-		 ws->GetParent(parent);
+       nsCOMPtr<nsIWebShell> parent;
+		 ws->GetParent(*getter_AddRefs(parent));
 		 if (parent) 
 			 isFrame = PR_TRUE;
-		 NS_IF_RELEASE(parent);
      }
   }
-  NS_IF_RELEASE(container);
 
   if (!isFrame) {
     nsAutoString kStartDocumentLoad("StartDocumentLoad");

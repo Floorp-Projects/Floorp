@@ -222,43 +222,29 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
 									nsIDocumentLoaderObserver * aObserver)
 {
   nsresult rv = NS_OK;
-  nsIContentViewerContainer *cont = nsnull;
-  nsIWebShell *ws = nsnull;
 
   if (aLoader == nsnull) {
     return rv;
   }
-  rv = aLoader->GetContainer(&cont);
+  nsCOMPtr<nsISupports> cont;
+  rv = aLoader->GetContainer(getter_AddRefs(cont));
   if (NS_FAILED(rv) || (cont == nsnull)) {
     return rv;
   }
-  rv = cont->QueryInterface(nsIWebShell::GetIID(), (void **)&ws);
-  if (NS_FAILED(rv) || (ws == nsnull)) {
-    NS_RELEASE(cont);
-    return rv;
-  }
-  nsIContentViewer* cv = nsnull;
-  rv = ws->GetContentViewer(&cv);
+  nsCOMPtr<nsIWebShell> ws(do_QueryInterface(cont));
+  NS_ENSURE_TRUE(ws, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIContentViewer> cv;
+  rv = ws->GetContentViewer(getter_AddRefs(cv));
   if (NS_FAILED(rv) || (cv == nsnull)) {
-    NS_RELEASE(ws);
-    NS_RELEASE(cont);
     return rv;
   }
-  nsIDocumentViewer* docViewer = nsnull;
-  rv = cv->QueryInterface(nsIDocumentViewer::GetIID(), (void**) &docViewer);
-  if (NS_FAILED(rv) || (docViewer == nsnull)) {
-    NS_RELEASE(cv);
-    NS_RELEASE(ws);
-    NS_RELEASE(cont);
-    return rv;
-  }
+  nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(cv));
+  NS_ENSURE_TRUE(docViewer, NS_ERROR_FAILURE);
+
   nsCOMPtr<nsIDocument> doc;
   rv = docViewer->GetDocument(*getter_AddRefs(doc));
   if (NS_FAILED(rv) || (doc == nsnull)) {
-    NS_RELEASE(docViewer);
-    NS_RELEASE(cv);
-    NS_RELEASE(ws);
-    NS_RELEASE(cont);
     return rv;
   }
   
@@ -279,25 +265,15 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
   NS_IF_RELEASE(docURL);
   nsCRT::free(spec);
 
-  nsIDOMHTMLDocument *htmldoc = nsnull;
-  rv = doc->QueryInterface(kIDOMHTMLDocumentIID, (void**)&htmldoc);
-  if (NS_FAILED(rv) || (htmldoc == nsnull)) {
-    NS_RELEASE(docViewer);
-    NS_RELEASE(cv);
-    NS_RELEASE(ws);
-    NS_RELEASE(cont);
+  nsCOMPtr<nsIDOMHTMLDocument> htmldoc(do_QueryInterface(doc));
+  if (htmldoc == nsnull) {
     PR_Free(URLName);
-    return rv;
+    return NS_ERROR_FAILURE;
   }
 
-  nsIDOMHTMLCollection* forms = nsnull;
-  rv = htmldoc->GetForms(&forms);
+  nsCOMPtr<nsIDOMHTMLCollection> forms;
+  rv = htmldoc->GetForms(getter_AddRefs(forms));
   if (NS_FAILED(rv) || (forms == nsnull)) {
-    NS_RELEASE(htmldoc);
-    NS_RELEASE(docViewer);
-    NS_RELEASE(cv);
-    NS_RELEASE(ws);
-    NS_RELEASE(cont);
     PR_Free(URLName);
     return rv;
   }
@@ -305,25 +281,22 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
   PRUint32 numForms;
   forms->GetLength(&numForms);
   for (PRUint32 formX = 0; formX < numForms; formX++) {
-    nsIDOMNode* formNode = nsnull;
-    forms->Item(formX, &formNode);
+    nsCOMPtr<nsIDOMNode> formNode;
+    forms->Item(formX, getter_AddRefs(formNode));
     if (nsnull != formNode) {
-      nsIDOMHTMLFormElement* formElement = nsnull;
-      rv = formNode->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElement);
-      if ((NS_SUCCEEDED(rv)) && (nsnull != formElement)) {
-        nsIDOMHTMLCollection* elements = nsnull;
-        rv = formElement->GetElements(&elements);
+      nsCOMPtr<nsIDOMHTMLFormElement> formElement(do_QueryInterface(formNode));
+      if ((nsnull != formElement)) {
+        nsCOMPtr<nsIDOMHTMLCollection> elements;
+        rv = formElement->GetElements(getter_AddRefs(elements));
         if ((NS_SUCCEEDED(rv)) && (nsnull != elements)) {
           /* got to the form elements at long last */ 
           PRUint32 numElements;
           elements->GetLength(&numElements);
           for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
-            nsIDOMNode* elementNode = nsnull;
-            elements->Item(elementX, &elementNode);
+            nsCOMPtr<nsIDOMNode> elementNode;
+            elements->Item(elementX, getter_AddRefs(elementNode));
             if (nsnull != elementNode) {
-              nsIDOMHTMLInputElement *inputElement = nsnull;
-              rv = elementNode->QueryInterface
-                        (nsIDOMHTMLInputElement::GetIID(), (void**)&inputElement);
+              nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(elementNode));
               if ((NS_SUCCEEDED(rv)) && (nsnull != inputElement)) {
                 nsAutoString type("");
                 rv = inputElement->GetType(type);
@@ -347,25 +320,14 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
                     }
                   }
                 }
-                NS_RELEASE(inputElement);
               }
-              NS_RELEASE(elementNode);
             }
           }
-          NS_RELEASE(elements);
         }
-        NS_RELEASE(formElement);
       }
-      NS_RELEASE(formNode);
     }
   }
 
-  NS_RELEASE(forms);
-  NS_RELEASE(htmldoc);
-  NS_RELEASE(docViewer);
-  NS_RELEASE(cv);
-  NS_RELEASE(ws);
-  NS_RELEASE(cont);
   PR_Free(URLName);
   return rv;
 }

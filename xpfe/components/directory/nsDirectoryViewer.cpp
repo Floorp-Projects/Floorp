@@ -34,7 +34,6 @@
 #include "nsEscape.h"
 #include "nsNeckoUtil.h"
 #include "nsIContentViewer.h"
-#include "nsIContentViewerContainer.h"
 #include "nsIDocument.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDocumentViewer.h"
@@ -947,12 +946,12 @@ public:
                             nsIChannel* aChannel,
                             nsILoadGroup* aLoadGroup,
                             const char* aContentType, 
-                            nsIContentViewerContainer* aContainer,
+                            nsISupports* aContainer,
                             nsISupports* aExtraInfo,
                             nsIStreamListener** aDocListenerResult,
                             nsIContentViewer** aDocViewerResult);
 
-  NS_IMETHOD CreateInstanceForDocument(nsIContentViewerContainer* aContainer,
+  NS_IMETHOD CreateInstanceForDocument(nsISupports* aContainer,
                                        nsIDocument* aDocument,
                                        const char *aCommand,
                                        nsIContentViewer** aDocViewerResult);
@@ -1027,7 +1026,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
                                          nsIChannel* aChannel,
                                          nsILoadGroup* aLoadGroup,
                                          const char* aContentType, 
-                                         nsIContentViewerContainer* aContainer,
+                                         nsISupports* aContainer,
                                          nsISupports* aExtraInfo,
                                          nsIStreamListener** aDocListenerResult,
                                          nsIContentViewer** aDocViewerResult)
@@ -1086,7 +1085,7 @@ nsDirectoryViewerFactory::CreateInstance(const char *aCommand,
 
 
 NS_IMETHODIMP
-nsDirectoryViewerFactory::CreateInstanceForDocument(nsIContentViewerContainer* aContainer,
+nsDirectoryViewerFactory::CreateInstanceForDocument(nsISupports* aContainer,
                                                     nsIDocument* aDocument,
                                                     const char *aCommand,
                                                     nsIContentViewer** aDocViewerResult)

@@ -965,18 +965,12 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
       rv = NS_ERROR_FAILURE;
 
       // do a resize
-      nsCOMPtr<nsIContentViewerContainer> contentViewerContainer;
-      contentViewerContainer = do_QueryInterface(mWebShell);
-      if (!contentViewerContainer) {
-          NS_ERROR("Webshell doesn't support the content viewer container interface");
-          return;
-      }
-
       nsCOMPtr<nsIContentViewer> contentViewer;
-      if (NS_FAILED(rv = contentViewerContainer->GetContentViewer(getter_AddRefs(contentViewer)))) {
-          NS_ERROR("Unable to retrieve content viewer.");
-          return;
-      }
+      if( NS_FAILED(mWebShell->GetContentViewer(getter_AddRefs(contentViewer))))
+         {
+         NS_WARN_IF_FALSE(PR_FALSE, "Error Getting contentViewer");
+         return;
+         }
 
       nsCOMPtr<nsIDocumentViewer> docViewer;
       docViewer = do_QueryInterface(contentViewer);
@@ -1205,18 +1199,9 @@ nsWebShellWindow::GetPresShell(nsIPresShell** aPresShell)
 {
   nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIContentViewerContainer> contentViewerContainer;
-  contentViewerContainer = do_QueryInterface(mWebShell);
-  if (!contentViewerContainer) {
-      NS_ERROR("Webshell doesn't support the content viewer container interface");
-      return NS_ERROR_FAILURE;
-  }
-
   nsCOMPtr<nsIContentViewer> contentViewer;
-  if (NS_FAILED(rv = contentViewerContainer->GetContentViewer(getter_AddRefs(contentViewer)))) {
-      NS_ERROR("Unable to retrieve content viewer.");
-      return NS_ERROR_FAILURE;
-  }
+  NS_ENSURE_SUCCESS(mWebShell->GetContentViewer(getter_AddRefs(contentViewer)),
+   NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocumentViewer> docViewer;
   docViewer = do_QueryInterface(contentViewer);

@@ -70,12 +70,12 @@ public:
                               nsIChannel* aChannel,
                               nsILoadGroup* aLoadGroup,
                               const char* aContentType, 
-                              nsIContentViewerContainer* aContainer,
+                              nsISupports* aContainer,
                               nsISupports* aExtraInfo,
                               nsIStreamListener** aDocListenerResult,
                               nsIContentViewer** aDocViewerResult) = 0;
 
-    NS_IMETHOD CreateInstanceForDocument(nsIContentViewerContainer* aContainer,
+    NS_IMETHOD CreateInstanceForDocument(nsISupports* aContainer,
                                          nsIDocument* aDocument,
                                          const char *aCommand,
                                          nsIContentViewer** aDocViewerResult) = 0;
@@ -99,7 +99,7 @@ public:
 
     NS_IMETHOD LoadDocument(nsIURI * aUri, 
                             const char* aCommand,
-                            nsIContentViewerContainer* aContainer,
+                            nsISupports* aContainer,
                             nsIInputStream* aPostDataStream = nsnull,
                             nsISupports* aExtraInfo = nsnull,
                             nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
@@ -121,9 +121,9 @@ public:
 
     NS_IMETHOD RemoveObserver(nsIDocumentLoaderObserver *aObserver) = 0;
 
-    NS_IMETHOD SetContainer(nsIContentViewerContainer* aContainer) = 0;
+    NS_IMETHOD SetContainer(nsISupports* aContainer) = 0;
 
-    NS_IMETHOD GetContainer(nsIContentViewerContainer** aResult) = 0;
+    NS_IMETHOD GetContainer(nsISupports** aResult) = 0;
     
     NS_IMETHOD GetContentViewerContainer(PRUint32 aDocumentID, nsIContentViewerContainer** aResult) = 0;
 

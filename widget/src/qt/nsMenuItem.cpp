@@ -30,7 +30,6 @@
 #include "nsQEventHandler.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
-#include "nsIContentViewerContainer.h"
 #include "nsIContentViewer.h"
 #include "nsIDOMElement.h"
 #include "nsIDocumentViewer.h"
@@ -384,22 +383,9 @@ NS_METHOD nsMenuItem::DoCommand()
         return rv;
     }
     
-    nsCOMPtr<nsIContentViewerContainer> contentViewerContainer;
-    contentViewerContainer = do_QueryInterface(mWebShell);
-    if (!contentViewerContainer) 
-    {
-        NS_ERROR("Webshell doesn't support the content viewer container interface");
-        //g_print("Webshell doesn't support the content viewer container interface");
-        return rv;
-    }
-
     nsCOMPtr<nsIContentViewer> contentViewer;
-    if (NS_FAILED(rv = contentViewerContainer->GetContentViewer(getter_AddRefs(contentViewer)))) 
-    {
-        NS_ERROR("Unable to retrieve content viewer.");
-        //g_print("Unable to retrieve content viewer.");
-        return rv;
-    }
+    NS_ENSURE_SUCCESS(mWebShell->GetContentViewer(getter_AddRefs(contentViewer)),
+      NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIDocumentViewer> docViewer;
     docViewer = do_QueryInterface(contentViewer);
