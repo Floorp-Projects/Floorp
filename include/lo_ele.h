@@ -39,6 +39,10 @@
 #include "edttypes.h"
 #include "il_types.h"
 
+#ifdef DOM
+struct DOM_Node;
+#endif
+
 /*
  * Colors - some might say that some of this should be user-customizable.
  */
@@ -1095,6 +1099,9 @@ struct LO_EdgeStruct_struct {
 
 struct LO_Any_struct {
     int16 type;
+#ifdef DOM
+    struct DOM_Node *node;
+#endif
     int16 x_offset;
     int32 ele_id;
     int32 x, y;

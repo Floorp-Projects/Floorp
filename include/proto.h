@@ -109,6 +109,10 @@ extern void LO_SetSpanFontFamily(MWContext* context, void *span, char *family);
 extern void LO_SetSpanFontWeight(MWContext* context, void *span, char *weight);
 extern void LO_SetSpanFontSize(MWContext* context, void *span, int32 size);
 extern void LO_SetSpanFontSlant(MWContext* context, void *span, char *slant);
+
+/* Setters for table contents */
+extern void LO_SetTableCellAttribute(MWContext *context, void *cell,
+                                     const char *name, const char *value);
 #endif
 
 extern void LO_SetLayerBgColor(CL_Layer *layer, LO_Color *color);
