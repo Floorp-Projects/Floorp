@@ -59,6 +59,16 @@ nsRecyclingAllocator::nsRecycleTimerCallback(nsITimer *aTimer, void *aClosure)
 #endif
         if (obj->mNAllocations)
             obj->FreeUnusedBuckets();
+
+        // If we are holding no more memory, there is not need for the timer.
+        // We will revive the timer on the next allocation.
+        // XXX Unfortunately there is no way to Cancel and restart the same timer.
+        // XXX So we pretty much kill it and create a new one later.
+        if (!obj->mNAllocations && obj->mRecycleTimer)
+        {
+            obj->mRecycleTimer->Cancel();
+            NS_RELEASE(obj->mRecycleTimer);
+        }
     }
     else
     {
@@ -86,10 +96,6 @@ nsRecyclingAllocator::nsRecyclingAllocator(PRUint32 nbucket, PRUint32 recycleAft
         for (PRUint32 i = 0; i < mNBucket; i++)
             mMemBucket[i].available = 1;
 
-        // Setup timer for releasing memory
-        // If this fails, then we wont have a timer to release unused memory. We can live with that.
-        (void) NS_NewTimer(&mRecycleTimer, nsRecycleTimerCallback, this,
-                           NS_SEC_TO_MS(mRecycleAfter), NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
     }
 }
 
@@ -193,7 +199,7 @@ nsRecyclingAllocator::Malloc(PRUint32 bytes, PRBool zeroit)
     // Find a free unallocated bucket and store allocation
     for (i = 0; i < mNBucket; i++)
     {
-        // If bucket cannot be calimed, continue search.
+        // If bucket cannot be claimed, continue search.
         if (!Claim(i))
             continue;
 
@@ -203,6 +209,17 @@ nsRecyclingAllocator::Malloc(PRUint32 bytes, PRBool zeroit)
             mMemBucket[i].ptr = ptr;
             mMemBucket[i].size = bytes;
             PR_AtomicIncrement(&mNAllocations);
+            // This is the first allocation we are holding.
+            // Setup timer for releasing memory
+            // If this fails, then we wont have a timer to release unused
+            // memory. We can live with that. Also, the next allocation
+            // will try again to set the timer.
+            if (mNAllocations && !mRecycleTimer)
+            {
+                (void) NS_NewTimer(&mRecycleTimer, nsRecycleTimerCallback, this,
+                                   NS_SEC_TO_MS(mRecycleAfter), NS_PRIORITY_LOWEST,
+                                   NS_TYPE_REPEATING_SLACK);
+            }
             return ptr;
         }
 
@@ -278,8 +295,8 @@ nsRecyclingAllocator::FreeUnusedBuckets()
             Unclaim(i);
         }
     }
+
 #ifdef DEBUG_dp
     printf("\n");
 #endif
 }
-
