@@ -32,6 +32,7 @@
 
 class nsMenuBarFrame;
 class nsIPresContext;
+class nsIDOMKeyEvent;
 
 /** editor Implementation of the DragListener interface
  */
@@ -67,6 +68,8 @@ public:
 
 protected:
   static void InitAccessKey();
+
+  PRBool IsAccessKeyPressed(nsIDOMKeyEvent* event);
 
   nsMenuBarFrame* mMenuBarFrame; // The menu bar object.
   PRBool mAccessKeyDown;         // Whether or not the ALT key is currently down.
