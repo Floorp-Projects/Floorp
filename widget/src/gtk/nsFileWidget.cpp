@@ -189,3 +189,23 @@ NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
   return NS_OK;
 }
 
+nsFileDlgResults nsFileWidget::GetFile(nsIWidget *aParent,
+                                       nsString &promptString,
+                                       nsFileSpec &theFileSpec)
+{
+  return nsFileDlgResults_Cancel;
+}
+
+nsFileDlgResults nsFileWidget::GetFolder(nsIWidget *aParent,
+                                         nsString &promptString,
+                                         nsFileSpec &theFileSpec)
+{
+  return nsFileDlgResults_Cancel;
+}
+
+nsFileDlgResults nsFileWidget::PutFile(nsIWidget *aParent,
+                                       nsString &promptString,
+                                       nsFileSpec &theFileSpec)
+{ 
+  return nsFileDlgResults_Cancel; 
+}

@@ -52,16 +52,28 @@ class nsFileWidget : public nsIFileWidget
 
     // nsIFileWidget part
     virtual PRBool	Show();
-    NS_IMETHOD		GetFile(nsString& aFile);
+    NS_IMETHOD GetFile(nsString& aFile);
     NS_IMETHOD GetFile(nsFileSpec& aFile);
-    NS_IMETHOD		SetDefaultString(nsString& aFile);
-    NS_IMETHOD		SetFilterList(PRUint32 aNumberOfFilters,
-				      const nsString aTitles[],
-				      const nsString aFilters[]);
+    NS_IMETHOD SetDefaultString(nsString& aFile);
+    NS_IMETHOD SetFilterList(PRUint32 aNumberOfFilters,
+                             const nsString aTitles[],
+                             const nsString aFilters[]);
 
     NS_IMETHOD GetDisplayDirectory(nsString& aDirectory);
     NS_IMETHOD SetDisplayDirectory(nsString& aDirectory);
   
+  virtual nsFileDlgResults GetFile(nsIWidget *aParent,
+                                   nsString &promptString,
+                                   nsFileSpec &theFileSpec);
+  
+  virtual nsFileDlgResults GetFolder(nsIWidget *aParent,
+                                     nsString &promptString,
+                                     nsFileSpec &theFileSpec);
+
+  virtual nsFileDlgResults PutFile(nsIWidget *aParent,
+                                   nsString &promptString,
+                                   nsFileSpec &theFileSpec);
+
   protected:
     GtkWidget		*mWidget;
     nsString		mTitle;
