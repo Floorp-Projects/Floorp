@@ -147,17 +147,22 @@ pref("font.scale.bitmap.undersize", 80);
 pref("font.scale.bitmap.oversize",  120);
 
 pref("font.scale.outline.min.ja",      10);
-pref("font.scale.bitmap.min.ja",       14);
+pref("font.scale.bitmap.min.ja",       16);
 pref("font.scale.bitmap.undersize.ja", 80);
 pref("font.scale.bitmap.oversize.ja",  120);
 
+pref("font.scale.outline.min.ko",      10);
+pref("font.scale.bitmap.min.ko",       16);
+pref("font.scale.bitmap.undersize.ko", 80);
+pref("font.scale.bitmap.oversize.ko",  120);
+
 pref("font.scale.outline.min.zh-CN",      10);
-pref("font.scale.bitmap.min.zh-CN",       14);
+pref("font.scale.bitmap.min.zh-CN",       16);
 pref("font.scale.bitmap.undersize.zh-CN", 80);
 pref("font.scale.bitmap.oversize.zh-CN",  120);
 
 pref("font.scale.outline.min.zh-TW",      10);
-pref("font.scale.bitmap.min.zh-TW",       14);
+pref("font.scale.bitmap.min.zh-TW",       16);
 pref("font.scale.bitmap.undersize.zh-TW", 80);
 pref("font.scale.bitmap.oversize.zh-TW",  120);
 
