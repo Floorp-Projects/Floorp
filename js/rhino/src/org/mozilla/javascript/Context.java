@@ -2002,9 +2002,8 @@ public class Context {
         Context cx = getCurrentContext();
         if (cx == null)
             return null;
-        if (cx.interpreterLine > 0 && cx.interpreterSourceFile != null) {
-            linep[0] = cx.interpreterLine;
-            return cx.interpreterSourceFile;
+        if (cx.interpreterData != null) {
+            return Interpreter.getSourcePositionFromStack(cx, linep);
         }
         /**
          * A bit of a hack, but the only way to get filename and line
@@ -2208,8 +2207,8 @@ public class Context {
     private Hashtable activationNames;
 
     // For the interpreter to indicate line/source for error reports.
-    int interpreterLine;
-    String interpreterSourceFile;
+    int interpreterLineIndex;
+    InterpreterData interpreterData;
 
     // For instruction counting (interpreter only)
     int instructionCount;

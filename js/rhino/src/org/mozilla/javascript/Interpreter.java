@@ -1571,7 +1571,8 @@ public class Interpreter
         }
     }
 
-    static int[] getLineNumbers(InterpreterData data) {
+    static int[] getLineNumbers(InterpreterData data)    
+    {
         UintMap presentLines = new UintMap();
 
         int iCodeLength = data.itsICodeTop;
@@ -1588,6 +1589,13 @@ public class Interpreter
         }
 
         return presentLines.getKeys();
+    }
+    
+    static String getSourcePositionFromStack(Context cx, int[] linep)    
+    {
+        InterpreterData idata = cx.interpreterData;
+        linep[0] = getShort(idata.itsICode, cx.interpreterLineIndex);
+        return idata.itsSourceFile;
     }
 
     static Object getEncodedSource(InterpreterData idata)
@@ -1739,8 +1747,8 @@ public class Interpreter
             debuggerFrame.onEnter(cx, scope, thisObj, args);
         }
 
-        String savedSourceFile = cx.interpreterSourceFile;
-        cx.interpreterSourceFile = idata.itsSourceFile;
+        InterpreterData savedData = cx.interpreterData;
+        cx.interpreterData = idata;
 
         Object result = undefined;
         // If javaException != null on exit, it will be throw instead of
@@ -2665,9 +2673,9 @@ public class Interpreter
         break;
     }
     case Icode_LINE : {
-        int line = getShort(iCode, pc + 1);
-        cx.interpreterLine = line;
+        cx.interpreterLineIndex = pc + 1;
         if (debuggerFrame != null) {
+            int line = getShort(iCode, pc + 1);
             debuggerFrame.onLineChange(cx, line);
         }
         pc += 2;
@@ -2701,7 +2709,7 @@ public class Interpreter
             }
         }
 
-        cx.interpreterSourceFile = savedSourceFile;
+        cx.interpreterData = savedData;
 
         if (debuggerFrame != null) {
             if (javaException != null) {
