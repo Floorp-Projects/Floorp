@@ -2439,28 +2439,29 @@ nsOutlinerBodyFrame::EnsureColumns()
     if (count == 0)
       return; // Nothing to do.
 
-    // Get a column, and get the parent frame.  We need to use its box direction
-    // to find out the order in which we should iterate the columns.
-    nsCOMPtr<nsIDOMNode> node;
-    cols->Item(0, getter_AddRefs(node));
-    nsCOMPtr<nsIContent> child(do_QueryInterface(node));
+    nsIFrame* frame = nsnull;
+    nsIFrame* colContainer = nsnull;
+    PRInt32 i = 0;
+    do {
+      // Get a column, and get the parent frame.  We need to use its box direction
+      // to find out the order in which we should iterate the columns.
+      nsCOMPtr<nsIDOMNode> node;
+      cols->Item(i++, getter_AddRefs(node));
+      nsCOMPtr<nsIContent> child(do_QueryInterface(node));
         
-    // Get the frame for this column.
-    nsIFrame* frame;
-    shell->GetPrimaryFrameFor(child, &frame);
-    if (!frame)
-      return; // This is disastrous.
-
-    nsIFrame* colContainer;
-    frame->GetParent(&colContainer);
-      
-    nsCOMPtr<nsIBox> colContainerBox(do_QueryInterface(colContainer));
-    nsIBox* colBox;
+      // Get the frame for this column.
+      shell->GetPrimaryFrameFor(child, &frame);
+      if (frame)
+        frame->GetParent(&colContainer);
+    } while (!frame);
+          
+     nsCOMPtr<nsIBox> colContainerBox(do_QueryInterface(colContainer));
+    nsIBox* colBox = nsnull;
     colContainerBox->GetChildBox(&colBox);
     
     nsOutlinerColumn* currCol = nsnull;
     while (colBox) {
-      nsIFrame* frame;
+      nsIFrame* frame = nsnull;
       colBox->GetFrame(&frame);
       nsCOMPtr<nsIContent> content;
       frame->GetContent(getter_AddRefs(content));
