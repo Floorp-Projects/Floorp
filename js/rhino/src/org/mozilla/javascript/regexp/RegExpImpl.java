@@ -416,13 +416,19 @@ class ReplaceData extends GlobData {
                 }
             }
             else {  /* ECMA 3, 1-9 or 01-99 */
+                int parenCount = res.parens.size();
                 num = NativeRegExp.unDigit(dc);
+                if (num > parenCount)
+                    return null;
                 cp = dp + 2;
                 if ((dp + 2) < da.length) {
                     dc = da[dp + 2];
                     if (NativeRegExp.isDigit(dc)) {
-                        num = 10 * num + NativeRegExp.unDigit(dc);
-                        cp++;
+                        tmp = 10 * num + NativeRegExp.unDigit(dc);
+                        if (tmp <= parenCount) {
+                            cp++;
+                            num = tmp;
+                        }
                     }
                 }
                 if (num == 0) return null;  /* $0 or $00 is not valid */

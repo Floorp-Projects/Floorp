@@ -384,6 +384,15 @@ System.out.println();
         return TokenStream.isJSLineTerminator(c);
     }
 
+    private boolean isREWhiteSpace(int c) {
+        return (c == '\u0020' || c == '\u0009'
+                || c == '\n' || c == '\r'
+                || c == 0x2028 || c == 0x2029
+                || c == '\u000C' || c == '\u000B'
+                || c == '\u00A0' 
+                || Character.getType((char)c) == Character.SPACE_SEPARATOR);
+    }
+
 
     /*
      *
@@ -1693,12 +1702,12 @@ System.out.println();
                     continue;
                 case 's':
                     for (i = (int)(charSet.length); i >= 0; i--)
-                        if (Character.isSpaceChar((char)i))
+                        if (isREWhiteSpace(i))
                             addCharacterToCharSet(charSet, (char)(i));
                     continue;
                 case 'S':
                     for (i = (int)(charSet.length); i >= 0; i--)
-                        if (!Character.isSpaceChar((char)i))
+                        if (!isREWhiteSpace(i))
                             addCharacterToCharSet(charSet, (char)(i));
                     continue;
                 case 'w':
@@ -1960,7 +1969,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 break;
             case REOP_SPACE:
                 if (x.cp != gData.cpend 
-                            && Character.isSpaceChar(gData.cpbegin[x.cp])) {
+                            && isREWhiteSpace(gData.cpbegin[x.cp])) {
                     result = x;
                     result.cp++;
                 }
@@ -1969,7 +1978,7 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
                 break;
             case REOP_NONSPACE:
                 if (x.cp != gData.cpend 
-                            && !Character.isSpaceChar(gData.cpbegin[x.cp])) {
+                            && !isREWhiteSpace(gData.cpbegin[x.cp])) {
                     result = x;
                     result.cp++;
                 }
