@@ -423,7 +423,7 @@ public static class Template implements ASN1Template {
 
         if( remainingContent > 0 ) {
             throw new InvalidBERException("SEQUENCE is " + remainingContent +
-                " bytes shorter than expected");
+                " bytes longer than expected");
         }
         Assert._assert( remainingContent == 0 || remainingContent == -1 );
 
