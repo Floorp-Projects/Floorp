@@ -515,7 +515,6 @@ nsresult nsHTMLEditor::SplitStyleAboveRange(nsIDOMRange *inRange,
   
   origStartNode = startNode;
   origStartOffset = startOffset;
-  PRBool sameNode = (startNode==endNode);
   
   // split any matching style nodes above the start of range
   {
