@@ -38,7 +38,8 @@
 
 #include "nsISupports.idl"
 #include "domstubs.idl"
-#include "nsISelection.idl"
+
+interface nsISelection;
 
 
 /*

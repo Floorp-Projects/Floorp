@@ -40,8 +40,8 @@
 
 #include "nsISupports.idl"
 #include "domstubs.idl"
-#include "nsIAtom.idl"
 
+interface nsIAtom;
 interface nsISupportsArray;
 interface nsISelection;
 interface nsIContentFilter;

@@ -51,6 +51,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIContent.h"
+#include "nsIAtom.h"
 #include "nsTextEditUtils.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
