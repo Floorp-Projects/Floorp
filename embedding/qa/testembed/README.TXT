@@ -24,15 +24,20 @@
 
 TestEmbed is a C++ test app based upon mfcEmbed. It includes
 individual test cases for Embedding interface methods. Interfaces
-include nsIFile & nsILocalFile, nsISHistory, nsIWebNavigation,
-nsIWebProgressListener, nsIClipboardCommands, and nsIRequest.
+covered include nsIFile & nsILocalFile, nsISHistory, nsIWebNavigation,
+nsIWebProgressListener, nsIClipboardCommands, nsIRequest, nsIDOMWindow,
+nsIDirectoryService, nsIProfile, nsIObserverService, nsIWebBrowser,
+nsIWebProgress, nsIWebBrowserFind, nsIEditingSession, nsICommandManager,
+nsICommandParams, nsIStreamListener, nsIURIContentListener,
+nsISHistoryListener, nsIWebBrowserChrome, and nsIEmbeddingSiteWindow.
+.
 Individual tests also exist for methods found in nsIGlobalHistory
 and nsIProfile.
 
 In addition to the mfcEmbed menus, it contains 5 menus: Tests,
 Interfaces, Tools, Verified Bugs, and Clipboard Commands.
 
-Executed test cases print output to a file called TestOutput.txt.
+Executed test cases print output to a logfile called TestOutput.txt.
 This will be created in the C:\temp folder.
 
 See build instructions below.
@@ -102,11 +107,13 @@ BrowserImpl*.cpp
 	(BrowserImpl.cpp implements the set of interfaces which 
 	are required by Gecko of all embedding apps. The other
 	interfaces implemented in the BrowserImpl*.cpp files are 
-	optional)
+	optional. Included in the BrowserImpl.cpp file are interface tests for 					nsIWebBrowserChrome,nsIEmbeddingSiteWindow, nsIStreamListener, and 				nsIURIContentListener.)
 
 	- Calls on the statusbar/progressbar update functions exposed
-	via the IBrowserFrameGlue in response to the nsIProgressListener
-	interface callbacks
+	via the IBrowserFrameGlue in response to the nsIWebProgressListener
+	interface callbacks. nsIWebProgressListener methods are implemented
+	in BrowserImplWebPrgrsLstnr.cpp. nsISHistoryListener methods are
+	implemented in BrowserImplHistoryLstnr.cpp
 
 Dialogs.cpp
 	- Contains dialog box code for displaying Prompts, getting
@@ -118,19 +125,32 @@ winEmbedFileLocProvider.cpp, ProfilesDlg.cpp, ProfileMgr.cpp
 	- Profile management related code (by Conrad Carlen)
 
 Tests.cpp
-	- This is where individual test cases are stored. The file
-	is divided into three sections: 1) individual test cases
-	corresponding to the "Tests" menu. 2) tools that are helpful,
+	- This is where individual test cases are stored and test interfaces are
+	registered. The file is divided into three sections: 1) individual test 
+	cases corresponding to the "Tests" menu. 2) tools that are helpful,
 	corresponding to the "Tools" menu. These include routines like
-	removing all entries from Global History. 3) Interfaces. These
-	correspond to the "Interfaces" menu and contain modular tests
-	for embedding interface methods.
+	removing all entries from Global History. 3) Registration of
+	interface tests with CTests object (bottom part of the file). Example: 
+
+	void CTests::OnInterfacesNsidomwindow()
+	{
+		CDomWindow oDomWindow(qaWebBrowser) ;
+		oDomWindow.OnStartTests(nCommandID);
+	}
+
+	The interface tests OnInterfacesNsidomwindow() is associated with menu
+	handlers in the message map (in top part of the file). For this example,
+	ON_COMMAND(ID_INTERFACES_NSIDOMWINDOW_RUNALLTESTS, OnInterfacesNsidomwindow).
+	The test interface object (oDomWindow) is created with appropriate constructor.
+	Then the object calls the test interface's OnStartTests() method and passes
+	the selected command ID.
+
 
 QAUtils.cpp
 	- This contains routines that are useful to QA. Such tasks as
 	printing to a logfile, displaying messages to the screen, formatting
-	output data, and retrieving the name of an nsI request are stored
-	here.
+	output data, retrieving the name of an nsI request, and getting a urI 
+	are stored here.
 
 makefile.in
 	- We define "_AFXDLL" and for the compiler and specify
@@ -145,9 +165,11 @@ testembed.dsp and testembed.dsw
 	- These VisualStudio workspace/project files can be used
 	to open/build this sample inside of the VC++ IDE
 
+Most interface tests have their own .cpp & .h files (e.g. nsIWebBrow.cpp).
+
 Instructions for building:
 	1) Open a dos shell.
-	2) cd ../mozilla/embedding/qa/testembed	   // testEmbed directory
+	2) cd /mozilla/embedding/qa/testembed	   // testEmbed directory
 	3) Copy the makefile.in file and call it makefile. Place in same directory.
 	4) Change the top few lines in 'makefile' to indicate local pathway. Example:
 		DEPTH		= ../../..
@@ -174,12 +196,12 @@ A few suggestions:
 	Progress listener (from Tests menu). This will create all types
 	of listener msgs in your logfile and display many msgs on the 
 	screen.
-	2) Best way to use web progress listener is to turn it on, then
-	change URL (from the Tests menu). Change a few more urls and
+	2) Best way to use web progress listener is to turn it on (from 
+	the Tests menu)then change URL . Change a few more urls and
 	monitor the output.
 	3) Before running nsISHistory interface tests, load 1-2 urls.
 	That will create a session history. The same applies for the
 	nsIWebNavigation interfaces tests. One loaded url will enable
 	back/forward navigation.
-	4) Currently, nsIUriContentListener is registered from the "Tools" >
-	"Test Your Method" menu. That will change soon. 
+	4) nsIUriContentListener is registered from the "Tests" >
+	"Add urIContentListener" menu. There are submenu items for different options. 
