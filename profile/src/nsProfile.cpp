@@ -938,6 +938,13 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
     printf("ProfileManagerData*** : %s\n", charData);
 #endif
 
+	nsIFileLocator* locator = nsnull;
+		
+	rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
+
+	if (NS_FAILED(rv) || !locator)
+		return NS_ERROR_FAILURE;
+
     nsString data(charData);
     
 	// Set the gathered info into an array
@@ -958,24 +965,16 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
 	if (!dirName || !*dirName)
     {
 		// They didn't type a directory path...
-		nsIFileLocator* locator = nsnull;
-		
-		rv = nsServiceManager::GetService(kFileLocatorCID, nsIFileLocator::GetIID(), (nsISupports**)&locator);
-
-		if (NS_FAILED(rv) || !locator)
-			return NS_ERROR_FAILURE;
-
 		// Get current profile, make the new one a sibling...
 	    nsIFileSpec* horribleCOMDirSpecThing;
         rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultUserProfileRoot50, &horribleCOMDirSpecThing);
         
-		nsServiceManager::ReleaseService(kFileLocatorCID, locator);
-		
 		if (NS_FAILED(rv) || !horribleCOMDirSpecThing)
 			return NS_ERROR_FAILURE;
 
 		//Append profile name to form a directory name
 	    horribleCOMDirSpecThing->GetFileSpec(&dirSpec);
+		NS_RELEASE(horribleCOMDirSpecThing);
 		//dirSpec.SetLeafName(profileName);
 		dirSpec += profileName;
 	}
@@ -997,7 +996,24 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
     if (NS_FAILED(rv))
 		return rv;
 
-    if (dirName)
+    // Get profile defaults folder..
+    nsIFileSpec* profDefaultsDir;
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_ProfileDefaultsFolder50, &profDefaultsDir);
+        
+	if (NS_FAILED(rv) || !profDefaultsDir)
+		return NS_ERROR_FAILURE;
+
+	nsFileSpec defaultsDirSpec;
+
+	profDefaultsDir->GetFileSpec(&defaultsDirSpec);
+	NS_RELEASE(profDefaultsDir);
+
+	// Copy contents from defaults folder.
+	defaultsDirSpec.RecursiveCopy(dirSpec);
+
+	nsServiceManager::ReleaseService(kFileLocatorCID, locator);
+		
+	if (dirName)
 	{
 		PR_DELETE(dirName);
 	}
