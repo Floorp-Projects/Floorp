@@ -55,7 +55,6 @@ public:
         RESULT_TREE_FRAGMENT
     };
 
-    txAExprResult();  // Not to be implemented
     txAExprResult(txResultRecycler* aRecycler) : mRecycler(aRecycler) {}
     virtual ~txAExprResult() {};
 
@@ -121,7 +120,6 @@ private:
 class BooleanResult : public txAExprResult {
 
 public:
-    BooleanResult(); // Not to be implemented
     BooleanResult(MBool aValue);
 
     TX_DECL_EXPRRESULT
@@ -133,7 +131,6 @@ private:
 class NumberResult : public txAExprResult {
 
 public:
-    NumberResult(); // Not to be implemented
     NumberResult(double aValue, txResultRecycler* aRecycler);
 
     TX_DECL_EXPRRESULT
@@ -145,7 +142,6 @@ public:
 
 class StringResult : public txAExprResult {
 public:
-    StringResult();
     StringResult(txResultRecycler* aRecycler);
     StringResult(const nsAString& aValue, txResultRecycler* aRecycler);
 

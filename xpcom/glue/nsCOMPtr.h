@@ -210,6 +210,13 @@ class nsDerivedSafe : public T
           |operator=()|, and that's _bad_.  So bad, in fact, that this declaration exists explicitly
           to stop people from doing it.
         */
+
+    protected:
+      nsDerivedSafe();                                        // NOT TO BE IMPLEMENTED
+        /*
+          This ctor exists to avoid compile errors and warnings about nsDeriviedSafe using the
+          default ctor but inheriting classes without an empty ctor. See bug 209667.
+        */
   };
 
 #if !defined(HAVE_CPP_ACCESS_CHANGING_USING) && defined(NEED_CPP_UNUSED_IMPLEMENTATIONS)
