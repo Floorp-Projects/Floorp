@@ -2747,60 +2747,22 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
       }
       return rv;
   }
-  else if (aTag == nsXULAtoms::treeitem)
-  {
-    // A tree item is essentially a NO-OP as far as the frame construction code
-    // is concerned.  The row for this item will be created (when the TREEROW child
-    // tag is encountered).  The children of this node still need to be processed,
-    // but this content node needs to be "skipped". 
-
-    rv = ProcessChildren(aPresContext, aContent, aParentFrame, aAbsoluteItems,
-                 aFrameItems, aFixedItems);
-    
-    // No more work to do.
-    return rv;
-  }
   else if (aTag == nsXULAtoms::treechildren)
   {
-    // Determine whether or not we need to process the child content of
-    // this node. We determine this by checking the OPEN attribute on the parent
-    // content node.  The OPEN attribute indicates whether or not the children
-    // of this node should be part of the tree view (whether or not the folder
-    // is expanded or collapsed).
-    nsIContent* pTreeItemNode = nsnull;
-    aContent->GetParent(pTreeItemNode);
-    if (pTreeItemNode != nsnull)
-    {
-      nsString attrValue;
-      nsIAtom* kOpenAtom = NS_NewAtom("open");
-      nsresult result = pTreeItemNode->GetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, attrValue);
-      attrValue.ToLowerCase();
-      processChildren =  (result == NS_CONTENT_ATTR_NO_VALUE ||
-        (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
-      NS_RELEASE(kOpenAtom);
-      NS_RELEASE(pTreeItemNode);
-
-      // If we do need to process, we have to "skip" this content node, since it
-      // doesn't really have any associated display.
-      
-      if (processChildren)
-      {
-        rv = ProcessChildren(aPresContext, aContent, aParentFrame, aAbsoluteItems,
-                   aFrameItems, aFixedItems);
-      }
-      else haltProcessing = PR_TRUE;
-    }
-
-    // No more work to do.
-    return rv;
+	  haltProcessing = PR_TRUE;
+	  return rv; // This is actually handled by the treeitem node.
   }
-  else if (aTag == nsXULAtoms::treerow)
+  else if (aTag == nsXULAtoms::treeitem)
   {
     // A tree item causes a table row to be constructed that is always
     // slaved to the nearest enclosing table row group (regardless of how
     // deeply nested it is within other tree items).
     rv = NS_NewTableRowFrame(aNewFrame);
     processChildren = PR_TRUE;
+
+	// Note: See later in this method.  More processing has to be done after the
+	// tree item has constructed its children and after this frame has been added
+	// to our list.
   }
   else if (aTag == nsXULAtoms::treecell)
   {
@@ -2820,7 +2782,7 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
   {
     rv = NS_NewTreeIndentationFrame(aNewFrame);
   }
-  // End of TREE CONSTRUCTION logic
+  // End of TREE CONSTRUCTION code here (there's more later on in the function)
 
   // TOOLBAR CONSTRUCTION
   else if (aTag == nsXULAtoms::toolbox) {
@@ -2845,8 +2807,8 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
                                              aStyleContext, PR_FALSE);
 
-  // Add the new frame to our list of frame items.
-  aFrameItems.AddChild(aNewFrame);
+    // Add the new frame to our list of frame items.
+    aFrameItems.AddChild(aNewFrame);
 
     // Process the child content if requested
     nsFrameItems childItems;
@@ -2857,6 +2819,50 @@ HTMLStyleSheetImpl::ConstructXULFrame(nsIPresContext*  aPresContext,
     // Set the frame's initial child list
     aNewFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
   
+	// MORE TREE CONSTRUCTION LOGIC: Now we have to process a tree item's children
+	if (aTag == nsXULAtoms::treeitem)
+	{
+		// We need to find the treechildren node that is a child of this node
+		// and we need to construct new rows.
+		PRInt32 aChildCount;
+		aContent->ChildCount(aChildCount);
+		for (PRInt32 i = 0; i < aChildCount; i++) 
+		{
+			nsIContent* childContent;
+			aContent->ChildAt(i, childContent);
+
+			if (childContent) 
+			{
+			  // Construct a child frame
+			  nsIAtom* pTag = nsnull;
+			  childContent->GetTag(pTag);
+			  if (pTag == nsXULAtoms::treechildren)
+			  {
+				  // We want to call ConstructFrame to keep building rows, but only if we're
+				  // open.
+				  nsString attrValue;
+				  nsIAtom* kOpenAtom = NS_NewAtom("open");
+				  nsresult result = aContent->GetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, attrValue);
+				  attrValue.ToLowerCase();
+				  processChildren =  (result == NS_CONTENT_ATTR_NO_VALUE ||
+					(result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
+				  NS_RELEASE(kOpenAtom);
+				  
+				  // If we do need to process, we have to "skip" this content node, since it
+				  // doesn't really have any associated display.
+      
+				  if (processChildren)
+				  {
+					rv = ProcessChildren(aPresContext, childContent, aParentFrame, aAbsoluteItems,
+							   aFrameItems, aFixedItems);
+				  }
+			  }
+			  NS_RELEASE(pTag);
+			  NS_RELEASE(childContent);
+			}
+		}
+	}
+
     // If the frame is absolutely positioned then create a placeholder frame
     if (isAbsolutelyPositioned) {
       nsIFrame* placeholderFrame;
