@@ -92,9 +92,6 @@ void JSObject::initObjectObject(JSScope *)
 {
     // The ObjectPrototypeObject has already been constructed by static initialization.
     
-//    JSNativeFunction *objCon = new JSNativeFunction(objectConstructor);
-//    objCon->setProperty(widenCString("prototype"), JSValue(ObjectPrototypeObject));    
-//    g->setProperty(*ObjectString, JSValue(objCon));
 }
 
 
@@ -251,6 +248,67 @@ static JSValue date_invokor(Context *, const JSValues&)
     return JSValue(new JSString("now"));
 }
 
+/********** Array Object Stuff **************************/
+
+JSString* JSArray::ArrayString = new JSString("Array");
+
+JSObject *JSArray::ArrayPrototypeObject = NULL;
+
+static JSValue array_constructor(Context *, const JSValues& argv)
+{
+    // argv[0] will be NULL
+    int argCount = argv.size();
+    if (argCount > 1)
+        if (argCount > 2) { // then it's a bunch of elements
+            JSArray *result = new JSArray(argCount - 1);
+            for (uint32 i = 1; i < argCount; i++) {
+                (*result)[i - 1] = argv[i];
+            }
+            return JSValue(result);
+        }
+        else
+            return JSValue(new JSArray(JSValue::valueToInteger(argv[1]).i32));
+    else
+        return JSValue(new JSArray());
+}
+
+static JSValue array_toString(Context *, const JSValues& argv)
+{
+    if (argv.size() > 0) {
+        JSValue theThis = argv[0];
+        if (theThis.isArray()) {
+            StringFormatter f;
+            f << theThis;
+            return JSValue(new JSString(f));
+        }
+        else
+            throw new JSException("TypeError : Array::toString called on non array object");
+    }
+    return kUndefinedValue;
+}
+
+struct ArrayFunctionEntry {
+    char *name;
+    JSNativeFunction::JSCode fn;
+} ArrayFunctions[] = {
+    { "constructor",    array_constructor },
+    { "toString",       array_toString }
+    // splice, join etc etc
+};
+
+
+void JSArray::initArrayObject(JSScope *g)
+{
+    ArrayPrototypeObject = new JSObject();
+    ArrayPrototypeObject->setClass(new JSString(ArrayString));
+
+    for (uint i = 0; i < sizeof(ArrayFunctions) / sizeof(ArrayFunctionEntry); i++)
+        ArrayPrototypeObject->setProperty(widenCString(ArrayFunctions[i].name), JSValue(new JSNativeFunction(ArrayFunctions[i].fn) ) );
+
+    ASSERT(g->getProperty(*ArrayString).isObject());
+    JSObject *arrayVariable = g->getProperty(*ArrayString).object;
+    arrayVariable->setProperty(widenCString("prototype"), JSValue(ArrayPrototypeObject));   // should be DontEnum, DontDelete, ReadOnly    
+}
 
 /**************************************************************************************/
 
@@ -260,7 +318,7 @@ JSType Number_Type = JSType(widenCString("Number"), &Integer_Type);
 JSType Character_Type = JSType(widenCString("Character"), &Any_Type);
 JSType String_Type = JSType(widenCString("String"), &Character_Type);
 JSType Function_Type = JSType(widenCString("Function"), &Any_Type, new JSNativeFunction(function_constructor), new JSNativeFunction(function_constructor));
-JSType Array_Type = JSType(widenCString("Array"), &Any_Type);
+JSType Array_Type = JSType(widenCString("Array"), &Any_Type, new JSNativeFunction(array_constructor), new JSNativeFunction(array_constructor));
 JSType Type_Type = JSType(widenCString("Type"), &Any_Type);
 JSType Boolean_Type = JSType(widenCString("Boolean"), &Any_Type, new JSNativeFunction(boolean_constructor), new JSNativeFunction(boolean_constructor));
 JSType Null_Type = JSType(widenCString("Null"), &Any_Type);

@@ -176,8 +176,10 @@ ICodeModule* Context::compileFunction(const String &source)
 JSValue Context::readEvalFile(FILE* in, const String& fileName)
 {
     String buffer;
-    string line;
-    LineReader inReader(in);
+	int ch;
+	while ((ch = getc(in)) != EOF)
+		buffer += static_cast<char>(ch);
+    
     JSValues emptyArgs;
     JSValue result;
         
@@ -187,45 +189,34 @@ JSValue Context::readEvalFile(FILE* in, const String& fileName)
     autosaver<Linkage*> linkage(mLinkage, 0);
     autosaver<InstructionIterator> pc(mPC);
 
-    while (inReader.readLine(line) != 0) {
-        appendChars(buffer, line.data(), line.size());
-        try {
-            Arena a;
-            Parser p(getWorld(), a, buffer, fileName);
-            StmtNode *parsedStatements = p.parseProgram();
-			ASSERT(p.lexer.peek(true).hasKind(Token::end));
+    try {
+        Arena a;
+        Parser p(getWorld(), a, buffer, fileName);
+        StmtNode *parsedStatements = p.parseProgram();
+/*******/
+		ASSERT(p.lexer.peek(true).hasKind(Token::end));
+        {
+            PrettyPrinter f(stdOut, 30);
             {
-            	PrettyPrinter f(stdOut, 30);
-            	{
-            		PrettyPrinter::Block b(f, 2);
-                	f << "Program =";
-                	f.linearBreak(1);
-                	StmtNode::printStatements(f, parsedStatements);
-            	}
-            	f.end();
+            	PrettyPrinter::Block b(f, 2);
+                f << "Program =";
+                f.linearBreak(1);
+                StmtNode::printStatements(f, parsedStatements);
             }
-    	    stdOut << '\n';
+            f.end();
+        }
+    	stdOut << '\n';
+/*******/
 
 	    // Generate code for parsedStatements, which is a linked 
-            // list of zero or more statements
-            ICodeModule* icm = genCode(parsedStatements, fileName);
-            if (icm) {
-                result = interpret(icm, emptyArgs);
-                delete icm;
-            }
-
-            clear(buffer);
-        } catch (Exception &e) {
-            /* If we got a syntax error on the end of input,
-             * then wait for a continuation
-             * of input rather than printing the error message. */
-            if (!(e.hasKind(Exception::syntaxError) &&
-                  e.lineNum && e.pos == buffer.size() &&
-                  e.sourceFile == fileName)) {
-                stdOut << '\n' << e.fullMessage();
-                clear(buffer);
-            }
+        // list of zero or more statements
+        ICodeModule* icm = genCode(parsedStatements, fileName);
+        if (icm) {
+            result = interpret(icm, emptyArgs);
+            delete icm;
         }
+    } catch (Exception &e) {
+        throw new JSException(e.fullMessage());
     }
     return result;
 }
@@ -566,7 +557,7 @@ void Context::initContext()
     
     // the 'Math' object just has some useful properties 
     JSMath::initMathObject(mGlobal);
-
+    JSArray::initArrayObject(mGlobal);
 
     // This initializes the state of the binary operator overload mechanism.
     // One could argue that it is unneccessary to do this until the 'Operators'
@@ -1037,6 +1028,7 @@ using JSString throughout.
                         JSArray* array = value.array;
                         (*registers)[dst(ge).first] = (*array)[(*registers)[src2(ge).first]];
                     }
+                    // FIXME - else case does what/? GET_PROPERTY of toString(index) ?
                 }
                 break;
             case SET_ELEMENT:
@@ -1047,6 +1039,7 @@ using JSString throughout.
                         JSArray* array = value.array;
                         (*array)[(*registers)[src1(se).first]] = (*registers)[src2(se).first];
                     }
+                    // FIXME - else case does what/? SET_PROPERTY of toString(index) ?
                 }
                 break;
 
