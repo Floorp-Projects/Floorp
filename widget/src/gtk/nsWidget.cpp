@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -294,33 +294,31 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
 
 NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
-  // The (x,y) components of the bounds are always zero.  Dont change
-  // them here or the compositor (and other things probably) freaks out.
-
-  if (mWidget)
-    ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
-
-  return NS_OK;
+    if (mWidget) {
+        ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
+    }
+    return NS_OK;
 }
 
 NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
 #if 0
-  printf("nsWidget::Resize %s (%p) to %d %d\n",
-         gtk_widget_get_name(mWidget), this,
-         aWidth, aHeight);
+    printf("nsWidget::Resize %s (%p) to %d %d\n",
+           mWidget ? gtk_widget_get_name(mWidget) : "(no-widget)", this,
+           aWidth, aHeight);
 #endif
-  mBounds.width  = aWidth;
-  mBounds.height = aHeight;
-  if (mWidget) {
-    ::gtk_widget_set_usize(mWidget, aWidth, aHeight);
+    mBounds.width  = aWidth;
+    mBounds.height = aHeight;
+    if (mWidget) {
+        ::gtk_widget_set_usize(mWidget, aWidth, aHeight);
+        if (aRepaint) {
+            if (GTK_WIDGET_VISIBLE (mWidget)) {
+                ::gtk_widget_queue_draw (mWidget);
+            }
+        }
+    }
 
-    if (aRepaint)
-      if (GTK_WIDGET_VISIBLE (mWidget))
-        ::gtk_widget_queue_draw (mWidget);
-  }
-
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_METHOD nsWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
@@ -338,31 +336,33 @@ NS_METHOD nsWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
 //-------------------------------------------------------------------------
 PRBool nsWidget::OnResize(nsRect &aRect)
 {
-  // call the event callback
+    // call the event callback
 #if 0
-  printf("nsWidget::OnResize %s (%p)\n",
-         gtk_widget_get_name(mWidget),
-         this);
+    printf("nsWidget::OnResize %s (%p)\n",
+           mWidget ? gtk_widget_get_name(mWidget) : "(no-widget)",
+           this);
 #endif
-  if (mEventCallback) {
-    nsSizeEvent event;
-    InitEvent(event, NS_SIZE);
-    event.windowSize = &aRect;
-    event.eventStructType = NS_SIZE_EVENT;
-    if (mWidget) {
-      event.mWinWidth = mWidget->allocation.width;
-      event.mWinHeight = mWidget->allocation.height;
-    } else {
-      event.mWinWidth = 0;
-      event.mWinHeight = 0;
+    if (mEventCallback) {
+        nsSizeEvent event;
+        InitEvent(event, NS_SIZE);
+        event.windowSize = &aRect;
+        event.eventStructType = NS_SIZE_EVENT;
+        if (mWidget) {
+            event.point.x = mWidget->allocation.x;
+            event.point.y = mWidget->allocation.y;
+            event.mWinWidth = mWidget->allocation.width;
+            event.mWinHeight = mWidget->allocation.height;
+        } else {
+            event.point.x = 0;
+            event.point.y = 0;
+            event.mWinWidth = 0;
+            event.mWinHeight = 0;
+        }
+        event.time = 0;
+        PRBool result = DispatchWindowEvent(&event);
+        return result;
     }
-    event.point.x = mWidget->allocation.x;
-    event.point.y = mWidget->allocation.y;
-    event.time = 0;
-    PRBool result = DispatchWindowEvent(&event);
-    return result;
-  }
-  return PR_FALSE;
+    return PR_FALSE;
 }
 
 //------
@@ -370,18 +370,18 @@ PRBool nsWidget::OnResize(nsRect &aRect)
 //------
 PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
 {
-  nsGUIEvent event;
+    nsGUIEvent event;
 #if 0
-  printf("nsWidget::OnMove %s (%p)\n",
-         gtk_widget_get_name(mWidget),
-         this);
+    printf("nsWidget::OnMove %s (%p)\n",
+           mWidget ? gtk_widget_get_name(mWidget) : "(no-widget)",
+           this);
 #endif
-  InitEvent(event, NS_MOVE);
-  event.point.x = aX;
-  event.point.y = aY;
-  event.eventStructType = NS_GUI_EVENT;
-  PRBool result = DispatchWindowEvent(&event);
-  return result;
+    InitEvent(event, NS_MOVE);
+    event.point.x = aX;
+    event.point.y = aY;
+    event.eventStructType = NS_GUI_EVENT;
+    PRBool result = DispatchWindowEvent(&event);
+    return result;
 }
 
 //-------------------------------------------------------------------------
@@ -391,8 +391,9 @@ PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::Enable(PRBool bState)
 {
-    if (mWidget)
-      ::gtk_widget_set_sensitive(mWidget, bState);
+    if (mWidget) {
+        ::gtk_widget_set_sensitive(mWidget, bState);
+    }
     return NS_OK;
 }
 
@@ -403,8 +404,9 @@ NS_METHOD nsWidget::Enable(PRBool bState)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetFocus(void)
 {
-    if (mWidget)
-      ::gtk_widget_grab_focus(mWidget);
+    if (mWidget) {
+        ::gtk_widget_grab_focus(mWidget);
+    }
     return NS_OK;
 }
 
@@ -432,37 +434,39 @@ nsIFontMetrics *nsWidget::GetFont(void)
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::SetFont(const nsFont &aFont)
 {
-  nsIFontMetrics* mFontMetrics;
-  mContext->GetMetricsFor(aFont, mFontMetrics);
+    nsIFontMetrics* mFontMetrics;
+    mContext->GetMetricsFor(aFont, mFontMetrics);
 
-  if (mFontMetrics) {
-    nsFontHandle  fontHandle;
-    mFontMetrics->GetFontHandle(fontHandle);
-    // FIXME avoid fontset problems....
-    if (((GdkFont*)fontHandle)->type == GDK_FONT_FONTSET)
-    {
-      g_print("nsWidget:SetFont - got a FontSet.. ignoring\n");
-      NS_RELEASE(mFontMetrics);
-      return NS_ERROR_FAILURE;
+    if (mFontMetrics) {
+        nsFontHandle  fontHandle;
+        mFontMetrics->GetFontHandle(fontHandle);
+        // FIXME avoid fontset problems....
+        if (((GdkFont*)fontHandle)->type == GDK_FONT_FONTSET)
+        {
+            g_print("nsWidget:SetFont - got a FontSet.. ignoring\n");
+            NS_RELEASE(mFontMetrics);
+            return NS_ERROR_FAILURE;
+        }
+
+        if (mWidget) {
+            gtk_widget_ensure_style(mWidget);
+
+            GtkStyle *style = gtk_style_copy(mWidget->style);
+            // gtk_style_copy ups the ref count of the font
+            gdk_font_unref (style->font);
+
+            GdkFont *font = (GdkFont *)fontHandle;
+            style->font = font;
+            gdk_font_ref(style->font);
+
+            gtk_widget_set_style(mWidget, style);
+
+            gtk_style_unref(style);
+        }
+
     }
-
-    gtk_widget_ensure_style(mWidget);
-
-    GtkStyle *style = gtk_style_copy(mWidget->style);
-    // gtk_style_copy ups the ref count of the font
-    gdk_font_unref (style->font);
-
-    GdkFont *font = (GdkFont *)fontHandle;
-    style->font = font;
-    gdk_font_ref(style->font);
-
-    gtk_widget_set_style(mWidget, style);
-
-    gtk_style_unref(style);
-
-  }
-  NS_RELEASE(mFontMetrics);
-  return NS_OK;
+    NS_RELEASE(mFontMetrics);
+    return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -670,29 +674,39 @@ NS_METHOD nsWidget::Update(void)
 //-------------------------------------------------------------------------
 void *nsWidget::GetNativeData(PRUint32 aDataType)
 {
-  switch(aDataType) {
-    case NS_NATIVE_WINDOW:
+    switch(aDataType) {
+      case NS_NATIVE_WINDOW:
+        if (mWidget) {
 #ifdef NS_GTK_REF
-      return (void *)gdk_window_ref(mWidget->window);
+            return (void *)gdk_window_ref(mWidget->window);
 #else
-      return (void *)mWidget->window;
+            return (void *)mWidget->window;
 #endif
-    case NS_NATIVE_DISPLAY:
-      return (void *)GDK_DISPLAY();
-    case NS_NATIVE_WIDGET:
+        }
+        break;
+
+      case NS_NATIVE_DISPLAY:
+        return (void *)GDK_DISPLAY();
+
+      case NS_NATIVE_WIDGET:
+        if (mWidget) {
 #ifdef NS_GTK_REF
-      gtk_widget_ref(mWidget);
+            gtk_widget_ref(mWidget);
 #endif
-      return (void *)mWidget;
-    case NS_NATIVE_GRAPHIC:
-    /* GetSharedGC ups the ref count on the GdkGC so make sure you release
-     * it afterwards. */
-      return (void *)((nsToolkit *)mToolkit)->GetSharedGC();
-    default:
-      g_print("nsWidget::GetNativeData(%i) - weird value\n", aDataType);
-      break;
-  }
-  return nsnull;
+            return (void *)mWidget;
+        }
+        break;
+
+      case NS_NATIVE_GRAPHIC:
+        /* GetSharedGC ups the ref count on the GdkGC so make sure you release
+         * it afterwards. */
+        return (void *)((nsToolkit *)mToolkit)->GetSharedGC();
+
+      default:
+        g_print("nsWidget::GetNativeData(%i) - weird value\n", aDataType);
+        break;
+    }
+    return nsnull;
 }
 
 #ifdef NS_GTK_REF
@@ -700,12 +714,16 @@ void nsWidget::ReleaseNativeData(PRUint32 aDataType)
 {
   switch(aDataType) {
     case NS_NATIVE_WINDOW:
-      gdk_window_unref(mWidget->window);
+      if (mWidget) {
+          gdk_window_unref(mWidget->window);
+      }
       break;
     case NS_NATIVE_DISPLAY:
       break;
     case NS_NATIVE_WIDGET:
-      gtk_widget_unref(mWidget);
+      if (mWidget) {
+          gtk_widget_unref(mWidget);
+      }
       break;
     case NS_NATIVE_GRAPHIC:
       gdk_gc_unref(((nsToolkit *)mToolkit)->GetSharedGC());
@@ -881,57 +899,6 @@ NS_METHOD nsWidget::Create(nsNativeWidget aParent,
 //-------------------------------------------------------------------------
 void nsWidget::InitCallbacks(char *aName)
 {
-#if 0
-/* basically we are keeping the parent from getting the childs signals by
- * doing this. */
-  gtk_signal_connect_after(GTK_OBJECT(mWidget),
-                           "button_press_event",
-                           GTK_SIGNAL_FUNC(gtk_true),
-                           NULL);
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "button_release_event",
-                     GTK_SIGNAL_FUNC(gtk_true),
-                     NULL);
-  gtk_signal_connect(GTK_OBJECT(mWidget),
-                     "motion_notify_event",
-                     GTK_SIGNAL_FUNC(gtk_true),
-                     NULL);
-#endif
-  /*
-    gtk_signal_connect(GTK_OBJECT(mWidget),
-    "enter_notify_event",
-    GTK_SIGNAL_FUNC(gtk_true),
-    NULL);
-    gtk_signal_connect(GTK_OBJECT(mWidget),
-    "leave_notify_event",
-    GTK_SIGNAL_FUNC(gtk_true),
-    NULL);
-    
-    gtk_signal_connect(GTK_OBJECT(mWidget),
-    "draw",
-    GTK_SIGNAL_FUNC(gtk_false),
-    NULL);
-    gtk_signal_connect(GTK_OBJECT(mWidget),
-    "expose_event",
-    GTK_SIGNAL_FUNC(gtk_true),
-    NULL);
-    gtk_signal_connect(GTK_OBJECT(mWidget),
-    "key_press_event",
-    GTK_SIGNAL_FUNC(gtk_true),
-    NULL);
-    gtk_signal_connect(GTK_OBJECT(mWidget),
-    "key_release_event",
-    GTK_SIGNAL_FUNC(gtk_true),
-    NULL);
-    gtk_signal_connect(GTK_OBJECT(mWidget),
-    "focus_in_event",
-    GTK_SIGNAL_FUNC(gtk_true),
-    NULL);
-    gtk_signal_connect(GTK_OBJECT(mWidget),
-    "focus_out_event",
-    GTK_SIGNAL_FUNC(gtk_true),
-    NULL);
-  */
 }
 
 void nsWidget::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
@@ -1807,11 +1774,6 @@ nsWidget::RealizeSignal(GtkWidget *      aWidget,
 //////////////////////////////////////////////////////////////////////
 
 
-///////////////////////////////////////////////////////////////////////////
-//
-// Dispatch standard event
-//
-///////////////////////////////////////////////////////////////////////////
 /* virtual */ GdkWindow *
 nsWidget::GetWindowForSetBackground()
 {
@@ -1824,4 +1786,3 @@ nsWidget::GetWindowForSetBackground()
 
   return gdk_window;
 }
-///////////////////////////////////////////////////////////////////////////
