@@ -938,6 +938,11 @@ void nsCString::AssignWithConversion(const PRUnichar* aString,PRInt32 aCount) {
   }
 }
 
+void nsCString::AssignWithConversion( const nsString& aString ) {
+  AssignWithConversion(aString.GetUnicode(), aString.Length());
+}
+
+
 
 /**
  * assign given unichar to this string
