@@ -86,6 +86,8 @@ public:
                   const nsRect& aBounds,
                   nsScrollPreference aScrolling = nsScrollPreference_kAuto)=0;
 
+  NS_IMETHOD Destroy() = 0;
+
   NS_IMETHOD GetBounds(nsRect& aResult) = 0;
 
   NS_IMETHOD SetBounds(const nsRect& aBounds) = 0;
