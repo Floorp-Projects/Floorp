@@ -30,7 +30,6 @@ CSRCS		= xpt_dump.c xpt_link.c
 LIBS		= 		\
 		  -L$(DIST)/bin \
 		  -lxpt 	\
-		  $(NSPR_LIBS) 	\
 		  $(NULL)
 
 include $(topsrcdir)/config/rules.mk

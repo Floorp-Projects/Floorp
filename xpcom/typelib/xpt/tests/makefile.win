@@ -35,7 +35,6 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\libxpt
 LLIBS=					\
  $(DIST)\lib\xpcom32.lib		\
  $(DIST)\lib\libxpt32.lib		\
- $(LIBNSPR)				\
  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -152,18 +152,18 @@ main(int argc, char **argv)
             
             totalNumberOfInterfaces += header->num_interfaces;
             if (k == 0) {
-                IDE_array = PR_CALLOC(totalNumberOfInterfaces * sizeof(XPTInterfaceDirectoryEntry));
-                fix_array = PR_CALLOC(totalNumberOfInterfaces * sizeof(fixElement));
+                IDE_array = XPT_CALLOC(totalNumberOfInterfaces * sizeof(XPTInterfaceDirectoryEntry));
+                fix_array = XPT_CALLOC(totalNumberOfInterfaces * sizeof(fixElement));
             } else {
-                newIDE = PR_REALLOC(IDE_array, totalNumberOfInterfaces * sizeof(XPTInterfaceDirectoryEntry));
-                newFix = PR_REALLOC(fix_array, totalNumberOfInterfaces * sizeof(fixElement));
+                newIDE = XPT_REALLOC(IDE_array, totalNumberOfInterfaces * sizeof(XPTInterfaceDirectoryEntry));
+                newFix = XPT_REALLOC(fix_array, totalNumberOfInterfaces * sizeof(fixElement));
 
                 if (!newIDE) {
-                    perror("FAILED: PR_REALLOC of IDE_array");
+                    perror("FAILED: XPT_REALLOC of IDE_array");
                     return 1;
                 }
                 if (!newFix) {
-                    perror("FAILED: PR_REALLOC of newFix");
+                    perror("FAILED: XPT_REALLOC of newFix");
                     return 1;
                 }
                 IDE_array = newIDE;
@@ -197,7 +197,7 @@ main(int argc, char **argv)
                 ann->next = header->annotations;
             }
             
-            PR_FREEIF(header)
+            XPT_FREEIF(header);
             if (state)
                 XPT_DestroyXDRState(state);
             free(whole);
@@ -564,7 +564,7 @@ update_fix_array(fixElement *fix, int element_to_delete,
         return PR_FALSE;
     }
 
-    deleted = PR_CALLOC(sizeof(fixElement));
+    deleted = XPT_CALLOC(sizeof(fixElement));
     if (!copy_fixElement(&fix[element_to_delete], deleted)) {
         return PR_FALSE;
     }

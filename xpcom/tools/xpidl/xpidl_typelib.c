@@ -211,10 +211,10 @@ fill_iid(struct nsID *id, char *str)
     fprintf(stderr, "parsing iid   %s\n", str);
 #endif
 
-    count = PR_sscanf(str, (str[0] == '{' ? nsIDFmt1 : nsIDFmt2),
-                      &n0, &n1, &n2,
-                      &n3[0],&n3[1],&n3[2],&n3[3],
-                      &n3[4],&n3[5],&n3[6],&n3[7]);
+    count = sscanf(str, (str[0] == '{' ? nsIDFmt1 : nsIDFmt2),
+                   &n0, &n1, &n2,
+                   &n3[0],&n3[1],&n3[2],&n3[3],
+                   &n3[4],&n3[5],&n3[6],&n3[7]);
 
     id->m0 = (PRInt32) n0;
     id->m1 = (PRInt16) n1;
@@ -243,7 +243,7 @@ fill_ide_table(gpointer key, gpointer value, gpointer user_data)
     XPTInterfaceDirectoryEntry *ide;
     char *iid;
 
-    PR_ASSERT(holder);
+    XPT_ASSERT(holder);
     iid = holder->iid ? holder->iid : "";
 
 #ifdef DEBUG_shaver_ifaces
@@ -397,25 +397,41 @@ pass_1(TreeState *state)
     } else {
         /* write the typelib */
         time_t now;
-        char *annotate_val, *data;
-        PRUint32 i, len, header_sz;
+        char *annotate_val, *data, *timestr;
+        PRUint32 i, len, header_sz, annotation_len, written_so_far;
         XPTState *xstate = XPT_NewXDRState(XPT_ENCODE, NULL, 0);
         XPTCursor curs, *cursor = &curs;
+        static char *annotation_format = "Created from %s.idl\nCreation date: %s"
+                                         "Interfaces:";
+
         /* fill in the annotations, listing resolved interfaces in order */
 
         (void)time(&now);
-        annotate_val = PR_smprintf("Created from %s.idl\nCreation date: %s"
-                                   "Interfaces:",
-                                   state->basename, ctime(&now));
+        timestr = ctime(&now);
+
+        /* Avoid dependence on nspr; no PR_smprintf and friends. */
+
+        /* How large should the annotation string be? */
+        annotation_len = strlen(annotation_format) + strlen(state->basename) +
+            strlen(timestr);
+        for (i = 0; i < HEADER(state)->num_interfaces; i++) {
+            XPTInterfaceDirectoryEntry *ide;
+            ide = &HEADER(state)->interface_directory[i];
+            if (ide->interface_descriptor) {
+                annotation_len += strlen(ide->name) + 1;
+            }
+        }
+
+        annotate_val = (char *) malloc(annotation_len);
+        written_so_far = sprintf(annotate_val, annotation_format,
+                                 state->basename, timestr);
 
         for (i = 0; i < HEADER(state)->num_interfaces; i++) {
             XPTInterfaceDirectoryEntry *ide;
             ide = &HEADER(state)->interface_directory[i];
             if (ide->interface_descriptor) {
-                annotate_val = PR_sprintf_append(annotate_val, " %s",
-                                                 ide->name);
-                if (!annotate_val)
-                    return FALSE;
+                written_so_far += sprintf(annotate_val + written_so_far, 
+                                          " %s", ide->name);
             }
         }
 
@@ -423,7 +439,7 @@ pass_1(TreeState *state)
             XPT_NewAnnotation(XPT_ANN_LAST | XPT_ANN_PRIVATE,
                               XPT_NewStringZ("xpidl 0.99.9"),
                               XPT_NewStringZ(annotate_val));
-        PR_smprintf_free(annotate_val);
+        free(annotate_val);
 
 #ifdef DEBUG_shaver_misc
         fprintf(stderr, "writing the typelib\n");
@@ -937,6 +953,7 @@ typelib_const_dcl(TreeState *state)
             is_long = TRUE;
             break;
         default:
+            is_long = FALSE; /* quell warning. */
             success = FALSE;
         }
     }

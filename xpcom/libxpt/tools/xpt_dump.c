@@ -744,7 +744,10 @@ XPT_DumpConstDescriptor(XPTHeader *header, XPTConstDescriptor *cd,
                         const int indent, PRBool verbose_mode)
 {
     int new_indent = indent + BASE_INDENT;
-    char *out, *const_type;
+    char *const_type;
+/*      char *out; */
+    PRUint32 uintout;
+    PRInt32 intout;
 
     if (verbose_mode) {
         fprintf(stdout, "%*sName:   %s\n", indent, " ", cd->name);
@@ -766,13 +769,18 @@ XPT_DumpConstDescriptor(XPTHeader *header, XPTConstDescriptor *cd,
     case TD_INT16:
         fprintf(stdout, "%d", cd->value.i16);
         break;
+    case TD_INT64:
+        /* XXX punt for now to remove NSPR linkage...
+         * borrow from mozilla/nsprpub/pr/src/io/prprf.c::cvt_ll? */
+
+/*          out = PR_smprintf("%lld", cd->value.i64); */
+/*          fputs(out, stdout); */
+/*          PR_smprintf_free(out); */
+        LL_L2I(intout, cd->value.i64);
+        fprintf(stdout, "%d", intout);
+        break;
     case TD_INT32:
         fprintf(stdout, "%d", cd->value.i32);
-        break;
-    case TD_INT64:
-        out = PR_smprintf("%lld", cd->value.i64);
-        fputs(out, stdout);
-        PR_smprintf_free(out);
         break;
     case TD_UINT8:
         fprintf(stdout, "%d", cd->value.ui8);
@@ -780,13 +788,16 @@ XPT_DumpConstDescriptor(XPTHeader *header, XPTConstDescriptor *cd,
     case TD_UINT16:
         fprintf(stdout, "%d", cd->value.ui16);
         break;
+    case TD_UINT64:
+/*          out = PR_smprintf("%lld", cd->value.ui64); */
+/*          fputs(out, stdout); */
+/*          PR_smprintf_free(out); */
+        /* XXX punt for now to remove NSPR linkage. */
+        LL_L2UI(uintout, cd->value.ui64);
+        fprintf(stdout, "%d", uintout);
+        break;
     case TD_UINT32:
         fprintf(stdout, "%d", cd->value.ui32);
-        break;
-    case TD_UINT64:
-        out = PR_smprintf("%lld", cd->value.ui64);
-        fputs(out, stdout);
-        PR_smprintf_free(out);
         break;
     case TD_FLOAT:
         fprintf(stdout, "%f", cd->value.flt);
