@@ -70,6 +70,7 @@ PROGRAM=.\$(OBJDIR)\$(EXENAME).EXE
 #//------------------------------------------------------------------------
 LCFLAGS=-DNETSCAPE
 LLIBS=$(LLIBS)				\
+                $(LIBNSPR)              \
                 $(DIST)\lib\xpcom32.lib	\
                 $(DIST)\lib\netlib.lib  \
                 $(DIST)\lib\raptorbase.lib  \
