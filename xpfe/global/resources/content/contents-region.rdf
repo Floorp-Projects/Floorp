@@ -12,7 +12,7 @@
 	chrome:displayName="US Regional Contents"
         chrome:author="mozilla.org"
         chrome:name="global-region"
- 	chrome:localeVersion="1.2b">
+ 	chrome:localeVersion="1.2">
   </RDF:Description>
 
 </RDF:RDF>
