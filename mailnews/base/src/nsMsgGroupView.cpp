@@ -123,6 +123,9 @@ nsHashKey *nsMsgGroupView::AllocHashKeyForHdr(nsIMsgDBHdr *msgHdr)
     case nsMsgViewSortType::byAuthor:
       (void) msgHdr->GetAuthor(getter_Copies(cStringKey));
       return new nsCStringKey(cStringKey.get());
+    case nsMsgViewSortType::byRecipient:
+      (void) msgHdr->GetRecipients(getter_Copies(cStringKey));
+      return new nsCStringKey(cStringKey.get());
     case nsMsgViewSortType::byAccount:
       {
         nsCOMPtr <nsIMsgDatabase> dbToUse = m_db;
@@ -245,6 +248,7 @@ nsMsgGroupThread *nsMsgGroupView::AddHdrToThread(nsIMsgDBHdr *msgHdr)
 //  if (m_sortType == nsMsgViewSortType::byDate)
 //    msgKey = ((nsPRUint32Key *) hashKey)->GetValue();
   nsMsgGroupThread *foundThread = nsnull;
+  if (hashKey)
   foundThread = (nsMsgGroupThread *) m_groupsTable.Get(hashKey);
   PRBool newThread = !foundThread;
   nsMsgViewIndex viewIndexOfThread;
@@ -390,7 +394,6 @@ NS_IMETHODIMP nsMsgGroupView::OnHdrDeleted(nsIMsgDBHdr *aHdrDeleted, nsMsgKey aP
   nsresult rv = GetThreadContainingMsgHdr(aHdrDeleted, getter_AddRefs(thread));
   NS_ENSURE_SUCCESS(rv, rv);
   nsMsgViewIndex viewIndexOfThread = GetIndexOfFirstDisplayedKeyInThread(thread);
-  nsHashKey *hashKey = AllocHashKeyForHdr(aHdrDeleted);
   thread->RemoveChildHdr(aHdrDeleted, nsnull);
 
   nsMsgGroupThread *groupThread = NS_STATIC_CAST(nsMsgGroupThread *, (nsIMsgThread *) thread);
@@ -404,6 +407,7 @@ NS_IMETHODIMP nsMsgGroupView::OnHdrDeleted(nsIMsgDBHdr *aHdrDeleted, nsMsgKey aP
   if (!groupThread->m_keys.GetSize())
   {
     nsHashKey *hashKey = AllocHashKeyForHdr(aHdrDeleted);
+    if (hashKey)
     m_groupsTable.Remove(hashKey);
     delete hashKey;
   }
@@ -501,11 +505,16 @@ NS_IMETHODIMP nsMsgGroupView::LoadMessageByViewIndex(nsMsgViewIndex aViewIndex)
 nsresult nsMsgGroupView::GetThreadContainingMsgHdr(nsIMsgDBHdr *msgHdr, nsIMsgThread **pThread)
 {
   nsHashKey *hashKey = AllocHashKeyForHdr(msgHdr);
+  if (hashKey)
+  {
   nsMsgGroupThread *groupThread = (nsMsgGroupThread *) m_groupsTable.Get(hashKey);
   
   if (groupThread)
     groupThread->QueryInterface(NS_GET_IID(nsIMsgThread), (void **) pThread);
   delete hashKey;
+  }
+  else
+    *pThread = nsnull;
   return (*pThread) ? NS_OK : NS_ERROR_FAILURE;
 }
 
