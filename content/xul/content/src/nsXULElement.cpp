@@ -477,16 +477,11 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
     if (! aResult)
         return NS_ERROR_NULL_POINTER;
 
-    nsXULElement* element = new nsXULElement();
+    nsRefPtr<nsXULElement> element = new nsXULElement();
     if (! element)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    // anchor the element so an early return will clean up properly.
-    nsCOMPtr<nsIContent> anchor =
-        do_QueryInterface(NS_REINTERPRET_CAST(nsIStyledContent*, element));
-
-    nsresult rv;
-    rv = element->Init();
+    nsresult rv = element->Init();
     if (NS_FAILED(rv)) return rv;
 
     element->mPrototype = aPrototype;
@@ -502,7 +497,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype,
             element->AddListenerFor(aPrototype->mAttributes[i].mName, PR_TRUE);
     }
 
-    *aResult = NS_REINTERPRET_CAST(nsIStyledContent*, element);
+    *aResult = NS_REINTERPRET_CAST(nsIStyledContent*, element.get());
     NS_ADDREF(*aResult);
     return NS_OK;
 }
@@ -627,9 +622,7 @@ nsXULElement::GetParentNode(nsIDOMNode** aParentNode)
     }
 
     if (mDocument) {
-        // XXX This is a mess because of our fun multiple inheritance heirarchy
-        nsCOMPtr<nsIContent> thisIContent;
-        QueryInterface(NS_GET_IID(nsIContent), getter_AddRefs(thisIContent));
+        nsIContent *thisIContent = this;
 
         if (mDocument->GetRootContent() == thisIContent) {
             // If we don't have a parent, and we're the root content
@@ -1319,16 +1312,11 @@ nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
     // XXX This should use nsContentList, but that does not support
     // _two_ strings being passed to the match func.  Ah, the ability
     // to create real closures, where art thou?
-    nsresult rv;
     nsRDFDOMNodeList* elements = new nsRDFDOMNodeList();
     NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
     NS_ADDREF(elements);
 
-    nsCOMPtr<nsIDOMNode> domElement;
-    rv = QueryInterface(NS_GET_IID(nsIDOMNode), getter_AddRefs(domElement));
-    if (NS_SUCCEEDED(rv)) {
-        GetElementsByAttribute(domElement, aAttribute, aValue, elements);
-    }
+    GetElementsByAttribute(this, aAttribute, aValue, elements);
 
     *aReturn = elements;
     return NS_OK;
@@ -1601,12 +1589,11 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
           nsIBindingManager *bindingManager = mDocument->GetBindingManager();
           NS_ASSERTION(bindingManager, "no binding manager");
           if (bindingManager) {
-            bindingManager->ChangeDocumentFor(NS_STATIC_CAST(nsIStyledContent*, this), mDocument, aDocument);
+            bindingManager->ChangeDocumentFor(this, mDocument, aDocument);
           }
 
-          nsIDOMElement* domElement = NS_STATIC_CAST(nsIDOMElement*, this);
           nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(mDocument));
-          nsDoc->SetBoxObjectFor(domElement, nsnull);
+          nsDoc->SetBoxObjectFor(this, nsnull);
         }
 
         // mControllers can own objects that are implemented
@@ -1973,11 +1960,9 @@ nsXULElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
             newCurrentIndex = PR_MIN((treeRows - 1), newCurrentIndex);
             nsCOMPtr<nsIDOMElement> newCurrentItem;
             listBox->GetItemAtIndex(newCurrentIndex, getter_AddRefs(newCurrentItem));
-            if (newCurrentItem) {
-                nsCOMPtr<nsIDOMXULSelectControlItemElement> xulCurItem = do_QueryInterface(newCurrentItem);
-                if (xulCurItem)
-                    controlElement->SetCurrentItem(xulCurItem);
-            }
+            nsCOMPtr<nsIDOMXULSelectControlItemElement> xulCurItem = do_QueryInterface(newCurrentItem);
+            if (xulCurItem)
+                controlElement->SetCurrentItem(xulCurItem);
         } else {
             controlElement->SetCurrentItem(nsnull);
         }
@@ -2064,9 +2049,8 @@ nsXULElement::UnregisterAccessKey(const nsAString& aOldValue)
                 nsCOMPtr<nsIPresContext> presContext;
                 shell->GetPresContext(getter_AddRefs(presContext));
 
-                nsIContent* content = NS_STATIC_CAST(nsIContent*, this);
                 presContext->EventStateManager()->
-                    UnregisterAccessKey(content, aOldValue.First());
+                    UnregisterAccessKey(this, aOldValue.First());
             }
         }
     }
@@ -3022,11 +3006,9 @@ nsXULElement::GetBuilder(nsIXULTemplateBuilder** aBuilder)
 {
     *aBuilder = nsnull;
 
-    if (mDocument) {
-        nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mDocument);
-        if (xuldoc)
-            xuldoc->GetTemplateBuilderFor(NS_STATIC_CAST(nsIStyledContent*, this), aBuilder);
-    }
+    nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mDocument);
+    if (xuldoc)
+        xuldoc->GetTemplateBuilderFor(this, aBuilder);
 
     return NS_OK;
 }
@@ -3068,7 +3050,7 @@ nsXULElement::EnsureContentsGenerated(void) const
                         return NS_OK;
                     }
 
-                    return builder->CreateContents(NS_STATIC_CAST(nsIStyledContent*, unconstThis));
+                    return builder->CreateContents(unconstThis);
                 }
             }
 
@@ -3322,7 +3304,7 @@ nsXULElement::GetBoxObject(nsIBoxObject** aResult)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(mDocument));
-  return nsDoc->GetBoxObjectFor(NS_STATIC_CAST(nsIDOMElement*, this), aResult);
+  return nsDoc->GetBoxObjectFor(this, aResult);
 }
 
 // Methods for setting/getting attributes from nsIDOMXULElement
