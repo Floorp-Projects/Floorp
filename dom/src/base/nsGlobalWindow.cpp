@@ -114,6 +114,8 @@ GlobalWindowImpl::GlobalWindowImpl()
   mRunningTimeout = nsnull;
   mTimeoutPublicIdCounter = 1;
   mListenerManager = nsnull;
+
+  mFirstLoadKludge = PR_TRUE;
 }
 
 GlobalWindowImpl::~GlobalWindowImpl() 
@@ -232,6 +234,13 @@ GlobalWindowImpl::GetContext(nsIScriptContext **aContext)
 NS_IMETHODIMP_(void)       
 GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
 {
+  if (mFirstLoadKludge) {
+    mFirstLoadKludge = PR_FALSE;
+    mDocument = aDocument;
+    NS_IF_ADDREF(mDocument);
+    return;
+  }
+
   ClearAllTimeouts();
 
   if (nsnull != mScriptObject && nsnull != mContext) {
@@ -1398,12 +1407,31 @@ GlobalWindowImpl::Open(JSContext *cx,
                        PRUint32 argc, 
                        nsIDOMWindow** aReturn)
 {
-  PRUint32 mChrome = 0;
-  PRInt32 mWidth = 0, mHeight = 0;
-  PRInt32 mLeft = 0, mTop = 0;
-  nsRect mDefaultBounds;
+  return OpenInternal(cx, argv, argc, PR_FALSE, aReturn);
+}
+
+// like Open, but attaches to the new window any extra parameters past [features]
+// as a JS property named "arguments"
+NS_IMETHODIMP    
+GlobalWindowImpl::OpenDialog(JSContext *cx,
+                       jsval *argv, 
+                       PRUint32 argc, 
+                       nsIDOMWindow** aReturn)
+{
+  return OpenInternal(cx, argv, argc, PR_TRUE, aReturn);
+}
+
+nsresult    
+GlobalWindowImpl::OpenInternal(JSContext *cx,
+                       jsval *argv, 
+                       PRUint32 argc, 
+                       PRBool aAttachArguments,
+                       nsIDOMWindow** aReturn)
+{
+  PRUint32 chromeFlags;
   nsAutoString mAbsURL, name;
   JSString* str;
+  char* options;
   *aReturn = nsnull;
 
   if (argc > 0) {
@@ -1444,75 +1472,18 @@ GlobalWindowImpl::Open(JSContext *cx,
     name.SetString("");
   }
 
-  /* set default location/size of new window. */
-  nsIBrowserWindow *mBrowser;
-  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
-    mBrowser->GetWindowBounds(mDefaultBounds);
-    NS_RELEASE(mBrowser);
-  }
-  
+  options = nsnull;
   if (argc > 2) {
     if (!(str = JS_ValueToString(cx, argv[2]))) {
       return NS_ERROR_FAILURE;
     }
-    char *options = JS_GetStringBytes(str);
-
-    mChrome |= WinHasOption(options, "toolbar") ? NS_CHROME_TOOL_BAR_ON : 0;
-    mChrome |= WinHasOption(options, "location") ? NS_CHROME_LOCATION_BAR_ON : 0;
-    mChrome |= (WinHasOption(options, "directories") | WinHasOption(options, "personalbar"))
-      ? NS_CHROME_PERSONAL_TOOLBAR_ON : 0;
-    mChrome |= WinHasOption(options, "status") ? NS_CHROME_STATUS_BAR_ON : 0;
-    mChrome |= WinHasOption(options, "menubar") ? NS_CHROME_MENU_BAR_ON : 0;
-    mChrome |= WinHasOption(options, "scrollbars") ? NS_CHROME_SCROLLBARS_ON : 0;
-    mChrome |= WinHasOption(options, "resizable") ? NS_CHROME_WINDOW_RESIZE_ON : 0;
-    mChrome |= NS_CHROME_WINDOW_CLOSE_ON;
-
-    mChrome |= WinHasOption(options, "chrome") ? NS_CHROME_OPEN_AS_CHROME : 0;
-
-    mWidth = WinHasOption(options, "innerWidth") | WinHasOption(options, "width");
-    mHeight = WinHasOption(options, "innerHeight") | WinHasOption(options, "height");
-
-    /*mWidth = WinHasOption(options, "outerWidth");
-    mHeight = WinHasOption(options, "outerHeight");*/
-
-    mLeft = WinHasOption(options, "left") | WinHasOption(options, "screenX");
-    mTop = WinHasOption(options, "top") | WinHasOption(options, "screenY");
-    /*z-ordering, history, dependent
-    mChrome->topmost         = WinHasOption(options, "alwaysRaised");
-    mChrome->bottommost              = WinHasOption(options, "alwaysLowered");
-    mChrome->z_lock          = WinHasOption(options, "z-lock");
-    mChrome->is_modal            = WinHasOption(options, "modal");
-    mChrome->hide_title_bar  = !(WinHasOption(options, "titlebar"));
-    mChrome->dependent              = WinHasOption(options, "dependent");
-    mChrome->copy_history           = FALSE;
-    */
-
-    /* Allow disabling of commands only if there is no menubar */
-    /*if (!mChrome & NS_CHROME_MENU_BAR_ON) {
-        mChrome->disable_commands = !WinHasOption(options, "hotkeys");
-        if (XP_STRCASESTR(options,"hotkeys")==NULL)
-            mChrome->disable_commands = FALSE;
-    }*/
-    /* If titlebar condition not specified, default to shown */
-    /*if (XP_STRCASESTR(options,"titlebar")==0)*/
-    mChrome |= NS_CHROME_TITLEBAR_ON;
-
-    /* XXX Add security check on z-ordering, modal, hide title, disable hotkeys */
-
-    /* XXX Add security check for sizing and positioning.  
-     * See mozilla/lib/libmocha/lm_win.c for current constraints */
-
-  } 
-  else {
-      /* Make a fully mChromed window, but don't copy history. */
-    mChrome = (PRUint32)~0;
+    options = JS_GetStringBytes(str);
   }
+  chromeFlags = CalculateChromeFlags(options);
 
-  nsIBrowserWindow *newWindow = nsnull;
-  nsIScriptGlobalObject *newGlobalObject = nsnull;
   nsIWebShell *newOuterShell = nsnull;
-  nsIWebShellContainer *webShellContainer, *newContainer;
-  
+  nsIWebShellContainer *webShellContainer;
+
   /* XXX check for existing window of same name.  If exists, set url and 
    * update chrome */
   if (NS_OK == mWebShell->GetContainer(webShellContainer) && nsnull != webShellContainer) {
@@ -1520,111 +1491,190 @@ GlobalWindowImpl::Open(JSContext *cx,
     webShellContainer->FindWebShellWithName(name.GetUnicode(), newOuterShell);
     if (nsnull == newOuterShell) {
 			// No window of that name, and we are allowed to create a new one now.
-      webShellContainer->NewWebShell(mChrome, PR_FALSE, newOuterShell);
+      webShellContainer->NewWebShell(chromeFlags, PR_FALSE, newOuterShell);
     }
 
     if (nsnull != newOuterShell) {
-      newOuterShell->SetName(name.GetUnicode());
-      newOuterShell->LoadURL(mAbsURL.GetUnicode());
-      
-			nsIWebShell *rootShell;
-			newOuterShell->GetRootWebShellEvenIfChrome(rootShell);
-			if (nsnull != rootShell) {
-				rootShell->GetContainer(newContainer);
-				if (nsnull != newContainer) {
-					newContainer->QueryInterface(kIBrowserWindowIID, (void**)&newWindow);
-					NS_RELEASE(newContainer);
-				}
-				NS_RELEASE(rootShell);
-			}
+      if (NS_SUCCEEDED(ReadyOpenedWebShell(newOuterShell, aReturn))) {
+        if (aAttachArguments && argc > 3)
+          AttachArguments(*aReturn, argv+3, argc-3);
+        newOuterShell->SetName(name.GetUnicode());
+        newOuterShell->LoadURL(mAbsURL.GetUnicode());
+        SizeAndShowOpenedWebShell(newOuterShell, options);
+      }
+      NS_RELEASE(newOuterShell);
     }
     NS_RELEASE(webShellContainer);
   }
 
-  if (nsnull != newWindow && nsnull != newOuterShell) {
-    // beard: don't resize/reposition the window if it is the same web shell.
-    if (newOuterShell != mWebShell) {
-      // How should we do default size/pos?
-      // How about inheriting from the current window?
-      newWindow->SizeTo(mWidth ? mWidth : mDefaultBounds.width, mHeight ? mHeight : mDefaultBounds.height);
-      newWindow->MoveTo(mLeft ? mLeft : mDefaultBounds.x, mTop ? mTop : mDefaultBounds.y);
-      newWindow->Show();
-    }
-
-    /* Get win obj */
-    nsIScriptContextOwner *newContextOwner = nsnull;
-
-    if (NS_OK != newOuterShell->QueryInterface(kIScriptContextOwnerIID, (void**)&newContextOwner) ||
-        NS_OK != newContextOwner->GetScriptGlobalObject(&newGlobalObject)) {
-
-      NS_IF_RELEASE(newWindow);
-      NS_IF_RELEASE(newOuterShell);
-      NS_IF_RELEASE(newContextOwner);
-      return NS_ERROR_FAILURE;
-    }
-
-    NS_RELEASE(newWindow);
-    NS_RELEASE(newOuterShell);
-    NS_RELEASE(newContextOwner);
-  }
-
-  nsIDOMWindow *newDOMWindow = nsnull;
-  if (nsnull != newGlobalObject) {
-    if (NS_OK == newGlobalObject->QueryInterface(kIDOMWindowIID, (void**)&newDOMWindow)) {
-      *aReturn = newDOMWindow;
-    }
-
-    /* Set opener */
-    newGlobalObject->SetOpenerWindow(this);
-  }
-
-  NS_IF_RELEASE(newGlobalObject);
-
   return NS_OK;
 }
 
-// like Open, but attaches to the new window any extra parameters past [features]
-// as a JS property named "arguments"
-NS_IMETHODIMP    
-GlobalWindowImpl::OpenDialog(JSContext *cx,
-                       jsval *argv, 
-                       PRUint32 argc, 
-                       nsIDOMWindow** aReturn)
+// attach the given array of JS values to the given window, as a property array
+// named "arguments"
+nsresult
+GlobalWindowImpl::AttachArguments(nsIDOMWindow *aWindow, jsval *argv, PRUint32 argc)
 {
-  nsresult res;
-
-  res = Open(cx, argv, argc, aReturn);
+  if (argc == 0)
+    return NS_OK;
 
   // copy the extra parameters into a JS Array and attach it
-  if (NS_OK == res && argc > 3) {
-    JSObject *args;
-    void *scriptObject;
-    nsIScriptGlobalObject *scriptGlobal;
-    nsIScriptObjectOwner *owner;
-    JSContext *newWinContext;
-    nsIScriptContext *newWinScriptContext;
+  JSObject *args;
+  JSObject *scriptObject;
+  nsIScriptGlobalObject *scriptGlobal;
+  nsIScriptObjectOwner *owner;
+  JSContext *jsContext;
+  nsIScriptContext *scriptContext;
 
-    res = (*aReturn)->QueryInterface(kIScriptGlobalObjectIID, (void **)&scriptGlobal);
-    if (NS_SUCCEEDED(res)) {
-      scriptGlobal->GetContext(&newWinScriptContext);
-      if (newWinScriptContext) {
-        newWinContext = (JSContext *) newWinScriptContext->GetNativeContext();
-        res = (*aReturn)->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner);
-        if (NS_SUCCEEDED(res)) {
-          res = owner->GetScriptObject(newWinScriptContext, &scriptObject);
-          args = JS_NewArrayObject(newWinContext, argc-3, argv+3);
-          if (args) {
-            jsval argsVal = OBJECT_TO_JSVAL(args);
-//          JS_DefineProperty(newWinContext, (JSObject *)scriptObject, "arguments",
-//            argsVal, NULL, NULL, JSPROP_PERMANENT);
-            JS_SetProperty(newWinContext, (JSObject *)scriptObject, "arguments", &argsVal);
-          }
-          NS_RELEASE(owner);
+  if (NS_SUCCEEDED(aWindow->QueryInterface(kIScriptGlobalObjectIID, (void **)&scriptGlobal))) {
+    scriptGlobal->GetContext(&scriptContext);
+    if (scriptContext) {
+      jsContext = (JSContext *) scriptContext->GetNativeContext();
+      if (NS_SUCCEEDED(aWindow->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner))) {
+        owner->GetScriptObject(scriptContext, (void **) &scriptObject);
+        args = JS_NewArrayObject(jsContext, argc, argv);
+        if (args) {
+          jsval argsVal = OBJECT_TO_JSVAL(args);
+//        JS_DefineProperty(jsContext, scriptObject, "arguments",
+//          argsVal, NULL, NULL, JSPROP_PERMANENT);
+          JS_SetProperty(jsContext, scriptObject, "arguments", &argsVal);
         }
-        NS_RELEASE(newWinScriptContext);
+        NS_RELEASE(owner);
       }
-      NS_RELEASE(scriptGlobal);
+      NS_RELEASE(scriptContext);
     }
+    NS_RELEASE(scriptGlobal);
+  }
+  return NS_OK;
+}
+
+
+PRUint32
+GlobalWindowImpl::CalculateChromeFlags(char *aFeatures) {
+
+  PRUint32  chromeFlags = 0;
+
+  if (nsnull == aFeatures)
+    return (PRUint32)~0; // default is fully chromed (but don't copy history?)
+
+  chromeFlags |= WinHasOption(aFeatures, "toolbar") ? NS_CHROME_TOOL_BAR_ON : 0;
+  chromeFlags |= WinHasOption(aFeatures, "location") ? NS_CHROME_LOCATION_BAR_ON : 0;
+  chromeFlags |= (WinHasOption(aFeatures, "directories") | WinHasOption(aFeatures, "personalbar"))
+    ? NS_CHROME_PERSONAL_TOOLBAR_ON : 0;
+  chromeFlags |= WinHasOption(aFeatures, "status") ? NS_CHROME_STATUS_BAR_ON : 0;
+  chromeFlags |= WinHasOption(aFeatures, "menubar") ? NS_CHROME_MENU_BAR_ON : 0;
+  chromeFlags |= WinHasOption(aFeatures, "scrollbars") ? NS_CHROME_SCROLLBARS_ON : 0;
+  chromeFlags |= WinHasOption(aFeatures, "resizable") ? NS_CHROME_WINDOW_RESIZE_ON : 0;
+  chromeFlags |= NS_CHROME_WINDOW_CLOSE_ON;
+
+  chromeFlags |= WinHasOption(aFeatures, "chrome") ? NS_CHROME_OPEN_AS_CHROME : 0;
+
+  /*z-ordering, history, dependent
+  chromeFlags->topmost         = WinHasOption(aFeatures, "alwaysRaised");
+  chromeFlags->bottommost              = WinHasOption(aFeatures, "alwaysLowered");
+  chromeFlags->z_lock          = WinHasOption(aFeatures, "z-lock");
+  chromeFlags->is_modal            = WinHasOption(aFeatures, "modal");
+  chromeFlags->hide_title_bar  = !(WinHasOption(aFeatures, "titlebar"));
+  chromeFlags->dependent              = WinHasOption(aFeatures, "dependent");
+  chromeFlags->copy_history           = FALSE;
+  */
+
+  /* Allow disabling of commands only if there is no menubar */
+  /*if (!chromeFlags & NS_CHROME_MENU_BAR_ON) {
+      chromeFlags->disable_commands = !WinHasOption(aFeatures, "hotkeys");
+      if (XP_STRCASESTR(aFeatures,"hotkeys")==NULL)
+          chromeFlags->disable_commands = FALSE;
+  }*/
+  /* If titlebar condition not specified, default to shown */
+  /*if (XP_STRCASESTR(aFeatures,"titlebar")==0)*/
+  chromeFlags |= NS_CHROME_TITLEBAR_ON;
+
+  /* XXX Add security check on z-ordering, modal, hide title, disable hotkeys */
+
+  /* XXX Add security check for sizing and positioning.  
+   * See mozilla/lib/libmocha/lm_win.c for current constraints */
+
+  return chromeFlags;
+}
+
+// set the newly opened webshell's (window) size, and show it
+nsresult
+GlobalWindowImpl::SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFeatures)
+{
+  if (nsnull == aOuterShell)
+    return NS_ERROR_NULL_POINTER;
+
+  nsRect           defaultBounds;
+  PRInt32          top = 0, left = 0, height = 0, width = 0;
+  nsIBrowserWindow *thisWindow,
+                   *openedWindow = nsnull;
+
+  // use this window's size as the default
+  if (NS_SUCCEEDED(GetBrowserWindowInterface(thisWindow))) {
+    thisWindow->GetWindowBounds(defaultBounds);
+    NS_RELEASE(thisWindow);
+  }
+
+  // get the nsIBrowserWindow corresponding to the given aOuterShell
+  nsIWebShell *rootShell;
+	aOuterShell->GetRootWebShellEvenIfChrome(rootShell);
+	if (nsnull != rootShell) {
+    nsIWebShellContainer *newContainer;
+		rootShell->GetContainer(newContainer);
+		if (nsnull != newContainer) {
+			if (NS_FAILED(newContainer->QueryInterface(kIBrowserWindowIID, (void**)&openedWindow)))
+        openedWindow = nsnull;
+			NS_RELEASE(newContainer);
+		}
+		NS_RELEASE(rootShell);
+	}
+
+  // set size
+  if (nsnull != openedWindow) {
+
+    if (nsnull != aFeatures) {
+      width = WinHasOption(aFeatures, "innerWidth") | WinHasOption(aFeatures, "width");
+      height = WinHasOption(aFeatures, "innerHeight") | WinHasOption(aFeatures, "height");
+
+      // width = WinHasOption(aFeatures, "outerWidth");
+      // height = WinHasOption(aFeatures, "outerHeight");
+
+      left = WinHasOption(aFeatures, "left") | WinHasOption(aFeatures, "screenX");
+      top = WinHasOption(aFeatures, "top") | WinHasOption(aFeatures, "screenY");
+    }
+
+    // beard: don't resize/reposition the window if it is the same web shell.
+    if (aOuterShell != mWebShell) {
+      openedWindow->SizeTo(width ? width : defaultBounds.width, height ? height : defaultBounds.height);
+      openedWindow->MoveTo(left ? left : defaultBounds.x, top ? top : defaultBounds.y);
+      openedWindow->Show();
+    }
+
+    NS_RELEASE(openedWindow);
+  }
+  return NS_OK;
+}
+
+// return the nsIDOMWindow corresponding to the given nsIWebShell
+// note this forces the creation of a script context, if one has not already been created
+// note it also sets the window's opener to this -- because it's just convenient, that's all
+nsresult
+GlobalWindowImpl::ReadyOpenedWebShell(nsIWebShell *aWebShell, nsIDOMWindow **aDOMWindow)
+{
+  nsIScriptContextOwner *newContextOwner = nsnull;
+  nsIScriptGlobalObject *newGlobalObject = nsnull;
+  nsresult              res;
+
+  *aDOMWindow = nsnull;
+  res = aWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)&newContextOwner);
+  if (NS_SUCCEEDED(res)) {
+    res = newContextOwner->GetScriptGlobalObject(&newGlobalObject);
+    if (NS_SUCCEEDED(res)) {
+      res = newGlobalObject->QueryInterface(kIDOMWindowIID, (void**)aDOMWindow);
+      newGlobalObject->SetOpenerWindow(this); // damnit
+      NS_RELEASE(newGlobalObject);
+    }
+    NS_RELEASE(newContextOwner);
   }
   return res;
 }
@@ -1818,6 +1868,12 @@ PRBool
 GlobalWindowImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
   if (JSVAL_IS_STRING(aID) && 
+      PL_strcmp("arguments", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
+    int a;
+    a = 6;
+  } // DRaM
+
+  if (JSVAL_IS_STRING(aID) && 
       PL_strcmp("location", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
     nsIDOMLocation *location;
     
@@ -1851,6 +1907,12 @@ GlobalWindowImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 PRBool
 GlobalWindowImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
+  if (JSVAL_IS_STRING(aID) && 
+      PL_strcmp("arguments", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
+    int a;
+    a = 6;
+  } // DRaM
+
   if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
     nsString mPropName;
     nsAutoString mPrefix;
@@ -1929,8 +1991,8 @@ GlobalWindowImpl::GetListenerManager(nsIEventListenerManager **aInstancePtrResul
       NS_RELEASE(mDoc);
       return NS_OK;
     }
+    NS_IF_RELEASE(mDoc);
   }
-  NS_IF_RELEASE(mDoc);
   return NS_ERROR_FAILURE;
 }
 

@@ -209,6 +209,13 @@ protected:
   PRInt32       WinHasOption(char *options, char *name);
   PRBool        CheckForEventListener(JSContext *aContext, nsString& aPropName);
 
+  nsresult      OpenInternal(JSContext *cx, jsval *argv, PRUint32 argc, 
+                       PRBool aAttachArguments, nsIDOMWindow** aReturn);
+  nsresult      AttachArguments(nsIDOMWindow *aWindow, jsval *argv, PRUint32 argc);
+  PRUint32      CalculateChromeFlags(char *aFeatures);
+  nsresult      SizeAndShowOpenedWebShell(nsIWebShell *aOuterShell, char *aFeatures);
+  nsresult      ReadyOpenedWebShell(nsIWebShell *aWebShell, nsIDOMWindow **aDOMWindow);
+
   nsIScriptContext *mContext;
   void *mScriptObject;
   nsIDOMDocument *mDocument;
@@ -225,6 +232,8 @@ protected:
   PRUint32 mTimeoutPublicIdCounter;
   nsIEventListenerManager* mListenerManager;
   nsDOMWindowList *mFrames;
+
+  PRBool mFirstLoadKludge;
 };
 
 /* 
