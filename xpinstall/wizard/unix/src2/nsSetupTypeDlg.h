@@ -37,25 +37,40 @@ public:
 /*---------------------------------------------------------------------*
  *   Navigation
  *---------------------------------------------------------------------*/
-    int     Back();
-    int     Next();
+    static void         Back(GtkWidget *aWidget, gpointer aData);
+    static void         Next(GtkWidget *aWidget, gpointer aData);
 
-    int     Parse(nsINIParser *aParser);
+    int                 Parse(nsINIParser *aParser);
+
+    int                 Show(int aDirection);
+    int                 Hide(int aDirection);
+
+    static void         SelectFolder(GtkWidget *aWidget, gpointer aData);
+    static void         SelectFolderOK(GtkWidget *aWidget, 
+                                       GtkFileSelection *aFileSel);
+    static void         RadBtnToggled(GtkWidget *aWidget, gpointer aData);
 
 /*---------------------------------------------------------------------*
  *   INI Properties
  *---------------------------------------------------------------------*/
-    int             SetMsg0(char *aMsg);
-    char            *GetMsg0();
+    int                 SetMsg0(char *aMsg);
+    char                *GetMsg0();
 
-    int             AddSetupType(nsSetupType *aSetupType);
-    nsSetupType     *GetSetupTypeList();
+    int                 AddSetupType(nsSetupType *aSetupType);
+    nsSetupType         *GetSetupTypeList();
+    int                 GetNumSetupTypes();
+    nsSetupType         *GetSelectedSetupType();
 
 private:
-    void            FreeSetupTypeList();
+    void                FreeSetupTypeList();
 
-    char            *mMsg0;
-    nsSetupType     *mSetupTypeList;
+    char                *mMsg0;
+    nsSetupType         *mSetupTypeList;
 };
+
+static GtkWidget        *sBrowseBtn;
+static gint             sBrowseBtnID;
+static GtkWidget        *sFolder;
+static GSList           *sGroup;
 
 #endif /* _NS_SETUPTYPEDLG_H_ */

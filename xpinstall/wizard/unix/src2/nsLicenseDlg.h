@@ -37,25 +37,23 @@ public:
 /*-------------------------------------------------------------------*
  *   Navigation
  *-------------------------------------------------------------------*/
-    int     Back();
-    int     Next();
+    static void     Back(GtkWidget *aWidget, gpointer aData);
+    static void     Next(GtkWidget *aWidget, gpointer aData);
     
     int     Parse(nsINIParser *aParser);
+
+    int     Show(int aDirection);
+    int     Hide(int aDirection);
 
 /*-------------------------------------------------------------------*
  *   INI Properties
  *-------------------------------------------------------------------*/
     int     SetLicenseFile(char *aLicenseFile);
-    char *  GetLicenseFile();
-    int     SetMsg0(char *aMsg);
-    char *  GetMsg0();
-    int     SetMsg1(char *aMsg);
-    char *  GetMsg1();
-
+    char    *GetLicenseFile();
+    char    *GetLicenseContents();
+    
 private:
     char    *mLicenseFile;
-    char    *mMsg0;
-    char    *mMsg1;
 };
 
 #endif /* _NS_LICENSEDLG_H_ */

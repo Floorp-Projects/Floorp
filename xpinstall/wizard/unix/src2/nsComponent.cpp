@@ -30,20 +30,38 @@ nsComponent::nsComponent() :
     mArchive(NULL),
     mSize(0),
     mDependencies(NULL),
-    mAttributes(NO_ATTR)
+    mAttributes(NO_ATTR),
+    mNext(NULL),
+    mIndex(-1),
+    mRefCount(0)
 {
+    int i;
+
+    for (i = 0; i < MAX_URLS; i++)
+        mURL[i] = NULL;
 }
 
 nsComponent::~nsComponent()
 {
-    if (mDescShort)
-        free (mDescShort);
-    if (mDescLong)
-        free (mDescLong);
-    if (mArchive)
-        free (mArchive);
-    if (mDependencies)
-        delete mDependencies;
+    int i;
+
+    XI_IF_FREE(mDescShort);
+    XI_IF_FREE(mDescLong);
+    XI_IF_FREE(mArchive);
+    XI_IF_DELETE(mDependencies)
+    for (i = 0; i < MAX_URLS; i++)
+        XI_IF_FREE(mURL[i]);
+}
+
+nsComponent *
+nsComponent::Duplicate()
+{
+    nsComponent *dup = new nsComponent();
+    *dup = *this;
+    dup->InitRefCount();
+    dup->InitNext();
+
+    return dup;
 }
 
 int
@@ -121,6 +139,28 @@ nsComponent::GetSize()
         return mSize;
 
     return 0;
+}
+
+int
+nsComponent::SetURL(char *aURL, int aIndex)
+{
+    if (!aURL)
+        return E_PARAM;
+    if (mURL[aIndex])
+        return E_URL_ALREADY;
+
+    mURL[aIndex] = aURL;
+    
+    return OK;
+}
+
+char *
+nsComponent::GetURL(int aIndex)
+{
+    if (aIndex < 0 || aIndex >= MAX_URLS)
+        return NULL;
+
+    return mURL[aIndex];
 }
 
 int 
@@ -212,6 +252,32 @@ nsComponent::IsInvisible()
 }
 
 int
+nsComponent::SetLaunchApp()
+{
+    mAttributes |= nsComponent::LAUNCHAPP;
+
+    return OK;
+}
+
+int
+nsComponent::SetDontLaunchApp()
+{
+    if (IsLaunchApp())
+        mAttributes &= ~nsComponent::LAUNCHAPP;
+
+    return OK;
+}
+
+int
+nsComponent::IsLaunchApp()
+{
+    if (mAttributes & nsComponent::LAUNCHAPP)
+        return TRUE;
+
+    return FALSE;
+}
+
+int
 nsComponent::SetNext(nsComponent *aComponent)
 {
     if (!aComponent)
@@ -237,4 +303,54 @@ nsComponent::GetNext()
         return mNext;
 
     return NULL;
+}
+
+int
+nsComponent::SetIndex(int aIndex)
+{
+    if (aIndex < 0 || aIndex > MAX_COMPONENTS)
+        return E_OUT_OF_BOUNDS;
+
+    mIndex = aIndex;
+        
+    return OK;
+}
+
+int
+nsComponent::GetIndex()
+{
+    if (mIndex < 0 || mIndex > MAX_COMPONENTS)
+        return E_OUT_OF_BOUNDS;
+    
+    return mIndex;
+}
+
+int
+nsComponent::AddRef()
+{
+    mRefCount++;
+    
+    return OK;
+}
+
+int
+nsComponent::Release()
+{
+    mRefCount--;
+
+    if (mRefCount < 0)
+        return E_REF_COUNT;
+
+    if (mRefCount == 0)
+        delete this;
+
+    return OK;
+}
+
+int
+nsComponent::InitRefCount()
+{
+    mRefCount = 1;
+
+    return OK;
 }

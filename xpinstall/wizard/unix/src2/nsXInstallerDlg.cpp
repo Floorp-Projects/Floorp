@@ -25,8 +25,10 @@
 #include "nsXInstallerDlg.h"
 
 nsXInstallerDlg::nsXInstallerDlg() :
-    mShowDlg(nsXInstallerDlg::SHOW_DLG),
-    mTitle(NULL)
+    mShowDlg(nsXInstallerDlg::SHOW_DIALOG),
+    mTitle(NULL),
+    mWidgetsInit((int)FALSE),
+    mTable(NULL)
 {
 }
 
@@ -39,8 +41,8 @@ nsXInstallerDlg::~nsXInstallerDlg()
 int
 nsXInstallerDlg::SetShowDlg(int aShowDlg)
 {
-    if ( aShowDlg != nsXInstallerDlg::SHOW_DLG &&
-         aShowDlg != nsXInstallerDlg::SKIP_DLG )
+    if ( aShowDlg != nsXInstallerDlg::SHOW_DIALOG &&
+         aShowDlg != nsXInstallerDlg::SKIP_DIALOG )
         return E_PARAM;
 
     mShowDlg = aShowDlg;

@@ -37,6 +37,8 @@ public:
     nsComponent();
     ~nsComponent();
 
+    nsComponent *   Duplicate();
+
 /*--------------------------------------------------------------*
  *   Accessors/Mutators
  *--------------------------------------------------------------*/
@@ -48,6 +50,8 @@ public:
     char *          GetArchive();
     int             SetSize(int aSize);
     int             GetSize();
+    int             SetURL(char *aURL, int aIndex);
+    char *          GetURL(int aIndex);
     int             AddDependency(nsComponent *aDependent);
     int             RemoveDependency(nsComponent *aIndependent);
     nsComponentList *GetDependencies();
@@ -57,9 +61,17 @@ public:
     int             SetInvisible();
     int             SetVisible();
     int             IsInvisible(); 
+    int             SetLaunchApp();
+    int             SetDontLaunchApp();
+    int             IsLaunchApp();
     int             SetNext(nsComponent *aComponent);
     int             InitNext();
     nsComponent     *GetNext();
+    int             SetIndex(int aIndex);
+    int             GetIndex();
+    int             AddRef();
+    int             Release();
+    int             InitRefCount();
     
 /*---------------------------------------------------------------*
  *   Attributes
@@ -68,7 +80,8 @@ public:
     {
         NO_ATTR     = 0x00000000,
         SELECTED    = 0x00000001,
-        INVISIBLE   = 0x00000010
+        INVISIBLE   = 0x00000010,
+        LAUNCHAPP   = 0x00000100
     };
 
 private:
@@ -76,9 +89,12 @@ private:
     char            *mDescLong;
     char            *mArchive;
     int             mSize;
+    char            *mURL[MAX_URLS];
     nsComponentList *mDependencies;
     int             mAttributes;
     nsComponent     *mNext;
+    int             mIndex;
+    int             mRefCount;
 };
 
 #endif /* _NS_COMPONENT_H_ */
