@@ -183,9 +183,9 @@ protected:
   PopupControlState mOldState;
 
 private:
-  // Not meant to be implemented.
-  static void* operator new(size_t /*size*/) CPP_THROW_NEW;
-  static void operator delete(void* /*memory*/);
+  // Hide so that this class can only be stack-allocated
+  static void* operator new(size_t /*size*/) CPP_THROW_NEW { return nsnull; }
+  static void operator delete(void* /*memory*/) {}
 };
 
 #endif // nsPIDOMWindow_h__
