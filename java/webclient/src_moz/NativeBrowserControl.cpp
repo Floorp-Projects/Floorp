@@ -45,6 +45,9 @@
 #include <nsIDOMWindowInternal.h>
 #include <nsIChromeEventHandler.h>
 
+// for the focus hacking we need to do
+#include <nsIFocusController.h>
+
 NativeBrowserControl::NativeBrowserControl(void)
 {
     parentHWnd = nsnull;
@@ -257,6 +260,44 @@ NativeBrowserControl::Destroy(void)
     
     parentHWnd = nsnull;
 }
+
+// handle focus in and focus out events
+void
+NativeBrowserControl::TopLevelFocusIn(void)
+{
+  if (mIsDestroyed)
+    return;
+
+  nsCOMPtr<nsPIDOMWindow> piWin;
+  GetPIDOMWindow(getter_AddRefs(piWin));
+
+  if (!piWin)
+    return;
+
+  nsCOMPtr<nsIFocusController> focusController;
+  piWin->GetRootFocusController(getter_AddRefs(focusController));
+  if (focusController)
+    focusController->SetActive(PR_TRUE);
+}
+
+void
+NativeBrowserControl::TopLevelFocusOut(void)
+{
+  if (mIsDestroyed)
+    return;
+
+  nsCOMPtr<nsPIDOMWindow> piWin;
+  GetPIDOMWindow(getter_AddRefs(piWin));
+
+  if (!piWin)
+    return;
+
+  nsCOMPtr<nsIFocusController> focusController;
+  piWin->GetRootFocusController(getter_AddRefs(focusController));
+  if (focusController)
+    focusController->SetActive(PR_FALSE);
+}
+
 
 NativeWrapperFactory *NativeBrowserControl::GetWrapperFactory()
 {

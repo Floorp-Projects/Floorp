@@ -75,6 +75,8 @@ public:
     void        Resize          (PRUint32 x, PRUint32 y,
                                  PRUint32 aWidth, PRUint32 aHeight);
     void        Destroy         (void);
+    void        TopLevelFocusIn (void);
+    void        TopLevelFocusOut(void);
 
     NativeWrapperFactory * GetWrapperFactory();
 

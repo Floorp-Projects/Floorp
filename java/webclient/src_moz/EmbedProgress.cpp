@@ -135,6 +135,8 @@ EmbedProgress::OnStateChange(nsIWebProgress *aWebProgress,
     // if we've got the start flag, emit the signal
     if ((aStateFlags & STATE_IS_NETWORK) && 
 	(aStateFlags & STATE_START)) {
+
+	mOwner->TopLevelFocusIn();
 	
 	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
 	       ("EmbedProgress::OnStateChange: START_DOCUMENT_LOAD\n"));
