@@ -1977,6 +1977,11 @@ NS_IMETHODIMP nsMsgDBView::GetCommandStatus(nsMsgViewCommandTypeValue command, P
 nsresult 
 nsMsgDBView::CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices, PRBool isMove, nsIMsgFolder *destFolder)
 {
+  if (m_deletingRows)
+  {
+    NS_ASSERTION(PR_FALSE, "Last move did not complete");
+    return NS_OK;
+  }
   nsresult rv = NS_OK;
   NS_ENSURE_ARG_POINTER(destFolder);
   nsCOMPtr<nsISupportsArray> messageArray;
@@ -2164,6 +2169,11 @@ nsresult nsMsgDBView::RemoveByIndex(nsMsgViewIndex index)
 
 nsresult nsMsgDBView::DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices, PRBool deleteStorage)
 {
+  if (m_deletingRows)  
+  {
+    NS_ASSERTION(PR_FALSE, "Last delete did not complete");
+    return NS_OK;
+  }
   nsresult rv = NS_OK;
 	nsCOMPtr<nsISupportsArray> messageArray;
 	NS_NewISupportsArray(getter_AddRefs(messageArray));
