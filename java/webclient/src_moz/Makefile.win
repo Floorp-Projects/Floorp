@@ -166,6 +166,7 @@ buildRunems:
 !ifndef PACKAGE_BUILD
 	@echo +++ Creating runem.bat.  Use this to run the test browser.
 	rm -f runem.bat
+	@echo SET PATH=%%PATH%%;$(JDKHOME)\jre\bin $(PERL) ..\src_share\runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl $(DEPTH) %1% >> runem.bat
 	@echo $(PERL) ..\src_share\runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl $(DEPTH) %1% >> runem.bat
 !endif
 !endif

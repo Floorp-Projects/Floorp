@@ -96,9 +96,9 @@ if ($IS_UNIX) {
 }
 
 # stock the CLASSPATH
-$ENV{"CLASSPATH"} = $ENV{"JDKHOME"} . $SEP . "lib" . $SEP . "tools.jar" . 
-  $CPSEP . $ENV{"JDKHOME"} . $SEP . "lib" . $SEP . "rt.jar" . $CPSEP . 
-  $ENV{"CLASSPATH"};
+#$ENV{"CLASSPATH"} = $ENV{"JDKHOME"} . $SEP . "lib" . $SEP . "tools.jar" . 
+#  $CPSEP . $ENV{"JDKHOME"} . $SEP . "lib" . $SEP . "rt.jar" . $CPSEP . 
+#  $ENV{"CLASSPATH"};
 if ($IS_UNIX) {
   $ENV{"CLASSPATH"} = $ENV{"CLASSPATH"} . $CPSEP . $BINDIR . $SEP . ".." . 
     $SEP . "classes";
@@ -115,10 +115,6 @@ $cmd = $JAVA_CMD;
 if ($SEP eq "/") {
   $cmd = $cmd . " -native";
 }
-else {
-  # workaround bug 64332 on Win32, turn off hotspot and JIT
-  $cmd = $cmd . " -classic -Djava.compiler=NONE";
-}
 
 #tack on the java library path
 $cmd = $cmd . " -Djava.library.path=" . $BINDIR . $CPSEP . $BINDIR . $SEP . "components";
@@ -127,7 +123,9 @@ if ($IS_UNIX) {
   $cmd = $cmd . " -Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n";
 }
 else {
-  $cmd = $cmd . " -Xdebug -Xrunjdwp:transport=dt_shmem,address=jdbconn,server=y,suspend=n";
+  if ($ENV{"MOZ_DEBUG"}) {
+    $cmd = $cmd . " -Xdebug -Xrunjdwp:transport=dt_shmem,address=jdbconn,server=y,suspend=n";
+  }
 }
 #tack on the classpath, class name, and bin dir
 $cmd = $cmd . " -classpath " . $ENV{"CLASSPATH"} . " " . $CLASSNAME . " " . 
@@ -142,4 +140,4 @@ if ($MIN_ARGC < $ARGC) {
 
 print $cmd . "\n";
 
-exec $cmd;
+system($cmd);
