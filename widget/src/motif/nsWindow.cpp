@@ -22,7 +22,6 @@
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
-#include "nsDeviceContextUnix.h"
 #include "nsRect.h"
 #include "nsTransform2D.h"
 #include "nsGfxCIID.h"
@@ -44,7 +43,6 @@
 #include "Xm/DialogS.h"
 #include "Xm/RowColumn.h"
 #include "Xm/Form.h"
-
 
 #define DBG 0
 
@@ -788,7 +786,9 @@ nscolor nsWindow::GetForegroundColor(void)
 void nsWindow::SetForegroundColor(const nscolor &aColor)
 {
   mForeground = aColor;
-  PRUint32 pixel = ((nsDeviceContextUnix *)mContext)->ConvertPixel(aColor);
+
+  PRUint32 pixel;
+  mContext->ConvertPixel(aColor, pixel);
   XtVaSetValues(mWidget, XtNforeground, pixel, nsnull);
 }
 
@@ -812,7 +812,8 @@ nscolor nsWindow::GetBackgroundColor(void)
 void nsWindow::SetBackgroundColor(const nscolor &aColor)
 {
   mBackground = aColor ;
-  PRUint32 pixel = ((nsDeviceContextUnix *)mContext)->ConvertPixel(aColor);
+  PRUint32 pixel;
+  mContext->ConvertPixel(aColor, pixel);
   XtVaSetValues(mWidget, XtNbackground, pixel, nsnull);
 }
 
