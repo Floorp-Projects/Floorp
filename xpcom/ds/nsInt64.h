@@ -50,57 +50,58 @@
 // class, be sure to change the class declaration to "class NS_BASE
 // nsInt64".
 
-class nsInt64
+template<class T>
+class nsTInt64
 {
 public: //XXX should be private
-    PRInt64 mValue;
+    T mValue;
 
 public:
     /**
      * Construct a new 64-bit integer.
      */
-    nsInt64(void) : mValue(LL_ZERO) {
+    nsTInt64(void) : mValue(LL_ZERO) {
     }
 
     /**
      * Construct a new 64-bit integer from a 32-bit signed integer
      */
-    nsInt64(const PRInt32 aInt32) {
+    nsTInt64(const PRInt32 aInt32) {
         LL_I2L(mValue, aInt32);
     }
 
     /**
      * Construct a new 64-bit integer from a 32-bit unsigned integer
      */
-    nsInt64(const PRUint32 aUint32) {
+    nsTInt64(const PRUint32 aUint32) {
         LL_UI2L(mValue, aUint32);
     }
 
     /**
      * Construct a new 64-bit integer from a floating point value.
      */
-    nsInt64(const PRFloat64 aFloat64) {
+    nsTInt64(const PRFloat64 aFloat64) {
         LL_D2L(mValue, aFloat64);
     }
 
     /**
      * Construct a new 64-bit integer from a native 64-bit integer
      */
-    nsInt64(const PRInt64 aInt64) : mValue(aInt64) {
+    nsTInt64(const T aInt64) : mValue(aInt64) {
     }
 
     /**
      * Construct a new 64-bit integer from another 64-bit integer
      */
-    nsInt64(const nsInt64& aObject) : mValue(aObject.mValue) {
+    nsTInt64(const nsTInt64& aObject) : mValue(aObject.mValue) {
     }
 
-    // ~nsInt64(void) -- XXX destructor unnecessary
+    // ~nsTInt64(void) -- XXX destructor unnecessary
 
     /**
      * Assign a 64-bit integer to another 64-bit integer
      */
-    const nsInt64& operator =(const nsInt64& aObject) {
+    const nsTInt64& operator =(const nsTInt64& aObject) {
         mValue = aObject.mValue;
         return *this;
     }
@@ -135,15 +136,15 @@ public:
     /**
      * Convert a 64-bit integer to a native 64-bit integer.
      */
-    operator PRInt64(void) const {
+    operator T() const {
         return mValue;
     }
 
     /**
      * Perform unary negation on a 64-bit integer.
      */
-    const nsInt64 operator -(void) {
-        nsInt64 result;
+    const nsTInt64 operator -(void) {
+        nsTInt64 result;
         LL_NEG(result.mValue, mValue);
         return result;
     }
@@ -153,7 +154,7 @@ public:
     /**
      * Increment a 64-bit integer by a 64-bit integer amount.
      */
-    nsInt64& operator +=(const nsInt64& aObject) {
+    nsTInt64& operator +=(const nsTInt64& aObject) {
         LL_ADD(mValue, mValue, aObject.mValue);
         return *this;
     }
@@ -161,7 +162,7 @@ public:
     /**
      * Decrement a 64-bit integer by a 64-bit integer amount.
      */
-    nsInt64& operator -=(const nsInt64& aObject) {
+    nsTInt64& operator -=(const nsTInt64& aObject) {
         LL_SUB(mValue, mValue, aObject.mValue);
         return *this;
     }
@@ -169,7 +170,7 @@ public:
     /**
      * Multiply a 64-bit integer by a 64-bit integer amount.
      */
-    nsInt64& operator *=(const nsInt64& aObject) {
+    nsTInt64& operator *=(const nsTInt64& aObject) {
         LL_MUL(mValue, mValue, aObject.mValue);
         return *this;
     }
@@ -177,7 +178,7 @@ public:
     /**
      * Divide a 64-bit integer by a 64-bit integer amount.
      */
-    nsInt64& operator /=(const nsInt64& aObject) {
+    nsTInt64& operator /=(const nsTInt64& aObject) {
         LL_DIV(mValue, mValue, aObject.mValue);
         return *this;
     }
@@ -185,7 +186,7 @@ public:
     /**
      * Compute the modulus of a 64-bit integer to a 64-bit value.
      */
-    nsInt64& operator %=(const nsInt64& aObject) {
+    nsTInt64& operator %=(const nsTInt64& aObject) {
         LL_MOD(mValue, mValue, aObject.mValue);
         return *this;
     }
@@ -193,7 +194,7 @@ public:
     /**
      * Shift a 64-bit integer left.
      */
-    nsInt64& operator <<=(int aCount) {
+    nsTInt64& operator <<=(int aCount) {
         LL_SHL(mValue, mValue, aCount);
         return *this;
     }
@@ -201,26 +202,116 @@ public:
     /**
      * Shift a 64-bit signed integer right.
      */
-    nsInt64& operator >>=(int aCount) {
+    nsTInt64& operator >>=(int aCount) {
         LL_SHR(mValue, mValue, aCount);
         return *this;
     }
 
     // Comparison operators
-    friend inline PRBool operator ==(const nsInt64& aObject1, const nsInt64& aObject2);
-    friend inline PRBool operator !=(const nsInt64& aObject1, const nsInt64& aObject2);
-    friend inline PRBool operator >(const nsInt64& aObject1, const nsInt64& aObject2);
-    friend inline PRBool operator >=(const nsInt64& aObject1, const nsInt64& aObject2);
-    friend inline PRBool operator <(const nsInt64& aObject1, const nsInt64& aObject2);
-    friend inline PRBool operator <=(const nsInt64& aObject1, const nsInt64& aObject2);
+    /**
+     * Add two 64-bit integers.
+     */
+    inline const nsTInt64
+    operator +(const nsTInt64& aObject2) const {
+        return nsTInt64(*this) += aObject2;
+    }
+
+    /**
+     * Subtract one 64-bit integer from another.
+     */
+    inline const nsTInt64
+    operator -(const nsTInt64& aObject2) const {
+        return nsTInt64(*this) -= aObject2;
+    }
+
+    /**
+     * Multiply two 64-bit integers
+     */
+    inline const nsTInt64
+    operator *(const nsTInt64& aObject2) const {
+        return nsTInt64(*this) *= aObject2;
+    }
+
+    /**
+     * Divide one 64-bit integer by another
+     */
+    inline const nsTInt64
+    operator /(const nsTInt64& aObject2) const {
+        return nsTInt64(*this) /= aObject2;
+    }
+
+    /**
+     * Compute the modulus of two 64-bit integers
+     */
+    inline const nsTInt64
+    operator %(const nsTInt64& aObject2) const {
+        return nsTInt64(*this) %= aObject2;
+    }
+
+    /**
+     * Shift left a 64-bit integer
+     */
+    inline const nsTInt64
+    operator <<(int aCount) const {
+        return nsTInt64(*this) <<= aCount;
+    }
+
+    /**
+     * Shift right a signed 64-bit integer
+     */
+    inline const nsTInt64
+    operator >>(int aCount) const {
+        return nsTInt64(*this) >>= aCount;
+    }
+
+    /**
+     * Determine if two 64-bit integers are equal
+     */
+    inline PRBool
+    operator ==(const nsTInt64& aObject2) const {
+        return LL_EQ(mValue, aObject2.mValue);
+    }
+
+    /**
+     * Determine if two 64-bit integers are not equal
+     */
+    inline PRBool
+    operator !=(const nsTInt64& aObject2) const {
+        return LL_NE(mValue, aObject2.mValue);
+    }
+
+
+    /**
+     * Perform a bitwise AND of two 64-bit integers
+     */
+    inline const nsTInt64
+    operator &(const nsTInt64& aObject2) const {
+        return nsTInt64(*this) &= aObject2;
+    }
+
+    /**
+     * Perform a bitwise OR of two 64-bit integers
+     */
+    inline const nsTInt64
+    operator |(const nsTInt64& aObject2) const {
+        return nsTInt64(*this) |= aObject2;
+    }
+
+    /**
+     * Perform a bitwise XOR of two 64-bit integers
+     */
+    inline const nsTInt64
+    operator ^(const nsTInt64& aObject2) const {
+        return nsTInt64(*this) ^= aObject2;
+    }
 
     // Bitwise operators
 
     /**
      * Compute the bitwise NOT of a 64-bit integer
      */
-    const nsInt64 operator ~(void) {
-        nsInt64 result;
+    const nsTInt64 operator ~(void) const {
+        nsTInt64 result;
         LL_NOT(result.mValue, mValue);
         return result;
     }
@@ -228,7 +319,7 @@ public:
     /**
      * Compute the bitwise AND with another 64-bit integer
      */
-    nsInt64& operator &=(const nsInt64& aObject) {
+    nsTInt64& operator &=(const nsTInt64& aObject) {
         LL_AND(mValue, mValue, aObject.mValue);
         return *this;
     }
@@ -236,7 +327,7 @@ public:
     /**
      * Compute the bitwise OR with another 64-bit integer
      */
-    nsInt64& operator |=(const nsInt64& aObject) {
+    nsTInt64& operator |=(const nsTInt64& aObject) {
         LL_OR(mValue, mValue, aObject.mValue);
         return *this;
     }
@@ -244,84 +335,14 @@ public:
     /**
      * Compute the bitwise XOR with another 64-bit integer
      */
-    nsInt64& operator ^=(const nsInt64& aObject) {
+    nsTInt64& operator ^=(const nsTInt64& aObject) {
         LL_XOR(mValue, mValue, aObject.mValue);
         return *this;
     }
 };
 
-
-/**
- * Add two 64-bit integers.
- */
-inline const nsInt64
-operator +(const nsInt64& aObject1, const nsInt64& aObject2) {
-    return nsInt64(aObject1) += aObject2;
-}
-
-/**
- * Subtract one 64-bit integer from another.
- */
-inline const nsInt64
-operator -(const nsInt64& aObject1, const nsInt64& aObject2) {
-    return nsInt64(aObject1) -= aObject2;
-}
-
-/**
- * Multiply two 64-bit integers
- */
-inline const nsInt64
-operator *(const nsInt64& aObject1, const nsInt64& aObject2) {
-    return nsInt64(aObject1) *= aObject2;
-}
-
-/**
- * Divide one 64-bit integer by another
- */
-inline const nsInt64
-operator /(const nsInt64& aObject1, const nsInt64& aObject2) {
-    return nsInt64(aObject1) /= aObject2;
-}
-
-/**
- * Compute the modulus of two 64-bit integers
- */
-inline const nsInt64
-operator %(const nsInt64& aObject1, const nsInt64& aObject2) {
-    return nsInt64(aObject1) %= aObject2;
-}
-
-/**
- * Shift left a 64-bit integer
- */
-inline const nsInt64
-operator <<(const nsInt64& aObject, int aCount) {
-    return nsInt64(aObject) <<= aCount;
-}
-
-/**
- * Shift right a signed 64-bit integer
- */
-inline const nsInt64
-operator >>(const nsInt64& aObject, int aCount) {
-    return nsInt64(aObject) >>= aCount;
-}
-
-/**
- * Determine if two 64-bit integers are equal
- */
-inline PRBool
-operator ==(const nsInt64& aObject1, const nsInt64& aObject2) {
-    return LL_EQ(aObject1.mValue, aObject2.mValue);
-}
-
-/**
- * Determine if two 64-bit integers are not equal
- */
-inline PRBool
-operator !=(const nsInt64& aObject1, const nsInt64& aObject2) {
-    return LL_NE(aObject1.mValue, aObject2.mValue);
-}
+typedef nsTInt64<PRInt64> nsInt64;
+typedef nsTInt64<PRUint64> nsUint64;
 
 /**
  * Determine if one 64-bit integer is strictly greater than another, using signed values
@@ -329,6 +350,11 @@ operator !=(const nsInt64& aObject1, const nsInt64& aObject2) {
 inline PRBool
 operator >(const nsInt64& aObject1, const nsInt64& aObject2) {
     return LL_CMP(aObject1.mValue, >, aObject2.mValue);
+}
+
+inline PRBool
+operator >(const nsUint64& aObject1, const nsUint64& aObject2) {
+    return LL_UCMP(aObject1.mValue, >, aObject2.mValue);
 }
 
 /**
@@ -339,12 +365,22 @@ operator >=(const nsInt64& aObject1, const nsInt64& aObject2) {
     return ! LL_CMP(aObject1.mValue, <, aObject2.mValue);
 }
 
+inline PRBool
+operator >=(const nsUint64& aObject1, const nsUint64& aObject2) {
+    return ! LL_UCMP(aObject1.mValue, <, aObject2.mValue);
+}
+
 /**
  * Determine if one 64-bit integer is strictly less than another, using signed values
  */
 inline PRBool 
 operator <(const nsInt64& aObject1, const nsInt64& aObject2) {
     return LL_CMP(aObject1.mValue, <, aObject2.mValue);
+}
+
+inline PRBool 
+operator <(const nsUint64& aObject1, const nsUint64& aObject2) {
+    return LL_UCMP(aObject1.mValue, <, aObject2.mValue);
 }
 
 /**
@@ -355,29 +391,9 @@ operator <=(const nsInt64& aObject1, const nsInt64& aObject2) {
     return ! LL_CMP(aObject1.mValue, >, aObject2.mValue);
 }
 
-/**
- * Perform a bitwise AND of two 64-bit integers
- */
-inline const nsInt64
-operator &(const nsInt64& aObject1, const nsInt64& aObject2) {
-    return nsInt64(aObject1) &= aObject2;
+inline PRBool
+operator <=(const nsUint64& aObject1, const nsUint64& aObject2) {
+    return ! LL_UCMP(aObject1.mValue, >, aObject2.mValue);
 }
-
-/**
- * Perform a bitwise OR of two 64-bit integers
- */
-inline const nsInt64
-operator |(const nsInt64& aObject1, const nsInt64& aObject2) {
-    return nsInt64(aObject1) |= aObject2;
-}
-
-/**
- * Perform a bitwise XOR of two 64-bit integers
- */
-inline const nsInt64
-operator ^(const nsInt64& aObject1, const nsInt64& aObject2) {
-    return nsInt64(aObject1) ^= aObject2;
-}
-
 
 #endif // nsInt64_h__
