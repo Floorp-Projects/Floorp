@@ -53,6 +53,7 @@
 #import "BookmarkInfoController.h"
 #import "BookmarkManager.h"
 #import "BookmarkToolbar.h"
+#import "BrowserTabView.h"
 #import "RunLoopMessenger.h"
 #import "CHBrowserService.h"
 #import "UserDefaults.h"
@@ -487,7 +488,7 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     [browserController previousTab:aSender];
 }
 
--(IBAction) nextTab:(id)aSender;
+-(IBAction) nextTab:(id)aSender
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
@@ -1198,21 +1199,21 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
     [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
 }
 
--(IBAction) releaseNoteLink:(id)aSender;
+-(IBAction) releaseNoteLink:(id)aSender
 {
   NSString *pageToLoad = NSLocalizedStringFromTable(@"ReleaseNotesDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"ReleaseNotesDefault"])
     [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
 }
 
--(IBAction) tipsTricksLink:(id)aSender;
+-(IBAction) tipsTricksLink:(id)aSender
 {
   NSString *pageToLoad = NSLocalizedStringFromTable(@"TipsTricksPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"TipsTricksPageDefault"])
     [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
 }
 
--(IBAction) searchCustomizeLink:(id)aSender;
+-(IBAction) searchCustomizeLink:(id)aSender
 {
   NSString *pageToLoad = NSLocalizedStringFromTable(@"SearchCustomPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"SearchCustomPageDefault"])
