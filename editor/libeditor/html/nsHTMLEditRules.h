@@ -110,6 +110,7 @@ protected:
   nsresult AlignTableElement(nsIDOMNode *aNode, const nsString *alignType);
   nsresult AlignTableCellContents(nsIDOMNode *aNode, const nsString *alignType);
   nsresult GetTableContent(nsIDOMNode *aNode, nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
+  nsresult GetListContent(nsIDOMNode *aNode, nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
 
   nsresult InsertTab(nsIDOMSelection *aSelection, nsString *outString);
 
