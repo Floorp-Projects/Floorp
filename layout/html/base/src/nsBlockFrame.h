@@ -139,6 +139,10 @@ public:
   NS_IMETHOD VerifyTree() const;
 #endif
 
+#ifdef ACCESSIBILITY
+  NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
+#endif
+
   // line cursor methods to speed up searching for the line(s)
   // containing a point. The basic idea is that we set the cursor
   // property if the lines' combinedArea.ys and combinedArea.yMosts

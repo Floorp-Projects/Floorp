@@ -417,6 +417,69 @@ nsAccessibilityService::CreateHTMLButtonAccessibleXBL(nsIDOMNode *aNode, nsIAcce
 }
 
 NS_IMETHODIMP
+nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsISupports *aFrame, 
+                                                     nsIAccessible **aAccessible)
+{
+  // Frame type was generic, we'll use the DOM to decide 
+  // if and what kind of accessible object is needed.
+  // This method assumes we're in an HTML namespace.
+  *aAccessible = nsnull;
+  nsIFrame* frame;
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIWeakReference> weakShell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsIContent *content = frame->GetContent();
+  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+
+  nsIAtom *tag = content->Tag();
+  if (tag == nsAccessibilityAtoms::option) {
+    *aAccessible = new nsHTMLSelectOptionAccessible(node, weakShell);
+  }
+  else if (tag == nsAccessibilityAtoms::optgroup) {
+    *aAccessible = new nsHTMLSelectOptGroupAccessible(node, weakShell);
+  }
+#ifndef MOZ_ACCESSIBILITY_ATK
+  else if (tag == nsAccessibilityAtoms::ul || tag == nsAccessibilityAtoms::ol) {
+    *aAccessible = new nsHTMLListAccessible(node, weakShell);
+  }
+  else if (tag == nsAccessibilityAtoms::a) {
+    *aAccessible = new nsHTMLLinkAccessible(node, weakShell, frame);
+  }
+#endif
+  else {
+    return NS_ERROR_FAILURE;
+  }
+
+  NS_ENSURE_TRUE(aAccessible, NS_ERROR_OUT_OF_MEMORY);
+  NS_ADDREF(*aAccessible);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccessibilityService::CreateHTMLLIAccessible(nsISupports *aFrame, 
+                                               nsISupports *aBulletFrame,
+                                               const nsAString& aBulletText,
+                                               nsIAccessible **_retval)
+{
+  nsIFrame* frame;
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIWeakReference> weakShell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
+  if (NS_FAILED(rv))
+    return rv;
+  nsIFrame *bulletFrame = NS_STATIC_CAST(nsIFrame*, aBulletFrame);
+  NS_ASSERTION(bulletFrame, "bullet frame argument not a frame");
+
+  *_retval = new nsHTMLLIAccessible(node, weakShell, bulletFrame, aBulletText);
+  if (! *_retval) 
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsAccessibilityService::CreateHTMLCheckboxAccessible(nsISupports *aFrame, nsIAccessible **_retval)
 {
   nsIFrame* frame;
@@ -1566,7 +1629,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   // Please leave this in for now, it's a convenient debugging method
   nsAutoString name;
   aNode->GetLocalName(name);
-  if (name.EqualsIgnoreCase("browser")) 
+  if (name.EqualsIgnoreCase("ol")) 
     printf("## aaronl debugging tag name\n");
 
   nsAutoString attrib;
@@ -1653,6 +1716,13 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
           printf("* "); // Aaron's break point
         }
 #endif
+        if (frame->GetContent() != content) {
+          // Not the main content for this frame!
+          // For example, this happens because <area> elements return the
+          // image frame as their primary frame. The main content for the 
+          // image frame is the image content.
+          return NS_ERROR_FAILURE;
+        }
         *aFrameHint = frame;
       }
     }
@@ -1665,17 +1735,20 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     return NS_ERROR_FAILURE;
   }
 
+  /**
+   * Attempt to create an accessible based on what we know
+   */
   if (content->IsContentOfType(nsIContent::eTEXT)) {
-    // ---- Try using frame to get nsIAccessible ----                   
+    // --- Create HTML for visible text frames ---
     nsSize frameSize = frame->GetSize();
     if (frameSize.height == 0 || frameSize.width == 0) {
       *aIsHidden = true;
       return NS_ERROR_FAILURE;
     }
     frame->GetAccessible(getter_AddRefs(newAcc));
-    return InitAccessible(newAcc, aAccessible);
   }
   else if (!content->IsContentOfType(nsIContent::eHTML)) {
+    // --- Try creating accessible non-HTML (XUL, etc.) ---
     // XUL elements may implement nsIAccessibleProvider via XBL
     // This allows them to say what kind of accessible to create
     nsCOMPtr<nsIAccessibleProvider> accProv(do_QueryInterface(aNode));
@@ -1684,42 +1757,14 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     if (!accProv)
       return NS_ERROR_FAILURE;
     accProv->GetAccessible(getter_AddRefs(newAcc)); 
-    return InitAccessible(newAcc, aAccessible);
   }
-
-  // ---- Check if area node ----
-  nsCOMPtr<nsIDOMHTMLAreaElement> areaContent(do_QueryInterface(aNode));
-  if (areaContent)   // Area elements are implemented in nsHTMLImageAccessible as children of the image
-    return NS_ERROR_FAILURE; // Return, otherwise the image frame looks like an accessible object in the wrong place
-
-  // ---- Try using frame to get nsIAccessible ----                   
-  frame->GetAccessible(getter_AddRefs(newAcc));
-
-#ifndef MOZ_ACCESSIBILITY_ATK
-  // ---- If link, create link accessible ----
-  if (!newAcc) {
-    // is it a link?
-    nsCOMPtr<nsILink> link(do_QueryInterface(aNode));
-    if (link) {
-      newAcc = new nsHTMLLinkAccessible(aNode, aWeakShell, frame);
-    }
-  }
-#endif //MOZ_ACCESSIBILITY_ATK
-
-  // ---- If <select> <option>, create select option accessible
-    
-  if (!newAcc) {
-    nsCOMPtr<nsIDOMHTMLOptionElement> optionElement(do_QueryInterface(aNode));
-    if (optionElement) {
-      newAcc = new nsHTMLSelectOptionAccessible(aNode, aWeakShell);
-    }
-  }
-  // See if this is an <optgroup>, 
-  // create the accessible for the optgroup.
-  if (!newAcc) {
-    nsCOMPtr<nsIDOMHTMLOptGroupElement> optGroupElement(do_QueryInterface(aNode));
-    if (optGroupElement) {
-      newAcc = new nsHTMLSelectOptGroupAccessible(aNode, aWeakShell);
+  else {
+    // --- Try creating accessible for HTML ---
+    frame->GetAccessible(getter_AddRefs(newAcc)); // Try using frame to do it
+    if (!newAcc) {
+      // Use markup (mostly tag name, perhaps attributes) to
+      // decide if and what kind of accessible to create.
+      CreateHTMLAccessibleByMarkup(frame, getter_AddRefs(newAcc));
     }
   }
 

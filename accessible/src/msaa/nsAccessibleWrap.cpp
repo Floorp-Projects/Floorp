@@ -677,14 +677,14 @@ nsAccessibleWrap::Next(ULONG aNumElementsRequested, VARIANT FAR* pvar, ULONG FAR
       msaaAccessible->nsAccessNode::Release(); // this accessible will not be received by the caller
   }
 
-  mEnumVARIANTPosition += *aNumElementsFetched;
+  mEnumVARIANTPosition += NS_STATIC_CAST(PRUint16, *aNumElementsFetched);
   return NOERROR;
 }
 
 STDMETHODIMP
 nsAccessibleWrap::Skip(ULONG aNumElements)
 {
-  mEnumVARIANTPosition += aNumElements;
+  mEnumVARIANTPosition += NS_STATIC_CAST(PRUint16, aNumElements);
 
   PRInt32 numChildren;
   GetChildCount(&numChildren);

@@ -74,10 +74,8 @@
 #include "nsGUIEvent.h"
 #include "nsLayoutErrors.h"
 #include "nsAutoPtr.h"
-#ifdef MOZ_ACCESSIBILITY_ATK
-#include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
-#endif
+#include "nsIAccessibilityService.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -5709,6 +5707,37 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
   }
   return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
+
+#ifdef ACCESSIBILITY
+NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
+{
+  *aAccessible = nsnull;
+  nsCOMPtr<nsIAccessibilityService> accService = 
+    do_GetService("@mozilla.org/accessibilityService;1");
+  NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
+
+  nsIPresContext *aPresContext = GetPresContext();
+  if (!mBullet || !aPresContext) {
+    return NS_ERROR_FAILURE;
+  }
+
+  const nsStyleList* myList = GetStyleList();
+  nsAutoString bulletText;
+  if (myList->mListStyleImage || myList->mListStyleType == NS_STYLE_LIST_STYLE_DISC ||
+      myList->mListStyleType == NS_STYLE_LIST_STYLE_CIRCLE ||
+      myList->mListStyleType == NS_STYLE_LIST_STYLE_SQUARE) {
+    bulletText.Assign(PRUnichar(0x2022));; // Unicode bullet character
+  }
+  else if (myList->mListStyleType != NS_STYLE_LIST_STYLE_NONE) {
+    mBullet->GetListItemText(aPresContext, *myList, bulletText);
+  }
+
+  return accService->CreateHTMLLIAccessible(NS_STATIC_CAST(nsIFrame*, this), 
+                                            NS_STATIC_CAST(nsIFrame*, mBullet), 
+                                            bulletText,
+                                            aAccessible);
+}
+#endif
 
 void nsBlockFrame::ClearLineCursor() {
   if (!(GetStateBits() & NS_BLOCK_HAS_LINE_CURSOR)) {
