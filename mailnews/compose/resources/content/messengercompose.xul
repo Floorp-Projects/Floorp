@@ -20,7 +20,8 @@
    - 
    - Contributor(s):
    -   Ben Goodger <ben@netscape.com> (ass'td polish fixes)
-   -   Hkan Waara <hwaara@chello.se>
+   -   Håkan Waara <hwaara@chello.se>
+   -   Neil Rashbrook <neil@parkwaycc.co.uk> (ass'td polish fix)
   -->
 
 <?xml-stylesheet href="chrome://messenger/skin/messengercompose/messengercompose.css" type="text/css"?> 
@@ -418,14 +419,14 @@
       <hbox id="msgheaderstoolbar-box" flex="1">
         <vbox flex="1" id="addresses-box">
           <hbox align="center">
-            <label value="&fromAddr.label;"/>
+            <label value="&fromAddr.label;" accesskey="&fromAddr.accesskey;" control="msgIdentity"/>
             <menulist id="msgIdentity" label="..." flex="1" oncommand="LoadIdentity(false);">
               <menupopup id="msgIdentityPopup"/>
             </menulist>
           </hbox> 
           <listbox id="addressingWidget" flex="1"/>
           <hbox align="center">
-            <label value="&subject.label;" accesskey="&subject.accesskey;"/>
+            <label value="&subject.label;" accesskey="&subject.accesskey;" control="msgSubject"/>
             <textbox id="msgSubject" flex="1" class="toolbar" disableonsend="true"
                      onkeyup="SetComposeWindowTitle(event.which);"
                      onkeypress="subjectKeyPress(event);"
@@ -435,7 +436,7 @@
         <splitter id="attachmentbucket-sizer" collapse="after"/>
         <vbox id="attachments-box">
           <label id="attachmentBucketText" value="&attachments.label;" crop="right"
-                accesskey="&attachments.accesskey;"/>
+                 accesskey="&attachments.accesskey;" control="attachmentBucket"/>
           <listbox id="attachmentBucket" flex="1" rows="4"
                    context="msgComposeAttachmentContext"
                    onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"
