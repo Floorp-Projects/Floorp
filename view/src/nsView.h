@@ -27,6 +27,8 @@
 #include "nsIFactory.h"
 #include "nsIViewObserver.h"
 
+//mmptemp
+
 class nsIPresContext;
 
 class nsView : public nsIView
@@ -102,8 +104,8 @@ public:
 
 protected:
   virtual ~nsView();
+  //
   virtual nsresult LoadWidget(const nsCID &aClassIID);
-  nsresult CreateOffscreenSurfaces(nsIRenderingContext &aRC, PRInt32 aWidth, PRInt32 aHeight);
 
 protected:
   nsIViewManager    *mViewManager;
@@ -123,16 +125,6 @@ protected:
   float             mOpacity;
   PRInt32           mVFlags;
   nsIRegion*        mDirtyRegion;
-
-public:
-  //globals
-
-  static PRInt32           gNumViews;
-  static PRInt32           gOffScreenWidth;
-  static PRInt32           gOffScreenHeight;
-  static nsDrawingSurface  gOffScreen;
-  static nsDrawingSurface  gRedSurf;
-  static nsDrawingSurface  gBlueSurf;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
