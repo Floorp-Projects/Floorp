@@ -57,9 +57,6 @@ nsIndexedToHTML::Init(nsIStreamListener* aListener) {
 
     mListener = aListener;
 
-    nsCOMPtr<nsILocaleService> localeServ = do_GetService(NS_LOCALESERVICE_CONTRACTID);
-    localeServ->GetApplicationLocale(getter_AddRefs(mLocale));
-
     mDateTime = do_CreateInstance(kDateTimeFormatCID, &rv);
 
     nsCOMPtr<nsIStringBundleService> sbs =
@@ -198,9 +195,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         buffer.Append(NS_LITERAL_STRING("\">\n"));
     }
     
-    buffer.Append(NS_LITERAL_STRING("</head>\n<body><pre>\n"));
-
-    buffer.Append(NS_LITERAL_STRING("<H1>"));
+    buffer.Append(NS_LITERAL_STRING("</head>\n<body>\n<h1>"));
     
     char* escaped = nsEscapeHTML(spec);
     nsAutoString escapedSpec; escapedSpec.AssignWithConversion(escaped);
@@ -215,8 +210,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     if (NS_FAILED(rv)) return rv;
     
     buffer.Append(title);
-    buffer.Append(NS_LITERAL_STRING("</H1>\n"));
-    buffer.Append(NS_LITERAL_STRING("<hr><table border=0>\n"));
+    buffer.Append(NS_LITERAL_STRING("</h1>\n<hr><table border=\"0\" cellpadding=\"2\">\n"));
 
     //buffer.Append(NS_LITERAL_STRING("<tr><th>Name</th><th>Size</th><th>Last modified</th></tr>\n"));
 
@@ -256,7 +250,7 @@ nsIndexedToHTML::OnStopRequest(nsIRequest* request, nsISupports *aContext,
                                nsresult aStatus) {
     nsresult rv = NS_OK;
     nsString buffer;
-    buffer.Assign(NS_LITERAL_STRING("</table><hr></pre></body></html>\n"));
+    buffer.Assign(NS_LITERAL_STRING("</table><hr></body></html>\n"));
     
     nsCOMPtr<nsIInputStream> inputData;
     nsCOMPtr<nsISupports>    inputDataSup;
@@ -296,15 +290,14 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
 
     nsString pushBuffer;
    
-    pushBuffer.Append(NS_LITERAL_STRING("<tr>\n <td>"));
-    pushBuffer.Append(NS_LITERAL_STRING("<a HREF=\""));
+    pushBuffer.Append(NS_LITERAL_STRING("<tr>\n <td><a href=\""));
 
     nsXPIDLCString loc;
     aIndex->GetLocation(getter_Copies(loc));
     
     pushBuffer.AppendWithConversion(loc);
 
-    pushBuffer.Append(NS_LITERAL_STRING("\"> <img border=\"0\" align=\"absbottom\" src=\""));
+    pushBuffer.Append(NS_LITERAL_STRING("\"> <img border=\"0\" align=\"middle\" hspace=\"2\" src=\""));
 
     PRUint32 type;
     aIndex->GetType(&type);
@@ -318,51 +311,62 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         pushBuffer.Append(NS_LITERAL_STRING("internal-gopher-unknown"));
         break;
     }
-    pushBuffer.Append(NS_LITERAL_STRING("\"> "));
+    pushBuffer.Append(NS_LITERAL_STRING("\"><tt>"));
+
+    
+    if (type == nsIDirIndex::TYPE_SYMLINK)
+        pushBuffer.Append(NS_LITERAL_STRING("<i>"));
 
     nsXPIDLString tmp;
     aIndex->GetDescription(getter_Copies(tmp));
     PRUnichar* escaped = nsEscapeHTML2(tmp.get(), tmp.Length());
     pushBuffer.Append(escaped);
     nsMemory::Free(escaped);
-    pushBuffer.Append(NS_LITERAL_STRING("</a>"));
-    pushBuffer.Append(NS_LITERAL_STRING("</td>\n"));
 
-    pushBuffer.Append(NS_LITERAL_STRING(" <td>"));
+    if (type == nsIDirIndex::TYPE_SYMLINK)
+        pushBuffer.Append(NS_LITERAL_STRING("</i>"));
 
+    pushBuffer.Append(NS_LITERAL_STRING("</tt></a></td>\n<td align=\"right\"><tt>"));
+    
     PRUint32 size;
     aIndex->GetSize(&size);
     
     if (size != PRUint32(-1) &&
         type != nsIDirIndex::TYPE_DIRECTORY &&
         type != nsIDirIndex::TYPE_SYMLINK) {
-        pushBuffer.AppendInt(size);
+        nsAutoString  sizeString;
+        FormatSizeString(size, sizeString);
+        pushBuffer.Append(sizeString);
+        pushBuffer.Append(NS_LITERAL_STRING("&nbsp;"));   // for a little extra space
     } else {
         pushBuffer.Append(NS_LITERAL_STRING("&nbsp;"));
     }
 
-    pushBuffer.Append(NS_LITERAL_STRING("</td>\n"));
-
-    pushBuffer.Append(NS_LITERAL_STRING(" <td>"));
-    
+    pushBuffer.Append(NS_LITERAL_STRING("</tt></td>\n <td align=\"right\"><tt>"));
 
     PRTime t;
     aIndex->GetLastModified(&t);
 
     if (t == -1) {
-        pushBuffer.Append(NS_LITERAL_STRING("&nbsp;"));
+        pushBuffer.Append(NS_LITERAL_STRING("&nbsp;</tt></td>\n <td><tt>&nbsp;"));
     } else {
         nsAutoString formatted;
-        mDateTime->FormatPRTime(mLocale,
+        mDateTime->FormatPRTime(nsnull,
                                 kDateFormatShort,
+                                kTimeFormatNone,
+                                t,
+                                formatted);
+        pushBuffer.Append(formatted);
+        pushBuffer.Append(NS_LITERAL_STRING("</tt></td>\n <td align=\"right\"><tt>"));
+        mDateTime->FormatPRTime(nsnull,
+                                kDateFormatNone,
                                 kTimeFormatSeconds,
                                 t,
                                 formatted);
         pushBuffer.Append(formatted);
     }
 
-    pushBuffer.Append(NS_LITERAL_STRING("</td>\n"));
-    pushBuffer.Append(NS_LITERAL_STRING("</tr>\n"));
+    pushBuffer.Append(NS_LITERAL_STRING("</tt></td>\n</tr>\n"));
     
     nsCOMPtr<nsIInputStream> inputData;
     nsCOMPtr<nsISupports>    inputDataSup;
@@ -383,8 +387,21 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     return rv; 
 }
 
+void nsIndexedToHTML::FormatSizeString(PRUint32 inSize, nsString& outSizeString)
+{
+    outSizeString.Truncate();
+    if (inSize == 0) {
+        outSizeString.Append(NS_LITERAL_STRING("&nbsp;"));
+    } else {
+        // round up to the nearest Kilobyte
+        PRUint32  upperSize = (inSize + 1023) / 1024;
+        outSizeString.AppendInt(upperSize);
+        outSizeString.Append(NS_LITERAL_STRING(" KB"));
+    }
+}
+
 nsIndexedToHTML::nsIndexedToHTML() {
-    NS_INIT_REFCNT();
+    NS_INIT_ISUPPORTS();
 }
 
 nsIndexedToHTML::~nsIndexedToHTML() {

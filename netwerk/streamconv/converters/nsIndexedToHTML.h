@@ -45,7 +45,6 @@
 #include "nsIStreamConverter.h"
 #include "nsXPIDLString.h"
 #include "nsIDirIndexListener.h"
-#include "nsILocaleService.h"
 #include "nsIDateTimeFormat.h"
 #include "nsIStringBundle.h"
 
@@ -83,10 +82,13 @@ public:
     }
 
 protected:
+    
+    void FormatSizeString(PRUint32 inSize, nsString& outSizeString);
+
+protected:
     nsCOMPtr<nsIDirIndexParser>     mParser;
     nsCOMPtr<nsIStreamListener>     mListener; // final listener (consumer)
 
-    nsCOMPtr<nsILocale> mLocale;
     nsCOMPtr<nsIDateTimeFormat> mDateTime;
     nsCOMPtr<nsIStringBundle> mBundle;
 };
