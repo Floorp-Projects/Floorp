@@ -45,8 +45,4 @@ ifeq ($(OS_ARCH),BSD_OS)
 OS_LIBS		+= -lgcc
 endif
 
-ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -DWIN32_LEAN_AND_MEAN
-endif
-
 

@@ -41,6 +41,9 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 
+// unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
+#include <unknwn.h>
+
 // {5846BA30-B856-11d1-A98A-00805F8A7AC4}
 #define NS_ITEST_COM_IID \
 { 0x5846ba30, 0xb856, 0x11d1, \

@@ -38,10 +38,6 @@ REQUIRES	= xpcom \
 
 include $(topsrcdir)/config/config.mk
 
-ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -DWIN32_LEAN_AND_MEAN
-endif
-
 CPPSRCS =				\
 	nsMathMLAtoms.cpp  \
         nsMathMLOperators.cpp \

@@ -157,10 +157,6 @@ ifeq ($(OS_ARCH), Linux)
 DEFINES         += -D_XOPEN_SOURCE=500
 endif
 
-ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -DWIN32_LEAN_AND_MEAN
-endif
-
 libs:: $(EXPORT_RESOURCE)
 	$(INSTALL) $^ $(DIST)/bin/res
 

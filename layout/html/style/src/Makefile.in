@@ -63,10 +63,6 @@ FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -DWIN32_LEAN_AND_MEAN
-endif
-
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../base/src \
 		-I$(srcdir)/../../../base/src \

@@ -22,11 +22,6 @@
  *   Seth Spitzer <sspitzer@netscape.com>
  */
 
-// Define so header files for openfilename are included
-#ifdef WIN32_LEAN_AND_MEAN
-#undef WIN32_LEAN_AND_MEAN
-#endif
-
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
@@ -41,6 +36,10 @@
 #include "nsCRT.h"
 #include <windows.h>
 #include <SHLOBJ.H>
+
+// commdlg.h and cderr.h are needed to build with WIN32_LEAN_AND_MEAN
+#include <commdlg.h>
+#include <cderr.h>
 
 #ifdef MOZ_UNICODE
 #include "nsString.h"

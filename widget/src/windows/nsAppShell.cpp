@@ -42,6 +42,10 @@
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include <windows.h>
+
+// unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
+#include <unknwn.h>
+
 #include "nsWidgetsCID.h"
 #ifdef MOZ_AIMM
 #include "aimm.h"

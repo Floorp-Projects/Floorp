@@ -49,5 +49,5 @@ include $(topsrcdir)/config/rules.mk
 INCLUDES	+= -I..
 
 ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -D__STDC__ -DWIN32_LEAN_AND_MEAN
+DEFINES		+= -D__STDC__
 endif

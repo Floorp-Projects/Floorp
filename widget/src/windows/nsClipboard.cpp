@@ -42,6 +42,9 @@
 #include <SHLOBJ.H>
 #include <INTSHCUT.H>
 
+// shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
+#include <shellapi.h>
+
 #include "nsCOMPtr.h"
 #include "nsDataObj.h"
 #include "nsIClipboardOwner.h"

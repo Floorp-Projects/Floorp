@@ -44,8 +44,6 @@ CPPSRCS		= \
 		nsLabel.cpp \
 		$(NULL)
 
-DEFINES		+= -DWIN32_LEAN_AND_MEAN
-
 ifdef MOZ_UNICODE
 DEFINES += -DMOZ_UNICODE 
 endif

@@ -45,9 +45,14 @@
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 #ifdef MOZ_AIMM
+// objbase.h must be declared before initguid.h to use the |DEFINE_GUID|'s in aimm.h
+#include <objbase.h>
 #include <initguid.h>
 #include "aimm.h"
 #endif
+
+// unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
+#include <unknwn.h>
 
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 

@@ -33,6 +33,9 @@
 #include <shlobj.h>
 #include <logkeys.h>
 
+// commdlg.h is needed to build with WIN32_LEAN_AND_MEAN
+#include <commdlg.h>
+
 static WNDPROC OldListBoxWndProc;
 static BOOL    gbProcessingXpnstallFiles;
 static DWORD   gdwACFlag;

@@ -29,6 +29,9 @@
 #include "ifuncns.h"
 #include <winver.h>
 
+// shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
+#include <shellapi.h>
+
 #define HIDWORD(l)   ((DWORD) (((ULONG) (l) >> 32) & 0xFFFF))
 #define LODWORD(l)   ((DWORD) (l))
 

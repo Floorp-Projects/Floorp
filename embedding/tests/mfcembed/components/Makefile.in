@@ -77,7 +77,7 @@ FORCE_SHARED_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS	+= /D "WIN32_LEAN_AND_MEAN" /D "_AFXDLL" /D "USE_SINGLE_SIGN_ON" /D "_WINDLL"
+CXXFLAGS	+= /D "_AFXDLL" /D "USE_SINGLE_SIGN_ON" /D "_WINDLL"
 LDFLAGS		+= -SUBSYSTEM:windows
 
 Dialogs.res: Dialogs.rc resource.h

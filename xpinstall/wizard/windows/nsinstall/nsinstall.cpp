@@ -24,6 +24,11 @@
  */
 
 #include <windows.h>
+
+// stdlib.h and malloc.h are needed to build with WIN32_LEAN_AND_MEAN
+#include <stdlib.h>
+#include <malloc.h>
+
 #include "resource.h"
 #include "zlib.h"
 

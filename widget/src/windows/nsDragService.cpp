@@ -51,6 +51,9 @@
 #include <OLE2.h>
 #include "OLEIDL.H"
 
+// shellapi.h is needed to build with WIN32_LEAN_AND_MEAN
+#include <shellapi.h>
+
 
 //-------------------------------------------------------------------------
 //

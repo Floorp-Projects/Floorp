@@ -47,7 +47,7 @@ include $(topsrcdir)/config/rules.mk
 # Compile directly against the static lib, so we can use the tools
 # during the build without the shared library path being set.
 ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -DWIN32_LEAN_AND_MEAN -DEXPORT_XPT_API
+DEFINES		+= -DEXPORT_XPT_API
 endif
 
 LIBS		= $(DIST)/lib/$(LIB_PREFIX)xpt.$(LIB_SUFFIX)

@@ -74,7 +74,3 @@ libs::
 
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(EXPORT_RESOURCE) $(DESTDIR)$(mozappdir)/res
-
-ifeq ($(OS_ARCH),WINNT)
-DEFINES	+= -DWIN32_LEAN_AND_MEAN
-endif

@@ -94,7 +94,3 @@ EXTRA_DSO_LDOPTS += \
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DXML_DTD
-
-ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -DWIN32_LEAN_AND_MEAN
-endif

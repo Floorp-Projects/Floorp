@@ -52,7 +52,3 @@ ifeq (,$(filter AIX OpenVMS QNX HP-UX,$(OS_ARCH)))
 CFLAGS		+= -D__STDC__
 endif
 
-ifeq ($(OS_ARCH),WINNT)
-DEFINES		+= -DWIN32_LEAN_AND_MEAN
-endif
-
