@@ -41,6 +41,8 @@ thunderbird\mozz.dll
 
 thunderbird\xpicleanup.exe
 thunderbird\thunderbird.exe
+thunderbird\LICENSE
+thunderbird\README.txt
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Mail Specific Files
