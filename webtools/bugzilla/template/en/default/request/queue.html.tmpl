@@ -35,53 +35,7 @@
   <script language="JavaScript" type="text/javascript" src="productmenu.js"></script>
 [% END %]
 
-[% PROCESS global/header.html.tmpl 
-  title="Request Queue"
-  style = "
-    table.requests th { text-align: left; }
-    table#filter th { text-align: right; }
-  "
-%]
-
-[% column_headers = { 
-      "type"       => "Flag" , 
-      "status"     => "Status" , 
-      "bug"        => "Bug" , 
-      "attachment" => "Attachment" , 
-      "requester"  => "Requester" ,
-      "requestee"  => "Requestee" , 
-      "created"    => "Created" , 
-      "category"   => "Product/Component"    } %]
-
-[% DEFAULT display_columns = ["requester", "requestee", "type", "bug", "attachment", "created"]
-           group_field     = "Requestee"
-           group_value     = ""
-%]
-
-[% IF requests.size == 0 %]
-  <p>
-    No requests.
-  </p>
-[% ELSE %]
-  [% PROCESS start_new_table %]
-  [% FOREACH request = requests %]
-    [% IF request.$group_field != group_value %]
-      </table>
-      [% PROCESS start_new_table %]
-      [% group_value = request.$group_field %]
-    [% END %]
-    <tr>
-      [% FOREACH column = display_columns %]
-        [% NEXT IF column == group_field || excluded_columns.contains(column) %]
-        <td>[% PROCESS "display_$column" %]</td>
-      [% END %]
-    </tr>
-  [% END %]
-  </table>
-[% END %]
-
-<h3>Filter the Queue</h3>
-
+[% filter_form = BLOCK %]
 <form action="request.cgi" method="get">
   <input type="hidden" name="action" value="queue">
 
@@ -147,6 +101,56 @@
   </table>
 
 </form>
+[% END %]
+
+[% PROCESS global/header.html.tmpl 
+  title="Request Queue"
+  h2=filter_form
+  style = "
+    table.requests th { text-align: left; }
+    table#filter th { text-align: right; }
+  "
+%]
+
+[% column_headers = { 
+      "type"       => "Flag" , 
+      "status"     => "Status" , 
+      "bug"        => "Bug" , 
+      "attachment" => "Attachment" , 
+      "requester"  => "Requester" ,
+      "requestee"  => "Requestee" , 
+      "created"    => "Created" , 
+      "category"   => "Product/Component"    } %]
+
+[% DEFAULT display_columns = ["requester", "requestee", "type", "bug", "attachment", "created"]
+           group_field     = "Requestee"
+           group_value     = ""
+%]
+
+
+[% IF requests.size == 0 %]
+  <p>
+    No requests.
+  </p>
+[% ELSE %]
+  [% FOREACH request = requests %]
+    [% IF loop.first %] [% PROCESS start_new_table %] [% END %]
+    [% IF request.$group_field != group_value %]
+      [% group_value = request.$group_field %]
+      [% UNLESS loop.first %]
+        </table>
+        [% PROCESS start_new_table %]
+      [% END %]
+    [% END %]
+    <tr>
+      [% FOREACH column = display_columns %]
+        [% NEXT IF column == group_field || excluded_columns.contains(column) %]
+        <td>[% PROCESS "display_$column" %]</td>
+      [% END %]
+    </tr>
+  [% END %]
+  </table>
+[% END %]
 
 [% PROCESS global/footer.html.tmpl %]
 
