@@ -472,7 +472,7 @@ pref("ui.key.menuAccessKeyFocuses", false);
 
 // Middle-mouse handling
 pref("middlemouse.paste", false);
-pref("middlemouse.openNewWindow", false);
+pref("middlemouse.openNewWindow", true);
 
 // Clipboard behavior
 pref("clipboard.autocopy", false);
