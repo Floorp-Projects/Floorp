@@ -575,7 +575,11 @@ public class FunctionObject extends NativeFunction {
                     invokersCache.put(method, invoker);
                 }
             }
-            return invoker.invoke(thisObj, args);
+            try {
+                return invoker.invoke(thisObj, args);
+            } catch (RuntimeException e) {
+                throw new InvocationTargetException(e);
+            }
         } 
         return method.invoke(thisObj, args);
     }
