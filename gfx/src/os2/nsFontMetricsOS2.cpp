@@ -599,13 +599,13 @@ nsFontMetricsOS2::SetFontHandle( HPS aPS, nsFontOS2* aFont )
    // Encoding:
    //  There doesn't seem to be any encoding stuff yet, so guess.
    //  (XXX unicode hack; use same codepage as converter!)
-  nsCAutoString name;
-  mLangGroup->ToString(name);
+  const char* langGroup;
+  mLangGroup->GetUTF8String(&langGroup);
   for (int j=0; j < eCharset_COUNT; j++ )
   {
-    if (name.get()[0] == gCharsetInfo[j].mLangGroup[0])
+    if (langGroup[0] == gCharsetInfo[j].mLangGroup[0])
     {
-      if (!strcmp(name.get(), gCharsetInfo[j].mLangGroup))
+      if (strcmp(langGroup, gCharsetInfo[j].mLangGroup) == 0)
       {
         mConvertCodePage = gCharsetInfo[j].mCodePage;
         break;
