@@ -142,11 +142,12 @@ struct serialNumberRecord {
   PRInt32 COMPtrCount;
 };
 
-// These functions are copied from nsprpub/lib/ds/plhash.c, with one
-// change to free the serialNumberRecord.
+// These functions are copied from nsprpub/lib/ds/plhash.c, with changes
+// to the functions not called Default* to free the serialNumberRecord or
+// the BloatEntry.
 
 static void * PR_CALLBACK
-SerialNumberAllocTable(void *pool, PRSize size)
+DefaultAllocTable(void *pool, PRSize size)
 {
 #if defined(XP_MAC)
 #pragma unused (pool)
@@ -156,7 +157,7 @@ SerialNumberAllocTable(void *pool, PRSize size)
 }
 
 static void PR_CALLBACK
-SerialNumberFreeTable(void *pool, void *item)
+DefaultFreeTable(void *pool, void *item)
 {
 #if defined(XP_MAC)
 #pragma unused (pool)
@@ -166,7 +167,7 @@ SerialNumberFreeTable(void *pool, void *item)
 }
 
 static PLHashEntry * PR_CALLBACK
-SerialNumberAllocEntry(void *pool, const void *key)
+DefaultAllocEntry(void *pool, const void *key)
 {
 #if defined(XP_MAC)
 #pragma unused (pool,key)
@@ -188,9 +189,28 @@ SerialNumberFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
     }
 }
 
+static void PR_CALLBACK
+TypesToLogFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
+{
+#if defined(XP_MAC)
+#pragma unused (pool)
+#endif
+
+    if (flag == HT_FREE_ENTRY) {
+        nsCRT::free(NS_CONST_CAST(char*,
+                     NS_REINTERPRET_CAST(const char*, he->key)));
+        PR_Free(he);
+    }
+}
+
 static PLHashAllocOps serialNumberHashAllocOps = {
-    SerialNumberAllocTable, SerialNumberFreeTable,
-    SerialNumberAllocEntry, SerialNumberFreeEntry
+    DefaultAllocTable, DefaultFreeTable,
+    DefaultAllocEntry, SerialNumberFreeEntry
+};
+
+static PLHashAllocOps typesToLogHashAllocOps = {
+    DefaultAllocTable, DefaultFreeTable,
+    DefaultAllocEntry, TypesToLogFreeEntry
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -316,14 +336,6 @@ public:
     return Dump(-1, out, nsTraceRefcnt::ALL_STATS);
   }
 
-  static PRIntn PR_CALLBACK DestroyEntry(PLHashEntry *he, PRIntn i, void *arg) {
-    BloatEntry* entry = (BloatEntry*)he->value;
-    if (entry) {
-      delete entry;
-    }
-    return HT_ENUMERATE_REMOVE | HT_ENUMERATE_NEXT;
-  }
-
   static PRIntn PR_CALLBACK GatherEntry(PLHashEntry *he, PRIntn i, void *arg) {
     BloatEntry* entry = (BloatEntry*)he->value;
     GatherArgs* ga = (GatherArgs*) arg;
@@ -404,6 +416,25 @@ protected:
   nsTraceRefcntStats mAllStats;
 };
 
+static void PR_CALLBACK
+BloatViewFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
+{
+#if defined(XP_MAC)
+#pragma unused (pool)
+#endif
+
+    if (flag == HT_FREE_ENTRY) {
+        BloatEntry* entry = NS_REINTERPRET_CAST(BloatEntry*,he->value);
+        delete entry;
+        PR_Free(he);
+    }
+}
+
+static PLHashAllocOps bloatViewHashAllocOps = {
+    DefaultAllocTable, DefaultFreeTable,
+    DefaultAllocEntry, BloatViewFreeEntry
+};
+
 static void
 RecreateBloatView()
 {
@@ -411,7 +442,7 @@ RecreateBloatView()
                                PL_HashString,
                                PL_CompareStrings,
                                PL_CompareValues,
-                               NULL, NULL);
+                               &bloatViewHashAllocOps, NULL);
 }
 
 static BloatEntry*
@@ -542,7 +573,6 @@ nsTraceRefcnt::ResetStatistics()
 #ifdef NS_BUILD_REFCNT_LOGGING
   LOCK_TRACELOG();
   if (gBloatView) {
-    PL_HashTableEnumerateEntries(gBloatView, BloatEntry::DestroyEntry, 0);
     PL_HashTableDestroy(gBloatView);
     gBloatView = nsnull;
   }
@@ -752,7 +782,7 @@ static void InitTraceLog(void)
                                   PL_HashString,
                                   PL_CompareStrings,
                                   PL_CompareValues,
-                                  NULL, NULL);
+                                  &typesToLogHashAllocOps, NULL);
     if (!gTypesToLog) {
       NS_WARNING("out of memory");
       fprintf(stdout, "### XPCOM_MEM_LOG_CLASSES defined -- unable to log specific classes\n");
