@@ -358,7 +358,10 @@ extern PRStatus _MD_WakeupWaiter(struct PRThread *);
 NSPR_API(void) _MD_InitIO(void);
 #define _MD_INIT_IO _MD_InitIO
 
-#define _MD_INIT_CONTEXT(_thread, _sp, _main, status)
+#define _MD_INIT_CONTEXT(_thread, _sp, _main, status) \
+    PR_BEGIN_MACRO \
+    *status = PR_TRUE; \
+    PR_END_MACRO
 #define _MD_SWITCH_CONTEXT(_thread)
 #define _MD_RESTORE_CONTEXT(_newThread)
 
