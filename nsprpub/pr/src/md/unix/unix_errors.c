@@ -22,1549 +22,786 @@
 #endif
 #include <errno.h>
 
+static void _MD_unix_map_default_error(int err)
+{
+    PRErrorCode prError;
+
+    switch (err ) {
+        case EACCES:
+            prError = PR_NO_ACCESS_RIGHTS_ERROR;
+            break;
+        case EADDRINUSE:
+            prError = PR_ADDRESS_IN_USE_ERROR;
+            break;
+        case EADDRNOTAVAIL:
+            prError = PR_ADDRESS_NOT_AVAILABLE_ERROR;
+            break;
+        case EAFNOSUPPORT:
+            prError = PR_ADDRESS_NOT_SUPPORTED_ERROR;
+            break;
+        case EAGAIN:
+            prError = PR_WOULD_BLOCK_ERROR;
+            break;
+        case EALREADY:
+            prError = PR_ALREADY_INITIATED_ERROR;
+            break;
+        case EBADF:
+            prError = PR_BAD_DESCRIPTOR_ERROR;
+            break;
+#ifdef EBADMSG
+        case EBADMSG:
+            prError = PR_IO_ERROR;
+            break;
+#endif
+        case EBUSY:
+            prError = PR_FILESYSTEM_MOUNTED_ERROR;
+            break;
+        case ECONNREFUSED:
+            prError = PR_CONNECT_REFUSED_ERROR;
+            break;
+        case ECONNRESET:
+            prError = PR_CONNECT_RESET_ERROR;
+            break;
+        case EDEADLK:
+            prError = PR_DEADLOCK_ERROR;
+            break;
+#ifdef EDIRCORRUPTED
+        case EDIRCORRUPTED:
+            prError = PR_DIRECTORY_CORRUPTED_ERROR;
+            break;
+#endif
+#ifdef EDQUOT
+        case EDQUOT:
+            prError = PR_NO_DEVICE_SPACE_ERROR;
+            break;
+#endif
+        case EEXIST:
+            prError = PR_FILE_EXISTS_ERROR;
+            break;
+        case EFAULT:
+            prError = PR_ACCESS_FAULT_ERROR;
+            break;
+        case EFBIG:
+            prError = PR_FILE_TOO_BIG_ERROR;
+            break;
+        case EINPROGRESS:
+            prError = PR_IN_PROGRESS_ERROR;
+            break;
+        case EINTR:
+            prError = PR_PENDING_INTERRUPT_ERROR;
+            break;
+        case EINVAL:
+            prError = PR_INVALID_ARGUMENT_ERROR;
+            break;
+        case EIO:
+            prError = PR_IO_ERROR;
+            break;
+        case EISCONN:
+            prError = PR_IS_CONNECTED_ERROR;
+            break;
+        case EISDIR:
+            prError = PR_IS_DIRECTORY_ERROR;
+            break;
+        case ELOOP:
+            prError = PR_LOOP_ERROR;
+            break;
+        case EMFILE:
+            prError = PR_PROC_DESC_TABLE_FULL_ERROR;
+            break;
+        case EMLINK:
+            prError = PR_MAX_DIRECTORY_ENTRIES_ERROR;
+            break;
+        case EMSGSIZE:
+            prError = PR_INVALID_ARGUMENT_ERROR;
+            break;
+#ifdef EMULTIHOP
+        case EMULTIHOP:
+            prError = PR_REMOTE_FILE_ERROR;
+            break;
+#endif
+        case ENAMETOOLONG:
+            prError = PR_NAME_TOO_LONG_ERROR;
+            break;
+        case ENETUNREACH:
+            prError = PR_NETWORK_UNREACHABLE_ERROR;
+            break;
+        case ENFILE:
+            prError = PR_SYS_DESC_TABLE_FULL_ERROR;
+            break;
+#ifdef ENOBUFS
+        case ENOBUFS:
+            prError = PR_INSUFFICIENT_RESOURCES_ERROR;
+            break;
+#endif
+        case ENODEV:
+            prError = PR_FILE_NOT_FOUND_ERROR;
+            break;
+        case ENOENT:
+            prError = PR_FILE_NOT_FOUND_ERROR;
+            break;
+        case ENOLCK:
+            prError = PR_FILE_IS_LOCKED_ERROR;
+            break;
+#ifdef ENOLINK 
+        case ENOLINK:
+            prError = PR_REMOTE_FILE_ERROR;
+            break;
+#endif
+        case ENOMEM:
+            prError = PR_OUT_OF_MEMORY_ERROR;
+            break;
+        case ENOPROTOOPT:
+            prError = PR_INVALID_ARGUMENT_ERROR;
+            break;
+        case ENOSPC:
+            prError = PR_NO_DEVICE_SPACE_ERROR;
+            break;
+#ifdef ENOSR
+        case ENOSR:
+            prError = PR_INSUFFICIENT_RESOURCES_ERROR;
+            break;
+#endif
+        case ENOTCONN:
+            prError = PR_NOT_CONNECTED_ERROR;
+            break;
+        case ENOTDIR:
+            prError = PR_NOT_DIRECTORY_ERROR;
+            break;
+        case ENOTSOCK:
+            prError = PR_NOT_SOCKET_ERROR;
+            break;
+        case ENXIO:
+            prError = PR_FILE_NOT_FOUND_ERROR;
+            break;
+        case EOPNOTSUPP:
+            prError = PR_NOT_TCP_SOCKET_ERROR;
+            break;
+#ifdef EOVERFLOW
+        case EOVERFLOW:
+            prError = PR_BUFFER_OVERFLOW_ERROR;
+            break;
+#endif
+        case EPERM:
+            prError = PR_NO_ACCESS_RIGHTS_ERROR;
+            break;
+        case EPIPE:
+            prError = PR_CONNECT_RESET_ERROR;
+            break;
+#ifdef EPROTO
+        case EPROTO:
+            prError = PR_IO_ERROR;
+            break;
+#endif
+        case EPROTONOSUPPORT:
+            prError = PR_PROTOCOL_NOT_SUPPORTED_ERROR;
+            break;
+        case EPROTOTYPE:
+            prError = PR_ADDRESS_NOT_SUPPORTED_ERROR;
+            break;
+        case ERANGE:
+            prError = PR_INVALID_METHOD_ERROR;
+            break;
+        case EROFS:
+            prError = PR_READ_ONLY_FILESYSTEM_ERROR;
+            break;
+        case ESPIPE:
+            prError = PR_INVALID_METHOD_ERROR;
+            break;
+        case ETIMEDOUT:
+            prError = PR_IO_TIMEOUT_ERROR;
+            break;
+#if EWOULDBLOCK != EAGAIN
+        case EWOULDBLOCK:
+            prError = PR_WOULD_BLOCK_ERROR;
+            break;
+#endif
+        case EXDEV:
+            prError = PR_NOT_SAME_DEVICE_ERROR;
+            break;
+        default:
+            prError = PR_UNKNOWN_ERROR;
+            break;
+    }
+    PR_SetError(prError, err);
+}
+
 void _MD_unix_map_opendir_error(int err)
 {
-	switch (err) {
-		case ENOTDIR:
-			PR_SetError(PR_NOT_DIRECTORY_ERROR, err);
-			break;
-		case EACCES:
-			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
-			break;
-		case EMFILE:
-			PR_SetError(PR_PROC_DESC_TABLE_FULL_ERROR, err);
-			break;
-		case ENFILE:
-			PR_SetError(PR_SYS_DESC_TABLE_FULL_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case ELOOP:
-			PR_SetError(PR_LOOP_ERROR, err);
-			break;
-		case ENAMETOOLONG:
-			PR_SetError(PR_NAME_TOO_LONG_ERROR, err);
-			break;
-		case ENOENT:
-			PR_SetError(PR_FILE_NOT_FOUND_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    _MD_unix_map_default_error(err);
 }
 
 void _MD_unix_map_closedir_error(int err)
 {
-	switch (err) {
-		case EINVAL:
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    PRErrorCode prError;
+
+    switch (err) {
+        case EINVAL:
+            prError = PR_BAD_DESCRIPTOR_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_readdir_error(int err)
 {
+    PRErrorCode prError;
 
-	switch (err) {
-		case ENOENT:
-			PR_SetError(PR_NO_MORE_FILES_ERROR, err);
-			break;
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-#ifdef EDIRCORRUPTED
-		case EDIRCORRUPTED:
-			PR_SetError(PR_DIRECTORY_CORRUPTED_ERROR, err);
-			break;
-#endif
+    switch (err) {
+        case ENOENT:
+            prError = PR_NO_MORE_FILES_ERROR;
+            break;
 #ifdef EOVERFLOW
-		case EOVERFLOW:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
+        case EOVERFLOW:
+            prError = PR_IO_ERROR;
+            break;
 #endif
-		case EINVAL:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
-#ifdef EBADMSG
-		case EBADMSG:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
-#endif
-		case EDEADLK:
-			PR_SetError(PR_DEADLOCK_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-		case EIO:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
-		case ENOLCK:
-			PR_SetError(PR_FILE_IS_LOCKED_ERROR, err);
-			break;
-#ifdef ENOLINK
-		case ENOLINK:
-			PR_SetError(PR_REMOTE_FILE_ERROR, err);
-			break;
-#endif
-		case ENXIO:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+        case EINVAL:
+            prError = PR_IO_ERROR;
+            break;
+        case ENXIO:
+            prError = PR_IO_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_unlink_error(int err)
 {
-	switch (err) {
-		case EACCES:
-			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
-			break;
-		case EBUSY:
-			PR_SetError(PR_FILESYSTEM_MOUNTED_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-		case ELOOP:
-			PR_SetError(PR_LOOP_ERROR, err);
-			break;
-		case ENAMETOOLONG:
-			PR_SetError(PR_NAME_TOO_LONG_ERROR, err);
-			break;
-		case ENOENT:
-			PR_SetError(PR_FILE_NOT_FOUND_ERROR, err);
-			break;
-		case ENOTDIR:
-			PR_SetError(PR_NOT_DIRECTORY_ERROR, err);
-			break;
-		case EPERM:
-			PR_SetError(PR_IS_DIRECTORY_ERROR, err);
-			break;
-		case EROFS:
-			PR_SetError(PR_READ_ONLY_FILESYSTEM_ERROR, err);
-			break;
-#ifdef EMULTIHOP
-		case EMULTIHOP:
-			PR_SetError(PR_REMOTE_FILE_ERROR, err);
-			break;
-#endif
-#ifdef ENOLINK
-		case ENOLINK:
-			PR_SetError(PR_REMOTE_FILE_ERROR, err);
-			break;
-#endif
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    PRErrorCode prError;
+
+    switch (err) {
+        case EPERM:
+            prError = PR_IS_DIRECTORY_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_stat_error(int err)
 {
-	switch (err) {
-		case EACCES:
-			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-#ifdef EMULTIHOP
-		case EMULTIHOP:
-#endif
-#ifdef ENOLINK
-		case ENOLINK:
-#endif
-		case ETIMEDOUT:
-			PR_SetError(PR_REMOTE_FILE_ERROR, err);
-			break;
-		case ELOOP:
-			PR_SetError(PR_LOOP_ERROR, err);
-			break;
-		case ENAMETOOLONG:
-			PR_SetError(PR_NAME_TOO_LONG_ERROR, err);
-			break;
-		case ENOENT:
-			PR_SetError(PR_FILE_NOT_FOUND_ERROR, err);
-			break;
-		case ENOTDIR:
-			PR_SetError(PR_NOT_DIRECTORY_ERROR, err);
-			break;
-#ifdef EOVERFLOW
-		case EOVERFLOW:
-			PR_SetError(PR_BUFFER_OVERFLOW_ERROR, err);
-			break;
-#endif
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    PRErrorCode prError;
+
+    switch (err) {
+        case ETIMEDOUT:
+            prError = PR_REMOTE_FILE_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_fstat_error(int err)
 {
-	switch (err) {
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-		case ETIMEDOUT:
-#ifdef ENOLINK
-		case ENOLINK:
-#endif
-			PR_SetError(PR_REMOTE_FILE_ERROR, err);
-			break;
-#ifdef EOVERFLOW
-		case EOVERFLOW:
-			PR_SetError(PR_BUFFER_OVERFLOW_ERROR, err);
-			break;
-#endif
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    PRErrorCode prError;
+
+    switch (err) {
+        case ETIMEDOUT:
+            prError = PR_REMOTE_FILE_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_rename_error(int err)
 {
-	switch (err) {
-		case EACCES:
-			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
-			break;
-		case EBUSY:
-			PR_SetError(PR_FILESYSTEM_MOUNTED_ERROR, err);
-			break;
-#ifdef EDQUOT
-		case EDQUOT:
-			PR_SetError(PR_NO_DEVICE_SPACE_ERROR, err);
-			break;
-#endif
-		case EEXIST:
-			PR_SetError(PR_DIRECTORY_NOT_EMPTY_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-		case EINVAL:
-			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
-			break;
-		case EIO:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
-		case EISDIR:
-			PR_SetError(PR_IS_DIRECTORY_ERROR, err);
-			break;
-		case ELOOP:
-			PR_SetError(PR_LOOP_ERROR, err);
-			break;
-#ifdef EMULTIHOP
-		case EMULTIHOP:
-			PR_SetError(PR_REMOTE_FILE_ERROR, err);
-			break;
-#endif
-#ifdef ENOLINK
-		case ENOLINK:
-			PR_SetError(PR_REMOTE_FILE_ERROR, err);
-			break;
-#endif
-		case ENAMETOOLONG:
-			PR_SetError(PR_NAME_TOO_LONG_ERROR, err);
-			break;
-		case ENOENT:
-			PR_SetError(PR_FILE_NOT_FOUND_ERROR, err);
-			break;
-		case ENOSPC:
-			PR_SetError(PR_NO_DEVICE_SPACE_ERROR, err);
-			break;
-		case ENOTDIR:
-			PR_SetError(PR_NOT_DIRECTORY_ERROR, err);
-			break;
-		case EROFS:
-			PR_SetError(PR_READ_ONLY_FILESYSTEM_ERROR, err);
-			break;
-		case EXDEV:
-			PR_SetError(PR_NOT_SAME_DEVICE_ERROR, err);
-			break;
-		case EMLINK:
-			PR_SetError(PR_MAX_DIRECTORY_ENTRIES_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    PRErrorCode prError;
+
+    switch (err) {
+        case EEXIST:
+            prError = PR_DIRECTORY_NOT_EMPTY_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_access_error(int err)
 {
-	switch (err) {
-		case EACCES:
-			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-		case EINVAL:
-			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
-			break;
-		case ELOOP:
-			PR_SetError(PR_LOOP_ERROR, err);
-			break;
-#ifdef EMULTIHOP
-		case EMULTIHOP:
-#endif
-#ifdef ENOLINK
-		case ENOLINK:
-#endif
-		case ETIMEDOUT:
-			PR_SetError(PR_REMOTE_FILE_ERROR, err);
-			break;
-		case ENAMETOOLONG:
-			PR_SetError(PR_NAME_TOO_LONG_ERROR, err);
-			break;
-		case ENOENT:
-			PR_SetError(PR_FILE_NOT_FOUND_ERROR, err);
-			break;
-		case ENOTDIR:
-			PR_SetError(PR_NOT_DIRECTORY_ERROR, err);
-			break;
-		case EROFS:
-			PR_SetError(PR_READ_ONLY_FILESYSTEM_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    PRErrorCode prError;
+
+    switch (err) {
+        case ETIMEDOUT:
+            prError = PR_REMOTE_FILE_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_mkdir_error(int err)
 {
-	switch (err) {
-		case ENOTDIR:
-			PR_SetError(PR_NOT_DIRECTORY_ERROR, err);
-			break;
-		case ENOENT:
-			PR_SetError(PR_FILE_NOT_FOUND_ERROR, err);
-			break;
-		case ENAMETOOLONG:
-			PR_SetError(PR_NAME_TOO_LONG_ERROR, err);
-			break;
-		case EACCES:
-			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
-			break;
-		case EEXIST:
-			PR_SetError(PR_FILE_EXISTS_ERROR, err);
-			break;
-		case EROFS:
-			PR_SetError(PR_READ_ONLY_FILESYSTEM_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case ELOOP:
-			PR_SetError(PR_LOOP_ERROR, err);
-			break;
-		case EMLINK:
-			PR_SetError(PR_MAX_DIRECTORY_ENTRIES_ERROR, err);
-			break;
-		case ENOSPC:
-			PR_SetError(PR_NO_DEVICE_SPACE_ERROR, err);
-			break;
-#ifdef EDQUOT
-		case EDQUOT:
-			PR_SetError(PR_NO_DEVICE_SPACE_ERROR, err);
-			break;
-#endif
-		case EIO:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
-#ifdef EMULTIHOP
-		case EMULTIHOP:
-			PR_SetError(PR_REMOTE_FILE_ERROR, err);
-			break;
-#endif
-#ifdef ENOLINK
-		case ENOLINK:
-			PR_SetError(PR_REMOTE_FILE_ERROR, err);
-			break;
-#endif
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    _MD_unix_map_default_error(err);
 }
 
 void _MD_unix_map_rmdir_error(int err)
 {
+    PRErrorCode prError;
 
-	switch (err) {
-		case EACCES:
-			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
-			break;
-		case EBUSY:
-			PR_SetError(PR_FILESYSTEM_MOUNTED_ERROR, err);
-			break;
-		case EEXIST:
-			PR_SetError(PR_DIRECTORY_NOT_EMPTY_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case EINVAL:
-			PR_SetError(PR_DIRECTORY_NOT_EMPTY_ERROR, err);
-			break;
-		case EIO:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
-		case ELOOP:
-			PR_SetError(PR_LOOP_ERROR, err);
-			break;
-#ifdef EMULTIHOP
-		case EMULTIHOP:
-#endif
-#ifdef ENOLINK
-		case ENOLINK:
-#endif
-		case ETIMEDOUT:
-			PR_SetError(PR_REMOTE_FILE_ERROR, err);
-			break;
-		case ENAMETOOLONG:
-			PR_SetError(PR_NAME_TOO_LONG_ERROR, err);
-			break;
-		case ENOENT:
-			PR_SetError(PR_FILE_NOT_FOUND_ERROR, err);
-			break;
-		case ENOTDIR:
-			PR_SetError(PR_NOT_DIRECTORY_ERROR, err);
-			break;
-		case EROFS:
-			PR_SetError(PR_READ_ONLY_FILESYSTEM_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    switch (err) {
+        case EEXIST:
+            prError = PR_DIRECTORY_NOT_EMPTY_ERROR;
+            break;
+        case EINVAL:
+            prError = PR_DIRECTORY_NOT_EMPTY_ERROR;
+            break;
+        case ETIMEDOUT:
+            prError = PR_REMOTE_FILE_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_read_error(int err)
 {
-	switch (err) {
-		case EACCES:
-			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
-			break;
-		case EAGAIN:
-#if EWOULDBLOCK != EAGAIN
-		case EWOULDBLOCK:
-#endif
-			PR_SetError(PR_WOULD_BLOCK_ERROR, err);
-			break;
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-#ifdef EBADMSG
-		case EBADMSG:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
-#endif
-		case EDEADLK:
-			PR_SetError(PR_DEADLOCK_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-		case EINVAL:
-			PR_SetError(PR_INVALID_METHOD_ERROR, err);
-			break;
-		case EIO:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
-		case ENOLCK:
-			PR_SetError(PR_FILE_IS_LOCKED_ERROR, err);
-			break;
-		case ENXIO:
-			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
-			break;
-		case EISDIR:
-			PR_SetError(PR_IS_DIRECTORY_ERROR, err);
-			break;
-		case ECONNRESET:
-		case EPIPE:
-			PR_SetError(PR_CONNECT_RESET_ERROR, err);
-			break;
-#ifdef ENOLINK
-		case ENOLINK:
-			PR_SetError(PR_REMOTE_FILE_ERROR, err);
-			break;
-#endif
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    PRErrorCode prError;
+
+    switch (err) {
+        case EINVAL:
+            prError = PR_INVALID_METHOD_ERROR;
+            break;
+        case ENXIO:
+            prError = PR_INVALID_ARGUMENT_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_write_error(int err)
 {
-	switch (err) {
-		case EAGAIN:
-#if EWOULDBLOCK != EAGAIN
-		case EWOULDBLOCK:
-#endif
-			PR_SetError(PR_WOULD_BLOCK_ERROR, err);
-			break;
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case EDEADLK:
-			PR_SetError(PR_DEADLOCK_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case EFBIG:
-			PR_SetError(PR_FILE_TOO_BIG_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-		case EINVAL:
-			PR_SetError(PR_INVALID_METHOD_ERROR, err);
-			break;
-		case EIO:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
-		case ENOLCK:
-			PR_SetError(PR_FILE_IS_LOCKED_ERROR, err);
-			break;
-#ifdef ENOSR
-		case ENOSR:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-#endif
-		case ENOSPC:
-			PR_SetError(PR_NO_DEVICE_SPACE_ERROR, err);
-			break;
-		case ENXIO:
-			PR_SetError(PR_INVALID_METHOD_ERROR, err);
-			break;
-		case ERANGE:
-			PR_SetError(PR_INVALID_METHOD_ERROR, err);
-			break;
-		case ETIMEDOUT:
-			PR_SetError(PR_REMOTE_FILE_ERROR, err);
-			break;
-		case ECONNRESET:
-		case EPIPE:
-			PR_SetError(PR_CONNECT_RESET_ERROR, err);
-			break;
-#ifdef EDQUOT
-		case EDQUOT:
-			PR_SetError(PR_NO_DEVICE_SPACE_ERROR, err);
-			break;
-#endif
-#ifdef ENOLINK
-		case ENOLINK:
-			PR_SetError(PR_REMOTE_FILE_ERROR, err);
-			break;
-#endif
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    PRErrorCode prError;
+
+    switch (err) {
+        case EINVAL:
+            prError = PR_INVALID_METHOD_ERROR;
+            break;
+        case ENXIO:
+            prError = PR_INVALID_METHOD_ERROR;
+            break;
+        case ETIMEDOUT:
+            prError = PR_REMOTE_FILE_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_lseek_error(int err)
 {
-	switch (err) {
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case ESPIPE:
-			PR_SetError(PR_INVALID_METHOD_ERROR, err);
-			break;
-		case EINVAL:
-			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    _MD_unix_map_default_error(err);
 }
 
 void _MD_unix_map_fsync_error(int err)
 {
-	switch (err) {
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-#ifdef ENOLINK
-		case ENOLINK:
-#endif
-		case ETIMEDOUT:
-			PR_SetError(PR_REMOTE_FILE_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-		case EIO:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
-		case EINVAL:
-			PR_SetError(PR_INVALID_METHOD_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    PRErrorCode prError;
+
+    switch (err) {
+        case ETIMEDOUT:
+            prError = PR_REMOTE_FILE_ERROR;
+            break;
+        case EINVAL:
+            prError = PR_INVALID_METHOD_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_close_error(int err)
 {
-	switch (err) {
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case EFBIG:
-			PR_SetError(PR_FILE_TOO_BIG_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-#ifdef ENOLINK
-		case ENOLINK:
-#endif
-		case ETIMEDOUT:
-			PR_SetError(PR_REMOTE_FILE_ERROR, err);
-			break;
-		case EIO:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    PRErrorCode prError;
+
+    switch (err) {
+        case ETIMEDOUT:
+            prError = PR_REMOTE_FILE_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_socket_error(int err)
 {
-	switch (err) {
-		case EPROTONOSUPPORT:
-			PR_SetError(PR_PROTOCOL_NOT_SUPPORTED_ERROR, err);
-			break;
-		case EMFILE:
-			PR_SetError(PR_PROC_DESC_TABLE_FULL_ERROR, err);
-			break;
-		case ENFILE:
-			PR_SetError(PR_SYS_DESC_TABLE_FULL_ERROR, err);
-			break;
-		case EACCES:
-			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
-			break;
-#if !defined(SCO)
-		case ENOBUFS:
-#endif /* !defined(SCO) */
-		case ENOMEM:
-#ifdef ENOSR
-		case ENOSR:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-#endif
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    PRErrorCode prError;
+
+    switch (err) {
+        case ENOMEM:
+            prError = PR_INSUFFICIENT_RESOURCES_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_socketavailable_error(int err)
 {
-	PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
+    PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
 }
 
 void _MD_unix_map_recv_error(int err)
 {
-	switch (err) {
-		case EAGAIN:
-#if EWOULDBLOCK != EAGAIN
-		case EWOULDBLOCK:
-#endif
-			PR_SetError(PR_WOULD_BLOCK_ERROR, err);
-			break;
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case ENOTSOCK:
-			PR_SetError(PR_NOT_SOCKET_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case ENOMEM:
-			PR_SetError(PR_OUT_OF_MEMORY_ERROR, err);
-			break;
-		case ECONNRESET:
-		case EPIPE:
-			PR_SetError(PR_CONNECT_RESET_ERROR, err);
-			break;
-#ifdef ENOSR
-		case ENOSR:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-#endif
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    _MD_unix_map_default_error(err);
 }
 
 void _MD_unix_map_recvfrom_error(int err)
 {
-	switch (err) {
-		case EAGAIN:
-#if EWOULDBLOCK != EAGAIN
-		case EWOULDBLOCK:
-#endif
-			PR_SetError(PR_WOULD_BLOCK_ERROR, err);
-			break;
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case ENOTSOCK:
-			PR_SetError(PR_NOT_SOCKET_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case ENOMEM:
-			PR_SetError(PR_OUT_OF_MEMORY_ERROR, err);
-			break;
-#ifdef ENOSR
-		case ENOSR:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-#endif
-		case ECONNRESET:
-			PR_SetError(PR_CONNECT_RESET_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    _MD_unix_map_default_error(err);
 }
 
 void _MD_unix_map_send_error(int err)
 {
-	switch (err) {
-		case EAGAIN:
-#if EWOULDBLOCK != EAGAIN
-		case EWOULDBLOCK:
-#endif
-			PR_SetError(PR_WOULD_BLOCK_ERROR, err);
-			break;
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case ENOTSOCK:
-			PR_SetError(PR_NOT_SOCKET_ERROR, err);
-			break;
-		case EMSGSIZE:
-		case EINVAL:
-			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
-			break;
-		case EIO:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
-#if !defined(SCO)
-		case ENOBUFS:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-#endif /* !defined(SCO) */
-		case ECONNREFUSED:
-			PR_SetError(PR_CONNECT_REFUSED_ERROR, err);
-			break;
-		case EISCONN:
-			PR_SetError(PR_IS_CONNECTED_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-		case ENOMEM:
-			PR_SetError(PR_OUT_OF_MEMORY_ERROR, err);
-			break;
-#ifdef ENOSR
-		case ENOSR:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-#endif
-		case ECONNRESET:
-		case EPIPE:
-			PR_SetError(PR_CONNECT_RESET_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    _MD_unix_map_default_error(err);
 }
 
 void _MD_unix_map_sendto_error(int err)
 {
-	switch (err) {
-		case EAGAIN:
-#if EWOULDBLOCK != EAGAIN
-		case EWOULDBLOCK:
-#endif
-			PR_SetError(PR_WOULD_BLOCK_ERROR, err);
-			break;
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case ENOTSOCK:
-			PR_SetError(PR_NOT_SOCKET_ERROR, err);
-			break;
-		case EMSGSIZE:
-		case EINVAL:
-			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
-			break;
-#if !defined(SCO)
-		case ENOBUFS:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-#endif /* !defined(SCO) */
-		case ECONNREFUSED:
-			PR_SetError(PR_CONNECT_REFUSED_ERROR, err);
-			break;
-		case EISCONN:
-			PR_SetError(PR_IS_CONNECTED_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-		case ENOMEM:
-			PR_SetError(PR_OUT_OF_MEMORY_ERROR, err);
-			break;
-#ifdef ENOSR
-		case ENOSR:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-#endif
-		case ECONNRESET:
-		case EPIPE:
-			PR_SetError(PR_CONNECT_RESET_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    _MD_unix_map_default_error(err);
 }
 
 void _MD_unix_map_writev_error(int err)
 {
-	switch (err) {
-		case EAGAIN:
-#if EWOULDBLOCK != EAGAIN
-		case EWOULDBLOCK:
-#endif
-			PR_SetError(PR_WOULD_BLOCK_ERROR, err);
-			break;
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-		case EIO:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
-#ifdef ENOSR
-		case ENOSR:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-#endif
-		case EINVAL:
-			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
-			break;
-		case ECONNRESET:
-		case EPIPE:
-			PR_SetError(PR_CONNECT_RESET_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    _MD_unix_map_default_error(err);
 }
 
 void _MD_unix_map_accept_error(int err)
 {
-	switch (err) {
-		case EAGAIN:
-#if EWOULDBLOCK != EAGAIN
-		case EWOULDBLOCK:
-#endif
-			PR_SetError(PR_WOULD_BLOCK_ERROR, err);
-			break;
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case ENOTSOCK:
-			PR_SetError(PR_NOT_SOCKET_ERROR, err);
-			break;
-		case EOPNOTSUPP:
-		case ENODEV:
-			PR_SetError(PR_NOT_TCP_SOCKET_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case EMFILE:
-			PR_SetError(PR_PROC_DESC_TABLE_FULL_ERROR, err);
-			break;
-		case ENFILE:
-			PR_SetError(PR_SYS_DESC_TABLE_FULL_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-		case ENOMEM:
-			PR_SetError(PR_OUT_OF_MEMORY_ERROR, err);
-			break;
-#ifdef ENOSR
-		case ENOSR:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-#endif
-#ifdef EPROTO
-		case EPROTO:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
-#endif
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    PRErrorCode prError;
+
+    switch (err) {
+        case ENODEV:
+            prError = PR_NOT_TCP_SOCKET_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_connect_error(int err)
 {
-	switch (err) {
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case EADDRNOTAVAIL:
-			PR_SetError(PR_ADDRESS_NOT_AVAILABLE_ERROR, err);
-			break;
-		case EINPROGRESS:
-			PR_SetError(PR_IN_PROGRESS_ERROR, err);
-			break;
-		case EALREADY:
-			PR_SetError(PR_ALREADY_INITIATED_ERROR, err);
-			break;
-		case ENOTSOCK:
-			PR_SetError(PR_NOT_SOCKET_ERROR, err);
-			break;
-		case EAFNOSUPPORT:
-			PR_SetError(PR_ADDRESS_NOT_SUPPORTED_ERROR, err);
-			break;
-		case EISCONN:
-			PR_SetError(PR_IS_CONNECTED_ERROR, err);
-			break;
-		case ETIMEDOUT:
-			PR_SetError(PR_IO_TIMEOUT_ERROR, err);
-			break;
-		case ECONNREFUSED:
-			PR_SetError(PR_CONNECT_REFUSED_ERROR, err);
-			break;
-		case ENETUNREACH:
-			PR_SetError(PR_NETWORK_UNREACHABLE_ERROR, err);
-			break;
-		case EADDRINUSE:
-			PR_SetError(PR_ADDRESS_IN_USE_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		/*
-		 * UNIX domain sockets are not supported in NSPR
-		 */
-		case EACCES:
-			PR_SetError(PR_ADDRESS_NOT_SUPPORTED_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-		case EINVAL:
-			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
-			break;
-		case EIO:
+    PRErrorCode prError;
+
+    switch (err) {
+        case EACCES:
+            prError = PR_ADDRESS_NOT_SUPPORTED_ERROR;
+            break;
 #if defined(UNIXWARE) || defined(SNI) || defined(NEC)
-			/*
-			 * On some platforms, if we connect to a port on
-			 * the local host (the loopback address) that no
-			 * process is listening on, we get EIO instead
-			 * of ECONNREFUSED.
-			 */
-			PR_SetError(PR_CONNECT_REFUSED_ERROR, err);
-#else
-			PR_SetError(PR_IO_ERROR, err);
+        /*
+         * On some platforms, if we connect to a port on the local host 
+         * (the loopback address) that no process is listening on, we get 
+         * EIO instead of ECONNREFUSED.
+         */
+        case EIO:
+            prError = PR_CONNECT_REFUSED_ERROR;
+            break;
 #endif
-			break;
-		case ELOOP:
-			PR_SetError(PR_ADDRESS_NOT_SUPPORTED_ERROR, err);
-			break;
-		case ENOENT:
-			PR_SetError(PR_ADDRESS_NOT_SUPPORTED_ERROR, err);
-			break;
-#ifdef ENOSR
-		case ENOSR:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-#endif
-		case ENXIO:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
-		case EPROTOTYPE:
-			PR_SetError(PR_ADDRESS_NOT_SUPPORTED_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+        case ELOOP:
+            prError = PR_ADDRESS_NOT_SUPPORTED_ERROR;
+            break;
+        case ENOENT:
+            prError = PR_ADDRESS_NOT_SUPPORTED_ERROR;
+            break;
+        case ENXIO:
+            prError = PR_IO_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_bind_error(int err)
 {
-	switch (err) {
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case ENOTSOCK:
-			PR_SetError(PR_NOT_SOCKET_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case EADDRNOTAVAIL:
-			PR_SetError(PR_ADDRESS_NOT_AVAILABLE_ERROR, err);
-			break;
-		case EADDRINUSE:
-			PR_SetError(PR_ADDRESS_IN_USE_ERROR, err);
-			break;
-		case EACCES:
-			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
-			break;
-		case EINVAL:
-			PR_SetError(PR_SOCKET_ADDRESS_IS_BOUND_ERROR, err);
-			break;
-#ifdef ENOSR
-		case ENOSR:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-#endif
-		/*
-		 * UNIX domain sockets are not supported in NSPR
-		 */
-		case EIO:
-		case EISDIR:
-		case ELOOP:
-		case ENOENT:
-		case ENOTDIR:
-		case EROFS:
-			PR_SetError(PR_ADDRESS_NOT_SUPPORTED_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    PRErrorCode prError;
+
+    switch (err) {
+        case EINVAL:
+            prError = PR_SOCKET_ADDRESS_IS_BOUND_ERROR;
+            break;
+        /*
+         * UNIX domain sockets are not supported in NSPR
+         */
+        case EIO:
+        case EISDIR:
+        case ELOOP:
+        case ENOENT:
+        case ENOTDIR:
+        case EROFS:
+            prError = PR_ADDRESS_NOT_SUPPORTED_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_listen_error(int err)
 {
-	switch (err) {
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case ENOTSOCK:
-			PR_SetError(PR_NOT_SOCKET_ERROR, err);
-			break;
-		case EOPNOTSUPP:
-			PR_SetError(PR_NOT_TCP_SOCKET_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    _MD_unix_map_default_error(err);
 }
 
 void _MD_unix_map_shutdown_error(int err)
 {
-	switch (err) {
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case ENOTSOCK:
-			PR_SetError(PR_NOT_SOCKET_ERROR, err);
-			break;
-		case ENOTCONN:
-			PR_SetError(PR_NOT_CONNECTED_ERROR, err);
-			break;
-		case ENOMEM:
-			PR_SetError(PR_OUT_OF_MEMORY_ERROR, err);
-			break;
-#ifdef ENOSR
-		case ENOSR:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-#endif
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    _MD_unix_map_default_error(err);
 }
 
 void _MD_unix_map_socketpair_error(int err)
 {
-	switch (err) {
-		case EMFILE:
-			PR_SetError(PR_PROC_DESC_TABLE_FULL_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case ENOMEM:
-#ifdef ENOSR
-		case ENOSR:
-#endif
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-		case EAFNOSUPPORT:
-		case EPROTONOSUPPORT:
-		case EOPNOTSUPP:
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    PRErrorCode prError;
+
+    switch (err) {
+        case ENOMEM:
+            prError = PR_INSUFFICIENT_RESOURCES_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_getsockname_error(int err)
 {
-	switch (err) {
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case ENOTSOCK:
-			PR_SetError(PR_NOT_SOCKET_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-#if !defined(SCO)
-		case ENOBUFS:
-#endif /* !defined(SCO) */
-		case ENOMEM:
-#ifdef ENOSR
-		case ENOSR:
-#endif
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    PRErrorCode prError;
+
+    switch (err) {
+        case ENOMEM:
+            prError = PR_INSUFFICIENT_RESOURCES_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_getpeername_error(int err)
 {
+    PRErrorCode prError;
 
-	switch (err) {
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case ENOTSOCK:
-			PR_SetError(PR_NOT_SOCKET_ERROR, err);
-			break;
-		case ENOTCONN:
-			PR_SetError(PR_NOT_CONNECTED_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-#if !defined(SCO)
-		case ENOBUFS:
-#endif /* !defined(SCO) */
-		case ENOMEM:
-#ifdef ENOSR
-		case ENOSR:
-#endif
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    switch (err) {
+        case ENOMEM:
+            prError = PR_INSUFFICIENT_RESOURCES_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_getsockopt_error(int err)
 {
-	switch (err) {
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case ENOTSOCK:
-			PR_SetError(PR_NOT_SOCKET_ERROR, err);
-			break;
-		case ENOPROTOOPT:
-			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case EINVAL:
-			PR_SetError(PR_BUFFER_OVERFLOW_ERROR, err);
-			break;
-		case ENOMEM:
-#ifdef ENOSR
-		case ENOSR:
-#endif
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    PRErrorCode prError;
+
+    switch (err) {
+        case EINVAL:
+            prError = PR_BUFFER_OVERFLOW_ERROR;
+            break;
+        case ENOMEM:
+            prError = PR_INSUFFICIENT_RESOURCES_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_setsockopt_error(int err)
 {
-	switch (err) {
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case ENOTSOCK:
-			PR_SetError(PR_NOT_SOCKET_ERROR, err);
-			break;
-		case ENOPROTOOPT:
-			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case EINVAL:
-			PR_SetError(PR_BUFFER_OVERFLOW_ERROR, err);
-			break;
-		case ENOMEM:
-#ifdef ENOSR
-		case ENOSR:
-#endif
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    PRErrorCode prError;
+
+    switch (err) {
+        case EINVAL:
+            prError = PR_BUFFER_OVERFLOW_ERROR;
+            break;
+        case ENOMEM:
+            prError = PR_INSUFFICIENT_RESOURCES_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_open_error(int err)
 {
-	switch (err) {
-		case EACCES:
-			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
-			break;
-		case EAGAIN:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-		case EBUSY:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
-		case EEXIST:
-			PR_SetError(PR_FILE_EXISTS_ERROR, err);
-			break;
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-		case EINVAL:
-			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
-			break;
-		case EIO:
-			PR_SetError(PR_IO_ERROR, err);
-			break;
-		case EISDIR:
-			PR_SetError(PR_IS_DIRECTORY_ERROR, err);
-			break;
-		case ELOOP:
-			PR_SetError(PR_LOOP_ERROR, err);
-			break;
-		case EMFILE:
-			PR_SetError(PR_PROC_DESC_TABLE_FULL_ERROR, err);
-			break;
-		case ENAMETOOLONG:
-			PR_SetError(PR_NAME_TOO_LONG_ERROR, err);
-			break;
-		case ENFILE:
-			PR_SetError(PR_SYS_DESC_TABLE_FULL_ERROR, err);
-			break;
-		case ENODEV:
-		case ENOENT:
-		case ENXIO:
-			PR_SetError(PR_FILE_NOT_FOUND_ERROR, err);
-			break;
-		case ENOMEM:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-		case ENOSPC:
-			PR_SetError(PR_NO_DEVICE_SPACE_ERROR, err);
-			break;
-#ifdef ENOSR
-		case ENOSR:
-#endif
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-		case ENOTDIR:
-			PR_SetError(PR_NOT_DIRECTORY_ERROR, err);
-			break;
-		case EPERM:
-			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
-			break;
-#ifdef EMULTIHOP
-		case EMULTIHOP:
-#endif
-#ifdef ENOLINK
-		case ENOLINK:
-#endif
-		case ETIMEDOUT:
-			PR_SetError(PR_REMOTE_FILE_ERROR, err);
-			break;
+    PRErrorCode prError;
+
+    switch (err) {
+        case EAGAIN:
+            prError = PR_INSUFFICIENT_RESOURCES_ERROR;
+            break;
+        case EBUSY:
+            prError = PR_IO_ERROR;
+            break;
+        case ENODEV:
+            prError = PR_FILE_NOT_FOUND_ERROR;
+            break;
+        case ENOMEM:
+            prError = PR_INSUFFICIENT_RESOURCES_ERROR;
+            break;
 #ifdef EOVERFLOW
-		case EOVERFLOW:
-			PR_SetError(PR_FILE_TOO_BIG_ERROR, err);
-			break;
+        case EOVERFLOW:
+            prError = PR_FILE_TOO_BIG_ERROR;
+            break;
 #endif
-		case EROFS:
-			PR_SetError(PR_READ_ONLY_FILESYSTEM_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+        case ETIMEDOUT:
+            prError = PR_REMOTE_FILE_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_mmap_error(int err)
 {
-	switch (err) {
-		case EACCES:
-			PR_SetError(PR_NO_ACCESS_RIGHTS_ERROR, err);
-			break;
-		case EAGAIN:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case EINVAL:
-			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
-			break;
-		case EMFILE:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-		case ENODEV:
-			PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, err);
-			break;
-		case ENOMEM:
-			PR_SetError(PR_OUT_OF_MEMORY_ERROR, err);
-			break;
-		case ENXIO:
-			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-	}
+    PRErrorCode prError;
+
+    switch (err) {
+        case EAGAIN:
+            prError = PR_INSUFFICIENT_RESOURCES_ERROR;
+            break;
+        case EMFILE:
+            prError = PR_INSUFFICIENT_RESOURCES_ERROR;
+            break;
+        case ENODEV:
+            prError = PR_OPERATION_NOT_SUPPORTED_ERROR;
+            break;
+        case ENXIO:
+            prError = PR_INVALID_ARGUMENT_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
+    }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_gethostname_error(int err)
 {
-    switch (err) {
-		case EFAULT:
-			PR_SetError(PR_ACCESS_FAULT_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-    }
+    _MD_unix_map_default_error(err);
 }
 
 void _MD_unix_map_select_error(int err)
 {
-    switch (err) {
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case EINTR:
-			PR_SetError(PR_PENDING_INTERRUPT_ERROR, err);
-			break;
-		case EINVAL:
-			PR_SetError(PR_INVALID_ARGUMENT_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
-    }
+    _MD_unix_map_default_error(err);
 }
 
 #if defined(_PR_POLL_AVAILABLE) || defined(_PR_NEED_FAKE_POLL)
 void _MD_unix_map_poll_error(int err)
 {
-    PRErrorCode prerror;
+    PRErrorCode prError;
+
     switch (err) {
         case EAGAIN:
-            prerror = PR_INSUFFICIENT_RESOURCES_ERROR;
-            break;
-        case EINVAL:
-            prerror = PR_INVALID_ARGUMENT_ERROR;
-            break;
-        case EFAULT:
-            prerror = PR_ACCESS_FAULT_ERROR;
+            prError = PR_INSUFFICIENT_RESOURCES_ERROR;
             break;
         default:
-            prerror = PR_UNKNOWN_ERROR;
-            break;
+            _MD_unix_map_default_error(err);
+            return;
     }
-    PR_SetError(prerror, err);
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_poll_revents_error(int err)
 {
-
     if (err & POLLNVAL)
-		PR_SetError(PR_BAD_DESCRIPTOR_ERROR, EBADF);
+        PR_SetError(PR_BAD_DESCRIPTOR_ERROR, EBADF);
     else if (err & POLLHUP)
-		PR_SetError(PR_CONNECT_RESET_ERROR, EPIPE);
+        PR_SetError(PR_CONNECT_RESET_ERROR, EPIPE);
     else if (err & POLLERR)
-		PR_SetError(PR_IO_ERROR, EIO);
-	else
-		PR_SetError(PR_UNKNOWN_ERROR, err);
+        PR_SetError(PR_IO_ERROR, EIO);
+    else
+        PR_SetError(PR_UNKNOWN_ERROR, err);
 }
 #endif /* _PR_POLL_AVAILABLE || _PR_NEED_FAKE_POLL */
 
 
 void _MD_unix_map_flock_error(int err)
 {
+    PRErrorCode prError;
+
     switch (err) {
-		case EBADF:
-		case EINVAL:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case EWOULDBLOCK:
-			PR_SetError(PR_FILE_IS_LOCKED_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
+        case EINVAL:
+            prError = PR_BAD_DESCRIPTOR_ERROR;
+            break;
+        case EWOULDBLOCK:
+            prError = PR_FILE_IS_LOCKED_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
     }
+    PR_SetError(prError, err);
 }
 
 void _MD_unix_map_lockf_error(int err)
 {
+    PRErrorCode prError;
+
     switch (err) {
-		case EBADF:
-			PR_SetError(PR_BAD_DESCRIPTOR_ERROR, err);
-			break;
-		case EACCES:
-			PR_SetError(PR_FILE_IS_LOCKED_ERROR, err);
-			break;
-		case EDEADLK:
-			PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, err);
-			break;
-		default:
-			PR_SetError(PR_UNKNOWN_ERROR, err);
-			break;
+        case EACCES:
+            prError = PR_FILE_IS_LOCKED_ERROR;
+            break;
+        case EDEADLK:
+            prError = PR_INSUFFICIENT_RESOURCES_ERROR;
+            break;
+        default:
+            _MD_unix_map_default_error(err);
+            return;
     }
+    PR_SetError(prError, err);
 }
 
 #ifdef AIX
-void _MD_aix_map_sendfile_error(int oserror)
-#endif
+void _MD_aix_map_sendfile_error(int err)
+{
+    _MD_unix_map_default_error(err);
+}
+#endif /* AIX */
 
 #ifdef HPUX11
-void _MD_hpux_map_sendfile_error(int oserror)
-#endif
-
-#if defined(AIX) || defined(HPUX11)
+void _MD_hpux_map_sendfile_error(int err)
 {
-    PRErrorCode prerror;
-
-    switch (oserror) {
-        case ENOTSOCK:
-            prerror = PR_NOT_SOCKET_ERROR;
-            break;
-        case EFAULT:
-            prerror = PR_ACCESS_FAULT_ERROR;
-            break;
-        case ENOBUFS:
-            prerror = PR_INSUFFICIENT_RESOURCES_ERROR;
-            break;
-        case EINVAL:
-            prerror = PR_INVALID_ARGUMENT_ERROR;
-            break;
-        case ENOTCONN:
-            prerror = PR_NOT_CONNECTED_ERROR;
-            break;
-        case EPIPE:
-            prerror = PR_CONNECT_RESET_ERROR;
-            break;
-        case ENOMEM:
-            prerror = PR_OUT_OF_MEMORY_ERROR;
-            break;
-        case EOPNOTSUPP:
-            prerror = PR_NOT_TCP_SOCKET_ERROR;
-            break;
-        default:
-            prerror = PR_UNKNOWN_ERROR;
-    }
-    PR_SetError(prerror, oserror); 
+    _MD_unix_map_default_error(err);
 }
-#endif /* defined(AIX) || defined(HPUX11) */
+#endif /* HPUX11 */
