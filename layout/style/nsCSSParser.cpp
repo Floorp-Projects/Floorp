@@ -868,23 +868,41 @@ static PRBool IsPseudoClass(const nsString& aBuffer)
 }
 
 /**
- * These are the 15 possible kinds of CSS1 style selectors:
+ * These are the 31 possible kinds of CSS1 style selectors:
+ * (but there are 50 ways to leave your lover)
+ * [*] means it can repeat
  * <UL>
  * <LI>Tag
  * <LI>Tag#Id
- * <LI>Tag#Id.Class
- * <LI>Tag#Id.Class:Pseudo
- * <LI>Tag#Id:Pseudo
- * <LI>Tag.Class
- * <LI>Tag.Class:Pseudo
- * <LI>Tag:Pseudo
+ * <LI>Tag#Id.Class[*]
+ * <LI>Tag#Id.Class[*]:PseudoClass[*]
+ * <LI>Tag#Id.Class[*]:PseudoClass[*]:PseudoElement
+ * <LI>Tag#Id.Class[*]:PseudoElement
+ * <LI>Tag#Id:PseudoClass[*]
+ * <LI>Tag#Id:PseudoClass[*]:PseudoElement
+ * <LI>Tag#Id:PseudoElement
+ * <LI>Tag.Class[*]
+ * <LI>Tag.Class[*]:PseudoClass[*]
+ * <LI>Tag.Class[*]:PseudoClass[*]:PseudoElement
+ * <LI>Tag.Class[*]:PseudoElement
+ * <LI>Tag:PseudoClass[*]
+ * <LI>Tag:PseudoClass[*]:PseudoElement
+ * <LI>Tag:PseudoElement
  * <LI>#Id
- * <LI>#Id.Class
- * <LI>#Id.Class:Pseudo
- * <LI>#Id:Pseudo
- * <LI>.Class
- * <LI>.Class:Pseudo
- * <LI>:Pseudo
+ * <LI>#Id.Class[*]
+ * <LI>#Id.Class[*]:PseudoClass[*]
+ * <LI>#Id.Class[*]:PseudoClass[*]:PseudoElement
+ * <LI>#Id.Class[*]:PseudoElement
+ * <LI>#Id:PseudoClass[*]
+ * <LI>#Id:PseudoClass[*]:PseudoElement
+ * <LI>#Id:PseudoElement
+ * <LI>.Class[*]
+ * <LI>.Class[*]:PseudoClass[*]
+ * <LI>.Class[*]:PseudoClass[*]:PseudoElement
+ * <LI>.Class[*]:PseudoElement
+ * <LI>:PseudoClass[*]
+ * <LI>:PseudoClass[*]:PseudoElement
+ * <LI>:PseudoElement
  * </UL>
  */
 PRBool CSSParserImpl::ParseSelector(PRInt32* aErrorCode,
@@ -1116,11 +1134,14 @@ CSSParserImpl::ParseDeclaration(PRInt32* aErrorCode,
 {
   // Get property name
   nsCSSToken* tk = &mToken;
+  char propertyName[100];
   for (;;) {
     if (!GetToken(aErrorCode, PR_TRUE)) {
       return PR_FALSE;
     }
     if (eCSSToken_Ident == tk->mType) {
+      tk->mIdent.ToCString(propertyName, sizeof(propertyName));
+      // grab the ident before the ExpectSymbol trashes the token
       if (!ExpectSymbol(aErrorCode, ':', PR_TRUE)) {
         return PR_FALSE;
       }
@@ -1137,8 +1158,6 @@ CSSParserImpl::ParseDeclaration(PRInt32* aErrorCode,
   }
 
   // Map property name to it's ID and then parse the property
-  char propertyName[100];
-  tk->mIdent.ToCString(propertyName, sizeof(propertyName));
   if (!ParseProperty(aErrorCode, propertyName, aDeclaration)) {
     return PR_FALSE;
   }
