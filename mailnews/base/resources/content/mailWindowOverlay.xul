@@ -555,10 +555,6 @@ Rights Reserved.
                   label="&openLinkCmd.label;"
                   accesskey="&openLinkCmd.accesskey;"
                   oncommand="gMessagePaneContextMenu.openLink();"/>
-        <menuitem id="context-editlink"
-                  label="&editLinkCmd.label;"
-                  accesskey="&editLinkCmd.accesskey;"
-                  oncommand="gMessagePaneContextMenu.editLink();"/>
         <menuseparator id="messagePaneContext-sep-link"/>
         <menuitem id="context-selectall"
                   label="&selectAllCmd.label;"
