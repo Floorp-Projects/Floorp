@@ -32,11 +32,13 @@
 
 DEPTH=..\..\..
 
-
 DIRS=public idl src \
 !if !defined(DISABLE_TESTS)
      tests \
 !endif
-     shell loader
+     shell loader \
+!if defined(XPC_TOOLS_SUPPORT)
+     tools
+!endif
 
 include <$(DEPTH)\config\rules.mak>
