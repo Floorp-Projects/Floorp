@@ -43,7 +43,6 @@
 #include <secrng.h>
 #include <nspr.h>
 #include <plstr.h>
-#include <cdbhdl.h>
 #include <pkcs11.h>
 
 #include <jssutil.h>
@@ -56,6 +55,19 @@
 #if defined(AIX) || defined(HPUX) || defined(LINUX)
 #include <signal.h>
 #endif
+
+/* HACK
+ * Include this from cdbhdl.h since it's now a private export.
+ * We only do this because we need to allocate memory for this so
+ * we need its size.
+ */
+struct CERTCertDBHandleStr {
+    DB *permCertDB;
+    DB *tempCertDB;
+    void *spkDigestInfo;
+    CERTStatusConfig *statusConfig;
+    PZMonitor *dbMon;
+};
 
 /*
 ** NOTE:  We must declare a function "prototype" for the following function
@@ -548,6 +560,11 @@ JSS_completeInitialize(JNIEnv *env,
 	if (rv != SECSuccess) {
 		goto finish;
 	}
+
+    if( NSS_SetDomesticPolicy() != SECSuccess ) {
+        JSS_throwMsg(env, SECURITY_EXCEPTION, "Unable to set security policy");
+        goto finish;
+    }
 
     /*
      * Save the JavaVM pointer so we can retrieve the JNI environment
