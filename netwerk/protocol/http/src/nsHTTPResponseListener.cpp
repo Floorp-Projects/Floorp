@@ -22,7 +22,7 @@
 #include "nsIInputStream.h"
 #include "nsIHTTPConnection.h"
 #include "nsHTTPResponse.h"
-#include "nsIHTTPEventSink.h"
+#include "nsIHttpEventSink.h"
 #include "nsCRT.h"
 #include "stdio.h" //sscanf
 

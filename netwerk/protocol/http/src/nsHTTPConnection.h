@@ -29,7 +29,7 @@
 #include "nsIUrl.h"
 #include "nsHTTPHandler.h"
 #include "nsIEventQueue.h"
-#include "nsIHTTPEventSink.h"
+#include "nsIHttpEventSink.h"
 
 class nsHTTPRequest;
 class nsHTTPResponse;
