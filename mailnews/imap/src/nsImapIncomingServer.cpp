@@ -3284,3 +3284,49 @@ nsImapIncomingServer::GetSearchScope(nsMsgSearchScopeValue *searchScope)
    return NS_OK;
 }
 
+// Gets new messages (imap /Select) for this folder and all subfolders except 
+// Trash. This is a recursive function. Gets new messages for current folder
+// first, then calls self recursively for each subfolder.
+NS_IMETHODIMP 
+nsImapIncomingServer::GetNewMessagesAllFolders(nsIMsgFolder *aRootFolder, nsIMsgWindow *aWindow)
+{
+  nsresult retval = NS_OK;
+
+  if (!aRootFolder)
+    return retval;
+
+  // If this is the trash folder, we don't need to do anything here or with
+  // any subfolders.
+  PRUint32 flags = 0;
+  aRootFolder->GetFlags(&flags);
+  if (flags & MSG_FOLDER_FLAG_TRASH)
+    return retval;
+
+  // Get new messages for this folder. 
+  aRootFolder->UpdateFolder(aWindow);
+
+  // Loop through all subfolders to get new messages for them.
+  nsCOMPtr<nsIEnumerator> aEnumerator;
+  retval = aRootFolder->GetSubFolders(getter_AddRefs(aEnumerator));
+  NS_ASSERTION((NS_SUCCEEDED(retval) && aEnumerator), "GetSubFolders() failed to return enumerator.");
+  if (NS_FAILED(retval)) 
+    return retval;
+
+  nsresult more = aEnumerator->First();
+
+  while (NS_SUCCEEDED(more))
+  {
+    nsCOMPtr<nsISupports> aSupport;
+    nsresult rv = aEnumerator->CurrentItem(getter_AddRefs(aSupport));
+    NS_ASSERTION((NS_SUCCEEDED(rv) && aSupport), "CurrentItem() failed.");
+			
+    nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(aSupport, &rv);
+    NS_ASSERTION((NS_SUCCEEDED(rv) && msgFolder), "nsIMsgFolder service not found.");
+
+    retval = GetNewMessagesAllFolders(msgFolder, aWindow);
+
+    more = aEnumerator->Next();
+  }
+
+  return retval;
+}

@@ -2024,42 +2024,59 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
         return rv;
 }
 
+// Called by Biff, or when user presses GetMsg button.
 NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlListener *aListener)
 {
-  nsresult rv = NS_ERROR_FAILURE;
-  NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
-  if (NS_FAILED(rv)) return rv;
-  nsCOMPtr<nsIMsgFolder> inbox;
   nsCOMPtr<nsIMsgFolder> rootFolder;
-  rv = GetRootFolder(getter_AddRefs(rootFolder));
-  if(NS_SUCCEEDED(rv) && rootFolder)
-  {
-    PRUint32 numFolders;
-    rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
-  }
-  if (inbox)
-  {
-    nsCOMPtr <nsIEventQueue> eventQ;
-    NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
-    if (NS_SUCCEEDED(rv) && pEventQService)
-      pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
-                        getter_AddRefs(eventQ));
+  nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
+
+  if(NS_SUCCEEDED(rv) && rootFolder) {
 
     nsCOMPtr<nsIImapIncomingServer> imapServer;
     nsresult rv = GetImapIncomingServer(getter_AddRefs(imapServer));
-
+ 
     if (NS_SUCCEEDED(rv) && imapServer)
       imapServer->GetDownloadBodiesOnGetNewMail(&m_downloadingFolderForOfflineUse);
 
-    inbox->SetGettingNewMessages(PR_TRUE);
-    m_urlListener = aListener;
-    rv = imapService->SelectFolder(eventQ, inbox, this, aWindow, nsnull);
 
-    if (rv == NS_BINDING_ABORTED)
+    // Check preferences to see if we should check all folders for new 
+    // messages, or just the inbox.
+  	PRBool checkAllFolders = PR_FALSE;
+
+    nsCOMPtr <nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv) && prefs)
     {
-      inbox->NotifyFolderEvent(mFolderLoadedAtom);
-      rv = NS_OK;
+
+      nsCOMPtr<nsIPrefBranch> prefBranch; 
+      rv = prefs->GetBranch("", getter_AddRefs(prefBranch)); 
+
+
+      // This pref might not exist, which is OK. We'll only check INBOX in that 
+      // case.
+      if (NS_SUCCEEDED(rv) && prefBranch)
+	      rv = prefBranch->GetBoolPref("mail.check_all_imap_folders_for_new", &checkAllFolders); 
     }
+
+    m_urlListener = aListener;                                                  
+
+    if (checkAllFolders) {
+
+      // Get new messages in all folders (except trash).
+      if (imapServer)
+        imapServer->GetNewMessagesAllFolders(rootFolder, aWindow);
+    }
+
+    else {
+
+      // Get new messages in inbox only.
+      PRUint32 numFolders;
+      nsCOMPtr<nsIMsgFolder> inbox;
+      rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
+      if (inbox)
+        rv = inbox->UpdateFolder(aWindow);
+
+    }
+    
   }
 
   return rv;

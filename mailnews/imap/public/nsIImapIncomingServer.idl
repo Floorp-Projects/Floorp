@@ -29,6 +29,7 @@ interface nsIEventQueue;
 interface nsIImapProtocol;
 interface nsISupportsArray;
 interface nsIMsgFolder;
+interface nsIMsgWindow;
 
 typedef long nsMsgImapDeleteModel;
 
@@ -81,6 +82,7 @@ interface nsIImapIncomingServer : nsISupports {
   void reDiscoverAllFolders();
   nsIMsgFolder GetReadMailPFC(in boolean createIfMissing);
   nsIMsgFolder GetSentMailPFC(in boolean createIfMissing);
+  void GetNewMessagesAllFolders(in nsIMsgFolder aRootFolder, in nsIMsgWindow aWindow); 
   attribute boolean doingLsub;
 
   void allowFolderConversion(out boolean allowConversion);
