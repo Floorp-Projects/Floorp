@@ -194,6 +194,7 @@ protected:
   PRInt32                  mType;
   PRBool                   mSkipFocusEvent;
   nsCOMPtr<nsIControllers> mControllers;
+  PRBool                   mDidMouseDown;
 
   PRBool IsImage() const {
     nsAutoString tmp;
@@ -226,6 +227,7 @@ nsHTMLInputElement::nsHTMLInputElement(nsIAtom* aTag)
   mType = NS_FORM_INPUT_TEXT; // default value
   mForm = nsnull;
   mSkipFocusEvent = PR_FALSE;
+  mDidMouseDown   = PR_FALSE;
   //nsTraceRefcnt::Create((nsIFormControl*)this, "nsHTMLFormControlElement", __FILE__, __LINE__);
 
 }
@@ -724,6 +726,10 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
         }                                                                       
       }                                                                         
       break; // NS_FOCUS_CONTENT
+
+      case NS_BLUR_CONTENT:
+        mDidMouseDown = PR_FALSE;
+        break; // NS_BLUR_CONTENT
           
       case NS_KEY_PRESS:
       {
@@ -765,21 +771,28 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
       } break;// NS_KEY_PRESS
 
       case NS_MOUSE_LEFT_BUTTON_DOWN:
+        mDidMouseDown = PR_TRUE;
+        break;// NS_KEY_PRESS
+
+      case NS_MOUSE_LEFT_BUTTON_UP:
       {
-        PRInt32 type;
-        GetType(&type);
-        switch(type) {
-          case NS_FORM_INPUT_CHECKBOX:
-            {
-              PRBool checked;
-              GetChecked(&checked);
-              SetChecked(!checked);
-            }
-            break;
-          case NS_FORM_INPUT_RADIO:
-            SetChecked(PR_TRUE);
-            break;
-        } //switch 
+        if (mDidMouseDown) {
+          PRInt32 type;
+          GetType(&type);
+          switch(type) {
+            case NS_FORM_INPUT_CHECKBOX:
+              {
+                PRBool checked;
+                GetChecked(&checked);
+                SetChecked(!checked);
+              }
+              break;
+            case NS_FORM_INPUT_RADIO:
+              SetChecked(PR_TRUE);
+              break;
+          } //switch 
+        }
+        mDidMouseDown = PR_FALSE;
       } break;// NS_MOUSE_LEFT_BUTTON_DOWN
 
     } //switch 
@@ -862,14 +875,19 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (IsImage()) {
-    if (nsGenericHTMLElement::ParseImageAttribute(aAttribute,
-                                                  aValue, aResult)) {
+  else if (aAttribute == nsHTMLAtoms::border) {
+    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  } 
+  else if (aAttribute == nsHTMLAtoms::align) {
+    if (nsGenericHTMLElement::ParseAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (aAttribute == nsHTMLAtoms::border) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+  else if (IsImage()) {
+    if (nsGenericHTMLElement::ParseImageAttribute(aAttribute,
+                                                  aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -887,11 +905,17 @@ nsHTMLInputElement::AttributeToString(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
+  else if (aAttribute == nsHTMLAtoms::align) {
+    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
+      nsGenericHTMLElement::AlignValueToString(aValue, aResult);
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
   else if (IsImage() &&
            nsGenericHTMLElement::ImageAttributeToString(aAttribute,
                                                         aValue, aResult)) {
     return NS_CONTENT_ATTR_HAS_VALUE;
-  }
+  } 
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
