@@ -330,25 +330,17 @@ InstallVersionToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
     return JS_TRUE;
   }
 
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->ToString(nativeRet)) {
-      return JS_FALSE;
-    }
-
-    JSString *jsstring =
-      JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*,
-                                                  nativeRet.get()),
-                          nativeRet.Length());
-
-    // set the return value
-    *rval = STRING_TO_JSVAL(jsstring);
-  }
-  else {
-    JS_ReportError(cx, "Function toString requires 0 parameters");
-    return JS_FALSE;
+  if (NS_OK != nativeThis->ToString(nativeRet)) {
+    return JS_TRUE;
   }
 
+  JSString *jsstring =
+    JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*,
+                                                nativeRet.get()),
+                        nativeRet.Length());
+
+  // set the return value
+  *rval = STRING_TO_JSVAL(jsstring);
   return JS_TRUE;
 }
 
