@@ -68,6 +68,7 @@ calEvent.prototype = {
         this.cloneItemBaseInto(m);
         m.mStartDate = this.mStartDate.clone();
         m.mEndDate = this.mEndDate.clone();
+        m.isAllDay = this.isAllDay;
 
         return m;
     },

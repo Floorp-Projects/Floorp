@@ -287,7 +287,7 @@ MonthView.prototype.createEventBox = function(itemOccurrence)
     eventBoxText.setAttribute("crop", "end");
     eventBoxText.setAttribute("class", "month-day-event-text-class");
 
-    if (itemOccurrence.isAllDay) {
+    if (calEvent.isAllDay) {
         eventBox.setAttribute("allday", "true");
         eventBoxText.setAttribute("value", itemOccurrence.title );
         // Create an image
