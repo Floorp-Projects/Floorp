@@ -91,6 +91,9 @@ nsHTTPRequest::~nsHTTPRequest()
 */
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// nsISupports methods:
+
 NS_IMPL_ADDREF(nsHTTPRequest);
 NS_IMPL_RELEASE(nsHTTPRequest);
 
@@ -124,18 +127,21 @@ nsHTTPRequest::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsHTTPRequest::IsPending(PRBool *result)
 {
-  nsresult rv = NS_ERROR_NULL_POINTER;
+  nsresult rv = NS_OK;
 
   if (mTransport) {
     rv = mTransport->IsPending(result);
+  } else {
+    *result = PR_FALSE; 
   }
+
   return rv;
 }
 
 NS_IMETHODIMP
 nsHTTPRequest::Cancel(void)
 {
-  nsresult rv = NS_ERROR_NULL_POINTER;
+  nsresult rv = NS_ERROR_FAILURE;
 
   if (mTransport) {
     rv = mTransport->Cancel();
@@ -146,7 +152,7 @@ nsHTTPRequest::Cancel(void)
 NS_IMETHODIMP
 nsHTTPRequest::Suspend(void)
 {
-  nsresult rv = NS_ERROR_NULL_POINTER;
+  nsresult rv = NS_ERROR_FAILURE;
 
   if (mTransport) {
     rv = mTransport->Suspend();
@@ -157,7 +163,7 @@ nsHTTPRequest::Suspend(void)
 NS_IMETHODIMP
 nsHTTPRequest::Resume(void)
 {
-  nsresult rv = NS_ERROR_NULL_POINTER;
+  nsresult rv = NS_ERROR_FAILURE;
 
   if (mTransport) {
     rv = mTransport->Resume();
@@ -320,66 +326,80 @@ nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
     return rv;
 }
 
-NS_METHOD 
-nsHTTPRequest::Clone(const nsHTTPRequest* *o_Request) const
+nsresult nsHTTPRequest::Clone(const nsHTTPRequest* *o_Request) const
 {
     return NS_ERROR_FAILURE;
 }
                         
-NS_METHOD 
-nsHTTPRequest::SetMethod(HTTPMethod i_Method)
+nsresult nsHTTPRequest::SetMethod(HTTPMethod i_Method)
 {
     mMethod = i_Method;
     return NS_OK;
 }
 
-HTTPMethod 
-nsHTTPRequest::GetMethod(void) const
+HTTPMethod nsHTTPRequest::GetMethod(void) const
 {
     return mMethod;
 }
                         
-NS_METHOD 
-nsHTTPRequest::SetPriority()
+nsresult nsHTTPRequest::SetPriority()
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_METHOD 
-nsHTTPRequest::GetPriority()
+nsresult nsHTTPRequest::GetPriority()
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
-NS_METHOD
-nsHTTPRequest::SetHeader(nsIAtom* i_Header, const char* i_Value)
+nsresult nsHTTPRequest::SetHeader(nsIAtom* i_Header, const char* i_Value)
 {
     return mHeaders.SetHeader(i_Header, i_Value);
 }
 
-NS_METHOD
-nsHTTPRequest::GetHeader(nsIAtom* i_Header, char* *o_Value)
+nsresult nsHTTPRequest::GetHeader(nsIAtom* i_Header, char* *o_Value)
 {
     return mHeaders.GetHeader(i_Header, o_Value);
 }
 
 
-NS_METHOD
-nsHTTPRequest::SetHTTPVersion(HTTPVersion i_Version)
+nsresult nsHTTPRequest::SetHTTPVersion(HTTPVersion i_Version)
 {
     mVersion = i_Version;
     return NS_OK;
 }
 
-NS_METHOD
-nsHTTPRequest::GetHTTPVersion(HTTPVersion* o_Version) 
+nsresult nsHTTPRequest::GetHTTPVersion(HTTPVersion* o_Version) 
 {
     *o_Version = mVersion;
     return NS_OK;
 }
 
 
+nsresult nsHTTPRequest::SetPostDataStream(nsIInputStream* aStream)
+{
+  mPostDataStream = aStream;
+
+  return NS_OK;
+}
+
+nsresult nsHTTPRequest::GetPostDataStream(nsIInputStream* *aResult)
+{ 
+  nsresult rv = NS_OK;
+
+  if (aResult) {
+    *aResult = mPostDataStream;
+    NS_IF_ADDREF(*aResult);
+  } else {
+    rv = NS_ERROR_NULL_POINTER;
+  }
+
+  return rv;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIStreamObserver methods:
 
 NS_IMETHODIMP
 nsHTTPRequest::OnStartRequest(nsIChannel* channel, nsISupports* i_Context)
@@ -474,8 +494,7 @@ nsHTTPRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Context,
 }
 
 
-NS_IMETHODIMP
-nsHTTPRequest::SetConnection(nsHTTPChannel* i_Connection)
+nsresult nsHTTPRequest::SetConnection(nsHTTPChannel* i_Connection)
 {
     mConnection = i_Connection;
     return NS_OK;

@@ -101,7 +101,6 @@ protected:
     PRInt32                     mContentLength;
     nsCString                   mContentType;
     nsCString                   mCharset;
-    nsIInputStream*             mPostStream;
     nsCOMPtr<nsISupports>       mOwner;
 	// Auth related stuff-
 	/* 
