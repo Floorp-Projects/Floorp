@@ -142,7 +142,7 @@ nsNoAuthURLParser::ParseAtHost(const char* i_Spec, char* *o_Host,
         if (len > 1 && *i_Spec == '[') {
             // Possible IPv6 address
             PRNetAddr netaddr;
-            char* fwdPtr = strchr(i_Spec+1, ']');
+            char* fwdPtr = PL_strchr(i_Spec+1, ']');
             if (fwdPtr) {
                 rv = ExtractString((char*)i_Spec+1, o_Host, 
                                    (fwdPtr - i_Spec - 1));
