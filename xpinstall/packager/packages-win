@@ -149,7 +149,7 @@ bin\res\*
 bin\help\browserhelp\*
 bin\help\troubleshoot\*
 
-;[mail]
+[mail]
 bin\msgbsutl.dll
 bin\components\addrbook.dll
 bin\components\addrbook.xpt
@@ -177,7 +177,7 @@ bin\chrome\messenger\*
 bin\chrome\messengercompose\*
 bin\help\mailhelp\*
 
-;[editor]
+[editor]
 bin\components\editor.js
 bin\components\editor.xpt
 bin\components\ender.dll
