@@ -74,6 +74,7 @@ void nsTextWidget::Create(nsIWidget *aParent,const nsRect &aRect,EVENT_CALLBACK 
 LongRect		destRect,viewRect;
 PRUint32		teFlags=0;
 GrafPtr			curport;
+PRInt32			offx,offy;
 
 
   mParent = aParent;
@@ -112,6 +113,8 @@ GrafPtr			curport;
 	  mEventCallback = aHandleEventFunction;
 	  	  
 	  // Initialize the TE record
+	  CalcOffset(offx,offy);
+	  
 	  viewRect.left = aRect.x;
 	  viewRect.top = aRect.y;
 	  viewRect.right = aRect.x+aRect.width;
@@ -119,7 +122,9 @@ GrafPtr			curport;
 	  destRect = viewRect;
 	  ::GetPort(&curport);
 	  ::SetPort(mWindowPtr);
+	  ::SetOrigin(-offx,-offy);
 		WENew(&destRect,&viewRect,teFlags,&mTE_Data);
+		::SetOrigin(0,0);
 		::SetPort(curport);
 		
 	  InitDeviceContext(mContext, (nsNativeWidget)mWindowPtr);
@@ -175,14 +180,17 @@ nsresult nsTextWidget::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 PRBool nsTextWidget::OnPaint(nsPaintEvent & aEvent)
 {
+PRInt32							offx,offy;
 nsRect							therect;
 Rect								macrect;
 GrafPtr							theport;
 RGBColor						blackcolor = {0,0,0};
 RgnHandle						thergn;
 	
+	CalcOffset(offx,offy);
 	::GetPort(&theport);
 	::SetPort(mWindowPtr);
+	::SetOrigin(-offx,-offy);
 	GetBounds(therect);
 	nsRectToMacRect(therect,macrect);
 	thergn = ::NewRgn();
@@ -196,6 +204,7 @@ RgnHandle						thergn;
 	WEUpdate(nsnull,mTE_Data);
 	::PenSize(1,1);
 	::SetClip(thergn);
+	::SetOrigin(0,0);
 	::SetPort(theport);
 	
   return PR_FALSE;
@@ -209,9 +218,13 @@ GrafPtr				theport;
 RgnHandle			thergn;
 nsRect				therect;
 Rect					macrect;
+PRInt32				offx,offy;
 
+	CalcOffset(offx,offy);
 	::GetPort(&theport);
 	::SetPort(mWindowPtr);
+	::SetOrigin(-offx,-offy);
+
 	GetBounds(therect);
 	nsRectToMacRect(therect,macrect);
 	thergn = ::NewRgn();
@@ -219,6 +232,7 @@ Rect					macrect;
 	::ClipRect(&macrect);
 	WEKey(aKey,aModifiers,mTE_Data);
 	::SetClip(thergn);
+	::SetOrigin(0,0);
 	::SetPort(theport);
 	
 }
@@ -234,17 +248,23 @@ Point		mouseLoc;
 PRInt16 modifiers=0;
 nsRect	therect;
 Rect		macrect;
+PRInt32				offx,offy;
+
+	
 	
 	switch (aEvent.message)
 		{
 		case NS_MOUSE_LEFT_BUTTON_DOWN:
+			CalcOffset(offx,offy);
 			::SetPort(mWindowPtr);
+			::SetOrigin(-offx,-offy);
 			GetBounds(therect);
 			nsRectToMacRect(therect,macrect);
 			::ClipRect(&macrect);
 			mouseLoc.h = aEvent.point.x;
 			mouseLoc.v = aEvent.point.y;
 			WEClick(mouseLoc,modifiers,aEvent.time,mTE_Data);
+			::SetOrigin(0,0);
 			result = PR_FALSE;
 			break;
 		case NS_MOUSE_LEFT_BUTTON_UP:
