@@ -4446,6 +4446,15 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent,
           nsCOMPtr<nsIContent> target(do_QueryInterface(aTarget));
           if (target) {
             ret = target->HandleDOMEvent(mPresContext, innerEvent, &aEvent, NS_EVENT_FLAG_INIT, &status);
+
+            // Dispatch to the system event group.  Make sure to clear the
+            // STOP_DISPATCH flag since this resets for each event group
+            // per DOM3 Events.
+
+            innerEvent->flags &= ~NS_EVENT_FLAG_STOP_DISPATCH;
+            ret = target->HandleDOMEvent(mPresContext, innerEvent, &aEvent,
+                                         NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_SYSTEM_EVENT,
+                                         &status);
           }
           else {
             nsCOMPtr<nsIChromeEventHandler> target(do_QueryInterface(aTarget));
