@@ -10223,7 +10223,7 @@ else
 fi
 
 
-min_ft_version=7.0.1
+min_ft_version=6.1.0
 echo $ac_n "checking for FreeType - version >= $min_ft_version""... $ac_c" 1>&6
 echo "configure:10229: checking for FreeType - version >= $min_ft_version" >&5
 no_ft=""
