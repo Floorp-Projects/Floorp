@@ -34,6 +34,7 @@ class nsIXMLDocument;
 class nsIUnicharInputStream;
 class nsIParser;
 class nsINameSpace;
+class nsICSSLoader;
 
 typedef enum {
   eXMLContentSinkState_InProlog,
@@ -85,12 +86,6 @@ public:
   NS_IMETHOD AddEntityReference(const nsIParserNode& aNode);
 
   NS_IMETHOD ResumeParsing();
-  NS_IMETHOD LoadStyleSheet(nsIURL* aURL,
-                            nsIUnicharInputStream* aUIN,
-                            PRBool aActive,
-                            const nsString& aTitle,
-                            const nsString& aMedia,
-                            nsIContent* aOwner);
   NS_IMETHOD EvaluateScript(nsString& aScript, PRUint32 aLineNo);
 
 protected:
@@ -118,7 +113,12 @@ protected:
 
   nsresult RefreshIfEnabled(nsIViewManager* vm);
 
-#ifdef XSL
+#ifndef XSL
+  nsresult ProcessStyleLink(nsIContent* aElement,
+                            const nsString& aHref, PRBool aAlternate,
+                            const nsString& aTitle, const nsString& aType,
+                            const nsString& aMedia);
+#else
   nsresult CreateStyleSheetURL(nsIURL** aUrl, const nsAutoString& aHref);
   nsresult LoadXSLStyleSheet(const nsIURL* aUrl);
 #endif
@@ -129,6 +129,7 @@ protected:
 
   nsIDocument* mDocument;
   nsIURL* mDocumentURL;
+  nsIURL* mDocumentBaseURL; // can be set via HTTP headers
   nsIWebShell* mWebShell;
   nsIParser* mParser;
 
@@ -150,6 +151,10 @@ protected:
   // something similar for STYLE.
   PRBool mInScript;
   PRUint32 mScriptLineNo;
+
+  nsString  mPreferredStyle;
+  PRInt32 mStyleSheetCount;
+  nsICSSLoader* mCSSLoader;
 
 #ifdef XSL
   XSLStyleSheetState mXSLState;
