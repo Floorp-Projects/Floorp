@@ -85,6 +85,7 @@ nsresult InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
   // set out param default value
   if (nsnull!=aDidMerge)
     *aDidMerge=PR_FALSE;
+  nsresult result = NS_OK;
   if ((nsnull!=aDidMerge) && (nsnull!=aTransaction))
   {
     // if aTransaction isa InsertTextTxn, and if the selection hasn't changed, 
@@ -112,7 +113,8 @@ nsresult InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
           // a single InsertTextTxn
           nsCOMPtr<EditTxn> childTxn;
           otherTxn->GetTxnAt(0, getter_AddRefs(childTxn));
-          nsCOMPtr<InsertTextTxn> otherInsertTxn(childTxn);
+          nsCOMPtr<InsertTextTxn> otherInsertTxn;
+          otherInsertTxn = do_QueryInterface(childTxn, &result);
           if (otherInsertTxn)
           {
             if (PR_TRUE==IsSequentialInsert(otherInsertTxn))
@@ -127,7 +129,7 @@ nsresult InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
       }
     }
   }
-  return NS_OK;
+  return result;
 }
 
 nsresult InsertTextTxn::Write(nsIOutputStream *aOutputStream)

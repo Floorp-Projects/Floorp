@@ -62,7 +62,7 @@ nsresult DeleteRangeTxn::Init(nsIDOMRange *aRange)
 #ifdef NS_DEBUG
     PRUint32 count;
     nsCOMPtr<nsIDOMCharacterData> textNode;
-    textNode = mStartParent;
+    textNode = do_QueryInterface(mStartParent, &result);
     if (textNode)
       textNode->GetLength(&count);
     else
@@ -74,7 +74,7 @@ nsresult DeleteRangeTxn::Init(nsIDOMRange *aRange)
     }
     NS_ASSERTION(mStartOffset<=count, "bad start offset");
 
-    textNode = mEndParent;
+    textNode = do_QueryInterface(mEndParent, &result);
     if (textNode)
       textNode->GetLength(&count);
     else
@@ -362,11 +362,13 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
           break;
 #ifdef NS_DEBUG
         // begin debug output
-        nsCOMPtr<nsIDOMElement> childElement (child);
+        nsCOMPtr<nsIDOMElement> childElement;
+        childElement = do_QueryInterface(child, &result);
         nsAutoString childElementTag="text node";
         if (childElement)
           childElement->GetTagName(childElementTag);
-        nsCOMPtr<nsIDOMElement> parentElement(parent);
+        nsCOMPtr<nsIDOMElement> parentElement;
+        parentElement = do_QueryInterface(parent, &result);
         nsAutoString parentElementTag="text node";
         if (parentElement)
           parentElement->GetTagName(parentElementTag);
@@ -425,11 +427,13 @@ nsresult DeleteRangeTxn::CreateTxnsToDeleteNodesBetween(nsIDOMNode *aCommonParen
             break;
 #ifdef NS_DEBUG
           // begin debug output
-          nsCOMPtr<nsIDOMElement> childElement(child);
+          nsCOMPtr<nsIDOMElement> childElement;
+          childElement = do_QueryInterface(child, &result);
           nsAutoString childElementTag="text node";
           if (childElement)
             childElement->GetTagName(childElementTag);
-          nsCOMPtr<nsIDOMElement> parentElement(parent);
+          nsCOMPtr<nsIDOMElement> parentElement;
+          parentElement = do_QueryInterface(parent, &result);
           nsAutoString parentElementTag="text node";
           if (parentElement)
             parentElement->GetTagName(parentElementTag);
@@ -482,7 +486,8 @@ nsresult DeleteRangeTxn::BuildAncestorList(nsIDOMNode *aNode, nsISupportsArray *
       aList->AppendElement(parentAsISupports);
 #ifdef NS_DEBUG
         // begin debug output
-        nsCOMPtr<nsIDOMElement> parentElement(parent);
+        nsCOMPtr<nsIDOMElement> parentElement;
+        parentElement = do_QueryInterface(parent, &result);
         nsAutoString parentElementTag="text node";
         if (parentElement)
           parentElement->GetTagName(parentElementTag);
