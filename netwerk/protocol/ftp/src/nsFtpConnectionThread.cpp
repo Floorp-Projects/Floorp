@@ -23,6 +23,7 @@
 #include "nsISocketTransportService.h"
 #include "nsIUrl.h"
 
+#include "nsIByteBufferInputStream.h" // for our internal stream state
 #include "nsIInputStream.h"
 
 #include "prcmon.h"
@@ -61,6 +62,8 @@ nsFtpConnectionThread::nsFtpConnectionThread(PLEventQueue* aEventQ, nsIStreamLis
     NS_ADDREF(mListener);
     mAction = GET;
     mState = FTP_S_USER;
+    mAscii = PR_TRUE;
+    mLength = 0;
 }
 
 nsFtpConnectionThread::~nsFtpConnectionThread() {
@@ -128,12 +131,14 @@ nsFtpConnectionThread::Run() {
             // Reading state. used after a write in order to retrieve
             // the response from the server.
             case FTP_READ_BUF:
+                {
                 if (mState == mNextState)
                     NS_ASSERTION(0, "ftp read state mixup");
 
                 rv = Read();
                 mState = mNextState;
                 break;
+                }
                 // END: FTP_READ_BUF
 
 //////////////////////////////
@@ -142,6 +147,7 @@ nsFtpConnectionThread::Run() {
 
 
             case FTP_S_USER:
+                {
                 buffer = "USER anonymous";
                 bufLen = PL_strlen(buffer);
 
@@ -157,9 +163,11 @@ nsFtpConnectionThread::Run() {
                 mState = FTP_READ_BUF;
                 mNextState = FTP_R_USER;
                 break;
+                }
                 // END: FTP_S_USER
 
             case FTP_R_USER:
+                {
                 if (mResponseCode == 3) {
                     // send off the password
                     mState = FTP_S_PASS;
@@ -168,9 +176,11 @@ nsFtpConnectionThread::Run() {
 				    mState = FTP_S_SYST;
                 }
                 break;
+                }
 			    // END: FTP_R_USER
 
             case FTP_S_PASS:
+                {
                 if (!mPassword.Length()) {
                     // XXX we need to prompt the user to enter a password.
 
@@ -189,9 +199,11 @@ nsFtpConnectionThread::Run() {
                 mState = FTP_READ_BUF;
                 mNextState = FTP_R_PASS;
                 break;
+                }
                 // END: FTP_S_PASS
 
             case FTP_R_PASS:
+                {
                 if (mResponseCode == 3) {
                     // send account info
                     mState = FTP_S_ACCT;
@@ -202,9 +214,11 @@ nsFtpConnectionThread::Run() {
                     NS_ASSERTION(0, "ftp unexpected condition");
                 }
 			    break;
+                }
 			    // END: FTP_R_PASS    
 
 		    case FTP_S_SYST:
+                {
 			    buffer = "SYST\r\n";
                 bufLen = PL_strlen(buffer);
 
@@ -219,9 +233,11 @@ nsFtpConnectionThread::Run() {
                 mState = FTP_READ_BUF;
 			    mNextState = FTP_R_SYST;
 			    break;
+                }
                 // END: FTP_S_SYST
 
-		    case FTP_R_SYST:
+            case FTP_R_SYST: 
+                {
 			    if (mResponseCode == 2) {
                     if (mUseDefaultPath) {
 					    mState = FTP_S_PWD;
@@ -241,9 +257,11 @@ nsFtpConnectionThread::Run() {
 				    mState = FTP_S_PWD;		
 			    }
 			    break;
+                }
 			    // END: FTP_R_SYST
 
 		    case FTP_S_ACCT:
+                {
 			    buffer = "ACCT noaccount\r\n";
                 bufLen = PL_strlen(buffer);
 
@@ -258,9 +276,11 @@ nsFtpConnectionThread::Run() {
                 mState = FTP_READ_BUF;
 			    mNextState = FTP_R_ACCT;			
 			    break;
+                }
                 // END: FTP_S_ACCT
 
 		    case FTP_R_ACCT:
+                {
 			    if (mResponseCode == 2) {
 				    mState = FTP_S_SYST;
 			    } else {
@@ -269,9 +289,11 @@ nsFtpConnectionThread::Run() {
 				    return NS_ERROR_NOT_IMPLEMENTED;
 			    }
 			    break;
+                }
 			    // END: FTP_R_ACCT
 
 		    case FTP_S_MACB:
+                {
 			    buffer = "MACB ENABLE\r\n";
                 bufLen = PL_strlen(buffer);
 
@@ -285,9 +307,11 @@ nsFtpConnectionThread::Run() {
                 mState = FTP_READ_BUF;
 			    mNextState = FTP_R_MACB;
 			    break;
+                }
                 // END: FTP_S_MACB
 
 		    case FTP_R_MACB:
+                {
 			    if (mResponseCode == 2) {
 				    // set the mac binary
 				    if (mServerType == FTP_UNIX_TYPE) {
@@ -299,9 +323,11 @@ nsFtpConnectionThread::Run() {
 			    }
                 mState = FindActionState();
 			    break;
+                }
 			    // END: FTP_R_MACB
 
 		    case FTP_S_PWD:
+                {
 			    buffer = "PWD\r\n";
                 bufLen = PL_strlen(buffer);
 
@@ -315,6 +341,7 @@ nsFtpConnectionThread::Run() {
                 mState = FTP_READ_BUF;
 			    mNextState = FTP_R_PWD;
 			    break;
+                }
                 // END: FTP_S_PWD
 
 		    case FTP_R_PWD:
@@ -405,11 +432,400 @@ nsFtpConnectionThread::Run() {
 			    }
 			    // END: FTP_R_PWD
 
+            case FTP_S_MODE:
+                {
+                if (mAscii) {
+                    buffer = "TYPE A\r\n";
+                } else {
+                    buffer = "TYPE I\r\n";
+                }
+                bufLen = PL_strlen(buffer);
 
+                // send off the command
+                rv = mCOutStream->Write(buffer, bufLen, &bytes);
+
+                if (bytes < bufLen) {
+                    break;
+                }
+                
+                mState = FTP_READ_BUF;
+			    mNextState = FTP_R_MODE;
+                break;
+                }
+                // END: FTP_S_MODE
+
+            case FTP_R_MODE:
+                {
+                if (mResponseCode != 2) {
+                    // indicate error.
+                    mState = FTP_ERROR;
+                    break;
+                }
+                if (mAction == PUT) {
+                    mState = FTP_S_CWD;
+                } else {
+                    mState = FTP_S_SIZE;
+                }
+                break;
+                }
+                // END: FTP_R_MODE
+
+            case FTP_S_CWD:
+                {
+                const char * path = nsnull;
+                rv = mUrl->GetPath(&path);
+                if (NS_FAILED(rv)) return rv;
+
+                if (mServerType == FTP_VMS_TYPE) {
+                    char *slash = nsnull;
+                    
+                    if ( (slash = PL_strrchr(path, '/')) ) {
+                        *slash = '\0';
+                        PR_smprintf(buffer, "CWD [%.1024s]\r\n", path);
+                        *slash = '/';
+
+                        // turn '/'s into '.'s
+                        while ( (slash = PL_strchr(buffer, '/')) )
+                            *slash = '.';
+                    } else {
+                        PR_smprintf(buffer, "CWD [.%.1024s]\r\n", path);
+                    }
+                } else {
+                    // non VMS server
+                    PR_smprintf(buffer, "CWD %.1024s\r\n", path);
+                }
+                bufLen = PL_strlen(buffer);
+
+                // send off the command
+                rv = mCOutStream->Write(buffer, bufLen, &bytes);
+
+                if (bytes < bufLen) {
+                    break;
+                }
+                
+                mState = FTP_READ_BUF;
+			    mNextState = FTP_R_CWD;
+                break;
+                }
+                // END: FTP_S_CWD
+
+            case FTP_R_CWD:
+                {
+                if (mResponseCode == 2) {
+                    // success
+                    if (mAction == PUT) {
+                        // we are uploading
+                        mState = FTP_S_PUT;
+                        break;
+                    }
+                    
+                    // we are GETting a file or dir
+
+                    if (mServerType == FTP_VMS_TYPE) {
+                        if (mFilename.Length() > 0) {
+                            // it's a file
+                            mState = FTP_S_RETR;
+                            break;
+                        }
+                    }
+
+                    // we're not VMS, and we've already failed a RETR.
+                    mState = FTP_S_LIST;
+                } else {
+                    mState = FTP_ERROR;
+                }
+                break;
+                }
+                // END: FTP_R_CWD
+
+            case FTP_S_SIZE:
+                {
+                const char *path = nsnull;
+                rv = mUrl->GetPath(&path);
+                if (NS_FAILED(rv)) return rv;
+
+                if (mServerType == FTP_VMS_TYPE) {
+                    mState = FindGetState();
+                    break;
+                }
+
+                PR_smprintf(buffer, "SIZE %.1024s\r\n", path);
+                bufLen = PL_strlen(buffer);
+
+                // send off the command
+                rv = mCOutStream->Write(buffer, bufLen, &bytes);
+
+                if (bytes < bufLen) {
+                    break;
+                }
+                
+                mState = FTP_READ_BUF;
+			    mNextState = FTP_R_SIZE;
+                break;
+                }
+                // END: FTP_S_SIZE
+
+            case FTP_R_SIZE: 
+                {
+                if (mResponseCode == 2) {
+                    PRInt32 conversionError;
+                    mLength = mResponseMsg.ToInteger(&conversionError);
+                }
+                mState = FTP_S_MDTM;
+                break;
+                }
+                // END: FTP_R_SIZE
+
+            case FTP_S_MDTM:
+                {
+                const char *path = nsnull;
+                rv = mUrl->GetPath(&path);
+                if (NS_FAILED(rv)) return rv;
+
+                if (mServerType == FTP_VMS_TYPE) {
+                    mState = FindGetState();
+                    break;
+                }
+
+                PR_smprintf(buffer, "MDTM %.1024s\r\n", path);
+                bufLen = PL_strlen(buffer);
+
+                // send off the command
+                rv = mCOutStream->Write(buffer, bufLen, &bytes);
+
+                if (bytes < bufLen) {
+                    break;
+                }
+                
+                mState = FTP_READ_BUF;
+			    mNextState = FTP_R_MDTM;
+                break;
+                }
+                // END: FTP_S_MDTM;
+
+            case FTP_R_MDTM:
+                {
+                if (mResponseCode == 2) {
+                     // The time is returned in ISO 3307 "Representation
+                     // of the Time of Day" format. This format is YYYYMMDDHHmmSS or
+                     // YYYYMMDDHHmmSS.xxx, where
+                     //         YYYY    is the year
+                     //         MM      is the month (01-12)
+                     //         DD      is the day of the month (01-31)
+                     //         HH      is the hour of the day (00-23)
+                     //         mm      is the minute of the hour (00-59)
+                     //         SS      is the second of the hour (00-59)
+                     //         xxx     if present, is a fractional second and may be any length
+                     // Time is expressed in UTC (GMT), not local time.
+                    PRExplodedTime ts;
+                    PRInt64 t1, t2;
+                    PRTime t;
+                    time_t tt;
+                    char *timeStr = nsnull;
+                    timeStr = mResponseMsg.ToNewCString();
+                    if (!timeStr) return NS_ERROR_OUT_OF_MEMORY;
+
+                    ts.tm_year =
+                     (timeStr[0] - '0') * 1000 +
+                     (timeStr[1] - '0') *  100 +
+                     (timeStr[2] - '0') *   10 +
+                     (timeStr[3] - '0');
+
+                    ts.tm_month = ((timeStr[4] - '0') * 10 + (timeStr[5] - '0')) - 1;
+                    ts.tm_mday = (timeStr[6] - '0') * 10 + (timeStr[7] - '0');
+                    ts.tm_hour = (timeStr[8] - '0') * 10 + (timeStr[9] - '0');
+                    ts.tm_min  = (timeStr[10] - '0') * 10 + (timeStr[11] - '0');
+                    ts.tm_sec  = (timeStr[12] - '0') * 10 + (timeStr[13] - '0');
+                    ts.tm_usec = 0;
+
+                    t = PR_ImplodeTime(&ts);
+                    LL_I2L(t1, PR_USEC_PER_SEC);
+                    LL_DIV(t2, t, t1);
+                    LL_L2I(tt, t2);
+
+                    mLastModified = tt;                
+                }
+
+                mState = FindGetState();
+
+                break;
+                }
+                // END: FTP_R_MDTM
+
+            case FTP_S_LIST:
+                {
+                if (mList)
+                    buffer = "LIST\r\n";
+                else
+                    buffer = "NLST\r\n";
+                bufLen = PL_strlen(buffer);
+
+                // send off the command
+                rv = mCOutStream->Write(buffer, bufLen, &bytes);
+
+                if (bytes < bufLen) {
+                    break;
+                }
+                
+                mState = FTP_READ_BUF;
+			    mNextState = FTP_R_LIST;
+                break;
+                }
+                // END: FTP_S_LIST
+
+            case FTP_R_LIST:
+                {
+                if (mResponseCode == 1) {
+                    // success
+                    mDirectory = PR_TRUE;
+                    // We're receiving a directory listing.
+                    // Read it from the data stream.
+                    PRUint32 bytes = 0, len = 0;
+                    nsIByteBufferInputStream* in;
+
+                    rv = NS_NewByteBufferInputStream(&in);
+                    if (NS_FAILED(rv)) return rv;
+                    
+#define LIST_BUF_LEN 4096
+                    char listBuf[LIST_BUF_LEN]; // XXX tune this mem.
+
+                    rv = mDInStream->Read(listBuf, LIST_BUF_LEN, &bytes);
+                    while ( !NS_FAILED(rv) && bytes > 0) {
+                        PRUint32 writeCnt = 0;
+
+                        rv = in->Fill(listBuf, bytes, &writeCnt);
+                        if (NS_FAILED(rv)) return rv;
+
+                        // tell the user about the data.
+                        nsFtpOnDataAvailableEvent* event =
+                            new nsFtpOnDataAvailableEvent(mListener, nsnull); // XXX the destroy event method
+                                                                              // XXX needs to clean up this new.
+                        if (event == nsnull)
+                            return NS_ERROR_OUT_OF_MEMORY;
+
+                        event->Init(in, 0, writeCnt);
+
+                        rv = event->Fire(mEventQueue);
+                        if (NS_FAILED(rv)) {
+                            delete event;
+                            return rv;
+                        }                        
+
+                        rv = mDInStream->Read(listBuf, LIST_BUF_LEN, &bytes);
+                    }
+
+                    if (bytes == 1) {
+                        // XXX we're done
+                    } else if (bytes < 0) {
+                        // XXX indicate errror
+                    }
+
+
+                    // XXX at this stage in the old code, we appended a '/' to the 
+                    // XXX url string if it didn't already have one.
+                }
+                break;
+                }
+                // END: FTP_R_LIST
+
+            case FTP_S_RETR:
+                {
+                const char *path = nsnull;
+                rv = mUrl->GetPath(&path);
+                if (NS_FAILED(rv)) return rv;
+
+                NS_ASSERTION(mFilename.Length() > 0, "ftp filename not present");
+
+                if (mServerType == FTP_VMS_TYPE)
+                    PR_smprintf(buffer, "RETR %.1024s\r\n", mFilename);
+                else
+                    PR_smprintf(buffer, "RETR %.1024s\r\n", path);
+                bufLen = PL_strlen(buffer);
+
+                // send off the command
+                rv = mCOutStream->Write(buffer, bufLen, &bytes);
+
+                if (bytes < bufLen) {
+                    break;
+                }
+                
+                mState = FTP_READ_BUF;
+			    mNextState = FTP_R_RETR;
+                break;
+                }
+                // END: FTP_S_RETR
+
+            case FTP_R_RETR:
+                {
+                // The only way we can get here is if we knew we were dealing with
+                // a file and not a dir listing. This state assumes we're retrieving
+                // a file!
+                if (mResponseCode == 1) {
+                    // success.
+
+                    // XXX need to notify the observer that we're starting a file download operation
+
+                    // We're receiving a file.
+                    // Read it from the data stream.
+                    PRUint32 bytes = 0, len = 0;
+                    nsIByteBufferInputStream* in;
+
+                    rv = NS_NewByteBufferInputStream(&in);
+                    if (NS_FAILED(rv)) return rv;
+                    
+#define FILE_BUF_LEN 4096
+                    char listBuf[FILE_BUF_LEN]; // XXX tune this mem alloc.
+
+                    rv = mDInStream->Read(listBuf, FILE_BUF_LEN, &bytes);
+                    while ( !NS_FAILED(rv) && bytes > 0) {
+                        PRUint32 writeCnt = 0;
+
+                        rv = in->Fill(listBuf, bytes, &writeCnt);
+                        if (NS_FAILED(rv)) return rv;
+
+                        // tell the user about the data.
+                        nsFtpOnDataAvailableEvent* event =
+                            new nsFtpOnDataAvailableEvent(mListener, nsnull); // XXX the destroy event method
+                                                                              // XXX needs to clean up this new.
+                        if (event == nsnull)
+                            return NS_ERROR_OUT_OF_MEMORY;
+
+                        event->Init(in, 0, writeCnt);
+
+                        rv = event->Fire(mEventQueue);
+                        if (NS_FAILED(rv)) {
+                            delete event;
+                            return rv;
+                        }                        
+
+                        rv = mDInStream->Read(listBuf, LIST_BUF_LEN, &bytes);
+                    }
+
+                    if (bytes == 1) {
+                        // XXX we're done
+                    } else if (bytes < 0) {
+                        // XXX indicate errror
+                    }
+
+                } else {
+                    if (mServerType == FTP_VMS_TYPE) {
+                        // XXX the old code has some DOUBLE_PASV code in here to 
+                        // XXX try again. I'm forgoing it for now.
+                        mState = FTP_ERROR;
+                    } else {
+                        mState = FTP_S_CWD;
+                    }
+                }
+                break;
+                }
+                // END: FTP_R_RETR
+
+                    
 //////////////////////////////
 //// DATA CONNECTION STATES
 //////////////////////////////
             case FTP_S_PASV:
+                {
                 buffer = "PASV\r\n";
                 bufLen = PL_strlen(buffer);
 
@@ -421,6 +837,7 @@ nsFtpConnectionThread::Run() {
                 mState = FTP_READ_BUF;
                 mNextState = FTP_R_PASV;
                 break;
+                }
                 // FTP: FTP_S_PASV
 
             case FTP_R_PASV:
@@ -534,6 +951,7 @@ nsFtpConnectionThread::Run() {
                 // END: FTP_S_DEL_FILE
 
             case FTP_R_DEL_FILE:
+                {
                 if (mResponseCode != 2) {
                     // failed. Increment to the dir delete.
                     mState = FTP_S_DEL_DIR;
@@ -542,6 +960,7 @@ nsFtpConnectionThread::Run() {
 
                 mState = FTP_COMPLETE;
                 break;
+                }
                 // END: FTP_R_DEL_FILE
 
             case FTP_S_DEL_DIR:
@@ -568,12 +987,14 @@ nsFtpConnectionThread::Run() {
                 // END: FTP_S_DEL_DIR
 
             case FTP_R_DEL_DIR:
+                {
                 if (mResponseCode != 2) {
                     // failed.
                     // XXX indicate failure
                 }
                 mState = FTP_COMPLETE;
                 break;
+                }
                 // END: FTP_R_DEL_DIR
 
             case FTP_S_MKDIR:
@@ -719,7 +1140,7 @@ FTP_STATE
 nsFtpConnectionThread::FindActionState(void) {
 
     // These operations require the separate data channel.
-    if (mAction == GET || mAction == POST) {
+    if (mAction == GET || mAction == PUT) {
         // we're doing an operation that requies the data channel.
         // figure out what kind of data channel we want to setup,
         // and do it.
@@ -738,6 +1159,38 @@ nsFtpConnectionThread::FindActionState(void) {
 
     if (mAction == MKDIR)
         return FTP_S_MKDIR;
+
+    return FTP_ERROR;
+}
+
+FTP_STATE
+nsFtpConnectionThread::FindGetState(void) {
+    const char *path = nsnull;
+    nsresult rv;
+
+    rv = mUrl->GetPath(&path);
+    if (NS_FAILED(rv)) return FTP_ERROR;
+
+    if (mServerType == FTP_VMS_TYPE) {
+        // check for directory
+        if (!path[0] || (path[0] == '/' && !path[1]) ) {
+            mDirectory = PR_TRUE;
+            return FTP_S_LIST; 
+        }
+        else if (!PL_strchr(path, '/')) {
+            return FTP_S_RETR;
+        }
+        else {
+            return FTP_S_CWD;
+        }
+    } else {
+        // XXX I've removed the check for "aleady tried RETR"
+        if (path[PL_strlen(path) -1] == '/') {
+            return FTP_S_CWD;
+        } else {
+            return FTP_S_RETR;
+        }
+    }
 
     return FTP_ERROR;
 }
