@@ -2391,7 +2391,6 @@ NS_IMETHODIMP nsDocShell::ConvertFileToStringURI(nsString& aIn, nsString& aOut)
 NS_IMETHODIMP nsDocShell::ConvertStringURIToFileCharset(nsString& aIn, 
    nsCString& aOut)
 {
-   nsresult rv=NS_OK;
    aOut = "";
    // for file url, we need to convert the nsString to the file system
    // charset before we pass to NS_NewURI
