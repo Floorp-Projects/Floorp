@@ -1874,6 +1874,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 			newHdr->SetMessageKey (newMsgPos); 
 			newHdr->OrFlags(MSG_FLAG_NEW, &newFlags);
       destIFolder->SetHasNewMessages(PR_TRUE);
+      destMailDB->AddToNewList(newMsgPos);
 		}
 	}
 	else

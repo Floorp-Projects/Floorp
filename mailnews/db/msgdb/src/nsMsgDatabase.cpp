@@ -1495,6 +1495,8 @@ PRUint32	nsMsgDatabase::GetStatusFlags(nsIMsgDBHdr *msgHdr, PRUint32 origFlags)
     (void)msgHdr->GetMessageKey(&key);
 	if (m_newSet && m_newSet->IsMember(key))
 		statusFlags |= MSG_FLAG_NEW;
+  else
+    statusFlags &= ~MSG_FLAG_NEW;
 	if (IsHeaderRead(msgHdr, &isRead) == NS_OK && isRead)
 		statusFlags |= MSG_FLAG_READ;
 	return statusFlags;
@@ -1599,7 +1601,7 @@ nsresult nsMsgDatabase::MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
     PRUint32 flags;
     rv = msgHdr->GetFlags(&flags);
     flags &= ~MSG_FLAG_NEW;
-
+    msgHdr->SetFlags(flags);
     if (NS_FAILED(rv)) return rv;
     
 	return NotifyKeyChangeAll(key, oldFlags, flags, instigator);
@@ -2041,9 +2043,14 @@ NS_IMETHODIMP nsMsgDatabase::ClearNewList(PRBool notify /* = FALSE */)
 		if (notify)	// need to update view
 		{
 			PRInt32 firstMember;
-			while ((firstMember = m_newSet->GetFirstMember()) != 0)
+      nsMsgKeySet *saveNewSet = m_newSet;
+      // set m_newSet to null so that the code that's listening to the key change
+      // doesn't think we have new messages and send notifications all over
+      // that we have new messages.
+      m_newSet = nsnull;
+			while ((firstMember = saveNewSet->GetFirstMember()) != 0)
 			{
-				m_newSet->Remove(firstMember);	// this bites, since this will cause us to regen new list many times.
+				saveNewSet->Remove(firstMember);	// this bites, since this will cause us to regen new list many times.
 				nsIMsgDBHdr *msgHdr;
 				err = GetMsgHdrForKey(firstMember, &msgHdr);
 				if (NS_SUCCEEDED(err))
@@ -2056,6 +2063,7 @@ NS_IMETHODIMP nsMsgDatabase::ClearNewList(PRBool notify /* = FALSE */)
 					NS_RELEASE(msgHdr);
 				}
 			}
+      m_newSet = saveNewSet;
 		}
 		delete m_newSet;
 		m_newSet = NULL;
