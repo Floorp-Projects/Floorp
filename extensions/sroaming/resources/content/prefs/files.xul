@@ -88,8 +88,8 @@
                   filename="cookies.txt"
                   label="" />
         <listitem type="checkbox"
-                  id="cookperm"
-                  filename="cookperm.txt"
+                  id="hostperm"
+                  filename="hostperm.1"
                   label="" />
         <listitem type="checkbox"
                   id="history"
@@ -142,7 +142,7 @@
 -->
         <listitem type="checkbox"
                   id="emailcerts"
-                  filename="cert7.db"
+                  filename="cert8.db"
                   label="" />
         <listitem type="checkbox"
                   id="cryptokeys"
