@@ -1946,7 +1946,7 @@ void nsWindow::FreeNativeData(void * data, PRUint32 aDataType)
       {
         BOOL rc;
         if( mNativeDrag) rc = DrgReleasePS( mPS);
-        else rc = WinReleasePS( mPS);
+        else rc = WinReleasePS((HPS)data);
 #ifdef DEBUG
         if( !rc)
           printf( "Error from {Win/Drg}ReleasePS()\n");
