@@ -61,6 +61,8 @@ interface nsIMsgCompFields : nsISupports {
   attribute wstring otherRandomHeaders;
 
 	attribute wstring body;
+
+	attribute string  temporaryFiles;	// a list of temp files to remove
 	
 	/* some utility functions */
   nsIMsgRecipientArray SplitRecipients(in wstring recipients, in boolean emailAddressOnly);    

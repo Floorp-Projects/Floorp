@@ -62,6 +62,7 @@ public:
     MSG_MESSAGE_ID_HEADER_ID,
     MSG_X_TEMPLATE_HEADER_ID,
     MSG_DRAFT_ID_HEADER_ID,
+	MSG_TEMPORARY_FILES_HEADER_ID,
     
     MSG_MAX_HEADERS   //Must be the last one.
   } MsgHeaderID;
@@ -112,6 +113,8 @@ public:
 
 	const char* GetAttachments() {return GetAsciiHeader(MSG_ATTACHMENTS_HEADER_ID);}
 
+	const char* GetTemporaryFiles() {return GetAsciiHeader(MSG_TEMPORARY_FILES_HEADER_ID);}
+
 	nsresult SetOrganization(const char *value) {return SetAsciiHeader(MSG_ORGANIZATION_HEADER_ID, value);}
 	const char* GetOrganization() {return GetAsciiHeader(MSG_ORGANIZATION_HEADER_ID);}
 
@@ -146,6 +149,8 @@ public:
 
 	PRInt32 GetReturnReceiptType() { return m_receiptType; };
 	void SetReturnReceiptType(PRInt32 type) {m_receiptType = type;};
+
+	nsresult CleanUpTempFiles();
 
 protected:
 	char*       m_headers[MSG_MAX_HEADERS];

@@ -29,6 +29,7 @@
 #include "nsMsgRecipientArray.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsMsgCompUtils.h"
+#include "nsIFileChannel.h"
 
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
@@ -63,6 +64,9 @@ nsMsgCompFields::nsMsgCompFields()
 
 nsMsgCompFields::~nsMsgCompFields()
 {
+	// Clean up temp files first if set
+	CleanUpTempFiles();
+
 	PRInt16 i;
 	for (i = 0; i < MSG_MAX_HEADERS; i ++)
 		PR_FREEIF(m_headers[i]);
@@ -93,6 +97,81 @@ nsresult nsMsgCompFields::Copy(nsIMsgCompFields* pMsgCompFields)
 	m_internalCharSet = pFields->m_internalCharSet;
 
 	return NS_OK;
+}
+
+nsresult nsMsgCompFields::CleanUpTempFiles()
+{
+	nsresult rv;
+	char *attachmentList;
+
+	rv = GetTemporaryFiles(&attachmentList);
+	NS_ENSURE_SUCCESS(rv,rv);
+
+	if ((!attachmentList) || (!*attachmentList))
+      return NS_OK;
+
+  // parse the attachment list 
+#ifdef DEBUG_cavin
+  printf("In CleanUpTempFiles(), attachments to delete list = %s\n", (const char*)attachmentList);
+#endif
+
+  char *token = nsnull;
+  char *rest = attachmentList;
+  nsCAutoString  url;
+  
+  token = nsCRT::strtok(rest, ",", &rest);
+  while (token && *token) 
+  {
+    url = token;
+    url.StripWhitespace();
+    // Only deal with temp files (ie, starting with "file://")
+	if (!url.IsEmpty() && url.CompareWithConversion(kFileURLPrefix, PR_TRUE, 7) == 0)
+	{
+      nsCOMPtr<nsIFileURL> tempFileURL(do_CreateInstance("@mozilla.org/network/standard-url;1", &rv));
+	  if (NS_FAILED(rv))
+	  {
+		  NS_ASSERTION(0, "Can't creat nsIFileURL interface");
+		  continue;
+	  }
+   
+      rv = tempFileURL->SetSpec(url);
+      if (NS_FAILED(rv))
+	  {
+		  NS_ASSERTION(0, "Can't set file spec in nsIFileURL interface");
+		  continue;
+	  }
+   
+      nsCOMPtr<nsIFile> urlFile;
+      rv = tempFileURL->GetFile(getter_AddRefs(urlFile));
+      if (NS_FAILED(rv)) 
+      {
+	      NS_ASSERTION(0, "Can't get nsIFile interface from nsIFileURL interface");
+		  continue;
+	  }
+
+	  PRBool isDir;
+	  rv = urlFile->IsDirectory(&isDir);
+	  if (NS_FAILED(rv)) 
+      {
+	    NS_ASSERTION(0, "IsDirectory() call failed!");
+        continue;
+      }
+
+	  if (isDir) 
+      {
+	    NS_ASSERTION(0, "The temporary file is not supposed to be a directory!");
+		continue;
+      }
+
+      // remove it if not a dir
+	  urlFile->Delete(PR_FALSE); 
+	}
+
+    token = nsCRT::strtok(rest, ",", &rest);
+  }
+
+  nsCRT::free(attachmentList);
+  return NS_OK;
 }
 
 nsresult nsMsgCompFields::SetAsciiHeader(MsgHeaderID header, const char *value)
@@ -265,9 +344,20 @@ NS_IMETHODIMP nsMsgCompFields::SetAttachments(const char *value)
 	return SetAsciiHeader(MSG_ATTACHMENTS_HEADER_ID, value);
 }
 
+NS_IMETHODIMP nsMsgCompFields::SetTemporaryFiles(const char *value)
+{
+	return SetAsciiHeader(MSG_TEMPORARY_FILES_HEADER_ID, value);
+}
+
 NS_IMETHODIMP nsMsgCompFields::GetAttachments(char **_retval)
 {
 	*_retval = nsCRT::strdup(GetAsciiHeader(MSG_ATTACHMENTS_HEADER_ID));
+	return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP nsMsgCompFields::GetTemporaryFiles(char **_retval)
+{
+	*_retval = nsCRT::strdup(GetAsciiHeader(MSG_TEMPORARY_FILES_HEADER_ID));
 	return *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
