@@ -514,6 +514,11 @@ PRBool nsTableCellFrame::ParentDisablesSelection() const //override default beha
   return nsFrame::ParentDisablesSelection();
 }
 
+/* virtual */ void
+nsTableCellFrame::GetSelfOverflow(nsRect& aOverflowArea)
+{
+  aOverflowArea = nsRect(nsPoint(0,0), GetSize());
+}
 
 // Align the cell's child frame within the cell
 
@@ -586,7 +591,7 @@ void nsTableCellFrame::VerticallyAlignChild(const nsHTMLReflowState& aReflowStat
   nsHTMLReflowMetrics desiredSize(PR_FALSE);
   desiredSize.width = mRect.width;
   desiredSize.height = mRect.height;
-  desiredSize.mOverflowArea = nsRect(0, 0, mRect.width, mRect.height);
+  GetSelfOverflow(desiredSize.mOverflowArea);
   ConsiderChildOverflow(desiredSize.mOverflowArea, firstKid);
   FinishAndStoreOverflow(&desiredSize);
   if (kidYTop != kidRect.y) {
@@ -1289,6 +1294,26 @@ nsBCTableCellFrame::SetBorderWidth(PRUint8 aSide,
   }
 }
 
+/* virtual */ void
+nsBCTableCellFrame::GetSelfOverflow(nsRect& aOverflowArea)
+{
+  nsMargin halfBorder;
+  GetBorderWidth(GetPresContext()->PixelsToTwips(), halfBorder);
+  // Since we have the inner half and we want an outer bound for the
+  // outer half, just inflate the right and bottom sides by a pixel.
+  // XXX Overestimating could lead to problems with outlines (although
+  // this is probably bad for outlines to begin with) and scrollable
+  // regions in 'overflow: auto' or 'overflow: scroll' containers.
+  nscoord onePixel = nscoord(GetPresContext()->PixelsToTwips() + 0.999);
+  halfBorder.right += onePixel;
+  halfBorder.bottom += onePixel;
+
+  nsRect overflow(nsPoint(0,0), GetSize());
+  overflow.Inflate(halfBorder);
+  aOverflowArea = overflow;
+}
+
+
 void
 nsBCTableCellFrame::PaintUnderlay(nsPresContext&           aPresContext,
                                   nsIRenderingContext&      aRenderingContext,
@@ -1302,7 +1327,8 @@ nsBCTableCellFrame::PaintUnderlay(nsPresContext&           aPresContext,
       /*direct call; not table-based paint*/ ||
       (aFlags & NS_PAINT_FLAG_TABLE_CELL_BG_PASS)
       /*table cell background only pass*/) {
-    // make border-width reflect border-collapse assigned border
+    // make border-width reflect the half of the border-collapse
+    // assigned border that's inside the cell
     GET_PIXELS_TO_TWIPS(&aPresContext, p2t);
     nsMargin borderWidth;
     GetBorderWidth(p2t, borderWidth);
