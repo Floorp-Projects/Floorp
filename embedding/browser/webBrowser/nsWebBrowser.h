@@ -38,15 +38,18 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIScrollable.h"
 #include "nsISHistory.h"
-#include "nsISupportsArray.h"
 #include "nsITextScroll.h"
 #include "nsIWidget.h"
+#include "nsIWebProgress.h"
 
 #include "nsIWebBrowser.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowserSetup.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIWebBrowserFocus.h"
+
+#include "nsVoidArray.h"
+#include "nsWeakPtr.h"
 
 class nsWebBrowserInitInfo
 {
@@ -61,6 +64,18 @@ public:
    nsString                name;
 };
 
+class nsWebBrowserListenerState
+{
+public:
+    PRBool Equals(nsISupports *aListener, const nsIID& aID) {
+        nsCOMPtr<nsISupports> listener = do_QueryReferent(mWeakPtr);
+        if (listener.get() == aListener && mID.Equals(aID)) return PR_TRUE;
+        return PR_FALSE;
+    };
+
+    nsWeakPtr mWeakPtr;
+    nsIID mID;
+};
 
 class nsWebBrowser : public nsIWebBrowser,
                      public nsIWebNavigation,
@@ -98,6 +113,8 @@ protected:
     NS_IMETHOD EnsureDocShellTreeOwner();
     NS_IMETHOD EnsureContentListener();
     NS_IMETHOD GetPrimaryContentWindow(nsIDOMWindowInternal **aDomWindow);
+    NS_IMETHOD BindListener(nsISupports *aListener, const nsIID& aIID);
+    NS_IMETHOD UnBindListener(nsISupports *aListener, const nsIID& aIID);
 
     static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
@@ -116,11 +133,12 @@ protected:
    PRUint32                   mContentType;
    nativeWindow               mParentNativeWindow;
    nsIWebBrowserPersistProgress *mProgressListener;
+   nsCOMPtr<nsIWebProgress>   mWebProgress;
 
    //Weak Reference interfaces...
    nsIWidget*                 mParentWidget;
    nsIDocShellTreeItem*       mParent; 
-
+   nsVoidArray *              mListenerArray;
           
 };
 

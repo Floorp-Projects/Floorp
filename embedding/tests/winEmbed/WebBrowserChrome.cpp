@@ -69,6 +69,7 @@ NS_INTERFACE_MAP_BEGIN(WebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener) // optional
+   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 //   NS_INTERFACE_MAP_ENTRY(nsIPrompt)
 NS_INTERFACE_MAP_END
 
@@ -137,7 +138,7 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, PRInt32
 	if (!mWebBrowser)
         return NS_ERROR_FAILURE;
 
-    mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
+    (void)mWebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
 
     nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(mWebBrowser);
     dsti->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
@@ -153,6 +154,11 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, PRInt32
                              nsnull, 
                              aX, aY, aCX, aCY);
     mBaseWindow->Create();
+
+    nsCOMPtr<nsIWebProgressListener> listener = NS_STATIC_CAST(nsIWebProgressListener*, this);
+    nsCOMPtr<nsISupports> supports = do_QueryInterface(listener);
+    (void)mWebBrowser->AddWebBrowserListener(supports, 
+        NS_GET_IID(nsIWebProgressListener));
     
     NS_IF_ADDREF(*aWebBrowser = mWebBrowser);
     return NS_OK;

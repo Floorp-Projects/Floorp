@@ -35,6 +35,7 @@
 #include "nsIPrompt.h"
 #include "nsIContextMenuListener.h"
 #include "nsITooltipListener.h"
+#include "nsWeakReference.h"
 
 // Other
 #include "nsIWebBrowser.h"
@@ -51,7 +52,8 @@ class CWebBrowserChrome : public nsIWebBrowserChrome,
                            public nsIPrompt,
                            public nsIInterfaceRequestor,
                            public nsIContextMenuListener,
-                           public nsITooltipListener
+                           public nsITooltipListener,
+                           public nsSupportsWeakReference
 {
 friend class CBrowserWindow;
 

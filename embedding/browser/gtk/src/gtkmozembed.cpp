@@ -55,6 +55,7 @@
 #include "nsMPFileLocProvider.h"
 #include "prio.h"
 #include "prprf.h"
+#include "nsWeakReference.h"
 
 // freakin X headers
 #ifdef Success
@@ -101,7 +102,8 @@ private:
 // this class is a progress listener for the main content area, once
 // it has been loaded.
 
-class GtkMozEmbedContentProgress : public nsIWebProgressListener
+class GtkMozEmbedContentProgress : public nsIWebProgressListener,
+                                   public nsSupportsWeakReference
 {
 public:
   GtkMozEmbedContentProgress();
@@ -119,7 +121,8 @@ private:
 };
 
 // this class is a progress listener for the chrome area
-class GtkMozEmbedChromeProgress : public nsIWebProgressListener
+class GtkMozEmbedChromeProgress : public nsIWebProgressListener,
+                                  public nsSupportsWeakReference
 {
 public:
   GtkMozEmbedChromeProgress();
@@ -1868,6 +1871,7 @@ NS_IMPL_RELEASE(GtkMozEmbedContentProgress)
 NS_INTERFACE_MAP_BEGIN(GtkMozEmbedContentProgress)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
 void
@@ -1988,6 +1992,7 @@ NS_IMPL_RELEASE(GtkMozEmbedChromeProgress)
 NS_INTERFACE_MAP_BEGIN(GtkMozEmbedChromeProgress)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
 
 void

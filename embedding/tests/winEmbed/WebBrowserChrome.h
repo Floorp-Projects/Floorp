@@ -37,6 +37,8 @@
 #include "nsIPrompt.h"
 #include "nsIWebBrowser.h"
 #include "nsVoidArray.h"
+#include "nsWeakReference.h"
+
 
 class WebBrowserChromeUI
 {
@@ -60,7 +62,8 @@ class WebBrowserChrome   : public nsIWebBrowserChrome,
                            public nsIWebProgressListener,
                            public nsIBaseWindow,
 //                           public nsIPrompt,
-                           public nsIInterfaceRequestor
+                           public nsIInterfaceRequestor,
+                           public nsSupportsWeakReference
 {
 public:
     WebBrowserChrome();
