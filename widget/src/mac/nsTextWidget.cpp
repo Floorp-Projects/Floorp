@@ -19,6 +19,8 @@
 #include "nsTextWidget.h"
 #include <ToolUtils.h>
 #include <Appearance.h>
+#include <memory>
+
 #if TARGET_CARBON
 #include <ControlDefinitions.h>
 #endif
