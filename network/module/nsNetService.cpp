@@ -64,6 +64,7 @@ static nsNetFileInit netFileInit;
 // Global count of active urls from mkgeturl.c
 extern "C" int NET_TotalNumberOfProcessingURLs;
 
+extern "C" void net_AddrefContext(MWContext* window_id);
 MWContext *new_stub_context(URL_Struct *URL_s);
 void free_stub_context(MWContext *window_id);
 static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id);
@@ -317,14 +318,11 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
         NS_RELEASE(pProtocol);
     }
     
+    /* Create a new Context and set its reference count to one.. */
     MWContext *stubContext = new_stub_context(URL_s);
+    net_AddrefContext(stubContext);
+
     /* Start the URL load... */
-/*
-    NET_GetURL (URL_s,                      // URL_Struct
-                FO_CACHE_AND_NGLAYOUT,      // FO_Present_type
-                (MWContext *)m_stubContext, // MWContext
-                bam_exit_routine);          // Exit routine...
-*/
     NET_GetURL (URL_s,                      /* URL_Struct      */
                 FO_CACHE_AND_NGLAYOUT,      /* FO_Present_type */
                 (MWContext *)stubContext,   /* MWContext       */
@@ -462,15 +460,11 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
 
 /*        printf("+++ Loading %s\n", aUrl); */
 
+      /* Create a new Context and set its reference count to one.. */
         MWContext *stubContext = new_stub_context(URL_s);
+        net_AddrefContext(stubContext);
 
         /* Start the URL load... */
-/*
-        NET_GetURL (URL_s,                      // URL_Struct
-                    FO_CACHE_AND_NGLAYOUT,      // FO_Present_type
-                    (MWContext *)m_stubContext, // MWContext
-                    bam_exit_routine);          // Exit routine...
-*/
         NET_GetURL (URL_s,                      /* URL_Struct      */
                     FO_CACHE_AND_NGLAYOUT,      /* FO_Present_type */
                     (MWContext *)  stubContext, /* MWContext       */
@@ -890,15 +884,23 @@ static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id
  * Ugly hack to free contexts
  */
 
+extern "C" void net_AddrefContext(MWContext *context)
+{
+  if (nsnull != context) {
+    context->ref_count++;
+  }
+}
+
 extern "C" void net_ReleaseContext(MWContext *context)
 {
-    if (context) {
-        if (context->modular_data) {
-            free_stub_context(context);
-        } else {
-           TRACEMSG(("net_ReleaseContext: not releasing non-modular context"));
-        }
-    }
+ if (context) {
+   NS_PRECONDITION((0 < context->ref_count), "Context reference count is bad.");
+   if ((0 == --context->ref_count) && (context->modular_data)) {
+     free_stub_context(context);
+   } else {
+     TRACEMSG(("net_ReleaseContext: not releasing non-modular context"));
+   }
+ }
 }
 
 
