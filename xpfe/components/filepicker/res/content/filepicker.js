@@ -80,9 +80,9 @@ function onLoad() {
   // setup the dialogOverlay.xul button handlers
   doSetOKCancel(onOK, onCancel);
 
-  if (directory) {
+  if (directory)
     sfile.initWithPath(directory);
-  } else {
+  if (!directory || !(sfile.exists() && sfile.isDirectory())) {
     // Start in the user's home directory
     var dirServiceProvider = Components.classes[nsIDirectoryServiceProvider_PROGID].getService().QueryInterface(nsIDirectoryServiceProvider);
     var persistent = new Object();
