@@ -2714,7 +2714,8 @@ nsEditor::GetNextNode(nsIDOMNode   *aParentNode,
   nsCOMPtr<nsIDOMNode> child = GetChildAt(aParentNode, aOffset);
   if (child)
   {
-    result = GetLeftmostChild(aParentNode, aResultNode);
+    result = GetLeftmostChild(child, aResultNode);
+
     if (NS_FAILED(result)) return result;
     if (!aEditableNode) return result;
     if (IsEditable(*aResultNode))  return result;
@@ -4282,7 +4283,6 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
   PRBool isFirst;
   PRBool isLast;
   PRInt32 offset;
-  //PRInt32 length=1;
 
   // get the node and offset of the insertion point
   nsresult result = aRange->GetStartParent(getter_AddRefs(node));
@@ -4409,8 +4409,8 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
       }
     }
     else
-    { // we're deleting a node
-      DeleteElementTxn *txn;
+    { // we're either deleting a node or some text, need to dig into the next/prev node to find out
+
       nsCOMPtr<nsIDOMNode> selectedNode;
       if (eDeletePrevious==aAction)
       {
@@ -4420,12 +4420,62 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
       {
         result = GetNextNode(node, offset, PR_TRUE, getter_AddRefs(selectedNode));
       }
-      if (NS_SUCCEEDED(result) && selectedNode) 
+      if (NS_FAILED(result)) { return result; }
+
+      if (selectedNode) 
+
       {
-        result = CreateTxnForDeleteElement(selectedNode, &txn);
-        if (NS_SUCCEEDED(result)) 
+
+        nsCOMPtr<nsIDOMCharacterData> selectedNodeAsText;
+
+        selectedNodeAsText = do_QueryInterface(selectedNode);
+
+        if (selectedNodeAsText)
+
+        { // we are deleting from a text node, so do a text deletion
+
+          PRInt32 begin = 0;    // default for forward delete
+
+          if (eDeletePrevious==aAction)
+
+          {
+
+            PRUint32 length=0;
+
+            selectedNodeAsText->GetLength(&length);
+
+            if (0<length)
+
+              begin = length-1;
+
+          }
+
+          DeleteTextTxn *delTextTxn;
+
+          result = CreateTxnForDeleteText(selectedNodeAsText, begin, 1, &delTextTxn);
+
+          if (NS_FAILED(result))  { return result; }
+
+          if (!delTextTxn) { return NS_ERROR_NULL_POINTER; }
+
+          aTxn->AppendChild(delTextTxn);
+
+        }
+
+        else
+
         {
-          aTxn->AppendChild(txn);
+
+          DeleteElementTxn *delElementTxn;
+
+          result = CreateTxnForDeleteElement(selectedNode, &delElementTxn);
+
+          if (NS_FAILED(result))  { return result; }
+
+          if (!delElementTxn) { return NS_ERROR_NULL_POINTER; }
+
+          aTxn->AppendChild(delElementTxn);
+
         }
       }
     }

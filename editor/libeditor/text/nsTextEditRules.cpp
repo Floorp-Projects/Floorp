@@ -851,6 +851,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
     // if we don't have an empty document, check the selection to see if any collapsing is necessary
     if (!mBogusNode)
     {
+      // get the node that contains the selection point
       nsCOMPtr<nsIDOMNode>anchor;
       PRInt32 offset;
 		  res = aSelection->GetAnchorNode(getter_AddRefs(anchor));
@@ -858,16 +859,20 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection,
       if (!anchor) return NS_ERROR_NULL_POINTER;
       res = aSelection->GetAnchorOffset(&offset);
       if (NS_FAILED(res)) return res;
+      // selectedNode is either the anchor itself, 
+      // or if anchor has children, it's the referenced child node
+      nsCOMPtr<nsIDOMNode> selectedNode = do_QueryInterface(anchor);
+      PRBool hasChildren=PR_FALSE;
+      anchor->HasChildNodes(&hasChildren);
+      if (PR_TRUE==hasChildren)
+      { // if anchor has children, set selectedNode to the child pointed at        
+        nsCOMPtr<nsIDOMNodeList> anchorChildren;
+        res = anchor->GetChildNodes(getter_AddRefs(anchorChildren));
+        if ((NS_SUCCEEDED(res)) && anchorChildren) {              
+          res = anchorChildren->Item(offset, getter_AddRefs(selectedNode));
+        }
+      }
 
-      nsCOMPtr<nsIDOMNodeList> anchorChildren;
-      res = anchor->GetChildNodes(getter_AddRefs(anchorChildren));
-      nsCOMPtr<nsIDOMNode> selectedNode;
-      if ((NS_SUCCEEDED(res)) && anchorChildren) {              
-        res = anchorChildren->Item(offset, getter_AddRefs(selectedNode));
-      }
-      else {
-        selectedNode = do_QueryInterface(anchor);
-      }
       if ((NS_SUCCEEDED(res)) && selectedNode)
       {
         nsCOMPtr<nsIDOMCharacterData>selectedNodeAsText;
