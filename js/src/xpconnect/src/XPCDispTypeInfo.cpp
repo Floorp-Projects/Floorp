@@ -316,7 +316,7 @@ STDMETHODIMP XPCDispTypeInfo::GetIDsOfNames(
     {
         nsDependentString buffer(NS_STATIC_CAST(const PRUnichar *,
                                  rgszNames[index]),
-                                 SysStringLen(rgszNames[index]));
+                                 wcslen(rgszNames[index]));
         pMemId[index] = mNameArray.Find(buffer);
 
     }
