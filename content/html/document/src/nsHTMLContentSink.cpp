@@ -1858,6 +1858,9 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
         nsAutoString str(bd);
 
         rv = cdata->AppendData(str);
+        
+        mTextLength = 0;
+		    didFlush = PR_TRUE;
       }
     }
     else {
@@ -1890,11 +1893,12 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
 
         mLastTextNode = content;
 
+		    mTextLength = 0;
+    		didFlush = PR_TRUE;
+
         DidAddContent(content, mSink->IsInScript());
       }
     }
-    mTextLength = 0;
-    didFlush = PR_TRUE;
   }
   if (nsnull != aDidFlush) {
     *aDidFlush = didFlush;
@@ -2221,7 +2225,7 @@ HTMLContentSink::WillInterrupt()
       LL_SUB(diff, now, mLastNotificationTime);
       
       // If it's already time for us to have a notification
-      if (LL_CMP(diff, >=, interval)) {
+      if (LL_CMP(diff, >, interval)) {
         mBackoffCount--;
         SINK_TRACE(SINK_TRACE_REFLOW,
                  ("HTMLContentSink::WillInterrupt: flushing tags since we've run out time; backoff count: %d", mBackoffCount));
@@ -3753,7 +3757,7 @@ HTMLContentSink::IsTimeToNotify()
   LL_I2L(interval, mNotificationInterval);
   LL_SUB(diff, now, mLastNotificationTime);
 
-  if (LL_CMP(diff, >=, interval)) {
+  if (LL_CMP(diff, >, interval)) {
     mBackoffCount--;
     return PR_TRUE;
   }
