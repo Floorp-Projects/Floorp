@@ -1365,7 +1365,7 @@ GlobalWindowImpl::Open(JSContext *cx,
     webShellContainer->FindWebShellWithName(name.GetUnicode(), newWebShell);
     if (nsnull == newWebShell) {
       // No window of that name so create a new one.
-      webShellContainer->NewWebShell(newWebShell);
+      webShellContainer->NewWebShell(mChrome, PR_FALSE, newWebShell);
     }
     if (nsnull != newWebShell) {
       newWebShell->SetName(name);
@@ -1381,8 +1381,6 @@ GlobalWindowImpl::Open(JSContext *cx,
 
   if (nsnull != newWindow && nsnull != newWebShell) {
     //How should we do default size/pos
-    newWindow->Hide();
-    newWindow->SetChrome(mChrome);
     newWindow->SizeTo(mWidth ? mWidth : 620, mHeight ? mHeight : 400);
     newWindow->MoveTo(mLeft, mTop);
     newWindow->Show();
