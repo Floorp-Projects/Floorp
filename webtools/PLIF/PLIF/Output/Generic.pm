@@ -111,7 +111,7 @@ sub protocol {
 
 sub serviceInstanceInit {
     my $self = shift;
-    $self->SUPER::init(@_);
+    $self->SUPER::serviceInstanceInit(@_);
     my($app, $session, $protocol) = @_;
     $self->propertySet('actualSession', $session);
     $self->propertySet('actualProtocol', $protocol);
