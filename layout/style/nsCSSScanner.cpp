@@ -419,145 +419,151 @@ PRBool nsCSSScanner::EatNewline(nsresult& aErrorCode)
   return eaten;
 }
 
+inline PRBool
+IsIdentStart(PRInt32 aChar, PRUint8* aLexTable)
+{
+  return aChar >= 0 &&
+         (aChar >= 256 || (aLexTable[aChar] & START_IDENT) != 0);
+}
+
+static PRBool
+StartsIdent(PRInt32 aFirstChar, PRInt32 aSecondChar, PRUint8* aLexTable)
+{
+  return IsIdentStart(aFirstChar, aLexTable) ||
+         (aFirstChar == '-' && IsIdentStart(aSecondChar, aLexTable));
+}
+
+static PRBool
+CheckLexTable(PRInt32 aChar, PRUint8 aBit, PRUint8* aLexTable)
+{
+  NS_ASSERTION(!(aBit & (START_IDENT | IS_IDENT)),
+               "can't use CheckLexTable with identifiers");
+  return aChar >= 0 && aChar < 256 && (aLexTable[aChar] & aBit) != 0;
+}
+
 PRBool nsCSSScanner::Next(nsresult& aErrorCode, nsCSSToken& aToken)
 {
   PRInt32 ch = Read(aErrorCode);
   if (ch < 0) {
     return PR_FALSE;
   }
-  if (ch < 256) {
-    PRUint8* lexTable = gLexTable;
+  PRUint8* lexTable = gLexTable;
 
-    // IDENT
-    if ((lexTable[ch] & START_IDENT) != 0) {
-      return ParseIdent(aErrorCode, ch, aToken);
-    }
-    if (ch == '-') {  // possible ident
-      PRInt32 nextChar = Peek(aErrorCode);
-      if ((0 <= nextChar) && (0 != (lexTable[nextChar] & START_IDENT))) {
-        return ParseIdent(aErrorCode, ch, aToken);
-      }
-    }
+  // IDENT
+  if (StartsIdent(ch, Peek(aErrorCode), lexTable))
+    return ParseIdent(aErrorCode, ch, aToken);
 
-    // AT_KEYWORD
-    if (ch == '@') {
-      PRInt32 nextChar = Peek(aErrorCode);
-      if ((nextChar >= 0) && (nextChar <= 255)) {
-        if ((lexTable[nextChar] & START_IDENT) != 0) {
-          return ParseAtKeyword(aErrorCode, ch, aToken);
-        }
-      }
-    }
+  // From this point on, 0 <= ch < 256.
+     
+  // AT_KEYWORD
+  if (ch == '@') {
+    PRInt32 nextChar = Read(aErrorCode);
+    PRInt32 followingChar = Peek(aErrorCode);
+    Pushback(nextChar);
+    if (StartsIdent(nextChar, followingChar, lexTable))
+      return ParseAtKeyword(aErrorCode, ch, aToken);
+  }
 
-    // NUMBER or DIM
-    if ((ch == '.') || (ch == '+') || (ch == '-')) {
-      PRInt32 nextChar = Peek(aErrorCode);
-      if ((nextChar >= 0) && (nextChar <= 255)) {
-        if ((lexTable[nextChar] & IS_DIGIT) != 0) {
-          return ParseNumber(aErrorCode, ch, aToken);
-        }
-        else if (('.' == nextChar) && ('.' != ch)) {
-          PRInt32 holdNext = Read(aErrorCode);
-          nextChar = Peek(aErrorCode);
-          if ((0 <= nextChar) && (nextChar <= 255)) {
-            if ((lexTable[nextChar] & IS_DIGIT) != 0) {
-              Pushback(holdNext);
-              return ParseNumber(aErrorCode, ch, aToken);
-            }
-          }
-          Pushback(holdNext);
-        }
-      }
-    }
-    if ((lexTable[ch] & IS_DIGIT) != 0) {
+  // NUMBER or DIM
+  if ((ch == '.') || (ch == '+') || (ch == '-')) {
+    PRInt32 nextChar = Peek(aErrorCode);
+    if (CheckLexTable(nextChar, IS_DIGIT, lexTable)) {
       return ParseNumber(aErrorCode, ch, aToken);
     }
-
-    // ID
-    if (ch == '#') {
-      return ParseID(aErrorCode, ch, aToken);
+    else if (('.' == nextChar) && ('.' != ch)) {
+      nextChar = Read(aErrorCode);
+      PRInt32 followingChar = Peek(aErrorCode);
+      Pushback(nextChar);
+      if (CheckLexTable(followingChar, IS_DIGIT, lexTable))
+        return ParseNumber(aErrorCode, ch, aToken);
     }
+  }
+  if ((lexTable[ch] & IS_DIGIT) != 0) {
+    return ParseNumber(aErrorCode, ch, aToken);
+  }
 
-    // STRING
-    if ((ch == '"') || (ch == '\'')) {
-      return ParseString(aErrorCode, ch, aToken);
-    }
+  // ID
+  if (ch == '#') {
+    return ParseID(aErrorCode, ch, aToken);
+  }
 
-    // WS
-    if ((lexTable[ch] & IS_WHITESPACE) != 0) {
-      aToken.mType = eCSSToken_WhiteSpace;
-      aToken.mIdent.Assign(PRUnichar(ch));
-      (void) EatWhiteSpace(aErrorCode);
-      return PR_TRUE;
-    }
-    if (ch == '/') {
-      PRInt32 nextChar = Peek(aErrorCode);
-      if (nextChar == '*') {
-        (void) Read(aErrorCode);
+  // STRING
+  if ((ch == '"') || (ch == '\'')) {
+    return ParseString(aErrorCode, ch, aToken);
+  }
+
+  // WS
+  if ((lexTable[ch] & IS_WHITESPACE) != 0) {
+    aToken.mType = eCSSToken_WhiteSpace;
+    aToken.mIdent.Assign(PRUnichar(ch));
+    (void) EatWhiteSpace(aErrorCode);
+    return PR_TRUE;
+  }
+  if (ch == '/') {
+    PRInt32 nextChar = Peek(aErrorCode);
+    if (nextChar == '*') {
+      (void) Read(aErrorCode);
 #if 0
-        // If we change our storage data structures such that comments are
-        // stored (for Editor), we should reenable this code, condition it
-        // on being in editor mode, and apply glazou's patch from bug
-        // 60290.
-        aToken.mIdent.SetCapacity(2);
-        aToken.mIdent.Assign(PRUnichar(ch));
-        aToken.mIdent.Append(PRUnichar(nextChar));
-        return ParseCComment(aErrorCode, aToken);
+      // If we change our storage data structures such that comments are
+      // stored (for Editor), we should reenable this code, condition it
+      // on being in editor mode, and apply glazou's patch from bug
+      // 60290.
+      aToken.mIdent.SetCapacity(2);
+      aToken.mIdent.Assign(PRUnichar(ch));
+      aToken.mIdent.Append(PRUnichar(nextChar));
+      return ParseCComment(aErrorCode, aToken);
 #endif
-        return SkipCComment(aErrorCode) && Next(aErrorCode, aToken);
-      }
+      return SkipCComment(aErrorCode) && Next(aErrorCode, aToken);
     }
-    if (ch == '<') {  // consume HTML comment tags
-      if (LookAhead(aErrorCode, '!')) {
-        if (LookAhead(aErrorCode, '-')) {
-          if (LookAhead(aErrorCode, '-')) {
-            aToken.mType = eCSSToken_HTMLComment;
-            aToken.mIdent.Assign(NS_LITERAL_STRING("<!--"));
-            return PR_TRUE;
-          }
-          Pushback('-');
-        }
-        Pushback('!');
-      }
-    }
-    if (ch == '-') {  // check for HTML comment end
+  }
+  if (ch == '<') {  // consume HTML comment tags
+    if (LookAhead(aErrorCode, '!')) {
       if (LookAhead(aErrorCode, '-')) {
-        if (LookAhead(aErrorCode, '>')) {
+        if (LookAhead(aErrorCode, '-')) {
           aToken.mType = eCSSToken_HTMLComment;
-          aToken.mIdent.Assign(NS_LITERAL_STRING("-->"));
+          aToken.mIdent.Assign(NS_LITERAL_STRING("<!--"));
           return PR_TRUE;
         }
         Pushback('-');
       }
+      Pushback('!');
     }
-
-    // INCLUDES ("~=") and DASHMATCH ("|=")
-    if (( ch == '|' ) || ( ch == '~' ) || ( ch == '^' ) ||
-        ( ch == '$' ) || ( ch == '*' )) {
-      PRInt32 nextChar = Read(aErrorCode);
-      if ( nextChar == '=' ) {
-        if (ch == '~') {
-          aToken.mType = eCSSToken_Includes;
-        }
-        else if (ch == '|') {
-          aToken.mType = eCSSToken_Dashmatch;
-        }
-        else if (ch == '^') {
-          aToken.mType = eCSSToken_Beginsmatch;
-        }
-        else if (ch == '$') {
-          aToken.mType = eCSSToken_Endsmatch;
-        }
-        else if (ch == '*') {
-          aToken.mType = eCSSToken_Containsmatch;
-        }
+  }
+  if (ch == '-') {  // check for HTML comment end
+    if (LookAhead(aErrorCode, '-')) {
+      if (LookAhead(aErrorCode, '>')) {
+        aToken.mType = eCSSToken_HTMLComment;
+        aToken.mIdent.Assign(NS_LITERAL_STRING("-->"));
         return PR_TRUE;
-      } else {
-        Pushback(nextChar);
       }
+      Pushback('-');
     }
-  } else {
-    return ParseIdent(aErrorCode, ch, aToken);
+  }
+
+  // INCLUDES ("~=") and DASHMATCH ("|=")
+  if (( ch == '|' ) || ( ch == '~' ) || ( ch == '^' ) ||
+      ( ch == '$' ) || ( ch == '*' )) {
+    PRInt32 nextChar = Read(aErrorCode);
+    if ( nextChar == '=' ) {
+      if (ch == '~') {
+        aToken.mType = eCSSToken_Includes;
+      }
+      else if (ch == '|') {
+        aToken.mType = eCSSToken_Dashmatch;
+      }
+      else if (ch == '^') {
+        aToken.mType = eCSSToken_Beginsmatch;
+      }
+      else if (ch == '$') {
+        aToken.mType = eCSSToken_Endsmatch;
+      }
+      else if (ch == '*') {
+        aToken.mType = eCSSToken_Containsmatch;
+      }
+      return PR_TRUE;
+    } else {
+      Pushback(nextChar);
+    }
   }
   aToken.mType = eCSSToken_Symbol;
   aToken.mSymbol = ch;
