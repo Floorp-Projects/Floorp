@@ -594,7 +594,7 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
      if (FAILED(::OleInitialize(NULL))){
        printf("***** OLE has not been initialized!\n");
      } else {
-       if (DEBUG) printf("***** OLE has been initialized!\n");
+       //if defined(DEBUG) printf("***** OLE has been initialized!\n");
      }
      gOLEInited = TRUE;
    }
