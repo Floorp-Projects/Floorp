@@ -299,7 +299,7 @@ sub write_results {
        "Engine command line: $engine_command<br>\n" .
        "OS type: $os_type<br>\n");
 
-    if ($opt_engine_type eq "rhino") {
+    if ($opt_engine_type =~ /^rhino/) {
         open (JAVAOUTPUT, $opt_java_path . "java -fullversion " .
               $redirect_command . " |");
         print OUTPUT <JAVAOUTPUT>;
