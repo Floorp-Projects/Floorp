@@ -181,18 +181,15 @@ sub _copy($$)
 #// yeah
 #//--------------------------------------------------------------------------------------------------
 
-sub _InstallManifestRDF($;$;$;$)
+sub _InstallManifestRDF($$$$$)
 {
-  my($src, $dest, $chrome_dir, $type) = @_;
+  my($src, $dist_dir, $chrome_subdir, $manifest_subdir, $type) = @_;
   
-  _MakeAlias($src, $dest);
+  _MakeAlias($src, "${dist_dir}${chrome_subdir}${manifest_subdir}");
   
-  my($working_dir) = cwd();
-  
-  open(CHROMEFILE, ">>${chrome_dir}:chrome:installed-chrome.txt");
-  my($manifest_location) = "${working_dir}${dest}";
-  chop($manifest_location);
-  print(CHROMEFILE "${type},install,path,${manifest_location}\n");
+  open(CHROMEFILE, ">>${dist_dir}${chrome_subdir}installed-chrome.txt");
+  $manifest_subdir =~ tr(:)(/);
+  print(CHROMEFILE "${type},install,url,resource:/Chrome/${manifest_subdir}\n");
   close(CHROMEFILE);
 }
 
@@ -458,7 +455,8 @@ sub MakeResourceAliases()
         #//
         #// Most resources should all go into the chrome dir eventually
         #//
-        my($chrome_dir) = "$dist_dir" . "Chrome:";
+        my $chrome_subdir = "Chrome:";
+        my $chrome_dir = "$dist_dir" . $chrome_subdir;
         my($resource_dir) = "$dist_dir" . "res:";
         my($samples_dir) = "$resource_dir" . "samples:";
 
@@ -589,16 +587,16 @@ sub MakeResourceAliases()
 
 
     # install manifest RDF files
-    _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", "${chrome_dir}packages:chatzilla:", $chrome_dir, "content");
-    _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", "${chrome_dir}packages:chatzilla:", $chrome_dir, "locale");
-    _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", "${chrome_dir}packages:chatzilla:", $chrome_dir, "skin");
+    _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", $dist_dir, $chrome_subdir, "packages:chatzilla:", "content");
+    _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", $dist_dir, $chrome_subdir, "packages:chatzilla:", "locale");
+    _InstallManifestRDF(":mozilla:extensions:irc:xul:manifest.rdf", $dist_dir, $chrome_subdir, "packages:chatzilla:", "skin");
     
-    _InstallManifestRDF(":mozilla:themes:modern:manifest.rdf","${chrome_dir}skins:modern:", $chrome_dir, "skin");
-    _InstallManifestRDF(":mozilla:xpfe:communicator:resources:locale:en-US:manifest.rdf","${chrome_dir}locales:en-US:", $chrome_dir, "locale");
+    _InstallManifestRDF(":mozilla:themes:modern:manifest.rdf",$dist_dir, $chrome_subdir, "skins:modern:", "skin");
+    _InstallManifestRDF(":mozilla:xpfe:communicator:resources:locale:en-US:manifest.rdf",  $dist_dir, $chrome_subdir, "locales:en-US:", "locale");
     
-    _InstallManifestRDF(":mozilla:xpfe:communicator:resources:content:manifest.rdf","${chrome_dir}packages:core:", $chrome_dir, "content");
-    _InstallManifestRDF(":mozilla:xpfe:global:resources:content:manifest.rdf","${chrome_dir}packages:widget-toolkit:", $chrome_dir, "content");
-    _InstallManifestRDF(":mozilla:mailnews:base:resources:content:manifest.rdf","${chrome_dir}packages:messenger:", $chrome_dir, "content");
+    _InstallManifestRDF(":mozilla:xpfe:communicator:resources:content:manifest.rdf", $dist_dir, $chrome_subdir, "packages:core:", "content");
+    _InstallManifestRDF(":mozilla:xpfe:global:resources:content:manifest.rdf", $dist_dir, $chrome_subdir, "packages:widget-toolkit:", "content");
+    _InstallManifestRDF(":mozilla:mailnews:base:resources:content:manifest.rdf", $dist_dir, $chrome_subdir, "packages:messenger:", "content");
     
     
         _InstallResources(":mozilla:xpinstall:res:content:MANIFEST","$xpinstallContent", 0);
