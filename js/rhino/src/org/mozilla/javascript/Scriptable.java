@@ -178,6 +178,16 @@ public interface Scriptable {
      * This design allows properties to be defined in prototypes and implemented
      * in terms of getters and setters of Java values without consuming slots
      * in each instance.<p>
+     * <p>
+     * The values that may be set are limited to the following:
+     * <UL>
+     * <LI>java.lang.Boolean objects</LI>
+     * <LI>java.lang.String objects</LI>
+     * <LI>java.lang.Number objects</LI>
+     * <LI>org.mozilla.javascript.Scriptable objects</LI>
+     * <LI>null</LI>
+     * <LI>The value returned by Context.getUndefinedValue()</LI> 
+     * </UL><p>    
      * Note that <code>has</code> will be called by the runtime first before
      * <code>set</code> is called to determine in which object the
      * property is defined.
