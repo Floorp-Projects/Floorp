@@ -49,6 +49,8 @@ TEST_FILES      = \
 		doctype.xif \
 		xifdtplain.out \
 		xifdthtml.out \
+		simplemail.html \
+		simplemail.out \
 		$(NULL)
 
 LINCS=					\
