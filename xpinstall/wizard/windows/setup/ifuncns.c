@@ -127,12 +127,11 @@ void GetUserAgentShort(char *szUserAgent, char *szOutUAShort, DWORD dwOutUAShort
   }
 }
 
-DWORD GetWinRegSubKeyProductPath(HKEY hkRootKey, char *szInKey, char *szReturnSubKey, DWORD dwReturnSubKeySize, char *szInSubSubKey, char *szInName, char *szCompare, BOOL bUseCurrentVersion)
+DWORD GetWinRegSubKeyProductPath(HKEY hkRootKey, char *szInKey, char *szReturnSubKey, DWORD dwReturnSubKeySize, char *szInSubSubKey, char *szInName, char *szCompare, char *szInCurrentVersion)
 {
   char      *szRv = NULL;
   char      szKey[MAX_BUF];
   char      szBuf[MAX_BUF];
-  char      szCurrentVersion[MAX_BUF_TINY];
   HKEY      hkHandle;
   DWORD     dwIndex;
   DWORD     dwBufSize;
@@ -142,9 +141,6 @@ DWORD GetWinRegSubKeyProductPath(HKEY hkRootKey, char *szInKey, char *szReturnSu
   BOOL      bFoundSubKey;
 
   bFoundSubKey = FALSE;
-
-  /* get the current version value for this product */
-  GetWinReg(hkRootKey, szInKey, "CurrentVersion", szCurrentVersion, sizeof(szCurrentVersion));
 
   if(RegOpenKeyEx(hkRootKey, szInKey, 0, KEY_READ, &hkHandle) != ERROR_SUCCESS)
   {
@@ -160,9 +156,7 @@ DWORD GetWinRegSubKeyProductPath(HKEY hkRootKey, char *szInKey, char *szReturnSu
     dwBufSize = dwReturnSubKeySize;
     if(RegEnumKeyEx(hkHandle, dwIndex, szReturnSubKey, &dwBufSize, NULL, NULL, NULL, &ftLastWriteFileTime) == ERROR_SUCCESS)
     {
-      if(  (*szCurrentVersion != '\0') && (lstrcmpi(szCurrentVersion, szReturnSubKey) != 0)
-         ||(!bUseCurrentVersion)
-        )
+      if(  (*szInCurrentVersion != '\0') && (lstrcmpi(szInCurrentVersion, szReturnSubKey) != 0)  )
       {
         /* The key found is not the CurrentVersion (current UserAgent), so we can return it to be deleted.
          * We don't want to return the SubKey that is the same as the CurrentVersion because it might
@@ -198,15 +192,21 @@ DWORD GetWinRegSubKeyProductPath(HKEY hkRootKey, char *szInKey, char *szReturnSu
 
 void CleanupPreviousVersionRegKeys(void)
 {
+  DWORD dwIndex = 0;
+  DWORD dwSubKeyCount;
+  char  szBufTiny[MAX_BUF_TINY];
+  char  szKeyRoot[MAX_BUF_TINY];
+  char  szCurrentVersion[MAX_BUF_TINY];
+  char  szUAShort[MAX_BUF_TINY];
   char  szRvSubKey[MAX_PATH + 1];
+  char  szPath[MAX_BUF];
+  char  szKey[MAX_BUF];
+  char  szCleanupProduct[MAX_BUF];
+  HKEY  hkeyRoot;
   char  szSubSubKey[] = "Main";
   char  szName[] = "Install Directory";
   char  szWRMSUninstall[] = "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall";
-  char  szPath[MAX_BUF];
-  char  szUAShort[MAX_BUF_TINY];
-  char  szKey[MAX_BUF];
-  char  szCleanupProduct[MAX_BUF];
-  DWORD dwSubKeyCount;
+  char  szSection[] = "Cleanup Previous Product RegKeys";
 
   lstrcpy(szPath, sgProduct.szPath);
   if(*sgProduct.szSubPath != '\0')
@@ -216,58 +216,73 @@ void CleanupPreviousVersionRegKeys(void)
   }
   AppendBackSlash(szPath, sizeof(szPath));
 
-  do
+  wsprintf(szBufTiny, "Product Reg Key%d", dwIndex);        
+  GetPrivateProfileString(szSection, szBufTiny, "", szKey, sizeof(szKey), szFileIniConfig);
+
+  while(*szKey != '\0')
   {
-    /* build product key path here */
-    lstrcpy(szCleanupProduct, sgProduct.szProductNameInternal);
-    wsprintf(szKey, "Software\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductNameInternal);
-    dwSubKeyCount = GetWinRegSubKeyProductPath(HKEY_LOCAL_MACHINE, szKey, szRvSubKey, sizeof(szRvSubKey), szSubSubKey, szName, szPath, TRUE);
+    wsprintf(szBufTiny, "Reg Key Root%d",dwIndex);
+    GetPrivateProfileString(szSection, szBufTiny, "", szKeyRoot, sizeof(szKeyRoot), szFileIniConfig);
+    hkeyRoot = ParseRootKey(szKeyRoot);
 
-    if( (*szRvSubKey == '\0') && (*sgProduct.szProductNamePrevious != '\0') )
+    wsprintf(szBufTiny, "Product Name%d", dwIndex);        
+    GetPrivateProfileString(szSection, szBufTiny, "", szCleanupProduct, sizeof(szCleanupProduct), szFileIniConfig);
+    // something is wrong, they didn't give a product name.
+    if(*szCleanupProduct == '\0')
+      return;
+
+    wsprintf(szBufTiny, "Current Version%d", dwIndex);        
+    GetPrivateProfileString(szSection, szBufTiny, "", szCurrentVersion, sizeof(szCurrentVersion), szFileIniConfig);
+
+    do
     {
-      lstrcpy(szCleanupProduct, sgProduct.szProductNamePrevious);
-      wsprintf(szKey, "Software\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductNamePrevious);
-      dwSubKeyCount = GetWinRegSubKeyProductPath(HKEY_LOCAL_MACHINE, szKey, szRvSubKey, sizeof(szRvSubKey), szSubSubKey, szName, szPath, FALSE);
-    }
-
-    if(*szRvSubKey != '\0')
-    {
-      if(dwSubKeyCount > 1)
+      // if the current version is not found, we'll get null in szCurrentVersion and GetWinRegSubKeyProductPath() will do the right thing
+      dwSubKeyCount = GetWinRegSubKeyProductPath(hkeyRoot, szKey, szRvSubKey, sizeof(szRvSubKey), szSubSubKey, szName, szPath, szCurrentVersion);
+  	  
+      if(*szRvSubKey != '\0')
       {
-        AppendBackSlash(szKey, sizeof(szKey));
-        lstrcat(szKey, szRvSubKey);
+        if(dwSubKeyCount > 1)
+        {
+          AppendBackSlash(szKey, sizeof(szKey));
+          lstrcat(szKey, szRvSubKey);
+        }
+        DeleteWinRegKey(hkeyRoot, szKey, TRUE);
+
+        GetUserAgentShort(szRvSubKey, szUAShort, sizeof(szUAShort));
+        if(*szUAShort != '\0')
+        {
+          /* delete uninstall key that contains product name and its user agent in parenthesis, for
+           * example:
+           *     Mozilla (0.8)
+           */
+          wsprintf(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s (%s)", szCleanupProduct, szUAShort);
+          DeleteWinRegKey(hkeyRoot, szKey, TRUE);
+
+          /* delete uninstall key that contains product name and its user agent not in parenthesis,
+           * for example:
+           *     Mozilla 0.8
+           */
+          wsprintf(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s %s", szCleanupProduct, szUAShort);
+          DeleteWinRegKey(hkeyRoot, szKey, TRUE);
+
+          /* We are not looking to delete just the product name key, for example:
+           *     Mozilla
+           *
+           * because it might have just been created by the current installation process, so
+           * deleting this would be a "Bad Thing" (TM).  Besides, we shouldn't be deleting the
+           * CurrentVersion key that might have just gotten created because GetWinRegSubKeyProductPath()
+           * will not return the CurrentVersion key.
+           */
+        }
+        // the szKey was stepped on.  Reget it.
+        wsprintf(szBufTiny, "Product Reg Key%d", dwIndex);        
+        GetPrivateProfileString(szSection, szBufTiny, "", szKey, sizeof(szKey), szFileIniConfig);
       }
-      DeleteWinRegKey(HKEY_LOCAL_MACHINE, szKey, TRUE);
+    }  while (*szRvSubKey != '\0');
+    wsprintf(szBufTiny, "Product Reg Key%d", ++dwIndex);        
+    GetPrivateProfileString(szSection, szBufTiny, "", szKey, sizeof(szKey), szFileIniConfig);
+  } 
 
-      GetUserAgentShort(szRvSubKey, szUAShort, sizeof(szUAShort));
-      if(*szUAShort != '\0')
-      {
-        /* delete uninstall key that contains product name and its user agent in parenthesis, for
-         * example:
-         *     Mozilla (0.8)
-         */
-        wsprintf(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s (%s)", szCleanupProduct, szUAShort);
-        DeleteWinRegKey(HKEY_LOCAL_MACHINE, szKey, TRUE);
-
-        /* delete uninstall key that contains product name and its user agent not in parenthesis,
-         * for example:
-         *     Mozilla 0.8
-         */
-        wsprintf(szKey, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\%s %s", szCleanupProduct, szUAShort);
-        DeleteWinRegKey(HKEY_LOCAL_MACHINE, szKey, TRUE);
-
-        /* We are not looking to delete just the product name key, for example:
-         *     Mozilla
-         *
-         * because it might have just been created by the current installation process, so
-         * deleting this would be a "Bad Thing" (TM).  Besides, we shouldn't be deleting the
-         * CurrentVersion key that might have just gotten created because GetWinRegSubKeyProductPath()
-         * will not return the CurrentVersion key.
-         */
-      }
-    }
-
-  } while(*szRvSubKey);
 }
 
 void ProcessFileOps(DWORD dwTiming, char *szSectionPrefix)

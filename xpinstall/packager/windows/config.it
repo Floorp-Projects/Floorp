@@ -1109,6 +1109,17 @@ Overwrite Key=TRUE
 Overwrite Name=TRUE
 Timing=pre smartupdate
 
+[Cleanup Previous Product RegKeys]
+Reg Key Root0=HKEY_LOCAL_MACHINE
+Product Name0=Mozilla
+Product Reg Key0=Software\Mozilla.org\Mozilla
+Current Version0=$UserAgent$
+;
+Reg Key Root1=HKEY_CURRENT_USER
+Product Name1=Mozilla
+Product Reg Key1=Software\Mozilla.org\Mozilla
+Current Version1=$UserAgent$
+
 
 
 ; Values for Show Folder:
