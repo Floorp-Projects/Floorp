@@ -3302,6 +3302,32 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
                                        PR_FALSE,
                                        getter_AddRefs(styleContext));
 
+  const nsStyleUserInterface* ui= (const nsStyleUserInterface*)
+        styleContext->GetStyleData(eStyleStruct_UserInterface);
+
+  // Ensure that our XBL bindings are installed.
+  if (!ui->mBehavior.IsEmpty()) {
+    // Get the XBL loader.
+    nsresult rv;
+    NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
+    if (!xblService)
+      return rv;
+
+    PRBool resolveStyle;
+    nsCOMPtr<nsIXBLBinding> binding;
+    rv = xblService->LoadBindings(aDocElement, ui->mBehavior, PR_FALSE, getter_AddRefs(binding), &resolveStyle);
+    if (NS_FAILED(rv))
+      return NS_OK; // Binding will load asynchronously.
+
+    if (resolveStyle) {
+      nsCOMPtr<nsIAtom> tag;
+      aDocElement->GetTag(*getter_AddRefs(tag));
+      rv = ResolveStyleContext(aPresContext, aParentFrame, aDocElement, tag, getter_AddRefs(styleContext));
+      if (NS_FAILED(rv))
+        return rv;
+    }
+  }
+
   const nsStyleDisplay* display = 
     (const nsStyleDisplay*)styleContext->GetStyleData(eStyleStruct_Display);
   const nsStyleColor* color = 
@@ -3453,13 +3479,14 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
       }
     }
 
+     // Create any anonymous frames the doc element frame requires
+    CreateAnonymousFrames(aPresShell, aPresContext, nsnull, aState, aDocElement, contentFrame,
+                          childItems);
+
     // Set the initial child lists
     contentFrame->SetInitialChildList(aPresContext, nsnull,
                                       childItems.childList);
  
-    // Create any anonymous frames the doc element frame requires
-    CreateAnonymousFrames(aPresShell, aPresContext, nsnull, aState, aDocElement, contentFrame,
-                          childItems);
 
     // only support absolute positioning if we are a block.
     // if we are a box don't do it.
@@ -8688,6 +8715,12 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
 
     if (aChild == docElement.get()) {
       NS_PRECONDITION(nsnull == mInitialContainingBlock, "initial containing block already created");
+      
+      if (!mDocElementContainingBlock)
+        return NS_OK; // We get into this situation when an XBL binding is asynchronously
+                      // applied to the root tag (e.g., <window> in XUL).  It's ok.  We can
+                      // just bail here because the root will really be built later during
+                      // InitialReflow.
 
       // Get the style context of the containing block frame
       nsCOMPtr<nsIStyleContext> containerStyle;
@@ -10066,8 +10099,8 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
     nsCOMPtr<nsIAtom> tag;
     aContent->GetTag(*getter_AddRefs(tag));
     if (reframe == PR_FALSE && tag && (tag.get() == nsXULAtoms::treechildren ||
-      tag.get() == nsXULAtoms::treeitem || tag.get() == nsXULAtoms::treerow ||
-      tag.get() == nsXULAtoms::treecell))
+      (tag.get() == nsXULAtoms::treeitem && aAttribute != nsXULAtoms::open) ||
+      tag.get() == nsXULAtoms::treerow || tag.get() == nsXULAtoms::treecell))
       return NS_OK;
   }
 #endif // INCLUDE_XUL

@@ -1235,13 +1235,23 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   printf("OnEndDocumentLoad\n");
 #endif
 
-  /* We get notified every time a page/Frame is loaded. But we need to
-   * Load the menus, run the startup script etc.. only once. So, Use
-   * the mChrome Initialized  member to check whether chrome should be 
-   * initialized or not - Radha
-   */
   if (mChromeLoaded)
     return NS_OK;
+
+  // We get notified every time a subframe is loaded. We
+  // need to properly ignore the load of subframes and only really
+  // execute our onload handler when we get a notification for ourselves
+  nsCOMPtr<nsISupports> container;
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem, parent;
+
+  loader->GetContainer(getter_AddRefs(container));
+  // Is this a frame ?
+  docShellAsItem = do_QueryInterface(container);
+  if (docShellAsItem) {
+    docShellAsItem->GetSameTypeParent(getter_AddRefs(parent));
+  }
+  if (parent)
+    return NS_OK; // We're a subframe. Get out of dodge.
 
   mChromeLoaded = PR_TRUE;
 
