@@ -260,11 +260,8 @@ nsWidget::nsWidget()
   mIsDragDest = PR_FALSE;
   mIsToplevel = PR_FALSE;
 
-  if (NS_OK == nsComponentManager::CreateInstance(kRegionCID,
-                                                  nsnull,
-                                                  NS_GET_IID(nsIRegion),
-                                                  (void**)&mUpdateArea))
-  {
+  mUpdateArea = do_CreateInstance(kRegionCID);
+  if (mUpdateArea) {
     mUpdateArea->Init();
     mUpdateArea->SetTo(0, 0, 0, 0);
   }
@@ -338,13 +335,11 @@ nsWidget::~nsWidget()
   printf("nsWidget::~nsWidget:%p\n", this);
 #endif
 
-  NS_IF_RELEASE(mUpdateArea);
-
   // it's safe to always call Destroy() because it will only allow itself
   // to be called once
   Destroy();
 
-  if (!sWidgetCount--) {
+  if (!--sWidgetCount) {
     NS_IF_RELEASE(sLookAndFeel);
   }
 
@@ -423,6 +418,10 @@ NS_IMETHODIMP nsWidget::Destroy(void)
   // make sure we don't call this more than once.
   if (mIsDestroying)
     return NS_OK;
+
+  // we don't want people sending us events if we are the button motion target
+  if (sButtonMotionTarget == this)
+    sButtonMotionTarget = nsnull;
 
   // ok, set our state
   mIsDestroying = PR_TRUE;
@@ -1642,6 +1641,9 @@ nsWidget::InstallRealizeSignal(GtkWidget * aWidget)
 nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
 {
   
+  if (mIsDestroying)
+    return;
+
   nsMouseEvent event;
 
   event.message = NS_MOUSE_MOVE;

@@ -165,6 +165,22 @@ nsWindow::~nsWindow()
     UnqueueDraw();
 }
 
+NS_IMETHODIMP nsWindow::Destroy(void)
+{
+  // remove our pointer from the object so that we event handlers don't send us events
+  // after we are gone or in the process of going away
+
+  if (mSuperWin)
+    gtk_object_remove_data(GTK_OBJECT(mSuperWin), "nsWindow");
+  if (mShell)
+    gtk_object_remove_data(GTK_OBJECT(mShell), "nsWindow");
+  if (mMozArea)
+    gtk_object_remove_data(GTK_OBJECT(mMozArea), "nsWindow");
+
+  return nsWidget::Destroy();
+}
+
+
 PRBool nsWindow::IsChild() const
 {
   return PR_FALSE;
@@ -1028,6 +1044,9 @@ nsWindow::InstallFocusOutSignal(GtkWidget * aWidget)
 void 
 nsWindow::HandleGDKEvent(GdkEvent *event)
 {
+  if (mIsDestroying)
+    return;
+
   switch (event->any.type)
   {
   case GDK_MOTION_NOTIFY:
@@ -2543,6 +2562,9 @@ nsWindow::HandleXlibExposeEvent(XEvent *event)
 void
 nsWindow::HandleXlibButtonEvent(XButtonEvent * aButtonEvent)
 {
+  if (mIsDestroying)
+    return;
+
   nsMouseEvent event;
   
   PRUint32 eventType = 0;
