@@ -81,7 +81,8 @@ protected:
   nsresult LoadStyleSheet(nsIURL* aURL,
                           nsIUnicharInputStream* aUIN,
                           PRBool aInline);
-  nsresult FlushText(PRBool* aDidFlush=nsnull);
+  nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
+                     PRBool* aDidFlush=nsnull);
 
   nsresult AddContentAsLeaf(nsIContent *aContent);
   void FindNameSpaceAttributes(const nsIParserNode& aNode);
@@ -95,6 +96,10 @@ protected:
   PRInt32 PushContent(nsIContent *aContent);
   nsIContent* PopContent();
   PRInt32 GetCurrentNestLevel();
+
+  nsresult EvaluateScript(nsString& aScript, PRUint32 aLineNo);
+  nsresult ProcessEndSCRIPTTag(const nsIParserNode& aNode);
+  nsresult ProcessStartSCRIPTTag(const nsIParserNode& aNode);
 
   struct NameSpaceStruct {
     nsIAtom* mPrefix;
@@ -120,6 +125,12 @@ protected:
   PRUnichar* mText;
   PRInt32 mTextLength;
   PRInt32 mTextSize;
+  PRBool mConstrainSize;
+
+  // XXX Special processing for HTML SCRIPT tags. We may need
+  // something similar for STYLE.
+  PRBool mInScript;
+  PRUint32 mScriptLineNo;
 };
 
 #endif // nsXMLContentSink_h__

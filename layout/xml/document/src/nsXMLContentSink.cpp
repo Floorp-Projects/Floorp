@@ -38,8 +38,12 @@
 #include "nsVoidArray.h"
 #include "nsCRT.h"
 #include "nsICSSParser.h"
+#include "nsHTMLAtoms.h"
+#include "nsIScriptContext.h"
+#include "nsIScriptContextOwner.h"
 #include "prtime.h"
 #include "prlog.h"
+#include "prmem.h"
 
 static char kNameSpaceSeparator[] = ":";
 static char kNameSpaceDef[] = "xmlns";
@@ -93,6 +97,8 @@ nsXMLContentSink::nsXMLContentSink()
   mText = nsnull;
   mTextLength = 0;
   mTextSize = 0;
+  mConstrainSize = PR_TRUE;
+  mInScript = PR_FALSE;
 }
 
 nsXMLContentSink::~nsXMLContentSink()
@@ -120,7 +126,7 @@ nsXMLContentSink::~nsXMLContentSink()
     delete mContentStack;
   }
   if (nsnull != mText) {
-    delete [] mText;
+    PR_FREEIF(mText);
   }
 }
 
@@ -207,8 +213,6 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 #if XML_PSEUDO_ELEMENT
   // Pop the pseudo root content
   PopContent();
-#else
-  mDocument->SetRootContent(mDocElement);
 #endif
 
   StartLayout();
@@ -472,6 +476,11 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   // same. We need to teach the CSS system to be case insensitive.
   tag.ToUpperCase();
   if (isHTML) {
+    nsIAtom* tagAtom = NS_NewAtom(tag);
+    if (nsHTMLAtoms::script == tagAtom) {
+      result = ProcessStartSCRIPTTag(aNode);
+    }
+    NS_RELEASE(tagAtom);
     nsIHTMLContent *htmlContent = nsnull;
     result = NS_CreateHTMLElement(&htmlContent, tag);
     content = (nsIContent *)htmlContent;
@@ -503,6 +512,7 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
       if (nsnull == mDocElement) {
         mDocElement = content;
         NS_ADDREF(mDocElement);
+        mDocument->SetRootContent(mDocElement);
       }
       else {
         nsIContent *parent = GetCurrentContent();
@@ -520,17 +530,45 @@ NS_IMETHODIMP
 nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
 {
   nsresult result = NS_OK;
+  nsAutoString tag, nameSpace;
+  PRInt32 nsoffset;
+  PRInt32 id = gNameSpaceId_Unknown;
+  PRBool isHTML = nsnull;
 
   // XXX Hopefully the parser will flag this before we get
   // here. If we're in the prolog or epilog, there should be
   // no close tags for elements.
   PR_ASSERT(eXMLContentSinkState_InDocumentElement == mState);
-  
-  FlushText();
+
+  tag = aNode.GetText();
+  nsoffset = tag.Find(kNameSpaceSeparator);
+  if (-1 != nsoffset) {
+    tag.Left(nameSpace, nsoffset);
+    tag.Cut(0, nsoffset+1);
+  }
+  else {
+    nameSpace.Truncate();
+  }
+
+  id = GetNameSpaceId(nameSpace);
+  isHTML = IsHTMLNameSpace(id);
+
+  if (!mInScript) {
+    FlushText();
+  }
 
   nsIContent* content = PopContent();
   if (nsnull != content) {
     PRInt32 nestLevel = GetCurrentNestLevel();
+
+    if (isHTML) {
+      tag.ToUpperCase();
+      nsIAtom* tagAtom = NS_NewAtom(tag);
+      if (nsHTMLAtoms::script == tagAtom) {
+        result = ProcessEndSCRIPTTag(aNode);
+      }
+      NS_RELEASE(tagAtom);
+    }
 
     CloseNameSpacesAtNestLevel(nestLevel);
 
@@ -776,27 +814,29 @@ nsXMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
 }
 
 nsresult
-nsXMLContentSink::FlushText(PRBool* aDidFlush)
+nsXMLContentSink::FlushText(PRBool aCreateTextNode, PRBool* aDidFlush)
 {
   nsresult rv = NS_OK;
   PRBool didFlush = PR_FALSE;
   if (0 != mTextLength) {
-    nsIHTMLContent* content;
-    rv = NS_NewTextNode(&content);
-    if (NS_OK == rv) {
-      // Set the content's document
-      content->SetDocument(mDocument, PR_FALSE);
+    if (aCreateTextNode) {
+      nsIHTMLContent* content;
+      rv = NS_NewTextNode(&content);
+      if (NS_OK == rv) {
+        // Set the content's document
+        content->SetDocument(mDocument, PR_FALSE);
+        
+        // Set the text in the text node
+        static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
+        nsITextContent* text = nsnull;
+        content->QueryInterface(kITextContentIID, (void**) &text);
+        text->SetText(mText, mTextLength, PR_FALSE);
+        NS_RELEASE(text);
 
-      // Set the text in the text node
-      static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
-      nsITextContent* text = nsnull;
-      content->QueryInterface(kITextContentIID, (void**) &text);
-      text->SetText(mText, mTextLength, PR_FALSE);
-      NS_RELEASE(text);
-
-      // Add text to its parent
-      AddContentAsLeaf(content);      
-      NS_RELEASE(content);
+        // Add text to its parent
+        AddContentAsLeaf(content);      
+        NS_RELEASE(content);
+      }
     }
     mTextLength = 0;
     didFlush = PR_TRUE;
@@ -819,7 +859,7 @@ nsXMLContentSink::AddCharacterData(const nsIParserNode& aNode)
 
   // Create buffer when we first need it
   if (0 == mTextSize) {
-    mText = new PRUnichar[4096];
+    mText = (PRUnichar *) PR_MALLOC(sizeof(PRUnichar) * 4096);
     if (nsnull == mText) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -834,9 +874,18 @@ nsXMLContentSink::AddCharacterData(const nsIParserNode& aNode)
       amount = addLen;
     }
     if (0 == amount) {
-      nsresult rv = FlushText();
-      if (NS_OK != rv) {
-        return rv;
+      if (mConstrainSize) {
+        nsresult rv = FlushText();
+        if (NS_OK != rv) {
+          return rv;
+        }
+      }
+      else {
+        mTextSize += addLen;
+        mText = (PRUnichar *) PR_REALLOC(mText, sizeof(PRUnichar) * mTextSize);
+        if (nsnull == mText) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
       }
     }
     memcpy(&mText[mTextLength], text.GetUnicode() + offset,
@@ -1102,4 +1151,176 @@ nsXMLContentSink::StartLayout()
       }
     }
   }
+}
+
+nsresult
+nsXMLContentSink::EvaluateScript(nsString& aScript, PRUint32 aLineNo)
+{
+  nsresult rv = NS_OK;
+
+  if (0 < aScript.Length()) {
+    nsIScriptContextOwner *owner;
+    nsIScriptContext *context;
+    owner = mDocument->GetScriptContextOwner();
+    if (nsnull != owner) {
+      
+      rv = owner->GetScriptContext(&context);
+      if (rv != NS_OK) {
+        NS_RELEASE(owner);
+        return rv;
+      }
+        
+      jsval val;
+      nsIURL* mDocURL = mDocument->GetDocumentURL();
+      const char* mURL;
+      if (mDocURL) {
+        mURL = mDocURL->GetSpec();
+      }
+      
+      PRBool result = context->EvaluateString(aScript, mURL, aLineNo, &val);
+      
+      NS_IF_RELEASE(mDocURL);
+      
+      NS_RELEASE(context);
+      NS_RELEASE(owner);
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsXMLContentSink::ProcessEndSCRIPTTag(const nsIParserNode& aNode)
+{
+  nsresult result = NS_OK;
+  if (mInScript) {
+    nsAutoString script;
+    script.SetString(mText, mTextLength);
+    result = EvaluateScript(script, mScriptLineNo);
+    FlushText(PR_FALSE);
+    mInScript = PR_FALSE;
+  }
+
+  return result;
+}
+
+#define SCRIPT_BUF_SIZE 1024
+
+// XXX Stolen from nsHTMLContentSink. Needs to be shared.
+// Returns PR_TRUE if the language name is a version of JavaScript and
+// PR_FALSE otherwise
+static PRBool
+IsJavaScriptLanguage(const nsString& aName)
+{
+  if (aName.EqualsIgnoreCase("JavaScript") || 
+      aName.EqualsIgnoreCase("LiveScript") || 
+      aName.EqualsIgnoreCase("Mocha")) { 
+    return PR_TRUE;
+  } 
+  else if (aName.EqualsIgnoreCase("JavaScript1.1")) { 
+    return PR_TRUE;
+  } 
+  else if (aName.EqualsIgnoreCase("JavaScript1.2")) { 
+    return PR_TRUE;
+  } 
+  else if (aName.EqualsIgnoreCase("JavaScript1.3")) { 
+    return PR_TRUE;
+  } 
+  else if (aName.EqualsIgnoreCase("JavaScript1.4")) { 
+    return PR_TRUE;
+  } 
+  else { 
+    return PR_FALSE;
+  } 
+}
+
+nsresult
+nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
+{
+  nsresult rv = NS_OK;
+  PRBool   isJavaScript = PR_TRUE;
+  PRInt32 i, ac = aNode.GetAttributeCount();
+
+  // Look for SRC attribute and look for a LANGUAGE attribute
+  nsAutoString src;
+  for (i = 0; i < ac; i++) {
+    const nsString& key = aNode.GetKeyAt(i);
+    if (key.EqualsIgnoreCase("src")) {
+      src = aNode.GetValueAt(i);
+      src.Trim("\"", PR_TRUE, PR_TRUE); 
+    }
+    else if (key.EqualsIgnoreCase("type")) {
+      nsAutoString  type;
+      
+      GetAttributeValueAt(aNode, i, type);
+      isJavaScript = type.EqualsIgnoreCase("text/javascript");
+    }
+    else if (key.EqualsIgnoreCase("language")) {
+      nsAutoString  lang;
+      
+      GetAttributeValueAt(aNode, i, lang);
+      isJavaScript = IsJavaScriptLanguage(lang);
+    }
+  }
+  
+  // Don't process scripts that aren't JavaScript
+  if (isJavaScript) {
+    nsAutoString script;
+    
+    // If there is a SRC attribute, (for now) read from the
+    // stream synchronously and hold the data in a string.
+    if (src != "") {
+      // Use the SRC attribute value to open a blocking stream
+      nsIURL* url = nsnull;
+      nsAutoString absURL;
+      nsIURL* docURL = mDocument->GetDocumentURL();
+      nsAutoString emptyURL;
+      emptyURL.Truncate();
+      rv = NS_MakeAbsoluteURL(docURL, emptyURL, src, absURL);
+      if (NS_OK != rv) {
+        return rv;
+      }
+      NS_RELEASE(docURL);
+      rv = NS_NewURL(&url, nsnull, absURL);
+      if (NS_OK != rv) {
+        return rv;
+      }
+      PRInt32 ec;
+      nsIInputStream* iin = url->Open(&ec);
+      if (nsnull == iin) {
+        NS_RELEASE(url);
+        return (nsresult) ec;/* XXX fix url->Open */
+      }
+      
+      // Drain the stream by reading from it a chunk at a time
+      PRInt32 nb;
+      nsresult err;
+      do {
+        char buf[SCRIPT_BUF_SIZE];
+        
+        err = iin->Read(buf, 0, SCRIPT_BUF_SIZE, &nb);
+        if (NS_OK == err) {
+          script.Append((const char *)buf, nb);
+        }
+      } while (err == NS_OK);
+      
+      if (NS_BASE_STREAM_EOF != err) {
+          rv = NS_ERROR_FAILURE;
+      }
+      
+      NS_RELEASE(iin);
+      NS_RELEASE(url);
+      
+      rv = EvaluateScript(script, (PRUint32)aNode.GetSourceLineNumber());
+      
+    }
+    else {
+      // Wait until we get the script content
+      mInScript = PR_TRUE;
+      mConstrainSize = PR_FALSE;
+      mScriptLineNo = (PRUint32)aNode.GetSourceLineNumber();
+    }
+  }
+
+  return rv;
 }
