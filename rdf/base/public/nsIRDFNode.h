@@ -75,6 +75,10 @@ public:
      * Determine if two resources are identical.
      */
     NS_IMETHOD EqualsResource(const nsIRDFResource* resource, PRBool* result) const = 0;
+
+    /**
+     * Determine if two resources are identical.
+     */
     NS_IMETHOD EqualsString(const char* uri, PRBool* result) const = 0;
 };
 

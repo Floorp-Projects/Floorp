@@ -209,7 +209,7 @@ main(int argc, char** argv)
     if (NS_FAILED(rv = theRDFService->GetResource("http://home.netscape.com", &theHomePage)))
         goto done;
 
-    if (NS_FAILED(rv = theRDFService->GetResource("http://home.nescape.com/NC-rdf#title", &NC_title)))
+    if (NS_FAILED(rv = theRDFService->GetResource(NC_NAMESPACE_URI "title", &NC_title)))
         goto done;
 
     if (NS_FAILED(rv = theRDFService->GetLiteral(nsAutoString("Netscape's Home Page"), &theTitle)))

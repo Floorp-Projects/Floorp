@@ -47,7 +47,6 @@ static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 
 static const char kURINC_BookmarksRoot[] = "NC:BookmarksRoot"; // XXX?
 
-#define NC_NAMESPACE_URI "http://home.netscape.com/NC-rdf#"
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, BookmarkAddDate);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Description);
@@ -55,13 +54,9 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, PersonalToolbarFolderCategory);
 
-
-#define WEB_NAMESPACE_URI "http://home.netscape.com/WEB-rdf#"
 DEFINE_RDF_VOCAB(WEB_NAMESPACE_URI, WEB, LastVisitDate);
 DEFINE_RDF_VOCAB(WEB_NAMESPACE_URI, WEB, LastModifiedDate);
 
-
-#define RDF_NAMESPACE_URI "http://www.w3.org/TR/WD-rdf-syntax#"
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, instanceOf);
 
 static const char kPersonalToolbar[]  = "Personal Toolbar";

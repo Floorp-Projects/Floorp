@@ -63,7 +63,6 @@ static NS_DEFINE_CID(kRDFServiceCID,          NS_RDFSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
-#define RDF_NAMESPACE_URI  "http://www.w3.org/TR/WD-rdf-syntax#"
 static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, nextVal); // ad hoc way to make containers fast
 
