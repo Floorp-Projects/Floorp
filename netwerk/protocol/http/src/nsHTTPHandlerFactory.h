@@ -24,26 +24,4 @@
 
 #include "nsIFactory.h"
 
-class nsHTTPHandlerFactory : public nsIFactory
-{
-public:
-    nsHTTPHandlerFactory(const nsCID &aClass);
-
-    // nsISupports methods
-    NS_DECL_ISUPPORTS
-
-    // nsIFactory methods
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              const nsIID &aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
-
-protected:
-    virtual ~nsHTTPHandlerFactory();
-
-protected:
-    nsCID       mClassID;
-};
-
-#endif /* nsHTTPHandlerFactory_h___ */
+#endif

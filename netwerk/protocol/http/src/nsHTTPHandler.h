@@ -123,9 +123,6 @@ public:
     */
     NS_IMETHOD      FollowRedirects(PRBool bFollow=PR_TRUE);
 
-    // Singleton function - note this AddRefs so when you are done... release it!
-    static nsHTTPHandler* GetInstance(void);
-
     // Functions from nsIHTTPProtocolHandler
     NS_DECL_NSIHTTPPROTOCOLHANDLER
 
@@ -156,19 +153,13 @@ public:
     virtual nsresult ReleaseTransport(nsIChannel* i_pTrans);
 
     virtual nsresult CancelPendingChannel(nsHTTPChannel* aChannel);
-
-    virtual nsresult GetAuthEngine(nsAuthEngine** o_AuthEngine)
-    {
-        *o_AuthEngine = &mAuthEngine;
-        return NS_OK;
-    };
   
     PRTime GetSessionStartTime() { return mSessionStartTime; }
 
+    nsHTTPHandler(void);
 protected:
 
     // None
-    nsHTTPHandler(void);
     virtual ~nsHTTPHandler();
 
     // This is the array of connections that the handler thread 

@@ -24,6 +24,12 @@
 
 interface nsIInputStream;
 
+[ptr] native nsAuthEnginePtr(nsAuthEngine);
+
+%{C++
+class nsAuthEngine;
+%}
+
 [scriptable, uuid(ad1d53ae-3e25-11d3-8cd3-0060b0fc14a3)]
 interface nsIHTTPProtocolHandler : nsIProtocolHandler
 {
@@ -49,6 +55,10 @@ interface nsIHTTPProtocolHandler : nsIProtocolHandler
     nsIInputStream NewPostDataStream(in boolean isFile,
                                      in string data, 
                                      in unsigned long encodeFlags);
+
+    /* i'll file a bug on the http guys to make nsAuthEngine scriptable
+	   and then we can get rid of this no script code! */
+	[noscript] void getAuthEngine(out nsAuthEnginePtr authEngine);
     
 };
 
@@ -57,9 +67,5 @@ interface nsIHTTPProtocolHandler : nsIProtocolHandler
 //Possible errors
 #define NS_ERROR_BAD_REQUEST    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 200)
 #define NS_ERROR_BUSY           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 201)
-
-
-// Create (or get) HTTP Handler
-extern NS_METHOD NS_CreateOrGetHTTPHandler(nsIHTTPProtocolHandler* *o_HTTPHandler);
 
 %}
