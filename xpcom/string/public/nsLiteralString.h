@@ -70,8 +70,8 @@ literal_string( const char* aPtr, PRUint32 aLength )
 
 #ifdef HAVE_CPP_2BYTE_WCHAR_T
   #define NS_L(s)                                 L##s
-  #define NS_MULTILINE_LITERAL_STRING(s)          nsDependentString(NS_REINTERPRET_CAST(const PRUnichar*, s), NS_CONST_CAST(PRUint32,(sizeof(s)/sizeof(wchar_t))-1) )
-  #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  nsDependentString n(NS_REINTERPRET_CAST(const PRUnichar*, s), NS_CONST_CAST(PRUint32,(sizeof(s)/sizeof(wchar_t))-1) )
+  #define NS_MULTILINE_LITERAL_STRING(s)          nsDependentString(NS_REINTERPRET_CAST(const PRUnichar*, s), (sizeof(s)/sizeof(wchar_t))-1)
+  #define NS_NAMED_MULTILINE_LITERAL_STRING(n,s)  nsDependentString n(NS_REINTERPRET_CAST(const PRUnichar*, s), (sizeof(s)/sizeof(wchar_t))-1)
 #else
   #define NS_L(s)                                 s
   #define NS_MULTILINE_LITERAL_STRING(s)          NS_ConvertASCIItoUCS2(s, sizeof(s)-1)
