@@ -401,12 +401,12 @@ nsEditorAppCore::DoEditorMode(nsIWebShell *aWebShell)
 // the name of the attribute here should be the contents of the appropriate
 // tag, e.g. 'b' for bold, 'i' for italics.
 NS_IMETHODIMP    
-nsEditorAppCore::SetTextProperty(const nsString& aAttr)
+nsEditorAppCore::SetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue)
 {
 	nsIAtom		*styleAtom = nsnull;
 	nsresult	err = NS_NOINTERFACE;
 
-	styleAtom = NS_NewAtom(aAttr);			/// XXX Hack alert! Look in nsIEditProperty.h for this
+	styleAtom = NS_NewAtom(aProp);			/// XXX Hack alert! Look in nsIEditProperty.h for this
 
 	if (! styleAtom)
 		return NS_ERROR_OUT_OF_MEMORY;
@@ -421,14 +421,14 @@ nsEditorAppCore::SetTextProperty(const nsString& aAttr)
 				// should we allow this?
 				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
 				if (textEditor)
-					err = textEditor->SetTextProperty(styleAtom);
+					err = textEditor->SetTextProperty(styleAtom, &aAttr, &aValue);
 			}
 			break;
 		case eHTMLTextEditorType:
 			{
 				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
 				if (htmlEditor)
-					err = htmlEditor->SetTextProperty(styleAtom);
+					err = htmlEditor->SetTextProperty(styleAtom, &aAttr, &aValue);
 			}
 			break;
 		default:
@@ -442,12 +442,12 @@ nsEditorAppCore::SetTextProperty(const nsString& aAttr)
 
 
 NS_IMETHODIMP
-nsEditorAppCore::RemoveOneProperty(const nsString &aAttr)
+nsEditorAppCore::RemoveOneProperty(const nsString& aProp, const nsString &aAttr)
 {
 	nsIAtom		*styleAtom = nsnull;
 	nsresult	err = NS_NOINTERFACE;
 
-	styleAtom = NS_NewAtom(aAttr);			/// XXX Hack alert! Look in nsIEditProperty.h for this
+	styleAtom = NS_NewAtom(aProp);			/// XXX Hack alert! Look in nsIEditProperty.h for this
 
 	if (! styleAtom)
 		return NS_ERROR_OUT_OF_MEMORY;
@@ -462,14 +462,14 @@ nsEditorAppCore::RemoveOneProperty(const nsString &aAttr)
 				// should we allow this?
 				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
 				if (textEditor)
-					err = textEditor->RemoveTextProperty(styleAtom);
+					err = textEditor->RemoveTextProperty(styleAtom, &aAttr);
 			}
 			break;
 		case eHTMLTextEditorType:
 			{
 				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
 				if (htmlEditor)
-					err = htmlEditor->RemoveTextProperty(styleAtom);
+					err = htmlEditor->RemoveTextProperty(styleAtom, &aAttr);
 			}
 			break;
 		default:
@@ -484,7 +484,7 @@ nsEditorAppCore::RemoveOneProperty(const nsString &aAttr)
 // the name of the attribute here should be the contents of the appropriate
 // tag, e.g. 'b' for bold, 'i' for italics.
 NS_IMETHODIMP    
-nsEditorAppCore::RemoveTextProperty(const nsString& aAttr)
+nsEditorAppCore::RemoveTextProperty(const nsString& aProp, const nsString& aAttr)
 {
 	// OK, I'm really hacking now. This is just so that we can accept 'all' as input.
 	// this logic should live elsewhere.
@@ -495,7 +495,7 @@ nsEditorAppCore::RemoveTextProperty(const nsString& aAttr)
 		nsnull			// this null is important
 	};
 	
-	nsAutoString	allStr = aAttr;
+	nsAutoString	allStr = aProp;
 	allStr.ToLowerCase();
 	PRBool		doingAll = (allStr == "all");
 	nsresult	err = NS_OK;
@@ -510,7 +510,7 @@ nsEditorAppCore::RemoveTextProperty(const nsString& aAttr)
 			thisAttr.Truncate(0);
 			thisAttr += (char *)(*tagName);
 		
-			err = RemoveOneProperty(thisAttr);
+			err = RemoveOneProperty(thisAttr, aAttr);
 
 			tagName ++;
 		}
@@ -518,14 +518,15 @@ nsEditorAppCore::RemoveTextProperty(const nsString& aAttr)
 	}
 	else
 	{
-		err = RemoveOneProperty(aAttr);
+		err = RemoveOneProperty(aProp, aAttr);
 	}
 	
 	return err;
 }
 
 NS_IMETHODIMP
-nsEditorAppCore::GetTextProperty(const nsString& aAttr, PRBool* aFirstHas, PRBool* aAnyHas, PRBool* aAllHas)
+nsEditorAppCore::GetTextProperty(const nsString& aProp, const nsString& aAttr, const nsString& aValue, 
+                                 PRBool* aFirstHas, PRBool* aAnyHas, PRBool* aAllHas)
 {
 	nsIAtom		*styleAtom = nsnull;
 	nsresult	err = NS_NOINTERFACE;
@@ -534,7 +535,7 @@ nsEditorAppCore::GetTextProperty(const nsString& aAttr, PRBool* aFirstHas, PRBoo
 	PRBool		anyOfSelectionHasProp = PR_FALSE;
 	PRBool		allOfSelectionHasProp = PR_FALSE;
 	
-	styleAtom = NS_NewAtom(aAttr);			/// XXX Hack alert! Look in nsIEditProperty.h for this
+	styleAtom = NS_NewAtom(aProp);			/// XXX Hack alert! Look in nsIEditProperty.h for this
 
 	switch (mEditorType)
 	{
@@ -543,14 +544,14 @@ nsEditorAppCore::GetTextProperty(const nsString& aAttr, PRBool* aFirstHas, PRBoo
 				// should we allow this?
 				nsCOMPtr<nsITextEditor>	textEditor = do_QueryInterface(mEditor);
 				if (textEditor)
-					err = textEditor->GetTextProperty(styleAtom, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
+					err = textEditor->GetTextProperty(styleAtom, &aAttr, &aValue, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
 			}
 			break;
 		case eHTMLTextEditorType:
 			{
 				nsCOMPtr<nsIHTMLEditor>	htmlEditor = do_QueryInterface(mEditor);
 				if (htmlEditor)
-					err = htmlEditor->GetTextProperty(styleAtom, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
+					err = htmlEditor->GetTextProperty(styleAtom, &aAttr, &aValue, firstOfSelectionHasProp, anyOfSelectionHasProp, allOfSelectionHasProp);
 			}
 			break;
 		default:

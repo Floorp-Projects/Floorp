@@ -61,9 +61,14 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD    SetDocumentCharset(const nsString& aCharset)  { return nsBaseAppCore::SetDocumentCharset(aCharset); } 
 
 	  NS_IMETHOD    SetEditorType(const nsString& aEditorType);
-		NS_IMETHOD    SetTextProperty(const nsString& aAttr);
-		NS_IMETHOD    RemoveTextProperty(const nsString& aAttr);
-		NS_IMETHOD    GetTextProperty(const nsString& aAttr, PRBool* aFirstHas, PRBool* aAnyHas, PRBool* aAllHas);
+		NS_IMETHOD    SetTextProperty(const nsString& aProp, 
+                                  const nsString& aAttr, 
+                                  const nsString& aValue);
+		NS_IMETHOD    RemoveTextProperty(const nsString& aProp, const nsString& aAttr);
+		NS_IMETHOD    GetTextProperty(const nsString& aProp, 
+                                  const nsString& aAttr, 
+                                  const nsString& aValue,
+                                  PRBool* aFirstHas, PRBool* aAnyHas, PRBool* aAllHas);
 		NS_IMETHOD    GetContentsAsText(nsString& aContentsAsText);
 		NS_IMETHOD    GetContentsAsHTML(nsString& aContentsAsHTML);
 		NS_IMETHOD    GetEditorDocument(nsIDOMDocument** aEditorDocument);
@@ -113,7 +118,7 @@ class nsEditorAppCore : public nsBaseAppCore,
     NS_IMETHOD 			DoEditorMode(nsIWebShell *aWebShell);
     NS_IMETHOD	 		ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
     NS_IMETHOD			InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
-    NS_IMETHOD			RemoveOneProperty(const nsString& aAttr);
+    NS_IMETHOD			RemoveOneProperty(const nsString& aProp, const nsString& aAttr);
     void 						SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName);
 		
     nsString            mEnableScript;     
