@@ -166,13 +166,14 @@ function ConfirmDelete()
       var buttonPressed = {value:0}
       promptService.confirmEx(window, dialogTitle, dialogText,
                               (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0) +
-                              (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_1) +
-                              (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_2),
+                              (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1) +
+                              (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2),
                               gProfileManagerBundle.getString("dontDeleteFiles"),
+                              null,
                               gProfileManagerBundle.getString("deleteFiles"),
-                              null, null, {value:0}, buttonPressed);
-      if (buttonPressed.value != 2)
-          DeleteProfile(buttonPressed.value == 1);
+                              null, {value:0}, buttonPressed);
+      if (buttonPressed.value != 1)
+          DeleteProfile(buttonPressed.value == 2);
     }
     else
       DeleteProfile(false);
