@@ -257,7 +257,7 @@ static SECStatus secmod_EncodeData(DBT *data, char * module) {
 	goto loser;
     }
 
-    dataLen = sizeof(secmodData) + len + len2 + len3 +
+    dataLen = sizeof(secmodData) + len + len2 + len3 + sizeof(unsigned short) +
 				 count*sizeof(secmodSlotData);
 
     data->data = (unsigned char *) PORT_ZAlloc(dataLen);
