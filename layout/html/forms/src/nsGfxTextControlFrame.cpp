@@ -3440,7 +3440,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
         if (selCon)
         {
           selCon->SetCaretEnabled(PR_FALSE);
-          selCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
+          selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
         }
       }
     }
