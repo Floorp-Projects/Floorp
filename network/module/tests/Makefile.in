@@ -39,6 +39,7 @@ LIBS = \
 	-lgophurl \
 	-lremoturl \
 	-lhttpurl \
+	-lsockstuburl \
 	-lnetcache \
 	-lmimetype \
 	-lnetcnvts \
