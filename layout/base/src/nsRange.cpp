@@ -90,12 +90,20 @@ private:
   nsIDOMNode   *mEndParent;
   PRInt32      mStartOffset;
   PRInt32      mEndOffset;
+  nsIDOMNode   *mCachedStartNode;
+  nsIDOMNode   *mCachedEndNode;
   nsVoidArray  *mStartAncestors;
   nsVoidArray  *mEndAncestors;
   nsVoidArray  *mStartAncestorOffsets;
   nsVoidArray  *mEndAncestorOffsets;
 
-  PRBool        IsIncreasing();
+  PRBool        InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
+  
+  nsresult      DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
+                             nsIDOMNode* aEndN, PRInt32 aEndOffset);
+
+  PRBool        IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOff,
+                             nsIDOMNode* aEndN, PRInt32 aEndOff);
                        
   PRBool        IsPointInRange(nsIDOMNode* pParent, PRInt32 pOffset);
   
@@ -126,10 +134,12 @@ nsRange::nsRange()
   NS_INIT_REFCNT();
 
   mIsPositioned = PR_FALSE;
-  nsIDOMNode* mStartParent = nsnull;
-  PRInt32 mStartOffset = 0;
-  nsIDOMNode* mEndParent = nsnull;
-  PRInt32 mEndOffset = 0;
+  mStartParent = nsnull;
+  mStartOffset = 0;
+  mEndParent = nsnull;
+  mEndOffset = 0;
+  mCachedStartNode = nsnull;
+  mCachedEndNode = nsnull;
   mStartAncestors = nsnull;
   mEndAncestors = nsnull;
   mStartAncestorOffsets = nsnull;
@@ -176,7 +186,36 @@ nsresult nsRange::QueryInterface(const nsIID& aIID,
  * Private helper routines
  ******************************************************/
 
-PRBool nsRange::IsIncreasing()
+PRBool nsRange::InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
+{
+  // XXX NEED IMPLEMENTATION!
+  return PR_TRUE;
+}
+  
+nsresult nsRange::DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
+                             nsIDOMNode* aEndN, PRInt32 aEndOffset)
+{
+  if (mStartParent != aStartN)
+  {
+    NS_IF_RELEASE(mStartParent);
+    mStartParent = aStartN;
+    NS_ADDREF(mStartParent);
+  }
+  mStartOffset = aStartOffset;
+  if (mEndParent != aEndN)
+  {
+    NS_IF_RELEASE(mEndParent);
+    mEndParent = aEndN;
+    NS_ADDREF(mEndParent);
+  }
+  mEndOffset = aEndOffset;
+  
+  return NS_OK;
+}
+
+
+PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
+                             nsIDOMNode* aEndN, PRInt32 aEndOffset)
 {
   PRInt32 numStartAncestors = 0;
   PRInt32 numEndAncestors = 0;
@@ -184,33 +223,44 @@ PRBool nsRange::IsIncreasing()
   PRInt32 commonNodeEndOffset = 0;
   
   // no trivial cases please
-  if (!mStartParent || !mEndParent) return PR_FALSE;
+  if (!aStartN || !aEndN) return PR_FALSE;
   
   // check common case first
-  if (mStartParent==mEndParent)
+  if (aStartN==aEndN)
   {
-  	 if (mStartOffset>mEndOffset) return PR_FALSE;
-  	 else  return PR_TRUE;
+    if (aStartOffset>aEndOffset) return PR_FALSE;
+    else return PR_TRUE;
   }
   
   // lazy refreshing of cached ancestor data
-  if (!mStartAncestors)
+  if (!mStartAncestors || (mCachedStartNode != aStartN))
   {
+    if (mStartAncestors)
+    {
+      delete mStartAncestors;
+      delete mStartAncestorOffsets;
+    }
   	mStartAncestors = new nsVoidArray();
   	mStartAncestorOffsets = new nsVoidArray();
-    numStartAncestors = GetAncestorsAndOffsets(mStartParent,mStartOffset,mStartAncestors,mStartAncestorOffsets);
+    numStartAncestors = GetAncestorsAndOffsets(aStartN,aStartOffset,mStartAncestors,mStartAncestorOffsets);
+    mCachedStartNode = aStartN;
   }
   else numStartAncestors = mStartAncestors->Count();
   
-  if (!mEndAncestors)
+  if (!mEndAncestors || (mCachedEndNode != aEndN))
   {
+    if (mEndAncestors)
+    {
+      delete mEndAncestors;
+      delete mEndAncestorOffsets;
+    }
   	mEndAncestors = new nsVoidArray();
   	mEndAncestorOffsets = new nsVoidArray();
-    numEndAncestors = GetAncestorsAndOffsets(mEndParent,mEndOffset,mEndAncestors,mEndAncestorOffsets);
+    numEndAncestors = GetAncestorsAndOffsets(aEndN,aEndOffset,mEndAncestors,mEndAncestorOffsets);
+    mCachedEndNode = aEndN;
   }
   else numEndAncestors = mEndAncestors->Count();
   
-  // first different ancestor found.
   --numStartAncestors; // adjusting for 0-based counting 
   --numEndAncestors; 
   // back through the ancestors, starting from the root, until first non-matching ancestor found
@@ -456,19 +506,6 @@ nsresult nsRange::GetStartParent(nsIDOMNode** aStartParent)
   return NS_OK;
 }
 
-nsresult nsRange::SetStartParent(nsIDOMNode* aStartParent)
-{
-  if (!mIsPositioned)
-    return NS_ERROR_NOT_INITIALIZED;
-  if (!IsIncreasing())
-    return NS_ERROR_ILLEGAL_VALUE;
-
-  NS_IF_RELEASE(mStartParent);
-  NS_IF_ADDREF(aStartParent);
-  mStartParent = aStartParent;
-  return NS_OK;
-}
-
 nsresult nsRange::GetStartOffset(PRInt32* aStartOffset)
 {
   if (!mIsPositioned)
@@ -476,17 +513,6 @@ nsresult nsRange::GetStartOffset(PRInt32* aStartOffset)
   if (!aStartOffset)
     return NS_ERROR_NULL_POINTER;
   *aStartOffset = mStartOffset;
-  return NS_OK;
-}
-
-nsresult nsRange::SetStartOffset(PRInt32 aStartOffset)
-{
-  if (!mIsPositioned)
-    return NS_ERROR_NOT_INITIALIZED;
-  if (!IsIncreasing())
-    return NS_ERROR_ILLEGAL_VALUE;
-
-  mStartOffset = aStartOffset;
   return NS_OK;
 }
 
@@ -502,19 +528,6 @@ nsresult nsRange::GetEndParent(nsIDOMNode** aEndParent)
   return NS_OK;
 }
 
-nsresult nsRange::SetEndParent(nsIDOMNode* aEndParent)
-{
-  if (!mIsPositioned)
-    return NS_ERROR_NOT_INITIALIZED;
-  if (!IsIncreasing())
-    return NS_ERROR_ILLEGAL_VALUE;
-
-  NS_IF_RELEASE(mEndParent);
-  NS_IF_ADDREF(aEndParent);
-  mEndParent = aEndParent;
-  return NS_OK;
-}
-
 nsresult nsRange::GetEndOffset(PRInt32* aEndOffset)
 {
   if (!mIsPositioned)
@@ -522,17 +535,6 @@ nsresult nsRange::GetEndOffset(PRInt32* aEndOffset)
   if (!aEndOffset)
     return NS_ERROR_NULL_POINTER;
   *aEndOffset = mEndOffset;
-  return NS_OK;
-}
-
-nsresult nsRange::SetEndOffset(PRInt32 aEndOffset)
-{
-  if (!mIsPositioned)
-    return NS_ERROR_NOT_INITIALIZED;
-  if (!IsIncreasing())
-    return NS_ERROR_ILLEGAL_VALUE;
-
-  mEndOffset = aEndOffset;
   return NS_OK;
 }
 
@@ -556,28 +558,48 @@ nsresult nsRange::GetCommonParent(nsIDOMNode** aCommonParent)
 
 nsresult nsRange::SetStart(nsIDOMNode* aParent, PRInt32 aOffset)
 {
-  if (!mIsPositioned)
+  nsresult res;
+  
+  if (!aParent) return NS_ERROR_NULL_POINTER;
+  
+  // must be in same document as endpoint, else 
+  // endpoint is collapsed to new start.
+  if (mIsPositioned && !InSameDoc(aParent,mEndParent))
   {
-    NS_IF_RELEASE(mEndParent);
-    mEndParent = NULL;
-    mEndOffset = NULL;
-    mIsPositioned = PR_TRUE;
+    res = DoSetRange(aParent,aOffset,aParent,aOffset);
+    return res;
   }
-  NS_IF_ADDREF(aParent);
-  mStartParent = aParent;
-  mStartOffset = aOffset;
-  return NS_OK;
+  // start must be before end
+  if (mIsPositioned && !IsIncreasing(aParent,aOffset,mEndParent,mEndOffset))
+    return NS_ERROR_ILLEGAL_VALUE;
+  // if it's in an attribute node, end must be in or descended from same node
+  // (haven't done this one yet)
+  
+  res = DoSetRange(aParent,aOffset,mEndParent,mEndOffset);
+  return res;
 }
 
 nsresult nsRange::SetEnd(nsIDOMNode* aParent, PRInt32 aOffset)
 {
-  if (!mIsPositioned)
-    return NS_ERROR_NOT_INITIALIZED;  // can't set end before start
-
-  NS_IF_ADDREF(aParent);
-  mEndParent = aParent;
-  mEndOffset = aOffset;
-  return NS_OK;
+  nsresult res;
+  
+  if (!aParent) return NS_ERROR_NULL_POINTER;
+  
+  // must be in same document as startpoint, else 
+  // endpoint is collapsed to new end.
+  if (mIsPositioned && !InSameDoc(aParent,mEndParent))
+  {
+    res = DoSetRange(aParent,aOffset,aParent,aOffset);
+    return res;
+  }
+  // start must be before end
+  if (mIsPositioned && !IsIncreasing(mStartParent,mStartOffset,aParent,aOffset))
+    return NS_ERROR_ILLEGAL_VALUE;
+  // if it's in an attribute node, start must be in or descended from same node
+  // (haven't done this one yet)
+  
+  res = DoSetRange(mStartParent,mStartOffset,aParent,aOffset);
+  return res;
 }
 
 nsresult nsRange::Collapse(PRBool aToStart)
@@ -670,14 +692,24 @@ nsresult nsRange::ToString(nsString& aReturn)
 
 //
 // We don't actually want to allow setting this ...
-// it should be set only by actually positioning the range.
+// These are all read only attributes that the idl
+// is generating setters for
 //
 nsresult nsRange::SetIsPositioned(PRBool aIsPositioned)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
-//
-// Various other things which we don't want to implement yet:
-//
+nsresult nsRange::SetStartParent(nsIDOMNode* aNode)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+nsresult nsRange::SetStartOffset(PRInt32 aOffset)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+nsresult nsRange::SetEndParent(nsIDOMNode* aNode)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
+nsresult nsRange::SetEndOffset(PRInt32 aOffset)
+{ return NS_ERROR_NOT_IMPLEMENTED; }
+
 nsresult nsRange::SetIsCollapsed(PRBool aIsCollapsed)
 { return NS_ERROR_NOT_IMPLEMENTED; }
 
