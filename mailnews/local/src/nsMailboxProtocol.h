@@ -178,6 +178,7 @@ private:
 	// and forwards it to the mailbox parser. 
 	PRInt32 ReadFolderResponse(nsIInputStream * inputStream, PRUint32 length);
 	PRInt32 ReadMessageResponse(nsIInputStream * inputStream, PRUint32 length);
+	PRInt32 DoneReadingMessage();
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of Protocol Methods

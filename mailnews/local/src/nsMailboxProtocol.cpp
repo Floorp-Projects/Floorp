@@ -174,20 +174,7 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, c
 		m_mailboxCopyHandler->OnStopBinding(aURL, 0, nsnull); 
 	else if (m_nextState == MAILBOX_READ_MESSAGE) 
 	{
-		// and close the article file if it was open....
-		if (m_tempMessageFile)
-			PR_Close(m_tempMessageFile);
-
-		if (m_displayConsumer)
-		{
-			nsFilePath filePath(MESSAGE_PATH);
-			nsFileURL  fileURL(filePath);
-			char * message_path_url = PL_strdup(fileURL.GetAsString());
-
-			m_displayConsumer->LoadURL(nsAutoString(message_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReload, 0);
-
-			PR_FREEIF(message_path_url);
-		}
+		DoneReadingMessage();
 	}
 
 	// and we want to mark ourselves for deletion or some how inform our protocol manager that we are 
@@ -257,36 +244,52 @@ PRInt32 nsMailboxProtocol::SendData(const char * dataBuffer)
 	return status;
 }
 
+PRInt32 nsMailboxProtocol::DoneReadingMessage()
+{
+	// and close the article file if it was open....
+	if (m_tempMessageFile)
+		PR_Close(m_tempMessageFile);
+
+	// disply hack: run a file url on the temp file
+	if (m_displayConsumer)
+	{
+		nsFilePath filePath(MESSAGE_PATH);
+		nsFileURL  fileURL(filePath);
+		char * message_path_url = PL_strdup(fileURL.GetAsString());
+
+		m_displayConsumer->LoadURL(nsAutoString(message_path_url).GetUnicode(), nsnull, PR_TRUE, nsURLReload, 0);
+
+		PR_FREEIF(message_path_url);
+	}
+
+	// now mark the message as read
+	nsCOMPtr<nsIMsgDBHdr> msgHdr;
+	nsresult rv = NS_OK;
+	PRUint32 flags = 0;
+
+	rv = m_runningUrl->GetMessageHeader(getter_AddRefs(msgHdr));
+	if (NS_SUCCEEDED(rv))
+		msgHdr->OrFlags(MSG_FLAG_READ, &flags);
+
+	return rv;
+}
+
 PRInt32 nsMailboxProtocol::SetupMessageExtraction()
 {
 	// Determine the number of bytes we are going to need to read out of the 
 	// mailbox url....
-
-	nsMsgKey messageKey;
-	PRUint32 messageSize = 0;
-	const nsFileSpec * dbFileSpec = nsnull;
-	m_runningUrl->GetFilePath(&dbFileSpec);
-	m_runningUrl->GetMessageKey(messageKey);
-	if (dbFileSpec)
+	nsCOMPtr<nsIMsgDBHdr> msgHdr;
+	nsresult rv = NS_OK;
+	
+	rv = m_runningUrl->GetMessageHeader(getter_AddRefs(msgHdr));
+	if (NS_SUCCEEDED(rv))
 	{
-		nsCOMPtr<nsIMsgDatabase> mailDBFactory;
-		nsCOMPtr<nsIMsgDatabase> mailDB;
-
-		nsCOMPtr<nsIMsgDBHdr> msgHdr;
-		nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), 
-														 (void **) getter_AddRefs(mailDBFactory));
-		if (NS_SUCCEEDED(rv) && mailDBFactory)
-			rv = mailDBFactory->Open((nsFileSpec&) *dbFileSpec, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(mailDB), PR_FALSE);
-		if (mailDB) // did we get a db back?
-		{
-			mailDB->GetMsgHdrForKey(messageKey, getter_AddRefs(msgHdr));
-			if (msgHdr)
-				msgHdr->GetMessageSize(&messageSize);
-			mailDB->Close(PR_TRUE);
-		}
+		PRUint32 messageSize = 0;
+		msgHdr->GetMessageSize(&messageSize);
+		m_runningUrl->SetMessageSize(messageSize);
 	}
-	m_runningUrl->SetMessageSize(messageSize);
-	return NS_OK;
+	
+	return rv;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
