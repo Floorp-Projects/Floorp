@@ -20,6 +20,8 @@
  * Contributor(s): 
  */
 
+var ctrlKeydown = false;
+
 function debugDump(msg)
 {
   // uncomment for noise
@@ -98,7 +100,12 @@ function BeginDragThreadTree(event)
 	var database = childWithDatabase.database;
 	var rdf = GetRDFService();
 	if ((!rdf) || (!database))	{ debugDump("CAN'T GET DATABASE\n"); return(false); }
-		        
+	
+	if (event.ctrlKey)
+		ctrlKeydown = true;
+	else
+		ctrlKeydown = false;
+			        
 	var dragStarted = false;
 
 	var dragService = GetDragService();
@@ -257,9 +264,14 @@ function DropOnFolderTree(event)
 			else
 				gNextMessageAfterDelete = null;
 
-            messenger.CopyMessages(treeDatabase,
-                                   sourceRescource,
-                                   targetNode, messageList, true);
+			if (ctrlKeydown)
+				messenger.CopyMessages(treeDatabase,
+									   sourceRescource,
+									   targetNode, messageList, false);
+			else
+				messenger.CopyMessages(treeDatabase,
+									   sourceRescource,
+									   targetNode, messageList, true);
         }
 	}
 	else
