@@ -600,7 +600,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
     // blinkRect(localcx, trect);
     localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, 0);
 #else
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_OS2)
     localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
 #endif //unix
     localcx->CopyOffScreenBits(ds, brect.x, brect.y, brect, 0);
