@@ -740,6 +740,8 @@ nsTransform2D *theMatrix;
       FillRect(aX, aY, aWidth, size);
     }
   }
+
+
 #endif
 
   return NS_OK;
@@ -749,9 +751,10 @@ NS_IMETHODIMP nsRenderingContextPS :: DrawString(const PRUnichar *aString, PRUin
                                     nscoord aX, nscoord aY, nscoord aWidth,
                                     const nscoord* aSpacing)
 {
-PRInt32 x = aX;
-PRInt32 y = aY;
-nsTransform2D *theMatrix;
+nsTransform2D   *theMatrix;
+PRInt32         x = aX;
+PRInt32         y = aY;
+nsIFontMetrics  *fMetrics;
 
   SetupFontAndColor();
   mDelRenderingContext->GetCurrentTransform(theMatrix);
@@ -764,39 +767,33 @@ nsTransform2D *theMatrix;
     // Slow, but accurate rendering
     const PRUnichar* end = aString + aLength;
     while (aString < end){
-      // XXX can shave some cycles by inlining a version of transform
-      // coord where y is constant and transformed once
       x = aX;
       y = aY;
-      
       theMatrix->TransformCoord(&x, &y);
-      //::ExtTextOutW(mDC, x, y, 0, NULL, aString, 1, NULL);
-	    //XXX:Remove ::ExtTextOutW above
-	    //PostscriptTextOut((const char *)aString, 1, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aWidth, aSpacing, PR_TRUE);
+	    PostscriptTextOut((const char *)aString, 1, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aWidth, aSpacing, PR_TRUE);
       aX += *aSpacing++;
       aString++;
     }
   } else {
     theMatrix->TransformCoord(&x, &y);
-    //::ExtTextOutW(mDC, x, y, 0, NULL, aString, aLength, NULL);
-	//XXX: Remove ::ExtTextOutW above
-	//PostscriptTextOut((const char *)aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aWidth, aSpacing, PR_TRUE);
+	  PostscriptTextOut((const char *)aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aWidth, aSpacing, PR_TRUE);
   }
 
-#ifdef NOTNOW
-  if (nsnull != mFontMetrics){
+
+  mDelRenderingContext->GetFontMetrics(fMetrics);
+
+  if (nsnull != fMetrics){
     nsFont *font;
-    //mFontMetrics->GetFont(font);
+    fMetrics->GetFont(font);
     PRUint8 decorations = font->decorations;
 
     if (decorations & NS_FONT_DECORATION_OVERLINE){
       nscoord offset;
       nscoord size;
-      mFontMetrics->GetUnderline(offset, size);
+      fMetrics->GetUnderline(offset, size);
       FillRect(aX, aY, aWidth, size);
     }
   }
-#endif
   return NS_OK;
 }
 
@@ -935,7 +932,15 @@ NS_IMETHODIMP nsRenderingContextPS :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 
 void nsRenderingContextPS :: SetupFontAndColor(void)
 {
+nscoord         fontHeight = 0;
+nsFont          *font;
+nsIFontMetrics  *fMetrics;
 
+  mDelRenderingContext->GetFontMetrics(fMetrics);
+  fMetrics->GetHeight(fontHeight);
+  fMetrics->GetFont(font);
+
+  PostscriptFont(fontHeight,font->style,font->variant,font->weight,font->decorations);
 }
 
 #ifdef NOTNOW

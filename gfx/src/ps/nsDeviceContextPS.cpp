@@ -19,6 +19,7 @@
 #include "nsDeviceContextPS.h"
 #include "nsRenderingContextPS.h"
 #include "nsString.h"
+#include "nsFontMetricsPS.h"
 
 #include "prprf.h"
 #include "nsPSUtil.h"
@@ -26,6 +27,8 @@
 #include "xlate.h"
 
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+
+
 
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
@@ -46,6 +49,16 @@ nsDeviceContextPS :: nsDeviceContextPS()
  */
 nsDeviceContextPS :: ~nsDeviceContextPS()
 {
+PRInt32 i, n;
+
+  // get rid of the fonts in our mFontMetrics cache
+  n= mFontMetrics.Count();
+  for (i = 0; i < n; i++){
+    nsIFontMetrics* fm = (nsIFontMetrics*) mFontMetrics.ElementAt(i);
+    fm->Destroy();
+    NS_RELEASE(fm);
+  }
+  mFontMetrics.Clear();
 }
 
 NS_IMPL_QUERY_INTERFACE(nsDeviceContextPS, kDeviceContextIID)
@@ -56,10 +69,28 @@ NS_IMPL_RELEASE(nsDeviceContextPS)
  *  See documentation in nsDeviceContextPS.h
  *	@update 12/21/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextPS :: Init(nsIDeviceContext *aCreatingDeviceContext)
+NS_IMETHODIMP nsDeviceContextPS :: Init(nsIDeviceContext *aCreatingDeviceContext,nsIDeviceContext *aPrinterContext, HDC aTheDC)
 {
+float origscale, newscale;
+float t2d, a2d;
+
+  mDepth = 1;
   mDelContext = aCreatingDeviceContext;
 
+  mDC = aTheDC;
+
+  mTwipsToPixels = (float)72.0/(float)NSIntPointsToTwips(72);
+  mPixelsToTwips = 1.0f / mTwipsToPixels;
+
+  GetTwipsToDevUnits(newscale);
+  aPrinterContext->GetTwipsToDevUnits(origscale);
+  mPixelScale = newscale / origscale;
+
+  aPrinterContext->GetTwipsToDevUnits(t2d);
+  aPrinterContext->GetAppUnitsToDevUnits(a2d);
+
+  mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
+  mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
   return  NS_OK;
 }
 
@@ -105,9 +136,8 @@ nsresult              rv = NS_ERROR_OUT_OF_MEMORY;
 NS_IMETHODIMP nsDeviceContextPS :: SupportsNativeWidgets(PRBool &aSupportsWidgets)
 {
 
-  return (mDelContext->SupportsNativeWidgets(aSupportsWidgets));
-  //aSupportsWidgets = PR_FALSE;
-  //return NS_OK;
+  aSupportsWidgets = PR_FALSE;
+  return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -117,12 +147,12 @@ NS_IMETHODIMP nsDeviceContextPS :: SupportsNativeWidgets(PRBool &aSupportsWidget
 NS_IMETHODIMP nsDeviceContextPS :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
 
-  return (mDelContext->GetScrollBarDimensions(aWidth, aHeight));
+  aWidth = ::GetSystemMetrics(SM_CXVSCROLL) * mDevUnitsToAppUnits;
+  aHeight = ::GetSystemMetrics(SM_CXHSCROLL) * mDevUnitsToAppUnits;
+  aWidth = 0;
+  aHeight = 0;
+  return NS_OK;
 
-  // XXX Should we push this to widget library
-  //aWidth = 320.0;
-  //aHeight = 320.0;
-  //return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -133,8 +163,6 @@ NS_IMETHODIMP nsDeviceContextPS :: GetDrawingSurface(nsIRenderingContext &aConte
 {
 
   return(mDelContext->GetDrawingSurface(aContext,aSurface));
-  //aContext.CreateDrawingSurface(nsnull, 0, aSurface);
-  //return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -143,10 +171,8 @@ NS_IMETHODIMP nsDeviceContextPS :: GetDrawingSurface(nsIRenderingContext &aConte
  */
 NS_IMETHODIMP nsDeviceContextPS::GetDepth(PRUint32& aDepth)
 {
-  return(mDelContext->GetDepth(aDepth));
+  return(1);    // postscript is 1 bit
 
-  //aDepth = mDepth;
-  //return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -165,33 +191,7 @@ NS_IMETHODIMP nsDeviceContextPS::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
  */
 NS_IMETHODIMP nsDeviceContextPS::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 {
-
     return (mDelContext->GetILColorSpace(aColorSpace));
-
-#ifdef NOTNOW
-  if (nsnull == mColorSpace) {
-    IL_RGBBits colorRGBBits;
-  
-    // Default is to create a 32-bit color space
-    colorRGBBits.red_shift = 16;  
-    colorRGBBits.red_bits = 8;
-    colorRGBBits.green_shift = 8;
-    colorRGBBits.green_bits = 8; 
-    colorRGBBits.blue_shift = 0; 
-    colorRGBBits.blue_bits = 8;  
-  
-    //mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 32);
-    if (nsnull == mColorSpace) {
-      aColorSpace = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  //NS_POSTCONDITION(nsnull != mColorSpace, "null color space");
-  //aColorSpace = mColorSpace;
-  //IL_AddRefToColorSpace(aColorSpace);
-  return NS_OK;
-#endif
 }
 
 
@@ -201,15 +201,10 @@ NS_IMETHODIMP nsDeviceContextPS::GetILColorSpace(IL_ColorSpace*& aColorSpace)
  */
 NS_IMETHODIMP nsDeviceContextPS :: CheckFontExistence(const nsString& aFontName)
 {
-#ifdef NEVER
-  	short fontNum;
-	if (GetMacFontNumber(aFontName, fontNum))
-		return NS_OK;
-	else
-		return NS_ERROR_FAILURE;
-#endif
 
-  return NS_OK;
+  return (mDelContext->CheckFontExistence(aFontName));
+
+  //return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -218,10 +213,11 @@ NS_IMETHODIMP nsDeviceContextPS :: CheckFontExistence(const nsString& aFontName)
  */
 NS_IMETHODIMP nsDeviceContextPS::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
-  aWidth = 1;
-  aHeight = 1;
 
-  return NS_ERROR_FAILURE;
+  aWidth = NSToIntRound((72.0f*8.0f) * mDevUnitsToAppUnits);
+  aHeight = NSToIntRound((72.0f*10.0f) * mDevUnitsToAppUnits);
+
+  return NS_OK;
 }
 
 /** ---------------------------------------------------
@@ -230,7 +226,6 @@ NS_IMETHODIMP nsDeviceContextPS::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRI
  */
 NS_IMETHODIMP nsDeviceContextPS::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,nsIDeviceContext *&aContext)
 {
-
   return NS_OK;
 }
 
@@ -368,10 +363,6 @@ NS_IMETHODIMP nsDeviceContextPS::EndDocument(void)
  */
 NS_IMETHODIMP nsDeviceContextPS::BeginPage(void)
 {
-#ifdef NEVER
- 	if(((nsDeviceContextSpecPS*)(this->mSpec))->mPrintManagerOpen) 
-		::PrOpenPage(((nsDeviceContextSpecPS*)(this->mSpec))->mPrinterPort,nsnull);
-#endif
   return NS_OK;
 }
 
@@ -382,16 +373,8 @@ NS_IMETHODIMP nsDeviceContextPS::BeginPage(void)
  */
 NS_IMETHODIMP nsDeviceContextPS::EndPage(void)
 {
-#ifdef NEVER
- 	if(((nsDeviceContextSpecPS*)(this->mSpec))->mPrintManagerOpen) {
- 		::SetPort((GrafPtr)(((nsDeviceContextSpecPS*)(this->mSpec))->mPrinterPort));
-		::PrClosePage(((nsDeviceContextSpecPS*)(this->mSpec))->mPrinterPort);
-	}
-#endif
   return NS_OK;
 }
-
-
 
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
@@ -403,3 +386,51 @@ NS_IMETHODIMP nsDeviceContextPS :: ConvertPixel(nscolor aColor, PRUint32 & aPixe
   return NS_OK;
 }
 
+
+NS_IMETHODIMP nsDeviceContextPS::GetMetricsFor(const nsFont& aFont, nsIFontMetrics  *&aMetrics)
+{
+PRInt32         n,cnt;
+nsresult        rv;
+
+  // First check our cache
+  n = mFontMetrics.Count();
+
+  for (cnt = 0; cnt < n; cnt++){
+    aMetrics = (nsIFontMetrics*) mFontMetrics.ElementAt(cnt);
+
+    const nsFont  *font;
+    aMetrics->GetFont(font);
+    if (aFont.Equals(*font)){
+      NS_ADDREF(aMetrics);
+      return NS_OK;
+    }
+  }
+
+  // It's not in the cache. Get font metrics and then cache them.
+  nsIFontMetrics* fm = new nsFontMetricsPS();
+  if (nsnull == fm) {
+    aMetrics = nsnull;
+    return NS_ERROR_FAILURE;
+  }
+
+  rv = fm->Init(aFont, this);
+
+  if (NS_OK != rv) {
+    aMetrics = nsnull;
+    return rv;
+  }
+
+  mFontMetrics.AppendElement(fm);
+  NS_ADDREF(fm);     // this is for the cache
+
+
+  for (cnt = 0; cnt < n; cnt++){
+    aMetrics = (nsIFontMetrics*) mFontMetrics.ElementAt(cnt);
+    const nsFont  *font;
+    aMetrics->GetFont(font);
+  }
+
+  NS_ADDREF(fm);      // this is for the routine that needs this font
+  aMetrics = fm;
+  return NS_OK;
+}
