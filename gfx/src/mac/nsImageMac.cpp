@@ -270,6 +270,43 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
 	if (!mImageBitsHandle)
 		return NS_ERROR_FAILURE;
 
+  PRInt32 srcWidth = aSWidth;
+  PRInt32 srcHeight = aSHeight;
+  PRInt32 dstWidth = aDWidth;
+  PRInt32 dstHeight = aDHeight;
+  PRInt32 dstOrigX = aDX;
+  PRInt32 dstOrigY = aDY;
+
+  // Ensure that the source rect is no larger than our decoded rect.
+  // If it is, clip the source rect, and scale the difference to adjust
+  // the dest rect.
+
+  PRInt32 j = aSX + aSWidth;
+  PRInt32 z;
+  if (j > mDecodedX2) {
+    z = j - mDecodedX2;
+    aDWidth -= z*dstWidth/srcWidth;
+    aSWidth -= z;
+  }
+  if (aSX < mDecodedX1) {
+    aDX += (mDecodedX1 - aSX)*dstWidth/srcWidth;
+    aSX = mDecodedX1;
+  }
+
+  j = aSY + aSHeight;
+  if (j > mDecodedY2) {
+    z = j - mDecodedY2;
+    aDHeight -= z*dstHeight/srcHeight;
+    aSHeight -= z;
+  }
+  if (aSY < mDecodedY1) {
+    aDY += (mDecodedY1 - aSY)*dstHeight/srcHeight;
+    aSY = mDecodedY1;
+  }
+
+  if (aDWidth <= 0 || aDHeight <= 0 || aSWidth <= 0 || aSHeight <= 0)
+    return NS_OK;
+
   // lock and set up bits handles
   StHandleLocker  imageBitsLocker(mImageBitsHandle);
   StHandleLocker  maskBitsLocker(mMaskBitsHandle);    // ok with nil handle
@@ -277,13 +314,6 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
   mImagePixmap.baseAddr = *mImageBitsHandle;
   if (mMaskBitsHandle)
     mMaskPixmap.baseAddr = *mMaskBitsHandle;
-
-	// currently the top is 0, this may change and this code will have to reflect that
-	if (( mDecodedY2 < aSHeight) ) {
-		// adjust the source and dest height to reflect this
-		aDHeight = float(mDecodedY2/float(aSHeight)) * aDHeight;
-		aSHeight = mDecodedY2;
-	}	
 
 	::SetRect(&srcRect, aSX, aSY, aSX + aSWidth, aSY + aSHeight);
 	maskRect = srcRect;
