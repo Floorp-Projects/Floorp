@@ -20,13 +20,13 @@
 
 #include "xpcprivate.h"
 
-#ifndef WIN32
-#error "This code is for Win32 only
+// Remember that these 'words' are 32bit DWORDS
+
+#if !defined(LINUX)
+#error "This code is for Linux x86 only
 #endif
 
-// Remember that on Win32 these 'words' are 32bit DWORDS
-
-static uint32 __stdcall
+static uint32
 invoke_count_words(uint32 paramCount, nsXPCVariant* s)
 {
     uint32 result = 0;
@@ -75,7 +75,7 @@ invoke_count_words(uint32 paramCount, nsXPCVariant* s)
     return result;
 }
 
-static void __stdcall
+static void
 invoke_copy_to_stack(uint32* d, uint32 paramCount, nsXPCVariant* s)
 {
     for(uint32 i = 0; i < paramCount; i++, d++, s++)
@@ -108,32 +108,50 @@ invoke_copy_to_stack(uint32* d, uint32 paramCount, nsXPCVariant* s)
     }
 }
 
-#pragma warning(disable : 4035) // OK to have no return value
 nsresult
 xpc_InvokeNativeMethod(void* that, PRUint32 index,
                        uint32 paramCount, nsXPCVariant* params)
 {
-    __asm {
-        push    params
-        push    paramCount
-        call    invoke_count_words  // stdcall, result in eax
-        shl     eax,2               // *= 4
-        sub     esp,eax             // make space for params
-        mov     edx,esp
-        push    params
-        push    paramCount
-        push    edx
-        call    invoke_copy_to_stack // stdcall
-        mov     ecx,that            // instance in ecx
-        push    ecx                 // push this
-        mov     edx,[ecx]           // vtable in edx
-        mov     eax,index
-        shl     eax,2               // *= 4
-        add     edx,eax
-        call    [edx]               // stdcall, i.e. callee cleans up stack.
-    }
-}
-#pragma warning(default : 4035) // restore default
+    uint32 result;
+    void* fn_count = invoke_count_words;
+    void* fn_copy = invoke_copy_to_stack;
+
+ __asm__ __volatile__(
+    "pushl %4\n\t"
+    "pushl %3\n\t"
+    "movl  %5, %%eax\n\t"
+    "call  *%%eax\n\t"         /* count words */
+    "addl  $0x8, %%esp\n\t"
+    "shl   $2, %%eax\n\t"    /* *= 4 */
+    "subl  %%eax, %%esp\n\t" /* make room for params */
+    "movl  %%esp, %%edx\n\t"
+    "pushl %4\n\t"
+    "pushl %3\n\t"
+    "pushl %%edx\n\t"
+    "movl  %6, %%eax\n\t"
+    "call  *%%eax\n\t"       /* copy params */
+    "addl  $0xc, %%esp\n\t"
+    "movl  %1, %%ecx\n\t"
+    "pushl %%ecx\n\t"
+    "movl  (%%ecx), %%edx\n\t"
+    "movl  %2, %%eax\n\t"   /* function index */
+    "shl   $2, %%eax\n\t"   /* *= 4 */
+    "addl  $8, %%eax\n\t"   /* += 8 */
+    "addl  %%eax, %%edx\n\t"
+    "call  *(%%edx)\n\t"    /* safe to not cleanup esp */
+    "movl  %%eax, %0"
+    : "=g" (result)         /* %0 */
+    : "g" (that),           /* %1 */
+      "g" (index),          /* %2 */
+      "g" (paramCount),     /* %3 */
+      "g" (params),         /* %4 */
+      "g" (fn_count),       /* %5 */
+      "g" (fn_copy)         /* %6 */
+    : "ax", "cx", "dx", "memory" 
+    );
+  
+  return result;
+}    
 
 #ifdef DEBUG
 nsresult

@@ -20,7 +20,9 @@
 
 #include "xpcprivate.h"
 
-#ifdef WIN32
+#ifndef WIN32
+#error "This code is for Win32 only
+#endif
 
 static nsresult __stdcall
 PrepareAndDispatch(nsXPCWrappedJS* self, uint32 methodIndex,
@@ -144,4 +146,3 @@ nsresult __stdcall nsXPCWrappedJS::Sentinel##n() \
 #include "xpcstubsdef.inc"
 #pragma warning(default : 4035) // restore default
 
-#endif
