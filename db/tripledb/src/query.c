@@ -271,7 +271,7 @@ PRStatus tdbFreeCursorNolock(TDBCursor* cursor)
         PR_ASSERT(cursor->lasthit->refcnt >= 0);
     }
     freeParentChain(cursor);
-    tdbFlush(db);
+    if (db) tdbFlush(db);
     for (i=0 ; i<3 ; i++) {
         PR_FREEIF(cursor->range[i].min);
         PR_FREEIF(cursor->range[i].max);
@@ -279,7 +279,7 @@ PRStatus tdbFreeCursorNolock(TDBCursor* cursor)
     if (cursor->prevcursor) {
         cursor->prevcursor->nextcursor = cursor->nextcursor;
     } else {
-        db->firstcursor = cursor->nextcursor;
+        if (db) db->firstcursor = cursor->nextcursor;
     }
     if (cursor->nextcursor) {
         cursor->nextcursor->prevcursor = cursor->prevcursor;
