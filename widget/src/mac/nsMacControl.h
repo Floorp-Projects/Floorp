@@ -49,6 +49,7 @@ public:
     
 	// nsIWidget interface
 	NS_IMETHOD    	Show(PRBool aState);
+	NS_IMETHODIMP		SetFont(const nsFont &aFont);
 
 protected:
 	nsString				mLabel;

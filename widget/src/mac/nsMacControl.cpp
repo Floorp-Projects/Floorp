@@ -16,8 +16,13 @@
  * Reserved.
  */
 
+#include "nsIFontMetrics.h"
+#include "nsIDeviceContext.h"
+#include "nsFont.h"
+
 #include "nsMacControl.h"
 #include "nsColor.h"
+#include "nsFontMetricsMac.h"
 
 
 //-------------------------------------------------------------------------
@@ -62,6 +67,7 @@ NS_IMETHODIMP nsMacControl::Create(nsIWidget *aParent,
 	if(nsnull != mWindowPtr){
 		mControl = ::NewControl(mWindowPtr, &macRect, "\p", true, 0, 0, 1, mControlType, nil);
 	}
+	
 	mLastBounds = ctlRect;
 
 	return NS_OK;
@@ -89,6 +95,7 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 {
 	if (mControl && mVisible)
 	{
+#if 0
 		// set the control text attributes
 		// (the rendering context has already set these attributes for
 		// the window: we just have to transfer them over to the control)
@@ -98,6 +105,7 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 		fontStyleRec.size = mWindowPtr->txSize;
 		fontStyleRec.style = mWindowPtr->txFace;
 		::SetControlFontStyle(mControl, &fontStyleRec);
+#endif
 
 		// draw the control
 		if (mLabel != mLastLabel)
@@ -206,4 +214,28 @@ NS_IMETHODIMP nsMacControl::Show(PRBool bState)
   		::HideControl(mControl);
   }
   return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Set this control font
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsMacControl::SetFont(const nsFont &aFont)
+{
+	NS_IF_RELEASE(mFontMetrics);
+	if (mContext)
+		mContext->GetMetricsFor(aFont, mFontMetrics);
+	
+	TextStyle		theStyle;
+	nsFontMetricsMac::GetNativeTextStyle(*mFontMetrics, *mContext, theStyle);
+	
+	ControlFontStyleRec fontStyleRec;
+	fontStyleRec.flags = (kControlUseFontMask | kControlUseFaceMask | kControlUseSizeMask);
+	fontStyleRec.font = theStyle.tsFont;
+	fontStyleRec.size = theStyle.tsSize;
+	fontStyleRec.style = theStyle.tsFace;
+	::SetControlFontStyle(mControl, &fontStyleRec);
+
+ 	return NS_OK;
 }
