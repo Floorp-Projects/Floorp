@@ -519,10 +519,11 @@ function onParagraphFormatChange(paraMenuList, commandID)
   }
 }
 
-function EditorSetParagraphFormat(commandID, paraFormat)
+function doStatefulCommand(commandID, newState)
 {
   var commandNode = document.getElementById(commandID);
-  commandNode.setAttribute("state", paraFormat);
+  if (commandNode)
+      commandNode.setAttribute("state", newState);
   window._content.focus();   // needed for command dispatch to work
   goDoCommand(commandID);
 }
@@ -565,15 +566,6 @@ function onFontFaceChange(fontFaceMenuList, commandID)
       }
     }
   }
-}
-
-function EditorSetFontFace(commandID, fontFace)
-{
-  dump("Setting font face to " + fontFace + "\n");
-  var commandNode = document.getElementById(commandID);
-  commandNode.setAttribute("state", fontFace);
-  window._content.focus();   // needed for command dispatch to work
-  goDoCommand(commandID);
 }
 
 function EditorSelectFontSize()
@@ -760,14 +752,6 @@ function GetSelectedElementOrParentCellOrLink()
   return element;
 }
 
-function EditorAlign(commandID, alignType)
-{
-  var commandNode = document.getElementById(commandID);
-  // dump("Saving para format state " + alignType + "\n");
-  commandNode.setAttribute("state", alignType);
-  goDoCommand(commandID);
-}
-
 function SetEditMode(mode)
 {
   if (gIsHTMLEditor)
@@ -914,7 +898,7 @@ function SetDisplayMode(mode)
 
       if (gFormatToolbarHidden != "true")
       {
-dump("Switching back to visible toolbar. gFormatToolbarHidden = "+gFormatToolbarHidden+"\n");
+// dump("Switching back to visible toolbar. gFormatToolbarHidden = "+gFormatToolbarHidden+"\n");
         gFormatToolbar.setAttribute("hidden", gFormatToolbarHidden);
       }
 

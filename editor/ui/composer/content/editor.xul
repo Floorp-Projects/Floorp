@@ -166,7 +166,7 @@
       <observes element="Editor:Throbber" attribute="busy"/>
     </button>
   </toolbar>
-  <toolbar id="FormatToolbar" persist="collapsed">
+  <toolbar id="FormatToolbar" persist="collapsed" tbautostretch="always">
     <!-- We need this else menulists get stretched -->
     <box autostretch="never">
       <!-- from editorOverlay -->
@@ -176,20 +176,34 @@
 
     <button id="DecreaseFontSizeButton"/>
     <button id="IncreaseFontSizeButton"/>
+
+    <toolbarseparator class="toolbarseparator-standard"/>
+
     <button id="boldButton"/>
     <button id="italicButton"/>
     <button id="underlineButton"/>
-    <spring class="separator_small"/>
+
+    <toolbarseparator class="toolbarseparator-standard"/>
+    
     <button id="ulButton"/>
     <button id="olButton"/>
     <button id="outdentButton"/>
     <button id="indentButton"/>
-    <spring class="separator_small"/>
+
+    <toolbarseparator class="toolbarseparator-standard"/>
+
+    <button id="align-left-button"/>
+    <button id="align-center-button"/>
+    <button id="align-right-button"/>
+    <button id="align-justify-button"/>
+
     <!-- TODO: Change to a menulist? -->
-    <menu>
+    <!-- menu>
       <button id="AlignPopupButton"/>
       <menupopup id="AlignmentPopup"/>
-    </menu>
+    </menu -->
+
+
     <spring flex="1"/>
   </toolbar>
 </toolbox>
