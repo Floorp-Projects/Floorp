@@ -48,6 +48,42 @@
 
   <box class="box-smallheader" title="&lHeader;"/>
 
+  <!-- Recent files menu -->
+	<titledbox orient="vertical">
+    <title><text value="&recentFiles.title;"/></title>
+    <box align="horizontal" valign="middle">
+      <text value="&documentsInMenu;"/>
+      <textfield 
+        id="recentFiles"
+        name="recent string" 
+        type="text" 
+        size="3" 
+        value="10" 
+        pref="true" 
+        preftype="int" 
+        prefstring="editor.history.url_maximum"
+        prefattribute="value"
+      />
+    </box>
+	</titledbox>
+
+  <!-- HTML formatting on output -->
+	<titledbox orient="vertical">
+    <title><text value="&savingFiles.title;"/></title>
+    <box align="horizontal" valign="middle">
+      <checkbox 
+        value      = "&preserveExistingFormatting;"
+        id         = "preserveFormatting" 
+        tooltip    = "aTooltip" tooltiptext="&preserveExistingFormatting.tooltip;"
+        pref       = "true" 
+        preftype   = "bool" 
+        prefstring = "editor.prettyprint"
+        prefattribute="checked"
+      />
+    </box>
+	</titledbox>
+
+  <!-- Table editing -->
   <titledbox orient="vertical" autostretch="never">
     <title><text value="&tableEditing.label;"/></title>
   
@@ -82,25 +118,6 @@
     </box>
   </titledbox>
 
-  <!-- Recent files menu -->
-	<titledbox orient="vertical">
-    <title><text value="&recentFiles.title;"/></title>
-    <box align="horizontal" valign="middle">
-      <text value="&documentsInMenu;"/>
-      <textfield 
-        id="recentFiles"
-        name="recent string" 
-        type="text" 
-        size="3" 
-        value="10" 
-        pref="true" 
-        preftype="int" 
-        prefstring="editor.history.url_maximum"
-        prefattribute="value"
-      />
-    </box>
-	</titledbox>
-
 <!-- Take out Auto-Save; not supported at this time
   -->
 	<titledbox orient="vertical">
@@ -127,22 +144,6 @@
         prefattribute="value"
       />
       <text value="&minText;" />
-    </box>
-	</titledbox>
-
-<!-- HTML formatting on output -->
-	<titledbox orient="vertical">
-    <title><text value="&savingFiles.title;"/></title>
-    <box align="horizontal" valign="middle">
-      <checkbox 
-        value      = "&preserveExistingFormatting;"
-        id         = "preserveFormatting" 
-        tooltip    = "aTooltip" tooltiptext="&preserveExistingFormatting.tooltip;"
-        pref       = "true" 
-        preftype   = "bool" 
-        prefstring = "editor.prettyprint"
-        prefattribute="checked"
-      />
     </box>
 	</titledbox>
 
