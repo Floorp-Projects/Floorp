@@ -116,7 +116,8 @@ static char *get_string(void)
         if (cp == ep) {
             if (bp == buf) {
                 bp = malloc(2 * bsize);
-                memcpy(bp, buf, bsize);
+                if (bp)
+                    memcpy(bp, buf, bsize);
             } else {
                 bp = realloc(bp, 2 * bsize);
             }
@@ -218,7 +219,7 @@ struct graphnode {
     graphnode   *up;
     int32       direct;         /* bytes allocated by this node's code */
     int32       total;          /* direct + bytes from all descendents */
-    int32       visited;        /* counter used as flag when computing totals */
+    int         low;            /* 0 or lowest current tree walk level */
 };
 
 #define graphnode_name(node)    ((char*) (node)->entry.value)
@@ -252,10 +253,18 @@ static void connect_nodes(graphnode *from, graphnode *to, callsite *site)
 
     for (edge = from->out; edge; edge = edge->next) {
         if (edge->node == to) {
-            edge[0].direct += site->direct;
-            edge[1].direct += site->direct;
-            edge[0].total += site->total;
-            edge[1].total += site->total;
+            /*
+             * Say the stack looks like this: ... => JS => js => JS => js.
+             * We must avoid overcounting JS=>js because the first edge total
+             * includes second (because the lower site's total includes all
+             * its kids' totals).
+             */
+            if (!to->low || to->low < from->low) {
+                edge[0].direct += site->direct;
+                edge[1].direct += site->direct;
+                edge[0].total += site->total;
+                edge[1].total += site->total;
+            }
             return;
         }
     }
@@ -296,7 +305,7 @@ static PLHashEntry *graphnode_allocentry(void *pool, const void *key)
         node->in = node->out = NULL;
         node->up = NULL;
         node->direct = node->total = 0;
-        node->visited = 0;
+        node->low = 0;
     }
     return &node->entry;
 }
@@ -363,8 +372,8 @@ static void walk_callsite_tree(callsite *site, int level, int kidnum, FILE *fp)
 {
     callsite *parent;
     graphnode *meth, *pmeth, *comp, *pcomp, *lib, *plib;
+    int old_meth_low, old_comp_low, old_lib_low, nkids;
     callsite *kid;
-    int nkids;
 
     parent = site->parent;
     meth = comp = lib = NULL;
@@ -373,7 +382,7 @@ static void walk_callsite_tree(callsite *site, int level, int kidnum, FILE *fp)
         if (meth) {
             pmeth = parent->method;
             if (pmeth && pmeth != meth) {
-                if (!meth->visited)
+                if (!meth->low)
                     meth->total += site->total;
                 connect_nodes(pmeth, meth, site);
 
@@ -381,7 +390,7 @@ static void walk_callsite_tree(callsite *site, int level, int kidnum, FILE *fp)
                 if (comp) {
                     pcomp = pmeth->up;
                     if (pcomp && pcomp != comp) {
-                        if (!comp->visited)
+                        if (!comp->low)
                             comp->total += site->total;
                         connect_nodes(pcomp, comp, site);
 
@@ -389,17 +398,23 @@ static void walk_callsite_tree(callsite *site, int level, int kidnum, FILE *fp)
                         if (lib) {
                             plib = pcomp->up;
                             if (plib && plib != lib) {
-                                if (!lib->visited)
+                                if (!lib->low)
                                     lib->total += site->total;
                                 connect_nodes(plib, lib, site);
                             }
-                            lib->visited++;
+                            old_lib_low = lib->low;
+                            if (!old_lib_low)
+                                lib->low = level;
                         }
                     }
-                    comp->visited++;
+                    old_comp_low = comp->low;
+                    if (!old_comp_low)
+                        comp->low = level;
                 }
             }
-            meth->visited++;
+            old_meth_low = meth->low;
+            if (!old_meth_low)
+                meth->low = level;
         }
     }
 
@@ -416,11 +431,15 @@ static void walk_callsite_tree(callsite *site, int level, int kidnum, FILE *fp)
     }
 
     if (meth) {
-        meth->visited--;
+        if (!old_meth_low)
+            meth->low = 0;
         if (comp) {
-            comp->visited--;
-            if (lib)
-                lib->visited--;
+            if (!old_comp_low)
+                comp->low = 0;
+            if (lib) {
+                if (!old_lib_low)
+                    lib->low = 0;
+            }
         }
     }
 }
