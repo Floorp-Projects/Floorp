@@ -51,6 +51,9 @@
 #include "MoreFilesExtras.h"
 #endif
 
+#ifdef XP_UNIX
+#define COMPONENT_REG "component.reg"
+#endif
 
 //------------------------------------------------------------------------
 //          globals
@@ -111,7 +114,13 @@ PR_PUBLIC_API(nsresult) XPI_Init(
     nsfsRegFile    += COMPONENT_REG;
 
     rv = NS_InitXPCOM(&gServiceMgr, &nsfsRegFile, &nsfsDirectory);
-
+#elif defined(XP_UNIX)
+    nsfsDirectory   = aProgramDir;
+    nsfsRegFile     = aProgramDir;
+    nsfsRegFile    += "/";
+    nsfsRegFile    += COMPONENT_REG;
+ 
+    rv = NS_InitXPCOM(&gServiceMgr, &nsfsRegFile, &nsfsDirectory);
 #else
     rv = NS_InitXPCOM(&gServiceMgr, NULL, NULL);
 #endif
