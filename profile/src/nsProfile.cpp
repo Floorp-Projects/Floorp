@@ -2249,16 +2249,12 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
                                           nsnull, 
                                           kIPrefMigration_IID, 
                                           (void**) &pPrefMigrator);
-                                          
-	if (NS_SUCCEEDED(rv)) 
-	{ 
-		pPrefMigrator->ProcessPrefs((char *)oldProfDir.GetCString(), 
-                                (char *)newProfDir.GetCString(), 
-                                &rv); 
-	} 
+    if (NS_FAILED(rv)) return rv;
+                                      
+	rv = pPrefMigrator->ProcessPrefs((char *)oldProfDir.GetCString(), 
+                                (char *)newProfDir.GetCString());
 
-	if (NS_FAILED(rv))
-	     return NS_ERROR_FAILURE;
+	if (NS_FAILED(rv)) return rv;
 
 	//unmark migrate flag
 	if (NS_SUCCEEDED(rv))
