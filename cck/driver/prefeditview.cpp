@@ -878,13 +878,10 @@ void CPrefEditView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 BOOL CPrefEditView::CheckForRemoteAdmins()
 {
-  CTreeCtrl &treeCtrl = GetTreeCtrl();
-  HTREEITEM hRoot = treeCtrl.GetRootItem();
+	CTreeCtrl &treeCtrl = GetTreeCtrl();
+	HTREEITEM hRoot = treeCtrl.GetRootItem();
 
-  if (IsRemoteAdministered(hRoot))
-    return TRUE;
-  else
-    return FALSE;
+	return (IsRemoteAdministered(hRoot) ? TRUE : FALSE);
 }
 
 

@@ -779,7 +779,278 @@ void endElement(void *userData, const char *name)
 
 }
 
+BOOL ProcessMailNews() //CString xpifile, browser.xpi,bin/netscp.cfg,bin/defaults/pref/all-ns.js)
+{
 
+	BOOL bMailLocked      = (atoi(GetGlobal("MailAcctLocked")) == 0 ? FALSE : TRUE);
+	BOOL bMailRemoteAdmin = (atoi(GetGlobal("MailAcctRemoteAdmin")) == 0 ? FALSE : TRUE);
+	BOOL bNewsLocked      = (atoi(GetGlobal("NewsAcctLocked")) == 0 ? FALSE : TRUE);
+	BOOL bNewsRemoteAdmin = (atoi(GetGlobal("NewsAcctRemoteAdmin")) == 0 ? FALSE : TRUE);
+
+	CString strMailAcctID			= GetGlobal("MailAcctID");
+	CString strMailAcctDisplayName	= GetGlobal("MailAcctDisplayName");
+	CString strMailAcctServer		= GetGlobal("MailAcctServer");
+	CString strMailAcctPortNumber   = GetGlobal("MailAcctPortNumber");
+	int       nMailAcctPortNumber   = atoi(GetGlobal("MailAcctPortNumber"));
+	CString strMailAcctSMTPServer   = GetGlobal("MailAcctSMTPServer");
+
+	CString strNewsAcctID			= GetGlobal("NewsAcctID");
+	CString strNewsAcctDisplayName	= GetGlobal("NewsAcctDisplayName");
+	CString strNewsAcctServer		= GetGlobal("NewsAcctServer");
+	CString strNewsAcctPortNumber   = GetGlobal("NewsAcctPortNumber");
+	int       nNewsAcctPortNumber   = atoi(GetGlobal("NewsAcctPortNumber"));
+
+	BOOL bMailComplete =	strMailAcctID.GetLength()
+						 && strMailAcctDisplayName.GetLength()
+						 && strMailAcctServer.GetLength()
+						 && strMailAcctPortNumber.GetLength()
+						 && strMailAcctSMTPServer.GetLength();
+	
+	BOOL bNewsComplete =    strNewsAcctID.GetLength()
+						 && strNewsAcctDisplayName.GetLength()
+						 && strNewsAcctServer.GetLength();
+
+    CString strAccountsToAppend;
+
+    // If either is remote admin, ensure .jsc file exists already
+
+    if ((bMailComplete && bMailRemoteAdmin) || (bNewsComplete && bNewsRemoteAdmin))
+    {
+      if (!FileExists(remoteAdminFile))
+      {
+        CString strURL = GetGlobal("RemoteAdminURL");
+        CString strComment;
+        strComment.Format("/* This Remote Admin file should be placed at %s */\n", strURL);
+        CreateNewFile(remoteAdminFile, strComment);
+      }
+	}
+
+
+	if (bMailComplete)
+	{
+		// for Mail, we are currently not locking SMTP server info (okay per PM JeffH)
+		// and most setup prefs go into all-ns.js unless locked or remote.
+		
+        // generate account, identity, and server strings from account ID the administrator gave us
+
+		CString strAccount		= "Acct"   + strMailAcctID;
+		CString strIdentity		= "id"     + strMailAcctID;
+		CString strServer		= "server" + strMailAcctID;
+		CString strSMTPServer	= "smtp"   + strMailAcctID;
+
+		CString strPref;
+		CString strMailAcctServerType;
+		CString strMailAcctPopLeaveMsg;
+		BOOL    bIsPop = FALSE;
+
+		strAccountsToAppend = strAccount;  // will add this to appendaccounts pref
+
+
+		// Determine whether the server type is POP or IMAP
+		if (GetGlobal("pop") == "1")
+		{
+			strMailAcctServerType = "pop3";
+			bIsPop = TRUE;
+
+			// check if "leave pop messages on server" option is set
+			if (GetGlobal("PopMessages") == "0")	
+				strMailAcctPopLeaveMsg = "false";
+			else 
+				strMailAcctPopLeaveMsg = "true";
+		}
+		else
+			strMailAcctServerType = "imap";
+
+        // these go to the .js file
+
+		ExtractXPIFile(gstrInstallFile, gstrPlainPrefFile);
+
+		strPref.Format("mail.account.%s.identities",strAccount);  // i.e. mail.account.Acct9991.identities
+        ModifyJS(gstrPlainPrefFile, strPref, strIdentity, FALSE);
+
+		strPref.Format("mail.account.%s.server",strAccount);	  // i.e. mail.account.Acct9991.server
+        ModifyJS(gstrPlainPrefFile, strPref, strServer, FALSE);
+ 
+        strPref.Format("mail.identity.%s.smtpServer",strIdentity);// i.e. mail.identity.id9991.smtpServer
+        ModifyJS(gstrPlainPrefFile, strPref, strSMTPServer, FALSE);
+
+        strPref.Format("mail.identity.%s.smtpRequiresUsername",strIdentity);// i.e. mail.identity.id9991.smtpRequiresUsername
+        ModifyJS2(gstrPlainPrefFile, strPref, "true", FALSE);
+
+        strPref.Format("mail.smtpserver.%s.hostname",strSMTPServer);   // i.e. mail.smtpserver.smtp9991.hostname
+        ModifyJS(gstrPlainPrefFile, strPref, strMailAcctSMTPServer, FALSE);
+
+        ModifyJS(gstrPlainPrefFile, "mail.smtpservers.appendsmtpservers", strSMTPServer, FALSE);
+        ModifyJS(gstrPlainPrefFile, "mail.smtp.defaultserver",		 	  strSMTPServer, FALSE);
+
+
+        strPref.Format("mail.identity.%s.valid",strIdentity);	  // i.e. mail.identity.id9991.valid
+        ModifyJS2(gstrPlainPrefFile, strPref, "false", FALSE);
+
+        strPref.Format("mail.identity.%s.wizardSkipPanels",strIdentity);   // i.e. mail.identity.id9991.wizardSkipPanels
+        ModifyJS2(gstrPlainPrefFile, strPref, "true", FALSE);
+
+
+		strPref.Format("mail.server.%s.hostname",strServer);  // i.e. mail.server.server9991.hostname
+        ModifyJS(gstrPlainPrefFile, strPref, strMailAcctServer, FALSE);
+
+
+        if (bMailLocked && !bMailRemoteAdmin)   // save in cfg file
+		{
+			ExtractXPIFile(gstrInstallFile, gstrCFGPrefFile);
+
+			// user realhostname instead of hostname when locking it
+
+			strPref.Format("mail.server.%s.realhostname",strServer);  // i.e. mail.server.server9991.realhostname
+			ModifyHashedPref(gstrCFGPrefFile, strPref, strMailAcctServer, "string", TRUE); 
+
+			strPref.Format("mail.server.%s.name",strServer);  // i.e. mail.server.server9991.name
+			ModifyHashedPref(gstrCFGPrefFile, strPref, strMailAcctDisplayName, "string", TRUE); 
+
+			strPref.Format("mail.server.%s.port",strServer);  // i.e. mail.server.server9991.port
+			ModifyHashedPref(gstrCFGPrefFile, strPref, strMailAcctPortNumber, "int", TRUE); 
+
+			strPref.Format("mail.server.%s.type",strServer);  // i.e. mail.server.server9991.type
+			ModifyHashedPref(gstrCFGPrefFile, strPref, strMailAcctServerType, "string", TRUE); 
+
+			if (bIsPop)
+			{
+				strPref.Format("mail.server.%s.leave_on_server",strServer);  // i.e. mail.server.server9991.type
+				ModifyHashedPref(gstrCFGPrefFile, strPref, strMailAcctPopLeaveMsg, "bool", TRUE); 
+			}
+
+		}
+		else 
+		{
+			// if remoteadmin, save in .jsc file, otherwise save in .js file
+
+            CString strTarget = bMailRemoteAdmin ? remoteAdminFile : gstrPlainPrefFile;
+
+            // only use .realhostname if pref is locked/remote, otherwise use .hostname
+
+			if (bMailRemoteAdmin)
+				strPref.Format("mail.server.%s.realhostname",strServer);  // i.e. mail.server.server9991.realhostname
+			else
+				strPref.Format("mail.server.%s.hostname",strServer);  // i.e. mail.server.server9991.hostname
+
+            ModifyJS(strTarget, strPref, strMailAcctServer, FALSE);
+
+			strPref.Format("mail.server.%s.name",strServer);  // i.e. mail.server.server9991.name
+            ModifyJS(strTarget, strPref, strMailAcctDisplayName, FALSE);
+
+			strPref.Format("mail.server.%s.port",strServer);  // i.e. mail.server.server9991.port
+            ModifyJS2(strTarget, strPref, strMailAcctPortNumber, FALSE);
+
+			strPref.Format("mail.server.%s.type",strServer);  // i.e. mail.server.server9991.type
+            ModifyJS(strTarget, strPref, strMailAcctServerType, FALSE);
+
+			if (bIsPop)
+			{
+				strPref.Format("mail.server.%s.leave_on_server",strServer);  // i.e. mail.server.server9991.type
+				ModifyJS2(strTarget, strPref, strMailAcctPopLeaveMsg, FALSE); 
+			}
+		
+		}
+
+	}
+
+	if (bNewsComplete)
+	{
+		// setup prefs go into all-ns.js unless locked or remote.
+		
+        // generate account, identity, and server strings from account ID the administrator gave us
+
+		CString strAccount		= "Acct"   + strNewsAcctID;
+		CString strIdentity		= "id"     + strNewsAcctID;
+		CString strServer		= "server" + strNewsAcctID;
+
+		CString strPref;
+		CString strMailAcctServerType;
+
+		if (strAccountsToAppend.GetLength())  // the mail account is already there, comma delimit it
+			strAccountsToAppend += ",";
+
+		strAccountsToAppend += strAccount;  // will add this to appendaccounts pref
+
+
+        // these go to the .js file
+
+		ExtractXPIFile(gstrInstallFile, gstrPlainPrefFile);
+
+		strPref.Format("mail.account.%s.identities",strAccount);  // i.e. mail.account.Acct9992.identities
+        ModifyJS(gstrPlainPrefFile, strPref, strIdentity, FALSE);
+
+		strPref.Format("mail.account.%s.server",strAccount);	  // i.e. mail.account.Acct9992.server
+        ModifyJS(gstrPlainPrefFile, strPref, strServer, FALSE);
+ 
+        strPref.Format("mail.identity.%s.valid",strIdentity);	  // i.e. mail.identity.id9992.valid
+        ModifyJS2(gstrPlainPrefFile, strPref, "false", FALSE);
+
+        strPref.Format("mail.identity.%s.wizardSkipPanels",strIdentity);   // i.e. mail.identity.id9992.wizardSkipPanels
+        ModifyJS2(gstrPlainPrefFile, strPref, "true", FALSE);
+
+	    strPref.Format("mail.server.%s.type",strServer);   // i.e. mail.server.server9992.type
+		ModifyJS(gstrPlainPrefFile, strPref, "nntp", FALSE);
+
+		strPref.Format("mail.server.%s.hostname",strServer);  // i.e. mail.server.server9991.hostname
+        ModifyJS(gstrPlainPrefFile, strPref, strNewsAcctServer, FALSE);
+
+
+        if (bNewsLocked && !bNewsRemoteAdmin)   // save in cfg file
+		{
+			ExtractXPIFile(gstrInstallFile, gstrCFGPrefFile);
+
+			// user realhostname instead of hostname when locking it
+
+			strPref.Format("mail.server.%s.realhostname",strServer);  // i.e. mail.server.server9992.realhostname
+			ModifyHashedPref(gstrCFGPrefFile, strPref, strNewsAcctServer, "string", TRUE); 
+
+			strPref.Format("mail.server.%s.name",strServer);		  // i.e. mail.server.server9992.name
+			ModifyHashedPref(gstrCFGPrefFile, strPref, strNewsAcctDisplayName, "string", TRUE); 
+
+			if (strNewsAcctPortNumber.GetLength())
+			{
+				strPref.Format("mail.server.%s.port",strServer);	  // i.e. mail.server.server9992.port
+				ModifyHashedPref(gstrCFGPrefFile, strPref, strNewsAcctPortNumber, "int", TRUE); 
+			}
+
+		}
+		else 
+		{
+			// if remoteadmin, save in .jsc file, otherwise save in .js file
+
+            CString strTarget = bNewsRemoteAdmin ? remoteAdminFile : gstrPlainPrefFile;
+
+            // only use .realhostname if pref is locked/remote, otherwise use .hostname
+
+			if (bNewsRemoteAdmin)
+				strPref.Format("mail.server.%s.realhostname",strServer);  // i.e. mail.server.server9992.realhostname
+			else
+				strPref.Format("mail.server.%s.hostname",strServer);  // i.e. mail.server.server9992.hostname
+
+            ModifyJS(strTarget, strPref, strNewsAcctServer, FALSE);
+
+			strPref.Format("mail.server.%s.name",strServer);  // i.e. mail.server.server9991.name
+            ModifyJS(strTarget, strPref, strNewsAcctDisplayName, FALSE);
+
+			if (strNewsAcctPortNumber.GetLength())
+			{
+				strPref.Format("mail.server.%s.port",strServer);  // i.e. mail.server.server9991.port
+				ModifyJS2(strTarget, strPref, strNewsAcctPortNumber, FALSE);
+			}
+
+		}
+
+	}
+
+	if (strAccountsToAppend.GetLength())
+		ModifyJS(gstrPlainPrefFile, "mail.accountmanager.appendaccounts", strAccountsToAppend, FALSE);
+
+	return TRUE;
+}
+
+	
+	
 // special case for homepage URL: if locked or remote admin, do the right thing.
 // otherwise, call the originally called ModifyProperties method
 
@@ -1771,6 +2042,10 @@ int interpret(char *cmd)
 	}
 	else if (strcmp(cmdname, "wrapXPI") == 0)
 	{
+	}
+	else if (strcmp(cmdname, "processMailNews") == 0)
+	{
+		ProcessMailNews();
 	}
   else if (strcmp(cmdname, "processPrefsTree") == 0)
   {

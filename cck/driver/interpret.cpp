@@ -699,8 +699,33 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				if (!IterateListBox(parms))
 					return FALSE;
 			}
-			else if(strcmp(pcmd, "IsMailfieldempty") ==0)
+			else if(strcmp(pcmd, "IsNCADMMailfieldempty") ==0)
 			{
+				CString strMailAcctID		   = GetGlobal("MailAcctID");
+				CString strMailAcctDisplayName = GetGlobal("MailAcctDisplayName");
+				CString strMailAcctServer	   = GetGlobal("MailAcctServer");
+				CString strMailAcctPortNumber  = GetGlobal("MailAcctPortNumber");
+				CString strMailAcctSMTPServer  = GetGlobal("MailAcctSMTPServer");
+
+				if ((strMailAcctID.IsEmpty()) || 
+					(strMailAcctDisplayName.IsEmpty()) || 
+					(strMailAcctServer.IsEmpty()) || 
+					(strMailAcctPortNumber.IsEmpty())	|| 
+					(strMailAcctSMTPServer.IsEmpty()))
+				{
+					if (!((strMailAcctID.IsEmpty()) && 
+						(strMailAcctDisplayName.IsEmpty()) && 
+						(strMailAcctServer.IsEmpty()) && 
+						(strMailAcctPortNumber.IsEmpty())	&& 
+						(strMailAcctSMTPServer.IsEmpty())))
+					{
+						AfxMessageBox("All fields must be filled to create a customized mail account", MB_OK);
+						return FALSE;
+					}
+				}
+			}
+ 			else if(strcmp(pcmd, "IsMailfieldempty") ==0)
+ 			{
 				CString ispDomainName = GetGlobal("DomainName");
 				CString ispPrettyName = GetGlobal("PrettyName");
 				CString ispLongName = GetGlobal("LongName");
@@ -719,14 +744,14 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						(ispLongName.IsEmpty()) && 
 						(ispInServer.IsEmpty())	&& 
 						(ispOutServer.IsEmpty())))
-					{
-						AfxMessageBox("All fields must be filled to create a customized mail account", MB_OK);
-						return FALSE;
-					}
+ 					{
+ 						AfxMessageBox("All fields must be filled to create a customized mail account", MB_OK);
+ 						return FALSE;
+ 					}
 				}
 			}
-			else if(strcmp(pcmd, "IsNewsfieldempty") ==0)
-			{
+ 			else if(strcmp(pcmd, "IsNewsfieldempty") ==0)
+ 			{
 				CString newsDomainName = GetGlobal("nDomainName");
 				CString newsPrettyName = GetGlobal("nPrettyName");
 				CString newsLongName = GetGlobal("nLongName");
@@ -742,6 +767,25 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						(newsPrettyName.IsEmpty()) && 
 						(newsLongName.IsEmpty()) && 
 						(newsServer.IsEmpty())))
+					{
+						AfxMessageBox("All fields must be filled to create a customized news account", MB_OK);
+						return FALSE;
+					}
+				}
+			}
+			else if(strcmp(pcmd, "IsNCADMNewsfieldempty") ==0)
+			{
+				CString strNewsAcctID          = GetGlobal("NewsAcctID");
+				CString strNewsAcctDisplayName = GetGlobal("NewsAcctDisplayName");
+				CString strNewsAcctServer      = GetGlobal("NewsAcctServer");
+
+				if ((strNewsAcctID.IsEmpty()) || 
+					(strNewsAcctDisplayName.IsEmpty()) || 
+					(strNewsAcctServer.IsEmpty()))
+				{
+					if (!((strNewsAcctID.IsEmpty()) && 
+						(strNewsAcctDisplayName.IsEmpty()) && 
+						(strNewsAcctServer.IsEmpty()))) 
 					{
 						AfxMessageBox("All fields must be filled to create a customized news account", MB_OK);
 						return FALSE;
@@ -1500,6 +1544,82 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
           SetGlobal("QuicklaunchEnabled","FALSE");
         }
 
+      }
+
+      else if (strcmp(pcmd, "DoMailNewsIDsDiffer") == 0)
+	  {
+		  CString strMail, strNews; 
+
+		  WIDGET* tmpWidgetMail = findWidget("MailAcctID");
+		  WIDGET* tmpWidgetNews = findWidget("NewsAcctID");
+         
+		  if (tmpWidgetMail && tmpWidgetNews)
+		  {
+			strMail = CWizardUI::GetScreenValue(tmpWidgetMail);
+			strNews = CWizardUI::GetScreenValue(tmpWidgetNews);
+
+			// if both are not empty, make sure they are different
+
+			  if (strMail.GetLength() && strNews.GetLength())
+			{
+				if (strMail.CompareNoCase(strNews) == 0)
+				{
+						numericMessage = replaceVars(parms,NULL);
+						AfxMessageBox(numericMessage,MB_OK);
+						Validate = FALSE;
+				}
+				else
+					Validate = TRUE;
+			}
+		  }
+					
+	  }
+      else if (strcmp(pcmd, "SynchMailAcctLockRemote") == 0)
+      {
+     	WIDGET* tmpWidget = findWidget("MailAcctLocked");
+ 
+        if (tmpWidget)
+        {
+          CButton *pBtn = (CButton*)tmpWidget->control;
+ 
+          CString locked = GetGlobal("MailAcctRemoteAdmin");
+          if (locked[0] == '0')
+          {
+            SetGlobal("MailAcctLocked","0");
+  					pBtn->SetCheck(0);
+            pBtn->EnableWindow(TRUE);
+          }
+          else
+          {
+            SetGlobal("MailAcctLocked","1");
+  				  pBtn->SetCheck(1);
+            pBtn->EnableWindow(FALSE);
+          }
+        }
+      }
+
+      else if (strcmp(pcmd, "SynchNewsAcctLockRemote") == 0)
+      {
+     	WIDGET* tmpWidget = findWidget("NewsAcctLocked");
+ 
+        if (tmpWidget)
+        {
+          CButton *pBtn = (CButton*)tmpWidget->control;
+ 
+          CString locked = GetGlobal("NewsAcctRemoteAdmin");
+          if (locked[0] == '0')
+          {
+            SetGlobal("NewsAcctLocked","0");
+  					pBtn->SetCheck(0);
+            pBtn->EnableWindow(TRUE);
+          }
+          else
+          {
+            SetGlobal("NewsAcctLocked","1");
+  				  pBtn->SetCheck(1);
+            pBtn->EnableWindow(FALSE);
+          }
+        }
       }
 
       else if (strcmp(pcmd, "SynchHomeURLLockRemote") == 0)

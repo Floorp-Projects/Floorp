@@ -1229,6 +1229,12 @@ void CWizardUI::UpdateGlobals()
       ((CPrefEditView*)curWidget->control)->DoSavePrefsTree(localPrefsFile);
       if (((CPrefEditView*)curWidget->control)->CheckForRemoteAdmins())
         SetGlobal("RemoteAdminPrefFound","1");
+
+	  else if (     GetGlobal("HomePageURLRemoteAdmin") == "1" 
+		         || GetGlobal("MailAcctRemoteAdmin") == "1" 
+		         || GetGlobal("NewsAcctRemoteAdmin") == "1")
+        SetGlobal("RemoteAdminPrefFound","1");
+  	    // (check any remote settings from any wizard pages we know about)
       else
         SetGlobal("RemoteAdminPrefFound","0");
 
