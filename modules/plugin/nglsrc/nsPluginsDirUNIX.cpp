@@ -32,7 +32,6 @@
 #include "prlink.h"
 #include "plstr.h"
 #include "prmem.h"
-#include <dlfcn.h>
 #include "nsSpecialSystemDirectory.h"
 
 /* Local helper functions */
