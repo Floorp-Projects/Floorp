@@ -26,7 +26,7 @@ jstypes.o: jstypes.cpp jstypes.h utilities.h systemtypes.h \
  vmtypes.h world.h hash.h icode.h interpreter.h
 numerics.o: numerics.cpp numerics.h utilities.h systemtypes.h
 parser.o: parser.cpp numerics.h utilities.h systemtypes.h parser.h \
- world.h hash.h
+ world.h hash.h nodefactory.h
 utilities.o: utilities.cpp utilities.h systemtypes.h
 vmtypes.o: vmtypes.cpp utilities.h systemtypes.h vmtypes.h numerics.h \
  jstypes.h gc_allocator.h parser.h jsclasses.h world.h hash.h icode.h
