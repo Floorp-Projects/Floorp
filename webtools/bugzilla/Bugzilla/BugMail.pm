@@ -904,7 +904,7 @@ sub MessageToMTA ($) {
 
     my $headers = new Mail::Header \@header_lines, Modify => 0;
     $mailer->open($headers->header_hashref);
-    print $mailer $msg;
+    print $mailer $body;
     $mailer->close;
 }
 
