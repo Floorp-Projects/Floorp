@@ -165,7 +165,7 @@ public:
   void ResetMaxChildHeight();
 
   /** set mTallestCell to max(mTallestCell, aChildHeight) */ 
-  void SetMaxChildHeight(nscoord aChildHeight, nscoord aCellTopMargin, nscoord aCellBottomMargin);
+  void SetMaxChildHeight(nscoord aChildHeight);
 
   /** returns the tallest child in this row (ignoring any cell with rowspans) */
   nscoord GetTallestChild() const;
@@ -243,8 +243,6 @@ protected:
   NS_IMETHOD RecoverState(nsIPresContext& aPresContext,
                           RowReflowState& aState,
                           nsIFrame*       aKidFrame,
-                          nscoord&        aMaxCellTopMargin,
-                          nscoord&        aMaxCellBottomMargin,
                           nsSize*         aMaxElementSize);
 
   void PlaceChild(nsIPresContext& aPresContext,
@@ -305,8 +303,6 @@ private:
     RowBits  mBits;
   };
   nscoord  mTallestCell;          // not my height, but the height of my tallest child
-  nscoord  mCellMaxTopMargin;
-  nscoord  mCellMaxBottomMargin;
   nsSize   mMaxElementSize;       // cached max element size
 };
 

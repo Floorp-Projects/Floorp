@@ -49,8 +49,6 @@ NS_DEF_PTR(nsIStyleContext);
 nsTableRowFrame::nsTableRowFrame()
   : nsHTMLContainerFrame(),
     mTallestCell(0),
-    mCellMaxTopMargin(0),
-    mCellMaxBottomMargin(0),
     mAllBits(0)
 {
   mBits.mMinRowSpan = 1;
@@ -297,7 +295,9 @@ nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
                            const nsHTMLReflowState& aReflowState)
 {
   // Resize and re-align the cell frames based on our row height
-  nscoord rowCellHeight = mRect.height - mCellMaxTopMargin - mCellMaxBottomMargin;
+  nscoord cellMaxTopMargin = GetChildMaxTopMargin();
+  nscoord cellMaxBottomMargin = GetChildMaxBottomMargin();
+  nscoord rowCellHeight = mRect.height - cellMaxTopMargin - cellMaxBottomMargin;
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
 
@@ -364,31 +364,13 @@ nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
 void nsTableRowFrame::ResetMaxChildHeight()
 {
   mTallestCell=0;
-  mCellMaxTopMargin=0;
-  mCellMaxBottomMargin=0;
 }
 
-void nsTableRowFrame::SetMaxChildHeight(nscoord aChildHeight, nscoord aTopMargin, nscoord aBottomMargin)
+void nsTableRowFrame::SetMaxChildHeight(nscoord aChildHeight)
 {
   if (mTallestCell<aChildHeight)
     mTallestCell = aChildHeight;
-
-  if (mCellMaxTopMargin<aTopMargin)
-    mCellMaxTopMargin = aTopMargin;
-
-  if (mCellMaxBottomMargin<aBottomMargin)
-    mCellMaxBottomMargin = aBottomMargin;
 }
-
-  /*
-  const nsStyleColor* myColor =
-    (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-  if (nsnull != myColor) {
-    nsRect  rect(0, 0, mRect.width, mRect.height);
-    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *myColor);
-  }
-  */
 
 static
 PRBool IsFirstRow(nsTableFrame&    aTable,
@@ -522,12 +504,20 @@ nscoord nsTableRowFrame::GetTallestChild() const
 
 nscoord nsTableRowFrame::GetChildMaxTopMargin() const
 {
-  return mCellMaxTopMargin;
+  nsTableFrame *tableFrame;
+  nsTableFrame::GetTableFrame((nsIFrame*)this, tableFrame);
+
+  // Only cells in the first row have a top margin
+  return (GetRowIndex() == 0) ? tableFrame->GetCellSpacingY() : 0;
 }
 
 nscoord nsTableRowFrame::GetChildMaxBottomMargin() const
 {
-  return mCellMaxBottomMargin;
+  nsTableFrame *tableFrame;
+  nsTableFrame::GetTableFrame((nsIFrame*)this, tableFrame);
+  
+  // All cells have the same bottom margin
+  return tableFrame->GetCellSpacingY();
 }
 
 PRInt32 nsTableRowFrame::GetMaxColumns() const
@@ -762,8 +752,6 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
   nsSize  localKidMaxElementSize(0,0);
   nsSize* kidMaxElementSize = (aDesiredSize.maxElementSize) ? &localKidMaxElementSize : nsnull;
 
-  nscoord maxCellTopMargin = 0;
-  nscoord maxCellBottomMargin = 0;
   nscoord cellSpacingX = aReflowState.tableFrame->GetCellSpacingX();
   PRInt32 cellColSpan=1;  // must be defined here so it's set properly for non-cell kids
   
@@ -808,12 +796,6 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
         ((nsTableCellFrame *)kidFrame)->GetColIndex(cellColIndex);
         cellColSpan = aReflowState.tableFrame->GetEffectiveColSpan(cellColIndex,
                                                                    ((nsTableCellFrame *)kidFrame));
-        nsMargin kidMargin;
-        aReflowState.tableFrame->GetCellMarginData((nsTableCellFrame *)kidFrame,kidMargin);
-        if (kidMargin.top > maxCellTopMargin)
-          maxCellTopMargin = kidMargin.top;
-        if (kidMargin.bottom > maxCellBottomMargin)
-          maxCellBottomMargin = kidMargin.bottom;
    
         // Compute the x-origin for the child, taking into account straddlers (cells from prior
         // rows with rowspans > 1)
@@ -934,7 +916,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
                                 desiredSize.height, availWidth);
   
         // Place the child
-        nsRect kidRect (aReflowState.x, kidMargin.top, desiredSize.width,
+        nsRect kidRect (aReflowState.x, GetChildMaxTopMargin(), desiredSize.width,
                         desiredSize.height);
   
         PlaceChild(aPresContext, aReflowState, kidFrame, kidRect,
@@ -959,7 +941,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
       aReflowState.x += cellSpacingX;
   }
 
-  SetMaxChildHeight(aReflowState.maxCellHeight,maxCellTopMargin, maxCellBottomMargin);  // remember height of tallest child who doesn't have a row span
+  SetMaxChildHeight(aReflowState.maxCellHeight);  // remember height of tallest child who doesn't have a row span
 
   // Return our desired size. Note that our desired width is just whatever width
   // we were given by the row group frame
@@ -993,8 +975,6 @@ nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
 {
   // Place our children, one at a time, until we are out of children
   nsSize    kidMaxElementSize(0,0);
-  nscoord   maxTopMargin = 0;
-  nscoord   maxBottomMargin = 0;
   nscoord   x = 0;
   PRBool    tableLayoutStrategy=NS_STYLE_TABLE_LAYOUT_AUTO; 
   nsTableFrame* table = aReflowState.tableFrame;
@@ -1016,14 +996,9 @@ nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
     if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay)
     {
       // Get the child's margins
-      nsMargin  margin;
-      nscoord   topMargin = 0;
-      if (aReflowState.tableFrame->GetCellMarginData((nsTableCellFrame *)kidFrame, margin) == NS_OK)
-      {
-        topMargin = margin.top;
-      }
-      maxTopMargin = PR_MAX(margin.top, maxTopMargin);
-      maxBottomMargin = PR_MAX(margin.bottom, maxBottomMargin);
+      // Get the frame's margins
+      nsMargin  kidMargin;
+      aReflowState.tableFrame->GetCellMarginData((nsTableCellFrame *)kidFrame, kidMargin);
 
       // get border padding values
       nsMargin borderPadding;
@@ -1072,11 +1047,11 @@ nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
       NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "unexpected child reflow status");
 
       // Place the child
-      x += margin.left;
-      nsRect kidRect(x, topMargin, kidSize.width, kidSize.height);
+      x += kidMargin.left;
+      nsRect kidRect(x, kidMargin.top, kidSize.width, kidSize.height);
       PlaceChild(aPresContext, aReflowState, kidFrame, kidRect, aDesiredSize.maxElementSize,
                  &kidMaxElementSize);
-      x += kidSize.width + margin.right;
+      x += kidSize.width + kidMargin.right;
     }
     else
     {// it's an unknown frame type, give it a generic reflow and ignore the results
@@ -1089,7 +1064,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
       break;
   }
 
-  SetMaxChildHeight(aReflowState.maxCellHeight, maxTopMargin, maxBottomMargin);  // remember height of tallest child who doesn't have a row span
+  SetMaxChildHeight(aReflowState.maxCellHeight);  // remember height of tallest child who doesn't have a row span
 
   // Return our desired size
   aDesiredSize.width = x;
@@ -1108,12 +1083,9 @@ nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
 NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
                                         RowReflowState& aReflowState,
                                         nsIFrame*       aKidFrame,
-                                        nscoord&        aMaxCellTopMargin,
-                                        nscoord&        aMaxCellBottomMargin,
                                         nsSize*         aMaxElementSize)
 {
   // Initialize OUT parameters
-  aMaxCellTopMargin = aMaxCellBottomMargin = 0;
   if (aMaxElementSize) {
     aMaxElementSize->width = 0;
     aMaxElementSize->height = 0;
@@ -1127,14 +1099,9 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
       frame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
 
       if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay) {
+        // Get the child's margins
         nsMargin  kidMargin;
-        
-        // Update the max top and bottom margins
         aReflowState.tableFrame->GetCellMarginData((nsTableCellFrame *)frame, kidMargin);
-        if (kidMargin.top > aMaxCellTopMargin)
-          aMaxCellTopMargin = kidMargin.top;
-        if (kidMargin.bottom > aMaxCellBottomMargin)
-          aMaxCellBottomMargin = kidMargin.bottom;
 
         // Update maxCellHeight and maxVertCellSpace. When determining this we
         // don't include cells that span rows
@@ -1284,17 +1251,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
   if (NS_STYLE_DISPLAY_TABLE_CELL == childDisplay->mDisplay)
   {
     // Recover our reflow state
-    nscoord maxCellTopMargin, maxCellBottomMargin;
-    RecoverState(aPresContext, aReflowState, aNextFrame, maxCellTopMargin,
-                 maxCellBottomMargin, aDesiredSize.maxElementSize);
-
-    // Get the frame's margins
-    nsMargin  kidMargin;
-    aReflowState.tableFrame->GetCellMarginData((nsTableCellFrame *)aNextFrame, kidMargin);
-    if (kidMargin.top > maxCellTopMargin)
-      maxCellTopMargin = kidMargin.top;
-    if (kidMargin.bottom > maxCellBottomMargin)
-      maxCellBottomMargin = kidMargin.bottom;
+    RecoverState(aPresContext, aReflowState, aNextFrame, aDesiredSize.maxElementSize);
 
     // At this point, we know the column widths. Compute the cell available width
     PRInt32 cellColIndex;
@@ -1405,13 +1362,12 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
                             cellAvailWidth);
 
     // Now place the child
-    nsRect kidRect (aReflowState.x, kidMargin.top, desiredSize.width,
+    nsRect kidRect (aReflowState.x, GetChildMaxTopMargin(), desiredSize.width,
                     desiredSize.height);
     PlaceChild(aPresContext, aReflowState, aNextFrame, kidRect,
                aDesiredSize.maxElementSize, &kidMaxElementSize);
 
-    SetMaxChildHeight(aReflowState.maxCellHeight, maxCellTopMargin,
-                      maxCellBottomMargin);
+    SetMaxChildHeight(aReflowState.maxCellHeight);
 
     // Return our desired size. Note that our desired width is just whatever width
     // we were given by the row group frame
