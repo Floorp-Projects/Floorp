@@ -59,6 +59,11 @@
       
       <!-- ///////////////// public listbox members ///////////////// -->
 
+      <property name="disabled" onset="if (val) this.setAttribute('disabled', 'true');
+                                       else this.removeAttribute('disabled');
+                                       return val;"
+                                onget="return this.hasAttribute('disabled');"/>
+
       <property name="listBoxObject"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsIListBoxObject);"
                 readonly="true"/>
@@ -800,6 +805,7 @@
            click, so that drags work correctly. -->
       <handler event="mousedown">
       <![CDATA[
+        if (this.parentNode.disabled) return;
         if (!event.ctrlKey && !event.shiftKey && !event.metaKey) {
           if (!this.selected) {
             parentNode.selectItem(this);
@@ -811,9 +817,9 @@
 
       <!-- On a click (up+down on the same item), deselect everything
            except this item. -->
-      <handler event="click">
+      <handler event="click" button="0">
       <![CDATA[
-        if (event.button != 0) return;
+        if (this.parentNode.disabled) return;
         if (parentNode.selType != "multiple") {
           parentNode.selectItem(this);
         }
@@ -889,7 +895,12 @@
     </implementation>
 
     <handlers> 
-      <handler event="mousedown" button="0" action="if (!this.disabled) this.checked = !this.checked;"/>
+      <handler event="mousedown" button="0">
+      <![CDATA[
+        if (!this.disabled && !this.parentNode.disabled)
+          this.checked = !this.checked;
+      ]]>
+      </handler>
     </handlers>
   </binding>
   
