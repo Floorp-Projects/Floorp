@@ -49,6 +49,10 @@ DeviceContextImpl :: DeviceContextImpl()
   mTextZoom = 1.0f;
   mWidget = nsnull;
   mFontAliasTable = nsnull;
+
+#ifdef NS_PRINT_PREVIEW
+  mUseAltDC = kUseAltDCFor_NONE;
+#endif
 }
 
 static PRBool PR_CALLBACK DeleteValue(nsHashKey* aKey, void* aValue, void* closure)
@@ -75,6 +79,7 @@ DeviceContextImpl :: ~DeviceContextImpl()
     mFontAliasTable->Enumerate(DeleteValue);
     delete mFontAliasTable;
   }
+
 }
 
 NS_IMETHODIMP DeviceContextImpl :: Init(nsNativeWidget aWidget)
@@ -138,6 +143,13 @@ static NS_DEFINE_CID(kRCCID, NS_RENDERING_CONTEXT_CID);
 
 NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext)
 {
+#ifdef NS_PRINT_PREVIEW
+  // AltDC NEVER use widgets to create their DCs
+  if (mAltDC && (mUseAltDC & kUseAltDCFor_CREATE_RC)) {
+    return mAltDC->CreateRenderingContext(aContext);
+  }
+#endif
+
   nsIRenderingContext *pContext;
   nsIWidget           *win;
   aView->GetWidget(win);
@@ -163,6 +175,15 @@ NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIWidget *aWidget, ns
   nsIRenderingContext *pContext;
   nsresult             rv;
 
+#ifdef NS_PRINT_PREVIEW
+  // AltDC NEVER use widgets to create their DCs
+  // NOTE: The mAltDC will call it;s own init
+  // so we can return here
+  if (mAltDC && (mUseAltDC & kUseAltDCFor_CREATE_RC)) {
+    return mAltDC->CreateRenderingContext(aContext);
+  }
+#endif
+
   aContext = nsnull;
   rv = nsComponentManager::CreateInstance(kRCCID, nsnull, NS_GET_IID(nsIRenderingContext), (void **)&pContext);
 
@@ -179,7 +200,13 @@ NS_IMETHODIMP DeviceContextImpl :: CreateRenderingContext(nsIWidget *aWidget, ns
 
 NS_IMETHODIMP DeviceContextImpl :: InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
 {
+#ifdef NS_PRINT_PREVIEW
+  // there are a couple of cases where the kUseAltDCFor_CREATE_RC flag has been turned off
+  // but we still need to initialize with the Alt DC
+  return aContext->Init(mAltDC?mAltDC:this, aWin);
+#else
   return aContext->Init(this, aWin);
+#endif
 }
 
 NS_IMETHODIMP DeviceContextImpl::CreateFontCache()
@@ -210,6 +237,13 @@ DeviceContextImpl::GetLocaleLangGroup(void)
 NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont,
   nsIAtom* aLangGroup, nsIFontMetrics*& aMetrics)
 {
+#ifdef NS_PRINT_PREVIEW
+  // Defer to Alt when there is one
+  if (mAltDC != nsnull && (mUseAltDC & kUseAltDCFor_FONTMETRICS)) {
+    return mAltDC->GetMetricsFor(aFont, aLangGroup, aMetrics);
+  }
+#endif
+
   if (nsnull == mFontCache) {
     nsresult  rv = CreateFontCache();
     if (NS_FAILED(rv)) {
@@ -230,6 +264,13 @@ NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont,
 
 NS_IMETHODIMP DeviceContextImpl::GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics)
 {
+#ifdef NS_PRINT_PREVIEW
+  // Defer to Alt when there is one
+  if (mAltDC != nsnull && (mUseAltDC & kUseAltDCFor_FONTMETRICS)) {
+    return mAltDC->GetMetricsFor(aFont, aMetrics);
+  }
+#endif
+
   if (nsnull == mFontCache) {
     nsresult  rv = CreateFontCache();
     if (NS_FAILED(rv)) {
@@ -488,6 +529,28 @@ NS_IMETHODIMP DeviceContextImpl :: FlushFontCache(void)
   return NS_OK;
 }
 
+#ifdef NS_PRINT_PREVIEW
+NS_IMETHODIMP DeviceContextImpl :: SetAltDevice(nsIDeviceContext* aAltDC)
+{
+  mAltDC = aAltDC;
+
+  // Can't use it if it isn't there
+  if (aAltDC == nsnull) {
+    mUseAltDC = kUseAltDCFor_NONE;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP DeviceContextImpl :: SetUseAltDC(PRUint8 aValue, PRBool aOn)
+{
+  if (aOn) {
+    mUseAltDC |= aValue;
+  } else {
+    mUseAltDC &= ~aValue;
+  }
+  return NS_OK;
+}
+#endif
 
 /////////////////////////////////////////////////////////////
 
