@@ -77,7 +77,7 @@ function open() {
 		browser.loadUrl( url );
 	} else {
 		/* User wants new window. */
-        window.opener.openDialog( "chrome://navigator/content/navigator.xul", null, "all,dialog=no", url );
+        window.opener.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "all,dialog=no", url );
 	}
 
 	return true;
