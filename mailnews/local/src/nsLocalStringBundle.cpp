@@ -26,7 +26,7 @@
 /* This is the next generation string retrieval call */
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
-#define LOCAL_MSGS_URL       "resource:/chrome/messenger/locale/en-US/localMsgs_en-US.properties"
+#define LOCAL_MSGS_URL       "chrome://messenger/locale/localMsgs.properties"
 
 extern "C" 
 PRUnichar *

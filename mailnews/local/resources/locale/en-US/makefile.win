@@ -21,8 +21,8 @@ MODULE=msglocal
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) localMsgs_en-US.properties $(DIST)\bin\chrome\messenger\locale\en-US
+	$(MAKE_INSTALL) localMsgs.properties $(DIST)\bin\chrome\messenger\locale\en-US
 
 clobber::
-	rm -f $(DIST)bin\chrome\messenger\locale\en-US\localMsgs_en-US.properties
+	rm -f $(DIST)bin\chrome\messenger\locale\en-US\localMsgs.properties
 
