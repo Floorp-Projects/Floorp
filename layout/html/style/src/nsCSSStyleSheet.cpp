@@ -523,7 +523,7 @@ public:
 
   NS_IMETHOD Clone(nsICSSStyleSheet*& aClone) const;
 
-  NS_IMETHOD IsUnmodified(void) const;
+  NS_IMETHOD IsModified(PRBool* aSheetModified) const;
   NS_IMETHOD SetModified(PRBool aModified);
 
   nsresult  EnsureUniqueInner(void);
@@ -2008,9 +2008,10 @@ CSSStyleSheetImpl::DidDirty(void)
 }
 
 NS_IMETHODIMP 
-CSSStyleSheetImpl::IsUnmodified(void) const
+CSSStyleSheetImpl::IsModified(PRBool* aSheetModified) const
 {
-  return ((mDirty) ? NS_COMFALSE : NS_OK);
+  *aSheetModified = mDirty;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
