@@ -77,6 +77,7 @@ protected:
   nsresult ShowStatusMsg(const PRUnichar *aMsg);
   nsresult ReleaseFolderLock();
   void     ShowCompactingStatusMsg();
+  void     ShowDoneStatus();
   nsresult CompactNextFolder();
   
 
