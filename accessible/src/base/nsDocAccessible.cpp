@@ -1024,10 +1024,9 @@ NS_IMETHODIMP nsDocAccessible::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* 
     return NS_ERROR_FAILURE;
   }
 
-  nsIAccessibleEvent *accEvent = new nsAccessibleEventData(aEvent, aAccessible, this, aData);
+  nsCOMPtr<nsIAccessibleEvent> accEvent = new nsAccessibleEventData(aEvent, aAccessible, this, aData);
   NS_ENSURE_TRUE(accEvent, NS_ERROR_OUT_OF_MEMORY);
 
-  NS_ADDREF(accEvent);
   return obsService->NotifyObservers(accEvent, NS_ACCESSIBLE_EVENT_TOPIC, nsnull);
 }
 
