@@ -887,10 +887,10 @@ nsHTMLContentSerializer::AppendToString(const PRUnichar aChar,
   aOutputStr.Append(aChar);
 }
 
-static PRUint16 kValNBSP = 160;
-static const char* kEntityNBSP = "nbsp";
+static const PRUint16 kValNBSP = 160;
+static const char kEntityNBSP[] = "nbsp";
 
-static PRUint16 kGTVal = 62;
+static const PRUint16 kGTVal = 62;
 static const char* kEntities[] = {
   "", "", "", "", "", "", "", "", "", "",
   "", "", "", "", "", "", "", "", "", "",

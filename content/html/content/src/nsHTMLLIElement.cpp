@@ -159,7 +159,7 @@ NS_IMPL_STRING_ATTR(nsHTMLLIElement, Type, type)
 NS_IMPL_INT_ATTR(nsHTMLLIElement, Value, value)
 
 
-static nsHTMLValue::EnumTable kUnorderedListItemTypeTable[] = {
+static const nsHTMLValue::EnumTable kUnorderedListItemTypeTable[] = {
   { "disc", NS_STYLE_LIST_STYLE_DISC },
   { "circle", NS_STYLE_LIST_STYLE_CIRCLE },
   { "round", NS_STYLE_LIST_STYLE_CIRCLE },
@@ -167,7 +167,7 @@ static nsHTMLValue::EnumTable kUnorderedListItemTypeTable[] = {
   { 0 }
 };
 
-static nsHTMLValue::EnumTable kOrderedListItemTypeTable[] = {
+static const nsHTMLValue::EnumTable kOrderedListItemTypeTable[] = {
   { "A", NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA },
   { "a", NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA },
   { "I", NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN },

@@ -373,7 +373,7 @@ nsHTMLButtonElement::RemoveFocus(nsIPresContext* aPresContext)
   return rv;
 }
 
-static nsHTMLValue::EnumTable kButtonTypeTable[] = {
+static const nsHTMLValue::EnumTable kButtonTypeTable[] = {
   { "button", NS_FORM_BUTTON_BUTTON },
   { "reset", NS_FORM_BUTTON_RESET },
   { "submit", NS_FORM_BUTTON_SUBMIT },
@@ -391,7 +391,7 @@ nsHTMLButtonElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::type) {
-    nsHTMLValue::EnumTable *table = kButtonTypeTable;
+    const nsHTMLValue::EnumTable *table = kButtonTypeTable;
     nsAutoString val(aValue);
     while (nsnull != table->tag) { 
       if (val.EqualsIgnoreCase(table->tag)) {

@@ -41,7 +41,7 @@
 #include "nsContentUtils.h"  // for NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO
 #include "nsIDOMDocument.h"
 
-static const char* kLoadAsData = "loadAsData";
+static const char kLoadAsData[] = "loadAsData";
 
 nsresult
 NS_NewDOMBuilder(nsIDOMDOMBuilder** aResult,

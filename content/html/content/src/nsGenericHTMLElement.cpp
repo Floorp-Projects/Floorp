@@ -457,7 +457,7 @@ nsGenericHTMLElement::SetLang(const nsAString& aLang)
   return NS_OK;
 }
 
-static nsHTMLValue::EnumTable kDirTable[] = {
+static const nsHTMLValue::EnumTable kDirTable[] = {
   { "ltr", NS_STYLE_DIRECTION_LTR },
   { "rtl", NS_STYLE_DIRECTION_RTL },
   { 0 }
@@ -2762,7 +2762,7 @@ nsGenericHTMLElement::GetPresContext(nsIHTMLContent* aContent,
 }
 
 // XXX check all mappings against ebina's usage
-static nsHTMLValue::EnumTable kAlignTable[] = {
+static const nsHTMLValue::EnumTable kAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
 
@@ -2780,7 +2780,7 @@ static nsHTMLValue::EnumTable kAlignTable[] = {
 
 // Elements that should return vertical align values "middle", "bottom", and "top" 
 //  instead of "center", "baseline", and "texttop" from GetAttribute() should use this
-static nsHTMLValue::EnumTable kVAlignTable[] = {
+static const nsHTMLValue::EnumTable kVAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
   { "top", NS_STYLE_VERTICAL_ALIGN_TOP },//verified
@@ -2795,7 +2795,7 @@ static nsHTMLValue::EnumTable kVAlignTable[] = {
   { 0 }
 };
 
-static nsHTMLValue::EnumTable kDivAlignTable[] = {
+static const nsHTMLValue::EnumTable kDivAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
@@ -2804,7 +2804,7 @@ static nsHTMLValue::EnumTable kDivAlignTable[] = {
   { 0 }
 };
 
-static nsHTMLValue::EnumTable kFrameborderTable[] = {
+static const nsHTMLValue::EnumTable kFrameborderTable[] = {
   { "yes", NS_STYLE_FRAME_YES },
   { "no", NS_STYLE_FRAME_NO },
   { "1", NS_STYLE_FRAME_1 },
@@ -2812,7 +2812,7 @@ static nsHTMLValue::EnumTable kFrameborderTable[] = {
   { 0 }
 };
 
-static nsHTMLValue::EnumTable kScrollingTable[] = {
+static const nsHTMLValue::EnumTable kScrollingTable[] = {
   { "yes", NS_STYLE_FRAME_YES },
   { "no", NS_STYLE_FRAME_NO },
   { "on", NS_STYLE_FRAME_ON },
@@ -2823,7 +2823,7 @@ static nsHTMLValue::EnumTable kScrollingTable[] = {
   { 0 }
 };
 
-static nsHTMLValue::EnumTable kTableVAlignTable[] = {
+static const nsHTMLValue::EnumTable kTableVAlignTable[] = {
   { "top",     NS_STYLE_VERTICAL_ALIGN_TOP },
   { "middle",  NS_STYLE_VERTICAL_ALIGN_MIDDLE },
   { "bottom",  NS_STYLE_VERTICAL_ALIGN_BOTTOM },
@@ -2856,7 +2856,7 @@ nsGenericHTMLElement::ParseAlignValue(const nsAString& aString,
 //----------------------------------------
 
 // Vanilla table as defined by the html4 spec...
-static nsHTMLValue::EnumTable kTableHAlignTable[] = {
+static const nsHTMLValue::EnumTable kTableHAlignTable[] = {
   { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
   { "right",  NS_STYLE_TEXT_ALIGN_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_CENTER },
@@ -2866,7 +2866,7 @@ static nsHTMLValue::EnumTable kTableHAlignTable[] = {
 };
 
 // This table is used for TABLE when in compatability mode
-static nsHTMLValue::EnumTable kCompatTableHAlignTable[] = {
+static const nsHTMLValue::EnumTable kCompatTableHAlignTable[] = {
   { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
   { "right",  NS_STYLE_TEXT_ALIGN_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_CENTER },
@@ -2901,7 +2901,7 @@ nsGenericHTMLElement::TableHAlignValueToString(const nsHTMLValue& aValue,
 //----------------------------------------
 
 // These tables are used for TD,TH,TR, etc (but not TABLE)
-static nsHTMLValue::EnumTable kTableCellHAlignTable[] = {
+static const nsHTMLValue::EnumTable kTableCellHAlignTable[] = {
   { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
   { "right",  NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
@@ -2910,7 +2910,7 @@ static nsHTMLValue::EnumTable kTableCellHAlignTable[] = {
   { 0 }
 };
 
-static nsHTMLValue::EnumTable kCompatTableCellHAlignTable[] = {
+static const nsHTMLValue::EnumTable kCompatTableCellHAlignTable[] = {
   { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
   { "right",  NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },

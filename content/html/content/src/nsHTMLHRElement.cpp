@@ -160,7 +160,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLHRElement, NoShade, noshade)
 NS_IMPL_STRING_ATTR(nsHTMLHRElement, Size, size)
 NS_IMPL_STRING_ATTR(nsHTMLHRElement, Width, width)
 
-static nsHTMLValue::EnumTable kAlignTable[] = {
+static const nsHTMLValue::EnumTable kAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_CENTER },

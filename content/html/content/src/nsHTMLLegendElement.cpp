@@ -172,7 +172,7 @@ NS_IMPL_STRING_ATTR(nsHTMLLegendElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLLegendElement, Align, align)
 
 // this contains center, because IE4 does
-static nsHTMLValue::EnumTable kAlignTable[] = {
+static const nsHTMLValue::EnumTable kAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_CENTER },

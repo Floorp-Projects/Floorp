@@ -63,7 +63,7 @@
 #include "nsIServiceManager.h"
 #include "nsIAttribute.h"
 
-static const char *kJSStackContractID = "@mozilla.org/js/xpc/ContextStack;1";
+static const char kJSStackContractID[] = "@mozilla.org/js/xpc/ContextStack;1";
 static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 nsIDOMScriptObjectFactory *nsContentUtils::sDOMScriptObjectFactory = nsnull;

@@ -390,7 +390,7 @@ nsHTMLValue::InitializeFrom(const nsHTMLValue& aCopy)
 
 PRBool
 nsHTMLValue::ParseEnumValue(const nsAString& aValue,
-                            EnumTable* aTable,
+                            const EnumTable* aTable,
                             PRBool aCaseSensitive)
 {
   nsAutoString val(aValue);
@@ -406,7 +406,7 @@ nsHTMLValue::ParseEnumValue(const nsAString& aValue,
 }
 
 PRBool
-nsHTMLValue::EnumValueToString(EnumTable* aTable,
+nsHTMLValue::EnumValueToString(const EnumTable* aTable,
                                nsAString& aResult) const
 {
   if (GetUnit() == eHTMLUnit_Enumerated) {

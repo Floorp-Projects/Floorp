@@ -315,7 +315,7 @@ nsHTMLTableCellElement::SetAlign(const nsAString& aValue)
 }
 
 
-static nsHTMLValue::EnumTable kCellScopeTable[] = {
+static const nsHTMLValue::EnumTable kCellScopeTable[] = {
   { "row",      NS_STYLE_CELL_SCOPE_ROW },
   { "col",      NS_STYLE_CELL_SCOPE_COL },
   { "rowgroup", NS_STYLE_CELL_SCOPE_ROWGROUP },
