@@ -13,7 +13,6 @@ function OnLoadNewCard()
 	
 	editCard.card = 0;
 	editCard.okCallback = 0;
-	editCard.generateDisplayName = true;
 	
 	if (window.arguments && window.arguments[0])
 	{
@@ -41,9 +40,12 @@ function OnLoadEditCard()
 			
 	// set global state variables
 	// if first or last name entered, disable generateDisplayName
-	editCard.generateDisplayName = (editCard.card.FirstName.length +
-									editCard.card.LastName.length +
-		 							editCard.card.DisplayName.length == 0)
+	if ( editCard.generateDisplayName && (editCard.card.FirstName.length +
+										  editCard.card.LastName.length +
+										  editCard.card.DisplayName.length > 0) )
+	{
+		editCard.generateDisplayName = false;
+	}
 	
 	GetCardValues(editCard.card, frames["editcard"].document);
 		
@@ -71,6 +73,7 @@ function InitEditCard()
 	if ( prefs )
 	{
 		editCard.displayLastNameFirst = prefs.GetBoolPref("mail.addr_book.lastnamefirst");
+		editCard.generateDisplayName = prefs.GetBoolPref("mail.addr_book.displayName.autoGeneration");
 	}
 }
 
