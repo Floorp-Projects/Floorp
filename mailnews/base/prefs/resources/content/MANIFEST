@@ -25,6 +25,7 @@ am-server-top.xul
 am-copies.xul
 am-copies.js
 am-advanced.xul
+am-smtp.xul
 pref-mailnews.xul
 pref-winsetting.xul
 pref-receipts.xul

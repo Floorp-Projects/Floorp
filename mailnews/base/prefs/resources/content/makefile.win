@@ -29,6 +29,7 @@ install::
 	$(MAKE_INSTALL) am-copies.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-copies.js		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-advanced.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) am-smtp.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) pref-mailnews.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) pref-winsetting.xul $(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) pref-receipts.xul	$(DIST)\bin\chrome\messenger\content\default
@@ -53,6 +54,7 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\am-copies.xul
 	rm -f $(DIST)\chrome\messenger\content\default\am-copies.js
 	rm -f $(DIST)\chrome\messenger\content\default\am-advanced.xul
+	rm -f $(DIST)\chrome\messenger\content\default\am-smtp.xul
 	rm -f $(DIST)\chrome\messenger\content\default\AccountWizard.xul
 	rm -f $(DIST)\chrome\messenger\content\default\AccountWizard.js
 	rm -f $(DIST)\chrome\messenger\content\default\aw-accounttype.xul

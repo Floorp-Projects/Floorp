@@ -88,6 +88,10 @@
                      <html:iframe src="am-advanced.xul" name="am-advanced.xul"
                           style="border: none" flex="100%"/>
                 </box>
+                <box id="am-smtp.xul" flex="100%">
+                     <html:iframe src="am-smtp.xul" name="am-smtp.xul"
+                          style="border:none" flex="100%"/>
+                </box>
               </deck>
            </tabcontrol>
         </box>
