@@ -107,3 +107,9 @@ install:: $(TARGETS)
 	$(INSTALL) $(srcdir)/../resources/dom-test-1.css $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/dom-test-4.css $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/xpidl-test-1.xul $(DIST)/bin/res/rdf
+	$(INSTALL) $(topsrcdir)/js/src/xpconnect/typelib/nsISupports.xpt   $(DIST)/bin/components
+	$(INSTALL) $(topsrcdir)/js/src/xpconnect/typelib/xpccomponents.xpt $(DIST)/bin/components
+	$(INSTALL) $(topsrcdir)/js/src/xpconnect/typelib/xpcjsid.xpt       $(DIST)/bin/components
+	$(INSTALL) $(topsrcdir)/js/src/xpconnect/typelib/xpctest.xpt       $(DIST)/bin/components
+	$(INSTALL) $(srcdir)/nsRDFInterfaces.xpt                           $(DIST)/bin/components
+	$(INSTALL) $(srcdir)/nsISimpleEnumerator.xpt                       $(DIST)/bin/components
