@@ -1139,6 +1139,7 @@ NS_IMETHODIMP
 PresShell::CantRenderReplacedElement(nsIPresContext* aPresContext,
                                      nsIFrame*       aFrame)
 {
+#ifdef _WIN32
   nsIEventQueueService* eventService;
   nsresult              rv;
    
@@ -1160,7 +1161,7 @@ PresShell::CantRenderReplacedElement(nsIPresContext* aPresContext,
       PL_PostEvent(eventQueue, ev);
     }
   }
-
+#endif
   return rv;
 }
 
