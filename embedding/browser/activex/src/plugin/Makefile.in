@@ -226,6 +226,7 @@ install-securitypolicy: nsAxSecurityPolicy.js
 install-prefs: activex.js
 	$(INSTALL) $< $(DIST)/bin/defaults/pref
 
+ifdef MOZ_USE_ACTIVEX_PLUGIN
 libs:: install-plugin install-prefs
 
 ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
@@ -238,6 +239,7 @@ endif
 
 ifdef XPC_IDISPATCH_SUPPORT
 libs:: install-securitypolicy
+endif
 endif
 
 ## Note: Ensure you create the redist dir containing the correct runtime dlls
@@ -254,7 +256,7 @@ ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
 	$(ZIP) -9 -j $(DIST)/bin/$(XPIFILE) $(XPIDL_GEN_DIR)/nsIMozAxPlugin.xpt
 endif
 
-$(SHARED_LIBRARY) : $(DEFFILE) copy-sources
+$(SHARED_LIBRARY) : $(DEFFILE)
 
 $(DEFFILE):
 	-rm -f $@

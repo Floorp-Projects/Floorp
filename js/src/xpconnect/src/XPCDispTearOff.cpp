@@ -138,6 +138,20 @@ XPCDispatchTearOff::~XPCDispatchTearOff()
 NS_COM_IMPL_ADDREF(XPCDispatchTearOff)
 NS_COM_IMPL_RELEASE(XPCDispatchTearOff)
 
+// See bug 127982:
+//
+// Microsoft's InlineIsEqualGUID global function is multiply defined
+// in ATL and/or SDKs with varying namespace requirements. To save the control
+// from future grief, this method is used instead. 
+static inline BOOL _IsEqualGUID(REFGUID rguid1, REFGUID rguid2)
+{
+   return (
+	  ((PLONG) &rguid1)[0] == ((PLONG) &rguid2)[0] &&
+	  ((PLONG) &rguid1)[1] == ((PLONG) &rguid2)[1] &&
+	  ((PLONG) &rguid1)[2] == ((PLONG) &rguid2)[2] &&
+	  ((PLONG) &rguid1)[3] == ((PLONG) &rguid2)[3]);
+}
+
 STDMETHODIMP XPCDispatchTearOff::InterfaceSupportsErrorInfo(REFIID riid)
 {
     static const IID* arr[] = 
@@ -147,7 +161,7 @@ STDMETHODIMP XPCDispatchTearOff::InterfaceSupportsErrorInfo(REFIID riid)
 
     for(int i=0;i<sizeof(arr)/sizeof(arr[0]);i++)
     {
-        if(InlineIsEqualGUID(*arr[i],riid))
+        if(_IsEqualGUID(*arr[i],riid))
             return S_OK;
     }
     return S_FALSE;
