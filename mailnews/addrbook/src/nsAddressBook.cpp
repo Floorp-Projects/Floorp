@@ -51,6 +51,8 @@
 #include "nsIDocShell.h"
 #include "nsXPIDLString.h"
 #include "nsICategoryManager.h"
+#include "nsIAbUpgrader.h"
+#include "nsSpecialSystemDirectory.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
@@ -59,7 +61,7 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
 static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORY_CID); 
 static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);
-
+static NS_DEFINE_CID(kAB4xUpgraderServiceCID, NS_AB4xUPGRADER_CID);
 
 const char *kDirectoryDataSourceRoot = "abdirectory://";
 const char *kCardDataSourceRoot = "abcard://";
@@ -355,7 +357,7 @@ protected:
 	PRBool mMigrating;
 
     nsresult ParseTabFile();
-    nsresult ParseLdifFile();
+    nsresult ParseLDIFFile();
 	void AddTabRowToDatabase();
 	void AddLdifRowToDatabase();
 	void AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot);
@@ -398,10 +400,11 @@ nsresult AddressBookParser::ParseFile()
 {
 	/* Get database file name */
 	char *leafName = nsnull;
-	nsString fileString;
+	nsAutoString fileString;
 	if (mFileSpec) {
 		mFileSpec->GetLeafName(&leafName);
 		fileString = leafName;
+		// todo:  detect ldif / tab files a better way
 		if (-1 != fileString.Find(kTabExtension) || -1 != fileString.Find(kTxtExtension))
 			mFileType = TABFile;
 		else if (-1 != fileString.Find(kLdifExtension))
@@ -449,8 +452,10 @@ nsresult AddressBookParser::ParseFile()
 
 	if (mFileType == TABFile)
 		rv = ParseTabFile();
-	if (mFileType == LDIFFile)
-		rv = ParseLdifFile();
+	else if (mFileType == LDIFFile)
+		rv = ParseLDIFFile();
+	else 
+		rv = NS_ERROR_FAILURE;
 
 	if(NS_FAILED(rv))
 		return rv;
@@ -859,7 +864,7 @@ nsresult AddressBookParser::GetLdifStringRecord(char* buf, PRInt32 len, PRInt32*
 		return NS_ERROR_FAILURE;
 }
 
-nsresult AddressBookParser::ParseLdifFile()
+nsresult AddressBookParser::ParseLDIFFile()
 {
     char buf[1024];
 	char* pBuf = &buf[0];
@@ -1250,6 +1255,27 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 	}
 }
 
+NS_IMETHODIMP nsAddressBook::ConvertNA2toLDIF(nsIFileSpec *srcFileSpec, nsIFileSpec *dstFileSpec)
+{
+  nsresult rv = NS_OK;
+  if (!srcFileSpec || !dstFileSpec) return NS_ERROR_NULL_POINTER;
+  
+  nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_PROGID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  if (!abUpgrader) return NS_ERROR_FAILURE;
+
+  rv = abUpgrader->StartUpgrade4xAddrBook(srcFileSpec, dstFileSpec);
+  if (NS_SUCCEEDED(rv)) {
+    PRBool done = PR_FALSE;
+    
+    do {
+      rv = abUpgrader->ContinueExport(&done);
+      printf("converting na2 to ldif...\n");
+    } while (NS_SUCCEEDED(rv) && !done);
+  }
+  return rv;  
+}
+
 NS_IMETHODIMP nsAddressBook::ConvertLDIFtoMAB(nsIFileSpec *fileSpec, PRBool migrating)
 {
     nsresult rv;
@@ -1277,10 +1303,61 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
 
     // XXX: todo "Open File" should be in a string bundle
 	rv = fileSpec->ChooseInputFile("Open File", nsIFileSpecWithUI::eAllFiles, nsnull, nsnull);
-	if (NS_FAILED(rv))
-		return rv;
+	if (NS_FAILED(rv)) return rv;
 
-    rv = ConvertLDIFtoMAB(fileSpec, PR_FALSE /* migrating */);
+	// todo, check that we have a file, not a directory, and that is readable
+	// and that it is not zero length.
+
+	nsXPIDLCString leafName;
+	rv = fileSpec->GetLeafName(getter_Copies(leafName));
+  	if (NS_FAILED(rv)) return rv;
+
+	// todo:  detect na2 files a better way
+	PRBool isNA2File = PR_FALSE;
+	nsAutoString fileString = (const char *) leafName;
+	if (-1 != fileString.Find(".na2")) {
+		isNA2File = PR_TRUE;
+	}
+
+	if (isNA2File) {
+ 		nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_PROGID, &rv);
+  		if (NS_FAILED(rv) || !abUpgrader) {
+			// todo:  make this an alert
+			printf("this product can't import Netscape 4.x addressbooks.  use the commercial build\n");
+			return NS_ERROR_FAILURE;
+		}
+
+		nsCOMPtr <nsIFileSpec> tmpLDIFFile;
+		nsSpecialSystemDirectory file(nsSpecialSystemDirectory::OS_TemporaryDirectory);
+		rv = NS_NewFileSpecWithSpec(file, getter_AddRefs(tmpLDIFFile));
+  		NS_ASSERTION(NS_SUCCEEDED(rv) && tmpLDIFFile,"failed to get the tmp dir");
+  		if (NS_FAILED(rv)) return rv;
+		if (!tmpLDIFFile) return NS_ERROR_FAILURE;
+
+		nsCAutoString tmpFileName;
+		tmpFileName = (const char *)leafName;
+		tmpFileName += ".ldif";	
+		rv = tmpLDIFFile->AppendRelativeUnixPath((const char *)tmpFileName);
+  		if (NS_FAILED(rv)) return rv;
+
+		// todo:  
+		// check to see that that file doesn't exist.
+		// what if there are colision?
+
+		rv = ConvertNA2toLDIF(fileSpec, tmpLDIFFile);
+  		if (NS_FAILED(rv)) return rv;
+
+    	rv = ConvertLDIFtoMAB(tmpLDIFFile, PR_FALSE /* migrating */);
+  		if (NS_FAILED(rv)) return rv;
+
+		rv = tmpLDIFFile->Delete(PR_TRUE);
+  		if (NS_FAILED(rv)) return rv;
+	}
+	else {
+		// this will convert ldif and tab files
+    	rv = ConvertLDIFtoMAB(fileSpec, PR_FALSE /* migrating */);
+  		if (NS_FAILED(rv)) return rv;
+	}
     return rv;
 }
 

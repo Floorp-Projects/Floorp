@@ -185,7 +185,13 @@ function AbPrintAddressBook()
 
 function AbImport()
 {
-	addressbook.importAddressBook();
+	try {
+		addressbook.importAddressBook();
+	}
+	catch (ex) {
+		alert("failed to import the addressbook.\n");
+		dump("import failed:  " + ex + "\n");
+	}
 }
 
 /*

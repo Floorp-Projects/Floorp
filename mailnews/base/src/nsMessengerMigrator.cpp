@@ -1690,28 +1690,6 @@ static PRBool charEndsWith(const char *str, const char *endStr)
 #define DEBUG_AB_MIGRATION 1
 #endif
 
-nsresult
-nsMessengerMigrator::Convert4xAddressBookToLDIF(nsIFileSpec *srcFileSpec, nsIFileSpec *dstFileSpec)
-{
-  nsresult rv = NS_OK;
-  if (!srcFileSpec || !dstFileSpec) return NS_ERROR_NULL_POINTER;
-  
-  nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_PROGID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  if (!abUpgrader) return NS_ERROR_FAILURE;
-
-  rv = abUpgrader->StartUpgrade4xAddrBook(srcFileSpec, dstFileSpec);
-  if (NS_SUCCEEDED(rv)) {
-    PRBool done = PR_FALSE;
-    
-    do {
-      rv = abUpgrader->ContinueExport(&done);
-      printf("grinding...\n");
-    } while (NS_SUCCEEDED(rv) && !done);
-  }
-  return rv;  
-}
-
 void
 nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosure)
 {
@@ -1787,21 +1765,16 @@ nsMessengerMigrator::migrateAddressBookPrefEnum(const char *aPref, void *aClosur
   NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to append filename");
   if (NS_FAILED(rv)) return;
      
-  rv = Convert4xAddressBookToLDIF(ab4xFile, tmpLDIFFile);
-  NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to convert to ldif");
-  if (NS_FAILED(rv)) return;
-
-  
-#ifdef DEBUG_AB_MIGRATION
-  printf("convert %s%s into %s%s\n",(const char *)abName,TEMP_LDIF_FILE_SUFFIX,(const char *)abName,ADDRESSBOOK_PREF_VALUE_5x_SUFFIX);
-#endif /* DEBUG_AB_MIGRATION */
-
   nsCOMPtr <nsIAddressBook> ab = do_CreateInstance(kAddressBookCID, &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv) && ab, "failed to get address book");
   if (NS_FAILED(rv) || !ab) return;
+
+  rv = ab->ConvertNA2toLDIF(ab4xFile, tmpLDIFFile);
+  NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration failed: failed to convert na2 to ldif");
+  if (NS_FAILED(rv)) return;
   
   rv = ab->ConvertLDIFtoMAB(tmpLDIFFile, PR_TRUE /* migrating */);
-  NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration filed: ldif to mab conversion failed\n");
+  NS_ASSERTION(NS_SUCCEEDED(rv),"ab migration filed:  failed to convert ldif to mab\n");
   if (NS_FAILED(rv)) return;
  
   // this sucks.

@@ -115,7 +115,6 @@ private:
 
   nsresult MigrateAddressBooks();
   static void migrateAddressBookPrefEnum(const char *aPref, void *aClosure);
-  static nsresult Convert4xAddressBookToLDIF(nsIFileSpec *srcFileSpec, nsIFileSpec *dstFileSpec);
         
   nsresult ProceedWithMigration();
   
