@@ -79,7 +79,7 @@
     <command id="cmd_open"                                          oncommand="goDoCommand('cmd_open')"/>
     <command id="cmd_openRemote"   label="&openremoteCmd.label;"    oncommand="goDoCommand('cmd_openRemote')"/>
     <command id="cmd_close"        label="&closeCmd.label;"         oncommand="goDoCommand('cmd_close')"/>
-    <command id="cmd_printSetup"   label="&printSetupCmd.label;"    oncommand="goDoCommand('cmd_printSetup')"/>
+    <command id="cmd_printSetup"   oncommand="goDoCommand('cmd_printSetup')"/>
 <!--
     <command id="cmd_printPreview" label="&printPreviewCmd.label;"  oncommand="goDoCommand('cmd_printPreview')"/>
 -->
@@ -661,11 +661,13 @@
                  tooltip="aTooltip" tooltiptext="&previewToolbarCmd.tooltip;"/>
 
   <toolbarbutton id="printButton" type="menu-button" class="toolbarbutton-1"
-                 label="&printToolbarCmd.label;" observes="cmd_print"
-                 tooltip="aTooltip" tooltiptext="&printToolbarCmd.tooltip;">
+                 label="&printToolbarCmd.label;"
+                 tooltip="aTooltip" tooltiptext="&printToolbarCmd.tooltip;"
+                 oncommand="if (event.target==this) goDoCommand('cmd_print');">
     <menupopup id="printMenu">
-      <menuitem accesskey="&fileprint.accesskey;"      label="&printCmd.label;" default="true"/>
-      <menuitem accesskey="&fileprintsetup.accesskey;" label="&printSetupCmd.label;" oncommand="goDoCommand('cmd_printSetup'); event.preventBubble();"/>
+      <menuitem id="printMenuItemToolbar" accesskey="&fileprint.accesskey;" label="&printCmd.label;" default="true"
+                oncommand="goDoCommand('cmd_print');"/>
+      <!-- 'printSetupToolbar' is merged in here from platformGlobalOverlay.xul -->
     </menupopup>
   </toolbarbutton>
     
@@ -739,10 +741,10 @@
   <stack id="ColorButtons" align="center">
     <observes element="cmd_fontColor"       attribute="state" onbroadcast="onFontColorChange()"/>
     <observes element="cmd_backgroundColor" attribute="state" onbroadcast="onBackgroundColorChange()"/>
-    <label class="color-button" id="BackgroundColorButton"
+    <box class="color-button" id="BackgroundColorButton"
           onclick="EditorSelectColor('', event);"
           tooltip="aTooltip"   tooltiptext="&BackgroundColorButton.tooltip;"/>
-    <label class="color-button" id="TextColorButton"
+    <box class="color-button" id="TextColorButton"
           onclick="EditorSelectColor('Text', event);"
           tooltip="aTooltip"   tooltiptext="&TextColorButton.tooltip;"/>
   </stack>
