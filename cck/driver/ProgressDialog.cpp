@@ -21,7 +21,7 @@
 
 #include "stdafx.h"
 #include "WizardMachine.h"
-//#include "ProgressDialog.h"
+#include "ProgressDialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

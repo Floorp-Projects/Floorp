@@ -24,7 +24,7 @@
 #endif
 
 #include "resource.h"		// main symbols
-#include "WizardMachineDlg.h"
+//#include "WizardMachineDlg.h"
 #include "WizardTypes.h"
 
 

@@ -21,7 +21,7 @@
 
 /////////////////////////////////////////////////////////////////////////////
 // CPropSheet
-#include "WizardUI.h"
+//#include "WizardUI.h"
 
 class CPropSheet : public CPropertySheet
 {

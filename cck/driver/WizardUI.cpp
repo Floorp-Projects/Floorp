@@ -21,8 +21,9 @@
 //
 
 #include "stdafx.h"
+#include "afxmt.h"
+
 #include "WizardMachine.h"
-//#include "ImageDialog.h"
 #include "fstream.h"
 #include "ImgDlg.h"
 #include "SumDlg.h"
@@ -30,14 +31,15 @@
 #include "NewDialog.h"
 #include "NewConfigDialog.h"
 #include "ProgDlgThread.h"
+#include "PropSheet.h"
+#include "WizardUI.h"
+
 #include <direct.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-
 // The following is included to make 
 // the browse for a dir code compile
 #include <shlobj.h>
-
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

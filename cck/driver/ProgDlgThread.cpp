@@ -21,6 +21,7 @@
 
 #include "stdafx.h"
 #include "WizardMachine.h"
+#include "WizardMachineDlg.h"
 #include "ProgDlgThread.h"
 
 #ifdef _DEBUG

@@ -42,6 +42,8 @@ LLFLAGS = \
 INCS = -I. \
 	$(INCS)
 
+#	.\$(OBJDIR)\Interpret.obj \
+
 OBJS = \
 	.\$(OBJDIR)\HelpDlg.obj \
 	.\$(OBJDIR)\ImageDialog.obj \

@@ -34,6 +34,7 @@
 #include "NewDialog.h"
 #include "NewConfigDialog.h"
 #include "ProgDlgThread.h"
+#include "PropSheet.h"
 
 // for CopyDir
 #include "winbase.h"  

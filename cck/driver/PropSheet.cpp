@@ -21,6 +21,7 @@
 
 #include "stdafx.h"
 #include "WizardMachine.h"
+#include "PropSheet.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

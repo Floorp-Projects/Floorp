@@ -21,6 +21,7 @@
 
 #include "stdafx.h"
 #include "WizardMachine.h"
+#include "WizardMachineDlg.h"
 //#include "ImageDialog.h"
 #include "ImgDlg.h"
 
