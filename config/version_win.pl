@@ -140,6 +140,7 @@ my $bufferstr="    ";
 #WIN32_MODULE_COPYRIGHT
 #WIN32_MODULE_TRADEMARKS
 #WIN32_MODULE_ORIGINAL_FILENAME
+#WIN32_MODULE_PRODUCTNAME
 
 #Override values obtained from the .ver file
 my $override_comment;
@@ -151,6 +152,7 @@ my $override_module;
 my $override_copyright;
 my $override_trademarks;
 my $override_filename;
+my $override_productname;
 if (open(VERFILE, "<$srcdir/module.ver")) 
 {
 
@@ -166,6 +168,7 @@ if (open(VERFILE, "<$srcdir/module.ver"))
 		if ($a eq "WIN32_MODULE_COPYRIGHT") { $override_copyright = $b; }
 		if ($a eq "WIN32_MODULE_TRADEMARKS") { $override_trademarks = $b; }
 		if ($a eq "WIN32_MODULE_ORIGINAL_FILENAME") { $override_filename = $b; }
+		if ($a eq "WIN32_MODULE_PRODUCTNAME") { $override_productname = $b; }
 		($a,$b) = getNextEntry();
 	}
 	close(VERFILE)
@@ -238,7 +241,7 @@ my $fileversion = $productversion;
 my $copyright = "License: MPL 1.1/GPL 2.0/LGPL 2.1";
 my $company = "Mozilla, Netscape";
 my $trademarks = "Mozilla, Netscape";
-
+my $productname = "Mozilla";
 
 
 if (defined($override_comment)){$comment=$override_comment;}
@@ -250,6 +253,7 @@ if (defined($override_module)){$module=$override_module;}
 if (defined($override_copyright)){$copyright=$override_company;}
 if (defined($override_trademarks)){$trademarks=$override_trademarks;}
 if (defined($override_filename)){$binary=$override_filename;}
+if (defined($override_productname)){$productname=$override_productname;}
 
 
 #Override section
@@ -393,7 +397,7 @@ print RCFILE qq{
 };
 }
 print RCFILE qq{
-            VALUE "ProductName", "Mozilla"
+            VALUE "ProductName", "$productname"
         END
     END
     BLOCK "VarFileInfo"
