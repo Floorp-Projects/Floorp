@@ -3,8 +3,8 @@
 # HTMLPopUp::None.pm - the implementation of the header and link
 # command which will be used if no popup menus are desired.
 
-# $Revision: 1.5 $ 
-# $Date: 2001/07/20 19:05:05 $ 
+# $Revision: 1.6 $ 
+# $Date: 2002/05/01 02:01:49 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/None.pm,v $ 
 # $Name:  $ 
@@ -36,14 +36,8 @@
 # Contributor(s): 
 
 
-# We need this empty package namespace for our dependency analysis, it
-# gets confused if there is not a package name which matches the file
-# name and in this case the file is one of several possible
-# implementations.
 
 package HTMLPopUp::None;
-
-package HTMLPopUp;
 
 $VERSION = '#tinder_version#';
 
@@ -62,6 +56,7 @@ $VERSION = '#tinder_version#';
 
 
 sub page_header {
+  my $self = shift @_;
   my (%args) = @_;
 
   my ($html_time) = $main::LOCALTIME;
@@ -128,7 +123,8 @@ EOF
 
 
 sub Link {
-  my ($args) = @_;
+  my $self = shift @_;
+  my (%args) = @_;
   my ($out) = '';
   
   my ($name) ="";
@@ -151,6 +147,7 @@ sub Link {
 
 
 sub define_structures {
+  my $self = shift @_;
   my (@out) = ();
 
   return @out;

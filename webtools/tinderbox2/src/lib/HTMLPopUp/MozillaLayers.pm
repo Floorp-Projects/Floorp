@@ -15,8 +15,8 @@
 
 
 
-# $Revision: 1.6 $ 
-# $Date: 2001/07/20 19:05:04 $ 
+# $Revision: 1.7 $ 
+# $Date: 2002/05/01 02:01:49 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MozillaLayers.pm,v $ 
 # $Name:  $ 
@@ -48,14 +48,8 @@
 # Contributor(s): 
 
 
-# We need this empty package namespace for our dependency analysis, it
-# gets confused if there is not a package name which matches the file
-# name and in this case the file is one of several possible
-# implementations.
 
 package HTMLPopUp::MozillaLayers;
-
-package HTMLPopUp;
 
 $VERSION = '#tinder_version#';
 
@@ -69,6 +63,7 @@ $VERSION = '#tinder_version#';
 
 
 sub page_header {
+  my $self = shift @_;
   my (%args) = @_;
 
   my ($html_time) = $main::LOCALTIME;
@@ -199,6 +194,7 @@ sub Link {
 #	  "windowwidth"=>"",
 #	 );
 
+  my $self = shift @_;
   my (%args) = @_;
   my $out = '';
 
@@ -223,7 +219,7 @@ sub Link {
     # set the defaults
 
     $args{'windowtitle'} = $args{'windowtitle'} || 
-      $HTML::DEFAULT_POPUP_TITLE;
+      $HTMLPopUp::DEFAULT_POPUP_TITLE;
 
 
     # the arguments:
@@ -303,6 +299,7 @@ sub Link {
 
 
 sub define_structures {
+  my $self = shift @_;
   my (@out) =();
 
   push @out, "\t<SCRIPT>\n";
