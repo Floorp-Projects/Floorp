@@ -75,8 +75,7 @@ nsAccessibleHyperText::nsAccessibleHyperText(nsIDOMNode* aDomNode, nsIWeakRefere
       nsIFrame *parentFrame = nsAccessible::GetParentBlockFrame(frame);
       nsCOMPtr<nsIPresContext> presContext;
       shell->GetPresContext(getter_AddRefs(presContext));
-      nsIFrame* childFrame = nsnull;
-      parentFrame->FirstChild(presContext, nsnull, &childFrame);
+      nsIFrame* childFrame = parentFrame->GetFirstChild(nsnull);
       PRBool bSave = PR_FALSE;
       GetAllTextChildren(presContext, childFrame, aDomNode, bSave);
     }
@@ -122,8 +121,7 @@ PRBool nsAccessibleHyperText::GetAllTextChildren(nsIPresContext *aPresContext, n
       }
     }
 
-    nsIFrame* childFrame = nsnull;
-    aCurFrame->FirstChild(aPresContext, nsnull, &childFrame);
+    nsIFrame* childFrame = aCurFrame->GetFirstChild(nsnull);
     if (GetAllTextChildren(aPresContext, childFrame, aNode, bSave))
       return PR_TRUE;
   }
