@@ -87,16 +87,9 @@ function LoadCerts()
     enableBackupAllButton.setAttribute("enabled",true);
   }
 
-
-  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
-  var verifiedColText;
   if (certdb.ocspOn) {
-    verifiedColText = bundle.GetStringFromName("certmgr.verifiedNoOCSP");
-  } else {
-    verifiedColText = bundle.GetStringFromName("certmgr.verified");
+    document.getElementById('ocsp_info').removeAttribute("hidden");
   }
-  var verifiedCol = document.getElementById('verifiedcol');
-  verifiedCol.setAttribute('label', verifiedColText);
 }
 
 function getSelectedTab()

@@ -57,11 +57,12 @@
       </tabpanels>
     </tabbox>
 
-    <hbox>
+    <hbox align="center">
       <button id="HelpButton"
               label="&certmgr.help.label;" 
               accesskey="&certmgr.helpButtonAccessKey;"
               oncommand="doHelpButton();"/>
+      <description id="ocsp_info" hidden="true">&certmgr.ocsp_info;</description>
     </hbox>
   </vbox>
 

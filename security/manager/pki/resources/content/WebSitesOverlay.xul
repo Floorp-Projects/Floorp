@@ -40,7 +40,7 @@
         <treecol id="certcol" label="&certmgr.certname;" primary="true" 
                      persist="hidden width ordinal" flex="1"/>
         <splitter class="tree-splitter"/>
-        <treecol id="tokencol" label="&certmgr.tokenname;"
+        <treecol id="purposecol" label="&certmgr.purpose;"
                      persist="hidden width ordinal" flex="1"/>
 <!--        <treecol id="certdbkeycol" collapsed="true" flex="1"/> -->
       </treecols>
