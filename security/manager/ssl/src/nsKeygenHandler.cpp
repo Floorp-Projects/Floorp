@@ -377,6 +377,11 @@ found_match:
           goto loser;
       }
 
+    /* Make sure token is initialized. */
+    rv = setPassword(slot, m_ctx);
+    if (NS_FAILED(rv))
+    goto loser;
+
     sec_rv = PK11_Authenticate(slot, PR_TRUE, m_ctx);
     if (sec_rv != SECSuccess) {
         goto loser;
