@@ -537,7 +537,7 @@ nsHTTPRequest::formBuffer(nsCString * requestBuffer, PRUint32 capabilities)
     }
 
     // This is under the assumpsion that the POST/PUT headers are all done
-    if (!mInputStream)
+    if (!mInputStream  || mDoingProxySSLConnect)
         requestBuffer->Append(CRLF);
 
     return NS_OK;
@@ -1215,8 +1215,12 @@ nsHTTPRequest::GetUploadStream(nsIInputStream** o_UploadStream)
 {
     if (!o_UploadStream)
         return NS_ERROR_NULL_POINTER;
-    *o_UploadStream = mInputStream;
     
+    // until we are in process of SSL connect no upload stream avaible 
+    if (mDoingProxySSLConnect) 
+        *o_UploadStream = nsnull;
+    else
+        *o_UploadStream = mInputStream;
     NS_IF_ADDREF(*o_UploadStream);
 
     return NS_OK;
