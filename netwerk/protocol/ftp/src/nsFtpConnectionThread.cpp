@@ -2197,17 +2197,18 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
     if (NS_FAILED(rv)) return rv;
 
     // Skip leading slash
-    char* fwdPtr = path.BeginWriting();
+    char *fwdPtr = path.BeginWriting();
     if (fwdPtr && (*fwdPtr == '/'))
         fwdPtr++;
     if (*fwdPtr != '\0') {
         // now unescape it... %xx reduced inline to resulting character
-        NS_UnescapeURL(fwdPtr);
-        mPath.Assign(fwdPtr);
+        PRInt32 len = NS_UnescapeURL(fwdPtr);
+        mPath.Assign(fwdPtr, len);
 
-        // return an error if we find a CR or LF in the path
+#ifdef DEBUG
         if (mPath.FindCharInSet(CRLF) >= 0)
-            return NS_ERROR_MALFORMED_URI;
+            NS_ERROR("NewURI() should've prevented this!!!");
+#endif
     }
 
     // pull any username and/or password out of the uri
