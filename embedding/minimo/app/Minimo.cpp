@@ -25,13 +25,12 @@
  *   The 10LE Team (in alphabetical order)
  *   -------------------------------------
  *
- *    Ilias Biris	<ext-ilias.biris@indt.org.br> - Coordinator
+ *    Ilias Biris       <ext-ilias.biris@indt.org.br> - Coordinator
  *    Afonso Costa      <afonso.costa@indt.org.br>
- *    Antonio Gomes     <ext-antonio.araujo-neto@nokia.com>
+ *    Antonio Gomes     <antonio.gomes@indt.org.br>
  *    Diego Gonzalez    <diego.gonzalez@indt.org.br>
  *    Raoni Novellino   <raoni.novellino@indt.org.br>
- *    Andre Pedralho    <ext-andre.pedralho@nokia.com>
- *
+ *    Andre Pedralho    <andre.pedralho@indt.org.br>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -48,168 +47,40 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "gtkmozembed.h"
-#include <gtk/gtk.h>
-#include <gdk/gdk.h>
-#include <gdk/gdkkeysyms.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <signal.h>
+/* Minimo global types */
+//#include "minimo_types.h"
+
+/* Preference */
+//#include "preference.h"
+
+/* History */
+//#include "history.h"
 
 /* bookmark library */
 #include "bookmark.h"
 
-/* mozilla specific headers */
-#include "prenv.h"
-#include "nsMemory.h"
-#include "gtkmozembed_internal.h"
-
-/* Includes used by Find features */
-#include "nsIWebBrowser.h"
-#include "nsIWebBrowserFind.h"
-#include "nsNetUtil.h"
-
-/* Includes used by 'mozilla_preference_set', 'mozilla_preference_set_int' and 'mozilla_preference_set_boolean' */
-#include "nsIPref.h"
-
-/* Includes used by 'save_mozilla' */
-#include "nsIPresShell.h"
-#include "nsIDocShell.h"
-#include "nsIDOMDocument.h"
-#include "nsIWebBrowserPersist.h"
-#include "nsIWebNavigation.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsILocalFile.h"
-#include "nsIDocShellTreeOwner.h"
-#include "nsIDocument.h"
-
-#define PREF_ID NS_PREF_CONTRACTID
-
-#ifdef NS_TRACE_MALLOC
-#include "nsTraceMalloc.h"
-#endif
-
-#ifdef MOZ_JPROF
-#include "jprof.h"
-#endif
-
-
-/* MINIMO TOOLBAR STRUCT */
-typedef struct _MinimoToolBar {
-  GtkWidget  *toolbar;
-  
-  GtkWidget *OpenButton;
-  GtkWidget *BackButton;
-  GtkWidget *ReloadButton;
-  GtkWidget *ForwardButton;
-  GtkWidget *StopButton;
-  GtkWidget *PrefsButton;
-  GtkWidget *InfoButton;
-  GtkWidget *QuitButton;
-  
-} MinimoToolbar;
-
-/* MINIMO STRUCT */
-typedef struct _MinimoBrowser {
-  
-  GtkWidget  *topLevelWindow;
-  GtkWidget  *topLevelVBox;
-  GtkWidget  *mozEmbed;
-  
-  MinimoToolbar toolbar;
-  
-  gboolean    show_tabs;
-  GtkWidget  *notebook;
-  GtkWidget  *label_notebook;
-  GtkWidget  *active_page;
-  GtkWidget  *expanderBar;
-  GtkWidget  *ToolbarDown;
-  GtkWidget  *TabButton;
-  GtkWidget  *AddTabButton;
-  GtkWidget  *CloseTabButton;
-  GtkWidget  *OpenBookmarkButton;
-  GtkWidget  *AddBookmarkButton;
-  GtkWidget  *OpenFindDialog;
-  GtkWidget  *OpenSaveAsBuntton;
-  GtkWidget  *OpenFromFileButton;
-  GtkWidget  *IncreaseFontSizeButton;
-  GtkWidget  *DecreaseFontSizeButton;
-  GtkWidget  *FullScreenButton;
-  
-  GtkWidget  *progressPopup;
-  GtkWidget  *progressBar;
-  gint        totalBytes;
-  
-  gboolean didFind;
-  
-} MinimoBrowser;
-
-/* Global Minimo Variable */
-MinimoBrowser *browser;
-
-/* SPECIFIC STRUCT FOR SPECIFY SOME PARAMETERS OF '_open_dialog_params' METHOD */
-typedef struct _open_dialog_params
-{
-  GtkWidget* dialog_combo;
-  MinimoBrowser* browser;
-} OpenDialogParams;
-
-/* Minimo's PATH - probably "~/home/current_user/.Minimo" */
-static char *g_profile_path = NULL;
-
-/* the list of browser windows currently open */
-GList *browser_list = g_list_alloc();
-
-/* store the last expression on find dialog */
-gchar *last_find = NULL;
-
-/* Number of browsers */
-static int num_browsers = 0;
-
-/* Last clicked URL */
-gchar *clicked_url;
-
-/* History */
-GList* g_autocomplete_list = g_list_alloc();
-
-/* Data Struct for make possible the real autocomplete */
-GtkEntryCompletion *minimo_entry_completion;
-GtkListStore *store;
-GtkTreeIter iter;
-
-/* Initial Font Size */
-int font_size = 10;
-
 /* METHODS HEADERS  */
 
-/*callbacks from the expander */
-static void open_new_tab_cb (GtkButton *button, MinimoBrowser *browser);
+/*callbacks from the menuToolButton */
+static void open_new_tab_cb (GtkMenuItem *button, MinimoBrowser *browser);
 static void close_current_tab_cb (GtkMenuItem *menuitem, MinimoBrowser *browser);
-static void show_hide_tabs_cb (GtkButton *button, MinimoBrowser *browser);
-static void open_bookmark_window_cb (GtkButton *menuitem, MinimoBrowser *browser);
+static void show_hide_tabs_cb (GtkMenuItem *button, MinimoBrowser *browser);
+static void open_bookmark_window_cb (GtkMenuItem *button, MinimoBrowser *browser);
+static void open_history_window (GtkButton *button, MinimoBrowser* browser);
 static void switch_page_cb (GtkNotebook *notebook, GtkNotebookPage *page, guint page_num, MinimoBrowser *browser);
-static GtkWidget *get_active_tab (MinimoBrowser *browser);
-static void link_message_cb (GtkWidget *, MinimoBrowser *);
-static void update_ui (MinimoBrowser *browser);
-static void open_bookmark_window_cb (GtkButton *button,MinimoBrowser *browser);
 static void create_find_dialog (GtkWidget *w, MinimoBrowser *browser);
-static void create_save_document(GtkButton *button, MinimoBrowser *browser);
-static void create_open_document_from_file (GtkButton *button, MinimoBrowser *browser);
-static void increase_font_size (GtkButton *button, MinimoBrowser *browser);
-static void decrease_font_size (GtkButton *button, MinimoBrowser *browser);
-static void full_screen_cb (GtkButton *button, MinimoBrowser* browser);
-static void unfull_screen_cb (GtkButton *button, MinimoBrowser* browser);
+static void create_save_document(GtkMenuItem *button, MinimoBrowser *browser);
+static void create_open_document_from_file (GtkMenuItem *button, MinimoBrowser *browser);
+static void increase_font_size_cb (GtkMenuItem *button, MinimoBrowser *browser);
+static void decrease_font_size_cb (GtkMenuItem *button, MinimoBrowser *browser);
+static void full_screen_cb (GtkMenuItem *button, MinimoBrowser* browser);
+static void unfull_screen_cb (GtkMenuItem *button, MinimoBrowser* browser);
 
 static GtkWidget *populate_menu_button(MinimoBrowser* browser);
 
 /* Building the Minimo Browser */
 static MinimoBrowser *new_gtk_browser(guint32 chromeMask);
 static GtkWidget* create_minimo_progress(MinimoBrowser* browser);
-static void create_minimo_expander_bar(MinimoBrowser* browser);
 static void set_browser_visibility(MinimoBrowser *browser, gboolean visibility);
 static void setup_toolbar(MinimoBrowser* browser);
 static void quick_message(gchar* message);
@@ -227,7 +98,6 @@ static void load_started_cb(GtkMozEmbed *embed, MinimoBrowser *browser);
 static void load_finished_cb(GtkMozEmbed *embed, MinimoBrowser *browser);
 static void new_window_cb(GtkMozEmbed *embed, GtkMozEmbed **retval, guint chromemask, MinimoBrowser *browser);
 static void visibility_cb(GtkMozEmbed *embed, gboolean visibility, MinimoBrowser *browser);
-//static void destroy_brsr_cb(GtkMozEmbed *embed, MinimoBrowser *browser);
 static gint open_uri_cb(GtkMozEmbed *embed, const char *uri, MinimoBrowser *browser);
 static void size_to_cb(GtkMozEmbed *embed, gint width, gint height, MinimoBrowser *browser);
 static void create_info_dialog (MinimoBrowser* browser);
@@ -235,228 +105,38 @@ static void create_open_dialog(MinimoBrowser* browser);
 static void find_dialog_ok_cb (GtkWidget *w, GtkWidget *window);
 static void on_save_ok_cb(GtkWidget *button, GtkWidget *fs);
 static void on_open_ok_cb(GtkWidget *button, GtkWidget *fs);
+static GtkWidget *get_active_tab (MinimoBrowser *browser);
+static void link_message_cb (GtkWidget *, MinimoBrowser *);
+static void update_ui (MinimoBrowser *browser);
 
 /* callbacks from the singleton object */
 static void new_window_orphan_cb(GtkMozEmbedSingle *embed, GtkMozEmbed **retval, guint chromemask, gpointer data);
 
-/* Mozilla API Methods - make possible the direct comunitation between Minimo Browser and the "Gecko Render Engine" */
+/* Variable to enable pango settings */
+static PangoFontDescription* gDefaultMinimoFont = NULL;
 
-static PRUnichar *mozilla_locale_to_unicode (const gchar *locStr);
-static gboolean mozilla_find(GtkMozEmbed *b, const char *exp, PRBool IgnoreCase,
-                             PRBool SearchBackWards, PRBool DoWrapFind,
-                             PRBool SearchEntireWord, PRBool SearchInFrames,
-                             PRBool DidFind);
-//static gboolean mozilla_preference_set (const char *preference_name, const char *new_value);
-//static gboolean mozilla_preference_set_boolean (const char *preference_name, gboolean new_boolean_value);
-static gboolean mozilla_preference_set_int (const char *preference_name, gint  new_int_value);
-static gboolean mozilla_save(GtkMozEmbed *b, gchar *file_name, gint all);
-static gchar *mozilla_get_link_message (GtkWidget *embed);
-
-/*
- * mozilla_locale_to_unicode: Decodes a string encoded for the current
- * locale into unicode. Used for getting text entered in a GTK+ entry
- * into a form which mozilla can use.
- *
- */
-static PRUnichar *mozilla_locale_to_unicode (const gchar *locStr)
-{
-  
-  if (locStr == NULL)
-  {
-    return (NULL);
-  }
-  nsAutoString autoStr;
-  autoStr.AssignWithConversion (locStr);       
-  PRUnichar *uniStr = ToNewUnicode(autoStr);
-  return ( uniStr );
-}
-
-/*
- * mozilla_find: Look for a text in the current shown webpage
- *
- */
-static gboolean 
-mozilla_find(GtkMozEmbed *b, const char *exp, PRBool IgnoreCase,
-             PRBool SearchBackWards, PRBool DoWrapFind,
-             PRBool SearchEntireWord, PRBool SearchInFrames,
-             PRBool DidFind)
-{
-  PRUnichar *search_string;
-  g_return_val_if_fail(b != NULL, FALSE);
-  nsIWebBrowser *wb = nsnull;
-  gtk_moz_embed_get_nsIWebBrowser( b, &wb);
-  nsCOMPtr<nsIWebBrowserFind> finder(do_GetInterface(wb));
-  search_string = mozilla_locale_to_unicode(exp);
-  finder->SetSearchString(search_string);
-  
-  finder->SetFindBackwards(SearchBackWards);
-  finder->SetWrapFind(DoWrapFind);
-  finder->SetEntireWord(SearchEntireWord);
-  finder->SetSearchFrames(SearchInFrames);
-  finder->SetMatchCase(IgnoreCase);
-  finder->FindNext(&DidFind);
-  
-  g_free(search_string);
-  return ( DidFind );
-}
-
-/*
- * mozilla_preference_set: Method used to set up some specific text-based parameters of the gecko render engine
- *
- */
-/*static gboolean
-mozilla_preference_set (const char *preference_name, const char *new_value)
-{
-  g_return_val_if_fail (preference_name != NULL, FALSE);
-  g_return_val_if_fail (new_value != NULL, FALSE);
-  
-  nsCOMPtr<nsIPref> pref = do_CreateInstance(PREF_ID);
-  
-  if (pref)
-  {
-    nsresult rv = pref->SetCharPref (preference_name, new_value);
-    return ( NS_SUCCEEDED (rv) ? TRUE : FALSE );
-  }
-  return (FALSE);
-}*/
-
-/*
- * mozilla_preference_set: Method used to set up some specific boolean-based parameters of the gecko render engine
- *
- */
-/*static gboolean
-mozilla_preference_set_boolean (const char *preference_name, gboolean new_boolean_value)
-{
-  
-  g_return_val_if_fail (preference_name != NULL, FALSE);
-  
-  nsCOMPtr<nsIPref> pref = do_CreateInstance(PREF_ID);
-  
-  if (pref)
-  {
-    nsresult rv = pref->SetBoolPref (preference_name,  new_boolean_value ? PR_TRUE : PR_FALSE);
-    return ( NS_SUCCEEDED (rv) ? TRUE : FALSE );
-  }
-  
-  return (FALSE);
-}*/
-
-/*
- * mozilla_preference_set: Method used to set up some specific integer-based parameters of the gecko render engine
- *
- */
-static gboolean
-mozilla_preference_set_int (const char *preference_name, gint  new_int_value)
-{
-  g_return_val_if_fail (preference_name != NULL, FALSE);
-  
-  nsCOMPtr<nsIPref> pref = do_CreateInstance(PREF_ID);
-  
-  if (pref)
-  {
-    nsresult rv = pref->SetIntPref (preference_name, new_int_value);
-    return ( NS_SUCCEEDED (rv) ? TRUE : FALSE );
-  }
-  
-  return (FALSE);
-  
-}
-
-/*
- * mozilla_save: Method used to save an webpage and its files into the disk
- *
- */
-static gboolean
-mozilla_save(GtkMozEmbed *b, gchar *file_name, gint all)
-{
-  
-  nsCOMPtr<nsIWebBrowser> wb;
-  gint i = 0;
-  gchar *relative_path = NULL;
-  g_return_val_if_fail(b != NULL, FALSE);
-  
-  gtk_moz_embed_get_nsIWebBrowser(b,getter_AddRefs(wb));
-  if (!wb) return (FALSE);
-  
-  nsCOMPtr<nsIWebNavigation> nav(do_QueryInterface(wb));
-  
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  nav->GetDocument(getter_AddRefs(domDoc));
-  
-  if (!domDoc) return (FALSE);
-  nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(wb));
-  
-  if (persist) {
-    nsCOMPtr<nsILocalFile> file;
-    nsCOMPtr<nsILocalFile> relative = nsnull;
-    if (all) {
-      
-      relative_path = g_strdup(file_name);
-      relative_path = g_strconcat(relative_path,"_files/", NULL);
-      
-      for (i=strlen(relative_path)-1 ; i >= 0; --i)
-        if (relative_path[i] == '/') {
-          relative_path[i] = '\0';
-          break;
-        }
-      
-      mkdir(relative_path,0755);
-      
-      nsAutoString s; s.AssignWithConversion(relative_path);
-      NS_NewLocalFile(s, PR_TRUE, getter_AddRefs(relative));
-    }
-    
-    nsAutoString s; s.AssignWithConversion(file_name);
-    NS_NewLocalFile(s,PR_TRUE,getter_AddRefs(file));
-    
-    if (file) persist->SaveDocument(domDoc,file,relative, nsnull, 0, 0);
-    
-    if (all) g_free(relative_path);
-    
-    return (TRUE);
-  }
-  return (FALSE);
-}
-
-/*
- * mozilla_get_link_message: Method used to get "link messages" from the Gecko Render Engine. 
- * eg. When the user put the mouse over a link, the render engine throws messegas that can be cautch for after 
- * used by Minimo Browser.
- *
- */
-gchar *mozilla_get_link_message (GtkWidget *embed) {
-  
-  gchar *link;
-  
-  link = gtk_moz_embed_get_link_message (GTK_MOZ_EMBED (embed));
-  
-  return link;
-  
-}
-
+/* body */
 static void handle_remote(int sig)
 {
   FILE *fp;
   char url[256];
   
   sprintf(url, "/tmp/Mosaic.%d", getpid());
-  if ((fp = fopen(url, "r"))) 
-  {
-    if (fgets(url, sizeof(url) - 1, fp))
-    {
+  if ((fp = fopen(url, "r"))) {
+    if (fgets(url, sizeof(url) - 1, fp)) {
       MinimoBrowser *bw = NULL;
-      if (strncmp(url, "goto", 4) == 0 && fgets(url, sizeof(url) - 1, fp)) 
-      {
+      if (strncmp(url, "goto", 4) == 0 && fgets(url, sizeof(url) - 1, fp)) {
         GList *tmp_list = browser_list;
         bw =(MinimoBrowser *)tmp_list->data;
         if(!bw) return;
-      }
-      else if (strncmp(url, "newwin", 6) == 0 && fgets(url, sizeof(url) - 1, fp))
-      {
+        
+      } else if (strncmp(url, "newwin", 6) == 0 && fgets(url, sizeof(url) - 1, fp)) { 
+        
         bw = new_gtk_browser(GTK_MOZ_EMBED_FLAG_DEFAULTCHROME);
         gtk_widget_set_usize(bw->mozEmbed, 240, 320);
         set_browser_visibility(bw, TRUE);
       }
+      
       if (bw)
         gtk_moz_embed_load_url(GTK_MOZ_EMBED(bw->mozEmbed), url);
       fclose(fp);
@@ -465,8 +145,7 @@ static void handle_remote(int sig)
   return;
 }
 
-static void init_remote()
-{
+static void init_remote() {
   gchar *file;
   FILE *fp;
   
@@ -474,8 +153,7 @@ static void init_remote()
   
   /* Write the pidfile : would be useful for automation process*/
   file = g_strconcat(g_get_home_dir(), "/", ".mosaicpid", NULL);
-  if((fp = fopen(file, "w"))) 
-  {
+  if((fp = fopen(file, "w"))) {
     fprintf (fp, "%d\n", getpid());
     fclose (fp);
     signal(SIGUSR1, handle_remote);
@@ -483,8 +161,8 @@ static void init_remote()
   g_free(file);
 }
 
-static void cleanup_remote()
-{
+static void cleanup_remote() {
+  
   gchar *file;
   
   signal(SIGUSR1, SIG_IGN);
@@ -494,21 +172,21 @@ static void cleanup_remote()
   g_free(file);
 }
 
-static void autocomplete_populate(gpointer data, gpointer combobox)
-{
+static void autocomplete_populate(gpointer data, gpointer combobox) {
+  
   if (!data || !combobox)
-    return;
+	return;
   
   gtk_combo_set_popdown_strings (GTK_COMBO (combobox), g_autocomplete_list);
 }
 
-static void populate_autocomplete(GtkCombo *comboBox)
-{
+static void populate_autocomplete(GtkCombo *comboBox) {
+  
   g_list_foreach(g_autocomplete_list, autocomplete_populate, comboBox);
 }
 
-static gint autocomplete_list_cmp(gconstpointer a, gconstpointer b)
-{
+static gint autocomplete_list_cmp(gconstpointer a, gconstpointer b) {
+  
   if (!a)
     return -1;
   if (!b)
@@ -517,8 +195,7 @@ static gint autocomplete_list_cmp(gconstpointer a, gconstpointer b)
   return strcmp((char*)a, (char*)b);
 }
 
-static void init_autocomplete()
-{
+static void init_autocomplete() {
   if (!g_autocomplete_list)
     return;
   
@@ -529,10 +206,8 @@ static void init_autocomplete()
   
   store = gtk_list_store_new (1, G_TYPE_STRING);
   
-  if((fp = fopen(full_path, "r+"))) 
-  {
-    while(fgets(url, sizeof(url) - 1, fp))
-    {
+  if((fp = fopen(full_path, "r+"))) {
+    while(fgets(url, sizeof(url) - 1, fp)) {
       int length = strlen(url);
       if (url[length-1] == '\n')
         url[length-1] = '\0'; 
@@ -547,8 +222,7 @@ static void init_autocomplete()
   g_autocomplete_list =   g_list_sort(g_autocomplete_list, autocomplete_list_cmp);
 }
 
-static void autocomplete_writer(gpointer data, gpointer fp)
-{
+static void autocomplete_writer(gpointer data, gpointer fp) {
   FILE* file = (FILE*) fp;
   char* url  = (char*) data;
   
@@ -556,22 +230,19 @@ static void autocomplete_writer(gpointer data, gpointer fp)
     return;
   
   fwrite(url, strlen(url), 1, file);
-  fputc('\n', file);
-  
+  fputc('\n', file);  
 }
 
-static void autocomplete_destroy(gpointer data, gpointer dummy)
-{
+static void autocomplete_destroy(gpointer data, gpointer dummy) {
+  
   g_free(data);
 }
 
-static void cleanup_autocomplete()
-{
+static void cleanup_autocomplete() {
   char* full_path = g_strdup_printf("%s/%s", g_profile_path, "autocomplete.txt");
-  
   FILE *fp;
-  if((fp = fopen(full_path, "w"))) 
-  {
+  
+  if((fp = fopen(full_path, "w"))) {
     g_list_foreach(g_autocomplete_list, autocomplete_writer, fp);
     fclose(fp);
   }
@@ -580,11 +251,11 @@ static void cleanup_autocomplete()
   g_list_foreach(g_autocomplete_list, autocomplete_destroy, NULL);
 }
 
-static void add_autocomplete(const char* value, OpenDialogParams* params)
-{
+static void add_autocomplete(const char* value, OpenDialogParams* params) {
+  
   GList* found = g_list_find_custom(g_autocomplete_list, value, autocomplete_list_cmp);
+  
   if (!found) {
-    
     g_autocomplete_list = g_list_insert_sorted(g_autocomplete_list, g_strdup(value), autocomplete_list_cmp);    
     /* Append url's to autocompletion*/
     gtk_list_store_append (store, &iter);
@@ -603,45 +274,38 @@ main(int argc, char **argv) {
   gtk_set_locale();
   gtk_init(&argc, &argv);
   
-  
-  char *home_path;
-  home_path = PR_GetEnv("HOME");
-  if (!home_path) {
+  user_home = PR_GetEnv("HOME");
+  if (!user_home) {
     fprintf(stderr, "Failed to get HOME\n");
     exit(1);
   }
   
-  g_profile_path = g_strdup_printf("%s/%s", home_path, ".Minimo");
+  gchar *dir = g_strconcat(user_home,"/.Minimo",NULL);
+  /* this is fine, as it will silently error if it already exists*/
+  mkdir(dir,0700);
+  g_free(dir);   
   
+  /* Minimo's config folder - hidden */  
+  g_profile_path = g_strdup_printf("%s/%s", user_home, ".Minimo");
   gtk_moz_embed_set_profile_path(g_profile_path, "Minimo");
   
   browser = new_gtk_browser(GTK_MOZ_EMBED_FLAG_DEFAULTCHROME);
   
-  // set our minimum size
+  /* set our minimum size */
   gtk_widget_set_usize(browser->mozEmbed, 240, 320);
   
+  /* Load the configuration files */
+  read_minimo_config();
+  
   set_browser_visibility(browser, TRUE);
+  
+  initialize_bookmark(browser->mozEmbed);
   
   init_remote();
   init_autocomplete();
   
   if (argc > 1)
     gtk_moz_embed_load_url(GTK_MOZ_EMBED(browser->mozEmbed), argv[1]);
-  
-#if 0
-  /* testing popups settings */
-  mozilla_preference_set_boolean ("dom.disable_open_during_load", 0);
-  
-  /* testing proxy settings */
-  mozilla_preference_set_int    ("network.proxy.type", 1);
-  mozilla_preference_set	("network.proxy.http", "172.18.110.24");
-  mozilla_preference_set_int    ("network.proxy.http_port", 8080);
-  mozilla_preference_set 	("network.proxy.ftp", "172.18.110.24");
-  mozilla_preference_set_int    ("network.proxy.ftp_port", 8080);
-  mozilla_preference_set 	("network.proxy.ssl", "172.18.110.24");
-  mozilla_preference_set_int    ("network.proxy.ssl_port", 8080);
-  mozilla_preference_set_boolean("nglayout.widget.gfxscrollbars", TRUE);
-#endif
   
   // get the singleton object and hook up to its new window callback
   // so we can create orphaned windows.
@@ -663,8 +327,8 @@ main(int argc, char **argv) {
 
 /* Build the Minimo Window */
 static MinimoBrowser *
-new_gtk_browser(guint32 chromeMask)
-{
+new_gtk_browser(guint32 chromeMask) {
+  
   MinimoBrowser *browser = 0;
   
   num_browsers++;
@@ -716,9 +380,6 @@ new_gtk_browser(guint32 chromeMask)
   // set the chrome type so it's stored in the object
   gtk_moz_embed_set_chrome_mask(GTK_MOZ_EMBED(browser->mozEmbed), chromeMask);
   
-// #ifdef GTK_VERSION < 2.6
-  create_minimo_expander_bar(browser);
-// #endif
   browser->progressPopup = create_minimo_progress(browser);
   
   // add it to the toplevel vbox
@@ -734,10 +395,9 @@ new_gtk_browser(guint32 chromeMask)
 }
 
 void
-set_browser_visibility(MinimoBrowser *browser, gboolean visibility)
-{
-  if (!visibility)
-  {
+set_browser_visibility(MinimoBrowser *browser, gboolean visibility) {
+  
+  if (!visibility) {
     gtk_widget_hide(browser->topLevelWindow);
     return;
   }
@@ -748,10 +408,10 @@ set_browser_visibility(MinimoBrowser *browser, gboolean visibility)
 }
 
 /* bookmark button clicked */ 
-void open_bookmark_window_cb (GtkButton *button,
+void open_bookmark_window_cb (GtkMenuItem *button,
                               MinimoBrowser *browser)
 {
-  show_bookmark(browser->mozEmbed);
+  open_bookmark();
 }
 
 void
@@ -784,14 +444,17 @@ info_clicked_cb(GtkButton *button, MinimoBrowser *browser)
   create_info_dialog(browser);
 }
 
+/* Creates a GUI for proxy and 'block popup' settings */
 void
-pref_clicked_cb(GtkButton *button, MinimoBrowser *browser)
-{
+pref_clicked_cb(GtkButton *button, MinimoBrowser *browser) {
+  
+  build_pref_window (browser->topLevelWindow);
 }
 
 void
 stop_clicked_cb(GtkButton *button, MinimoBrowser *browser)
 {
+  
   gtk_moz_embed_stop_load(GTK_MOZ_EMBED(browser->mozEmbed));
 }
 
@@ -815,18 +478,18 @@ destroy_cb(GtkWidget *widget, MinimoBrowser *browser)
   num_browsers--;
   tmp_list = g_list_find(browser_list, browser);
   browser_list = g_list_remove_link(browser_list, tmp_list);
-  if (num_browsers == 0)
-    gtk_main_quit();
   
+  if (num_browsers == 0)  
+    gtk_main_quit();
 }
 
 void
 title_changed_cb(GtkMozEmbed *embed, MinimoBrowser *browser)
 {
   char *newTitle;
+  
   newTitle = gtk_moz_embed_get_title(embed);
-  if(newTitle)
-  {
+  if(newTitle) {
     gtk_window_set_title(GTK_WINDOW(browser->topLevelWindow), newTitle);
     g_free(newTitle);
   }
@@ -849,10 +512,9 @@ load_finished_cb(GtkMozEmbed *embed, MinimoBrowser *browser)
 void
 new_window_cb(GtkMozEmbed *embed, GtkMozEmbed **newEmbed, guint chromemask, MinimoBrowser *browser)
 {
-  
-  open_new_tab_cb (NULL, browser);
-  gtk_moz_embed_load_url(GTK_MOZ_EMBED(browser->mozEmbed), clicked_url);
-  show_hide_tabs_cb (NULL, browser);
+  MinimoBrowser *newBrowser = new_gtk_browser(chromemask);
+  gtk_widget_set_usize(newBrowser->mozEmbed, 240, 320);
+  *newEmbed = GTK_MOZ_EMBED(newBrowser->mozEmbed);
 }
 
 void
@@ -878,9 +540,7 @@ size_to_cb(GtkMozEmbed *embed, gint width, gint height,
 void
 link_message_cb (GtkWidget *embed, MinimoBrowser *browser)
 {
-  
-  clicked_url = mozilla_get_link_message (browser->active_page);
-  
+  g_link_message_url = mozilla_get_link_message (browser->active_page);
 }
 
 void new_window_orphan_cb(GtkMozEmbedSingle *embed,
@@ -891,7 +551,6 @@ void new_window_orphan_cb(GtkMozEmbedSingle *embed,
   *retval = GTK_MOZ_EMBED(newBrowser->mozEmbed);
 }
 
-static PangoFontDescription* gDefaultMinimoFont = NULL;
 static PangoFontDescription* getOrCreateDefaultMinimoFont()
 {
   if (gDefaultMinimoFont)
@@ -963,33 +622,25 @@ void setup_toolbar(MinimoBrowser* browser)
   gtk_widget_show (toolbar->StopButton);
   gtk_container_add(GTK_CONTAINER (toolbar->toolbar), toolbar->StopButton);
   gtk_signal_connect(GTK_OBJECT(toolbar->StopButton), "clicked", GTK_SIGNAL_FUNC(stop_clicked_cb), browser);
-
-// #ifdef GTK_VERSION > 2.6
+  
   toolbar->PrefsButton = (GtkWidget*) gtk_menu_tool_button_new_from_stock("gtk-preferences");
   gtk_widget_show (toolbar->PrefsButton);
   gtk_container_add(GTK_CONTAINER (toolbar->toolbar), toolbar->PrefsButton);
   gtk_signal_connect(GTK_OBJECT(toolbar->PrefsButton), "clicked", GTK_SIGNAL_FUNC(pref_clicked_cb), browser);
   menu = populate_menu_button (browser);
-  gtk_menu_tool_button_set_menu ((GtkMenuToolButton *)toolbar->PrefsButton,menu);
-// #elif  
-  //toolbar->PrefsButton =(GtkWidget*) gtk_tool_button_new_from_stock ("gtk-preferences");
-  //toolbar->PrefsButton =(GtkWidget*) gtk_tool_button_new_from_stock ("gtk-preferences");
-  //gtk_widget_show (toolbar->PrefsButton);
-  //gtk_container_add(GTK_CONTAINER (toolbar->toolbar), toolbar->PrefsButton);
-  //gtk_signal_connect(GTK_OBJECT(toolbar->PrefsButton), "clicked", GTK_SIGNAL_FUNC(pref_clicked_cb), browser);
-
+  gtk_menu_tool_button_set_menu ((GtkMenuToolButton *) toolbar->PrefsButton, menu);
+  
   toolbar->InfoButton = (GtkWidget*) gtk_tool_button_new_from_stock ("gtk-dialog-info");
   gtk_widget_show(toolbar->InfoButton);
   gtk_container_add(GTK_CONTAINER (toolbar->toolbar), toolbar->InfoButton);
   gtk_signal_connect(GTK_OBJECT(toolbar->InfoButton), "clicked", GTK_SIGNAL_FUNC(info_clicked_cb), browser);
-
+  
   toolbar->QuitButton = (GtkWidget*) gtk_tool_button_new_from_stock ("gtk-quit");
   gtk_widget_show(toolbar->QuitButton);
   gtk_container_add(GTK_CONTAINER (toolbar->toolbar), toolbar->QuitButton);  
   gtk_signal_connect(GTK_OBJECT(toolbar->QuitButton), "clicked", GTK_SIGNAL_FUNC(destroy_cb), browser);
 }
 
-// #ifdef GTK_VERSION > 2.6
 static GtkWidget *populate_menu_button(MinimoBrowser* browser){
   
   GtkWidget *menu, *menu_item;
@@ -1047,13 +698,13 @@ static GtkWidget *populate_menu_button(MinimoBrowser* browser){
   
   menu_item = gtk_image_menu_item_new_with_label ("Increase Font Size");
   gtk_menu_shell_append  ((GtkMenuShell *)(menu),menu_item);
-  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", GTK_SIGNAL_FUNC(increase_font_size), browser);
+  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", GTK_SIGNAL_FUNC(increase_font_size_cb), browser);
   image = gtk_image_new_from_stock(GTK_STOCK_ZOOM_IN, GTK_ICON_SIZE_SMALL_TOOLBAR);
   gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (menu_item), image);
   
   menu_item = gtk_image_menu_item_new_with_label ("Decrease Font Size");
   gtk_menu_shell_append  ((GtkMenuShell *)(menu),menu_item);
-  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", GTK_SIGNAL_FUNC(decrease_font_size), browser);
+  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", GTK_SIGNAL_FUNC(decrease_font_size_cb), browser);
   image = gtk_image_new_from_stock(GTK_STOCK_ZOOM_OUT, GTK_ICON_SIZE_SMALL_TOOLBAR);
   gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (menu_item), image);
   
@@ -1063,14 +714,13 @@ static GtkWidget *populate_menu_button(MinimoBrowser* browser){
   image = gtk_image_new_from_stock(GTK_STOCK_ZOOM_FIT, GTK_ICON_SIZE_SMALL_TOOLBAR);
   gtk_image_menu_item_set_image (GTK_IMAGE_MENU_ITEM (menu_item), image);
   
-  menu_item = gtk_menu_item_new_with_label ("Unfull Screen");
+  menu_item = gtk_image_menu_item_new_with_label ("History");
   gtk_menu_shell_append  ((GtkMenuShell *)(menu),menu_item);
-  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", GTK_SIGNAL_FUNC(unfull_screen_cb), browser);
+  gtk_signal_connect(GTK_OBJECT(menu_item), "activate", GTK_SIGNAL_FUNC(open_history_window), browser);
   
   gtk_widget_show_all(menu);
   
   return (menu);
-
 }
 
 static void destroy_dialog_params_cb(GtkWidget *widget, OpenDialogParams* params)
@@ -1080,7 +730,8 @@ static void destroy_dialog_params_cb(GtkWidget *widget, OpenDialogParams* params
 
 static void open_dialog_ok_cb(GtkButton *button, OpenDialogParams* params)
 {
-  const gchar *url = gtk_editable_get_chars (GTK_EDITABLE (GTK_COMBO(params->dialog_combo)->entry), 0, -1);
+  const gchar *url = 
+    gtk_editable_get_chars (GTK_EDITABLE (GTK_COMBO(params->dialog_combo)->entry), 0, -1);
   
   gtk_moz_embed_load_url(GTK_MOZ_EMBED(params->browser->mozEmbed), url);
   
@@ -1125,10 +776,12 @@ void
 location_changed_cb(GtkMozEmbed *embed, GtkLabel* label)
 {
   char *newLocation;
+  
   newLocation = gtk_moz_embed_get_location(embed);
-  if (newLocation)
-  {
+  if (newLocation) {
+    
     gtk_label_set_text(label, newLocation);
+    add_to_history(newLocation);
     g_free(newLocation);
   }
 }
@@ -1145,7 +798,6 @@ void progress_change_cb(GtkMozEmbed *embed, gint cur, gint max, MinimoBrowser* b
 
 static GtkWidget* create_minimo_progress (MinimoBrowser* browser)
 {
-  
   if (!browser) {
     quick_message("Creating the progress meter failed.");
     return NULL;
@@ -1193,7 +845,6 @@ static GtkWidget* create_minimo_progress (MinimoBrowser* browser)
   gtk_widget_show(Minimo_Progress_Status);
   gtk_box_pack_start(GTK_BOX (vbox3), Minimo_Progress_Status, TRUE, FALSE, 0);
   
-  
   browser->progressBar = progressbar1;
   
   gtk_signal_connect(GTK_OBJECT(browser->mozEmbed), "net_state", GTK_SIGNAL_FUNC(net_state_change_cb), Minimo_Progress_Status);
@@ -1203,169 +854,7 @@ static GtkWidget* create_minimo_progress (MinimoBrowser* browser)
   return Minimo_Progress;
 }
 
-
-// #ifdef GTK_VERSION 2.6
-/* Create the 'Expand Bar', with buttons as "Hide/Show Tabs", "Add/Manage Bookmark", "Find", "Save As", "Open" ... */
-static void create_minimo_expander_bar(MinimoBrowser* browser)
-{
-  
-  if (!browser) {
-    quick_message("Creating the expander bar failed.");
-    return ;
-  }
-  
-  browser->expanderBar = gtk_expander_new (NULL);
-  gtk_widget_show (browser->expanderBar);
-  gtk_box_pack_start (GTK_BOX (browser->topLevelVBox), browser->expanderBar, FALSE, TRUE, 0);
-  
-#ifdef MOZ_WIDGET_GTK
-  browser->ToolbarDown = gtk_toolbar_new ();
-#endif
-
-#ifdef MOZ_WIDGET_GTK2
-  browser->ToolbarDown = gtk_toolbar_new();
-  gtk_toolbar_set_orientation(GTK_TOOLBAR(browser->ToolbarDown),GTK_ORIENTATION_HORIZONTAL);
-  gtk_toolbar_set_style(GTK_TOOLBAR(browser->ToolbarDown),GTK_TOOLBAR_ICONS);
-#endif /* MOZ_WIDGET_GTK2 */
-
-  gtk_widget_show (browser->ToolbarDown);
-  gtk_container_add (GTK_CONTAINER (browser->expanderBar), browser->ToolbarDown);
-
-  gtk_toolbar_set_icon_size(GTK_TOOLBAR(browser->ToolbarDown), GTK_ICON_SIZE_SMALL_TOOLBAR);
-
-  /*
-   * Show or hide notebooks
-   */
-  
-  browser->TabButton =
-    gtk_toolbar_append_item(GTK_TOOLBAR(browser->ToolbarDown),
-                            "Tab Button",
-                            "Show/Hide Tabs",
-                            "Show/Hide Tabs",
-                            gtk_image_new_from_stock(GTK_STOCK_DND_MULTIPLE, GTK_ICON_SIZE_SMALL_TOOLBAR), 
-                            GTK_SIGNAL_FUNC(show_hide_tabs_cb),
-                            browser);
-  
-  
-  /*
-   * Add new notebook
-   */
-  
-  browser->AddTabButton =
-    gtk_toolbar_append_item(GTK_TOOLBAR(browser->ToolbarDown),
-                            "Add Tab",
-                            "Add Tab",
-                            "Add Tab",
-                            gtk_image_new_from_stock(GTK_STOCK_ADD, GTK_ICON_SIZE_SMALL_TOOLBAR), 
-                            GTK_SIGNAL_FUNC(open_new_tab_cb),
-                            browser);
-  
-  /*
-   * Close active notebook
-   */
-  
-  browser->CloseTabButton =
-    gtk_toolbar_append_item(GTK_TOOLBAR(browser->ToolbarDown),
-                            "Close Tab",
-                            "Close Tab",
-                            "Close Tab",
-                            gtk_image_new_from_stock(GTK_STOCK_REMOVE, GTK_ICON_SIZE_SMALL_TOOLBAR), 
-                            GTK_SIGNAL_FUNC(close_current_tab_cb),
-                            browser);
-  
-  /*
-   * Open bookmark management window
-   */
-  
-  browser->OpenBookmarkButton =
-    gtk_toolbar_append_item(GTK_TOOLBAR(browser->ToolbarDown),
-                            "Open Bookmark Window",
-                            "Open Bookmark Window",
-                            "Open Bookmark Window",
-                            gtk_image_new_from_stock(GTK_STOCK_HARDDISK, GTK_ICON_SIZE_SMALL_TOOLBAR), 
-                            GTK_SIGNAL_FUNC(open_bookmark_window_cb),
-                            browser);
-  
-  /*
-   * Add bookmark
-   */
-  
-  browser->AddBookmarkButton =
-    gtk_toolbar_append_item(GTK_TOOLBAR(browser->ToolbarDown),
-                            "Add Bookmark",
-                            "Add Bookmark",
-                            "Add Bookmark",
-                            gtk_image_new_from_stock(GTK_STOCK_YES, GTK_ICON_SIZE_SMALL_TOOLBAR), 
-                            GTK_SIGNAL_FUNC(add_bookmark_cb),
-                            browser->mozEmbed);
-  
-  browser->OpenFindDialog =
-    gtk_toolbar_append_item(GTK_TOOLBAR(browser->ToolbarDown),
-                            "Find",
-                            "Find",
-                            "Find",
-                            gtk_image_new_from_stock(GTK_STOCK_FIND, GTK_ICON_SIZE_SMALL_TOOLBAR), 
-                            GTK_SIGNAL_FUNC(create_find_dialog),
-                            browser);
-  
-  browser->OpenSaveAsBuntton =
-    gtk_toolbar_append_item(GTK_TOOLBAR(browser->ToolbarDown),
-                            "Save As",
-                            "Save As",
-                            "Save As",
-                            gtk_image_new_from_stock(GTK_STOCK_SAVE_AS, GTK_ICON_SIZE_SMALL_TOOLBAR), 
-                            GTK_SIGNAL_FUNC(create_save_document),
-                            browser);
-  
-  browser->OpenFromFileButton =
-    gtk_toolbar_append_item(GTK_TOOLBAR(browser->ToolbarDown),
-                            "Open From File",
-                            "Open From File",
-                            "Open From File",
-                            gtk_image_new_from_stock(GTK_STOCK_OPEN, GTK_ICON_SIZE_SMALL_TOOLBAR), 
-                            GTK_SIGNAL_FUNC(create_open_document_from_file),
-                            browser);
-  
-  /*
-   * Increase Font Size Button
-   */ 
-  browser->IncreaseFontSizeButton =
-    gtk_toolbar_append_item(GTK_TOOLBAR(browser->ToolbarDown),
-                            "Increase Font Size",
-                            "Increase Font Size",
-                            "Increase Font Size",
-                            gtk_image_new_from_stock(GTK_STOCK_ZOOM_IN, GTK_ICON_SIZE_SMALL_TOOLBAR), 
-                            GTK_SIGNAL_FUNC(increase_font_size),
-                            browser);
-  
-  /*
-   * Decrease Font Size Button
-   */ 
-  browser->DecreaseFontSizeButton =
-    gtk_toolbar_append_item(GTK_TOOLBAR(browser->ToolbarDown),
-                            "Decrease Font Size",
-                            "Decrease Font Size",
-                            "Decrease Font Size",
-                            gtk_image_new_from_stock(GTK_STOCK_ZOOM_OUT, GTK_ICON_SIZE_SMALL_TOOLBAR), 
-                            GTK_SIGNAL_FUNC(decrease_font_size),
-                            browser);
-  
-  /*
-   * Full Screen
-   */ 
-  browser->DecreaseFontSizeButton =
-    gtk_toolbar_append_item(GTK_TOOLBAR(browser->ToolbarDown),
-                            "Full Screen",
-                            "Full Screen",
-                            "Full Screen",
-                            gtk_image_new_from_stock(GTK_STOCK_ZOOM_FIT, GTK_ICON_SIZE_SMALL_TOOLBAR), 
-                            GTK_SIGNAL_FUNC(full_screen_cb),
-                            browser);
-}
-// #endif
-
 /* METHODS THAT CREATE DIALOG FOR SPECIFICS TASK */
-
 static void create_open_dialog(MinimoBrowser* browser)
 {
   if (!browser) {
@@ -1472,8 +961,7 @@ void create_info_dialog (MinimoBrowser* browser)
   char* locationString = gtk_moz_embed_get_location((GtkMozEmbed*)browser->mozEmbed);
   
   // first extract all of the interesting info out of the browser
-  // object.
-  
+  // object.	
   GtkWidget *InfoDialog;
   GtkWidget *dialog_vbox5;
   GtkWidget *vbox4;
@@ -1508,7 +996,6 @@ void create_info_dialog (MinimoBrowser* browser)
   gtk_window_set_type_hint (GTK_WINDOW (InfoDialog), GDK_WINDOW_TYPE_HINT_DIALOG);
   gtk_window_set_gravity (GTK_WINDOW (InfoDialog), GDK_GRAVITY_NORTH_EAST);
   gtk_window_set_transient_for(GTK_WINDOW(InfoDialog), GTK_WINDOW(browser->topLevelWindow));
-  
   
   dialog_vbox5 = GTK_DIALOG (InfoDialog)->vbox;
   gtk_widget_show (dialog_vbox5);
@@ -1622,14 +1109,13 @@ void create_info_dialog (MinimoBrowser* browser)
   sprintf(buffer, "%d bytes", browser->totalBytes);
   gtk_entry_set_text(GTK_ENTRY(SizeEntry), buffer);
   
-  
   PageTitle = gtk_label_new ("");
   gtk_widget_modify_font(PageTitle, getOrCreateDefaultMinimoFont());
   
   if (titleString)
-    gtk_label_set_text(GTK_LABEL(PageTitle), titleString);
+	gtk_label_set_text(GTK_LABEL(PageTitle), titleString);
   else
-    gtk_label_set_text(GTK_LABEL(PageTitle), "Untitled Page");
+	gtk_label_set_text(GTK_LABEL(PageTitle), "Untitled Page");
   
   gtk_widget_show (PageTitle);
   gtk_frame_set_label_widget (GTK_FRAME (frame1), PageTitle);
@@ -1652,13 +1138,11 @@ void create_info_dialog (MinimoBrowser* browser)
   gtk_widget_show (dialog_action_area5);
   gtk_button_box_set_layout (GTK_BUTTON_BOX (dialog_action_area5), GTK_BUTTONBOX_END);
   
-  //  closebutton1 = gtk_button_new_from_stock ("gtk-close");
   closebutton1 = gtk_button_new_with_label("Close");
   gtk_widget_modify_font(GTK_BIN(closebutton1)->child, getOrCreateDefaultMinimoFont());
   gtk_widget_show (closebutton1);
   gtk_dialog_add_action_widget (GTK_DIALOG (InfoDialog), closebutton1, GTK_RESPONSE_CLOSE);
   GTK_WIDGET_SET_FLAGS (closebutton1, GTK_CAN_DEFAULT);
-  
   
   gtk_signal_connect_object(GTK_OBJECT(closebutton1), "clicked", GTK_SIGNAL_FUNC(gtk_widget_destroy), InfoDialog);
   
@@ -1672,13 +1156,13 @@ void create_info_dialog (MinimoBrowser* browser)
 void
 create_find_dialog (GtkWidget *w, MinimoBrowser *browser) {
   
-  GtkWidget *window, *hbox, *entry, *label, *button, *ignore_case,
-    *vbox_l, *hbox_tog;
+  GtkWidget *window, *hbox, *entry, *label, *button, *ignore_case, *vbox_l, *hbox_tog;
   GList *glist = NULL;
   
-  if (last_find) glist = g_list_append(glist, last_find);
-  window = gtk_dialog_new();
+  if (last_find) 
+    glist = g_list_append(glist, last_find);
   
+  window = gtk_dialog_new();
   gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER_ON_PARENT);
   gtk_window_set_modal (GTK_WINDOW (window), TRUE);
   gtk_window_set_keep_above(GTK_WINDOW (window), TRUE);
@@ -1701,7 +1185,8 @@ create_find_dialog (GtkWidget *w, MinimoBrowser *browser) {
   entry = gtk_combo_new ();
   gtk_combo_disable_activate(GTK_COMBO(entry));
   gtk_combo_set_case_sensitive(GTK_COMBO(entry), TRUE);
-  if (last_find) gtk_combo_set_popdown_strings(GTK_COMBO(entry),glist);
+  if (last_find) 
+    gtk_combo_set_popdown_strings(GTK_COMBO(entry),glist);
   gtk_entry_set_text(GTK_ENTRY(GTK_COMBO(entry)->entry), "");
   g_object_set_data(G_OBJECT(window), "entry", entry);
   g_signal_connect(G_OBJECT(GTK_COMBO(entry)->entry), "activate", G_CALLBACK(find_dialog_ok_cb), window);
@@ -1724,15 +1209,16 @@ create_find_dialog (GtkWidget *w, MinimoBrowser *browser) {
   
   button = gtk_button_new_from_stock (GTK_STOCK_CLOSE);
   gtk_box_pack_start (GTK_BOX(GTK_DIALOG(window)->action_area), button, FALSE, FALSE, 0);
-  g_signal_connect_swapped(G_OBJECT(button), "clicked", G_CALLBACK(gtk_widget_destroy), (gpointer)window);
+  g_signal_connect_swapped(G_OBJECT(button), "clicked", G_CALLBACK(gtk_widget_destroy),
+                           (gpointer)window);
   
   gtk_widget_show_all (window);
-  gtk_widget_grab_focus (entry);     	
+  gtk_widget_grab_focus (entry);
 }
 
 /* Method that create the "save dialog" */
 void 
-create_save_document(GtkButton *button, MinimoBrowser *browser) 
+create_save_document(GtkMenuItem *button, MinimoBrowser *browser) 
 {
   GtkWidget *fs, *all, *ok_button, *cancel_button, *hbox;
   GtkWidget *SaveDialog, *scrolled_window;
@@ -1743,7 +1229,8 @@ create_save_document(GtkButton *button, MinimoBrowser *browser)
   
   location = gtk_moz_embed_get_location(GTK_MOZ_EMBED (browser->mozEmbed));
   if (location) file_name = g_basename(location);
-  all = gtk_check_button_new_with_label("Save everything, including images and framesets?");
+  all = gtk_check_button_new_with_label
+    ("Save everything, including images and framesets?");
   
   fs = gtk_file_chooser_widget_new (GTK_FILE_CHOOSER_ACTION_SAVE);
   SaveDialog = gtk_dialog_new ();
@@ -1800,7 +1287,7 @@ create_save_document(GtkButton *button, MinimoBrowser *browser)
 
 /* Method that create the "Open From File .." Dialog */
 static void
-create_open_document_from_file (GtkButton *button, MinimoBrowser *browser) {
+create_open_document_from_file (GtkMenuItem *button, MinimoBrowser *browser) {
   
   GtkWidget *fs, *ok_button, *cancel_button, *hbox;
   GtkWidget *OpenFromFileDialog, *scrolled_window;
@@ -1810,9 +1297,11 @@ create_open_document_from_file (GtkButton *button, MinimoBrowser *browser) {
   g_return_if_fail(browser->mozEmbed != NULL);
   
   location = gtk_moz_embed_get_location(GTK_MOZ_EMBED (browser->mozEmbed));
-  if (location) file_name = g_basename(location);
+  if (location) 
+    file_name = g_basename(location);
   
   fs = gtk_file_chooser_widget_new (GTK_FILE_CHOOSER_ACTION_OPEN);
+  
   OpenFromFileDialog = gtk_dialog_new ();
   gtk_widget_set_size_request (OpenFromFileDialog, 240, 320);
   gtk_window_set_title (GTK_WINDOW (OpenFromFileDialog), ("Open URL From File"));
@@ -1863,38 +1352,42 @@ create_open_document_from_file (GtkButton *button, MinimoBrowser *browser) {
 
 /* Method that increase the Minimo's font size */
 static 
-void increase_font_size (GtkButton *button, MinimoBrowser *browser)
-{
-  font_size += 1;
-  mozilla_preference_set_int ("font.min-size.variable.x-western", font_size);
-  fprintf(stderr, "increasing %d\n", font_size);
+void increase_font_size_cb (GtkMenuItem *button, MinimoBrowser *browser) {
+  
+  config.current_font_size += 1;
+  mozilla_preference_set_int ("font.size.variable.x-western", config.current_font_size);
+  fprintf(stderr, "increasing %d\n", config.current_font_size);
 }
 
 /* Method that decrease the Minimo's font size */
 static 
-void decrease_font_size (GtkButton *button, MinimoBrowser *browser)
-{
-  font_size -= 1;
-  mozilla_preference_set_int ("font.min-size.variable.x-western", font_size);
-  fprintf(stderr, "decreasing %d\n", font_size);
+void decrease_font_size_cb (GtkMenuItem *button, MinimoBrowser *browser) {
+  
+  config.current_font_size -= 1;
+  mozilla_preference_set_int ("font.size.variable.x-western", config.current_font_size);
+  fprintf(stderr, "decreasing %d\n", config.current_font_size);
 }
 
 
 /* Method that show the "Full Screen" Minimo's Mode */
-static void full_screen_cb (GtkButton *button, MinimoBrowser* browser) {
-
+static void full_screen_cb (GtkMenuItem *button, MinimoBrowser* browser) {
+  
   gtk_window_fullscreen (GTK_WINDOW (browser->topLevelWindow));
-  gtk_signal_connect (GTK_OBJECT (button), "clicked", GTK_SIGNAL_FUNC(unfull_screen_cb), browser);
-  gtk_tooltips_set_tip (gtk_tooltips_new (), GTK_WIDGET (button), "Unfull Screen", NULL);
-
+  gtk_signal_connect (GTK_OBJECT (button), "activate", GTK_SIGNAL_FUNC(unfull_screen_cb), browser);
+  gtk_tooltips_set_tip (gtk_tooltips_new (), GTK_WIDGET (button), "UnFull Screen", NULL);
 }
 
 /* Method that show the "Normal Screen" Minimo's Mode */
-static void unfull_screen_cb (GtkButton *button, MinimoBrowser* browser) {
-
+static void unfull_screen_cb (GtkMenuItem *button, MinimoBrowser* browser) {
+  
   gtk_window_unfullscreen (GTK_WINDOW (browser->topLevelWindow));
-  gtk_signal_connect (GTK_OBJECT (button), "clicked", GTK_SIGNAL_FUNC(full_screen_cb), browser);  
+  gtk_signal_connect (GTK_OBJECT (button), "activate", GTK_SIGNAL_FUNC(full_screen_cb), browser);  
   gtk_tooltips_set_tip (gtk_tooltips_new (), GTK_WIDGET (button), "Full Screen", NULL);
+}
+
+/* Method that show History Window */
+static void open_history_window (GtkButton *button, MinimoBrowser* browser){
+  view_history(browser->mozEmbed);
 }
 
 /* METHODS TO MANIPULATE TABS */
@@ -1910,7 +1403,7 @@ static GtkWidget *get_active_tab (MinimoBrowser *browser)
   return active_page;
 }
 
-static void open_new_tab_cb (GtkButton *button, MinimoBrowser *browser)
+static void open_new_tab_cb (GtkMenuItem *button, MinimoBrowser *browser)
 {
   GtkWidget *page_label;
   gint num_pages;
@@ -1936,7 +1429,6 @@ static void open_new_tab_cb (GtkButton *button, MinimoBrowser *browser)
   num_pages = gtk_notebook_get_n_pages (GTK_NOTEBOOK (browser->notebook));
   
   /* applying the Signal into the new Render Engine - MozEmbed */
-  
   // hook up the title change to update the window title
   gtk_signal_connect (GTK_OBJECT  (browser->mozEmbed), "title",       GTK_SIGNAL_FUNC (title_changed_cb), browser);
   gtk_signal_connect (GTK_OBJECT  (browser->mozEmbed), "location",    GTK_SIGNAL_FUNC(location_changed_cb), page_label);
@@ -1962,46 +1454,44 @@ static void open_new_tab_cb (GtkButton *button, MinimoBrowser *browser)
   num_browsers= num_pages;
 }
 
-static void close_current_tab_cb (GtkMenuItem *menuitem, MinimoBrowser *browser)
+static void close_current_tab_cb (GtkMenuItem *button, MinimoBrowser *browser)
 {
   gint current_page, num_pages;
   
   num_pages = gtk_notebook_get_n_pages (GTK_NOTEBOOK (browser->notebook));
   
   if (num_pages >1) {
-    
-  	current_page = gtk_notebook_get_current_page (GTK_NOTEBOOK (browser->notebook));
-    
-  	gtk_notebook_remove_page (GTK_NOTEBOOK (browser->notebook), current_page);
-  	num_pages = gtk_notebook_get_n_pages (GTK_NOTEBOOK (browser->notebook));
-	num_browsers= num_pages;
-    
-  	if (num_pages == 1) {
+	
+    current_page = gtk_notebook_get_current_page (GTK_NOTEBOOK (browser->notebook));
+	
+    gtk_notebook_remove_page (GTK_NOTEBOOK (browser->notebook), current_page);
+    num_pages = gtk_notebook_get_n_pages (GTK_NOTEBOOK (browser->notebook));
+    num_browsers= num_pages;
+	
+    if (num_pages == 1) {
       gtk_notebook_set_show_tabs (GTK_NOTEBOOK (browser->notebook), FALSE);
-	}
+    }
   }
 }
 
 static void switch_page_cb (GtkNotebook *notebook, GtkNotebookPage *page, guint page_num, MinimoBrowser *browser)
 {
   browser->active_page = gtk_notebook_get_nth_page (GTK_NOTEBOOK (browser->notebook), page_num);
+  browser->mozEmbed = browser->active_page;
   update_ui (browser);
-  
 }
 
-static void show_hide_tabs_cb (GtkButton *button, MinimoBrowser *browser)
+static void show_hide_tabs_cb (GtkMenuItem *button, MinimoBrowser *browser)
 {
   if (browser->show_tabs) {
-  	gtk_notebook_set_show_tabs (GTK_NOTEBOOK(browser->notebook), FALSE);
-  	browser->show_tabs = FALSE;
+    gtk_notebook_set_show_tabs (GTK_NOTEBOOK(browser->notebook), FALSE);
+    browser->show_tabs = FALSE;
   }
   else {
-  	gtk_notebook_set_show_tabs (GTK_NOTEBOOK(browser->notebook), TRUE);
-  	browser->show_tabs = TRUE;
+    gtk_notebook_set_show_tabs (GTK_NOTEBOOK(browser->notebook), TRUE);
+    browser->show_tabs = TRUE;
   }
-  
 }
-
 
 /* CALLBACKS METHODS ... */
 
@@ -2013,52 +1503,48 @@ static void on_open_ok_cb (GtkWidget *button, GtkWidget *fs) {
   filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (fs));
   
   if (!filename || !strcmp(filename,"")) {
-    
+	
     return ;
-    
   } else {
-    
+	
     converted = g_filename_to_utf8 (filename, -1, NULL, NULL, NULL);
     
     browser = (MinimoBrowser *) g_object_get_data(G_OBJECT(fs), "minimo");
-    
+	
     if (converted != NULL) {
       
       gtk_moz_embed_load_url(GTK_MOZ_EMBED(browser->mozEmbed), converted);
       gtk_widget_grab_focus (GTK_WIDGET(browser->mozEmbed));
     }
-	
+    
     g_free (converted);
     g_free ((void *) filename);
     gtk_widget_destroy((GtkWidget *) g_object_get_data(G_OBJECT(fs), "open_dialog"));
-    
   }
-  
   return ;
 }
 
 static void on_save_ok_cb(GtkWidget *button, GtkWidget *fs) {
+  
   MinimoBrowser *browser = NULL;
   G_CONST_RETURN gchar *filename;
   
   filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (fs));
   
   if (!filename || !strcmp(filename,"")) {
-    
+	
     return ;
-    
+	
   } else {
     browser = (MinimoBrowser *) g_object_get_data(G_OBJECT(fs), "minimo");
-    
+	
     if (!mozilla_save( GTK_MOZ_EMBED (browser->mozEmbed), (gchar *) filename, TRUE )) {
       //create_dialog("Error","Save failed, did you enter a name?",0,0);
-      
     }
-    
+	
     gtk_widget_destroy((GtkWidget *) g_object_get_data(G_OBJECT(fs), "save_dialog"));
     gtk_widget_destroy(fs);
   }
-  
   return ;
 }
 
@@ -2079,7 +1565,7 @@ static void find_dialog_ok_cb (GtkWidget *w, GtkWidget *window)
                                    TRUE, //GET_FIND_OPTION(window, "in_frame"),
                                    FALSE);
   
-  //	if (!browser->didFind) create_dialog("Find Results", "Expression was not found!", 0, 1);
+  //if (!browser->didFind) create_dialog("Find Results", "Expression was not found!", 0, 1);
   if (last_find) g_free(last_find);
   last_find = g_strdup(gtk_entry_get_text(GTK_ENTRY(GTK_COMBO(entry)->entry)));
 }
@@ -2094,11 +1580,12 @@ static void update_ui (MinimoBrowser *browser)
   
   tmp = gtk_moz_embed_get_title (GTK_MOZ_EMBED (browser->active_page));
   
-  if (tmp) x = strlen (tmp);
-  if (x == 0) tmp = "Minimo";
+  if (tmp)
+    x = strlen (tmp);
+  if (x == 0)
+    tmp = "Minimo";
   gtk_window_set_title (GTK_WINDOW(browser->topLevelWindow), tmp);
   url = gtk_moz_embed_get_location (GTK_MOZ_EMBED (browser->active_page));
-  
 }
 
 /* Method that build the entry completion */
@@ -2128,4 +1615,3 @@ gint escape_key_handler(GtkWidget *window, GdkEventKey *ev)
   }
   return (0);
 }
-
