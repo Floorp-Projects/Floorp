@@ -454,7 +454,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 break;
             case WITHOUT:
                 {
-                    Without* without = static_cast<Without*>(instruction);
+                    // Without* without = static_cast<Without*>(instruction);
                     mGlobal = mGlobal->getParent();
                 }
                 break;
