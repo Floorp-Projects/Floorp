@@ -324,6 +324,7 @@ nsListControlFrame::Reflow(nsIPresContext&   aPresContext,
     // Subtract out the borders
   nsMargin border;
   if (!aReflowState.mStyleSpacing->GetBorder(border)) {
+    NS_NOTYETIMPLEMENTED("percentage border");
     border.SizeTo(0, 0, 0, 0);
   }
   //XXX: Should just get the border.top when needed instead of

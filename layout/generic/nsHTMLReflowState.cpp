@@ -425,7 +425,9 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
       const nsStyleSpacing* blockSpacing;
 
       cbrs->frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)blockSpacing);
-      blockSpacing->GetBorder(blockBorder);
+      if (!blockSpacing->GetBorder(blockBorder)) {
+        NS_NOTYETIMPLEMENTED("percentage border");
+      }
       placeholderOffset.x -= blockBorder.top;
       placeholderOffset.y -= blockBorder.bottom;
     }

@@ -200,7 +200,9 @@ nsFieldSetFrame::Paint(nsIPresContext& aPresContext,
         nscoord onePixel = NSIntPixelsToTwips(1, p2t);
  
         nsMargin border;
-        spacing->GetBorder(border);
+        if (!spacing->GetBorder(border)) {
+          NS_NOTYETIMPLEMENTED("percentage border");
+        }
 
         nscoord yoff = 0;
         

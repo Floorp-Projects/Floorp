@@ -244,7 +244,9 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   nsMargin  border;
 
   // Get the border values
-  aReflowState.mStyleSpacing->GetBorder(border);
+  if (!aReflowState.mStyleSpacing->GetBorder(border)) {
+    NS_NOTYETIMPLEMENTED("percentage border");
+  }
   
   nsIHTMLReflow*  htmlReflow;
   rv = aKidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);

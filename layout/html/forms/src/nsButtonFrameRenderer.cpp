@@ -235,7 +235,9 @@ nsButtonFrameRenderer::GetButtonOuterFocusBorderAndPadding()
 	if (mOuterFocusStyle) {
 		// get the outer focus border and padding
 		const nsStyleSpacing* spacing = (const nsStyleSpacing*)mOuterFocusStyle ->GetStyleData(eStyleStruct_Spacing);
-		spacing->GetBorderPadding(focusBorderAndPadding);
+		if (!spacing->GetBorderPadding(focusBorderAndPadding)) {
+      NS_NOTYETIMPLEMENTED("percentage border");
+    }
 	}
 
 	return focusBorderAndPadding;
@@ -249,7 +251,9 @@ nsButtonFrameRenderer::GetButtonBorderAndPadding()
 
     nsMargin borderAndPadding(0,0,0,0);
  	const nsStyleSpacing* spacing = (const nsStyleSpacing*)context ->GetStyleData(eStyleStruct_Spacing);
-    spacing->GetBorderPadding(borderAndPadding);
+    if (!spacing->GetBorderPadding(borderAndPadding)) {
+      NS_NOTYETIMPLEMENTED("percentage border");
+    }
 	return borderAndPadding;
 }
 
@@ -278,7 +282,9 @@ nsButtonFrameRenderer::GetButtonInnerFocusBorderAndPadding()
 	if (mInnerFocusStyle) {
 		// get the outer focus border and padding
 		const nsStyleSpacing* spacing = (const nsStyleSpacing*)mInnerFocusStyle ->GetStyleData(eStyleStruct_Spacing);
-		spacing->GetBorderPadding(innerFocusBorderAndPadding);
+		if (!spacing->GetBorderPadding(innerFocusBorderAndPadding)) {
+      NS_NOTYETIMPLEMENTED("percentage border");
+    }
 	}
 
 	return innerFocusBorderAndPadding;
@@ -292,7 +298,9 @@ nsButtonFrameRenderer::GetButtonOutlineBorderAndPadding()
 	if (mOutlineStyle) {
 		// get the outline border and padding
 		const nsStyleSpacing* spacing = (const nsStyleSpacing*)mOutlineStyle ->GetStyleData(eStyleStruct_Spacing);
-		spacing->GetBorderPadding(borderAndPadding);
+		if (!spacing->GetBorderPadding(borderAndPadding)) {
+      NS_NOTYETIMPLEMENTED("percentage border");
+    }
 	}
 
 	return borderAndPadding;

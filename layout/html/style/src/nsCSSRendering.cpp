@@ -1803,7 +1803,9 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     nsRect    paddingArea(aBorderArea);
     nsMargin  border;
 
-    aSpacing.GetBorder(border);
+    if (!aSpacing.GetBorder(border)) {
+      NS_NOTYETIMPLEMENTED("percentage border");
+    }
     paddingArea.Deflate(border);
 
     // The actual dirty rect is the intersection of the padding area and the
