@@ -490,6 +490,7 @@
               return popupSetBox.activeChild;
             else if (menuBox)
               return menuBox.activeChild;
+            throw Components.results.NS_ERROR_FAILURE;
           ]]>
         </getter>
         <setter>
@@ -502,6 +503,7 @@
               return popupSetBox.activeChild = val;
             else if (menuBox)
               return menuBox.activeChild = val;
+            throw Components.results.NS_ERROR_FAILURE;
           ]]>
         </setter>
       </property>
@@ -694,6 +696,9 @@
       <property name="contentViewerFile"
                 readonly="true"
                 onget="return this.docShell.contentViewer.QueryInterface(Components.interfaces.nsIContentViewerFile);"/>
+      <property name="documentCharsetInfo"
+                readonly="true"
+                onget="return this.docShell.documentCharsetInfo;"/>
     </implementation>
   </binding>
 
