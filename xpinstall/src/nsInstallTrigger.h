@@ -14,14 +14,17 @@
 #include "nsSoftwareUpdate.h"
 #include "nsXPITriggerInfo.h"
 
+#include "nsIContentHandler.h"
+
 #define CHROME_SKIN         1
 #define CHROME_LOCALE       2
 #define CHROME_SAFEMAX      CHROME_LOCALE
 #define CHROME_CONTENT      4
 #define CHROME_ALL          7
 
-
-class nsInstallTrigger: public nsIScriptObjectOwner, public nsIDOMInstallTriggerGlobal
+class nsInstallTrigger: public nsIScriptObjectOwner, 
+                        public nsIDOMInstallTriggerGlobal,
+                        public nsIContentHandler
 {
     public:
         static const nsIID& IID() { static nsIID iid = NS_SoftwareUpdateInstallTrigger_CID; return iid; }
@@ -30,6 +33,7 @@ class nsInstallTrigger: public nsIScriptObjectOwner, public nsIDOMInstallTrigger
         virtual ~nsInstallTrigger();
         
         NS_DECL_ISUPPORTS
+        NS_DECL_NSICONTENTHANDLER
 
         NS_IMETHOD    GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
         NS_IMETHOD    SetScriptObject(void* aScriptObject);
