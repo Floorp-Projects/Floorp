@@ -86,7 +86,10 @@ function goPreferences(id, paneURL, paneID)
 
 function okToCapture() {
   var capture = document.getElementById("menu_capture");
-  if (!window._content.document) {
+  if (!capture) {
+    return;
+  }
+  if (!window._content || !window._content.document) {
     capture.setAttribute("disabled", "true");
     return;
   }
@@ -109,7 +112,10 @@ function okToCapture() {
 
 function okToPrefill() {
   var prefill = document.getElementById("menu_prefill");
-  if (!window._content.document) {
+  if (!prefill) {
+    return;
+  }
+  if (!window._content || !window._content.document) {
     prefill.setAttribute("disabled", "true");
     return;
   }
