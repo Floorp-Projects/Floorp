@@ -38,6 +38,11 @@ dnl     AC_ERROR(Building in the srcdir is not supported! Please build from a se
 dnl fi
 dnl unset d
 
+dnl Build optimized by default
+dnl ========================================================
+CFLAGS="${CFLAGS--O}"
+CXXFLAGS="${CXXFLAGS--O}"
+
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
