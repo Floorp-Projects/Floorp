@@ -71,10 +71,10 @@ extern int MK_SIGNON_CHANGE;
 static PRMonitor * signon_lock_monitor = NULL;
 static PRThread  * signon_lock_owner = NULL;
 static int signon_lock_count = 0;
-static Bool si_anonymous = FALSE;
+static PRBool si_anonymous = PR_FALSE;
 
 #ifdef APPLE_KEYCHAIN
-static Bool     si_list_invalid = FALSE;
+static PRBool     si_list_invalid = PR_FALSE;
 static KCCallbackUPP si_kcUPP = NULL;
 PRIVATE int
 si_SaveSignonDataInKeychain();
@@ -111,10 +111,10 @@ struct LO_FormSubmitData_struct {
  */
 static const char *pref_useDialogs =
     "wallet.useDialogs";
-PRIVATE Bool si_useDialogs = FALSE;
+PRIVATE PRBool si_useDialogs = PR_FALSE;
 
 PRIVATE void
-si_SetUsingDialogsPref(Bool x)
+si_SetUsingDialogsPref(PRBool x)
 {
     /* do nothing if new value of pref is same as current value */
     if (x == si_useDialogs) {
@@ -128,7 +128,7 @@ si_SetUsingDialogsPref(Bool x)
 MODULE_PRIVATE int PR_CALLBACK
 si_UsingDialogsPrefChanged(const char * newpref, void * data)
 {
-    Bool x;
+    PRBool x;
     PREF_GetBoolPref(pref_useDialogs, &x);
     si_SetUsingDialogsPref(x);
     return PREF_NOERROR;
@@ -137,47 +137,47 @@ si_UsingDialogsPrefChanged(const char * newpref, void * data)
 void
 si_RegisterUsingDialogsPrefCallbacks(void)
 {
-    Bool x = FALSE; /* initialize to default value in case PREF_GetBoolPref fails */
-    static Bool first_time = TRUE;
+    PRBool x = PR_FALSE; /* initialize to default value in case PREF_GetBoolPref fails */
+    static PRBool first_time = PR_TRUE;
 
     if(first_time)
     {
-        first_time = FALSE;
+        first_time = PR_FALSE;
         PREF_GetBoolPref(pref_useDialogs, &x);
         si_SetUsingDialogsPref(x);
         PREF_RegisterCallback(pref_useDialogs, si_UsingDialogsPrefChanged, NULL);
     }
 }
 
-PRIVATE Bool
+PRIVATE PRBool
 si_GetUsingDialogsPref(void)
 {
     si_RegisterUsingDialogsPrefCallbacks();
     return si_useDialogs;
 }
 
-Bool
+PRBool
 MyFE_Confirm(const char* szMessage)
 {
     char c;
 
     if (!si_GetUsingDialogsPref()) {
-      return JS_TRUE;
+      return PR_TRUE;
     }
 
     fprintf(stdout, "%c%s  (y/n)?  ", '\007', szMessage); /* \007 is BELL */
     for (;;) {
         c = getchar();
         if (tolower(c) == 'y') {
-            return JS_TRUE;
+            return PR_TRUE;
         }
         if (tolower(c) == 'n') {
-            return JS_FALSE;
+            return PR_FALSE;
         }
     }
 }
 
-Bool
+PRBool
 MyFE_SelectDialog
     (const char* szMessage, char** pList, int16* pCount)
 {
@@ -186,7 +186,7 @@ MyFE_SelectDialog
 
     if (!si_GetUsingDialogsPref()) {
       *pCount = 0;
-      return JS_TRUE;
+      return PR_TRUE;
     }
 
     fprintf(stdout, "%s\n", szMessage);
@@ -198,10 +198,10 @@ MyFE_SelectDialog
         c = getchar();
         if (c >= '0' && c <= '9') {
             *pCount = c - '0';
-            return JS_TRUE;
+            return PR_TRUE;
         }
         if (tolower(c) == 'n') {
-            return JS_FALSE;
+            return PR_FALSE;
         }
     }
 }
@@ -236,7 +236,7 @@ si_WriteKey(XP_File fp) {
 
 PRBool
 si_BadKey() {
-  return FALSE;
+  return PR_FALSE;
 }
 
 void
@@ -279,7 +279,7 @@ si_lock_signon_list(void)
 
     PR_EnterMonitor(signon_lock_monitor);
 
-    while(TRUE) {
+    while(PR_TRUE) {
 
         /* no current owner or owned by this thread */
         PRThread * t = PR_CurrentThread();
@@ -324,13 +324,13 @@ si_unlock_signon_list(void)
 
 static const char *pref_rememberSignons =
     "network.signon.rememberSignons";
-PRIVATE Bool si_RememberSignons = FALSE;
+PRIVATE PRBool si_RememberSignons = PR_FALSE;
 
 PRIVATE int
 si_SaveSignonDataLocked(char * filename);
 
 PRIVATE void
-si_SetSignonRememberingPref(Bool x)
+si_SetSignonRememberingPref(PRBool x)
 {
     /* do nothing if new value of pref is same as current value */
     if (x == si_RememberSignons) {
@@ -363,7 +363,7 @@ si_SetSignonRememberingPref(Bool x)
 MODULE_PRIVATE int PR_CALLBACK
 si_SignonRememberingPrefChanged(const char * newpref, void * data)
 {
-    Bool x;
+    PRBool x;
     PREF_GetBoolPref(pref_rememberSignons, &x);
     si_SetSignonRememberingPref(x);
     return PREF_NOERROR;
@@ -372,19 +372,19 @@ si_SignonRememberingPrefChanged(const char * newpref, void * data)
 void
 si_RegisterSignonPrefCallbacks(void)
 {
-    Bool x = TRUE; /* initialize to default value in case PREF_GetBoolPref fails */
-    static Bool first_time = TRUE;
+    PRBool x = PR_TRUE; /* initialize to default value in case PREF_GetBoolPref fails */
+    static PRBool first_time = PR_TRUE;
 
     if(first_time)
     {
-        first_time = FALSE;
+        first_time = PR_FALSE;
         PREF_GetBoolPref(pref_rememberSignons, &x);
         si_SetSignonRememberingPref(x);
         PREF_RegisterCallback(pref_rememberSignons, si_SignonRememberingPrefChanged, NULL);
     }
 }
 
-PRIVATE Bool
+PRIVATE PRBool
 si_GetSignonRememberingPref(void)
 {
 #ifdef APPLE_KEYCHAIN
@@ -393,10 +393,10 @@ si_GetSignonRememberingPref(void)
     if (si_list_invalid)
     {
         /*
-         * set si_list_invalid to FALSE first because SI_RemoveAllSignonData
+         * set si_list_invalid to PR_FALSE first because SI_RemoveAllSignonData
          * calls si_GetSignonRememberingPref
          */
-        si_list_invalid = FALSE;
+        si_list_invalid = PR_FALSE;
         SI_RemoveAllSignonData();
         SI_LoadSignonData(NULL);
     }
@@ -413,7 +413,7 @@ si_GetSignonRememberingPref(void)
 typedef struct _SignonDataStruct {
     char * name;
     char * value;
-    Bool isPassword;
+    PRBool isPassword;
 } si_SignonDataStruct;
 
 typedef struct _SignonUserStruct {
@@ -435,9 +435,9 @@ typedef struct _RejectStruct {
 PRIVATE XP_List * si_signon_list=0;
 PRIVATE XP_List * si_reject_list=0;
 
-PRIVATE Bool si_signon_list_changed = FALSE;
+PRIVATE PRBool si_signon_list_changed = PR_FALSE;
 PRIVATE int si_TagCount = 0;
-PRIVATE Bool si_NoticeGiven = FALSE;
+PRIVATE PRBool si_NoticeGiven = PR_FALSE;
 
 
 /* Remove misleading portions from URL name */
@@ -559,8 +559,8 @@ si_GetURL(char * URLName) {
 }
 
 /* Remove a user node from a given URL node */
-PUBLIC Bool
-SI_RemoveUser(char *URLName, char *userName, Bool save) {
+PUBLIC PRBool
+SI_RemoveUser(char *URLName, char *userName, PRBool save) {
     si_SignonURLStruct * url;
     si_SignonUserStruct * user;
     si_SignonDataStruct * data;
@@ -569,7 +569,7 @@ SI_RemoveUser(char *URLName, char *userName, Bool save) {
 
     /* do nothing if signon preference is not enabled */
     if (!si_GetSignonRememberingPref()) {
-        return FALSE;
+        return PR_FALSE;
     }
 
     si_lock_signon_list();
@@ -579,7 +579,7 @@ SI_RemoveUser(char *URLName, char *userName, Bool save) {
     if (!url) {
         /* URL not found */
         si_unlock_signon_list();
-        return FALSE;
+        return PR_FALSE;
     }
 
     /* free the data in each node of the specified user node for this URL */
@@ -602,7 +602,7 @@ SI_RemoveUser(char *URLName, char *userName, Bool save) {
             }
         }
         si_unlock_signon_list();
-        return FALSE; /* user not found so nothing to remove */
+        return PR_FALSE; /* user not found so nothing to remove */
         foundUser: ;
     }
 
@@ -627,16 +627,16 @@ SI_RemoveUser(char *URLName, char *userName, Bool save) {
 
     /* write out the change to disk */
     if (save) {
-        si_signon_list_changed = TRUE;
+        si_signon_list_changed = PR_TRUE;
         si_SaveSignonDataLocked(NULL);
     }
 
     si_unlock_signon_list();
-    return TRUE;
+    return PR_TRUE;
 }
 
 /* Determine if a specified url/user exists */
-PRIVATE Bool
+PRIVATE PRBool
 si_CheckForUser(char *URLName, char *userName) {
     si_SignonURLStruct * url;
     si_SignonUserStruct * user;
@@ -646,7 +646,7 @@ si_CheckForUser(char *URLName, char *userName) {
 
     /* do nothing if signon preference is not enabled */
     if (!si_GetSignonRememberingPref()) {
-        return FALSE;
+        return PR_FALSE;
     }
 
     si_lock_signon_list();
@@ -656,7 +656,7 @@ si_CheckForUser(char *URLName, char *userName) {
     if (!url) {
         /* URL not found */
         si_unlock_signon_list();
-        return FALSE;
+        return PR_FALSE;
     }
 
     /* find the specified user */
@@ -666,12 +666,12 @@ si_CheckForUser(char *URLName, char *userName) {
         while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
             if (XP_STRCMP(data->value, userName)==0) {
                 si_unlock_signon_list();
-                return TRUE;
+                return PR_TRUE;
             }
         }
     }
     si_unlock_signon_list();
-    return FALSE; /* user not found */
+    return PR_FALSE; /* user not found */
 }
 
 /*
@@ -682,7 +682,7 @@ si_CheckForUser(char *URLName, char *userName) {
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE si_SignonUserStruct*
-si_GetUser(char* URLName, Bool pickFirstUser, char* userText) {
+si_GetUser(char* URLName, PRBool pickFirstUser, char* userText) {
     si_SignonURLStruct* url;
     si_SignonUserStruct* user;
     si_SignonDataStruct* data;
@@ -819,7 +819,7 @@ si_GetUserForChangeForm(char* URLName, int messageNumber)
                  */
                 XP_ListRemoveObject(url->signonUser_list, user);
                 XP_ListAddObject(url->signonUser_list, user);
-                si_signon_list_changed = TRUE;
+                si_signon_list_changed = PR_TRUE;
                 si_SaveSignonDataLocked(NULL);
                 XP_FREE(message);
                 return user;
@@ -917,7 +917,7 @@ si_GetURLAndUserForChangeForm(char* password)
          */
         XP_ListRemoveObject(url->signonUser_list, user);
         XP_ListAddObject(url->signonUser_list, user);
-        si_signon_list_changed = TRUE;
+        si_signon_list_changed = PR_TRUE;
         si_SaveSignonDataLocked(NULL);
     } else {
         user = NULL;
@@ -952,7 +952,7 @@ si_FreeReject(si_Reject * reject) {
     PR_Free(reject);
 }
 
-PRIVATE Bool
+PRIVATE PRBool
 si_CheckForReject(char * URLName, char * userName) {
     XP_List * list_ptr;
     si_Reject * reject;
@@ -964,16 +964,16 @@ si_CheckForReject(char * URLName, char * userName) {
             if(!PL_strcmp(userName, reject->userName) &&
                     !PL_strcmp(URLName, reject->URLName)) {
                 si_unlock_signon_list();
-                return TRUE;
+                return PR_TRUE;
            }
         }
     }
     si_unlock_signon_list();
-    return FALSE;
+    return PR_FALSE;
 }
 
 PRIVATE void
-si_PutReject(char * URLName, char * userName, Bool save) {
+si_PutReject(char * URLName, char * userName, PRBool save) {
     si_Reject * reject;
     char * URLName2=NULL;
     char * userName2=NULL;
@@ -987,7 +987,7 @@ si_PutReject(char * URLName, char * userName, Bool save) {
          *  So we need to determine whether or not we were called from
          *  SI_LoadSignonData before setting or clearing the lock.  We can
          *  determine this by testing "save" since only SI_LoadSignonData
-         *  passes in a value of FALSE for "save".
+         *  passes in a value of PR_FALSE for "save".
          */
         XP_List * list_ptr;
         if (save) {
@@ -1016,11 +1016,11 @@ si_PutReject(char * URLName, char * userName, Bool save) {
         /* add it to the list in alphabetical order */
         {
             si_Reject * tmp_reject;
-            Bool rejectAdded = FALSE;
+            PRBool rejectAdded = PR_FALSE;
             while((tmp_reject = (si_Reject *) XP_ListNextObject(list_ptr))!=0) {
                 if (PL_strcmp (reject->URLName, tmp_reject->URLName)<0) {
                     XP_ListInsertObject (si_reject_list, tmp_reject, reject);
-                    rejectAdded = TRUE;
+                    rejectAdded = PR_TRUE;
                     break;
                 }
             }
@@ -1034,7 +1034,7 @@ si_PutReject(char * URLName, char * userName, Bool save) {
 #endif
 
         if (save) {
-            si_signon_list_changed = TRUE;
+            si_signon_list_changed = PR_TRUE;
             SI_SaveSignonData(NULL);
         }
         if (save) {
@@ -1044,9 +1044,9 @@ si_PutReject(char * URLName, char * userName, Bool save) {
 }
 
 /* Ask user if it is ok to save the signon data */
-PRIVATE Bool
+PRIVATE PRBool
 si_OkToSave(char *URLName, char *userName) {
-    Bool remember_checked = TRUE;
+    PRBool remember_checked = PR_TRUE;
     char *strippedURLName = 0;
 
     /* do not save signons if user didn't know the key */
@@ -1056,20 +1056,20 @@ si_OkToSave(char *URLName, char *userName) {
 
     /* if url/user already exists, then it is safe to save it again */
     if (si_CheckForUser(URLName, userName)) {
-        return TRUE;
+        return PR_TRUE;
     }
 
     if (!si_NoticeGiven) {
         char* notification = 0;
-        si_NoticeGiven = TRUE;
-        si_signon_list_changed = TRUE;
+        si_NoticeGiven = PR_TRUE;
+        si_signon_list_changed = PR_TRUE;
         SI_SaveSignonData(NULL);
         StrAllocCopy(notification, XP_GetString(MK_SIGNON_NOTIFICATION));
         StrAllocCat(notification, XP_GetString(MK_SIGNON_NOTIFICATION_1));
         if (!MyFE_Confirm(notification)) {
             XP_FREE (notification);
-            PREF_SetBoolPref(pref_rememberSignons, FALSE);
-            return FALSE;
+            PREF_SetBoolPref(pref_rememberSignons, PR_FALSE);
+            return PR_FALSE;
         }
         XP_FREE (notification);
     }
@@ -1077,16 +1077,16 @@ si_OkToSave(char *URLName, char *userName) {
     strippedURLName = si_StrippedURL(URLName);
     if (si_CheckForReject(strippedURLName, userName)) {
         XP_FREE(strippedURLName);
-        return FALSE;
+        return PR_FALSE;
     }
 
     if (!MyFE_Confirm(XP_GetString(MK_SIGNON_NAG))) {
-        si_PutReject(strippedURLName, userName, TRUE);
+        si_PutReject(strippedURLName, userName, PR_TRUE);
         XP_FREE(strippedURLName);
-        return FALSE;
+        return PR_FALSE;
     }
     XP_FREE(strippedURLName);
-    return TRUE;
+    return PR_TRUE;
 }
 
 /*
@@ -1098,10 +1098,10 @@ si_OkToSave(char *URLName, char *userName) {
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE void
-si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
+si_PutData(char * URLName, LO_FormSubmitData * submit, PRBool save) {
     char * name;
     char * value;
-    Bool added_to_list = FALSE;
+    PRBool added_to_list = PR_FALSE;
     si_SignonURLStruct * url;
     si_SignonUserStruct * user;
     si_SignonDataStruct * data;
@@ -1110,7 +1110,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
     XP_List * user_ptr;
     XP_List * data_ptr;
     si_SignonURLStruct * tmp_URL_ptr;
-    Bool mismatch;
+    PRBool mismatch;
     int i;
 
     /* discard this if the password is empty */
@@ -1129,7 +1129,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
      *   So we need to determine whether or not we were called from
      *   SI_LoadSignonData before setting or clearing the lock.  We can
      *   determine this by testing "save" since only SI_LoadSignonData passes
-     *   in a value of FALSE for "save".
+     *   in a value of PR_FALSE for "save".
      */
     if (save) {
         si_lock_signon_list();
@@ -1184,7 +1184,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
             if(PL_strcmp(url->URLName,tmp_URL_ptr->URLName)<0) {
                 XP_ListInsertObject
                     (si_signon_list, tmp_URL_ptr, url);
-                added_to_list = TRUE;
+                added_to_list = PR_TRUE;
                 break;
             }
         }
@@ -1209,7 +1209,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
         data_ptr = user->signonData_list;
         j = 0;
         while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
-            mismatch = FALSE;
+            mismatch = PR_FALSE;
 
             /* skip non text/password fields */
             while ((j < submit->value_cnt) &&
@@ -1230,18 +1230,18 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
                     if (!XP_STRCMP(data->value, "")) {
                         j++; /* success */
                     } else {
-                        mismatch = TRUE;
+                        mismatch = PR_TRUE;
                         break; /* value mismatch, try next user */
                     }
                 } else if (!XP_STRCMP(data->value, ((char **)submit->value_array)[j])
                         || data->isPassword) {
                     j++; /* success */
                 } else {
-                    mismatch = TRUE;
+                    mismatch = PR_TRUE;
                     break; /* value mismatch, try next user */
                 }
             } else {
-                mismatch = TRUE;
+                mismatch = PR_TRUE;
                 break; /* name or type mismatch, try next user */
             }
 
@@ -1271,7 +1271,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
                 /* update saved password */
                 if ((j < submit->value_cnt) && data->isPassword) {
                     if (XP_STRCMP(data->value, ((char **)submit->value_array)[j])) {
-                        si_signon_list_changed = TRUE;
+                        si_signon_list_changed = PR_TRUE;
                         StrAllocCopy(data->value, ((char **)submit->value_array)[j]);
                         si_Randomize(data->value);
                     }
@@ -1289,7 +1289,7 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
 
             /* return */
             if (save) {
-                si_signon_list_changed = TRUE;
+                si_signon_list_changed = PR_TRUE;
                 si_SaveSignonDataLocked(NULL);
                 si_unlock_signon_list();
             }
@@ -1355,12 +1355,12 @@ si_PutData(char * URLName, LO_FormSubmitData * submit, Bool save) {
          * Note that by appending to the front, we assure that if there are
          * several users, the most recently used one will be favored for
          * reuse the next time this form is encountered.  But don't do this
-         * when reading in signons.txt (i.e., when save is false), otherwise
+         * when reading in signons.txt (i.e., when save is PR_FALSE), otherwise
          * we will be reversing the order when reading in.
          */
     if (save) {
         XP_ListAddObject(url->signonUser_list, user);
-        si_signon_list_changed = TRUE;
+        si_signon_list_changed = PR_TRUE;
         si_SaveSignonDataLocked(NULL);
         si_unlock_signon_list();
     } else {
@@ -1386,8 +1386,8 @@ SI_StartOfForm() {
 #ifdef APPLE_KEYCHAIN
 OSStatus PR_CALLBACK
 si_KeychainCallback( KCEvent keychainEvent, KCCallbackInfo *info, void *userContext) {
-    Bool    *listInvalid = (Bool*)userContext;
-    *listInvalid = TRUE;
+    PRBool    *listInvalid = (PRBool*)userContext;
+    *listInvalid = PR_TRUE;
 }
 #endif
 
@@ -1409,7 +1409,7 @@ si_LoadSignonDataFromKeychain() {
     uint8 type_array[MAX_ARRAY_SIZE];
     char buffer[BUFFER_SIZE];
     XP_File fp;
-    Bool badInput = FALSE;
+    PRBool badInput = PR_FALSE;
     int i;
     char* unmungedValue;
     KCItemRef   itemRef;
@@ -1440,9 +1440,9 @@ si_LoadSignonDataFromKeychain() {
 
     if (status == noErr) {
         /* if we found a Netscape item, let's assume notice has been given */
-        si_NoticeGiven = TRUE;
+        si_NoticeGiven = PR_TRUE;
     } else {
-        si_NoticeGiven = FALSE;
+        si_NoticeGiven = PR_FALSE;
     }
 
     si_lock_signon_list();
@@ -1451,7 +1451,7 @@ si_LoadSignonDataFromKeychain() {
         uint16          i = 0;
         uint32          actualSize;
         KCItemFlags     flags;
-        Boolean         reject = FALSE;
+        PRBool          reject = PR_FALSE;
 
         submit.value_cnt = 0;
 
@@ -1466,7 +1466,7 @@ si_LoadSignonDataFromKeychain() {
         }
 
         if (flags & kNegativeKCItemFlag) {
-            reject = TRUE;
+            reject = PR_TRUE;
         }
 
         /* get the server name */
@@ -1550,10 +1550,10 @@ si_LoadSignonDataFromKeychain() {
             submit.value_cnt++;
             /* store the info for this URL into memory-resident data structure */
             if (!URLName || XP_STRLEN(URLName) == 0) {
-                badInput = TRUE;
+                badInput = PR_TRUE;
             }
             if (!badInput) {
-                si_PutData(URLName, &submit, FALSE);
+                si_PutData(URLName, &submit, PR_FALSE);
             }
 
             /* free up all the allocations done for processing this URL */
@@ -1563,10 +1563,10 @@ si_LoadSignonDataFromKeychain() {
             }
         } else {
             /* reject */
-            si_PutReject(URLName, buffer, FALSE);
+            si_PutReject(URLName, buffer, PR_FALSE);
         }
 
-        reject = FALSE;         /* reset reject flag */
+        reject = PR_FALSE;         /* reset reject flag */
         XP_FREE(URLName);
         KCReleaseItemRef( &itemRef );
 
@@ -1618,7 +1618,7 @@ SI_LoadSignonData(char * filename) {
     uint8 type_array[MAX_ARRAY_SIZE];
     char buffer[BUFFER_SIZE];
     XP_File fp;
-    Bool badInput;
+    PRBool badInput;
     int i;
     char* unmungedValue;
 
@@ -1682,7 +1682,7 @@ if (NS_FAILED(rv)) {
         StrAllocCopy(URLName, buffer);
         XP_FileReadLine(buffer, BUFFER_SIZE, fp); /* get username */
         si_StripLF(buffer);
-        si_PutReject(URLName, buffer, FALSE);
+        si_PutReject(URLName, buffer, PR_FALSE);
         XP_FREE (URLName);
     }
 
@@ -1700,7 +1700,7 @@ if (NS_FAILED(rv)) {
 
         /* preparre to read the name/value pairs */
         submit.value_cnt = 0;
-        badInput = FALSE;
+        badInput = PR_FALSE;
 
         while(XP_FileReadLine(buffer, BUFFER_SIZE, fp)) {
 
@@ -1725,7 +1725,7 @@ if (NS_FAILED(rv)) {
             /* read in and save the value part */
             if(!XP_FileReadLine(buffer, BUFFER_SIZE, fp)) {
                 /* error in input file so give up */
-                badInput = TRUE;
+                badInput = PR_TRUE;
                 break;
             }
             si_StripLF(buffer);
@@ -1752,10 +1752,10 @@ if (NS_FAILED(rv)) {
 
         /* store the info for this URL into memory-resident data structure */
         if (!URLName || XP_STRLEN(URLName) == 0) {
-            badInput = TRUE;
+            badInput = PR_TRUE;
         }
         if (!badInput) {
-            si_PutData(URLName, &submit, FALSE);
+            si_PutData(URLName, &submit, PR_FALSE);
         }
 
         /* free up all the allocations done for processing this URL */
@@ -1920,7 +1920,7 @@ si_SaveSignonDataInKeychain() {
         }
     }
 
-    si_signon_list_changed = FALSE;
+    si_signon_list_changed = PR_FALSE;
     return (0);
 }
 #endif
@@ -2061,7 +2061,7 @@ si_SaveSignonDataLocked(char * filename) {
         }
     }
 
-    si_signon_list_changed = FALSE;
+    si_signon_list_changed = PR_FALSE;
     XP_FileClose(fp);
     return(0);
 }
@@ -2078,7 +2078,7 @@ SI_SaveSignonData(char * filename) {
 
     /* do nothing if signon preference is not enabled */
     if (!si_GetSignonRememberingPref()) {
-        return FALSE;
+        return PR_FALSE;
     }
 
     /* lock and call common save routine */
@@ -2096,7 +2096,7 @@ PUBLIC void
 SI_RemoveAllSignonData() {
 
     /* repeatedly remove first user node of first URL node */
-    while (SI_RemoveUser(NULL, NULL, FALSE)) {
+    while (SI_RemoveUser(NULL, NULL, PR_FALSE)) {
     }
 }
 
@@ -2145,7 +2145,7 @@ SI_RememberSignonData
 
         if ((j<submit.value_cnt) && si_OkToSave(URLName, /* urlname */
                 ((char **)submit.value_array)[j] /* username */)) {
-            si_PutData(URLName, &submit, TRUE);
+            si_PutData(URLName, &submit, PR_TRUE);
         }
     } else if (passwordCount == 2) {
         /* two-password form is a registration */
@@ -2197,7 +2197,7 @@ SI_RememberSignonData
         XP_STRCPY(((char **)submit.value_array)[pswd[2]],
                ((char **)submit.value_array)[pswd[1]]);
         StrAllocCopy(data->value, ((char **)submit.value_array)[pswd[1]]);
-        si_signon_list_changed = TRUE;
+        si_signon_list_changed = PR_TRUE;
         si_SaveSignonDataLocked(NULL);
         si_unlock_signon_list();
     }
@@ -2227,7 +2227,7 @@ SI_RestoreSignonData
      */
     /* see if this is first item in form and is a password */
     /* get first saved user just so we can see the name of the first item on the form */
-    user = si_GetUser(URLName, TRUE, NULL); /* this is the first saved user */
+    user = si_GetUser(URLName, PR_TRUE, NULL); /* this is the first saved user */
     if (user) {
         data_ptr = user->signonData_list; /* this is first item on form */
         data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
@@ -2251,7 +2251,7 @@ SI_RestoreSignonData
 #endif
 
     /* restore the data from previous time this URL was visited */
-    user = si_GetUser(URLName, FALSE, name);
+    user = si_GetUser(URLName, PR_FALSE, name);
     if (user) {
         data_ptr = user->signonData_list;
         while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
@@ -2300,7 +2300,7 @@ si_RememberSignonDataFromBrowser(char* URLName, char* username, char* password)
     type_array[1] = FORM_TYPE_PASSWORD;
 
     /* Save the signon data */
-    si_PutData(URLName, &submit, TRUE);
+    si_PutData(URLName, &submit, PR_TRUE);
 
     /* Free up the data memory just allocated */
     XP_FREE(value_array[0]);
@@ -2322,7 +2322,7 @@ SI_RememberSignonDataFromBrowser
  */
 PRIVATE void
 si_RestoreOldSignonDataFromBrowser
-    (char* URLName, Bool pickFirstUser,
+    (char* URLName, PRBool pickFirstUser,
     char** username, char** password)
 {
     si_SignonUserStruct* user;
@@ -2374,7 +2374,7 @@ SI_PromptUsernameAndPassword
 
     /* prefill with previous username/password if any */
     si_RestoreOldSignonDataFromBrowser
-        (URLName, FALSE, username, password);
+        (URLName, PR_FALSE, username, password);
 
     /* get new username/password from user */
     status = FE_PromptUsernameAndPassword
@@ -2393,7 +2393,7 @@ SI_PromptUsernameAndPassword
 /* Browser-generated prompt for password */
 PUBLIC char *
 SI_PromptPassword
-    (MWContext *context, char *prompt, char *URLName, Bool pickFirstUser)
+    (MWContext *context, char *prompt, char *URLName, PRBool pickFirstUser)
 {
     char *password=0, *username=0, *copyOfPrompt=0, *result;
     char *urlname = URLName;
@@ -2497,7 +2497,7 @@ SI_Prompt (MWContext *context, char *prompt,
     /* get previous username used */
     if (!defaultUsername || !XP_STRLEN(defaultUsername)) {
         si_RestoreOldSignonDataFromBrowser
-            (URLName, FALSE, &username, &password);
+            (URLName, PR_FALSE, &username, &password);
     } else {
        StrAllocCopy(username, defaultUsername);
     }
@@ -2540,7 +2540,7 @@ SI_AnonymizeSignons()
         si_dormant_signon_list = si_signon_list;
         si_signon_list = XP_ListNew();
         si_unlock_signon_list();
-        si_anonymous = TRUE;
+        si_anonymous = PR_TRUE;
     }
 }
 
@@ -2553,7 +2553,7 @@ SI_UnanonymizeSignons()
         si_signon_list = si_dormant_signon_list;
         si_unlock_signon_list();
         si_dormant_signon_list = 0;
-        si_anonymous = FALSE;
+        si_anonymous = PR_FALSE;
     }
 }
 
@@ -2563,17 +2563,17 @@ extern int MK_SIGNON_VIEW_SIGNONS;
 extern int MK_SIGNON_VIEW_REJECTS;
 
 
-/* return TRUE if "number" is in sequence of comma-separated numbers */
-Bool si_InSequence(char* sequence, int number) {
+/* return PR_TRUE if "number" is in sequence of comma-separated numbers */
+PRBool si_InSequence(char* sequence, int number) {
     char* ptr;
     char* endptr;
     char* undo = NULL;
-    Bool retval = FALSE;
+    PRBool retval = PR_FALSE;
     int i;
 
     /* not necessary -- routine will work even with null sequence */
     if (!*sequence) {
-        return FALSE;
+        return PR_FALSE;
     }
 
     for (ptr = sequence ; ptr ; ptr = endptr) {
@@ -2598,8 +2598,8 @@ Bool si_InSequence(char* sequence, int number) {
                 i = atoi(ptr);
                 if (i == number) {
 
-                    /* "number" was in the sequence so return TRUE */
-                    retval = TRUE;
+                    /* "number" was in the sequence so return PR_TRUE */
+                    retval = PR_TRUE;
                     break;
                 }
             }
@@ -2667,7 +2667,7 @@ si_SignonInfoDialogDone(XPDialogState* state, char** argv, int argc,
                     data_ptr = userToDelete->signonData_list;
                     data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
                     /* do the deletion */
-                    SI_RemoveUser(URLToDelete->URLName, data->value, TRUE);
+                    SI_RemoveUser(URLToDelete->URLName, data->value, PR_TRUE);
                 }
                 userToDelete = user;
                 URLToDelete = url;
@@ -2681,8 +2681,8 @@ si_SignonInfoDialogDone(XPDialogState* state, char** argv, int argc,
         data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr);
 
         /* do the deletion */
-        SI_RemoveUser(URLToDelete->URLName, data->value, TRUE);
-        si_signon_list_changed = TRUE;
+        SI_RemoveUser(URLToDelete->URLName, data->value, PR_TRUE);
+        si_signon_list_changed = PR_TRUE;
         si_SaveSignonDataLocked(NULL);
     }
 
@@ -2711,7 +2711,7 @@ si_SignonInfoDialogDone(XPDialogState* state, char** argv, int argc,
     }
     if (rejectToDelete) {
         si_FreeReject(rejectToDelete);
-        si_signon_list_changed = TRUE;
+        si_signon_list_changed = PR_TRUE;
         si_SaveSignonDataLocked(NULL);
     }
     si_unlock_signon_list();
@@ -2765,9 +2765,9 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
            we need to reload the signon data */
         if (si_list_invalid)
         {
-                /* set si_list_invalid to FALSE first because SI_RemoveAllSignonData
+                /* set si_list_invalid to PR_FALSE first because SI_RemoveAllSignonData
                    calls si_GetSignonRememberingPref */
-            si_list_invalid = FALSE;
+            si_list_invalid = PR_FALSE;
             SI_RemoveAllSignonData();
             SI_LoadSignonData(NULL);
         }
