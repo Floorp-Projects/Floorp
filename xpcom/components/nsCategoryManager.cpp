@@ -98,7 +98,7 @@ protected:
   virtual ~BaseStringEnumerator()
   {
     if (mArray)
-      delete mArray;
+      delete[] mArray;
   }
 
   const char** mArray;
