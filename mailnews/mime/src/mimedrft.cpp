@@ -1214,6 +1214,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
   PRBool sign_p = PR_FALSE;   /* #### how do we determine this? */
   PRBool forward_inline = PR_FALSE;
   PRBool bodyAsAttachment = PR_FALSE;
+  PRBool charsetOverride = PR_FALSE;
   
   NS_ASSERTION (mdd, "null mime draft data");
   
@@ -1247,6 +1248,8 @@ mime_parse_stream_complete (nsMIMESession *stream)
     mdd->obj = 0;
     if (mdd->options) 
     {
+      // save the override flag before it's unavailable
+      charsetOverride = mdd->options->override_charset;
       // mscott: aren't we leaking a bunch of trings here like the charset strings and such?
       delete mdd->options;
       mdd->options = 0;
@@ -1436,36 +1439,32 @@ mime_parse_stream_complete (nsMIMESession *stream)
       // Ok, if we are here, then we should look at the charset and convert
       // to UTF-8...
       //
-      if (!forward_inline)
+      if (!forward_inline && body)
       {
-        char *bodyCharset = MimeHeaders_get_parameter (mdd->messageBody->type, "charset", NULL, NULL);
-        if (bodyCharset && body)
+        char *mimeCharset = nsnull;
+        // Get a charset from the header if no override is set.
+        if (!charsetOverride)
+          mimeCharset = MimeHeaders_get_parameter (mdd->messageBody->type, "charset", NULL, NULL);
+        // If no charset is specified in the header then use the default.
+        char *bodyCharset = mimeCharset ? mimeCharset : mdd->mailcharset;
+        if (bodyCharset)
         {
-          // Now do conversion to UTF-8 for output
+          // Now do conversion to Unicode for output
           nsAutoString tempUnicodeString;
           if (NS_SUCCEEDED(ConvertToUnicode(bodyCharset, body, tempUnicodeString)))
-          {
-            char *utf8Str = nsCRT::strdup(NS_ConvertUCS2toUTF8(tempUnicodeString.get()).get());
-            if (utf8Str)
-            {
-              PR_FREEIF(body);
-              body = utf8Str;
-            }
-          }
-
-          PR_FREEIF(bodyCharset);
+            fields->SetBody(tempUnicodeString.get());
+          else
+            fields->SetBody(NS_ConvertASCIItoUCS2(body).get());
+          PR_Free(body);
+          body = nsnull;
+          PR_FREEIF(mimeCharset);
         }
       }
 
       // convert from UTF-8 to UCS2
       if (body)
       {
-        nsString ucs2;
-        if (NS_SUCCEEDED(nsMsgI18NConvertToUnicode(nsCAutoString("UTF-8"), nsCAutoString(body), ucs2)))
-          fields->SetBody(ucs2.get());
-        else
-          fields->SetBody(NS_ConvertASCIItoUCS2(body).get());
-      
+        fields->SetBody(NS_ConvertUTF8toUCS2(body).get());
         PR_Free(body);
       }
 
