@@ -64,8 +64,8 @@ nsresult nsMsgSearchOnlineMail::ValidateTerms ()
   {
       // ### mwelch Figure out the charsets to use 
       //            for the search terms and targets.
-      nsString srcCharset, dstCharset;
-      GetSearchCharsets(srcCharset, dstCharset);
+      nsXPIDLString srcCharset, dstCharset;
+      GetSearchCharsets(getter_Copies(srcCharset), getter_Copies(dstCharset));
 
       // do IMAP specific validation
       err = Encode (m_encoding, m_searchTerms, dstCharset.get());
@@ -106,7 +106,6 @@ nsresult nsMsgSearchOnlineMail::Search (PRBool *aDone)
 
     return err;
 }
-
 
 nsresult nsMsgSearchOnlineMail::Encode (nsCString& pEncoding,
                                         nsISupportsArray *searchTerms,
