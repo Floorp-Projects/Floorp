@@ -48,69 +48,69 @@ header[field=ORGANIZATION] { display: block; text-align:left; }
  * "X-" are turned off!
  */
 
-header[field=RETURN-PATH] { display: none; text-align:left; }
+header[field=RETURN-PATH] { display: block; text-align:left; }
 
-header[field=STATUS] { display: none; text-align:left; }
+header[field=STATUS] { display: block; text-align:left; }
 
-header[field=RECEIVED] { display: none; text-align:left; }
+header[field=RECEIVED] { display: block; text-align:left; }
 
-header[field=MIME-VERSION] { display: none; text-align:left; }
+header[field=MIME-VERSION] { display: block; text-align:left; }
 
-header[field=PRECEDENCE] { display: none; text-align: left; }
+header[field=PRECEDENCE] { display: block; text-align: left; }
 
-header[field=CONTENT-BASE] { display: none; text-align:left; }
+header[field=CONTENT-BASE] { display: block; text-align:left; }
 
-header[field=CONTENT-LOCATION] { display: none; text-align:left; }
+header[field=CONTENT-LOCATION] { display: block; text-align:left; }
 
-header[field=CONTENT-ID] { display: none; text-align:left; }
+header[field=CONTENT-ID] { display: block; text-align:left; }
 
-header[field=CONTENT-DESCRIPTION] { display: none; text-align:left; }
+header[field=CONTENT-DESCRIPTION] { display: block; text-align:left; }
 
-header[field=CONTENT-DISPOSITION] { display: none; text-align:left; }
+header[field=CONTENT-DISPOSITION] { display: block; text-align:left; }
 
-header[field=CONTENT-ENCODING] { display: none; text-align:left; }
+header[field=CONTENT-ENCODING] { display: block; text-align:left; }
 
-header[field=CONTENT-LENGTH] { display: none; text-align:left; }
+header[field=CONTENT-LENGTH] { display: block; text-align:left; }
 
-header[field=CONTENT-NAME] { display: none; text-align:left; }
+header[field=CONTENT-NAME] { display: block; text-align:left; }
 
-header[field=CONTENT-TRANSFER-ENCODING] { display: none; text-align:left; }
+header[field=CONTENT-TRANSFER-ENCODING] { display: block; text-align:left; }
 
-header[field=CONTENT-TYPE] { display: none; text-align:left; }
+header[field=CONTENT-TYPE] { display: block; text-align:left; }
 
-header[field=DISTRIBUTION] { display: none; text-align:left; }
+header[field=DISTRIBUTION] { display: block; text-align:left; }
 
-header[field=FCC] { display: none; text-align:left; }
+header[field=FCC] { display: block; text-align:left; }
 
-header[field=FOLLOWUP-TO] { display: none; text-align:left; }
+header[field=FOLLOWUP-TO] { display: block; text-align:left; }
 
-header[field=LINES] { display: none; text-align:left; }
+header[field=LINES] { display: block; text-align:left; }
 
-header[field=MESSAGE-ID] { display: none; text-align:left; }
+header[field=MESSAGE-ID] { display: block; text-align:left; }
 
-header[field=REFERENCES] { display: none; text-align:left; }
+header[field=REFERENCES] { display: block; text-align:left; }
 
-header[field=REPLY-TO] { display: none; text-align:left; }
+header[field=REPLY-TO] { display: block; text-align:left; }
 
-header[field=RESENT-COMMENTS] { display: none; text-align:left; }
+header[field=RESENT-COMMENTS] { display: block; text-align:left; }
 
-header[field=RESENT-DATE] { display: none; text-align:left; }
+header[field=RESENT-DATE] { display: block; text-align:left; }
 
-header[field=RESENT-FROM] { display: none; text-align:left; }
+header[field=RESENT-FROM] { display: block; text-align:left; }
 
-header[field=RESENT-MESSAGE-ID] { display: none; text-align:left; }
+header[field=RESENT-MESSAGE-ID] { display: block; text-align:left; }
 
-header[field=RESENT-SENDER] { display: none; text-align:left; }
+header[field=RESENT-SENDER] { display: block; text-align:left; }
 
-header[field=RESENT-TO] { display: none; text-align:left; }
+header[field=RESENT-TO] { display: block; text-align:left; }
 
-header[field=RESENT-CC] { display: none; text-align:left; }
+header[field=RESENT-CC] { display: block; text-align:left; }
 
-header[field=SENDER] { display: none; text-align:left; }
+header[field=SENDER] { display: block; text-align:left; }
 
-header[field=XREF] { display: none; text-align:left; }
+header[field=XREF] { display: block; text-align:left; }
 
-header[field=APPROVED-BY] { display: none; text-align:left; }
+header[field=APPROVED-BY] { display: block; text-align:left; }
 
 /**************************************************
  * These are all of the header extensions. For now,
@@ -118,35 +118,35 @@ header[field=APPROVED-BY] { display: none; text-align:left; }
  * all header display
  **************************************************/
 
-header[field=X-SUN-CHARSET] { display: none; text-align:left; }
+header[field=X-SUN-CHARSET] { display: block; text-align:left; }
 
-header[field=X-SUN-CONTENT-LENGTH] { display: none; text-align:left; }
+header[field=X-SUN-CONTENT-LENGTH] { display: block; text-align:left; }
 
-header[field=X-SUN-DATA-DESCRIPTION] { display: none; text-align:left; }
+header[field=X-SUN-DATA-DESCRIPTION] { display: block; text-align:left; }
 
-header[field=X-SUN-DATA-NAME] { display: none; text-align:left; }
+header[field=X-SUN-DATA-NAME] { display: block; text-align:left; }
 
-header[field=X-SUN-DATA-TYPE] { display: none; text-align:left; }
+header[field=X-SUN-DATA-TYPE] { display: block; text-align:left; }
 
-header[field=X-SUN-ENCODING-INFO] { display: none; text-align:left; }
+header[field=X-SUN-ENCODING-INFO] { display: block; text-align:left; }
 
-header[field=X-PRIORITY] { display: none; text-align:left; }
+header[field=X-PRIORITY] { display: block; text-align:left; }
 
-header[field=X-MOZILLA-PARTURL] { display: none; text-align:left; }
+header[field=X-MOZILLA-PARTURL] { display: block; text-align:left; }
 
-header[field=X-MOZILLA-DRAFT-INFO] { display: none; text-align:left; }
+header[field=X-MOZILLA-DRAFT-INFO] { display: block; text-align:left; }
 
-header[field=X-ACCEPT-LANGUAGE] { display: none; text-align:left; }
+header[field=X-ACCEPT-LANGUAGE] { display: block; text-align:left; }
 
-header[field=X-MAILING-LIST] { display: none; text-align:left; }
+header[field=X-MAILING-LIST] { display: block; text-align:left; }
 
-header[field=X-MAILING-LOOP] { display: none; text-align:left; }
+header[field=X-MAILING-LOOP] { display: block; text-align:left; }
 
-header[field=X-LOOP] { display: none; text-align: left; }
+header[field=X-LOOP] { display: block; text-align: left; }
 
-header[field=X-MAILER] { display: none; text-align:left; }
+header[field=X-MAILER] { display: block; text-align:left; }
 
-header[field=X-MOZILLA-STATUS] { display: none; text-align:left; }
+header[field=X-MOZILLA-STATUS] { display: block; text-align:left; }
 
-header[field=X-MOZILLA-STATUS2] { display: none; text-align: left; }
+header[field=X-MOZILLA-STATUS2] { display: block; text-align: left; }
 

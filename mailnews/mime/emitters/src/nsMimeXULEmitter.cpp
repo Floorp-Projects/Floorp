@@ -599,12 +599,11 @@ nsMimeXULEmitter::WriteXULTag(const char *tagName, const char *value)
     PR_FREEIF(l10nTagName);
   }
 
-  // UtilityWrite("<html:div>: </html:div>");
-  UtilityWrite(": ");
   UtilityWrite("</headerdisplayname>");
 
   // Now write out the actual value itself and move on!
   //
+  UtilityWrite(": ");
   UtilityWrite(newValue);
   UtilityWrite("</header>");
 
@@ -662,9 +661,18 @@ nsMimeXULEmitter::DumpAttachmentMenu()
   if ( (!mAttachArray) || (mAttachArray->Count() <= 0) )
     return NS_OK;
 
+  // RICHIE SHERRY - Hard coded string...evil...need to use string bundle when they work on
+  //                 non UI threads.
+  char  *i18nString = nsnull;
+
+  if (mAttachArray->Count() == 1)
+    i18nString = "Attachment";
+  else
+    i18nString = "Attachments";
+
   char *buttonXUL = PR_smprintf(
-                      "<titledbutton src=\"chrome://messenger/skin/attach.gif\" value=\"%d Attachments\" align=\"right\" class=\"popup\" popup=\"attachmentPopup\"/>", 
-                      mAttachArray->Count());
+                      "<titledbutton src=\"chrome://messenger/skin/attach.gif\" value=\"%d %s\" align=\"right\" class=\"popup\" popup=\"attachmentPopup\"/>", 
+                      mAttachArray->Count(), i18nString);
 
   if ( (!buttonXUL) || (!*buttonXUL) )
     return NS_OK;
@@ -737,7 +745,6 @@ nsMimeXULEmitter::OutputGenericHeader(const char *aHeaderVal)
 
   if (val)
   {
-    //UtilityWriteCRLF("<box align=\"vertical\" style=\"padding: 2px;\">");
     UtilityWriteCRLF("<box style=\"padding: 2px;\">");
     rv = WriteXULTag(aHeaderVal, val);
     UtilityWriteCRLF("</box>");
@@ -764,6 +771,7 @@ nsMimeXULEmitter::DumpSubjectFromDate()
       UtilityWriteCRLF("<spring flex=\"2\"/>");
       UtilityWriteCRLF("</box>");
 
+
       UtilityWriteCRLF("<box name=\"header-attachment\" align=\"horizontal\" flex=\"100%\">");
       UtilityWriteCRLF("<spring flex=\"1\"/>");
 
@@ -784,25 +792,15 @@ nsresult
 nsMimeXULEmitter::DumpToCC()
 {
   UtilityWriteCRLF("<toolbar>");
-  UtilityWriteCRLF("<box name=\"header-splitter2\" align=\"horizontal\" flex=\"100%\" >");
 
-    UtilityWriteCRLF("<box name=\"header-part2\" align=\"vertical\" flex=\"100%\" style=\"background-color: #FF0000; \" >");
-    UtilityWriteCRLF("<spring flex=\"1\"/>");
+    UtilityWriteCRLF("<box name=\"header-part2\" align=\"vertical\" flex=\"100%\">");
 
-          OutputGenericHeader(HEADER_TO);
-
-    UtilityWriteCRLF("<spring flex=\"1\"/>");
-    UtilityWriteCRLF("</box>");
-
-    UtilityWriteCRLF("<box name=\"header-part3\" align=\"vertical\" style=\"background-color: #00FF00; \">");
-    UtilityWriteCRLF("<spring flex=\"1\"/>");
-
+      OutputGenericHeader(HEADER_TO);
       OutputGenericHeader(HEADER_CC);
+      OutputGenericHeader(HEADER_BCC);
 
-    UtilityWriteCRLF("<spring flex=\"1\"/>");
     UtilityWriteCRLF("</box>");
 
-  UtilityWriteCRLF("</box>");
   UtilityWriteCRLF("</toolbar>");
   return NS_OK;
 }
@@ -810,10 +808,35 @@ nsMimeXULEmitter::DumpToCC()
 nsresult
 nsMimeXULEmitter::DumpRestOfHeaders()
 {
+  PRInt32     i;
+
   if (mHeaderDisplayType != nsMimeHeaderDisplayTypes::AllHeaders)
     return NS_OK;
 
   UtilityWriteCRLF("<toolbar>");
+
+    UtilityWriteCRLF("<box name=\"header-part3\" align=\"vertical\" flex=\"100%\">");
+
+      for (i=0; i<mHeaderArray->Count(); i++)
+      {
+        headerInfoType *headerInfo = (headerInfoType *)mHeaderArray->ElementAt(i);
+        if ( (!headerInfo) || (!headerInfo->name) || (!(*headerInfo->name)) ||
+              (!headerInfo->value) || (!(*headerInfo->value)))
+          continue;
+    
+        if ( (!PL_strcasecmp(HEADER_SUBJECT, headerInfo->name)) ||
+             (!PL_strcasecmp(HEADER_DATE, headerInfo->name)) ||
+             (!PL_strcasecmp(HEADER_FROM, headerInfo->name)) ||
+             (!PL_strcasecmp(HEADER_TO, headerInfo->name)) ||
+             (!PL_strcasecmp(HEADER_CC, headerInfo->name)) )
+           continue;
+
+        UtilityWriteCRLF("<box style=\"padding: 2px;\">");
+        WriteXULTag(headerInfo->name, headerInfo->value);
+        UtilityWriteCRLF("</box>");
+      }
+
+    UtilityWriteCRLF("</box>");
 
   UtilityWriteCRLF("</toolbar>");
   return NS_OK;
