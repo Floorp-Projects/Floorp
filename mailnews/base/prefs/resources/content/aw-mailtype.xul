@@ -22,14 +22,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<!DOCTYPE window
-[
-<!ENTITY mailTypeTitle.label "Netscape WebMail or Other Mail:">
-<!ENTITY mailTypeDesc.label "Select a free Netscape WebMail account or other mail account, such as your ISP or company mail.">
-<!ENTITY mailTypeOtherMail.label "Other Mail">
-
-]>
-
+<!DOCTYPE window SYSTEM "chrome://l10n/locale/aw-mailtype.dtd" >
 <window id="mailtype" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="parent.wizardPageLoaded('mailtype');">

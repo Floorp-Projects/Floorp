@@ -23,25 +23,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<!DOCTYPE window
-[
-<!ENTITY serverTitle.label "Server Information">
-<!ENTITY incomingServerTitle.label "Incoming Server">
-<!ENTITY incomingServerTypeDesc.label "Select the type of incoming server you are using.">
-<!ENTITY incomingServerTypeLabel.label "Server Type:">
-<!ENTITY incomingServerNameDesc.label "Enter the name of your incoming server. For example, pop.netscape.net">
-<!ENTITY incomingServerLabel.label "Server Name:">
-
-<!ENTITY smtpServerTitle.label "Outgoing (SMTP) Server">
-<!ENTITY smtpServerDesc.label "Enter the name of your outgoing (SMTP) server. For example, smtp.netscape.net">
-<!ENTITY smtpServerLabel.label "Server Name:">
-
-<!ENTITY imapType.label "IMAP Mail Server">
-<!ENTITY popType.label "POP Mail Server">
-<!ENTITY nntpType.label "News Server">
-
-]>
-
+<!DOCTYPE window SYSTEM "chrome://l10n/locale/aw-server.dtd" >
 <window id="serverpage" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="parent.wizardPageLoaded('server');">

@@ -22,7 +22,6 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<!DOCTYPE window>
 
 <window id="smtp" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

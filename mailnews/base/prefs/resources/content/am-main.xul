@@ -3,25 +3,7 @@
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
 
-<!DOCTYPE window
-[
-<!ENTITY accountTitle.label "Account Settings">
-<!ENTITY accountName.label "Account Name:">
-<!ENTITY accountNameDesc.label "The account name identitifies each account">
-<!ENTITY identityTitle.label "Identity">
-<!ENTITY identityDesc.label "Each account can have its own identity, which is the information that other people see when they read your messages.">
-<!ENTITY name.label "Your Name">
-<!ENTITY email.label "Email Address">
-<!ENTITY replyTo.label "Reply-to Address">
-<!ENTITY organization.label "Organization">
-<!ENTITY signature.label "Attach this signature">
-<!ENTITY sampleSig1.label "Sample Signature 1">
-<!ENTITY sampleSig2.label "Sample Signature 2">
-<!ENTITY sampleSig3.label "Sample Signature 3">
-<!ENTITY useHtml.label "Compose messages using html">
-<!ENTITY attachVCard.label "Attach my vCard to messages">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://l10n/locale/am-main.dtd" >
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

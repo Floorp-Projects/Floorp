@@ -3,15 +3,7 @@
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/accounttree.css" type="text/css"?>
 
-<!DOCTYPE window
-[
-<!ENTITY nameCol.label "Name">
-<!ENTITY duplicate.label "Duplicate">
-<!ENTITY delete.label "Delete">
-<!ENTITY newAccount.label "New Account">
-<!ENTITY setAsDefault.label "Set As Default">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://l10n/locale/accounttree.dtd" >
 <window	xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

@@ -23,17 +23,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<!DOCTYPE window
-[
-<!ENTITY accountTypeTitle.label "Welcome to the Account Setup Wizard">
-<!ENTITY accountTypeDesc.label "This wizard will collect the necessary information needed before you can use your new account. If you do not know the information requested, please contact your Internet Service Provider or System Administrator.">
-<!ENTITY accountTypeMail.label "Mail">
-<!ENTITY accountTypeNews.label "News">
-<!ENTITY accountTypeWebMail.label "Netscape WebMail">
-<!ENTITY webMailNew.label "New Account">
-<!ENTITY webMailExisting.label "Existing Account">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://l10n/locale/aw-accounttype.dtd" >
 <window id="accounttype" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="parent.wizardPageLoaded('accounttype');">

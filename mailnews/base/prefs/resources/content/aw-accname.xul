@@ -22,14 +22,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<!DOCTYPE window
-[
-<!ENTITY accnameTitle.label "Account Name">
-<!ENTITY accnameDesc.label "Enter the name by which you would like to refer to this account.">
-<!ENTITY accnameExample.label "For example, Work Account, Home Account or News Account">
-<!ENTITY accnameLabel.label "Account Name:">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://l10n/locale/aw-accname.dtd" >
 <window id="accnamepage" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="parent.wizardPageLoaded('accname');">

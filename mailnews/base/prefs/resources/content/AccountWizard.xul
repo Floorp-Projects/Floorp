@@ -23,15 +23,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<!DOCTYPE window
-[
-<!ENTITY backButton.label "Back">
-<!ENTITY nextButton.label "Next">
-<!ENTITY finishButton.label "Finish">
-<!ENTITY cancelButton.label "Cancel">
-<!ENTITY instructions.label "Click next to continue entering information.">
-]
->
+<!DOCTYPE window SYSTEM "chrome://l10n/locale/AccountWizard.dtd" >
 
 <window id="account-wizard-dialog" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

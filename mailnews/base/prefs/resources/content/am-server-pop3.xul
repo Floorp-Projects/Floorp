@@ -2,19 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
-<!DOCTYPE window
-[
-<!ENTITY savePassword.label "Save password.">
-<!ENTITY biffStart.label "Check for new messages every ">
-<!ENTITY biffEnd.label "minutes.">
-<!ENTITY leaveOnServer.label "Leave messages on server.">
-<!ENTITY deleteOnServer.label "Delete messages on server when deleted locally.">
-<!ENTITY emptyTrashOnExit.label "Empty Trash on exit">
-<!ENTITY hostname.label "Server Hostname">
-<!ENTITY username.label "Your Login Name">
-<!ENTITY popServerTitle.label "POP Server Information">
-]
->
+<!DOCTYPE window SYSTEM "chrome://l10n/locale/am-server-pop3.dtd" >
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

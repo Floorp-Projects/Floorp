@@ -23,22 +23,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<!DOCTYPE window
-[
-<!ENTITY loginTitle.label "Name and Password">
-<!ENTITY usernameDesc.label "Enter your user name given to you by your email provider.">
-<!ENTITY usernameExample.label "For example: jsmith">
-<!ENTITY usernameLabel.label "User Name:">
-
-<!ENTITY passwordTitle.label "Password Storage">
-<!ENTITY savePasswordDesc.label "Netscape Mail can save your password so that you are not asked for it each time you access this account. Your password is automatically sent to the server to which you are connecting. This is not recommended if other people have access to your computer.">
-<!ENTITY savePasswordLabel.label "If you want Netscape Mail to save your password, check the box below.">
-<!ENTITY savePasswordCheckbox.label "Save my password">
-
-<!ENTITY passwordDesc.label "Enter the password given to you by your email provider">
-<!ENTITY passwordLabel.label "Password:">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://l10n/locale/aw-login.dtd" >
 <window id="loginpage" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="parent.wizardPageLoaded('login');">

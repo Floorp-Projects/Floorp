@@ -23,20 +23,7 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 -->
 
-<!DOCTYPE window
-[
-<!ENTITY identityTitle.label "Identity">
-<!ENTITY identityDesc.label "Each account can have its own identity, which is the ifnormation that other people see when they read your messages.">
-
-<!ENTITY fullnameDesc.label "Enter the name you would like to appear in the From field of your outgoing messages.">
-<!ENTITY fullnameExample.label "For example, John Smith">
-<!ENTITY fullnameLabel.label "Your Name:">
-
-<!ENTITY emailDesc.label "Enter your email address. This is the address otherws will use to send email to you.">
-<!ENTITY emailExample.label "For example, test@netscape.net">
-<!ENTITY emailLabel.label "Email Address:">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://l10n/locale/aw-identity.dtd" >
 <window id="identitypage" xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="parent.wizardPageLoaded('identity');">

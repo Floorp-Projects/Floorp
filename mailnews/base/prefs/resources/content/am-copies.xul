@@ -2,20 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
-<!DOCTYPE window
-[
-<!ENTITY copyAndFolderTitle.label "Copy and Folder settings">
-<!ENTITY sendingPrefix.label "When sending messages, automatically ">
-<!ENTITY fccLocalSent.label "Place a copy in folder Sent on Local Mail ">
-<!ENTITY chooseFolderButton.label "Choose Folder...">
-<!ENTITY bccAccount.label "Bcc &lt;account's e-mail address&gt;">
-<!ENTITY bccAddress.label "Bcc these addresses:">
-<!ENTITY specialFolderTitle.label "Special Folders">
-<!ENTITY junkMailFolder.label "Keep junk mail in Junk Mail on Earthlink Inbox">
-<!ENTITY draftMailFolder.label "Keep message drafts in Drafts in Local Mail">
-<!ENTITY templateMailFolder.label "Keep message templates in Templates in Local Mail">
-]>
-
+<!DOCTYPE window SYSTEM "chrome://l10n/locale/am-copies.dtd" >
 <xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload = "">
