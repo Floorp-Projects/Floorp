@@ -118,7 +118,7 @@ nsScriptLoadRequest::FireScriptEvaluated(nsresult aResult)
 //////////////////////////////////////////////////////////////
 
 nsScriptLoader::nsScriptLoader() 
-  : mDocument(nsnull)
+  : mDocument(nsnull), mSuspendCount(0)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -261,7 +261,7 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
 
   // Check to see that the element is not in a container that
   // suppresses script evaluation within it.
-  if (InNonScriptingContainer(aElement)) {
+  if (mSuspendCount || InNonScriptingContainer(aElement)) {
     return FireErrorNotification(NS_ERROR_NOT_AVAILABLE, aElement, aObserver);
   }
 
@@ -754,6 +754,23 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 
   // Process any pending requests
   ProcessPendingReqests();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptLoader::Suspend()
+{
+  mSuspendCount++;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScriptLoader::Resume()
+{
+  NS_ASSERTION((mSuspendCount > 0), "nsScriptLoader call to resume() unbalanced");
+  mSuspendCount--;
 
   return NS_OK;
 }

@@ -1582,6 +1582,16 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
         }
       }
 
+      // Suspend script processing while we move children around.
+      // We don't want to re-evaluate scripts as a result of the move.
+      nsCOMPtr<nsIScriptLoader> loader;
+      if (mSink && mSink->mDocument) {
+        mSink->mDocument->GetScriptLoader(getter_AddRefs(loader));
+        if (loader) {
+          loader->Suspend();
+        }
+      }
+      
       if (NS_SUCCEEDED(result)) {
         // Move all of the demoted containers children to its parent
         PRInt32 i, count;
@@ -1637,6 +1647,10 @@ SinkContext::DemoteContainer(const nsIParserNode& aNode)
           stackPos++;
         }
         mStackPos--;
+      }
+
+      if (loader) {
+        loader->Resume();
       }
 
       // Restore frames state after adding it to new parent
