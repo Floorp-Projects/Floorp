@@ -1404,7 +1404,6 @@ nsMsgDBView::CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32
     if (msgHdr)
       messageArray->AppendElement(msgHdr);
   }
-
   m_deletingMsgs = isMove;
   rv = destFolder->CopyMessages(m_folder /* source folder */, messageArray, isMove, window, this /* listener */, PR_FALSE /* isFolder */, PR_TRUE /*allowUndo*/);
 
@@ -4260,6 +4259,10 @@ nsMsgDBView::GetMsgToSelectAfterDelete(nsMsgViewIndex *msgToSelectAfterDelete)
     rv = mOutlinerSelection->GetRangeAt(i, &startRange, &endRange);
     *msgToSelectAfterDelete = PR_MIN(*msgToSelectAfterDelete, startRange);
   }
+  nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_folder);
+  PRBool thisIsImapFolder = (imapFolder != nsnull);
+  if (thisIsImapFolder) //need to update the imap-delete model, can change more than once in a session.
+    GetImapDeleteModel(nsnull);
   if (mDeleteModel == nsMsgImapDeleteModels::IMAPDelete)
     if (selectionCount > 1 || (endRange-startRange) > 0)  //multiple selection either using Ctrl or Shift keys
       *msgToSelectAfterDelete = nsMsgViewIndex_None;

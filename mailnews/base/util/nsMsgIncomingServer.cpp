@@ -116,7 +116,7 @@ nsMsgIncomingServer::SetKey(const char * serverKey)
                                           NS_GET_IID(nsIPref),
                                           (nsISupports**)&m_prefs);
 
-    m_serverKey = serverKey;
+    m_serverKey.Assign(serverKey);
     return rv;
 }
     
@@ -999,8 +999,8 @@ nsMsgIncomingServer::GetFilterList(nsIMsgFilterList **aResult)
   NS_IF_ADDREF(*aResult);
   return NS_OK;
     
-}    
-
+}
+         
 // if the user has a : appended, then
 nsresult
 nsMsgIncomingServer::SetHostName(const char *aHostname)
@@ -1297,7 +1297,6 @@ nsMsgIncomingServer::SetOfflineSupportLevel(PRInt32 aSupportLevel)
     SetIntValue("offline_support_level", aSupportLevel);
     return NS_OK;
 }
-
 #define BASE_MSGS_URL       "chrome://messenger/locale/messenger.properties"
 
 NS_IMETHODIMP nsMsgIncomingServer::DisplayOfflineMsg(nsIMsgWindow *aMsgWindow)

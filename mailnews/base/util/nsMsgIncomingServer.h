@@ -55,11 +55,11 @@ class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer,
   
 private:
   nsIPref *m_prefs;
-  nsCString m_serverKey;
   nsCString m_password;
   PRBool m_serverBusy;
 
 protected:
+  nsCString m_serverKey;
   void getPrefName(const char *serverKey, const char *pref, nsCString& fullPrefName);
   void getDefaultPrefName(const char *pref, nsCString& fullPrefName);
 

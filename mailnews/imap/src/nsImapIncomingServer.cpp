@@ -359,7 +359,16 @@ nsImapIncomingServer::GetDeleteModel(PRInt32 *retval)
 NS_IMETHODIMP	   								\
 nsImapIncomingServer::SetDeleteModel(PRInt32 ivalue)
 {												\
-  return SetIntValue("delete_model", ivalue);			
+  nsresult rv = SetIntValue("delete_model", ivalue);			
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIImapHostSessionList> hostSession = 
+        do_GetService(kCImapHostSessionList, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+    hostSession->SetDeleteIsMoveToTrashForHost(m_serverKey, ivalue == nsMsgImapDeleteModels::MoveToTrash); 
+    hostSession->SetShowDeletedMessagesForHost(m_serverKey, ivalue == nsMsgImapDeleteModels::IMAPDelete);
+  }
+  return rv;
 }
 
 NS_IMPL_SERVERPREF_INT(nsImapIncomingServer, TimeOutLimits,
