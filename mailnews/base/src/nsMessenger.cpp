@@ -1556,7 +1556,7 @@ nsSaveAsListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aSupport,
       rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, (const char *)nsAutoCString(nsMsgI18NFileSystemCharset()), 
                                   m_msgBuffer.GetUnicode(), &conBuf); 
       if ( NS_SUCCEEDED(rv) && (conBuf) )
-        conLength = m_msgBuffer.Length();
+        conLength = nsCRT::strlen(conBuf);
     }
 
     if ( (NS_SUCCEEDED(rv)) && (conBuf) )
