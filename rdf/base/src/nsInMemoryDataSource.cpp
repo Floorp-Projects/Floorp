@@ -691,11 +691,10 @@ InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
 
     static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
 
-    mAllocator.Init("nsInMemoryDataSource", kBucketSizes, kNumBuckets,
-                    NS_SIZE_IN_HEAP(sizeof(Assertion) * 64)
-                    + NS_SIZE_IN_HEAP(sizeof(PLHashEntry) * 64)
-                    + NS_SIZE_IN_HEAP(sizeof(InMemoryAssertionEnumeratorImpl))
-                    + NS_SIZE_IN_HEAP(sizeof(InMemoryArcsEnumeratorImpl)));
+    // Per news://news.mozilla.org/39BEC105.5090206%40netscape.com
+    static const PRInt32 kInitialSize = 1024;
+
+    mAllocator.Init("nsInMemoryDataSource", kBucketSizes, kNumBuckets, kInitialSize);
 
 #ifdef MOZ_THREADSAFE_RDF
     mLock = nsnull;

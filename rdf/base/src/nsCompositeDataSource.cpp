@@ -543,9 +543,10 @@ CompositeDataSourceImpl::CompositeDataSourceImpl(void)
 
     static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
 
-    mAllocator.Init("nsCompositeDataSource", kBucketSizes, kNumBuckets,
-                    NS_SIZE_IN_HEAP(sizeof(CompositeArcsInOutEnumeratorImpl))
-                    + NS_SIZE_IN_HEAP(sizeof(CompositeAssertionEnumeratorImpl)));
+    // Per news://news.mozilla.org/39BEC105.5090206%40netscape.com
+    static const PRInt32 kInitialSize = 256;
+
+    mAllocator.Init("nsCompositeDataSource", kBucketSizes, kNumBuckets, kInitialSize);
 
 #ifdef PR_LOGGING
     if (nsRDFLog == nsnull) 

@@ -86,9 +86,8 @@ nsElementMap::nsElementMap()
 
     static const PRInt32 kInitialNumElements = 64;
 
-    static const PRInt32 kInitialPoolSize =
-        (NS_SIZE_IN_HEAP(sizeof(PLHashEntry)) +
-         NS_SIZE_IN_HEAP(sizeof(ContentListItem))) * kInitialNumElements;
+    // Per news://news.mozilla.org/39BEC105.5090206%40netscape.com
+    static const PRInt32 kInitialPoolSize = 512;
 
     mPool.Init("nsElementMap", kBucketSizes, kNumBuckets, kInitialPoolSize);
 
