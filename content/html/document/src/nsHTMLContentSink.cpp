@@ -2739,6 +2739,11 @@ HTMLContentSink::WillBuildModel(void)
     mBeginLoadTime = PR_IntervalToMicroseconds(PR_IntervalNow());
   }
   mScrolledToRefAlready = PR_FALSE;
+
+  if (mHTMLDocument) {
+    mHTMLDocument->SetDTDMode(mParser? mParser->GetParseMode():eDTDMode_quirks);
+  }
+
   // Notify document that the load is beginning
   mDocument->BeginLoad();
   return NS_OK;
