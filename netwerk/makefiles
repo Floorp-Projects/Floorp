@@ -24,6 +24,8 @@ netwerk/protocol/resource/src/Makefile
 netwerk/mime/Makefile
 netwerk/mime/public/Makefile
 netwerk/mime/src/Makefile
+netwerk/socket/Makefile
+netwerk/socket/base/Makefile
 netwerk/streamconv/Makefile
 netwerk/streamconv/public/Makefile
 netwerk/streamconv/src/Makefile
