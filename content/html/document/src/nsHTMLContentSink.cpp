@@ -3588,10 +3588,10 @@ HTMLContentSink::DidProcessAToken(void)
         // If we can't get the last input time from the widget
         // then we will get it from the viewmanager.
         rv = vm->GetLastUserEventTime(eventTime);
-        NS_ENSURE_TRUE(NS_SUCCEEDED(rv), NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(rv , NS_ERROR_FAILURE);
     }
 
-    NS_ENSURE_TRUE(NS_SUCCEEDED(rv), NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     if ((!(mFlags & NS_SINK_FLAG_DYNAMIC_LOWER_VALUE)) &&
       (mLastSampledUserEventTime == eventTime)) {
