@@ -14,7 +14,7 @@
 #
 # The Initial Developer of the Original Code is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation. All
+# Copyright (C) 1998-2000 Netscape Communications Corporation. All
 # Rights Reserved.
 #
 # Contributor(s): 
@@ -27,23 +27,9 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) EditorDialog.css  $(DIST)\bin\chrome\editor\skin\default
 	$(MAKE_INSTALL) EdImageMap.css    $(DIST)\bin\chrome\editor\skin\default
-  $(MAKE_INSTALL) images\checker.gif        $(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\circletool.gif     $(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\contrast.gif       $(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\pointertool.gif    $(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\polygontool.gif    $(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\rectangletool.gif  $(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\zoomin.gif         $(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\zoomout.gif        $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\Map_checker.gif        $(DIST)\bin\chrome\editor\skin\default\images
 
 clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\default\EditorDialog.css
   rm -f $(DIST)\bin\chrome\editor\skin\default\EdImageMap.css
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\checker.gif
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\circletool.gif
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\contrast.gif
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\pointertool.gif
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\polygontool.gif
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\rectangletool.gif
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\zoomin.gif
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\zoomout.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\Map_checker.gif
