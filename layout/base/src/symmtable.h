@@ -127,9 +127,9 @@ const static PRUint8 symmtable_30[256] = {
 /* F_ */    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0, 
 };
 
-static PRUnichar Mirrored(PRUnichar u)
+static PRUint32 Mirrored(PRUint32 u)
 {
-  switch (u & 0xFF00) {
+  switch (u & 0xFFFFFF00) {
     // XOR the character with the bitmap in the conversion table to give the symmetric equivalent
     case 0:
       u ^= symmtable_00[u & 0xff];

@@ -100,8 +100,8 @@ foreach $block (0 .. 0xff) {
 }
 
 # Generate conversion method
-print OUT "\nstatic PRUnichar Mirrored(PRUnichar u)\n{\n";
-print OUT "  switch (u & 0xFF00) {\n";
+print OUT "\nstatic PRUint32 Mirrored(PRUint32 u)\n{\n";
+print OUT "  switch (u & 0xFFFFFF00) {\n";
 print OUT "    // XOR the character with the bitmap in the conversion table to give the symmetric equivalent\n";
 foreach $block (0 .. 0xff) {
   if (1==@isblock[$block]) {

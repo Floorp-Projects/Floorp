@@ -1036,9 +1036,9 @@ private:
   nsCharType GetCharType(PRUnichar aChar);
 
   /**
-   * Give a Unichar, return the symmetric equivalent
+   * Give a Unicode character, return the symmetric equivalent
    */
-  PRUnichar SymmSwap(PRUnichar aChar);
+  PRUint32 SymmSwap(PRUint32 aChar);
 
   PRInt32 doWriteReverse(const PRUnichar *src, PRInt32 srcLength,
                          PRUnichar *dest, PRUint16 options);
