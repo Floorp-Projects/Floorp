@@ -43,11 +43,6 @@ static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebugIR = PR_FALSE;
 #endif
 
-nsTableColGroupFrame::nsTableColGroupFrame()
-  : nsHTMLContainerFrame()
-{
-  mColCount=0;
-}
 
 NS_IMETHODIMP
 nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList)

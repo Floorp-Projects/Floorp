@@ -36,12 +36,12 @@ class nsTableCellFrame : public nsHTMLContainerFrame
 {
 public:
 
+  // default constructor supplied by the compiler
+
   void InitCellFrame(PRInt32 aColIndex);
 
   /** instantiate a new instance of nsTableCellFrame.
     * @param aResult    the new object is returned in this out-param
-    * @param aContent   the table object to map
-    * @param aParent    the parent of the new frame
     *
     * @return  NS_OK if the frame was properly allocated, otherwise an error code
     */
@@ -179,11 +179,6 @@ private:
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
 
 protected:
-
-  /** protected constructor.
-    * @see NewFrame
-    */
-  nsTableCellFrame();
 
   // Subclass hook for style post processing
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);

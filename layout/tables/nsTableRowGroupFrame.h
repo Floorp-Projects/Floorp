@@ -40,6 +40,8 @@ class nsTableRowGroupFrame : public nsHTMLContainerFrame
 {
 public:
 
+  // default constructor supplied by the compiler
+
   /** instantiate a new instance of nsTableRowGroupFrame.
     * @param aResult    the new object is returned in this out-param
     * @param aContent   the table object to map

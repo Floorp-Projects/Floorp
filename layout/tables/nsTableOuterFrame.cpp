@@ -94,16 +94,7 @@ struct OuterTableReflowState {
 
 /* ----------- nsTableOuterFrame ---------- */
 
-/**
-  */
-nsTableOuterFrame::nsTableOuterFrame()
-  : nsHTMLContainerFrame(),
-  mInnerTableFrame(nsnull),
-  mCaptionFrame(nsnull),
-  mMinCaptionWidth(0),
-  mDesiredSize(nsnull)
-{
-}
+
 
 NS_IMETHODIMP nsTableOuterFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                                      nsIAtom*        aListName,

@@ -48,22 +48,6 @@ static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebugNT = PR_FALSE;
 #endif
 
-/**
-  */
-nsTableCellFrame::nsTableCellFrame()
-  : nsHTMLContainerFrame()
-{
-  mColIndex=0;
-  mPriorAvailWidth=0;
-  mDesiredSize.width=0;
-  mDesiredSize.height=0;
-  mMaxElementSize.width=0;
-  mMaxElementSize.height=0;
-  mPass1DesiredSize.width=0;
-  mPass1DesiredSize.height=0;
-  mPass1MaxElementSize.width=0;
-  mPass1MaxElementSize.height=0;
-}
 
 NS_IMETHODIMP
 nsTableCellFrame::SetInitialChildList(nsIPresContext& aPresContext,
