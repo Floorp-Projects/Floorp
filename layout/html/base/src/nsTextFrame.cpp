@@ -4162,8 +4162,8 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
                 if (!isWhitespace){
                   if (!keepSearching)
                     found = PR_TRUE;
-                else
-                  aPos->mEatingWS = PR_TRUE;
+                  else
+                    aPos->mEatingWS = PR_TRUE;
                 }
               }
             }
@@ -4188,79 +4188,43 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
           if (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE, aPos->mIsKeyboardSelect) &&
             (aPos->mStartOffset + contentLen <= (mContentLength + mContentOffset))){
 
-            if ((aPos->mEatingWS && isWhitespace) || !aPos->mEatingWS){
+            // On some platforms (mac, unix), we want the selection to end
+            // at the end of the word (not the beginning of the next one).
+            if ((sWordSelectEatSpaceAfter ? isWhitespace : !isWhitespace) || !aPos->mEatingWS) {
               aPos->mContentOffset = aPos->mStartOffset + contentLen;
-              // check for whitespace next. On some platforms (mac), we want the selection to end
-              // at the end of the word (not the beginning of the next one), so don't slurp up any extra whitespace.
-              if ( sWordSelectEatSpaceAfter ) {
-                keepSearching = PR_TRUE;
-                aPos->mEatingWS = PR_TRUE;
-              if (!isWhitespace){
+              keepSearching = PR_TRUE;
+              aPos->mEatingWS = !sWordSelectEatSpaceAfter;
+#ifdef IBMBIDI
+              wordLen = (mState & NS_FRAME_IS_BIDI)
+                      ? mContentOffset + mContentLength : -1;
+#endif // IBMBIDI
+              while (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE, aPos->mIsKeyboardSelect))
+              {
+                if (aPos->mStartOffset + contentLen > (mContentLength + mContentOffset))
+                  goto TryNextFrame;
+                if (sWordSelectEatSpaceAfter ? isWhitespace : !isWhitespace)
+                  aPos->mContentOffset += contentLen;
+                else
+                  break;
 #ifdef IBMBIDI
                 wordLen = (mState & NS_FRAME_IS_BIDI)
                         ? mContentOffset + mContentLength : -1;
 #endif // IBMBIDI
-                  while (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE, aPos->mIsKeyboardSelect))
-                  {
-                    if (aPos->mStartOffset + contentLen > (mContentLength + mContentOffset))
-                      goto TryNextFrame;
-                    if (isWhitespace)
-                      aPos->mContentOffset += contentLen;
-                    else
-                      break;
-#ifdef IBMBIDI
-                  wordLen = (mState & NS_FRAME_IS_BIDI)
-                          ? mContentOffset + mContentLength : -1;
-#endif // IBMBIDI
-                  }
-                  keepSearching = (mContentOffset + mContentLength) <= aPos->mContentOffset;
-                  if (!keepSearching)
-                    found = PR_TRUE;
-                }
-                else  //we just need to jump the space, done here
-                {
-#ifdef IBMBIDI
-                wordLen = (mState & NS_FRAME_IS_BIDI)
-                        ? mContentOffset + mContentLength : -1;
-#endif // IBMBIDI
-                  while(tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE, aPos->mIsKeyboardSelect))
-                  {
-                    if (aPos->mStartOffset + contentLen > (mContentLength + mContentOffset))
-                      goto TryNextFrame;
-
-                    if (isWhitespace)
-                      aPos->mContentOffset += contentLen;		
-                    else
-                      break;
-#ifdef IBMBIDI
-              wordLen = (mState & NS_FRAME_IS_BIDI) ? mContentOffset + mContentLength : -1;
-#endif // IBMBIDI
-                  }
-                  keepSearching = (mContentOffset + mContentLength) <= aPos->mContentOffset;
-                  if (!keepSearching)
-                    found = PR_TRUE;
-                }
-              } // if we should eat space to the next word
-              else {
-                keepSearching = (mContentOffset + mContentLength) <= aPos->mContentOffset;
-                if (!keepSearching)
-                  found = PR_TRUE;
               }
+              keepSearching = (mContentOffset + mContentLength) <= aPos->mContentOffset;
+              if (!keepSearching)
+                found = PR_TRUE;
             }
-            else if (aPos->mEatingWS)
-			   {
+            else
+            {
               aPos->mContentOffset = mContentOffset;
-				  found = PR_TRUE;
-			   }
-            if (!isWhitespace){
-              aPos->mEatingWS = PR_FALSE;
+              found = PR_TRUE;
             }
-            else if (!keepSearching) //we have found the "whole" word so just looking for WS
-              aPos->mEatingWS = PR_TRUE;
+            aPos->mEatingWS = isWhitespace;
           } 
 
   TryNextFrame:        
-		    GetNextInFlow(&frameUsed);
+          GetNextInFlow(&frameUsed);
           start = 0;
         }
       }
