@@ -247,7 +247,7 @@ LIBOBJS			:= $(addsuffix \", $(LIBOBJS))
 endif
 
 ifndef MOZ_AUTO_DEPS
-ifneq (,$(OBJS))
+ifneq (,$(OBJS)$(SIMPLE_PROGRAMS))
 MDDEPFILES		= $(addprefix $(MDDEPDIR)/,$(OBJS:.$(OBJ_SUFFIX)=.pp))
 endif
 endif
@@ -334,7 +334,7 @@ SUBMAKEFILES		:= $(addsuffix /Makefile, $(filter-out $(STATIC_MAKEFILES), $(DIRS
 endif
 
 # MAKE_DIRS: List of directories to build while looping over directories.
-ifneq (,$(OBJS))
+ifneq (,$(OBJS)$(SIMPLE_PROGRAMS))
 MAKE_DIRS		+= $(MDDEPDIR)
 GARBAGE_DIRS		+= $(MDDEPDIR)
 endif
@@ -1452,7 +1452,7 @@ $(MDDEPDIR)/%.pp: %.s
 	$(REPORT_BUILD)
 	@$(MAKE_DEPS_NOAUTO)
 
-ifneq (,$(OBJS))
+ifneq (,$(OBJS)$(SIMPLE_PROGRAMS))
 depend:: $(SUBMAKEFILES) $(MAKE_DIRS) $(MDDEPFILES)
 else
 depend:: $(SUBMAKEFILES)
@@ -1477,7 +1477,7 @@ endif # COMPILER_DEPEND
 $(MDDEPDIR):
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; else true; fi
 
-ifneq (,$(OBJS))
+ifneq (,$(OBJS)$(SIMPLE_PROGRAMS))
 MDDEPEND_FILES		:= $(strip $(wildcard $(MDDEPDIR)/*.pp))
 
 ifneq (,$(MDDEPEND_FILES))
