@@ -63,6 +63,7 @@ CPPSRCS		= \
 		nsRecyclingAllocator.cpp \
 		nsStaticNameTable.cpp \
 		nsStatistics.cpp \
+		nsStringEnumerator.cpp \
 		nsStringService.cpp \
 		nsSupportsArray.cpp \
 		nsSupportsArrayEnumerator.cpp \
@@ -113,6 +114,7 @@ EXPORTS		= \
 		nsArray.h \
 		nsArrayEnumerator.h \
 		nsCOMArray.h \
+		nsStringEnumerator.h \
 		$(NULL)			
 
 XPIDLSRCS	= \
@@ -125,6 +127,7 @@ XPIDLSRCS	= \
 		nsIRecyclingAllocator.idl \
 		nsIVariant.idl \
 		nsISerializable.idl \
+		nsIStringEnumerator.idl \
 		nsIStringService.idl \
 		nsISupportsArray.idl \
 		nsISupportsIterators.idl \
