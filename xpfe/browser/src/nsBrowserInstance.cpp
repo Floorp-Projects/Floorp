@@ -45,6 +45,7 @@
 
 // Interfaces Needed
 #include "nsIBaseWindow.h"
+#include "nsICategoryManager.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIHttpProtocolHandler.h"
@@ -791,6 +792,23 @@ NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,
                                                      nsIInterfaceRequestor * aWindowContext,
                                                      nsIRequest * aRequest)
 {
+  // Verify that we can handle this content, to avoid infinite window opening
+  // loops
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catMan =
+    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLCString value;
+  rv = catMan->GetCategoryEntry("Gecko-Content-Viewers",
+                                aContentType, 
+                                getter_Copies(value));
+
+  // If there is no value (i.e. rv is NS_ERROR_NOT_AVAILABLE), we can't handle
+  // the content.
+  if (rv == NS_ERROR_NOT_AVAILABLE)
+      return NS_ERROR_WONT_HANDLE_CONTENT;
+
   // create a new browser window to handle the content
   NS_ENSURE_ARG(aRequest);
   nsCOMPtr<nsIDOMWindow> parentWindow;
