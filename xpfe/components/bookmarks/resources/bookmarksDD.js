@@ -200,7 +200,6 @@ var bookmarksDNDObserver = {
     if (aEvent.target.localName == "treechildren")  
       dropAction = "on"; // handle drop on blank space. 
     var containerItem = dropAction == "on" ? dropItem : dropItem.parentNode.parentNode;
-    var rContainer = this.getResource(NODE_ID(containerItem));
 
   	// XXX magical fix for bug # 33546: handle dropping after open container
     if (dropItem.getAttribute("container") && dropItem.getAttribute("open") &&
@@ -222,7 +221,8 @@ var bookmarksDNDObserver = {
     }
     
     var rTarget = this.getResource(NODE_ID(dropItem));
-    
+    var rContainer = this.getResource(NODE_ID(containerItem));    
+
     // XXX
     var rType = this.getResource(RDF_NS + "type");
     var rBookmark = this.getResource(NC_NS + "Bookmark");
