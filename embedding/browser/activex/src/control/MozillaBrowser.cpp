@@ -64,8 +64,6 @@ static const tstring c_szHelpKey = _T("Software\\Microsoft\\Windows\\CurrentVers
 #define MOZ_CONTROL_REG_VALUE_DIR            _T("Dir")
 #define MOZ_CONTROL_REG_VALUE_BIN_DIRECTORY_PATH _T("BinDirectoryPath")
 
-BOOL CMozillaBrowser::m_bRegistryInitialized = FALSE;
-
 // Some recent SDKs define these IOleCommandTarget groups, so they're
 // postfixed with _Moz to prevent linker errors.
 
@@ -78,6 +76,15 @@ GUID CGID_MSHTML_Moz =
 /////////////////////////////////////////////////////////////////////////////
 // CMozillaBrowser
 
+// Initialise static member variables
+BOOL CMozillaBrowser::m_bRegistryInitialized = FALSE;
+#ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
+BOOL CMozillaBrowser::m_bXPCOMInitialised = FALSE;
+#endif
+
+//
+// Constructor
+//
 CMozillaBrowser::CMozillaBrowser()
 {
 	NG_TRACE_METHOD(CMozillaBrowser::CMozillaBrowser);
@@ -122,6 +129,9 @@ CMozillaBrowser::CMozillaBrowser()
 }
 
 
+//
+// Destructor
+//
 CMozillaBrowser::~CMozillaBrowser()
 {
 	NG_TRACE_METHOD(CMozillaBrowser::~CMozillaBrowser);
@@ -152,6 +162,11 @@ STDMETHODIMP CMozillaBrowser::InterfaceSupportsErrorInfo(REFIID riid)
 }
 
 
+//
+// Displays a message box to the user. If the container provides
+// a IDocHostShowUI interface we use that to display messages, otherwise
+// a simple message box is shown.
+//
 int CMozillaBrowser::MessageBox(LPCTSTR lpszText, LPCTSTR lpszCaption, UINT nType)
 {
 	// Let the doc host display it's own message box if it can
@@ -173,6 +188,10 @@ int CMozillaBrowser::MessageBox(LPCTSTR lpszText, LPCTSTR lpszCaption, UINT nTyp
 }
 
 
+//
+// Sets error information for VB programmers who want to know why
+// something failed.
+//
 HRESULT CMozillaBrowser::SetErrorInfo(LPCTSTR lpszDesc, HRESULT hr)
 {
 	USES_CONVERSION;
@@ -553,18 +572,27 @@ HRESULT CMozillaBrowser::Initialize()
 	TCHAR szBinDirPath[MAX_PATH];
 	DWORD dwBinDirPath = sizeof(szBinDirPath) / sizeof(szBinDirPath[0]);
 
-	memset(szBinDirPath, 0, sizeof(szBinDirPath));
-	if (m_SystemKey.QueryValue(szBinDirPath, MOZ_CONTROL_REG_VALUE_BIN_DIRECTORY_PATH, &dwBinDirPath) == ERROR_SUCCESS)
+#ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
+	// Can't call NS_InitXPCom more than once or things go boom!
+	if (!m_bXPCOMInitialised)
+#endif
 	{
-		USES_CONVERSION;
-		nsILocalFile *pBinDirPath = nsnull;
-		nsresult res = NS_NewLocalFile(T2A(szBinDirPath), &pBinDirPath);
-		NS_InitXPCOM(&m_pIServiceManager, pBinDirPath);
-		NS_RELEASE(pBinDirPath);
-	}
-	else
-	{
-		NS_InitXPCOM(&m_pIServiceManager, nsnull);
+		memset(szBinDirPath, 0, sizeof(szBinDirPath));
+		if (m_SystemKey.QueryValue(szBinDirPath, MOZ_CONTROL_REG_VALUE_BIN_DIRECTORY_PATH, &dwBinDirPath) == ERROR_SUCCESS)
+		{
+			USES_CONVERSION;
+			nsILocalFile *pBinDirPath = nsnull;
+			nsresult res = NS_NewLocalFile(T2A(szBinDirPath), &pBinDirPath);
+			NS_InitXPCOM(&m_pIServiceManager, pBinDirPath);
+			NS_RELEASE(pBinDirPath);
+		}
+		else
+		{
+			NS_InitXPCOM(&m_pIServiceManager, nsnull);
+		}
+#ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
+		m_bXPCOMInitialised = TRUE;
+#endif
 	}
 
 	// Register components
@@ -578,13 +606,12 @@ HRESULT CMozillaBrowser::Initialize()
 	//
 	// If an event queue already exists for the thread, then 
 	// CreateThreadEventQueue(...) will fail...
-	nsresult rv;
 	nsIEventQueueService* eventQService = NULL;
-
-	rv = nsServiceManager::GetService(kEventQueueServiceCID,
+	nsresult rv = nsServiceManager::GetService(kEventQueueServiceCID,
 								kIEventQueueServiceIID,
 								(nsISupports **)&eventQService);
-	if (NS_SUCCEEDED(rv)) {
+	if (NS_SUCCEEDED(rv))
+	{
 		rv = eventQService->CreateThreadEventQueue();
 		nsServiceManager::ReleaseService(kEventQueueServiceCID, eventQService);
 	}
@@ -595,10 +622,21 @@ HRESULT CMozillaBrowser::Initialize()
 // Terminates the web shell engine
 HRESULT CMozillaBrowser::Terminate()
 {
-	// XXX: Do not call DestroyThreadEventQueue(...) for now...
-	
+	// Destroy the event queue
+	nsIEventQueueService* eventQService = NULL;
+	nsresult rv = nsServiceManager::GetService(kEventQueueServiceCID,
+								kIEventQueueServiceIID,
+								(nsISupports **)&eventQService);
+	if (NS_SUCCEEDED(rv))
+	{
+		rv = eventQService->DestroyThreadEventQueue();
+		nsServiceManager::ReleaseService(kEventQueueServiceCID, eventQService);
+	}
+
 	// Terminate XPCOM & cleanup
+#ifndef HACK_AROUND_NONREENTRANT_INITXPCOM
 	NS_ShutdownXPCOM(m_pIServiceManager);
+#endif
 	m_pIServiceManager = nsnull;
 
 	return S_OK;

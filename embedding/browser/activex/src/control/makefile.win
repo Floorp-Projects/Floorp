@@ -101,12 +101,16 @@ include <$(DEPTH)\config\config.mak>
 LCFLAGS = $(LCFLAGS) -DMOZ_NO_DEBUG_RTL
 !endif
 
-LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_CONTROL_SUPPORT
+LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_CONTROL_SUPPORT -DHACK_AROUND_NONREENTRANT_INITXPCOM
 
 install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
+	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components
 	$(MAKE_INSTALL) MozillaControl.html $(DIST)\bin\res
-	regsvr32 /s /c $(DIST)\bin\$(DLLNAME).dll
+	regsvr32 /s /c $(DIST)\bin\components\$(DLLNAME).dll
+
+clobber::
+	-regsvr32 /s /c /u $(DIST)\bin\$(DLLNAME).dll
+	-del $(DEFFILE)
 
 $(DEFFILE) : mkctldef.bat
 	mkctldef.bat $(DEFFILE)
@@ -139,9 +143,5 @@ WebShellContainer.cpp \
 StdAfx.cpp: StdAfx.h MozillaControl.h MozillaBrowser.h WebShellContainer.h IOleCommandTargetImpl.h
 
 guids.cpp: StdAfx.h guids.h
-
-clobber::
-	-regsvr32 /s /c /u $(DIST)\bin\$(DLLNAME).dll
-	-del $(DEFFILE)
 
 !endif

@@ -312,6 +312,10 @@ protected:
 
 	nsIWebShell			*	m_pIWebShell;
 
+#ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
+	// Flag that stops XPCOM from blowing up when called multiple times
+	static BOOL             m_bXPCOMInitialised;
+#endif
 	// System registry key for various control settings
 	CRegKey                 m_SystemKey;
 	// User registry key for various control settings
