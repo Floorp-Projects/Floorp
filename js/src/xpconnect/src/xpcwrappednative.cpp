@@ -2792,6 +2792,7 @@ void DEBUG_ReportShadowedMembers(XPCNativeSet* set,
         static const char* skipClasses[] = {
             "Window",
             "HTMLDocument",
+            "HTMLCollection",
             "Event",
             "ChromeWindow",
             nsnull
