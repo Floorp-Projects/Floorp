@@ -90,7 +90,7 @@ public class Interpreter extends LabelTable {
             InterpretedFunction result =
                 generateFunctionICode(cx, scope, f, securityDomain);
             result.itsData.itsFunctionType = f.getFunctionType();
-            createFunctionObject(result, scope);
+            createFunctionObject(result, scope, false);
             return result;
         }
         return generateScriptICode(cx, scope, tree, securityDomain);
@@ -1391,29 +1391,39 @@ public class Interpreter extends LabelTable {
     }
 
     private static void createFunctionObject(InterpretedFunction fn,
-                                             Scriptable scope)
+                                             Scriptable scope,
+                                             boolean fromEvalCode)
     {
         fn.setPrototype(ScriptableObject.getClassPrototype(scope, "Function"));
         fn.setParentScope(scope);
         InterpreterData id = fn.itsData;
         if (id.itsName.length() == 0)
             return;
+        boolean callSetProp = false;
         if ((id.itsFunctionType == FunctionNode.FUNCTION_STATEMENT &&
              fn.itsClosure == null))
         {
-            try {
-                // ECMA specifies that functions defined in global and 
-                // function scope should have DONTDELETE set.
-                ((ScriptableObject) scope).defineProperty(fn.itsData.itsName,
-                    fn, ScriptableObject.PERMANENT);
-            } catch (ClassCastException e) {
-                ScriptRuntime.setProp(scope, fn.itsData.itsName, fn, scope);
+            if (fromEvalCode) {
+                callSetProp = true;
+            } else {
+                try {
+                    // ECMA specifies that functions defined in global and 
+                    // function scope should have DONTDELETE set.
+                    ((ScriptableObject) scope).defineProperty(
+                        fn.itsData.itsName, fn, ScriptableObject.PERMANENT);
+                } catch (ClassCastException e) {
+                    callSetProp = true;
+                }
             }
         }
 
         if (id.itsFunctionType == FunctionNode.FUNCTION_EXPRESSION_STATEMENT &&
             fn.itsClosure != null)
         {
+            callSetProp = true;
+        }
+
+        if (callSetProp) {
             ScriptRuntime.setProp(scope, fn.itsData.itsName, fn, scope);
         }
     }
@@ -1502,7 +1512,8 @@ public class Interpreter extends LabelTable {
 
         if (theData.itsNestedFunctions != null) {
             for (int i = 0; i < theData.itsNestedFunctions.length; i++)
-                createFunctionObject(theData.itsNestedFunctions[i], scope);
+                createFunctionObject(theData.itsNestedFunctions[i], scope,
+                                     theData.itsFromEvalCode);
         }
 
         Object result = undefined;
@@ -2266,7 +2277,8 @@ public class Interpreter extends LabelTable {
                                 theData.itsNestedFunctions[i],
                                 scope, cx);
                     createFunctionObject(
-                          (InterpretedFunction)stack[stackTop], scope);
+                          (InterpretedFunction)stack[stackTop], scope,
+                          theData.itsFromEvalCode);
                     pc += 2;
                     break;
                 }
