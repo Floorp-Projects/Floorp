@@ -381,7 +381,7 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
       }
       else if (!m_startPos)
       {
-        PRInt32 growBy = (numBytesInStream - numFreeBytesInBuffer) * 2;
+        PRInt32 growBy = (numBytesInStream - numFreeBytesInBuffer) * 2 + 1;
         // try growing buffer by twice as much as we need.
         nsresult rv = GrowBuffer(m_dataBufferSize + growBy);
         // if we can't grow the buffer, we have to bail.
@@ -402,13 +402,14 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
       if (prv)
         *prv = rv;
       PRUint32 i;
-      for (i=m_numBytesInBuffer;i <numBytesCopied;i++)  //replace nulls with spaces
+      PRUint32 endBufPos = m_numBytesInBuffer + numBytesCopied;
+      for (i = m_numBytesInBuffer; i <endBufPos; i++)  //replace nulls with spaces
       {
         if (!startOfLine[i])
           startOfLine[i] = ' ';
       }
       m_numBytesInBuffer += numBytesCopied;
-      m_dataBuffer[m_startPos+m_numBytesInBuffer] = '\0';
+      m_dataBuffer[m_startPos + m_numBytesInBuffer] = '\0';
     }
     else if (!m_numBytesInBuffer)
     {
