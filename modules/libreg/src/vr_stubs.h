@@ -81,20 +81,7 @@
 
 #ifdef STANDALONE_REGISTRY
 
-#define XP_FILE_READ             "r"
-#define XP_FILE_READ_BIN         "rb"
-#define XP_FILE_WRITE            "w"
-#define XP_FILE_WRITE_BIN        "wb"
-#define XP_FILE_UPDATE           "r+"
-#define XP_FILE_TRUNCATE         "w+"
-#ifdef SUNOS4
-/* XXX SunOS4 hack -- make this universal by using r+b and w+b */
-#define XP_FILE_UPDATE_BIN       "r+"
-#define XP_FILE_TRUNCATE_BIN     "w+"
-#else
-#define XP_FILE_UPDATE_BIN       "rb+"
-#define XP_FILE_TRUNCATE_BIN     "wb+"
-#endif
+#define USE_STDIO_MODES
 
 #define XP_FileSeek(file,offset,whence) fseek((file), (offset), (whence))
 #define XP_FileRead(dest,count,file)    fread((dest), 1, (count), (file))
@@ -132,29 +119,19 @@
 
 typedef FILE          * XP_File;
 
-#else /* if not standalone, use NSPR */
+#else /* not standalone, use NSPR */
 
-#define XP_FILE_READ             PR_RDONLY, 0644
-#define XP_FILE_READ_BIN         PR_RDONLY, 0644
-#define XP_FILE_WRITE            PR_WRONLY, 0644
-#define XP_FILE_WRITE_BIN        PR_WRONLY, 0644
-#define XP_FILE_UPDATE           PR_RDWR|PR_CREATE_FILE, 0644
-#define XP_FILE_TRUNCATE         (PR_WRONLY | PR_TRUNCATE), 0644
 
-#define XP_FILE_UPDATE_BIN       PR_RDWR|PR_CREATE_FILE, 0644
-#define XP_FILE_TRUNCATE_BIN     (PR_RDWR | PR_TRUNCATE), 0644
-
-#ifdef SEEK_SET
-    #undef SEEK_SET
-    #undef SEEK_CUR
-    #undef SEEK_END
-    #define SEEK_SET PR_SEEK_SET
-    #define SEEK_CUR PR_SEEK_CUR
-    #define SEEK_END PR_SEEK_END
-#endif
-
+/*-------------------------------------*/
+/* Alternate fileI/O function mappings */
+/*-------------------------------------*/
 
 #if USE_MMAP_REGISTRY_IO
+  /*-----------------------------------------------*/
+  /* NSPR mememory-mapped I/O (write through)      */
+  /* unfortunately this isn't supported on the Mac */
+  /*-----------------------------------------------*/
+#define USE_NSPR_MODES
 
 #include "mmapio.h"
 #define XP_FileSeek(file,offset,whence) mmio_FileSeek((file),(offset),(whence))
@@ -162,12 +139,36 @@ typedef FILE          * XP_File;
 #define XP_FileWrite(src,count,file)    mmio_FileWrite((file), (src), (count))
 #define XP_FileTell(file)               mmio_FileTell(file)
 #define XP_FileClose(file)              mmio_FileClose(file)
-#define XP_FileOpen(path, flags, mode)  mmio_FileOpen((path), (flags), (mode))
+#define XP_FileOpen(path, mode)         mmio_FileOpen((path), mode )
 #define XP_FileFlush(file)              ((void)1)
 
 typedef MmioFile* XP_File;
 
-#else /*USE_MMAP_REGISTRY_IO*/
+#elif USE_BUFFERED_REGISTRY_IO
+  /*-----------------------------------------------*/
+  /* home-grown XP buffering                       */
+  /* writes are buffered too so use flush!         */
+  /*-----------------------------------------------*/
+#define USE_STDIO_MODES
+
+#include "nr_bufio.h"
+#define XP_FileSeek(file,offset,whence) bufio_Seek((file),(offset),(whence))
+#define XP_FileRead(dest,count,file)    bufio_Read((file), (dest), (count))
+#define XP_FileWrite(src,count,file)    bufio_Write((file), (src), (count))
+#define XP_FileTell(file)               bufio_Tell(file)
+#define XP_FileClose(file)              bufio_Close(file)
+#define XP_FileOpen(path, mode)         bufio_Open((path), (mode))
+#define XP_FileFlush(file)              ((void)1)
+
+
+
+typedef BufioFile* XP_File;
+
+#else
+  /*-----------------------------------------------*/
+  /* standard NSPR file I/O                        */
+  /*-----------------------------------------------*/
+#define USE_NSPR_MODES
 /*
 ** Note that PR_Seek returns the offset (if successful) and -1 otherwise.  So
 ** to make this code work
@@ -178,7 +179,7 @@ typedef MmioFile* XP_File;
 #define XP_FileRead(dest,count,file)    PR_Read((file), (dest), (count))
 #define XP_FileWrite(src,count,file)    PR_Write((file), (src), (count))
 #define XP_FileTell(file)               PR_Seek(file, 0, PR_SEEK_CUR)
-#define XP_FileOpen(path, flags, mode)  PR_Open((path), (flags), (mode))
+#define XP_FileOpen(path, mode)         PR_Open((path), mode )
 #define XP_FileClose(file)              PR_Close(file)
 #ifdef XP_MAC
 #define XP_FileFlush(file)              PR_Sync(file)
@@ -189,6 +190,8 @@ typedef MmioFile* XP_File;
 typedef PRFileDesc* XP_File;
 
 #endif /*USE_MMAP_REGISTRY_IO*/
+
+
 
 #define XP_ASSERT(x)        PR_ASSERT((x))
 
@@ -212,19 +215,59 @@ typedef PRFileDesc* XP_File;
 
 #endif /*STANDALONE_REGISTRY*/
 
+
+/*--- file open modes for stdio ---*/
+#ifdef USE_STDIO_MODES
+#define XP_FILE_READ             "r"
+#define XP_FILE_READ_BIN         "rb"
+#define XP_FILE_WRITE            "w"
+#define XP_FILE_WRITE_BIN        "wb"
+#define XP_FILE_UPDATE           "r+"
+#define XP_FILE_TRUNCATE         "w+"
+#ifdef SUNOS4
+/* XXX SunOS4 hack -- make this universal by using r+b and w+b */
+#define XP_FILE_UPDATE_BIN       "r+"
+#define XP_FILE_TRUNCATE_BIN     "w+"
+#else
+#define XP_FILE_UPDATE_BIN       "rb+"
+#define XP_FILE_TRUNCATE_BIN     "wb+"
+#endif
+#endif /* USE_STDIO_MODES */
+
+/*--- file open modes for NSPR file I/O ---*/
+#ifdef USE_NSPR_MODES
+#define XP_FILE_READ             PR_RDONLY, 0644
+#define XP_FILE_READ_BIN         PR_RDONLY, 0644
+#define XP_FILE_WRITE            PR_WRONLY, 0644
+#define XP_FILE_WRITE_BIN        PR_WRONLY, 0644
+#define XP_FILE_UPDATE           (PR_RDWR|PR_CREATE_FILE), 0644
+#define XP_FILE_TRUNCATE         (PR_RDWR | PR_TRUNCATE), 0644
+
+#define XP_FILE_UPDATE_BIN       PR_RDWR|PR_CREATE_FILE, 0644
+#define XP_FILE_TRUNCATE_BIN     (PR_RDWR | PR_TRUNCATE), 0644
+
+#ifdef SEEK_SET
+    #undef SEEK_SET
+    #undef SEEK_CUR
+    #undef SEEK_END
+    #define SEEK_SET PR_SEEK_SET
+    #define SEEK_CUR PR_SEEK_CUR
+    #define SEEK_END PR_SEEK_END
+#endif
+#endif /* USE_NSPR_MODES */
+
+
+
+
+
 #ifdef STANDALONE_REGISTRY /* included from prmon.h otherwise */
 #include "prtypes.h"
 #endif /*STANDALONE_REGISTRY*/
 
 typedef int XP_Bool;
 
-#ifdef XP_PC
- typedef struct _stat   XP_StatStruct;
- #define XP_Stat(file,data,type)     _stat((file),(data))
-#else
- typedef struct stat    XP_StatStruct;
- #define  XP_Stat(file,data,type)     stat((file),(data))
-#endif /*XP_PC*/
+typedef struct stat    XP_StatStruct;
+#define  XP_Stat(file,data)     stat((file),(data))
 
 #ifdef XP_MAC
  extern int nr_RenameFile(char *from, char *to);

@@ -18,7 +18,7 @@
  * Contributor(s):  James L. Nance <jim_nance@yahoo.com>
  */
 
-#include <prio.h>
+#include "prio.h"
 
 typedef struct MmioFileStruct MmioFile;
 
