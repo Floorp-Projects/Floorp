@@ -138,6 +138,7 @@ protected:
 
     NPStream m_NPStream;
     unsigned long m_nDataPos;
+    unsigned long m_nDataMax;
 
     char *m_szContentType;
     char *m_szURL;

@@ -45,6 +45,103 @@
 
 class nsURLDataCallback;
 
+template <class Entry>
+class nsSimpleArray
+{
+    Entry *m_pData;
+    unsigned long m_nSize;
+    unsigned long m_nMaxSize;
+    unsigned long m_nExpandArrayBy;
+public:
+    nsSimpleArray(unsigned long nExpandArrayBy = 10) :
+      m_pData(NULL),
+      m_nSize(0),
+      m_nMaxSize(0),
+      m_nExpandArrayBy(nExpandArrayBy)
+    {
+    }
+    
+    virtual ~nsSimpleArray()
+    {
+        if (m_pData)
+        {
+            free(m_pData);
+        }
+    }
+
+    Entry ElementAt(unsigned long aIndex) const
+    {
+        ATLASSERT(aIndex < m_nSize);
+        return m_pData[aIndex];
+    }
+
+    Entry operator[](unsigned long aIndex) const
+    {
+        return ElementAt(aIndex);
+    }
+
+    void AppendElement(Entry entry)
+    {
+        if (!m_pData)
+        {
+            m_nMaxSize = m_nExpandArrayBy;
+            m_pData = (Entry *) malloc(sizeof(Entry) * m_nMaxSize);
+        }
+        else if (m_nSize == m_nMaxSize)
+        {
+            m_nMaxSize += m_nExpandArrayBy;
+            m_pData = (Entry *) realloc(m_pData, sizeof(Entry) * m_nMaxSize);
+        }
+        ATLASSERT(m_pData);
+        if (m_pData)
+        {
+            m_pData[m_nSize++] = entry;
+        }
+    }
+
+    void RemoveElementAt(unsigned long nIndex)
+    {
+        ATLASSERT(aIndex < m_nSize);
+        if (nIndex < m_nSize)
+        {
+            m_nSize--;
+            if (m_nSize > 0)
+            {
+                m_pData[nIndex] = m_pData[m_nSize - 1];
+                m_nSize--;
+            }
+        }
+    }
+
+    void RemoveElement(Entry entry)
+    {
+        unsigned long i = 0;
+        while (i < m_nSize)
+        {
+            if (m_pData[i] == entry)
+            {
+                m_nSize--;
+                if (m_nSize > 0)
+                {
+                    m_pData[i] = m_pData[m_nSize - 1];
+                    m_nSize--;
+                }
+                continue;
+            }
+            i++;
+        }
+    }
+
+    BOOL IsEmpty() const { return m_nSize == 0 ? TRUE : FALSE; }
+    unsigned long Count() const { return m_nSize; }
+};
+
+
+#define PLUGINS_FROM_IE       0x1
+#define PLUGINS_FROM_NS4X     0x2
+#define PLUGINS_FROM_NS6X     0x4
+#define PLUGINS_FROM_MOZILLA  0x8
+
 /////////////////////////////////////////////////////////////////////////////
 // nsPluginHostCtrl
 class ATL_NO_VTABLE nsPluginHostCtrl : 
@@ -189,9 +286,8 @@ protected:
         TCHAR *szPluginName;
         TCHAR *szMIMEType;
     };
-    PluginInfo  **m_pPlugins;
-    unsigned long m_nPlugins;
-    unsigned long m_nPluginsMax;
+
+    nsSimpleArray<PluginInfo *> m_Plugins;
 
     // Array of names and values to pass to the new plugin
     unsigned long m_nArgs;
@@ -207,9 +303,8 @@ protected:
         DWORD nRefCount;
         NPPluginFuncs NPPFuncs;
     };
-    static LoadedPluginInfo **m_pLoadedPlugins;
-    static unsigned long m_nLoadedPlugins;
-    static unsigned long m_nLoadedPluginsMax;
+
+    static nsSimpleArray<LoadedPluginInfo *> m_LoadedPlugins;
 
     LoadedPluginInfo *m_pLoadedPlugin;
 
@@ -218,7 +313,8 @@ protected:
     static NPNetscapeFuncs g_NPNFuncs;
     static HRESULT InitPluginCallbacks();
 
-    HRESULT CreatePluginList();
+    HRESULT CreatePluginList(unsigned long ulFlags);
+    HRESULT CreatePluginListFrom(const TCHAR *szPluginsDir);
     HRESULT CleanupPluginList();
     HRESULT GetPluginInfo(const TCHAR * pszPluginPath, PluginInfo *pInfo);
 

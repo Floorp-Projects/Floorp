@@ -48,9 +48,7 @@ typedef NS_CALLBACK_(NPError, NP_PLUGINSHUTDOWN) (void);
 
 const kArraySizeIncrement = 10;
 
-nsPluginHostCtrl::LoadedPluginInfo **nsPluginHostCtrl::m_pLoadedPlugins = NULL;
-unsigned long nsPluginHostCtrl::m_nLoadedPlugins = 0;
-unsigned long nsPluginHostCtrl::m_nLoadedPluginsMax = 0;
+nsSimpleArray<nsPluginHostCtrl::LoadedPluginInfo *> nsPluginHostCtrl::m_LoadedPlugins;
 
 /////////////////////////////////////////////////////////////////////////////
 // nsPluginHostCtrl
@@ -62,10 +60,6 @@ nsPluginHostCtrl::nsPluginHostCtrl()
     m_bPluginIsAlive = FALSE;
     m_bCreatePluginFromStreamData = FALSE;
     m_pLoadedPlugin = NULL;
-
-    m_pPlugins = NULL;
-    m_nPlugins = 0;
-    m_nPluginsMax = 0;
 
     m_nArgs = 0;
     m_nArgsMax = 0;
@@ -85,7 +79,9 @@ LRESULT nsPluginHostCtrl::OnCreate(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lP
     SetWindowLong(GWL_STYLE, GetWindowLong(GWL_STYLE) | WS_CLIPCHILDREN);
 
     // Load a list of plugins
-    CreatePluginList();
+    CreatePluginList(
+        PLUGINS_FROM_IE | PLUGINS_FROM_NS4X |
+        PLUGINS_FROM_NS6X | PLUGINS_FROM_MOZILLA);
 
     HRESULT hr = E_FAIL;
     if (m_bstrContentType.Length() == 0 &&
@@ -253,6 +249,11 @@ HRESULT nsPluginHostCtrl::GetBaseURL(TCHAR **ppszBaseURL)
 HRESULT nsPluginHostCtrl::LoadPluginByContentType(const TCHAR *pszContentType)
 {
     TCHAR * pszPluginPath = NULL;
+
+    // Set the content type
+    USES_CONVERSION;
+    put_PluginContentType(T2OLE(pszContentType));
+
     // Search for a plugin that can handle this content
     HRESULT hr = FindPluginPathByContentType(pszContentType, &pszPluginPath);
     if (FAILED(hr))
@@ -271,46 +272,86 @@ HRESULT nsPluginHostCtrl::LoadPluginByContentType(const TCHAR *pszContentType)
     return hr;
 }
 
-HRESULT nsPluginHostCtrl::CreatePluginList()
+HRESULT nsPluginHostCtrl::CreatePluginList(unsigned long ulFlags)
 {
     // This function trawls through the plugin directory and builds a list
     // of plugins and what MIME types each plugin handles.
 
     CleanupPluginList();
 
-    TCHAR szPluginsDir[_MAX_PATH];
-    memset(szPluginsDir, 0, sizeof(szPluginsDir));
-
-    // TODO search for Mozilla/NS 6.x plugins dir first
-
-    // Try and obtain a path to the plugins - Netscape 4.x
-    CRegKey keyNS;
-    if (keyNS.Open(HKEY_LOCAL_MACHINE,
-        _T("Software\\Netscape\\Netscape Navigator"), KEY_READ) == ERROR_SUCCESS)
+    // Try and obtain a path to the plugins in Netscape 6.x or Mozilla
+    if (ulFlags & PLUGINS_FROM_NS6X ||
+        ulFlags & PLUGINS_FROM_MOZILLA)
     {
-        TCHAR szVersion[10];
-        DWORD nVersion = sizeof(szVersion) / sizeof(szVersion[0]);
-        keyNS.QueryValue(szVersion, _T("CurrentVersion"), &nVersion);
+        // TODO search for Mozilla/NS 6.x plugins dir
+    }
+
+    // Try and obtain a path to the plugins in Netscape 4.x
+    if (ulFlags & PLUGINS_FROM_NS4X)
+    {
+        TCHAR szPluginsDir[_MAX_PATH];
+        memset(szPluginsDir, 0, sizeof(szPluginsDir));
         
-        CRegKey keyVersion;
-        if (keyVersion.Open(keyNS, szVersion, KEY_READ) == ERROR_SUCCESS)
+        CRegKey keyNS;
+        const TCHAR *kNav4xKey = _T("Software\\Netscape\\Netscape Navigator");
+        if (keyNS.Open(HKEY_LOCAL_MACHINE, kNav4xKey, KEY_READ) == ERROR_SUCCESS)
         {
-            CRegKey keyMain;
-            if (keyMain.Open(keyVersion, _T("Main"), KEY_READ) == ERROR_SUCCESS)
+            TCHAR szVersion[10];
+            DWORD nVersion = sizeof(szVersion) / sizeof(szVersion[0]);
+            keyNS.QueryValue(szVersion, _T("CurrentVersion"), &nVersion);
+        
+            CRegKey keyVersion;
+            if (keyVersion.Open(keyNS, szVersion, KEY_READ) == ERROR_SUCCESS)
             {
-                DWORD nPluginsDir = sizeof(szPluginsDir) / sizeof(szPluginsDir[0]);
-                keyMain.QueryValue(szPluginsDir, _T("Plugins Directory"), &nPluginsDir);
-                keyMain.Close();
+                CRegKey keyMain;
+                if (keyMain.Open(keyVersion, _T("Main"), KEY_READ) == ERROR_SUCCESS)
+                {
+                    DWORD nPluginsDir = sizeof(szPluginsDir) / sizeof(szPluginsDir[0]);
+                    keyMain.QueryValue(szPluginsDir, _T("Plugins Directory"), &nPluginsDir);
+                    keyMain.Close();
+                }
+                keyVersion.Close();
             }
-            keyVersion.Close();
+            keyNS.Close();
         }
-        keyNS.Close();
-    }
-    if (szPluginsDir[0] == TCHAR('\0'))
-    {
-        return E_FAIL;
+        if (szPluginsDir[0])
+        {
+            CreatePluginListFrom(szPluginsDir);
+        }
     }
 
+    // Try and obtain a path to the plugins in Internet Explorer
+    if (ulFlags & PLUGINS_FROM_IE)
+    {
+        TCHAR szPluginsDir[_MAX_PATH];
+        memset(szPluginsDir, 0, sizeof(szPluginsDir));
+
+        CRegKey keyIE;
+        const TCHAR *kIEKey = _T("Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\IEXPLORE.EXE");
+        if (keyIE.Open(HKEY_LOCAL_MACHINE, kIEKey, KEY_READ) == ERROR_SUCCESS)
+        {
+            DWORD nPluginsDir = sizeof(szPluginsDir) / sizeof(szPluginsDir[0]);
+            keyIE.QueryValue(szPluginsDir, _T("Path"), &nPluginsDir);
+
+            TCHAR *szSemiColon = _tcschr(szPluginsDir, _TCHAR(';'));
+            if (szSemiColon)
+            {
+                *szSemiColon = _TCHAR('\0');
+            }
+            _tcscat(szPluginsDir, _T("\\Plugins"));
+            keyIE.Close();
+        }
+        if (szPluginsDir[0])
+        {
+            CreatePluginListFrom(szPluginsDir);
+        }
+    }
+
+    return S_OK;
+}
+
+HRESULT nsPluginHostCtrl::CreatePluginListFrom(const TCHAR *szPluginsDir)
+{
     HANDLE hFind;
     WIN32_FIND_DATA finddata;
 
@@ -335,19 +376,7 @@ HRESULT nsPluginHostCtrl::CreatePluginList()
             {
                 pInfo->szPluginName = _tcsdup(finddata.cFileName);
                 pInfo->szPluginPath = _tcsdup(szPluginsDir);
-                if (!m_pPlugins)
-                {
-                    m_nPluginsMax = kArraySizeIncrement;
-                    m_pPlugins = (PluginInfo **)
-                        malloc(sizeof(PluginInfo *) * m_nPluginsMax);
-                }
-                else if (m_nPlugins == m_nPluginsMax)
-                {
-                    m_nPluginsMax += kArraySizeIncrement;
-                    m_pPlugins =
-                        (PluginInfo **) realloc(m_pPlugins, sizeof(PluginInfo *) * m_nPluginsMax);
-                }
-                m_pPlugins[m_nPlugins++] = pInfo;
+                m_Plugins.AppendElement(pInfo);
             }
             else
             {
@@ -367,25 +396,17 @@ HRESULT nsPluginHostCtrl::CreatePluginList()
 HRESULT nsPluginHostCtrl::CleanupPluginList()
 {
     // Free the memory used by the plugin info list
-    if (m_pPlugins)
+    for (unsigned long i = 0; i < m_Plugins.Count(); i++)
     {
-        for (unsigned long i = 0; i < m_nPlugins; i++)
-        {
-            PluginInfo *pI = m_pPlugins[i];
-            if (pI->szMIMEType)
-                free(pI->szMIMEType);
-            if (pI->szPluginName)
-                free(pI->szPluginName);
-            if (pI->szPluginPath)
-                free(pI->szPluginPath);
-            free(pI);
-        }
+        PluginInfo *pI = m_Plugins[i];
+        if (pI->szMIMEType)
+            free(pI->szMIMEType);
+        if (pI->szPluginName)
+            free(pI->szPluginName);
+        if (pI->szPluginPath)
+            free(pI->szPluginPath);
+        free(pI);
     }
-    free(m_pPlugins);
-    m_pPlugins = 0;
-    m_nPlugins = 0;
-    m_nPluginsMax = 0;
-
     return S_OK;
 }
 
@@ -433,17 +454,12 @@ HRESULT nsPluginHostCtrl::FindPluginPathByContentType(const TCHAR *pszContentTyp
 {
     *ppszPluginPath = NULL;
 
-    if (!m_pPlugins)
-    {
-        return E_FAIL;
-    }
-
     // Search the list of plugins for one that will handle the content type
     TCHAR szPluginPath[_MAX_PATH + 1];
     unsigned long nContentType = _tcslen(pszContentType);
-    for (unsigned long i = 0; i < m_nPlugins; i++)
+    for (unsigned long i = 0; i < m_Plugins.Count(); i++)
     {
-        PluginInfo *pI = m_pPlugins[i];
+        PluginInfo *pI = m_Plugins[i];
         if (pI->szMIMEType)
         {
             TCHAR *pszMIMEType = pI->szMIMEType;
@@ -480,11 +496,11 @@ HRESULT nsPluginHostCtrl::LoadPlugin(const TCHAR *szPluginPath)
     // TODO critical section
 
     // Test if the plugin has already been loaded
-    for (unsigned long i = 0; i < m_nLoadedPlugins; i++)
+    for (unsigned long i = 0; i < m_LoadedPlugins.Count(); i++)
     {
-        if (_tcscmp(m_pLoadedPlugins[i]->szFullPath, szPluginPath) == 0)
+        if (_tcscmp(m_LoadedPlugins[i]->szFullPath, szPluginPath) == 0)
         {
-            m_pLoadedPlugin = m_pLoadedPlugins[i];
+            m_pLoadedPlugin = m_LoadedPlugins[i];
             memcpy(&m_NPPFuncs, &m_pLoadedPlugin->NPPFuncs, sizeof(m_NPPFuncs));
             m_pLoadedPlugin->nRefCount++;
             return S_OK;
@@ -535,25 +551,7 @@ HRESULT nsPluginHostCtrl::LoadPlugin(const TCHAR *szPluginPath)
     memcpy(&m_pLoadedPlugin->NPPFuncs, &m_NPPFuncs, sizeof(m_NPPFuncs));
 
     // Add it to the array
-    if (m_pLoadedPlugins == NULL)
-    {
-        m_nLoadedPluginsMax = kArraySizeIncrement;
-        m_pLoadedPlugins = (LoadedPluginInfo **)
-            malloc(sizeof(LoadedPluginInfo *) * m_nLoadedPluginsMax);
-    }
-    else if (m_nLoadedPlugins == m_nLoadedPluginsMax)
-    {
-        m_nLoadedPluginsMax += kArraySizeIncrement;
-        m_pLoadedPlugins = (LoadedPluginInfo **)
-            realloc(m_pLoadedPlugins, sizeof(LoadedPluginInfo *) * m_nLoadedPluginsMax);
-        m_pLoadedPlugins[m_nLoadedPlugins++] = m_pLoadedPlugin;
-    }
-    if (m_pLoadedPlugins == NULL)
-    {
-        ATLASSERT(m_pLoadedPlugins);
-        return E_OUTOFMEMORY;
-    }
-    m_pLoadedPlugins[m_nLoadedPlugins++] = m_pLoadedPlugin;
+    m_LoadedPlugins.AppendElement(m_pLoadedPlugin);
 
     return S_OK;
 }
@@ -581,28 +579,9 @@ HRESULT nsPluginHostCtrl::UnloadPlugin()
         FreeLibrary(m_pLoadedPlugin->hInstance);
 
         // Delete the entry from the array
-        for (unsigned long i = 0; i < m_nLoadedPlugins; i++)
-        {
-            if (m_pLoadedPlugins[i] == m_pLoadedPlugin)
-            {
-                m_nLoadedPlugins--;
-                // Replace entry with one from the end of the array
-                if (m_nLoadedPlugins > 0)
-                {
-                    m_pLoadedPlugins[i] = m_pLoadedPlugins[m_nLoadedPlugins];
-                }
-                break;
-            }
-        }
+        m_LoadedPlugins.RemoveElement(m_pLoadedPlugin);
         free(m_pLoadedPlugin->szFullPath);
         delete m_pLoadedPlugin;
-
-        // Clean up the array if there are no entries in it
-        if (m_nLoadedPlugins == 0)
-        {
-            free(m_pLoadedPlugins);
-            m_pLoadedPlugins = NULL;
-        }
     }
     else
     {
