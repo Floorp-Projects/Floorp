@@ -48,6 +48,7 @@
 #include "nsMessageViewDataSource.h"
 
 #include "nsTraceRefcnt.h"
+#include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID,		NS_MSGMAILSESSION_CID);
@@ -73,6 +74,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_TotalUnreadMessages= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Charset = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_BiffState = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_HasUnreadMessages = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_NewMessages = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_SubfoldersHaveUnreadMessages = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_NoSelect = nsnull;
 
@@ -92,6 +94,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_EmptyTrash= nsnull;
 nsrefcnt nsMsgFolderDataSource::gFolderResourceRefCnt = 0;
 
 nsIAtom * nsMsgFolderDataSource::kBiffStateAtom = nsnull;
+nsIAtom * nsMsgFolderDataSource::kNewMessagesAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kTotalMessagesAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kTotalUnreadMessagesAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kNameAtom = nsnull;
@@ -134,6 +137,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 		NS_RELEASE2(kNC_Charset, refcnt);
 		NS_RELEASE2(kNC_BiffState, refcnt);
 		NS_RELEASE2(kNC_HasUnreadMessages, refcnt);
+		NS_RELEASE2(kNC_NewMessages, refcnt);
 		NS_RELEASE2(kNC_SubfoldersHaveUnreadMessages, refcnt);
     NS_RELEASE2(kNC_NoSelect, refcnt);
 
@@ -152,6 +156,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
     NS_RELEASE(kTotalMessagesAtom);
     NS_RELEASE(kTotalUnreadMessagesAtom);
     NS_RELEASE(kBiffStateAtom);
+	NS_RELEASE(kNewMessagesAtom);
     NS_RELEASE(kNameAtom);
 	}
 }
@@ -192,6 +197,7 @@ nsresult nsMsgFolderDataSource::Init()
     rdf->GetResource(NC_RDF_CHARSET, &kNC_Charset);
     rdf->GetResource(NC_RDF_BIFFSTATE, &kNC_BiffState);
     rdf->GetResource(NC_RDF_HASUNREADMESSAGES, &kNC_HasUnreadMessages);
+	rdf->GetResource(NC_RDF_NEWMESSAGES, &kNC_NewMessages);
     rdf->GetResource(NC_RDF_SUBFOLDERSHAVEUNREADMESSAGES, &kNC_SubfoldersHaveUnreadMessages);
     rdf->GetResource(NC_RDF_NOSELECT, &kNC_NoSelect);
     
@@ -211,6 +217,7 @@ nsresult nsMsgFolderDataSource::Init()
     kTotalMessagesAtom           = NS_NewAtom("TotalMessages");
     kTotalUnreadMessagesAtom     = NS_NewAtom("TotalUnreadMessages");
     kBiffStateAtom               = NS_NewAtom("BiffState");
+    kNewMessagesAtom               = NS_NewAtom("NewMessages");
     kNameAtom              = NS_NewAtom("Name");
   }
 	CreateLiterals(rdf);
@@ -774,6 +781,22 @@ nsMsgFolderDataSource::OnItemBoolPropertyChanged(nsISupports *item,
                                                  PRBool oldValue,
                                                  PRBool newValue)
 {
+    nsresult rv; 
+    nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(item)); 
+    if(folder) 
+	{ 
+		nsCOMPtr<nsIRDFResource> resource(do_QueryInterface(item)); 
+		if(resource) 
+		{ 
+			if (kNewMessagesAtom == property) 
+			{ 
+				if (newValue != oldValue) {
+					nsIRDFNode* newMessagesNode = newValue?kTrueLiteral:kFalseLiteral;
+					NotifyPropertyChanged(resource, kNC_NewMessages, newMessagesNode); 
+				}
+			} 
+		} 
+	} 
 
 	return NS_OK;
 }
@@ -854,6 +877,8 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 		rv = createBiffStateNode(folder, target);
 	else if ((kNC_HasUnreadMessages == property))
 		rv = createHasUnreadMessagesNode(folder, target);
+	else if ((kNC_NewMessages == property))
+		rv = createNewMessagesNode(folder, target);
 	else if ((kNC_SubfoldersHaveUnreadMessages == property))
 		rv = createSubfoldersHaveUnreadMessagesNode(folder, target);
 	else if ((kNC_Child == property))
@@ -1185,9 +1210,9 @@ nsMsgFolderDataSource::createBiffStateNode(nsIMsgFolder *folder, nsIRDFNode **ta
 nsresult
 nsMsgFolderDataSource::GetBiffStateString(PRUint32 biffState, nsCAutoString& biffStateStr)
 {
-	if(biffState == nsMsgBiffState_NewMail)
+	if(biffState == nsIMsgFolder::nsMsgBiffState_NewMail)
 		biffStateStr = "NewMail";
-	else if(biffState == nsMsgBiffState_NoMail)
+	else if(biffState == nsIMsgFolder::nsMsgBiffState_NoMail)
 		biffStateStr = "NoMail";
 	else 
 		biffStateStr = "UnknownMail";
@@ -1299,6 +1324,83 @@ nsMsgFolderDataSource::NotifyFolderTreeNameChanged(nsIMsgFolder* aFolder,
 
     return NS_OK;
 }
+
+// <<<<<<<<< >>>>>>>>>>>>>>>>..
+// New Messages
+
+nsresult
+nsMsgFolderDataSource::createNewMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target)
+{
+
+	nsresult rv;
+
+	PRBool isServer;
+	rv = folder->GetIsServer(&isServer);
+	if (NS_FAILED(rv)) return rv;
+
+	*target = kFalseLiteral;
+
+	//PRInt32 totalNewMessages;
+	PRBool isNewMessages;
+	if(!isServer)
+	{
+		rv = folder->GetHasNewMessages(&isNewMessages);
+		if(NS_FAILED(rv)) return rv;
+		if(isNewMessages)
+			*target = kTrueLiteral;
+		else
+			*target = kFalseLiteral;
+	}
+	NS_IF_ADDREF(*target);
+	return NS_OK;
+}
+
+/**
+nsresult
+nsMsgFolderDataSource::OnUnreadMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue)
+{
+	nsCOMPtr<nsIRDFResource> folderResource = do_QueryInterface(folder);
+	if(folderResource)
+	{
+		//First send a regular unread message changed notification
+		nsCOMPtr<nsIRDFNode> newNode;
+
+		GetNumMessagesNode(newValue, getter_AddRefs(newNode));
+		NotifyPropertyChanged(folderResource, kNC_TotalUnreadMessages, newNode);
+	
+		//Now see if hasUnreadMessages has changed
+		nsCOMPtr<nsIRDFNode> oldHasUnreadMessages;
+		nsCOMPtr<nsIRDFNode> newHasUnreadMessages;
+		if(oldValue <=0 && newValue >0)
+		{
+			oldHasUnreadMessages = kFalseLiteral;
+			newHasUnreadMessages = kTrueLiteral;
+			NotifyPropertyChanged(folderResource, kNC_HasUnreadMessages, newHasUnreadMessages);
+		}
+		else if(oldValue > 0 && newValue <= 0)
+		{
+			newHasUnreadMessages = kFalseLiteral;
+			NotifyPropertyChanged(folderResource, kNC_HasUnreadMessages, newHasUnreadMessages);
+		}
+  }
+  return NS_OK;
+}
+
+**/
+
+nsresult
+nsMsgFolderDataSource::GetNewMessagesString(PRBool newMessages, nsCAutoString& newMessagesStr)
+{
+	if(newMessages)
+		newMessagesStr = "true";
+	else 
+		newMessagesStr = "false";
+
+
+
+	return NS_OK;
+}
+// <<<<<<<<< >>>>>>>>>>>>>>>>..
 
 
 nsresult

@@ -35,6 +35,7 @@
 #include "nsImapCore.h"
 #include "nsIImapUrl.h"
 #include "nsIImapMailFolderSink.h"
+#include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 
 
 #include "nsCOMPtr.h"

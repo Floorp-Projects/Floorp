@@ -28,6 +28,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
 #include "MailNewsTypes.h"
+#include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 #include "nsMemory.h"
 #include "nsXPIDLString.h"
 
@@ -182,7 +183,7 @@ nsMsgNotificationManager::OnItemPropertyChanged(nsISupports *item,
 		{
 			PRUint32 biffState;
 			rv = folder->GetBiffState(&biffState);
-			if(NS_SUCCEEDED(rv) && (biffState == nsMsgBiffState_NewMail))
+			if(NS_SUCCEEDED(rv) && (biffState == nsIMsgFolder::nsMsgBiffState_NewMail))
 			{
 				rv = AddNewMailNotification(folder);
 			}
@@ -235,7 +236,7 @@ nsMsgNotificationManager::OnItemPropertyFlagChanged(nsISupports *item,
 	{
 		if(kBiffStateAtom ==  property)
 		{
-			if(newFlag == nsMsgBiffState_NewMail)
+			if(newFlag == nsIMsgFolder::nsMsgBiffState_NewMail)
 			{
 				rv = AddNewMailNotification(folder);
 			}

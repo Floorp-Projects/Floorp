@@ -62,7 +62,7 @@ NS_IMPL_QUERY_INTERFACE_INHERITED2(nsMsgDBFolder,
 
 
 nsMsgDBFolder::nsMsgDBFolder(void)
-: mAddListener(PR_TRUE)
+: mAddListener(PR_TRUE), mNewMessages(PR_FALSE)
 {
   if (mInstanceCount++ <=0) {
     mFolderLoadedAtom = NS_NewAtom("FolderLoaded");
@@ -152,6 +152,17 @@ NS_IMETHODIMP nsMsgDBFolder::EndFolderLoading(void)
 		mDatabase->AddListener(this);
 	mAddListener = PR_TRUE;
 	UpdateSummaryTotals(PR_TRUE);
+
+	//GGGG			 check for new mail here and call SetNewMessages...?? -- ONE OF THE 2 PLACES
+	if(mDatabase)
+	{
+	    nsresult rv;
+		PRBool hasNewMessages;
+
+		rv = mDatabase->HasNew(&hasNewMessages);
+		SetHasNewMessages(hasNewMessages);
+	}
+
 	return NS_OK;
 }
 
@@ -287,25 +298,34 @@ NS_IMETHODIMP nsMsgDBFolder::SetCharset(const PRUnichar * aCharset)
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::HasNewMessages(PRBool *hasNewMessages)
+NS_IMETHODIMP nsMsgDBFolder::GetHasNewMessages(PRBool *hasNewMessages)
 {
 	if(!hasNewMessages)
 		return NS_ERROR_NULL_POINTER;
 
-	nsresult rv;
-	//If there's no database then there are no new messages.
-	if(mDatabase)
-	{
-		rv = mDatabase->HasNew(hasNewMessages);
-	}
-	else
-	{
-		*hasNewMessages = PR_FALSE;
-		rv = NS_OK;
-	}
+	nsresult rv = NS_OK;
+	*hasNewMessages = mNewMessages;
 
 	return rv;
 }
+
+NS_IMETHODIMP nsMsgDBFolder::SetHasNewMessages(PRBool curNewMessages)
+{
+	nsresult rv;
+
+	if (curNewMessages != mNewMessages) 
+	{
+		/** @params
+		  * nsIAtom* property, PRBool oldValue, PRBool newValue
+		  */
+		PRBool oldNewMessages = mNewMessages;
+		mNewMessages = curNewMessages;
+		NotifyBoolPropertyChanged(kNewMessagesAtom, oldNewMessages, curNewMessages);
+	}
+
+	return NS_OK;
+}
+
 
 NS_IMETHODIMP nsMsgDBFolder::GetFirstNewMessage(nsIMessage **firstNewMessage)
 {
@@ -452,7 +472,8 @@ nsresult nsMsgDBFolder::SendFlagNotifications(nsISupports *item, PRUint32 oldFla
 
 	PRUint32 changedFlags = oldFlags ^ newFlags;
 	if((changedFlags & MSG_FLAG_READ) || (changedFlags & MSG_FLAG_REPLIED)
-		|| (changedFlags & MSG_FLAG_FORWARDED)|| (changedFlags & MSG_FLAG_NEW) || (changedFlags & MSG_FLAG_IMAP_DELETED))
+		|| (changedFlags & MSG_FLAG_FORWARDED) || (changedFlags & MSG_FLAG_IMAP_DELETED)
+		|| (changedFlags & MSG_FLAG_NEW))
 	{
 		rv = NotifyPropertyFlagChanged(item, kStatusAtom, oldFlags, newFlags);
 	}
@@ -589,6 +610,7 @@ nsMsgDBFolder::OnReadChanged(nsIDBChangeListener * aInstigator)
     return NS_OK;
 }
 
+// 1.  When the status of a message changes.
 NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
                          nsIDBChangeListener * aInstigator)
 {
@@ -608,19 +630,64 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlag
 			UpdateSummaryTotals(PR_TRUE);
 		}
 	}
+
+	// The old state was new message state
+	// We check and see if this state has changed
+	if(aOldFlags & MSG_FLAG_NEW) 
+	{
+		// state changing from new to something else
+		if (!(aNewFlags  & MSG_FLAG_NEW)) 
+		{
+			CheckWithNewMessagesStatus(PR_FALSE);
+		}
+	}
+
 	return NS_OK;
 }
 
+nsresult nsMsgDBFolder::CheckWithNewMessagesStatus(PRBool messageAdded)
+{
+	nsresult rv;
+
+	PRBool hasNewMessages;
+
+	if (messageAdded)
+	{
+		SetHasNewMessages(PR_TRUE);
+	}
+	else // message modified or deleted
+	{
+		if(mDatabase)
+		{
+			rv = mDatabase->HasNew(&hasNewMessages);
+			SetHasNewMessages(hasNewMessages);
+		}
+	}
+
+	return NS_OK;
+}
+
+// 3.  When a message gets deleted, we need to see if it was new
+//     When we lose a new message we need to check if there are still new messages 
 NS_IMETHODIMP nsMsgDBFolder::OnKeyDeleted(nsMsgKey aKeyChanged, nsMsgKey  aParentKey, PRInt32 aFlags, 
                           nsIDBChangeListener * aInstigator)
 {
+	if(aFlags & MSG_FLAG_NEW) {
+		CheckWithNewMessagesStatus(PR_FALSE);
+	}
+
 	//Do both flat and thread notifications
 	return OnKeyAddedOrDeleted(aKeyChanged, aParentKey, aFlags, aInstigator, PR_FALSE, PR_TRUE, PR_TRUE);
 }
 
+// 2.  When a new messages gets added, we need to see if it's new.
 NS_IMETHODIMP nsMsgDBFolder::OnKeyAdded(nsMsgKey aKeyChanged, nsMsgKey  aParentKey , PRInt32 aFlags, 
                         nsIDBChangeListener * aInstigator)
 {
+	if(aFlags & MSG_FLAG_NEW) {
+		CheckWithNewMessagesStatus(PR_TRUE);
+	}
+
 	//Do both flat and thread notifications
 	return OnKeyAddedOrDeleted(aKeyChanged, aParentKey, aFlags, aInstigator, PR_TRUE, PR_TRUE, PR_TRUE);
 }
@@ -917,6 +984,16 @@ nsMsgDBFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 		if (NS_SUCCEEDED(mailUrl->GetUpdatingFolder(&updatingFolder)) && updatingFolder)
 		{
       NotifyFolderEvent(mFolderLoadedAtom);
+
+//GGGG			 check for new mail here and call SetNewMessages...?? -- ONE OF THE 2 PLACES
+			if(mDatabase)
+			{
+				nsresult rv;
+				PRBool hasNewMessages;
+
+				rv = mDatabase->HasNew(&hasNewMessages);
+				SetHasNewMessages(hasNewMessages);
+			}
 		}
 
     // be sure to remove ourselves as a url listener

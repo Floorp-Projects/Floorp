@@ -58,6 +58,7 @@
 #include "nsMsgAccountManagerDS.h"
 
 #include "nsMsgBiffManager.h"
+#include "nsStatusBarBiffManager.h"
 #include "nsMsgNotificationManager.h"
 
 #include "nsCopyMessageStreamListener.h"
@@ -104,6 +105,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFilterService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFilterDataSource)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgFilterDelegateFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgBiffManager, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsStatusBarBiffManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMsgNotificationManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCopyMessageStreamListener)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCopyService)
@@ -215,6 +217,10 @@ static nsModuleComponentInfo gComponents[] = {
     { "Messenger Biff Manager", NS_MSGBIFFMANAGER_CID,
       NS_MSGBIFFMANAGER_PROGID,
       nsMsgBiffManagerConstructor,
+    },
+    { "Status Bar Biff Manager", NS_STATUSBARBIFFMANAGER_CID,
+      NS_STATUSBARBIFFMANAGER_PROGID,
+      nsStatusBarBiffManagerConstructor,
     },
     { "Mail/News Notification Manager", NS_MSGNOTIFICATIONMANAGER_CID,
       NS_MSGNOTIFICATIONMANAGER_PROGID,

@@ -135,6 +135,7 @@ protected:
 	nsresult createCharsetNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createBiffStateNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createHasUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
+	nsresult createNewMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createSubfoldersHaveUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
   nsresult createFolderNoSelectNode(nsIMsgFolder *folder,
                                     nsIRDFNode **target);
@@ -160,6 +161,7 @@ protected:
 													 PRBool tv, PRBool *hasAssertion);
 
 	nsresult GetBiffStateString(PRUint32 biffState, nsCAutoString & biffStateStr);
+	nsresult GetNewMessagesString(PRBool newMessages, nsCAutoString & newMessagesStr);
 
 	nsresult CreateNameSortString(nsIMsgFolder *folder, nsAutoString &name);
 	nsresult CreateUnreadMessagesNameString(PRInt32 unreadMessages, nsAutoString &nameString);
@@ -200,6 +202,7 @@ protected:
   static nsIRDFResource* kNC_Charset;
   static nsIRDFResource* kNC_BiffState;
   static nsIRDFResource* kNC_HasUnreadMessages;
+  static nsIRDFResource* kNC_NewMessages;
   static nsIRDFResource* kNC_SubfoldersHaveUnreadMessages;
   static nsIRDFResource* kNC_NoSelect;
 
@@ -224,6 +227,7 @@ protected:
   static nsIAtom* kTotalMessagesAtom;
   static nsIAtom* kTotalUnreadMessagesAtom;
   static nsIAtom* kBiffStateAtom;
+  static nsIAtom* kNewMessagesAtom;
   static nsIAtom* kNameAtom;
   
   static nsrefcnt gFolderResourceRefCnt;

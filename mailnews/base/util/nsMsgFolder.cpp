@@ -69,6 +69,7 @@ PRUnichar *nsMsgFolder::kUnsentName = 0;
 
 nsIAtom * nsMsgFolder::kTotalMessagesAtom	= nsnull;
 nsIAtom * nsMsgFolder::kBiffStateAtom	= nsnull;
+nsIAtom * nsMsgFolder::kNewMessagesAtom	= nsnull;
 nsIAtom * nsMsgFolder::kNumNewBiffMessagesAtom	= nsnull;
 nsIAtom * nsMsgFolder::kTotalUnreadMessagesAtom	= nsnull;
 nsIAtom * nsMsgFolder::kFlaggedAtom	= nsnull;
@@ -109,6 +110,7 @@ nsMsgFolder::nsMsgFolder(void)
 	
   if (gInstanceCount == 0) {
     kBiffStateAtom           = NS_NewAtom("BiffState");
+    kNewMessagesAtom         = NS_NewAtom("NewMessages");
     kNumNewBiffMessagesAtom  = NS_NewAtom("NumNewBiffMessages");
     kNameAtom          = NS_NewAtom("Name");
     kTotalUnreadMessagesAtom = NS_NewAtom("TotalUnreadMessages");
@@ -149,6 +151,7 @@ nsMsgFolder::~nsMsgFolder(void)
     if (gInstanceCount <= 0) {
       NS_IF_RELEASE(kTotalMessagesAtom);
       NS_IF_RELEASE(kBiffStateAtom);
+      NS_IF_RELEASE(kNewMessagesAtom);
       NS_IF_RELEASE(kNumNewBiffMessagesAtom);
       NS_IF_RELEASE(kTotalUnreadMessagesAtom);
       NS_IF_RELEASE(kFlaggedAtom);
@@ -1331,7 +1334,13 @@ PRInt32 nsMsgFolder::GetNumPendingTotalMessages()
 	return mNumPendingTotalMessages;
 }
 
-NS_IMETHODIMP nsMsgFolder::HasNewMessages(PRBool *hasNewMessages)
+NS_IMETHODIMP nsMsgFolder::GetHasNewMessages(PRBool *hasNewMessages)
+{
+	//we don't support this
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFolder::SetHasNewMessages(PRBool hasNewMessages)
 {
 	//we don't support this
 	return NS_OK;
@@ -1869,14 +1878,30 @@ NS_IMETHODIMP nsMsgFolder::GetBiffState(PRUint32 *aBiffState)
 
 NS_IMETHODIMP nsMsgFolder::SetBiffState(PRUint32 aBiffState)
 {
-	if(mBiffState != aBiffState)
-	{
+	nsresult rv;
+
+	// this optimization isn't working with filters...
+	// so commenting out the optimization
+	// need to figure out why and fix it !!!
+
+	//if(mBiffState != aBiffState) 
+	//{
 		PRUint32 oldBiffState = mBiffState;
 		mBiffState = aBiffState;
 		nsCOMPtr<nsISupports> supports;
-		if(NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(supports))))
-			NotifyPropertyFlagChanged(supports, kBiffStateAtom, oldBiffState, mBiffState);
-	}
+
+		// Get the server and notify it and not inbox.
+		nsCOMPtr<nsIMsgIncomingServer> aServer;
+		nsCOMPtr<nsIFolder> aRootFolder;
+
+		rv = GetServer(getter_AddRefs(aServer));
+		rv = aServer->GetRootFolder(getter_AddRefs(aRootFolder));
+        if(NS_FAILED(rv))
+            return rv;
+		
+		if(NS_SUCCEEDED(aRootFolder->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(supports))))
+			(aRootFolder)->NotifyPropertyFlagChanged(supports, kBiffStateAtom, oldBiffState, mBiffState);
+	//}
 	return NS_OK;
 }
 

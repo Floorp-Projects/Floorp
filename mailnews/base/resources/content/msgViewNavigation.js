@@ -173,7 +173,7 @@ function ScrollToFirstNewMessage()
 	var folderURI = treeFolder.getAttribute('ref');
 	var folderResource = RDF.GetResource(folderURI);
 	var folder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-	var hasNew = folder.hasNewMessages();
+	var hasNew = folder.hasNewMessages;
 	if(hasNew)
 	{
 		var newMessage = folder.firstNewMessage;

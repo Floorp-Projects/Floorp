@@ -470,7 +470,7 @@ nsresult nsPop3TestDriver::OnGet()
 
 	if (pop3Service)
 	{
-		pop3Service->GetNewMail(nsnull, this, popServer, nsnull);
+		pop3Service->GetNewMail(nsnull, this, nsnull, popServer, nsnull);
 		m_runningURL = PR_TRUE;
 	}
 	return rv;

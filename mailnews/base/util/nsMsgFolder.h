@@ -105,7 +105,8 @@ public:
   NS_IMETHOD SummaryChanged(void);
   NS_IMETHOD GetNumUnread(PRBool deep, PRInt32 *_retval);
   NS_IMETHOD GetTotalMessages(PRBool deep, PRInt32 *_retval);
-  NS_IMETHOD HasNewMessages(PRBool *hasNewMessages);
+  NS_IMETHOD GetHasNewMessages(PRBool *hasNewMessages);
+  NS_IMETHOD SetHasNewMessages(PRBool hasNewMessages);
   NS_IMETHOD GetFirstNewMessage(nsIMessage **firstNewMessage);
   NS_IMETHOD ClearNewMessages();
   NS_IMETHOD GetExpungedBytes(PRUint32 *aExpungedBytesCount);
@@ -282,6 +283,7 @@ protected:
   
   static nsIAtom* kTotalUnreadMessagesAtom;
   static nsIAtom* kBiffStateAtom;
+  static nsIAtom* kNewMessagesAtom;
   static nsIAtom* kNumNewBiffMessagesAtom;
   static nsIAtom* kTotalMessagesAtom;
   static nsIAtom* kStatusAtom;

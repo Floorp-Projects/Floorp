@@ -26,8 +26,10 @@
 #include "nsIMsgAccountManager.h"
 #include "nsMsgBaseCID.h"
 #include "nsIObserverService.h"
+#include "nsStatusBarBiffManager.h"
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
+static NS_DEFINE_CID(kStatusBarBiffManagerCID, NS_STATUSBARBIFFMANAGER_CID);
 
 NS_IMPL_ISUPPORTS4(nsMsgBiffManager, nsIMsgBiffManager, nsIIncomingServerListener, nsIObserver, nsISupportsWeakReference)
 
@@ -96,6 +98,10 @@ nsresult nsMsgBiffManager::Init()
 		nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
 		observerService->AddObserver(this, topic.GetUnicode());
 	}
+
+
+	//Ensure status bar biff service has started
+	NS_WITH_SERVICE(nsStatusBarBiffManager, statusBarBiffService, kStatusBarBiffManagerCID, &rv);
 
 	return NS_OK;
 }

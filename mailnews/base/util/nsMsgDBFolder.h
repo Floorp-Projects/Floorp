@@ -55,7 +55,7 @@ public:
 	NS_IMETHOD HasMessage(nsIMessage *message, PRBool *hasMessage);
 	NS_IMETHOD GetCharset(PRUnichar * *aCharset);
 	NS_IMETHOD SetCharset(const PRUnichar * aCharset);
-	NS_IMETHOD HasNewMessages(PRBool *hasNewMessages);
+	//NS_IMETHOD HasNewMessages(PRBool *hasNewMessages);
 	NS_IMETHOD GetFirstNewMessage(nsIMessage **firstNewMessage);
 	NS_IMETHOD ClearNewMessages();
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
@@ -79,11 +79,14 @@ public:
 
 	NS_IMETHOD Shutdown(PRBool shutdownChildren);
   NS_IMETHOD ForceDBClosed();
+	NS_IMETHOD GetHasNewMessages(PRBool *hasNewMessages);
+	NS_IMETHOD SetHasNewMessages(PRBool hasNewMessages);
 
 protected:
 	virtual nsresult ReadDBFolderInfo(PRBool force);
 	virtual nsresult GetDatabase(nsIMsgWindow *aMsgWindow) = 0;
 	virtual nsresult SendFlagNotifications(nsISupports *item, PRUint32 oldFlags, PRUint32 newFlags);
+	nsresult CheckWithNewMessagesStatus(PRBool messageAdded);
 	nsresult OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, nsMsgKey  aParentKey , PRInt32 aFlags, 
                         nsIDBChangeListener * aInstigator, PRBool added, PRBool doFlat, PRBool doThread);
 	nsresult CreatePlatformLeafNameForDisk(const char *userLeafName, nsFileSpec &baseDir, char **resultName);
@@ -94,6 +97,7 @@ protected:
 	nsCOMPtr<nsIMsgDatabase> mDatabase;
 	nsString mCharset;
 	PRBool mAddListener;
+	PRBool mNewMessages;
 
   static nsIAtom* mFolderLoadedAtom;
   static nsIAtom* mDeleteOrMoveMsgCompletedAtom;

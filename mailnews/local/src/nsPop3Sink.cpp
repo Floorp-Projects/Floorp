@@ -33,6 +33,7 @@
 #include "nsIMsgIncomingServer.h"
 #include "nsLocalUtils.h"
 #include "nsMsgLocalFolderHdrs.h"
+#include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 
 NS_IMPL_ISUPPORTS(nsPop3Sink, NS_GET_IID(nsIPop3Sink));
 
@@ -427,14 +428,14 @@ nsPop3Sink::SetBiffStateAndUpdateFE(PRUint32 aBiffState, PRInt32 numNewMessages)
 	// as part of the smoketest process.
     switch (aBiffState)
     {
-    case nsMsgBiffState_Unknown:
+    case nsIMsgFolder::nsMsgBiffState_Unknown:
     default:
         printf("Excuse me, Sir. I have no idea.\n");
         break;
-    case nsMsgBiffState_NewMail:
+    case nsIMsgFolder::nsMsgBiffState_NewMail:
         printf("Y'all got mail!\n");
         break;
-    case nsMsgBiffState_NoMail:
+    case nsIMsgFolder::nsMsgBiffState_NoMail:
         printf("You have no mail.\n");
         break;
     }

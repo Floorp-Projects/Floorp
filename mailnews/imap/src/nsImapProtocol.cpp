@@ -261,7 +261,7 @@ nsImapProtocol::nsImapProtocol() :
 
   // used to buffer incoming data by ReadNextLineFromInput
   m_inputStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, CRLF, PR_TRUE /* allocate new lines */, PR_FALSE /* leave CRLFs on the returned string */);
-  m_currentBiffState = nsMsgBiffState_Unknown;
+  m_currentBiffState = nsIMsgFolder::nsMsgBiffState_Unknown;
 
   m_userName = nsnull;
   m_hostName = nsnull;
@@ -3206,15 +3206,15 @@ void nsImapProtocol::PeriodicBiff()
       FetchMessage(fetchStr, kFlags, PR_TRUE);
 
       if (((PRUint32) m_flagState->GetHighestNonDeletedUID() >= id) && m_flagState->IsLastMessageUnseen())
-        m_currentBiffState = nsMsgBiffState_NewMail;
+        m_currentBiffState = nsIMsgFolder::nsMsgBiffState_NewMail;
       else
-        m_currentBiffState = nsMsgBiffState_NoMail;
+        m_currentBiffState = nsIMsgFolder::nsMsgBiffState_NoMail;
         }
         else
-            m_currentBiffState = nsMsgBiffState_NoMail;
+            m_currentBiffState = nsIMsgFolder::nsMsgBiffState_NoMail;
     }
     else
-      m_currentBiffState = nsMsgBiffState_Unknown;
+      m_currentBiffState = nsIMsgFolder::nsMsgBiffState_Unknown;
     
     if (startingState != m_currentBiffState)
       SendSetBiffIndicatorEvent(m_currentBiffState);
@@ -3224,7 +3224,7 @@ void nsImapProtocol::SendSetBiffIndicatorEvent(nsMsgBiffState newState)
 {
     m_imapMiscellaneousSink->SetBiffStateAndUpdate(this, newState);
 
-  if (newState == nsMsgBiffState_NewMail)
+  if (newState == nsIMsgFolder::nsMsgBiffState_NewMail)
     m_mailToFetch = PR_TRUE;
   else
     m_mailToFetch = PR_FALSE;
@@ -6324,7 +6324,7 @@ PRBool nsImapProtocol::TryToLogon()
                 AlertUserEventUsingId(IMAP_LOGIN_FAILED);
                 m_hostSessionList->SetPasswordForHost(GetImapServerKey(), nsnull);
                 PR_FREEIF(password);
-                m_currentBiffState = nsMsgBiffState_Unknown;
+                m_currentBiffState = nsIMsgFolder::nsMsgBiffState_Unknown;
                 SendSetBiffIndicatorEvent(m_currentBiffState);
             } // if we didn't receive the death signal...
           } // if login failed
@@ -6339,9 +6339,9 @@ PRBool nsImapProtocol::TryToLogon()
 #endif
         if (imapPasswordIsNew) 
         {
-                  if (m_currentBiffState == nsMsgBiffState_Unknown)
+                  if (m_currentBiffState == nsIMsgFolder::nsMsgBiffState_Unknown)
                   {
-                    m_currentBiffState = nsMsgBiffState_NoMail;
+                    m_currentBiffState = nsIMsgFolder::nsMsgBiffState_NoMail;
                       SendSetBiffIndicatorEvent(m_currentBiffState);
                   }
 #ifdef UNREADY_CODE
@@ -6392,7 +6392,7 @@ PRBool nsImapProtocol::TryToLogon()
   PR_FREEIF(userName);
   if (!loginSucceeded)
   {
-    m_currentBiffState = nsMsgBiffState_Unknown;
+    m_currentBiffState = nsIMsgFolder::nsMsgBiffState_Unknown;
     SendSetBiffIndicatorEvent(m_currentBiffState);
     HandleCurrentUrlError();
     SetConnectionStatus(-1);        // stop netlib

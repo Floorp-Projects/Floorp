@@ -194,6 +194,19 @@
 { 0x4a374e7e, 0x190f, 0x11d3,							\
     { 0x8a, 0x88, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0xd2 } }
 
+
+//
+// nsStatusBarBiffManager
+//
+#define NS_STATUSBARBIFFMANAGER_PROGID \
+  "component://netscape/messenger/statusBarBiffManager"
+
+/* 7f9a9fb0-4161-11d4-9876-00c04fa0d2a6 */
+#define NS_STATUSBARBIFFMANAGER_CID                \
+{ 0x7f9a9fb0, 0x4161, 0x11d4,                      \
+  {0x98, 0x76, 0x00, 0xc0, 0x4f, 0xa0, 0xd2, 0xa6} }
+
+
 //
 // nsMsgNotificationManager
 //

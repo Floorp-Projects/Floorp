@@ -28,6 +28,7 @@
 #include "nsIImapProtocol.h"
 #include "MailNewsTypes.h"
 #include "nsIMsgMailNewsUrl.h"
+#include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 
 class nsIImapUrl;
 

@@ -33,6 +33,7 @@
 #include "MailNewsTypes.h"
 #include "nsLocalStringBundle.h"
 #include "nsIMsgStatusFeedback.h"
+#include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 
 #include "prerror.h"
 #include "plhash.h"
@@ -196,7 +197,7 @@ typedef struct _Pop3ConData {
                                  * called
                                  */
     PRBool only_check_for_new_mail;
-  	nsMsgBiffState biffstate;     /* If just checking for, what the answer is. */
+	nsMsgBiffState biffstate;     /* If just checking for, what the answer is. */
     
     void *msg_closure;
     

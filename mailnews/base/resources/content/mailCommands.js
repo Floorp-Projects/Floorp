@@ -75,8 +75,14 @@ function GetNewMessages(selectedFolders, compositeDataSource)
 		var msgFolder = selectedFolders[0];
 
 		//Whenever we do get new messages, clear the old new messages.
-		if(msgFolder && msgFolder.hasNewMessages())
-			msgFolder.clearNewMessages();
+		if(msgFolder) 
+		{
+			var nsIMsgFolder = Components.interfaces.nsIMsgFolder;
+			msgFolder.biffState = nsIMsgFolder.nsMsgBiffState_NoMail;
+
+			if (msgFolder.hasNewMessages)
+				msgFolder.clearNewMessages();
+		}
 		
 		if(compositeDataSource)
 		{

@@ -201,7 +201,7 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
         PRBool downloadOnBiff = PR_FALSE;
         rv = GetDownloadOnBiff(&downloadOnBiff);
         if (downloadOnBiff)
-            rv = pop3Service->GetNewMail(msgWindow, nsnull, this, nsnull);
+            rv = pop3Service->GetNewMail(msgWindow, nsnull, inbox, this, nsnull);
         else
             rv = pop3Service->CheckForNewMail(msgWindow, nsnull, inbox, this,
                                               nsnull);
@@ -287,13 +287,14 @@ NS_IMETHODIMP nsPop3IncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsPop3IncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIURI **aResult)
+NS_IMETHODIMP nsPop3IncomingServer::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener *aUrlListener, nsIMsgFolder *inbox, nsIURI **aResult)
 {
+	//GGGG
 	nsresult rv;
 
 	NS_WITH_SERVICE(nsIPop3Service, pop3Service, kCPop3ServiceCID, &rv);
   	if (NS_FAILED(rv)) return rv;
 
-        rv = pop3Service->GetNewMail(aMsgWindow, aUrlListener, this, aResult);
+        rv = pop3Service->GetNewMail(aMsgWindow, aUrlListener, inbox, this, aResult);
 	return rv;
 }

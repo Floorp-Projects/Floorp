@@ -26,11 +26,13 @@
 interface nsIURI;
 interface nsIMsgWindow;
 interface nsIUrlListener;
+interface nsIMsgFolder;
 
 [scriptable, uuid(ee87cc60-1dd1-11b2-b25a-ff87320f212d)]
 interface nsILocalMailIncomingServer : nsISupports {
   void createDefaultMailboxes(in nsIFileSpec path);
   void setFlagsOnDefaultMailboxes();
-  nsIURI getNewMail(in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener);
+  nsIURI getNewMail(in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener, in nsIMsgFolder aInbox);
+  //nsIURI getNewMail(in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener, in nsIMsgFolder aInbox);
 };
 

@@ -2049,7 +2049,17 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
     if (NS_FAILED(rv)) return rv;
     if (!localMailServer) return NS_ERROR_FAILURE;
 
-    rv = localMailServer->GetNewMail(aWindow, nsnull, nsnull);
+	//GGGGGGG
+	nsCOMPtr<nsIMsgFolder> inbox;
+	nsCOMPtr<nsIMsgFolder> rootFolder;
+	rv = GetRootFolder(getter_AddRefs(rootFolder));
+	if(NS_SUCCEEDED(rv) && rootFolder)
+	{
+		PRUint32 numFolders;
+		rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1, &numFolders, getter_AddRefs(inbox));
+	}
+
+    rv = localMailServer->GetNewMail(aWindow, nsnull, inbox, nsnull); 
     return rv;
 }
 

@@ -28,6 +28,7 @@
 #include "nsISupportsArray.idl"
 #include "nsIMsgCopyServiceListener.idl"
 #include "nsIUrlListener.idl"
+#include "nsIEnumerator.idl"
 
 %{ C++
 #include "nsIMsgDatabase.h"
@@ -44,8 +45,15 @@ interface nsIMsgFilterList;
 interface nsIMsgFolderCacheElement;
 interface nsAutoString;
 
+typedef long nsMsgBiffState;
+
 [scriptable, uuid(85e39ff0-b248-11d2-b7ef-00805f05ffa5)]
 interface nsIMsgFolder : nsIFolder {
+
+const nsMsgBiffState nsMsgBiffState_NewMail = 0; // User has new mail waiting.
+const nsMsgBiffState nsMsgBiffState_NoMail =  1; // No new mail is waiting.
+const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is new mail.
+
 
   /* already exists in nsIFolder */
   /*	readonly attribute string name;   */
@@ -175,7 +183,8 @@ interface nsIMsgFolder : nsIFolder {
   * does this folder have new messages
   *
   */
-	boolean hasNewMessages();
+	//boolean hasNewMessages();
+	attribute boolean hasNewMessages;
 
   /**
    * return the first new message in the folder

@@ -26,6 +26,7 @@
 #include "nsImapMoveCoalescer.h"
 #include "nsMsgKeyArray.h"
 #include "nsImapService.h"
+#include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 
@@ -106,7 +107,8 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
 				nsImapMailFolder::AllocateUidStringFromKeyArray(*keysToAdd, messageIds);
 
 				destFolder->SetNumNewMessages(keysToAdd->GetSize());
-				destFolder->SetBiffState(nsMsgBiffState_NewMail);
+				//destFolder->SetBiffState(nsIMsgFolder::nsMsgBiffState_NewMail);
+				destFolder->SetHasNewMessages(PR_TRUE);
 
 				nsCOMPtr <nsISupports> sourceSupports = do_QueryInterface((nsIMsgImapMailFolder *) m_sourceFolder, &rv);
 				nsCOMPtr <nsIUrlListener> urlListener(do_QueryInterface(sourceSupports));

@@ -68,6 +68,7 @@
 #include "nsIImapMockChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsIMsgWindow.h"
+#include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -1729,7 +1730,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
 
       if (keysToFetch.GetSize() > 0)
       {
-        SetBiffState(nsMsgBiffState_NewMail);
+        SetBiffState(nsIMsgFolder::nsMsgBiffState_NewMail);
         if (flagState)
         {
           flagState->GetNumberOfRecentMessages(&numRecentMessages);

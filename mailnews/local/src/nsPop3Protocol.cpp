@@ -48,6 +48,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPref.h" 
 #include "nsIMsgWindow.h"
+#include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 
 #define PREF_MAIL_ALLOW_AT_SIGN_IN_USER_NAME "mail.allow_at_sign_in_user_name"
 
@@ -677,7 +678,7 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 
     m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), mailDirectory);
 
-	m_pop3ConData->biffstate = nsMsgBiffState_NoMail;
+	m_pop3ConData->biffstate = nsIMsgFolder::nsMsgBiffState_NoMail;
 
 	const char* uidl = PL_strcasestr(queryPart, "uidl=");
     PR_FREEIF(m_pop3ConData->only_uidl);
@@ -1130,7 +1131,7 @@ nsPop3Protocol::GetStat()
            involve keeping messages on the server.  Therefore, we now know enough
            to finish up.  If we had no messages, that would have been handled
            above; therefore, we know we have some new messages. */
-        m_pop3ConData->biffstate = nsMsgBiffState_NewMail;
+        m_pop3ConData->biffstate = nsIMsgFolder::nsMsgBiffState_NewMail;
         m_pop3ConData->next_state = POP3_SEND_QUIT;
         return(0);
     }
@@ -1357,7 +1358,7 @@ PRInt32 nsPop3Protocol::GetFakeUidlTop(nsIInputStream* inputStream,
                messages and no messages are marked dele */
 			if (m_pop3ConData->only_check_for_new_mail)
 			{
-				m_pop3ConData->biffstate = nsMsgBiffState_NewMail;
+				m_pop3ConData->biffstate = nsIMsgFolder::nsMsgBiffState_NewMail;
 				m_pop3ConData->next_state = POP3_SEND_QUIT;
 			}
 			else
@@ -1759,7 +1760,7 @@ nsPop3Protocol::GetMsg()
         }
         if (m_pop3ConData->only_check_for_new_mail) {
             if (m_totalDownloadSize > 0)
-                m_pop3ConData->biffstate = nsMsgBiffState_NewMail; 
+                m_pop3ConData->biffstate = nsIMsgFolder::nsMsgBiffState_NewMail; 
             m_pop3ConData->next_state = POP3_SEND_QUIT;
             return(0);
         }
@@ -2441,7 +2442,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                 (!password || m_username.IsEmpty())) 
             {
                 status = MK_POP3_PASSWORD_UNDEFINED;
-                m_pop3ConData->biffstate = nsMsgBiffState_Unknown;
+                m_pop3ConData->biffstate = nsIMsgFolder::nsMsgBiffState_Unknown;
                 m_nsIPop3Sink->SetBiffStateAndUpdateFE(m_pop3ConData->biffstate, 0);	
 
                 /* update old style biff */
@@ -2720,7 +2721,7 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
 							nsCRT::free(statusTemplate);
 
 						}
-                        m_nsIPop3Sink->SetBiffStateAndUpdateFE(nsMsgBiffState_NewMail, m_pop3ConData->number_of_messages_not_seen_before);
+                        m_nsIPop3Sink->SetBiffStateAndUpdateFE(nsIMsgFolder::nsMsgBiffState_NewMail, m_pop3ConData->number_of_messages_not_seen_before);
                     }
                 }
             }

@@ -76,6 +76,10 @@ function LoadMessageByUri(uri)
 		if (message)
 			setTitleFromFolder(message.msgFolder, message.mime2DecodedSubject);
 
+		var nsIMsgFolder = Components.interfaces.nsIMsgFolder;
+		if (message.msgFolder.server.downloadOnBiff)
+			message.msgFolder.biffState = nsIMsgFolder.nsMsgBiffState_NoMail;
+
 		gCurrentDisplayedMessage = uri;
 		gHaveLoadedMessage = true;
 		OpenURL(uri);
@@ -202,15 +206,26 @@ function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection)
   //Set threaded state
   ShowThreads(isThreaded);
   
+
   //Clear the new messages of the old folder
   var oldFolderURI = folder.getAttribute("ref");
   if(oldFolderURI && (oldFolderURI != "null") && (oldFolderURI !=""))
   {
-	var oldFolder = GetMsgFolderFromURI(oldFolderURI);
-	if(oldFolder && oldFolder.hasNewMessages())
-		oldFolder.clearNewMessages();
+   var oldFolder = GetMsgFolderFromURI(oldFolderURI);
+   if(oldFolder)
+   {
+       if (oldFolder.hasNewMessages)
+           oldFolder.clearNewMessages();
+   }
   }
-  
+
+  //the new folder being selected should have its biff state get cleared.   
+  if(newFolder)
+  {
+    newFolder.biffState = 
+          Components.interfaces.nsIMsgFolder.nsMsgBiffState_NoMail;
+  }
+
   //Clear out the thread pane so that we can sort it with the new sort id without taking any time.
   folder.setAttribute('ref', "");
 

@@ -122,6 +122,7 @@ NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIMsgWindow* aMsgWindow,
 
 
 nsresult nsPop3Service::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener * aUrlListener,
+								   nsIMsgFolder *aInbox,
                                    nsIPop3IncomingServer *popServer,
                                    nsIURI ** aURL)
 {
@@ -153,7 +154,12 @@ nsresult nsPop3Service::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener * aU
 	{
         // now construct a pop3 url...
         char * urlSpec = PR_smprintf("pop3://%s@%s:%d", (const char *)escapedUsername, (const char *)popHost, POP3_PORT);
-        rv = BuildPop3Url(urlSpec, nsnull, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow);
+
+		if (aInbox) 
+		{
+			rv = BuildPop3Url(urlSpec, aInbox, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow);
+		}
+
         PR_FREEIF(urlSpec);
 	}
     

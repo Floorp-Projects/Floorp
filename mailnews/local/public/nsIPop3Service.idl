@@ -28,7 +28,7 @@
 interface nsIURI;
 interface nsIStreamListener;
 interface nsIMsgWindow;
-
+interface nsIMsgFolder;
 /*
  * The Pop3 Service is an interface designed to make building and running
  * pop3 urls easier. I'm not sure if this service will go away when the
@@ -54,6 +54,7 @@ interface nsIPop3Service : nsISupports {
    */
   
   nsIURI GetNewMail(in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener,
+					in nsIMsgFolder aInbox,
                     in nsIPop3IncomingServer popServer);
 
   nsIURI CheckForNewMail(in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener,

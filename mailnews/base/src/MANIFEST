@@ -43,4 +43,6 @@ nsMsgViewNavigationService.h
 nsMsgServiceProvider.h
 nsMsgPrintEngine.h
 nsMsgRDFUtils.h
+nsStatusBarBiffManager.h
+
 
