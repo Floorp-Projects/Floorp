@@ -140,14 +140,17 @@ nsMimeMapperMac :: MapMacOSTypeToMimeType ( ResType inMacType, nsCAutoString & o
 // ParseMappings
 //
 // The mappings are of the form
-//   1..N of (<4 char code> <space> <mime type>)
+//   1..N of (<4 char code> <space> <mime type>).
+//
+// It is perfectly acceptable for there to be no mappings (either |inMappings|
+// is null or an emtpy string).
 //
 void
 nsMimeMapperMac :: ParseMappings ( const char* inMappings )
 {
   if ( !inMappings )
     return;
-    
+
   const char* currPosition = inMappings;
   while ( *currPosition ) {
     char mimeType[100];
@@ -176,6 +179,10 @@ nsMimeMapperMac :: ParseMappings ( const char* inMappings )
 char*
 nsMimeMapperMac :: ExportMapping ( short * outLength ) const
 {
+  NS_WARN_IF_FALSE ( outLength, "No out param provided" );
+  if ( outLength )
+    *outLength = 0;
+
 #if 0
 // I'm leaving this code in here just to prove a point. If we were allowed to
 // use string stream's (we're not, because of bloat), this is all the code I'd have
@@ -202,32 +209,34 @@ nsMimeMapperMac :: ExportMapping ( short * outLength ) const
     len += it->second.Length();  // <mime type>
   }  
 
-  // create a string of that length and fill it in with each mapping
+  // create a string of that length and fill it in with each mapping. We have to
+  // consider the possibility that there aren't any generic (internal mozilla) flavors
+  // so the map could be empty.
+  exportBuffer = NS_STATIC_CAST(char*, nsAllocator::Alloc(len + 1));      // don't forget the NULL
+  if ( !exportBuffer )
+    return nsnull;
+  *exportBuffer = '\0';                          // null terminate at the start for strcat()
   if ( len ) {
-    exportBuffer = new char[len + 1];              // don't forget the NULL
-    if ( exportBuffer ) { 
-      *exportBuffer = '\0';                        // null terminate at the start for strcat()
-      
-      char* posInString = exportBuffer;
-      for ( MimeMapConstIterator it = mMappings.begin(); it != mMappings.end(); ++it ) {
-        // create a buffer for this mapping, fill it in, and append it to our
-        // ongoing result buffer, |exportBuffer|. 
-        char* currMapping = new char[10 + 2 + it->second.Length() + 1];  // same computation as above, plus NULL
-        const char* mimeType = it->second.ToNewCString();
-        if ( currMapping && mimeType ) {
-          sprintf(currMapping, "%ld %s ", it->first, mimeType);
-          strcat(posInString, currMapping);
-          posInString += strlen(currMapping);     // advance marker to get ready for next mapping
-        }
-        delete [] mimeType;
-        delete [] currMapping;
+    char* posInString = exportBuffer;
+    for ( MimeMapConstIterator it = mMappings.begin(); it != mMappings.end(); ++it ) {
+      // create a buffer for this mapping, fill it in, and append it to our
+      // ongoing result buffer, |exportBuffer|. 
+      char* currMapping = new char[10 + 2 + it->second.Length() + 1];  // same computation as above, plus NULL
+      char* mimeType = it->second.ToNewCString();
+      if ( currMapping && mimeType ) {
+        sprintf(currMapping, "%ld %s ", it->first, mimeType);
+        strcat(posInString, currMapping);
+        posInString += strlen(currMapping);     // advance marker to get ready for next mapping
       }
+      nsCRT::free ( mimeType );
+      nsCRT::free ( currMapping );
+    }
       
-      *posInString = '\0';                        // null terminate our resulting string
-    } // if we got the memory
+    *posInString = '\0';                        // null terminate our resulting string
   } // if there is anything in our list
   
-  *outLength = len + 1;  // don't forget the NULL
+  if ( outLength )
+    *outLength = len + 1;  // don't forget the NULL
   return exportBuffer;
   
 } // ExportMapping
