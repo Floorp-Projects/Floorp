@@ -97,9 +97,8 @@ static const char kIncludeDefaultsStr[] = "\n"
 "#include \"nsIJSScriptObject.h\"\n"
 "#include \"nsIScriptObjectOwner.h\"\n"
 "#include \"nsIScriptGlobalObject.h\"\n"
-#ifdef USE_COMPTR
 "#include \"nsCOMPtr.h\"\n"
-#else
+#ifndef USE_COMPTR
 "#include \"nsIPtr.h\"\n"
 #endif
 "#include \"nsString.h\"\n";
@@ -316,9 +315,8 @@ static const char kPropFuncBeginStr[] = "\n"
 static const char kIntCaseStr[] =
 "  if (JSVAL_IS_INT(id)) {\n"
 "    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);\n"
-"    nsIScriptSecurityManager *secMan;\n"
-"    PRBool ok = PR_FALSE;\n"
-"    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {\n"
+"    nsCOMPtr<nsIScriptSecurityManager> secMan;\n"
+"    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {\n"
 "      return JS_FALSE;\n"
 "    }\n"
 "    switch(JSVAL_TO_INT(id)) {\n";
@@ -327,9 +325,8 @@ static const char kIntCaseNamedItemStr[] =
 "  PRBool checkNamedItem = PR_TRUE;\n"
 "  if (JSVAL_IS_INT(id)) {\n"
 "    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);\n"
-"    nsIScriptSecurityManager *secMan;\n"
-"    PRBool ok = PR_FALSE;\n"
-"    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {\n"
+"    nsCOMPtr<nsIScriptSecurityManager> secMan;\n"
+"    if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {\n"
 "      return JS_FALSE;\n"
 "    }\n"
 "    checkNamedItem = PR_FALSE;\n"
@@ -339,14 +336,12 @@ static const char kPropFuncDefaultStr[] =
 "      default:\n"
 "        return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
 "    }\n"
-"    NS_RELEASE(secMan);\n"
 "  }\n";
 
 static const char kPropFuncDefaultNamedItemStr[] = 
 "      default:\n"
 "        checkNamedItem = PR_TRUE;\n"
 "    }\n"
-"    NS_RELEASE(secMan);\n"
 "  }\n";
 
 static const char kPropFuncDefaultItemStr[] = 
@@ -469,6 +464,7 @@ static const char kPropFuncNamedItemNonPrimaryStr[] =
 static const char kPropCaseBeginStr[] = 
 "      case %s_%s:\n"
 "      {\n"
+"        PRBool ok = PR_FALSE;\n"
 "        secMan->CheckScriptAccess(scriptCX, obj, \"%s.%s\", &ok);\n"
 "        if (!ok) {\n"
 "          //Need to throw error here\n"
@@ -653,6 +649,9 @@ static const char kIntGetCaseStr[] =
 static const char kBoolGetCaseStr[] =
 "          *vp = BOOLEAN_TO_JSVAL(prop);\n";
 
+static const char kJSValGetCaseStr[] =
+"          *vp = prop;\n";
+
 void
 JSStubGen::GeneratePropGetter(ofstream *file,
                               IdlInterface &aInterface,
@@ -682,6 +681,9 @@ JSStubGen::GeneratePropGetter(ofstream *file,
     case TYPE_INT:
     case TYPE_UINT:
       case_str = kIntGetCaseStr;
+      break;
+    case TYPE_JSVAL:
+      case_str = kJSValGetCaseStr;
       break;
     case TYPE_STRING:
       case_str = kStringGetCaseStr;
@@ -794,6 +796,9 @@ static const char kBoolSetCaseStr[] =
 "          return JS_FALSE;\n"
 "        }\n";
 
+static const char kJSValSetCaseStr[] =
+"       prop = *vp;\n";
+
 void
 JSStubGen::GeneratePropSetter(ofstream *file,
                               IdlInterface &aInterface,
@@ -821,6 +826,9 @@ JSStubGen::GeneratePropSetter(ofstream *file,
     case TYPE_INT:
     case TYPE_UINT:
       sprintf(case_buf, kIntSetCaseStr, attr_type);
+      break;
+    case TYPE_JSVAL:
+      strcpy(case_buf, kJSValSetCaseStr);
       break;
     case TYPE_STRING:
       strcpy(case_buf, kStringSetCaseStr);
@@ -977,8 +985,8 @@ static const char kMethodBodyBeginStr[] = "\n"
 "  *rval = JSVAL_NULL;\n"
 "\n"
 "  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);\n"
-"  nsIScriptSecurityManager *secMan;\n"
-"  if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {\n"
+"  nsCOMPtr<nsIScriptSecurityManager> secMan;\n"
+"  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {\n"
 "    return JS_FALSE;\n"
 "  }\n"
 "  {\n"
@@ -988,7 +996,6 @@ static const char kMethodBodyBeginStr[] = "\n"
 "      //Need to throw error here\n"
 "      return JS_FALSE;\n"
 "    }\n"
-"    NS_RELEASE(secMan);\n"
 "  }\n"
 "\n"
 "  // If there's no private data, this must be the prototype, so ignore\n"
@@ -1066,6 +1073,12 @@ static const char kMethodFuncParamStr[] =
 #define JSGEN_GENERATE_FUNCPARAM(buffer, paramNum, paramType) \
     sprintf(buffer, kMethodFuncParamStr, paramNum, paramNum)
 
+static const char kMethodJSValParamStr[] =
+"    b%d = argv[%d];\n";
+
+#define JSGEN_GENERATE_JSVALPARAM(buffer, paramNum) \
+    sprintf(buffer, kMethodJSValParamStr, paramNum, paramNum)
+
 static const char kMethodParamListStr[] = "b%d";
 static const char kMethodParamListDelimiterStr[] = ", ";
 static const char kMethodParamEllipsisStr[] = "cx, argv+%d, argc-%d";
@@ -1102,6 +1115,9 @@ static const char kMethodBoolRetStr[] =
 
 static const char kMethodVoidRetStr[] = 
 "    *rval = JSVAL_VOID;\n";
+
+static const char kMethodJSValRetStr[] = 
+"    *rval = nativeRet;\n";
 
 static const char kMethodBadParamStr[] =
 "    if (argc < %d) {\n"
@@ -1206,6 +1222,9 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
           case TYPE_UINT:
             JSGEN_GENERATE_INTPARAM(buf, p);
             break;
+          case TYPE_JSVAL:
+            JSGEN_GENERATE_JSVALPARAM(buf, p);
+            break;
           case TYPE_STRING:
             JSGEN_GENERATE_STRINGPARAM(buf, p);
             break;
@@ -1270,6 +1289,9 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
           case TYPE_INT:
           case TYPE_UINT:
             *file << kMethodIntRetStr;
+            break;
+          case TYPE_JSVAL:
+            *file << kMethodJSValRetStr;
             break;
           case TYPE_STRING:
             *file << kMethodStringRetStr;

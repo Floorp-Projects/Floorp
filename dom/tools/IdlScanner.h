@@ -59,6 +59,7 @@ enum EIDLTokenType {
   INT_TOKEN,
   UINT_TOKEN,
   STRING_TOKEN,
+  JSVAL_TOKEN,
   INPUT_PARAM_TOKEN,
   OUTPUT_PARAM_TOKEN,
   INOUT_PARAM_TOKEN,
@@ -192,6 +193,7 @@ protected:
   void      EKeywords(char *aCurrentPos, Token *aToken);
   void      FKeywords(char *aCurrentPos, Token *aToken);
   void      IKeywords(char *aCurrentPos, Token *aToken);
+  void      JKeywords(char *aCurrentPos, Token *aToken);
   void      LKeywords(char *aCurrentPos, Token *aToken);
   void      NKeywords(char *aCurrentPos, Token *aToken);
   void      OKeywords(char *aCurrentPos, Token *aToken);

@@ -134,6 +134,10 @@ void IdlVariable::GetTypeAsString(char *aString, size_t aStringSize)
       if (aStringSize > 4) {
         strcpy(aString, "void");
       }
+    case TYPE_JSVAL:
+      if (aStringSize > 4) {
+        strcpy(aString, "jsval");
+      }
       break;
   }
 }

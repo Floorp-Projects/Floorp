@@ -481,6 +481,9 @@ IdlVariable* IdlParser::ParseConst(IdlSpecification &aSpecification)
     case UINT_TOKEN:
       constObj->SetType(TYPE_UINT);
       break;
+    case JSVAL_TOKEN:
+      constObj->SetType(TYPE_JSVAL);
+      break;
     // string type
     case STRING_TOKEN:
       constObj->SetType(TYPE_STRING);
@@ -625,6 +628,9 @@ IdlAttribute* IdlParser::ParseAttribute(IdlSpecification &aSpecification, int aT
     case UINT_TOKEN:
       attrObj->SetType(TYPE_UINT);
       break;
+    case JSVAL_TOKEN:
+      attrObj->SetType(TYPE_JSVAL);
+      break;
     // string type
     case STRING_TOKEN:
       attrObj->SetType(TYPE_STRING);
@@ -713,6 +719,9 @@ IdlFunction* IdlParser::ParseFunction(IdlSpecification &aSpecification, Token *a
       break;
     case UINT_TOKEN:
       funcObj->SetReturnValue(TYPE_UINT);
+      break;
+    case JSVAL_TOKEN:
+      funcObj->SetReturnValue(TYPE_JSVAL);
       break;
     // string type
     case STRING_TOKEN:
@@ -962,6 +971,9 @@ IdlParameter* IdlParser::ParseFunctionParameter(IdlSpecification &aSpecification
       break;
     case UINT_TOKEN:
       argObj->SetType(TYPE_UINT);
+      break;
+    case JSVAL_TOKEN:
+      argObj->SetType(TYPE_JSVAL);
       break;
     // string type
     case STRING_TOKEN:

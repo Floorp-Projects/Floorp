@@ -181,6 +181,9 @@ Token* IdlScanner::NextToken()
         case 'i':
           IKeywords(mTokenName + 1, mCurrentToken); 
           break;
+        case 'j':
+          JKeywords(mTokenName + 1, mCurrentToken); 
+          break;
         case 'l':
           LKeywords(mTokenName + 1, mCurrentToken); 
           break;
@@ -742,6 +745,41 @@ void IdlScanner::IKeywords(char *aCurrentPos, Token *aToken)
   }
   else {
     mInputFile->putback(c);
+  }
+}
+
+//
+// 'jsval' is the only keyword starting with 'j'.
+// If that is not it, it must be an identifier
+//
+void IdlScanner::JKeywords(char *aCurrentPos, Token *aToken)
+{
+  int c = mInputFile->get();
+  if (c != EOF && c == 's' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'v' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'a' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+      c != EOF && c == 'l' && (*aCurrentPos++ = c)) {
+    // if terminated is a keyword
+    c = mInputFile->get();
+    if (c != EOF) {
+      if (isalpha(c) || isdigit(c) || c == '_') {
+        // more characters, it must be an identifier
+        *aCurrentPos++ = c;
+        Identifier(aCurrentPos, aToken);
+      }
+      else {
+        // it is a keyword
+        aToken->SetToken(JSVAL_TOKEN);
+        mInputFile->putback(c);
+      }
+    }
+    else {
+      aToken->SetToken(JSVAL_TOKEN);
+    }
+  }
+  else {
+    // it must be an identifier
+    KeywordMismatch(c, aCurrentPos, aToken);
   }
 }
 
