@@ -19,8 +19,8 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.10 $ 
-# $Date: 2002/05/03 04:10:29 $ 
+# $Revision: 1.11 $ 
+# $Date: 2002/05/03 04:33:30 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
@@ -286,7 +286,7 @@ sub construct_build_event_times_vec {
       
       my ($build_obj) = TinderDB::Build->new();
       
-      @out= $db->event_times_vec($start_time, $end_time, $tree);
+      @out= $build_obj->event_times_vec($start_time, $end_time, $tree);
   };
 
 
@@ -493,14 +493,14 @@ sub status_table_body {
   # we have data for.
 
   my ($row_times);
-  if ($ROW_SPACING_DISIPLINE == 'uniform') {
+  if      ($ROW_SPACING_DISIPLINE == 'uniform') {
       $row_times = construct_uniform_times_vec($start_time, $end_time, 
                                                $TABLE_SPACING,);
   } elsif ($ROW_SPACING_DISIPLINE == 'event_driven') {
       $row_times = construct_event_times_vec($start_time, $end_time, 
                                              $tree);
   } elsif ($ROW_SPACING_DISIPLINE == 'build_event_driven') {
-      $row_times =  construct_build_event_times_vec($start_time, $end_time, 
+      $row_times = construct_build_event_times_vec($start_time, $end_time, 
                                                     $tree);
   } else {
       die("unknown row spacing disipline: $ROW_SPACING_DISIPLINE\n");
