@@ -243,7 +243,10 @@ nsFrameLoader::LoadFrame()
 NS_IMETHODIMP
 nsFrameLoader::GetDocShell(nsIDocShell **aDocShell)
 {
-  EnsureDocShell();
+  *aDocShell = nsnull;
+
+  nsresult rv = EnsureDocShell();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   *aDocShell = mDocShell;
   NS_IF_ADDREF(*aDocShell);
