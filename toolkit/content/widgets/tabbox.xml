@@ -302,8 +302,10 @@
 
           if (next && next != startTab) {
             this.selectedItem = next;
-            next.focus();
-            document.commandDispatcher.advanceFocusIntoSubtree(next);
+            if (this.getAttribute("setfocus") != "false") {
+              next.focus();
+              document.commandDispatcher.advanceFocusIntoSubtree(next);
+            }
           }
         ]]>
         </body>

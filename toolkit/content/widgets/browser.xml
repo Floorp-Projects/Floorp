@@ -412,6 +412,14 @@
       <field name="mFormFillAttached">
         false
       </field>
+      
+      <field name="focusedWindow">
+        null
+      </field>
+
+      <field name="focusedElement">
+        null
+      </field>      
 
       <constructor>
         <![CDATA[

@@ -78,6 +78,7 @@
           </xul:menupopup>
 
           <xul:tabs class="tabbrowser-tabs" closebutton="true" flex="1"
+                    setfocus="false"
                     onclick="this.parentNode.parentNode.parentNode.onTabClick(event);"
                     onmousedown="this.parentNode.parentNode.parentNode.updateContextTab(event);"
                     ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode.parentNode);
@@ -421,8 +422,11 @@
             if (this.mCurrentBrowser == newBrowser)
               return;
 
-            if (this.mCurrentBrowser)
-              this.mCurrentBrowser.setAttribute("type", "content");
+            if (this.mCurrentBrowser) {
+              this.mCurrentBrowser.focusedWindow = document.commandDispatcher.focusedWindow;
+              this.mCurrentBrowser.focusedElement = document.commandDispatcher.focusedElement;
+               this.mCurrentBrowser.setAttribute("type", "content");
+            }
             
             var updatePageReport = false;
             if ((this.mCurrentBrowser.pageReport && !newBrowser.pageReport) ||
@@ -484,8 +488,24 @@
               }
             }
 
-            // Focus our new content area.
-            setTimeout("window._content.focus()", 0);
+            function setFocus(element) {
+              Components.lookupMethod(element, "focus").call(element);
+            }
+
+            // Focus the previously focused element or window
+            document.commandDispatcher.suppressFocusScroll = true;
+            if (newBrowser.focusedElement) {
+              try {
+                setFocus(newBrowser.focusedElement);
+              } catch (e) {
+                setFocus(newBrowser.focusedWindow);
+              }
+            }
+            else if (newBrowser.focusedWindow)
+              setFocus(newBrowser.focusedWindow);
+            else // new tab, focus our new content area
+              setTimeout(setFocus, 0, window.content);
+            document.commandDispatcher.suppressFocusScroll = false;    
           ]]>
         </body>
       </method>
