@@ -1,8 +1,0 @@
-<!-- extracted from content/NetSupportConfirmCheckYN.xul -->
-
-
-<!-- LOCALIZATION NOTE (m.label) : DONT_TRANSLATE --> 
-<!ENTITY m.label "m"> 
-<!ENTITY backwards.label "Backwards">
-<!ENTITY yes.label "Yes"> 
-<!ENTITY no.label "No"> 

@@ -30,7 +30,6 @@ CHROME_L10N = \
 	.\viewSource.dtd \
 	.\pageInfo.dtd \
 	.\navigator.dtd \
-	.\NetSupportConfirmCheckYN.dtd \
 	.\navigator.properties \
 	.\askViewZoom.dtd \
 	$(NULL)
