@@ -141,7 +141,10 @@ nsScrollFrame::GetClipSize(   nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(CallQueryInterface(view, &scrollingView))) {
        const nsIView* clip = nsnull;
        scrollingView->GetClipView(&clip);
-       clip->GetDimensions(aWidth, aHeight);
+       nsRect r;
+       clip->GetBounds(r);
+       *aWidth = r.width;
+       *aHeight = r.height;
     } else {
        *aWidth = 0;
        *aHeight = 0;
@@ -426,9 +429,12 @@ nsScrollFrame::CreateScrollingView(nsIPresContext* aPresContext)
     
     // Get the z-index
     PRInt32 zIndex = 0;
+    PRBool  autoZIndex = PR_FALSE;
 
     if (eStyleUnit_Integer == position->mZIndex.GetUnit()) {
       zIndex = position->mZIndex.GetIntValue();
+    } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
+      autoZIndex = PR_TRUE;
     }
 
     // Initialize the scrolling view
@@ -437,8 +443,12 @@ nsScrollFrame::CreateScrollingView(nsIPresContext* aPresContext)
                 nsViewVisibility_kShow : 
                 nsViewVisibility_kHide);
 
+    // Initialize the view's z-index
+    viewManager->SetViewZIndex(view, autoZIndex, zIndex);
+
     // Insert the view into the view hierarchy
-    viewManager->InsertChild(parentView, view, zIndex);
+    // XXX Put it last in document order, until we can do better
+    viewManager->InsertChild(parentView, view, nsnull, PR_TRUE);
 
     // Set the view's opacity
     viewManager->SetViewOpacity(view, vis->mOpacity);
