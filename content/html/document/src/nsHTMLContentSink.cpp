@@ -441,7 +441,7 @@ public:
                             const nsStringArray& aLinkTypes,
                             const nsString& aTitle, const nsString& aType,
                             const nsString& aMedia);
-  void PrefetchHref(const nsAString &aHref);
+  void PrefetchHref(const nsAString &aHref, PRBool aExplicit);
 
   void ProcessBaseHref(const nsAString& aBaseHref);
   void ProcessBaseTarget(const nsAString& aBaseTarget);
@@ -4789,10 +4789,10 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement,
   nsStringArray linkTypes;
   nsStyleLinkElement::ParseLinkTypes(aRel, linkTypes);
 
+  PRBool hasPrefetch = (linkTypes.IndexOf(NS_LITERAL_STRING("prefetch")) != -1);
   // prefetch href if relation is "next" or "prefetch"
-  if (linkTypes.IndexOf(NS_LITERAL_STRING("next")) != -1 ||
-      linkTypes.IndexOf(NS_LITERAL_STRING("prefetch")) != -1) {
-    PrefetchHref(aHref);
+  if (hasPrefetch || linkTypes.IndexOf(NS_LITERAL_STRING("next")) != -1) {
+    PrefetchHref(aHref, hasPrefetch);
   }
 
   // is it a stylesheet link?
@@ -4887,7 +4887,7 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
 }
 
 void
-HTMLContentSink::PrefetchHref(const nsAString &aHref)
+HTMLContentSink::PrefetchHref(const nsAString &aHref, PRBool aExplicit)
 {
   //
   // SECURITY CHECK: disable prefetching from mailnews!
@@ -4931,7 +4931,7 @@ HTMLContentSink::PrefetchHref(const nsAString &aHref)
                               : NS_LossyConvertUCS2toASCII(charset).get(),
             mDocumentBaseURL);
     if (uri)
-      prefetchService->PrefetchURI(uri, mDocumentURI);
+      prefetchService->PrefetchURI(uri, mDocumentURI, aExplicit);
   }
 }
 
@@ -4991,12 +4991,12 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
         // XXX seems overkill to generate this string array
         nsStringArray linkTypes;
         nsStyleLinkElement::ParseLinkTypes(relVal, linkTypes);
-        if (linkTypes.IndexOf(NS_LITERAL_STRING("next")) != -1 ||
-            linkTypes.IndexOf(NS_LITERAL_STRING("prefetch")) != -1) {
+        PRBool hasPrefetch = (linkTypes.IndexOf(NS_LITERAL_STRING("prefetch")) != -1);
+        if (hasPrefetch || linkTypes.IndexOf(NS_LITERAL_STRING("next")) != -1) {
           nsAutoString hrefVal;
           element->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, hrefVal);
           if (!hrefVal.IsEmpty()) {
-            PrefetchHref(hrefVal);
+            PrefetchHref(hrefVal, hasPrefetch);
           }
         }
       }
