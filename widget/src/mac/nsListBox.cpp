@@ -17,233 +17,27 @@
  */
 
 #include "nsListBox.h"
-#include "nsColor.h"
-#include "nsGUIEvent.h"
-#include "nsString.h"
-#include "nsStringUtil.h"
+#include <StringCompare.h>
+#include <Resources.h>
 
-#include <Xm/List.h>
+NS_IMPL_ADDREF(nsListBox);
+NS_IMPL_RELEASE(nsListBox);
 
-#define DBG 0
-
-//-------------------------------------------------------------------------
-//
-//  initializer
-//
-//-------------------------------------------------------------------------
-
-void nsListBox::SetMultipleSelection(PRBool aMultipleSelections)
+typedef struct ldesRsrc
 {
-  mMultiSelect = aMultipleSelections;
-}
-
-
-//-------------------------------------------------------------------------
-//
-//  AddItemAt
-//
-//-------------------------------------------------------------------------
-
-void nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
-{
-  NS_ALLOC_STR_BUF(val, aItem, 256);
-
-  XmString str;
-
-  str = XmStringCreateLocalized(val);
-
-  XmListAddItem(mWidget, str, (int)aPosition+1);
-  NS_FREE_STR_BUF(val);
-}
-
-//-------------------------------------------------------------------------
-//
-//  Finds an item at a postion
-//
-//-------------------------------------------------------------------------
-PRInt32  nsListBox::FindItem(nsString &aItem, PRInt32 aStartPos)
-{
-  NS_ALLOC_STR_BUF(val, aItem, 256);
-
-  XmString str = XmStringCreate(val, XmFONTLIST_DEFAULT_TAG);
-
-  int index = XmListItemPos(mWidget, str)-1;
-  if (index < aStartPos) {
-    index = -1;
-  }
-  NS_FREE_STR_BUF(val);
-  XmStringFree(str);
-
-  return index;
-}
-
-//-------------------------------------------------------------------------
-//
-//  CountItems - Get Item Count
-//
-//-------------------------------------------------------------------------
-PRInt32  nsListBox::GetItemCount()
-{
-  int count = 0;
-  XtVaGetValues(mWidget, XmNitemCount, &count, nsnull);
-
-  return (PRInt32)count;
-}
-
-//-------------------------------------------------------------------------
-//
-//  Removes an Item at a specified location
-//
-//-------------------------------------------------------------------------
-PRBool  nsListBox::RemoveItemAt(PRInt32 aPosition)
-{
-  int count = 0;
-  XtVaGetValues(mWidget, XmNitemCount, &count, nsnull);
-  if (aPosition >= 0 && aPosition < count) {
-    XmListDeletePos(mWidget, aPosition+1);
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
-//  
-//
-//-------------------------------------------------------------------------
-PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
-{
-  PRBool result = PR_FALSE;
-  XmStringTable list;
-
-  int count = 0;
-  XtVaGetValues(mWidget,  XmNitems, &list, XmNitemCount, &count, nsnull);
-
-  if (aPosition >= 0 && aPosition < count) {
-    char * text;
-    if (XmStringGetLtoR(list[aPosition], XmFONTLIST_DEFAULT_TAG, &text)) {
-      anItem.SetLength(0);
-      anItem.Append(text);
-      XtFree(text);
-      result = PR_TRUE;
-    }
-  }
-
-  return result;
-}
-
-//-------------------------------------------------------------------------
-//
-//  Gets the selected of selected item
-//
-//-------------------------------------------------------------------------
-void nsListBox::GetSelectedItem(nsString& aItem)
-{
-  int * list;
-  int   count;
-
-  if (XmListGetSelectedPos(mWidget, &list, &count)) {
-    GetItemAt(aItem, list[0]-1); 
-    XtFree((char *)list);
-  }
-}
-
-//-------------------------------------------------------------------------
-//
-//  Gets the list of selected otems
-//
-//-------------------------------------------------------------------------
-PRInt32 nsListBox::GetSelectedIndex()
-{  
-  if (!mMultiSelect) { 
-    int * list;
-    int   count;
-
-    if (XmListGetSelectedPos(mWidget, &list, &count)) {
-      int index = -1;
-      if (count > 0) {
-        index = list[0]-1;
-      }
-      XtFree((char *)list);
-      return index;
-    }
-  } else {
-    NS_ASSERTION(0, "Multi selection list box does not support GetSlectedIndex()");
-  }
-  return -1;
-}
-
-//-------------------------------------------------------------------------
-//
-//  SelectItem
-//
-//-------------------------------------------------------------------------
-void nsListBox::SelectItem(PRInt32 aPosition)
-{
-  int count = 0;
-  XtVaGetValues(mWidget,  XmNitemCount, &count, nsnull);
-  if (aPosition >= 0 && aPosition < count) {
-    XmListSelectPos(mWidget, aPosition+1, FALSE);
-  }
-}
-
-//-------------------------------------------------------------------------
-//
-//  GetSelectedCount
-//
-//-------------------------------------------------------------------------
-PRInt32 nsListBox::GetSelectedCount()
-{
-  int count = 0;
-  XtVaGetValues(mWidget,  XmNselectedItemCount, &count, nsnull);
-  return (PRInt32)count;
-}
-
-//-------------------------------------------------------------------------
-//
-//  GetSelectedIndices
-//
-//-------------------------------------------------------------------------
-void nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
-{
-  int * list;
-  int   count;
-
-  if (XmListGetSelectedPos(mWidget, &list, &count)) {
-    int num = aSize > count?count:aSize;
-    int i;
-    for (i=0;i<num;i++) {
-      aIndices[i] = (PRInt32)list[i]-1;
-    }
-    XtFree((char *)list);
-  }
-}
-
-//-------------------------------------------------------------------------
-//
-//  SetSelectedIndices
-//
-//-------------------------------------------------------------------------
-void nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
-{
-  if (GetSelectedCount() > 0) {
-    XtVaSetValues(mWidget, XmNselectedItemCount, 0, NULL);
-  }
-  int i;
-  for (i=0;i<aSize;i++) {
-    SelectItem(aIndices[i]);
-  }
-}
-
-//-------------------------------------------------------------------------
-//
-//  Deselect
-//
-//-------------------------------------------------------------------------
-void nsListBox::Deselect()
-{
-  XtVaSetValues(mWidget, XmNselectedItemCount, 0, NULL);
-}
+	short	version;
+	short	rows;
+	short	cols;
+	short	cellHeight;
+	short	cellWidth;
+	Boolean	vertScroll;
+	Boolean	__pad1;
+	Boolean	horizScroll;
+	Boolean	__pad2;
+	short	ldefID;
+	Boolean	hasGrow;
+	Boolean	__pad3;
+} ldesRsrc;
 
 
 //-------------------------------------------------------------------------
@@ -251,10 +45,14 @@ void nsListBox::Deselect()
 // nsListBox constructor
 //
 //-------------------------------------------------------------------------
-nsListBox::nsListBox(nsISupports *aOuter) : nsWindow(aOuter)
+nsListBox::nsListBox() : nsMacControl(), nsIListWidget(), nsIListBox()
 {
-  mMultiSelect = PR_FALSE;
-  mBackground  = NS_RGB(124, 124, 124);
+	NS_INIT_REFCNT();
+	strcpy(gInstanceClassName, "nsListBox");
+	SetControlType(kControlListBoxAutoSizeProc);
+
+	mListHandle	= nsnull;
+	mMultiSelect = PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -268,162 +66,123 @@ nsListBox::~nsListBox()
 
 //-------------------------------------------------------------------------
 //
-// Query interface implementation
 //
 //-------------------------------------------------------------------------
-nsresult nsListBox::QueryObject(const nsIID& aIID, void** aInstancePtr)
+void nsListBox::GetRectForMacControl(nsRect &outRect)
 {
-    nsresult result = nsWindow::QueryObject(aIID, aInstancePtr);
+	//¥TODO: we can certainly remove this function if we
+	// implement GetDesiredSize() in nsComboboxControlFrame
+	outRect = mBounds;
+	outRect.x = 1;
+	outRect.y = 1;
+	outRect.width -= 1;
+	outRect.height -= 1;
+}
 
-    static NS_DEFINE_IID(kInsListBoxIID, NS_ILISTBOX_IID);
-    static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
-    if (result == NS_NOINTERFACE) {
-      if (aIID.Equals(kInsListBoxIID)) {
-        *aInstancePtr = (void*) ((nsIListBox*)&mAggWidget);
-        AddRef();
-        result = NS_OK;
-      }
-      else if (aIID.Equals(kInsListWidgetIID)) {
-        *aInstancePtr = (void*) ((nsIListWidget*)&mAggWidget);
-        AddRef();
-        result = NS_OK;
-      }
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsListBox::Create(nsIWidget *aParent,
+                      const nsRect &aRect,
+                      EVENT_CALLBACK aHandleEventFunction,
+                      nsIDeviceContext *aContext,
+                      nsIAppShell *aAppShell,
+                      nsIToolkit *aToolkit,
+                      nsWidgetInitData *aInitData) 
+{
+	Handle resH = ::NewHandleClear(sizeof(ldesRsrc));
+	if (resH)
+	{
+		ldesRsrc** ldesH = (ldesRsrc**)resH;
+		(*ldesH)->cols = 1;
+		(*ldesH)->vertScroll = 1;
+		short resID = mValue = 2222;
+		::AddResource(resH, 'ldes', resID, "\p");
+	}
+
+	nsresult res = Inherited::Create(aParent, aRect, aHandleEventFunction,
+						aContext, aAppShell, aToolkit, aInitData);
+	if (resH)
+	{
+		::RemoveResource(resH);
+		::DisposeHandle(resH);
+	}
+
+  	if (res == NS_OK)
+  	{
+		Size actualSize;
+		::GetControlData(mControl, kControlNoPart, kControlListBoxListHandleTag, sizeof(ListHandle), (Ptr)&mListHandle, &actualSize);
+		if (mListHandle)
+		{
+			SetMultipleSelection(mMultiSelect);
+			::SetControlMinimum(mControl, 0);
+			::SetControlMaximum(mControl, 0);
+			::LSetDrawingMode(true, mListHandle);
+		}
+		else
+  			res = NS_ERROR_FAILURE;
+  	}
+
+	return res;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+nsresult nsListBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+    if (NULL == aInstancePtr) {
+        return NS_ERROR_NULL_POINTER;
     }
 
-    return result;
+	static NS_DEFINE_IID(kInsListBoxIID, NS_ILISTBOX_IID);
+	static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
+
+	if (aIID.Equals(kInsListBoxIID)) {
+		*aInstancePtr = (void*) ((nsIListBox*)this);
+		NS_ADDREF_THIS();
+		return NS_OK;
+	}
+	else if (aIID.Equals(kInsListWidgetIID)) {
+		*aInstancePtr = (void*) ((nsIListWidget*)this);
+		NS_ADDREF_THIS();
+		return NS_OK;
+	}
+
+	return nsWindow::QueryInterface(aIID,aInstancePtr);
 }
 
-//-------------------------------------------------------------------------
-//
-// nsListBox Creator
-//
-//-------------------------------------------------------------------------
-void nsListBox::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  aParent->AddChild(this);
-  Widget parentWidget = nsnull;
-
-  if (DBG) fprintf(stderr, "aParent 0x%x\n", aParent);
-
-  if (aParent) {
-    parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
-  } else {
-    parentWidget = (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL);
-  }
-
-  InitToolkit(aToolkit, aParent);
-  InitDeviceContext(aContext, parentWidget);
-
-  if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
-
-  unsigned char selectionPolicy;
-  
-  Boolean autoSelection;
-  if (mMultiSelect) {
-    //selectionPolicy = XmEXTENDED_SELECT;
-    selectionPolicy = XmMULTIPLE_SELECT;
-    autoSelection   = TRUE;
-  } else {
-    selectionPolicy = XmBROWSE_SELECT;
-    autoSelection   = FALSE;
-  }
-
-  mWidget = ::XtVaCreateManagedWidget("",
-                                    xmListWidgetClass,
-                                    parentWidget,
-                                    XmNitemCount, 0,
-                                    XmNx, aRect.x,
-                                    XmNy, aRect.y,
-                                    XmNwidth, aRect.width,
-                                    XmNheight, aRect.height,
-                                    XmNrecomputeSize, False,
-                                    XmNselectionPolicy, selectionPolicy,
-                                    XmNautomaticSelection, autoSelection,
-                                    XmNscrollBarDisplayPolicy, XmAS_NEEDED,
-                                    XmNlistSizePolicy, XmCONSTANT,
-                                    XmNmarginTop, 0,
-                                    XmNmarginBottom, 0,
-                                    XmNmarginLeft, 0,
-                                    XmNmarginRight, 0,
-                                    XmNmarginHeight, 0,
-                                    XmNmarginWidth, 0,
-                                    XmNlistMarginHeight, 0,
-                                    XmNlistMarginWidth, 0,
-                                    XmNscrolledWindowMarginWidth, 0,
-                                    XmNscrolledWindowMarginHeight, 0,
-                                    nsnull);
-  if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mWidget, this);
-
-  // save the event callback function
-  mEventCallback = aHandleEventFunction;
-
-  //InitCallbacks();
-
-}
-
-//-------------------------------------------------------------------------
-//
-// nsListBox Creator
-//
-//-------------------------------------------------------------------------
-void nsListBox::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-}
-
-//-------------------------------------------------------------------------
-//
-// move, paint, resizes message - ignore
-//
-//-------------------------------------------------------------------------
-PRBool nsListBox::OnMove(PRInt32, PRInt32)
-{
-  return PR_FALSE;
-}
-
-//-------------------------------------------------------------------------
-//
-// paint message. Don't send the paint out
-//
-//-------------------------------------------------------------------------
-PRBool nsListBox::OnPaint(nsPaintEvent &aEvent)
-{
-  return PR_FALSE;
-}
-
-PRBool nsListBox::OnResize(nsSizeEvent &aEvent)
-{
-    return PR_FALSE;
-}
-
-
-//-------------------------------------------------------------------------
-//-------------------------------------------------------------------------
-//-------------------------------------------------------------------------
-//-------------------------------------------------------------------------
-#define GET_OUTER() ((nsListBox*) ((char*)this - nsListBox::GetOuterOffset()))
-
-
+#pragma mark -
 //-------------------------------------------------------------------------
 //
 //  SetMultipleSelection
 //
 //-------------------------------------------------------------------------
-
-void nsListBox::AggListBox::SetMultipleSelection(PRBool aMultipleSelections)
+NS_METHOD nsListBox::SetMultipleSelection(PRBool aMultipleSelections) 
 {
-  GET_OUTER()->SetMultipleSelection(aMultipleSelections);
+	mMultiSelect = aMultipleSelections;
+
+	if (mListHandle)
+		(*mListHandle)->selFlags = (mMultiSelect ? (lUseSense | lNoRect | lNoExtend) : lOnlyOne);
+
+	 return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
+//
+//  PreCreateWidget
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsListBox::PreCreateWidget(nsWidgetInitData *aInitData)
+{
+  if (nsnull != aInitData) {
+    nsListBoxInitData* data = (nsListBoxInitData *) aInitData;
+    mMultiSelect = data->mMultiSelect;
+  }
+  return NS_OK;
 }
 
 
@@ -432,10 +191,27 @@ void nsListBox::AggListBox::SetMultipleSelection(PRBool aMultipleSelections)
 //  AddItemAt
 //
 //-------------------------------------------------------------------------
-
-void nsListBox::AggListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
+nsresult nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 {
-  GET_OUTER()->AddItemAt(aItem, aPosition);
+	if (! mListHandle)
+		return NS_ERROR_NOT_INITIALIZED;
+
+	Str255 pString;
+	StringToStr255(aItem, pString);
+
+	StartDraw();
+	if (aPosition == -1)
+		aPosition = GetItemCount() + 1;
+	short rowNum = ::LAddRow(1, aPosition, mListHandle);
+
+	Cell newCell;
+	::SetPt(&newCell, 0, rowNum);
+	::LSetCell(pString+1, *pString, newCell, mListHandle);
+
+	::SetControlMaximum(mControl, GetItemCount());
+	EndDraw();
+
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -443,9 +219,40 @@ void nsListBox::AggListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 //  Finds an item at a postion
 //
 //-------------------------------------------------------------------------
-PRInt32  nsListBox::AggListBox::FindItem(nsString &aItem, PRInt32 aStartPos)
+PRInt32  nsListBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 {
-  return  GET_OUTER()->FindItem(aItem, aStartPos);
+	if (! mListHandle)
+		return -1;
+
+	PRInt32 index = -1;
+	short itemCount = GetItemCount();
+
+	if (aStartPos < itemCount)
+	{
+		Str255 searchStr;
+		StringToStr255(aItem, searchStr);
+
+		for (short i = aStartPos; i < itemCount; i ++)
+		{
+			Str255	itemStr;
+			short strSize = sizeof(itemStr) - 1;
+
+			Cell theCell;
+			::SetPt(&theCell, 0, i);
+
+			::LGetCell(itemStr+1, &strSize, theCell, mListHandle);
+			if (strSize > sizeof(itemStr) - 1) 
+				strSize = sizeof(itemStr) - 1;
+			itemStr[0] = strSize;
+
+			if (::EqualString(itemStr, searchStr, FALSE, FALSE))
+			{
+				index = i;
+				break;
+			}
+		}
+	}
+	return index;
 }
 
 //-------------------------------------------------------------------------
@@ -453,9 +260,12 @@ PRInt32  nsListBox::AggListBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 //  CountItems - Get Item Count
 //
 //-------------------------------------------------------------------------
-PRInt32  nsListBox::AggListBox::GetItemCount()
+PRInt32  nsListBox::GetItemCount()
 {
-  return GET_OUTER()->GetItemCount();
+	if (! mListHandle)
+		return 0;
+
+	return (*mListHandle)->dataBounds.bottom;
 }
 
 //-------------------------------------------------------------------------
@@ -463,9 +273,20 @@ PRInt32  nsListBox::AggListBox::GetItemCount()
 //  Removes an Item at a specified location
 //
 //-------------------------------------------------------------------------
-PRBool  nsListBox::AggListBox::RemoveItemAt(PRInt32 aPosition)
+PRBool  nsListBox::RemoveItemAt(PRInt32 aPosition)
 {
-  return GET_OUTER()->RemoveItemAt(aPosition);
+	if (! mListHandle)
+		return PR_FALSE;
+
+	if (GetItemCount() < aPosition)
+		return PR_FALSE;
+
+	StartDraw();
+	::LDelRow(1, aPosition, mListHandle);
+	::SetControlMaximum(mControl, GetItemCount());
+	EndDraw();
+
+	return PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
@@ -473,29 +294,136 @@ PRBool  nsListBox::AggListBox::RemoveItemAt(PRInt32 aPosition)
 //  Removes an Item at a specified location
 //
 //-------------------------------------------------------------------------
-PRBool nsListBox::AggListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
+PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 {
-  return  GET_OUTER()->GetItemAt(anItem, aPosition);
+	anItem = "";
+
+	if (! mListHandle)
+		return PR_FALSE;
+
+	if (GetItemCount() < aPosition)
+		return PR_FALSE;
+
+	Str255	itemStr;
+	short strSize = sizeof(itemStr) - 1;
+
+	Cell theCell;
+	::SetPt(&theCell, 0, aPosition);
+
+	::LGetCell(itemStr+1, &strSize, theCell, mListHandle);
+	if (strSize > sizeof(itemStr) - 1) 
+		strSize = sizeof(itemStr) - 1;
+	itemStr[0] = strSize;
+	Str255ToString(itemStr, anItem);
+
+	return PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
 //
-//  Gets the selected of selected item
+//  Gets the content of selected item
 //
 //-------------------------------------------------------------------------
-void nsListBox::AggListBox::GetSelectedItem(nsString& aItem)
+nsresult nsListBox::GetSelectedItem(nsString& aItem)
 {
-  GET_OUTER()->GetSelectedItem(aItem);
+	aItem = "";
+
+	if (! mListHandle)
+		return PR_FALSE;
+
+	PRInt32 selectedIndex = GetSelectedIndex();
+	if (selectedIndex < 0)
+		return PR_FALSE;
+
+	GetItemAt(aItem, selectedIndex);
+	return PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
 //
-//  Gets the list of selected otems
+//  Gets the list of selected items
 //
 //-------------------------------------------------------------------------
-PRInt32 nsListBox::AggListBox::GetSelectedIndex()
+PRInt32 nsListBox::GetSelectedIndex()
 {  
-  return GET_OUTER()->GetSelectedIndex();
+	if (! mListHandle)
+		return -1;
+
+	Cell theCell;
+	::SetPt(&theCell, 0, 0);
+
+	if (::LGetSelect(true, &theCell, mListHandle))
+		return theCell.v;
+	else
+		return -1;
+}
+
+//-------------------------------------------------------------------------
+//
+//  Gets the count of selected items
+//
+//-------------------------------------------------------------------------
+PRInt32 nsListBox::GetSelectedCount()
+{  
+	if (! mListHandle)
+		return 0;
+
+	PRInt32 itemCount = 0;
+	Cell theCell;
+	::SetPt(&theCell, 0, 0);
+	while (::LGetSelect(true, &theCell, mListHandle))
+	{
+		itemCount ++;
+		::LNextCell(true, true, &theCell, mListHandle);
+	}
+	return itemCount;
+}
+
+//-------------------------------------------------------------------------
+//
+//  Gets the indices of selected items
+//
+//-------------------------------------------------------------------------
+nsresult nsListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
+{  
+	if (! mListHandle)
+		return NS_ERROR_NOT_INITIALIZED;
+
+	PRInt32 itemCount = 0;
+	Cell theCell;
+	::SetPt(&theCell, 0, 0);
+	while (::LGetSelect(true, &theCell, mListHandle) && (itemCount < aSize))
+	{
+		aIndices[itemCount] = theCell.v;
+		itemCount ++;
+		::LNextCell(true, true, &theCell, mListHandle);
+	}
+	return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+//  Sets selected items
+//
+//-------------------------------------------------------------------------
+nsresult nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
+{  
+	if (! mListHandle)
+		return NS_ERROR_NOT_INITIALIZED;
+
+	StartDraw();
+	::LSetDrawingMode(false, mListHandle);
+	for (PRInt32 i = 0; i < aSize; i ++)
+	{
+		Cell theCell;
+		::SetPt(&theCell, 0, 1);
+		::LSetSelect(true, theCell, mListHandle);
+	}
+	::LSetDrawingMode(true, mListHandle);
+	::LAutoScroll(mListHandle);
+	EndDraw();
+
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -503,39 +431,25 @@ PRInt32 nsListBox::AggListBox::GetSelectedIndex()
 //  SelectItem
 //
 //-------------------------------------------------------------------------
-void nsListBox::AggListBox::SelectItem(PRInt32 aPosition)
+nsresult nsListBox::SelectItem(PRInt32 aPosition)
 {
-  GET_OUTER()->SelectItem(aPosition);
-}
+	if (! mListHandle)
+		return NS_ERROR_NOT_INITIALIZED;
 
-//-------------------------------------------------------------------------
-//
-//  GetSelectedCount
-//
-//-------------------------------------------------------------------------
-PRInt32 nsListBox::AggListBox::GetSelectedCount()
-{
-  return  GET_OUTER()->GetSelectedCount();
-}
+	if (GetItemCount() < aPosition)
+		return PR_FALSE;
 
-//-------------------------------------------------------------------------
-//
-//  GetSelectedIndices
-//
-//-------------------------------------------------------------------------
-void nsListBox::AggListBox::GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
-{
-  GET_OUTER()->GetSelectedIndices(aIndices, aSize);
-}
+	if (! mMultiSelect)
+		Deselect();
 
-//-------------------------------------------------------------------------
-//
-//  GetSelectedIndices
-//
-//-------------------------------------------------------------------------
-void nsListBox::AggListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
-{
-  GET_OUTER()->SetSelectedIndices(aIndices, aSize);
+	StartDraw();
+	Cell theCell;
+	::SetPt(&theCell, 0, aPosition);
+	::LSetSelect(true, theCell, mListHandle);
+	::LAutoScroll(mListHandle);
+	EndDraw();
+
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -543,14 +457,57 @@ void nsListBox::AggListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize
 //  Deselect
 //
 //-------------------------------------------------------------------------
-void nsListBox::AggListBox::Deselect()
+nsresult nsListBox::Deselect()
 {
-  GET_OUTER()->Deselect();
+	if (! mListHandle)
+		return NS_ERROR_NOT_INITIALIZED;
+
+	if (GetItemCount() == 0)
+		return PR_FALSE;
+
+	StartDraw();
+	::LSetDrawingMode(false, mListHandle);
+	Cell theCell;
+	::SetPt(&theCell, 0, 0);
+	while (::LGetSelect(true, &theCell, mListHandle))
+	{
+		::LSetSelect(false, theCell, mListHandle);
+		::LNextCell(true, true, &theCell, mListHandle);
+	}
+	::LSetDrawingMode(true, mListHandle);
+	EndDraw();
+
+	return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+//  DispatchMouseEvent
+//
+//-------------------------------------------------------------------------
+PRBool nsListBox::DispatchMouseEvent(nsMouseEvent &aEvent)
+{
+	PRBool eatEvent = PR_FALSE;
+	switch (aEvent.message)
+	{
+		case NS_MOUSE_LEFT_DOUBLECLICK:
+		case NS_MOUSE_LEFT_BUTTON_DOWN:
+			StartDraw();
+			{
+				Point thePoint;
+				thePoint.h = aEvent.point.x;
+				thePoint.v = aEvent.point.y;
+				::TrackControl(mControl, thePoint, nil);
+				//¥TODO: the mouseUp event is eaten by TrackControl.
+				//¥ We must create it and dispatch it after the mouseDown;
+				eatEvent = PR_TRUE;
+			}
+			EndDraw();
+			break;
+	}
 
-//----------------------------------------------------------------------
+	if (eatEvent)
+		return PR_TRUE;
+	return (Inherited::DispatchMouseEvent(aEvent));
 
-BASE_IWIDGET_IMPL(nsListBox, AggListBox);
-
-
+}

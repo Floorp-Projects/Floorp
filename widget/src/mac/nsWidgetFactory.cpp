@@ -42,7 +42,7 @@
 
 
 #include "nsTextAreaWidget.h"
-//#include "nsListBox.h"
+#include "nsListBox.h"
 #include "nsComboBox.h"
 #include "nsLookAndFeel.h"
 
@@ -189,8 +189,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
        inst = (nsISupports*)(nsWindow*)new nsFileWidget();
     }
     else if (mClassID.Equals(kCListbox)) {
-//        inst = (nsISupports*)(nsWindow*)new nsListBox();
-					NS_NOTYETIMPLEMENTED("nsListBox");
+       inst = (nsISupports*)(nsWindow*)new nsListBox();
     }
     else if (mClassID.Equals(kCHorzScrollbar)) {
         inst = (nsISupports*)(nsWindow*)new nsScrollbar(PR_FALSE);

@@ -19,100 +19,63 @@
 #ifndef nsListBox_h__
 #define nsListBox_h__
 
-#include "nsWindow.h"
+#include "nsMacControl.h"
 #include "nsIListBox.h"
+#include <Lists.h>
 
-/**
- * Native Motif Listbox wrapper
- */
 
-class nsListBox :   public nsWindow
+class nsListBox :	public nsMacControl,
+					public nsIListWidget,
+					public nsIListBox
 {
+private:
+	typedef nsMacControl Inherited;
 
 public:
-    nsListBox(nsISupports *aOuter);
-    virtual ~nsListBox();
+   	nsListBox();
+	virtual ~nsListBox();
 
-    // nsISupports. Forward to the nsObject base class
-    NS_IMETHOD QueryObject(const nsIID& aIID, void** aInstancePtr);
+	// nsISupports
+	NS_IMETHOD_(nsrefcnt) AddRef();
+	NS_IMETHOD_(nsrefcnt) Release();
+	NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-    void Create(nsIWidget *aParent,
-              const nsRect &aRect,
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
+	// nsIWidget
+	NS_IMETHODIMP				Create(nsIWidget *aParent,
+									const nsRect &aRect,
+									EVENT_CALLBACK aHandleEventFunction,
+									nsIDeviceContext *aContext = nsnull,
+									nsIAppShell *aAppShell = nsnull,
+									nsIToolkit *aToolkit = nsnull,
+									nsWidgetInitData *aInitData = nsnull);
 
-    void Create(nsNativeWidget aParent,
-              const nsRect &aRect, 
-              EVENT_CALLBACK aHandleEventFunction,
-              nsIDeviceContext *aContext = nsnull,
-              nsIAppShell *aAppShell = nsnull,
-              nsIToolkit *aToolkit = nsnull,
-              nsWidgetInitData *aInitData = nsnull);
+	// nsIListBox part
+	NS_IMETHOD SetMultipleSelection(PRBool aMultipleSelections);
+	NS_IMETHOD AddItemAt(nsString &aItem, PRInt32 aPosition);
+	PRInt32    FindItem(nsString &aItem, PRInt32 aStartPos);
+	PRInt32    GetItemCount();
+	PRBool     RemoveItemAt(PRInt32 aPosition);
+	PRBool     GetItemAt(nsString& anItem, PRInt32 aPosition);
+	NS_IMETHOD GetSelectedItem(nsString& aItem);
+	PRInt32    GetSelectedIndex();
+	PRInt32    GetSelectedCount();
+	NS_IMETHOD GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
+	NS_IMETHOD SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
+	NS_IMETHOD SelectItem(PRInt32 aPosition);
+	NS_IMETHOD Deselect() ;
+	NS_IMETHOD PreCreateWidget(nsWidgetInitData *aInitData);
 
-
-    virtual PRBool    OnMove(PRInt32 aX, PRInt32 aY);
-    virtual PRBool OnPaint(nsPaintEvent & aEvent);
-    virtual PRBool OnResize(nsSizeEvent &aEvent);
-
-
-    // nsIListBox interface
-    void      SetMultipleSelection(PRBool aMultipleSelections);
-    void      AddItemAt(nsString &aItem, PRInt32 aPosition);
-    PRInt32   FindItem(nsString &aItem, PRInt32 aStartPos);
-    PRInt32   GetItemCount();
-    PRBool    RemoveItemAt(PRInt32 aPosition);
-    PRBool    GetItemAt(nsString& anItem, PRInt32 aPosition);
-    void      GetSelectedItem(nsString& aItem);
-    PRInt32   GetSelectedIndex();
-    PRInt32   GetSelectedCount();
-    void      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
-    void      SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
-    void      SelectItem(PRInt32 aPosition);
-    void      Deselect() ;
+	// nsWindow
+	virtual PRBool			DispatchMouseEvent(nsMouseEvent &aEvent);
 
 protected:
-    PRBool  mMultiSelect;
+	// nsMacControl
+	virtual void			GetRectForMacControl(nsRect &outRect);
 
-private:
-
-  // this should not be public
-  static PRInt32 GetOuterOffset() {
-    return offsetof(nsListBox,mAggWidget);
-  }
-
-
-  // Aggregator class and instance variable used to aggregate in the
-  // nsIListBox interface to nsListBox w/o using multiple
-  // inheritance.
-  class AggListBox : public nsIListBox {
-  public:
-    AggListBox();
-    virtual ~AggListBox();
-
-    AGGREGATE_METHOD_DEF
-
-    // nsIListBox
-    void      SetMultipleSelection(PRBool aMultipleSelections);
-    void      AddItemAt(nsString &aItem, PRInt32 aPosition);
-    PRInt32   FindItem(nsString &aItem, PRInt32 aStartPos);
-    PRInt32   GetItemCount();
-    PRBool    RemoveItemAt(PRInt32 aPosition);
-    PRBool    GetItemAt(nsString& anItem, PRInt32 aPosition);
-    void      GetSelectedItem(nsString& aItem);
-    PRInt32   GetSelectedIndex();
-    PRInt32   GetSelectedCount();
-    void      GetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
-    void      SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize);
-    void      SelectItem(PRInt32 aPosition);
-    void      Deselect() ;
-
-  };
-  AggListBox mAggWidget;
-  friend class AggListBox;
-
+protected:
+	ListHandle	mListHandle;
+	PRBool		mMultiSelect;
 };
+
 
 #endif // nsListBox_h__
