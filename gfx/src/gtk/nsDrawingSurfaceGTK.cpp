@@ -112,6 +112,8 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
   }
   mLocked = PR_TRUE;
 
+  mLockX = aX;
+  mLockY = aY;
   mLockWidth = aWidth;
   mLockHeight = aHeight;
   mLockFlags = aFlags;
@@ -138,9 +140,20 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Unlock(void)
     NS_ASSERTION(0, "attempting to unlock an DS that isn't locked");
     return NS_ERROR_FAILURE;
   }
+/*
+ //if it is writeable, we are going to want to redraw the pixmap from the image.
 
+ gdk_draw_image(GdkDrawable  *drawable,
+		mGC,
+		mImage,
+		0, 0,
+		mLockX, mLockY,
+		mLockWidth, mLockHeight);
+*/
   ::gdk_image_destroy(mImage);
   mImage = nsnull;
+
+  mLocked = PR_FALSE;
 
   return NS_OK;
 }
