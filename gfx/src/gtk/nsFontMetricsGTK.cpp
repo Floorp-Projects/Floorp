@@ -1,4 +1,3 @@
-#define MOZ_MATHML 1
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * ex: set tabstop=8 softtabstop=2 shiftwidth=2 expandtab:
  *
@@ -1677,6 +1676,7 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
       nsCOMPtr<nsICharRepresentable> mapper = do_QueryInterface(converter);
       if (mapper) {
         res = mapper->FillInfo(aSelf->mMap);
+        DEBUG_PRINTF(("\n\ncharset = %s", atomToName(charset)));
   
         /*
          * XXX This is a bit of a hack. Documents containing the CP1252
@@ -3717,7 +3717,7 @@ if (gAllowDoubleByteSpecialChars) {
       }
       if (western_font) {
         NS_ASSERTION(western_font->SupportsChar(aChar), "font supposed to support this char");
-        return font;
+        return western_font;
       }
       else if (sub_font) {
         FIND_FONT_PRINTF(("      transliterate special chars for single byte docs"));
