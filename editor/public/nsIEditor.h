@@ -20,6 +20,8 @@
 #define nsIEditor_h__
 #include "nsISupports.h"
 
+class nsIDOMElement;
+
 /*
 Editor interface to outside world
 */
@@ -78,6 +80,33 @@ public:
    * @param aProperty An enum that will recieve the various properties that can be applied from the current selection.
    */
   virtual nsresult GetProperties(PROPERTIES **aProperty)=0;
+
+  /**
+   * SetAttribute() sets the attribute of the current node.
+   * No checking is done to see if aAttribute is a legal attribute of the node,
+   * or if aValue is a legal value of aAttribute.
+   *
+   * @param aAttribute  the string representation of the attribute to set
+   * @param aValue      the value to set aAttribute to
+   */
+  virtual nsresult SetAttribute(nsIDOMElement * aElement, 
+                                const nsString& aAttribute, 
+                                const nsString& aValue)=0;
+
+  /**
+   * GetAttributeValue() retrieves the attribute's value for the current node.
+   *
+   * @param aAttribute    the string representation of the attribute to get
+   * @param aResultValue  the value of aAttribute.  only valid if aResultIsSet is PR_TRUE
+   * @param aResultIsSet  PR_TRUE if aAttribute is set on the current node, PR_FALSE if it is not.
+   */
+  virtual nsresult GetAttributeValue(nsIDOMElement * aElement, 
+                                     const nsString& aAttribute, 
+                                     nsString&       aResultValue, 
+                                     PRBool&         aResultIsSet)=0;
+
+  virtual nsresult RemoveAttribute(nsIDOMElement * aElement, 
+                                   const nsString& aAttribute)=0;
 
   /**
    * InsertString() Inserts a string at the current location
