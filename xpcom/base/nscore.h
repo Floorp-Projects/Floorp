@@ -165,8 +165,8 @@ typedef PRUint16 PRUnichar;
   #define HAVE_CPP_PARTIAL_SPECIALIZATION
   #define HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
 
-  #define HAVE_ACCESS_CHANGING_CPP_USING
-  #define HAVE_AMBIGUITY_RESOLVING_CPP_USING
+  #define HAVE_CPP_ACCESS_CHANGING_USING
+  #define HAVE_CPP_AMBIGUITY_RESOLVING_USING
   #define HAVE_CPP_EXPLICIT
   #define HAVE_CPP_BOOL
   #define HAVE_CPP_NAMESPACE_STD
@@ -180,14 +180,14 @@ typedef PRUint16 PRUnichar;
   #define HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
 
   #define HAVE_CPP_EXPLICIT
-  #define HAVE_ACCESS_CHANGING_CPP_USING
+  #define HAVE_CPP_ACCESS_CHANGING_USING
 
   #if (_MSC_VER<1100)
       // before 5.0, VC++ couldn't handle explicit
     #undef HAVE_CPP_EXPLICIT
   #elif (_MSC_VER==1100)
       // VC++5.0 has an internal compiler error (sometimes) without this
-    #undef HAVE_ACCESS_CHANGING_CPP_USING
+    #undef HAVE_CPP_ACCESS_CHANGING_USING
   #endif
 
   #define HAVE_CPP_NAMESPACE_STD

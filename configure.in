@@ -2484,22 +2484,22 @@ dnl keyword is supported.
 dnl
 dnl Check to see if we can change access with |using|.
 AC_CACHE_CHECK(whether the C++ \"using\" keyword can change access,
-               ac_cv_cpp_using_can_change_access,
+               ac_cv_cpp_access_changing_using,
                [AC_TRY_COMPILE(class X { public: int go(const X&) {return 3;} };
                                class Y : public X {
                                  public:  int go(int) {return 2;}
                                  private: using X::go;
                                };,
                                X x; Y y;,
-                               ac_cv_cpp_using_can_change_access=yes,
-                               ac_cv_cpp_using_can_change_access=no)])
-if test "$ac_cv_cpp_using_can_change_access" = yes ; then
-   AC_DEFINE(HAVE_ACCESS_CHANGING_CPP_USING)
+                               ac_cv_cpp_access_changing_using=yes,
+                               ac_cv_cpp_access_changing_using=no)])
+if test "$ac_cv_cpp_access_changing_using" = yes ; then
+   AC_DEFINE(HAVE_CPP_ACCESS_CHANGING_USING)
 fi
 
 dnl Check to see if we can resolve ambiguity with |using|.
 AC_CACHE_CHECK(whether the C++ \"using\" keyword resolves ambiguity,
-               ac_cv_cpp_using_resolves_ambiguity,
+               ac_cv_cpp_ambiguity_resolving_using,
                [AC_TRY_COMPILE(class X { 
                                  public: int go(const X&) {return 3;}
                                          int jo(const X&) {return 3;}
@@ -2511,10 +2511,10 @@ AC_CACHE_CHECK(whether the C++ \"using\" keyword resolves ambiguity,
                                  private: using X::go;
                                };,
                                X x; Y y; y.jo(x);,
-                               ac_cv_cpp_using_resolves_ambiguity=yes,
-                               ac_cv_cpp_using_resolves_ambiguity=no)])
-if test "$ac_cv_cpp_using_resolves_ambiguity" = yes ; then
-   AC_DEFINE(HAVE_AMBIGUITY_RESOLVING_CPP_USING)
+                               ac_cv_cpp_ambiguity_resolving_using=yes,
+                               ac_cv_cpp_ambiguity_resolving_using=no)])
+if test "$ac_cv_cpp_ambiguity_resolving_using" = yes ; then
+   AC_DEFINE(HAVE_CPP_AMBIGUITY_RESOLVING_USING)
 fi
 
 dnl Check to see if the |std| namespace is supported. If so, we'll want
