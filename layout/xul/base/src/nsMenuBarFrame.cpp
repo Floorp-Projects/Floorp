@@ -418,7 +418,7 @@ nsMenuBarFrame::Enter()
   nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
   if (menuFrame->IsOpen()) {
     // Let the child menu handle this.
-//    menuFrame->Enter();
+    menuFrame->Enter();
     return;
   }
 

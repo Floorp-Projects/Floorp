@@ -72,6 +72,7 @@ public:
   nsIFrame* FindMenuWithShortcut(PRUint32 aLetter);
 
   void Escape(PRBool& aHandledFlag);
+  void Enter();
 
 protected:
   nsIFrame* mCurrentMenu; // The current menu that is active.

@@ -390,6 +390,17 @@ nsMenuPopupFrame::Escape(PRBool& aHandledFlag)
   }
 }
 
+void
+nsMenuPopupFrame::Enter()
+{
+  if (!mCurrentMenu)
+    return;
+
+  // Give it to the child.
+  nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
+  menuFrame->Enter();
+}
+
 nsIFrame*
 nsMenuPopupFrame::FindMenuWithShortcut(PRUint32 aLetter)
 {
