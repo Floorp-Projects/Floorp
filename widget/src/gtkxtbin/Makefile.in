@@ -33,14 +33,14 @@ ifdef MOZ_ENABLE_GTK2
 CSRCS		= \
 		gtk2xtbin.c \
 		$(NULL)
-EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) $(XLDFLAGS) -lXt
+EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) $(XLDFLAGS) $(XT_LIBS)
 endif
 
 ifdef MOZ_ENABLE_GTK
 CSRCS           = \
                 gtkxtbin.c \
 		$(NULL)
-EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS) -lXt
+EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS) $(XT_LIBS)
 endif
 
 
