@@ -16,6 +16,9 @@
 
     function Startup()
     {
+      document.getElementById("spellCheckBeforeSend").hidden =
+        !("@mozilla.org/spellchecker;1" in Components.classes);
+
       doEnabling();
     }
     
@@ -30,21 +33,6 @@
       else {
         quotebox.firstChild.setAttribute("disabled","true");
         quotebox.lastChild.setAttribute("disabled","true");
-      }
-      
-      var spellChecker;
-      try {
-        spellChecker = Components.classes["@mozilla.org/spellchecker;1"];
-        //switch to this when nsISpellChecker becomes scriptable
-        //spellChecker = Components.classes["@mozilla.org/spellchecker;1"].createInstance(Components.interfaces.nsISpellChecker);
-      }
-      catch (ex) {
-        spellChecker = null;
-      }
-
-      if (!spellChecker) {
-        var spellCheckerCheckbox = document.getElementById("spellCheckBeforeSend");
-        spellCheckerCheckbox.setAttribute("hidden","true");
       }
     }
   ]]>
