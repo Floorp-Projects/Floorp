@@ -242,9 +242,34 @@ void nsMarkupDocument::FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode
 
 void nsMarkupDocument::ToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
 {
-  BeginConvertToXIF(aConverter,aNode);
-  ConvertChildrenToXIF(aConverter,aNode);
-  FinishConvertToXIF(aConverter,aNode);
+  if (aConverter.GetUseSelection() == PR_TRUE)
+  {
+    nsIContent* content = nsnull;
+    nsresult    isContent = aNode->QueryInterface(kIContentIID, (void**)&content);
+
+    if (isContent == NS_OK)
+    {
+      PRBool  isInSelection = IsInSelection(content);
+      
+      if (isInSelection == PR_TRUE)
+      {
+        BeginConvertToXIF(aConverter,aNode);
+        ConvertChildrenToXIF(aConverter,aNode);
+        FinishConvertToXIF(aConverter,aNode);
+      }
+      else
+      {
+        ConvertChildrenToXIF(aConverter,aNode);
+      }
+      NS_RELEASE(content);
+    }
+  }
+  else
+  {
+    BeginConvertToXIF(aConverter,aNode);
+    ConvertChildrenToXIF(aConverter,aNode);
+    FinishConvertToXIF(aConverter,aNode);
+  }
 }
 
 void nsMarkupDocument::CreateXIF(nsString & aBuffer, PRBool aUseSelection)
@@ -252,6 +277,8 @@ void nsMarkupDocument::CreateXIF(nsString & aBuffer, PRBool aUseSelection)
   
   nsXIFConverter  converter(aBuffer);
   // call the function
+
+  converter.SetUseSelection(aUseSelection);
 
   converter.AddStartTag("section");
   

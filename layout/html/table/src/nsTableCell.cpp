@@ -209,11 +209,13 @@ void nsTableCell::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
   if (aAttribute == nsHTMLAtoms::rowspan) {
     ParseValue(aValue, 1, 10000, val, eHTMLUnit_Integer);
     SetRowSpan(val.GetIntValue());
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
     return;
   }
   if (aAttribute == nsHTMLAtoms::colspan) {
     ParseValue(aValue, 1, 1000, val, eHTMLUnit_Integer);
     SetColSpan(val.GetIntValue());
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
     return;
   }
   if (aAttribute == nsHTMLAtoms::width) {
