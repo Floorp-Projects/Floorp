@@ -191,7 +191,6 @@ PR_STATIC_CALLBACK(JSBool)
 XULFocusTrackerAddFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMElementPtr b0;
 
   *rval = JSVAL_NULL;
@@ -248,7 +247,6 @@ PR_STATIC_CALLBACK(JSBool)
 XULFocusTrackerRemoveFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIDOMElementPtr b0;
 
   *rval = JSVAL_NULL;
@@ -305,7 +303,6 @@ PR_STATIC_CALLBACK(JSBool)
 XULFocusTrackerFocusChanged(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
 
@@ -353,7 +350,6 @@ PR_STATIC_CALLBACK(JSBool)
 XULFocusTrackerGetController(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIController* nativeRet;
 
   *rval = JSVAL_NULL;
@@ -403,7 +399,6 @@ PR_STATIC_CALLBACK(JSBool)
 XULFocusTrackerSetController(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   nsIControllerPtr b0;
 
   *rval = JSVAL_NULL;
