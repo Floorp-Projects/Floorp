@@ -138,16 +138,6 @@ void nsXtWidget_LeaveMask_EventHandler(Widget w, XtPointer p, XEvent * event, Bo
 }
 
 //==============================================================
-void nsXtWidget_ResizeRedirectMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b)
-{
-  if (DBG) fprintf(stderr, "***************** nsXtWidget_ResizeRedirectMask_EventHandler\n");
-  //nsWindow * widgetWindow = (nsWindow *) p ;
-  //nsMouseEvent mevent;
-  //nsXtWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_EXIT);
-  //widgetWindow->DispatchMouseEvent(mevent);
-}
-
-//==============================================================
 void nsXtWidget_Toggle_Callback(Widget w, XtPointer p, XtPointer call_data)
 {
   nsWindow * widgetWindow = (nsWindow *) p ;
@@ -315,3 +305,12 @@ void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data)
   if (DBG) fprintf(stderr, "Out nsXtWidget_Text_Callback\n");
 }
 
+//==============================================================
+void nsXtWidget_FSBCancel_Callback(Widget w, XtPointer p, XtPointer call_data)
+{
+}
+
+//==============================================================
+void nsXtWidget_FSBOk_Callback(Widget w, XtPointer p, XtPointer call_data)
+{
+}

@@ -28,10 +28,11 @@ void nsXtWidget_ButtonMotionMask_EventHandler(Widget w, XtPointer p, XEvent * ev
 void nsXtWidget_MotionMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
 void nsXtWidget_EnterMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
 void nsXtWidget_LeaveMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
-void nsXtWidget_ResizeRedirectMask_EventHandler(Widget w, XtPointer p, XEvent * event, Boolean * b);
-
 //----------------------------------------------------
-// Callbacks
+
+void nsXtWidget_FSBCancel_Callback(Widget w, XtPointer p, XtPointer call_data);
+void nsXtWidget_FSBOk_Callback(Widget w, XtPointer p, XtPointer call_data);
+
 //----------------------------------------------------
 void nsXtWidget_Scrollbar_Callback(Widget w, XtPointer p, XtPointer call_data);
 void nsXtWidget_Toggle_Callback(Widget w, XtPointer p, XtPointer call_data);
