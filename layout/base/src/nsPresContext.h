@@ -73,13 +73,13 @@ public:
   NS_IMETHOD GetImageGroup(nsIImageGroup** aGroupResult);
   NS_IMETHOD StartLoadImage(const nsString& aURL,
                             const nscolor* aBackgroundColor,
+                            const nsSize* aDesiredSize,
                             nsIFrame* aTargetFrame,
-                            const nsSize& aDesiredSize,
-                            nsFrameImageLoaderCB aCallBack,
-                            PRBool aNeedSizeUpdate,
-                            PRBool aNeedErrorNotification,
-                            nsIFrameImageLoader** aLoaderResult);
-  NS_IMETHOD StopLoadImage(nsIFrame* aForFrame);
+                            nsIFrameImageLoaderCB aCallBack,
+                            void* aClosure,
+                            nsIFrameImageLoader** aResult);
+  NS_IMETHOD StopLoadImage(nsIFrame* aForFrame, nsIFrameImageLoader* aLoader);
+  NS_IMETHOD StopAllLoadImagesFor(nsIFrame* aForFrame);
   NS_IMETHOD SetContainer(nsISupports* aContainer);
   NS_IMETHOD GetContainer(nsISupports** aResult);
   NS_IMETHOD SetLinkHandler(nsILinkHandler* aHandler);

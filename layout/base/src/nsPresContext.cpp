@@ -29,17 +29,10 @@
 #include "nsIURL.h"
 #include "nsIURLGroup.h"
 #include "nsIDocument.h"
-#include "nsIFrame.h"
 #include "nsIStyleContext.h"
 #include "nsLayoutAtoms.h"
 #ifdef _WIN32
 #include <windows.h>
-#endif
-
-#ifdef DEBUG
-#undef NOISY_IMAGES
-#else
-#undef NOISY_IMAGES
 #endif
 
 int
@@ -655,59 +648,45 @@ nsPresContext::GetImageGroup(nsIImageGroup** aResult)
 NS_IMETHODIMP
 nsPresContext::StartLoadImage(const nsString& aURL,
                               const nscolor* aBackgroundColor,
+                              const nsSize* aDesiredSize,
                               nsIFrame* aTargetFrame,
-                              const nsSize& aDesiredSize,
-                              nsFrameImageLoaderCB aCallBack,
-                              PRBool aNeedSizeUpdate,
-                              PRBool aNeedErrorNotification,
-                              nsIFrameImageLoader** aLoaderResult)
+                              nsIFrameImageLoaderCB aCallBack,
+                              void* aClosure,
+                              nsIFrameImageLoader** aResult)
 {
   if (mStopped) {
     return NS_OK;
   }
-
-#ifdef NOISY_IMAGES
-  nsIDocument* doc = mShell->GetDocument();
-  if (nsnull != doc) {
-    nsIURL* url = doc->GetDocumentURL();
-    if (nsnull != url) {
-      printf("%s: ", url->GetSpec());
-      NS_RELEASE(url);
-    }
-    NS_RELEASE(doc);
+  if (nsnull == aTargetFrame) {
+    return NS_ERROR_NULL_POINTER;
   }
-  printf("%p: start load for %p (", this, aTargetFrame);
-  fputs(aURL, stdout);
-  printf(")\n");
-#endif
 
-  *aLoaderResult = nsnull;
- 
-  // Lookup image request in our loaders array. Note that we need
-  // to get a loader that is observing the same image and that has
-  // the same value for aNeedSizeUpdate.
+  // Mark frame as having loaded an image
+  nsFrameState state;
+  aTargetFrame->GetFrameState(&state);
+  state |= NS_FRAME_HAS_LOADED_IMAGES;
+  aTargetFrame->SetFrameState(state);
+
+  // Lookup image request in our loaders array (maybe the load request
+  // has already been made for that url at the desired size).
   PRInt32 i, n = mImageLoaders.Count();
   nsIFrameImageLoader* loader;
-  nsAutoString loaderURL;
   for (i = 0; i < n; i++) {
+    PRBool same;
     loader = (nsIFrameImageLoader*) mImageLoaders.ElementAt(i);
-    nsIFrame* targetFrame;
-    loader->GetTargetFrame(targetFrame);
-    if (targetFrame == aTargetFrame) {
-      loader->GetURL(loaderURL);
-      // XXX case doesn't matter for all of the url so using Equals
-      // isn't quite right
-      if (aURL.Equals(loaderURL)) {
-        // Make sure the size update flags are the same, if not keep looking
-        PRIntn status;
-        loader->GetImageLoadStatus(status);
-        PRBool wantSize = 0 != (status & NS_IMAGE_LOAD_STATUS_SIZE_REQUESTED);
-        if (aNeedSizeUpdate == wantSize) {
-          NS_ADDREF(loader);
-          *aLoaderResult = loader;
-          return NS_OK;
-        }
+    loader->IsSameImageRequest(aURL, aBackgroundColor, aDesiredSize, &same);
+    if (same) {
+      // This is pretty sick, but because we can get a notification
+      // *before* the caller has returned we have to store into
+      // aResult before calling the AddFrame method.
+      if (aResult) {
+        NS_ADDREF(loader);
+        *aResult = loader;
       }
+
+      // Add frame to list of interested frames for this loader
+      loader->AddFrame(aTargetFrame, aCallBack, aClosure);
+      return NS_OK;
     }
   }
 
@@ -729,18 +708,27 @@ nsPresContext::StartLoadImage(const nsString& aURL,
   }
   mImageLoaders.AppendElement(loader);
 
-  rv = loader->Init(this, mImageGroup, aURL, aBackgroundColor, aTargetFrame,
-                    aDesiredSize, aCallBack, aNeedSizeUpdate,
-                    aNeedErrorNotification);
+  // This is pretty sick, but because we can get a notification
+  // *before* the caller has returned we have to store into aResult
+  // before calling the loaders init method.
+  if (aResult) {
+    *aResult = loader;
+    NS_ADDREF(loader);
+  }
+
+  rv = loader->Init(this, mImageGroup, aURL, aBackgroundColor, aDesiredSize,
+                    aTargetFrame, aCallBack, aClosure);
   if (NS_OK != rv) {
     mImageLoaders.RemoveElement(loader);
     NS_RELEASE(loader);
+
+    // Undo premature store of reslut
+    if (aResult) {
+      *aResult = nsnull;
+      NS_RELEASE(loader);
+    }
     return rv;
   }
-
-  // Return the loader
-  NS_ADDREF(loader);
-  *aLoaderResult = loader;
   return NS_OK;
 }
 
@@ -760,34 +748,52 @@ nsPresContext::Stop(void)
 }
 
 NS_IMETHODIMP
-nsPresContext::StopLoadImage(nsIFrame* aForFrame)
+nsPresContext::StopLoadImage(nsIFrame* aTargetFrame,
+                             nsIFrameImageLoader* aLoader)
 {
-  nsIFrameImageLoader* loader;
   PRInt32 i, n = mImageLoaders.Count();
-  for (i = 0; i < n;) {
+  nsIFrameImageLoader* loader;
+  for (i = 0; i < n; i++) {
     loader = (nsIFrameImageLoader*) mImageLoaders.ElementAt(i);
-    nsIFrame* loaderFrame;
-    loader->GetTargetFrame(loaderFrame);
-    if (loaderFrame == aForFrame) {
-#ifdef NOISY_IMAGES
-      nsIDocument* doc = mShell->GetDocument();
-      if (nsnull != doc) {
-        nsIURL* url = doc->GetDocumentURL();
-        if (nsnull != url) {
-          printf("%s: ", url->GetSpec());
-          NS_RELEASE(url);
-        }
-        NS_RELEASE(doc);
+    if (loader == aLoader) {
+      // Remove frame from list of interested frames for this loader
+      loader->RemoveFrame(aTargetFrame);
+
+      // If loader is no longer loading for anybody and its safe to
+      // nuke it, nuke it.
+      PRBool safe;
+      loader->SafeToDestroy(&safe);
+      if (safe) {
+        NS_RELEASE(loader);
+        mImageLoaders.RemoveElementAt(i);
+        n--;
+        i--;
       }
-      printf("%p: stop load for %p\n", this, aForFrame);
-#endif
-      loader->StopImageLoad();
-      NS_RELEASE(loader);
-      mImageLoaders.RemoveElementAt(i);
-      n--;
-      continue;
     }
-    i++;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::StopAllLoadImagesFor(nsIFrame* aTargetFrame)
+{
+  nsFrameState state;
+  aTargetFrame->GetFrameState(&state);
+  if (NS_FRAME_HAS_LOADED_IMAGES & state) {
+    nsIFrameImageLoader* loader;
+    PRInt32 i, n = mImageLoaders.Count();
+    for (i = 0; i < n; i++) {
+      PRBool safe;
+      loader = (nsIFrameImageLoader*) mImageLoaders.ElementAt(i);
+      loader->RemoveFrame(aTargetFrame);
+      loader->SafeToDestroy(&safe);
+      if (safe) {
+        NS_RELEASE(loader);
+        mImageLoaders.RemoveElementAt(i);
+        n--;
+        i--;
+      }
+    }
   }
   return NS_OK;
 }
