@@ -433,7 +433,7 @@ NS_IMETHODIMP nsWindowMediator::UnregisterWindow( nsIWebShellWindow* inWindow )
   nsresult rv = NS_NewRDFContainer(mInner, kNC_WindowMediatorRoot, getter_AddRefs(container));
   if (NS_SUCCEEDED(rv))
   {
-  	container->RemoveElement( windowInfo->mRDFID, true );
+  	container->RemoveElement( windowInfo->mRDFID, PR_TRUE );
   }
  	
 	// Remove from the list and free up 
