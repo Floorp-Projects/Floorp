@@ -372,18 +372,21 @@ nsVoidArray  *dir_ServerList = nsnull;
 
 nsVoidArray* DIR_GetDirectories()
 {
+    if (!dir_ServerList)
+        DIR_GetDirServers();
 	return dir_ServerList;
 }
 
 nsresult DIR_GetDirServers()
 {
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
-    if (NS_FAILED(rv) || !pPref) 
-		return NS_ERROR_FAILURE;
 
 	if (!dir_ServerList)
 	{
+        NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
+        if (NS_FAILED(rv) || !pPref) 
+    		return NS_ERROR_FAILURE;
+
 		/* we need to build the DIR_Server list */ 
 		rv = DIR_GetServerPreferences(&dir_ServerList);
 
