@@ -84,6 +84,7 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 _FILES	= \
+	ua.css \
 	html.css \
 	quirk.css \
 	viewsource.css \
@@ -103,14 +104,12 @@ endif
 
 PLATFORM_FORMS_CSS	= $(srcdir)/$(PLATFORM_DIR)/platform-forms.css
 
-GARBAGE		+= $(addprefix $(DIST)/bin/res/,$(_FILES)) $(DIST)/bin/res/ua.css
+GARBAGE		+= $(addprefix $(DIST)/bin/res/,$(_FILES))
 
 libs:: $(_FILES) $(srcdir)/forms.css  $(PLATFORM_FORMS_CSS)
 	$(INSTALL) $^ $(DIST)/bin/res
-	rm -f $(DIST)/bin/res/ua.css
-	cp $(srcdir)/ua.css $(DIST)/bin/res
 
-install:: $(_FILES) $(srcdir)/forms.css ua.css $(PLATFORM_FORMS_CSS)
+install:: $(_FILES) $(srcdir)/forms.css $(PLATFORM_FORMS_CSS)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/res
 
 DEFINES += -D_IMPL_NS_LAYOUT
