@@ -37,7 +37,7 @@ existance
 existant
 );
 
-$testcount = scalar(@Support::Files::testitems) * scalar(@evilwords);
+$testcount = scalar(@Support::Files::testitems);
 }
 
 use Test::More tests => $testcount;
@@ -59,35 +59,32 @@ my $fh;
 my @testitems = @Support::Files::testitems;
 
 # at last, here we actually run the test...
+my $evilwordsregexp = join('|', @evilwords);
 
 foreach my $file (@testitems) {
     $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
     next if (!$file); # skip null entries
 
-    foreach my $word (@evilwords) { # go through the evilwords
-        
-        if (open (FILE, $file)) { # open the file for reading
-            my $found_word = 0;
+    if (open (FILE, $file)) { # open the file for reading
 
-            while (my $file_line = <FILE>) { # and go through the file line by line
-                if ($file_line =~ /$word/i) { # found an evil word
-                    $found_word = 1;
-                    last;
-                }
+        my $found_word = '';
+
+        while (my $file_line = <FILE>) { # and go through the file line by line
+            if ($file_line =~ /($evilwordsregexp)/i) { # found an evil word
+                $found_word = $1;
+                last;
             }
-            
-            if ($found_word) {
-                ok(0,"$file: found SPELLING ERROR $word --WARNING");
-            }
-            else {
-                ok(1,"$file does not contain the spelling error $word");
-            }
-            
-            close (FILE);
         }
-        else {
-            ok(0,"could not open $file for spellcheck --WARNING");
+            
+        close (FILE);
+            
+        if ($found_word) {
+            ok(0,"$file: found SPELLING ERROR $found_word --WARNING");
+        } else {
+            ok(1,"$file does not contain registered spelling errors");
         }
+    } else {
+        ok(0,"could not open $file for spellcheck --WARNING");
     }
 } 
 
