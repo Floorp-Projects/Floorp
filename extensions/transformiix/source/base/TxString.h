@@ -120,10 +120,10 @@
 
 #ifdef MOZILLA
 #include "nsString.h"
-//typedef unsigned long SPECIAL_CHAR;
-#endif
-
+typedef PRUnichar UNICODE_CHAR;
+#else
 typedef unsigned short UNICODE_CHAR;
+#endif
 
 #ifndef NULL
  #define NULL 0
