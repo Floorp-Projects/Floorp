@@ -666,9 +666,9 @@ nsGenericElement::InternalSupports(const nsString& aFeature,
   } else if (aFeature.EqualsWithConversion("Views", PR_TRUE) ||
              aFeature.EqualsWithConversion("StyleSheets", PR_TRUE) ||
              aFeature.EqualsWithConversion("CSS", PR_TRUE) ||
-             aFeature.EqualsWithConversion("CSS2", PR_TRUE) ||
+//           aFeature.EqualsWithConversion("CSS2", PR_TRUE) ||
              aFeature.EqualsWithConversion("Events", PR_TRUE) ||
-             aFeature.EqualsWithConversion("UIEvents", PR_TRUE) ||
+//           aFeature.EqualsWithConversion("UIEvents", PR_TRUE) ||
              aFeature.EqualsWithConversion("MouseEvents", PR_TRUE) ||
              aFeature.EqualsWithConversion("HTMLEvents", PR_TRUE) ||
              aFeature.EqualsWithConversion("Range", PR_TRUE)) {
