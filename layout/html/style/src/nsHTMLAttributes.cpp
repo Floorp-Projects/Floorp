@@ -827,9 +827,11 @@ HTMLAttributesImpl::SetMappingFunction(nsMapAttributesFunc aMapFunc)
 NS_IMETHODIMP
 HTMLAttributesImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
 {
-  NS_ASSERTION(nsnull != mMapper, "no mapping function");
-  if (nsnull != mMapper) {
-    (*mMapper)(this, aContext, aPresContext);
+  if (0 < mCount) {
+    NS_ASSERTION(nsnull != mMapper, "no mapping function");
+    if (nsnull != mMapper) {
+      (*mMapper)(this, aContext, aPresContext);
+    }
   }
   return NS_OK;
 }
