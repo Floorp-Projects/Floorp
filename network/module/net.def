@@ -20,3 +20,4 @@ EXPORTS
         NET_ToggleTrace
         NET_PollSockets
         NS_NewRelatedLinks
+	NET_RegisterContentTypeConverter
