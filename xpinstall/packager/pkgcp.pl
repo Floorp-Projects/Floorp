@@ -157,6 +157,7 @@ LINE: while (<MANIFEST>) {
 
 	# if we hit this, dunno what it is.  abort! abort!
 	die "Error: $_ unrecognized ($package, $lineno).  Exiting...\n";
+# cyeh	print "Error: $_ unrecognized ($package, $lineno).  Exiting...\n";
 
 } # LINE
 
@@ -236,7 +237,20 @@ sub do_copyfile
 	} else {
 		if ($batch) {
 			$path = "$destdir$PD$component$PD$File::Find::dir";
-			$path =~ s/$srcdir$PD//;	# rm $srcdir added by find()
+
+			# avert your eyes now, butt-ugly hack
+			if ($os eq "MSDOS") {
+				$path =~ s/\\/\//g;
+				$srcdir =~ s/\\/\//g;
+				$PD = "/";
+				$path =~ s/$srcdir$PD//g;
+				$path =~ s/\//\\/g;
+				$PD = "\\";
+			} else {
+				$path =~ s/$srcdir$PD//;
+			}
+			# end stupid MSDOS hack
+
 			$basefile = basename ($File::Find::name);
 			($debug >= 5) &&
 				print "recursive find w/o altdest: $path $basefile\n";
@@ -383,8 +397,6 @@ sub check_arguments
 	} elsif ( $os =~ /dos/i ) {
 		$os = "MSDOS";
 		$PD = "\\";
-		print "Error: MSDOS not yet implemented.\n";
-		$exitval = 1;
 	} elsif ( $os =~ /unix/i ) {	# null because Unix is default for
 		$os = "";		# fileparse_set_fstype()
 		$PD = "/";
