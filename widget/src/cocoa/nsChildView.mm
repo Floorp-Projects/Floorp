@@ -1935,6 +1935,11 @@ const PRInt32 kNumLines = 8;
     NSPoint localPoint = [self convertPoint:mouseLoc fromView:nil];
     outGeckoEvent->point.x = NS_STATIC_CAST(nscoord, localPoint.x);
     outGeckoEvent->point.y = NS_STATIC_CAST(nscoord, localPoint.y);
+
+    if (outGeckoEvent->message == NS_MOUSE_SCROLL) {
+      outGeckoEvent->refPoint.x = outGeckoEvent->refPoint.y = 0;
+      outGeckoEvent->point.x = outGeckoEvent->point.y = 0;
+    }
   }
   
   // set up modifier keys
