@@ -340,7 +340,7 @@ class nsCOMPtr_base
         }
 
 #ifdef NSCAP_FEATURE_FACTOR_DESTRUCTOR
-		 ~nsCOMPtr_base();
+		 NS_EXPORT ~nsCOMPtr_base();
 #endif
 
 #if 0
@@ -637,7 +637,7 @@ SameCOMIdentity( nsISupports* lhs, nsISupports* rhs )
 #endif // defined(NSCAP_FEATURE_ALLOW_COMPARISONS)
 
 
-
+#if 0
 template <class SourceType, class DestinationType>
 inline
 nsresult
@@ -649,7 +649,7 @@ CallQueryInterface( SourceType* aSource, nsCOMPtr<DestinationType>* aDestination
 
 		return aSource->QueryInterface(DestinationType::GetIID(), NS_STATIC_CAST(void**, getter_AddRefs(*aDestination)));
 	}
-
+#endif
 
 
 #endif // !defined(nsCOMPtr_h___)
