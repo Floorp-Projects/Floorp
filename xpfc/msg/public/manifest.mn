@@ -11,11 +11,11 @@ GDEPTH = ../../..
 DEPTH = ../../..
 
 EXPORTS = \
-    nsISMTPService.h \
-    nsIMIMEService.h \
+	nsISMTPService.h \
+	nsIMimeService.h \
 	nsISMTPObserver.h \
 	nsIMessage.h \
-	nsIMIMEMessage.h \
+	nsIMimeMessage.h \
 	nsIMIMEBodyPart.h \
 	$(NULL)
 
