@@ -41,7 +41,6 @@
 #include "nsString.h"
 #include "nsPresContext.h"
 #include "nsIStyleRule.h"
-#include "nsISupportsArray.h"
 #include "nsCRT.h"
 
 #include "nsCOMPtr.h"

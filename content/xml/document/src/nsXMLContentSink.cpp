@@ -609,11 +609,11 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl)
 
 nsresult
 nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
-                                   const nsAString& aHref,
+                                   const nsSubstring& aHref,
                                    PRBool aAlternate,
-                                   const nsAString& aTitle,
-                                   const nsAString& aType,
-                                   const nsAString& aMedia)
+                                   const nsSubstring& aTitle,
+                                   const nsSubstring& aType,
+                                   const nsSubstring& aMedia)
 {
   nsresult rv = NS_OK;
   mPrettyPrintXML = PR_FALSE;

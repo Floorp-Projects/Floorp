@@ -581,22 +581,8 @@ nsHTMLStyleSheet::GetType(nsString& aType) const
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLStyleSheet::GetMediumCount(PRInt32& aCount) const
-{
-  aCount = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLStyleSheet::GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const
-{
-  aMedium = nsnull;
-  return NS_ERROR_INVALID_ARG;
-}
-
 NS_IMETHODIMP_(PRBool)
-nsHTMLStyleSheet::UseForMedium(nsIAtom* aMedium) const
+nsHTMLStyleSheet::UseForMedium(nsPresContext* aPresContext) const
 {
   return PR_TRUE; // works for all media
 }

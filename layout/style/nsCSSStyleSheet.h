@@ -52,6 +52,7 @@
 
 class nsIURI;
 class nsISupportsArray;
+class nsMediaList;
 
 // -------------------------------
 // CSS Style Sheet Inner Data Container
@@ -84,7 +85,6 @@ public:
 
 class CSSImportsCollectionImpl;
 class CSSRuleListImpl;
-class DOMMediaListImpl;
 static PRBool CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData);
 
 class nsCSSStyleSheet : public nsICSSStyleSheet, 
@@ -101,9 +101,7 @@ public:
   NS_IMETHOD GetBaseURI(nsIURI** aBaseURI) const;
   NS_IMETHOD GetTitle(nsString& aTitle) const;
   NS_IMETHOD GetType(nsString& aType) const;
-  NS_IMETHOD GetMediumCount(PRInt32& aCount) const;
-  NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const;
-  NS_IMETHOD_(PRBool) UseForMedium(nsIAtom* aMedium) const;
+  NS_IMETHOD_(PRBool) UseForMedium(nsPresContext* aPresContext) const;
   NS_IMETHOD_(PRBool) HasRules() const;
   NS_IMETHOD GetApplicable(PRBool& aApplicable) const;
   NS_IMETHOD SetEnabled(PRBool aEnabled);
@@ -133,8 +131,7 @@ public:
   NS_IMETHOD GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const;
   NS_IMETHOD SetURIs(nsIURI* aSheetURI, nsIURI* aBaseURI);
   NS_IMETHOD SetTitle(const nsAString& aTitle);
-  NS_IMETHOD AppendMedium(nsIAtom* aMedium);
-  NS_IMETHOD ClearMedia();
+  NS_IMETHOD SetMedia(nsMediaList* aMedia);
   NS_IMETHOD SetOwningNode(nsIDOMNode* aOwningNode);
   NS_IMETHOD SetOwnerRule(nsICSSImportRule* aOwnerRule);
   NS_IMETHOD GetOwnerRule(nsICSSImportRule** aOwnerRule);
@@ -181,7 +178,7 @@ protected:
 
 protected:
   nsString              mTitle;
-  DOMMediaListImpl*     mMedia;
+  nsCOMPtr<nsMediaList> mMedia;
   nsCSSStyleSheet*      mFirstChild;
   nsCSSStyleSheet*      mNext;
   nsICSSStyleSheet*     mParent;    // weak ref
@@ -198,7 +195,7 @@ protected:
 
   nsAutoVoidArray*      mRuleProcessors;
 
-  friend class DOMMediaListImpl;
+  friend class nsMediaList;
   friend PRBool CascadeSheetRulesInto(nsICSSStyleSheet* aSheet, void* aData);
 };
 

@@ -341,7 +341,7 @@ class CSSImportRuleImpl : public nsCSSRule,
                           public nsIDOMCSSImportRule
 {
 public:
-  CSSImportRuleImpl(nsISupportsArray* aMedia);
+  CSSImportRuleImpl(nsMediaList* aMedia);
   CSSImportRuleImpl(const CSSImportRuleImpl& aCopy);
   virtual ~CSSImportRuleImpl(void);
 
@@ -375,31 +375,31 @@ public:
 
 protected:
   nsString  mURLSpec;
-  nsCOMPtr<nsIMediaList> mMedia;
+  nsCOMPtr<nsMediaList> mMedia;
   nsCOMPtr<nsICSSStyleSheet> mChildSheet;
 };
 
-CSSImportRuleImpl::CSSImportRuleImpl(nsISupportsArray* aMedia)
-  : nsCSSRule(),
-    mURLSpec()
+CSSImportRuleImpl::CSSImportRuleImpl(nsMediaList* aMedia)
+  : nsCSSRule()
+  , mURLSpec()
+  , mMedia(aMedia)
 {
-  // XXXbz This is really silly.... the mMedia we create here will be
-  // clobbered if we manage to load a sheet.  Which should really
+  // XXXbz This is really silly.... the mMedia here will be replaced
+  // with itself if we manage to load a sheet.  Which should really
   // never fail nowadays, in sane cases.
-  NS_NewMediaList(aMedia, nsnull, getter_AddRefs(mMedia));
 }
 
 CSSImportRuleImpl::CSSImportRuleImpl(const CSSImportRuleImpl& aCopy)
   : nsCSSRule(aCopy),
     mURLSpec(aCopy.mURLSpec)
 {
-  
   nsCOMPtr<nsICSSStyleSheet> sheet;
   if (aCopy.mChildSheet) {
     aCopy.mChildSheet->Clone(nsnull, this, nsnull, nsnull,
                              getter_AddRefs(sheet));
   }
   SetSheet(sheet);
+  // SetSheet sets mMedia appropriately
 }
 
 CSSImportRuleImpl::~CSSImportRuleImpl(void)
@@ -522,7 +522,7 @@ CSSImportRuleImpl::SetSheet(nsICSSStyleSheet* aSheet)
 nsresult
 NS_NewCSSImportRule(nsICSSImportRule** aInstancePtrResult, 
                     const nsString& aURLSpec,
-                    nsISupportsArray* aMedia)
+                    nsMediaList* aMedia)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
@@ -930,14 +930,18 @@ nsCSSMediaRule::nsCSSMediaRule(const nsCSSMediaRule& aCopy)
   : nsCSSGroupRule(aCopy)
 {
   if (aCopy.mMedia) {
-    NS_NewMediaList(aCopy.mMedia, aCopy.mSheet, getter_AddRefs(mMedia));
+    aCopy.mMedia->Clone(getter_AddRefs(mMedia));
+    if (mMedia) {
+      // XXXldb This doesn't really make sense.
+      mMedia->SetStyleSheet(aCopy.mSheet);
+    }
   }
 }
 
 nsCSSMediaRule::~nsCSSMediaRule()
 {
   if (mMedia) {
-    mMedia->DropReference();
+    mMedia->SetStyleSheet(nsnull);
   }
 }
 
@@ -959,14 +963,9 @@ NS_IMETHODIMP
 nsCSSMediaRule::SetStyleSheet(nsICSSStyleSheet* aSheet)
 {
   if (mMedia) {
-    nsresult rv;
-    nsCOMPtr<nsISupportsArray> oldMedia(do_QueryInterface(mMedia, &rv));
-    if (NS_FAILED(rv))
-      return rv;
-    mMedia->DropReference();
-    rv = NS_NewMediaList(oldMedia, aSheet, getter_AddRefs(mMedia));
-    if (NS_FAILED(rv))
-      return rv;
+    // Set to null so it knows it's leaving one sheet and joining another.
+    mMedia->SetStyleSheet(nsnull);
+    mMedia->SetStyleSheet(aSheet);
   }
 
   return nsCSSGroupRule::SetStyleSheet(aSheet);
@@ -983,17 +982,9 @@ nsCSSMediaRule::List(FILE* out, PRInt32 aIndent) const
   fputs("@media ", out);
 
   if (mMedia) {
-    PRUint32 index = 0;
-    PRUint32 count;
-    mMedia->Count(&count);
-    while (index < count) {
-      nsCOMPtr<nsIAtom> medium = dont_AddRef((nsIAtom*)mMedia->ElementAt(index++));
-      medium->ToString(buffer);
-      fputs(NS_LossyConvertUCS2toASCII(buffer).get(), out);
-      if (index < count) {
-        fputs(", ", out);
-      }
-    }
+    nsAutoString mediaText;
+    mMedia->GetText(mediaText);
+    fputs(NS_LossyConvertUCS2toASCII(mediaText).get(), out);
   }
 
   return nsCSSGroupRule::List(out, aIndent);
@@ -1019,9 +1010,12 @@ nsCSSMediaRule::Clone(nsICSSRule*& aClone) const
 }
 
 nsresult
-nsCSSMediaRule::SetMedia(nsISupportsArray* aMedia)
+nsCSSMediaRule::SetMedia(nsMediaList* aMedia)
 {
-  return NS_NewMediaList(aMedia, mSheet, getter_AddRefs(mMedia));
+  mMedia = aMedia;
+  if (aMedia)
+    mMedia->SetStyleSheet(mSheet);
+  return NS_OK;
 }
 
 // nsIDOMCSSRule methods
@@ -1035,22 +1029,12 @@ nsCSSMediaRule::GetType(PRUint16* aType)
 NS_IMETHODIMP
 nsCSSMediaRule::GetCssText(nsAString& aCssText)
 {
-  PRUint32 index;
-  PRUint32 count;
   aCssText.AssignLiteral("@media ");
   // get all the media
   if (mMedia) {
-    mMedia->Count(&count);
-    for (index = 0; index < count; index++) {
-      nsCOMPtr<nsIAtom> medium = dont_AddRef((nsIAtom*)mMedia->ElementAt(index));
-      if (medium) {
-        nsAutoString tempString;
-        if (index > 0)
-          aCssText.AppendLiteral(", ");
-        medium->ToString(tempString);
-        aCssText.Append(tempString);
-      }
-    }
+    nsAutoString mediaText;
+    mMedia->GetText(mediaText);
+    aCssText.Append(mediaText);
   }
 
   return nsCSSGroupRule::AppendRulesToCssText(aCssText);
@@ -1110,9 +1094,7 @@ NS_IMETHODIMP_(PRBool)
 nsCSSMediaRule::UseForPresentation(nsPresContext* aPresContext)
 {
   if (mMedia) {
-    PRBool matches = PR_FALSE;
-    mMedia->MatchesMedium(aPresContext->Medium(), &matches);
-    return matches;
+    return mMedia->Matches(aPresContext);
   }
   return PR_TRUE;
 }

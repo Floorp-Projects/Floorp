@@ -335,9 +335,7 @@ public:
   NS_IMETHOD GetBaseURI(nsIURI** aBaseURL) const;
   NS_IMETHOD GetTitle(nsString& aTitle) const;
   NS_IMETHOD GetType(nsString& aType) const;
-  NS_IMETHOD GetMediumCount(PRInt32& aCount) const;
-  NS_IMETHOD GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const;
-  NS_IMETHOD_(PRBool) UseForMedium(nsIAtom* aMedium) const;
+  NS_IMETHOD_(PRBool) UseForMedium(nsPresContext* aPresContext) const;
   NS_IMETHOD_(PRBool) HasRules() const;
 
   NS_IMETHOD GetApplicable(PRBool& aApplicable) const;
@@ -532,22 +530,8 @@ HTMLCSSStyleSheetImpl::GetType(nsString& aType) const
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::GetMediumCount(PRInt32& aCount) const
-{
-  aCount = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::GetMediumAt(PRInt32 aIndex, nsIAtom*& aMedium) const
-{
-  aMedium = nsnull;
-  return NS_ERROR_INVALID_ARG;
-}
-
 NS_IMETHODIMP_(PRBool)
-HTMLCSSStyleSheetImpl::UseForMedium(nsIAtom* aMedium) const
+HTMLCSSStyleSheetImpl::UseForMedium(nsPresContext* aPresContext) const
 {
   return PR_TRUE; // works for all media
 }
