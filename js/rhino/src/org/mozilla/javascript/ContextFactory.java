@@ -266,7 +266,10 @@ public class ContextFactory
           case Context.FEATURE_DYNAMIC_SCOPE:
             return false;
 
-          case Context.FEATURE_STRICT_MODE:
+          case Context.FEATURE_STRICT_VARS:
+            return false;
+
+          case Context.FEATURE_STRICT_EVAL:
             return false;
         }
         // It is a bug to call the method with unknown featureIndex

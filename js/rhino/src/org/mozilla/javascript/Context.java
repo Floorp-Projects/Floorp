@@ -231,19 +231,28 @@ public class Context
     public static final int FEATURE_DYNAMIC_SCOPE = 7;
 
     /**
-     * Control if strict mode is enabled.
-     * With strict mode enabled Rhino reports runtime errors in the following
-     * cases:
-     * <ul>
-     * <li> Assignment to non-existing names which typically indicates missed
-     *      <b>var</b> declaration.
-     * <li> Passing non-string arguments to the eval function.
-     * </ul>
+     * Control if strict variable mode is enabled.
+     * When the feature is on Rhino reports runtime errors if assignment
+     * to a global variable that does not exist is executed. When the feature
+     * is off such assignments creates new variable in the global scope  as
+     * required by ECMA 262.
      * <p>
      * By default {@link #hasFeature(int)} returns false.
      * @since 1.6 Release 1
      */
-    public static final int FEATURE_STRICT_MODE = 8;
+    public static final int FEATURE_STRICT_VARS = 8;
+
+    /**
+     * Control if strict eval mode is enabled.
+     * When the feature is on Rhino reports runtime errors if non-string
+     * argument is passed to the eval function. When the feature is off
+     * eval simply return non-string argument as is without performing any
+     * evaluation as required by ECMA 262.
+     * <p>
+     * By default {@link #hasFeature(int)} returns false.
+     * @since 1.6 Release 1
+     */
+    public static final int FEATURE_STRICT_EVAL = 9;
 
     public static final String languageVersionProperty = "language version";
     public static final String errorReporterProperty   = "error reporter";
@@ -2159,7 +2168,8 @@ public class Context
      * @see #FEATURE_PARENT_PROTO_PROPRTIES
      * @see #FEATURE_E4X
      * @see #FEATURE_DYNAMIC_SCOPE
-     * @see #FEATURE_STRICT_MODE
+     * @see #FEATURE_STRICT_VARS
+     * @see #FEATURE_STRICT_EVAL
      */
     public boolean hasFeature(int featureIndex)
     {

@@ -48,7 +48,8 @@ public class ShellContextFactory extends ContextFactory
     protected boolean hasFeature(Context cx, int featureIndex)
     {
         switch (featureIndex) {
-          case Context.FEATURE_STRICT_MODE:
+          case Context.FEATURE_STRICT_VARS:
+          case Context.FEATURE_STRICT_EVAL:
             return strictMode;
         }
         return super.hasFeature(cx, featureIndex);
