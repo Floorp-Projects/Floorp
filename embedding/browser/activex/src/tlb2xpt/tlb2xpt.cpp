@@ -11,9 +11,12 @@ void EnumTypeLib(ITypeLib *typeLib, EnumTypeLibProc pfn);
 void EnumTypeLibProcVerbose(ITypeInfo *typeInfo, TYPEATTR *typeAttr);
 void EnumTypeLibProcXPIDL(ITypeInfo *typeInfo, TYPEATTR *typeAttr);
 void EnumTypeLibProcXPT(ITypeInfo *typeInfo, TYPEATTR *typeAttr);
+void EnumTypeLibProcStubs(ITypeInfo *typeInfo, TYPEATTR *typeAttr);
 
-void DumpXPCOMInterfaceXPT(ITypeInfo *tiInterface);
-void DumpXPCOMInterfaceIDL(ITypeInfo *typeInfo);
+void DumpXPCOMInterfaceXPT(FILE *f, ITypeInfo *tiInterface);
+void DumpXPCOMInterfaceIDL(FILE *f, ITypeInfo *typeInfo);
+void DumpXPCOMInterfaceStubH(FILE *f, ITypeInfo *tiInterface);
+void DumpXPCOMInterfaceStubC(FILE *f, ITypeInfo *tiInterface);
 
 FILE *fidl   = NULL;
 FILE *fxpt   = NULL;
@@ -93,7 +96,12 @@ int main(int argc, char* argv[])
     }
     if (genStubs)
     {
-        // TODO genStubs
+        std::string stubh(output);
+        std::string stubc(output);
+        stubh += ".h";
+        stubc += ".cpp";
+        fstubh = fopen(stubh.c_str(), "wt");
+        fstubc = fopen(stubc.c_str(), "wt");
     }
 
     if (verbose)
@@ -110,15 +118,20 @@ int main(int argc, char* argv[])
 
     if (verbose)
         EnumTypeLib(typeLib, EnumTypeLibProcVerbose);
+    
     if (genIDL)
     {
         fputs("#include \"axIUnknown.idl\"\n\n", fidl);
         EnumTypeLib(typeLib, EnumTypeLibProcXPIDL);
     }
+
     if (genXPT)
         EnumTypeLib(typeLib, EnumTypeLibProcXPT);
+
     if (genStubs)
-        ; // TODO
+    {
+        EnumTypeLib(typeLib, EnumTypeLibProcStubs);
+    }
 
     return 0;
 }
@@ -168,7 +181,7 @@ void EnumTypeLibProcXPT(ITypeInfo *typeInfo, TYPEATTR *typeAttr)
 {
     if (typeAttr->typekind == TKIND_INTERFACE)
     {
-        DumpXPCOMInterfaceXPT(typeInfo);
+        DumpXPCOMInterfaceXPT(fxpt, typeInfo);
     }
 }
 
@@ -176,7 +189,17 @@ void EnumTypeLibProcXPIDL(ITypeInfo *typeInfo, TYPEATTR *typeAttr)
 {
     if (typeAttr->typekind == TKIND_INTERFACE)
     {
-        DumpXPCOMInterfaceIDL(typeInfo);
+        DumpXPCOMInterfaceIDL(fidl, typeInfo);
+    }
+}
+
+
+void EnumTypeLibProcStubs(ITypeInfo *typeInfo, TYPEATTR *typeAttr)
+{
+    if (typeAttr->typekind == TKIND_INTERFACE)
+    {
+        DumpXPCOMInterfaceStubH(fstubh, typeInfo);
+        DumpXPCOMInterfaceStubC(fstubc, typeInfo);
     }
 }
 
@@ -197,7 +220,7 @@ void EnumTypeLib(ITypeLib *typeLib, EnumTypeLibProc pfn)
 
 // [scriptable, uuid(00000000-0000-0000-0000-000000000000)]
 // interface axIFoo : axIBar
-void DumpXPCOMInterfaceXPT(ITypeInfo *tiInterface)
+void DumpXPCOMInterfaceXPT(FILE *f, ITypeInfo *tiInterface)
 {
     XPTArena *arena = XPT_NewArena(1024 * 10, sizeof(double), "main xpt_link arena");
     // TODO. Maybe it would be better to just feed an IDL through the regular compiler
@@ -205,11 +228,44 @@ void DumpXPCOMInterfaceXPT(ITypeInfo *tiInterface)
     XPT_DestroyArena(arena);
 }
 
-// [scriptable, uuid(00000000-0000-0000-0000-000000000000)]
-// interface axIFoo : axIBar
-void DumpXPCOMInterfaceIDL(ITypeInfo *tiInterface)
+void DumpXPCOMInterfaceStubH(FILE *f, ITypeInfo *tiInterface)
 {
     HRESULT hr;
+
+    USES_CONVERSION;
+    BSTR bstrName = NULL;
+    hr = tiInterface->GetDocumentation(MEMBERID_NIL, &bstrName, NULL, NULL, NULL);
+    char *name = strdup(W2A(bstrName));
+    SysFreeString(bstrName);
+
+    fputs("template<class T>\n", f);
+    fprintf(f, "class nsAX%sImpl : public ax%s\n", name, name);
+    fputs("{\n}", f);
+
+    for (char *c = name; *c; c++)
+    {
+        *c = toupper(*c);
+    }
+    fprintf(f, "  NS_DECL_AX%s\n", name);
+    fputs("};\n\n", f);
+
+    free(name);
+}
+
+void DumpXPCOMInterfaceStubC(FILE *f, ITypeInfo *tiInterface)
+{
+
+}
+
+void DumpXPCOMInterfaceIDL(FILE *f, ITypeInfo *tiInterface)
+{
+    HRESULT hr;
+
+    // [scriptable, uuid(00000000-0000-0000-0000-000000000000)]
+    // interface axIFoo : axIBar
+    // {
+    //    void method1();
+    // };
 
     TYPEATTR *attr;
     tiInterface->GetTypeAttr(&attr);
@@ -219,28 +275,28 @@ void DumpXPCOMInterfaceIDL(ITypeInfo *tiInterface)
     //
     // Attribute block
     //
-    fputs("[scriptable, ", fidl);
+    fputs("[scriptable, ", f);
 
     // uuid()
 	WCHAR szGUID[64];
 	StringFromGUID2(attr->guid, szGUID, sizeof(szGUID));
     szGUID[0] = L'(';
     szGUID[wcslen(szGUID) - 1] = L')';
-    fprintf(fidl, "uuid%s", W2A(szGUID));
+    fprintf(f, "uuid%s", W2A(szGUID));
     
-    fputs("]\n", fidl);
+    fputs("]\n", f);
 
 
     //
     // Interface block
     //
 
-    fprintf(fidl, "interface ");
+    fprintf(f, "interface ");
 
     BSTR bstrName = NULL;
-    hr = tiInterface->GetDocumentation( MEMBERID_NIL, &bstrName, NULL, NULL, NULL);
-
-    fprintf(fidl, "ax%s", W2A(bstrName));
+    hr = tiInterface->GetDocumentation(MEMBERID_NIL, &bstrName, NULL, NULL, NULL);
+    fprintf(f, "ax%s", W2A(bstrName));
+    SysFreeString(bstrName);
 
     // Check for the base interface
 	for (UINT n = 0; n <  attr->cImplTypes; n++)
@@ -253,10 +309,10 @@ void DumpXPCOMInterfaceIDL(ITypeInfo *tiInterface)
 		if (FAILED(hr = tiInterface->GetRefTypeInfo(href, &tiParent)))
            ; // TODO
 
-		if (FAILED(hr = tiParent->GetDocumentation( MEMBERID_NIL, &bstrName, NULL, NULL, NULL)))
+		if (FAILED(hr = tiParent->GetDocumentation(MEMBERID_NIL, &bstrName, NULL, NULL, NULL)))
            ; // TODO
 
-		fprintf(fidl, " : ax%s", W2A(bstrName));
+		fprintf(f, " : ax%s", W2A(bstrName));
 
 		SysFreeString(bstrName);
         bstrName = NULL;
@@ -269,8 +325,8 @@ void DumpXPCOMInterfaceIDL(ITypeInfo *tiInterface)
     // Methods and properties block
     //
 
-    fprintf(fidl, "\n");
-    fprintf(fidl, "{\n");
+    fprintf(f, "\n");
+    fprintf(f, "{\n");
 
 
     for (n = 0; n < attr->cFuncs; n++)
@@ -278,7 +334,7 @@ void DumpXPCOMInterfaceIDL(ITypeInfo *tiInterface)
         FUNCDESC *func;
         tiInterface->GetFuncDesc(n, &func);
 
-        fprintf(fidl, "  ");
+        fprintf(f, "  ");
         if (func->invkind & INVOKE_PROPERTYPUT ||
             func->invkind & INVOKE_PROPERTYGET)
 		{
@@ -288,17 +344,17 @@ void DumpXPCOMInterfaceIDL(ITypeInfo *tiInterface)
         TypeDesc tf(tiInterface, &func->elemdescFunc.tdesc);
         if (tf.mType == TypeDesc::T_RESULT)
         {
-            fprintf(fidl, "void ");
+            fprintf(f, "void ");
         }
         else
         {
-            fprintf(fidl, "%s ", tf.ToXPIDLString().c_str());
+            fprintf(f, "%s ", tf.ToXPIDLString().c_str());
         }
 
         // Method / property name
         BSTR bstrName = NULL;
     	tiInterface->GetDocumentation(func->memid, &bstrName, NULL, NULL, NULL);
-        fprintf(fidl, "%s (\n", W2A(bstrName));
+        fprintf(f, "%s (\n", W2A(bstrName));
         SysFreeString(bstrName);
 
         // Get the names of all the arguments
@@ -309,7 +365,7 @@ void DumpXPCOMInterfaceIDL(ITypeInfo *tiInterface)
         // Dump out all parameters
         for (int p = 0; p < func->cParams; p++)
         {
-            fputs("    ", fidl);
+            fputs("    ", f);
 
             BOOL isIn = FALSE;
             BOOL isOut = FALSE;
@@ -317,20 +373,20 @@ void DumpXPCOMInterfaceIDL(ITypeInfo *tiInterface)
             // Keywords
 			if (func->lprgelemdescParam[p].idldesc.wIDLFlags & IDLFLAG_FRETVAL)
 			{
-				fputs("[retval] ", fidl);
+				fputs("[retval] ", f);
 			}
 			if (func->lprgelemdescParam[p].idldesc.wIDLFlags & IDLFLAG_FIN &&
                 func->lprgelemdescParam[p].idldesc.wIDLFlags & IDLFLAG_FOUT)
             {
-                fputs("inout ", fidl);
+                fputs("inout ", f);
             }
             else if (func->lprgelemdescParam[p].idldesc.wIDLFlags & IDLFLAG_FIN)
             {
-                fputs("in ", fidl);
+                fputs("in ", f);
             }
             else if (func->lprgelemdescParam[p].idldesc.wIDLFlags & IDLFLAG_FOUT)
             {
-                fputs("out ", fidl);
+                fputs("out ", f);
             }
 
             // Type
@@ -340,35 +396,35 @@ void DumpXPCOMInterfaceIDL(ITypeInfo *tiInterface)
             if (tp.mType == TypeDesc::T_POINTER &&
                 func->lprgelemdescParam[p].idldesc.wIDLFlags & IDLFLAG_FOUT)
             {
-                fprintf(fidl, "%s ", tp.mData.mPtr->ToXPIDLString().c_str());
+                fprintf(f, "%s ", tp.mData.mPtr->ToXPIDLString().c_str());
             }
             else
             {
                 // Type
-                fprintf(fidl, "%s ", tp.ToXPIDLString().c_str());
+                fprintf(f, "%s ", tp.ToXPIDLString().c_str());
             }
 
             // Name
-            fputs(W2A(rgbstrNames[p+1]), fidl);
+            fputs(W2A(rgbstrNames[p+1]), f);
 
             if (p < func->cParams - 1)
             {
-                fprintf(fidl, ",\n");
+                fprintf(f, ",\n");
             }
             else
             {
-                fprintf(fidl, "\n");
+                fprintf(f, "\n");
             }
         	SysFreeString(rgbstrNames[0]);
         }
-        fputs("  );\n", fidl);
+        fputs("  );\n", f);
 
         tiInterface->ReleaseFuncDesc(func);
     }
 
 
     // Fin
-    fputs("};\n\n", fidl);
+    fputs("};\n\n", f);
 
     tiInterface->ReleaseTypeAttr(attr);
 }
