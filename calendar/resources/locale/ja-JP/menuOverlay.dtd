@@ -130,34 +130,34 @@
 <!ENTITY javaScriptConsoleCmd.label     "JavaScript コンソール">
 <!ENTITY javaScriptConsoleCmd.accesskey "S">
 
-<!ENTITY navigatorCmd.label     "Browser">
+<!ENTITY navigatorCmd.label     "ブラウザ">
 <!ENTITY navigatorCmd.accesskey "B">
 
-<!ENTITY messengerCmd.label     "Mail">
+<!ENTITY messengerCmd.label     "メール">
 <!ENTITY messengerCmd.accesskey "M">
 
 <!ENTITY addressBookCmd.label     "アドレス帳">
 <!ENTITY addressBookCmd.accesskey "A">
 
-<!ENTITY helpMenu.label         "Help"> 
+<!ENTITY helpMenu.label         "ヘルプ"> 
 <!ENTITY helpMenu.accesskey            "H">
 
 <!ENTITY walletPasswordManager.label     "パスワードマネージャ">
 <!ENTITY walletPasswordManager.accesskey "p">
 
 <!-- Toolbar items -->
-<!ENTITY fileMenu.label         "File"> 
+<!ENTITY fileMenu.label         "ファイル"> 
 <!ENTITY fileMenu.accesskey       "F">
 
-<!ENTITY editMenu.label         "Edit"> 
+<!ENTITY editMenu.label         "編集"> 
 <!ENTITY editMenu.accesskey       "E"> 
-<!ENTITY preferencesCmd.label       "Options...">
+<!ENTITY preferencesCmd.label       "オプション...">
 <!ENTITY preferencesCmd.accesskey     "O"> 
 
-<!ENTITY viewMenu.label         "View"> 
+<!ENTITY viewMenu.label         "表示"> 
 <!ENTITY viewMenu.accesskey       "V"> 
 
-<!ENTITY releaseCmd.label       "Release Notes">
+<!ENTITY releaseCmd.label       "リリースノート">
 <!ENTITY releaseCmd.accesskey       "R">
-<!ENTITY aboutCmd.label         "About &brandFullName;">
+<!ENTITY aboutCmd.label         "&brandFullName; について">
 <!ENTITY aboutCmd.accesskey       "A">
