@@ -50,10 +50,11 @@ function onMasterPasswordLoad()
   case nsIPK11Token.ASK_EXPIRE_TIME: askTimes = 2; break;
   }
   var radiogroup = document.getElementById("passwordAskTimes");
-  var radioitem = radiogroup.childNodes[askTimes];
-  if (askTimes == 2) {
-    // The last radio is a box, because it also has the timeout textbox
-    radioitem = radioitem.firstChild;
+  var radioitem;
+  switch (askTimes) {
+  case 0: radioitem = document.getElementById("askFirstTime"); break;
+  case 1: radioitem = document.getElementById("askEveryTime"); break;
+  case 2: radioitem = document.getElementById("askTimeout"); break;
   }
   radiogroup.selectedItem = radioitem;
   var timeout = internal_token.getAskPasswordTimeout();
