@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <limits.h>
 #include <errno.h>
+#include <locale.h>
 
 #ifdef XPU_USE_NSPR
 #include "plstr.h"
@@ -628,6 +629,8 @@ Bool XpuParseMediumSourceSize( const char *value,
              *name;
   char       *boolbuf;
   size_t      value_len;
+  int         num_input_items;
+  const char *cur_locale;
   
   if( value && value[0]!='{' && value[0]!='\0' )
     return(False);
@@ -666,7 +669,18 @@ Bool XpuParseMediumSourceSize( const char *value,
   /* ... continue to parse the remaining string... */
   d++;
   
-  if( sscanf(d, "%s %f %f %f %f", boolbuf, ma1, ma2, ma3, ma4) != 5 )
+
+  /* Force C/POSIX radix for scanf()-parsing (see bug 131831 ("Printing
+   * does not work in de_AT@euro locale")), do the parsing and restore
+   * the original locale.
+   * XXX: This may affect all threads and not only the calling one...
+   */
+  cur_locale = setlocale(LC_NUMERIC, NULL);
+  setlocale(LC_NUMERIC, "C"); 
+  num_input_items = sscanf(d, "%s %f %f %f %f", boolbuf, ma1, ma2, ma3, ma4);
+  setlocale(LC_NUMERIC, cur_locale);
+
+  if( num_input_items != 5 )
   {
     free(name);
     return(False);
@@ -728,7 +742,7 @@ Bool XpuEnumerateMediumSourceSizes( Display *pdpy, XPContext pcontext,
     else
     {
       /* Should never ever happen! */
-      fprintf(stderr, "XpuEnumerateMediumSourceSize: error parsing '%s'", medium_spec);
+      fprintf(stderr, "XpuEnumerateMediumSourceSize: error parsing '%s'\n", medium_spec);
     }
   }
   /* not reached */   
