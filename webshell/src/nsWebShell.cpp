@@ -532,7 +532,25 @@ protected:
 
   // if there is no mWindow, this will keep track of the bounds  --dwc0001
   nsRect  mBounds;
+
+#ifdef NS_DEBUG
+private:
+		// We're counting the number of |nsWebShells| to help find leaks
+	static unsigned long gNumberOfWebShells;
+
+	static unsigned long TotalWebShellsInExistence() { return gNumberOfWebShells; }
+#endif
 };
+
+#ifdef NS_DEBUG
+unsigned long nsWebShell::gNumberOfWebShells = 0;
+
+unsigned long
+NS_TotalWebShellsInExistence()
+	{
+		return nsWebShell::TotalWebShellsInExistence();
+	}
+#endif
 
 //----------------------------------------------------------------------
 
@@ -640,6 +658,11 @@ nsresult nsWebShell::DestroyPluginHost(void)
 // Note: operator new zeros our memory
 nsWebShell::nsWebShell()
 {
+#ifdef NS_DEBUG
+		// We're counting the number of |nsWebShells| to help find leaks
+	++gNumberOfWebShells;
+#endif
+
   NS_INIT_REFCNT();
   mHistoryIndex = -1;
   mScrollPref = nsScrollPreference_kAuto;
@@ -729,6 +752,11 @@ nsWebShell::~nsWebShell()
 
 
   DestroyPluginHost();
+
+#ifdef NS_DEBUG
+		// We're counting the number of |nsWebShells| to help find leaks
+	--gNumberOfWebShells;
+#endif
 }
 
 void nsWebShell::InitFrameData(PRBool aCompleteInitScrolling)
