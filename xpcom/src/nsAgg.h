@@ -109,7 +109,7 @@ _class::AddRef(void)                                                        \
 {                                                                           \
     ++mRefCnt; /* keep track of our refcount as well as outer's */          \
     if (fOuter)                                                             \
-        return fOuter->AddRef();                                            \
+        return NS_ADDREF(fOuter);                                           \
     else                                                                    \
         return mRefCnt;                                                     \
 }                                                                           \

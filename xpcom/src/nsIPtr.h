@@ -81,34 +81,34 @@ class cls##Ptr {                                                              \
 public:                                                                       \
   cls##Ptr(void)  : mPtr(0) {}                                                \
   cls##Ptr(const cls##Ptr& aCopy) : mPtr(aCopy.mPtr)                          \
-    { if(0 != mPtr)  mPtr->AddRef();  }                                       \
+    { NS_IF_ADDREF(mPtr);  }                                                  \
   cls##Ptr(cls* aInterface)       : mPtr(aInterface)  {}                      \
-  ~cls##Ptr(void)     { if(0 != mPtr)  mPtr->Release();  }                    \
+  ~cls##Ptr(void)     { NS_IF_RELEASE(mPtr);  }                               \
   cls##Ptr& operator=(const cls##Ptr& aCopy)                                  \
     { if(mPtr == aCopy.mPtr) return *this;                                    \
-      if(0 != aCopy.mPtr)  aCopy.mPtr->AddRef();                              \
-      if(0 != mPtr)  mPtr->Release();                                         \
+      NS_IF_ADDREF(aCopy.mPtr);                                               \
+      NS_IF_RELEASE(mPtr);                                                    \
       mPtr = aCopy.mPtr;  return *this; }                                     \
   cls##Ptr& operator=(cls* aInterface)                                        \
     { if(mPtr == aInterface) return *this;                                    \
-      if(0 != mPtr)  mPtr->Release(); mPtr = aInterface;                      \
+      NS_IF_RELEASE(mPtr); mPtr = aInterface;                                 \
       return *this; }                                                         \
   cls##Ptr& operator=(PRInt32 aInt)                                           \
-    { if(0 != mPtr)  mPtr->Release(); mPtr = 0;                               \
+    { NS_IF_RELEASE(mPtr);                                                    \
       return *this; }                                                         \
   void  SetAddRef(cls* aInterface)                                            \
     { if(aInterface == mPtr)  return;                                         \
-      if(0 != aInterface)  aInterface->AddRef();                              \
-      if(0 != mPtr)  mPtr->Release(); mPtr = aInterface;  }                   \
-  cls*  AddRef(void)  { mPtr->AddRef(); return mPtr;  }                       \
+      NS_IF_ADDREF(aInterface);                                               \
+      NS_IF_RELEASE(mPtr); mPtr = aInterface;  }                              \
+  cls*  AddRef(void)  { NS_ADDREF(mPtr); return mPtr;  }                      \
   cls*  IfAddRef(void)                                                        \
-    { if(0 != mPtr) mPtr->AddRef(); return mPtr;  }                           \
+    { NS_IF_ADDREF(mPtr); return mPtr;  }                                     \
   cls*& AssignRef(void)                                                       \
-    { if(0 != mPtr) mPtr->Release(); mPtr = 0;  return mPtr; }                \
+    { NS_IF_RELEASE(mPtr);  return mPtr; }                                    \
   cls** AssignPtr(void)                                                       \
-    { if(0 != mPtr) mPtr->Release(); mPtr = 0;  return &mPtr; }               \
+    { NS_IF_RELEASE(mPtr);  return &mPtr; }                                   \
   void** Query(void)                                                          \
-    { if(0 != mPtr) mPtr->Release(); mPtr = 0;  return (void**)&mPtr; }       \
+    { NS_IF_RELEASE(mPtr);  return (void**)&mPtr; }                           \
   PRBool  IsNull() const                                                      \
     { return PRBool(0 == mPtr); }                                             \
   PRBool  IsNotNull() const                                                   \
