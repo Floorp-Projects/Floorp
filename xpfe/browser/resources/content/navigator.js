@@ -625,8 +625,16 @@ function BrowserStop()
   }
  
 
-function BrowserReallyReload(reloadType) 
+function BrowserReallyReload(event) 
   {
+    var nsIWebNavigation = Components.interfaces.nsIWebNavigation;
+    // Default is loadReloadNormal.
+    var reloadType = nsIWebNavigation.loadReloadNormal;
+    // See if the event was a shift-click.
+    if ( event.shiftKey ) {
+        // Shift key means loadReloadBypassProxyAndCache.
+        reloadType = nsIWebNavigation.loadReloadBypassProxyAndCache;
+    }
     appCore.reload(reloadType);
   }
 
@@ -1598,17 +1606,14 @@ function clearErrorNotification()
 
 //Posts the currently displayed url to a native widget so third-party apps can observe it.
 var urlWidgetService = null;
+try {
+    urlWidgetService = getService( "component://mozilla/urlwidget", "nsIUrlWidget" );
+} catch( exception ) {
+    //dump( "Error getting url widget service: " + exception + "\n" );
+}
 function postURLToNativeWidget() {
-    var url = window._content.location.href;
-    if ( !urlWidgetService ) {
-        try {
-            urlWidgetService = getService( "component://mozilla/urlwidget", "nsIUrlWidget" );
-        } catch( exception ) {
-        // this component is windows only, don't spit out errors
-        // dump( "Error getting url widget service: " + exception + "\n" );
-        }
-    }
     if ( urlWidgetService ) {
+        var url = window._content.location.href;
         try {
             urlWidgetService.SetURLToHiddenControl( url, window );
         } catch( exception ) {
