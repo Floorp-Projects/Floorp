@@ -554,7 +554,7 @@ nsAppShellService::CreateDialogWindow(nsIWebShellWindow * aParent,
     // temporarily disabling parentage because non-Windows platforms
     // seem to be interpreting it in unexpected ways.
     nsWidgetInitData widgetInitData;
-    widgetInitData.mBorderStyle = eBorderStyle_window;
+    widgetInitData.mBorderStyle = eBorderStyle_dialog;
 
     if (aInitialWidth == NS_SIZETOCONTENT ||
         aInitialHeight == NS_SIZETOCONTENT) {

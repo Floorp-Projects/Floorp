@@ -1913,6 +1913,11 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
   }
   chromeFlags = CalculateChromeFlags(options);
 
+  if (aAttachArguments) {
+    // Opening a dialog.
+    chromeFlags |= NS_CHROME_OPEN_AS_DIALOG;
+  }
+
   nsIWebShell *newOuterShell = nsnull;
   nsIWebShellContainer *webShellContainer;
 
@@ -2002,6 +2007,9 @@ GlobalWindowImpl::CalculateChromeFlags(char *aFeatures) {
   chromeFlags |= NS_CHROME_WINDOW_CLOSE_ON;
 
   chromeFlags |= WinHasOption(aFeatures, "chrome") ? NS_CHROME_OPEN_AS_CHROME : 0;
+
+  chromeFlags |= WinHasOption(aFeatures, "modal") ? NS_CHROME_MODAL : 0;
+  chromeFlags |= WinHasOption(aFeatures, "dialog") ? NS_CHROME_OPEN_AS_DIALOG : 0;
 
   /*z-ordering, history, dependent
   chromeFlags->topmost         = WinHasOption(aFeatures, "alwaysRaised");
