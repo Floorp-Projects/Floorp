@@ -3,6 +3,7 @@
 #
 
 nsIFontEnumerator.idl
+nsIFontList.idl
 nsIScriptableRegion.idl
 nsIScreen.idl
 nsIScreenManager.idl
