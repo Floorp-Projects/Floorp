@@ -1623,6 +1623,9 @@ nsRenderingContextGTK::GetBoundingMetrics(const char*        aString,
                       &aBoundingMetrics.width, 
                       &aBoundingMetrics.ascent, 
                       &aBoundingMetrics.descent);
+    // flip sign of descent for cross-platform compatibility
+    aBoundingMetrics.descent = -aBoundingMetrics.descent;
+
     aBoundingMetrics.leftBearing = NSToCoordRound(aBoundingMetrics.leftBearing * mP2T);
     aBoundingMetrics.rightBearing = NSToCoordRound(aBoundingMetrics.rightBearing * mP2T);
     aBoundingMetrics.width = NSToCoordRound(aBoundingMetrics.width * mP2T);

@@ -2398,6 +2398,8 @@ nsFontMetricsGTK::GetBoundingMetrics (nsFontGTK*         aFont,
                       &aBoundingMetrics.width, 
                       &aBoundingMetrics.ascent, 
                       &aBoundingMetrics.descent); 
+    // flip sign of descent for cross-platform compatibility
+    aBoundingMetrics.descent = -aBoundingMetrics.descent;
     // get italic correction
     XFontStruct *fontInfo = (XFontStruct *) GDK_FONT_XFONT (aFont->mFont);
     unsigned long pr = 0;
