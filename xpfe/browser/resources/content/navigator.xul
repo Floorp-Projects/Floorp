@@ -180,7 +180,7 @@ Contributor(s): ______________________________________. -->
                      defaultSearchEngine="true" tabScrolling="true"
                      showCommentColumn="true"
                      tooltiptext="&locationBar.tooltip;"
-                     oninput="window.XULBrowserWindow.userTyped=true;"
+                     oninput="window.XULBrowserWindow.userTyped.value=true;"
                      ontextcommand="return handleURLBarCommand(userAction);"
                      ontextrevert="return handleURLBarRevert();"
                      onfocus="URLBarFocusHandler(event);"
