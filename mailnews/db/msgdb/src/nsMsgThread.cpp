@@ -319,6 +319,19 @@ nsresult	nsMsgThread::ReparentNonReferenceChildrenOf(nsIMsgDBHdr *topLevelHdr, n
 NS_IMETHODIMP nsMsgThread::GetChildAt(PRInt32 aIndex, nsIMsgDBHdr **result)
 {
 	nsresult ret = NS_OK;
+	mdbOid oid;
+	nsIMdbRow *hdrRow = nsnull;
+
+	ret = m_mdbTable->PosToOid( m_mdbDB->GetEnv(), aIndex, &oid);
+	if (NS_SUCCEEDED(ret))
+	{
+		//do I have to release hdrRow?
+		ret = m_mdbTable->PosToRow(m_mdbDB->GetEnv(), aIndex, &hdrRow); 
+		if(NS_SUCCEEDED(ret) && hdrRow)
+		{
+			ret = m_mdbDB->CreateMsgHdr(hdrRow,  oid.mOid_Id , result);
+		}
+	}
 
 	return ret;
 }
