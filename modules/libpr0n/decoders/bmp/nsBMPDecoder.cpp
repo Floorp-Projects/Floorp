@@ -579,7 +579,16 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
                                 memset(mAlphaPtr, 0xFF, mStateData);
                                 mAlphaPtr += mStateData;
 
-                                if ((mStateData & 1) == 0)
+                                // See if we will need to skip a byte
+                                // to word align the pixel data
+                                // mStateData is a number of pixels
+                                // so allow for the RLE compression type
+                                // Pixels RLE8=1 RLE4=2
+                                //    1    Pad    Pad
+                                //    2    No     Pad
+                                //    3    Pad    No
+                                //    4    No     No
+                                if (((mStateData - 1) & mBIH.compression) != 0)
                                     mState = eRLEStateAbsoluteMode;
                                 else
                                     mState = eRLEStateAbsoluteModePadded;
