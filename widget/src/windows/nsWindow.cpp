@@ -4549,6 +4549,16 @@ LPCWSTR nsWindow::WindowPopupClassW()
     return className;
 }
 
+LPCTSTR nsWindow::WindowClass()
+{
+  return (NS_ConvertUCS2toUTF8(WindowClassW()).get());
+}
+
+LPCTSTR nsWindow::WindowPopupClass()
+{
+  return (NS_ConvertUCS2toUTF8(WindowPopupClassW()).get());
+}
+
 #else
 LPCTSTR nsWindow::WindowClass()
 {
