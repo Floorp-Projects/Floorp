@@ -25,7 +25,7 @@
 #include "plevent.h"
 #include "nsRepository.h"
 
-#define RDF_DB "test.rdf"
+#define RDF_DB "rdf:bookmarks"
 #define SUCCESS 0
 #define FAILURE -1
 
@@ -53,7 +53,7 @@ main(int argc, char** argv)
 
   NS_GetRDFService( &pRDF );
   PR_ASSERT( pRDF != 0 );
-
+  pRDF->SetBookmarkFile("bookmark.htm");
   nsIRDFDataBase* pDB;
   char* url[] = { RDF_DB, NULL };
 
@@ -64,7 +64,8 @@ main(int argc, char** argv)
 
   /* execute queries */
   RDF_Resource resource = 0;
-  if( NS_OK != pDB->CreateResource("test.rdf#root", &resource) )
+  
+  if( NS_OK != pDB->CreateResource("NC:Bookmarks", &resource) )
     fail("Unable to get resource on db!!!\n");
   RDF_Resource parent = 0;
   if( NS_OK != pDB->GetResource("parent", &parent) )

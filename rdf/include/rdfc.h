@@ -104,7 +104,7 @@ PR_PUBLIC_API(RDF_Error) RDF_Shutdown(void);
 
 
 PR_PUBLIC_API(char*) RDF_GetResourceName(RDF rdfDB, RDF_Resource node);
-
+PR_PUBLIC_API(void) SetBookmarkURL(const char* url);
 PR_PUBLIC_API(RDF_Resource) RDFUtil_GetFirstInstance (RDF_Resource type, char* defaultURL);
 PR_PUBLIC_API(void) RDFUtil_SetFirstInstance (RDF_Resource type, RDF_Resource item);
 

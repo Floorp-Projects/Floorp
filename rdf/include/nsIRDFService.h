@@ -63,6 +63,10 @@ public:
   NS_IMETHOD ResourceIdentifier(RDF_Resource r,
                             char**   url /* out */) = 0;
 
+#ifdef MOZILLA_CLIENT
+  NS_IMETHOD SetBookmarkFile(const char* bookmarkFilePath) = 0;
+#endif
+
 
 };
 
