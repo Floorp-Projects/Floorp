@@ -24,7 +24,7 @@ class nsByteBufferInputStream;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsByteBufferOutputStream : public nsIByteBufferOutputStream
+class nsByteBufferOutputStream : public nsIOutputStream
 {
 public:
     NS_DECL_ISUPPORTS
@@ -34,9 +34,8 @@ public:
 
     // nsIOutputStream methods:
     NS_IMETHOD Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount); 
-
-    // nsIByteBufferOutputStream methods:
     NS_IMETHOD Write(nsIInputStream* fromStream, PRUint32 *aWriteCount);
+    NS_IMETHOD Flush(void);
 
     // nsByteBufferOutputStream methods:
     nsByteBufferOutputStream(nsByteBufferInputStream* in);
@@ -71,7 +70,8 @@ public:
     friend class nsByteBufferOutputStream;
 
     nsresult Init(void);
-    void SetEOF(void);
+    nsresult SetEOF(void);
+    nsresult Drain(void);
 
     PRBool AtEOF() { return mEOF && (mReadCursor == mWriteCursor) && !mFull; }
 
@@ -101,8 +101,8 @@ public:
         PRInt32 amt = PR_MIN(max, diff);
         if (amt > 0) {
             nsCRT::memcpy(toBuf, &mBuffer[mReadCursor], amt);
-#ifdef NS_DEBUG
-            nsCRT::memset(&mBuffer[mReadCursor], 0xDD, amt);
+#ifdef DEBUG_warren
+//            nsCRT::memset(&mBuffer[mReadCursor], 0xDD, amt);
 #endif
             mReadCursor += amt;
             *totalRef += amt;
@@ -243,14 +243,17 @@ nsByteBufferInputStream::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsByteBufferInputStream::Close(void)
 {
+    nsresult rv = NS_OK;
     if (mBlocking) 
         PR_CEnterMonitor(this);
     mClosed = PR_TRUE;
     if (mBlocking) {
-        PR_CNotify(this);   // wake up the writer
+        PRStatus status = PR_CNotify(this);   // wake up the writer
+        if (status != PR_SUCCESS)
+            rv = NS_ERROR_FAILURE;
         PR_CExitMonitor(this);
     }
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -281,7 +284,7 @@ nsByteBufferInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount)
         PR_CEnterMonitor(this);
     *aReadCount = 0;
 
-    /*while (aCount > 0)*/ {   // XXX should this block trying to fill the buffer, or return ASAP?
+    /*while (aCount > 0)*/ {
         if (ReadableAmount() == 0) {
             if (mBlocking) {
                 PRStatus status = PR_CWait(this, PR_INTERVAL_NO_TIMEOUT);
@@ -325,8 +328,11 @@ nsByteBufferInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount)
         if (*aReadCount)
             mFull = PR_FALSE;
 
-        if (mBlocking) 
-            PR_CNotify(this);   // tell the writer there's space
+        if (mBlocking) {
+            PRStatus status = PR_CNotify(this);   // tell the writer there's space
+            if (status != PR_SUCCESS)
+                rv = NS_ERROR_FAILURE;
+        }
     }
   done:
     if (mBlocking) 
@@ -401,8 +407,11 @@ nsByteBufferInputStream::Fill(nsIInputStream* stream, PRUint32 *aWriteCount)
         if (mWriteCursor == mReadCursor)
             mFull = PR_TRUE;
 
-        if (mBlocking) 
-            PR_CNotify(this);   // tell the reader there's more
+        if (mBlocking) {
+            PRStatus status = PR_CNotify(this);   // tell the reader there's more
+            if (status != PR_SUCCESS)
+                rv = NS_ERROR_FAILURE;
+        }
     }
   done:
     if (mBlocking) 
@@ -410,16 +419,46 @@ nsByteBufferInputStream::Fill(nsIInputStream* stream, PRUint32 *aWriteCount)
     return rv;
 }
 
-void
+nsresult
 nsByteBufferInputStream::SetEOF()
 {
+    nsresult rv = NS_OK;
     if (mBlocking) 
         PR_CEnterMonitor(this);
     mEOF = PR_TRUE;
     if (mBlocking) {
-        PR_CNotify(this);   // wake up the reader
+        PRStatus status = PR_CNotify(this);   // wake up the reader
+        if (status != PR_SUCCESS)
+            rv = NS_ERROR_FAILURE;
         PR_CExitMonitor(this);
     }
+    return rv;
+}
+
+nsresult
+nsByteBufferInputStream::Drain()
+{
+    nsresult rv = NS_OK;
+    if (mBlocking) {
+        PR_CEnterMonitor(this);
+        while (ReadableAmount() != 0) {
+            PRStatus status = PR_CNotify(this);   // wake up the reader
+            if (status != PR_SUCCESS) {
+                rv = NS_ERROR_FAILURE;
+                break;
+            }
+            else {
+                // wait for the reader to take all the data
+                status = PR_CWait(this, PR_INTERVAL_NO_TIMEOUT);
+                if (status != PR_SUCCESS) {
+                    rv = NS_ERROR_FAILURE;
+                    break;
+                }
+            }
+        }
+        PR_CExitMonitor(this);
+    }
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -447,8 +486,7 @@ nsByteBufferOutputStream::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
     if (aInstancePtr == nsnull)
         return NS_ERROR_NULL_POINTER;
-    if (aIID.Equals(nsIByteBufferOutputStream::GetIID()) ||
-        aIID.Equals(nsIOutputStream::GetIID()) ||
+    if (aIID.Equals(nsIOutputStream::GetIID()) ||
         aIID.Equals(nsIBaseStream::GetIID()) ||
         aIID.Equals(nsISupports::GetIID())) {
         *aInstancePtr = this;
@@ -475,6 +513,12 @@ NS_IMETHODIMP
 nsByteBufferOutputStream::Write(nsIInputStream* fromStream, PRUint32 *aWriteCount)
 {
     return mInputStream->Fill(fromStream, aWriteCount);
+}
+
+NS_IMETHODIMP
+nsByteBufferOutputStream::Flush(void)
+{
+    return mInputStream->Drain();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -674,8 +674,15 @@ public:
      *  @return number of bytes read or an error if < 0
      */   
     NS_IMETHOD
-    Write(const char* aBuf, PRInt32 aOffset, PRInt32 aCount, 
-          PRInt32 *resultingCount); 
+    Write(const char* aBuf, PRInt32 aCount, PRInt32 *resultingCount); 
+
+    NS_IMETHOD Write(nsIInputStream* fromStream, PRUint32 *aWriteCount) {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD Flush() {
+        return NS_OK;
+    }
 
     ////////////////////////////////////////////////////////////////////////////
     // nsPluginManagerStream specific methods:

@@ -23,10 +23,7 @@
 #include "nscore.h"
 
 /* forward declaration */
-class nsIInputStream;
-class nsString;
 class nsIURL;
-
 
 /* 97566110-ff60-11d1-beb9-00805f8a66dc */
 #define NS_ISTREAMOBSERVER_IID   \

@@ -112,6 +112,14 @@ public:
                      PRUint32 aLen,
                      PRUint32 *aWriteCount);
 
+    NS_IMETHOD Write(nsIInputStream* fromStream, PRUint32 *aWriteCount) {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD Flush(void) {
+        return NS_OK;
+    }
+
 protected:
     virtual ~nsBufferedStream();
 
@@ -147,6 +155,14 @@ public:
     NS_IMETHOD Write(const char *aBuf, 
                      PRUint32 aLen,
                      PRUint32 *aWriteLength);
+
+    NS_IMETHOD Write(nsIInputStream* fromStream, PRUint32 *aWriteCount) {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD Flush(void) {
+        return NS_OK;
+    }
 
 protected:
     virtual ~nsAsyncStream();
@@ -186,6 +202,14 @@ public:
                      PRUint32 aLen,
                      PRUint32 *aWriteLength);
   
+    NS_IMETHOD Write(nsIInputStream* fromStream, PRUint32 *aWriteCount) {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD Flush(void) {
+        return NS_OK;
+    }
+
 protected:
     virtual ~nsBlockingStream();
 

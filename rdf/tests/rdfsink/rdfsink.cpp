@@ -136,6 +136,16 @@ public:
         *aWriteCount = aCount;
         return NS_OK;
     }
+
+    NS_IMETHOD Write(nsIInputStream* fromStream, PRUint32 *aWriteCount) {
+        return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD Flush() {
+        PR_Sync(PR_GetSpecialFD(PR_StandardOutput));
+        return NS_OK;
+    }
+
 };
 
 NS_IMPL_ISUPPORTS(ConsoleOutputStreamImpl, kIOutputStreamIID);

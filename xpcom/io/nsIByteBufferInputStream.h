@@ -42,25 +42,6 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// XXX regenerate:
-#define NS_IBYTEBUFFEROUTPUTSTREAM_IID               \
-{ /* 924df6d0-f192-11d2-9322-000000000000 */         \
-    0x924df6d0,                                      \
-    0xf192,                                          \
-    0x11d2,                                          \
-    {0x93, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00} \
-}
-
-class nsIByteBufferOutputStream : public nsIOutputStream {
-public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBYTEBUFFEROUTPUTSTREAM_IID);
-
-    NS_IMETHOD Write(nsIInputStream* fromStream, PRUint32 *aWriteCount) = 0;
-
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
 extern NS_BASE nsresult
 NS_NewByteBufferInputStream(nsIByteBufferInputStream* *result,
                             PRBool blocking = PR_FALSE,

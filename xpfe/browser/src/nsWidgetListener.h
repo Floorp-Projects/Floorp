@@ -37,6 +37,7 @@ class nsWidgetListener : public nsIWidgetController,
 {
 public:
   nsWidgetListener();
+  NS_IMETHOD ProcessEvent(class nsIDOMEvent *) { return NS_OK; }
 
   // nsISupports interface
   NS_DECL_ISUPPORTS
