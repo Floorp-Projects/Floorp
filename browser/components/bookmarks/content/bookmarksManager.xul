@@ -133,17 +133,17 @@
   </keyset>
   
   <toolbox id="bookmarks-toolbox">
-    <menubar id="main-menubar" grippytooltiptext="&menuBar.tooltip;">
+    <menubar id="main-menubar">
       <menu label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
         <menupopup>
           <menuitem label="&menuitem.newBookmark.label;" 
-                    accesskey="&command.newBookmark.accesskey;"
+                    accesskey="&menuitem.newBookmark.accesskey;"
                     observes="cmd_bm_newbookmark"/>
-          <menuitem label="&button.newFolder.label;" 
-                    accesskey="&command.newFolder.accesskey;"
+          <menuitem label="&menuitem.newFolder.label;" 
+                    accesskey="&menuitem.newFolder.accesskey;"
                     observes="cmd_bm_newfolder"/>
-          <menuitem label="&button.newSeparator.label;"
-                    accesskey="&command.newSeparator.accesskey;"
+          <menuitem label="&menuitem.newSeparator.label;"
+                    accesskey="&menuitem.newSeparator.accesskey;"
                     observes="cmd_bm_newseparator"/>
           <menuseparator/>
           <menuitem label="&menuitem.import.label;"
@@ -223,20 +223,29 @@
       </menu>
     </menubar>
 
-    <toolbar id="command-toolbar" tbalign="stretch" grippytooltiptext="&bookmarkToolbar.tooltip;">
-      <toolbarbutton id="newfolder" label="&button.newFolder.label;" 
+    <toolbar id="command-toolbar" tbalign="stretch">
+      <toolbarbutton id="newbookmark" label="&menuitem.newBookmark.label;"
+                     accesskey="&menuitem.newBookmark.accesskey;"
+                     command="cmd_bm_newbookmark"/>
+      <toolbarbutton id="newfolder" label="&menuitem.newFolder.label;"
+                     accesskey="&menuitem.newFolder.accesskey;"
                      command="cmd_bm_newfolder"/>
-      <toolbarbutton id="newseparator" label="&button.newSeparator.label;" 
+      <toolbarbutton id="newseparator" label="&menuitem.newSeparator.label;" 
+                     accesskey="&menuitem.newSeparator.accesskey;"
                      command="cmd_bm_newseparator"/>
       <toolbarseparator/>
-      <toolbarbutton id="moveBookmark" label="&command.moveBookmark.label;"
+      <toolbarbutton id="moveBookmark" label="&command.moveBookmarkShort.label;"
+                     accesskey="&command.moveBookmark.accesskey;"
                      command="cmd_bm_movebookmark"/>
       <toolbarseparator/>
       <toolbarbutton id="properties" label="&command.properties.label;"
+                     accesskey="&command.properties.accesskey;"
                      command="cmd_bm_properties"/>
       <toolbarbutton id="rename" label="&command.rename.label;"
+                     accesskey="&command.rename.accesskey;"
                      command="cmd_bm_rename"/>
       <toolbarbutton id="delete" label="&command.delete.label;"
+                     accesskey="&command.delete.accesskey;"
                      command="cmd_bm_delete"/>
     </toolbar>
 
