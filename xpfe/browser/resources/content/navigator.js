@@ -872,7 +872,7 @@ function OpenSearch(tabName, searchStr)
 
   function WalletEditor()
   {
-  	window.open("chrome://wallet/content/WalletEditor.xul","walletEditor","modal,chrome,height=504,width=436"); 
+  	window.openDialog("chrome://wallet/content/WalletEditor.xul","walletEditor","modal,chrome,height=504,width=436"); 
     
   }
 
@@ -924,12 +924,12 @@ function OpenSearch(tabName, searchStr)
 
   function SignonViewer()
   {
-      window.open("chrome://wallet/content/SignonViewer.xul","SSViewer","modal,chrome,height=504,width=436"); 
+      window.openDialog("chrome://wallet/content/SignonViewer.xul","SSViewer","modal,chrome,height=504,width=436"); 
   }
 
   function CookieViewer()
   {
-   window.open("chrome://wallet/content/CookieViewer.xul","CookieViewer","modal,chrome,height=504,width=436"); 
+   window.openDialog("chrome://wallet/content/CookieViewer.xul","CookieViewer","modal,chrome,height=504,width=436"); 
   }
 
   function OpenMessenger()
