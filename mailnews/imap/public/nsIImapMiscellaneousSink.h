@@ -29,6 +29,8 @@
 #include "MailNewsTypes.h"
 #include "nsIMsgMailNewsUrl.h"
 
+class nsIImapUrl;
+
 class nsIImapIncomingServer;
 
 /* 22e3e664-e789-11d2-af83-001083002da8 */
@@ -71,7 +73,7 @@ public:
 	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
 													 TunnelInfo *aInfo) = 0;
   NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocol,
-                                   nsISupports* copyState) = 0;
+                                   nsIImapUrl * aUrl) = 0;
   NS_IMETHOD SetUrlState(nsIImapProtocol* aProtocol,
                          nsIMsgMailNewsUrl* aUrl,
                          PRBool isRunning,

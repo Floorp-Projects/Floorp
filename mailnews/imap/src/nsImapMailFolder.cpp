@@ -3188,67 +3188,116 @@ NS_IMETHODIMP
 nsImapMailFolder::SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                      nsMsgKeyArray* aKeyArray,
                                      const char* msgIdString,
-                                     nsISupports* copyState)
+                                     nsIImapUrl * aUrl)
 {   // CopyMessages() only
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn;
+  nsCOMPtr<nsISupports> copyState;
+  
+  if (aUrl)
+    aUrl->GetCopyState(getter_AddRefs(copyState));
 
-    if (copyState)
-    {
-        nsCOMPtr<nsImapMailCopyState> mailCopyState =
-            do_QueryInterface(copyState, &rv);
-        if (NS_FAILED(rv)) return rv;
-        if (mailCopyState->m_undoMsgTxn)
-            msgTxn = do_QueryInterface(mailCopyState->m_undoMsgTxn, &rv);
-    }
-    if (msgTxn)
-        msgTxn->SetCopyResponseUid(aKeyArray, msgIdString);
-    
-    return NS_OK;
+  if (copyState)
+  {
+      nsCOMPtr<nsImapMailCopyState> mailCopyState =
+          do_QueryInterface(copyState, &rv);
+      if (NS_FAILED(rv)) return rv;
+      if (mailCopyState->m_undoMsgTxn)
+          msgTxn = do_QueryInterface(mailCopyState->m_undoMsgTxn, &rv);
+  }
+  if (msgTxn)
+      msgTxn->SetCopyResponseUid(aKeyArray, msgIdString);
+  
+  return NS_OK;
 }    
+
+NS_IMETHODIMP
+nsImapMailFolder::StartMessage(nsIMsgMailNewsUrl * aUrl)
+{
+  nsCOMPtr<nsIImapUrl> imapUrl (do_QueryInterface(aUrl));
+  nsCOMPtr<nsISupports> copyState;
+  NS_ENSURE_TRUE(imapUrl, NS_ERROR_FAILURE);
+  
+  imapUrl->GetCopyState(getter_AddRefs(copyState));
+	if (copyState)
+	{
+		nsCOMPtr <nsICopyMessageStreamListener> listener = do_QueryInterface(copyState);
+		if (listener)
+			listener->StartMessage();
+	}
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapMailFolder::EndMessage(nsIMsgMailNewsUrl * aUrl, nsMsgKey uidOfMessage)
+{
+  nsCOMPtr<nsIImapUrl> imapUrl (do_QueryInterface(aUrl));
+  nsCOMPtr<nsISupports> copyState;
+  NS_ENSURE_TRUE(imapUrl, NS_ERROR_FAILURE);
+  
+  imapUrl->GetCopyState(getter_AddRefs(copyState));
+	if (copyState)
+	{
+		nsCOMPtr <nsICopyMessageStreamListener> listener = do_QueryInterface(copyState);
+		if (listener)
+			listener->EndMessage(uidOfMessage);
+	}
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsImapMailFolder::SetAppendMsgUid(nsIImapProtocol* aProtocol,
                                   nsMsgKey aKey,
-                                  nsISupports* copyState)
+                                  nsIImapUrl * aUrl)
 {
-    nsresult rv = NS_OK;
-    if (copyState)
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsISupports> copyState;
+
+  if (aUrl)
+    aUrl->GetCopyState(getter_AddRefs(copyState));
+  if (copyState)
+  {
+    nsCOMPtr<nsImapMailCopyState> mailCopyState = do_QueryInterface(copyState, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    if (mailCopyState->m_undoMsgTxn) // CopyMessages()
     {
-        nsCOMPtr<nsImapMailCopyState> mailCopyState =
-            do_QueryInterface(copyState, &rv);
-        if (NS_FAILED(rv)) return rv;
-        if (mailCopyState->m_undoMsgTxn) // CopyMessages()
-        {
-            //            nsImapMailCopyState* mailCopyState = 
-            //                (nsImapMailCopyState*) copyState;
-            nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn;
-            msgTxn = do_QueryInterface(mailCopyState->m_undoMsgTxn, &rv);
-            if (NS_SUCCEEDED(rv))
-                msgTxn->AddDstKey(aKey);
-        }
-        else if (mailCopyState->m_listener) // CopyFileMessage();
-                                            // Draft/Template goes here
-            mailCopyState->m_listener->SetMessageKey(aKey);
+        //            nsImapMailCopyState* mailCopyState = 
+        //                (nsImapMailCopyState*) copyState;
+        nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn;
+        msgTxn = do_QueryInterface(mailCopyState->m_undoMsgTxn, &rv);
+        if (NS_SUCCEEDED(rv))
+            msgTxn->AddDstKey(aKey);
     }
-    return NS_OK;
+    else if (mailCopyState->m_listener) // CopyFileMessage();
+                                        // Draft/Template goes here
+       mailCopyState->m_listener->SetMessageKey(aKey);
+  }
+  return NS_OK;
 }    
 
 NS_IMETHODIMP
 nsImapMailFolder::GetMessageId(nsIImapProtocol* aProtocl,
                                nsCString* messageId,
-                               nsISupports* copyState)
+                               nsIImapUrl * aUrl)
 {
-    nsresult rv = NS_OK;
-    if (copyState)
-    {
-        nsCOMPtr<nsImapMailCopyState> mailCopyState =
-            do_QueryInterface(copyState, &rv);
-        if (NS_FAILED(rv)) return rv;
-        if (mailCopyState->m_listener)
-            rv = mailCopyState->m_listener->GetMessageId(messageId);
-    }
-    return rv;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsISupports> copyState;
+
+  if (aUrl)
+    aUrl->GetCopyState(getter_AddRefs(copyState));
+  if (copyState)
+  {
+    nsCOMPtr<nsImapMailCopyState> mailCopyState =
+        do_QueryInterface(copyState, &rv);
+    if (NS_FAILED(rv)) return rv;
+    if (mailCopyState->m_listener)
+        rv = mailCopyState->m_listener->GetMessageId(messageId);
+  }
+  
+  return rv;
 }
     // nsIImapMiscellaneousSink methods
 NS_IMETHODIMP
@@ -3458,10 +3507,14 @@ nsImapMailFolder::ProcessTunnel(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsImapMailFolder::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
-                                        nsISupports* copyState)
+                                        nsIImapUrl * aUrl)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
+    if (!aUrl) return rv;
+    nsCOMPtr<nsISupports> copyState;
+    aUrl->GetCopyState(getter_AddRefs(copyState));
     if (!copyState) return rv;
+
     nsCOMPtr<nsImapMailCopyState> mailCopyState = do_QueryInterface(copyState,
                                                                     &rv);
     if (NS_FAILED(rv)) return rv;

@@ -70,7 +70,9 @@ interface nsIImapMailFolderSink : nsISupports {
     
     void AbortHeaderParseStream(in nsIImapProtocol aProtocol) ;
     
-    void OnlineCopyCompleted(in nsIImapProtocol aProtocol, in ImapOnlineCopyState aCopyState) ;
+    void OnlineCopyCompleted(in nsIImapProtocol aProtocol, in ImapOnlineCopyState aCopyState);
+	void StartMessage(in nsIMsgMailNewsUrl aUrl);
+	void EndMessage(in nsIMsgMailNewsUrl aUrl, in nsMsgKey uidOfMessage);
 	// these two hokey methods are needed so we can try to make sure the imap url is released
 	// on the UI thread. This in turn ensures that the objects the imap url holds on to
 	// are only released / destroyed from the UI thread.

@@ -118,13 +118,13 @@ public:
 		nsImapOnlineMove						= 0x10000021,
 		nsImapOnlineToOfflineCopy				= 0x10000022,
 		nsImapOnlineToOfflineMove				= 0x10000023,
-        nsImapOfflineToOnlineCopy               = 0x10000024,
+    nsImapOfflineToOnlineCopy               = 0x10000024,
 		nsImapOfflineToOnlineMove				= 0x10000025,
 		nsImapBiff								= 0x10000026,
 		nsImapSelectNoopFolder					= 0x10000027,
-        nsImapAppendDraftFromFile               = 0x10000028,
-        nsImapUidExpunge                        = 0x10000029,
-        nsImapSaveMessageToDisk                 = 0x10000030
+    nsImapAppendDraftFromFile               = 0x10000028,
+    nsImapUidExpunge                        = 0x10000029,
+    nsImapSaveMessageToDisk                 = 0x10000030
 	} nsImapAction;
 
 	// Initialization method used to initialize the url...
@@ -137,20 +137,20 @@ public:
 	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog) = 0;
 	NS_IMETHOD SetImapLog(nsIImapLog  * aImapLog) = 0;
 
-    NS_IMETHOD GetImapMailFolderSink(nsIImapMailFolderSink** aImapMailFolderSink) = 0;
-    NS_IMETHOD SetImapMailFolderSink(nsIImapMailFolderSink* aImapMailFolderSink) = 0;
+  NS_IMETHOD GetImapMailFolderSink(nsIImapMailFolderSink** aImapMailFolderSink) = 0;
+  NS_IMETHOD SetImapMailFolderSink(nsIImapMailFolderSink* aImapMailFolderSink) = 0;
 
-    NS_IMETHOD GetImapMessageSink(nsIImapMessageSink** aImapMessageSink) = 0;
-    NS_IMETHOD SetImapMessageSink(nsIImapMessageSink* aImapMessageSink) = 0;
+  NS_IMETHOD GetImapMessageSink(nsIImapMessageSink** aImapMessageSink) = 0;
+  NS_IMETHOD SetImapMessageSink(nsIImapMessageSink* aImapMessageSink) = 0;
 
-    NS_IMETHOD GetImapExtensionSink(nsIImapExtensionSink** aImapExtensionSink) = 0;
-    NS_IMETHOD SetImapExtensionSink(nsIImapExtensionSink* aImapExtensionSink) = 0;
+  NS_IMETHOD GetImapExtensionSink(nsIImapExtensionSink** aImapExtensionSink) = 0;
+  NS_IMETHOD SetImapExtensionSink(nsIImapExtensionSink* aImapExtensionSink) = 0;
 
-    NS_IMETHOD GetImapMiscellaneousSink(nsIImapMiscellaneousSink** aImapMiscellaneousSink) = 0;
-    NS_IMETHOD SetImapMiscellaneousSink(nsIImapMiscellaneousSink* aImapMiscellaneousSink) = 0;
+  NS_IMETHOD GetImapMiscellaneousSink(nsIImapMiscellaneousSink** aImapMiscellaneousSink) = 0;
+  NS_IMETHOD SetImapMiscellaneousSink(nsIImapMiscellaneousSink* aImapMiscellaneousSink) = 0;
 
-    NS_IMETHOD SetImapServerSink(nsIImapServerSink *aImapServerSink) = 0;
-    NS_IMETHOD GetImapServerSink(nsIImapServerSink **aImapServerSink) = 0;
+  NS_IMETHOD SetImapServerSink(nsIImapServerSink *aImapServerSink) = 0;
+  NS_IMETHOD GetImapServerSink(nsIImapServerSink **aImapServerSink) = 0;
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the imap url state
 	///////////////////////////////////////////////////////////////////////////////
@@ -173,21 +173,21 @@ public:
 	NS_IMETHOD	CreateListOfMessageIdsString(nsCString *result) = 0;
 	NS_IMETHOD	MessageIdsAreUids(PRBool *result) = 0;
 	NS_IMETHOD	GetMsgFlags(imapMessageFlagsType *result) = 0;	// kAddMsgFlags or kSubtractMsgFlags only
-    NS_IMETHOD GetChildDiscoveryDepth(PRInt32* discoveryDepth) = 0;
-    NS_IMETHOD GetOnlineSubDirSeparator(char* separator) = 0;
+  NS_IMETHOD GetChildDiscoveryDepth(PRInt32* discoveryDepth) = 0;
+  NS_IMETHOD GetOnlineSubDirSeparator(char* separator) = 0;
 	NS_IMETHOD SetOnlineSubDirSeparator(char onlineDirSeparator) = 0;
 
 	NS_IMETHOD	SetAllowContentChange(PRBool allowContentChange) = 0;
 	NS_IMETHOD  GetAllowContentChange(PRBool *results) = 0;
 
-    NS_IMETHOD SetCopyState(nsISupports* copyState) = 0;
-    NS_IMETHOD GetCopyState(nsISupports** copyState) = 0;
+  NS_IMETHOD SetCopyState(nsISupports* copyState) = 0;
+  NS_IMETHOD GetCopyState(nsISupports** copyState) = 0;
 
-    NS_IMETHOD SetMsgFileSpec(nsIFileSpec* aFileSpec) = 0;
-    NS_IMETHOD GetMsgFileSpec(nsIFileSpec** aFileSpec) = 0;
+  NS_IMETHOD SetMsgFileSpec(nsIFileSpec* aFileSpec) = 0;
+  NS_IMETHOD GetMsgFileSpec(nsIFileSpec** aFileSpec) = 0;
 
-    NS_IMETHOD GetMockChannel(nsIImapMockChannel ** aChannel) = 0;
-    NS_IMETHOD SetMockChannel(nsIImapMockChannel * aChannel) = 0;
+  NS_IMETHOD GetMockChannel(nsIImapMockChannel ** aChannel) = 0;
+  NS_IMETHOD SetMockChannel(nsIImapMockChannel * aChannel) = 0;
 
 	NS_IMETHOD AddChannelToLoadGroup() = 0;
 	NS_IMETHOD RemoveChannel(nsresult status) = 0;

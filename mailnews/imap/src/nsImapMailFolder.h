@@ -191,6 +191,7 @@ public:
   // nsIImapExtensionSink methods
   NS_IMETHOD ClearFolderRights(nsIImapProtocol* aProtocol,
                                nsIMAPACLRightsInfo* aclRights);
+
   NS_IMETHOD AddFolderRights(nsIImapProtocol* aProtocol,
                              nsIMAPACLRightsInfo* aclRights);
   NS_IMETHOD RefreshFolderRights(nsIImapProtocol* aProtocol,
@@ -200,13 +201,13 @@ public:
   NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                 nsMsgKeyArray* keyArray,
                                 const char* msgIdString,
-                                nsISupports* copyState);
+                                nsIImapUrl * aUrl);
   NS_IMETHOD SetAppendMsgUid(nsIImapProtocol* aProtocol,
                              nsMsgKey aKey,
-                             nsISupports* copyState);
+                             nsIImapUrl * aUrl);
   NS_IMETHOD GetMessageId(nsIImapProtocol* aProtocol,
                           nsCString* messageId,
-                          nsISupports* copyState);
+                          nsIImapUrl * aUrl);
     
     // nsIImapMiscellaneousSink methods
 	NS_IMETHOD AddSearchResult(nsIImapProtocol* aProtocol, 
@@ -234,8 +235,9 @@ public:
                                msg_line_info* aInfo);
 	NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
                              TunnelInfo *aInfo);
+
   NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocol,
-                                   nsISupports* copyState);
+                                   nsIImapUrl * aUrl);
   NS_IMETHOD SetUrlState(nsIImapProtocol* aProtocol,
                          nsIMsgMailNewsUrl* aUrl,
                          PRBool isRunning,

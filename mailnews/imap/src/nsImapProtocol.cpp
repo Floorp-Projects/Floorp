@@ -148,57 +148,13 @@ void TLineDownloadCache::CacheLine(const char *line, PRUint32 uid)
 NS_IMPL_THREADSAFE_ADDREF(nsImapProtocol)
 NS_IMPL_THREADSAFE_RELEASE(nsImapProtocol)
 
-NS_IMETHODIMP nsImapProtocol::QueryInterface(const nsIID &aIID, void** aInstancePtr)
-{                                                                        
-  if (NULL == aInstancePtr)
-    return NS_ERROR_NULL_POINTER;
-        
-  *aInstancePtr = NULL;
-                                                                         
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID); 
-  static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID); 
-
-  if (aIID.Equals(NS_GET_IID(nsIRunnable)))
-  {
-    *aInstancePtr = (nsIRunnable *) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  if (aIID.Equals(NS_GET_IID(nsIMsgLogonRedirector)))
-  {
-    *aInstancePtr = (nsIMsgLogonRedirector *) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-
-  if (aIID.Equals(NS_GET_IID(nsIStreamListener)) ||
-      aIID.Equals(NS_GET_IID(nsIStreamObserver))) 
-  {
-    *aInstancePtr = (nsIStreamListener *) this;                                                   
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIImapProtocol)))
-  {
-    *aInstancePtr = (nsIImapProtocol *) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) 
-  {
-    *aInstancePtr = (void*) ((nsISupports*) (nsIImapProtocol *) this);
-    NS_ADDREF_THIS();
-    return NS_OK;                                                        
-  }                                                                      
-  
-  if (aIID.Equals(kIsThreadsafeIID)) 
-  {
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_INTERFACE_MAP_BEGIN(nsImapProtocol)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIImapProtocol)
+   NS_INTERFACE_MAP_ENTRY(nsIRunnable)
+   NS_INTERFACE_MAP_ENTRY(nsIImapProtocol)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+NS_INTERFACE_MAP_END_THREADSAFE
 
 static PRInt32 gTooFastTime = 2;
 static PRInt32 gIdealTime = 4;
@@ -1191,25 +1147,16 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 
   m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
   PseudoInterrupt(PR_FALSE);  // clear this, because we must be done interrupting?
-  nsCOMPtr<nsISupports> copyState;
-
-  if (m_runningUrl)
-    rv = m_runningUrl->GetCopyState(getter_AddRefs(copyState));
   if (NS_SUCCEEDED(rv) && GetConnectionStatus() >= 0 && GetServerStateParser().LastCommandSuccessful() 
-	&& m_imapMiscellaneousSink && copyState)
+	&& m_imapMiscellaneousSink && m_runningUrl)
   {
-      m_imapMiscellaneousSink->CopyNextStreamMessage(this, copyState);
+      m_imapMiscellaneousSink->CopyNextStreamMessage(this, m_runningUrl);
       WaitForFEEventCompletion();
   }
-
-  // removing the channel from the current url needs to be done on the UI thread
-  // because it triggers a set of events that perculate back to JS that require it 
-  // being on the UI thread....so call a proxy instead of removing the channel ourselves...
 
   // this is so hokey...we MUST clear any local references to the url 
   // BEFORE calling ReleaseUrlState
   mailnewsurl = nsnull;
-  copyState = nsnull;   
 
   // release the url as we are done with it...
   ReleaseUrlState();
@@ -2191,22 +2138,12 @@ nsresult nsImapProtocol::BeginMessageDownLoad(
            rv = m_imapMessageSink->SetupMsgWriteStream(nativePath, addDummyEnvelope);
 	       }
 	}
-	if (m_imapMailFolderSink)
+	if (m_imapMailFolderSink && m_runningUrl)
 	{
-		nsCOMPtr<nsISupports> copyState;
-
-        if (m_runningUrl)
-		{
-            m_runningUrl->GetCopyState(getter_AddRefs(copyState));
-			if (copyState)
-			{
-				nsCOMPtr <nsICopyMessageStreamListener> listener = do_QueryInterface(copyState);
-				if (listener)
-					listener->StartMessage();
-			}
-		}
-	}
-
+    nsCOMPtr<nsIMsgMailNewsUrl> mailurl = do_QueryInterface(m_runningUrl);
+    m_imapMailFolderSink->StartMessage(mailurl);
+  }
+  
   }
   else
     HandleMemoryFailure();
@@ -2964,19 +2901,12 @@ void nsImapProtocol::NormalMessageEndDownload()
     // need to know if we're downloading for display or not.
     if (m_imapMessageSink)
       m_imapMessageSink->NormalEndMsgWriteStream(m_downloadLineCache.CurrentUID());
-	nsCOMPtr<nsISupports> copyState;
-
-    if (m_runningUrl)
-	{
-        m_runningUrl->GetCopyState(getter_AddRefs(copyState));
-		if (copyState)
-		{
-			nsCOMPtr <nsICopyMessageStreamListener> listener = do_QueryInterface(copyState);
-			if (listener)
-				listener->EndMessage(m_downloadLineCache.CurrentUID());
-		}
-	}
-
+  
+    if (m_runningUrl && m_imapMailFolderSink)
+    {
+      nsCOMPtr<nsIMsgMailNewsUrl> mailUrl (do_QueryInterface(m_runningUrl));
+      m_imapMailFolderSink->EndMessage(mailUrl, m_downloadLineCache.CurrentUID());
+    }
   }
 }
 
@@ -3647,15 +3577,12 @@ void nsImapProtocol::AddFolderRightsForUser(const char *mailboxName, const char 
 void nsImapProtocol::SetCopyResponseUid(nsMsgKeyArray* aKeyArray,
                                         const char *msgIdString)
 {
-    if (m_imapExtensionSink)
-    {
-        nsCOMPtr<nsISupports> copyState;
-        if (m_runningUrl)
-            m_runningUrl->GetCopyState(getter_AddRefs(copyState));
-        m_imapExtensionSink->SetCopyResponseUid(this,aKeyArray, msgIdString,
-                                                copyState);
-        WaitForFEEventCompletion();
-    }
+  if (m_imapExtensionSink)
+  {
+    m_imapExtensionSink->SetCopyResponseUid(this,aKeyArray, msgIdString,
+                                            m_runningUrl);
+    WaitForFEEventCompletion();
+  }
 }
 
 void nsImapProtocol::CommitNamespacesForHostEvent()
@@ -4556,11 +4483,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
             if (GetServerStateParser().LastCommandSuccessful() &&
                 imapAction == nsIImapUrl::nsImapAppendDraftFromFile)
             {
-                nsCOMPtr<nsISupports> copyState;
-                if(m_runningUrl)
-                    m_runningUrl->GetCopyState(getter_AddRefs(copyState));
-
-                if (GetServerStateParser().GetCapabilityFlag() &
+              if (GetServerStateParser().GetCapabilityFlag() &
                     kUidplusCapability)
                 {
                     nsMsgKey newKey =
@@ -4568,7 +4491,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
                     if (m_imapExtensionSink)
                     {
                         m_imapExtensionSink->SetAppendMsgUid(this, newKey,
-                                                             copyState);
+                                                             m_runningUrl);
                         WaitForFEEventCompletion();
                     }
                     nsCString oldMsgId;
@@ -4586,7 +4509,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
                 { // *** code me to search for the newly appended message
                     nsCString messageId;
                     rv = m_imapExtensionSink->GetMessageId(this, &messageId,
-                                                       copyState);
+                                                       m_runningUrl);
                     WaitForFEEventCompletion();
                     if (NS_SUCCEEDED(rv) && messageId.Length() > 0 &&
                         GetServerStateParser().LastCommandSuccessful())
@@ -4599,13 +4522,13 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
             {
                             nsMsgKey newkey = nsMsgKey_None;
               nsImapSearchResultIterator *searchResult = 
-                GetServerStateParser().CreateSearchResultIterator();
+              GetServerStateParser().CreateSearchResultIterator();
               newkey = searchResult->GetNextMessageNumber();
               delete searchResult;
                             if (newkey != nsMsgKey_None)
                             {
                                 m_imapExtensionSink->SetAppendMsgUid
-                                    (this, newkey, copyState);
+                                    (this, newkey, m_runningUrl);
                                 WaitForFEEventCompletion();
                             }
                         }
@@ -6617,12 +6540,14 @@ NS_IMETHODIMP nsImapMockChannel::AsyncWrite(nsIInputStream *fromStream, PRUint32
 
 NS_IMETHODIMP nsImapMockChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 {
-    *aLoadAttributes = nsIChannel::LOAD_NORMAL;
-    return NS_OK;
+  *aLoadAttributes = nsIChannel::LOAD_NORMAL;
+  // *aLoadAttributes = mLoadAttributes;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapMockChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
+  // mLoadAttributes = aLoadAttributes;
   return NS_OK;       // don't fail when trying to set this
 }
 

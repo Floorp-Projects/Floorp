@@ -589,6 +589,7 @@ protected:
   // because the context is already the uri...
   nsISupports * m_channelContext;
 	PRBool	m_cancelled;
+  nsLoadFlags mLoadAttributes;
 };
 
 #endif  // nsImapProtocol_h___

@@ -28,6 +28,8 @@
 #include "nsIImapProtocol.h"
 #include "nsMsgKeyArray.h"
 
+class nsIImapUrl;
+
 /* 44ede08e-e77f-11d2-af83-001083002da8 */
 
 #define NS_IIMAPEXTENSIONSINK_IID \
@@ -54,13 +56,13 @@ public:
   NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                 nsMsgKeyArray* keyArray, 
                                 const char *msgIdString,
-                                nsISupports* copyState) = 0;
+                                nsIImapUrl * aUrl) = 0;
   NS_IMETHOD SetAppendMsgUid(nsIImapProtocol* aProtocol,
                              nsMsgKey newKey,
-                             nsISupports* copyState) = 0;
+                             nsIImapUrl * aUrl) = 0;
   NS_IMETHOD GetMessageId(nsIImapProtocol* aProtocol,
                           nsCString* messageId,
-                          nsISupports* copyState) = 0;
+                          nsIImapUrl * aUrl) = 0;
 };
 
 #endif

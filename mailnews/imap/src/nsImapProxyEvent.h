@@ -34,6 +34,7 @@
 #include "nsIImapMiscellaneousSink.h"
 #include "nsIImapIncomingServer.h"
 #include "nsImapCore.h"
+#include "nsIImapUrl.h"
 
 #include "nsCOMPtr.h"
 class nsImapProxyBase
@@ -90,13 +91,13 @@ public:
     NS_IMETHOD SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                   nsMsgKeyArray* aKeyArray,
                                   const char* msgIdString,
-                                  nsISupports* copyState);
+                                  nsIImapUrl * aUrl);
     NS_IMETHOD SetAppendMsgUid(nsIImapProtocol* aProtocol,
                                nsMsgKey aKey,
-                               nsISupports* copyState);
+                               nsIImapUrl * aUrl);
     NS_IMETHOD GetMessageId(nsIImapProtocol* aProtocol,
                             nsCString* messageId,
-                            nsISupports* copyState);
+                            nsIImapUrl * aUrl);
     
     nsIImapExtensionSink* m_realImapExtensionSink;
 };
@@ -130,7 +131,7 @@ public:
                                     uid_validity_info* aInfo);
     NS_IMETHOD LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
                                      PRUint32 uidValidity);
-	NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
+	  NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
                               PRUint32 statusMsgId, const char *extraInfo);
     NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
                                ProgressInfo* aInfo);
@@ -139,7 +140,7 @@ public:
     NS_IMETHOD ProcessTunnel(nsIImapProtocol* aProtocol,
                              TunnelInfo *aInfo);
     NS_IMETHOD CopyNextStreamMessage(nsIImapProtocol* aProtocl,
-                                     nsISupports* copyState);
+                                     nsIImapUrl * aUrl);
 
     NS_IMETHOD SetUrlState(nsIImapProtocol* aProtocol,
                            nsIMsgMailNewsUrl* aUrl,
@@ -224,32 +225,32 @@ struct SetCopyResponseUidProxyEvent : nsImapExtensionSinkProxyEvent
     SetCopyResponseUidProxyEvent(nsImapExtensionSinkProxy* aProxy,
                                  nsMsgKeyArray* aKeyArray, 
                                  const char* msgIdString,
-                                 nsISupports* copyState);
+                                 nsIImapUrl * aUr);
     virtual ~SetCopyResponseUidProxyEvent();
     NS_IMETHOD HandleEvent();
     nsMsgKeyArray m_copyKeyArray;
     nsCString m_msgIdString;
-    nsCOMPtr<nsISupports> m_copyState;
+    nsCOMPtr<nsIImapUrl> m_Url;;
 };
 
 struct SetAppendMsgUidProxyEvent : nsImapExtensionSinkProxyEvent
 {
     SetAppendMsgUidProxyEvent(nsImapExtensionSinkProxy* aProxy,
-                              nsMsgKey aKey, nsISupports* copyState);
+                              nsMsgKey aKey, nsIImapUrl * aUrl);
     virtual ~SetAppendMsgUidProxyEvent();
     NS_IMETHOD HandleEvent();
     nsMsgKey m_key;
-    nsCOMPtr<nsISupports> m_copyState;
+    nsCOMPtr<nsIImapUrl> m_Url;
 };
 
 struct GetMessageIdProxyEvent : nsImapExtensionSinkProxyEvent
 {
     GetMessageIdProxyEvent(nsImapExtensionSinkProxy* aProxy,
-                           nsCString* messageId, nsISupports* copyState);
+                           nsCString* messageId, nsIImapUrl * aUrl);
     virtual ~GetMessageIdProxyEvent();
     NS_IMETHOD HandleEvent();
     nsCString* m_messageId;
-    nsCOMPtr<nsISupports> m_copyState;
+    nsCOMPtr<nsIImapUrl> m_Url;
 };
 
 struct nsImapMiscellaneousSinkProxyEvent : public nsImapEvent
@@ -379,10 +380,10 @@ struct ProcessTunnelProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 struct CopyNextStreamMessageProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
     CopyNextStreamMessageProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                                    nsISupports* copyState);
+                                    nsIImapUrl * aUrl);
     virtual ~CopyNextStreamMessageProxyEvent();
     NS_IMETHOD HandleEvent();
-    nsCOMPtr<nsISupports> m_copyState;
+    nsCOMPtr<nsIImapUrl> m_Url;
 };
 
 struct SetUrlStateProxyEvent : public nsImapMiscellaneousSinkProxyEvent
