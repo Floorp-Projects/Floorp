@@ -87,6 +87,7 @@ function SetupHTMLEditorCommands()
   gHTMLEditorCommandManager.registerCommand("cmd_FinishHTMLSource",   nsFinishHTMLSource);
   gHTMLEditorCommandManager.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
   gHTMLEditorCommandManager.registerCommand("cmd_smiley",             nsSetSmiley);
+  gHTMLEditorCommandManager.registerCommand("cmd_buildRecentPagesMenu", nsBuildRecentPagesMenu);
 }
 
 function SetupComposerWindowCommands()
@@ -135,27 +136,30 @@ function SetupComposerWindowCommands()
   }
 
   // File-related commands
-  commandManager.registerCommand("cmd_newEditor",     nsNewEditorCommand);
-  commandManager.registerCommand("cmd_open",          nsOpenCommand);
-  commandManager.registerCommand("cmd_save",          nsSaveCommand);
-  commandManager.registerCommand("cmd_saveAs",        nsSaveAsCommand);
-  commandManager.registerCommand("cmd_saveAsCharset", nsSaveAsCharsetCommand);
-  commandManager.registerCommand("cmd_revert",        nsRevertCommand);
-  commandManager.registerCommand("cmd_openRemote",    nsOpenRemoteCommand);
-  commandManager.registerCommand("cmd_preview",       nsPreviewCommand);
-  commandManager.registerCommand("cmd_editSendPage",  nsSendPageCommand);
-  commandManager.registerCommand("cmd_quit",          nsQuitCommand);
-  commandManager.registerCommand("cmd_close",         nsCloseCommand);
-  commandManager.registerCommand("cmd_preferences",   nsPreferencesCommand);
+  commandManager.registerCommand("cmd_newEditor",      nsNewEditorCommand);
+  commandManager.registerCommand("cmd_open",           nsOpenCommand);
+  commandManager.registerCommand("cmd_save",           nsSaveCommand);
+  commandManager.registerCommand("cmd_saveAs",         nsSaveAsCommand);
+  commandManager.registerCommand("cmd_exportToText",   nsExportToTextCommand);
+  commandManager.registerCommand("cmd_saveAsCharset",  nsSaveAsCharsetCommand);
+  commandManager.registerCommand("cmd_revert",         nsRevertCommand);
+  commandManager.registerCommand("cmd_openRemote",     nsOpenRemoteCommand);
+  commandManager.registerCommand("cmd_preview",        nsPreviewCommand);
+  commandManager.registerCommand("cmd_editSendPage",   nsSendPageCommand);
+  commandManager.registerCommand("cmd_quit",           nsQuitCommand);
+  commandManager.registerCommand("cmd_close",          nsCloseCommand);
+  commandManager.registerCommand("cmd_preferences",    nsPreferencesCommand);
 
   // Edit Mode commands
-  commandManager.registerCommand("cmd_NormalMode",         nsNormalModeCommand);
-  commandManager.registerCommand("cmd_AllTagsMode",        nsAllTagsModeCommand);
-  commandManager.registerCommand("cmd_HTMLSourceMode",     nsHTMLSourceModeCommand);
-  commandManager.registerCommand("cmd_PreviewMode",        nsPreviewModeCommand);
-  commandManager.registerCommand("cmd_FinishHTMLSource",   nsFinishHTMLSource);
-  commandManager.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
-
+  if (window.editorShell.editorType == "html")
+  {
+    commandManager.registerCommand("cmd_NormalMode",         nsNormalModeCommand);
+    commandManager.registerCommand("cmd_AllTagsMode",        nsAllTagsModeCommand);
+    commandManager.registerCommand("cmd_HTMLSourceMode",     nsHTMLSourceModeCommand);
+    commandManager.registerCommand("cmd_PreviewMode",        nsPreviewModeCommand);
+    commandManager.registerCommand("cmd_FinishHTMLSource",   nsFinishHTMLSource);
+    commandManager.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
+  }
 
   gComposerWindowCommandManager.insertControllerAt(0, editorController);
 }
@@ -282,7 +286,7 @@ var nsSaveCommand =
     {
       FinishHTMLSource(); // In editor.js
       var doSaveAs = window.editorShell.editorDocument.location == "about:blank";
-      return window.editorShell.saveDocument(doSaveAs, false);
+      return window.editorShell.saveDocument(doSaveAs, false, "text/html");
     }
     return false;
   }
@@ -300,7 +304,25 @@ var nsSaveAsCommand =
     if (window.editorShell)
     {
       FinishHTMLSource();
-      return window.editorShell.saveDocument(true, false);
+      return window.editorShell.saveDocument(true, false, "text/html");
+    }
+    return false;
+  }
+}
+
+var nsExportToTextCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable);
+  },
+
+  doCommand: function(aCommand)
+  {
+    if (window.editorShell)
+    {
+      FinishHTMLSource();
+      return window.editorShell.saveDocument(true, true, "text/plain");
     }
     return false;
   }
@@ -319,7 +341,7 @@ var nsSaveAsCharsetCommand =
     window.openDialog("chrome://editor/content/EditorSaveAsCharset.xul","_blank", "chrome,close,titlebar,modal")
     if (window.ok)
     {
-      window.ok = window.editorShell.saveDocument(true, false);
+      window.ok = window.editorShell.saveDocument(true, false, "text/html");
     }
     window._content.focus();
     return window.ok;
@@ -884,7 +906,6 @@ var nsSetSmiley =
   {
 	
     var commandNode = document.getElementById(aCommand);
-
     var smileyCode = commandNode.getAttribute("state");
 
     var strSml;
@@ -906,7 +927,6 @@ var nsSetSmiley =
         break;
         default:	strSml="";
         break;
-
     }
 
     try 
@@ -1449,5 +1469,18 @@ var nsCancelHTMLSource =
   {
     // In editor.js
     CancelHTMLSource();
+  }
+};
+
+var nsBuildRecentPagesMenu =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return true;
+  },
+  doCommand: function(aCommand)
+  {
+    // In editor.js. True means save menu to prefs
+    BuildRecentMenu(true);
   }
 };

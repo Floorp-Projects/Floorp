@@ -47,6 +47,8 @@
 <!ENTITY filesave.keybinding "s">
 <!ENTITY saveAsCmd.label "Save As...">
 <!ENTITY filesaveas.accesskey "a">
+<!ENTITY exportToTextCmd.label "Export to Text...">
+<!ENTITY fileexporttotext.accesskey "x">
 <!ENTITY saveAsCharsetCmd.label "Save As Charset...">
 <!ENTITY filesaveascharset.accesskey "h">
 <!ENTITY previewCmd.label "Browse Page">
@@ -248,7 +250,7 @@
 <!ENTITY insertchars.accesskey "c">
 <!ENTITY insertBreakCmd.label "Line Break">
 <!ENTITY insertbreak.accesskey "b">
-<!ENTITY insertBreakAllCmd.label "Break below Image(s)">
+<!ENTITY insertBreakAllCmd.label "Break Below Image(s)">
 <!ENTITY insertbreakall.accesskey "k">
 
 <!-- Used just in context popup. -->

@@ -337,23 +337,6 @@ function FindAndSelectEditorWindowWithURL(urlToMatch)
   return false;
 }
 
-function editorSendPage()
-{
-  var docModified = window.editorShell.documentModified;
-  var pageUrl = window.editorShell.editorDocument.location;
-  if (pageUrl != "about:blank" && !docModified)
-  {
-    var pageTitle = window.editorShell.editorDocument.title;
-    window.openDialog("chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
-                        "chrome,all,dialog=no", "attachment='" + pageUrl.replace(/\,/g, "%2C") + "',body='" + pageUrl +
-                        "',subject='" + pageTitle + "',bodyislink=true");
-  } 
-  else if (CheckAndSaveDocument(GetString("SendPageReason")), DocumentHasBeenSaved())
-    editorSendPage();
-
-  window._content.focus();
-}
-
 function DocumentHasBeenSaved()
 {
   var fileurl = "";
@@ -410,7 +393,7 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
    if (result.value == 0) 
    {
      // Save
-     var success = window.editorShell.saveDocument(false, false);
+     var success = window.editorShell.saveDocument(false, false, "text/html");
      return success;
    }
    
@@ -671,11 +654,11 @@ function initFontFaceMenu(menuPopup)
     var fontWasFound = anyHas.value;
 
     // Skip over default, TT, and separator
-    for (var i = 3; i < menuPopup.childNodes.length; i++)
+    for (var i = 3; i < children.length; i++)
     {
       var menuItem = children[i];
       var faceType = menuItem.getAttribute("data");
-      
+
       if (faceType)
       {
         editorShell.GetTextProperty("font", "face", faceType, firstHas, anyHas, allHas);
@@ -1030,6 +1013,31 @@ function SetEditMode(mode)
 
     if (mode == DisplayModeSource)
     {
+      // Display the DOCTYPE as a non-editable string above edit area
+      var domdoc;
+      try { domdoc = window.editorShell.editorDocument; } catch (e) { dump( e + "\n");}
+      if (domdoc)
+      {
+        var doctypeNode = document.getElementById("doctype-text");
+        var dt = domdoc.doctype;
+        if (doctypeNode)
+        {
+          if (dt)
+          {
+            doctypeNode.removeAttribute("collapsed");
+            var doctypeText = "<!DOCTYPE " + domdoc.doctype.name;
+            if (dt.publicId)
+              doctypeText += " PUBLIC \"" + domdoc.doctype.publicId;
+            if (dt.systemId)
+              doctypeText += " "+"\"" + dt.systemId;
+            doctypeText += "\">"
+            doctypeNode.setAttribute("value", doctypeText);
+          }
+          else
+            doctypeNode.setAttribute("collapsed", "true");
+        }
+      }
+
       // We can't monitor changes while in HTML Source, 
       //   so the nsSaveCommand::isCommandEnabled() will always return true 
       //   when in HTML Source mode
@@ -1328,6 +1336,7 @@ function BuildRecentMenu(savePrefs)
   var menuIndex = 1;
   var arrayIndex = 0;
   var i;
+  var disableMenu = true;
 
   if(!newDoc)
   {
@@ -1350,6 +1359,7 @@ function BuildRecentMenu(savePrefs)
       // Build the menu
       AppendRecentMenuitem(popup, title, url, menuIndex);
       menuIndex++;
+      disableMenu = false;
 
       // Save in array for prefs
       if (savePrefs && arrayIndex < historyCount)
@@ -1377,6 +1387,9 @@ function BuildRecentMenu(savePrefs)
   // Force saving to file so next file opened finds these values
   if (savePrefs)
     gPrefs.SavePrefFile();
+
+  // Disable menu item if no entries
+  DisableItem("menu_RecentFiles", disableMenu);
 }
 
 function AppendRecentMenuitem(menupopup, title, url, menuIndex)
@@ -1395,10 +1408,16 @@ function AppendRecentMenuitem(menupopup, title, url, menuIndex)
         accessKey = " ";
 
       var itemString = accessKey+" ";
+
+      // Show "title [url]" or just the URL
       if (title)
-        itemString += title;
-      else
-        itemString += url;
+      {
+       itemString += title;
+       itemString += " [";
+      }
+      itemString += url;
+      if (title)
+        itemString += "]";
 
       menuItem.setAttribute("value", itemString);
       menuItem.setAttribute("data", url);
@@ -2178,6 +2197,7 @@ function IsSelectionInOneCell()
 function EditorInsertOrEditTable(insertAllowed)
 {
   if (IsInTable()) {
+    // Edit properties of existing table
     window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "","TablePanel");
     window._content.focus();
   } else if(insertAllowed) {
