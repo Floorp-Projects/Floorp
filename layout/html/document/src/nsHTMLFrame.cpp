@@ -517,9 +517,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   }
 
   float t2p = aPresContext.GetTwipsToPixels();
-  nsIViewManager* viewMan = nsnull;
   nsIPresShell *presShell = aPresContext.GetShell();     
-  viewMan = presShell->GetViewManager();  
   NS_RELEASE(presShell);
 
   // create, init, set the parent of the view
@@ -527,7 +525,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   rv = NSRepository::CreateInstance(kCViewCID, nsnull, kIViewIID,
                                         (void **)&view);
   if (NS_OK != rv) {
-    NS_ASSERTION(0, "Could not create view for nsHTMLFrame"); 
+    NS_ASSERTION(0, "Could not create view for nsHTMLFrame");
     return rv;
   }
 
@@ -536,6 +534,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   GetOffsetFromView(origin, parView);  
   nsRect viewBounds(origin.x, origin.y, aSize.width, aSize.height);
 
+  nsIViewManager* viewMan = presShell->GetViewManager();  
   rv = view->Init(viewMan, viewBounds, parView, &kCChildCID);
   viewMan->InsertChild(parView, view, 0);
   NS_RELEASE(viewMan);
