@@ -117,11 +117,34 @@ nsresult nsAbLDAPDirectory::InitiateConnection ()
     // turn moz-abldapdirectory://ldap_2.servers.nscpphonebook into -> "ldap_2.servers.nscpphonebook.uri"
     nsXPIDLCString URI;
     rv = prefs->CopyCharPref(prefName.get(), getter_Copies(URI));
+    if (NS_FAILED(rv))
+    {
+        /*
+         * A recent change in Mozilla now means that the LDAP Address Book
+         * RDF Resource URI is based on the unique preference name value i.e.  
+         * [moz-abldapdirectory://prefName]
+         * Prior to this valid change it was based on the actual uri i.e. 
+         * [moz-abldapdirectory://host:port/basedn]
+         * Basing the resource on the prefName allows these attributes to 
+         * change. 
+         *
+         * But the uri value was also the means by which third-party
+         * products could integrate with Mozilla's LDAP Address Books without 
+         * necessarily having an entry in the preferences file or more importantly
+         * needing to be able to change the preferences entries. Thus to set the 
+         * URI Spec now, it is only necessary to read the uri pref entry, while in the case
+         * where it is not a preference, we need to replace the "moz-abldapdirectory".
+        */
+        nsCAutoString tempLDAPURL(mURINoQuery);
+        tempLDAPURL.ReplaceSubstring("moz-abldapdirectory:", "ldap:");
+        rv = mURL->SetSpec(tempLDAPURL);
+    }
+    else
+    {
+        rv = mURL->SetSpec(URI);
+    }
     NS_ENSURE_SUCCESS(rv,rv);
     
-    rv = mURL->SetSpec(URI);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     mConnection = do_CreateInstance(NS_LDAPCONNECTION_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
