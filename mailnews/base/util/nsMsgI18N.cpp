@@ -431,54 +431,6 @@ PRBool nsMsgI18Nmultibyte_charset(const char *charset)
   return result;
 }
 
-// Check 7bit in a given buffer.
-// This is expensive (both memory and performance).
-// The check would be very simple if applied to an unicode text (e.g. nsString or utf-8).
-// Possible optimazaion is to search ESC(0x1B) in case of iso-2022-jp and iso-2022-kr.
-// Or convert and check line by line.
-PRBool nsMsgI18N7bit_data_part(const char *charset, const char *inString, const PRUint32 size)
-{
-  nsAutoString aCharset; aCharset.AssignWithConversion(charset);
-  nsresult res;
-  PRBool result = PR_TRUE;
-  
-  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(kCharsetConverterManagerCID, &res);
-
-  if (NS_SUCCEEDED(res)) {
-    nsIUnicodeDecoder* decoder = nsnull;
-
-    // get an unicode converter
-    res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
-    if(NS_SUCCEEDED(res)) {
-      char *currentSrcPtr = NS_CONST_CAST(char *, inString);
-      PRUint32 consumedLen = 0;
-      PRUnichar unicharBuff[512];
-      PRInt32 srcLen;
-      PRInt32 unicharLength;
-
-      // convert to unicode
-      while (consumedLen < size) {
-        srcLen = ((size - consumedLen) >= 512) ? 512 : (size - consumedLen);  // buffer len or remaining src len
-        unicharLength = 512;
-        res = decoder->Convert(currentSrcPtr, &srcLen, unicharBuff, &unicharLength);
-        // break, if error or the input string not consumed
-        if (NS_FAILED(res) || !srcLen)
-          break;
-        for (PRInt32 i = 0; i < unicharLength; i++) {
-          if (unicharBuff[i] > 127) {
-            result = PR_FALSE;
-            break;
-          }
-        }
-        currentSrcPtr += srcLen;
-        consumedLen = currentSrcPtr - inString; // src length used so far
-      }
-      NS_IF_RELEASE(decoder);
-    }    
-  }
-
-  return result;
-}
 
 PRBool nsMsgI18Ncheck_data_in_charset_range(const char *charset, const PRUnichar* inString, char **fallbackCharset)
 {
@@ -609,18 +561,24 @@ nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString* outString)
 }
 
 nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, 
-                                const PRUnichar* inString, char** outString, char **fallbackCharset)
+                                const PRUnichar* inString, char** outString, 
+                                char **fallbackCharset, PRBool *isAsciiOnly)
 {
-  NS_ASSERTION(contentType, "null ptr- contentType");
-  NS_ASSERTION(charset, "null ptr- charset");
-  NS_ASSERTION(outString, "null ptr- outString");
-  if(!contentType || !charset || !inString || !outString)
-    return NS_ERROR_NULL_POINTER;
-  if (0 == *inString) {
-    *outString = nsCRT::strdup("");
-    return (NULL != *outString) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  NS_ENSURE_ARG_POINTER(contentType);
+  NS_ENSURE_ARG_POINTER(charset);
+  NS_ENSURE_ARG_POINTER(inString);
+  NS_ENSURE_ARG_POINTER(outString);
+
+  *outString = nsnull;
+
+  if (nsCRT::IsAscii(inString)) {
+    if (isAsciiOnly)
+      *isAsciiOnly = PR_TRUE;
+    *outString = nsCRT::strdup(NS_LossyConvertUCS2toASCII(inString).get());
+    return (nsnull != *outString) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
   }
-  *outString = NULL;
+  if (isAsciiOnly)
+    *isAsciiOnly = PR_FALSE;
 
   PRBool bTEXT_HTML = PR_FALSE;
   nsresult res;
@@ -726,6 +684,11 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset,
     if (NS_FAILED(conv->GetCharset(fallbackCharset)))
       *fallbackCharset = nsnull;
   }
+  // In case of HTML, non ASCII may be encoded as CER, NCR.
+  // Exclude stateful charset which is 7 bit but not ASCII only.
+  else if (isAsciiOnly && bTEXT_HTML && *outString &&
+           !nsMsgI18Nstateful_charset(NS_LossyConvertUCS2toASCII(charsetName).get()))
+    *isAsciiOnly = nsCRT::IsAscii(*outString);
 
   return res;
 }

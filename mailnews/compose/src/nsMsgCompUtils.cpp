@@ -724,6 +724,7 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
                   PRBool /*digest_p*/,
                   nsMsgAttachmentHandler * /*ma*/,
                   const char *charset,
+                  PRBool bodyIsAsciiOnly,
                   const char *content_id, 
                   PRBool      aBodyDocument)
 {
@@ -785,7 +786,7 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
     should definitely do it for Latin1. */
     if (encoding &&
                   !PL_strcasecmp (encoding, "7bit") &&
-                  !PL_strcasecmp (charset, "iso-8859-1"))
+                  bodyIsAsciiOnly)
       PL_strcpy (charset_label, "us-ascii");
     
     // If charset is multibyte then no charset to be specified (apply base64 instead).

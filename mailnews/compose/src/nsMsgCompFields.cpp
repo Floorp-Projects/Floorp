@@ -66,6 +66,7 @@ nsMsgCompFields::nsMsgCompFields()
   m_useMultipartAlternative = PR_FALSE;
   m_uuEncodeAttachments = PR_FALSE;
   m_returnReceipt = PR_FALSE;
+  m_bodyIsAsciiOnly = PR_FALSE;
 
   nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
   if (prefs) 
@@ -452,6 +453,20 @@ NS_IMETHODIMP nsMsgCompFields::SetUuEncodeAttachments(PRBool value)
 NS_IMETHODIMP nsMsgCompFields::GetUuEncodeAttachments(PRBool *_retval)
 {
   *_retval = m_uuEncodeAttachments;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgCompFields::SetBodyIsAsciiOnly(PRBool value)
+{
+  m_bodyIsAsciiOnly = value;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgCompFields::GetBodyIsAsciiOnly(PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  *_retval = m_bodyIsAsciiOnly;
   return NS_OK;
 }
 

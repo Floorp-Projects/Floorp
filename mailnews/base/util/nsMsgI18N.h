@@ -75,16 +75,6 @@ NS_MSG_BASE PRBool    nsMsgI18Nstateful_charset(const char *charset);
 NS_MSG_BASE PRBool nsMsgI18Nmultibyte_charset(const char *charset);
 
 /**
- * Check the input string contains 7 bit data only.
- *
- * @param charset     [IN] Charset name of the input string.
- * @param string      [IN] Input string to be examined.
- * @param size        [IN] Size of the input string.
- * @return            True if 7 bit only.
- */
-NS_MSG_BASE PRBool    nsMsgI18N7bit_data_part(const char *charset, const char *string, const PRUint32 size);
-
-/**
  * Check the input (unicode) string is in a range of the given charset after the conversion.
  * Note, do not use this for large string (e.g. message body) since this actually applies the conversion to the buffer.
  *
@@ -197,10 +187,14 @@ NS_MSG_BASE nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString
  *                         null if fallback charset is not needed.
  *                         Otherwise, a fallback charset name may be set if that was used for the conversion. 
  *                         Caller is responsible for freeing the memory (or use nsXPIDLCString).
+ * @param isAsciiOnly [OUT]
+ *                         null if non ASCII info is not needed.
+ *                         Otherwise, true is set if the input data is ASCII only false otherwise. 
  * @return            nsresult.
  */
 NS_MSG_BASE nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char* charset, 
-                                            const PRUnichar* inString, char** outString, char **fallbackCharset=nsnull);
+                                            const PRUnichar* inString, char** outString, 
+                                            char **fallbackCharset=nsnull, PRBool *isAsciiOnly=nsnull);
 
 /**
  * Convert from unicode to charset, generates NNTP XPAT search string.

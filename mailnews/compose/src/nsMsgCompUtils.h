@@ -104,6 +104,7 @@ char        *mime_generate_attachment_headers (const char *type,
                            PRBool digest_p,
                            nsMsgAttachmentHandler *ma,
                            const char *charset,
+                           PRBool bodyIsAsciiOnly,
                            const char *content_id,
                            PRBool     aBodyDocument);
 

@@ -762,16 +762,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
     and takes more memory. */
   PR_FREEIF(m_attachment1_encoding);
   if (m_attachment1_body)
-  {
-    // Check if the part contains 7 bit only. Re-label charset if necessary.
-    if (nsMsgI18Nstateful_charset(mCompFields->GetCharacterSet())) {
-      body_is_us_ascii = nsMsgI18N7bit_data_part(mCompFields->GetCharacterSet(), m_attachment1_body, m_attachment1_body_length); 
-    }
-    else {
-      body_is_us_ascii = mime_7bit_data_p (m_attachment1_body, m_attachment1_body_length);
-    }
-
-  }
+    mCompFields->GetBodyIsAsciiOnly(&body_is_us_ascii);
 
   if (nsMsgI18Nstateful_charset(mCompFields->GetCharacterSet()) ||
       body_is_us_ascii)
@@ -840,6 +831,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
                         m_digest_p,
                         m_plaintext,
                         mCompFields->GetCharacterSet(),
+                        mCompFields->GetBodyIsAsciiOnly(),
                         nsnull,
                         PR_TRUE);
     if (!hdrs)
@@ -1038,6 +1030,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
                          m_digest_p,
                          nsnull, /* no "ma"! */
                          mCompFields->GetCharacterSet(),
+                         mCompFields->GetBodyIsAsciiOnly(),
                          nsnull,
                          PR_TRUE);
     if (!hdrs)
@@ -1261,6 +1254,8 @@ nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
                                                           // we determine from
                                                           // the file or none
                                                           // at all! 
+                                           PR_FALSE,      // bodyIsAsciiOnly to false
+                                                          // for attachments
                                            ma->m_content_id,
                                            PR_FALSE);
   if (!hdrs)
@@ -1494,9 +1489,11 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   {
     // Convert to entities.
     // If later Editor generates entities then we can remove this.
+    PRBool isAsciiOnly;
     rv = nsMsgI18NSaveAsCharset(mCompFields->GetForcePlainText() ? TEXT_PLAIN : attachment1_type, 
-                                aCharset, bodyText, &outCString);
+                                aCharset, bodyText, &outCString, nsnull, &isAsciiOnly);
 
+    mCompFields->SetBodyIsAsciiOnly(isAsciiOnly);
     // body contains multilingual data, confirm send to the user
     // do this only for text/plain
     if ((NS_ERROR_UENC_NOMAPPING == rv) && mCompFields->GetForcePlainText()) {
@@ -2872,6 +2869,8 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
   mCompFields->SetReceiptHeaderType(receiptType);
 
   mCompFields->SetUuEncodeAttachments(fields->GetUuEncodeAttachments());
+
+  mCompFields->SetBodyIsAsciiOnly(fields->GetBodyIsAsciiOnly());
 
   nsCOMPtr<nsISupports> secInfo;
   fields->GetSecurityInfo(getter_AddRefs(secInfo));

@@ -854,10 +854,13 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
         if (  bodyString && *bodyString )
         {
           // Apply entity conversion then convert to a mail charset. 
+          PRBool isAsciiOnly;
           rv = nsMsgI18NSaveAsCharset(attachment1_type, m_compFields->GetCharacterSet(), 
-                                      NS_ConvertASCIItoUCS2(bodyString).get(), &outCString);
+                                      NS_ConvertASCIItoUCS2(bodyString).get(), &outCString,
+                                      nsnull, &isAsciiOnly);
           if (NS_SUCCEEDED(rv)) 
           {
+            m_compFields->SetBodyIsAsciiOnly(isAsciiOnly);
             bodyString = outCString;
             newBody = PR_TRUE;
           }
@@ -953,8 +956,10 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
       // Convert body to mail charset not to utf-8 (because we don't manipulate body text)
       char *outCString = nsnull;
       nsXPIDLCString fallbackCharset;
+      PRBool isAsciiOnly;
       rv = nsMsgI18NSaveAsCharset(contentType, m_compFields->GetCharacterSet(), 
-                                  msgBody.get(), &outCString, getter_Copies(fallbackCharset));
+                                  msgBody.get(), &outCString, 
+                                  getter_Copies(fallbackCharset), &isAsciiOnly);
       SET_SIMULATED_ERROR(SIMULATED_SEND_ERROR_14, rv, NS_ERROR_UENC_NOMAPPING);
       if (NS_SUCCEEDED(rv) && nsnull != outCString) 
       {
@@ -970,6 +975,7 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
         // re-label to the fallback charset
         else if (fallbackCharset)
           m_compFields->SetCharacterSet(fallbackCharset.get());
+        m_compFields->SetBodyIsAsciiOnly(isAsciiOnly);
         m_compFields->SetBody(outCString);
         entityConversionDone = PR_TRUE;
         PR_Free(outCString);
