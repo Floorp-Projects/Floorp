@@ -1154,33 +1154,67 @@ PRInt32 CSkippedContentToken::GetTokenType(void) {
   return eToken_skippedcontent;
 }
 
-/*
- *  Consume content until you find an end sequence that matches
+/* 
+ *  Consume content until you find an end sequence that matches 
  *  this objects current mTextValue. Note that this is complicated 
  *  by the fact that you can be parsing content that itself 
  *  contains quoted content of the same type (like <SCRIPT>). 
  *  That means we have to look for quote-pairs, and ignore the 
- *  content inside them.
- *  
- *  @update  gess 7/25/98
- *  @param   aScanner -- controller of underlying input source
- *  @return  error result
- */
-nsresult CSkippedContentToken::Consume(PRUnichar,CScanner& aScanner) {
-  PRBool      done=PR_FALSE;
-  PRInt32     result=kNoError;
-  nsString    temp;
+ *  content inside them. 
+ * 
+ *  @update  gess 7/25/98 
+ *  @param   aScanner -- controller of underlying input source 
+ *  @return  error result 
+ */ 
+nsresult CSkippedContentToken::Consume(PRUnichar aChar,CScanner& aScanner) { 
+  PRBool      done=PR_FALSE; 
+  PRInt32     result=kNoError; 
+  nsString    temp; 
 
-  while((!done) && (kNoError==result)) {
-    static nsAutoString terminals(">");
-    result=aScanner.ReadUntil(temp,terminals,PR_TRUE);
-    done=PRBool(kNotFound!=temp.RFind(mTextValue,PR_TRUE));
-  }
-  int len=temp.Length();
-  temp.Truncate(len-mTextValue.Length());
-  mTextKey=temp;
-  return result;
-}
+  //We're going to try a new algorithm here. Rather than scan for the matching 
+ //end tag like we used to do, we're now going to scan for whitespace and comments. 
+ //If we find either, just eat them. If we find text or a tag, then go to the 
+ //target endtag, or the start of another comment. 
+
+ static nsAutoString kEndTerminal(">"); 
+ static nsAutoString kStartTerminal("<"); 
+ while((!done) && (kNoError==result)) { 
+  result=aScanner.GetChar(aChar); 
+  if((kNoError==result) && (kLessThan==aChar)) { 
+   //we're reading a tag or a comment... 
+   temp+=aChar; 
+   result=aScanner.GetChar(aChar); 
+   if((kNoError==result) && (kExclamation==aChar)) { 
+    //read a comment... 
+    static CCommentToken theComment; 
+    result=theComment.Consume(aChar,aScanner); 
+    if(kNoError==result) { 
+     temp.Append(theComment.GetStringValueXXX()); 
+    } 
+   } else { 
+    //read a tag... 
+    temp+=aChar; 
+    result=aScanner.ReadUntil(temp,kEndTerminal,PR_TRUE); 
+   } 
+  } 
+  else if(0<=gWhitespace.Find(aChar)) { 
+   static CWhitespaceToken theWS; 
+   result=theWS.Consume(aChar,aScanner); 
+   if(kNoError==result) { 
+    temp.Append(theWS.GetStringValueXXX()); 
+   } 
+  } 
+  else { 
+   temp+=aChar; 
+   result=aScanner.ReadUntil(temp,kStartTerminal,PR_FALSE); 
+  } 
+  done=PRBool(kNotFound!=temp.RFind(mTextValue,PR_TRUE)); 
+ } 
+  int len=temp.Length(); 
+  temp.Truncate(len-mTextValue.Length()); 
+  mTextKey=temp; 
+  return result; 
+} 
 
 
 /**
