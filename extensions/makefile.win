@@ -16,6 +16,7 @@
 # Reserved.
 
 DEPTH=..
+include <$(DEPTH)/config/config.mak>
 
 !ifdef NECKO
 DIRS = wallet pics cookie
