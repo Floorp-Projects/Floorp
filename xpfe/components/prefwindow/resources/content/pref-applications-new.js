@@ -109,7 +109,7 @@ function onOK()
   handlerInfo.saveToDisk = false;
   handlerInfo.handleInternal = false;
   handlerInfo.alwaysAsk = true;
-  var file = Components.classes["@mozilla.org/file/local;1"].createInstance();
+  file = Components.classes["@mozilla.org/file/local;1"].createInstance();
   if (file)
     file = file.QueryInterface(Components.interfaces.nsILocalFile);
   if (file) {
