@@ -164,19 +164,14 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
     if (NS_FAILED(rv))
       return -1;
 
-    //XXX I18N Converting char* to PRUnichar*
-    nsAutoString strline(line, length);
-    PRUnichar* wline = strline.ToNewUnicode();
-    if (!wline)
-      return -1;
+    nsString strline(line);
 
     PRUnichar* wresult;
-    rv = conv->ScanTXT(wline,
-              obj->options->dont_touch_citations_p /* XXX This is pref abuse.
-              ScanTXT does nothing with citations. Add real prefs.*/
-              ? conv->kURLs : ~PRUint32(0),
-              &wresult);
-    Recycle(wline);
+    rv = conv->ScanTXT(strline.GetUnicode(),
+                 obj->options->dont_touch_citations_p /*XXX This is pref abuse.
+                      ScanTXT does nothing with citations. Add prefs.*/
+                 ? conv->kURLs : ~PRUint32(0),
+                 &wresult);
     if (NS_FAILED(rv))
       return -1;
 

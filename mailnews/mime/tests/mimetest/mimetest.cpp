@@ -439,7 +439,8 @@ NewChannel(nsIChannel **aInstancePtrResult, nsIURI *aURI)
     return NS_ERROR_FAILURE;
   res = pService->NewChannelFromURI(nsnull, aURI, (nsILoadGroup *)nsnull,
                                     (nsIInterfaceRequestor *)nsnull,
-                                    0, (nsIURI *)nsnull, aInstancePtrResult);
+                                    0, (nsIURI *)nsnull, 0, 0, 
+                                    aInstancePtrResult);
   if (NS_FAILED(res))
     return NS_ERROR_FAILURE;
   else

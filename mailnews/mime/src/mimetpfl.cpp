@@ -294,18 +294,14 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
       return -1;
 
     //XXX I18N Converting char* to PRUnichar*
-    nsAutoString strline(linep, length-linequotelevel);
-    PRUnichar* wline = strline.ToNewUnicode();
-    if (!wline)
-      return -1;
+    nsString strline(linep);
 
     PRUnichar* wresult;
-    rv = conv->ScanTXT(wline,
+    rv = conv->ScanTXT(strline.GetUnicode(),
                  obj->options->dont_touch_citations_p /*XXX This is pref abuse.
                       ScanTXT does nothing with citations. Add prefs.*/
                  ? conv->kURLs : ~PRUint32(0),
                  &wresult);
-    Recycle(wline);
     if (NS_FAILED(rv))
       return -1;
 

@@ -145,7 +145,7 @@ MimeRebuffer::IncreaseBuffer(const char *addBuf, PRUint32 size)
     return mSize;
   }
 
-  memcpy(mBuf+mSize, addBuf, size);
+  nsCRT::memcpy(mBuf+mSize, addBuf, size);
   mSize += size;
   return mSize;
 }
@@ -170,7 +170,7 @@ MimeRebuffer::ReduceBuffer(PRUint32 numBytes)
     return mSize;
   }
 
-  memcpy(mBuf, mBuf+numBytes, (mSize - numBytes));
+  nsCRT::memcpy(mBuf, mBuf+numBytes, (mSize - numBytes));
   mSize -= numBytes;
   return mSize;
 }
