@@ -24,9 +24,11 @@
             CLASS = OrgMozillaChimeraPreferenceNavigation; 
             LANGUAGE = ObjC; 
             OUTLETS = {
+                checkboxLoadTabsInBackground = NSButton; 
                 checkboxNewTabBlank = NSButton; 
                 checkboxNewWindowBlank = NSButton; 
                 checkboxOpenTabs = NSButton; 
+                checkboxOpenTabsForAEs = NSButton; 
                 checkboxUseSystemHomePage = NSButton; 
                 sliderHistoryDays = NSSlider; 
                 textFieldHistoryDays = NSTextField; 
