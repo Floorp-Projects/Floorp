@@ -43,6 +43,7 @@ static char sccsid[] = "@(#)strerror.c	8.1 (Berkeley) 6/4/93";
 #define sys_nerr    (*_sys_nerr_dll)
 #endif
 
+#ifndef HAVE_STRERROR
 #ifndef _AFXDLL
 char *
 strerror(num)
@@ -74,3 +75,4 @@ strerror(num)
 }
 
 #endif
+#endif /* !HAVE_STRERROR */
