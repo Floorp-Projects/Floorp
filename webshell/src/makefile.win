@@ -23,6 +23,7 @@ DEFINES=-D_IMPL_NS_WEB -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
 
 CPPSRCS=				\
+ dlldeps.cpp			    \
  nsComFactory.cpp			\
  nsDLLFactory.cpp			\
  nsDocLoader.cpp			\
@@ -31,6 +32,7 @@ CPPSRCS=				\
  $(NULL)
 
 CPP_OBJS=				\
+ .\$(OBJDIR)\dlldeps.obj		    \
  .\$(OBJDIR)\nsComFactory.obj		\
  .\$(OBJDIR)\nsDLLFactory.obj		\
  .\$(OBJDIR)\nsDocLoader.obj		\

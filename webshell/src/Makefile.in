@@ -26,6 +26,7 @@ MODULE		= raptor
 LIBRARY_NAME	= raptorwebwidget
 
 CPPSRCS		= \
+    dldeps.cpp \
 		nsDLLFactory.cpp \
 		nsDocLoader.cpp \
 		nsThrobber.cpp \
