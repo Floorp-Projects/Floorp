@@ -23,8 +23,15 @@ treebody {
 
 } 
 
+treecol {
+ display: table-column;
+ width: 200px;
+}
+
 treecell { 
- display: table-cell; 
+ display: table-cell;
+ font-family: Verdana, Sans-Serif;
+ font-size: 8pt;
 } 
 
 treehead treeitem treecell { 

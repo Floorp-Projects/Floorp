@@ -55,8 +55,8 @@
 
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kIRDFServiceIID,              NS_IRDFSERVICE_IID);
+static NS_DEFINE_IID(kIRDFDataSourceIID,           NS_IRDFDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFFileSystemDataSourceIID, NS_IRDFFILESYSTEMDATAOURCE_IID);
-static NS_DEFINE_IID(kIRDFFileSystemIID,           NS_IRDFFILESYSTEM_IID);
 static NS_DEFINE_IID(kIRDFAssertionCursorIID,      NS_IRDFASSERTIONCURSOR_IID);
 static NS_DEFINE_IID(kIRDFCursorIID,               NS_IRDFCURSOR_IID);
 static NS_DEFINE_IID(kIRDFArcsOutCursorIID,        NS_IRDFARCSOUTCURSOR_IID);
@@ -72,10 +72,11 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, URL);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Columns);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
 
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, instanceOf);
-DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, Bag);
-
+DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, type);
+DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, Seq);
 
 
 static	nsIRDFService		*gRDFService = nsnull;
@@ -153,10 +154,12 @@ FileSystemDataSource::~FileSystemDataSource (void)
 	NS_RELEASE2(kNC_Child, refcnt);
 	NS_RELEASE2(kNC_Name, refcnt);
 	NS_RELEASE2(kNC_URL, refcnt);
-	NS_RELEASE2(kNC_Columns, refcnt);
+//	NS_RELEASE2(kNC_Columns, refcnt);
+	NS_RELEASE2(kNC_Folder, refcnt);
 
 	NS_RELEASE2(kRDF_InstanceOf, refcnt);
-	NS_RELEASE2(kRDF_Bag, refcnt);
+	NS_RELEASE2(kRDF_type, refcnt);
+	NS_RELEASE2(kRDF_Seq, refcnt);
 
 	gFileSystemDataSource = nsnull;
 	nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
@@ -165,7 +168,8 @@ FileSystemDataSource::~FileSystemDataSource (void)
 
 
 
-NS_IMPL_ISUPPORTS(FileSystemDataSource, kIRDFFileSystemDataSourceIID);
+// NS_IMPL_ISUPPORTS(FileSystemDataSource, kIRDFFileSystemDataSourceIID);
+NS_IMPL_ISUPPORTS(FileSystemDataSource, kIRDFDataSourceIID);
 
 
 
@@ -181,10 +185,13 @@ FileSystemDataSource::Init(const char *uri)
 	gRDFService->GetResource(kURINC_child, &kNC_Child);
 	gRDFService->GetResource(kURINC_Name, &kNC_Name);
 	gRDFService->GetResource(kURINC_URL, &kNC_URL);
-	gRDFService->GetResource(kURINC_Columns, &kNC_Columns);
+//	gRDFService->GetResource(kURINC_Columns, &kNC_Columns);
+	gRDFService->GetResource(kURINC_Folder, &kNC_Folder);
 
 	gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_InstanceOf);
-	gRDFService->GetResource(kURIRDF_Bag, &kRDF_Bag);
+	gRDFService->GetResource(kURIRDF_type, &kRDF_type);
+	gRDFService->GetResource(kURIRDF_Seq, &kRDF_Seq);
+
 
 	//   if (NS_FAILED(rv = AddColumns()))
 	//       return rv;
@@ -262,7 +269,12 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 		{
 			rv = GetURL(source, &array);
 		}
-
+		else if (peq(property, kRDF_type))
+		{
+			*target = kRDF_Seq;
+			rv = NS_OK;
+			return(rv);
+		}
 		if (array != nsnull)
 		{
 			nsIRDFLiteral *literal = (nsIRDFLiteral *)(array->ElementAt(0));
@@ -355,11 +367,11 @@ FileSystemDataSource::HasAssertion(nsIRDFResource *source,
 	nsresult		rv = NS_ERROR_FAILURE;
 
 	*hasAssertion = PR_FALSE;
-	if (isFileURI(source))
+	if (peq(source, kNC_FileSystemRoot) || isFileURI(source))
 	{
-		if (peq(property, kRDF_InstanceOf))
+		if (peq(property, kRDF_type))
 		{
-			if (peq((nsIRDFResource *)target, kRDF_Bag))
+			if (peq((nsIRDFResource *)target, kRDF_Seq))
 			{
 				*hasAssertion = PR_TRUE;
 				rv = NS_OK;
@@ -396,6 +408,7 @@ FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
 			return NS_ERROR_OUT_OF_MEMORY;
 
 		temp->AppendElement(kNC_Child);
+		temp->AppendElement(kRDF_type);
 		*labels = new FileSystemCursor(source, kNC_Child, temp);
 		if (nsnull != *labels)
 		{
@@ -410,6 +423,7 @@ FileSystemDataSource::ArcLabelsOut(nsIRDFResource *source,
 			return NS_ERROR_OUT_OF_MEMORY;
 
 		temp->AppendElement(kNC_Child);
+		temp->AppendElement(kRDF_type);
 //		temp->AppendElement(kNC_Name);
 //		temp->AppendElement(kNC_URL);
 //		temp->AppendElement(kNC_Columns);

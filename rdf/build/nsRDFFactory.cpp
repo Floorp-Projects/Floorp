@@ -33,6 +33,7 @@
 #include "nsISupports.h"
 #include "nsRDFBaseDataSources.h"
 #include "nsRDFBuiltInDataSources.h"
+#include "nsIRDFFileSystem.h"
 #include "nsRDFCID.h"
 #include "nsRepository.h"
 #include "rdf.h"
@@ -41,6 +42,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 
 static NS_DEFINE_CID(kRDFBookmarkDataSourceCID,  NS_RDFBOOKMARKDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFFileSystemDataSourceCID,NS_RDFFILESYSTEMDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContentSinkCID,         NS_RDFCONTENTSINK_CID);
 static NS_DEFINE_CID(kRDFHTMLBuilderCID,         NS_RDFHTMLBUILDER_CID);
@@ -50,7 +52,7 @@ static NS_DEFINE_CID(kRDFTreeBuilderCID,         NS_RDFTREEBUILDER_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,       NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFXULBuilderCID,          NS_RDFXULBUILDER_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
-static NS_DEFINE_CID(kXULDataSourceCID,			 NS_XULDATASOURCE_CID);
+static NS_DEFINE_CID(kXULDataSourceCID,		 NS_XULDATASOURCE_CID);
 static NS_DEFINE_CID(kXULDocumentCID,            NS_XULDOCUMENT_CID);
 static NS_DEFINE_CID(kRDFDefaultResourceCID,     NS_RDFDEFAULTRESOURCE_CID);
 
@@ -153,6 +155,10 @@ RDFFactoryImpl::CreateInstance(nsISupports *aOuter,
         if (NS_FAILED(rv = NS_NewRDFBookmarkDataSource((nsIRDFDataSource**) &inst)))
             return rv;
     }
+    else if (mClassID.Equals(kRDFFileSystemDataSourceCID)) {
+        if (NS_FAILED(rv = NS_NewRDFFileSystemDataSource((nsIRDFDataSource**) &inst)))
+            return rv;
+    }
     else if (mClassID.Equals(kRDFCompositeDataSourceCID)) {
         if (NS_FAILED(rv = NS_NewRDFCompositeDataSource((nsIRDFCompositeDataSource**) &inst)))
             return rv;
@@ -250,6 +256,10 @@ NSRegisterSelf(nsISupports* serviceMgr, const char* aPath)
                                          "Bookmarks",
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "bookmarks",
                                          aPath, PR_TRUE, PR_TRUE);
+    rv = nsRepository::RegisterComponent(kRDFFileSystemDataSourceCID,  
+                                         "RDF File System Data Source",
+                                         NS_RDF_DATASOURCE_PROGID_PREFIX "files",
+                                         aPath, PR_TRUE, PR_TRUE);
     rv = nsRepository::RegisterComponent(kRDFCompositeDataSourceCID, 
                                          "RDF Composite Data Source",
                                          NS_RDF_DATASOURCE_PROGID_PREFIX "composite-datasource",
@@ -313,6 +323,7 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char* aPath)
     // XXX return error codes!
 
     rv = nsRepository::UnregisterComponent(kRDFBookmarkDataSourceCID,  aPath);
+    rv = nsRepository::UnregisterComponent(kRDFFileSystemDataSourceCID,aPath);
     rv = nsRepository::UnregisterComponent(kRDFCompositeDataSourceCID, aPath);
     rv = nsRepository::UnregisterComponent(kRDFInMemoryDataSourceCID,  aPath);
     rv = nsRepository::UnregisterComponent(kRDFXMLDataSourceCID,       aPath);

@@ -37,6 +37,9 @@ class nsIRDFDataBase;
 // in nsBookmarkDataSource.cpp
 nsresult NS_NewRDFBookmarkDataSource(nsIRDFDataSource** result);
 
+// in nsFileSystemDataSource.cpp
+nsresult NS_NewRDFFileSystemDataSource(nsIRDFDataSource** result);
+
 // in nsMemoryDataSource.cpp
 nsresult NS_NewRDFInMemoryDataSource(nsIRDFDataSource** result);
 

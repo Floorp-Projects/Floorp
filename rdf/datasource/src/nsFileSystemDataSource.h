@@ -82,9 +82,11 @@ private:
 	nsIRDFResource		*kNC_Name;
 	nsIRDFResource		*kNC_URL;
 	nsIRDFResource		*kNC_Columns;
+	nsIRDFResource		*kNC_Folder;
 
 	nsIRDFResource		*kRDF_InstanceOf;
-	nsIRDFResource		*kRDF_Bag;
+	nsIRDFResource		*kRDF_type;
+	nsIRDFResource		*kRDF_Seq;
 
 public:
 

@@ -46,60 +46,38 @@ function doSort(node)
 
 </html:script>
 
-<xul:tree xul:datasources="rdf:files rdf:bookmarks rdf:mail">
+<xul:tree datasources="rdf:files rdf:bookmarks rdf:mail">
   <xul:treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <xul:treecol rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
   <xul:treecol rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
+
   <xul:treehead>
     <xul:treeitem>
-      <xul:treecell xul:resource='http://home.netscape.com/NC-rdf#Name' xul:onclick="return doSort(this);">Name</xul:treecell>
-      <xul:treecell xul:resource='http://home.netscape.com/NC-rdf#URL' xul:onclick="return doSort(this);">URL</xul:treecell>
-      <xul:treecell xul:resource='http://home.netscape.com/WEB-rdf#LastModifiedDate' xul:onclick="return doSort(this);">Last Modified</xul:treecell>
+      <xul:treecell resource='http://home.netscape.com/NC-rdf#Name' onclick="return doSort(this);">Name</xul:treecell>
+      <xul:treecell resource='http://home.netscape.com/NC-rdf#URL' onclick="return doSort(this);">URL</xul:treecell>
+      <xul:treecell resource='http://home.netscape.com/WEB-rdf#LastModifiedDate' onclick="return doSort(this);">Last Modified</xul:treecell>
     </xul:treeitem>
   </xul:treehead>
 
   <xul:treebody>
-    <xul:treeitem xul:id="NC:PersonalToolbarFolder" xul:open="true">
-      <xul:treechildren>
-
-        <xul:treeitem>
-          <xul:treecell>
-            <xul:treeindentation/>Hard-<html:i>coded</html:i> <html:b>Item</html:b>
-          </xul:treecell>
-          <xul:treecell>http://blah.blah.com</xul:treecell>
-
-          <xul:treechildren>
-            <xul:treeitem>
-              <xul:treecell><xul:treeindentation/>
-                 <html:img src="http://www.mozilla.org/images/logo-star.gif"/>
-                 <html:i>Another</html:i> hard-coded <html:font color="green">item</html:font>
-              </xul:treecell>
-              <xul:treecell>http://moreblah.blah.com</xul:treecell>
-            </xul:treeitem>
-          </xul:treechildren>
-
-        </xul:treeitem>
-
-      </xul:treechildren>
-    </xul:treeitem>
-
-    <xul:treeitem xul:id="NC:BookmarksRoot">
+    <xul:treeitem id="NC:BookmarksRoot" open="true">
       <xul:treecell>Bookmarks</xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
     </xul:treeitem>
 
-    <xul:treeitem xul:id="NC:FilesRoot">
+    <xul:treeitem id="NC:FilesRoot">
       <xul:treecell>File System</xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
     </xul:treeitem>
 
-    <xul:treeitem xul:id="NC:MailRoot">
+    <xul:treeitem id="NC:MailRoot">
       <xul:treecell>Mail</xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
     </xul:treeitem>
+
   </xul:treebody>
 </xul:tree>
 
