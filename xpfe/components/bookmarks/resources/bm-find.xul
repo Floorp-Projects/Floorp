@@ -65,7 +65,6 @@
 <keyset id="keyset">
   <!-- File Menu -->
   <key id="key_newNavigator"/>
-  <key id="key_newMessage"/>
   <key id="key_newEditor"/>
   <key id="key_close"/>
   <key id="key_quit"/>
