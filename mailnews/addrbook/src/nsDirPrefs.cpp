@@ -2486,33 +2486,31 @@ static nsresult DIR_GetCustomAttributePrefs(const char *prefstring, DIR_Server *
 		return NS_ERROR_FAILURE;
 
 	char **tokenList = nsnull;
-	char *childList = nsnull;
+	char **childList = nsnull;
 
 	PL_strcpy(scratch, prefstring);
 	PL_strcat(scratch, ".attributes");
 
-	if (PREF_NOERROR == pPref->CreateChildList(scratch, &childList))
+	PRUint32 prefCount;
+	rv = pPref->GetChildList(scratch, &prefCount, &childList);
+	if (NS_SUCCEEDED(rv))
 	{
-		if (childList && childList[0])
+		for (PRUint32 i = 0; i < prefCount; ++i)
 		{
-			char *child = nsnull;
-			PRInt16 indx = 0;
-			while ((pPref->NextChild (childList, &indx, &child)) == NS_OK)
+			char *jsValue = nsnull;
+			rv = pPref->CopyCharPref(childList[i], &jsValue);
+			if (NS_SUCCEEDED(rv))
 			{
-				char *jsValue = nsnull;
-				if (PREF_NOERROR == pPref->CopyCharPref (child, &jsValue))
+				if (jsValue && jsValue[0])
 				{
-					if (jsValue && jsValue[0])
-					{
-						char *attrName = child + PL_strlen(scratch) + 1;
-						DIR_AddCustomAttribute (server, attrName, jsValue);
-					}
-					PR_FREEIF(jsValue);
+					char *attrName = childList[i] + PL_strlen(scratch) + 1;
+					DIR_AddCustomAttribute (server, attrName, jsValue);
 				}
+				PR_FREEIF(jsValue);
 			}
 		}
 
-		PR_FREEIF(childList);
+		NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, childList);
 	}
 
 	if (0 == dir_CreateTokenListFromPref (prefstring, "basicSearchAttributes", scratch, 
@@ -2557,12 +2555,15 @@ static nsresult DIR_GetCustomFilterPrefs(const char *prefstring, DIR_Server *ser
 	server->tokenSeps = DIR_GetStringPref (prefstring, "wordSeparators", localScratch, kDefaultTokenSeps);
 	while (keepGoing && NS_SUCCEEDED(status))
 	{
-		char *childList = nsnull;
+		char **childList = nsnull;
 
 		PR_snprintf (scratch, 128, "%s.filter%d", prefstring, filterNum);
-		if (PREF_NOERROR == pPref->CreateChildList(scratch, &childList))
+
+		PRUint32 prefCount;
+		status = pPref->GetChildList(scratch, &prefCount, &childList);
+		if (NS_SUCCEEDED(status))
 		{
-			if ('\0' != childList[0])
+			if (prefCount > 0)
 			{
 				DIR_Filter *filter = (DIR_Filter*) PR_Malloc (sizeof(DIR_Filter));
 				if (filter)
@@ -2594,7 +2595,7 @@ static nsresult DIR_GetCustomFilterPrefs(const char *prefstring, DIR_Server *ser
 			}
 			else
 				keepGoing = PR_FALSE;
-			PR_Free(childList);
+			NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, childList);
 		}
 		else
 			keepGoing = PR_FALSE;
@@ -2756,23 +2757,23 @@ char *DIR_CreateServerPrefName (DIR_Server *server, char *name)
 	if (leafName)
 	{
 		PRInt32 uniqueIDCnt = 0;
-		char * children = nsnull;
-		char * child = nsnull;
+		char **children = nsnull;
 		/* we need to verify that this pref string name is unique */
 		prefName = PR_smprintf(PREF_LDAP_SERVER_TREE_NAME".%s", leafName);
 		isUnique = PR_FALSE;
 		while (!isUnique && prefName)
 		{ 
 			isUnique = PR_TRUE; /* now flip the logic and assume we are unique until we find a match */
-			if (pPref->CreateChildList(PREF_LDAP_SERVER_TREE_NAME, &children) == PREF_NOERROR)
+			PRUint32 prefCount;
+			rv = pPref->GetChildList(PREF_LDAP_SERVER_TREE_NAME, &prefCount, &children);
+			if (NS_SUCCEEDED(rv))
 			{
-				PRInt16 i = 0; 
-				while ( (pPref->NextChild(children, &i, &child)) == NS_OK && isUnique)
+				for (PRUint32 i = 0; i < prefCount && isUnique; ++i)
 				{
-                    if (!nsCRT::strcasecmp(child, prefName) ) /* are they the same name?? */
+					if (!nsCRT::strcasecmp(children[i], prefName)) /* are they the same name?? */
 						isUnique = PR_FALSE;
 				}
-				PR_FREEIF(children);
+				NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, children);
 				if (!isUnique) /* then try generating a new pref name and try again */
 				{
 					PR_smprintf_free(prefName);
@@ -2998,7 +2999,7 @@ static nsresult dir_GetPrefsFrom45Branch(nsVoidArray **list, nsVoidArray **obsol
   if (NS_FAILED(result) || !pPref) 
     return NS_ERROR_FAILURE;
   
-  char *children;
+  char **children;
   
   (*list) = new nsVoidArray();
   if (!(*list))
@@ -3010,8 +3011,10 @@ static nsresult dir_GetPrefsFrom45Branch(nsVoidArray **list, nsVoidArray **obsol
     if (!(*obsoleteList))
       return NS_ERROR_OUT_OF_MEMORY;
   }
-  
-  if (pPref->CreateChildList(PREF_LDAP_SERVER_TREE_NAME, &children) == PREF_NOERROR)
+
+  PRUint32 prefCount;
+  result = pPref->GetChildList(PREF_LDAP_SERVER_TREE_NAME, &prefCount, &children);
+  if (NS_SUCCEEDED(result))
   {	
   /* TBD: Temporary code to read broken "ldap" preferences tree.
   *      Remove line with if statement after M10.
@@ -3019,10 +3022,8 @@ static nsresult dir_GetPrefsFrom45Branch(nsVoidArray **list, nsVoidArray **obsol
     if (dir_UserId == 0)
       pPref->GetIntPref(PREF_LDAP_GLOBAL_TREE_NAME".user_id", &dir_UserId);
     
-    PRInt16 i = 0;
-    char *child;
     
-    while ((pPref->NextChild(children, &i, &child)) == NS_OK)
+    for (PRUint32 i = 0; i < prefCount; ++i)
     {
       DIR_Server *server;
       
@@ -3030,7 +3031,7 @@ static nsresult dir_GetPrefsFrom45Branch(nsVoidArray **list, nsVoidArray **obsol
       if (server)
       {
         DIR_InitServer(server);
-        server->prefName = nsCRT::strdup(child);
+        server->prefName = nsCRT::strdup(children[i]);
         DIR_GetPrefsForOneServer(server, PR_FALSE, PR_FALSE);
         if (   server->description && server->description[0]
           && (   (server->dirType == PABDirectory || 
@@ -3056,7 +3057,7 @@ static nsresult dir_GetPrefsFrom45Branch(nsVoidArray **list, nsVoidArray **obsol
       }
     }
     
-    PR_Free(children);
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, children);
   }
   
   return result;
@@ -3072,7 +3073,7 @@ nsresult DIR_GetServerPreferences(nsVoidArray** list)
 
 	PRInt32 position = 1;
 	PRInt32 version = -1;
-	char *oldChildren = nsnull;
+	char **oldChildren = nsnull;
 	PRBool savePrefs = PR_FALSE;
 	PRBool migrating = PR_FALSE;
 	nsVoidArray *oldList = nsnull;
@@ -3089,14 +3090,16 @@ nsresult DIR_GetServerPreferences(nsVoidArray** list)
 			pPref->SetIntPref(PREF_LDAP_VERSION_NAME, kCurrentListVersion);
 
 			/* Look to see if there's an old-style "ldap_1" tree in prefs */
-			if (PREF_NOERROR == pPref->CreateChildList("ldap_1", &oldChildren))
+			PRUint32 prefCount;
+			err = pPref->GetChildList("ldap_1", &prefCount, &oldChildren);
+			if (NS_SUCCEEDED(err))
 			{
-				if (PL_strlen(oldChildren))
+				if (prefCount > 0)
 				{
 					migrating = PR_TRUE;
 					position = dir_GetPrefsFrom40Branch(&oldList);
 				}
-				PR_Free(oldChildren);
+				NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, oldChildren);
 			}
 		}
 	}
