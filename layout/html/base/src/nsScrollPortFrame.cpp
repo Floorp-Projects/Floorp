@@ -541,7 +541,7 @@ nsScrollPortFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowSt
 {
    nsresult rv;
 
-   aSize.clear();
+   aSize.Clear();
  
    if (mNeedsRecalc) {
        nsIFrame* childFrame = mFrames.FirstChild(); 
@@ -595,7 +595,7 @@ nsScrollPortFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowSt
 nsresult
 nsScrollPortFrame::GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsBoxInfo& aSize)
 {
-  aSize.clear();
+  aSize.Clear();
 
   // see if the frame has IBox interface
 

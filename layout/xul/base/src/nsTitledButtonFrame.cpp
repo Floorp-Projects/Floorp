@@ -933,7 +933,7 @@ nsTitledButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
 {
   // get our info object.
   nsBoxInfo info;
-  info.clear();
+  info.Clear();
 
   GetBoxInfo(aPresContext, aReflowState, info);
 

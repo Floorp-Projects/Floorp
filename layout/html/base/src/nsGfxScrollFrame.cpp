@@ -1599,7 +1599,7 @@ nsGfxScrollFrameInner::GetIntegerAttribute(nsIFrame* aFrame, nsIAtom* atom, PRIn
 NS_IMETHODIMP
 nsGfxScrollFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
 {
-  aSize.clear();
+  aSize.Clear();
 
   nsresult rv;
   nsBoxInfo scrollAreaInfo, vboxInfo, hboxInfo;
