@@ -1298,9 +1298,6 @@ gtk_moz_embed_get_link_message_unichar (GtkMozEmbed *embed)
 
 // class and instance initialization
 
-GtkType
-gtk_moz_embed_single_get_type(void);
-
 static void
 gtk_moz_embed_single_class_init(GtkMozEmbedSingleClass *klass);
 
