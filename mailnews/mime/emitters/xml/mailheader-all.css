@@ -1,3 +1,8 @@
+mailheader {
+  display:           block;
+  background-color:  lightblue;
+}
+
 Subject:before {
   content:  "Subject: ";
 }
