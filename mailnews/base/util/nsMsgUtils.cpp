@@ -115,7 +115,7 @@ nsresult GetMsgDBHdrFromURI(const char *uri, nsIMsgDBHdr **msgHdr)
   return msgMessageService->MessageURIToMsgHdr(uri, msgHdr);
 }
 
-nsresult CreateStartupUrl(char *uri, nsIURI** aUrl)
+nsresult CreateStartupUrl(const char *uri, nsIURI** aUrl)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
   if (!uri || !*uri || !aUrl) return rv;

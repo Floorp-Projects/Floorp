@@ -44,23 +44,3 @@ function MessengerSetDefaultCharacterSet(aCharset)
   //  messenger.SetDocumentCharset. You'll just break things and reak havoc
   // if you call MsgReload() here...
 }
-
-function PrintPreview() {
-	dump("PrintPreview()\n");
-	try {
-		messenger.DoPrintPreview();
-	}
-	catch (ex) {
-		dump("failed to print preview\n");
-	}
-}
-
-function Print() {
-	dump("Print()\n");
-	try {
-		messenger.DoPrint();
-	}
-	catch (ex) {
-		dump("failed to print\n");
-	}
-}

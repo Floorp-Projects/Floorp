@@ -54,7 +54,7 @@ NS_MSG_BASE nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageServ
 
 NS_MSG_BASE nsresult GetMsgDBHdrFromURI(const char *uri, nsIMsgDBHdr **msgHdr);
 
-NS_MSG_BASE nsresult CreateStartupUrl(char *uri, nsIURI** aUrl);
+NS_MSG_BASE nsresult CreateStartupUrl(const char *uri, nsIURI** aUrl);
 
 NS_MSG_BASE nsresult NS_MsgGetPriorityFromString(const char *priority, nsMsgPriorityValue *outPriority);
 
