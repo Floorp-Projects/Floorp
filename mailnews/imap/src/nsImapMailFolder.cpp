@@ -585,7 +585,8 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
 			if (imapFolder)
 			{
 				nsCAutoString onlineName = m_onlineFolderName; 
-				onlineName += m_hierarchyDelimiter;
+				if (onlineName.Length() > 0)
+					onlineName += m_hierarchyDelimiter;
 				onlineName += folderNameStr;
 				imapFolder->SetVerifiedAsOnlineFolder(PR_TRUE);
 				imapFolder->SetOnlineName(onlineName.GetBuffer());
