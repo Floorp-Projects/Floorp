@@ -126,9 +126,9 @@ protected:
 
   nsresult AppendNewFrames(nsIPresContext& aPresContext, nsIFrame*);
 
-  nsresult InsertNewFrame(nsIPresContext&  aPresContext,
-                          nsIFrame* aNewFrame,
-                          nsIFrame* aPrevSibling);
+  nsresult InsertNewFrames(nsIPresContext&  aPresContext,
+                           nsIFrame* aFrameList,
+                           nsIFrame* aPrevSibling);
 
   nsresult DoRemoveFrame(nsBlockReflowState& aState,
                          nsIFrame* aDeletedFrame);
@@ -387,6 +387,68 @@ protected:
   nsBulletFrame* mBullet;
 
   //friend class nsBaseIBFrame;
+};
+
+//----------------------------------------------------------------------
+
+#define nsAnonymousBlockFrameSuper nsBlockFrame
+
+// Anonymous block frame. An anonymous block is used by some other
+// container (the parent frame) to provide block reflow for a set of
+// child frames. The parent is responsible for the maintainance of the
+// anonymous blocks child list. To accomplish this, the normal methods
+// for managing the child list (AppendFrames, InsertFrames, and
+// RemoveFrame) forward the operation to the parent frame (the
+// container of the anonymous block).
+class nsAnonymousBlockFrame : public nsAnonymousBlockFrameSuper {
+public:
+  friend nsresult NS_NewAnonymousBlockFrame(nsIFrame*& aNewFrame);
+
+  // nsIFrame overrides
+
+  // AppendFrames/InsertFrames/RemoveFrame are implemented to forward
+  // the method call to the parent frame.
+  NS_IMETHOD  AppendFrames(nsIPresContext& aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aFrameList);
+  NS_IMETHOD  InsertFrames(nsIPresContext& aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aPrevFrame,
+                           nsIFrame*       aFrameList);
+  NS_IMETHOD  RemoveFrame(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aOldFrame);
+
+  // These methods are used by the parent frame to actually modify the
+  // child frames of the anonymous block frame.
+  nsresult AppendFrames2(nsIPresContext& aPresContext,
+                         nsIPresShell&   aPresShell,
+                         nsIAtom*        aListName,
+                         nsIFrame*       aFrameList);
+
+  nsresult InsertFrames2(nsIPresContext& aPresContext,
+                         nsIPresShell&   aPresShell,
+                         nsIAtom*        aListName,
+                         nsIFrame*       aPrevFrame,
+                         nsIFrame*       aFrameList);
+
+  nsresult RemoveFrame2(nsIPresContext& aPresContext,
+                        nsIPresShell&   aPresShell,
+                        nsIAtom*        aListName,
+                        nsIFrame*       aOldFrame);
+
+  // O(C)
+  void StealFirstFrame();
+
+  // XXX slow O(N)
+  void StealLastFrame();
+
+protected:
+  nsAnonymousBlockFrame();
+  ~nsAnonymousBlockFrame();
 };
 
 #endif /* nsBlockFrame_h___ */
