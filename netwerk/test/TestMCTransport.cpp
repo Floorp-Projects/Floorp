@@ -114,7 +114,9 @@ TestListener::OnDataAvailable(nsIRequest *req, nsISupports *ctx,
     PRUint32 nread = 0;
 
     while (count) {
-        rv = is->Read(buf, sizeof(buf), &nread);
+        PRUint32 amount = PR_MIN(count, sizeof(buf));
+
+        rv = is->Read(buf, amount, &nread);
         if (NS_FAILED(rv)) return rv;
 
         fwrite(buf, nread, 1, mFile);
