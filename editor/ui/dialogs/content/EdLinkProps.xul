@@ -37,7 +37,7 @@
 ]>
 
 
-<xul:window class="dialog" title="&windowTitle.label;"
+<xul:window title="&windowTitle.label;"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
@@ -53,8 +53,8 @@
   <xul:box align="vertical">
     <xul:box> align="horizontal">
   	  <label class="smallmargin" id="linkMessage" for="linkTextMessage"> &LinkTextInput.label; </label>
-	  </xul:box>
-	  <input type="text" size="25" length="25" id="linkTextInput"></input>
+	</xul:box>
+	<input type="text" size="25" length="25" id="linkTextInput"></input>
   </xul:box>
 
   <fieldset><legend align="left"> &LinkURLFieldset.label; </legend>
@@ -72,10 +72,12 @@
     </xul:box>
  </fieldset>
 
-  <xul:box>
+ <xul:spring flex="100%"/>
+
+ <xul:box>
     <xul:titledbutton class="spaced" id="AdvancedEdit" onclick="onAdvancedEdit()" value="&AdvancedEditButton.label;"/>
     <xul:spring flex="100%"/>    
     <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="&OKButton.label;"/>  
     <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="&CancelButton.label;"/>
-  </xul:box>
+ </xul:box>
 </xul:window>
