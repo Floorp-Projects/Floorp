@@ -37,7 +37,7 @@ class nsPhXRemoteWidgetHelper : public nsIXRemoteWidgetHelper {
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD EnableXRemoteCommands(nsIWidget *aWidget);
+  NS_IMETHOD EnableXRemoteCommands( nsIWidget *aWidget, const char *aProfile, const char *aProgram );
 };
 
 #endif /* __nsPhMozRemoteHelper_h__ */

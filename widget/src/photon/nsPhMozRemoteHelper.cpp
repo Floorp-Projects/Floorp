@@ -38,7 +38,7 @@ nsPhXRemoteWidgetHelper::~nsPhXRemoteWidgetHelper()
 NS_IMPL_ISUPPORTS1(nsPhXRemoteWidgetHelper, nsIXRemoteWidgetHelper)
 
 NS_IMETHODIMP
-nsPhXRemoteWidgetHelper::EnableXRemoteCommands(nsIWidget *aWidget)
+nsPhXRemoteWidgetHelper::EnableXRemoteCommands( nsIWidget *aWidget, const char *aProfile, const char *aProgram )
 {
   return NS_OK;
 }
