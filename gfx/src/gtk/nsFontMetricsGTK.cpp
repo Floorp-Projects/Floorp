@@ -806,6 +806,8 @@ typedef struct nsFontCharSetMap
   nsFontCharSetInfo* mInfo;
 } nsFontCharSetMap;
 
+static int gGotAllFontNames = 0;
+
 static PLHashTable* gFamilies = nsnull;
 
 static PLHashTable* gFamilyNames = nsnull;
@@ -1874,7 +1876,9 @@ SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
   nsFontCharSetInfo* charSetInfo = charSet->mInfo;
   PRUint32* map = charSetInfo->mMap;
   nsFontSearch* search = (nsFontSearch*) arg;
+#ifdef MOZ_MATHML
   nsFontMetricsGTK* m = search->mMetrics;
+#endif
   PRUnichar c = search->mChar;
 #ifdef REALLY_NOISY_FONTS
   printf("%s: searching for character c=0x%x (%d) '%c' in %s\n",
@@ -1994,6 +1998,9 @@ GetFontNames(char* aPattern)
     SKIP_FIELD(foundry);
     // XXX What to do about the many Applix fonts that start with "ax"?
     FIND_FIELD(familyName);
+    if (!*familyName) {
+      continue;
+    }
     FIND_FIELD(weightName);
     FIND_FIELD(slant);
     FIND_FIELD(setWidth);
@@ -2301,7 +2308,6 @@ nsFontMetricsGTK::FindFont(PRUnichar aChar)
   // specific to the vendor of the X server here. Because XListFonts for the
   // whole list is very expensive on some Unixes.
 
-  static int gGotAllFontNames = 0;
   if (!gGotAllFontNames) {
     gGotAllFontNames = 1;
     GetFontNames("-*-*-*-*-*-*-*-*-*-*-*-*-*-*");
@@ -2382,3 +2388,144 @@ nsFontMetricsGTK::GetSpaceWidth(nscoord &aSpaceWidth)
 }
 
 #endif /* FONT_SWITCHING */
+
+
+// The Font Enumerator
+
+nsFontEnumeratorGTK::nsFontEnumeratorGTK()
+{
+  NS_INIT_REFCNT();
+}
+
+NS_IMPL_ISUPPORTS(nsFontEnumeratorGTK,
+                  nsCOMTypeInfo<nsIFontEnumerator>::GetIID());
+
+static int gInitializedFontEnumerator = 0;
+
+static int
+InitializeFontEnumerator(void)
+{
+  gInitializedFontEnumerator = 1;
+
+  if (!gGotAllFontNames) {
+    gGotAllFontNames = 1;
+    GetFontNames("-*-*-*-*-*-*-*-*-*-*-*-*-*-*");
+  }
+
+  return 1;
+}
+
+typedef struct EnumerateFamilyInfo
+{
+  PRUnichar** mArray;
+  int         mIndex;
+} EnumerateFamilyInfo;
+
+static PRIntn
+EnumerateFamily(PLHashEntry* he, PRIntn i, void* arg)
+{
+  EnumerateFamilyInfo* info = (EnumerateFamilyInfo*) arg;
+  PRUnichar** array = info->mArray;
+  int j = info->mIndex;
+  PRUnichar* str = ((nsString*) he->key)->ToNewUnicode();
+  if (!str) {
+    for (j = j - 1; j >= 0; j--) {
+      nsAllocator::Free(array[j]);
+    }
+    info->mIndex = 0;
+    return HT_ENUMERATE_STOP;
+  }
+  array[j] = str;
+  info->mIndex++;
+
+  return HT_ENUMERATE_NEXT;
+}
+
+static int
+CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
+{
+  const PRUnichar* str1 = *((const PRUnichar**) aArg1);
+  const PRUnichar* str2 = *((const PRUnichar**) aArg2);
+
+  // XXX add nsICollation stuff
+
+  return nsCRT::strcmp(str1, str2);
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorGTK::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
+{
+  if (aCount) {
+    *aCount = 0;
+  }
+  else {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aResult) {
+    *aResult = nsnull;
+  }
+  else {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if (!gInitializedFontEnumerator) {
+    if (!InitializeFontEnumerator()) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  PRUnichar** array = (PRUnichar**)
+    nsAllocator::Alloc(gFamilies->nentries * sizeof(PRUnichar*));
+  if (!array) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  EnumerateFamilyInfo info = { array, 0 };
+  PL_HashTableEnumerateEntries(gFamilies, EnumerateFamily, &info);
+  if (!info.mIndex) {
+    nsAllocator::Free(array);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_QuickSort(array, gFamilies->nentries, sizeof(PRUnichar*),
+    CompareFontNames, nsnull);
+
+  *aCount = gFamilies->nentries;
+  *aResult = array;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorGTK::EnumerateFonts(const char* aLangGroup,
+  const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult)
+{
+  if ((!aLangGroup) || (!aGeneric)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aCount) {
+    *aCount = 0;
+  }
+  else {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aResult) {
+    *aResult = nsnull;
+  }
+  else {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if ((!strcmp(aLangGroup, "x-unicode")) ||
+      (!strcmp(aLangGroup, "x-user-def"))) {
+    return EnumerateAllFonts(aCount, aResult);
+  }
+
+  if (!gInitializedFontEnumerator) {
+    if (!InitializeFontEnumerator()) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  // XXX still need to implement aLangGroup and aGeneric
+  return EnumerateAllFonts(aCount, aResult);
+}

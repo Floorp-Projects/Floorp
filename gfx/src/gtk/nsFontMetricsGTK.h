@@ -24,6 +24,7 @@
 #define nsFontMetricsGTK_h__
 
 #include "nsIFontMetrics.h"
+#include "nsIFontEnumerator.h"
 #include "nsFont.h"
 #include "nsString.h"
 #include "nsUnitConversion.h"
@@ -174,6 +175,14 @@ protected:
   PRUint8             mStyleIndex;
 
 #endif /* FONT_SWITCHING */
+};
+
+class nsFontEnumeratorGTK : public nsIFontEnumerator
+{
+public:
+  nsFontEnumeratorGTK();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFONTENUMERATOR
 };
 
 #endif
