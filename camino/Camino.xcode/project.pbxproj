@@ -1017,6 +1017,48 @@
 			settings = {
 			};
 		};
+		0F5FD71B07F48CDC00E8EDBD = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = "NSResponder+Utils.h";
+			path = "src/extensions/NSResponder+Utils.h";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0F5FD71C07F48CDC00E8EDBD = {
+			fileRef = 0F5FD71B07F48CDC00E8EDBD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F5FD71D07F48CDC00E8EDBD = {
+			fileRef = 0F5FD71B07F48CDC00E8EDBD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F5FD71E07F48CE500E8EDBD = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.objc;
+			name = "NSResponder+Utils.m";
+			path = "src/extensions/NSResponder+Utils.m";
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		0F5FD71F07F48CE500E8EDBD = {
+			fileRef = 0F5FD71E07F48CE500E8EDBD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F5FD72007F48CE500E8EDBD = {
+			fileRef = 0F5FD71E07F48CE500E8EDBD;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		0F66E4A807D6D8D500444E2A = {
 			fileRef = 0FCCE56707D6D7DA006DD3D1;
 			isa = PBXBuildFile;
@@ -2446,6 +2488,7 @@
 				0FBC0EE30798FA2700E8E0E2,
 				0F13A30F07D7F3930034B176,
 				0F4752D407DC0F4D002AEE9F,
+				0F5FD71C07F48CDC00E8EDBD,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3559,6 +3602,7 @@
 				0FBC0EE00798FA1900E8E0E2,
 				0F13A31007D7F3930034B176,
 				0F4752D507DC0F4D002AEE9F,
+				0F5FD71F07F48CE500E8EDBD,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6309,6 +6353,7 @@
 				0FBC0EE40798FA2700E8E0E2,
 				0F13A31107D7F3930034B176,
 				0F4752D607DC0F4D002AEE9F,
+				0F5FD71D07F48CDC00E8EDBD,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7423,6 +7468,7 @@
 				0FBC0EE10798FA1900E8E0E2,
 				0F13A31207D7F3930034B176,
 				0F4752D707DC0F4D002AEE9F,
+				0F5FD72007F48CE500E8EDBD,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -14402,6 +14448,7 @@
 				F527C90203BCD43601A80166,
 				F549ACE40302DEBB01026D5D,
 				F5B34B04034A50C901A80166,
+				0F5FD71B07F48CDC00E8EDBD,
 				F5648739023C3857010001CA,
 				F5C3AB810270072A01A80166,
 				F583E3C203B8228F01A80166,
@@ -14431,6 +14478,7 @@
 				F549ACDF0302DE6001026D5D,
 				F527C90303BCD43601A80166,
 				F5B34B01034A505F01A80166,
+				0F5FD71E07F48CE500E8EDBD,
 				F564873A023C3857010001CA,
 				F583E3BF03B8228701A80166,
 				F541495B02711A8301A80166,

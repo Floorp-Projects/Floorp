@@ -443,16 +443,14 @@ enum BWCOpenDest {
 
 - (void)windowDidBecomeMain:(NSNotification *)notification
 {
-  // we have to manually enable/disable the bookmarks menu items, because we
-  // turn autoenabling off for that menu
-  [[NSApp delegate] adjustBookmarksMenuItemsEnabling:YES];
+  // MainController listens for window layering notifications and updates bookmarks,
+  // so we don't need to do anything here
 }
 
 - (void)windowDidResignMain:(NSNotification *)notification
 {
-  // we have to manually enable/disable the bookmarks menu items, because we
-  // turn autoenabling off for that menu
-  [[NSApp delegate] adjustBookmarksMenuItemsEnabling:NO];
+  // MainController listens for window layering notifications and updates bookmarks,
+  // so we don't need to do anything here
 }
 
 -(void)mouseMoved:(NSEvent*)aEvent
@@ -487,9 +485,6 @@ enum BWCOpenDest {
 {
   mClosingWindow = YES;
     
-#if DEBUG
-  NSLog(@"Window will close notification.");
-#endif
   [self autosaveWindowFrame];
   
   // ensure that the URL auto-complete popup is closed before the mork
@@ -507,10 +502,6 @@ enum BWCOpenDest {
   // Tell the BrowserTabView the window is closed
   [mTabBrowser windowClosed];
   
-  // we have to manually enable/disable the bookmarks menu items, because we
-  // turn autoenabling off for that menu
-  [[NSApp delegate] adjustBookmarksMenuItemsEnabling:NO];
-
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 
   // autorelease just in case we're here because of a window closing
@@ -1319,7 +1310,7 @@ enum BWCOpenDest {
 - (void)contentViewChangedTo:(NSView*)inView forURL:(NSString*)inURL
 {
   // update bookmarks menu
-  [[NSApp delegate] adjustBookmarksMenuItemsEnabling:[[self window] isMainWindow]];
+  [[NSApp delegate] adjustBookmarksMenuItemsEnabling];
 }
 
 - (void)updateFromFrontmostTab
@@ -1510,7 +1501,7 @@ enum BWCOpenDest {
   else
     [self loadURL:@"about:bookmarks" referrer:nil activate:YES allowPopups:NO];
 
-  [[NSApp delegate] adjustBookmarksMenuItemsEnabling:[[self window] isMainWindow]];
+  [[NSApp delegate] adjustBookmarksMenuItemsEnabling];
 }
 
 //
@@ -2322,9 +2313,12 @@ enum BWCOpenDest {
 
 -(IBAction)closeCurrentTab:(id)sender
 {
-  if ( [mTabBrowser numberOfTabViewItems] > 1 ) {
+  if ( [mTabBrowser numberOfTabViewItems] > 1 )
+  {
     [[[mTabBrowser selectedTabViewItem] view] windowClosed];
     [mTabBrowser removeTabViewItem:[mTabBrowser selectedTabViewItem]];
+
+    [[NSApp delegate] adjustBookmarksMenuItemsEnabling];
   }
 }
 

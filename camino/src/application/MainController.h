@@ -72,7 +72,6 @@ typedef enum EBookmarkOpenBehavior
     // IBOutlet NSMenuItem*    mOfflineMenuItem;
     IBOutlet NSMenuItem*    mCloseWindowMenuItem;
     IBOutlet NSMenuItem*    mCloseTabMenuItem;
-    IBOutlet NSMenuItem*    mShowAllBookmarksMenuItem;
 
     IBOutlet NSMenu*        mGoMenu;
     IBOutlet NSMenu*        mBookmarksMenu;
@@ -82,7 +81,8 @@ typedef enum EBookmarkOpenBehavior
     IBOutlet NSMenuItem*    mBookmarksToolbarMenuItem;
     IBOutlet NSMenuItem*    mAddBookmarkMenuItem;
     IBOutlet NSMenuItem*    mCreateBookmarksFolderMenuItem;
-    IBOutlet NSMenuItem*    mCreateBookmarksSeparatorMenuItem;
+    IBOutlet NSMenuItem*    mCreateBookmarksSeparatorMenuItem;  // unused
+    IBOutlet NSMenuItem*    mShowAllBookmarksMenuItem;
     
     BOOL                    mOffline;
 
@@ -169,7 +169,7 @@ typedef enum EBookmarkOpenBehavior
 - (void)adjustCloseTabMenuItemKeyEquivalent:(BOOL)inHaveTabs;
 - (void)fixCloseMenuItemKeyEquivalents;
 
-- (void)adjustBookmarksMenuItemsEnabling:(BOOL)inBrowserWindowFrontmost;
+- (void)adjustBookmarksMenuItemsEnabling;
 
 - (NSView*)getSavePanelView;
 - (NSWindow*)getFrontmostBrowserWindow;
@@ -184,8 +184,6 @@ typedef enum EBookmarkOpenBehavior
 - (BrowserWindowController*)getMainWindowBrowserController;
 
 + (NSImage*)createImageForDragging:(NSImage*)aIcon title:(NSString*)aTitle;
-
-- (void)pumpGeckoEventQueue;
 
 // used by export bookmarks popup to say what file extension should be used on the resulting
 // bookmarks file.

@@ -42,6 +42,8 @@
 #import <Carbon/Carbon.h>
 
 #import "NSString+Utils.h"
+#import "NSResponder+Utils.h"
+#import "NSMenu+Utils.h"
 
 #import "ChimeraUIConstants.h"
 #import "MainController.h"
@@ -105,9 +107,16 @@ const int kReuseWindowOnAE = 2;
 @interface MainController(Private)<NetworkServicesClient>
 
 - (void)setupStartpage;
+- (void)installBookmarksMenuEnableHandler;
+- (NSMenu*)bookmarksMenu;
+- (BOOL)bookmarksItemsEnabled;
+- (void)adjustBookmarkMenuItems;
+- (void)windowLayeringDidChange:(NSNotification*)inNotifiction;
+- (void)openPanelDidEnd:(NSOpenPanel*)inOpenPanel returnCode:(int)inReturnCode contextInfo:(void*)inContextInfo;
 
 @end
 
+#pragma mark -
 
 @implementation MainController
 
@@ -181,9 +190,18 @@ const int kReuseWindowOnAE = 2;
 
 -(void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
+  [self installBookmarksMenuEnableHandler];
+
   // initialize prefs if we haven't already.
   PreferenceManager *pm = [PreferenceManager sharedInstance];
 
+  // register for window layering changes, so that we can update the bookmarks menu
+  NSNotificationCenter* notificationCenter = [NSNotificationCenter defaultCenter];
+  [notificationCenter addObserver:self selector:@selector(windowLayeringDidChange:) name:NSWindowDidBecomeKeyNotification object:nil];
+  [notificationCenter addObserver:self selector:@selector(windowLayeringDidChange:) name:NSWindowDidResignKeyNotification object:nil];
+  [notificationCenter addObserver:self selector:@selector(windowLayeringDidChange:) name:NSWindowDidBecomeMainNotification object:nil];
+  [notificationCenter addObserver:self selector:@selector(windowLayeringDidChange:) name:NSWindowDidResignMainNotification object:nil];
+  
   // start bookmarks
   RunLoopMessenger *mainThreadRunLoopMessenger = [[RunLoopMessenger alloc] init];
   [NSThread detachNewThreadSelector:@selector(startBookmarksManager:) toTarget:[BookmarkManager class] withObject:mainThreadRunLoopMessenger];
@@ -226,10 +244,9 @@ const int kReuseWindowOnAE = 2;
     long systemVersion;
     OSErr err = ::Gestalt(gestaltSystemVersion, &systemVersion);
     if ((err == noErr) && (systemVersion >= 0x00001023)) {
-      NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-      [nc addObserver:self selector:@selector(availableServicesChanged:) name:NetworkServicesAvailableServicesChanged object:nil];
-      [nc addObserver:self selector:@selector(serviceResolved:) name:NetworkServicesResolutionSuccess object:nil];
-      [nc addObserver:self selector:@selector(serviceResolutionFailed:) name:NetworkServicesResolutionFailure object:nil];
+      [notificationCenter addObserver:self selector:@selector(availableServicesChanged:) name:NetworkServicesAvailableServicesChanged object:nil];
+      [notificationCenter addObserver:self selector:@selector(serviceResolved:) name:NetworkServicesResolutionSuccess object:nil];
+      [notificationCenter addObserver:self selector:@selector(serviceResolutionFailed:) name:NetworkServicesResolutionFailure object:nil];
       doingRendezvous = YES;
     }
   }
@@ -277,6 +294,13 @@ const int kReuseWindowOnAE = 2;
   CHBrowserService::TermEmbedding();
   
   [self autorelease];
+}
+
+- (void)windowLayeringDidChange:(NSNotification*)inNotifiction
+{
+  // The key window isn't set until after this notification is processed, so we have to delay the actual
+  // menu update.
+  [self performSelectorOnMainThread:@selector(adjustBookmarksMenuItemsEnabling) withObject:nil waitUntilDone:NO];
 }
 
 - (NSMenu *)applicationDockMenu:(NSApplication *)sender
@@ -497,29 +521,65 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 
 -(IBAction) openFile:(id)aSender
 {
-    NSOpenPanel* openPanel = [[[NSOpenPanel alloc] init] autorelease];
-    [openPanel setCanChooseFiles: YES];
-    [openPanel setCanChooseDirectories: NO];
-    [openPanel setAllowsMultipleSelection: NO];
-    NSArray* array = [NSArray arrayWithObjects: @"htm",@"html",@"shtml",@"xhtml",@"xml",
-                                                @"txt",@"text",
-                                                @"gif",@"jpg",@"jpeg",@"png",@"bmp",
-                                                @"webloc",@"url",
-                                                nil];
-    int result = [openPanel runModalForTypes: array];
-    if (result == NSOKButton) {
-        NSArray* urlArray = [openPanel URLs];
-        if ([urlArray count] == 0)
-            return;
-        NSURL* url = [urlArray objectAtIndex: 0];
-        [[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:url];
-        url = [MainController decodeLocalFileURL:url];
-        BrowserWindowController* browserController = [self getMainWindowBrowserController];
-        if (browserController)
-          [browserController loadURL:[url absoluteString] referrer:nil activate:YES allowPopups:NO];
-        else
-          [self openBrowserWindowWithURL:[url absoluteString] andReferrer:nil behind:nil allowPopups:NO];
-    }
+  NSOpenPanel* openPanel = [NSOpenPanel openPanel];
+  [openPanel setCanChooseFiles:YES];
+  [openPanel setCanChooseDirectories:NO];
+  [openPanel setAllowsMultipleSelection:YES];
+  NSArray* fileTypes = [NSArray arrayWithObjects: @"htm",@"html",@"shtml",@"xhtml",@"xml",
+                                                  @"txt",@"text",
+                                                  @"gif",@"jpg",@"jpeg",@"png",@"bmp",
+                                                  @"webloc",@"url",
+                                                  nil];
+
+  BrowserWindowController* browserController = [self getMainWindowBrowserController];
+  if (browserController)
+  {
+    [openPanel beginSheetForDirectory:nil
+                                 file:nil
+                                types:fileTypes
+                       modalForWindow:[browserController window]
+                        modalDelegate:self
+                       didEndSelector:@selector(openPanelDidEnd:returnCode:contextInfo:)
+                          contextInfo:browserController];
+  }
+  else
+  {
+    int result = [openPanel runModalForTypes:fileTypes];
+    [self openPanelDidEnd:openPanel returnCode:result contextInfo:nil];
+  }
+}
+
+- (void)openPanelDidEnd:(NSOpenPanel*)inOpenPanel returnCode:(int)inReturnCode contextInfo:(void*)inContextInfo
+{
+  if (inReturnCode != NSOKButton)
+    return;
+
+  BrowserWindowController* browserController = (BrowserWindowController*)inContextInfo;
+
+  NSArray* urlArray = [inOpenPanel URLs];
+  if ([urlArray count] == 0)
+      return;
+
+  NSMutableArray* urlStringsArray = [NSMutableArray arrayWithCapacity:[urlArray count]];
+  
+  // fix them up
+  NSEnumerator* urlsEnum = [urlArray objectEnumerator];
+  NSURL* curURL;
+  while ((curURL = [urlsEnum nextObject]))
+  {
+    [[NSDocumentController sharedDocumentController] noteNewRecentDocumentURL:curURL];
+    curURL = [MainController decodeLocalFileURL:curURL];
+    [urlStringsArray addObject:[curURL path]];
+  }
+
+  if (!browserController)
+  {
+    [self openBrowserWindowWithURLs:urlStringsArray behind:nil allowPopups:YES];
+  }
+  else
+  {
+    [browserController openURLArray:urlStringsArray replaceExistingTabs:YES allowPopups:YES];
+  }
 }
 
 -(IBAction) openLocation:(id)aSender
@@ -713,34 +773,63 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
 	[[ProgressDlgController sharedDownloadController] showWindow:aSender];
 }
 
+
+// super sekrit private API
+extern "C" MenuRef _NSGetCarbonMenu(NSMenu* aMenu);
+
+static OSStatus MenuEventHandler(EventHandlerCallRef inHandlerCallRef, EventRef inEvent, void *inUserData)
+{
+  UInt32 eventKind = ::GetEventKind(inEvent);
+  switch (eventKind)
+  {
+    case kEventMenuOpening:
+      {
+        MainController* mainController = (MainController*)inUserData;
+        MenuRef theMenu;
+        OSStatus err = ::GetEventParameter(inEvent, kEventParamDirectObject, typeMenuRef, NULL, sizeof(MenuRef), NULL, &theMenu);
+        if ((err == noErr) && (theMenu == _NSGetCarbonMenu([mainController bookmarksMenu])))
+        {
+          [mainController adjustBookmarkMenuItems];
+        }
+      }
+      break;
+  }
+
+  // always let the event propagate  
+  return eventNotHandledErr;
+}
+
+// install a carbon event handler so that we can tell when a menu is being opened
+// on 10.3, we could use NSMenu delegate methods
+- (void)installBookmarksMenuEnableHandler
+{
+  const EventTypeSpec menuEventList[] = { { kEventClassMenu, kEventMenuOpening } };
+
+  InstallApplicationEventHandler(NewEventHandlerUPP(MenuEventHandler), 
+                                 GetEventTypeCount(menuEventList),
+                                 menuEventList, (void*)self, NULL);
+}
+
 //
-// -adjustBookmarksMenuItemsEnabling:
+// -adjustBookmarksMenuItemsEnabling
 //
 // We've turned off auto-enabling for the bookmarks menu because of the unknown
 // number of bookmarks in the list so we have to manage it manually. This routine
 // should be called whenever a window goes away, becomes main, or is no longer main.
 //
-- (void)adjustBookmarksMenuItemsEnabling:(BOOL)inBrowserWindowFrontmost
+- (void)adjustBookmarksMenuItemsEnabling
 {
-  [mAddBookmarkMenuItem               setEnabled:inBrowserWindowFrontmost];
-  [mCreateBookmarksFolderMenuItem     setEnabled:inBrowserWindowFrontmost];
-  [mCreateBookmarksSeparatorMenuItem  setEnabled:YES];
+  NSResponder* firstResponder = [[NSApp keyWindow] firstResponder];
+  [mAddBookmarkMenuItem               setEnabled:([firstResponder responderForAction:[mAddBookmarkMenuItem action]] != nil)];
+  [mCreateBookmarksFolderMenuItem     setEnabled:([firstResponder responderForAction:[mCreateBookmarksFolderMenuItem action]] != nil)];
+  [mCreateBookmarksSeparatorMenuItem  setEnabled:([firstResponder responderForAction:[mCreateBookmarksSeparatorMenuItem action]] != nil)];
 
-
-  // We need the frontmost browser for the case of the dl/about window
-  // is the main so we can ensure the "show/hide all bookmarks" has the correct
-  // state for that window. Unfortunately, we can't rely on |-getFrontmostBrowserWindow| in all
-  // cases, such as when a window has just been opened. As a result, first
-  // try |-getMainWindowBrowserController| and if that fails use fFBW as a fallback.   
-  BrowserWindowController* browserController = [self getMainWindowBrowserController];
-  if (!browserController)
-    browserController = (BrowserWindowController*)[[self getFrontmostBrowserWindow] windowController];
-
-  BOOL showBookmarksEnabled = YES;
+  BOOL browserWindowIsMain  = [[[NSApp mainWindow] delegate] isMemberOfClass:[BrowserWindowController class]];
+  BOOL showBookmarksEnabled = [self bookmarksItemsEnabled];
   BOOL useShowLabel = YES;
-  
-  if (browserController)
+  if (browserWindowIsMain)
   {
+    BrowserWindowController* browserController = (BrowserWindowController*)[[NSApp mainWindow] delegate];
     if ([browserController bookmarkManagerIsVisible])
     {
       useShowLabel = NO;
@@ -757,6 +846,51 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
                                        
   [mShowAllBookmarksMenuItem setTitle:showBMLabel];
   [mShowAllBookmarksMenuItem setEnabled:showBookmarksEnabled];
+}
+
+- (NSMenu*)bookmarksMenu
+{
+  return mBookmarksMenu;
+}
+
+- (BOOL)bookmarksItemsEnabled
+{
+  BOOL enableItems = YES;
+  
+  // NSLog(@"Main window %@, key window %@", [NSApp mainWindow], [NSApp keyWindow]);
+  
+  // I can't help thinking that there's an easier way, via NSResponder-type logic
+  // XXX this isn't quite right yet. It disables stuff when the toolbar customization
+  // sheet is up, which is unnecessary.
+  NSEnumerator* windowEnum = [[NSApp windows] objectEnumerator];
+  NSWindow* curWindow;
+  while ((curWindow = [windowEnum nextObject]))
+  {
+    if (![curWindow isVisible])
+      continue;
+
+    if ([curWindow level] == NSModalPanelWindowLevel)
+    {
+      enableItems = NO;
+      break;
+    }
+    
+    if ([curWindow isSheet])
+    {
+      enableItems = NO;
+      break;
+    }
+  }
+    
+  return enableItems;
+}
+
+- (void)adjustBookmarkMenuItems
+{
+  BOOL enableItems = [self bookmarksItemsEnabled];
+
+  int firstBookmarkItem = [mBookmarksMenu indexOfItemWithTag:kBookmarksDividerTag] + 1;
+  [mBookmarksMenu setAllItemsEnabled:enableItems startingWithItemAtIndex:firstBookmarkItem includingSubmenus:YES];
 }
 
 - (NSView*)getSavePanelView
@@ -784,8 +918,8 @@ Otherwise, we return the URL we originally got. Right now this supports .url and
       unsigned int chromeMask = [[thisWindow windowController] chromeMask];
       if (chromeMask == 0 || 
             (chromeMask & nsIWebBrowserChrome::CHROME_TOOLBAR &&
-              chromeMask & nsIWebBrowserChrome::CHROME_STATUSBAR &&
-              chromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE)) {
+             chromeMask & nsIWebBrowserChrome::CHROME_STATUSBAR &&
+             chromeMask & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE)) {
         foundWindow = thisWindow;
         break;
       }
@@ -1499,18 +1633,6 @@ static int SortByProtocolAndName(NSDictionary* item1, NSDictionary* item2, void 
   NSString *pageToLoad = NSLocalizedStringFromTable(@"RendezvousPageDefault", @"WebsiteDefaults", nil);
   if (![pageToLoad isEqualToString:@"RendezvousPageDefault"])
     [self openNewWindowOrTabWithURL:pageToLoad andReferrer:nil];
-}
-
-// currently unused
-- (void)pumpGeckoEventQueue
-{
-  nsCOMPtr<nsIEventQueueService> service = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
-  if (!service) return;
-  
-  nsCOMPtr<nsIEventQueue> queue;
-  service->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-  if (queue)
-    queue->ProcessPendingEvents();
 }
 
 // Reads the URL from a .webloc . Returns nil on failure.
