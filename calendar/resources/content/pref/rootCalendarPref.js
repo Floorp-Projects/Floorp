@@ -53,9 +53,10 @@ function calendarPreferences( CalendarWindow )
     this.loadPreferences();  
   }
   catch(e) {
-    this.calendarPref.setBoolPref("showalarms", true);
+     this.calendarPref.setBoolPref("alarms.show", true);
+     this.calendarPref.setBoolPref("alarms.playsound", false);
     
-    this.loadPreferences();
+     this.loadPreferences();
   }
   
   
@@ -63,7 +64,9 @@ function calendarPreferences( CalendarWindow )
 
 calendarPreferences.prototype.loadPreferences = function()
 {
-   this.arrayOfPrefs.showalarms = this.calendarPref.getBoolPref( "showalarms" );
+   this.arrayOfPrefs.showalarms = this.calendarPref.getBoolPref( "alarms.show" );
+
+   this.arrayOfPrefs.alarmsplaysound = this.calendarPref.getBoolPref( "alarms.playsound" );
 }
 
 calendarPreferences.prototype.getPref = function( Preference )

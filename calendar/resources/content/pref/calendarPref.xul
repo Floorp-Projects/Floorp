@@ -48,7 +48,7 @@
      <![CDATA[
        var panel = "chrome://calendar/content/pref/calendarPref.xul";
        var _elementIDs = [
-         "showalarms"
+         "alarmshow", "alarmplaysound"
        ];
      ]]>
    </script>
@@ -61,7 +61,14 @@
           prefattribute="checked" prefstring="calendar.preferencename"
           label="Label" />
    -->
-   <checkbox id="showalarms" type="checkbox" pref="true" preftype="bool"
-          prefattribute="checked" prefstring="calendar.showalarms"
-          label="Show Calendar Alarms?" />
+   <vbox>
+      <description>When an alarm goes off:</description>
+      <checkbox id="alarmplaysound" type="checkbox" pref="true" preftype="bool"
+          prefattribute="checked" prefstring="calendar.alarms.playsound"
+          label="Play a sound" />
+          
+      <checkbox id="alarmshow" type="checkbox" pref="true" preftype="bool"
+          prefattribute="checked" prefstring="calendar.alarms.show"
+          label="Show an alarm box" />
+   </vbox>
 </page>

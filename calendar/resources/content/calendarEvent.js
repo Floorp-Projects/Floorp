@@ -590,13 +590,15 @@ CalendarAlarmObserver.prototype.fireAlarm = function( calendarEvent )
 {
    debug( "Fire alarm "+ calendarEvent );
    
+   if( gCalendarWindow.calendarPreferences.getPref( "alarmsplaysound" ) )
+   {
+      playSound();
+   }
+   
    addEventToDialog(  calendarEvent );
 
    if ( calendarEvent.alarmEmailAddress )
    {
-      
-      //debug( "about to send an email to "+ calendarEvent.alarmEmailAddress + "with subject "+ calendarEvent.title );
-      
       //send an email for the event
       // TO DO
    }

@@ -1019,3 +1019,18 @@ function alertCalendarVersion()
 {
    alert( "This calendar was made on "+gDateMade+". Please include this in your bug report." );
 }
+
+function playSound( ThisURL )
+{
+   ThisURL = "chrome://calendar/content/sound.wav";
+
+   var url = Components.classes["@mozilla.org/network/standard-url;1"].createInstance();
+   url = url.QueryInterface(Components.interfaces.nsIURL);
+   url.spec = ThisURL;
+
+   var sample = Components.classes["@mozilla.org/sound;1"].createInstance();
+   
+   sample = sample.QueryInterface(Components.interfaces.nsISound);
+
+   sample.play( url );
+}
