@@ -9,6 +9,7 @@ function onUndo() {
 
 function onOK() {
   applyChanges();
+  //TODO: Allow this after bug 6005 is fixed
   //toolkitCore.CloseWindow(window);
 }
 
@@ -16,8 +17,9 @@ function onCancel() {
   // Undo all actions performed within the dialog
   // TODO: We need to suppress reflow/redraw untill all levels are undone
   while (undoCount > 0) {
-    appCore.undo();
+    onUndo();
   }
+  //TODO: Allow this after bug 6005 is fixed
   //toolkitCore.CloseWindow(window);
 }
 
