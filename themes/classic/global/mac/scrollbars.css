@@ -104,6 +104,8 @@ scrollbarbutton[type="decrement"] {
    border-right: 1px solid black;
 }
 
+
+
 scrollbarbutton[type="decrement"]:hover:active {
    -moz-user-focus: ignore;
    -moz-user-select: none;
@@ -136,6 +138,16 @@ scrollbarbutton[type="increment"][disabled="true"]:hover:active {
    -moz-user-focus: ignore;
    -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-right-disabled.gif") 
+}
+
+/*with double ended scrollbar arrows, must collapse black border between touching arrows to 1px*/
+
+scrollbarbutton[sbattr="scrollbar-up-bottom"] {
+	border-left: 1px solid black;
+	border-right: none;
+}
+scrollbarbutton[sbattr="scrollbar-down-top"] {
+	border-left: none;
 }
 
 scrollbar[align="vertical"] > scrollbarbutton {
@@ -183,4 +195,13 @@ scrollbar[align="vertical"] > scrollbarbutton[type="increment"][disabled="true"]
    -moz-user-focus: ignore;
    -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-down-disabled.gif");
+}
+
+/*with double ended scrollbar arrows, must collapse black border between touching arrows to 1px*/
+scrollbar[align="vertical"] > scrollbarbutton[sbattr="scrollbar-up-bottom"] {
+	border-top: 1px solid black;
+	border-bottom: none;
+}
+scrollbar[align="vertical"] > scrollbarbutton[sbattr="scrollbar-down-top"] {
+	border-top: none;
 }
