@@ -853,12 +853,14 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
 
         for (index=count-1; index >= 0; --index)
         {
-            nsCOMPtr<nsIURI> uri;
-            nsISocketTransport * trans = NS_STATIC_CAST (nsISocketTransport *, mIdleTransports -> ElementAt (index));
-            
-            PRBool isAlive = PR_FALSE;
-            if (trans && NS_SUCCEEDED (trans -> IsAlive (mKeepAliveTimeout, &isAlive))
-                && !isAlive)
+            trans = (nsIChannel*) mIdleTransports -> ElementAt (index);
+
+            nsresult rv;
+            nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface (trans, &rv);
+            PRBool isAlive = PR_TRUE;
+
+            if (NS_FAILED (rv) || NS_FAILED (sTrans -> IsAlive (mKeepAliveTimeout, &isAlive))
+                || !isAlive)
                 mIdleTransports -> RemoveElement (trans);
         }
 
@@ -993,7 +995,7 @@ nsresult nsHTTPHandler::ReleaseTransport(nsIChannel* i_pTrans)
         
             if (NS_SUCCEEDED (rv) && alive)
             {
-                PRBool added = mIdleTransports -> AppendElement (trans);
+                PRBool added = mIdleTransports -> AppendElement (i_pTrans);
                 NS_ASSERTION(added, 
                     "Failed to add a socket to idle transports list!");
 
