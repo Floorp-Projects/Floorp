@@ -633,8 +633,8 @@ PRIntervalTime timeout)
 #ifdef _PR_HAVE_PEEK_BUFFER
 	if ((PR_MSG_PEEK == flags) && _PR_FD_NEED_EMULATE_MSG_PEEK(fd)) {
 		if (rv > 0) {
-			memcpy(fd->secret->peekBuffer, buf, me->md.blocked_io_bytes);
-			fd->secret->peekBytes = me->md.blocked_io_bytes;
+			memcpy(fd->secret->peekBuffer, buf, rv);
+			fd->secret->peekBytes = rv;
 		}
 	}
 #endif
