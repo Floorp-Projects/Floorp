@@ -1133,45 +1133,51 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteSubFolders(
     return nsMsgFolder::DeleteSubFolders(folders, msgWindow);
   }
 
+  if (!msgWindow) 
+    return NS_ERROR_NULL_POINTER;
+ 
+  nsCOMPtr<nsIMsgFolder> trashFolder;
+  rv = GetTrashFolder(getter_AddRefs(trashFolder));
+  if (NS_SUCCEEDED(rv))
+  {
+    // we don't allow multiple folder selection so this is ok.
+    nsCOMPtr<nsISupports> supports = getter_AddRefs(folders->ElementAt(0));
+    nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports);
+    if (folder)
+      trashFolder->CopyFolder(folder, PR_TRUE, msgWindow, nsnull);
+  }
+  return rv;
+}
+
+nsresult nsMsgLocalMailFolder::ConfirmFolderDeletion(nsIMsgWindow *aMsgWindow, PRBool *aResult)
+{
+  NS_ENSURE_ARG(aResult);
+  NS_ENSURE_ARG(aMsgWindow);
   nsCOMPtr<nsIDocShell> docShell;
-  if (!msgWindow) return NS_ERROR_NULL_POINTER;
-  msgWindow->GetRootDocShell(getter_AddRefs(docShell));
+  aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
   if (docShell)
   {
-    PRBool okToDelete = PR_FALSE;
     PRBool confirmDeletion = PR_TRUE;
+    nsresult rv;
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv))
-       rv = prefs->GetBoolPref("mailnews.confirm.moveFoldersToTrash", &confirmDeletion);
+       prefs->GetBoolPref("mailnews.confirm.moveFoldersToTrash", &confirmDeletion);
     if (confirmDeletion)
     {
       if (!mMsgStringService)
         mMsgStringService = do_GetService(NS_MSG_POPSTRINGSERVICE_CONTRACTID);
-      if (!mMsgStringService) return NS_ERROR_FAILURE;
-      PRUnichar *alertString = nsnull;
-      mMsgStringService->GetStringByID(POP3_MOVE_FOLDER_TO_TRASH, &alertString);
-      if (!alertString) return rv;
-        nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
+      if (!mMsgStringService) 
+        return NS_ERROR_FAILURE;
+      nsXPIDLString alertString;
+      mMsgStringService->GetStringByID(POP3_MOVE_FOLDER_TO_TRASH, getter_Copies(alertString));
+      nsCOMPtr<nsIPrompt> dialog(do_GetInterface(docShell));
       if (dialog)
-        dialog->Confirm(nsnull, alertString, &okToDelete);
+        dialog->Confirm(nsnull, alertString.get(), aResult);
     }
     else
-      okToDelete = PR_TRUE;
-    if (okToDelete)
-    { 
-      nsCOMPtr<nsIMsgFolder> trashFolder;
-      rv = GetTrashFolder(getter_AddRefs(trashFolder));
-      if (NS_SUCCEEDED(rv))
-      {
-        // we don't allow multiple folder selection so this is ok.
-        nsCOMPtr<nsISupports> supports = getter_AddRefs(folders->ElementAt(0));
-        nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports);
-        if (folder)
-           trashFolder->CopyFolder(folder, PR_TRUE, msgWindow, nsnull);
-      }
-    }
+      *aResult = PR_TRUE;
   }
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWindow *msgWindow)
@@ -1978,15 +1984,24 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
   nsCOMPtr<nsIMsgFolder> newMsgFolder;
   PRBool isChildOfTrash=PR_FALSE;
   rv = IsChildOfTrash(&isChildOfTrash);
-  if (isChildOfTrash)
+  if (isChildOfTrash)  
   {
+    if (isMoveFolder) //do it just for the parent folder (isMoveFolder is true for parent only) if we are deleting/moving a folder tree
+    {
+      PRBool okToDelete = PR_FALSE;
+      ConfirmFolderDeletion(msgWindow, &okToDelete);
+      if (!okToDelete)
+        return NS_MSG_ERROR_COPY_FOLDER_ABORTED;
+    }
+
     PRBool match = PR_FALSE;
-    PRBool confirmed = PR_FALSE;
     rv = srcFolder->MatchOrChangeFilterDestination(nsnull, PR_FALSE, &match);
     if (match)
     {
+      PRBool confirmed = PR_FALSE;
       srcFolder->ConfirmFolderDeletionForFilter(msgWindow, &confirmed);
-      if (!confirmed) return NS_MSG_ERROR_COPY_FOLDER_ABORTED;
+      if (!confirmed) 
+        return NS_MSG_ERROR_COPY_FOLDER_ABORTED;
     }
   }
   
