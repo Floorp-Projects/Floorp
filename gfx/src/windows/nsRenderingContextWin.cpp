@@ -58,24 +58,12 @@ static NS_DEFINE_IID(kDrawingSurfaceCID, NS_DRAWING_SURFACE_CID);
 // in the current logical palette. This has no effect on a non-palette device
 #define PALETTERGB_COLORREF(c)  (0x02000000 | (c))
 
-/*
- * This is actually real fun.  Windows does not draw dotted lines with Pen's
- * directly (Go ahead, try it, you'll get dashes).
- *
- * the trick is to install a callback and actually put the pixels in
- * directly. This function will get called for each pixel in the line.
- *
- */
-
-static PRBool gFastDDASupport = PR_FALSE;
-
 typedef struct lineddastructtag
 {
    int   nDottedPixel;
    HDC   dc;
    COLORREF crColor;
 } lineddastruct;
-
 
 void CALLBACK LineDDAFunc(int x,int y,LONG lData)
 {
@@ -163,7 +151,7 @@ nsRenderingContextWin :: nsRenderingContextWin()
 {
   NS_INIT_REFCNT();
 
-  // The first time in we initialize gIsWIN95 flag & gFastDDASupport flag
+  // The first time in we initialize gIsWIN95 flag
   if (NOT_SETUP == gIsWIN95) {
     OSVERSIONINFO os;
     os.dwOSVersionInfoSize = sizeof(os);
@@ -182,13 +170,13 @@ nsRenderingContextWin :: nsRenderingContextWin()
   mDCOwner = nsnull;
   mFontMetrics = nsnull;
   mOrigSolidBrush = NULL;
-  mBlackBrush = NULL;
+  mWhiteBrush = NULL;
   mOrigFont = NULL;
   mDefFont = NULL;
   mOrigSolidPen = NULL;
   mBlackPen = NULL;
   mOrigPalette = NULL;
-  mCurrBrushColor = NULL;
+  mCurrBrushColor = NS_RGB(255, 255, 255);
   mCurrFontMetrics = nsnull;
   mCurrPenColor = NULL;
   mCurrPen = NULL;
@@ -238,11 +226,7 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
       mOrigFont = NULL;
     }
 
-    if (NULL != mDefFont)
-    {
-      VERIFY(::DeleteObject(mDefFont));
-      mDefFont = NULL;
-    }
+    mDefFont = NULL;  // stock object so we don't need to delete it
 
     if (NULL != mOrigSolidPen)
     {
@@ -251,14 +235,8 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
     }
   }
 
-  if (NULL != mCurrBrush)
-    VERIFY(::DeleteObject(mCurrBrush));
-
-  if ((NULL != mBlackBrush) && (mBlackBrush != mCurrBrush))
-    VERIFY(::DeleteObject(mBlackBrush));
-
-  mCurrBrush = NULL;
-  mBlackBrush = NULL;
+  mCurrBrush = NULL;   // don't delete - owned by brush cache
+  mWhiteBrush = NULL;  // stock object so we don't need to delete it
 
   //don't kill the font because the font cache/metrics owns it
   mCurrFont = NULL;
@@ -266,14 +244,11 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
   if (NULL != mCurrPen)
     VERIFY(::DeleteObject(mCurrPen));
 
-  if ((NULL != mBlackPen) && (mBlackPen != mCurrPen))
-    VERIFY(::DeleteObject(mBlackPen));
-
   if ((NULL != mNullPen) && (mNullPen != mCurrPen))
     VERIFY(::DeleteObject(mNullPen));
 
   mCurrPen = NULL;
-  mBlackPen = NULL;
+  mBlackPen = NULL;  // stock object so we don't need to delete it
   mNullPen = NULL;
 
   if (nsnull != mStateCache)
@@ -440,7 +415,7 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
   }
   else
   {
-    prevbrush = mBlackBrush;
+    prevbrush = mWhiteBrush;
     prevfont = mDefFont;
     prevpen = mBlackPen;
   }
@@ -472,9 +447,6 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
       ::RealizePalette(aNewDC);
   }
 
-  if (GetDeviceCaps(aNewDC, RASTERCAPS) & (RC_BITBLT))
-    gFastDDASupport = PR_TRUE;
-
   return NS_OK;
 }
 
@@ -490,11 +462,9 @@ nsresult nsRenderingContextWin :: CommonInit(void)
   mInitialized = PR_TRUE;
 #endif
 
-  mBlackBrush = (HBRUSH)::GetStockObject(BLACK_BRUSH);
-  mDefFont = ::CreateFont(12, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
-                          ANSI_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS,
-                          DEFAULT_QUALITY, FF_ROMAN | VARIABLE_PITCH, "Times New Roman");
-  mBlackPen = ::CreatePen(PS_SOLID, 0, RGB(0, 0, 0));
+  mWhiteBrush = (HBRUSH)::GetStockObject(WHITE_BRUSH);
+  mDefFont = (HFONT)::GetStockObject(SYSTEM_FONT);
+  mBlackPen = (HPEN)::GetStockObject(BLACK_PEN);
 
   mContext->GetGammaTable(mGammaTable);
 
@@ -575,9 +545,6 @@ NS_IMETHODIMP nsRenderingContextWin :: UnlockDrawingSurface(void)
       if (PR_FALSE == offscr)
         ::RealizePalette(mDC);
     }
-
-    if (GetDeviceCaps(mDC, RASTERCAPS) & (RC_BITBLT))
-      gFastDDASupport = PR_TRUE;
   }
 
   return NS_OK;
@@ -1079,7 +1046,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawLine(nscoord aX0, nscoord aY0, nscoor
 
   SetupPen();
 
-  if ((nsLineStyle_kDotted == mCurrLineStyle) && (PR_TRUE == gFastDDASupport))
+  if (nsLineStyle_kDotted == mCurrLineStyle)
   {
     lineddastruct dda_struct;
 
@@ -1243,16 +1210,10 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawPolygon(const nsPoint aPoints[], PRIn
 	}
 
   // Outline the polygon - note we are implicitly ignoring the linestyle here
-  LOGBRUSH lb;
-  lb.lbStyle = BS_NULL;
-  lb.lbColor = 0;
-  lb.lbHatch = 0;
   SetupSolidPen();
-  HBRUSH brush = ::CreateBrushIndirect(&lb);
-  HBRUSH oldBrush = (HBRUSH)::SelectObject(mDC, brush);
+  HBRUSH oldBrush = (HBRUSH)::SelectObject(mDC, ::GetStockObject(NULL_BRUSH));
   ::Polygon(mDC, pp0, int(aNumPoints));
   ::SelectObject(mDC, oldBrush);
-  ::DeleteObject(brush);
 
   // Release temporary storage if necessary
   if (pp0 != pts)
@@ -2124,28 +2085,98 @@ NS_IMETHODIMP nsRenderingContextWin::RetrieveCurrentNativeGraphicData(PRUint32 *
   return NS_OK;
 }
 
-#ifdef NS_DEBUG
-//these are used with the routines below
-//to see how our state caching is working... MMP
-static numpen = 0;
-static numbrush = 0;
-static numfont = 0;
-#endif
+// Small cache of HBRUSH objects
+// Note: the current assumption is that there is only one UI thread so
+// we do not lock, and we do not use TLS
+static const int  BRUSH_CACHE_SIZE = 17;  // 2 stock plus 15
+
+class SolidBrushCache {
+public:
+  SolidBrushCache();
+  ~SolidBrushCache();
+
+  HBRUSH  GetSolidBrush(COLORREF aColor);
+
+private:
+  struct CacheEntry {
+    HBRUSH   mBrush;
+    COLORREF mBrushColor;
+  };
+
+  CacheEntry  mCache[BRUSH_CACHE_SIZE];
+  int         mIndexOldest;  // index of oldest entry in cache
+};
+
+SolidBrushCache::SolidBrushCache()
+  : mIndexOldest(2)
+{
+  // First two entries are stock objects
+  mCache[0].mBrush = (HBRUSH)::GetStockObject(WHITE_BRUSH);
+  mCache[0].mBrushColor = RGB(255, 255, 255);
+  mCache[1].mBrush = (HBRUSH)::GetStockObject(BLACK_BRUSH);
+  mCache[1].mBrushColor = RGB(0, 0, 0);
+}
+
+SolidBrushCache::~SolidBrushCache()
+{
+  // No need to delete the stock objects
+  for (int i = 2; i < BRUSH_CACHE_SIZE; i++) {
+    if (mCache[i].mBrush) {
+      ::DeleteObject(mCache[i].mBrush);
+    }
+  }
+}
+
+HBRUSH
+SolidBrushCache::GetSolidBrush(COLORREF aColor)
+{
+  int     i;
+  HBRUSH  result = NULL;
+  
+  // See if it's already in the cache
+  for (i = 0; (i < BRUSH_CACHE_SIZE) && mCache[i].mBrush; i++) {
+    if (mCache[i].mBrush && (mCache[i].mBrushColor == aColor)) {
+      // Found an existing brush
+      result = mCache[i].mBrush;
+      break;
+    }
+  }
+
+  if (!result) {
+    // We didn't find it in the set of existing brushes, so create a
+    // new brush
+    result = (HBRUSH)::CreateSolidBrush(PALETTERGB_COLORREF(aColor));
+
+    // If there's an empty slot in the cache, then just add it there
+    if (i >= BRUSH_CACHE_SIZE) {
+      // Nope. The cache is full so we need to replace the oldest entry
+      // in the cache
+      ::DeleteObject(mCache[mIndexOldest].mBrush);
+      i = mIndexOldest;
+      if (++mIndexOldest >= BRUSH_CACHE_SIZE) {
+        mIndexOldest = 2;
+      }
+    }
+
+    // Add the new entry
+    mCache[i].mBrush = result;
+    mCache[i].mBrushColor = aColor;
+  }
+
+  return result;
+}
+
+static SolidBrushCache  gSolidBrushCache;
 
 HBRUSH nsRenderingContextWin :: SetupSolidBrush(void)
 {
   if ((mCurrentColor != mCurrBrushColor) || (NULL == mCurrBrush))
   {
-    HBRUSH tbrush = ::CreateSolidBrush(PALETTERGB_COLORREF(mColor));
-
+    HBRUSH tbrush = gSolidBrushCache.GetSolidBrush(mColor);
+    
     ::SelectObject(mDC, tbrush);
-
-    if (NULL != mCurrBrush)
-      VERIFY(::DeleteObject(mCurrBrush));
-
     mCurrBrush = tbrush;
     mCurrBrushColor = mCurrentColor;
-//printf("brushes: %d\n", ++numbrush);
   }
 
   return mCurrBrush;
@@ -2164,7 +2195,6 @@ void nsRenderingContextWin :: SetupFontAndColor(void)
 
     mCurrFont = tfont;
     mCurrFontMetrics = mFontMetrics;
-//printf("fonts: %d\n", ++numfont);
   }
 
   if (mCurrentColor != mCurrTextColor)
@@ -2209,6 +2239,10 @@ HPEN nsRenderingContextWin :: SetupSolidPen(void)
 {
   if ((mCurrentColor != mCurrPenColor) || (NULL == mCurrPen) || (mCurrPen != mStates->mSolidPen))
   {
+    // XXX This is really slow performance wise to create and destroy pens
+    // all the time. We either need to:
+    // - maintain a small cache
+    // - use the new DC_PEN stock solid color pen in Win 98 and NT 5.0
     HPEN  tpen = ::CreatePen(PS_SOLID, 0, PALETTERGB_COLORREF(mColor));
 
     ::SelectObject(mDC, tpen);
@@ -2218,7 +2252,6 @@ HPEN nsRenderingContextWin :: SetupSolidPen(void)
 
     mStates->mSolidPen = mCurrPen = tpen;
     mCurrPenColor = mCurrentColor;
-//printf("pens: %d\n", ++numpen);
   }
 
   return mCurrPen;
@@ -2237,7 +2270,6 @@ HPEN nsRenderingContextWin :: SetupDashedPen(void)
 
     mStates->mDashedPen = mCurrPen = tpen;
     mCurrPenColor = mCurrentColor;
-//printf("pens: %d\n", ++numpen);
   }
 
   return mCurrPen;
@@ -2256,7 +2288,6 @@ HPEN nsRenderingContextWin :: SetupDottedPen(void)
 
     mStates->mDottedPen = mCurrPen = tpen;
     mCurrPenColor = mCurrentColor;
-//printf("pens: %d\n", ++numpen);
   }
 
   return mCurrPen;
