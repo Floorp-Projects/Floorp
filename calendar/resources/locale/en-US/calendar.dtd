@@ -161,11 +161,11 @@
 <!ENTITY calendar.calendarlistbox.label "Calendars">
 
 <!ENTITY calendar.events.filter.all.label "All Events">
-<!ENTITY calendar.events.filter.all.label "Today's Events">
-<!ENTITY calendar.events.filter.all.label "Events This Week">
-<!ENTITY calendar.events.filter.all.label "Events Next 2 Weeks">
-<!ENTITY calendar.events.filter.all.label "Events In The Next Month">
-<!ENTITY calendar.events.filter.all.label "All Future Events">
+<!ENTITY calendar.events.filter.today.label "Today's Events">
+<!ENTITY calendar.events.filter.week.label "Events This Week">
+<!ENTITY calendar.events.filter.2weeks.label "Events Next 2 Weeks">
+<!ENTITY calendar.events.filter.month.label "Events In The Next Month">
+<!ENTITY calendar.events.filter.future.label "All Future Events">
 <!ENTITY calendar.events.filter.current.label "Currently Selected Day">
 
 <!ENTITY calendar.unifinder.tree.done.label          "Done">
