@@ -78,8 +78,9 @@
     <td>
       <select name="component" size="5">
         [%- FOREACH c = component_ %]
-          <option value="[% c FILTER html %]"
-            [% " selected=\"selected\"" IF c == default.component_ %]>[% c FILTER html -%]
+          <option value="[% c.name FILTER html %]"
+            [% " selected=\"selected\"" IF c.name == default.component_ %]>
+            [% c.name FILTER html -%]
           </option>
         [%- END %]
       </select>

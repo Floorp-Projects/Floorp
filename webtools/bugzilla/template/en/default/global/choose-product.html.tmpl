@@ -27,8 +27,9 @@
 [% FOREACH p = proddesc.keys.sort %]
   <tr>
     <th align="right" valign="top">
-      <a href="[% target %]?product=[% p FILTER url_quote %]">
-        [% p FILTER html %]</a>:
+      <a href="[% target %]?product=[% p FILTER url_quote %]
+                                       [%- "&amp;format=$format" IF format %]">
+      [% p FILTER html %]</a>:
     </th>
 
     [% IF proddesc.$p %]

@@ -1750,6 +1750,9 @@ $::vars =
 
     # SyncAnyPendingShadowChanges - called in the footer to sync the shadowdb
     'SyncAnyPendingShadowChanges' => \&SyncAnyPendingShadowChanges ,
+    
+    # User Agent - useful for detecting in templates
+    'user_agent' => $ENV{'HTTP_USER_AGENT'} ,
   };
 
 1;

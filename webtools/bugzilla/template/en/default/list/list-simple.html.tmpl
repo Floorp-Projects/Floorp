@@ -39,7 +39,11 @@
   </head>
 
   <body>
-    [% PROCESS list/table.html.tmpl %]
+    [% IF bugs.size == 0 %]
+      <h3>Zarro Boogs found.</h3>
+    [% ELSE %]
+      [% PROCESS list/table.html.tmpl %]
+    [% END %]
   </body>
 
 </html>

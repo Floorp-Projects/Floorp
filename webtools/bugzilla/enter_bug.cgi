@@ -86,6 +86,7 @@ if (!defined $::FORM{'product'}) {
         $vars->{'proddesc'} = \%products;
 
         $vars->{'target'} = "enter_bug.cgi";
+        $vars->{'format'} = $::FORM{'format'};
         $vars->{'title'} = "Enter Bug";
         $vars->{'h2'} = 
                     "First, you must pick a product on which to enter a bug.";
@@ -258,9 +259,23 @@ elsif (1 == @{$::components{$product}}) {
     $::FORM{'component'} = $::components{$product}->[0];
 }
 
+my @components;
+SendSQL("SELECT value, description FROM components " . 
+        "WHERE program = " . SqlQuote($product) . " ORDER BY value");
+while (MoreSQLData()) {
+    my ($name, $description) = FetchSQLData();
+
+    my %component;
+
+    $component{'name'} = $name;
+    $component{'description'} = $description;
+
+    push @components, \%component;
+}
+
 my %default;
 
-$vars->{'component_'} = $::components{$product};
+$vars->{'component_'} = \@components;
 $default{'component_'} = formvalue('component');
 
 $vars->{'assigned_to'} = formvalue('assigned_to');
@@ -359,7 +374,8 @@ if ($::usergroupset ne '0') {
 
 $vars->{'default'} = \%default;
 
-print "Content-type: text/html\n\n";
-$template->process("bug/create/create.html.tmpl", $vars)
+my $format = ValidateOutputFormat($::FORM{'format'}, "create");
+
+print "Content-type: $format->{'contenttype'}\n\n";
+$template->process("bug/create/$format->{'template'}", $vars)
   || ThrowTemplateError($template->error());          
-exit;
