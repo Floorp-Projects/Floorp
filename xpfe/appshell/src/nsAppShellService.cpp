@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Robert O'Callahan <roc+moz@cs.cmu.edu>
  */
 
 
@@ -568,8 +569,17 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
         widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_title);
       if (aChromeMask & nsIWebBrowserChrome::windowCloseOn)
         widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_close);
-      if (aChromeMask & nsIWebBrowserChrome::windowResizeOn)
-        widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_resizeh | eBorderStyle_minimize | eBorderStyle_maximize | eBorderStyle_menu);
+      if (aChromeMask & nsIWebBrowserChrome::windowResizeOn) {
+        widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_resizeh);
+        /* Associate the resize flag with min/max buttons and system menu.
+           but not for dialogs. This is logic better associated with the
+           platform implementation, and partially covered by the
+           eBorderStyle_default style. But since I know of no platform
+           that wants min/max buttons on dialogs, it works here, too.
+           If you have such a platform, this is where the fun starts: */
+        if (!(aChromeMask & nsIWebBrowserChrome::openAsDialog))
+          widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_minimize | eBorderStyle_maximize | eBorderStyle_menu);
+      }
     }
 
     if (aInitialWidth == NS_SIZETOCONTENT ||
