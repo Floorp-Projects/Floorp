@@ -13,6 +13,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 export::
+	@echo "********************************* goats"
 	cp $(srcdir)/default.xpm $(DEPTH)/browser/app/default.xpm
 	cp $(srcdir)/mozicon16.xpm $(DEPTH)/browser/app/mozicon16.xpm
 	cp $(srcdir)/mozicon50.xpm $(DEPTH)/browser/app/mozicon50.xpm
