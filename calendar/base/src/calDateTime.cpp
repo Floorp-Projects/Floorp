@@ -325,6 +325,7 @@ calDateTime::GetScriptableFlags(PRUint32 *aScriptableFlags)
     *aScriptableFlags =
         nsIXPCScriptable::WANT_GETPROPERTY |
         nsIXPCScriptable::WANT_SETPROPERTY |
+        nsIXPCScriptable::WANT_NEWRESOLVE |
         nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE;
     return NS_OK;
 }
@@ -360,8 +361,9 @@ calDateTime::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
         nsDependentString jsid((PRUnichar *)::JS_GetStringChars(JSVAL_TO_STRING(id)),
                                ::JS_GetStringLength(JSVAL_TO_STRING(id)));
         if (jsid.EqualsLiteral("jsDate") && vp) {
-            JSObject *dobj = JSVAL_TO_OBJECT(*vp);
-            if (!js_DateIsValid(cx, dobj)) {
+            JSObject *dobj;
+            if (!JSVAL_IS_OBJECT(*vp) ||
+                !js_DateIsValid(cx, (dobj = JSVAL_TO_OBJECT(*vp)))) {
                 mValid = PR_FALSE;
             } else {
                 jsdouble utcMsec = js_DateGetMsecSinceEpoch(cx, dobj);
@@ -446,9 +448,25 @@ calDateTime::NewEnumerate(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
 /* PRBool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id, in PRUint32 flags, out JSObjectPtr objp); */
 NS_IMETHODIMP
 calDateTime::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
-                        JSObject * obj, jsval id, PRUint32 flags, JSObject * *objp, PRBool *_retval)
+                        JSObject * obj, jsval id, PRUint32 flags,
+                        JSObject * *objp, PRBool *_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (JSVAL_IS_STRING(id)) {
+        JSString *str = JSVAL_TO_STRING(id);
+        nsDependentString name((PRUnichar *)::JS_GetStringChars(str),
+                               ::JS_GetStringLength(str));
+        if (name.EqualsLiteral("jsDate")) {
+            *_retval = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                             ::JS_GetStringLength(str),
+                                             JSVAL_VOID,
+                                             nsnull, nsnull, 0);
+            *objp = obj;
+            return *_retval ? NS_OK : NS_ERROR_FAILURE;
+        }
+    }
+
+    *_retval = PR_TRUE;
+    return NS_OK;
 }
 
 /* PRBool convert (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in PRUint32 type, in JSValPtr vp); */
