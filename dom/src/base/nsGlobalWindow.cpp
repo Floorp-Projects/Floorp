@@ -3356,30 +3356,7 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
     return NS_OK; // don't open the window, but also don't throw a JS exception
   }
 
-  // If we're called from chrome, push our context onto the context
-  // stack. This is so that opening a window from chrome by calling
-  // open() on a non-chrome window doesn't allow chrome-only features
-  // on the new window (opened through this non-chrome window).
-  nsCOMPtr<nsIJSContextStack> stack;
-
-  if (IsCallerChrome() && mContext) {
-    stack = do_GetService(sJSStackContractID);
-
-    JSContext *my_cx = NS_REINTERPRET_CAST(JSContext *,
-                                           mContext->GetNativeContext());
-
-    if (stack && my_cx) {
-      stack->Push(my_cx);
-    } else {
-      stack = nsnull;
-    }
-  }
-
   rv = OpenInternal(url, name, options, PR_FALSE, nsnull, 0, nsnull, _retval);
-
-  if (stack) {
-    stack->Pop(nsnull);
-  }
 
   nsCOMPtr<nsIDOMChromeWindow> chrome_win(do_QueryInterface(*_retval));
 
