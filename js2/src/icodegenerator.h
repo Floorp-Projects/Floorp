@@ -241,6 +241,7 @@ namespace ICG {
         
         TypedRegister op(ICodeOp op, TypedRegister source);
         TypedRegister op(ICodeOp op, TypedRegister source1, TypedRegister source2);
+        TypedRegister binaryOp(ICodeOp op, TypedRegister source1, TypedRegister source2);
         TypedRegister call(TypedRegister target, const StringAtom &name, RegisterList *args);
         TypedRegister methodCall(TypedRegister targetBase, TypedRegister targetValue, RegisterList *args);
         TypedRegister staticCall(JSClass *c, const StringAtom &name, RegisterList *args);

@@ -35,12 +35,12 @@ namespace Interpreter {
     struct Activation;
     
     struct Linkage;
-    
+
     class Context : public gc_base {
         void initContext();
     public:
         explicit Context(World& world, JSScope* aGlobal)
-            : mWorld(world), mGlobal(aGlobal), mLinkage(0), mActivation(0) { initContext(); }
+            : mWorld(world), mGlobal(aGlobal), mLinkage(0), mActivation(0), mHasOperatorsPackageLoaded(false) { initContext(); }
 
         World& getWorld()           { return mWorld; }
         JSScope* getGlobalObject()  { return mGlobal; }
@@ -77,12 +77,18 @@ namespace Interpreter {
         JSValue interpret(ICodeModule* iCode, const JSValues& args);
         void doCall(JSFunction *target, Instruction *pc);
 
-
         ICodeModule* genCode(StmtNode *p, const String &fileName);
         JSValue readEvalFile(FILE* in, const String& fileName);
 
+        void addBinaryOperator(BinaryOperator::BinaryOp op, BinaryOperator *fn) { mBinaryOperators[op].push_back(fn); }
+        const JSValue findBinaryOverride(JSValue &operand1, JSValue &operand2, BinaryOperator::BinaryOp op);
+
+
+        bool hasOperatorsPackageLoaded()    { return mHasOperatorsPackageLoaded; }
+
     private:
         void broadcast(Event event);
+        void initOperatorsPackage();
 
     private:
         World& mWorld;
@@ -92,7 +98,12 @@ namespace Interpreter {
         typedef ListenerList::iterator ListenerIterator;
         ListenerList mListeners;
         Activation* mActivation;
+        bool mHasOperatorsPackageLoaded;
+
         InstructionIterator mPC;
+        
+        BinaryOperatorList mBinaryOperators[BinaryOperator::BinaryOperatorCount];
+
     }; /* class Context */
 
 } /* namespace Interpreter */

@@ -46,17 +46,23 @@ namespace JavaScript {
 namespace ICG {
     class ICodeModule;
 } /* namespace ICG */
+namespace Interpreter {
+    class Context;
+} /* namespace Interpreter */
 } /* namespace JavaScript */
 
 namespace JavaScript {
 namespace JSTypes {
+
     using ICG::ICodeModule;
+    using Interpreter::Context;
     
     class JSObject;
     class JSArray;
     class JSFunction;
     class JSString;
     class JSType;
+    class Context;
     
     /**
      * All JavaScript data types.
@@ -350,7 +356,7 @@ namespace JSTypes {
 
     class JSNativeFunction : public JSFunction {
     public:
-        typedef JSValue (*JSCode)(const JSValues& argv);
+        typedef JSValue (*JSCode)(Context *cx, const JSValues& argv);
         JSCode mCode;
         JSNativeFunction(JSCode code) : mCode(code) {}
         virtual bool isNative()    { return true; }

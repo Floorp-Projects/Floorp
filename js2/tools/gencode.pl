@@ -78,6 +78,12 @@ $ops{"DEBUGGER"} =
    super  => "Instruction",
    rem    => "drop to the debugger",
   };
+$ops{"GENERIC_BINARY_OP"} =
+  {
+   super  => "Instruction_4",
+   rem    => "dest, op, source1, source2",
+   params => [ ("TypedRegister", "BinaryOperator::BinaryOp", "TypedRegister", "TypedRegister") ]
+  };
 $ops{"MOVE"} =
   {
    super  => "Instruction_2",
