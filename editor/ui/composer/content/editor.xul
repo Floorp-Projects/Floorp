@@ -91,10 +91,10 @@
   <broadcaster id="args" value="chrome://editor/content/EditorInitPage.html"/>
   <broadcaster id="canPrint"/>
   
-  <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
+  <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs
   <broadcaster id="dialog.start" ready="false"/>
   <observes element="dialog.start" attribute="ready" onbroadcast="EditorStartup('html')"/>
-  
+-->
   <!-- command nodes are appended here from the overlays -->
   <broadcasterset id="broadcasterset">
     <broadcaster id="Editor:Throbber" busy="false"/>
@@ -233,7 +233,7 @@
       </box>
     </deck>
 
-    <box id="EditModeToolbar" hidden="true" autostretch="never" valign="middle" persist="hidden collapsed">
+    <box id="EditModeToolbar" hidden="false" autostretch="never" valign="middle" persist="hidden collapsed">
       <tabbox id="EditModeTabbox" class="tabbox-bottom" flex="1">
       <tab id="NormalModeButton"/>
         <tab id="TagModeButton"/>
