@@ -786,7 +786,8 @@ AC_TRY_LINK(
             FC_Initialize();
             exit(0);
         }
-        , [FULLCIRCLE_LIB="-ltalkback $FULLCIRCLE_LIB" result="yes"],
+        ,[FULLCIRCLE_LIB="-ltalkback $FULLCIRCLE_LIB" result="yes"],
+        [MISSING_FULLCIRCLE=1 result="no"],
         [MISSING_FULLCIRCLE=1 result="no"] ) 
 AC_MSG_RESULT("$result")
 
