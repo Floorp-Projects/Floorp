@@ -31,7 +31,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= ctl
 LIBRARY_NAME	= ctl
-Expcom_obsolete_LIBRARY = 1
+EXPORT_LIBRARY  = 1
 IS_COMPONENT	= 1
 
 REQUIRES	= xpcom_obsolete \

@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= ucvmath
 LIBRARY_NAME	= ucvmath
-Expcom_obsolete_LIBRARY = 1
+EXPORT_LIBRARY  = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsUCvMathModule
 GRE_MODULE	= 1
