@@ -121,7 +121,7 @@ struct ProtocolRegistryEntry : public SavedRegistryEntry {
         keyName += "\\shell\\open\\command";
 
         // Append appropriate suffix to setting.
-        if ( protocol == "chrome" ) {
+        if ( this->protocol.Equals( "chrome" ) ) {
             // Use "-chrome" command line flag.
             setting += chromeSuffix;
         } else {
@@ -274,8 +274,8 @@ nsresult ProtocolRegistryEntry::set() {
     SavedRegistryEntry( HKEY_LOCAL_MACHINE, ddeName, NULL, NULL ).set();
 
     // Special case.
-    if ( protocol = "http" ) {
-        // We need to zap HKR\Software\Classes\http\shell\open\ddeexec\Application
+    if ( protocol.Equals( "http" ) ) {
+        // We need to zap HKLM\Software\Classes\http\shell\open\ddeexec\Application
         // because Communicator looks there to determine whether they're the
         // "default browser."  If they are (the value there is "NSShell" or "Netscape")
         // then it will reset lots of registry entries, "stealing" them from us.
@@ -339,7 +339,7 @@ nsresult ProtocolRegistryEntry::reset() {
 
     // Special case.
     if ( protocol = "http" ) {
-        // We had to zap HKR\Software\Classes\http\shell\open\ddeexec\Application
+        // We had to zap HKLM\Software\Classes\http\shell\open\ddeexec\Application
         // (see comment above under ProtocolRegistryEntry::set).  Restore it here.
         SavedRegistryEntry( HKEY_LOCAL_MACHINE, "Software\\Classes\\http\\shell\\open\\ddeexec\\Application", NULL, NULL ).reset();
     }
