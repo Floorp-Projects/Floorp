@@ -29,7 +29,7 @@
 
 <!ENTITY cmd.close.commandKey             "w">
 <!ENTITY cmd.cleanUp.label                "Clean Up">
-<!ENTITY cmd.cleanUp.tooltip              "Removes completed, canceled or failed downloads from the list">
+<!ENTITY cmd.cleanUp.tooltip              "Removes completed, canceled and failed downloads from the list">
 <!ENTITY cmd.cleanUp.accesskey            "a">
 
 <!ENTITY cmd.change.label                 "Change...">
