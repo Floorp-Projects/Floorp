@@ -120,10 +120,7 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINS
     (NP_GETENTRYPOINTS)PR_FindSymbol(aLibrary, "NP_GetEntryPoints");
   
   if (!pfnGetEntryPoints)
-  {
-    NS_ASSERTION(pfnGetEntryPoints, "failed to get entry points");
     return;
-  }
  
   fCallbacks.size = sizeof(fCallbacks);
   
@@ -134,32 +131,24 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINS
     "callback version is less than NP version");
 
   fShutdownEntry = (NP_PLUGINSHUTDOWN)PR_FindSymbol(aLibrary, "NP_Shutdown");
-#elif defined(XP_MAC)
+#elif defined(XP_MAC) && !defined(TARGET_CARBON)
   // get the main entry point
-#if TARGET_CARBON
-  NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "main");
-#else
   NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "mainRD");
 
-
   if(pfnMain == NULL)
-  {
-    NS_ASSERTION(pfnMain, "failed to get entry points");
     return;
-  }
 
   // call into the entry point
   NPError error;
   NS_TRY_SAFE_CALL_RETURN(error, CallNPP_MainEntryProc(pfnMain, 
                                                        &(ns4xPlugin::CALLBACKS), 
                                                        &fCallbacks, 
-                                                       (NP_PLUGINSHUTDOWN)&fShutdownEntry), aLibrary);
+                                                       &fShutdownEntry), aLibrary);
 
-  if(error != NPERR_NO_ERROR 	|| ((fCallbacks.version >> 8) < NP_VERSION_MAJOR))
+  if(error != NPERR_NO_ERROR || ((fCallbacks.version >> 8) < NP_VERSION_MAJOR))
   {
     return;
   }
-#endif // !TARGET_CARBON
 #else // for everyone else
   memcpy((void*) &fCallbacks, (void*) callbacks, sizeof(fCallbacks));
   fShutdownEntry = aShutdown;
@@ -340,11 +329,15 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
       return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(*aResult);
-	
-	// we must init here because the plugin may call NPN functions
-	// when we call into the NP_Initialize entry point - NPN functions
-	// require that mBrowserManager be set up
-    (*aResult)->Initialize();
+
+    // we must init here because the plugin may call NPN functions 
+    // when we call into the NP_Initialize entry point - NPN functions
+    // require that mBrowserManager be set up
+    if (NS_FAILED((*aResult)->Initialize()))
+    {
+      NS_RELEASE(*aResult);
+      return NS_ERROR_FAILURE;
+    }
 
     // the NP_Initialize entry point was misnamed as NP_PluginInit,
     // early in plugin project development.  Its correct name is
@@ -414,19 +407,51 @@ ns4xPlugin::CreatePlugin(nsIServiceManager* aServiceMgr,
       }
     } 
    
+#if TARGET_CARBON
+  // call into the entry point
+  NP_MAIN pfnMain = (NP_MAIN) PR_FindSymbol(aLibrary, "main");
 
-  ns4xPlugin* plugin = new ns4xPlugin(nsnull, aLibrary, nsnull, aServiceMgr);
-  if(plugin == NULL)
-    return NS_ERROR_OUT_OF_MEMORY;
+  if(pfnMain == NULL)
+    return NS_ERROR_FAILURE;
+
+  NPP_ShutdownUPP pfnShutdown;
+  NPPluginFuncs callbacks;
+  memset((void*) &callbacks, 0, sizeof(callbacks));
+  callbacks.size = sizeof(callbacks);
+  NPError error;
+
+  NS_TRY_SAFE_CALL_RETURN(error, CallNPP_MainEntryProc(pfnMain, 
+                                                       &(ns4xPlugin::CALLBACKS), 
+                                                       &callbacks, 
+                                                       &pfnShutdown), fLibrary);
+  if(error != NPERR_NO_ERROR)
+    return NS_ERROR_FAILURE;
 
   ::UseResFile(appRefNum);
 
-  plugin->SetPluginRefNum(pluginRefNum);
+  if ((callbacks.version >> 8) < NP_VERSION_MAJOR)
+    return NS_ERROR_FAILURE;
 
-    *aResult = plugin;
-      
-    NS_ADDREF(*aResult);
+  // create the new plugin handler
+  ns4xPlugin* plugin = new ns4xPlugin(&callbacks, aLibrary, (NP_PLUGINSHUTDOWN)pfnShutdown, aServiceMgr);
+#else // not carbon
+  ::UseResFile(appRefNum);
+  ns4xPlugin* plugin = new ns4xPlugin(nsnull, aLibrary, nsnull, aServiceMgr);
 #endif
+  if(plugin == NULL)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  *aResult = plugin;
+
+  NS_ADDREF(*aResult);
+  if (NS_FAILED((*aResult)->Initialize()))
+  {
+    NS_RELEASE(*aResult);
+    return NS_ERROR_FAILURE;
+  }
+  
+  plugin->SetPluginRefNum(pluginRefNum);
+#endif  // XP_MAC
 
 #ifdef XP_BEOS
 // I just copied UNIX version.
@@ -520,7 +545,9 @@ NS_METHOD ns4xPlugin :: CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID,
 nsresult
 ns4xPlugin::Initialize(void)
 {
-	return NS_OK;
+  if (nsnull == fLibrary)
+    return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 nsresult
