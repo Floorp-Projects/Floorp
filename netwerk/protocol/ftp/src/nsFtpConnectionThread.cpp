@@ -66,7 +66,7 @@ NS_IMPL_ISUPPORTS3(nsFtpConnectionThread, nsIRunnable, nsIRequest, nsIStreamObse
 nsFtpConnectionThread::nsFtpConnectionThread() {
     NS_INIT_REFCNT();
     // bool init
-    mAsyncOpened = mConnected = mResetMode = mList = mRetryPass = mCachedConn = mSentStart = PR_FALSE;
+    mAsyncOpened = mConnected = mList = mRetryPass = mCachedConn = mSentStart = PR_FALSE;
     mFireCallbacks = mUsePasv = mBin = mKeepRunning = mAnonymous = PR_TRUE;
 
     mAction = GET;
@@ -214,6 +214,7 @@ nsFtpConnectionThread::Process() {
                     if (!carryOverBuf.IsEmpty() ) {
                         carryOverBuf += buffer;
                         cleanup = tmpBuffer = carryOverBuf.ToNewCString();
+                        carryOverBuf.Truncate(0);
                         if (!tmpBuffer) return NS_ERROR_OUT_OF_MEMORY;
                     } else {
                         tmpBuffer = buffer;
@@ -1055,13 +1056,7 @@ nsFtpConnectionThread::R_mode() {
     if (mAction == PUT) {
         return FTP_S_CWD;
     } else {
-        if (mResetMode) {
-            // if this was a mode reset, we know it was from a previous R_size() call
-            // don't bother going back into size
-            return FTP_S_CWD;
-        } else {
-            return FTP_S_SIZE;
-        }
+        return FTP_S_SIZE;
     }
 }
 
@@ -1085,6 +1080,10 @@ nsFtpConnectionThread::R_cwd() {
     FTP_STATE state = FTP_ERROR;
     if (mResponseCode/100 == 2) {
         mCwd = mCwdAttempt;
+
+        nsresult rv = mFTPChannel->SetContentType("application/http-index-format");
+        if (NS_FAILED(rv)) return FTP_ERROR;
+
         // success
         if (mAction == PUT) {
             // we are uploading
@@ -1094,7 +1093,7 @@ nsFtpConnectionThread::R_cwd() {
             state = FTP_S_LIST;
         }
     } else {
-        state = FTP_ERROR;
+        state = FTP_S_RETR;
     }
     return state;
 }
@@ -1123,13 +1122,6 @@ nsFtpConnectionThread::R_size() {
         rv = mFTPChannel->SetContentLength(mLength);
         if (NS_FAILED(rv)) return FTP_ERROR;
 
-    } if (mResponseCode/100 == 5) {
-        // couldn't get the size of what we asked for, must be a dir.
-        mResetMode = PR_TRUE;
-
-        rv = mFTPChannel->SetContentType("application/http-index-format");
-        if (NS_FAILED(rv)) return FTP_ERROR;
-        retState = FTP_S_MODE;
     }
 
     if (mAsyncOpened && mObserver) {
@@ -1187,14 +1179,7 @@ nsFtpConnectionThread::R_mdtm() {
         mLastModified = PR_ImplodeTime(&ts);
     }
 
-    PRUint32 len = PL_strlen(mPath);
-    CBufDescriptor buf(mPath, PR_TRUE, len + 1, len);
-    nsCAutoString pathStr(buf);
-    if (pathStr.Last() == '/') {
-        return FTP_S_CWD;
-    } else {
-        return FTP_S_RETR;
-    }
+    return FTP_S_CWD;
 }
 
 nsresult
@@ -1271,7 +1256,7 @@ nsFtpConnectionThread::R_retr() {
     if (mResponseCode/100 == 1) {
         return FTP_READ_BUF;
     }
-    return FTP_S_CWD;
+    return FTP_ERROR;
 }
 
 
@@ -1731,10 +1716,6 @@ nsFtpConnectionThread::StopProcessing() {
     nsresult rv;
     PRUnichar* errorMsg = nsnull;
 
-    // Release the transports
-    mCPipe = 0;
-    mDPipe = 0;
-
     // kill the event loop
     mKeepRunning = PR_FALSE;
 
@@ -1743,7 +1724,14 @@ nsFtpConnectionThread::StopProcessing() {
         // generate a FTP specific error msg.
         rv = MapResultCodeToString(mInternalError, &errorMsg);
         if (NS_FAILED(rv)) return rv;
+
+        if (mCPipe) (void)mCPipe->Cancel();
+        if (mDPipe) (void)mDPipe->Cancel();
     }
+
+    // Release the transports
+    mCPipe = 0;
+    mDPipe = 0;
 
     rv = mFTPChannel->Stopped(mInternalError, errorMsg);
     if (NS_FAILED(rv)) return rv;
