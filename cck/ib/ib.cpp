@@ -1210,12 +1210,25 @@ int StartIB(CString parms, WIDGET *curWidget)
 	ULARGE_INTEGER nTotalBytes, nTotalFreeBytes, nTotalAvailable;
 	GetDiskFreeSpaceEx(NULL,&nTotalAvailable, &nTotalBytes, &nTotalFreeBytes);
 	// Checking for 26.3MB disk space
-    if ((nTotalAvailable.QuadPart) > 27,577,549)
-		;
+	if (linuxOption != "Linux")
+	{
+		if ((nTotalAvailable.QuadPart) > 27,577,549)
+			;
+		else
+		{
+			AfxMessageBox("You dont have enough Disk space ", MB_OK);
+			return FALSE;
+		}
+	}
 	else
 	{
-		AfxMessageBox("You dont have enough Disk space ", MB_OK);
-		return FALSE;
+		if ((nTotalAvailable.QuadPart) > 84,934,656)
+			;
+		else
+		{
+			AfxMessageBox("You dont have enough Disk space ", MB_OK);
+			return FALSE;
+		}
 	}
 //Check for Disk space over
 
