@@ -1094,9 +1094,6 @@ NS_METHOD nsContainerFrame::VerifyTree() const
   return NS_OK;
 }
 
-/////////////////////////////////////////////////////////////////////////////
-
-#ifdef NS_DEBUG
 PRInt32 nsContainerFrame::LengthOf(nsIFrame* aFrame)
 {
   PRInt32 result = 0;
@@ -1108,6 +1105,10 @@ PRInt32 nsContainerFrame::LengthOf(nsIFrame* aFrame)
 
   return result;
 }
+
+/////////////////////////////////////////////////////////////////////////////
+
+#ifdef NS_DEBUG
 
 PRBool nsContainerFrame::IsChild(const nsIFrame* aChild) const
 {
