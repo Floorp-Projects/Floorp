@@ -22,7 +22,6 @@
 #include "nsBrowserWindow.h"
 #include "nsGtkMenu.h"
 #include "nsIImageManager.h"
-#include <stdlib.h>
 #include "plevent.h"
 
 static nsNativeViewerApp* gTheApp;
@@ -102,29 +101,66 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 
 
 #ifdef CRAWL_STACK_ON_SIGSEGV
-#include "nsTraceRefcnt.h"
+
 #include <signal.h>
+#include <unistd.h>
+#include "nsTraceRefcnt.h"
+
+extern "C" char * strsignal(int);
+
+static char _progname[1024] = "huh?";
 
 void
-sigsegv_handler(int signum)
+ah_crap_handler(int signum)
 {
   PR_CurrentThread();
 
-  printf("sigsegv_handler(signum = %d)\n",signum);
-
+  printf("prog = %s\npid = %d\nsignal = %s\n",
+         _progname,
+         getpid(),
+         strsignal(signum));
+  
   char stack[4096];
-
+  
   nsTraceRefcnt::WalkTheStack(stack, sizeof(stack));
+  
+  // Convert all spaces between symbols to newlines for readability
+  char * needle  = "+0x";
+  char * haystack  = stack;
+  char * sp = NULL;
+  
+  while((sp = strstr(haystack,needle)))
+  {
+    char * ws = strchr(sp,' ');
 
-  printf("stack = %s\n",stack);
+    if (ws)
+    {
+      *ws = '\n';
+
+      haystack = ws + 1;
+    }
+  }
+
+  printf("stack = %s\n\n",stack);
+
+  printf("Sleeping for 5 minutes.\n");
+  printf("Type 'gdb %s %d' to attatch your debugger to this thread.\n",
+         _progname,
+         getpid());
+
+  sleep(300);
+
+  printf("Done sleeping...\n");
 } 
 #endif // CRAWL_STACK_ON_SIGSEGV
 
 int main(int argc, char **argv)
 {
 #ifdef CRAWL_STACK_ON_SIGSEGV
-  signal(SIGSEGV, sigsegv_handler);
-  signal(SIGILL, sigsegv_handler);
+  strcpy(_progname,argv[0]);
+  signal(SIGSEGV, ah_crap_handler);
+  signal(SIGILL, ah_crap_handler);
+  signal(SIGABRT, ah_crap_handler);
 #endif // CRAWL_STACK_ON_SIGSEGV
 
   // Hack to get il_ss set so it doesn't fail in xpcompat.c
