@@ -21,7 +21,6 @@
  */
 
 @import url(chrome://global/skin/);
-@import url(chrome://editor/skin/EditorToolbars.css);
 
 iframe#content-frame { 
   min-width: 10px; 
