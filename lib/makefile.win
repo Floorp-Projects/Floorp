@@ -38,7 +38,7 @@ DEPTH=..
 #//
 #//------------------------------------------------------------------------
 #DIRS=libi18n layout libstyle liblayer libmocha
-DIRS=libi18n htmldlgs libparse
+DIRS=libi18n htmldlgs libparse layout libstyle
 
 
 #//------------------------------------------------------------------------
