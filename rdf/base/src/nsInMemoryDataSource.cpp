@@ -35,6 +35,7 @@
 
  */
 
+#include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsIOutputStream.h"
 #include "nsIRDFCursor.h"
@@ -42,6 +43,7 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
 #include "nsIServiceManager.h"
+#include "nsAutoLock.h"
 #include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
 #include "nsRDFCID.h"
 #include "nsString.h"
@@ -49,14 +51,17 @@
 #include "rdfutil.h"
 #include "plhash.h"
 #include "plstr.h"
+#include "prlog.h"
 #include "rdf.h"
 
-
 #if 1 // defined(MOZ_THREADSAFE_RDF)
-#include "nsAutoLock.h"
 #define NS_AUTOLOCK(__monitor) nsAutoLock __lock(__monitor)
 #else
 #define NS_AUTOLOCK(__monitor)
+#endif
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo* gLog = nsnull;
 #endif
 
 
@@ -865,6 +870,11 @@ InMemoryDataSource::InMemoryDataSource(void)
     mLock = PR_NewLock();
 
     NS_INIT_REFCNT();
+
+#ifdef PR_LOGGING
+    if (! gLog)
+        gLog = PR_NewLogModule("InMemoryDataSource");
+#endif
 }
 
 InMemoryDataSource::~InMemoryDataSource(void)
@@ -890,6 +900,9 @@ InMemoryDataSource::~InMemoryDataSource(void)
         }
         delete mObservers;
     }
+
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("InMemoryDataSource(%s): destroyed.", mURL));
 
     if (mURL) PL_strfree(mURL);
     PR_DestroyLock(mLock);
@@ -955,6 +968,9 @@ InMemoryDataSource::Init(const char* uri)
 {
     if ((mURL = PL_strdup(uri)) == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
+
+    PR_LOG(gLog, PR_LOG_ALWAYS,
+           ("InMemoryDataSource(%s): initialized.", mURL));
 
     return NS_OK;
 }
@@ -1159,6 +1175,46 @@ InMemoryDataSource::SafeAssert(nsIRDFResource* source,
 {
     NS_AUTOLOCK(mLock);
 
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
+        nsXPIDLCString uri;
+        source->GetValue(getter_Copies(uri));
+        PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("InMemoryDataSource(%s):", mURL));
+
+        PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("ASSERT  [(%p)%s]--", source, (const char*) uri));
+
+        property->GetValue(getter_Copies(uri));
+        PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("        --%c[(%p)%s]--", (tv ? '-' : '!'), property, (const char*) uri));
+
+        nsCOMPtr<nsIRDFResource> resource;
+        nsCOMPtr<nsIRDFLiteral> literal;
+
+        if ((resource = do_QueryInterface(target)) != nsnull) {
+            resource->GetValue(getter_Copies(uri));
+            PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("        -->[(%p)%s]", target, (const char*) uri));
+        }
+        else if ((literal = do_QueryInterface(target)) != nsnull) {
+            nsXPIDLString value;
+            literal->GetValue(getter_Copies(value));
+            nsAutoString valueStr(value);
+            char* valueCStr = valueStr.ToNewCString();
+
+            PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("        -->(\"%s\")\n", valueCStr));
+
+            delete[] valueCStr;
+        }
+        else {
+            PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("        -->(unknown-type)\n"));
+        }
+    }
+#endif
+
     nsresult rv;
     Assertion* next = GetForwardArcs(source);
     Assertion* prev = next;
@@ -1262,6 +1318,46 @@ InMemoryDataSource::SafeUnassert(nsIRDFResource* source,
                                  nsIRDFNode* target)
 {
     NS_AUTOLOCK(mLock);
+
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
+        nsXPIDLCString uri;
+        source->GetValue(getter_Copies(uri));
+        PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("InMemoryDataSource(%s):", mURL));
+
+        PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("UNASSERT [(%p)%s]--", source, (const char*) uri));
+
+        property->GetValue(getter_Copies(uri));
+        PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("         ---[(%p)%s]--", property, (const char*) uri));
+
+        nsCOMPtr<nsIRDFResource> resource;
+        nsCOMPtr<nsIRDFLiteral> literal;
+
+        if ((resource = do_QueryInterface(target)) != nsnull) {
+            resource->GetValue(getter_Copies(uri));
+            PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("         -->[(%p)%s]", target, (const char*) uri));
+        }
+        else if ((literal = do_QueryInterface(target)) != nsnull) {
+            nsXPIDLString value;
+            literal->GetValue(getter_Copies(value));
+            nsAutoString valueStr(value);
+            char* valueCStr = valueStr.ToNewCString();
+
+            PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("         -->(\"%s\")\n", valueCStr));
+
+            delete[] valueCStr;
+        }
+        else {
+            PR_LOG(gLog, PR_LOG_ALWAYS,
+               ("         -->(unknown-type)\n"));
+        }
+    }
+#endif
 
     nsresult rv;
     Assertion* next = GetForwardArcs(source);
