@@ -7936,8 +7936,7 @@ ResDef(MK_LDAP_AUTHDN_LOOKUP_FAILED, XP_MSG_BASE + 1469, "Mail id invalid or not
 
 /* Cookies & Signons XP Strings */
 ResDef(MK_ACCESS_COOKIES_WISHES_MODIFY, (XP_MSG_BASE + 1476),
-"The site %1$s \nwishes to modify an existing cookie.\n\n\
-Do you wish to allow the cookie to be modified?")
+"The site %1$s \nwants permission to modify an existing cookie.")
 
 ResDef(MK_ACCESS_SITE_COOKIES_ACCEPTED, (XP_MSG_BASE + 1477),
 "Cookies that current site stored on your system")
@@ -7949,21 +7948,18 @@ ResDef(MK_SIGNON_VIEW_REJECTS, (XP_MSG_BASE + 1479),
 "View sign-ons that won't be saved")
 
 ResDef(MK_ACCESS_COOKIES_WISHES0, (XP_MSG_BASE + 1480),
-"The site %1$s \nwishes to set a cookie.\n\n\
-Do you wish to allow the cookie to be set?")
+"The site %1$s \nwants permission to set a cookie.")
 
 ResDef(MK_ACCESS_COOKIES_WISHES1, (XP_MSG_BASE + 1481),
-"The site %1$s \nwishes to set another cookie.\n\
-You currently have a cookie from this site.\n\n\
-Do you wish to allow the cookie to be set?")
+"The site %1$s \nwants permission to set another cookie.\n\
+You currently have a cookie from this site.")
 
 ResDef(MK_ACCESS_COOKIES_WISHESN, (XP_MSG_BASE + 1482),
-"The site %1$s \nwishes to set another cookie.\n\
-You currently have %2$d cookies from this site.\n\n\
-Do you wish to allow the cookie to be set?")
+"The site %1$s \nwants permission to set another cookie.\n\
+You currently have %2$d cookies from this site.")
 
 ResDef(MK_ACCESS_COOKIES_REMEMBER, (XP_MSG_BASE + 1483),
-"Do you want to remember this decision?")
+"Remember this decision")
 
 ResDef(MK_ACCESS_COOKIES_ACCEPTED, (XP_MSG_BASE + 1484),
 "Cookies stored on your system")
