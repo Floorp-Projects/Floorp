@@ -32,6 +32,7 @@
 
   TO DO
 
+  . fix ContentTagTest's location in the network contruction
   . use arenas
   . extended template syntax
 
@@ -406,6 +407,8 @@ protected:
         const Match* right = NS_STATIC_CAST(const Match*, aRight);
         return *left == *right; }
 
+    enum { kHashTableThreshold = 8 };
+
 public:
     class Iterator;
 
@@ -522,16 +525,7 @@ MatchSet::MatchSet()
     : mMatches(nsnull), mCount(0)
 {
     MOZ_COUNT_CTOR(MatchSet);
-
     mHead.mNext = mHead.mPrev = &mHead;
-
-    // XXXwaterson create this lazily if we exceed a threshold?
-    mMatches = PL_NewHashTable(16,
-                               HashMatch,
-                               CompareMatches,
-                               PL_CompareValues,
-                               nsnull /* XXXwaterson use an arena */,
-                               nsnull);
 }
 
 #ifdef NEED_CPP_UNUSED_IMPLEMENTATIONS
@@ -541,13 +535,12 @@ void MatchSet::operator=(const MatchSet& aMatchSet) {}
 
 MatchSet::~MatchSet()
 {
-    // XXXwaterson if it's worth it, do a hand rolled cleanup routine
-    // that avoids de-hashing n' stuff.
-    Clear();
-
-    if (mMatches)
+    if (mMatches) {
         PL_HashTableDestroy(mMatches);
+        mMatches = nsnull;
+    }
 
+    Clear();
     MOZ_COUNT_DTOR(MatchSet);
 }
 
@@ -555,6 +548,20 @@ MatchSet::~MatchSet()
 MatchSet::Iterator
 MatchSet::Insert(Iterator aIterator, const Match& aMatch)
 {
+    if (++mCount > kHashTableThreshold && !mMatches) {
+        // If we've exceeded a high-water mark, then hash everything.
+        mMatches = PL_NewHashTable(2 * kHashTableThreshold,
+                                   HashMatch,
+                                   CompareMatches,
+                                   PL_CompareValues,
+                                   nsnull /* XXXwaterson use an arena */,
+                                   nsnull);
+
+        Iterator last = Last();
+        for (Iterator match = First(); match != last; ++match)
+            PL_HashTableAdd(mMatches, &*match, &*match);
+    }
+
     MatchList* newelement = new MatchList();
     if (newelement) {
         newelement->mMatch = aMatch;
@@ -585,7 +592,18 @@ PRBool
 MatchSet::Contains(const Rule* aRule, const Instantiation& aInstantiation) const
 {
     Match match(aRule, aInstantiation);
-    return PL_HashTableLookup(mMatches, &match) != nsnull;
+    if (mMatches) {
+        return PL_HashTableLookup(mMatches, &match) != nsnull;
+    }
+    else {
+        ConstIterator last = Last();
+        for (ConstIterator i = First(); i != last; ++i) {
+            if (*i == match)
+                return PR_TRUE;
+        }
+    }
+
+    return PR_FALSE;
 }
 
 nsresult
@@ -610,6 +628,8 @@ MatchSet::Iterator
 MatchSet::Erase(Iterator aIterator)
 {
     Iterator result = aIterator;
+
+    --mCount;
 
     if (mMatches)
         PL_HashTableRemove(mMatches, &*aIterator);
@@ -902,40 +922,167 @@ public:
     void Clear();
 
 protected:
+    nsresult Init();
+    nsresult Destroy();
+
     // "Clusters" of matched rules for the same <content, member> pair
     PLHashTable* mMatches;
 
-    static PRIntn RemoveMatch(PLHashEntry* he, PRIntn i, void* arg);
+    class MatchEntry {
+    public:
+        MatchEntry() { MOZ_COUNT_CTOR(ConflictSet::MatchEntry); }
+        ~MatchEntry() { MOZ_COUNT_DTOR(ConflictSet::MatchEntry); }
+
+        struct PLHashEntry mHashEntry;
+        Key                mKey;
+        MatchSet           mMatchSet;
+    };
+
+    static PLHashAllocOps gMatchAllocOps;
+    static void*        PR_CALLBACK AllocMatchTable(void* aPool, PRSize aSize);
+    static void         PR_CALLBACK FreeMatchTable(void* aPool, void* aItem);
+    static PLHashEntry* PR_CALLBACK AllocMatchEntry(void* aPool, const void* aKey);
+    static void         PR_CALLBACK FreeMatchEntry(void* aPool, PLHashEntry* aHashEntry, PRUintn aFlag);
 
     // Maps an Instantiation::Binding to a MatchSet
     PLHashTable* mBindings;
 
+    class BindingEntry {
+    public:
+        BindingEntry() : mElement(nsnull)
+            { MOZ_COUNT_CTOR(ConflictSet::BindingEntry); }
+
+        ~BindingEntry() {
+            delete mElement;
+            MOZ_COUNT_DTOR(ConflictSet::BindingEntry); }
+
+        struct PLHashEntry mHashEntry;
+        MemoryElement*     mElement;
+        MatchSet           mMatchSet;
+    };
+
+    static PLHashAllocOps gBindingAllocOps;
+    static void*        PR_CALLBACK AllocBindingTable(void* aPool, PRSize aSize);
+    static void         PR_CALLBACK FreeBindingTable(void* aPool, void* aItem);
+    static PLHashEntry* PR_CALLBACK AllocBindingEntry(void* aPool, const void* aKey);
+    static void         PR_CALLBACK FreeBindingEntry(void* aPool, PLHashEntry* aHashEntry, PRUintn aFlag);
+
     static PLHashNumber HashMemoryElement(const void* aBinding);
     static PRIntn CompareMemoryElements(const void* aLeft, const void* aRight);
-    static PRIntn RemoveMemoryElement(PLHashEntry* he, PRIntn i, void* arg);
 };
+
+// Allocation operations for the match table
+PLHashAllocOps ConflictSet::gMatchAllocOps = {
+    AllocMatchTable, FreeMatchTable, AllocMatchEntry, FreeMatchEntry };
+
+
+void* PR_CALLBACK
+ConflictSet::AllocMatchTable(void* aPool, PRSize aSize)
+{
+    return new char[aSize];
+}
+
+void PR_CALLBACK
+ConflictSet::FreeMatchTable(void* aPool, void* aItem)
+{
+    delete[] NS_STATIC_CAST(char*, aItem);
+}
+
+PLHashEntry* PR_CALLBACK
+ConflictSet::AllocMatchEntry(void* aPool, const void* aKey)
+{
+    MatchEntry* entry = new MatchEntry();
+    if (! entry)
+        return nsnull;
+
+    entry->mKey = *NS_STATIC_CAST(const Key*, aKey);
+    return NS_REINTERPRET_CAST(PLHashEntry*, entry);
+}
+
+void PR_CALLBACK
+ConflictSet::FreeMatchEntry(void* aPool, PLHashEntry* aHashEntry, PRUintn aFlag)
+{
+    MatchEntry* entry = NS_REINTERPRET_CAST(MatchEntry*, aHashEntry);
+    delete entry;
+}
+
+// Allocation operations for the bindings table
+PLHashAllocOps ConflictSet::gBindingAllocOps = {
+    AllocBindingTable, FreeBindingTable, AllocBindingEntry, FreeBindingEntry };
+
+
+void* PR_CALLBACK
+ConflictSet::AllocBindingTable(void* aPool, PRSize aSize)
+{
+    return new char[aSize];
+}
+
+void PR_CALLBACK
+ConflictSet::FreeBindingTable(void* aPool, void* aItem)
+{
+    delete[] NS_STATIC_CAST(char*, aItem);
+}
+
+PLHashEntry* PR_CALLBACK
+ConflictSet::AllocBindingEntry(void* aPool, const void* aKey)
+{
+    BindingEntry* entry = new BindingEntry();
+    if (! entry)
+        return nsnull;
+
+    const MemoryElement* element = NS_STATIC_CAST(const MemoryElement*, aKey);
+    entry->mElement = element->Clone();
+
+    return NS_REINTERPRET_CAST(PLHashEntry*, entry);
+}
+
+void PR_CALLBACK
+ConflictSet::FreeBindingEntry(void* aPool, PLHashEntry* aHashEntry, PRUintn aFlag)
+{
+    BindingEntry* entry = NS_REINTERPRET_CAST(BindingEntry*, aHashEntry);
+    delete entry;
+}
+
 
 ConflictSet::ConflictSet()
     : mMatches(nsnull), mBindings(nsnull)
+{
+    Init();
+}
+
+ConflictSet::~ConflictSet()
+{
+    Destroy();
+}
+
+
+nsresult
+ConflictSet::Init()
 {
     mMatches = PL_NewHashTable(16 /* XXXwaterson we need a way to give a hint? */,
                                Key::Hash,
                                Key::Compare,
                                PL_CompareValues,
-                               nsnull /* XXXwaterson use an arena */,
-                               nsnull);
+                               &gMatchAllocOps,
+                               nsnull /* XXXwaterson use an arena */);
 
     mBindings = PL_NewHashTable(16, /* XXXwaterson need hint */
                                 HashMemoryElement,
                                 CompareMemoryElements,
                                 PL_CompareValues,
-                                nsnull /* XXXwaterson use an arena */,
-                                nsnull);
+                                &gBindingAllocOps,
+                                nsnull /* XXXwaterson use an arena */);
+
+    return NS_OK;
 }
 
-ConflictSet::~ConflictSet()
+
+nsresult
+ConflictSet::Destroy()
 {
-    Clear();
+    PL_HashTableDestroy(mBindings);
+    PL_HashTableDestroy(mMatches);
+    return NS_OK;
 }
 
 nsresult
@@ -954,15 +1101,20 @@ ConflictSet::Add(const Instantiation& aInstantiation, const Rule* aRule)
             set = NS_STATIC_CAST(MatchSet*, (*hep)->value);
         }
         else {
-            Key* newkey = new Key(key);
-            if (! newkey)
+            PLHashEntry* he = PL_HashTableRawAdd(mMatches, hep, hash, &key, nsnull);
+            if (! he)
                 return NS_ERROR_OUT_OF_MEMORY;
 
-            set = new MatchSet();
-            if (! set)
-                return NS_ERROR_OUT_OF_MEMORY;
+            MatchEntry* entry = NS_REINTERPRET_CAST(MatchEntry*, he);
 
-            PL_HashTableRawAdd(mMatches, hep, hash, newkey, set);
+            // Fixup the key in the hashentry to point to the value
+            // that the specially-allocated entry contains (rather
+            // than the value on the stack). Do the same for its
+            // value.
+            entry->mHashEntry.key   = &entry->mKey;
+            entry->mHashEntry.value = &entry->mMatchSet;
+
+            set = &entry->mMatchSet;
         }
 
         if (! set->Contains(aRule, aInstantiation)) {
@@ -984,15 +1136,17 @@ ConflictSet::Add(const Instantiation& aInstantiation, const Rule* aRule)
                 set = NS_STATIC_CAST(MatchSet*, (*hep)->value);
             }
             else {
-                MemoryElement* keyelement = element->Clone();
-                if (! keyelement)
+                PLHashEntry* he = PL_HashTableRawAdd(mBindings, hep, hash, &*element, nsnull);
+
+                BindingEntry* entry = NS_REINTERPRET_CAST(BindingEntry*, he);
+                if (! entry)
                     return NS_ERROR_OUT_OF_MEMORY;
 
-                set = new MatchSet();
-                if (! set)
-                    return NS_ERROR_OUT_OF_MEMORY;
+                // Fixup the key and value.
+                entry->mHashEntry.key   = entry->mElement;
+                entry->mHashEntry.value = &entry->mMatchSet;
 
-                PL_HashTableRawAdd(mBindings, hep, hash, keyelement, set);
+                set = &entry->mMatchSet;
             }
 
             if (! set->Contains(aRule, aInstantiation)) {
@@ -1047,13 +1201,6 @@ ConflictSet::Remove(const MemoryElement& aMemoryElement,
         }
 
         // We'll eagerly remove it from the table.
-        MemoryElement* key =
-            NS_STATIC_CAST(MemoryElement*,
-                           NS_CONST_CAST(void*, (*hep)->key));
-
-        delete key;
-        delete set;
-
         PL_HashTableRawRemove(mBindings, hep, *hep);
     }
 
@@ -1088,53 +1235,17 @@ ConflictSet::Remove(const MemoryElement& aMemoryElement,
         }
 
         if (set->Empty()) {
-            Key* hashkey = NS_STATIC_CAST(Key*, NS_CONST_CAST(void*, (*hep)->key));
-            delete hashkey;
-            delete set;
-
             PL_HashTableRawRemove(mMatches, hep, *hep);
         }
     }
 }
 
 
-PRIntn
-ConflictSet::RemoveMemoryElement(PLHashEntry* he, PRIntn, void*)
-{
-    MemoryElement* element =
-        NS_STATIC_CAST(MemoryElement*, NS_CONST_CAST(void*, he->key));
-
-    delete element;
-
-    MatchSet* matches =
-        NS_STATIC_CAST(MatchSet*, he->value);
-
-    delete matches;
-
-    return HT_ENUMERATE_REMOVE;
-}
-
-
-PRIntn
-ConflictSet::RemoveMatch(PLHashEntry* he, PRIntn, void*)
-{
-    Key* key = NS_STATIC_CAST(Key*, NS_CONST_CAST(void*, he->key));
-
-    delete key;
-
-    MatchSet* matches =
-        NS_STATIC_CAST(MatchSet*, he->value);
-
-    delete matches;
-
-    return HT_ENUMERATE_REMOVE;
-}
-
 void
 ConflictSet::Clear()
 {
-    PL_HashTableEnumerateEntries(mBindings, RemoveMemoryElement, nsnull);
-    PL_HashTableEnumerateEntries(mMatches, RemoveMatch, nsnull);
+    Destroy();
+    Init();
 }
 
 PLHashNumber
