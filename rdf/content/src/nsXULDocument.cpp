@@ -817,8 +817,6 @@ public:
                                    nsIContent* aElement,
                                    void* aClosure);
 
-    nsresult SearchForNodeByID(const nsString& anID, nsIContent* anElement, nsIDOMElement** aReturn);
-
     static nsresult
     GetElementsByTagName(nsIDOMNode* aNode,
                          const nsString& aTagName,
@@ -3319,10 +3317,6 @@ XULDocumentImpl::GetCommandDispatcher(nsIDOMXULCommandDispatcher** aTracker)
 NS_IMETHODIMP
 XULDocumentImpl::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
 {
-    NS_PRECONDITION(mRootContent != nsnull, "document contains no content");
-    if (! mRootContent)
-        return NS_ERROR_NOT_INITIALIZED; // XXX right error code?
-
     nsresult rv;
 
     nsCOMPtr<nsIRDFResource> resource;
@@ -3352,10 +3346,8 @@ XULDocumentImpl::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
         return rv;
     }
 
-    // Didn't find it in our element map. Grovel for it.
+    // Didn't find it in our element map.
     *aReturn = nsnull;
-    SearchForNodeByID(aId, mRootContent, aReturn);
-
     return NS_OK;
 }
 
@@ -3462,52 +3454,6 @@ XULDocumentImpl::RemoveElementsFromMapByContent(nsIRDFResource* aResource,
     return (aElement == content) ? HT_ENUMERATE_REMOVE : HT_ENUMERATE_NEXT;
 }
 
-
-nsresult
-XULDocumentImpl::SearchForNodeByID(const nsString& aID, 
-                                   nsIContent* aElement,
-                                   nsIDOMElement** aReturn)
-{
-    nsresult rv;
-
-    // See if we match.
-    PRInt32 namespaceID;
-    rv = aElement->GetNameSpaceID(namespaceID);
-    if (NS_FAILED(rv)) return rv;
-    
-    nsAutoString id;
-    rv = aElement->GetAttribute(namespaceID, kIdAtom, id);
-    if (NS_FAILED(rv)) return rv;
-
-    if (id == aID) {
-        nsCOMPtr<nsIDOMElement> domNode( do_QueryInterface(aElement) );
-        NS_ASSERTION(domNode != nsnull, "not a dom node");
-        
-        if (domNode) {
-            *aReturn = domNode;
-            NS_ADDREF(*aReturn);
-        }
-        return NS_OK;
-    }
-
-    // Walk children.
-    // XXX: Don't descend into closed tree items (or menu items or buttons?).
-    PRInt32 childCount;
-    aElement->ChildCount(childCount);
-    for (PRInt32 i = 0; i < childCount && !(*aReturn); i++) {
-        nsCOMPtr<nsIContent> child;
-        rv = aElement->ChildAt(i, *getter_AddRefs(child));
-        if (NS_FAILED(rv)) return rv;
-        
-        rv = SearchForNodeByID(aID, child, aReturn);
-        if (NS_FAILED(rv)) return rv;
-
-        if (*aReturn)
-            return NS_OK;
-    }
-
-    return NS_OK;
-}
 
 
 ////////////////////////////////////////////////////////////////////////
