@@ -574,7 +574,7 @@ nsHTTPChannel::BuildNotificationProxies()
         rv = proxyManager->GetProxyForObject(eventQ,
                                              NS_GET_IID(nsIHTTPEventSink),
                                              mRealEventSink,
-                                             PROXY_ASYNC | PROXY_ALWAYS,
+                                             PROXY_SYNC | PROXY_ALWAYS,
                                              getter_AddRefs(mEventSink));
         if (NS_FAILED(rv)) return rv;
     }
@@ -2189,7 +2189,7 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
     if (NS_FAILED(rv)) return rv;
     rv = channel->SetOriginalURI(mOriginalURI);
     if (NS_FAILED(rv)) return rv;
-
+/*
     if (mLoadGroup) {
         nsCOMPtr<nsIRequest> tempRequest;
         rv = mLoadGroup->GetDefaultLoadRequest(getter_AddRefs(tempRequest));
@@ -2199,7 +2199,7 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
                 mLoadGroup->SetDefaultLoadRequest(channel);
         }
     }
-
+*/
     // Convey the referrer if one was used for this channel to the next one-
     nsXPIDLCString referrer;
     GetRequestHeader(nsHTTPAtoms::Referer, getter_Copies(referrer));
@@ -2217,28 +2217,39 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
         httpProxy->SetProxyPort(proxyPort);
     }
 
+    //
+    // Fire the OnRedirect(...) notification.
+    //
+    if (mEventSink) {
+        rv = mEventSink->OnRedirect(this, channel);
+        // Ignore the redirect if OnRedirect(...) returns a failure.
+        if (NS_FAILED(rv)) {
+            LOG(("ProcessRedirect [this=%x]."
+                 "\tRedirect aborted because OnRedirect(...) failed.\n",
+                  this));
+            return rv;
+        }
+    }
+
     if (mResponseDataListener) {
         // Start the redirect...
         nsIStreamListener   *sl = mResponseDataListener;
         nsHTTPFinalListener *fl = NS_STATIC_CAST(nsHTTPFinalListener*, sl);
         rv = channel->AsyncOpen(fl->GetListener(), mResponseContext);
         fl->Shutdown();
+
+        // Update the channel status to indicate that a redirect occurred...
+        mStatus = NS_BINDING_REDIRECTED;
+
+        // Null out pointers that are no longer needed...
+        //
+        // This will prevent the OnStopRequest(...) notification from being fired
+        // for the original URL...
+        //
+        mResponseDataListener = 0;
     }
     else
         rv = NS_ERROR_FAILURE;
-
-    //
-    // Fire the OnRedirect(...) notification.
-    //
-    if (mEventSink)
-        mEventSink->OnRedirect((nsISupports*)(nsIRequest*)this, newURI);
-
-    // Null out pointers that are no longer needed...
-    //
-    // This will prevent the OnStopRequest(...) notification from being fired
-    // for the original URL...
-    //
-    mResponseDataListener = 0;
 
     NS_ADDREF(*aResult = channel);
     return rv;
@@ -2878,7 +2889,9 @@ nsHTTPChannel::ProcessStatusCode(void)
                 listener = listener2;
         }
 
-        rv = ProcessRedirection(statusCode);
+        // Ignore the return code... If the redirect fails, there may still
+        // be an entity associated with the current channel...
+        (void) ProcessRedirection(statusCode);
         break;
 
         //

@@ -58,6 +58,7 @@ nsLoadGroup::nsLoadGroup(nsISupports* outer)
     , mLoadFlags(LOAD_NORMAL)
     , mRequests(nsnull)
     , mStatus(NS_OK)
+    , mIsCanceling(PR_FALSE)
 {
     NS_INIT_AGGREGATED(outer);
 
@@ -190,13 +191,18 @@ nsLoadGroup::Cancel(nsresult status)
     nsresult rv, firstError;
     PRUint32 count;
 
-    // set the load group status to our cancel status while we cancel 
-    // all our requests...once the cancel is done, we'll reset it...
-
-    mStatus = status;
-
     rv = mRequests->Count(&count);
     if (NS_FAILED(rv)) return rv;
+
+    // set the load group status to our cancel status while we cancel 
+    // all our requests...once the cancel is done, we'll reset it...
+    //
+    mStatus = status;
+
+    // Set the flag indicating that the loadgroup is being canceled...  This
+    // prevents any new channels from being added during the operation.
+    //
+    mIsCanceling = PR_TRUE;
 
     firstError = NS_OK;
 
@@ -247,6 +253,8 @@ nsLoadGroup::Cancel(nsresult status)
     }
 
     mStatus = NS_OK;
+    mIsCanceling = PR_FALSE;
+
     return firstError;
 }
 
@@ -397,7 +405,20 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
     request->GetName(getter_Copies(nameStr));
     LOG(("LOADGROUP [%x]: Adding request %x %s (count=%d).\n",
         this, request, NS_ConvertUCS2toUTF8(nameStr).get(), count));
-#endif
+#endif /* PR_LOGGING */
+
+    //
+    // Do not add the channel, if the loadgroup is being canceled...
+    //
+    if (mIsCanceling) {
+
+#if defined(PR_LOGGING)
+        LOG(("LOADGROUP [%x]: AddChannel() ABORTED because LoadGroup is"
+             " being canceled!!\n", this));
+#endif /* PR_LOGGING */
+
+        return NS_BINDING_ABORTED;
+    }
 
     nsLoadFlags flags;
     rv = MergeLoadFlags(request, flags);

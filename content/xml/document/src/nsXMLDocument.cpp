@@ -292,7 +292,7 @@ nsXMLDocument::OnHeadersAvailable(nsISupports *aContext)
 }
 
 NS_IMETHODIMP
-nsXMLDocument::OnRedirect(nsISupports *aContext, nsIURI *aNewLocation)
+nsXMLDocument::OnRedirect(nsIChannel *aOldChannel, nsIChannel *aNewChannel)
 {
   nsresult rv;
 
@@ -302,8 +302,14 @@ nsXMLDocument::OnRedirect(nsISupports *aContext, nsIURI *aNewLocation)
   if (NS_FAILED(rv))
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIURI> newLocation;
+  rv = aNewChannel->GetURI(getter_AddRefs(newLocation));
+
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIPrincipal> newCodebase;
-  rv = securityManager->GetCodebasePrincipal(aNewLocation,
+  rv = securityManager->GetCodebasePrincipal(newLocation,
                                              getter_AddRefs(newCodebase));
 
   if (NS_FAILED(rv))

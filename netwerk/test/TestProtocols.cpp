@@ -116,8 +116,8 @@ public:
   NS_IMETHOD      OnHeadersAvailable(nsISupports* i_Context);
 
   // OnRedirect gets fired only if you have set FollowRedirects on the handler!
-  NS_IMETHOD      OnRedirect(nsISupports* i_Context, 
-                             nsIURI* i_NewLocation);
+  NS_IMETHOD      OnRedirect(nsIChannel *aOldChannel, 
+                             nsIChannel *aNewChannel);
 };
 
 TestHTTPEventSink::TestHTTPEventSink()
@@ -223,7 +223,7 @@ TestHTTPEventSink::OnHeadersAvailable(nsISupports* context)
 }
 
 NS_IMETHODIMP
-TestHTTPEventSink::OnRedirect(nsISupports* context, nsIURI* i_NewLocation)
+TestHTTPEventSink::OnRedirect(nsIChannel *aOldChannel, nsIChannel *aNewChannel)
 {
     printf("\n+++ TestHTTPEventSink::OnRedirect +++\n");
     return NS_OK;

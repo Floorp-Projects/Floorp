@@ -98,8 +98,7 @@ public:
   NS_IMETHOD GetInterface(const nsIID& aIID, void** aSink);
 
   // nsIHTTPEventSink
-  NS_IMETHOD OnHeadersAvailable(nsISupports *aContext);
-  NS_IMETHOD OnRedirect(nsISupports *aContext, nsIURI *aNewLocation);
+  NS_DECL_NSIHTTPEVENTSINK
 
 protected:
   virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);  // subclass hook for sheet ordering
