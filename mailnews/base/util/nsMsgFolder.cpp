@@ -199,6 +199,12 @@ nsMsgFolder::GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread)
 	return NS_ERROR_FAILURE;	
 }
 
+NS_IMETHODIMP
+nsMsgFolder::HasMessage(nsIMessage *message, PRBool *hasMessage)
+{
+	return NS_ERROR_FAILURE;	
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP nsMsgFolder::BuildFolderURL(char **url)
@@ -1218,6 +1224,11 @@ NS_IMETHODIMP nsMsgFolder::GetHostName(char **hostName)
 
 	*hostName = "";
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgFolder::GetNewMessages()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult nsMsgFolder::NotifyPropertyChanged(char *property, char *oldValue, char* newValue)

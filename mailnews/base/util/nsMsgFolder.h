@@ -69,6 +69,8 @@ public:
   NS_IMETHOD GetMessages(nsIEnumerator* *result);
 	NS_IMETHOD GetThreads(nsIEnumerator ** threadEnumerator);
 	NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread);
+	NS_IMETHOD HasMessage(nsIMessage *message, PRBool *hasMessage);
+
 
   NS_IMETHOD GetPrettyName(char ** name);
   NS_IMETHOD SetPrettyName(char * name);
@@ -237,8 +239,9 @@ public:
   NS_IMETHOD GetUsersName(char **userName);
   NS_IMETHOD GetHostName(char **hostName);
 
- virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db) = 0;
- 	NS_IMETHOD DeleteMessage(nsIMessage *message) = 0;
+	virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db) = 0;
+	NS_IMETHOD DeleteMessage(nsIMessage *message) = 0;
+	NS_IMETHOD GetNewMessages();
 
 protected:
 	nsresult NotifyPropertyChanged(char *property, char* oldValue, char* newValue);
@@ -255,9 +258,6 @@ protected:
   nsCOMPtr<nsISupportsArray> mSubFolders;
 	nsVoidArray *mListeners; //This can't be an nsISupportsArray because due to
 													 //ownership issues, listeners can't be AddRef'd
-#ifdef HAVE_MASTER
-  MSG_Master  *mMaster;
-#endif
 
   PRInt16 mCsid;			// default csid for folder/newsgroup - maintained by fe.
   PRUint8 mDepth;
