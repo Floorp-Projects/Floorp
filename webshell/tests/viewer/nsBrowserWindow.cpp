@@ -463,6 +463,14 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       nsAutoString url(SAMPLES_BASE_URL);
       url.Append("/toolbarTest1.xul");
       mWebShell->LoadURL(url);
+      break;
+    }
+  case VIEWER_XPTOOLKITTREE1:
+    {
+      nsAutoString url(SAMPLES_BASE_URL);
+      url.Append("/treeTest1.xul");
+      mWebShell->LoadURL(url);
+      break;
     }
   
   case JS_CONSOLE:
