@@ -54,6 +54,7 @@ public:
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
   NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
+  NS_IMETHOD GetAccState(PRUint32 *_retval); 
 };
 
 class nsHTMLRadioButtonAccessible : public nsHTMLFormControlAccessible
@@ -65,6 +66,7 @@ public:
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
   NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
+  NS_IMETHOD GetAccState(PRUint32 *_retval); 
 };
 
 class nsHTMLButtonAccessible : public nsHTMLFormControlAccessible
