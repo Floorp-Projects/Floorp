@@ -812,8 +812,9 @@ void nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
             aClipRect->x, aClipRect->y, 
             aClipRect->XMost(),  aClipRect->YMost(), aDx, aDy);
 
-  printf("Clipping %d %d %d %d\n", aClipRect->x, aClipRect->y,aClipRect->XMost(),  aClipRect->YMost());
-  printf("Forcing repaint %d %d %d %d\n", mBounds.x, mBounds.y, mBounds.width, mBounds.height);
+  if (DBG)printf("Clipping %d %d %d %d\n", aClipRect->x, aClipRect->y,aClipRect->XMost(),  aClipRect->YMost());
+  if (DBG)printf("Forcing repaint %d %d %d %d\n", mBounds.x, mBounds.y, mBounds.width, mBounds.height);
+#if 0
   XEvent evt;
   evt.xgraphicsexpose.type       = GraphicsExpose;
   evt.xgraphicsexpose.send_event = False;
@@ -824,9 +825,9 @@ void nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   evt.xgraphicsexpose.width      = mBounds.width;
   evt.xgraphicsexpose.height     = mBounds.height;
   evt.xgraphicsexpose.count      = 0;
-  //XSendEvent(display, win, False, ExposureMask, &evt);
-  //XFlush(display);
-
+  XSendEvent(display, win, False, ExposureMask, &evt);
+  XFlush(display);
+#endif
 }
 
 
