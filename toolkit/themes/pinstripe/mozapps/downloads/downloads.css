@@ -86,6 +86,7 @@ label:last-child {
 .link {
   text-decoration: underline;
   color: blue !important;
+  cursor: pointer;
   -moz-user-focus: normal;
   font-size: 100% !important;
   margin-left: 6px;
@@ -94,6 +95,10 @@ label:last-child {
 }
 
 .link:hover:active {
+  color : red !important;
+}
+
+.link:focus {
 }
 
 progressmeter {
