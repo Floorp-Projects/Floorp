@@ -43,7 +43,7 @@ MozillaObjectWrapper::MozillaObjectWrapper(nsISupports* aNsObject,
     MOZ_COUNT_CTOR(MozillaObjectWrapper);
     nsObject = aNsObject;
     ownerDocument = aOwner;
-    if (ownerDocument && (ownerDocument != this))
+    if (ownerDocument)
         ownerDocument->addWrapper(this);
 }
 

@@ -43,7 +43,7 @@ DeleteWrapper(nsHashKey *aKey, void *aData, void* closure)
  * Construct a new Mozilla document and wrap it. The caller is responsible for
  * deleting the wrapper object!
  */
-Document::Document() : Node(NULL, NULL)
+Document::Document() : Node(0, 0)
 {
     nsresult res;
     nsCOMPtr<nsIDOMDocument> document;
@@ -57,6 +57,8 @@ Document::Document() : Node(NULL, NULL)
     res = implementation->CreateDocument(emptyStr, emptyStr, nsnull,
                 getter_AddRefs(document));
     //if (NS_FAILED(res)) return NULL;
+
+    ownerDocument = this;
     wrapperHashTable = new nsObjectHashtable(nsnull, nsnull, DeleteWrapper, nsnull);
     bInHashTableDeletion = PR_FALSE;
     addWrapper(this);
@@ -68,8 +70,9 @@ Document::Document() : Node(NULL, NULL)
  *
  * @param aDocument the nsIDOMDocument you want to wrap
  */
-Document::Document(nsIDOMDocument* aDocument) : Node(aDocument, this)
+Document::Document(nsIDOMDocument* aDocument) : Node(aDocument, 0)
 {
+    ownerDocument = this;
     wrapperHashTable = new nsObjectHashtable(nsnull, nsnull, DeleteWrapper, nsnull);
     bInHashTableDeletion = PR_FALSE;
     addWrapper(this);
