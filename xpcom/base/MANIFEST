@@ -1,5 +1,6 @@
 nsAgg.h
 nsIAllocator.h
+nsMemory.h
 nsCOMPtr.h
 nsCom.h
 nsCWeakReference.h

@@ -1,0 +1,122 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+/**
+ * <font color="#FF0000"><b>    W A R N I N G
+ * <p>This API is currently under review in preparation for making it an 
+ * officially supported part of the mozilla platform. Please submit comments
+ * to porkjockeys@mozilla.org before 6/15/00. Until that time, it is not 
+ * advised to base commercial products on this API because it is subject to 
+ * change. Use at your own risk!
+ * </b></font>
+ *
+ * @status UNDER_REVIEW
+ */
+
+#include "nsISupports.idl"
+
+interface nsIMemoryPressureObserver;
+
+/**
+ * nsIMemory: interface to allocate and deallocate memory. Also provides
+ * for notifications in low-memory situations.
+ */
+[scriptable, uuid(59e7e77a-38e4-11d4-8cf5-0060b0fc14a3)]
+interface nsIMemory : nsISupports
+{
+    /**
+     * Allocates a block of memory of a particular size. If the memory 
+     * cannot be allocated (because of an out-of-memory condition), null
+     * is returned.
+     *
+     * @param size - the size of the block to allocate
+     * @result the block of memory
+     */
+    [noscript, notxpcom] voidPtr alloc(in size_t size);
+
+    /**
+     * Reallocates a block of memory to a new size.
+     *
+     * @param ptr - the block of memory to reallocate
+     * @param size - the new size
+     * @result the reallocated block of memory
+     *
+     * If ptr is null, this function behaves like malloc.
+     * If s is the size of the block to which ptr points, the first
+     * min(s, size) bytes of ptr's block are copied to the new block.
+     * If the allocation succeeds, ptr is freed and a pointer to the 
+     * new block returned.  If the allocation fails, ptr is not freed
+     * and null is returned. The returned value may be the same as ptr.
+     */
+    [noscript, notxpcom] voidPtr realloc(in voidPtr ptr,
+                                         in size_t newSize);
+
+    /**
+     * Frees a block of memory. Null is a permissible value, in which case
+     * nothing happens. 
+     *
+     * @param ptr - the block of memory to free
+     */
+    [noscript, notxpcom] void free(in voidPtr ptr);
+
+    /**
+     * Attempts to shrink the heap.
+     */
+    void heapMinimize();
+
+    /**
+     * Allows a memory pressure observer to be registered to provide a
+     * callback for low-memory situations, allowing unnecessary objects to
+     * be freed (e.g. flushing caches). Observers will be called either
+     * before alloc or realloc are about to return null, or when
+     * heapMinimize is called.
+     * @param obs - the observer to register
+     */
+    void registerObserver(in nsIMemoryPressureObserver obs);
+
+    /**
+     * Allows a memory pressure observer to be unregistered.
+     * @param obs - the observer to unregister
+     */
+    void unregisterObserver(in nsIMemoryPressureObserver obs);
+};
+
+/**
+ * nsIMemoryPressureObserver: interface for low-memory notification.
+ */
+[scriptable, uuid(fe6c8bd4-38e4-11d4-8cf5-0060b0fc14a3)]
+interface nsIMemoryPressureObserver : nsISupports
+{
+    const unsigned long REASON_ALLOC_FAILURE = 0;
+    const unsigned long REASON_HEAP_MINIMIZE = 1;
+
+    /**
+     * Called in response to a low-memory condition. 
+     * @param reason - either REASON_ALLOC_FAILURE when alloc or realloc 
+     *                 fails, or REASON_HEAP_MINIMIZE when heapMinimize is
+     *                 called
+     * @param requestedAmount - either the size requested by alloc or realloc,
+     *                 or 0 if heapMinimize was called
+     */
+    void flushMemory(in unsigned long reason,
+                     in size_t requestedAmount);
+};

@@ -34,6 +34,7 @@ REQUIRES	= xpcom
 
 CPPSRCS		= \
 		nsAllocator.cpp \
+		nsMemory.cpp \
 		nsDebug.cpp \
 		nsIInterfaceRequestor.cpp \
 		nsTraceRefcnt.cpp \
@@ -53,6 +54,7 @@ endif
 EXPORTS		= \
 		nsAgg.h \
 		nsIAllocator.h \
+		nsMemory.h \
 		nsCOMPtr.h \
 		nsCom.h \
 		nsCWeakReference.h \
@@ -80,6 +82,7 @@ endif
 XPIDLSRCS	= \
 		nsrootidl.idl \
 		nsISupports.idl \
+		nsIMemory.idl \
 		nsIInterfaceRequestor.idl \
 		nsIWeakReference.idl \
 		nsIConsoleService.idl \
