@@ -41,7 +41,9 @@
 #include "nsMenu.h"
 #include "nsMenuItem.h"
 #include "nsPopUpMenu.h"
+#if 0
 #include "nsContextMenu.h"
+#endif
 #include "nsTabWidget.h"
 #include "nsFontRetrieverService.h"
 
@@ -234,9 +236,11 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCPopUpMenu)) {
         inst = (nsISupports*)new nsPopUpMenu();
     }
+#if 0
     else if (mClassID.Equals(kCContextMenu)) {
         inst = (nsISupports*)(nsIContextMenu*)new nsContextMenu();
     }
+#endif
     else if (mClassID.Equals(kCSound)) {
     	nsISound* aSound = nsnull;
     	NS_NewSound(&aSound);
