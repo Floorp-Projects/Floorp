@@ -26,12 +26,15 @@
 #include <string>
 #include <iterator>
 #include <iostream>
+#include <cstdio>
 
 #ifndef _WIN32	// Microsoft Visual C++ 6.0 bug: standard identifiers should be in std namespace
 using std::size_t;
 using std::ptrdiff_t;
 using std::strlen;
 using std::strcpy;
+using std::sprintf;
+using std::fprintf;
 #define STD std
 #else
 #define STD
@@ -83,6 +86,23 @@ namespace JavaScript {
 // Unicode UTF-16 characters and strings
 //
 
+	// Special char16s
+	namespace uni {
+		const char16 null = '\0';
+		const char16 cr = '\r';
+		const char16 lf = '\n';
+		const char16 space = ' ';
+		const char16 ls = 0x2028;
+		const char16 ps = 0x2029;
+	}
+	const uint16 firstFormatChar = 0x200C;	// Lowest Unicode Cf character
+	
+	inline char16 widen(char ch) {return static_cast<char16>(static_cast<uchar>(ch));}
+	
+	// Use char16Value to compare char16's for inequality because an implementation may have char16's
+	// be either signed or unsigned.
+	inline uint16 char16Value(char16 ch) {return static_cast<uint16>(ch);}
+
 	// A string of UTF-16 characters.  Nulls are allowed just like any other character.
 	// The string is not null-terminated.
 	// Use wstring if char16 is wchar_t.  Otherwise use basic_string<uint16>.
@@ -98,18 +118,6 @@ namespace JavaScript {
 
 	// If c is a char16, return it; if c is char16eof, return the character \uFFFF.
 	inline char16 char16orEOFToChar16(char16orEOF c) {return static_cast<char16>(c);}
-
-	// Special char16s
-	namespace uni {
-		const char16 null = '\0';
-		const char16 cr = '\r';
-		const char16 lf = '\n';
-		const char16 ls = 0x2028;
-		const char16 ps = 0x2029;
-	}
-	const uint16 firstFormatChar = 0x200C;	// Lowest Unicode Cf character
-	
-	inline char16 widen(char ch) {return static_cast<char16>(static_cast<uchar>(ch));}
 
 #ifndef _WIN32
 	// Return a String containing the characters of the null-terminated C string cstr
@@ -128,10 +136,20 @@ namespace JavaScript {
 		const uchar *uchars = reinterpret_cast<const uchar *>(chars);
 		str.append(uchars, uchars + length);
 	}
+
+	// Widen and insert length characters starting at chars into the given position of str.
+	inline void insertChars(String &str, String::size_type pos, const char *chars, size_t length)
+	{
+		ASSERT(pos <= str.size());
+		const uchar *uchars = reinterpret_cast<const uchar *>(chars);
+		str.insert(str.begin() + pos, uchars, uchars + length);
+	}
 #else // Microsoft VC6 bug: String constructor and append limited to char16 iterators
 	String widenCString(const char *cstr);
 	void appendChars(String &str, const char *chars, size_t length);
+	void insertChars(String &str, String::size_type pos, const char *chars, size_t length)
 #endif
+	void insertChars(String &str, String::size_type pos, const char *cstr);
 
 
 	String &operator+=(String &str, const char *cstr);
@@ -391,8 +409,8 @@ namespace JavaScript {
 	};
 
 
-	String *newArenaString(Arena &arena);
-	String *newArenaString(Arena &arena, const String &str);
+	String &newArenaString(Arena &arena);
+	String &newArenaString(Arena &arena, const String &str);
 
 
 //
@@ -562,26 +580,6 @@ namespace JavaScript {
 
 
 //
-// Source File Positions
-//
-
-	// A FileOffset holds the raw, zero-based offset of a position in the source input.
-	// This offset is designed of easy indexing and depends on the format of the input.
-	// If the input is a String or array of char16, then this is merely a character index.
-	// If the input is utf-8, then this is a byte offset (which is very different from
-	// a character offset in this case!).
-	typedef uint32 FileOffset;
-
-
-	// A SourcePosition describes a character position in a source file or eval string.
-	struct SourcePosition {
-		FileOffset lineFileOffset;		// Byte or character offset of start of source line relative to source file
-		uint32 lineNum;					// One-based source line number
-		uint32 charPos;					// Zero-based character offset of target character relative to the beginning of its source line
-	};
-
-
-//
 // Exceptions
 //
 
@@ -589,22 +587,34 @@ namespace JavaScript {
 	// exception bad_alloc).
 	struct Exception {
 		enum Kind {
-			SyntaxError
+			SyntaxError,
+			StackOverflow
 		};
 		
 		Kind kind;						// The exception's kind
 		String message;					// The detailed message
 		String sourceFile;				// A description of the source code that caused the error
-		SourcePosition position;		// Position of first character in token that caused the error
+		uint32 lineNum;					// Number of line that caused the error
+		uint32 charNum;					// Character offset within the line that caused the error
+		uint32 pos;						// Offset within the input of the error
 		String sourceLine;				// The text of the source line
 
-		Exception(Kind kind, const String &message): kind(kind), message(message) {position.lineNum = 0;}
-		Exception(Kind kind, const String &message, const String &sourceFile, SourcePosition &position, const String &sourceLine):
-			kind(kind), message(message), sourceFile(sourceFile), position(position), sourceLine(sourceLine) {}
-			
+		Exception(Kind kind, const String &message): kind(kind), message(message), lineNum(0), charNum(0) {}
+		Exception(Kind kind, const String &message, const String &sourceFile, uint32 lineNum, uint32 charNum, uint32 pos,
+				const String &sourceLine):
+			kind(kind), message(message), sourceFile(sourceFile), lineNum(lineNum), charNum(charNum), pos(pos), sourceLine(sourceLine) {}
+		Exception(Kind kind, const String &message, const String &sourceFile, uint32 lineNum, uint32 charNum, uint32 pos,
+				const char16 *sourceLineBegin, const char16 *sourceLineEnd):
+			kind(kind), message(message), sourceFile(sourceFile), lineNum(lineNum), charNum(charNum), pos(pos),
+			sourceLine(sourceLineBegin, sourceLineEnd) {}
+
 		const char *kindString() const;
 		String fullMessage() const;
 	};
+
+
+	// Throw a StackOverflow exception if the execution stack has gotten too large.
+	inline void checkStackSize() {}
 }
 
 
