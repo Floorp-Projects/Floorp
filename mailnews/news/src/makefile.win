@@ -21,7 +21,7 @@ IGNORE_MANIFEST=1
 include <$(DEPTH)\config\config.mak>
 
 
-LIBRARY_NAME=msgnews_s
+LIBRARY_NAME=nntp
 MODULE= mailnews
 REQUIRES=xpcom js nspr netlib
 
@@ -45,7 +45,7 @@ CPP_OBJS=   nsNNTPProtocol.obj				\
 EXPORTS=	nsNNTPProtocol.h				\
             $(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib -I$(PUBLIC)\security
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib -I$(PUBLIC)\security -I$(PUBLIC)\rdf
 
 LCFLAGS = \
         $(LCFLAGS) \
