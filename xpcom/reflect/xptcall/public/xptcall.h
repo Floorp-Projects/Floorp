@@ -113,7 +113,7 @@ public:
     // vtbl for this class. Since this is overridden in the inheriting class
     // we expect it to never be called. 
     // *This is needed by the Irix implementation.*
-//    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+    XPTC_EXPORT NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
     // Include generated vtbl stub declarations.
     // These are virtual and *also* implemented by this class..
@@ -137,6 +137,10 @@ PR_BEGIN_EXTERN_C
 XPTC_PUBLIC_API(nsresult)
 XPTC_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
                    PRUint32 paramCount, nsXPTCVariant* params);
+
+// Used to force linking of these obj for the static library into the dll
+extern void xptc_dummy();
+extern void xptc_dummy2();
 
 PR_END_EXTERN_C
 
