@@ -203,8 +203,8 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIStreamListener> convertedListener;
-  rv = streamConverterService->AsyncConvertData(NS_LITERAL_STRING("message/rfc822"),
-                                                NS_LITERAL_STRING("text/xul"),
+  rv = streamConverterService->AsyncConvertData(NS_LITERAL_STRING("message/rfc822").get(),
+                                                NS_LITERAL_STRING("text/xul").get(),
                                                 mStreamListener,
                                                 quoteSupport,
                                                 getter_AddRefs(convertedListener));
