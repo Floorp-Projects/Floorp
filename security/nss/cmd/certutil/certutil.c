@@ -2239,7 +2239,7 @@ static secuCommandFlag certutil_commands[] =
 	{ /* cmd_ListCerts           */  'L', PR_FALSE, 0, PR_FALSE },
 	{ /* cmd_ModifyCertTrust     */  'M', PR_FALSE, 0, PR_FALSE },
 	{ /* cmd_NewDBs              */  'N', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_DumpChain           */  'P', PR_FALSE, 0, PR_FALSE },
+	{ /* cmd_DumpChain           */  'O', PR_FALSE, 0, PR_FALSE },
 	{ /* cmd_CertReq             */  'R', PR_FALSE, 0, PR_FALSE },
 	{ /* cmd_CreateAndAddCert    */  'S', PR_FALSE, 0, PR_FALSE },
 	{ /* cmd_TokenReset          */  'T', PR_FALSE, 0, PR_FALSE },
