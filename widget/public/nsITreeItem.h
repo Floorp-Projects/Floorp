@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef nsIDMItem_h___
-#define nsIDMItem_h___
+#ifndef nsITreeItem_h___
+#define nsITreeItem_h___
 
 #include "nsIDMItem.h"
 #include "prthread.h"
