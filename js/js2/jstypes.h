@@ -223,9 +223,10 @@ namespace JSTypes {
         }
     };
         
-    class JS_Exception : public gc_base {
+    class JSException : public gc_base {
     public:
-        JS_Exception() { }
+        JSException(JSValue v) : value(v) { }
+        JSValue value;
     };
         
 } /* namespace JSTypes */    

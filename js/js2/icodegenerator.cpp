@@ -55,6 +55,26 @@ namespace ICG {
     // ICodeGenerator
     //
 
+    ICodeGenerator::ICodeGenerator(World *world, bool hasTryStatement, uint32 switchStatementNesting)
+        :   topRegister(0), 
+            registerBase(0), 
+            maxRegister(0), 
+            statementLabelBase(0), 
+            exceptionRegister(NotARegister)
+    { 
+        iCode = new InstructionStream(); 
+        if (hasTryStatement) 
+            exceptionRegister = allocateVariable(world->identifiers[widenCString("__exceptionObject__")]);
+        for (int i = 0; i < switchStatementNesting; i++) {
+            String s = widenCString("__switchControlVariable__");
+            char num[8]; 
+            sprintf(num, "%.2d", i);
+            appendChars(s, num, strlen(num));
+            allocateVariable(world->identifiers[s]);
+        }
+    }
+
+
     ICodeModule *ICodeGenerator::complete()
     {
 #ifdef DEBUG
@@ -66,7 +86,6 @@ namespace ICG {
             ASSERT((*i)->mOffset <= iCode->size());
         }
 #endif
-        
         /*
         for (InstructionIterator ii = iCode->begin(); 
              ii != iCode->end(); ii++) {            
@@ -85,11 +104,25 @@ namespace ICG {
                 }
         }
         */
-        markMaxRegister();
-            
+        markMaxRegister();            
         return new ICodeModule(iCode, maxRegister);
     }
     
+    TryCodeState::TryCodeState(Label *catchLabel, Label *finallyLabel, ICodeGenerator *icg) 
+        : ICodeState(Try_state, icg), 
+                catchHandler(catchLabel), 
+                finallyHandler(finallyLabel),
+                finallyInvoker(NULL),
+                beyondCatch(NULL)
+    { 
+        if (catchHandler) {
+            beyondCatch = icg->getLabel();
+            if (finallyLabel)
+                finallyInvoker = icg->getLabel();
+        }
+    }
+
+
     /********************************************************************/
 
     Register ICodeGenerator::loadImmediate(double value)
@@ -234,12 +267,6 @@ namespace ICG {
         iCode->push_back(instr);
     }
 
-    void ICodeGenerator::beginTry(Label *catchLabel)
-    {
-        Try *instr = new Try(catchLabel);
-        iCode->push_back(instr);
-    }
-        
     /********************************************************************/
 
     Label *ICodeGenerator::getLabel()
@@ -679,8 +706,11 @@ namespace ICG {
     void ICodeGenerator::beginTryStatement(uint32 /* pos */,
                                            bool hasCatch, bool hasFinally)
     {
-        addStitcher(new TryCodeState((hasCatch) ? getLabel() : NULL,
-                                     (hasFinally) ? getLabel() : NULL, this));        
+        ASSERT(exceptionRegister != NotARegister);
+        TryCodeState *ics = new TryCodeState((hasCatch) ? getLabel() : NULL,
+                                     (hasFinally) ? getLabel() : NULL, this);
+        addStitcher(ics);
+        beginTry(ics->catchHandler, ics->finallyInvoker);
     }
 
     void ICodeGenerator::endTryBlock()
@@ -688,6 +718,9 @@ namespace ICG {
         TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
         ASSERT(ics->stateKind == Try_state);
 
+        endTry();
+        if (ics->finallyHandler)
+            jsr(ics->finallyHandler);
         if (ics->beyondCatch)
             branch(ics->beyondCatch);
     }
@@ -705,30 +738,44 @@ namespace ICG {
     {
         TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
         ASSERT(ics->stateKind == Try_state);
+        ASSERT(ics->catchHandler);
+        setLabel(ics->catchHandler);
     }
 
-    void ICodeGenerator::endCatchExpression(Register /* expression */)
+    void ICodeGenerator::endCatchExpression(Register exceptionId)
     {
         TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
         ASSERT(ics->stateKind == Try_state);
+        move(exceptionRegister, exceptionId);
     }
     
     void ICodeGenerator::endCatchStatement()
     {
         TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
         ASSERT(ics->stateKind == Try_state);
+        if (ics->finallyHandler)
+            jsr(ics->finallyHandler);
+        throwStatement(0, exceptionRegister);
     }
 
     void ICodeGenerator::beginFinallyStatement(uint32 /* pos */)
     {
         TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
         ASSERT(ics->stateKind == Try_state);
+        ASSERT(ics->finallyHandler);
+        if (ics->finallyInvoker) {
+            setLabel(ics->finallyInvoker);
+            jsr(ics->finallyHandler);
+            throwStatement(0, exceptionRegister);
+        }
+        setLabel(ics->finallyHandler);
     }
 
     void ICodeGenerator::endFinallyStatement()
     {
         TryCodeState *ics = static_cast<TryCodeState *>(stitcher.back());
         ASSERT(ics->stateKind == Try_state);
+        rts();
     }
 
     /************************************************************************/

@@ -64,11 +64,24 @@ using namespace JSTypes;
 // These classes are private to the JS interpreter.
 
 /**
+* 
+*/
+struct Handler: public gc_base {
+    Handler(Label *catchLabel, Label *finallyLabel)
+        : catchTarget(catchLabel), finallyTarget(finallyLabel) {}
+    Label *catchTarget;
+    Label *finallyTarget;
+};
+typedef std::vector<Handler *> CatchStack;
+
+
+/**
  * Represents the current function's invocation state.
  */
 struct Activation : public gc_base {
     JSValues mRegisters;
     ICodeModule* mICode;
+    CatchStack catchStack;
         
     Activation(ICodeModule* iCode, const JSValues& args)
         : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
@@ -132,7 +145,8 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
     InstructionIterator begin_pc = iCode->its_iCode->begin();
     InstructionIterator pc = begin_pc;
 
-    std::vector<InstructionIterator> catchStack;     // <-- later will need to restore scope, other 'global' values
+    // stack of all catch/finally handlers available for the current activation
+    std::stack<InstructionIterator> subroutineStack;    // to implement jsr/rts for finally code
     while (true) {
         try {
             // tell any listeners about the current execution state.
@@ -376,34 +390,84 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             
             case THROW :
                 {
-                    throw new JS_Exception();
+                    Throw* thrw = static_cast<Throw*>(instruction);
+                    throw new JSException((*registers)[op1(thrw)]);
                 }
                 
             case TRY:
                 {       // push the catch handler address onto the try stack
-                        // why did Rhino interpreter also have a finally stack?
                     Try* tri = static_cast<Try*>(instruction);
-                    catchStack.push_back(begin_pc + ofs(tri));
+                    activation->catchStack.push_back(new Handler(op1(tri), op2(tri)));
                 }   
                 break;
             case ENDTRY :
                 {
-                    catchStack.pop_back();
+                    Handler *h = activation->catchStack.back();
+                    activation->catchStack.pop_back();
+                    delete h;
                 }
                 break;
-
+            case JSR :
+                {
+                    subroutineStack.push(++pc);
+                    Jsr* jsr = static_cast<Jsr*>(instruction);
+                    uint32 offset = ofs(jsr);
+                    pc = begin_pc + offset;
+                    continue;
+                }
+            case RTS :
+                {
+                    ASSERT(!subroutineStack.empty());
+                    pc = subroutineStack.top();
+                    subroutineStack.pop();
+                    continue;
+                }
             default:
                 NOT_REACHED("bad opcode");
                 break;
+
             }
     
             // increment the program counter.
             ++pc;
         }
-        catch (JS_Exception ) {
-            ASSERT(!catchStack.empty());
-            pc = catchStack.back();
-            catchStack.pop_back();
+        catch (JSException x) {
+            if (mLinkage) {
+                if (activation->catchStack.empty()) {
+                    Linkage *pLinkage = mLinkage;
+                    for (; pLinkage != NULL; pLinkage = pLinkage->mNext) {
+                        if (!pLinkage->mActivation->catchStack.empty()) {
+                            activation = pLinkage->mActivation;
+                            Handler *h = activation->catchStack.back();
+                            registers = &activation->mRegisters;
+                            begin_pc = pLinkage->mBasePC;
+                            if (h->catchTarget) {
+                                pc = begin_pc + h->catchTarget->mOffset;
+                            }
+                            else {
+                                ASSERT(h->finallyTarget);
+                                pc = begin_pc + h->finallyTarget->mOffset;
+                            }
+                            mLinkage = pLinkage;
+                            break;
+                        }
+                    }
+                    if (pLinkage)
+                        continue;
+                }
+                else {
+                    Handler *h = activation->catchStack.back();
+                    if (h->catchTarget) {
+                        pc = begin_pc + h->catchTarget->mOffset;
+                    }
+                    else {
+                        ASSERT(h->finallyTarget);
+                        pc = begin_pc + h->finallyTarget->mOffset;
+                    }
+                    continue;
+                }
+            }
+            return x.value;            
         }
     }
 } /* interpret */
