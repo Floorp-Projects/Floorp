@@ -453,7 +453,6 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
   if (!menuPopup) 
     return NS_OK;
 
-
   if (aActivateFlag) {
       nsRect rect;
       menuPopup->GetRect(rect);
@@ -484,6 +483,8 @@ nsMenuFrame::ActivateMenu(PRBool aActivateFlag)
     view->GetViewManager(*getter_AddRefs(viewManager));
     viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
     viewManager->ResizeView(view, 0, 0);
+    // set here so hide chain can close the menu as well.
+    mMenuOpen = PR_FALSE;
   }
   
   return NS_OK;
@@ -693,9 +694,8 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
         menuPopup->RemoveKeyboardNavigator();
     }
 
+    // activate false will also set the mMenuOpen to false.
     ActivateMenu(PR_FALSE);
-
-    mMenuOpen = PR_FALSE;
 
     if (nsMenuFrame::mDismissalListener)
       nsMenuFrame::mDismissalListener->EnableListener(PR_TRUE);

@@ -42,7 +42,7 @@ public:
   nscoord flex;
   nscoord left;
   nscoord right;
-  PRBool  collapsed;
+  //PRBool  collapsed;
   PRBool  bogus;
 
   nsBoxSize* next;

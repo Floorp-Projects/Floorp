@@ -429,6 +429,11 @@ nsContainerBox::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   aSize.width = 0;
   aSize.height = 0;
 
+  PRBool collapsed = PR_FALSE;
+  IsCollapsed(aState, collapsed);
+  if (collapsed)
+    return NS_OK;
+
   // if the size was not completely redefined in CSS then ask our children
   if (!nsIBox::AddCSSPrefSize(aState, this, aSize)) 
   {
@@ -460,6 +465,11 @@ nsContainerBox::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
   aSize.width = 0;
   aSize.height = 0;
 
+  PRBool collapsed = PR_FALSE;
+  IsCollapsed(aState, collapsed);
+  if (collapsed)
+    return NS_OK;
+
   // if the size was not completely redefined in CSS then ask our children
   if (!nsIBox::AddCSSMinSize(aState, this, aSize)) 
   {
@@ -485,6 +495,11 @@ nsContainerBox::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
   aSize.width = NS_INTRINSICSIZE;
   aSize.height = NS_INTRINSICSIZE;
 
+  PRBool collapsed = PR_FALSE;
+  IsCollapsed(aState, collapsed);
+  if (collapsed)
+    return NS_OK;
+
   // if the size was not completely redefined in CSS then ask our children
   if (!nsIBox::AddCSSMaxSize(aState, this, aSize)) 
   {
@@ -509,6 +524,12 @@ nsContainerBox::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
   nsresult rv = NS_OK;
 
   aAscent = 0;
+
+  PRBool collapsed = PR_FALSE;
+  IsCollapsed(aState, collapsed);
+  if (collapsed)
+    return NS_OK;
+
   if (mLayoutManager)
     rv = mLayoutManager->GetAscent(this, aState, aAscent);
   else

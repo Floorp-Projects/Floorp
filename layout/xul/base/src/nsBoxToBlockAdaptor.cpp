@@ -197,6 +197,15 @@ nsBoxToBlockAdaptor::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
      return NS_OK;
   }
 
+  PRBool collapsed = PR_FALSE;
+  IsCollapsed(aState, collapsed);
+  if (collapsed) {
+    mPrefSize.width = 0;
+    mPrefSize.height = 0;
+    mPrefNeedsRecalc = PR_FALSE;
+    return NS_OK;
+  }
+
   nsresult rv = NS_OK;
 
   // see if anything is defined in css. If pref size is competely
@@ -291,6 +300,14 @@ nsBoxToBlockAdaptor::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
   if (!DoesNeedRecalc(mMinSize)) {
      aSize = mMinSize;
      return NS_OK;
+  }
+
+  PRBool collapsed = PR_FALSE;
+  IsCollapsed(aState, collapsed);
+  if (collapsed) {
+    mMinSize.width = 0;
+    mMinSize.height = 0;
+    return NS_OK;
   }
 
   mMinSize.width  = 0;
@@ -404,9 +421,15 @@ nsBoxToBlockAdaptor::Layout(nsBoxLayoutState& aState)
       }
     }
 
-
-     mAscent = desiredSize.ascent;
-     mFrame->SizeTo(presContext, desiredSize.width, desiredSize.height);
+     PRBool collapsed = PR_FALSE;
+     IsCollapsed(aState, collapsed);
+     if (collapsed) {
+       mAscent = 0;
+       mFrame->SizeTo(presContext, 0, 0);
+     } else {
+       mAscent = desiredSize.ascent;
+       mFrame->SizeTo(presContext, desiredSize.width, desiredSize.height);
+     }
    }
 
    SyncLayout(aState);
@@ -634,12 +657,14 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
 
     if (size.height != NS_INTRINSICSIZE) {
         size.height -= (border.top + border.bottom);
-        NS_ASSERTION(size.height >= 0,"Error top bottom border too large");
+        if (size.height < 0)
+          size.height = 0;
     }
 
     if (size.width != NS_INTRINSICSIZE) {
         size.width -= (border.left + border.right);
-        NS_ASSERTION(size.height >= 0,"Error left right border too large");
+        if (size.width < 0)
+          size.width = 0;
     }
 
     nsHTMLReflowState   reflowState(aPresContext, aReflowState, mFrame, nsSize(size.width, NS_INTRINSICSIZE));

@@ -858,6 +858,12 @@ nsBox::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
   aSize.width = 0;
   aSize.height = 0;
+
+  PRBool collapsed = PR_FALSE;
+  IsCollapsed(aState, collapsed);
+  if (collapsed)
+    return NS_OK;
+
   AddBorderAndPadding(aSize);
   AddInset(aSize);
   nsIBox::AddCSSPrefSize(aState, this, aSize);
@@ -869,6 +875,12 @@ nsBox::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
   aSize.width = 0;
   aSize.height = 0;
+
+  PRBool collapsed = PR_FALSE;
+  IsCollapsed(aState, collapsed);
+  if (collapsed)
+    return NS_OK;
+
   AddBorderAndPadding(aSize);
   AddInset(aSize);
   nsIBox::AddCSSMinSize(aState, this, aSize);
@@ -880,6 +892,12 @@ nsBox::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
   aSize.width = NS_INTRINSICSIZE;
   aSize.height = NS_INTRINSICSIZE;
+
+  PRBool collapsed = PR_FALSE;
+  IsCollapsed(aState, collapsed);
+  if (collapsed)
+    return NS_OK;
+
   AddBorderAndPadding(aSize);
   AddInset(aSize);
   nsIBox::AddCSSMaxSize(aState, this, aSize);
@@ -890,6 +908,12 @@ NS_IMETHODIMP
 nsBox::GetFlex(nsBoxLayoutState& aState, nscoord& aFlex)
 {
   aFlex = 0;
+
+  PRBool collapsed = PR_FALSE;
+  IsCollapsed(aState, collapsed);
+  if (collapsed)
+    return NS_OK;
+
   GetDefaultFlex(aFlex);
   nsIBox::AddCSSFlex(aState, this, aFlex);
 
@@ -899,6 +923,12 @@ nsBox::GetFlex(nsBoxLayoutState& aState, nscoord& aFlex)
 NS_IMETHODIMP
 nsBox::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
 {
+  aAscent = 0;
+  PRBool collapsed = PR_FALSE;
+  IsCollapsed(aState, collapsed);
+  if (collapsed)
+    return NS_OK;
+
   nsSize size(0,0);
   nsresult rv = GetPrefSize(aState, size);
   aAscent = size.height;
