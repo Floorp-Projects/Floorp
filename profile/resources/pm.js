@@ -2,7 +2,7 @@ var selected    = null;
 var currProfile = "";
 var profile = Components.classes["component://netscape/profile/manager"].createInstance();
 profile = profile.QueryInterface(Components.interfaces.nsIProfile);             
-dump("profile = " + profile + "\n"); 
+//dump("profile = " + profile + "\n"); 
 
 function openCreateProfile()
 {
@@ -20,7 +20,7 @@ function RenameProfile(w)
 {
 	if (!selected)
 	{
-		dump("Select a profile to rename.\n");
+		//dump("Select a profile to rename.\n");
 		return;
 	}
 
@@ -30,7 +30,7 @@ function RenameProfile(w)
 
 	if (migrate == "true")
 	{
-		dump("Migrate this profile before renaming it.\n");
+		//dump("Migrate this profile before renaming it.\n");
 		return;
 	}
 
@@ -44,7 +44,7 @@ function DeleteProfile(deleteFilesFlag)
 {
 	if (!selected)
 	{
-		dump("Select a profile to delete.\n");
+		//dump("Select a profile to delete.\n");
 		return;
 	}
 
@@ -60,10 +60,10 @@ function DeleteProfile(deleteFilesFlag)
 
 function StartCommunicator()
 {
-	dump("************Inside Start Communicator prof\n");
+	//dump("************Inside Start Communicator prof\n");
 	if (!selected)
 	{
-		dump("Select a profile to migrate.\n");
+		//dump("Select a profile to migrate.\n");
 		return;
 	}
 
@@ -75,7 +75,7 @@ function StartCommunicator()
 		profile.migrateProfile(name);
 	}
 
-	dump("************name: "+name+"\n");
+	//dump("************name: "+name+"\n");
 	profile.startCommunicator(name);
 	ExitApp();
 }
@@ -90,24 +90,24 @@ function ExitApp()
 
 function showSelection(node)
 {
-	dump("************** In showSelection routine!!!!!!!!! \n");
+	//dump("************** In showSelection routine!!!!!!!!! \n");
 	// (see tree's onclick definition)
 	// Tree events originate in the smallest clickable object which is the cell.  The object 
 	// originating the event is available as event.target.  We want the cell's row, so we go 
 	// one further and get event.target.parentNode.
 	selected = node;
 	var num = node.getAttribute("rowNum");
-	dump("num: "+num+"\n");
+	//dump("num: "+num+"\n");
 
 	var name = node.getAttribute("rowName");
-	dump("name: "+name+"\n");
+	//dump("name: "+name+"\n");
 
 	//dump("Selected " + num + " : " + name + "\n");
 }
 
 function addTreeItem(num, name, migrate)
 {
-  dump("Adding element " + num + " : " + name + "\n");
+  //dump("Adding element " + num + " : " + name + "\n");
   var body = document.getElementById("theTreeBody");
 
   var newitem = document.createElement('treeitem');
@@ -138,12 +138,12 @@ function addTreeItem(num, name, migrate)
 
 function loadElements()
 {
-	dump("****************hacked onload handler adds elements to tree widget\n");
+	//dump("****************hacked onload handler adds elements to tree widget\n");
 	var profileList = "";
 
 	profileList = profile.getProfileList();	
 
-	dump("Got profile list of '" + profileList + "'\n");
+	//dump("Got profile list of '" + profileList + "'\n");
 	profileList = profileList.split(",");
 	try {
 		currProfile = profile.currentProfile;
@@ -163,13 +163,15 @@ function loadElements()
 
 function openRename()
 {
-	if (!selected)
-		dump("Select a profile to rename.\n");
+	if (!selected) {
+		//dump("Select a profile to rename.\n");
+	}
 	else
 	{
 		var migrate = selected.getAttribute("rowMigrate");
-		if (migrate == "true")
-			dump("Migrate the profile before renaming it.\n");
+		if (migrate == "true") {
+			//dump("Migrate the profile before renaming it.\n");
+		}
 		else
 			var win = window.openDialog('pmrename.xul', 'Renamer', 'chrome');
 	}
@@ -180,7 +182,7 @@ function ConfirmDelete()
 {
 	if (!selected)
 	{
-		dump("Select a profile to delete.\n");
+		//dump("Select a profile to delete.\n");
 		return;
 	}
 
@@ -189,7 +191,7 @@ function ConfirmDelete()
 
 	if (migrate == "true")
 	{
-		dump("Migrate this profile before deleting it.\n");
+		//dump("Migrate this profile before deleting it.\n");
 		return;
 	}
 
