@@ -38,6 +38,9 @@ namespace Silverstone.Manticore.Browser
   using System.ComponentModel;
   using System.Drawing;
   using System.Windows.Forms;
+  using System.Net;
+
+  using Microsoft.Win32;
 
   using Silverstone.Manticore.Core;
   using Silverstone.Manticore.App;
@@ -123,7 +126,6 @@ namespace Silverstone.Manticore.Browser
       this.Controls.Add(mStatusBar);
 
       mToolbarBuilder = new BrowserToolbarBuilder("browser\\browser-toolbar.xml", this);
-	    mToolbarBuilder.Build();
 
       // Start Page handler
       this.VisibleChanged += new EventHandler(LoadStartPage);
@@ -185,6 +187,56 @@ namespace Silverstone.Manticore.Browser
       OpenDialog dlg = new OpenDialog();
       if (dlg.ShowDialog() == DialogResult.OK)
         mWebBrowser.LoadURL(dlg.URL, false);
+    }
+
+    public void SavePageAs()
+    {
+      SaveFileDialog dlg = new SaveFileDialog();
+      dlg.AddExtension = true;
+      dlg.DefaultExt = "html";
+      dlg.FileName = "untitled";
+      dlg.InitialDirectory = FileLocator.GetFolderPath(FileLocator.SpecialFolders.ssfPERSONAL); // XXX persist this. 
+      dlg.Title = "Save Page As...";
+      dlg.ValidateNames = true;
+      dlg.OverwritePrompt = true;
+
+      WebRequest req = WebRequest.Create(mWebBrowser.URL);
+      WebResponse resp = req.GetResponse();
+      string contentType = resp.ContentType;
+      switch (contentType) 
+      {
+        case "text/html":
+        case "text/xhtml":
+          dlg.Filter = "Web Page, complete (*.htm;*.html)|*.htm*|Web Page, HTML only (*.htm;*.html)|*.htm*|Text only (*.txt)|*.txt";
+          break;
+        default:
+          // XXX factor this into a separate MIME service.
+          RegistryKey clsRoot = Registry.ClassesRoot;
+          string extFromMIMEDBKey = "MIME\\Database\\Content Type\\" + contentType;
+          RegistryKey extensionKey = clsRoot.OpenSubKey(extFromMIMEDBKey);
+          string extension = extensionKey.GetValue("Extension") as String;
+          RegistryKey handlerKey = clsRoot.OpenSubKey(extension);
+          string handler = handlerKey.GetValue("") as String;
+          RegistryKey descriptionKey = clsRoot.OpenSubKey(handler);
+          string description = descriptionKey.GetValue("") as String;
+          if (description == "")
+            description = extension.ToUpper() + "file";
+          description += " (*" + extension + ")";
+          dlg.Filter = description + "|*" + extension + "|All Files (*.*)|*.*";
+          break;
+      }
+
+      dlg.FileOk += new CancelEventHandler(OnSavePageAsOK);
+      dlg.ShowDialog();
+    }
+
+    public void OnSavePageAsOK(Object sender, CancelEventArgs e)
+    {
+      if (e.Cancel != true) 
+      {
+        SaveFileDialog dlg = sender as SaveFileDialog;
+        Console.WriteLine("{0}", dlg.FileName);
+      }
     }
 
     public void Quit() 
@@ -256,6 +308,9 @@ namespace Silverstone.Manticore.Browser
           break;
         case "file-open":
           Open();
+          break;
+        case "file-save-as":
+          SavePageAs();
           break;
         case "file-exit":
           Quit();

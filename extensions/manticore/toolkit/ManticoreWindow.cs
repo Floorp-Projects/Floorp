@@ -77,10 +77,5 @@ namespace Silverstone.Manticore.Toolkit
       WindowMediator wm = ServiceManager.WindowMediator;
       wm.SetMostRecentWindow(this);
     }
-
-    public override void Dispose()
-    {
-      base.Dispose();
-    }
   }
 }

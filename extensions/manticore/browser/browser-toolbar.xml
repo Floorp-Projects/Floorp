@@ -3,14 +3,20 @@
 <toolbox id="mainToolbox"
          xmlns="http://www.silverstone.net.nz/2001/manticore/uidl">
   <toolstrip>
-    <toolbar id="navigation-toolbar" label="" visible="true" description="Navigation Toolbar">
-	  <toolbarbutton label="Back" command="view-go-back"/>
-	  <toolbarbutton label="Forward" command="view-go-forward"/>
-	  <toolbarbutton label="Stop" command="view-stop"/>
-	  <toolbarbutton label="Reload" command="view-reload"/>
-	  <toolbarseparator/>
-	  <toolbarbutton label="Home" command="view-go-home"/>
-	</toolbar>
+    <toolbar id="command-toolbar" label="" visible="true" description="Command Toolbar">
+  	  <toolbarbutton label="Back" command="view-go-back"/>
+	    <toolbarbutton label="Forward" command="view-go-forward"/>
+	    <toolbarbutton label="Stop" command="view-stop"/>
+	    <toolbarbutton label="Reload" command="view-reload"/>
+  	  <toolbarseparator/>
+	    <toolbarbutton label="Home" command="view-go-home"/>
+	  </toolbar>
+  </toolstrip>
+  <toolstrip>
+    <toolbar id="navigation-toolbar" label="Location:" visible="true" description="Navigation Toolbar">
+      <locationbar/>
+	    <toolbarbutton label="Go" command="go-to-url"/>
+	  </toolbar>
   </toolstrip>
 </toolbox>
 

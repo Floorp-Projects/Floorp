@@ -1,13 +1,15 @@
 <VisualStudioProject>
     <CSHARP>
         <Build>
-            <Settings ReferencePath = "C:\WINNT\Microsoft.NET\Framework\v1.0.2914;C:\builds\mozilla\extensions\manticore;" >
+            <Settings ReferencePath = "C:\WINNT\Microsoft.NET\Framework\v1.0.2914;C:\builds\mozilla\extensions\manticore;D:\builds\mozilla\extensions\manticore\;D:\builds\trunk\mozilla\extensions\manticore\" >
                 <Config
                     Name = "Debug"
                     EnableASPDebugging = "false"
                     EnableASPXDebugging = "false"
                     EnableUnmanagedDebugging = "false"
                     EnableSQLServerDebugging = "false"
+                    RemoteDebugEnabled = "false"
+                    RemoteDebugMachine = ""
                     StartAction = "Project"
                     StartArguments = ""
                     StartPage = ""
@@ -22,6 +24,8 @@
                     EnableASPXDebugging = "false"
                     EnableUnmanagedDebugging = "false"
                     EnableSQLServerDebugging = "false"
+                    RemoteDebugEnabled = "false"
+                    RemoteDebugMachine = ""
                     StartAction = "Project"
                     StartArguments = ""
                     StartPage = ""

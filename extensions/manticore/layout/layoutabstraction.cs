@@ -43,7 +43,6 @@ namespace Silverstone.Manticore.Layout
 
   // Trident
   using AxSHDocVw;
-  using MSHTML;
   
   // Gecko
   using AxMOZILLACONTROLLib;
@@ -115,7 +114,7 @@ namespace Silverstone.Manticore.Layout
       {
         String layoutEngine = ServiceManager.Preferences.GetStringPref("browser.layoutengine");
         if (layoutEngine == "") 
-          layoutEngine = "gecko";
+          layoutEngine = "trident";
         SwitchLayoutEngine(layoutEngine);
       }
     }
@@ -190,6 +189,7 @@ namespace Silverstone.Manticore.Layout
       //       made to support ignore-cache and ignore-history.
       //       This will require modification to the ActiveX
       //       control.
+
       RealizeLayoutEngine();
       Object o = null;
       if (gecko != null)

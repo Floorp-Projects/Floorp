@@ -1,7 +1,7 @@
 <VisualStudioProject>
     <CSHARP
         ProjectType = "Local"
-        ProductVersion = "7.0.9254"
+        ProductVersion = "7.0.9372"
         SchemaVersion = "1.0"
         ProjectGuid = "{B40F4C31-96AF-4E5F-A088-546389BC78C4}"
     >
@@ -15,7 +15,6 @@
                 DefaultHTMLPageLayout = "Grid"
                 DefaultTargetSchema = "IE50"
                 DelaySign = "false"
-                NoStandardLibraries = "true"
                 OutputType = "WinExe"
                 RootNamespace = "Silverstone.Manticore"
                 StartupObject = ""
@@ -59,22 +58,6 @@
             </Settings>
             <References>
                 <Reference
-                    Name = "MSHTML"
-                    AssemblyName = "MSHTML"
-                />
-                <Reference
-                    Name = "AxSHDocVw"
-                    AssemblyName = "AxSHDocVw"
-                />
-                <Reference
-                    Name = "MOZILLACONTROLLib"
-                    AssemblyName = "MOZILLACONTROLLib"
-                />
-                <Reference
-                    Name = "AxMOZILLACONTROLLib"
-                    AssemblyName = "AxMOZILLACONTROLLib"
-                />
-                <Reference
                     Name = "System.Windows.Forms"
                     AssemblyName = "System.Windows.Forms"
                 />
@@ -95,6 +78,30 @@
                     AssemblyName = "System.Xml"
                 />
                 <Reference
+                    Name = "AxComCtl3"
+                    AssemblyName = "AxComCtl3"
+                />
+                <Reference
+                    Name = "AxMOZILLACONTROLLib"
+                    AssemblyName = "AxMOZILLACONTROLLib"
+                />
+                <Reference
+                    Name = "AxSHDocVw"
+                    AssemblyName = "AxSHDocVw"
+                />
+                <Reference
+                    Name = "ComCtl3"
+                    AssemblyName = "ComCtl3"
+                />
+                <Reference
+                    Name = "MOZILLACONTROLLib"
+                    AssemblyName = "MOZILLACONTROLLib"
+                />
+                <Reference
+                    Name = "SHDocVw"
+                    AssemblyName = "SHDocVw"
+                />
+                <Reference
                     Name = "mscorlib"
                     AssemblyName = "mscorlib"
                 />
@@ -106,10 +113,6 @@
                     RelPath = "app.cs"
                     SubType = "Code"
                     BuildAction = "Compile"
-                />
-                <File
-                    RelPath = "licenses.licx"
-                    BuildAction = "Content"
                 />
                 <File
                     RelPath = "makefile.win"
@@ -289,6 +292,10 @@
                 />
                 <File
                     RelPath = "resources\bookmark-folder-open.png"
+                    BuildAction = "Content"
+                />
+                <File
+                    RelPath = "resources\manticore.exe.manifest"
                     BuildAction = "Content"
                 />
                 <File

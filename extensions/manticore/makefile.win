@@ -100,6 +100,7 @@ bindings:
 	echo $(_WINDIR)\system32\shdocvw.dll 
 	aximp $(_WINDIR)\system32\shdocvw.dll 
 	aximp $(MOZ_SRC)\mozilla\dist\$(SUBDIR)\bin\mozctl.dll 
+	aximp $(_WINDIR)\system32\comct332.ocx
 
 # XXX fix me
 clean:
