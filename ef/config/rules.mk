@@ -52,7 +52,7 @@ endif
 ifneq ($(HEADER_GEN),)
 $(HEADER_INCLUDES): 
 	@$(MKDIR) $(HEADER_GEN_DIR)
-	$(JAVAH) -classpath $(DEPTH)/../dist/classes -d $(HEADER_GEN_DIR) $(HEADER_GEN)
+	$(JAVAH) -classpath $(XPDIST)/classes -d $(HEADER_GEN_DIR) $(HEADER_GEN)
 
 $(OBJS) : $(HEADER_INCLUDES)	
 endif
