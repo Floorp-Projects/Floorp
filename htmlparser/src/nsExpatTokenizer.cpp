@@ -46,6 +46,7 @@ typedef struct _XMLParserState {
   XML_Parser parser;
   nsDeque* tokenDeque;
   CTokenRecycler* tokenRecycler;
+  CToken* doctypeToken;
   CToken* cdataToken;  // Used by the begin and end handlers of the cdata section
 } XMLParserState;
 
@@ -183,6 +184,7 @@ nsExpatTokenizer::nsExpatTokenizer(nsString* aURL) : nsHTMLTokenizer() {
   mState->cdataToken = nsnull;
   mState->parser = nsnull;
   mState->tokenDeque = nsnull;
+  mState->doctypeToken = nsnull;
 
   nsAutoString buffer; buffer.AssignWithConversion("UTF-16");
   const PRUnichar* encoding = buffer.GetUnicode();
@@ -636,13 +638,19 @@ void nsExpatTokenizer::HandleProcessingInstruction(void *userData,
 
 void nsExpatTokenizer::HandleDefault(void *userData, const XML_Char *s, int len) {
   XMLParserState* state = (XMLParserState*) userData;
-  nsAutoString str((PRUnichar *)s, len);
-  PRInt32 offset = -1;
-  CToken* newLine = 0;
-  
-  while ((offset = str.FindChar('\n', PR_FALSE, offset + 1)) != -1) {
-    newLine = state->tokenRecycler->CreateTokenOfType(eToken_newline, eHTMLTag_unknown);
-    AddToken(newLine, NS_OK, state->tokenDeque, state->tokenRecycler);
+  if (state->doctypeToken) {
+    nsString& doctypestr = state->doctypeToken->GetStringValueXXX();
+    doctypestr.Append((PRUnichar*)s, len);
+  }
+  else {
+    nsAutoString str((PRUnichar *)s, len);
+    PRInt32 offset = -1;
+    CToken* newLine = 0;
+    
+    while ((offset = str.FindChar('\n', PR_FALSE, offset + 1)) != -1) {
+      newLine = state->tokenRecycler->CreateTokenOfType(eToken_newline, eHTMLTag_unknown);
+      AddToken(newLine, NS_OK, state->tokenDeque, state->tokenRecycler);
+    }
   }
 }
 
@@ -858,14 +866,19 @@ void nsExpatTokenizer::HandleStartDoctypeDecl(void *userData,
   if (token) {
     nsString& str = token->GetStringValueXXX();
     str.AppendWithConversion(kDocTypeDeclPrefix);
-    str.AppendWithConversion(" ");
-    str.Append((PRUnichar*) doctypeName);
-    str.AppendWithConversion(">");
-    AddToken(token, NS_OK, state->tokenDeque, state->tokenRecycler);
+    state->doctypeToken = token;
   }
 }
 
 void nsExpatTokenizer::HandleEndDoctypeDecl(void *userData)
 {
+  XMLParserState* state = (XMLParserState*) userData;
+  CToken* token = state->doctypeToken;
+  if (token) {
+    nsString& str = token->GetStringValueXXX();
+    str.AppendWithConversion(">");
+    AddToken(token, NS_OK, state->tokenDeque, state->tokenRecycler);
+    state->doctypeToken = nsnull;
+  }
   // Do nothing
 }
