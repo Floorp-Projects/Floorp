@@ -26,6 +26,7 @@
 #include "nsIDeviceContext.h"
 #include "nsIDeviceContextSpec.h"
 #include "libimg.h"
+#include "nsCOMPtr.h"
 
 class nsIImageRequest;
 class nsHashtable;
@@ -103,6 +104,7 @@ protected:
   float             mAppUnitsToDevUnits;
   float             mDevUnitsToAppUnits;
   nsFontCache       *mFontCache;
+  nsCOMPtr<nsIAtom> mWestern; // XXX temporary fix for performance bug - erik
   float             mZoom;
   float             mGammaValue;
   PRUint8           *mGammaTable;
