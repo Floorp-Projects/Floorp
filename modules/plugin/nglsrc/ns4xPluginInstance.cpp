@@ -40,6 +40,8 @@
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID); // needed for NS_TRY_SAFE_CALL_*
 static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 
+#define MAX_PLUGIN_NECKO_BUFFER 16384
+
 class ns4xPluginStreamListener : public nsIPluginStreamListener {
 
 public:
@@ -70,6 +72,7 @@ public:
 protected:
 
   void* mNotifyData;
+  char* mStreamBuffer;
   ns4xPluginInstance* mInst;
   NPStream mNPStream;
   PRUint32 mPosition;
@@ -90,6 +93,7 @@ ns4xPluginStreamListener::ns4xPluginStreamListener(nsIPluginInstance* inst,
     NS_INIT_REFCNT();
 	mInst = (ns4xPluginInstance*) inst;
 	mPosition = 0;
+  mStreamBuffer=nsnull;
 
     // Initialize the 4.x interface structure
     memset(&mNPStream, 0, sizeof(mNPStream));
@@ -167,6 +171,14 @@ ns4xPluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
       return NS_ERROR_FAILURE;
   }
 
+  // create buffer for stream here because we know the size
+  mStreamBuffer = (char*) PR_Malloc((PRUint32)MAX_PLUGIN_NECKO_BUFFER);
+  if (!mStreamBuffer)
+  {
+    NS_ASSERTION(PR_FALSE,"failed to create 4.x plugin stream buffer or size MAX_PLUGIN_NECKO_BUFFER");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   return NS_OK;
 }
 
@@ -190,6 +202,8 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
   PRUint32  numtowrite = 0;
   PRUint32  amountRead = 0;
   PRInt32   writeCount = 0;
+  PRUint32  leftToRead = 0;         // just in case OnDataaAvail tries to overflow our buffer
+  PRBool   createdHere = PR_FALSE;  // we did malloc in locally, so we must free locally
 
   pluginInfo->GetURL(&mNPStream.url);
   pluginInfo->GetLastModified((PRUint32*)&(mNPStream.lastmodified));
@@ -197,12 +211,22 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
   if (callbacks->write == nsnull || length == 0)
     return NS_OK; // XXX ?
 
-  // Get the data from the input stream
-  char* buffer = (char*) PR_Malloc(length);
-  if (!buffer)
+  if (nsnull == mStreamBuffer)
+  {
+    // create the buffer here because we failed in OnStartBinding
+    // XXX why don't we always get an OnStartBinding? This will protect us.
+    mStreamBuffer = (char*) PR_Malloc(length);
+    if (!mStreamBuffer)
     return NS_ERROR_OUT_OF_MEMORY;
+    createdHere = PR_TRUE;
+  }
 
-  nsresult rv = input->Read(buffer, length, &amountRead);
+  if (length > MAX_PLUGIN_NECKO_BUFFER)  // what if Necko gives us a lot of data?
+  {
+    leftToRead = length - MAX_PLUGIN_NECKO_BUFFER; // break it up
+    length     = MAX_PLUGIN_NECKO_BUFFER;
+  }
+  nsresult rv = input->Read(mStreamBuffer, length, &amountRead);
   if (NS_FAILED(rv))
     goto error;
 
@@ -248,7 +272,7 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
                                                             &mNPStream, 
                                                             mPosition,
                                                             numtowrite,
-                                                            (void *)buffer), lib);
+                                                            (void *)mStreamBuffer), lib);
       if (writeCount < 0) {
         rv = NS_ERROR_FAILURE;
         goto error;
@@ -262,8 +286,17 @@ ns4xPluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
   rv = NS_OK;
 
 error:
-  if (buffer)
-    PR_Free(buffer);
+  if (PR_TRUE == createdHere) // cleanup buffer if we made it locally
+  {
+    PR_Free(mStreamBuffer);
+    mStreamBuffer=nsnull;
+  }
+
+  if (leftToRead > 0)  // if we have more to read in this pass, do it recursivly
+  {
+    OnDataAvailable(pluginInfo, input, leftToRead);
+  }
+
   return rv;
 }
 
@@ -345,6 +378,14 @@ ns4xPluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo,
                                                 mNPStream.url,
                                                 nsPluginReason_Done,
                                                 mNotifyData), lib);
+  }
+
+
+  // lets get rid of the buffer if we made one globally
+  if (mStreamBuffer)
+  {
+    PR_Free(mStreamBuffer);
+    mStreamBuffer=nsnull;
   }
 
   return NS_OK;
