@@ -43,7 +43,7 @@ package org.mozilla.javascript;
  * @author Mike McCabe
  * @author Norris Boyd
  */
-class IRFactory
+final class IRFactory
 {
     IRFactory(Parser parser)
     {
@@ -58,21 +58,21 @@ class IRFactory
     /**
      * Script (for associating file/url names with toplevel scripts.)
      */
-    void initScript(ScriptOrFnNode scriptNode, Object body)
+    void initScript(ScriptOrFnNode scriptNode, Node body)
     {
-        Node children = ((Node) body).getFirstChild();
+        Node children = body.getFirstChild();
         if (children != null) { scriptNode.addChildrenToBack(children); }
     }
 
     /**
      * Leaf
      */
-    Object createLeaf(int nodeType)
+    Node createLeaf(int nodeType)
     {
         return new Node(nodeType);
     }
 
-    Object createLeaf(int nodeType, int nodeOp)
+    Node createLeaf(int nodeType, int nodeOp)
     {
         return new Node(nodeType, nodeOp);
     }
@@ -81,30 +81,30 @@ class IRFactory
      * Statement leaf nodes.
      */
 
-    Object createSwitch(int lineno)
+    Node createSwitch(int lineno)
     {
         return new Node.Jump(Token.SWITCH, lineno);
     }
 
-    Object createVariables(int lineno)
+    Node createVariables(int lineno)
     {
         return new Node(Token.VAR, lineno);
     }
 
-    Object createExprStatement(Object expr, int lineno)
+    Node createExprStatement(Node expr, int lineno)
     {
-        return new Node(Token.EXPRSTMT, (Node) expr, lineno);
+        return new Node(Token.EXPRSTMT, expr, lineno);
     }
 
-    Object createExprStatementNoReturn(Object expr, int lineno)
+    Node createExprStatementNoReturn(Node expr, int lineno)
     {
-        return new Node(Token.POP, (Node) expr, lineno);
+        return new Node(Token.POP, expr, lineno);
     }
 
     /**
      * Name
      */
-    Object createName(String name)
+    Node createName(String name)
     {
         checkActivationName(name, Token.NAME);
         return Node.newString(Token.NAME, name);
@@ -113,7 +113,7 @@ class IRFactory
     /**
      * String (for literals)
      */
-    Object createString(String string)
+    Node createString(String string)
     {
         return Node.newString(string);
     }
@@ -121,7 +121,7 @@ class IRFactory
     /**
      * Number (for literals)
      */
-    Object createNumber(double number)
+    Node createNumber(double number)
     {
         return Node.newNumber(number);
     }
@@ -134,38 +134,37 @@ class IRFactory
      * @param stmts the statements in the catch clause
      * @param lineno the starting line number of the catch clause
      */
-    Object createCatch(String varName, Object catchCond, Object stmts,
-                       int lineno)
+    Node createCatch(String varName, Node catchCond, Node stmts, int lineno)
     {
         if (catchCond == null) {
             catchCond = new Node(Token.EMPTY);
         }
-        return new Node(Token.CATCH, (Node)createName(varName),
-                               (Node)catchCond, (Node)stmts, lineno);
+        return new Node(Token.CATCH, createName(varName),
+                        catchCond, stmts, lineno);
     }
 
     /**
      * Throw
      */
-    Object createThrow(Object expr, int lineno)
+    Node createThrow(Node expr, int lineno)
     {
-        return new Node(Token.THROW, (Node)expr, lineno);
+        return new Node(Token.THROW, expr, lineno);
     }
 
     /**
      * Return
      */
-    Object createReturn(Object expr, int lineno)
+    Node createReturn(Node expr, int lineno)
     {
         return expr == null
             ? new Node(Token.RETURN, lineno)
-            : new Node(Token.RETURN, (Node)expr, lineno);
+            : new Node(Token.RETURN, expr, lineno);
     }
 
     /**
      * Label
      */
-    Object createLabel(String label, int lineno)
+    Node createLabel(String label, int lineno)
     {
         Node.Jump n = new Node.Jump(Token.LABEL, lineno);
         n.setLabel(label);
@@ -175,7 +174,7 @@ class IRFactory
     /**
      * Break (possibly labeled)
      */
-    Object createBreak(String label, int lineno)
+    Node createBreak(String label, int lineno)
     {
         Node.Jump n = new Node.Jump(Token.BREAK, lineno);
         if (label != null) {
@@ -187,7 +186,7 @@ class IRFactory
     /**
      * Continue (possibly labeled)
      */
-    Object createContinue(String label, int lineno)
+    Node createContinue(String label, int lineno)
     {
         Node.Jump n = new Node.Jump(Token.CONTINUE, lineno);
         if (label != null) {
@@ -201,7 +200,7 @@ class IRFactory
      * Creates the empty statement block
      * Must make subsequent calls to add statements to the node
      */
-    Object createBlock(int lineno)
+    Node createBlock(int lineno)
     {
         return new Node(Token.BLOCK, lineno);
     }
@@ -211,12 +210,11 @@ class IRFactory
         return new FunctionNode(name);
     }
 
-    Object initFunction(FunctionNode fnNode, int functionIndex,
-                        Object statements, int functionType)
+    Node initFunction(FunctionNode fnNode, int functionIndex,
+                      Node statements, int functionType)
     {
-        Node stmts = (Node)statements;
         fnNode.setFunctionType(functionType);
-        fnNode.addChildToBack(stmts);
+        fnNode.addChildToBack(statements);
 
         int functionCount = fnNode.getFunctionCount();
         if (functionCount != 0) {
@@ -250,14 +248,14 @@ class IRFactory
                 Node setFn = new Node(Token.POP,
                                 new Node(Token.SETVAR, Node.newString(name),
                                          new Node(Token.THISFN)));
-                stmts.addChildrenToFront(setFn);
+                statements.addChildrenToFront(setFn);
             }
         }
 
         // Add return to end if needed.
-        Node lastStmt = stmts.getLastChild();
+        Node lastStmt = statements.getLastChild();
         if (lastStmt == null || lastStmt.getType() != Token.RETURN) {
-            stmts.addChildToBack(new Node(Token.RETURN));
+            statements.addChildToBack(new Node(Token.RETURN));
         }
 
         Node result = Node.newString(Token.FUNCTION,
@@ -271,37 +269,33 @@ class IRFactory
      * breaks the Factory abstraction, but it removes a requirement
      * from implementors of Node.
      */
-    void addChildToBack(Object parent, Object child)
+    void addChildToBack(Node parent, Node child)
     {
-        ((Node)parent).addChildToBack((Node)child);
+        parent.addChildToBack(child);
     }
 
     /**
      * While
      */
-    Object createWhile(Object cond, Object body, int lineno)
+    Node createWhile(Node cond, Node body, int lineno)
     {
-        return createLoop(LOOP_WHILE, (Node)body, (Node)cond, null, null,
-                          lineno);
+        return createLoop(LOOP_WHILE, body, cond, null, null, lineno);
     }
 
     /**
      * DoWhile
      */
-    Object createDoWhile(Object body, Object cond, int lineno)
+    Node createDoWhile(Node body, Node cond, int lineno)
     {
-        return createLoop(LOOP_DO_WHILE, (Node)body, (Node)cond, null, null,
-                          lineno);
+        return createLoop(LOOP_DO_WHILE, body, cond, null, null, lineno);
     }
 
     /**
      * For
      */
-    Object createFor(Object init, Object test, Object incr, Object body,
-                     int lineno)
+    Node createFor(Node init, Node test, Node incr, Node body, int lineno)
     {
-        return createLoop(LOOP_FOR, (Node)body, (Node)test,
-                          (Node)init, (Node)incr, lineno);
+        return createLoop(LOOP_FOR, body, test, init, incr, lineno);
     }
 
     private Node createLoop(int loopType, Node body, Node cond,
@@ -312,7 +306,7 @@ class IRFactory
         if (loopType == LOOP_FOR && cond.getType() == Token.EMPTY) {
             cond = new Node(Token.TRUE);
         }
-        Node.Jump IFEQ = new Node.Jump(Token.IFEQ, (Node)cond);
+        Node.Jump IFEQ = new Node.Jump(Token.IFEQ, cond);
         IFEQ.target = bodyTarget;
         Node.Target breakTarget = new Node.Target();
 
@@ -346,7 +340,7 @@ class IRFactory
                 Node.Target incrTarget = new Node.Target();
                 result.addChildAfter(incrTarget, body);
                 if (incr.getType() != Token.EMPTY) {
-                    incr = (Node)createUnary(Token.POP, incr);
+                    incr = createUnary(Token.POP, incr);
                     result.addChildAfter(incr, incrTarget);
                 }
                 continueTarget = incrTarget;
@@ -362,14 +356,12 @@ class IRFactory
      * For .. In
      *
      */
-    Object createForIn(Object lhs, Object obj, Object body, int lineno)
+    Node createForIn(Node lhs, Node obj, Node body, int lineno)
     {
         String name;
-        Node lhsNode = (Node) lhs;
-        Node objNode = (Node) obj;
-        int type = lhsNode.getType();
+        int type = lhs.getType();
 
-        Node lvalue = lhsNode;
+        Node lvalue = lhs;
         switch (type) {
 
           case Token.NAME:
@@ -385,8 +377,8 @@ class IRFactory
              * parser would have to know something about the
              * 'init' node of the for-in loop.
              */
-            Node lastChild = lhsNode.getLastChild();
-            if (lhsNode.getFirstChild() != lastChild) {
+            Node lastChild = lhs.getLastChild();
+            if (lhs.getFirstChild() != lastChild) {
                 parser.reportError("msg.mult.index");
             }
             lvalue = Node.newString(Token.NAME, lastChild.getString());
@@ -394,12 +386,12 @@ class IRFactory
 
           default:
             parser.reportError("msg.bad.for.in.lhs");
-            return objNode;
+            return obj;
         }
 
         Node localBlock = new Node(Token.LOCAL_BLOCK);
 
-        Node init = new Node(Token.ENUM_INIT, objNode);
+        Node init = new Node(Token.ENUM_INIT, obj);
         init.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
         Node cond = new Node(Token.ENUM_NEXT);
         cond.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
@@ -407,14 +399,14 @@ class IRFactory
         id.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
 
         Node newBody = new Node(Token.BLOCK);
-        Node assign = (Node) createAssignment(lvalue, id);
+        Node assign = createAssignment(lvalue, id);
         newBody.addChildToBack(new Node(Token.POP, assign));
-        newBody.addChildToBack((Node) body);
+        newBody.addChildToBack(body);
 
-        Node loop = (Node) createWhile(cond, newBody, lineno);
+        Node loop = createWhile(cond, newBody, lineno);
         loop.addChildToFront(init);
         if (type == Token.VAR)
-            loop.addChildToFront(lhsNode);
+            loop.addChildToFront(lhs);
         localBlock.addChildToBack(loop);
 
         return localBlock;
@@ -435,37 +427,31 @@ class IRFactory
 
      * ... and a goto to GOTO around these handlers.
      */
-    Object createTryCatchFinally(Object tryblock, Object catchblocks,
-                                 Object finallyblock, int lineno)
+    Node createTryCatchFinally(Node tryBlock, Node catchBlocks,
+                               Node finallyBlock, int lineno)
     {
-        Node trynode = (Node)tryblock;
-        boolean hasFinally = false;
-        Node finallyNode = null;
-        if (finallyblock != null) {
-            finallyNode = (Node)finallyblock;
-            hasFinally = (finallyNode.getType() != Token.BLOCK
-                          || finallyNode.hasChildren());
-        }
+        boolean hasFinally = (finallyBlock != null)
+                             && (finallyBlock.getType() != Token.BLOCK
+                                 || finallyBlock.hasChildren());
 
         // short circuit
-        if (trynode.getType() == Token.BLOCK && !trynode.hasChildren()
+        if (tryBlock.getType() == Token.BLOCK && !tryBlock.hasChildren()
             && !hasFinally)
         {
-            return trynode;
+            return tryBlock;
         }
 
-        Node catchNodes = (Node)catchblocks;
-        boolean hasCatch = catchNodes.hasChildren();
+        boolean hasCatch = catchBlocks.hasChildren();
 
         // short circuit
         if (!hasFinally && !hasCatch)  {
             // bc finally might be an empty block...
-            return trynode;
+            return tryBlock;
         }
 
 
         Node localBlock  = new Node(Token.LOCAL_BLOCK);
-        Node.Jump pn = new Node.Jump(Token.TRY, trynode, lineno);
+        Node.Jump pn = new Node.Jump(Token.TRY, tryBlock, lineno);
         pn.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
 
         Node.Target finallyTarget = null;
@@ -524,8 +510,8 @@ class IRFactory
             Node.Target endCatch = new Node.Target();
 
             // add [jsr finally?] goto end to each catch block
-            // expects catchNode children to be (cond block) pairs.
-            Node cb = catchNodes.getFirstChild();
+            // expects catchblocks children to be (cond block) pairs.
+            Node cb = catchBlocks.getFirstChild();
             boolean hasDefault = false;
             while (cb != null) {
                 int catchLineNo = cb.getLineno();
@@ -546,8 +532,7 @@ class IRFactory
                     condStmt = catchBlock;
                     hasDefault = true;
                 } else {
-                    condStmt = (Node) createIf(cond, catchBlock, null,
-                                               catchLineNo);
+                    condStmt = createIf(cond, catchBlock, null, catchLineNo);
                 }
                 // Try..catch produces "with" code in order to limit
                 // the scope of the exception object.
@@ -557,8 +542,7 @@ class IRFactory
                 Node catchScope = Node.newString(Token.CATCH_SCOPE,
                                                  name.getString());
                 catchScope.addChildToBack(createUseLocal(localBlock));
-                Node withStmt = (Node) createWith(catchScope, condStmt,
-                                                  catchLineNo);
+                Node withStmt = createWith(catchScope, condStmt, catchLineNo);
                 pn.addChildToBack(withStmt);
 
                 // move to next cb
@@ -585,7 +569,7 @@ class IRFactory
 
         if (hasFinally) {
             pn.addChildToBack(finallyTarget);
-            Node fBlock = new Node(Token.FINALLY, finallyNode);
+            Node fBlock = new Node(Token.FINALLY, finallyBlock);
             fBlock.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
             pn.addChildToBack(fBlock);
         }
@@ -601,18 +585,18 @@ class IRFactory
     /**
      * With
      */
-    Object createWith(Object obj, Object body, int lineno)
+    Node createWith(Node obj, Node body, int lineno)
     {
         setRequiresActivation();
         Node result = new Node(Token.BLOCK, lineno);
-        result.addChildToBack(new Node(Token.ENTERWITH, (Node)obj));
-        Node bodyNode = new Node(Token.WITH, (Node) body, lineno);
+        result.addChildToBack(new Node(Token.ENTERWITH, obj));
+        Node bodyNode = new Node(Token.WITH, body, lineno);
         result.addChildrenToBack(bodyNode);
         result.addChildToBack(new Node(Token.LEAVEWITH));
         return result;
     }
 
-    Object createArrayLiteral(ObjArray elems, int skipCount)
+    Node createArrayLiteral(ObjArray elems, int skipCount)
     {
         int length = elems.size();
         int[] skipIndexes = null;
@@ -641,7 +625,7 @@ class IRFactory
      * creation plus object property entries, so later compiler
      * stages don't need to know about object literals.
      */
-    Object createObjectLiteral(ObjArray elems)
+    Node createObjectLiteral(ObjArray elems)
     {
         int size = elems.size() / 2;
         Node object = new Node(Token.OBJECTLIT);
@@ -663,7 +647,7 @@ class IRFactory
     /**
      * Regular expressions
      */
-    Object createRegExp(int regexpIndex)
+    Node createRegExp(int regexpIndex)
     {
         Node n = new Node(Token.REGEXP);
         n.putIntProp(Node.REGEXP_PROP, regexpIndex);
@@ -673,9 +657,8 @@ class IRFactory
     /**
      * If statement
      */
-    Object createIf(Object condObj, Object ifTrue, Object ifFalse, int lineno)
+    Node createIf(Node cond, Node ifTrue, Node ifFalse, int lineno)
     {
-        Node cond = (Node)condObj;
         int condStatus = isAlwaysDefinedBoolean(cond);
         if (condStatus == ALWAYS_TRUE_BOOLEAN) {
             return ifTrue;
@@ -689,11 +672,11 @@ class IRFactory
 
         Node result = new Node(Token.BLOCK, lineno);
         Node.Target ifNotTarget = new Node.Target();
-        Node.Jump IFNE = new Node.Jump(Token.IFNE, (Node) cond);
+        Node.Jump IFNE = new Node.Jump(Token.IFNE, cond);
         IFNE.target = ifNotTarget;
 
         result.addChildToBack(IFNE);
-        result.addChildrenToBack((Node)ifTrue);
+        result.addChildrenToBack(ifTrue);
 
         if (ifFalse != null) {
             Node.Jump GOTOToEnd = new Node.Jump(Token.GOTO);
@@ -701,7 +684,7 @@ class IRFactory
             GOTOToEnd.target = endTarget;
             result.addChildToBack(GOTOToEnd);
             result.addChildToBack(ifNotTarget);
-            result.addChildrenToBack((Node)ifFalse);
+            result.addChildrenToBack(ifFalse);
             result.addChildToBack(endTarget);
         } else {
             result.addChildToBack(ifNotTarget);
@@ -710,25 +693,23 @@ class IRFactory
         return result;
     }
 
-    Object createCondExpr(Object condObj, Object ifTrue, Object ifFalse)
+    Node createCondExpr(Node cond, Node ifTrue, Node ifFalse)
     {
-        Node cond = (Node)condObj;
         int condStatus = isAlwaysDefinedBoolean(cond);
         if (condStatus == ALWAYS_TRUE_BOOLEAN) {
             return ifTrue;
         } else if (condStatus == ALWAYS_FALSE_BOOLEAN) {
             return ifFalse;
         }
-        return new Node(Token.HOOK, cond, (Node)ifTrue, (Node)ifFalse);
+        return new Node(Token.HOOK, cond, ifTrue, ifFalse);
     }
 
     /**
      * Unary
      */
-    Object createUnary(int nodeType, Object child)
+    Node createUnary(int nodeType, Node child)
     {
-        Node childNode = (Node) child;
-        int childType = childNode.getType();
+        int childType = child.getType();
         switch (nodeType) {
           case Token.DELPROP: {
             Node left;
@@ -736,16 +717,16 @@ class IRFactory
             if (childType == Token.NAME) {
                 // Transform Delete(Name "a")
                 //  to Delete(Bind("a"), String("a"))
-                childNode.setType(Token.BINDNAME);
-                left = childNode;
-                right = Node.newString(childNode.getString());
+                child.setType(Token.BINDNAME);
+                left = child;
+                right = Node.newString(child.getString());
             } else if (childType == Token.GETPROP ||
                        childType == Token.GETELEM)
             {
-                left = childNode.getFirstChild();
-                right = childNode.getLastChild();
-                childNode.removeChild(left);
-                childNode.removeChild(right);
+                left = child.getFirstChild();
+                right = child.getLastChild();
+                child.removeChild(left);
+                child.removeChild(right);
             } else {
                 return new Node(Token.TRUE);
             }
@@ -753,25 +734,25 @@ class IRFactory
           }
           case Token.TYPEOF:
             if (childType == Token.NAME) {
-                childNode.setType(Token.TYPEOFNAME);
-                return childNode;
+                child.setType(Token.TYPEOFNAME);
+                return child;
             }
             break;
           case Token.BITNOT:
             if (childType == Token.NUMBER) {
-                int value = ScriptRuntime.toInt32(childNode.getDouble());
-                childNode.setDouble(~value);
-                return childNode;
+                int value = ScriptRuntime.toInt32(child.getDouble());
+                child.setDouble(~value);
+                return child;
             }
             break;
           case Token.NEG:
             if (childType == Token.NUMBER) {
-                childNode.setDouble(-childNode.getDouble());
-                return childNode;
+                child.setDouble(-child.getDouble());
+                return child;
             }
             break;
           case Token.NOT: {
-            int status = isAlwaysDefinedBoolean(childNode);
+            int status = isAlwaysDefinedBoolean(child);
             if (status != 0) {
                 int type;
                 if (status == ALWAYS_TRUE_BOOLEAN) {
@@ -780,20 +761,19 @@ class IRFactory
                     type = Token.TRUE;
                 }
                 if (childType == Token.TRUE || childType == Token.FALSE) {
-                    childNode.setType(type);
-                    return childNode;
+                    child.setType(type);
+                    return child;
                 }
                 return new Node(type);
             }
             break;
           }
         }
-        return new Node(nodeType, childNode);
+        return new Node(nodeType, child);
     }
 
-    Object createCallOrNew(int nodeType, Object childNode)
+    Node createCallOrNew(int nodeType, Node child)
     {
-        Node child = (Node)childNode;
         int type = Node.NON_SPECIALCALL;
         if (child.getType() == Token.NAME) {
             String name = child.getString();
@@ -817,9 +797,8 @@ class IRFactory
         return node;
     }
 
-    Object createIncDec(int nodeType, boolean post, Object childObj)
+    Node createIncDec(int nodeType, boolean post, Node child)
     {
-        Node child = (Node)childObj;
         int childType = child.getType();
 
         switch (childType) {
@@ -857,11 +836,8 @@ class IRFactory
     /**
      * Binary
      */
-    Object createBinary(int nodeType, Object leftObj, Object rightObj)
+    Node createBinary(int nodeType, Node left, Node right)
     {
-        Node left = (Node)leftObj;
-        Node right = (Node)rightObj;
-
         switch (nodeType) {
 
           case Token.DOT:
@@ -1019,11 +995,8 @@ class IRFactory
         return new Node(nodeType, left, right);
     }
 
-    Object createAssignment(Object leftObj, Object rightObj)
+    Node createAssignment(Node left, Node right)
     {
-        Node left = (Node)leftObj;
-        Node right = (Node)rightObj;
-
         int nodeType = left.getType();
         switch (nodeType) {
           case Token.NAME:
@@ -1050,11 +1023,8 @@ class IRFactory
         return createAssignment(makeReferenceGet(left), right);
     }
 
-    Object createAssignmentOp(int assignOp, Object leftObj, Object rightObj)
+    Node createAssignmentOp(int assignOp, Node left, Node right)
     {
-        Node left = (Node)leftObj;
-        Node right = (Node)rightObj;
-
         int nodeType = left.getType();
         switch (nodeType) {
           case Token.NAME: {

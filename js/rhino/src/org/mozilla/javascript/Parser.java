@@ -140,7 +140,7 @@ public class Parser
 
         /* so we have something to add nodes to until
          * we've collected all the source */
-        Object pn = nf.createLeaf(Token.BLOCK);
+        Node pn = nf.createLeaf(Token.BLOCK);
 
         try {
             for (;;) {
@@ -152,7 +152,7 @@ public class Parser
                     break;
                 }
 
-                Object n;
+                Node n;
                 if (tt == Token.FUNCTION) {
                     try {
                         n = function(FunctionNode.FUNCTION_STATEMENT);
@@ -211,7 +211,7 @@ public class Parser
      * it'd only be useful for checking argument hiding, which
      * I'm not doing anyway...
      */
-    private Object parseFunctionBody()
+    private Node parseFunctionBody()
         throws IOException
     {
         int oldflags = ts.flags;
@@ -219,11 +219,11 @@ public class Parser
                       | TokenStream.TSF_RETURN_VOID);
         ts.flags |= TokenStream.TSF_FUNCTION;
 
-        Object pn = nf.createBlock(ts.getLineno());
+        Node pn = nf.createBlock(ts.getLineno());
         try {
             int tt;
             while((tt = ts.peekToken()) > Token.EOF && tt != Token.RC) {
-                Object n;
+                Node n;
                 if (tt == Token.FUNCTION) {
                     ts.getToken();
                     n = function(FunctionNode.FUNCTION_STATEMENT);
@@ -244,14 +244,14 @@ public class Parser
         return pn;
     }
 
-    private Object function(int functionType)
+    private Node function(int functionType)
         throws IOException, ParserException
     {
         int syntheticType = functionType;
         int baseLineno = ts.getLineno();  // line number where source starts
 
         String name;
-        Object memberExprNode = null;
+        Node memberExprNode = null;
         if (ts.matchToken(Token.NAME)) {
             name = ts.getString();
             if (!ts.matchToken(Token.LP)) {
@@ -259,7 +259,7 @@ public class Parser
                     // Extension to ECMA: if 'function <name>' does not follow
                     // by '(', assume <name> starts memberExpr
                     decompiler.addName(name);
-                    Object memberExprHead = nf.createName(name);
+                    Node memberExprHead = nf.createName(name);
                     name = "";
                     memberExprNode = memberExprTail(false, memberExprHead);
                 }
@@ -314,7 +314,7 @@ public class Parser
         int savedNestingOfWith = nestingOfWith;
         nestingOfWith = 0;
 
-        Object body;
+        Node body;
         String source;
         try {
             decompiler.addToken(Token.LP);
@@ -369,7 +369,7 @@ public class Parser
         fnNode.setBaseLineno(baseLineno);
         fnNode.setEndLineno(ts.getLineno());
 
-        Object pn;
+        Node pn;
         if (memberExprNode == null) {
             pn = nf.initFunction(fnNode, functionIndex, body, syntheticType);
             if (functionType == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
@@ -388,10 +388,10 @@ public class Parser
         return pn;
     }
 
-    private Object statements()
+    private Node statements()
         throws IOException
     {
-        Object pn = nf.createBlock(ts.getLineno());
+        Node pn = nf.createBlock(ts.getLineno());
 
         int tt;
         while((tt = ts.peekToken()) > Token.EOF && tt != Token.RC) {
@@ -401,10 +401,10 @@ public class Parser
         return pn;
     }
 
-    private Object condition()
+    private Node condition()
         throws IOException, ParserException
     {
-        Object pn;
+        Node pn;
         mustMatchToken(Token.LP, "msg.no.paren.cond");
         decompiler.addToken(Token.LP);
         pn = expr(false);
@@ -471,7 +471,7 @@ public class Parser
         return label;
     }
 
-    private Object statement()
+    private Node statement()
         throws IOException
     {
         try {
@@ -493,10 +493,10 @@ public class Parser
      * is implemented.
      */
 
-    private Object statementHelper()
+    private Node statementHelper()
         throws IOException, ParserException
     {
-        Object pn = null;
+        Node pn = null;
 
         // If skipsemi == true, don't add SEMI + EOL to source at the
         // end of this statment.  For compound statements, IF/FOR etc.
@@ -512,10 +512,10 @@ public class Parser
 
             decompiler.addToken(Token.IF);
             int lineno = ts.getLineno();
-            Object cond = condition();
+            Node cond = condition();
             decompiler.addEOL(Token.LC);
-            Object ifTrue = statement();
-            Object ifFalse = null;
+            Node ifTrue = statement();
+            Node ifFalse = null;
             if (ts.matchToken(Token.ELSE)) {
                 decompiler.addToken(Token.RC);
                 decompiler.addToken(Token.ELSE);
@@ -533,8 +533,8 @@ public class Parser
             decompiler.addToken(Token.SWITCH);
             pn = nf.createSwitch(ts.getLineno());
 
-            Object cur_case = null;  // to kill warning
-            Object case_statements;
+            Node cur_case = null;  // to kill warning
+            Node case_statements;
 
             mustMatchToken(Token.LP, "msg.no.paren.switch");
             decompiler.addToken(Token.LP);
@@ -586,9 +586,9 @@ public class Parser
 
             decompiler.addToken(Token.WHILE);
             int lineno = ts.getLineno();
-            Object cond = condition();
+            Node cond = condition();
             decompiler.addEOL(Token.LC);
-            Object body = statement();
+            Node body = statement();
             decompiler.addEOL(Token.RC);
 
             pn = nf.createWhile(cond, body, lineno);
@@ -602,12 +602,12 @@ public class Parser
 
             int lineno = ts.getLineno();
 
-            Object body = statement();
+            Node body = statement();
 
             decompiler.addToken(Token.RC);
             mustMatchToken(Token.WHILE, "msg.no.while.do");
             decompiler.addToken(Token.WHILE);
-            Object cond = condition();
+            Node cond = condition();
 
             pn = nf.createDoWhile(body, cond, lineno);
             break;
@@ -619,10 +619,10 @@ public class Parser
             decompiler.addToken(Token.FOR);
             int lineno = ts.getLineno();
 
-            Object init;  // Node init is also foo in 'foo in Object'
-            Object cond;  // Node cond is also object in 'foo in Object'
-            Object incr = null; // to kill warning
-            Object body;
+            Node init;  // Node init is also foo in 'foo in Object'
+            Node cond;  // Node cond is also object in 'foo in Object'
+            Node incr = null; // to kill warning
+            Node body;
 
             mustMatchToken(Token.LP, "msg.no.paren.for");
             decompiler.addToken(Token.LP);
@@ -681,9 +681,9 @@ public class Parser
         case Token.TRY: {
             int lineno = ts.getLineno();
 
-            Object tryblock;
-            Object catchblocks = null;
-            Object finallyblock = null;
+            Node tryblock;
+            Node catchblocks = null;
+            Node finallyblock = null;
 
             skipsemi = true;
             decompiler.addToken(Token.TRY);
@@ -708,7 +708,7 @@ public class Parser
                     String varName = ts.getString();
                     decompiler.addName(varName);
 
-                    Object catchCond = null;
+                    Node catchCond = null;
                     if (ts.matchToken(Token.IF)) {
                         decompiler.addToken(Token.IF);
                         catchCond = expr(false);
@@ -786,13 +786,13 @@ public class Parser
             int lineno = ts.getLineno();
             mustMatchToken(Token.LP, "msg.no.paren.with");
             decompiler.addToken(Token.LP);
-            Object obj = expr(false);
+            Node obj = expr(false);
             mustMatchToken(Token.RP, "msg.no.paren.after.with");
             decompiler.addToken(Token.RP);
             decompiler.addEOL(Token.LC);
 
             ++nestingOfWith;
-            Object body;
+            Node body;
             try {
                 body = statement();
             } finally {
@@ -812,7 +812,7 @@ public class Parser
             break;
         }
         case Token.RETURN: {
-            Object retExpr = null;
+            Node retExpr = null;
 
             decompiler.addToken(Token.RETURN);
 
@@ -905,17 +905,17 @@ public class Parser
         return pn;
     }
 
-    private Object variables(boolean inForInit)
+    private Node variables(boolean inForInit)
         throws IOException, ParserException
     {
-        Object pn = nf.createVariables(ts.getLineno());
+        Node pn = nf.createVariables(ts.getLineno());
         boolean first = true;
 
         decompiler.addToken(Token.VAR);
 
         for (;;) {
-            Object name;
-            Object init;
+            Node name;
+            Node init;
             mustMatchToken(Token.NAME, "msg.bad.var");
             String s = ts.getString();
 
@@ -942,10 +942,10 @@ public class Parser
         return pn;
     }
 
-    private Object expr(boolean inForInit)
+    private Node expr(boolean inForInit)
         throws IOException, ParserException
     {
-        Object pn = assignExpr(inForInit);
+        Node pn = assignExpr(inForInit);
         while (ts.matchToken(Token.COMMA)) {
             decompiler.addToken(Token.COMMA);
             pn = nf.createBinary(Token.COMMA, pn, assignExpr(inForInit));
@@ -953,10 +953,10 @@ public class Parser
         return pn;
     }
 
-    private Object assignExpr(boolean inForInit)
+    private Node assignExpr(boolean inForInit)
         throws IOException, ParserException
     {
-        Object pn = condExpr(inForInit);
+        Node pn = condExpr(inForInit);
 
         int tt = ts.peekToken();
         // omitted: "invalid assignment left-hand side" check.
@@ -974,13 +974,13 @@ public class Parser
         return pn;
     }
 
-    private Object condExpr(boolean inForInit)
+    private Node condExpr(boolean inForInit)
         throws IOException, ParserException
     {
-        Object ifTrue;
-        Object ifFalse;
+        Node ifTrue;
+        Node ifFalse;
 
-        Object pn = orExpr(inForInit);
+        Node pn = orExpr(inForInit);
 
         if (ts.matchToken(Token.HOOK)) {
             decompiler.addToken(Token.HOOK);
@@ -994,10 +994,10 @@ public class Parser
         return pn;
     }
 
-    private Object orExpr(boolean inForInit)
+    private Node orExpr(boolean inForInit)
         throws IOException, ParserException
     {
-        Object pn = andExpr(inForInit);
+        Node pn = andExpr(inForInit);
         if (ts.matchToken(Token.OR)) {
             decompiler.addToken(Token.OR);
             pn = nf.createBinary(Token.OR, pn, orExpr(inForInit));
@@ -1006,10 +1006,10 @@ public class Parser
         return pn;
     }
 
-    private Object andExpr(boolean inForInit)
+    private Node andExpr(boolean inForInit)
         throws IOException, ParserException
     {
-        Object pn = bitOrExpr(inForInit);
+        Node pn = bitOrExpr(inForInit);
         if (ts.matchToken(Token.AND)) {
             decompiler.addToken(Token.AND);
             pn = nf.createBinary(Token.AND, pn, andExpr(inForInit));
@@ -1018,10 +1018,10 @@ public class Parser
         return pn;
     }
 
-    private Object bitOrExpr(boolean inForInit)
+    private Node bitOrExpr(boolean inForInit)
         throws IOException, ParserException
     {
-        Object pn = bitXorExpr(inForInit);
+        Node pn = bitXorExpr(inForInit);
         while (ts.matchToken(Token.BITOR)) {
             decompiler.addToken(Token.BITOR);
             pn = nf.createBinary(Token.BITOR, pn, bitXorExpr(inForInit));
@@ -1029,10 +1029,10 @@ public class Parser
         return pn;
     }
 
-    private Object bitXorExpr(boolean inForInit)
+    private Node bitXorExpr(boolean inForInit)
         throws IOException, ParserException
     {
-        Object pn = bitAndExpr(inForInit);
+        Node pn = bitAndExpr(inForInit);
         while (ts.matchToken(Token.BITXOR)) {
             decompiler.addToken(Token.BITXOR);
             pn = nf.createBinary(Token.BITXOR, pn, bitAndExpr(inForInit));
@@ -1040,10 +1040,10 @@ public class Parser
         return pn;
     }
 
-    private Object bitAndExpr(boolean inForInit)
+    private Node bitAndExpr(boolean inForInit)
         throws IOException, ParserException
     {
-        Object pn = eqExpr(inForInit);
+        Node pn = eqExpr(inForInit);
         while (ts.matchToken(Token.BITAND)) {
             decompiler.addToken(Token.BITAND);
             pn = nf.createBinary(Token.BITAND, pn, eqExpr(inForInit));
@@ -1051,10 +1051,10 @@ public class Parser
         return pn;
     }
 
-    private Object eqExpr(boolean inForInit)
+    private Node eqExpr(boolean inForInit)
         throws IOException, ParserException
     {
-        Object pn = relExpr(inForInit);
+        Node pn = relExpr(inForInit);
         for (;;) {
             int tt = ts.peekToken();
             switch (tt) {
@@ -1095,10 +1095,10 @@ public class Parser
         return pn;
     }
 
-    private Object relExpr(boolean inForInit)
+    private Node relExpr(boolean inForInit)
         throws IOException, ParserException
     {
-        Object pn = shiftExpr();
+        Node pn = shiftExpr();
         for (;;) {
             int tt = ts.peekToken();
             switch (tt) {
@@ -1121,10 +1121,10 @@ public class Parser
         return pn;
     }
 
-    private Object shiftExpr()
+    private Node shiftExpr()
         throws IOException, ParserException
     {
-        Object pn = addExpr();
+        Node pn = addExpr();
         for (;;) {
             int tt = ts.peekToken();
             switch (tt) {
@@ -1141,10 +1141,10 @@ public class Parser
         return pn;
     }
 
-    private Object addExpr()
+    private Node addExpr()
         throws IOException, ParserException
     {
-        Object pn = mulExpr();
+        Node pn = mulExpr();
         for (;;) {
             int tt = ts.peekToken();
             if (tt == Token.ADD || tt == Token.SUB) {
@@ -1160,10 +1160,10 @@ public class Parser
         return pn;
     }
 
-    private Object mulExpr()
+    private Node mulExpr()
         throws IOException, ParserException
     {
-        Object pn = unaryExpr();
+        Node pn = unaryExpr();
         for (;;) {
             int tt = ts.peekToken();
             switch (tt) {
@@ -1181,7 +1181,7 @@ public class Parser
         return pn;
     }
 
-    private Object unaryExpr()
+    private Node unaryExpr()
         throws IOException, ParserException
     {
         int tt;
@@ -1225,7 +1225,7 @@ public class Parser
 
             int lineno = ts.getLineno();
 
-            Object pn = memberExpr(true);
+            Node pn = memberExpr(true);
 
             /* don't look across a newline boundary for a postfix incop.
 
@@ -1249,7 +1249,7 @@ public class Parser
 
     }
 
-    private void argumentList(Object listNode)
+    private void argumentList(Node listNode)
         throws IOException, ParserException
     {
         boolean matched;
@@ -1270,12 +1270,12 @@ public class Parser
         decompiler.addToken(Token.RP);
     }
 
-    private Object memberExpr(boolean allowCallSyntax)
+    private Node memberExpr(boolean allowCallSyntax)
         throws IOException, ParserException
     {
         int tt;
 
-        Object pn;
+        Node pn;
 
         /* Check for new expressions. */
         ts.flags |= ts.TSF_REGEXP;
@@ -1315,7 +1315,7 @@ public class Parser
         return memberExprTail(allowCallSyntax, pn);
     }
 
-    private Object memberExprTail(boolean allowCallSyntax, Object pn)
+    private Node memberExprTail(boolean allowCallSyntax, Node pn)
         throws IOException, ParserException
     {
         int tt;
@@ -1353,12 +1353,12 @@ public class Parser
         return pn;
     }
 
-    private Object primaryExpr()
+    private Node primaryExpr()
         throws IOException, ParserException
     {
         int tt;
 
-        Object pn;
+        Node pn;
 
         ts.flags |= ts.TSF_REGEXP;
         tt = ts.getToken();
