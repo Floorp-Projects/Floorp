@@ -597,11 +597,4 @@ CWebShellContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel,
 	//NOTE: This appears to get fired once for each individual item on a page.
 
 	return NS_OK; 
-} 
-
-
-NS_IMETHODIMP 
-CWebShellContainer::HandleUnknownContentType(nsIDocumentLoader* loader, nsIChannel *aChannel, const char *aContentType, const char *aCommand ) 
-{ 
-	return NS_OK; 
 }
