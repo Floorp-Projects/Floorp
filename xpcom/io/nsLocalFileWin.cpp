@@ -650,18 +650,18 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
 NS_IMETHODIMP  
 nsLocalFile::Clone(nsIFile **file)
 {
-    nsresult rv;
+    NS_ENSURE_ARG(file);
+    *file = nsnull;
     
-    nsCOMPtr<nsILocalFile> localFile;
+    // Just copy-construct ourselves
+    nsCOMPtr<nsILocalFile> localFile = new nsLocalFile(*this);
+    if (localFile == NULL)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = NS_NewLocalFile(mWorkingPath.get(), mFollowSymlinks, getter_AddRefs(localFile));
-    
-    if (NS_SUCCEEDED(rv) && localFile)
-    {
-        return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)file);
-    }
-            
-    return rv;
+    *file = localFile;
+    NS_ADDREF(*file);
+        
+    return NS_OK;
 }
 
 NS_IMETHODIMP  
