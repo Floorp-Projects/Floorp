@@ -265,8 +265,6 @@ struct nsFontCharSetMapXlib
   nsFontCharSetInfoXlib* mInfo;
 };
 
-typedef XFontStruct *XFontStructPtr;
-
 /* WorkInProgress (for bug 119491 ("Cleanup global vars in PostScript and
  * Xprint modules"): Container to hold per-device context data for
  * fontmetrics code */
@@ -291,8 +289,6 @@ public:
   nsFontXlib(nsFontXlib *);
   virtual ~nsFontXlib();
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-
-  operator const XFontStructPtr() { return (const XFontStructPtr)mFont; }
 
   void LoadFont(void);
   PRBool IsEmptyFont(XFontStruct*);

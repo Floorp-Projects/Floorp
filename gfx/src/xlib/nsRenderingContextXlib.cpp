@@ -552,9 +552,9 @@ void nsRenderingContextXlib::UpdateGC()
    values.foreground = color;
    valuesMask |= GCForeground;
 
-   if (mCurrentFont && XFontStructPtr(*mCurrentFont)) {
+   if (mCurrentFont && mCurrentFont->GetXFontStruct()) {
      valuesMask |= GCFont;
-     values.font = XFontStructPtr(*mCurrentFont)->fid;
+     values.font = mCurrentFont->GetXFontStruct()->fid;
    }
  
    values.line_style = mLineStyle;
