@@ -525,7 +525,7 @@ nsAString::do_ReplaceFromReadable( index_type cutStart, size_type cutLength, con
       copy_string(this->BeginReading(fromBegin).advance(PRInt32(cutEnd)), this->EndReading(fromEnd), BeginWriting(toBegin).advance(PRInt32(replacementEnd)));
     SetLength(newLength);
     if ( cutLength < replacementLength )
-      copy_string_backward(this->BeginReading(fromBegin).advance(PRInt32(cutEnd)), this->BeginReading(fromEnd).advance(PRInt32(oldLength)), BeginWriting(toBegin).advance(PRInt32(replacementEnd)));
+      copy_string_backward(this->BeginReading(fromBegin).advance(PRInt32(cutEnd)), this->BeginReading(fromEnd).advance(PRInt32(oldLength)), EndWriting(toBegin));
 
     copy_string(aReplacement.BeginReading(fromBegin), aReplacement.EndReading(fromEnd), BeginWriting(toBegin).advance(PRInt32(cutStart)));
   }
@@ -1044,7 +1044,7 @@ nsACString::do_ReplaceFromReadable( index_type cutStart, size_type cutLength, co
       copy_string(this->BeginReading(fromBegin).advance(PRInt32(cutEnd)), this->EndReading(fromEnd), BeginWriting(toBegin).advance(PRInt32(replacementEnd)));
     SetLength(newLength);
     if ( cutLength < replacementLength )
-      copy_string_backward(this->BeginReading(fromBegin).advance(PRInt32(cutEnd)), this->BeginReading(fromEnd).advance(PRInt32(oldLength)), BeginWriting(toBegin).advance(PRInt32(replacementEnd)));
+      copy_string_backward(this->BeginReading(fromBegin).advance(PRInt32(cutEnd)), this->BeginReading(fromEnd).advance(PRInt32(oldLength)), EndWriting(toBegin));
 
     copy_string(aReplacement.BeginReading(fromBegin), aReplacement.EndReading(fromEnd), BeginWriting(toBegin).advance(PRInt32(cutStart)));
   }
