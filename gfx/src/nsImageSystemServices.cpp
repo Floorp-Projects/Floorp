@@ -107,10 +107,12 @@ ImageSystemServicesImpl::SetTimeout(ilTimeoutCallbackFunction aFunc,
 void 
 ImageSystemServicesImpl::ClearTimeout(void *aTimerID)
 {
-    nsITimer *timer = (nsITimer *)aTimerID;
+    nsITimer* timer = (nsITimer *)aTimerID;
+    void*     closure = timer->GetClosure();
     
     timer->Cancel();
     NS_RELEASE(timer);
+    PR_DELETE(closure);
 }
 
 extern "C" NS_GFX_(nsresult)
