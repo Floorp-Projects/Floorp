@@ -1444,9 +1444,8 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
         }
         break;
     }
-#ifdef DEBUG_law
-printf( "\nError: %s, listener=0x%08X, rv=0x%08X\n\n", NS_LossyConvertUCS2toASCII(msgId).get(), (int)(void*)mWebProgressListener.get(), (int)rv );
-#endif
+    PR_LOG(nsExternalHelperAppService::mLog, PR_LOG_ERROR,
+        ("Error: %s, listener=0x%p, rv=0x%08X\n", NS_LossyConvertUCS2toASCII(msgId).get(), mWebProgressListener.get(), rv));
     // Get properties file bundle and extract status string.
     nsCOMPtr<nsIStringBundleService> s = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
     if (s)

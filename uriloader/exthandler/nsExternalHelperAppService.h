@@ -163,6 +163,8 @@ protected:
 #ifdef PR_LOGGING
   // NSPR Logging
   static PRLogModuleInfo* mLog;
+
+  friend class nsExternalAppHandler;
 #endif
   // functions related to the tempory file cleanup service provided by
   // nsExternalHelperAppService
