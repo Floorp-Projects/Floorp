@@ -3524,7 +3524,7 @@ nsTreeBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
       mTimer = do_CreateInstance("@mozilla.org/timer;1");
 
       nsCOMPtr<nsITimerInternal> ti = do_QueryInterface(mTimer);
-      ti->SetIdle(PR_TRUE);
+      ti->SetIdle(PR_FALSE);
 
       mTimer->InitWithFuncCallback(ScrollCallback, this, kLazyScrollDelay, 
                                    nsITimer::TYPE_REPEATING_SLACK);
@@ -3565,7 +3565,7 @@ nsTreeBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
             // This node isn't expanded, set a timer to expand it.
             mTimer = do_CreateInstance("@mozilla.org/timer;1");
             nsCOMPtr<nsITimerInternal> ti = do_QueryInterface(mTimer);
-            ti->SetIdle(PR_TRUE);
+            ti->SetIdle(PR_FALSE);
             mTimer->InitWithFuncCallback(OpenCallback, this, kOpenDelay, 
                                          nsITimer::TYPE_ONE_SHOT);
           }
