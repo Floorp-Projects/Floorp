@@ -93,7 +93,6 @@ protected:
     PRUint32                            mStatus;
     PRUint32                            mLoadFlags;
     PRPackedBool                        mIsPending;
-
 };
 
 #endif /* nsWyciwygChannel_h___ */
