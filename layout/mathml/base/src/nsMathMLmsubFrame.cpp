@@ -93,6 +93,7 @@ nsMathMLmsubFrame::Init(nsIPresContext*  aPresContext,
     }
   }
 
+  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
   return rv;
 }
 
@@ -108,7 +109,6 @@ nsMathMLmsubFrame::Place(nsIPresContext*      aPresContext,
   // Get the children's desired sizes
 
   PRInt32 count = 0;
-  nsRect aRect;
   nsHTMLReflowMetrics baseSize (nsnull);
   nsHTMLReflowMetrics subScriptSize (nsnull);
   nsIFrame* baseFrame;
@@ -116,39 +116,26 @@ nsMathMLmsubFrame::Place(nsIPresContext*      aPresContext,
   // parameter v, Rule 18a, Appendix G of the TeXbook
   nscoord minSubScriptShift = 0; 
 
-  nsBoundingMetrics baseBounds, subScriptBounds;
+  nsBoundingMetrics bmBase, bmSubScript;
 
   nsIFrame* aChildFrame = mFrames.FirstChild();
   while (nsnull != aChildFrame)
   {
     if (!IsOnlyWhitespace(aChildFrame)) {
-      aChildFrame->GetRect(aRect);
       if (0 == count) {
 	// base 
 	baseFrame = aChildFrame;
-	baseSize.descent = aRect.x; baseSize.ascent = aRect.y;
-	baseSize.width = aRect.width; baseSize.height = aRect.height;
-        if (NS_FAILED(GetBoundingMetricsFor(baseFrame, baseBounds))) {
-          baseBounds.descent = baseSize.descent;
-          baseBounds.ascent = baseSize.ascent;
-          baseBounds.width = baseSize.width;
-        }
+        GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
       }
       else if (1 == count) {
 	// subscript
 	subScriptFrame = aChildFrame;
-	subScriptSize.descent = aRect.x; subScriptSize.ascent = aRect.y;
-	subScriptSize.width = aRect.width; subScriptSize.height = aRect.height;
-        if (NS_FAILED(GetBoundingMetricsFor(subScriptFrame, subScriptBounds))) {
-          subScriptBounds.descent = subScriptSize.descent;
-          subScriptBounds.ascent = subScriptSize.ascent;
-          subScriptBounds.width = subScriptSize.width;
-        }
+        GetReflowAndBoundingMetricsFor(subScriptFrame, subScriptSize, bmSubScript);
 	// get the subdrop from the subscript font
 	nscoord aSubDrop;
 	GetSubDropFromChild (aPresContext, subScriptFrame, aSubDrop);
 	// parameter v, Rule 18a, App. G, TeXbook
-	minSubScriptShift = baseSize.descent + aSubDrop;
+	minSubScriptShift = bmBase.descent + aSubDrop;
       }
       else {
 	NS_ASSERTION((count < 2),"nsMathMLmsubFrame : invalid markup");
@@ -167,12 +154,17 @@ nsMathMLmsubFrame::Place(nsIPresContext*      aPresContext,
   // = h(x) - 4/5 * sigma_5, Rule 18b, App. G, TeXbook
   nscoord xHeight = 0;
   nsCOMPtr<nsIFontMetrics> fm;
-  const nsStyleFont* aFont =
-    (const nsStyleFont*) mStyleContext->GetStyleData (eStyleStruct_Font);
+
+//  const nsStyleFont* aFont =
+//    (const nsStyleFont*) mStyleContext->GetStyleData (eStyleStruct_Font);
+
+  const nsStyleFont* aFont;
+  baseFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)aFont);
+
   aPresContext->GetMetricsFor (aFont->mFont, getter_AddRefs(fm));
   fm->GetXHeight (xHeight);
   nscoord minShiftFromXHeight = (nscoord) 
-    (subScriptSize.ascent - (4.0f/5.0f) * xHeight);
+    (bmSubScript.ascent - (4.0f/5.0f) * xHeight);
 
   // aSubScriptShift
   // = minimum amount to shift the subscript down set by user or from the font
@@ -181,51 +173,55 @@ nsMathMLmsubFrame::Place(nsIPresContext*      aPresContext,
   nscoord aSubScriptShift, dummy;
   // get aSubScriptShift default from font
   GetSubScriptShifts (fm, aSubScriptShift, dummy);
-  if (mUserSetFlag == PR_TRUE) {
+  if (mUserSetFlag) {
     // the user has set the subscriptshift attribute
     aSubScriptShift = NSToCoordRound(mSubScriptShiftFactor * xHeight);
+//XXX shouldn't this be 
+//    aSubScriptShift = 
+//      PR_MAX(aSubScriptShift, NSToCoordRound(mSubScriptShiftFactor * xHeight));
   }
 
   // get actual subscriptshift to be used
   // Rule 18b, App. G, TeXbook
   nscoord actualSubScriptShift = 
     PR_MAX(minSubScriptShift,PR_MAX(aSubScriptShift,minShiftFromXHeight));
-#if 0
   // get bounding box for base + subscript
-  aDesiredSize.ascent = 
-    PR_MAX(baseSize.ascent,(subScriptSize.ascent-actualSubScriptShift));
-  aDesiredSize.descent = 
-    PR_MAX(baseSize.descent,(actualSubScriptShift+subScriptSize.descent));
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-  // add mScriptSpace between base and subscript
-  aDesiredSize.width = baseSize.width + mScriptSpace + subScriptSize.width;
-#endif
-
   mBoundingMetrics.ascent = 
-    PR_MAX(baseBounds.ascent, subScriptBounds.ascent - actualSubScriptShift);
+    PR_MAX(bmBase.ascent, bmSubScript.ascent - actualSubScriptShift);
   mBoundingMetrics.descent = 
-   PR_MAX(baseBounds.descent, subScriptBounds.descent + actualSubScriptShift);
+   PR_MAX(bmBase.descent, bmSubScript.descent + actualSubScriptShift);
   // add mScriptSpace between base and supscript
-  mBoundingMetrics.width = baseBounds.width + mScriptSpace + subScriptBounds.width;
+  mBoundingMetrics.width = bmBase.width + mScriptSpace + bmSubScript.width;
 
-  aDesiredSize.ascent = 
-     PR_MAX(baseSize.ascent, subScriptSize.ascent - actualSubScriptShift);
-  aDesiredSize.descent = 
-     PR_MAX(baseSize.descent, subScriptSize.descent + actualSubScriptShift);
+  // to be simplified
+  nscoord dyBase = mBoundingMetrics.ascent - bmBase.ascent;
+  nscoord dySubScript = mBoundingMetrics.ascent - bmSubScript.ascent + actualSubScriptShift;
+
+  nscoord baseTop = mBoundingMetrics.ascent - dyBase - bmBase.ascent + baseSize.ascent;
+  nscoord subScriptTop = mBoundingMetrics.ascent - dySubScript - bmSubScript.ascent + subScriptSize.ascent;
+
+  aDesiredSize.ascent = PR_MAX(baseTop, subScriptTop);
+  aDesiredSize.descent = PR_MAX(baseSize.height-baseTop, subScriptSize.height-subScriptTop);
+
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-
   aDesiredSize.width = baseSize.width + mScriptSpace + subScriptSize.width;
+
+  mReference.x = 0;
+  mReference.y = aDesiredSize.ascent - mBoundingMetrics.ascent;
+  mBoundingMetrics.leftBearing = bmBase.leftBearing;
+  mBoundingMetrics.rightBearing = baseSize.width + mScriptSpace + bmSubScript.rightBearing;
 
   if (aPlaceOrigin) {
     nscoord dx, dy;
     // now place the base ...
-    dx = 0; dy = aDesiredSize.ascent - baseSize.ascent;
+    dx = 0; dy = aDesiredSize.ascent - baseTop;
     FinishReflowChild (baseFrame, aPresContext, baseSize, dx, dy, 0);
     // ... and subscript
     dx = baseSize.width; 
-    dy = aDesiredSize.ascent - subScriptSize.ascent + actualSubScriptShift;
+    dy = aDesiredSize.ascent - subScriptTop;
     FinishReflowChild (subScriptFrame, aPresContext, subScriptSize, dx, dy, 0);
   }
 
   return NS_OK;
 }
+

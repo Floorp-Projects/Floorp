@@ -92,6 +92,7 @@ nsMathMLmsupFrame::Init(nsIPresContext*  aPresContext,
     }
   }
 
+  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
   return rv;
 }
 
@@ -121,28 +122,15 @@ nsMathMLmsupFrame::Place(nsIPresContext*      aPresContext,
   while (nsnull != aChildFrame) 
   {
     if (!IsOnlyWhitespace(aChildFrame)) {
-      aChildFrame->GetRect(aRect);
       if (0 == count) {
 	// base 
 	baseFrame = aChildFrame;
-	baseSize.descent = aRect.x; baseSize.ascent = aRect.y;
-	baseSize.width = aRect.width; baseSize.height = aRect.height;
-        if (NS_FAILED(GetBoundingMetricsFor(baseFrame, bmBase))) {
-          bmBase.descent = baseSize.descent;
-          bmBase.ascent = baseSize.ascent;
-          bmBase.width = baseSize.width;
-        }
+        GetReflowAndBoundingMetricsFor(baseFrame, baseSize, bmBase);
       }
       else if (1 == count) {
 	// superscript
 	supScriptFrame = aChildFrame;
-	supScriptSize.descent = aRect.x; supScriptSize.ascent = aRect.y;
-	supScriptSize.width = aRect.width; supScriptSize.height = aRect.height;
-        if (NS_FAILED(GetBoundingMetricsFor(supScriptFrame, bmSupScript))) {
-          bmSupScript.descent = supScriptSize.descent;
-          bmSupScript.ascent = supScriptSize.ascent;
-          bmSupScript.width = supScriptSize.width;
-        }
+        GetReflowAndBoundingMetricsFor(supScriptFrame, supScriptSize, bmSupScript);
 	// get the supdrop from the supscript font
 	nscoord aSupDrop;
 	GetSupDropFromChild (aPresContext, supScriptFrame, aSupDrop);
@@ -165,12 +153,17 @@ nsMathMLmsupFrame::Place(nsIPresContext*      aPresContext,
   // = d(x) + 1/4 * sigma_5, Rule 18c, App. G, TeXbook
   nscoord xHeight = 0;
   nsCOMPtr<nsIFontMetrics> fm;
-  const nsStyleFont* aFont =
-    (const nsStyleFont*) mStyleContext->GetStyleData (eStyleStruct_Font);
+
+//  const nsStyleFont* aFont =
+//    (const nsStyleFont*) mStyleContext->GetStyleData (eStyleStruct_Font);
+
+  const nsStyleFont *aFont;
+  baseFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)aFont);
+
   aPresContext->GetMetricsFor (aFont->mFont, getter_AddRefs(fm));
   fm->GetXHeight (xHeight);
   nscoord minShiftFromXHeight = (nscoord) 
-    (supScriptSize.descent + (1.0f/4.0f) * xHeight);
+    (bmSupScript.descent + (1.0f/4.0f) * xHeight);
 
   // aSupScriptShift{1,2,3}
   // = minimum amount to shift the supscript up
@@ -187,6 +180,9 @@ nsMathMLmsupFrame::Place(nsIPresContext*      aPresContext,
     float aFactor2 = ((float) aSupScriptShift2) / aSupScriptShift1;
     float aFactor3 = ((float) aSupScriptShift3) / aSupScriptShift1;
     aSupScriptShift1 = NSToCoordRound(mSupScriptShiftFactor * xHeight);
+//XXX shouldn't this be 
+//    aSupScriptShift1 = 
+//      PR_MAX(aSupScriptShift1, NSToCoordRound(mSupScriptShiftFactor * xHeight));
     aSupScriptShift2 = NSToCoordRound(aFactor2 * aSupScriptShift1);
     aSupScriptShift3 = NSToCoordRound(aFactor3 * aSupScriptShift1);
   }
@@ -214,66 +210,39 @@ nsMathMLmsupFrame::Place(nsIPresContext*      aPresContext,
   nscoord actualSupScriptShift = 
     PR_MAX(minSupScriptShift,PR_MAX(aSupScriptShift,minShiftFromXHeight));
 
-  // get bounding box for base + supscript
-#if 0
-  const nsStyleFont *font;
-  baseFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
-  PRInt32 baseStyle = font->mFont.style;
-  supScriptFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
-  PRInt32 supScriptStyle = font->mFont.style;
-  if (baseStyle == NS_STYLE_FONT_STYLE_ITALIC &&
-      supScriptStyle != NS_STYLE_FONT_STYLE_ITALIC) {
-      // take care of italic correction
-      ...
-  }
-#endif
-
-#if 0
-  aDesiredSize.ascent = 
-    PR_MAX(baseSize.ascent,(supScriptSize.ascent+actualSupScriptShift));
-  aDesiredSize.descent = 
-    PR_MAX(baseSize.descent,(supScriptSize.descent-actualSupScriptShift));
-  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-  // add mScriptSpace between base and supscript
-  aDesiredSize.width = baseSize.width + mScriptSpace + supScriptSize.width;
-#endif
-
   mBoundingMetrics.ascent =
-    PR_MAX(bmBase.ascent, bmSupScript.ascent + actualSupScriptShift);
+    PR_MAX(bmBase.ascent, (bmSupScript.ascent + actualSupScriptShift));
   mBoundingMetrics.descent =
-   PR_MAX(bmBase.descent, bmSupScript.descent - actualSupScriptShift);
+    PR_MAX(bmBase.descent, (bmSupScript.descent - actualSupScriptShift));
   // add mScriptSpace between base and supscript
   mBoundingMetrics.width = bmBase.width + mScriptSpace + bmSupScript.width;
 
-#if 0
-printf("bmBase.width:%d + mScriptSpace:%d + bmSupScript.width:%d = mBoundingMetrics.width:%d\n",
-bmBase.width, mScriptSpace, bmSupScript.width, mBoundingMetrics.width);
-#endif
+  // to be simplified ...
+  nscoord dyBase = mBoundingMetrics.ascent - bmBase.ascent;
+  nscoord dySupScript = mBoundingMetrics.ascent - bmSupScript.ascent - actualSupScriptShift;
 
-  aDesiredSize.ascent =
-     PR_MAX(baseSize.ascent,  supScriptSize.ascent + actualSupScriptShift);
-  aDesiredSize.descent =
-     PR_MAX(baseSize.descent, supScriptSize.descent - actualSupScriptShift);
+  nscoord baseTop = mBoundingMetrics.ascent - dyBase - bmBase.ascent + baseSize.ascent;
+  nscoord supScriptTop = mBoundingMetrics.ascent - dySupScript - bmSupScript.ascent + supScriptSize.ascent;
+
+  aDesiredSize.ascent = PR_MAX(baseTop, supScriptTop);
+  aDesiredSize.descent = PR_MAX(baseSize.height-baseTop, supScriptSize.height-supScriptTop);
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
 
-  aDesiredSize.width = baseSize.width + mScriptSpace + supScriptSize.width;
+  aDesiredSize.width = mBoundingMetrics.width;
+
+  mReference.x = 0;
+  mReference.y = aDesiredSize.ascent - mBoundingMetrics.ascent;
+  mBoundingMetrics.leftBearing = bmBase.leftBearing;
+  mBoundingMetrics.rightBearing = baseSize.width + mScriptSpace + bmSupScript.rightBearing;
 
   if (aPlaceOrigin) {
     nscoord dx, dy;
     // now place the base ...
-    dx = 0; dy = aDesiredSize.ascent - baseSize.ascent;
+    dx = 0; dy = aDesiredSize.ascent - baseTop;
     FinishReflowChild (baseFrame, aPresContext, baseSize, dx, dy, 0);
     // ... and supscript
-
-#if 0
-    float t2p;
-    aPresContext->GetTwipsToPixels(&t2p);
-    PRInt32 scriptspace = NSTwipsToIntPixels(mScriptSpace, t2p);
-    printf("mScriptSpace in twips:%d pixel:%d\n", mScriptSpace, scriptspace);
-#endif
-
     dx = baseSize.width + mScriptSpace; 
-    dy = aDesiredSize.ascent - supScriptSize.ascent - actualSupScriptShift;
+    dy = aDesiredSize.ascent - supScriptTop;
     FinishReflowChild (supScriptFrame, aPresContext, supScriptSize, dx, dy, 0);
   }
 

@@ -176,40 +176,46 @@ nsMathMLContainerFrame::SetReference(const nsPoint& aReference)
   return NS_OK;
 }
 
-// helper methods to facilitate getting/setting the bounding metrics
-nsresult
-nsMathMLContainerFrame::GetBoundingMetricsFor(nsIFrame*          aFrame, 
-                                              nsBoundingMetrics& aBoundingMetrics)
+// helper method to facilitate getting the reflow and bounding metrics
+void
+nsMathMLContainerFrame::GetReflowAndBoundingMetricsFor(nsIFrame*            aFrame,
+                                                       nsHTMLReflowMetrics& aReflowMetrics,
+                                                       nsBoundingMetrics&   aBoundingMetrics)
 {
+  NS_PRECONDITION(aFrame, "null arg");
+
+  // IMPORTANT: This function is only meant to be called in Place() methods 
+  // where it is assumed that the frame's rect is still acting as place holder
+  // for the frame's ascent and descent information
+  
+  nsRect aRect;
+  aFrame->GetRect(aRect);
+  aReflowMetrics.descent = aRect.x; 
+  aReflowMetrics.ascent  = aRect.y;
+  aReflowMetrics.width   = aRect.width; 
+  aReflowMetrics.height  = aRect.height;
+	
   aBoundingMetrics.Clear();
   nsIMathMLFrame* aMathMLFrame = nsnull;
   nsresult rv = aFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
-  if (NS_SUCCEEDED(rv) && aMathMLFrame) {   
+  if (NS_SUCCEEDED(rv) && aMathMLFrame) {
     aMathMLFrame->GetBoundingMetrics(aBoundingMetrics);
-    return NS_OK;
+#if 0
+    nsFrame::ListTag(stdout, aFrame);
+    printf(" subItalicCorrection:%d supItalicCorrection:%d\n",
+    aBoundingMetrics.subItalicCorrection, aBoundingMetrics.supItalicCorrection);
+#endif
   }
-  // if we reach here, aFrame is not a MathML frame, let the caller know that
-  printf("GetBoundingMetrics() failed for: "); /* getchar(); */
-  nsFrame::ListTag(stdout, aFrame);
-  printf("\n");
-//  NS_ASSERTION(0, "GetBoundingMetrics() failed!!");
-  return NS_ERROR_FAILURE;
-}
-
-nsresult
-nsMathMLContainerFrame::SetBoundingMetricsFor(nsIFrame*          aFrame, 
-                                              nsBoundingMetrics& aBoundingMetrics)
-{
-  nsIMathMLFrame* aMathMLFrame = nsnull;
-  nsresult rv = aFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
-  if (NS_SUCCEEDED(rv) && aMathMLFrame) {   
-    aMathMLFrame->SetBoundingMetrics(aBoundingMetrics);
-    return NS_OK;
+  else { // aFrame is not a MathML frame, just return the reflow metrics
+    aBoundingMetrics.descent = aReflowMetrics.descent;
+    aBoundingMetrics.ascent  = aReflowMetrics.ascent;
+    aBoundingMetrics.width   = aReflowMetrics.width;
+#if 0
+    printf("GetBoundingMetrics() failed for: "); /* getchar(); */
+    nsFrame::ListTag(stdout, aFrame);
+    printf("\n");
+#endif
   }
-  // if we reach here, aFrame is not a MathML frame, let the caller know that
-  printf("SetBoundingMetrics() failed!! ...\n"); /* getchar(); */
-//  NS_ASSERTION(0, "SetBoundingMetrics() failed!!");
-  return NS_ERROR_FAILURE;
 }
 
 /* /////////////
@@ -514,6 +520,29 @@ nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(PRInt32 aIndex,
   return NS_OK;
 }
 
+PRInt32
+nsMathMLContainerFrame::FindSmallestFontSizeFor(nsIFrame* aFrame)
+{
+  nsStyleFont aFont;
+  nsCOMPtr<nsIStyleContext> aStyleContext;
+  aFrame->GetStyleContext(getter_AddRefs(aStyleContext));
+  aStyleContext->GetStyle(eStyleStruct_Font, aFont);
+//  PRInt32 fontSize = NSTwipsToFloorIntPoints(aFont.mFont.size);
+  PRInt32 fontSize = aFont.mFont.size;
+
+  PRInt32 childSize;
+  nsIFrame* childFrame;
+  aFrame->FirstChild(nsnull, &childFrame);
+  while (nsnull != childFrame) {
+    if (!IsOnlyWhitespace(childFrame)) {
+      childSize = FindSmallestFontSizeFor(childFrame);
+      if (fontSize > childSize) fontSize = childSize;
+    }
+    childFrame->GetNextSibling(&childFrame);
+  }
+  return fontSize;
+}
+
 // helper method to alter the style context
 // This method is used for switching the font to a subscript/superscript font in
 // mfrac, msub, msup, msubsup, munder, mover, munderover, mmultiscripts 
@@ -544,6 +573,71 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresConte
 
         PRInt32 gap = childData.scriptLevel - mPresentationData.scriptLevel;
         if (0 != gap) {
+          // We are about to change the font-size... We first see if we
+          // are in the scope of a <mstyle> that tells us what to do.
+          // This is one of the most obscure part to implement in the spec...
+          /*
+          The REC says:
+
+          Whenever the scriptlevel is changed, either automatically or by being
+          explicitly incremented, decremented, or set, the current font size is
+          multiplied by the value of scriptsizemultiplier to the power of the
+          change in scriptlevel. For example, if scriptlevel is increased by 2,
+          the font size is multiplied by scriptsizemultiplier twice in succession;
+          if scriptlevel is explicitly set to 2 when it had been 3, the font size
+          is divided by scriptsizemultiplier. 
+
+          The default value of scriptsizemultiplier is less than one (in fact, it
+          is approximately the square root of 1/2), resulting in a smaller font size
+          with increasing scriptlevel. To prevent scripts from becoming unreadably
+          small, the font size is never allowed to go below the value of
+          scriptminsize as a result of a change to scriptlevel, though it can be
+          set to a lower value using the fontsize attribute  on <mstyle> or on
+          token elements. If a change to scriptlevel would cause the font size to
+          become lower than scriptminsize using the above formula, the font size
+          is instead set equal to scriptminsize within the subexpression for which
+          scriptlevel was changed. 
+
+          In the syntax for scriptminsize, v-unit represents a unit of vertical
+          length. The most common unit for specifying font sizes in typesetting
+          is pt (points). 
+          */
+
+          // default scriptsizemultiplier = 0.71 
+          // default scriptminsize = 8pt 
+
+          // here we only consider scriptminsize, and use the default
+          // smaller-font-size algorithm of the style system
+          PRInt32 scriptminsize = NSIntPointsToTwips(8);
+
+          // see if the scriptminsize attribute is on <mstyle> that wraps us
+          nsAutoString value;
+          nsIFrame* mstyleFrame = mPresentationData.mstyle;
+          if (mstyleFrame) {
+            nsCOMPtr<nsIContent> mstyleContent;
+            mstyleFrame->GetContent(getter_AddRefs(mstyleContent));
+            if (NS_CONTENT_ATTR_HAS_VALUE == mstyleContent->GetAttribute(kNameSpaceID_None, 
+                             nsMathMLAtoms::scriptminsize_, value))
+            {
+              PRInt32 errorCode;
+              PRInt32 userValue = value.ToInteger(&errorCode);
+              if (NS_SUCCEEDED(errorCode)) {
+                // assume unit is point 
+                // XXX need consistent, default unit throughout the code
+                scriptminsize = NSIntPointsToTwips(userValue);
+              }
+              else {
+                // XXX TODO: try to see if it is a h/v-unit like 1ex, 2px, 1em
+              }
+            }
+          }
+
+          // get Nav's magic font scaler
+          PRInt32 scaler;
+          aPresContext->GetFontScaler(&scaler);
+          float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
+          const nsFont& defaultFont = aPresContext->GetDefaultFontDeprecated();
+
           nsCOMPtr<nsIContent> childContent;
           childFrame->GetContent(getter_AddRefs(childContent));
 
@@ -555,12 +649,36 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresConte
           nsIStyleContext* lastStyleContext = mStyleContext;
           nsCOMPtr<nsIStyleContext> newStyleContext;
 
+          // XXX seems not to decrease when the initail font-size is large (100pt)
           nsAutoString fontSize = (0 < gap)
                                 ? ":-moz-math-font-size-smaller"
                                 : ":-moz-math-font-size-larger";
           nsCOMPtr<nsIAtom> fontAtom(getter_AddRefs(NS_NewAtom(fontSize)));
-          if (0 > gap) gap = -gap; // absolute value
+
+          PRBool isSmaller = PR_TRUE;
+          if (0 > gap) { isSmaller = PR_FALSE; gap = -gap; } // absolute value
+
+          PRInt32 smallestFontSize, smallestFontIndex;
+          if (isSmaller) {
+            // find the smallest font-size in this subtree
+            smallestFontSize = FindSmallestFontSizeFor(childFrame);
+          }
+
           while (0 < gap--) {
+
+            if (isSmaller) {
+              // look ahead for the next smallest font size that will be in the subtree
+              smallestFontIndex = nsStyleUtil::FindNextSmallerFontSize(smallestFontSize, (PRInt32)defaultFont.size, scaleFactor);
+              smallestFontSize = nsStyleUtil::CalcFontPointSize(smallestFontIndex, (PRInt32)defaultFont.size, scaleFactor);
+//printf("About to move to fontsize:%dpt(%dtwips)\n", 
+//NSTwipsToFloorIntPoints(smallestFontSize), smallestFontSize);
+              if (smallestFontSize < scriptminsize) {
+                // don't bother doing any work
+//printf("..... stopping ......\n");
+// XXX there should be a mechanism so that we never try this subtree again
+                break;
+              }
+            }
 
             aPresContext->ResolvePseudoStyleContextFor(childContent, fontAtom, lastStyleContext,
                                                        PR_FALSE, getter_AddRefs(newStyleContext));          
@@ -620,7 +738,43 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresConte
  * Frame construction
  * =============================================================================
  */
- 
+
+NS_IMETHODIMP
+nsMathMLContainerFrame::Paint(nsIPresContext*      aPresContext,
+                              nsIRenderingContext& aRenderingContext,
+                              const nsRect&        aDirtyRect,
+                              nsFramePaintLayer    aWhichLayer)
+{
+  nsresult rv = NS_OK;
+
+  rv = nsHTMLContainerFrame::Paint(aPresContext,
+                                   aRenderingContext,
+                                   aDirtyRect,
+                                   aWhichLayer);
+#ifdef SHOW_BOUNDING_BOX
+  // for visual debug
+  // ----------------
+  // if you want to see your bounding box, make sure to properly fill
+  // your mBoundingMetrics and mReference point, and set
+  // mPresentationData.flags |= NS_MATHML_BOUNDING_METRICS
+  // in the Init() of your sub-class
+
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer &&
+      NS_MATHML_PAINT_BOUNDING_METRICS(mPresentationData.flags))
+  {
+    aRenderingContext.SetColor(NS_RGB(0,0,255));
+
+    nscoord x = mReference.x + mBoundingMetrics.leftBearing;
+    nscoord y = mReference.y;
+    nscoord w = mBoundingMetrics.rightBearing - mBoundingMetrics.leftBearing;
+    nscoord h = mBoundingMetrics.ascent + mBoundingMetrics.descent;
+
+    aRenderingContext.DrawRect(x,y,w,h);
+  }
+#endif
+  return rv;
+}
+
 NS_IMETHODIMP
 nsMathMLContainerFrame::Init(nsIPresContext*  aPresContext,
                              nsIContent*      aContent,
@@ -847,7 +1001,7 @@ nsMathMLContainerFrame::ReflowTokenFor(nsIFrame*                aFrame,
 
 // helper function to place token elements
 // mBoundingMetrics is computed at the ReflowToken pass, it is
-// not computed here because if our children may be text frames that
+// not computed here because our children may be text frames that
 // do not implement the GetBoundingMetrics() interface.
 nsresult
 nsMathMLContainerFrame::PlaceTokenFor(nsIFrame*            aFrame,
@@ -893,6 +1047,11 @@ nsMathMLContainerFrame::PlaceTokenFor(nsIFrame*            aFrame,
       childFrame->GetNextSibling(&childFrame);
     }
   }
+  nsBoundingMetrics bm;
+  NS_STATIC_CAST(nsMathMLContainerFrame*,
+                 aFrame)->GetBoundingMetrics(bm);
+  NS_STATIC_CAST(nsMathMLContainerFrame*,
+                 aFrame)->SetReference(nsPoint(0,aDesiredSize.ascent-bm.ascent));
   return NS_OK;
 }
 
@@ -1087,23 +1246,18 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
   aDesiredSize.width = aDesiredSize.height = aDesiredSize.ascent = aDesiredSize.descent = 0;
  
   PRInt32 count = 0; 
-  nsRect rect;
+  nsBoundingMetrics bm;
+  nsHTMLReflowMetrics childSize(nsnull);
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
     if (!IsOnlyWhitespace(childFrame)) {
-      childFrame->GetRect(rect);
+      GetReflowAndBoundingMetricsFor(childFrame, childSize, bm);
 
-      aDesiredSize.width += rect.width;
-      if (aDesiredSize.descent < rect.x) aDesiredSize.descent = rect.x;
-      if (aDesiredSize.ascent < rect.y) aDesiredSize.ascent = rect.y;
+      aDesiredSize.width += childSize.width;
+      if (aDesiredSize.descent < childSize.descent) aDesiredSize.descent = childSize.descent;
+      if (aDesiredSize.ascent < childSize.ascent) aDesiredSize.ascent = childSize.ascent;
 
       // Compute and cache our bounding metrics
-      nsBoundingMetrics bm;
-      if (NS_FAILED(GetBoundingMetricsFor(childFrame, bm))) {
-        bm.ascent  =  rect.y;
-        bm.descent = -rect.x;
-        bm.width   =  rect.width;
-      }
       if (0 == count)   
         mBoundingMetrics  = bm;
       else
@@ -1116,13 +1270,14 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
   
   if (aPlaceOrigin) {
+    nsRect rect;
+  
     nscoord dy;
     nscoord dx = 0;
     childFrame = mFrames.FirstChild();
     while (childFrame) {
       childFrame->GetRect(rect);
 
-      nsHTMLReflowMetrics childSize(nsnull);
       childSize.width = rect.width;
       childSize.height = rect.height;
 
@@ -1134,6 +1289,9 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
       childFrame->GetNextSibling(&childFrame);
     }
   }
+
+  mReference.x = 0;
+  mReference.y = aDesiredSize.ascent - mBoundingMetrics.ascent;
   return NS_OK;
 }
 

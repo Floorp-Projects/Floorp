@@ -391,8 +391,8 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
     if (aContainerSize.height <= aDesiredStretchSize.height) {
       mEnum = eMathMLChar_DONT_STRETCH; // ensure that the char later behaves like a normal char
       rv = aRenderingContext.GetBoundingMetrics(mData.GetUnicode(), 
-                                              PRUint32(mData.Length()), 
-                                              mBoundingMetrics);
+                                                PRUint32(mData.Length()), 
+                                                mBoundingMetrics);
       if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", mData[0], mData[0]&0x00FF); /*getchar();*/ return rv; }
       return NS_OK;
     }
@@ -467,6 +467,19 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
     nscoord a, d;
     h = w = a = d = 0;
     float flex[3] = {0.7f, 0.3f, 0.7f}; // XXX hack!
+
+    // get metrics data to be re-used later
+    nsBoundingMetrics bmdata[4];
+    for (i = 0; i < 4; i++) {
+      ch = gMathMLCharGlyph[index+i];
+      rv = aRenderingContext.GetBoundingMetrics(&ch, PRUint32(1), bm);
+      if (NS_FAILED(rv)) { 
+        printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF); /*getchar();*/
+        return rv; 
+      }
+      bmdata[i] = bm;
+    }
+
     if (aDirection == NS_STRETCH_DIRECTION_VERTICAL) {
       // default is to fill-up the area given to us
       width = aDesiredStretchSize.width;
@@ -475,9 +488,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
       descent = aContainerSize.descent;
 
       for (i = 0; i < 4; i++) {
-        ch = gMathMLCharGlyph[index+i];
-        rv = aRenderingContext.GetBoundingMetrics(&ch, PRUint32(1), bm);
-        if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF); /*getchar();*/ return rv; }
+        bm = bmdata[i];
         if (w < bm.width) w = bm.width;
         if (i < 3) {
           h += nscoord(flex[i]*(bm.ascent+bm.descent)); // sum heights of the parts...
@@ -507,9 +518,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
       descent = aDesiredStretchSize.descent;
 
       for (i = 0; i < 4; i++) {
-        ch = gMathMLCharGlyph[index+i];
-        rv = aRenderingContext.GetBoundingMetrics(&ch, PRUint32(1), bm);
-        if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF); /*getchar();*/ return rv; }
+      	bm = bmdata[i];
         if (0 == i) bm0 = bm;
         if (a < bm.ascent) a = bm.ascent;
         if (d < bm.descent) d = bm.descent;
@@ -527,6 +536,8 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
 //        ascent = a;
 //        height = a + d;
         mBoundingMetrics.width = aContainerSize.width;
+        mBoundingMetrics.leftBearing = 0;
+        mBoundingMetrics.rightBearing = aContainerSize.width;
       } else { // sum of parts doesn't fit in the space... will use a single glyph
         mEnum = eMathMLChar_DONT_STRETCH; // ensure that the char behaves like a normal char
         mBoundingMetrics = bm0;
