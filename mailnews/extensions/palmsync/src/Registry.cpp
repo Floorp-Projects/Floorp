@@ -233,8 +233,6 @@ HRESULT RegisterServerForPalmSync(const CLSID& clsid,         // Class ID
     nsCAutoString independentProgId(szVerIndProgID);
     nsCAutoString progId(szProgID);
 
-    MessageBox(NULL, "In Register Server", "PalmSync", MB_OK);
-
     DWORD dwResult = ::GetModuleFileName(hModule, szModuleName,
                               sizeof(szModuleName)/sizeof(char));
 

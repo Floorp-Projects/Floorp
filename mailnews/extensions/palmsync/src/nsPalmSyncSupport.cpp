@@ -135,6 +135,7 @@ nsPalmSyncSupport::InitializePalmSyncSupport()
                 m_nsPalmSyncFactory = nsnull;
                 return NS_ERROR_FAILURE;
             }
+	    RegisterPalmSync();
         }
     }
 
