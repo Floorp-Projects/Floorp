@@ -24,12 +24,11 @@
   <groupbox style="width: 25em;">
     <caption label="&pseudoClasses.title;"/>
     <vbox>
-      <checkbox id="cbxStateHover" label="&stateHover.label;"/>
-      <checkbox id="cbxStateActive" label="&stateActive.label;"/>
-      <checkbox id="cbxStateFocus" label="&stateFocus.label;"/>
+      <!-- These don't need to be localized, since they are CSS APIs -->
+      <checkbox id="cbxStateHover" label=":hover"/>
+      <checkbox id="cbxStateActive" label=":active"/>
+      <checkbox id="cbxStateFocus" label=":focus"/>
     </vbox>
   </groupbox>
 
 </dialog>
-
-        

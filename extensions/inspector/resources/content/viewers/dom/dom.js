@@ -50,6 +50,7 @@ var gEntityConverter;
 
 const kDOMViewCID          = "@mozilla.org/inspector/dom-view;1";
 const kClipboardHelperCID  = "@mozilla.org/widget/clipboardhelper;1";
+const kPromptServiceCID    = "@mozilla.org/embedcomp/prompt-service;1";
 
 //////////////////////////////////////////////////
 
@@ -526,7 +527,12 @@ DOMViewer.prototype =
         this.selectElementInTree(result);
         this.mDOMTree.focus();
       } else {
-        alert("End of document reached."); // XXX localize
+        var bundle = this.mPanel.panelset.stringBundle;
+        var msg = bundle.getString("findNodesDocumentEnd.message");
+        var title = bundle.getString("findNodesDocumentEnd.title");
+
+        var promptService = XPCU.getService(kPromptServiceCID, "nsIPromptService");
+        promptService.alert(window, title, msg);
       }
     }
   },

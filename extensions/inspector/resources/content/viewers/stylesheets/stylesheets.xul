@@ -3,6 +3,7 @@
 <!DOCTYPE page [
   <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://inspector/locale/viewers/stylesheets.dtd"> %dtd3;
 ]>
 
 <?xml-stylesheet href="chrome://inspector/skin/"?>
@@ -18,9 +19,9 @@
   <tree id="olStyleSheets" class="plain" flex="1"
             onselect="viewer.onItemSelected()">
     <treecols>
-      <treecol id="olcHref" label="Stylesheet" primary="true" persist="width,hidden,ordinal" flex="1"/>
+      <treecol id="olcHref" label="&styleLocation.label;" primary="true" persist="width,hidden,ordinal" flex="1"/>
       <splitter class="tree-splitter"/>
-      <treecol id="olcRules" label="Rules" persist="width,hidden,ordinal" style="width: 4em"/>
+      <treecol id="olcRules" label="&styleRules.label;" persist="width,hidden,ordinal" style="width: 4em"/>
     </treecols>
     <treechildren id="olbStyleSheets"/>
   </tree>

@@ -1,4 +1,3 @@
-<?xml version="1.0"?>
 <!-- ***** BEGIN LICENSE BLOCK *****
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
@@ -35,30 +34,29 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE page [
-  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
-  <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
-  <!ENTITY % dtd3 SYSTEM "chrome://inspector/locale/viewers/computedStyle.dtd"> %dtd3;
-]>
+<!ENTITY boxPosition.label "Position">
+<!ENTITY boxDimension.label "Dimensions">
+<!ENTITY boxMargin.label "Margin">
+<!ENTITY boxBorder.label "Border">
+<!ENTITY boxPadding.label "Padding">
 
-<?xml-stylesheet href="chrome://inspector/skin/"?>
+<!ENTITY boxImage.label "Image">
+<!ENTITY boxImageCapture.label "Capture">
+<!ENTITY boxSaveImage.label "Save As...">
 
-<page id="winComputedStyle"
-      orient="vertical"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inBaseTreeView.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/viewers/computedStyle/computedStyle.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
-  
-  <tree id="olStyles" flex="1"  onselect="viewer.onItemSelected()" class="plain">
-    <treecols>
-      <treecol id="olcStyleName" label="&propertyName.label;" flex="1"/>
-      <splitter class="tree-splitter"/>
-      <treecol id="olcStyleValue" label="&propertyValue.label;" flex="1"/>
-    </treecols>
-    <treechildren id="olbStyles"/>
-  </tree>
-</page>
+<!ENTITY boxShowOutlines.label "Show Boxes">
+<!ENTITY boxFillOutlines.label "Fill Boxes">
+
+<!ENTITY boxColorPicker.label "Pick Color...">
+<!ENTITY boxColorPicker.title "Color Picker">
+<!ENTITY boxStartPicking.label "Start">
+<!ENTITY boxStopPicking.label "Stop">
+<!ENTITY boxClosePicker.label "Close">
+
+<!ENTITY zoom.label "Zoom">
+<!ENTITY zoom1x.label "&zoom.label; 1x">
+<!ENTITY zoom2x.label "&zoom.label; 2x">
+<!ENTITY zoom4x.label "&zoom.label; 4x">
+<!ENTITY zoom8x.label "&zoom.label; 8x">
+<!ENTITY zoom16x.label "&zoom.label; 16x">
+<!ENTITY zoom32x.label "&zoom.label; 32x">

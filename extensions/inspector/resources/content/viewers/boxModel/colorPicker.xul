@@ -3,11 +3,12 @@
 <!DOCTYPE window [
   <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://inspector/locale/viewers/boxModel.dtd"> %dtd3;
 ]>
 
 <?xml-stylesheet href="chrome://inspector/skin/viewers/boxModel/boxModel.css"?>
 
-<window id="winColorPicker" title="Color Picker" class="color-dialog"
+<window id="winColorPicker" title="&boxColorPicker.title;" class="color-dialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript"><![CDATA[
@@ -59,10 +60,10 @@
   </vbox>
   <vbox flex="1">
     <deck id="dkStartStop">
-      <button id="btnStart" label="Start" oncommand="startPicking()"/>
-      <button id="btnStop" label="Stop" oncommand="stopPicking()"/>
+      <button id="btnStart" label="&boxStartPicking.label;" oncommand="startPicking()"/>
+      <button id="btnStop" label="&boxStopPicking.label;" oncommand="stopPicking()"/>
     </deck>
-    <button id="btnClose" label="Close" oncommand="exit()"/>
+    <button id="btnClose" label="&boxClosePicker.label;" oncommand="exit()"/>
   </vbox>
 
 </window>

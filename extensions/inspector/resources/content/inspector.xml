@@ -15,11 +15,17 @@
      **************************************************************** -->
 
   <binding id="panelset" extends="chrome://inspector/content/inspector.xml#base">
+    <content>
+      <xul:stringbundle src="chrome://inspector/locale/inspector.properties"/>
+      <children/>
+    </content>
+
     <implementation>
       <field name="mFocusedDocument">null</field>
       <field name="mFocusedPanel">null</field>
       <field name="mCommandStack">[]</field>
       <field name="mCommandPtr">-1</field>
+      <field name="mStringBundle">null</field>
 
       <property name="registry" readonly="true"
                 onget="return this.mRegistry"/>
@@ -27,6 +33,8 @@
                 onget="return this.mInitialized"/>
       <property name="focusedPanel" readonly="true" 
                 onget="return this.mFocusedPanel;"/>
+      <property name="stringBundle" readonly="true"
+                onget="return this.mStringBundle;"/>
       
       <method name="initialize">
         <body><![CDATA[
@@ -341,6 +349,10 @@
           return this.mClipboardData;
         ]]></body>
       </method>
+
+      <constructor><![CDATA[
+        this.mStringBundle = document.getAnonymousNodes(this)[0];
+      ]]></constructor>
     </implementation>
     
     <handlers>

@@ -3,6 +3,7 @@
 <!DOCTYPE page [
   <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://inspector/locale/viewers/xblBindings.dtd"> %dtd3;
 ]>
 
 <?xml-stylesheet href="chrome://inspector/skin/viewers/xblBindings/xblBindings.css"?>
@@ -23,9 +24,10 @@
   </menulist>
   
   <multipanelset id="mpsBinding" flex="1">
-    <multipanel id="bxContent" label="Content" open="true" persist="open" onopen="if (viewer) {viewer.initContent();} else {gInitContent = true;}">
+    <multipanel id="bxContent" label="&bindingContent.label;" open="true" persist="open" onopen="if (viewer) {viewer.initContent();} else {gInitContent = true;}">
       <tree id="olContent" flex="1" class="plain">
         <treecols>
+          <!-- Don't localize these DOM API names -->
           <treecol id="colNodeName" primary="true" label="nodeName" flex="1"/>
           <splitter class="tree-splitter"/>
           <treecol id="colNodeValue" label="nodeValue" flex="1"/>
@@ -34,7 +36,7 @@
       </tree>
     </multipanel>
 
-    <multipanel id="bxMethods" label="Methods" open="true" persist="open">
+    <multipanel id="bxMethods" label="&bindingMethods.label;" open="true" persist="open">
       <tree id="olMethods" class="tree-list plain" flex="1"
                 onselect="viewer.onMethodSelected()">
         <treecols>
@@ -44,23 +46,23 @@
       </tree>
     </multipanel>
   
-    <multipanel id="bxProps" label="Properties" open="true" persist="open">
+    <multipanel id="bxProps" label="&bindingProperties.label;" open="true" persist="open">
       <vbox flex="1">
         <radiogroup class="outset" orient="horizontal">
-          <radio id="raPropGetter" label="getter" selected="true" oncommand="viewer.onPropSelected()"/>
-          <radio id="raPropSetter" label="setter" oncommand="viewer.onPropSelected()"/>
+          <radio id="raPropGetter" label="&bindingGetter.label;" selected="true" oncommand="viewer.onPropSelected()"/>
+          <radio id="raPropSetter" label="&bindingSetter.label;" oncommand="viewer.onPropSelected()"/>
         </radiogroup>
         <tree id="olProps" class="tree-list plain" flex="1"
                   onselect="viewer.onPropSelected()">
           <treecols>
-            <treecol id="olcPropName" label="Property" flex="1"/>
+            <treecol id="olcPropName" label="&bindingProperty.label;" flex="1"/>
           </treecols>
           <treechildren id="olbProps" context="ppDOMContext"/>
         </tree>
       </vbox>
     </multipanel>
 
-    <multipanel id="bxHandlers" label="Handlers" persist="open">
+    <multipanel id="bxHandlers" label="&bindingHandlers.label;" persist="open">
       <tree id="olHandlers" class="tree-list plain" flex="1"
                 onselect="viewer.onHandlerSelected()">
         <treecols>
@@ -71,7 +73,7 @@
       </tree>
     </multipanel>
   
-    <multipanel id="bxResources" label="Resources" persist="open">
+    <multipanel id="bxResources" label="&bindingResources.label;" persist="open">
       <tree id="olResources" class="tree-list plain" flex="1">
         <treecols>
           <treecol id="olcResourceType" flex="1"/>
@@ -81,7 +83,7 @@
       </tree>
     </multipanel>
 
-    <multipanel id="bxFunction" label="Source Code" open="true" persist="open">
+    <multipanel id="bxFunction" label="&bindingSourceCode.label;" open="true" persist="open">
       <textbox id="txbFunction" class="plain" readonly="true" multiline="true" flex="1"/>
     </multipanel>
   </multipanelset>

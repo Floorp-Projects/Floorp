@@ -109,22 +109,24 @@ SidebarPrefs.prototype =
 
   installSidebar: function()
   {
-    if (!this.isSidebarInstalled()) {
-      this.mDS.Assert(this.mPanelRes, gRDF.GetResource(kNCURI + "title"), gRDF.GetLiteral(kSidebarTitle), true);
-      this.mDS.Assert(this.mPanelRes, gRDF.GetResource(kNCURI + "content"), gRDF.GetLiteral(kSidebarURL), true);
-      this.mPanelSeq.AppendElement(this.mPanelRes);
-      this.forceSidebarRefresh();
-      
-      // XXX localize this
-      var msg = document.getElementById("txSidebarMsg");
-      msg.removeChild(msg.firstChild);
-      msg.appendChild(document.createTextNode("The sidebar is installed.")); 
-      var btn = document.getElementById("btnSidebarInstall");
-      btn.setAttribute("disabled", "true");
-      
-      return true;
-    } else
+    if (this.isSidebarInstalled()) {
       return false;
+    }
+
+    this.mDS.Assert(this.mPanelRes, gRDF.GetResource(kNCURI + "title"), gRDF.GetLiteral(kSidebarTitle), true);
+    this.mDS.Assert(this.mPanelRes, gRDF.GetResource(kNCURI + "content"), gRDF.GetLiteral(kSidebarURL), true);
+    this.mPanelSeq.AppendElement(this.mPanelRes);
+    this.forceSidebarRefresh();
+
+    var msg = document.getElementById("txSidebarMsg");
+    msg.removeChild(msg.firstChild);
+
+    var bundle = document.getElementById("inspector-bundle");
+    msg.appendChild(document.createTextNode(bundle.getString("sidebarInstalled"))); 
+    var btn = document.getElementById("btnSidebarInstall");
+    btn.setAttribute("disabled", "true");
+
+    return true;
   },
 
   forceSidebarRefresh: function()

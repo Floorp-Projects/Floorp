@@ -3,6 +3,7 @@
 <!DOCTYPE page [
   <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://inspector/locale/viewers/boxModel.dtd"> %dtd3;
 ]>
 
 <?xml-stylesheet href="chrome://inspector/skin/viewers/boxModel/boxModel.css"?>
@@ -32,11 +33,11 @@
     <caption>
       <menulist id="mlStats" value="position" oncommand="viewer.showStatGroup(this.value)">
         <menupopup>
-          <menuitem value="position" label="Position"/>
-          <menuitem value="dimension" label="Dimensions"/>
-          <menuitem value="margin" label="Margin"/>
-          <menuitem value="border" label="Border"/>
-          <menuitem value="padding" label="Padding"/>
+          <menuitem value="position" label="&boxPosition.label;"/>
+          <menuitem value="dimension" label="&boxDimension.label;"/>
+          <menuitem value="margin" label="&boxMargin.label;"/>
+          <menuitem value="border" label="&boxBorder.label;"/>
+          <menuitem value="padding" label="&boxPadding.label;"/>
         </menupopup>
       </menulist>
     </caption>
@@ -72,28 +73,28 @@
   
   <vbox id="bxCaptureStuff" flex="1">
     <groupbox id="tbxImage">
-      <caption label="Image"/>
+      <caption label="&boxImage.label;"/>
       <hbox align="center" flex="1">
-        <button label="Capture" command="cmdCapture"/>
-        <button label="Pick Color..." command="cmdOpenColorPicker"/>
-        <button label="Save As..." command="cmdSaveImage"/>
+        <button label="&boxImageCapture.label;" command="cmdCapture"/>
+        <button label="&boxColorPicker.label;" command="cmdOpenColorPicker"/>
+        <button label="&boxSaveImage.label;" command="cmdSaveImage"/>
         <spacer flex="1"/>
         
-        <checkbox id="cbxShowOutlines" label="Show Boxes" command="cmdToggleOutlines"/>
-        <checkbox id="cbxFillOutlines" label="Fill Boxes" command="cmdToggleFill"/>
+        <checkbox id="cbxShowOutlines" label="&boxShowOutlines.label;" command="cmdToggleOutlines"/>
+        <checkbox id="cbxFillOutlines" label="&boxFillOutlines.label;" command="cmdToggleFill"/>
         <menulist id="mlZoom" value="1" command="cmdZoom">
           <menupopup>
-            <menuitem value="1" label="Zoom 1x"/>
-            <menuitem value="2" label="Zoom 2x"/>
-            <menuitem value="4" label="Zoom 4x"/>
-            <menuitem value="8" label="Zoom 8x"/>
-            <menuitem value="16" label="Zoom 16x"/>
-            <menuitem value="32" label="Zoom 32x"/>
+            <menuitem value="1" label="&zoom1x.label;"/>
+            <menuitem value="2" label="&zoom2x.label;"/>
+            <menuitem value="4" label="&zoom4x.label;"/>
+            <menuitem value="8" label="&zoom8x.label;"/>
+            <menuitem value="16" label="&zoom16x.label;"/>
+            <menuitem value="32" label="&zoom32x.label;"/>
           </menupopup>
         </menulist>
       </hbox>
     </groupbox>
-      
+
     <hbox id="bxZoom" align="start" flex="1">
       <stack id="bxZoomStack">
         <html:img id="imgZoom"/>
