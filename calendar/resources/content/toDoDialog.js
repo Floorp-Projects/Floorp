@@ -57,7 +57,7 @@
    args.onOk = <function>;          // funtion to call when OK is clicked
    args.calendarEvent = calendarEvent;    // newly creatd calendar event to be editted
    
-   openDialog("chrome://calendar/content/eventDialog.xul", "caEditEvent", "chrome,modal", args );
+   openDialog("chrome://calendar/content/eventDialog.xul", "caEditEvent", "chrome,titlebar,modal", args );
 *
 *  Invoke this dialog to edit an existing event as follows:
 *
@@ -337,6 +337,8 @@ function loadCalendarEventDialog()
 
    // revert cursor from "wait" set in calendar.js editToDo, newToDoCommand
    opener.setCursor( "auto" );
+
+   self.focus();
 }
 
 

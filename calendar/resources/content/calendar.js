@@ -292,7 +292,7 @@ function launchPreferences()
   if( applicationName == "Mozilla" || applicationName == "Firebird" ) {
     goPreferences( "calendarPanel", "chrome://calendar/content/pref/calendarPref.xul", "calendarPanel" );
   } else
-    window.openDialog("chrome://calendar/content/pref/prefBird.xul", "PrefWindow", "chrome,titlebar,resizable=no");
+    window.openDialog("chrome://calendar/content/pref/prefBird.xul", "PrefWindow", "chrome,titlebar,modal,resizable=no");
 }
 
 /** 
@@ -876,7 +876,7 @@ function openEventDialog(calendarEvent, mode, onOk, server)
   // wait cursor will revert to auto in eventDialog.js loadCalendarEventDialog
   window.setCursor( "wait" );
   // open the dialog modally
-  openDialog("chrome://calendar/content/eventDialog.xul", "caEditEvent", "chrome,modal", args );
+  openDialog("chrome://calendar/content/eventDialog.xul", "caEditEvent", "chrome,titlebar,modal", args );
 }
 
 /** PRIVATE: open todo dialog in mode, and call onOk if ok is clicked.
@@ -896,7 +896,7 @@ function openToDoDialog(calendarToDo, mode, onOk, server)
   // wait cursor will revert to auto in todoDialog.js loadCalendarEventDialog
   window.setCursor( "wait" );
   // open the dialog modally
-  openDialog("chrome://calendar/content/toDoDialog.xul", "caEditToDo", "chrome,modal", args );
+  openDialog("chrome://calendar/content/toDoDialog.xul", "caEditToDo", "chrome,titlebar,modal", args );
 }
 
 /**
@@ -1142,7 +1142,7 @@ function launchWizard()
 {
    var args = new Object();
 
-   openDialog("chrome://calendar/content/wizard.xul", "caWizard", "chrome,modal", args );
+   openDialog("chrome://calendar/content/wizard.xul", "caWizard", "chrome,titlebar,modal", args );
 }
 
 function reloadApplication()
@@ -1239,7 +1239,7 @@ function publishEntireCalendar()
       args.publishObject = publishObject;
    }
    
-   openDialog("chrome://calendar/content/publishDialog.xul", "caPublishEvents", "chrome,modal", args );
+   openDialog("chrome://calendar/content/publishDialog.xul", "caPublishEvents", "chrome,titlebar,modal", args );
 }
 
 function publishEntireCalendarDialogResponse( CalendarPublishObject )
@@ -1270,7 +1270,7 @@ function publishCalendarData()
    
    args.onOk =  self.publishCalendarDataDialogResponse;
    
-   openDialog("chrome://calendar/content/publishDialog.xul", "caPublishEvents", "chrome,modal", args );
+   openDialog("chrome://calendar/content/publishDialog.xul", "caPublishEvents", "chrome,titlebar,modal", args );
 }
 
 function publishCalendarDataDialogResponse( CalendarPublishObject )

@@ -59,7 +59,7 @@
 *  args.weeksInView=multiweek how many weeks to show
 *  args.prevWeeksInView=previous weeks to show in view
 *  args.startOfWeek=zero based day to start the week
-*  calendar.openDialog("chrome://calendar/content/eventDialog.xul", "printdialog", "chrome,modal", args );
+*  calendar.openDialog("chrome://calendar/content/eventDialog.xul", "printdialog", "chrome,titlebar.modal", args );
 *
 * IMPLEMENTATION NOTES
 **********
@@ -102,6 +102,8 @@ function loadCalendarPrintDialog()
   firstFocus.focus();
 
   opener.setCursor( "auto" );
+  
+  self.focus();
 }
 
 
