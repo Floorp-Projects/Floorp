@@ -46,7 +46,6 @@
 
   <broadcaster id="args" value=""/>
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
-  <popupset id="aTooltipSet" />
 
   <vbox style="min-width: 20em">
     <groupbox><caption id="linkTextCaption"/>
