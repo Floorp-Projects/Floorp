@@ -5827,8 +5827,8 @@ NS_NewScriptGlobalObject(PRBool aIsChrome, nsIScriptGlobalObject **aResult)
 //***    NavigatorImpl: Object Management
 //*****************************************************************************
 
-NavigatorImpl::NavigatorImpl(nsIDocShell *aDocShell) :
-  mDocShell(aDocShell)
+NavigatorImpl::NavigatorImpl(nsIDocShell *aDocShell)
+  : mDocShell(aDocShell)
 {
 }
 
@@ -5869,67 +5869,85 @@ void NavigatorImpl::SetDocShell(nsIDocShell *aDocShell)
 NS_IMETHODIMP
 NavigatorImpl::GetUserAgent(nsAString& aUserAgent)
 {
-  nsresult res;
+  nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &res));
-  if (NS_SUCCEEDED(res) && service) {
+    service(do_GetService(kHTTPHandlerCID, &rv));
+  if (NS_SUCCEEDED(rv)) {
     nsCAutoString ua;
-    res = service->GetUserAgent(ua);
+    rv = service->GetUserAgent(ua);
     CopyASCIItoUCS2(ua, aUserAgent);
   }
 
-  return res;
+  return rv;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetAppCodeName(nsAString& aAppCodeName)
 {
-  nsresult res;
+  nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &res));
-  if (NS_SUCCEEDED(res) && service) {
+    service(do_GetService(kHTTPHandlerCID, &rv));
+  if (NS_SUCCEEDED(rv)) {
     nsCAutoString appName;
-    res = service->GetAppName(appName);
-    CopyASCIItoUCS2(appName, aAppCodeName);
+    rv = service->GetAppName(appName);
+    CopyASCIItoUTF16(appName, aAppCodeName);
   }
 
-  return res;
+  return rv;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetAppVersion(nsAString& aAppVersion)
 {
-  nsresult res;
+  const nsAdoptingCString& override = 
+    nsContentUtils::GetCharPref("general.appversion.override");
+
+  if (override) {
+    CopyASCIItoUTF16(override, aAppVersion);
+    return NS_OK;
+  }
+
+  nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &res));
-  if (NS_SUCCEEDED(res) && service) {
+    service(do_GetService(kHTTPHandlerCID, &rv));
+  if (NS_SUCCEEDED(rv)) {
     nsCAutoString str;
-    res = service->GetAppVersion(str);
-    CopyASCIItoUCS2(str, aAppVersion);
+    rv = service->GetAppVersion(str);
+    CopyASCIItoUTF16(str, aAppVersion);
+    if (NS_FAILED(rv))
+      return rv;
 
     aAppVersion.AppendLiteral(" (");
-    res = service->GetPlatform(str);
-    if (NS_FAILED(res))
-      return res;
+
+    rv = service->GetPlatform(str);
+    if (NS_FAILED(rv))
+      return rv;
 
     AppendASCIItoUTF16(str, aAppVersion);
 
     aAppVersion.AppendLiteral("; ");
-    res = service->GetLanguage(str);
-    if (NS_FAILED(res))
-      return res;
 
+    rv = service->GetLanguage(str);
+    if (NS_FAILED(rv))
+      return rv;
     AppendASCIItoUTF16(str, aAppVersion);
 
     aAppVersion.Append(PRUnichar(')'));
   }
 
-  return res;
+  return rv;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetAppName(nsAString& aAppName)
 {
+  const nsAdoptingCString& override =
+    nsContentUtils::GetCharPref("general.appname.override");
+  if (override) {
+    CopyASCIItoUTF16(override, aAppName);
+    return NS_OK;
+  }
+
   aAppName.AssignLiteral("Netscape");
   return NS_OK;
 }
@@ -5937,25 +5955,32 @@ NavigatorImpl::GetAppName(nsAString& aAppName)
 NS_IMETHODIMP
 NavigatorImpl::GetLanguage(nsAString& aLanguage)
 {
-  nsresult res;
+  nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &res));
-  if (NS_SUCCEEDED(res) && service) {
+    service(do_GetService(kHTTPHandlerCID, &rv));
+  if (NS_SUCCEEDED(rv)) {
     nsCAutoString lang;
-    res = service->GetLanguage(lang);
+    rv = service->GetLanguage(lang);
     CopyASCIItoUCS2(lang, aLanguage);
   }
 
-  return res;
+  return rv;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetPlatform(nsAString& aPlatform)
 {
-  nsresult res;
+  const nsAdoptingCString& override =
+    nsContentUtils::GetCharPref("general.platform.override");
+  if (override) {
+    CopyASCIItoUTF16(override, aPlatform);
+    return NS_OK;
+  }
+
+  nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &res));
-  if (NS_SUCCEEDED(res) && service) {
+    service(do_GetService(kHTTPHandlerCID, &rv));
+  if (NS_SUCCEEDED(rv)) {
     // sorry for the #if platform ugliness, but Communicator is
     // likewise hardcoded and we're seeking backward compatibility
     // here (bug 47080)
@@ -5972,88 +5997,88 @@ NavigatorImpl::GetPlatform(nsAString& aPlatform)
     // to indicate the platform it was compiled *for*, not what it is
     // currently running *on* which is what this does.
     nsCAutoString plat;
-    res = service->GetOscpu(plat);
-    CopyASCIItoUCS2(plat, aPlatform);
+    rv = service->GetOscpu(plat);
+    CopyASCIItoUTF16(plat, aPlatform);
 #endif
   }
 
-  return res;
+  return rv;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetOscpu(nsAString& aOSCPU)
 {
-  nsresult res;
+  nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &res));
-  if (NS_SUCCEEDED(res) && service) {
+    service(do_GetService(kHTTPHandlerCID, &rv));
+  if (NS_SUCCEEDED(rv)) {
     nsCAutoString oscpu;
-    res = service->GetOscpu(oscpu);
+    rv = service->GetOscpu(oscpu);
     CopyASCIItoUCS2(oscpu, aOSCPU);
   }
 
-  return res;
+  return rv;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetVendor(nsAString& aVendor)
 {
-  nsresult res;
+  nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &res));
-  if (NS_SUCCEEDED(res) && service) {
+    service(do_GetService(kHTTPHandlerCID, &rv));
+  if (NS_SUCCEEDED(rv)) {
     nsCAutoString vendor;
-    res = service->GetVendor(vendor);
+    rv = service->GetVendor(vendor);
     CopyASCIItoUCS2(vendor, aVendor);
   }
 
-  return res;
+  return rv;
 }
 
 
 NS_IMETHODIMP
 NavigatorImpl::GetVendorSub(nsAString& aVendorSub)
 {
-  nsresult res;
+  nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &res));
-  if (NS_SUCCEEDED(res) && service) {
+    service(do_GetService(kHTTPHandlerCID, &rv));
+  if (NS_SUCCEEDED(rv)) {
     nsCAutoString vendor;
-    res = service->GetVendorSub(vendor);
+    rv = service->GetVendorSub(vendor);
     CopyASCIItoUCS2(vendor, aVendorSub);
   }
 
-  return res;
+  return rv;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetProduct(nsAString& aProduct)
 {
-  nsresult res;
+  nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &res));
-  if (NS_SUCCEEDED(res) && service) {
+    service(do_GetService(kHTTPHandlerCID, &rv));
+  if (NS_SUCCEEDED(rv)) {
     nsCAutoString product;
-    res = service->GetProduct(product);
+    rv = service->GetProduct(product);
     CopyASCIItoUCS2(product, aProduct);
   }
 
-  return res;
+  return rv;
 }
 
 NS_IMETHODIMP
 NavigatorImpl::GetProductSub(nsAString& aProductSub)
 {
-  nsresult res;
+  nsresult rv;
   nsCOMPtr<nsIHttpProtocolHandler>
-    service(do_GetService(kHTTPHandlerCID, &res));
-  if (NS_SUCCEEDED(res) && service) {
+    service(do_GetService(kHTTPHandlerCID, &rv));
+  if (NS_SUCCEEDED(rv)) {
     nsCAutoString productSub;
-    res = service->GetProductSub(productSub);
+    rv = service->GetProductSub(productSub);
     CopyASCIItoUCS2(productSub, aProductSub);
   }
 
-  return res;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -6168,7 +6193,6 @@ NavigatorImpl::Preference()
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
-
   rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(ncc));
   NS_ENSURE_SUCCESS(rv, rv);
 
