@@ -421,6 +421,18 @@ function ShowAddressComplete( good)
 		alert( str);
 }
 
+function CreateNewFileSpecFromPath( inPath)
+{
+	var file = Components.classes["component://netscape/filespec"].createInstance();
+	if (file != null) {
+		file = file.QueryInterface( Components.interfaces.nsIFileSpec);
+		if (file != null) {
+			file.nativePath = inPath;
+		}
+	}
+
+	return( file);
+}
 
 /*
 	Import Settings from a specific module, returns false if it failed
@@ -448,15 +460,29 @@ function ImportSettings( module, newAccount, error) {
 		if (location.value != null) {
 			// Settings were not found, however, they are specified
 			// in a file, so ask the user for the settings file.
-			var filePicker = Components.classes["component://netscape/filespecwithui"].createInstance();
+			var filePicker = Components.classes["component://mozilla/filepicker"].createInstance();
 			if (filePicker != null) {
-				filePicker = filePicker.QueryInterface( Components.interfaces.nsIFileSpecWithUI);
+				filePicker = filePicker.QueryInterface( Components.interfaces.nsIFilePicker);
 				if (filePicker != null) {
-					// filePicker.create( window.top, GetBundleString( 'ImportSelectSettings'), filePicker.modeLoad);
+					var file = null;
 					try {
-						filePicker.chooseInputFile( GetBundleString( 'ImportSelectSettings'), filePicker.eAllFiles, null, null);
-						setIntf.SetLocation( filePicker.QueryInterface( Components.interfaces.nsIFileSpec));
-					} catch( ex) {
+						filePicker.init( top.window, GetBundleString( 'ImportSelectSettings'), Components.interfaces.nsIFilePicker.modeOpen);
+						filePicker.appendFilters( Components.interfaces.nsIFilePicker.filterAll);
+						filePicker.show();
+						if (filePicker.file && (filePicker.file.path.length > 0))
+							file = CreateNewFileSpecFromPath( filePicker.file.path);
+						else
+							file = null;
+					}
+					catch(ex) {
+						file = null;
+						error.value = null;
+						return( false);
+					}					
+					if (file != null) {
+						setIntf.SetLocation( file);
+					} 
+					else {
 						error.value = null;
 						return( false);
 					}					
@@ -521,13 +547,18 @@ function ImportMail( module, success, error) {
 	if (loc == null) {
 		// No location found, check to see if we can ask the user.
 		if (mailInterface.GetStatus( "canUserSetLocation") != 0) {
-			var filePicker = Components.classes["component://netscape/filespecwithui"].createInstance();
+			var filePicker = Components.classes["component://mozilla/filepicker"].createInstance();
 			if (filePicker != null) {
-				filePicker = filePicker.QueryInterface( Components.interfaces.nsIFileSpecWithUI);
+				filePicker = filePicker.QueryInterface( Components.interfaces.nsIFilePicker);
 				if (filePicker != null) {
 					try {
-						filePicker.chooseDirectory( GetBundleString( 'ImportSelectMailDir'));
-						mailInterface.SetData( "mailLocation", CreateNewFileSpec( filePicker.QueryInterface( Components.interfaces.nsIFileSpec)));
+						filePicker.init( top.window, GetBundleString( 'ImportSelectMailDir'), Components.interfaces.nsIFilePicker.modeGetFolder);
+						filePicker.appendFilters( Components.interfaces.nsIFilePicker.filterAll);
+						filePicker.show();
+						if (filePicker.file && (filePicker.file.path.length > 0))
+							mailInterface.SetData( "mailLocation", CreateNewFileSpecFromPath( filePicker.file.path));
+						else
+							return( false);
 					} catch( ex) {
 						// don't show an error when we return!
 						return( false);
@@ -612,9 +643,9 @@ function ImportAddress( module, success, error) {
 			return( false);
 		}
 
-		var filePicker = Components.classes["component://netscape/filespecwithui"].createInstance();
+		var filePicker = Components.classes["component://mozilla/filepicker"].createInstance();
 		if (filePicker != null) {
-			filePicker = filePicker.QueryInterface( Components.interfaces.nsIFileSpecWithUI);
+			filePicker = filePicker.QueryInterface( Components.interfaces.nsIFilePicker);
 			if (filePicker == null) {
 				error.data = GetBundleString( 'ImportAddressNotFound');
 				return( false);
@@ -632,8 +663,13 @@ function ImportAddress( module, success, error) {
 		if (addInterface.GetStatus( "supportsMultiple") != 0) {
 			// ask for dir
 			try {
-				filePicker.chooseDirectory( GetBundleString( 'ImportSelectAddrDir'));
-				file = filePicker.QueryInterface( Components.interfaces.nsIFileSpec);
+				filePicker.init( top.window, GetBundleString( 'ImportSelectAddrDir'), Components.interfaces.nsIFilePicker.modeGetFolder);
+				filePicker.appendFilters( Components.interfaces.nsIFilePicker.filterAll);
+				filePicker.show();
+				if (filePicker.file && (filePicker.file.path.length > 0))
+					file = filePicker.file.path;
+				else
+					file = null;
 			} catch( ex) {
 				file = null;
 			}
@@ -641,8 +677,13 @@ function ImportAddress( module, success, error) {
 		else {
 			// ask for file
 			try {
-				filePicker.chooseInputFile( GetBundleString( 'ImportSelectAddrFile'), filePicker.eAllFiles, null, null);
-				file = filePicker.QueryInterface( Components.interfaces.nsIFileSpec);
+				filePicker.init( top.window, GetBundleString( 'ImportSelectAddrFile'), Components.interfaces.nsIFilePicker.modeOpen);
+				filePicker.appendFilters( Components.interfaces.nsIFilePicker.filterAll);
+				filePicker.show();
+				if (filePicker.file && (filePicker.file.path.length > 0))
+					file = filePicker.file.path;
+				else
+					file = null;
 			} catch( ex) {
 				file = null;
 			}
@@ -652,7 +693,7 @@ function ImportAddress( module, success, error) {
 			return( false);
 		}
 		
-		file = CreateNewFileSpec( file);
+		file = CreateNewFileSpecFromPath( file);
 
 		addInterface.SetData( "addressLocation", file);
 	}
