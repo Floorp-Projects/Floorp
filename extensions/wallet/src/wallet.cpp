@@ -1668,7 +1668,7 @@ wallet_WriteToFile(const char * filename, nsVoidArray* list) {
  */
 static void
 wallet_ReadFromFile
-    (const char * filename, nsVoidArray*& list, PRBool localFile, PlacementType placement = DUP_AFTER) {
+    (const char * filename, nsVoidArray*& list, PRBool localFile, PlacementType placement = AT_END) {
 
   /* open input stream */
   nsFileSpec dirSpec;
@@ -1796,7 +1796,7 @@ wallet_ReadFromFile
  */
 static void
 wallet_ReadFromURLFieldToSchemaFile
-    (const char * filename, nsVoidArray*& list, PlacementType placement = DUP_AFTER) {
+    (const char * filename, nsVoidArray*& list, PlacementType placement = AT_END) {
 
   /* open input stream */
   nsFileSpec dirSpec;
