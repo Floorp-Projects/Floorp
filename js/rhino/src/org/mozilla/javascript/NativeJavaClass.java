@@ -125,7 +125,6 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
         throws JavaScriptException
     {
     	Class classObject = getClassObject();
-        Scriptable topLevel = ScriptableObject.getTopLevelScope(this);
     	int modifiers = classObject.getModifiers();
     	if (! (Modifier.isInterface(modifiers) || 
                Modifier.isAbstract(modifiers))) 
@@ -140,44 +139,16 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
 	        Constructor ctor = (Constructor) member;
 	        if (ctor == null) {
 	            String sig = NativeJavaMethod.signature(args);
-	            Object errArgs[] = { getClassObject().getName(), sig };
+	            Object errArgs[] = { classObject.getName(), sig };
 	            throw Context.reportRuntimeError(Context.getMessage(
 	                "msg.no.java.ctor", errArgs));
 	        }
 
 	        // Found the constructor, so try invoking it.
-	        Class[] paramTypes = ctor.getParameterTypes();
-	        for (int i = 0; i < args.length; i++) {
-	            args[i] = NativeJavaObject.coerceType(paramTypes[i], args[i]);
-	        }
-	        try {
-                    /* we need to force this to be wrapped, because construct _has_
-                     * to return a scriptable */
-                    return (Scriptable) NativeJavaObject.wrap(
-                                            topLevel, ctor.newInstance(args),
-                                            getClassObject());
-
-	        } catch (InstantiationException instEx) {
-	            Object[] errArgs = { instEx.getMessage(), 
-	                                 getClassObject().getName() };
-	            throw Context.reportRuntimeError(Context.getMessage
-	                                             ("msg.cant.instantiate",
-	                                              errArgs));
-	        } catch (IllegalArgumentException argEx) {
-	            String signature = NativeJavaMethod.signature(args);
-	            String ctorString = ctor.toString();
-	            Object[] errArgs = { argEx.getMessage(),ctorString,signature };
-	            throw Context.reportRuntimeError(Context.getMessage
-	                                             ("msg.bad.ctor.sig",
-	                                             errArgs));
-	        } catch (InvocationTargetException e) {
-	            throw JavaScriptException.wrapException(scope, e);
-	        } catch (IllegalAccessException accessEx) {
-	            Object[] errArgs = { accessEx.getMessage() };
-	            throw Context.reportRuntimeError(Context.getMessage
-	                                             ("msg.java.internal.private", errArgs));
-	        }
-	    } else {
+                return NativeJavaClass.constructSpecific(cx, scope, 
+                                                         this, ctor, args);
+        } else {
+                Scriptable topLevel = ScriptableObject.getTopLevelScope(this);
                 String msg = "";
 	    	try {
                     // trying to construct an interface; use JavaAdapter to 
@@ -194,11 +165,55 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
                     // fall through to error
                     msg = ex.getMessage();
                 }
-	        Object[] errArgs = { msg, getClassObject().getName() };
+	        Object[] errArgs = { msg, classObject.getName() };
 	        throw Context.reportRuntimeError(Context.getMessage
 	                                         ("msg.cant.instantiate",
 	                                          errArgs));
-	    }
+        }
+    }
+
+    public static Scriptable constructSpecific(Context cx, 
+                                               Scriptable scope, 
+                                               Scriptable thisObj, 
+                                               Constructor ctor,
+                                               Object[] args)
+        throws JavaScriptException
+    {
+        Scriptable topLevel = ScriptableObject.getTopLevelScope(thisObj);
+        Class classObject = ctor.getDeclaringClass();
+
+        Class[] paramTypes = ctor.getParameterTypes();
+        for (int i = 0; i < args.length; i++) {
+            args[i] = NativeJavaObject.coerceType(paramTypes[i], args[i]);
+        }
+        try {
+            /* we need to force this to be wrapped, because construct _has_
+             * to return a scriptable */
+            return 
+                (Scriptable) NativeJavaObject.wrap(topLevel, 
+                                                   ctor.newInstance(args),
+                                                   classObject);
+
+        } catch (InstantiationException instEx) {
+            Object[] errArgs = { instEx.getMessage(), 
+                                 classObject.getName() };
+            throw Context.reportRuntimeError(Context.getMessage
+                                             ("msg.cant.instantiate",
+                                              errArgs));
+        } catch (IllegalArgumentException argEx) {
+            String signature = NativeJavaMethod.signature(args);
+            String ctorString = ctor.toString();
+            Object[] errArgs = { argEx.getMessage(),ctorString,signature };
+            throw Context.reportRuntimeError(Context.getMessage
+                                             ("msg.bad.ctor.sig",
+                                              errArgs));
+        } catch (InvocationTargetException e) {
+            throw JavaScriptException.wrapException(scope, e);
+        } catch (IllegalAccessException accessEx) {
+            Object[] errArgs = { accessEx.getMessage() };
+            throw Context.reportRuntimeError(Context.getMessage
+                                             ("msg.java.internal.private", errArgs));
+        }
     }
 
     public String toString() {

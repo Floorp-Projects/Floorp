@@ -40,7 +40,14 @@ class JavaMembers {
 
     boolean has(String name, boolean isStatic) {
         Hashtable ht = isStatic ? staticMembers : members;
-        return ht.get(name) != null;
+        Object obj = ht.get(name);
+        if (obj != null) {
+            return true;
+        }
+        else {
+            Member member = this.findExplicitFunction(name, isStatic);
+            return member != null;
+        }
     }
 
     Object get(Scriptable scope, String name, Object javaObject,
@@ -48,8 +55,16 @@ class JavaMembers {
     {
         Hashtable ht = isStatic ? staticMembers : members;
         Object member = ht.get(name);
-        if (member == null)
-            return Scriptable.NOT_FOUND;
+        if (!isStatic && member == null) {
+            // Try to get static member from instance (LC3)
+            member = staticMembers.get(name);
+        }
+        if (member == null) {
+            member = this.getExplicitFunction(scope, name, 
+                                              javaObject, isStatic);
+            if (member == null)
+                return Scriptable.NOT_FOUND;
+        }
         if (member instanceof Scriptable)
             return member;
         Field field = (Field) member;
@@ -65,6 +80,86 @@ class JavaMembers {
         scope = ScriptableObject.getTopLevelScope(scope);
         return NativeJavaObject.wrap(scope, rval, fieldType);
     }
+
+    Member findExplicitFunction(String name, boolean isStatic) {
+        Hashtable ht = isStatic ? staticMembers : members;
+        int sigStart = name.indexOf('(');
+        Object member = null;
+        Member[] methodsOrCtors = null;
+        NativeJavaMethod method = null;
+        boolean isCtor = (isStatic && sigStart == 0);
+
+        if (isCtor) {
+            // Explicit request for an overloaded constructor
+            methodsOrCtors = ctors;
+        }
+        else if (sigStart > 0) {
+            // Explicit request for an overloaded method
+            String trueName = name.substring(0,sigStart);
+            Object obj = ht.get(trueName);
+            if (!isStatic && obj == null) {
+                // Try to get static member from instance (LC3)
+                obj = staticMembers.get(trueName);
+            }
+            if (obj != null && obj instanceof NativeJavaMethod) {
+                method = (NativeJavaMethod)obj;
+                methodsOrCtors = method.getMethods();
+            }
+        }
+
+        if (methodsOrCtors != null) {
+            for (int i = 0; i < methodsOrCtors.length; i++) {
+                String nameWithSig = 
+                    NativeJavaMethod.signature(methodsOrCtors[i]);
+                if (name.equals(nameWithSig)) {
+                    return methodsOrCtors[i];
+                }
+            }
+        }
+
+        return null;
+    }
+
+    Object getExplicitFunction(Scriptable scope, 
+                               String name,
+                               Object javaObject,
+                               boolean isStatic) {
+
+        Hashtable ht = isStatic ? staticMembers : members;
+        Object member = null;
+        Member methodOrCtor = this.findExplicitFunction(name, isStatic);
+
+        if (methodOrCtor != null) {
+            Scriptable prototype = 
+                ScriptableObject.getFunctionPrototype(scope);
+
+            if (methodOrCtor instanceof Constructor) {
+                NativeJavaConstructor fun = 
+                    new NativeJavaConstructor((Constructor)methodOrCtor);
+                fun.setParentScope(scope);
+                fun.setPrototype(prototype);
+                member = fun;
+                ht.put(name, fun);
+            }
+            else {
+                String trueName = methodOrCtor.getName();
+                member = ht.get(trueName);
+
+                if (member instanceof NativeJavaMethod &&
+                    ((NativeJavaMethod)member).getMethods().length > 1 ) {
+                    NativeJavaMethod fun = 
+                        new NativeJavaMethod((Method)methodOrCtor, name);
+                    fun.setParentScope(scope);
+                    fun.setPrototype(prototype);
+                    ht.put(name, fun);
+                    member = fun;
+                }
+            }
+        }
+
+        return member;
+    }
+
 
     public void put(String name, Object javaObject, Object value,
                     boolean isStatic)

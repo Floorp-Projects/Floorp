@@ -45,6 +45,13 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         names[0] = methods[0].getName();
     }
 
+    public NativeJavaMethod(Method method, String name) {
+        this.methods = new Method[1];
+        this.methods[0] = method;
+        names = new String[1];
+        names[0] = name;
+    }
+
     public void add(Method method) {
         if (names[0] == null) {
             names[0] = method.getName();
@@ -86,6 +93,9 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                 return "undefined";
             return "object";
         }
+        if (type.isArray()) {
+            return signature(type.getComponentType()) + "[]";
+        }
         return type.getName();
     }
 
@@ -111,10 +121,16 @@ public class NativeJavaMethod extends NativeFunction implements Function {
     }
 
     static String signature(Member member) {
-        Class paramTypes[] = member instanceof Method
-                             ? ((Method) member).getParameterTypes()
-                             : ((Constructor) member).getParameterTypes();
-        return  member.getName() + "(" + signature(paramTypes) + ")";
+        Class paramTypes[];
+
+        if (member instanceof Method) {
+            paramTypes = ((Method) member).getParameterTypes();
+            return member.getName() + "(" + signature(paramTypes) + ")";
+        }
+        else {
+            paramTypes = ((Constructor) member).getParameterTypes();
+            return "(" + signature(paramTypes) + ")";
+        }
     }
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
@@ -186,10 +202,6 @@ public class NativeJavaMethod extends NativeFunction implements Function {
         }
     }
 
-    public Object getDefaultValue(Class hint) {
-        return this;
-    }
-    
     /** 
      * Find the correct function to call given the set of methods
      * or constructors and the arguments.
@@ -216,7 +228,12 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                 // Just abandon conversion from JSObject
             }
         }
-      methodSearch:
+
+        Member  bestFit = null;
+        Class[] bestFitTypes = null;
+
+        java.util.Vector ambiguousMethods = null;
+
         for (int i = 0; i < methodsOrCtors.length; i++) {
             Member member = methodsOrCtors[i];
             Class paramTypes[] = hasMethods
@@ -225,22 +242,192 @@ public class NativeJavaMethod extends NativeFunction implements Function {
             if (paramTypes.length != args.length) {
                 continue;
             }
-            for (int j = 0; j < paramTypes.length; j++) {
-                if (!NativeJavaObject.canConvert(args[j], paramTypes[j])) {
-                    if (debug) printDebug("Rejecting ", member, args);
-                    continue methodSearch;
+            if (bestFitTypes == null) {
+                int j;
+                for (j = 0; j < paramTypes.length; j++) {
+                    if (!NativeJavaObject.canConvert(args[j], paramTypes[j])) {
+                        if (debug) printDebug("Rejecting ", member, args);
+                        break;
+                    }
+                }
+                if (j == paramTypes.length) {
+                    if (debug) printDebug("Found ", member, args);
+                    bestFit = member;
+                    bestFitTypes = paramTypes;
                 }
             }
-            if (debug) {
-                printDebug("Found ", member, args);
-                while (++i < methodsOrCtors.length)
-                    printDebug("Never considered ", methodsOrCtors[i], args);
+            else {
+                int preference = 
+                    NativeJavaMethod.preferSignature(args, 
+                                                     paramTypes, 
+                                                     bestFitTypes);
+                if (preference == PREFERENCE_AMBIGUOUS) {
+                    if (debug) printDebug("Deferring ", member, args);
+                    // add to "ambiguity list"
+                    if (ambiguousMethods == null)
+                        ambiguousMethods = new java.util.Vector();
+                    ambiguousMethods.addElement(member);
+                }
+                else if (preference == PREFERENCE_FIRST_ARG) {
+                    if (debug) printDebug("Substituting ", member, args);
+                    bestFit = member;
+                    bestFitTypes = paramTypes;
+                }
+                else {
+                    if (debug) printDebug("Rejecting ", member, args);
+                }
             }
-            return member;
         }
-        return null;
+
+        if (ambiguousMethods == null) 
+            return bestFit;
+        
+        // Compare ambiguous methods with best fit, in case 
+        // the current best fit removes the ambiguities.
+        for (int i = ambiguousMethods.size() - 1; i >= 0; i--) {
+            Member member = (Member)ambiguousMethods.elementAt(i);
+            Class paramTypes[] = hasMethods
+                                 ? ((Method) member).getParameterTypes()
+                                 : ((Constructor) member).getParameterTypes();
+            int preference = 
+                NativeJavaMethod.preferSignature(args, 
+                                                 paramTypes, 
+                                                 bestFitTypes);
+
+            if (preference == PREFERENCE_FIRST_ARG) {
+                if (debug) printDebug("Substituting ", member, args);
+                bestFit = member;
+                bestFitTypes = paramTypes;
+                ambiguousMethods.removeElementAt(i);
+            }
+            else if (preference == PREFERENCE_SECOND_ARG) {
+                if (debug) printDebug("Rejecting ", member, args);
+                ambiguousMethods.removeElementAt(i);
+            }
+            else {
+                if (debug) printDebug("UNRESOLVED: ", member, args);
+            }
+        }
+
+        if (ambiguousMethods.size() > 0) {
+            // PENDING: report remaining ambiguity
+            StringBuffer buf = new StringBuffer();
+            boolean isCtor = (bestFit instanceof Constructor);
+
+            ambiguousMethods.addElement(bestFit);
+
+            for (int i = 0; i < ambiguousMethods.size(); i++) {
+                if (i != 0) {
+                    buf.append(", ");
+                }
+                Member member = (Member)ambiguousMethods.elementAt(i);
+                if (!isCtor) {
+                    Class rtnType = ((Method)member).getReturnType();
+                    buf.append(rtnType);
+                    buf.append(' ');
+                }
+                buf.append(NativeJavaMethod.signature(member));
+            }
+
+            String errMsg;
+            if (isCtor) {
+                Object errArgs[] = { 
+                    bestFit.getName(), 
+                    NativeJavaMethod.signature(args),
+                    buf.toString()
+                };
+                errMsg = 
+                    Context.getMessage("msg.constructor.ambiguous", errArgs);
+            }
+            else {
+                Object errArgs[] = { 
+                    bestFit.getDeclaringClass().getName(), 
+                    bestFit.getName(), 
+                    NativeJavaMethod.signature(args),
+                    buf.toString()
+                };
+                errMsg = Context.getMessage("msg.method.ambiguous", errArgs);
+            }
+
+            throw 
+                Context.reportRuntimeError(errMsg);
+        }
+
+        return bestFit;
     }
     
+    /** Types are equal */
+    static final int PREFERENCE_EQUAL      = 0;
+    static final int PREFERENCE_FIRST_ARG  = 1;
+    static final int PREFERENCE_SECOND_ARG = 2;
+    /** No clear "easy" conversion */
+    static final int PREFERENCE_AMBIGUOUS  = 3;
+
+    /**
+     * Determine which of two signatures is the closer fit.
+     * Returns one of PREFERENCE_EQUAL, PREFERENCE_FIRST_ARG, 
+     * PREFERENCE_SECOND_ARG, or PREFERENCE_AMBIGUOUS.
+     */
+    public static int preferSignature(Object[] args, 
+                                      Class[] sig1, Class[] sig2) {
+
+        int preference = 0;
+
+        for (int j = 0; j < args.length; j++) {
+            Class type1 = sig1[j];
+            Class type2 = sig2[j];
+
+            if (type1 == type2) {
+                continue;
+            }
+
+            preference |=
+                NativeJavaMethod.preferConversion(args[j], 
+                                                  type1,
+                                                  type2);
+
+            if (preference == PREFERENCE_AMBIGUOUS) {
+                break;
+            }
+        }
+        return preference;
+    }
+
+
+    /**
+     * Determine which of two types is the easier conversion.
+     * Returns one of PREFERENCE_EQUAL, PREFERENCE_FIRST_ARG, 
+     * PREFERENCE_SECOND_ARG, or PREFERENCE_AMBIGUOUS.
+     */
+    public static int preferConversion(Object fromObj, 
+                                       Class toClass1, Class toClass2) {
+
+        int rank1  = 
+            NativeJavaObject.getConversionWeight(fromObj, toClass1);
+        int rank2 = 
+            NativeJavaObject.getConversionWeight(fromObj, toClass2);
+
+        if (rank1 == NativeJavaObject.CONVERSION_NONTRIVIAL && 
+            rank2 == NativeJavaObject.CONVERSION_NONTRIVIAL) {
+
+            if (toClass1.isAssignableFrom(toClass2)) {
+                return PREFERENCE_FIRST_ARG;
+            }
+            else if (toClass2.isAssignableFrom(toClass1)) {
+                return PREFERENCE_SECOND_ARG;
+            }
+        }
+        else {
+            if (rank1 < rank2) {
+                return PREFERENCE_FIRST_ARG;
+            }
+            else if (rank1 > rank2) {
+                return PREFERENCE_SECOND_ARG;
+            }
+        }
+        return PREFERENCE_AMBIGUOUS;
+    }
+
     Method[] getMethods() {
         return methods; 
     }
@@ -249,7 +436,8 @@ public class NativeJavaMethod extends NativeFunction implements Function {
 
     private static void printDebug(String msg, Member member, Object[] args) {
         if (debug) {
-            System.err.println(msg + member.getDeclaringClass().getName() +
+            System.err.println(" ----- " + msg + 
+                               member.getDeclaringClass().getName() +
                                "." + signature(member) +
                                " for arguments (" + signature(args) + ")");
         }

@@ -45,7 +45,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
     {
         this.javaObject = javaObject;
         Class dynamicType = javaObject != null ? javaObject.getClass()
-                                               : staticType;
+            : staticType;
         members = JavaMembers.lookupClass(scope, dynamicType, staticType);
         fieldAndMethods = members.getFieldAndMethodsObjects(javaObject, false);
     }
@@ -128,17 +128,17 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             return obj;
         if (Context.useJSObject && jsObjectClass != null && 
             staticType != jsObjectClass && jsObjectClass.isInstance(obj)) 
-        {
-            try {
-                return jsObjectGetScriptable.invoke(obj, ScriptRuntime.emptyArgs);
+            {
+                try {
+                    return jsObjectGetScriptable.invoke(obj, ScriptRuntime.emptyArgs);
+                }
+                catch (InvocationTargetException e) {
+                    // Just abandon conversion from JSObject
+                }
+                catch (IllegalAccessException e) {
+                    // Just abandon conversion from JSObject
+                }
             }
-            catch (InvocationTargetException e) {
-                // Just abandon conversion from JSObject
-            }
-            catch (IllegalAccessException e) {
-                // Just abandon conversion from JSObject
-            }
-        }
         return new NativeJavaObject(scope, obj, staticType);
     }
 
@@ -173,8 +173,8 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         if (converter == null) {
             Object[] errArgs = { converterName, javaObject.getClass().getName() };
             throw Context.reportRuntimeError(
-                    Context.getMessage("msg.java.conversion.implicit_method",
-                                       errArgs));
+                                             Context.getMessage("msg.java.conversion.implicit_method",
+                                                                errArgs));
         }
         return callConverter(converter);
     }
@@ -193,8 +193,9 @@ public class NativeJavaObject implements Scriptable, Wrapper {
             // fall through to error message
         }
         throw Context.reportRuntimeError(
-            Context.getMessage("msg.default.value", null));
+                                         Context.getMessage("msg.default.value", null));
     }
+
 
     /**
      * Determine whether we can/should convert between the given type and the
@@ -202,82 +203,254 @@ public class NativeJavaObject implements Scriptable, Wrapper {
      * function, but for now I'll hide behind precedent.
      */
     public static boolean canConvert(Object fromObj, Class to) {
-        if (fromObj == null)
-            return true;
-        // XXX nontrivial conversions?
-        return getConversionWeight(fromObj, to) == CONVERSION_TRIVIAL;
+        int weight = NativeJavaObject.getConversionWeight(fromObj, to);
+
+        return (weight != CONVERSION_NONE);
     }
 
-    public static final int CONVERSION_NONE         = 0;
-    public static final int CONVERSION_TRIVIAL      = 1;
-    public static final int CONVERSION_NONTRIVIAL   = 2;
+    static final int JSTYPE_UNDEFINED   = 0; // undefined type
+    static final int JSTYPE_NULL        = 1; // null
+    static final int JSTYPE_BOOLEAN     = 2; // boolean
+    static final int JSTYPE_NUMBER      = 3; // number
+    static final int JSTYPE_STRING      = 4; // string
+    static final int JSTYPE_JAVA_CLASS  = 5; // JavaClass
+    static final int JSTYPE_JAVA_OBJECT = 6; // JavaObject
+    static final int JSTYPE_JAVA_ARRAY  = 7; // JavaArray
+    static final int JSTYPE_OBJECT      = 8; // Scriptable
 
+    public static final byte CONVERSION_TRIVIAL      = 1;
+    public static final byte CONVERSION_NONTRIVIAL   = 0;
+    public static final byte CONVERSION_NONE         = 99;
+
+    /**
+     * Derive a ranking based on how "natural" the conversion is.
+     * The special value CONVERSION_NONE means no conversion is possible, 
+     * and CONVERSION_NONTRIVIAL signals that more type conformance testing 
+     * is required.
+     * Based on 
+     * <a href="http://www.mozilla.org/js/liveconnect/lc3_method_overloading.html">
+     * "preferred method conversions" from Live Connect 3</a>
+     */
     public static int getConversionWeight(Object fromObj, Class to) {
-        Class from = fromObj.getClass();
+        int fromCode = NativeJavaObject.getJSTypeCode(fromObj);
 
-        // if to is a primitive, from must be assignableFrom
-        // the wrapper class.
-        if (to.isPrimitive()) {
-            if (to == Boolean.TYPE)
-                return from == ScriptRuntime.BooleanClass
-                       ? CONVERSION_TRIVIAL
-                       : CONVERSION_NONE;
-            // Allow String to convert to Character if length() == 1
-            if (to == Character.TYPE) {
-                if (from.isAssignableFrom(ScriptRuntime.CharacterClass) ||
-                    (from == ScriptRuntime.StringClass &&
-                     ((String) fromObj).length() == 1))
-                {
-                    return CONVERSION_TRIVIAL;
+        int result = CONVERSION_NONE;
+
+        switch (fromCode) {
+
+        case JSTYPE_UNDEFINED:
+            if (to == String.class || to == Object.class) {
+                result = 1;
+            }
+            break;
+
+        case JSTYPE_NULL:
+            if (!to.isPrimitive()) {
+                result = 1;
+            }
+            break;
+
+        case JSTYPE_BOOLEAN:
+            // "boolean" is #1
+            if (to == Boolean.TYPE) {
+                result = 1;
+            }
+            else if (to == Boolean.class) {
+                result = 2;
+            }
+            else if (to == Object.class) {
+                result = 3;
+            }
+            else if (to == String.class) {
+                result = 4;
+            }
+            break;
+
+        case JSTYPE_NUMBER:
+            if (to.isPrimitive()) {
+                if (to == Double.TYPE) {
+                    result = 1;
                 }
-                return CONVERSION_NONE;
+                else if (to == Boolean.TYPE) {
+                    result = CONVERSION_NONE;
+                }
+                else {
+                    result = 1 + NativeJavaObject.getSizeRank(to);
+                }
             }
-            if (ScriptRuntime.NumberClass.isAssignableFrom(from))
-                return CONVERSION_TRIVIAL;
-            return CONVERSION_NONTRIVIAL;
-        }
-        if (to == ScriptRuntime.CharacterClass) {
-            if (from.isAssignableFrom(ScriptRuntime.CharacterClass) ||
-                (from == ScriptRuntime.StringClass &&
-                ((String) fromObj).length() == 1))
-            {
-                return CONVERSION_TRIVIAL;
+            else {
+                if (to == String.class) {
+                    // native numbers are #1-8
+                    result = 9;
+                }
+                else if (to == Object.class) {
+                    result = 10;
+                }
+                else if (Number.class.isAssignableFrom(to)) {
+                    // "double" is #1
+                    result = 2;
+                }
             }
-            return CONVERSION_NONE;
+            break;
+
+        case JSTYPE_STRING:
+            if (to == String.class) {
+                result = 1;
+            }
+            else if (to == Object.class) {
+                result = 2;
+            }
+            else if (to.isPrimitive()) {
+                if (to == Character.TYPE) {
+                    result = 3;
+                }
+                else {
+                    result = 4;
+                }
+            }
+            break;
+
+        case JSTYPE_JAVA_CLASS:
+            if (to == Class.class) {
+                result = 1;
+            }
+            if (Context.useJSObject && jsObjectClass != null && 
+                jsObjectClass.isAssignableFrom(to)) {
+                result = 2;
+            }
+            else if (to == Object.class) {
+                result = 3;
+            }
+            else if (to == String.class) {
+                result = 4;
+            }
+            break;
+
+        case JSTYPE_JAVA_OBJECT:
+        case JSTYPE_JAVA_ARRAY:
+            if (to == String.class) {
+                result = 2;
+            }
+            else if (to.isPrimitive()) {
+                result = 
+                    (fromCode == JSTYPE_JAVA_ARRAY) ?
+                    CONVERSION_NONTRIVIAL :
+                    2 + NativeJavaObject.getSizeRank(to);
+            }
+            else {
+                Object javaObj = fromObj;
+                if (javaObj instanceof NativeJavaObject) {
+                    javaObj = ((NativeJavaObject)javaObj).unwrap();
+                }
+                if (to.isInstance(javaObj)) {
+                    result = CONVERSION_NONTRIVIAL;
+                }
+            }
+            break;
+
+        case JSTYPE_OBJECT:
+            // Other objects takes #1-#3 spots
+            if (Context.useJSObject && jsObjectClass != null && 
+                jsObjectClass.isAssignableFrom(to)) {
+                result = 1;
+            }
+            else if (to == Object.class) {
+                result = 2;
+            }
+            else if (to == String.class) {
+                result = 3;
+            }
+            else if (to.isPrimitive()) {
+                result = 3 + NativeJavaObject.getSizeRank(to);
+            }
+            break;
         }
-        if (to == ScriptRuntime.StringClass) {
-            return CONVERSION_TRIVIAL;
+
+        return result;
+    
+    }
+
+    static int getSizeRank(Class aType) {
+        if (aType == Double.TYPE) {
+            return 1;
         }
-        if (Context.useJSObject && jsObjectClass != null && 
-            jsObjectClass.isAssignableFrom(to) && 
-            Scriptable.class.isAssignableFrom(from))
-        {
-            // Convert a Scriptable to a JSObject.
-            return CONVERSION_TRIVIAL;
+        else if (aType == Float.TYPE) {
+            return 2;
         }
-        return to.isAssignableFrom(from) ? CONVERSION_TRIVIAL : CONVERSION_NONE;
+        else if (aType == Long.TYPE) {
+            return 3;
+        }
+        else if (aType == Integer.TYPE) {
+            return 4;
+        }
+        else if (aType == Short.TYPE) {
+            return 5;
+        }
+        else if (aType == Character.TYPE) {
+            return 6;
+        }
+        else if (aType == Byte.TYPE) {
+            return 7;
+        }
+        else {
+            return 8;
+        }
+    }
+
+    static int getJSTypeCode(Object value) {
+        if (value == null) {
+            return JSTYPE_NULL;
+        }
+        else if (value == Undefined.instance) {
+            return JSTYPE_UNDEFINED;
+        }
+        else if (value instanceof Scriptable) {
+            if (value instanceof NativeJavaClass) {
+                return JSTYPE_JAVA_CLASS;
+            }
+            else if (value instanceof NativeJavaArray) {
+                return JSTYPE_JAVA_ARRAY;
+            }
+            else if (value instanceof NativeJavaObject) {
+                return JSTYPE_JAVA_OBJECT;
+            }
+            else {
+                return JSTYPE_OBJECT;
+            }
+        }
+        else {
+            Class valueClass = value.getClass();
+
+            if (valueClass == String.class) {
+                return JSTYPE_STRING;
+            }
+            else if (valueClass == Boolean.class) {
+                return JSTYPE_BOOLEAN;
+            }
+            else if (value instanceof Number) {
+                return JSTYPE_NUMBER;
+            }
+            else if (valueClass == Class.class) {
+                return JSTYPE_JAVA_CLASS;
+            }
+            else if (valueClass.isArray()) {
+                return JSTYPE_JAVA_ARRAY;
+            }
+            else {
+                return JSTYPE_JAVA_OBJECT;
+            }
+        }
     }
 
     /**
      * Type-munging for field setting and method invocation.
-     * This is traditionally the least fun part of getting LiveConnect right.
-     * I hope we've got good tests.... =/<p>
-     *
-     * Assumptions:<br>
-     * <ul>
-     * <li> we should convert fields very aggressively. e.g: a String sent to an
-     *      int slot gets toInteger()ed and then assigned.  Invalid strings
-     *      become NaN and then 0.
-     * <li> we only get called when we <b>must</b> make this coercion.  Don't
-     *      use this unless you already know that the type conversion is really
-     *      what you want.
-     * </ul>
      */
     public static Object coerceType(Class type, Object value) {
         // Don't coerce null to a string (or other object)
-        if (value == null)
+        if (value == null) {
             return null;
-            
+        }
+
         // For final classes we can compare valueClass to a class object
         // rather than using instanceof
         Class valueClass = value.getClass();
@@ -317,14 +490,14 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         // Double, Float
         if (type == ScriptRuntime.DoubleClass || type == Double.TYPE) {
             return valueClass == ScriptRuntime.DoubleClass
-                   ? value
-                   : new Double(ScriptRuntime.toNumber(value));
+                ? value
+                : new Double(ScriptRuntime.toNumber(value));
         }
 
         if (type == ScriptRuntime.FloatClass || type == Float.TYPE) {
             return valueClass == ScriptRuntime.FloatClass
-                   ? value
-                   : new Float(ScriptRuntime.toNumber(value));
+                ? value
+                : new Float(ScriptRuntime.toNumber(value));
         }
 
         if (valueClass == ScriptRuntime.DoubleClass)
@@ -334,23 +507,23 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         // wrap the Scriptable value in a JSObject.
         if (Context.useJSObject && jsObjectClass != null && 
             value instanceof Scriptable)
-        {
-            if (Scriptable.class.isAssignableFrom(type))
-                return value;
-            try {
-                Object ctorArgs[] = { value };
-                return jsObjectCtor.newInstance(ctorArgs);
-            } catch (InstantiationException instEx) {
-                throw new EvaluatorException("error generating JSObject wrapper for " +
-                                              value);
-            } catch (IllegalArgumentException argEx) {
-                throw new EvaluatorException("JSObject constructor doesn't want [Scriptable]!");
-            } catch (InvocationTargetException e) {
-                throw WrappedException.wrapException(e);
-            } catch (IllegalAccessException accessEx) {
-                throw new EvaluatorException("JSObject constructor is protected/private!");
+            {
+                if (Scriptable.class.isAssignableFrom(type))
+                    return value;
+                try {
+                    Object ctorArgs[] = { value };
+                    return jsObjectCtor.newInstance(ctorArgs);
+                } catch (InstantiationException instEx) {
+                    throw new EvaluatorException("error generating JSObject wrapper for " +
+                                                 value);
+                } catch (IllegalArgumentException argEx) {
+                    throw new EvaluatorException("JSObject constructor doesn't want [Scriptable]!");
+                } catch (InvocationTargetException e) {
+                    throw WrappedException.wrapException(e);
+                } catch (IllegalAccessException accessEx) {
+                    throw new EvaluatorException("JSObject constructor is protected/private!");
+                }
             }
-        }
         
         if (ScriptRuntime.NumberClass.isInstance(value))
             return new Double(((Number) value).doubleValue());
