@@ -255,7 +255,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL)
 { 
   nsresult rv;
 
-  nsCOMPtr<nsIBindableContent> bindableContent = do_QueryInterface(aContent);
+  nsCOMPtr<nsIBindableContent> bindableContent(do_QueryInterface(aContent));
   if (!bindableContent)
     return NS_ERROR_FAILURE;
 
