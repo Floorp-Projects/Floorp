@@ -305,6 +305,10 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/libprgrss.a \
 		  $(NULL)
 
+ifdef MOZ_LDAP
+BASIC_LIBS	+= $(DIST)/lib/libldap.a $(DIST)/lib/liblber.a 
+endif
+
 ifdef MOZ_MAIL_NEWS
 BASIC_LIBS	+= \
 		  $(DIST)/lib/libmozmsg.a \
@@ -316,10 +320,6 @@ endif
 		  $(DIST)/lib/libneo.a \
 		  $(DIST)/lib/libaddr.a \
 		  $(NULL)
-endif
-
-ifdef MOZ_LDAP
-BASIC_LIBS	+= $(DIST)/lib/libldap.a $(DIST)/lib/liblber.a 
 endif
 
 ifdef MOZ_MAIL_NEWS
