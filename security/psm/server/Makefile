@@ -313,5 +313,5 @@ endif
 	cp $(INSTALL_JS) xpi/install.js
 	cd xpi; zip -T -r ../$(PLATFORM)/psm.xpi psm install.js
 	rm -rf xpi
-
+	$(NSINSTALL) -m 644 moz-install.html $(PLATFORM)
 	
