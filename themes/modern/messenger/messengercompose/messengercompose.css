@@ -319,3 +319,7 @@ tree#attachmentBucket {
 #compose-toolbar-sizer {
   border-top: none;
 }
+
+#navprintplus {
+	display:none !important; 
+}
