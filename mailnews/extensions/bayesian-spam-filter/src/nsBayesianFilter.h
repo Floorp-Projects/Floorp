@@ -41,6 +41,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsIMsgFilterPlugin.h"
+#include "nsISemanticUnitScanner.h"
 #include "pldhash.h"
 
 // XXX can't simply byte align arenas, must at least 2-byte align.
@@ -51,6 +52,7 @@ class Token;
 class TokenEnumeration;
 class TokenAnalyzer;
 class nsIMsgWindow;
+
 /**
  * Helper class to enumerate Token objects in a PLDHashTable
  * safely and without copying (see bugzilla #174859). The
@@ -73,7 +75,6 @@ public:
     Tokenizer();
     ~Tokenizer();
 
-    nsresult Clear(); // clears out the previous message tokens
     operator int() { return mTokenTable.entryStore != NULL; }
     
     Token* get(const char* word);
@@ -83,6 +84,11 @@ public:
     PRUint32 countTokens();
     Token* copyTokens();
     TokenEnumeration getTokens();
+
+    /**
+     * Clears out the previous message tokens.
+     */
+    nsresult clearTokens();
 
     /**
      * Assumes that text is mutable and
@@ -106,6 +112,7 @@ private:
 private:
     PLDHashTable mTokenTable;
     PLArenaPool mWordPool;
+    nsCOMPtr<nsISemanticUnitScanner> mScanner;
 };
 
 class nsBayesianFilter : public nsIJunkMailPlugin {

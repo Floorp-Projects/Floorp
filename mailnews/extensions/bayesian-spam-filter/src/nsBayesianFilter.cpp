@@ -162,7 +162,7 @@ Tokenizer::~Tokenizer()
     PL_FinishArenaPool(&mWordPool);
 }
 
-nsresult Tokenizer::Clear()
+nsresult Tokenizer::clearTokens()
 {
     // we re-use the tokenizer when classifying multiple messages, 
     // so this gets called after every message classification.
@@ -244,6 +244,17 @@ static PRBool isDecimalNumber(const char* word)
     return PR_TRUE;
 }
 
+static PRBool isASCII(const char* word)
+{
+    const unsigned char* p = (const unsigned char*)word;
+    unsigned char c;
+    while ((c = *p++)) {
+        if (c > 127)
+            return PR_FALSE;
+    }
+    return PR_TRUE;
+}
+
 inline PRBool isUpperCase(char c) { return ('A' <= c) && (c <= 'Z'); }
 
 static char* toLowerCase(char* str)
@@ -263,7 +274,39 @@ void Tokenizer::tokenize(char* text)
     while ((word = nsCRT::strtok(next, kBayesianFilterTokenDelimiters, &next)) != NULL) {
         if (word[0] == '\0') continue;
         if (isDecimalNumber(word)) continue;
-        add(toLowerCase(word));
+        if (isASCII(word))
+            add(toLowerCase(word));
+        else {
+            nsresult rv;
+            // use I18N  scanner to break this word into meaningful semantic units.
+            if (!mScanner) {
+                mScanner = do_CreateInstance(NS_SEMANTICUNITSCANNER_CONTRACTID, &rv);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't create semantic unit scanner!");
+                if (NS_FAILED(rv)) {
+                    return;
+                }
+            }
+            if (mScanner) {
+                mScanner->Start("UTF-8");
+                // convert this word from UTF-8 into UCS2.
+                NS_ConvertUTF8toUCS2 uword(word);
+                ToLowerCase(uword);
+                const PRUnichar* utext = uword.get();
+                PRInt32 len = uword.Length(), pos = 0, begin, end;
+                PRBool gotUnit;
+                while (pos < len) {
+                    rv = mScanner->Next(utext, len, pos, PR_TRUE, &begin, &end, &gotUnit);
+                    if (NS_SUCCEEDED(rv) && gotUnit) {
+                        NS_ConvertUCS2toUTF8 utfUnit(utext + begin, end - begin);
+                        add(utfUnit.get());
+                        // advance to end of current unit.
+                        pos = end;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -506,7 +549,7 @@ public:
     virtual void analyzeTokens(Tokenizer& tokenizer)
     {
         mFilter->classifyMessage(tokenizer, mTokenSource.get(), mListener);
-        tokenizer.Clear();
+        tokenizer.clearTokens();
         classifyNextMessage();
     }
 
