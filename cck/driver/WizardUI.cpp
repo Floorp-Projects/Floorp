@@ -490,13 +490,50 @@ void CWizardUI::UpdateScreenWidget(WIDGET *curWidget)
 
 		((CCheckListBox*)curWidget->control)->ResetContent();
 
+		int mailindex, calendarindex;
+		BOOL foundcalendar = FALSE;
 		for (int i = 0; i < curWidget->numOfOptions; i++) 
+		{
 			if (curWidget->options.value[i])
 				((CCheckListBox*)curWidget->control)->AddString(curWidget->options.value[i]);
-		if (strcmp(curWidget->options.value[--i], "Calendar") == 0)
+			if (strcmp(curWidget->options.value[i], "Calendar") == 0)
+			{
+				calendarindex = i;
+				foundcalendar = TRUE;
+			}
+			if (strcmp(curWidget->options.value[i], "Mail & Instant Messaging") == 0)
+				mailindex = i;
+		}
+
+		if (foundcalendar == TRUE)
+		// Place Calendar component after MailNews
 		{
-			((CCheckListBox*)curWidget->control)->DeleteString(i);
-			((CCheckListBox*)curWidget->control)->InsertString(3,curWidget->options.value[i]);
+			typedef struct TEMPOPTIONS
+			{
+				char name[MIN_SIZE];
+				char value[MIN_SIZE];
+			}TEMPOPTIONS;
+			TEMPOPTIONS tempOptions[100];
+			int i,j;
+			
+			((CCheckListBox*)curWidget->control)->DeleteString(calendarindex);
+			((CCheckListBox*)curWidget->control)->InsertString(mailindex, curWidget->options.value[calendarindex]);
+
+			for(i=mailindex,j=0; i<calendarindex; i++,j++)
+			{
+				strcpy(tempOptions[j].name, curWidget->optDesc.name[i]);
+				strcpy(tempOptions[j].value, curWidget->optDesc.value[i]);
+			}
+			int jcnt = j;
+			strcpy(curWidget->optDesc.name[mailindex], curWidget->optDesc.name[calendarindex]);
+			strcpy(curWidget->optDesc.value[mailindex], curWidget->optDesc.value[calendarindex]);	
+
+			for (j=0,i=mailindex+1; j<jcnt; j++,i++)
+			{
+				strcpy(curWidget->optDesc.name[i], tempOptions[j].name);		
+				strcpy(curWidget->optDesc.value[i], tempOptions[j].value);		
+			}
+
 		}
 
 		if (curWidget->value && curWidget->value != "")

@@ -230,10 +230,10 @@ int GenerateComponentList(CString parms, WIDGET *curWidget)
 		curWidget->options.value[i] = new char[strlen(Components[i].name)+1];
 		strcpy(curWidget->options.value[i], Components[i].name);
 
-		curWidget->optDesc.name[i]  = new char[strlen(Components[i].compname)+1];
+		curWidget->optDesc.name[i]  = new char[MIN_SIZE];				
 		strcpy(curWidget->optDesc.name[i], Components[i].compname);
 
-		curWidget->optDesc.value[i] = new char[strlen(Components[i].desc)+1];
+		curWidget->optDesc.value[i]  = new char[MIN_SIZE];
 		strcpy(curWidget->optDesc.value[i], Components[i].desc);
 
 		// INVISIBLE just means not selected, let user decide whether to
