@@ -339,12 +339,20 @@ NS_IMETHODIMP
 nsContainerFrame::GetFrameForPoint(const nsPoint& aPoint, 
                                    nsIFrame**     aFrame)
 {
+  return GetFrameForPointUsing(aPoint, nsnull, aFrame);
+}
+
+nsresult
+nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
+                                        nsIAtom*       aList,
+                                        nsIFrame**     aFrame)
+{
   nsIFrame* kid;
   nsRect kidRect;
   nsPoint tmp;
   *aFrame = nsnull;
 
-  FirstChild(nsnull, kid);
+  FirstChild(aList, kid);
   while (nsnull != kid) {
     kid->GetRect(kidRect);
     if (kidRect.Contains(aPoint)) {
@@ -354,7 +362,7 @@ nsContainerFrame::GetFrameForPoint(const nsPoint& aPoint,
     kid->GetNextSibling(kid);
   }
 
-  FirstChild(nsnull, kid);
+  FirstChild(aList, kid);
   while (nsnull != kid) {
     nsFrameState state;
     kid->GetFrameState(state);
