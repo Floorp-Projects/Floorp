@@ -4250,7 +4250,7 @@ nsWindow* nsWindow::FindTopLevelWindow() {
   if (!mShell) {
     GtkWidget *top_mozarea = GetOwningWidget();
     void *data = gtk_object_get_data(GTK_OBJECT(top_mozarea), "nsWindow");
-    return NS_STATIC_CAST(nsWindow *, data);
+    return data == this ? nsnull : NS_STATIC_CAST(nsWindow *, data);
   } else {
     return nsnull;
   }
