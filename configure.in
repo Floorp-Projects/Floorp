@@ -1560,6 +1560,10 @@ case "$target_os" in
 os2*)
     LIBS=
     ;;
+freebsd*)
+# for stuff like -lXshm
+    CPPFLAGS="${CPPFLAGS} ${X_CFLAGS}"
+    ;;
 esac
 AC_CHECK_HEADERS(sys/byteorder.h compat.h getopt.h)
 AC_CHECK_HEADERS(sys/bittypes.h memory.h unistd.h)
@@ -1735,8 +1739,15 @@ then
 	if test $? -eq 0; then
 		if test -z "`egrep -i '(unrecognize|unknown)' conftest.out | grep pthread`" && test -z "`egrep -i '(error|incorrect)' conftest.out`" ; then
 			ac_cv_have_dash_pthread=yes
-			CFLAGS="$CFLAGS -pthread"
-			CXXFLAGS="$CXXFLAGS -pthread"
+	        case "$target_os" in
+	        freebsd*)
+# Freebsd doesn't use -pthread for compiles, it uses them for linking
+                ;;
+	        *)
+			    CFLAGS="$CFLAGS -pthread"
+			    CXXFLAGS="$CXXFLAGS -pthread"
+                ;;
+	        esac
 		fi
 	fi
 	rm -f conftest*
@@ -1762,7 +1773,18 @@ then
     fi
 
 	case "$target" in
-	    *-*-freebsd*|*-*-openbsd*|*-*-bsdi*)
+	    *-*-freebsd*)
+			AC_DEFINE(_REENTRANT)
+			AC_DEFINE(_THREAD_SAFE)
+			dnl -pthread links in -lc_r, so don't specify it explicitly.
+			if test "$ac_cv_have_dash_pthread" = "yes"; then
+				_PTHREAD_LDFLAGS="-pthread"
+			else
+				_PTHREAD_LDFLAGS="-lc_r"
+			fi
+			;;
+
+	    *-*-openbsd*|*-*-bsdi*)
 			AC_DEFINE(_REENTRANT)
 			AC_DEFINE(_THREAD_SAFE)
 			dnl -pthread links in -lc_r, so don't specify it explicitly.
@@ -2784,14 +2806,19 @@ fi
 
 if test "$MOZ_ENABLE_QT"
 then
-    QTINCDIR="/include"
     MOZ_ARG_WITH_STRING(qtdir,
     [  --with-qtdir=\$dir       Specify Qt directory ],
     [ QTDIR=$withval])
 
     if test -z "$QTDIR"; then
       QTDIR="/usr"
-      QTINCDIR="/include/qt"
+    fi
+    QTINCDIR="/include/qt"
+    if test ! -d "$QTDIR$QTINCDIR"; then
+       QTINCDIR="/include/X11/qt"
+    fi
+    if test ! -d "$QTDIR$QTINCDIR"; then
+       QTINCDIR="/include"
     fi
 
     if test -x "$QTDIR/bin/moc"; then
