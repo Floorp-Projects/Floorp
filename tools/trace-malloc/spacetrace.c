@@ -2211,23 +2211,8 @@ void tmEventHandler(tmreader* aReader, tmevent* aEvent)
                     */
                     if(NULL != CALLSITE_RUN(callsite))
                     {
-                        static PRIntervalTime sec2int = 0;
-                        PRUint32 timeval = 0;
-                        PRUint64 timeval64 = LL_INIT(0, 0);
                         char eventType = aEvent->type;
                         
-                        if(0 == sec2int)
-                        {
-                            sec2int = PR_SecondsToInterval(1);
-                        }
-
-                        /*
-                        ** Convert the interval to a timeval.
-                        */
-                        LL_MUL(timeval64, (PRUint64)aEvent->u.alloc.interval, (PRUint64)ST_TIMEVAL_RESOLUTION);
-                        LL_DIV(timeval64, timeval64, (PRUint64)sec2int);
-                        LL_L2UI(timeval, timeval64);
-
                         /*
                         ** Play a nasty trick on reallocs of size zero.
                         ** They are to become free events.
@@ -2237,7 +2222,7 @@ void tmEventHandler(tmreader* aReader, tmevent* aEvent)
                         {
                             eventType = TM_EVENT_FREE;
                         }
-                        trackEvent(timeval, eventType, callsite, aEvent->u.alloc.ptr, aEvent->u.alloc.size, oldcallsite, oldptr, oldsize);
+                        trackEvent(aEvent->u.alloc.interval, eventType, callsite, aEvent->u.alloc.ptr, aEvent->u.alloc.size, oldcallsite, oldptr, oldsize);
                     }
                 }
                 else
