@@ -118,6 +118,7 @@ public class Interpreter extends LabelTable {
         for (short i = 0; i < itsFunctionList.size(); i++) {
             FunctionNode def = (FunctionNode)itsFunctionList.elementAt(i);
             Interpreter jsi = new Interpreter();
+            jsi.itsSourceFile = itsSourceFile;
             jsi.itsData = new InterpreterData(0, 0, 0, securityDomain);
             jsi.itsInFunctionFlag = true;
             itsNestedFunctions[i] = jsi.generateFunctionICode(cx, scope, def, 
@@ -163,12 +164,20 @@ public class Interpreter extends LabelTable {
     int itsLineNumber = 0;
     InterpretedFunction[] itsNestedFunctions = null;
     
-    private void updateLineNumber(Node node)
+    private int updateLineNumber(Node node, int iCodeTop)
     {
         Object datum = node.getDatum();
         if (datum == null || !(datum instanceof Number))
-            return;
-        itsLineNumber = ((Number) datum).shortValue();
+            return iCodeTop;
+        short lineNumber = ((Number) datum).shortValue(); 
+        if (lineNumber != itsLineNumber) {
+            itsLineNumber = lineNumber;
+            iCodeTop = addByte((byte) TokenStream.LINE, iCodeTop);
+            iCodeTop = addByte((byte)(lineNumber >> 8), iCodeTop);
+            iCodeTop = addByte((byte)(lineNumber & 0xff), iCodeTop);                    
+        }
+        
+        return iCodeTop;
     }
     
     private void badTree(Node node)
@@ -203,7 +212,7 @@ public class Interpreter extends LabelTable {
                 break;
 
             case TokenStream.SCRIPT :
-                updateLineNumber(node);
+                iCodeTop = updateLineNumber(node, iCodeTop);
                 while (child != null) {
                     if (child.getType() != TokenStream.FUNCTION) 
                         iCodeTop = generateICode(child, iCodeTop);
@@ -212,7 +221,7 @@ public class Interpreter extends LabelTable {
                 break;
 
             case TokenStream.CASE :
-                updateLineNumber(node);
+                iCodeTop = updateLineNumber(node, iCodeTop);
                 child = child.getNextSibling();
                 while (child != null) {
                     iCodeTop = generateICode(child, iCodeTop);
@@ -227,7 +236,7 @@ public class Interpreter extends LabelTable {
             case TokenStream.BLOCK :
             case TokenStream.VOID :
             case TokenStream.NOP :
-                updateLineNumber(node);
+                iCodeTop = updateLineNumber(node, iCodeTop);
                 while (child != null) {
                     iCodeTop = generateICode(child, iCodeTop);
                     child = child.getNextSibling();
@@ -243,7 +252,7 @@ public class Interpreter extends LabelTable {
                 break;
                
             case TokenStream.SWITCH : {
-                    updateLineNumber(node);
+                    iCodeTop = updateLineNumber(node, iCodeTop);
                     iCodeTop = generateICode(child, iCodeTop);
                     int theLocalSlot = itsData.itsMaxLocals++;
                     iCodeTop = addByte((byte) TokenStream.NEWTEMP, iCodeTop);
@@ -337,6 +346,10 @@ public class Interpreter extends LabelTable {
                 
             case TokenStream.NEW :
             case TokenStream.CALL : {
+                    if (itsSourceFile != null && (itsData.itsSourceFile == null || ! itsSourceFile.equals(itsData.itsSourceFile))) 
+                        itsData.itsSourceFile = itsSourceFile;
+                    iCodeTop = addByte((byte)TokenStream.SOURCEFILE, iCodeTop);
+                    
                     int childCount = 0;
                     while (child != null) {
                         iCodeTop = generateICode(child, iCodeTop);
@@ -363,6 +376,8 @@ public class Interpreter extends LabelTable {
                     iCodeTop = addByte((byte)(childCount & 0xff), iCodeTop);
                     if (childCount > itsData.itsMaxArgs)
                         itsData.itsMaxArgs = childCount;
+                    
+                    iCodeTop = addByte((byte)TokenStream.SOURCEFILE, iCodeTop);
                 }
                 break;
                 
@@ -721,7 +736,7 @@ public class Interpreter extends LabelTable {
 
             case TokenStream.POP :
             case TokenStream.POPV :
-                updateLineNumber(node);
+                iCodeTop = updateLineNumber(node, iCodeTop);
             case TokenStream.ENTERWITH :
                 iCodeTop = generateICode(child, iCodeTop);
                 iCodeTop = addByte((byte) type, iCodeTop);
@@ -814,14 +829,14 @@ public class Interpreter extends LabelTable {
                 break;
                 
             case TokenStream.THROW :
-                updateLineNumber(node);
+                iCodeTop = updateLineNumber(node, iCodeTop);
                 iCodeTop = generateICode(child, iCodeTop);
                 iCodeTop = addByte((byte) TokenStream.THROW, iCodeTop);
                 itsStackDepth--;
                 break;
                 
             case TokenStream.RETURN :
-                updateLineNumber(node);
+                iCodeTop = updateLineNumber(node, iCodeTop);
                 if (child != null) 
                     iCodeTop = generateICode(child, iCodeTop);
                 else {
@@ -1274,7 +1289,7 @@ public class Interpreter extends LabelTable {
         int count;
         int slot;
                 
-        String name;
+        String name = null;
                
         Object[] outArgs;
 
@@ -1304,7 +1319,7 @@ public class Interpreter extends LabelTable {
         
         while (pc < iCodeLength) {
             try {
-                switch (iCode[pc]) {
+                switch ((int)(iCode[pc] & 0xff)) {
                     case TokenStream.ENDTRY :
                         tryStackTop--;
                         break;
@@ -1755,6 +1770,14 @@ public class Interpreter extends LabelTable {
                         i = (iCode[pc + 1] << 8) | (iCode[pc + 2] & 0xFF);                    
                         stack[++stackTop] = theData.itsRegExpLiterals[i];
                         pc += 2;
+                        break;
+                    case TokenStream.LINE :    
+                        i = (iCode[pc + 1] << 8) | (iCode[pc + 2] & 0xFF);                    
+                        cx.interpreterLine = i;
+                        pc += 2;
+                        break;
+                    case TokenStream.SOURCEFILE :    
+                        cx.interpreterSourceFile = theData.itsSourceFile;
                         break;
                     default :
                         dumpICode(theData);
