@@ -29,11 +29,6 @@
 // test: <b>...<br></b> : make sure that it works in pullup case and
 // non-pullup case
 
-// XXX As coded today, the reflow-status is mapped into
-// complete/not-complete before returning. If we want to support other
-// kinds of breaks we need to return the complete breaking status
-// outward properly.
-
 // content appended INCREMENTAL reflow
 // content inserted INCREMENTAL reflow
 // content deleted INCREMENTAL reflow
@@ -159,6 +154,8 @@ nsCSSInlineFrame::CreateContinuingFrame(nsIPresContext*  aCX,
   }
   PrepareContinuingFrame(aCX, aParent, aStyleContext, cf);
   aContinuingFrame = cf;
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+     ("nsCSSInlineFrame::CreateContinuingFrame: newFrame=%p", cf));
   return NS_OK;
 }
 
@@ -169,7 +166,8 @@ nsCSSInlineFrame::DeleteNextInFlowsFor(nsIFrame* aChild)
 }
 
 NS_IMETHODIMP
-nsCSSInlineFrame::FindTextRuns(nsCSSLineLayout& aLineLayout)
+nsCSSInlineFrame::FindTextRuns(nsCSSLineLayout&  aLineLayout,
+                               nsIReflowCommand* aReflowCommand)
 {
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
     ("enter nsCSSInlineFrame::FindTextRuns [%d,%d,%c]",
@@ -179,11 +177,31 @@ nsCSSInlineFrame::FindTextRuns(nsCSSLineLayout& aLineLayout)
   PRInt32 n;
   nsresult rv = NS_OK;
 
-  // Create any new frames first
-  if (mNextInFlow == nsnull) {
-    rv = CreateNewFrames(aLineLayout);
-    if (NS_OK != rv) {
-      goto done;
+  // Gather up children from the overflow lists
+  DrainOverflowLists();
+
+  // Create new frames if necessary
+  if (NS_FRAME_FIRST_REFLOW & mState) {
+    if ((nsnull == mPrevInFlow) && (nsnull == mNextInFlow) &&
+        (0 == mChildCount)) {
+      rv = CreateNewFrames(aLineLayout.mPresContext);
+      if (NS_OK != rv) {
+        goto done;
+      }
+    }
+  }
+  else if (nsnull != aReflowCommand) {
+    nsIFrame* target;
+    aReflowCommand->GetTarget(target);
+    if (this == target) {
+      nsIReflowCommand::ReflowType type;
+      aReflowCommand->GetType(type);
+      if (nsIReflowCommand::FrameAppended == type) {
+        rv = CreateNewFrames(aLineLayout.mPresContext);
+        if (NS_OK != rv) {
+          goto done;
+        }
+      }
     }
   }
 
@@ -194,7 +212,7 @@ nsCSSInlineFrame::FindTextRuns(nsCSSLineLayout& aLineLayout)
     nsIInlineReflow* inlineReflow;
     if (NS_OK == frame->QueryInterface(kIInlineReflowIID,
                                        (void**)&inlineReflow)) {
-      rv = inlineReflow->FindTextRuns(aLineLayout);
+      rv = inlineReflow->FindTextRuns(aLineLayout, aReflowCommand);
       if (NS_OK != rv) {
         return rv;
       }
@@ -244,8 +262,8 @@ nsCSSInlineFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
                                PRBool(nsnull != aMetrics.maxElementSize));
   nsresult rv = NS_OK;
   if (eReflowReason_Initial == state.reason) {
-    MoveOverflowToChildList();
-    rv = FrameAppendedReflow(state);
+    DrainOverflowLists();
+    rv = InitialReflow(state);
     mState &= ~NS_FRAME_FIRST_REFLOW;
   }
   else if (eReflowReason_Incremental == state.reason) {
@@ -275,7 +293,7 @@ nsCSSInlineFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
     }
   }
   else if (eReflowReason_Resize == state.reason) {
-    MoveOverflowToChildList();
+    DrainOverflowLists();
     rv = ResizeReflow(state);
   }
   ComputeFinalSize(state, aMetrics);
@@ -364,7 +382,30 @@ nsCSSInlineFrame::ComputeFinalSize(nsCSSInlineReflowState& aState,
   }
 }
 
-// XXX this isn't very incremental; we can do better SOMEDAY
+nsInlineReflowStatus
+nsCSSInlineFrame::InitialReflow(nsCSSInlineReflowState& aState)
+{
+  NS_PRECONDITION(nsnull == mNextInFlow, "bad frame-appended-reflow");
+  NS_PRECONDITION(mLastContentIsComplete == PR_TRUE, "bad state");
+
+  // Create any frames that need creating; note that they should have been 
+  if ((nsnull == mPrevInFlow) && (nsnull == mNextInFlow) &&
+      (0 == mChildCount)) {
+    nsresult rv = CreateNewFrames(aState.mPresContext);
+    if (NS_OK != rv) {
+      return rv;
+    }
+  }
+
+  nsInlineReflowStatus rs = NS_FRAME_COMPLETE;
+  if (0 != mChildCount) {
+    if (!ReflowMapped(aState, rs)) {
+      return rs;
+    }
+  }
+  return rs;
+}
+
 nsInlineReflowStatus
 nsCSSInlineFrame::FrameAppendedReflow(nsCSSInlineReflowState& aState)
 {
@@ -372,9 +413,9 @@ nsCSSInlineFrame::FrameAppendedReflow(nsCSSInlineReflowState& aState)
   NS_PRECONDITION(mLastContentIsComplete == PR_TRUE, "bad state");
 
   // Create any frames that need creating
-  nsresult rv = CreateNewFrames(aState.mInlineLayout.mLineLayout);
+  nsresult rv = CreateNewFrames(aState.mPresContext);
   if (NS_OK != rv) {
-    return nsInlineReflowStatus(rv);
+    return rv;
   }
 
   nsInlineReflowStatus rs = NS_FRAME_COMPLETE;
@@ -387,8 +428,12 @@ nsCSSInlineFrame::FrameAppendedReflow(nsCSSInlineReflowState& aState)
 }
 
 nsresult
-nsCSSInlineFrame::CreateNewFrames(nsCSSLineLayout& aLineLayout)
+nsCSSInlineFrame::CreateNewFrames(nsIPresContext* aPresContext)
 {
+  // reason: initial:     (a) null nif, pif: create frames
+  //                      (b) pullup: don't create frames
+  // reason: incremental: (a) append targetted at us => create frames
+
   // Get the childPrevInFlow for our eventual first child if we are a
   // continuation and we have no children and the last child in our
   // prev-in-flow is incomplete. While we are at it, we also compute
@@ -427,8 +472,8 @@ nsCSSInlineFrame::CreateNewFrames(nsCSSLineLayout& aLineLayout)
 
     // Create child
     nsIFrame* child;
-    rv = nsHTMLBase::CreateFrame(aLineLayout.mPresContext, this, kid,
-                                 childPrevInFlow, child);
+    rv = nsHTMLBase::CreateFrame(aPresContext, this, kid, childPrevInFlow,
+                                 child);
     NS_RELEASE(kid);
     if (NS_OK != rv) {
       return rv;
@@ -775,12 +820,16 @@ nsCSSInlineFrame::PullUpChildren(nsCSSInlineReflowState& aState,
   keepGoing = PR_TRUE;
 
 done:;
+// XXX Why bother? Assuming our offsets are correct then our
+// next-in-flow will pick up where we left off.
+#if XXX
   nextInFlow = (nsCSSInlineFrame*) mNextInFlow;
   if ((nsnull != nextInFlow) && (nsnull == nextInFlow->mFirstChild)) {
     if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus)) {
       AdjustOffsetOfEmptyNextInFlows();
     }
   }
+#endif
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("exit nsCSSInlineFrame::PullUpChildren: childCount=%d rs=%x",
@@ -813,15 +862,11 @@ nsCSSInlineFrame::PullOneChild(nsCSSInlineFrame* aNextInFlow,
         kidFrame, aNextInFlow->mChildCount - 1));
 
     // Take the frame away from the next-in-flow. Update it's first
-    // content offset and propagate upward the offset if the
-    // next-in-flow is a pseudo-frame.
+    // content offset.
     kidFrame->GetNextSibling(aNextInFlow->mFirstChild);
     aNextInFlow->mChildCount--;
     if (nsnull != aNextInFlow->mFirstChild) {
       aNextInFlow->SetFirstContentOffset(aNextInFlow->mFirstChild);
-      if (aNextInFlow->IsPseudoFrame()) {
-        aNextInFlow->PropagateContentOffsets();
-      }
     }
   }
 
@@ -864,8 +909,11 @@ nsCSSInlineFrame::MaybeCreateNextInFlow(nsCSSInlineReflowState& aState,
 
 void
 nsCSSInlineFrame::PushKids(nsCSSInlineReflowState& aState,
-                           nsIFrame* aPrevChild, nsIFrame* aPushedChild)
+                           nsIFrame*               aPrevChild,
+                           nsIFrame*               aPushedChild)
 {
+  NS_ASSERTION(nsnull == mOverflowList, "bad overflow list");
+
   // Count how many children are being pushed
   PRInt32 pushCount = mChildCount - aState.mInlineLayout.mFrameNum;
 
@@ -874,9 +922,97 @@ nsCSSInlineFrame::PushKids(nsCSSInlineReflowState& aState,
   if (0 != pushCount) {
     NS_FRAME_TRACE(NS_FRAME_TRACE_PUSH_PULL,
        ("nsCSSInlineFrame::PushKids: pushing %d children", pushCount));
-    PushChildren(aPushedChild, aPrevChild, PR_TRUE/* XXX ignored! */);
+    // Break sibling list
+    aPrevChild->SetNextSibling(nsnull);
     mChildCount -= pushCount;
+
+    // Place overflow frames on our overflow list; our next-in-flow
+    // will pick them up when it is reflowed
+    mOverflowList = aPushedChild;
   }
+#ifdef NS_DEBUG
+  PRInt32 len = LengthOf(mFirstChild);
+  NS_ASSERTION(len == mChildCount, "child count is wrong");
+#endif
+}
+
+void
+nsCSSInlineFrame::DrainOverflowLists()
+{
+  // Our prev-in-flows overflow list goes before my children and must
+  // be re-parented.
+  if (nsnull != mPrevInFlow) {
+    nsCSSInlineFrame* prevInFlow = (nsCSSInlineFrame*) mPrevInFlow;
+    if (nsnull != prevInFlow->mOverflowList) {
+      nsIFrame* frame = prevInFlow->mOverflowList;
+      nsIFrame* lastFrame = nsnull;
+      PRInt32 count = 0;
+      while (nsnull != frame) {
+        // Reparent the frame
+        frame->SetGeometricParent(this);
+        nsIFrame* contentParent;
+        frame->GetContentParent(contentParent);
+        if (prevInFlow == contentParent) {
+          frame->SetContentParent(this);
+        }
+
+        // Advance through the list
+        count++;
+        lastFrame = frame;
+        frame->GetNextSibling(frame);
+      }
+
+      // Join the two frame lists together and update our child count
+#if XXX
+      if (nsnull == mFirstChild) {
+        // We are a continuation of our prev-in-flow; we assume that
+        // the last child was complete.
+        mLastContentIsComplete = PR_TRUE;
+      }
+#endif
+      nsIFrame* newFirstChild = prevInFlow->mOverflowList;
+      newFirstChild->GetContentIndex(mFirstContentOffset);
+      lastFrame->SetNextSibling(mFirstChild);
+      mFirstChild = newFirstChild;
+      prevInFlow->mOverflowList = nsnull;
+      mChildCount += count;
+    }
+  }
+
+  // Our overflow list goes to the end of our child list
+  if (nsnull != mOverflowList) {
+    // Append the overflow list to the end of our child list
+    nsIFrame* lastFrame;
+    LastChild(lastFrame);
+    if (nsnull == lastFrame) {
+      mFirstChild = mOverflowList;
+      mFirstChild->GetContentIndex(mFirstContentOffset);
+    }
+    else {
+      lastFrame->SetNextSibling(mOverflowList);
+    }
+
+    // Count how many frames are on the overflow list and then update
+    // our count
+    nsIFrame* frame = mOverflowList;
+    PRInt32 count = 0;
+    while (nsnull != frame) {
+      count++;
+      frame->GetNextSibling(frame);
+    }
+    mChildCount += count;
+    mOverflowList = nsnull;
+#if XXX
+    // We get here when we pushed some children to a potential
+    // next-in-flow and then our parent decided to reflow us instead
+    // of continuing us.
+    NS_ASSERTION(nsnull == mNextInFlow, "huh?");
+    mLastContentIsComplete = PR_TRUE;
+#endif
+  }
+
+  // XXX What do we set mLastContentIsComplete to?
+
 #ifdef NS_DEBUG
   PRInt32 len = LengthOf(mFirstChild);
   NS_ASSERTION(len == mChildCount, "child count is wrong");
