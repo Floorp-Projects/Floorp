@@ -36,6 +36,7 @@
 #include "nsIMsgOfflineNewsState.h"
 
 #include "nsMsgLineBuffer.h"
+#include "nsCOMPtr.h"
 
 // this is only needed as long as our libmime hack is in place
 #include "prio.h"
@@ -203,7 +204,8 @@ private:
 
 	// part of temporary libmime converstion trick......these should go away once MIME uses a new stream
 	// converter interface...
-	PRFileDesc* m_tempArticleFile;
+	nsCOMPtr<nsIOutputStream> m_tempArticleStream;
+	nsFileSpec m_tempArticleFile;
 
 	// News Event Sinks
     nsINNTPNewsgroupList	* m_newsgroupList;

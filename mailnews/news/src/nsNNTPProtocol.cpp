@@ -361,7 +361,7 @@ char *MSG_UnEscapeSearchUrl (const char *commandSpecificData)
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 
-nsNNTPProtocol::nsNNTPProtocol(nsIURL * aURL, nsITransport * transportLayer)
+nsNNTPProtocol::nsNNTPProtocol(nsIURL * aURL, nsITransport * transportLayer) : m_tempArticleFile(ARTICLE_PATH)
 {
   /* the following macro is used to initialize the ref counting data */
   NS_INIT_REFCNT();
@@ -2018,8 +2018,11 @@ PRInt32 nsNNTPProtocol::BeginArticle()
   // with talking to the RFC-822->HTML stream converter....clever huh =).....
 
   // we are about to display an article so open up a temp file on the article...
-  PR_Delete(ARTICLE_PATH);
-  m_tempArticleFile = PR_Open(ARTICLE_PATH, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
+  m_tempArticleFile.Delete(PR_FALSE);
+  nsISupports * supports;
+  NS_NewIOFileStream(&supports, m_tempArticleFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
+  m_tempArticleStream = do_QueryInterface(supports);
+  NS_IF_RELEASE(supports);
   m_nextState = NNTP_READ_ARTICLE;
 
   return 0;
@@ -2068,8 +2071,8 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 		else
 			m_nextState = NEWS_DONE;
 		// and close the article file if it was open....
-		if (m_tempArticleFile)
-			PR_Close(m_tempArticleFile);
+		if (m_tempArticleStream)
+			m_tempArticleStream->Close();
 
 		if (m_displayConsumer)
 		{
@@ -2112,8 +2115,11 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 			// for test purposes...we'd want to write this line out to an rfc-822 stream converter...
 			// we don't have one now so print the data out so we can verify that we got it....
 			printf("%s", outputBuffer);
-			if (m_tempArticleFile)
-				PR_Write(m_tempArticleFile,(void *) outputBuffer,PL_strlen(outputBuffer));
+			if (m_tempArticleStream)
+			{
+				PRUint32 count = 0;
+				m_tempArticleStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
+			}
 		}
 	}
 
