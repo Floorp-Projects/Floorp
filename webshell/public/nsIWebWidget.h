@@ -20,6 +20,7 @@
 
 #include "nsweb.h"
 #include "nsIDocumentWidget.h"
+class nsIDOMDocument;
 class nsILinkHandler;
 class nsIPresContext;
 class nsIStyleSet;
@@ -72,8 +73,11 @@ public:
 
   virtual PRBool GetShowFrameBorders() = 0;
 
-  virtual nsresult GetScriptContext(nsIScriptContext **aContext) = 0;
-  virtual nsresult ReleaseScriptContext() = 0;
+  NS_IMETHOD GetScriptContext(nsIScriptContext **aContext) = 0;
+
+  NS_IMETHOD GetDOMDocument(nsIDOMDocument** aDocument) = 0;
+                                                
+  NS_IMETHOD ReleaseScriptContext() = 0;
 
 };
 
