@@ -209,6 +209,7 @@ protected:
 
     HT_Resource getAddFolder          ();
     HT_Resource getMenuFolder         ();
+	XP_Bool		getOnlyHeaders			();
 
 private:
 

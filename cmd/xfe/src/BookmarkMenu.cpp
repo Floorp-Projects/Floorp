@@ -188,6 +188,14 @@ XFE_BookmarkMenu::updateRoot()
  	// Create the entries if any
  	if (root)
  	{
+		// Make sure the "Joe's Bookmarks" cascade gets created for the
+		// first item in the "File Bookmarks" hierarchy.
+		if (getOnlyHeaders())
+		{
+			XtManageChild(createCascadeButton(_subMenu,getMenuFolder(),True));
+			XtManageChild(createSeparator(_subMenu));
+		}
+
  		createItemTree(_subMenu,root);
  	}
 }

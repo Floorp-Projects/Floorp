@@ -1312,6 +1312,12 @@ XFE_RDFMenuToolbarBase::getMenuFolder()
     return getRootFolder();
 }
 //////////////////////////////////////////////////////////////////////////
+XP_Bool
+XFE_RDFMenuToolbarBase::getOnlyHeaders()
+{
+	return _onlyHeaders;
+}
+//////////////////////////////////////////////////////////////////////////
 /* static */ HT_Resource
 XFE_RDFMenuToolbarBase::ht_FindFolderByName(HT_Resource root,
                                             char * folder_name)
