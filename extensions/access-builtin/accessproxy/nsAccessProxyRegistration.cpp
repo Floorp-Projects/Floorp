@@ -32,6 +32,7 @@
 #include "nsIAppShellComponent.h"
 #include "nsIRegistry.h"
 #include "prprf.h"
+#include "nsCRT.h"
 
 #define NS_ACESSPROXY_CONTRACTID NS_IAPPSHELLCOMPONENT_CONTRACTID "/accessproxy;1"
 
