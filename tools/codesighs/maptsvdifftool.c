@@ -397,32 +397,6 @@ int difftool(Options* inOptions)
                     unsigned moduleIndex = 0;
 
                     /*
-                    **  Update our overall totals.
-                    */
-                    if(CODE == segmentClass)
-                    {
-                        if(additive)
-                        {
-                            overall.mCode += size;
-                        }
-                        else
-                        {
-                            overall.mCode -= size;
-                        }
-                    }
-                    else
-                    {
-                        if(additive)
-                        {
-                            overall.mData += size;
-                        }
-                        else
-                        {
-                            overall.mData -= size;
-                        }
-                    }
-
-                    /*
                     **  Find, in succession, the following things:
                     **      the module
                     **      the segment
@@ -469,29 +443,6 @@ int difftool(Options* inOptions)
                         unsigned segmentIndex = 0;
                         theModule = (modules + moduleIndex);
                         
-                        if(CODE == segmentClass)
-                        {
-                            if(additive)
-                            {
-                                modules[moduleIndex].mSize.mCode += size;
-                            }
-                            else
-                            {
-                                modules[moduleIndex].mSize.mCode -= size;
-                            }
-                        }
-                        else
-                        {
-                            if(additive)
-                            {
-                                modules[moduleIndex].mSize.mData += size;
-                            }
-                            else
-                            {
-                                modules[moduleIndex].mSize.mData -= size;
-                            }
-                        }
-                        
                         for(segmentIndex = 0; segmentIndex < theModule->mSegmentCount; segmentIndex++)
                         {
                             if(0 == strcmp(segment, theModule->mSegments[segmentIndex].mSegment))
@@ -531,15 +482,6 @@ int difftool(Options* inOptions)
                             unsigned objectIndex = 0;
                             theSegment = (theModule->mSegments + segmentIndex);
                             
-                            if(additive)
-                            {
-                                theSegment->mSize += size;
-                            }
-                            else
-                            {
-                                theSegment->mSize -= size;
-                            }
-                            
                             for(objectIndex = 0; objectIndex < theSegment->mObjectCount; objectIndex++)
                             {
                                 if(0 == strcmp(object, theSegment->mObjects[objectIndex].mObject))
@@ -578,15 +520,6 @@ int difftool(Options* inOptions)
                                 unsigned symbolIndex = 0;
                                 theObject = (theSegment->mObjects + objectIndex);
                                 
-                                if(additive)
-                                {
-                                    theObject->mSize += size;
-                                }
-                                else
-                                {
-                                    theObject->mSize -= size;
-                                }
-                                
                                 for(symbolIndex = 0; symbolIndex < theObject->mSymbolCount; symbolIndex++)
                                 {
                                     if(0 == strcmp(symbol, theObject->mSymbols[symbolIndex].mSymbol))
@@ -623,13 +556,42 @@ int difftool(Options* inOptions)
                                 if(0 == retval)
                                 {
                                     theSymbol = (theObject->mSymbols + symbolIndex);
-                                    
+
+                                    /*
+                                    **  Update our various totals.
+                                    */
                                     if(additive)
                                     {
+                                        if(CODE == segmentClass)
+                                        {
+                                            overall.mCode += size;
+                                            theModule->mSize.mCode += size;
+                                        }
+                                        else if(DATA == segmentClass)
+                                        {
+                                            overall.mData += size;
+                                            theModule->mSize.mData += size;
+                                        }
+
+                                        theSegment->mSize += size;
+                                        theObject->mSize += size;
                                         theSymbol->mSize += size;
                                     }
                                     else
                                     {
+                                        if(CODE == segmentClass)
+                                        {
+                                            overall.mCode -= size;
+                                            theModule->mSize.mCode -= size;
+                                        }
+                                        else if(DATA == segmentClass)
+                                        {
+                                            overall.mData -= size;
+                                            theModule->mSize.mData -= size;
+                                        }
+
+                                        theSegment->mSize -= size;
+                                        theObject->mSize -= size;
                                         theSymbol->mSize -= size;
                                     }
                                 }
@@ -667,20 +629,45 @@ int difftool(Options* inOptions)
         {
             theModule = modules + moduleLoop;
             
+            /*
+            **  Skip if there is zero drift, or no net change.
+            */
+            if(0 == inOptions->mZeroDrift && 0 == (theModule->mSize.mCode + theModule->mSize.mData))
+            {
+                continue;
+            }
+
             for(segmentLoop = 0; segmentLoop < theModule->mSegmentCount; segmentLoop++)
             {
                 theSegment = theModule->mSegments + segmentLoop;
+                
+                /*
+                **  Skip if there is zero drift, or no net change.
+                */
+                if(0 == inOptions->mZeroDrift && 0 == theSegment->mSize)
+                {
+                    continue;
+                }
                 
                 for(objectLoop = 0; objectLoop < theSegment->mObjectCount; objectLoop++)
                 {
                     theObject = theSegment->mObjects + objectLoop;
                     
+                    /*
+                    **  Skip if there is zero drift, or no net change.
+                    */
+                    if(0 == inOptions->mZeroDrift && 0 == theObject->mSize)
+                    {
+                        continue;
+                    }
+
                     for(symbolLoop = 0; symbolLoop < theObject->mSymbolCount; symbolLoop++)
                     {
                         theSymbol = theObject->mSymbols + symbolLoop;
                         
                         /*
                         **  Propogate the composition all the way to the top.
+                        **  Sizes of zero change are skipped.
                         */
                         if(0 < theSymbol->mSize)
                         {
