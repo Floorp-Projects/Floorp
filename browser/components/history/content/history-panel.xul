@@ -81,10 +81,9 @@
 
   <hbox align="center">
     <label value="&find.label;" accesskey="&find.accesskey;" control="search-box"/>
-    <textbox id="search-box" flex="1"
-             type="timed" timeout="500"
+    <textbox id="search-box" flex="1" type="timed" timeout="500"
              oncommand="searchHistory(gSearchBox.value);"/>
-    <toolbarbutton id="viewButton" type="menu" label="&view.label;" selectedsort="day" persist="selectedsort">
+    <button id="viewButton" style="min-width:0px !important;" type="menu" label="&view.label;" accesskey="w" selectedsort="day" persist="selectedsort">
       <menupopup>
         <menuitem id="bydayandsite" label="&byDayAndSite.label;" accesskey="&byDayAndSite.accesskey;" type="radio"
                   oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'dayandsite'); GroupBy('dayandsite');"/>
@@ -103,7 +102,7 @@
                   oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'lastvisited');
                              GroupBy('lastvisited');"/>
       </menupopup>
-    </toolbarbutton>
+    </button>
   </hbox>
   <tree id="historyTree" flex="1" class="plain"
         context="historyContextMenu" seltype="multiple"
