@@ -318,23 +318,29 @@ xptiInterfaceInfo::GetMethodInfoForName(const char* methodName, uint16 *index,
         return NS_ERROR_UNEXPECTED;
 
     // This is a slow algorithm, but this is not expected to be called much.
-    for(uint16 i = mInterface->mMethodBaseIndex; 
-        i < mInterface->mDescriptor->num_methods; 
+    for(uint16 i = 0;
+        i < mInterface->mDescriptor->num_methods;
         ++i)
     {
         const nsXPTMethodInfo* info;
         info = NS_REINTERPRET_CAST(nsXPTMethodInfo*,
                                    &mInterface->mDescriptor->
-                                        method_descriptors[i - 
-                                            mInterface->mMethodBaseIndex]);
-        *index = i;
-        *result = info;
-        return NS_OK;
+                                        method_descriptors[i]);
+        if (PL_strcmp(methodName, info->GetName()) == 0) {
+            *index = i + mInterface->mMethodBaseIndex;
+            *result = info;
+            return NS_OK;
+        }
     }
     if(mInterface->mParent)
-        return mInterface->mParent->GetMethodInfoForName(methodName, index, result);
+        return mInterface->mParent->GetMethodInfoForName(methodName,
+                                                         index, result);
     else
+    {
+        *index = 0;
+        *result = 0;
         return NS_ERROR_INVALID_ARG;
+    }
 }
 
 NS_IMETHODIMP
