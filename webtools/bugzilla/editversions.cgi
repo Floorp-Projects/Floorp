@@ -320,7 +320,7 @@ if ($action eq 'new') {
     unlink "data/versioncache";
 
     print "OK, done.<p>\n";
-    PutTrailer($localtrailer);
+    PutTrailer("<A HREF=\"editversions.cgi?product=$product&amp;action=add\">add</a> another version or $localtrailer");
     exit;
 }
 
