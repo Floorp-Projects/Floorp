@@ -496,7 +496,8 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     DoImageInspector();
     break;
 
-#if defined(XP_WIN) || defined(XP_MAC)
+#if 0 // this is obsolete: trees are done with table frames now
+//#if defined(XP_WIN) || defined(XP_MAC)
   case VIEWER_TREEVIEW:
 	// Instantiate a tree widget
 	DoTreeView();
@@ -850,6 +851,8 @@ HandleToolbarDemoWindowEvent(nsGUIEvent *aEvent)
   
   return result;
 }
+
+#if 0 // Obsolete
 // XXX This is a hack to get tree widget/RDF testing alive. It should
 // most definitely go away ASAP. It creates the bookmark data source,
 // attaches it to an RDF document, and sets the document's root
@@ -989,7 +992,7 @@ nsBrowserWindow::DoTreeView()
     NS_RELEASE(doc); // i.e., unless you've refcounted "doc", root dies _now_
   }
 }
-
+#endif
 
 //
 // DoToolbarDemo
