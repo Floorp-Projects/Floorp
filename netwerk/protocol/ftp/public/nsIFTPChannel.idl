@@ -29,10 +29,6 @@ interface nsIRequestObserver;
 [scriptable, uuid(3476df52-1dd2-11b2-b928-925d89b33bc0)]
 interface nsIFTPChannel : nsIChannel
 {
-    /**
-     * Set the stream to be uploaded by this channel.  
-     */
-    attribute nsIInputStream uploadStream;
 };
 
 [scriptable, uuid(455d4234-0330-43d2-bbfb-99afbecbfeb0)]

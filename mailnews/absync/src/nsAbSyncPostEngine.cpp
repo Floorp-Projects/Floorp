@@ -42,6 +42,7 @@
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
 #include "nsIHttpChannel.h"
+#include "nsIUploadChannel.h"
 #include "nsTextFormatter.h"
 #include "nsICookieService.h"
 #include "nsIAbSync.h"
@@ -698,9 +699,11 @@ nsAbSyncPostEngine::FireURLRequest(nsIURI *aURL, const char *postData)
   if (!httpChannel)
     return NS_ERROR_FAILURE;
 
-  if (NS_SUCCEEDED(rv = NS_NewPostDataStream(getter_AddRefs(postStream), PR_FALSE, postData, 0)))
-    httpChannel->SetUploadStream(postStream);
-  
+  if (NS_SUCCEEDED(rv = NS_NewPostDataStream(getter_AddRefs(postStream), PR_FALSE, postData, 0))){
+    nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
+    NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
+    uploadChannel->SetUploadStream(postStream, nsnull, -1);
+  }
   httpChannel->AsyncOpen(this, nsnull);
 
   return NS_OK;

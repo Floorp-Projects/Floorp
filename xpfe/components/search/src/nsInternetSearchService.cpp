@@ -59,6 +59,7 @@
 #include "nsIChannel.h"
 #include "nsIFileChannel.h"
 #include "nsIHttpChannel.h"
+#include "nsIUploadChannel.h"
 #include "nsIInputStream.h"
 #include "nsIBookmarksService.h"
 #include "nsIStringBundle.h"
@@ -3600,27 +3601,29 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 				nsCOMPtr<nsIHttpChannel> httpChannel (do_QueryInterface(channel));
 				if (httpChannel)
 				{
-                    httpChannel->SetRequestMethod("POST");
-
-                    // construct post data to send
-                    nsAutoString	postStr;
-                    postStr.AssignWithConversion(POSTHEADER_PREFIX);
-                    postStr.AppendInt(input.Length(), 10);
-                    postStr.AppendWithConversion(POSTHEADER_SUFFIX);
-                    postStr += input;
-			        	
-					nsCOMPtr<nsIInputStream>	postDataStream;
-					nsCAutoString			poststrC;
-					poststrC.AssignWithConversion(postStr);
-					if (NS_SUCCEEDED(rv = NS_NewPostDataStream(getter_AddRefs(postDataStream),
-										   PR_FALSE, poststrC, 0)))
-					{
-						httpChannel->SetUploadStream(postDataStream);
-					}
+				    httpChannel->SetRequestMethod("POST");
+				    
+				    // construct post data to send
+				    nsAutoString	postStr;
+				    postStr.AssignWithConversion(POSTHEADER_PREFIX);
+				    postStr.AppendInt(input.Length(), 10);
+				    postStr.AppendWithConversion(POSTHEADER_SUFFIX);
+				    postStr += input;
+				    
+				    nsCOMPtr<nsIInputStream>	postDataStream;
+				    nsCAutoString			poststrC;
+				    poststrC.AssignWithConversion(postStr);
+				    if (NS_SUCCEEDED(rv = NS_NewPostDataStream(getter_AddRefs(postDataStream),
+									       PR_FALSE, poststrC, 0)))
+				    {
+					nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
+					NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
+					uploadChannel->SetUploadStream(postDataStream, nsnull, -1);
+				    }
 				}
 			}
-
-            nsCOMPtr<nsIRequest> request;
+			
+			nsCOMPtr<nsIRequest> request;
 			if (NS_SUCCEEDED(rv = channel->AsyncOpen(this, context)))
 			{
 			}

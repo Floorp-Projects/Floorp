@@ -31,6 +31,7 @@
 #include "nsNetUtil.h"
 #include "nsIFileTransportService.h"
 #include "nsIHttpChannel.h"
+#include "nsIUploadChannel.h"
 #include "nsEscape.h"
 
 #include "nsCExternalHandlerService.h"
@@ -153,8 +154,10 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveURI(nsIURI *aURI, nsIInputStream *aPostDa
             {
                 // Rewind the postdata stream
                 stream->Seek(PR_SEEK_SET, 0);
+                nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
+                NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
                 // Attach the postdata to the http channel
-                httpChannel->SetUploadStream(aPostData);
+                uploadChannel->SetUploadStream(aPostData, nsnull, -1);
             }
         }
     }

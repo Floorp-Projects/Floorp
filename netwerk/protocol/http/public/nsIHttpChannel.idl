@@ -61,12 +61,9 @@ interface nsIHttpChannel : nsIChannel
     void   visitRequestHeaders(in nsIHttpHeaderVisitor visitor);
 
     /**
-     * Set the stream to be uploaded by this HTTP channel.  Setting this causes
-     * the HTTP method to be changed to POST.  For PUT requests, the method
-     * must be explicitly set.
+     * Get the stream (to be) uploaded by this HTTP channel.
      */
-    attribute nsIInputStream uploadStream;
-
+    readonly attribute nsIInputStream uploadStream;
 
     /**************************************************************************
      * Response info...

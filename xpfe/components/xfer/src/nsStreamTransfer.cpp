@@ -31,6 +31,7 @@
 #include "nsIURL.h"
 #include "nsEscape.h"
 #include "nsIHttpChannel.h"
+#include "nsIUploadChannel.h"
 #include "nsICachingChannel.h"
 #include "nsIStringBundle.h"
 #include "nsIAllocator.h"
@@ -197,7 +198,10 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL,
                     nsCOMPtr<nsIRandomAccessStore> stream( do_QueryInterface( postData ) );
                     if ( stream ) {
                         stream->Seek( PR_SEEK_SET, 0 );
-                        httpChannel->SetUploadStream( postData );
+                        nsCOMPtr<nsIUploadChannel> uploadChannel(do_QueryInterface(httpChannel));
+                        NS_ASSERTION(uploadChannel, "http must support nsIUploadChannel");
+
+                        uploadChannel->SetUploadStream( postData, nsnull, -1);
                         httpChannel->SetRequestMethod("POST");
                     }
                 }
