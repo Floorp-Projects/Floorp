@@ -1929,24 +1929,20 @@ NS_IMETHODIMP PresShell::GetCaret(nsICaret **outCaret)
 
 NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
 {
-	nsresult	result = NS_OK;
-	PRBool	oldEnabled = mCaretEnabled;
+  nsresult result = NS_OK;
+  PRBool   oldEnabled = mCaretEnabled;
 	
-	mCaretEnabled = aInEnable;
+  mCaretEnabled = aInEnable;
 	
-	if (mCaret && (mCaretEnabled != oldEnabled))
-	{
-    // Update the document's content and frame models.
-    if (mDocument)
-      mDocument->FlushPendingNotifications();
-
+  if (mCaret && (mCaretEnabled != oldEnabled))
+  {
     nsCOMPtr<nsIDOMSelection> domSel;
     if (NS_SUCCEEDED(GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel))) && domSel)
       mCaret->SetCaretDOMSelection(domSel);
     result = mCaret->SetCaretVisible(mCaretEnabled);
-	}
+  }
 	
-	return result;
+  return result;
 }
 
 
