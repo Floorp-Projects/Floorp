@@ -54,7 +54,7 @@ NSPR_END_EXTERN_C
 /* Possibly exportable */
 #if defined(__cplusplus)
 PR_EXTERN(PrefResult) PREF_SavePrefFileSpecWith(
-	const nsFileSpec& fileSpec,
+	nsIFileSpec* fileSpec,
 	PLHashEnumerator heSaveProc);
 #endif /*__cplusplus*/
 
