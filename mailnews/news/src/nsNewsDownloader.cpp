@@ -51,6 +51,7 @@
 #include "nsIMsgAccountManager.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIRequestObserver.h"
+#include "nsIMsgMailSession.h"
 
 // This file contains the news article download state machine.
 
@@ -479,6 +480,17 @@ nsresult nsMsgDownloadAllNewsgroups::AdvanceToNextGroup(PRBool *done)
     if (newsFolder)
       newsFolder->SetSaveArticleOffline(PR_FALSE);
   
+    nsCOMPtr<nsIMsgMailSession> session = 
+             do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
+    if (NS_SUCCEEDED(rv) && session) 
+    {
+      PRBool folderOpen;
+      PRUint32 folderFlags;
+      m_currentFolder->GetFlags(&folderFlags);
+      session->IsFolderOpenInWindow(m_currentFolder, &folderOpen);
+      if (!folderOpen && ! (folderFlags & (MSG_FOLDER_FLAG_TRASH | MSG_FOLDER_FLAG_INBOX)))
+        m_currentFolder->SetMsgDatabase(nsnull);
+    }
     m_currentFolder = nsnull;
   }
 
