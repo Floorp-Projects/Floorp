@@ -893,7 +893,6 @@ nsEventStateManager::SetClickCount(nsIPresContext& aPresContext,
 {
   nsresult ret = NS_OK;
   nsCOMPtr<nsIContent> mouseContent;
-  PRBool fireClick = PR_FALSE;
 
   mCurrentTarget->GetContent(getter_AddRefs(mouseContent));
 
@@ -961,7 +960,6 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext& aPresContext,
   nsresult ret = NS_OK;
   nsMouseEvent event;
   nsCOMPtr<nsIContent> mouseContent;
-  PRBool fireClick = PR_FALSE;
 
   mCurrentTarget->GetContent(getter_AddRefs(mouseContent));
 
