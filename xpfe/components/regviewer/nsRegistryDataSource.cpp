@@ -138,7 +138,7 @@ nsRegistryDataSource::Init()
         rv = gRDF->GetResource(NS_REGISTRY_NAMESPACE_URI "subkeys", &kSubkeys);
         if (NS_FAILED(rv)) return rv;
 
-        rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2("[binary data]").get(), &kBinaryLiteral);
+        rv = gRDF->GetLiteral(NS_LITERAL_STRING("[binary data]").get(), &kBinaryLiteral);
         if (NS_FAILED(rv)) return rv;
     }
 

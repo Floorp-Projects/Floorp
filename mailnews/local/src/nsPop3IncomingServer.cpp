@@ -120,17 +120,17 @@ nsPop3IncomingServer::initializeStrings()
                                      getter_AddRefs(bundle));
     NS_ENSURE_SUCCESS(rv, rv);
     
-    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("inboxFolderName").get(),
+    bundle->GetStringFromName(NS_LITERAL_STRING("inboxFolderName").get(),
                               &kInboxName);
-    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("trashFolderName").get(),
+    bundle->GetStringFromName(NS_LITERAL_STRING("trashFolderName").get(),
                               &kTrashName);
-    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("sentFolderName").get(),
+    bundle->GetStringFromName(NS_LITERAL_STRING("sentFolderName").get(),
                               &kSentName);
-    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("draftsFolderName").get(),
+    bundle->GetStringFromName(NS_LITERAL_STRING("draftsFolderName").get(),
                               &kDraftsName);
-    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("templatesFolderName").get(),
+    bundle->GetStringFromName(NS_LITERAL_STRING("templatesFolderName").get(),
                               &kTemplatesName);
-    bundle->GetStringFromName(NS_ConvertASCIItoUCS2("unsentFolderName").get(),
+    bundle->GetStringFromName(NS_LITERAL_STRING("unsentFolderName").get(),
                               &kUnsentName);
     return NS_OK;
 }

@@ -794,9 +794,9 @@ nsTableColGroupFrame::GetFrameType(nsIAtom** aType) const
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsTableColGroupFrame::GetFrameName(nsString& aResult) const
+nsTableColGroupFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("TableColGroup", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("TableColGroup"), aResult);
 }
 
 NS_IMETHODIMP

@@ -839,9 +839,8 @@ mozJSComponentLoader::AttemptRegistration(nsIFile *component,
         rv = NS_GetServiceManager(getter_AddRefs(mgr));
         if (NS_SUCCEEDED(rv))
         {
-          // this string can't come from a string bundle, because we don't have string
-          // bundles yet.
-          NS_ConvertASCIItoUCS2 statusMsg("Registering JS component ");            
+          // this string can't come from a string bundle, because we
+          // don't have string bundles yet.
           NS_ConvertASCIItoUCS2 fileName("(no name)");
 
           // get the file name
@@ -851,11 +850,14 @@ mozJSComponentLoader::AttemptRegistration(nsIFile *component,
             component->GetLeafName(getter_Copies(leafName));
             fileName.AssignWithConversion(leafName);
           }
-          statusMsg.Append(fileName);
           
-          (void) observerService->NotifyObservers(mgr,
-                                                  NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID,
-                                                  statusMsg.get());
+          // this string can't come from a string bundle, because we
+          // don't have string bundles yet.
+          (void) observerService->
+            NotifyObservers(mgr,
+                            NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID,
+                            PromiseFlatString(NS_LITERAL_STRING("Registering JS component ") +
+                                              fileName).get());
         }
       }
     }
@@ -906,7 +908,7 @@ mozJSComponentLoader::UnregisterComponent(nsIFile *component)
         {
             (void) observerService->NotifyObservers(mgr,
                                                     NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID,
-                                                    NS_ConvertASCIItoUCS2("Unregistering JS component").get());
+                                                    NS_LITERAL_STRING("Unregistering JS component").get());
         }
       }
     }

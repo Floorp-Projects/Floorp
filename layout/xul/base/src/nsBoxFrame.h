@@ -170,7 +170,7 @@ public:
                                   nsIFrame*       aChildList);
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
   NS_IMETHOD DidReflow(nsIPresContext* aPresContext,

@@ -517,7 +517,7 @@ nsAbSyncPostEngine::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */,
       // RICHIE - REMOVE THIS BEFORE SHIPPING!!!!
 #ifdef DEBUG
       PRUnichar *msgValue = nsnull;
-      msgValue = nsTextFormatter::smprintf(nsString(NS_ConvertASCIItoUCS2("Server: %s - port %d")).get(),
+      msgValue = nsTextFormatter::smprintf(nsString(NS_LITERAL_STRING("Server: %s - port %d")).get(),
                                            mMojoSyncSpec, mMojoSyncPort);
       NotifyListenersOnStatus(mTransactionID, msgValue);
       PR_FREEIF(msgValue);
@@ -777,7 +777,7 @@ NS_IMETHODIMP nsAbSyncPostEngine::SendAbRequest(const char *aSpec, PRInt32 aPort
 
   // Init stuff we need....
   mSyncProtocolRequest = nsCRT::strdup(aProtocolRequest);
-  mProtocolResponse = NS_ConvertASCIItoUCS2("");
+  mProtocolResponse.Truncate();
   mTotalWritten = 0;
 
   // The first thing we need to do is authentication so do it!
@@ -795,7 +795,7 @@ nsAbSyncPostEngine::KickTheSyncOperation(void)
 
   // The first thing we need to do is authentication so do it!
   mAuthenticationRunning = PR_FALSE;
-  mProtocolResponse = NS_ConvertASCIItoUCS2("");
+  mProtocolResponse.Truncate();
   mPostEngineState = nsIAbSyncPostEngineState::nsIAbSyncPostRunning;
 
   const char postHeader[] = "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: %d\r\nCookie: %s\r\n\r\n%s";

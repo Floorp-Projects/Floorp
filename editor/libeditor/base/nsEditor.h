@@ -86,6 +86,9 @@ class RemoveStyleSheetTxn;
 class nsIFile;
 class nsISelectionController;
 
+#define kMOZEditorBogusNodeAttr NS_LITERAL_STRING("_moz_editor_bogus_node")
+#define kMOZEditorBogusNodeValue NS_LITERAL_STRING("TRUE")
+
 /** implementation of an editor object.  it will be the controller/focal point 
  *  for the main editor services. i.e. the GUIManager, publishing, transaction 
  *  manager, event interfaces. the idea for the event interfaces is to have them 
@@ -121,9 +124,6 @@ public:
     kOpInsertIMEText  = 1002,
     kOpDeleteText     = 1003
   };
-
-  static const char* kMOZEditorBogusNodeAttr;
-  static const char* kMOZEditorBogusNodeValue;
 
   /** The default constructor. This should suffice. the setting of the interfaces is done
    *  after the construction of the editor class.

@@ -103,8 +103,8 @@ public:
                            nsIFrame*       aOldFrame,
                            nsIFrame*       aNewFrame);
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const {
-    return MakeFrameName("FieldSet", aResult);
+  NS_IMETHOD GetFrameName(nsAString& aResult) const {
+    return MakeFrameName(NS_LITERAL_STRING("FieldSet"), aResult);
   }
 #endif
 

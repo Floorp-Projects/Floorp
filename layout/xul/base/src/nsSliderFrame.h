@@ -131,8 +131,8 @@ public:
   virtual ~nsSliderFrame();
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const {
-    return MakeFrameName("SliderFrame", aResult);
+  NS_IMETHOD GetFrameName(nsAString& aResult) const {
+    return MakeFrameName(NS_LITERAL_STRING("SliderFrame"), aResult);
   }
 #endif
 

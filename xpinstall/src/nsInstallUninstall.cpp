@@ -109,7 +109,7 @@ char* nsInstallUninstall::toString()
     
     if (temp)
     {
-        rsrcVal = mInstall->GetResourcedString(NS_ConvertASCIItoUCS2("Uninstall"));
+        rsrcVal = mInstall->GetResourcedString(NS_LITERAL_STRING("Uninstall"));
 
         if (rsrcVal)
         {

@@ -629,7 +629,7 @@ nsEditorShell::PrepareDocumentForEditing(nsIDOMWindow* aDOMWindow, nsIURI *aUrl)
   // We won't unload this, so we don't need to be returned the style sheet pointer
   
   
-  styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorOverride.css"),
+  styleSheets->ApplyOverrideStyleSheet(NS_LITERAL_STRING("chrome://editor/content/EditorOverride.css"),
                                        getter_AddRefs(mBaseStyleSheet));
 
   SetDisplayMode(mDisplayMode);
@@ -638,9 +638,9 @@ nsEditorShell::PrepareDocumentForEditing(nsIDOMWindow* aDOMWindow, nsIURI *aUrl)
   // Activate the debug menu only in debug builds
   // by removing the "hidden" attribute set "true" in XUL
   nsCOMPtr<nsIDOMElement> elem;
-  rv = dDoc->GetElementById(NS_ConvertASCIItoUCS2("debugMenu"), getter_AddRefs(elem));
+  rv = dDoc->GetElementById(NS_LITERAL_STRING("debugMenu"), getter_AddRefs(elem));
   if (elem)
-    elem->RemoveAttribute(NS_ConvertASCIItoUCS2("hidden"));
+    elem->RemoveAttribute(NS_LITERAL_STRING("hidden"));
 #endif
 
   // Force initial focus to the content window except if in mail compose
@@ -921,7 +921,7 @@ nsEditorShell::SetEditorType(const PRUnichar *editorType)
   {
     // We don't store a separate type for textmail
     if (textMail)
-      mEditorTypeString = NS_ConvertASCIItoUCS2("text");
+      mEditorTypeString = NS_LITERAL_STRING("text");
     else
       mEditorTypeString = theType;
     return NS_OK;
@@ -1486,7 +1486,7 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
       {
     
         //Load the editmode style sheet
-        res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorContent.css"),
+        res = styleSheets->ApplyOverrideStyleSheet(NS_LITERAL_STRING("chrome://editor/content/EditorContent.css"),
                                                    getter_AddRefs(mEditModeStyleSheet));
       }
       if (NS_FAILED(res)) return res;
@@ -1510,7 +1510,7 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
     else
     {
       // else load it
-      res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorAllTags.css"),
+      res = styleSheets->ApplyOverrideStyleSheet(NS_LITERAL_STRING("chrome://editor/content/EditorAllTags.css"),
                                                  getter_AddRefs(mAllTagsModeStyleSheet));
     }     
     if (NS_FAILED(res)) return res;
@@ -1525,7 +1525,7 @@ nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
       }
       else
       {
-        res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorContent.css"),
+        res = styleSheets->ApplyOverrideStyleSheet(NS_LITERAL_STRING("chrome://editor/content/EditorContent.css"),
                                                    getter_AddRefs(mEditModeStyleSheet));
       }
     }
@@ -1585,7 +1585,7 @@ nsEditorShell::DisplayParagraphMarks(PRBool aShowMarks)
     }
     //First time used -- load the style sheet
     nsCOMPtr<nsICSSStyleSheet> styleSheet;
-    res = styleSheets->ApplyOverrideStyleSheet(NS_ConvertASCIItoUCS2("chrome://editor/content/EditorParagraphMarks.css"),
+    res = styleSheets->ApplyOverrideStyleSheet(NS_LITERAL_STRING("chrome://editor/content/EditorParagraphMarks.css"),
                                                 getter_AddRefs(mParagraphMarksStyleSheet));
   }
   else if (mParagraphMarksStyleSheet)
@@ -3374,12 +3374,12 @@ nsEditorShell::MakeOrChangeList(const PRUnichar *listType, PRBool entireList)
     case eHTMLTextEditorType:
       if (aListType.IsEmpty())
       {
-        err = mEditor->RemoveList(NS_ConvertASCIItoUCS2("ol"));
+        err = mEditor->RemoveList(NS_LITERAL_STRING("ol"));
         if(NS_SUCCEEDED(err))
         {
-          err = mEditor->RemoveList(NS_ConvertASCIItoUCS2("ul"));
+          err = mEditor->RemoveList(NS_LITERAL_STRING("ul"));
           if(NS_SUCCEEDED(err))
-            err = mEditor->RemoveList(NS_ConvertASCIItoUCS2("dl"));
+            err = mEditor->RemoveList(NS_LITERAL_STRING("dl"));
         }
       }
       else

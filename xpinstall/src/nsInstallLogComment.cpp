@@ -41,8 +41,8 @@
 MOZ_DECL_CTOR_COUNTER(nsInstallLogComment)
 
 nsInstallLogComment::nsInstallLogComment( nsInstall* inInstall,
-                                          const nsString& inFileOpCommand,
-                                          const nsString& inComment,
+                                          const nsAString& inFileOpCommand,
+                                          const nsAString& inComment,
                                           PRInt32 *error)
 
 : nsInstallObject(inInstall)

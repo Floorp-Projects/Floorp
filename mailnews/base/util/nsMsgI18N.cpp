@@ -62,6 +62,7 @@
 #include "nsReadableUtils.h"
 #include "prmem.h"
 #include "nsFileSpec.h"
+#include "nsUnicharUtils.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
@@ -216,7 +217,7 @@ nsresult nsMsgI18NConvertToUnicode(const nsCString& aCharset,
 }
 
 // Convert an unicode string to a C string with a given charset.
-nsresult ConvertFromUnicode(const nsString& aCharset, 
+nsresult ConvertFromUnicode(const nsAString& aCharset, 
                             const nsString& inString,
                             char** outCString)
 {
@@ -237,12 +238,18 @@ nsresult ConvertFromUnicode(const nsString& aCharset,
   // Note: this will hide a possible error when the unicode text may contain more than one charset.
   // (e.g. Latin1 + Japanese). Use nsMsgI18NSaveAsCharset instead to avoid that problem.
   else if (aCharset.IsEmpty() ||
-      aCharset.EqualsIgnoreCase("us-ascii") ||
-      aCharset.EqualsIgnoreCase("ISO-8859-1")) {
+           Compare(aCharset,
+                   NS_LITERAL_STRING("us-ascii"),
+                   nsCaseInsensitiveStringComparator()) == 0 ||
+           Compare(aCharset,
+                   NS_LITERAL_STRING("ISO-8859-1"),
+                   nsCaseInsensitiveStringComparator()) == 0) {
     *outCString = ToNewCString(inString);
     return (NULL == *outCString) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
   }
-  else if (aCharset.EqualsIgnoreCase("UTF-8")) {
+  else if (Compare(aCharset,
+                   NS_LITERAL_STRING("UTF-8"),
+                   nsCaseInsensitiveStringComparator()) == 0) {
     *outCString = ToNewUTF8String(inString);
     return (NULL == *outCString) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
   }
@@ -253,7 +260,8 @@ nsresult ConvertFromUnicode(const nsString& aCharset,
   NS_ENSURE_SUCCESS(res, res);
 
   nsCOMPtr <nsIAtom> charsetAtom;
-  res = ccm2->GetCharsetAtom(aCharset.get(), getter_AddRefs(charsetAtom));
+  res = ccm2->GetCharsetAtom(PromiseFlatString(aCharset).get(),
+                             getter_AddRefs(charsetAtom));
   NS_ENSURE_SUCCESS(res, res);
 
   // get an unicode converter
@@ -292,7 +300,7 @@ nsresult ConvertFromUnicode(const nsString& aCharset,
 }
 
 // Convert a C string to an unicode string.
-nsresult ConvertToUnicode(const nsString& aCharset, 
+nsresult ConvertToUnicode(const nsAString& aCharset, 
                           const char* inCString, 
                           nsString& outString)
 {
@@ -310,8 +318,12 @@ nsresult ConvertToUnicode(const nsString& aCharset,
     return NS_OK;
   }
   else if (aCharset.IsEmpty() ||
-      aCharset.EqualsIgnoreCase("us-ascii") ||
-      aCharset.EqualsIgnoreCase("ISO-8859-1")) {
+           Compare(aCharset,
+                   NS_LITERAL_STRING("us-ascii"),
+                   nsCaseInsensitiveStringComparator()) == 0 ||
+           Compare(aCharset,
+                   NS_LITERAL_STRING("ISO-8859-1"),
+                   nsCaseInsensitiveStringComparator()) == 0) {
     outString.AssignWithConversion(inCString);
     return NS_OK;
   }
@@ -322,7 +334,8 @@ nsresult ConvertToUnicode(const nsString& aCharset,
   NS_ENSURE_SUCCESS(res, res);
 
   nsCOMPtr <nsIAtom> charsetAtom;
-  res = ccm2->GetCharsetAtom(aCharset.get(), getter_AddRefs(charsetAtom));
+  res = ccm2->GetCharsetAtom(PromiseFlatString(aCharset).get(),
+                             getter_AddRefs(charsetAtom));
   NS_ENSURE_SUCCESS(res, res);
 
   // get an unicode converter
@@ -454,7 +467,7 @@ PRBool nsMsgI18Nmultibyte_charset(const char *charset)
     nsAutoString charsetData;
     res = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(charset).get(), getter_AddRefs(charsetAtom));
     if (NS_SUCCEEDED(res)) {
-      res = ccm2->GetCharsetData2(charsetAtom, NS_ConvertASCIItoUCS2(".isMultibyte").get(), &charsetData);
+      res = ccm2->GetCharsetData2(charsetAtom, NS_LITERAL_STRING(".isMultibyte").get(), &charsetData);
       if (NS_SUCCEEDED(res)) {
         result = charsetData.EqualsWithConversion("true", PR_TRUE);
       }

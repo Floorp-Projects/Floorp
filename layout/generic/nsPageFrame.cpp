@@ -266,9 +266,9 @@ nsPageFrame::GetFrameType(nsIAtom** aType) const
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsPageFrame::GetFrameName(nsString& aResult) const
+nsPageFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("Page", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("Page"), aResult);
 }
 #endif
 

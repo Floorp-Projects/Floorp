@@ -71,7 +71,7 @@ public:
                               PRInt32         aHint);
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
   virtual void UpdateAttributes(nsIPresContext*  aPresContext,

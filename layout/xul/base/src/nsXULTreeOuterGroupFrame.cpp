@@ -310,7 +310,7 @@ nsXULTreeOuterGroupFrame::~nsXULTreeOuterGroupFrame()
 
   // NOTE: the last Remove will delete the drag capturer
   if ( receiver && mDragOverListener ) 
-    receiver->RemoveEventListener(NS_ConvertASCIItoUCS2("dragover"), mDragOverListener, PR_TRUE);
+    receiver->RemoveEventListener(NS_LITERAL_STRING("dragover"), mDragOverListener, PR_TRUE);
   
   delete mRowGroupInfo;
 
@@ -409,7 +409,7 @@ nsXULTreeOuterGroupFrame::Init(nsIPresContext* aPresContext, nsIContent* aConten
   nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(aContent));
   if ( receiver ) {
     mDragOverListener = new nsDragOverListener(this);
-    receiver->AddEventListener(NS_ConvertASCIItoUCS2("dragover"), mDragOverListener, PR_FALSE);
+    receiver->AddEventListener(NS_LITERAL_STRING("dragover"), mDragOverListener, PR_FALSE);
   }
   
   // our parent is the <tree> tag. check if it has an attribute denying the ability to
@@ -420,7 +420,7 @@ nsXULTreeOuterGroupFrame::Init(nsIPresContext* aPresContext, nsIContent* aConten
   if ( parent ) {
     nsAutoString attr;
     parent->GetAttr ( kNameSpaceID_None, nsXULAtoms::ddNoDropBetweenRows, attr ); 
-    if ( attr.Equals(NS_ConvertASCIItoUCS2("true")) )
+    if ( attr.Equals(NS_LITERAL_STRING("true")) )
       mCanDropBetweenRows = PR_FALSE;
   }
   

@@ -194,7 +194,7 @@ PRUnichar *nsMsgSearchAdapter::EscapeSearchUrl (const PRUnichar *nntpCommand)
 			{
 				*scratchPtr++ = '\\';
                 nsTextFormatter::snprintf(scratchPtr, 2,
-                                          NS_ConvertASCIItoUCS2("%2.2X").get(), ch);
+                                          NS_LITERAL_STRING("%2.2X").get(), ch);
                                    /* Reviewed 4.51 safe use of sprintf */
 				scratchPtr += 2;
 			}

@@ -669,8 +669,8 @@ nscolor white,black;
   aSurface->SetFont(*font);
 
     // clear surface
-  NS_ColorNameToRGB(NS_ConvertASCIItoUCS2("white"), &white);
-  NS_ColorNameToRGB(NS_ConvertASCIItoUCS2("red"), &black);
+  NS_ColorNameToRGB(NS_LITERAL_STRING("white"), &white);
+  NS_ColorNameToRGB(NS_LITERAL_STRING("red"), &black);
   aSurface->SetColor(white);
   aSurface->FillRect(0,0,1000,1000);
   aSurface->SetColor(black);
@@ -709,8 +709,8 @@ nscolor white,black;
             
 
   // clear surface
-  NS_ColorNameToRGB(NS_ConvertASCIItoUCS2("white"), &white);
-  NS_ColorNameToRGB(NS_ConvertASCIItoUCS2("black"), &black);
+  NS_ColorNameToRGB(NS_LITERAL_STRING("white"), &white);
+  NS_ColorNameToRGB(NS_LITERAL_STRING("black"), &black);
   aSurface->SetColor(white);
   aSurface->FillRect(0,0,1000,1000);
   aSurface->SetColor(black);
@@ -763,14 +763,14 @@ nscolor white,black;
   aSurface->SetFont(*font);
 
     // clear surface
-  NS_ColorNameToRGB(NS_ConvertASCIItoUCS2("white"), &white);
-  NS_ColorNameToRGB(NS_ConvertASCIItoUCS2("black"), &black);
+  NS_ColorNameToRGB(NS_LITERAL_STRING("white"), &white);
+  NS_ColorNameToRGB(NS_LITERAL_STRING("black"), &black);
   aSurface->SetColor(white);
   aSurface->FillRect(0,0,1000,1000);
   aSurface->SetColor(black);
 
   aSurface->FillRect(20, 20, 100, 100);
-  aSurface->DrawString(NS_ConvertASCIItoUCS2("This is a Rectangle\0"),20,5);
+  aSurface->DrawString(NS_ConvertCASCIItoUCS2("This is a Rectangle\0"),20,5);
 
   pointlist = new nsPoint[6];
   pointlist[0].x = 150;pointlist[0].y = 150;
@@ -897,13 +897,13 @@ char *str;
     if(aGenLoad == PR_TRUE)
       {
       MyBlendObserver *observer = new MyBlendObserver(aTheImage);
-      NS_ColorNameToRGB(NS_ConvertASCIItoUCS2("white"), &white);
+      NS_ColorNameToRGB(NS_LITERAL_STRING("white"), &white);
       gImageReq = gImageGroup->GetImage(fileURL,observer,&white, 0, 0, 0);
       }
     else
       {
       MyObserver *observer = new MyObserver();
-      NS_ColorNameToRGB(NS_ConvertASCIItoUCS2("white"), &white);
+      NS_ColorNameToRGB(NS_LITERAL_STRING("white"), &white);
       gImageReq = gImageGroup->GetImage(fileURL,observer,&white, 0, 0, 0);
       }
             

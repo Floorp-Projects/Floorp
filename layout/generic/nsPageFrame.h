@@ -75,7 +75,7 @@ public:
   
 #ifdef NS_DEBUG
   // Debugging
-  NS_IMETHOD  GetFrameName(nsString& aResult) const;
+  NS_IMETHOD  GetFrameName(nsAString& aResult) const;
   void SetDebugFD(FILE* aFD) { mDebugFD = aFD; }
   FILE * mDebugFD;
 #endif

@@ -73,7 +73,7 @@ void nsBaseDialog::Initialize(nsIXPBaseWindow * aWindow)
   nsIDOMHTMLDocument *doc = nsnull;
   mWindow->GetDocument(doc);
   if (nsnull != doc) {
-    doc->GetElementById(NS_ConvertASCIItoUCS2("cancel"), &mCancelBtn);
+    doc->GetElementById(NS_LITERAL_STRING("cancel"), &mCancelBtn);
     if (nsnull != mCancelBtn) {
       mWindow->AddEventListener(mCancelBtn);
     }
@@ -141,7 +141,7 @@ nsBaseDialog::IsChecked(nsIDOMElement * aNode)
 
 //-----------------------------------------------------------------
 PRBool 
-nsBaseDialog::IsChecked(const nsString & aName)
+nsBaseDialog::IsChecked(const nsAString & aName)
 {
   nsIDOMElement      * node;
   nsIDOMHTMLDocument * doc = nsnull;
@@ -171,7 +171,7 @@ nsBaseDialog::SetChecked(nsIDOMElement * aNode, PRBool aValue)
 
 //---------------------------------------------------------------
 void  
-nsBaseDialog::SetChecked(const nsString & aName, PRBool aValue)
+nsBaseDialog::SetChecked(const nsAString & aName, PRBool aValue)
 {
   nsIDOMElement      * node;
   nsIDOMHTMLDocument * doc = nsnull;
@@ -186,7 +186,7 @@ nsBaseDialog::SetChecked(const nsString & aName, PRBool aValue)
 }
 
 //-----------------------------------------------------------------
-void nsBaseDialog::GetText(nsIDOMElement * aNode, nsString & aStr)
+void nsBaseDialog::GetText(nsIDOMElement * aNode, nsAString & aStr)
 {
   nsIDOMHTMLInputElement * element;
   if (NS_OK == aNode->QueryInterface(kIDOMHTMLInputElementIID, (void**) &element)) {
@@ -196,7 +196,7 @@ void nsBaseDialog::GetText(nsIDOMElement * aNode, nsString & aStr)
 }
 
 //-----------------------------------------------------------------
-void nsBaseDialog::GetText(const nsString & aName, nsString & aStr)
+void nsBaseDialog::GetText(const nsAString & aName, nsAString & aStr)
 {
   nsIDOMElement      * node;
   nsIDOMHTMLDocument * doc = nsnull;
@@ -212,7 +212,7 @@ void nsBaseDialog::GetText(const nsString & aName, nsString & aStr)
 
 //---------------------------------------------------------------
 void  
-nsBaseDialog::SetText(nsIDOMElement * aNode, const nsString &aValue)
+nsBaseDialog::SetText(nsIDOMElement * aNode, const nsAString &aValue)
 {
   nsIDOMHTMLInputElement * element;
   if (NS_OK == aNode->QueryInterface(kIDOMHTMLInputElementIID, (void**) &element)) {
@@ -223,7 +223,7 @@ nsBaseDialog::SetText(nsIDOMElement * aNode, const nsString &aValue)
 
 
 //-----------------------------------------------------------------
-void nsBaseDialog::SetText(const nsString & aName, const nsString & aStr)
+void nsBaseDialog::SetText(const nsAString & aName, const nsAString & aStr)
 {
   nsIDOMElement      * node;
   nsIDOMHTMLDocument * doc = nsnull;

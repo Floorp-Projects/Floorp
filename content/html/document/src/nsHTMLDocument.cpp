@@ -2260,7 +2260,7 @@ nsHTMLDocument::Close()
     nsAutoString emptyStr; emptyStr.AssignWithConversion("</HTML>");
     mWriteLevel++;
     result = mParser->Parse(emptyStr, NS_GENERATE_PARSER_KEY(), 
-                            NS_ConvertASCIItoUCS2("text/html"), PR_FALSE,
+                            NS_LITERAL_STRING("text/html"), PR_FALSE,
                             PR_TRUE);
     mWriteLevel--;
     mIsWriting = 0;

@@ -89,9 +89,9 @@ nsAreaFrame::GetFrameType(nsIAtom** aType) const
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
-nsAreaFrame::GetFrameName(nsString& aResult) const
+nsAreaFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("Area", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("Area"), aResult);
 }
 
 NS_IMETHODIMP

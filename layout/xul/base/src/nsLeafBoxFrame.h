@@ -54,7 +54,7 @@ public:
   NS_IMETHOD GetFrame(nsIFrame** aFrame);
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
   // nsIHTMLReflow overrides

@@ -84,10 +84,10 @@ nsSubscribableServer::Init()
     rv = mRDFService->GetResource(NC_NAMESPACE_URI "Subscribed",getter_AddRefs(kNC_Subscribed));
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").get(),getter_AddRefs(kTrueLiteral));
+    rv = mRDFService->GetLiteral(NS_LITERAL_STRING("true").get(),getter_AddRefs(kTrueLiteral));
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2("false").get(),getter_AddRefs(kFalseLiteral));
+    rv = mRDFService->GetLiteral(NS_LITERAL_STRING("false").get(),getter_AddRefs(kFalseLiteral));
     NS_ENSURE_SUCCESS(rv,rv);
     return NS_OK;
 }

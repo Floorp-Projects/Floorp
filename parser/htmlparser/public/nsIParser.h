@@ -229,7 +229,7 @@ class nsIParser : public nsISupports {
     virtual PRBool    IsComplete() =0;
     
     virtual nsresult  Parse(nsIURI* aURL,nsIRequestObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;
-    virtual nsresult	Parse(nsIInputStream& aStream, const nsString& aMimeType,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;
+    virtual nsresult	Parse(nsIInputStream& aStream, const nsAReadableString& aMimeType,PRBool aEnableVerify=PR_FALSE, void* aKey=0,nsDTDMode aMode=eDTDMode_autodetect) = 0;
     virtual nsresult  Parse(const nsAReadableString& aSourceBuffer,void* aKey,const nsAReadableString& aContentType,PRBool aEnableVerify,PRBool aLastCall,nsDTDMode aMode=eDTDMode_autodetect) = 0;
     
     virtual nsresult  Terminate(void) = 0;
@@ -238,7 +238,7 @@ class nsIParser : public nsISupports {
                                     void* aKey,
                                     nsVoidArray& aTagStack,
                                     PRUint32 anInsertPos,
-                                    const nsString& aContentType,
+                                    const nsAReadableString& aContentType,
                                     nsDTDMode aMode=eDTDMode_autodetect) = 0;
 
     /**

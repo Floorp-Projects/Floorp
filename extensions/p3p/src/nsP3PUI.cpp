@@ -272,10 +272,10 @@ nsP3PUI::MarkNoP3P()
   if ( mPrivacyButton ) {
     if (mPrivacyStatus != P3P_STATUS_NO_P3P) {
       mPrivacyStatus = P3P_STATUS_NO_P3P;
-      rv = mPrivacyButton->RemoveAttribute( NS_ConvertASCIItoUCS2("level") );
+      rv = mPrivacyButton->RemoveAttribute( NS_LITERAL_STRING("level") );
 
       if (NS_SUCCEEDED(rv)) {
-        rv = mPrivacyButton->RemoveAttribute( NS_ConvertASCIItoUCS2("tooltiptext") );
+        rv = mPrivacyButton->RemoveAttribute( NS_LITERAL_STRING("tooltiptext") );
       }
     }
   } else {
@@ -297,12 +297,12 @@ nsP3PUI::MarkNoPrivacy()
   if ( mPrivacyButton ) {
     if (mPrivacyStatus != P3P_STATUS_NO_POLICY) {
       mPrivacyStatus = P3P_STATUS_NO_POLICY;
-      rv = mPrivacyButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("none") );
+      rv = mPrivacyButton->SetAttribute( NS_LITERAL_STRING("level"), NS_LITERAL_STRING("none") );
 
       if (NS_SUCCEEDED(rv)) {
         nsAutoString  sToolTip;
         mP3PService->GetLocaleString( "StatusNone", sToolTip );
-        rv = mPrivacyButton->SetAttribute( NS_ConvertASCIItoUCS2("tooltiptext"), sToolTip );
+        rv = mPrivacyButton->SetAttribute( NS_LITERAL_STRING("tooltiptext"), sToolTip );
       }
     }
   } else {
@@ -324,12 +324,12 @@ nsP3PUI::MarkPrivate()
   if ( mPrivacyButton ) {
     if (mPrivacyStatus != P3P_STATUS_POLICY_MET) {
       mPrivacyStatus = P3P_STATUS_POLICY_MET;
-      rv = mPrivacyButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("yes") );
+      rv = mPrivacyButton->SetAttribute( NS_LITERAL_STRING("level"), NS_LITERAL_STRING("yes") );
 
       if (NS_SUCCEEDED(rv)) {
         nsAutoString  sToolTip;
         mP3PService->GetLocaleString( "StatusMet", sToolTip );
-        rv = mPrivacyButton->SetAttribute( NS_ConvertASCIItoUCS2("tooltiptext"), sToolTip );
+        rv = mPrivacyButton->SetAttribute( NS_LITERAL_STRING("tooltiptext"), sToolTip );
       }
     }
   } else {
@@ -351,12 +351,12 @@ nsP3PUI::MarkNotPrivate()
   if ( mPrivacyButton ) {
     if (mPrivacyStatus != P3P_STATUS_POLICY_NOT_MET) {
       mPrivacyStatus = P3P_STATUS_POLICY_NOT_MET;
-      rv = mPrivacyButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("no") );
+      rv = mPrivacyButton->SetAttribute( NS_LITERAL_STRING("level"), NS_LITERAL_STRING("no") );
 
       if (NS_SUCCEEDED(rv)) {
         nsAutoString  sToolTip;
         mP3PService->GetLocaleString( "StatusNotMet", sToolTip );
-        rv = mPrivacyButton->SetAttribute( NS_ConvertASCIItoUCS2("tooltiptext"), sToolTip );
+        rv = mPrivacyButton->SetAttribute( NS_LITERAL_STRING("tooltiptext"), sToolTip );
       }
 
       mP3PUIService->WarningNotPrivate( mDocShellTreeItem );
@@ -380,12 +380,12 @@ nsP3PUI::MarkPartialPrivacy()
   if ( mPrivacyButton ) {
     if (mPrivacyStatus != P3P_STATUS_PARTIAL_POLICY) {
       mPrivacyStatus = P3P_STATUS_PARTIAL_POLICY;
-      rv = mPrivacyButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("partial") );
+      rv = mPrivacyButton->SetAttribute( NS_LITERAL_STRING("level"), NS_LITERAL_STRING("partial") );
 
       if (NS_SUCCEEDED(rv)) {
         nsAutoString  sToolTip;
         mP3PService->GetLocaleString( "StatusPartial", sToolTip );
-        rv = mPrivacyButton->SetAttribute( NS_ConvertASCIItoUCS2("tooltiptext"), sToolTip );
+        rv = mPrivacyButton->SetAttribute( NS_LITERAL_STRING("tooltiptext"), sToolTip );
       }
 
       mP3PUIService->WarningPartialPrivacy( mDocShellTreeItem );
@@ -409,12 +409,12 @@ nsP3PUI::MarkPrivacyBroken()
   if ( mPrivacyButton ) {
     if (mPrivacyStatus != P3P_STATUS_BAD_POLICY) {
       mPrivacyStatus = P3P_STATUS_BAD_POLICY;
-      rv = mPrivacyButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("broken") );
+      rv = mPrivacyButton->SetAttribute( NS_LITERAL_STRING("level"), NS_LITERAL_STRING("broken") );
 
       if (NS_SUCCEEDED(rv)) {
         nsAutoString  sToolTip;
         mP3PService->GetLocaleString( "StatusBroken", sToolTip );
-        rv = mPrivacyButton->SetAttribute( NS_ConvertASCIItoUCS2("tooltiptext"), sToolTip );
+        rv = mPrivacyButton->SetAttribute( NS_LITERAL_STRING("tooltiptext"), sToolTip );
       }
     }
   } else {
@@ -436,12 +436,12 @@ nsP3PUI::MarkInProgress()
   if ( mPrivacyButton ) {
     if (mPrivacyStatus != P3P_STATUS_IN_PROGRESS) {
       mPrivacyStatus = P3P_STATUS_IN_PROGRESS;
-      rv = mPrivacyButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("inprogress") );
+      rv = mPrivacyButton->SetAttribute( NS_LITERAL_STRING("level"), NS_LITERAL_STRING("inprogress") );
 
       if (NS_SUCCEEDED(rv)) {
         nsAutoString  sToolTip;
         mP3PService->GetLocaleString( "StatusInProg", sToolTip );
-        rv = mPrivacyButton->SetAttribute( NS_ConvertASCIItoUCS2("tooltiptext"), sToolTip );
+        rv = mPrivacyButton->SetAttribute( NS_LITERAL_STRING("tooltiptext"), sToolTip );
       }
     }
   } else {

@@ -81,7 +81,7 @@ public:
   NS_IMETHOD Scrolled(nsIView *aView);
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);

@@ -1217,7 +1217,7 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
   // Find enclosing table cell from the selection (cell may be the selected element)
   nsCOMPtr<nsIDOMElement> cellElement;
     // can't use |NS_LITERAL_STRING| here until |GetElementOrParentByTagName| is fixed to accept readables
-  nsresult res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("td"), nsnull, getter_AddRefs(cellElement));
+  nsresult res = GetElementOrParentByTagName(NS_LITERAL_STRING("td"), nsnull, getter_AddRefs(cellElement));
   if (NS_FAILED(res)) return res;
   // Do nothing -- we didn't find a table cell
   if (!cellElement) return NS_OK;
@@ -1565,12 +1565,12 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAReadableString& aSourceToInse
   nsAutoString inputString (aSourceToInsert);  // hope this does copy-on-write
  
   // Windows linebreaks: Map CRLF to LF:
-  inputString.ReplaceSubstring(NS_ConvertASCIItoUCS2("\r\n"),
-                               NS_ConvertASCIItoUCS2("\n"));
+  inputString.ReplaceSubstring(NS_LITERAL_STRING("\r\n").get(),
+                               NS_LITERAL_STRING("\n").get());
  
   // Mac linebreaks: Map any remaining CR to LF:
-  inputString.ReplaceSubstring(NS_ConvertASCIItoUCS2("\r"),
-                               NS_ConvertASCIItoUCS2("\n"));
+  inputString.ReplaceSubstring(NS_LITERAL_STRING("\r").get(),
+                               NS_LITERAL_STRING("\n").get());
 
   nsAutoEditBatch beginBatching(this);
 
@@ -1706,7 +1706,8 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAReadableString& aSourceString)
   // Truncate at the end of the body tag
   
   // Kludge of the year: fool the parser by replacing "body" with "div" so we get a node
-  bodyTag.ReplaceSubstring(NS_ConvertASCIItoUCS2("body"), NS_ConvertASCIItoUCS2("div"));
+  bodyTag.ReplaceSubstring(NS_LITERAL_STRING("body").get(),
+                           NS_LITERAL_STRING("div").get());
 
   nsCOMPtr<nsIDOMRange> range;
   res = selection->GetRangeAt(0, getter_AddRefs(range));
@@ -2004,7 +2005,7 @@ nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
     if (aGetLists)
     {
       // Get the "ol", "ul", or "dl" parent element
-      res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("list"), node, getter_AddRefs(blockParentElem));
+      res = GetElementOrParentByTagName(NS_LITERAL_STRING("list"), node, getter_AddRefs(blockParentElem));
       if (NS_FAILED(res)) return res;
     } 
     else 
@@ -2060,7 +2061,7 @@ nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
           if (aGetLists)
           {
             // Get the "ol", "ul", or "dl" parent element
-            res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("list"), startParent, getter_AddRefs(blockParent));
+            res = GetElementOrParentByTagName(NS_LITERAL_STRING("list"), startParent, getter_AddRefs(blockParent));
           } 
           else 
           {
@@ -2743,7 +2744,7 @@ nsHTMLEditor::GetSelectedElement(const nsAReadableString& aTagName, nsIDOMElemen
         }
   #endif
         nsCOMPtr<nsIDOMElement> parentLinkOfAnchor;
-        res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("href"), anchorNode, getter_AddRefs(parentLinkOfAnchor));
+        res = GetElementOrParentByTagName(NS_LITERAL_STRING("href"), anchorNode, getter_AddRefs(parentLinkOfAnchor));
         // XXX: ERROR_HANDLING  can parentLinkOfAnchor be null?
         if (NS_SUCCEEDED(res) && parentLinkOfAnchor)
         {
@@ -2754,7 +2755,7 @@ nsHTMLEditor::GetSelectedElement(const nsAReadableString& aTagName, nsIDOMElemen
           } else if(focusNode) 
           {  // Link node must be the same for both ends of selection
             nsCOMPtr<nsIDOMElement> parentLinkOfFocus;
-            res = GetElementOrParentByTagName(NS_ConvertASCIItoUCS2("href"), focusNode, getter_AddRefs(parentLinkOfFocus));
+            res = GetElementOrParentByTagName(NS_LITERAL_STRING("href"), focusNode, getter_AddRefs(parentLinkOfFocus));
             if (NS_SUCCEEDED(res) && parentLinkOfFocus == parentLinkOfAnchor)
               bNodeFound = PR_TRUE;
           }
@@ -3055,9 +3056,9 @@ nsHTMLEditor::SetBackgroundColor(const nsAReadableString& aColor)
         while(cell)
         {
           if (setColor)
-            res = SetAttribute(cell, NS_ConvertASCIItoUCS2("bgcolor"), aColor);
+            res = SetAttribute(cell, NS_LITERAL_STRING("bgcolor"), aColor);
           else
-            res = RemoveAttribute(cell, NS_ConvertASCIItoUCS2("bgcolor"));
+            res = RemoveAttribute(cell, NS_LITERAL_STRING("bgcolor"));
           if (NS_FAILED(res)) break;
 
           GetNextSelectedCell(getter_AddRefs(cell), nsnull);
@@ -3074,9 +3075,9 @@ nsHTMLEditor::SetBackgroundColor(const nsAReadableString& aColor)
   }
   // Use the editor method that goes through the transaction system
   if (setColor)
-    res = SetAttribute(element, NS_ConvertASCIItoUCS2("bgcolor"), aColor);
+    res = SetAttribute(element, NS_LITERAL_STRING("bgcolor"), aColor);
   else
-    res = RemoveAttribute(element, NS_ConvertASCIItoUCS2("bgcolor"));
+    res = RemoveAttribute(element, NS_LITERAL_STRING("bgcolor"));
 
   return res;
 }
@@ -3471,7 +3472,7 @@ nsHTMLEditor::GetHeadContentsAsHTML(nsAWritableString& aOutputString)
   res = SetSelectionAroundHeadChildren(selection, mDocWeak);
   if (NS_FAILED(res)) return res;
 
-  res = OutputToString(aOutputString, NS_ConvertASCIItoUCS2("text/html"),
+  res = OutputToString(aOutputString, NS_LITERAL_STRING("text/html"),
                        nsIDocumentEncoder::OutputSelectionOnly);
   if (NS_SUCCEEDED(res))
   {

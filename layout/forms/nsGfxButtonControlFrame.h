@@ -85,7 +85,7 @@ public:
    // nsFormControlFrame
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 

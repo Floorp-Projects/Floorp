@@ -785,28 +785,28 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
   PRInt32 specHeight = currHeight;
   nsAutoString posString, sizeString;
 
-  rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("screenX"), posString);
+  rv = windowElement->GetAttribute(NS_LITERAL_STRING("screenX"), posString);
   if (NS_SUCCEEDED(rv)) {
     temp = posString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode))
       specX = temp;
   }
 
-  rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("screenY"), posString);
+  rv = windowElement->GetAttribute(NS_LITERAL_STRING("screenY"), posString);
   if (NS_SUCCEEDED(rv)) {
     temp = posString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode))
       specY = temp;
   }
     
-  rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("width"), sizeString);
+  rv = windowElement->GetAttribute(NS_LITERAL_STRING("width"), sizeString);
   if (NS_SUCCEEDED(rv)) {
     temp = sizeString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode) && temp > 0) {
       specWidth = temp;
     }
   }
-  rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("height"), sizeString);
+  rv = windowElement->GetAttribute(NS_LITERAL_STRING("height"), sizeString);
   if (NS_SUCCEEDED(rv)) {
     temp = sizeString.ToInteger(&errorCode);
     if (NS_SUCCEEDED(errorCode) && temp > 0) {
@@ -828,7 +828,7 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
       SetSize(specWidth, specHeight, PR_FALSE);
     }
 
-    rv = windowElement->GetAttribute(NS_ConvertASCIItoUCS2("sizemode"), sizeString);
+    rv = windowElement->GetAttribute(NS_LITERAL_STRING("sizemode"), sizeString);
     if (NS_SUCCEEDED(rv)) {
       PRInt32 sizeMode = nsSizeMode_Normal;
       /* ignore request to minimize, to not confuse novices
@@ -955,7 +955,7 @@ NS_IMETHODIMP nsXULWindow::LoadTitleFromXUL()
    NS_ENSURE_TRUE(docShellElement, NS_ERROR_FAILURE);
 
    nsAutoString windowTitle;
-   docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("title"), windowTitle);
+   docShellElement->GetAttribute(NS_LITERAL_STRING("title"), windowTitle);
    if(windowTitle.IsEmpty())
       return NS_OK;
 

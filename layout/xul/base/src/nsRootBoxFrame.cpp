@@ -325,7 +325,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 NS_IMETHODIMP
 nsRootBoxFrame::GetFrameName(nsString& aResult) const
 {
-  return MakeFrameName("RootBox", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("RootBox"), aResult);
 }
 
 NS_IMETHODIMP

@@ -74,7 +74,7 @@ void nsImageInspectorDialog::Initialize(nsIXPBaseWindow * aWindow)
   nsIDOMHTMLDocument *doc = nsnull;
   mWindow->GetDocument(doc);
   if (nsnull != doc) {
-    doc->GetElementById(NS_ConvertASCIItoUCS2("ok"), &mOKBtn);
+    doc->GetElementById(NS_LITERAL_STRING("ok"), &mOKBtn);
 
     // XXX: Register event listening on each dom element. We should change this so
     // all DOM events are automatically passed through.
@@ -190,7 +190,7 @@ void nsImageInspectorDialog::MouseClick(nsIDOMEvent* aMouseEvent, nsIXPBaseWindo
       nsCOMPtr<nsIDOMElement> node(do_QueryInterface(target));
       if (node.get() == mOKBtn) {
         nsString str;
-        GetText(NS_ConvertASCIItoUCS2("url"), str);
+        GetText(NS_LITERAL_STRING("url"), str);
         //DoClose();
       } 
     }

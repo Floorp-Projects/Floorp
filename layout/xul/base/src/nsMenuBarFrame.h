@@ -125,9 +125,9 @@ public:
   PRBool IsDisabled(nsIContent* aContent);
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
-      return MakeFrameName("MenuBar", aResult);
+      return MakeFrameName(NS_LITERAL_STRING("MenuBar"), aResult);
   }
 #endif
 

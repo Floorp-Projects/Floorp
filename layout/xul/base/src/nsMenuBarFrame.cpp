@@ -150,12 +150,12 @@ nsMenuBarFrame::Init(nsIPresContext*  aPresContext,
   // Also hook up the listener to the window listening for focus events. This is so we can keep proper
   // state as the user alt-tabs through processes.
   
-  target->AddEventListener(NS_ConvertASCIItoUCS2("keypress"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE); 
-  target->AddEventListener(NS_ConvertASCIItoUCS2("keydown"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);  
-  target->AddEventListener(NS_ConvertASCIItoUCS2("keyup"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);   
+  target->AddEventListener(NS_LITERAL_STRING("keypress"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE); 
+  target->AddEventListener(NS_LITERAL_STRING("keydown"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);  
+  target->AddEventListener(NS_LITERAL_STRING("keyup"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);   
 
-  target->AddEventListener(NS_ConvertASCIItoUCS2("mousedown"), (nsIDOMMouseListener*)mMenuBarListener, PR_FALSE);   
-  target->AddEventListener(NS_ConvertASCIItoUCS2("blur"), (nsIDOMFocusListener*)mMenuBarListener, PR_TRUE);   
+  target->AddEventListener(NS_LITERAL_STRING("mousedown"), (nsIDOMMouseListener*)mMenuBarListener, PR_FALSE);   
+  target->AddEventListener(NS_LITERAL_STRING("blur"), (nsIDOMFocusListener*)mMenuBarListener, PR_TRUE);   
 
   return rv;
 }
@@ -182,9 +182,9 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
     InstallKeyboardNavigator();
   }
   else if (mKeyboardNavigator) {
-    mTarget->RemoveEventListener(NS_ConvertASCIItoUCS2("keypress"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
-    mTarget->RemoveEventListener(NS_ConvertASCIItoUCS2("keydown"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
-    mTarget->RemoveEventListener(NS_ConvertASCIItoUCS2("keyup"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
+    mTarget->RemoveEventListener(NS_LITERAL_STRING("keypress"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
+    mTarget->RemoveEventListener(NS_LITERAL_STRING("keydown"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
+    mTarget->RemoveEventListener(NS_LITERAL_STRING("keyup"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
   
     NS_IF_RELEASE(mKeyboardNavigator);
   }
@@ -658,9 +658,9 @@ nsMenuBarFrame::InstallKeyboardNavigator()
   mKeyboardNavigator = new nsMenuListener(this);
   NS_IF_ADDREF(mKeyboardNavigator);
 
-  mTarget->AddEventListener(NS_ConvertASCIItoUCS2("keypress"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE); 
-  mTarget->AddEventListener(NS_ConvertASCIItoUCS2("keydown"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);  
-  mTarget->AddEventListener(NS_ConvertASCIItoUCS2("keyup"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);   
+  mTarget->AddEventListener(NS_LITERAL_STRING("keypress"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE); 
+  mTarget->AddEventListener(NS_LITERAL_STRING("keydown"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);  
+  mTarget->AddEventListener(NS_LITERAL_STRING("keyup"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);   
   
   return NS_OK;
 }
@@ -671,9 +671,9 @@ nsMenuBarFrame::RemoveKeyboardNavigator()
   if (!mKeyboardNavigator || mIsActive)
     return NS_OK;
 
-  mTarget->RemoveEventListener(NS_ConvertASCIItoUCS2("keypress"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
-  mTarget->RemoveEventListener(NS_ConvertASCIItoUCS2("keydown"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
-  mTarget->RemoveEventListener(NS_ConvertASCIItoUCS2("keyup"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("keypress"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("keydown"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("keyup"), (nsIDOMKeyListener*)mKeyboardNavigator, PR_TRUE);
   
   NS_IF_RELEASE(mKeyboardNavigator);
 
@@ -708,12 +708,12 @@ nsMenuBarFrame::IsDisabled(nsIContent* aContent)
 NS_IMETHODIMP
 nsMenuBarFrame::Destroy(nsIPresContext* aPresContext)
 {
-  mTarget->RemoveEventListener(NS_ConvertASCIItoUCS2("keypress"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE); 
-  mTarget->RemoveEventListener(NS_ConvertASCIItoUCS2("keydown"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);  
-  mTarget->RemoveEventListener(NS_ConvertASCIItoUCS2("keyup"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("keypress"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE); 
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("keydown"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);  
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("keyup"), (nsIDOMKeyListener*)mMenuBarListener, PR_FALSE);
 
-  mTarget->RemoveEventListener(NS_ConvertASCIItoUCS2("mousedown"), (nsIDOMMouseListener*)mMenuBarListener, PR_FALSE);
-  mTarget->RemoveEventListener(NS_ConvertASCIItoUCS2("blur"), (nsIDOMFocusListener*)mMenuBarListener, PR_TRUE);
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"), (nsIDOMMouseListener*)mMenuBarListener, PR_FALSE);
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("blur"), (nsIDOMFocusListener*)mMenuBarListener, PR_TRUE);
 
   NS_IF_RELEASE(mMenuBarListener);
 

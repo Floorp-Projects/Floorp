@@ -379,9 +379,9 @@ nsIsIndexFrame::KeyPress(nsIDOMEvent* aEvent)
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
-nsIsIndexFrame::GetFrameName(nsString& aResult) const
+nsIsIndexFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("IsIndex", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("IsIndex"), aResult);
 }
 #endif
 

@@ -987,7 +987,8 @@ nsresult nsOutlookMail::ImportAddresses( PRUint32 *pCount, PRUint32 *pTotal, con
 
 void nsOutlookMail::SanitizeValue( nsString& val)
 {
-	val.ReplaceSubstring(NS_ConvertASCIItoUCS2("\x0D\x0A"),NS_ConvertASCIItoUCS2(", "));
+	val.ReplaceSubstring(NS_LITERAL_STRING("\x0D\x0A").get(),
+                         NS_LITERAL_STRING(", ").get());
 	val.ReplaceChar( 13, ',');
 	val.ReplaceChar( 10, ',');
 }

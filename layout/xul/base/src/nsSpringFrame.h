@@ -62,9 +62,9 @@ public:
                               nsIFrame**     aFrame);
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
-      return MakeFrameName("Spring", aResult);
+      return MakeFrameName(NS_LITERAL_STRING("Spring"), aResult);
   }
 #endif
 

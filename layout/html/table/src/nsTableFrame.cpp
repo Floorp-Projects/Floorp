@@ -4162,9 +4162,9 @@ nsTableFrame::IsAutoLayout()
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsTableFrame::GetFrameName(nsString& aResult) const
+nsTableFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("Table", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("Table"), aResult);
 }
 #endif
 

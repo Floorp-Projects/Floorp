@@ -391,19 +391,19 @@ char* nsRegisterItem::toString()
     {
     case CHROME_SKIN:
         rsrcVal = mInstall->GetResourcedString(
-                    NS_ConvertASCIItoUCS2("RegSkin"));
+                    NS_LITERAL_STRING("RegSkin"));
         break;
     case CHROME_LOCALE:
         rsrcVal = mInstall->GetResourcedString(
-                    NS_ConvertASCIItoUCS2("RegLocale"));
+                    NS_LITERAL_STRING("RegLocale"));
         break;
     case CHROME_CONTENT:
         rsrcVal = mInstall->GetResourcedString(
-                    NS_ConvertASCIItoUCS2("RegContent"));
+                    NS_LITERAL_STRING("RegContent"));
         break;
     default:
         rsrcVal = mInstall->GetResourcedString(
-                    NS_ConvertASCIItoUCS2("RegPackage"));
+                    NS_LITERAL_STRING("RegPackage"));
         break;
     }
 

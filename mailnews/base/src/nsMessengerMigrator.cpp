@@ -433,7 +433,7 @@ nsMessengerMigrator::initializeStrings()
   
   // now retrieve strings
   nsXPIDLString localFolders;
-  rv = bundle->GetStringFromName(NS_ConvertASCIItoUCS2("localFolders").get(),
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("localFolders").get(),
                                  getter_Copies(localFolders));
   NS_ENSURE_SUCCESS(rv, rv);
   // convert to unicode and ASCII

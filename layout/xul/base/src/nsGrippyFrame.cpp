@@ -255,8 +255,8 @@ nsGrippyFrame::GetChildAt(nsIPresContext* aPresContext, nsIFrame* parent, PRInt3
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsGrippyFrame::GetFrameName(nsString& aResult) const
+nsGrippyFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("Grippy", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("Grippy"), aResult);
 }
 #endif

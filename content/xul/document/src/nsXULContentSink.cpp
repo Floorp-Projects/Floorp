@@ -919,7 +919,7 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
     if (text.Find(kOverlayPI) == 0) {
         // Load a XUL overlay.
         nsAutoString href;
-        nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
+        nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("href"), href);
 
         // If there was no href, we can't do
         // anything with this PI
@@ -942,7 +942,7 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
     // If it's a stylesheet PI...
     else if (text.Find(kStyleSheetPI) == 0) {
         nsAutoString href;
-        nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
+        nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("href"), href);
 
         // If there was no href, we can't do
         // anything with this PI
@@ -950,20 +950,20 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
             return NS_OK;
 
         nsAutoString type;
-        nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("type"), type);
+        nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("type"), type);
 
         nsAutoString title;
-        nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("title"), title);
+        nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("title"), title);
 
         title.CompressWhitespace();
 
         nsAutoString media;
-        nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("media"), media);
+        nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("media"), media);
 
         media.ToLowerCase();
 
         nsAutoString alternate;
-        nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("alternate"), alternate);
+        nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("alternate"), alternate);
 
         nsresult rv = ProcessStyleLink(nsnull /* XXX need a node here */,
                          href, alternate.EqualsWithConversion("yes"),  /* XXX ignore case? */

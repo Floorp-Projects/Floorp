@@ -260,9 +260,9 @@ nsLeafBoxFrame::Reflow(nsIPresContext*   aPresContext,
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsLeafBoxFrame::GetFrameName(nsString& aResult) const
+nsLeafBoxFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("LeafBox", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("LeafBox"), aResult);
 }
 #endif
 

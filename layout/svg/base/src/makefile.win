@@ -33,6 +33,7 @@ REQUIRES    = xpcom \
 			  pref \
 			  view \
 	      necko \
+	      unicharutil \
               $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN

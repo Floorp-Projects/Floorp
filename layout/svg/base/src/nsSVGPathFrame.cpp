@@ -55,7 +55,7 @@
 #include "nsGUIEvent.h"
 //#include "nsSVGPathCID.h"
 #include "nsReadableUtils.h"
-
+#include "nsUnicharUtils.h"
 //
 // NS_NewSVGPathFrame
 //
@@ -111,7 +111,10 @@ nsSVGPathFrame::Init(nsIPresContext*  aPresContext,
   nsAutoString type;
   mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
 
-  if (type.EqualsIgnoreCase(NS_ConvertASCIItoUCS2("swatch")) || type.IsEmpty())
+  if ((Compare(type,
+               NS_LITERAL_STRING("swatch"),
+               nsCaseInsensitiveStringComparator()) == 0) ||
+      type.IsEmpty())
   {
     //mSVGPath = new nsStdSVGPath();
     //mSVGPath->Init(mContent);

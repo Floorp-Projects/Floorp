@@ -1787,7 +1787,7 @@ si_WriteChar(nsOutputFileStream& strm, PRUnichar c) {
 }
 
 PRIVATE void
-si_WriteLine(nsOutputFileStream& strm, const nsString& lineBuffer) {
+si_WriteLine(nsOutputFileStream& strm, const nsAFlatString& lineBuffer) {
 
   for (PRUint32 i=0; i<lineBuffer.Length(); i++) {
     Wallet_UTF8Put(strm, lineBuffer.CharAt(i));
@@ -1846,7 +1846,7 @@ si_SaveSignonDataLocked() {
       si_WriteLine(strm, NS_ConvertASCIItoUCS2(reject->passwordRealm));
     }
   }
-  si_WriteLine(strm, NS_ConvertASCIItoUCS2("."));
+  si_WriteLine(strm, NS_LITERAL_STRING("."));
 
   /* format for cached logins shall be:
    * url LINEBREAK {name LINEBREAK value LINEBREAK}*  . LINEBREAK
@@ -1876,7 +1876,7 @@ si_SaveSignonDataLocked() {
           si_WriteLine(strm, nsAutoString(data->name));
           si_WriteLine(strm, nsAutoString(data->value));
         }
-        si_WriteLine(strm, NS_ConvertASCIItoUCS2("."));
+        si_WriteLine(strm, NS_LITERAL_STRING("."));
       }
     }
   }

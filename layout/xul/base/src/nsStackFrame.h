@@ -55,9 +55,9 @@ public:
   friend nsresult NS_NewStackFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayout = nsnull);
 
 #ifdef NS_DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
-    return MakeFrameName("Stack", aResult);
+    return MakeFrameName(NS_LITERAL_STRING("Stack"), aResult);
   }
 #endif
 

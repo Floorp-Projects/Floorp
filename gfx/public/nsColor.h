@@ -42,6 +42,7 @@
 #include "nscore.h"
 
 class nsString;
+class nsAString;
 
 // A color is a 32 bit unsigned integer with four components: R, G, B
 // and A.
@@ -93,7 +94,7 @@ extern "C" NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aBuf, nscolor* aResu
 
 // Translate a color name to a color. Return true if it parses ok,
 // otherwise return false.
-extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const nsString& aBuf, nscolor* aResult);
+extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const nsAString& aBuf, nscolor* aResult);
 
 // Weird color computing code stolen from winfe which was stolen
 // from the xfe which was written originally by Eric Bina. So there.

@@ -1242,8 +1242,8 @@ nsTextEditRules::CreateBogusNodeIfNeeded(nsISelection *aSelection)
     if (!mBogusNode) return NS_ERROR_NULL_POINTER;
 
     // give it a special attribute
-    brElement->SetAttribute( NS_ConvertASCIItoUCS2(nsEditor::kMOZEditorBogusNodeAttr),
-                             NS_ConvertASCIItoUCS2(nsEditor::kMOZEditorBogusNodeValue) );
+    brElement->SetAttribute( kMOZEditorBogusNodeAttr,
+                             kMOZEditorBogusNodeValue );
     
     // put the node in the document
     res = mEditor->InsertNode(mBogusNode,mBody,0);
@@ -1370,7 +1370,7 @@ nsTextEditRules::CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<ns
   nsCOMPtr<nsIDOMElement> brElem = do_QueryInterface(*outBRNode);
   if (brElem)
   {
-    res = mEditor->SetAttribute(brElem, NS_ConvertASCIItoUCS2("type"), NS_ConvertASCIItoUCS2("_moz"));
+    res = mEditor->SetAttribute(brElem, NS_LITERAL_STRING("type"), NS_LITERAL_STRING("_moz"));
     if (NS_FAILED(res)) return res;
   }
   return res;

@@ -349,7 +349,9 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
 
   if(NS_SUCCEEDED(rv))
   {
-    if(isServer && name->EqualsIgnoreCase(NS_ConvertASCIItoUCS2("Inbox")))
+    if(isServer && (Compare(*name,
+                            NS_LITERAL_STRING("Inbox"),
+                            nsCaseInsensitiveStringComparator()) == 0))
       flags |= MSG_FOLDER_FLAG_INBOX;
     else if((isServer || isParentInbox) && name->EqualsIgnoreCase(nsAutoString(kTrashName)))
       flags |= MSG_FOLDER_FLAG_TRASH;

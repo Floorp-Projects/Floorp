@@ -94,7 +94,7 @@ void nsPrintSetupDialog::Initialize(nsIXPBaseWindow * aWindow)
   nsIDOMHTMLDocument *doc = nsnull;
   mWindow->GetDocument(doc);
   if (nsnull != doc) {
-    doc->GetElementById(NS_ConvertASCIItoUCS2("ok"),       &mOKBtn);
+    doc->GetElementById(NS_LITERAL_STRING("ok"),       &mOKBtn);
 
     // XXX: Register event listening on each dom element. We should change this so
     // all DOM events are automatically passed through.
@@ -114,45 +114,45 @@ void nsPrintSetupDialog::Initialize(nsIXPBaseWindow * aWindow)
 //-----------------------------------------------------------------
 void nsPrintSetupDialog::GetSetupInfo(PrintSetupInfo & aPSI)
 {
-  aPSI.mPortrait         = IsChecked(NS_ConvertASCIItoUCS2("portrait"));
-  aPSI.mBevelLines       = IsChecked(NS_ConvertASCIItoUCS2("bevellines"));
-  aPSI.mBlackText        = IsChecked(NS_ConvertASCIItoUCS2("blacktext"));
-  aPSI.mBlackLines       = IsChecked(NS_ConvertASCIItoUCS2("blacklines"));
-  aPSI.mLastPageFirst    = IsChecked(NS_ConvertASCIItoUCS2("lastpagefirst"));
-  aPSI.mPrintBackgrounds = IsChecked(NS_ConvertASCIItoUCS2("printbg"));
+  aPSI.mPortrait         = IsChecked(NS_LITERAL_STRING("portrait"));
+  aPSI.mBevelLines       = IsChecked(NS_LITERAL_STRING("bevellines"));
+  aPSI.mBlackText        = IsChecked(NS_LITERAL_STRING("blacktext"));
+  aPSI.mBlackLines       = IsChecked(NS_LITERAL_STRING("blacklines"));
+  aPSI.mLastPageFirst    = IsChecked(NS_LITERAL_STRING("lastpagefirst"));
+  aPSI.mPrintBackgrounds = IsChecked(NS_LITERAL_STRING("printbg"));
 
   nsString str;
-  GetText(NS_ConvertASCIItoUCS2("toptext"), str);
+  GetText(NS_LITERAL_STRING("toptext"), str);
   aPSI.mTopMargin = GetFloat(str);
 
-  GetText(NS_ConvertASCIItoUCS2("lefttext"), str);
+  GetText(NS_LITERAL_STRING("lefttext"), str);
   aPSI.mLeftMargin = GetFloat(str);
 
-  GetText(NS_ConvertASCIItoUCS2("bottomtext"), str);
+  GetText(NS_LITERAL_STRING("bottomtext"), str);
   aPSI.mBottomMargin = GetFloat(str);
 
-  GetText(NS_ConvertASCIItoUCS2("righttext"), str);
+  GetText(NS_LITERAL_STRING("righttext"), str);
   aPSI.mRightMargin = GetFloat(str);
 
-  GetText(NS_ConvertASCIItoUCS2("lefttext"),   str);
-  GetText(NS_ConvertASCIItoUCS2("bottomtext"), str);
-  GetText(NS_ConvertASCIItoUCS2("righttext"),  str);
+  GetText(NS_LITERAL_STRING("lefttext"),   str);
+  GetText(NS_LITERAL_STRING("bottomtext"), str);
+  GetText(NS_LITERAL_STRING("righttext"),  str);
 
   nsString header;
   nsString footer;
-  GetText(NS_ConvertASCIItoUCS2("headertext"),  header);
-  GetText(NS_ConvertASCIItoUCS2("footertext"),  footer);
+  GetText(NS_LITERAL_STRING("headertext"),  header);
+  GetText(NS_LITERAL_STRING("footertext"),  footer);
   aPSI.mHeaderText = header;
   aPSI.mFooterText = footer;
 
   //GetText("headertext",  aPSI.mHeaderText);
   //GetText("footertext",  aPSI.mFooterText);
 
-  aPSI.mDocTitle    = IsChecked(NS_ConvertASCIItoUCS2("doctitle"));
-  aPSI.mDocLocation = IsChecked(NS_ConvertASCIItoUCS2("docloc"));
-  aPSI.mPageNum     = IsChecked(NS_ConvertASCIItoUCS2("pagenum"));
-  aPSI.mPageTotal   = IsChecked(NS_ConvertASCIItoUCS2("pagetotal"));
-  aPSI.mDatePrinted = IsChecked(NS_ConvertASCIItoUCS2("dateprinted"));
+  aPSI.mDocTitle    = IsChecked(NS_LITERAL_STRING("doctitle"));
+  aPSI.mDocLocation = IsChecked(NS_LITERAL_STRING("docloc"));
+  aPSI.mPageNum     = IsChecked(NS_LITERAL_STRING("pagenum"));
+  aPSI.mPageTotal   = IsChecked(NS_LITERAL_STRING("pagetotal"));
+  aPSI.mDatePrinted = IsChecked(NS_LITERAL_STRING("dateprinted"));
 
 }
 
@@ -169,31 +169,31 @@ void nsPrintSetupDialog::SetSetupInfo(const PrintSetupInfo & aPSI)
 //-----------------------------------------------------------------
 void nsPrintSetupDialog::SetSetupInfoInternal(const PrintSetupInfo & aPSI)
 {
-  SetChecked(NS_ConvertASCIItoUCS2("portrait"),      aPSI.mPortrait);
-  SetChecked(NS_ConvertASCIItoUCS2("bevellines"),    aPSI.mBevelLines);
-  SetChecked(NS_ConvertASCIItoUCS2("blacktext"),     aPSI.mBlackText);
-  SetChecked(NS_ConvertASCIItoUCS2("blacklines"),    aPSI.mBlackLines);
-  SetChecked(NS_ConvertASCIItoUCS2("lastpagefirst"), aPSI.mLastPageFirst);
-  SetChecked(NS_ConvertASCIItoUCS2("printbg"),       aPSI.mPrintBackgrounds);
+  SetChecked(NS_LITERAL_STRING("portrait"),      aPSI.mPortrait);
+  SetChecked(NS_LITERAL_STRING("bevellines"),    aPSI.mBevelLines);
+  SetChecked(NS_LITERAL_STRING("blacktext"),     aPSI.mBlackText);
+  SetChecked(NS_LITERAL_STRING("blacklines"),    aPSI.mBlackLines);
+  SetChecked(NS_LITERAL_STRING("lastpagefirst"), aPSI.mLastPageFirst);
+  SetChecked(NS_LITERAL_STRING("printbg"),       aPSI.mPrintBackgrounds);
 
   char str[64];
   sprintf(str, "%5.2f", aPSI.mTopMargin);
-  SetText(NS_ConvertASCIItoUCS2("toptext"), NS_ConvertASCIItoUCS2(str));
+  SetText(NS_LITERAL_STRING("toptext"), NS_ConvertASCIItoUCS2(str));
   sprintf(str, "%5.2f", aPSI.mLeftMargin);
-  SetText(NS_ConvertASCIItoUCS2("lefttext"), NS_ConvertASCIItoUCS2(str));
+  SetText(NS_LITERAL_STRING("lefttext"), NS_ConvertASCIItoUCS2(str));
   sprintf(str, "%5.2f", aPSI.mBottomMargin);
-  SetText(NS_ConvertASCIItoUCS2("bottomtext"), NS_ConvertASCIItoUCS2(str));
+  SetText(NS_LITERAL_STRING("bottomtext"), NS_ConvertASCIItoUCS2(str));
   sprintf(str, "%5.2f", aPSI.mRightMargin);
-  SetText(NS_ConvertASCIItoUCS2("righttext"),  NS_ConvertASCIItoUCS2(str));
+  SetText(NS_LITERAL_STRING("righttext"),  NS_ConvertASCIItoUCS2(str));
 
-  SetText(NS_ConvertASCIItoUCS2("headertext"),  aPSI.mHeaderText);
-  SetText(NS_ConvertASCIItoUCS2("footertext"),  aPSI.mFooterText);
+  SetText(NS_LITERAL_STRING("headertext"),  aPSI.mHeaderText);
+  SetText(NS_LITERAL_STRING("footertext"),  aPSI.mFooterText);
 
-  SetChecked(NS_ConvertASCIItoUCS2("doctitle"),    aPSI.mDocTitle);
-  SetChecked(NS_ConvertASCIItoUCS2("docloc"),      aPSI.mDocLocation);
-  SetChecked(NS_ConvertASCIItoUCS2("pagenum"),     aPSI.mPageNum);
-  SetChecked(NS_ConvertASCIItoUCS2("pagetotal"),   aPSI.mPageTotal);
-  SetChecked(NS_ConvertASCIItoUCS2("dateprinted"), aPSI.mDatePrinted);
+  SetChecked(NS_LITERAL_STRING("doctitle"),    aPSI.mDocTitle);
+  SetChecked(NS_LITERAL_STRING("docloc"),      aPSI.mDocLocation);
+  SetChecked(NS_LITERAL_STRING("pagenum"),     aPSI.mPageNum);
+  SetChecked(NS_LITERAL_STRING("pagetotal"),   aPSI.mPageTotal);
+  SetChecked(NS_LITERAL_STRING("dateprinted"), aPSI.mDatePrinted);
 
 }
 

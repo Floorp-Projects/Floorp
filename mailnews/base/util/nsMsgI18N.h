@@ -153,7 +153,7 @@ NS_MSG_BASE nsresult nsMsgI18NConvertToUnicode(const nsCString& aCharset,
  * @param outCString  [OUT] Output C string, need PR_FREE.
  * @return            nsresult.
  */
-NS_MSG_BASE nsresult ConvertFromUnicode(const nsString& aCharset, 
+NS_MSG_BASE nsresult ConvertFromUnicode(const nsAString& aCharset, 
                                    const nsString& inString,
                                    char** outCString);
 
@@ -165,7 +165,7 @@ NS_MSG_BASE nsresult ConvertFromUnicode(const nsString& aCharset,
  * @param outString   [OUT] Output unicode string.
  * @return            nsresult.
  */
-NS_MSG_BASE nsresult ConvertToUnicode(const nsString& aCharset, 
+NS_MSG_BASE nsresult ConvertToUnicode(const nsAString& aCharset, 
                                  const char* inCString, 
                                  nsString& outString);
 

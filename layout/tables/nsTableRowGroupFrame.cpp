@@ -1641,9 +1641,9 @@ nsTableRowGroupFrame::Init(nsIPresContext*  aPresContext,
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsTableRowGroupFrame::GetFrameName(nsString& aResult) const
+nsTableRowGroupFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("TableRowGroup", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("TableRowGroup"), aResult);
 }
 
 NS_IMETHODIMP

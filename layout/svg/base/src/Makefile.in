@@ -38,6 +38,7 @@ REQUIRES	= xpcom \
 		  view \
 		  pref \
 		  necko \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -607,7 +607,7 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
                         //printf("Collapse right\n");
                         if (GetCollapseDirection() == After) 
                         {
-                             mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state, NS_ConvertASCIItoUCS2("collapsed"), PR_TRUE);
+                             mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state, NS_LITERAL_STRING("collapsed"), PR_TRUE);
                            
                         }
 
@@ -616,7 +616,7 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
                         //printf("Collapse left\n");
                         if (GetCollapseDirection() == Before) 
                         {
-                          mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state, NS_ConvertASCIItoUCS2("collapsed"), PR_TRUE);
+                          mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state, NS_LITERAL_STRING("collapsed"), PR_TRUE);
                          
                         }
                     }
@@ -626,7 +626,7 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
                 // if we are not in a collapsed position and we are not dragging make sure
                 // we are dragging.
                 if (currentState != Dragging)
-                  mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state, NS_ConvertASCIItoUCS2("dragging"), PR_TRUE);
+                  mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state, NS_LITERAL_STRING("dragging"), PR_TRUE);
 
                 if (realTimeDrag)
                   AdjustChildren(aPresContext);
@@ -952,7 +952,7 @@ nsSplitterFrameInner::MouseMove(nsIDOMEvent* aMouseEvent)
   if (mDragging)
     return NS_OK;
 
-  mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state, NS_ConvertASCIItoUCS2("dragging"), PR_TRUE);
+  mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state, NS_LITERAL_STRING("dragging"), PR_TRUE);
 
   RemoveListener();
   mOuter->CaptureMouse(mOuter->mPresContext, PR_TRUE);
@@ -1031,7 +1031,7 @@ nsSplitterFrameInner::UpdateState()
             // Open -> Collapsed
             // Dragging -> Collapsed
             sibling->SetAttr(kNameSpaceID_None, nsXULAtoms::collapsed,
-                             NS_ConvertASCIItoUCS2("true"), PR_TRUE);
+                             NS_LITERAL_STRING("true"), PR_TRUE);
           }
         }
       }

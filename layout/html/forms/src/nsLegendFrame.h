@@ -74,7 +74,7 @@ public:
                    PRUint32             aFlags = 0);
 
 #ifdef NS_DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
   PRInt32 GetAlign();

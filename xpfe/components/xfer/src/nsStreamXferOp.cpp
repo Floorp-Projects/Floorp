@@ -471,7 +471,7 @@ nsStreamXferOp::OnStopRequest( nsIRequest      *request,
         
         if (stringBundle) {
             nsXPIDLString messageStr;
-            nsresult rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("repost").get(), 
+            nsresult rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("repost").get(), 
                                                           getter_Copies(messageStr));
             
             if (NS_SUCCEEDED(rv) && messageStr && mParentWindow) {

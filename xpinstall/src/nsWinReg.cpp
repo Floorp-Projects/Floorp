@@ -65,9 +65,9 @@ nsWinReg::SetRootKey(PRInt32 key)
 }
   
 PRInt32
-nsWinReg::CreateKey(const nsString& subkey, const nsString& classname, PRInt32* aReturn)
+nsWinReg::CreateKey(const nsAString& subkey, const nsAString& classname, PRInt32* aReturn)
 {
-	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_CREATE, subkey, classname, NS_ConvertASCIItoUCS2("null"), aReturn);
+	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_CREATE, subkey, classname, NS_LITERAL_STRING("null"), aReturn);
 
   if(wi == nsnull)
   {
@@ -91,9 +91,9 @@ nsWinReg::CreateKey(const nsString& subkey, const nsString& classname, PRInt32* 
 }
   
 PRInt32
-nsWinReg::DeleteKey(const nsString& subkey, PRInt32* aReturn)
+nsWinReg::DeleteKey(const nsAString& subkey, PRInt32* aReturn)
 {
-	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_DELETE, subkey, NS_ConvertASCIItoUCS2("null"), NS_ConvertASCIItoUCS2("null"), aReturn);
+	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_DELETE, subkey, NS_LITERAL_STRING("null"), NS_LITERAL_STRING("null"), aReturn);
 
   if(wi == nsnull)
   {
@@ -117,9 +117,9 @@ nsWinReg::DeleteKey(const nsString& subkey, PRInt32* aReturn)
 }
 
 PRInt32
-nsWinReg::DeleteValue(const nsString& subkey, const nsString& valname, PRInt32* aReturn)
+nsWinReg::DeleteValue(const nsAString& subkey, const nsAString& valname, PRInt32* aReturn)
 {
-	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_DELETE_VAL, subkey, valname, NS_ConvertASCIItoUCS2("null"), aReturn);
+	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_DELETE_VAL, subkey, valname, NS_LITERAL_STRING("null"), aReturn);
 
   if(wi == nsnull)
   {
@@ -143,7 +143,7 @@ nsWinReg::DeleteValue(const nsString& subkey, const nsString& valname, PRInt32* 
 }
 
 PRInt32
-nsWinReg::SetValueString(const nsString& subkey, const nsString& valname, const nsString& value, PRInt32* aReturn)
+nsWinReg::SetValueString(const nsAString& subkey, const nsAString& valname, const nsAString& value, PRInt32* aReturn)
 {
 	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_SET_VAL_STRING, subkey, valname, value, aReturn);
 

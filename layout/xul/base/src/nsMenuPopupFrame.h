@@ -156,9 +156,9 @@ public:
   NS_IMETHOD KillCloseTimer();
 
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
-      return MakeFrameName("MenuPopup", aResult);
+      return MakeFrameName(NS_LITERAL_STRING("MenuPopup"), aResult);
   }
 #endif
 

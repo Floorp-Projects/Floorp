@@ -98,19 +98,19 @@ LookupLowercasedKeyword(const nsCString& aLowercasedKeyword,
 }  
 
 PRInt32
-nsStaticCaseInsensitiveNameTable::Lookup(const nsCString& aName)
+nsStaticCaseInsensitiveNameTable::Lookup(const nsACString& aName)
 {
     NS_ASSERTION(mNameArray, "not inited");  
     NS_ASSERTION(mNameTable, "not inited");  
     NS_ASSERTION(mCount,     "not inited");
 
-    nsCAutoString strLower;
-    aName.ToLowerCase(strLower);
+    nsCAutoString strLower(aName);
+    strLower.ToLowerCase();
     return LookupLowercasedKeyword(strLower, mNameTable);
 }  
 
 PRInt32
-nsStaticCaseInsensitiveNameTable::Lookup(const nsString& aName)
+nsStaticCaseInsensitiveNameTable::Lookup(const nsAString& aName)
 {
     NS_ASSERTION(mNameArray, "not inited");  
     NS_ASSERTION(mNameTable, "not inited");  

@@ -1309,9 +1309,9 @@ nsTableCellFrame::GetFrameType(nsIAtom** aType) const
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsTableCellFrame::GetFrameName(nsString& aResult) const
+nsTableCellFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("TableCell", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("TableCell"), aResult);
 }
 #endif
 

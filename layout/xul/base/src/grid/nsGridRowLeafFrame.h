@@ -55,9 +55,9 @@ public:
   friend nsresult NS_NewGridRowLeafFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayoutManager);
 
 #ifdef NS_DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
-      return MakeFrameName("nsGridRowLeaf", aResult);
+      return MakeFrameName(NS_LITERAL_STRING("nsGridRowLeaf"), aResult);
   }
 #endif
 

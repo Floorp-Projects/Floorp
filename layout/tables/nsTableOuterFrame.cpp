@@ -1759,9 +1759,9 @@ NS_NewTableOuterFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsTableOuterFrame::GetFrameName(nsString& aResult) const
+nsTableOuterFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("TableOuter", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("TableOuter"), aResult);
 }
 
 NS_IMETHODIMP

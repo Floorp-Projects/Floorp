@@ -319,7 +319,7 @@ NS_IMETHODIMP mozLineTerm::OpenAux(const PRUnichar *command,
       return NS_ERROR_FAILURE;
 
   // Ensure that cookie attribute of document is defined
-  nsAutoString cookiePrefix ( NS_ConvertASCIItoUCS2("xmlterm=") );
+  NS_NAMED_LITERAL_STRING(cookiePrefix, "xmlterm=");
   nsAutoString cookieStr;
   result = domHTMLDoc->GetCookie(cookieStr);
 

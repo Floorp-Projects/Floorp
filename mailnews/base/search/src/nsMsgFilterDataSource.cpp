@@ -92,7 +92,7 @@ nsMsgFilterDataSource::cleanupGlobalObjects()
 nsresult
 nsMsgFilterDataSource::initGlobalObjects(nsIRDFService *rdf)
 {
-    rdf->GetLiteral(NS_ConvertASCIItoUCS2("true").get(),
+    rdf->GetLiteral(NS_LITERAL_STRING("true").get(),
                     getter_AddRefs(kTrueLiteral));
     
     rdf->GetResource(NC_RDF_CHILD, getter_AddRefs(kNC_Child));

@@ -467,7 +467,7 @@ static const char *kAbPrintUrlFormat = "addbook:printone?email=%s&folder=%s";
 		*aPrintCardUrl = PR_smprintf("");
 		return NS_OK;
 	}
-	dirNameStr.ReplaceSubstring(NS_ConvertASCIItoUCS2(" "), NS_ConvertASCIItoUCS2("%20"));
+	dirNameStr.ReplaceSubstring(NS_LITERAL_STRING(" ").get(), NS_LITERAL_STRING("%20").get());
 
   char *emailCharStr = ToNewUTF8String(emailStr);
   char *dirCharStr = ToNewUTF8String(dirNameStr);

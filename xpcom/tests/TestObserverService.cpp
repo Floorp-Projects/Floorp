@@ -69,7 +69,7 @@ extern ostream &operator<<( ostream &s, nsString &str ) {
 
 class TestObserver : public nsIObserver, public nsSupportsWeakReference {
 public:
-    TestObserver( const nsString &name = NS_ConvertASCIItoUCS2("unknown") )
+    TestObserver( const nsAString &name = NS_LITERAL_STRING("unknown") )
         : mName( name ) {
         NS_INIT_REFCNT();
     }
@@ -111,9 +111,9 @@ int main(int argc, char *argv[])
 	
     if (res == NS_OK) {
 
-        nsIObserver *aObserver = new TestObserver(NS_ConvertASCIItoUCS2("Observer-A"));
+        nsIObserver *aObserver = new TestObserver(NS_LITERAL_STRING("Observer-A"));
         aObserver->AddRef();
-        nsIObserver *bObserver = new TestObserver(NS_ConvertASCIItoUCS2("Observer-B"));
+        nsIObserver *bObserver = new TestObserver(NS_LITERAL_STRING("Observer-B"));
         bObserver->AddRef();
             
         cout << "Adding Observer-A as observer of topic-A..." << endl;
@@ -131,13 +131,13 @@ int main(int argc, char *argv[])
         cout << "Testing Notify(observer-A, topic-A)..." << endl;
         rv = anObserverService->NotifyObservers( aObserver,
                                    topicA.get(),
-                                   NS_ConvertASCIItoUCS2("Testing Notify(observer-A, topic-A)").get() );
+                                   NS_LITERAL_STRING("Testing Notify(observer-A, topic-A)").get() );
         testResult(rv);
 
         cout << "Testing Notify(observer-B, topic-B)..." << endl;
         rv = anObserverService->NotifyObservers( bObserver,
                                    topicB.get(),
-                                   NS_ConvertASCIItoUCS2("Testing Notify(observer-B, topic-B)").get() );
+                                   NS_LITERAL_STRING("Testing Notify(observer-B, topic-B)").get() );
         testResult(rv);
  
         cout << "Testing EnumerateObserverList (for topic-A)..." << endl;
@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
                    << NS_REINTERPRET_CAST(TestObserver*, NS_REINTERPRET_CAST(void*, observer.get()))->mName << "..." << endl;
               rv = observer->Observe( observer, 
                                       topicA.get(), 
-                                      NS_ConvertASCIItoUCS2("during enumeration").get() );
+                                      NS_LITERAL_STRING("during enumeration").get() );
               testResult(rv);
           }
         }

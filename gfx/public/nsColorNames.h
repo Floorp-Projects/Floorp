@@ -43,6 +43,8 @@
 
 struct nsStr;
 class nsCString;
+class nsACString;
+class nsAString;
 
 /*
    Declare the enum list using the magic of preprocessing
@@ -66,8 +68,8 @@ public:
 
   // Given a color name, return the color enum value
   // This only functions provided a valid ref on the table
-  static nsColorName LookupName(const nsString& aName);
-  static nsColorName LookupName(const nsCString& aName);
+  static nsColorName LookupName(const nsAString& aName);
+  static nsColorName LookupName(const nsACString& aName);
 
   static const nsCString& GetStringValue(nsColorName aColorName);
 

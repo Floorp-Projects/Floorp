@@ -841,12 +841,10 @@ nsTextBoxFrame::GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsTextBoxFrame::GetFrameName(nsString& aResult) const
+nsTextBoxFrame::GetFrameName(nsAString& aResult) const
 {
-    MakeFrameName("Text", aResult);
-    aResult += NS_LITERAL_STRING("[value=");
-    aResult += mTitle;
-    aResult += NS_LITERAL_STRING("]");
+    MakeFrameName(NS_LITERAL_STRING("Text"), aResult);
+    aResult += NS_LITERAL_STRING("[value=") + mTitle + NS_LITERAL_STRING("]");
     return NS_OK;
 }
 #endif

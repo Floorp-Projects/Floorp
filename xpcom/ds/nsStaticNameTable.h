@@ -61,8 +61,8 @@ public:
   enum { NOT_FOUND = -1 };
 
   PRBool           Init(const char* Names[], PRInt32 Count);
-  PRInt32          Lookup(const nsCString& aName);
-  PRInt32          Lookup(const nsString& aName);
+  PRInt32          Lookup(const nsACString& aName);
+  PRInt32          Lookup(const nsAString& aName);
   const nsCString& GetStringValue(PRInt32 index);
   PRBool           IsNullString(const nsCString& s) {return s == mNullStr;}
 

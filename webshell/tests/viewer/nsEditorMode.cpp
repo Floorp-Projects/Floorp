@@ -146,10 +146,10 @@ nsresult NS_DoEditorTest(PRInt32 aCommandID)
     switch(aCommandID)
     {
       case VIEWER_EDIT_SET_BGCOLOR_RED:
-        htmlEditor->SetBodyAttribute(NS_ConvertASCIItoUCS2("bgcolor"), NS_ConvertASCIItoUCS2("red"));
+        htmlEditor->SetBodyAttribute(NS_LITERAL_STRING("bgcolor"), NS_LITERAL_STRING("red"));
         break;
       case VIEWER_EDIT_SET_BGCOLOR_YELLOW:
-        htmlEditor->SetBodyAttribute(NS_ConvertASCIItoUCS2("bgcolor"), NS_ConvertASCIItoUCS2("yellow"));
+        htmlEditor->SetBodyAttribute(NS_LITERAL_STRING("bgcolor"), NS_LITERAL_STRING("yellow"));
         break;
       case VIEWER_EDIT_INSERT_CELL:  
         tableEditor->InsertTableCell(1, PR_FALSE);

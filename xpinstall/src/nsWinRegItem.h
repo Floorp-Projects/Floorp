@@ -56,16 +56,16 @@ public:
   nsWinRegItem(nsWinReg*        regObj,
                PRInt32          root,
                PRInt32          action,
-               const nsString&  sub,
-               const nsString&  valname,
-               const nsString&  val,
+               const nsAString&  sub,
+               const nsAString&  valname,
+               const nsAString&  val,
                PRInt32*         aReturn);
   
   nsWinRegItem(nsWinReg*        regObj,
                PRInt32          root,
                PRInt32          action,
-               const nsString&  sub,
-               const nsString&  valname,
+               const nsAString&  sub,
+               const nsAString&  valname,
                PRInt32          val,
                PRInt32*         aReturn);
   

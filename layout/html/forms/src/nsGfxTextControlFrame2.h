@@ -106,9 +106,9 @@ public:
 #endif
 
 #ifdef NS_DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const
+  NS_IMETHOD GetFrameName(nsAString& aResult) const
   {
-    aResult.AssignWithConversion("nsGfxControlFrame2");
+    aResult = NS_LITERAL_STRING("nsGfxControlFrame2");
     return NS_OK;
   }
 #endif

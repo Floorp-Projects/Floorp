@@ -152,9 +152,6 @@ static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
 
-const char* nsEditor::kMOZEditorBogusNodeAttr="_moz_editor_bogus_node";
-const char* nsEditor::kMOZEditorBogusNodeValue="TRUE";
-
 #ifdef NS_DEBUG_EDITOR
 static PRBool gNoisy = PR_FALSE;
 #else
@@ -1145,7 +1142,7 @@ nsEditor::MarkNodeDirty(nsIDOMNode* aNode)
   //  mark the node dirty.
   nsCOMPtr<nsIDOMElement> element (do_QueryInterface(aNode));
   if (element)
-    element->SetAttribute(NS_ConvertASCIItoUCS2("_moz_dirty"), nsAutoString());
+    element->SetAttribute(NS_LITERAL_STRING("_moz_dirty"), NS_LITERAL_STRING(""));
   return NS_OK;
 }
 
@@ -3662,10 +3659,9 @@ nsEditor::IsMozEditorBogusNode(nsIDOMNode *aNode)
   element = do_QueryInterface(aNode);
   if (element)
   {
-    nsAutoString att; att.AssignWithConversion(kMOZEditorBogusNodeAttr);
     nsAutoString val;
-    (void)element->GetAttribute(att, val);
-    if (val.EqualsWithConversion(kMOZEditorBogusNodeValue)) {
+    (void)element->GetAttribute(kMOZEditorBogusNodeAttr, val);
+    if (val.Equals(kMOZEditorBogusNodeValue)) {
       return PR_TRUE;
     }
   }

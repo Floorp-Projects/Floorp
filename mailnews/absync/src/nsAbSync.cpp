@@ -765,7 +765,7 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
   PRBool        foundPhone = PR_FALSE;
   const char    *phoneType;
 
-  protLine = NS_ConvertASCIItoUCS2("");
+  protLine.Truncate();
 
   if (aAddId)
   {
@@ -784,8 +784,7 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
     char *tVal = PR_smprintf("%d", (aKey * -1));
     if (tVal)
     {
-      tProtLine.Append(NS_ConvertASCIItoUCS2("%26cid%3D"));
-      tProtLine.Append(NS_ConvertASCIItoUCS2(tVal));
+      tProtLine.Append(NS_LITERAL_STRING("%26cid%3D") + NS_ConvertASCIItoUCS2(tVal));
       nsCRT::free(tVal);
     }
   }
@@ -844,9 +843,9 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
             utfString = myTStr;
           }
 
-          tProtLine.Append(NS_ConvertASCIItoUCS2("&"));
-          tProtLine.Append(NS_ConvertASCIItoUCS2(pVal));
-          tProtLine.Append(NS_ConvertASCIItoUCS2("="));
+          tProtLine.Append(NS_LITERAL_STRING("&") + 
+                           NS_ConvertASCIItoUCS2(pVal) +
+                           NS_LITERAL_STRING("="));
           if (utfString)
           {
             tProtLine.Append(NS_ConvertASCIItoUCS2(utfString));
@@ -854,10 +853,10 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
           }
           else
             tProtLine.Append(aName);
-          tProtLine.Append(NS_ConvertASCIItoUCS2("&"));
-          tProtLine.Append(NS_ConvertASCIItoUCS2(pVal));
-          tProtLine.Append(NS_ConvertASCIItoUCS2("_type="));
-          tProtLine.Append(NS_ConvertASCIItoUCS2(phoneType));
+          tProtLine.Append(NS_LITERAL_STRING("&") + 
+                           NS_ConvertASCIItoUCS2(pVal) + 
+                           NS_LITERAL_STRING("_type=") +
+                           NS_ConvertASCIItoUCS2(phoneType));
           PR_FREEIF(pVal);
           phoneCount++;
         }
@@ -874,9 +873,9 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
           utfString = myTStr;
         }
 
-        tProtLine.Append(NS_ConvertASCIItoUCS2("&"));
-        tProtLine.Append(NS_ConvertASCIItoUCS2(mSchemaMappingList[i].serverField));
-        tProtLine.Append(NS_ConvertASCIItoUCS2("="));
+        tProtLine.Append(NS_LITERAL_STRING("&") + 
+                         NS_ConvertASCIItoUCS2(mSchemaMappingList[i].serverField) +
+                         NS_LITERAL_STRING("="));
         if (utfString)
         {
           tProtLine.Append(NS_ConvertASCIItoUCS2(utfString));
@@ -915,9 +914,9 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
           utfString = myTStr;
         }
       
-        tProtLine.Append(NS_ConvertASCIItoUCS2("&"));
-        tProtLine.Append(NS_ConvertASCIItoUCS2(kServerPlainTextColumn));
-        tProtLine.Append(NS_ConvertASCIItoUCS2("="));
+        tProtLine.Append(NS_LITERAL_STRING("&") + 
+                         NS_ConvertASCIItoUCS2(kServerPlainTextColumn) +
+                         NS_LITERAL_STRING("="));
         if (utfString)
         {
           tProtLine.Append(NS_ConvertASCIItoUCS2(utfString));
@@ -987,7 +986,7 @@ nsAbSync::ThisCardHasChanged(nsIAbCard *aCard, syncMappingRecord *newSyncRecord,
   nsString            tempProtocolLine;
 
   // First, null out the protocol return line
-  protLine = NS_ConvertASCIItoUCS2("");
+  protLine.Truncate();
 
   // Use the localID for this entry to lookup the old history record in the 
   // cached array
@@ -1062,9 +1061,9 @@ nsAbSync::ThisCardHasChanged(nsIAbCard *aCard, syncMappingRecord *newSyncRecord,
       char *tVal = PR_smprintf("%d", (aKey * -1));
       if (tVal)
       {
-        protLine.Append(NS_ConvertASCIItoUCS2("%26cid%3D"));
-        protLine.Append(NS_ConvertASCIItoUCS2(tVal));
-        protLine.Append(tempProtocolLine);
+        protLine.Append(NS_LITERAL_STRING("%26cid%3D") +
+                        NS_ConvertASCIItoUCS2(tVal) +
+                        tempProtocolLine);
         nsCRT::free(tVal);
       }
       else
@@ -1079,9 +1078,9 @@ nsAbSync::ThisCardHasChanged(nsIAbCard *aCard, syncMappingRecord *newSyncRecord,
       char *tVal2 = PR_smprintf("%d", historyRecord->serverID);
       if (tVal2)
       {
-        protLine.Append(NS_ConvertASCIItoUCS2("%26id%3D"));
-        protLine.Append(NS_ConvertASCIItoUCS2(tVal2));
-        protLine.Append(tempProtocolLine);
+        protLine.Append(NS_LITERAL_STRING("%26id%3D") +
+                        NS_ConvertASCIItoUCS2(tVal2) +
+                        tempProtocolLine);
         nsCRT::free(tVal2);
       }
       else
@@ -1434,7 +1433,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
           //
           // Need the separator for multiple operations...
           if (!mPostString.IsEmpty())
-            mPostString.Append(NS_ConvertASCIItoUCS2("&"));
+            mPostString.Append(NS_LITERAL_STRING("&"));
 
           if (mNewSyncMapingTable[workCounter].flags & SYNC_ADD)
           {
@@ -1446,12 +1445,12 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
             char *tVal3 = PR_smprintf("%d", mCurrentPostRecord);
             if (tVal3)
             {
-              mPostString.Append(NS_ConvertASCIItoUCS2(tVal3));
-              mPostString.Append(NS_ConvertASCIItoUCS2("="));
+              mPostString.Append(NS_ConvertASCIItoUCS2(tVal3) + 
+                                 NS_LITERAL_STRING("="));
             }
 
-            mPostString.Append(NS_ConvertASCIItoUCS2(SYNC_ESCAPE_ADDUSER));
-            mPostString.Append(singleProtocolLine);
+            mPostString.Append(NS_ConvertASCIItoUCS2(SYNC_ESCAPE_ADDUSER) + 
+                               singleProtocolLine);
 
             PR_FREEIF(tVal3);
             mCurrentPostRecord++;
@@ -1466,12 +1465,12 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
             char *tVal4 = PR_smprintf("%d", mCurrentPostRecord);
             if (tVal4)
             {
-              mPostString.Append(NS_ConvertASCIItoUCS2(tVal4));
-              mPostString.Append(NS_ConvertASCIItoUCS2("="));
+              mPostString.Append(NS_ConvertASCIItoUCS2(tVal4) +
+                                 NS_LITERAL_STRING("="));
             }
 
-            mPostString.Append(NS_ConvertASCIItoUCS2(SYNC_ESCAPE_MOD));
-            mPostString.Append(singleProtocolLine);
+            mPostString.Append(NS_ConvertASCIItoUCS2(SYNC_ESCAPE_MOD) +
+                               singleProtocolLine);
             PR_FREEIF(tVal4);
             mCurrentPostRecord++;
           }
@@ -1494,7 +1493,7 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
     {
       // Need the separator for multiple operations...
       if (!mPostString.IsEmpty())
-        mPostString.Append(NS_ConvertASCIItoUCS2("&"));
+        mPostString.Append(NS_LITERAL_STRING("&"));
 
       char *tVal = PR_smprintf("%d", mOldSyncMapingTable[readCount].serverID);
       if (tVal)
@@ -1506,13 +1505,13 @@ nsAbSync::AnalyzeAllRecords(nsIAddrDatabase *aDatabase, nsIAbDirectory *director
         char *tVal2 = PR_smprintf("%d", mCurrentPostRecord);
         if (tVal2)
         {
-          mPostString.Append(NS_ConvertASCIItoUCS2(tVal2));
-          mPostString.Append(NS_ConvertASCIItoUCS2("="));
+          mPostString.Append(NS_ConvertASCIItoUCS2(tVal2) +
+                             NS_LITERAL_STRING("="));
         }
 
-        mPostString.Append(NS_ConvertASCIItoUCS2(SYNC_ESCAPE_DEL));
-        mPostString.Append(NS_ConvertASCIItoUCS2("%26id="));
-        mPostString.Append(NS_ConvertASCIItoUCS2(tVal));
+        mPostString.Append(NS_ConvertASCIItoUCS2(SYNC_ESCAPE_DEL) +
+                           NS_LITERAL_STRING("%26id=") +
+                           NS_ConvertASCIItoUCS2(tVal));
         nsCRT::free(tVal);
         nsCRT::free(tVal2);
         mCurrentPostRecord++;
@@ -1554,7 +1553,7 @@ nsAbSync::AnalyzeTheLocalAddressBook()
   nsCOMPtr <nsIAbDirectory>     directory = nsnull;
 
   // Init to null...
-  mPostString.Assign(NS_ConvertASCIItoUCS2(""));
+  mPostString.Truncate();
 
   // Now, open the database...for now, make it the default
   rv = OpenAB(mAbSyncAddressBookFileName, &aDatabase);
@@ -2183,7 +2182,7 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
   // If no response, then this is a problem...
   if (!aProtocolResponse)
   {
-    PRUnichar   *outValue = GetString(NS_ConvertASCIItoUCS2("syncInvalidResponse").get());
+    PRUnichar   *outValue = GetString(NS_LITERAL_STRING("syncInvalidResponse").get());
     DisplayErrorMessage(outValue);
     PR_FREEIF(outValue);
     return NS_ERROR_FAILURE;
@@ -2195,7 +2194,7 @@ nsAbSync::ProcessServerResponse(const char *aProtocolResponse)
 
   if (ErrorFromServer(&errorString))
   {
-    PRUnichar   *outValue = GetString(NS_ConvertASCIItoUCS2("syncServerError").get());
+    PRUnichar   *outValue = GetString(NS_LITERAL_STRING("syncServerError").get());
     PRUnichar   *msgValue;
 
     msgValue = nsTextFormatter::smprintf(outValue, errorString);
@@ -2712,7 +2711,7 @@ nsAbSync::AddNewUsers()
         {
           tFullName.Append(tFirstName);
           if (tLastName)
-            tFullName.Append(NS_ConvertASCIItoUCS2(" "));
+            tFullName.Append(NS_LITERAL_STRING(" "));
         }
 
         if (tLastName)
@@ -2798,7 +2797,7 @@ PRInt32
 nsAbSync::GetTypeOfPhoneNumber(nsString tagName)
 {  
   nsString compValue = tagName;
-  compValue.Append(NS_ConvertASCIItoUCS2("_type"));
+  compValue.Append(NS_LITERAL_STRING("_type"));
 
   for (PRInt32 i=0; i<mPhoneTypes->Count(); i++)
   {
@@ -2913,9 +2912,9 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
   if (!aTagName->CompareWithConversion("phone", PR_TRUE, 5))
   {
     nsString      tempVal;
-    tempVal.Append(*aTagName);
-    tempVal.Append(NS_ConvertASCIItoUCS2("="));
-    tempVal.Append(*aTagValue);
+    tempVal.Append(*aTagName +
+                   NS_LITERAL_STRING("=") +
+                   *aTagValue);
 
     if (aTagName->FindChar(aChar) != -1)
       mPhoneTypes->AppendString(tempVal);

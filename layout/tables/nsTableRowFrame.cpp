@@ -1548,9 +1548,9 @@ NS_NewTableRowFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsTableRowFrame::GetFrameName(nsString& aResult) const
+nsTableRowFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("TableRow", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("TableRow"), aResult);
 }
 
 NS_IMETHODIMP

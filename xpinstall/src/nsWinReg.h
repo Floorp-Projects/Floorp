@@ -79,10 +79,10 @@ class nsWinReg
                       ~nsWinReg();
 
     PRInt32           SetRootKey(PRInt32 key);
-    PRInt32           CreateKey(const nsString& subkey, const nsString& classname, PRInt32* aReturn);
-    PRInt32           DeleteKey(const nsString& subkey, PRInt32* aReturn);
-    PRInt32           DeleteValue(const nsString& subkey, const nsString& valname, PRInt32* aReturn);
-    PRInt32           SetValueString(const nsString& subkey, const nsString& valname, const nsString& value, PRInt32* aReturn);
+    PRInt32           CreateKey(const nsAString& subkey, const nsAString& classname, PRInt32* aReturn);
+    PRInt32           DeleteKey(const nsAString& subkey, PRInt32* aReturn);
+    PRInt32           DeleteValue(const nsAString& subkey, const nsAString& valname, PRInt32* aReturn);
+    PRInt32           SetValueString(const nsAString& subkey, const nsAString& valname, const nsAString& value, PRInt32* aReturn);
     PRInt32           GetValueString(const nsString& subkey, const nsString& valname, nsString* aReturn);
     PRInt32           SetValueNumber(const nsString& subkey, const nsString& valname, PRInt32 value, PRInt32* aReturn);
     PRInt32           GetValueNumber(const nsString& subkey, const nsString& valname, PRInt32* aReturn);

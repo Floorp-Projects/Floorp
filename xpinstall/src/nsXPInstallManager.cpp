@@ -310,19 +310,19 @@ PRBool nsXPInstallManager::ConfirmChromeInstall(nsIScriptGlobalObject* aGlobalOb
             if ( mChromeType == CHROME_LOCALE )
             {
                 xpiBundle->GetStringFromName(
-                    NS_ConvertASCIItoUCS2("ApplyNowLocale").get(),
+                    NS_LITERAL_STRING("ApplyNowLocale").get(),
                     getter_Copies(applyNowText));
                 xpiBundle->GetStringFromName(
-                    NS_ConvertASCIItoUCS2("ConfirmLocale").get(),
+                    NS_LITERAL_STRING("ConfirmLocale").get(),
                     getter_Copies(confirmFormat));
             }
             else
             {
                 xpiBundle->GetStringFromName(
-                    NS_ConvertASCIItoUCS2("ApplyNowSkin").get(),
+                    NS_LITERAL_STRING("ApplyNowSkin").get(),
                     getter_Copies(applyNowText));
                 xpiBundle->GetStringFromName(
-                    NS_ConvertASCIItoUCS2("ConfirmSkin").get(),
+                    NS_LITERAL_STRING("ConfirmSkin").get(),
                     getter_Copies(confirmFormat));
             }
 

@@ -519,9 +519,9 @@ nsSVGContainerFrame::Release(void)
 }
 
 NS_IMETHODIMP
-nsSVGContainerFrame::GetFrameName(nsString& aResult) const
+nsSVGContainerFrame::GetFrameName(nsAString& aResult) const
 {
-	aResult = NS_ConvertASCIItoUCS2("nsSVGContainerFrame");
+	aResult = NS_LITERAL_STRING("nsSVGContainerFrame");
 	return NS_OK;
 }
 

@@ -225,7 +225,7 @@ public:
 
 #ifdef DEBUG
     // nsIFrameDebug
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
     // nsIFormControlFrame

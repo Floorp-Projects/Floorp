@@ -289,12 +289,12 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString &
   nsAutoString inputString (aInputString);  // hope this does copy-on-write
 
   // Windows linebreaks: Map CRLF to LF:
-  inputString.ReplaceSubstring(NS_ConvertASCIItoUCS2("\r\n"),
-                               NS_ConvertASCIItoUCS2("\n"));
+  inputString.ReplaceSubstring(NS_LITERAL_STRING("\r\n").get(),
+                               NS_LITERAL_STRING("\n").get());
  
   // Mac linebreaks: Map any remaining CR to LF:
-  inputString.ReplaceSubstring(NS_ConvertASCIItoUCS2("\r"),
-                               NS_ConvertASCIItoUCS2("\n"));
+  inputString.ReplaceSubstring(NS_LITERAL_STRING("\r").get(),
+                               NS_LITERAL_STRING("\n").get());
 */
 
   // force IME commit; set up rules sniffing and batching

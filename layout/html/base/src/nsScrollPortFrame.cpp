@@ -77,9 +77,9 @@ nsScrollPortFrame::NeedsClipWidget()
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
-nsScrollPortFrame::GetFrameName(nsString& aResult) const
+nsScrollPortFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("ScrollPortFrame", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("ScrollPortFrame"), aResult);
 }
 #endif
 

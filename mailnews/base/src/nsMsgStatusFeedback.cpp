@@ -126,7 +126,7 @@ nsMsgStatusFeedback::OnStateChange(nsIWebProgress* aWebProgress,
       m_lastPercent = 0;
       StartMeteors();
       nsXPIDLString loadingDocument;
-      rv = mBundle->GetStringFromName(NS_ConvertASCIItoUCS2("documentLoading").get(),
+      rv = mBundle->GetStringFromName(NS_LITERAL_STRING("documentLoading").get(),
                                       getter_Copies(loadingDocument));
       if (NS_SUCCEEDED(rv))
         ShowStatusString(loadingDocument);
@@ -135,7 +135,7 @@ nsMsgStatusFeedback::OnStateChange(nsIWebProgress* aWebProgress,
     {
       StopMeteors();
       nsXPIDLString documentDone;
-      rv = mBundle->GetStringFromName(NS_ConvertASCIItoUCS2("documentDone").get(),
+      rv = mBundle->GetStringFromName(NS_LITERAL_STRING("documentDone").get(),
                                       getter_Copies(documentDone));
       if (NS_SUCCEEDED(rv))
         ShowStatusString(documentDone);

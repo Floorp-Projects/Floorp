@@ -675,9 +675,9 @@ nsImageBoxFrame::CacheImageSize(nsBoxLayoutState& aState)
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsImageBoxFrame::GetFrameName(nsString& aResult) const
+nsImageBoxFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("ImageBox", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("ImageBox"), aResult);
 }
 #endif
 

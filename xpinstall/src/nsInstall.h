@@ -271,7 +271,7 @@ class nsInstall
         void       LogComment(nsString& aComment);
 
         PRInt32    ExtractFileFromJar(const nsString& aJarfile, nsIFile* aSuggestedName, nsIFile** aRealName);
-        char*      GetResourcedString(const nsString& aResName);
+        char*      GetResourcedString(const nsAString& aResName);
         void       AddPatch(nsHashKey *aKey, nsIFile* fileName);
         void       GetPatch(nsHashKey *aKey, nsIFile** fileName);
         

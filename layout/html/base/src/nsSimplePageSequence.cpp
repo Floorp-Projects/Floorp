@@ -557,9 +557,9 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsSimplePageSequenceFrame::GetFrameName(nsString& aResult) const
+nsSimplePageSequenceFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("SimplePageSequence", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("SimplePageSequence"), aResult);
 }
 #endif
 

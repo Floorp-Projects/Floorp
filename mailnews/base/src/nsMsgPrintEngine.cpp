@@ -87,7 +87,7 @@ nsMsgPrintEngine::OnStateChange(nsIWebProgress* aWebProgress,
   if (progressStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT) {
     if (progressStateFlags & nsIWebProgressListener::STATE_START) {
       // Tell the user we are loading...
-      PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("LoadingMessageToPrint").get());
+      PRUnichar *msg = GetString(NS_LITERAL_STRING("LoadingMessageToPrint").get());
       SetStatusMessage( msg );
       if (msg) nsCRT::free(msg);
     }
@@ -97,7 +97,7 @@ nsMsgPrintEngine::OnStateChange(nsIWebProgress* aWebProgress,
       rv = NS_ERROR_FAILURE;
 
       // Tell the user the message is loaded...
-      PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("MessageLoaded").get());
+      PRUnichar *msg = GetString(NS_LITERAL_STRING("MessageLoaded").get());
       SetStatusMessage( msg );
       if (msg) nsCRT::free(msg);
 
@@ -270,7 +270,7 @@ nsMsgPrintEngine::StartNextPrintOperation()
     mWindow->Close();
 
     // Tell the user we are done...
-    PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("PrintingComplete").get());
+    PRUnichar *msg = GetString(NS_LITERAL_STRING("PrintingComplete").get());
     SetStatusMessage( msg );
     if (msg) nsCRT::free(msg);
     

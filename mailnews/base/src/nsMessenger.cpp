@@ -579,7 +579,7 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
 
   urlString.AssignWithConversion(unescapedUrl);
 
-  urlString.ReplaceSubstring(NS_ConvertASCIItoUCS2("/;section"), NS_ConvertASCIItoUCS2("?section"));
+  urlString.ReplaceSubstring(NS_LITERAL_STRING("/;section").get(), NS_LITERAL_STRING("?section").get());
   urlCString = ToNewCString(urlString);
 
   rv = CreateStartupUrl(urlCString, getter_AddRefs(aURL));
@@ -685,12 +685,12 @@ nsMessenger::SaveAttachment(const char * contentType, const char * url,
      The display name is in UTF-8 because it has been escaped from JS
   */ 
   
-  rv = ConvertToUnicode(NS_ConvertASCIItoUCS2("UTF-8"), unescapedDisplayName, tempStr);
+  rv = ConvertToUnicode(NS_LITERAL_STRING("UTF-8"), unescapedDisplayName, tempStr);
   if (NS_SUCCEEDED(rv))
   {
       filePicker->Init(
           nsnull, 
-          GetString(NS_ConvertASCIItoUCS2("Save Attachment").get()),
+          GetString(NS_LITERAL_STRING("Save Attachment").get()),
           nsIFilePicker::modeSave
           );
       filePicker->SetDefaultString(tempStr.get());
@@ -738,7 +738,7 @@ nsMessenger::SaveAllAttachments(PRUint32 count,
     if (NS_FAILED(rv)) goto done;
     filePicker->Init(
         nsnull, 
-        GetString(NS_ConvertASCIItoUCS2("Save All Attachments").get()),
+        GetString(NS_LITERAL_STRING("Save All Attachments").get()),
         nsIFilePicker::modeGetFolder
         );
     filePicker->Show(&dialogResult);
@@ -763,7 +763,7 @@ nsMessenger::SaveAllAttachments(PRUint32 count,
         nsUnescape(unescapedUrl);
         unescapedName = PL_strdup(displayNameArray[0]);
         nsUnescape(unescapedName);
-        rv = ConvertToUnicode(NS_ConvertASCIItoUCS2("UTF-8"), unescapedName, tempStr);
+        rv = ConvertToUnicode(NS_LITERAL_STRING("UTF-8"), unescapedName, tempStr);
         if (NS_FAILED(rv)) goto done;
         rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), tempStr,
                                 &tempCStr);
@@ -819,11 +819,11 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
         nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("@mozilla.org/filepicker;1", &rv);
         if (NS_FAILED(rv)) goto done;
 
-        filePicker->Init(nsnull, GetString(NS_ConvertASCIItoUCS2("SaveMailAs").get()), nsIFilePicker::modeSave);
+        filePicker->Init(nsnull, GetString(NS_LITERAL_STRING("SaveMailAs").get()), nsIFilePicker::modeSave);
 
         filePicker->SetDefaultString(GetString(NS_LITERAL_STRING("defaultSaveMessageAsFileName").get()));
-        filePicker->AppendFilter(GetString(NS_ConvertASCIItoUCS2("EMLFiles").get()),
-                                 NS_ConvertASCIItoUCS2("*.eml").get());
+        filePicker->AppendFilter(GetString(NS_LITERAL_STRING("EMLFiles").get()),
+                                 NS_LITERAL_STRING("*.eml").get());
         filePicker->AppendFilters(nsIFilePicker::filterHTML | nsIFilePicker::filterText | nsIFilePicker::filterAll);
 
         PRInt16 dialogResult;
@@ -1689,7 +1689,7 @@ nsSaveMsgListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
           nsUnescape(unescapedUrl);
           unescapedName = PL_strdup(state->m_displayNameArray[i]);
           nsUnescape(unescapedName);
-          rv = ConvertToUnicode(NS_ConvertASCIItoUCS2("UTF-8"), unescapedName, tempStr);
+          rv = ConvertToUnicode(NS_LITERAL_STRING("UTF-8"), unescapedName, tempStr);
           if (NS_FAILED(rv)) goto done;
           rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), tempStr,
                                   &tempCStr);

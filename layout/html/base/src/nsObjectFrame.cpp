@@ -93,6 +93,7 @@
 #include "nsIPrintOptions.h"
 #include "nsGfxCIID.h"
 #include "nsHTMLUtils.h"
+#include "nsUnicharUtils.h"
 static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 // headers for plugin scriptability
@@ -649,9 +650,9 @@ nsObjectFrame::GetFrameType(nsIAtom** aType) const
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsObjectFrame::GetFrameName(nsString& aResult) const
+nsObjectFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("ObjectFrame", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("ObjectFrame"), aResult);
 }
 #endif
 
@@ -1463,9 +1464,9 @@ nsObjectFrame::IsHidden() const
     // on the tag...
       // these |NS_ConvertASCIItoUCS2|s can't be |NS_LITERAL_STRING|s until |EqualsIgnoreCase| get's fixed
     if (hidden.Length() &&
-        ! hidden.EqualsIgnoreCase(NS_ConvertASCIItoUCS2("false")) &&
-        ! hidden.EqualsIgnoreCase(NS_ConvertASCIItoUCS2("no")) &&
-        ! hidden.EqualsIgnoreCase(NS_ConvertASCIItoUCS2("off"))) {
+        (Compare(hidden, NS_LITERAL_STRING("false"), nsCaseInsensitiveStringComparator()) != 0) &&
+        (Compare(hidden, NS_LITERAL_STRING("no"), nsCaseInsensitiveStringComparator()) != 0) &&
+        (Compare(hidden, NS_LITERAL_STRING("off"), nsCaseInsensitiveStringComparator()) != 0)) {
       // The <embed> or <applet> is hidden.
       return PR_TRUE;
     }

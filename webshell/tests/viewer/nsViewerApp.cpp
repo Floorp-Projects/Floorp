@@ -737,12 +737,10 @@ nsViewerApp::ViewSource(nsString& aURL)
 
   bw->SetApp(this);
   bw->Init(mAppShell, nsRect(0, 0, 620, 400), PRUint32(~0), mAllowPlugins);
-  bw->SetTitle(NS_ConvertASCIItoUCS2("View Source").get());
+  bw->SetTitle(NS_LITERAL_STRING("View Source").get());
   bw->SetVisibility(PR_TRUE);
 
-  nsAutoString strUrl; strUrl.AppendWithConversion("view-source:");
-  strUrl.Append(aURL);
-  bw->GoTo(strUrl.get());
+  bw->GoTo(PromiseFlatString(NS_LITERAL_STRING("view-source:") + aURL).get());
 
   NS_RELEASE(bw);
 

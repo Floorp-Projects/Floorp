@@ -36,7 +36,7 @@
 #include "nsIImportABDescriptor.h"
 #include "nsEudoraStringBundle.h"
 #include "nsEudoraImport.h"
-
+#include "nsUnicharUtils.h"
 #include "EudoraDebugLog.h"
 
 
@@ -1382,7 +1382,9 @@ nsresult nsEudoraWin32::FoundAddressBook( nsIFileSpec *spec, const PRUnichar *pN
 		nsCRT::free( pLeaf);
 		nsString	tStr;
 		name.Right( tStr, 4);
-		if (!tStr.CompareWithConversion( NS_ConvertASCIItoUCS2(".txt").get(), PR_TRUE)) {
+		if (! Compare(tStr,
+                      NS_LITERAL_STRING(".txt"),
+                      nsCaseInsensitiveStringComparator())) {
 			name.Left( tStr, name.Length() - 4);
 			name = tStr;
 		}

@@ -683,9 +683,9 @@ nsScrollBoxFrame::GetFrameType(nsIAtom** aType) const
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
-nsScrollBoxFrame::GetFrameName(nsString& aResult) const
+nsScrollBoxFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("ScrollBox", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("ScrollBox"), aResult);
 }
 #endif
 
@@ -750,7 +750,7 @@ nsScrollBoxFrame::SaveState(nsIPresContext* aPresContext,
     if (xoffset) {
       res = xoffset->SetData(x);
       NS_ENSURE_SUCCESS(res, res);
-      state->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("x-offset"), xoffset);
+      state->SetStatePropertyAsSupports(NS_LITERAL_STRING("x-offset"), xoffset);
     }
 
     nsCOMPtr<nsISupportsPRInt32> yoffset;
@@ -759,7 +759,7 @@ nsScrollBoxFrame::SaveState(nsIPresContext* aPresContext,
     if (yoffset) {
       res = yoffset->SetData(y);
       NS_ENSURE_SUCCESS(res, res);
-      state->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("y-offset"), yoffset);
+      state->SetStatePropertyAsSupports(NS_LITERAL_STRING("y-offset"), yoffset);
     }
 
     nsCOMPtr<nsISupportsPRInt32> width;
@@ -768,7 +768,7 @@ nsScrollBoxFrame::SaveState(nsIPresContext* aPresContext,
     if (width) {
       res = width->SetData(childRect.width);
       NS_ENSURE_SUCCESS(res, res);
-      state->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("width"), width);
+      state->SetStatePropertyAsSupports(NS_LITERAL_STRING("width"), width);
     }
 
     nsCOMPtr<nsISupportsPRInt32> height;
@@ -777,7 +777,7 @@ nsScrollBoxFrame::SaveState(nsIPresContext* aPresContext,
     if (height) {
       res = height->SetData(childRect.height);
       NS_ENSURE_SUCCESS(res, res);
-      state->SetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("height"), height);
+      state->SetStatePropertyAsSupports(NS_LITERAL_STRING("height"), height);
     }
     *aState = state;
     NS_ADDREF(*aState);
@@ -796,10 +796,10 @@ nsScrollBoxFrame::RestoreState(nsIPresContext* aPresContext,
   nsCOMPtr<nsISupportsPRInt32> yoffset;
   nsCOMPtr<nsISupportsPRInt32> width;
   nsCOMPtr<nsISupportsPRInt32> height;
-  aState->GetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("x-offset"), getter_AddRefs(xoffset));
-  aState->GetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("y-offset"), getter_AddRefs(yoffset));
-  aState->GetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("width"), getter_AddRefs(width));
-  aState->GetStatePropertyAsSupports(NS_ConvertASCIItoUCS2("height"), getter_AddRefs(height));
+  aState->GetStatePropertyAsSupports(NS_LITERAL_STRING("x-offset"), getter_AddRefs(xoffset));
+  aState->GetStatePropertyAsSupports(NS_LITERAL_STRING("y-offset"), getter_AddRefs(yoffset));
+  aState->GetStatePropertyAsSupports(NS_LITERAL_STRING("width"), getter_AddRefs(width));
+  aState->GetStatePropertyAsSupports(NS_LITERAL_STRING("height"), getter_AddRefs(height));
 
   nsresult res = NS_ERROR_NULL_POINTER;
   if (xoffset && yoffset) {

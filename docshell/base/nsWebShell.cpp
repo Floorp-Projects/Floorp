@@ -923,7 +923,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
                                 getter_AddRefs(stringBundle));
        if (stringBundle && prompter) {
         nsXPIDLString messageStr;
-        nsresult rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("fileNotFound").get(), 
+        nsresult rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("fileNotFound").get(), 
                                                       getter_Copies(messageStr));
           
         if (NS_SUCCEEDED(rv) && messageStr) {
@@ -1048,7 +1048,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       }
 
       nsXPIDLString messageStr;
-      rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("dnsNotFound").get(),
+      rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("dnsNotFound").get(),
                                            getter_Copies(messageStr));
       if (NS_FAILED(rv)) return rv;
 
@@ -1080,7 +1080,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       }
 
       nsXPIDLString messageStr;
-      rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("connectionFailure").get(),
+      rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("connectionFailure").get(),
                                            getter_Copies(messageStr));
       if (NS_FAILED(rv)) return rv;
 
@@ -1112,7 +1112,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
       }
 
       nsXPIDLString messageStr;
-      rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("netTimeout").get(),
+      rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("netTimeout").get(),
                                            getter_Copies(messageStr));
       if (NS_FAILED(rv)) return rv;
 
@@ -1137,7 +1137,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
  
       if (stringBundle && prompter) {
         nsXPIDLString messageStr;
-        nsresult rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("repost").get(), 
+        nsresult rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("repost").get(), 
                                                       getter_Copies(messageStr));
           
         if (NS_SUCCEEDED(rv) && messageStr) {

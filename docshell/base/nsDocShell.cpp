@@ -2206,8 +2206,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI, PRUint32 aLoadFlags)
 
         nsXPIDLString messageStr;
         NS_ENSURE_SUCCESS(stringBundle->
-                          GetStringFromName(NS_ConvertASCIItoUCS2
-                                            ("protocolNotFound").get(),
+                          GetStringFromName(NS_LITERAL_STRING("protocolNotFound").get(),
                                             getter_Copies(messageStr)),
                           NS_ERROR_FAILURE);
 
@@ -5232,7 +5231,7 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
  
       if (stringBundle && prompter) {
         nsXPIDLString messageStr;
-        nsresult rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("repostConfirm").get(), 
+        nsresult rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("repostConfirm").get(), 
                                                       getter_Copies(messageStr));
           
         if (NS_SUCCEEDED(rv) && messageStr) {

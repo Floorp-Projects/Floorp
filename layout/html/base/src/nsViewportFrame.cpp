@@ -106,7 +106,7 @@ public:
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   
 #ifdef DEBUG
-  NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameName(nsAString& aResult) const;
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
 
@@ -632,9 +632,9 @@ ViewportFrame::GetFrameType(nsIAtom** aType) const
 
 #ifdef DEBUG
 NS_IMETHODIMP
-ViewportFrame::GetFrameName(nsString& aResult) const
+ViewportFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName("Viewport", aResult);
+  return MakeFrameName(NS_LITERAL_STRING("Viewport"), aResult);
 }
 
 NS_IMETHODIMP
