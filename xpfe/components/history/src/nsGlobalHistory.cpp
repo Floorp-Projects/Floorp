@@ -588,6 +588,12 @@ nsGlobalHistory::RemoveAllPages()
     if (err != 0)
       continue;
 
+    // XXX possibly avoid leakage
+    err = row->CutAllColumns(mEnv);
+    NS_ASSERTION(err == 0, "couldn't cut all columns");
+    // XXX we'll notify regardless of whether we could successfully
+    // CutAllColumns or not.
+
     // Notify observers that the row is, er, history.
     NotifyUnassert(kNC_HistoryRoot, kNC_child, resource);
   }
@@ -599,7 +605,7 @@ nsGlobalHistory::RemoveAllPages()
   // Do a "large commit" to flush the (almost empty) table to disk.
   {
     nsMdbPtr<nsIMdbThumb> thumb(mEnv);
-    err = mStore->LargeCommit(mEnv, getter_Acquires(thumb));
+    err = mStore->CompressCommit(mEnv, getter_Acquires(thumb));
     if (err != 0) return NS_ERROR_FAILURE;
 
     mdb_count total;
