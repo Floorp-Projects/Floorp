@@ -433,23 +433,17 @@ nsAccessibilityService::CreateHTMLAreaAccessible(nsIWeakReference *aShell, nsIDO
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsAccessibilityService::CreateHTMLBlockAccessible(nsIDOMNode* aDOMNode, nsISupports* aDocument, nsIAccessible **_retval)
+NS_IMETHODIMP
+nsAccessibilityService::CreateHTMLBlockAccessible(nsISupports *aFrame, nsIAccessible **_retval)
 {
-  nsCOMPtr<nsIDocument> document (do_QueryInterface(aDocument));
-  if (!document)
-    return NS_ERROR_FAILURE;
+  nsIFrame* frame;
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIWeakReference> weakShell;
+  nsresult rv = GetInfo(aFrame, &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
+  if (NS_FAILED(rv))
+    return rv;
 
-#ifdef DEBUG
-  PRInt32 shells = document->GetNumberOfShells();
-  NS_ASSERTION(shells > 0,"Error no shells!");
-#endif
-
-  nsCOMPtr<nsIPresShell> tempShell;
-  document->GetShellAt(0, getter_AddRefs(tempShell));
-  nsCOMPtr<nsIWeakReference> weakShell = do_GetWeakReference(tempShell);
-
-  *_retval = new nsAccessible(aDOMNode, weakShell);
+  *_retval = new nsHTMLBlockAccessible(node, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 

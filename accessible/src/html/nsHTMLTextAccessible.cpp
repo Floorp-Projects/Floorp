@@ -45,13 +45,13 @@ nsTextAccessible(aDomNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsHTMLTextAccessible::GetAccName(nsAString& _retval)
+NS_IMETHODIMP nsHTMLTextAccessible::GetAccName(nsAString& aName)
 { 
   nsAutoString accName;
   if (NS_FAILED(mDOMNode->GetNodeValue(accName)))
     return NS_ERROR_FAILURE;
   accName.CompressWhitespace();
-  _retval = accName;
+  aName = accName;
   return NS_OK;
 }
 
@@ -60,15 +60,40 @@ nsLeafAccessible(aDomNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsHTMLHRAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsHTMLHRAccessible::GetAccRole(PRUint32 *aRole)
 {
-  *_retval = ROLE_SEPARATOR;
+  *aRole = ROLE_SEPARATOR;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLHRAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsHTMLHRAccessible::GetAccState(PRUint32 *aState)
 {
-  nsLeafAccessible::GetAccState(_retval);
-  *_retval &= ~STATE_FOCUSABLE;
+  nsLeafAccessible::GetAccState(aState);
+  *aState &= ~STATE_FOCUSABLE;
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLBlockAccessible, nsBlockAccessible)
+
+nsHTMLBlockAccessible::nsHTMLBlockAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
+nsBlockAccessible(aDomNode, aShell)
+{ 
+}
+
+NS_IMETHODIMP nsHTMLBlockAccessible::GetAccName(nsAString& aName)
+{
+  return nsAccessible::GetAccName(aName);
+}
+
+NS_IMETHODIMP nsHTMLBlockAccessible::GetAccRole(PRUint32 *aRole)
+{
+  *aRole = ROLE_TEXT;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLBlockAccessible::GetAccState(PRUint32 *aState)
+{
+  nsAccessible::GetAccState(aState);
+  *aState &= ~STATE_FOCUSABLE;
   return NS_OK;
 }

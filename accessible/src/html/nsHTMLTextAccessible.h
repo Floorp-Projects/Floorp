@@ -61,4 +61,15 @@ public:
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
 };
 
+class nsHTMLBlockAccessible : public nsBlockAccessible
+{
+  NS_DECL_ISUPPORTS_INHERITED
+
+public:
+  nsHTMLBlockAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccName(nsAString& _retval);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccState(PRUint32 *_retval); 
+};
+
 #endif  
