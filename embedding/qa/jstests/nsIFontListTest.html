@@ -1,0 +1,86 @@
+<HTML>
+<!--
+Written by Dharma.
+Test last run on 07/02/01.
+-->
+<TITLE> nsIFontList </TITLE>
+<HEAD>
+<SCRIPT TYPE="text/javascript">
+
+var langgroup = new Array("x-western", "ar", "el", "he", "ja", "ko", "th",
+                          "tr", "x-baltic", "x-central-euro", "x-cyrillic",
+                          "zh-CN", "zh-TW");
+var fonttype = new Array("serif" , "sans-serif", "cursive", "fantasy", "monospace");
+
+function getFontList()
+{
+  try
+  {
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    var fontListObj = Components.classes["@mozilla.org/gfx/fontlist;1"].createInstance();
+    if (fontListObj)
+       fontListObj = fontListObj.QueryInterface(Components.interfaces.nsIFontList);
+    /*
+     this can be done in a single stmt.
+    var fontListObj = Components.classes["@mozilla.org/gfx/fontlist;1"].
+                      createInstance(Components.interfaces.nsIFontList);
+    */
+  }
+  catch(e) {
+    alert("Exception: " + e);
+  }
+  return fontListObj;
+}
+
+</SCRIPT>
+
+<SCRIPT LANGUAGE="JAVASCRIPT">
+
+function getBrowserVersion()
+{
+  document.write("<b><h2>Browser Info </h2></b>");
+  document.write("<p><li><b>App Name:<TAB> </b>" + navigator.appName);
+  document.write("<p><li><b>User Agent:<TAB> </b>" + navigator.userAgent);
+  document.write("<p><li><b>Code Name:<TAB> </b>" + navigator.appCodeName);
+  document.write("<p><li><b>App Version:<TAB> </b>" + navigator.appVersion);
+  document.write("<p><li><b>Language:<TAB> </b>" + navigator.language);
+  document.write("<p><li><b>Platform:<TAB> </b>" + navigator.platform);
+}
+
+</SCRIPT>
+</HEAD>
+
+<BODY>
+<SCRIPT TYPE="text/javascript">
+getBrowserVersion();
+var fontList = getFontList();
+try
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  document.writeln("<H2><B>" + "Available Fonts" + "</B></H2>");
+  for(i=0; i<langgroup.length; i++)
+  {
+    document.writeln("<BR><B><U>" + langgroup[i] + "</U></B> <BR>");
+    for(j=0; j<fonttype.length; j++)
+    {
+      document.writeln("<B>" + fonttype[j] + "</B> <BR>");
+      var fontEnumerator = fontList.availableFonts(langgroup[i], fonttype[j]);
+      while (fontEnumerator.hasMoreElements())
+      {
+        fontName = fontEnumerator.getNext();
+        fontName = fontName.QueryInterface(Components.interfaces.nsISupportsWString);
+        var fontNameStr = fontName.toString();
+        document.writeln(fontNameStr + "<BR>");
+      }
+    }
+  }
+  document.writeln("<B>" + "-------------------" + "</B>");
+
+}
+catch(e) {
+  alert("Exception: " + e);
+}
+</SCRIPT>
+</BODY>
+</HTML>
