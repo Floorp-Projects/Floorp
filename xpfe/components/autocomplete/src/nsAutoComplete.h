@@ -65,13 +65,11 @@ public:
   NS_DECL_NSIAUTOCOMPLETERESULTS
   
 private:
-    nsString mSearchString;
-    nsCOMPtr<nsISupports> mParam;
-    nsCOMPtr<nsIDOMHTMLInputElement> mInputElement;
-    
-    nsCOMPtr<nsICollection> mItems;
+    nsString mSearchString;    
+    nsCOMPtr<nsISupportsArray> mItems;
     PRInt32 mDefaultItemIndex;
-    nsString mDefaultComment;
+
+    nsCOMPtr<nsISupports> mParam;
 };
 
 #endif

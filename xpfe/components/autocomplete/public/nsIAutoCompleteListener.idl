@@ -44,4 +44,7 @@ interface nsIAutoCompleteListener : nsISupports {
 
     /* onAutoComplete is called by the autocomplete session when the search is done or over */
     void onAutoComplete(in nsIAutoCompleteResults result, in AutoCompleteStatus status);
+    
+    /* private param used by the autocomplete widget */
+    attribute nsISupports param;
 };

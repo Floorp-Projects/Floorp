@@ -23,7 +23,7 @@
  */
 
 #include "nsISupports.idl"
-#include "nsICollection.idl"
+#include "nsISupportsArray.idl"
 
 [scriptable, uuid(88DCFA80-062F-11d4-a449-B36A1A94C0FC)]
 interface nsIAutoCompleteItem : nsISupports {
@@ -39,12 +39,11 @@ interface nsIAutoCompleteItem : nsISupports {
 [scriptable, uuid(88DCFA81-062F-11d4-a449-B36A1A94C0FC)]
 interface nsIAutoCompleteResults : nsISupports {
     attribute wstring searchString;                 // the original search string
-    attribute nsISupports param;                    // param use by the the search engine
     
-    attribute nsICollection items;                  // Array of result items (nsIAutoCompleteItem)
-    attribute long defaultItemIndex;                // Index (0 base) of the defaut item that will be preselected and displayed
-    attribute wstring defaultComment;               // will be displayed in the input element only if the selected item doesn't
-                                                    // have its own comment (blurr type only)
+    attribute nsISupportsArray items;               // Array of result items (nsIAutoCompleteItem)
+    attribute long defaultItemIndex;                // Index (0 base) of the default item that will be preselected and displayed
+
+    attribute nsISupports param;                    // param use by the the search engine
 };
 
 %{ C++

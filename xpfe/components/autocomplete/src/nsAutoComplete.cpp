@@ -139,7 +139,8 @@ NS_IMPL_ISUPPORTS1(nsAutoCompleteResults, nsIAutoCompleteResults)
 nsAutoCompleteResults::nsAutoCompleteResults() :
     mDefaultItemIndex(0)
 {
-  NS_INIT_ISUPPORTS();
+    NS_NewISupportsArray(getter_AddRefs(mItems));
+    NS_INIT_ISUPPORTS();
 }
 
 nsAutoCompleteResults::~nsAutoCompleteResults()
@@ -173,7 +174,7 @@ NS_IMETHODIMP nsAutoCompleteResults::SetParam(nsISupports * aParam)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAutoCompleteResults::GetItems(nsICollection * *aItems)
+NS_IMETHODIMP nsAutoCompleteResults::GetItems(nsISupportsArray * *aItems)
 {
     if (!aItems) return NS_ERROR_NULL_POINTER;
     *aItems = mItems;
@@ -181,7 +182,7 @@ NS_IMETHODIMP nsAutoCompleteResults::GetItems(nsICollection * *aItems)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAutoCompleteResults::SetItems(nsICollection * aItems)
+NS_IMETHODIMP nsAutoCompleteResults::SetItems(nsISupportsArray * aItems)
 {
     mItems = aItems;
     return NS_OK;
@@ -197,18 +198,5 @@ NS_IMETHODIMP nsAutoCompleteResults::GetDefaultItemIndex(PRInt32 *aDefaultItemIn
 NS_IMETHODIMP nsAutoCompleteResults::SetDefaultItemIndex(PRInt32 aDefaultItemIndex)
 {
     mDefaultItemIndex = aDefaultItemIndex;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsAutoCompleteResults::GetDefaultComment(PRUnichar * *aDefaultComment)
-{
-    if (!aDefaultComment) return NS_ERROR_NULL_POINTER;
-    *aDefaultComment = mDefaultComment.ToNewUnicode();
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsAutoCompleteResults::SetDefaultComment(const PRUnichar * aDefaultComment)
-{
-    mDefaultComment = aDefaultComment;
     return NS_OK;
 }
