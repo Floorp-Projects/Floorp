@@ -19,7 +19,7 @@ DEPTH=../../../..
 
 include $(DEPTH)/config/config.mk
 
-LIBRARY_NAME = raptorxlmdoc_s
+LIBRARY_NAME = raptorxmldoc_s
 
 DEFINES += -D_IMPL_NS_HTML
 
