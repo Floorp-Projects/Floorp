@@ -174,11 +174,12 @@ private:
   void RestoreGC();
   void ApplyClipping( PhGC_t *);
   void SetPhLineStyle();
+  void StartDrawing(PhDrawContext_t *dc, PhGC_t *gc);
+  void StopDrawing();
 
 protected:
   PhGC_t             *mGC;
   PhGC_t             *mholdGC;
-  PhGC_t             *mOldGC;
   nscolor            mCurrentColor;
   nsLineStyle        mCurrentLineStyle;
   nsTransform2D      *mTMatrix;		// transform that all the graphics drawn here will obey
@@ -193,6 +194,8 @@ protected:
   PtWidget_t         *mWidget;
   char               *mPhotonFontName;
   nsRegionPh         *mGlobalClip;
+  PhDrawContext_t 	*mOldDC;
+  PhGC_t			*mOldGC;
 
   //default objects
   //state management

@@ -31,6 +31,7 @@
 #include "nsDeviceContextPh.h"
 #include "nsRenderingContextPh.h"
 #include "nsDeviceContextSpecPh.h"
+#include "nsHashtable.h"
 
 #include "nsPhGfxLog.h"
 
@@ -43,6 +44,8 @@ nscoord nsDeviceContextPh::mDpi = 96;
 
 NS_IMPL_ISUPPORTS1(nsDeviceContextPh, nsIDeviceContext)
 
+static nsHashtable* mFontLoadCache = nsnull;
+static int globals_initialized = 0;
 
 nsDeviceContextPh :: nsDeviceContextPh()
 {
@@ -82,6 +85,12 @@ nsDeviceContextPh :: ~nsDeviceContextPh()
   if (NULL != mPaletteInfo.palette)
     PR_Free(mPaletteInfo.palette);
 
+  if (mFontLoadCache) 
+  {
+	 delete mFontLoadCache;
+	 mFontLoadCache = nsnull;
+  }
+
   NS_IF_RELEASE(mSpec);
 }
 
@@ -119,41 +128,104 @@ nsresult nsDeviceContextPh :: Init(nsNativeDeviceContext aContext, nsIDeviceCont
   PpPrintContext_t       *PrinterContext = nsnull;
   float                  origscale, newscale, t2d, a2d;
     
-  /* convert the mSpec into a nsDeviceContextPh */
-  if (mSpec)
-  {
-    mSpec->QueryInterface(kIDeviceContextSpecIID, (void**) &PrintSpec);
-    if (PrintSpec)
-    {
-  	  PrintSpec->GetPrintContext( PrinterContext );
-
-      PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init PpPrinterContext=<%p>\n", PrinterContext));
-    }	    
-  }
-  
   mDC = aContext;
 
-  CommonInit(mSpec);		/* HACK! */
+  CommonInit(mDC);
 
   GetTwipsToDevUnits(newscale);
   aOrigContext->GetAppUnitsToDevUnits(origscale);
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init printing newscale=<%f> origscale=<%f>\n", newscale, origscale));
   
   mPixelScale = newscale / origscale;
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init printing mPixelScale=<%f>\n", mPixelScale));
 
   aOrigContext->GetTwipsToDevUnits(t2d);
   aOrigContext->GetAppUnitsToDevUnits(a2d);
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init printing t2d=<%f> a2d=<%f> mTwipsToPixels=<%f>\n", t2d,a2d,mTwipsToPixels));
 
   mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
   mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
-  
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init mAppUnitsToDevUnits=<%f>\n", mAppUnitsToDevUnits));
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::Init mDevUnitsToAppUnits=<%f>\n", mDevUnitsToAppUnits));
 
+// for printers
+	int width, height;
+  	//GetPrinterRect(&width, &height);
+	const PhDim_t *psize;
+	PhDim_t dim;
+	PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
+
+	PpPrintGetPC(pc, Pp_PC_PAPER_SIZE, (const void **)&psize );
+  	mWidthFloat = (float)(psize->w / 10);
+  	mHeightFloat = (float)(psize->h / 10);
+  	dim.w = psize->w / 10;
+  	dim.h = psize->h / 10;
+	printf("PRINT: %d, %d\n", (int)mWidthFloat, (int)mHeightFloat);
+	PpPrintSetPC(pc, INITIAL_PC, 0 , Pp_PC_SOURCE_SIZE, &dim );
+  
   return NS_OK;
 }
+
+void nsDeviceContextPh :: GetPrinterRect(int *width, int *height)
+{
+	PhDim_t dim;
+	const PhDim_t *psize;
+	const PhRect_t 	*mrect, *non_print;
+	PhRect_t	rect, margins;
+	const char *orientation = 0, *name = NULL;
+	char		*ptr;
+	int			tmp;
+	PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
+	
+	memset( &rect, 0, sizeof(rect));
+	memset( &margins, 0, sizeof(margins));
+
+	printf("PC: %X\n", pc);
+	PpPrintGetPC(pc, Pp_PC_PAPER_SIZE, (const void **)&psize );
+	PpPrintGetPC(pc, Pp_PC_NONPRINT_MARGINS, (const void **)&non_print );
+	printf("SIZE: %d, %d\n", psize->w, psize->h);
+	dim.w = (psize->w - ( non_print->ul.x + non_print->lr.x )) * 100 / 1000;
+	dim.h = (psize->h - ( non_print->ul.x + non_print->lr.x )) * 100 / 1000;
+
+#if 0
+	/* get margins requested in pc */
+	PpPrintGetPC(pc, Pp_PC_MARGINS, &mrect );
+	if ( mrect->ul.x > non_print->ul.x )
+	    margins.ul.x = max( mrect->ul.x - non_print->ul.x, 0 ) * pMyPrintData->pUnits.x / 1000;
+	if ( mrect->ul.y > non_print->ul.y )
+	    margins.ul.y = max( mrect->ul.y - non_print->ul.y, 0 ) * pMyPrintData->pUnits.y / 1000;
+	if ( mrect->lr.x > non_print->lr.y )
+	    margins.lr.x = max( mrect->lr.x - non_print->lr.x, 0 ) * pMyPrintData->pUnits.x / 1000;
+	if ( mrect->lr.y > non_print->lr.y )
+	    margins.lr.y = max( mrect->lr.y - non_print->lr.y, 0 ) * pMyPrintData->pUnits.y / 1000;
+
+#endif
+	PpPrintGetPC(pc, Pp_PC_ORIENTATION, (const void **)&orientation );
+
+	if ( *orientation ) 
+	{
+		tmp = dim.w;
+		dim.w = dim.h;
+		dim.h = tmp;
+	}
+
+#if 0
+	/* compute drawable area of paper after margins are set */
+	pMyPrintData->rDrawableArea.left = margins.ul.x;
+	pMyPrintData->rDrawableArea.top = margins.ul.y;
+	pMyPrintData->rDrawableArea.right = dim.w - margins.lr.x;
+	pMyPrintData->rDrawableArea.bottom = dim.h - margins.lr.y;
+
+	if ( pMyPrintData->rDrawableArea.left >= pMyPrintData->rDrawableArea.right ||
+	 	 pMyPrintData->rDrawableArea.top  >= pMyPrintData->rDrawableArea.bottom ) {
+		pMyPrintData->result = SM_RESULT_PRINT_NOTPRINTABLE;
+		return STATE_ABORT;
+	}
+#endif		
+
+	/* set these to 0 since we do the margins */
+	PpPrintSetPC(pc, INITIAL_PC, 0 , Pp_PC_MARGINS, &rect ); 
+	PpPrintSetPC(pc, INITIAL_PC, 0 , Pp_PC_SOURCE_SIZE, &dim );
+
+	*width = dim.w;
+	*height = dim.h;
+}
+
 
 void nsDeviceContextPh :: CommonInit(nsNativeDeviceContext aDC)
 {
@@ -253,17 +325,18 @@ NS_IMETHODIMP nsDeviceContextPh :: CreateRenderingContext(nsIRenderingContext *&
 	  surf = new nsDrawingSurfacePh();
 	  if (nsnull != surf)
 	  {
-        /* I think this is a good idea... not sure if mDC is the right one tho... */
-        PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CreateRenderingContext - mDC=<%p>\n", mDC));
+		/* I think this is a good idea... not sure if mDC is the right one tho... */
+		PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CreateRenderingContext - mDC=<%p>\n", mDC));
 
 		PhGC_t * aGC = (PhGC_t *) mDC;
 		printf("CreateRenderingContext\n");
-        rv = surf->Init(aGC);
-        if (NS_OK == rv)
-          rv = pContext->Init(this, surf);
-      }
+		
+		rv = surf->Init(aGC);
+		if (NS_OK == rv)
+		  rv = pContext->Init(this, surf);
+	  }
 	  else
-	     rv = NS_ERROR_OUT_OF_MEMORY;
+		 rv = NS_ERROR_OUT_OF_MEMORY;
     }
     else
        rv = NS_ERROR_OUT_OF_MEMORY;
@@ -318,7 +391,7 @@ NS_IMETHODIMP nsDeviceContextPh :: GetSystemAttribute(nsSystemAttrID anID, Syste
         *aInfo->mColor = NS_RGB(0,0,0);	        /* Black */
         break;
     case eSystemAttr_Color_WidgetBackground:
-        *aInfo->mColor = NS_RGB(128,128,128);	/* Gray */
+        *aInfo->mColor = NS_RGB(255,255,255); //NS_RGB(128,128,128);	 Gray 
         break;
     case eSystemAttr_Color_WidgetForeground:
         *aInfo->mColor = NS_RGB(0,0,0);	        /* Black */
@@ -398,7 +471,21 @@ NS_IMETHODIMP nsDeviceContextPh :: GetDrawingSurface(nsIRenderingContext &aConte
 
 NS_IMETHODIMP nsDeviceContextPh :: GetClientRect(nsRect &aRect)
 {
-	return GetRect ( aRect );
+	nsresult rv = NS_OK;
+
+	if ( mSpec )
+	{
+	  // we have a printer device
+	  aRect.x = 0;
+	  aRect.y = 0;
+	  aRect.width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
+	  aRect.height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
+	  printf("GetClientRect: printer: %d, %d - %d, %d\n", mWidth, mHeight, aRect.width, aRect.height);
+	}
+	else
+		rv = GetRect ( aRect );
+
+	return rv;
 }
 
 /* I need to know the requested font size to finish this function */
@@ -407,41 +494,31 @@ NS_IMETHODIMP nsDeviceContextPh :: CheckFontExistence(const nsString& aFontName)
   nsresult    ret_code = NS_ERROR_FAILURE;
   char        *fontName = aFontName.ToNewCString();
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CheckFontExistence for font=<%s>\n",fontName));
-
-
-  if( fontName )
+  if (fontName) 
   {
-    int         MAX_FONTDETAIL = 90;
-    FontDetails fDetails[MAX_FONTDETAIL];
-    int         fontcount;
-  
-    fontcount = PfQueryFonts('a', PHFONT_ALL_FONTS, fDetails, MAX_FONTDETAIL);
-    if (fontcount >= MAX_FONTDETAIL)
-    {
-      PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CheckFontExistence ERROR - Font Array should be increased!\n"));
-    }
+	FontID *id = NULL;
 
-    if (fontcount)
-    {
-      int index;
-      for(index=0; index < fontcount; index++)
-      {
-        //PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CheckFontExistence  comparing <%s> with <%s>\n", fontName, fDetails[index].desc));
-        if (strncmp(fontName, fDetails[index].desc, strlen(fontName)) == 0)
-        {
-          //PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CheckFontExistence  Found the font <%s>\n", fDetails[index].desc));
-          ret_code = NS_OK;
-          break;	  
-        }
-      }
-    }
+	if (id = PfFindFont((uchar_t *)fontName, 0, 0))
+	{
+		if (!mFontLoadCache)
+			mFontLoadCache = new nsHashtable(); 
 
-    if( ret_code == NS_ERROR_FAILURE )
-    {
-      PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CheckFontExistence  Did not find the font <%s>\n", fontName));
-    }
-  
+		//nsStringKey key((char *)(id->pucStem));
+		nsCStringKey key((char *)(id->pucStem));
+		if (!(mFontLoadCache->Exists(&key)))
+		{
+			char FullFontName[MAX_FONT_TAG];
+			PfGenerateFontName((uchar_t *)fontName, nsnull, 8, (uchar_t *)FullFontName);
+			PfLoadFont(FullFontName, PHFONT_LOAD_METRICS, nsnull);
+			PfLoadMetrics(FullFontName);
+			// add this font to the table
+			mFontLoadCache->Put(&key, nsnull);
+		}
+	
+		ret_code = NS_OK;
+		PfFreeFont(id);
+	}
+
     delete [] fontName;
   }
 
@@ -466,7 +543,13 @@ NS_IMETHODIMP nsDeviceContextPh :: ConvertPixel(nscolor aColor, PRUint32 & aPixe
 
 NS_IMETHODIMP nsDeviceContextPh :: GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDeviceSurfaceDimensions mDevUnitsToAppUnits=<%f> mWidth=<%d> mHeight=<%d>\n", mDevUnitsToAppUnits, mWidth, mHeight));
+	if (mSpec)
+	{
+		printf("PRINT: GetDeviceSurfaceDimensions\n");
+		aWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
+		aHeight = NSToIntRound(mHeightFloat * mDevUnitsToAppUnits);
+		return (NS_OK);
+	}
 
   if (mWidth == -1)
     mWidth = NSToIntRound(mWidthFloat * mDevUnitsToAppUnits);
@@ -497,26 +580,26 @@ NS_IMETHODIMP nsDeviceContextPh::GetRect(nsRect &aRect)
 NS_IMETHODIMP nsDeviceContextPh :: GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                         nsIDeviceContext *&aContext)
 {
-#if 0
-  static NS_DEFINE_CID(kCDeviceContextPS, NS_DEVICECONTEXTPS_CID);
+	//XXX this API should take an CID, use the repository and
+	//then QI for the real object rather than casting... MMP
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDeviceContextFor\n"));
+	aContext = new nsDeviceContextPh();
 
-  // Create a Postscript device context
-  nsresult rv;
-  nsIDeviceContextPS *dcps;
-  rv = nsComponentManager::CreateInstance(kCDeviceContextPS, nsnull, NS_GET_IID(nsIDeviceContextPS), (void **)&dcps);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't create PS Device context");
-  dcps->SetSpec(aDevice);
-  dcps->InitDeviceContextPS((nsIDeviceContext*)aContext, (nsIDeviceContext*)this);
-  rv = dcps->QueryInterface(NS_GET_IID(nsIDeviceContext), (void **)&aContext);
+	((nsDeviceContextPh *)aContext)->mSpec = aDevice;
+	NS_ADDREF(aDevice);
 
-  NS_RELEASE(dcps);
+	//((nsDeviceContextSpecWin *)aDevice)->GetDeviceName(devicename);
+	//((nsDeviceContextSpecWin *)aDevice)->GetDriverName(drivername);
+	//((nsDeviceContextSpecWin *)aDevice)->GetDEVMODE(hdevmode);
 
-  return rv;
-#endif  
-	printf("GetDeviceContextFor()\n");
-	return (NS_ERROR_FAILURE);
+	//devmode = (DEVMODE *)::GlobalLock(hdevmode);
+	//HDC dc = ::CreateDC(drivername, devicename, NULL, devmode);
+
+	//  ::SetAbortProc(dc, (ABORTPROC)abortproc);
+
+	//::GlobalUnlock(hdevmode);
+
+	return ((nsDeviceContextPh *)aContext)->Init(NULL, this);
 }
 
 nsresult nsDeviceContextPh::SetDPI(PRInt32 aDpi)
@@ -559,14 +642,30 @@ NS_IMETHODIMP nsDeviceContextPh :: BeginDocument(void)
 {
   nsresult    ret_code = NS_ERROR_FAILURE;
   int         err;
-  
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::BeginDocument - Not Implemented\n"));
+  PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
 
-  return ret_code;
+	PhDrawContext_t *dc = PhDCSetCurrent(NULL);
+	printf("Begin: %X, ", dc);
+	PhDCSetCurrent(dc);
+
+  PpStartJob(pc);
+  PpContinueJob(pc);
+
+	dc = PhDCSetCurrent(NULL);
+	printf("%X\n", dc);
+	PhDCSetCurrent(dc);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextPh :: EndDocument(void)
 {
+  printf("EndDocument\n");
+  PpPrintContext_t *pc = ((nsDeviceContextSpecPh *)mSpec)->GetPrintContext();
+  PpSuspendJob(pc);
+  PpEndJob(pc);
+  return NS_OK;
+#if 0
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::EndDocument - Not Implemented\n"));
   nsresult    ret_code = NS_ERROR_FAILURE;
 
@@ -599,16 +698,21 @@ NS_IMETHODIMP nsDeviceContextPh :: EndDocument(void)
   }  
 
   return ret_code;
+#endif
 }
 
 NS_IMETHODIMP nsDeviceContextPh :: BeginPage(void)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::BeginPage - Not Implemented\n"));
-  return NS_OK;
+	printf("BeginPage\n");
+  	return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextPh :: EndPage(void)
 {
+	printf("EndPage\n");
+  PpPrintNewPage(((nsDeviceContextSpecPh *)mSpec)->GetPrintContext());
+	return NS_OK;
+#if 0
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::EndPage - Not Implemented\n"));
 
   nsresult    ret_code = NS_ERROR_FAILURE;
@@ -640,8 +744,17 @@ NS_IMETHODIMP nsDeviceContextPh :: EndPage(void)
     }
     NS_RELEASE(PrintSpec);
   }  
+#endif
 
-  return ret_code;
+  return NS_OK;
+}
+
+int nsDeviceContextPh :: IsPrinting(void)
+{
+	if (mSpec)
+		return 1;
+
+	return 0;
 }
 
 /*

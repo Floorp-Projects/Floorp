@@ -34,7 +34,8 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Init(PRBool aQuiet, PpPrintContext_t *aPrintContext);
-  NS_IMETHOD GetPrintContext(PpPrintContext_t *&aPrintContext) const;
+  //NS_IMETHOD GetPrintContext(PpPrintContext_t *&aPrintContext) const;
+  PpPrintContext_t *GetPrintContext();
 
 protected:
   virtual ~nsDeviceContextSpecPh();

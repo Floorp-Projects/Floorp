@@ -26,7 +26,7 @@
 #include <Pt.h>
 #include "nsIImage.h"
 
-class nsImagePh : public nsIImage{
+class nsImagePh : public nsIImage {
 public:
   nsImagePh();
   ~nsImagePh();
@@ -44,24 +44,26 @@ public:
   virtual PRBool      GetIsRowOrderTopToBottom() { return mIsTopToBottom; }
   virtual PRInt32     GetLineStride();
 
-  NS_IMETHOD     SetNaturalWidth(PRInt32 naturalwidth) { mNaturalWidth= naturalwidth; return NS_OK;}
-  NS_IMETHOD     SetNaturalHeight(PRInt32 naturalheight) { mNaturalHeight= naturalheight; return NS_OK;}
-  virtual PRInt32     GetNaturalWidth() {return mNaturalWidth; }
-  virtual PRInt32     GetNaturalHeight() {return mNaturalHeight; }
-
   NS_IMETHOD          SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2);        
   virtual PRInt32     GetDecodedX1() { return mDecodedX1;}
   virtual PRInt32     GetDecodedY1() { return mDecodedY1;}
   virtual PRInt32     GetDecodedX2() { return mDecodedX2;}
   virtual PRInt32     GetDecodedY2() { return mDecodedY2;}
 
+  NS_IMETHOD     SetNaturalWidth(PRInt32 naturalwidth) { mNaturalWidth= naturalwidth; return NS_OK;}
+  NS_IMETHOD     SetNaturalHeight(PRInt32 naturalheight) { mNaturalHeight= naturalheight; return NS_OK;}
+  virtual PRInt32     GetNaturalWidth() {return mNaturalWidth; }
+  virtual PRInt32     GetNaturalHeight() {return mNaturalHeight; }
+
 
   virtual nsColorMap* GetColorMap();
   NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   NS_IMETHOD          Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                       PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
+  NS_IMETHOD 		DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface, 
+  						nsRect &aSrcRect, nsRect &aTileRect);
 
-  NS_IMETHOD DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+  NS_IMETHOD 		  DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                         PRInt32 aSXOffset, PRInt32 aSYOffset, const nsRect &aTileRect);
 
   virtual void        ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
@@ -77,29 +79,15 @@ public:
   virtual PRInt32     GetAlphaLineStride();
   virtual nsIImage*   DuplicateImage();
   
-  virtual void  SetAlphaLevel(PRInt32 aAlphaLevel);
-  virtual PRInt32 GetAlphaLevel();
-  virtual void  MoveAlphaMask(PRInt32 aX, PRInt32 aY);
+  virtual void  	  SetAlphaLevel(PRInt32 aAlphaLevel);
+  virtual PRInt32 	  GetAlphaLevel();
+  virtual void  	  MoveAlphaMask(PRInt32 aX, PRInt32 aY);
 
-  NS_IMETHOD   LockImagePixels(PRBool aMaskPixels);
-  NS_IMETHOD   UnlockImagePixels(PRBool aMaskPixels);    
-  
+  NS_IMETHOD   		  LockImagePixels(PRBool aMaskPixels);
+  NS_IMETHOD   		  UnlockImagePixels(PRBool aMaskPixels);    
 
 private:
-  /**
-   * Calculate the amount of memory needed for the initialization of the image
-   */
-  void ComputeMetrics() {
-    mRowBytes = (mWidth * mDepth) >> 5;
-
-    if (((PRUint32)mWidth * mDepth) & 0x1F)
-      mRowBytes++;
-    mRowBytes <<= 2;
-    
-    mSizeImage = mRowBytes * mHeight;
-  };
   void ComputePaletteSize(PRIntn nBitCount);
-
 
 private:
   PRInt32             mWidth;
@@ -113,27 +101,24 @@ private:
   PRInt8              mNumBytesPixel;     // number of bytes per pixel
   PRInt16             mNumPaletteColors;  // either 8 or 0
 
-//  PRBool              mIsOptimized;       // Have we turned our DIB into a GDI?
-//  nsColorMap*         mColorMap;          // Redundant with mColorTable, but necessary
-  PRInt32		      mNaturalWidth;
-  PRInt32		      mNaturalHeight;
-
   PRInt32             mDecodedX1;       //Keeps track of what part of image
   PRInt32             mDecodedY1;       // has been decoded.
   PRInt32             mDecodedX2; 
   PRInt32             mDecodedY2;    
-   
+
   // alpha layer members
   PRUint8             *mAlphaBits;        // alpha layer if we made one
   PRInt8              mAlphaDepth;        // alpha layer depth
-  PRInt16             mARowBytes;         // number of bytes per row in the image for tha alpha
+  PRInt16             mAlphaRowBytes;         // number of bytes per row in the image for tha alpha
   PRInt16             mAlphaWidth;        // alpha layer width
   PRInt16             mAlphaHeight;       // alpha layer height
   PRInt8              mImageCache;        // place to save off the old image for fast animation
   PRInt16             mAlphaLevel;        // an alpha level every pixel uses
-  PhImage_t           mImage;
+  PhImage_t           mPhImage;
 
   PRUint8             mFlags;             // flags set by ImageUpdated
+  PRUint8             mImageFlags;             // flags set by ImageUpdated
+  PRInt32 mNaturalWidth;
+  PRInt32 mNaturalHeight;
 };
-
 #endif

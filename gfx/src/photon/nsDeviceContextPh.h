@@ -78,12 +78,14 @@ public:
 
   static int prefChanged(const char *aPref, void *aClosure);
   nsresult    SetDPI(PRInt32 dpi);
+  int IsPrinting(void);
 
 protected:
 
   nsresult    Init(nsNativeDeviceContext aContext, nsIDeviceContext *aOrigContext);
   nsresult    GetDisplayInfo(PRInt32 &aWidth, PRInt32 &aHeight, PRUint32 &aDepth);
   void        CommonInit(nsNativeDeviceContext aDC);
+  void 		GetPrinterRect(int *width, int *height);
 
   nsDrawingSurface      mSurface;
   PRUint32              mDepth;  // bit depth of device

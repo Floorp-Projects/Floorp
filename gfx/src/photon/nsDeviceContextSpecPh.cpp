@@ -29,15 +29,12 @@ nsDeviceContextSpecPh :: nsDeviceContextSpecPh()
 {
   NS_INIT_REFCNT();
   mPC = nsnull;
-  
 }
 
 nsDeviceContextSpecPh :: ~nsDeviceContextSpecPh()
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDeviceContextSpecPh::~nsDeviceContextSpecPh Destructor Called\n"));
   if (mPC)
     PpPrintReleasePC(mPC);
-	
 }
 
 static NS_DEFINE_IID(kDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
@@ -48,16 +45,13 @@ NS_IMPL_RELEASE(nsDeviceContextSpecPh)
 
 NS_IMETHODIMP nsDeviceContextSpecPh :: Init(PRBool aQuiet, PpPrintContext_t *aPrintContext)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDeviceContextSpecPh::Init aQuiet=<%d> - Not Implemented\n", aQuiet));
-
 	/* Create a Printer Context */
 	mPC = aPrintContext;		/* Assume ownership of the Printer Context */
-
-  return NS_OK;
+  	return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecPh :: GetPrintContext(PpPrintContext_t *&aPrintContext) const
+//NS_IMETHODIMP nsDeviceContextSpecPh :: GetPrintContext(PpPrintContext_t *&aPrintContext) const
+PpPrintContext_t *nsDeviceContextSpecPh :: GetPrintContext()
 {
-  aPrintContext = mPC;
-  return NS_OK;
+  return (mPC);
 }

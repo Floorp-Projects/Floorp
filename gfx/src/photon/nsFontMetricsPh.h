@@ -97,6 +97,7 @@ protected:
   nscoord             mUnderlineSize;
   nscoord             mUnderlineOffset;
   nscoord             mSpaceWidth;
+  nscoord			mAveCharWidth;
   
   nsCOMPtr<nsIAtom>   mLangGroup;
 };
