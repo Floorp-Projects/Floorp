@@ -811,7 +811,7 @@ PRBool nsMsgAccountManager::writeFolderCache(nsHashKey *aKey, void *aData,
 }
 
 // enumeration for empty trash on exit
-PRBool nsMsgAccountManager::emptyTrashOnExit(nsHashKey *aKey, void *aData,
+PRBool PR_CALLBACK nsMsgAccountManager::emptyTrashOnExit(nsHashKey *aKey, void *aData,
                                              void *closure)
 {
     nsIMsgIncomingServer *server = (nsIMsgIncomingServer*)aData;

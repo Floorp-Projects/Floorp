@@ -117,7 +117,7 @@ private:
                                      void *closure);
 
   // empty trash on exit
-  static PRBool emptyTrashOnExit(nsHashKey *aKey, void *aData,
+  static PRBool PR_CALLBACK emptyTrashOnExit(nsHashKey *aKey, void *aData,
                                      void *closure);
   //
   // account enumerators
@@ -187,7 +187,7 @@ private:
   static PRBool PR_CALLBACK removeListener(nsHashKey *aKey, void *element, void *aData);
   
   // folder listener enumerators
-  static PRBool PR_CALLBACK addListenerToFolder(nsISupports *element, void *data);
-  static PRBool PR_CALLBACK removeListenerFromFolder(nsISupports *element, void *data);
+  static PRBool addListenerToFolder(nsISupports *element, void *data);
+  static PRBool removeListenerFromFolder(nsISupports *element, void *data);
 };
 
