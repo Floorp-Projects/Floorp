@@ -197,7 +197,8 @@ iframe {
     list-style-image      : url("chrome://messenger/skin/file-hover.gif");
   } 
 
-#button-file:hover:active
+menu:hover:active > #button-file,
+menu[open="true"] > #button-file
   {
     list-style-image      : url("chrome://messenger/skin/file-clicked.gif");
   } 
@@ -480,33 +481,87 @@ searchterm {
  behavior: url(chrome://messenger/content/mailWidgets.xml#searchterm);
 }
 
-
-
-
 /** 
  *Focus rings on 3 pane view
  */
 
-#folderTree{
-	border: 2px solid transparent;
-} 
- 
-#folderTree:focus{
-	border: 2px solid black;
-} 
-  
-  
-.window-focusborder[focusring="true"]{
- border:2px solid black;
+#folderTree > treehead,
+#threadTree[focusring="false"] > treehead
+{
+  border-left: 1px solid #EFEFEF;
+  border-top: 1px solid #EFEFEF;
+  border-right: 1px solid transparent;
 }
 
-.window-focusborder[focusring="false"]{
- border:2px solid transparent;
-} 
- 
+#folderTree > treechildren,
+#threadTree[focusring="false"] > treechildren
+{
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+}
 
+#folderTree:focus > treehead,
+#threadTree[focusring="true"]  > treehead
+{
+  border-left: 1px solid black;
+  border-top: 1px solid black;
+  border-right: 1px solid black;
+}
 
+#folderTree:focus > treechildren,
+#threadTree[focusring="true"]  > treechildren
+{
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+  border-bottom: 1px solid black;
+}
 
+#folderTree > treehead > treerow > .treecell-header:first-child,
+#threadTree > treehead > treerow > .treecell-header:first-child
+{
+  border-left: none;
+}
 
+#folderTree > treehead > treerow > .treecell-header,
+#threadTree > treehead > treerow > .treecell-header
+{
+  border-top: none !important;
+}
 
+#folderTree > treehead > treerow > .treecell-header > .treecell-header-box,
+#threadTree > treehead > treerow > .treecell-header > .treecell-header-box 
+{
+  border-top: none  !important;
+}
 
+#msgHeaderView {
+  border-left: 1px solid #8C9EA5;
+  border-top: 1px solid #EFEFEF;
+  border-right: 1px solid #EFEFEF;
+}
+
+#messagepane {
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+}
+
+#messagepanebox[focusring="true"] > #msgHeaderView
+{
+  border-left: 1px solid #000000;
+  border-top: 1px solid #000000;
+  border-right: 1px solid #000000;
+}
+
+#messagepanebox[focusring="true"] > #messagepane
+{
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+  border-bottom: 1px solid black;
+}
+
+sidebarheader 
+{
+  border: 1px solid #5C7794;
+}
