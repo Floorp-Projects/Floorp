@@ -20,6 +20,7 @@
 #include "nsIMsgGroupRecord.idl"
 #include "nsINNTPNewsgroup.idl"
 
+[uuid(203b2120-b256-11d2-b7f0-00805f05ffa5)]
 interface nsINNTPCategory : nsISupports {
     nsINNTPNewsgroup BuildCategoryTree(in nsINNTPNewsgroup parent,
                                        in string catName,

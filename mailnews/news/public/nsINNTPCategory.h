@@ -11,6 +11,13 @@
 
 
 /* starting interface nsINNTPCategory */
+
+/* {203b2120-b256-11d2-b7f0-00805f05ffa5} */
+#define NS_INNTPCATEGORY_IID_STR "203b2120-b256-11d2-b7f0-00805f05ffa5"
+#define NS_INNTPCATEGORY_IID \
+  {0x203b2120, 0xb256, 0x11d2, \
+    { 0xb7, 0xf0, 0x00, 0x80, 0x5f, 0x05, 0xff, 0xa5 }}
+
 class nsINNTPCategory : public nsISupports {
  private:
   void operator delete(void *); // NOT TO BE IMPLEMENTED
