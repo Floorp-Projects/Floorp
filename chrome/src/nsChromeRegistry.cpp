@@ -657,7 +657,7 @@ nsChromeRegistry::FindProvider(const nsCString& aPackage,
       rv = SelectPackageInProvider(packageList, aPackage, aProvider, providerName,
                                    aArc, aSelectedProvider);
       if (NS_FAILED(rv)) return rv;
-      if (aSelectedProvider)
+      if (*aSelectedProvider)
         return NS_OK;
     }
   }
@@ -718,16 +718,14 @@ nsChromeRegistry::SelectPackageInProvider(nsIRDFResource *aPackageList,
       rv = nsChromeRegistry::FollowArc(mChromeDataSource, packageName, package, mName);
       if (NS_FAILED(rv)) continue;	// don't fail if package has not yet been installed
 
-      // select provider assuming it comes from the install directory.
-      // XXX we really should be keeping track of whether it's from there,
-      // or from the profile
       if (packageName.Equals(aPackage)) {
         nsAutoString providerNameUC;
         nsAutoString packageNameUC;
         providerNameUC.AssignWithConversion(aProviderName);
         packageNameUC.AssignWithConversion(packageName);
+        PRBool useProfile = !mProfileRoot.IsEmpty();
         rv = SelectProviderForPackage(aProvider, providerNameUC.GetUnicode(),
-                                      packageNameUC.GetUnicode(), aArc, PR_FALSE, PR_TRUE);
+                                      packageNameUC.GetUnicode(), aArc, useProfile, PR_TRUE);
         if (NS_FAILED(rv)) return rv;
         *aSelectedProvider = kid;
         NS_ADDREF(*aSelectedProvider);
