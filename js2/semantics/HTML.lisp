@@ -56,9 +56,9 @@
 (define-html 'dl 1 0 0 2 :indent 2)
 (define-html 'dt 1 0 0 1 :indent 2)
 (define-html 'em 0 0 0 0)
-(define-html 'h1 1 0 0 2 :indent 2)
-(define-html 'h2 1 0 0 2 :indent 2)
-(define-html 'h3 1 0 0 2 :indent 2)
+(define-html 'h1 2 0 0 2 :indent 2)
+(define-html 'h2 2 0 0 2 :indent 2)
+(define-html 'h3 2 0 0 2 :indent 2)
 (define-html 'h4 1 0 0 2 :indent 2)
 (define-html 'h5 1 0 0 2 :indent 2)
 (define-html 'h6 1 0 0 2 :indent 2)
@@ -330,6 +330,7 @@
   '(((:new-line t) (br))
     
     ;Misc.
+    (:spc nbsp)
     (:tab2 nbsp nbsp)
     (:tab3 nbsp nbsp nbsp)
     

@@ -84,6 +84,7 @@
     
     
     ;Misc.
+    (:spc " ")
     (:tab2 tab)
     (:tab3 tab)
     (:8-pt fs 16)
