@@ -59,42 +59,31 @@ JS_BEGIN_EXTERN_C
 #define CPU_IS_ARM
 #endif
 
+typedef union jsdpun {
+    struct {
+#if defined(IS_LITTLE_ENDIAN) && !defined(CPU_IS_ARM)
+	uint32 lo, hi;
+#else
+	uint32 hi, lo;
+#endif
+    } s;
+    jsdouble d;
+} jsdpun;
+
 #if (__GNUC__ == 2 && __GNUC_MINOR__ > 95) || __GNUC__ > 2
 /*
  * This version of the macros is safe for the alias optimizations that gcc
  * does, but uses gcc-specific extensions.
  */
-typedef union {
-    jsdouble value;
-    struct {
-#if defined(IS_LITTLE_ENDIAN) && !defined(CPU_IS_ARM)
-        uint32 lsw;
-        uint32 msw;
-#else
-        uint32 msw;
-        uint32 lsw;
-#endif
-    } parts;
-} js_ieee_double_shape_type;
 
-#define JSDOUBLE_HI32(x)   (__extension__ ({ js_ieee_double_shape_type sh_u;  \
-                                             sh_u.value = (x);                \
-                                             sh_u.parts.msw; }))
-#define JSDOUBLE_LO32(x)   (__extension__ ({ js_ieee_double_shape_type sh_u;  \
-                                             sh_u.value = (x);                \
-                                             sh_u.parts.lsw; }))
-#define JSDOUBLE_SET_HI32(x, y)  (__extension__ ({                            \
-                                             js_ieee_double_shape_type sh_u;  \
-                                             sh_u.value = (x);                \
-                                             sh_u.parts.msw = (y);            \
-                                             (x) = sh_u.value; }))
-#define JSDOUBLE_SET_LO32(x, y)  (__extension__ ({                            \
-                                             js_ieee_double_shape_type sh_u;  \
-                                             sh_u.value = (x);                \
-                                             sh_u.parts.lsw = (y);            \
-                                             (x) = sh_u.value; }))
+#define JSDOUBLE_HI32(x) (__extension__ ({ jsdpun u; u.d = (x); u.s.hi; }))
+#define JSDOUBLE_LO32(x) (__extension__ ({ jsdpun u; u.d = (x); u.s.lo; }))
+#define JSDOUBLE_SET_HI32(x, y) \
+    (__extension__ ({ jsdpun u; u.d = (x); u.s.hi = (y); (x) = u.d; }))
+#define JSDOUBLE_SET_LO32(x, y) \
+    (__extension__ ({ jsdpun u; u.d = (x); u.s.lo = (y); (x) = u.d; }))
 
-#else /* GNUC */
+#else /* not or old GNUC */
 
 /*
  * We don't know of any non-gcc compilers that perform alias optimization,
@@ -112,7 +101,7 @@ typedef union {
 #define JSDOUBLE_SET_HI32(x, y) (JSDOUBLE_HI32(x)=(y))
 #define JSDOUBLE_SET_LO32(x, y) (JSDOUBLE_LO32(x)=(y))
 
-#endif /* GNUC */
+#endif /* not or old GNUC */
 
 #define JSDOUBLE_HI32_SIGNBIT   0x80000000
 #define JSDOUBLE_HI32_EXPMASK   0x7ff00000
