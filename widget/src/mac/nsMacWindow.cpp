@@ -281,8 +281,7 @@ nsMacWindow::nsMacWindow() : Inherited()
 	, mPhantomScrollbar(nsnull)
 	, mPhantomScrollbarData(nsnull)
 {
-  //mMacEventHandler.reset(new nsMacEventHandler(this));
-	mMacEventHandler = (auto_ptr<nsMacEventHandler>) new nsMacEventHandler(this);
+	mMacEventHandler.reset(new nsMacEventHandler(this));
 	WIDGET_SET_CLASSNAME("nsMacWindow");	
 
   // create handlers for drag&drop
