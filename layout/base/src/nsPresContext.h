@@ -43,6 +43,7 @@
 #include "nsFont.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
+#include "nsIPref.h"
 #include "nsICharsetConverterManager.h"
 #include "nsILanguageAtomService.h"
 #include "nsIURL.h"
@@ -120,6 +121,7 @@ protected:
   nsPresContext();
   virtual ~nsPresContext();
 
+  nsCOMPtr<nsIPref>     mPrefs;
   nsCOMPtr<nsILanguageAtomService> mLangService;
   nsWeakPtr             mContainer;
 
