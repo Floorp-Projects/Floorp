@@ -60,7 +60,7 @@ BM_CVS_NS_js 	= js js/src js/src/fdlibm
 BM_DIRS_xpcom		= $(NSPRPUB_DIR) modules/libreg xpcom
 BM_DEP_DIRS_xpcom	= intl/unicharutil/public intl/uconv/public modules/libjar
 BM_CVS_NS_xpcom		= xpcom xpcom/typelib xpcom/typelib/xpidl intl/unicharutil/public intl/uconv/public
-BM_CVS_xpcom		= modules/libreg xpcom/typelib/xpt xpcom/base xpcom/ds xpcom/io xpcom/components xpcom/threads xpcom/reflect xpcom/proxy xpcom/build xpcom/tools xpcom/sample modules/libjar
+BM_CVS_xpcom		= $(NSPRPUB_DIR) modules/libreg xpcom/typelib/xpt xpcom/base xpcom/ds xpcom/io xpcom/components xpcom/threads xpcom/reflect xpcom/proxy xpcom/build xpcom/tools xpcom/sample modules/libjar
 
 #
 # xpconnect
