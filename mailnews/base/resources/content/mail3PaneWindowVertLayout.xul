@@ -113,6 +113,7 @@ Rights Reserved.
 <popupset id="aTooltipSet">
   <popup id="threadPaneContext"/>
   <popup id="folderPaneContext"/>
+  <popup id="attachmentTreeContext"/>
 
   <popup id="emailAddressPopup" popupanchor="bottomleft">
       <menuitem label="&AddToAddressBook.label;"
