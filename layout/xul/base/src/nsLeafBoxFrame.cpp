@@ -390,12 +390,12 @@ nsLeafBoxFrame::Release(void)
 }
 
 NS_IMETHODIMP
-nsLeafBoxFrame::ContentChanged(nsIPresContext* aPresContext,
-                            nsIContent*     aChild,
-                            nsISupports*    aSubContent)
+nsLeafBoxFrame::CharacterDataChanged(nsIPresContext* aPresContext,
+                                     nsIContent*     aChild,
+                                     PRBool          aAppend)
 {
   NeedsRecalc();
-  return nsLeafFrame::ContentChanged(aPresContext, aChild, aSubContent);
+  return nsLeafFrame::CharacterDataChanged(aPresContext, aChild, aAppend);
 }
 
 

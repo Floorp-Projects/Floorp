@@ -1848,7 +1848,7 @@ nsDocument::EndLoad()
 }
 
 void
-nsDocument::ContentChanged(nsIContent* aContent, nsISupports* aSubContent)
+nsDocument::CharacterDataChanged(nsIContent* aContent, PRBool aAppend)
 {
   NS_ABORT_IF_FALSE(aContent, "Null content!");
 
@@ -1857,7 +1857,7 @@ nsDocument::ContentChanged(nsIContent* aContent, nsISupports* aSubContent)
     nsIDocumentObserver *observer =
       NS_STATIC_CAST(nsIDocumentObserver *, mObservers.ElementAt(i));
 
-    observer->ContentChanged(this, aContent, aSubContent);
+    observer->CharacterDataChanged(this, aContent, aAppend);
   }
 }
 

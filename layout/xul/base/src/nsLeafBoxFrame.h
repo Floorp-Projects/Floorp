@@ -63,9 +63,9 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
-                            nsIContent*     aChild,
-                            nsISupports*    aSubContent);
+  NS_IMETHOD CharacterDataChanged(nsIPresContext* aPresContext,
+                                  nsIContent*     aChild,
+                                  PRBool          aAppend);
 
   NS_IMETHOD DidReflow(nsIPresContext*           aPresContext,
                        const nsHTMLReflowState*  aReflowState,

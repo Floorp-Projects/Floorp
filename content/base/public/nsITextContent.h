@@ -109,41 +109,6 @@ public:
   NS_IMETHOD AppendTextTo(nsAString& aResult) = 0;
 };
 
-//----------------------------------------------------------------------
-
-/* a6cf905e-15b3-11d2-932e-00805f8add32 */
-#define NS_ITEXT_CONTENT_CHANGE_DATA_IID \
- {0xa6cf905e, 0x15b3, 0x11d2, {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
-
-// Simple interface for encapsulating change data for a ContentChanged
-// notification.
-class nsITextContentChangeData : public nsISupports {
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITEXT_CONTENT_CHANGE_DATA_IID);
-
-  enum ChangeType {
-    Insert,
-    Append,
-    Replace
-  };
-
-  /**
-   * Get the type of change associated with the ContentChanged
-   * notification.
-   */
-  NS_IMETHOD GetChangeType(ChangeType* aResult) = 0;
-
-  NS_IMETHOD GetInsertData(PRInt32* aOffset,
-                           PRInt32* aInsertLength) = 0;
-
-  NS_IMETHOD GetAppendData(PRInt32* aOffset,
-                           PRInt32* aAppendLength) = 0;
-
-  NS_IMETHOD GetReplaceData(PRInt32* aOffset,
-                            PRInt32* aSourceLength,
-                            PRInt32* aReplaceLength) = 0;
-};
-
 // XXX These belong elsewhere
 nsresult
 NS_NewTextNode(nsITextContent** aResult);

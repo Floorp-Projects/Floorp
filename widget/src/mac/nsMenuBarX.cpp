@@ -742,8 +742,8 @@ nsMenuBarX::EndUpdate( nsIDocument * aDocument, nsUpdateType aUpdateType )
 }
 
 void
-nsMenuBarX::ContentChanged( nsIDocument * aDocument, nsIContent * aContent,
-                            nsISupports * aSubContent)
+nsMenuBarX::CharacterDataChanged( nsIDocument * aDocument,
+                                  nsIContent * aContent, PRBool aAppend)
 {
 }
 

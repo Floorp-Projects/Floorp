@@ -1408,24 +1408,6 @@ nsObjectFrame::IsHidden(PRBool aCheckVisibilityStyle) const
   return PR_FALSE;
 }
 
-NS_IMETHODIMP
-nsObjectFrame::ContentChanged(nsIPresContext* aPresContext,
-                            nsIContent*     aChild,
-                            nsISupports*    aSubContent)
-{
-  // Generate a reflow command with this frame as the target frame
-  nsresult rv = NS_OK;
-  nsIPresShell *shell = aPresContext->GetPresShell();
-  if (shell) {
-    nsHTMLReflowCommand* reflowCmd;
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
-                                 eReflowType_ContentChanged);
-    if (NS_SUCCEEDED(rv))
-      shell->AppendReflowCommand(reflowCmd);
-  }
-  return rv;
-}
-
 nsPoint nsObjectFrame::GetWindowOriginInPixels(PRBool aWindowless)
 {
   nsIView * parentWithView;

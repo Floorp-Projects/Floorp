@@ -93,9 +93,6 @@ public:
 
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
-  NS_IMETHOD ContentChanged(nsIPresContext* aPresContext,
-                            nsIContent*     aChild,
-                            nsISupports*    aSubContent);
   NS_IMETHOD GetPluginInstance(nsIPluginInstance*& aPluginInstance);
 
   /* fail on any requests to get a cursor from us because plugins set their own! see bug 118877 */

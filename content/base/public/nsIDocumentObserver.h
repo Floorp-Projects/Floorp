@@ -116,12 +116,11 @@ public:
    *
    * @param aDocument The document being observed
    * @param aContent the piece of content that changed
-   * @param aSubContent subrange information about the piece of content
-   *  that changed
+   * @param aAppend   Whether the change was an append
    */
-  virtual void ContentChanged(nsIDocument *aDocument,
-                              nsIContent* aContent,
-                              nsISupports* aSubContent) = 0;
+  virtual void CharacterDataChanged(nsIDocument *aDocument,
+                                    nsIContent* aContent,
+                                    PRBool aAppend) = 0;
 
   /**
    * Notification that the state of a content node has changed. 
@@ -358,9 +357,9 @@ public:
                              nsIPresShell* aShell);                          \
     virtual void EndReflow(nsIDocument* aDocument,                           \
                            nsIPresShell* aShell);                            \
-    virtual void ContentChanged(nsIDocument* aDocument,                      \
-                                nsIContent* aContent,                        \
-                                nsISupports* aSubContent);                   \
+    virtual void CharacterDataChanged(nsIDocument* aDocument,                \
+                                      nsIContent* aContent,                  \
+                                      PRBool aAppend);                       \
     virtual void ContentStatesChanged(nsIDocument* aDocument,                \
                                       nsIContent* aContent1,                 \
                                       nsIContent* aContent2,                 \
@@ -453,9 +452,9 @@ _class::ContentStatesChanged(nsIDocument* aDocument,                      \
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_CONTENT(_class)                       \
 void                                                                      \
-_class::ContentChanged(nsIDocument* aDocument,                            \
-                       nsIContent* aContent,                              \
-                       nsISupports* aSubContent)                          \
+_class::CharacterDataChanged(nsIDocument* aDocument,                      \
+                             nsIContent* aContent,                        \
+                             PRBool aAppend)                              \
 {                                                                         \
 }                                                                         \
 void                                                                      \

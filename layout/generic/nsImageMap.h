@@ -89,8 +89,6 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIDocumentObserver
-  virtual void ContentChanged(nsIDocument* aDocument, nsIContent* aContent,
-                              nsISupports* aSubContent);
   virtual void AttributeChanged(nsIDocument* aDocument, nsIContent* aContent,
                                 PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                 PRInt32 aModType);

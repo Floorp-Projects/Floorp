@@ -793,11 +793,11 @@ public:
    *
    * @param aPresContext the presentation context
    * @param aContent     the content node that was changed
-   * @param aSubContent  a hint to the frame about the change
+   * @param aAppend      a hint to the frame about the change
    */
-  NS_IMETHOD  ContentChanged(nsIPresContext* aPresContext,
-                             nsIContent*     aChild,
-                             nsISupports*    aSubContent) = 0;
+  NS_IMETHOD  CharacterDataChanged(nsIPresContext* aPresContext,
+                                   nsIContent*     aChild,
+                                   PRBool          aAppend) = 0;
 
   /**
    * This call is invoked when the value of a content objects's attribute

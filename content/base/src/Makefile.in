@@ -102,7 +102,6 @@ CPPSRCS		= \
 		nsStyleContext.cpp \
 		nsStyleSet.cpp \
 		nsSyncLoadService.cpp \
-		nsTextContentChangeData.cpp \
 		nsTextNode.cpp \
 		nsTreeWalker.cpp \
 		nsXMLContentSerializer.cpp \

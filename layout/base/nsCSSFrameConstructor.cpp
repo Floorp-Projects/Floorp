@@ -9707,9 +9707,9 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsCSSFrameConstructor::ContentChanged(nsIPresContext* aPresContext,
-                                      nsIContent*  aContent,
-                                      nsISupports* aSubContent)
+nsCSSFrameConstructor::CharacterDataChanged(nsIPresContext* aPresContext,
+                                            nsIContent* aContent,
+                                            PRBool aAppend)
 {
   nsresult      rv = NS_OK;
 
@@ -9725,7 +9725,7 @@ nsCSSFrameConstructor::ContentChanged(nsIPresContext* aPresContext,
   if (nsnull != frame) {
 #if 0
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-       ("nsHTMLStyleSheet::ContentChanged: content=%p[%s] subcontent=%p frame=%p",
+       ("nsCSSFrameConstructor::CharacterDataChanged: content=%p[%s] subcontent=%p frame=%p",
         aContent, ContentTag(aContent, 0),
         aSubContent, frame));
 #endif
@@ -9738,9 +9738,9 @@ nsCSSFrameConstructor::ContentChanged(nsIPresContext* aPresContext,
     // first-letter text but isn't currently).
     //
     // To deal with both of these we make a simple change: map a
-    // ContentChanged into a ContentReplaced when we are changing text
+    // CharacterDataChanged into a ContentReplaced when we are changing text
     // that is part of a first-letter situation.
-    PRBool doContentChanged = PR_TRUE;
+    PRBool doCharacterDataChanged = PR_TRUE;
     nsCOMPtr<nsITextContent> textContent(do_QueryInterface(aContent));
     if (textContent) {
       // Ok, it's text content. Now do some real work...
@@ -9757,7 +9757,7 @@ nsCSSFrameConstructor::ContentChanged(nsIPresContext* aPresContext,
           nsCOMPtr<nsIContent> container = aContent->GetParent();
           if (container) {
             PRInt32 ix = container->IndexOf(aContent);
-            doContentChanged = PR_FALSE;
+            doCharacterDataChanged = PR_FALSE;
             rv = ContentReplaced(aPresContext, container,
                                  aContent, aContent, ix);
           }
@@ -9765,8 +9765,8 @@ nsCSSFrameConstructor::ContentChanged(nsIPresContext* aPresContext,
       }
     }
 
-    if (doContentChanged) {
-      frame->ContentChanged(aPresContext, aContent, aSubContent);
+    if (doCharacterDataChanged) {
+      frame->CharacterDataChanged(aPresContext, aContent, aAppend);
     }
   }
 

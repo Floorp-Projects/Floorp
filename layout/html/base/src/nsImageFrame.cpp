@@ -811,15 +811,6 @@ nsImageFrame::GetInnerArea(nsIPresContext* aPresContext,
     (mNextInFlow ? 0 : mBorderPadding.bottom);
 }
 
-NS_IMETHODIMP
-nsImageFrame::ContentChanged(nsIPresContext* aPresContext,
-                             nsIContent*     aChild,
-                             nsISupports*    aSubContent)
-{
-  mState |= NS_FRAME_IS_DIRTY;
-  return mParent->ReflowDirtyChild(aPresContext->PresShell(), this);
-}
-
 // get the offset into the content area of the image where aImg starts if it is a continuation.
 nscoord 
 nsImageFrame::GetContinuationOffset(nscoord* aWidth) const
