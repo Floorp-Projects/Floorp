@@ -44,6 +44,7 @@
 #include "plugin.h"
 #include "helpers.h"
 #include "logger.h"
+#include "scripter.h"
 #include "guiprefs.h"
 #include "winutils.h"
 
@@ -63,15 +64,20 @@ CPlugin::CPlugin(NPP pNPInstance, WORD wMode) :
   m_hWndManual(NULL),
   m_hWndAuto(NULL),
   m_hWndParent(NULL),
+  m_hWndStandAloneLogWindow(NULL),
   m_bPluginReady(FALSE),
   m_hWndLastEditFocus(NULL),
   m_iWidth(200),
   m_iHeight(500)
 {
+  restorePreferences();
+  pLogger->setLogToFileFlag(m_Pref_bToFile);
+  pLogger->blockDumpToFile(FALSE);
 }
 
 CPlugin::~CPlugin()
 {
+  savePreferences();
 }
 
 static char szSection[] = SECTION_PREFERENCES;
@@ -104,6 +110,12 @@ void CPlugin::restorePreferences()
 
   XP_GetPrivateProfileString(szSection, KEY_REMEMBER_LAST_API_CALL, ENTRY_YES, sz, sizeof(sz), szFileName);
   m_Pref_bRememberLastCall = (strcmpi(sz, ENTRY_YES) == 0) ? TRUE : FALSE;
+
+  XP_GetPrivateProfileString(szSection, KEY_STAND_ALONE, ENTRY_NO, sz, sizeof(sz), szFileName);
+  m_Pref_bStandAlone = (strcmpi(sz, ENTRY_YES) == 0) ? TRUE : FALSE;
+
+  XP_GetPrivateProfileString(szSection, KEY_AUTOSTART_SCRIPT, ENTRY_NO, sz, sizeof(sz), szFileName);
+  m_Pref_bAutoStartScript = (strcmpi(sz, ENTRY_YES) == 0) ? TRUE : FALSE;
 }
 
 void CPlugin::savePreferences()
@@ -118,6 +130,8 @@ void CPlugin::savePreferences()
   XP_WritePrivateProfileString(szSection, KEY_TO_FRAME, m_Pref_bToFrame ? szYes : szNo, szFileName);
   XP_WritePrivateProfileString(szSection, KEY_FLUSH_NOW, m_Pref_bFlushNow ? szYes : szNo, szFileName);
   XP_WritePrivateProfileString(szSection, KEY_REMEMBER_LAST_API_CALL, m_Pref_bRememberLastCall ? szYes : szNo, szFileName);
+  XP_WritePrivateProfileString(szSection, KEY_STAND_ALONE, m_Pref_bStandAlone ? szYes : szNo, szFileName);
+  XP_WritePrivateProfileString(szSection, KEY_AUTOSTART_SCRIPT, m_Pref_bAutoStartScript ? szYes : szNo, szFileName);
 }
 
 void CPlugin::updatePrefs(GUIPrefs prefs, int iValue, char * szValue)
@@ -147,6 +161,12 @@ void CPlugin::updatePrefs(GUIPrefs prefs, int iValue, char * szValue)
     case gp_rememberlast:
       m_Pref_bRememberLastCall = (BOOL)iValue;
       break;
+    case gp_standalone:
+      m_Pref_bStandAlone = (BOOL)iValue;
+      break;
+    case gp_autostartscript:
+      m_Pref_bAutoStartScript = (BOOL)iValue;
+      break;
     default:
       break;
   }
@@ -164,6 +184,8 @@ void CPlugin::getLogFileName(LPSTR szLogFileName, int iSize)
     char sz[256];
     getModulePath(szLogFileName, iSize);
     Edit_GetText(GetDlgItem(m_hWnd, IDC_EDIT_LOG_FILE_NAME), sz, sizeof(sz));
+    if(!strlen(sz))
+      strcpy(sz, m_Pref_szLogFile);
     strcat(szLogFileName, sz);
   }
   else
@@ -172,14 +194,78 @@ void CPlugin::getLogFileName(LPSTR szLogFileName, int iSize)
 
 BOOL CALLBACK NP_LOADDS TesterDlgProc(HWND, UINT, WPARAM, LPARAM);
 
+static BOOL bStandAlone = TRUE;
+static char szStandAlonePluginWindowClassName[] = "StandAloneWindowClass";
+
+BOOL CPlugin::initStandAlone()
+{
+  HWND hWndParent = NULL;
+
+  WNDCLASS wc;
+  wc.style         = 0; 
+  wc.lpfnWndProc   = DefWindowProc; 
+  wc.cbClsExtra    = 0; 
+  wc.cbWndExtra    = 0; 
+  wc.hInstance     = m_hInst; 
+  wc.hIcon         = LoadIcon(hInst, MAKEINTRESOURCE(IDI_ICON_APP)); 
+  wc.hCursor       = LoadCursor(0, IDC_ARROW); 
+  wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+  wc.lpszMenuName  = NULL; 
+  wc.lpszClassName = szStandAlonePluginWindowClassName;
+
+  if(RegisterClass(&wc))
+    hWndParent = CreateWindow(szStandAlonePluginWindowClassName, 
+                              "The Tester Plugin", 
+                              WS_POPUPWINDOW | WS_CAPTION | WS_VISIBLE | WS_MINIMIZEBOX, 
+                              0, 0, 800, 600, 
+                              GetDesktopWindow(), NULL, m_hInst, NULL);
+
+//  m_hWndStandAloneLogWindow = CreateWindow("LISTBOX", "", 
+  //                                          WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | LBS_NOINTEGRALHEIGHT, 
+    //                                        200, 3, 590, 562, 
+      //                                      hWndParent, NULL, m_hInst, NULL);
+
+  m_hWndStandAloneLogWindow = CreateWindow("EDIT", "", 
+                                            WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_READONLY,
+                                            200, 3, 590, 562, 
+                                            hWndParent, NULL, m_hInst, NULL);
+  if(!IsWindow(hWndParent))
+    return FALSE;
+
+  m_hWndParent = hWndParent;
+
+  HFONT hFont = GetStockFont(DEFAULT_GUI_FONT);
+  SetWindowFont(m_hWndStandAloneLogWindow, hFont, FALSE);
+
+  CreateDialogParam(m_hInst, MAKEINTRESOURCE(IDD_DIALOG_TESTER), m_hWndParent, (DLGPROC)TesterDlgProc, (LPARAM)this);
+
+  m_bPluginReady = (m_hWnd != NULL);
+
+  return m_bPluginReady;
+}
+
+void CPlugin::shutStandAlone()
+{
+  if (isStandAlone() && m_hWndParent) 
+  {
+    DestroyWindow(m_hWndParent);
+    UnregisterClass(szStandAlonePluginWindowClassName, m_hInst);
+  }
+
+  m_bPluginReady = FALSE;
+}
+
 BOOL CPlugin::initEmbed(DWORD dwInitData)
 {
-  restorePreferences();
+  if (m_bPluginReady)
+    return TRUE;
 
   HWND hWndParent = (HWND)dwInitData;
 
-  if(IsWindow(hWndParent))
-    m_hWndParent = hWndParent;
+  if(!IsWindow(hWndParent))
+    return FALSE;
+
+  m_hWndParent = hWndParent;
 
   CreateDialogParam(m_hInst, MAKEINTRESOURCE(IDD_DIALOG_TESTER), m_hWndParent, (DLGPROC)TesterDlgProc, (LPARAM)this);
 
@@ -196,8 +282,6 @@ BOOL CPlugin::initFull(DWORD dwInitData)
 
 void CPlugin::shutEmbed()
 {
-  savePreferences();
-
   if(m_hWnd != NULL)
   {
     DestroyWindow(m_hWnd);
@@ -231,6 +315,75 @@ void CPlugin::onInit(HWND hWnd, HWND hWndManual, HWND hWndAuto)
   pLogger->setShowImmediatelyFlag(IsDlgButtonChecked(m_hWnd, IDC_CHECK_SHOW_LOG) == BST_CHECKED);
   pLogger->setLogToFrameFlag(IsDlgButtonChecked(m_hWnd, IDC_CHECK_LOG_TO_FRAME) == BST_CHECKED);
   pLogger->setLogToFileFlag(IsDlgButtonChecked(m_hWnd, IDC_CHECK_LOG_TO_FILE) == BST_CHECKED);
+}
+
+BOOL CPlugin::isStandAlone()
+{
+  return m_Pref_bStandAlone;
+}
+
+void CPlugin::outputToNativeWindow(LPSTR szString)
+{
+  if (!m_hWndStandAloneLogWindow)
+    return;
+
+  // VERSION FOR EDIT BOX
+
+  static char text[16384];
+
+  if (strlen(szString)) {
+    int length = Edit_GetTextLength(m_hWndStandAloneLogWindow);
+    if ((length + strlen(szString)) > sizeof(text))
+      strcpy(text, szString);
+    else {
+      Edit_GetText(m_hWndStandAloneLogWindow, text, sizeof(text));
+      strcat(text, szString);
+    }
+
+    Edit_SetText(m_hWndStandAloneLogWindow, text);
+    int lines = Edit_GetLineCount(m_hWndStandAloneLogWindow);
+    Edit_Scroll(m_hWndStandAloneLogWindow, lines, 0);
+  }
+  else
+    Edit_SetText(m_hWndStandAloneLogWindow, ""); // clear the window
+
+/*
+  // VERSION FOR LISTBOX
+
+  // parse the string and add lines to the listbox
+  char *p = 0;
+  char *newline = szString;
+
+  for (;;) {
+    // could be either \r\n or \n, we don't need them at all for the listbox
+    p = strchr(newline, '\n');
+    if (!p)
+      break;
+
+    if (*(p - 1) == '\r')
+      *(p - 1) = '\0';
+    else
+      *p = '\0';
+
+    char line[512];
+    strcpy(line, newline);
+
+    ListBox_AddString(m_hWndStandAloneLogWindow, line);
+    int count = ListBox_GetCount(m_hWndStandAloneLogWindow);
+    if(count == 32767)
+      ListBox_ResetContent(m_hWndStandAloneLogWindow);
+    ListBox_SetCaretIndex(m_hWndStandAloneLogWindow, count - 1);
+    UpdateWindow(m_hWndStandAloneLogWindow);
+
+    // restore the original
+    if (*p == '\n')
+      *(p - 1) = '\r';
+    else
+      *p = '\n';
+
+    newline = ++p;
+  }
+*/
 }
 
 int CPlugin::messageBox(LPSTR szMessage, LPSTR szTitle, UINT uStyle)
@@ -307,6 +460,41 @@ DWORD CPlugin::makeNPNCall(NPAPI_Action action, DWORD dw1, DWORD dw2, DWORD dw3,
   return dwRet;
 }
 
+void CPlugin::autoStartScriptIfNeeded()
+{
+  if (!m_Pref_bAutoStartScript)
+    return;
+
+  CScripter scripter;
+  scripter.associate(this);
+
+  char szFileName[_MAX_PATH];
+  getModulePath(szFileName, sizeof(szFileName));
+  strcat(szFileName, m_Pref_szScriptFile);
+
+  if(scripter.createScriptFromFile(szFileName))
+  {
+    int iRepetitions = scripter.getCycleRepetitions();
+    int iDelay = scripter.getCycleDelay();
+    if(iDelay < 0)
+      iDelay = 0;
+
+    assert(pLogger != NULL);
+    pLogger->resetStartTime();
+
+    for(int i = 0; i < iRepetitions; i++)
+    {
+      scripter.executeScript();
+      if(iDelay != 0)
+        XP_Sleep(iDelay);
+    }
+  }
+  else
+  {
+    MessageBox(NULL, "Script file not found or invalid", "", MB_OK | MB_ICONERROR);
+  }
+}
+
 // Creation and destruction
 CPluginBase * CreatePlugin(NPP instance, uint16 mode)
 {
@@ -317,5 +505,5 @@ CPluginBase * CreatePlugin(NPP instance, uint16 mode)
 void DestroyPlugin(CPluginBase * pPlugin)
 {
   if(pPlugin != NULL)
-    delete (CPluginBase *)pPlugin;
+    delete (CPlugin *)pPlugin;
 }

@@ -44,6 +44,7 @@
 #define IDC_STATIC_REPETITIONS_LEFT     1044
 #define IDC_CHECK_REMEMBER_LAST         1045
 #define IDC_STATIC_REPETITIONS_LABEL    1046
+#define IDI_ICON_APP                    1047
 
 // Next default values for new objects
 // 
@@ -51,7 +52,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        115
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1047
+#define _APS_NEXT_CONTROL_VALUE         1048
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

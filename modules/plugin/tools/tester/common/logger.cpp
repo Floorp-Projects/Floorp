@@ -203,10 +203,9 @@ Frame:
   {
     if(m_bShowImmediately)
     {
-      if(m_pStream == NULL)
-        NPN_NewStream(m_pPluginInstance, m_szStreamType, m_szTarget, &m_pStream);
+      BOOL dosstyle = (m_pPlugin && m_pPlugin->isStandAlone());
 
-      int iLength = formatLogItem(plis, szOutput, "");
+      int iLength = formatLogItem(plis, szOutput, "", dosstyle);
 
       // we should fix the output string if it contains symbols <html
       // If this is the case the browser will display the whole output
@@ -214,7 +213,17 @@ Frame:
       // I do not know if this is a bug in the browser or not.
       FixUpOutputString(szOutput);
 
-      NPN_Write(m_pPluginInstance, m_pStream, iLength, (void *)szOutput);
+      if (m_pPlugin && m_pPlugin->isStandAlone())
+      {
+        m_pPlugin->outputToNativeWindow(szOutput);
+      }
+      else
+      {
+        if(m_pStream == NULL)
+          NPN_NewStream(m_pPluginInstance, m_szStreamType, m_szTarget, &m_pStream);
+
+        NPN_Write(m_pPluginInstance, m_pStream, iLength, (void *)szOutput);
+      }
       delete plis;
     }
     else
@@ -269,15 +278,23 @@ void CLogger::clearLog()
 
 void CLogger::clearTarget()
 {
-  if(m_pStream != NULL)
-    NPN_DestroyStream(m_pPluginInstance, m_pStream, NPRES_DONE);
-  NPN_NewStream(m_pPluginInstance, m_szStreamType, m_szTarget, &m_pStream);
-  NPN_Write(m_pPluginInstance, m_pStream, 1, "\n");
-
-  if(!m_bShowImmediately)
+  if (m_pPlugin && m_pPlugin->isStandAlone())
   {
-    NPN_DestroyStream(m_pPluginInstance, m_pStream, NPRES_DONE);
-    m_pStream = NULL;
+    m_pPlugin->outputToNativeWindow("");
+  }
+  else
+  {
+    if(m_pStream != NULL)
+      NPN_DestroyStream(m_pPluginInstance, m_pStream, NPRES_DONE);
+
+    NPN_NewStream(m_pPluginInstance, m_szStreamType, m_szTarget, &m_pStream);
+    NPN_Write(m_pPluginInstance, m_pStream, 1, "\n");
+
+    if(!m_bShowImmediately)
+    {
+      NPN_DestroyStream(m_pPluginInstance, m_pStream, NPRES_DONE);
+      m_pStream = NULL;
+    }
   }
 }
 
@@ -291,24 +308,34 @@ void CLogger::dumpLogToTarget()
   if(m_pLog == NULL)
     return;
 
-  BOOL bTemporaryStream = ((m_pStream == NULL) && !getShowImmediatelyFlag());
+  static char szOutput[1024];
 
-  if(m_pStream == NULL)
-    NPN_NewStream(m_pPluginInstance, m_szStreamType, m_szTarget, &m_pStream);
-
-  for(LogItemListElement * plile = m_pLog->m_pFirst; plile != NULL; plile = plile->pNext)
+  if (m_pPlugin && m_pPlugin->isStandAlone())
   {
-    static char szOutput[1024];
-
-    int iLength = formatLogItem(plile->plis, szOutput, "");
-
-    NPN_Write(m_pPluginInstance, m_pStream, iLength, (void *)szOutput);
+    for(LogItemListElement * plile = m_pLog->m_pFirst; plile != NULL; plile = plile->pNext)
+    {
+      int iLength = formatLogItem(plile->plis, szOutput, "", TRUE);
+      m_pPlugin->outputToNativeWindow(szOutput);
+    }
   }
-
-  if(bTemporaryStream)
+  else
   {
-    NPN_DestroyStream(m_pPluginInstance, m_pStream, NPRES_DONE);
-    m_pStream = NULL;
+    BOOL bTemporaryStream = ((m_pStream == NULL) && !getShowImmediatelyFlag());
+
+    if(m_pStream == NULL)
+      NPN_NewStream(m_pPluginInstance, m_szStreamType, m_szTarget, &m_pStream);
+
+    for(LogItemListElement * plile = m_pLog->m_pFirst; plile != NULL; plile = plile->pNext)
+    {
+      int iLength = formatLogItem(plile->plis, szOutput, "");
+      NPN_Write(m_pPluginInstance, m_pStream, iLength, (void *)szOutput);
+    }
+
+    if(bTemporaryStream)
+    {
+      NPN_DestroyStream(m_pPluginInstance, m_pStream, NPRES_DONE);
+      m_pStream = NULL;
+    }
   }
 }
 

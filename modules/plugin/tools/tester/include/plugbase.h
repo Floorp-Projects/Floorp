@@ -81,6 +81,10 @@ public:
   virtual BOOL isInitialized() = 0; // initialized
   virtual void getModulePath(LPSTR szPath, int iSize) = 0;
   virtual int messageBox(LPSTR szMessage, LPSTR szTitle, UINT uStyle) = 0;
+  virtual BOOL isStandAlone() = 0; // is our GUI is in a separate native window
+  virtual BOOL initStandAlone() = 0; // create separate native window
+  virtual void shutStandAlone() = 0; // destroy separate native window
+  virtual void outputToNativeWindow(LPSTR szString) = 0; // used to output log in StandAlone mode
 
   // virtuals just in case
   virtual BOOL initFull(DWORD dwInitData);
@@ -88,6 +92,7 @@ public:
   virtual BOOL init(DWORD dwInitData);
   virtual void shut();
   virtual void getLogFileName(LPSTR szLogFileName, int iSize);
+  virtual void autoStartScriptIfNeeded();
 
   const NPP getNPInstance();
   const WORD getMode();

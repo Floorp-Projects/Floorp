@@ -5,8 +5,8 @@
 <BODY>
 
 <CENTER><B><FONT SIZE=+2>Tester Plugin</FONT></B></CENTER>
-<CENTER><I>Started by: av 11.25.1997</I></CENTER>
-<CENTER><I>Last updated: 04.1.2002</I></CENTER>
+<CENTER><I>Started by: av@netscape.com 11.25.1997</I></CENTER>
+<CENTER><I>Last updated: 02.28.2003</I></CENTER>
 
 <P><B><FONT SIZE=+1>Table of contents</FONT></B>
 <UL>
@@ -27,6 +27,7 @@
 </UL>
 
 <LI>&nbsp;&nbsp;&nbsp; <A HREF="#Full Page">Full Page Mode</A></LI>
+<LI>&nbsp;&nbsp;&nbsp; <A HREF="#Special">Some Special Provisions</A></LI>
 <LI>&nbsp;&nbsp;&nbsp; <A HREF="#Log File">Log File Format</A></LI>
 <LI>&nbsp;&nbsp;&nbsp; <A HREF="#Script File">Script File Format</A></LI>
 <LI>&nbsp;&nbsp;&nbsp; <A HREF="#Current Version">Current Version and Known Issues</A></LI>
@@ -100,7 +101,7 @@ when it is appropriate by hand ("Flush" button).
 
 <BR>&nbsp;
 
-<CENTER><IMG SRC="auto.gif" HEIGHT=371 WIDTH=195>&nbsp;<IMG SRC="manual.gif" HEIGHT=371 WIDTH=195 ALIGN=ABSCENTER></CENTER>
+<CENTER><IMG SRC="auto.gif" HEIGHT=371 WIDTH=195>&nbsp;<IMG SRC="manual.gif" HEIGHT=371 WIDTH=195></CENTER>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Fig. 1. Screen shots of Auto and Manual modes
 
@@ -126,6 +127,20 @@ script file. It automatically constructes log file with the name of cache
 file and <TT>'log'</TT> extension. This can overridden in preferences profile.
 See Appendix B on&nbsp; <A HREF="#Log File Name In Fully Automatic Mode">how
 to specify log file name in fully automatic mode</A> .
+
+<P><A NAME="Special"></A><B><FONT SIZE=+1>Some special provisions</FONT></B>
+
+<P>Those were added to enchance the plugin functionality so that it can operate
+without fully implemented API in the browser.
+
+<P>First, you can start running script automatically as soon as NPP_New is called on
+the plugin.
+
+<P>Second, the plugin can use native pop up window to display its GUI.
+
+<P>Both modes do not rely on the browser capability to create windows/frames/widgets
+and layout. See <A href="#Preferences File">Appendix B</A> on how to turn these
+modes on in the preferences file.
 
 <P><A NAME="Log File"></A><B><FONT SIZE=+1>Log File Format</FONT></B>
 
@@ -234,7 +249,7 @@ or <TT>width=</TT>..., <TT>height=</TT>...
 
 <P><A NAME="Current Version"></A><B><FONT SIZE=+1>Current Version and Known Issues</FONT></B>
 
-<P>Current version is 1.5.
+<P>Current version is 1.6.
 
 <P>Issues:
 <UL>
@@ -309,14 +324,26 @@ used in dependencies)
 <P><TT>Npapi.ini</TT> is located in the same directory the plugin is located.
 Currently it stores GUI preferences (state of check boxes etc.) 
 in <TT>Preferences </TT>section, and normally this section does not need to be
-edited directly. Exception is <B><TT>LoadWindowStatus</B></TT>.
+edited directly. Some exeptions are <B><TT>LoadWindowStatus</B></TT>, 
+<B><TT>AutoStartScript</B></TT> and <B><TT>StandAloneWindow</B></TT>.
 
 <P><TT>In Preferences</TT> section you can manually add an option to show
 a small window in the left top corner of the screen which tells you that
 the plugin dll is loaded in memory. This may be useful after calling
 <TT>NPN_SetValue</TT> setting <TT>NPPVpluginKeepLibraryInMemory TRUE</TT>.
+
+<P><TT>StandAloneWindow</TT> will pop up a separate native window which
+will be used by the plugin instead of the browser window.
+
+<P><TT>AutoStartScript</TT> will start the executing of the script file immediately 
+after the plugin is loaded and initialized.
+
 <UL><TT>[Preferences]</TT>
-<BR><TT>LoadWindowStatus=Yes</TT></UL>
+<BR><TT>LoadWindowStatus=Yes</TT>
+<BR><TT>AutoStartScript=Yes</TT>
+<BR><TT>StandAloneWindow=Yes</TT></UL>
+
+<P> The default values for all those settings are "no".
 
 <P><A NAME="Separator"></A><TT>In Log </TT>section the form of <A HREF="#Separator Back">separator</A>
 can be specified using key <B><TT>RecordSeparator</TT></B>. For example:

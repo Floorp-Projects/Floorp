@@ -54,36 +54,13 @@ typedef enum
   gp_tofile,
   gp_toframe,
   gp_flush,
-  gp_rememberlast
+  gp_rememberlast,
+  gp_standalone,
+  gp_autostartscript
 }GUIPrefs;
 
 class CPlugin : public CPluginBase
 {
-private:
-  HINSTANCE m_hInst;
-  HWND m_hWnd;
-  HWND m_hWndParent;
-  HWND m_hWndManual;
-  HWND m_hWndAuto;
-  BOOL m_bPluginReady;
-
-//
-// some GUI data
-//
-public:
-  HWND m_hWndLastEditFocus;
-  int m_iWidth;
-  int m_iHeight;
-
-// GUI preferences
-  ShowGUI m_Pref_ShowGUI;
-  char m_Pref_szLogFile[256];
-  char m_Pref_szScriptFile[256];
-  BOOL m_Pref_bToFile;
-  BOOL m_Pref_bToFrame;
-  BOOL m_Pref_bFlushNow;
-  BOOL m_Pref_bRememberLastCall;
-
 // public interface
 public:
   CPlugin(NPP pNPInstance, WORD wMode);
@@ -97,6 +74,12 @@ public:
   void getModulePath(LPSTR szPath, int iSize);
   int messageBox(LPSTR szMessage, LPSTR szTitle, UINT uStyle);
   void getLogFileName(LPSTR szLogFileName, int iSize);
+  BOOL initStandAlone(); // create separate native window
+  void shutStandAlone(); // destroy separate native window
+  BOOL isStandAlone(); // is our GUI is in a separate native window
+  void outputToNativeWindow(LPSTR szString); // used to output log in StandAlone mode
+
+  void autoStartScriptIfNeeded();
 
   DWORD makeNPNCall(NPAPI_Action = action_invalid, 
                     DWORD dw1 = 0L, DWORD dw2 = 0L, 
@@ -125,6 +108,32 @@ public:
   void onInit(HWND hWnd, HWND hWndManual, HWND hWndAuto);
   void onDestroy();
   void onLogToFile(BOOL bLofToFile);
+
+private:
+  HINSTANCE m_hInst;
+  HWND m_hWnd;
+  HWND m_hWndParent;
+  HWND m_hWndStandAloneLogWindow;
+  HWND m_hWndManual;
+  HWND m_hWndAuto;
+  BOOL m_bPluginReady;
+
+// some GUI data
+public:
+  HWND m_hWndLastEditFocus;
+  int m_iWidth;
+  int m_iHeight;
+
+// GUI preferences
+  ShowGUI m_Pref_ShowGUI;
+  char m_Pref_szLogFile[256];
+  char m_Pref_szScriptFile[256];
+  BOOL m_Pref_bToFile;
+  BOOL m_Pref_bToFrame;
+  BOOL m_Pref_bFlushNow;
+  BOOL m_Pref_bRememberLastCall;
+  BOOL m_Pref_bStandAlone;
+  BOOL m_Pref_bAutoStartScript;
 };
 
 #endif // __PLUGIN_H__
