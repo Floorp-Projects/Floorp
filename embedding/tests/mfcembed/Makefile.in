@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 PROGRAM		= mfcembed$(BIN_SUFFIX)
 RESFILE		= MfcEmbed.res
 
+MODULE = mfcEmbed
 REQUIRES = \
 	xpcom \
 	string \
