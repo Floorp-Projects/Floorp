@@ -60,10 +60,6 @@
 #include "nsIDOMElement.h"
 #include "nsContentPolicyUtils.h"
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
 int
 PrefChangedCallback(const char* aPrefName, void* instance_data)
 {
@@ -102,14 +98,14 @@ nsPresContext::nsPresContext()
   
   mShell = nsnull;
 
-#ifdef _WIN32
-  // XXX This needs to be elsewhere, e.g., part of nsIDeviceContext
-  mDefaultColor = ::GetSysColor(COLOR_WINDOWTEXT);
-  mDefaultBackgroundColor = ::GetSysColor(COLOR_WINDOW);
-#else
   mDefaultColor = NS_RGB(0x00, 0x00, 0x00);
   mDefaultBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
-#endif
+  nsILookAndFeel* look = nsnull;
+  if (NS_SUCCEEDED(GetLookAndFeel(&look)) && look) {
+    look->GetColor(nsILookAndFeel::eColor_WindowForeground, mDefaultColor);
+    look->GetColor(nsILookAndFeel::eColor_WindowBackground, mDefaultBackgroundColor);
+    NS_RELEASE(look);
+  }
   
   mUseDocumentColors = PR_TRUE;
   mUseDocumentFonts = PR_TRUE;
@@ -257,12 +253,9 @@ nsPresContext::GetUserPreferences()
   PRBool usePrefColors = PR_TRUE;
   PRUint32  colorPref;
   PRBool boolPref;
-#ifdef _WIN32
-  // XXX Is Windows the only platform that uses this?
-  if (NS_OK == mPrefs->GetBoolPref("browser.display.wfe.use_windows_colors", &boolPref)) {
+  if (NS_OK == mPrefs->GetBoolPref("browser.display.use_system_colors", &boolPref)) {
     usePrefColors = !boolPref;
   }
-#endif
   if (usePrefColors) {
     if (NS_OK == mPrefs->GetColorPrefDWord("browser.display.foreground_color", &colorPref)) {
       mDefaultColor = (nscolor)colorPref;
