@@ -193,8 +193,16 @@ function UpdatePageReport(event)
   if (!gReportButton)
     return;
 
-  if (gBrowser.mCurrentBrowser.pageReport)
+  if (gBrowser.mCurrentBrowser.pageReport) {
     gReportButton.setAttribute("blocked", "true");
+    if (pref && pref.getBoolPref("privacy.popups.firstTime")) {
+      // Force a reflow. Gross.
+      var x = gReportButton.boxObject.width;
+
+      // Now display a dialog.
+      displayPageReportFirstTime();
+    }
+  }
   else
     gReportButton.removeAttribute("blocked");
 }
@@ -3142,6 +3150,12 @@ function displayPageInfo()
 {
     window.openDialog("chrome://navigator/content/pageInfo.xul", "_blank",
                       "dialog=no", null, "securityTab");
+}
+
+function displayPageReportFirstTime()
+{
+    window.openDialog("chrome://browser/content/pageReportFirstTime.xul", "_blank",
+                      "modal");
 }
 
 function displayPageReport()
