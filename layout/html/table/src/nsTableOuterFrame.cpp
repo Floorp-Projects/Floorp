@@ -202,36 +202,110 @@ nsresult nsTableOuterFrame::RecoverState(OuterTableReflowState& aState,
   return NS_OK;
 }
 
+nsresult nsTableOuterFrame::AdjustSiblingsAfterReflow(nsIPresContext*        aPresContext,
+                                                      OuterTableReflowState& aState,
+                                                      nsIFrame*              aKidFrame,
+                                                      nscoord                aDeltaY)
+{
+  nsIFrame* lastKidFrame = aKidFrame;
+
+  if (aDeltaY != 0) {
+    // Move the frames that follow aKidFrame by aDeltaY
+    nsIFrame* kidFrame;
+
+    aKidFrame->GetNextSibling(kidFrame);
+    while (nsnull != kidFrame) {
+      nsPoint origin;
+  
+      // XXX We can't just slide the child if it has a next-in-flow
+      kidFrame->GetOrigin(origin);
+      origin.y += aDeltaY;
+  
+      // XXX We need to send move notifications to the frame...
+      kidFrame->MoveTo(origin.x, origin.y);
+
+      // Get the next frame
+      lastKidFrame = kidFrame;
+      kidFrame->GetNextSibling(kidFrame);
+    }
+
+  } else {
+    // Get the last frame
+    LastChild(lastKidFrame);
+
+    // Set our running y-offset
+    nsRect  rect;
+
+    lastKidFrame->GetRect(rect);
+    aState.y = rect.YMost();
+  }
+
+  // Get the bottom margin for the last child frame
+  const nsStyleSpacing* kidSpacing;
+  lastKidFrame->GetStyleData(eStyleStruct_Spacing, (nsStyleStruct *&)kidSpacing);
+  nsMargin margin;
+  kidSpacing->CalcMarginFor(lastKidFrame, margin);
+  if (margin.bottom < 0) {
+    aState.prevMaxNegBottomMargin = -margin.bottom;
+  } else {
+    aState.prevMaxPosBottomMargin = margin.bottom;
+  }
+
+  return NS_OK;
+}
+
 nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext* aPresContext,
+                                              OuterTableReflowState& aState,
                                               nsReflowMetrics& aDesiredSize,
                                               const nsReflowState& aReflowState,
                                               nsReflowStatus& aStatus)
 {
-  OuterTableReflowState state(aPresContext, aReflowState);
-
   // Get the next frame in the reflow chain
-  nsIFrame* next;
-  aReflowState.reflowCommand->GetNext(next);
+  nsIFrame* kidFrame;
+  aReflowState.reflowCommand->GetNext(kidFrame);
 
-  // Recover the reflow state
-  RecoverState(state, next);
+  // Recover our reflow state
+  RecoverState(aState, kidFrame);
 
-#if 0
   // Pass along the reflow command
   // XXX Check if we're the target...
-  nsReflowState reflowState(next, aReflowState, kidMaxSize);
+  nsSize          kidMaxElementSize(0,0);
+  nsSize*         pKidMaxElementSize = (nsnull != aDesiredSize.maxElementSize) ?
+                                                  &kidMaxElementSize : nsnull;
+  nsReflowMetrics kidSize(pKidMaxElementSize);
+  nsRect          oldKidRect;
 
-  SetReflowState(aState, next);
-  next->WillReflow(*aPresContext);
-  status = ReflowChild(next, aPresContext, kidSize, state.availSize,
-                       pKidMaxElementSize, state);
+  kidFrame->GetRect(oldKidRect);
+  SetReflowState(aState, kidFrame);
 
-  // Place the child frame
+  // Get the top margin for the child
+  const nsStyleSpacing* kidSpacing;
+  kidFrame->GetStyleData(eStyleStruct_Spacing, (nsStyleStruct *&)kidSpacing);
+  nsMargin kidMargin;
+  kidSpacing->CalcMarginFor(kidFrame, kidMargin);
+  nscoord topMargin = GetTopMarginFor(aPresContext, aState, kidMargin);
+  nscoord bottomMargin = kidMargin.bottom;
+
+  // Figure out the amount of available size for the child (subtract
+  // off the top margin we are going to apply to it)
+  if (PR_FALSE == aState.unconstrainedHeight) {
+    aState.availSize.height -= topMargin;
+  }
+  // Subtract off for left and right margin
+  if (PR_FALSE == aState.unconstrainedWidth) {
+    aState.availSize.width -= kidMargin.left + kidMargin.right;
+  }
+
+  // Now do the reflow
   aState.y += topMargin;
-  nsRect kidRect (0, 0, kidSize.width, kidSize.height);
-  kidRect.x += kidMargin.left;
-  kidRect.y += aState.y;
-  PlaceChild(aState, kidFrame, kidRect, aMaxElementSize, kidMaxElementSize);
+  kidFrame->WillReflow(*aPresContext);
+  kidFrame->MoveTo(kidMargin.left, aState.y);
+  aStatus = ReflowChild(kidFrame, aPresContext, kidSize, aState.availSize,
+                        pKidMaxElementSize, aState);
+
+  // Place the child frame after taking into account its margin
+  nsRect kidRect (kidMargin.left, aState.y, kidSize.width, kidSize.height);
+  PlaceChild(aState, kidFrame, kidRect, aDesiredSize.maxElementSize, kidMaxElementSize);
   if (bottomMargin < 0) {
     aState.prevMaxNegBottomMargin = -bottomMargin;
   } else {
@@ -239,9 +313,8 @@ nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext* aPresContext,
   }
 
   // Adjust the frames that follow
-#endif
-
-  return NS_OK;
+  return AdjustSiblingsAfterReflow(aPresContext, aState, kidFrame,
+                                   kidRect.YMost() - oldKidRect.YMost());
 }
 
 /**
@@ -276,8 +349,11 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
     aDesiredSize.maxElementSize->height = 0;
   }
 
+  // Initialize our local reflow state
+  OuterTableReflowState state(aPresContext, aReflowState);
+
   if (eReflowReason_Incremental == aReflowState.reason) {
-    ; // IncrementalReflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+    IncrementalReflow(aPresContext, state, aDesiredSize, aReflowState, aStatus);
 
   } else {
     PRBool  reflowMappedOK = PR_TRUE;
@@ -305,8 +381,6 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
       return NS_OK;
     }
     
-    OuterTableReflowState state(aPresContext, aReflowState);
-  
     // lay out captions pass 1, if necessary
     if (PR_FALSE==IsFirstPassValid())
     {
@@ -383,47 +457,47 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
   */
       }
     }
-  
-    if (NS_FRAME_IS_COMPLETE(aStatus)) {
-      // Don't forget to add in the bottom margin from our last child.
-      // Only add it in if there's room for it.
-      nscoord margin = state.prevMaxPosBottomMargin -
-        state.prevMaxNegBottomMargin;
-      if (state.availSize.height >= margin) {
-        state.y += margin;
-      }
-    }
-  
-    // Return our desired rect
-    //NS_ASSERTION(0<state.y, "illegal height after reflow");
-    //NS_ASSERTION(0<state.innerTableMaxSize.width, "illegal width after reflow");
-    aDesiredSize.width  = state.innerTableMaxSize.width;
-    /* if we're incomplete, take up all the remaining height so we don't waste time
-     * trying to lay out in a slot that we know isn't tall enough to fit our minimum.
-     * otherwise, we're as tall as our kids want us to be */
-    if (NS_FRAME_IS_NOT_COMPLETE(aStatus))
-      aDesiredSize.height = aReflowState.maxSize.height;
-    else 
-      aDesiredSize.height = state.y;
-  
-    if (gsDebug==PR_TRUE) 
-    {
-      if (nsnull!=aDesiredSize.maxElementSize)
-        printf("Outer frame Reflow complete, returning %s with aDesiredSize = %d,%d and aMaxElementSize=%d,%d\n",
-                NS_FRAME_IS_COMPLETE(aStatus)? "Complete" : "Not Complete",
-                aDesiredSize.width, aDesiredSize.height, 
-                aDesiredSize.maxElementSize->width, aDesiredSize.maxElementSize->height);
-      else
-        printf("Outer frame Reflow complete, returning %s with aDesiredSize = %d,%d and NSNULL aMaxElementSize\n",
-                NS_FRAME_IS_COMPLETE(aStatus)? "Complete" : "Not Complete",
-                aDesiredSize.width, aDesiredSize.height);
-    }
-  
-  #ifdef NS_DEBUG
-    // replace with a check that does not assume linear placement of children
-    // PostReflowCheck(status);
-  #endif
   }
+  
+  if (NS_FRAME_IS_COMPLETE(aStatus)) {
+    // Don't forget to add in the bottom margin from our last child.
+    // Only add it in if there's room for it.
+    nscoord margin = state.prevMaxPosBottomMargin -
+      state.prevMaxNegBottomMargin;
+    if (state.availSize.height >= margin) {
+      state.y += margin;
+    }
+  }
+  
+  // Return our desired rect
+  //NS_ASSERTION(0<state.y, "illegal height after reflow");
+  //NS_ASSERTION(0<state.innerTableMaxSize.width, "illegal width after reflow");
+  aDesiredSize.width  = state.innerTableMaxSize.width;
+  /* if we're incomplete, take up all the remaining height so we don't waste time
+   * trying to lay out in a slot that we know isn't tall enough to fit our minimum.
+   * otherwise, we're as tall as our kids want us to be */
+  if (NS_FRAME_IS_NOT_COMPLETE(aStatus))
+    aDesiredSize.height = aReflowState.maxSize.height;
+  else 
+    aDesiredSize.height = state.y;
+
+  if (gsDebug==PR_TRUE) 
+  {
+    if (nsnull!=aDesiredSize.maxElementSize)
+      printf("Outer frame Reflow complete, returning %s with aDesiredSize = %d,%d and aMaxElementSize=%d,%d\n",
+              NS_FRAME_IS_COMPLETE(aStatus)? "Complete" : "Not Complete",
+              aDesiredSize.width, aDesiredSize.height, 
+              aDesiredSize.maxElementSize->width, aDesiredSize.maxElementSize->height);
+    else
+      printf("Outer frame Reflow complete, returning %s with aDesiredSize = %d,%d and NSNULL aMaxElementSize\n",
+              NS_FRAME_IS_COMPLETE(aStatus)? "Complete" : "Not Complete",
+              aDesiredSize.width, aDesiredSize.height);
+  }
+
+#ifdef NS_DEBUG
+  // replace with a check that does not assume linear placement of children
+  // PostReflowCheck(status);
+#endif
 
   return NS_OK;
 
