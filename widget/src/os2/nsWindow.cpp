@@ -1795,7 +1795,8 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
       }
       else if( !event.isControl && !event.isAlt && event.charCode != 0)
       {
-         if (!(fsFlags & KC_VIRTUALKEY) || (event.keyCode == 0))
+         if ( !(fsFlags & KC_VIRTUALKEY) || 
+              ((fsFlags & KC_CHAR) && (event.keyCode == 0)) )
          {
             event.isShift = PR_FALSE;
             event.keyCode = 0;
