@@ -99,7 +99,19 @@ var key = {
  "?imagemap_properties": "chrome://help/locale/composer_help.html#IMAGE_MAPS",
  "?link_properties": "chrome://help/locale/composer_help.html#page_link",
  "?table_properties": "chrome://help/locale/composer_help.html#Setting_table_properties",
- "?advanced_property_editor": "chrome://help/locale/composer_help.html#PROPERTY_EDITOR"
+ "?advanced_property_editor": "chrome://help/locale/composer_help.html#PROPERTY_EDITOR",
+
+ // Mailnews account settings tag mappings. 
+ "?mail_account_identity": "chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_IDENTITY",
+ "?mail_server_imap": "chrome://help/locale/mail_help.html#IMAP_SERVER", 
+ "?mail_server_pop3": "chrome://help/locale/mail_help.html#POP_SERVER", 
+ "?mail_server_nntp": "chrome://help/locale/mail_help.html#DISCUSSION_HOST_PROPERTIES", 
+ "?mail_copies": "chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_COPIES",
+ "?mail_addressing_settings": "chrome://help/locale/mail_help.html#addressing_settings", 
+ "?mail_offline_imap": "chrome://help/locale/mail_help.html#OFFLINE_IMAP", 
+ "?mail_offline_pop3": "chrome://help/locale/mail_help.html#OFFLINE_POP", 
+ "?mail_offline_nntp": "chrome://help/locale/mail_help.html#OFFLINE_NEWS", 
+ "?mail_smtp": "chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_SMTP" 
 }
 
 // This function is called by dialogs that want to display context-sensitive help
