@@ -894,6 +894,8 @@ pr_Mac_LoadNamedFragment(const FSSpec *fileSpec, const char* fragmentName)
 
 unlock:
 	if (result == NULL) {
+		if (newLib != NULL)
+			PR_DELETE(newLib);
 		PR_SetError(PR_LOAD_LIBRARY_ERROR, _MD_ERRNO());
 		DLLErrorInternal(_MD_ERRNO());  /* sets error text */
 	}
@@ -956,6 +958,8 @@ pr_Mac_LoadIndexedFragment(const FSSpec *fileSpec, PRUint32 fragIndex)
 
 unlock:
 	if (result == NULL) {
+		if (newLib != NULL)
+			PR_DELETE(newLib);
 		PR_SetError(PR_LOAD_LIBRARY_ERROR, _MD_ERRNO());
 		DLLErrorInternal(_MD_ERRNO());  /* sets error text */
 	}
