@@ -462,7 +462,7 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
             if (target.Length() == 0) {
               GetBaseTarget(target);
             }
-            mInner.TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href, target, PR_TRUE);
+            ret = mInner.TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href, target, PR_TRUE);
             NS_IF_RELEASE(baseURL);
             *aEventStatus = nsEventStatus_eConsumeNoDefault; 
           }
