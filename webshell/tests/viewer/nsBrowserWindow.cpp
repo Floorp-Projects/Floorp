@@ -377,42 +377,6 @@ HandleForwardEvent(nsGUIEvent *aEvent)
   return result;
 }
 
-//----------------------------------------------------------
-static void BuildFileURL(const char * aFileName, nsString & aFileURL) 
-{
-  nsAutoString fileName(aFileName);
-  char * str = fileName.ToNewCString();
-
-  PRInt32 len = strlen(str);
-  PRInt32 sum = len + sizeof(FILE_PROTOCOL);
-  char* lpszFileURL = new char[sum];
-
-  // Translate '\' to '/'
-  for (PRInt32 i = 0; i < len; i++) {
-    if (str[i] == '\\') {
-	    str[i] = '/';
-    }
-  }
-
-  // Build the file URL
-  PR_snprintf(lpszFileURL, sum, "%s%s", FILE_PROTOCOL, str);
-
-  // create string
-  aFileURL = lpszFileURL;
-  delete[] lpszFileURL;
-  delete[] str;
-}
-
-//----------------------------------------------------------
-static void BuildFileURL(const PRUnichar * aFileName, nsString & aFileURL) 
-{
-  nsAutoString fileName(aFileName);
-  char * str = fileName.ToNewCString();
-  BuildFileURL(str, aFileURL);
-  delete[] str;
-}
-
-
 static nsEventStatus PR_CALLBACK
 HandleLocationEvent(nsGUIEvent *aEvent)
 {
@@ -767,10 +731,9 @@ nsBrowserWindow::DoFileOpen()
 {
   nsFileSpec fileSpec;
   if (GetFileFromFileSelector(mWindow, fileSpec, mOpenFileDirectory)) {
-	nsAutoString fileURL;
-    BuildFileURL(nsString(fileSpec.GetNativePathCString()).GetUnicode(), fileURL);
+	nsFileURL fileURL(fileSpec);
     // Ask the Web widget to load the file URL
-    mWebShell->LoadURL(fileURL.GetUnicode());
+    mWebShell->LoadURL(nsString(fileURL.GetURLString()).GetUnicode());
     Show();
   }
 }
