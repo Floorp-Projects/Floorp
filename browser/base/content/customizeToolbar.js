@@ -55,6 +55,7 @@ function buildDialog()
 
     var paletteEnclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                                     "toolbarpaletteitem");
+    paletteEnclosure.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event, dragObserver)");
     paletteEnclosure.appendChild(newItem);
     newToolbar.appendChild(paletteEnclosure);
     toolbarItem = toolbarItem.nextSibling;
@@ -163,8 +164,10 @@ var dropObserver = {
     // Don't allow duplicates.
     var toolbarItem = toolbar.firstChild;
     while (toolbarItem) {
-      if (toolbarItem.firstChild.id == newButtonId)
-        return;
+      if (toolbarItem.firstChild.id == newButtonId) {
+        toolbar.removeChild(toolbarItem);
+        break;
+      }
       toolbarItem = toolbarItem.nextSibling;
     }
  
@@ -183,6 +186,7 @@ var dropObserver = {
 
     var paletteEnclosure = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                                     "toolbarpaletteitem");
+    paletteEnclosure.setAttribute("ondraggesture", "nsDragAndDrop.startDrag(event, dragObserver)");
     paletteEnclosure.appendChild(paletteItem);
 
     toolbar.insertBefore(paletteEnclosure, gCurrentDragOverItem);
