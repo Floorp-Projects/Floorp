@@ -115,6 +115,9 @@ Feed.onProgress = function(event) {
 }
 
 Feed.onDownloadError = function(event) {
+  var request = event.target;
+  var url = request.channel.originalURI.spec;
+  var feed = gFzFeedCache[url];
   if (feed.downloadCallback)
     feed.downloadCallback.downloaded(feed, kNewsBlogRequestFailure);
 }
