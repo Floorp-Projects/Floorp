@@ -53,6 +53,8 @@ CacheLogPrintPath(PRLogModuleLevel level, char * format, nsIFile * item)
     nsresult rv = item->GetNativePath(path);
     if (NS_SUCCEEDED(rv)) {
         PR_LOG(gCacheLog, level, (format, path.get()));
+    } else {
+        PR_LOG(gCacheLog, level, ("GetNativePath failed: %x", rv));
     }
 }
 

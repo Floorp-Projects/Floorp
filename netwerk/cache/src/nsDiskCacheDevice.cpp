@@ -1039,11 +1039,19 @@ nsDiskCacheDevice::MoveCacheToTrash(nsIFile ** result)
     if (NS_FAILED(rv))  return rv;
 
     // move cache directory into unique trash directory
-    nsCOMPtr<nsIFile> cacheDir;
-    rv = mCacheDirectory->Clone(getter_AddRefs(cacheDir));
+    nsCOMPtr<nsIFile> parentDir;
+
+    rv = mCacheDirectory->GetParent(getter_AddRefs(parentDir));
     if (NS_FAILED(rv))  return rv;
-    rv = cacheDir->MoveToNative(uniqueDir, nsCString());
+    
+    rv = mCacheDirectory->MoveToNative(uniqueDir, nsCString());
     if (NS_FAILED(rv))  return rv;
+    
+    // set mCacheDirectory to point to parentDir/Cache/ again
+    rv = parentDir->AppendNative(NS_LITERAL_CSTRING("Cache"));
+    if (NS_FAILED(rv))  return rv;
+    
+    mCacheDirectory = do_QueryInterface(parentDir);
 
     // return unique directory, in case caller wants specifically delete it
     if (result)
@@ -1058,8 +1066,10 @@ nsDiskCacheDevice::InitializeCacheDirectory()
     nsresult rv;
     
     rv = mCacheDirectory->Create(nsIFile::DIRECTORY_TYPE, 0777);
-    if (NS_FAILED(rv)) return rv;
-    
+    CACHE_LOG_PATH(PR_LOG_ALWAYS, "\ncreate cache directory: %s\n", mCacheDirectory);
+    CACHE_LOG_ALWAYS(("mCacheDirectory->Create() = %x\n", rv));
+    if (NS_FAILED(rv))  return rv;
+
     // reopen the cache map     
     rv = mCacheMap->Open(mCacheDirectory);
     return rv;
