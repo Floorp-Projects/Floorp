@@ -696,11 +696,6 @@ struct StructCheckData {
   CheckCallbackFn callback;
 };
 
-#define CHECKDATA_STRUCT(_props) \
-  {_props, sizeof(_props)/sizeof(PropertyCheckData), nsnull}
-#define CHECKDATA_STRUCT_WITH_CALLBACK(_props, _cb) \
-  {_props, sizeof(_props)/sizeof(PropertyCheckData), _cb}
-
 static void
 ExamineRectProperties(const nsCSSRect* aRect,
                       PRUint32& aSpecifiedCount, PRUint32& aInheritedCount)
@@ -975,36 +970,16 @@ static const PropertyCheckData SVGCheckProperties[] = {
 };
 #endif
   
-// These are indexed by style struct ID and must stay in order!
 static const StructCheckData gCheckProperties[] = {
-  { nsnull, 0, nsnull}, /* empty, since no 0th SID */
-  CHECKDATA_STRUCT_WITH_CALLBACK(FontCheckProperties, CheckFontCallback),
-  CHECKDATA_STRUCT(ColorCheckProperties),
-  CHECKDATA_STRUCT(BackgroundCheckProperties),
-  CHECKDATA_STRUCT(ListCheckProperties),
-  CHECKDATA_STRUCT(PositionCheckProperties),
-  CHECKDATA_STRUCT(TextCheckProperties),
-  CHECKDATA_STRUCT(TextResetCheckProperties),
-  CHECKDATA_STRUCT(DisplayCheckProperties),
-  CHECKDATA_STRUCT(VisibilityCheckProperties),
-  CHECKDATA_STRUCT(ContentCheckProperties),
-  CHECKDATA_STRUCT(QuotesCheckProperties),
-  CHECKDATA_STRUCT(UserInterfaceCheckProperties),
-  CHECKDATA_STRUCT(UIResetCheckProperties),
-  CHECKDATA_STRUCT(TableCheckProperties),
-  CHECKDATA_STRUCT(TableBorderCheckProperties),
-  CHECKDATA_STRUCT(MarginCheckProperties),
-  CHECKDATA_STRUCT(PaddingCheckProperties),
-  CHECKDATA_STRUCT(BorderCheckProperties),
-  CHECKDATA_STRUCT(OutlineCheckProperties),
-#ifdef INCLUDE_XUL
-  CHECKDATA_STRUCT(XULCheckProperties),
-#endif
-#ifdef MOZ_SVG
-  CHECKDATA_STRUCT(SVGCheckProperties),
-#endif
-  { nsnull, 0, nsnull} /* empty, so at least we crash reliably if someone
-                          passes in the BorderPaddingShortcut ID */
+
+#define STYLE_STRUCT(name, checkdata_cb) \
+  {name##CheckProperties, \
+   sizeof(name##CheckProperties)/sizeof(PropertyCheckData), \
+   checkdata_cb},
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+  {nsnull, 0, nsnull}
+
 };
 
 
@@ -1252,7 +1227,7 @@ nsRuleNode::GetTextResetData(nsIStyleContext* aContext, PRBool aComputeData)
 }
 
 const nsStyleStruct*
-nsRuleNode::GetUIData(nsIStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetUserInterfaceData(nsIStyleContext* aContext, PRBool aComputeData)
 {
   nsCSSUserInterface uiData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_UserInterface, mPresContext, aContext);
@@ -1600,8 +1575,8 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
       // it never has to go back to the rule tree for data.  Instead the style context tree
       // should be walked to find the data.
       const nsStyleStruct* parentStruct = parentContext->GetStyleData(aSID);
-      aContext->AddStyleBit(bit);
-      aContext->SetStyle(aSID, *parentStruct);
+      aContext->AddStyleBit(bit); // makes const_cast OK.
+      aContext->SetStyle(aSID, NS_CONST_CAST(nsStyleStruct*, parentStruct));
       return parentStruct;
     }
     else
@@ -1647,115 +1622,115 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsIStyleContext* aConte
       nsStyleFont* fontData = new (mPresContext) nsStyleFont(*defaultFont);
       fontData->mSize = fontData->mFont.size =
           ZoomFont(mPresContext, fontData->mFont.size);
-      aContext->SetStyle(eStyleStruct_Font, *fontData);
+      aContext->SetStyle(eStyleStruct_Font, fontData);
       return fontData;
     }
     case eStyleStruct_Display:
     {
       nsStyleDisplay* disp = new (mPresContext) nsStyleDisplay();
-      aContext->SetStyle(eStyleStruct_Display, *disp);
+      aContext->SetStyle(eStyleStruct_Display, disp);
       return disp;
     }
     case eStyleStruct_Visibility:
     {
       nsStyleVisibility* vis = new (mPresContext) nsStyleVisibility(mPresContext);
-      aContext->SetStyle(eStyleStruct_Visibility, *vis);
+      aContext->SetStyle(eStyleStruct_Visibility, vis);
       return vis;
     }
     case eStyleStruct_Text:
     {
       nsStyleText* text = new (mPresContext) nsStyleText();
-      aContext->SetStyle(eStyleStruct_Text, *text);
+      aContext->SetStyle(eStyleStruct_Text, text);
       return text;
     }
     case eStyleStruct_TextReset:
     {
       nsStyleTextReset* text = new (mPresContext) nsStyleTextReset();
-      aContext->SetStyle(eStyleStruct_TextReset, *text);
+      aContext->SetStyle(eStyleStruct_TextReset, text);
       return text;
     }
     case eStyleStruct_Color:
     {
       nsStyleColor* color = new (mPresContext) nsStyleColor(mPresContext);
-      aContext->SetStyle(eStyleStruct_Color, *color);
+      aContext->SetStyle(eStyleStruct_Color, color);
       return color;
     }
     case eStyleStruct_Background:
     {
       nsStyleBackground* bg = new (mPresContext) nsStyleBackground(mPresContext);
-      aContext->SetStyle(eStyleStruct_Background, *bg);
+      aContext->SetStyle(eStyleStruct_Background, bg);
       return bg;
     }
     case eStyleStruct_Margin:
     {
       nsStyleMargin* margin = new (mPresContext) nsStyleMargin();
-      aContext->SetStyle(eStyleStruct_Margin, *margin);
+      aContext->SetStyle(eStyleStruct_Margin, margin);
       return margin;
     }
     case eStyleStruct_Border:
     {
       nsStyleBorder* border = new (mPresContext) nsStyleBorder(mPresContext);
-      aContext->SetStyle(eStyleStruct_Border, *border);
+      aContext->SetStyle(eStyleStruct_Border, border);
       return border;
     }
     case eStyleStruct_Padding:
     {
       nsStylePadding* padding = new (mPresContext) nsStylePadding();
-      aContext->SetStyle(eStyleStruct_Padding, *padding);
+      aContext->SetStyle(eStyleStruct_Padding, padding);
       return padding;
     }
     case eStyleStruct_Outline:
     {
       nsStyleOutline* outline = new (mPresContext) nsStyleOutline(mPresContext);
-      aContext->SetStyle(eStyleStruct_Outline, *outline);
+      aContext->SetStyle(eStyleStruct_Outline, outline);
       return outline;
     }
     case eStyleStruct_List:
     {
       nsStyleList* list = new (mPresContext) nsStyleList();
-      aContext->SetStyle(eStyleStruct_List, *list);
+      aContext->SetStyle(eStyleStruct_List, list);
       return list;
     }
     case eStyleStruct_Position:
     {
       nsStylePosition* pos = new (mPresContext) nsStylePosition();
-      aContext->SetStyle(eStyleStruct_Position, *pos);
+      aContext->SetStyle(eStyleStruct_Position, pos);
       return pos;
     }
     case eStyleStruct_Table:
     {
       nsStyleTable* table = new (mPresContext) nsStyleTable();
-      aContext->SetStyle(eStyleStruct_Table, *table);
+      aContext->SetStyle(eStyleStruct_Table, table);
       return table;
     }
     case eStyleStruct_TableBorder:
     {
       nsStyleTableBorder* table = new (mPresContext) nsStyleTableBorder(mPresContext);
-      aContext->SetStyle(eStyleStruct_TableBorder, *table);
+      aContext->SetStyle(eStyleStruct_TableBorder, table);
       return table;
     }
     case eStyleStruct_Content:
     {
       nsStyleContent* content = new (mPresContext) nsStyleContent();
-      aContext->SetStyle(eStyleStruct_Content, *content);
+      aContext->SetStyle(eStyleStruct_Content, content);
       return content;
     }
     case eStyleStruct_Quotes:
     {
       nsStyleQuotes* quotes = new (mPresContext) nsStyleQuotes();
-      aContext->SetStyle(eStyleStruct_Quotes, *quotes);
+      aContext->SetStyle(eStyleStruct_Quotes, quotes);
       return quotes;
     }
     case eStyleStruct_UserInterface:
     {
       nsStyleUserInterface* ui = new (mPresContext) nsStyleUserInterface();
-      aContext->SetStyle(eStyleStruct_UserInterface, *ui);
+      aContext->SetStyle(eStyleStruct_UserInterface, ui);
       return ui;
     }
     case eStyleStruct_UIReset:
     {
       nsStyleUIReset* ui = new (mPresContext) nsStyleUIReset();
-      aContext->SetStyle(eStyleStruct_UIReset, *ui);
+      aContext->SetStyle(eStyleStruct_UIReset, ui);
       return ui;
     }
 
@@ -1763,7 +1738,7 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsIStyleContext* aConte
     case eStyleStruct_XUL:
     {
       nsStyleXUL* xul = new (mPresContext) nsStyleXUL();
-      aContext->SetStyle(eStyleStruct_XUL, *xul);
+      aContext->SetStyle(eStyleStruct_XUL, xul);
       return xul;
     }
 #endif
@@ -1772,47 +1747,22 @@ nsRuleNode::SetDefaultOnRoot(const nsStyleStructID aSID, nsIStyleContext* aConte
     case eStyleStruct_SVG:
     {
       nsStyleSVG* svg = new (mPresContext) nsStyleSVG();
-      aContext->SetStyle(eStyleStruct_SVG, *svg);
+      aContext->SetStyle(eStyleStruct_SVG, svg);
       return svg;
     }
 #endif
-
-    case eStyleStruct_BorderPaddingShortcut:
-      NS_ERROR("unexpected SID");
   }
   return nsnull;
 }
 
 nsRuleNode::ComputeStyleDataFn
 nsRuleNode::gComputeStyleDataFn[] = {
-  // Note that these must line up _exactly_ with the numeric values of
-  // the nsStyleStructID enum.
-  nsnull,
-  &nsRuleNode::ComputeFontData,
-  &nsRuleNode::ComputeColorData,
-  &nsRuleNode::ComputeBackgroundData,
-  &nsRuleNode::ComputeListData,
-  &nsRuleNode::ComputePositionData,
-  &nsRuleNode::ComputeTextData,
-  &nsRuleNode::ComputeTextResetData,
-  &nsRuleNode::ComputeDisplayData,
-  &nsRuleNode::ComputeVisibilityData,
-  &nsRuleNode::ComputeContentData,
-  &nsRuleNode::ComputeQuotesData,
-  &nsRuleNode::ComputeUIData,
-  &nsRuleNode::ComputeUIResetData,
-  &nsRuleNode::ComputeTableData,
-  &nsRuleNode::ComputeTableBorderData,
-  &nsRuleNode::ComputeMarginData,
-  &nsRuleNode::ComputePaddingData,
-  &nsRuleNode::ComputeBorderData,
-  &nsRuleNode::ComputeOutlineData,
-#ifdef INCLUDE_XUL
-  &nsRuleNode::ComputeXULData,
-#endif
-#ifdef MOZ_SVG
-  &nsRuleNode::ComputeSVGData,
-#endif
+
+#define STYLE_STRUCT(name, checkdata_cb) \
+  &nsRuleNode::Compute##name##Data,
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+
   nsnull
 };
 
@@ -2291,14 +2241,14 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_Font, *font);
+    aContext->SetStyle(eStyleStruct_Font, font);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mInheritedData)
       aHighestNode->mStyleData.mInheritedData = new (mPresContext) nsInheritedStyleData;
     aHighestNode->mStyleData.mInheritedData->mFontData = font;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_FONT, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(Font), aHighestNode);
   }
 
   return font;
@@ -2411,14 +2361,14 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_Text, *text);
+    aContext->SetStyle(eStyleStruct_Text, text);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mInheritedData)
       aHighestNode->mStyleData.mInheritedData = new (mPresContext) nsInheritedStyleData;
     aHighestNode->mStyleData.mInheritedData->mTextData = text;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_TEXT, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(Text), aHighestNode);
   }
 
   return text;
@@ -2483,24 +2433,26 @@ nsRuleNode::ComputeTextResetData(nsStyleStruct* aStartData, const nsCSSStruct& a
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_TextReset, *text);
+    aContext->SetStyle(eStyleStruct_TextReset, text);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mResetData)
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
-    aHighestNode->mStyleData.mResetData->mTextData = text;
+    aHighestNode->mStyleData.mResetData->mTextResetData = text;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_TEXT_RESET, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(TextReset), aHighestNode);
   }
 
   return text;
 }
 
 const nsStyleStruct*
-nsRuleNode::ComputeUIData(nsStyleStruct* aStartData, const nsCSSStruct& aData, 
-                          nsIStyleContext* aContext, 
-                          nsRuleNode* aHighestNode,
-                          const RuleDetail& aRuleDetail, PRBool aInherited)
+nsRuleNode::ComputeUserInterfaceData(nsStyleStruct* aStartData,
+                                     const nsCSSStruct& aData, 
+                                     nsIStyleContext* aContext, 
+                                     nsRuleNode* aHighestNode,
+                                     const RuleDetail& aRuleDetail,
+                                     PRBool aInherited)
 {
   nsCOMPtr<nsIStyleContext> parentContext = getter_AddRefs(aContext->GetParent());
   
@@ -2593,14 +2545,14 @@ nsRuleNode::ComputeUIData(nsStyleStruct* aStartData, const nsCSSStruct& aData,
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_UserInterface, *ui);
+    aContext->SetStyle(eStyleStruct_UserInterface, ui);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mInheritedData)
       aHighestNode->mStyleData.mInheritedData = new (mPresContext) nsInheritedStyleData;
-    aHighestNode->mStyleData.mInheritedData->mUIData = ui;
+    aHighestNode->mStyleData.mInheritedData->mUserInterfaceData = ui;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_UI, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(UserInterface), aHighestNode);
   }
 
   return ui;
@@ -2682,14 +2634,14 @@ nsRuleNode::ComputeUIResetData(nsStyleStruct* aStartData, const nsCSSStruct& aDa
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_UIReset, *ui);
+    aContext->SetStyle(eStyleStruct_UIReset, ui);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mResetData)
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
-    aHighestNode->mStyleData.mResetData->mUIData = ui;
+    aHighestNode->mStyleData.mResetData->mUIResetData = ui;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_UI_RESET, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(UIReset), aHighestNode);
   }
 
   return ui;
@@ -2878,14 +2830,14 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_Display, *display);
+    aContext->SetStyle(eStyleStruct_Display, display);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mResetData)
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mDisplayData = display;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_DISPLAY, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(Display), aHighestNode);
   }
 
   // CSS2 specified fixups:
@@ -3030,14 +2982,14 @@ nsRuleNode::ComputeVisibilityData(nsStyleStruct* aStartStruct, const nsCSSStruct
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_Visibility, *visibility);
+    aContext->SetStyle(eStyleStruct_Visibility, visibility);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mInheritedData)
       aHighestNode->mStyleData.mInheritedData = new (mPresContext) nsInheritedStyleData;
     aHighestNode->mStyleData.mInheritedData->mVisibilityData = visibility;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_VISIBILITY, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(Visibility), aHighestNode);
   }
 
   return visibility;
@@ -3086,14 +3038,14 @@ nsRuleNode::ComputeColorData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDa
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_Color, *color);
+    aContext->SetStyle(eStyleStruct_Color, color);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mInheritedData)
       aHighestNode->mStyleData.mInheritedData = new (mPresContext) nsInheritedStyleData;
     aHighestNode->mStyleData.mInheritedData->mColorData = color;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_COLOR, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(Color), aHighestNode);
   }
 
   return color;
@@ -3227,14 +3179,14 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct, const nsCSSStruct
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_Background, *bg);
+    aContext->SetStyle(eStyleStruct_Background, bg);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mResetData)
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mBackgroundData = bg;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_BACKGROUND, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(Background), aHighestNode);
   }
 
   return bg;
@@ -3291,14 +3243,14 @@ nsRuleNode::ComputeMarginData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_Margin, *margin);
+    aContext->SetStyle(eStyleStruct_Margin, margin);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mResetData)
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mMarginData = margin;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_MARGIN, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(Margin), aHighestNode);
   }
 
   margin->RecalcData();
@@ -3571,14 +3523,14 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_Border, *border);
+    aContext->SetStyle(eStyleStruct_Border, border);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mResetData)
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mBorderData = border;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_BORDER, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(Border), aHighestNode);
   }
 
   border->RecalcData();
@@ -3636,14 +3588,14 @@ nsRuleNode::ComputePaddingData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_Padding, *padding);
+    aContext->SetStyle(eStyleStruct_Padding, padding);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mResetData)
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mPaddingData = padding;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_PADDING, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(Padding), aHighestNode);
   }
 
   padding->RecalcData();
@@ -3708,14 +3660,14 @@ nsRuleNode::ComputeOutlineData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_Outline, *outline);
+    aContext->SetStyle(eStyleStruct_Outline, outline);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mResetData)
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mOutlineData = outline;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_OUTLINE, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(Outline), aHighestNode);
   }
 
   outline->RecalcData();
@@ -3825,14 +3777,14 @@ nsRuleNode::ComputeListData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_List, *list);
+    aContext->SetStyle(eStyleStruct_List, list);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mInheritedData)
       aHighestNode->mStyleData.mInheritedData = new (mPresContext) nsInheritedStyleData;
     aHighestNode->mStyleData.mInheritedData->mListData = list;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_LIST, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(List), aHighestNode);
   }
 
   return list;
@@ -3933,14 +3885,14 @@ nsRuleNode::ComputePositionData(nsStyleStruct* aStartStruct, const nsCSSStruct& 
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_Position, *pos);
+    aContext->SetStyle(eStyleStruct_Position, pos);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mResetData)
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mPositionData = pos;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_POSITION, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(Position), aHighestNode);
   }
 
   return pos;
@@ -4003,14 +3955,14 @@ nsRuleNode::ComputeTableData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDa
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_Table, *table);
+    aContext->SetStyle(eStyleStruct_Table, table);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mResetData)
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mTableData = table;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_TABLE, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(Table), aHighestNode);
   }
 
   return table;
@@ -4101,14 +4053,14 @@ nsRuleNode::ComputeTableBorderData(nsStyleStruct* aStartStruct, const nsCSSStruc
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_TableBorder, *table);
+    aContext->SetStyle(eStyleStruct_TableBorder, table);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mInheritedData)
       aHighestNode->mStyleData.mInheritedData = new (mPresContext) nsInheritedStyleData;
-    aHighestNode->mStyleData.mInheritedData->mTableData = table;
+    aHighestNode->mStyleData.mInheritedData->mTableBorderData = table;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_TABLE_BORDER, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(TableBorder), aHighestNode);
   }
 
   return table;
@@ -4296,14 +4248,14 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_Content, *content);
+    aContext->SetStyle(eStyleStruct_Content, content);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mResetData)
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mContentData = content;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_CONTENT, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(Content), aHighestNode);
   }
 
   return content;
@@ -4388,14 +4340,14 @@ nsRuleNode::ComputeQuotesData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_Quotes, *quotes);
+    aContext->SetStyle(eStyleStruct_Quotes, quotes);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mInheritedData)
       aHighestNode->mStyleData.mInheritedData = new (mPresContext) nsInheritedStyleData;
     aHighestNode->mStyleData.mInheritedData->mQuotesData = quotes;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_QUOTES, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(Quotes), aHighestNode);
   }
 
   return quotes;
@@ -4483,14 +4435,14 @@ nsRuleNode::ComputeXULData(nsStyleStruct* aStartStruct, const nsCSSStruct& aData
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_XUL, *xul);
+    aContext->SetStyle(eStyleStruct_XUL, xul);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mResetData)
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mXULData = xul;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_XUL, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(XUL), aHighestNode);
   }
 
   return xul;
@@ -4657,14 +4609,14 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct, const nsCSSStruct& aData
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
     // style context.
-    aContext->SetStyle(eStyleStruct_SVG, *svg);
+    aContext->SetStyle(eStyleStruct_SVG, svg);
   else {
     // We were fully specified and can therefore be cached right on the rule node.
     if (!aHighestNode->mStyleData.mInheritedData)
       aHighestNode->mStyleData.mInheritedData = new (mPresContext) nsInheritedStyleData;
     aHighestNode->mStyleData.mInheritedData->mSVGData = svg;
     // Propagate the bit down.
-    PropagateDependentBit(NS_STYLE_INHERIT_SVG, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BIT(SVG), aHighestNode);
   }
 
   return svg;
@@ -4690,34 +4642,11 @@ nsRuleNode::GetParentData(const nsStyleStructID aSID)
 
 nsRuleNode::GetStyleDataFn
 nsRuleNode::gGetStyleDataFn[] = {
-  // Note that these must line up _exactly_ with the numeric values of
-  // the nsStyleStructID enum.
-  nsnull,
-  &nsRuleNode::GetFontData,
-  &nsRuleNode::GetColorData,
-  &nsRuleNode::GetBackgroundData,
-  &nsRuleNode::GetListData,
-  &nsRuleNode::GetPositionData,
-  &nsRuleNode::GetTextData,
-  &nsRuleNode::GetTextResetData,
-  &nsRuleNode::GetDisplayData,
-  &nsRuleNode::GetVisibilityData,
-  &nsRuleNode::GetContentData,
-  &nsRuleNode::GetQuotesData,
-  &nsRuleNode::GetUIData,
-  &nsRuleNode::GetUIResetData,
-  &nsRuleNode::GetTableData,
-  &nsRuleNode::GetTableBorderData,
-  &nsRuleNode::GetMarginData,
-  &nsRuleNode::GetPaddingData,
-  &nsRuleNode::GetBorderData,
-  &nsRuleNode::GetOutlineData,
-#ifdef INCLUDE_XUL
-  &nsRuleNode::GetXULData,
-#endif
-#ifdef MOZ_SVG
-  &nsRuleNode::GetSVGData,
-#endif
+
+#define STYLE_STRUCT(name, checkdata_cb) &nsRuleNode::Get##name##Data,
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+
   nsnull
 };
 

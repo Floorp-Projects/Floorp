@@ -87,7 +87,7 @@ public:
   NS_IMETHOD GetBorderPaddingFor(nsStyleBorderPadding& aBorderPadding);
 
   NS_IMETHOD GetStyle(nsStyleStructID aSID, const nsStyleStruct** aStruct);
-  NS_IMETHOD SetStyle(nsStyleStructID aSID, const nsStyleStruct& aStruct);
+  NS_IMETHOD SetStyle(nsStyleStructID aSID, nsStyleStruct* aStruct);
 
   NS_IMETHOD GetRuleNode(nsRuleNode** aResult) { *aResult = mRuleNode; return NS_OK; };
   NS_IMETHOD AddStyleBit(const PRUint32& aBit) { mBits |= aBit; return NS_OK; };
@@ -162,6 +162,10 @@ nsStyleContext::nsStyleContext(nsIStyleContext* aParent,
   }
 
   ApplyStyleFixups(aPresContext);
+
+  NS_ASSERTION(NS_STYLE_INHERIT_MASK &
+               (1 << PRInt32(nsStyleStructID_Length - 1)) != 0,
+               "NS_STYLE_INHERIT_MASK must be bigger, and other bits shifted");
 }
 
 nsStyleContext::~nsStyleContext()
@@ -382,33 +386,33 @@ nsStyleContext::GetUniqueStyleData(nsIPresContext* aPresContext, const nsStyleSt
   case eStyleStruct_Display: {
     const nsStyleDisplay* dis = (const nsStyleDisplay*)GetStyleData(aSID);
     nsStyleDisplay* newDis = new (aPresContext) nsStyleDisplay(*dis);
-    SetStyle(aSID, *newDis);
+    SetStyle(aSID, newDis);
     result = newDis;
-    mBits &= ~NS_STYLE_INHERIT_DISPLAY;
+    mBits &= ~NS_STYLE_INHERIT_BIT(Display);
     break;
   }
   case eStyleStruct_Background: {
     const nsStyleBackground* bg = (const nsStyleBackground*)GetStyleData(aSID);
     nsStyleBackground* newBG = new (aPresContext) nsStyleBackground(*bg);
-    SetStyle(aSID, *newBG);
+    SetStyle(aSID, newBG);
     result = newBG;
-    mBits &= ~NS_STYLE_INHERIT_BACKGROUND;
+    mBits &= ~NS_STYLE_INHERIT_BIT(Background);
     break;
   }
   case eStyleStruct_Text: {
     const nsStyleText* text = (const nsStyleText*)GetStyleData(aSID);
     nsStyleText* newText = new (aPresContext) nsStyleText(*text);
-    SetStyle(aSID, *newText);
+    SetStyle(aSID, newText);
     result = newText;
-    mBits &= ~NS_STYLE_INHERIT_TEXT;
+    mBits &= ~NS_STYLE_INHERIT_BIT(Text);
     break;
   }
   case eStyleStruct_TextReset: {
     const nsStyleTextReset* reset = (const nsStyleTextReset*)GetStyleData(aSID);
     nsStyleTextReset* newReset = new (aPresContext) nsStyleTextReset(*reset);
-    SetStyle(aSID, *newReset);
+    SetStyle(aSID, newReset);
     result = newReset;
-    mBits &= ~NS_STYLE_INHERIT_TEXT_RESET;
+    mBits &= ~NS_STYLE_INHERIT_BIT(TextReset);
     break;
   }
   default:
@@ -426,101 +430,37 @@ nsStyleContext::GetStyle(nsStyleStructID aSID, const nsStyleStruct** aStruct)
 }
 
 NS_IMETHODIMP
-nsStyleContext::SetStyle(nsStyleStructID aSID, const nsStyleStruct& aStruct)
+nsStyleContext::SetStyle(nsStyleStructID aSID, nsStyleStruct* aStruct)
 {
   // This method should only be called from nsRuleNode!  It is not a public
   // method!
-  nsresult result = NS_OK;
   
-  PRBool isReset = mCachedStyleData.IsReset(aSID);
-  if (isReset) {
-    if (!mCachedStyleData.mResetData) {
-      nsCOMPtr<nsIPresContext> presContext;
-      mRuleNode->GetPresContext(getter_AddRefs(presContext));
-      mCachedStyleData.mResetData = new (presContext.get()) nsResetStyleData;
-    }
-  } else {
-    if (!mCachedStyleData.mInheritedData) {
-      nsCOMPtr<nsIPresContext> presContext;
-      mRuleNode->GetPresContext(getter_AddRefs(presContext));
-      mCachedStyleData.mInheritedData = new (presContext.get()) nsInheritedStyleData;
-    }
-  }
+  NS_ASSERTION(aSID >= 0 && aSID < nsStyleStructID_Length, "out of bounds");
 
-  switch (aSID) {
-    case eStyleStruct_Font:
-      mCachedStyleData.mInheritedData->mFontData = (nsStyleFont*)(const nsStyleFont*)(&aStruct);
-      break;
-    case eStyleStruct_Color:
-      mCachedStyleData.mInheritedData->mColorData = (nsStyleColor*)(const nsStyleColor*)(&aStruct);
-      break;
-    case eStyleStruct_Background:
-      mCachedStyleData.mResetData->mBackgroundData = (nsStyleBackground*)(const nsStyleBackground*)(&aStruct);
-      break;
-    case eStyleStruct_List:
-      mCachedStyleData.mInheritedData->mListData = (nsStyleList*)(const nsStyleList*)(&aStruct);
-      break;
-    case eStyleStruct_Position:
-      mCachedStyleData.mResetData->mPositionData = (nsStylePosition*)(const nsStylePosition*)(&aStruct);
-      break;
-    case eStyleStruct_Text:
-      mCachedStyleData.mInheritedData->mTextData = (nsStyleText*)(const nsStyleText*)(&aStruct);
-      break;
-    case eStyleStruct_TextReset:
-      mCachedStyleData.mResetData->mTextData = (nsStyleTextReset*)(const nsStyleTextReset*)(&aStruct);
-      break;
-    case eStyleStruct_Display:
-      mCachedStyleData.mResetData->mDisplayData = (nsStyleDisplay*)(const nsStyleDisplay*)(&aStruct);
-      break;
-    case eStyleStruct_Visibility:
-      mCachedStyleData.mInheritedData->mVisibilityData = (nsStyleVisibility*)(const nsStyleVisibility*)(&aStruct);
-      break;
-    case eStyleStruct_Table:
-      mCachedStyleData.mResetData->mTableData = (nsStyleTable*)(const nsStyleTable*)(&aStruct);
-      break;
-    case eStyleStruct_TableBorder:
-      mCachedStyleData.mInheritedData->mTableData = (nsStyleTableBorder*)(const nsStyleTableBorder*)(&aStruct);
-      break;
-    case eStyleStruct_Content:
-      mCachedStyleData.mResetData->mContentData = (nsStyleContent*)(const nsStyleContent*)(&aStruct);
-      break;
-    case eStyleStruct_Quotes:
-      mCachedStyleData.mInheritedData->mQuotesData = (nsStyleQuotes*)(const nsStyleQuotes*)(&aStruct);
-      break;
-    case eStyleStruct_UserInterface:
-      mCachedStyleData.mInheritedData->mUIData = (nsStyleUserInterface*)(const nsStyleUserInterface*)(&aStruct);
-      break;
-    case eStyleStruct_UIReset:
-      mCachedStyleData.mResetData->mUIData = (nsStyleUIReset*)(const nsStyleUIReset*)(&aStruct);
-      break;
-    case eStyleStruct_Margin:
-      mCachedStyleData.mResetData->mMarginData = (nsStyleMargin*)(const nsStyleMargin*)(&aStruct);
-      break;
-    case eStyleStruct_Padding:
-      mCachedStyleData.mResetData->mPaddingData = (nsStylePadding*)(const nsStylePadding*)(&aStruct);
-      break;
-    case eStyleStruct_Border:
-      mCachedStyleData.mResetData->mBorderData = (nsStyleBorder*)(const nsStyleBorder*)(&aStruct);
-      break;
-    case eStyleStruct_Outline:
-      mCachedStyleData.mResetData->mOutlineData = (nsStyleOutline*)(const nsStyleOutline*)(&aStruct);
-      break;
-#ifdef INCLUDE_XUL
-    case eStyleStruct_XUL:
-      mCachedStyleData.mResetData->mXULData = (nsStyleXUL*)(const nsStyleXUL*)(&aStruct);
-      break;
-#endif
-#ifdef MOZ_SVG
-    case eStyleStruct_SVG:
-      mCachedStyleData.mInheritedData->mSVGData = (nsStyleSVG*)(const nsStyleSVG*)(&aStruct);
-      break;
-#endif
-    default:
-      NS_ERROR("Invalid style struct id");
-      result = NS_ERROR_INVALID_ARG;
-      break;
+  // NOTE:  nsCachedStyleData::GetStyleData works roughly the same way.
+  const nsCachedStyleData::StyleStructInfo& info =
+      nsCachedStyleData::gInfo[aSID];
+  char* resetOrInheritSlot = NS_REINTERPRET_CAST(char*, &mCachedStyleData) +
+                             info.mCachedStyleDataOffset;
+  char* resetOrInherit = NS_REINTERPRET_CAST(char*,
+      *NS_REINTERPRET_CAST(void**, resetOrInheritSlot));
+  if (!resetOrInherit) {
+    nsCOMPtr<nsIPresContext> presContext;
+    mRuleNode->GetPresContext(getter_AddRefs(presContext));
+    if (mCachedStyleData.IsReset(aSID)) {
+      mCachedStyleData.mResetData = new (presContext.get()) nsResetStyleData;
+      resetOrInherit = NS_REINTERPRET_CAST(char*, mCachedStyleData.mResetData);
+    } else {
+      mCachedStyleData.mInheritedData =
+          new (presContext.get()) nsInheritedStyleData;
+      resetOrInherit =
+          NS_REINTERPRET_CAST(char*, mCachedStyleData.mInheritedData);
+    }
   }
-  return result;
+  char* dataSlot = resetOrInherit + info.mInheritResetOffset;
+  *NS_REINTERPRET_CAST(nsStyleStruct**, dataSlot) = aStruct;
+
+  return NS_OK;
 }
 
 void

@@ -107,7 +107,7 @@ public:
   // XXXdwh Make this function private.  It should not be possible to call this
   // function from layout.
   // Fill a style struct with data.  
-  NS_IMETHOD SetStyle(nsStyleStructID aSID, const nsStyleStruct& aStruct) = 0;
+  NS_IMETHOD SetStyle(nsStyleStructID aSID, nsStyleStruct* aStruct) = 0;
   
   // Get the data for a style struct.
   NS_IMETHOD GetStyle(nsStyleStructID aSID, const nsStyleStruct** aStruct) = 0;

@@ -55,63 +55,24 @@
 class nsIFrame;
 
 enum nsStyleStructID {
-  eStyleStruct_Font           = 1,
-  eStyleStruct_Color          = 2,
-  eStyleStruct_Background     = 3,
-  eStyleStruct_List           = 4,
-  eStyleStruct_Position       = 5,
-  eStyleStruct_Text           = 6,
-  eStyleStruct_TextReset      = 7,
-  eStyleStruct_Display        = 8,
-  eStyleStruct_Visibility     = 9,
-  eStyleStruct_Content        = 10,
-  eStyleStruct_Quotes         = 11,
-  eStyleStruct_UserInterface  = 12,
-  eStyleStruct_UIReset        = 13,
-  eStyleStruct_Table          = 14,
-  eStyleStruct_TableBorder    = 15,
-  eStyleStruct_Margin         = 16,
-  eStyleStruct_Padding        = 17,
-  eStyleStruct_Border         = 18,
-  eStyleStruct_Outline        = 19,
-  eStyleStruct_XUL            = 20,
-#ifdef MOZ_SVG
-  eStyleStruct_SVG            = 21,
-  eStyleStruct_Max            = eStyleStruct_SVG,
-  eStyleStruct_BorderPaddingShortcut = 22,       // only for use in GetStyle()
-#else
-  eStyleStruct_Max            = eStyleStruct_XUL,
-  eStyleStruct_BorderPaddingShortcut = 21,       // only for use in GetStyle()
-#endif
-  eStyleStruct_Min            = eStyleStruct_Font
+
+/*
+ * Define the constants eStyleStruct_Font, etc.
+ *
+ * The C++ standard, section 7.2, guarantees that enums begin with 0 and
+ * increase by 1.
+ */
+
+#define STYLE_STRUCT(name, checkdata_cb) eStyleStruct_##name,
+#include "nsStyleStructList.h"
+#undef STYLE_STRUCT
+
+nsStyleStructID_Length /* one past the end; length of 0-based list */
+
 };
 
 // Bits for each struct.
-#define NS_STYLE_INHERIT_BIT(sid_)        (1 << (PRInt32(sid_) - 1))
-#define NS_STYLE_INHERIT_FONT             NS_STYLE_INHERIT_BIT(eStyleStruct_Font)
-#define NS_STYLE_INHERIT_COLOR            NS_STYLE_INHERIT_BIT(eStyleStruct_Color)
-#define NS_STYLE_INHERIT_BACKGROUND       NS_STYLE_INHERIT_BIT(eStyleStruct_Background)
-#define NS_STYLE_INHERIT_LIST             NS_STYLE_INHERIT_BIT(eStyleStruct_List)
-#define NS_STYLE_INHERIT_POSITION         NS_STYLE_INHERIT_BIT(eStyleStruct_Position)
-#define NS_STYLE_INHERIT_TEXT             NS_STYLE_INHERIT_BIT(eStyleStruct_Text)
-#define NS_STYLE_INHERIT_TEXT_RESET       NS_STYLE_INHERIT_BIT(eStyleStruct_TextReset)
-#define NS_STYLE_INHERIT_DISPLAY          NS_STYLE_INHERIT_BIT(eStyleStruct_Display)
-#define NS_STYLE_INHERIT_VISIBILITY       NS_STYLE_INHERIT_BIT(eStyleStruct_Visibility)
-#define NS_STYLE_INHERIT_TABLE            NS_STYLE_INHERIT_BIT(eStyleStruct_Table)
-#define NS_STYLE_INHERIT_TABLE_BORDER     NS_STYLE_INHERIT_BIT(eStyleStruct_TableBorder)
-#define NS_STYLE_INHERIT_CONTENT          NS_STYLE_INHERIT_BIT(eStyleStruct_Content)
-#define NS_STYLE_INHERIT_QUOTES           NS_STYLE_INHERIT_BIT(eStyleStruct_Quotes)
-#define NS_STYLE_INHERIT_UI               NS_STYLE_INHERIT_BIT(eStyleStruct_UserInterface)
-#define NS_STYLE_INHERIT_UI_RESET         NS_STYLE_INHERIT_BIT(eStyleStruct_UIReset)
-#define NS_STYLE_INHERIT_MARGIN           NS_STYLE_INHERIT_BIT(eStyleStruct_Margin)
-#define NS_STYLE_INHERIT_PADDING          NS_STYLE_INHERIT_BIT(eStyleStruct_Padding)
-#define NS_STYLE_INHERIT_BORDER           NS_STYLE_INHERIT_BIT(eStyleStruct_Border)
-#define NS_STYLE_INHERIT_OUTLINE          NS_STYLE_INHERIT_BIT(eStyleStruct_Outline)
-#define NS_STYLE_INHERIT_XUL              NS_STYLE_INHERIT_BIT(eStyleStruct_XUL)
-#ifdef MOZ_SVG
-#define NS_STYLE_INHERIT_SVG              NS_STYLE_INHERIT_BIT(eStyleStruct_SVG)
-#endif
-
+#define NS_STYLE_INHERIT_BIT(sid_)        (1 << PRInt32(eStyleStruct_##sid_))
 #define NS_STYLE_INHERIT_MASK             0x00ffffff
 
 // A bit to test whether or not we have any text decorations.
