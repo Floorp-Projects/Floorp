@@ -199,7 +199,7 @@ nsHTMLTableColElement::AttributeToString(nsIAtom* aAttribute,
      ch
    */
   /* ignore attributes that are of standard types
-     choff, span, width
+     choff, span
    */
   if (aAttribute == nsHTMLAtoms::align) {
     if (nsGenericHTMLElement::TableHAlignValueToString(aValue, aResult)) {
@@ -208,6 +208,11 @@ nsHTMLTableColElement::AttributeToString(nsIAtom* aAttribute,
   }
   else if (aAttribute == nsHTMLAtoms::valign) {
     if (nsGenericHTMLElement::TableVAlignValueToString(aValue, aResult)) {
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+  }
+  else if (aAttribute == nsHTMLAtoms::width) {
+    if (nsGenericHTMLElement::ValueOrPercentOrProportionalToString(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -240,6 +245,10 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
         float p2t;
         aPresContext->GetScaledPixelsToTwips(p2t);
         position->mWidth.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+        break;
+
+      case eHTMLUnit_Proportional:
+        position->mWidth.SetIntValue(value.GetIntValue(), eStyleUnit_Proportional);
         break;
       }
     }
