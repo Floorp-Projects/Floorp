@@ -409,6 +409,9 @@ main()
         // [Shouldn't compile] Is it a compile time error to try to |Release| be hand?
       //foop->Release();
 
+				// [Shouldn't compile] Is it a compile time error to try to |delete| an |nsCOMPtr|?
+			//delete foop;
+
 	  /* Solaris Workshop compiler fails to compile this. */
 #if !defined(XP_UNIX) || !(defined(SOLARIS) && !defined(__GNUG__))
       cout << endl << "### Test  3: can you |AddRef| if you must?" << endl;
@@ -443,6 +446,17 @@ main()
         cout << "foo1p != foo2p" << endl;
       else
         cout << "foo1p == foo2p" << endl;
+
+      cout << endl << "### Test  7.5: can you compare a |nsCOMPtr| with NULL, 0, nsnull [!=]?" << endl;
+      if ( foo1p != 0 )
+      	cout << "foo1p != 0" << endl;
+      if ( 0 != foo1p )
+      	cout << "0 != foo1p" << endl;
+      if ( foo1p == 0 )
+      	cout << "foo1p == 0" << endl;
+      if ( 0 == foo1p )
+      	cout << "0 == foo1p" << endl;
+			
 
       IFoo* raw_foo2p = foo2p.get();
 
@@ -487,6 +501,11 @@ main()
         cout << "foo1p is NULL" << endl;
       else
         cout << "foo1p is not NULL" << endl;
+
+#if 0
+			if ( foo1p == 1 )
+				cout << "foo1p allowed compare with in" << endl;
+#endif
 
       cout << endl << "### Test 14: how about when two |nsCOMPtr|s refering to the same object go out of scope?" << endl;
     }
