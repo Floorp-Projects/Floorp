@@ -348,7 +348,7 @@ JS_DHashTableFinish(JSDHashTable *table)
     table->ops->freeTable(table, table->entryStore);
 }
 
-static JSDHashEntryHdr *
+static JSDHashEntryHdr * JS_DHASH_FASTCALL
 SearchTable(JSDHashTable *table, const void *key, JSDHashNumber keyHash,
             JSDHashOperator op)
 {
@@ -478,7 +478,7 @@ ChangeTable(JSDHashTable *table, int deltaLog2)
     return JS_TRUE;
 }
 
-JS_PUBLIC_API(JSDHashEntryHdr *)
+JS_PUBLIC_API(JSDHashEntryHdr *) JS_DHASH_FASTCALL
 JS_DHashTableOperate(JSDHashTable *table, const void *key, JSDHashOperator op)
 {
     JSDHashNumber keyHash;

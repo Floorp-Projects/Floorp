@@ -117,7 +117,7 @@ public:
    * See also |nsIFrame::GetStyleData| and the other global
    * |GetStyleData| in nsIFrame.h.
    */
-  NS_HIDDEN_(const nsStyleStruct*) GetStyleData(nsStyleStructID aSID);
+  NS_HIDDEN_(const nsStyleStruct*) NS_FASTCALL GetStyleData(nsStyleStructID aSID);
 
   /**
    * Define typesafe getter functions for each style struct by

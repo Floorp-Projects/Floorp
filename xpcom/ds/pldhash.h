@@ -50,6 +50,12 @@ PR_BEGIN_EXTERN_C
 #define PL_DHASHMETER 1
 #endif
 
+#if defined(__GNUC__) && defined(__i386__)
+#define PL_DHASH_FASTCALL __attribute__ ((regparm (3),stdcall))
+#else
+#define PL_DHASH_FASTCALL
+#endif
+
 /* Table size limit, do not equal or exceed (see min&maxAlphaFrac, below). */
 #undef PL_DHASH_SIZE_LIMIT
 #define PL_DHASH_SIZE_LIMIT     PR_BIT(24)
@@ -501,7 +507,7 @@ typedef enum PLDHashOperator {
  * the entry is marked so that PL_DHASH_ENTRY_IS_FREE(entry).  This operation
  * returns null unconditionally; you should ignore its return value.
  */
-PR_EXTERN(PLDHashEntryHdr *)
+PR_EXTERN(PLDHashEntryHdr *) PL_DHASH_FASTCALL
 PL_DHashTableOperate(PLDHashTable *table, const void *key, PLDHashOperator op);
 
 /*

@@ -126,7 +126,7 @@ class nsTAString_CharT
     public:
 
         // this acts like a virtual destructor
-      NS_COM ~nsTAString_CharT();
+      NS_COM NS_FASTCALL ~nsTAString_CharT();
 
 
         /**
@@ -182,7 +182,7 @@ class nsTAString_CharT
          * writing code like: |if (str.Length() == 0)|
          */
 
-      NS_COM size_type Length() const;
+      NS_COM size_type NS_FASTCALL Length() const;
       PRBool IsEmpty() const { return Length() == 0; }
 
 
@@ -192,23 +192,23 @@ class nsTAString_CharT
          * "case-sensitive" comparision is performed.
          */
 
-      NS_COM PRBool Equals( const self_type& ) const;
-      NS_COM PRBool Equals( const self_type&, const comparator_type& ) const;
-      NS_COM PRBool Equals( const char_type* ) const;
-      NS_COM PRBool Equals( const char_type*, const comparator_type& ) const;
+      NS_COM PRBool NS_FASTCALL Equals( const self_type& ) const;
+      NS_COM PRBool NS_FASTCALL Equals( const self_type&, const comparator_type& ) const;
+      NS_COM PRBool NS_FASTCALL Equals( const char_type* ) const;
+      NS_COM PRBool NS_FASTCALL Equals( const char_type*, const comparator_type& ) const;
 
         /**
          * An efficient comparison with ASCII that can be used even
          * for wide strings. Call this version when you know the
          * length of 'data'.
          */
-      NS_COM PRBool EqualsASCII( const char* data, size_type len ) const;
+      NS_COM PRBool NS_FASTCALL EqualsASCII( const char* data, size_type len ) const;
         /**
          * An efficient comparison with ASCII that can be used even
          * for wide strings. Call this version when 'data' is
          * null-terminated.
          */
-      NS_COM PRBool EqualsASCII( const char* data ) const;
+      NS_COM PRBool NS_FASTCALL EqualsASCII( const char* data ) const;
 
     // EqualsLiteral must ONLY be applied to an actual literal string.
     // Do not attempt to use it with a regular char* pointer, or with a char
@@ -239,8 +239,8 @@ class nsTAString_CharT
     // *not* lowercased for you. If you compare to an ASCII or literal
     // string that contains an uppercase character, it is guaranteed to
     // return false. We will throw assertions too.
-      NS_COM PRBool LowerCaseEqualsASCII( const char* data, size_type len ) const;
-      NS_COM PRBool LowerCaseEqualsASCII( const char* data ) const;
+      NS_COM PRBool NS_FASTCALL LowerCaseEqualsASCII( const char* data, size_type len ) const;
+      NS_COM PRBool NS_FASTCALL LowerCaseEqualsASCII( const char* data ) const;
 
     // LowerCaseEqualsLiteral must ONLY be applied to an actual
     // literal string.  Do not attempt to use it with a regular char*
@@ -273,8 +273,8 @@ class nsTAString_CharT
          * a void string.
          */
 
-      NS_COM PRBool IsVoid() const;
-      NS_COM void SetIsVoid( PRBool );
+      NS_COM PRBool NS_FASTCALL IsVoid() const;
+      NS_COM void NS_FASTCALL SetIsVoid( PRBool );
 
 
         /**
@@ -284,20 +284,20 @@ class nsTAString_CharT
          * string's underlying buffer is null-terminated.
          */
 
-      NS_COM PRBool IsTerminated() const;
+      NS_COM PRBool NS_FASTCALL IsTerminated() const;
 
 
         /**
          * These are contant time since nsTAString uses flat storage
          */
-      NS_COM char_type First() const;
-      NS_COM char_type Last() const;
+      NS_COM char_type NS_FASTCALL First() const;
+      NS_COM char_type NS_FASTCALL Last() const;
 
 
         /**
          * Returns the number of occurances of the given character.
          */
-      NS_COM size_type CountChar( char_type ) const;
+      NS_COM size_type NS_FASTCALL CountChar( char_type ) const;
 
 
         /**
@@ -305,7 +305,7 @@ class nsTAString_CharT
          * non-zero offset to control where the search begins.
          */
 
-      NS_COM PRInt32 FindChar( char_type, index_type offset = 0 ) const;
+      NS_COM PRInt32 NS_FASTCALL FindChar( char_type, index_type offset = 0 ) const;
 
 
         /**
@@ -314,7 +314,7 @@ class nsTAString_CharT
          *
          * SetCapacity(0) is a suggestion to discard all associated storage.
          */
-      NS_COM void SetCapacity( size_type );
+      NS_COM void NS_FASTCALL SetCapacity( size_type );
 
 
         /**
@@ -337,7 +337,7 @@ class nsTAString_CharT
          * This distinction makes me think the two different uses should
          * be split into two distinct functions.
          */
-      NS_COM void SetLength( size_type );
+      NS_COM void NS_FASTCALL SetLength( size_type );
 
 
         /**
@@ -357,14 +357,14 @@ class nsTAString_CharT
          * the buffer into their own buffer.
          */
 
-      NS_COM void Assign( const self_type& readable );
-      NS_COM void Assign( const substring_tuple_type& tuple );
-      NS_COM void Assign( const char_type* data );
-      NS_COM void Assign( const char_type* data, size_type length );
-      NS_COM void Assign( char_type c );
+      NS_COM void NS_FASTCALL Assign( const self_type& readable );
+      NS_COM void NS_FASTCALL Assign( const substring_tuple_type& tuple );
+      NS_COM void NS_FASTCALL Assign( const char_type* data );
+      NS_COM void NS_FASTCALL Assign( const char_type* data, size_type length );
+      NS_COM void NS_FASTCALL Assign( char_type c );
 
-      NS_COM void AssignASCII( const char* data, size_type length );
-      NS_COM void AssignASCII( const char* data );
+      NS_COM void NS_FASTCALL AssignASCII( const char* data, size_type length );
+      NS_COM void NS_FASTCALL AssignASCII( const char* data );
 
     // AssignLiteral must ONLY be applied to an actual literal string.
     // Do not attempt to use it with a regular char* pointer, or with a char
@@ -393,14 +393,14 @@ class nsTAString_CharT
          * |Append|, |operator+=| are used to add characters to the end of this string.
          */ 
 
-      NS_COM void Append( const self_type& readable );
-      NS_COM void Append( const substring_tuple_type& tuple );
-      NS_COM void Append( const char_type* data );
-      NS_COM void Append( const char_type* data, size_type length );
-      NS_COM void Append( char_type c );
+      NS_COM void NS_FASTCALL Append( const self_type& readable );
+      NS_COM void NS_FASTCALL Append( const substring_tuple_type& tuple );
+      NS_COM void NS_FASTCALL Append( const char_type* data );
+      NS_COM void NS_FASTCALL Append( const char_type* data, size_type length );
+      NS_COM void NS_FASTCALL Append( char_type c );
 
-      NS_COM void AppendASCII( const char* data, size_type length );
-      NS_COM void AppendASCII( const char* data );
+      NS_COM void NS_FASTCALL AppendASCII( const char* data, size_type length );
+      NS_COM void NS_FASTCALL AppendASCII( const char* data );
 
     // AppendLiteral must ONLY be applied to an actual literal string.
     // Do not attempt to use it with a regular char* pointer, or with a char
@@ -428,26 +428,26 @@ class nsTAString_CharT
          * NOTE: It's a shame the |pos| parameter isn't at the front of the arg list.
          */ 
 
-      NS_COM void Insert( const self_type& readable, index_type pos );
-      NS_COM void Insert( const substring_tuple_type& tuple, index_type pos );
-      NS_COM void Insert( const char_type* data, index_type pos );
-      NS_COM void Insert( const char_type* data, index_type pos, size_type length );
-      NS_COM void Insert( char_type c, index_type pos );
+      NS_COM void NS_FASTCALL Insert( const self_type& readable, index_type pos );
+      NS_COM void NS_FASTCALL Insert( const substring_tuple_type& tuple, index_type pos );
+      NS_COM void NS_FASTCALL Insert( const char_type* data, index_type pos );
+      NS_COM void NS_FASTCALL Insert( const char_type* data, index_type pos, size_type length );
+      NS_COM void NS_FASTCALL Insert( char_type c, index_type pos );
 
 
         /**
          * |Cut| is used to remove a range of characters from this string.
          */
 
-      NS_COM void Cut( index_type cutStart, size_type cutLength );
+      NS_COM void NS_FASTCALL Cut( index_type cutStart, size_type cutLength );
 
       
         /**
          * |Replace| is used overwrite a range of characters from this string.
          */
 
-      NS_COM void Replace( index_type cutStart, size_type cutLength, const self_type& readable );
-      NS_COM void Replace( index_type cutStart, size_type cutLength, const substring_tuple_type& readable );
+      NS_COM void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const self_type& readable );
+      NS_COM void NS_FASTCALL Replace( index_type cutStart, size_type cutLength, const substring_tuple_type& readable );
 
       
         /**
@@ -513,19 +513,19 @@ class nsTAString_CharT
          * get pointer to internal string buffer (may not be null terminated).
          * return length of buffer.
          */
-      NS_COM size_type GetReadableBuffer( const char_type **data ) const;
-      NS_COM size_type GetWritableBuffer(       char_type **data );
+      NS_COM size_type NS_FASTCALL GetReadableBuffer( const char_type **data ) const;
+      NS_COM size_type NS_FASTCALL GetWritableBuffer(       char_type **data );
 
         /**
          * returns true if this tuple is dependent on (i.e., overlapping with)
          * the given char sequence.
          */
-      PRBool IsDependentOn(const char_type *start, const char_type *end) const;
+      PRBool NS_FASTCALL IsDependentOn(const char_type *start, const char_type *end) const;
 
         /**
          * we can be converted to a const nsTSubstring (dependent on this)
          */
-      const substring_type ToSubstring() const;
+      const substring_type NS_FASTCALL ToSubstring() const;
 
         /**
          * type cast helpers
@@ -578,7 +578,7 @@ class nsTAString_CharT
 
 
 NS_COM
-int Compare( const nsTAString_CharT& lhs, const nsTAString_CharT& rhs, const nsTStringComparator_CharT& = nsTDefaultStringComparator_CharT() );
+int NS_FASTCALL Compare( const nsTAString_CharT& lhs, const nsTAString_CharT& rhs, const nsTStringComparator_CharT& = nsTDefaultStringComparator_CharT() );
 
 
 inline

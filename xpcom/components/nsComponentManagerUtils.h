@@ -70,7 +70,7 @@ public:
         // nothing else to do here
     }
     
-    virtual nsresult operator()( const nsIID&, void** ) const;
+    virtual nsresult NS_FASTCALL operator()( const nsIID&, void** ) const;
     
 private:
     const nsCID&	mCID;
@@ -89,7 +89,7 @@ public:
 					// nothing else to do here
 				}
     
-    virtual nsresult operator()( const nsIID&, void** ) const;
+    virtual nsresult NS_FASTCALL operator()( const nsIID&, void** ) const;
     
 private:
     const char*	  mContractID;

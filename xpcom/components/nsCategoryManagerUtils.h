@@ -57,7 +57,7 @@ public:
     {
         // nothing else to do;
     }
-    virtual nsresult operator()( const nsIID& aIID, void** aInstancePtr) const;
+    virtual nsresult NS_FASTCALL operator()( const nsIID& aIID, void** aInstancePtr) const;
 
 private:
     const char *mCategory;  // Do not free.  This char * is not owned.
