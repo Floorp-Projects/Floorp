@@ -79,6 +79,27 @@ function updateWinReg()
   }
 }
 
+function upgradeCleanup()
+{
+  var fComponentReg;
+  var fXpti;
+
+  fComponentReg = getFolder("Program", "component.reg");
+  logComment("Component.reg file: " + fComponentReg);
+  if(File.exists(fComponentReg))
+    fileDelete(fComponentReg);
+
+  fXpti = getFolder("Components", "xpti.dat");
+  logComment("xpti.dat file: " + fXpti);
+  if(File.exists(fXpti))
+    fileDelete(fXpti);
+
+  fXpti = getFolder("Components", "xptitemp.dat");
+  logComment("xptitemp.dat file: " + fXpti);
+  if(File.exists(fXpti))
+    fileDelete(fXpti);
+}
+
 // main
 var srDest;
 var err;
@@ -176,6 +197,7 @@ if(verifyDiskSpace(fProgram, srDest))
   if( err == SUCCESS )
   {
     updateWinReg();
+    upgradeCleanup();
 
     err = performInstall(); 
     logComment("performInstall() returned: " + err);
