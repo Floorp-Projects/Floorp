@@ -40,10 +40,10 @@ int	 __big_insert (HTAB *, BUFHEAD *, const DBT *, const DBT *);
 int	 __big_keydata (HTAB *, BUFHEAD *, DBT *, DBT *, int);
 int	 __big_return (HTAB *, BUFHEAD *, int, DBT *, int);
 int	 __big_split (HTAB *, BUFHEAD *, BUFHEAD *, BUFHEAD *,
-		int, uint32, SPLIT_RETURN *);
+		uint32, uint32, SPLIT_RETURN *);
 int	 __buf_free (HTAB *, int, int);
 void	 __buf_init (HTAB *, int);
-uint32	 __call_hash (HTAB *, char *, int);
+uint32	 __call_hash (HTAB *, char *, size_t);
 int	 __delpair (HTAB *, BUFHEAD *, int);
 int	 __expand_table (HTAB *);
 int	 __find_bigpair (HTAB *, BUFHEAD *, int, char *, int);

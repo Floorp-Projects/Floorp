@@ -216,7 +216,7 @@ newbuf(HTAB *hashp, uint32 addr, BUFHEAD *prev_bp)
 		 */
 		memset(bp, 0xff, sizeof(BUFHEAD));
 
-		if ((bp->page = (char *)malloc(hashp->BSIZE)) == NULL) {
+		if ((bp->page = (char *)malloc((size_t)hashp->BSIZE)) == NULL) {
 			free(bp);
 			return (NULL);
 		}
@@ -224,7 +224,7 @@ newbuf(HTAB *hashp, uint32 addr, BUFHEAD *prev_bp)
 		/* this memset is supposedly unnecessary but lets add
 		 * it anyways.
 		 */
-		memset(bp->page, 0xff, hashp->BSIZE);
+		memset(bp->page, 0xff, (size_t)hashp->BSIZE);
 
 		if (hashp->nbufs)
 			hashp->nbufs--;

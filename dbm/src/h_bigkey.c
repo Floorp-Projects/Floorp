@@ -472,7 +472,7 @@ collect_data(
 		totlen = len + mylen;
 		if (hashp->tmp_buf)
 			free(hashp->tmp_buf);
-		if ((hashp->tmp_buf = (char *)malloc(totlen)) == NULL)
+		if ((hashp->tmp_buf = (char *)malloc((size_t)totlen)) == NULL)
 			return (-1);
 		if (set) {
 			hashp->cndx = 1;
@@ -500,7 +500,7 @@ collect_data(
 		errno = EINVAL;			/* Out of buffers. */
 		return (-1);
 	}
-	memmove(&hashp->tmp_buf[len], (bufp->page) + bp[1], mylen);
+	memmove(&hashp->tmp_buf[len], (bufp->page) + bp[1], (size_t)mylen);
 	return (totlen);
 }
 
@@ -547,7 +547,7 @@ collect_key(
 	if (bp[2] == FULL_KEY || bp[2] == FULL_KEY_DATA) {    /* End of Key. */
 		if (hashp->tmp_key != NULL)
 			free(hashp->tmp_key);
-		if ((hashp->tmp_key = (char *)malloc(totlen)) == NULL)
+		if ((hashp->tmp_key = (char *)malloc((size_t)totlen)) == NULL)
 			return (-1);
 		if (__big_return(hashp, bufp, 1, val, set))
 			return (-1);
@@ -561,7 +561,7 @@ collect_key(
 		errno = EINVAL;		/* MIS -- OUT OF BUFFERS */
 		return (-1);
 	}
-	memmove(&hashp->tmp_key[len], (bufp->page) + bp[1], mylen);
+	memmove(&hashp->tmp_key[len], (bufp->page) + bp[1], (size_t)mylen);
 	return (totlen);
 }
 
@@ -577,7 +577,7 @@ __big_split(
 	BUFHEAD *np,	/* Pointer to new bucket page */
 			/* Pointer to first page containing the big key/data */
 	BUFHEAD *big_keyp,
-	int addr,	/* Address of big_keyp */
+	uint32 addr,	/* Address of big_keyp */
 	uint32   obucket,/* Old Bucket */
 	SPLIT_RETURN *ret)
 {

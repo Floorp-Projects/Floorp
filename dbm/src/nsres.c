@@ -49,7 +49,7 @@ int GenKeyData(const char *library, int32 id, DBT *key)
 {
 	char idstr[10];
 	static char * strdata = NULL;
-	int len;
+	size_t len;
 
 	if (strdata)
 		free (strdata);
