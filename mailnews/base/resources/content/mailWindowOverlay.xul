@@ -573,7 +573,7 @@ END of Deprecated -->
 			<menuseparator/>
 			-->
 			<menuitem value="&searchInternetCmd.label;" disabled="true" oncommand="MsgSearchInternet();"/>
-			<menuitem value="&searchMailCmd.label;" disabled="true" oncommand="MsgSearchMessages();" accesskey="&searchMailCmd.accesskey;"/>
+			<menuitem value="&searchMailCmd.label;" oncommand="MsgSearchMessages();" accesskey="&searchMailCmd.accesskey;"/>
 			<menuitem value="&searchBookmarksCmd.label;" disabled="true" oncommand="MsgSearchBookmarks();"/>
 			<menuitem value="&searchPeopleCmd.label;" disabled="true" oncommand="MsgSearchPeople();"/>
 			<menuseparator/>
