@@ -60,7 +60,7 @@
         <hbox>
             <vbox flex="1">
                 <description id="intro">&intro.label;</description>
-                <description id="location" crop="center" value=""/>
+                <description id="location" dir="ltr" crop="start" value=""/>
                 <separator orient="horizontal" class="thin"/>
                 <description id="prompt">&prompt.label;</description>
             </vbox>
