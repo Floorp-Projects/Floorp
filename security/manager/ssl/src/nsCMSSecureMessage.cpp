@@ -142,10 +142,15 @@ DecodeCert(const char *value, nsIX509Cert ** _retval)
     return rv;
   }
 
-  nsCOMPtr<nsIX509Cert> cert =  new nsNSSCertificate((char *)data, length);
+  nsCOMPtr<nsIX509Cert> cert =  nsNSSCertificate::ConstructFromDER((char *)data, length);
 
-  *_retval = cert;
-  NS_IF_ADDREF(*_retval);
+  if (cert) {
+    *_retval = cert;
+    NS_ADDREF(*_retval);
+  }
+  else {
+    rv = NS_ERROR_FAILURE;
+  }
 
   nsCRT::free((char*)data);
   return rv;

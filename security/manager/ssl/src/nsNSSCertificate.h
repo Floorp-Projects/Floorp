@@ -62,7 +62,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIX509CERT
 
-  nsNSSCertificate(char *certDER, int derLen);
   nsNSSCertificate(CERTCertificate *cert);
   /* from a request? */
   virtual ~nsNSSCertificate();
@@ -71,6 +70,7 @@ public:
   nsresult SetCertType(PRUint32 aCertType);
   nsresult GetCertType(PRUint32 *aCertType);
   nsresult FormatUIStrings(const nsAutoString &nickname, nsAutoString &nickWithSerial, nsAutoString &details);
+  static nsNSSCertificate* ConstructFromDER(char *certDER, int derLen);
 
 private:
   CERTCertificate *mCert;
