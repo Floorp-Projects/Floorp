@@ -153,7 +153,6 @@ main (int , char **)
     Interpreter::Context cx (world, &global);
     ICodeASM::ICodeParser icp(&cx);
 
-    /*
     testAlpha (icp, "False", "False");
     testAlpha (icp, "fe fi fo fum", "fe");
     testAlpha (icp, "   bla", "");
@@ -184,13 +183,11 @@ main (int , char **)
     testUInt32 (icp, "12.3", 12);
     testUInt32 (icp, "-123", 0);
     testUInt32 (icp, "-12.3", 0);
-    */
     /* XXX what to do with the overflow? */
     //testUInt32 (icp, "12123687213612873621873438754387934657834", 0);
 
     string src;
     
-    /*
     src = 
         "some_label:\n"
         "LOAD_STRING               R1, 'hello'   ;test comment\n"
@@ -202,7 +199,6 @@ main (int , char **)
         "RETURN                    R3";
     
     testParse (icp, cx, src);
-    */
 
     /* {x= 1;  for (i = 10; i > 0; --i) x = x * i; print ("x is " + x);} */
     src = 
@@ -212,7 +208,7 @@ main (int , char **)
         "LOAD_IMMEDIATE            R1, 10\n"
         "CAST                      R2, R1, 'any'\n"
         "SAVE_NAME                 'i', R2\n"
-        "BRANCH                    Offset 17\n"
+        "BRANCH                    Offset 16\n"
         "LOAD_NAME                 R1, 'x'\n"
         "LOAD_NAME                 R2, 'i'\n"
         "GENERIC_BINARY_OP         R3, Multiply, R1, R2\n"
@@ -225,7 +221,7 @@ main (int , char **)
         "LOAD_NAME                 R4, 'i'\n"
         "LOAD_IMMEDIATE            R5, 0\n"
         "GENERIC_BINARY_OP         R6, Less, R5, R4\n"
-        "BRANCH_TRUE               Offset 8, R6\n"
+        "BRANCH_TRUE               Offset 7, R6\n"
         "LOAD_STRING               R1, 'x is '\n"
         "LOAD_NAME                 R2, 'x'\n"
         "GENERIC_BINARY_OP         R3, Add, R1, R2\n"
