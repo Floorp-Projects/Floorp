@@ -83,6 +83,11 @@ public:
 private:
   void CreateImage(nsIDeviceContext * aDeviceContext);
 
+  /** 
+   * Calculate the amount of memory needed for the initialization of the image
+   */
+  void ComputeMetrics();
+
 private:
   PRInt32 mWidth;
   PRInt32 mHeight;
