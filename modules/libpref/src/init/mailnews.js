@@ -264,3 +264,66 @@ pref("ldap_1.directory6.attributes.street", "State:st");
 pref("ldap_1.directory6.filter1.repeatFilterForWords", false);
 
 pref("ldapList.version", 0);
+
+pref("ldap_2.autoComplete.interval",							650);
+pref("ldap_2.autoComplete.enabled",								true);
+pref("ldap_2.autoComplete.useAddressBooks",						true);
+pref("ldap_2.autoComplete.useDirectory",						false);
+pref("ldap_2.autoComplete.showDialogForMultipleMatches",		true);
+pref("ldap_2.autoComplete.skipDirectoryIfLocalMatchFound",		false);
+pref("ldap_2.autoComplete.nicknameHasPrecedence",               false);
+pref("ldap_2.autoComplete.numAddresBooks",						15); // number of address books to search for name completion.
+
+pref("ldap_2.servers.pab.position",								1);
+pref("ldap_2.servers.pab.description",							"Personal Address Book");
+pref("ldap_2.servers.pab.dirType",								2);
+pref("ldap_2.servers.pab.isOffline",							false);
+
+pref("ldap_2.servers.netcenter.position",						2);
+pref("ldap_2.servers.netcenter.description",					"Netcenter Member Directory");
+pref("ldap_2.servers.netcenter.vlvDisabled",					true);
+pref("ldap_2.servers.netcenter.serverName",						"memberdir.netscape.com");
+pref("ldap_2.servers.netcenter.searchBase",						"ou=member_directory,o=netcenter.com");
+pref("ldap_2.servers.netcenter.auth.enabled",					true);
+pref("ldap_2.servers.netcenter.auth.dn",						"uid=mozilla,ou=people,o=netcenter.com");
+pref("ldap_2.servers.netcenter.auth.savePassword",				true);
+pref("ldap_2.servers.netcenter.auth.password",					"BPqvLvWNew==");
+pref("ldap_2.servers.netcenter.customDisplayUrl",				"http://dirsearch.netscape.com/cgi-bin/member_lookup.cgi?dn=%s");
+pref("ldap_2.servers.netcenter.replication.never",				true);
+
+pref("ldap_2.servers.infospace.position",						3);
+pref("ldap_2.servers.infospace.description",					"InfoSpace Directory");
+pref("ldap_2.servers.infospace.serverName",						"ldap.infospace.com");
+pref("ldap_2.servers.infospace.searchBase",						"c=US");
+pref("ldap_2.servers.infospace.vlvDisabled",					true);
+pref("ldap_2.servers.infospace.autoComplete.never",				true);
+pref("ldap_2.servers.infospace.replication.never",				true);
+
+pref("ldap_2.servers.verisign.position",						4);
+pref("ldap_2.servers.verisign.description",						"Verisign Directory");
+pref("ldap_2.servers.verisign.serverName",						"directory.verisign.com");
+pref("ldap_2.servers.verisign.vlvDisabled",						true);
+pref("ldap_2.servers.verisign.autoComplete.never",				true);
+pref("ldap_2.servers.verisign.replication.never",				true);
+
+// A position of zero is a special value that indicates the directory is deleted.
+// These entries are provided to keep the (obsolete) Four11 directory and the
+// WhoWhere, Bigfoot and Switchboard directories from being migrated.
+pref("ldap_2.servers.four11.position",						0);
+pref("ldap_2.servers.four11.description",						"Four11 Directory");
+pref("ldap_2.servers.four11.serverName",						"ldap.four11.com");
+
+pref("ldap_2.servers.whowhere.position",						0);             
+pref("ldap_2.servers.whowhere.description",						"WhoWhere Directory");
+pref("ldap_2.servers.whowhere.serverName",						"ldap.whowhere.com");
+
+pref("ldap_2.servers.bigfoot.position",							0);             
+pref("ldap_2.servers.bigfoot.description",						"Bigfoot Directory");
+pref("ldap_2.servers.bigfoot.serverName",                       "ldap.bigfoot.com");
+                                                                                 
+pref("ldap_2.servers.switchboard.position",						0);             
+pref("ldap_2.servers.switchboard.description",					"Switchboard Directory");
+pref("ldap_2.servers.switchboard.serverName",					"ldap.switchboard.com");
+
+pref("ldap_2.user_id",											0);
+pref("ldap_2.version",											1); /* Update kCurrentListVersion in include/dirprefs.h if you change this */
