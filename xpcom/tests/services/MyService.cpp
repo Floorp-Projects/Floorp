@@ -38,8 +38,8 @@
 
 #include "MyService.h"
 #include "nsIServiceManager.h"
+#include "nsIGenericFactory.h"
 #include <stdio.h>
-#include "nsIFactory.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -49,61 +49,26 @@ public:
     NS_IMETHOD
     Doit(void);
 
-    MyService(nsISupports* outer);
-    virtual ~MyService(void);
+    MyService();
+    virtual ~MyService();
 
     NS_DECL_ISUPPORTS
 
 };
-
-////////////////////////////////////////////////////////////////////////////////
-
-class MyServiceFactory : public nsIFactory {
-public:
-
-    NS_DECL_ISUPPORTS
-
-    // nsIFactory methods:
-
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              REFNSIID aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
-
-    // MyService methods:
-
-    MyServiceFactory(void);
-    virtual ~MyServiceFactory(void);
-
-    PRBool CanUnload(void) { return mOutstandingInstances == 0; }
-
-    friend class MyService;
-
-protected:
-    PRBool      mStarted;
-    PRUint32    mOutstandingInstances;
-};
-
-MyServiceFactory* gFact = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
 // MyService Implementation
 
 NS_IMPL_ISUPPORTS1(MyService, IMyService);
 
-MyService::MyService(nsISupports* outer)
+MyService::MyService()
 {
     NS_INIT_REFCNT();
-    // incrementing this will keep our factory from getting unloaded
-    gFact->mOutstandingInstances++;
     printf("  creating my service\n");
 }
 
-MyService::~MyService(void)
+MyService::~MyService()
 {
-    // decrementing this will allow our factory to get unloaded
-    --gFact->mOutstandingInstances;
     printf("  destroying my service\n");
 }
 
@@ -117,74 +82,13 @@ MyService::Doit(void)
 ////////////////////////////////////////////////////////////////////////////////
 // MyServiceFactory Implementation
 
-NS_IMPL_ISUPPORTS1(MyServiceFactory, nsIFactory);
+NS_GENERIC_FACTORY_CONSTRUCTOR(MyService)
 
-MyServiceFactory::MyServiceFactory(void)
-    : mStarted(PR_FALSE), mOutstandingInstances(0)
-{
-    NS_INIT_REFCNT();
-    printf("initializing my service factory\n");
-}
+static nsModuleComponentInfo myService_components[] = {
+    { "MyService", NS_IMYSERVICE_CID, nsnull, MyServiceConstructor },
+};
 
-MyServiceFactory::~MyServiceFactory(void)
-{
-    NS_ASSERTION(mOutstandingInstances == 0, "unloading factory when there are still instances");
-    printf("finalizing my service factory\n");
-}
+NS_IMPL_NSGETMODULE(MyService, myService_components)
 
-nsresult
-MyServiceFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    MyService* serv = new MyService(aOuter);
-    if (serv == NULL)
-        return NS_ERROR_OUT_OF_MEMORY;
-    return serv->QueryInterface(aIID, aResult);
-}
 
-nsresult
-MyServiceFactory::LockFactory(PRBool aLock)
-{
-    mOutstandingInstances += aLock ? 1 : -1;
-    return NS_OK;
-}
 
-////////////////////////////////////////////////////////////////////////////////
-// DLL Entry Points:
-
-static NS_DEFINE_CID(kIMyServiceCID, NS_IMYSERVICE_CID);
-
-extern "C" NS_EXPORT nsresult
-NSGetFactory(nsISupports* serviceMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aContractID,
-             nsIFactory **aFactory)
-{
-    if (!aClass.Equals(kIMyServiceCID))
-        return NS_ERROR_FACTORY_NOT_REGISTERED;
-    if (gFact == NULL) {
-        printf("loading my service factory\n");
-        gFact = new MyServiceFactory();
-        if (gFact == NULL)
-            return NS_ERROR_OUT_OF_MEMORY;
-        gFact->AddRef();    // one for our global
-    }
-    gFact->AddRef();        // one for the client
-    *aFactory = gFact;
-    return NS_OK;
-}
-
-extern "C" NS_EXPORT PRBool
-NSCanUnload(nsISupports* serviceMgr)
-{
-    if (gFact && gFact->CanUnload()) {
-        nsrefcnt cnt = gFact->Release();
-        NS_ASSERTION(cnt == 0, "can't release service factory");
-        gFact = NULL;
-        printf("unloading my service factory\n");
-        return PR_TRUE;
-    }
-    return PR_FALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////

@@ -143,19 +143,20 @@ AsyncNoShutdownTest(int testNumber)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+#if defined(XP_WIN32) || defined(XP_OS2_VACPP)
+#define _MY_SERVICE_DLL "rel:MyService.dll"
+#else
+#define _MY_SERVICE_DLL "rel:libMyService" MOZ_DLL_SUFFIX
+#endif
 
 void
 SetupFactories(void)
 {
     nsresult err;
     // seed the repository (hack)
-#ifdef XP_OS2
-    err = nsComponentManager::RegisterComponent(kIMyServiceCID, NULL, NULL, "rel:MyServce.dll",
+    err = nsComponentManager::RegisterComponent(kIMyServiceCID, NULL, NULL, 
+                                                _MY_SERVICE_DLL,
                                                 PR_TRUE, PR_FALSE);
-#else
-    err = nsComponentManager::RegisterComponent(kIMyServiceCID, NULL, NULL, "rel:MyService.dll",
-                                                PR_TRUE, PR_FALSE);
-#endif
     NS_ASSERTION(err == NS_OK, "failed to register my factory");
 }
 

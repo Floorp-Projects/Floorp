@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 IS_COMPONENT	= 1
 MODULE_NAME	= MyService
-HAS_EXTRAEXPORTS	= 1
 LIBRARY_NAME	= MyService
 SHORT_LIBNAME	= MyServce
 
