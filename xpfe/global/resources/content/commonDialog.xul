@@ -23,7 +23,7 @@
     <box orient="vertical" flex="1">
       <!-- text -->
       <html id="info.header" class="header" flex="1"/>
-      <box id="info.box" flex="1" orient="vertical" style="max-width: 45em;"/>
+      <html id="info.box" flex="1" orient="vertical" style="max-width: 45em;"/>
 
       <!-- edit fields -->
       <box orient="vertical" id="loginEditField" collapsed="true">

@@ -7,6 +7,7 @@
     margin                : 1px 2px 1px 10px;
     min-width             : 0px;
     cursor                : pointer;
+    user-focus            : none;
   }  
   
 #navigator-throbber > .button-internal-box

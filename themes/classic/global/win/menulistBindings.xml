@@ -38,7 +38,7 @@
       <xul:box class="menulist-compact-internal-box" flex="1" autostretch="never">
         <xul:image class="menulist-compact-dropmarker" inherits="disabled"/>
         <xul:spring flex="1"/>
-        <xul:text class="menulist-compact-text" inherits="value,accesskey,crop,disabled" crop="right" flex="1"/>
+        <xul:text class="menulist-compact-text" inherits="value,accesskey,crop,disabled" crop="right"/>
       </xul:box>
     </content>
   </binding>

@@ -1,59 +1,35 @@
-<?xml version="1.0"?><!-- -*- Mode: SGML; tab-width: 4; indent-tabs-mode: nil; -*- -->
+<?xml version="1.0"?>
 
-<?xml-stylesheet href="chrome://messenger/skin/messengercompose/messengercompose.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/messengercompose/messengercompose.css" type="text/css"?>  
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/askSendFormat.dtd">
 
-<window id="askSendFormat"
-    title="&windowTitle.label;"
+<window title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns:html="http://www.w3.org/1999/xhtml"
     onload="Startup()"
-    orient="vertical"
+    align="vertical"
     class="dialog"
-    style="user-input: ignore"
-    >
+    > 
 
-<script language="JavaScript" src="chrome://messenger/content/messengercompose/askSendFormat.js"/>
+<script language="JavaScript" src="chrome://messenger/content/messengercompose/askSendFormat.js"/> 
 
-<keyset id="keyset"/>
+	<keyset id="keyset"/>
 
     <spring style="height:0.5em"/>
     <box align="horizontal">
         <spring style="width:10px"/>
-        <box orient="vertical" valign="middle">
-            <image id="convertDefault" />
-        </box>
-        <spring style="width:10px"/>
-        <box orient="vertical" flex="1">
-            <html>&recipient.label;</html>
-            <deck id="mailSendFormatExplanation">
-                <box orient="vertical"><html>&convertibleDefault.label;</html></box>  <!-- Hack: <box> is a workaround for bug 44513. -->
-                <box orient="vertical"><html>&convertibleYes.label;</html></box>
-                <box orient="vertical"><html>&convertibleAltering.label;</html></box>
-                <box orient="vertical"><html>&convertibleNo.label;</html></box>
-            </deck>
-            <html>&question.label;</html>
+        <box align="vertical">
+            <text value="&question.label;" />
+            
             <spring style="height:1em"/>
 
 			<radiogroup id="mailDefaultHTMLAction" orient="vertical" autostretch="never">
-			   <box orient="horizontal">
-                <radio group="mailDefaultHTMLAction" id="SendPlainTextAndHtml" data="0" value="&plainTextAndHtml.label;"/>
-                <html id="plainTextAndHtmlRecommended" hidden="true" style="margin-top: 4px;">&recommended.label;</html>
-                <!-- Hack: box and html are workarounds for bug 49623 -->
-               </box>
-			   <box orient="horizontal">
+				<radio group="mailDefaultHTMLAction" id="SendPlainTextAndHtml" data="0" value="&plainTextAndHtml.label;"/>                
 				<radio group="mailDefaultHTMLAction" id="SendPlainTextOnly" data="1" value="&plainTextOnly.label;"/>
-                <html id="plainTextOnlyRecommended" hidden="true" style="margin-top: 4px;">&recommended.label;</html>
-               </box>
-			   <box orient="horizontal">
 				<radio group="mailDefaultHTMLAction" id="SendHtmlOnly" data="2" value="&htmlOnly.label;"/>
-                <html id="htmlOnlyRecommended" hidden="true" style="margin-top: 4px;">&recommended.label;</html>
-               </box>
 			</radiogroup>
-
         </box>
         <spring style="width:10px"/>
     </box>
@@ -61,15 +37,9 @@
     <spring style="height:1em"/>
 	<box id="okCancelButtons"
         button1Label="&send.label;"
-        button2Label="&cancel.label;"
+        button2Label="&dontSend.label;"
 	    button3Label="&recipients.label;"
 	    button4Label="&help.label;"
 	/>
-	<box id="hiddenLabels"
-        plainTextAndHtmlRecommendedLabel="&plainTextAndHtmlRecommended.label;"
-        plainTextOnlyRecommendedLabel="&plainTextOnlyRecommended.label;"
-        htmlOnlyRecommendedLabel="&htmlOnlyRecommended.label;"
-	/>
-    <spring style="height:1em" />
-
+    <spring style="height:0.5em" />
 </window>

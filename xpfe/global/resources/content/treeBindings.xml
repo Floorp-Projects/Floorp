@@ -102,7 +102,7 @@
   <binding id="tree">
     <content>
       <children/>
-      <xul:treerows class="tree-container-treerows">
+      <xul:treerows class="tree-container-treerows" inherits="dragover,dragdroptree">
         <children includes="treehead,treechildren"/>
       </xul:treerows> 
     </content>

@@ -48,7 +48,6 @@
       <tab id="cookiesTab" value="&tab.cookiesonsystem.label;"/>
       <tab value="&tab.bannedservers.label;"/>
       <tab id="imagesTab" style="display:none" value="&tab.bannedimages.label;"/>
-	  <spring flex="1"/>
     </tabbox>
     <tabpanel id="panel">
       <box class="tabpanel" id="system" flex="1" orient="vertical">

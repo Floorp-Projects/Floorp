@@ -1594,3 +1594,74 @@ function LoadIdentity(startup)
         }
     }   
 }
+
+
+function subjectKeyPress(event) 
+{
+  switch(event.keyCode) {
+  case 9: 
+    if (!event.shiftKey) {
+      window._content.focus();
+      event.preventDefault;
+    }
+    break;
+  case 13:
+    window._content.focus();
+    break;
+  }
+}
+
+function editorKeyPress(event)
+{
+  if (event.keyCode == 9) {
+    if (event.shiftKey) {
+      document.getElementById('msgSubject').focus();
+      event.preventDefault();
+    }
+  }
+}
+
+function AttachmentBucketClicked(event)
+{
+  if (event.target.localName != 'treecell')
+    goDoCommand('cmd_attachFile');
+}  
+
+var attachmentBucketObserver = {
+  onDrop: function (aEvent, aData, aDragSession)
+    {
+      var aData = aData.length ? aData[0] : aData;
+      if (aData.flavour != "application/x-moz-file") 
+        return;
+    
+      var dataObj = aData.data.data.QueryInterface(Components.interfaces.nsIFile);
+      if (!dataObj) 
+        return;
+        
+      var fileURL = nsJSComponentManager.createInstance("component://netscape/network/standard-url",
+                                                        "nsIFileURL");
+      fileURL.file = dataObj;
+	    AddAttachment(fileURL.spec);
+    },
+    
+  onDragOver: function (aEvent, aFlavour, aDragSession)
+    {
+      if (aFlavour != "application/x-moz-file")
+        return;
+      var attachmentBucket = document.getElementById("attachmentBucket");
+      attachmentBucket.setAttribute("dragover", "true");
+    },
+    
+  onDragExit: function (aEvent, aDragSession)
+    {
+      var attachmentBucket = document.getElementById("attachmentBucket");
+      attachmentBucket.removeAttribute("dragover");
+    },
+        
+  getSupportedFlavours: function ()
+    {
+      var flavourList = { };
+      flavourList["application/x-moz-file"] = { width: 2, iid: "nsIFile" };
+      return flavourList;
+    },  
+};

@@ -46,7 +46,7 @@ function awGetSelectItemIndex(itemData)
 	    selectElementIndexTable = new Object();
 	    selectElem = document.getElementById("msgRecipientType#1");
         for (var i = 0; i < selectElem.childNodes[0].childNodes.length; i ++)
-        {
+    {
             aData = selectElem.childNodes[0].childNodes[i].getAttribute("data");
             selectElementIndexTable[aData] = i;
         }
@@ -309,6 +309,24 @@ function awReturnHit(inputElement)
 		else
 			awSetFocus(row+1, nextInput);
 	}
+}
+
+function awDeleteHit(inputElement)
+{
+  var row = awGetRowByInputElement(inputElement);
+  var nextRow = awGetInputElement(row+1);
+  var index = 1;
+  if (!nextRow) {
+    nextRow = awGetInputElement(row-1);
+    index = -1;
+  }
+  if (nextRow) {
+    awSetFocus(row+index, nextRow)
+    if (row)
+      awRemoveRow(row);
+  }
+  else
+    inputElement.value = "";
 }
 
 function awInputChanged(inputElement)
@@ -613,3 +631,41 @@ function awSetAutoComplete(rowNumber)
     selectElem = awGetPopupElement(rowNumber);
     _awSetAutoComplete(selectElem, inputElem)
 }
+
+function awRecipientKeyPress(event, element)
+{
+  switch(event.keyCode) {
+  case 13:
+    awReturnHit(element);
+    break;
+  case 9:
+    awTabFromRecipient(element, event);
+    break;
+  case 46:
+  case 8:
+    if (!element.value && !this.lastVal)
+      awDeleteHit(element);
+    break;
+  }
+  this.lastVal = element.value;
+}
+
+function awKeyPress(event, treeElement)
+{
+  switch(event.keyCode) {
+  case 46:
+  case 8:
+    var selItems = treeElement.selectedItems;
+    var kids = document.getElementById("addressWidgetBody");
+    for (var i = 0; i < selItems.length; i++) {
+      // must not delete the last item
+      if (kids.childNodes.length > 1)
+        kids.removeChild(selItems[i]);
+      else
+        selItems[i].firstChild.lastChild.childNodes[1].value = "";
+      top.MAX_RECIPIENTS--;
+    }
+    break;   
+  }
+}
+

@@ -94,4 +94,7 @@ toolbarseparator
     margin                : 2px 0.2em 2px 0.2em;
   }
   
-   
+.toolbar-focustarget
+  {
+    user-focus            : none !important;
+  }   

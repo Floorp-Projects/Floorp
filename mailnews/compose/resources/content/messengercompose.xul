@@ -19,6 +19,7 @@
    - Rights Reserved.
    - 
    - Contributor(s):
+   -   Ben Goodger <ben@netscape.com> (ass'td polish fixes)
   -->
 
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
@@ -26,50 +27,37 @@
 <?xul-overlay href="chrome://messenger/content/messengercompose/addressingWidgetOverlay.xul"?>
 <?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
 
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://messenger/skin/messengercompose/messengercompose.css" type="text/css"?> 
-
-<!--
-The contents of this file are subject to the Netscape Public
-License Version 1.1 (the "License"); you may not use this file
-except in compliance with the License. You may obtain a copy of
-the License at http://www.mozilla.org/NPL/
-
-Software distributed under the License is distributed on an "AS
-IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-implied. See the License for the specific language governing
-rights and limitations under the License.
-
-The Original Code is Mozilla Communicator client code, released
-March 31, 1998.
-
-The Initial Developer of the Original Code is Netscape
-Communications Corporation. Portions created by Netscape are
-Copyright (C) 1998-1999 Netscape Communications Corporation. All
-Rights Reserved.
--->
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/messengercompose.dtd">
 
 <window id="main-window"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
-		onunload="ComposeUnload()"
-		onload="ComposeLoad()"
+        onunload="ComposeUnload()"
+        onload="ComposeLoad()"
         onclose="return ComposeCanClose()"
-		title="&msgComposeWindow.title;"
-		windowtype="msgcompose"
-		align="vertical"
-		width="640" height="480"
-		persist="screenX screenY width height"
-		> 
+        title="&msgComposeWindow.title;"
+        windowtype="msgcompose"
+        orient="vertical"
+        width="640" height="480"
+        persist="screenX screenY width height"> 
 
-<script language="JavaScript" src="chrome://messenger/content/accountUtils.js"/>
-<script language="JavaScript" src="chrome://messenger/content/widgetglue.js"/>
-<script language="JavaScript" src="chrome://editor/content/editor.js"/>
-<script language="JavaScript" src="chrome://editor/content/ComposerCommands.js"/>
-<script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
-<script language="JavaScript" src="chrome://global/content/strres.js"/>
-<script language="JavaScript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
+<script language="JavaScript" src="chrome://global/content/strres.js"></script>
+<script language="JavaScript" src="chrome://messenger/content/accountUtils.js"></script>
+<script language="JavaScript" src="chrome://messenger/content/widgetglue.js"></script>
+<script language="JavaScript" src="chrome://editor/content/editor.js"></script>
+<script language="JavaScript" src="chrome://editor/content/ComposerCommands.js"></script>
+<script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"></script>
+<script language="JavaScript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"></script>
+
+
+<!-- drag and drop -->
+<script language="JavaScript" src="chrome://global/content/nsDragAndDrop.js"></script>
+<script language="JavaScript" src="chrome://global/content/nsJSSupportsUtils.js"></script>
+<script language="JavaScript" src="chrome://global/content/nsJSComponentManager.js"></script>
+<script language="JavaScript" src="chrome://global/content/nsTransferable.js"></script>
 
 <commands id="commands">
   <commandset id="msgComposeCommandUpdate"
@@ -183,7 +171,7 @@ Rights Reserved.
 	<!-- broadcaster id="cmd_quoteMessage" oncommand="goDoCommand('cmd_quoteMessage')"/ -->
 	<broadcaster id="cmd_rewrap" oncommand="goDoCommand('cmd_rewrap')"/>
 
-  <broadcaster id="Editor:Throbber" busy="false"/>
+	<broadcaster id="Editor:Throbber" busy="false"/>
 </broadcasterset>
 
 <broadcaster id="args" value="editorType=default"/>
@@ -244,334 +232,282 @@ Rights Reserved.
   <popup id="BackColorPopup"/>
 </popupset>
 
-<!-- box id="toolbar" align="vertical" style="width:100%;height:100%" -->
-<toolbox class="toolbox-top">
-  <menubar>
-	<menu id="menu_File">
-    <menupopup id="menu_FilePopup">
-      <menuitem value="&newMessage.label;" accessKey="&newMessage.accesskey;" key="key_newMessage" observes="cmd_new"/>
-      <menu id="menu_New">
-        <menupopup id="menu_NewPopup">
-          <menuitem id="menu_newNavigator"/>
-          <menuitem id="menu_newEditor"/>
+  <toolbox class="toolbox-top">
+    <menubar id="compose-menubar">
+      <menu id="menu_File">
+        <menupopup id="menu_FilePopup">
+          <menuitem value="&newMessage.label;" accessKey="&newMessage.accesskey;" key="key_newMessage" observes="cmd_new"/>
+          <menu id="menu_New">
+            <menupopup id="menu_NewPopup">
+              <menuitem id="menu_newNavigator"/>
+              <menuitem id="menu_newEditor"/>
+            </menupopup>
+          </menu>
+          <menuitem value="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" observes="cmd_attachFile"/>
+          <menuitem value="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" observes="cmd_attachPage"/>
+          <menuseparator/>
+          <menuitem id="menu_close"/>
+          <menuitem value="&saveCmd.label;" key="key_save" observes="cmd_saveDefault"/>
+          <menu value="&saveAsCmd.label;" accessKey="&saveAsCmd.accesskey;">
+            <menupopup>
+              <menuitem value="&saveAsFileCmd.label;" accessKey="&saveAsFileCmd.accesskey;" observes="cmd_saveAsFile"/>
+              <menuseparator/>
+              <menuitem value="&saveAsDraftCmd.label;" accessKey="&saveAsDraftCmd.accesskey;" observes="cmd_saveAsDraft"/>
+              <menuitem value="&saveAsTemplateCmd.label;" accessKey="&saveAsTemplateCmd.accesskey;" observes="cmd_saveAsTemplate"/>
+            </menupopup>
+          </menu>
+          <menuseparator/>
+          <menuitem value="&sendNowCmd.label;" accessKey="&sendNowCmd.accesskey;" observes="cmd_sendNow"/>
+          <menuitem value="&sendLaterCmd.label;" accessKey="&sendLaterCmd.accesskey;" observes="cmd_sendLater"/>
+          <menuseparator/>
         </menupopup>
       </menu>
-    <menuitem value="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" observes="cmd_attachFile"/>
-    <menuitem value="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" observes="cmd_attachPage"/>
-		<menuseparator/>
-
-		<menuitem id="menu_close"/>
-		<menuitem value="&saveCmd.label;" key="key_save" observes="cmd_saveDefault"/>
-		<menu value="&saveAsCmd.label;" accessKey="&saveAsCmd.accesskey;">
-      <menupopup>
-        <menuitem value="&saveAsFileCmd.label;" accessKey="&saveAsFileCmd.accesskey;" observes="cmd_saveAsFile"/>
-        <menuseparator/>
-        <menuitem value="&saveAsDraftCmd.label;" accessKey="&saveAsDraftCmd.accesskey;" observes="cmd_saveAsDraft"/>
-        <menuitem value="&saveAsTemplateCmd.label;" accessKey="&saveAsTemplateCmd.accesskey;" observes="cmd_saveAsTemplate"/>
-      </menupopup>
-		</menu>
-		<menuseparator/>
-		
-		<menuitem value="&sendNowCmd.label;" accessKey="&sendNowCmd.accesskey;" observes="cmd_sendNow"/>
-		<menuitem value="&sendLaterCmd.label;" accessKey="&sendLaterCmd.accesskey;" observes="cmd_sendLater"/>
-		<menuseparator/>
-		</menupopup>
-	</menu>
-
-	<menu id="menu_Edit">
-		<menupopup oncreate="EditorInitEditMenu()">
-			<menuitem id="menu_undo"/>
-			<menuitem id="menu_redo"/>
-			<menuseparator/>
-			<menuitem id="menu_cut"/>
-			<menuitem id="menu_copy"/>
-			<menuitem id="menu_paste"/>
-      <menuitem id="menu_pasteQuote"/>
-			<menuitem id="menu_delete"/>
-			<menuseparator/>
-			<menuitem id="menu_selectAll"/>
-			<menuseparator/>
-			<menuitem value="&findCmd.label;"      key="key_find"      accesskey="&findCmd.accesskey;"      observes="cmd_find"/>
-			<menuitem value="&findAgainCmd.label;" key="key_findNext" accesskey="&findAgainCmd.accesskey;" observes="cmd_findNext"/>
-			<menuseparator/>
-			<menuitem value="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" observes="cmd_account"/>
-			<menuitem id="menu_preferences" observes="cmd_preferences"/>
-		</menupopup>
-	</menu>
-	<menu id="menu_View">
-	<menupopup>
-			<menu id="menu_Toolbars">
-				<menupopup>
-		            <menuitem id="menu_showComposeToolbar"
-		                      value="&showComposeToolbarCmd.label;"
-		                      observes="cmd_showComposeToolbar"
-		                      accesskey="&showComposeToolbarCmd.accesskey;"
-		                      checked="true"/>
-		            <menuitem id="menu_showFormatToolbar"
-		                      value="&showFormatToolbarCmd.label;"
-		                      observes="cmd_showFormatToolbar"
-		                      accesskey="&showFormatToolbarCmd.accesskey;"
-		                      checked="true"/>
-					<menuitem id="menu_showTaskbar"/>
-				</menupopup>
-			</menu>
-			<menuseparator/>
-			<!--
-			<menuitem value="&pageInfoCmd.label;" disabled="true" accesskey="&pageInfoCmd.accesskey;" cmd="nsCmd:ComposeNYI"/>
-			<menuseparator/>
-			-->
-      <menu id = "maileditCharsetMenu" />
-	</menupopup>
-    </menu>
-
-
-	<!-- entire menus comes from editorOverlay -->
-	<menu id="insertMenu" observes="cmd_insert"/>
-	
-	<!-- menu items come from editorOverlay -->
-	<menu id="formatMenu" value="&formatMenu.label;" accesskey="&formatMenu.accesskey;" observes="cmd_format">
-    <menupopup id="formatMenuPopup">
-  		<menu id="tableMenu"/>
-     	<menuseparator/>
-      <menuitem id="objectProperties"/>
-      <menuitem id="colorsAndBackground"/>
-    </menupopup>
-	</menu>
-	
-
-	<menu value="&optionsMenu.label;"  accesskey="&optionsMenu.accesskey;">
-    <menupopup>	
-		<menuitem value="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" observes="cmd_selectAddress"/>
-        <menuitem value="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" observes="cmd_spelling"/>
-		<!--menuitem value="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" observes="cmd_quoteMessage"/-->	
-		<menuitem value="&editRewrapCmd.label;" observes="cmd_rewrap" oncommand="editorShell.Rewrap(false)"/>
-	  <menuseparator/>
-	    
-	  <menu value="&outputFormatMenu.label;" observes="cmd_outputFormat">
-      <menupopup>
-			  <menuitem type="radio" name="output_format" value="&askmeFormatCmd.label;" id="1" checked="true"/>
-    		<menuitem type="radio" name="output_format" value="&plainTextFormatCmd.label;" id="2"/>
-    		<menuitem type="radio" name="output_format" value="&htmlFormatCmd.label;" id="3"/>
-    		<menuitem type="radio" name="output_format" value="&bothFormatCmd.label;" id="4"/>
-			</menupopup>
-	  </menu>
-		<menu value="&priorityMenu.label;" oncommand="PriorityMenuSelect(event.target);">
-      <menupopup>
-			  <menuitem type="radio" name="priority" value="&lowestPriorityCmd.label;" id="lowest"/>
-    		<menuitem type="radio" name="priority" value="&lowPriorityCmd.label;" id="low"/>
-    		<menuitem type="radio" name="priority" value="&normalPriorityCmd.label;" id="normal" checked="true"/>
-    		<menuitem type="radio" name="priority" value="&highPriorityCmd.label;" id="high"/>
-    		<menuitem type="radio" name="priority" value="&highestPriorityCmd.label;" id="highest"/>
-			</menupopup>
-	   	</menu>
-
-		<menu value="&fileCarbonCopyCmd.label;" id="fccMenu" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
-        <menupopup/>
-		<template> 
-		<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+      <menu id="menu_Edit">
+        <menupopup oncreate="EditorInitEditMenu()">
+          <menuitem id="menu_undo"/>
+          <menuitem id="menu_redo"/>
+          <menuseparator/>
+          <menuitem id="menu_cut"/>
+          <menuitem id="menu_copy"/>
+          <menuitem id="menu_paste"/>
+          <menuitem id="menu_pasteQuote"/>
+          <menuitem id="menu_delete"/>
+          <menuseparator/>
+          <menuitem id="menu_selectAll"/>
+          <menuseparator/>
+          <menuitem value="&findCmd.label;"      key="key_find"      accesskey="&findCmd.accesskey;"      observes="cmd_find"/>
+          <menuitem value="&findAgainCmd.label;" key="key_findNext" accesskey="&findAgainCmd.accesskey;" observes="cmd_findNext"/>
+          <menuseparator/>
+          <menuitem value="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" observes="cmd_account"/>
+          <menuitem id="menu_preferences" observes="cmd_preferences"/>
+        </menupopup>
+      </menu>
+      <menu id="menu_View">
+        <menupopup>
+          <menu id="menu_Toolbars">
             <menupopup>
-              <!--menuitem value="[current selection]" disabled="true"/-->
-              <!--menuseparator/-->
-              <menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
-				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-				BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-				IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-				ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-                <menupopup>
-                  <menuitem uri="..." value="&fileHereMenu.label;"
-				oncommand="MessageFcc(event.target)"
-				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-				BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-				IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-				ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
-                  <menuseparator/>
-                </menupopup>
-              </menu>
+              <menuitem id="menu_showComposeToolbar"
+                        value="&showComposeToolbarCmd.label;"
+                        observes="cmd_showComposeToolbar"
+                        accesskey="&showComposeToolbarCmd.accesskey;"
+                        checked="true"/>
+              <menuitem id="menu_showFormatToolbar"
+                        value="&showFormatToolbarCmd.label;"
+                        observes="cmd_showFormatToolbar"
+                        accesskey="&showFormatToolbarCmd.accesskey;"
+                        checked="true"/>
+              <menuitem id="menu_showTaskbar"/>
             </menupopup>
-		</rule>
-		<rule nc:CanFileMessages="false" nc:ServerType="nntp">
-                <!-- don't show nntp servers in the file and copies menus -->
-		</rule>
-		<rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
-            <!-- note, there is no "file here" -->
+          </menu>
+          <menuseparator/>
+          <menu id = "maileditCharsetMenu" />
+        </menupopup>
+      </menu>
+  
+      <menu id="insertMenu" observes="cmd_insert"/>
+
+      <menu id="formatMenu" value="&formatMenu.label;" accesskey="&formatMenu.accesskey;" observes="cmd_format">
+        <menupopup id="formatMenuPopup">
+          <menu id="tableMenu"/>
+          <menuseparator/>
+          <menuitem id="objectProperties"/>
+          <menuitem id="colorsAndBackground"/>
+        </menupopup>
+      </menu>
+  
+      <menu value="&optionsMenu.label;" accesskey="&optionsMenu.accesskey;">
+        <menupopup>	
+          <menuitem value="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" observes="cmd_selectAddress"/>
+          <menuitem value="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" observes="cmd_spelling"/>
+          <menuitem value="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" observes="cmd_quoteMessage"/>	
+          <menuitem value="&editRewrapCmd.label;" observes="cmd_rewrap" oncommand="editorShell.Rewrap(false)"/>
+          <menuseparator/>
+          <menu value="&outputFormatMenu.label;" observes="cmd_outputFormat">
             <menupopup>
-              <menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+              <menuitem type="radio" name="output_format" value="&askmeFormatCmd.label;" id="1" checked="true"/>
+              <menuitem type="radio" name="output_format" value="&plainTextFormatCmd.label;" id="2"/>
+              <menuitem type="radio" name="output_format" value="&htmlFormatCmd.label;" id="3"/>
+              <menuitem type="radio" name="output_format" value="&bothFormatCmd.label;" id="4"/>
+            </menupopup>
+          </menu>
+          <menu value="&priorityMenu.label;" oncommand="PriorityMenuSelect(event.target);">
+            <menupopup>
+              <menuitem type="radio" name="priority" value="&lowestPriorityCmd.label;" id="lowest"/>
+              <menuitem type="radio" name="priority" value="&lowPriorityCmd.label;" id="low"/>
+              <menuitem type="radio" name="priority" value="&normalPriorityCmd.label;" id="normal" checked="true"/>
+              <menuitem type="radio" name="priority" value="&highPriorityCmd.label;" id="high"/>
+              <menuitem type="radio" name="priority" value="&highestPriorityCmd.label;" id="highest"/>
+            </menupopup>
+          </menu>
+          <menu value="&fileCarbonCopyCmd.label;" id="fccMenu" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+            <menupopup/>
+            <template> 
+              <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+                <menupopup>
+                  <!--menuitem value="[current selection]" disabled="true"/>
+                  <menuseparator/-->
+                  <menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+                        SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                        BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                        IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                        ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+                    <menupopup>
+                      <menuitem uri="..." value="&fileHereMenu.label;"
+                                oncommand="MessageFcc(event.target)"
                                 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                                 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-                                ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-			<menupopup/>
-              </menu>
-            </menupopup>
-		</rule>
-		<rule nc:CanFileMessages="true">
-            <menupopup>
-			<menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
-			  oncommand="MessageFcc(event.target)" 
-				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-				BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-				IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-				ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
-            </menupopup>
-          </rule>
-        </template>
-		</menu>	    
+                                ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
+                      <menuseparator/>
+                    </menupopup>
+                  </menu>
+                </menupopup>
+              </rule>
+              <rule nc:CanFileMessages="false" nc:ServerType="nntp"/>
+              <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+                <menupopup>
+                  <menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+                        SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                        BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                        IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                        ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+                    <menupopup/>
+                  </menu>
+                </menupopup>
+              </rule>
+              <rule nc:CanFileMessages="true">
+                <menupopup>
+                  <menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+                            oncommand="MessageFcc(event.target)" 
+                            SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                            BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                            IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                            ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+                </menupopup>
+              </rule>
+            </template>
+          </menu>	    
+          <!--menuseparator/>
+          <menuitem value="&addSignatureCmd.label;" disabled="true" oncommand=""/>    	
+          <menuitem value="&attachVCardCmd.label;" disabled="true" accesskey="&attachVCardCmd.accesskey;" oncommand="AttachVCard()"/-->    	
+        </menupopup>
+      </menu>
+      <menu id="debugMenu"/>
+      <menu id="tasksMenu"/>
+      <menu id="menu_Help"/>
+    </menubar>
 
-    <!--
-    <menuseparator/>
-		<menuitem value="&addSignatureCmd.label;" disabled="true" oncommand=""/>    	
-		<menuitem value="&attachVCardCmd.label;" disabled="true" accesskey="&attachVCardCmd.accesskey;" oncommand="AttachVCard()"/>    	
-    -->
-    </menupopup>
-	</menu>
-
-    <menu id="debugMenu"/>
-	<menu id="tasksMenu"/>
-	<menu id="menu_Help"/>
-	<spring flex="100%"/>
-  </menubar>
     <toolbar class="toolbar-primary" id="composeToolbar" persist="collapsed">
-		<box id="toolbar_button_box">
-	 		<button class="button-toolbar-2 top" id="button-send" value="&sendButton.label;" tooltip="aTooltip" tooltiptext="&sendButton.tooltip;" observes="cmd_sendNow"/>
-      <separator/>
-	 		<button class="button-toolbar-2 top" id="button-address" value="&addressButton.label;" tooltip="aTooltip" tooltiptext="&addressButton.tooltip;" observes="cmd_selectAddress"/>
-	 		<button class="button-toolbar-2 top" id="button-attach" value="&attachButton.label;" tooltip="aTooltip" tooltiptext="&attachButton.tooltip;" observes="cmd_attachFile"/>
-	 		<!--button class="button-toolbar-2 top" id="button-quote" value="&quoteButton.label;" tooltip="aTooltip" tooltiptext="&quoteButton.tooltip;"  observes="cmd_quoteMessage"/-->
-      <button class="button-toolbar-2 top" id="spellingButton" value="&spellingButton.label;" observes="cmd_spelling"/>
-      <separator/>
-	 		<button class="button-toolbar-2 top" id="button-save" value="&saveButton.label;" tooltip="aTooltip" tooltiptext="&saveButton.tooltip;" observes="cmd_saveDefault"/>
-	    <spring flex="100%"/>
-		</box>
-    <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("compose.throbber.url")'>
-      <observes element="broadcaster_throbber" attribute="busy"/>
-    </button>
-	</toolbar>
-
-	<toolbar id="MsgHeadersToolbar" persist="collapsed">
-		<box align="horizontal" flex="100%">
-			<spring style="width:0.5em; min-width:0.5em"/>
-			<box align="vertical" flex="75%"  style="min-width: 20em">
-				<spring style="height:0.5em"/>
-				<box align="horizontal">
-                    <text value="&fromAddr.label;"/>
-					<spring style="width:0.5em"/>
-					<menulist id="msgIdentity" value="..." flex="100%" oncommand="contentChanged=true; LoadIdentity(false);">
-                        <menupopup id="msgIdentityPopup" flex="100%"/>
-                    </menulist>
-				</box> 
-				<spring style="height:0.5em"/>
-
-				<!-- addressing widget -->
-				<box id="addressingWidget"/>
-				<spring style="height:0.5em"/>
-				
-				<box align="horizontal">
-					<text value="&subject.label;"/>
-					<spring style="width:0.5em"/>
-				    <textfield id="msgSubject" type="text" flex="100%"
-						onkeyup="SetComposeWindowTitle(event.keyCode);"
-						onkeypress="if (event.keyCode == 9) {
-						                if (event.shiftKey == false) {
-						                    window._content.focus();
-						                    event.preventDefault();
-						                }
-						            }
-						            else
-						                if (event.keyCode == 13)
-						                    window._content.focus();"
-						onchange="contentChanged=true;"
-						/>
-				</box>
-				<spring style="height:0.5em"/>
-			</box>
-			
-			<!--spring style="width:0.5em"/-->
-			<splitter id="gray_horizontal_splitter" persist="state"/>
-			
-			<box align="vertical" flex="25%">
-				<spring style="height:0.5em"/>
-				<box align="vertical" style="height:1em">
-					<text value="&attachments.label;" flex="100%"/>
-				</box>
-				<spring style="height:0.5em"/>
-				<box align="vertical" style="height:8.5em; background-color:white; border-top:solid black 1px">
-					<tree id="attachmentBucket" flex="100%" style="width:0px"
-						onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"
-						onchange="contentChanged=true;">
-                                                <treecolgroup>
-						<treecol flex="1"/>
-                                                </treecolgroup>
-
-						<treechildren id="bucketBody" flex="1">
-						</treechildren>
-					</tree>
-				</box>
-				<spring style="height:0.5em"/>
-			</box>
-			<spring style="width:0.5em; min-width:0.5em"/>
-		</box>
-	</toolbar>
-
-    <!-- These toolbar items get filled out from the editorOverlay -->
-    <toolbar id="FormatToolbar" persist="collapsed" tbautostretch="always">
-      <!-- We need this else menulists get stretched -->
-      <box autostretch="never">
-        <menulist id="ParagraphSelect"/>
-        <menulist id="FontFaceSelect"/>
-
-        <stack id="ColorButtons"/>
+      <button class="button-toolbar-2 top" 
+              id="button-send" value="&sendButton.label;" 
+              tooltip="aTooltip" tooltiptext="&sendButton.tooltip;" 
+              observes="cmd_sendNow"/>
+      <toolbarseparator/>
+      <button class="button-toolbar-2 top" 
+              id="button-address" value="&addressButton.label;" 
+              tooltip="aTooltip" tooltiptext="&addressButton.tooltip;" 
+              observes="cmd_selectAddress"/>
+      <button class="button-toolbar-2 top" 
+              id="button-attach" value="&attachButton.label;" 
+              tooltip="aTooltip" tooltiptext="&attachButton.tooltip;" 
+              observes="cmd_attachFile"/>
+      <button class="button-toolbar-2 top" 
+              id="spellingButton" value="&spellingButton.label;" 
+              observes="cmd_spelling"/>
+      <toolbarseparator/>
+      <button class="button-toolbar-2 top" 
+              id="button-save" value="&saveButton.label;" 
+              tooltip="aTooltip" tooltiptext="&saveButton.tooltip;" 
+              observes="cmd_saveDefault"/>
+      <spring flex="1"/>
+      <button id="navigator-throbber" 
+              oncommand="goClickThrobber('compose.throbber.url')">
+        <observes element="broadcaster_throbber" attribute="busy"/>
+      </button>
+    </toolbar>
+  
+    <toolbar id="MsgHeadersToolbar" persist="collapsed" tborient="vertical" tbautostretch="always" flex="1">
+      <box id="msgheaderstoolbar-box" flex="1">
+        <box orient="vertical" flex="75">
+          <box autostretch="never">
+            <text class="label" value="&fromAddr.label;"/>
+            <menulist id="msgIdentity" value="..." flex="1" oncommand="LoadIdentity(false);">
+              <menupopup id="msgIdentityPopup"/>
+            </menulist>
+          </box> 
+          <tree id="addressingWidgetTree" flex="1"/>
+          <box autostretch="never">
+            <text class="label" value="&subject.label;"/>
+            <textfield id="msgSubject" type="text" flex="1" onkeyup="SetComposeWindowTitle(event.which);"
+                       onkeypress="subjectKeyPress(event);" onchange="contentChanged=true;"/>
+          </box>
+        </box>
+        <splitter id="attachmentbucket-sizer" collapse="after"/>
+        <box orient="vertical" flex="25">
+          <text class="label" id="attachmentBucketText" value="&attachments.label;" crop="right"/>
+          <tree id="attachmentBucket" class="inset toolbar-focustarget" flex="1" style="height: 0px; width: 0px;"
+                dragdroptree="true"
+                onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"
+                onchange="contentChanged=true;"
+                onclick="AttachmentBucketClicked(event);"
+                ondragover="nsDragAndDrop.dragOver(event, attachmentBucketObserver);"
+                ondragdrop="nsDragAndDrop.drop(event, attachmentBucketObserver);"
+                ondragexit="nsDragAndDrop.dragExit(event, attachmentBucketObserver);">
+                
+            <treecolgroup>
+              <treecol flex="1"/>
+            </treecolgroup>
+            <treechildren id="bucketBody" flex="1"/>
+          </tree>
+        </box>
       </box>
-
+    </toolbar>
+  
+    <!-- These toolbar items get filled out from the editorOverlay -->
+    <toolbar id="FormatToolbar" persist="collapsed" tbautostretch="never">
+      <menulist id="ParagraphSelect"/>
+      <menulist id="FontFaceSelect"/>
+      <stack id="ColorButtons"/>
       <button id="DecreaseFontSizeButton"/>
       <button id="IncreaseFontSizeButton"/>
-
       <toolbarseparator class="toolbarseparator-standard"/>
-
       <button id="boldButton"/>
       <button id="italicButton"/>
       <button id="underlineButton"/>
-
       <toolbarseparator class="toolbarseparator-standard"/>
-
       <button id="ulButton"/>
       <button id="olButton"/>
       <button id="outdentButton"/>
       <button id="indentButton"/>
-
       <toolbarseparator class="toolbarseparator-standard"/>
-
+    
       <menu>
         <button id="AlignPopupButton"/>
         <menupopup id="AlignmentPopup"/>
       </menu>
-
+    
       <menu>
         <button id="InsertPopupButton"/>
-	    <menupopup id="InsertPopup"/>
+        <menupopup id="InsertPopup"/>
       </menu>
       <spring flex="1"/>
     </toolbar>
-</toolbox>
+  </toolbox>
 
-    <!-- The mail message body frame -->
-    <editor type="content-primary" id="content-frame" src="about:blank" name="browser.message.body" flex="100%"
-		onkeypress="if (event.keyCode == 9)
-		                if (event.shiftKey == true) {
-		                    document.getElementById('msgSubject').focus();
-		                    event.preventDefault();
-		                }"
-        />
+  <splitter id="compose-toolbar-sizer" collapse="after"/>
 
-    <!-- Some of this is from globarOverlay.xul -->
-    <statusbar id="status-bar">
-      <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
-      <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0">
-          <observes element="Editor:Throbber" attribute="busy"/>
-      </progressmeter>
-      <statusbarpanel id="statusText" value="&defaultStatusText.label;" flex="1" crop="right"/>
-    </statusbar>
+  <!-- The mail message body frame -->
+  <box id="appcontent" orient="vertical" flex="1">
+    <editor type="content-primary" id="content-frame" src="about:blank" name="browser.message.body" flex="1"
+            onkeypress="editorKeyPress(event);"/>
+  </box>
 
-<!-- /box -->
-	<box id="taskbar" class="toolbox-bottom"/>
+  <statusbar id="status-bar">
+    <progressmeter class="progressmeter-statusbar" mode="normal" value="0"/>
+    <statusbarpanel id="statusText" flex="1" value="&defaultStatusText.label;"/>
+  </statusbar>
+
+  <box id="taskbar"/>
+
 </window>
 

@@ -47,10 +47,9 @@
   <keyset id="keyset"/>
 
   <tabcontrol align="vertical" orient="vertical">
-	  <tabbox flex="1" align="horizontal">
-		  <tab id="TableTab" selected="true" onclick="SelectTableTab()" value="&tableTab.label;"/>
-		  <tab id="CellTab" onclick="SelectCellTab()" value="&cellTab.label;"/>
-	  	<spring flex="1"/>
+	  <tabbox flex="1">
+		  <tab id="TableTab" oncommand="SelectTableTab()" value="&tableTab.label;"/>
+		  <tab id="CellTab" oncommand="SelectCellTab()" value="&cellTab.label;"/>
 	  </tabbox>
     <tabpanel orient="vertical" id="TabPanel">
 

@@ -130,6 +130,7 @@
   .menulist-compact
     {
       behavior            : url("chrome://global/skin/menulistBindings.xml#menulist-compact");
+      user-focus          : none;  /* we don't take focus */
       border-left         : 1px solid threedhighlight;
       border-top          : 1px solid threedhighlight;
       border-right        : 1px solid threeddarkshadow;

@@ -71,11 +71,10 @@
   <separator class="thin"/>
   
   <tabcontrol align="vertical" orient="vertical" flex="1">
-	  <tabbox align="horizontal">
-      <tab selected="true" value="&tabHTML.label;"/>
+	  <tabbox>
+      <tab value="&tabHTML.label;"/>
       <tab value="&tabCSS.label;"/>
       <tab value="&tabJSE.label;"/>
-      <spring flex="1"/>
     </tabbox>
     <tabpanel flex="1">
       <!-- ============================================================== -->

@@ -49,7 +49,6 @@
       <tab id="signonSitesTab" style="display:none" value="&tab.signonsnotstored.label;"/>
       <tab id="nopreview" style="display:none" value="&tab.nopreview.label;"/>
       <tab id="nocapture" style="display:none" value="&tab.nocapture.label;"/>
-      <spring flex="1"/>
     </tabbox>
     <tabpanel id="panel">
       <!-- saved signons -->

@@ -649,7 +649,7 @@
           tooltip="aTooltip"               tooltiptext="&anchorToolbarCmd.tooltip;"/>
 
   <!-- Formatting toolbar items. "data" are HTML tagnames, don't translate -->
-  <menulist id="ParagraphSelect" tooltip="aTooltip" tooltiptext="&ParagraphSelect.tooltip;">
+  <menulist class="toolbar-focustarget" id="ParagraphSelect" tooltip="aTooltip" tooltiptext="&ParagraphSelect.tooltip;">
     <observes element="cmd_paragraphState" attribute="state" onbroadcast="onParagraphFormatChange(this.parentNode, 'cmd_paragraphState')"/>
     <menupopup id="ParagraphPopup" oncommand="doStatefulCommand('cmd_paragraphState', event.target.data)">
       <menuitem value="&bodyTextCmd.label;"            data=""/>
@@ -669,7 +669,7 @@
 
   <!-- TODO: Use actual "face" value when combobox can display arbitrary HTML -->
   <!-- "data" are HTML tagnames, don't translate -->
-  <menulist id="FontFaceSelect" tooltip="aTooltip" tooltiptext="&FontFaceSelect.tooltip;">
+  <menulist class="toolbar-focustarget" id="FontFaceSelect" tooltip="aTooltip" tooltiptext="&FontFaceSelect.tooltip;">
     <observes element="cmd_fontFace" attribute="state" onbroadcast="onFontFaceChange(this.parentNode, 'cmd_fontFace')"/>
     <menupopup id="FontFacePopup" oncommand="doStatefulCommand('cmd_fontFace', event.target.data)">
       <menuitem value="&fontVarWidth.label;"      data=""/>
@@ -681,7 +681,7 @@
     </menupopup>
   </menulist>  
   
-  <menulist id="FontSizeSelect" oncommand="EditorSelectFontSize()" tooltip="aTooltip" tooltiptext="&FontSizeSelect.tooltip;">
+  <menulist class="toolbar-focustarget" id="FontSizeSelect" oncommand="EditorSelectFontSize()" tooltip="aTooltip" tooltiptext="&FontSizeSelect.tooltip;">
     <observes element="cmd_fontSize" attribute="state" onbroadcast="onFontSizeChange(this.parentNode, 'cmd_fontSize')"/>
     <menupopup>
       <menuitem value="&size-xx-smallCmd.label;"/>

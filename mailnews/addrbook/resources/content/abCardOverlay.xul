@@ -32,11 +32,10 @@ Rights Reserved.
 <box id="editcard" align="vertical">
 
 	<tabcontrol align="vertical" style="margin:5px">
-	   <tabbox id="abTabBox" align="horizontal">
-	      <tab selected="true" value="&Name.tab;"/>
+	   <tabbox id="abTabBox">
+	      <tab value="&Name.tab;"/>
 	      <tab value="&Address.tab;"/>
 	      <tab value="&Other.tab;"/>
-		  <spring flex="1"/>
 	   </tabbox>
 	   
 	   <tabpanel id="abTabPanel" align="vertical" flex="1">
@@ -45,9 +44,7 @@ Rights Reserved.
 			<box index="name" align="vertical" flex="1">
 				
 				<titledbox orient="vertical" flex="1">
-					<title>
-						<text value="&Name.box;"/>
-					</title>
+					<title value="&Name.box;"/>
 		
 					<box align="vertical" style="width:100%">
 						<box orient="horizontal">
@@ -111,9 +108,7 @@ Rights Reserved.
 				</titledbox>
 
 				<titledbox orient="vertical" flex="1">
-					<title>
-						<text value="&Phones.box;"/>
-					</title>
+					<title value="&Phones.box;"/>
 		
 					<box align="vertical" style="width:100%">
 						<box orient="horizontal">
@@ -159,9 +154,7 @@ Rights Reserved.
 			<box index="address" align="vertical" flex="1">
 				
 				<titledbox orient="vertical" flex="1">
-					<title>
-						<text value="&Home.box;"/>
-					</title>
+					<title value="&Home.box;"/>
 		
 					<box align="vertical" style="width:100%">
 		
@@ -214,9 +207,7 @@ Rights Reserved.
 				</titledbox>
 
 				<titledbox orient="vertical" style="width:100%">
-					<title>
-						<text value="&Work.box;"/>
-					</title>
+					<title value="&Work.box;"/>
 		
 					<box align="vertical" style="width:100%">
 		
@@ -295,19 +286,19 @@ Rights Reserved.
 			<box index="other" align="vertical" flex="1">
 				
 				<box align="vertical" class="alignBoxWithFieldset">
-					<box orient="horizontal" flex="1">
+					<box flex="1">
 						<text for="Custom1" value="&Custom1.label;" class="CardEditLabel"/>
 						<textfield id="Custom1" flex="1"/>
 					</box>
-					<box orient="horizontal" flex="1">
+					<box flex="1">
 						<text for="Custom2" value="&Custom2.label;" class="CardEditLabel"/>
 						<textfield id="Custom2" flex="1"/>
 					</box>
-					<box orient="horizontal" flex="1">
+					<box flex="1">
 						<text for="Custom3" value="&Custom3.label;" class="CardEditLabel"/>
 						<textfield id="Custom3" flex="1"/>
 					</box>
-					<box orient="horizontal" flex="1">
+					<box flex="1">
 						<text for="Custom4" value="&Custom4.label;" class="CardEditLabel"/>
 						<textfield id="Custom4" flex="1"/>
 					</box>

@@ -15,12 +15,23 @@ tree
     border-bottom         : 1px solid threedhighlight;
   }
   
+.tree-container-treerows[dragover="true"][dragdroptree="true"]
+  {
+    border                : 2px solid highlight;
+    padding               : 0px;
+  }  
+  
 .tree-container-treerows
   {
     border-left           : 1px solid threeddarkshadow;
     border-top            : 1px solid threeddarkshadow;
     border-right          : 1px solid threedface;
     border-bottom         : 1px solid threedface;
+  }  
+
+.tree-container-treerows[dragdroptree="true"]
+  {
+    padding               : 1px;
   }  
   
 tree.inset

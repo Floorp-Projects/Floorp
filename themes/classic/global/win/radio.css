@@ -76,7 +76,7 @@
       color               : graytext;
     }
   
-  radio:focus > .radio-internal-box > .radio-text
+  radio[focused="true"] > .radio-internal-box > .radio-text
     { 
       border              : 1px dotted threeddarkshadow;
       padding             : 0px;
