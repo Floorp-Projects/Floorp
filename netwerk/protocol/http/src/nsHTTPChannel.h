@@ -49,7 +49,8 @@ public:
 
     // Constructors and Destructor
     nsHTTPChannel(nsIURI* i_URL, 
-                  nsIHTTPEventSink* i_HTTPEventSink,
+                  const char* verb,
+                  nsIEventSinkGetter* i_EventSinkGetter,
                   nsHTTPHandler* i_Handler);
 
     virtual ~nsHTTPChannel();
@@ -69,22 +70,28 @@ public:
     // nsHTTPChannel methods:
     nsresult            Init(nsILoadGroup *aGroup);
     nsresult            Open();
+    nsresult            Redirect(const char *aURL,
+                                 nsIChannel **aResult);
     nsresult            ResponseCompleted(nsIChannel* aTransport, 
                                           nsresult aStatus);
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
     nsresult            GetResponseContext(nsISupports** aContext);
     nsresult            SetContentType(const char* aContentType);
 
-
 protected:
     nsCOMPtr<nsIURI>            mURI;
     PRBool                      mConnected; 
     nsCOMPtr<nsHTTPHandler>     mHandler;
     HTTPState                   mState;
+
+    nsString                    mVerb;
     nsCOMPtr<nsIHTTPEventSink>  mEventSink;
+    nsCOMPtr<nsIEventSinkGetter> mEventSinkGetter;
+
     nsHTTPRequest*              mRequest;
     nsHTTPResponse*             mResponse;
     nsIStreamListener*          mResponseDataListener;
+
     PRUint32                    mLoadAttributes;
 
     nsCOMPtr<nsISupports>       mResponseContext;

@@ -165,16 +165,10 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
             }
         }
 
-        // Verify that the event sink is http
-        nsCOMPtr<nsIHTTPEventSink>  httpEventSink;
-
-        if (eventSinkGetter) {
-            (void) eventSinkGetter->GetEventSink(verb, nsCOMTypeInfo<nsIHTTPEventSink>::GetIID(),
-                                                 (nsISupports**)(nsIHTTPEventSink**)getter_AddRefs(httpEventSink));
-        }
         // Create one
         pChannel = new nsHTTPChannel(i_URL, 
-                                     httpEventSink,
+                                     verb,
+                                     eventSinkGetter,
                                      this);
         if (pChannel) {
             NS_ADDREF(pChannel);
