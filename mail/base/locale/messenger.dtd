@@ -513,3 +513,45 @@ Rights Reserved.
 
 <!ENTITY junkMailCmd.label "Junk Mail Controls...">
 <!ENTITY junkMailCmd.accesskey "J">
+
+<!ENTITY toolsMenu.label "Tools">
+<!ENTITY toolsMenu.accesskey "T">
+
+<!ENTITY textZoomEnlargeCmd.label       "Increase Text Size">
+<!ENTITY textZoomEnlargeCmd.accesskey   "I">
+<!ENTITY textZoomEnlargeCmd.commandkey  "+">
+<!ENTITY textZoomEnlargeCmd.commandkey2 "="> <!-- + is above this key on many keyboards -->
+
+<!ENTITY textZoomReduceCmd.label        "Decrease Text Size">
+<!ENTITY textZoomReduceCmd.accesskey    "D">
+<!ENTITY textZoomReduceCmd.commandkey   "-">
+<!ENTITY  newMessageCmd.key               "M">
+<!ENTITY  newMessageCmd.label             "Message">
+<!ENTITY  newMessageCmd.accesskey         "m">
+<!ENTITY threadColumn.label "Thread">
+<!ENTITY senderColumn.label "Sender">
+<!ENTITY subjectColumn.label "Subject">
+<!ENTITY dateColumn.label "Date">
+<!ENTITY priorityColumn.label "Priority">
+<!ENTITY labelColumn.label "Label">
+<!ENTITY statusColumn.label "Status">
+<!ENTITY sizeColumn.label "Size">
+<!ENTITY scoreColumn.label "Junk Score">
+<!ENTITY linesColumn.label "Lines">
+<!ENTITY unreadColumn.label "Unread">
+<!ENTITY totalColumn.label "Total">
+<!ENTITY orderReceivedColumn.label "Order Received">
+<!ENTITY readColumn.label "Read">
+<!ENTITY flagColumn.label "Flag">
+<!ENTITY locationColumn.label "Location">
+
+<!--Tooltips-->
+<!ENTITY threadColumnHeader.tooltip "Click to display message threads"> 
+<!ENTITY columnChooser.tooltip "Click to select columns to display"> 
+<!ENTITY nameColumn.label   "Name"> 
+<!ENTITY unreadColumn.label "Unread"> 
+<!ENTITY totalColumn.label "Total"> 
+<!ENTITY accounts.label "Accounts">
+<!-- LOCALIZATION NOTE (accounts.img) : DONT_TRANSLATE -->
+<!ENTITY accounts.img "chrome://messenger/skin/local-mailhost.gif">
+
