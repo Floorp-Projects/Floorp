@@ -188,7 +188,6 @@ public:
                              nsIContent *aRealNode,
                              PRBool aIsUnique,
                              nsIRDFResource* aChild,
-                             PRInt32 aNaturalOrderPos,
                              PRBool aNotify);
 
     nsresult
@@ -198,7 +197,6 @@ public:
     CreateWidgetItem(nsIContent* aElement,
                      nsIRDFResource* aProperty,
                      nsIRDFResource* aChild,
-                     PRInt32 aNaturalOrderPos,
                      PRBool aNotify);
 
     enum eUpdateAction { eSet, eClear };
@@ -325,7 +323,6 @@ protected:
     static nsIAtom* kIsEmptyAtom;
     static nsIAtom* kMenuAtom;
     static nsIAtom* kMenuPopupAtom;
-    static nsIAtom* kNaturalOrderPosAtom;
     static nsIAtom* kOpenAtom;
     static nsIAtom* kParentAtom;
     static nsIAtom* kPersistAtom;
@@ -370,7 +367,6 @@ nsIAtom* RDFGenericBuilderImpl::kIsContainerAtom;
 nsIAtom* RDFGenericBuilderImpl::kIsEmptyAtom;
 nsIAtom* RDFGenericBuilderImpl::kMenuAtom;
 nsIAtom* RDFGenericBuilderImpl::kMenuPopupAtom;
-nsIAtom* RDFGenericBuilderImpl::kNaturalOrderPosAtom;
 nsIAtom* RDFGenericBuilderImpl::kOpenAtom;
 nsIAtom* RDFGenericBuilderImpl::kParentAtom;
 nsIAtom* RDFGenericBuilderImpl::kPersistAtom;
@@ -457,7 +453,6 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         NS_IF_RELEASE(kIsEmptyAtom);
         NS_IF_RELEASE(kMenuAtom);
         NS_IF_RELEASE(kMenuPopupAtom);
-        NS_IF_RELEASE(kNaturalOrderPosAtom);
         NS_IF_RELEASE(kOpenAtom);
         NS_IF_RELEASE(kParentAtom);
         NS_IF_RELEASE(kPersistAtom);
@@ -521,7 +516,6 @@ RDFGenericBuilderImpl::Init()
         kIsEmptyAtom                    = NS_NewAtom("isempty");
         kMenuAtom                       = NS_NewAtom("menu");
         kMenuPopupAtom                  = NS_NewAtom("menupopup");
-        kNaturalOrderPosAtom            = NS_NewAtom("pos");
         kOpenAtom                       = NS_NewAtom("open");
         kParentAtom                     = NS_NewAtom("parent");
         kPersistAtom                    = NS_NewAtom("persist");
@@ -1018,7 +1012,7 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
 
             // Okay, it's a "live" element, so go ahead and append the new
             // child to this node.
-            rv = CreateWidgetItem(element, aProperty, resource, 0, PR_TRUE);
+            rv = CreateWidgetItem(element, aProperty, resource, PR_TRUE);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create widget item");
             if (NS_FAILED(rv)) return rv;
 
@@ -1268,7 +1262,7 @@ RDFGenericBuilderImpl::OnChange(nsIRDFResource* aSource,
             if (! newresource)
                 return NS_OK;
 
-            rv = CreateWidgetItem(element, aProperty, newresource, 0, PR_TRUE);
+            rv = CreateWidgetItem(element, aProperty, newresource, PR_TRUE);
             if (NS_FAILED(rv)) return rv;
         }
         else {
@@ -1682,7 +1676,6 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                                                 nsIContent *aRealNode,
                                                 PRBool aIsUnique,
                                                 nsIRDFResource* aChild,
-                                                PRInt32 aNaturalOrderPos,
                                                 PRBool aNotify)
 {
 	nsresult rv;
@@ -1784,7 +1777,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             }
 
             // Recurse until we get to the resource element.
-            rv = BuildContentFromTemplate(tmplKid, realKid, PR_TRUE, aChild, -1, aNotify);
+            rv = BuildContentFromTemplate(tmplKid, realKid, PR_TRUE, aChild, aNotify);
             if (NS_FAILED(rv)) return rv;
         }
         else if (isResourceElement) {
@@ -1874,17 +1867,6 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             rv = realKid->SetAttribute(kNameSpaceID_None, kTemplateAtom, templateID, PR_FALSE);
             if (NS_FAILED(rv)) return rv;
 
-            // set natural order hint
-            if ((aNaturalOrderPos > 0) && (isResourceElement)) {
-                nsAutoString	pos, zero("0000");
-                pos.Append(aNaturalOrderPos, 10);
-                if (pos.Length() < 4) {
-                    pos.Insert(zero, 0, 4-pos.Length());
-                }
-
-                realKid->SetAttribute(kNameSpaceID_None, kNaturalOrderPosAtom, pos, PR_FALSE);
-            }
-
             // copy all attributes from template to new node
             PRInt32	numAttribs;
             rv = tmplKid->GetAttributeCount(numAttribs);
@@ -1929,7 +1911,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 // hand" because HTML won't build itself up
                 // lazily. Note that we _don't_ need to notify: we'll
                 // add the entire subtree in a single whack.
-                rv = BuildContentFromTemplate(tmplKid, realKid, isUnique, aChild, -1, PR_FALSE);
+                rv = BuildContentFromTemplate(tmplKid, realKid, isUnique, aChild, PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
 
                 if (isResourceElement) {
@@ -1953,7 +1935,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
             if (! isUnique)
             {
                 rv = NS_ERROR_UNEXPECTED;
-                if ((nsnull != gXULSortService) && (isResourceElement) )
+                if ((nsnull != gXULSortService) && (isResourceElement))
                 {
                     rv = gXULSortService->InsertContainerNode(mDB, mRoot, aRealNode, realKid, aNotify);
                 }
@@ -2037,7 +2019,6 @@ nsresult
 RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement,
                                         nsIRDFResource *aProperty,
                                         nsIRDFResource *aChild,
-                                        PRInt32 aNaturalOrderPos,
                                         PRBool aNotify)
 {
 	nsCOMPtr<nsIContent> tmpl;
@@ -2049,8 +2030,7 @@ RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement,
         return NS_OK;
     }
 
-    rv = BuildContentFromTemplate(tmpl, aElement, PR_TRUE, aChild, aNaturalOrderPos, aNotify);
-
+    rv = BuildContentFromTemplate(tmpl, aElement, PR_TRUE, aChild, aNotify);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to build content from template");
 	return rv;
 }
@@ -2350,7 +2330,7 @@ RDFGenericBuilderImpl::CreateContainerContents(nsIContent* aElement, nsIRDFResou
             if (! target)
                 continue;
 
-            rv = CreateWidgetItem(aElement, property, target, -1, aNotify);
+            rv = CreateWidgetItem(aElement, property, target, aNotify);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create item");
             if (NS_FAILED(rv)) return rv;
         }
@@ -2417,7 +2397,7 @@ RDFGenericBuilderImpl::CreateTemplateContents(nsIContent* aElement, const nsStri
         element = parent;
     }
 
-    rv = BuildContentFromTemplate(tmpl, aElement, PR_FALSE, resource, -1, PR_FALSE);
+    rv = BuildContentFromTemplate(tmpl, aElement, PR_FALSE, resource, PR_FALSE);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
