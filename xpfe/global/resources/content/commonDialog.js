@@ -136,27 +136,18 @@ dump("There are " + numButtons + " buttons\n");
 	
 	
 	
-	// Set the Checkbox
-//	dump(" set checkbox \n");
-	var checkMsg = param.GetString(  1 );
-//	dump("check box msg is "+ checkMsg +"\n");
-	if ( checkMsg != "" )
-	{	
-		var prompt = (document.getElementById("checkbox"));
-    	if ( prompt )
-   	{
-    		prompt.setAttribute("value",checkMsg);
-    	}
-		var checkValue = param.GetInt( 1 );
-		var element=document.getElementById("checkbox" );
-		var checkbool =  checkValue > 0 ? true : false;
-		element.checked = checkbool;
-	}
-	else
-	{
-		var element = document.getElementById("checkbox");
-		element.setAttribute("hidden","true" );
-	}
+  // Set the Checkbox
+  var checkMsg = param.GetString(1);
+  dump("*** checkMsg = " + checkMsg + "\n");
+  if (checkMsg)
+  {	
+    var checkboxElement = document.getElementById("checkbox");
+    var checkboxContainer = document.getElementById("checkboxContainer");
+    checkboxContainer.removeAttribute("hidden");
+    checkboxElement.setAttribute("value", checkMsg);
+    var checkValue = param.GetInt( 1 );
+    checkboxElement.checked = checkValue > 0 ? true : false;
+  }
 
 	// handle the edit fields
 //	dump("set editfields \n");
@@ -164,6 +155,8 @@ dump("There are " + numButtons + " buttons\n");
 	switch( numEditfields )
 	{
 		case 2:
+      var editFieldsBox = document.getElementById("editFields");
+      editFieldsBox.removeAttribute("hidden");
 			var element = document.getElementById("dialog.password2");
 			element.value = param.GetString( 7 );
 
@@ -205,6 +198,8 @@ dump("There are " + numButtons + " buttons\n");
 			 }
 			break;
 	 	case 1:
+      var editFieldsBox = document.getElementById("editFields");
+      editFieldsBox.removeAttribute("hidden");
 	 		var editfield1Password = param.GetInt( 4 );
 	 		if ( editfield1Password == 1 )
 		 	 {
@@ -248,11 +243,6 @@ dump("There are " + numButtons + " buttons\n");
 //				dump("give keyboard focus to password edit field \n");
 				element.focus();
 			}
-			break;
-	 	case 0:
-//	 		dump("hiding all editfields \n");
-			var element = document.getElementById("editFields");
-			element.setAttribute("hidden", "true");
 			break;
 	}
 	
