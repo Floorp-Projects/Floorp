@@ -2112,13 +2112,41 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 
 #define SCRIPT_BUF_SIZE 1024
 
+// Returns PR_TRUE if the language name is a version of JavaScript and
+// PR_FALSE otherwise
+static PRBool
+IsJavaScriptLanguage(const nsString& aName)
+{
+  if (aName.EqualsIgnoreCase("JavaScript") || 
+      aName.EqualsIgnoreCase("LiveScript") || 
+      aName.EqualsIgnoreCase("Mocha")) { 
+    return PR_TRUE;
+  } 
+  else if (aName.EqualsIgnoreCase("JavaScript1.1")) { 
+    return PR_TRUE;
+  } 
+  else if (aName.EqualsIgnoreCase("JavaScript1.2")) { 
+    return PR_TRUE;
+  } 
+  else if (aName.EqualsIgnoreCase("JavaScript1.3")) { 
+    return PR_TRUE;
+  } 
+  else if (aName.EqualsIgnoreCase("JavaScript1.4")) { 
+    return PR_TRUE;
+  } 
+  else { 
+    return PR_FALSE;
+  } 
+}
+
 nsresult
 HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
+  PRBool   isJavaScript = PR_TRUE;
   PRInt32 i, ac = aNode.GetAttributeCount();
 
-  // Look for SRC attribute
+  // Look for SRC attribute and look for a LANGUAGE attribute
   nsAutoString src;
   for (i = 0; i < ac; i++) {
     const nsString& key = aNode.GetKeyAt(i);
@@ -2126,83 +2154,98 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       src = aNode.GetValueAt(i);
       src.Trim("\"", PR_TRUE, PR_TRUE); 
     }
+    else if (key.EqualsIgnoreCase("type")) {
+      nsAutoString  type;
+
+      GetAttributeValueAt(aNode, i, type, nsnull);
+      isJavaScript = type.EqualsIgnoreCase("text/javascript");
+    }
+    else if (key.EqualsIgnoreCase("language")) {
+      nsAutoString  lang;
+       
+      GetAttributeValueAt(aNode, i, lang, nsnull);
+      isJavaScript = IsJavaScriptLanguage(lang);
+    }
   }
 
-  nsAutoString script;
-
-  // If there is a SRC attribute, (for now) read from the
-  // stream synchronously and hold the data in a string.
-  if (src != "") {
-    // Use the SRC attribute value to open a blocking stream
-    nsIURL* url = nsnull;
-    nsAutoString absURL;
-    nsIURL* docURL = mDocument->GetDocumentURL();
-    rv = NS_MakeAbsoluteURL(docURL, mBaseHREF, src, absURL);
-    if (NS_OK != rv) {
-      return rv;
-    }
-    NS_RELEASE(docURL);
-    rv = NS_NewURL(&url, nsnull, absURL);
-    if (NS_OK != rv) {
-      return rv;
-    }
-    PRInt32 ec;
-    nsIInputStream* iin = url->Open(&ec);
-    if (nsnull == iin) {
-      NS_RELEASE(url);
-      return (nsresult) ec;/* XXX fix url->Open */
-    }
-
-    // Drain the stream by reading from it a chunk at a time
-    PRInt32 nb;
-    nsresult err;
-    do {
-      char buf[SCRIPT_BUF_SIZE];
-      
-      err = iin->Read(buf, 0, SCRIPT_BUF_SIZE, &nb);
-      if (NS_OK == err) {
-        script.Append((const char *)buf, nb);
-      }
-    } while (err == NS_OK);
-
-    if (NS_BASE_STREAM_EOF != err) {
-      rv = NS_ERROR_FAILURE;
-    }
-
-    NS_RELEASE(iin);
-    NS_RELEASE(url);
-  }
-  else {
-    // Otherwise, get the text content of the script tag
-    script = aNode.GetSkippedContent();
-  }
-
-  if (script != "") {
-    nsIScriptContextOwner *owner;
-    nsIScriptContext *context;
-    owner = mDocument->GetScriptContextOwner();
-    if (nsnull != owner) {
-    
-      rv = owner->GetScriptContext(&context);
-      if (rv != NS_OK) {
-        NS_RELEASE(owner);
+  // Don't process scripts that aren't JavaScript
+  if (isJavaScript) {
+    nsAutoString script;
+  
+    // If there is a SRC attribute, (for now) read from the
+    // stream synchronously and hold the data in a string.
+    if (src != "") {
+      // Use the SRC attribute value to open a blocking stream
+      nsIURL* url = nsnull;
+      nsAutoString absURL;
+      nsIURL* docURL = mDocument->GetDocumentURL();
+      rv = NS_MakeAbsoluteURL(docURL, mBaseHREF, src, absURL);
+      if (NS_OK != rv) {
         return rv;
       }
-      
-      jsval val;
-      nsIURL* mDocURL = mDocument->GetDocumentURL();
-      const char* mURL;
-      if (mDocURL) {
-        mURL = mDocURL->GetSpec();
+      NS_RELEASE(docURL);
+      rv = NS_NewURL(&url, nsnull, absURL);
+      if (NS_OK != rv) {
+        return rv;
       }
-      PRUint32 mLineNo = (PRUint32)aNode.GetSourceLineNumber();
-
-      PRBool result = context->EvaluateString(script, mURL, mLineNo, &val);
+      PRInt32 ec;
+      nsIInputStream* iin = url->Open(&ec);
+      if (nsnull == iin) {
+        NS_RELEASE(url);
+        return (nsresult) ec;/* XXX fix url->Open */
+      }
+  
+      // Drain the stream by reading from it a chunk at a time
+      PRInt32 nb;
+      nsresult err;
+      do {
+        char buf[SCRIPT_BUF_SIZE];
+        
+        err = iin->Read(buf, 0, SCRIPT_BUF_SIZE, &nb);
+        if (NS_OK == err) {
+          script.Append((const char *)buf, nb);
+        }
+      } while (err == NS_OK);
+  
+      if (NS_BASE_STREAM_EOF != err) {
+        rv = NS_ERROR_FAILURE;
+      }
+  
+      NS_RELEASE(iin);
+      NS_RELEASE(url);
+    }
+    else {
+      // Otherwise, get the text content of the script tag
+      script = aNode.GetSkippedContent();
+    }
+  
+    if (script != "") {
+      nsIScriptContextOwner *owner;
+      nsIScriptContext *context;
+      owner = mDocument->GetScriptContextOwner();
+      if (nsnull != owner) {
       
-      NS_IF_RELEASE(mDocURL);
-
-      NS_RELEASE(context);
-      NS_RELEASE(owner);
+        rv = owner->GetScriptContext(&context);
+        if (rv != NS_OK) {
+          NS_RELEASE(owner);
+          return rv;
+        }
+        
+        jsval val;
+        nsIURL* mDocURL = mDocument->GetDocumentURL();
+        const char* mURL;
+        if (mDocURL) {
+          mURL = mDocURL->GetSpec();
+        }
+        PRUint32 mLineNo = (PRUint32)aNode.GetSourceLineNumber();
+  
+        PRBool result = context->EvaluateString(script, mURL, mLineNo, &val);
+        
+        NS_IF_RELEASE(mDocURL);
+  
+        NS_RELEASE(context);
+        NS_RELEASE(owner);
+      }
     }
   }
 
