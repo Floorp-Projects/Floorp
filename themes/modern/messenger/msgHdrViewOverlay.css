@@ -32,6 +32,10 @@ mail-emailaddress {
   display: inline;
 }
 
+[hide] {
+  visibility: collapse;
+}
+
 spring.buttonTopSpacer     { height: .3em; }
 spring.buttonSpacer        { width: .5em; }
 box.headerBox              { overflow: hidden; min-width:50px;}

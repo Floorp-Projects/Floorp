@@ -456,26 +456,26 @@ function ShowMessageHeaderPane()
 { 
   var node = document.getElementById("headerPart1");
   if (node)
-    node.removeAttribute("collapsed");
+    node.removeAttribute("hide");
   node = document.getElementById("headerPart2");
   if (node)
-    node.removeAttribute("collapsed");
+    node.removeAttribute("hide");
   node = document.getElementById("headerPart3");
   if (node)
-    node.removeAttribute("collapsed");
+    node.removeAttribute("hide");
 }
 
 function HideMessageHeaderPane()
 {
   var node = document.getElementById("headerPart1");
   if (node)
-    node.setAttribute("collapsed", "true");
+    node.setAttribute("hide", "true");
   node = document.getElementById("headerPart2");
   if (node)
-    node.setAttribute("collapsed", "true");
+    node.setAttribute("hide", "true");
   node = document.getElementById("headerPart3");
   if (node)
-    node.setAttribute("collapsed", "true");
+    node.setAttribute("hide", "true");
 }
 
 // ToggleLongShortAddresses is used to toggle between showing
