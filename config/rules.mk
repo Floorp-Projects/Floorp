@@ -377,8 +377,6 @@ SUBMAKEFILES		:= $(addsuffix /Makefile, $(filter-out $(STATIC_MAKEFILES), $(DIRS
 endif
 
 # MAKE_DIRS: List of directories to build while looping over directories.
-MAKE_DIRS		=
-
 ifneq (,$(OBJS))
 MAKE_DIRS		+= $(MDDEPDIR)
 GARBAGE_DIRS		+= $(MDDEPDIR)
