@@ -175,9 +175,36 @@ NS_IMETHODIMP nsCollationMacUC::GetSortKeyLen(
 {
   NS_ENSURE_ARG_POINTER(outLen);
 
-  // According to the document, the length of the key should typically be
+  // If possible, a length is estimated by actually creating a key (and cache the result).
+  // If the string is too big then return the length by the formula.
+
+  PRUint32 stringLen = stringIn.Length();
+  // Set the default value for an output length.
+  // According to the documentation, the length of the key should typically be
   // at least 5 * textLength
   *outLen = (1 + stringIn.Length()) * 5 * sizeof(UCCollationValue);
+    
+  if (stringLen > kCacheSize)
+  {
+    mCachedKeyLen = 0;  // indicate key is not cached
+    return NS_OK;
+  }
+
+  nsresult res = EnsureCollator(strength);
+  NS_ENSURE_SUCCESS(res, res);
+
+  ItemCount actual;
+  memcpy((void *) mCachedString, (void *) PromiseFlatString(stringIn).get(), 
+         stringLen * sizeof(UniChar));
+  OSErr err = ::UCGetCollationKey(mCollator, (const UniChar *) mCachedString,
+                           (ItemCount) stringLen,
+                           kCacheSize,
+                           &actual, (UCCollationValue *) mCachedKey);
+  if (err == noErr)
+    *outLen = mCachedKeyLen = actual * sizeof(UCCollationValue);
+  else
+    mCachedKeyLen = 0;
+
   return NS_OK;
 }
 
@@ -196,13 +223,21 @@ NS_IMETHODIMP nsCollationMacUC::CreateRawSortKey(
   NS_ENSURE_SUCCESS(res, res);
 
   OSStatus err;
-  // this api is bad, we should pass in the length of key somewhere
-  // call GetSortKeyLen to get it instead.
-  PRUint32 keyLength;
-  res = GetSortKeyLen(strength, stringIn, &keyLength);
-  NS_ENSURE_SUCCESS(res, res);
-
+  
+  // If we already get a key at the estimation then just copy the cached data.
+  if (mCachedKeyLen && 
+      !memcmp((void *) mCachedString, 
+              (void *) (const UniChar*) PromiseFlatString(stringIn).get(), mCachedKeyLen))
+  {
+    memcpy((void *) key, (void *) mCachedKey, mCachedKeyLen);
+    *outLen = mCachedKeyLen;
+    return NS_OK;
+  }
+  
+  // If not cached then call the API.
+  PRUint32 keyLength = (1 + stringIn.Length()) * 5 * sizeof(UCCollationValue);
   ItemCount actual;
+  
   err = ::UCGetCollationKey(mCollator, (const UniChar*) PromiseFlatString(stringIn).get(),
                            (UniCharCount) stringIn.Length(),
                            (ItemCount) (keyLength / sizeof(UCCollationValue)),
