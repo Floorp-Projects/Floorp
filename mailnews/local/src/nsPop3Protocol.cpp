@@ -680,7 +680,7 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
         nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_pop3Server);
         if (server)
         {
-          server->GetLimitMessageSize(&limitMessageSize);
+          server->GetLimitOfflineMessageSize(&limitMessageSize);
           if (limitMessageSize)
           {
               PRInt32 max_size = 0;
@@ -1088,12 +1088,12 @@ PRInt32 nsPop3Protocol::SendStatOrGurl(PRBool sendStat)
            But if we're just checking for new mail (biff) then don't bother
            prompting the user for a password: just fail silently. */
         Error(POP3_PASSWORD_FAILURE);
-        
+
         SetFlag(POP3_PASSWORD_FAILED);
 
         // libmsg event sink
         if (m_nsIPop3Sink) 
-		{
+        {
             m_nsIPop3Sink->SetUserAuthenticated(PR_FALSE);
             m_nsIPop3Sink->SetMailAccountURL(NULL);
         }

@@ -233,7 +233,6 @@ interface nsIMsgIncomingServer : nsISupports {
 
   attribute boolean loginAtStartUp;
 
-  attribute boolean limitMessageSize;
   attribute boolean limitOfflineMessageSize;
   attribute long maxMessageSize;
 

@@ -1508,10 +1508,6 @@ NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer,
                         "canFileMessages");
 
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer,
-                        LimitMessageSize,
-                        "limit_message_size")
-
-NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer,
       LimitOfflineMessageSize,
       "limit_offline_message_size")
 
