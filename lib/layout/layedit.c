@@ -425,24 +425,31 @@ void lo_MergeState( MWContext *context, lo_DocState *old_state, int32 iStartLine
 		}
 		eptr = old_line_array[new_line_num-2];
 
-        /* We need to add a few pixels to the new line width so that
-         * there's always room for the cursor at the end of the line,
-         * even if there's a scroll bar.
-         *
-         * JPNote: We never, ever, shrink the width of the document once
-         * we've enlarged it. This is bad.
-         */
-
-#ifdef XP_MAC
-#define INCREMENT_WIDTH_AMT	15
-#else
-#define INCREMENT_WIDTH_AMT	20
-#endif
+/* INCREMENT_WIDTH_AMT: We used to add a "slop" factor to allow for
+ * the cursor; that doesn't seem to be needed any more, and probably
+ * should be taken out.
+ */
+#define INCREMENT_WIDTH_AMT	0
 
 #define max(a, b) (((a) > (b)) ? (a) : (b))
-		old_state->max_width = max( old_state->max_width, new_state->max_width + INCREMENT_WIDTH_AMT );
-		old_state->y = eptr->lo_any.y +eptr->lo_any.line_height;
+        /* HACK ALERT!  For bug 94115 (inappropriate horizontal scrollbars).
+         * lo_MergeState is used both for relayout after resizing
+         * the window, and for relayout of small parts of a document.
+         * In the former case, we need to be able to shrink the
+         * document width; in the latter, we can't because some
+         * other part of the document may be something like a
+         * table or image which needs the larger width.
+         * So we rely on the caller to tell us if we're resizing.
+         * The comparable code in lo_MergeElements doesn't seem to need
+         * this hack because it's never used for full-document resize.
+         */
+        if (context->reSize)
+            old_state->max_width = new_state->max_width;
+        else
+          old_state->max_width = max( old_state->max_width,
+                                      new_state->max_width + INCREMENT_WIDTH_AMT );
 #undef max
+	old_state->y = eptr->lo_any.y +eptr->lo_any.line_height;
 
         LO_SetDocumentDimensions(context, old_state->max_width, 
                                  eptr->lo_any.y +eptr->lo_any.line_height);
@@ -679,20 +686,6 @@ void lo_MergeElements( MWContext *context, lo_DocState *old_state, int32 iStartL
 			*pRetHeight = -1;
 		}
 		eptr = old_line_array[new_line_num-2];
-
-        /* We need to add a few pixels to the new line width so that
-         * there's always room for the cursor at the end of the line,
-         * even if there's a scroll bar.
-         *
-         * JPNote: We never, ever, shrink the width of the document once
-         * we've enlarged it. This is bad.
-         */
-
-#ifdef XP_MAC
-#define INCREMENT_WIDTH_AMT	15
-#else
-#define INCREMENT_WIDTH_AMT	20
-#endif
 
 #define max(a, b) (((a) > (b)) ? (a) : (b))
 		old_state->max_width = max( old_state->max_width, new_state->max_width + INCREMENT_WIDTH_AMT );

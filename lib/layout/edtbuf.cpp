@@ -10329,6 +10329,8 @@ static void SetDocColor(MWContext* pContext, int type, ED_Color& color)
 }
 
 void CEditBuffer::RefreshLayout(){
+    PRPackedBool saveResize;
+
     VALIDATE_TREE(this);
 
     SetDocColor(m_pContext, LO_COLOR_BG, m_colorBackground);
@@ -10352,7 +10354,13 @@ void CEditBuffer::RefreshLayout(){
       LO_SetBackgroundImage( m_pContext, m_pBackgroundImage );
     }
 
+    /* HACK ALERT!
+     * See discussion in layedit.c regarding bug 94115.
+     */
+    saveResize = m_pContext->reSize;
+    m_pContext->reSize = (PRPackedBool)TRUE;
     Relayout(m_pRoot, 0, m_pRoot->GetLastMostChild() );
+    m_pContext->reSize = saveResize;
 }
 
 void CEditBuffer::SetDisplayParagraphMarks(XP_Bool bDisplay) {
