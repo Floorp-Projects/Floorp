@@ -46,6 +46,7 @@ XPIDLSRCS	= \
 		nsIWindowMediator.idl \
 		nsIXULWindow.idl \
 		nsIUserInfo.idl \
+		nsITimingService.idl \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),mac)

@@ -33,6 +33,7 @@ XPIDLSRCS =                        \
 		.\nsIWindowMediator.idl	   \
 		.\nsIXULWindow.idl       \
         .\nsIUserInfo.idl   \
+		.\nsITimingService.idl \
 		$(NULL)
 
 EXPORTS =                         \
