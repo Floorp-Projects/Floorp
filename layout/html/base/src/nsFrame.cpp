@@ -1047,6 +1047,11 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
 
   nsMouseEvent *me = (nsMouseEvent *)aEvent;
 
+#ifdef XP_MAC
+  if (me->isControl)
+    return NS_OK;//short ciruit. hard coded for mac due to time restraints.
+#endif
+    
   if (me->clickCount >1 )
   {
     rv = frameselection->SetMouseDownState( PR_TRUE );
@@ -1495,7 +1500,6 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
   result = FirstChild(aCX, nsnull, &kid);
 
   if (NS_SUCCEEDED(result) && nsnull != kid) {
-
 #define HUGE_DISTANCE 999999 //some HUGE number that will always fail first comparison
 
     PRInt32 closestXDistance = HUGE_DISTANCE;
@@ -1602,7 +1606,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
         // else if (xDistance > closestXDistance)
         //   break;//done
       }
-      
+    
       kid->GetNextSibling(&kid);
     }
     if (closestFrame) {
@@ -2649,23 +2653,21 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
       while ( !found ){
         nsCOMPtr<nsIPresContext> context;
         result = aPos->mTracker->GetPresContext(getter_AddRefs(context));
+        if (NS_FAILED(result))
+          return result;
         nsPoint point;
         point.x = aPos->mDesiredX;
-        if(aPos->mDirection == eDirPrevious)
-        {
-          nsRect tempRect;
-          nsRect& tempRectRef = tempRect;
-          resultFrame->GetRect(tempRectRef);
-          nsPoint offset;
-          nsIView * view; //used for call of get offset from view
-          resultFrame->GetOffsetFromView(aPresContext, offset,&view);
-          point.y = tempRect.height + offset.y;
-        }
-        else
-          point.y = 0;
 
-        result = NS_ERROR_FAILURE;
-        nsIView*  view;//if frame has a view. then stop. no doubleclicking into views
+        nsRect tempRect;
+        nsRect& tempRectRef = tempRect;
+        resultFrame->GetRect(tempRectRef);
+        nsPoint offset;
+        nsIView * view; //used for call of get offset from view
+        result = resultFrame->GetOffsetFromView(aPresContext, offset,&view);
+        if (NS_FAILED(result))
+          return result;
+        point.y = tempRect.height + offset.y;
+
         if (NS_FAILED(resultFrame->GetView(aPresContext, &view)) || !view)
         {
           result = resultFrame->GetContentAndOffsetsFromPoint(context,point,
@@ -3009,6 +3011,8 @@ nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
               (aPos->mDirection == eDirPrevious && newOffset >= aPos->mStartOffset))
           {
             result = GetFrameFromDirection(aPresContext, aPos);
+            if (NS_FAILED(result))
+              return result;
 					  PRBool selectable = PR_FALSE;
 					  if (aPos->mResultFrame)
   					  aPos->mResultFrame->IsSelectable(&selectable, nsnull);

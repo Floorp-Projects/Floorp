@@ -1910,7 +1910,6 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
   }
   nsIView * view;
   nsPoint origin;
-  GetView(aPresContext, &view);
   GetOffsetFromView(aPresContext, origin, &view);
 
   if (aPoint.x - origin.x < 0)
@@ -1953,12 +1952,15 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
   { 
     if (NS_SUCCEEDED(prefs->GetIntPref("browser.drag_out_of_frame_style", &prefInt)) && prefInt)
     {
-      if (aPoint.y < mRect.y)//above rectangle
+      nsRect bounds(mRect);
+      
+      bounds.MoveBy(origin.x, origin.y);
+      if (aPoint.y < bounds.y)//above rectangle
       {
         aOffset = mContentOffset;
         outofstylehandled = PR_TRUE;
       }
-      else if (aPoint.y > (mRect.y + mRect.height))
+      else if (aPoint.y > (bounds.y + bounds.height))
       {
         aOffset = mContentOffset + mContentLength;
         outofstylehandled = PR_TRUE;
