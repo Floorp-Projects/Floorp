@@ -35,10 +35,11 @@ function init()
 
   if (window.location.search) {
       loadURI(key[window.location.search]);
-      selectTOC(key[window.location.search]);
+      // selectTOC(key[window.location.search]);
 
   } else {
       goHome();
+  }
 }
 
 function selectTOC(link_attr) {

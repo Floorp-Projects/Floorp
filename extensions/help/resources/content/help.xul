@@ -26,7 +26,7 @@
 	id="helpToolbar" 
 	grippytooltip="aTooltip" 
 	grippytooltiptext="The Help Toolbar"
-        tbautostretch="always" 
+       tbautostretch="always" 
 	persist="collapsed">
 
         <button id="helpBackButton"
@@ -64,9 +64,9 @@
 
         <box orient="vertical" id="help-subset">
           <!-- these we will want to clean up or style better -->
-	  <text value="&t1.label;"/>
-          <text value="&t2.label;"/>
-          <text value="&t3.label;"/>
+	  <text label="&t1.label;"/>
+          <text label="&t2.label;"/>
+          <text label="&t3.label;"/>
         </box>
 
         <tabcontrol orient="vertical" flex="1">
