@@ -129,98 +129,81 @@ nsGtkUtils::gtk_widget_set_color(GtkWidget *  widget,
   }
 }
 //////////////////////////////////////////////////////////////////
+/* static */ GdkModifierType
+nsGtkUtils::gdk_keyboard_get_modifiers()
+{
+  GdkModifierType m = (GdkModifierType) 0;
+
+  gdk_window_get_pointer(NULL,NULL,NULL,&m);
+
+  return m;
+}
+//////////////////////////////////////////////////////////////////
 /* static */ void
 nsGtkUtils::gdk_window_flash(GdkWindow *    aGdkWindow,
                              unsigned int   aTimes,
                              unsigned long  aInterval,
-							 GdkRectangle * aArea)
+                             GdkRectangle * aArea)
 {
-  Display *    display = 0;
-  Window       root_window = 0;
-  Window       child_window = 0;
-  Window       xwindow = 0;
-  GC           gc;
-  int          x;
-  int          y;
-  unsigned int width;
-  unsigned int height;
-  unsigned int border_width;
-  unsigned int depth;
-  int          root_x;
-  int          root_y;
-  unsigned int i;
-  XGCValues    gcv;
-  
-  display = GDK_WINDOW_XDISPLAY(aGdkWindow);
-  
-  xwindow = GDK_WINDOW_XWINDOW(aGdkWindow);
-  
-  XGetGeometry(display,
-			   xwindow,
-			   &root_window,
-			   &x,
-			   &y,
-			   &width,
-			   &height,
-			   &border_width,
-			   &depth);
-  
-  XTranslateCoordinates(display, 
-						xwindow,
-						root_window, 
-						0, 
-						0,
-						&root_x,
-						&root_y,
-						&child_window);
-  
-  memset(&gcv, 0, sizeof(XGCValues));
-  
-  gcv.function = GXxor;
-  gcv.foreground = WhitePixel(display, DefaultScreen(display));
-  gcv.subwindow_mode = IncludeInferiors;
-  
-  if (gcv.foreground == 0)
-	gcv.foreground = 1;
-  
-  gc = XCreateGC(display,
-				 root_window,
-				 GCFunction | GCForeground | GCSubwindowMode, 
-				 &gcv);
-  
-  XGrabServer(display);
+  gint         x;
+  gint         y;
+  gint         width;
+  gint         height;
+  guint        i;
+  GdkGC *      gc = 0;
+  GdkColor     white;
 
-  // If an area is given, use that.  Notice how out of whack coordinates
-  // and dimentsions are not checked!!!
+  gdk_window_get_geometry(aGdkWindow,
+                          NULL,
+                          NULL,
+                          &width,
+                          &height,
+                          NULL);
+
+  gdk_window_get_origin (aGdkWindow,
+                         &x,
+                         &y);
+
+  gc = gdk_gc_new(GDK_ROOT_PARENT());
+
+  white.pixel = WhitePixel(gdk_display,DefaultScreen(gdk_display));
+
+  gdk_gc_set_foreground(gc,&white);
+  gdk_gc_set_function(gc,GDK_XOR);
+  gdk_gc_set_subwindow(gc,GDK_INCLUDE_INFERIORS);
+  
+  /* 
+   * If an area is given, use that.  Notice how out of whack coordinates
+   * and dimentsions are not checked!!!
+   */
   if (aArea)
   {
-	root_x += aArea->x;
-	root_y += aArea->y;
-
-	width = aArea->width;
-	height = aArea->height;
+    x += aArea->x;
+    y += aArea->y;
+    
+    width = aArea->width;
+    height = aArea->height;
   }
 
-  // Need to do this twice so that the XOR effect can replace 
-  // the original window contents.
+  /*
+   * Need to do this twice so that the XOR effect can replace 
+   * the original window contents.
+   */
   for (i = 0; i < aTimes * 2; i++)
   {
-	XFillRectangle(display,
-				   root_window,
-				   gc,
-				   root_x,
-				   root_y,
-				   width,
-				   height);
-	
-	XSync(display, False);
-	
-  usleep(aInterval);
+    gdk_draw_rectangle(GDK_ROOT_PARENT(),
+                       gc,
+                       TRUE,
+                       x,
+                       y,
+                       width,
+                       height);
+
+    gdk_flush();
+    
+    usleep(aInterval);
   }
-  
-  
-  XFreeGC(display, gc);  
-  
-  XUngrabServer(display);
+
+  gdk_gc_destroy(gc);
 }
 //////////////////////////////////////////////////////////////////

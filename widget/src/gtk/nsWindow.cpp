@@ -400,6 +400,12 @@ nsresult nsWindow::SetIcon(GdkPixmap *pixmap,
   return NS_OK;
 }
 
+#define CAPS_LOCK_IS_ON \
+(nsGtkUtils::gdk_keyboard_get_modifiers() & GDK_LOCK_MASK)
+
+#define WANT_PAINT_FLASHING \
+(debug_WantPaintFlashing() && CAPS_LOCK_IS_ON)
+
 /**
  * Processes an Expose Event
  *
@@ -414,11 +420,14 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
     event.renderingContext = nsnull;
 
 #ifdef NS_DEBUG
-    debug_DumpPaintEvent(stdout,
-                         this,
-                         &event,
-                         debug_GetName(mWidget),
-                         (PRInt32) debug_GetRenderXID(mWidget));
+    if (CAPS_LOCK_IS_ON)
+    {
+      debug_DumpPaintEvent(stdout,
+                           this,
+                           &event,
+                           debug_GetName(mWidget),
+                           (PRInt32) debug_GetRenderXID(mWidget));
+    }
 #endif // NS_DEBUG
 
 
@@ -464,7 +473,7 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
     mUpdateArea->Subtract(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
 
 #ifdef NS_DEBUG
-    if (debug_WantPaintFlashing())
+    if (WANT_PAINT_FLASHING)
     {
       GdkWindow *    gw = GetRenderWindow(mWidget);
       
@@ -506,11 +515,14 @@ PRBool nsWindow::OnDraw(nsPaintEvent &event)
     event.renderingContext = nsnull;
 
 #ifdef NS_DEBUG
-    debug_DumpPaintEvent(stdout,
-                         this,
-                         &event,
-                         debug_GetName(mWidget),
-                         (PRInt32) debug_GetRenderXID(mWidget));
+    if (CAPS_LOCK_IS_ON)
+    {
+      debug_DumpPaintEvent(stdout,
+                           this,
+                           &event,
+                           debug_GetName(mWidget),
+                           (PRInt32) debug_GetRenderXID(mWidget));
+    }
 #endif // NS_DEBUG
 
 
@@ -551,7 +563,7 @@ PRBool nsWindow::OnDraw(nsPaintEvent &event)
     mUpdateArea->Subtract(event.rect->x, event.rect->y, event.rect->width, event.rect->height);
 
 #ifdef NS_DEBUG
-    if (debug_WantPaintFlashing())
+    if (WANT_PAINT_FLASHING)
     {
       GdkWindow *    gw = GetRenderWindow(mWidget);
       
