@@ -160,11 +160,11 @@ protected:
 
   // Current find state
   nsString mTypeAheadBuffer;
-  PRPackedBool mLinksOnlyPref;
-  PRPackedBool mStartLinksOnlyPref;
+  PRBool mLinksOnlyPref;
+  PRBool mStartLinksOnlyPref;
   PRPackedBool mLinksOnly;
-  PRPackedBool mIsTypeAheadOn;
-  PRPackedBool mCaretBrowsingOn;
+  PRBool mIsTypeAheadOn;
+  PRBool mCaretBrowsingOn;
   PRPackedBool mLiteralTextSearchOnly;
   PRPackedBool mDontTryExactMatch;
   PRInt32 mRepeatingMode;

@@ -262,12 +262,9 @@ nsTypeAheadFind::PrefsReset(const char* aPrefName, void* instance_data)
   }
 
   PRBool wasTypeAheadOn = typeAheadFind->mIsTypeAheadOn;
-  PRBool temp_bool;
 
   prefs->GetBoolPref("accessibility.typeaheadfind",
-                     &temp_bool);
-
-  typeAheadFind->mIsTypeAheadOn = temp_bool;
+                     &typeAheadFind->mIsTypeAheadOn);
 
   if (typeAheadFind->mIsTypeAheadOn != wasTypeAheadOn) {
     nsCOMPtr<nsIWebProgress> progress =
@@ -305,19 +302,16 @@ nsTypeAheadFind::PrefsReset(const char* aPrefName, void* instance_data)
   }
 
   prefs->GetBoolPref("accessibility.typeaheadfind.linksonly",
-                     &temp_bool);
-  typeAheadFind->mLinksOnlyPref = temp_bool;
+                     &typeAheadFind->mLinksOnlyPref);
 
   prefs->GetBoolPref("accessibility.typeaheadfind.startlinksonly",
-                     &temp_bool);
-  typeAheadFind->mStartLinksOnlyPref = temp_bool;
+                     &typeAheadFind->mStartLinksOnlyPref);
 
   prefs->GetIntPref("accessibility.typeaheadfind.timeout",
                      &typeAheadFind->mTimeoutLength);
 
   prefs->GetBoolPref("accessibility.browsewithcaret",
-                     &temp_bool);
-  typeAheadFind->mCaretBrowsingOn = temp_bool;
+                     &typeAheadFind->mCaretBrowsingOn);
 
   return 0;  // PREF_OK
 }
