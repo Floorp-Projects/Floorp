@@ -256,7 +256,7 @@ all:: export libs install
 #
 #XXXceb
 # Directory SDK doesn't use NSPR
-#TARGETS			+= tweak_nspr
+TARGETS			+= tweak_nspr
 
 #
 # Since the NSPR folks won't help, we'll fix things the sneaky way.
