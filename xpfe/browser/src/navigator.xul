@@ -304,7 +304,7 @@
 		      <separator />
 		      <menuitem name="Blank Page" onclick="BrowserNewWindow();"/>
 		      <menuitem name="Page Using Template..." onclick="BrowserNewWindow();"/>
-		      <menuitem name="Page Using Draft..." onclick="BrowserNewWindow();""/>
+		      <menuitem name="Page Using Draft..." onclick="BrowserNewWindow();"/>
     		</menu>
       <menuitem name="Open" onclick="BrowserNewWindow();"/>
       <separator />
@@ -497,7 +497,7 @@
 	        <observes element="canPrint" attribute="disabled"/>
 	      </titledbutton>
 	      	  
-          <titledbutton id="Throbber" style="list-style-image:url(resource:/res/throbber/anims00.gif);" align="right" onClick="window.frames[0].home()">
+          <titledbutton id="Throbber" style="list-style-image:url(resource:/res/throbber/anims00.gif);" onClick="window.frames[0].home()">
              <observes element="Browser:Throbber" attribute="busy"/>
           </titledbutton>
       </html:td>
