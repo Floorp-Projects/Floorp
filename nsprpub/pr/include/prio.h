@@ -458,7 +458,7 @@ PR_EXTERN(PRFileDesc*) PR_GetSpecialFD(PRSpecialFD id);
 PR_EXTERN(PRDescIdentity) PR_GetUniqueIdentity(const char *layer_name);
 PR_EXTERN(const char*) PR_GetNameForIdentity(PRDescIdentity ident);
 PR_EXTERN(PRDescIdentity) PR_GetLayersIdentity(PRFileDesc* fd);
-PR_EXTERN(PRFileDesc*) PR_GetIdentitiesLayer(PRFileDesc* stack, PRDescIdentity id);
+PR_EXTERN(PRFileDesc*) PR_GetIdentitiesLayer(PRFileDesc* fd_stack, PRDescIdentity id);
 
 /*
  **************************************************************************
@@ -497,7 +497,7 @@ PR_EXTERN(PRFileDesc*) PR_CreateIOLayerStub(
  **************************************************************************
  */
 PR_EXTERN(PRStatus) PR_PushIOLayer(
-    PRFileDesc *stack, PRDescIdentity id, PRFileDesc *layer);
+    PRFileDesc *fd_stack, PRDescIdentity id, PRFileDesc *layer);
 
 /*
  **************************************************************************
@@ -513,7 +513,7 @@ PR_EXTERN(PRStatus) PR_PushIOLayer(
  * that file descriptor will remain valid.
  **************************************************************************
  */
-PR_EXTERN(PRFileDesc*) PR_PopIOLayer(PRFileDesc *stack, PRDescIdentity id);
+PR_EXTERN(PRFileDesc*) PR_PopIOLayer(PRFileDesc *fd_stack, PRDescIdentity id);
 
 /*
  **************************************************************************
