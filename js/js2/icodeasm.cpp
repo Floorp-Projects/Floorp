@@ -479,7 +479,6 @@ namespace ICodeASM {
                     throw JSParseException (eidDuplicateLabel);
                 }
             }
-            return firstTokenEnd;
         } else {
             /* the thing we scanned was an instruction, search the icode map
              * for a matching instruction */
@@ -493,7 +492,7 @@ namespace ICodeASM {
             /* otherwise, choke on it */
             throw JSParseException (eidUnknownICode);
         }
-
+        return firstTokenEnd;
     }
     
 }
