@@ -50,6 +50,8 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 #include "nsXULFormControlAccessible.h"
+#include "nsIAccessibilityService.h"
+#include "nsIServiceManager.h"
 
 /**
   * XUL Button: can contain arbitrary HTML content
@@ -58,9 +60,16 @@
 /**
   * Default Constructor
   */
+
+// Don't inherit from nsFormControlAccessible - it doesn't allow children and a button can have a dropmarker child
 nsXULButtonAccessible::nsXULButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsFormControlAccessible(aNode, aShell)
+nsAccessible(aNode, aShell), mAccService(do_GetService("@mozilla.org/accessibilityService;1"))
 { 
+}
+
+NS_IMETHODIMP nsXULButtonAccessible::GetAccName(nsAWritableString& aResult)
+{
+  return GetXULAccName(aResult);
 }
 
 /**
@@ -116,8 +125,17 @@ NS_IMETHODIMP nsXULButtonAccessible::GetAccRole(PRUint32 *_retval)
 NS_IMETHODIMP nsXULButtonAccessible::GetAccState(PRUint32 *_retval)
 {
   // get focus and disable status from base class
-  nsFormControlAccessible::GetAccState(_retval);
-  *_retval |= STATE_FOCUSABLE;
+  nsAccessible::GetAccState(_retval);
+
+  PRBool disabled = PR_FALSE;
+  nsCOMPtr<nsIDOMXULControlElement> xulFormElement(do_QueryInterface(mDOMNode));  
+  if (xulFormElement) {
+    xulFormElement->GetDisabled(&disabled);
+    if (disabled)
+      *_retval |= STATE_UNAVAILABLE;
+    else 
+      *_retval |= STATE_FOCUSABLE;
+  }
 
   // Buttons can be checked -- they simply appear pressed in rather than checked
   nsCOMPtr<nsIDOMXULButtonElement> xulButtonElement(do_QueryInterface(mDOMNode));
@@ -132,6 +150,132 @@ NS_IMETHODIMP nsXULButtonAccessible::GetAccState(PRUint32 *_retval)
         *_retval |= STATE_MIXED;
     }
   }
+
+  return NS_OK;
+}
+
+/**
+  * Perhaps 1 child - if there's a <dropmarker>
+  */
+NS_IMETHODIMP nsXULButtonAccessible::GetAccFirstChild(nsIAccessible **aResult)
+{
+  *aResult = nsnull;
+
+  nsCOMPtr<nsIAccessible> testAccessible;
+  nsAccessible::GetAccLastChild(getter_AddRefs(testAccessible));
+
+  // If the anonymous tree walker can find accessible children, and the last one is a push button, 
+  // then use it as the only accessible child -- because this is the scenario where we have a dropmarker child
+
+  if (testAccessible) {    
+    PRUint32 role;
+    if (NS_SUCCEEDED(testAccessible->GetAccRole(&role)) && role == ROLE_PUSHBUTTON) {
+      *aResult = testAccessible;
+      NS_ADDREF(*aResult);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULButtonAccessible::GetAccLastChild(nsIAccessible **aResult)
+{
+  return GetAccFirstChild(aResult);
+}
+
+NS_IMETHODIMP nsXULButtonAccessible::GetAccChildCount(PRInt32 *aResult)
+{
+  *aResult = 0;
+
+  nsCOMPtr<nsIAccessible> accessible;
+  GetAccFirstChild(getter_AddRefs(accessible));
+  if (accessible)
+    *aResult = 1;
+
+  return NS_OK;
+}
+
+/**
+  * XUL Dropmarker: can contain arbitrary HTML content
+  */
+
+/**
+  * Default Constructor
+  */
+nsXULDropmarkerAccessible::nsXULDropmarkerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
+nsFormControlAccessible(aNode, aShell)
+{ 
+}
+
+/**
+  * Only one actions available
+  */
+NS_IMETHODIMP nsXULDropmarkerAccessible::GetAccNumActions(PRUint8 *aResult)
+{
+  *aResult = eSingle_Action;
+  return NS_OK;;
+}
+
+PRBool nsXULDropmarkerAccessible::DropmarkerOpen(PRBool aToggleOpen)
+{
+  PRBool isOpen = PR_FALSE;
+
+  nsCOMPtr<nsIDOMNode> parentButtonNode;
+  mDOMNode->GetParentNode(getter_AddRefs(parentButtonNode));
+  nsCOMPtr<nsIDOMXULButtonElement> parentButtonElement(do_QueryInterface(parentButtonNode));
+
+  if (parentButtonElement) {
+    parentButtonElement->GetOpen(&isOpen);
+    if (aToggleOpen)
+      parentButtonElement->SetOpen(!isOpen);
+  }
+
+  return isOpen;
+}
+
+/**
+  * Return the name of our only action
+  */
+NS_IMETHODIMP nsXULDropmarkerAccessible::GetAccActionName(PRUint8 index, nsAWritableString& aResult)
+{
+  if (index == eAction_Click) {
+    if (DropmarkerOpen(PR_FALSE))
+      aResult = NS_LITERAL_STRING("close");
+    else
+      aResult = NS_LITERAL_STRING("open");
+    return NS_OK;
+  }
+
+  return NS_ERROR_INVALID_ARG;
+}
+
+/**
+  * Tell the Dropmarker to do it's action
+  */
+NS_IMETHODIMP nsXULDropmarkerAccessible::AccDoAction(PRUint8 index)
+{
+  if (index == eAction_Click) {
+    DropmarkerOpen(PR_TRUE); // Reverse the open attribute
+    return NS_OK;
+  }
+  return NS_ERROR_INVALID_ARG;
+}
+
+/**
+  * We are a pushbutton
+  */
+NS_IMETHODIMP nsXULDropmarkerAccessible::GetAccRole(PRUint32 *aResult)
+{
+  *aResult = ROLE_PUSHBUTTON;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULDropmarkerAccessible::GetAccState(PRUint32 *aResult)
+{
+  *aResult = 0;
+  
+  if (DropmarkerOpen(PR_FALSE))
+    *aResult = STATE_PRESSED;
 
   return NS_OK;
 }
@@ -378,3 +522,29 @@ nsFormControlAccessible(aNode, aShell)
 { 
 }
 
+/**
+  * XUL StatusBar: can contain arbitrary HTML content
+  */
+
+/**
+  * Default Constructor
+  */
+nsXULStatusBarAccessible::nsXULStatusBarAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
+nsFormControlAccessible(aNode, aShell)
+{ 
+}
+
+/**
+  * We are a statusbar
+  */
+NS_IMETHODIMP nsXULStatusBarAccessible::GetAccRole(PRUint32 *_retval)
+{
+  *_retval = ROLE_STATUSBAR;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULStatusBarAccessible::GetAccState(PRUint32 *_retval)
+{
+  *_retval = 0;  // no special state flags for status bar
+  return NS_OK;
+}

@@ -53,7 +53,7 @@
   * Default Constructor
   */
 nsXULColorPickerTileAccessible::nsXULColorPickerTileAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsXULButtonAccessible(aNode, aShell)
+nsFormControlAccessible(aNode, aShell)
 { 
 }
 

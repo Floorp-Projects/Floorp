@@ -338,8 +338,8 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccState(PRUint32 *_retval)
   nsCOMPtr<nsIPresContext> context;
   shell->GetPresContext(getter_AddRefs(context));
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  nsIFrame *frame;
-  if (content && NS_SUCCEEDED(shell->GetPrimaryFrameFor(content, &frame))) {
+  nsIFrame *frame = nsnull;
+  if (content && NS_SUCCEEDED(shell->GetPrimaryFrameFor(content, &frame)) && frame) {
     nsCOMPtr<nsISelectionController> selCon;
     frame->GetSelectionController(context,getter_AddRefs(selCon));
     if (selCon) {

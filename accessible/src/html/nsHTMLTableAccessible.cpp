@@ -54,6 +54,13 @@ NS_IMETHODIMP nsHTMLTableCellAccessible::GetAccRole(PRUint32 *aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsHTMLTableCellAccessible::GetAccState(PRUint32 *aResult)
+{
+  nsAccessible::GetAccState(aResult);
+  *aResult &= ~STATE_FOCUSABLE;   // Inherit all states except focusable state since table cells cannot be focused
+  return NS_OK;
+}
+
 nsHTMLTableAccessible::nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsBlockAccessible(aDomNode, aShell)
 { 

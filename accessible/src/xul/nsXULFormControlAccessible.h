@@ -45,15 +45,24 @@
 #include "nsFormControlAccessible.h"
 #include "nsHTMLFormControlAccessible.h"
 
-class nsXULButtonAccessible : public nsFormControlAccessible
+class nsXULButtonAccessible : public nsAccessible
+// Don't inherit from nsFormControlAccessible - it doesn't allow children and a button can have a dropmarker child
 {
 public:
   nsXULButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccName(nsAWritableString& aResult);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
   NS_IMETHOD GetAccState(PRUint32 *_retval);
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
   NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
+  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
+  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
+  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
+
+private:
+  nsCOMPtr<nsIAccessibilityService> mAccService;
+
 };
 
 class nsXULCheckboxAccessible : public nsFormControlAccessible
@@ -65,6 +74,20 @@ public:
   NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
   NS_IMETHOD AccDoAction(PRUint8 index);
   NS_IMETHOD GetAccState(PRUint32 *_retval); 
+};
+
+class nsXULDropmarkerAccessible : public nsFormControlAccessible
+{
+public:
+  nsXULDropmarkerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccState(PRUint32 *_retval); 
+  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
+  NS_IMETHOD AccDoAction(PRUint8 index);
+
+private:
+  PRBool DropmarkerOpen(PRBool aToggleOpen);
 };
 
 class nsXULGroupboxAccessible : public nsAccessible
@@ -99,6 +122,14 @@ class nsXULRadioGroupAccessible : public nsFormControlAccessible
 {
 public:
   nsXULRadioGroupAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+};
+
+class nsXULStatusBarAccessible : public nsFormControlAccessible
+{
+public:
+  nsXULStatusBarAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
+  NS_IMETHOD GetAccState(PRUint32 *_retval); 
 };
 
 #endif  
