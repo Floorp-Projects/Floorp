@@ -1,67 +1,110 @@
-var gSpamSettings;
-varg gServer;
+var gSpamSettings = {};
+var gCurrentServer;
+var gMessengerBundle = document.getElementById("bundle_messenger");
 
 function onJunkMailLoad()
 {
-  if (window.arguments && window.arguments[0])
-    setupForAccountFromFolder(window.arguments[0].folder);
+  if (window.arguments && window.arguments[0]) {
+    // XXX todo, what if no folder?
+    setupForAccountFromFolder(window.arguments[0].folder.URI);
+  }
 }
 
-function onServerClick()
-{
+function onServerClick(event)
+{ 
+  if (gCurrentServer.serverURI == event.target.id)
+    return;
+
+  // before we set the UI for the new server,
+  // save off the old one
+  storeSettings(gSpamSettings[gCurrentServer.key].settings);
+
+  // set up the UI for the server
+  setupForAccountFromFolder(event.target.id);
 }
 
-function setupForAccountFromFolder(folder)
+function setupForAccountFromFolder(aURI)
 {
-  // make sure we do the right thing for the stand alone msg window
+  // XXX todo
+  // XXX make sure we do the right thing for the stand alone msg window
+  // XXX if no folders are selected or if a folder that doesn't get mail (news, local?) is selected
   try {
-    var msgFolder = GetMsgFolderFromUri(folder.URI, false);
-    gServer = msgFolder.server;
+    var msgFolder = GetMsgFolderFromUri(aURI, false);
+    gCurrentServer = msgFolder.server;
   }
   catch (ex) {
     // get server for default account
     var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"]
                .getService(Components.interfaces.nsIMsgAccountManager);
     var account = accountManager.defaultAccount;
-    gServer = account.incomingServer;
+    gCurrentServer = account.incomingServer;
   }
 
-  // get and clone spam settings for this server
-  // we clone because if the users cancels we are going to throw away the changes
-  gSpamSettings = Components.classes["@mozilla.org/messenger/spamsettings;1"].createInstance(Components.interfaces.nsISpamSettings);
-  gSpamSettings.clone(gServer.spamSettings);
+  var obj;
+  var key = gCurrentServer.key;
+
+  if (key in gSpamSettings) {
+    obj = gSpamSettings[key];
+  }
+  else {
+    // get and clone spam settings for this server
+    // we clone because if the users cancels we are going to throw away the changes
+    var settings = Components.classes["@mozilla.org/messenger/spamsettings;1"].createInstance(Components.interfaces.nsISpamSettings);
+    settings.clone(gCurrentServer.spamSettings);
+    obj = {server: gCurrentServer, settings: settings}; 
+    gSpamSettings[key] = obj;
+  } 
 
   // select server in the menulist
   var serverList = document.getElementById("server");
-  var menuitems = serverList.getElementsByAttribute("id", server.serverURI);
+  var menuitems = serverList.getElementsByAttribute("id", obj.server.serverURI);
   serverList.selectedItem = menuitems[0];
 
   // set up the UI for this server
-  document.getElementById("level").value = gSpamSettings.level;
+  document.getElementById("level").selectedItem = document.getElementById("level" + obj.settings.level);
 
-  document.getElementById("moveOnSpam").checked = gSpamSettings.moveOnSpam;
-  // todo, use  attribute string actionTargetFolder;
+  document.getElementById("moveOnSpam").checked = obj.settings.moveOnSpam;
+  if (obj.settings.actionTargetFolder)
+    SetFolderPicker(obj.settings.actionTargetFolder, "actionTargetFolder");
 
-  document.getElementById("purge").checked = gSpamSettings.purge;
-  document.getElementById("purgeInterval").value = gSpamSettings.purgeInterval;
+  document.getElementById("purge").checked = obj.settings.purge;
+  document.getElementById("purgeInterval").value = obj.settings.purgeInterval;
 
-  document.getElementById("useWhiteList").checked = gSpamSettings.useWhiteList;
+  document.getElementById("useWhiteList").checked = obj.settings.useWhiteList;
   var abList = document.getElementById("whiteListAbURI");
-  menuitems = abList.getElementsByAttribute("id", gSpamSettings.whiteListAbURI);
+  menuitems = abList.getElementsByAttribute("id", obj.settings.whiteListAbURI);
   abList.selectedItem = menuitems[0];
 }
 
 function junkLog()
 {
   // pass in the "real" spam settings, as it's the one with the logStream
-  var args = {spamSettings: gServer.spamSettings};
+  var args = {spamSettings: gCurrentServer.spamSettings};
   window.openDialog("chrome://messenger/content/junkLog.xul", "junkLog", "chrome,modal,titlebar,resizable,centerscreen", args);
 }
 
 function onAccept()
 {
-  // if they hit ok, set the "real" server's spam settings.  this will set prefs.
-  gServer.spamSettings = gSpamSettings;
+  for (var key in gSpamSettings) {
+    // if they hit ok, set the "real" server's spam settings.  
+    // this will set prefs.
+    gSpamSettings[key].server.spamSettings = gSpamSettings[key].settings;
+  }
+  return true;
+}
+
+function storeSettings(aSettings)
+{
+  aSettings.level = document.getElementById("level").selectedItem.getAttribute("value");
+
+  aSettings.moveOnSpam = document.getElementById("moveOnSpam").checked;
+  aSettings.actionTargetFolder = document.getElementById("actionTargetFolder").getAttribute("uri");
+
+  aSettings.purge = document.getElementById("purge").checked;
+  aSettings.purgeInterval = document.getElementById("purgeInterval").value;
+
+  aSettings.useWhiteList = document.getElementById("useWhiteList").checked;
+  aSettings.whiteListAbURI = document.getElementById("whiteListAbURI").selectedItem.getAttribute("id");
 }
 
 function doHelpButton()

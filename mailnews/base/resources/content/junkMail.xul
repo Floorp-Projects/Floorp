@@ -20,6 +20,10 @@
         ondialoghelp="return doHelpButton();"
         persist="screenX screenY width height">
 
+<stringbundleset id="stringbundleset">
+  <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
+</stringbundleset>
+
 <script type="application/x-javascript" src="chrome://messenger/content/junkMail.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 
@@ -56,30 +60,30 @@
     <radiogroup flex="1" id="level" orient="horizontal">
       <!-- using 0 - 100, in case we ever do a slider or add more levels.  
            this way, the exist pref value will migrate nice. -->
-      <radio flex="1" id="off" value="0" accesskey="&off.accesskey;" label="&off.label;"/>
-      <radio flex="1" id="lowest" value="20" accesskey="&lowest.accesskey;" label="&lowest.label;"/>
-      <radio flex="1" id="low" value="40" accesskey="&low.accesskey;" label="&low.label;"/>
-      <radio flex="1" id="medium" value="60" accesskey="&medium.accesskey;" label="&medium.label;"/>
-      <radio flex="1" id="high" value="80" accesskey="&high.accesskey;" label="&high.label;"/>
-      <radio flex="1" id="highest" value="100" accesskey="&highest.accesskey;" label="&highest.label;"/>
+      <radio flex="1" id="level0" value="0" accesskey="&off.accesskey;" label="&off.label;"/>
+      <radio flex="1" id="level20" value="20" accesskey="&lowest.accesskey;" label="&lowest.label;"/>
+      <radio flex="1" id="level40" value="40" accesskey="&low.accesskey;" label="&low.label;"/>
+      <radio flex="1" id="level60" value="60" accesskey="&medium.accesskey;" label="&medium.label;"/>
+      <radio flex="1" id="level80" value="80" accesskey="&high.accesskey;" label="&high.label;"/>
+      <radio flex="1" id="level100" value="100" accesskey="&highest.accesskey;" label="&highest.label;"/>
     </radiogroup>
   </hbox>
 
   <separator/>
 
   <hbox align="center">
-    <checkbox id="move" accesskey="&move.accesskey;" label="&move.label;"/>
+    <checkbox id="moveOnSpam" accesskey="&move.accesskey;" label="&move.label;"/>
     <menulist id="actionTargetFolder"/>
   </hbox>
 
   <hbox autostretch="never" align="center">
     <checkbox id="purge" accesskey="&purge1.accesskey;" label="&purge1.label;"/>
-    <textbox id="purgeInterval" />
+    <textbox size="3" id="purgeInterval" />
     <label value="&purge2.label;"/>
   </hbox>
 
   <hbox align="center">
-    <checkbox id="whiteList" accesskey="&whitelist.accesskey;" label="&whitelist.label;"/>
+    <checkbox id="useWhiteList" accesskey="&whitelist.accesskey;" label="&whitelist.label;"/>
     <menulist id="whiteListAbURI">
      <menupopup id="abPopup-menupopup" ref="moz-abdirectory://"
         datasources="rdf:addressdirectory">
