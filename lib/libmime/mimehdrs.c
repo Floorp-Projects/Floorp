@@ -23,6 +23,7 @@
 
 #include "rosetta.h"
 #include "mimei.h"
+#include "xp_linebuf.h"
 #include "xpgetstr.h"
 #include "libi18n.h"
 #include "mime.h"
@@ -204,8 +205,8 @@ MimeHeaders_parse_line (const char *buffer, int32 size, MimeHeaders *hdrs)
   desired_size = hdrs->all_headers_fp + size + 1;
   if (desired_size >= hdrs->all_headers_size)
 	{
-	  status = msg_GrowBuffer (desired_size, sizeof(char), 255,
-							   &hdrs->all_headers, &hdrs->all_headers_size);
+	  status = XP_GrowBuffer (desired_size, sizeof(char), 255,
+                              &hdrs->all_headers, &hdrs->all_headers_size);
 	  if (status < 0) return status;
 	}
   XP_MEMCPY(hdrs->all_headers+hdrs->all_headers_fp, buffer, size);
@@ -819,8 +820,8 @@ MimeHeaders_default_addbook_link_generator (const char *dest, void *closure,
 
 #define MimeHeaders_grow_obuffer(hdrs, desired_size) \
   ((((long) (desired_size)) >= ((long) (hdrs)->obuffer_size)) ? \
-   msg_GrowBuffer ((desired_size), sizeof(char), 255, \
-				   &(hdrs)->obuffer, &(hdrs)->obuffer_size) \
+   XP_GrowBuffer ((desired_size), sizeof(char), 255, \
+                  &(hdrs)->obuffer, &(hdrs)->obuffer_size) \
    : 0)
 
 
@@ -2787,9 +2788,11 @@ mime_decode_filename(char *name)
 		if (d) *d = '?';
 		win_csid = INTL_DocToWinCharSetID(mail_csid);
 		
+#if 0 /* #### */
 		cvt = INTL_DecodeMimePartIIStr(returnVal, win_csid, FALSE);
 		if (cvt && cvt != returnVal)
 			returnVal = cvt;
+#endif
 	}
 
 

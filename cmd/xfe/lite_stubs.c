@@ -22,7 +22,9 @@
 
 #include "xp.h"
 
+#if 0
 /*
 ** For NET_ExtViewerConverter (ns/lib/libnet/cvview.c)
 */
 char *MimeGuessURLContentName(MWContext *context, const char *url) { return NULL; }
+#endif

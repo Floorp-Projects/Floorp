@@ -21,6 +21,8 @@
  */
 
 #include "xp.h"
+#include "xp_linebuf.h"
+#include "mkbuf.h"
 #include "libi18n.h"
 #include "xp_time.h"
 #include "msgcom.h"
@@ -73,7 +75,7 @@ extern char * NET_ExplainErrorDetails (int code, ...);
 #include "mimedisp.h"
 
 
-#ifndef MOZILLA_30
+/*#ifndef MOZILLA_30*/
 
 static MimeHeadersState MIME_HeaderType;
 static XP_Bool MIME_NoInlineAttachments;
@@ -83,18 +85,13 @@ static XP_Bool MIME_PrefDataValid = 0; /* 0: First time. */
                                 /* 1: Cache is not valid. */
                                 /* 2: Cache is valid. */
 
-#endif
-
-/* #### defined in libmsg/msgutils.c */
-extern NET_StreamClass *
-msg_MakeRebufferingStream (NET_StreamClass *next_stream,
-                           URL_Struct *url,
-                           MWContext *context);
+/*#endif*/
 
 
 static char *
 mime_reformat_date(const char *date, void *stream_closure)
 {
+#if 0 /* #### fix me */
   struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
   MWContext *context = msd->context;
   const char *s;
@@ -106,6 +103,9 @@ mime_reformat_date(const char *date, void *stream_closure)
   s = MSG_FormatDateFromContext(context, t);
   if (!s) return 0;
   return XP_STRDUP(s);
+#else /*!0 #### */
+  return XP_STRDUP(date);
+#endif /* !0 */
 }
 
 
@@ -161,6 +161,7 @@ mime_convert_charset (const char *input_line, int32 input_length,
   unsigned char *converted;
 
   /* #### */
+#if 0
   extern unsigned char *INTL_ConvMailToWinCharCode(MWContext *context,
                                                    unsigned char *pSrc,
                                                    uint32 block_size);
@@ -174,6 +175,7 @@ mime_convert_charset (const char *input_line, int32 input_length,
       *output_size_ret = XP_STRLEN((char *) converted);
     }
   else
+#endif /* 0 #### */
     {
       *output_ret = 0;
       *output_size_ret = 0;
@@ -189,8 +191,8 @@ mime_convert_rfc1522 (const char *input_line, int32 input_length,
                       void *stream_closure)
 {
   struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
-  char *converted;
-  char *line;
+  char *converted = 0;
+  char *line = 0;
 
   if (input_line[input_length] == 0)  /* oh good, it's null-terminated */
     line = (char *) input_line;
@@ -202,8 +204,10 @@ mime_convert_rfc1522 (const char *input_line, int32 input_length,
       line[input_length] = 0;
     }
 
+#if 0 /* #### */
   converted = IntlDecodeMimePartIIStr(line,
       INTL_DocToWinCharSetID(INTL_DefaultDocCharSetID(msd->context)), FALSE);
+#endif
 
   if (line != input_line)
     XP_FREE(line);
@@ -705,7 +709,7 @@ mime_make_output_stream(const char *content_type,
   {
     /* Bug #110565: do not change the stream to a rebuffering stream
        when we have a Mail Compose context */
-    NET_StreamClass * buffer = msg_MakeRebufferingStream(stream, url, context);
+    NET_StreamClass * buffer = NET_MakeRebufferingStream(stream, url, context);
     if (buffer)
       stream = buffer;
   }
@@ -949,18 +953,18 @@ static char *mime_image_make_image_html(void *image_data);
 static int mime_image_write_buffer(char *buf, int32 size, void *image_closure);
 
 #ifdef MOZILLA_30
-extern XP_Bool MSG_VariableWidthPlaintext;
+XP_Bool MSG_VariableWidthPlaintext = TRUE;	/* #### */
 #endif
 
 
-#ifndef MOZILLA_30
+/*#ifndef MOZILLA_30*/
 int PR_CALLBACK
 mime_PrefsChangeCallback(const char* prefname, void* data)
 {
   MIME_PrefDataValid = 1;       /* Invalidates our cached stuff. */
   return PREF_NOERROR;
 }
-#endif /* !MOZILLA_30 */
+/*#endif / * !MOZILLA_30 */
 
 
 NET_StreamClass *
@@ -1051,7 +1055,7 @@ MIME_MessageConverter (int format_out, void *closure,
 
   msd->options->headers = MimeHeadersSome;
 
-#ifndef MOZILLA_30
+/*#ifndef MOZILLA_30*/
   if (MIME_PrefDataValid < 2) {
     int32 headertype;
     if (MIME_PrefDataValid == 0) {
@@ -1085,14 +1089,14 @@ MIME_MessageConverter (int format_out, void *closure,
   msd->options->no_inline_p = MIME_NoInlineAttachments;
   msd->options->wrap_long_lines_p = MIME_WrapLongLines;
   msd->options->headers = MIME_HeaderType;
-#endif /* !MOZILLA_30 */
+/*#endif / * !MOZILLA_30 */
 
   if (context->type == MWContextMail ||
       context->type == MWContextNews
-#ifndef MOZILLA_30
+/*#ifndef MOZILLA_30*/
       || context->type == MWContextMailMsg
       || context->type == MWContextNewsMsg
-#endif /* !MOZILLA_30 */
+/*#endif / * !MOZILLA_30 */
       )
     {
 #ifndef MOZILLA_30
@@ -1358,7 +1362,7 @@ mime_image_begin(const char *image_url, const char *content_type,
    */
   {
     NET_StreamClass *buffer =
-      msg_MakeRebufferingStream (mid->istream, mid->url_struct, msd->context);
+      NET_MakeRebufferingStream (mid->istream, mid->url_struct, msd->context);
     if (buffer)
       mid->istream = buffer;
   }
@@ -1684,13 +1688,14 @@ mime_get_main_object(MimeObject* obj)
 	 if (!mime_subclass_p(obj->class,
                          (MimeObjectClass*) &mimeMultipartSignedClass)
 		&& !mime_subclass_p(obj->class,
-                         (MimeObjectClass*) &mimeFilterClass)) {
+                         (MimeObjectClass*) &mimeFilterClass))
 #else
 	if (!mime_subclass_p(obj->class,
-                         (MimeObjectClass*) &mimeMultipartSignedClass)) {
+                         (MimeObjectClass*) &mimeMultipartSignedClass))
 #endif
-      return obj;
-    }
+      {
+        return obj;
+      }
 
     HG09860
     cobj = (MimeContainer*) obj;
@@ -2053,9 +2058,9 @@ static int
 mime_richtext_write (NET_StreamClass *stream, const char* buf, int32 size)
 {
   struct mime_richtext_data *data = (struct mime_richtext_data *) stream->data_object;
-  return msg_LineBuffer (buf, size, &data->ibuffer, &data->ibuffer_size,
-                         &data->ibuffer_fp, FALSE, mime_richtext_write_line,
-                         data);
+  return XP_LineBuffer (buf, size, &data->ibuffer, &data->ibuffer_size,
+                        &data->ibuffer_fp, FALSE, mime_richtext_write_line,
+                        data);
 }
 
 static unsigned int
@@ -2160,6 +2165,57 @@ MIME_EnrichedTextConverter (int format_out, void *closure,
 }
 
 
+
+/* Hooking libmime into netlib.
+   This stuff used to be done in MSG_RegisterConverters, in libmsg/msgsend.cpp
+   but we don't currently have message composition, so we need to register
+   the libmime stuff separately.
+ */
+
+void
+MIME_RegisterConverters(void)
+{
+  int targets1[] = { FO_PRESENT, FO_PRINT };
+  int targets2[] = { FO_EMBED, FO_QUOTE_MESSAGE, FO_QUOTE_HTML_MESSAGE,
+                     FO_SAVE_AS, FO_SAVE_AS_TEXT, FO_INTERNAL_IMAGE, FO_FONT
+#ifdef XP_UNIX
+                     , FO_SAVE_AS_POSTSCRIPT
+#endif /* XP_UNIX */
+  };
+  int ntargets1 = sizeof(targets1)/sizeof(*targets1);
+  int ntargets2 = sizeof(targets2)/sizeof(*targets2);
+  int i;
+
+  for (i = 0; i < ntargets1; i++)
+    {
+      NET_RegisterContentTypeConverter (MESSAGE_RFC822, targets1[i],
+                                        NULL, MIME_MessageConverter);
+      NET_RegisterContentTypeConverter (MESSAGE_NEWS, targets1[i],
+                                        NULL, MIME_MessageConverter);
+      NET_RegisterContentTypeConverter (TEXT_RICHTEXT, targets1[i],
+                                        NULL, MIME_MessageConverter);
+      NET_RegisterContentTypeConverter (TEXT_ENRICHED, targets1[i],
+                                        NULL, MIME_MessageConverter);
+#ifndef MOZILLA_30
+      NET_RegisterContentTypeConverter (TEXT_VCARD, targets1[i],
+                                        NULL, MIME_MessageConverter);
+#endif /* MOZILLA_30 */
+#ifdef MOZ_CALENDAR
+      NET_RegisterContentTypeConverter (TEXT_CALENDAR, targets1[i],
+                                        NULL, MIME_MessageConverter);
+#endif /* MOZ_CALENDAR */
+    }
+
+  for (i = 0; i < ntargets2; i++)
+    {
+      NET_RegisterContentTypeConverter (MESSAGE_RFC822, targets2[i],
+                                        NULL, MIME_MessageConverter);
+      NET_RegisterContentTypeConverter (MESSAGE_NEWS, targets2[i],
+                                        NULL, MIME_MessageConverter);
+    }
+}
+
+
 
 #ifndef MOZILLA_30
 
@@ -2384,8 +2440,6 @@ MIME_VCardConverter ( int format_out,
     return stream;
 }
 
-#endif /* !MOZILLA_30 */
-
 
 
 int
@@ -2397,6 +2451,8 @@ MimeSendMessage(MimeDisplayOptions* options, char* to, char* subject,
 	return NET_SendMessageUnattended(msd->context, to, subject,
 									 otherheaders, body);
 }
+
+#endif /* !MOZILLA_30 */
 
 
 int
@@ -2429,10 +2485,10 @@ mime_TranslateCalendar(char* caldata, char** html)
     *html = jf_getForm(closure);
     jf_Destroy(closure);
     return 0;
-#else
+#else /* !JULIAN_EXISTS */
     *html = XP_STRDUP("<b>Can't handle calendar data on this platform yet</b>");
     return 0;
-#endif /* JULIAN_EXISTS */
+#endif /* !JULIAN_EXISTS */
 }
 
 
@@ -2625,5 +2681,6 @@ extern NET_StreamClass * MIME_JulianConverter (int format_out, void *closure, UR
 
     return stream;
 }
-#endif
+#endif /* MOZ_CALENDAR */
+
 

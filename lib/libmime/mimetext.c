@@ -233,20 +233,20 @@ MimeInlineText_parse_decoded_buffer (char *buf, int32 size, MimeObject *obj)
 	 MimeLeaf class, except that we line-buffer to our own wrapper on the
 	 `parse_line' method instead of calling the `parse_line' method directly.
    */
-  return msg_LineBuffer (buf, size,
-						 &obj->ibuffer, &obj->ibuffer_size, &obj->ibuffer_fp,
-						 TRUE,
-						 ((int32 (*) (char *, uint32, void *))
-						  /* This cast is to turn void into MimeObject */
-						  MimeInlineText_rotate_convert_and_parse_line),
-						 obj);
+  return XP_LineBuffer (buf, size,
+                        &obj->ibuffer, &obj->ibuffer_size, &obj->ibuffer_fp,
+                        TRUE,
+                        ((int32 (*) (char *, uint32, void *))
+                         /* This cast is to turn void into MimeObject */
+                         MimeInlineText_rotate_convert_and_parse_line),
+                        obj);
 }
 
 
 #define MimeInlineText_grow_cbuffer(text, desired_size) \
   (((desired_size) >= (text)->cbuffer_size) ? \
-   msg_GrowBuffer ((desired_size), sizeof(char), 100, \
-				   &(text)->cbuffer, &(text)->cbuffer_size) \
+   XP_GrowBuffer ((desired_size), sizeof(char), 100, \
+                  &(text)->cbuffer, &(text)->cbuffer_size) \
    : 0)
 
 

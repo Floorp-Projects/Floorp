@@ -86,8 +86,8 @@ MimeRichtextConvert (char *line, int32 length,
 
   desired_size = length * 4;
   if (desired_size >= *obuffer_sizeP)
-	status = msg_GrowBuffer (desired_size, sizeof(char), 1024,
-							 obufferP, obuffer_sizeP);
+	status = XP_GrowBuffer (desired_size, sizeof(char), 1024,
+                            obufferP, obuffer_sizeP);
   if (status < 0) return status;
 
   if (enriched_p)

@@ -24,6 +24,8 @@
 #define _MIMEOBJ_H_
 
 #include "mimei.h"
+#include "xp_linebuf.h"
+
 
 /* MimeObject is the base-class for the objects representing all other 
    MIME types.  It provides several methods:
@@ -192,8 +194,8 @@ struct MimeObject {
 
 #define MimeObject_grow_obuffer(obj, desired_size) \
   (((desired_size) >= (obj)->obuffer_size) ? \
-   msg_GrowBuffer ((desired_size), sizeof(char), 1024, \
-				   &(obj)->obuffer, &(obj)->obuffer_size) \
+   XP_GrowBuffer ((desired_size), sizeof(char), 1024, \
+                  &(obj)->obuffer, &(obj)->obuffer_size) \
    : 0)
 
 
