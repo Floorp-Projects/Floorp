@@ -38,6 +38,11 @@ function checkData()
 
 function configureDialer( configFolder, acctSetupIni, regFile )
 {
+	globals.debug( "Configuring dialer" );
+
+	var		intlFlag = globals.GetNameValuePair( acctSetupIni, "Mode Selection", "IntlMode" );
+	intlFlag = intlFlag.toLowerCase();
+	
 	// * determine name of scripting file
 	var		scriptEnabledFlag = "FALSE";
 	var		scriptFile = globals.GetNameValuePair( regFile, "Dial-In Configuration", "ScriptFileName" );
@@ -146,15 +151,15 @@ function loadData()
 		var acctSetupIni = globals.getAcctSetupFilename( self );
 		var regFile = configFolder + documentVars.regServer.value;
 
-		var intlFlag = globals.GetNameValuePair( acctSetupIni, "Mode Selection", "IntlMode" );
-		intlFlag = intlFlag.toLowerCase();
 
 		var regSource = globals.GetNameValuePair( acctSetupIni, "Mode Selection", "RegSource" );
 		
 		var localFlag = globals.GetNameValuePair( regFile, "Dial-In Configuration", "LocalMode" );
 		localFlag = localFlag.toLowerCase();
-		if ( localFlag == null || localFlag != "yes" )
+		globals.debug( "localFlag:" + localFlag );
+		if ( localFlag != "yes" )
 		{
+			globals.debug( "LocalMode==no" );
 			var connectStatusFlag = plugin.IsDialerConnected();
 			if ( connectStatusFlag == true )
 			{
@@ -169,7 +174,9 @@ function loadData()
 		regCGI = globals.GetNameValuePair( regFile, "IP", "RegCGI" );
 		regRoot = globals.GetNameValuePair( regFile, "Configuration", "RegRoot" );
 		metadataMode = globals.GetNameValuePair( regFile, "Configuration", "MetadataMode" );
-
+		if ( metadataMode == "no" )
+			globals.debug( "MetadataMode==no, you will not be downloading necessary metadata" );
+		
 		if ( regCGI == null || regCGI == "" )
 		{
 			alert( "Internal problem determining the Registration Server." );
@@ -212,11 +219,14 @@ function loadData()
 		
 		/*documentVars.countryCode.value;*/
 				
-		if ( localFlag != "yes" )
-			globals.set1StepMode( 1 );
+		//if ( localFlag != "yes" )
+		//	globals.set1StepMode( 1 );
+		
 		var		result = plugin.GenerateComparePage( globals.getFolder( self ), regCGI, regRoot, metadataMode, reggieData );
-		if ( localFlag != "yes" )
-			globals.oneStepSemaphore = true;
+		
+		plugin.DialerHangup();
+		//if ( localFlag != "yes" )
+		//	globals.oneStepSemaphore = true;
 		
 		if ( result == true )
 			window.location.replace( "compwrap.htm" );
