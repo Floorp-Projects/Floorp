@@ -116,35 +116,6 @@ nsresult nsCalCommandCanvas :: Init()
 
   gXPFCToolkit->GetCanvasManager()->RegisterView((nsIXPFCCanvas*)this,mStaticTextField);
 
-  nsFont font("Times", NS_FONT_STYLE_NORMAL,
-		  NS_FONT_VARIANT_NORMAL,
-		  NS_FONT_WEIGHT_BOLD,
-		  0,
-		  8);
-
-  nsIFontMetrics * fm ;
-  nsIDeviceContext * ctx;
-  
-  gXPFCToolkit->GetViewManager()->GetDeviceContext(ctx);
-  
-  ctx->GetMetricsFor(font, fm);
-
-
-  nscoord width ;
-  
-  nsIRenderingContext * aRC;
-
-  ctx->CreateRenderingContext(mStaticTextField, aRC);
-
-  aRC->SetFont(font);
-
-  aRC->GetWidth(text,width);
-
-  NS_RELEASE(aRC);
-  NS_RELEASE(ctx);
-
-  rect.width = width ;
-
   mStaticTextField->Init(gXPFCToolkit->GetViewManager(),
                           rect,
                           GetParent()->GetView(),
@@ -173,11 +144,6 @@ nsresult nsCalCommandCanvas :: Init()
   /*
    * Writeable Command field
    */
-
-  GetBounds(rect);
-
-  rect.x += width;
-  rect.width -= width;
 
   res = nsRepository::CreateInstance(kViewCID, 
                                     nsnull,
