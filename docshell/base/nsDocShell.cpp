@@ -2658,10 +2658,25 @@ NS_IMETHODIMP nsDocShell::ShouldAddToSessionHistory(nsIURI* aURI,
 NS_IMETHODIMP nsDocShell::ShouldPersistInSessionHistory(nsIURI* aURI,
    PRBool* aShouldAdd)
 {
-   *aShouldAdd = PR_TRUE;
+   *aShouldAdd = PR_FALSE;
+   if(!aURI)
+      return NS_OK;
 
-   // XXXTAB Do testing here if there are some things that shouldn't stay in 
-   // session history
+   nsXPIDLCString scheme;
+   NS_ENSURE_SUCCESS(aURI->GetScheme(getter_Copies(scheme)), NS_ERROR_FAILURE);
+   
+   nsAutoString schemeStr(scheme);
+
+   if(schemeStr.Equals("about"))
+      {
+      nsXPIDLCString path;
+      NS_ENSURE_SUCCESS(aURI->GetPath(getter_Copies(path)), NS_ERROR_FAILURE);
+      nsAutoString pathStr(path);
+      if(pathStr.Equals("blank"))
+         return NS_OK;
+      }
+
+   *aShouldAdd = PR_TRUE;
 
    return NS_OK;
 }
