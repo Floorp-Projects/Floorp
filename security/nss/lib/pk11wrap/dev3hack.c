@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.3 $ $Date: 2002/01/29 21:10:50 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: dev3hack.c,v $ $Revision: 1.4 $ $Date: 2002/01/31 17:28:49 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSS_3_4_CODE
@@ -84,6 +84,10 @@ nssSlot_CreateSession
     }
     if (readWrite) {
 	rvSession->handle = PK11_GetRWSession(slot->pk11slot);
+	if (rvSession->handle == CK_INVALID_HANDLE) {
+	    nss_ZFreeIf(rvSession);
+	    return NULL;
+	}
 	rvSession->isRW = PR_TRUE;
 	rvSession->slot = slot;
 	return rvSession;
