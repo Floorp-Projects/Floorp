@@ -41,8 +41,8 @@
 #include "nsIStreamConverterService.h"
 #include "nsIStreamListener.h"
 #include "nsHashtable.h"
-#include "nsISupportsArray.h"
-#include "nsVoidArray.h"
+#include "nsCOMArray.h"
+#include "nsIAtom.h"
 
 class nsStreamConverterService : public nsIStreamConverterService {
 public:    
@@ -94,7 +94,7 @@ struct SCTableData {
     nsCStringKey *key;
     union _data {
         BFSState *state;
-        nsISupportsArray *edges;
+        nsCOMArray<nsIAtom> *edges;
     } data;
 
     SCTableData(nsCStringKey* aKey) : key(aKey) {

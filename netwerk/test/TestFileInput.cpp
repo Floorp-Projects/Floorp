@@ -54,7 +54,7 @@
 #include "nsIInputStream.h"
 #include "nsIRunnable.h"
 #include "nsIThread.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include <stdio.h>
@@ -269,9 +269,7 @@ SerialReadTest(char* dirName)
     PRDir* dir = PR_OpenDir(dirName);
     NS_ASSERTION(dir, "bad dir");
 
-    nsISupportsArray* threads;
-    rv = NS_NewISupportsArray(&threads);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewISupportsArray failed");
+    nsCOMArray<nsIThread> threads;
 
     PRIntervalTime startTime = PR_IntervalNow();
     PRDirEntry* entry;
@@ -289,6 +287,8 @@ SerialReadTest(char* dirName)
 
         rv = reader->Init(readerThread);
         NS_ASSERTION(NS_SUCCEEDED(rv), "init failed");
+
+        // XXXbz shouldn't we put these in our array?
 
         nsIStreamListener* listener;
         reader->QueryInterface(NS_GET_IID(nsIStreamListener), (void**)&listener);
@@ -309,14 +309,11 @@ SerialReadTest(char* dirName)
     gVolume = 0;
 
     // now that we've forked all the async requests, wait until they're done
-    PRUint32 threadCount;
-    rv = threads->Count(&threadCount);
+    PRUint32 threadCount = threads.Count();
     for (PRUint32 i = 0; i < threadCount; i++) {
-        nsIThread* thread = (nsIThread*)threads->ElementAt(i);
+        nsIThread* thread = threads.ObjectAt(i);
         thread->Join();
-        NS_RELEASE(thread);
     }
-    NS_RELEASE(threads);
 
     status = PR_CloseDir(dir);
     NS_ASSERTION(status == PR_SUCCESS, "can't close dir");
@@ -331,9 +328,7 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
     PRDir* dir = PR_OpenDir(dirName);
     NS_ASSERTION(dir, "bad dir");
 
-    nsISupportsArray* threads;
-    rv = NS_NewISupportsArray(&threads);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewISupportsArray failed");
+    nsCOMArray<nsIThread> threads;
 
     PRDirEntry* entry;
     while ((entry = PR_ReadDir(dir, PR_SKIP_BOTH)) != nsnull) {
@@ -348,9 +343,10 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
         NS_ASSERTION(reader, "out of memory");
         NS_ADDREF(reader);
 
-        nsIThread* readerThread;
+        nsCOMPtr<nsIThread> readerThread;
 
-        rv = NS_NewThread(&readerThread, reader, 0, PR_JOINABLE_THREAD);
+        rv = NS_NewThread(getter_AddRefs(readerThread), reader, 0,
+                          PR_JOINABLE_THREAD);
 
         NS_ASSERTION(NS_SUCCEEDED(rv), "new thread failed");
 
@@ -372,20 +368,16 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
         NS_RELEASE(trans);
         NS_RELEASE(listener);
         NS_RELEASE(reader);
-        rv = threads->AppendElement(readerThread) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
+        rv = threads.AppendObject(readerThread) ? NS_OK : NS_ERROR_FAILURE;
         NS_ASSERTION(NS_SUCCEEDED(rv), "AppendElement failed");
-        NS_RELEASE(readerThread);
     }
 
     // now that we've forked all the async requests, wait until they're done
-    PRUint32 threadCount;
-    rv = threads->Count(&threadCount);
+    PRUint32 threadCount = threads.Count();
     for (PRUint32 i = 0; i < threadCount; i++) {
-        nsIThread* thread = (nsIThread*)threads->ElementAt(i);
+        nsIThread* thread = threads.ObjectAt(i);
         thread->Join();
-        NS_RELEASE(thread);
     }
-    NS_RELEASE(threads);
 
     status = PR_CloseDir(dir);
     NS_ASSERTION(status == PR_SUCCESS, "can't close dir");

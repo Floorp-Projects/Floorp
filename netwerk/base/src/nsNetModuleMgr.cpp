@@ -37,8 +37,7 @@
 
 #include "nsAutoLock.h"
 #include "nsNetModuleMgr.h"
-#include "nsNetModRegEntry.h"
-#include "nsEnumeratorUtils.h" // for nsArrayEnumerator
+#include "nsArrayEnumerator.h" // for nsArrayEnumerator
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsIEventQueue.h"
@@ -61,7 +60,7 @@ NS_IMETHODIMP
 nsNetModuleMgr::RegisterModule(const char *aTopic, nsINetNotify *aNotify)
 {
     nsresult rv;
-    PRUint32 cnt;
+    PRInt32 cnt;
 
     // XXX before registering an object for a particular topic
     // XXX QI the nsINetNotify interface passed in for the interfaces
@@ -84,11 +83,10 @@ nsNetModuleMgr::RegisterModule(const char *aTopic, nsINetNotify *aNotify)
     }
 
     // Check for a previous registration
-    mEntries->Count(&cnt);
-    for (PRUint32 i = 0; i < cnt; i++) 
+    cnt = mEntries.Count();
+    for (PRInt32 i = 0; i < cnt; i++) 
     {
-        nsCOMPtr<nsINetModRegEntry> curEntry =
-            dont_AddRef(NS_STATIC_CAST(nsINetModRegEntry*, mEntries->ElementAt(i)));
+        nsINetModRegEntry* curEntry = mEntries[i];
 
         PRBool same = PR_FALSE;
         rv = newEntryI->Equals(curEntry, &same);
@@ -96,13 +94,14 @@ nsNetModuleMgr::RegisterModule(const char *aTopic, nsINetNotify *aNotify)
 
         // if we've already got this one registered, yank it, and replace it with the new one
         if (same) {
-            mEntries->DeleteElementAt(i);
+            mEntries.RemoveObjectAt(i);
             break;
         }
     }
 
-    rv = mEntries->AppendElement(NS_STATIC_CAST(nsISupports*, newEntryI)) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
-    return rv;
+    if (!mEntries.AppendObject(newEntryI))
+        return NS_ERROR_FAILURE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -122,18 +121,17 @@ nsNetModuleMgr::UnregisterModule(const char *aTopic, nsINetNotify *aNotify)
     rv = tmpEntry->QueryInterface(NS_GET_IID(nsINetModRegEntry), getter_AddRefs(tmpEntryI));
     if (NS_FAILED(rv)) return rv;
 
-    PRUint32 cnt;
-    mEntries->Count(&cnt);
-    for (PRUint32 i = 0; i < cnt; i++) {
-        nsCOMPtr<nsINetModRegEntry> curEntry = 
-            dont_AddRef(NS_STATIC_CAST(nsINetModRegEntry*, mEntries->ElementAt(i)));
+    PRInt32 cnt;
+    cnt = mEntries.Count();
+    for (PRInt32 i = 0; i < cnt; i++) {
+        nsINetModRegEntry* curEntry = mEntries[i];
 
         PRBool same = PR_FALSE;
         rv = tmpEntryI->Equals(curEntry, &same);
         if (NS_FAILED(rv)) return rv;
 
         if (same) {
-            mEntries->DeleteElementAt(i);
+            mEntries.RemoveObjectAt(i);
             break;
         }
     }
@@ -148,19 +146,14 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
     
     nsAutoMonitor mon(mMonitor);
 
-    PRUint32 cnt;
-    rv = mEntries->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
+    PRInt32 cnt = mEntries.Count();
 
     // create the new array
-    nsCOMPtr<nsISupportsArray> topicEntries;
-    rv = NS_NewISupportsArray(getter_AddRefs(topicEntries));
-    if (NS_FAILED(rv)) return rv;
+    nsCOMArray<nsINetModRegEntry> topicEntries;
 
     // run through the main entry array looking for topic matches.
-    for (PRUint32 i = 0; i < cnt; i++) {
-        nsCOMPtr<nsINetModRegEntry> entry = 
-            dont_AddRef(NS_STATIC_CAST(nsINetModRegEntry*, mEntries->ElementAt(i)));
+    for (PRInt32 i = 0; i < cnt; i++) {
+        nsINetModRegEntry* entry = mEntries[i];
 
         nsXPIDLCString topic;
         rv = entry->GetTopic(getter_Copies(topic));
@@ -168,8 +161,8 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
 
         if (0 == PL_strcmp(aTopic, topic)) {
             // found a match, add it to the list
-            rv = topicEntries->AppendElement(NS_STATIC_CAST(nsISupports*, entry)) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
-            if (NS_FAILED(rv)) return rv;
+            if (!topicEntries.AppendObject(entry))
+                return NS_ERROR_FAILURE;
         }
     }
 
@@ -189,13 +182,10 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
 
 nsNetModuleMgr::nsNetModuleMgr() {
     NS_INIT_ISUPPORTS();
-    NS_NewISupportsArray(&mEntries);
     mMonitor = nsAutoMonitor::NewMonitor("nsNetModuleMgr");
 }
 
 nsNetModuleMgr::~nsNetModuleMgr() {
-    NS_IF_RELEASE(mEntries);
-
     nsAutoMonitor::DestroyMonitor(mMonitor);
     gManager = nsnull;
 }
