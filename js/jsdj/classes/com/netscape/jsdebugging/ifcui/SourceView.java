@@ -516,6 +516,7 @@ final class SourceTextItemDrawer
         _polyExecPoint.addPoint( rectExec.x, rectExec.y );
 
         _ptText = new Point( _width, 0 );
+        _stringClipper = new DrawStringClipper( _charWidth );
     }
 
     public void draw( Graphics g,
@@ -531,6 +532,7 @@ final class SourceTextItemDrawer
         SourceLineItemModel itemModel = (SourceLineItemModel) item.data();
 
         Rect r = new Rect();
+        Rect clipRect = g.clipRect();
 
         // draw the main text
 
@@ -541,9 +543,16 @@ final class SourceTextItemDrawer
                          boundsRect.y + _ptText.y,
                          boundsRect.width - _ptText.x,
                          boundsRect.height - _ptText.y );
-
-            if( r.intersects( g.clipRect() ) )
-                item.drawStringInRect(g,text,_font,r,Graphics.LEFT_JUSTIFIED);
+            
+//            System.out.println("r is "+r+"  clip is "+clipRect);            
+            if( r.intersects( clipRect ) )
+            {
+                /* no sync - we trust that we are drawn on only one thread */
+                if( _stringClipper.doClip(text, r, clipRect) > 0 )
+                    item.drawStringInRect(g, _stringClipper.getString(), _font,
+                                          _stringClipper.getRect(),
+                                          Graphics.LEFT_JUSTIFIED);
+            }
         }
 
         if( hasBreakpoint )
@@ -553,7 +562,7 @@ final class SourceTextItemDrawer
                          _rectBP.width,
                          _rectBP.height );
 
-            if( r.intersects( g.clipRect() ) )
+            if( r.intersects( clipRect ) )
             {
                 if( hasConditionalBreakpoint )
                     g.setColor( Color.orange );
@@ -570,7 +579,7 @@ final class SourceTextItemDrawer
                          _rectBPBackground.width,
                          _rectBPBackground.height );
 
-            if( r.intersects( g.clipRect() ) )
+            if( r.intersects( clipRect ) )
             {
                 g.setColor( Color.black );
                 g.setFont(_font);
@@ -585,7 +594,7 @@ final class SourceTextItemDrawer
                          _rectExecPointBackground.width,
                          _rectExecPointBackground.height );
 
-            if( r.intersects( g.clipRect() ) )
+            if( r.intersects( clipRect ) )
             {
                 if( scriptType == SourceLineItemModel.FUNCTION_BODY )
                     g.setColor( Color.orange );
@@ -619,7 +628,7 @@ final class SourceTextItemDrawer
                          boundsRect.width - _ptLineNumbers.x,
                          boundsRect.height - _ptLineNumbers.y );
 
-            if( r.intersects( g.clipRect() ) )
+            if( r.intersects( clipRect ) )
             {
                 g.setColor( Color.darkGray );
                 g.setFont(_font);
@@ -666,6 +675,7 @@ final class SourceTextItemDrawer
     private Point   _ptText;
     private boolean _showLineNumbers;
     private int     _charWidth;
+    private DrawStringClipper _stringClipper;
 
 
 }
@@ -946,6 +956,16 @@ final class SourceTextListItem extends SmartListItem
                                   Font titleFont, Rect textBounds,
                                   int justification)
     {
+        // XXX temp test...
+//        if(AS.DEBUG) {
+//            int len = title.length();
+//            String sub;
+//            if(0 == len)
+//                sub = "BLANK";
+//            else
+//                sub = title.substring(0, Math.min(60,len));
+//            System.out.println("drawing text: \""+sub+"\" at "+textBounds);
+//        }
         super.drawStringInRect(g,title,titleFont,textBounds,justification);
     }
 
