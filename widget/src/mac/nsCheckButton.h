@@ -22,20 +22,19 @@
 #include "nsWindow.h"
 #include "nsICheckButton.h"
 
+
 /**
- * Native Motif Checkbox wrapper
+ * Native Macintosh button wrapper
  */
 
 class nsCheckButton : public nsWindow
-                      
 {
 
 public:
-
   nsCheckButton(nsISupports *aOuter);
-  virtual                 ~nsCheckButton();
+  virtual ~nsCheckButton();
 
-  NS_IMETHOD QueryObject(REFNSIID aIID, void** aInstancePtr);
+  NS_IMETHOD QueryObject(const nsIID& aIID, void** aInstancePtr);
 
   void Create(nsIWidget *aParent,
               const nsRect &aRect,
@@ -52,35 +51,38 @@ public:
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
 
-  // nsICheckButton part
-  virtual void            SetLabel(const nsString& aText);
-  virtual void            GetLabel(nsString& aBuffer);
 
-  virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
-  virtual PRBool          OnPaint(nsPaintEvent &aEvent);
-  virtual PRBool          OnResize(nsSizeEvent &aEvent);
+    // nsIRadioButton part
+  virtual void   SetLabel(const nsString& aText);
+  virtual void   GetLabel(nsString& aBuffer);
+  virtual PRBool OnPaint(nsPaintEvent & aEvent);
+  virtual PRBool OnResize(nsSizeEvent &aEvent);
+  virtual PRBool DispatchMouseEvent(nsMouseEvent &aEvent);
 
   virtual void            SetState(PRBool aState);
   virtual PRBool          GetState();
-
-  // These are needed to Override the auto check behavior
-  void Armed();
-  void DisArmed();
+  
+  // Mac specific methods
+  void LocalToWindowCoordinate(nsPoint& aPoint);
+  void LocalToWindowCoordinate(nsRect& aRect);	
+  
+  // Overriden from nsWindow
+  virtual PRBool PtInWindow(PRInt32 aX,PRInt32 aY);
+  
 
 private:
+
+	void StringToStr255(const nsString& aText, Str255& aStr255);
+	void DrawWidget(PRBool	aMouseInside);
 
   // this should not be public
   static PRInt32 GetOuterOffset() {
     return offsetof(nsCheckButton,mAggWidget);
   }
 
-  Boolean mInitialState;
-  Boolean mNewValue;
-  Boolean mValueWasSet;
-  Boolean mIsArmed;
 
   // Aggregator class and instance variable used to aggregate in the
-  // nsIButton interface to nsCheckButton w/o using multiple
+  // nsIRadioButton interface to nsCheckButton w/o using multiple
   // inheritance.
   class AggCheckButton : public nsICheckButton {
   public:
@@ -95,10 +97,16 @@ private:
     virtual void   SetState(PRBool aState);
     virtual PRBool GetState();
 
-
   };
+
   AggCheckButton mAggWidget;
   friend class AggCheckButton;
+  
+  nsString			mLabel;
+  PRBool				mMouseDownInButton;
+  PRBool				mWidgetArmed;
+  PRBool				mButtonSet;
+
 
 };
 
