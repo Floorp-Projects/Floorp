@@ -3546,6 +3546,7 @@ void nsViewManager::OptimizeDisplayListClipping(PRBool aHaveClip, nsRect& aClipR
   }
 }
 
+#ifdef NS_DEBUG
 void nsViewManager::ShowDisplayList(PRInt32 flatlen)
 {
   char     nest[400];
@@ -3606,6 +3607,7 @@ void nsViewManager::ShowDisplayList(PRInt32 flatlen)
     nestcnt = newnestcnt;
   }
 }
+#endif
 
 void nsViewManager::ComputeViewOffset(nsIView *aView, nsPoint *aOrigin)
 {
