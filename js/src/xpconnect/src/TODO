@@ -1,0 +1,60 @@
+/* jband - 02/20/99 - TODO and issues list */
+
+**** TODO ****
+- Docs
+    - list of required docs
+    - docs on source?
+- namespaces
+    - xpidl work
+    - xptinfo work
+    - XPConnect work
+- ports
+    - Mac!
+    - other
+- xpidl work for marking pointer, const, reference, nsID
+- 64bit ints on platforms w/o 'long long'
+- re-org the source directory layout
+- define 'JSFILE' by default in JS engines
+- better api for Components object
+- reimplement nsSJIID and nsJSCID using multiple inheritence
+- nsJSCID getSerrvice method
+- global namespace interface
+- fix interface constant stuff
+- XPCOnnect as a service
+    - auto reg stuff
+- flattened component scheme
+    - xpidl extensions
+    - XPConnect support
+    - simple aggregatable interface for GetCID()
+- 'shared'
+- resolve the string issues
+- work with embedders
+- better exceptions (not just throw strings)
+- work in JS engine to track more info when exceptions thrown so that
+  the uncaught exceptions will not be so mysterious (filename and lineno)
+- better tests
+- xpidl work and documents
+
+- proto object per class?
+- Param gc rooting?
+- safer use of jsdoubles?
+
+**** ISSUES ****
+
+- Contexts\Runtimes\ScopeChain problems
+
+- Constants for WrappedJS objects? 
+    - Even for WrappedNatives the constants should (perhaps) be in the 
+      (as yet not created) class proto object rather than props of each object?
+      This makes then overwritable?
+
+- Ref counting for contexts?
+
+- JSContext and JSRuntime life times and how that impacts XPConnect stuff
+
+- wrappedJS stub stuff can't handle (non-xpcom) natives passed by value -
+  we need to know the object size to cleanup the stack!
+
+- Listener interface for class and instance create/destroy?
+
+- Issues with shutting down a context?
