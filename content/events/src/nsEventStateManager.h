@@ -279,7 +279,6 @@ protected:
   nsCOMPtr<nsIContent> mURLTargetContent;
   nsCOMPtr<nsIContent> mCurrentFocus;
   nsIFrame* mCurrentFocusFrame;
-  EFocusedWithType mLastFocusedWith;
   PRInt32 mCurrentTabIndex;
 
   // DocShell Traversal Data Memebers
