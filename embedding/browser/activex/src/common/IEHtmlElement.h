@@ -61,7 +61,7 @@ public:
 BEGIN_COM_MAP(CIEHtmlElement)
     COM_INTERFACE_ENTRY2(IDispatch, IHTMLElement)
     COM_INTERFACE_ENTRY(IHTMLElement)
-    COM_INTERFACE_ENTRY_AGGREGATE(IID_IHTMLDOMNode, m_pNodeAgg)
+    COM_INTERFACE_ENTRY_AGGREGATE(__uuidof(IHTMLDOMNode), m_pNodeAgg)
 END_COM_MAP()
 
     virtual HRESULT GetChildren(CIEHtmlElementCollectionInstance **ppCollection);
@@ -169,3 +169,5 @@ protected:
 typedef CComObject<CIEHtmlElement> CIEHtmlElementInstance;
 
 #endif
+
+
