@@ -883,6 +883,78 @@ nsHTMLTextAreaElement::GetControllers(nsIControllers** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLTextAreaElement::GetTextLength(PRInt32 *aTextLength)
+{
+  NS_ENSURE_ARG_POINTER(aTextLength);
+  nsAutoString val;
+  nsresult rv = GetValue(val);
+  *aTextLength = val.Length();
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::GetSelectionStart(PRInt32 *aSelectionStart)
+{
+  NS_ENSURE_ARG_POINTER(aSelectionStart);
+  nsCOMPtr<nsIFormControlFrame> formControlFrame = getter_AddRefs(GetFormControlFrame(PR_TRUE));
+
+  nsCOMPtr<nsIGfxTextControlFrame2>
+    textControlFrame(do_QueryInterface(formControlFrame));
+    
+  if (textControlFrame) {
+    PRInt32 selectionEnd;
+    return textControlFrame->GetSelectionRange(aSelectionStart, &selectionEnd);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::SetSelectionStart(PRInt32 aSelectionStart)
+{
+  nsCOMPtr<nsIFormControlFrame> formControlFrame = getter_AddRefs(GetFormControlFrame(PR_TRUE));
+
+  nsCOMPtr<nsIGfxTextControlFrame2>
+    textControlFrame(do_QueryInterface(formControlFrame));
+
+  if (textControlFrame)
+    textControlFrame->SetSelectionStart(aSelectionStart);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::GetSelectionEnd(PRInt32 *aSelectionEnd)
+{
+  NS_ENSURE_ARG_POINTER(aSelectionEnd);
+  nsCOMPtr<nsIFormControlFrame> formControlFrame = getter_AddRefs(GetFormControlFrame(PR_TRUE));
+
+  nsCOMPtr<nsIGfxTextControlFrame2>
+    textControlFrame(do_QueryInterface(formControlFrame));
+    
+  if (textControlFrame) {
+    PRInt32 selectionStart;
+    return textControlFrame->GetSelectionRange(&selectionStart, aSelectionEnd);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::SetSelectionEnd(PRInt32 aSelectionEnd)
+{
+  nsCOMPtr<nsIFormControlFrame> formControlFrame = getter_AddRefs(GetFormControlFrame(PR_TRUE));
+
+  nsCOMPtr<nsIGfxTextControlFrame2>
+    textControlFrame(do_QueryInterface(formControlFrame));
+
+  if (textControlFrame)
+    textControlFrame->SetSelectionEnd(aSelectionEnd);
+
+  return NS_OK;
+}
 
 nsresult
 nsHTMLTextAreaElement::Reset()
