@@ -39,7 +39,7 @@ CORE_DEPTH = ..
 
 MODULE = svrcore
 
-IMPORTS = nspr20/v4.4.1 nss/NSS_3_9_6_RTM
+IMPORTS = nspr20/v4.4.1 nss/NSS_3_9_3_RTM
 
 RELEASE = svrcore
 
