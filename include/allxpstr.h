@@ -7916,6 +7916,12 @@ ResDef(MK_LDAP_AUTHDN_LOOKUP_FAILED, XP_MSG_BASE + 1469, "Mail id invalid or not
 
 
 /* Cookies & Signons XP Strings */
+ResDef(MK_SIGNON_VIEW_SIGNONS, (XP_MSG_BASE + 1478),
+"View saved sign-ons")
+
+ResDef(MK_SIGNON_VIEW_REJECTS, (XP_MSG_BASE + 1479),
+"View sign-ons that won't be saved")
+
 ResDef(MK_ACCESS_COOKIES_WISHES0, (XP_MSG_BASE + 1480),
 "The server %1$s \nwishes to set a cookie.\n\n\
 Do you wish to allow the cookie to be set?")
@@ -7934,10 +7940,16 @@ ResDef(MK_ACCESS_COOKIES_REMEMBER, (XP_MSG_BASE + 1483),
 "Do you want to remember this decision?")
 
 ResDef(MK_ACCESS_COOKIES_ACCEPTED, (XP_MSG_BASE + 1484),
-"Cookies you have accepted")
+"Cookies stored on your system")
 
 ResDef(MK_ACCESS_COOKIES_PERMISSION, (XP_MSG_BASE + 1485),
-"Hosts that may (+) or may not (-)<BR> set cookies")
+"Sites that can(+) and cannot(-) store cookies")
+
+ResDef(MK_ACCESS_VIEW_COOKIES, (XP_MSG_BASE + 1486),
+"View stored cookies")
+
+ResDef(MK_ACCESS_VIEW_SITES, (XP_MSG_BASE + 1487),
+"View sites that can store cookies")
 
 ResDef(MK_SIGNON_PASSWORDS_GENERATE, (XP_MSG_BASE + 1490), \
 "********")
