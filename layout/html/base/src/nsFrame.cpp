@@ -1028,7 +1028,7 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
         // are we an anchor? If so, bail out now!
         nsCOMPtr<nsIAtom> tag;
         content->GetTag(*getter_AddRefs(tag));
-        if ( tag == nsHTMLAtoms::a )
+        if ( tag.get() == nsHTMLAtoms::a )
           return NS_OK;
         
         // now try the parent
