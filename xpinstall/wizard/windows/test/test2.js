@@ -11,24 +11,25 @@
 
 var regName = "testxpi test 2";
 var vi      = "2.0.1.9"
-var jarSrc  = "test1.txt";
+var jarSrc  = "test2.txt";
 var err;
 
 err = startInstall("Acceptance: test2", "install test file 2", vi, 0);
-logComment("startInstall returned: " + err);
+logComment("startInstall() returned: " + err);
 
 f   = getFolder("Program", "testxpi");
 logComment("getFolder() returned: " + f);
 
-err = addSubcomponent(regName, vi, jarSrc, f, jarSrc, true);
-logComment("addSubComponent returned: " + err);
+err = addFile(regName, vi, jarSrc, f, jarSrc, true);
+logComment("addFile() returned: " + err);
 
-if(0 == getLastError())
+err == getLastError();
+if(0 == err)
 {
 	err = finalizeInstall();
-  logComment("finalizeInstall returned: " + err);
+  logComment("finalizeInstall() returned: " + err);
 }
 else
 {
-	abortInstall();
+	abortInstall(err);
 }

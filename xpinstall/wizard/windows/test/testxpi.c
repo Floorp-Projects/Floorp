@@ -56,6 +56,9 @@ void PrintError(LPSTR szMsg, DWORD dwErrorCodeSH, int iExitCode)
 
   printf("%s\n", szErrorString);
   printf("exit code: %d\n", iExitCode);
+  if(iExitCode == 0)
+    printf("\n** Success! **\n");
+
   DeInitializeXPIStub();
   exit(iExitCode);
 }
