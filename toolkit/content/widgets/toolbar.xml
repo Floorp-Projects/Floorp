@@ -121,14 +121,17 @@
                   node.localName == "toolbaritem" || 
                   node.localName == "toolbarbutton" ||
                   node.localName == "toolbarseparator" ||
-                  node.localName == "spacer")
+                  node.localName == "toolbarspring" ||
+                  node.localName == "toolbarspacer")
               {
                 if (currentSet)
                   currentSet += ",";
 
                 if (node.localName == "toolbarseparator")
                   currentSet += "separator";
-                else if (node.localName == "spacer")
+                else if (node.localName == "toolbarspring")
+                  currentSet += "spring";
+                else if (node.localName == "toolbarspacer")
                   currentSet += "spacer";
                 else
                   currentSet += node.id;
@@ -175,13 +178,18 @@
             if (aId == "separator") {
               newItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                                  "toolbarseparator");
-              var uniqueId = (new Date()).getTime();
+              var uniqueId = (new Date()).getTime()+this.childNodes.length;
               newItem.id = "separator" + uniqueId;
+            } else if (aId == "spring") {
+              newItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                 "toolbarspring");
+              var uniqueId = (new Date()).getTime()+this.childNodes.length;
+              newItem.flex = 1;
+              newItem.id = "spring" + uniqueId;
             } else if (aId == "spacer") {
               newItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                                 "spacer");
-              var uniqueId = (new Date()).getTime();
-              newItem.flex = 1;
+                                                 "toolbarspacer");
+              var uniqueId = (new Date()).getTime()+this.childNodes.length;
               newItem.id = "spacer" + uniqueId;
             } else {
               // Attempt to locate an item with a matching id within palette.
@@ -238,9 +246,24 @@
     </implementation>
   </binding>
 
-  <binding id="toolbarseparator" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base"/>
+  <binding id="toolbardecoration" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base"/>
 
-  <binding id="toolbarpaletteitem" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base" display="xul:button"/>
-  
+  <binding id="toolbarpaletteitem" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base" display="xul:button">
+    <content>
+      <xul:hbox class="toolbarpaletteitem-box" flex="1" xbl:inherits="type,place">
+        <children/>
+      </xul:hbox>
+    </content>
+  </binding>
+    
+  <binding id="toolbarpaletteitem-palette" extends="chrome://global/content/widgets/toolbar.xml#toolbarpaletteitem">
+    <content>
+      <xul:hbox class="toolbarpaletteitem-box" xbl:inherits="type,place">
+        <children/>
+      </xul:hbox>
+      <xul:label xbl:inherits="value=title"/>
+    </content>
+  </binding>
+
 </bindings>          
 

@@ -205,11 +205,27 @@ toolbar {
 }
 
 toolbarseparator {
-  -moz-binding: url("chrome://global/content/widgets/toolbar.xml#toolbarseparator");
+  -moz-binding: url("chrome://global/content/widgets/toolbar.xml#toolbardecoration");
+}
+
+toolbarspacer {
+  -moz-binding: url("chrome://global/content/widgets/toolbar.xml#toolbardecoration");
+  display: inline;
+}
+
+toolbarspring {
+  -moz-binding: url("chrome://global/content/widgets/toolbar.xml#toolbardecoration");
+  -moz-box-flex: 1;
+  display: inline;
 }
 
 toolbarpaletteitem {
   -moz-binding: url("chrome://global/content/widgets/toolbar.xml#toolbarpaletteitem");
+}
+
+toolbarpaletteitem[place="palette"] {
+  -moz-box-orient: vertical;
+  -moz-binding: url("chrome://global/content/widgets/toolbar.xml#toolbarpaletteitem-palette");
 }
 
 /********* menubar ***********/

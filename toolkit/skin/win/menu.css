@@ -99,6 +99,10 @@ menubar > menu {
   margin: 1px 0px 1px 0px;
 }
 
+menubar > menu[disabled="true"] {
+  border: 1px solid transparent !important;
+}
+
 menubar > menu[_moz-menuactive="true"] {
   border-top: 1px solid ThreeDHighlight;
   border-right: 1px solid ThreeDShadow;

@@ -722,21 +722,21 @@ Contributor(s):
                       oncommand="BrowserHome();"/>
     
       <toolbaritem id="urlbar-container" align="center" flex="1"
-                    class="chromeclass-location">
+                   title="&locationItem.title;" class="chromeclass-location">
         <textbox id="urlbar" flex="1"
-                  type="autocomplete"
-                  autocompletesearch="history" 
-                  autocompletepopup="PopupAutoComplete"
-                  tabscrolling="true"
-                  showcommentcolumn="true"
-                  enablehistory="true"
-                  inputtooltiptext="&locationBar.tooltip;"
-                  oninput="window.XULBrowserWindow.userTyped.value=true;"
-                  ontextentered="return handleURLBarCommand(param);"
-                  ontextreverted="return handleURLBarRevert();"
-                  onfocus="URLBarFocusHandler(event);"
-                  onmousedown="URLBarMouseDownHandler(event);"
-                  onclick="URLBarClickHandler(event);">
+                 type="autocomplete"
+                 autocompletesearch="history" 
+                 autocompletepopup="PopupAutoComplete"
+                 tabscrolling="true"
+                 showcommentcolumn="true"
+                 enablehistory="true"
+                 inputtooltiptext="&locationBar.tooltip;"
+                 oninput="window.XULBrowserWindow.userTyped.value=true;"
+                 ontextentered="return handleURLBarCommand(param);"
+                 ontextreverted="return handleURLBarRevert();"
+                 onfocus="URLBarFocusHandler(event);"
+                 onmousedown="URLBarMouseDownHandler(event);"
+                 onclick="URLBarClickHandler(event);">
           <deck id="page-proxy-deck">
             <image id="page-proxy-button"
                     ondraggesture="PageProxyDragGesture(event);"
@@ -753,7 +753,8 @@ Contributor(s):
         </textbox>
       </toolbaritem>
 
-      <toolbaritem id="search-container" align="center" class="chromeclass-location">
+      <toolbaritem id="search-container" align="center"
+                   title="&searchItem.title;" class="chromeclass-location">
         <textbox id="search-bar" flex="1"/>
       </toolbaritem>
       
@@ -772,12 +773,12 @@ Contributor(s):
                       oncommand="BrowserPrint();"
                       tooltiptext="&printButton.tooltip;"/>
 
-      <toolbaritem id="throbber-box" align="center" pack="center">
+      <toolbaritem id="throbber-box" align="center" pack="center" title="&throbberItem.title;">
         <button id="navigator-throbber" oncommand="goClickThrobber('browser.throbber.url')"
                 tooltiptext="&throbber.tooltip;"/>
       </toolbaritem>
       
-      <toolbaritem id="personal-bookmarks" flex="1">
+      <toolbaritem id="personal-bookmarks" title="&bookmarksItem.title;" flex="1">
         <bookmarks-toolbar id="bookmarks-toolbar" flex="1"/>
       </toolbaritem>
     </toolbarpalette>
