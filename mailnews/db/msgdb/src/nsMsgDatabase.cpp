@@ -394,6 +394,7 @@ NS_IMETHODIMP_(nsrefcnt) nsMsgDatabase::Release(void)
 		NS_DELETEXPCOM(this);                              
 		return 0;                                          
 	}
+	NS_LOG_RELEASE(this, mRefCnt,"nsMsgDatabase"); 
 	return mRefCnt;                                      
 }
 
@@ -419,8 +420,13 @@ NS_IMETHODIMP nsMsgDatabase::QueryInterface(REFNSIID aIID, void** aResult)
 	static nsIMdbFactory *gMDBFactory = nsnull;
 	if (!gMDBFactory)
 	{
-		nsresult rv;
-        rv = nsComponentManager::CreateInstance(kCMorkFactory, nsnull, nsIMdbFactoryFactory::GetIID(), (void **) &gMDBFactory);
+		nsCOMPtr <nsIMdbFactoryFactory> factoryfactory;
+		nsresult rv = nsComponentManager::CreateInstance(kCMorkFactory,
+												  nsnull,
+												  NS_GET_IID(nsIMdbFactoryFactory),
+												  (void **) getter_AddRefs(factoryfactory));
+		if (NS_SUCCEEDED(rv) && factoryfactory)
+		  rv = factoryfactory->GetMdbFactory(&gMDBFactory);
 	}
 	return gMDBFactory;
 }
