@@ -3522,11 +3522,14 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
             mNameSpace->FindNameSpaceID(prefix, &nameSpaceID);
           } // else, no declared namespaces
           if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
+            REPORT_UNEXPECTED(NS_LITERAL_STRING("Unknown namespace prefix '") +
+                              holdIdent + NS_LITERAL_STRING("'."));
             return PR_FALSE;
           }
           attr.AppendInt(nameSpaceID, 10);
           attr.Append(PRUnichar('|'));
           if (! GetToken(aErrorCode, PR_FALSE)) {
+            REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("attribute name"));
             return PR_FALSE;
           }
           if (eCSSToken_Ident == mToken.mType) {
@@ -3539,6 +3542,8 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
             }
           }
           else {
+            REPORT_UNEXPECTED_TOKEN(
+              NS_LITERAL_STRING("Expected attribute name but found"));
             UngetToken();
             return PR_FALSE;
           }
@@ -3553,26 +3558,15 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
         }
       }
       else if (mToken.IsSymbol('*')) {  // namespace wildcard
-        if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {
-          attr.AppendInt(kNameSpaceID_Unknown, 10);
-          attr.Append(PRUnichar('|'));
-          if (! GetToken(aErrorCode, PR_FALSE)) {
-            return PR_FALSE;
-          }
-          if (eCSSToken_Ident == mToken.mType) {
-            attr.Append(mToken.mIdent);
-          }
-          else {
-            UngetToken();
-            return PR_FALSE;
-          }
-        }
-        else {
-          return PR_FALSE;
-        }
+        // Wildcard namespace makes no sense here and is not allowed
+        REPORT_UNEXPECTED_TOKEN(
+          NS_LITERAL_STRING("Expected attribute name but found"));
+        UngetToken();
+        return PR_FALSE;
       }
       else if (mToken.IsSymbol('|')) {  // explicit NO namespace
         if (! GetToken(aErrorCode, PR_FALSE)) {
+          REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("attribute name"));
           return PR_FALSE;
         }
         if (eCSSToken_Ident == mToken.mType) {
@@ -3585,11 +3579,15 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
           }
         }
         else {
+          REPORT_UNEXPECTED_TOKEN(
+            NS_LITERAL_STRING("Expected attribute name but found"));
           UngetToken();
           return PR_FALSE;
         }
       }
       else {
+        REPORT_UNEXPECTED_TOKEN(
+          NS_LITERAL_STRING("Expected attribute name or namespace but found"));
         UngetToken();
         return PR_FALSE;
       }
