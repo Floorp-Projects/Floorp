@@ -30,6 +30,7 @@
 
 #include <elf.h>
 #include <glib.h>
+#include <string.h>
 
 
 Elf32_Ehdr *elf_header = NULL;
@@ -51,6 +52,64 @@ Elf32_Addr hole_addr_start;
 Elf32_Addr hole_addr_remap_start;
 Elf32_Addr hole_addr_remap_end;
 
+int need_byteswap;
+
+unsigned char machine_type;
+
+Elf32_Word
+read_word(Elf32_Word w)
+{
+  if (need_byteswap) 
+    w = GUINT32_SWAP_LE_BE(w);
+  return w;
+}
+
+Elf32_Sword
+read_sword(Elf32_Sword w)
+{
+  if (need_byteswap) 
+    w = (Elf32_Sword)GUINT32_SWAP_LE_BE((guint32)w);
+  return w;
+}
+
+void 
+write_word(Elf32_Word *ptr, Elf32_Word w)
+{
+  if (need_byteswap) 
+    w = GUINT32_SWAP_LE_BE(w);
+  *ptr = w;
+}
+
+Elf32_Half
+read_half(Elf32_Half h)
+{
+  if (need_byteswap) 
+    h = GUINT16_SWAP_LE_BE(h);
+  return h;
+}
+
+void 
+write_half(Elf32_Half *ptr, Elf32_Half h)
+{
+  if (need_byteswap) 
+    h = GUINT16_SWAP_LE_BE(h);
+  *ptr = h;
+}
+
+void
+setup_byteswapping(unsigned char ei_data)
+{
+  need_byteswap = 0;
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+  if (ei_data == ELFDATA2LSB)
+    need_byteswap = 1;
+#endif
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  if (ei_data == ELFDATA2MSB)
+    need_byteswap = 1;
+#endif
+}
+
 
 Elf32_Shdr *
 elf_find_section_num(int section_index)
@@ -58,8 +117,8 @@ elf_find_section_num(int section_index)
   Elf32_Shdr *section;
   Elf32_Word sectionsize;
 
-  section = (Elf32_Shdr *)FILE_OFFSET(elf_header->e_shoff);
-  sectionsize = elf_header->e_shentsize;
+  section = (Elf32_Shdr *)FILE_OFFSET(read_word(elf_header->e_shoff));
+  sectionsize = read_half(elf_header->e_shentsize);
 
   section = (Elf32_Shdr *)((char *)section + sectionsize*section_index);
 
@@ -76,17 +135,17 @@ elf_find_section_named(char *name)
   char *strtab;
   int i = 0;
 
-  section = (Elf32_Shdr *)FILE_OFFSET(elf_header->e_shoff);
+  section = (Elf32_Shdr *)FILE_OFFSET(read_word(elf_header->e_shoff));
 
-  strtab_section = elf_find_section_num(elf_header->e_shstrndx);
+  strtab_section = elf_find_section_num(read_half(elf_header->e_shstrndx));
   
-  strtab = (char *)FILE_OFFSET(strtab_section->sh_offset);
+  strtab = (char *)FILE_OFFSET(read_word(strtab_section->sh_offset));
   
-  sectionsize = elf_header->e_shentsize;
-  numsections = elf_header->e_shnum;
+  sectionsize = read_half(elf_header->e_shentsize);
+  numsections = read_half(elf_header->e_shnum);
 
   for (i=0;i<numsections;i++) {
-    if (strcmp(&strtab[section->sh_name], name) == 0) {
+    if (strcmp(&strtab[read_word(section->sh_name)], name) == 0) {
       return section;
     }
     section = (Elf32_Shdr *)((char *)section + sectionsize);
@@ -103,12 +162,12 @@ elf_find_section(Elf32_Word sh_type)
   int numsections;
   int i = 0;
 
-  section = (Elf32_Shdr *)FILE_OFFSET(elf_header->e_shoff);
-  sectionsize = elf_header->e_shentsize;
-  numsections = elf_header->e_shnum;
+  section = (Elf32_Shdr *)FILE_OFFSET(read_word(elf_header->e_shoff));
+  sectionsize = read_half(elf_header->e_shentsize);
+  numsections = read_half(elf_header->e_shnum);
 
   for (i=0;i<numsections;i++) {
-    if (section->sh_type == sh_type) {
+    if (read_word(section->sh_type) == sh_type) {
       return section;
     }
     section = (Elf32_Shdr *)((char *)section + sectionsize);
@@ -125,17 +184,17 @@ elf_find_next_higher_section(Elf32_Word offset)
   int numsections;
   int i = 0;
 
-  section = (Elf32_Shdr *)FILE_OFFSET(elf_header->e_shoff);
-  sectionsize = elf_header->e_shentsize;
-  numsections = elf_header->e_shnum;
+  section = (Elf32_Shdr *)FILE_OFFSET(read_word(elf_header->e_shoff));
+  sectionsize = read_half(elf_header->e_shentsize);
+  numsections = read_half(elf_header->e_shnum);
 
   higher = NULL;
 
   for (i=0;i<numsections;i++) {
-    if (section->sh_offset >= offset) {
+    if (read_word(section->sh_offset) >= offset) {
       if (higher == NULL) {
 	higher = section;
-      } else if (section->sh_offset < higher->sh_offset) {
+      } else if (read_word(section->sh_offset) < read_word(higher->sh_offset)) {
 	higher = section;
       }
     }
@@ -155,16 +214,16 @@ vma_to_offset(Elf32_Addr addr)
   int numsections;
   int i = 0;
 
-  section = (Elf32_Shdr *)FILE_OFFSET(elf_header->e_shoff);
-  sectionsize = elf_header->e_shentsize;
-  numsections = elf_header->e_shnum;
+  section = (Elf32_Shdr *)FILE_OFFSET(read_word(elf_header->e_shoff));
+  sectionsize = read_half(elf_header->e_shentsize);
+  numsections = read_half(elf_header->e_shnum);
 
   higher = NULL;
 
   for (i=0;i<numsections;i++) {
-    if ( (addr >= section->sh_addr) &&
-	 (addr < section->sh_addr + section->sh_size) ) {
-      return section->sh_offset + (addr-section->sh_addr);
+    if ( (addr >= read_word(section->sh_addr)) &&
+	 (addr < read_word(section->sh_addr) + read_word(section->sh_size)) ) {
+      return read_word(section->sh_offset) + (addr - read_word(section->sh_addr));
     }
     
     section = (Elf32_Shdr *)((char *)section + sectionsize);
@@ -185,15 +244,15 @@ find_segment_addr_min_max(Elf32_Word file_offset,
   int numsegments;
   int i = 0;
 
-  segment = (Elf32_Phdr *)FILE_OFFSET(elf_header->e_phoff);
-  segmentsize = elf_header->e_phentsize;
-  numsegments = elf_header->e_phnum;
+  segment = (Elf32_Phdr *)FILE_OFFSET(read_word(elf_header->e_phoff));
+  segmentsize = read_half(elf_header->e_phentsize);
+  numsegments = read_half(elf_header->e_phnum);
 
   for (i=0;i<numsegments;i++) {
-    if ((file_offset >= segment->p_offset) &&
-	(file_offset < segment->p_offset + segment->p_filesz))  {
-      *start = segment->p_vaddr;
-      *end = segment->p_vaddr + segment->p_memsz;
+    if ((file_offset >= read_word(segment->p_offset)) &&
+	(file_offset < read_word(segment->p_offset) + read_word(segment->p_filesz)))  {
+      *start = read_word(segment->p_vaddr);
+      *end = read_word(segment->p_vaddr) + read_word(segment->p_memsz);
       return;
     }
 
@@ -208,10 +267,10 @@ dynamic_find_tag(Elf32_Shdr *dynamic, Elf32_Sword d_tag)
   int i;
   Elf32_Dyn *element;
 
-  element = (Elf32_Dyn *)FILE_OFFSET(dynamic->sh_offset);
-  for (i=0; element[i].d_tag != DT_NULL; i++) {
-    if (element[i].d_tag = d_tag) {
-      return FILE_OFFSET(element[i].d_un.d_ptr);
+  element = (Elf32_Dyn *)FILE_OFFSET(read_word(dynamic->sh_offset));
+  for (i=0; read_sword(element[i].d_tag) != DT_NULL; i++) {
+    if (read_sword(element[i].d_tag) == d_tag) {
+      return FILE_OFFSET(read_word(element[i].d_un.d_ptr));
     }
   }
   
@@ -326,15 +385,15 @@ add_strings_from_dynsym(Elf32_Shdr *dynsym, char *strtab)
   Elf32_Word entry_size;
   
 
-  symbol = (Elf32_Sym *)FILE_OFFSET(dynsym->sh_offset);
-  symbol_end = (Elf32_Sym *)FILE_OFFSET(dynsym->sh_offset + dynsym->sh_size);
-  entry_size = dynsym->sh_entsize;
+  symbol = (Elf32_Sym *)FILE_OFFSET(read_word(dynsym->sh_offset));
+  symbol_end = (Elf32_Sym *)FILE_OFFSET(read_word(dynsym->sh_offset) + read_word(dynsym->sh_size));
+  entry_size = read_word(dynsym->sh_entsize);
 
   while (symbol < symbol_end) {
     int name_idx;
     struct dynamic_symbol *dynamic_symbol;
 
-    name_idx = symbol->st_name;
+    name_idx = read_word(symbol->st_name);
     possibly_add_string(name_idx, &strtab[name_idx]);
 
     
@@ -351,15 +410,15 @@ fixup_strings_in_dynsym(Elf32_Shdr *dynsym)
   Elf32_Word entry_size;
   
 
-  symbol = (Elf32_Sym *)FILE_OFFSET(dynsym->sh_offset);
-  symbol_end = (Elf32_Sym *)FILE_OFFSET(dynsym->sh_offset + dynsym->sh_size);
-  entry_size = dynsym->sh_entsize;
+  symbol = (Elf32_Sym *)FILE_OFFSET(read_word(dynsym->sh_offset));
+  symbol_end = (Elf32_Sym *)FILE_OFFSET(read_word(dynsym->sh_offset) + read_word(dynsym->sh_size));
+  entry_size = read_word(dynsym->sh_entsize);
   
   while (symbol < symbol_end) {
-    int name_idx;
     struct dynamic_symbol *dynamic_symbol;
 
-    symbol->st_name = fixup_string(symbol->st_name);
+    write_word(&symbol->st_name,
+	       fixup_string(read_word(symbol->st_name)));
 			 
     symbol = (Elf32_Sym *)((char *)symbol + entry_size);
   }
@@ -374,21 +433,22 @@ add_strings_from_dynamic(Elf32_Shdr *dynamic, char *strtab)
   Elf32_Dyn *element;
   Elf32_Word entry_size;
 
-  entry_size = dynamic->sh_entsize;
+  entry_size = read_word(dynamic->sh_entsize);
   
 
-  element = (Elf32_Dyn *)FILE_OFFSET(dynamic->sh_offset);
-  while (element->d_tag != DT_NULL) {
+  element = (Elf32_Dyn *)FILE_OFFSET(read_word(dynamic->sh_offset));
+  while (read_sword(element->d_tag) != DT_NULL) {
 
-    switch(element->d_tag) {
+    switch(read_sword(element->d_tag)) {
     case DT_NEEDED:
     case DT_SONAME:
     case DT_RPATH:
-      name_idx = element->d_un.d_val;
+      name_idx = read_word(element->d_un.d_val);
       /*if (name_idx) printf("d_tag: %d\n", element->d_tag);*/
       possibly_add_string(name_idx, &strtab[name_idx]);
       break;
     default:
+      ;
       /*printf("unhandled d_tag: %d (0x%x)\n", element->d_tag, element->d_tag);*/
     }
 
@@ -405,18 +465,20 @@ fixup_strings_in_dynamic(Elf32_Shdr *dynamic)
   Elf32_Dyn *element;
   Elf32_Word entry_size;
 
-  entry_size = dynamic->sh_entsize;
+  entry_size = read_word(dynamic->sh_entsize);
 
-  element = (Elf32_Dyn *)FILE_OFFSET(dynamic->sh_offset);
-  while (element->d_tag != DT_NULL) {
+  element = (Elf32_Dyn *)FILE_OFFSET(read_word(dynamic->sh_offset));
+  while (read_sword(element->d_tag) != DT_NULL) {
 
-    switch(element->d_tag) {
+    switch(read_sword(element->d_tag)) {
     case DT_NEEDED:
     case DT_SONAME:
     case DT_RPATH:
-      element->d_un.d_val = fixup_string(element->d_un.d_val);
+      write_word(&element->d_un.d_val,
+		 fixup_string(read_word(element->d_un.d_val)));
       break;
     default:
+      ;
       /*printf("unhandled d_tag: %d (0x%x)\n", element->d_tag, element->d_tag);*/
     }
 
@@ -436,19 +498,19 @@ add_strings_from_ver_d(Elf32_Shdr *ver_d, char *strtab)
   int i;
   int cont;
 
-  verdef = (Elf32_Verdef *)FILE_OFFSET(ver_d->sh_offset);
+  verdef = (Elf32_Verdef *)FILE_OFFSET(read_word(ver_d->sh_offset));
 
   do {
-    num_aux = verdef->vd_cnt;
-    veraux = (Elf32_Verdaux *)((char *)verdef + verdef->vd_aux);
+    num_aux = read_half(verdef->vd_cnt);
+    veraux = (Elf32_Verdaux *)((char *)verdef + read_word(verdef->vd_aux));
     for (i=0; i<num_aux; i++) {
-      name_idx = veraux->vda_name;
+      name_idx = read_word(veraux->vda_name);
       possibly_add_string(name_idx, &strtab[name_idx]);
-      veraux = (Elf32_Verdaux *)((char *)veraux + veraux->vda_next);
+      veraux = (Elf32_Verdaux *)((char *)veraux + read_word(veraux->vda_next));
     }
 
-    cont = verdef->vd_next != 0;
-    verdef = (Elf32_Verdef *)((char *)verdef + verdef->vd_next);
+    cont = read_word(verdef->vd_next) != 0;
+    verdef = (Elf32_Verdef *)((char *)verdef + read_word(verdef->vd_next));
   } while (cont);
   
 }
@@ -463,18 +525,19 @@ fixup_strings_in_ver_d(Elf32_Shdr *ver_d)
   int i;
   int cont;
 
-  verdef = (Elf32_Verdef *)FILE_OFFSET(ver_d->sh_offset);
+  verdef = (Elf32_Verdef *)FILE_OFFSET(read_word(ver_d->sh_offset));
 
   do {
-    num_aux = verdef->vd_cnt;
-    veraux = (Elf32_Verdaux *)((char *)verdef + verdef->vd_aux);
+    num_aux = read_half(verdef->vd_cnt);
+    veraux = (Elf32_Verdaux *)((char *)verdef + read_word(verdef->vd_aux));
     for (i=0; i<num_aux; i++) {
-      veraux->vda_name = fixup_string(veraux->vda_name);
-      veraux = (Elf32_Verdaux *)((char *)veraux + veraux->vda_next);
+      write_word(&veraux->vda_name,
+		 fixup_string(read_word(veraux->vda_name)));
+      veraux = (Elf32_Verdaux *)((char *)veraux + read_word(veraux->vda_next));
     }
 
-    cont = verdef->vd_next != 0;
-    verdef = (Elf32_Verdef *)((char *)verdef + verdef->vd_next);
+    cont = read_word(verdef->vd_next) != 0;
+    verdef = (Elf32_Verdef *)((char *)verdef + read_word(verdef->vd_next));
   } while (cont);
   
 }
@@ -489,21 +552,21 @@ add_strings_from_ver_r(Elf32_Shdr *ver_r, char *strtab)
   int i;
   int cont;
 
-  verneed = (Elf32_Verneed *)FILE_OFFSET(ver_r->sh_offset);
+  verneed = (Elf32_Verneed *)FILE_OFFSET(read_word(ver_r->sh_offset));
 
   do {
-    name_idx = verneed->vn_file;
+    name_idx = read_word(verneed->vn_file);
     possibly_add_string(name_idx, &strtab[name_idx]);
-    num_aux = verneed->vn_cnt;
-    veraux = (Elf32_Vernaux *)((char *)verneed + verneed->vn_aux);
+    num_aux = read_half(verneed->vn_cnt);
+    veraux = (Elf32_Vernaux *)((char *)verneed + read_word(verneed->vn_aux));
     for (i=0; i<num_aux; i++) {
-      name_idx = veraux->vna_name;
+      name_idx = read_word(veraux->vna_name);
       possibly_add_string(name_idx, &strtab[name_idx]);
-      veraux = (Elf32_Vernaux *)((char *)veraux + veraux->vna_next);
+      veraux = (Elf32_Vernaux *)((char *)veraux + read_word(veraux->vna_next));
     }
 
-    cont = verneed->vn_next != 0;
-    verneed = (Elf32_Verneed *)((char *)verneed + verneed->vn_next);
+    cont = read_word(verneed->vn_next) != 0;
+    verneed = (Elf32_Verneed *)((char *)verneed + read_word(verneed->vn_next));
   } while (cont);
 }
 
@@ -517,19 +580,21 @@ fixup_strings_in_ver_r(Elf32_Shdr *ver_r)
   int i;
   int cont;
 
-  verneed = (Elf32_Verneed *)FILE_OFFSET(ver_r->sh_offset);
+  verneed = (Elf32_Verneed *)FILE_OFFSET(read_word(ver_r->sh_offset));
 
   do {
-    verneed->vn_file = fixup_string(verneed->vn_file);
-    num_aux = verneed->vn_cnt;
-    veraux = (Elf32_Vernaux *)((char *)verneed + verneed->vn_aux);
+    write_word(&verneed->vn_file,
+	       fixup_string(read_word(verneed->vn_file)));
+    num_aux = read_half(verneed->vn_cnt);
+    veraux = (Elf32_Vernaux *)((char *)verneed + read_word(verneed->vn_aux));
     for (i=0; i<num_aux; i++) {
-      veraux->vna_name = fixup_string(veraux->vna_name);
-      veraux = (Elf32_Vernaux *)((char *)veraux + veraux->vna_next);
+      write_word(&veraux->vna_name,
+		 fixup_string(read_word(veraux->vna_name)));
+      veraux = (Elf32_Vernaux *)((char *)veraux + read_word(veraux->vna_next));
     }
 
-    cont = verneed->vn_next != 0;
-    verneed = (Elf32_Verneed *)((char *)verneed + verneed->vn_next);
+    cont = read_word(verneed->vn_next) != 0;
+    verneed = (Elf32_Verneed *)((char *)verneed + read_word(verneed->vn_next));
   } while (cont);
 }
 
@@ -543,7 +608,7 @@ gboolean sum_size(gpointer	key,
 
 struct index_n_dynstr {
   int index;
-  char *dynstr;
+  unsigned char *dynstr;
 };
 
 gboolean output_string(gpointer	key,
@@ -557,11 +622,11 @@ gboolean output_string(gpointer	key,
 }
 
 
-char *
+unsigned char *
 generate_new_dynstr(Elf32_Word *size_out)
 {
   int size;
-  char *new_dynstr;
+  unsigned char *new_dynstr;
   struct index_n_dynstr x;
 
   size = 1; /* first a zero */
@@ -591,15 +656,18 @@ remap_sections(void)
   int numsections;
   int i = 0;
 
-  section = (Elf32_Shdr *)FILE_OFFSET(elf_header->e_shoff);
-  sectionsize = elf_header->e_shentsize;
-  numsections = elf_header->e_shnum;
+  section = (Elf32_Shdr *)FILE_OFFSET(read_word(elf_header->e_shoff));
+  sectionsize = read_half(elf_header->e_shentsize);
+  numsections = read_half(elf_header->e_shnum);
 
   for (i=0;i<numsections;i++) {
-    section->sh_size = fixup_size(section->sh_offset, section->sh_size);
-    section->sh_offset = fixup_offset(section->sh_offset);
-
-    section->sh_addr = fixup_addr(section->sh_addr);
+    write_word(&section->sh_size,
+	       fixup_size(read_word(section->sh_offset),
+			  read_word(section->sh_size)));
+    write_word(&section->sh_offset,
+	       fixup_offset(read_word(section->sh_offset)));
+    write_word(&section->sh_addr,
+	       fixup_addr(read_word(section->sh_addr)));
     
     section = (Elf32_Shdr *)((char *)section + sectionsize);
   }
@@ -611,20 +679,37 @@ remap_segments(void)
 {
   Elf32_Phdr *segment;
   Elf32_Word segmentsize;
+  Elf32_Word p_align;
   int numsegments;
   int i = 0;
 
-  segment = (Elf32_Phdr *)FILE_OFFSET(elf_header->e_phoff);
-  segmentsize = elf_header->e_phentsize;
-  numsegments = elf_header->e_phnum;
+  segment = (Elf32_Phdr *)FILE_OFFSET(read_word(elf_header->e_phoff));
+  segmentsize = read_half(elf_header->e_phentsize);
+  numsegments = read_half(elf_header->e_phnum);
 
   for (i=0;i<numsegments;i++) {
-    segment->p_filesz = fixup_size(segment->p_offset, segment->p_filesz);
-    segment->p_offset = fixup_offset(segment->p_offset);
+    write_word(&segment->p_filesz,
+	       fixup_size(read_word(segment->p_offset),
+			  read_word(segment->p_filesz)));
+    write_word(&segment->p_offset,
+	       fixup_offset(read_word(segment->p_offset)));
 
-    segment->p_memsz = fixup_addr_size(segment->p_vaddr, segment->p_memsz);
-    segment->p_vaddr = fixup_addr(segment->p_vaddr);
-    segment->p_paddr = segment->p_vaddr;
+    write_word(&segment->p_memsz,
+	       fixup_addr_size(read_word(segment->p_vaddr),
+			       read_word(segment->p_memsz)));
+    write_word(&segment->p_vaddr,
+	       fixup_addr(read_word(segment->p_vaddr)));
+    write_word(&segment->p_paddr,
+	       read_word(segment->p_vaddr));
+
+    /* Consistancy checking: */
+    p_align = read_word(segment->p_align);
+    if (p_align > 1) {
+      if ((read_word(segment->p_vaddr) - read_word(segment->p_offset))%p_align != 0) {
+	fprintf(stderr, "Warning, creating non-aligned segment addr: %x offset: %x allign: %x\n",
+		read_word(segment->p_vaddr), read_word(segment->p_offset), p_align);
+      }
+    }
     
     segment = (Elf32_Phdr *)((char *)segment + segmentsize);
   }
@@ -633,10 +718,13 @@ remap_segments(void)
 void
 remap_elf_header(void)
 {
-    elf_header->e_phoff = fixup_offset(elf_header->e_phoff);
-    elf_header->e_shoff = fixup_offset(elf_header->e_shoff);
+  write_word(&elf_header->e_phoff,
+	     fixup_offset(read_word(elf_header->e_phoff)));
+  write_word(&elf_header->e_shoff,
+	     fixup_offset(read_word(elf_header->e_shoff)));
 
-    elf_header->e_entry = fixup_addr(elf_header->e_entry);
+  write_word(&elf_header->e_entry,
+	     fixup_addr(read_word(elf_header->e_entry)));
 }
 
 void
@@ -646,12 +734,14 @@ remap_symtab(Elf32_Shdr *symtab)
   Elf32_Sym *symbol_end;
   Elf32_Word entry_size;
 
-  symbol = (Elf32_Sym *)FILE_OFFSET(symtab->sh_offset);
-  symbol_end = (Elf32_Sym *)FILE_OFFSET(symtab->sh_offset + symtab->sh_size);
-  entry_size = symtab->sh_entsize;
+  symbol = (Elf32_Sym *)FILE_OFFSET(read_word(symtab->sh_offset));
+  symbol_end = (Elf32_Sym *)FILE_OFFSET(read_word(symtab->sh_offset) +
+					read_word(symtab->sh_size));
+  entry_size = read_word(symtab->sh_entsize);
 
   while (symbol < symbol_end) {
-    symbol->st_value = fixup_addr(symbol->st_value);
+    write_word(&symbol->st_value,
+	       fixup_addr(read_word(symbol->st_value)));
     symbol = (Elf32_Sym *)((char *)symbol + entry_size);
   }
 }
@@ -668,24 +758,30 @@ remap_rel_section(Elf32_Rel *rel, Elf32_Word size, Elf32_Word entry_size)
   Elf32_Rel *rel_end;
   Elf32_Word offset;
   Elf32_Addr *addr;
+  Elf32_Word type;
 
   rel_end = (Elf32_Rel *)((char *)rel + size);
 
   while (rel < rel_end) {
-    if (ELF32_R_TYPE(rel->r_info) == R_386_RELATIVE) {
-	  /* We need to relocate the data this is pointing to too. */
-	  offset = vma_to_offset(rel->r_offset);
-
-	  if ( (offset >= got_data_start) &&
-	       (offset < got_data_end) ) {
-	    /*printf("RELATIVE REL in .rel.got, skipping\n");*/
-	  } else {
-	    addr =  (Elf32_Addr *)FILE_OFFSET(offset);
-	    *addr = fixup_addr(*addr);
-	  }
+    type = ELF32_R_TYPE(read_word(rel->r_info)); 
+    switch (machine_type) {
+    case EM_386:
+      if ((type == R_386_RELATIVE) || (type == R_386_JMP_SLOT)) {
+	/* We need to relocate the data this is pointing to too. */
+	offset = vma_to_offset(read_word(rel->r_offset));
+	
+	addr =  (Elf32_Addr *)FILE_OFFSET(offset);
+	write_word(addr, 
+		   fixup_addr(read_word(*addr)));
+      }
+      write_word(&rel->r_offset,
+		 fixup_addr(read_word(rel->r_offset)));
+      break;
+    case EM_PPC:
+      /* The PPC always uses RELA relocations */
+      break;
     }
 
-    rel->r_offset = fixup_addr(rel->r_offset);
     
     rel = (Elf32_Rel *)((char *)rel + entry_size);
   }
@@ -697,62 +793,50 @@ remap_rela_section(Elf32_Rela *rela, Elf32_Word size, Elf32_Word entry_size)
   Elf32_Rela *rela_end;
   Elf32_Addr *addr;
   Elf32_Word offset;
+  Elf32_Word type;
+  Elf32_Word bitmask;
 
   rela_end = (Elf32_Rela *)((char *)rela + size);
 
   while (rela < rela_end) {
-    if (ELF32_R_TYPE(rela->r_info) == R_386_RELATIVE) {
-	  /* We need to relocate the data this is pointing to too. */
-	  offset = vma_to_offset(rela->r_offset);
-
-	  if ( (offset >= got_data_start) &&
-	       (offset < got_data_end) ) {
-	    /*printf("RELATIVE RELA in .rel.got, skipping\n");*/
-	  } else {
-	    addr =  (Elf32_Addr *)FILE_OFFSET(offset);
-	    *addr = fixup_addr(*addr);
-	  }
+    type = ELF32_R_TYPE(read_word(rela->r_info));
+    switch (machine_type) {
+    case EM_386:
+      if ((type == R_386_RELATIVE) || (type == R_386_JMP_SLOT)) {
+	/* We need to relocate the data this is pointing to too. */
+	offset = vma_to_offset(read_word(rela->r_offset));
+	
+	addr =  (Elf32_Addr *)FILE_OFFSET(offset);
+	write_word(addr,
+		   fixup_addr(read_word(*addr)));
+      }
+      write_word(&rela->r_offset,
+		 fixup_addr(read_word(rela->r_offset)));
+      break;
+    case EM_PPC:
+      switch (type) {
+      case R_PPC_RELATIVE:
+	write_word((Elf32_Word *)&rela->r_addend,
+		   fixup_addr(read_word(rela->r_addend)));
+	/* Fall through for 32bit offset fixup */
+      case R_PPC_ADDR32:
+      case R_PPC_GLOB_DAT:
+      case R_PPC_JMP_SLOT:
+	write_word(&rela->r_offset,
+		   fixup_addr(read_word(rela->r_offset)));
+	break;
+      case R_PPC_NONE:
+	break;
+      default:
+	fprintf(stderr, "Warning, unhandled PPC relocation type %d\n", type);
+      }
+      
+      break;
     }
-
-    rela->r_offset = fixup_addr(rela->r_offset);
     
     rela = (Elf32_Rela *)((char *)rela + entry_size);
   }
 }
-
-
-void
-remap_reloc(void)
-{
-  Elf32_Shdr *section;
-  Elf32_Word sectionsize;
-  Elf32_Word offset;
-  int numsections;
-  int i = 0;
-
-  /* This is old code. relocations are now handled from remap_dynamic() */
-  section = (Elf32_Shdr *)FILE_OFFSET(elf_header->e_shoff);
-  sectionsize = elf_header->e_shentsize;
-  numsections = elf_header->e_shnum;
-
-  for (i=0;i<numsections;i++) {
-    if (section->sh_type == SHT_REL) {
-      Elf32_Rel *rel;
-
-      rel = (Elf32_Rel *)FILE_OFFSET(section->sh_offset);
-      remap_rel_section(rel, section->sh_size, section->sh_entsize);
-      
-    } else if (section->sh_type == SHT_RELA) {
-      Elf32_Rela *rel;
-
-      rel = (Elf32_Rela *)FILE_OFFSET(section->sh_offset);
-      remap_rela_section(rel, section->sh_size, section->sh_entsize);
-    }
-    
-    section = (Elf32_Shdr *)((char *)section + sectionsize);
-  }
-}
-
 
 void 
 remap_i386_got(void)
@@ -768,24 +852,48 @@ remap_i386_got(void)
     return;
   }
 
-  got_data_start = got_section->sh_offset;
-  got_data_end = got_section->sh_offset + got_section->sh_size;
+  got_data_start = read_word(got_section->sh_offset);
+  got_data_end = got_data_start + read_word(got_section->sh_size);
   
-  got = (Elf32_Addr *)FILE_OFFSET(got_section->sh_offset);
-  got_end = (Elf32_Addr *)FILE_OFFSET(got_section->sh_offset + got_section->sh_size);
-  entry_size = got_section->sh_entsize;
+  got = (Elf32_Addr *)FILE_OFFSET(got_data_start);
+  got_end = (Elf32_Addr *)FILE_OFFSET(got_data_end);
+  entry_size = read_word(got_section->sh_entsize);
 
-  *got= fixup_addr(*got); /* Pointer to .dynamic */
-  got = (Elf32_Addr *)((char *)got + 2*entry_size); /* Skip two reserved entries. */
-  
-  
-  while (got < got_end) {
-    if (*got != 0)
-      *got= fixup_addr(*got);
-    
-    got = (Elf32_Addr *)((char *)got + entry_size);
-  }
+  write_word(got,
+	     fixup_addr(read_word(*got))); /* Pointer to .dynamic */
 }
+
+void 
+remap_ppc_got(void)
+{
+  Elf32_Shdr *got_section;
+  Elf32_Addr *got;
+  Elf32_Addr *got_end;
+  Elf32_Word entry_size;
+
+  got_section = elf_find_section_named(".got");
+  if (got_section == NULL) {
+    fprintf(stderr, "Warning, no .got section\n");
+    return;
+  }
+
+  got_data_start = read_word(got_section->sh_offset);
+  got_data_end = got_data_start + read_word(got_section->sh_size);
+  
+  got = (Elf32_Addr *)FILE_OFFSET(got_data_start);
+  got_end = (Elf32_Addr *)FILE_OFFSET(got_data_end);
+  entry_size = read_word(got_section->sh_entsize);
+
+  /* Skip reserved part.
+   * Note that this should really be found by finding the
+   * _GLOBAL_OFFSET_TABLE symbol, as it could (according to
+   * the spec) point to the middle of the got.
+   */
+  got = (Elf32_Addr *)((char *)got + entry_size); /* Skip blrl instruction */
+  write_word(got,
+	     fixup_addr(read_word(*got))); /* Pointer to .dynamic */
+}
+
 
 Elf32_Word
 get_dynamic_val(Elf32_Shdr *dynamic, Elf32_Sword tag)
@@ -793,12 +901,12 @@ get_dynamic_val(Elf32_Shdr *dynamic, Elf32_Sword tag)
   Elf32_Dyn *element;
   Elf32_Word entry_size;
 
-  entry_size = dynamic->sh_entsize;
+  entry_size = read_word(dynamic->sh_entsize);
 
-  element = (Elf32_Dyn *)FILE_OFFSET(dynamic->sh_offset);
-  while (element->d_tag != DT_NULL) {
-    if (element->d_tag == tag) {
-      return element->d_un.d_val;
+  element = (Elf32_Dyn *)FILE_OFFSET(read_word(dynamic->sh_offset));
+  while (read_sword(element->d_tag) != DT_NULL) {
+    if (read_sword(element->d_tag) == tag) {
+      return read_word(element->d_un.d_val);
     }
     element = (Elf32_Dyn *)((char *)element + entry_size);
   }
@@ -814,14 +922,30 @@ remap_dynamic(Elf32_Shdr *dynamic, Elf32_Word new_dynstr_size)
   Elf32_Word rel_entry_size;
   Elf32_Rel *rel;
   Elf32_Rela *rela;
+  int jmprel_overlaps;
+  Elf32_Word rel_start, rel_end, jmprel_start, jmprel_end;
+    
+  entry_size = read_word(dynamic->sh_entsize);
 
-  entry_size = dynamic->sh_entsize;
-
-  element = (Elf32_Dyn *)FILE_OFFSET(dynamic->sh_offset);
-  while (element->d_tag != DT_NULL) {
-    switch(element->d_tag) {
+  /* Find out if REL/RELA and JMPREL overlaps: */
+  if (get_dynamic_val(dynamic, DT_PLTREL) == DT_REL) {
+    rel_start = get_dynamic_val(dynamic, DT_REL);
+    rel_end = rel_start + get_dynamic_val(dynamic, DT_RELSZ);
+  } else {
+    rel_start = get_dynamic_val(dynamic, DT_RELA);
+    rel_end = rel_start + get_dynamic_val(dynamic, DT_RELASZ);
+  }
+  jmprel_start = get_dynamic_val(dynamic, DT_JMPREL);
+  
+  jmprel_overlaps = 0;
+  if ((jmprel_start >= rel_start) && (jmprel_start < rel_end))
+    jmprel_overlaps = 1;
+    
+  element = (Elf32_Dyn *)FILE_OFFSET(read_word(dynamic->sh_offset));
+  while (read_sword(element->d_tag) != DT_NULL) {
+    switch(read_sword(element->d_tag)) {
     case DT_STRSZ:
-      element->d_un.d_val = new_dynstr_size;
+      write_word(&element->d_un.d_val, new_dynstr_size);
       break;
     case DT_PLTGOT:
     case DT_HASH:
@@ -831,46 +955,53 @@ remap_dynamic(Elf32_Shdr *dynamic, Elf32_Word new_dynstr_size)
     case DT_VERDEF:
     case DT_VERNEED:
     case DT_VERSYM:
-      element->d_un.d_ptr = fixup_addr(element->d_un.d_ptr);
+      write_word(&element->d_un.d_ptr,
+		 fixup_addr(read_word(element->d_un.d_ptr)));
       break;
     case DT_JMPREL:
       rel_size = get_dynamic_val(dynamic, DT_PLTRELSZ);
-      if (get_dynamic_val(dynamic, DT_PLTREL) == DT_REL) {
-	rel_entry_size = get_dynamic_val(dynamic, DT_RELENT);
-	rel = (Elf32_Rel *)FILE_OFFSET(vma_to_offset(element->d_un.d_ptr));
-	remap_rel_section(rel, rel_size, rel_entry_size);
-      } else {
-	rel_entry_size = get_dynamic_val(dynamic, DT_RELAENT);
-	rela = (Elf32_Rela *)FILE_OFFSET(vma_to_offset(element->d_un.d_ptr));
-	remap_rela_section(rela, rel_size, rel_entry_size);
+      if (!jmprel_overlaps) {
+	if (get_dynamic_val(dynamic, DT_PLTREL) == DT_REL) {
+	  rel_entry_size = get_dynamic_val(dynamic, DT_RELENT);
+	  rel = (Elf32_Rel *)FILE_OFFSET(vma_to_offset(read_word(element->d_un.d_ptr)));
+	  remap_rel_section(rel, rel_size, rel_entry_size);
+	} else {
+	  rel_entry_size = get_dynamic_val(dynamic, DT_RELAENT);
+	  rela = (Elf32_Rela *)FILE_OFFSET(vma_to_offset(read_word(element->d_un.d_ptr)));
+	  remap_rela_section(rela, rel_size, rel_entry_size);
+	}
       }
-
-      element->d_un.d_ptr = fixup_addr(element->d_un.d_ptr);
+      write_word(&element->d_un.d_ptr,
+		 fixup_addr(read_word(element->d_un.d_ptr)));
       break;
     case DT_REL:
       rel_size = get_dynamic_val(dynamic, DT_RELSZ);
       rel_entry_size = get_dynamic_val(dynamic, DT_RELENT);
-      rel = (Elf32_Rel *)FILE_OFFSET(vma_to_offset(element->d_un.d_ptr));
+      rel = (Elf32_Rel *)FILE_OFFSET(vma_to_offset(read_word(element->d_un.d_ptr)));
       remap_rel_section(rel, rel_size, rel_entry_size);
-      
-      element->d_un.d_ptr = fixup_addr(element->d_un.d_ptr);
+
+      write_word(&element->d_un.d_ptr,
+		 fixup_addr(read_word(element->d_un.d_ptr)));
       break;
     case DT_RELA:
       rel_size = get_dynamic_val(dynamic, DT_RELASZ);
       rel_entry_size = get_dynamic_val(dynamic, DT_RELAENT);
-      rela = (Elf32_Rela *)FILE_OFFSET(vma_to_offset(element->d_un.d_ptr));
+      rela = (Elf32_Rela *)FILE_OFFSET(vma_to_offset(read_word(element->d_un.d_ptr)));
       remap_rela_section(rela, rel_size, rel_entry_size);
 
-      element->d_un.d_ptr = fixup_addr(element->d_un.d_ptr);
+      write_word(&element->d_un.d_ptr,
+		 fixup_addr(read_word(element->d_un.d_ptr)));
       break;
     default:
-      /*printf("unhandled d_tag: %d (0x%x)\n", element->d_tag, element->d_tag);*/
+      /*printf("unhandled d_tag: %d (0x%x)\n", read_sword(element->d_tag), read_sword(element->d_tag));*/
+      break;
     }
 
     element = (Elf32_Dyn *)((char *)element + entry_size);
   }
 }
 
+void
 align_hole(Elf32_Word *start, Elf32_Word *end)
 {
   Elf32_Word len;
@@ -884,15 +1015,15 @@ align_hole(Elf32_Word *start, Elf32_Word *end)
   len = *end - *start;
   align = 0;
     
-  sectionsize = elf_header->e_shentsize;
-  numsections = elf_header->e_shnum;
+  sectionsize = read_half(elf_header->e_shentsize);
+  numsections = read_half(elf_header->e_shnum);
   do {
-    section = (Elf32_Shdr *)FILE_OFFSET(elf_header->e_shoff);
+    section = (Elf32_Shdr *)FILE_OFFSET(read_word(elf_header->e_shoff));
     unaligned = 0;
     
     for (i=0;i<numsections;i++) {
-      if ( (section->sh_addralign > 1) &&
-	   ( (section->sh_offset-len + align)%section->sh_addralign != 0) ) {
+      if ( (read_word(section->sh_addralign) > 1) &&
+	   ( (read_word(section->sh_offset) - len + align)%read_word(section->sh_addralign) != 0) ) {
 	unaligned = 1;
       }
       
@@ -921,11 +1052,11 @@ main(int argc, char *argv[])
   Elf32_Shdr *dynstr;
   Elf32_Shdr *hash;
   Elf32_Shdr *higher_section;
-  int dynstr_index;
+  Elf32_Word dynstr_index;
   Elf32_Shdr *ver_r;
   Elf32_Shdr *ver_d;
   char *dynstr_data;
-  char *new_dynstr;
+  unsigned char *new_dynstr;
   Elf32_Word old_dynstr_size;
   Elf32_Word new_dynstr_size;
   
@@ -972,14 +1103,17 @@ main(int argc, char *argv[])
     fprintf(stderr, "Only 32bit ELF files supported\n");
     return 1;
   }
+  
+  setup_byteswapping(elf_header->e_ident[EI_DATA]);
 
-  if ( (elf_header->e_ident[EI_DATA] != ELFDATA2LSB) ||
-       (elf_header->e_machine !=  EM_386) ) {
-    fprintf(stderr, "Only intel LSB binaries are supported right now\n");
+  machine_type = read_half(elf_header->e_machine);
+  if ( (machine_type != EM_386) &&
+       (machine_type != EM_PPC) ) {
+    fprintf(stderr, "Unsupported architecture. Supported are: x86, ppc\n");
     return 1;
   }
 
-  if (elf_header->e_type != ET_DYN) {
+  if (read_half(elf_header->e_type) != ET_DYN) {
     fprintf(stderr, "Not an ELF shared object\n");
     return 1;
   }
@@ -987,10 +1121,10 @@ main(int argc, char *argv[])
   dynamic = elf_find_section(SHT_DYNAMIC);
   dynsym = elf_find_section(SHT_DYNSYM);
   symtab = elf_find_section(SHT_SYMTAB);
-  dynstr_index = dynsym->sh_link;
+  dynstr_index = read_word(dynsym->sh_link);
   dynstr = elf_find_section_num(dynstr_index);
-  dynstr_data = FILE_OFFSET(dynstr->sh_offset);
-  old_dynstr_size = dynstr->sh_size;
+  dynstr_data = (char *)FILE_OFFSET(read_word(dynstr->sh_offset));
+  old_dynstr_size = read_word(dynstr->sh_size);
   ver_d = elf_find_section(SHT_GNU_verdef);
   ver_r = elf_find_section(SHT_GNU_verneed);
   hash = elf_find_section(SHT_HASH);
@@ -999,9 +1133,9 @@ main(int argc, char *argv[])
   
   add_strings_from_dynsym(dynsym, dynstr_data);
   add_strings_from_dynamic(dynamic, dynstr_data);
-  if (ver_d && (ver_d->sh_link == dynstr_index))
+  if (ver_d && (read_word(ver_d->sh_link) == dynstr_index))
     add_strings_from_ver_d(ver_d, dynstr_data);
-  if (ver_r && (ver_r->sh_link == dynstr_index))
+  if (ver_r && (read_word(ver_r->sh_link) == dynstr_index))
     add_strings_from_ver_r(ver_r, dynstr_data);
 
   /* Generate new dynstr section from the used strings hashtable: */
@@ -1018,12 +1152,11 @@ main(int argc, char *argv[])
   }
 
   /* Fixup all references: */
-  
   fixup_strings_in_dynsym(dynsym);
   fixup_strings_in_dynamic(dynamic);
-  if (ver_d && (ver_d->sh_link == dynstr_index))
+  if (ver_d && (read_word(ver_d->sh_link) == dynstr_index))
     fixup_strings_in_ver_d(ver_d);
-  if (ver_r && (ver_r->sh_link == dynstr_index))
+  if (ver_r && (read_word(ver_r->sh_link) == dynstr_index))
     fixup_strings_in_ver_r(ver_r);
   
   /* Copy over the new dynstr: */
@@ -1033,17 +1166,16 @@ main(int argc, char *argv[])
   /* Compact the dynstr section and the file: */
 
   /* 1. Set up the data for the fixup_offset() function: */
-  hole_index = dynstr->sh_offset + new_dynstr_size;
+  hole_index = read_word(dynstr->sh_offset) + new_dynstr_size;
   higher_section = elf_find_next_higher_section(hole_index);
-  hole_end = higher_section->sh_offset;
+  hole_end = read_word(higher_section->sh_offset);
 
   align_hole(&hole_index, &hole_end);
-  
   hole_len = hole_end - hole_index;
 
   hole_addr_start = hole_index; /* TODO: Fix this to something better */
 
-  find_segment_addr_min_max(dynstr->sh_offset,
+  find_segment_addr_min_max(read_word(dynstr->sh_offset),
 			    &hole_addr_remap_start, &hole_addr_remap_end);
   
   /*
@@ -1054,14 +1186,16 @@ main(int argc, char *argv[])
   */
   
   /* 2. Change all section and segment sizes and offsets: */
-  
   remap_symtab(dynsym);
   if (symtab)
     remap_symtab(symtab);
+
+  if (machine_type == EM_386)
+    remap_i386_got();
+  if (machine_type == EM_PPC)
+    remap_ppc_got();
   
-  remap_i386_got();
   remap_dynamic(dynamic, new_dynstr_size);
-  
   remap_sections(); /* After this line the section headers are wrong */
   remap_segments();
   remap_elf_header();
@@ -1076,6 +1210,8 @@ main(int argc, char *argv[])
 
   ftruncate(fd, size - hole_len);
   close(fd);
+
+  return 0;
 }
 
 
