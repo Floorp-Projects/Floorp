@@ -475,11 +475,12 @@ XULSortServiceImpl::IsTreeElement(nsIContent *element)
 		if (nameSpaceID == kNameSpaceID_XUL)
 		{
 			nsCOMPtr<nsIAtom>	tag;
-			if (NS_FAILED(rv = element->GetTag(*getter_AddRefs(tag))))
-				return(rv);
-			if (tag.get() == kTreeAtom)
+			if (NS_SUCCEEDED(rv = element->GetTag(*getter_AddRefs(tag))))
 			{
-				isTreeNode = PR_TRUE;
+				if (tag.get() == kTreeAtom)
+				{
+					isTreeNode = PR_TRUE;
+				}
 			}
 		}
 	}
@@ -1339,7 +1340,7 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, sortPtr sortInfo, PRBool fir
 					                nsAutoString	zero("000000");
 					                if (cellPosVal1.Length() < zero.Length())
 					                {
-								cellPosVal1.Insert(zero, 0, zero.Length() - cellPosVal1.Length());
+								cellPosVal1.Insert(zero, 0, PRInt32(zero.Length() - cellPosVal1.Length()));
 					                }
 							hasMore = PR_FALSE;
 							hasMoreSrcs = PR_FALSE;
