@@ -2012,8 +2012,6 @@ nsXULContentBuilder::IsElementInBuilder(nsIContent *aContent)
 nsresult
 nsXULContentBuilder::OpenContainer(nsIContent* aElement)
 {
-    nsresult rv;
-
     // See if we're responsible for this element
     if (! IsElementInBuilder(aElement))
         return NS_OK;
@@ -2046,7 +2044,7 @@ nsXULContentBuilder::OpenContainer(nsIContent* aElement)
         if (! doc)
             return NS_ERROR_UNEXPECTED;
 
-        rv = doc->ContentAppended(container, newIndex);
+        nsresult rv = doc->ContentAppended(container, newIndex);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -2056,8 +2054,6 @@ nsXULContentBuilder::OpenContainer(nsIContent* aElement)
 nsresult
 nsXULContentBuilder::CloseContainer(nsIContent* aElement)
 {
-    nsresult rv;
-
     // See if we're responsible for this element
     if (! IsElementInBuilder(aElement))
         return NS_OK;
