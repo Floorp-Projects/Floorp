@@ -42,8 +42,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# Solaris' sh blows
+# Solaris and Tru64 UNIX sh blows
 ifeq ($(OS_ARCH),SunOS)
+SHELL := ksh
+endif
+ifeq ($(OS_ARCH),OSF1)
 SHELL := ksh
 endif
 
