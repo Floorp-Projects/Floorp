@@ -610,12 +610,6 @@ y
 MODSCRIPT
   RET=$?
   if [ "$RET" -ne 0 ]; then
-    # Debugging output for bug 195127
-    echo "Current directory is `pwd`"
-    echo "ls -l ../../../../dist/${OBJDIR}/lib/libsoftokn3.chk"
-    ls -l ../../../../dist/${OBJDIR}/lib/libsoftokn3.chk
-    echo "ls -l ../../../../dist/${OBJDIR}/lib"
-    ls -l ../../../../dist/${OBJDIR}/lib
     html_failed "<TR><TD>${CU_ACTION} ($RET) " 
     cert_log "ERROR: ${CU_ACTION} failed $RET"
   else
