@@ -6,9 +6,9 @@
 # partitions and this will require making directory structure in
 # get_filename() less regular then we have defined it here.
 
-# $Revision: 1.2 $ 
-# $Date: 2001/01/04 00:24:36 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.3 $ 
+# $Date: 2001/02/27 15:25:20 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/FileStructure.pm,v $ 
 # $Name:  $ 
 
@@ -39,6 +39,9 @@
 
 
 package FileStructure;
+
+# This package must not use any tinderbox specific libraries.  It is
+# intended to be a base class.
 
 $VERSION = '#tinder_version#';
 

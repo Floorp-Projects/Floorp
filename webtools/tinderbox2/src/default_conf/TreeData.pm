@@ -29,8 +29,8 @@
 # issue to work out.
 
 
-# $Revision: 1.3 $ 
-# $Date: 2001/02/16 00:09:54 $ 
+# $Revision: 1.4 $ 
+# $Date: 2001/02/27 15:26:43 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TreeData.pm,v $ 
 # $Name:  $ 
@@ -61,6 +61,9 @@
 
 
 package TreeData;
+
+# This package must not use any tinderbox specific libraries.  It is
+# intended to be a base class.
 
 $VERSION = '#tinder_version#';
 

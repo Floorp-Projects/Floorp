@@ -1,8 +1,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 
-# $Revision: 1.4 $ 
-# $Date: 2001/02/16 20:03:13 $ 
+# $Revision: 1.5 $ 
+# $Date: 2001/02/27 15:24:56 $ 
 # $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
@@ -40,7 +40,8 @@
 package BuildStatus;
 
 
-
+# This package must not use any tinderbox specific libraries.  It is
+# intended to be a base class.
 
 
 # for each Build status we have:
