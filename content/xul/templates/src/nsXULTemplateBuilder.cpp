@@ -65,7 +65,6 @@
 #include "rdf.h"
 #include "rdfutil.h"
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 #include "nsIDOMXULElement.h"
 #include "nsVoidArray.h"
 #include "nsIXULSortService.h"
@@ -137,6 +136,10 @@ nsIAtom* RDFGenericBuilderImpl::kRuleAtom;
 nsIAtom* RDFGenericBuilderImpl::kTextAtom;
 nsIAtom* RDFGenericBuilderImpl::kPropertyAtom;
 nsIAtom* RDFGenericBuilderImpl::kInstanceOfAtom;
+
+nsIAtom* RDFGenericBuilderImpl::kTreeAtom;
+nsIAtom* RDFGenericBuilderImpl::kTreeChildrenAtom;
+nsIAtom* RDFGenericBuilderImpl::kTreeItemAtom;
 
 PRInt32  RDFGenericBuilderImpl::kNameSpaceID_RDF;
 PRInt32  RDFGenericBuilderImpl::kNameSpaceID_XUL;
@@ -225,6 +228,10 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         NS_RELEASE(kPropertyAtom);
         NS_RELEASE(kInstanceOfAtom);
 
+        NS_RELEASE(kTreeAtom);
+        NS_RELEASE(kTreeChildrenAtom);
+        NS_RELEASE(kTreeItemAtom);
+
         NS_RELEASE(kNC_Title);
         NS_RELEASE(kNC_child);
         NS_RELEASE(kNC_Column);
@@ -254,13 +261,6 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         nsServiceManager::ReleaseService(kXULSortServiceCID, XULSortService);
         NS_RELEASE(gNameSpaceManager);
     }
-
-    if (mTimer)
-        {
-            mTimer->Cancel();
-            NS_RELEASE(mTimer);
-            mTimer = nsnull;
-        }
 }
 
 
@@ -294,6 +294,10 @@ RDFGenericBuilderImpl::Init()
         kTextAtom            = NS_NewAtom("text");
         kPropertyAtom        = NS_NewAtom("property");
         kInstanceOfAtom      = NS_NewAtom("instanceOf");
+
+        kTreeAtom            = NS_NewAtom("tree");
+        kTreeChildrenAtom    = NS_NewAtom("treechildren");
+        kTreeItemAtom        = NS_NewAtom("treeitem");
 
         nsresult rv;
 
@@ -408,26 +412,6 @@ RDFGenericBuilderImpl::SetDocument(nsIRDFDocument* aDocument)
     // note: null now allowed, it indicates document going away
 
     mDocument = aDocument; // not refcounted
-    if (aDocument)
-    {
-    	if (nsnull == mTimer)
-    	{
-		NS_VERIFY(NS_SUCCEEDED(NS_NewTimer(&mTimer)), "couldn't get timer");
-		if (mTimer)
-		{
-			mTimer->Init(this, /* PR_TRUE, */ 1L);
-		}
-	}
-    }
-    else
-    {
-    	if (mTimer)
-    	{
-    		mTimer->Cancel();
-    		NS_RELEASE(mTimer);
-    		mTimer = nsnull;
-    	}
-    }
     return NS_OK;
 }
 
@@ -629,7 +613,20 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSource,
 
             // Okay, it's a "live" element, so go ahead and append the new
             // child to this node.
-            rv = CreateWidgetItem(element, aProperty, resource, 0, PR_TRUE);
+
+            // XXX Bug 10818.
+            PRBool notify;
+            if (IsTreeWidgetItem(element) && !IsReflowScheduled()) {
+                notify = PR_TRUE;
+
+                rv = ScheduleReflow();
+                if (NS_FAILED(rv)) return rv;
+            }
+            else {
+                notify = PR_FALSE;
+            }
+
+            rv = CreateWidgetItem(element, aProperty, resource, 0, notify);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create widget item");
             if (NS_FAILED(rv)) return rv;
             
@@ -1471,14 +1468,6 @@ RDFGenericBuilderImpl::OnRemoveAttributeNode(nsIDOMElement* aElement, nsIDOMAttr
 
 
 ////////////////////////////////////////////////////////////////////////
-// nsITimerCallback methods
-
-void
-RDFGenericBuilderImpl::Notify(nsITimer* aTimer)
-{
-}
-
-////////////////////////////////////////////////////////////////////////
 // Implementation methods
 
 nsresult
@@ -2293,47 +2282,60 @@ RDFGenericBuilderImpl::CreateContainerContents(nsIContent* aElement, nsIRDFResou
     rv = tempArray->Count(&numElements);
     if (NS_FAILED(rv)) return rv;
 
-    if (numElements > 0) {
-        nsIRDFResource ** flatArray = new nsIRDFResource *[numElements];
-        if (flatArray) {
-            // flatten array of resources, sort them, then add as item elements
-            unsigned long loop;
+    if (numElements == 0)
+        return NS_OK;
 
-            for (loop=0; loop<numElements; loop++)
-                flatArray[loop] = (nsIRDFResource *)tempArray->ElementAt(loop);
+    // Tree widget hackery. To be removed if and when the
+    // reflow lock is exposed. See bug 10818.
+    PRBool istree = IsTreeWidgetItem(aElement);
 
-            if (nsnull != XULSortService) {
-                XULSortService->OpenContainer(mDB, aElement, flatArray, numElements/2, 2*sizeof(nsIRDFResource *));
-            }
+    {
+        // XXX change to use nsVoidArray?
+        nsIRDFResource** flatArray = new nsIRDFResource*[numElements];
+        if (! flatArray) return NS_ERROR_OUT_OF_MEMORY;
 
-            // This will insert all of the elements into the
-            // container, but _won't_ bother layout about it.
-            for (loop=0; loop<numElements; loop+=2) {
-                rv = CreateWidgetItem(aElement, flatArray[loop+1], flatArray[loop], loop+1, PR_FALSE);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create widget item");
-                if (NS_FAILED(rv)) break;
-            }
+        // flatten array of resources, sort them, then add as item elements
+        PRUint32 loop;
+        for (loop=0; loop<numElements; loop++)
+            flatArray[loop] = (nsIRDFResource *)tempArray->ElementAt(loop);
 
-            for (PRInt32 i = PRInt32(numElements) - 1; i >=0; i--) {
-                NS_IF_RELEASE(flatArray[i]);
-            }
-            delete [] flatArray;
+        if (XULSortService) {
+            XULSortService->OpenContainer(mDB, aElement, flatArray, numElements/2, 2*sizeof(nsIRDFResource *));
+        }
 
-            if (NS_FAILED(rv)) return rv;
+        // This will insert all of the elements into the
+        // container, but _won't_ bother layout about it.
+        for (loop=0; loop<numElements; loop+=2) {
+            rv = CreateWidgetItem(aElement, flatArray[loop+1], flatArray[loop], loop+1, (istree ? PR_FALSE : PR_TRUE));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create widget item");
+            if (NS_FAILED(rv)) break;
+        }
 
-            nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
-            if (! doc)
-                return NS_ERROR_UNEXPECTED;
+        for (PRInt32 i = PRInt32(numElements) - 1; i >=0; i--) {
+            NS_IF_RELEASE(flatArray[i]);
+        }
 
-            // _Now_ tell layout that we've mucked with the
-            // container. This'll force a reflow and get the content
-            // displayed.
-            rv = doc->ContentChanged(aElement, nsnull);
+        delete [] flatArray;
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    if (istree) {
+        nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
+        if (! doc)
+            return NS_ERROR_UNEXPECTED;
+
+        nsCOMPtr<nsIContent> treechildren;
+        rv = nsRDFContentUtils::FindChildByTag(aElement,
+                                               kNameSpaceID_XUL,
+                                               kTreeChildrenAtom,
+                                               getter_AddRefs(treechildren));
+
+        if (NS_SUCCEEDED(rv)) {
+            // _Now_ tell layout that we've mucked with the container. This'll
+            // force a reflow and get the content displayed.
+            rv = doc->ContentAppended(treechildren, 0);
             if (NS_FAILED(rv)) return rv;
         }
-    }
-    for (int i = numElements - 1; i >= 0; i--) {
-        tempArray->RemoveElementAt(i);
     }
 
     return NS_OK;
@@ -2982,4 +2984,91 @@ RDFGenericBuilderImpl::RemoveAndRebuildGeneratedChildren(nsIContent* aElement)
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
+}
+
+
+PRBool
+RDFGenericBuilderImpl::IsTreeWidgetItem(nsIContent* aElement)
+{
+    // Determine if this is a <tree> or a <treeitem> tag, in which
+    // case, some special logic will kick in to force batched reflows.
+    // XXX Should be removed when Bug 10818 is fixed.
+    nsresult rv;
+
+    PRInt32 nameSpaceID;
+    rv = aElement->GetNameSpaceID(nameSpaceID);
+    if (NS_FAILED(rv)) return PR_FALSE;
+
+    nsCOMPtr<nsIAtom> tag;
+    rv = aElement->GetTag(*getter_AddRefs(tag));
+    if (NS_FAILED(rv)) return PR_FALSE;
+
+    // If we're building content under a <tree> or a <treeitem>,
+    // then DO NOT notify layout until we're all done.
+    if ((nameSpaceID == kNameSpaceID_XUL) &&
+        ((tag.get() == kTreeAtom) || (tag.get() == kTreeItemAtom))) {
+        return PR_TRUE;
+    }
+    else {
+        return PR_FALSE;
+    }
+
+}
+
+PRBool
+RDFGenericBuilderImpl::IsReflowScheduled()
+{
+    return (mTimer != nsnull);
+}
+
+
+
+nsresult
+RDFGenericBuilderImpl::ScheduleReflow()
+{
+    NS_PRECONDITION(mTimer == nsnull, "reflow scheduled");
+    if (mTimer)
+        return NS_ERROR_UNEXPECTED;
+
+    nsresult rv;
+
+    rv = NS_NewTimer(getter_AddRefs(mTimer));
+    if (NS_FAILED(rv)) return rv;
+
+    mTimer->Init(RDFGenericBuilderImpl::ForceTreeReflow, this, 1000);
+    NS_ADDREF(this); // the timer will hold a reference to the builder
+    
+    return NS_OK;
+}
+
+
+void
+RDFGenericBuilderImpl::ForceTreeReflow(nsITimer* aTimer, void* aClosure)
+{
+    // XXX Any lifetime issues we need to deal with here???
+    RDFGenericBuilderImpl* builder = NS_STATIC_CAST(RDFGenericBuilderImpl*, aClosure);
+
+    nsresult rv;
+
+    nsCOMPtr<nsIDocument> doc = do_QueryInterface(builder->mDocument);
+
+    // If we've been removed from the document, then this will have
+    // been nulled out.
+    if (! doc) return;
+
+    // XXX What if kTreeChildrenAtom & kNameSpaceXUL are clobbered b/c
+    // the generic builder has been destroyed?
+    nsCOMPtr<nsIContent> treechildren;
+    rv = nsRDFContentUtils::FindChildByTag(builder->mRoot,
+                                           kNameSpaceID_XUL,
+                                           kTreeChildrenAtom,
+                                           getter_AddRefs(treechildren));
+
+    if (NS_FAILED(rv)) return; // couldn't find
+
+    rv = doc->ContentAppended(treechildren, 0);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to notify content appended");
+
+    builder->mTimer = nsnull;
+    NS_RELEASE(builder);
 }

@@ -30,7 +30,6 @@
 #include "nsIDOMNodeObserver.h"
 #include "nsIDOMElementObserver.h"
 #include "nsITimer.h"
-#include "nsITimerCallback.h"
 #include "nsIXULSortService.h"
 
 class nsIRDFDocument;
@@ -44,8 +43,7 @@ class nsIRDFService;
 class RDFGenericBuilderImpl : public nsIRDFContentModelBuilder,
                               public nsIRDFObserver,
                               public nsIDOMNodeObserver,
-                              public nsIDOMElementObserver,
-                              public nsITimerCallback
+                              public nsIDOMElementObserver
 {
 public:
     RDFGenericBuilderImpl();
@@ -92,9 +90,6 @@ public:
 
     // nsIDOMElementObserver interface
     NS_DECL_IDOMELEMENTOBSERVER
-
-    // nsITimerCallback interface
-    virtual void Notify(nsITimer* aTimer);
 
     // Implementation methods
     nsresult
@@ -179,10 +174,10 @@ public:
                                  nsIAtom* aTag,
                                  nsIContent** aResult);
 
-    virtual PRBool
+    PRBool
     IsContainmentProperty(nsIContent* aElement, nsIRDFResource* aProperty);
 
-    virtual PRBool
+    PRBool
     IsIgnoredProperty(nsIContent* aElement, nsIRDFResource* aProperty);
 
     PRBool
@@ -208,22 +203,34 @@ public:
                 nsIAtom* aNameAtom,
                 nsIRDFResource** aResource);
 
-    virtual nsresult
+    nsresult
     OpenWidgetItem(nsIContent* aElement);
 
-    virtual nsresult
+    nsresult
     CloseWidgetItem(nsIContent* aElement);
 
-    virtual nsresult
+    nsresult
     RemoveAndRebuildGeneratedChildren(nsIContent* aElement);
-    
+
+    // XXX. Urg. Hack until layout can batch reflows. See bug 10818.
+    PRBool
+    IsTreeWidgetItem(nsIContent* aElement);
+
+    PRBool
+    IsReflowScheduled();
+
+    nsresult
+    ScheduleReflow();
+
+    static void
+    ForceTreeReflow(nsITimer* aTimer, void* aClosure);
 
 protected:
     nsIRDFDocument*            mDocument;
     nsIRDFCompositeDataSource* mDB;
     nsIContent*                mRoot;
 
-    nsITimer			*mTimer;
+    nsCOMPtr<nsITimer>		   mTimer;
     static nsIRDFDataSource	*mLocalstore;
     static PRBool		persistLock;
 
@@ -257,6 +264,10 @@ protected:
     static nsIAtom* kTextAtom;
     static nsIAtom* kPropertyAtom;
     static nsIAtom* kInstanceOfAtom;
+
+    static nsIAtom* kTreeAtom;
+    static nsIAtom* kTreeChildrenAtom;
+    static nsIAtom* kTreeItemAtom;
 
     static PRInt32  kNameSpaceID_RDF;
     static PRInt32  kNameSpaceID_XUL;
