@@ -58,24 +58,6 @@ public:
 	virtual void		setSensitive			(Boolean state);
 	virtual Boolean		isSensitive				();
 
-	//////////////////////////////////////////////////////////////////////
-	//                                                                  //
-	// Command interface interface.                                     //
-	//                                                                  //
-	//////////////////////////////////////////////////////////////////////
-	void				setCommand				(CommandType command);
-	CommandType			getCommand				();
-
-	void				setCallData				(void * callData);
-	void * 				getCallData				();
-
-	//////////////////////////////////////////////////////////////////////
-	//                                                                  //
-	// XFE_ToolbarButton notifications                                  //
-	//                                                                  //
-	//////////////////////////////////////////////////////////////////////
-	static const char * doCommandNotice;
-
 protected:
 
 	//////////////////////////////////////////////////////////////////////
@@ -88,25 +70,17 @@ protected:
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
-	// Configure                                                        //
+	// configure                                                        //
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
 	virtual void	configure			();
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
-	// ToolTip interface                                                //
+	// addCallbacks                                                     //
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
- 	virtual void	tipStringObtain		(XmString *		stringReturn,
-										 Boolean *		needToFreeString);
-	
- 	virtual void	docStringObtain		(XmString *		stringReturn,
-										 Boolean *		needToFreeString);
-	
- 	virtual void	docStringSet		(XmString		string);
-
- 	virtual void	docStringClear		(XmString		string);
+ 	virtual void	addCallbacks		();
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
@@ -127,16 +101,9 @@ protected:
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
 	virtual void	activate			();
+	virtual void	popup				();
 
 private:
-
-	//////////////////////////////////////////////////////////////////////
-	//                                                                  //
-	// Private data                                                     //
-	//                                                                  //
-	//////////////////////////////////////////////////////////////////////
-	CommandType		m_command;
-	void *			m_callData;
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
@@ -144,6 +111,11 @@ private:
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
 	static void		activateCB			(Widget			w,
+ 										 XtPointer		clientData,
+ 										 XtPointer		callData);
+
+
+	static void		popupCB				(Widget			w,
  										 XtPointer		clientData,
  										 XtPointer		callData);
 

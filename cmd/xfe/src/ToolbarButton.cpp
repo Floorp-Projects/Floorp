@@ -35,28 +35,13 @@
 
 #include "prefapi.h"
 
-extern "C" RDF_NCVocab  gNavCenter;
-
-//////////////////////////////////////////////////////////////////////////
-//
-// XFE_ToolbarButton notifications
-//
-//////////////////////////////////////////////////////////////////////////
-const char *
-XFE_ToolbarButton::doCommandNotice = "XFE_ToolbarButton::doCommandNotice";
-
 //////////////////////////////////////////////////////////////////////////
 XFE_ToolbarButton::XFE_ToolbarButton(XFE_Frame *		frame,
 									 Widget				parent,
                                      HT_Resource		htResource,
 									 const String		name) :
-	XFE_ToolbarItem(frame,parent,htResource,name),
-	m_command(NULL),
-	m_callData(NULL)
+	XFE_ToolbarItem(frame,parent,htResource,name)
 {
-	// The default value for the command is the widget name
-	m_command = Command::intern((char *) getName());
-
 }
 //////////////////////////////////////////////////////////////////////////
 XFE_ToolbarButton::~XFE_ToolbarButton()
@@ -102,36 +87,6 @@ XFE_ToolbarButton::isSensitive()
 
 //////////////////////////////////////////////////////////////////////////
 //
-// Command interface interface
-//
-//////////////////////////////////////////////////////////////////////////
-void
-XFE_ToolbarButton::setCommand(CommandType command)
-{
-	m_command = command;
-}
-//////////////////////////////////////////////////////////////////////////
-CommandType
-XFE_ToolbarButton::getCommand()
-{
-	return m_command;
-}
-//////////////////////////////////////////////////////////////////////////
-void
-XFE_ToolbarButton::setCallData(void * callData)
-{
-	m_callData = callData;
-}
-//////////////////////////////////////////////////////////////////////////
-void *
-XFE_ToolbarButton::getCallData()
-{
-	return m_callData;
-}
-//////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////
-//
 // Widget creation interface
 //
 //////////////////////////////////////////////////////////////////////////
@@ -149,11 +104,6 @@ XFE_ToolbarButton::createBaseWidget(Widget			parent,
 							  parent,
 							  NULL);
 
-    XtAddCallback(button,
-				  XmNactivateCallback,
-				  XFE_ToolbarButton::activateCB,
-				  (XtPointer) this);
-	
 	return button;
 }
 //////////////////////////////////////////////////////////////////////////
@@ -203,53 +153,30 @@ XFE_ToolbarButton::configure()
                       NULL);
 	}
 
-#ifdef NOT_YET
-	// Add popup callback to button
-	XtAddCallback(m_widget,
-				  XmNbutton3DownCallback,
-				  &XFE_RDFToolbar::popupCB,
-				  (XtPointer) this);
-#endif
 }
 //////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////
 //
-// Tool tip support
+// addCallbacks
 //
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
-XFE_ToolbarButton::tipStringObtain(XmString *	stringReturn,
-								   Boolean *	needToFreeString)
+XFE_ToolbarButton::addCallbacks()
 {
 	XP_ASSERT( isAlive() );
-	
-	*stringReturn = getTipStringFromAppDefaults();
-	*needToFreeString = False;
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_ToolbarButton::docStringObtain(XmString *	stringReturn,
-								   Boolean *	needToFreeString)
-{
-	XP_ASSERT( isAlive() );
-	
-	*stringReturn = getDocStringFromAppDefaults();
-	*needToFreeString = False;
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_ToolbarButton::docStringSet(XmString /* string */)
-{
-	getAncestorFrame()->notifyInterested(Command::commandArmedCallback,
-										 (void *) getCommand());
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_ToolbarButton::docStringClear(XmString /* string */)
-{
-	getAncestorFrame()->notifyInterested(Command::commandDisarmedCallback,
-										 (void *) getCommand());
+
+	// Add activate callback
+    XtAddCallback(m_widget,
+				  XmNactivateCallback,
+				  XFE_ToolbarButton::activateCB,
+				  (XtPointer) this);
+
+	// Add popup callback
+	XtAddCallback(m_widget,
+				  XmNbutton3DownCallback,
+				  XFE_ToolbarButton::popupCB,
+				  (XtPointer) this);
 }
 //////////////////////////////////////////////////////////////////////////
 
@@ -529,6 +456,12 @@ XFE_ToolbarButton::activate()
 	}
 }
 //////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_ToolbarButton::popup()
+{
+	printf("popup(%s) - Write Me Please.\n",XtName(m_widget));
+}
+//////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -545,5 +478,17 @@ XFE_ToolbarButton::activateCB(Widget		/* w */,
 	XP_ASSERT( button != NULL );
 
 	button->activate();
+}
+//////////////////////////////////////////////////////////////////////////
+/* static */ void
+XFE_ToolbarButton::popupCB(Widget			/* w */,
+						   XtPointer		clientData,
+						   XtPointer		/* callData */)
+{
+	XFE_ToolbarButton * button = (XFE_ToolbarButton *) clientData;
+
+	XP_ASSERT( button != NULL );
+
+	button->popup();
 }
 //////////////////////////////////////////////////////////////////////////

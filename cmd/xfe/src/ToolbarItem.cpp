@@ -28,6 +28,11 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "ToolbarItem.h"
+#include "View.h"			// For XFE_View::statusNeedsUpdatingMidTruncated
+#include "RDFUtils.h"
+
+#include "felocale.h"		// fe_ConvertToXmString()
+#include "intl_csi.h"		// For INTL_ functions
 
 #include <Xfe/ToolTip.h>
 
@@ -97,8 +102,6 @@ XFE_ToolbarItem::getHtResource()
 /* virtual */ void
 XFE_ToolbarItem::setBaseWidget(Widget w)
 {
-//	printf("XFE_ToolbarItem::setBaseWidget(%s)\n",XtName(w));
-
 	XP_ASSERT( XfeIsAlive(w) );
 
 	XFE_Component::setBaseWidget(w);
@@ -110,12 +113,15 @@ XFE_ToolbarItem::setBaseWidget(Widget w)
 				  XmNdestroyCallback,
 				  XFE_ToolbarItem::freeNameCB,
 				  (XtPointer) m_name);
-
+	
 	// Add tooltip support
 	addToolTipSupport();
 
 	// Configure the item
     configure();
+
+	// Add callbacks
+    addCallbacks();
 
     // Install destroy handler (magic garbage collection for the item)
     installDestroyHandler();
@@ -146,10 +152,21 @@ XFE_ToolbarItem::isSensitive()
 
 //////////////////////////////////////////////////////////////////////////
 //
+// addCallbacks
+//
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_ToolbarItem::addCallbacks()
+{
+}
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+//
 // Tool tip support
 //
 //////////////////////////////////////////////////////////////////////////
-void
+/* virtual */ void
 XFE_ToolbarItem::addToolTipSupport()
 {
 	XP_ASSERT( isAlive() );
@@ -157,6 +174,7 @@ XFE_ToolbarItem::addToolTipSupport()
 	// Add tip string support
 	XfeTipStringAdd(m_widget);
 
+	// Set the tip string obtain callback
 	XfeTipStringSetObtainCallback(m_widget,
 								  XFE_ToolbarItem::tipStringObtainCB,
 								  (XtPointer) this);
@@ -164,10 +182,12 @@ XFE_ToolbarItem::addToolTipSupport()
 	// Add doc string support
 	XfeDocStringAdd(m_widget);
 
+	// Set the doc string obtain callback
 	XfeDocStringSetObtainCallback(m_widget,
 								  XFE_ToolbarItem::docStringObtainCB,
 								  (XtPointer) this);
     
+	// Set the doc string set callback
 	XfeDocStringSetCallback(m_widget,
 							XFE_ToolbarItem::docStringCB,
 							(XtPointer) this);
@@ -187,6 +207,132 @@ XFE_ToolbarItem::getDocStringFromAppDefaults()
 	XP_ASSERT( isAlive() );
 
 	return XfeDocStringGetFromAppDefaults(m_widget);
+}
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+//
+// ToolTip interface
+//
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_ToolbarItem::tipStringObtain(XmString *	stringReturn,
+								 Boolean *	needToFreeString)
+{
+	HT_Resource			entry = getHtResource();
+	MWContext *			context = getAncestorContext();
+
+	XP_ASSERT( entry != NULL );
+	XP_ASSERT( context != NULL );
+
+    void *				data = NULL;
+    XmFontList			font_list = NULL;
+    XmString			xmstr = NULL;
+
+    HT_GetTemplateData(HT_TopNode(HT_GetView(entry)),
+					   gNavCenter->buttonTooltipText,
+					   HT_COLUMN_STRING,
+					   &data);
+
+    if (data != NULL) 
+	{
+		MWContext * context = getAncestorContext();
+
+		INTL_CharSetInfo charSetInfo = LO_GetDocumentCharacterSetInfo(context);
+    
+		xmstr = fe_ConvertToXmString((unsigned char *) data,
+									 INTL_GetCSIWinCSID(charSetInfo) ,
+									 NULL, 
+									 XmFONT_IS_FONT, 
+									 &font_list);
+
+		*stringReturn = xmstr;
+		*needToFreeString = True;
+    }
+    else 
+    {
+		*stringReturn = XFE_RDFUtils::getStringFromResource(context,entry);
+		*needToFreeString = True;
+    }
+}
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_ToolbarItem::docStringObtain(XmString *	stringReturn,
+								 Boolean *	needToFreeString)
+{
+	HT_Resource			entry = getHtResource();
+	MWContext *			context = getAncestorContext();
+
+	XP_ASSERT( entry != NULL );
+	XP_ASSERT( context != NULL );
+
+    void *				data = NULL;
+    XmFontList			font_list = NULL;
+    XmString			xmstr = NULL;
+
+    HT_GetTemplateData(HT_TopNode(HT_GetView(entry)),
+					   gNavCenter->buttonStatusbarText,
+					   HT_COLUMN_STRING,
+					   &data);
+
+    if (data != NULL) 
+	{
+		MWContext * context = getAncestorContext();
+
+		INTL_CharSetInfo charSetInfo = LO_GetDocumentCharacterSetInfo(context);
+    
+		xmstr = fe_ConvertToXmString((unsigned char *) data,
+									 INTL_GetCSIWinCSID(charSetInfo) ,
+									 NULL, 
+									 XmFONT_IS_FONT, 
+									 &font_list);
+
+		*stringReturn = xmstr;
+		*needToFreeString = True;
+    }
+    else 
+    {
+		*stringReturn = XFE_RDFUtils::getStringFromResource(context,entry);
+		*needToFreeString = True;
+    }
+}
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_ToolbarItem::docStringSet(XmString xmstr)
+{
+	XFE_Frame * frame = getAncestorFrame();
+
+	XP_ASSERT( frame != NULL );
+
+	// Make sure the xmstr is valid
+	if (xmstr != NULL)
+	{
+		String str = XfeXmStringGetPSZ(xmstr,XmSTRING_DEFAULT_CHARSET);
+
+		// Make sure the str is valid
+		if (str != NULL)
+		{
+			// Tell the frame to update its status
+			frame->notifyInterested(XFE_View::statusNeedsUpdatingMidTruncated,
+									(void *) str);
+			
+			XtFree(str);
+		}
+	}
+}
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_ToolbarItem::docStringClear(XmString /* string */)
+{
+	XFE_Frame * frame = getAncestorFrame();
+
+	XP_ASSERT( frame != NULL );
+
+	String str = "";
+
+	// Tell the frame to update its status
+	frame->notifyInterested(XFE_View::statusNeedsUpdatingMidTruncated,
+							(void *) str);
 }
 //////////////////////////////////////////////////////////////////////////
 

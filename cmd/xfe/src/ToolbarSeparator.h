@@ -67,21 +67,6 @@ protected:
 	//////////////////////////////////////////////////////////////////////
 	virtual void	configure			();
 
-	//////////////////////////////////////////////////////////////////////
-	//                                                                  //
-	// ToolTip interface                                                //
-	//                                                                  //
-	//////////////////////////////////////////////////////////////////////
- 	virtual void	tipStringObtain		(XmString *		stringReturn,
-										 Boolean *		needToFreeString);
-	
- 	virtual void	docStringObtain		(XmString *		stringReturn,
-										 Boolean *		needToFreeString);
-	
- 	virtual void	docStringSet		(XmString		string);
-
- 	virtual void	docStringClear		(XmString		string);
-
 private:
 
 };

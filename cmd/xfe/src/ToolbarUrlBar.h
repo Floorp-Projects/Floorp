@@ -79,26 +79,23 @@ protected:
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
-	// Configure                                                        //
+	// configure                                                        //
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
 	virtual void	configure			();
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
-	// ToolTip interface                                                //
+	// addCallbacks                                                     //
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
- 	virtual void	tipStringObtain		(XmString *		stringReturn,
-										 Boolean *		needToFreeString);
-	
- 	virtual void	docStringObtain		(XmString *		stringReturn,
-										 Boolean *		needToFreeString);
-	
- 	virtual void	docStringSet		(XmString		string);
+ 	virtual void	addCallbacks		();
 
- 	virtual void	docStringClear		(XmString		string);
-
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// Urlbar callback interface                                        //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
 	virtual void	textActivate		();
 
 private:

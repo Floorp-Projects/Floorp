@@ -88,6 +88,23 @@ XFE_ToolbarUrlBar::configure()
 
 //////////////////////////////////////////////////////////////////////////
 //
+// addCallbacks
+//
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_ToolbarUrlBar::addCallbacks()
+{
+	XP_ASSERT( isAlive() );
+
+    XtAddCallback(m_widget,
+				  XmNtextActivateCallback,
+				  XFE_ToolbarUrlBar::textActivateCB,
+				  (XtPointer) this);
+}
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+//
 // Text string methods
 //
 //////////////////////////////////////////////////////////////////////////
@@ -134,64 +151,14 @@ XFE_ToolbarUrlBar::createBaseWidget(Widget			parent,
 // 							   XmNtraversalOn,			False,
 // 							   XmNhighlightThickness,	0,
 							  NULL);
-
-    XtAddCallback(urlbar,
-				  XmNtextActivateCallback,
-				  XFE_ToolbarUrlBar::textActivateCB,
-				  (XtPointer) this);
-	
 	return urlbar;
 }
 //////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////
 //
-// Tool tip support
+// Urlbar callback interface
 //
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_ToolbarUrlBar::tipStringObtain(XmString *	stringReturn,
-								   Boolean *	needToFreeString)
-{
-	XP_ASSERT( isAlive() );
-	
-	*stringReturn = getTipStringFromAppDefaults();
-	*needToFreeString = False;
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_ToolbarUrlBar::docStringObtain(XmString *	stringReturn,
-								   Boolean *	needToFreeString)
-{
-	XP_ASSERT( isAlive() );
-	
-	*stringReturn = getDocStringFromAppDefaults();
-	*needToFreeString = False;
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_ToolbarUrlBar::docStringSet(XmString /* string */)
-{
-// 	XFE_Frame * frame = (XFE_Frame *) getToplevel();
-
-// 	XP_ASSERT( frame != NULL );
-
-// 	frame->notifyInterested(Command::commandArmedCallback,
-// 							(void *) getCommand());
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_ToolbarUrlBar::docStringClear(XmString /* string */)
-{
-// 	XFE_Frame * frame = (XFE_Frame *) getToplevel();
-
-// 	XP_ASSERT( frame != NULL );
-
-// 	frame->notifyInterested(Command::commandDisarmedCallback,
-// 							(void *) getCommand());
-}
-//////////////////////////////////////////////////////////////////////////
-
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void	
 XFE_ToolbarUrlBar::textActivate()

@@ -18,10 +18,10 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// Name:        ToolbarButton.h                                         //
+// Name:        ToolbarCascade.h                                        //
 //                                                                      //
-// Description:	XFE_ToolbarButton class header.                         //
-//              A toolbar push button.                                  //
+// Description:	XFE_ToolbarCascade class header.                        //
+//              A cascading toolbar push button.                        //
 //                                                                      //
 // Author:		Ramiro Estrugo <ramiro@netscape.com>                    //
 //                                                                      //
@@ -35,20 +35,27 @@
 class XFE_ToolbarCascade : public XFE_ToolbarButton
 {
 public:
-
-	XFE_ToolbarCascade(XFE_Frame *		frame,
-					  Widget			parent,
-                      HT_Resource		htResource,
-					  const String		name);
+	
+    XFE_ToolbarCascade(XFE_Frame *		frame,
+					   Widget			parent,
+					   HT_Resource		htResource,
+					   const String		name);
 
     virtual ~XFE_ToolbarCascade();
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
-	// XFE_ToolbarCascade notifications                                 //
+	// Accessors                                                        //
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
-	static const char * doCommandNotice;
+	Widget			getSubmenu();
+
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// Initialize                                                       //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+ 	virtual void	initialize			();
 
 protected:
 
@@ -62,18 +69,24 @@ protected:
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
-	// ToolTip interface                                                //
+	// Configure                                                        //
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
- 	virtual void	tipStringObtain		(XmString *		stringReturn,
-										 Boolean *		needToFreeString);
-	
- 	virtual void	docStringObtain		(XmString *		stringReturn,
-										 Boolean *		needToFreeString);
-	
- 	virtual void	docStringSet		(XmString		string);
+	virtual void	configure			();
 
- 	virtual void	docStringClear		(XmString		string);
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// addCallbacks                                                     //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+ 	virtual void	addCallbacks		();
+
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// Button callback interface                                        //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+	virtual void	cascading			();
 
 private:
 
@@ -82,15 +95,14 @@ private:
 	// Private data                                                     //
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
-	CommandType		m_command;
-	void *			m_callData;
+	Widget			m_submenu;
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
 	// Private callbacks                                                //
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
-	static void		activateCB			(Widget			w,
+	static void		cascadingCB			(Widget			w,
  										 XtPointer		clientData,
  										 XtPointer		callData);
 

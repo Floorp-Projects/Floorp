@@ -59,7 +59,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
-	// Initialize                                                       //
+	// initialize                                                       //
 	//                                                                  //
 	// This method should be called by the item creator to initialize   //
 	// the item.  This is needed for abstract methods to be properly    //
@@ -68,7 +68,7 @@ public:
 	// methods might not have been properly set up by then.             //
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
- 	virtual void	initialize			() = 0;	
+ 	virtual void		initialize				() = 0;	
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
@@ -97,7 +97,7 @@ protected:
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
-	// Configure                                                        //
+	// configure                                                        //
 	//                                                                  //
 	// This method is called as soon as the base widget has been set    //
 	// so that sub classes can configure the item according to their    //
@@ -108,23 +108,39 @@ protected:
 
 	//////////////////////////////////////////////////////////////////////
 	//                                                                  //
+	// addCallbacks                                                     //
+	//                                                                  //
+	// This method is called right after configure().  Sub classes can  //
+	// use it to install callbacks on the base widget.                  //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+ 	virtual void	addCallbacks		();
+
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
+	// ToolTip support                                                  //
+	//                                                                  //
+	//////////////////////////////////////////////////////////////////////
+	virtual void	addToolTipSupport	();
+
+	XmString		getTipStringFromAppDefaults	();
+	XmString		getDocStringFromAppDefaults	();
+
+	//////////////////////////////////////////////////////////////////////
+	//                                                                  //
 	// ToolTip interface                                                //
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
+
  	virtual void	tipStringObtain		(XmString *		stringReturn,
-										 Boolean *		needToFreeString) = 0;
+										 Boolean *		needToFreeString);
 	
  	virtual void	docStringObtain		(XmString *		stringReturn,
-										 Boolean *		needToFreeString) = 0;
+										 Boolean *		needToFreeString);
 	
- 	virtual void	docStringSet		(XmString		string) = 0;
+ 	virtual void	docStringSet		(XmString		string);
 
- 	virtual void	docStringClear		(XmString		string) = 0;
-
-
-	void			addToolTipSupport	();
-	XmString		getTipStringFromAppDefaults	();
-	XmString		getDocStringFromAppDefaults	();
+ 	virtual void	docStringClear		(XmString		string);
 
 private:
 

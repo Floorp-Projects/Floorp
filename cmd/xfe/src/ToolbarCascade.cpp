@@ -18,97 +18,62 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// Name:        ToolbarButton.cpp                                       //
+// Name:        ToolbarCascade.cpp                                      //
 //                                                                      //
-// Description:	XFE_ToolbarButton class implementation.                 //
-//              A toolbar push button.                                  //
+// Description:	XFE_ToolbarCascade class implementation.                //
+//              A cascading toolbar push button.                        //
 //                                                                      //
 // Author:		Ramiro Estrugo <ramiro@netscape.com>                    //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "ToolbarButton.h"
+#include "ToolbarCascade.h"
+#include "RDFUtils.h"
 
-#include <Xfe/Button.h>
+#include <Xfe/Cascade.h>
 
-//////////////////////////////////////////////////////////////////////////
-//
-// XFE_ToolbarButton notifications
-//
-//////////////////////////////////////////////////////////////////////////
-const char *
-XFE_ToolbarButton::doCommandNotice = "XFE_ToolbarButton::doCommandNotice";
+#include "prefapi.h"
 
 //////////////////////////////////////////////////////////////////////////
-XFE_ToolbarButton::XFE_ToolbarButton(XFE_Frame *		frame,
-									 Widget				parent,
-									 const String		name) :
-	XFE_ToolbarItem(frame,parent,name),
-	m_command(NULL),
-	m_callData(NULL)
+XFE_ToolbarCascade::XFE_ToolbarCascade(XFE_Frame *		frame,
+									   Widget			parent,
+									   HT_Resource		htResource,
+									   const String		name) :
+	XFE_ToolbarButton(frame,parent,htResource,name),
+	m_submenu(NULL)
 {
-	// The default value for the command is the widget name
-	m_command = Command::intern((char *) getName());
-
-    createBaseWidget(parent,getName());
-
-    installDestroyHandler();
 }
 //////////////////////////////////////////////////////////////////////////
-XFE_ToolbarButton::~XFE_ToolbarButton()
+XFE_ToolbarCascade::~XFE_ToolbarCascade()
 {
 }
 //////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////
 //
-// Sensitive interface
+// Initialize
 //
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
-XFE_ToolbarButton::setSensitive(Boolean state)
+XFE_ToolbarCascade::initialize()
 {
-	XP_ASSERT( isAlive() );
+    Widget cascade = createBaseWidget(getParent(),getName());
 
-	XfeSetPretendSensitive(m_widget,state);
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ Boolean
-XFE_ToolbarButton::isSensitive()
-{
-	XP_ASSERT( isAlive() );
-	
-	return XfeIsPretendSensitive(m_widget);
+	setBaseWidget(cascade);
+
+    XtVaGetValues(cascade,XmNsubMenuId,&m_submenu,NULL);
 }
 //////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////
 //
-// Command interface interface
+// Accessors
 //
 //////////////////////////////////////////////////////////////////////////
-void
-XFE_ToolbarButton::setCommand(CommandType command)
+Widget
+XFE_ToolbarCascade::getSubmenu()
 {
-	m_command = command;
-}
-//////////////////////////////////////////////////////////////////////////
-CommandType
-XFE_ToolbarButton::getCommand()
-{
-	return m_command;
-}
-//////////////////////////////////////////////////////////////////////////
-void
-XFE_ToolbarButton::setCallData(void * callData)
-{
-	m_callData = callData;
-}
-//////////////////////////////////////////////////////////////////////////
-void *
-XFE_ToolbarButton::getCallData()
-{
-	return m_callData;
+	return m_submenu;
 }
 //////////////////////////////////////////////////////////////////////////
 
@@ -118,73 +83,67 @@ XFE_ToolbarButton::getCallData()
 //
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ Widget
-XFE_ToolbarButton::createBaseWidget(Widget 	parent,
-									String	name)
+XFE_ToolbarCascade::createBaseWidget(Widget			parent,
+									 const String	name)
 {
 	XP_ASSERT( XfeIsAlive(parent) );
 	XP_ASSERT( name != NULL );
 
-	Widget button;
+	Widget cascade;
 
-	button = XtVaCreateWidget(name,
-							  xfeButtonWidgetClass,
+	cascade = XtVaCreateWidget(name,
+							  xfeCascadeWidgetClass,
 							  parent,
 							  NULL);
+	return cascade;
+}
+//////////////////////////////////////////////////////////////////////////
 
-    XtAddCallback(button,
-				  XmNactivateCallback,
-				  XFE_ToolbarButton::activateCB,
+//////////////////////////////////////////////////////////////////////////
+//
+// Configure
+//
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_ToolbarCascade::configure()
+{
+	XP_ASSERT( isAlive() );
+
+	// Chain
+	XFE_ToolbarButton::configure();
+}
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+//
+// addCallbacks
+//
+//////////////////////////////////////////////////////////////////////////
+/* virtual */ void
+XFE_ToolbarCascade::addCallbacks()
+{
+	XP_ASSERT( isAlive() );
+
+	// Chain
+	XFE_ToolbarButton::addCallbacks();
+
+	// Add cascading callback
+    XtAddCallback(m_widget,
+				  XmNcascadingCallback,
+				  XFE_ToolbarCascade::cascadingCB,
 				  (XtPointer) this);
-	
-	return button;
 }
 //////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////
 //
-// Tool tip support
+// Button callback interface
 //
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
-XFE_ToolbarButton::tipStringObtain(XmString *	stringReturn,
-								   Boolean *	needToFreeString)
+XFE_ToolbarCascade::cascading()
 {
-	XP_ASSERT( isAlive() );
-	
-	*stringReturn = getTipStringFromAppDefaults();
-	*needToFreeString = False;
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_ToolbarButton::docStringObtain(XmString *	stringReturn,
-								   Boolean *	needToFreeString)
-{
-	XP_ASSERT( isAlive() );
-	
-	*stringReturn = getDocStringFromAppDefaults();
-	*needToFreeString = False;
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_ToolbarButton::docStringSet(XmString /* string */)
-{
-	XFE_Frame * frame = (XFE_Frame *) getToplevel();
-
-	XP_ASSERT( frame != NULL );
-
-	frame->notifyInterested(Command::commandArmedCallback,
-							(void *) getCommand());
-}
-//////////////////////////////////////////////////////////////////////////
-/* virtual */ void
-XFE_ToolbarButton::docStringClear(XmString /* string */)
-{
-	XFE_Frame * frame = (XFE_Frame *) getToplevel();
-
-	XP_ASSERT( frame != NULL );
-
-	frame->notifyInterested(Command::commandDisarmedCallback,
-							(void *) getCommand());
+	printf("cascading(%s)\n",XtName(m_widget));
 }
 //////////////////////////////////////////////////////////////////////////
 
@@ -194,26 +153,14 @@ XFE_ToolbarButton::docStringClear(XmString /* string */)
 //
 //////////////////////////////////////////////////////////////////////////
 /* static */ void
-XFE_ToolbarButton::activateCB(Widget		w,
-							  XtPointer		clientData,
-							  XtPointer		callData)
+XFE_ToolbarCascade::cascadingCB(Widget		/* w */,
+								XtPointer	clientData,
+								XtPointer	/* callData */)
 {
-	XFE_ToolbarButton *			button = (XFE_ToolbarButton*) clientData;
-	XfeButtonCallbackStruct *	cd = (XfeButtonCallbackStruct *) callData;
-	CommandType					cmd = button->getCommand();
-	void *						cmdCallData = button->getCallData();
+	XFE_ToolbarCascade * cascade = (XFE_ToolbarCascade *) clientData;
 
-	// The command info - only widget and event available
-	XFE_CommandInfo				info(XFE_COMMAND_BUTTON_ACTIVATE,
-									 w,
-									 cd->event);
-	// Command arguments
-	XFE_DoCommandArgs			cmdArgs(cmd,
-										cmdCallData,
-										&info);
+	XP_ASSERT( cascade != NULL );
 
-	// Send a message that will perform an action.
-	button->notifyInterested(XFE_ToolbarButton::doCommandNotice,
-							 (void *) & cmdArgs);
+	cascade->cascading();
 }
 //////////////////////////////////////////////////////////////////////////
