@@ -5,8 +5,17 @@
    xmlns:html="http://www.w3.org/1999/xhtml"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
+  <!-- bound to <description>s -->
   <binding id="text-base">
-    <implementation>
+    <implementation implements="nsIDOMXULDescriptionElement, nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return (accService? accService.createXULTextAccessible(this): null);
+          ]]>
+        </getter>
+      </property>
       <property name="disabled" onget="if (this.getAttribute('disabled') == 'true') return true; return false;"
                                 onset="if (val) this.setAttribute('disabled', 'true');
                                        else this.removeAttribute('disabled'); 
@@ -19,7 +28,7 @@
   </binding>
 
   <binding id="text-label" extends="chrome://global/content/bindings/text.xml#text-base">
-    <implementation>
+    <implementation implements="nsIDOMXULLabelElement">
       <property name="accessKey" onget="return this.getAttribute('accesskey');"
                                  onset="this.setAttribute('accesskey', val); return val;"/>
       <property name="control" onget="return this.getAttribute('control');"

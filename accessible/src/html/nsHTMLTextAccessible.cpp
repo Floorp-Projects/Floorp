@@ -46,6 +46,8 @@
 #include "nsISelectionController.h"
 #include "nsIPresContext.h"
 #include "nsReadableUtils.h"
+#include "nsIDOMXULDescriptionElement.h"
+#include "nsIDOMXULLabelElement.h"
 
 nsHTMLTextAccessible::nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsLinkableAccessible(aDomNode, aShell)
@@ -55,8 +57,17 @@ nsLinkableAccessible(aDomNode, aShell)
 /* wstring getAccName (); */
 NS_IMETHODIMP nsHTMLTextAccessible::GetAccName(nsAWritableString& _retval)
 { 
-
-  return mDOMNode->GetNodeValue(_retval);
+  // handles descriptions and label XUL elements
+  nsCOMPtr<nsIDOMXULDescriptionElement> descriptionElement(do_QueryInterface(mDOMNode));
+  if (descriptionElement) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+    return AppendFlatStringFromSubtree(content, &_retval);
+  }
+  // HTML elements
+  else {
+    return mDOMNode->GetNodeValue(_retval);
+  }
+  return NS_ERROR_FAILURE;
 }
 
 /* unsigned long getAccRole (); */

@@ -42,7 +42,9 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createHTMLRadioButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLButtonAccessible(in nsISupports aFrame);
   nsIAccessible createHTML4ButtonAccessible(in nsISupports aFrame);
+  nsIAccessible createXULButtonAccessible(in nsIDOMNode aNode);
   nsIAccessible createHTMLTextAccessible(in nsISupports aFrame);
+  nsIAccessible createXULTextAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULImageAccessible(in nsIDOMNode aNode);
   nsIAccessible createHTMLImageAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLAreaAccessible(in nsIWeakReference aPresShell, in nsIDOMNode aDOMNode, in nsIAccessible aAccParent);
