@@ -15,6 +15,7 @@
 #include "nsIDocument.h"
 #include "nsIXMLContentSink.h"
 #include "nsLayoutCID.h"
+#include "nsXMLDocument.h"
 
 // Static IIDs/CIDs. Try to minimize these.
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
@@ -265,38 +266,26 @@ nsXBLService::FetchBindingDocument(nsIURI* aURI, nsIDocument** aResult)
 
   if (NS_FAILED(rv)) return rv;
 
+  // XXX This is evil, but we're living in layout, so I'm
+  // just going to do it.
+  nsXMLDocument* xmlDoc = (nsXMLDocument*)(doc.get());
+
   // Now we have to synchronously load the binding file.
-  // Create an XML content sink and a parser.  Then kick off a load for
-  // the overlay.
+  // Create an XML content sink and a parser. 
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_OpenURI(getter_AddRefs(channel), aURI, nsnull);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIXMLContentSink> sink;
-  NS_NewXMLContentSink(getter_AddRefs(sink), doc, aURI, nsnull);
-
-  nsCOMPtr<nsIParser> parser;
-  rv = nsComponentManager::CreateInstance(kParserCID,
-                                          nsnull,
-                                          NS_GET_IID(nsIParser),
-                                          getter_AddRefs(parser));
-  NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create parser");
-  if (NS_FAILED(rv)) return rv;
-
-  parser->SetCommand("view");
-
-  nsAutoString utf8("UTF-8");
-  parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
-  parser->SetContentSink(sink); // grabs a reference to the parser
+  // Call StartDocumentLoad
+  nsCOMPtr<nsIStreamListener> listener;
+  if (NS_FAILED(rv = xmlDoc->StartDocumentLoad("view", channel, 
+                                               nsnull, nsnull, getter_AddRefs(listener)))) {
+    NS_ERROR("Failure to init XBL doc prior to load.");
+    return rv;
+  }
 
   // Now do a blocking synchronous parse of the file.
-  nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(parser, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = parser->Parse(aURI);
-  if (NS_FAILED(rv)) return rv;
-
   nsCOMPtr<nsIInputStream> in;
   PRUint32 sourceOffset = 0;
   rv = channel->OpenInputStream(0, -1, getter_AddRefs(in));
