@@ -5,7 +5,7 @@
 #include "prerror.h"
 
 #ifndef XP_UNIX
-#include "direct.h" */
+#include "direct.h"
 #endif
 
 #include <time.h>
