@@ -376,7 +376,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 #statusbar-display
   {
     list-style-image      : url("chrome://communicator/skin/document.gif");
-    font-size			  : 9px;
+    font-size			  : 10px;
     color				  : #D0E7E7;
   }
   

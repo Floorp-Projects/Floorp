@@ -341,6 +341,7 @@
 menubutton.button-toolbar-4
   {
     -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
+	margin				  : 0px 6px;
   }
 
 .button-toolbar-4 > .menubutton-internal-box > .menubutton-single-icon

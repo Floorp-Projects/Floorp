@@ -103,6 +103,36 @@ EXPORT_RESOURCE_SAMPLES = \
 	editmode-tags.gif \
 	editmode-html.gif \
 	editmode-preview.gif \
+	anchor-clicked.gif \
+	anchor-disabled.gif \
+	anchor-hover.gif \
+	hline-disabled.gif \
+	hline-hover.gif \
+	hline-clicked.gif \
+	spell-clicked.gif \
+	spell-disabled.gif \
+	spell-hover.gif \
+	image-disabled.gif \
+	image-hover.gif \
+	image-clicked.gif \
+	link-clicked.gif \
+	link-disabled.gif \
+	link-hover.gif \
+	newfile-disabled.gif \
+	newfile-hover.gif \
+	newfile-clicked.gif \
+	openfile-clicked.gif \
+	openfile-disabled.gif \
+	openfile-hover.gif \
+	preview-clicked.gif \
+	preview-disabled.gif \
+	preview-hover.gif \
+	savefile-disabled.gif \
+	savefile-hover.gif \
+	table-clicked.gif \
+	table-disabled.gif \
+	table-hover.gif \
+	savefile-clicked.gif \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

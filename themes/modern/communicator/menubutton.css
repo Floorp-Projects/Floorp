@@ -41,6 +41,12 @@
       padding               : 1px 3px 1px 3px;
     }
  
+  .button-toolbar > .menubutton-internal-box > .menubutton-single-icon,
+  .button-toolbar > .button-internal-box > .button-icon
+	{
+	  margin-right			: 2px;
+	}
+ 
  .button-toolbar[open="true"] > .menubutton-internal-box,
  .button-toolbar:hover:active > .menubutton-internal-box
     {

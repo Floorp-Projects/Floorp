@@ -137,16 +137,74 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
 
 /* Image URLs for all Editor toolbar buttons */
 
+#newButton, #openButton, #saveButton, #previewButton, #printButton, #linkButton, #imageButton, #namedAnchorButton,
+#hlineButton, #tableButton {
+	min-width			: 42px;
+}
+
 #newButton {
 	list-style-image:url("chrome://editor/skin/images/newfile.gif");
 }
+
+#newButton[disabled="true"],
+#newButton[disabled="true"]:hover,
+#newButton[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/newfile-disabled.gif");
+  } 
+
+#newButton:hover
+  {
+    list-style-image      : url("chrome://editor/skin/images/newfile-hover.gif");
+  } 
+
+#newButton:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/newfile-clicked.gif");
+  }
+
 #openButton {
 	list-style-image:url("chrome://editor/skin/images/openfile.gif");
 }
 
+#openButton[disabled="true"],
+#openButton[disabled="true"]:hover,
+#openButton[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/openfile-disabled.gif");
+  } 
+
+#openButton:hover
+  {
+    list-style-image      : url("chrome://editor/skin/images/openfile-hover.gif");
+  } 
+
+#openButton:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/openfile-clicked.gif");
+  }
+
 #saveButton {
 	list-style-image:url("chrome://editor/skin/images/savefile.gif");
 }
+
+#saveButton[disabled="true"],
+#saveButton[disabled="true"]:hover,
+#saveButton[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/savefile-disabled.gif");
+  } 
+
+#saveButton:hover
+  {
+    list-style-image      : url("chrome://editor/skin/images/savefile-hover.gif");
+  } 
+
+#saveButton:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/savefile-clicked.gif");
+  }
+
 #saveButton[dirty="true"] {
   list-style-image:url(chrome://editor/skin/images/savemod.gif); 
 }
@@ -154,16 +212,66 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
 #publishButton {
 	list-style-image:url("chrome://editor/skin/images/publish.gif");
 }
+
 #previewButton {
 	list-style-image:url("chrome://editor/skin/images/preview.gif");
 }
 
+#previewButton[disabled="true"],
+#previewButton[disabled="true"]:hover,
+#previewButton[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/preview-disabled.gif");
+  } 
+
+#previewButton:hover
+  {
+    list-style-image      : url("chrome://editor/skin/images/preview-hover.gif");
+  } 
+
+#previewButton:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/preview-clicked.gif");
+  }
+
 #printButton 
   {
     -moz-binding          : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
-	  list-style-image      : url("chrome://editor/skin/images/print.gif");
-    margin-top            : 0px;
-    margin-left           : 0px !important;
+	list-style-image      : url("chrome://global/skin/print.gif");
+    margin                : 3px 3px 1px 3px;
+    text-align			  : center;
+  }
+
+#printButton > .menubutton-dual-stack > .menubutton-dual-button
+  {
+  	margin				  : 0px;
+  	padding				  : 0px;
+  }
+
+#printButton[disabled="true"],
+#printButton[disabled="true"]:hover,
+#printButton[disabled="true"]:hover:active,
+#printButton[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button,
+#printButton[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover,
+#printButton[disabled="true"] > .menubutton-dual-stack > .menubutton-dual-button:hover:active
+  {
+    list-style-image      : url("chrome://global/skin/print-disabled.gif");
+  }
+
+#printButton > .menubutton-dual-stack > .menubutton-dual-button:hover
+  {
+    list-style-image      : url("chrome://global/skin/print-hover.gif");
+  }
+
+#printButton > .menubutton-dual-stack > .menubutton-dual-button:hover:active
+  {
+    list-style-image      : url("chrome://global/skin/print-clicked.gif");
+  }
+
+#printButton > .menubutton-dual-stack > .menubutton-dual-dropmarker-box
+  {
+    margin-left             : 19px;
+    margin-top				: 21px;
   }
 
 #findButton {
@@ -172,18 +280,108 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
 #linkButton {
 	list-style-image:url("chrome://editor/skin/images/link.gif");
 }
+
+#linkButton[disabled="true"],
+#linkButton[disabled="true"]:hover,
+#linkButton[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/link-disabled.gif");
+  } 
+
+#linkButton:hover
+  {
+    list-style-image      : url("chrome://editor/skin/images/link-hover.gif");
+  } 
+
+#linkButton:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/link-clicked.gif");
+  }
+
 #imageButton {
 	list-style-image:url("chrome://editor/skin/images/image.gif");
 }
+
+#imageButton[disabled="true"],
+#imageButton[disabled="true"]:hover,
+#imageButton[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/image-disabled.gif");
+  } 
+
+#imageButton:hover
+  {
+    list-style-image      : url("chrome://editor/skin/images/image-hover.gif");
+  } 
+
+#imageButton:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/image-clicked.gif");
+  }
+
 #namedAnchorButton {
 	list-style-image:url("chrome://editor/skin/images/anchor.gif");
 }
+
+#namedAnchorButton[disabled="true"],
+#namedAnchorButton[disabled="true"]:hover,
+#namedAnchorButton[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/anchor-disabled.gif");
+  } 
+
+#namedAnchorButton:hover
+  {
+    list-style-image      : url("chrome://editor/skin/images/anchor-hover.gif");
+  } 
+
+#namedAnchorButton:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/anchor-clicked.gif");
+  }
+
 #hlineButton {
 	list-style-image:url("chrome://editor/skin/images/hline.gif");
 }
+
+#hlineButton[disabled="true"],
+#hlineButton[disabled="true"]:hover,
+#hlineButton[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/hline-disabled.gif");
+  } 
+
+#hlineButton:hover
+  {
+    list-style-image      : url("chrome://editor/skin/images/hline-hover.gif");
+  } 
+
+#hlineButton:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/hline-clicked.gif");
+  }
+
 #tableButton {
 	list-style-image:url("chrome://editor/skin/images/table.gif");
 }
+
+#tableButton[disabled="true"],
+#tableButton[disabled="true"]:hover,
+#tableButton[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/table-disabled.gif");
+  } 
+
+#tableButton:hover
+  {
+    list-style-image      : url("chrome://editor/skin/images/table-hover.gif");
+  } 
+
+#tableButton:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/table-clicked.gif");
+  }
+
 #linkButton-dark {
 	list-style-image:url("chrome://editor/skin/images/link.gif");
 }
@@ -199,9 +397,27 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
 #tableButton-dark {
 	list-style-image:url("chrome://editor/skin/images/table.gif");
 }
+
 #spellingButton {
 	list-style-image:url("chrome://editor/skin/images/spell.gif");
 }
+
+#spellingButton[disabled="true"],
+#spellingButton[disabled="true"]:hover,
+#spellingButton[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/spell-disabled.gif");
+  } 
+
+#spellingButton:hover
+  {
+    list-style-image      : url("chrome://editor/skin/images/spell-hover.gif");
+  } 
+
+#spellingButton:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/spell-clicked.gif");
+  }
 
 /* formatting buttons */
 

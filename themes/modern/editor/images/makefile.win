@@ -101,3 +101,33 @@ install::
 	$(MAKE_INSTALL) editmode-tags.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) editmode-html.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) editmode-preview.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) anchor-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) anchor-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) anchor-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) hline-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) hline-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) hline-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) spell-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) spell-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) spell-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) image-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) image-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) image-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) link-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) link-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) link-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) newfile-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) newfile-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) newfile-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) openfile-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) openfile-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) openfile-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) preview-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) preview-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) preview-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) savefile-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) savefile-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) savefile-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) table-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) table-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) table-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
