@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.4 $ 
-# $Date: 2000/08/30 02:28:24 $ 
+# $Revision: 1.5 $ 
+# $Date: 2000/08/31 22:00:26 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -482,6 +482,13 @@ sub daemon_main {
 
     $summary_data = Summaries::summary_pages($tree, $summary_data);
 
+    # There are automated bots who need the header data, they extract
+    # it from this file.
+    
+    my ($all_headers) = TinderHeader::get_alltree_headers($tree);
+    
+    TinderHeader::export_alltree_headers($tree, $all_headers);
+    
     # if previous runs have died in the middle of an update, they will
     # leave these files which are useless and need to be cleaned up.
     
