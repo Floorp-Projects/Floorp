@@ -975,20 +975,20 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 		if (!names || !addresses)
 			return err;
 
-		nsCAutoString walkNames(names);
-		nsCAutoString walkAddresses(addresses);
+		nsCAutoString walkNames;
+		nsCAutoString walkAddresses;
 		PRInt32 namePos = 0;
 		PRInt32 addressPos = 0;
 		for (PRUint32 i = 0; i < count && result == boolContinueLoop; i++)
 		{
+			walkNames = names + namePos;
+			walkAddresses = addresses + addressPos;;
 			err = MatchRfc2047String (walkNames, charset, charsetOverride, &result);
 			if (boolContinueLoop == result)
 				err = MatchRfc2047String (walkAddresses, charset, charsetOverride, &result);
 
 			namePos += walkNames.Length() + 1;
 			addressPos += walkAddresses.Length() + 1;
-			walkNames = names + namePos;
-			walkAddresses = addresses + addressPos;;
 		}
 
 		PR_FREEIF(names);
