@@ -188,7 +188,7 @@ INCLUDES	+= -I$(srcdir)/../..
 ifeq ($(OS_ARCH),IRIX)
 # The assembler on IRIX (6.3 only?) seems to have trouble with the default command,
 # but works fine if we first copy the header and source file into the current dir.
-$(OBJDIR)/xptcstubs_asm_irix.o: $(DIST)/include/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_irix.s
+xptcstubs_asm_irix.o: $(DIST)/include/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_irix.s
 	@rm -f ./xptcstubsdef.inc
 	@cp $(DIST)/include/xptcstubsdef.inc .
 	@if test ! -f ./Makefile.in; then rm -f ./xptcstubs_asm_irix.s; cp $(srcdir)/xptcstubs_asm_irix.s .; else true; fi
@@ -202,7 +202,7 @@ ifeq ($(OS_ARCH),OpenVMS)
 # Our assembler wants the include file to be of assembler syntax, not C/C++
 # syntax, so we have to massage it slightly.
 
-$(OBJDIR)/xptcstubs_asm_openvms_alpha.o: $(PUBLIC)/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_openvms_alpha.s
+xptcstubs_asm_openvms_alpha.o: $(PUBLIC)/xptcstubsdef.inc $(srcdir)/xptcstubs_asm_openvms_alpha.s
 	@rm -f ./xptcstubsdef_asm.vms
 	@awk ' \
 	/^.*_ENTRY\([0-9]+\)/ { \

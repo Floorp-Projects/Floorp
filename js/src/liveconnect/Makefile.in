@@ -90,18 +90,18 @@ include $(topsrcdir)/config/rules.mk
 # These make rules only works on IRIX...sigh
 
 ifeq ($(OS_ARCH),IRIX)
-jsj_nodl.c: $(OBJDIR)/stubs.o Makefile $(DEPTH)/config/nodl.pl
+jsj_nodl.c: stubs.o Makefile $(DEPTH)/config/nodl.pl
 	rm -f $@
 	$(PERL) $(DEPTH)/config/nodl.pl "jsj_nodl_tab" \
-	    `nm -Bn $(OBJDIR)/stubs.o | egrep Java_.*_stub | awk '{print $$3;}'` > $@
+	    `nm -Bn stubs.o | egrep Java_.*_stub | awk '{print $$3;}'` > $@
 endif
 
 ifdef JAVA_OR_OJI
-$(OBJDIR)/stubs.o:					 \
+stubs.o:					 \
 	$(JNI_GEN_DIR)/netscape_javascript_JSObject.c	 \
 	$(JNI_GEN_DIR)/netscape_javascript_JSException.c \
 	$(NULL)
 else
-$(OBJDIR)/stubs.o:
+stubs.o:
 endif
 

@@ -30,7 +30,7 @@ REQUIRES	= libreg pref js
 CSRCS		= reg.c VerReg.c vr_stubs.c
 
 BIN_SRCS	= VerReg.c reg.c vr_stubs.c
-BIN_OBJS	= $(addprefix $(OBJDIR)/R_,$(BIN_SRCS:.c=.o))
+BIN_OBJS	= $(addprefix R_,$(BIN_SRCS:.c=.o))
 
 # force the creation of a static lib.
 override NO_STATIC_LIB=
@@ -47,10 +47,9 @@ endif
 INCLUDES	+= -I$(topsrcdir)/include
 GARBAGE		+= $(PROGRAM) $(BIN_OBJS)
 
-PROGRAM		= $(OBJDIR)/vreg$(BIN_SUFFIX)
+PROGRAM		= vreg$(BIN_SUFFIX)
 
 $(PROGRAM): $(BIN_OBJS)
-	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH), OS2)
 	$(LINK_EXE) -OUT:$@ $(BIN_OBJS) $(LDFLAGS) $(OS_LIBS)
 else
@@ -61,24 +60,21 @@ else
 endif
 endif
 
-$(OBJDIR)/R_VerReg.o:	VerReg.c
-	@$(MAKE_OBJDIR)
+R_VerReg.o:	VerReg.c
 ifeq ($(OS_ARCH), OS2)
 	$(CC) -Fo$@ -c $(CFLAGS) -DSTANDALONE_REGISTRY $<
 else
 	$(CC) -o $@ -c $(CFLAGS) -DSTANDALONE_REGISTRY $<
 endif
 
-$(OBJDIR)/R_reg.o:	reg.c
-	@$(MAKE_OBJDIR)
+R_reg.o:	reg.c
 ifeq ($(OS_ARCH), OS2)
 	$(CC) -Fo$@ -c $(CFLAGS) -DSTANDALONE_REGISTRY $<
 else
 	$(CC) -o $@ -c $(CFLAGS) -DSTANDALONE_REGISTRY $<
 endif
 
-$(OBJDIR)/R_vr_stubs.o:	vr_stubs.c
-	@$(MAKE_OBJDIR)
+R_vr_stubs.o:	vr_stubs.c
 ifeq ($(OS_ARCH), OS2)
 	$(CC) -Fo$@ -c $(CFLAGS) -DSTANDALONE_REGISTRY $<
 else

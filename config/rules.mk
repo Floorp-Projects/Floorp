@@ -42,13 +42,10 @@
 #			(used to define $OBJS)
 # d)
 #	PROGRAM	-- the target program name to create from $OBJS
-#			($OBJDIR automatically prepended to it)
 # d2)
 #	SIMPLE_PROGRAMS	-- Compiles Foo.cpp Bar.cpp into Foo, Bar executables.
-#			($OBJDIR automatically prepended to it)
 # e)
 #	LIBRARY_NAME	-- the target library name to create from $OBJS
-#			($OBJDIR automatically prepended to it)
 # f)
 #	JSRCS	-- java source files to compile into class files
 #			(if you don't specify this it will default to *.java)
@@ -80,14 +77,6 @@ ifndef NS_CONFIG_MK
 include $(topsrcdir)/config/config.mk
 endif
 
-ifdef PROGRAM
-PROGRAM			:= $(addprefix $(OBJDIR)/, $(PROGRAM))
-endif
-
-ifdef SIMPLE_PROGRAMS
-SIMPLE_PROGRAMS := $(addprefix $(OBJDIR)/, $(SIMPLE_PROGRAMS))
-endif
-
 #
 # Library rules
 #
@@ -106,8 +95,6 @@ ifndef DEF_FILE
 DEF_FILE		:= $(LIBRARY:.lib=.def)
 endif # DEF_FILE
 endif # LIBRARY
-
-LIBRARY			:= $(addprefix $(OBJDIR)/, $(LIBRARY))
 
 ifndef NO_SHARED_LIB
 ifdef MKSHLIB
@@ -165,17 +152,6 @@ ifndef OBJS
 OBJS			= $(JRI_STUB_CFILES) $(addsuffix .o, $(JMC_GEN)) $(CSRCS:.c=.o) $(CPPSRCS:.cpp=.o) $(ASFILES:.s=.o)
 endif
 
-OBJS			:= $(addprefix $(OBJDIR)/, $(OBJS))
-
-ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-ifdef DLL
-DLL			:= $(addprefix $(OBJDIR)/, $(DLL))
-ifeq ($(OS_ARCH),WINNT)
-LIB			:= $(addprefix $(OBJDIR)/, $(LIB))
-endif # WINNT
-endif # DLL
-endif # OS2, WINNT
-
 ifndef OS2_IMPLIB
 LIBOBJS			:= $(addprefix \", $(OBJS))
 LIBOBJS			:= $(addsuffix \", $(LIBOBJS))
@@ -196,10 +172,6 @@ else
 ALL_TRASH		= $(TARGETS) $(OBJS) LOGS TAGS $(GARBAGE) a.out \
 			  $(NOSUCHFILE) $(JMC_STUBS) so_locations \
 			  _gen _stubs $(MDDEPDIR) $(wildcard gts_tmp_*)
-endif
-
-ifndef USE_AUTOCONF
-ALL_TRASH		+= $(OBJDIR)
 endif
 
 ifdef JAVA_OR_NSJVM
@@ -279,8 +251,8 @@ alldep:: export depend libs install
 everything:: realclean alldep
 
 #
-# Rules to make OBJDIR and MDDEPDIR (for --enable-md).
-# These rules replace the MAKE_OBJDIR and MAKE_DEPDIR macros.
+# Rules to make MDDEPDIR (for --enable-md).
+# These rules replace the MAKE_DEPDIR macro.
 # The macros often failed with parallel builds (-jN),
 # because two processes would simultaneously try to make the same  directory.
 # Using these rules insures that 'make' will have only one process
@@ -299,13 +271,6 @@ $(MDDEPDIR):
 ifdef OBJS
 MAKE_DIRS += $(MDDEPDIR)
 endif
-endif
-
-ifneq "$(OBJDIR)" "."
-$(OBJDIR):
-	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
-
-MAKE_DIRS += $(OBJDIR)
 endif
 
 ifdef ALL_PLATFORMS
@@ -516,7 +481,7 @@ endif
 # creates Foo.o Bar.o, links with LIBS to create Foo, Bar.
 #
 #
-$(SIMPLE_PROGRAMS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EXTRA_DEPS) Makefile Makefile.in
+$(SIMPLE_PROGRAMS):%: %.o $(EXTRA_DEPS) Makefile Makefile.in
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) $(WRAP_MALLOC_CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 	$(MOZ_POST_PROGRAM_COMMAND) $@
@@ -621,14 +586,13 @@ endif
 endif
 else
 	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
-	@if test ! -f $(OBJDIR)/VMSuni.opt; then \
-	    echo "Creating universal symbol option file $(OBJDIR)/VMSuni.opt"; \
+	@if test ! -f VMSuni.opt; then \
+	    echo "Creating universal symbol option file VMSuni.opt"; \
 	    for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done; \
 	    create_opt_uni $(OBJS) $(SUB_LOBJS); \
-	    mv VMSuni.opt $(OBJDIR); \
 	fi
 	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
-	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OBJDIR)/VMSuni.opt;
+	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) VMSuni.opt;
 	@echo "`translate $@`" > $(@:.$(DLL_SUFFIX)=.vms)
 endif
 	chmod +x $@
@@ -651,45 +615,45 @@ else
 endif
 endif
 
-$(OBJDIR)/%: %.c
+%: %.c
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	$(CC) -Fo$@ -c $(CFLAGS) $<
 else
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
 endif
 
-$(OBJDIR)/%.o: %.c
+%.o: %.c
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	$(CC) -Fo$@ -c $(CFLAGS) $<
 else
 	$(CC) -o $@ -c $(CFLAGS) $<
 endif
 
-$(OBJDIR)/moc_%.cpp: %.h
+moc_%.cpp: %.h
 	$(MOC) $< -o $@ 
 
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
-$(OBJDIR)/%.o: %.s
+%.o: %.s
 	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $<
 
-$(OBJDIR)/%.o: %.S
+%.o: %.S
 	$(AS) -o $@ $(ASFLAGS) -c $<
 
-$(OBJDIR)/%: %.cpp
+%: %.cpp
 	$(CCC) -o $@ $(CXXFLAGS) $< $(LDFLAGS)
 
 #
 # Please keep the next two rules in sync.
 #
-$(OBJDIR)/%.o: %.cc
+%.o: %.cc
 	$(CCC) -o $@ -c $(CXXFLAGS) $<
 
-$(OBJDIR)/%.o: %.cpp
+%.o: %.cpp
 ifdef STRICT_CPLUSPLUS_SUFFIX
-	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > $(OBJDIR)/t_$*.cc
-	$(CCC) -o $@ -c $(CXXFLAGS) $(OBJDIR)/t_$*.cc
-	rm -f $(OBJDIR)/t_$*.cc
+	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > t_$*.cc
+	$(CCC) -o $@ -c $(CXXFLAGS) t_$*.cc
+	rm -f t_$*.cc
 else
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	$(CCC) -Fo$@ -c $(CXXFLAGS) $<
@@ -737,7 +701,7 @@ endif
 # Update Makefiles
 ###############################################################################
 #
-$(OBJDIR)/Makefile: Makefile.in
+Makefile: Makefile.in
 	@echo Updating $@
 	$(topsrcdir)/build/autoconf/update-makefile.sh
 
@@ -952,7 +916,7 @@ INCLUDES		+= -I$(JMC_GEN_DIR) -I.
 ifdef JAVA_OR_NSJVM
 JMC_HEADERS		= $(patsubst %,$(JMC_GEN_DIR)/%.h,$(JMC_GEN))
 JMC_STUBS		= $(patsubst %,$(JMC_GEN_DIR)/%.c,$(JMC_GEN))
-JMC_OBJS		= $(patsubst %,$(OBJDIR)/%.o,$(JMC_GEN))
+JMC_OBJS		= $(patsubst %,%.o,$(JMC_GEN))
 
 $(JMC_GEN_DIR)/M%.h: $(JMCSRCDIR)/%.class
 	$(JMC) -d $(JMC_GEN_DIR) -interface $(JMC_GEN_FLAGS) $(?F:.class=)
@@ -960,7 +924,7 @@ $(JMC_GEN_DIR)/M%.h: $(JMCSRCDIR)/%.class
 $(JMC_GEN_DIR)/M%.c: $(JMCSRCDIR)/%.class
 	$(JMC) -d $(JMC_GEN_DIR) -module $(JMC_GEN_FLAGS) $(?F:.class=)
 
-$(OBJDIR)/M%.o: $(JMC_GEN_DIR)/M%.h $(JMC_GEN_DIR)/M%.c
+M%.o: $(JMC_GEN_DIR)/M%.h $(JMC_GEN_DIR)/M%.c
 ifeq ($(OS_ARCH),OS2)
 	$(CC) -Fo$@ -c $(CFLAGS) $(JMC_GEN_DIR)/M$*.c
 else
@@ -1185,7 +1149,7 @@ ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 	    if ($$found) {                                                    \
 		print "Removing stale dependency $< from $(DEPENDENCIES)\n";  \
 		seek(MD, 0, 0);                                               \
-		$$tmpname = "$(OBJDIR)/fix.md" . $$$$;                        \
+		$$tmpname = "fix.md" . $$$$;                                  \
 		open(TMD, "> " . $$tmpname);                                  \
 		while (<MD>) {                                                \
 		    s@ \.*/*$< @ @;                                           \
@@ -1226,30 +1190,14 @@ endif
 else
 $(MKDEPENDENCIES)::
 	touch $(MKDEPENDENCIES)
-ifdef USE_AUTOCONF
-	$(MKDEPEND) -p$(OBJDIR_NAME)/ -o'.o' -f$(MKDEPENDENCIES) $(DEFINES) $(ACDEFINES) $(INCLUDES) $(addprefix $(srcdir)/,$(CSRCS) $(CPPSRCS)) >/dev/null 2>&1
-	@mv depend.mk depend.mk.old && cat depend.mk.old | sed "s|^$(OBJDIR_NAME)/$(srcdir)/|$(OBJDIR_NAME)/|g" > depend.mk && rm -f depend.mk.old
-else
-	$(MKDEPEND) -p$(OBJDIR_NAME)/ -o'.o' -f$(MKDEPENDENCIES) $(INCLUDES) $(CSRCS) $(CPPSRCS)
-endif
+	$(MKDEPEND) -o'.o' -f$(MKDEPENDENCIES) $(DEFINES) $(ACDEFINES) $(INCLUDES) $(addprefix $(srcdir)/,$(CSRCS) $(CPPSRCS)) >/dev/null 2>&1
+	@mv depend.mk depend.mk.old && cat depend.mk.old | sed "s|^$(srcdir)/||g" > depend.mk && rm -f depend.mk.old
 
 ifndef MOZ_NATIVE_MAKEDEPEND
 $(MKDEPEND):
 	cd $(DEPTH)/config; $(MAKE) nsinstall
 	cd $(MKDEPEND_DIR); $(MAKE)
 endif
-
-# Dont do the detect hackery for autoconf builds.  It makes them painfully
-# slow and its not needed anyway, since autoconf does it much better.
-ifndef USE_AUTOCONF
-
-# Rules to for detection
-$(MOZILLA_DETECT_GEN):
-	cd $(MOZILLA_DETECT_DIR); $(MAKE)
-
-detect: $(MOZILLA_DETECT_GEN)
-
-endif # ! USE_AUTOCONF
 
 ifndef MOZ_NATIVE_MAKEDEPEND
 MKDEPEND_BUILTIN = $(MKDEPEND) 
@@ -1268,7 +1216,7 @@ dependclean::
 	rm -f $(MKDEPENDENCIES)
 	+$(LOOP_OVER_DIRS)
 
--include $(OBJDIR)/depend.mk
+-include depend.mk
 
 endif # ! COMPILER_DEPEND
 

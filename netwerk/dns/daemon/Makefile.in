@@ -40,7 +40,7 @@ REQUIRES=
 
 include $(topsrcdir)/config/config.mk
 
-SIMPLE_PROGRAMS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
+SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
 
 # hack until necko lands
 ifndef NECKO

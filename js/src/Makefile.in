@@ -124,7 +124,7 @@ LIBRARY		= js$(MOZ_BITS)$(VERSION_NUMBER).$(LIB_SUFFIX)
 DEF_FILE	= jsos2$(VERSION_NUMBER).def
 EXTRA_LIBS	= $(NSPR_LIBS) $(LIBNSJAVA)
 else
-EXTRA_LIBS	= $(NSPR_LIBS) $(LIBNSJAVA) $(OBJDIR)/libjs.lib
+EXTRA_LIBS	= $(NSPR_LIBS) $(LIBNSJAVA) libjs.lib
 endif
 OS_CFLAGS	+= -tm-
 endif
@@ -144,7 +144,7 @@ DEFINES		+= -DEXPORT_JS_API
 
 INCLUDES	+= -I$(srcdir)
 
-GARBAGE		+= $(JSMATH_PRELINK) $(OBJDIR)/jscpucfg.o $(OBJDIR)/jsautocfg.h $(OBJDIR)/jsautocfg.tmp
+GARBAGE		+= $(JSMATH_PRELINK) jscpucfg.o jsautocfg.h jsautocfg.tmp
 
 ifneq ($(findstring -L,$(NSPR_LIBS)),)
 NSPR_STATIC_PATH	= $(subst -L,,$(findstring -L,$(NSPR_LIBS)))
@@ -239,11 +239,9 @@ endif
 # special rule for jsmath.o since we want to incrementally link
 # against fdlibm to pull in only what is needed
 jsmath.o: $(FDLIBM_LIBRARY) $(JSMATH_PRELINK)
-	@$(MAKE_OBJDIR)
 	$(LD) $(DASH_R) -o $@ $(JSMATH_PRELINK) $(FDLIBM_LIBRARY)
 
 $(JSMATH_PRELINK): jsmath.c
-	@$(MAKE_OBJDIR)
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	$(CC) -Fo$@ -c $(CFLAGS) $<
 else
@@ -253,8 +251,7 @@ endif
 # An AIX Optimization bug causes PR_dtoa() & JS_dtoa to produce wrong result.
 # This suppresses optimization for this single compilation unit.
 ifeq ($(OS_ARCH),AIX)
-$(OBJDIR)/jsdtoa.o: jsdtoa.c
-	@$(MAKE_OBJDIR)
+jsdtoa.o: jsdtoa.c
 	$(CC) -o $@ -c $(filter-out -O, $(CFLAGS)) $<
 endif
 
@@ -269,20 +266,20 @@ $(FDLIBM_LIBRARY):
 
 jsopcode.h jsopcode.c: jsopcode.tbl
 
-$(OBJDIR)/jsautocfg.h: $(OBJDIR)/jscpucfg
-	@rm -f $@ $(OBJDIR)/jsautocfg.tmp
-	$(OBJDIR)/jscpucfg > $(OBJDIR)/jsautocfg.tmp
-	mv $(OBJDIR)/jsautocfg.tmp $@
+jsautocfg.h: jscpucfg
+	@rm -f $@ jsautocfg.tmp
+	./jscpucfg > jsautocfg.tmp
+	mv jsautocfg.tmp $@
 
 ifeq ($(OS_ARCH),OpenVMS)
 # force a posix build for OpenVMS
-$(OBJDIR)/jscpucfg.o: jscpucfg.c
+jscpucfg.o: jscpucfg.c
 	c89 -c -o $@ $<
 
-$(OBJDIR)/jscpucfg: $(OBJDIR)/jscpucfg.o
+jscpucfg: jscpucfg.o
 	c89 -o $@ $<
 endif
 
-export:: $(OBJDIR)/jsautocfg.h
+export:: jsautocfg.h
 	$(INSTALL) -m 444 $< $(DIST)/include
 

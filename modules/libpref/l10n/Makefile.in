@@ -28,12 +28,12 @@ include $(topsrcdir)/config/rules.mk
 
 LIBS		= -L$(DIST)/lib -lhash
 
-all:: other-stuff $(OBJDIR)/resources $(OBJDIR)/un-obscure
+all:: other-stuff resources un-obscure
 
 other-stuff:
 	cd $(DEPTH)/config; $(MAKE)
 	cd $(DEPTH)/security/lib/util; $(MAKE) export
 	cd $(DEPTH)/security/lib/hash; $(MAKE)
 	
-$(OBJDIR)/resources: $(OBJDIR)/resources.o
+resources: resources.o
 	$(CC) -o $@ $< $(LIBS)
