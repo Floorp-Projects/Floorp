@@ -14,7 +14,7 @@ function closeWindow(aClose)
 # Closing the last window doesn't quit the application on OS X.
 #ifndef XP_MACOSX
   // If we're down to the last window and someone tries to shut down, check to make sure we can!
-  if (windowCount == 1 && !canQuitApplication()) 
+  if (windowCount == 1 && !canQuitApplication())
     return false;
 #endif
 
