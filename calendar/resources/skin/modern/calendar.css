@@ -206,6 +206,7 @@
  *-------------------------------------------------------------------*/
 #calendar-multiweek-view-button 
   {
+    margin-left:	8px;
     padding-top:	1px;
     -moz-image-region: rect(68px 45px 102px 0px);
   }
@@ -227,6 +228,7 @@
 
 #calendar-month-view-button 
   {
+    margin-left:	8px;
     padding-top:	1px;
     -moz-image-region: rect(102px 45px 136px 0px);
   }
@@ -248,6 +250,7 @@
 
 #calendar-week-view-button 
   {
+    margin-left:	8px;
     padding-top:	1px;
     -moz-image-region: rect(34px 45px 68px 0px);
   }
@@ -269,6 +272,7 @@
 
 #calendar-day-view-button 
   {
+    margin-left:	8px;
     padding-top:	1px;
     -moz-image-region: rect(0 45px 34px 0px);
   }
