@@ -36,7 +36,7 @@ function OnLoadNewCard()
 
 	editCard.card = cardproperty;
 	editCard.okCallback = 0;
-	editCard.titlePrefix = editCard.newCardTitlePrefix;
+	editCard.titleProperty = "newCardTitle"
 
 	if (window.arguments && window.arguments[0])
 	{
@@ -91,7 +91,7 @@ function OnLoadEditCard()
 	
 	doSetOKCancel(EditCardOKButton, 0);
 
-	editCard.titlePrefix = editCard.editCardTitlePrefix;
+	editCard.titleProperty = "editCardTitle";
 
 	if (window.arguments && window.arguments[0])
 	{
@@ -113,8 +113,10 @@ function OnLoadEditCard()
 	}
 	
 	GetCardValues(editCard.card, document);
-		
-	top.window.title = editCard.titlePrefix + editCard.card.displayName;
+
+    var displayName = editCard.card.displayName;
+	top.window.title = Bundle.formatStringFromName(editCard.titleProperty,
+                                                   [ displayName ], 1);
 }
 
 function RegisterSaveListener(func)
@@ -154,10 +156,6 @@ function InitEditCard()
 			editCard.generateDisplayName = prefs.GetBoolPref("mail.addr_book.displayName.autoGeneration");
 			editCard.lastFirstSeparator = ", ";
 			editCard.firstLastSeparator = " ";
-			editCard.newCardTitlePrefix =
-              Bundle.GetStringFromName("newCardTitlePrefix") + " ";
-			editCard.editCardTitlePrefix =
-              Bundle.GetStringFromName("editCardTitlePrefix") + " ";
 		}
 		catch (ex) {
 			dump("failed to get pref\n");
@@ -363,7 +361,8 @@ function GenerateDisplayName()
 			displayName = firstNameField.value + separator + lastNameField.value;
 			
 		displayNameField.value = displayName;
-		top.window.title = editCard.titlePrefix + displayName;
+		top.window.title = Bundle.formatStringFromName(editCard.titleProperty,
+                                                       [ displayName ], 1);
 	}
 }
 
@@ -371,8 +370,10 @@ function DisplayNameChanged()
 {
 	// turn off generateDisplayName if the user changes the display name
 	editCard.generateDisplayName = false;
-	
-	var title = editCard.titlePrefix + document.getElementById('DisplayName').value;
+
+    var displayName = document.getElementById('DisplayName').value;
+	var title = Bundle.formatStringFromName(editCard.titleProperty,
+                                            [ displayName ], 1);
 	if ( top.window.title != title )
 		top.window.title = title;
 }
