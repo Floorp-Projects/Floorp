@@ -107,3 +107,6 @@
 <!ENTITY createCertInfo.title "Generating A Private Key">
 <!ENTITY createCertInfo.msg1 "Key Generation in progress... This may take a few minutes....">
 <!ENTITY createCertInfo.msg2 "Please wait...">
+
+<!-- Access Keys -->
+<!ENTITY createCertInfo.okButtonAccessKey "o">
