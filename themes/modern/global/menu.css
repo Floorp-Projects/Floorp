@@ -157,7 +157,7 @@ popup > menuitem[_moz-menuactive="true"] {
 menulist > menupopup > menuitem,
 .menulist-menupopup > menu,
 menulist > menupopup > menu {
-  padding-right: 12px;
+  padding-right: 26px;
   padding-top: 1px;
   padding-bottom: 1px;
   max-width: none;
