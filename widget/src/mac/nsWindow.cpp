@@ -154,12 +154,15 @@ void nsWindow::Create(nsNativeWidget aParent,
 void 
 nsWindow::InitToolkit(nsIToolkit *aToolkit,nsIWidget  *aWidgetParent) 
 {
-  if (nsnull == mToolkit) { 
-    if (nsnull != aToolkit) {
+  if (nsnull == mToolkit) 
+  	{ 
+    if (nsnull != aToolkit) 
+    	{
       mToolkit = (nsToolkit*)aToolkit;
       mToolkit->AddRef();
-    }
-    else {
+   		}
+    else 
+    	{
       if (nsnull != aWidgetParent) 
       	{
         mToolkit = (nsToolkit*)(aWidgetParent->GetToolkit()); // the call AddRef's, we don't have to
@@ -170,8 +173,8 @@ nsWindow::InitToolkit(nsIToolkit *aToolkit,nsIWidget  *aWidgetParent)
         mToolkit->AddRef();
         mToolkit->Init(PR_GetCurrentThread());
       	}
-    }
-  }
+    	}
+  	}
 
 }
 
@@ -213,7 +216,7 @@ Rect		bounds;
 		mWindowPtr = NewCWindow(mWindowRecord,&bounds,"\ptestwindow",TRUE,0,(GrafPort*)-1,TRUE,(long)this);
 		
 		mWindowRegion = NewRgn();
-		SetRectRgn(mWindowRegion,bounds.left,bounds.top,bounds.right,bounds.bottom);
+		SetRectRgn(mWindowRegion,0,0,bounds.right,bounds.bottom);
 
 		mWindowMadeHere = PR_TRUE;
 		mIsMainWindow = PR_TRUE;
@@ -226,7 +229,7 @@ Rect		bounds;
 		mIsMainWindow = PR_TRUE;		
 		}
 	
-  //InitDeviceContext(aContext, (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL));
+  InitDeviceContext(aContext, (nsNativeWidget)mWindowPtr);
 }
 
 //-------------------------------------------------------------------------
@@ -263,11 +266,42 @@ void nsWindow::CreateChildWindow(nsNativeWidget aNativeParent,
 		mWindowPtr = (WindowPtr)aNativeParent;
 		}
   
-  //InitDeviceContext(aContext, (Widget)aNativeParent);
+  InitDeviceContext(aContext,aNativeParent);
 
   // Force cursor to default setting
   mCursor = eCursor_select;
   SetCursor(eCursor_standard);
+
+}
+
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
+void nsWindow::InitDeviceContext(nsIDeviceContext *aContext,nsNativeWidget aParentWidget) 
+{
+
+  // keep a reference to the toolkit object
+  if (aContext) {
+    mContext = aContext;
+    mContext->AddRef();
+  }
+  else {
+    nsresult  res;
+
+    static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
+    static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
+
+    res = NSRepository::CreateInstance(kDeviceContextCID,
+                                       nsnull, 
+                                       kDeviceContextIID, 
+                                       (void **)&mContext);
+    if (NS_OK == res) 
+    	{
+      mContext->Init(aParentWidget);
+    	}
+  }
 
 }
 

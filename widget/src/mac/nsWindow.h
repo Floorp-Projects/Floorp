@@ -140,7 +140,6 @@ public:
     
     nsWindow* FindWidgetHit(Point aThePoint);
     ptInWindow(PRInt32 aX,PRInt32 aY);
-    
 
     char gInstanceClassName[256];
 protected:
@@ -258,6 +257,8 @@ private:
 	PRBool				mWindowMadeHere;			// if main window and we created, true
 	PRBool				mIsMainWindow;				// top level Mac window
 	RgnHandle			mWindowRegion;				// the region defining this window
+	
+	void InitDeviceContext(nsIDeviceContext *aContext,nsNativeWidget aParentWidget);
 	
 };
 
