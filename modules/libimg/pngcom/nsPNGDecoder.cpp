@@ -43,29 +43,6 @@ PR_END_EXTERN_C
 
 
 /*-----------class----------------*/
-class PNGDecoder : public nsIImgDecoder   
-{
-public:
-  PNGDecoder(il_container* aContainer);
-  virtual ~PNGDecoder();
- 
-  NS_DECL_ISUPPORTS
-
-  /* stream */
-  NS_IMETHOD ImgDInit();
-
-  NS_IMETHOD ImgDWriteReady(PRUint32 *max_read);
-  NS_IMETHOD ImgDWrite(const unsigned char *buf, int32 len);
-  NS_IMETHOD ImgDComplete();
-  NS_IMETHOD ImgDAbort();
-
-  NS_IMETHOD_(il_container *) SetContainer(il_container *ic){ilContainer = ic; return ic;}
-  NS_IMETHOD_(il_container *) GetContainer() {return ilContainer;}
-
-  
-private:
-  il_container* ilContainer;
-};
 /*-------------------------------------------------*/
 
 PNGDecoder::PNGDecoder(il_container* aContainer)
@@ -80,6 +57,7 @@ PNGDecoder::~PNGDecoder(void)
   NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 };
 
+static NS_DEFINE_IID(kPNGDecoderIID, NS_PNGDECODER_IID);
 
 NS_IMETHODIMP 
 PNGDecoder::QueryInterface(const nsIID& aIID, void** aInstPtr)
@@ -103,149 +81,6 @@ PNGDecoder::QueryInterface(const nsIID& aIID, void** aInstPtr)
 
 NS_IMPL_ADDREF(PNGDecoder)
 NS_IMPL_RELEASE(PNGDecoder)
-
-/*-----------class----------------*/
-class nsPNGDecFactory : public nsIFactory 
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  nsPNGDecFactory(const nsCID &aClass);
-  virtual ~nsPNGDecFactory();
-
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                            REFNSIID aIID,
-                            void **aResult);
-
-  NS_IMETHOD LockFactory(PRBool aLock);
- 
-protected:
-
-private:
-	nsCID mClassID;
-	il_container *ilContainer;
-};
-
-/*-----------------------------------------*/
-
-static nsPNGDecFactory* gFactory = NULL;
-
-NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS(nsPNGDecFactory, kIFactoryIID)
-
-
-nsPNGDecFactory::nsPNGDecFactory(const nsCID &aClass)
-{
-	NS_INIT_REFCNT();
-	mClassID = aClass;
-}
-
-nsPNGDecFactory::~nsPNGDecFactory(void)
-{
-	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
-}
-/*----------------------------------for autoregistration ----*/
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-
-extern "C" NS_EXPORT nsresult 
-NSRegisterSelf(nsISupports* aServMgr, const char *path)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
-
-     if ((rv = compMgr->RegisterComponent(kPNGDecoderCID, 
-       "Netscape PNGDec", 
-       "component://netscape/image/decoder&type=image/png", path, PR_TRUE, PR_TRUE)
-				  ) != NS_OK) {
-				  return rv;
-			  }
- (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
-
-}
-
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char *path)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-  if (NS_FAILED(rv)) return rv;
-
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           nsIComponentManager::GetIID(), 
-                           (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = compMgr->UnregisterComponent(kPNGDecoderCID, path);
-
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
-  return rv;
-}
-
-/*--------------------*/
-NS_IMETHODIMP
-nsPNGDecFactory::CreateInstance(nsISupports *aOuter,
-                             const nsIID &aIID,
-                             void **ppv)
-{
-   PNGDecoder *pngdec = NULL;
-   *ppv  = NULL;
-   il_container* ic = NULL;
-
-NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-   if (aOuter && !aIID.Equals(kISupportsIID))
-       return NS_NOINTERFACE;  
-   ic = new il_container();
-
-   pngdec = new PNGDecoder(ic);
-   nsresult res = pngdec->QueryInterface(aIID,(void**)ppv);
-       //interface is other than nsISupports and pngdecoder
-       
-    if (NS_FAILED(res)) {
-    *ppv = NULL;
-    delete pngdec;
-  }
-  delete ic; /* is a place holder */
-
-  return res;
-}
- 
-NS_METHOD
-nsPNGDecFactory::LockFactory(PRBool aLock)
-{
-    return NS_OK;
-}
-
-extern "C" NS_EXPORT nsresult
-NSGetFactory(nsISupports* serviceMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
-{
-  if( !aClass.Equals(kPNGDecoderCID))
-		return NS_ERROR_FACTORY_NOT_REGISTERED;
-  if( gFactory == NULL){
-	  gFactory = new nsPNGDecFactory(aClass);
-	  if( gFactory == NULL)
-		return NS_ERROR_OUT_OF_MEMORY;
-	  gFactory->AddRef(); //for global
-  }
-  gFactory->AddRef();   //for client
-  *aFactory = gFactory;
-  return NS_OK;
-}
-
 
 /*----------------------------------------------------*/
 // api functions
