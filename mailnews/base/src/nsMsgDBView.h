@@ -87,7 +87,7 @@ enum eFieldType {
 // I think this will be an abstract implementation class.
 // The classes that implement the outliner support will probably
 // inherit from this class.
-class nsMsgDBView : public nsIMsgDBView, public nsIDBChangeListener, public nsIOutlinerView, public nsIMsgCopyServiceListener, public nsIMsgSearchNotify, public nsIObserver
+class nsMsgDBView : public nsIMsgDBView, public nsIDBChangeListener, public nsIOutlinerView, public nsIMsgSearchNotify, public nsIObserver
 {
 public:
   nsMsgDBView();
@@ -97,7 +97,6 @@ public:
   NS_DECL_NSIMSGDBVIEW
   NS_DECL_NSIDBCHANGELISTENER
   NS_DECL_NSIOUTLINERVIEW
-  NS_DECL_NSIMSGCOPYSERVICELISTENER
   NS_DECL_NSIMSGSEARCHNOTIFY
   NS_DECL_NSIOBSERVER
 
@@ -313,10 +312,8 @@ protected:
   nsMsgKey                m_currentlyDisplayedMsgKey;
   // if we're deleting messages, we want to hold off loading messages on selection changed until the delete is done
   // and we want to batch notifications.
-  PRBool                  m_deletingMsgs;
-  // used for batching deletes
-  nsUInt32Array           m_removedIndices;
-
+  PRBool                  m_deletingRows;
+  
   nsCOMPtr <nsIMsgFolder> m_folder;
   PRBool mIsSpecialFolder; // for special folders, the Sender column really shows recipients.
   PRBool mIsNews;          // we have special icons for news, and for news, we show lines instead of size

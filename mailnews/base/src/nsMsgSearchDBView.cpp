@@ -61,7 +61,7 @@ nsMsgSearchDBView::~nsMsgSearchDBView()
  /* destructor code */
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsMsgSearchDBView, nsMsgDBView, nsIMsgDBView)
+NS_IMPL_ISUPPORTS_INHERITED2(nsMsgSearchDBView, nsMsgDBView, nsIMsgDBView, nsIMsgCopyServiceListener)
 
 NS_IMETHODIMP nsMsgSearchDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, nsMsgViewFlagsTypeValue viewFlags, PRInt32 *pCount)
 {
@@ -352,6 +352,33 @@ nsMsgSearchDBView::InitializeGlobalsForDeleteAndFile(nsMsgViewIndex *indices, PR
 
 
 }
+
+// nsIMsgCopyServiceListener methods
+
+NS_IMETHODIMP
+nsMsgSearchDBView::OnStartCopy()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchDBView::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax)
+{
+  return NS_OK;
+}
+
+// believe it or not, these next two are msgcopyservice listener methods!
+NS_IMETHODIMP
+nsMsgSearchDBView::SetMessageKey(PRUint32 aMessageKey)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgSearchDBView::GetMessageId(nsCString* aMessageId)
+{
+  return NS_OK;
+}
   
 NS_IMETHODIMP
 nsMsgSearchDBView::OnStopCopy(nsresult aStatus)
@@ -369,6 +396,8 @@ nsMsgSearchDBView::OnStopCopy(nsresult aStatus)
 
     return rv;
 }
+
+// end nsIMsgCopyServiceListener methods
 
 nsresult nsMsgSearchDBView::ProcessRequestsInOneFolder(nsIMsgWindow *window)
 {

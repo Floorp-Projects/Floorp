@@ -107,7 +107,6 @@ NS_INTERFACE_MAP_BEGIN(nsMsgDBView)
    NS_INTERFACE_MAP_ENTRY(nsIMsgDBView)
    NS_INTERFACE_MAP_ENTRY(nsIDBChangeListener)
    NS_INTERFACE_MAP_ENTRY(nsIOutlinerView)
-   NS_INTERFACE_MAP_ENTRY(nsIMsgCopyServiceListener)
    NS_INTERFACE_MAP_ENTRY(nsIMsgSearchNotify)
    NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END
@@ -128,7 +127,7 @@ nsMsgDBView::nsMsgDBView()
   mIsSpecialFolder = PR_FALSE;
   mIsNews = PR_FALSE;
   mDeleteModel = nsMsgImapDeleteModels::MoveToTrash;
-  m_deletingMsgs = PR_FALSE;
+  m_deletingRows = PR_FALSE;
   mRemovingRow = PR_FALSE;
   mIsSearchView = PR_FALSE;
   // initialize any static atoms or unicode strings
@@ -1856,8 +1855,8 @@ nsMsgDBView::CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32
     if (msgHdr)
       messageArray->AppendElement(msgHdr);
   }
-  m_deletingMsgs = isMove;
-  rv = destFolder->CopyMessages(m_folder /* source folder */, messageArray, isMove, window, this /* listener */, PR_FALSE /* isFolder */, PR_TRUE /*allowUndo*/);
+  m_deletingRows = isMove && mDeleteModel != nsMsgImapDeleteModels::IMAPDelete;
+  rv = destFolder->CopyMessages(m_folder /* source folder */, messageArray, isMove, window, nsnull /* listener */, PR_FALSE /* isFolder */, PR_TRUE /*allowUndo*/);
 
   return rv;
 }
@@ -1997,11 +1996,13 @@ nsresult nsMsgDBView::RemoveByIndex(nsMsgViewIndex index)
 {
 	if (!IsValidIndex(index))
 		return NS_MSG_INVALID_DBVIEW_INDEX;
-
 	m_keys.RemoveAt(index);
 	m_flags.RemoveAt(index);
 	m_levels.RemoveAt(index);
-	NoteChange(index, -1, nsMsgViewNotificationCode::insertOrDelete);
+
+  if (!m_deletingRows)
+    NoteChange(index, -1, nsMsgViewNotificationCode::insertOrDelete); // an example where view is not the listener - D&D messages
+  
 	return NS_OK;
 }
 
@@ -2020,8 +2021,9 @@ nsresult nsMsgDBView::DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indic
       messageArray->AppendElement(msgHdr);
 
   }
-  m_deletingMsgs = PR_TRUE;
-  m_folder->DeleteMessages(messageArray, window, deleteStorage, PR_FALSE, this, PR_TRUE /*allow Undo*/ );
+  if (mDeleteModel != nsMsgImapDeleteModels::IMAPDelete)
+    m_deletingRows = PR_TRUE;
+  m_folder->DeleteMessages(messageArray, window, deleteStorage, PR_FALSE, nsnull, PR_TRUE /*allow Undo*/ );
 
   return rv;
 }
@@ -4806,40 +4808,41 @@ nsMsgDBView::GetURIForFirstSelectedMessage(char **uri)
   return NS_OK;
 }
 
-// nsIMsgCopyServiceListener methods
 NS_IMETHODIMP
-nsMsgDBView::OnStartCopy()
+nsMsgDBView::OnDeleteCompleted(PRBool aSucceeded)
 {
-  return NS_OK;
-}
+  if (m_deletingRows)
+  { 
+    if (aSucceeded)
+    {
+      PRInt32 selectionCount; 
+      //selection count cannot be zero, we would not be here
+      mOutlinerSelection->GetRangeCount(&selectionCount);  
+      NS_ASSERTION(selectionCount, "selected indices for deletion is 0");
+      PRInt32 *startRangeArray = (PRInt32*) PR_MALLOC(selectionCount* sizeof(PRInt32));
+      PRInt32 *endRangeArray = (PRInt32*) PR_MALLOC(selectionCount* sizeof(PRInt32));
+      PRInt32 i;
+      for (i=0; i<selectionCount; i++)
+        mOutlinerSelection->GetRangeAt(i, &startRangeArray[i], &endRangeArray[i]);
 
-NS_IMETHODIMP
-nsMsgDBView::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax)
-{
-  return NS_OK;
-}
+      PRInt32 delta=0; //keeps no of rows deleted.
+      for (i=0; i<selectionCount; i++)
+      {
+        startRangeArray[i] -=delta;
+        endRangeArray[i] -= delta;
+        PRInt32 numRows = endRangeArray[i]-startRangeArray[i]+1;
+        delta += numRows;
+        NoteChange(startRangeArray[i], -1*numRows, nsMsgViewNotificationCode::insertOrDelete);
+      }
+      PR_FREEIF(startRangeArray);
+      PR_FREEIF(endRangeArray);
+    }
+  }
 
-// believe it or not, these next two are msgcopyservice listener methods!
-NS_IMETHODIMP
-nsMsgDBView::SetMessageKey(PRUint32 aMessageKey)
-{
-  return NS_OK;
-}
+ m_deletingRows = PR_FALSE;
+ return NS_OK;
 
-NS_IMETHODIMP
-nsMsgDBView::GetMessageId(nsCString* aMessageId)
-{
-  return NS_OK;
 }
-  
-NS_IMETHODIMP
-nsMsgDBView::OnStopCopy(nsresult aStatus)
-{
-  m_deletingMsgs = PR_FALSE;
-  m_removedIndices.RemoveAll();
-  return NS_OK;
-}
-// end nsIMsgCopyServiceListener methods
 
 PRBool nsMsgDBView::OfflineMsgSelected(nsMsgViewIndex * indices, PRInt32 numIndices)
 {

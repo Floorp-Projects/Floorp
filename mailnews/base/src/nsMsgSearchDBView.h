@@ -41,7 +41,7 @@
 #include "nsMsgDBView.h"
 #include "nsIMsgCopyServiceListener.h"
 
-class nsMsgSearchDBView : public nsMsgDBView
+class nsMsgSearchDBView : public nsMsgDBView, public nsIMsgCopyServiceListener
 {
 public:
   nsMsgSearchDBView();
@@ -49,6 +49,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIMSGSEARCHNOTIFY
+  NS_DECL_NSIMSGCOPYSERVICELISTENER
 
   virtual const char * GetViewName(void) {return "SearchView"; }
   NS_IMETHOD Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sortType, nsMsgViewSortOrderValue sortOrder, 
@@ -63,9 +64,6 @@ public:
   virtual nsresult GetMsgHdrForViewIndex(nsMsgViewIndex index, nsIMsgDBHdr **msgHdr);
   virtual nsresult OnNewHeader(nsMsgKey newKey, nsMsgKey parentKey, PRBool ensureListed);
   NS_IMETHOD GetFolderForViewIndex(nsMsgViewIndex index, nsIMsgFolder **folder);
-
-  // override to chain move/copies from next folder in search results
-  NS_IMETHOD OnStopCopy(nsresult aStatus);
 
   virtual nsresult GetFolders(nsISupportsArray **aFolders);
 protected:

@@ -235,6 +235,7 @@ var folderObserver = {
 
 function HandleDeleteOrMoveMsgFailed(folder)
 {
+  gDBView.onDeleteCompleted(false);
   if(IsCurrentLoadedFolder(folder)) {
     if(gNextMessageAfterDelete) {
       gNextMessageAfterDelete = null;
@@ -248,6 +249,7 @@ function HandleDeleteOrMoveMsgFailed(folder)
 
 function HandleDeleteOrMoveMsgCompleted(folder)
 {
+  gDBView.onDeleteCompleted(true);
   if (gNextMessageViewIndexAfterDelete != -2) 
   {
     if (IsCurrentLoadedFolder(folder)) 
