@@ -164,7 +164,7 @@ public:
         void set_sequence(int v);
 
         int get_status();
-        void set_status(int v);
+        void set_status(enum icalproperty_status v);
 
 
 public:
