@@ -30,11 +30,10 @@ MODULE		= apprunner
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 PROGRAM		= mozilla$(BIN_SUFFIX)
-EXTRA_DSO_LIBS	= gkgfx
 else
 PROGRAM		= mozilla-bin
-EXTRA_DSO_LIBS	= gkgfx
 endif
+EXTRA_DSO_LIBS	= gkgfx
 
 CPPSRCS		= \
 		nsAppRunner.cpp \
@@ -78,7 +77,11 @@ ifdef MOZ_OJI
 OJI_LIBS	= -ljsj
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+LIBS		= $(XP_LIBS) -llibxpfelocation_s
+else
 LIBS		= $(XP_LIBS) -lxpfelocation_s
+endif
 
 ifdef GC_LEAK_DETECTOR
 LIBS += -lboehm
