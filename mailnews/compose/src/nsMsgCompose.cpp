@@ -877,6 +877,13 @@ nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor)
     // Make sure we setup to listen for editor state changes...
     m_editor->RegisterDocumentStateListener(mDocumentListener);
 
+    // Set the charset
+    nsXPIDLString msgCharSet;
+    m_compFields->GetCharacterSet(getter_Copies(msgCharSet));
+    if (msgCharSet) {
+        m_editor->SetDocumentCharacterSet(msgCharSet);
+    }
+
     // Now, lets init the editor here!
     // Just get a blank editor started...
     m_editor->LoadUrl(NS_ConvertASCIItoUCS2("about:blank").GetUnicode());
