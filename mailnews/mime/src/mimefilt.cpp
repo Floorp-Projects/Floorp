@@ -129,17 +129,17 @@ static char *
 test_type_icon(const char *type, void *stream_closure)
 {
   if (!nsCRT::strncasecmp(type, "text/", 5))
-	return nsCRT::strdup("internal-gopher-text");
+	return nsCRT::strdup("resource:/res/html/gopher-text.gif");
   else if (!nsCRT::strncasecmp(type, "image/", 6))
-	return nsCRT::strdup("internal-gopher-image");
+	return nsCRT::strdup("resource:/res/html/gopher-image.gif");
   else if (!nsCRT::strncasecmp(type, "audio/", 6))
-	return nsCRT::strdup("internal-gopher-sound");
+	return nsCRT::strdup("resource:/res/html/gopher-sound.gif");
   else if (!nsCRT::strncasecmp(type, "video/", 6))
-	return nsCRT::strdup("internal-gopher-movie");
+	return nsCRT::strdup("resource:/res/html/gopher-movie.gif");
   else if (!nsCRT::strncasecmp(type, "application/", 12))
-	return nsCRT::strdup("internal-gopher-binary");
+	return nsCRT::strdup("resource:/res/html/gopher-binary.gif");
   else
-	return nsCRT::strdup("internal-gopher-unknown");
+	return nsCRT::strdup("resource:/res/html/gopher-unknown.gif");
 }
 
 static int

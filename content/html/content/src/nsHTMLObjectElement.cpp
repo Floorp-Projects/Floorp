@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLObjectElement.h"
 #include "nsGenericHTMLElement.h"
+#include "nsImageLoadingContent.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsDOMError.h"
@@ -48,6 +49,7 @@
 #include "nsIFormControl.h"
 
 class nsHTMLObjectElement : public nsGenericHTMLContainerFormElement,
+                            public nsImageLoadingContent,
                             public nsIDOMHTMLObjectElement
 {
 public:
@@ -131,6 +133,8 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLObjectElement, nsGenericElement)
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLObjectElement,
                                     nsGenericHTMLContainerFormElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLObjectElement)
+  NS_INTERFACE_MAP_ENTRY(imgIDecoderObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIImageLoadingContent)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLObjectElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 

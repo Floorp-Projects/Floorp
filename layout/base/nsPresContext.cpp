@@ -76,8 +76,7 @@
 
 // Needed for Start/Stop of Image Animation
 #include "imgIContainer.h"
-#include "nsIDOMHTMLImageElement.h"
-#include "nsIImageFrame.h"
+#include "nsIImageLoadingContent.h"
 
 //needed for resetting of image service color
 #include "nsLayoutCID.h"
@@ -808,7 +807,7 @@ nsPresContext::GetImageAnimationMode(PRUint16* aModeResult)
 // Helper function for setting Anim Mode on image
 static void SetImgAnimModeOnImgReq(imgIRequest* aImgReq, PRUint16 aMode)
 {
-  if (aImgReq != nsnull) {
+  if (aImgReq) {
     nsCOMPtr<imgIContainer> imgCon;
     aImgReq->GetImage(getter_AddRefs(imgCon));
     if (imgCon) {
@@ -835,20 +834,14 @@ PR_STATIC_CALLBACK(PRBool) set_animation_mode(nsHashKey *aKey, void *aData, void
 // this is a way to turn on/off image animations
 void nsPresContext::SetImgAnimations(nsCOMPtr<nsIContent>& aParent, PRUint16 aMode)
 {
-  nsCOMPtr<nsIDOMHTMLImageElement> imgContent(do_QueryInterface(aParent));
+  nsCOMPtr<nsIImageLoadingContent> imgContent(do_QueryInterface(aParent));
   if (imgContent) {
-    nsIFrame* frame;
-    mShell->GetPrimaryFrameFor(aParent, &frame);
-    if (frame != nsnull) {
-      nsIImageFrame* imgFrame = nsnull;
-      CallQueryInterface(frame, &imgFrame);
-      if (imgFrame != nsnull) {
-        nsCOMPtr<imgIRequest> imgReq;
-        imgFrame->GetImageRequest(getter_AddRefs(imgReq));
-        SetImgAnimModeOnImgReq(imgReq, aMode);
-      }
-    }
+    nsCOMPtr<imgIRequest> imgReq;
+    imgContent->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                           getter_AddRefs(imgReq));
+    SetImgAnimModeOnImgReq(imgReq, aMode);
   }
+  
   PRInt32 count;
   aParent->ChildCount(count);
   for (PRInt32 i=0;i<count;i++) {

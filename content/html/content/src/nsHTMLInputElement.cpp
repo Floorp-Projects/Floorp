@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -103,6 +104,9 @@
 #include "nsIFileStreams.h"
 #include "nsNetUtil.h"
 
+// input type=image
+#include "nsImageLoadingContent.h"
+
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
@@ -126,6 +130,7 @@ static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
                                         : ((bitfield) &= ~(0x01 << (field))))
 
 class nsHTMLInputElement : public nsGenericHTMLLeafFormElement,
+                           public nsImageLoadingContent,
                            public nsIDOMHTMLInputElement,
                            public nsIDOMNSHTMLInputElement,
                            public nsITextControlElement,
@@ -236,7 +241,7 @@ protected:
   //Helper method
 #ifdef ACCESSIBILITY
   nsresult FireEventForAccessibility(nsIPresContext* aPresContext,
-			    		                       const nsAString& aEventType);
+                                     const nsAString& aEventType);
 #endif
 
   /**
@@ -373,6 +378,8 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLInputElement,
   NS_INTERFACE_MAP_ENTRY(nsITextControlElement)
   NS_INTERFACE_MAP_ENTRY(nsIRadioControlElement)
   NS_INTERFACE_MAP_ENTRY(nsIPhonetic)
+  NS_INTERFACE_MAP_ENTRY(imgIDecoderObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIImageLoadingContent)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLInputElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -422,6 +429,10 @@ nsHTMLInputElement::BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
       mType == NS_FORM_INPUT_RADIO &&
       (mForm || !(GET_BOOLBIT(mBitField, BF_PARSER_CREATING)))) {
     WillRemoveFromRadioGroup();
+  } else if (aName == nsHTMLAtoms::src && aNameSpaceID == kNameSpaceID_None &&
+             aValue && mType == NS_FORM_INPUT_IMAGE) {
+    // Null value means the attr got unset; don't trigger on that
+    ImageURIChanged(*aValue);
   }
 }
 
@@ -488,6 +499,14 @@ nsHTMLInputElement::AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
         nsMemory::Free(mValue);
         mValue = nsnull;
       }
+    }
+
+    if (mType == NS_FORM_INPUT_IMAGE && !mCurrentRequest) {
+      // We just got switched to be an image input; we should see
+      // whether we have an image to load;
+      nsAutoString src;
+      GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, src);
+      ImageURIChanged(src);
     }
 
     // If the type of the input has changed we might need to change the type
@@ -1630,7 +1649,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
                   }
                 }
               }
-	      NS_ENSURE_SUCCESS(rv, rv);
+              NS_ENSURE_SUCCESS(rv, rv);
             
               nsCOMPtr<nsIPresShell> shell;
               aPresContext->GetShell(getter_AddRefs(shell));

@@ -80,6 +80,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIDragDropOverride.h"
 #include "nsIContent.h"
+#include "nsIImageLoadingContent.h"
 #include "nsIXMLContent.h"
 #include "nsINameSpaceManager.h"
 #include "nsUnicharUtils.h"
@@ -89,7 +90,6 @@
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
-#include "nsIImageFrame.h"
 #include "nsIFrame.h"
 #include "nsLayoutAtoms.h"
 #include "imgIContainer.h"
@@ -1041,52 +1041,6 @@ nsContentAreaDragDrop::HandleEvent(nsIDOMEvent *event)
 
 
 //
-// GetImageFrame
-//
-// Finds the image from from a content node
-//
-nsresult 
-nsContentAreaDragDrop::GetImageFrame(nsIContent* aContent, nsIDocument *aDocument, nsIPresContext *aPresContext,
-                                        nsIPresShell *aPresShell, nsIImageFrame** aImageFrame)
-{
-	NS_ENSURE_ARG_POINTER(aImageFrame); 
-	*aImageFrame = nsnull;
-
-	nsresult rv = NS_ERROR_FAILURE;
-
-	if (aDocument) {
-		// Make sure the presentation is up-to-date
-		rv = aDocument->FlushPendingNotifications();
-		if (NS_FAILED(rv))
-			return rv;
-	}
-
-	if (aContent && aDocument && aPresContext && aPresShell) {
-		nsIFrame* frame = nsnull;
-		rv = aPresShell->GetPrimaryFrameFor(aContent, &frame);
-		if (NS_SUCCEEDED(rv) && frame) {
-			nsCOMPtr<nsIAtom> type;
-			frame->GetFrameType(getter_AddRefs(type));
-			if (type == nsLayoutAtoms::imageFrame) {
-				nsIImageFrame* imageFrame;
-				rv = CallQueryInterface(frame, &imageFrame);
-				if (NS_FAILED(rv)) {
-					NS_WARNING("Should not happen - frame is not image frame even though type is nsLayoutAtoms::imageFrame");
-					return rv;
-				}
-				*aImageFrame = imageFrame;
-			}
-			else
-				return NS_ERROR_FAILURE;
-		}
-		else
-			rv = NS_OK;
-	}
-	return rv;
-}
-
-
-//
 // GetImage
 //
 // Given a dom node that's an image, finds the nsIImage associated with it.
@@ -1094,50 +1048,42 @@ nsContentAreaDragDrop::GetImageFrame(nsIContent* aContent, nsIDocument *aDocumen
 nsresult
 nsContentAreaDragDrop::GetImageFromDOMNode(nsIDOMNode* inNode, nsIImage**outImage)
 {
-	NS_ENSURE_ARG_POINTER(outImage);
-	*outImage = nsnull;
+  NS_ENSURE_ARG_POINTER(outImage);
+  *outImage = nsnull;
 
-	nsresult rv = NS_ERROR_NOT_AVAILABLE;
+  nsresult rv = NS_ERROR_NOT_AVAILABLE;
 
-	nsCOMPtr<nsIContent> content(do_QueryInterface(inNode));
-	if ( content ) {
-		nsCOMPtr<nsIDocument> document;
-		content->GetDocument(*getter_AddRefs(document));
-		if ( document ) {
-		  nsCOMPtr<nsIPresShell> presShell;
-			document->GetShellAt(0, getter_AddRefs(presShell));
-			if ( presShell ) {
-			  nsCOMPtr<nsIPresContext> presContext;
-				presShell->GetPresContext(getter_AddRefs(presContext));
-				if (presContext) {
-					nsCOMPtr<imgIContainer> imgContainer;
-					
-					nsIImageFrame* imageFrame = nsnull;
-					if ( NS_SUCCEEDED(GetImageFrame(content, document, presContext, presShell, &imageFrame)) && imageFrame ) {
-						nsCOMPtr<imgIRequest> imgRequest;
-						imageFrame->GetImageRequest(getter_AddRefs(imgRequest));
-						if (imgRequest)
-							imgRequest->GetImage(getter_AddRefs(imgContainer));
-					}
-					else {
-						// We could try the background image, but we really don't want to be dragging
-						// the bg image in any case.
-					}
+  nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(inNode));
+  if (!content) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
-					if (imgContainer) {
-						nsCOMPtr<gfxIImageFrame> imgFrame;
-						imgContainer->GetFrameAt(0, getter_AddRefs(imgFrame));
-						if (imgFrame)	{
-							nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(imgFrame);
-							if (ir) {
-								rv = CallGetInterface(ir.get(), outImage);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+  nsCOMPtr<imgIRequest> imgRequest;
+  content->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                      getter_AddRefs(imgRequest));
+  if (!imgRequest) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  
+  nsCOMPtr<imgIContainer> imgContainer;
+  imgRequest->GetImage(getter_AddRefs(imgContainer));
 
-	return rv;
+  if (!imgContainer) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+    
+  nsCOMPtr<gfxIImageFrame> imgFrame;
+  imgContainer->GetFrameAt(0, getter_AddRefs(imgFrame));
+
+  if (!imgFrame) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  
+  nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(imgFrame);
+
+  if (!ir) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  
+  return CallGetInterface(ir.get(), outImage);
 }

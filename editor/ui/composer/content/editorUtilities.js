@@ -837,9 +837,6 @@ function GetScheme(urlspec)
   if (!resultUrl || IsUrlAboutBlank(resultUrl))
     return "";
 
-  if (/^internal-gopher-/.test(resultUrl))
-    return "internal-gopher-";
-
   var IOService = GetIOService();
   if (!IOService)
     return "";

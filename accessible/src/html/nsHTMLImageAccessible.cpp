@@ -48,7 +48,7 @@
 #include "nsIServiceManager.h"
 #include "imgIRequest.h"
 #include "imgIContainer.h"
-#include "nsIImageFrame.h"
+#include "nsIImageLoadingContent.h"
 #include "nsNetUtil.h"
 
 // --- image -----
@@ -83,18 +83,12 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetAccState(PRUint32 *_retval)
 
   nsLinkableAccessible::GetAccState(_retval);
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-  nsIFrame *frame = nsnull;
-  if (content && shell) 
-    shell->GetPrimaryFrameFor(content, &frame);
-
-  nsIImageFrame *imageFrame = nsnull;
-  frame->QueryInterface(NS_GET_IID(nsIImageFrame), (void**)&imageFrame);
-
+  nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(mDOMNode));
   nsCOMPtr<imgIRequest> imageRequest;
-  if (imageFrame) 
-    imageFrame->GetImageRequest(getter_AddRefs(imageRequest));
+
+  if (content) 
+    content->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                        getter_AddRefs(imageRequest));
   
   nsCOMPtr<imgIContainer> imgContainer;
   if (imageRequest) 

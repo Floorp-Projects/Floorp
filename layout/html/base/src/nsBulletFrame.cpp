@@ -107,7 +107,7 @@ nsBulletFrame::Destroy(nsIPresContext* aPresContext)
   if (mListener)
     NS_REINTERPRET_CAST(nsBulletListener*, mListener.get())->SetFrame(nsnull);
 
-  mPresContext = nsnull;
+  mPresContext = nsnull; // clear weak pointer
   
   // Let base class do the rest
   return nsFrame::Destroy(aPresContext);

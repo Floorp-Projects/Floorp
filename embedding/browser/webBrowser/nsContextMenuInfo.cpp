@@ -25,7 +25,7 @@
 
 #include "nsIDocument.h"
 #include "nsIFrame.h"
-#include "nsIImageFrame.h"
+#include "nsIImageLoadingContent.h"
 #include "imgIRequest.h"
 #include "nsICanvasFrame.h"
 #include "nsIDOMHTMLDocument.h"
@@ -211,33 +211,11 @@ nsContextMenuInfo::GetImageRequest(nsIDOMNode * aDOMNode, imgIRequest ** aReques
   NS_ENSURE_ARG_POINTER(aRequest);
 
   // Get content
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aDOMNode);
+  nsCOMPtr<nsIImageLoadingContent> content = do_QueryInterface(aDOMNode);
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
-  // Get Document
-  nsCOMPtr<nsIDocument> document;
-  content->GetDocument(*getter_AddRefs(document));
-  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
-  
-  // Get shell
-  nsCOMPtr<nsIPresShell> presShell;
-  document->GetShellAt(0, getter_AddRefs(presShell));
-  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-
-  // Get PresContext
-  nsCOMPtr<nsIPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
-  NS_ENSURE_TRUE(presContext, NS_ERROR_FAILURE);
-
-  nsIFrame *frame = nsnull;
-  presShell->GetPrimaryFrameFor(content, &frame); // does not AddRef
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-  
-  nsIImageFrame *imgFrame = nsnull;
-  frame->QueryInterface(NS_GET_IID(nsIImageFrame), (void **)&imgFrame); // does not AddRef
-  NS_ENSURE_TRUE(imgFrame, NS_ERROR_FAILURE);
-
-  return imgFrame->GetImageRequest(aRequest);
+  return content->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
+                             aRequest);
 }
 
 PRBool

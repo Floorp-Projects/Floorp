@@ -1415,20 +1415,18 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     rv = ef->CreateInstanceByTag(nodeInfo,getter_AddRefs(content));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIHTMLContent> imageContent(do_QueryInterface(content,&rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-    
-    imageContent->SetHTMLAttribute(nsHTMLAtoms::src, contentString, PR_FALSE);
+    content->SetAttr(kNameSpaceID_None, nsHTMLAtoms::src, contentString,
+                     PR_FALSE);
 
     // Set aContent as the parent content and set the document object. This
     // way event handling works
-    imageContent->SetParent(aContent);
-    imageContent->SetDocument(aDocument, PR_TRUE, PR_TRUE);
+    content->SetParent(aContent);
+    content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
   
     // Create an image frame and initialize it
     nsIFrame* imageFrame;
     NS_NewImageFrame(shell, &imageFrame);
-    imageFrame->Init(aPresContext, imageContent, aParentFrame, aStyleContext, nsnull);
+    imageFrame->Init(aPresContext, content, aParentFrame, aStyleContext, nsnull);
   
     // Return the image frame
     *aFrame = imageFrame;
