@@ -2,6 +2,7 @@
 var srDest;
 var err;
 var communicatorFolder;
+var fWindowsSystem;
 var fileComponentRegStr;
 var fileComponentReg;
 
@@ -10,6 +11,7 @@ err    = startInstall("Mozilla Seamonkey", "", "$Version$");
 logComment("startInstall: " + err);
 
 communicatorFolder = getFolder("Communicator");
+fWindowsSystem     = getFolder("Win System");
 logComment("communicatorFolder: " + communicatorFolder);
 
 if(verifyDiskSpace(communicatorFolder, srDest) == true)
@@ -20,7 +22,16 @@ if(verifyDiskSpace(communicatorFolder, srDest) == true)
                      communicatorFolder, // Where to put this file (Returned from GetFolder) 
                      "",                 // subdir name to create relative to communicatorFolder
                      true);              // Force Flag 
-  logComment("addDirectory() returned: " + err);
+  logComment("addDirectory() of Program returned: " + err);
+
+  err = addDirectory("/Microsoft/shared",
+                     "6.0.8168.0",       // hard code version here due to a bug in the
+                                         // xpinstall version settings code
+                     "system",           // dir name in jar to extract 
+                     fWindowsSystem,     // Where to put this file (Returned from GetFolder) 
+                     "",                 // subdir name to create relative to communicatorFolder
+                     false);             // Force Flag 
+  logComment("addDirectory() of system returned: " + err);
 
   // check return value
   if(!checkError(err))
