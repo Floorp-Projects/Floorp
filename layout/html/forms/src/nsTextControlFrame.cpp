@@ -1599,7 +1599,7 @@ nsTextControlFrame::CalculateSizeStandard(nsPresContext*       aPresContext,
   NS_ENSURE_SUCCESS(rv, rv);
   nsIRenderingContext* rendContext = aReflowState.rendContext;
   rendContext->SetFont(fontMet);
-  lineHeight = aReflowState.CalcLineHeight(aPresContext, rendContext, aReflowState.frame);
+  lineHeight = aReflowState.CalcLineHeight(aPresContext, rendContext, this);
   fontMet->GetAveCharWidth(charWidth);
   fontMet->GetMaxAdvance(charMaxAdvance);
 
