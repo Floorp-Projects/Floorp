@@ -1238,6 +1238,8 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*  aPresContext,
   switch (aDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_BLOCK:
   case NS_STYLE_DISPLAY_LIST_ITEM:
+  case NS_STYLE_DISPLAY_RUN_IN:
+  case NS_STYLE_DISPLAY_COMPACT:
     rv = NS_NewBlockFrame(aContent, aParentFrame, aNewFrame, PR_FALSE);
     processChildren = PR_TRUE;
     break;
