@@ -229,7 +229,7 @@
 <!ENTITY savePageCmd.commandkey       "s">
 <!ENTITY saveFrameCmd.label           "Save Frame As...">
 <!ENTITY saveFrameCmd.accesskey       "F">
-<!ENTITY saveLinkCmd.label            "Save Link to Disk...">
+<!ENTITY saveLinkCmd.label            "Save Link As...">
 <!ENTITY saveLinkCmd.accesskey        "k">
 <!ENTITY sendLinkCmd.label            "Send Link..."> 
 <!ENTITY sendLinkCmd.accesskey        "d">
