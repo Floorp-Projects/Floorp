@@ -230,6 +230,8 @@ private:
   nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, const char *newsrcfile, PRInt32 accountNum);
 
   static char *getUniqueKey(const char* prefix, nsHashtable *hashTable);
+  static char *getUniqueAccountKey(const char* prefix,
+                                   nsISupportsArray *accounts);
   
   nsresult getPrefService();
   nsIPref *m_prefs;
@@ -301,7 +303,7 @@ char *
 nsMsgAccountManager::getUniqueKey(const char* prefix, nsHashtable *hashTable)
 {
   PRInt32 i=1;
-  char key[10];
+  char key[30];
   PRBool unique=PR_FALSE;
 
   do {
@@ -310,6 +312,29 @@ nsMsgAccountManager::getUniqueKey(const char* prefix, nsHashtable *hashTable)
     void* hashElement = hashTable->Get(&hashKey);
     
     if (!hashElement) unique=PR_TRUE;
+  } while (!unique);
+
+  return nsCRT::strdup(key);
+}
+
+char *
+nsMsgAccountManager::getUniqueAccountKey(const char *prefix,
+                                         nsISupportsArray *accounts)
+{
+  PRInt32 i=1;
+  char key[30];
+  PRBool unique = PR_FALSE;
+  
+  findAccountByKeyEntry findEntry;
+  findEntry.key = key;
+  findEntry.account = nsnull;
+  
+  do {
+    PR_snprintf(key, 10, "%s%d", prefix, i++);
+    
+    accounts->EnumerateForwards(findAccountByKey, (void *)&findEntry);
+
+    if (!findEntry.account) unique=PR_TRUE;
   } while (!unique);
 
   return nsCRT::strdup(key);
@@ -929,7 +954,7 @@ nsMsgAccountManager::CreateAccount(nsIMsgAccount **_retval)
 {
     if (!_retval) return NS_ERROR_NULL_POINTER;
 
-    const char *key="xxxx";
+    const char *key=getUniqueAccountKey("account", m_accounts);
 
     return createKeyedAccount(key, _retval);
 }
