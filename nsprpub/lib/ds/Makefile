@@ -28,7 +28,7 @@ OPTIMIZER =
 endif
 endif
 
-INCLUDES = -I$(DIST)/include/private -I$(DIST)/include
+INCLUDES = -I$(DIST)/include -I$(MOD_DEPTH)/pr/include -I$(MOD_DEPTH)/pr/include/private
 
 CSRCS = \
 	plarena.c \

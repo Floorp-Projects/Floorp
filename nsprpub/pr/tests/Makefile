@@ -168,7 +168,7 @@ PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=$(PROG_SUFFIX)))
 
 TARGETS = $(PROGS)
 
-INCLUDES = -I$(DIST)/include/obsolete -I$(DIST)/include/private -I$(DIST)/include 
+INCLUDES = -I$(DIST)/include -I$(MOD_DEPTH)/pr/include -I$(MOD_DEPTH)/pr/include/private
 
 # Setting the variables LDOPTS and LIBPR.  We first initialize
 # them to the default values, then adjust them for some platforms.

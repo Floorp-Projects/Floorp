@@ -23,7 +23,6 @@ MOD_DEPTH = ../../..
 
 include $(MOD_DEPTH)/config/config.mk
 
-INCLUDES = -I$(DIST)/include
 W16STDIO = $(MOD_DEPTH)/pr/src/md/windows/$(OBJDIR)/w16stdio.$(OBJ_SUFFIX)
 
 CSRCS = poppad.c \
@@ -33,7 +32,7 @@ CSRCS = poppad.c \
        popprnt0.c
           
 
-INCLUDES = -I$(DIST)/include/private -I$(DIST)/include 
+INCLUDES = -I$(DIST)/include 
 LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).lib
 LIBPLDS = $(DIST)/lib/plds$(MOD_VERSION).lib
 TARGETS = $(OBJDIR)/poppad.exe

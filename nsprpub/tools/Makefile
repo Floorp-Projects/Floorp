@@ -43,9 +43,9 @@ PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=$(PROG_SUFFIX)))
 
 TARGETS = $(PROGS)
 
-INCLUDES = -I$(DIST)/include/private -I$(DIST)/include 
+INCLUDES = -I$(DIST)/include 
 
-NSPR_VERSION = 21
+NSPR_VERSION = 3
 
 # Setting the variables LDOPTS and LIBPR.  We first initialize
 # them to the default values, then adjust them for some platforms.

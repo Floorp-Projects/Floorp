@@ -143,12 +143,10 @@ ifeq ($(OS_ARCH),BeOS)
 MDCPUCFG_H = _beos.cfg
 endif
 
-export:: $(HEADERS) $(MDCPUCFG_H)
-	$(INSTALL) -m 444 $(HEADERS) $(DIST)/include/md
+export:: $(MDCPUCFG_H)
 	$(INSTALL) -m 444 $(MDCPUCFG_H) $(DIST)/include
 ifeq ($(MOZ_BITS),16)
 	cp $(DIST)/include/$(MDCPUCFG_H) $(DIST)/include/prcpucfg.h
-	$(INSTALL) -m 444 $(HEADERS) $(MOZ_INCL)/md
 	$(INSTALL) -m 444 $(MDCPUCFG_H) $(MOZ_INCL)
 	mv -f $(DIST)/include/$(MDCPUCFG_H) $(MOZ_INCL)/prcpucfg.h
 else

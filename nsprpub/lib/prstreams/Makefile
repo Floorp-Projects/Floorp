@@ -41,7 +41,7 @@ ifeq ($(OS_ARCH),HP-UX)
     endif
 endif
 
-INCLUDES = -I$(DIST)/include -I../../../include
+INCLUDES = -I$(DIST)/include
 
 HEADERS = *.h
 
