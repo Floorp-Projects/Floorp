@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::Version = '$Revision: 1.77 $ ';
+$::Version = '$Revision: 1.78 $ ';
 
 sub PrintUsage {
     die <<END_USAGE
@@ -671,7 +671,6 @@ sub BloatTest {
         return 'testfailed';
     }
 
-
     $ENV{XPCOM_MEM_BLOAT_LOG} = 1; # Turn on ref counting to track leaks.
     my $cmd = "$binary_basename -f bloaturls.txt";
     my $result = run_test($build_dir, $binary_dir, $cmd, $binary_log,
@@ -680,22 +679,14 @@ sub BloatTest {
 
     print_logfile($binary_log, "bloat test");
     
-    if ($result->{timed_out} or $result->{exit_value}) {
-        if ($result->{timed_out}) {
-            print_log "Error: bloat test timed out after"
-                      ." $timeout_secs seconds.\n";
-        } else {
-            print_test_errors($result, $binary_basename);
-        }
-        # HACK. Clobber is not reporting bloat status properly, only turn
-        # tree orange for depend build (bug 22052).  -mcafee
-        if ($Settings::BuildDepend) {
-            print_log "Turn the tree orange now.\n";
-            return 'testfailed';
-        } else {
-            return 'success';
-        }
-    }
+	if ($result->{timed_out}) {
+	  print_log "Error: bloat test timed out after"
+		." $timeout_secs seconds.\n";
+	  return 'testfailed';
+	} elsif ($result->{exit_value}) {
+	  print_test_errors($result, $binary_basename);
+	  return 'testfailed';
+	}
 
     print_log "<a href=#bloat>\n######################## BLOAT STATISTICS\n";
     open DIFF, "$build_dir/../bloatdiff.pl $build_dir/bloat-prev.log $binary_log|"
