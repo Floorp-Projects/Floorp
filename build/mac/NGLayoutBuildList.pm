@@ -279,7 +279,6 @@ sub BuildRuntimeDist()
 	_InstallFromManifest(":mozilla:build:mac:MANIFEST",								"$distdirectory:mac:common:");
 	_InstallFromManifest(":mozilla:lib:mac:NSRuntime:include:MANIFEST",				"$distdirectory:mac:common:");
 	_InstallFromManifest(":mozilla:lib:mac:NSStdLib:include:MANIFEST",				"$distdirectory:mac:common:");
-	_InstallFromManifest(":mozilla:lib:mac:MacMemoryAllocator:include:MANIFEST",	"$distdirectory:mac:common:");
 	_InstallFromManifest(":mozilla:lib:mac:MoreFiles:MANIFEST",						"$distdirectory:mac:common:morefiles:");
 
 	#GC_LEAK_DETECTOR
@@ -313,6 +312,7 @@ sub BuildClientDist()
 	my $dist_dir = _getDistDirectory(); # the subdirectory with the libs and executable.
 
 	_InstallFromManifest(":mozilla:lib:mac:Misc:MANIFEST",							"$distdirectory:mac:common:");
+#	_InstallFromManifest(":mozilla:lib:mac:Instrumentation:MANIFEST",				"$distdirectory:mac:inst:");
 
 	#INCLUDE
 
