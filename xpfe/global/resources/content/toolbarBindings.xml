@@ -203,5 +203,39 @@
       </method>
     </interface>
   </binding>
+
+  <binding id="menubar" extends="xul:menubar">
+    <content>
+      <xul:toolbargrippy inherits="grippytooltiptext:tooltiptext,grippytooltip:tooltip,last-toolbar"
+                         onclick="this.grippyClicked();"
+                         class="toolbar-grippy"/>
+      <xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar" autostretch="never">
+        <children/>
+      </xul:box>
+    </content>
+    <interface>
+      <method name="findNodeByClass">
+        <argument name="aClassName"/>
+        <body>
+        <![CDATA[
+          var nodes = document.getAnonymousNodes(this);
+          for (var i = 0; i < nodes.length; i++) {
+            if (nodes[i].getAttribute("class") == aClassName)
+              return nodes[i];
+            else {
+              var subnodes = nodes[i].getElementsByAttribute("class", aClassName);
+              if (subnodes.length) {
+                for (var i = 0; i < subnodes.length; i++) {
+                  if (subnodes[i].getAttribute("class") == aClassName) 
+                    return subnodes[i];
+                }
+              }
+            }
+          }
+        ]]>
+        </body>
+      </method>
+    </interface>
+  </binding>
           
 </bindings>          

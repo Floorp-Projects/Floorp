@@ -149,7 +149,13 @@ toolbox
     behavior              : url(chrome://global/content/toolbarBindings.xml#toolbox);
   }
   
-toolbar, menubar
+menubar
+  {
+    user-focus            : ignore;
+    behavior              : url(chrome://global/content/toolbarBindings.xml#menubar);
+  }
+
+toolbar
   {
     user-focus            : ignore;
     behavior              : url(chrome://global/content/toolbarBindings.xml#toolbar);
