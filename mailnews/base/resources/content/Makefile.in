@@ -41,6 +41,8 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/contentframe.xul			\
 	$(srcdir)/sidebar-messenger.xul			\
 	$(srcdir)/sidebar-messenger.rdf			\
+	$(srcdir)/newFolderNameDialog.xul	\
+	$(srcdir)/newFolderNameDialog.js	\
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))

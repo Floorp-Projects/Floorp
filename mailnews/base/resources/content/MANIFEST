@@ -28,3 +28,5 @@ subscribe.xul
 contentframe.xul
 sidebar-messenger.xul
 sidebar-messenger.rdf
+newFolderNameDialog.xul
+newFolderNameDialog.js

@@ -32,6 +32,8 @@ install::
 	$(MAKE_INSTALL) contentframe.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) sidebar-messenger.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) sidebar-messenger.rdf	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) newFolderNameDialog.xul	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) newFolderNameDialog.js	$(DIST)\bin\chrome\messenger\content\default
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\messenger.xul
@@ -46,4 +48,6 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\contentframe.xul
 	rm -f $(DIST)\chrome\messenger\content\default\sidebar-messenger.xul
 	rm -f $(DIST)\chrome\messenger\content\default\sidebar-messenger.rdf
+	rm -f $(DIST)\chrome\messenger\content\default\newFolderNameDialog.xul
+	rm -f $(DIST)\chrome\messenger\content\default\newFolderNameDialog.js
 
