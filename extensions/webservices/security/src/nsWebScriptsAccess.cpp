@@ -723,6 +723,11 @@ nsWebScriptsAccess::IsPublicService(const char* aHost, PRBool* aReturn)
     }
   }
 
+  // Do nothing if the pref value turns out to be 
+  // strings with nothing but whitespaces.
+  if (mMasterServices.Count() == 0)
+    return rv;
+
   // Allocate param block.
   nsISOAPParameter** bodyBlocks = 
     NS_STATIC_CAST(nsISOAPParameter**,
