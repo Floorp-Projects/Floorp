@@ -104,7 +104,7 @@ public:
     NS_IMETHOD StartDocumentLoad(const char* aCommand,
                                  nsIChannel* aChannel,
                                  nsILoadGroup* aLoadGroup,
-                                 nsIContentViewerContainer* aContainer,
+                                 nsISupports* aContainer,
                                  nsIStreamListener **aDocListener);
 
     virtual const nsString* GetDocumentTitle() const;
@@ -281,11 +281,11 @@ public:
     NS_IMETHOD CreateFromPrototype(const char* aCommand,
                                    nsIXULPrototypeDocument* aPrototype,
                                    nsIPrincipal* aPrincipal,
-                                   nsIContentViewerContainer* aContainer);
+                                   nsISupports* aContainer);
 
     // nsIStreamLoadableDocument interface
     NS_IMETHOD LoadFromStream(nsIInputStream& xulStream,
-                              nsIContentViewerContainer* aContainer,
+                              nsISupports* aContainer,
                               const char* aCommand );
 
     // nsIDOMEventCapturer interface
@@ -419,7 +419,7 @@ protected:
                            nsIAtom* aTag,
                            nsIContent** aResult);
 
-    nsresult PrepareToLoad(nsIContentViewerContainer* aContainer,
+    nsresult PrepareToLoad(nsISupports* aContainer,
                            const char* aCommand,
                            nsIChannel* aChannel,
                            nsILoadGroup* aLoadGroup,
@@ -512,7 +512,6 @@ protected:
     nsCOMPtr<nsIRDFDataSource>          mLocalStore;
     nsCOMPtr<nsILineBreaker>            mLineBreaker;    // [OWNER] 
     nsCOMPtr<nsIWordBreaker>            mWordBreaker;    // [OWNER] 
-    nsIContentViewerContainer* mContentViewerContainer;  // [WEAK] it owns me! (indirectly)
     nsString                   mCommand;
     nsVoidArray                mSubDocuments;     // [OWNER] of subelements
     PRBool                     mIsPopup; 
