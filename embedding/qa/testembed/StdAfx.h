@@ -128,6 +128,8 @@
 #include "nsIXPIProgressDialog.h"
 #include "nsIXPIDialogService.h"
 
+#include "nsIWebBrowserSetup.h"
+
 //#include "nsIURIContentListener.h"
 
 //{{AFX_INSERT_LOCATION}}
