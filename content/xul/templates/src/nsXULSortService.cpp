@@ -690,7 +690,7 @@ getNodeValue(nsIContent *node1, nsIRDFResource *sortProperty, sortPtr sortInfo, 
 				{
 					nsAutoString	modSortProperty(sortPropertyURI);
 					modSortProperty += "?sort=true";
-					const char	*sortProp = modSortProperty.ToNewCString();
+					char	*sortProp = modSortProperty.ToNewCString();
 					if (sortProp)
 					{
 						nsIRDFResource	*modSortRes = nsnull;
