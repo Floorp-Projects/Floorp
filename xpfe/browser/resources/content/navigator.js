@@ -406,8 +406,8 @@ function Startup()
     else
       setTimeout(WindowFocusTimerCallback, 0, gURLBar);
 
-    // Perform default browser checking.
-    checkForDefaultBrowser();
+    // Perform default browser checking (after window opens).
+    setTimeout( checkForDefaultBrowser, 0 );
 
     // hook up remote support
     if (XREMOTESERVICE_CONTRACTID in Components.classes) {
