@@ -359,7 +359,7 @@ nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
           }
         } else { // --- No FOR attribute, we are a label for our first child element
           PRInt32 numNodes;
-          nsresult rv = mInner.ChildCount(numNodes);
+          rv = mInner.ChildCount(numNodes);
           if (NS_SUCCEEDED(rv)) {
             nsIContent* contNode = nsnull;
 	    PRInt32 i;
