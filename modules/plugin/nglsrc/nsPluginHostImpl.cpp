@@ -1508,7 +1508,8 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   nsIPluginInstance *instance = nsnull;
 
 #ifdef NS_DEBUG
-  printf("InstantiateEmbededPlugin for %s\n",aMimeType);
+  if(!aMimeType)
+    printf("InstantiateEmbededPlugin for %s\n",aMimeType);
 #endif
 
   if(FindStoppedPluginForURL(aURL, aOwner) == NS_OK)
