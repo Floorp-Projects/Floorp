@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.7 $ 
-# $Date: 2000/09/22 15:15:00 $ 
+# $Revision: 1.8 $ 
+# $Date: 2000/10/17 23:49:07 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -104,10 +104,6 @@ CGI Mode Arguments
 		Both --end-time and --display-hours are equivlant means
 		of stating when the table should end.
 
---table-spacing The number of minutes separating the table rows.  
-		This can not be set smaller then: $TinderDB::MIN_TABLE_SPACING.
-
-
 --noignore	Show all build columns even if some of them 
 		have been set to ignore.
 
@@ -169,11 +165,11 @@ EOF
 # All times are stored in time() format.
 
 sub construct_times_vec {
-  my ($start_time, $end_time, $table_spacing_min, ) = @_;
+  my ($start_time, $end_time, $table_spacing, ) = @_;
 
   my (@out) =();
   
-  my ($table_spacing_sec) = $table_spacing_min*$main::SECONDS_PER_MINUTE;
+  my ($table_spacing_sec) = $table_spacing*$main::SECONDS_PER_MINUTE;
   my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) =
     localtime($start_time);
 
@@ -208,8 +204,6 @@ sub parse_args {
 
   my ($tree) = $form{'tree'};
   my ($daemon_mode) = (grep /daemon-mode/, keys %form);
-  my ($table_spacing) = ( $form{'table-spacing'} || 
-                        $TinderDB::MIN_TABLE_SPACING);
   
   my ($start_time) = $form{'start-time'} || $main::TIME;
   
@@ -274,12 +268,9 @@ sub parse_args {
   # grid and would cause our rendering algorithm to get off by one
   # build creating problems in the whole grid display.
 
-  ($table_spacing >= $TinderDB::MIN_TABLE_SPACING ) ||
-    die("You may not specify a table spacing of less then ".
-        "min_table_spacing: $TinderDB::MIN_TABLE_SPACING \n");
-  
   my ($times_vec) = construct_times_vec($start_time, $end_time, 
-                                        $table_spacing,);
+                                        $TinderDB::TABLE_SPACING,);
+
   return ($daemon_mode, $times_vec, $tree,);
 } # parse_args
 
@@ -526,7 +517,9 @@ sub write_stats {
  my ($run_time) = sprintf ("%.2f",         # round
                            ($end_time - $TIME)/$main::SECONDS_PER_MINUTE);
 
-# print LOG "run_time: $run_time num_updates: $NUM_UPDATES\n";
+ if ($TinderConfig::LOG_PERFORMANCE) {
+   print LOG "run_time: $run_time num_updates: $NUM_UPDATES\n";
+ }
 
  return ;
 }
