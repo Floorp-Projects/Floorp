@@ -38,7 +38,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.h,v 1.5 2002/04/04 00:11:48 nelsonb%netscape.com Exp $
+ * $Id: secport.h,v 1.6 2002/05/01 00:06:39 wtc%netscape.com Exp $
  */
 
 #ifndef _SECPORT_H_
@@ -144,7 +144,7 @@ extern void *PORT_ArenaGrow(PLArenaPool *arena, void *ptr,
 extern void *PORT_ArenaMark(PLArenaPool *arena);
 extern void PORT_ArenaRelease(PLArenaPool *arena, void *mark);
 extern void PORT_ArenaUnmark(PLArenaPool *arena, void *mark);
-extern char *PORT_ArenaStrdup(PLArenaPool *arena, char *str);
+extern char *PORT_ArenaStrdup(PLArenaPool *arena, const char *str);
 
 #ifdef __cplusplus
 }
@@ -210,10 +210,10 @@ extern char *PORT_ArenaStrdup(PLArenaPool *arena, char *str);
 #define PORT_Strcasecmp PL_strcasecmp
 #define PORT_Strcat 	strcat
 #define PORT_Strchr 	strchr
-#define PORT_Strrchr    PL_strrchr
+#define PORT_Strrchr    strrchr
 #define PORT_Strcmp 	strcmp
 #define PORT_Strcpy 	strcpy
-#define PORT_Strdup 	PL_strdup
+extern char *PORT_Strdup(const char *s);
 #define PORT_Strlen(s) 	strlen(s)
 #define PORT_Strncasecmp PL_strncasecmp
 #define PORT_Strncat 	strncat
