@@ -92,10 +92,10 @@ endif
 
 DEFINES += -DWIN32
 ifdef MAPFILE
-# Add LD options to restrict exported symbols to those in the map file
+DLLFLAGS += -DEF:$(MAPFILE)
 endif
 # Change PROCESS to put the mapfile in the correct format for this platform
-PROCESS_MAP_FILE = $(INSTALL) -m 444 $(LIBRARY_NAME).def $@
+PROCESS_MAP_FILE = perl -e "open INFILE, \"< $(LIBRARY_NAME).def\" ; open OUTFILE, \"> $@ \"; print OUTFILE <INFILE>" 
 
 
 #
