@@ -1286,11 +1286,18 @@ function IsGetNextNMessagesEnabled()
 
 function IsEmptyTrashEnabled()
 {
-    return IsMailFolderSelected();
+  var folderURI = GetSelectedFolderURI();
+  var server = GetServer(folderURI);
+  return (server.canEmptyTrashOnExit?IsMailFolderSelected():false);
 }
 
 function IsCompactFolderEnabled()
 {
+  var folderURI = GetSelectedFolderURI();
+  var server = GetServer(folderURI);
+  if (!(server.canCompactFoldersOnServer))
+    return false;
+
     var folderOutliner = GetFolderOutliner();
     var startIndex = {};
     var endIndex = {};
@@ -1534,6 +1541,11 @@ function CommandUpdate_UndoRedo()
 
 function SetupUndoRedoCommand(command)
 {
+    var loadedFolder = GetLoadedMsgFolder();
+    var server = loadedFolder.server;
+    if (!(server.canUndoDeleteOnServer))
+      return false;
+
     var canUndoOrRedo = false;
     var txnType = 0;
 

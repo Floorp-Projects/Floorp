@@ -452,6 +452,7 @@ var MessageWindowController =
 			case "cmd_getNextNMessages":
 			case "cmd_find":
 			case "cmd_findAgain":
+      case "cmd_search":
       case "button_mark":
 			case "cmd_markAsRead":
 			case "cmd_markAllRead":
@@ -541,6 +542,11 @@ var MessageWindowController =
 				return true;
 			case "cmd_findAgain":
 				return MsgCanFindAgain();
+      case "cmd_search":
+        var loadedFolder = GetLoadedMsgFolder();
+        if (!loadedFolder)
+          return false;
+        return loadedFolder.server.canSearchMessages; 
       case "cmd_undo":
       case "cmd_redo":
                 return SetupUndoRedoCommand(command);
@@ -639,6 +645,9 @@ var MessageWindowController =
 			case "cmd_findAgain":
 				MsgFindAgain();
 				break;
+      case "cmd_search":
+        MsgSearchMessages();
+        break;
       case "button_mark":
 			case "cmd_markAsRead":
 				MsgMarkMsgAsRead(null);

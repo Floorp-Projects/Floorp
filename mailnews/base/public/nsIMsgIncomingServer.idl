@@ -166,6 +166,9 @@ interface nsIMsgIncomingServer : nsISupports {
   /* should we use a secure channel? */
   attribute boolean isSecure;
 
+  /* can server support a secure channel? */
+  readonly attribute boolean isSecureServer;
+
   /* what kind of logon redirector to use for this server, if any */
   attribute string redirectorType;
 
@@ -255,6 +258,9 @@ interface nsIMsgIncomingServer : nsISupports {
   /* check if this server allows search operations */
   readonly attribute boolean canSearchMessages;
 
+  /* check if this server allows canEmptyTrashOnExit operations */
+  readonly attribute boolean canEmptyTrashOnExit;
+
   /* display startup page once per account per session */
   attribute boolean displayStartupPage;
   attribute nsIMsgDownloadSettings downloadSettings;
@@ -302,6 +308,12 @@ interface nsIMsgIncomingServer : nsISupports {
 
   /* can this server allows message filing ? */
   attribute boolean canFileMessagesOnServer;
+
+  /* can this server allow compacting folders ? */
+  readonly attribute boolean canCompactFoldersOnServer;
+
+  /* can this server allow undo delete ? */
+  readonly attribute boolean canUndoDeleteOnServer;
 
   /* used for setting up the filter UI */
   readonly attribute nsMsgSearchScopeValue filterScope;

@@ -242,6 +242,7 @@ var DefaultController =
 			case "cmd_getNextNMessages":
 			case "cmd_find":
 			case "cmd_findAgain":
+      case "cmd_search":
       case "button_mark":
 			case "cmd_markAsRead":
 			case "cmd_markAllRead":
@@ -368,6 +369,8 @@ var DefaultController =
       case "cmd_findAgain":
         return IsMessageDisplayedInMessagePane();
         break;
+      case "cmd_search":
+        return IsCanSearchMessagesEnabled();
       // these are enabled on when we are in threaded mode
       case "cmd_selectThread":
         if (GetNumSelectedMessages() <= 0) return false;
@@ -576,6 +579,8 @@ var DefaultController =
             case "cmd_properties":
                 MsgFolderProperties();
                 return;
+      case "cmd_search":
+        MsgSearchMessages();
       case "button_mark":
 			case "cmd_markAsRead":
 				MsgMarkMsgAsRead(null);
@@ -804,6 +809,12 @@ function IsRenameFolderEnabled()
         return false;
 }
 
+function IsCanSearchMessagesEnabled()
+{
+  var folderURI = GetSelectedFolderURI();
+  var server = GetServer(folderURI);
+  return server.canSearchMessages;
+}
 function IsFolderCharsetEnabled()
 {
   return IsFolderSelected();

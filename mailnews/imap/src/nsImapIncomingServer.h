@@ -78,7 +78,11 @@ public:
 	NS_IMETHOD CloseCachedConnections();
     NS_IMETHOD GetConstructedPrettyName(PRUnichar **retval);
         NS_IMETHOD GetCanBeDefaultServer(PRBool *canBeDefaultServer);
+NS_IMETHOD GetCanCompactFoldersOnServer(PRBool *canCompactFoldersOnServer);
+NS_IMETHOD GetCanUndoDeleteOnServer(PRBool *canUndoDeleteOnServer);
         NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
+  NS_IMETHOD GetCanEmptyTrashOnExit(PRBool *canEmptyTrashOnExit);
+  NS_IMETHOD GetIsSecureServer(PRBool *isSecureServer);
     NS_IMETHOD GetOfflineSupportLevel(PRInt32 *aSupportLevel);
     NS_IMETHOD GeneratePrettyNameForMigration(PRUnichar **aPrettyName);
         NS_IMETHOD GetSupportsDiskSpace(PRBool *aSupportsDiskSpace);
@@ -117,6 +121,8 @@ private:
   PRBool ConnectionTimeOut(nsIImapProtocol* aImapConnection);
   nsresult GetFormattedName(const PRUnichar *constructedPrettyName, PRUnichar **formattedPrettyName);  
   nsresult CreatePrefNameWithRedirectorType(const char *prefSuffix, nsCAutoString &prefName);
+  nsresult GetPrefForServerAttribute(const char *prefSuffix, PRBool *prefValue);
+
   nsCOMPtr<nsISupportsArray> m_connectionCache;
   nsCOMPtr<nsISupportsArray> m_urlQueue;
 	nsCOMPtr<nsIStringBundle>	m_stringBundle;

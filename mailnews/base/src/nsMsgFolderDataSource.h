@@ -166,7 +166,8 @@ protected:
                                     nsIRDFNode **target);
   nsresult createFolderSynchronizeNode(nsIMsgFolder *folder, nsIRDFNode **target);
   nsresult createFolderSyncDisabledNode(nsIMsgFolder *folder, nsIRDFNode **target);
-
+  nsresult createCanSearchMessages(nsIMsgFolder *folder,
+                                      nsIRDFNode **target);
   nsresult createFolderChildNode(nsIMsgFolder *folder, nsIRDFNode **target);
 
   nsresult getFolderArcLabelsOut(nsISupportsArray **arcs);
@@ -239,6 +240,7 @@ protected:
   static nsIRDFResource* kNC_ImapShared;
   static nsIRDFResource* kNC_Synchronize;
   static nsIRDFResource* kNC_SyncDisabled;
+  static nsIRDFResource* kNC_CanSearchMessages;
 
   // commands
   static nsIRDFResource* kNC_Delete;

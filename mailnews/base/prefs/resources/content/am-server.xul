@@ -137,7 +137,7 @@ Contributors:
               prefstring="mail.server.%serverkey%.delete_mail_left_on_server"/>
   </vbox>
   <!-- IMAP -->
-  <hbox iscontrolcontainer="true" align="center">
+  <hbox iscontrolcontainer="true" align="center" id="imap.deleteModel.box">
     <label value="&deleteMessagePrefix.label;"/>
     <menulist hidable="true" hidefor="pop3,nntp" wsm_persist="true" id="imap.deleteModel"
               prefstring="mail.server.%serverkey%.delete_model">

@@ -275,7 +275,7 @@ function fillFolderPaneContextMenu()
 // End of News folder context menu =======================================
 
   ShowMenuItem("folderPaneContext-searchMessages", (numSelected<=1));
-  EnableMenuItem("folderPaneContext-searchMessages", true);
+  EnableMenuItem("folderPaneContext-searchMessages", IsCanSearchMessagesEnabled());
 
   return(true);
 }

@@ -264,6 +264,42 @@ nsMsgIncomingServer::GetCanSearchMessages(PRBool *canSearchMessages)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgIncomingServer::GetCanCompactFoldersOnServer(PRBool *canCompactFoldersOnServer)
+{
+    // derived class should override if they need to do this.
+    NS_ENSURE_ARG_POINTER(canCompactFoldersOnServer);
+    *canCompactFoldersOnServer = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::GetCanUndoDeleteOnServer(PRBool *canUndoDeleteOnServer)
+{
+    // derived class should override if they need to do this.
+    NS_ENSURE_ARG_POINTER(canUndoDeleteOnServer);
+    *canUndoDeleteOnServer = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::GetCanEmptyTrashOnExit(PRBool *canEmptyTrashOnExit)
+{
+    // derived class should override if they need to do this.
+    NS_ENSURE_ARG_POINTER(canEmptyTrashOnExit);
+    *canEmptyTrashOnExit = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::GetIsSecureServer(PRBool *isSecureServer)
+{
+    // derived class should override if they need to do this.
+    NS_ENSURE_ARG_POINTER(isSecureServer);
+    *isSecureServer = PR_TRUE;
+    return NS_OK;
+}
+
 // construct <localStoreType>://[<username>@]<hostname
 NS_IMETHODIMP
 nsMsgIncomingServer::GetServerURI(char* *aResult)

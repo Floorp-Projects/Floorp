@@ -40,6 +40,17 @@ function onPreInit(account, accountValues)
     var type = parent.getAccountValue(account, accountValues, "server", "type", null, false);
     gRedirectorType = parent.getAccountValue(account, accountValues, "server", "redirectorType", null, false);
     hideShowControls(type);
+
+    if(!(account.incomingServer.isSecureServer))
+      document.getElementById("server.isSecure").setAttribute("hidden", "true");
+    else
+      document.getElementById("server.isSecure").removeAttribute("hidden");
+    
+    if(!account.incomingServer.canEmptyTrashOnExit)
+    {
+      document.getElementById("server.emptyTrashOnExit").setAttribute("hidden", "true");
+      document.getElementById("imap.deleteModel.box").setAttribute("hidden", "true");
+    }
 }
 
 function initServerType() {

@@ -3157,10 +3157,67 @@ nsImapIncomingServer::GetCanBeDefaultServer(PRBool *canBeDefaultServer)
 }
 
 NS_IMETHODIMP
+nsImapIncomingServer::GetCanCompactFoldersOnServer(PRBool *canCompactFoldersOnServer)
+{
+    NS_ENSURE_ARG_POINTER(canCompactFoldersOnServer);
+
+    // Initialize canCompactFoldersOnServer true, a default value for IMAP
+    *canCompactFoldersOnServer = PR_TRUE;
+
+    GetPrefForServerAttribute("canCompactFoldersOnServer", canCompactFoldersOnServer);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetCanUndoDeleteOnServer(PRBool *canUndoDeleteOnServer)
+{
+    NS_ENSURE_ARG_POINTER(canUndoDeleteOnServer);
+
+    // Initialize canUndoDeleteOnServer true, a default value for IMAP
+    *canUndoDeleteOnServer = PR_TRUE;
+
+    GetPrefForServerAttribute("canUndoDeleteOnServer", canUndoDeleteOnServer);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsImapIncomingServer::GetCanSearchMessages(PRBool *canSearchMessages)
 {
     NS_ENSURE_ARG_POINTER(canSearchMessages);
+
+    // Initialize canSearchMessages true, a default value for IMAP
     *canSearchMessages = PR_TRUE;
+
+    GetPrefForServerAttribute("canSearchMessages", canSearchMessages);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetCanEmptyTrashOnExit(PRBool *canEmptyTrashOnExit)
+{
+    NS_ENSURE_ARG_POINTER(canEmptyTrashOnExit);
+
+    // Initialize canEmptyTrashOnExit true, a default value for IMAP
+    *canEmptyTrashOnExit = PR_TRUE;
+
+    GetPrefForServerAttribute("canEmptyTrashOnExit", canEmptyTrashOnExit);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetIsSecureServer(PRBool *isSecureServer)
+{
+    NS_ENSURE_ARG_POINTER(isSecureServer);
+
+    // Initialize isSecureServer true, a default value for IMAP
+    *isSecureServer = PR_TRUE;
+
+    GetPrefForServerAttribute("isSecureServer", isSecureServer);
+
     return NS_OK;
 }
 
@@ -3253,42 +3310,11 @@ nsImapIncomingServer::GetCanCreateFoldersOnServer(PRBool *aCanCreateFoldersOnSer
 {
     NS_ENSURE_ARG_POINTER(aCanCreateFoldersOnServer);
 
-    nsresult rv;
-
     // Initialize aCanCreateFoldersOnServer true, a default value for IMAP
     *aCanCreateFoldersOnServer = PR_TRUE;
 
-    nsCAutoString prefName;
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    GetPrefForServerAttribute("aCanCreateFoldersOnServer", aCanCreateFoldersOnServer);
 
-    nsXPIDLCString serverKey;
-    rv = GetKey(getter_Copies(serverKey));
-
-    // Time to check if this server has the pref 
-    // (mail.server.<serverkey>.canCreateFolders) already set
-    nsMsgIncomingServer::getPrefName(serverKey, 
-                                     "canCreateFolders", 
-                                     prefName);
-    rv = prefs->GetBoolPref(prefName.get(), aCanCreateFoldersOnServer);
-
-    // If the server pref is not set in then look at the 
-    // pref set with redirector type
-    if (NS_FAILED(rv)) {
-        rv = CreatePrefNameWithRedirectorType(".canCreateFolders", prefName);
-        if (NS_FAILED(rv)) 
-            return NS_OK; // return if no redirector type
-
-        if(NS_SUCCEEDED(rv)) {
-            rv = prefs->GetBoolPref(prefName.get(), aCanCreateFoldersOnServer);
-        }
-    }
-
-    // Couldn't get the default value with the redirector type.
-    // Fall back on IMAP default value
-    if (NS_FAILED(rv)) {
-        // set default value
-        *aCanCreateFoldersOnServer = PR_TRUE;
-    }
     return NS_OK;
 }
 
@@ -3433,47 +3459,51 @@ nsImapIncomingServer::CreatePrefNameWithRedirectorType(const char *prefSuffix, n
     return NS_OK;
 }
 
+nsresult
+nsImapIncomingServer::GetPrefForServerAttribute(const char *prefSuffix, PRBool *prefValue)
+{
+  NS_ENSURE_ARG_POINTER(prefSuffix);
+  nsresult rv;
+  nsCAutoString prefName;
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+
+  nsXPIDLCString serverKey;
+  rv = GetKey(getter_Copies(serverKey));
+
+  // Time to check if this server has the pref 
+  // (mail.server.<serverkey>.prefSuffix) already set
+  nsMsgIncomingServer::getPrefName(serverKey, 
+                                   prefSuffix, 
+                                   prefName);
+  rv = prefs->GetBoolPref(prefName.get(), prefValue);
+
+  // If the server pref is not set in then look at the 
+  // pref set with redirector type
+  if (NS_FAILED(rv)) 
+  {
+    nsCAutoString redirectorType;
+    redirectorType.Assign(".");
+    redirectorType.Append(prefSuffix);
+
+    rv = CreatePrefNameWithRedirectorType(redirectorType.get(), prefName);
+
+    if(NS_SUCCEEDED(rv)) 
+      rv = prefs->GetBoolPref(prefName.get(), prefValue);
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP
 nsImapIncomingServer::GetCanFileMessagesOnServer(PRBool *aCanFileMessagesOnServer)
 {
     NS_ENSURE_ARG_POINTER(aCanFileMessagesOnServer);
 
-    nsresult rv;
-
     // Initialize aCanFileMessagesOnServer true, a default value for IMAP
     *aCanFileMessagesOnServer = PR_TRUE;
 
-    nsCAutoString prefName;
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    GetPrefForServerAttribute("aCanFileMessagesOnServer", aCanFileMessagesOnServer);
 
-    nsXPIDLCString serverKey;
-    rv = GetKey(getter_Copies(serverKey));
-
-    // Time to check if this server has the pref 
-    // (mail.server.<serverkey>.canFileMessages) already set
-    nsMsgIncomingServer::getPrefName(serverKey, 
-                                     "canFileMessages", 
-                                     prefName);
-    rv = prefs->GetBoolPref(prefName.get(), aCanFileMessagesOnServer);
-
-    // If the server pref is not set in then look at the 
-    // pref set with redirector type
-    if (NS_FAILED(rv)) {
-        rv = CreatePrefNameWithRedirectorType(".canFileMessages", prefName);
-        if (NS_FAILED(rv)) 
-            return NS_OK; //  return if no redirector type
-
-        if(NS_SUCCEEDED(rv)) {
-            rv = prefs->GetBoolPref(prefName.get(), aCanFileMessagesOnServer);
-        }
-    }
-
-    // Couldn't get the default value with the redirector type.
-    // Fall back on IMAP default value
-    if (NS_FAILED(rv)) {
-        // set default value
-        *aCanFileMessagesOnServer = PR_TRUE;
-    }
     return NS_OK;
 }
 
