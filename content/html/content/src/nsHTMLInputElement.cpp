@@ -913,7 +913,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                aFlags, aEventStatus);
 
   // now check to see if the event was "cancelled"
-  if (nsEventStatus_eConsumeNoDefault != *aEventStatus && checkWasSet &&
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus && checkWasSet &&
       (type == NS_FORM_INPUT_CHECKBOX || type == NS_FORM_INPUT_RADIO)) {
     // if it was cancelled and a radio button, then set the old selceted btn to TRUE
     //. if it is a checkbox then set it to it's original value
