@@ -901,11 +901,9 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:modules:libimg:png:MANIFEST",                    "$distdirectory:libimg:");
     InstallFromManifest(":mozilla:modules:libimg:mng:MANIFEST",                    "$distdirectory:libimg:");
 
-    if ($main::options{useimg2}) {
-	    #LIBIMG2
-	    InstallFromManifest(":mozilla:modules:libpr0n:public:MANIFEST_IDL",            "$distdirectory:libimg2:");
-	    InstallFromManifest(":mozilla:modules:libpr0n:decoders:icon:MANIFEST_IDL",     "$distdirectory:icondecoder:");
-    }
+    #LIBIMG2
+    InstallFromManifest(":mozilla:modules:libpr0n:public:MANIFEST_IDL",            "$distdirectory:libimg2:");
+    InstallFromManifest(":mozilla:modules:libpr0n:decoders:icon:MANIFEST_IDL",     "$distdirectory:icondecoder:");
     
     #PLUGIN
     InstallFromManifest(":mozilla:modules:plugin:base:public:MANIFEST",            "$distdirectory:plugin:");
@@ -1417,10 +1415,8 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:modules:libutil:macbuild:libutilIDL.xml",             "libutil");
     BuildIDLProject(":mozilla:modules:libjar:macbuild:libjarIDL.xml",               "libjar");
     
-	if ($main::options{useimg2}) {
-	    BuildIDLProject(":mozilla:modules:libpr0n:macbuild:libimg2IDL.xml",         "libimg2");
-	    BuildIDLProject(":mozilla:modules:libpr0n:macbuild:icondecoderIDL.xml",         "icondecoder");
-    }
+    BuildIDLProject(":mozilla:modules:libpr0n:macbuild:libimg2IDL.xml",         "libimg2");
+    BuildIDLProject(":mozilla:modules:libpr0n:macbuild:icondecoderIDL.xml",         "icondecoder");
     
     BuildIDLProject(":mozilla:modules:plugin:base:macbuild:pluginIDL.xml",          "plugin");
     BuildIDLProject(":mozilla:modules:oji:macbuild:ojiIDL.xml",                     "oji");
@@ -1760,16 +1756,13 @@ sub BuildImglib2Projects()
 
     StartBuildModule("libimg2");    
     
-    if ($main::options{useimg2})
+    BuildOneProject(":mozilla:modules:libpr0n:macbuild:libimg2.xml",            "libimg2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:modules:libpr0n:macbuild:icondecoder.xml",        "icondecoder$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+    
+    # MNG
+    if ($main::options{mng})
     {
-        BuildOneProject(":mozilla:modules:libpr0n:macbuild:libimg2.xml",            "libimg2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-        BuildOneProject(":mozilla:modules:libpr0n:macbuild:icondecoder.xml",        "icondecoder$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-        
-        # MNG
-        if ($main::options{mng})
-        {
-            BuildOneProject(":mozilla:modules:libpr0n:macbuild:mngdecoder.xml",     "mngdecoder$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-        }
+        BuildOneProject(":mozilla:modules:libpr0n:macbuild:mngdecoder.xml",     "mngdecoder$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     }
     
     EndBuildModule("libimg2");
