@@ -130,7 +130,7 @@ insert into components (value, program, initialowner) values ("Content Model", "
 insert into components (value, program, initialowner) values ("Cookies", "NGLayout", "scullin@netscape.com");
 insert into components (value, program, initialowner) values ("DOM", "NGLayout", "vidur@netscape.com");
 insert into components (value, program, initialowner) values ("DOM", "NGLayout", "vidur@netscape.com");
-insert into components (value, program, initialowner) values ("Editor", "kostello@netscape.com");
+insert into components (value, program, initialowner) values ("Editor", "NGLayout", "kostello@netscape.com");
 insert into components (value, program, initialowner) values ("Embedding APIs", "NGLayout", "jevering@netscape.com");
 insert into components (value, program, initialowner) values ("Event Handling", "NGLayout", "joki@netscape.com");
 insert into components (value, program, initialowner) values ("Event Handling", "NGLayout", "joki@netscape.com");
