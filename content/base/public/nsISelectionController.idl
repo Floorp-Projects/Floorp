@@ -27,13 +27,12 @@
 #include "nsISelectionDisplay.idl"
 
 %{C++
-
-class nsISelection;
 typedef short SelectionType;
 typedef short SelectionRegion;
 %}
 
 interface nsIDOMNode;
+interface nsISelection;
 interface nsISelectionDisplay;
 
 [scriptable, uuid(D2D1D179-85A7-11d3-9932-00108301233C)]
