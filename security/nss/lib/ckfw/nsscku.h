@@ -40,13 +40,12 @@
  * Cryptography Standards (PKCS)" in all material mentioning or referencing
  * this document.
  */
- */
 
 #ifndef NSSCKU_H
 #define NSSCKU_H
 
 #ifdef DEBUG
-static const char NSSCKU_CVS_ID[] = "@(#) $RCSfile: nsscku.h,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:33 $ $Name:  $";
+static const char NSSCKU_CVS_ID[] = "@(#) $RCSfile: nsscku.h,v $ $Revision: 1.2 $ $Date: 2000/04/03 21:58:34 $ $Name:  $";
 #endif /* DEBUG */
 
 #endif /* NSSCKU_H */
