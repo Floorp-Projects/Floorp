@@ -137,7 +137,7 @@
                     push(a);
                 }
                 else {
-                    if (length || fInst->isMethodClosure) {
+                    if (length || fInst->isMethodClosure || fWrap->compileFrame->buildArguments) {
                         pFrame = new ParameterFrame(fWrap->compileFrame);
                         pFrame->instantiate(meta->env);
                         pFrame->thisObject = a;
@@ -155,7 +155,10 @@
                         // XXX constructing a parameterFrame only for the purpose of holding the 'this'
                         // need to find a more efficient way of stashing 'this'
                         // used to be : "meta->env->addFrame(fWrap->compileFrame->prototype);"
-                        meta->env->addFrame(new ParameterFrame(a, fWrap->compileFrame->prototype));
+                        // Still need to mark the frame as a runtime frame (see stmtnode::return in validate)
+                        pFrame = new ParameterFrame(a, fWrap->compileFrame->prototype);
+                        pFrame->pluralFrame = fWrap->compileFrame;
+                        meta->env->addFrame(pFrame);
                     }
                 }
             }

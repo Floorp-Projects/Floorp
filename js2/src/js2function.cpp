@@ -78,22 +78,16 @@ namespace MetaData {
             ASSERT(fnExpr);     // otherwise, an exception would have been thrown out of here
             fnExpr->obj = NULL;
             DEFINE_ROOTKEEPER(rk, fnExpr->obj);
-//            JS2Class *exprType;
             meta->ValidateExpression(&meta->cxt, meta->env, fnExpr);
             Arena *oldArena = meta->referenceArena;
             meta->referenceArena = new Arena;
             try {
-//                meta->SetupExprNode(meta->env, RunPhase, fnExpr, &exprType);
-
-
                 CompilationData *oldData = meta->startCompilationUnit(fnExpr->function.fWrap->bCon, *bodyStr, srcLoc);
                 meta->env->addFrame(fnExpr->function.fWrap->compileFrame);
                 meta->SetupStmt(meta->env, RunPhase, fnExpr->function.body);
                 fnExpr->function.fWrap->bCon->emitOp(eReturnVoid, meta->engine->errorPos());
                 meta->env->removeTopFrame();
                 meta->restoreCompilationUnit(oldData);
-
-
             }
             catch (Exception &x) {
                 meta->referenceArena->clear();
@@ -113,6 +107,8 @@ namespace MetaData {
             fnInst->fWrap->length = 0;
             fnInst->fWrap->bCon->emitOp(eReturnVoid, meta->engine->errorPos());
             meta->createDynamicProperty(fnInst, meta->engine->length_StringAtom, INT_TO_JS2VAL(0), ReadAccess, true, false);
+            if (meta->cxt.E3compatibility)
+                meta->createDynamicProperty(fnInst, &meta->world.identifiers["arguments"], JS2VAL_NULL, ReadAccess, true, false);
             return thatValue;
         }
     }

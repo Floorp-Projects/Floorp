@@ -134,7 +134,18 @@ static js2val Math_exp(JS2Metadata *meta, const js2val /*thisValue*/, js2val *ar
 {
     if (argc == 0)
         return meta->engine->nanValue;
-    return meta->engine->allocNumber(fd::exp(meta->toFloat64(argv[0])));
+    float64 x = meta->toFloat64(argv[0]);
+#ifdef _WIN32
+    if (!JSDOUBLE_IS_NaN(x)) {
+        if (x == positiveInfinity) {
+            return meta->engine->posInfValue;
+        }
+        if (x == negativeInfinity) {
+            return JS2VAL_ZERO;
+        }
+    }
+#endif
+    return meta->engine->allocNumber(fd::exp(x));
 }
 static js2val Math_floor(JS2Metadata *meta, const js2val /*thisValue*/, js2val *argv, uint32 argc)
 {

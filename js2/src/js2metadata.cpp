@@ -478,8 +478,10 @@ namespace MetaData {
                 break;
             case StmtNode::Return:
                 {
-                    Frame *regionalFrame = *env->getRegionalFrame();
-                    if (regionalFrame->kind != ParameterFrameKind)
+                    ParameterFrame *pFrame = env->getEnclosingParameterFrame();
+                    // If there isn't a parameter frame, or the parameter frame is
+                    // only a runtime frame (for eval), then it's an orphan return
+                    if ((pFrame->kind != ParameterFrameKind) || pFrame->pluralFrame)
                         reportError(Exception::syntaxError, "Return statement not in function", p->pos);
                     ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
                     if (e->expr) {
@@ -3875,7 +3877,8 @@ bool nullClass_BracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, js
 
         // A 'forbidden' member, used to mark hidden bindings
         forbiddenMember = new LocalMember(Member::ForbiddenMember, true);
-
+    
+        FunctionInstance *fInst;
         Variable *v;
         
 // XXX Built-in Attributes... XXX 
@@ -3908,6 +3911,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         env->addFrame(objectClass);
             v = new Variable(objectClass, OBJECT_TO_JS2VAL(objectClass->prototype), true);
             defineLocalMember(env, engine->prototype_StringAtom, NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
+            v = new Variable(objectClass, INT_TO_JS2VAL(1), true);
+            defineLocalMember(env, engine->length_StringAtom, NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, false);
         env->removeTopFrame();
 
 /*** ECMA 3  Function Class ***/
@@ -3930,7 +3935,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
 // Add __proto__ as a getter/setter instance member to Object & class
         Multiname mn(&world.identifiers["__proto__"], publicNamespace);
-        FunctionInstance *fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+        fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), class_underbarProtoGet, env);
         fInst->fWrap->length = 0;
         InstanceGetter *g = new InstanceGetter(&mn, fInst, objectClass, true, true);
@@ -3965,6 +3970,13 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         fInst->fWrap->length = 0;
         createDynamicProperty(JS2VAL_TO_OBJECT(objectClass->prototype), engine->valueOf_StringAtom, OBJECT_TO_JS2VAL(fInst), ReadAccess, true, false);
         createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(0), ReadAccess, true, false);
+        // and 'constructor'
+        fInst = new FunctionInstance(this, functionClass->prototype, functionClass);
+        fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), Object_Constructor, env);
+        fInst->fWrap->length = 0;
+        createDynamicProperty(JS2VAL_TO_OBJECT(objectClass->prototype), &world.identifiers["constructor"], OBJECT_TO_JS2VAL(fInst), ReadWriteAccess, false, false);
+        createDynamicProperty(fInst, engine->length_StringAtom, INT_TO_JS2VAL(1), ReadAccess, true, false);
+
 
 /*** ECMA 4  Integer Class ***/
         v = new Variable(classClass, OBJECT_TO_JS2VAL(integerClass), true);
@@ -4928,8 +4940,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 
     FunctionInstance::~FunctionInstance()
     {
-//        if (fWrap)
-//            delete fWrap;
+        if (fWrap)
+            delete fWrap;
     }
 
 /************************************************************************************

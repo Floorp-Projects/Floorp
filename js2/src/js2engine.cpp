@@ -468,6 +468,9 @@ namespace MetaData {
                   INIT_STRINGATOM(length),
                   INIT_STRINGATOM(toString),
                   INIT_STRINGATOM(valueOf),
+                  packageFrame(NULL),
+                  parameterFrame(NULL),
+                  localFrame(NULL),
                   traceInstructions(false)
     {
         for (int i = 0; i < 256; i++)
