@@ -62,10 +62,10 @@ DER_StoreHeader(unsigned char *buf, unsigned int code, uint32 len)
 {
     unsigned char b[4];
 
-    b[0] = (len >> 24) & 0xff;
-    b[1] = (len >> 16) & 0xff;
-    b[2] = (len >> 8) & 0xff;
-    b[3] = len & 0xff;
+    b[0] = (unsigned char)(len >> 24);
+    b[1] = (unsigned char)(len >> 16);
+    b[2] = (unsigned char)(len >> 8);
+    b[3] = (unsigned char)len;
     if ((code & DER_TAGNUM_MASK) == DER_SET
 	|| (code & DER_TAGNUM_MASK) == DER_SEQUENCE)
 	code |= DER_CONSTRUCTED;
