@@ -223,6 +223,18 @@ nsresult nsLayer::FetchEventsByRange(
                       )
 {
   nsresult res;
+
+  /*
+   * Before we do anything, see if we've cached the info..
+   */
+  if ( aStart->compareTo(mpCal->getEventsSpanStart()) >= 0 &&
+       0 >= aStop->compareTo(mpCal->getEventsSpanEnd()) )
+  {
+    mpCal->getEventsByRange(anArray, *aStart, *aStop);
+    return NS_OK;
+  }
+
+
   ErrorCode status = ZERO_ERROR;
   DateTime d;
   char * psDTStart = 0;

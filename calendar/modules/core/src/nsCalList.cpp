@@ -44,12 +44,18 @@ nsCalList::~nsCalList()
  * @param pCal pointer to the calendar to add
  * @return 0 on success
  *         1 problems adding the calendar
+ *         2 already in the list
  */
 nsresult nsCalList::Add(NSCalendar* pCal)
 {
-  if (0 > m_List.Add(pCal))
-    return 1;
-  return 0;
+	int index = m_List.FindIndex(0, pCal);
+	if (index != -1)
+	{
+    if (0 > m_List.Add(pCal))
+      return 1;
+    return 0;
+	}
+	return 2;
 }
 
 /**
