@@ -238,25 +238,35 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
     return NS_ERROR_FAILURE;
   }
 
-  // Clear the native clipboard
+  // are we already the owner?
   if (gdk_selection_owner_get(GDK_SELECTION_PRIMARY) == sWidget->window)
+  {
+    // if so, clear all the targets
     gtk_selection_remove_all(sWidget);
-
-  // register as the selection owner:
-  gint have_selection = gtk_selection_owner_set(sWidget,
-                                                GDK_SELECTION_PRIMARY,
-                                                GDK_CURRENT_TIME);
-  if (have_selection == 0)
-    return NS_ERROR_FAILURE;
+  }
+#if 0
+  else
+  {
+#endif
+    // we arn't already the owner, so we will become it
+    gint have_selection = gtk_selection_owner_set(sWidget,
+                                                  GDK_SELECTION_PRIMARY,
+                                                  GDK_CURRENT_TIME);
+    if (have_selection == 0)
+      return NS_ERROR_FAILURE;
+#if 0
+  }
+#endif
 
   nsString *df;
   int i = 0;
   nsVoidArray *dfList;
+  // find out what types this data can be
   mTransferable->FlavorsTransferableCanExport(&dfList);
 
-  // Walk through flavors and see which flavor matches the one being pasted:
   int cnt = dfList->Count();
 
+  // add string type for other applications that don't use text/plain
   gtk_selection_add_target(sWidget, 
                            GDK_SELECTION_PRIMARY,
                            GDK_SELECTION_TYPE_STRING,
@@ -267,7 +277,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
     df = (nsString *)dfList->ElementAt(i);
     if (nsnull != df) {
       gint format = GetFormat(*df);
-      
+      // add these types as selection targets
       gtk_selection_add_target(sWidget, 
                                GDK_SELECTION_PRIMARY,
                                sSelTypes[format],
@@ -288,16 +298,25 @@ gint nsClipboard::GetFormat(const nsString &aMimeStr)
   char *foo = aMimeStr.ToNewCString();
   g_print("  nsClipboard::GetFormat(%s)\n", foo);
   delete [] foo;
-#endif  
+#endif
   if (aMimeStr.Equals(kTextMime)) {
     type = TARGET_TEXT_PLAIN;
-  } else if (aMimeStr.Equals(kHTMLMime)) {
-    type = TARGET_TEXT_HTML;
+  } else if (aMimeStr.Equals(kXIFMime)) {
+    type = TARGET_TEXT_XIF;
   } else if (aMimeStr.Equals(kUnicodeMime)) {
     type = TARGET_TEXT_UNICODE;
+  } else if (aMimeStr.Equals(kHTMLMime)) {
+    type = TARGET_TEXT_HTML;
+  } else if (aMimeStr.Equals(kAOLMailMime)) {
+    type = TARGET_AOLMAIL;
+  } else if (aMimeStr.Equals(kPNGImageMime)) {
+    type = TARGET_IMAGE_PNG;
   } else if (aMimeStr.Equals(kJPEGImageMime)) {
     type = TARGET_IMAGE_JPEG;
+  } else if (aMimeStr.Equals(kGIFImageMime)) {
+    type = TARGET_IMAGE_GIF;
   }
+
 #ifdef WE_DO_DND
   else if (aMimeStr.Equals(kDropFilesMime)) {
     format = CF_HDROP;
