@@ -23,7 +23,7 @@
 #ifndef NSDEFAULTURIFIXUP_H
 #define NSDEFAULTURIFIXUP_H
 
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
 #include "nsIURIFixup.h"
 
 #include "nsCOMPtr.h"
@@ -53,7 +53,7 @@ private:
     const char * GetFileSystemCharset();
     const char * GetCharsetForUrlBar();
 
-    nsCOMPtr<nsIPref> mPrefs;
+    nsCOMPtr<nsIPrefBranch> mPrefBranch;
     nsCAutoString mFsCharset;
 };
 
