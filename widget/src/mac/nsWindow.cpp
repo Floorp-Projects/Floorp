@@ -68,6 +68,16 @@ nsWindow::nsWindow() : nsBaseWidget()
 nsWindow::~nsWindow()
 {
 	//Destroy();
+	// beard:  moved from Destroy down below to fix a ref counting bug.
+	mEventCallback = nsnull;	 // prevent the widget from causing additional events
+
+	if (mWindowRegion != nsnull)
+	{
+		::DisposeRgn(mWindowRegion);
+		mWindowRegion = nsnull;	
+	}
+
+	NS_IF_RELEASE(mTempRenderingContext);
 }
 
 
@@ -164,16 +174,7 @@ NS_IMETHODIMP nsWindow::Destroy()
 	nsBaseWidget::OnDestroy();
 	nsBaseWidget::Destroy();
 
-	ReportDestroyEvent();
-  mEventCallback = nsnull;	 // prevent the widget from causing additional events
-
-	if (mWindowRegion != nsnull)
-	{
-		::DisposeRgn(mWindowRegion);
-		mWindowRegion = nsnull;	
-	}
-
-	NS_IF_RELEASE(mTempRenderingContext);
+	ReportDestroyEvent();	// beard: this seems to cause the window to be deleted. moved all release code to destructor.
 
 	return NS_OK;
 }
@@ -1020,6 +1021,48 @@ void nsWindow::LocalToWindowCoordinate(nsRect& aRect)
 	ConvertToDeviceCoordinates(aRect.x, aRect.y);
 }
 
+//=================================================================
+/*  Convert the device coordinates to local coordinates.
+ *  @update  dc 09/16/98
+ *  @param   nscoord -- X coordinate to convert
+ *  @param   nscoord -- Y coordinate to convert
+ *  @return  NONE
+ */
+void  nsWindow::ConvertToLocalCoordinates(nscoord &aX, nscoord &aY)
+{
+	PRInt32	offX, offY;
+	this->CalcOffset(offX,offY);
+
+	aX -= offX;
+	aY -= offY;
+}
+
+/*
+ * Convert an nsPoint into mac local coordinates.
+ * The tree hierarchy is navigated upwards, changing
+ * the x,y offset by the parent's coordinates
+ *
+ */
+void nsWindow::WindowToLocalCoordinate(nsPoint& aPoint)
+{
+	ConvertToLocalCoordinates(aPoint.x, aPoint.y);
+}
+
+/* 
+ * Convert widget local coordinates into mac local coordinates
+ */
+void nsWindow::WindowToLocalCoordinate(nscoord& aX, nscoord& aY)
+{
+	ConvertToLocalCoordinates(aX, aY);
+}
+
+/* 
+ * Convert an nsRect into mac local coordinates
+ */
+void nsWindow::WindowToLocalCoordinate(nsRect& aRect)
+{
+	ConvertToLocalCoordinates(aRect.x, aRect.y);
+}
 
 #pragma mark -
 #pragma mark - will be gone -
