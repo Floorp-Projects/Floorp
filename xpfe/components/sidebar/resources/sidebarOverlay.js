@@ -791,7 +791,8 @@ function SidebarCustomize() {
 
 function sidebar_is_collapsed() {
   var sidebar_splitter = document.getElementById('sidebar-splitter');
-  return sidebar_splitter.getAttribute('state') == 'collapsed';
+  return (sidebar_splitter &&
+          sidebar_splitter.getAttribute('state') == 'collapsed');
 }
 
 function SidebarExpandCollapse() {
