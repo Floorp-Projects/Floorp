@@ -12,9 +12,9 @@
 # the completed string before it is returned.
 
 
-# $Revision: 1.5 $ 
-# $Date: 2000/11/09 19:30:45 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.6 $ 
+# $Date: 2001/02/16 01:34:37 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp.pm,v $ 
 # $Name:  $ 
 
@@ -107,8 +107,8 @@ $DEFAULT_POPUP_TITLE = '';
 # these varaibles are a hack, I need them to make the popup window
 # auto size correctly.  I wish there was a javascript way to autosize.
 
-$DEFAULT_POPUP_HEIGHT = 150;
-$DEFAULT_POPUP_WIDTH = 350;
+$DEFAULT_POPUP_HEIGHT = 225;
+$DEFAULT_POPUP_WIDTH = 425;
 
 
 
