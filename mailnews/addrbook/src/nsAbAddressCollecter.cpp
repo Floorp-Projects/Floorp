@@ -60,6 +60,23 @@ nsAbAddressCollecter::~nsAbAddressCollecter()
 	}
 }
 
+NS_IMETHODIMP nsAbAddressCollecter::CollectUnicodeAddress(const PRUnichar * aAddress)
+{
+  NS_ENSURE_ARG(aAddress);
+  nsresult rv = NS_OK;
+
+  // convert the unicode string to UTF-8...
+  nsAutoString unicodeString (aAddress);
+  char * utf8Version = unicodeString.ToNewUTF8String();
+  if (utf8Version)
+  {
+    rv = CollectAddress(utf8Version);
+    Recycle(utf8Version);
+  }
+
+  return rv;
+}
+
 NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 {
 	nsresult rv;

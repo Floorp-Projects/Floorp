@@ -38,7 +38,7 @@ public:
 	virtual ~nsAbAddressCollecter();
 
 	NS_DECL_ISUPPORTS
-    NS_DECL_NSIABADDRESSCOLLECTER
+  NS_DECL_NSIABADDRESSCOLLECTER
 
 	nsresult OpenHistoryAB(nsIAddrDatabase **aDatabase);
 	nsresult IsDomainExcluded(const char *address, nsIPref *pPref, PRBool *bExclude);

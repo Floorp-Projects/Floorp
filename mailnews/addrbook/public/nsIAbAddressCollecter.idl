@@ -27,6 +27,12 @@
 
 interface nsIAbAddressCollecter : nsISupports {
 
-  void CollectAddress(in string address);
+  void collectAddress(in string address);
+  /* CollectUnicodeAddress is the most I18N friendly
+     of the two methods to call. If you just take a char * address
+	 as used by CollectAddress then you don't know what char set
+	 the address is in (UTF-8??).
+  */
+  void collectUnicodeAddress(in wstring address);
 };
 
