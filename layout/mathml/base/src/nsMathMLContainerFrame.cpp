@@ -486,7 +486,7 @@ nsMathMLContainerFrame::GetReflowAndBoundingMetricsFor(nsIFrame*            aFra
     aBoundingMetrics.descent = aReflowMetrics.descent;
     aBoundingMetrics.ascent  = aReflowMetrics.ascent;
     aBoundingMetrics.width   = aReflowMetrics.width;
-#if 1
+#if 0
     printf("GetBoundingMetrics() failed for: "); /* getchar(); */
     nsFrame::ListTag(stdout, aFrame);
     printf("\n");
@@ -711,8 +711,7 @@ nsMathMLContainerFrame::EmbellishOperator()
     mEmbellishData.firstChild = firstChild;
     // Cache also the inner-most embellished frame at the core of the hierarchy
     nsIMathMLFrame* aMathMLFrame = nsnull;
-    nsresult rv = firstChild->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
-    NS_ASSERTION(NS_SUCCEEDED(rv) && aMathMLFrame, "Mystery!");
+    firstChild->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
     nsEmbellishData embellishData;
     aMathMLFrame->GetEmbellishData(embellishData);
     mEmbellishData.core = embellishData.core;
@@ -985,7 +984,7 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresConte
           PRBool isSmaller = PR_TRUE;
           if (0 > gap) { isSmaller = PR_FALSE; gap = -gap; } // absolute value
 
-          PRInt32 smallestFontSize, smallestFontIndex;
+          PRInt32 smallestFontIndex, smallestFontSize = 0;
           if (isSmaller) {
             // find the smallest font-size in this subtree
             smallestFontSize = FindSmallestFontSizeFor(aPresContext, childFrame);

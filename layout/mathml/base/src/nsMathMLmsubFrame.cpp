@@ -110,8 +110,8 @@ nsMathMLmsubFrame::Place(nsIPresContext*      aPresContext,
   PRInt32 count = 0;
   nsHTMLReflowMetrics baseSize (nsnull);
   nsHTMLReflowMetrics subScriptSize (nsnull);
-  nsIFrame* baseFrame;
-  nsIFrame* subScriptFrame;
+  nsIFrame* baseFrame = nsnull;
+  nsIFrame* subScriptFrame = nsnull;
   // parameter v, Rule 18a, Appendix G of the TeXbook
   nscoord minSubScriptShift = 0; 
 

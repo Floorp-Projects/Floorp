@@ -110,7 +110,6 @@ nsMathMLmactionFrame::Init(nsIPresContext*  aPresContext,
                            nsIStyleContext* aContext,
                            nsIFrame*        aPrevInFlow)
 {
-  nsresult rv = NS_OK;
   nsAutoString value, prefix;
 
   // Init our local attributes
