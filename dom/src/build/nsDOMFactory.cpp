@@ -237,6 +237,12 @@ public:
                                  nsISupports *aElement, 
                                  nsISupports *aParent, 
                                  void **aReturn);
+
+  NS_IMETHOD    NewScriptXMLElement(const nsString &aTagName, 
+                                    nsIScriptContext *aContext, 
+                                    nsISupports *aElement, 
+                                    nsISupports *aParent, 
+                                    void **aReturn);
   
   NS_IMETHOD    NewScriptHTMLCollection(nsIScriptContext *aContext, 
                                         nsISupports *aCollection, 
@@ -481,6 +487,16 @@ nsDOMScriptObjectFactory::NewScriptElement(const nsString &aTagName,
     default:
       return NS_NewScriptHTMLElement(aContext, aElement, aParent, aReturn);
   }
+}
+
+NS_IMETHODIMP    
+nsDOMScriptObjectFactory::NewScriptXMLElement(const nsString &aTagName, 
+                                              nsIScriptContext *aContext, 
+                                              nsISupports *aElement, 
+                                              nsISupports *aParent, 
+                                              void **aReturn)
+{
+  return NS_NewScriptElement(aContext, aElement, aParent, aReturn);
 }
 
 NS_IMETHODIMP    

@@ -73,6 +73,12 @@ public:
                                  nsISupports *aParent, 
                                  void **aReturn)=0;
 
+  NS_IMETHOD    NewScriptXMLElement(const nsString &aTagName, 
+                                    nsIScriptContext *aContext, 
+                                    nsISupports *aElement, 
+                                    nsISupports *aParent, 
+                                    void **aReturn)=0;
+
   NS_IMETHOD    NewScriptHTMLCollection(nsIScriptContext *aContext, 
                                         nsISupports *aCollection, 
                                         nsISupports *aParent, 
