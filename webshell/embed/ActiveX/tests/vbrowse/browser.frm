@@ -6,10 +6,10 @@ Begin VB.Form Form1
    ClientHeight    =   5880
    ClientLeft      =   60
    ClientTop       =   345
-   ClientWidth     =   7005
+   ClientWidth     =   7485
    LinkTopic       =   "Form1"
    ScaleHeight     =   5880
-   ScaleWidth      =   7005
+   ScaleWidth      =   7485
    StartUpPosition =   3  'Windows Default
    Begin ComctlLib.StatusBar StatusBar1 
       Align           =   2  'Align Bottom
@@ -17,8 +17,8 @@ Begin VB.Form Form1
       Left            =   0
       TabIndex        =   8
       Top             =   5625
-      Width           =   7005
-      _ExtentX        =   12356
+      Width           =   7485
+      _ExtentX        =   13203
       _ExtentY        =   450
       SimpleText      =   ""
       _Version        =   327682
@@ -26,7 +26,7 @@ Begin VB.Form Form1
          NumPanels       =   1
          BeginProperty Panel1 {0713E89F-850A-101B-AFC0-4210102A8DA7} 
             AutoSize        =   1
-            Object.Width           =   11853
+            Object.Width           =   12700
             Text            =   ""
             TextSave        =   ""
             Key             =   ""
@@ -45,7 +45,9 @@ Begin VB.Form Form1
    End
    Begin VB.ComboBox cmbUrl 
       Height          =   315
+      ItemData        =   "browser.frx":0000
       Left            =   3120
+      List            =   "browser.frx":0016
       TabIndex        =   6
       Text            =   "http://www.mozilla.com"
       Top             =   120
@@ -54,7 +56,7 @@ Begin VB.Form Form1
    Begin MOZILLACONTROLLibCtl.MozillaBrowser Browser1 
       Height          =   4815
       Left            =   0
-      OleObjectBlob   =   "browser.frx":0000
+      OleObjectBlob   =   "browser.frx":00A4
       TabIndex        =   5
       Top             =   600
       Width           =   6975
@@ -99,6 +101,14 @@ Begin VB.Form Form1
       Top             =   120
       Width           =   495
    End
+   Begin VB.Shape Throbber1 
+      FillColor       =   &H0000FF00&
+      FillStyle       =   0  'Solid
+      Height          =   375
+      Left            =   6960
+      Top             =   120
+      Width           =   375
+   End
 End
 Attribute VB_Name = "Form1"
 Attribute VB_GlobalNameSpace = False
@@ -107,10 +117,12 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Private Sub Browser1_BeforeNavigate(ByVal URL As String, ByVal Flags As Long, ByVal TargetFrameName As String, PostData As Variant, ByVal Headers As String, Cancel As Boolean)
     StatusBar1.Panels(1).Text = "Loading " & URL
+    Throbber1.FillColor = &HFF&
 End Sub
 
 Private Sub Browser1_NavigateComplete(ByVal URL As String)
     StatusBar1.Panels(1).Text = "Loaded " & URL
+    Throbber1.FillColor = &HFF00&
 End Sub
 
 Private Sub btnBack_Click()
