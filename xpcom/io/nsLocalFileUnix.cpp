@@ -1229,8 +1229,9 @@ nsLocalFile::GetTarget(char **_retval)
     CHECK_mPath();
     NS_ENSURE_ARG_POINTER(_retval);
 
-    VALIDATE_STAT_CACHE();
-    if (!S_ISLNK(mCachedStat.st_mode))
+    struct stat symStat;
+    lstat(mPath, &symStat);
+    if (!S_ISLNK(symStat.st_mode))
         return NS_ERROR_FILE_INVALID_PATH;
 
     PRInt64 targetSize64;
