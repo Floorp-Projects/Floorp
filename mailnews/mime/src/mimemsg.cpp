@@ -453,7 +453,7 @@ HG09091
     if (input_charset)
     {
       if (!nsCRT::strcasecmp(input_charset, "us-ascii"))
-        SetMailCharacterSetToMsgWindow(obj, NS_LITERAL_STRING("ISO-8859-1"));
+        SetMailCharacterSetToMsgWindow(obj, NS_LITERAL_STRING("ISO-8859-1").get());
       else
         SetMailCharacterSetToMsgWindow(obj, NS_ConvertASCIItoUCS2(input_charset));
     }
