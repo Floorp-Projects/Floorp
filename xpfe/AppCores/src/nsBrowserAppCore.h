@@ -66,6 +66,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    Stop();
 
     NS_IMETHOD    WalletEditor();
+    NS_IMETHOD    WalletChangePassword();
     NS_IMETHOD    WalletSafeFillin(nsIDOMWindow* aWin);
     NS_IMETHOD    WalletQuickFillin(nsIDOMWindow* aWin);
     NS_IMETHOD    WalletSamples();

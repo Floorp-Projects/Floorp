@@ -407,6 +407,21 @@ nsBrowserAppCore::WalletEditor()
 }
 
 NS_IMETHODIMP    
+nsBrowserAppCore::WalletChangePassword()
+{
+  nsIWalletService *walletservice;
+  nsresult res;
+  res = nsServiceManager::GetService(kWalletServiceCID,
+                                     kIWalletServiceIID,
+                                     (nsISupports **)&walletservice);
+  if ((NS_OK == res) && (nsnull != walletservice)) {
+    res = walletservice->WALLET_ChangePassword();
+    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
 nsBrowserAppCore::WalletSafeFillin(nsIDOMWindow* aWin)
 {
   NS_PRECONDITION(aWin != nsnull, "null ptr");
@@ -433,7 +448,7 @@ nsBrowserAppCore::WalletSafeFillin(nsIDOMWindow* aWin)
   }
 
 #ifndef HTMLDialogs 
-  return newWind("file:///y|/htmldlgs.htm");
+  return newWind("file:///htmldlgs.htm");
 #endif
 
   return NS_OK;
@@ -488,6 +503,10 @@ nsBrowserAppCore::WalletSamples() {
   return NS_OK;
 }
 NS_IMETHODIMP
+nsBrowserAppCore::WalletChangePassword() {
+  return NS_OK;
+}
+NS_IMETHODIMP
 nsBrowserAppCore::WalletQuickFillin(nsIDOMWindow*) {
   return NS_OK;
 }
@@ -511,7 +530,7 @@ nsBrowserAppCore::SignonViewer()
     nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
   }
 #ifndef HTMLDialogs 
-  return newWind("file:///y|/htmldlgs.htm");
+  return newWind("file:///htmldlgs.htm");
 #endif
   return NS_OK;
 }
@@ -537,7 +556,7 @@ nsBrowserAppCore::CookieViewer()
     nsServiceManager::ReleaseService(kNetServiceCID, netservice);
   }
 #ifndef HTMLDialogs 
-  return newWind("file:///y|/htmldlgs.htm");
+  return newWind("file:///htmldlgs.htm");
 #endif
   return NS_OK;
 }

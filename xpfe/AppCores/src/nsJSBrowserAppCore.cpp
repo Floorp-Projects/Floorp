@@ -298,6 +298,39 @@ BrowserAppCoreWalletEditor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
 
 //
+// Native method WalletChangePassword
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreWalletChangePassword(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->WalletChangePassword()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function walletChangePassword requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method WalletSafeFillin
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -940,6 +973,7 @@ static JSFunctionSpec BrowserAppCoreMethods[] =
   {"loadUrl",          BrowserAppCoreLoadUrl,     1},
   {"loadInitialPage",          BrowserAppCoreLoadInitialPage,     0},
   {"walletEditor",          BrowserAppCoreWalletEditor,     0},
+  {"walletChangePassword",          BrowserAppCoreWalletChangePassword,     0},
   {"walletSafeFillin",          BrowserAppCoreWalletSafeFillin,     0},
   {"walletQuickFillin",          BrowserAppCoreWalletQuickFillin,     0},
   {"walletSamples",          BrowserAppCoreWalletSamples,     0},
