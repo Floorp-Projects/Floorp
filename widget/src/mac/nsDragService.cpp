@@ -426,7 +426,8 @@ nsDragService :: DragSendDataProc ( FlavorType inFlavor, void* inRefCon, ItemRef
         // make the data accessable to the DragManager
         retVal = ::SetDragItemFlavorData ( inDragRef, inItemRef, inFlavor, data, dataSize, 0 );
         NS_ASSERTION ( retVal == noErr, "SDIFD failed in DragSendDataProc" );
-    }  
+    }
+    delete [] data;
   } // if valid refcon
   
   return retVal;

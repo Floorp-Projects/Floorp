@@ -142,6 +142,8 @@ nsClipboard :: SetNativeClipboardData()
       long numBytes = ::PutScrap ( dataSize, macOSFlavor, data );
       if ( numBytes != dataSize )
         errCode = NS_ERROR_FAILURE;
+        
+      delete [] data;
     }
   } // foreach flavor in transferable
   delete flavorList;
