@@ -1766,7 +1766,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
                   DeleteMessage(message, msgWindow, PR_TRUE);
               }
           }
-		  if(isMove)
+		  if(!isMove)
         NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
       }
   }
