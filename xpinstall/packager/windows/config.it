@@ -291,9 +291,9 @@ Message=Preparing SmartUpdate, please wait...
 ;Destination=[TEMP]\Test\temp
 
 ;Delete FileX sections
-;[Delete File0]
-;Timing=post launchapp
-;Destination=[Setup Path]\install.js
+[Delete File0]
+Timing=post download
+Destination=[COMMON_PROGRAMS]\Netscape Seamonkey\Netscape AppRunner.lnk
 
 ;Remove DirectoryX sections
 ;[Remove Directory0]
