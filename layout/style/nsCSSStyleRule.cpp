@@ -2032,11 +2032,23 @@ MapDeclarationColorInto(nsICSSDeclaration* aDeclaration,
       if (eCSSUnit_Inherit == ourColor->mBackColor.GetUnit()) { // do inherit first, so SetColor doesn't do it
         const nsStyleColor* inheritColor = parentColor;
         if (inheritColor->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_TO_PARENT) {
+          // walk up the contexts until we get to a context that does not have its
+          // background propagated to its parent (or a context that has had its background
+          // propagated from its child)
           if (nsnull != aParentContext) {
-            nsIStyleContext* grandParentContext = aParentContext->GetParent();
-            if (nsnull != grandParentContext) {
-              inheritColor = (const nsStyleColor*)grandParentContext->GetStyleData(eStyleStruct_Color);
-            }
+            nsCOMPtr<nsIStyleContext> higherContext = getter_AddRefs(aParentContext->GetParent());
+            do {
+              if (higherContext) {
+                inheritColor = (const nsStyleColor*)higherContext->GetStyleData(eStyleStruct_Color);
+                if (inheritColor && 
+                    (!(inheritColor->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_TO_PARENT)) ||
+                    (inheritColor->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_FROM_CHILD)) {
+                  // done walking up the higher contexts
+                  break;
+                }
+                higherContext = getter_AddRefs(higherContext->GetParent());
+              }
+            } while (higherContext);
           }
         }
         color->mBackgroundColor = inheritColor->mBackgroundColor;

@@ -2072,8 +2072,10 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
 {
   NS_ASSERTION(aForFrame, "Frame is expected to be provided to PaintBackground");
 
-  PRBool        transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
-                                  (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
+  // consider it transparent if transparent is set, or if it is propagated to the parent
+  PRBool        transparentBG = 
+                  (NS_STYLE_BG_COLOR_TRANSPARENT == (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) ||
+                  (aColor.mBackgroundFlags & NS_STYLE_BG_PROPAGATED_TO_PARENT);
   float         percent;
   nsStyleCoord  bordStyleRadius[4];
   PRInt16       borderRadii[4],i;
@@ -2208,7 +2210,6 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
       if (scrollFrame) {
         nsCOMPtr<nsIScrollableFrame> scrollableFrame ( do_QueryInterface(scrollFrame) );
         if ( scrollableFrame ) {
-
           scrollableFrame->GetScrolledFrame(aPresContext, scrolledFrame);
           if (scrolledFrame) {
             nsRect rect;
@@ -2231,8 +2232,8 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
         NS_RELEASE(presShell);
         rootFrame->GetView(aPresContext, (nsIView**)&viewportView);
 
-	    NS_ASSERTION(viewportView, "no viewport view");
-	    viewportView->GetDimensions(&viewportArea.width, &viewportArea.height);
+	      NS_ASSERTION(viewportView, "no viewport view");
+	      viewportView->GetDimensions(&viewportArea.width, &viewportArea.height);
       }
     }
 
@@ -2477,30 +2478,28 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
     // See if there's a background color specified. The background color
     // is rendered over the 'border' 'padding' and 'content' areas
     if (!transparentBG) {
+      // get the radius for our border
+      aSpacing.mBorderRadius.GetTop(bordStyleRadius[0]);      //topleft
+      aSpacing.mBorderRadius.GetRight(bordStyleRadius[1]);    //topright
+      aSpacing.mBorderRadius.GetBottom(bordStyleRadius[2]);   //bottomright
+      aSpacing.mBorderRadius.GetLeft(bordStyleRadius[3]);     //bottomleft
 
-
-    // get the radius for our border
-    aSpacing.mBorderRadius.GetTop(bordStyleRadius[0]);      //topleft
-    aSpacing.mBorderRadius.GetRight(bordStyleRadius[1]);    //topright
-    aSpacing.mBorderRadius.GetBottom(bordStyleRadius[2]);   //bottomright
-    aSpacing.mBorderRadius.GetLeft(bordStyleRadius[3]);     //bottomleft
-
-    for(i=0;i<4;i++) {
-      borderRadii[i] = 0;
-      switch ( bordStyleRadius[i].GetUnit()) {
-        case eStyleUnit_Inherit:
-          break;
-        case eStyleUnit_Percent:
-          percent = bordStyleRadius[i].GetPercentValue();
-          borderRadii[i] = (nscoord)(percent * aBorderArea.width);
-          break;
-        case eStyleUnit_Coord:
-          borderRadii[i] = bordStyleRadius[i].GetCoordValue();
-          break;
-        default:
-          break;
+      for(i=0;i<4;i++) {
+        borderRadii[i] = 0;
+        switch ( bordStyleRadius[i].GetUnit()) {
+          case eStyleUnit_Inherit:
+            break;
+          case eStyleUnit_Percent:
+            percent = bordStyleRadius[i].GetPercentValue();
+            borderRadii[i] = (nscoord)(percent * aBorderArea.width);
+            break;
+          case eStyleUnit_Coord:
+            borderRadii[i] = bordStyleRadius[i].GetCoordValue();
+            break;
+          default:
+            break;
+        }
       }
-    }
 
 
       // rounded version of the border
@@ -2515,7 +2514,6 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
       aRenderingContext.FillRect(aBorderArea);
     }
   }
-
 }
 
 /** ---------------------------------------------------

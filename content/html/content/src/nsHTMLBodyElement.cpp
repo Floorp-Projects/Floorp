@@ -566,7 +566,8 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aP
     canvasStyleColor->mBackgroundXPosition = styleColor->mBackgroundXPosition;
     canvasStyleColor->mBackgroundYPosition = styleColor->mBackgroundYPosition;
     canvasStyleColor->mBackgroundImage = styleColor->mBackgroundImage;
-    canvasStyleColor->mBackgroundFlags = styleColor->mBackgroundFlags;
+    canvasStyleColor->mBackgroundFlags = (styleColor->mBackgroundFlags & ~NS_STYLE_BG_PROPAGATED_TO_PARENT);
+    canvasStyleColor->mBackgroundFlags |= NS_STYLE_BG_PROPAGATED_FROM_CHILD;
 
     bFixedBackground = 
       canvasStyleColor->mBackgroundAttachment == NS_STYLE_BG_ATTACHMENT_FIXED ? PR_TRUE : PR_FALSE;
@@ -579,7 +580,14 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aP
                                    NS_STYLE_BG_PROPAGATED_TO_PARENT;  
                                     // NOTE: if this was the BODY then 
                                     // this flag is somewhat erroneous 
-                                    // as it was propogated to the GRANDPARENT
+                                    // as it was propogated to the GRANDPARENT!
+                                    // We patch this next by marking the HTML's
+                                    // background as propagated too, so we can walk
+                                    // up the chain of contexts that have to propagation
+                                    // bit set (see nsCSSStyleRule.cpp MapDeclarationColorInto)
+    if (styleColor == bodyStyleColor) {
+      htmlStyleColor->mBackgroundFlags |= NS_STYLE_BG_PROPAGATED_TO_PARENT;
+    }
   }
 
   nsCOMPtr<nsIPresShell> presShell;
