@@ -62,9 +62,6 @@ static const char *kPrintProgressDialogURL = "chrome://global/content/printProgr
 static const char *kPrtPrvProgressDialogURL = "chrome://global/content/printPreviewProgress.xul";
 static const char *kPageSetupDialogURL     = "chrome://communicator/content/printPageSetup.xul";
 
-#define NS_DIALOGPARAMBLOCK_CONTRACTID \
- "@mozilla.org/embedcomp/dialogparam;1"
-
 /****************************************************************
  ************************* ParamBlock ***************************
  ****************************************************************/

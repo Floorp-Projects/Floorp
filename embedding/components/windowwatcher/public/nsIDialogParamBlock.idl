@@ -50,8 +50,6 @@ interface nsIDialogParamBlock:  nsISupports {
 };
 
 %{C++
-// {f76c0901-437a-11d3-b7a0-e35db351b4bc}
-#define NS_DIALOGPARAMBLOCK_IID \
- {0xf76c0901, 0x437a, 0x11d3, {0xb7, 0xa0, 0xe3, 0x5d, 0xb3, 0x51, 0xb4, 0xbc}}
+#define NS_DIALOGPARAMBLOCK_CONTRACTID "@mozilla.org/embedcomp/dialogparam;1"
 %}
 

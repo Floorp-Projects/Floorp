@@ -666,7 +666,7 @@ NS_IMETHODIMP
 nsXPInstallManager::LoadParams(PRUint32 aCount, const PRUnichar** aPackageList, nsIDialogParamBlock** aParams)
 {
     nsIDialogParamBlock* paramBlock = 0;
-    nsresult rv = nsComponentManager::CreateInstance("@mozilla.org/embedcomp/dialogparam;1",
+    nsresult rv = nsComponentManager::CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID,
                                             nsnull,
                                             NS_GET_IID(nsIDialogParamBlock),
                                             (void**)&paramBlock);
