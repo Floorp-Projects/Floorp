@@ -217,7 +217,6 @@ en-US.jar:
     locale/en-US/messenger/offline.properties                           (base/resources/locale/en-US/offline.properties)
     locale/en-US/messenger/junkMail.dtd                                 (base/resources/locale/en-US/junkMail.dtd)
     locale/en-US/messenger/start.html                                   (base/resources/locale/en-US/start.html)  
-    locale/en-US/messenger/mail_mozilla.gif                             (base/resources/locale/en-US/mail_mozilla.gif)  
     locale/en-US/messenger/junkMailInfo.dtd                             (base/resources/locale/en-US/junkMailInfo.dtd)
     locale/en-US/messenger/SearchDialog.dtd                             (base/search/resources/locale/en-US/SearchDialog.dtd)
     locale/en-US/messenger/viewLog.dtd                                  (base/search/resources/locale/en-US/viewLog.dtd)
