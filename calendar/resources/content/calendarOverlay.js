@@ -100,7 +100,7 @@ function addEventToDialog( Event )
              calendarAlarmWindow.pendingEvents = new Array();
          }
            
-         //dump( "\n ADDING PENDING EVENT TO DIALOG _______________________" );
+         dump( "\n ADDING PENDING EVENT TO DIALOG _______________________" );
          
          calendarAlarmWindow.pendingEvents.push( Event );
       }

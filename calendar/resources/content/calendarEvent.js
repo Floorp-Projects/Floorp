@@ -703,7 +703,7 @@ CalendarAlarmObserver.prototype.fireAlarm = function calAlarm_fireAlarm( calenda
       playSound();
    }
    
-   addEventToDialog(  calendarEvent );
+   addEventToDialog( calendarEvent );
 
    if ( calendarEvent.alarmEmailAddress )
    {

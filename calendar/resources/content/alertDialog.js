@@ -146,7 +146,7 @@ function createAlarmBox( Event )
    
    OuterBox.getElementsByAttribute( "name", "SnoozeButton" )[0].setAttribute( "onclick", "snoozeAlarm( this.event );removeAlarmBox( this.event );" ); 
    
-   OuterBox.getElementsByAttribute( "name", "alarm-length-field" )[0].value = opener.getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultsnoozelength", 60 );
+   OuterBox.getElementsByAttribute( "name", "alarm-length-field" )[0].value = opener.getIntPref(opener.gCalendarWindow.calendarPreferences.calendarPref, "event.defaultsnoozelength", 60 );
       
    kungFooDeathGripOnEventBoxes.push( OuterBox.getElementsByAttribute( "name", "SnoozeButton" )[0] );
    
@@ -159,13 +159,13 @@ function createAlarmBox( Event )
    var EventDescription = document.createTextNode( Event.description );
    OuterBox.getElementsByAttribute( "name", "Description" )[0].appendChild( EventDescription );
 
-   var startDate = new Date( Event.start.getTime() );
+   var displayDate = new Date( Event.displayDate );
 
-   var EventStartDate = document.createTextNode( getFormatedDate( startDate ) );
-   OuterBox.getElementsByAttribute( "name", "StartDate" )[0].appendChild( EventStartDate );
+   var EventDisplayDate = document.createTextNode( getFormatedDate( displayDate ) );
+   OuterBox.getElementsByAttribute( "name", "StartDate" )[0].appendChild( EventDisplayDate );
 
-   var EventStartTime = document.createTextNode( getFormatedTime( startDate ) );
-   OuterBox.getElementsByAttribute( "name", "StartTime" )[0].appendChild( EventStartTime );
+   var EventDisplayTime = document.createTextNode( getFormatedTime( displayDate ) );
+   OuterBox.getElementsByAttribute( "name", "StartTime" )[0].appendChild( EventDisplayTime );
 
    /*
    ** 3rd part of the row: the number of times that alarm went off (sometimes hidden)
