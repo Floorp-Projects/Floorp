@@ -112,6 +112,8 @@
 # $answer{'ADMIN_PASSWORD'} = 'fooey';
 # $answer{'ADMIN_REALNAME'} = 'Joel Peshkin';
 #
+# $answer{'SMTP_SERVER'} = 'mail.mydomain.net';
+#
 #
 # Note: Only information that supersedes defaults from LocalVar()
 # function calls needs to be specified in this file.
@@ -1278,6 +1280,24 @@ if (@oldparams) {
     }
     print "\n";
     close PARAMFILE;
+}
+
+# Set maildeliverymethod to SMTP and prompt for SMTP server
+# if running on Windows and set to sendmail (Mail::Mailer doesn't
+# support sendmail on Windows)
+if ($^O =~ /MSWin32/i && Param('maildeliverymethod') eq 'sendmail') {
+    print "\nBugzilla requires an SMTP server to function on Windows.\n" .
+        "Please enter your SMTP server's hostname: ";
+    my $smtp = $answer{'SMTP_SERVER'} 
+        || ($silent && die("cant preload SMTP_SERVER")) 
+        || <STDIN>;
+    chomp $smtp;
+    if (!$smtp) {
+        print "\nWarning: No SMTP Server provided, defaulting to localhost\n";
+        $smtp = 'localhost';
+    }
+    SetParam('maildeliverymethod', 'smtp');
+    SetParam('smtpserver', $smtp);
 }
 
 # WriteParams will only write out still-valid entries

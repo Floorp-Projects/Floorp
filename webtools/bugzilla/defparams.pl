@@ -686,7 +686,9 @@ sub find_languages {
            'is useful for debugging (for more information see the ' .
            'Mail::Mailer manual)',
    type => 's',
-   choices => ['sendmail', 'smtp', 'qmail', 'testfile'],
+   choices => $^O =~ /MSWin32/i 
+                  ? ['smtp', 'testfile']
+                  : ['sendmail', 'smtp', 'qmail', 'testfile'],
    default => 'sendmail',
    checker => \&check_multi
   },
