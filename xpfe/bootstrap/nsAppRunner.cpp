@@ -854,6 +854,15 @@ static nsresult DoOnShutdown()
 {
   nsresult rv;
 
+  // save the prefs, in case they weren't saved
+  {
+    // scoping this in a block to force release
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get prefs, so unable to save them");
+    if (NS_SUCCEEDED(rv))
+      prefs->SavePrefFile(nsnull);
+  }
+
   // call ShutDownCurrentProfile() so we update the last modified time of the profile
   {
     // scoping this in a block to force release
@@ -863,15 +872,6 @@ static nsresult DoOnShutdown()
       // 0 is undefined, we use this secret value so that we don't notify
       profileMgr->ShutDownCurrentProfile(0);
     }
-  }
-
-  // save the prefs, in case they weren't saved
-  {
-    // scoping this in a block to force release
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get prefs, so unable to save them");
-    if (NS_SUCCEEDED(rv))
-      prefs->SavePrefFile(nsnull);
   }
 
   // at this point, all that is on the clipboard is a proxy object, but that object
