@@ -14,6 +14,8 @@
     ICInstance internetConfig;
 }
 
++ (CHPreferenceManager *)sharedInstance;
+
 - (id) init;
 - (void) dealloc;
 - (BOOL) initInternetConfig;
@@ -21,6 +23,6 @@
 - (void) syncMozillaPrefs;
 // - (BOOL) getICBoolPref:(ConstStr255Param) prefKey;
 - (NSString *) getICStringPref:(ConstStr255Param) prefKey;
-- (NSString *) homePage;
+- (NSString *) homePage:(BOOL) checkStartupPagePref;
 
 @end

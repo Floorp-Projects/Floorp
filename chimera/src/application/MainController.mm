@@ -70,7 +70,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 -(void)awakeFromNib
 {
-    mPreferenceManager = [[CHPreferenceManager alloc] init];
+    mPreferenceManager = [[CHPreferenceManager sharedInstance] retain];
 
     [self newWindow: self];
     
@@ -107,8 +107,9 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
     [[mainWindow windowController] autosaveWindowFrame];
 
   // Now open the new window.
-  BrowserWindowController* controller = [self openBrowserWindowWithURLString: [mPreferenceManager homePage]];
-  if ([[mPreferenceManager homePage] isEqualToString: @"about:blank"])
+  NSString* homePage = [mPreferenceManager homePage:YES];
+  BrowserWindowController* controller = [self openBrowserWindowWithURLString:homePage];
+  if ([homePage isEqualToString: @"about:blank"])
     [controller focusURLBar];
   else
     [[[controller getBrowserWrapper] getBrowserView] setActive: YES];

@@ -38,6 +38,7 @@
 #import "BrowserWindowController.h"
 #import "CHBrowserWrapper.h"
 #import "CHIconTabViewItem.h"
+#import "CHPreferenceManager.h"
 
 #include "nsIWebNavigation.h"
 #include "nsIDOMElement.h"
@@ -54,7 +55,6 @@
 #include "nsCRT.h"
 #include "CHGeckoUtils.h"
 #include "nsIWebProgressListener.h"
-
 
 static NSString *BrowserToolbarIdentifier	= @"Browser Window Toolbar";
 static NSString *BackToolbarItemIdentifier	= @"Back Toolbar Item";
@@ -608,7 +608,7 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 
 - (IBAction)home:(id)aSender
 {
-  [[mBrowserView getBrowserView] loadURI:[NSURL URLWithString:@"about:blank"] flags:NSLoadFlagsNone];
+  [[mBrowserView getBrowserView] loadURI:[NSURL URLWithString:[[CHPreferenceManager sharedInstance] homePage:NO]] flags:NSLoadFlagsNone];
 }
 
 - (IBAction)toggleSidebar:(id)aSender
