@@ -64,10 +64,6 @@ const short kWindowMarginWidth = 6;
 const short kDialogTitleBarHeight = 26;
 const short kDialogMarginWidth = 6;
 
-#if !TARGET_CARBON
-DragTrackingHandlerUPP nsMacWindow::sDragTrackingHandlerUPP = NewDragTrackingHandlerProc(DragTrackingHandler);
-DragReceiveHandlerUPP nsMacWindow::sDragReceiveHandlerUPP = NewDragReceiveHandlerProc(DragReceiveHandler);
-#endif
 
 void SetDragActionBasedOnModifiers ( nsIDragService* inDragService, short inModifiers ) ; 
 
@@ -278,6 +274,10 @@ nsMacWindow::nsMacWindow() : Inherited()
   //mMacEventHandler.reset(new nsMacEventHandler(this));
 	mMacEventHandler = (auto_ptr<nsMacEventHandler>) new nsMacEventHandler(this);
 	WIDGET_SET_CLASSNAME("nsMacWindow");	
+
+  // create handlers for drag&drop
+  mDragTrackingHandlerUPP = NewDragTrackingHandlerUPP(DragTrackingHandler);
+  mDragReceiveHandlerUPP = NewDragReceiveHandlerUPP(DragReceiveHandler);
 }
 
 
@@ -302,10 +302,15 @@ nsMacWindow::~nsMacWindow()
 			::DisposeWindow(mWindowPtr);
       
 		// clean up DragManager stuff
-#if !TARGET_CARBON
-		::RemoveTrackingHandler ( sDragTrackingHandlerUPP, mWindowPtr );
-		::RemoveReceiveHandler ( sDragReceiveHandlerUPP, mWindowPtr );
-#endif
+		if ( mDragTrackingHandlerUPP ) {
+		  ::RemoveTrackingHandler ( mDragTrackingHandlerUPP, mWindowPtr );
+		  ::DisposeDragTrackingHandlerUPP ( mDragTrackingHandlerUPP );
+		 }
+		if ( mDragReceiveHandlerUPP ) {
+		  ::RemoveReceiveHandler ( mDragReceiveHandlerUPP, mWindowPtr );
+		  ::DisposeDragReceiveHandlerUPP ( mDragReceiveHandlerUPP );
+		}
+
 		nsMacMessageSink::RemoveRaptorWindowFromList(mWindowPtr);
 		mWindowPtr = nsnull;
 	}
@@ -534,16 +539,15 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   ::EmbedControl ( rootControl, mPhantomScrollbar );
     
 	// register tracking and receive handlers with the native Drag Manager
-#if !TARGET_CARBON
-	if ( sDragTrackingHandlerUPP ) {
-		OSErr result = ::InstallTrackingHandler ( sDragTrackingHandlerUPP, mWindowPtr, this );
+	if ( mDragTrackingHandlerUPP ) {
+		OSErr result = ::InstallTrackingHandler ( mDragTrackingHandlerUPP, mWindowPtr, this );
 		NS_ASSERTION ( result == noErr, "can't install drag tracking handler");
 	}
-	if ( sDragReceiveHandlerUPP ) {
-		OSErr result = ::InstallReceiveHandler ( sDragReceiveHandlerUPP, mWindowPtr, this );
+	if ( mDragReceiveHandlerUPP ) {
+		OSErr result = ::InstallReceiveHandler ( mDragReceiveHandlerUPP, mWindowPtr, this );
 		NS_ASSERTION ( result == noErr, "can't install drag receive handler");
 	}
-#endif
+
 	return NS_OK;
 }
 
