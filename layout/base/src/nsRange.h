@@ -21,6 +21,7 @@
  */
 
 #include "nsIDOMRange.h"
+#include "nsCOMPtr.h"
 
 class nsIDOMNode;
 class nsIDOMDocumentFragment;
@@ -92,14 +93,14 @@ public:
 
 private:
   PRBool       mIsPositioned;
-  nsIDOMNode   *mStartParent;
-  nsIDOMNode   *mEndParent;
   PRInt32      mStartOffset;
   PRInt32      mEndOffset;
+  nsCOMPtr<nsIDOMNode> mStartParent;
+  nsCOMPtr<nsIDOMNode> mEndParent;
   static nsVoidArray  *mStartAncestors;       // just keeping these around to avoid reallocing the arrays.
   static nsVoidArray  *mEndAncestors;         // the contents of these arrays are discarded across calls.
-  static nsVoidArray  *mStartAncestorOffsets; //
-  static nsVoidArray  *mEndAncestorOffsets;   //
+  static nsVoidArray  *mStartAncestorOffsets; // 
+  static nsVoidArray  *mEndAncestorOffsets;   // XXX - thread safety alert - need to lock usage of these
 
   // no copy's or assigns
   nsRange(const nsRange&);
@@ -107,49 +108,73 @@ private:
   
   // helper routines
   
-  static PRBool        InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
-  static PRInt32       IndexOf(nsIDOMNode* aNode);
-  static PRInt32       FillArrayWithAncestors(nsVoidArray* aArray,nsIDOMNode* aNode);
-  static nsIDOMNode*   CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
-  static nsresult      GetDOMNodeFromContent(nsIContent* inContentNode, nsIDOMNode** outDomNode);
-  static nsresult      GetContentFromDOMNode(nsIDOMNode* inDomNode, nsIContent** outContentNode);
-  static nsresult      PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* aSourceNode);
+  static PRBool        InSameDoc(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr<nsIDOMNode> aNode2);
+  static PRInt32       IndexOf(nsCOMPtr<nsIDOMNode> aNode);
+  static PRInt32       FillArrayWithAncestors(nsVoidArray* aArray,nsCOMPtr<nsIDOMNode> aNode);
+  static nsCOMPtr<nsIDOMNode>   CommonParent(nsCOMPtr<nsIDOMNode> aNode1, nsCOMPtr<nsIDOMNode> aNode2);
+  static nsresult      GetDOMNodeFromContent(nsCOMPtr<nsIContent> inContentNode, nsCOMPtr<nsIDOMNode>* outDomNode);
+  static nsresult      GetContentFromDOMNode(nsCOMPtr<nsIDOMNode> inDomNode, nsCOMPtr<nsIContent>* outContentNode);
+  static nsresult      PopRanges(nsCOMPtr<nsIDOMNode> aDestNode, PRInt32 aOffset, nsCOMPtr<nsIContent> aSourceNode);
   
-  static nsresult CloneSibsAndParents(nsIDOMNode* parentNode,
+  static nsresult CloneSibsAndParents(nsCOMPtr<nsIDOMNode> parentNode,
                                       PRInt32 nodeOffset,
-                                      nsIDOMNode* clonedNode,
-                                      nsIDOMNode* commonParent,
-                                      nsIDOMDocumentFragment* docfrag,
+                                      nsCOMPtr<nsIDOMNode> clonedNode,
+                                      nsCOMPtr<nsIDOMNode> commonParent,
+                                      nsCOMPtr<nsIDOMDocumentFragment> docfrag,
                                       PRBool leftP);
 
-  nsresult      DoSetRange(nsIDOMNode* aStartN, PRInt32 aStartOffset,
-                             nsIDOMNode* aEndN, PRInt32 aEndOffset);
+  nsresult      DoSetRange(nsCOMPtr<nsIDOMNode> aStartN, PRInt32 aStartOffset,
+                             nsCOMPtr<nsIDOMNode> aEndN, PRInt32 aEndOffset);
 
-  PRBool        IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOff,
-                             nsIDOMNode* aEndN, PRInt32 aEndOff);
+  PRBool        IsIncreasing(nsCOMPtr<nsIDOMNode> aStartN, PRInt32 aStartOff,
+                             nsCOMPtr<nsIDOMNode> aEndN, PRInt32 aEndOff);
                        
-  nsresult      IsPointInRange(nsIDOMNode* aParent, PRInt32 aOffset, PRBool* aResult);
+  nsresult      IsPointInRange(nsCOMPtr<nsIDOMNode> aParent, PRInt32 aOffset, PRBool* aResult);
   
-  nsresult      ComparePointToRange(nsIDOMNode* aParent, PRInt32 aOffset, PRInt32* aResult);
+  nsresult      ComparePointToRange(nsCOMPtr<nsIDOMNode> aParent, PRInt32 aOffset, PRInt32* aResult);
   
   
-  PRInt32       GetAncestorsAndOffsets(nsIDOMNode* aNode, PRInt32 aOffset,
+  PRInt32       GetAncestorsAndOffsets(nsCOMPtr<nsIDOMNode> aNode, PRInt32 aOffset,
                         nsVoidArray* aAncestorNodes, nsVoidArray* aAncestorOffsets);
   
-  nsresult      AddToListOf(nsIDOMNode* aNode);
+  nsresult      AddToListOf(nsCOMPtr<nsIDOMNode> aNode);
   
-  nsresult      RemoveFromListOf(nsIDOMNode* aNode);
+  nsresult      RemoveFromListOf(nsCOMPtr<nsIDOMNode> aNode);
  
-  nsresult      ContentOwnsUs(nsIDOMNode* domNode);
+  nsresult      ContentOwnsUs(nsCOMPtr<nsIDOMNode> domNode);
 };
 
 // Make a new nsIDOMRange object
 nsresult NS_NewRange(nsIDOMRange** aInstancePtrResult);
 
-//
-// Utility routine to compare two "points", were a point is a node/offset pair
-// Returns -1 if point1 < point2, 1, if point1 > point2,
-// 0 if error or if point1 == point2.
-//
+
+/*************************************************************************************
+ *  Utility routine to compare two "points", were a point is a node/offset pair
+ *  Returns -1 if point1 < point2, 1, if point1 > point2,
+ *  0 if error or if point1 == point2.
+ ************************************************************************************/
 PRInt32 ComparePoints(nsIDOMNode* aParent1, PRInt32 aOffset1,
                       nsIDOMNode* aParent2, PRInt32 aOffset2);
+
+
+/*************************************************************************************
+ *  Utility routine to detect if a content node intersects a range
+ ************************************************************************************/
+PRBool IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange);
+
+
+/*************************************************************************************
+ *  Utility routine to detect if a content node is completely contained in a range
+ ************************************************************************************/
+PRBool IsNodeInsideRange(nsIContent* aNode, nsIDOMRange* aRange);
+
+
+/*************************************************************************************
+ * Utility routine to create a pair of dom points to represent 
+ * the start and end locations of a single node.  Return false
+ * if we dont' succeed.
+ ************************************************************************************/
+PRBool GetNodeBracketPoints(nsIContent* aNode, 
+                            nsCOMPtr<nsIDOMNode>* outParent,
+                            PRInt32* outStartOffset,
+                            PRInt32* outEndOffset);
