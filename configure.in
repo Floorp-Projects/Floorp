@@ -2483,8 +2483,9 @@ if test "$_PEDANTIC"; then
 fi
 
 dnl pass -Wno-long-long to the compiler
-MOZ_ARG_ENABLE_BOOL(ignore-no-long-long-warning,
-[  --enable-ignore-no-long-long-warning       pass -Wno-long-long to the compiler], _IGNORE_LONG_LONG_WARNINGS=)
+MOZ_ARG_ENABLE_BOOL(long-long-warning,
+[  --enable-long-long-warning Pass -Wno-long-long to the compiler],
+  _IGNORE_LONG_LONG_WARNINGS=)
 if test "$_IGNORE_LONG_LONG_WARNINGS"; then
      _SAVE_CFLAGS="$CFLAGS"
      CFLAGS="$CFLAGS -Wno-long-long"
