@@ -84,3 +84,4 @@ DEFINES		+= -D_IMPL_NS_WIDGET -I$(srcdir)/../xpwidgets -I$(srcdir)
 
 CXXFLAGS	+= $(TK_CFLAGS)
 
+ADD_TO_DEF_FILE = cat < $(srcdir)/extradefs.os2 >>$(DEF_FILE)
