@@ -228,14 +228,25 @@ nsLayoutUtils::CompareTreePosition(nsIContent* aContent1, nsIContent* aContent2,
   NS_PRECONDITION(aContent2, "aContent2 must not be null");
 
   nsAutoVoidArray content1Ancestors;
-  nsAutoVoidArray content2Ancestors;
-  nsIContent* c;
-
-  for (c = aContent1; c != aCommonAncestor; c = c->GetParent()) {
-    content1Ancestors.AppendElement(c);
+  nsIContent* c1;
+  for (c1 = aContent1; c1 && c1 != aCommonAncestor; c1 = c1->GetParent()) {
+    content1Ancestors.AppendElement(c1);
   }
-  for (c = aContent2; c != aCommonAncestor; c = c->GetParent()) {
-    content2Ancestors.AppendElement(c);
+  if (!c1 && aCommonAncestor) {
+    // So, it turns out aCommonAncestor was not an ancestor of c1. Oops.
+    // Never mind. We can continue as if aCommonAncestor was null.
+    aCommonAncestor = nsnull;
+  }
+
+  nsAutoVoidArray content2Ancestors;
+  nsIContent* c2;
+  for (c2 = aContent2; c2 && c2 != aCommonAncestor; c2 = c2->GetParent()) {
+    content2Ancestors.AppendElement(c2);
+  }
+  if (!c2 && aCommonAncestor) {
+    // So, it turns out aCommonAncestor was not an ancestor of c2.
+    // We need to retry with no common ancestor hint.
+    return CompareTreePosition(aContent1, aContent2, nsnull);
   }
   
   int last1 = content1Ancestors.Count() - 1;
