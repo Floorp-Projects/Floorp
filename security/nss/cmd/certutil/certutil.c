@@ -312,62 +312,35 @@ AddCert(PK11SlotInfo *slot, CERTCertDBHandle *handle, char *name, char *trusts,
 	    GEN_BREAK(SECFailure);
 	}
 
-	if ( emailcert ) {
-	    CERTIssuerAndSN *issuerAndSN;
-	    SECItem *derCert;
+	/* CERT_ImportCert only collects certificates and returns the
+	* first certficate.  It does not insert these certificates into
+	* the dbase.  For now, just call CERT_NewTempCertificate.
+	* This will result in decoding the der twice.  This have to
+	* be handle properly.
+	*/
 
-	    issuerAndSN = CERT_GetCertIssuerAndSN(NULL, cert);
-	    derCert = &cert->derCert;
-	    
-#ifdef NOTDEF /* take this out for now */
-	    tempCert = CERT_ImportCertsFromSMIME(handle, 1, &derCert,
-						 issuerAndSN, NULL, NULL,
-						 NULL, PR_TRUE);
-#else
-	    tempCert = NULL;
-#endif
-	    if (tempCert == NULL) {
-		SECU_PrintError(progName,
-			"unable to add email cert to the temp database");
-		GEN_BREAK(SECFailure);
-	    }
+	tempCert = CERT_NewTempCertificate(handle, &cert->derCert, NULL,
+	                                   PR_FALSE, PR_TRUE);
 
-	} else {
-	    /* Make sure there isn't a nickname conflict */
-	    if (SEC_CertNicknameConflict(name, &cert->derSubject, handle)) {
-		SECU_PrintError(progName, "certificate '%s' conflicts", name);
-		GEN_BREAK(SECFailure);
-	    }
-
-	    /* CERT_ImportCert only collects certificates and returns the
-	     * first certficate.  It does not insert these certificates into
-	     * the dbase.  For now, just call CERT_NewTempCertificate.
-	     * This will result in decoding the der twice.  This have to
-	     * be handle properly.
-	     */
-
-	    tempCert = CERT_NewTempCertificate(handle, &cert->derCert, NULL,
-					       PR_FALSE, PR_TRUE);
-
-	    if (!PK11_IsInternal(slot)) {
-		tempCert->trust = trust;
-		rv = PK11_ImportCertForKeyToSlot(slot, tempCert, name,
-		                                 PR_FALSE, NULL);
-	    }
-
-	    if (tempCert == NULL) {
-		SECU_PrintError(progName,
-				"unable to add cert to the temp database");
-		GEN_BREAK(SECFailure);
-	    }
-
-	    rv = CERT_AddTempCertToPerm(tempCert, name, trust);
-	    if (rv) {
-		SECU_PrintError(progName, 
-				"could not add certificate to database");
-		GEN_BREAK(SECFailure);
-	    }
+	if (!PK11_IsInternal(slot)) {
+	    tempCert->trust = trust;
+	    rv = PK11_ImportCertForKeyToSlot(slot, tempCert, name,
+	                                     PR_FALSE, NULL);
 	}
+
+	if (tempCert == NULL) {
+	    SECU_PrintError(progName,"unable to add cert to the temp database");
+	    GEN_BREAK(SECFailure);
+	}
+
+	rv = CERT_AddTempCertToPerm(tempCert, name, trust);
+	if (rv) {
+	    SECU_PrintError(progName, "could not add certificate to database");
+	    GEN_BREAK(SECFailure);
+	}
+
+	if ( emailcert )
+	    CERT_SaveSMimeProfile(tempCert, NULL, NULL);
     } while (0);
 
     CERT_DestroyCertificate (tempCert);
@@ -2181,14 +2154,6 @@ main(int argc, char **argv)
     if (certutil.commands[cmd_PrintHelp].activated)
 	LongUsage(progName);
 
-#if 0
-    /*  Not supported at the moment.  */
-    /*  -E  add email cert */
-    if (certutil.commands[cmd_AddEmailCert].activated) {
-	certutil.commands[cmd_AddCert].activated = PR_TRUE;
-    }
-#endif
-
     if (certutil.options[opt_PasswordFile].arg) {
 	pwdata.source = PW_FROMFILE;
 	pwdata.data = certutil.options[opt_PasswordFile].arg;
@@ -2325,8 +2290,9 @@ main(int argc, char **argv)
 	return -1;
     }
 
-    /*  -A, -M, -S require trust  */
+    /*  -A, -E, -M, -S require trust  */
     if ((certutil.commands[cmd_AddCert].activated ||
+         certutil.commands[cmd_AddEmailCert].activated ||
          certutil.commands[cmd_ModifyCertTrust].activated ||
          certutil.commands[cmd_CreateAndAddCert].activated) &&
         !certutil.options[opt_Trust].activated) {
@@ -2615,12 +2581,13 @@ main(int argc, char **argv)
     }
 
     if (certutil.commands[cmd_CreateAndAddCert].activated ||
-         certutil.commands[cmd_AddCert].activated) {
+         certutil.commands[cmd_AddCert].activated ||
+	 certutil.commands[cmd_AddEmailCert].activated) {
 	rv = AddCert(slot, certHandle, name, 
 	             certutil.options[opt_Trust].arg,
 	             inFile, 
 	             certutil.options[opt_ASCIIForIO].activated,
-		     PR_FALSE /* Email cert not supported */ );
+	             certutil.commands[cmd_AddEmailCert].activated);
 	if (rv) 
 	    return -1;
     }
