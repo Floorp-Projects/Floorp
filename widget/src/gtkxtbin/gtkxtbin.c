@@ -213,7 +213,7 @@ gtk_xtbin_realize (GtkWidget *widget)
   GdkWindowAttr attributes;
   gint          attributes_mask, n;
   GtkXtBin     *xtbin;
-  Arg           args[2];
+  Arg           args[5];
   gint          width, height;
   Widget        top_widget;
   Window        win;
@@ -254,9 +254,9 @@ gtk_xtbin_realize (GtkWidget *widget)
   attributes.width        = widget->allocation.width;
   attributes.height       = widget->allocation.height;
   attributes.wclass       = GDK_INPUT_OUTPUT;
-  attributes.visual       = gtk_widget_get_visual (widget);
-  attributes.colormap     = gtk_widget_get_colormap (widget);
-  attributes.event_mask   = gtk_widget_get_events (widget);
+  attributes.visual       = gdk_window_get_visual (xtbin->parent_window);
+  attributes.colormap     = gdk_window_get_colormap (xtbin->parent_window);
+  attributes.event_mask   = gdk_window_get_events (xtbin->parent_window);
   attributes.event_mask  |= GDK_EXPOSURE_MASK;
   attributes_mask         = GDK_WA_X      | GDK_WA_Y | 
                             GDK_WA_VISUAL | GDK_WA_COLORMAP;
@@ -309,6 +309,9 @@ gtk_xtbin_realize (GtkWidget *widget)
   n = 0;
   XtSetArg(args[n], XtNheight, xtbin->height);n++;
   XtSetArg(args[n], XtNwidth,  xtbin->width);n++;
+  XtSetArg(args[n], XtNvisual, GDK_VISUAL_XVISUAL(gdk_window_get_visual( xtbin->parent_window )) ); n++;
+  XtSetArg(args[n], XtNdepth, gdk_window_get_visual( xtbin->parent_window )->depth ); n++;
+  XtSetArg(args[n], XtNcolormap, GDK_COLORMAP_XCOLORMAP(gdk_window_get_colormap( xtbin->parent_window)) ); n++;
   XtSetValues(embeded, args, n);
 
   /* Ok, here is the dirty little secret on how I am */
