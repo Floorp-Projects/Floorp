@@ -1,0 +1,24 @@
+$Ren8dot3List$
+
+var err = initInstall("DOM Inspector", "Inspector", "$Version$"); 
+logComment("initInstall: " + err);
+
+$Ren8dot3Call$
+
+var fProgram = getFolder("Program");
+logComment("fProgram: " + fProgram);
+
+err = addDirectory("", "$Version$", "bin", fProgram, "", true);
+logComment("addDirectory: " + err);
+
+var jarFolder = getFolder("Chrome", "inspector.jar");
+registerChrome(PACKAGE | DELAYED_CHROME, jarFolder, "content/inspector/");
+registerChrome(SKIN | DELAYED_CHROME, jarFolder, "skin/modern/inspector/");
+registerChrome(SKIN | DELAYED_CHROME, jarFolder, "skin/classic/inspector/");
+registerChrome(LOCALE | DELAYED_CHROME, jarFolder, "locale/en-US/inspector/");
+
+err = getLastError();
+if (err==SUCCESS)
+    performInstall(); 
+else
+    cancelInstall(err);

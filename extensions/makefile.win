@@ -24,6 +24,7 @@ include <$(DEPTH)/config/config.mak>
 
 DIRS = wallet \
 	cookie \
+	inspector \
 	irc \
 !if !defined(DISABLE_JSD) && !defined(DISABLE_VENKMAN)
     venkman \
