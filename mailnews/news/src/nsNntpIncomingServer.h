@@ -36,6 +36,8 @@
 #include "nsEnumeratorUtils.h" 
 #include "nsIMsgWindow.h"
 #include "nsISubscribableServer.h"
+#include "nsIRDFResource.h"
+#include "nsIRDFService.h"
 
 class nsINntpUrl;
 class nsIMsgMailNewsUrl;
@@ -68,12 +70,21 @@ protected:
 	NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *_retval);
 
 private:
+	nsresult CreateAndAdd(const char *groupUri, const char *aName, nsIRDFResource *aResource);
+	nsresult FindParent(const char *groupUri, const char *serverUri, const char *aName, nsIRDFResource *aChildResource);
 	nsresult SetNewsgroupAsSubscribed(const char *aName);
     PRBool mNewsrcHasChanged;
 	nsAdapterEnumerator *mGroupsEnumerator;
 	PRBool mHostInfoLoaded;
 	PRBool mHostInfoHasChanged;
 	nsCOMPtr <nsISubscribeListener> mSubscribeListener;
+	nsCOMPtr <nsIRDFDataSource> mSubscribeDatasource;
+	nsCOMPtr <nsIRDFService> mRDFService;
+	nsCOMPtr <nsIRDFResource> kNC_Name;
+	nsCOMPtr <nsIRDFResource> kNC_Child;
+	nsCOMPtr <nsIRDFResource> kNC_Subscribed;
+	nsCOMPtr <nsIRDFLiteral> kTrueLiteral;
+	nsCOMPtr <nsIRDFLiteral> kFalseLiteral;
 };
 
 #endif

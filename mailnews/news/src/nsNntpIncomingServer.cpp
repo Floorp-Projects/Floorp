@@ -34,7 +34,6 @@
 #include "nsCOMPtr.h"
 #include "nsINntpService.h"
 #include "nsINNTPProtocol.h"
-#include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsMsgNewsCID.h"
 #include "nsNNTPProtocol.h"
@@ -529,46 +528,19 @@ nsNntpIncomingServer::SetNewsgroupAsSubscribed(const char *aName)
 	groupUri += "/";
 	groupUri += aName;
 
-	nsCOMPtr <nsIRDFService> rdfService = do_GetService(kRDFServiceCID, &rv);
-	if (NS_FAILED(rv)) return rv;
-	if (!rdfService) return NS_ERROR_FAILURE;
-
 	nsCOMPtr<nsIRDFResource> newsgroupResource;
-	rv = rdfService->GetResource((const char *) groupUri, getter_AddRefs(newsgroupResource));
-
-#if 0
-	nsCOMPtr<nsIRDFLiteral> totalMessagesLiteral;
-	nsAutoString totalMessagesString(aTotalMessages);
-	rv = rdfService->GetLiteral(totalMessagesString.GetUnicode(), getter_AddRefs(totalMessagesLiteral));
-	if(NS_FAILED(rv)) return rv;
-	nsCOMPtr<nsIRDFResource> kNC_TotalMessages;
-	rv = rdfService->GetResource("http://home.netscape.com/NC-rdf#TotalMessages", getter_AddRefs(kNC_TotalMessages));
-	if(NS_FAILED(rv)) return rv;
-#endif
-
-	nsCOMPtr<nsIRDFLiteral> subscribedLiteral;
-	nsAutoString subscribedString; subscribedString.AssignWithConversion("true");
-	rv = rdfService->GetLiteral(subscribedString.GetUnicode(), getter_AddRefs(subscribedLiteral));
-	if(NS_FAILED(rv)) return rv;
-	nsCOMPtr<nsIRDFResource> kNC_Subscribed;
-	rv = rdfService->GetResource("http://home.netscape.com/NC-rdf#Subscribed", getter_AddRefs(kNC_Subscribed));
-	if(NS_FAILED(rv)) return rv;
+	rv = mRDFService->GetResource((const char *) groupUri, getter_AddRefs(newsgroupResource));
 
 	nsCOMPtr<nsIRDFDataSource> ds;
-	rv = rdfService->GetDataSource("rdf:subscribe",getter_AddRefs(ds));
+	rv = mRDFService->GetDataSource("rdf:subscribe",getter_AddRefs(mSubscribeDatasource));
 	if(NS_FAILED(rv)) return rv;
-	if (!ds) return NS_ERROR_FAILURE;
-
-#if 0
-	rv = ds->Assert(newsgroupResource, kNC_TotalMessages, totalMessagesLiteral, PR_TRUE);
-	if(NS_FAILED(rv)) return rv;
-#endif
+	if (!mSubscribeDatasource) return NS_ERROR_FAILURE;
 
 	nsCOMPtr<nsIRDFNode> oldLiteral;
-	rv = ds->GetTarget(newsgroupResource, kNC_Subscribed, PR_TRUE, getter_AddRefs(oldLiteral));
+	rv = mSubscribeDatasource->GetTarget(newsgroupResource, kNC_Subscribed, PR_TRUE, getter_AddRefs(oldLiteral));
 	if(NS_FAILED(rv)) return rv;
 
-	rv = ds->Change(newsgroupResource, kNC_Subscribed, oldLiteral, subscribedLiteral);
+	rv = mSubscribeDatasource->Change(newsgroupResource, kNC_Subscribed, oldLiteral, kTrueLiteral);
 	if(NS_FAILED(rv)) return rv;
 
 	return NS_OK;
@@ -595,64 +567,101 @@ nsNntpIncomingServer::AddNewNewsgroup(const char *aName)
 	groupUri += "/";
 	groupUri += aName;
 
-	nsCOMPtr <nsIRDFService> rdfService = do_GetService(kRDFServiceCID, &rv);
-	if (NS_FAILED(rv)) return rv;
-	if (!rdfService) return NS_ERROR_FAILURE;
-
 	nsCOMPtr<nsIRDFResource> newsgroupResource;
-	rv = rdfService->GetResource((const char *) groupUri, getter_AddRefs(newsgroupResource));
-		
-	nsCOMPtr<nsIRDFLiteral> nameLiteral;
-	nsAutoString nameString; nameString.AssignWithConversion(aName);
-	rv = rdfService->GetLiteral(nameString.GetUnicode(), getter_AddRefs(nameLiteral));
-	if(NS_FAILED(rv)) return rv;
-	nsCOMPtr<nsIRDFResource> kNC_Name;
-	rv = rdfService->GetResource("http://home.netscape.com/NC-rdf#Name", getter_AddRefs(kNC_Name));
+	rv = mRDFService->GetResource((const char *) groupUri, getter_AddRefs(newsgroupResource));
 	if(NS_FAILED(rv)) return rv;
 
-	nsCOMPtr<nsIRDFLiteral> subscribedLiteral;
-	nsAutoString subscribedString; subscribedString.AssignWithConversion("false");
-	rv = rdfService->GetLiteral(subscribedString.GetUnicode(), getter_AddRefs(subscribedLiteral));
-	if(NS_FAILED(rv)) return rv;
-	nsCOMPtr<nsIRDFResource> kNC_Subscribed;
-	rv = rdfService->GetResource("http://home.netscape.com/NC-rdf#Subscribed", getter_AddRefs(kNC_Subscribed));
-	if(NS_FAILED(rv)) return rv;
+	rv = CreateAndAdd((const char *)groupUri, aName, newsgroupResource);
+	if (NS_FAILED(rv)) return rv;
 
-	nsCOMPtr<nsIRDFDataSource> ds;
-	rv = rdfService->GetDataSource("rdf:subscribe",getter_AddRefs(ds));
-	if(NS_FAILED(rv)) return rv;
-	if (!ds) return NS_ERROR_FAILURE;
-
-	rv = ds->Assert(newsgroupResource, kNC_Name, nameLiteral, PR_TRUE);
-	if(NS_FAILED(rv)) return rv;
-
-	rv = ds->Assert(newsgroupResource, kNC_Subscribed, subscribedLiteral, PR_TRUE);
-	if(NS_FAILED(rv)) return rv;
-
-	nsCOMPtr<nsIRDFResource> kNC_Child;
-	rv = rdfService->GetResource("http://home.netscape.com/NC-rdf#child", getter_AddRefs(kNC_Child));
-	if(NS_FAILED(rv)) return rv;
-
-	// this assumes a lot about how we get back the list of newsgroups from the server
-	PRInt32 slashpos = groupUri.RFindChar('/',PR_TRUE);
-	PRInt32 dotpos = groupUri.RFindChar('.',PR_TRUE);
-	nsCOMPtr <nsIRDFResource> parent;
-
-	if (dotpos > slashpos) {
-		groupUri.Truncate(dotpos);
-
-		rv = rdfService->GetResource((const char *)groupUri, getter_AddRefs(parent));
-		if(NS_FAILED(rv)) return rv;
-	}
-	else {
-		rv = rdfService->GetResource((const char *)serverUri, getter_AddRefs(parent));
-		if(NS_FAILED(rv)) return rv;
-	}
-		
-	rv = ds->Assert(parent, kNC_Child, newsgroupResource, PR_TRUE);
+	rv = FindParent((const char *)groupUri, (const char *)serverUri, aName, newsgroupResource);
 	if(NS_FAILED(rv)) return rv;
 
 	return NS_OK;
+}
+
+nsresult
+nsNntpIncomingServer::CreateAndAdd(const char *groupUri, const char *aName, nsIRDFResource *aResource)
+{
+	nsresult rv;
+
+#ifdef DEBUG_sspitzer_
+	printf("CreateAndAdd(%s,%s,??)\n",groupUri,aName);
+#endif
+		
+	nsCOMPtr<nsIRDFLiteral> nameLiteral;
+	nsAutoString nameString; 
+	nameString.AssignWithConversion(aName);
+	rv = mRDFService->GetLiteral(nameString.GetUnicode(), getter_AddRefs(nameLiteral));
+	if(NS_FAILED(rv)) return rv;
+
+	rv = mSubscribeDatasource->Assert(aResource, kNC_Name, nameLiteral, PR_TRUE);
+	if(NS_FAILED(rv)) return rv;
+
+	rv = mSubscribeDatasource->Assert(aResource, kNC_Subscribed, kFalseLiteral, PR_TRUE);
+	if(NS_FAILED(rv)) return rv;
+
+	return rv;
+}
+
+nsresult
+nsNntpIncomingServer::FindParent(const char *groupUri, const char *serverUri, 
+								const char *aName, nsIRDFResource *aChildResource)
+{
+	nsresult rv;
+#ifdef DEBUG_sspitzer_
+	printf("FindParent(%s,%s,%s,??)\n",groupUri,serverUri,aName);
+#endif
+
+	nsCOMPtr <nsIRDFResource> parentResource;
+
+	nsCAutoString groupUriCStr(groupUri);
+
+	PRInt32 slashpos = groupUriCStr.RFindChar('/',PR_TRUE);
+	PRInt32 dotpos = groupUriCStr.RFindChar('.',PR_TRUE);
+
+	if (dotpos > slashpos) {
+		groupUriCStr.Truncate(dotpos);
+
+		nsCAutoString nameCStr(aName);
+		PRInt32 namedotpos = nameCStr.RFindChar('.',PR_TRUE);
+		nameCStr.Truncate(namedotpos);
+	
+		rv = mRDFService->GetResource((const char *) groupUriCStr, getter_AddRefs(parentResource));
+		if(NS_FAILED(rv)) return rv;
+
+		PRBool prune = PR_FALSE;
+		// this code isn't working yet.
+#if 0
+		rv = mSubscribeDatasource->HasAssertion(parentResource, kNC_Subscribed, kFalseLiteral, PR_TRUE, &prune);
+		if(NS_FAILED(rv)) return rv;
+#endif
+
+		if (!prune) {
+			rv = CreateAndAdd((const char *)groupUriCStr, (const char *)nameCStr, parentResource);
+			if(NS_FAILED(rv)) return rv;
+		}
+
+		// assert the group as a child of the group above
+		rv = mSubscribeDatasource->Assert(parentResource, kNC_Child, aChildResource, PR_TRUE);
+		if(NS_FAILED(rv)) return rv;
+
+		// recurse
+		if (!prune) {
+			rv = FindParent((const char *)groupUriCStr, serverUri, (const char *)nameCStr, parentResource);
+			if(NS_FAILED(rv)) return rv;
+		}
+	}
+	else {
+		rv = mRDFService->GetResource(serverUri, getter_AddRefs(parentResource));
+		if(NS_FAILED(rv)) return rv;
+
+		// assert the group as a child of the server
+		rv = mSubscribeDatasource->Assert(parentResource, kNC_Child, aChildResource, PR_TRUE);
+		if(NS_FAILED(rv)) return rv;
+	}
+
+	return rv;
 }
 
 
@@ -791,6 +800,12 @@ nsNntpIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
 	rv = listener->OnStopPopulating();
 	if (NS_FAILED(rv)) return rv;
 
+	mRDFService = nsnull;
+	mSubscribeDatasource = nsnull;
+	kNC_Name = nsnull;
+	kNC_Child = nsnull;
+	kNC_Subscribed = nsnull;
+
 	return NS_OK;
 }
 
@@ -846,18 +861,49 @@ nsNntpIncomingServer::SubscribeToNewsgroup(const char *name)
 NS_IMETHODIMP
 nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow)
 {
-	nsresult rv;
+  nsresult rv;
 #ifdef DEBUG_sspitzer
-	printf("in PopulateSubscribeDatasource()\n");
+  printf("in PopulateSubscribeDatasource()\n");
 #endif
-	nsCOMPtr<nsINntpService> nntpService = do_GetService(kNntpServiceCID, &rv);
-	if (NS_FAILED(rv)) return rv;
-	if (!nntpService) return NS_ERROR_FAILURE;
 
-        rv = nntpService->BuildSubscribeDatasource(this, aMsgWindow);
-        if (NS_FAILED(rv)) return rv;
+  mRDFService = do_GetService(kRDFServiceCID, &rv);
+  NS_ASSERTION(NS_SUCCEEDED(rv) && mRDFService,"no rdf server");
+  if (NS_FAILED(rv)) return rv;
 
-        return NS_OK;
+  rv = mRDFService->GetDataSource("rdf:subscribe",getter_AddRefs(mSubscribeDatasource));
+  NS_ASSERTION(NS_SUCCEEDED(rv) && mSubscribeDatasource,"no subscribe datasource");
+  if (NS_FAILED(rv)) return rv;
+
+  rv = mRDFService->GetResource("http://home.netscape.com/NC-rdf#Name", getter_AddRefs(kNC_Name));
+  NS_ASSERTION(NS_SUCCEEDED(rv) && kNC_Name,"no name resource");
+  if (NS_FAILED(rv)) return rv;
+
+  rv = mRDFService->GetResource("http://home.netscape.com/NC-rdf#child", getter_AddRefs(kNC_Child));
+  NS_ASSERTION(NS_SUCCEEDED(rv) && kNC_Child,"no child resource");
+  if (NS_FAILED(rv)) return rv;
+
+  rv = mRDFService->GetResource("http://home.netscape.com/NC-rdf#Subscribed", getter_AddRefs(kNC_Subscribed));
+  NS_ASSERTION(NS_SUCCEEDED(rv) && kNC_Subscribed, "no subscribed resource");	
+  if (NS_FAILED(rv)) return rv;
+ 
+  nsAutoString trueString; 
+  trueString.AssignWithConversion("true");
+  rv = mRDFService->GetLiteral(trueString.GetUnicode(), getter_AddRefs(kTrueLiteral));
+  if(NS_FAILED(rv)) return rv;
+
+  nsAutoString falseString; 
+  falseString.AssignWithConversion("false");
+  rv = mRDFService->GetLiteral(falseString.GetUnicode(), getter_AddRefs(kFalseLiteral));
+  if(NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsINntpService> nntpService = do_GetService(kNntpServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  if (!nntpService) return NS_ERROR_FAILURE;
+
+  rv = nntpService->BuildSubscribeDatasource(this, aMsgWindow);
+  if (NS_FAILED(rv)) return rv;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
