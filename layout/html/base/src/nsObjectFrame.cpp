@@ -163,7 +163,7 @@ public:
 
   NS_IMETHOD GetURL(const char *aURL, const char *aTarget, void *aPostData, 
                     PRUint32 aPostDataLen, void *aHeadersData, 
-                    PRUint32 aHeadersDataLen);
+                    PRUint32 aHeadersDataLen, PRBool isFile = PR_FALSE);
 
   NS_IMETHOD ShowStatus(const char *aStatusMsg);
 
@@ -2235,7 +2235,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetInstance(nsIPluginInstance *&aInstance)
 }
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarget, void *aPostData, PRUint32 aPostDataLen, void *aHeadersData, 
-                                            PRUint32 aHeadersDataLen)
+                                            PRUint32 aHeadersDataLen, PRBool isFile)
 {
   NS_ENSURE_TRUE(mOwner,NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(mContext,NS_ERROR_NULL_POINTER);
@@ -2271,9 +2271,28 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
   nsCOMPtr<nsISupports> result;
   nsCOMPtr<nsIInputStream> postDataStream;
   nsCOMPtr<nsIInputStream> headersDataStream;
+
+  // deal with post data, either in a file or raw data, and any headers
   if (aPostData) {
-    rv = NS_NewPostDataStream(getter_AddRefs(postDataStream), PR_FALSE, (const char *) aPostData, 0);
+    if (isFile) {
+      // convert file:///c:/ to c:
+      const char * fileURL = (const char*)aPostData; // default to raw data
+      nsXPIDLCString path;
+      nsCOMPtr<nsILocalFile> aFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);     
+      if (NS_SUCCEEDED(aFile->SetURL(fileURL)))
+        if (NS_SUCCEEDED(aFile->GetPath(getter_Copies(path))))
+          fileURL = (const char*)path;
+
+      // use NewPostDataStream only for post data on disk
+      rv = NS_NewPostDataStream(getter_AddRefs(postDataStream), isFile, fileURL, 0);
+    } else  {
+      // use NewByteInputStream to handle binary post data, see bug 105417
+      rv = NS_NewByteInputStream(getter_AddRefs(result), (const char *) aPostData, aPostDataLen);
+      if (result)
+        postDataStream = do_QueryInterface(result, &rv);
+    }
   }
+
   if (aHeadersData) {
     rv = NS_NewByteInputStream(getter_AddRefs(result), (const char *) aHeadersData, aHeadersDataLen);
     if (result) {

@@ -98,7 +98,8 @@ public:
   NS_IMETHOD
   GetURL(const char *aURL, const char *aTarget, 
          void *aPostData, PRUint32 aPostDataLen, 
-         void *aHeadersData, PRUint32 aHeadersDataLen) = 0;
+         void *aHeadersData, PRUint32 aHeadersDataLen, 
+         PRBool isFile = PR_FALSE) = 0;
 
   /**
    * Show a status message in the host environment.
