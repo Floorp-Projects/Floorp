@@ -94,14 +94,15 @@ expander {
   border: 1px solid black;
 }
 
-.themesLink {                                                                   
-  margin-left: 5px;                                                             
-  text-decoration: underline;                                                   
-  color: blue;                                                                  
-  cursor: pointer;                                                              
-}                                                                               
-
-.themesLink:active {                                                            
-  color: red;                                                                   
+.themesLink {
+  margin-left: 5px;
+  text-decoration: underline;
+  color: blue;
+  cursor: pointer;
 }
 
+.themesLink:active {
+  color: red;
+}
+
+dialogheader {display: none}
