@@ -82,11 +82,12 @@ fi
 #   Exclude certain path patterns.
 #   Be sure to modify the grep command below as well.
 #
-EXCLUDE_PATH_01="/test/"
-EXCLUDE_PATH_02="/tests/"
-EXCLUDE_PATH_03="/tools/"
-EXCLUDE_PATH_04="/config/"
-EXCLUDE_PATH_05="IBMNEC.map"
+EXCLUDE_PATTERN_01="test"
+EXCLUDE_PATTERN_02="tools"
+EXCLUDE_PATTERN_03="dbg"
+
+EXCLUDE_NAME_01="mkdepend.map"
+EXCLUDE_NAME_02="IBMNEC.map"
 
 
 #
@@ -114,8 +115,10 @@ find ./mozilla -type f -name *.map > $ALLMAPSFILE
 #
 #   Reduce the map files to a revelant set.
 #
+NOPATMAPSFILE="$TMPDIR/nopatmaps.list"
+grep -vi $EXCLUDE_PATTERN_01 < $ALLMAPSFILE | grep -vi $EXCLUDE_PATTERN_02 | grep -vi $EXCLUDE_PATTERN_03 > $NOPATMAPSFILE
 MAPSFILE="$TMPDIR/maps.list"
-grep -v $EXCLUDE_PATH_01 < $ALLMAPSFILE | grep -v $EXCLUDE_PATH_02 | grep -v $EXCLUDE_PATH_03 | grep -v $EXCLUDE_PATH_04 | grep -v $EXCLUDE_PATH_05 > $MAPSFILE
+grep -vi $EXCLUDE_NAME_01 < $NOPATMAPSFILE | grep -vi $EXCLUDE_NAME_02 > $MAPSFILE
 
 
 #
