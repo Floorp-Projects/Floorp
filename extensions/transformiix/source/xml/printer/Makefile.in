@@ -26,7 +26,7 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS = XMLPrinter.cpp HTMLPrinter.cpp
+CPPSRCS = XMLPrinter.cpp HTMLPrinter.cpp TEXTPrinter.cpp
 
 include $(topsrcdir)/config/rules.mk
 

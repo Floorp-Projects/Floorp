@@ -23,7 +23,7 @@
  * Bob Miller, kbob@oblix.com
  *    -- plugged core leak.
  *
- * $Id: printers.h,v 1.5 2000/06/11 12:25:25 Peter.VanderBeken%pandora.be Exp $
+ * $Id: printers.h,v 1.6 2000/11/16 22:08:56 axel%pike.org Exp $
  */
 
 
@@ -41,7 +41,7 @@
  * A class for printing XML nodes.
  * This class was ported from XSL:P Java source
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2000/06/11 12:25:25 $
+ * @version $Revision: 1.6 $ $Date: 2000/11/16 22:08:56 $
 **/
 class XMLPrinter {
 
@@ -244,7 +244,7 @@ private:
  * A class for printing an XML node as non-well-formed HTML
  * This class was ported from XSL:P Java source
  * @author Keith Visco (kvisco@ziplink.net)
- * @version $Revision: 1.5 $ $Date: 2000/06/11 12:25:25 $
+ * @version $Revision: 1.6 $ $Date: 2000/11/16 22:08:56 $
 **/
 class HTMLPrinter : public XMLPrinter {
 
@@ -320,5 +320,62 @@ private:
     void initialize(ostream& os, int indentSize);
 
 }; //-- HTMLPrinter
+
+/**
+ * A class for printing an XML node as text
+ * @author Axel Hecht
+**/
+class TEXTPrinter : public XMLPrinter {
+
+public:
+
+      //---------------/
+     //- Contructors -/
+    //---------------/
+
+    /**
+     * Default constructor uses cout as the default ostream
+    **/
+    TEXTPrinter();
+
+    /**
+     * Creates a new XML Printer using the given PrintWriter
+     * for output
+     * @param writer the PrintWriter to use for output
+    **/
+    TEXTPrinter(ostream& os);
+
+    /**
+     * Creates a new XML Printer using the given PrintWriter
+     * for output, and nodes are indenting using the specified
+     * indent size
+     * @param os the out stream to use for output
+     * @param indent the number of spaces to indent
+    **/
+    TEXTPrinter (ostream& os, int indent);
+
+    /**
+     * Prints the given Node
+     * @param node the Node to print
+    **/
+    virtual void print(Node* node);
+
+private:
+
+    /**
+     * The out stream to print results to
+    **/
+    ostream* ostreamPtr;
+
+      //-------------------/
+     //- Private Methods -/
+    //-------------------/
+
+    /**
+     * Called by Constructor to initialize Object instance
+    **/
+    void initialize(ostream& os);
+
+}; //-- TEXTPrinter
 
 #endif
