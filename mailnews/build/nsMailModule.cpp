@@ -140,6 +140,7 @@
 #include "nsAbBooleanExpression.h"
 #include "nsAbDirectoryQueryProxy.h"
 #include "nsAbView.h"
+#include "nsMsgVCardService.h"
 
 #if defined(MOZ_LDAP_XPCOM)
 #include "nsAbLDAPDirectory.h"
@@ -373,6 +374,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbLDAPProcessChangeLogData)
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirectoryQueryProxy)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbView)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgVCardService) 
 
 ////////////////////////////////////////////////////////////////////////////////
 // bayesian spam filter factories
@@ -802,6 +804,8 @@ static const nsModuleComponentInfo gComponents[] = {
       NS_ADDBOOKURL_CONTRACTID, nsAddbookUrlConstructor },   
     { "The addbook Protocol Handler", NS_ADDBOOK_HANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "addbook", nsAddbookProtocolHandlerConstructor },
+    { "add vCard content handler", NS_ADDRESSBOOK_CID, NS_CONTENT_HANDLER_CONTRACTID_PREFIX"x-application-addvcard", nsAddressBookConstructor },
+
     { "The directory factory service interface", NS_ABDIRFACTORYSERVICE_CID,
       NS_ABDIRFACTORYSERVICE_CONTRACTID, nsAbDirFactoryServiceConstructor },
     { "The MDB directory factory interface", NS_ABMDBDIRFACTORY_CID,
@@ -847,6 +851,7 @@ static const nsModuleComponentInfo gComponents[] = {
     { "The directory query proxy interface", NS_ABDIRECTORYQUERYPROXY_CID,
       NS_ABDIRECTORYQUERYPROXY_CONTRACTID, nsAbDirectoryQueryProxyConstructor},
     { "addressbook view", NS_ABVIEW_CID, NS_ABVIEW_CONTRACTID, nsAbViewConstructor},
+    { "vcard helper service", NS_MSGVCARDSERVICE_CID, NS_MSGVCARDSERVICE_CONTRACTID, nsMsgVCardServiceConstructor },
 
     ////////////////////////////////////////////////////////////////////////////////
     // bayesian spam filter components
