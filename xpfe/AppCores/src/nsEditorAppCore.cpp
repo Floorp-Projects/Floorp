@@ -1308,7 +1308,7 @@ nsEditorAppCore::Exit()
                                              (nsISupports **)&clipboard);
 
   if (NS_OK == rvv) {
-    nsITransferable * trans;
+    nsITransferable * trans = nsnull;			// XXX this needs fixin
     clipboard->GetData(trans);
     if (nsnull != trans) {
       if (NS_OK == trans->IsLargeDataSet()) {
