@@ -95,6 +95,7 @@ public:
   NS_IMETHOD              GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
   NS_IMETHOD              Paint(nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect);
   NS_IMETHOD              ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy);
+  NS_IMETHOD              ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
   NS_IMETHOD              EnableDragDrop(PRBool aEnable);
   NS_IMETHOD              GetAttention();
   virtual void            ConvertToDeviceCoordinates(nscoord  &aX,nscoord &aY) {}

@@ -687,6 +687,11 @@ NS_METHOD nsBaseWidget::Paint(nsIRenderingContext& aRenderingContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP nsBaseWidget::ScrollWidgets(PRInt32 aDx, PRInt32 aDy)
+{
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP nsBaseWidget::ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy)
 {
   return NS_ERROR_FAILURE;
