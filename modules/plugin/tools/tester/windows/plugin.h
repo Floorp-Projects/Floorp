@@ -125,15 +125,4 @@ public:
   void onLogToFile(BOOL bLofToFile);
 };
 
-#define SECTION_PREFERENCES   "Preferences"
-#define KEY_AUTO_MODE         "AutoMode"
-#define KEY_LOG_FILE          "LogFile"
-#define KEY_SCRIPT_FILE       "ScriptFile"
-#define KEY_TO_FILE           "LogToFile"
-#define KEY_TO_FRAME          "LogToFrame"
-#define KEY_FLUSH_NOW         "FlushImmediately"
-
-#define ENTRY_YES             "Yes"
-#define ENTRY_NO              "No"
-
 #endif // __PLUGIN_H__

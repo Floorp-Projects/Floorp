@@ -79,7 +79,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib /nologo /dll /debug /machine:I386 /out:"../../../../../dist/win32_d.obj/bin/plugins/npapi.dll" /pdbtype:sept
 
 !ENDIF 
 
@@ -108,7 +108,7 @@ SOURCE=.\guihlp.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\guihlp.h
+SOURCE=.\loadstatus.cpp
 # End Source File
 # Begin Source File
 
@@ -156,19 +156,11 @@ SOURCE=.\plugin.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\plugin.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\common\pplib.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\common\profile.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\resource.h
 # End Source File
 # Begin Source File
 
@@ -192,12 +184,96 @@ SOURCE=.\winentry.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\winutils.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\xp.cpp
 # End Source File
 # End Group
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=..\include\action.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\comstrs.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\guihlp.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\guiprefs.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\helpers.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\loadstatus.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\log.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\logfile.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\logger.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\loghlp.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\plugbase.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\plugin.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\profile.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\resource.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\script.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\scripter.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\scrpthlp.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\strconv.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\winutils.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\include\xp.h
+# End Source File
 # End Group
 # Begin Group "Resource Files"
 

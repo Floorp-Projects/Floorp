@@ -44,6 +44,8 @@
 #include "plugin.h"
 #include "helpers.h"
 #include "logger.h"
+#include "guiprefs.h"
+#include "winutils.h"
 
 extern HINSTANCE hInst;
 extern CLogger * pLogger;
@@ -72,7 +74,6 @@ CPlugin::~CPlugin()
 {
 }
 
-static char szINIFile[] = NPAPI_INI_FILE_NAME;
 static char szSection[] = SECTION_PREFERENCES;
 static char szYes[] = ENTRY_YES;
 static char szNo[] = ENTRY_NO;
@@ -80,8 +81,7 @@ static char szNo[] = ENTRY_NO;
 void CPlugin::restorePreferences()
 {
   char szFileName[_MAX_PATH];
-  getModulePath(szFileName, sizeof(szFileName));
-  strcat(szFileName, szINIFile);
+  GetINIFileName(m_hInst, szFileName, sizeof(szFileName));
 
   char sz[256];
   XP_GetPrivateProfileString(szSection, KEY_AUTO_MODE, ENTRY_NO, sz, sizeof(sz), szFileName);
@@ -106,8 +106,7 @@ void CPlugin::restorePreferences()
 void CPlugin::savePreferences()
 {
   char szFileName[_MAX_PATH];
-  getModulePath(szFileName, sizeof(szFileName));
-  strcat(szFileName, szINIFile);
+  GetINIFileName(m_hInst, szFileName, sizeof(szFileName));
 
   XP_WritePrivateProfileString(szSection, KEY_AUTO_MODE, (m_Pref_ShowGUI == sg_auto) ? szYes : szNo, szFileName);
   XP_WritePrivateProfileString(szSection, KEY_LOG_FILE, m_Pref_szLogFile, szFileName);
@@ -148,19 +147,7 @@ void CPlugin::updatePrefs(GUIPrefs prefs, int iValue, char * szValue)
 
 void CPlugin::getModulePath(LPSTR szPath, int iSize)
 {
-  char sz[_MAX_PATH];
-  GetModuleFileName(m_hInst, sz, sizeof(sz));
-  char * p = strrchr(sz, '\\');
-  if(p != NULL)
-  {
-    *++p = '\0';
-    if((int)strlen(sz) < iSize) 
-      strcpy(szPath, sz);
-    else
-      strcpy(szPath, "");
-  }
-  else
-    strcpy(szPath, "");
+  GetModulePath(m_hInst, szPath, iSize);
 }
 
 void CPlugin::getLogFileName(LPSTR szLogFileName, int iSize)
