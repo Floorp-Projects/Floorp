@@ -18,17 +18,23 @@
 
 #include "nsRepository.h"
 #include "nsIWebShell.h"
+#include "nsIURL.h"
 #include "nsFileSpec.h"
+#include "nsIDocumentLoader.h"
+#include "nsIContentViewer.h"
+#include "prprf.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
+static NS_DEFINE_IID(kIDocumentLoaderFactoryIID,   NS_IDOCUMENTLOADERFACTORY_IID);
 
 GtkMozillaContainer::GtkMozillaContainer(GtkMozilla *moz)
 {
   mWebShell = nsnull;
   width = height = 0;
+  mStream = nsnull;
   
   mozilla = moz;
   gtk_widget_set_app_paintable(GTK_WIDGET(moz), PR_TRUE);
@@ -235,8 +241,8 @@ static char *simple_unicode_to_char(const PRUnichar* aURL)
 
 NS_IMETHODIMP
 GtkMozillaContainer::WillLoadURL(nsIWebShell* aShell,
-				 const PRUnichar* aURL,
-				 nsLoadType aReason)
+                                 const PRUnichar* aURL,
+                                 nsLoadType aReason)
 {
   gint result = 1;
   char *url = simple_unicode_to_char(aURL);
@@ -261,7 +267,7 @@ GtkMozillaContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 
 NS_IMETHODIMP
 GtkMozillaContainer::EndLoadURL(nsIWebShell* aShell,
-				const PRUnichar* aURL, PRInt32 aStatus)
+                                const PRUnichar* aURL, PRInt32 aStatus)
 {
   char *url = simple_unicode_to_char(aURL);
   gtk_signal_emit_by_name(GTK_OBJECT(mozilla), "end_load_url",
@@ -271,9 +277,48 @@ GtkMozillaContainer::EndLoadURL(nsIWebShell* aShell,
   return NS_OK;
 }
 
+
+nsresult
+GtkMozillaContainer::CreateContentViewer(nsIURL* aURL, 
+                                         const char* aContentType, 
+                                         const char *aCommand,
+                                         nsIContentViewerContainer* aContainer,
+                                         nsISupports* aExtraInfo,
+                                         nsIStreamListener** aDocListenerResult,
+                                         nsIContentViewer** aDocViewerResult)
+{
+    // Lookup class-id for the command plus content-type combination
+    nsCID cid;
+    char id[500];
+    PR_snprintf(id, sizeof(id),
+                NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "%s/%s",
+                aCommand, aContentType);
+    nsresult rv = nsComponentManager::ProgIDToCLSID(id, &cid);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    // Create an instance of the document-loader-factory object
+    nsIDocumentLoaderFactory* factory;
+    rv = nsComponentManager::CreateInstance(cid, (nsISupports *)nsnull,
+                                            kIDocumentLoaderFactoryIID, 
+                                            (void **)&factory);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    // Now create an instance of the content viewer
+    rv = factory->CreateInstance(aURL, aContentType, aCommand, aContainer,
+                                 aExtraInfo, aDocListenerResult,
+                                 aDocViewerResult);
+    NS_RELEASE(factory);
+    return rv;
+}
+
+
 NS_IMETHODIMP
 GtkMozillaContainer::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 aProgress,
-                                                                   PRInt32 aProgressMax)
+                                     PRInt32 aProgressMax)
 {
   printf("Progress: %d (0..%d)\n", aProgress, aProgressMax);
   return NS_OK;
@@ -309,9 +354,9 @@ GtkMozillaContainer::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* fra
 
 NS_IMETHODIMP
 GtkMozillaContainer::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
-	    PRInt32 aXPos, PRInt32 aYPos, 
-	    const nsString& aPopupType, const nsString& aPopupAlignment,
-	    nsIDOMWindow* aWindow)
+                                 PRInt32 aXPos, PRInt32 aYPos, 
+                                 const nsString& aPopupType, const nsString& aPopupAlignment,
+                                 nsIDOMWindow* aWindow)
 {
   printf("CreatePopup\n");
   return NS_ERROR_FAILURE;
@@ -345,4 +390,110 @@ GtkMozillaContainer::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocu
 {
   printf("FocusAvailable\n");
   return NS_ERROR_FAILURE;
+}
+
+gint
+GtkMozillaContainer::StartStream(const char *base_url, const char *action,
+                                 const char *content_type)
+{
+  nsresult rv = NS_OK;
+  nsString url_str(base_url);
+  nsIURL* url = nsnull;
+  nsIContentViewer* viewer = nsnull;
+  nsIStreamListener* listener = nsnull;
+  
+  rv = NS_NewURL(&url, url_str, NULL, mWebShell);
+
+  if (NS_FAILED(rv)) {
+    goto done;
+  }
+
+  rv = CreateContentViewer(url,
+                           content_type, 
+                           action, 
+                           mWebShell,
+                           nsnull,
+                           &listener, 
+                           &viewer);
+  
+  if (NS_FAILED(rv)) {
+    printf("GtkMozillaContainer: Unable to create ContentViewer for action=%s, content-type=%s\n", action, content_type);
+    goto done;
+  }
+
+  rv = viewer->SetContainer((nsIContentViewerContainer*)mWebShell);
+  if (NS_FAILED(rv)) {
+    goto done;
+  }
+
+  rv = mWebShell->Embed(viewer, action, nsnull);
+  if (NS_FAILED(rv)) {
+    goto done;
+  }
+
+  /*
+   * Pass the OnStartBinding(...) notification out to the document 
+   * IStreamListener.
+   */
+  rv = listener->OnStartBinding(url, content_type);
+  if (NS_FAILED(rv)) {
+    goto done;
+  }
+
+  mStream = new GtkMozillaInputStream();
+  mStreamURL = url;
+  mListener = listener;
+  
+ done:
+  NS_IF_RELEASE(viewer);
+
+  if (NS_SUCCEEDED(rv))
+    return 0;
+  else
+    return -1;
+}
+
+gint
+GtkMozillaContainer::WriteStream(const char *data, gint len)
+{
+  nsresult rv = NS_OK;
+  PRUint32 Count;
+  
+  mStream->Fill(data, len);
+    
+  rv = mListener->OnDataAvailable(mStreamURL, mStream, len);
+  if (NS_FAILED(rv))
+    return 0;
+  
+  rv = mListener->OnProgress(mStreamURL, len, len+1);
+  if (NS_FAILED(rv))
+    return 0;
+
+  mStream->FillResult(&Count);
+  
+  return (gint) Count;
+}
+
+void
+GtkMozillaContainer::EndStream(void)
+{
+  nsresult rv = NS_OK;
+  
+  mStream->Fill(NULL, 0);
+    
+  rv = mListener->OnDataAvailable(mStreamURL, mStream, 0);
+  if (NS_FAILED(rv))
+    return;
+  
+  rv = mListener->OnStopBinding(mStreamURL, NS_OK, NULL);
+  if (NS_FAILED(rv))
+    return;
+  
+  rv = mListener->OnProgress(mStreamURL, 10, 10);
+  if (NS_FAILED(rv))
+    return;
+  
+  NS_IF_RELEASE(mStreamURL);
+  NS_IF_RELEASE(mListener);
+  NS_IF_RELEASE(mStream);
 }

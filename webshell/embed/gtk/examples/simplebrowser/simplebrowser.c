@@ -27,15 +27,15 @@ static void
 set_buttons(struct browser *browser)
 {
   gtk_widget_set_sensitive(browser->back_button,
-			   gtk_mozilla_can_back(browser->mozilla));
+                           gtk_mozilla_can_back(browser->mozilla));
   gtk_widget_set_sensitive(browser->forward_button,
-			   gtk_mozilla_can_forward(browser->mozilla));
+                           gtk_mozilla_can_forward(browser->mozilla));
 }
 
 
 static gint configure_event_after(GtkWidget *window,
-				  GdkEvent  *event,
-				  GtkMozilla *moz)
+                                  GdkEvent  *event,
+                                  GtkMozilla *moz)
 {
   GtkAllocation *alloc;
 
@@ -45,17 +45,17 @@ static gint configure_event_after(GtkWidget *window,
 }
 
 static gint will_load_url(GtkWidget *mozilla,
-			  const char *url,
-			  GtkMozillaLoadType load_type,
-			  struct browser *browser)
+                          const char *url,
+                          GtkMozillaLoadType load_type,
+                          struct browser *browser)
 {
   printf("will_load_url(%s, %d)\n", url, load_type);
   return 1; /* Return 0 if you don't want to load this url */
 }
 
 static void begin_load_url(GtkWidget *mozilla,
-			   const char *url,
-			   struct browser *browser)
+                           const char *url,
+                           struct browser *browser)
 {
   printf("begin_load_url(%s)\n", url);
   gtk_entry_set_text(GTK_ENTRY(browser->url_entry), url);
@@ -63,28 +63,46 @@ static void begin_load_url(GtkWidget *mozilla,
 }
 
 static void end_load_url(GtkMozilla  *mozilla,
-			 const gchar *url,
-			 gint status)
+                         const gchar *url,
+                         gint status)
 {
   printf("end_load_url(%s, %d)\n", url, status);
 }
 
 static void back_clicked(GtkWidget *button,
-			 gpointer arg)
+                         gpointer arg)
 {
   GtkMozilla *moz = GTK_MOZILLA(arg);
   gtk_mozilla_back(moz);
 }
 
 static void forward_clicked(GtkWidget *button,
-			    gpointer arg)
+                            gpointer arg)
 {
   GtkMozilla *moz = GTK_MOZILLA(arg);
   gtk_mozilla_forward(moz);
 }
 
+static void stream_clicked(GtkWidget *button,
+                           gpointer arg)
+{
+  char buf[] = "<html><body>testing <a href=\"test.html\">HTML</a> streaming...</body></html>";
+  GtkMozilla *moz = GTK_MOZILLA(arg);
+  int c,i,size;
+
+  gtk_mozilla_stream_start_html(moz, "file://dummy/url/");
+  size = sizeof(buf);
+  i = 0;
+  while (size>0) {
+    c = gtk_mozilla_stream_write(moz, &buf[i], size );
+    size -= c;
+    i += c;
+  }
+  gtk_mozilla_stream_end(moz);
+}
+
 static void url_activate(GtkWidget *entry,
-			gpointer arg)
+                         gpointer arg)
 {
   const char *str;
   
@@ -103,6 +121,7 @@ int main( int   argc,
   GtkWidget *back_button;
   GtkWidget *forward_button;
   GtkWidget *url_entry;
+  GtkWidget *stream_button;
   GtkWidget *mozilla;
   struct browser browser;
 
@@ -140,6 +159,10 @@ int main( int   argc,
   gtk_box_pack_start (GTK_BOX (hbox), url_entry, TRUE, TRUE, 0);
   gtk_widget_show(url_entry);
   
+  stream_button = gtk_button_new_with_label("Test Stream");
+  gtk_box_pack_start (GTK_BOX (hbox), stream_button, FALSE, FALSE, 0);
+  gtk_widget_show(stream_button);
+  
   gtk_widget_show(hbox);
 
   mozilla = gtk_mozilla_new();
@@ -155,32 +178,36 @@ int main( int   argc,
   browser.url_entry = url_entry;
   
   gtk_signal_connect_after(GTK_OBJECT (window), "configure_event",
-			   (GtkSignalFunc) configure_event_after,
-			   mozilla);
+                           (GtkSignalFunc) configure_event_after,
+                           mozilla);
 
   gtk_signal_connect(GTK_OBJECT (mozilla), "will_load_url",
-		     (GtkSignalFunc) will_load_url,
-		     &browser);
+                     (GtkSignalFunc) will_load_url,
+                     &browser);
 
   gtk_signal_connect(GTK_OBJECT (mozilla), "begin_load_url",
-		     (GtkSignalFunc) begin_load_url,
-		     &browser);
+                     (GtkSignalFunc) begin_load_url,
+                     &browser);
   
   gtk_signal_connect(GTK_OBJECT (mozilla), "end_load_url",
-		     (GtkSignalFunc) end_load_url,
-		     &browser);
+                     (GtkSignalFunc) end_load_url,
+                     &browser);
 
   gtk_signal_connect(GTK_OBJECT (back_button), "clicked",
-		     (GtkSignalFunc) back_clicked,
-		     mozilla);
+                     (GtkSignalFunc) back_clicked,
+                     mozilla);
 
   gtk_signal_connect(GTK_OBJECT (url_entry), "activate",
-		     (GtkSignalFunc) url_activate,
-		     mozilla);
+                     (GtkSignalFunc) url_activate,
+                     mozilla);
 
   gtk_signal_connect(GTK_OBJECT (forward_button), "clicked",
-		     (GtkSignalFunc) forward_clicked,
-		     mozilla);
+                     (GtkSignalFunc) forward_clicked,
+                     mozilla);
+
+    gtk_signal_connect(GTK_OBJECT (stream_button), "clicked",
+                       (GtkSignalFunc) stream_clicked,
+                       mozilla);
 
   set_buttons(&browser);
   

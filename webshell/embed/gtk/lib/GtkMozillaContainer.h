@@ -19,6 +19,7 @@
 
 #include <gtk/gtk.h>
 #include "nsIWebShell.h"
+#include "GtkMozillaInputStream.h"
 #include "gtkmozilla.h"
 
 
@@ -79,10 +80,29 @@ public:
   gint GetHistoryLength();
   gint GetHistoryIndex();
 
-private:
+  /* Stream stuff: */
+  gint StartStream(const char *base_url, const char *action,
+                   const char *content_type);
+  gint WriteStream(const char *data, gint len);
+  void EndStream(void);
+  
+protected:
+  nsresult CreateContentViewer(nsIURL* aURL, 
+                               const char* aContentType, 
+                               const char *aCommand,
+                               nsIContentViewerContainer* aContainer,
+                               nsISupports* aExtraInfo,
+                               nsIStreamListener** aDocListenerResult,
+                               nsIContentViewer** aDocViewerResult);
+
   nsIWebShell *mWebShell;
   GtkMozilla *mozilla;
   int width, height;
+
+  /* Stream stuff: */
+  GtkMozillaInputStream *mStream;
+  nsIURL *mStreamURL;
+  nsIStreamListener *mListener;
 };
 
 #endif /* GTKMOZILLACONTAINER_H */

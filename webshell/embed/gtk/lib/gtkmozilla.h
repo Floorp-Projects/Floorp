@@ -43,10 +43,9 @@ typedef enum GtkMozillaLoadType {
   GTK_LOAD_REFRESH
 } GtkMozillaLoadType;
 
-
 typedef struct _GtkMozilla       GtkMozilla;
 typedef struct _GtkMozillaClass  GtkMozillaClass;
-
+  
 struct _GtkMozilla
 {
   GtkLayout layout;
@@ -68,21 +67,31 @@ struct _GtkMozillaClass
                         gint status);
 };
 
-GtkType    gtk_mozilla_get_type        (void);
-GtkWidget* gtk_mozilla_new             (void);
+extern GtkType    gtk_mozilla_get_type(void);
+extern GtkWidget* gtk_mozilla_new(void);
 
-void gtk_mozilla_load_url(GtkMozilla *moz, const char *url);
-void gtk_mozilla_stop(GtkMozilla *moz);
-void gtk_mozilla_reload(GtkMozilla *moz, GtkMozillaReloadType reload_type);
-void gtk_mozilla_resize(GtkMozilla *moz, gint width, gint height);
+extern void gtk_mozilla_load_url(GtkMozilla *moz, const char *url);
+extern void gtk_mozilla_stop(GtkMozilla *moz);
+extern void gtk_mozilla_reload(GtkMozilla *moz, GtkMozillaReloadType reload_type);
+extern void gtk_mozilla_resize(GtkMozilla *moz, gint width, gint height);
 
-void gtk_mozilla_back(GtkMozilla *moz);
-void gtk_mozilla_forward(GtkMozilla *moz);
-gint gtk_mozilla_can_back(GtkMozilla *moz);
-gint gtk_mozilla_can_forward(GtkMozilla *moz);
-void gtk_mozilla_goto_history(GtkMozilla *moz, gint index);
-gint gtk_mozilla_get_history_length(GtkMozilla *moz);
-gint gtk_mozilla_get_history_index(GtkMozilla *moz);
+extern void gtk_mozilla_back(GtkMozilla *moz);
+extern void gtk_mozilla_forward(GtkMozilla *moz);
+extern gint gtk_mozilla_can_back(GtkMozilla *moz);
+extern gint gtk_mozilla_can_forward(GtkMozilla *moz);
+extern void gtk_mozilla_goto_history(GtkMozilla *moz, gint index);
+extern gint gtk_mozilla_get_history_length(GtkMozilla *moz);
+extern gint gtk_mozilla_get_history_index(GtkMozilla *moz);
+
+extern gint gtk_mozilla_stream_start(GtkMozilla *moz,
+                                     const char *base_url,
+                                     const char *action,
+                                     const char *content_type);
+extern gint gtk_mozilla_stream_start_html(GtkMozilla *moz,
+                                          const char *base_url);
+extern gint gtk_mozilla_stream_write(GtkMozilla *moz, const char *data,
+                                     gint len);
+extern void gtk_mozilla_stream_end(GtkMozilla *moz);
 
 #ifdef __cplusplus
 }
