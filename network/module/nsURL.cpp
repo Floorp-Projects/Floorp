@@ -31,13 +31,6 @@
 #include "xp_mcom.h"	/* XP_STRDUP() */
 #endif
 
-#ifdef XP_PC
-#include <windows.h>
-static HINSTANCE g_hInst = NULL;
-#endif
-
-char *mangleResourceIntoFileURL(const char* aResourceFileName);
-
 class URLImpl : public nsIURL {
 public:
   URLImpl(const nsString& aSpec);
@@ -714,17 +707,6 @@ nsIInputStream* URLImpl::Open(PRInt32* aErrorCode)
   nsIInputStream* in = nsnull;
   nsINetService *inet = nsnull;
 
-  // XXX: Rewrite the resource: URL into a file: URL
-  NS_LOCK_INSTANCE();
-  if (PL_strcmp(mProtocol, "resource") == 0) {
-    char* fileName;
-
-    fileName = mangleResourceIntoFileURL(mFile);
-    Set(fileName);
-    PR_Free(fileName);
-  } 
-  NS_UNLOCK_INSTANCE();
-
   rv = nsServiceManager::GetService(kNetServiceCID,
                                     kINetServiceIID,
                                     (nsISupports **)&inet);
@@ -741,17 +723,6 @@ nsresult URLImpl::Open(nsIStreamListener *aListener)
 {
   nsINetService *inet = nsnull;
   nsresult rv;
-
-  // XXX: Rewrite the resource: URL into a file: URL
-  NS_LOCK_INSTANCE();
-  if (PL_strcmp(mProtocol, "resource") == 0) {
-    char *fileName;
-
-    fileName = mangleResourceIntoFileURL(mFile);
-    Set(fileName);
-    PR_Free(fileName);
-  } 
-  NS_UNLOCK_INSTANCE();
 
   rv = nsServiceManager::GetService(kNetServiceCID,
                                     kINetServiceIID,
@@ -823,117 +794,3 @@ NS_NET nsresult NS_MakeAbsoluteURL(nsIURL* aURL,
   }
   return NS_OK;
 }
-
-char *mangleResourceIntoFileURL(const char* aResourceFileName) 
-{
-  // XXX For now, resources are not in jar files 
-  // Find base path name to the resource file
-  char* resourceBase;
-  char* cp;
-
-#ifdef XP_PC
-  // XXX For now, all resources are relative to the .exe file
-  resourceBase = (char *)PR_Malloc(_MAX_PATH);;
-  DWORD mfnLen = GetModuleFileName(g_hInst, resourceBase, _MAX_PATH);
-  // Truncate the executable name from the rest of the path...
-  cp = strrchr(resourceBase, '\\');
-  if (nsnull != cp) {
-    *cp = '\0';
-  }
-  // Change the first ':' into a '|'
-  cp = PL_strchr(resourceBase, ':');
-  if (nsnull != cp) {
-      *cp = '|';
-  }
-#endif /* XP_PC */
-
-#ifdef XP_UNIX
-  // XXX For now, all resources are relative to the current working directory
-
-    FILE *pp;
-
-#define MAXPATHLEN 2000
-
-    resourceBase = (char *)PR_Malloc(MAXPATHLEN);;
-
-    if (!(pp = popen("pwd", "r"))) {
-      printf("RESOURCE protocol error in nsURL::mangeResourceIntoFileURL 1\n");
-      return(nsnull);
-    }
-    else {
-      if (fgets(resourceBase, MAXPATHLEN, pp)) {
-        printf("[%s] %d\n", resourceBase, PL_strlen(resourceBase));
-        resourceBase[PL_strlen(resourceBase)-1] = 0;
-      }
-      else {
-       printf("RESOURCE protocol error in nsURL::mangeResourceIntoFileURL 2\n");
-       return(nsnull);
-      }
-   }
-
-   printf("RESOURCE name %s\n", resourceBase);
-#endif /* XP_UNIX */
-
-#ifdef XP_MAC
-	resourceBase = XP_STRDUP("usr/local/netscape/bin");
-#endif /* XP_MAC */
-
-  // Join base path to resource name
-  if (aResourceFileName[0] == '/') {
-    aResourceFileName++;
-  }
-  PRInt32 baseLen = PL_strlen(resourceBase);
-  PRInt32 resLen = PL_strlen(aResourceFileName);
-  PRInt32 totalLen = 8 + baseLen + 1 + resLen + 1;
-  char* fileName = (char *)PR_Malloc(totalLen);
-  PR_snprintf(fileName, totalLen, "file:///%s/%s", resourceBase, aResourceFileName);
-
-#ifdef XP_PC
-  // Change any backslashes into foreward slashes...
-  while ((cp = PL_strchr(fileName, '\\')) != 0) {
-    *cp = '/';
-    cp++;
-  }
-#endif /* XP_PC */
-
-  PR_Free(resourceBase);
-
-  return fileName;
-}
-
-#ifdef XP_PC
-
-BOOL WINAPI DllMain(HINSTANCE hDllInst,
-                    DWORD fdwReason,
-                    LPVOID lpvReserved)
-{
-    BOOL bResult = TRUE;
-
-    switch (fdwReason)
-    {
-        case DLL_PROCESS_ATTACH:
-          {
-            // save our instance
-            g_hInst = hDllInst;
-          }
-          break;
-
-        case DLL_PROCESS_DETACH:
-            break;
-
-        case DLL_THREAD_ATTACH:
-            break;
-
-        case DLL_THREAD_DETACH:
-            break;
-
-        default:
-            break;
-  }
-
-  return (bResult);
-}
-
-
-
-#endif /* XP_PC */
