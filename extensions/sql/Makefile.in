@@ -40,15 +40,16 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS            = \
-		base \
-		pgsql \
-		build
+DIRS            = base
+
+ifdef MOZ_ENABLE_PGSQL
+DIRS		+= pgsql
+endif
+
+DIRS		+= build
 
 ifdef ENABLE_TESTS
-DIRS		+= \
-		sqltest \
-		tests
+DIRS		+= sqltest tests
 endif
 
 include $(topsrcdir)/config/rules.mk
