@@ -32,13 +32,13 @@ endif
 endif
 
 #
-# On IRIX 5.3, classic nspr (user-level threads on top of sprocs)
+# On IRIX 5.x, classic nspr (user-level threads on top of sprocs)
 # is the default (and only) implementation strategy.
 #
-# On IRIX 6.2 and later, the default implementation strategy is
+# On IRIX 6.x and later, the default implementation strategy is
 # pthreads.  Classic nspr is also available.
 #
-ifeq ($(OS_RELEASE),5.3)
+ifeq ($(basename $(OS_RELEASE)),5)
 CLASSIC_NSPR = 1
 endif
 
@@ -111,7 +111,11 @@ RANLIB			= /bin/true
 NOMD_OS_CFLAGS		= $(ODD_CFLAGS) -D_SGI_MP_SOURCE
 
 ifeq ($(OS_RELEASE),5.3)
-OS_CFLAGS               += -DIRIX5_3
+OS_CFLAGS		+= -DIRIX5_3
+endif
+
+ifneq ($(basename $(OS_RELEASE)),5)
+OS_CFLAGS		+= -D_PR_HAVE_SGI_PRDA_PROCMASK
 endif
 
 ifeq (,$(filter-out 6.5,$(OS_RELEASE)))
