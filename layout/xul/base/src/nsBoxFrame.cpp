@@ -602,7 +602,7 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   // create the layout state
-  nsBoxLayoutState state(aPresContext, aReflowState);
+  nsBoxLayoutState state(aPresContext, aReflowState, aDesiredSize);
 
   // coelesce reflows if we are root.
   if (state.HandleReflow(this, (mState & NS_STATE_IS_ROOT))) {

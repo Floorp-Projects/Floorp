@@ -37,7 +37,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIPresContext.h"
 
-nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext):mPresContext(aPresContext), mReflowState(nsnull)
+nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext):mPresContext(aPresContext), mReflowState(nsnull), mMaxElementSize(nsnull)
 {
 }
 
@@ -46,11 +46,22 @@ nsBoxLayoutState::nsBoxLayoutState(const nsBoxLayoutState& aState)
   mPresContext = aState.mPresContext;
   mType        = aState.mType;
   mReflowState = aState.mReflowState;
+  mMaxElementSize = aState.mMaxElementSize;
 }
 
-nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState):mReflowState(&aReflowState),mPresContext(aPresContext),mType(Dirty)
+nsBoxLayoutState::nsBoxLayoutState(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsHTMLReflowMetrics& aDesiredSize):mReflowState(&aReflowState),mPresContext(aPresContext),mType(Dirty)
 {
+  mMaxElementSize = aDesiredSize.maxElementSize;
 }
+
+void 
+nsBoxLayoutState::GetMaxElementSize(nsSize** aMaxElementSize)
+{
+  *aMaxElementSize = nsnull;
+  if (mReflowState)
+     *aMaxElementSize = mMaxElementSize;
+}
+
 
 PRBool
 nsBoxLayoutState::HandleReflow(nsIBox* aRootBox, PRBool aCoelesce)

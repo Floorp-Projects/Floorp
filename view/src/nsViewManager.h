@@ -148,6 +148,10 @@ public:
   NS_IMETHOD GetWidget(nsIWidget **aWidget);
   NS_IMETHOD ForceUpdate();
   NS_IMETHOD GetOffset(nscoord *aX, nscoord *aY);
+
+  NS_IMETHOD IsCachingWidgetChanges(PRBool* aCaching);
+  NS_IMETHOD CacheWidgetChanges(PRBool aCache);
+
   
 protected:
   virtual ~nsViewManager();

@@ -150,7 +150,9 @@ public:
   NS_IMETHOD GetWidget(nsIWidget **aWidget);
   NS_IMETHOD ForceUpdate();
   NS_IMETHOD GetOffset(nscoord *aX, nscoord *aY);
-
+ 
+  NS_IMETHOD IsCachingWidgetChanges(PRBool* aCaching);
+  NS_IMETHOD CacheWidgetChanges(PRBool aCache);
 protected:
   virtual ~nsViewManager2();
 
@@ -239,6 +241,8 @@ private:
 	 */
   PRBool IsRectVisible(nsIView *aView, const nsRect &aRect);
 
+  nsresult ProcessWidgetChanges(nsIView* aView);
+
 private:
   nsIDeviceContext  *mContext;
   float				mTwipsToPixels;
@@ -260,6 +264,7 @@ private:
   nsRect            mTranslucentArea;       // bounding box of all translucent views.
   nsSize			mTranslucentSize;       // size of the blending buffers.
   nsIScrollableView *mRootScrollable;
+  PRInt32     mCachingWidgetChanges;
 
   //from here to public should be static and locked... MMP
   static PRInt32           mVMCount;        //number of viewmanagers

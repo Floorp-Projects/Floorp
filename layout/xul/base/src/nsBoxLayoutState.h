@@ -51,7 +51,7 @@ public:
     Initial
   };
 
-  nsBoxLayoutState(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState);
+  nsBoxLayoutState(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsHTMLReflowMetrics& aDesiredSize);
   nsBoxLayoutState(nsIPresContext* aPresContext);
   nsBoxLayoutState(const nsBoxLayoutState& aState);
 
@@ -59,6 +59,7 @@ public:
 
   virtual nsIPresContext* GetPresContext() { return mPresContext; }
   virtual nsresult GetPresShell(nsIPresShell** aShell);
+  virtual void GetMaxElementSize(nsSize** aMaxElementSize);
 
   virtual eBoxLayoutReason GetLayoutReason() { return mType; }
   virtual void SetLayoutReason(eBoxLayoutReason aReason) { mType = aReason; }
@@ -81,6 +82,7 @@ private:
   nsIPresContext* mPresContext;
   const nsHTMLReflowState* mReflowState;
   eBoxLayoutReason mType;
+  nsSize* mMaxElementSize;
 };
 
 #endif

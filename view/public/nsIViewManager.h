@@ -473,6 +473,17 @@ public:
 
   NS_IMETHOD GetOffset(nscoord *aX, nscoord *aY) = 0;
 
+  /**
+   * Turn widget on or off widget movement caching
+   */
+  NS_IMETHOD IsCachingWidgetChanges(PRBool* aCaching)=0;
+
+
+  /**
+   * Pass true to cache widget changes. pass false to stop. When false is passed
+   * All widget changes will be applied.
+   */
+  NS_IMETHOD CacheWidgetChanges(PRBool aCache)=0;
 
 };
 

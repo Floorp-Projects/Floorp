@@ -31,6 +31,8 @@
 #define nsTabFrame_h___
 
 #include "nsButtonBoxFrame.h"
+#include "nsIContent.h"
+#include "nsCOMPtr.h"
 
 class nsTabControlFrame;
 
@@ -46,9 +48,9 @@ public:
 
 protected:
 
-  virtual nsresult GetChildWithTag(nsIAtom* atom, nsIContent* start, nsIContent*& tabpanel);
-  virtual nsresult GetTabControl(nsIContent* content, nsIContent*& tabcontrol);
-  virtual nsresult GetIndexInParent(nsIContent* content, PRInt32& index);
+  virtual nsresult GetChildWithTag(nsIAtom* atom, nsCOMPtr<nsIContent> start, nsCOMPtr<nsIContent>& tabpanel);
+  virtual nsresult GetTabControl(nsCOMPtr<nsIContent> content, nsCOMPtr<nsIContent>& tabcontrol);
+  virtual nsresult GetIndexInParent(nsCOMPtr<nsIContent> content, PRInt32& index);
 
 private:
    

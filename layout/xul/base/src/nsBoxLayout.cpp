@@ -46,6 +46,20 @@ nsBoxLayout::nsBoxLayout()
 }
 
 void
+nsBoxLayout::GetParentLayout(nsIBox* aBox, nsIBoxLayout** aParent)
+{
+  nsIBox* parent = nsnull;
+  aBox->GetParentBox(&parent);
+  if (parent)
+  {
+    aBox->GetLayoutManager(aParent);
+    return;
+  }
+
+  *aParent = nsnull;
+}
+
+void
 nsBoxLayout::AddBorderAndPadding(nsIBox* aBox, nsSize& aSize)
 {
   nsBox::AddBorderAndPadding(aBox, aSize);
@@ -147,27 +161,6 @@ nsBoxLayout::AddSmallestSize(nsSize& aSize, const nsSize& aSize2)
   if (aSize2.height < aSize.height)
      aSize.height = aSize2.height;
 }
-
-NS_IMETHODIMP
-nsBoxLayout::PaintDebug(nsIBox* aBox, 
-                        nsIPresContext* aPresContext,
-                        nsIRenderingContext& aRenderingContext,
-                        const nsRect& aDirtyRect,
-                        nsFramePaintLayer aWhichLayer)
-
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBoxLayout::DisplayDebugInfoFor(nsIBox* aBox,
-                                     nsIPresContext* aPresContext,
-                                     nsPoint&        aPoint,
-                                     PRInt32&        aCursor)
-{
-  return NS_OK;
-}
-
 
 // nsISupports
 NS_IMPL_ADDREF(nsBoxLayout);

@@ -122,7 +122,7 @@ nsBoxToBlockAdaptor::NeedsRecalc()
 }
 
 NS_IMETHODIMP
-nsBoxToBlockAdaptor::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+nsBoxToBlockAdaptor::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
 
   if (!mPrefNeedsRecalc) {
@@ -137,20 +137,25 @@ nsBoxToBlockAdaptor::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSiz
   // in css we will have to reflow the child.
   nsSize pref(0,0);
   
-  PRBool completelyRedefined = nsIBox::AddCSSPrefSize(aBoxLayoutState, this, mPrefSize);
+  PRBool completelyRedefined = nsIBox::AddCSSPrefSize(aState, this, mPrefSize);
 
   if (!completelyRedefined) {
-     const nsHTMLReflowState* reflowState = aBoxLayoutState.GetReflowState();
+     const nsHTMLReflowState* reflowState = aState.GetReflowState();
      if (reflowState) {
-       nsIPresContext* presContext = aBoxLayoutState.GetPresContext();
+       nsIPresContext* presContext = aState.GetPresContext();
        nsReflowStatus status = NS_FRAME_COMPLETE;
        nsHTMLReflowMetrics desiredSize(nsnull);
 
        PRBool isDirty = PR_FALSE;
        IsDirty(isDirty);
 
-       //nsRect oldRect;
-      // mFrame->GetRect(oldRect);
+       nsSize* currentSize = nsnull;
+       aState.GetMaxElementSize(&currentSize);
+       nsSize size(0,0);
+
+       if (currentSize) {
+        desiredSize.maxElementSize = &size;
+       }
 
        rv = Reflow(presContext, 
                   desiredSize, 
@@ -162,11 +167,20 @@ nsBoxToBlockAdaptor::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSiz
                   NS_INTRINSICSIZE,
                   PR_FALSE);
 
+      if (currentSize) {
+        desiredSize.maxElementSize = nsnull;
+
+        if (size.width > currentSize->width)
+           currentSize->width = size.width;
+
+        if (size.height > currentSize->height)
+           currentSize->height = size.height;
+      }
+
        nsFrameState frameState = 0;
        mFrame->GetFrameState(&frameState);
        frameState |= NS_FRAME_IS_DIRTY;
        mFrame->SetFrameState(frameState);
-       //mFrame->SetRect(presContext, oldRect);
 
        mPrefSize.width = desiredSize.width;
        mPrefSize.height = desiredSize.height;
@@ -180,7 +194,7 @@ nsBoxToBlockAdaptor::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSiz
        // check it.
        AddInset(mPrefSize);
 
-       nsIBox::AddCSSPrefSize(aBoxLayoutState, this, mPrefSize);
+       nsIBox::AddCSSPrefSize(aState, this, mPrefSize);
        mPrefNeedsRecalc = PR_FALSE;
     }
   }
@@ -191,7 +205,7 @@ nsBoxToBlockAdaptor::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSiz
 }
 
 NS_IMETHODIMP
-nsBoxToBlockAdaptor::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+nsBoxToBlockAdaptor::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
   if (!DoesNeedRecalc(mMinSize)) {
      aSize = mMinSize;
@@ -207,7 +221,7 @@ nsBoxToBlockAdaptor::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize
   if (mMinWidth != -1)
     mMinSize.width = mMinWidth;
 
-  nsIBox::AddCSSMinSize(aBoxLayoutState, this, mMinSize);
+  nsIBox::AddCSSMinSize(aState, this, mMinSize);
 
   aSize = mMinSize;
 
@@ -215,21 +229,21 @@ nsBoxToBlockAdaptor::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize
 }
 
 NS_IMETHODIMP
-nsBoxToBlockAdaptor::GetMaxSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
+nsBoxToBlockAdaptor::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
 {
   if (!DoesNeedRecalc(mMaxSize)) {
      aSize = mMaxSize;
      return NS_OK;
   }
 
-  nsresult rv = nsBox::GetMaxSize(aBoxLayoutState, mMaxSize);
+  nsresult rv = nsBox::GetMaxSize(aState, mMaxSize);
   aSize = mMaxSize;
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsBoxToBlockAdaptor::GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex)
+nsBoxToBlockAdaptor::GetFlex(nsBoxLayoutState& aState, nscoord& aFlex)
 {
   if (!DoesNeedRecalc(mFlex)) {
      aFlex = mFlex;
@@ -237,7 +251,7 @@ nsBoxToBlockAdaptor::GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex)
   }
 
   mFlex = 0;
-  nsBox::GetFlex(aBoxLayoutState, mFlex);
+  nsBox::GetFlex(aState, mFlex);
 
   aFlex = mFlex;
 
@@ -245,7 +259,7 @@ nsBoxToBlockAdaptor::GetFlex(nsBoxLayoutState& aBoxLayoutState, nscoord& aFlex)
 }
 
 NS_IMETHODIMP
-nsBoxToBlockAdaptor::GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)
+nsBoxToBlockAdaptor::GetAscent(nsBoxLayoutState& aState, nscoord& aAscent)
 {
   if (!DoesNeedRecalc(mAscent)) {
     aAscent = mAscent;
@@ -253,7 +267,7 @@ nsBoxToBlockAdaptor::GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAsce
   }
 
   nsSize size;
-  GetPrefSize(aBoxLayoutState, size);
+  GetPrefSize(aState, size);
 
   aAscent = mAscent;
 
@@ -261,27 +275,32 @@ nsBoxToBlockAdaptor::GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAsce
 }
 
 NS_IMETHODIMP
-nsBoxToBlockAdaptor::IsCollapsed(nsBoxLayoutState& aBoxLayoutState, PRBool& aCollapsed)
+nsBoxToBlockAdaptor::IsCollapsed(nsBoxLayoutState& aState, PRBool& aCollapsed)
 {
-  return nsBox::IsCollapsed(aBoxLayoutState, aCollapsed);
+  return nsBox::IsCollapsed(aState, aCollapsed);
 }
 
 nsresult
-nsBoxToBlockAdaptor::Layout(nsBoxLayoutState& aBoxLayoutState)
+nsBoxToBlockAdaptor::Layout(nsBoxLayoutState& aState)
 {
    nsRect ourRect(0,0,0,0);
    GetBounds(ourRect);
 
-   const nsHTMLReflowState* reflowState = aBoxLayoutState.GetReflowState();
-   nsIPresContext* presContext = aBoxLayoutState.GetPresContext();
+   const nsHTMLReflowState* reflowState = aState.GetReflowState();
+   nsIPresContext* presContext = aState.GetPresContext();
    nsReflowStatus status = NS_FRAME_COMPLETE;
    nsHTMLReflowMetrics desiredSize(nsnull);
    nsresult rv;
  
    if (reflowState) {
 
-    // nsRect oldRect;
-    // mFrame->GetRect(oldRect);
+    nsSize* currentSize = nsnull;
+    aState.GetMaxElementSize(&currentSize);
+    nsSize size(0,0);
+
+    if (currentSize) {
+      desiredSize.maxElementSize = &size;
+    }
 
      rv = Reflow(presContext, 
                   desiredSize, 
@@ -292,18 +311,21 @@ nsBoxToBlockAdaptor::Layout(nsBoxLayoutState& aBoxLayoutState)
                   ourRect.width,
                   ourRect.height);
      
-     mAscent = desiredSize.ascent;
+    if (currentSize) {
+      desiredSize.maxElementSize = nsnull;
 
-     PRBool isCollapsed = PR_FALSE;
-     IsCollapsed(aBoxLayoutState, isCollapsed);
-   //  if (!isCollapsed) {
-       mFrame->SizeTo(presContext, desiredSize.width, desiredSize.height);
-   //  } else {
-    //    mFrame->SetRect(presContext, oldRect);
-   //  }
+      if (size.width > currentSize->width)
+         currentSize->width = size.width;
+  
+      if (size.height > currentSize->height)
+         currentSize->height = size.height;
+    }
+
+     mAscent = desiredSize.ascent;
+     mFrame->SizeTo(presContext, desiredSize.width, desiredSize.height);
    }
 
-   SyncLayout(aBoxLayoutState);
+   SyncLayout(aState);
 
    return rv;
 }
@@ -608,8 +630,9 @@ nsBoxToBlockAdaptor::Reflow(nsIPresContext*   aPresContext,
 
     // ok we need the max ascent of the items on the line. So to do this
     // ask the block for its line iterator. Get the max ascent.
-    nsILineIterator* lines = nsnull;
-    if (NS_SUCCEEDED(mFrame->QueryInterface(NS_GET_IID(nsILineIterator), (void**)&lines)) && lines) 
+    nsresult rv;
+    nsCOMPtr<nsILineIterator> lines = do_QueryInterface(mFrame, &rv);
+    if (NS_SUCCEEDED(rv) && lines) 
     {
       nsIFrame* firstFrame = nsnull;
       PRInt32 framesOnLine;
@@ -774,13 +797,13 @@ nsBoxToBlockAdaptor::BuildReflowChain(nsIFrame* aFrame, nsIFrame* aTargetParent,
 
 
 PRBool
-nsBoxToBlockAdaptor::GetWasCollapsed(nsBoxLayoutState& aBoxLayoutState)
+nsBoxToBlockAdaptor::GetWasCollapsed(nsBoxLayoutState& aState)
 {
   return mWasCollapsed;
 }
 
 void
-nsBoxToBlockAdaptor::SetWasCollapsed(nsBoxLayoutState& aBoxLayoutState, PRBool aCollapsed)
+nsBoxToBlockAdaptor::SetWasCollapsed(nsBoxLayoutState& aState, PRBool aCollapsed)
 {
   mWasCollapsed = aCollapsed;
 }

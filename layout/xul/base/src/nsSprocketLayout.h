@@ -45,6 +45,7 @@ public:
 
   nsBoxSize* next;
 
+  void Clear();
   void Add(nsSize minSize, 
            nsSize prefSize,
            nsSize maxSize,
@@ -53,9 +54,6 @@ public:
            PRBool aIsHorizontal);
 
   void Add(const nsMargin& aMargin, PRBool aIsHorizontal);
-
-  void* operator new(size_t sz, nsBoxLayoutState& aState);
-  void operator delete(void* aPtr, size_t sz);
 };
 
 class nsComputedBoxSize
@@ -68,8 +66,7 @@ public:
   PRBool  resized;
   nsComputedBoxSize* next;
 
-  void* operator new(size_t sz, nsBoxLayoutState& aState);
-  void operator delete(void* aPtr, size_t sz);
+  void Clear();
 };
 
 
@@ -85,25 +82,6 @@ public:
 #define SET_Y(size, coord, isHorizontal) if (isHorizontal) { (size).y = (coord); } else { (size).x  = (coord); }
 
 #define SET_COORD(aX, aY, coord, isHorizontal) if (isHorizontal) { aX = (coord); } else { aY  = (coord); }
-
-
-class nsBoxSizeList
-{
-public:
-    virtual nsBoxSize* GetBoxSize(nsBoxLayoutState& aState)=0;
-    virtual nsBoxSizeList* GetFirst()=0;
-    virtual nsBoxSizeList* GetLast()=0;
-    virtual nsBoxSizeList* GetNext()=0;
-    virtual nsBoxSizeList* GetParent()=0;
-    virtual void SetParent(nsBoxSizeList* aParent)=0;
-    virtual void SetNext(nsIPresShell* aShell, nsBoxSizeList* aNext)=0;
-    virtual void Append(nsIPresShell* aShell, nsBoxSizeList* aChild)=0;
-    virtual void Clear(nsIPresShell* aShell)=0;
-    virtual PRInt32 GetCount()=0;
-    virtual void Desecrate()=0;
-    virtual void AddRef()=0;
-    virtual void Release(nsIPresShell* aShell)=0;
-};
 
 class nsSprocketLayout : public nsBoxLayout {
 
@@ -154,7 +132,8 @@ protected:
                            PRInt32 aFlexes, 
                            PRBool& aFinished);
 
-  virtual void ComputeChildSizes(nsBoxLayoutState& aState, 
+  virtual void ComputeChildSizes(nsIBox* aBox, 
+                         nsBoxLayoutState& aState, 
                          nscoord& aGivenSize, 
                          nsBoxSize* aBoxSizes, 
                          nsComputedBoxSize* aComputedBoxSizes);
