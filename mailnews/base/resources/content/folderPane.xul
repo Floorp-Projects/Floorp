@@ -35,9 +35,9 @@
 
 
 <tree rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager" id="folderTree" onclick="return parent.parent.ChangeFolderByDOMNode(event.target.parentNode)">
-  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
-  <treecol rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
+  <treecol style="width:70%" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol style="width:15%" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
+  <treecol style="width:15%" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
   <treehead>
     <treeitem>
       <treecell>&nameColumn.label;</treecell>

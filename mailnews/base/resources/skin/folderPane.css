@@ -30,6 +30,7 @@ tree {
  border-spacing: 0px; 
  //border-collapse: collapse; 
  width: 100%
+
 } 
 
 treeitem { 
@@ -49,9 +50,14 @@ treecell {
  color: black;
  font-family: Verdana;
  font-size: 10pt;
+ white-space: nowrap;
 } 
 
-treecell[selectedcell] { 
+treecol {
+ display: table-column;
+}
+
+treeitem[selected="true"] { 
  background-color: #666699; 
  color: white;
 } 

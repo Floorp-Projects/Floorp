@@ -54,7 +54,7 @@ treecell {
  white-space: nowrap;
 } 
 
-treecell[selectedcell] { 
+treeitem[selected="true"] { 
  background-color: #666699; 
  color: white;
 } 
