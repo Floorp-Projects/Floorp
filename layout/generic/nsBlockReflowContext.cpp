@@ -38,7 +38,7 @@
 #undef  NOISY_VERTICAL_MARGINS
 #endif
 
-nsBlockReflowContext::nsBlockReflowContext(nsIPresContext& aPresContext,
+nsBlockReflowContext::nsBlockReflowContext(nsIPresContext* aPresContext,
                                            const nsHTMLReflowState& aParentRS,
                                            PRBool aComputeMaxElementSize)
   : mPresContext(aPresContext),
@@ -70,7 +70,7 @@ nsBlockReflowContext::IsHTMLParagraph(nsIFrame* aFrame)
 }
 
 nscoord
-nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext& aPresContext,
+nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
                                                 nsHTMLReflowState& aRS)
 {
   // Get aFrame's top margin
@@ -95,7 +95,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext& aPresContext,
         // it. For its margins to be computed we need to have a reflow
         // state for it.
         nsSize availSpace(aRS.computedWidth, aRS.computedHeight);
-        nsHTMLReflowState reflowState(aPresContext, aRS, childFrame,
+        nsHTMLReflowState reflowState(*aPresContext, aRS, childFrame,
                                       availSpace);
         generationalTopMargin =
           ComputeCollapsedTopMargin(aPresContext, reflowState);
@@ -149,7 +149,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   // Setup reflow state for reflowing the frame
   // XXX subtract out vertical margin?
   nsSize availSpace(aSpace.width, aSpace.height);
-  nsHTMLReflowState reflowState(mPresContext, mOuterReflowState, aFrame,
+  nsHTMLReflowState reflowState(*mPresContext, mOuterReflowState, aFrame,
                                 availSpace, reason);
   aComputedOffsets = reflowState.computedOffsets;
   reflowState.lineLayout = nsnull;
@@ -200,7 +200,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  htmlReflow->WillReflow(mPresContext);
+  htmlReflow->WillReflow(*mPresContext);
 
 #ifdef DEBUG
   mMetrics.width = nscoord(0xdeadbeef);
@@ -223,7 +223,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   nscoord tx = x - mOuterReflowState.mComputedBorderPadding.left;
   nscoord ty = y - mOuterReflowState.mComputedBorderPadding.top;
   mOuterReflowState.spaceManager->Translate(tx, ty);
-  rv = htmlReflow->Reflow(mPresContext, mMetrics, reflowState,
+  rv = htmlReflow->Reflow(*mPresContext, mMetrics, reflowState,
                           aFrameReflowStatus);
   mOuterReflowState.spaceManager->Translate(-tx, -ty);
 
@@ -314,7 +314,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
 /* XXX promote DeleteChildsNextInFlow to nsIFrame to elminate this cast */
         nsHTMLContainerFrame* parent;
         aFrame->GetParent((nsIFrame**)&parent);
-        parent->DeleteChildsNextInFlow(mPresContext, aFrame);
+        parent->DeleteChildsNextInFlow(*mPresContext, aFrame);
       }
     }
   }
