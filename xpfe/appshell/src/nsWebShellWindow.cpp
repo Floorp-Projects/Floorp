@@ -358,14 +358,16 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 {
   nsEventStatus result = nsEventStatus_eIgnore;
   nsIWebShell* webShell = nsnull;
+  nsWebShellWindow *eventWindow = nsnull;
 
   // Get the WebShell instance...
   if (nsnull != aEvent->widget) {
     void* data;
 
     aEvent->widget->GetClientData(data);
-    if (nsnull != data) {
-      webShell = ((nsWebShellWindow*)data)->mWebShell;
+    if (data != nsnull) {
+      eventWindow = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
+      webShell = eventWindow->mWebShell;
     }
   }
 
@@ -376,38 +378,26 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
        * client area of the window...
        */
       case NS_MOVE: {
-        void* data;
-        nsWebShellWindow *win;
-        aEvent->widget->GetClientData(data);
-        win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
         // persist position, but not immediately, in case this OS is firing
         // repeated move events as the user drags the window
-        win->SetPersistenceTimer(PR_FALSE, PR_TRUE);
+        eventWindow->SetPersistenceTimer(PR_FALSE, PR_TRUE);
         break;
       }
       case NS_SIZE: {
-        void* data;
-        nsWebShellWindow *win;
         nsSizeEvent* sizeEvent = (nsSizeEvent*)aEvent;
         nsCOMPtr<nsIBaseWindow> shellAsWin(do_QueryInterface(webShell));
         shellAsWin->SetPositionAndSize(0, 0, sizeEvent->windowSize->width, 
           sizeEvent->windowSize->height, PR_FALSE);  
-        aEvent->widget->GetClientData(data);
-        win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
         // persist size, but not immediately, in case this OS is firing
         // repeated size events as the user drags the sizing handle
-        win->SetPersistenceTimer(PR_TRUE, PR_FALSE);
+        eventWindow->SetPersistenceTimer(PR_TRUE, PR_FALSE);
         result = nsEventStatus_eConsumeNoDefault;
         break;
       }
       case NS_SIZEMODE: {
-        void* data;
-        nsWebShellWindow *win;
         nsSizeModeEvent* modeEvent = (nsSizeModeEvent*)aEvent;
         aEvent->widget->SetSizeMode(modeEvent->mSizeMode);
-        aEvent->widget->GetClientData(data);
-        win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
-        win->StoreBoundsToXUL(PR_FALSE, PR_FALSE, PR_TRUE);
+        eventWindow->StoreBoundsToXUL(PR_FALSE, PR_FALSE, PR_TRUE);
         result = nsEventStatus_eConsumeDoDefault;
         // Note the current implementation of SetSizeMode just stores
         // the new state; it doesn't actually resize. So here we store
@@ -417,37 +407,24 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         break;
       }
       case NS_XUL_CLOSE: {
-        void* data;
-        nsWebShellWindow *win;
-        aEvent->widget->GetClientData(data);
-        win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
-        if (!win->ExecuteCloseHandler())
-          win->Close();
+        if (!eventWindow->ExecuteCloseHandler())
+          eventWindow->Close();
         break;
       }
       /*
        * Notify the ApplicationShellService that the window is being closed...
        */
       case NS_DESTROY: {
-        void* data;
-        aEvent->widget->GetClientData(data);
-        if (data)
-           ((nsWebShellWindow *)data)->Close();
+        eventWindow->Close();
         break;
       }
 
       case NS_SETZLEVEL: {
-        void             *data;
-        nsZLevelEvent    *zEvent = (nsZLevelEvent *) aEvent;
+        nsZLevelEvent *zEvent = (nsZLevelEvent *) aEvent;
 
-        zEvent->widget->GetClientData(data);
-        if (data) {
-          nsWebShellWindow *win;
-          win = NS_REINTERPRET_CAST(nsWebShellWindow *, data);
-          zEvent->mAdjusted = win->ConstrainToZLevel(zEvent->mImmediate,
-                                &zEvent->mPlacement,
-                                zEvent->mReqBelow, &zEvent->mActualBelow);
-        }
+        zEvent->mAdjusted = eventWindow->ConstrainToZLevel(zEvent->mImmediate,
+                              &zEvent->mPlacement,
+                              zEvent->mReqBelow, &zEvent->mActualBelow);
         break;
       }
 
@@ -461,19 +438,15 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 #endif
 // Sucky platform specific code to get around event dispatch ordering
 #ifdef WIN32
-        void* data;
-        aEvent->widget->GetClientData(data);
-        if (!data)
-          break;
-          
+
         nsCOMPtr<nsIDOMWindowInternal> domWindow;
-        ((nsWebShellWindow *)data)->ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
+        eventWindow->ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
         /*
         nsCOMPtr<nsIWebShell> contentShell;
-        ((nsWebShellWindow *)data)->GetContentWebShell(getter_AddRefs(contentShell));
+        eventWindow->GetContentWebShell(getter_AddRefs(contentShell));
         if (contentShell) {
           
-          if (NS_SUCCEEDED(((nsWebShellWindow *)data)->
+          if (NS_SUCCEEDED(eventWindow->
               ConvertWebShellToDOMWindow(contentShell, getter_AddRefs(domWindow)))) {
             if(domWindow){
               nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
@@ -497,20 +470,15 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 #ifdef DEBUG_saari
         printf("nsWebShellWindow::NS_DEACTIVATE\n");
 #endif
-        
-        void* data;
-        aEvent->widget->GetClientData(data);
-        if (!data)
-          break;
-          
+
         nsCOMPtr<nsIDOMWindowInternal> domWindow;
-        ((nsWebShellWindow *)data)->ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
+        eventWindow->ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
         /*
         nsCOMPtr<nsIWebShell> contentShell;
-        ((nsWebShellWindow *)data)->GetContentWebShell(getter_AddRefs(contentShell));
+        eventWindow->GetContentWebShell(getter_AddRefs(contentShell));
         if (contentShell) {
           
-          if (NS_SUCCEEDED(((nsWebShellWindow *)data)->
+          if (NS_SUCCEEDED(eventWindow->
               ConvertWebShellToDOMWindow(contentShell, getter_AddRefs(domWindow)))) {
             if(domWindow){
               nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(domWindow);
@@ -532,14 +500,9 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 #ifdef DEBUG_saari
         printf("nsWebShellWindow::GOTFOCUS\n");
 #endif
-        void* data;
-        aEvent->widget->GetClientData(data);
-        if (!data)
-          break;
-
         nsCOMPtr<nsIDOMDocument> domDocument;
         nsCOMPtr<nsIDOMWindowInternal> domWindow;
-        ((nsWebShellWindow *)data)->ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
+        eventWindow->ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
         nsCOMPtr<nsPIDOMWindow> piWin(do_QueryInterface(domWindow));
         nsCOMPtr<nsIFocusController> focusController;
         piWin->GetRootFocusController(getter_AddRefs(focusController));
@@ -550,15 +513,21 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
             focusController->SetSuppressFocus(PR_TRUE);
             domWindow->Focus(); // This sets focus, but we'll ignore it.  
                                 // A subsequent activate will cause us to stop suppressing.
+
+            // since the window has been activated, replace persistent size data
+            // with the newly activated window's
+            if (eventWindow->mChromeLoaded)
+              eventWindow->StoreBoundsToXUL(PR_TRUE, PR_TRUE, PR_TRUE);
+
             break;
           }
         }
 
         nsCOMPtr<nsIWebShell> contentShell;
-        ((nsWebShellWindow *)data)->GetContentWebShell(getter_AddRefs(contentShell));
+        eventWindow->GetContentWebShell(getter_AddRefs(contentShell));
         if (contentShell) {
           
-          if (NS_SUCCEEDED(((nsWebShellWindow *)data)->
+          if (NS_SUCCEEDED(eventWindow->
               ConvertWebShellToDOMWindow(contentShell, getter_AddRefs(domWindow)))) {
             domWindow->Focus();
           }
