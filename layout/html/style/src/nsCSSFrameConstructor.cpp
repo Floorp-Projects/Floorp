@@ -4613,6 +4613,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
       nsTreeRowGroupFrame* treeRowGroup = (nsTreeRowGroupFrame*)parentFrame;
       if (treeRowGroup && treeRowGroup->IsLazy()) {
         treeRowGroup->OnContentRemoved(*aPresContext, childFrame);
+        return NS_OK;
       }
     }
 #endif // INCLUDE_XUL

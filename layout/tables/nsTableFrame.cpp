@@ -3284,7 +3284,9 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
   */
 
   case nsIReflowCommand::FrameRemoved :
-    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
+    if (!objectFrame)
+      break;
+
     NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
     {
