@@ -39,7 +39,7 @@
 #ifndef txKey_h__
 #define txKey_h__
 
-#include "nsDoubleHashTable.h"
+#include "nsDoubleHashtable.h"
 #include "XMLUtils.h"
 
 class txKeyValueHashKey
