@@ -1165,7 +1165,7 @@ restart:
             GC_MARK(cx, JSVAL_TO_GCTHING(acx->rval2), "rval2", NULL);
 #endif
 
-        for (sh = cx->stackHeaders; sh; sh = sh->down) {
+        for (sh = acx->stackHeaders; sh; sh = sh->down) {
             METER(rt->gcStats.stackseg++);
             METER(rt->gcStats.segslots += sh->nslots);
             GC_MARK_JSVALS(cx, sh->nslots, JS_STACK_SEGMENT(sh), "stack");
