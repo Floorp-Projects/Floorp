@@ -90,7 +90,7 @@ if ($status != 0) {
 
 if ($errmsg ne "") {
   print "\nERROR: DOM SERIALIZER TEST FAILED: $errmsg\n";
-  print "See http://www.mozilla.org/editor/serializer-tests.html for help.\n"
+  print "See http://www.mozilla.org/editor/serializer-tests.html for help.\n";
   exit 1
 } else {
   print "DOM SERIALIZER TESTS SUCCEEDED\n";
