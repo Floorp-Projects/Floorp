@@ -963,8 +963,6 @@ nsMsgAccountManager::LoadAccounts()
   if (m_accountsLoaded)
     return NS_OK;
   
-  m_accountsLoaded = PR_TRUE;
-
   //Ensure biff service has started
   NS_WITH_SERVICE(nsIMsgBiffManager, biffService, kMsgBiffManagerCID, &rv);
   
@@ -984,6 +982,8 @@ nsMsgAccountManager::LoadAccounts()
     return NS_OK;
   }
 
+  m_accountsLoaded = PR_TRUE;
+  
     /* parse accountList and run loadAccount on each string, comma-separated */
 #ifdef DEBUG_ACCOUNTMANAGER
     printf("accountList = %s\n", (const char*)accountList);
