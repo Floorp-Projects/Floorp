@@ -43,11 +43,20 @@ static char *win_char_converter(const char *instr, int bFromUTF8);
 extern "C" {
 #endif
 
-/* OS name for the UTF-8 character set */
+/*
+ * Alternative names for the UTF-8 character set. Both of these (_A and _B)
+ * are accepted as meaning UTF-8 on all platforms.
+ */
+#define LDAPTOOL_CHARSET_UTF8_A		"utf8"
+#define LDAPTOOL_CHARSET_UTF8_B		"UTF-8"
+
+/*
+ * OS name for UTF-8.
+ */
 #if defined(_HPUX_SOURCE)
-#define LDAPTOOL_CHARSET_UTF8		"utf8"		/* HP/UX */
+#define LDAPTOOL_CHARSET_UTF8_OSNAME	LDAPTOOL_CHARSET_UTF8_A	/* HP/UX */
 #else
-#define LDAPTOOL_CHARSET_UTF8		"UTF-8"		/* all others */
+#define LDAPTOOL_CHARSET_UTF8_OSNAME	LDAPTOOL_CHARSET_UTF8_B	/* all others */
 #endif
 
 /* OS name for the default character set */
@@ -55,6 +64,9 @@ extern "C" {
 #define LDAPTOOL_CHARSET_DEFAULT	"roma8"		/* HP/UX */
 #elif defined(__GLIBC__)
 #define LDAPTOOL_CHARSET_DEFAULT	"US-ASCII"	/* glibc (Linux) */
+#elif defined(_WIN32)
+#define LDAPTOOL_CHARSET_DEFAULT	"windows-1252"	/* Windows */
+#define LDAPTOOL_CHARSET_WINANSI	"ANSI"		/* synonym */
 #else
 #define LDAPTOOL_CHARSET_DEFAULT	"646"		/* all others */
 #endif
@@ -74,29 +86,46 @@ extern "C" {
 #define LDAPTOOL_ICONV_NO_NULL_INBYTESLEFT	1
 #endif
 
-static char *convert_to_utf8( const char *src );
-#ifndef _WIN32
+static char *convert_to_utf8( const char *src_charset, const char *src );
 static const char *GetCurrentCharset(void);
-#endif
 
 
 /* Version that uses OS functions */
 char *
 ldaptool_local2UTF8( const char *src, const char *desc )
 {
-    char	*utf8;
+    static const char	*src_charset = NULL;
+    char		*utf8;
 
     if ( src == NULL ) {		/* trivial case # 1 */
 	utf8 = NULL;
     } else if ( *src == '\0' ) {	/* trivial case # 2 */
 	utf8 = strdup( "" );
     } else {
-	utf8 = convert_to_utf8( src );	/* the real deal */
+	/* Determine the source charset if not already done */
+	if ( NULL == src_charset ) {
+	    if ( NULL != ldaptool_charset
+			    && 0 != strcmp( ldaptool_charset, "" )) {
+		src_charset = ldaptool_charset;
+	    } else {
+		src_charset = GetCurrentCharset();
+	    }
+	}
+
+	if ( NULL != src_charset &&
+		( 0 == strcasecmp( LDAPTOOL_CHARSET_UTF8_A, src_charset ) ||
+		  0 == strcasecmp( LDAPTOOL_CHARSET_UTF8_B, src_charset ))) {
+	    /* no conversion needs to be done */
+	    return strdup( src );
+	}
+
+	utf8 = convert_to_utf8( src_charset, src );	/* the real deal */
 
 	if ( NULL == utf8 ) {
 	    utf8 = strdup( src );	/* fallback: no conversion */
 	    fprintf( stderr, "%s: warning: no conversion of %s to "
-		    LDAPTOOL_CHARSET_UTF8 "\n", desc, ldaptool_progname );
+		    LDAPTOOL_CHARSET_UTF8_OSNAME "\n",
+		    ldaptool_progname, desc );
 	}
     }
 
@@ -110,9 +139,27 @@ ldaptool_local2UTF8( const char *src, const char *desc )
  * src should not be NULL.
  */
 static char *
-convert_to_utf8( const char *src )	/* returns NULL on error */
+convert_to_utf8( const char *src_charset, const char *src )
 {
+    if (NULL != src_charset
+	    && 0 != strcasecmp( LDAPTOOL_CHARSET_DEFAULT, src_charset )
+	    && 0 != strcasecmp( LDAPTOOL_CHARSET_WINANSI, src_charset )) {
+	fprintf( stderr, "%s: conversion from %s to %s is not supported\n",
+		    ldaptool_progname, src_charset,
+		    LDAPTOOL_CHARSET_UTF8_OSNAME );
+	return NULL;
+    }
+
     return win_char_converter( src, FALSE );
+}
+
+
+/* returns a malloc'd string */
+static const char *
+GetCurrentCharset(void)
+{
+    /* Our concept of "locale" is very simple on Windows.... */
+    return strdup( LDAPTOOL_CHARSET_DEFAULT );
 }
 #else /* _WIN32 */
 
@@ -122,9 +169,8 @@ convert_to_utf8( const char *src )	/* returns NULL on error */
  * src should not be NULL.
  */
 static char *
-convert_to_utf8( const char *src )
+convert_to_utf8( const char *src_charset, const char *src )
 {
-    static const char	*src_charset = NULL;
     iconv_t		convdesc;
     char		*outbuf, *curoutbuf;
     size_t		inbytesleft, outbytesleft;
@@ -135,27 +181,13 @@ convert_to_utf8( const char *src )
 #define LDAPTOOL_ICONV_UNUSED_INBYTESLEFT	NULL
 #endif
 
-    /* Determine the source charset if not already done */
-    if ( NULL == src_charset ) {
-	if ( NULL != ldaptool_charset && 0 != strcmp( ldaptool_charset, "" )) {
-	    src_charset = ldaptool_charset;
-	} else {
-	    src_charset = GetCurrentCharset();
-	}
-    }
-
-    if ( NULL != src_charset
-		&& 0 == strcmp( LDAPTOOL_CHARSET_UTF8, src_charset )) {
-	/* no conversion needs to be done */
-	return strdup( src );
-    }
-
     /* Get a converter */
-    convdesc = iconv_open( LDAPTOOL_CHARSET_UTF8, src_charset );
+    convdesc = iconv_open( LDAPTOOL_CHARSET_UTF8_OSNAME, src_charset );
     if ( (iconv_t)-1 == convdesc ) {
 	if ( errno == EINVAL ) {
 	    fprintf( stderr, "%s: conversion from %s to %s is not supported\n",
-			ldaptool_progname, src_charset, LDAPTOOL_CHARSET_UTF8 );
+			ldaptool_progname, src_charset,
+			LDAPTOOL_CHARSET_UTF8_OSNAME );
 	} else {
 	    perror( src_charset );
 	}
