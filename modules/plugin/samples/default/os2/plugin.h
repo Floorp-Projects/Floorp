@@ -108,7 +108,7 @@ public:
 
 #define PLUGINFINDER_COMMAND_BEGINNING "javascript:window.open(\""
 #define PLUGINFINDER_COMMAND_END "\",\"plugin\",\"toolbar=no,status=no,resizable=no,scrollbars=no,height=252,width=626\");"
-#define DEFAULT_PLUGINFINDER_URL "http://cgi.netscape.com/cgi-bin/plug-in_finder.cgi"
+#define DEFAULT_PLUGINFINDER_URL "http://plugins.netscape.com/plug-in_finder.adp"
 #define JVM_SMARTUPDATE_URL "http://home.netscape.com/plugins/jvm.html"
 
 #ifdef WIN32
