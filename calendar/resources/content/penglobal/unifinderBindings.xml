@@ -1,0 +1,172 @@
+<?xml version="1.0"?>
+
+<!-- 
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - OEone Corporation.
+   - Portions created by OEone Corporation are Copyright (C) 2001
+   - OEone Corporation. All Rights Reserved.
+   -
+   - Contributor(s): Garth Smedley (garths@oeone.com)
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   -  -->
+
+<!DOCTYPE window [
+    <!ENTITY % dtd1 SYSTEM "chrome://penglobal/locale/unifinder.dtd" > %dtd1;
+]>
+
+<bindings id="unifinderBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="unifinder-base">
+    <resources>
+      <stylesheet src="chrome://penglobal/skin/unifinder/unifinder.css"/>
+    </resources>
+  </binding>
+
+  <binding id="unifinder" extends="chrome://penglobal/content/unifinderBindings.xml#unifinder-base">
+    <content orient="vertical">
+      <xul:box orient="vertical" class="unifinder-internal-box" flex="1" >
+        <xul:box orient="horizontal" class="unifinder-top-box"  >
+          <xul:toolbox class="unifinder-toolbox"  flex="1">
+            <xul:toolbar id="unifinder-toolbar" flex="1">
+                <xul:box>
+                    <children includes="unifinder-button" />
+                </xul:box>
+                <spring flex="1"/>
+                <xul:unifinder-button class="unifinder-menu-box unifinder-options-button-1" inherits="popup=menu-popup"/>
+            </xul:toolbar>
+          </xul:toolbox>
+        </xul:box>
+          <xul:tabbox   class="unifinder-tab-box" unifinder-tab-box="true" orient="vertical" flex="1" >
+            <children includes="tabs"/>
+            <xul:spring class="unifinder-tabs-spacer" />
+            <children includes="tabpanels"/>
+          </xul:tabbox>
+      </xul:box>
+    </content>
+    <implementation>
+      <property name="selectedTab">
+        <setter>
+        <![CDATA[
+          var tabsItem = this.getTabsItem();
+          
+          if( tabsItem )
+          {
+               tabsItem.selectedTab = val;
+               return val;
+           }
+           else
+           {
+               return null;
+           }
+        ]]>
+        </setter>
+        
+        <getter>
+        <![CDATA[
+          var tabsItem = this.getTabsItem();
+          
+          if( tabsItem )
+          {
+               return tabsItem.selectedTab;
+           }
+           else
+           {
+               return null;
+           }
+        ]]>
+        </getter>
+      </property>
+      
+        <method name="getTabsItem">
+            <body>
+            <![CDATA[
+              var tabsList = document.getElementsByTagName( "tabs" );
+              
+              for( var i = 0; i < tabsList.length; ++i )
+              {
+                if( this ===  tabsList[i].parentNode )
+                    return tabsList[i];
+              }
+              
+              return null;
+            ]]>
+            </body>
+        </method>
+      
+    </implementation>
+  
+  
+  
+  </binding>
+
+
+  <binding id="unifinder-search-controls" extends="chrome://penglobal/content/unifinderBindings.xml#unifinder-base">
+    <content orient="horizontal">
+        <xul:hbox valign="middle" align="left" autostretch="never">
+            <xul:label for="unifinder-search-field" value="&unifinder.search.options.searchfor;" />
+            <xul:textbox class="dialog-field" id="unifinder-search-field" 
+                     inherits="onkeypress=keypressfunction" flex="1"/>  
+        </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="unifinder-history-controls" extends="chrome://penglobal/content/unifinderBindings.xml#unifinder-base">
+    <content orient="horizontal">
+        <xul:hbox class="unifinder-sub-control-box-class" align="left" valign="middle" autostretch="never">
+            <xul:label for="unifinder-history-menu" value="&unifinder.history.options.documentsused;"/>
+            <xul:menulist  class="dialog-field"  label="&unifinder.history.menu.today;" data="day" >
+                <xul:menupopup >
+                    <xul:menuitem label="&unifinder.history.menu.today;"         value="day"/>
+                    <xul:menuitem label="&unifinder.history.menu.thisweek;"     value="week"/>
+                    <xul:menuitem label="&unifinder.history.menu.thismonth;"   value="month"/>
+                    <xul:menuitem label="&unifinder.history.menu.thisyear;"    value="year"/>
+                </xul:menupopup>
+            </xul:menulist>
+        </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="unifinder-button-base" extends="xul:button">
+    <resources>
+      <stylesheet src="chrome://penglobal/skin/unifinder/unifinder.css"/>
+    </resources>
+    <content orient="vertical">
+        <xul:unifinder-image-button class="unifinder-button-image"  unifinder-button-part="button"   /> 
+        <xul:unifinder-image-button class="unifinder-button-text"   unifinder-button-part="text"     /> 
+    </content>
+  </binding>
+  
+    
+  
+
+      
+</bindings>          
+

@@ -1,0 +1,107 @@
+/* 
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is OEone Corporation.
+ *
+ * The Initial Developer of the Original Code is
+ * OEone Corporation.
+ * Portions created by OEone Corporation are Copyright (C) 2001
+ * OEone Corporation. All Rights Reserved.
+ *
+ * Contributor(s): Mostafa Hosseini (mostafah@oeone.com)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * 
+*/
+
+#include "nsISupports.idl"
+
+/**
+ * The uuid is a unique number identifying the interface normally
+ * called IID. It can be generated as follows:
+ *
+ * Windows: guidgen.exe
+ * Unix: uuidgen which comes with e2fsprogs package
+ * Mac: ???
+ * All platform: Using irc, connect to irc.mozilla.org and type in
+ *				/join #mozilla
+ *				/msg mozbot uuid
+ *
+ */
+
+[scriptable, uuid(89c5cd5a-af2d-45e6-83c7-2f2420a13626)]
+interface oeIICalEvent : nsISupports
+{
+	attribute unsigned long Id;
+	attribute string Title;
+	attribute string Description;
+	attribute string Location;
+    attribute string Category;
+	attribute boolean PrivateEvent;
+	attribute boolean AllDay;
+	attribute boolean Alarm;
+//	attribute boolean AlarmWentOff;
+	attribute unsigned long AlarmLength;
+	attribute string AlarmEmailAddress;
+	attribute string InviteEmailAddress;
+	attribute string SnoozeTime;
+    attribute short RecurType;
+    attribute unsigned long RecurInterval;
+	attribute string RepeatUnits;
+	attribute boolean RepeatForever;
+	void SetStartDate( in short year, in short month, in short day, in short hour, in short min);
+	void SetEndDate( in short year, in short month, in short day, in short hour, in short min);
+	void SetRecurInfo( in short type, in unsigned long interval, in short endyear, in short endmonth, in short endday);
+	string GetNextRecurrence( in short year, in short month, in short day );
+	string GetRecurEndDate();
+	string GetStartDate();
+	string GetEndDate();
+//	void SetAlarm(in short year, in short month, in short day, in short hour, in short min);
+};
+
+[scriptable, uuid(981ab93d-ad51-45bb-a4a2-e158c2cfdeb4)]
+interface oeIICal : nsISupports
+{
+	void Test();
+	long AddEvent( in oeIICalEvent icalevent );
+	void DeleteEvent( in long id );
+	oeIICalEvent FetchEvent( in long id );
+	void SnoozeEvent( in long id );
+	string SearchAlarm( in short year, in short month, in short day,
+					in short hour, in short min );
+	string SearchEvent( in short styear, in short stmonth, in short stday,
+					in short sthour, in short stmin,
+					in short endyear, in short endmonth, in short endday,
+					in short endhour, in short endmin );
+	void SetServer( in string str );
+	long UpdateEvent( in oeIICalEvent icalevent );
+	string SearchForEvent( in string sqlstr );
+};
+
+%{ C++
+extern nsresult
+NS_NewICal(oeIICal** inst);
+extern nsresult
+NS_NewICalEvent(oeIICalEvent** inst);
+%}

@@ -1,0 +1,18 @@
+Easy Install Instructions:
+
+1) Install a clean copy of Mozilla 0.9.5.
+1b) If you have a copy of Mozilla 0.9.5, ensure you last had the modern skin running. Or, if you've just installed it, run with Modern.
+
+If you can install RPMS:
+2) Install the libical RPM as root.
+
+Otherwise:
+2) Download http://www.softwarestudio.org/download/libical-0.23.tar.gz , untar and run make / make install
+
+3) Unzip the calendar zip somewhere sensible. You'll need to keep the files around wherever you put them.
+4) Edit the MOZ_PATH variable in the "calendar" and "setupcalendar" scripts to point to your 0.9.5 directory.
+5) From the calendar directory, run ./setupcalendar.
+6) Edit the file content/penglobal/penroot.js and change "/home/mikep" to your home directory.
+7) Run ./calendar to run the calendar. 
+
+Head to irc.mozilla.org #calendar to talk about any problems you encounter.

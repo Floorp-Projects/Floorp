@@ -1,0 +1,369 @@
+<?xml version="1.0"?>
+<!-- 
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - OEone Corporation.
+   - Portions created by OEone Corporation are Copyright (C) 2001
+   - OEone Corporation. All Rights Reserved.
+   -
+   - Contributor(s): Garth Smedley (garths@oeone.com), Mike Potter (mikep@oeone.com)
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   -  -->
+
+<!-- Style sheets -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/skin/calendar.css" ?>
+
+<!-- DTDs -->
+
+<!-- DTD File with all strings specific to the calendar -->
+<!DOCTYPE window 
+[
+    <!ENTITY % dtd1 SYSTEM "chrome://penglobal/locale/global.dtd" > %dtd1;
+    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
+]>
+
+
+<!-- The Window  -->
+
+<overlay
+   xmlns:html="http://www.w3.org/1999/xhtml"
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   >
+<script type="application/x-javascript" src="chrome://calendar/content/calendarMonthView.js"/>
+   
+   <vbox id="month-view-box" flex="1">
+      
+      <!-- Month View: Controls-->
+				  
+      <hbox id="month-controls-box">
+
+         <image flex="1" id="month-previous-button" onclick="gCalendarWindow.goToPrevious()"/>
+                  
+         <label id="month-title-text" value="" />
+                  
+         <box flex="1" id="month-next-button-box">
+            <image id="month-next-button" onclick="gCalendarWindow.goToNext()"/>            
+         </box>
+      
+      </hbox>            
+			  
+		<vbox id="month-content-box">
+			 
+   		<!-- Month View: Day name header -->
+   			 
+   		<hbox id="month-header-box" flex="1" >
+            <image class="month-header-image-class" id="month-header-day-1" />           
+            <image class="month-header-image-class" id="month-header-day-2" />           
+            <image class="month-header-image-class" id="month-header-day-3" />           
+            <image class="month-header-image-class" id="month-header-day-4" />           
+            <image class="month-header-image-class" id="month-header-day-5" />           
+            <image class="month-header-image-class" id="month-header-day-6" />           
+            <image class="month-header-image-class" id="month-header-day-7" />        
+   		</hbox>
+			 
+		   <!-- Month View: Calendar Grid -->
+				  
+         <box id="month-grid-box" flex="1">    
+   		   <grid id="month-grid" flex="1">
+   			<columns>
+   			   <column class="month-column-class" flex="1"/>
+   				<column class="month-column-class" flex="1"/>
+   				<column class="month-column-class" flex="1"/>
+   				<column class="month-column-class" flex="1"/>
+   				<column class="month-column-class" flex="1"/>
+   				<column class="month-column-class" flex="1"/>
+   				<column class="month-column-class" flex="1"/>
+   			</columns>
+   		
+            <rows >
+         
+               <row flex="1"  >
+   				   <vbox class="month-day-box-class weekend" flex="1" id="month-week-1-day-1-box" weekend="true">
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-1-day-1" value="" />
+                     </hbox>
+   					</vbox>    
+   					 
+                  <vbox class="month-day-box-class" flex="1" id="month-week-1-day-2-box" >
+   					   <hbox>
+   						      <label class="month-day-number-class" id="month-week-1-day-2" value="" />
+                     </hbox>
+   				   </vbox>    
+   					
+                  <vbox class="month-day-box-class" flex="1" id="month-week-1-day-3-box" >
+      				   <hbox>
+   						      <label class="month-day-number-class" id="month-week-1-day-3" value="" />
+                     </hbox>
+   					</vbox>
+   					
+                  <vbox class="month-day-box-class" flex="1" id="month-week-1-day-4-box" >
+   						<hbox>
+                        <label class="month-day-number-class" id="month-week-1-day-4" value="" />
+   						</hbox>                    
+   				   </vbox>    
+   							  
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-1-day-5-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-1-day-5" value="" />
+   						</hbox>                   
+   					</vbox>    
+   					
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-1-day-6-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-1-day-6" value="" />
+   						</hbox>                    
+   					</vbox>    
+   					
+                  <vbox class="month-day-box-class weekend saturday" flex="1"  id="month-week-1-day-7-box"  weekend="true" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-1-day-7" value="" />
+   						</hbox>                    
+   					</vbox>    
+   				</row>
+   						
+   				<row flex="1"  >
+   				   <vbox class="month-day-box-class weekend" flex="1"  id="month-week-2-day-1-box"  weekend="true">
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-2-day-1" value="" />
+   						</hbox>                    
+   					</vbox>    
+   					
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-2-day-2-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-2-day-2" value="" />
+   					   </hbox>                    
+   					</vbox>    
+   							  
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-2-day-3-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-2-day-3" value="" />
+   						</hbox>                   
+   					</vbox>    
+   					
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-2-day-4-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-2-day-4" value="" />
+   						</hbox>                    
+   					</vbox>    
+   					
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-2-day-5-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-2-day-5" value="" />
+   						</hbox>                   
+   					</vbox>    
+   							  
+                  <vbox class="month-day-box-class" flex="1" id="month-week-2-day-6-box"  >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-2-day-6" value="" />
+   						</hbox>                    
+   					</vbox>    
+   							  
+                  <vbox class="month-day-box-class weekend saturday" flex="1" id="month-week-2-day-7-box" weekend="true" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-2-day-7" value="" />
+   						</hbox>                    
+   					</vbox>    
+   			   </row>
+   						
+   				<row flex="1"  >
+   				   <vbox class="month-day-box-class weekend" flex="1" id="month-week-3-day-1-box" weekend="true" >
+   					   <hbox>
+   					      <label class="month-day-number-class" id="month-week-3-day-1" value="" />
+   						</hbox>                    
+                  </vbox>    
+   							  
+                  <vbox class="month-day-box-class" flex="1" id="month-week-3-day-2-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-3-day-2" value="" />
+   						</hbox>                    
+   					</vbox>    
+   							  
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-3-day-3-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-3-day-3" value="" />
+   						</hbox>                    
+   					</vbox>    
+   					
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-3-day-4-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-3-day-4" value="" />
+   						</hbox>                    
+   					</vbox>    
+   					
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-3-day-5-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-3-day-5" value="" />
+   						</hbox>                   
+   					</vbox>    
+   					
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-3-day-6-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-3-day-6" value="" />
+   						</hbox>                    
+   					</vbox>    
+   							  
+                  <vbox class="month-day-box-class weekend saturday" flex="1"  id="month-week-3-day-7-box" weekend="true" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-3-day-7" value="" />
+   						</hbox>                    
+   					</vbox>    
+   				</row>
+   						
+   				<row flex="1"  >
+   				   <vbox class="month-day-box-class weekend" flex="1"  id="month-week-4-day-1-box" weekend="true" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-4-day-1" value="" />
+   						</hbox>                    
+   					</vbox>    
+   					
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-4-day-2-box">
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-4-day-2" value="" />
+   						</hbox>
+   					</vbox>    
+   						  
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-4-day-3-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-4-day-3" value="" />
+   					   </hbox>
+   					</vbox>    
+   							  
+                  <vbox class="month-day-box-class" flex="1"   id="month-week-4-day-4-box">
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-4-day-4" value="" />
+   						</hbox>
+   					</vbox>    
+   							  
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-4-day-5-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-4-day-5" value="" />
+   						</hbox>
+   					</vbox>    
+   						  
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-4-day-6-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-4-day-6" value="" />
+   						</hbox>
+   					</vbox>    
+   					
+                  <vbox class="month-day-box-class weekend saturday" flex="1"  id="month-week-4-day-7-box" weekend="true" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-4-day-7" value="" />
+   						</hbox>
+   					</vbox>    
+   			   </row>
+   						
+   				<row flex="1"  >
+   				   <vbox class="month-day-box-class weekend" flex="1" id="month-week-5-day-1-box" weekend="true" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-5-day-1" value="" />
+   						</hbox>                    
+   					</vbox>    
+   					
+                  <vbox class="month-day-box-class" flex="1" id="month-week-5-day-2-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-5-day-2" value="" />
+   						</hbox>
+   				   </vbox>    
+   					
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-5-day-3-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-5-day-3" value="" />
+   						</hbox>
+   					</vbox>    
+   							  
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-5-day-4-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-5-day-4" value="" />
+   						</hbox>
+   					</vbox>    
+   							  
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-5-day-5-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-5-day-5" value="" />
+   						</hbox>
+   					</vbox>    
+   					
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-5-day-6-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-5-day-6" value="" />
+   						</hbox>
+   					</vbox>    
+   					
+                  <vbox class="month-day-box-class weekend saturday" flex="1"  id="month-week-5-day-7-box" weekend="true" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-5-day-7" value="" />
+   						</hbox>
+   					</vbox>    
+   				</row>
+   						
+   				<row flex="1"  >
+   				   <vbox class="month-day-box-class weekend" flex="1"  id="month-week-6-day-1-box" weekend="true" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-6-day-1" value="" />
+   						</hbox>                    
+   					</vbox>    
+   				  
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-6-day-2-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-6-day-2" value="" />
+   						</hbox>                    
+   					</vbox>    
+   							  
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-6-day-3-box" >
+   					   <hbox>
+   						   <label class="month-day-number-class" id="month-week-6-day-3" value="" />
+   						</hbox>
+   					</vbox>    
+   							  
+                  <vbox class="month-day-box-class" flex="1"  id="month-week-6-day-4-box" >
+   					   <label  class="month-day-number-class" id="month-week-6-day-4" value="" />
+   					</vbox>    
+   							  
+                  <vbox class="month-day-box-class" flex="1"   id="month-week-6-day-5-box">
+   					   <label  class="month-day-number-class" id="month-week-6-day-5" value="" />
+   					</vbox>    
+   					
+                  <vbox class="month-day-box-class" flex="1"   id="month-week-6-day-6-box">
+   					   <label  class="month-day-number-class" id="month-week-6-day-6" value="" />
+   					</vbox>    
+   		         
+                  <vbox class="month-day-box-class weekend saturday" flex="1"  id="month-week-6-day-7-box" weekend="true" >
+   					   <label  class="month-day-number-class" id="month-week-6-day-7" value="" />
+   					</vbox>    
+   				</row>
+            </rows>
+			</grid>
+			 
+      </box>  <!-- End: Month grid box -->
+       
+   </vbox>  <!-- End: Month content box -->
+   </vbox>
+</overlay>

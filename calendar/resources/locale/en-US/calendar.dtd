@@ -1,0 +1,126 @@
+<!-- 
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - OEone Corporation.
+   - Portions created by OEone Corporation are Copyright (C) 2001
+   - OEone Corporation. All Rights Reserved.
+   -
+   - Contributor(s): Garth Smedley (garths@oeone.com), Mike Potter (mikep@oeone.com)
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   -  -->
+
+<!ENTITY alarm.units.minutes  "Minutes" >
+<!ENTITY alarm.units.hours    "Hours" >
+<!ENTITY alarm.units.days     "Days" >
+
+
+<!ENTITY repeat.units.days     "Days" >
+<!ENTITY repeat.units.weeks    "Weeks" >
+<!ENTITY repeat.units.months   "Months" >
+<!ENTITY repeat.units.years    "Years" >
+
+
+<!ENTITY newevent.title.label        "Title" >
+<!ENTITY newevent.location.label     "Location" >
+<!ENTITY newevent.start.label        "Start" >
+<!ENTITY newevent.date.label         "Date" >
+<!ENTITY newevent.end.label          "End" >
+<!ENTITY newevent.alldayevent.label  "This is an all-day event." >
+<!ENTITY newevent.description.label  "Description" >
+<!ENTITY newevent.private.label      "Private" >
+<!ENTITY newevent.private.note       "This event is private." >
+<!ENTITY newevent.alarm.label        "Alarm" >
+<!ENTITY newevent.invite.label       "Invite" >
+<!ENTITY newevent.email.label       "Email Alarm To" >
+<!ENTITY newevent.beforealarm.label  "before the event starts" >
+<!ENTITY newevent.repeat.label       "Repeat every" >
+<!ENTITY newevent.until.label        "Until" >
+<!ENTITY newevent.forever.label      "Forever" >
+<!ENTITY newevent.category.label      "Category" >
+<!ENTITY newevent.choosecategory.label      "Choose A Category" >
+<!ENTITY newevent.nocategory.label    "No Category" >
+                                       
+<!ENTITY newevent.starttimeerror.alertmessage "Your event cannot end before it has started. Please fix either the start time or the end time." >        
+<!ENTITY calendar.confirm.deleteevent "Are you sure you want to delete this event titled: " >        
+
+<!ENTITY event.alarm.checkbox.label "Remind me again in " >
+
+<!ENTITY event.title.alarm         "ALARM" >
+<!ENTITY event.title.new         "NEW EVENT" >
+<!ENTITY event.title.edit        "EDIT EVENT" >
+
+<!ENTITY event.tip.new         "Create a new event." >
+<!ENTITY event.tip.edit        "Edit an existing event." >
+<!ENTITY event.tip.alert       "Alarm!" >
+
+
+<!ENTITY calendar.flat.topbar.new              "New Event" >
+<!ENTITY calendar.flat.topbar.gototoday        "Go To Today" >
+<!ENTITY calendar.flat.topbar.choosedate       "Go To Date" >
+<!ENTITY calendar.flat.topbar.dayview          "Day View" >
+<!ENTITY calendar.flat.topbar.weekview         "Week View" >
+<!ENTITY calendar.flat.topbar.monthview        "Month View" >
+
+<!ENTITY calendar.tools.delete.tooltip         "Delete Event" >
+<!ENTITY calendar.tools.modify.tooltip         "Modify Event" >
+
+<!ENTITY calendar.newevent.button.tooltip         "Create New Calendar Event" >
+<!ENTITY calendar.gototoday.button.tooltip        "Go To Today" >
+<!ENTITY calendar.choosedate.button.tooltip       "Pick Date To Go To" >
+<!ENTITY calendar.dayview.button.tooltip          "Switch To Day View" >
+<!ENTITY calendar.weekview.button.tooltip         "Switch To Week View" >
+<!ENTITY calendar.monthview.button.tooltip        "Switch To Month View" >
+
+<!ENTITY calendar.newevent.button.label         "New Event" >
+<!ENTITY calendar.gototoday.button.label        "Today's Date" >
+<!ENTITY calendar.choosedate.button.label       "Choose A Date" >
+<!ENTITY calendar.dayview.button.label          "Day View" >
+<!ENTITY calendar.weekview.button.label         "Week View" >
+<!ENTITY calendar.monthview.button.label        "Month View" >
+
+<!ENTITY calendar.menu.options.newcategory   "New Category" >
+<!ENTITY calendar.menu.options.modify        "Edit" >
+<!ENTITY calendar.menu.options.remove        "Delete" >
+
+<!ENTITY calendar.main.tab.label        "Events" >
+
+<!ENTITY calendar.portlet.outliner.titlecol "Title" >
+<!ENTITY calendar.portlet.outliner.datecol  "Date" >
+<!ENTITY calendar.portlet.outliner.timecol  "Time" >
+
+<!ENTITY calendar.portlet.bottom.addevent     "Add New Event" >
+<!ENTITY calendar.portlet.bottom.viewcalendar "View Calendar" >
+
+<!ENTITY calendar.portlet.title.nexteventsStart "Your next" >
+<!ENTITY calendar.portlet.title.nexteventsEnd   "events" >
+<!ENTITY calendar.portlet.title.nexteventEnd    "event" >
+<!ENTITY calendar.portlet.title.noEventsText    "No Events" >
+<!ENTITY calendar.portlet.title.today           "Today's Events" >
+<!ENTITY calendar.portlet.title.week           "Week's Events" >
+ 
+ 

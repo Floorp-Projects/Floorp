@@ -1,0 +1,256 @@
+/* 
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is OEone Corporation.
+ *
+ * The Initial Developer of the Original Code is
+ * OEone Corporation.
+ * Portions created by OEone Corporation are Copyright (C) 2001
+ * OEone Corporation. All Rights Reserved.
+ *
+ * Contributor(s): Colin Phillips (colinp@oeone.com)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * 
+*/
+
+/*********************************************
+*
+* Dialog Overlay Cascading Style Sheet
+* Defines the default look for all dialogs
+*
+**********************************************/
+
+/* box surrounding the dialog */
+#dialog-box
+{
+	border					:1px #003399 solid;
+	background-color		:#E7EEEC;
+}
+
+/* dialog title */
+#standard-dialog-title
+{
+	border					:1px #000000 solid;
+	background-image			:url('chrome://penglobal/skin/dialog/standard-dialog-title-background.png');
+	background-repeat			:repeat;
+	vertical-align				:bottom;
+}
+
+/* this needs 1 px padding because of the 1 px border in the standard-dialog-title */
+#standard-dialog-title-icon
+{
+	padding : 1px;
+}
+
+#standard-dialog-title-text
+{
+	color						:#FFFFFF;
+	font-family					:Helvetica;
+	font-size					:14pt;
+}
+
+/* Standard Dialog Menu */
+#standard-dialog-title-menu
+{
+}
+
+/* dialog tips */
+#standard-dialog-tips
+{
+	border-right				:1px #000000 solid;
+	border-left				:1px #000000 solid;
+	border-bottom				:1px #000000 solid;
+	/* background-color			:#FFFFFF;*/
+	backround-color				:#E7EEEC;
+	font-family				:Helvetica;
+	font-size				:8pt;
+	background-image			:url('chrome://penglobal/skin/dialog/standard-dialog-tips-bg.png');
+	background-repeat			:repeat-y;
+	
+}
+
+/* the main content of the dialog */
+#standard-dialog-content
+{
+	backround-color				:#E7EEEC;
+	padding					:10px;
+}
+
+/* Message Title */
+#message-dialog-title-warning,
+#message-dialog-title-information,
+#message-dialog-title-critical,
+#message-dialog-title-question
+{
+	border					:1px #000000 solid;
+	background-image			:url('chrome://penglobal/skin/dialog/standard-dialog-title-background.png');
+	background-repeat			:repeat;
+	vertical-align				:bottom;
+}
+
+#message-dialog-title-warning-text,
+#message-dialog-title-information-text,
+#message-dialog-title-critical-text,
+#message-dialog-title-question-text
+{
+	color						:#FFFFFF;
+	font-family					:Helvetica;
+	font-size					:14pt;
+}
+
+/*  Message contents */
+#message-dialog-content-warning,
+#message-dialog-content-information,
+#message-dialog-content-critical,
+#message-dialog-content-question
+{
+	backround-color				:#E7EEEC;
+	padding			:10px;
+   -moz-box-align : center;
+}
+
+.daveskungfuclass
+{
+	font-family			:Helvetica;
+	font-size			:10pt;
+	padding-left			:10px;
+	padding-right			:10px;
+	backround-color			:#E7EEEC;
+        max-width                       :500px;
+        overflow                        :hidden;
+}
+
+/* Details for dialogs, provides advanced functionality */
+#advanced-dialog-content
+{
+	padding			:10px;
+}    
+
+/* Bigger margin and make the default button bigger than regular buttons */
+.dialog-btn-class[default="true"]
+{
+  min-height: 20px;
+}
+
+.dialog-btn-class
+{
+  height: 15px;
+  margin-left: 4px;
+  margin-right: 4px;
+}
+
+
+/* Advanced Components less/more toggle*/
+button.showLess,
+button.showMore
+{
+   margin              	: 0px; 
+   border              	: 0px;
+   min-width           	: 0px; 
+   padding           	: 0px;
+   -moz-user-focus     	: ignore !important;
+} 
+
+#advanced-dialog-advanced-toggle.showLess
+{
+	list-style-image        : url("chrome://penglobal/skin/dialog/standard-dialog-command-less.png");
+}
+
+#advanced-dialog-advanced-toggle.showMore
+{
+	list-style-image        : url("chrome://penglobal/skin/dialog/standard-dialog-command-more.png");
+	
+}
+
+/* Standard Dialog Command Button Bars */
+#standard-dialog-command
+{
+	background-color: #083A7C;
+}
+
+/* center the content vertically instead of stretching it */
+
+#standard-dialog-commands-wizard,
+#standard-dialog-commands-confirmation,
+#standard-dialog-commands-confirmation-nocancel,
+#standard-dialog-commands-standard,
+#standard-dialog-commands-standard-nocancel
+{
+   -moz-box-align : center;
+   min-height : 30px;
+}
+
+/* center the buttons vertically instead of stretching them,
+   allows buttons to be different sizes
+*/
+
+.standard-dialog-commands-button-box-class
+{
+   -moz-box-align : center;
+}
+
+
+/*Standard Dialog Buttons */
+#standard-dialog-commands-wizard-btn-previous,
+#standard-dialog-commands-wizard-btn-next,
+#standard-dialog-commands-wizard-btn-finish,
+#standard-dialog-commands-confirmation-btn-yes,
+#standard-dialog-commands-confirmation-btn-no,
+#standard-dialog-commands-standard-btn-ok
+{
+
+}
+
+#standard-dialog-commands-wizard-btn-cancel,
+#standard-dialog-commands-confirmation-btn-cancel,
+#standard-dialog-commands-standard-btn-cancel
+{
+}
+
+/* Message Dialog Command Button Bars */
+#message-dialog-commands-warning,
+#message-dialog-commands-warning-nocancel,
+#message-dialog-commands-information,
+#message-dialog-commands-critical,
+#message-dialog-commands-question,
+#message-dialog-commands-question-nocancel
+{
+	background-color: #083A7C;
+}
+
+/* Buttons */
+#dialog-btn-ok,
+#dialog-btn-yes,
+#dialog-btn-no,
+#mp-titlebar-ctrl-close-btn 
+{
+}
+
+#commonDialog-content-box
+{
+   -moz-box-align : start;
+}
+
+ 

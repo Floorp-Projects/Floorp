@@ -1,0 +1,237 @@
+<?xml version="1.0"?>
+
+<!-- 
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - OEone Corporation.
+   - Portions created by OEone Corporation are Copyright (C) 2001
+   - OEone Corporation. All Rights Reserved.
+   -
+   - Contributor(s): Garth Smedley (garths@oeone.com), Mike Potter (mikep@oeone.com)
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   -  -->
+
+
+
+<!-- Style sheets -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/skin/calendar.css" ?>
+
+<!-- DTDs -->
+
+<!-- DTD File with all strings specific to the calendar -->
+<!DOCTYPE window 
+[
+    <!ENTITY % dtd1 SYSTEM "chrome://penglobal/locale/global.dtd" > %dtd1;
+    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
+]>
+
+
+<!-- The Window  -->
+
+<overlay
+   xmlns:html="http://www.w3.org/1999/xhtml"
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   >
+
+<script type="application/x-javascript" src="chrome://calendar/content/calendarDayView.js"/>
+   
+ <vbox id="day-view-box" flex="1">
+   
+        <!-- Day View: Controls-->
+           
+      <hbox id="day-controls-box">
+   
+         <image flex="1" id="day-previous-button" onclick="gCalendarWindow.goToPrevious()"/>
+    
+         <label id="day-title-text" value="" />
+               
+         <box flex="1" id="day-next-button-box">
+            <image id="day-next-button" onclick="gCalendarWindow.goToNext()"/>
+         </box>
+    
+      </hbox>        
+        <!-- Day View:  -->
+            
+      <box id="all-day-content-box" collapsed="true" flex="1">
+         <label id="all-day-content-box-text" value="All-Day Events: "/>
+      </box>
+            
+      <!-- This is an overlay being included from above -->
+      <box id="day-view-content-box" autostretch="true" flex="1">
+            <stack id="day-view-content-board" flex="1" height="1200">    
+                <image src="chrome://calendar/skin/day_left_gradient.png" left="1" top="1" width="30" height="1199"/>           
+
+                <hbox top="0" left="31" class="day-view-hour-box-class" id="day-tree-item-0" onclick="dayViewHourClick( 0, event  )" ondblclick="dayViewHourDoubleClick( 0, event )" >
+                   <box class="day-time-class" flex="1">
+                      <label class="day-time-class" id="day-view-hour" value="&time.midnight; " />
+                   </box>
+                </hbox>
+                
+                <box top="50" left="31" class="day-view-hour-box-class" id="day-tree-item-1" onclick="dayViewHourClick( 1, event  )" ondblclick="dayViewHourDoubleClick( 1, event )"  >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.1; " />
+                   </box>
+                </box>
+                
+                <box top="100" left="31" class="day-view-hour-box-class" id="day-tree-item-2" onclick="dayViewHourClick( 2, event  )" ondblclick="dayViewHourDoubleClick( 2, event )"  >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.2; " />
+                   </box>
+                </box>
+                
+                <box top="150" left="31" class="day-view-hour-box-class" id="day-tree-item-3" onclick="dayViewHourClick( 3, event  )" ondblclick="dayViewHourDoubleClick( 3, event )" >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.3; " />
+                   </box>
+                </box>
+                
+                <box top="200" left="31" class="day-view-hour-box-class" id="day-tree-item-4" onclick="dayViewHourClick( 4, event  )" ondblclick="dayViewHourDoubleClick( 4, event )" >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.4; " />
+                   </box>
+                </box>
+                
+                <box top="250" left="31" class="day-view-hour-box-class" id="day-tree-item-5" onclick="dayViewHourClick( 5, event  )" ondblclick="dayViewHourDoubleClick( 5, event )" >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.5; " />
+                   </box>
+                </box>
+                
+                <box top="300" left="31" class="day-view-hour-box-class" id="day-tree-item-6" onclick="dayViewHourClick( 6, event  )" ondblclick="dayViewHourDoubleClick( 6, event )" >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.6; " />
+                   </box>
+                </box>
+                
+                <box top="350" left="31" class="day-view-hour-box-class" id="day-tree-item-7" onclick="dayViewHourClick( 7, event  )" ondblclick="dayViewHourDoubleClick( 7, event )" >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.7; " />
+                   </box>
+                </box>
+                
+                <box top="400" left="31" class="day-view-hour-box-class" id="day-tree-item-8" onclick="dayViewHourClick( 8, event  )" ondblclick="dayViewHourDoubleClick( 8, event )"  >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.8; " />
+                   </box>
+                </box>
+                
+                <box top="450" left="31" class="day-view-hour-box-class" id="day-tree-item-9" onclick="dayViewHourClick( 9, event  )" ondblclick="dayViewHourDoubleClick( 9, event )"  >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.9; " />
+                   </box>
+                </box>
+                
+                <box top="500" left="31" class="day-view-hour-box-class" id="day-tree-item-10" onclick="dayViewHourClick( 10, event  )" ondblclick="dayViewHourDoubleClick( 10, event )"  >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.10; " />
+                   </box>
+                </box>
+                
+                <box top="550" left="31" class="day-view-hour-box-class" id="day-tree-item-11" onclick="dayViewHourClick( 11, event  )" ondblclick="dayViewHourDoubleClick( 11, event )"  >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.11; " />
+                   </box>
+                </box>
+                
+                <box top="600" left="31" class="day-view-hour-box-class" id="day-tree-item-12" onclick="dayViewHourClick( 12, event  )" ondblclick="dayViewHourDoubleClick( 12, event )"  >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.noon; " />
+                   </box>
+                </box>
+                
+                <box top="650" left="31" class="day-view-hour-box-class" id="day-tree-item-13" onclick="dayViewHourClick( 13, event  )" ondblclick="dayViewHourDoubleClick( 13, event )" >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.13; " />
+                   </box>
+                </box>
+                
+                <box top="700" left="31" class="day-view-hour-box-class" id="day-tree-item-14" onclick="dayViewHourClick( 14, event  )" ondblclick="dayViewHourDoubleClick( 14, event )" >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.14; " />
+                   </box>
+                </box>
+                
+                <box top="750" left="31" class="day-view-hour-box-class" id="day-tree-item-15" onclick="dayViewHourClick( 15, event  )" ondblclick="dayViewHourDoubleClick( 15, event )" >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.15; " />
+                   </box>
+                </box>
+                
+                <box top="800" left="31" class="day-view-hour-box-class" id="day-tree-item-16" onclick="dayViewHourClick( 16, event  )" ondblclick="dayViewHourDoubleClick( 16, event )" >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.16; " />
+                   </box>
+                </box>
+                
+                <box top="850" left="31" class="day-view-hour-box-class" id="day-tree-item-17" onclick="dayViewHourClick( 17, event  )" ondblclick="dayViewHourDoubleClick( 17, event )" >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.17; " />
+                   </box>
+                </box>
+                
+                <box top="900" left="31" class="day-view-hour-box-class" id="day-tree-item-18" onclick="dayViewHourClick( 18, event  )" ondblclick="dayViewHourDoubleClick( 18, event )" >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.18; " />
+                   </box>
+                </box>
+                
+                <box top="950" left="31" class="day-view-hour-box-class" id="day-tree-item-19" onclick="dayViewHourClick( 19, event  )" ondblclick="dayViewHourDoubleClick( 19, event )" >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.19; " />
+                   </box>
+                </box>
+                
+                <box top="1000" left="31" class="day-view-hour-box-class" id="day-tree-item-20" onclick="dayViewHourClick( 20, event  )" ondblclick="dayViewHourDoubleClick( 20, event )" >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.20; " />
+                   </box>
+                </box>
+                
+                <box top="1050" left="31" class="day-view-hour-box-class" id="day-tree-item-21" onclick="dayViewHourClick( 21, event  )" ondblclick="dayViewHourDoubleClick( 21, event )" >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.21; " />
+                   </box>
+                </box>
+                
+                <box top="1100" left="31" class="day-view-hour-box-class" id="day-tree-item-22" onclick="dayViewHourClick( 22, event  )" ondblclick="dayViewHourDoubleClick( 22, event )" >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.22; " />
+                   </box>
+                </box>
+                
+                <box top="1150" left="31" class="day-view-hour-box-class" id="day-tree-item-23" onclick="dayViewHourClick( 23, event  )" ondblclick="dayViewHourDoubleClick( 23, event )" >
+                   <box class="day-time-class">
+                      <label class="day-time-class" id="day-view-hour" value="&time.23; " />
+                   </box>
+                </box>
+            </stack>    
+      </box>   <!-- End: day-tree-content-box -->
+   </vbox>  <!-- End: Calendar Day View -->
+</overlay>

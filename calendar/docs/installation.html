@@ -1,0 +1,15 @@
+<center><font size="+1"><i>Mozilla Calendar Installation</i></font></center>
+<hr width=100% size=1 noshade>
+<p><b>Installation Instructions</b> 
+<ul>
+    <li>Download and install a clean version of Mozilla 0.9.5. Presently, the calendar only works with this version.
+    <li>Download and install libical (version 0.23 ). We've provided an RPM that installs it to /usr here.
+    <li>Download and unzip calendar.tar.gz 
+    <li>Follow the instructions in the INSTALL file, which are:
+        <ul>
+            <li>Ensure that calendar and setupcalendar variables MOZ_PATH point to your install directory of Mozilla 0.9.5.
+            <li>Edit content/penglobal/penroot.js and change "/home/mikep" to your home directory.
+            <li>Run "./setupcalendar" from the calendar directory.
+            <li>Launch the calendar by running "./calendar"
+         </ul>
+</ul>    

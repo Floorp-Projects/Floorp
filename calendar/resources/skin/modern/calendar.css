@@ -1,0 +1,1222 @@
+/* 
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is OEone Corporation.
+ *
+ * The Initial Developer of the Original Code is
+ * OEone Corporation.
+ * Portions created by OEone Corporation are Copyright (C) 2001
+ * OEone Corporation. All Rights Reserved.
+ *
+ * Contributor(s): Garth Smedley (garths@oeone.com) , Mike Potter (mikep@oeone.com)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * 
+*/
+
+
+
+/*--------------------------------------------------------------------
+ *   C A L E N D A R
+ *-------------------------------------------------------------------*/
+
+#calendar-window
+{
+}
+
+
+/*--------------------------------------------------------------------
+ *   Box for the WHOLE calendar
+ *-------------------------------------------------------------------*/
+
+#calendar-top-box
+{
+   background-color     : #E7EEEC;
+	/*border					: 2px solid yellow;*/
+}
+
+#calendar-content-box
+{
+	/*border					: 1px solid green;*/
+}
+
+#calendar-unifinder-overlay
+{
+}
+
+
+/*--------------------------------------------------------------------
+ *   Top bar, with name, image and buttons
+ *-------------------------------------------------------------------*/
+
+#calendar-controls-box
+{
+   background-image        : url("chrome://calendar/skin/calendar_topbar.png");
+   background-repeat       : no-repeat;
+   min-height              : 33px;
+   max-height              : 33px;
+}
+
+
+/*--------------------------------------------------------------------
+ *   Button bar vertical divider line
+ *-------------------------------------------------------------------*/
+
+.calendar-control-divider
+{
+    list-style-image        : url("chrome://calendar/skin/divider.png");
+}
+
+
+button.calendar-management-button,
+button.calendar-management-button:hover,
+button.calendar-management-button:hover:active
+{
+	margin				  		: 0px;
+	border						: 0px; 
+	 -moz-binding				: url("chrome://calendar/content/penBindings.xml#penButton");
+	-moz-user-focus			: ignore !important;
+	max-height					: 36px;
+}
+
+/*--------------------------------------------------------------------
+ *   new event button
+ *-------------------------------------------------------------------*/
+
+#calendar-new-event-button 
+  {
+    list-style-image        : url("chrome://calendar/skin/newitem_up.png");
+  }
+#calendar-new-event-button[disabled="true"],
+#calendar-new-event-button[disabled="true"]:hover,
+#calendar-new-event-button[disabled="true"]:hover:active
+  {
+   list-style-image         : url("chrome://calendar/skin/newitem_disabled.png");
+  }
+#calendar-new-event-button:hover
+  {
+    list-style-image        : url("chrome://calendar/skin/newitem_hover.png");
+  }
+#calendar-new-event-button:hover:active
+  {
+    list-style-image        : url("chrome://calendar/skin/newitem_down.png");
+  }
+
+
+/*--------------------------------------------------------------------
+ *   Go To Today button
+ *-------------------------------------------------------------------*/
+
+#calendar-go-to-today-button 
+  {
+    list-style-image        : url("chrome://calendar/skin/today_up.png");
+  }
+#calendar-go-to-today-button[disabled="true"],
+#calendar-go-to-today-button[disabled="true"]:hover,
+#calendar-go-to-today-button[disabled="true"]:hover:active
+  {
+   list-style-image         : url("chrome://calendar/skin/today_disabled.png");
+  }
+#calendar-go-to-today-button:hover
+  {
+    list-style-image        : url("chrome://calendar/skin/today_hover.png");
+  }
+#calendar-go-to-today-button:hover:active
+  {
+    list-style-image        : url("chrome://calendar/skin/today_down.png");
+  }
+
+
+/*--------------------------------------------------------------------
+ *   Choose date button
+ *-------------------------------------------------------------------*/
+
+#calendar-choose-date-button 
+  {
+    list-style-image        : url("chrome://calendar/skin/goto_up.png");
+  }
+#calendar-choose-date-button[disabled="true"],
+#calendar-choose-date-button[disabled="true"]:hover,
+#calendar-choose-date-button[disabled="true"]:hover:active
+  {
+   list-style-image         : url("chrome://calendar/skin/goto_disabled.png");
+  }
+#calendar-choose-date-button:hover
+  {
+    list-style-image        : url("chrome://calendar/skin/goto_hover.png");
+  }
+#calendar-choose-date-button:hover:active
+  {
+    list-style-image        : url("chrome://calendar/skin/goto_down.png");
+  }
+
+
+/*--------------------------------------------------------------------
+ *   Change to month view button
+ *-------------------------------------------------------------------*/
+
+#calendar-month-view-button 
+  {
+    list-style-image        : url("chrome://calendar/skin/month_up.png");
+  }
+#calendar-month-view-button[disabled="true"],
+#calendar-month-view-button[disabled="true"]:hover,
+#calendar-month-view-button[disabled="true"]:hover:active
+  {
+   /*list-style-image         : url("chrome://calendar/skin/month_disabled.png");*/
+	list-style-image         : url("chrome://calendar/skin/month_down.png");
+  }
+#calendar-month-view-button:hover
+  {
+    list-style-image        : url("chrome://calendar/skin/month_hover.png");
+  }
+#calendar-month-view-button:hover:active
+  {
+    list-style-image        : url("chrome://calendar/skin/month_down.png");
+  }
+
+/*--------------------------------------------------------------------
+ *   Change to week view button
+ *-------------------------------------------------------------------*/
+
+#calendar-week-view-button 
+  {
+    list-style-image        : url("chrome://calendar/skin/week_up.png");
+  }
+#calendar-week-view-button[disabled="true"],
+#calendar-week-view-button[disabled="true"]:hover,
+#calendar-week-view-button[disabled="true"]:hover:active
+  {
+   /*list-style-image         : url("chrome://calendar/skin/week_disabled.png");*/
+	list-style-image         : url("chrome://calendar/skin/week_down.png");
+  }
+#calendar-week-view-button:hover
+  {
+    list-style-image        : url("chrome://calendar/skin/week_hover.png");
+  }
+#calendar-week-view-button:hover:active
+  {
+    list-style-image        : url("chrome://calendar/skin/week_down.png");
+  }
+
+/*--------------------------------------------------------------------
+ *   Change to day view button
+ *-------------------------------------------------------------------*/
+
+#calendar-day-view-button 
+  {
+    list-style-image        : url("chrome://calendar/skin/day_up.png");
+  }
+#calendar-day-view-button[disabled="true"],
+#calendar-day-view-button[disabled="true"]:hover,
+#calendar-day-view-button[disabled="true"]:hover:active
+  {
+   /*list-style-image         : url("chrome://calendar/skin/day_disabled.png");*/
+	list-style-image         : url("chrome://calendar/skin/day_down.png");
+  }
+#calendar-day-view-button:hover
+  {
+    list-style-image        : url("chrome://calendar/skin/day_hover.png");
+  }
+#calendar-day-view-button:hover:active
+  {
+    list-style-image        : url("chrome://calendar/skin/day_down.png");
+  }
+
+
+/*--------------------------------------------------------------------
+ *   Deck containing the three views, month, day week
+ *-------------------------------------------------------------------*/
+
+#calendar-deck
+{
+}
+
+
+
+
+
+
+/*--------------------------------------------------------------------
+ *   M O N T H   V I E W
+ *-------------------------------------------------------------------*/
+
+
+/*--------------------------------------------------------------------
+ * Box containing the whole month view
+ * I found that the only way I could restrict the size of the grid
+ * to match the unerlying image was with min and max width's
+ *-------------------------------------------------------------------*/
+
+#month-view-box
+{
+   
+   /*border             : 1px solid blue;*/
+   padding-top        : 20px;
+   max-width          : 660px; /* this is needed for some reason.*/
+   
+}
+
+/*--------------------------------------------------------------------
+ * Box for title, next, prev controls
+ *-------------------------------------------------------------------*/
+
+#month-controls-box
+{
+   /* border            : 1px solid blue; */
+   -moz-box-align    : center;
+}
+
+/*--------------------------------------------------------------------
+ * Month title text. 
+ *-------------------------------------------------------------------*/
+
+#month-title-text
+{
+   -moz-box-pack        : center;
+   -moz-box-align       : center;
+   font-size            : 18pt;
+   font-family          : Arial, Helvetica;
+   color                : #3f7d91;
+}
+
+
+/*--------------------------------------------------------------------
+ * Next and Previous buttons. :TODO: Should they have hover?
+ *-------------------------------------------------------------------*/
+
+#month-previous-button
+{
+   list-style-image     : url("chrome://calendar/skin/arrow_left.png");
+}
+
+#month-next-button
+{
+   list-style-image     : url("chrome://calendar/skin/arrow_right.png");
+}
+
+#month-next-button-box
+{
+   -moz-box-pack        : end;
+}
+
+
+/*--------------------------------------------------------------------
+ * Box around day name headers and grid, has a border
+ * white background and bits of the watch image in 
+ * its margin. :TODO: combine with month_background.png, below,  
+ *                    into one background image.
+ *-------------------------------------------------------------------*/
+
+#month-content-box
+{
+   border            :1px solid #1D7AB5;
+   padding           :2px;
+}
+
+/*--------------------------------------------------------------------
+ * Month header has the names of the days. 
+ *          :TODO: What about localization of day names? since they
+ *                 are in images,
+ *-------------------------------------------------------------------*/
+
+#month-header-box
+{
+   margin-bottom     : 1px;
+   margin-top        : -1px;
+}
+
+/*--------------------------------------------------------------------
+ * Fix the width and height of the day name images
+ *-------------------------------------------------------------------*/
+
+.month-header-image-class
+{
+   /*border: 1px solid red;*/
+}
+
+/*--------------------------------------------------------------------
+ * Give each day name its image
+ *-------------------------------------------------------------------*/
+
+#month-header-day-1
+{
+   list-style-image        : url("chrome://calendar/skin/sun.png");
+}
+
+#month-header-day-2
+{
+   list-style-image        : url("chrome://calendar/skin/mon.png");
+}
+
+#month-header-day-3
+{
+   list-style-image        : url("chrome://calendar/skin/tue.png");
+}
+
+#month-header-day-4
+{
+   list-style-image        : url("chrome://calendar/skin/wed.png");
+}
+
+#month-header-day-5
+{
+   list-style-image        : url("chrome://calendar/skin/thu.png");
+}
+
+#month-header-day-6
+{
+   list-style-image        : url("chrome://calendar/skin/fri.png");
+}
+
+#month-header-day-7
+{
+   list-style-image        : url("chrome://calendar/skin/sat.png");
+}
+
+
+/*--------------------------------------------------------------------
+ * Box around the grid - has background image with the watch and grid
+ *                       lines.
+ *-------------------------------------------------------------------*/
+
+#month-grid-box
+{
+
+   border               : 1px solid #1D7AB5;
+   border-bottom        : none;
+}
+
+
+/*--------------------------------------------------------------------
+ * Grid, one cell for each day
+ *-------------------------------------------------------------------*/
+
+#month-grid
+{
+   /* 
+   margin-top              : 3px;
+   margin-left             : 3px;
+   */
+}
+
+/*--------------------------------------------------------------------
+ * Fixed width columns in the month grid
+ *-------------------------------------------------------------------*/
+
+.month-column-class
+{
+   min-width            : 93px;
+   max-width            : 93px;
+}
+
+
+/*--------------------------------------------------------------------
+ * Make the cells line up with the image grid lines
+ *-------------------------------------------------------------------*/
+
+.month-day-box-class
+{
+   min-height           : 92px;
+   max-height           : 92px;
+   border-right         : 1px solid #1D7AB5; 	
+   border-bottom        : 1px solid #1D7AB5; 	
+   text-align           : left; 	/* align the day number */
+   background-color     : #FFFFFF;
+}
+
+.saturday
+{
+   border-right         :0px;
+}
+
+/*--------------------------------------------------------------------
+ * Highlight today differently.
+ *-------------------------------------------------------------------*/
+
+.month-day-box-class[today="true"]
+{
+   border               : 1px solid #2085c4;
+   border-right         : 2px solid #2085c4;
+   border-bottom        : 2px solid #2085c4;
+}
+
+
+#month-week-4-day-1-box[weekend="true"]
+{
+  	background-image        : url("chrome://calendar/skin/weekendwatch1.png");
+   background-repeat       : no-repeat;
+}
+
+#month-week-5-day-1-box[weekend="true"]
+{
+  	background-image        : url("chrome://calendar/skin/weekendwatch8.png");
+   background-repeat       : no-repeat;
+}
+
+/*--------------------------------------------------------------------
+ * Most selected days have a background color unless
+ * they are over the watch, then they have an image
+ * of the watch under the selection color
+ *-------------------------------------------------------------------*/
+
+.month-day-box-class[selected="true"]
+{
+   background-color       : #d5e3f2;
+}
+
+#month-week-4-day-1-box[selected="true"]
+{
+   background-image        : url("chrome://calendar/skin/selectedwatch1.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-4-day-2-box[selected="true"]
+{
+   background-image        : url("chrome://calendar/skin/selectedwatch2.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-4-day-3-box[selected="true"]
+{
+   background-image        : url("chrome://calendar/skin/selectedwatch3.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-5-day-1-box[selected="true"]
+{
+   background-image        : url("chrome://calendar/skin/selectedwatch4.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-5-day-2-box[selected="true"]
+{
+   background-image        : url("chrome://calendar/skin/selectedwatch5.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-5-day-3-box[selected="true"]
+{
+   background-image        : url("chrome://calendar/skin/selectedwatch6.png");
+   background-repeat       : no-repeat;
+}
+
+#month-week-5-day-4-box[selected="true"]
+{
+   background-image        : url("chrome://calendar/skin/selectedwatch7.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-5-day-5-box[selected="true"]
+{
+   background-image        : url("chrome://calendar/skin/selectedwatch8.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-6-day-2-box[selected="true"]
+{
+   background-image        : url("chrome://calendar/skin/selectedwatch9.png");
+   background-repeat       : no-repeat;
+}
+
+/*--------------------------------------------------------------------
+ * Most empty days have a background color unless
+ * they are over the watch, then they have an image
+ * of the watch under the empty day  color
+ *-------------------------------------------------------------------*/
+
+
+.month-day-box-class[empty="true"]
+{
+   background-color       : #E7EEEC;
+}
+
+#month-week-4-day-2-box
+{
+   background-image        : url("chrome://calendar/skin/watch2.png");
+   background-repeat       : no-repeat;
+}
+
+#month-week-4-day-3-box
+{
+   background-image        : url("chrome://calendar/skin/watch3.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-5-day-1-box
+{
+   background-image        : url("chrome://calendar/skin/watch4.png");
+   background-repeat       : no-repeat;
+}
+
+#month-week-5-day-1-box[empty="true"]
+{
+   background-image        : url("chrome://calendar/skin/watch4_green.png");
+   background-repeat       : no-repeat;
+}
+
+#month-week-5-day-2-box
+{
+   background-image        : url("chrome://calendar/skin/watch5.png");
+   background-repeat       : no-repeat;
+}
+
+#month-week-5-day-2-box[empty="true"]
+{
+   background-image        : url("chrome://calendar/skin/watch5_green.png");
+   background-repeat       : no-repeat;
+}
+
+#month-week-5-day-3-box
+{
+   background-image        : url("chrome://calendar/skin/watch6.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-5-day-3-box[empty="true"]
+{
+   background-image        : url("chrome://calendar/skin/watch6_green.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-5-day-4-box[empty="true"]
+{
+   background-image        : url("chrome://calendar/skin/watch7_green.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-5-day-4-box
+{
+   background-image        : url("chrome://calendar/skin/watch7.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-5-day-5-box
+{
+   background-image        : url("chrome://calendar/skin/watch8.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-5-day-5-box[empty="true"]
+{
+   background-image        : url("chrome://calendar/skin/watch8_green.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-6-day-2-box
+{
+   background-image        : url("chrome://calendar/skin/watch9.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-6-day-2-box[empty="true"]
+{
+   background-image        : url("chrome://calendar/skin/watch9_green.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-6-day-3-box[empty="true"]
+{
+   background-image        : url("chrome://calendar/skin/watch10.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-6-day-4-box[empty="true"]
+{
+   background-image        : url("chrome://calendar/skin/watch11.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-6-day-5-box[empty="true"]
+{
+   background-image        : url("chrome://calendar/skin/watch12.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-6-day-6-box[empty="true"]
+{
+   background-image        : url("chrome://calendar/skin/watch13.png");
+   background-repeat       : no-repeat;
+}
+
+
+#month-week-6-day-7-box[empty="true"]
+{
+   background-image        : url("chrome://calendar/skin/watch14.png");
+   background-repeat       : no-repeat;
+}
+
+/*--------------------------------------------------------------------
+ * Day numbers - alignment is contolled above in month-day-box-class
+ *-------------------------------------------------------------------*/
+
+.month-day-number-class
+{
+
+   margin-top           : 3px; 	
+   margin-left          : 4px; 	
+   margin-bottom        : -1px; 	
+   font-size            : 10pt;
+   font-family          : Arial, Helvetica;
+   color                : #1d7ab5;
+}
+
+
+/*--------------------------------------------------------------------
+ * Events in month view are in a box
+ *-------------------------------------------------------------------*/
+
+.month-day-event-box-class
+{
+   border               : 1px solid #1D7AB5;
+   margin-bottom        : 1px;
+   margin-left          : 2px;
+   margin-right         : 2px;
+   background-color     : #F9F4FF;
+   text-align           : center; 	
+   font-size            : 8pt;
+   font-family          : Arial, Helvetica;
+
+}
+
+.month-day-event-box-class:hover
+{
+   background-color  : #F9F4FF;
+	border				: 1px solid #003366;
+
+}
+
+.month-day-event-box-class[selected="true"]
+{
+   background-color     :  #D5E3F2;  
+   border-color         :  #003366;
+}
+
+
+/*--------------------------------------------------------------------
+ * Text item for events in month view
+ *-------------------------------------------------------------------*/
+
+.month-day-event-text-class
+{
+}
+
+
+/*--------------------------------------------------------------------
+ * Box that contains a view of the day's overall busyness
+ *-------------------------------------------------------------------*/
+
+.month-day-busy-ind-class
+{
+   min-width             : 30px;
+   max-width             : 30px;
+   max-height            : 10px;
+   min-height            : 10px;
+}
+
+.month-day-busy-ind-class[busy="true"]
+{
+   background-color        : #6699CC;
+}
+
+.month-allday-busy-ind-class
+{
+   list-style-image     :"";
+}
+
+.month-allday-busy-ind-class[busy="true"]
+{
+   list-style-image     :url("chrome://calendar/skin/all_day_event.png");
+}  
+
+.month-view-event-dot-class
+{                  
+   margin-left             : 2px;
+   margin-top              : 2px;
+   list-style-image        : url("chrome://calendar/skin/dot.png");
+}
+
+.month-view-event-dot-class[selected="true"]
+{
+   list-style-image        : url("chrome://calendar/skin/dot_selected.png");
+}
+
+
+
+
+
+/*--------------------------------------------------------------------
+ *   D A Y   V I E W
+ *-------------------------------------------------------------------*/
+
+
+
+/*--------------------------------------------------------------------
+ * Box containing the whole day view
+ *-------------------------------------------------------------------*/
+
+
+#day-view-box
+{
+   padding-top             :20px;
+   /* border            :1px solid red; */
+}
+
+/*--------------------------------------------------------------------
+ * Box for title, next, prev controls
+ *-------------------------------------------------------------------*/
+
+
+#day-controls-box
+{
+   -moz-box-pack        : center;
+   -moz-box-align       : center;
+}
+
+/*--------------------------------------------------------------------
+ * Box for title: make it big enough for the largest string
+ *                in any of the views for two reasons:
+ *                1. Next, Prev buttons appear in the same place
+ *                2. Redraw problems when replacing a longer string
+ *                   with a shorter one.
+ *-------------------------------------------------------------------*/
+
+#day-title-box
+{
+   min-width               : 400px;
+   max-width               : 400px;
+
+}
+
+
+/*--------------------------------------------------------------------
+ * Day title text. 
+ *-------------------------------------------------------------------*/
+
+#day-title-text
+{
+   font-size            : 18pt;
+   font-family          : Arial, Helvetica;
+   color                : #3f7d91;
+}
+
+/*--------------------------------------------------------------------
+ * Next and Previous buttons. :TODO: Should they have hover?
+ *-------------------------------------------------------------------*/
+
+#day-previous-button
+{
+   list-style-image        : url("chrome://calendar/skin/arrow_left.png");
+}
+
+#day-next-button
+{
+   list-style-image        : url("chrome://calendar/skin/arrow_right.png");
+}
+
+#day-next-button-box
+{
+   -moz-box-pack           : end;
+}
+
+
+/*--------------------------------------------------------------------
+ * Box around the all day content at the top
+ *-------------------------------------------------------------------*/
+
+#all-day-content-box
+{
+   min-height           : 25px;
+   max-height           : 25px;
+   margin-left          : 2px;
+   margin-rignt         : 2px;
+   overflow             : auto;
+   border               : 2px solid #2085c4;
+   vertical-align       : middle;
+
+}
+
+/*--------------------------------------------------------------------
+ * Box around the tree content
+ *-------------------------------------------------------------------*/
+
+#day-view-content-box
+{
+   overflow             : auto;
+   background-color     : white;
+   margin-bottom        : 5px;
+}
+
+#day-view-content-board
+{
+   /*border             : 1px solid green; */
+}
+
+/*--------------------------------------------------------------------
+ * Box around the tree content
+ *-------------------------------------------------------------------*/
+
+#day-view-content-box[allday="true"]
+{
+}
+
+.day-view-event-class
+{
+   margin-bottom     : 1px;
+   margin-top        : 1px;
+   border            : 1px solid #1D7AB5;
+   background-color  : #F9F4FF;
+}
+
+.day-view-event-class[selected="true"]
+{
+   background-color  : #d5e3f2;
+	border-color      : #003366
+}
+ 
+/*--------------------------------------------------------------------
+ * Box for hours
+ *-------------------------------------------------------------------*/
+
+.day-view-hour-box-class
+{
+   min-width            : 609px;
+   max-width            : 609px;
+   
+   border-top           : 1px solid #2085c4;
+   background-color     : white;
+   vertical-align       : middle;
+}
+
+
+#day-tree-item-0
+{
+   border-top           : none;
+}
+
+
+.day-view-hour-box-class[selected="true"]
+{
+   background-color     : blue;
+   
+}
+
+/*--------------------------------------------------------------------
+ * Class for time shown on left
+ *-------------------------------------------------------------------*/
+
+.day-time-class
+{
+   min-width            : 140px;
+   margin               : 6px; 	
+   font-size            : 10pt;
+   font-family          : Arial, Helvetica;
+   color                : #1d7ab5;
+   vertical-align       : middle;
+}
+
+/*--------------------------------------------------------------------
+ * Class for text of events
+ *-------------------------------------------------------------------*/
+
+.day-view-event-text-class
+{
+   font-size            : 10pt;
+   font-family          : Arial, Helvetica;
+   color                : #000000;
+}
+
+/*--------------------------------------------------------------------
+ *   W E E K     V I E W
+ *-------------------------------------------------------------------*/
+
+
+#week-view-box
+{
+   padding-top             :20px;
+}
+
+#week-view-content-board
+{
+	height						: 1200px;
+}
+
+#week-view-day-gradient
+{
+   list-style-image              : url( "chrome://calendar/skin/day_left_gradient.png"  );
+}	
+
+/* Week View: Controls */
+
+#week-controls-box
+{
+   -moz-box-align          : center;
+   -moz-box-pack           : center;
+}
+
+#week-title-box
+{
+   min-width               : 400px;
+   max-width               : 400px;
+}
+
+#week-title-text
+{
+   font-size            : 18pt;
+   font-family          : Arial, Helvetica;
+   color                : #3f7d91;
+}
+
+
+#week-previous-button
+{
+   list-style-image        : url("chrome://calendar/skin/arrow_left.png");
+}
+
+
+#week-next-button
+{
+   list-style-image        : url("chrome://calendar/skin/arrow_right.png");
+}
+
+#week-next-button-box
+{
+   -moz-box-pack           : end;
+}
+
+
+/* Week View: Day name header */
+
+#weekview-daynumber-spacer-left
+{
+   max-width            :99px;
+   min-width            :99px;
+}
+
+.weekview-daynumber-class
+{
+   -moz-box-align       : center;
+   max-width            :78px;
+   min-width            :78px;
+}
+#week-view-header
+{
+   background-image        : url("chrome://calendar/skin/week_top_bar.png");
+   background-repeat       : repeat-x;
+   min-height              : 40px;
+   max-height              : 40px;
+   color                   : #EAEBD2;
+   font-size               : 11pt;
+   font-family             : Arial, Helvetica;
+   text-align              : center; 
+   font-weight             : bold;
+   
+}
+
+.week-header-class
+{
+   max-width               : 80px;
+   max-height              : 40px;
+   
+}
+
+
+
+/* Week View: Calendar Tree */
+
+#week-view-content-box
+{
+   overflow             : auto;
+   border               : 1px solid #2085c4;
+   margin-bottom       : 5px;
+}
+
+
+#week-view-content-box[allday="true"]
+{
+}
+  
+
+.week-view-event-class
+{
+   margin-bottom     : 1px;
+   margin-top        : 1px;
+   border            : 1px solid #1D7AB5;
+   background-color  : #F9F4FF;
+   min-width         : 20px;
+}
+
+.week-view-event-class[selected="true"]
+{
+   background-color  : #D5E3F2;
+	border				: 1px solid #003366;
+}
+
+/*--------------------------------------------------------------------
+ * Class for text of events
+ *-------------------------------------------------------------------*/
+
+.week-view-event-text-class
+{
+   font-size            : 10pt;
+   font-family          : Arial, Helvetica;
+   color                : #000000;
+}
+
+
+.week-time-class-text
+{
+   margin               : 5px; 	
+   margin-top           : 10px;
+   font-size            : 10pt;
+   font-family          : Arial, Helvetica;
+   color                : #1d7ab5;
+   
+   
+}
+
+.week-time-class
+{
+   -moz-box-pack        : end;
+   -moz-box-align       : center;
+}
+
+
+.week-view-hour-box-class
+{
+   border-bottom        : 1px solid #2085c4;
+	border-left          : 1px solid #2085c4;
+   width                : 78px;
+   height               : 50px;
+   background-color     : white;
+}
+
+.week-view-hour-box-class-last-day
+{
+   border-bottom        : 1px solid #2085c4;
+}
+
+.week-view-hour-box-class[today="true"]
+{
+  	border-left				: 2px solid #2085c4;
+	border-right			: 1px solid #2085c4;
+}
+
+.week-view-hour-box-class-last-day[today="true"]
+{
+   border-right        : 2px solid #2085c4;
+}
+
+.week-view-hours-only-box-class
+{
+   border-bottom        : 1px solid #2085c4;
+   width                : 82px;
+   height               : 50px;
+   background-color     : white
+}
+
+#week-view-all-day-content-box
+{
+   border               : 1px solid #2085c4;
+   max-height           : 50px;
+   min-height           : 50px;
+}
+
+#all-day-content-box-text-box
+{
+   width						: 113px;
+	max-width				: 113px;
+	min-width				: 113px;
+} 
+
+#all-day-content-box-text-title
+{
+   font-size            : 10pt;
+   font-family          : Arial, Helvetica;
+   color                : #1d7ab5;
+   vertical-align       : middle;
+   text-align           : center;
+} 
+
+.all-day-content-box-week
+{
+  	max-width				: 78px;
+	min-width				: 78px;
+	/*border					: 1px solid red;*/
+}
+
+#all-day-content-box-week-1
+{
+	max-width				: 76px;
+	min-width				: 76px;
+}
+
+#all-day-content-spacer
+{
+  	min-width				: 8px;
+	max-width				: 8px;
+}	
+
+.weekend
+{
+  	background-color 		: #FFF9EF;
+}
+
+.calendar-unifinder-event-text
+{
+
+   max-width			: 350px;
+	/*border				: 1px solid red;*/
+}
+
+.calendar-unifinder-event-indent
+{
+  	padding-left		: 30px;
+}
+
+
+#unifinder-categories-tree > treechildren treeitem[selected="true"] > treerow
+{
+   background-color        : #D5E3F2;
+   color                   : #000000;
+}

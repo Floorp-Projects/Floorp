@@ -1,0 +1,583 @@
+/* 
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is OEone Corporation.
+ *
+ * The Initial Developer of the Original Code is
+ * OEone Corporation.
+ * Portions created by OEone Corporation are Copyright (C) 2001
+ * OEone Corporation. All Rights Reserved.
+ *
+ * Contributor(s): Garth Smedley (garths@oeone.com) , Mike Potter (mikep@oeone.com)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * 
+*/
+
+/*--------------------------------------------------------------------
+ *  U N I F I N D E R
+ *-------------------------------------------------------------------*/
+
+debuggggggggggggggg 
+{
+   border : 1px black solid;
+}
+
+
+.unifinder-toolbox
+{
+  border-bottom: 0px ;
+}
+
+#unifinder-toolbar 
+{
+  background-color	    : #e5e5ec;
+  border-bottom         : 0px solid #000000;
+}
+
+#unifinder-toolbar > .toolbar-holder {
+  border-top: 0px solid #92ABC9;
+  border-right: 0px solid #92ABC9;
+  border-bottom: 0px solid #92ABC9;
+  border-left: 0px solid #92ABC9;
+}
+
+
+
+
+
+
+
+
+/*--------------------------------------------------------------------
+ * Style for toolbar grippy
+ * THIS SHOULD BE MOVED TO A GLOBAL PLACE
+ *-------------------------------------------------------------------*/
+  
+
+
+
+
+toolbarseparator { 
+  margin: 0px 0.2em;
+  border-right: 1px solid #ffffff;
+  width: 0px;
+}
+
+toolbargrippy {
+  width: 9px;
+  background-image: none;
+  background-color	: #ffffff;
+  border-right:     1px solid #8698bc;
+  border-left:     1px solid #8698bc;
+  
+}
+
+toolbargrippy:active { 
+  background-color	: #e7e7ff;
+}
+
+toolbargrippy:hover:active { 
+  background-color	: #d2d7ed;
+}
+
+
+.toolbargrippy-top {
+  height: 1px;
+  background-image: none;
+  border-top:     1px solid #8698bc;
+  border-right:     1px solid #8698bc;
+  border-left:     1px solid #8698bc;
+}
+
+.toolbargrippy-btm {
+  height: 7px;
+  background-image: url("chrome://penglobal/skin/unifinder/toolbar_grippy_arrow.png");
+  background-repeat       : no-repeat;
+  
+  border-top:     1px solid #8698bc;
+  border-bottom:     1px solid #8698bc;
+}
+
+
+.collapsed-tray-holder {
+  background-color:	#e5e5ec;
+  height: 11px;
+  border-bottom		    : 1px solid #000000;
+}
+
+
+toolbargrippy[tbgrippy-collapsed="true"] {
+  background-image: none;
+  width: 200px;
+}
+
+toolbargrippy[tbgrippy-collapsed="true"] > .toolbargrippy-collapsed-left {
+  background-image: url("chrome://penglobal/skin/unifinder/toolbar_grippy_arrow_collapsed.png");
+  width: 12px;
+}
+
+toolbargrippy[tbgrippy-collapsed="true"] > .toolbargrippy-collapsed-right {
+  background-color: #e5e5ec;
+  border: 1px outset #92ABC9;
+}
+
+toolbargrippy[tbgrippy-collapsed="true"]:hover:active > .toolbargrippy-collapsed-left {
+  background-image: url("chrome://global/skin/toolbar/tbgrip-clps-act.gif");
+}
+
+toolbargrippy[tbgrippy-collapsed="true"]:hover:active > .toolbargrippy-collapsed-right {
+  border-style: inset;
+}
+
+
+
+
+.unifinder-tabs-spacer
+{
+   min-height : 5px;
+   border-bottom : 1px solid #c7d0d9;
+   background-color : #d0dff0;
+}
+
+.tabs-right-cap {
+  background: none;
+  width: 0px;
+}
+
+/* ::::: tabpanels ::::: */
+
+tabpanels {
+   border: none;
+  background-color: white;
+}
+
+
+
+
+
+
+/*--------------------------------------------------------------------
+ * Style for image buttons - Override a couple of settings
+ *      in the normal buttontop
+ * THIS SHOULD BE MOVED TO A GLOBAL PLACE
+ * UNIFINDER DOES NOT USE THIS ANYMORE, BUT LOTS OF OTHER THINGS 
+ * IN APPS RELY ON IT - THERE IS A MUCH MUCH BETTER WAY TO DO THIS!!!
+ * - GS Sept, 2001
+ *-------------------------------------------------------------------*/
+  
+.four-state-image-button
+{
+   -moz-binding        : url("chrome://calendar/content/penBindings.xml#penButton");
+   margin              : 0px;
+   border              : 0px;
+   min-width           : 0px;
+   -moz-user-focus     : ignore !important;
+}
+
+.four-state-image-button-18
+{
+   -moz-binding        : url("chrome://calendar/content/penBindings.xml#penButton");
+   margin              : 0px;
+   border              : 0px;
+   min-width           : 0px;
+   max-height          : 18px;
+   -moz-user-focus     : ignore !important;
+}
+
+.four-state-image-button-12
+{
+   -moz-binding        : url("chrome://calendar/content/penBindings.xml#penButton");
+   margin              : 0px;
+   border              : 0px;
+   min-width           : 0px;
+   max-height          : 12px;
+   -moz-user-focus     : ignore !important;
+}
+
+
+.unifinder-tab-box
+{
+   margin-top             : 4px 
+}
+
+.unifinder-internal-box
+{
+   background-color       : #a5bad6; 
+   
+}
+
+/* The top box has the icons in it */
+
+.unifinder-top-box
+{
+	overflow: never;
+   margin-bottom          : 1px;
+}
+
+#unifinder-toolbar
+{
+   background-image        : url("chrome://penglobal/skin/unifinder/topbar_striped.png");
+   background-repeat       : x-repeat;
+}
+
+/* Make space around the little dialog items in some tabs, like the search field and label */
+
+.unifinder-sub-control-box-class
+{
+   margin-top     : 5px;
+   margin-bottom  : 5px;
+   margin-left    : 15px;
+   margin-right   : 5px;
+}
+
+
+/* :SIGH: override the tree selection from tree.css, wish there was a better way */
+
+.unifinder-tree-class > treechildren treeitem[selected="true"][current="true"] > treerow
+{
+   background-color     : white;
+   color                : black;
+   border-top           : none;
+   border-left          : none;
+   border-right         : none;
+   border-bottom        : none;
+}
+
+.unifinder-tree-class > treechildren treeitem[selected="true"][current="true"] > treerow > treecell 
+{
+   border                  : none;
+}
+
+.unifinder-tree-class > treechildren treeitem[selected="true"][current="true"] > treerow > treecell > .unifinder-treecell-box-class
+{
+   background-color        : #d5e3f2; 
+   border                  : 1px #2085c4 solid;
+}
+
+.unifinder-treecell-box-class
+{
+
+   /*border         : 1px #2085c4 solid;*/
+   margin         : 4px;
+   margin-right   : 8px;
+   padding        : 2px;
+   padding-left   : 4px;
+   font-family    : Arial, Helvetica;
+   
+}
+
+/*--------------------------------------------------------------------
+ *   unifinder move to button
+ *-------------------------------------------------------------------*/
+
+.unifinder-move-button  > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/move_up.png");
+  }
+.unifinder-move-button[disabled="true"] > .unifinder-button-image,
+.unifinder-move-button[disabled="true"]:hover > .unifinder-button-image,
+.unifinder-move-button[disabled="true"]:hover:active > .unifinder-button-image
+  {
+   list-style-image         : url("chrome://penglobal/skin/unifinder/move_disabled.png");
+  }
+.unifinder-move-button:hover > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/move_hover.png");
+  }
+.unifinder-move-button:hover:active > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/move_down.png");
+  }
+
+
+/* text for above */
+.unifinder-move-button  > .unifinder-button-text
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/movetext.png");
+  }
+.unifinder-move-button[disabled="true"] > .unifinder-button-text,
+.unifinder-move-button[disabled="true"]:hover > .unifinder-button-text,
+.unifinder-move-button[disabled="true"]:hover:active > .unifinder-button-text
+  {
+   list-style-image         : url("chrome://penglobal/skin/unifinder/movetext_disabled.png");
+  }
+
+
+/*--------------------------------------------------------------------
+ *   unifinder copy to button
+ *-------------------------------------------------------------------*/
+
+.unifinder-copy-button  > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/copy_up.png");
+  }
+.unifinder-copy-button[disabled="true"] > .unifinder-button-image,
+.unifinder-copy-button[disabled="true"]:hover > .unifinder-button-image,
+.unifinder-copy-button[disabled="true"]:hover:active > .unifinder-button-image
+  {
+   list-style-image         : url("chrome://penglobal/skin/unifinder/copy_disabled.png");
+  }
+.unifinder-copy-button:hover > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/copy_hover.png");
+  }
+.unifinder-copy-button:hover:active > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/copy_down.png");
+  }
+
+/* text for above */
+.unifinder-copy-button  > .unifinder-button-text
+{
+    list-style-image        : url("chrome://penglobal/skin/unifinder/copytext.png");
+}
+
+.unifinder-copy-button[disabled="true"] > .unifinder-button-text,
+.unifinder-copy-button[disabled="true"]:hover > .unifinder-button-text,
+.unifinder-copy-button[disabled="true"]:hover:active > .unifinder-button-text
+{
+    list-style-image         : url("chrome://penglobal/skin/unifinder/copytext_disabled.png");
+}
+
+/*--------------------------------------------------------------------
+ *   unifinder publish to button
+ *-------------------------------------------------------------------*/
+
+.unifinder-publish-button  > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/publish_up.png");
+  }
+.unifinder-publish-button[disabled="true"] > .unifinder-button-image,
+.unifinder-publish-button[disabled="true"]:hover > .unifinder-button-image,
+.unifinder-publish-button[disabled="true"]:hover:active > .unifinder-button-image
+  {
+   list-style-image         : url("chrome://penglobal/skin/unifinder/publish_disabled.png");
+  }
+.unifinder-publish-button:hover > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/publish_hover.png");
+  }
+.unifinder-publish-button:hover:active > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/publish_down.png");
+  }
+
+/* text for above */
+.unifinder-publish-button > .unifinder-button-text
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/publishtext.png");
+  }
+.unifinder-publish-button[disabled="true"] > .unifinder-button-text,
+.unifinder-publish-button[disabled="true"]:hover > .unifinder-button-text,
+.unifinder-publish-button[disabled="true"]:hover:active > .unifinder-button-text
+  {
+   list-style-image         : url("chrome://penglobal/skin/unifinder/publishtext_disabled.png");
+  }
+
+/*--------------------------------------------------------------------
+ *   unifinder modify to button
+ *-------------------------------------------------------------------*/
+
+.unifinder-modify-button  > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/modify_up.png");
+  }
+.unifinder-modify-button[disabled="true"] > .unifinder-button-image,
+.unifinder-modify-button[disabled="true"]:hover > .unifinder-button-image,
+.unifinder-modify-button[disabled="true"]:hover:active > .unifinder-button-image
+  {
+   list-style-image         : url("chrome://penglobal/skin/unifinder/modify_disabled.png");
+  }
+.unifinder-modify-button:hover > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/modify_hover.png");
+  }
+.unifinder-modify-button:hover:active > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/modify_down.png");
+  }
+
+
+/* text for above */
+.unifinder-modify-button > .unifinder-button-text
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/edittext.png");
+  }
+.unifinder-modify-button[disabled="true"] > .unifinder-button-text,
+.unifinder-modify-button[disabled="true"]:hover > .unifinder-button-text,
+.unifinder-modify-button[disabled="true"]:hover:active > .unifinder-button-text
+  {
+   list-style-image         : url("chrome://penglobal/skin/unifinder/edittext_disabled.png");
+  }
+
+
+/*--------------------------------------------------------------------
+ *   unifinder remove button
+ *-------------------------------------------------------------------*/
+
+.unifinder-remove-button > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/remove_up.png");
+  }
+  
+.unifinder-remove-button[disabled="true"] > .unifinder-button-image,
+.unifinder-remove-button[disabled="true"]:hover > .unifinder-button-image,
+.unifinder-remove-button[disabled="true"]:hover:active > .unifinder-button-image
+  {
+   list-style-image         : url("chrome://penglobal/skin/unifinder/remove_disabled.png");
+  }
+
+.unifinder-remove-button:hover > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/remove_hover.png");
+  }
+
+.unifinder-remove-button:hover:active > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/remove_down.png");
+  }
+  
+
+.unifinder-remove-button > .unifinder-button-text
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/deletetext.png");
+  }
+.unifinder-remove-button[disabled="true"] > .unifinder-button-text,
+.unifinder-remove-button[disabled="true"]:hover > .unifinder-button-text,
+.unifinder-remove-button[disabled="true"]:hover:active > .unifinder-button-text
+  {
+   list-style-image         : url("chrome://penglobal/skin/unifinder/deletetext_disabled.png");
+  }
+
+
+/*--------------------------------------------------------------------
+ *   unifinder new category to button
+ *-------------------------------------------------------------------*/
+
+.unifinder-new-category-button  > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/newcategory_up.png");
+  }
+.unifinder-new-category-button[disabled="true"] > .unifinder-button-image,
+.unifinder-new-category-button[disabled="true"]:hover > .unifinder-button-image,
+.unifinder-new-category-button[disabled="true"]:hover:active > .unifinder-button-image
+  {
+   list-style-image         : url("chrome://penglobal/skin/unifinder/newcategory_disabled.png");
+  }
+.unifinder-new-category-button:hover > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/newcategory_hover.png");
+  }
+.unifinder-new-category-button:hover:active > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/newcategory_down.png");
+  }
+
+
+/* text for above */
+.unifinder-new-category-button > .unifinder-button-text
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/newtext.png");
+  }
+.unifinder-new-category-button[disabled="true"] > .unifinder-button-text,
+.unifinder-new-category-button[disabled="true"]:hover > .unifinder-button-text,
+.unifinder-new-category-button[disabled="true"]:hover:active > .unifinder-button-text
+  {
+   list-style-image         : url("chrome://penglobal/skin/unifinder/newtext_disabled.png");
+  }
+
+
+/*--------------------------------------------------------------------
+ *   unifinder clear results to button
+ *-------------------------------------------------------------------*/
+
+.unifinder-clear-results-button  > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/clearresults_up.png");
+  }
+.unifinder-clear-results-button[disabled="true"] > .unifinder-button-image,
+.unifinder-clear-results-button[disabled="true"]:hover > .unifinder-button-image,
+.unifinder-clear-results-button[disabled="true"]:hover:active > .unifinder-button-image
+  {
+   list-style-image         : url("chrome://penglobal/skin/unifinder/clearresults_disabled.png");
+  }
+.unifinder-clear-results-button:hover > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/clearresults_hover.png");
+  }
+.unifinder-clear-results-button:hover:active > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/clearresults_down.png");
+  }
+
+
+
+/*--------------------------------------------------------------------
+ *   unifinder options button
+ *-------------------------------------------------------------------*/
+
+.unifinder-options-button-1  > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/options_button_up.png");
+  }
+.unifinder-options-button-1:hover > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/options_button_hover.png");
+  }
+.unifinder-options-button-1:hover:active > .unifinder-button-image
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/options_button_down.png");
+  }
+
+
+/* text for above */
+.unifinder-options-button-1 > .unifinder-button-text
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/menutext.png");
+  }
+
+
+/*--------------------------------------------------------------------
+ *   unifinder options button-2
+ *-------------------------------------------------------------------*/
+
+#unifinder-options-button-2 
+  {
+    margin-right            : 2px;
+    border                  : 1px solid #1d6fad;
+    list-style-image        : url("chrome://penglobal/skin/unifinder/options_button.png");
+  }
+#unifinder-options-button-2:hover
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/options_button.png");
+  }
+#unifinder-options-button-2:hover:active
+  {
+    list-style-image        : url("chrome://penglobal/skin/unifinder/options_button.png");
+  }
+
+
+
+

@@ -1,0 +1,203 @@
+<?xml version="1.0"?>
+<!-- 
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - OEone Corporation.
+   - Portions created by OEone Corporation are Copyright (C) 2001
+   - OEone Corporation. All Rights Reserved.
+   -
+   - Contributor(s): Garth Smedley (garths@oeone.com), Mike Potter (mikep@oeone.com),
+   -                 Colin Phillips (colinp@oeone.com)
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   -  -->
+
+<!-- Style sheets -->
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://calendar/skin/calendar.css" type="text/css"?>
+
+
+<!-- Overlays -->
+<?xul-overlay href="chrome://penglobal/content/penRootOverlay.xul"?>
+<?xul-overlay href="chrome://penglobal/content/penApplicationOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://penglobal/content/datepicker-overlay.xul"?>
+
+<?xul-overlay href="chrome://calendar/content/unifinder-overlay.xul"?>
+<?xul-overlay href="chrome://calendar/content/calendarDayView.xul"?>
+<?xul-overlay href="chrome://calendar/content/calendarWeekView.xul"?>
+<?xul-overlay href="chrome://calendar/content/calendarMonthView.xul"?>
+
+<!-- DTDs -->
+
+<!-- DTD File with all strings specific to the calendar -->
+<!DOCTYPE window 
+[
+    <!ENTITY % dtd1 SYSTEM "chrome://penglobal/locale/global.dtd" > %dtd1;
+    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
+	 <!ENTITY % dtd3 SYSTEM "chrome://penglobal/locale/unifinder.dtd" > %dtd3;
+]>
+
+
+<!-- The Window  -->
+
+<window
+   id="calendar-window"
+   title="Mozilla Calendar"
+   onload="calendarInit()"
+   onunload="calendarFinish()"
+   xmlns:html="http://www.w3.org/1999/xhtml"
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   > 
+ 
+<!-- Javascript DTD To Variable -->
+<script type="application/x-javascript">
+  var confirmDeleteEvent = "&calendar.confirm.deleteevent;";
+</script>
+
+<!-- Javascript includes -->
+
+<!-- NEEDED FOR DATE UTILS -->
+<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+<script type="application/x-javascript" src="chrome://penglobal/content/dateUtils.js"/>
+<script type="application/x-javascript" src="chrome://penglobal/content/unifinder.js"/>
+
+<script type="application/x-javascript" src="chrome://calendar/content/calendar.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/unifinder.js"/>
+<script type="application/x-javascript" src="chrome://penglobal/content/calendarEvent.js"/>
+
+<!-- ALL THIS IS NEEDED FOR CATEGORIES 
+   <script type="application/x-javascript" src="chrome://calendar/content/categories.js"/>
+   <script type="application/x-javascript" src="chrome://jslib/content/jslib.js"/>
+   <script type="application/x-javascript" src="chrome://jslib/content/io/fileUtils.js"/>
+   <script type="application/x-javascript" src="chrome://penglobal/content/jslib/libraries/io/file.js"/>
+   <script type="application/x-javascript" src="chrome://penglobal/content/jslib/libraries/io/dir.js"/>
+   <script type="application/x-javascript" src="chrome://penglobal/content/penFileUtils.js"/>
+   <script type="application/x-javascript" src="chrome://penglobal/content/penCategoryManager.js"/>	
+-->
+
+<!-- Pop up menus -->
+
+<popupset id="aTooltipSet"/>
+
+ <popup id="debug-menu">
+   <menuitem label="Reload" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
+ </popup>
+ 
+ <popup  id="oe-date-picker-popup"  popupalign="topleft" oncommand="gCalendarWindow.goToDay( date )" value=""/>
+
+ <popup id="unifinder-options-menu">
+     <menuitem label="&calendar.menu.options.newcategory;" oncommand="unifinderNewCategoryCommand()" />
+     <menuitem label="&calendar.menu.options.modify;"      oncommand="unifinderModifyCommand()" />
+     <menuitem label="&calendar.menu.options.remove;"      oncommand="unifinderRemoveCommand()" />
+ </popup>
+
+
+<!-- V I S I B L E  C O N T E N T  -->
+
+<vbox id="calendar-top-box" flex="1" context="debug-menu">
+  
+  <!-- Calendar Controls-->
+ 
+	<hbox id="calendar-controls-box" flex="1" >
+		<spring flex="1" />
+   
+		<button class="calendar-management-button" id="calendar-new-event-button"    tooltip="aTooltip" tooltiptext="&calendar.newevent.button.tooltip;"     label="&calendar.newevent.button.label;"     oncommand="newEventCommand()"/>    
+		<image class="calendar-control-divider" />
+		<button class="calendar-management-button" id="calendar-go-to-today-button"  tooltip="aTooltip" tooltiptext="&calendar.gototoday.button.tooltip;"    label="&calendar.gototoday.button.label;"    oncommand="gCalendarWindow.goToToday()"/>    
+		<button class="calendar-management-button" id="calendar-choose-date-button"  tooltip="aTooltip" tooltiptext="&calendar.choosedate.button.tooltip;"   label="&calendar.choosedate.button.label;"   onmousedown="prepareChooseDate()" popup="oe-date-picker-popup" />    
+		<image class="calendar-control-divider" />
+		<button class="calendar-management-button" id="calendar-day-view-button"     tooltip="aTooltip" tooltiptext="&calendar.dayview.button.tooltip;"      label="&calendar.dayview.button.label;"      oncommand="gCalendarWindow.switchToDayView()"/>    
+		<button class="calendar-management-button" id="calendar-week-view-button"    tooltip="aTooltip" tooltiptext="&calendar.weekview.button.tooltip;"     label="&calendar.weekview.button.label;"     oncommand="gCalendarWindow.switchToWeekView()"/>    
+		<button class="calendar-management-button" id="calendar-month-view-button"   tooltip="aTooltip" tooltiptext="&calendar.monthview.button.tooltip;"    label="&calendar.monthview.button.label;"    oncommand="gCalendarWindow.switchToMonthView()"/>  
+	</hbox>
+
+   
+	<hbox id="calendar-content-box" flex="1">
+
+      
+		<!-- UNIFINDER OVERLAY  -->
+ 
+		<unifinder id="calendar-unifinder-overlay" menu-popup="unifinder-options-menu" flex="1"/>
+    
+		<splitter id="unifinder-splitter" />
+   
+		<popupset>
+			<popup id="savetip" style="background-color: #FFFFC0;">
+				<text id="popuptooltiptext" value=" "/>
+				<!--
+				<html id="popuptooltiptext"/>
+				-->
+			</popup>
+		</popupset>
+
+
+		<spring flex="1"/>
+      
+      <!-- Begin Day/Month/Week Deck -->
+		<deck id="calendar-deck" flex="1" index="3" >
+				 
+			 <!-- Calendar Month View -->
+			    
+			 <vbox id="month-view-box" flex="1"/>
+			 
+          <!-- End: Calendar Month View -->
+		
+			 
+          <!-- Calendar Week View -->
+				 
+			 <vbox id="week-view-box" flex="1"  orient="vertical"/>
+			
+			 <!-- End: Calendar Week View -->
+			
+			 
+          <!-- Calendar Day View -->
+			 
+			 <vbox id="day-view-box" flex="1"/>
+			
+			 <!-- End: Calendar Day View -->
+			
+			
+			 <!-- Calendar Empty View -->
+			 <vbox/>  
+			 
+		</deck>  <!-- End: Day/Month/Week Deck -->
+		
+      <spring flex="1"/>
+      
+      </hbox> <!-- End: box with unifinder on left, calendar on right -->
+	</vbox>
+
+
+
+
+
+</window>
+

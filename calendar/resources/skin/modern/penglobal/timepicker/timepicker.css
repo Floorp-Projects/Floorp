@@ -1,0 +1,191 @@
+/* 
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is OEone Corporation.
+ *
+ * The Initial Developer of the Original Code is
+ * OEone Corporation.
+ * Portions created by OEone Corporation are Copyright (C) 2001
+ * OEone Corporation. All Rights Reserved.
+ *
+ * Contributor(s): Garth Smedley (garths@oeone.com) , Mike Potter (mikep@oeone.com)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * 
+*/
+
+
+/* Box that occupies whole window */
+
+#oe-time-picker-overlay-box
+{
+   background-color        : #F8F8F8;
+   font-size               : 8pt;
+   margin-bottom           : 1px;
+   margin-right            : 1px;
+}
+
+
+/* Box that holds the am/pm boxes */
+
+#oe-time-picker-ampm-controls-box
+{
+   border              : 1px solid #2060c7; 
+}
+
+/* Style for selected am/pm box */
+
+.oe-time-picker-am-pm-box-class
+{
+   -moz-box-pack         : center;
+}
+
+.oe-time-picker-am-pm-box-class[selected="true"]
+{
+   background-color       : #6699CC;
+}
+
+
+
+/* Grid for hours */
+
+#oe-time-picker-hour-grid
+{
+   border-top         : 1px solid #2060c7; 
+   border-left        : 1px solid #2060c7; 
+   margin-top         : 1px;
+}
+
+/* Box in each cell of the grid for hours */
+
+.oe-time-picker-hour-box-class
+{
+   -moz-box-align       : center;
+   border-right         : 1px solid #2060c7; 
+   border-bottom        : 1px solid #2060c7; 
+}
+
+/* selected hour box */
+
+.oe-time-picker-hour-box-class[selected="true"]
+{
+   background-color       : #6699CC;
+}
+
+
+
+/* box around five minute grid */
+
+#oe-time-picker-five-minute-grid-box
+{
+   min-width   : 195px;
+   margin-left : 1px;
+}
+
+/* five minute grid */
+
+#oe-time-picker-five-minute-grid
+{
+   margin-top            : 2px;
+   margin-right          : 2px;
+   border-top            : 1px solid #003399; 
+   border-left           : 1px solid #003399; 
+   border-right          : 1px solid #003399; 
+   background-color      : #e7eeec;
+}
+
+
+/* box in five-minute grid elements */
+
+.oe-time-picker-five-minute-box-class
+{
+   -moz-box-align       : center;
+}
+
+/* selected five-minute grid element box */
+
+.oe-time-picker-five-minute-box-class[selected="true"]
+{
+   background-color       : #6699CC;
+}
+
+
+
+/* box around one minute grid */
+
+#oe-time-picker-one-minute-grid-box
+{
+   min-width   : 195px;
+   margin-left : 1px;
+}
+
+/* one minute grid */
+
+#oe-time-picker-one-minute-grid
+{
+   margin-top            : 2px;
+   margin-right          : 2px;
+   border-top            : 1px solid #003399; 
+   border-left           : 1px solid #003399; 
+   border-right          : 1px solid #003399; 
+   background-color      : #e7eeec;
+}
+
+/* box in one-minute grid elements */
+
+.oe-time-picker-one-minute-box-class
+{
+   -moz-box-align       : center;
+}
+
+/* selected one-minute grid element box */
+
+.oe-time-picker-one-minute-box-class[selected="true"]
+{
+   background-color       : #6699CC;
+}
+
+
+
+/* line across the bottom of the minute boxes, made to line up with more & less tabs */
+
+#oe-time-picker-minutes-bottom-image
+{
+   list-style-image     : url("chrome://penglobal/skin/timepicker/time_picker_minutes_bottom.png");
+}
+
+
+/* more tab */
+
+#oe-time-picker-more-control-image
+{
+   list-style-image     : url("chrome://penglobal/skin/timepicker/time_picker_more.png");
+}
+    
+/* less tab */
+
+#oe-time-picker-less-control-image
+{
+   list-style-image     : url("chrome://penglobal/skin/timepicker/time_picker_less.png");
+}    

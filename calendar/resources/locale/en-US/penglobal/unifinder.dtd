@@ -1,0 +1,69 @@
+<!-- 
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is OEone Calendar Code, released October 31st, 2001.
+   -
+   - The Initial Developer of the Original Code is
+   - OEone Corporation.
+   - Portions created by OEone Corporation are Copyright (C) 2001
+   - OEone Corporation. All Rights Reserved.
+   -
+   - Contributor(s): Garth Smedley (garths@oeone.com)
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   -  -->
+
+<!ENTITY unifinder.menu.options.newfolder			    "New Folder...">
+<!ENTITY unifinder.menu.options.moveto			        "Move To...">
+<!ENTITY unifinder.menu.options.copyto			        "Copy To...">
+<!ENTITY unifinder.menu.options.duplicate               "Duplicate...">
+<!ENTITY unifinder.menu.options.publishto			    "Publish To...">
+<!ENTITY unifinder.menu.options.modify			        "Modify">
+<!ENTITY unifinder.menu.options.remove			        "Remove">
+<!ENTITY unifinder.menu.options.delete			        "Delete">
+<!ENTITY unifinder.menu.options.showextraoptions	    "Show Extra Options"> 
+<!ENTITY unifinder.menu.options.hideextraoptions		"Hide Extra Options" >
+<!ENTITY unifinder.menu.options.showmanagementtools		"Show Management Tools">
+<!ENTITY unifinder.menu.options.hidemanagementtools		"Hide Management Tools">
+
+<!-- Toolbar button tooltips -->
+<!ENTITY unifinder.toolbar.newfolder.tooltip        "Create New Item">
+<!ENTITY unifinder.toolbar.modify.tooltip           "Modify Item">
+<!ENTITY unifinder.toolbar.delete.tooltip           "Delete Item">
+<!ENTITY unifinder.toolbar.moveto.tooltip           "Move Item to New Location">
+<!ENTITY unifinder.toolbar.copyto.tooltip           "Copy Item to New Location">
+<!ENTITY unifinder.toolbar.publish.tooltip          "Publish Item to your personal page">
+<!ENTITY unifinder.toolbar.options.tooltip          "Show Extra Options">
+
+
+<!ENTITY unifinder.search.options.searchfor			"Search For">
+<!ENTITY unifinder.history.options.documentsused	"Documents Used">
+<!ENTITY unifinder.history.menu.today			    "Today" >
+<!ENTITY unifinder.history.menu.thisweek			"This Week">
+<!ENTITY unifinder.history.menu.thismonth			"This Month">
+<!ENTITY unifinder.history.menu.thisyear			"This Year">
+                    
+<!ENTITY unifinder.tab.search.label			        "Search">
+<!ENTITY unifinder.tab.history.label		        "History">
+

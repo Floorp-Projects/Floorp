@@ -1,0 +1,267 @@
+/* 
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is OEone Corporation.
+ *
+ * The Initial Developer of the Original Code is
+ * OEone Corporation.
+ * Portions created by OEone Corporation are Copyright (C) 2001
+ * OEone Corporation. All Rights Reserved.
+ *
+ * Contributor(s): Garth Smedley (garths@oeone.com) , Mike Potter (mikep@oeone.com)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * 
+*/
+
+
+
+#standard-dialog-title-icon
+{
+  padding-left				: 2px;
+  list-style-image		: url("chrome://calendar/skin/ca-event-dialog/new_event_icon.png");
+}
+
+#repeat-box,
+#repeat-end-box,
+#alarm-box,
+#end-event-time-box,
+#start-event-time-box,
+#start-date-box
+{
+   vertical-align : middle;
+}
+
+#dialog-box
+{
+   min-width    : 453px;
+   /*min-height   : 460px;*/
+}
+
+#category-field
+{
+   margin-left    : 4px;
+   margin-right   : 4px;
+}
+
+
+.field-label-box-class
+{
+   text-align              : right;
+   margin-right            : 3px;
+}
+
+/* line up all the check boxes on the left with the other boxes */
+
+#repeat-checkbox,
+#repeat-checkbox > .internal-box > .checkmark-box, 
+#alarm-checkbox,
+#alarm-checkbox > .internal-box > .checkmark-box, 
+#private-checkbox,
+#private-checkbox > .internal-box > .checkmark-box, 
+#all-day-event-checkbox,
+#all-day-event-checkbox > .internal-box > .checkmark-box,
+#alarm-email-checkbox, 
+#alarm-email-checkbox > .internal-box > .checkmark-box,
+#invite-checkbox,
+#invite-checkbox > .internal-box > .checkmark-box
+{
+   margin-left   : 1px;
+}
+
+#all-day-event-checkbox
+{
+   margin-left    : 2px;
+}
+
+#repeat-length-units
+{
+   min-width   : 98px;
+}
+
+#alarm-spacer
+{
+   min-width   : 52px;
+}
+
+
+#radio-spacer
+{
+   min-width   : 38px;
+}
+
+#until-spacer
+{
+   min-width   : 8px;
+}
+
+#invite-spacer
+{
+  	min-width	: 54px;
+}
+
+#repeat-length-field
+{
+   max-width               : 3em;
+}
+
+#alarm-length-field
+{
+   max-width               : 3em;
+}
+
+#invite-email-field
+{
+ 	max-width					: 50em;
+}
+
+#alarm-email-field
+{
+  	max-width					: 50em;
+}
+
+#start-date-text
+{
+   -moz-user-focus			: ignore !important;
+   
+   max-width               : 10em;
+}
+
+#start-time-text
+{
+   max-width               : 10em;
+}
+
+#end-time-text
+{
+   max-width               : 10em;
+}
+
+#repeat-end-date-text
+{
+   max-width               : 10em;
+}
+
+
+/*--------------------------------------------------------------------
+ *   Start date button
+ *-------------------------------------------------------------------*/
+
+#start-date-button 
+  {
+    margin-left             : 3px;
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_up.png");
+  }
+#start-date-button[disabled="true"],
+#start-date-button[disabled="true"]:hover,
+#start-date-button[disabled="true"]:hover:active
+  {
+   list-style-image         : url("chrome://calendar/skin/ca-event-dialog/calendar_disabled.png");
+  }
+#start-date-button:hover
+  {
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_hover.png");
+  }
+#start-date-button:hover:active
+  {
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_down.png");
+  }
+
+
+/*--------------------------------------------------------------------
+ *   Start time button
+ *-------------------------------------------------------------------*/
+
+#start-time-button 
+  {
+    margin-left             : 3px;
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_up.png");
+  }
+#start-time-button[disabled="true"],
+#start-time-button[disabled="true"]:hover,
+#start-time-button[disabled="true"]:hover:active
+  {
+   list-style-image         : url("chrome://calendar/skin/ca-event-dialog/clock_disabled.png");
+  }
+#start-time-button:hover
+  {
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_hover.png");
+  }
+#start-time-button:hover:active
+  {
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_down.png");
+  }
+
+
+/*--------------------------------------------------------------------
+ *   End time button
+ *-------------------------------------------------------------------*/
+
+#end-time-button 
+  {
+    margin-left             : 3px;
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_up.png");
+  }
+#end-time-button[disabled="true"],
+#end-time-button[disabled="true"]:hover,
+#end-time-button[disabled="true"]:hover:active
+  {
+   list-style-image         : url("chrome://calendar/skin/ca-event-dialog/clock_disabled.png");
+  }
+#end-time-button:hover
+  {
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_hover.png");
+  }
+#end-time-button:hover:active
+  {
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/clock_down.png");
+  }
+
+
+
+/*--------------------------------------------------------------------
+ *   Repeat end date button
+ *-------------------------------------------------------------------*/
+
+#repeat-end-date-button 
+  {
+    margin-left             : 3px;
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_up.png");
+  }
+#repeat-end-date-button[disabled="true"],
+#repeat-end-date-button[disabled="true"]:hover,
+#repeat-end-date-button[disabled="true"]:hover:active
+  {
+   list-style-image         : url("chrome://calendar/skin/ca-event-dialog/calendar_disabled.png");
+  }
+#repeat-end-date-button:hover
+  {
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_hover.png");
+  }
+#repeat-end-date-button:hover:active
+  {
+    list-style-image        : url("chrome://calendar/skin/ca-event-dialog/calendar_down.png");
+  }
+
+
