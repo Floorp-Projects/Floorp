@@ -107,8 +107,6 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 #include "macstdlibextras.h"
 #include <TextServices.h>
 
-static nsresult CheckForNewChrome(void);
-
 // Set up the toolbox and (if DEBUG) the console.  Do this in a static initializer,
 // to make it as unlikely as possible that somebody calls printf() before we get initialized.
 static struct MacInitializer { MacInitializer() { InitializeMacToolbox(); } } gInitializer;
@@ -714,18 +712,6 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
 	return rv;
 }
 
-nsresult CheckForNewChrome(void) {
-
-  nsCOMPtr <nsIChromeRegistry> chromeReg = do_GetService("@mozilla.org/chrome/chrome-registry;1");
-  NS_ASSERTION(chromeReg, "chrome check couldn't get the chrome registry");
-
-  if (chromeReg)
-    return chromeReg->CheckForNewChrome();
-  return NS_ERROR_FAILURE;
-}
-
-
-
 static nsresult CreateAndRegisterDirectoryService()
 {
   nsresult rv = NS_OK;
@@ -949,8 +935,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
     PrintUsage();
     return rv;
   }
-
-  CheckForNewChrome();
 
   nsCOMPtr<nsIAppShellService> appShell = do_GetService(kAppShellServiceCID, &rv);
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get the appshell service");

@@ -259,6 +259,8 @@ nsChromeRegistry::nsChromeRegistry()
     rv = mRDFService->GetResource(kURICHROME_allowScripts, getter_AddRefs(mAllowScripts));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF resource");
   }
+
+  CheckForNewChrome();
 }
 
 
@@ -487,16 +489,6 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
         (void)LoadStyleSheet(getter_AddRefs(mUserContentSheet), userSheetURL);
         // it's ok not to have a userContent.css or userChrome.css file
       }
-    }
-    else if (!mInstallInitialized) {
-      // Load the installed search path for skins, content, and locales
-      // Prepend them to our list of substitutions
-      mInstallInitialized = PR_TRUE;
-      rv = AddToCompositeDataSource(PR_FALSE);
-      if (NS_FAILED(rv)) return rv;
-
-      rv = LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
-      if (NS_FAILED(rv)) return rv;
     }
   }
  
@@ -1615,7 +1607,7 @@ NS_IMETHODIMP nsChromeRegistry::SetProvider(const nsCString& aProvider,
     if (NS_FAILED(rv)) return rv;
   }
 
-  if(aProvider.Equals("skin")){
+  if(aProvider.Equals("skin") && mScrollbarSheet){
     rv = LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
     if (NS_FAILED(rv)) return rv;
   }
@@ -2342,8 +2334,7 @@ nsChromeRegistry::GetBackstopSheets(nsISupportsArray **aResult)
 {
   nsresult rv;
   if (!mScrollbarSheet) {
-    nsCOMPtr<nsICSSStyleSheet> dummy;
-    rv = LoadStyleSheet(getter_AddRefs(dummy), nsCAutoString("chrome://global/skin/scrollbars.css")); 
+    rv = LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
     if (NS_FAILED(rv)) return rv;
   }
 
