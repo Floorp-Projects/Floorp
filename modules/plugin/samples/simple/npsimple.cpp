@@ -48,6 +48,8 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkprivate.h>
 #include <gtk/gtk.h>
+#include <gdksuperwin.h>
+#include <gtkmozbox.h>
 
 /*------------------------------------------------------------------------------
  * Windows Includes
@@ -97,11 +99,12 @@ typedef struct _PlatformInstance
 #ifdef XP_UNIX
 typedef struct _PlatformInstance
 {
-    Window 		window;
-    GtkWidget         *widget;
-    Display *		display;
-    uint32 		x, y;
-    uint32 		width, height;
+    Window 		       window;
+    GtkWidget         *moz_box;
+    GdkSuperWin       *superwin;
+    Display *		   display;
+    uint32 		       x, y;
+    uint32 		       width, height;
 } PlatformInstance;
 #endif /* XP_UNIX */
 
@@ -1057,7 +1060,8 @@ SimplePluginInstance::PlatformNew(void)
 nsresult
 SimplePluginInstance::PlatformDestroy(void)
 {
-    gtk_widget_destroy(fPlatform.widget);
+    gtk_widget_destroy(fPlatform.moz_box);
+    fPlatform.moz_box = 0;
     return NS_OK;
 }
 
@@ -1070,17 +1074,22 @@ SimplePluginInstance::PlatformDestroy(void)
 nsresult
 SimplePluginInstance::PlatformSetWindow(nsPluginWindow* window)
 {
+#ifdef NS_DEBUG
+    printf("SimplePluginInstance::PlatformSetWindow\n");
+#endif
     if (window == NULL || window->window == NULL)
         return NS_ERROR_NULL_POINTER;
 
-    fPlatform.widget = (GtkWidget *)window->window;
+    fPlatform.superwin = (GdkSuperWin *)window->window;
+    fPlatform.moz_box = gtk_mozbox_new(fPlatform.superwin->bin_window);
+
     GtkWidget *button;
 
     button = gtk_button_new_with_label("Hello World");
-    gtk_layout_put(GTK_LAYOUT(fPlatform.widget), button, 0, 0);
+    gtk_container_add(GTK_CONTAINER(fPlatform.moz_box), button);
 
     gtk_widget_show(button);
-    gtk_widget_show(fPlatform.widget);
+    gtk_widget_show(fPlatform.moz_box);
 
     return NS_OK;
 }
