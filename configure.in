@@ -247,6 +247,7 @@ case "$target" in
 
        NS_USE_NATIVE=1
     else
+       MKSHLIB='$(CC) $(DSO_LDOPTS)'
        AS='$(CC)'
        ASFLAGS='$(CFLAGS)'
     fi
