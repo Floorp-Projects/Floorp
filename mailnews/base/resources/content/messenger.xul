@@ -45,7 +45,7 @@ Rights Reserved.
 <!ENTITY saveAsTemplateCmd.label ".Template">  
 <!ENTITY getNewMsgCmd.label "Get New Messages">  
 <!ENTITY sendUnsentCmd.label "Send Unsent Messages">  
-<!ENTITY subscribeCmd.label ".Subscribe">  
+<!ENTITY subscribeCmd.label "Subscribe">  
 <!ENTITY emptyTrashCmd.label ".Empty Trash">  
 <!ENTITY importCmd.label ".Import...">  
 <!ENTITY offlineMenu.label ".Offline"> 
