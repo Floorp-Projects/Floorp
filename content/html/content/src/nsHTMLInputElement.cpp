@@ -639,8 +639,9 @@ nsHTMLInputElement::GetValue(nsAString& aValue)
 NS_IMETHODIMP 
 nsHTMLInputElement::SetValue(const nsAString& aValue)
 {
-  //check secuity
-  if (mType == NS_FORM_INPUT_FILE) {
+  // check security.  Note that setting the value to the empty string is always
+  // OK and gives pages a way to clear a file input if necessary.
+  if (mType == NS_FORM_INPUT_FILE && !aValue.IsEmpty()) {
     nsIScriptSecurityManager *securityManager =
       nsContentUtils::GetSecurityManager();
 
