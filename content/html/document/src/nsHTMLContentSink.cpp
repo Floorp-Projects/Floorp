@@ -834,8 +834,7 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
 
     if (nodeType == eHTMLTag_a && keyAtom == nsHTMLAtoms::name) {
       NS_ConvertUCS2toUTF8 cname(v);
-      NS_ConvertUTF8toUCS2 uv(nsUnescape(NS_CONST_CAST(char *,
-                                                       cname.get())));
+      NS_ConvertUTF8toUCS2 uv(nsUnescape(cname.BeginWriting()));
 
       // Add attribute to content
       aContent->SetAttr(kNameSpaceID_None, keyAtom, uv, aNotify);

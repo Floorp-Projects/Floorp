@@ -903,7 +903,7 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
     if (mBuffer.Length() < aTextLength) {
       mBuffer.SetLength(aTextLength);
     }
-    PRUnichar* buffer = NS_CONST_CAST(PRUnichar*, mBuffer.get());
+    PRUnichar* buffer = mBuffer.BeginWriting();
 
     if (doReverse) {
       rv = mBidiEngine->WriteReverse(aText, aTextLength, buffer,
@@ -1158,7 +1158,7 @@ nsBidiPresUtils::ReorderUnicodeText(PRUnichar*       aText,
     if (mBuffer.Length() < aTextLength) {
       mBuffer.SetLength(aTextLength);
     }
-    PRUnichar* buffer = NS_CONST_CAST(PRUnichar*, mBuffer.get());
+    PRUnichar* buffer = mBuffer.BeginWriting();
 
     if (doReverse) {
       rv = mBidiEngine->WriteReverse(aText, aTextLength, buffer,

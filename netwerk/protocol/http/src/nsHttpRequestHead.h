@@ -42,12 +42,12 @@ public:
 
     void SetMethod(nsHttpAtom method) { mMethod = method; }
     void SetVersion(nsHttpVersion version) { mVersion = version; }
-    void SetRequestURI(const char *s) { mRequestURI.Adopt(s ? nsCRT::strdup(s) : 0); }
+    void SetRequestURI(const nsCSubstring &s) { mRequestURI = s; }
 
-    nsHttpHeaderArray    &Headers()    { return mHeaders; }
-    nsHttpAtom            Method()     { return mMethod; }
-    nsHttpVersion         Version()    { return mVersion; }
-    const nsAFlatCString &RequestURI() { return mRequestURI; }
+    nsHttpHeaderArray  &Headers()    { return mHeaders; }
+    nsHttpAtom          Method()     { return mMethod; }
+    nsHttpVersion       Version()    { return mVersion; }
+    const nsCSubstring &RequestURI() { return mRequestURI; }
 
     const char *PeekHeader(nsHttpAtom h)                                     { return mHeaders.PeekHeader(h); }
     nsresult SetHeader(nsHttpAtom h, const nsACString &v, PRBool m=PR_FALSE) { return mHeaders.SetHeader(h, v, m); }

@@ -1107,12 +1107,12 @@ nsProfileAccess::Get4xProfileInfo(nsIFile *registryFile, PRBool fromImport)
         // 4.x profiles coming from japanese machine are already in unicode.
         // So, there is no need to decode into unicode further.
         NS_ConvertUCS2toUTF8 temp(profile);
-        nsCAutoString profileName(nsUnescape( NS_CONST_CAST(char*, temp.get())));
+        nsCAutoString profileName(nsUnescape(temp.BeginWriting()));
         nsAutoString convertedProfName(NS_ConvertUTF8toUCS2(profileName).get());
 #else
         nsCAutoString temp; temp.AssignWithConversion(profile);
 
-        nsCAutoString profileName(nsUnescape( NS_CONST_CAST(char*, temp.get())));
+        nsCAutoString profileName(nsUnescape(temp.BeginWriting()));
         nsAutoString convertedProfName;
         ConvertStringToUnicode(charSet, profileName.get(), convertedProfName);
 #endif
@@ -1398,7 +1398,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
 
         // Unescape profile location
         NS_ConvertUCS2toUTF8 tempLoc(profLoc);
-        nsCAutoString profileLocation(nsUnescape( NS_CONST_CAST(char*, tempLoc.get())));
+        nsCAutoString profileLocation(nsUnescape(tempLoc.BeginWriting()));
         nsAutoString convertedProfLoc(NS_ConvertUTF8toUCS2(profileLocation).get());
 #else
         nsCAutoString charSet;
@@ -1408,7 +1408,7 @@ nsresult ProfileStruct::InternalizeLocation(nsIRegistry *aRegistry, nsRegistryKe
         // Unescape profile location and convert it to the right format
         nsCAutoString tempLoc; tempLoc.AssignWithConversion(profLoc);
 
-        nsCAutoString profileLocation(nsUnescape( NS_CONST_CAST(char*, tempLoc.get())));
+        nsCAutoString profileLocation(nsUnescape(tempLoc.BeginWriting()));
         nsAutoString convertedProfLoc;
         ConvertStringToUnicode(charSet, profileLocation.get(), convertedProfLoc);
 #endif

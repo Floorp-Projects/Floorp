@@ -489,7 +489,7 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
         nsCAutoString unboundFile;
         uniqueSrcFile->GetNativePath(unboundFile);
 
-        if (su_unbind((char*)realfile.get(), (char*)unboundFile.get()))  //
+        if (su_unbind(NS_CONST_CAST(char*, realfile.get()), NS_CONST_CAST(char*,unboundFile.get())))  //
         {
             // un-binding worked, save the tmp name for later
             uniqueSrcFile->GetNativePath(realfile);

@@ -156,7 +156,7 @@ NS_IMETHODIMP nsHankakuToZenkaku::Change( const PRUnichar* aText, PRInt32 aTextL
   PRInt32 ol;
   aResult.SetCapacity(aTextLength);
    
-  HankakuToZenkaku ( aText, aTextLength, (PRUnichar*) aResult.get(), aTextLength, &ol);
+  HankakuToZenkaku ( aText, aTextLength, aResult.BeginWriting(), aTextLength, &ol);
   aResult.SetLength(ol);
 
   return NS_OK;

@@ -3227,8 +3227,8 @@ static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue, 
 
   valueList.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar* value = (PRUnichar*)(const PRUnichar*)aValue.get();
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)valueList.get();
+  const PRUnichar* value = aValue.get();
+  PRUnichar* start = valueList.BeginWriting();
   PRUnichar* end   = start;
 
   while (kNullCh != *start) {

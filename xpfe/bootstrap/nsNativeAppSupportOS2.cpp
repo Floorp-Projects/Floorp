@@ -1733,7 +1733,7 @@ nsCString nsNativeAppSupportOS2::ParseDDEArg( HSZ args, int index ) {
         // Ensure result's buffer is sufficiently big.
         temp.SetLength( argLen + 1 );
         // Now get the string contents.
-        WinDdeQueryString( args, (char*)temp.get(), temp.Length(), CP_WINANSI );
+        WinDdeQueryString( args, temp.BeginWriting(), temp.Length(), CP_WINANSI );
         // Parse out the given arg.
         const char *p = temp.get();
         // offset points to the comma preceding the desired arg.

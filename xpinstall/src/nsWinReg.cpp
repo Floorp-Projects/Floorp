@@ -641,7 +641,7 @@ nsWinReg::NativeCreateKey(const nsString& aSubkey, const nsString& aClassname)
         return nsInstall::UNEXPECTED_ERROR;
 
     root   = (HKEY)mRootKey;
-    result = RegCreateKeyEx(root, subkey.get(), 0, (char*)classname.get(),
+    result = RegCreateKeyEx(root, subkey.get(), 0, NS_CONST_CAST(char*, classname.get()),
                 REG_OPTION_NON_VOLATILE, KEY_WRITE, nsnull, &newkey, &disposition);
 
     if(ERROR_SUCCESS == result)

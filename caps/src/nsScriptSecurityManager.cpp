@@ -2794,7 +2794,7 @@ nsScriptSecurityManager::InitPolicies()
     policyNames += NS_LITERAL_CSTRING(" ") + defaultPolicyNames;
 
     //-- Initialize domain policies
-    char* policyCurrent = (char*)policyNames.get();
+    char* policyCurrent = policyNames.BeginWriting();
     PRBool morePolicies = PR_TRUE;
     while (morePolicies)
     {
@@ -2832,7 +2832,7 @@ nsScriptSecurityManager::InitPolicies()
         }
 
         //-- Parse list of sites and create an entry in mOriginToPolicyMap for each
-        char* domainStart = (char*)domainList.get();
+        char* domainStart = domainList.BeginWriting();
         char* domainCurrent = domainStart;
         char* lastDot = nsnull;
         char* nextToLastDot = nsnull;

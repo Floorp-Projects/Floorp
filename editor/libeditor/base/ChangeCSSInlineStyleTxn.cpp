@@ -70,7 +70,7 @@ ChangeCSSInlineStyleTxn::ValueIncludes(const nsAString &aValueList, const nsAStr
   valueList.Append(kNullCh);  // put an extra null at the end
 
   PRUnichar *value = ToNewUnicode(aValue);
-  PRUnichar *start = (PRUnichar*)(const PRUnichar*)valueList.get();
+  PRUnichar *start = valueList.BeginWriting();
   PRUnichar *end   = start;
 
   while (kNullCh != *start) {
@@ -113,7 +113,7 @@ ChangeCSSInlineStyleTxn::RemoveValueFromListOfValues(nsAString & aValues, const 
   nsAutoString  outString;
   classStr.Append(kNullCh);  // put an extra null at the end
 
-  PRUnichar *start = (PRUnichar*)(const PRUnichar*)classStr.get();
+  PRUnichar *start = classStr.BeginWriting();
   PRUnichar *end   = start;
 
   while (kNullCh != *start) {

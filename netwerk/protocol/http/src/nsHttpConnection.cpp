@@ -655,7 +655,7 @@ nsHttpConnection::SetupSSLProxyConnect()
     nsHttpRequestHead request;
     request.SetMethod(nsHttp::Connect);
     request.SetVersion(gHttpHandler->HttpVersion());
-    request.SetRequestURI(buf.get());
+    request.SetRequestURI(buf);
     request.SetHeader(nsHttp::User_Agent, gHttpHandler->UserAgent());
 
     // send this header for backwards compatibility.

@@ -2221,7 +2221,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
     if (NS_FAILED(rv)) return rv;
 
     // Skip leading slash
-    char* fwdPtr = (char *)path.get();
+    char* fwdPtr = path.BeginWriting();
     if (fwdPtr && (*fwdPtr == '/'))
         fwdPtr++;
     if (*fwdPtr != '\0') {
@@ -2538,7 +2538,7 @@ nsFtpState::ConvertFilespecToVMS(nsCString& fileString)
 
     // Get a writeable copy we can strtok with.
     fileStringCopy = fileString;
-    t = nsCRT::strtok((char *)fileStringCopy.get(), "/", &nextToken);
+    t = nsCRT::strtok(fileStringCopy.BeginWriting(), "/", &nextToken);
     if (t) while (nsCRT::strtok(nextToken, "/", &nextToken)) ntok++; // count number of terms (tokens)
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) ConvertFilespecToVMS ntok: %d\n", this, ntok));
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) ConvertFilespecToVMS from: \"%s\"\n", this, fileString.get()));
@@ -2567,7 +2567,7 @@ nsFtpState::ConvertFilespecToVMS(nsCString& fileString)
             // Get another copy since the last one was written to.
             fileStringCopy = fileString;
             fileString.Truncate();
-            fileString.Append(nsCRT::strtok((char *)fileStringCopy.get(), 
+            fileString.Append(nsCRT::strtok(fileStringCopy.BeginWriting(), 
                               "/", &nextToken));
             fileString.Append(":[");
             if (ntok > 2) {
@@ -2596,7 +2596,7 @@ nsFtpState::ConvertFilespecToVMS(nsCString& fileString)
             fileStringCopy = fileString;
             fileString.Truncate();
             fileString.Append("[.");
-            fileString.Append(nsCRT::strtok((char*)fileStringCopy.get(),
+            fileString.Append(nsCRT::strtok(fileStringCopy.BeginWriting(),
                               "/", &nextToken));
             if (ntok > 2) {
                 for (int i=2; i<ntok; i++) {

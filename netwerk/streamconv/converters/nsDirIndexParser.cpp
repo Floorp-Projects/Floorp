@@ -220,7 +220,7 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
     aFormatStr += len;
     
     // Okay, we're gonna monkey with the nsStr. Bold!
-    name.SetLength(nsUnescapeCount(NS_CONST_CAST(char*, name.get())));
+    name.SetLength(nsUnescapeCount(name.BeginWriting()));
 
     // All tokens are case-insensitive - http://www.area.com/~roeber/file_format.html
     if (name.EqualsIgnoreCase("description"))
@@ -384,7 +384,7 @@ nsDirIndexParser::OnDataAvailable(nsIRequest *aRequest, nsISupports *aCtxt,
   // Now read the data into our buffer.
   nsresult rv;
   PRUint32 count;
-  rv = aStream->Read(NS_CONST_CAST(char*, mBuf.get() + len), aCount, &count);
+  rv = aStream->Read(mBuf.BeginWriting() + len, aCount, &count);
   if (NS_FAILED(rv)) return rv;
 
   // Set the string's length according to the amount of data we've read.

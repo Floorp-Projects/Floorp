@@ -4124,7 +4124,7 @@ static nsresult DoCharsetConversion(nsIUnicodeDecoder *aUnicodeDecoder,
   rv = aUnicodeDecoder->GetMaxLength(aANSIString, numberOfBytes, &outUnicodeLen);
   NS_ENSURE_SUCCESS(rv, rv);
   buffer.SetCapacity(outUnicodeLen);
-  rv = aUnicodeDecoder->Convert(aANSIString, &numberOfBytes, (PRUnichar*) buffer.get(), &outUnicodeLen);
+  rv = aUnicodeDecoder->Convert(aANSIString, &numberOfBytes, buffer.BeginWriting(), &outUnicodeLen);
   NS_ENSURE_SUCCESS(rv, rv);
   buffer.SetLength(outUnicodeLen);
   aUnicodeString = buffer;

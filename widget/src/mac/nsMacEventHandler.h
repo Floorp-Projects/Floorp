@@ -168,11 +168,11 @@ public:
 		//
 		virtual long 		HandlePositionToOffset(Point aPoint,short* regionClass);
 		virtual nsresult 	HandleOffsetToPosition(long offset,Point* position);
-		virtual nsresult	HandleUpdateInputArea(char* text,Size text_size, ScriptCode textScript,long fixedLength,TextRangeArray* textRangeArray);
-		virtual nsresult	UnicodeHandleUpdateInputArea(PRUnichar* text, long charCount, long fixedLength,TextRangeArray* textRangeArray);
+		virtual nsresult	HandleUpdateInputArea(const char* text,Size text_size, ScriptCode textScript,long fixedLength,TextRangeArray* textRangeArray);
+		virtual nsresult	UnicodeHandleUpdateInputArea(const PRUnichar* text, long charCount, long fixedLength,TextRangeArray* textRangeArray);
 		virtual nsresult	HandleUnicodeGetSelectedText(nsAString& outString);
 		virtual nsresult	ResetInputState();
-		virtual PRBool		HandleUKeyEvent(PRUnichar* text, long charCount, EventRecord& aOSEvent);
+		virtual PRBool		HandleUKeyEvent(const PRUnichar* text, long charCount, EventRecord& aOSEvent);
 		
 		//
 		// Synthetic events, generated internally to do things at specific times and

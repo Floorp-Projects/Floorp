@@ -46,6 +46,8 @@ nsTDependentSubstring_CharT::Rebind( const abstract_string_type& readable, PRUin
 
     mData += startPos;
     mLength = NS_MIN(length, strLength - startPos);
+
+    SetDataFlags(F_NONE);
   }
 
 void
@@ -58,4 +60,6 @@ nsTDependentSubstring_CharT::Rebind( const substring_type& str, PRUint32 startPo
 
     mData = NS_CONST_CAST(char_type*, str.Data()) + startPos;
     mLength = NS_MIN(length, strLength - startPos);
+
+    SetDataFlags(F_NONE);
   }

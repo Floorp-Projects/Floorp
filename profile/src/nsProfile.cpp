@@ -803,7 +803,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             nsAutoString currProfileName; 
  
             if (nsCRT::IsAscii(cmdResult))  {
-                currProfileName.AssignWithConversion(strtok(NS_CONST_CAST(char*,(const char*)cmdResult), " "));
+                currProfileName.AssignWithConversion(strtok(cmdResult.BeginWriting(), " "));
             }
             else {
                 // get a platform charset
@@ -812,7 +812,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                 NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get a platform charset");
 
                 // convert the profile name to Unicode
-                nsCAutoString profileName(strtok(NS_CONST_CAST(char*,(const char*)cmdResult), " "));
+                nsCAutoString profileName(strtok(cmdResult.BeginWriting(), " "));
                 rv = ConvertStringToUnicode(charSet, profileName.get(), currProfileName);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "failed to convert ProfileName to unicode");
             }

@@ -4239,7 +4239,7 @@ nsFontWinNonUnicode::GetWidth(HDC aDC, const PRUnichar* aString,
   if (!mIsWide)
     ::GetTextExtentPoint32A(aDC, buffer.get(), destLength, &size);
   else
-    ::GetTextExtentPoint32W(aDC, (PRUnichar*) buffer.get(), destLength / 2, &size);
+    ::GetTextExtentPoint32W(aDC, (const PRUnichar*) buffer.get(), destLength / 2, &size);
   size.cx -= mOverhangCorrection;
 
   return size.cx;
@@ -4260,7 +4260,7 @@ nsFontWinNonUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   if (!mIsWide)
     NS_ExtTextOutA(aDC, this, aX, aY, 0, NULL, buffer.get(), aLength, NULL);
   else 
-    NS_ExtTextOutW(aDC, this, aX, aY, 0, NULL, (PRUnichar*) buffer.get(), destLength / 2, NULL);
+    NS_ExtTextOutW(aDC, this, aX, aY, 0, NULL, (const PRUnichar*) buffer.get(), destLength / 2, NULL);
 }
 
 #ifdef MOZ_MATHML
@@ -4288,7 +4288,7 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
     if (gGlyphAgent.GetState() != eGlyphAgent_UNICODE) {
       // we are on a platform that doesn't implement GetGlyphOutlineW() 
       // we need to use glyph indices
-      rv = GetGlyphIndices(aDC, &mCMAP, (PRUnichar*)buffer.get(), destLength / 2, buf);
+      rv = GetGlyphIndices(aDC, &mCMAP, (const PRUnichar*)buffer.get(), destLength / 2, buf);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -4296,7 +4296,7 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
 
     // buffer.mBuffer is now a pseudo-Unicode string so that we can use 
     // GetBoundingMetricsCommon() also used by nsFontWinUnicode. 
-    return  GetBoundingMetricsCommon(aDC, mOverhangCorrection, (PRUnichar*)buffer.get(), 
+    return  GetBoundingMetricsCommon(aDC, mOverhangCorrection, (const PRUnichar*)buffer.get(), 
               destLength / 2, aBoundingMetrics, buf.get());
 
   }

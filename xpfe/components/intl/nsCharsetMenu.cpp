@@ -1457,9 +1457,9 @@ nsresult nsCharsetMenu::AddFromPrefsToMenu(
   if (pls) {
     nsXPIDLString ucsval;
     pls->ToString(getter_Copies(ucsval));
+    NS_ConvertUCS2toUTF8 utf8val(ucsval);
     if (ucsval)
-      res = AddFromStringToMenu(NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(ucsval).get()),
-                                aArray,
+      res = AddFromStringToMenu(utf8val.BeginWriting(), aArray,
                                 aContainer, aDecs, aIDPrefix);
   }
 

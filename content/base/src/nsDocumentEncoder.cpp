@@ -412,7 +412,7 @@ ConvertAndWrite(const nsAString& aString,
 
   nsCAutoString charXferString;
   charXferString.SetCapacity(charLength);
-  char* charXferBuf = (char*)charXferString.get();
+  char* charXferBuf = charXferString.BeginWriting();
   nsresult convert_rv = NS_OK;
 
   do {

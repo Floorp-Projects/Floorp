@@ -1682,7 +1682,7 @@ void nsNativeAppSupportWin::ParseDDEArg( HSZ args, int index, nsCString& aString
     // Ensure result's buffer is sufficiently big.
     temp.SetLength( argLen );
     // Now get the string contents.
-    DdeQueryString( mInstance, args, (char*)temp.get(), temp.Length(), CP_WINANSI );
+    DdeQueryString( mInstance, args, temp.BeginWriting(), temp.Length(), CP_WINANSI );
     // Parse out the given arg.
     ParseDDEArg(temp.get(), index, aString);
     return;

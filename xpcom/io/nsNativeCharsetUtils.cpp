@@ -968,7 +968,7 @@ NS_CopyNativeToUnicode(const nsACString &input, nsAString  &output)
     // |inputStr| from the result of BeginReading.
  
     const nsPromiseFlatCString &flat = PromiseFlatCString(input);
-    char *inputStr = (char*)flat.get();
+    char *inputStr = NS_CONST_CAST(char*, flat.get());
     size_t inputLen = flat.Length() + 1; // include null char
 
     // resultLen must be >= inputLen or the unicode conversion will fail
@@ -1012,7 +1012,7 @@ NS_CopyUnicodeToNative(const nsAString &input, nsACString &output)
     // |inputStr| from the result of BeginReading.
 
     const nsPromiseFlatString &flat = PromiseFlatString(input);
-    UniChar *inputStr = (UniChar*)flat.get();
+    UniChar *inputStr = (UniChar*) NS_CONST_CAST(PRUnichar*, flat.get());
     size_t inputLen = flat.Length() + 1; // include null char
 
     // resultLen must be >= inputLen or the unicode conversion will fail

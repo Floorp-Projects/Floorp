@@ -99,7 +99,7 @@ hack_nsIFile2URL(nsIFile* file, char * *aURL)
 #endif
 #if defined( XP_MAC )
     // Swap the / and colons to convert to an url
-    SwapSlashColon((char*)ePath.get());
+    SwapSlashColon(ePath.BeginWriting());
 #endif
     // Escape the path with the directory mask
     nsCAutoString tmp(ePath);

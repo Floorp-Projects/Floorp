@@ -88,8 +88,8 @@ class nsIMEPreedit {
   nsIMEPreedit();
   ~nsIMEPreedit();
   void Reset();
-  PRUnichar* GetPreeditString() const;
-  char* GetPreeditFeedback() const;
+  const PRUnichar* GetPreeditString() const;
+  const char* GetPreeditFeedback() const;
   int GetPreeditLength() const;
   void SetPreeditString(const XIMText* aText,
                         const PRInt32 aChangeFirst,

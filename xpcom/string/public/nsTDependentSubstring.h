@@ -57,6 +57,7 @@ class nsTDependentSubstring_CharT : public nsTSubstring_CharT
           NS_ASSERTION(start && end, "nsTDependentSubstring must wrap a non-NULL buffer");
           mData = NS_CONST_CAST(char_type*, start);
           mLength = end - start;
+          SetDataFlags(F_NONE);
         }
 
       nsTDependentSubstring_CharT( const abstract_string_type& str, PRUint32 startPos, PRUint32 length = size_type(-1) )

@@ -405,7 +405,7 @@ nsScannerString::ReplaceCharacter(nsScannerIterator& aPosition, PRUnichar aChar)
     // XXX Casting a const to non-const. Unless the base class
     // provides support for writing iterators, this is the best
     // that can be done.
-    PRUnichar* pos = (PRUnichar*)aPosition.get();
+    PRUnichar* pos = NS_CONST_CAST(PRUnichar*, aPosition.get());
     *pos = aChar;
 
     mIsDirty = PR_TRUE;

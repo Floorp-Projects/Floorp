@@ -442,7 +442,7 @@ static PRBool OtherDecimalToText(PRInt32 ordinal, PRUnichar zeroChar, nsString& 
 {
    PRUnichar diff = zeroChar - PRUnichar('0');
    DecimalToText(ordinal, result);
-   PRUnichar* p = NS_CONST_CAST(PRUnichar*, result.get());
+   PRUnichar* p = result.BeginWriting();
    if (ordinal < 0) {
      // skip the leading '-'
      ++p;
@@ -459,7 +459,7 @@ static PRBool TamilToText(PRInt32 ordinal,  nsString& result)
      // Can't do those in this system.
      return PR_FALSE;
    }
-   PRUnichar* p = (PRUnichar*)result.get();
+   PRUnichar* p = result.BeginWriting();
    for(; nsnull != *p ; p++) 
       if(*p != PRUnichar('0'))
          *p += diff;

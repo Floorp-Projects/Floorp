@@ -1499,7 +1499,7 @@ nsTextTransformer::DoArabicShaping(PRUnichar* aText,
 
   nsAutoString buf;
   buf.SetLength(aTextLength);
-  PRUnichar* buffer = (PRUnichar*)buf.get();
+  PRUnichar* buffer = buf.BeginWriting();
   
   ArabicShaping(aText, buf.Length(), buffer, (PRUint32 *)&newLen, !isVisual, !isVisual);
 

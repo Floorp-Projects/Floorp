@@ -573,7 +573,7 @@ nsHttpTransaction::ParseLineSegment(char *segment, PRUint32 len)
         // of mLineBuf.
         mLineBuf.Truncate(mLineBuf.Length() - 1);
         if (!mHaveStatusLine || (*segment != ' ' && *segment != '\t')) {
-            ParseLine(NS_CONST_CAST(char*,mLineBuf.get()));
+            ParseLine(mLineBuf.BeginWriting());
             mLineBuf.Truncate();
         }
     }

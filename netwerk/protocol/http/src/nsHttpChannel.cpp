@@ -455,15 +455,15 @@ nsHttpChannel::SetupTransaction()
     // use the URI path if not proxying (transparent proxying such as SSL proxy
     // does not count here). also, figure out what version we should be speaking.
     nsCAutoString buf, path;
-    const char* requestURI;
+    nsCString* requestURI;
     if (mConnectionInfo->UsingSSL() || !mConnectionInfo->UsingHttpProxy()) {
         rv = mURI->GetPath(path);
         if (NS_FAILED(rv)) return rv;
         // path may contain UTF-8 characters, so ensure that they're escaped.
         if (NS_EscapeURL(path.get(), path.Length(), esc_OnlyNonASCII, buf))
-            requestURI = buf.get();
+            requestURI = &buf;
         else
-            requestURI = path.get();
+            requestURI = &path;
         mRequestHead.SetVersion(gHttpHandler->HttpVersion());
     }
     else {
@@ -478,18 +478,19 @@ nsHttpChannel::SetupTransaction()
             if (NS_FAILED(rv)) return rv;
             rv = tempURI->GetAsciiSpec(path);
             if (NS_FAILED(rv)) return rv;
-            requestURI = path.get();
+            requestURI = &path;
         }
         else
-            requestURI = mSpec.get();
+            requestURI = &mSpec;
         mRequestHead.SetVersion(gHttpHandler->ProxyHttpVersion());
     }
 
     // trim off the #ref portion if any...
-    char *p = (char *)strchr(requestURI, '#');
-    if (p) *p = 0;
+    PRInt32 ref = requestURI->FindChar('#');
+    if (ref != kNotFound)
+        requestURI->SetLength(ref);
 
-    mRequestHead.SetRequestURI(requestURI);
+    mRequestHead.SetRequestURI(*requestURI);
 
     // set the request time for cache expiration calculations
     mRequestTime = NowInSeconds();
@@ -859,7 +860,7 @@ nsHttpChannel::ResponseWouldVary()
         NS_NAMED_LITERAL_CSTRING(prefix, "request-");
 
         // enumerate the elements of the Vary header...
-        char *val = NS_CONST_CAST(char *, buf.get()); // going to munge buf
+        char *val = buf.BeginWriting(); // going to munge buf
         char *token = nsCRT::strtok(val, NS_HTTP_HEADER_SEPS, &val);
         while (token) {
             //
@@ -1583,7 +1584,7 @@ nsHttpChannel::InitCacheEntry()
         if (!buf.IsEmpty()) {
             NS_NAMED_LITERAL_CSTRING(prefix, "request-");
            
-            char *val = NS_CONST_CAST(char *, buf.get()); // going to munge buf
+            char *val = buf.BeginWriting(); // going to munge buf
             char *token = nsCRT::strtok(val, NS_HTTP_HEADER_SEPS, &val);
             while (token) {
                 if ((*token != '*') && (PL_strcasecmp(token, "cookie") != 0)) {

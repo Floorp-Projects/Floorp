@@ -789,7 +789,7 @@ NS_IMETHODIMP nsWindowsHooks::StartupAddOption(const char* option) {
         // exploiting the fact that nsString's storage is also a char* buffer.
         // NS_CONST_CAST is safe here because nsCRT::strtok will only modify
         // the existing buffer
-        grabArgs(NS_CONST_CAST(char *, cargs.get()), &args);
+        grabArgs(cargs.BeginWriting(), &args);
         if (args != NULL)
             newsetting.Append(args);
         else
@@ -834,7 +834,7 @@ NS_IMETHODIMP nsWindowsHooks::StartupRemoveOption(const char* option) {
     // exploiting the fact that nsString's storage is also a char* buffer.
     // NS_CONST_CAST is safe here because nsCRT::strtok will only modify
     // the existing buffer
-    grabArgs(NS_CONST_CAST(char *, cargs.get()), &args);
+    grabArgs(cargs.BeginWriting(), &args);
 
     nsCAutoString launchcommand;
     if (args)
