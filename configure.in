@@ -862,6 +862,7 @@ sun-java/stubs/include/Makefile
 sun-java/stubs/jri/Makefile
 sun-java/stubs/src/Makefile
 xpcom/Makefile
+xpcom/public/Makefile
 xpcom/src/Makefile
 xpcom/tests/Makefile
 xpcom/tests/dynamic/Makefile
