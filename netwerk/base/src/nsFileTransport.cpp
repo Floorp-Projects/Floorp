@@ -606,7 +606,7 @@ nsFileTransport::Run(void)
     printf("nsFileTransport: latency=%u ticks\n", now - mStartTime);
 #endif
 #endif
-    
+
     if (mRunState == SUSPENDED && NS_FAILED(mCancelStatus))
         mRunState = CANCELED;
 
@@ -629,11 +629,13 @@ nsFileTransport::Run(void)
                 mXferState = CLOSING;
             mStatus = mCancelStatus;
         }
+        // Grab a local reference to mProgressSink
+        nsCOMPtr<nsIProgressEventSink> progressSink(mProgressSink);
         //
         // While processing, we allow Suspend, Resume, and Cancel.
         //
         PR_Unlock(mLock);
-        Process();
+        Process(progressSink);
         PR_Lock(mLock);
 
         //
@@ -659,7 +661,7 @@ nsFileTransport::Run(void)
 }
 
 void
-nsFileTransport::Process(void)
+nsFileTransport::Process(nsIProgressEventSink *progressSink)
 {
     LOG(("nsFileTransport: Inside Process [this=%x state=%x status=%x]\n",
         this, mXferState, mStatus));
@@ -796,9 +798,9 @@ nsFileTransport::Process(void)
             LOG(("nsFileTransport: READING [this=%x %s] read %u bytes [offset=%u]\n",
                 this, mStreamName.get(), total, mOffset));
 
-            if (mProgressSink)
-                mProgressSink->OnProgress(this, mContext, offset,
-                                          PR_MAX(mTotalAmount, 0));
+            if (progressSink)
+                progressSink->OnProgress(this, mContext, offset,
+                                         PR_MAX(mTotalAmount, 0));
         }
         break;
       }
@@ -844,8 +846,8 @@ nsFileTransport::Process(void)
             saveListener->OnStopRequest(this, saveContext, mStatus);
             saveListener = 0;
         }
-        if (mProgressSink) {
-            mProgressSink->OnStatus(this, saveContext, 
+        if (progressSink) {
+            progressSink->OnStatus(this, saveContext, 
                                     NS_NET_STATUS_READ_FROM, 
                                     NS_ConvertASCIItoUCS2(mStreamName).get());
         }
@@ -977,9 +979,9 @@ nsFileTransport::Process(void)
             LOG(("nsFileTransport: WRITING [this=%x %s] wrote %u bytes [offset=%u]\n",
                 this, mStreamName.get(), total, mOffset));
 
-            if (mProgressSink)
-                mProgressSink->OnProgress(this, mContext, offset,
-                                          PR_MAX(mTotalAmount, 0));
+            if (progressSink)
+                progressSink->OnProgress(this, mContext, offset,
+                                         PR_MAX(mTotalAmount, 0));
         }
         break;
       }
@@ -1010,12 +1012,10 @@ nsFileTransport::Process(void)
             mProvider->OnStopRequest(this, mContext, mStatus);
             mProvider = 0;
         }
-        if (mProgressSink) {
-            nsresult rv = mProgressSink->OnStatus(this, mContext,
-                                                  NS_NET_STATUS_WROTE_TO, 
-                                                  NS_ConvertASCIItoUCS2(mStreamName).get());
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unexpected OnStatus failure");
-        }
+        if (progressSink)
+            progressSink->OnStatus(this, mContext,
+                                   NS_NET_STATUS_WROTE_TO, 
+                                   NS_ConvertASCIItoUCS2(mStreamName).get());
         mContext = 0;
 
         mXferState = CLOSING;
@@ -1078,6 +1078,8 @@ NS_IMETHODIMP
 nsFileTransport::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks,
                                           PRUint32               aFlags)
 {
+    nsAutoLock lock(mLock);
+
     mNotificationCallbacks = aCallbacks;
     mProgressSink = 0;
 
