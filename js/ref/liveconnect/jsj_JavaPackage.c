@@ -242,6 +242,7 @@ JavaPackage_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 
     /* Pretty-printing of JavaPackage */
     case JSTYPE_VOID:   /* Default value */
+    case JSTYPE_NUMBER:
     case JSTYPE_STRING:
         /* Convert '/' to '.' so that it looks like Java language syntax. */
         if (!package->path)
@@ -302,23 +303,49 @@ JSClass JavaPackage_class = {
 
 JavaPackageDef
 standard_java_packages[] = {
-    {"java",                NULL,   PKG_SYSTEM},
-    {"java.awt",            NULL,   PKG_SYSTEM},
+    {"java",                NULL,   PKG_USER},
+    {"java.applet",         NULL,   PKG_USER},
+    {"java.awt",            NULL,   PKG_USER},
+    {"java.awt.datatransfer",
+                            NULL,   PKG_SYSTEM},
     {"java.awt.event",      NULL,   PKG_SYSTEM},
     {"java.awt.image",      NULL,   PKG_SYSTEM},
     {"java.awt.peer",       NULL,   PKG_SYSTEM},
-    {"java.beans",          NULL,   PKG_SYSTEM},
+    {"java.beans",          NULL,   PKG_USER},
     {"java.io",             NULL,   PKG_SYSTEM},
-    {"java.lang",           NULL,   PKG_SYSTEM},
+    {"java.lang",           NULL,   PKG_USER},
     {"java.lang.reflect",   NULL,   PKG_SYSTEM},
     {"java.math",           NULL,   PKG_SYSTEM},
-    {"java.net",            NULL,   PKG_SYSTEM},
-    {"java.rmi",            NULL,   PKG_SYSTEM},
-    {"java.text",           NULL,   PKG_SYSTEM},
-    {"java.util",           NULL,   PKG_SYSTEM},
+    {"java.net",            NULL,   PKG_USER},
+    {"java.rmi",            NULL,   PKG_USER},
+    {"java.rmi.dgc",        NULL,   PKG_USER},
+    {"java.rmi.user",       NULL,   PKG_USER},
+    {"java.rmi.registry",   NULL,   PKG_USER},
+    {"java.rmi.server",     NULL,   PKG_USER},
+    {"java.security",       NULL,   PKG_USER},
+    {"java.security.acl",   NULL,   PKG_SYSTEM},
+    {"java.security.interfaces",
+                            NULL,   PKG_SYSTEM},
+    {"java.sql",            NULL,   PKG_USER},
+    {"java.text",           NULL,   PKG_USER},
+    {"java.text.resources", NULL,   PKG_SYSTEM},
+    {"java.util",           NULL,   PKG_USER},
     {"java.util.zip",       NULL,   PKG_SYSTEM},
-    {"netscape",            NULL,   PKG_SYSTEM},
+
+    {"netscape",            NULL,   PKG_USER},
+    {"netscape.applet",     NULL,   PKG_SYSTEM},
+    {"netscape.application",NULL,   PKG_SYSTEM},
+    {"netscape.debug",      NULL,   PKG_SYSTEM},
     {"netscape.javascript", NULL,   PKG_SYSTEM},
+    {"netscape.ldap",       NULL,   PKG_SYSTEM},
+    {"netscape.misc",       NULL,   PKG_SYSTEM},
+    {"netscape.net",        NULL,   PKG_SYSTEM},
+    {"netscape.plugin",     NULL,   PKG_SYSTEM},
+    {"netscape.util",       NULL,   PKG_SYSTEM},
+    {"netscape.secfile",    NULL,   PKG_SYSTEM},
+    {"netscape.security",   NULL,   PKG_SYSTEM},
+    {"netscape.WAI",        NULL,   PKG_SYSTEM},
+
     {"sun",                 NULL,   PKG_USER},
     {"Packages",            "",     PKG_USER},
     0
