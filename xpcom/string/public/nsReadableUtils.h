@@ -91,7 +91,7 @@ NS_COM char* ToNewUTF8String( const nsAString& aSource );
   /**
    * Returns a new |PRUnichar| buffer containing a zero-terminated copy of |aSource|.
    *
-   * Allocates and returns a new |char| buffer which you must free with |nsMemory::Free|.
+   * Allocates and returns a new |PRUnichar| buffer which you must free with |nsMemory::Free|.
    * The new buffer is zero-terminated, but that may not help you if |aSource| contains embedded nulls.
    *
    * @param aSource a 16-bit wide string
@@ -103,7 +103,7 @@ NS_COM PRUnichar* ToNewUnicode( const nsAString& aSource );
   /**
    * Returns a new |PRUnichar| buffer containing a zero-terminated copy of |aSource|.
    *
-   * Allocates and returns a new |char| buffer which you must free with |nsMemory::Free|.
+   * Allocates and returns a new |PRUnichar| buffer which you must free with |nsMemory::Free|.
    * Performs an encoding conversion by 0-padding 8-bit wide characters up to 16-bits wide while copying |aSource| to your new buffer.
    * This conversion is not well defined; but it reproduces legacy string behavior.
    * The new buffer is zero-terminated, but that may not help you if |aSource| contains embedded nulls.
