@@ -3253,7 +3253,7 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
         parent = mParent;
     }
 
-    if (!retarget || (parent != mParent)) {
+    if (retarget || (parent != mParent)) {
       if (!*aDOMEvent) {
         // We haven't made a DOMEvent yet.  Force making one now.
         nsCOMPtr<nsIEventListenerManager> listenerManager;
