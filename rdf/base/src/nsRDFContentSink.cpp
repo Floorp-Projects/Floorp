@@ -208,7 +208,7 @@ protected:
     void      GetNameSpaceURI(PRInt32 aID, nsString& aURI);
     void      PopNameSpaces();
 
-    nsINameSpaceManager*  mNameSpaceManager;
+    nsCOMPtr<nsINameSpaceManager> mNameSpaceManager;
     nsVoidArray* mNameSpaceStack;
     PRInt32      mRDFNameSpaceID;
 
@@ -275,17 +275,16 @@ nsIAtom* RDFContentSinkImpl::kLiAtom;
 ////////////////////////////////////////////////////////////////////////
 
 RDFContentSinkImpl::RDFContentSinkImpl()
-    : mDocumentURL(nsnull),
-      mDataSource(nsnull),
-      mGenSym(0),
-      mNameSpaceManager(nsnull),
-      mNameSpaceStack(nsnull),
-      mRDFNameSpaceID(kNameSpaceID_Unknown),
-      mContextStack(nsnull),
-      mText(nsnull),
+    : mText(nsnull),
       mTextLength(0),
       mTextSize(0),
-      mConstrainSize(PR_TRUE)
+      mConstrainSize(PR_TRUE),
+      mNameSpaceStack(nsnull),
+      mRDFNameSpaceID(kNameSpaceID_Unknown),
+      mState(eRDFContentSinkState_InProlog),
+      mContextStack(nsnull),
+      mDocumentURL(nsnull),
+      mGenSym(0)
 {
     NS_INIT_REFCNT();
 
@@ -328,13 +327,12 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
 {
     NS_IF_RELEASE(mDocumentURL);
 
-    NS_IF_RELEASE(mNameSpaceManager);
     if (mNameSpaceStack) {
         // There shouldn't be any here except in an error condition
-        PRInt32 index = mNameSpaceStack->Count();
+        PRInt32 i = mNameSpaceStack->Count();
 
-        while (0 < index--) {
-            nsINameSpace* ns = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
+        while (0 < i--) {
+            nsINameSpace* ns = (nsINameSpace*)mNameSpaceStack->ElementAt(i);
             NS_RELEASE(ns);
         }
         delete mNameSpaceStack;
@@ -346,8 +344,8 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
         // XXX we should never need to do this, but, we'll write the
         // code all the same. If someone left the content stack dirty,
         // pop all the elements off the stack and release them.
-        PRInt32 index = mContextStack->Count();
-        while (0 < index--) {
+        PRInt32 i = mContextStack->Count();
+        while (0 < i--) {
             nsIRDFResource* resource;
             RDFContentSinkState state;
             PopContext(resource, state);
@@ -481,10 +479,6 @@ RDFContentSinkImpl::SetParser(nsIParser* aParser)
 NS_IMETHODIMP 
 RDFContentSinkImpl::OpenContainer(const nsIParserNode& aNode)
 {
-#ifdef DEBUG
-    const nsString& text = aNode.GetText();
-#endif
-
     FlushText();
 
     // We must register namespace declarations found in the attribute
@@ -742,8 +736,7 @@ RDFContentSinkImpl::Init(nsIURI* aURL, nsINameSpaceManager* aNameSpaceManager)
     mDocumentURL = aURL;
     NS_ADDREF(aURL);
 
-    mNameSpaceManager = aNameSpaceManager;
-    NS_ADDREF(mNameSpaceManager);
+    mNameSpaceManager = dont_QueryInterface(aNameSpaceManager);
 
     mState = eRDFContentSinkState_InProlog;
     return NS_OK;
@@ -870,8 +863,8 @@ RDFContentSinkImpl::GetNameSpaceID(nsIAtom* aPrefix, PRInt32& aNameSpaceID)
         return NS_ERROR_UNEXPECTED;
 
     // Look it up using the namespace stack
-    PRInt32 index = mNameSpaceStack->Count() - 1;
-    nsINameSpace* ns = (nsINameSpace*) mNameSpaceStack->ElementAt(index);
+    PRInt32 i = mNameSpaceStack->Count() - 1;
+    nsINameSpace* ns = (nsINameSpace*) mNameSpaceStack->ElementAt(i);
 
     nsresult rv;
     rv = ns->FindNameSpaceID(aPrefix, aNameSpaceID);
@@ -1427,9 +1420,9 @@ RDFContentSinkImpl::PopContext(nsIRDFResource*& rResource, RDFContentSinkState& 
         return NS_ERROR_NULL_POINTER;
     }
 
-    PRInt32 index = mContextStack->Count() - 1;
-    e = NS_STATIC_CAST(RDFContextStackElement*, mContextStack->ElementAt(index));
-    mContextStack->RemoveElementAt(index);
+    PRInt32 i = mContextStack->Count() - 1;
+    e = NS_STATIC_CAST(RDFContextStackElement*, mContextStack->ElementAt(i));
+    mContextStack->RemoveElementAt(i);
 
     // don't bother Release()-ing: call it our implicit AddRef().
     rResource = e->mResource;
@@ -1449,7 +1442,6 @@ RDFContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
     nsAutoString k, uri, prefix;
     PRInt32 ac = aNode.GetAttributeCount();
     PRInt32 offset;
-    nsresult result = NS_OK;
     nsINameSpace* ns = nsnull;
 
     if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
@@ -1471,7 +1463,7 @@ RDFContentSinkImpl::PushNameSpacesFrom(const nsIParserNode& aNode)
             if (0 == offset) {
                 prefix.Truncate();
 
-                if (k.Length() >= sizeof(kNameSpaceDef)) {
+                if (k.Length() >= PRInt32(sizeof kNameSpaceDef)) {
                     // If the next character is a :, there is a namespace prefix
                     PRUnichar next = k.CharAt(sizeof(kNameSpaceDef)-1);
                     if (':' == next) {
@@ -1522,9 +1514,9 @@ void
 RDFContentSinkImpl::PopNameSpaces()
 {
     if ((nsnull != mNameSpaceStack) && (0 < mNameSpaceStack->Count())) {
-        PRInt32 index = mNameSpaceStack->Count() - 1;
-        nsINameSpace* ns = (nsINameSpace*)mNameSpaceStack->ElementAt(index);
-        mNameSpaceStack->RemoveElementAt(index);
+        PRInt32 i = mNameSpaceStack->Count() - 1;
+        nsINameSpace* ns = (nsINameSpace*)mNameSpaceStack->ElementAt(i);
+        mNameSpaceStack->RemoveElementAt(i);
 
         // Releasing the most deeply nested namespace will recursively
         // release intermediate parent namespaces until the next
