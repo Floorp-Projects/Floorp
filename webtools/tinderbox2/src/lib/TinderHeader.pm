@@ -8,8 +8,8 @@
 #	 TreeState, Build, IgnoreBuilds, MOTD, Images, 
 
 
-# $Revision: 1.2 $ 
-# $Date: 2000/08/11 00:27:04 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/08/30 02:23:59 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader.pm,v $ 
 # $Name:  $ 
@@ -133,6 +133,7 @@ foreach $namespace (keys %NAMES2OBJS) {
 }
 
 
+%ALL_HEADERS=();
 
 #-----------------------------------------------------------
 # You should not need to configure anything below this line
@@ -192,6 +193,50 @@ sub savetree_header {
   }
 
   return $out;
+}
+
+
+# get all the headers for a particular tree, use the cache if they
+# have been loaded already.
+
+sub get_alltree_headers {
+  my ($tree) = @_;
+
+  if ($DEBUG) {
+    (TreeData::tree_exists($tree)) ||
+      die("TinderHeader::gettree_header(): ".
+          "Tree: $tree, not defined.");
+  }
+  
+  if (!$ALL_HEADERS{$tree}) {
+    my $header_ref;
+    
+    foreach $impl (keys %HEADER2DEFAULT_HTML) {
+      $header_ref->{$impl} = gettree_header($impl, $tree);
+    }
+    
+    $ALL_HEADERS{$tree} = $header_ref;
+  }
+
+  return $ALL_HEADERS{$tree};
+}
+
+
+# save all the headers for a particular tree to disk in an easily
+# parsable HTML form so that other programs can get at these values.
+
+sub export_alltree_headers {
+  my ($header_ref) = @_;
+
+  my @out = ("<pre>\n");
+  foreach $impl (keys %{ $header_ref }) {
+   push @out, "$impl: $header_ref->{$impl}\n";
+  }
+
+  $outfile = FileStructure::get_filename($tree, 'alltree_headers');
+  overwrite_file($outfile, @out);
+
+  return 1;
 }
 
 
@@ -312,6 +357,55 @@ This is usually called by admintree.cgi
 Return the current setting of the header in a form suitable for HTML
 display.
 
+
+=back
+
+These are class methods which operate on the individual implementations.
+
+
+=head1 CLASS METHODS
+
+
+=over 4
+
+=item B<savetree_header> 
+
+Store the data for this tree specific header to the correct disk file.
+This is usually called by admintree.cgi.  The user must specify which
+tree and which implementation (string) is being accessed.
+
+=back
+
+
+=over 4
+
+=item B<gettree_header>
+
+Return the current setting of the header in a form suitable for HTML
+display.  The user must specify which tree and which implementation
+(string) is being accessed.
+
+=back
+
+
+=over 4
+
+=item B<get_alltree_headers>
+
+Returns a hash_ref containing all the headers for a particular tree
+indexed by header name.
+
+
+=back
+
+=over 4
+
+=item B<export_alltree_headers>
+
+Save all the headers for a particular tree to disk in an easily
+parsable HTML form so that other programs can get at these values.
+The only argument to this function is the output of
+get_alltree_headers.
 
 =back
 
