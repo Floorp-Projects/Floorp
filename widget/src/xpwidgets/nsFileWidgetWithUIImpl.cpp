@@ -69,6 +69,9 @@ class nsFileSpecWithUIImpl
 	/* readonly attribute nsIFileSpec Parent; */
 	NS_IMETHOD GetParent(nsIFileSpec * *aParent);
 
+	/* boolean equals(in nsIFileSpec spec); */
+	NS_IMETHOD Equals(nsIFileSpec *spec, PRBool *result);
+
 	/* nsIFileSpec makeUnique (); */
 	NS_IMETHOD makeUnique();
 

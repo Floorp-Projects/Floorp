@@ -911,24 +911,38 @@ nsPrefMigration::GetDirFromPref(nsIFileSpec * oldProfilePath, nsIFileSpec * newP
 	// what if they don't want to go to <profile>/<newDirName>?
 	// what if unix users want "mail.directory" + "5" (like "~/ns_imap5")
 	// or "mail.imap.root_dir" + "5" (like "~/nsmail5")?
-	// should we let them? no.  let's migrate them to
+	// should we let them?  no.  let's migrate them to
 	// <profile>/Mail and <profile>/ImapMail
 	// let's make all three platforms the same.
-	rv = newPath->FromFileSpec(newProfilePath);
-	if (NS_FAILED(rv)) return rv;
-	rv = newPath->AppendRelativeUnixPath(newDirName);
-	if (NS_FAILED(rv)) return rv;
+	if (PR_TRUE) {
 #else
-	nsXPIDLCString leafname;
-	rv = newPath->FromFileSpec(oldPath);
+	nsCOMPtr <nsIFileSpec> oldPrefPathParent;
+	rv = oldPrefPath->GetParent(getter_AddRefs(oldPrefPathParent));
 	if (NS_FAILED(rv)) return rv;
-	rv = newPath->GetLeafName(getter_Copies(leafname));
-	if (NS_FAILED(rv)) return rv;
-	nsCString newleafname((const char *)leafname);
-	newleafname += NEW_DIR_SUFFIX;
-	rv = newPath->SetLeafName(newleafname);
-	if (NS_FAILED(rv)) return rv;
+
+	// if the pref pointed to the default directory
+	// treat it as if the pref wasn't set
+	// this way it will get migrated as the user expects
+	PRBool pathsMatch;
+	rv = oldProfilePath->Equals(oldPrefPathParent, &pathsMatch);
+	if (NS_SUCCEEDED(rv) && pathsMatch) {
 #endif /* XP_UNIX */
+		rv = newPath->FromFileSpec(newProfilePath);
+		if (NS_FAILED(rv)) return rv;
+		rv = newPath->AppendRelativeUnixPath(newDirName);
+		if (NS_FAILED(rv)) return rv;
+	}
+	else {
+		nsXPIDLCString leafname;
+		rv = newPath->FromFileSpec(oldPath);
+		if (NS_FAILED(rv)) return rv;
+		rv = newPath->GetLeafName(getter_Copies(leafname));
+		if (NS_FAILED(rv)) return rv;
+		nsCString newleafname((const char *)leafname);
+		newleafname += NEW_DIR_SUFFIX;
+		rv = newPath->SetLeafName(newleafname);
+		if (NS_FAILED(rv)) return rv;
+	}
 
   rv = SetPremigratedFilePref(pref, oldPath);
   if (NS_FAILED(rv)) return rv;
