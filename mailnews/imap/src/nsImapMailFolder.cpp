@@ -1088,6 +1088,10 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
                 rv = imapService->DeleteAllMessages(m_eventQueue, trashFolder,
                                                     urlListener, nsnull);
             }
+            // return an error if this failed. We want the empty trash on exit code
+            // to know if this fails so that it doesn't block waiting for empty trash to finish.
+            if (NS_FAILED(rv))
+              return rv;
         }
         PRBool hasSubfolders = PR_FALSE;
         rv = trashFolder->GetHasSubFolders(&hasSubfolders);
