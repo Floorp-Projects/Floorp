@@ -23,6 +23,7 @@ DEPTH=..\..\..
 MODULE=webBrowser_core
 
 XPIDLSRCS=						\
+		.\nsCWebBrowser.idl						\
 		.\nsIProgress.idl						\
 		.\nsIProgressListener.idl						\
 		.\nsIWebBrowser.idl						\
@@ -31,5 +32,14 @@ XPIDLSRCS=						\
 		.\nsIWebBrowserNav.idl					\
 		$(NULL)
 
+LIBRARY_NAME=nsWebBrowser_s
+
+CPP_OBJS=											\
+		.\$(OBJDIR)\nsWebBrowser.obj			\
+		$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\config\config.mak>
+
+libs:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
