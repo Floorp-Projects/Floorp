@@ -76,6 +76,10 @@ public:
 
   NS_IMETHOD GetNumberOfOptions(PRInt32* aNumOptions) = 0; 
 
+  /**
+   * 
+   */
+  NS_IMETHOD SyncViewWithFrame() = 0;
 
 };
 
