@@ -373,7 +373,7 @@ NS_IMETHODIMP ImportMailImpl::FindMailboxes( nsIFileSpec *pLoc, nsISupportsArray
 void ImportMailImpl::AddLinebreak( nsString *pStream)
 {
 	if (pStream)
-		pStream->Append( NS_LINEBREAK);
+		pStream->AppendWithConversion( NS_LINEBREAK);
 }
 
 void ImportMailImpl::ReportSuccess( nsString& name, PRInt32 count, nsString *pStream)
@@ -550,7 +550,7 @@ NS_IMETHODIMP ImportAddressImpl::GetAutoFind(PRUnichar **description, PRBool *_r
         return NS_ERROR_NULL_POINTER;
     
     *_retval = PR_TRUE;
-    nsString str = "Outlook Express address book (windows address book)";
+    nsString str; str.AppendWithConversion("Outlook Express address book (windows address book)");
     *description = str.ToNewUnicode();
     
     return( NS_OK);
@@ -578,7 +578,7 @@ NS_IMETHODIMP ImportAddressImpl::FindAddressBooks(nsIFileSpec *location, nsISupp
 	
 	nsIImportABDescriptor *		pID;
 	nsISupports *				pInterface;
-	nsString					str = "Outlook Express Address Book";
+	nsString					str; str.AppendWithConversion("Outlook Express Address Book");
 	
 	if (m_pWab->Loaded()) {
 		// create a new nsIImportABDescriptor and add it to the array
