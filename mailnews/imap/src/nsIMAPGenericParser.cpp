@@ -437,78 +437,78 @@ char *nsIMAPGenericParser::CreateString()
 // we find the close quote.
 char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 {
-	char *currentChar = fCurrentLine + 
-					    (fNextToken - fStartOfLineOfTokens)
-					    + 1;	// one char past opening '"'
-
-	int  charIndex = 0;
-	int  tokenIndex = 0;
-	PRBool closeQuoteFound = PR_FALSE;
-	nsCString returnString(currentChar);
-	
-	while (!closeQuoteFound && ContinueParse())
-	{
-		if (!returnString.CharAt(charIndex))
-		{
-			AdvanceToNextLine();
-			returnString += fCurrentLine;
-			charIndex++;
-		}
-		else if (returnString.CharAt(charIndex) == '"')
-		{
-			// don't check to see if it was escaped, 
-			// that was handled in the next clause
-			closeQuoteFound = PR_TRUE;
-		}
-		else if (returnString.CharAt(charIndex) == '\\')
-		{
-			// eat the escape character
-			returnString.Cut(charIndex, 1);
-			// whatever the escaped character was, we want it
-			charIndex++;
-			
-			// account for charIndex not reflecting the eat of the escape character
-			tokenIndex++;
-		}
-		else
-			charIndex++;
-	}
-	
-	if (closeQuoteFound)
-	{
-		returnString.SetCharAt(0, charIndex);
-		//if ((charIndex == 0) && skipToEnd)	// it's an empty string.  Why skip to end?
-		//	skip_to_CRLF();
-		//else if (charIndex == strlen(fCurrentLine))	// should we have this?
-		//AdvanceToNextLine();
-		//else 
-		if (charIndex < (int) (strlen(fNextToken) - 2))	// -2 because of the start and end quotes
-		{
-			// the quoted string was fully contained within fNextToken,
-			// and there is text after the quote in fNextToken that we
-			// still need
-//			int charDiff = strlen(fNextToken) - charIndex - 1;
-//			fCurrentTokenPlaceHolder -= charDiff;
-//			if (!nsCRT::strcmp(fCurrentTokenPlaceHolder, CRLF))
-//				fAtEndOfLine = PR_TRUE;
-			AdvanceTokenizerStartingPoint ((fNextToken - fLineOfTokens) + nsCRT::strlen(returnString) + 2);
-			if (!nsCRT::strcmp(fLineOfTokens, CRLF))
-				fAtEndOfLine = PR_TRUE;
-		}
-		else
-		{
-			fCurrentTokenPlaceHolder += tokenIndex + charIndex + 1 - strlen(fNextToken);
-			if (!*fCurrentTokenPlaceHolder)
-				*fCurrentTokenPlaceHolder = ' ';	// put the token delimiter back
-			/*	if (!nsCRT::strcmp(fNextToken, CRLF))
-				fAtEndOfLine = PR_TRUE;
-			*/
-		}
-	}
-	else
-		NS_ASSERTION(PR_FALSE, "didn't find close quote");
-	
-	return ToNewCString(returnString);
+  char *currentChar = fCurrentLine + 
+    (fNextToken - fStartOfLineOfTokens)
+    + 1;	// one char past opening '"'
+  
+  int  charIndex = 0;
+  int  tokenIndex = 0;
+  PRBool closeQuoteFound = PR_FALSE;
+  nsCString returnString(currentChar);
+  
+  while (!closeQuoteFound && ContinueParse())
+  {
+    if (!returnString.CharAt(charIndex))
+    {
+      AdvanceToNextLine();
+      returnString += fCurrentLine;
+      charIndex++;
+    }
+    else if (returnString.CharAt(charIndex) == '"')
+    {
+      // don't check to see if it was escaped, 
+      // that was handled in the next clause
+      closeQuoteFound = PR_TRUE;
+    }
+    else if (returnString.CharAt(charIndex) == '\\')
+    {
+      // eat the escape character
+      returnString.Cut(charIndex, 1);
+      // whatever the escaped character was, we want it
+      charIndex++;
+      
+      // account for charIndex not reflecting the eat of the escape character
+      tokenIndex++;
+    }
+    else
+      charIndex++;
+  }
+  
+  if (closeQuoteFound)
+  {
+    returnString.Truncate(charIndex);
+    //if ((charIndex == 0) && skipToEnd)	// it's an empty string.  Why skip to end?
+    //	skip_to_CRLF();
+    //else if (charIndex == strlen(fCurrentLine))	// should we have this?
+    //AdvanceToNextLine();
+    //else 
+    if (charIndex < (int) (strlen(fNextToken) - 2))	// -2 because of the start and end quotes
+    {
+      // the quoted string was fully contained within fNextToken,
+      // and there is text after the quote in fNextToken that we
+      // still need
+      //			int charDiff = strlen(fNextToken) - charIndex - 1;
+      //			fCurrentTokenPlaceHolder -= charDiff;
+      //			if (!nsCRT::strcmp(fCurrentTokenPlaceHolder, CRLF))
+      //				fAtEndOfLine = PR_TRUE;
+      AdvanceTokenizerStartingPoint ((fNextToken - fLineOfTokens) + returnString.Length() + 2);
+      if (!nsCRT::strcmp(fLineOfTokens, CRLF))
+        fAtEndOfLine = PR_TRUE;
+    }
+    else
+    {
+      fCurrentTokenPlaceHolder += tokenIndex + charIndex + 1 - strlen(fNextToken);
+      if (!*fCurrentTokenPlaceHolder)
+        *fCurrentTokenPlaceHolder = ' ';	// put the token delimiter back
+                                                /*	if (!nsCRT::strcmp(fNextToken, CRLF))
+                                                fAtEndOfLine = PR_TRUE;
+      */
+    }
+  }
+  else
+    NS_ASSERTION(PR_FALSE, "didn't find close quote");
+  
+  return ToNewCString(returnString);
 }
 
 
