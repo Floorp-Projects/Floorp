@@ -137,7 +137,7 @@ foreach my $path (@Support::Templates::include_paths) {
 
             if (@notfound) {
                 my $nflist = join("\n  ", @notfound);
-                ok(0, "($lang/$flavor) $fullpath - FEL has extra members:\n  $nflist\n" . 
+                ok(0, "($lang/$flavor) $fullpath - filterexceptions.pl has extra members:\n  $nflist\n" . 
                                                                   "--WARNING");
             }
             else {
