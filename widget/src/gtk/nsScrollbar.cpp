@@ -106,8 +106,10 @@ nsresult nsScrollbar::QueryInterface (const nsIID & aIID, void **aInstancePtr)
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::SetMaxRange (PRUint32 aEndRange)
 {
-  GTK_ADJUSTMENT (mAdjustment)->upper = (float) aEndRange;
-  gtk_signal_emit_by_name (GTK_OBJECT (mAdjustment), "changed");
+  if (mAdjustment) {
+    GTK_ADJUSTMENT (mAdjustment)->upper = (float) aEndRange;
+    gtk_signal_emit_by_name (GTK_OBJECT (mAdjustment), "changed");
+  }
   return NS_OK;
 }
 
@@ -119,7 +121,11 @@ NS_METHOD nsScrollbar::SetMaxRange (PRUint32 aEndRange)
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::GetMaxRange (PRUint32 & aMaxRange)
 {
-  aMaxRange = (PRUint32) GTK_ADJUSTMENT (mAdjustment)->upper;
+  if (mAdjustment)
+    aMaxRange = (PRUint32) GTK_ADJUSTMENT (mAdjustment)->upper;
+  else
+    aMaxRange = 0;
+
   return NS_OK;
 }
 
@@ -131,7 +137,8 @@ NS_METHOD nsScrollbar::GetMaxRange (PRUint32 & aMaxRange)
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::SetPosition (PRUint32 aPos)
 {
-  gtk_adjustment_set_value (GTK_ADJUSTMENT (mAdjustment), (float) aPos);
+  if (mAdjustment)
+    gtk_adjustment_set_value (GTK_ADJUSTMENT (mAdjustment), (float) aPos);
   return NS_OK;
 }
 
@@ -143,7 +150,11 @@ NS_METHOD nsScrollbar::SetPosition (PRUint32 aPos)
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::GetPosition (PRUint32 & aPos)
 {
-  aPos = (PRUint32) GTK_ADJUSTMENT (mAdjustment)->value;
+  if (mAdjustment)
+    aPos = (PRUint32) GTK_ADJUSTMENT (mAdjustment)->value;
+  else
+    aPos = 0;
+
   return NS_OK;
 }
 
@@ -157,9 +168,11 @@ NS_METHOD nsScrollbar::SetThumbSize (PRUint32 aSize)
 {
   if (aSize > 0)
     {
-      GTK_ADJUSTMENT (mAdjustment)->page_increment = (float) aSize;
-      GTK_ADJUSTMENT (mAdjustment)->page_size = (float) aSize;
-      gtk_signal_emit_by_name (GTK_OBJECT (mAdjustment), "changed");
+      if (mAdjustment) {
+        GTK_ADJUSTMENT (mAdjustment)->page_increment = (float) aSize;
+        GTK_ADJUSTMENT (mAdjustment)->page_size = (float) aSize;
+        gtk_signal_emit_by_name (GTK_OBJECT (mAdjustment), "changed");
+      }
     }
   return NS_OK;
 }
@@ -172,7 +185,11 @@ NS_METHOD nsScrollbar::SetThumbSize (PRUint32 aSize)
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::GetThumbSize (PRUint32 & aThumbSize)
 {
-  aThumbSize = (PRUint32) GTK_ADJUSTMENT (mAdjustment)->page_size;
+  if (mAdjustment)
+    aThumbSize = (PRUint32) GTK_ADJUSTMENT (mAdjustment)->page_size;
+  else
+    aThumbSize = 0;
+
   return NS_OK;
 }
 
@@ -186,8 +203,10 @@ NS_METHOD nsScrollbar::SetLineIncrement (PRUint32 aLineIncrement)
 {
   if (aLineIncrement > 0)
     {
-      GTK_ADJUSTMENT (mAdjustment)->step_increment = (float) aLineIncrement;
-      gtk_signal_emit_by_name (GTK_OBJECT (mAdjustment), "changed");
+      if (mAdjustment) {
+        GTK_ADJUSTMENT (mAdjustment)->step_increment = (float) aLineIncrement;
+        gtk_signal_emit_by_name (GTK_OBJECT (mAdjustment), "changed");
+      }
     }
   return NS_OK;
 }
@@ -200,7 +219,12 @@ NS_METHOD nsScrollbar::SetLineIncrement (PRUint32 aLineIncrement)
 //-------------------------------------------------------------------------
 NS_METHOD nsScrollbar::GetLineIncrement (PRUint32 & aLineInc)
 {
-  aLineInc = (PRUint32) GTK_ADJUSTMENT (mAdjustment)->step_increment;
+  if (mAdjustment) {
+    aLineInc = (PRUint32) GTK_ADJUSTMENT (mAdjustment)->step_increment;
+  }
+  else
+    aLineInc = 0;
+
   return NS_OK;
 }
 
@@ -213,20 +237,22 @@ NS_METHOD nsScrollbar::GetLineIncrement (PRUint32 & aLineInc)
 NS_METHOD nsScrollbar::SetParameters (PRUint32 aMaxRange, PRUint32 aThumbSize,
 	       PRUint32 aPosition, PRUint32 aLineIncrement)
 {
-  int thumbSize = (((int) aThumbSize) > 0 ? aThumbSize : 1);
-  int maxRange = (((int) aMaxRange) > 0 ? aMaxRange : 10);
-  int mLineIncrement = (((int) aLineIncrement) > 0 ? aLineIncrement : 1);
+  if (mAdjustment) {
+    int thumbSize = (((int) aThumbSize) > 0 ? aThumbSize : 1);
+    int maxRange = (((int) aMaxRange) > 0 ? aMaxRange : 10);
+    int mLineIncrement = (((int) aLineIncrement) > 0 ? aLineIncrement : 1);
 
-  int maxPos = maxRange - thumbSize;
-  int pos = ((int) aPosition) > maxPos ? maxPos - 1 : ((int) aPosition);
+    int maxPos = maxRange - thumbSize;
+    int pos = ((int) aPosition) > maxPos ? maxPos - 1 : ((int) aPosition);
 
-  GTK_ADJUSTMENT (mAdjustment)->lower = 0;
-  GTK_ADJUSTMENT (mAdjustment)->upper = maxRange;
-  GTK_ADJUSTMENT (mAdjustment)->page_size = thumbSize;
-  GTK_ADJUSTMENT (mAdjustment)->page_increment = thumbSize;
-  GTK_ADJUSTMENT (mAdjustment)->step_increment = mLineIncrement;
-  // this will emit the changed signal for us
-  gtk_adjustment_set_value (GTK_ADJUSTMENT (mAdjustment), pos);
+    GTK_ADJUSTMENT (mAdjustment)->lower = 0;
+    GTK_ADJUSTMENT (mAdjustment)->upper = maxRange;
+    GTK_ADJUSTMENT (mAdjustment)->page_size = thumbSize;
+    GTK_ADJUSTMENT (mAdjustment)->page_increment = thumbSize;
+    GTK_ADJUSTMENT (mAdjustment)->step_increment = mLineIncrement;
+    // this will emit the changed signal for us
+    gtk_adjustment_set_value (GTK_ADJUSTMENT (mAdjustment), pos);
+  }
   return NS_OK;
 }
 

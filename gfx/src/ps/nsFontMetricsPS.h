@@ -19,7 +19,9 @@
 #ifndef nsFontMetricsPS_h__
 #define nsFontMetricsPS_h__
 
+#ifdef XP_WIN
 #include <windows.h>
+#endif
 
 #include "nsIFontMetrics.h"
 #include "nsFont.h"
@@ -34,7 +36,7 @@ class nsFontMetricsPS : public nsIFontMetrics
 {
 public:
   nsFontMetricsPS();
-  ~nsFontMetricsPS();
+  virtual ~nsFontMetricsPS();
 
   void* operator new(size_t sz) {
     void* rv = new char[sz];
@@ -80,7 +82,9 @@ protected:
   nscoord             mStrikeoutOffset;
   nscoord             mUnderlineSize;
   nscoord             mUnderlineOffset;
+#ifdef XP_WIN
   HFONT               mFontHandle;
+#endif
 };
 
 #endif

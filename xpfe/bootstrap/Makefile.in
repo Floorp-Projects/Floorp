@@ -41,6 +41,7 @@ LIBS = \
 	$(TOOLKIT_WIDGET_LIB)\
 	-lraptorgfx	\
 	$(TOOLKIT_GFX_LIB)\
+	-lgfxps         \
 	$(TOOLKIT_BASE_LIB)\
 	-lreg		\
 	-labouturl	\

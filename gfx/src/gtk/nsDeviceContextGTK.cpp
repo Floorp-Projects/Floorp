@@ -24,6 +24,8 @@
 #include "nsDeviceContextGTK.h"
 #include "nsGfxCIID.h"
 
+#include "../ps/nsDeviceContextPS.h"
+
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
 
@@ -277,7 +279,11 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PR
 NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                       nsIDeviceContext *&aContext)
 {
-  return NS_ERROR_FAILURE;
+  // Create a Postscript device context 
+  aContext = new nsDeviceContextPS();
+  ((nsDeviceContextPS *)aContext)->SetSpec(aDevice);
+  NS_ADDREF(aDevice);
+  return((nsDeviceContextPS *) aContext)->Init((nsIDeviceContext*)aContext, (nsIDeviceContext*)this);
 }
 
 NS_IMETHODIMP nsDeviceContextGTK::BeginDocument(void)

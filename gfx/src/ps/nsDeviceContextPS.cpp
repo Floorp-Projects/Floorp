@@ -72,14 +72,12 @@ NS_IMPL_RELEASE(nsDeviceContextPS)
  *  See documentation in nsDeviceContextPS.h
  *	@update 12/21/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextPS :: Init(nsIDeviceContext *aCreatingDeviceContext,nsIDeviceContext *aPrinterContext, HDC aTheDC)
+NS_IMETHODIMP nsDeviceContextPS :: Init(nsIDeviceContext *aCreatingDeviceContext,nsIDeviceContext *aPrinterContext)
 {
 float origscale, newscale;
 float t2d, a2d;
 
   mDepth = 1;     // just for arguments sake
-
-  mDC = aTheDC;
 
   mTwipsToPixels = (float)72.0/(float)NSIntPointsToTwips(72);
   mPixelsToTwips = 1.0f / mTwipsToPixels;
@@ -128,7 +126,6 @@ nsresult  rv = NS_ERROR_OUT_OF_MEMORY;
  */
 NS_IMETHODIMP nsDeviceContextPS :: SupportsNativeWidgets(PRBool &aSupportsWidgets)
 {
-
   aSupportsWidgets = PR_FALSE;
   return NS_OK;
 }
@@ -139,9 +136,9 @@ NS_IMETHODIMP nsDeviceContextPS :: SupportsNativeWidgets(PRBool &aSupportsWidget
  */
 NS_IMETHODIMP nsDeviceContextPS :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
-  // WINDOWS CALLS, NEED TO BE THE NATIVE PLATFORMS METRICS
-  aWidth = ::GetSystemMetrics(SM_CXVSCROLL) * mDevUnitsToAppUnits;
-  aHeight = ::GetSystemMetrics(SM_CXHSCROLL) * mDevUnitsToAppUnits;
+   //XXX: Hardcoded values for Postscript
+  aWidth = 20;
+  aHeight = 20;
   return NS_OK;
 
 }
@@ -225,7 +222,6 @@ NS_IMETHODIMP nsDeviceContextPS :: CheckFontExistence(const nsString& aFontName)
 
 NS_IMETHODIMP nsDeviceContextPS :: GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const
 {
-  nsresult status = NS_OK;
 
   switch (anID) {
     case 0:

@@ -27,7 +27,8 @@
 #include "nsImageGTK.h"
 #include "nsDeviceContextGTK.h"
 #include "nsRegionGTK.h"
-
+#include "nsDeviceContextSpecG.h"
+#include "nsDeviceContextSpecFactoryG.h" 
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
@@ -37,6 +38,10 @@ static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+
+static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
+static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID); 
+
 
 class nsGfxFactoryGTK : public nsIFactory
 {   
@@ -138,6 +143,16 @@ nsresult nsGfxFactoryGTK::CreateInstance(nsISupports *aOuter,
   else if (mClassID.Equals(kCRegion)) {
     inst = (nsISupports *)new nsRegionGTK();
   }
+  else if (mClassID.Equals(kCDeviceContextSpec)) {
+    nsDeviceContextSpecGTK* dcs;
+    NS_NEWXPCOM(dcs, nsDeviceContextSpecGTK);
+    inst = (nsISupports *)dcs;
+  }
+  else if (mClassID.Equals(kCDeviceContextSpecFactory)) {
+    nsDeviceContextSpecFactoryGTK* dcs;
+    NS_NEWXPCOM(dcs, nsDeviceContextSpecFactoryGTK);
+    inst = (nsISupports *)dcs;
+  }          
 	
   if (inst == NULL) {  
     return NS_ERROR_OUT_OF_MEMORY;  

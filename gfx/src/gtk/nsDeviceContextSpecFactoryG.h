@@ -35,7 +35,7 @@ public:
                                      PRBool aQuiet);
 
 protected:
-  ~nsDeviceContextSpecFactoryGTK();
+  virtual ~nsDeviceContextSpecFactoryGTK();
 };
 
 #endif
