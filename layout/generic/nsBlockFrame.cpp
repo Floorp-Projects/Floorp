@@ -62,8 +62,6 @@
 
 #ifdef DEBUG
 
-//#define NOISY_BLOCK_INVALIDATE      // DO NOT CHECK THIS IN TURNED ON!
-
 static PRBool gLamePaintMetrics;
 static PRBool gLameReflowMetrics;
 static PRBool gNoisy;
@@ -148,21 +146,26 @@ InitDebugFlags()
   }
 }
 
-#undef NOISY_FIRST_LINE
-#undef REALLY_NOISY_FIRST_LINE
-#undef NOISY_FIRST_LETTER
-#undef NOISY_MAX_ELEMENT_SIZE
-#undef NOISY_MAXIMUM_WIDTH
+#undef NOISY_FIRST_LINE           // enables debug output for first-line specific layout
+#undef REALLY_NOISY_FIRST_LINE    // enables extra debug output for first-line specific layout
+#undef NOISY_FIRST_LETTER         // enables debug output for first-letter specific layout
+#undef NOISY_MAX_ELEMENT_SIZE     // enables debug output for max element size computation
+#undef NOISY_MAXIMUM_WIDTH        // enables debug output for max width computation
+#undef NOISY_KIDXMOST             // enables debug output for aState.mKidXMost computation
+#undef NOISY_FLOATER              // enables debug output for floater reflow (the in/out metrics for the floated block)
 #undef NOISY_FLOATER_CLEARING
-#undef NOISY_FINAL_SIZE
+#undef NOISY_FINAL_SIZE           // enables debug output for desired width/height computation, once all children have been reflowed
 #undef NOISY_REMOVE_FRAME
-#undef NOISY_COMBINED_AREA
+#undef NOISY_COMBINED_AREA        // enables debug output for combined area computation
 #undef NOISY_VERTICAL_MARGINS
-#undef NOISY_REFLOW_REASON
-#undef REFLOW_STATUS_COVERAGE
-#undef NOISY_SPACEMANAGER
+#undef NOISY_REFLOW_REASON        // gives a little info about why each reflow was requested
+#undef REFLOW_STATUS_COVERAGE     // I think this is most useful for printing, to see which frames return "incomplete"
+#undef NOISY_SPACEMANAGER         // enables debug output for space manager use, useful for analysing reflow of floaters and positioned elements
+#undef NOISY_BLOCK_INVALIDATE    // enables debug output for all calls to invalidate
 
 #endif
+
+//#define FIX_BUG_38157  needs review before it can be enabled
 
 //----------------------------------------------------------------------
 
@@ -361,6 +364,10 @@ public:
 
   const nsMargin& BorderPadding() const {
     return mReflowState.mComputedBorderPadding;
+  }
+
+  const nsMargin& Margin() const {
+    return mReflowState.mComputedMargin;
   }
 
   void UpdateMaxElementSize(const nsSize& aMaxElementSize) {
@@ -649,7 +656,18 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     else if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMaxWidth) {
       // Choose a width based on the content (shrink wrap width) up
       // to the maximum width
+      // Part 2 of a possible fix for 38157
+#ifdef FIX_BUG_38157
+      const nsMargin& margin = Margin();
+      nscoord availContentWidth = aReflowState.availableWidth;
+      if (NS_UNCONSTRAINEDSIZE != availContentWidth) {
+        availContentWidth -= (borderPadding.left + borderPadding.right) +
+                             (margin.left + margin.right);
+      }       
+      mContentArea.width = PR_MIN(aReflowState.mComputedMaxWidth, availContentWidth);
+#else
       mContentArea.width = aReflowState.mComputedMaxWidth;
+#endif
       SetFlag(BRS_SHRINKWRAPWIDTH, PR_TRUE);
     }
     else {
@@ -981,7 +999,9 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
       printf(": WARNING: xmost:%d\n", xmost);
     }
 #endif
-    //printf("%p RecoverState block %p aState.mKidXMost=%d\n", this, mBlock, xmost); 
+#ifdef NOISY_KIDXMOST
+    printf("%p RecoverState block %p aState.mKidXMost=%d\n", this, mBlock, xmost); 
+#endif
     mKidXMost = xmost;
   }
   if (GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
@@ -1494,12 +1514,11 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
-    /*sec*/ //ListTag(stdout);
-  /*
+  /*ListTag(stdout);
+  
     printf(": begin reflow type %d availSize=%d,%d computedSize=%d,%d\n",
            aReflowState.reason, aReflowState.availableWidth, aReflowState.availableHeight,
-           aReflowState.mComputedWidth, aReflowState.mComputedHeight);
-           */
+           aReflowState.mComputedWidth, aReflowState.mComputedHeight);*/
 
   DO_GLOBAL_REFLOW_COUNT("nsBlockFrame", aReflowState.reason);
 
@@ -1669,14 +1688,6 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       printf("\n");
 #endif
 
-#ifdef OLD_BLOCK_INCREMENTAL_REFLOW
-      // the old way...
-      // in the normal case, this just marks the line dirty
-      // but, it causes an incremental reflow targeted at a frame
-      // inside a continued span to get dropped on the floor.  see bug 25510
-      // This will be yanked as soon as we have high confidence in the enabled code below
-      rv = PrepareChildIncrementalReflow(state); 
-#else
       // this code does a correct job of propogating incremental reflows (bug 25510)
       // and has the potential to be very efficient.  we should be able to 
       // terminate reflow after the incremental reflow if we can detect that
@@ -1707,18 +1718,20 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
           // finally, mark this block frame as having a dirty child and return
           // XXX: we should be able to optimize this so we only call ReflowDirtyChild
           //      if it's absolutely necessary:  something on the line changed size.
-          nsCOMPtr<nsIPresShell> shell;
-          aPresContext->GetShell(getter_AddRefs(shell));
-          rv = ReflowDirtyChild(shell, state.mNextRCFrame); 
-          //XXX: it's possible we need to do some work regarding incremental painting
-          //     here, see code below "ReflowDirtyLines() after this switch statement.
-          //     It might be right to factor the tail end of this method into a new method
-          //     and call that here before calling ReflowDirtyChild().
+          if (!IsIncrementalDamageConstrained(state))
+          {
+            nsCOMPtr<nsIPresShell> shell;
+            aPresContext->GetShell(getter_AddRefs(shell));
+            rv = ReflowDirtyChild(shell, state.mNextRCFrame); 
+            //XXX: it's possible we need to do some work regarding incremental painting
+            //     here, see code below "ReflowDirtyLines() after this switch statement.
+            //     It might be right to factor the tail end of this method into a new method
+            //     and call that here before calling ReflowDirtyChild().
+          }
           return rv;
         } 
       }
       rv = PrepareChildIncrementalReflow(state);
-#endif
     }
     break;
 
@@ -2118,7 +2131,9 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   else {
     // Compute final width
     nscoord maxWidth = 0, maxHeight = 0;
-    //printf("%p aState.mKidXMost=%d\n", this, aState.mKidXMost); 
+#ifdef NOISY_KIDXMOST
+    printf("%p aState.mKidXMost=%d\n", this, aState.mKidXMost); 
+#endif
     nscoord minWidth = aState.mKidXMost + borderPadding.right;
     if (!HaveAutoWidth(aReflowState)) {
       // Use style defined width
@@ -2851,6 +2866,33 @@ WrappedLinesAreDirty(nsLineBox* aLine)
   return PR_FALSE;
 }
 
+PRBool nsBlockFrame::IsIncrementalDamageConstrained(const nsBlockReflowState& aState) const
+{
+  // see if the reflow will go through a text control.  if so, we can optimize 
+  // because we know the text control won't change size.
+  if (aState.mReflowState.reflowCommand)
+  {
+    nsIFrame *target;
+    aState.mReflowState.reflowCommand->GetTarget(target);
+    while (target)
+    { // starting with the target's parent, scan for a text control
+      nsIFrame *parent;
+      target->GetParent(&parent);
+      if ((nsIFrame*)this==parent || !parent)  // the null check is paranoia, it should never happen
+        break;  // we found ourself, so we know there's no text control between us and target
+      nsCOMPtr<nsIAtom> frameType;
+      parent->GetFrameType(getter_AddRefs(frameType));
+      if (frameType)
+      {
+        if (nsLayoutAtoms::textInputFrame == frameType.get())
+          return PR_TRUE; // damage is constrained to the text control innards
+      }
+      target = parent;  // advance the loop up the frame tree
+    }
+  }
+  return PR_FALSE;  // default case, damage is not constrained (or unknown)
+}
+
 /**
  * Reflow the dirty lines
  */
@@ -2942,9 +2984,13 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       nsRect oldCombinedArea;
       line->GetCombinedArea(&oldCombinedArea);
 
-      // Reflow the dirty line. If it's an incremental reflow, then have
-      // it invalidate the dirty area
-      rv = ReflowLine(aState, line, &keepGoing, incrementalReflow);
+      // Reflow the dirty line. If it's an incremental reflow, then force
+      // it to invalidate the dirty area if necessary
+      PRBool forceInvalidate = PR_FALSE;
+      if (incrementalReflow) {
+        forceInvalidate = !IsIncrementalDamageConstrained(aState);
+      }
+      rv = ReflowLine(aState, line, &keepGoing, forceInvalidate);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -3147,7 +3193,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       aLine->GetCombinedArea(&lineCombinedArea);
       if ((oldCombinedArea.x != lineCombinedArea.x) ||
           (oldCombinedArea.y != lineCombinedArea.y)) {
-        // The block has moved, and so do be safe we need to repaint
+        // The block has moved, and so to be safe we need to repaint
         // XXX We need to improve on this...
         nsRect  dirtyRect;
         dirtyRect.UnionRect(oldCombinedArea, lineCombinedArea);
@@ -3286,7 +3332,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       nsRect dirtyRect;
       dirtyRect.UnionRect(oldCombinedArea, combinedArea);
 #ifdef NOISY_BLOCK_INVALIDATE
-      printf("%p invalidate 9 (%d, %d, %d, %d)\n",
+      printf("%p invalidate because aDamageDirtyArea is true (%d, %d, %d, %d)\n",
              this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
 #endif
       Invalidate(aState.mPresContext, dirtyRect);
@@ -4021,8 +4067,11 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       // updated value in the line, and update the current maximum width
       if (aState.GetFlag(BRS_COMPUTEMAXWIDTH)) {
         aLine->mMaximumWidth = brc.GetMaximumWidth();
+        // need to add in margin on block's reported max width (see bug 35964)
+        const nsMargin& margin = brc.GetMargin();
+        aLine->mMaximumWidth += margin.left + margin.right;
 #ifdef NOISY_MAXIMUM_WIDTH
-        printf("nsBlockFrame::ReflowBlockFrame parent block %p line %p setting aLine.mMaximumWidth to %d\n", 
+        printf("nsBlockFrame::ReflowBlockFrame parent block %p line %p aLine->mMaximumWidth set to brc.GetMaximumWidth %d, updating aState.mMaximumWidth\n", 
              this, aLine, aLine->mMaximumWidth);
 #endif
         aState.UpdateMaximumWidth(aLine->mMaximumWidth);
@@ -4214,7 +4263,21 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
 
   const nsMargin& borderPadding = aState.BorderPadding();
   nscoord x = aState.mAvailSpaceRect.x + borderPadding.left;
+  // the available width is the smaller of the widths given by:
+  //    a) the space manager, accounting for floaters impacting this line
+  //    b) the parent frame's computed width
+  // part 1 of a possible fix for 38157
+#ifdef FIX_BUG_38157
+  const nsMargin& margin = aState.Margin();
+  nscoord availContentWidth = aState.mReflowState.availableWidth;
+  if (NS_UNCONSTRAINEDSIZE != availContentWidth) {
+    availContentWidth -= (borderPadding.left + borderPadding.right) +
+                         (margin.left + margin.right);
+  }
+  nscoord availWidth = PR_MIN(aState.mAvailSpaceRect.width, availContentWidth);
+#else
   nscoord availWidth = aState.mAvailSpaceRect.width;
+#endif
   nscoord availHeight;
   if (aState.GetFlag(BRS_UNCONSTRAINEDHEIGHT)) {
     availHeight = NS_UNCONSTRAINEDSIZE;
@@ -4969,7 +5032,7 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
   // calculate the maximum width
   if (aState.GetFlag(BRS_UNCONSTRAINEDWIDTH)) {
 #ifdef NOISY_MAXIMUM_WIDTH
-    printf("nsBlockFrame::PostPlaceLine block %p line %p caching max width %d\n", 
+    printf("nsBlockFrame::PostPlaceLine during UC Reflow of block %p line %p caching max width %d\n", 
            this, aLine, aLine->mBounds.XMost());
 #endif
     aLine->mMaximumWidth = aLine->mBounds.XMost();
@@ -4987,11 +5050,15 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
   // then make sure we take up all of the available width
   if (aState.GetFlag(BRS_SHRINKWRAPWIDTH) && aLine->IsLineWrapped()) {
     aState.mKidXMost = aState.BorderPadding().left + aState.mContentArea.width;
-    //printf("%p PostPlaceLine A aState.mKidXMost=%d\n", this, aState.mKidXMost); 
+#ifdef NOISY_KIDXMOST
+    printf("%p PostPlaceLine A aState.mKidXMost=%d\n", this, aState.mKidXMost); 
+#endif
   }
   else if (xmost > aState.mKidXMost) {
     aState.mKidXMost = xmost;
-    //printf("%p PostPlaceLine B aState.mKidXMost=%d\n", this, aState.mKidXMost); 
+#ifdef NOISY_KIDXMOST
+    printf("%p PostPlaceLine B aState.mKidXMost=%d\n", this, aState.mKidXMost); 
+#endif
   }
 }
 
@@ -5613,6 +5680,13 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
                             nsMargin& aMarginResult,
                             nsMargin& aComputedOffsetsResult)
 {
+#ifdef NOISY_FLOATER
+  printf("Reflow Floater %p in parent %p, availSpace(%d,%d,%d,%d)\n",
+          aPlaceholder->GetOutOfFlowFrame(), this, 
+          aState.mAvailSpaceRect.x, aState.mAvailSpaceRect.y, 
+          aState.mAvailSpaceRect.width, aState.mAvailSpaceRect.height
+  );
+#endif
   // XXX update this just
   aState.GetAvailableSpace();
 
@@ -5681,7 +5755,9 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
                aMarginResult.top  + aMarginResult.bottom);
     aState.StoreMaxElementSize(floater, mes);
   }
-
+#ifdef NOISY_FLOATER
+  printf("end ReflowFloater %p, sized to %d,%d\n", floater, metrics.width, metrics.height);
+#endif
   return NS_OK;
 }
 
@@ -5952,10 +6028,25 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
   // 
   // Note: The CSS2 spec says that floaters should be placed as high
   // as possible.
+  //
+#ifdef FIX_BUG_37657
+  // Also note that in backwards compatibility mode, we skip this step
+  // In old browsers, floaters are horizontally stacked regardless of 
+  // available space
+  nsCompatibility mode;
+  mPresContext->GetCompatibilityMode(&mode);
+  if (eCompatibility_NavQuirks != mode) {
+    while (!CanPlaceFloater(region, floaterDisplay->mFloats)) {
+      mY += mAvailSpaceRect.height;
+      GetAvailableSpace();
+    }
+  }
+#else
   while (!CanPlaceFloater(region, floaterDisplay->mFloats)) {
     mY += mAvailSpaceRect.height;
     GetAvailableSpace();
   }
+#endif
 
   // Assign an x and y coordinate to the floater. Note that the x,y
   // coordinates are computed <b>relative to the translation in the
