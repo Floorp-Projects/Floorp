@@ -26,6 +26,7 @@ REQUIRES = \
   content \
   docshell \
   dom \
+  editor \
   gfx \
   gfx2 \
   htmlparser \

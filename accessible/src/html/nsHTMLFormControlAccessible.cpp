@@ -42,6 +42,7 @@
 #include "nsFormControlAccessible.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLFormControlAccessible.h"
+#include "nsIClipboard.h"
 #include "nsIDOMHTMLButtonElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -52,8 +53,12 @@
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULSelectCntrlEl.h"
-#include "nsINameSpaceManager.h"
+#include "nsIEditor.h"
+#include "nsIEventStateManager.h"
 #include "nsIFrame.h"
+#include "nsIGfxTextControlFrame.h"
+#include "nsINameSpaceManager.h"
+#include "nsIPlaintextEditor.h"
 #include "nsISelectionController.h"
 #include "nsReadableUtils.h"
 #include "nsWeakReference.h"
@@ -310,6 +315,8 @@ nsFormControlAccessible(aNode, aShell)
 { 
 }
 
+NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTextFieldAccessible, nsFormControlAccessible, nsIAccessibleEditableText)
+
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccRole(PRUint32 *_retval)
 {
   *_retval = ROLE_TEXT;
@@ -400,6 +407,106 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsHTMLTextFieldAccessible::SetAttributes(PRInt32 aStartPos, PRInt32 aEndPos, nsISupports *aAttributes)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLTextFieldAccessible::SetTextContents(const nsAString &aText)
+{
+  nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea(do_QueryInterface(mDOMNode));
+  if (textArea)
+    return textArea->SetValue(aText);
+  
+  nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(mDOMNode));
+  if (inputElement)
+    return inputElement->SetValue(aText);
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsHTMLTextFieldAccessible::MakeSelection(PRInt32 aStartPos, PRInt32 aEndPos, nsIEditor **aEditor)
+{
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+  if (!shell)
+    return NS_ERROR_FAILURE;  
+
+  AccTakeFocus();
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  nsIFrame *frame = nsnull;
+  shell->GetPrimaryFrameFor(content, &frame);
+  nsCOMPtr<nsIGfxTextControlFrame2> tframe(do_QueryInterface(frame));
+  if (!tframe)
+    return NS_ERROR_FAILURE;  
+
+  nsCOMPtr<nsIEditor> editor;
+  tframe->SetSelectionRange(aStartPos, aEndPos);
+  tframe->GetEditor(getter_AddRefs(editor));
+  if (!editor)
+    return NS_ERROR_FAILURE;  
+
+  *aEditor = editor;
+  NS_ADDREF(*aEditor);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLTextFieldAccessible::InsertText(const nsAString &aText, PRInt32 aPosition)
+{
+  nsCOMPtr<nsIEditor> editor;
+  if (NS_SUCCEEDED(MakeSelection(aPosition, aPosition, getter_AddRefs(editor)))) {
+    nsCOMPtr<nsIPlaintextEditor> peditor(do_QueryInterface(editor));
+    peditor->InsertText(aText);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsHTMLTextFieldAccessible::CopyText(PRInt32 aStartPos, PRInt32 aEndPos)
+{
+  nsCOMPtr<nsIEditor> editor;
+  if (NS_SUCCEEDED(MakeSelection(aStartPos, aEndPos, getter_AddRefs(editor)))) {
+    editor->Copy();
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsHTMLTextFieldAccessible::CutText(PRInt32 aStartPos, PRInt32 aEndPos)
+{
+  nsCOMPtr<nsIEditor> editor;
+  if (NS_SUCCEEDED(MakeSelection(aStartPos, aEndPos, getter_AddRefs(editor)))) {
+    editor->Cut();
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsHTMLTextFieldAccessible::DeleteText(PRInt32 aStartPos, PRInt32 aEndPos)
+{
+  nsCOMPtr<nsIEditor> editor;
+  if (NS_SUCCEEDED(MakeSelection(aStartPos, aEndPos, getter_AddRefs(editor)))) {
+    editor->DeleteSelection(nsIEditor::eNone);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsHTMLTextFieldAccessible::PasteText(PRInt32 aPosition)
+{
+  nsCOMPtr<nsIEditor> editor;
+  if (NS_SUCCEEDED(MakeSelection(aPosition, aPosition, getter_AddRefs(editor)))) {
+    editor->Paste(nsIClipboard::kGlobalClipboard);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
 
 // --- groupbox  -----
 
