@@ -1,7 +1,6 @@
+*.pdb
+*.ncb
+*.opt
+*.plg
 Debug
 Release
-*.plg
-*.opt
-*.ncb
-deleted
-Makefile
