@@ -80,6 +80,7 @@ cert_init()
   ps -efl > ${NOISE_FILE} 2>&1
   ps aux >> ${NOISE_FILE} 2>&1
   noise
+
 }
 
 cert_log() ######################    write the cert_status file
@@ -256,42 +257,79 @@ cert_add_cert()
     return 0
 }
 
+################################# cert_all_CA ################################
+# local shell function to build the additional Temp. Certificate Authority (CA)
+# used for the "real life" ssl test with 2 different CA's in the
+# client and in teh server's dir
+##########################################################################
+cert_all_CA()
+{
+    echo nss > ${PWFILE}
+
+    ALL_CU_SUBJECT="CN=NSS Test CA, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+    cert_CA $CADIR TestCA -x "CTu,CTu,CTu"
+
+    ALL_CU_SUBJECT="CN=NSS Server Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
+    cert_CA $SERVER_CADIR serverCA -x "CTu,CTu,CTu"
+    ALL_CU_SUBJECT="CN=NSS Chain1 Server Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
+    cert_CA $SERVER_CADIR chain-1-serverCA "-c serverCA" "Cu,Cu,Cu"
+    ALL_CU_SUBJECT="CN=NSS Chain2 Server Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
+    cert_CA $SERVER_CADIR chain-2-serverCA "-c chain-1-serverCA" "Cu,Cu,Cu"
+
+
+
+    ALL_CU_SUBJECT="CN=NSS Client Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
+    cert_CA $CLIENT_CADIR clientCA -x "CTu,CTu,CTu"
+    ALL_CU_SUBJECT="CN=NSS Chain1 Client Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
+    cert_CA $CLIENT_CADIR chain-1-clientCA "-c clientCA" "Cu,Cu,Cu"
+    ALL_CU_SUBJECT="CN=NSS Chain2 Client Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
+    cert_CA $CLIENT_CADIR chain-2-clientCA "-c chain-1-clientCA" "Cu,Cu,Cu"
+
+    # root.cert in $CLIENT_CADIR and in $SERVER_CADIR is the one of the last 
+    # in the chain
+}
+
 ################################# cert_CA ################################
 # local shell function to build the Temp. Certificate Authority (CA)
 # used for testing purposes, creating  a CA Certificate and a root cert
 ##########################################################################
 cert_CA()
 {
-  echo "$SCRIPTNAME: Creating a CA Certificate =========================="
+  CUR_CADIR=$1
+  NICKNAME=$2
+  SIGNER=$3
+  TRUSTARG=$4
 
-  if [ ! -d "${CADIR}" ]; then
-      mkdir -p "${CADIR}"
+  echo "$SCRIPTNAME: Creating a CA Certificate $NICKNAME =========================="
+
+  if [ ! -d "${CUR_CADIR}" ]; then
+      mkdir -p "${CUR_CADIR}"
   fi
-  cd ${CADIR}
+  cd ${CUR_CADIR}
+  pwd
 
-  echo nss > ${PWFILE}
 
-  CU_ACTION="Creating CA Cert DB"
-  certu -N -d . -f ${R_PWFILE} 2>&1
-  if [ "$RET" -ne 0 ]; then
-      Exit 5 "Fatal - failed to create CA"
+  if [ "$SIGNER" = "-x" ] ; then # self signed -> create DB
+      CU_ACTION="Creating CA Cert DB"
+      certu -N -d . -f ${R_PWFILE} 2>&1
+      if [ "$RET" -ne 0 ]; then
+          Exit 5 "Fatal - failed to create CA $NICKNAME "
+      fi
+      echo "$SCRIPTNAME: Certificate initialized ----------"
   fi
 
-  ################# Generating Certscript #################################
-  #
-  echo "$SCRIPTNAME: Certificate initialized ----------"
 
   ################# Creating CA Cert ######################################
   #
-  CU_ACTION="Creating CA Cert"
-  CU_SUBJECT="CN=NSS Test CA, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
-  certu -S -n "TestCA" -t "CTu,CTu,CTu" -v 60 -x -d . -1 -2 -5 \
+  CU_ACTION="Creating CA Cert $NICKNAME "
+  CU_SUBJECT=$ALL_CU_SUBJECT
+  certu -S -n $NICKNAME -t $TRUSTARG -v 60 $SIGNER -d . -1 -2 -5 \
         -f ${R_PWFILE} -z ${R_NOISE_FILE} 2>&1 <<CERTSCRIPT
 5
 9
 n
 y
-3
+-1
 n
 5
 6
@@ -307,10 +345,11 @@ CERTSCRIPT
   ################# Exporting Root Cert ###################################
   #
   CU_ACTION="Exporting Root Cert"
-  certu -L -n "TestCA" -r -d . -o root.cert 
+  certu -L -n  $NICKNAME -r -d . -o root.cert 
   if [ "$RET" -ne 0 ]; then
       Exit 7 "Fatal - failed to export root cert"
   fi
+  cp root.cert ${NICKNAME}.root.cert
 }
 
 ############################## cert_smime_client #############################
@@ -368,6 +407,86 @@ cert_smime_client()
 }
 
 ############################## cert_ssl ################################
+# local shell function to create client + server certs for extended SSL test
+########################################################################
+cert_extended_ssl()
+{
+  ################# Creating Certs for extended SSL test ####################
+  #
+  CERTFAILED=0
+  echo "$SCRIPTNAME: Creating Certificates, issued by the last ==============="
+  echo "     of a chain of CA's which are not in the same database============"
+
+  echo "Server Cert"
+  cert_init_cert ${EXT_SERVERDIR} "${HOSTADDR}" 1
+
+  CU_ACTION="Initializing ${CERTNAME}'s Cert DB (ext.)"
+  certu -N -d "${CERTDIR}" -f "${R_PWFILE}" 2>&1
+
+  CU_ACTION="Generate Cert Request for $CERTNAME (ext)"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  certu -R -d "${CERTDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req 2>&1
+    #if [ "$RET" -ne 0 ]; then
+        #return $RET
+    #fi
+
+  CU_ACTION="Sign ${CERTNAME}'s Request (ext)"
+  cp ${CERTDIR}/req ${SERVER_CADIR}
+  certu -C -c "chain-2-serverCA" -m "$CERTSERIAL" -v 60 -d "${SERVER_CADIR}" \
+        -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" 2>&1
+
+  CU_ACTION="Import $CERTNAME's Cert (ext)"
+  certu -A -n "$CERTNAME" -t "u,u,u" -d "${CERTDIR}" -f "${R_PWFILE}" \
+        -i "${CERTNAME}.cert" 2>&1
+  CU_ACTION="Import Client Root CA for $CERTNAME (ext.)"
+  certu -A -n "clientCA" -t "TC,TC,TC" -f "${R_PWFILE}" -d "${CERTDIR}" \
+          -i "${CLIENT_CADIR}/clientCA.root.cert" 2>&1
+  echo "Importing all the server's own CA chain into the servers DB"
+  for CA in `find ${SERVER_CADIR} -name "?*.root.cert"` ;
+  do
+      N=`basename $CA | sed -e "s/.root.cert//"`
+      CU_ACTION="Import $N  CA for $CERTNAME (ext.)"
+      certu -A -n $N  -t "TC,TC,TC" -f "${R_PWFILE}" -d "${CERTDIR}" \
+          -i "${CA}" 2>&1
+  done
+#============
+  echo "Client Cert"
+  cert_init_cert ${EXT_CLIENTDIR} ExtendedSSLUser 1
+
+  CU_ACTION="Initializing ${CERTNAME}'s Cert DB (ext.)"
+  certu -N -d "${CERTDIR}" -f "${R_PWFILE}" 2>&1
+
+  CU_ACTION="Generate Cert Request for $CERTNAME (ext)"
+  CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
+  certu -R -d "${CERTDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req 2>&1
+
+  CU_ACTION="Sign ${CERTNAME}'s Request (ext)"
+  cp ${CERTDIR}/req ${CLIENT_CADIR}
+  certu -C -c "chain-2-clientCA" -m "$CERTSERIAL" -v 60 -d "${CLIENT_CADIR}" \
+        -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" 2>&1
+
+  CU_ACTION="Import $CERTNAME's Cert (ext)"
+  certu -A -n "$CERTNAME" -t "u,u,u" -d "${CERTDIR}" -f "${R_PWFILE}" \
+        -i "${CERTNAME}.cert" 2>&1
+  CU_ACTION="Import Server Root CA for $CERTNAME (ext.)"
+  certu -A -n "serverCA" -t "TC,TC,TC" -f "${R_PWFILE}" -d "${CERTDIR}" \
+          -i "${SERVER_CADIR}/serverCA.root.cert" 2>&1
+  echo "Importing all the client's own CA chain into the servers DB"
+  for CA in `find ${CLIENT_CADIR} -name "?*.root.cert"` ;
+  do
+      N=`basename $CA | sed -e "s/.root.cert//"`
+      CU_ACTION="Import $N  CA for $CERTNAME (ext.)"
+      certu -A -n $N  -t "TC,TC,TC" -f "${R_PWFILE}" -d "${CERTDIR}" \
+          -i "${CA}" 2>&1
+  done
+  if [ "$CERTFAILED" != 0 ] ; then
+      cert_log "ERROR: EXT failed $RET"
+  else
+      cert_log "SUCCESS: EXT passed"
+  fi
+}
+
+############################## cert_ssl ################################
 # local shell function to create client + server certs for SSL test
 ########################################################################
 cert_ssl()
@@ -387,10 +506,6 @@ cert_ssl()
   CU_SUBJECT="CN=${CERTNAME}, O=BOGUS Netscape, L=Mountain View, ST=California, C=US"
   certu -S -n "${CERTNAME}" -c "TestCA" -t "Pu,Pu,Pu" -d . -f "${R_PWFILE}" \
         -z "${R_NOISE_FILE}" -v 60 2>&1
-
-  #FIXME - certdir or serverdir????
-  #certu -S -n "${CERTNAME}" -c "TestCA" -t "Pu,Pu,Pu" -m "$CERTSERIAL" \
-  #      -d "${CERTDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -v 60 2>&1
 
   if [ "$CERTFAILED" != 0 ] ; then
       cert_log "ERROR: SSL failed $RET"
@@ -476,7 +591,8 @@ cert_cleanup()
 ################## main #################################################
 
 cert_init 
-cert_CA 
+cert_all_CA
+cert_extended_ssl 
 cert_ssl 
 cert_smime_client        
 cert_fips

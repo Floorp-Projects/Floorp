@@ -344,6 +344,11 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     DAVEDIR=${HOSTDIR}/dave
     FIPSDIR=${HOSTDIR}/fips
 
+    SERVER_CADIR=${HOSTDIR}/serverCA
+    CLIENT_CADIR=${HOSTDIR}/clientCA
+    EXT_SERVERDIR=${HOSTDIR}/ext_server
+    EXT_CLIENTDIR=${HOSTDIR}/ext_client
+
     PWFILE=${TMP}/tests.pw.$$
     NOISE_FILE=${TMP}/tests_noise.$$
 
@@ -361,6 +366,8 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     R_ALICEDIR=../alicedir
     R_BOBDIR=../bobdir
     R_DAVEDIR=../dave
+    R_EXT_SERVERDIR=../ext_server
+    R_EXT_CLIENTDIR=../ext_client
 
     R_PWFILE=../tests.pw.$$
     R_NOISE_FILE=../tests_noise.$$
