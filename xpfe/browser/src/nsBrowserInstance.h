@@ -54,12 +54,6 @@ class nsIFindComponent;
 
 #define SHISTORY_POPUP_LIST 10
 
-// {5551A1E0-5A66-11d3-806A-00600811A9C3}
-#define NS_BROWSERINSTANCE_CID { 0x5551a1e0, 0x5a66, 0x11d3, { 0x80, 0x6a, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3 } }
-
-// {C2343730-DC2C-11d3-98B3-001083010E9B}
-#define NS_BROWSERCONTENTHANDLER_CID { 0xc2343730, 0xdc2c, 0x11d3, { 0x98, 0xb3, 0x0, 0x10, 0x83, 0x1, 0xe, 0x9b } }
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsBrowserInstance:
 ////////////////////////////////////////////////////////////////////////////////
