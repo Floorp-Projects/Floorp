@@ -1400,7 +1400,8 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                     s = s->next;
                 }
                 // FIXME:  what about static member initialization? that's what mcg should be collecting.
-                thisClass->setConstructor(ccg.complete());
+                if (ccg.get_iCode()->size())
+                    thisClass->setConstructor(ccg.complete());
             }
         }
         break;
