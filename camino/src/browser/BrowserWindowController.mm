@@ -624,21 +624,22 @@ static Boolean movieControllerFilter(MovieController mc, short action, void *par
 
 - (NSArray*)throbberImages
 {
-    // Simply load an array of NSImage objects from the files "throbber-NN.tif". I used "Quicktime Player" to
-    // save all of the frames of the animated gif as individual .tif files for simplicity of implementation.
-    if (mThrobberImages == nil) {
-        NSImage* images[43];
-        for (int i = 0; i < 43; ++i) {
-            NSString* imageName = [NSString stringWithFormat: @"throbber-%02d", i + 1];
-            images[i] = [NSImage imageNamed: imageName];
-            if (images[i] == nil) {
-                NSLog(@"throbber image %@ failed to load", imageName);
-                abort();
-            }
-        }
-        mThrobberImages = [[NSArray alloc] initWithObjects: images count: 43];
+  const int kNumThrobberImages = 6;
+  // Simply load an array of NSImage objects from the files "throbber-NN.tif". I used "Quicktime Player" to
+  // save all of the frames of the animated gif as individual .tif files for simplicity of implementation.
+  if (mThrobberImages == nil) {
+    NSImage* images[kNumThrobberImages];
+    for (int i = 0; i < kNumThrobberImages; ++i) {
+      NSString* imageName = [NSString stringWithFormat: @"throbber-%02d", i + 1];
+      images[i] = [NSImage imageNamed: imageName];
+      if (images[i] == nil) {
+        NSLog(@"throbber image %@ failed to load", imageName);
+        abort();
+      }
     }
-    return mThrobberImages;
+    mThrobberImages = [[NSArray alloc] initWithObjects: images count: kNumThrobberImages];
+  }
+  return mThrobberImages;
 }
 
 - (NSToolbarItem*)throbberItem
