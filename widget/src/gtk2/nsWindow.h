@@ -235,7 +235,13 @@ public:
     void               GrabKeyboard (void);
     void               ReleaseGrabs (void);
 
-    void               SetPluginType(PRBool aIsXembed);
+    enum PluginType {
+        PluginType_NONE = 0,   /* do not have any plugin */
+        PluginType_XEMBED,     /* the plugin support xembed */
+        PluginType_NONXEMBED   /* the plugin does not support xembed */
+    };
+
+    void               SetPluginType(PluginType aPluginType);
     void               SetNonXEmbedPluginFocus(void);
     void               LoseNonXEmbedPluginFocus(void);
 
@@ -281,11 +287,11 @@ private:
                         mInKeyRepeat : 1,
                         mIsVisible : 1,
                         mRetryPointerGrab : 1,
-                        mHasNonXembedPlugin : 1,
                         mActivatePending : 1,
                         mRetryKeyboardGrab : 1;
     GtkWindow          *mTransientParent;
     PRInt32             mSizeState;
+    PluginType          mPluginType;
 
 #ifdef ACCESSIBILITY
     nsCOMPtr<nsIAccessible> mRootAccessible;

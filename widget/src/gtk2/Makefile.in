@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  dom \
 		  necko \
 		  uconv \
+		  gtkxtbin \
 		  xremoteservice
 
 CSRCS		= \
@@ -72,6 +73,7 @@ SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \
+		-lgtkxtbin \
 		$(XLDFLAGS) \
 		$(XLIBS) \
 		$(MOZ_GTK2_LIBS)
