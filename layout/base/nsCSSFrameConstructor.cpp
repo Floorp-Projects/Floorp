@@ -7472,16 +7472,16 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIPresContext* aPresContext,
       // are not containers for absolutely positioned child frames
       frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
       if (display->mDisplay != NS_STYLE_DISPLAY_TABLE) {
-        nsIAtom*  frameType;
-        frame->GetFrameType(&frameType);
+        nsCOMPtr<nsIAtom> frameType;
+        // This may set frameType to null.
+        frame->GetFrameType(getter_AddRefs(frameType));
 
         if (nsLayoutAtoms::scrollFrame == frameType) {
           // We want the scrolled frame, not the scroll frame
           nsIFrame* scrolledFrame;
           frame->FirstChild(aPresContext, nsnull, &scrolledFrame);
-          NS_RELEASE(frameType);
           if (scrolledFrame) {
-            scrolledFrame->GetFrameType(&frameType);
+            scrolledFrame->GetFrameType(getter_AddRefs(frameType));
             if (nsLayoutAtoms::areaFrame == frameType) {
               containingBlock = scrolledFrame;
             }
@@ -7491,7 +7491,6 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIPresContext* aPresContext,
                    (nsLayoutAtoms::positionedInlineFrame == frameType)) {
           containingBlock = frame;
         }
-        NS_RELEASE(frameType);
       }
     }
 
