@@ -38,7 +38,7 @@
 #define PREF_MAIL_NEWSRC_ROOT    "mail.newsrc_root"
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
-#define NEWSRC_FILE_PREFIX ".newsrc-"
+#define NEWSRC_FILE_PREFIX "newsrc-"
 #else
 #define NEWSRC_FILE_PREFIX ""
 #endif /* XP_UNIX || XP_BEOS */
