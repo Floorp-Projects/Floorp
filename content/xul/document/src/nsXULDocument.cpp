@@ -6465,19 +6465,26 @@ nsXULDocument::AddPrototypeSheets()
         rv = gXULCache->GetStyleSheet(uri, getter_AddRefs(sheet));
         if (NS_FAILED(rv)) return rv;
 
-        // If we don't get a style sheet from the cache, then the
-        // really rigorous thing to do here would be to go out and try
-        // to load it again. (This would allow us to do partial
-        // invalidation of the cache, which would be cool, but would
-        // also require some more thinking.)
-        //
-        // Reality is, we end up in this situation if, when parsing
-        // the original XUL document, there -was- no style sheet at
-        // the specified URL, or the stylesheet was empty. So, just
-        // skip it.
-        if (! sheet)
-            continue;
+        if (!sheet) {
+            if (!IsChromeURI(uri))
+                continue;
 
+            // If the sheet is a chrome URL, then we can refetch the
+            // sheet synchronously, since we know the sheet is local.  
+            // It's not too late! :)  
+            // Otherwise we just bail.  It shouldn't currently
+            // be possible to get into this situation for any reason
+            // other than a skin switch anyway (since skin switching is the
+            // only system that partially invalidates the XUL cache).
+            // - dwh
+            PRBool complete;
+            nsCOMPtr<nsICSSLoader> loader;
+            GetCSSLoader(*getter_AddRefs(loader));
+            rv = loader->LoadAgentSheet(uri, *getter_AddRefs(sheet), complete,
+                                        nsnull);
+            if (NS_FAILED(rv)) return rv;
+        }
+     
         nsCOMPtr<nsICSSStyleSheet> newsheet;
         rv = sheet->Clone(*getter_AddRefs(newsheet));
         if (NS_FAILED(rv)) return rv;
