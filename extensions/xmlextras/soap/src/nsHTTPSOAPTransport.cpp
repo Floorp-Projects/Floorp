@@ -87,7 +87,7 @@ nsresult DebugPrintDOM(nsIDOMNode * node)
 #define DEBUG_DUMP_DOCUMENT(message,doc)
 #endif
 
-static NS_NAMED_LITERAL_STRING(kStringSchemaType, "string");
+static NS_NAMED_LITERAL_STRING(kAnyURISchemaType, "anyURI");
 
 /**
  * Get and check the transport URI for accessibility.  In the future,
@@ -224,7 +224,7 @@ static nsresult GetTransportURI(nsISOAPCall * aCall, nsAString & aURI)
       if (NS_FAILED(rc)) 
         return rc;
       stringType.Append(nsSOAPUtils::kQualifiedSeparator);
-      stringType.Append(kStringSchemaType);
+      stringType.Append(kAnyURISchemaType);
     }
 
     //  If it is available, add the sourceURI 
