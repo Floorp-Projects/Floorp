@@ -761,6 +761,16 @@ public:
               new AggregateTransaction(mTXMgr, cLevel, i, mMaxLevel,
                                        mNumChildrenPerNode, flags);
 
+      if (!tximpl) {
+        printf("ERROR: Failed to allocate AggregateTransaction %d, level %d. (%d)\n",
+               i, mLevel, result);
+
+        if (mFlags & BATCH_FLAG)
+          mTXMgr->EndBatch();
+
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
       nsITransaction *tx = 0;
       result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
       if (NS_FAILED(result)) {
@@ -1163,6 +1173,12 @@ quick_test(TestTransactionFactory *factory)
 
 
   tximpl = factory->create(mgr, MERGE_FLAG);
+
+  if (!tximpl) {
+    printf("ERROR: Failed to allocate initial transaction.\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   tx = 0;
 
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -1205,6 +1221,11 @@ quick_test(TestTransactionFactory *factory)
 
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
+
+    if (!tximpl) {
+      printf("ERROR: Failed to allocate transaction %d.\n", i);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     tx = 0;
     result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -1296,6 +1317,11 @@ quick_test(TestTransactionFactory *factory)
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
 
+    if (!tximpl) {
+      printf("ERROR: Failed to allocate transaction %d.\n", i);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     tx = 0;
     result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
     if (NS_FAILED(result)) {
@@ -1370,6 +1396,11 @@ quick_test(TestTransactionFactory *factory)
 
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, TRANSIENT_FLAG);
+
+    if (!tximpl) {
+      printf("ERROR: Failed to allocate transaction %d.\n", i);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     tx = 0;
     result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -1545,6 +1576,12 @@ quick_test(TestTransactionFactory *factory)
   printf("Check if new transactions prune the redo stack ... ");
 
   tximpl = factory->create(mgr, NONE_FLAG);
+
+  if (!tximpl) {
+    printf("ERROR: Failed to allocate transaction.\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   tx     = 0;
 
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -1685,6 +1722,11 @@ quick_test(TestTransactionFactory *factory)
   for (i = 1; i <= 5; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
 
+    if (!tximpl) {
+      printf("ERROR: Failed to allocate transaction %d.\n", i);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     tx = 0;
     result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
     if (NS_FAILED(result)) {
@@ -1741,6 +1783,12 @@ quick_test(TestTransactionFactory *factory)
   printf("Test transaction Do() error ... ");
 
   tximpl = factory->create(mgr, THROWS_DO_ERROR_FLAG);
+
+  if (!tximpl) {
+    printf("ERROR: Failed to allocate transaction.\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   tx     = 0;
 
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -1838,6 +1886,12 @@ quick_test(TestTransactionFactory *factory)
   printf("Test transaction Undo() error ... ");
 
   tximpl = factory->create(mgr, THROWS_UNDO_ERROR_FLAG);
+
+  if (!tximpl) {
+    printf("ERROR: Failed to allocate transaction.\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   tx     = 0;
 
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -1942,6 +1996,12 @@ quick_test(TestTransactionFactory *factory)
   printf("Test transaction Redo() error ... ");
 
   tximpl = factory->create(mgr, THROWS_REDO_ERROR_FLAG);
+
+  if (!tximpl) {
+    printf("ERROR: Failed to allocate transaction.\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   tx     = 0;
 
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -1966,6 +2026,12 @@ quick_test(TestTransactionFactory *factory)
   //
 
   tximpl = factory->create(mgr, NONE_FLAG);
+
+  if (!tximpl) {
+    printf("ERROR: Failed to allocate transaction.\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   tx     = 0;
 
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -2125,6 +2191,11 @@ quick_test(TestTransactionFactory *factory)
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
 
+    if (!tximpl) {
+      printf("ERROR: Failed to allocate transaction %d.\n", i);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     tx = 0;
     result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
     if (NS_FAILED(result)) {
@@ -2193,6 +2264,11 @@ quick_test(TestTransactionFactory *factory)
 
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
+
+    if (!tximpl) {
+      printf("ERROR: Failed to allocate transaction %d.\n", i);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     tx = 0;
     result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -2547,6 +2623,11 @@ quick_test(TestTransactionFactory *factory)
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
 
+    if (!tximpl) {
+      printf("ERROR: Failed to allocate transaction %d.\n", i);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     tx = 0;
     result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
     if (NS_FAILED(result)) {
@@ -2884,6 +2965,11 @@ quick_batch_test(TestTransactionFactory *factory)
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
 
+    if (!tximpl) {
+      printf("ERROR: Failed to allocate transaction %d.\n", i);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     tx = 0;
     result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
     if (NS_FAILED(result)) {
@@ -2972,6 +3058,11 @@ quick_batch_test(TestTransactionFactory *factory)
 
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, TRANSIENT_FLAG);
+
+    if (!tximpl) {
+      printf("ERROR: Failed to allocate transaction %d.\n", i);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     tx = 0;
     result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -3069,6 +3160,11 @@ quick_batch_test(TestTransactionFactory *factory)
 
   tximpl = factory->create(mgr, NONE_FLAG);
 
+  if (!tximpl) {
+    printf("ERROR: Failed to allocate transaction.\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   tx = 0;
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
   if (NS_FAILED(result)) {
@@ -3107,6 +3203,11 @@ quick_batch_test(TestTransactionFactory *factory)
 
   tximpl = factory->create(mgr, NONE_FLAG);
 
+  if (!tximpl) {
+    printf("ERROR: Failed to allocate transaction.\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   tx = 0;
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
   if (NS_FAILED(result)) {
@@ -3144,6 +3245,11 @@ quick_batch_test(TestTransactionFactory *factory)
   }
 
   tximpl = factory->create(mgr, NONE_FLAG);
+
+  if (!tximpl) {
+    printf("ERROR: Failed to allocate transaction.\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   tx = 0;
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -3500,6 +3606,11 @@ quick_batch_test(TestTransactionFactory *factory)
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
 
+    if (!tximpl) {
+      printf("ERROR: Failed to allocate transaction %d.\n", i);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     tx = 0;
     result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
     if (NS_FAILED(result)) {
@@ -3640,6 +3751,12 @@ quick_batch_test(TestTransactionFactory *factory)
 
 
   tximpl = factory->create(mgr, THROWS_DO_ERROR_FLAG);
+
+  if (!tximpl) {
+    printf("ERROR: Failed to allocate transaction.\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   tx     = 0;
 
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -3751,6 +3868,12 @@ quick_batch_test(TestTransactionFactory *factory)
   printf("Test transaction Undo() error ... ");
 
   tximpl = factory->create(mgr, THROWS_UNDO_ERROR_FLAG);
+
+  if (!tximpl) {
+    printf("ERROR: Failed to allocate transaction.\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   tx     = 0;
 
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -3869,6 +3992,12 @@ quick_batch_test(TestTransactionFactory *factory)
   printf("Test transaction Redo() error ... ");
 
   tximpl = factory->create(mgr, THROWS_REDO_ERROR_FLAG);
+
+  if (!tximpl) {
+    printf("ERROR: Failed to allocate transaction.\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   tx     = 0;
 
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -3907,6 +4036,12 @@ quick_batch_test(TestTransactionFactory *factory)
   //
 
   tximpl = factory->create(mgr, NONE_FLAG);
+
+  if (!tximpl) {
+    printf("ERROR: Failed to allocate transaction.\n");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   tx     = 0;
 
   result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -4066,6 +4201,11 @@ quick_batch_test(TestTransactionFactory *factory)
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
 
+    if (!tximpl) {
+      printf("ERROR: Failed to allocate transaction %d.\n", i);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     tx = 0;
     result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
     if (NS_FAILED(result)) {
@@ -4147,6 +4287,11 @@ quick_batch_test(TestTransactionFactory *factory)
 
   for (i = 1; i <= 20; i++) {
     tximpl = factory->create(mgr, NONE_FLAG);
+
+    if (!tximpl) {
+      printf("ERROR: Failed to allocate transaction %d.\n", i);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     tx = 0;
     result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
@@ -4372,6 +4517,11 @@ stress_test(TestTransactionFactory *factory, PRInt32 iterations)
 
     for (j = 1; j <= i; j++) {
       TestTransaction *tximpl = factory->create(mgr, NONE_FLAG);
+
+      if (!tximpl) {
+        printf("ERROR: Failed to allocate transaction %d.\n", j);
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
 
       tx = 0;
       result = tximpl->QueryInterface(kITransactionIID, (void **)&tx);
