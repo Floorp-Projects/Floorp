@@ -402,19 +402,12 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
                                  PRBool aRemoveEventListeners,
                                  PRBool aClearScopeHint)
 {
-  nsresult rv;
+  if (!aDocument && mDocument) {
+    // Cache the old principal now that the document is being removed.
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
+    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
-  if (!aDocument) {
-    if (mDocument) {
-      // Cache the old principal now that the document is being removed.
-      nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
-      NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-      doc->GetPrincipal(getter_AddRefs(mDocumentPrincipal));
-    }
-  } else {
-    // let go of the old cached principal
-    mDocumentPrincipal = nsnull;
+    doc->GetPrincipal(getter_AddRefs(mDocumentPrincipal));
   }
 
   // Always clear watchpoints, to deal with two cases:
@@ -428,17 +421,50 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
   // when those sub-window objects are finalized, after JS_ClearScope and
   // a GC run that finds them to be garbage.
 
-  if (mContext && mJSObject)
-    ::JS_ClearWatchPointsForObject((JSContext *)mContext->GetNativeContext(),
-                                   mJSObject);
+  JSContext *cx = nsnull;
 
-  // Release the navigator object so that it will be recreated for the
-  // new document The plugins or mime types array may have
-  // changed. See bug 150087
-  if (mNavigator) {
-    mNavigator->SetDocShell(nsnull);
+  if (mContext) {
+    cx = (JSContext *)mContext->GetNativeContext();
 
-    NS_RELEASE(mNavigator);
+    if (mJSObject) {
+      ::JS_ClearWatchPointsForObject(cx, mJSObject);
+    }
+  }
+
+  if (aDocument) {
+    if (mNavigator && mDocumentPrincipal) {
+      // Loading a new document.  Compare it's principal against the
+      // old principal to see whether we are allowed to keep the old
+      // navigator object.
+      nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDocument));
+      NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIPrincipal> newPrincipal;
+      doc->GetPrincipal(getter_AddRefs(newPrincipal));
+
+      nsresult rv =
+        sSecMan->CheckSameOriginPrincipal(mDocumentPrincipal,
+                                          newPrincipal);
+
+      if (NS_SUCCEEDED(rv)) {
+        // Same origins.  Notify the navigator object that we are
+        // loading a new document, so it can make sure it is ready
+        // for the new document.
+        mNavigator->LoadingNewDocument();
+      } else {
+        // Different origins.  Destroy the navigator object so it gets
+        // recreated for the new document.  The plugins or mime types
+        // arrays may have changed. See bug 150087.
+        mNavigatorHolder = nsnull;
+
+        mNavigator->SetDocShell(nsnull);
+
+        NS_RELEASE(mNavigator);
+      }
+    }
+
+    // Let go of the cached principal since we no longer need it.
+    mDocumentPrincipal = nsnull;
   }
 
   if (mSidebar) {
@@ -462,7 +488,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
 
       if (internal == NS_STATIC_CAST(nsIDOMWindowInternal *, this)) {
         nsCOMPtr<nsIXBLService> xblService =
-                 do_GetService("@mozilla.org/xbl;1", &rv);
+          do_GetService("@mozilla.org/xbl;1");
         if (xblService) {
           nsCOMPtr<nsIDOMEventReceiver> rec =
             do_QueryInterface(mChromeEventHandler);
@@ -540,8 +566,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
       }
 
       if (!isAboutBlank ||
-         (isContentWindow && aClearScopeHint && !isSameOrigin))
-      {
+          (isContentWindow && aClearScopeHint && !isSameOrigin)) {
         // the current document is *not* about:blank,
         // or aClearScopeHint is true and the new document
         // has a different origin than the calling script.
@@ -549,7 +574,14 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
         ClearAllTimeouts();
 
         if (mContext && mJSObject) {
-          JSContext* cx = (JSContext *)mContext->GetNativeContext();
+          if (mNavigator) {
+            nsISupports* navigator =
+              NS_REINTERPRET_CAST(nsISupports*, mNavigator);
+            sXPConnect->WrapNative(cx, mJSObject, navigator,
+                                   NS_GET_IID(nsIDOMNavigator),
+                                   getter_AddRefs(mNavigatorHolder));
+          }
+
           ::JS_ClearScope(cx, mJSObject);
           ::JS_ClearRegExpStatics(cx);
 
@@ -560,6 +592,18 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
   }
 
   if (mContext && aDocument) {
+    if (mNavigator && mJSObject) {
+      // Make our JS wrapper hold on to the navigator object so
+      // that it doesn't go away when transitioning from page to
+      // page. We do this by just asking for the navigator
+      // property on the global object. That causes the global
+      // object's resolve hook to cache the property on the
+      // global, and thus root it which prevents GC from getting
+      // rid of the object.
+      jsval dummy;
+      ::JS_GetProperty(cx, mJSObject, "navigator", &dummy);
+    }
+
     // Add an extra ref in case we release mContext during GC.
     nsCOMPtr<nsIScriptContext> kungFuDeathGrip = mContext;
     kungFuDeathGrip->GC();
@@ -568,6 +612,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
   mDocument = aDocument;
 
   if (mDocument && mContext) {
+
     if (mIsScopeClear) {
       mContext->InitContext(this);
     } else if (mJSObject) {
@@ -575,8 +620,6 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument,
       // about:blank) then we need to update the cached document
       // property on the window to reflect the new document and not
       // the old one.
-
-      JSContext *cx = (JSContext *)mContext->GetNativeContext();
 
       nsWindowSH::CacheDocumentProperty(cx, mJSObject, this);
     }
@@ -622,6 +665,8 @@ GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
     }
 
     ClearControllers();
+
+    mNavigatorHolder = nsnull;
 
     mContext->GC();
 
@@ -2325,9 +2370,7 @@ GlobalWindowImpl::Prompt(const nsAString& aMessage,
   rv = CheckSecurityIsChromeCaller(&isChrome);
   if (NS_FAILED(rv) || !isChrome) {
       MakeScriptDialogTitle(aTitle, title);
-  }
-  else
-  {
+  } else {
       title.Assign(aTitle);
   }
   NS_WARN_IF_FALSE(!isChrome, "chrome shouldn't be calling prompt(), use the prompt service");
@@ -2774,8 +2817,7 @@ GlobalWindowImpl::ScrollByLines(PRInt32 numLines)
   float p2t, t2p;
 
   result = GetScrollInfo(&view, &p2t, &t2p);
-  if (view)
-  {
+  if (view) {
     result = view->ScrollByLines(0, numLines);
   }
 
@@ -2790,8 +2832,7 @@ GlobalWindowImpl::ScrollByPages(PRInt32 numPages)
   float p2t, t2p;
 
   result = GetScrollInfo(&view, &p2t, &t2p);
-  if (view)
-  {
+  if (view) {
     result = view->ScrollByPages(0, numPages);
   }
 
@@ -6220,6 +6261,15 @@ NavigatorImpl::Preference()
   return rv;
 }
 
+void
+NavigatorImpl::LoadingNewDocument()
+{
+  // Release these so that they will be recreated for the
+  // new document (if requested).  The plugins or mime types
+  // arrays may have changed.  See bug 150087.
+  NS_IF_RELEASE(mMimeTypes);
+  NS_IF_RELEASE(mPlugins);
+}
 
 nsresult
 NavigatorImpl::RefreshMIMEArray()

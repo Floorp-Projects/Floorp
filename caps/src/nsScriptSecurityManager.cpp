@@ -589,9 +589,9 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckSameOriginPrincipal(nsIPrincipal* aSourcePrincipal,
                                                   nsIPrincipal* aTargetPrincipal)
 {
-    return CheckSameOriginDOMProp(aSourcePrincipal, aTargetPrincipal,
-                                  nsIXPCSecurityManager::ACCESS_SET_PROPERTY,
-                                  PR_FALSE);
+    return CheckSameOriginPrincipalInternal(aSourcePrincipal,
+                                            aTargetPrincipal,
+                                            PR_FALSE);
 }
 
 
@@ -849,12 +849,10 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
 }
 
 nsresult
-nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
-                                                nsIPrincipal* aObject,
-                                                PRUint32 aAction,
-                                                PRBool aIsCheckConnect)
+nsScriptSecurityManager::CheckSameOriginPrincipalInternal(nsIPrincipal* aSubject,
+                                                          nsIPrincipal* aObject,
+                                                          PRBool aIsCheckConnect)
 {
-    nsresult rv;
     /*
     ** Get origin of subject and object and compare.
     */
@@ -862,7 +860,7 @@ nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
         return NS_OK;
 
     PRBool isSameOrigin = PR_FALSE;
-    rv = aSubject->Equals(aObject, &isSameOrigin);
+    nsresult rv = aSubject->Equals(aObject, &isSameOrigin);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (isSameOrigin)
@@ -894,7 +892,6 @@ nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
             return NS_OK;
     }
 
-
     // Allow access to about:blank
     nsCOMPtr<nsICodebasePrincipal> objectCodebase(do_QueryInterface(aObject));
     if (objectCodebase)
@@ -904,6 +901,27 @@ nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
         NS_ENSURE_SUCCESS(rv, rv);
         if (nsCRT::strcasecmp(origin, "about:blank") == 0)
             return NS_OK;
+    }
+
+    /*
+    ** Access tests failed, so now report error.
+    */
+    return NS_ERROR_DOM_PROP_ACCESS_DENIED;
+}
+
+
+nsresult
+nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
+                                                nsIPrincipal* aObject,
+                                                PRUint32 aAction,
+                                                PRBool aIsCheckConnect)
+{
+    nsresult rv = CheckSameOriginPrincipalInternal(aSubject, aObject,
+                                                   aIsCheckConnect);
+    
+    if (NS_SUCCEEDED(rv))
+    {
+        return NS_OK;
     }
 
     /*
