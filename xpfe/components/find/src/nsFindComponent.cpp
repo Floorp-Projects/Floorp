@@ -213,7 +213,10 @@ nsFindComponent::Context::MakeTSDocument(nsIDocument *aDocument)
 		return NS_ERROR_NULL_POINTER;
 	
 	// init the TS doc to start from the beginning
-	rv = mTextServicesDocument->FirstBlock();
+	if (mSearchBackwards)
+		rv = mTextServicesDocument->LastBlock();			// do we want to do this?
+	else
+		rv = mTextServicesDocument->FirstBlock();
 	if (NS_FAILED(rv))
 		return rv;
 	
@@ -267,14 +270,16 @@ static PRInt32 FindInString(const nsString &searchStr, const nsString &patternSt
 	PRInt32		patternLen = patternStr.Length();
 	PRInt32		searchStrLen = searchStr.Length();
 		
-	// pattern is empty
-	if (patternLen == 0)
+	if (patternLen == 0)									// pattern is empty
 		return -1;
 	
 	if (startOffset < 0)
 		startOffset = 0;
 	
-	if (startOffset >= searchStrLen)
+	if (startOffset >= searchStrLen)			// bad start offset
+		return -1;
+	
+	if (patternLen > searchStrLen)				// pattern is longer than string to search
 		return -1;
 	
 	const PRUnichar	*searchBuf = searchStr.GetUnicode();
@@ -286,12 +291,45 @@ static PRInt32 FindInString(const nsString &searchStr, const nsString &patternSt
 	if (searchBackwards)
 	{
 		// searching backwards
+		const PRUnichar	*s = searchEnd - patternLen - 1;
 	
-	
-	
-	
-	
-	
+		while (s >= searchBuf)
+		{
+			if (CharsMatch(*patternBuf, *s))			// start potential match
+			{
+				const PRUnichar	*t = s;
+				const PRUnichar	*p = patternBuf;
+				PRInt32		curMatchOffset = t - searchBuf;
+				PRBool		inWhitespace = nsString::IsSpace(*p);
+				
+				while (p < patEnd && CharsMatch(*p, *t))
+				{
+					if (inWhitespace && !nsString::IsSpace(*p))
+					{
+						// leaving p whitespace. Eat up addition whitespace in s
+						while (t < searchEnd - 1 && nsString::IsSpace(*(t + 1)))
+							t ++;
+							
+						inWhitespace = false;
+					}
+					else
+						inWhitespace = nsString::IsSpace(*p);
+
+					t ++;
+					p ++;
+				}
+				
+				if (p == patEnd)
+				{
+					foundOffset = curMatchOffset;
+					goto done;
+				}
+				
+				// could be smart about decrementing s here
+			}
+		
+			s --;
+		}
 	
 	}
 	else
@@ -307,22 +345,22 @@ static PRInt32 FindInString(const nsString &searchStr, const nsString &patternSt
 				const PRUnichar	*t = s;
 				const PRUnichar	*p = patternBuf;
 				PRInt32		curMatchOffset = t - searchBuf;
-				PRBool		inWhitespace = PR_FALSE;
+				PRBool		inWhitespace = nsString::IsSpace(*p);
 				
-				while (p < patEnd && CharsMatch(*p, *s))
+				while (p < patEnd && CharsMatch(*p, *t))
 				{
 					if (inWhitespace && !nsString::IsSpace(*p))
 					{
 						// leaving p whitespace. Eat up addition whitespace in s
-						while (s < searchEnd - 1 && nsString::IsSpace(*(s + 1)))
-							s ++;
+						while (t < searchEnd - 1 && nsString::IsSpace(*(t + 1)))
+							t ++;
 							
 						inWhitespace = PR_FALSE;
 					}
 					else
 						inWhitespace = nsString::IsSpace(*p);
 
-					s ++;
+					t ++;
 					p ++;
 				}
 				
@@ -337,7 +375,6 @@ static PRInt32 FindInString(const nsString &searchStr, const nsString &patternSt
 			
 			s ++;
 		}
-	
 	
 	}
 
@@ -384,7 +421,10 @@ nsFindComponent::Context::DoFind()
 			break;
 		}
 		
-		mTextServicesDocument->NextBlock();
+		if (mSearchBackwards)
+			mTextServicesDocument->PrevBlock();
+		else
+			mTextServicesDocument->NextBlock();
 	}
 
 	return NS_OK;

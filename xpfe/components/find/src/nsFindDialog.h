@@ -20,11 +20,12 @@
 #include "nsIXULWindowCallbacks.h"
 #include "nsIDocumentObserver.h"
 
+class nsFindComponent::Context;
 
 // Cribbed from nsFileDownloadDialog in nsBrowsrAppCore.cpp.  I really must
 // figure out how to make this more reusable...
 class nsFindDialog : public nsIXULWindowCallbacks,
-                             nsIDocumentObserver
+                     public nsIDocumentObserver
 {
 public:
     // Declare implementation of ISupports stuff.
@@ -97,7 +98,7 @@ public:
     void OnCancel();
     void SetWindow( nsIWebShellWindow *aWindow );
 
-private:
+protected:
     nsCOMPtr<nsIFindComponent>         mComponent;
     nsFindComponent::Context          *mContext;
     nsCOMPtr<nsIWebShell>              mWebShell;
