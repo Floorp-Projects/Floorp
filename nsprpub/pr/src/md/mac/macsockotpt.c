@@ -1776,6 +1776,8 @@ static PRInt32 CheckPollDescMethods(PRPollDesc *pds, PRIntn npds, PRInt16 *outRe
         PRInt16  in_flags_read = 0,  in_flags_write = 0;
         PRInt16 out_flags_read = 0, out_flags_write = 0;
 
+        pd->out_flags = 0;
+
         if (NULL == pd->fd || pd->in_flags == 0) continue;
 
         if (pd->in_flags & PR_POLL_READ)
@@ -1823,14 +1825,17 @@ static PRInt32 CheckPollDescEndpoints(PRPollDesc *pds, PRIntn npds, const PRInt1
 
         if (NULL == pd->fd || pd->in_flags == 0) continue;
 
+        if ((pd->in_flags & ~pd->out_flags) == 0) {
+            ready++;
+            continue;
+        }
+
         bottomFD = PR_GetIdentitiesLayer(pd->fd, PR_NSPR_IO_LAYER);
         /* bottomFD can be NULL for pollable sockets */
         if (bottomFD)
         {
             if (_PR_FILEDESC_OPEN == bottomFD->secret->state)
             {
-                pd->out_flags = 0;  /* pre-condition */
-
                 if (GetState(bottomFD, &readReady, &writeReady, &exceptReady))
                 {
                     if (readReady)
@@ -1851,8 +1856,8 @@ static PRInt32 CheckPollDescEndpoints(PRPollDesc *pds, PRIntn npds, const PRInt1
                     {
                         pd->out_flags |= PR_POLL_EXCEPT;
                     }
-                    if (0 != pd->out_flags) ready++;
                 }
+                if (0 != pd->out_flags) ready++;
             }
             else    /* bad state */
             {
@@ -1948,13 +1953,14 @@ PRInt32 _MD_poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
         writeFlags = &ioFlags[npds];
     }
 
-    if (timeout != PR_INTERVAL_NO_WAIT) {
+    // we have to be outside the lock when calling this, since
+    // it can call arbitrary user code (including other socket
+    // entry points)
+    ready = CheckPollDescMethods(pds, npds, readFlags, writeFlags);
+
+    if (!ready && timeout != PR_INTERVAL_NO_WAIT) {
         intn        is;
         
-        // we have to be outside the lock when calling this, since
-        // it can call arbitrary user code (including other socket
-        // entry points)
-        (void)CheckPollDescMethods(pds, npds, readFlags, writeFlags);
 
         _PR_INTSOFF(is);
         PR_Lock(thread->md.asyncIOLock);
@@ -1975,17 +1981,14 @@ PRInt32 _MD_poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
             // since we may have been woken by a pollable event firing,
             // we have to check both poll methods and endpoints.
             (void)CheckPollDescMethods(pds, npds, readFlags, writeFlags);
-            (void)CheckPollDescEndpoints(pds, npds, readFlags, writeFlags);
-            ready = CountReadyPollDescs(pds, npds);
+            ready = CheckPollDescEndpoints(pds, npds, readFlags, writeFlags);
         }
         
         thread->io_pending = PR_FALSE;
         SetDescPollThread(pds, npds, NULL);
     }
     else {
-        (void)CheckPollDescMethods(pds, npds, readFlags, writeFlags);
-        (void)CheckPollDescEndpoints(pds, npds, readFlags, writeFlags);
-        ready = CountReadyPollDescs(pds, npds);    
+        ready = CheckPollDescEndpoints(pds, npds, readFlags, writeFlags);
     }
 
     if (readFlags != readFlagsArray)
