@@ -140,7 +140,9 @@ nsContextMenu.prototype = {
         // Enabling this context menu item is now done through the global
         // command updating system
         // this.setItemAttr( "context-copy", "disabled", this.isNoTextSelected() );
-    
+
+        goUpdateGlobalEditMenuItems();
+
         // Items for text areas
         this.showItem( "context-cut", this.onTextInput );
         this.showItem( "context-paste", this.onTextInput );
@@ -213,10 +215,12 @@ nsContextMenu.prototype = {
                if(this.target.getAttribute( "type" ).toUpperCase() == "IMAGE") {
                  this.onImage = true;
                  this.imageURL = this.target.src;
-               } else if (this.target.getAttribute( "type" ).toUpperCase() == "TEXT") {
-                 this.onTextInput = true;
+               } else /* if (this.target.getAttribute( "type" ).toUpperCase() == "TEXT") */ {
+                 this.onTextInput = this.isTargetATextField(this.target);
                }
-             } else if (this.target.getAttribute( "background" )) {
+            } else if (this.target.tagName.toUpperCase() == "TEXTAREA") {
+                 this.onTextInput = true;
+            } else if (this.target.getAttribute( "background" )) {
                this.onImage = true;
                this.imageURL = this.target.getAttribute( "background" );
              } else  {
@@ -235,6 +239,17 @@ nsContextMenu.prototype = {
         // See if the user clicked in a frame.
         if ( this.target.ownerDocument != window.content.document ) {
             this.inFrame = true;
+        }
+
+        // Bubble up looking for an input or textarea
+        var elem = this.target;
+        while ( elem && !this.onTextInput ) {
+            // Test for element types of interest.
+            if ( elem.nodeType == 1 ) {
+                // Clicked on a link.
+                this.onTextInput = this.isTargetATextField(elem);
+            }
+            elem = elem.parentNode;
         }
     
         // Bubble out, looking for link.
@@ -550,5 +565,23 @@ nsContextMenu.prototype = {
                "contextMenu.link       = " + this.link + "\n" +
                "contextMenu.inFrame    = " + this.inFrame + "\n" +
                "contextMenu.hasBGImage = " + this.hasBGImage + "\n";
+    },
+    isTargetATextField : function ( node )
+    {
+      if (node.tagName.toUpperCase() == "INPUT") {
+        var attrib = node.getAttribute("type").toUpperCase();
+        return( (attrib != "IMAGE") &&
+                (attrib != "PASSWORD") &&
+                (attrib != "CHECKBOX") &&
+                (attrib != "RADIO") &&
+                (attrib != "SUBMIT") &&
+                (attrib != "RESET") &&
+                (attrib != "FILE") &&
+                (attrib != "HIDDEN") &&
+                (attrib != "RESET") &&
+                (attrib != "BUTTON") );
+      } else  {
+        return(node.tagName.toUpperCase() == "TEXTAREA");
+      }
     }
 };
