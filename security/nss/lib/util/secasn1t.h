@@ -35,7 +35,7 @@
  * Types for encoding/decoding of ASN.1 using BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1t.h,v 1.6 2002/08/07 03:25:13 jpierre%netscape.com Exp $
+ * $Id: secasn1t.h,v 1.7 2003/11/07 01:41:22 nelsonb%netscape.com Exp $
  */
 
 #ifndef _SECASN1T_H_
@@ -196,6 +196,8 @@ typedef struct sec_ASN1Template_struct {
 #define SEC_ASN1_SET_OF		(SEC_ASN1_GROUP | SEC_ASN1_SET)
 #define SEC_ASN1_ANY_CONTENTS	(SEC_ASN1_ANY | SEC_ASN1_INNER)
 
+/* Maximum depth of nested SEQUENCEs and SETs */
+#define SEC_ASN1D_MAX_DEPTH 32
 
 /*
 ** Function used for SEC_ASN1_DYNAMIC.

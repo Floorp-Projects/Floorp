@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.29 2003/10/17 17:56:56 relyea%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.30 2003/11/07 01:41:22 nelsonb%netscape.com Exp $
  */
 
 /* #define DEBUG_ASN1D_STATES 1 */
@@ -389,12 +389,7 @@ sec_asn1d_push_state (SEC_ASN1DecoderContext *cx,
     new_state = (sec_asn1d_state*)sec_asn1d_zalloc (cx->our_pool, 
 						    sizeof(*new_state));
     if (new_state == NULL) {
-	cx->status = decodeError;
-	if (state != NULL) {
-	    PORT_ArenaRelease(cx->our_pool, state->our_mark);
-	    state->our_mark = NULL;
-	}
-	return NULL;
+	goto loser;
     }
 
     new_state->top         = cx;
@@ -406,13 +401,24 @@ sec_asn1d_push_state (SEC_ASN1DecoderContext *cx,
 
     if (state != NULL) {
 	new_state->depth = state->depth;
-	if (new_depth)
-	    new_state->depth++;
+	if (new_depth) {
+	    if (++new_state->depth > SEC_ASN1D_MAX_DEPTH) {
+		goto loser;
+	    }
+	}
 	state->child = new_state;
     }
 
     cx->current = new_state;
     return new_state;
+
+loser:
+    cx->status = decodeError;
+    if (state != NULL) {
+	PORT_ArenaRelease(cx->our_pool, state->our_mark);
+	state->our_mark = NULL;
+    }
+    return NULL;
 }
 
 
@@ -715,8 +721,8 @@ sec_asn1d_init_state_based_on_template (sec_asn1d_state *state)
     return state;
 }
 
-static PRBool
-sec_asn1d_parent_is_indefinite(sec_asn1d_state *state)
+static sec_asn1d_state *
+sec_asn1d_get_enclosing_construct(sec_asn1d_state *state)
 {
     for (state = state->parent; state; state = state->parent) {
 	sec_asn1d_parse_place place = state->place;
@@ -728,16 +734,27 @@ sec_asn1d_parent_is_indefinite(sec_asn1d_state *state)
 	    place != duringChoice) {
 
             /* we've walked up the stack to a state that represents
-            ** the enclosing construct.  Is it one of the types that
-            ** permits an unexpected EOC?
-            */
-            int eoc_permitted = 
-		(place == duringGroup ||
-		 place == duringConstructedString ||
-		 state->child->optional);
-            return (state->indefinite && eoc_permitted) ? PR_TRUE : PR_FALSE;
-
+            ** the enclosing construct.  
+	    */
+            break;
 	}
+    }
+    return state;
+}
+
+static PRBool
+sec_asn1d_parent_allows_EOC(sec_asn1d_state *state)
+{
+    /* get state of enclosing construct. */
+    state = sec_asn1d_get_enclosing_construct(state);
+    if (state) {
+	sec_asn1d_parse_place place = state->place;
+        /* Is it one of the types that permits an unexpected EOC? */
+	int eoc_permitted = 
+	    (place == duringGroup ||
+	     place == duringConstructedString ||
+	     state->child->optional);
+	return (state->indefinite && eoc_permitted) ? PR_TRUE : PR_FALSE;
     }
     return PR_FALSE;
 }
@@ -776,7 +793,7 @@ sec_asn1d_parse_identifier (sec_asn1d_state *state,
 	 */
 	state->pending = 1;
     } else {
-	if (byte == 0 && sec_asn1d_parent_is_indefinite(state)) {
+	if (byte == 0 && sec_asn1d_parent_allows_EOC(state)) {
 	    /*
 	     * Our parent has indefinite-length encoding, and the
 	     * entire tag found is 0, so it seems that we have hit the
@@ -909,6 +926,17 @@ sec_asn1d_parse_length (sec_asn1d_state *state,
 	}
     }
 
+    /* If we're parsing an ANY, SKIP, or SAVE template, and 
+    ** the object being saved is definite length encoded and constructed, 
+    ** there's no point in decoding that construct's members.
+    ** So, just forget it's constructed and treat it as primitive.
+    ** (SAVE appears as an ANY at this point)
+    */
+    if (!state->indefinite &&
+	(state->underlying_kind & (SEC_ASN1_ANY | SEC_ASN1_SKIP))) {
+	state->found_tag_modifiers &= ~SEC_ASN1_CONSTRUCTED;
+    }
+
     return 1;
 }
 
@@ -1008,6 +1036,20 @@ sec_asn1d_prepare_for_contents (sec_asn1d_state *state)
      * both contents_length and pending will be zero.
      */
     state->pending = state->contents_length;
+
+    /* If this item has definite length encoding, and 
+    ** is enclosed by a definite length constructed type,
+    ** make sure it isn't longer than the remaining space in that 
+    ** constructed type.  
+    */
+    if (state->contents_length > 0) {
+	sec_asn1d_state *parent = sec_asn1d_get_enclosing_construct(state);
+	if (parent && !parent->indefinite && 
+	    state->consumed + state->contents_length > parent->pending) {
+	    state->top->status = decodeError;
+	    return;
+	}
+    }
 
     /*
      * An EXPLICIT is nothing but an outer header, which we have
@@ -1383,7 +1425,17 @@ sec_asn1d_free_child (sec_asn1d_state *state, PRBool error)
     state->place = beforeEndOfContents;
 }
 
-
+/* We have just saved an entire encoded ASN.1 object (type) for a SAVE 
+** template, and now in the next template, we are going to decode that 
+** saved data  by calling SEC_ASN1DecoderUpdate recursively.
+** If that recursive call fails with needBytes, it is a fatal error,
+** because the encoded object should have been complete.
+** If that recursive call fails with decodeError, it will have already
+** cleaned up the state stack, so we must bail out quickly.
+**
+** These checks of the status returned by the recursive call are now
+** done in the caller of this function, immediately after it returns.
+*/
 static void
 sec_asn1d_reuse_encoding (sec_asn1d_state *state)
 {
@@ -1449,6 +1501,9 @@ sec_asn1d_reuse_encoding (sec_asn1d_state *state)
     if (SEC_ASN1DecoderUpdate (state->top,
 			       (char *) item->data, item->len) != SECSuccess)
 	return;
+    if (state->top->status == needBytes) {
+	return;
+    }
 
     PORT_Assert (state->top->current == state);
     PORT_Assert (state->child == child);
@@ -1551,8 +1606,18 @@ static unsigned long
 sec_asn1d_parse_more_bit_string (sec_asn1d_state *state,
 				 const char *buf, unsigned long len)
 {
-    PORT_Assert (state->pending > 0);
     PORT_Assert (state->place == duringBitString);
+    if (state->pending == 0) {
+	/* An empty bit string with some unused bits is invalid. */
+	if (state->bit_string_unused_bits) {
+	    PORT_SetError (SEC_ERROR_BAD_DER);
+	    state->top->status = decodeError;
+	} else {
+	    /* An empty bit string with no unused bits is OK. */
+	    state->place = beforeEndOfContents;
+	}
+	return 0;
+    }
 
     len = sec_asn1d_parse_leaf (state, buf, len);
     if (state->place == beforeEndOfContents && state->dest != NULL) {
@@ -2332,14 +2397,14 @@ sec_asn1d_during_choice (sec_asn1d_state *state)
 	    /* This choice is probably the first item in a GROUP
 	    ** (e.g. SET_OF) that was indefinite-length encoded.
 	    ** We're actually at the end of that GROUP.
-	    ** We should look up the stack to be sure that we find
+	    ** We look up the stack to be sure that we find
 	    ** a state with indefinite length encoding before we
 	    ** find a state (like a SEQUENCE) that is definite.
 	    */
 	    child->place = notInUse;
 	    state->place = afterChoice;
 	    state->endofcontents = PR_TRUE;  /* propagate this up */
-	    if (sec_asn1d_parent_is_indefinite(state))
+	    if (sec_asn1d_parent_allows_EOC(state))
 		return state;
 	    PORT_SetError(SEC_ERROR_BAD_DER);
 	    state->top->status = decodeError;
@@ -2578,6 +2643,16 @@ SEC_ASN1DecoderUpdate (SEC_ASN1DecoderContext *cx,
 	    break;
 	  case duringSaveEncoding:
 	    sec_asn1d_reuse_encoding (state);
+	    if (cx->status == decodeError) {
+		/* recursive call has already popped all states from stack.
+		** Bail out quickly.
+		*/
+		return SECFailure;
+	    }
+	    if (cx->status == needBytes) {
+		/* recursive call wanted more data. Fatal. Clean up below. */
+		cx->status = decodeError;
+	    }
 	    break;
 	  case duringSequence:
 	    sec_asn1d_next_in_sequence (state);
@@ -2595,7 +2670,10 @@ SEC_ASN1DecoderUpdate (SEC_ASN1DecoderContext *cx,
 	    sec_asn1d_concat_group (state);
 	    break;
 	  case afterSaveEncoding:
-	    /* XXX comment! */
+	    /* SEC_ASN1DecoderUpdate has called itself recursively to 
+	    ** decode SAVEd encoded data, and now is done decoding that.
+	    ** Return to the calling copy of SEC_ASN1DecoderUpdate.
+	    */
 	    return SECSuccess;
 	  case beforeEndOfContents:
 	    sec_asn1d_prepare_for_end_of_contents (state);
