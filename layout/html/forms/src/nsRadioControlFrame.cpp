@@ -216,7 +216,9 @@ void nsRadioControlFrame::SetRadioControlFrameState(const nsString& aValue)
 NS_IMETHODIMP nsRadioControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
 {
   if (nsHTMLAtoms::checked == aName) {
-    SetRadioControlFrameState(NS_STRING_TRUE);
+      // Set the current state for the radio button because
+      // the mFormFrame->OnRadioChecked will not set it. 
+    SetRadioControlFrameState(aValue);
     if (mFormFrame) {
       PRBool state = (aValue == NS_STRING_TRUE) ? PR_TRUE : PR_FALSE;
       mFormFrame->OnRadioChecked(*this, state);
