@@ -16,9 +16,9 @@
  * Reserved.
  */
 
+#define FORCE_PR_LOG /* Allow logging in the release build (sorry this breaks the PCH) */
 #include "msgCore.h"    // precompiled header...
 
-#define FORCE_PR_LOG /* Allow logging in the release build (sorry this breaks the PCH) */
 
 #include "nsNNTPProtocol.h"
 #include "nsIOutputStream.h"
@@ -484,7 +484,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
 		  goto FAIL;
 		}
 #endif
-	  PR_ASSERT (!group && !message_id && !commandSpecificData);
+      /*	  PR_ASSERT (!group && !message_id && !commandSpecificData); */
 	  m_typeWanted = NEWS_POST;
 	  StrAllocCopy(m_path, "");
 	}
@@ -3079,6 +3079,8 @@ PRInt32 nsNNTPProtocol::PostData()
         // (but SendData does more than just write to the nsIOutputStream)
         message->GetFullMessage(&fullMessage);
         SendData(fullMessage);
+        // now terminate the message
+        SendData("." CRLF);
     }
 
 #ifdef UNREADY_CODE
@@ -3126,6 +3128,9 @@ PRInt32 nsNNTPProtocol::PostData()
 
     return(status);
 #else
+
+    m_nextState = NNTP_RESPONSE;
+    m_nextStateAfterResponse = NNTP_SEND_POST_DATA_RESPONSE;
 	return 0;
 #endif
 
