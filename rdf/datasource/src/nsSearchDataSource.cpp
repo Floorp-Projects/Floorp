@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; c-file-style: "stroustrup" -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 8; c-file-style: "stroustrup" -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -263,6 +263,9 @@ nsIRDFResource			*SearchDataSourceCallback::kNC_Site;
 nsIRDFResource			*SearchDataSourceCallback::kNC_Engine;
 nsIRDFResource			*SearchDataSourceCallback::kNC_loading;
 
+static const char		kEngineProtocol[] = "engine://";
+static const char		kSearchProtocol[] = "internetsearch:";
+
 
 
 PRBool
@@ -272,7 +275,7 @@ SearchDataSource::isEngineURI(nsIRDFResource *r)
         nsXPIDLCString	uri;
 	
 	r->GetValue( getter_Copies(uri) );
-	if (!strncmp(uri, "engine://", 9))
+	if (!strncmp(uri, kEngineProtocol, sizeof(kEngineProtocol) - 1))
 	{
 		isEngineURIFlag = PR_TRUE;
 	}
@@ -288,7 +291,7 @@ SearchDataSource::isSearchURI(nsIRDFResource *r)
         nsXPIDLCString	uri;
 	
 	r->GetValue( getter_Copies(uri) );
-	if (!strncmp(uri, "internetsearch:", strlen("internetsearch:")))
+	if (!strncmp(uri, kSearchProtocol, sizeof(kSearchProtocol) - 1))
 	{
 		isSearchURIFlag = PR_TRUE;
 	}
@@ -456,6 +459,7 @@ SearchDataSource::GetTarget(nsIRDFResource *source,
 }
 
 
+
 NS_IMETHODIMP
 SearchDataSource::GetTargets(nsIRDFResource *source,
                            nsIRDFResource *property,
@@ -536,14 +540,17 @@ SearchDataSource::Unassert(nsIRDFResource *source,
 	return NS_RDF_ASSERTION_REJECTED;
 }
 
+
+
 NS_IMETHODIMP
 SearchDataSource::Change(nsIRDFResource* aSource,
-						 nsIRDFResource* aProperty,
-						 nsIRDFNode* aOldTarget,
-						 nsIRDFNode* aNewTarget)
+			nsIRDFResource* aProperty,
+			nsIRDFNode* aOldTarget,
+			nsIRDFNode* aNewTarget)
 {
 	return NS_RDF_ASSERTION_REJECTED;
 }
+
 
 
 NS_IMETHODIMP
@@ -554,6 +561,7 @@ SearchDataSource::Move(nsIRDFResource* aOldSource,
 {
 	return NS_RDF_ASSERTION_REJECTED;
 }
+
 
 
 NS_IMETHODIMP
@@ -589,7 +597,7 @@ SearchDataSource::HasAssertion(nsIRDFResource *source,
         
         if (mInner)
         {
-		mInner->HasAssertion(source, property, target, tv, hasAssertion);
+		rv = mInner->HasAssertion(source, property, target, tv, hasAssertion);
 	}
         return(rv);
 }
@@ -785,7 +793,7 @@ SearchDataSource::BeginSearchRequest(nsIRDFResource *source)
 		{
 			if (attrib.EqualsIgnoreCase("engine"))
 			{
-				if (value.Find("engine://") == 0)
+				if (value.Find(kEngineProtocol) == 0)
 				{
 					char	*val = value.ToNewCString();
 					if (val)
@@ -862,9 +870,9 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 		if (NS_FAILED(rv = engine->GetValue(getter_Copies(engineURI))))
 			return(rv);
 		nsAutoString	engineStr(engineURI);
-		if (engineStr.Find("engine://") != 0)
+		if (engineStr.Find(kEngineProtocol) != 0)
 			return(rv);
-		engineStr.Cut(0, strlen("engine://"));
+		engineStr.Cut(0, sizeof(kEngineProtocol) - 1);
 		char	*basename = engineStr.ToNewCString();
 		if (!basename)
 			return(rv);
@@ -1041,7 +1049,7 @@ SearchDataSource::GetSearchEngineList()
 					{
 						uri.Cut(0, separatorOffset+1);
 						
-						nsAutoString	searchURL("engine://");
+						nsAutoString	searchURL(kEngineProtocol);
 						searchURL += uri;
 
 						char *basename = uri.ToNewCString();
@@ -1062,18 +1070,6 @@ SearchDataSource::GetSearchEngineList()
 							if (NS_SUCCEEDED(rv = gRDFService->GetResource(searchURI, getter_AddRefs(searchRes))))
 							{
 								mInner->Assert(kNC_SearchRoot, kNC_Child, searchRes, PR_TRUE);
-
-#if 0
-								// Note: don't save file contents here. Save them when a sort actually begins.
-								// This means we use a lot less memory as we only save datasets that we are using.
-
-								// save file contents
-								nsCOMPtr<nsIRDFLiteral>	dataLiteral;
-								if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(data.GetUnicode(), getter_AddRefs(dataLiteral))))
-								{
-									mInner->Assert(searchRes, kNC_Data, dataLiteral, PR_TRUE);
-								}
-#endif
 
 								// save name of search engine (as specified in file)
 								nsAutoString	nameValue;
@@ -1098,6 +1094,7 @@ SearchDataSource::GetSearchEngineList()
 	}
 	return(rv);
 }
+
 
 
 PRBool
@@ -1176,7 +1173,6 @@ SearchDataSource::ReadFileContents(char *basename, nsString& sourceContents)
 			if (childURL != nsnull)
 			{
 				// be sure to resolve aliases in case we encounter one
-				CInfoPBRec	cInfo;
 				PRBool		wasAliased = PR_FALSE;
 				fileSpec.ResolveAlias(wasAliased);
 				nsAutoString	childPath(childURL);
@@ -1392,14 +1388,6 @@ SearchDataSource::GetInputs(nsString data, nsString text, nsString &input)
 					else
 					{
 						// if value attribute's "value" isn't quoted, get the first word... ?
-/*
-						PRInt32 theEnd = line.FindCharInSet(" >\t", equal);
-						if (theEnd >= 0)
-						{
-							line.Mid(valueAttrib, equal+1, theEnd-equal-1);
-							valueAttrib.Trim(" \t");
-						}
-*/
 						valueAttrib = line;
 						valueAttrib.Cut(0, equal+1);
 						valueAttrib = valueAttrib.Trim(" \t");
@@ -1542,6 +1530,7 @@ SearchDataSourceCallback::OnStartBinding(nsIURI *aURL, const char *aContentType)
 }
 
 
+
 #ifndef NECKO
 NS_IMETHODIMP
 SearchDataSourceCallback::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax) 
@@ -1557,6 +1546,7 @@ SearchDataSourceCallback::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 	return(NS_OK);
 }
 #endif
+
 
 
 NS_IMETHODIMP
@@ -2019,6 +2009,7 @@ SearchDataSourceCallback::OnStopBinding(nsIURI* aURL, nsresult aStatus, const PR
 NS_IMPL_ISUPPORTS(SearchDataSourceCallback, nsIRDFSearchDataSourceCallback::GetIID());
 
 
+
 #ifndef NECKO
 NS_IMETHODIMP
 SearchDataSourceCallback::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
@@ -2028,10 +2019,11 @@ SearchDataSourceCallback::GetBindInfo(nsIURI* aURL, nsStreamBindingInfo* aInfo)
 #endif
 
 
+
 NS_IMETHODIMP
 #ifdef NECKO
 SearchDataSourceCallback::OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *aIStream,
-										  PRUint32 sourceOffset, PRUint32 aLength)
+					PRUint32 sourceOffset, PRUint32 aLength)
 #else
 SearchDataSourceCallback::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream, PRUint32 aLength)
 #endif
