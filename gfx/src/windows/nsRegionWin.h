@@ -52,10 +52,13 @@ public:
 private:
   ~nsRegionWin();
 
-  HRGN      mRegion;
-  int       mRegionType;
   LPRGNDATA mData;
   PRUint32  mDataSize;
+
+public:
+  //public so the rendering context can poke these... shoot me. MMP
+  HRGN      mRegion;
+  int       mRegionType;
 };
 
 #endif  // nsRegionWin_h___ 
