@@ -2194,7 +2194,7 @@ AC_CACHE_CHECK(for C++ template specialization support,
                ac_cv_cpp_template_specialization,
                [AC_TRY_COMPILE(template <class T> struct X { int a; };
                                class Y {};
-                               template <> struct X<Y> { double a; };,
+                               struct X<Y> { double a; };,
                                X<int> int_x;
                                X<Y> y_x;,
                                ac_cv_cpp_template_specialization=yes,
@@ -2217,6 +2217,21 @@ if test "$ac_cv_cpp_template_specialization" = yes ; then
   AC_DEFINE(HAVE_CPP_SPECIALIZATION)
 fi
 
+dnl Check for support of modern template specialization syntax
+dnl Test code and requirement from scc@netscape.com.
+dnl Autoconf cut-and-paste job by waterson@netscape.com
+AC_CACHE_CHECK(for modern C++ template specialization syntax support,
+               ac_cv_cpp_modern_specialize_template_syntax,
+               [AC_TRY_COMPILE(template <class T> struct X { int a; };
+                               class Y {};
+                               template <> struct X<Y> { double a; };,
+                               X<int> int_x;
+                               X<Y> y_x;,
+                               ac_cv_cpp_modern_specialize_template_syntax=yes,
+                               ac_cv_cpp_modern_specialize_template_syntax=no)])
+if test "$ac_cv_cpp_template_specialization" = yes ; then
+  AC_DEFINE(HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX)
+fi
 
 dnl
 dnl We dont do exceptions on unix.  The only reason this used to be here
@@ -2239,8 +2254,9 @@ dnl fi
 
 AC_CACHE_CHECK(for C++ \"using\" keyword,
                ac_cv_cpp_using,
-               [AC_TRY_COMPILE(class X { public: int go() {return 3;} };
+               [AC_TRY_COMPILE(class X { public: int go(const X&) {return 3;} };
                                class Y : public X {
+                                 public:  int go(int) {return 2;}
                                  private: using X::go;
                                };,
                                X x; Y y;,
