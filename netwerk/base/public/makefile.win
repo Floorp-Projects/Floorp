@@ -38,6 +38,8 @@ XPIDLSRCS =                        \
         .\nsIPrompt.idl            \
         .\nsIProtocolHandler.idl   \
         .\nsIProgressEventSink.idl \
+	.\nsINetModRegEntry.idl    \
+	.\nsINetModuleMgr.idl      \
 	.\nsINetNotify.idl         \
         $(NULL)
 

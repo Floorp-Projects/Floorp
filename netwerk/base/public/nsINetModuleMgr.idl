@@ -29,34 +29,45 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIEnumerator.idl"
+#include "nsINetNotify.idl"
+
+interface nsIEventQueue;
+
+%{ C++
+
+// {4EBDAFE0-13BA-11d3-A15A-0050041CAF44}
+#define NS_NETMODULEMGR_CID \
+{ 0x4ebdafe0, 0x13ba, 0x11d3, { 0xa1, 0x5a, 0x0, 0x50, 0x4, 0x1c, 0xaf, 0x44 } }
+%}
 
 [scriptable, uuid(ff9ead40-0ef2-11d3-9de6-0010a4053fd0)]
-interface nsINetModuleMgr : nsISupports, nsIObserverService {
+interface nsINetModuleMgr : nsISupports {
 	
     // Register the external module to receive notifications.
     // 
     // ARGUMENTS:
-    // aComponent: The internal component that the external module wants to monitor.
+    // aTopic: The internal component that the external module wants to monitor.
     // aEventQueue: The event queue to receive the events.
     // aNotify: The external module interface methods to be called when an event is fired.
     //
     // RETURNS: nsresult
-	void RegisterModule(in string aComponent, in nsIEventQueue* aEventQueue, in nsINetNotify aNotify);
+	void RegisterModule(in string aTopic, in nsIEventQueue aEventQueue, in nsINetNotify aNotify, in nsCIDPtr aCID);
 
     // Unregister the external module. Removes the nsINetModuleMgr binding between
     // internal component and external module.
     //
     // ARGUMENTS:
-    // aComponent: The internal component being monitored.
+    // aTopic: The internal component being monitored.
     // aNotify: The external modules notification module.
     //
     // RETURNS: nsresult
-    void UnregisterModule(in string aComponent, in nsINetNotify aNotify);
+    void UnregisterModule(in string aTopic, in nsIEventQueue aEventQueue, in nsINetNotify aNotify, in nsCIDPtr aCID);
 
-    // Enumerates all the registered modules for the specified component.
+    // Enumerates all the registered modules for the specified topic.
     //
     // ARGUMENTS:
-    // aComponent: the component to get all the notifiers for.
-    // aNotifiers: the array of notifiers.
-    void EnumerateModules(in string aComponent, out nsINetNotify* ** aNotifiers);
+    // aTopic: the component to get all the notifiers for.
+    // aEnumerator: the array of notifiers.
+    void EnumerateModules(in string aTopic, out nsISimpleEnumerator aEnumerator);
 };
