@@ -3443,6 +3443,15 @@ if (GetFieldDef("products", "product")) {
     }
     print "Fixing Indexes and Uniqueness.\n";
     $dbh->do("ALTER TABLE milestones DROP INDEX product");
+
+    # mkanat@kerio.com - bug 244756
+    # Silently drop the PRIMARY key if a buggy mysqldump has put it there.
+    # Don't print any error messages if the index isn't there.
+    my $originalprintwarn = $dbh->{'PrintWarn'};
+    $dbh->{'PrintWarn'} = 0;
+    $dbh->do("ALTER TABLE milestones DROP INDEX PRIMARY");
+    $dbh->{'PrintWarn'} = $originalprintwarn;
+
     $dbh->do("ALTER TABLE milestones ADD UNIQUE (product_id, value)");
     $dbh->do("ALTER TABLE bugs DROP INDEX product");
     $dbh->do("ALTER TABLE bugs ADD INDEX (product_id)");
