@@ -2027,7 +2027,6 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // line to be created; see SplitLine's callers for examples of
     // when this happens).
     while (nsnull != line) {
-      nsRect  damageRect;
       rv = ReflowLine(aState, line, &keepGoing, incrementalReflow ?
                       PR_TRUE : PR_FALSE);
       if (NS_FAILED(rv)) {
