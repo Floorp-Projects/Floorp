@@ -4352,6 +4352,16 @@ HT_IsNodeDataEditable(HT_Resource node, void *token, uint32 tokenType)
 		    ((token == gNavCenter->RDF_largeIcon) && (!htIsOpLocked(node, gNavCenter->RDF_IconLock))) ||
 		    ((token == gNavCenter->RDF_smallIcon) && (!htIsOpLocked(node, gNavCenter->RDF_IconLock))) ||
 		    (token == gWebData->RDF_description) ||
+		    (token == gNavCenter->treeFGColor) || (token == gNavCenter->treeBGColor) ||
+		    (token == gNavCenter->treeBGURL) || (token == gNavCenter->showTreeConnections) ||
+		    (token == gNavCenter->treeConnectionFGColor) || (token == gNavCenter->treeOpenTriggerIconURL) ||
+		    (token == gNavCenter->treeClosedTriggerIconURL) || (token == gNavCenter->selectionFGColor) ||
+		    (token == gNavCenter->selectionBGColor) || (token == gNavCenter->columnHeaderFGColor) ||
+		    (token == gNavCenter->columnHeaderBGColor) || (token == gNavCenter->columnHeaderBGURL) ||
+		    (token == gNavCenter->showColumnHeaders) || (token == gNavCenter->showColumnHeaderDividers) ||
+		    (token == gNavCenter->sortColumnFGColor) || (token == gNavCenter->sortColumnBGColor) ||
+		    (token == gNavCenter->titleBarFGColor) || (token == gNavCenter->titleBarBGColor) ||
+		    (token == gNavCenter->titleBarBGURL) ||
 		/*  ((token == gWebData->RDF_URL) && ht_isURLReal(node)) || */
 #ifdef	HT_PASSWORD_RTNS
 			(token == gNavCenter->RDF_Password) ||
@@ -4714,13 +4724,115 @@ HT_GetSmallIconURL (HT_Resource r)
 
 
 static PRBool
+rdfColorProcDialogHandler(XPDialogState *dlgstate, char **argv, int argc, unsigned int button)
+{
+	PRBool			dirty, retVal = PR_TRUE;
+	_htmlElementPtr         htmlElement;
+	void			*data = NULL;
+	int			loop;
+
+	switch(button)
+	{
+		case    XP_DIALOG_OK_BUTTON:
+		for (loop=0; loop<argc; loop+=2)
+		{
+			htmlElement = htmlElementList;
+			while (htmlElement != NULL)
+			{
+				if (strcmp( resourceID(htmlElement->token), argv[loop]))
+				{
+					htmlElement = htmlElement->next;
+					continue;
+				}
+				if (HT_IsNodeDataEditable(htmlElement->node,
+					htmlElement->token, htmlElement->tokenType))
+				{
+					HT_GetNodeData (htmlElement->node,
+						htmlElement->token,
+						htmlElement->tokenType, &data);
+
+					dirty = FALSE;
+					switch(htmlElement->tokenType)
+					{
+						case    HT_COLUMN_STRING:
+						if (data == NULL)
+						{
+							if (argv[loop+1][0] != '\0')
+							{
+								dirty = TRUE;
+							}
+						}
+						else if (strcmp(data,argv[loop+1]))
+						{
+							dirty = TRUE;
+						}
+						break;
+					}
+					if (dirty == TRUE)
+					{
+						HT_SetNodeData (htmlElement->node,
+								htmlElement->token,
+								htmlElement->tokenType,
+								argv[loop+1]);
+					}
+				}
+				break;
+			}
+		}
+		retVal = PR_FALSE;
+		break;
+
+		case    XP_DIALOG_CANCEL_BUTTON:
+		retVal = PR_FALSE;
+		break;
+	}
+
+	if (retVal == PR_FALSE)
+	{
+		freeHtmlElement(gNavCenter->treeFGColor);
+		freeHtmlElement(gNavCenter->treeBGColor);
+		freeHtmlElement(gNavCenter->treeBGURL);
+		freeHtmlElement(gNavCenter->showTreeConnections);
+		freeHtmlElement(gNavCenter->treeConnectionFGColor);
+		freeHtmlElement(gNavCenter->treeOpenTriggerIconURL);
+		freeHtmlElement(gNavCenter->treeClosedTriggerIconURL);
+		freeHtmlElement(gNavCenter->selectionFGColor);
+		freeHtmlElement(gNavCenter->selectionBGColor);
+		freeHtmlElement(gNavCenter->columnHeaderFGColor);
+		freeHtmlElement(gNavCenter->columnHeaderBGColor);
+		freeHtmlElement(gNavCenter->columnHeaderBGURL);
+		freeHtmlElement(gNavCenter->showColumnHeaders);
+		freeHtmlElement(gNavCenter->showColumnHeaderDividers);
+		freeHtmlElement(gNavCenter->sortColumnFGColor);
+		freeHtmlElement(gNavCenter->sortColumnBGColor);
+		freeHtmlElement(gNavCenter->titleBarFGColor);
+		freeHtmlElement(gNavCenter->titleBarBGColor);
+		freeHtmlElement(gNavCenter->titleBarBGURL);
+	}
+
+	return(retVal);
+}
+
+
+
+static XPDialogInfo rdfColorPropDialogInfo = {
+	(XP_DIALOG_OK_BUTTON | XP_DIALOG_CANCEL_BUTTON),
+	rdfColorProcDialogHandler,
+	500, 400
+};
+
+
+
+static PRBool
 rdfProcDialogHandler(XPDialogState *dlgstate, char **argv, int argc, unsigned int button)
 {
-	HT_Resource		node;
+	HT_Resource		node = NULL;
 	PRBool			dirty, retVal = PR_TRUE;
+	XPDialogStrings		*strings = NULL;
 	_htmlElementPtr         htmlElement;
 	int			loop;
 	void			*data = NULL;
+	char			*dynStr = NULL;
 
 	switch(button)
 	{
@@ -4816,6 +4928,42 @@ rdfProcDialogHandler(XPDialogState *dlgstate, char **argv, int argc, unsigned in
 		case    XP_DIALOG_CANCEL_BUTTON:
 		retVal = PR_FALSE;
 		break;
+
+		case	XP_DIALOG_MOREINFO_BUTTON:
+		node = htmlElementList->node;
+		dynStr = constructHTML(dynStr, node, gNavCenter->treeFGColor, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->treeBGColor, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->treeBGURL, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->showTreeConnections, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->treeConnectionFGColor, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->treeOpenTriggerIconURL, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->treeClosedTriggerIconURL, HT_COLUMN_STRING);
+
+		dynStr = constructHTML(dynStr, node, gNavCenter->selectionFGColor, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->selectionBGColor, HT_COLUMN_STRING);
+
+		dynStr = constructHTML(dynStr, node, gNavCenter->columnHeaderFGColor, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->columnHeaderBGColor, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->columnHeaderBGURL, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->showColumnHeaders, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->showColumnHeaderDividers, HT_COLUMN_STRING);
+
+		dynStr = constructHTML(dynStr, node, gNavCenter->sortColumnFGColor, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->sortColumnBGColor, HT_COLUMN_STRING);
+
+		dynStr = constructHTML(dynStr, node, gNavCenter->titleBarFGColor, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->titleBarBGColor, HT_COLUMN_STRING);
+		dynStr = constructHTML(dynStr, node, gNavCenter->titleBarBGURL, HT_COLUMN_STRING);
+		strings = XP_GetDialogStrings(RDF_HTML_STR);
+		if (strings != NULL && dynStr != NULL)
+		{
+			XP_CopyDialogString(strings, 0, dynStr);
+			XP_MakeHTMLDialog(NULL, &rdfColorPropDialogInfo, 0,
+				strings, node, PR_FALSE);
+		}
+		if (dynStr != NULL)	XP_FREE(dynStr);
+		if (strings != NULL)	XP_FreeDialogStrings(strings);
+		break;
 	}
 
 	if (retVal == PR_FALSE)
@@ -4824,6 +4972,19 @@ rdfProcDialogHandler(XPDialogState *dlgstate, char **argv, int argc, unsigned in
 	}
 	return(retVal);
 }
+
+
+
+static XPDialogInfo rdfPropDialogInfo = {
+	(XP_DIALOG_OK_BUTTON | XP_DIALOG_CANCEL_BUTTON),
+	rdfProcDialogHandler,
+	500, 400
+};
+static XPDialogInfo rdfWorkspacePropDialogInfo = {
+	(XP_DIALOG_OK_BUTTON | XP_DIALOG_CANCEL_BUTTON | XP_DIALOG_MOREINFO_BUTTON),
+	rdfProcDialogHandler,
+	500, 400
+};
 
 
 
@@ -4865,7 +5026,7 @@ freeHtmlElementList()
 _htmlElementPtr
 findHtmlElement(void *token)
 {
-	_htmlElementPtr         htmlElement;
+	_htmlElementPtr		htmlElement;
 
 	htmlElement = htmlElementList;
 	while(htmlElement != NULL)
@@ -4878,12 +5039,24 @@ findHtmlElement(void *token)
 
 
 
+void
+freeHtmlElement(void *token)
+{
+	_htmlElementPtr		*htmlElement, nextElement;
 
-static XPDialogInfo rdfPropDialogInfo = {
-	(XP_DIALOG_OK_BUTTON | XP_DIALOG_CANCEL_BUTTON),
-	rdfProcDialogHandler,
-	500, 400
-};
+	htmlElement = &htmlElementList;
+	while((*htmlElement) != NULL)
+	{
+		if ((*htmlElement)->token == token)
+		{
+			nextElement = (*htmlElement)->next;
+			free(*htmlElement);
+			*htmlElement = nextElement;
+			break;
+		}
+		htmlElement = &((*htmlElement)->next);
+	}
+}
 
 
 
@@ -5219,8 +5392,16 @@ HT_Properties (HT_Resource node)
 		{
 			XP_CopyDialogString(strings, 1, dynStr2);
 		}
-		XP_MakeHTMLDialog(NULL, &rdfPropDialogInfo, 0,
+		if (node->parent == NULL)
+		{
+			XP_MakeHTMLDialog(NULL, &rdfWorkspacePropDialogInfo, 0,
 				strings, node, PR_FALSE);
+		}
+		else
+		{
+			XP_MakeHTMLDialog(NULL, &rdfPropDialogInfo, 0,
+				strings, node, PR_FALSE);
+		}
 	}
 	else
 	{

@@ -268,6 +268,7 @@ char *				getIconURL( HT_Resource node, PRBool largeIconFlag, PRBool workspaceFl
 void				addHtmlElement(HT_Resource node, RDF_Resource token, uint32 tokenType);
 void				freeHtmlElementList();
 _htmlElementPtr			findHtmlElement(void *token);
+void				freeHtmlElement(void *token);
 char *				constructHTML(char *dynStr, HT_Resource node, void *token, uint32 tokenType);
 char *				constructHTMLPermission(char *dynStr, HT_Resource node, RDF_Resource token, char *permText);
 PRBool				htIsOpLocked(HT_Resource node, RDF_Resource token);
