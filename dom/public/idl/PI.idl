@@ -1,0 +1,4 @@
+      interface PI : Node {
+        attribute wstring        name;
+        attribute wstring        data;
+      };
