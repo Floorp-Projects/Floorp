@@ -77,13 +77,16 @@ var nsDefaultCLH = {
     var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService(nsIPrefBranch);
 
-    // if the pref is missing, just let the exception fall through
-    var chromeURI = prefs.getCharPref("toolkit.defaultChromeURI");
+    // if the pref is missing, ignore the exception 
+    try {
+      var chromeURI = prefs.getCharPref("toolkit.defaultChromeURI");
 
-    var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                           .getService(nsIWindowWatcher);
-    wwatch.openWindow(null, chromeURI, "_blank",
-                      "chrome,dialog=no,all", cmdLine);
+      var wwatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                            .getService(nsIWindowWatcher);
+      wwatch.openWindow(null, chromeURI, "_blank",
+                        "chrome,dialog=no,all", cmdLine);
+    }
+    catch (e) { }
   },
 
   helpInfo : "",
