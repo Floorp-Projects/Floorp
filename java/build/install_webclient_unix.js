@@ -1,3 +1,5 @@
+// logComment writes to install.log
+
 // Installation guide for Webclient.xpi
  // this function verifies disk space in kilobytes
  function verifyDiskSpace(dirPath, spaceRequired)
@@ -45,7 +47,7 @@ function chmodx(tgt)
  
  srDest = 1000;
 logComment("Starting Install Process");
- err    = initInstall("Webclient", "Webclient", "1.2"); 
+ err    = initInstall("Webclient", "Webclient", "1.3"); 
  logComment("initInstall: " + err);
  
  fProgram = getFolder("Program");
@@ -55,7 +57,7 @@ logComment("Starting Install Process");
  {
    setPackageFolder(fProgram);
    err = addDirectory("",
-     "1.2",
+     "1.3",
      "javadev", // dir name in jar to extract 
      fProgram, // Where to put this file 
                // (Returned from GetFolder) 
@@ -65,20 +67,23 @@ logComment("Starting Install Process");
 
    var fComponents     = getFolder("Components");
    var fJavadev        = getFolder("Program","javadev");
-   symlink(fComponents + "libjavadom.so", 
-           getFolder(fJavadev, "lib/libjavadom.so"));
-   chmodx(getFolder(fJavadev, "example/runem.bat"));
 
    // check return value
    if(err == SUCCESS)
    {
      err = performInstall(); 
      logComment("performInstall() returned: " + err);
+     err = chmodx(getFolder(fJavadev, "example/runem.bat"));
+     logComment("chmodx() returned: " + err);
+     err = symlink(fComponents + "libjavadom.so", 
+                   getFolder(fJavadev, "lib/libjavadom.so"));
+     logComment("symlink() returned: " + err);
    }
    else
      cancelInstall(err);
  }
  else
    cancelInstall(INSUFFICIENT_DISK_SPACE);
+
  
  // end main

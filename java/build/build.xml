@@ -46,6 +46,7 @@
   <property name="dist" value="${build.home}/.."/>
 
   <target name="main" depends="prepare,set.debug.vars,build.webclient.javadev,build.webclient.xpi"/>
+  <target name="xpi.from.javadev" depends="prepare,set.debug.vars,build.webclient.xpi"/>
 
   <target name="prepare">
 
@@ -136,24 +137,30 @@
     <copy file="README.WEBCLIENT" 
           todir="${package.home}"/>
 
-    <chmod perm="775" file="${package.lib}/${lib.prefix}javadomjni.${so.suffix}"/>
-    <chmod perm="775" file="${package.lib}/${lib.prefix}javadom.${so.suffix}"/>
-    <chmod perm="775" file="${package.lib}/${lib.prefix}webclient.${so.suffix}"/>
-    <chmod perm="775" file="${package.lib}/${lib.prefix}wc_share.${ar.suffix}"/>
-    <chmod perm="775" file="${package.example}/runem.pl"/>
+    <chmod perm="777" file="${package.lib}/${lib.prefix}javadomjni.${so.suffix}"/>
+    <chmod perm="777" file="${package.lib}/${lib.prefix}javadom.${so.suffix}"/>
+    <chmod perm="777" file="${package.lib}/${lib.prefix}webclient.${so.suffix}"/>
+    <chmod perm="777" file="${package.lib}/${lib.prefix}wc_share.${ar.suffix}"/>
+    <chmod perm="777" file="${package.example}/runem.pl"/>
 
   </target>
 
   <target name="build.webclient.xpi" depends="build.win32.webclient.xpi,build.unix.webclient.xpi"/>
 
   <target name="build.win32.webclient.xpi" if="build.win32.classes">
+    <echo message="Building WIN32 XPI"/>
     <jar jarfile="webclient_${package.version}_${short.os.name}.xpi" 
          basedir="${dist}"  includes="install.js,javadev/**"/>
   </target>
 
   <target name="build.unix.webclient.xpi" if="build.unix.classes">
+    <echo message="Building UNIX XPI"/>
+    <copy file="${dist}/${win.bin}/bin/${lib.prefix}webclientstub.${so.suffix}"
+          todir="${package.lib}"/>
+
     <jar jarfile="webclient_${package.version}_${short.os.name}.xpi" 
-         basedir="${dist}"  includes="install.js,javadev/**"/>
+         basedir="${dist}"  includes="install.js,symlink.sh,chmodx.sh,javadev/**"/>
+
   </target>
 
   <target name="create.webclient.scripts" depends="create.win32.webclient.scripts,create.unix.webclient.scripts"/>
@@ -164,7 +171,7 @@
 set PATH=%PATH%;%JDKHOME%\jre\bin
 perl .\runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl ..\.. %1%
     </echo>
-    <chmod perm="775" file="${package.example}/runem.bat"/>
+    <chmod perm="777" file="${package.example}/runem.bat"/>
 
     <copy file="install_webclient_win32.js" 
           tofile="${dist}/install.js"/>
@@ -173,9 +180,11 @@ perl .\runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl ..\.. %1%
 
   <target name="create.unix.webclient.scripts" if="build.unix.classes">
 
-    <echo file="${package.example}/runem">perl ./runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl ../../.. \$1 \$2 \$3 \$4 \$4 \$6
+    <echo file="${package.example}/runem.bat">export CLASSPATH=../lib/webclient_${package.version}_${short.os.name}.jar
+export LD_LIBRARY_PATH=$MOZILLA_FIVE_HOME:$MOZILLA_FIVE_HOME/components:$PWD/../lib
+perl ./runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl ../../.. $1 $2 $3 $4 $4 $6
     </echo>
-    <chmod perm="775" file="${package.example}/runem"/>
+    <chmod perm="777" file="${package.example}/runem.bat"/>
 
     <copy file="install_webclient_unix.js" 
           tofile="${dist}/install.js"/>
@@ -200,7 +209,7 @@ perl .\runem.pl org.mozilla.webclient.test.EmbeddedMozillaImpl ..\.. %1%
   </target>
 
   <target name="create.webclient.manifest">
-
+    <echo message="Creating manifest to ${package.manifest}"/>
     <echo file="${package.manifest}">Manifest-Version: 1.0
 Created-By: Webclient Build System
 Specification-Title: Webclient
@@ -217,6 +226,13 @@ Implementation-Vendor: mozilla.org
 
     <jar jarfile="${package.lib}/webclient_${package.version}_${short.os.name}.jar"
          basedir="${build.home}" manifest="${package.manifest}"/>
+
+  </target>
+
+  <target name="deploy.xpi" depends="main">
+
+    <copy file="webclient_${package.version}_${short.os.name}.xpi"
+          todir="${xpi.dist}"/>
 
   </target>
 

@@ -118,12 +118,16 @@ if ($SEP eq "/") {
 
 #tack on the java library path
 $cmd = $cmd . " -Djava.library.path=" . $BINDIR . $CPSEP . $BINDIR . $SEP . "components";
-#tack on the debug arguments
 if ($IS_UNIX) {
-  $cmd = $cmd . " -Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n";
+  $cmd = $cmd . $CPSEP . $ENV{"LD_LIBRARY_PATH"};
 }
-else {
-  if ($ENV{"MOZ_DEBUG"}) {
+
+#tack on the debug arguments
+if ($ENV{"MOZ_DEBUG"}) {
+  if ($IS_UNIX) {
+    $cmd = $cmd . " -Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n";
+  }
+  else {
     $cmd = $cmd . " -Xdebug -Xrunjdwp:transport=dt_shmem,address=jdbconn,server=y,suspend=n";
   }
 }
