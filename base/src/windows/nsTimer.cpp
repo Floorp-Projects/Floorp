@@ -33,7 +33,6 @@ public:
   static TimerImpl *gTimerList;
   static UINT gWindowsTimer;
   static DWORD gNextFire;
-  static DWORD gSyncHack;
 
   static void ProcessTimeouts(DWORD aNow);
   static void SyncTimeoutPeriod(DWORD aTickCount);
@@ -76,7 +75,6 @@ private:
 TimerImpl *TimerImpl::gTimerList = NULL;
 UINT TimerImpl::gWindowsTimer = 0;
 DWORD TimerImpl::gNextFire = (DWORD)-1;
-DWORD TimerImpl::gSyncHack = 0;
 
 void CALLBACK FireTimeout(HWND aWindow, 
                           UINT aMessage, 
@@ -112,12 +110,7 @@ TimerImpl::SyncTimeoutPeriod(DWORD aTickCount)
 {
     //  May want us to set tick count ourselves.
     if(aTickCount == 0)    {
-        if(gSyncHack == 0) {
-            aTickCount = ::GetTickCount();
-        }
-        else    {
-            aTickCount = gSyncHack;
-        }
+        aTickCount = ::GetTickCount();
     }
 
     //  If there's no list, we should clear the timer.
@@ -179,11 +172,6 @@ TimerImpl::ProcessTimeouts(DWORD aNow)
 
     BOOL bCalledSync = FALSE;
 
-    //  Set the hack, such that when FE_ClearTimeout
-    //      calls SyncTimeoutPeriod, that GetTickCount()
-    //      overhead is not incurred.
-    gSyncHack = aNow;
-    
     // loop over all entries
     while(p) {
         // send it
@@ -218,7 +206,6 @@ TimerImpl::ProcessTimeouts(DWORD aNow)
             p = p->mNext;
         }
     }
-    gSyncHack = 0;
 }
 
 
