@@ -20,6 +20,7 @@
 #include "nsBrowserWindow.h"
 #include "nsIImageManager.h"
 #include "nsIWidget.h"
+#include "nsIServiceManager.h"
 #include <stdlib.h>
 #include "resources.h"
 
@@ -76,6 +77,7 @@ enum
 	cmd_ShowContentQuality,
 	cmd_GFXWidgetMode,
 	cmd_NativeWidgetMode,
+	cmd_DumpLeaks,
 
 	item_GFXWidgetMode = 24,
 	item_NativeWidgetMode,
@@ -90,6 +92,7 @@ enum
 	cmd_ImageInspector
 };
 
+extern "C" void GC_gcollect(void);
 
 static nsNativeViewerApp* gTheApp;
 
@@ -317,6 +320,9 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 					::CheckItem(GetMenuHandle(menu_Debug), item_GFXWidgetMode, false);
 					::CheckItem(GetMenuHandle(menu_Debug), item_NativeWidgetMode, true);
 					break;
+				case cmd_DumpLeaks:
+					::GC_gcollect();
+					break;
 			}
 			break;
 			
@@ -358,18 +364,28 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 //----------------------------------------------------------------------
 int main(int argc, char **argv)
 {
+	// Set up the toolbox and (if DEBUG) the console
+	InitializeMacToolbox();
 
-  // Set up the toolbox and (if DEBUG) the console
-  InitializeMacToolbox();
-	
-  // Hack to get il_ss set so it doesn't fail in xpcompat.c
-  nsIImageManager *manager;
-  NS_NewImageManager(&manager);
+	// Start up XPCOM?
+ 	nsresult rv = NS_InitXPCOM(nsnull, nsnull, nsnull);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "NS_InitXPCOM failed");
+ 
+	// Hack to get il_ss set so it doesn't fail in xpcompat.c
+	nsIImageManager *manager;
+	NS_NewImageManager(&manager);
 
-  gTheApp = new nsNativeViewerApp();
-  NS_ADDREF(gTheApp);
-  if (gTheApp->Initialize(argc, argv) == NS_OK)
-    gTheApp->Run();
+	gTheApp = new nsNativeViewerApp();
+	if (gTheApp != nsnull) {
+		NS_ADDREF(gTheApp);
+		if (gTheApp->Initialize(argc, argv) == NS_OK)
+			gTheApp->Run();
+		NS_RELEASE(gTheApp);
+	}
 
-  return 0;
+	// Shutdown XPCOM?
+	rv = NS_ShutdownXPCOM(nsnull);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
+
+	return 0;
 }
