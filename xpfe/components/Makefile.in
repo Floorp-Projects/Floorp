@@ -124,6 +124,7 @@ DIRS    = \
           sidebar/public \
           bookmarks/public \
           alerts \
+          extensions \
           $(NULL)
 
 ifeq ($(OS_ARCH),WINNT) 

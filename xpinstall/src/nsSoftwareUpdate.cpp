@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,7 +11,8 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code.
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
@@ -21,7 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,7 +34,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-
 
 #include "nscore.h"
 #include "nsIGenericFactory.h"
@@ -67,6 +64,7 @@
 #include "nsInstallVersion.h"
 #include "ScheduledTasks.h"
 #include "InstallCleanupDefines.h"
+#include "nsXPInstallManager.h"
 
 #include "nsTopProgressNotifier.h"
 #include "nsLoggingProgressNotifier.h"
@@ -319,15 +317,24 @@ nsSoftwareUpdate::InstallJar(  nsIFile* aLocalFile,
     nsresult rv;
     nsIXULChromeRegistry* chromeRegistry = nsnull;
     NS_WITH_ALWAYS_PROXIED_SERVICE( nsIXULChromeRegistry,
-                                    tmpReg,
+                                    tmpRegCR,
                                     NS_CHROMEREGISTRY_CONTRACTID,
                                     NS_UI_THREAD_EVENTQ, &rv);
     if (NS_SUCCEEDED(rv))
-        chromeRegistry = tmpReg;
+        chromeRegistry = tmpRegCR;
+
+
+    NS_WITH_ALWAYS_PROXIED_SERVICE( nsIExtensionManager,
+                                    extensionManager,
+                                    "@mozilla.org/extensions/manager;1",
+                                    NS_UI_THREAD_EVENTQ, &rv);
+    if (NS_FAILED(rv))
+        extensionManager = nsnull;
 
     // we want to call this with or without a chrome registry
     nsInstallInfo *info = new nsInstallInfo( 0, aLocalFile, aURL, aArguments, aPrincipal,
-                                             flags, aListener, chromeRegistry );
+                                             flags, aListener, chromeRegistry, 
+                                             extensionManager);
 
     if (!info)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -357,6 +364,13 @@ nsSoftwareUpdate::InstallChrome( PRUint32 aType,
     if (NS_FAILED(rv))
         return rv;
 
+    NS_WITH_ALWAYS_PROXIED_SERVICE( nsIExtensionManager,
+                                    extensionManager,
+                                    "@mozilla.org/extensions/manager;1",
+                                    NS_UI_THREAD_EVENTQ, &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
     nsInstallInfo *info = new nsInstallInfo( aType,
                                              aFile,
                                              URL,
@@ -364,7 +378,8 @@ nsSoftwareUpdate::InstallChrome( PRUint32 aType,
                                              nsnull,
                                              (PRUint32)aSelect,
                                              aListener,
-                                             chromeRegistry);
+                                             chromeRegistry,
+                                             extensionManager);
     if (!info)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -510,6 +525,7 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsSoftwareUpdate,
                                          nsSoftwareUpdate::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsInstallTrigger)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsInstallVersion)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPInstallManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSoftwareUpdateNameSet)
 
 //----------------------------------------------------------------------
@@ -583,6 +599,12 @@ static const nsModuleComponentInfo components[] =
       NS_SOFTWAREUPDATENAMESET_CID,
       NS_SOFTWAREUPDATENAMESET_CONTRACTID,
       nsSoftwareUpdateNameSetConstructor
+    },
+
+    { "XPInstallManager Component",
+      NS_XPInstallManager_CID,
+      NS_XPINSTALLMANAGERCOMPONENT_CONTRACTID,
+      nsXPInstallManagerConstructor
     }
 };
 

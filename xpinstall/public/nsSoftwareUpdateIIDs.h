@@ -1,4 +1,3 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -73,6 +72,13 @@
     {0xbc, 0xde, 0x00, 0x80, 0x5f, 0x0e, 0x13, 0x53} \
 }
 
+#define NS_XPInstallManager_CID                      \
+{ /* {6a4d4c1e-a74a-4320-8124-16233a0183d6} */       \
+    0x6a4d4c1e,                                      \
+    0xa74a,                                          \
+    0x4320,                                          \
+    { 0x81, 0x24, 0x16, 0x23, 0x3a, 0x1, 0x83, 0xd6} \
+}
 
 
 #endif /* nsSoftwareUpdateIIDs_h___ */
