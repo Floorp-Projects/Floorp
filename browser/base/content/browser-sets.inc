@@ -126,7 +126,11 @@
     <key id="focusURLBar" key="&openCmd.commandkey;" command="Browser:OpenLocation"
          modifiers="accel"/>
 #ifdef XP_UNIX
+#ifndef XP_MACOSX
     <key id="focusSearchBar" key="&searchFocusUnix.commandkey;" oncommand="focusSearchBar();" modifiers="accel"/>
+#else
+    <key id="focusSearchBar" key="&searchFocus.commandkey;" oncommand="focusSearchBar();" modifiers="accel"/>
+#endif
 #else
     <key id="focusSearchBar" key="&searchFocus.commandkey;" oncommand="focusSearchBar();" modifiers="accel"/>
 #endif
