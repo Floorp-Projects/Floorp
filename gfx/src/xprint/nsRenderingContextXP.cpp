@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *
  */
 
 #include "nsRenderingContextXP.h"
@@ -29,6 +31,7 @@
 #include "nsICharRepresentable.h"
 #include "nsIRegion.h"      
 #include "prmem.h"
+
 
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
@@ -190,11 +193,10 @@ NS_IMETHODIMP
 nsRenderingContextXP :: Init(nsIDeviceContext* aContext)
 {
 
-  mContext = aContext;
+  mContext = do_QueryInterface(aContext);
   if (mContext) {
-     mPrintContext = (nsXPrintContext *)((nsDeviceContextXP *)mContext)->GetPrintContext();
+     mContext->GetPrintContext(mPrintContext);
   }
-  NS_IF_ADDREF(mContext);
   NS_ASSERTION(nsnull != mContext,"Device context is null.");
 
 
@@ -233,7 +235,7 @@ NS_IMETHODIMP nsRenderingContextXP :: LockDrawingSurface(PRInt32 aX, PRInt32 aY,
                                              PRUint32 aWidth, PRUint32 aHeight,
                                              void **aBits, PRInt32 *aStride,
                                              PRInt32 *aWidthBytes, 
-						PRUint32 aFlags)
+                                                PRUint32 aFlags)
 {
   PushState();
   return NS_OK;
@@ -297,8 +299,8 @@ nsRenderingContextXP :: Reset()
 NS_IMETHODIMP 
 nsRenderingContextXP :: GetDeviceContext(nsIDeviceContext *&aContext)
 {
-  NS_IF_ADDREF(mContext);
   aContext = mContext;
+  NS_IF_ADDREF(aContext);
   return NS_OK;
 }
 
@@ -394,7 +396,7 @@ PRInt32     cliptype;
 
   switch(aCombine) {
    case nsClipCombine_kIntersect:
-	mClipRegion->Intersect(trect.x,trect.y,trect.width,trect.height);
+        mClipRegion->Intersect(trect.x,trect.y,trect.width,trect.height);
     break;
   case nsClipCombine_kUnion:
     mClipRegion->Union(trect.x,trect.y,trect.width,trect.height);
@@ -513,8 +515,8 @@ NS_IMETHODIMP nsRenderingContextXP :: SetLineStyle(nsLineStyle aLineStyle)
     switch(aLineStyle)
       {
         case nsLineStyle_kSolid:
-	   XSetLineAttributes(mPrintContext->GetDisplay(), mPrintContext->GetGC(),
-			   1, // width
+           XSetLineAttributes(mPrintContext->GetDisplay(), mPrintContext->GetGC(),
+                           1, // width
                            LineSolid, // line style
                            CapNotLast,// cap style
                            JoinMiter);// join style
@@ -564,7 +566,7 @@ nsRenderingContextXP :: SetFont(const nsFont& aFont)
   // FIX_ME
   NS_IF_RELEASE(mFontMetrics);
   if (mContext) {
-  	mContext->GetMetricsFor(aFont, mFontMetrics);
+    mContext->GetMetricsFor(aFont, mFontMetrics);
   }
   return SetFont(mFontMetrics);
 }
@@ -964,7 +966,7 @@ NS_IMETHODIMP nsRenderingContextXP :: FillEllipse(nscoord aX, nscoord aY, nscoor
 
 NS_IMETHODIMP
 nsRenderingContextXP::DrawTile(nsIImage *aImage, nscoord aX0, nscoord aY0,
-					nscoord aX1, nscoord aY1,
+                                        nscoord aX1, nscoord aY1,
                                         nscoord aWidth, nscoord aHeight)
 {
   return NS_OK;
@@ -1191,12 +1193,10 @@ nsRenderingContextXP :: DrawString(const char *aString, PRUint32 aLength,
   nscoord y = aY;
 
   // Substract xFontStruct ascent since drawing specifies baseline
-#ifdef XPRINT_ON_SCREEN
   if (mFontMetrics) {
       mFontMetrics->GetMaxAscent(y);
       y += aY;
   }
-#endif
 
   if (nsnull != aSpacing) {
      // Render the string, one character at a time...
@@ -1267,13 +1267,9 @@ nsRenderingContextXP :: DrawString(const PRUnichar *aString, PRUint32 aLength,
     nscoord y;
 
     // Substract xFontStruct ascent since drawing specifies baseline
-#ifdef XPRINT_ON_SCREEN
     mFontMetrics->GetMaxAscent(y);
     y += aY;
     aY = y;
-#else
-    y = aY;
-#endif
 
     mTranMatrix->TransformCoord(&x, &y);
 
@@ -1311,8 +1307,8 @@ FoundFont:
             }
           }
           else {
-	    x += prevFont->DrawString(mPrintContext, x, y,
-				&aString[start], i - start);
+            x += prevFont->DrawString(mPrintContext, x, y, 
+                                      &aString[start], i - start);
           }
           prevFont = currFont;
           start = i;
@@ -1397,7 +1393,7 @@ nsRenderingContextXP :: DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
 NS_IMETHODIMP 
 nsRenderingContextXP :: DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
 {
-   nsRect	sr,dr;
+   nsRect sr,dr;
 
    sr = aSRect;
    mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
@@ -1420,8 +1416,8 @@ nsRenderingContextXP :: DrawImage(nsIImage *aImage, const nsRect& aSRect, const 
 NS_IMETHODIMP 
 nsRenderingContextXP :: DrawImage(nsIImage *aImage, const nsRect& aRect)
 {
-   return DrawImage(aImage,  aRect.x, aRect.y,
-				aRect.width, aRect.height);
+   return DrawImage(aImage, aRect.x, aRect.y,
+                            aRect.width, aRect.height);
 }
 
 

@@ -147,32 +147,32 @@ public:
   friend void TryFamily(nsFontSearch* aSearch, nsFontFamily* aFamily);
   friend struct nsFontXP;
 
-  nsFontXP   **mLoadedFonts;
-  PRUint16    mLoadedFontsAlloc;
-  PRUint16    mLoadedFontsCount;
+  nsFontXP          **mLoadedFonts;
+  PRUint16            mLoadedFontsAlloc;
+  PRUint16            mLoadedFontsCount;
 
-  int         mInFindSubstituteFont;
-  nsFontXP    *mSubstituteFont;
+  int                 mInFindSubstituteFont;
+  nsFontXP           *mSubstituteFont;
 
-  nsString    *mFonts;
-  PRUint16    mFontsAlloc;
-  PRUint16    mFontsCount;
-  PRUint16    mFontsIndex;
+  nsString           *mFonts;
+  PRUint16            mFontsAlloc;
+  PRUint16            mFontsCount;
+  PRUint16            mFontsIndex;
 
-  nsString          *mGeneric;
-  int               mTriedAllGenerics;
-  nsCOMPtr<nsIAtom> mLangGroup;
+  nsString           *mGeneric;
+  int                 mTriedAllGenerics;
+  nsCOMPtr<nsIAtom>   mLangGroup;
 
 protected:
   char *PickAppropriateSize(char **names, XFontStruct *fonts, int cnt, nscoord desired);
   void RealizeFont();
 
-  Display             *mDisplay;
-  nsIDeviceContext    *mDeviceContext;
-  nsFont              *mFont;
-  XFontStruct         *mFontHandle;
-  XFontStruct         *mFontStruct;
-  nsFontXP	      *mWesternFont;
+  Display            *mDisplay;
+  nsIDeviceContext   *mDeviceContext;
+  nsFont             *mFont;
+  XFontStruct        *mFontHandle;
+  XFontStruct        *mFontStruct;
+  nsFontXP           *mWesternFont;
   nscoord             mHeight;
   nscoord             mLeading;
   nscoord             mEmHeight;
@@ -200,7 +200,7 @@ protected:
 #endif /* FONT_SWITCHING */
 
 private:
-  static Font 		     mLastSetFont;	
+  static Font         mLastSetFont;
 };
 
 class nsFontEnumeratorXP : public nsIFontEnumerator
@@ -211,4 +211,4 @@ public:
   NS_DECL_NSIFONTENUMERATOR
 };
 
-#endif
+#endif /* !nsFontMetricsXP_h__ */

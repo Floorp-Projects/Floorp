@@ -18,9 +18,11 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ * Bradley Baetz <bbaetz@cs.mcgill.ca>
+ *
  */
 
-#include <iostream.h>
 #include <unistd.h>
 #include "nsDeviceContextXP.h"
 #include "nsRenderingContextXP.h"
@@ -29,10 +31,10 @@
 #include "nsIDeviceContextSpecXPrint.h"
 #include "il_util.h"
 #include "nspr.h"
+#include "nsXPrintContext.h"
 
-/*
-static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
-*/
+static PRLogModuleInfo *nsDeviceContextXPLM = PR_NewLogModule("nsDeviceContextXP");
+
 static NS_DEFINE_IID(kIDeviceContextSpecXPIID, NS_IDEVICE_CONTEXT_SPEC_XP_IID);
 
 /** ---------------------------------------------------
@@ -40,9 +42,7 @@ static NS_DEFINE_IID(kIDeviceContextSpecXPIID, NS_IDEVICE_CONTEXT_SPEC_XP_IID);
  */
 nsDeviceContextXP :: nsDeviceContextXP()
 {
-
   NS_INIT_REFCNT();
-  mSpec = nsnull; 
   /* Inherited from xlib device context code */
   mTwipsToPixels = 1.0;
   mPixelsToTwips = 1.0;
@@ -53,46 +53,35 @@ nsDeviceContextXP :: nsDeviceContextXP()
   mNumCells = 0;
   mPrintContext = nsnull;
 
-  mWidthFloat = 0.0f;
+  mWidthFloat  = 0.0f;
   mHeightFloat = 0.0f;
-  mWidth = -1;
+  mWidth  = -1;
   mHeight = -1;
 
+  NS_NewISupportsArray(getter_AddRefs(mFontMetrics));
 }
 
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
- *	@update 12/21/98 dwc
+ *        @update 12/21/98 dwc
  */
-nsDeviceContextXP :: ~nsDeviceContextXP()
-{
-PRInt32 i, n;
+nsDeviceContextXP :: ~nsDeviceContextXP() { }
 
-  // get rid of the fonts in our mFontMetrics cache
-  n= mFontMetrics.Count();
-  for (i = 0; i < n; i++){
-    nsIFontMetrics* fm = (nsIFontMetrics*) mFontMetrics.ElementAt(i);
-    fm->Destroy();
-    NS_RELEASE(fm);
-  }
-  mFontMetrics.Clear();
-  NS_IF_RELEASE(mSpec);
-
-}
 
 NS_IMETHODIMP
 nsDeviceContextXP :: SetSpec(nsIDeviceContextSpec* aSpec)
 {
-  nsIDeviceContextSpecXP *psSpec;
-  nsresult res;
+  PR_LOG(nsDeviceContextXPLM, PR_LOG_DEBUG, ("nsDeviceContextXP::SetSpec()\n"));
+
+  nsCOMPtr<nsIDeviceContextSpecXP> xpSpec;
 
   mSpec = aSpec;
-  NS_ADDREF(aSpec);
-  if (mPrintContext == nsnull) {
+
+  if (!mPrintContext) {
      mPrintContext = new nsXPrintContext();
-     res = mSpec->QueryInterface(kIDeviceContextSpecXPIID, (void **) &psSpec);
-     if (res == NS_OK) {
-        mPrintContext->Init(psSpec);
+     xpSpec = do_QueryInterface(mSpec);
+     if (xpSpec) {
+        mPrintContext->Init(xpSpec);
      }
   }
  
@@ -126,10 +115,6 @@ nsDeviceContextXP::InitDeviceContextXP(nsIDeviceContext *aCreatingDeviceContext,
   mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
   mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
 
-#ifdef XPRINT_ON_SCREEN
-  mAppUnitsToDevUnits = 1.0;
-  mDevUnitsToAppUnits = 1.0;
-#endif
   mScreen  = mPrintContext->GetScreen();
   mDisplay = mPrintContext->GetDisplay();
 
@@ -146,16 +131,18 @@ NS_IMETHODIMP nsDeviceContextXP :: CreateRenderingContext(nsIRenderingContext *&
 {
    nsresult  rv = NS_ERROR_OUT_OF_MEMORY;
 
-   aContext = new nsRenderingContextXP();
-   if (nsnull != aContext){
-      NS_ADDREF(aContext);
-      rv = ((nsRenderingContextXP*) aContext)->Init(this);
+   nsCOMPtr<nsRenderingContextXP> xpContext;
+
+   xpContext = new nsRenderingContextXP();
+   if (xpContext){
+      rv = xpContext->Init(this);
    }
 
-  if (NS_OK != rv){
-    NS_IF_RELEASE(aContext);
-  }
-  return rv;
+   if (NS_SUCCEEDED(rv)) {
+     aContext = xpContext;
+     NS_ADDREF(aContext);
+   }
+   return rv;
 }
 
 /** ---------------------------------------------------
@@ -171,10 +158,10 @@ NS_IMETHODIMP nsDeviceContextXP :: SupportsNativeWidgets(PRBool &aSupportsWidget
  *  See documentation in nsIDeviceContext.h
  */
 NS_IMETHODIMP nsDeviceContextXP :: GetScrollBarDimensions(float &aWidth, 
-					float &aHeight) const
+                                        float &aHeight) const
 {
   // XXX Oh, yeah.  These are hard coded.
-  aWidth = 15 * mPixelsToTwips;
+  aWidth  = 15 * mPixelsToTwips;
   aHeight = 15 * mPixelsToTwips;
 
   return NS_OK;
@@ -210,16 +197,16 @@ NS_IMETHODIMP nsDeviceContextXP::GetILColorSpace(IL_ColorSpace*& aColorSpace)
   IL_AddRefToColorSpace(aColorSpace);
 #endif
 
-  if(nsnull==mColorSpace) {
+  if(!mColorSpace) {
       IL_RGBBits colorRGBBits;
     
       // Create a 24-bit color space
-      colorRGBBits.red_shift = 16;  
-      colorRGBBits.red_bits = 8;
-      colorRGBBits.green_shift = 8;
-      colorRGBBits.green_bits = 8; 
-      colorRGBBits.blue_shift = 0; 
-      colorRGBBits.blue_bits = 8;  
+      colorRGBBits.red_shift   = 16;  
+      colorRGBBits.red_bits    =  8;
+      colorRGBBits.green_shift =  8;
+      colorRGBBits.green_bits  =  8; 
+      colorRGBBits.blue_shift  =  0; 
+      colorRGBBits.blue_bits   =  8;  
     
       mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
 
@@ -239,10 +226,21 @@ NS_IMETHODIMP nsDeviceContextXP::GetILColorSpace(IL_ColorSpace*& aColorSpace)
 
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
- *	@update 12/21/98 dwc
+ *        @update 12/21/98 dwc
  */
 NS_IMETHODIMP nsDeviceContextXP :: CheckFontExistence(const nsString& aFontName)
 {
+  PR_LOG(nsDeviceContextXPLM, PR_LOG_DEBUG, ("nsDeviceContextXP::CheckFontExistence()\n"));
+  /* BUG: this does - unfortunately - not work due missing DISPLAY ptr
+   * Additionally this is the _wrong_ time to make any assumtions 
+   * about fonts - this info+the correct information is _only_ 
+   * available _after_ XpSetContext() - therefore any assumtions 
+   * made here are _wrong_ until we have a vaoid XPContext 
+   * (X11 print context)
+   */
+#if 0
+  return nsFontMetricsXP::FamilyExists(aFontName);
+#else  
   char        **fnames = nsnull;
   PRInt32     namelen = aFontName.Length() + 1;
   char        *wildstring = (char *)PR_Malloc(namelen + 200);
@@ -253,21 +251,26 @@ NS_IMETHODIMP nsDeviceContextXP :: CheckFontExistence(const nsString& aFontName)
   XFontStruct *fonts;
   nsresult    rv = NS_ERROR_FAILURE;
 
-  if (nsnull == wildstring)
+  if (!wildstring)
     return NS_ERROR_UNEXPECTED;
 
-    if (abs(dpi - 75) < abs(dpi - 100))
+#if 0 /* gisburn: this cannot work - Xprint usually operates at >= 300dpi */
+  if (abs(dpi - 75) < abs(dpi - 100))
     dpi = 75;
   else
     dpi = 100;
+#endif
 
-  char* fontName = aFontName.ToNewCString();
   PR_snprintf(wildstring, namelen + 200,
               " -*-%s-*-*-normal-*-*-*-%d-%d-*-*-*-*",
-              fontName, dpi, dpi);
-  delete [] fontName;
+              aFontName.get(), dpi, dpi);
 
+  /* applications must not make any assumptions about fonts _before_ XpSetContext() !!! */
+  NS_ASSERTION((XpGetContext(mDisplay) != None), "Obtaining font information (XListFontsWithInfo()) _before_ XpSetContext()");
   fnames = ::XListFontsWithInfo(mDisplay, wildstring, 1, &numnames, &fonts);
+
+  PR_LOG(nsDeviceContextXPLM, PR_LOG_DEBUG, 
+         ("nsDeviceContextXP::CheckFontExistence: XListFontsWithInfo '%s'=%d\n", wildstring, numnames));
 
   if (numnames > 0)
   {
@@ -277,10 +280,11 @@ NS_IMETHODIMP nsDeviceContextXP :: CheckFontExistence(const nsString& aFontName)
 
   PR_Free(wildstring);
   return NS_OK;
+#endif  
 }
 
 NS_IMETHODIMP nsDeviceContextXP :: GetSystemAttribute(nsSystemAttrID anID, 
-						SystemAttrStruct * aInfo) const
+                                                SystemAttrStruct * aInfo) const
 {
   switch (anID) {
     case 0:
@@ -295,7 +299,7 @@ NS_IMETHODIMP nsDeviceContextXP :: GetSystemAttribute(nsSystemAttrID anID,
  *  See documentation in nsIDeviceContext.h
  */
 NS_IMETHODIMP nsDeviceContextXP::GetDeviceSurfaceDimensions(PRInt32 &aWidth, 
-							PRInt32 &aHeight)
+                                                        PRInt32 &aHeight)
 {
   float width, height;
   width = (float) mPrintContext->GetWidth();
@@ -304,10 +308,6 @@ NS_IMETHODIMP nsDeviceContextXP::GetDeviceSurfaceDimensions(PRInt32 &aWidth,
   // height = height - 200;
   aWidth = NSToIntRound(width * mDevUnitsToAppUnits);
   aHeight = NSToIntRound(height * mDevUnitsToAppUnits);
-#ifdef XPRINT_ON_SCREEN
-  aWidth = width; 
-  aHeight = height; 
-#endif
 
   return NS_OK;
 }
@@ -347,7 +347,7 @@ NS_IMETHODIMP nsDeviceContextXP::BeginDocument(PRUnichar * aTitle)
 {  
   nsresult  rv = NS_OK;
   if (mPrintContext != nsnull) {
-      rv = mPrintContext->BeginDocument();
+      rv = mPrintContext->BeginDocument(aTitle);
   } 
   return rv;
 }
@@ -360,7 +360,16 @@ NS_IMETHODIMP nsDeviceContextXP::EndDocument(void)
   nsresult  rv = NS_OK;
   if (mPrintContext != nsnull) {
       rv = mPrintContext->EndDocument();
+      
+      // gisburn: mPrintContext cannot be reused between to print 
+      // tasks as the destination print server may be a different one 
+      // or the printer used on the same print server has other 
+      // properties (build-in fonts for example ) than the printer 
+      // previously used
+      delete mPrintContext;
+      mPrintContext = nsnull;
   } 
+  
   return rv;
 }
 
@@ -378,7 +387,7 @@ NS_IMETHODIMP nsDeviceContextXP::BeginPage(void)
 
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
- *	@update 12/21/98 dwc
+ *        @update 12/21/98 dwc
  */
 NS_IMETHODIMP nsDeviceContextXP::EndPage(void)
 {
@@ -391,10 +400,10 @@ NS_IMETHODIMP nsDeviceContextXP::EndPage(void)
 
 /** ---------------------------------------------------
  *  See documentation in nsIDeviceContext.h
- *	@update 12/21/98 dwc
+ *        @update 12/21/98 dwc
  */
 NS_IMETHODIMP nsDeviceContextXP :: ConvertPixel(nscolor aColor, 
-							PRUint32 & aPixel)
+                                                        PRUint32 & aPixel)
 {
   aPixel = aColor;
   return NS_OK;
@@ -424,34 +433,41 @@ NS_IMETHODIMP nsDeviceContextXP::GetDepth(PRUint32& aDepth)
  *  See documentation in nsIDeviceContext.h
  */
 NS_IMETHODIMP nsDeviceContextXP::GetMetricsFor(const nsFont& aFont, 
-			nsIAtom* aLangGroup, nsIFontMetrics  *&aMetrics)
+                        nsIAtom* aLangGroup, nsIFontMetrics  *&aMetrics)
 {
     return GetMetricsFor(aFont, aMetrics);
 }
 
 NS_IMETHODIMP nsDeviceContextXP::GetMetricsFor(const nsFont& aFont, 
-					nsIFontMetrics  *&aMetrics)
+                                        nsIFontMetrics  *&aMetrics)
 {
-  PRInt32         n,cnt;
+  PRUint32         n,cnt;
   nsresult        rv;
 
   // First check our cache
-  n = mFontMetrics.Count();
+  rv = mFontMetrics->Count(&n);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  nsCOMPtr<nsIFontMetrics> m;
 
-  for (cnt = 0; cnt < n; cnt++){
-    aMetrics = (nsIFontMetrics*) mFontMetrics.ElementAt(cnt);
-
-    const nsFont  *font;
-    aMetrics->GetFont(font);
-    if (aFont.Equals(*font)){
-      NS_ADDREF(aMetrics);
-      return NS_OK;
+  for (cnt = 0; cnt < n; cnt++) {
+    if (NS_SUCCEEDED(mFontMetrics->QueryElementAt(cnt,
+                                                  NS_GET_IID(nsIFontMetrics),
+                                                  getter_AddRefs(m)))) {
+      const nsFont* font;
+      m->GetFont(font);
+      if (aFont.Equals(*font)) {
+        aMetrics = m;
+        NS_ADDREF(aMetrics);
+        return NS_OK;
+      }
     }
   }
 
   // It's not in the cache. Get font metrics and then cache them.
-  nsIFontMetrics* fm = new nsFontMetricsXP();
-  if (nsnull == fm) {
+  nsCOMPtr<nsIFontMetrics> fm = new nsFontMetricsXP();
+  if (!fm) {
     aMetrics = nsnull;
     return NS_ERROR_FAILURE;
   }
@@ -459,24 +475,21 @@ NS_IMETHODIMP nsDeviceContextXP::GetMetricsFor(const nsFont& aFont,
   // XXX need to pass real lang group
   rv = fm->Init(aFont, nsnull, this);
 
-  if (NS_OK != rv) {
+  if (NS_FAILED(rv)) {
     aMetrics = nsnull;
     return rv;
   }
 
-  mFontMetrics.AppendElement(fm);
-  NS_ADDREF(fm);     // this is for the cache
+  mFontMetrics->AppendElement(fm);
 
-
-  for (cnt = 0; cnt < n; cnt++){
-    aMetrics = (nsIFontMetrics*) mFontMetrics.ElementAt(cnt);
-    const nsFont  *font;
-    aMetrics->GetFont(font);
-  }
-
-  NS_ADDREF(fm);      // this is for the routine that needs this font
   aMetrics = fm;
+  NS_ADDREF(aMetrics);
   return NS_OK;
 }
 
-
+NS_IMETHODIMP
+nsDeviceContextXP::GetPrintContext(nsXPrintContext*& aContext) {
+  aContext = mPrintContext;
+  //NS_ADDREF(aContext);
+  return NS_OK;
+}
