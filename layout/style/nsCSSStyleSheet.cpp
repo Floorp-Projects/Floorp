@@ -59,9 +59,8 @@
 #include "nsICSSNameSpaceRule.h"
 #include "nsICSSMediaRule.h"
 #include "nsIMediaList.h"
-#include "nsIHTMLContent.h"
+#include "nsIStyledContent.h"
 #include "nsIDocument.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsIPresContext.h"
 #include "nsIEventStateManager.h"
 #include "nsHTMLAtoms.h"
@@ -2617,13 +2616,15 @@ CSSStyleSheetImpl::InsertRule(const nsAString& aRule,
   if (aIndex > count)
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   
+  // Hold strong ref to the CSSLoader in case the document update
+  // kills the document
   nsCOMPtr<nsICSSLoader> loader;
-  nsCOMPtr<nsICSSParser> css;
-  nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(mDocument));
-  if (htmlContainer) {
-    htmlContainer->GetCSSLoader(*getter_AddRefs(loader));
+  if (mDocument) {
+    loader = mDocument->GetCSSLoader();
+    NS_ASSERTION(loader, "Document with no CSS loader!");
   }
-  NS_ASSERTION(loader || !mDocument, "Document with no CSS loader!");
+  
+  nsCOMPtr<nsICSSParser> css;
   if (loader) {
     result = loader->GetParserFor(this, getter_AddRefs(css));
   }
@@ -2856,15 +2857,15 @@ CSSStyleSheetImpl::InsertRuleIntoGroup(const nsAString & aRule, nsICSSGroupRule*
     return NS_ERROR_INVALID_ARG;
   }
 
-  // get the css parser
+  // Hold strong ref to the CSSLoader in case the document update
+  // kills the document
   nsCOMPtr<nsICSSLoader> loader;
-  nsCOMPtr<nsICSSParser> css;
-  nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(mDocument));
-  if (htmlContainer) {
-    htmlContainer->GetCSSLoader(*getter_AddRefs(loader));
+  if (mDocument) {
+    loader = mDocument->GetCSSLoader();
+    NS_ASSERTION(loader, "Document with no CSS loader!");
   }
-  NS_ASSERTION(loader || !mDocument, "Document with no CSS loader!");
 
+  nsCOMPtr<nsICSSParser> css;
   if (loader) {
     result = loader->GetParserFor(this, getter_AddRefs(css));
   }

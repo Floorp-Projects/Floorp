@@ -83,7 +83,6 @@
 #include "nsIEventListenerManager.h"
 #include "nsIEventStateManager.h"
 #include "nsIFastLoadService.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"

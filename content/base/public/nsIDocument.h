@@ -83,6 +83,9 @@ class nsISupportsArray;
 class nsIScriptLoader;
 class nsIContentSink;
 class nsIScriptEventManager;
+class nsICSSLoader;
+class nsIHTMLStyleSheet;
+class nsIHTMLCSSStyleSheet;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
@@ -415,6 +418,24 @@ public:
   virtual void SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
                                             PRBool aApplicable) = 0;  
 
+  /**
+   * Get this document's CSSLoader.  May return null in error
+   * conditions (OOM)
+   */
+  virtual nsICSSLoader* GetCSSLoader() = 0;
+
+  /**
+   * Get this document's attribute stylesheet.  May return null if
+   * there isn't one.
+   */
+  virtual nsIHTMLStyleSheet* GetAttributeStyleSheet() const = 0;
+
+  /**
+   * Get this document's inline style sheet.  May return null if there
+   * isn't one
+   */
+  virtual nsIHTMLCSSStyleSheet* GetInlineStyleSheet() const = 0;
+  
   /**
    * Set the object from which a document can get a script context.
    * This is the context within which all scripts (during document 

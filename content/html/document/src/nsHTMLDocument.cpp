@@ -309,14 +309,6 @@ nsHTMLDocument::nsHTMLDocument()
 
 nsHTMLDocument::~nsHTMLDocument()
 {
-  if (mAttrStyleSheet) {
-    mAttrStyleSheet->SetOwningDocument(nsnull);
-  }
-
-  if (mStyleAttrStyleSheet) {
-    mStyleAttrStyleSheet->SetOwningDocument(nsnull);
-  }
-
   if (--gRefCntRDFService == 0) {
     NS_IF_RELEASE(gRDF);
   }
@@ -335,7 +327,6 @@ NS_INTERFACE_MAP_BEGIN(nsHTMLDocument)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIHTMLContentContainer)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsDocument)
 
@@ -1170,38 +1161,6 @@ nsHTMLDocument::GetImageMap(const nsAString& aMapName,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  *aResult = mAttrStyleSheet;
-
-  if (!*aResult) {
-    return NS_ERROR_NOT_AVAILABLE;  // probably not the right error...
-  }
-
-  NS_ADDREF(*aResult);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult)
-{
-  NS_ENSURE_ARG_POINTER(aResult);
-
-  *aResult = mStyleAttrStyleSheet;
-
-  if (!*aResult) {
-    return NS_ERROR_NOT_AVAILABLE;  // probably not the right error...
-  }
-
-  NS_ADDREF(*aResult);
-
-  return NS_OK;
-}
-
 // subclass hooks for sheet ordering
 void
 nsHTMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags)
@@ -1294,21 +1253,18 @@ nsHTMLDocument::SetReferrer(const nsAString& aReferrer)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::GetCSSLoader(nsICSSLoader*& aLoader)
+nsICSSLoader*
+nsHTMLDocument::GetCSSLoader()
 {
   if (!mCSSLoader) {
-    nsresult rv = NS_NewCSSLoader(this, getter_AddRefs(mCSSLoader));
-    NS_ENSURE_SUCCESS(rv, rv);
+    NS_NewCSSLoader(this, getter_AddRefs(mCSSLoader));
+    if (mCSSLoader) {
+      mCSSLoader->SetCaseSensitive(IsXHTML());
+      mCSSLoader->SetCompatibilityMode(mCompatMode);
+    }
   }
-
-  mCSSLoader->SetCaseSensitive(IsXHTML());
-  mCSSLoader->SetCompatibilityMode(mCompatMode);
-
-  aLoader = mCSSLoader;
-  NS_ADDREF(aLoader);
-
-  return NS_OK;
+  
+  return mCSSLoader;
 }
 
 

@@ -78,7 +78,6 @@
 
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDocumentStateListener.h"
 
@@ -3862,17 +3861,11 @@ nsHTMLEditor::GetCSSLoader(const nsAString& aURL, nsICSSLoader** aCSSLoader)
   NS_ENSURE_SUCCESS(rv, rv);;
   if (!document)     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
-  if (!container) return NS_ERROR_NULL_POINTER;
-      
-  nsCOMPtr<nsICSSLoader> cssLoader;
-  nsCOMPtr<nsICSSStyleSheet> cssStyleSheet;
+  NS_IF_ADDREF(*aCSSLoader = document->GetCSSLoader());
+  if (!*aCSSLoader) {
+    return NS_ERROR_NULL_POINTER;
+  }
 
-  rv = container->GetCSSLoader(*getter_AddRefs(cssLoader));
-  NS_ENSURE_SUCCESS(rv, rv);;
-  if (!cssLoader)    return NS_ERROR_NULL_POINTER;
-  *aCSSLoader = cssLoader;
-  NS_ADDREF(*aCSSLoader);
   return NS_OK;
 }
 

@@ -40,7 +40,6 @@
 #define nsXMLDocument_h___
 
 #include "nsDocument.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIHttpEventSink.h"
@@ -56,7 +55,6 @@ class nsICSSLoader;
 class nsIURI;
 
 class nsXMLDocument : public nsDocument,
-                      public nsIHTMLContentContainer,
                       public nsIInterfaceRequestor,
                       public nsIHttpEventSink
 {
@@ -107,10 +105,7 @@ public:
   NS_IMETHOD GetElementById(const nsAString& aElementId,
                             nsIDOMElement** aReturn);
 
-  // nsIHTMLContentContainer
-  NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult);
-  NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult);
-  NS_IMETHOD GetCSSLoader(nsICSSLoader*& aLoader);
+  virtual nsICSSLoader* GetCSSLoader();
 
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -136,10 +131,6 @@ protected:
 
   nsresult SetDefaultStylesheets(nsIURI* aUrl);
 
-  // For HTML elements in our content model
-  // XXX This is not clean, but is there a better way? 
-  nsCOMPtr<nsIHTMLStyleSheet> mAttrStyleSheet;
-  nsCOMPtr<nsIHTMLCSSStyleSheet> mInlineStyleSheet;
   // For additional catalog sheets (if any) needed to layout the XML vocabulary
   // of the document. Catalog sheets are kept at the beginning of our array of
   // style sheets and this counter is used as an offset to distinguish them

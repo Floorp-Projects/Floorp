@@ -49,7 +49,6 @@
 #include "nsICSSParser.h"
 #include "nsIURI.h"
 #include "nsINameSpaceManager.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsStyleConsts.h"
 
 MOZ_DECL_CTOR_COUNTER(nsDOMCSSAttributeDeclaration)
@@ -155,11 +154,10 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aBaseURI,
 
   nsCOMPtr<nsIURI> base = mContent->GetBaseURI();
 
-  nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(doc));
-  if (htmlContainer) {
-    htmlContainer->GetCSSLoader(*aCSSLoader);
+  if (doc) {
+    NS_IF_ADDREF(*aCSSLoader = doc->GetCSSLoader());
+    NS_ASSERTION(*aCSSLoader, "Document with no CSS loader!");
   }
-  NS_ASSERTION(!doc || *aCSSLoader, "Document with no CSS loader!");
   
   nsresult rv = NS_OK;
 

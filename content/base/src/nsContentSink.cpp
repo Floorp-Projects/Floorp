@@ -38,7 +38,6 @@
 #include "nsContentSink.h"
 #include "nsIScriptLoader.h"
 #include "nsIDocument.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsICSSLoader.h"
 #include "nsStyleLinkElement.h"
 #include "nsINodeInfo.h"
@@ -177,10 +176,7 @@ nsContentSink::Init(nsIDocument* aDoc,
   nsresult rv = loader->AddObserver(proxy);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(aDoc));
-  if (htmlContainer) {
-    htmlContainer->GetCSSLoader(*getter_AddRefs(mCSSLoader));
-  }
+  mCSSLoader = aDoc->GetCSSLoader();
 
   // XXX this presumes HTTP header info is already set in document
   // XXX if it isn't we need to set it here...

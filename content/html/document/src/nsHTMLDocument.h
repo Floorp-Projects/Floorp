@@ -45,7 +45,6 @@
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIDOMHTMLCollection.h"
-#include "nsIHTMLContentContainer.h"
 #include "nsIParser.h"
 #include "jsapi.h"
 #include "rdf.h"
@@ -73,8 +72,7 @@ class nsICacheEntryDescriptor;
 class nsHTMLDocument : public nsDocument,
                        public nsIHTMLDocument,
                        public nsIDOMHTMLDocument,
-                       public nsIDOMNSHTMLDocument,
-                       public nsIHTMLContentContainer
+                       public nsIDOMNSHTMLDocument
 {
 public:
   nsHTMLDocument();
@@ -113,9 +111,7 @@ public:
   NS_IMETHOD GetImageMap(const nsAString& aMapName,
                          nsIDOMHTMLMapElement** aResult);
 
-  NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aStyleSheet);
-  NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aStyleSheet);
-  NS_IMETHOD GetCSSLoader(nsICSSLoader*& aLoader);
+  virtual nsICSSLoader* GetCSSLoader();
 
   virtual void GetBaseTarget(nsAString& aTarget) const;
   virtual void SetBaseTarget(const nsAString& aTarget);
@@ -266,9 +262,6 @@ protected:
   void BaseResetToURI(nsIURI* aURI);
 
   virtual void RetrieveRelevantHeaders(nsIChannel *aChannel);
-
-  nsCOMPtr<nsIHTMLStyleSheet> mAttrStyleSheet;
-  nsCOMPtr<nsIHTMLCSSStyleSheet> mStyleAttrStyleSheet;
 
   nsString mBaseTarget;
   nsString mReferrer;
