@@ -107,7 +107,7 @@ nsHTMLContentSerializer::~nsHTMLContentSerializer()
 
 NS_IMETHODIMP 
 nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
-                              nsIAtom* aCharSet, PRBool aIsCopying)
+                              const char* aCharSet, PRBool aIsCopying)
 {
   mFlags = aFlags;
   if (!aWrapColumn) {
@@ -509,12 +509,10 @@ nsHTMLContentSerializer::EscapeURI(const nsAString& aURI, nsAString& aEscapedURI
   // See HTML 4.01 spec, "Appendix B.2.1 Non-ASCII characters in URI attribute values"
   nsCOMPtr<nsITextToSubURI> textToSubURI;
   nsAutoString uri(aURI); // in order to use FindCharInSet(), IsASCII()
-  nsXPIDLCString documentCharset;
   nsresult rv = NS_OK;
 
 
-  if (mCharSet && !uri.IsASCII()) {
-    mCharSet->ToUTF8String(documentCharset);
+  if (!mCharSet.IsEmpty() && !uri.IsASCII()) {
     textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -529,7 +527,7 @@ nsHTMLContentSerializer::EscapeURI(const nsAString& aURI, nsAString& aEscapedURI
   while ((end = uri.FindCharInSet("%#;/?:@&=+$,", start)) != -1) {
     part = Substring(aURI, start, (end-start));
     if (textToSubURI && !part.IsASCII()) {
-      rv = textToSubURI->ConvertAndEscape(documentCharset, part.get(), getter_Copies(escapedURI));
+      rv = textToSubURI->ConvertAndEscape(mCharSet.get(), part.get(), getter_Copies(escapedURI));
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
@@ -547,7 +545,7 @@ nsHTMLContentSerializer::EscapeURI(const nsAString& aURI, nsAString& aEscapedURI
     // Escape the remaining part.
     part = Substring(aURI, start, aURI.Length()-start);
     if (textToSubURI) {
-      rv = textToSubURI->ConvertAndEscape(documentCharset, part.get(), getter_Copies(escapedURI));
+      rv = textToSubURI->ConvertAndEscape(mCharSet.get(), part.get(), getter_Copies(escapedURI));
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else {

@@ -43,7 +43,7 @@
 #include "nsIComponentManager.h"
 #include "nsICategoryManager.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
+#include "nsEncoderDecoderUtils.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsICharsetAlias.h"

@@ -43,9 +43,12 @@
 #include "nsString.h"
 #include "nsISupports.h"
 
-// {CCD4D374-CCDC-11d2-B3B1-00805F8A6670}
+/* 0b4028d6-7473-4958-9b3c-4dee46bf68cb */
 #define NS_ICHARSETALIAS_IID \
-{ 0xccd4d374, 0xccdc, 0x11d2, { 0xb3, 0xb1, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 }}
+{   0x0b4028d6, \
+    0x7473, \
+    0x4958, \
+    {0x9b, 0x3c, 0x4d, 0xee, 0x46, 0xbf, 0x68, 0xcb} }
 
 // {98D41C21-CCF3-11d2-B3B1-00805F8A6670}
 #define NS_CHARSETALIAS_CID \
@@ -61,14 +64,8 @@ class nsICharsetAlias : public nsISupports
 public:
    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICHARSETALIAS_IID)
 
-   NS_IMETHOD GetPreferred(const nsAString& aAlias, nsAString& aResult) = 0;
-   NS_IMETHOD GetPreferred(const PRUnichar* aAlias, const PRUnichar** aResult) = 0;
-   NS_IMETHOD GetPreferred(const char* aAlias, char* aResult, PRInt32 aBufLength) = 0;
-
-   NS_IMETHOD Equals(const nsAString& aCharset1, const nsAString& aCharset2, PRBool* aResult) = 0;
-   NS_IMETHOD Equals(const PRUnichar* aCharset1, const PRUnichar* aCharset2, PRBool* aResult) = 0;
-   NS_IMETHOD Equals(const char* aCharset1, const char* aCharset2, PRBool* aResult) = 0;
-
+   NS_IMETHOD GetPreferred(const nsACString& aAlias, nsACString& aResult) = 0;
+   NS_IMETHOD Equals(const nsACString& aCharset1, const nsACString& aCharset2, PRBool* aResult) = 0;
 };
 
 #endif /* nsICharsetAlias_h___ */

@@ -48,7 +48,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 
 NS_IMETHODIMP
 nsConverterInputStream::Init(nsIInputStream* aStream,
-                             const PRUnichar *aCharset,
+                             const char *aCharset,
                              PRInt32 aBufferSize,
                              PRBool aRecoverFromErrors)
 {
@@ -61,13 +61,7 @@ nsConverterInputStream::Init(nsIInputStream* aStream,
         do_GetService(kCharsetConverterManagerCID, &rv);
     if (NS_FAILED(rv)) return nsnull;
 
-    nsAutoString charset;
-    if (aCharset)
-        charset.Assign(aCharset);
-    else
-        charset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
-    
-    rv = ccm->GetUnicodeDecoder(&charset, getter_AddRefs(mConverter));
+    rv = ccm->GetUnicodeDecoder(aCharset ? aCharset : "ISO-8859-1", getter_AddRefs(mConverter));
     if (NS_FAILED(rv)) return rv;
  
     // set up our buffers

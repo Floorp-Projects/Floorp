@@ -151,20 +151,18 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
   nsCOMPtr<nsIUnicodeEncoder> encoder;
 
   // get the charset
-  nsAutoString platformCharset;
+  nsCAutoString platformCharset;
   nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
     rv = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
   if (NS_FAILED(rv))
-    platformCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
+    platformCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
   
 
   // use transliterate to convert things like smart quotes to normal quotes for plain text
-  nsCAutoString cPlatformCharset;
-  cPlatformCharset.AssignWithConversion(platformCharset);
 
   nsCOMPtr<nsISaveAsCharset> converter = do_CreateInstance("@mozilla.org/intl/saveascharset;1");
-  rv = converter->Init(cPlatformCharset.get(),
+  rv = converter->Init(platformCharset.get(),
                   nsISaveAsCharset::attr_EntityAfterCharsetConv +
                   nsISaveAsCharset::attr_FallbackQuestionMark,
                   nsIEntityConverter::transliterate);
@@ -201,17 +199,18 @@ nsPrimitiveHelpers :: ConvertPlatformPlainTextToUnicode ( const char* inText, PR
   static PRBool hasConverter = PR_FALSE;
   if ( !hasConverter ) {
     // get the charset
-    nsAutoString platformCharset;
+    nsCAutoString platformCharset;
     nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
       rv = platformCharsetService->GetCharset(kPlatformCharsetSel_PlainTextInClipboard, platformCharset);
     if (NS_FAILED(rv))
-      platformCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
+      platformCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
       
     // get the decoder
     nsCOMPtr<nsICharsetConverterManager> ccm = 
              do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);  
-    rv = ccm->GetUnicodeDecoder(&platformCharset, getter_AddRefs(decoder));
+    rv = ccm->GetUnicodeDecoderRaw(platformCharset.get(),
+                                   getter_AddRefs(decoder));
 
     hasConverter = PR_TRUE;
   }

@@ -499,9 +499,9 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
   return result;
 }
 
-void nsIsIndexFrame::GetSubmitCharset(nsString& oCharset)
+void nsIsIndexFrame::GetSubmitCharset(nsCString& oCharset)
 {
-  oCharset.Assign(NS_LITERAL_STRING("UTF-8")); // default to utf-8
+  oCharset.Assign(NS_LITERAL_CSTRING("UTF-8")); // default to utf-8
   nsresult rv;
   // XXX
   // We may want to get it from the HTML 4 Accept-Charset attribute first
@@ -511,7 +511,9 @@ void nsIsIndexFrame::GetSubmitCharset(nsString& oCharset)
   nsIDocument* doc = nsnull;
   mContent->GetDocument(doc);
   if( nsnull != doc ) {
-    rv = doc->GetDocumentCharacterSet(oCharset);
+    nsAutoString docCharset;
+    rv = doc->GetDocumentCharacterSet(docCharset);
+    CopyUCS2toASCII(docCharset, oCharset);
     NS_RELEASE(doc);
   }
 
@@ -520,7 +522,7 @@ void nsIsIndexFrame::GetSubmitCharset(nsString& oCharset)
 NS_IMETHODIMP nsIsIndexFrame::GetEncoder(nsIUnicodeEncoder** encoder)
 {
   *encoder = nsnull;
-  nsAutoString charset;
+  nsCAutoString charset;
   nsresult rv = NS_OK;
   GetSubmitCharset(charset);
   
@@ -530,7 +532,7 @@ NS_IMETHODIMP nsIsIndexFrame::GetEncoder(nsIUnicodeEncoder** encoder)
                                     NS_GET_IID(nsICharsetConverterManager),
                                     (nsISupports**)&ccm);
   if(NS_SUCCEEDED(rv) && (nsnull != ccm)) {
-     rv = ccm->GetUnicodeEncoder(&charset, encoder);
+     rv = ccm->GetUnicodeEncoderRaw(charset.get(), encoder);
      nsServiceManager::ReleaseService( kCharsetConverterManagerCID, ccm);
      if (nsnull == encoder) {
        rv = NS_ERROR_FAILURE;

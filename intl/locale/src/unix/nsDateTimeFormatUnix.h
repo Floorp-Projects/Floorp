@@ -25,7 +25,6 @@
 
 
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsCOMPtr.h"
 #include "nsIDateTimeFormat.h"
 
@@ -77,8 +76,8 @@ private:
 
   nsString    mLocale;
   nsString    mAppLocale;
-  nsString    mCharset;                                    // in order to convert API result to unicode
-  char        mPlatformLocale[kPlatformLocaleLength+1];    // for setlocale
+  nsCString   mCharset;        // in order to convert API result to unicode
+  nsCString   mPlatformLocale; // for setlocale
   PRBool      mLocalePreferred24hour;                       // true if 24 hour format is preferred by current locale
   PRBool      mLocaleAMPMfirst;                             // true if AM/PM string is preferred before the time
   nsCOMPtr <nsIUnicodeDecoder>   mDecoder;

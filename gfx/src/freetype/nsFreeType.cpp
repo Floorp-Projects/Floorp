@@ -75,7 +75,7 @@ PRInt32      nsFreeType2::gEmbeddedBitmapMaximumHeight = 1000000;
 nsHashtable* nsFreeType2::sFontFamilies = nsnull;
 nsHashtable* nsFreeType2::sRange1CharSetNames = nsnull;
 nsHashtable* nsFreeType2::sRange2CharSetNames = nsnull;
-nsICharsetConverterManager2* nsFreeType2::sCharSetManager = nsnull;
+nsICharsetConverterManager* nsFreeType2::sCharSetManager = nsnull;
 PRBool       nsFreeType2::gHasExtFunc = PR_TRUE;
 
 extern nsulCodePageRangeCharSetName ulCodePageRange1CharSetNames[];
@@ -720,22 +720,19 @@ nsFreeType2::GetCustomEncoderInfo(const char * aFamilyName)
     //
     // build the converter
     //
-    nsICharsetConverterManager2* charSetManager = GetCharSetManager();
+    nsICharsetConverterManager* charSetManager = GetCharSetManager();
     if (!charSetManager)
       return nsnull;
-    nsCOMPtr<nsIAtom> charset(dont_AddRef(NS_NewAtom(fei->mConverterName)));
-    if (charset) {
-      nsresult res;
-      res = charSetManager->GetUnicodeEncoder(charset, &fei->mConverter);
-      if (NS_FAILED(res)) {
-        return nsnull;
-      }
+    nsresult res;
+    res = charSetManager->GetUnicodeEncoderRaw(fei->mConverterName, &fei->mConverter);
+    if (NS_FAILED(res)) {
+      return nsnull;
     }
   }
   return ffei;
 }
 
-nsICharsetConverterManager2*
+nsICharsetConverterManager*
 nsFreeType2::GetCharSetManager()
 {
   if (!sCharSetManager) {
@@ -743,7 +740,7 @@ nsFreeType2::GetCharSetManager()
     // get the sCharSetManager
     //
     nsServiceManager::GetService(kCharSetManagerCID,
-                                 NS_GET_IID(nsICharsetConverterManager2),
+                                 NS_GET_IID(nsICharsetConverterManager),
                                  (nsISupports**) &sCharSetManager);
     NS_ASSERTION(sCharSetManager,"failed to create the charset manager");
   }

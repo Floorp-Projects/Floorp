@@ -222,9 +222,8 @@ RelatedLinksStreamListener::Init()
 				(nsISupports**)&charsetConv);
 		if (NS_SUCCEEDED(rv) && (charsetConv))
 		{
-			nsString	utf8(NS_LITERAL_STRING("UTF-8"));
-			rv = charsetConv->GetUnicodeDecoder(&utf8,
-				getter_AddRefs(mUnicodeDecoder));
+			rv = charsetConv->GetUnicodeDecoderRaw("UTF-8",
+												getter_AddRefs(mUnicodeDecoder));
 			NS_RELEASE(charsetConv);
 		}
 

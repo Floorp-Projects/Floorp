@@ -52,7 +52,6 @@
 #include "nsFontMetricsXlib.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsILanguageAtomService.h"
 #include "nsISaveAsCharset.h"
 #include "nsIPref.h"
@@ -152,7 +151,7 @@ public:
 
   nsCOMPtr<nsIPref>                     mPref;
 
-  nsCOMPtr<nsICharsetConverterManager2> mCharSetManager;
+  nsCOMPtr<nsICharsetConverterManager> mCharSetManager;
   nsCOMPtr<nsIUnicodeEncoder>           mUserDefinedConverter;
 
   nsHashtable                           mAliases;
@@ -1801,12 +1800,8 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
   if (mLangGroup.get() == mFontMetricsContext->mUserDefined) {
     if (!mFontMetricsContext->mUserDefinedConverter) {
-      nsCOMPtr<nsIAtom> charset;
-      res = mFontMetricsContext->mCharSetManager->GetCharsetAtom2("x-user-defined",
-        getter_AddRefs(charset));
-      if (NS_SUCCEEDED(res)) {
         nsIUnicodeEncoder *ud_conv;
-        res = mFontMetricsContext->mCharSetManager->GetUnicodeEncoder(charset, &ud_conv);
+        res = mFontMetricsContext->mCharSetManager->GetUnicodeEncoderRaw("x-user-defined", &ud_conv);
         if (NS_SUCCEEDED(res)) {
           mFontMetricsContext->mUserDefinedConverter = ud_conv;
           res = mFontMetricsContext->mUserDefinedConverter->SetOutputErrorBehavior(
@@ -1822,10 +1817,6 @@ NS_IMETHODIMP nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
         else {
           return res;
         }
-      }
-      else {
-        return res;
-      }
     }
 
     nsCAutoString name("font.name.");
@@ -2539,17 +2530,15 @@ CheckMap(nsFontMetricsXlibContext *aFmctx, const nsFontCharSetMapXlib* aEntry)
 {
   while (aEntry->mName) {
     if (aEntry->mInfo->mCharSet) {
-      nsresult res;
-      nsCOMPtr<nsIAtom> charset =
-        getter_AddRefs(NS_NewAtom(aEntry->mInfo->mCharSet));
-      if (charset) {
+      
+        nsresult res;
+        // used to use NS_NewAtom??
         nsCOMPtr<nsIUnicodeEncoder> converter;
-        res = aFmctx->mCharSetManager->GetUnicodeEncoder(charset,
+        res = aFmctx->mCharSetManager->GetUnicodeEncoderRaw(aEntry->mInfo->mCharSet,
           getter_AddRefs(converter));
         if (NS_FAILED(res)) {
           printf("=== %s failed (%s)\n", aEntry->mInfo->mCharSet, __FILE__);
         }
-      }
     }
     aEntry++;
   }
@@ -2580,64 +2569,55 @@ SetUpFontCharSetInfo(nsFontMetricsXlibContext *aFmctx, nsFontCharSetInfoXlib* aS
 #endif /* DEBUG */
 
   nsresult res;
-  nsCOMPtr<nsIAtom> charset = getter_AddRefs(NS_NewAtom(aSelf->mCharSet));
-  if (charset) {
-    nsIUnicodeEncoder* converter = nsnull;
-    res = aFmctx->mCharSetManager->GetUnicodeEncoder(charset, &converter);
-    if (NS_SUCCEEDED(res)) {
-      aSelf->mConverter = converter;
-      res = converter->SetOutputErrorBehavior(converter->kOnError_Replace,
-        nsnull, '?');
-      nsCOMPtr<nsICharRepresentable> mapper = do_QueryInterface(converter);
-      if (mapper) {
-        aSelf->mCCMap = MapperToCCMap(mapper);
-        if (aSelf->mCCMap) {
+  
+  nsIUnicodeEncoder* converter = nsnull;
+  res = aFmctx->mCharSetManager->GetUnicodeEncoderRaw(aSelf->mCharSet, &converter);
+  if (NS_SUCCEEDED(res)) {
+    aSelf->mConverter = converter;
+    res = converter->SetOutputErrorBehavior(converter->kOnError_Replace,
+                                            nsnull, '?');
+    nsCOMPtr<nsICharRepresentable> mapper = do_QueryInterface(converter);
+    if (mapper) {
+      aSelf->mCCMap = MapperToCCMap(mapper);
+      if (aSelf->mCCMap) {
 #ifdef DEBUG
-          char *atomname = atomToName(charset);
-          if (atomname) {
-            NS_WARNING(nsPrintfCString(256, "SetUpFontCharSetInfo: charset = '%s'", atomname).get());
-            nsMemory::Free(atomname);
-          }
+        NS_WARNING(nsPrintfCString(256, "SetUpFontCharSetInfo: charset = '%s'", aSelf->mCharSet).get());
 #endif /* DEBUG */
 
-          /*
-           * We used to disable special characters like smart quotes
-           * in CJK fonts because if they are quite a bit larger than
-           * western glyphs and we did not want glyph fill-in to use them
-           * in single byte documents.
-           *
-           * Now, single byte documents find these special chars before
-           * the CJK fonts are searched so this is no longer needed
-           * but is useful when trying to determine which font(s) the
-           * special chars are found in.
-           */
-          if ((aSelf->Convert == DoubleByteConvert) 
-              && (!aFmctx->mAllowDoubleByteSpecialChars)) {
-            PRUint16* ccmap = aSelf->mCCMap;
-            PRUint32 page = CCMAP_BEGIN_AT_START_OF_MAP;
-            const PRUint16* specialmap = aFmctx->mDoubleByteSpecialCharsCCMap;
-            while (NextNonEmptyCCMapPage(specialmap, &page)) {
-              PRUint32 pagechar = page;
-              for (int i=0; i < CCMAP_BITS_PER_PAGE; i++) {
-                if (CCMAP_HAS_CHAR(specialmap, pagechar)) 
-                    CCMAP_UNSET_CHAR(ccmap, pagechar);
-                pagechar++;
-              }
+        /*
+         * We used to disable special characters like smart quotes
+         * in CJK fonts because if they are quite a bit larger than
+         * western glyphs and we did not want glyph fill-in to use them
+         * in single byte documents.
+         *
+         * Now, single byte documents find these special chars before
+         * the CJK fonts are searched so this is no longer needed
+         * but is useful when trying to determine which font(s) the
+         * special chars are found in.
+         */
+        if ((aSelf->Convert == DoubleByteConvert) 
+            && (!aFmctx->mAllowDoubleByteSpecialChars)) {
+          PRUint16* ccmap = aSelf->mCCMap;
+          PRUint32 page = CCMAP_BEGIN_AT_START_OF_MAP;
+          const PRUint16* specialmap = aFmctx->mDoubleByteSpecialCharsCCMap;
+          while (NextNonEmptyCCMapPage(specialmap, &page)) {
+            PRUint32 pagechar = page;
+            for (int i=0; i < CCMAP_BITS_PER_PAGE; i++) {
+              if (CCMAP_HAS_CHAR(specialmap, pagechar)) 
+                CCMAP_UNSET_CHAR(ccmap, pagechar);
+              pagechar++;
             }
           }
-          return PR_TRUE;
         }
-      }
-      else {
-        NS_WARNING("cannot get nsICharRepresentable");
+        return PR_TRUE;
       }
     }
     else {
-      NS_WARNING("cannot get Unicode converter");
+      NS_WARNING("cannot get nsICharRepresentable");
     }
   }
   else {
-    NS_WARNING("cannot get atom");
+    NS_WARNING("cannot get Unicode converter");
   }
 
   //
@@ -4040,18 +4020,15 @@ SetCharsetLangGroup(nsFontMetricsXlibContext *aFmctx, nsFontCharSetInfoXlib* aCh
   if (!aCharSetInfo->mCharSet || aCharSetInfo->mLangGroup)
     return;
 
-  nsCOMPtr<nsIAtom> charset;
-  nsresult res = aFmctx->mCharSetManager->GetCharsetAtom2(aCharSetInfo->mCharSet,
-                                                         getter_AddRefs(charset));
-  if (NS_SUCCEEDED(res)) {
-    res = aFmctx->mCharSetManager->GetCharsetLangGroup(charset,
-                                                       &aCharSetInfo->mLangGroup);
-    if (NS_FAILED(res)) {
-      aCharSetInfo->mLangGroup = NS_NewAtom("");
+  nsresult res;
+  
+  res = aFmctx->mCharSetManager->GetCharsetLangGroupRaw(aCharSetInfo->mCharSet,
+                                                        &aCharSetInfo->mLangGroup);
+  if (NS_FAILED(res)) {
+    aCharSetInfo->mLangGroup = NS_NewAtom("");
 #ifdef NOISY_FONTS
-      printf("=== cannot get lang group for %s\n", aCharSetInfo->mCharSet);
+    printf("=== cannot get lang group for %s\n", aCharSetInfo->mCharSet);
 #endif
-    }
   }
 }
 

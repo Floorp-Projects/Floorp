@@ -97,7 +97,6 @@
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsICharsetAlias.h"
 #include "nsIChannel.h"
@@ -4262,26 +4261,21 @@ HTMLContentSink::StartLayout()
 
 // Convert the ref from document charset to unicode.
 nsresult
-CharsetConvRef(const nsString& aDocCharset, const nsCString& aRefInDocCharset,
+CharsetConvRef(const nsCString& aDocCharset, const nsCString& aRefInDocCharset,
                nsString& aRefInUnicode)
 {
   nsresult rv;
 
   nsCOMPtr <nsIAtom> docCharsetAtom;
-  nsCOMPtr<nsICharsetConverterManager2> ccm2 =
+  nsCOMPtr<nsICharsetConverterManager> ccm =
     do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
 
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = ccm2->GetCharsetAtom(aDocCharset.get(), getter_AddRefs(docCharsetAtom));
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
   nsCOMPtr<nsIUnicodeDecoder> decoder;
-  rv = ccm2->GetUnicodeDecoder(docCharsetAtom, getter_AddRefs(decoder));
+  rv = ccm->GetUnicodeDecoder(aDocCharset.get(), getter_AddRefs(decoder));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -4373,7 +4367,8 @@ HTMLContentSink::ScrollToRef(PRBool aReallyScroll)
         rv = mDocument->GetDocumentCharacterSet(docCharset);
 
         if (NS_SUCCEEDED(rv)) {
-          rv = CharsetConvRef(docCharset, unescapedRef, ref);
+          NS_LossyConvertUCS2toASCII charset(docCharset);
+          rv = CharsetConvRef(charset, unescapedRef, ref);
 
           if (NS_SUCCEEDED(rv) && !ref.IsEmpty())
             rv = shell->GoToAnchor(ref, aReallyScroll);

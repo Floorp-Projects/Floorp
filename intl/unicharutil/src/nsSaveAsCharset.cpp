@@ -42,7 +42,7 @@
 #include "prprf.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
-#include "nsICharsetConverterManager2.h"
+#include "nsICharsetConverterManager.h"
 #include "nsSaveAsCharset.h"
 #include "nsCRT.h"
 #include "nsUnicharUtils.h"
@@ -361,14 +361,10 @@ nsresult nsSaveAsCharset::SetupUnicodeEncoder(const char* charset)
   nsresult rv;
 
   // set up unicode encoder
-  nsCOMPtr <nsICharsetConverterManager2> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr <nsIAtom> charsetAtom;
-  rv = ccm->GetCharsetAtom(NS_ConvertASCIItoUCS2(charset).get(), getter_AddRefs(charsetAtom));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return ccm->GetUnicodeEncoder(charsetAtom, getter_AddRefs(mEncoder));
+  return ccm->GetUnicodeEncoder(charset, getter_AddRefs(mEncoder));
 }
 
 nsresult nsSaveAsCharset::SetupCharsetList(const char *charsetList)

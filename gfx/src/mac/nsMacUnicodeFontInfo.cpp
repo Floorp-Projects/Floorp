@@ -51,7 +51,6 @@
 #include "nsLiteralString.h"
 #include "nsDeviceContextMac.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsIPersistentProperties2.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
@@ -89,7 +88,7 @@ NS_IMETHODIMP nsFontCleanupObserver::Observe(nsISupports *aSubject, const char *
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 static nsIPersistentProperties* gFontEncodingProperties = nsnull;
-static nsICharsetConverterManager2* gCharsetManager = nsnull;
+static nsICharsetConverterManager* gCharsetManager = nsnull;
 static nsObjectHashtable* gFontMaps = nsnull;
 static nsFontCleanupObserver *gFontCleanupObserver = nsnull;
 static PRUint16* gCCMap = nsnull;
@@ -504,8 +503,9 @@ InitFontEncodingProperties(void)
 
 // Helper to determine if a font has a private encoding that we know something about
 static nsresult
-GetEncoding(const nsCString& aFontName, nsString& aValue)
+GetEncoding(const nsCString& aFontName, nsACString& aValue)
 {
+  nsresult rv;
   // see if we should init the property
   if (! gFontEncodingProperties) {
     // but bail out for common fonts used at startup...
@@ -521,7 +521,7 @@ GetEncoding(const nsCString& aFontName, nsString& aValue)
       return NS_ERROR_NOT_AVAILABLE; // error mean do not get a special encoding
 
     // init the property now
-    nsresult rv = InitFontEncodingProperties();
+    rv = InitFontEncodingProperties();
     if NS_FAILED(rv)
       return rv;
   }
@@ -532,7 +532,11 @@ GetEncoding(const nsCString& aFontName, nsString& aValue)
   name.StripWhitespace();
   ToLowerCase(name);
 
-  return gFontEncodingProperties->GetStringProperty(name, aValue);
+  nsAutoString value;
+  rv = gFontEncodingProperties->GetStringProperty(name, value);
+  if (NS_SUCCEEDED(rv))
+    CopyUCS2toASCII(value, aValue);
+  return rv;
 }
 
 // This function uses the charset converter manager (CCM) to get a pointer on 
@@ -543,22 +547,18 @@ GetConverter(const nsCString& aFontName, nsIUnicodeEncoder** aConverter)
 {
   *aConverter = nsnull;
 
-  nsAutoString value;
+  nsCAutoString value;
   nsresult rv = GetEncoding(aFontName, value);
   if (NS_FAILED(rv)) return rv;
   
   if (!gCharsetManager)
   {
     rv = nsServiceManager::GetService(kCharsetConverterManagerCID,
-            NS_GET_IID(nsICharsetConverterManager2), (nsISupports**) &gCharsetManager);
+            NS_GET_IID(nsICharsetConverterManager), (nsISupports**) &gCharsetManager);
     if(NS_FAILED(rv)) return rv;
   }
   
-  nsCOMPtr<nsIAtom> charset;
-  rv = gCharsetManager->GetCharsetAtom(value.get(), getter_AddRefs(charset));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = gCharsetManager->GetUnicodeEncoder(charset, aConverter);
+  rv = gCharsetManager->GetUnicodeEncoderRaw(value.get(), aConverter);
   if (NS_FAILED(rv)) return rv;
 
   nsIUnicodeEncoder* tmp = *aConverter;

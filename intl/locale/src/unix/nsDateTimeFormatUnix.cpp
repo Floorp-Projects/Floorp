@@ -47,6 +47,7 @@
 #include "nsIPlatformCharset.h"
 #include "nsIPosixLocale.h"
 #include "nsCRT.h"
+#include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsDateTimeFormatUnix, nsIDateTimeFormat);
@@ -79,8 +80,8 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
     }
   }
 
-  mCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
-  PL_strncpy(mPlatformLocale, "en_US", kPlatformLocaleLength+1);
+  mCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
+  mPlatformLocale.Assign("en_US");
 
   // get locale name string, use app default if no locale specified
   if (NULL == locale) {
@@ -110,7 +111,7 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
 
     nsCOMPtr <nsIPosixLocale> posixLocale = do_GetService(NS_POSIXLOCALE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
-      res = posixLocale->GetPlatformLocale(&mLocale, mPlatformLocale, kPlatformLocaleLength+1);
+      res = posixLocale->GetPlatformLocale(&mLocale, mPlatformLocale);
     }
 
     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
@@ -118,21 +119,19 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(mLocale.get(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
-        mCharset = mappedCharset;
+        // XXX hacky, nsIPlatformCharset::GetDefaultCharsetForLocale
+        // should return a nsACString&
+        CopyUCS2toASCII(nsDependentString(mappedCharset), mCharset);
         nsMemory::Free(mappedCharset);
       }
     }
   }
 
   // Initialize unicode decoder
-  nsCOMPtr <nsIAtom>                      charsetAtom;
-  nsCOMPtr <nsICharsetConverterManager2>  charsetConverterManager;
+  nsCOMPtr <nsICharsetConverterManager>  charsetConverterManager;
   charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
   if (NS_SUCCEEDED(res)) {
-    res = charsetConverterManager->GetCharsetAtom(mCharset.get(), getter_AddRefs(charsetAtom));
-    if (NS_SUCCEEDED(res)) {
-      res = charsetConverterManager->GetUnicodeDecoder(charsetAtom, getter_AddRefs(mDecoder));
-    }
+    res = charsetConverterManager->GetUnicodeDecoder(mCharset.get(), getter_AddRefs(mDecoder));
   }
 
   LocalePreferred24hour();
@@ -154,7 +153,7 @@ void nsDateTimeFormatUnix::LocalePreferred24hour()
   tmc->tm_min=0;      // set the min & sec other number than '2'
   tmc->tm_sec=0;
 
-  char *temp = setlocale(LC_TIME, mPlatformLocale);
+  char *temp = setlocale(LC_TIME, mPlatformLocale.get());
   strftime(str, (size_t)99, "%X", (struct tm *)tmc);
 
   (void) setlocale(LC_TIME, temp);
@@ -250,7 +249,7 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
 
   // generate data/time string
   char *old_locale = setlocale(LC_TIME, NULL);
-  (void) setlocale(LC_TIME, mPlatformLocale);
+  (void) setlocale(LC_TIME, mPlatformLocale.get());
   if (PL_strlen(fmtD) && PL_strlen(fmtT)) {
     PL_strncat(fmtD, " ", NSDATETIME_FORMAT_BUFFER_LEN);
     PL_strncat(fmtD, fmtT, NSDATETIME_FORMAT_BUFFER_LEN);

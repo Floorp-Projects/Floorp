@@ -707,7 +707,8 @@ void
 nsPresContext::UpdateCharSet(const PRUnichar* aCharSet)
 {
   if (mLangService) {
-    mLangService->LookupCharSet(aCharSet, getter_AddRefs(mLanguage));
+    mLangService->LookupCharSet(NS_LossyConvertUCS2toASCII(aCharSet).get(),
+                                getter_AddRefs(mLanguage));
     GetFontPreferences();
     if (mLanguage) {
       nsCOMPtr<nsIAtom> langGroupAtom;

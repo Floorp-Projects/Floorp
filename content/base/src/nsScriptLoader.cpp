@@ -25,7 +25,6 @@
 #include "nsIDOMCharacterData.h"
 #include "nsParserUtils.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsICharsetAlias.h"
 #include "nsIContent.h"
@@ -677,7 +676,7 @@ nsScriptLoader::ProcessPendingReqests()
 
 // This function is copied from nsParser.cpp. It was simplified though, unnecessary part is removed.
 static PRBool 
-DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsString& oCharset) 
+DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsCString& oCharset) 
 {
   if (aLen < 2)
     return PR_FALSE;
@@ -687,21 +686,21 @@ DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen, nsString& oCharse
     if( aLen >= 3 && (0xBB==aBytes[1]) && (0xBF==aBytes[2])) {
         // EF BB BF
         // Win2K UTF-8 BOM
-        oCharset.AssignWithConversion("UTF-8"); 
+        oCharset.Assign("UTF-8"); 
     }
     break;
   case 0xFE:
     if(0xFF==aBytes[1]) {
       // FE FF
       // UTF-16, big-endian 
-      oCharset.AssignWithConversion("UTF-16BE"); 
+      oCharset.Assign("UTF-16BE"); 
     }
     break;
   case 0xFF:
     if(0xFE==aBytes[1]) {
       // FF FE
       // UTF-16, little-endian 
-      oCharset.AssignWithConversion("UTF-16LE"); 
+      oCharset.Assign("UTF-16LE"); 
     }
     break;
   }  // switch
@@ -759,7 +758,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
   }
 
   if (stringLen) {
-    nsAutoString characterSet, preferred;
+    nsCAutoString characterSet, preferred;
     nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
 
     nsCOMPtr<nsIChannel> channel;
@@ -775,7 +774,9 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
         nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
 
         if(NS_SUCCEEDED(rv) && calias) {
-          rv = calias->GetPreferred(charset, preferred);
+          NS_LossyConvertUCS2toASCII asciiCharset(charset);
+
+          rv = calias->GetPreferred(asciiCharset, preferred);
 
           if(NS_SUCCEEDED(rv)) {
             characterSet = preferred;
@@ -792,7 +793,9 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
         // is one.
         nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
         if (NS_SUCCEEDED(rv)) {
-          rv = calias->GetPreferred(charset, preferred);
+          NS_LossyConvertUCS2toASCII asciiCharset(charset);
+
+          rv = calias->GetPreferred(asciiCharset, preferred);
           
           if(NS_SUCCEEDED(rv)) {
             characterSet = preferred;
@@ -807,22 +810,24 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 
     if (characterSet.IsEmpty()) {
       // charset from document default
-      rv = mDocument->GetDocumentCharacterSet(characterSet);
+      nsAutoString uCharset;
+      rv = mDocument->GetDocumentCharacterSet(uCharset);
+      CopyUCS2toASCII(uCharset, characterSet);
     }
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "Could not get document charset!");
 
     if (characterSet.IsEmpty()) {
       // fall back to ISO-8851-1, see bug 118404
-      characterSet = NS_LITERAL_STRING("ISO-8859-1");
+      characterSet = NS_LITERAL_CSTRING("ISO-8859-1");
     }
     
     nsCOMPtr<nsICharsetConverterManager> charsetConv =
       do_GetService(kCharsetConverterManagerCID, &rv);
 
     if (NS_SUCCEEDED(rv) && charsetConv) {
-      rv = charsetConv->GetUnicodeDecoder(&characterSet,
-                                          getter_AddRefs(unicodeDecoder));
+      rv = charsetConv->GetUnicodeDecoderRaw(characterSet.get(),
+                                             getter_AddRefs(unicodeDecoder));
     }
 
     // converts from the charset to unicode

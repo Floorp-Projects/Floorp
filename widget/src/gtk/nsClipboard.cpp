@@ -47,17 +47,17 @@
 #include "nsVoidArray.h"
 
 #include "nsIServiceManager.h"
-#include "nsICharsetConverterManager.h"
 
 #include "prtime.h"
 #include "prthread.h"
 
 // unicode conversion
-#  include "nsIPlatformCharset.h"
+#include "nsIPlatformCharset.h"
+#include "nsICharsetConverterManager.h"
 
 static void ConvertHTMLtoUCS2(char* data, PRInt32 dataLength,
                               PRUnichar** unicodeData, PRInt32& outUnicodeLen);
-static void GetHTMLCharset   (char* data, PRInt32 dataLength, nsAString& str);
+static void GetHTMLCharset   (char* data, PRInt32 dataLength, nsACString& str);
 
 // The class statics:
 GtkWidget* nsClipboard::sWidget = 0;
@@ -604,7 +604,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
 
     nsresult rv;
     PRInt32 outUnicodeLen;
-    PRUnichar *unicodeData;
+    PRUnichar *unicodeData = nsnull;
 
 #ifdef DEBUG_CLIPBOARD
     g_print("        Converting from current locale to unicode\n");
@@ -612,16 +612,17 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
 
     nsCOMPtr<nsIUnicodeDecoder> decoder;
     // get the charset
-    nsAutoString platformCharset;
+    nsCAutoString platformCharset;
     nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
       rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
     if (NS_FAILED(rv))
-      platformCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
+      platformCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
       
     // get the decoder
     nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-    rv = ccm->GetUnicodeDecoder(&platformCharset, getter_AddRefs(decoder));
+    rv = ccm->GetUnicodeDecoderRaw(platformCharset.get(),
+                                   getter_AddRefs(decoder));
       
     // Estimate out length and allocate the buffer based on a worst-case estimate, then do
     // the conversion. 
@@ -649,7 +650,7 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
 
     nsresult rv;
     PRInt32 outUnicodeLen;
-    PRUnichar *unicodeData;
+    PRUnichar *unicodeData = nsnull;
 
     char *data = (char*)aSD->data;
     PRInt32 numberOfBytes = (PRInt32)aSD->length;
@@ -658,14 +659,10 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
     printf("UTF8_STRING is %s\nlength is %i\n", aSD->data, aSD->length);
 #endif
 
-    nsCOMPtr<nsIUnicodeDecoder> decoder;
-    // get the charset
-    nsAutoString platformCharset;
-    platformCharset.Assign(NS_LITERAL_STRING("UTF-8"));
-
     // get the decoder
+    nsCOMPtr<nsIUnicodeDecoder> decoder;
     nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-    rv = ccm->GetUnicodeDecoder(&platformCharset, getter_AddRefs(decoder));
+    rv = ccm->GetUnicodeDecoderRaw("UTF-8", getter_AddRefs(decoder));
 
     decoder->GetMaxLength(data, numberOfBytes, &outUnicodeLen);   // |outUnicodeLen| is number of chars
     if (outUnicodeLen) {
@@ -963,16 +960,16 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
 
       nsCOMPtr<nsIUnicodeEncoder> encoder;
       // get the charset
-      nsAutoString platformCharset;
+      nsCAutoString platformCharset;
       nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
       if (NS_SUCCEEDED(rv))
         rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
       if (NS_FAILED(rv))
-        platformCharset.Assign(NS_LITERAL_STRING("ISO-8859-1"));
+        platformCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
       
       // get the encoder
       nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-      rv = ccm->GetUnicodeEncoder(&platformCharset, getter_AddRefs(encoder));
+      rv = ccm->GetUnicodeEncoderRaw(platformCharset.get(), getter_AddRefs(encoder));
 
       encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
 
@@ -1386,9 +1383,9 @@ PRBool nsClipboard::FindSelectionNotifyEvent()
 void ConvertHTMLtoUCS2(char* data, PRInt32 dataLength,
                        PRUnichar** unicodeData, PRInt32& outUnicodeLen)
 {
-  nsAutoString charset;
+  nsCAutoString charset;
   GetHTMLCharset(data, dataLength, charset);// get charset of HTML
-  if (charset.Equals(NS_LITERAL_STRING("UTF-16"))) {//current mozilla
+  if (charset.Equals(NS_LITERAL_CSTRING("UTF-16"))) {//current mozilla
     outUnicodeLen = dataLength / 2 - 1;
     *unicodeData = NS_REINTERPRET_CAST(PRUnichar*,
                    nsMemory::Alloc((outUnicodeLen + 1) * sizeof(PRUnichar)));
@@ -1398,7 +1395,7 @@ void ConvertHTMLtoUCS2(char* data, PRInt32 dataLength,
       (*unicodeData)[outUnicodeLen] = '\0';
     }
   }
-  else if (charset.Equals(NS_LITERAL_STRING("OLD-MOZILLA"))) {// old mozilla
+  else if (charset.Equals(NS_LITERAL_CSTRING("OLD-MOZILLA"))) {// old mozilla
     outUnicodeLen = dataLength / 2;
     *unicodeData = NS_REINTERPRET_CAST(PRUnichar*,
                    nsMemory::Alloc((outUnicodeLen + 1) * sizeof(PRUnichar)));
@@ -1420,7 +1417,7 @@ void ConvertHTMLtoUCS2(char* data, PRInt32 dataLength,
       outUnicodeLen = 0;
       return;
     }
-    rv = ccm->GetUnicodeDecoder(&charset, getter_AddRefs(decoder));
+    rv = ccm->GetUnicodeDecoder(charset.get(), getter_AddRefs(decoder));
     if (NS_FAILED(rv)) {
 #ifdef DEBUG_CLIPBOARD
       g_print("        get unicode decoder error\n");
@@ -1455,12 +1452,12 @@ void ConvertHTMLtoUCS2(char* data, PRInt32 dataLength,
  *  2. "OLD-MOZILLA": UCS2 encoded data
  *  3. other:         "text/html" with other charset than utf-16
  */
-void GetHTMLCharset(char* data, PRInt32 dataLength, nsAString& str)
+void GetHTMLCharset(char* data, PRInt32 dataLength, nsACString& str)
 {
   // if detect "FFFE" or "FEFF", assume utf-16
   PRUnichar* beginChar =  (PRUnichar*)data;
   if ((beginChar[0] == 0xFFFE) || (beginChar[0] == 0xFEFF)) {
-    str.Assign(NS_LITERAL_STRING("UTF-16"));
+    str.Assign(NS_LITERAL_CSTRING("UTF-16"));
     return;
   }
   // no "FFFE" and "FEFF", assume ASCII first to find "charset" info
@@ -1496,7 +1493,7 @@ void GetHTMLCharset(char* data, PRInt32 dataLength, nsAString& str)
 #ifdef DEBUG_CLIPBOARD
       printf("Charset of HTML = %s\n", charsetUpperStr.get());
 #endif
-      str.Assign(NS_ConvertUTF8toUCS2(charsetUpperStr));
+      str.Assign(charsetUpperStr);
       return;
     }
   }
@@ -1506,6 +1503,6 @@ void GetHTMLCharset(char* data, PRInt32 dataLength, nsAString& str)
   // TODO: it may also be "text/html" without "charset".
   // can't distinguish between them. Sochoose OLD-MOZILLA here to
   // make compitable with old-version mozilla
-  str.Assign(NS_LITERAL_STRING("OLD-MOZILLA"));
+  str.Assign(NS_LITERAL_CSTRING("OLD-MOZILLA"));
 }
 

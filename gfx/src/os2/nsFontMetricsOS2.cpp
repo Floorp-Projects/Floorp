@@ -27,7 +27,6 @@
 #include "nsIServiceManager.h"
 #include "nsILanguageAtomService.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsICollation.h"
 #include "nsCollationCID.h"
 #include "nsLocaleCID.h"
@@ -74,7 +73,7 @@ int           nsFontMetricsOS2::gCachedIndex = 0;
 nsICollation *nsFontMetricsOS2::gCollation = nsnull;
 
 #ifdef WINCODE
-static nsICharsetConverterManager2 *gCharsetManager = nsnull;
+static nsICharsetConverterManager *gCharsetManager = nsnull;
 #endif
 static nsIPref           *gPref = nsnull;
 static nsIAtom           *gUsersLocale = nsnull;
@@ -308,7 +307,7 @@ InitGlobals(void)
 {
 #ifdef WINCODE
   nsServiceManager::GetService(kCharsetConverterManagerCID,
-    NS_GET_IID(nsICharsetConverterManager2), (nsISupports**) &gCharsetManager);
+    NS_GET_IID(nsICharsetConverterManager), (nsISupports**) &gCharsetManager);
   if (!gCharsetManager) {
     FreeGlobals();
     return NS_ERROR_FAILURE;

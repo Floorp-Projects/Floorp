@@ -153,11 +153,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
 
     nsCOMPtr <nsIPosixLocale> posixLocale = do_GetService(NS_POSIXLOCALE_CONTRACTID, &res);
     if (NS_SUCCEEDED(res)) {
-      char platformLocale[kPlatformLocaleLength+1];
-      res = posixLocale->GetPlatformLocale(&aLocale, platformLocale, kPlatformLocaleLength+1);
-      if (NS_SUCCEEDED(res)) {
-        mLocale.Assign(platformLocale);
-      }
+      res = posixLocale->GetPlatformLocale(&aLocale, mLocale);
     }
 
     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &res);
@@ -165,7 +161,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(aLocale.get(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
-        mCollation->SetCharset(mappedCharset);
+        mCollation->SetCharset(NS_LossyConvertUCS2toASCII(mappedCharset).get());
         nsMemory::Free(mappedCharset);
       }
     }
@@ -237,7 +233,7 @@ nsresult nsCollationUnix::CreateRawSortKey(const nsCollationStrength strength,
       // call strxfrm to generate a key 
       int len = strxfrm((char *) key, str, *outLen);
       DoRestoreLocale();
-      if (len >= *outLen) {
+      if (PRUint32(len) >= *outLen) {
 	res = NS_ERROR_FAILURE;
 	len = -1;
       }

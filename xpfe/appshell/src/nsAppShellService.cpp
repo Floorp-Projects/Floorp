@@ -108,7 +108,7 @@ static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
 #define gProfileInitialStateTopic      "profile-initial-state"
 
 // Static Function Prototypes
-static nsresult ConvertToUnicode(nsString& aCharset, const char* inString, nsAString& outString); 
+static nsresult ConvertToUnicode(nsCString& aCharset, const char* inString, nsAString& outString); 
 
 nsAppShellService::nsAppShellService() : 
   mDeleteCalled(PR_FALSE),
@@ -1275,7 +1275,7 @@ nsAppShellService::OpenBrowserWindow(PRInt32 height, PRInt32 width)
       }
       else {
         // get a platform charset
-        nsAutoString charSet;
+        nsCAutoString charSet;
         nsCOMPtr <nsIPlatformCharset> platformCharset(do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv));
         if (NS_FAILED(rv)) {
           NS_ASSERTION(0, "Failed to get a platform charset");
@@ -1449,7 +1449,7 @@ OnMacOSX()
 }
 #endif
 
-static nsresult ConvertToUnicode(nsString& aCharset, const char* inString, nsAString& outString)
+static nsresult ConvertToUnicode(nsCString& aCharset, const char* inString, nsAString& outString)
 {
   nsresult rv;
 
@@ -1459,7 +1459,7 @@ static nsresult ConvertToUnicode(nsString& aCharset, const char* inString, nsASt
     return rv;
 
   nsCOMPtr <nsIUnicodeDecoder> decoder; 
-  rv = ccm->GetUnicodeDecoder(&aCharset, getter_AddRefs(decoder));
+  rv = ccm->GetUnicodeDecoderRaw(aCharset.get(), getter_AddRefs(decoder));
   if (NS_FAILED(rv))
     return rv;
 

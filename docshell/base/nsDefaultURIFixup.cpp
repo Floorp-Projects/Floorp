@@ -606,7 +606,7 @@ const char * nsDefaultURIFixup::GetFileSystemCharset()
   if (mFsCharset.IsEmpty())
   {
     nsresult rv;
-    nsAutoString charset;
+    nsCAutoString charset;
     nsCOMPtr<nsIPlatformCharset> plat(do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv))
       rv = plat->GetCharset(kPlatformCharsetSel_FileName, charset);
@@ -614,7 +614,7 @@ const char * nsDefaultURIFixup::GetFileSystemCharset()
     if (charset.IsEmpty())
       mFsCharset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
     else
-      mFsCharset.Assign(NS_LossyConvertUCS2toASCII(charset));
+      mFsCharset.Assign(charset);
   }
 
   return mFsCharset.get();

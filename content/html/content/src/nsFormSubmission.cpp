@@ -78,7 +78,7 @@ public:
    * @param aFormProcessor a form processor who can listen to 
    * @param aBidiOptions the BIDI options flags for the current pres context
    */
-  nsFormSubmission(const nsAString& aCharset,
+  nsFormSubmission(const nsACString& aCharset,
                    nsISaveAsCharset* aEncoder,
                    nsIFormProcessor* aFormProcessor,
                    PRInt32 aBidiOptions)
@@ -148,7 +148,7 @@ protected:
                           nsISaveAsCharset* aEncoder);
 
   /** The name of the encoder charset */
-  nsString mCharset;
+  nsCString mCharset;
   /** The encoder that will encode Unicode names and values into
    *  bytes to be sent over the wire (usually a charset transformation)
    */
@@ -170,7 +170,7 @@ public:
    */
   static void GetSubmitCharset(nsIHTMLContent* aForm,
                                PRUint8 aCtrlsModAtSubmit,
-                               nsAString& aCharset);
+                               nsACString& aCharset);
   /**
    * Get the encoder for a form (suitable to pass in to the constructor).
    * @param aForm the form in question
@@ -180,7 +180,7 @@ public:
    */
   static nsresult GetEncoder(nsIHTMLContent* aForm,
                              nsIPresContext* aPresContext,
-                             const nsAString& aCharset,
+                             const nsACString& aCharset,
                              nsISaveAsCharset** aEncoder);
   /**
    * Get an attribute of a form as int, provided that it is an enumerated value.
@@ -244,7 +244,7 @@ public:
    * @param aMethod the method of the submit (either NS_FORM_METHOD_GET or
    *        NS_FORM_METHOD_POST).
    */
-  nsFSURLEncoded(const nsAString& aCharset,
+  nsFSURLEncoded(const nsACString& aCharset,
                  nsISaveAsCharset* aEncoder,
                  nsIFormProcessor* aFormProcessor,
                  PRInt32 aBidiOptions,
@@ -567,7 +567,7 @@ public:
    * @param aFormProcessor a form processor who can listen to 
    * @param aBidiOptions the BIDI options flags for the current pres context
    */
-  nsFSMultipartFormData(const nsAString& aCharset,
+  nsFSMultipartFormData(const nsACString& aCharset,
                         nsISaveAsCharset* aEncoder,
                         nsIFormProcessor* aFormProcessor,
                         PRInt32 aBidiOptions);
@@ -659,7 +659,7 @@ NS_IMPL_QUERY_INTERFACE_INHERITED0(nsFSMultipartFormData, nsFormSubmission)
 //
 // Constructor
 //
-nsFSMultipartFormData::nsFSMultipartFormData(const nsAString& aCharset,
+nsFSMultipartFormData::nsFSMultipartFormData(const nsACString& aCharset,
                                              nsISaveAsCharset* aEncoder,
                                              nsIFormProcessor* aFormProcessor,
                                              PRInt32 aBidiOptions)
@@ -886,7 +886,7 @@ nsFSMultipartFormData::AddPostDataStream()
 class nsFSTextPlain : public nsFormSubmission
 {
 public:
-  nsFSTextPlain(const nsAString& aCharset,
+  nsFSTextPlain(const nsACString& aCharset,
                 nsISaveAsCharset* aEncoder,
                 nsIFormProcessor* aFormProcessor,
                 PRInt32 aBidiOptions)
@@ -1152,7 +1152,7 @@ GetSubmissionFromForm(nsIHTMLContent* aForm,
   nsFormSubmission::GetEnumAttr(aForm, nsHTMLAtoms::method, &method);
 
   // Get charset
-  nsAutoString charset;
+  nsCAutoString charset;
   nsFormSubmission::GetSubmitCharset(aForm, ctrlsModAtSubmit, charset);
 
   // Get unicode encoder
@@ -1234,9 +1234,9 @@ nsFormSubmission::SubmitTo(nsIURI* aActionURL, const nsAString& aTarget,
 void
 nsFormSubmission::GetSubmitCharset(nsIHTMLContent* aForm,
                                    PRUint8 aCtrlsModAtSubmit,
-                                   nsAString& oCharset)
+                                   nsACString& oCharset)
 {
-  oCharset = NS_LITERAL_STRING("UTF-8"); // default to utf-8
+  oCharset = NS_LITERAL_CSTRING("UTF-8"); // default to utf-8
 
   nsresult rv = NS_OK;
   nsAutoString acceptCharsetValue;
@@ -1260,8 +1260,10 @@ nsFormSubmission::GetSubmitCharset(nsIHTMLContent* aForm,
         spPos = acceptCharsetValue.FindChar(PRUnichar(' '), offset);
         PRInt32 cnt = ((-1==spPos)?(charsetLen-offset):(spPos-offset));
         if (cnt > 0) {
-          nsAutoString charset;
-          acceptCharsetValue.Mid(charset, offset, cnt);
+          nsAutoString uCharset;
+          acceptCharsetValue.Mid(uCharset, offset, cnt);
+
+          nsCAutoString charset; charset.AssignWithConversion(uCharset);
           if (NS_SUCCEEDED(calias->GetPreferred(charset, oCharset)))
             return;
         }
@@ -1274,29 +1276,32 @@ nsFormSubmission::GetSubmitCharset(nsIHTMLContent* aForm,
   nsCOMPtr<nsIDocument> doc;
   aForm->GetDocument(*getter_AddRefs(doc));
   if (doc) {
-    rv = doc->GetDocumentCharacterSet(oCharset);
+    nsAutoString docCharset;
+    rv = doc->GetDocumentCharacterSet(docCharset);
+    if (NS_SUCCEEDED(rv))
+      CopyUCS2toASCII(docCharset, oCharset);
   }
 
   if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL
-     && oCharset.Equals(NS_LITERAL_STRING("windows-1256"),
-                 nsCaseInsensitiveStringComparator())) {
+     && oCharset.Equals(NS_LITERAL_CSTRING("windows-1256"),
+                        nsCaseInsensitiveCStringComparator())) {
 //Mohamed
-    oCharset = NS_LITERAL_STRING("IBM864");
+    oCharset = NS_LITERAL_CSTRING("IBM864");
   }
   else if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_LOGICAL
-          && oCharset.Equals(NS_LITERAL_STRING("IBM864"),
-                     nsCaseInsensitiveStringComparator())) {
-    oCharset = NS_LITERAL_STRING("IBM864i");
+          && oCharset.Equals(NS_LITERAL_CSTRING("IBM864"),
+                             nsCaseInsensitiveCStringComparator())) {
+    oCharset = NS_LITERAL_CSTRING("IBM864i");
   }
   else if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL
-          && oCharset.Equals(NS_LITERAL_STRING("ISO-8859-6"),
-                     nsCaseInsensitiveStringComparator())) {
-    oCharset = NS_LITERAL_STRING("IBM864");
+          && oCharset.Equals(NS_LITERAL_CSTRING("ISO-8859-6"),
+                             nsCaseInsensitiveCStringComparator())) {
+    oCharset = NS_LITERAL_CSTRING("IBM864");
   }
   else if (aCtrlsModAtSubmit==IBMBIDI_CONTROLSTEXTMODE_VISUAL
-          && oCharset.Equals(NS_LITERAL_STRING("UTF-8"),
-                     nsCaseInsensitiveStringComparator())) {
-    oCharset = NS_LITERAL_STRING("IBM864");
+          && oCharset.Equals(NS_LITERAL_CSTRING("UTF-8"),
+                             nsCaseInsensitiveCStringComparator())) {
+    oCharset = NS_LITERAL_CSTRING("IBM864");
   }
 
 }
@@ -1306,21 +1311,21 @@ nsFormSubmission::GetSubmitCharset(nsIHTMLContent* aForm,
 nsresult
 nsFormSubmission::GetEncoder(nsIHTMLContent* aForm,
                              nsIPresContext* aPresContext,
-                             const nsAString& aCharset,
+                             const nsACString& aCharset,
                              nsISaveAsCharset** aEncoder)
 {
   *aEncoder = nsnull;
   nsresult rv = NS_OK;
 
-  nsAutoString charset(aCharset);
-  if(charset.Equals(NS_LITERAL_STRING("ISO-8859-1")))
-    charset.Assign(NS_LITERAL_STRING("windows-1252"));
+  nsCAutoString charset(aCharset);
+  if(charset.Equals(NS_LITERAL_CSTRING("ISO-8859-1")))
+    charset.Assign(NS_LITERAL_CSTRING("windows-1252"));
 
   rv = CallCreateInstance( NS_SAVEASCHARSET_CONTRACTID, aEncoder);
   NS_ASSERTION(NS_SUCCEEDED(rv), "create nsISaveAsCharset failed");
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = (*aEncoder)->Init(NS_ConvertUCS2toUTF8(charset).get(),
+  rv = (*aEncoder)->Init(charset.get(),
                          (nsISaveAsCharset::attr_EntityAfterCharsetConv + 
                           nsISaveAsCharset::attr_FallbackDecimalNCR),
                          0);
@@ -1344,8 +1349,8 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
   nsAutoString newBuffer;
   //This condition handle the RTL,LTR for a logical file
   if (ctrlsModAtSubmit == IBMBIDI_CONTROLSTEXTMODE_VISUAL
-     && mCharset.Equals(NS_LITERAL_STRING("windows-1256"),
-                nsCaseInsensitiveStringComparator())) {
+     && mCharset.Equals(NS_LITERAL_CSTRING("windows-1256"),
+                        nsCaseInsensitiveCStringComparator())) {
     Conv_06_FE_WithReverse(nsString(aStr),
                            newBuffer,
                            textDirAtSubmit);
@@ -1353,8 +1358,8 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
     aLen=newBuffer.Length();
   }
   else if (ctrlsModAtSubmit == IBMBIDI_CONTROLSTEXTMODE_LOGICAL
-          && mCharset.Equals(NS_LITERAL_STRING("IBM864"),
-                             nsCaseInsensitiveStringComparator())) {
+          && mCharset.Equals(NS_LITERAL_CSTRING("IBM864"),
+                             nsCaseInsensitiveCStringComparator())) {
     //For 864 file, When it is logical, if LTR then only convert
     //If RTL will mak a reverse for the buffer
     Conv_FE_06(nsString(aStr), newBuffer);
@@ -1373,8 +1378,8 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
     aStr = (PRUnichar*)temp.get();
   }
   else if (ctrlsModAtSubmit == IBMBIDI_CONTROLSTEXTMODE_VISUAL
-          && mCharset.Equals(NS_LITERAL_STRING("IBM864"),
-                             nsCaseInsensitiveStringComparator())
+          && mCharset.Equals(NS_LITERAL_CSTRING("IBM864"),
+                             nsCaseInsensitiveCStringComparator())
                   && textDirAtSubmit == IBMBIDI_TEXTDIRECTION_RTL) {
 
     Conv_FE_06(nsString(aStr), newBuffer);
@@ -1439,7 +1444,7 @@ nsFormSubmission::ProcessValue(nsIDOMHTMLElement* aSource,
     nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(aSource);
     if (formControl) {
       if (formControl->GetType() == NS_FORM_INPUT_HIDDEN) {
-        return new nsString(mCharset);
+        return new NS_ConvertASCIItoUCS2(mCharset);
       }
     }
   }

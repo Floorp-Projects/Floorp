@@ -43,7 +43,6 @@
 #include "nsReadableUtils.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsIScriptableUConv.h"
 #include "nsScriptableUConv.h"
 #include "nsCRT.h"
@@ -149,9 +148,9 @@ nsScriptableUnicodeConverter::ConvertToUnicode(const char *aSrc, PRUnichar **_re
 
 /* attribute wstring charset; */
 NS_IMETHODIMP
-nsScriptableUnicodeConverter::GetCharset(PRUnichar * *aCharset)
+nsScriptableUnicodeConverter::GetCharset(char * *aCharset)
 {
-  *aCharset = ToNewUnicode(mCharset);
+  *aCharset = ToNewCString(mCharset);
   if (!*aCharset)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -159,7 +158,7 @@ nsScriptableUnicodeConverter::GetCharset(PRUnichar * *aCharset)
 }
 
 NS_IMETHODIMP
-nsScriptableUnicodeConverter::SetCharset(const PRUnichar * aCharset)
+nsScriptableUnicodeConverter::SetCharset(const char * aCharset)
 {
   mCharset.Assign(aCharset);
   return InitConverter();
@@ -171,20 +170,17 @@ nsScriptableUnicodeConverter::InitConverter()
   nsresult rv = NS_OK;
   mEncoder = NULL ;
 
-  nsCOMPtr<nsICharsetConverterManager2> ccm2 = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
 
-  if (NS_SUCCEEDED( rv) && (nsnull != ccm2)) {
+  if (NS_SUCCEEDED( rv) && (nsnull != ccm)) {
     // get charset atom due to getting unicode converter
-    nsCOMPtr <nsIAtom> charsetAtom;
-    rv = ccm2->GetCharsetAtom(mCharset.get(), getter_AddRefs(charsetAtom));
-    if (NS_SUCCEEDED(rv)) {
-      // get an unicode converter
-      rv = ccm2->GetUnicodeEncoder(charsetAtom, getter_AddRefs(mEncoder));
+    
+    // get an unicode converter
+    rv = ccm->GetUnicodeEncoder(mCharset.get(), getter_AddRefs(mEncoder));
+    if(NS_SUCCEEDED(rv)) {
+      rv = mEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, (PRUnichar)'?');
       if(NS_SUCCEEDED(rv)) {
-        rv = mEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, (PRUnichar)'?');
-        if(NS_SUCCEEDED(rv)) {
-          rv = ccm2->GetUnicodeDecoder(charsetAtom, getter_AddRefs(mDecoder));
-        }
+        rv = ccm->GetUnicodeDecoder(mCharset.get(), getter_AddRefs(mDecoder));
       }
     }
   }

@@ -2323,8 +2323,9 @@ ParserWriteFunc(nsIInputStream* in,
   }
 
   if(pws->mNeedCharsetCheck) { 
-    PRInt32 guessSource; 
-    nsAutoString guess, preferred; 
+    PRInt32 guessSource;
+    nsAutoString guess;
+    nsCAutoString preferred; 
   
     pws->mNeedCharsetCheck = PR_FALSE; 
     if(pws->mParser->DetectMetaTag(buf, theNumRead,
@@ -2333,17 +2334,17 @@ ParserWriteFunc(nsIInputStream* in,
         DetectByteOrderMark((const unsigned char*)buf, 
                             theNumRead, guess, guessSource))) { 
       nsCOMPtr<nsICharsetAlias> alias(do_GetService(NS_CHARSETALIAS_CONTRACTID));
-      result = alias->GetPreferred(guess, preferred);
+      result = alias->GetPreferred(NS_LossyConvertUCS2toASCII(guess), preferred);
       // Only continue if it's a recognized charset and not
       // one of a designated set that we ignore.
       if (NS_SUCCEEDED(result) &&
           ((kCharsetFromByteOrderMark == guessSource) ||
-           (!preferred.Equals(NS_LITERAL_STRING("UTF-16")) &&
-            !preferred.Equals(NS_LITERAL_STRING("UTF-16BE")) &&
-            !preferred.Equals(NS_LITERAL_STRING("UTF-16LE")) &&
-            !preferred.Equals(NS_LITERAL_STRING("UTF-32BE")) &&
-            !preferred.Equals(NS_LITERAL_STRING("UTF-32LE"))))) {
-        guess.Assign(preferred);
+           (!preferred.Equals(NS_LITERAL_CSTRING("UTF-16")) &&
+            !preferred.Equals(NS_LITERAL_CSTRING("UTF-16BE")) &&
+            !preferred.Equals(NS_LITERAL_CSTRING("UTF-16LE")) &&
+            !preferred.Equals(NS_LITERAL_CSTRING("UTF-32BE")) &&
+            !preferred.Equals(NS_LITERAL_CSTRING("UTF-32LE"))))) {
+        guess.Assign(NS_ConvertASCIItoUCS2(preferred));
         pws->mParser->SetDocumentCharset(guess, guessSource); 
         pws->mParser->SetSinkCharset(guess);
         nsCOMPtr<nsICachingChannel> channel(do_QueryInterface(pws->mRequest));

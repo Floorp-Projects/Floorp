@@ -32,7 +32,7 @@ GRE_MODULE	= 1
 XPIDLSRCS	= \
 	nsITextToSubURI.idl \
 	nsICurrentCharsetListener.idl \
-	nsICharsetConverterManager2.idl \
+	nsICharsetConverterManager.idl \
 	nsIScriptableUConv.idl \
 	$(NULL)
 

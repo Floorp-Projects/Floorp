@@ -61,7 +61,6 @@
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsHTMLAtoms.h"
 #include "nsITextContent.h"
 #include "nsIEnumerator.h"
@@ -74,6 +73,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsReadableUtils.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID,
                      NS_ICHARSETCONVERTERMANAGER_CID);
@@ -150,10 +150,10 @@ protected:
   nsCOMPtr<nsIUnicodeEncoder>    mUnicodeEncoder;
   nsCOMPtr<nsIDOMNode>           mCommonParent;
   nsCOMPtr<nsIDocumentEncoderNodeFixup> mNodeFixup;
-  nsCOMPtr<nsICharsetConverterManager2> mCharsetConverterManager;
+  nsCOMPtr<nsICharsetConverterManager> mCharsetConverterManager;
 
   nsString          mMimeType;
-  nsString          mCharset;
+  nsCString         mCharset;
   PRUint32          mFlags;
   PRUint32          mWrapColumn;
   PRUint32          mStartDepth;
@@ -275,7 +275,7 @@ nsDocumentEncoder::SetNode(nsIDOMNode* aNode)
 NS_IMETHODIMP
 nsDocumentEncoder::SetCharset(const nsAString& aCharset)
 {
-  mCharset = aCharset;
+  CopyUCS2toASCII(aCharset, mCharset);
   return NS_OK;
 }
 
@@ -926,10 +926,8 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
       mCharsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-    rv = mCharsetConverterManager->GetCharsetAtom(mCharset.get(), getter_AddRefs(charsetAtom));
-    NS_ENSURE_SUCCESS(rv, rv);
   }
-  mSerializer->Init(mFlags, mWrapColumn, charsetAtom, mIsCopying);
+  mSerializer->Init(mFlags, mWrapColumn, mCharset.get(), mIsCopying);
 
   if (mSelection) {
     nsCOMPtr<nsIDOMRange> range;
@@ -983,11 +981,7 @@ nsDocumentEncoder::EncodeToStream(nsIOutputStream* aStream)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsIAtom> charsetAtom;
-  rv = mCharsetConverterManager->GetCharsetAtom(mCharset.get(), getter_AddRefs(charsetAtom));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = mCharsetConverterManager->GetUnicodeEncoder(charsetAtom,
+  rv = mCharsetConverterManager->GetUnicodeEncoder(mCharset.get(),
                                                    getter_AddRefs(mUnicodeEncoder));
   NS_ENSURE_SUCCESS(rv, rv);
 

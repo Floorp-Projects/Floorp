@@ -81,7 +81,7 @@ class nsPrefConverter: public nsIPrefConverter
       NS_DECL_ISUPPORTS
       NS_DECL_NSIPREFCONVERTER
 
-      nsresult GetPlatformCharset(nsAutoString& aCharset);
+      nsresult GetPlatformCharset(nsCString& aCharset);
 };
 
 class nsPrefMigration: public nsIPrefMigration

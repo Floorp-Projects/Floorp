@@ -39,7 +39,6 @@
 #include "nsCharDetDll.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsDocumentCharsetInfo.h"
 #include "nsCOMPtr.h"
 

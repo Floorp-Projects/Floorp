@@ -60,7 +60,7 @@ nsPlatformCharset::nsPlatformCharset()
 
   UINT acp = ::GetACP();
   PRInt32 acpint = (PRInt32)(acp & 0x00FFFF);
-  nsAutoString acpKey; acpKey.Assign(NS_LITERAL_STRING("acp."));
+  nsAutoString acpKey(NS_LITERAL_STRING("acp."));
   acpKey.AppendInt(acpint, 10);
   nsresult res = MapToCharset(acpKey, mCharset);
 
@@ -92,36 +92,40 @@ nsPlatformCharset::InitInfo()
 }
 
 nsresult
-nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsAString& outCharset)
+nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsACString& outCharset)
 {
   //delay loading wincharset.properties bundle if possible
   if (inANSICodePage.Equals(NS_LITERAL_STRING("acp.1252"))) {
-    outCharset = NS_LITERAL_STRING("windows-1252");
+    outCharset = NS_LITERAL_CSTRING("windows-1252");
     return NS_OK;
   } 
 
   if (inANSICodePage.Equals(NS_LITERAL_STRING("acp.932"))) {
-    outCharset = NS_LITERAL_STRING("Shift_JIS");
+    outCharset = NS_LITERAL_CSTRING("Shift_JIS");
     return NS_OK;
   } 
 
   // ensure the .property file is loaded
   nsresult rv = InitInfo();
   if (NS_FAILED(rv)) {
-    outCharset.Assign(NS_LITERAL_STRING("windows-1252"));
+    outCharset.Assign(NS_LITERAL_CSTRING("windows-1252"));
     return rv;
   }
 
-  rv = gInfo->Get(inANSICodePage, outCharset);
+  nsAutoString charset;
+  rv = gInfo->Get(inANSICodePage, charset);
   if (NS_FAILED(rv)) {
-    outCharset.Assign(NS_LITERAL_STRING("windows-1252"));
+    outCharset.Assign(NS_LITERAL_CSTRING("windows-1252"));
     return rv;
   }
+
+  CopyUCS2toASCII(charset, outCharset);
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsAString& oResult)
+nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector,
+                              nsACString& oResult)
 {
   oResult = mCharset;
   return NS_OK;
@@ -133,7 +137,7 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUni
   nsCOMPtr<nsIWin32Locale>	winLocale;
   LCID						localeAsLCID;
   char						acp_name[6];
-  nsAutoString    charset;
+  nsCAutoString    charset;
   nsAutoString    localeAsNSString(localeName);
 
   //
@@ -165,13 +169,13 @@ nsPlatformCharset::Init()
 }
 
 nsresult 
-nsPlatformCharset::MapToCharset(short script, short region, nsAString& outCharset)
+nsPlatformCharset::MapToCharset(short script, short region, nsACString& outCharset)
 {
   return NS_OK;
 }
 
 nsresult
-nsPlatformCharset::InitGetCharset(nsAString &oString)
+nsPlatformCharset::InitGetCharset(nsACString &oString)
 {
   return NS_OK;
 }
@@ -183,7 +187,7 @@ nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& loc
 }
 
 nsresult
-nsPlatformCharset::VerifyCharset(nsString &aCharset)
+nsPlatformCharset::VerifyCharset(nsCString &aCharset)
 {
   return NS_OK;
 }

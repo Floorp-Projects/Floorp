@@ -44,7 +44,6 @@
 #include "nsIServiceManager.h"
 #include "nsILanguageAtomService.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsICharRepresentable.h"
 #include "nsISaveAsCharset.h"
 #include "nsIObserver.h"
@@ -144,7 +143,7 @@ PRUint16* nsFontMetricsWin::gEmptyCCMap = nsnull;
 
 
 static nsIPersistentProperties* gFontEncodingProperties = nsnull;
-static nsICharsetConverterManager2* gCharsetManager = nsnull;
+static nsICharsetConverterManager* gCharsetManager = nsnull;
 static nsIUnicodeEncoder* gUserDefinedConverter = nsnull;
 static nsISaveAsCharset* gFontSubstituteConverter = nsnull;
 static nsIPref* gPref = nsnull;
@@ -289,7 +288,7 @@ static nsresult
 InitGlobals(void)
 {
   nsServiceManager::GetService(kCharsetConverterManagerCID,
-    NS_GET_IID(nsICharsetConverterManager2), (nsISupports**) &gCharsetManager);
+    NS_GET_IID(nsICharsetConverterManager), (nsISupports**) &gCharsetManager);
   if (!gCharsetManager) {
     FreeGlobals();
     return NS_ERROR_FAILURE;
@@ -1255,7 +1254,7 @@ static PRUint8 gBitToUnicodeRange[] =
 
 // Helper to determine if a font has a private encoding that we know something about
 static nsresult
-GetEncoding(const char* aFontName, nsString& aValue)
+GetEncoding(const char* aFontName, nsCString& aValue)
 {
   // this is "MS P Gothic" in Japanese
   static const char* mspgothic=  
@@ -1290,8 +1289,12 @@ GetEncoding(const char* aFontName, nsString& aValue)
   if (! gFontEncodingProperties)
     InitFontEncodingProperties();
 
-  if (gFontEncodingProperties)
-    return gFontEncodingProperties->GetStringProperty(name, aValue);
+  if (gFontEncodingProperties) {
+    nsAutoString prop;
+    nsresult rv = gFontEncodingProperties->GetStringProperty(name, prop);
+    aValue.AssignWithConversion(prop);
+    return rv;
+  }
   return NS_ERROR_NOT_AVAILABLE;
 }
 
@@ -1299,13 +1302,11 @@ GetEncoding(const char* aFontName, nsString& aValue)
 // converter for the font whose name is given. The caller holds a reference
 // to the converter, and should take care of the release...
 static nsresult
-GetConverterCommon(nsString& aEncoding, nsIUnicodeEncoder** aConverter)
+GetConverterCommon(const char* aEncoding, nsIUnicodeEncoder** aConverter)
 {
   *aConverter = nsnull;
-  nsCOMPtr<nsIAtom> charset;
-  nsresult rv = gCharsetManager->GetCharsetAtom(aEncoding.get(), getter_AddRefs(charset));
-  if (NS_FAILED(rv)) return rv;
-  rv = gCharsetManager->GetUnicodeEncoder(charset, aConverter);
+  nsresult rv;
+  rv = gCharsetManager->GetUnicodeEncoderRaw(aEncoding, aConverter);
   if (NS_FAILED(rv)) return rv;
   return (*aConverter)->SetOutputErrorBehavior((*aConverter)->kOnError_Replace, nsnull, '?');
 }
@@ -1313,9 +1314,7 @@ GetConverterCommon(nsString& aEncoding, nsIUnicodeEncoder** aConverter)
 static nsresult
 GetDefaultConverterForTTFSymbolEncoding(nsIUnicodeEncoder** aConverter)
 {
-  nsAutoString value;
-  value.AssignWithConversion(DEFAULT_TTF_SYMBOL_ENCODING);
-  return GetConverterCommon(value, aConverter);
+  return GetConverterCommon(DEFAULT_TTF_SYMBOL_ENCODING, aConverter);
 }
 
 static nsresult
@@ -1323,13 +1322,13 @@ GetConverter(const char* aFontName, nsIUnicodeEncoder** aConverter, PRBool* aIsW
 {
   *aConverter = nsnull;
 
-  nsAutoString value;
+  nsCAutoString value;
   nsresult rv = GetEncoding(aFontName, value);
   if (NS_FAILED(rv)) return rv;
   // The encoding name of a wide NonUnicode font in fontEncoding.properties
   // has '.wide' suffix which has to be removed to get the converter
   // for the encoding.
-  if (Substring(value, value.Length() - 5, 5) == (NS_LITERAL_STRING(".wide"))) {
+  if (Substring(value, value.Length() - 5, 5) == (NS_LITERAL_CSTRING(".wide"))) {
     value.Truncate(value.Length()-5);
     if (aIsWide)
       *aIsWide = PR_TRUE;
@@ -1338,7 +1337,7 @@ GetConverter(const char* aFontName, nsIUnicodeEncoder** aConverter, PRBool* aIsW
     if (aIsWide)
       *aIsWide = PR_FALSE;
 
-  return GetConverterCommon(value, aConverter);
+  return GetConverterCommon(value.get(), aConverter);
 }
 
 // This function uses the charset converter manager to fill the map for the
@@ -1648,7 +1647,7 @@ nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName, eFontType& aFont
         // Here, we check if this font is a pseudo-unicode font that 
         // we know something about, and we force it to be treated as
         // a non-unicode font.
-        nsAutoString encoding;
+        nsCAutoString encoding;
         if (NS_SUCCEEDED(GetEncoding(aShortName, encoding))) {
           aCharset = DEFAULT_CHARSET;
           aFontType = eFontType_NonUnicode;
@@ -3546,11 +3545,7 @@ nsFontMetricsWin::RealizeFont()
 
   if (mLangGroup.get() == gUserDefined) {
     if (!gUserDefinedConverter) {
-      nsCOMPtr<nsIAtom> charset;
-      rv = gCharsetManager->GetCharsetAtom2("x-user-defined",
-        getter_AddRefs(charset));
-      if (NS_FAILED(rv)) return rv;
-      rv = gCharsetManager->GetUnicodeEncoder(charset, &gUserDefinedConverter);
+      rv = gCharsetManager->GetUnicodeEncoderRaw("x-user-defined", &gUserDefinedConverter);
       if (NS_FAILED(rv)) return rv;
       gUserDefinedConverter->SetOutputErrorBehavior(
         gUserDefinedConverter->kOnError_Replace, nsnull, '?');

@@ -262,7 +262,7 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
   mScriptcode = smSystemScript;
   mLangcode = langEnglish;
   mRegioncode = verUS;
-  mCharset.Assign(NS_LITERAL_STRING("x-mac-roman"));
+  mCharset.Assign(NS_LITERAL_CSTRING("x-mac-roman"));
   
 
   // get application locale
@@ -305,7 +305,7 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(mLocale.get(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
-        mCharset.Assign(mappedCharset);
+        mCharset.AssignWithConversion(mappedCharset);
         nsMemory::Free(mappedCharset);
       }
       
@@ -316,14 +316,12 @@ nsresult nsDateTimeFormatMac::Initialize(nsILocale* locale)
 
   // Initialize unicode decoder
   nsCOMPtr <nsIAtom>                      charsetAtom;
-  nsCOMPtr <nsICharsetConverterManager2>  charsetConverterManager;
+  nsCOMPtr <nsICharsetConverterManager>  charsetConverterManager;
   charsetConverterManager = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
   if (NS_SUCCEEDED(res)) {
-    res = charsetConverterManager->GetCharsetAtom(mUseDefaultLocale ? mSystemCharset.get() : mCharset.get(), 
-                                                  getter_AddRefs(charsetAtom));
-    if (NS_SUCCEEDED(res)) {
-      res = charsetConverterManager->GetUnicodeDecoder(charsetAtom, getter_AddRefs(mDecoder));
-    }
+    res = charsetConverterManager->GetUnicodeDecoder(mUseDefaultLocale ? mSystemCharset.get() : 
+                                                     mCharset.get(), 
+                                                     getter_AddRefs(mDecoder));
   }
   
   return res;

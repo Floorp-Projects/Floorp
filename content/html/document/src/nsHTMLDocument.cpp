@@ -675,11 +675,11 @@ nsHTMLDocument::TryChannelCharset(nsIChannel *aChannel,
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID));
       if (calias) {
-        nsAutoString preferred;
-        rv = calias->GetPreferred(NS_ConvertASCIItoUCS2(charsetVal),
+        nsCAutoString preferred;
+        rv = calias->GetPreferred(charsetVal,
                                   preferred);
         if(NS_SUCCEEDED(rv)) {
-          aCharset = preferred;
+          CopyASCIItoUCS2(preferred, aCharset);
           aCharsetSource = kCharsetFromChannel;
           return PR_TRUE;
         }

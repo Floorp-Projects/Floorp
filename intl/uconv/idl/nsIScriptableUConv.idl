@@ -50,13 +50,13 @@
  * @created         8/Jun/2000
  * @author          Makoto Kato [m_kato@ga2.so-net.ne.jp]
  */
-[scriptable, uuid(0A698C44-3BFF-11d4-9649-00C0CA135B4E)]
+[scriptable, uuid(d395ef67-a613-47b9-b5e3-dc7ce1bdb71a)]
 interface nsIScriptableUnicodeConverter : nsISupports
 {
   /**
    * Converts the data from Unicode to one Charset.
    */
-  string ConvertFromUnicode([const] in wstring aSrc);
+  string ConvertFromUnicode(in wstring aSrc);
 
   /**
    * Returns the terminator string.
@@ -72,5 +72,5 @@ interface nsIScriptableUnicodeConverter : nsISupports
   /**
    * Current charactor set
    */
-  attribute wstring charset;
+  attribute string charset;
 };

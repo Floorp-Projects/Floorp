@@ -64,7 +64,6 @@
 #include "nsEnumeratorUtils.h"
 #include "nsIRDFRemoteDataSource.h"
 #include "nsICharsetConverterManager.h"
-#include "nsICharsetConverterManager2.h"
 #include "nsICharsetAlias.h"
 #include "nsITextToSubURI.h"
 #include "nsEscape.h"
@@ -3291,22 +3290,20 @@ InternetSearchDataSource::FindData(nsIRDFResource *engine, nsIRDFLiteral **dataL
 }
 
 nsresult
-InternetSearchDataSource::DecodeData(const PRUnichar *aCharset, const PRUnichar *aInString, PRUnichar **aOutString)
+InternetSearchDataSource::DecodeData(const char *aCharset, const PRUnichar *aInString, PRUnichar **aOutString)
 {
 	nsresult rv;
     
-	nsCOMPtr <nsICharsetConverterManager2> charsetConv = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-	NS_ENSURE_SUCCESS(rv, rv);
-
-	nsCOMPtr <nsIAtom> charsetAtom;
-	rv = charsetConv->GetCharsetAtom(aCharset, getter_AddRefs(charsetAtom));
-	// Use the sherlock default charset in case of failure
-	if (NS_FAILED(rv))
-		rv = charsetConv->GetCharsetAtom(NS_LITERAL_STRING("x-mac-roman").get(), getter_AddRefs(charsetAtom));
+	nsCOMPtr <nsICharsetConverterManager> charsetConv = 
+          do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
 	NS_ENSURE_SUCCESS(rv, rv);
 
 	nsCOMPtr<nsIUnicodeDecoder>	unicodeDecoder;
-	rv = charsetConv->GetUnicodeDecoder(charsetAtom, getter_AddRefs(unicodeDecoder));
+	rv = charsetConv->GetUnicodeDecoder(aCharset, getter_AddRefs(unicodeDecoder));
+
+	// Use the sherlock default charset in case of failure
+	if (NS_FAILED(rv))
+		rv = charsetConv->GetUnicodeDecoderRaw("x-mac-roman", getter_AddRefs(unicodeDecoder));
 	NS_ENSURE_SUCCESS(rv, rv);
 
 	// This fixes the corruption occured in InternetSearchDataSource::ReadFileContents()
@@ -3342,7 +3339,7 @@ InternetSearchDataSource::updateDataHintsInGraph(nsIRDFResource *engine, const P
 
 	// save/update name of search engine (as specified in file)
 	nsAutoString scriptCodeValue;
-	const PRUnichar *charsetName = MapScriptCodeToCharsetName(0);
+	const char * charsetName = MapScriptCodeToCharsetName(0);
 	nsXPIDLString decodedValue;
 
 	if (NS_SUCCEEDED(rv = GetData(dataUni, "search", 0, "sourceTextEncoding", scriptCodeValue)) && 
@@ -3569,7 +3566,8 @@ struct	encodings
 
 
 nsresult
-InternetSearchDataSource::MapEncoding(const nsString &numericEncoding, nsString &stringEncoding)
+InternetSearchDataSource::MapEncoding(const nsString &numericEncoding, 
+                                      nsString &stringEncoding)
 {
 	// XXX we need to have a full table of numeric --> string conversions
 
@@ -3618,7 +3616,7 @@ InternetSearchDataSource::MapEncoding(const nsString &numericEncoding, nsString 
       if (numericEncoding.EqualsWithConversion(encodingList[i].numericEncoding)) 
       {
         stringEncoding.AssignWithConversion(encodingList[i].stringEncoding);
-        return(NS_OK);
+        return NS_OK;
       }
     }
   }
@@ -3630,7 +3628,7 @@ InternetSearchDataSource::MapEncoding(const nsString &numericEncoding, nsString 
     prefs->GetLocalizedUnicharPref("intl.charset.default", getter_Copies(defCharset));
 
   if (!defCharset.IsEmpty())
-    stringEncoding.Assign(defCharset);
+    stringEncoding = defCharset;
   else
     // make "ISO-8859-1" as the default (not "UTF-8")
     stringEncoding.Assign(NS_LITERAL_STRING("ISO-8859-1"));
@@ -3638,15 +3636,10 @@ InternetSearchDataSource::MapEncoding(const nsString &numericEncoding, nsString 
   return(NS_OK);
 }
 
-struct scripts
-{
-	PRInt32  scriptCode;
-	PRUnichar  charsetName[22];
-};
 
 
-const PRUnichar *
-InternetSearchDataSource::MapScriptCodeToCharsetName(PRInt32 aScriptCode)
+const char * const
+InternetSearchDataSource::MapScriptCodeToCharsetName(PRUint32 aScriptCode)
 {
 	// Script codes listed here are taken from Inside Macintosh Text.
 	// Used TECGetTextEncodingInternetName to map script code to charset name.
@@ -3654,57 +3647,45 @@ InternetSearchDataSource::MapScriptCodeToCharsetName(PRInt32 aScriptCode)
 	// In case no converter can be found for a charset name, 
 	// the default sherlock charset "x-mac-roman" should be used.
 	// 
-	static struct scripts scriptList[] =
+        static const char* const scriptList[] =
 	{
-		{ 0, {'x','-','m','a','c','-','r','o','m','a','n','\0'} },
-		{ 1, {'S','h','i','f','t','_','J','I','S','\0'} },
-		{ 2, {'B','i','g','5','\0'} },
-		{ 3, {'E','U','C','-','K','R','\0'} },
-		{ 4, {'X','-','M','A','C','-','A','R','A','B','I','C','\0'} },
-		{ 5, {'X','-','M','A','C','-','H','E','B','R','E','W','\0'} },
-		{ 6, {'X','-','M','A','C','-','G','R','E','E','K','\0'} },
-		{ 7, {'X','-','M','A','C','-','C','Y','R','I','L','L','I','C','\0'} },
-		{ 9, {'X','-','M','A','C','-','D','E','V','A','N','A','G','A','R','I','\0'} },
-		{ 10, {'X','-','M','A','C','-','G','U','R','M','U','K','H','I','\0'} },
-		{ 11, {'X','-','M','A','C','-','G','U','J','A','R','A','T','I','\0'} },
-		{ 12, {'X','-','M','A','C','-','O','R','I','Y','A','\0'} },
-		{ 13, {'X','-','M','A','C','-','B','E','N','G','A','L','I','\0'} },
-		{ 14, {'X','-','M','A','C','-','T','A','M','I','L','\0'} },
-		{ 15, {'X','-','M','A','C','-','T','E','L','U','G','U','\0'} },
-		{ 16, {'X','-','M','A','C','-','K','A','N','N','A','D','A','\0'} },
-		{ 17, {'X','-','M','A','C','-','M','A','L','A','Y','A','L','A','M','\0'} },
-		{ 18, {'X','-','M','A','C','-','S','I','N','H','A','L','E','S','E','\0'} },
-		{ 19, {'X','-','M','A','C','-','B','U','R','M','E','S','E','\0'} },
-		{ 20, {'X','-','M','A','C','-','K','H','M','E','R','\0'} },
-		{ 21, {'X','-','M','A','C','-','T','H','A','I','\0'} },
-		{ 22, {'X','-','M','A','C','-','L','A','O','T','I','A','N','\0'} },
-		{ 23, {'X','-','M','A','C','-','G','E','O','R','G','I','A','N','\0'} },
-		{ 24, {'X','-','M','A','C','-','A','R','M','E','N','I','A','N','\0'} },
-		{ 25, {'G','B','2','3','1','2','\0'} },
-		{ 26, {'X','-','M','A','C','-','T','I','B','E','T','A','N','\0'} },
-		{ 27, {'X','-','M','A','C','-','M','O','N','G','O','L','I','A','N','\0'} },
-		{ 28, {'X','-','M','A','C','-','E','T','H','I','O','P','I','C','\0'} },
-		{ 29, {'X','-','M','A','C','-','C','E','N','T','R','A','L','E','U','R','R','O','M','A','N','\0'} },
-		{ 30, {'X','-','M','A','C','-','V','I','E','T','N','A','M','E','S','E','\0'} },
-		{ 31, {'X','-','M','A','C','-','E','X','T','A','R','A','B','I','C','\0'} },
-
-		{ -1, {0} }
+		"x-mac-roman",           // 0
+		"Shift_JIS",             // 1
+		"Big5",                  // 2
+		"EUC-KR",                // 3
+		"X-MAC-ARABIC",          // 4
+		"X-MAC-HEBREW",          // 5
+		"X-MAC-GREEK",           // 6
+		"X-MAC-CYRILLIC",        // 7
+		"X-MAC-DEVANAGARI" ,     // 9
+		"X-MAC-GURMUKHI",        // 10
+		"X-MAC-GUJARATI",        // 11
+		"X-MAC-ORIYA",           // 12
+		"X-MAC-BENGALI",         // 13
+		"X-MAC-TAMIL",           // 14
+		"X-MAC-TELUGU",          // 15
+		"X-MAC-KANNADA",         // 16
+		"X-MAC-MALAYALAM",       // 17
+		"X-MAC-SINHALESE",       // 18
+		"X-MAC-BURMESE",         // 19
+		"X-MAC-KHMER",           // 20
+		"X-MAC-THAI",            // 21
+		"X-MAC-LAOTIAN",         // 22
+		"X-MAC-GEORGIAN",        // 23
+		"X-MAC-ARMENIAN",        // 24
+		"GB2312",                // 25
+		"X-MAC-TIBETAN",         // 26
+		"X-MAC-MONGOLIAN",       // 27
+		"X-MAC-ETHIOPIC",        // 28
+		"X-MAC-CENTRALEURROMAN", // 29
+		"X-MAC-VIETNAMESE",      // 30
+		"X-MAC-EXTARABIC",       // 31
  	};
 
-	const PRUnichar *charsetName = nsnull;
-	for (PRUint32 i = 0; scriptList[i].scriptCode >= 0; i++)
-	{
-		if (scriptList[i].scriptCode == aScriptCode)
-		{
-			charsetName = scriptList[i].charsetName;
-			break;
-		}
-	}
+        if (aScriptCode >= NS_ARRAY_LENGTH(scriptList))
+          aScriptCode = 0;
 
-	if (!charsetName)
-		charsetName = scriptList[0].charsetName;  // "x-mac-roman"
-
-	return charsetName;
+	return scriptList[aScriptCode];
 }
 
 
@@ -3853,17 +3834,12 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	// "interpret/resultTranslationFont" since we always convert results to Unicode
 	if (!resultEncodingStr.IsEmpty())
 	{
-		nsCOMPtr <nsICharsetConverterManager2> charsetConv = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+		nsCOMPtr <nsICharsetConverterManager> charsetConv = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
 		if (NS_SUCCEEDED(rv))
 		{
-			nsCOMPtr <nsIAtom> charsetAtom;
-			rv = charsetConv->GetCharsetAtom(resultEncodingStr.get(), getter_AddRefs(charsetAtom));
-
-			if (NS_SUCCEEDED(rv))
-			{
-				rv = charsetConv->GetUnicodeDecoder(charsetAtom,
-					getter_AddRefs(unicodeDecoder));
-			}
+                  NS_LossyConvertUCS2toASCII charset(resultEncodingStr);
+                  rv = charsetConv->GetUnicodeDecoder(charset.get(),
+                                                      getter_AddRefs(unicodeDecoder));
 		}
 	}
 

@@ -132,7 +132,7 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(aLocale.get(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
-        mCollation->SetCharset(mappedCharset);
+        mCollation->SetCharset(NS_LossyConvertUCS2toASCII(mappedCharset).get());
         nsMemory::Free(mappedCharset);
       }
     }

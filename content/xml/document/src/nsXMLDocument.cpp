@@ -620,10 +620,10 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
       nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
 
       if(NS_SUCCEEDED(rv) && (nsnull != calias) ) {
-        nsAutoString preferred;
-        rv = calias->GetPreferred(NS_ConvertASCIItoUCS2(charsetVal), preferred);
+        nsCAutoString preferred;
+        rv = calias->GetPreferred(charsetVal, preferred);
         if(NS_SUCCEEDED(rv)){            
-          charset = preferred;
+          CopyASCIItoUCS2(preferred, charset);
           charsetSource = kCharsetFromChannel;
         }
       }

@@ -46,7 +46,7 @@
 #include "nsILocalFile.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
-#include "nsICharsetConverterManager2.h"
+#include "nsICharsetConverterManager.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
@@ -58,7 +58,7 @@ static NS_DEFINE_CID(kThisImplCID, NS_THIS_STANDARDURL_IMPL_CID);
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 
 nsIIDNService *nsStandardURL::gIDNService = nsnull;
-nsICharsetConverterManager2 *nsStandardURL::gCharsetMgr = nsnull;
+nsICharsetConverterManager *nsStandardURL::gCharsetMgr = nsnull;
 PRBool nsStandardURL::gInitialized = PR_FALSE;
 PRBool nsStandardURL::gEscapeUTF8 = PR_TRUE;
 
@@ -214,7 +214,7 @@ nsSegmentEncoder::nsSegmentEncoder(const char *charset)
     // get unicode encoder (XXX cache this someplace)
     nsresult rv;
     if (!gCharsetMgr) {
-        nsCOMPtr<nsICharsetConverterManager2> convMgr(
+        nsCOMPtr<nsICharsetConverterManager> convMgr(
                 do_GetService("@mozilla.org/charset-converter-manager;1", &rv));
         if (NS_FAILED(rv)) {
             NS_ERROR("failed to get charset-converter-manager");
@@ -223,14 +223,7 @@ nsSegmentEncoder::nsSegmentEncoder(const char *charset)
         NS_ADDREF(gCharsetMgr = convMgr);
     }
 
-    nsCOMPtr<nsIAtom> charsetAtom;
-    rv = gCharsetMgr->GetCharsetAtom2(charset, getter_AddRefs(charsetAtom));
-    if (NS_FAILED(rv)) {
-        NS_ERROR("failed to get charset atom");
-        return;
-    }
-
-    rv = gCharsetMgr->GetUnicodeEncoder(charsetAtom, getter_AddRefs(mEncoder));
+    rv = gCharsetMgr->GetUnicodeEncoder(charset, getter_AddRefs(mEncoder));
     if (NS_FAILED(rv)) {
         NS_ERROR("failed to get unicode encoder");
         mEncoder = 0; // just in case

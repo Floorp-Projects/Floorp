@@ -55,8 +55,7 @@ public:
   nsPosixLocale();
   virtual ~nsPosixLocale();
 
-  NS_IMETHOD GetPlatformLocale(const nsString* locale,char* posixLocale,
-                               size_t length);
+  NS_IMETHOD GetPlatformLocale(const nsString* locale, nsACString& posixLocale);
   NS_IMETHOD GetXPLocale(const char* posixLocale, nsString* locale);
 
 protected:

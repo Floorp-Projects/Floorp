@@ -43,10 +43,12 @@
 #include "nscore.h"
 #include "nsString.h"
 
-// {21434951-EC71-11d2-9E89-0060089FE59B}
+/* a434957c-6514-447c-991b-2117b633359c */
 #define	NS_IPOSIXLOCALE_IID	  \
-{ 0x21434951, 0xec71, 0x11d2,     \
-{ 0x9e, 0x89, 0x0, 0x60, 0x8, 0x9f, 0xe5, 0x9b }}
+{   0xa434957c, \
+    0x6514, \
+    0x447c, \
+    {0x99, 0x1b, 0x21, 0x17, 0xb6, 0x33, 0x35, 0x9c} }
 
 #define MAX_LANGUAGE_CODE_LEN 3
 #define MAX_COUNTRY_CODE_LEN  3
@@ -57,9 +59,9 @@ class nsIPosixLocale : public nsISupports {
 
 public:
 	
-        NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPOSIXLOCALE_IID)
-	NS_IMETHOD GetPlatformLocale(const nsString* locale,char* posixLocale,size_t length)=0;
-	NS_IMETHOD GetXPLocale(const char* posixLocale, nsString* locale)=0;
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPOSIXLOCALE_IID)
+  NS_IMETHOD GetPlatformLocale(const nsString* locale, nsACString& posixLocale) = 0;
+  NS_IMETHOD GetXPLocale(const char* posixLocale, nsString* locale)=0;
 };
 
 

@@ -4121,7 +4121,7 @@ static nsresult CreateUnicodeDecoder(nsIUnicodeDecoder **aUnicodeDecoder)
 {
   nsresult rv;
   // get the charset
-  nsAutoString platformCharset;
+  nsCAutoString platformCharset;
   nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = platformCharsetService->GetCharset(kPlatformCharsetSel_FileName, platformCharset);
@@ -4130,7 +4130,8 @@ static nsresult CreateUnicodeDecoder(nsIUnicodeDecoder **aUnicodeDecoder)
   // get the decoder
   nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = ccm->GetUnicodeDecoder(&platformCharset, aUnicodeDecoder);
+  rv = ccm->GetUnicodeDecoderRaw(platformCharset.get(),
+                                 aUnicodeDecoder);
 
   return rv;
 }

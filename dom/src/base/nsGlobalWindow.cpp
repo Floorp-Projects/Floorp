@@ -3487,7 +3487,8 @@ GlobalWindowImpl::ConvertCharset(const nsAString& aStr,
     return result;
 
   // Get an encoder for the character set
-  result = ccm->GetUnicodeEncoder(&charset, getter_AddRefs(encoder));
+  result = ccm->GetUnicodeEncoderRaw(NS_LossyConvertUCS2toASCII(charset).get(),
+                                     getter_AddRefs(encoder));
   if (NS_FAILED(result))
     return result;
 
@@ -3584,7 +3585,8 @@ GlobalWindowImpl::Unescape(const nsAString& aStr,
     return result;
 
   // Get an decoder for the character set
-  result = ccm->GetUnicodeDecoder(&charset, getter_AddRefs(decoder));
+  result = ccm->GetUnicodeDecoderRaw(NS_LossyConvertUCS2toASCII(charset).get(),
+                                     getter_AddRefs(decoder));
   if (NS_FAILED(result))
     return result;
 

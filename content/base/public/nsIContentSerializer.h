@@ -52,11 +52,13 @@ class nsIDOMElement; /* forward declaration */
 class nsIDOMDocument; /* forward declaration */
 
 /* starting interface:    nsIContentSerializer */
-#define NS_ICONTENTSERIALIZER_IID_STR "61e9b9a3-d30c-429e-b0cf-ade73466df06"
 
+/* d650439a-ca29-410d-a906-b0557fb62fcd */
 #define NS_ICONTENTSERIALIZER_IID \
-  {0x61e9b9a3, 0xd30c, 0x429e, \
-    { 0xb0, 0xcf, 0xad, 0xe7, 0x34, 0x66, 0xdf, 0x06 }}
+{   0xd650439a, \
+    0xca29, \
+    0x410d, \
+    {0xa9, 0x06, 0xb0, 0x55, 0x7f, 0xb6, 0x2f, 0xcd} }
 
 class nsIContentSerializer : public nsISupports {
  public: 
@@ -64,7 +66,7 @@ class nsIContentSerializer : public nsISupports {
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONTENTSERIALIZER_IID)
 
   NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn,
-                  nsIAtom* aCharSet, PRBool aIsCopying) = 0;
+                  const char* aCharSet, PRBool aIsCopying) = 0;
 
   NS_IMETHOD AppendText(nsIDOMText* aText, PRInt32 aStartOffset,
                         PRInt32 aEndOffset, nsAString& aStr) = 0;

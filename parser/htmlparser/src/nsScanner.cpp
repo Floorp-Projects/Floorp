@@ -204,22 +204,22 @@ nsresult nsScanner::SetDocumentCharset(const nsAString& aCharset , PRInt32 aSour
 
   nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &res));
   NS_ASSERTION( nsnull != calias, "cannot find charset alias");
-  nsAutoString charsetName; charsetName.Assign(aCharset);
+  nsCAutoString charsetName = NS_LossyConvertUCS2toASCII(aCharset);
   if( NS_SUCCEEDED(res) && (nsnull != calias))
   {
     PRBool same = PR_FALSE;
-    res = calias->Equals(aCharset, mCharset, &same);
+    res = calias->Equals(charsetName, mCharset, &same);
     if(NS_SUCCEEDED(res) && same)
     {
       return NS_OK; // no difference, don't change it
     }
     // different, need to change it
-    res = calias->GetPreferred(aCharset, charsetName);
+    res = calias->GetPreferred(charsetName, charsetName);
 
     if(NS_FAILED(res) && (kCharsetUninitialized == mCharsetSource) )
     {
        // failed - unknown alias , fallback to ISO-8859-1
-      charsetName.Assign(NS_LITERAL_STRING("ISO-8859-1"));
+      charsetName.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));
     }
     mCharset = charsetName;
     mCharsetSource = aSource;
@@ -229,7 +229,7 @@ nsresult nsScanner::SetDocumentCharset(const nsAString& aCharset , PRInt32 aSour
     if(NS_SUCCEEDED(res) && (nsnull != ccm))
     {
       nsIUnicodeDecoder * decoder = nsnull;
-      res = ccm->GetUnicodeDecoder(&mCharset, &decoder);
+      res = ccm->GetUnicodeDecoderRaw(mCharset.get(), &decoder);
       if(NS_SUCCEEDED(res) && (nsnull != decoder))
       {
          NS_IF_RELEASE(mUnicodeDecoder);

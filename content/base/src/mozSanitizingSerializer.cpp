@@ -120,7 +120,7 @@ NS_IMPL_ISUPPORTS4(mozSanitizingHTMLSerializer,
 
 NS_IMETHODIMP 
 mozSanitizingHTMLSerializer::Init(PRUint32 aFlags, PRUint32 dummy,
-                                  nsIAtom* aCharSet, PRBool aIsCopying)
+                                  const char* aCharSet, PRBool aIsCopying)
 {
   return NS_OK;
 }

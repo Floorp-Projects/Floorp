@@ -130,11 +130,11 @@ void nsGtkIMEHelper::SetupUnicodeDecoder()
   nsCOMPtr<nsIPlatformCharset> platform = 
            do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &result);
   if (platform && NS_SUCCEEDED(result)) {
-    nsAutoString charset;
-    charset.Assign(NS_LITERAL_STRING(""));
+    nsCAutoString charset;
+    charset.Assign(NS_LITERAL_CSTRING(""));
     result = platform->GetCharset(kPlatformCharsetSel_Menu, charset);
     if (NS_FAILED(result) || charset.IsEmpty()) {
-      charset.Assign(NS_LITERAL_STRING("ISO-8859-1"));   // default
+      charset.Assign(NS_LITERAL_CSTRING("ISO-8859-1"));   // default
     }
     nsICharsetConverterManager* manager = nsnull;
     nsresult res = nsServiceManager::
@@ -142,7 +142,7 @@ void nsGtkIMEHelper::SetupUnicodeDecoder()
                  NS_GET_IID(nsICharsetConverterManager),
                  (nsISupports**)&manager);
     if (manager && NS_SUCCEEDED(res)) {
-      manager->GetUnicodeDecoder(&charset, &mDecoder);
+      manager->GetUnicodeDecoderRaw(charset.get(), &mDecoder);
       nsServiceManager::ReleaseService(kCharsetConverterManagerCID, manager);
     }
   }
