@@ -1063,7 +1063,7 @@ static void DumpHelp(char *appname)
 #ifdef MOZ_ENABLE_XREMOTE
   printf("%s-remote <command>%sExecute <command> in an already running\n"
          "%sMozilla process.  For more info, see:\n"
-         "\n%shttp://home.netscape.com/newsref/std/x-remote.html\n\n",
+         "\n%shttp://www.mozilla.org/unix/remote.html\n\n",
          HELP_SPACER_1,HELP_SPACER_1,HELP_SPACER_4,HELP_SPACER_2);
   printf("%s-splash%sEnable splash screen.\n",HELP_SPACER_1,HELP_SPACER_2);
 #else
