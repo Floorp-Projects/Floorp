@@ -1550,9 +1550,21 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext* aPresContext,
 
   if (change != 0) {
     mDrag.Reset(mDragger->mVertical, mDragger->mPrevNeighbor, change, this);
+    nsIFrame* parentFrame = nsnull;
+    GetParent((nsIFrame**)&parentFrame);
+    if (!parentFrame) {
+      return;
+    }
+
     nsCOMPtr<nsIPresShell> shell;
     aPresContext->GetShell(getter_AddRefs(shell));
-    shell->ResizeReflow(mTopLevelFrameset->mRect.width, mTopLevelFrameset->mRect.height);
+    if (!shell) {
+      return;
+    }
+
+    parentFrame->ReflowDirtyChild(shell, this);
+
+    // Update the view immediately (make drag appear snappier)
     nsCOMPtr<nsIViewManager> vm;
     shell->GetViewManager(getter_AddRefs(vm));
     if (vm) {
