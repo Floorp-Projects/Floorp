@@ -364,14 +364,20 @@ function(aRow, aColId)
       default:
         return rule.cssText;
     }
-  } else if (aColId == "olcFileURL") {
-    return rule.parentStyleSheet.href;
-  } else if (aColId == "olcWeight") {
+  }
+
+  if (aColId == "olcFileURL") {
+    return rule.parentStyleSheet ? rule.parentStyleSheet.href : "";
+  }
+
+  if (aColId == "olcWeight") {
     return rule.type == CSSRule.STYLE_RULE ? this.mDOMUtils.getRuleWeight(rule) : "";
-  } else if (aColId == "olcLine") {
+  }
+
+  if (aColId == "olcLine") {
     return rule.type == CSSRule.STYLE_RULE ? this.mDOMUtils.getRuleLine(rule) : "";
   }
-  
+
   return "";
 }
 
