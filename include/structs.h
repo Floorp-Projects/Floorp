@@ -224,7 +224,7 @@ struct MWContext_ {
 										   in Browser windows too.) */
 										/* Also overloaded by progress module to hold private crap! */
 
-#ifdef MOCHA
+
     struct JSContext *mocha_context;	/* opaque handle to Mocha state */
     uint32  event_bit;			/* sum of all event capturing objects */
     XP_Bool js_drag_enabled;		/* indicates JS drag enabled */
@@ -233,7 +233,7 @@ struct MWContext_ {
     MWContext *js_parent;
     int32 js_timeouts_pending;          /* Number of pending JavaScript timeouts */
 
-#endif
+
     XP_Bool restricted_target;			/* TRUE if window is off-limits for opening links into 
 						from mail or other window-grabbing functions.*/
 

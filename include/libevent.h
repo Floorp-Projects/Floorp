@@ -26,11 +26,7 @@
 
 #include "libmocha.h"
 #include "prtypes.h"
-#ifndef NSPR20
-#include "prevent.h"
-#else
 #include "plevent.h"
-#endif
 #include "shist.h"
 #include "fe_proto.h"
 #include "lo_ele.h"

@@ -33,7 +33,7 @@ typedef struct SHIST_SavedData {
 	void*		FormList;		/* layout data to recreate forms */
 	void*		EmbedList;		/* layout data to recreate embeds and applets */
 	void*		Grid;			/* layout data to recreate grids */
-#ifdef MOCHA
+
     void*		Window;			/* window object for grid being resized */
 
 	/* XXX none of this would be necessary if frameset docs were reparsed */
@@ -48,7 +48,7 @@ typedef struct SHIST_SavedData {
 	void*		OnMove;			/* JavaScript onmove event handler source */
 	void*		OnResize;		/* JavaScript onresize event handler source */
 	void*           style_stack;            /* JSSS style stack info */
-#endif
+
 } SHIST_SavedData;
 
 /*

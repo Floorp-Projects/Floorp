@@ -234,10 +234,6 @@ typedef int (*FARPROC)();
 #define _INT32
 #define _UINT32
 
-#ifndef NSPR20
-typedef int         	intn;
-#endif /* NSPR20 */
-
 /* function classifications */
 
 #define PUBLIC
