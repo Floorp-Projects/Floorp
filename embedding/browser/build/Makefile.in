@@ -46,6 +46,7 @@ REQUIRES	= xpcom \
 		  timer \
 		  windowwatcher \
 		  mimetype \
+		  webbrowserpersist \
 		  $(NULL)
 
 CPPSRCS		= \

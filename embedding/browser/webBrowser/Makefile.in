@@ -45,6 +45,7 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  wallet \
 		  appcomps \
+		  webbrowserpersist \
 		  $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
@@ -64,7 +65,6 @@ XPIDLSRCS	= \
 		nsIEmbeddingSiteWindow.idl  \
 		nsITooltipListener.idl		\
 		nsITooltipTextProvider.idl	\
-		nsIWebBrowserPersist.idl		\
 		nsIWebBrowserFocus.idl		\
 		nsIWebBrowserPrint.idl       \
 		$(NULL)
@@ -73,8 +73,6 @@ CPPSRCS		= \
 		nsDocShellTreeOwner.cpp		\
 		nsWebBrowser.cpp		\
 		nsCommandHandler.cpp		\
-		nsWebBrowserPersist.cpp		\
-		nsDOMWalker.cpp			\
 		nsNonPersistAuthPrompt.cpp      \
                 nsWebBrowserContentPolicy.cpp   \
 		$(NULL)

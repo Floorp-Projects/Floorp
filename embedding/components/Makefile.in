@@ -24,6 +24,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = windowwatcher appstartup find ui jsconsole build
+DIRS = windowwatcher appstartup find ui jsconsole webbrowserpersist build
 
 include $(topsrcdir)/config/rules.mk

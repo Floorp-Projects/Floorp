@@ -33,11 +33,16 @@ REQUIRES	= js \
 		  xpcom \
 		  string \
 		  windowwatcher \
+		  webbrowserpersist \
 		  jsconsole \
 		  find \
 		  embed_base \
 		  dom \
 		  txtsvc \
+		  mimetype \
+		  content \
+		  uriloader \
+		  necko \
 		  $(NULL)
 
 CPPSRCS		= nsModule.cpp
@@ -47,6 +52,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/libappstartupnotifier_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/libjsconsole_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/libfind_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/libwebbrowserpersist_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifdef MOZ_PERF_METRICS
@@ -58,6 +64,7 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../appstartup/src  \
 	-I$(srcdir)/../jsconsole/src  \
 	-I$(srcdir)/../find/src  \
+	-I$(srcdir)/../webbrowserpersist/src  \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = \
