@@ -1008,7 +1008,7 @@
         <menuitem id="context-copyimage"
                   label="&copyImageCmd.label;"
                   accesskey="&copyImageCmd.accesskey;"
-                  command="cmd_copyImageLocation"/>
+                  command="cmd_copyImageContents"/>
         <menuitem id="context-copyemail"
                   label="&copyEmailCmd.label;"
                   accesskey="&copyEmailCmd.accesskey;"
