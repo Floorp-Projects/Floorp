@@ -27,7 +27,7 @@
 CToken::CToken(PRInt32 aTag) : mTextValue() {
   mTypeID=aTag;
   mStringInit=PR_FALSE;
-  mUnused=PR_FALSE;
+  mLineNumber=1;
   mAttrCount=0;
 }
 
@@ -40,7 +40,7 @@ CToken::CToken(PRInt32 aTag) : mTextValue() {
 CToken::CToken(const nsString& aName) : mTextValue(aName) {
   mTypeID=0;
   mStringInit=PR_TRUE;
-  mUnused=PR_FALSE;
+  mLineNumber=1;
   mAttrCount=0;
 }
 
@@ -53,7 +53,7 @@ CToken::CToken(const nsString& aName) : mTextValue(aName) {
 CToken::CToken(const char* aName) : mTextValue(aName) {
   mTypeID=0;
   mStringInit=PR_TRUE;
-  mUnused=PR_FALSE;
+  mLineNumber=1;
   mAttrCount=0;
 }
  
@@ -202,6 +202,16 @@ PRInt32  CToken::GetTokenType(void) {
  */
 const char*  CToken::GetClassName(void) {
   return "token";
+}
+
+/**
+ * This getter retrieves the line number from the input source where
+ * the token occured. Lines are interpreted as occuring between \n characters.
+ * @update	gess7/24/98
+ * @return  int containing the line number the token was found on
+ */
+PRUint16 CToken::GetSourceLineNumber(void){
+  return mLineNumber;
 }
 
 /**

@@ -50,6 +50,7 @@ const PRInt32   kContextMismatch  = 10003;
 const PRInt32   kBadFilename      = 10004;
 const PRInt32   kBadURL           = 10005;
 const PRInt32   kInterrupted      = 10006;
+const PRInt32   kProcessComplete  = 10007;
 const PRInt32   kNotFound         = -1;
 const PRInt32   kNoError          = NS_OK;
 

@@ -851,6 +851,8 @@ PRInt32 nsParser::Tokenize(){
       mParserContext->mScanner->RewindToMark();
     }
   } 
+  if(result=kProcessComplete)
+    result=NS_OK;
   DidTokenize();
   return result;
 }

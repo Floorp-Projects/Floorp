@@ -167,6 +167,15 @@ class CToken {
      */
     virtual const char* GetClassName(void);
 
+
+    /**
+     * This getter retrieves the line number from the input source where
+     * the token occured. Lines are interpreted as occuring between \n characters.
+     * @update	gess7/24/98
+     * @return  int containing the line number the token was found on
+     */
+    virtual PRUint16 GetSourceLineNumber(void);
+
     /**
      * perform self test.
      * @update	gess5/11/98
@@ -177,7 +186,7 @@ protected:
     PRInt32       mTypeID;
     PRInt16       mAttrCount;
     PRBool        mStringInit;
-    PRBool        mUnused;
+    PRUint16      mLineNumber;
     nsAutoString  mTextValue;
 };
 

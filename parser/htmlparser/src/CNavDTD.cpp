@@ -2933,6 +2933,11 @@ nsresult CNavDTD::ConsumeToken(CToken*& aToken){
     result=theScanner->GetChar(theChar);
     switch(result) {
       case kEOF:
+          //We convert from eof to complete here, because we never really tried to get data.
+          //All we did was try to see if data was available, which it wasn't.
+          //It's important to return process complete, so that controlling logic can know that
+          //everything went well, but we're done with token processing.
+        result=kProcessComplete;
         break;
 
       case kInterrupted:
