@@ -5,8 +5,11 @@
 #include <iostream.h>
 #include <string>
 #include <iomanip>
+#include <sys/time.h>
 
+#ifdef XP_MAC
 #include "Profiler.h"
+#endif
 
 #ifndef TEST_STD_STRING
 #include "nsString.h"
@@ -14,8 +17,6 @@
 #include "nsStdStringWrapper.h"
 typedef nsStdCString nsCString;
 #endif
-
-#include <Timer.h>
 
 static const int kTestSucceeded = 0;
 static const int kTestFailed = 1;
@@ -55,37 +56,31 @@ Find( const string& text, const string& pattern )
     return text.find(pattern);
   }
 
+#ifndef HAVE_LONG_LONG
 inline
-UnsignedWide
-operator-( const UnsignedWide& lhs, const UnsignedWide& rhs )
+PRUint64
+operator-( const PRUint64& lhs, const PRUint64& rhs )
   {
-    PRInt64 a = LL_INIT(lhs.hi, lhs.lo);
-    PRInt64 b = LL_INIT(rhs.hi, rhs.lo);
-    PRInt64 c;
-    LL_SUB(c, a, b);
-    
-    UnsignedWide result = {c.hi, c.lo};
-
+    PRInt64 result;
+    LL_SUB(result, lhs, rhs);
     return result;
   }
+#endif
 
 class TestTimer
   {
     public:
-      TestTimer() { Microseconds(&mStartTime); }
+      TestTimer() : mStartTime(PR_Now()) { }
 
      ~TestTimer()
         {
-          UnsignedWide stopTime;
-          Microseconds(&stopTime);
-          UnsignedWide totalTime = stopTime - mStartTime;
-          if ( totalTime.hi )
-            cout << "*";
-          cout << setw(10) << totalTime.lo << " µs : ";
+	  PRTime stopTime = PR_Now();
+	  PRTime totalTime = stopTime - mStartTime;
+          cout << setw(10) << totalTime << " µs : ";
         }
 
     private:
-      UnsignedWide mStartTime;
+      PRTime mStartTime;
   };
 
 static
@@ -334,6 +329,11 @@ class Profiler
           ProfilerInit(collectDetailed, bestTimeBase, 100, 32);
 #endif
         }
+
+      void
+      Dump( const char* output_name )
+        {
+	}
 
       void
       Dump( const unsigned char* output_name )
