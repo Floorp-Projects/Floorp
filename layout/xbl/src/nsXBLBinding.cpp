@@ -140,12 +140,13 @@ nsXBLJSClass::Destroy()
   NS_ASSERTION(next == prev && prev == NS_STATIC_CAST(JSCList*, this),
                "referenced nsXBLJSClass is on LRU list already!?");
 
+  if (nsXBLService::gClassTable) {
+    nsStringKey key(name);
+    (nsXBLService::gClassTable)->Remove(&key);
+  }
+
   if (nsXBLService::gClassLRUListLength >= nsXBLService::gClassLRUListQuota) {
     // Over LRU list quota, just unhash and delete this class.
-    if (nsXBLService::gClassTable) {
-      nsStringKey key(name);
-      (nsXBLService::gClassTable)->Remove(&key);
-    }
     delete this;
   } else {
     // Put this most-recently-used class on end of the LRU-sorted freelist.
