@@ -56,6 +56,17 @@ public:
                                         void* aLibrayHandle);
 
   static NS_COM void WalkTheStack(char* aBuffer, int aBufLen);
+
+  static NS_COM void LogAddRef(void* aPtr,
+                               nsrefcnt aRefCnt,
+                               const char* aFile,
+                               int aLine);
+
+  static NS_COM void LogRelease(void* aPtr,
+                                nsrefcnt aRefCnt,
+                                const char* aFile,
+                                int aLine);
+
 };
 
 #endif /* nsTraceRefcnt_h___ */

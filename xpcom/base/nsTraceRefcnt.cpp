@@ -36,8 +36,6 @@ static PRLock* gTraceLock;
 #define UNLOCK_TRACELOG()
 #endif /* ! NS_MT_SUPPORTED */
 
-#if defined(MOZ_TRACE_XPCOM_REFCNT)
-
 static PRLogModuleInfo* gTraceRefcntLog;
 
 static void InitTraceLog(void)
@@ -55,36 +53,71 @@ static void InitTraceLog(void)
 #include "imagehlp.h"
 #include <stdio.h>
 
-#if 0
-static BOOL __stdcall
-EnumSymbolsCB(LPSTR aSymbolName,
-              ULONG aSymbolAddress,
-              ULONG aSymbolSize,
-              PVOID aUserContext)
+// Define these as static pointers so that we can load the DLL on the
+// fly (and not introduce a link-time dependency on it). Tip o' the
+// hat to Matt Pietrick for this idea. See:
+//
+//   http://msdn.microsoft.com/library/periodic/period97/F1/D3/S245C6.htm
+//
+typedef BOOL (__stdcall *SYMINITIALIZEPROC)(HANDLE, LPSTR, BOOL);
+static SYMINITIALIZEPROC _SymInitialize;
+
+typedef BOOL (__stdcall *SYMCLEANUPPROC)(HANDLE);
+static SYMCLEANUPPROC _SymCleanup;
+
+typedef BOOL (__stdcall *STACKWALKPROC)(DWORD,
+                                        HANDLE,
+                                        HANDLE,
+                                        LPSTACKFRAME,
+                                        LPVOID,
+                                        PREAD_PROCESS_MEMORY_ROUTINE,
+                                        PFUNCTION_TABLE_ACCESS_ROUTINE,
+                                        PGET_MODULE_BASE_ROUTINE,
+                                        PTRANSLATE_ADDRESS_ROUTINE);
+static STACKWALKPROC _StackWalk;
+
+typedef LPVOID (__stdcall *SYMFUNCTIONTABLEACCESSPROC)(HANDLE, DWORD);
+static SYMFUNCTIONTABLEACCESSPROC _SymFunctionTableAccess;
+
+typedef DWORD (__stdcall *SYMGETMODULEBASEPROC)(HANDLE, DWORD);
+static SYMGETMODULEBASEPROC _SymGetModuleBase;
+
+typedef BOOL (__stdcall *SYMGETSYMFROMADDRPROC)(HANDLE, DWORD, PDWORD, PIMAGEHLP_SYMBOL);
+static SYMGETSYMFROMADDRPROC _SymGetSymFromAddr;
+
+
+static PRBool
+EnsureSymInitialized()
 {
-  int* countp = (int*) aUserContext;
-  int count = *countp;
-  if (count < 3) {
-    printf("  %p[%4d]: %s\n", aSymbolAddress, aSymbolSize, aSymbolName);
-    count++;
-    *countp = count++;
+  PRBool gInitialized = PR_FALSE;
+
+  if (! gInitialized) {
+    HMODULE module = ::LoadLibrary("IMAGEHLP.DLL");
+    if (!module) return PR_FALSE;
+
+    _SymInitialize = (SYMINITIALIZEPROC) ::GetProcAddress(module, "SymInitialize");
+    if (!_SymInitialize) return PR_FALSE;
+
+    _SymCleanup = (SYMCLEANUPPROC)GetProcAddress(module, "SymCleanup");
+    if (!_SymCleanup) return PR_FALSE;
+
+    _StackWalk = (STACKWALKPROC)GetProcAddress(module, "StackWalk");
+    if (!_StackWalk) return PR_FALSE;
+
+    _SymFunctionTableAccess = (SYMFUNCTIONTABLEACCESSPROC) GetProcAddress(module, "SymFunctionTableAccess");
+    if (!_SymFunctionTableAccess) return PR_FALSE;
+
+    _SymGetModuleBase = (SYMGETMODULEBASEPROC)GetProcAddress(module, "SymGetModuleBase");
+    if (!_SymGetModuleBase) return PR_FALSE;
+
+    _SymGetSymFromAddr = (SYMGETSYMFROMADDRPROC)GetProcAddress(module, "SymGetSymFromAddr");
+    if (!_SymGetSymFromAddr) return PR_FALSE;
+
+    gInitialized = _SymInitialize(GetCurrentProcess(), 0, TRUE);
   }
-  return TRUE;
-}
 
-static BOOL __stdcall
-EnumModulesCB(LPSTR aModuleName,
-              ULONG aBaseOfDll,
-              PVOID aUserContext)
-{
-  HANDLE myProcess = ::GetCurrentProcess();
-
-  printf("module=%s dll=%x\n", aModuleName, aBaseOfDll);
-//  int count = 0;
-//  SymEnumerateSymbols(myProcess, aBaseOfDll, EnumSymbolsCB, (void*) &count);
-  return TRUE;
+  return gInitialized;
 }
-#endif
 
 /**
  * Walk the stack, translating PC's found into strings and recording the
@@ -100,82 +133,79 @@ EnumModulesCB(LPSTR aModuleName,
 void
 nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
 {
-  CONTEXT context;
-  STACKFRAME frame;
-  char* cp = aBuffer;
-
   aBuffer[0] = '\0';
   aBufLen--;                    // leave room for nul
 
   HANDLE myProcess = ::GetCurrentProcess();
   HANDLE myThread = ::GetCurrentThread();
 
+  BOOL ok;
+
+  ok = EnsureSymInitialized();
+  if (! ok)
+    return;
+
   // Get the context information for this thread. That way we will
   // know where our sp, fp, pc, etc. are and can fill in the
   // STACKFRAME with the initial values.
+  CONTEXT context;
   context.ContextFlags = CONTEXT_FULL;
-  GetThreadContext(myThread, &context);
-
-  if (!SymInitialize(myProcess, ".;..\\lib", TRUE)) {
+  ok = GetThreadContext(myThread, &context);
+  if (! ok)
     return;
-  }
-
-#if 0
-  SymEnumerateModules(myProcess, EnumModulesCB, NULL);
-#endif
 
   // Setup initial stack frame to walk from
+  STACKFRAME frame;
   memset(&frame, 0, sizeof(frame));
-  frame.AddrPC.Mode = AddrModeFlat;
-  frame.AddrPC.Offset = context.Eip;
-  frame.AddrReturn.Mode = AddrModeFlat;
-  frame.AddrReturn.Offset = context.Ebp;
-  frame.AddrFrame.Mode = AddrModeFlat;
-  frame.AddrFrame.Offset = context.Ebp;
-  frame.AddrStack.Mode = AddrModeFlat;
+  frame.AddrPC.Offset    = context.Eip;
+  frame.AddrPC.Mode      = AddrModeFlat;
   frame.AddrStack.Offset = context.Esp;
-  frame.Params[0] = context.Eax;
-  frame.Params[1] = context.Ecx;
-  frame.Params[2] = context.Edx;
-  frame.Params[3] = context.Ebx;
+  frame.AddrStack.Mode   = AddrModeFlat;
+  frame.AddrFrame.Offset = context.Ebp;
+  frame.AddrFrame.Mode   = AddrModeFlat;
 
   // Now walk the stack and map the pc's to symbol names that we stuff
   // append to *cp.
+  char* cp = aBuffer;
 
   int skip = 2;
-  int syms = 0;
   while (aBufLen > 0) {
-    char symbolBuffer[sizeof(IMAGEHLP_SYMBOL) + 512];
-    PIMAGEHLP_SYMBOL pSymbol = (PIMAGEHLP_SYMBOL) symbolBuffer;
-    pSymbol->SizeOfStruct = sizeof(symbolBuffer);
-    pSymbol->MaxNameLength = 512;
+    ok = _StackWalk(IMAGE_FILE_MACHINE_I386,
+                   myProcess,
+                   myThread,
+                   &frame,
+                   &context,
+                   0,                        // read process memory routine
+                   _SymFunctionTableAccess,  // function table access routine
+                   _SymGetModuleBase,        // module base routine
+                   0);                       // translate address routine
 
-    DWORD oldAddress = frame.AddrPC.Offset;
-    BOOL b = ::StackWalk(IMAGE_FILE_MACHINE_I386, myProcess, myThread,
-                         &frame, &context, NULL,
-                         SymFunctionTableAccess,
-                         SymGetModuleBase,
-                         NULL);
-    if (!b || (0 == frame.AddrPC.Offset)) {
-      if (syms <= 1) {
-        skip = 7;
-      }
+    if (!ok || frame.AddrPC.Offset == 0)
       break;
-    }
-    if (--skip >= 0) {
+
+    if (skip-- > 0)
       continue;
-    }
-    DWORD disp;
-    if (SymGetSymFromAddr(myProcess, frame.AddrPC.Offset, &disp, pSymbol)) {
-      int nameLen = strlen(pSymbol->Name);
+
+    char buf[sizeof(IMAGEHLP_SYMBOL) + 512];
+    PIMAGEHLP_SYMBOL symbol = (PIMAGEHLP_SYMBOL) buf;
+    symbol->SizeOfStruct = sizeof(buf);
+    symbol->MaxNameLength = 512;
+
+    DWORD displacement;
+    ok = _SymGetSymFromAddr(myProcess,
+                            frame.AddrPC.Offset,
+                            &displacement,
+                            symbol);
+
+    if (ok) {
+      int nameLen = strlen(symbol->Name);
       if (nameLen + 2 > aBufLen) {
         break;
       }
-      memcpy(cp, pSymbol->Name, nameLen);
+      memcpy(cp, symbol->Name, nameLen);
       cp += nameLen;
       *cp++ = ' ';
       aBufLen -= nameLen + 1;
-      syms++;
     }
     else {
       if (11 > aBufLen) {
@@ -186,21 +216,21 @@ nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
       memcpy(cp, tmp, 11);
       cp += 11;
       aBufLen -= 11;
-      syms++;
     }
   }
   *cp = 0;
 }
 
-#endif /* _WIN32 */
+#else /* _WIN32 */
 
-#else /* MOZ_TRACE_XPCOM_REFCNT */
-void
+NS_COM void
 nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
 {
-  aBuffer[0] = '\0';
+  // Write me!!!
+  *aBuffer = '\0';
 }
-#endif /* MOZ_TRACE_XPCOM_REFCNT */
+
+#endif
 
 NS_COM void
 nsTraceRefcnt::LoadLibrarySymbols(const char* aLibraryName,
@@ -315,4 +345,36 @@ nsTraceRefcnt::Destroy(void* aPtr,
   }
   UNLOCK_TRACELOG();
 #endif
+}
+
+
+NS_COM void
+nsTraceRefcnt::LogAddRef(void* aPtr,
+                         nsrefcnt aRefCnt,
+                         const char* aFile,
+                         int aLine)
+{
+  InitTraceLog();
+  if (PR_LOG_TEST(gTraceRefcntLog, PR_LOG_DEBUG)) {
+    char sb[16384];
+    WalkTheStack(sb, sizeof(sb));
+    // Can't use PR_LOG(), b/c it truncates the line
+    printf("%s(%d) %p AddRef %d %s\n", aFile, aLine, aPtr, aRefCnt, sb);
+  }
+}
+
+
+NS_COM void
+nsTraceRefcnt::LogRelease(void* aPtr,
+                         nsrefcnt aRefCnt,
+                         const char* aFile,
+                         int aLine)
+{
+  InitTraceLog();
+  if (PR_LOG_TEST(gTraceRefcntLog, PR_LOG_DEBUG)) {
+    char sb[16384];
+    WalkTheStack(sb, sizeof(sb));
+    // Can't use PR_LOG(), b/c it truncates the line
+    printf("%s(%d) %p Release %d %s\n", aFile, aLine, aPtr, aRefCnt, sb);
+  }
 }
