@@ -136,6 +136,6 @@ public class JDAPAddRequest extends JDAPBaseDNRequest
      * @return string representation of add request
      */
     public String toString() {
-        return "JDAPAddRequest " + getParamString();
+        return "AddRequest " + getParamString();
     }
 }

@@ -686,6 +686,7 @@ class Timer {
     void start() {
         TimerRunnable trun = new TimerRunnable(this);
         t = new Thread(trun);
+        t.setDaemon(true);
         t.start();
     }
 

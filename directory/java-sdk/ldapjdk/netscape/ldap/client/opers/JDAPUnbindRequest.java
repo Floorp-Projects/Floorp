@@ -68,6 +68,6 @@ public class JDAPUnbindRequest implements JDAPProtocolOp {
      * @return string representation
      */
     public String toString() {
-        return "JDAPUnbindRequest {}";
+        return "UnbindRequest {}";
     }
 }

@@ -449,13 +449,41 @@ public class LDAPSchema {
         if ( attr != null ) {
             Enumeration en = attr.getStringValues();
             if( en.hasMoreElements() ) {
-                compliant = !LDAPAttributeSchema.isSyntaxQuoted(
-                    (String)en.nextElement() );
+                compliant = !isSyntaxQuoted( (String)en.nextElement() );
             }
         }
         ld.setProperty( ld.SCHEMA_BUG_PROPERTY, compliant ? "standard" :
                         "NetscapeBug" );
         return compliant;
+    }
+
+    /**
+     * Parses an attribute schema definition to see if the SYNTAX value
+     * is quoted. It shouldn't be (according to RFC 2252), but it is for
+     * some LDAP servers. It will either be:<BR>
+     * <CODE>SYNTAX 1.3.6.1.4.1.1466.115.121.1.15</CODE> or<BR>
+     * <CODE>SYNTAX '1.3.6.1.4.1.1466.115.121.1.15'</CODE>
+     * @param raw Definition of the attribute type in the
+     * AttributeTypeDescription format.
+     */
+    static boolean isSyntaxQuoted( String raw ) {
+        int ind = raw.indexOf( " SYNTAX " );
+        if ( ind >= 0 ) {
+            ind += 8;
+            int l = raw.length() - ind;
+            // Extract characters
+            char[] ch = new char[l];
+            raw.getChars( ind, raw.length(), ch, 0 );
+            ind = 0;
+            // Skip to ' or start of syntax value
+            while( (ind < ch.length) && (ch[ind] == ' ') ) {
+                ind++;
+            }
+            if ( ind < ch.length ) {
+                return ( ch[ind] == '\'' );
+            }
+        }
+        return false;
     }
 
     /**

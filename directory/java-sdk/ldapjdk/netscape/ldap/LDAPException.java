@@ -110,6 +110,7 @@ import java.io.*;
  *  71     <A HREF="#AFFECTS_MULTIPLE_DSAS">AFFECTS_MULTIPLE_DSAS</A> (LDAP v3)
  *  80     <A HREF="#OTHER">OTHER</A>
  *  81     <A HREF="#SERVER_DOWN">SERVER_DOWN</A>
+ *  85     <A HREF="#LDAP_TIMEOUT">LDAP_TIMEOUT</A>
  *  89     <A HREF="#PARAM_ERROR">PARAM_ERROR</A>
  *  91     <A HREF="#CONNECT_ERROR">CONNECT_ERROR</A>
  *  92     <A HREF="#LDAP_NOT_SUPPORTED">LDAP_NOT_SUPPORTED</A>
@@ -483,6 +484,17 @@ public class LDAPException extends java.lang.Exception {
      * (81) The LDAP server cannot be contacted.
      */
     public final static int SERVER_DOWN                  = 0x51;
+
+    /**
+     * (85) The operation could not be completed within the
+     * maximum time limit. You can specify the maximum time limit
+     * by calling the <CODE>LDAPConstraints.setTimeLimit</CODE>
+     * method.<P>
+     *
+     * @see netscape.ldap.LDAPConstraints#setTimeLimit
+     */
+    public final static int LDAP_TIMEOUT                 = 0x55;
+
 
     /**
      * (89) When calling a constructor or method from your client,

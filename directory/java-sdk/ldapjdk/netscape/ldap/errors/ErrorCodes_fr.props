@@ -40,6 +40,7 @@
 71=Concerne plusieurs DSA
 80=Erreur inconnue
 81=Impossible de contacter le serveur LDAP
+85=Client délai dépassé
 89=Mauvais paramètre attribué à une méthode LDAP
 91=Impossible d'établir une connexion au serveur LDAP
 92=Non pris en charge par cette version du protocole LDAP

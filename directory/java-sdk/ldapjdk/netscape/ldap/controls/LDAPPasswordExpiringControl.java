@@ -91,4 +91,19 @@ public class LDAPPasswordExpiringControl extends LDAPStringControl {
     public static String parseResponse( LDAPControl[] controls ) {
         return LDAPStringControl.parseResponse( controls, EXPIRING );
     }
+    
+    public String toString() {
+         StringBuffer sb = new StringBuffer("{PasswordExpiringCtrl:");
+        
+        sb.append(" isCritical=");
+        sb.append(isCritical());
+        
+        sb.append(" msg=");
+        sb.append(m_msg);
+        
+        sb.append("}");
+
+        return sb.toString();
+    }
+    
 }

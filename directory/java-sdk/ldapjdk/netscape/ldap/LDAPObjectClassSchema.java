@@ -102,57 +102,69 @@ import java.util.*;
 public class LDAPObjectClassSchema extends LDAPSchemaElement {
     /**
      * Constructs an object class definition, using the specified
-     * information.
+     * information. The type of the object class will be STRUCTURAL.
      * @param name Name of the object class.
-     * @param oid Object identifier (OID) of the object class
-     * in dotted-string format (for example, "1.2.3.4").
-     * @param description Description of the object class.
-     * @param superior Name of the parent object class
-     * (the object class that the new object class inherits from).
-     * @param required Array of the names of the attributes required
-     * in this object class.
-     * @param optional Array of the names of the optional attributes
-     * allowed in this object class.
+     * @param oid object identifier (OID) of the object class
+     * in dotted-string format (for example, "1.2.3.4")
+     * @param description description of the object class
+     * @param superior name of the parent object class
+     * (the object class that the new object class inherits from)
+     * @param required array of names of attributes required
+     * in this object class
+     * @param optional array of names of optional attributes
+     * allowed in this object class
      */
     public LDAPObjectClassSchema( String name, String oid, String superior,
                                   String description,
                                   String[] required, String[] optional ) {
         super( name, oid, description );
         attrName = "objectclasses";
-        this.superiors = new String[] { superior };
         setQualifier( SUPERIOR, superior );
-        for( int i = 0; i < required.length; i++ ) {
-            must.addElement( required[i] );
+        if ( required != null ) {
+            for( int i = 0; i < required.length; i++ ) {
+                must.addElement( required[i] );
+            }
         }
-        for( int i = 0; i < optional.length; i++ ) {
-            may.addElement( optional[i] );
+        if ( optional != null ) {
+            for( int i = 0; i < optional.length; i++ ) {
+                may.addElement( optional[i] );
+            }
         }
     }
 
     /**
      * Constructs an object class definition, using the specified
      * information.
-     * @param name Name of the object class.
-     * @param oid Object identifier (OID) of the object class
-     * in dotted-string format (for example, "1.2.3.4").
-     * @param description Description of the object class.
-     * @param superiors Name of parent object classes
-     * (the object class that the new object class inherits from).
-     * @param required Array of the names of the attributes required
-     * in this object class.
-     * @param optional Array of the names of the optional attributes
-     * allowed in this object class.
+     * @param name name of the object class
+     * @param oid object identifier (OID) of the object class
+     * in dotted-string format (for example, "1.2.3.4")
+     * @param description description of the object class
+     * @param superiors names of parent object classes
+     * (the object classes that this object class inherits from)
+     * @param required array of names of attributes required
+     * in this object class
+     * @param optional array names of optional attributes
+     * allowed in this object class
      * @param type Either ABSTRACT, STRUCTURAL, or AUXILIARY
+     * @param aliases names which are to be considered aliases for this
+     * object class; <CODE>null</CODE> if there are no aliases
      */
     public LDAPObjectClassSchema( String name, String oid,
                                   String[] superiors,
                                   String description,
                                   String[] required, String[] optional,
-                                  int type ) {
-        this( name, oid, superiors[0], description, required, optional );
-        this.superiors = superiors;
-        setQualifier( SUPERIOR, this.superiors );
-        this.type = type;
+                                  int type, String[] aliases ) {
+        this( name, oid,
+              ((superiors != null) && (superiors.length > 0)) ?
+                  superiors[0] : null,
+              description, required, optional );
+        if ( (superiors != null) && (superiors.length > 1) ) {
+            setQualifier( SUPERIOR, superiors );
+        }
+        setQualifier( TYPE, typeToString( type ) );
+        if ( (aliases != null) && (aliases.length > 0) ) {
+            this.aliases = aliases;
+        }
     }
 
     /**
@@ -168,25 +180,13 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
      * in this format.)
      * <P>
      *
-     * @param raw Definition of the object in the ObjectClassDescription
-     * format.
+     * @param raw definition of the object in the ObjectClassDescription
+     * format
      */
     public LDAPObjectClassSchema( String raw ) {
         attrName = "objectclasses";
         parseValue( raw );
-        String[] vals = getQualifier( SUPERIOR );
-        if ( vals != null ) {
-            superiors = vals;
-            setQualifier( SUPERIOR, (String)null );
-        }
-        if ( properties.containsKey( "AUXILIARY" ) ) {
-            type = AUXILIARY;
-        } else if ( properties.containsKey( "ABSTRACT" ) ) {
-            type = ABSTRACT;
-        } else if ( properties.containsKey( "STRUCTURAL" ) ) {
-            type = STRUCTURAL;
-        }
-        obsolete = properties.containsKey( OBSOLETE );
+        setQualifier( TYPE, typeToString( getType() ) );
         Object o = properties.get( "MAY" );
         if ( o != null ) {
             if ( o instanceof Vector ) {
@@ -206,72 +206,91 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
     }
 
     /**
-     * Get the name of the object class that this class inherits from.
-     * @return The name of the object class that this class
-     * inherits from.
+     * Gets the name of the object class that this class inherits from.
+     * @return the name of the object class that this class
+     * inherits from. If it inherits from more than one class, only one
+     * is returned.
+     * @see netscape.ldap.LDAPObjectClassSchema#getSuperiors
      */
     public String getSuperior() {
-        return superiors[0];
+        String[] superiors = getSuperiors();
+        return (superiors != null) ? superiors[0] : null;
     }
 
     /**
-     * Get the names of all object classes that this class inherits
+     * Gets the names of all object classes that this class inherits
      * from. Typically only one, but RFC 2252 allows multiple
      * inheritance.
-     * @return The names of the object classes that this class
-     * inherits from.
+     * @return the names of the object classes that this class
+     * inherits from
      */
     public String[] getSuperiors() {
-        return superiors;
+        return getQualifier( SUPERIOR );
     }
 
     /**
-     * Get an enumeration of the names of the required attribute for
+     * Gets an enumeration of the names of the required attributes for
      * this object class.
-     * @return An enumeration of the names of the required attributes
-     * for this object class.
+     * @return an enumeration of the names of the required attributes
+     * for this object class
      */
     public Enumeration getRequiredAttributes() {
         return must.elements();
     }
 
     /**
-     * Get an enumeration of names of optional attributes allowed
+     * Gets an enumeration of names of optional attributes allowed
      * in this object class.
-     * @return An enumeration of the names of optional attributes
-     * allowed in this object class.
+     * @return an enumeration of the names of optional attributes
+     * allowed in this object class
      */
     public Enumeration getOptionalAttributes() {
         return may.elements();
     }
 
     /**
-     * Get the type of the object class.
+     * Gets the type of the object class.
      * @return STRUCTURAL, ABSTRACT, or AUXILIARY
      */
     public int getType() {
+        int type = STRUCTURAL;
+        if ( properties.containsKey( "AUXILIARY" ) ) {
+            type = AUXILIARY;
+        } else if ( properties.containsKey( "ABSTRACT" ) ) {
+            type = ABSTRACT;
+        }
         return type;
     }
 
     /**
-     * Prepare a value in RFC 2252 format for submitting to a server
+     * Prepares a value in RFC 2252 format for submitting to a server.
      *
      * @param quotingBug <CODE>true</CODE> if SUP and SYNTAX values are to
      * be quoted. That is to satisfy bugs in certain LDAP servers.
-     * @return A String ready to be submitted to an LDAP server
+     * @return a String ready to be submitted to an LDAP server
      */
-	String getValue( boolean quotingBug ) {
+    String getValue( boolean quotingBug ) {
         String s = getValuePrefix();
-        s += getValue( SUPERIOR, quotingBug );
-        s += ' ';
-        String val = getOptionalValues( NOVALS );
+        String val = getValue( SUPERIOR, quotingBug );
+        if ( (val != null) && (val.length() > 0) ) {
+            s += val + ' ';
+        }
+        String[] vals = getQualifier( TYPE );
+        if ( (vals != null) && (vals.length > 0) ) {
+            s += vals[0] + ' ';
+        }
+        val = getOptionalValues( NOVALS );
         if ( val.length() > 0 ) {
             s += val + ' ';
         }
-        s += "MUST " + vectorToList( must );
-        s += ' ';
-        s += "MAY " + vectorToList( may );
-        s += ' ';
+        if ( must.size() > 0 ) {
+            s += "MUST " + vectorToList( must );
+            s += ' ';
+        }
+        if ( may.size() > 0 ) {
+            s += "MAY " + vectorToList( may );
+            s += ' ';
+        }
         val = getCustomValues();
         if ( val.length() > 0 ) {
             s += val + ' ';
@@ -281,18 +300,21 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
     }
 
     /**
-     * Get the definition of the object class in a user friendly format.
+     * Gets the definition of the object class in a user friendly format.
      * This is the format that the object class definition uses when
      * you print the object class or the schema.
-     * @return Definition of the object class in a user friendly format.
+     * @return definition of the object class in a user friendly format
      */
     public String toString() {
         String s = "Name: " + name + "; OID: " + oid +
             "; Superior: ";
-        for( int i = 0; i < superiors.length; i++ ) {
-            s += superiors[i];
-            if ( i < (superiors.length-1) ) {
-                s += ", ";
+        String[] superiors = getSuperiors();
+        if ( superiors != null ) {
+            for( int i = 0; i < superiors.length; i++ ) {
+                s += superiors[i];
+                if ( i < (superiors.length-1) ) {
+                    s += ", ";
+                }
             }
         }
         s += "; Description: " + description + "; Required: ";
@@ -313,28 +335,23 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
             i++;
             s += (String)e.nextElement();
         }
-        switch ( type ) {
-        case STRUCTURAL:
-            break;
-        case ABSTRACT:
-            s += "; ABSTRACT";
-            break;
-        case AUXILIARY:
-            s += "; AUXILIARY";
-            break;
+        String[] vals = getQualifier( TYPE );
+        if ( (vals != null) && (vals.length > 0) ) {
+            s += "; " + vals[0];
         }
-        if ( obsolete ) {
+        if ( isObsolete() ) {
             s += "; OBSOLETE";
         }
         s += getQualifierString( IGNOREVALS );
+        s += getAliasString();
         return s;
     }
 
     /**
-     * Create a list within parentheses, with $ as delimiter
+     * Creates a list within parentheses, with $ as delimiter
      *
-     * @param vals Values for list
-     * @return A String with a list of values
+     * @param vals values for list
+     * @return a String with a list of values
      */
     protected String vectorToList( Vector vals ) {
         String val = "( ";
@@ -348,23 +365,43 @@ public class LDAPObjectClassSchema extends LDAPSchemaElement {
         return val;
     }
 
+    /**
+     * Returns the object class type as a String
+     *
+     * @param type one of STRUCTURAL, ABSTRACT, or AUXILIARY
+     * @return one of "STRUCTURAL", "ABSTRACT", "AUXILIARY", or <CODE>null</CODE>
+     */
+    protected String typeToString( int type ) {
+        switch( type ) {
+        case STRUCTURAL: return "STRUCTURAL";
+        case ABSTRACT: return "ABSTRACT";
+        case AUXILIARY: return "AUXILIARY";
+        default: return null;
+        }
+    }
+
     public static final int STRUCTURAL = 0;
     public static final int ABSTRACT = 1;
     public static final int AUXILIARY = 2;
 
-    private String[] superiors = { "" };
     private Vector must = new Vector();
     private Vector may = new Vector();
     private int type = STRUCTURAL;
 
-    // Qualifers known to not have values
-	static String[] NOVALS = { "ABSTRACT", "STRUCTURAL",
-							   "AUXILIARY" };
-	static {
-		for( int i = 0; i < NOVALS.length; i++ ) {
-			novalsTable.put( NOVALS[i], NOVALS[i] );
-		}
-	}
-	static String[] IGNOREVALS = { "ABSTRACT", "STRUCTURAL",
-                                   "AUXILIARY", "MUST", "MAY" };
+    // Qualifiers known to not have values; prepare a Hashtable
+    static final String[] NOVALS = { "ABSTRACT", "STRUCTURAL",
+                                     "AUXILIARY", "OBSOLETE" };
+    static {
+        for( int i = 0; i < NOVALS.length; i++ ) {
+            novalsTable.put( NOVALS[i], NOVALS[i] );
+        }
+    }
+
+    // Qualifiers which we output explicitly in toString()
+    static final String[] IGNOREVALS = { "ABSTRACT", "STRUCTURAL",
+                                         "AUXILIARY", "MUST", "MAY",
+                                         "SUP", "OBSOLETE"};
+    // Key for type in the properties Hashtable
+    static final String TYPE = "TYPE";
 }
+

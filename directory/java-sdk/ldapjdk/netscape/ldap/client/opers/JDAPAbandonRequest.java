@@ -84,6 +84,6 @@ public class JDAPAbandonRequest implements JDAPProtocolOp {
      * @return string representation
      */
     public String toString() {
-        return "JDAPAbandonRequest {msgid=" + m_msgid + "}";
+        return "AbandonRequest {msgid=" + m_msgid + "}";
     }
 }

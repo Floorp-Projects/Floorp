@@ -95,7 +95,7 @@ public class JDAPCompareRequest extends JDAPBaseDNRequest
      * @return string representation
      */
     public String toString() {
-        return "JDAPCompareRequest {entry=" + m_dn + ", ava=" + m_ava.toString() +
+        return "CompareRequest {entry=" + m_dn + ", ava=" + m_ava.toString() +
           "}";
     }
 }

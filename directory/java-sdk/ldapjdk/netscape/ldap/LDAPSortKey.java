@@ -137,6 +137,26 @@ public class LDAPSortKey {
         return m_matchRule;
     }
 
+    public String toString() {
+        
+        StringBuffer sb = new StringBuffer("{SortKey:");
+        
+        sb.append(" key=");
+        sb.append(m_key);
+        
+        sb.append(" reverse=");
+        sb.append(m_reverse);
+
+        if (m_matchRule != null) {
+            sb.append(" matchRule=");
+            sb.append(m_matchRule);
+        }
+        
+        sb.append("}");
+
+        return sb.toString();
+    }
+
     private String m_key;
     private boolean m_reverse;
     private String m_matchRule;

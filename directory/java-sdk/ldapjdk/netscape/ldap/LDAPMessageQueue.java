@@ -38,11 +38,16 @@ class LDAPMessageQueue {
         int id;
         LDAPConnection connection;
         LDAPConnThread connThread;
+        long timeToComplete;
+        
     
-        RequestEntry(int id, LDAPConnection connection, LDAPConnThread connThread) {
+        RequestEntry(int id, LDAPConnection connection,
+                     LDAPConnThread connThread, int timeLimit) {
             this.id= id;
             this.connection = connection;
             this.connThread = connThread;
+            this.timeToComplete = (timeLimit == 0) ?
+                 Long.MAX_VALUE : (System.currentTimeMillis() + timeLimit);
         }    
     }
 
@@ -53,6 +58,9 @@ class LDAPMessageQueue {
     private /*RequestEntry*/ Vector m_requestList  = new Vector(1);
     private LDAPException m_exception; /* For network errors */
     private boolean m_asynchOp;
+    
+    // A flag whether there are time constrained requests 
+    private boolean m_timeConstrained;
 
     /**
      * Constructor
@@ -84,11 +92,7 @@ class LDAPMessageQueue {
     synchronized LDAPMessage nextMessage () throws LDAPException {
         
         while(m_requestList.size() != 0 && m_exception == null && m_messageQueue.size() == 0) {
-            try {
-                wait ();
-            } catch (InterruptedException e) {
-                throw new LDAPInterruptedException("Interrupted LDAP operation");
-            }
+            waitForMessage();
         }
         
         // Network exception occurred ?
@@ -109,7 +113,7 @@ class LDAPMessageQueue {
         
         // Is the ldap operation completed?
         if (msg instanceof LDAPResponse) {
-            removeRequest(msg.getId());
+            removeRequest(msg.getID());
         }
         
         return msg;
@@ -127,12 +131,7 @@ class LDAPMessageQueue {
 
         while (true) {
             while(m_requestList.size() != 0 && m_exception == null && m_messageQueue.size() == 0) {            
-                try {
-                    wait ();
-                } catch (InterruptedException e) {
-                    throw new LDAPInterruptedException("Interrupted LDAP operation");
-                }
-
+                waitForMessage();
             }
 
             // Network exception occurred ?
@@ -159,13 +158,54 @@ class LDAPMessageQueue {
             }
 
             // Not found, wait for the next message
+            waitForMessage();
+        }            
+    }
+
+    /**
+     * Wait for a response message. Process interrupts and honor
+     * time limit if set for any request
+     */
+    synchronized private void waitForMessage () throws LDAPException{
+        
+        if (!m_timeConstrained) {
             try {
                 wait ();
+                return;
             } catch (InterruptedException e) {
                 throw new LDAPInterruptedException("Interrupted LDAP operation");
             }
+        }
 
-        }            
+        /**
+         * Perform time constrained wait
+         */
+        long minTimeToComplete = Long.MAX_VALUE;
+        long now = System.currentTimeMillis();
+        for (int i=0; i < m_requestList.size(); i++) {
+            RequestEntry entry = (RequestEntry)m_requestList.elementAt(i);
+            
+            // time limit exceeded ?
+            if (entry.timeToComplete <= now) {
+                entry.connection.abandon(entry.id);
+                throw new LDAPException("Time to complete operation exceeded",
+                                         LDAPException.LDAP_TIMEOUT);
+            }                
+                
+            if (entry.timeToComplete < minTimeToComplete) {
+                minTimeToComplete = entry.timeToComplete;
+            }            
+        }
+        
+        long timeLimit = (minTimeToComplete == Long.MAX_VALUE)? 
+                         0 :(minTimeToComplete - now);
+        
+        try {
+            m_timeConstrained = (timeLimit != 0);
+            wait (timeLimit);
+        } catch (InterruptedException e) {
+            throw new LDAPInterruptedException("Interrupted LDAP operation");
+        }
     }
 
     /**
@@ -268,7 +308,7 @@ class LDAPMessageQueue {
         int removeCount=0;
         for (int i=(m_messageQueue.size()-1); i>=0; i--) {
             LDAPMessage msg = (LDAPMessage)m_messageQueue.elementAt(i);
-            if (msg.getId() == id) {
+            if (msg.getID() == id) {
                 m_messageQueue.removeElementAt(i);
                 removeCount++;
             }
@@ -286,6 +326,7 @@ class LDAPMessageQueue {
         m_exception = null;
         m_messageQueue.removeAllElements();
         m_requestList.removeAllElements();
+        m_timeConstrained = false;
     }
     
     /**
@@ -353,11 +394,18 @@ class LDAPMessageQueue {
      * @param id LDAP request message ID
      * @param connection LDAP Connection for the message ID
      * @param connThread A physical connection to the server
+     * @param timeLimit The maximum number of milliseconds to wait for
+     * the request to complete 
     */
     synchronized void addRequest(int id, LDAPConnection connection,
-                                 LDAPConnThread connThread) {
+                                 LDAPConnThread connThread, int timeLimit) {
         
-        m_requestList.addElement(new RequestEntry(id, connection, connThread));
+        m_requestList.addElement(new RequestEntry(id, connection,
+                                                  connThread, timeLimit));
+        if (timeLimit != 0) {
+            m_timeConstrained = true;
+        }
+        notifyAll();
     }
 
     /**

@@ -195,10 +195,13 @@ public class LDAPConstraints implements Cloneable {
     /**
      * Sets the maximum number of milliseconds to wait for any operation
      * under these constraints. If 0, there is no maximum time limit
-     * on waiting for the operation results.
+     * on waiting for the operation results. If the time limit is exceeded,
+     * an LDAPException with the result code <CODE>LDAPException.TIME_LIMIT
+     * </CODE> is thrown.
      * @param msLimit Maximum number of milliseconds to wait for operation
      * results.
      * (0 by default, which means that there is no maximum time limit.)
+     * @see netscape.ldap.LDAPException#LDAP_TIMEOUT
      */
     public void setTimeLimit( int msLimit ) {
         m_time_limit = msLimit;
@@ -221,7 +224,7 @@ public class LDAPConstraints implements Cloneable {
      * Alternatively, the <CODE>LDAPBind</CODE> object identifies an 
      * authentication mechanism to be used instead of the default 
      * authentication mechanism when following referrals. This 
-     * object should be passed to the <CODE>setBindProc</BIND> method.
+     * object should be passed to the <CODE>setBindProc</CODE> method.
      * @param doReferrals Set to <CODE>true</CODE> if referrals should be 
      * followed automatically, or <CODE>False</CODE> if referrals should throw 
      * an <CODE>LDAPReferralException</CODE>.

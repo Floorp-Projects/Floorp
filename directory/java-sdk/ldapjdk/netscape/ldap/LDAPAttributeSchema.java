@@ -111,7 +111,7 @@ import java.util.*;
 
 public class LDAPAttributeSchema extends LDAPSchemaElement {
     /**
-     * Construct a blank element.
+     * Constructs a blank element.
      */
     protected LDAPAttributeSchema() {
         super();
@@ -120,11 +120,11 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
     /**
      * Constructs an attribute type definition, using the specified
      * information.
-     * @param name Name of the attribute type.
-     * @param oid Object identifier (OID) of the attribute type
-     * in dotted-string format (for example, "1.2.3.4").
-     * @param description Description of attribute type.
-     * @param syntax Syntax of this attribute type. The value of this
+     * @param name name of the attribute type
+     * @param oid object identifier (OID) of the attribute type
+     * in dotted-string format (for example, "1.2.3.4")
+     * @param description description of attribute type
+     * @param syntax syntax of this attribute type. The value of this
      * argument can be one of the following:
      * <UL>
      * <LI><CODE>cis</CODE> (case-insensitive string)
@@ -135,37 +135,66 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
      * but blanks and dashes are ignored during comparisons)
      * <LI><CODE>dn</CODE> (distinguished name)
      * </UL>
-     * @param single <CODE>true</CODE> if the attribute type is single-valued.
+     * @param single <CODE>true</CODE> if the attribute type is single-valued
      */
     public LDAPAttributeSchema( String name, String oid, String description,
-                            int syntax, boolean single ) {
+                                int syntax, boolean single ) {
         this( name, oid, description, cisString, single );
-        this.syntax = syntax;
-        this.syntaxString = internalSyntaxToString();
-        setQualifier( SYNTAX, this.syntaxString );
+        syntaxElement.syntax = syntax;
+        String syntaxType = syntaxElement.internalSyntaxToString( syntax );
+        if ( syntaxType != null ) {
+            syntaxElement.syntaxString = syntaxType;
+        }
+        setQualifier( SYNTAX, getSyntaxString() );
     }
 
     /**
      * Constructs an attribute type definition, using the specified
      * information.
-     * @param name Name of the attribute type.
-     * @param oid Object identifier (OID) of the attribute type
-     * in dotted-string format (for example, "1.2.3.4").
-     * @param description Description of attribute type.
-     * @param syntaxString Syntax of this attribute type in dotted-string
-     * format (for example, "1.2.3.4.5").
-     * @param single <CODE>true</CODE> if the attribute type is single-valued.
+     * @param name name of the attribute type
+     * @param oid object identifier (OID) of the attribute type
+     * in dotted-string format (for example, "1.2.3.4")
+     * @param description description of attribute type
+     * @param syntaxString syntax of this attribute type in dotted-string
+     * format (for example, "1.2.3.4.5")
+     * @param single <CODE>true</CODE> if the attribute type is single-valued
      */
     public LDAPAttributeSchema( String name, String oid, String description,
-                            String syntaxString, boolean single ) {
+                                String syntaxString, boolean single ) {
+        this( name, oid, description, syntaxString, single, null, null );
+    }
+
+    /**
+     * Constructs an attribute type definition, using the specified
+     * information.
+     * @param name name of the attribute type
+     * @param oid object identifier (OID) of the attribute type
+     * in dotted-string format (for example, "1.2.3.4")
+     * @param description description of attribute type
+     * @param syntaxString syntax of this attribute type in dotted-string
+     * format (for example, "1.2.3.4.5")
+     * @param single <CODE>true</CODE> if the attribute type is single-valued
+     * @param superior superior attribute as a name or OID; <CODE>null</CODE>
+     * if there is no superior
+     * @param aliases names which are to be considered aliases for this
+     * attribute; <CODE>null</CODE> if there are no aliases
+     */
+    public LDAPAttributeSchema( String name, String oid, String description,
+                                String syntaxString, boolean single,
+                                String superior, String[] aliases ) {
         super( name, oid, description );
         attrName = "attributetypes";
-        this.syntax = syntaxCheck( syntaxString );
-        this.syntaxString = syntaxString;
-        setQualifier( SYNTAX, this.syntaxString );
-        this.single = single;
+        syntaxElement.syntax = syntaxElement.syntaxCheck( syntaxString );
+        syntaxElement.syntaxString = syntaxString;
+        setQualifier( SYNTAX, syntaxElement.syntaxString );
         if ( single ) {
             setQualifier( SINGLE, "" );
+        }
+        if ( (superior != null) && (superior.length() > 0) ) {
+            setQualifier( SUPERIOR, superior );
+        }
+        if ( (aliases != null) && (aliases.length > 0) ) {
+            this.aliases = aliases;
         }
     }
 
@@ -182,22 +211,42 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
      * in this format.)
      * <P>
      *
-     * @param raw Definition of the attribute type in the
-     * AttributeTypeDescription format.
+     * @param raw definition of the attribute type in the
+     * AttributeTypeDescription format
      */
     public LDAPAttributeSchema( String raw ) {
         attrName = "attributetypes";
         parseValue( raw );
         String val = (String)properties.get( SYNTAX );
         if ( val != null ) {
-            syntaxString = val;
-            syntax = syntaxCheck( val );
+            syntaxElement.syntaxString = val;
+            syntaxElement.syntax = syntaxElement.syntaxCheck( val );
         }
-        single = properties.containsKey( "SINGLE-VALUE" );
     }
 
     /**
-     * Gets the syntax of the attribute type.
+     * Determines if the attribute type is single-valued.
+     * @return <code>true</code> if single-valued,
+     * <code>false</code> if multi-valued
+     */
+    public boolean isSingleValued() {
+        return (properties != null) ? properties.containsKey( SINGLE ) :
+            false;
+    }
+
+    /**
+     * Gets the name of the attribute that this attribute inherits from,
+     * if any.
+     * @return the name of the attribute that this attribute
+     * inherits from, or <CODE>null</CODE> if it does not have a superior
+     */
+    public String getSuperior() {
+        String[] val = getQualifier( SUPERIOR );
+        return ((val != null) && (val.length > 0)) ? val[0] : null;
+    }
+
+    /**
+     * Gets the syntax of the schema element
      * @return One of the following values:
      * <UL>
      * <LI><CODE>cis</CODE> (case-insensitive string)
@@ -211,83 +260,42 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
      * </UL>
      */
     public int getSyntax() {
-        return syntax;
+        return syntaxElement.syntax;
     }
 
     /**
      * Gets the syntax of the attribute type in dotted-decimal format,
      * for example "1.2.3.4.5"
-     * @return the attribute syntax in dotted-decimal format.
+     * @return The attribute syntax in dotted-decimal format.
      */
     public String getSyntaxString() {
-        return syntaxString;
-    }
-
-    /**
-     * Determines if the attribute type is single-valued.
-     * @return <code>true</code> if single-valued,
-     * <code>false</code> if multi-valued.
-     */
-    public boolean isSingleValued() {
-        return single;
-    }
-
-    protected String internalSyntaxToString() {
-        String s;
-        if ( syntax == cis ) {
-            s = cisString;
-        } else if ( syntax == binary ) {
-            s = binaryString;
-        } else if ( syntax == ces ) {
-            s = cesString;
-        } else if ( syntax == telephone ) {
-            s = telephoneString;
-        } else if ( syntax == dn ) {
-            s = dnString;
-        } else if ( syntax == integer ) {
-            s = intString;
-        } else {
-            s = syntaxString;
-        }
-        return s;
-    }
-
-    protected String syntaxToString() {
-        String s;
-        if ( syntax == cis ) {
-            s = "case-insensitive string";
-        } else if ( syntax == binary ) {
-            s = "binary";
-        } else if ( syntax == integer ) {
-            s = "integer";
-        } else if ( syntax == ces ) {
-            s = "case-exact string";
-        } else if ( syntax == telephone ) {
-            s = "telephone";
-        } else if ( syntax == dn ) {
-            s = "distinguished name";
-        } else {
-            s = syntaxString;
-        }
-        return s;
+        return syntaxElement.syntaxString;
     }
 
     /**
      * Prepare a value in RFC 2252 format for submitting to a server
      *
      * @param quotingBug <CODE>true</CODE> if SUP and SYNTAX values are to
-     * be quoted. That is to satisfy bugs in certain LDAP servers.
-     * @return A String ready to be submitted to an LDAP server
+     * be quoted; that is to satisfy bugs in certain LDAP servers.
+     * @return a String ready to be submitted to an LDAP server
      */
-	String getValue( boolean quotingBug ) {
+    String getValue( boolean quotingBug ) {
         String s = getValuePrefix();
-        s += getValue( SUPERIOR, false );
-        String val = getOptionalValues( MATCHING_RULES );
+        String val = getValue( SUPERIOR, false );
         if ( val.length() > 0 ) {
             s += val + ' ';
         }
-        s += getValue( SYNTAX, quotingBug );
-        s += ' ';
+        val = getOptionalValues( MATCHING_RULES );
+        if ( val.length() > 0 ) {
+            s += val + ' ';
+        }
+        val = getValue( SYNTAX, quotingBug );
+        if ( val.length() > 0 ) {
+            s += val + ' ';
+        }
+        if ( isSingleValued() ) {
+            s += SINGLE + ' ';
+        }
         val = getOptionalValues( NOVALS );
         if ( val.length() > 0 ) {
             s += val + ' ';
@@ -305,100 +313,55 @@ public class LDAPAttributeSchema extends LDAPSchemaElement {
     }
 
     /**
-     * Get the definition of the attribute type in a user friendly format.
+     * Gets the definition of the attribute type in a user friendly format.
      * This is the format that the attribute type definition uses when
      * you print the attribute type or the schema.
-     * @return Definition of the attribute type in a user friendly format.
+     * @return definition of the attribute type in a user friendly format
      */
     public String toString() {
         String s = "Name: " + name + "; OID: " + oid + "; Type: ";
-        s += syntaxToString();
+        s += syntaxElement.syntaxToString();
         s += "; Description: " + description + "; ";
-        if ( single ) {
+        if ( isSingleValued() ) {
             s += "single-valued";
         } else {
             s += "multi-valued";
         }
-        s += getQualifierString( EXPLICIT );
+        s += getQualifierString( IGNOREVALS );
+        s += getAliasString();
         return s;
     }
 
-    protected int syntaxCheck( String syntax ) {
-        int i = unknown;
-        if ( syntax.equals( cisString ) ) {
-            i = cis;
-        } else if ( syntax.equals( binaryString ) ) {
-            i = binary;
-        } else if ( syntax.equals( cesString ) ) {
-            i = ces;
-        } else if ( syntax.equals( intString ) ) {
-            i = integer;
-        } else if ( syntax.equals( telephoneString ) ) {
-            i = telephone;
-        } else if ( syntax.equals( dnString ) ) {
-            i = dn;
-        }
-        return i;
-    }
-
-    /**
-     * Parses an attribute schema definition to see if the SYNTAX value
-     * is quoted. It shouldn't be (according to RFC 2252), but it is for
-     * some LDAP servers. It will either be:<BR>
-     * <CODE>SYNTAX 1.3.6.1.4.1.1466.115.121.1.15</CODE> or<BR>
-     * <CODE>SYNTAX '1.3.6.1.4.1.1466.115.121.1.15'</CODE>
-     * @param raw Definition of the attribute type in the
-     * AttributeTypeDescription format.
-     */
-    static boolean isSyntaxQuoted( String raw ) {
-        int ind = raw.indexOf( " SYNTAX " );
-        if ( ind >= 0 ) {
-            ind += 8;
-            int l = raw.length() - ind;
-            // Extract characters
-            char[] ch = new char[l];
-            raw.getChars( ind, raw.length(), ch, 0 );
-            ind = 0;
-            // Skip to ' or start of syntax value
-            while( (ind < ch.length) && (ch[ind] == ' ') ) {
-                ind++;
-            }
-            if ( ind < ch.length ) {
-                return ( ch[ind] == '\'' );
-            }
-        }
-        return false;
-    }
-
     // Predefined qualifiers
-	public static final String EQUALITY = "EQUALITY";
-	public static final String ORDERING = "ORDERING";
-	public static final String SUBSTR = "SUBSTR";
-	public static final String SINGLE = "SINGLE-VALUE";
-	public static final String COLLECTIVE = "COLLECTIVE";
-	public static final String NO_USER_MODIFICATION = "NO-USER-MODIFICATION";
-	public static final String USAGE = "USAGE";
-	public static final String SYNTAX = "SYNTAX";
-	
-    protected int syntax = unknown;
-    protected String syntaxString = null;
-    protected boolean single = false;
-
-	static String[] NOVALS = { SINGLE,
-							   COLLECTIVE,
+    public static final String EQUALITY = "EQUALITY";
+    public static final String ORDERING = "ORDERING";
+    public static final String SUBSTR = "SUBSTR";
+    public static final String SINGLE = "SINGLE-VALUE";
+    public static final String COLLECTIVE = "COLLECTIVE";
+    public static final String NO_USER_MODIFICATION = "NO-USER-MODIFICATION";
+    public static final String USAGE = "USAGE";
+    
+    // Qualifiers known to not have values; prepare a Hashtable
+    static String[] NOVALS = { SINGLE,
+                               COLLECTIVE,
                                NO_USER_MODIFICATION };
-	static {
-		for( int i = 0; i < NOVALS.length; i++ ) {
-			novalsTable.put( NOVALS[i], NOVALS[i] );
-		}
-	}
-	static final String[] MATCHING_RULES = { EQUALITY,
+    static {
+        for( int i = 0; i < NOVALS.length; i++ ) {
+            novalsTable.put( NOVALS[i], NOVALS[i] );
+        }
+    }
+    static final String[] MATCHING_RULES = { EQUALITY,
                                              ORDERING,
                                              SUBSTR };
-    // Qualifiers tracked explicitly
-	static final String[] EXPLICIT = { SINGLE,
-                                       OBSOLETE,
-                                       COLLECTIVE,
-                                       NO_USER_MODIFICATION,
-                                       SYNTAX};
+    // Qualifiers which we output explicitly in toString()
+    static final String[] IGNOREVALS = { SINGLE,
+                                         OBSOLETE,
+                                         SUPERIOR,
+                                         SINGLE,
+                                         COLLECTIVE,
+                                         NO_USER_MODIFICATION,
+                                         SYNTAX};
+
+    private LDAPSyntaxSchemaElement syntaxElement =
+        new LDAPSyntaxSchemaElement();
 }

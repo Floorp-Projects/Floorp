@@ -509,6 +509,7 @@ public class LDAPSearchResults implements Enumeration {
                 } catch (LDAPException e) {
                     add(e);
                     currConn.releaseSearchListener(resultSource);
+                    searchComplete = true;
                     return;
                 }
                     

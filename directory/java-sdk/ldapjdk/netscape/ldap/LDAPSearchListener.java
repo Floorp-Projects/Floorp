@@ -71,7 +71,7 @@ public class LDAPSearchListener extends LDAPMessageQueue {
 
         // Notify LDAPConnThread to wake up if backlog limit has been reached
         if (result instanceof LDAPSearchResult || result instanceof LDAPSearchResultReference) {
-            LDAPConnection ld = getConnection(result.getId());
+            LDAPConnection ld = getConnection(result.getID());
             if (ld != null) {
                 ld.resultRetrieved();
             }                
@@ -104,6 +104,15 @@ public class LDAPSearchListener extends LDAPMessageQueue {
     }
     
     /**
+     * Reports true if a response has been received from the server.
+     *
+     * @return A flag whether the response message queue is empty
+     */
+    public boolean isResponseReceived() {
+        return super.isMessageReceived();
+    }
+
+    /**
      * Returns message ids for all outstanding requests
      * @return Message id array
      */
@@ -115,7 +124,7 @@ public class LDAPSearchListener extends LDAPMessageQueue {
      * Return the search constraints used to create this object
      * @return the search constraints used to create this object
      */
-    LDAPSearchConstraints getConstraints() {
+    LDAPSearchConstraints getSearchConstraints() {
         return m_constraints;
     }
 

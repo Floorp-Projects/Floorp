@@ -74,6 +74,8 @@ public class LDAPProxiedAuthControl extends LDAPControl {
     public final static String PROXIEDAUTHREQUEST  =
                                             "2.16.840.1.113730.3.4.12";
 
+    private String m_dn;
+    
     /**
      * Constructs an <CODE>LDAPProxiedAuthControl</CODE> object with a
      * DN to use as identity.
@@ -86,7 +88,7 @@ public class LDAPProxiedAuthControl extends LDAPControl {
     public LDAPProxiedAuthControl( String dn,
                                    boolean critical) {
         super( PROXIEDAUTHREQUEST, critical, null );
-        m_value = createSpecification( dn );
+        m_value = createSpecification( m_dn = dn );
     }
 
     /**
@@ -102,6 +104,20 @@ public class LDAPProxiedAuthControl extends LDAPControl {
         ber.addElement( new BEROctetString( dn ) );
         /* Suck out the data and return it */
         return flattenBER( ber );
+    }
+
+    public String toString() {
+         StringBuffer sb = new StringBuffer("{ProxiedAuthCtrl:");
+        
+        sb.append(" isCritical=");
+        sb.append(isCritical());
+        
+        sb.append(" dn=");
+        sb.append(m_dn);
+        
+        sb.append("}");
+
+        return sb.toString();
     }
 }
 

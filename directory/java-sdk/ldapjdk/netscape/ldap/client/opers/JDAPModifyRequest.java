@@ -109,7 +109,7 @@ public class JDAPModifyRequest extends JDAPBaseDNRequest
      * @return string representation of request
      */
     public String toString() {
-        String s = null;
+        String s = "";
         for (int i = 0; i < m_mod.length; i++) {
             if (i != 0)
                 s = s + "+";

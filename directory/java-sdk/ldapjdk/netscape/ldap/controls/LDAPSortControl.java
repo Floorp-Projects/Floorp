@@ -216,8 +216,12 @@ public class LDAPSortControl extends LDAPControl {
     public final static String SORTREQUEST  = "1.2.840.113556.1.4.473";
     public final static String SORTRESPONSE = "1.2.840.113556.1.4.474";
 
+    // Response varibales
     private String m_failedAttribute = null;
     private int m_resultCode = 0;
+    
+    // Request variables
+    private LDAPSortKey[] m_keys;
 
     /**
      * Constructs a sort response <CODE>LDAPSortControl</CODE> object.
@@ -300,7 +304,8 @@ public class LDAPSortControl extends LDAPControl {
         super( SORTREQUEST, critical, null );
         LDAPSortKey[] keys = new LDAPSortKey[1];
         keys[0] = key;
-        m_value = createSortSpecification( keys );
+        m_value = createSortSpecification( m_keys = keys );
+        
     }
 
     /**
@@ -316,7 +321,7 @@ public class LDAPSortControl extends LDAPControl {
     public LDAPSortControl(LDAPSortKey[] keys,
                            boolean critical) {
         super( SORTREQUEST, critical, null );
-        m_value = createSortSpecification( keys );
+        m_value = createSortSpecification( m_keys = keys );
     }
 
     /**
@@ -560,6 +565,47 @@ public class LDAPSortControl extends LDAPControl {
         }
         /* Suck out the data and return it */
         return flattenBER( ber );
+    }
+    
+    public String toString() {
+        return (getID() == SORTREQUEST) ? reqToString() : rspToString();
+    }
+    
+    String reqToString() {
+        
+        StringBuffer sb = new StringBuffer("{SortCtrl:");
+        
+        sb.append(" isCritical=");
+        sb.append(isCritical());
+        
+        sb.append(" ");
+        for (int i=0; i < m_keys.length; i++) {
+            sb.append(m_keys[i]);
+        }            
+        
+        sb.append("}");
+
+        return sb.toString();
+    }
+
+    String rspToString() {
+        
+        StringBuffer sb = new StringBuffer("{SortResponseCtrl:");
+        
+        sb.append(" isCritical=");
+        sb.append(isCritical());
+        
+        if (m_failedAttribute != null) {
+            sb.append(" failedAttr=");
+            sb.append(m_failedAttribute);
+        }
+        
+        sb.append(" resultCode=");
+        sb.append(m_resultCode);
+
+        sb.append("}");
+
+        return sb.toString();
     }
 
     // register SORTRESPONSE with LDAPControl

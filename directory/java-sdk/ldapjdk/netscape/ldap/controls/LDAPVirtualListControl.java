@@ -428,6 +428,34 @@ public class LDAPVirtualListControl extends LDAPControl {
         return flattenBER( seq );
     }
 
+    public String toString() {
+         StringBuffer sb = new StringBuffer("{VirtListCtrl:");
+        
+        sb.append(" isCritical=");
+        sb.append(isCritical());
+        
+        sb.append(" beforeCount=");
+        sb.append(m_beforeCount);
+        
+        sb.append(" afterCount=");
+        sb.append(m_afterCount);
+        
+        sb.append(" listIndex=");
+        sb.append(m_listIndex);
+
+        sb.append(" listSize=");
+        sb.append(m_listSize);
+
+        if (m_context != null) {
+            sb.append(" conext=");
+            sb.append(m_context);
+        }
+
+        sb.append("}");
+
+        return sb.toString();
+    }
+    
     private final static int TAG_BYINDEX = 0;
     private final static int TAG_BYFILTER = 1;
     private int m_beforeCount = 0;

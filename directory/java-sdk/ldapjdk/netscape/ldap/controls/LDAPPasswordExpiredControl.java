@@ -79,6 +79,21 @@ public class LDAPPasswordExpiredControl extends LDAPStringControl {
     public String getMessage() {
         return m_msg;
     }
+    
+    public String toString() {
+         StringBuffer sb = new StringBuffer("{PasswordExpiredCtrl:");
+        
+        sb.append(" isCritical=");
+        sb.append(isCritical());
+        
+        sb.append(" msg=");
+        sb.append(m_msg);
+        
+        sb.append("}");
+
+        return sb.toString();
+    }
+
 }
 
 

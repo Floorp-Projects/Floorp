@@ -22,6 +22,8 @@ import netscape.ldap.client.opers.*;
 import netscape.ldap.ber.stream.*;
 import java.io.*;
 import java.net.*;
+import java.text.SimpleDateFormat;
+
 
 /**
  * Base class for LDAP request and response messages.
@@ -73,6 +75,9 @@ public class LDAPMessage {
     private JDAPProtocolOp m_protocolOp = null;
     private LDAPControl m_controls[] = null;
 
+    // Time Stemp format Hour(0-23):Minute:Second.Milliseconds used for trace msgs
+    static SimpleDateFormat m_timeFormat = new SimpleDateFormat("HH:mm:ss.SSS");
+    
     /**
      * Constructs a ldap message.
      * @param msgid message identifier
@@ -184,7 +189,7 @@ public class LDAPMessage {
      * Returns the message identifer.
      * @return message identifer
      */
-    public int getId(){
+    public int getID(){
         return m_msgid;
     }
 
@@ -241,17 +246,35 @@ public class LDAPMessage {
      * @return ldap message
      */
     public String toString() {
-        if (m_controls == null) { 
-            return "[LDAPMessage] " + m_msgid + " " + m_protocolOp.toString();
+        StringBuffer sb = new StringBuffer("[LDAPMessage] ");
+        sb.append(m_msgid);
+        sb.append(" ");
+        sb.append(m_protocolOp.toString());
+
+        for (int i =0; m_controls != null && i < m_controls.length; i++) {
+            sb.append(" ");
+            sb.append(m_controls[i].toString());
         }
-        else {
-            StringBuffer sb = new StringBuffer(
-                   "[LDAPMessage] " + m_msgid + " " + m_protocolOp.toString());
-            for (int i =0; i < m_controls.length; i++) {
-                sb.append(" ctrl"+i+"=");
-                sb.append(m_controls[i].toString());
-            }
-            return sb.toString();
-        }            
+        return sb.toString();
+    }
+    
+    /**
+     * Returns string representation of a ldap message with
+     * the time stamp. Used for message trace
+     * @return ldap message with the time stamp
+     */
+    String toTraceString() {
+        String timeStamp = m_timeFormat.format(new Date());
+        StringBuffer sb = new StringBuffer(timeStamp);
+        sb.append(" ");
+        sb.append(m_msgid);
+        sb.append(" ");
+        sb.append(m_protocolOp.toString());
+
+        for (int i =0; m_controls != null && i < m_controls.length; i++) {
+            sb.append(" ");
+            sb.append(m_controls[i].toString());
+        }
+        return sb.toString();
     }
 }

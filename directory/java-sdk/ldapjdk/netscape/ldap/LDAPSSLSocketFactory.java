@@ -58,11 +58,6 @@ public class LDAPSSLSocketFactory implements LDAPSSLSocketFactoryExt {
     private Object m_cipherSuites = null;
 
     /**
-     * The Ldap connection
-     */
-    private LDAPConnection m_connection = null;
-
-    /**
      * Constructs an <CODE>LDAPSSLSocketFactory</CODE> object using
      * the default SSL socket implementation,
      * <CODE>netscape.net.SSLSocket</CODE>. (This class is provided

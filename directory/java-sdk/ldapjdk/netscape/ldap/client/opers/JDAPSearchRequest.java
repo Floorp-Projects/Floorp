@@ -208,7 +208,7 @@ public class JDAPSearchRequest extends JDAPBaseDNRequest
                 s = s + m_attrs[i];
             }
         }
-        return "JDAPSearchRequest {baseObject=" + m_base_dn + ", scope=" +
+        return "SearchRequest {baseObject=" + m_base_dn + ", scope=" +
           m_scope + ", derefAliases=" + m_deref + ",sizeLimit=" +
           m_size_limit + ", timeLimit=" + m_time_limit + ", attrsOnly=" +
           m_attrs_only + ", filter=" + m_filter + ", attributes=" +

@@ -67,6 +67,7 @@ import java.util.*;
  * RFC 2252 defines MatchingRuleDescription and MatchingRuleUseDescription
  * as follows:
  * <P>
+ * <PRE>
  *    MatchingRuleDescription = "(" whsp
  *        numericoid whsp  ; MatchingRule identifier
  *        [ "NAME" qdescrs ]
@@ -84,7 +85,7 @@ import java.util.*;
  *        [ "DESC" qdstring ]
  *        [ "OBSOLETE" ]
  *       "APPLIES" oids    ; AttributeType identifiers
- *    whsp ")" * <PRE>
+ *    whsp ")"
  * </PRE>
  * <P>
  * <CODE>LDAPMatchingRuleSchema</CODE> abstracts away from the two types and
@@ -94,17 +95,17 @@ import java.util.*;
  * @see netscape.ldap.LDAPSchemaElement
  **/
 
-public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
+public class LDAPMatchingRuleSchema extends LDAPSchemaElement {
     /**
-     * Construct a matching rule definition, using the specified
+     * Constructs a matching rule definition, using the specified
      * information.
-     * @param name Name of the matching rule.
-     * @param oid Object identifier (OID) of the matching rule
-     * in dotted-string format (for example, "1.2.3.4").
-     * @param description Description of the matching rule.
-     * @param attributes Array of the OIDs of the attributes for which
-     * the matching rule is applicable.
-     * @param syntax Syntax of this matching rule. The value of this
+     * @param name name of the matching rule
+     * @param oid object identifier (OID) of the matching rule
+     * in dotted-decimal format (for example, "1.2.3.4")
+     * @param description description of the matching rule
+     * @param attributes array of the OIDs of the attributes for which
+     * the matching rule is applicable
+     * @param syntax syntax of this matching rule. The value of this
      * argument can be one of the following:
      * <UL>
      * <LI><CODE>cis</CODE> (case-insensitive string)
@@ -116,13 +117,68 @@ public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
      * <LI><CODE>dn</CODE> (distinguished name)
      * </UL>
      */
-    public LDAPMatchingRuleSchema( String name, String oid, String description,
-                            String[] attributes, int syntax ) {
-        super( name, oid, description, syntax, true );
+    public LDAPMatchingRuleSchema( String name, String oid,
+                                   String description,
+                                   String[] attributes, int syntax ) {
+        this( name, oid, description, attributes, cisString );
+        syntaxElement.syntax = syntax;
+        String syntaxType = syntaxElement.internalSyntaxToString( syntax );
+        if ( syntaxType != null ) {
+            syntaxElement.syntaxString = syntaxType;
+        }
+        setQualifier( SYNTAX, syntaxElement.syntaxString );
+    }
+
+    /**
+     * Constructs a matching rule definition, using the specified
+     * information.
+     * @param name name of the matching rule.
+     * @param oid object identifier (OID) of the matching rule
+     * in dotted-decimal format (for example, "1.2.3.4").
+     * @param description description of the matching rule.
+     * @param attributes array of the OIDs of the attributes for which
+     * the matching rule is applicable.
+     * @param syntaxString syntax of this matching rule in dotted-decimal
+     * format
+     */
+    public LDAPMatchingRuleSchema( String name, String oid,
+                                   String description,
+                                   String[] attributes,
+                                   String syntaxString ) {
+        this( name, oid, description, attributes, syntaxString, null );
+    }
+
+    /**
+     * Constructs a matching rule definition, using the specified
+     * information.
+     * @param name name of the matching rule.
+     * @param oid object identifier (OID) of the matching rule
+     * in dotted-decimal format (for example, "1.2.3.4").
+     * @param description description of the matching rule.
+     * @param attributes array of the OIDs of the attributes for which
+     * the matching rule is applicable.
+     * @param syntaxString syntax of this matching rule in dotted-decimal
+     * format
+     * @param aliases names which are to be considered aliases for this
+     * matching rule; <CODE>null</CODE> if there are no aliases
+     */
+    public LDAPMatchingRuleSchema( String name, String oid,
+                                   String description,
+                                   String[] attributes,
+                                   String syntaxString,
+                                   String[] aliases ) {
+        super( name, oid, description );
         attrName = "matchingrules";
+        syntaxElement.syntax = syntaxElement.syntaxCheck( syntaxString );
+        syntaxElement.syntaxString = syntaxString;
+        setQualifier( SYNTAX, syntaxElement.syntaxString );
         this.attributes = new String[attributes.length];
-        for( int i = 0; i < attributes.length; i++ )
-            this.attributes[i] = new String( attributes[i] );
+        for( int i = 0; i < attributes.length; i++ ) {
+            this.attributes[i] = attributes[i];
+        }
+        if ( (aliases != null) && (aliases.length > 0) ) {
+            this.aliases = aliases;
+        }
     }
 
     /**
@@ -131,7 +187,7 @@ public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
      * format. For information on this format,
      * (see <A HREF="http://ds.internic.net/rfc/rfc2252.txt"
      * TARGET="_blank">RFC 2252, Lightweight Directory Access Protocol (v3):
-     * Attribute Syntax Definitions</A>.  This is the format that LDAP servers
+     * Attribute Syntax Definitions</A>. This is the format that LDAP servers
      * and clients use to exchange schema information. For example, when
      * you search an LDAP server for its schema, the server returns an entry
      * with attributes that include "matchingrule" and "matchingruleuse".
@@ -139,14 +195,16 @@ public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
      * in this format.
      * <P>
      *
-     * @param raw Definition of the matching rule in the
-     * MatchingRuleDescription format.
-     * @param use Definition of the use of the matching rule in the
-     * MatchingRuleUseDescription format.
+     * @param raw definition of the matching rule in the
+     * MatchingRuleDescription format
+     * @param use definition of the use of the matching rule in the
+     * MatchingRuleUseDescription format
      */
     public LDAPMatchingRuleSchema( String raw, String use ) {
         attrName = "matchingrules";
-        parseValue( raw );
+        if ( raw != null ) {
+            parseValue( raw );
+        }
         if ( use != null ) {
             parseValue( use );
         }
@@ -158,32 +216,68 @@ public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
         }
         String val = (String)properties.get( "SYNTAX" );
         if ( val != null ) {
-            syntaxString = val;
-            syntax = syntaxCheck( val );
+            syntaxElement.syntaxString = val;
+            syntaxElement.syntax = syntaxElement.syntaxCheck( val );
         }
     }
 
     /**
-     * Get the list of the OIDs of the attribute types which can be used
-     * with the matching rule. The list is a deep copy.
-     * @return Array of the OIDs of the attribute types which can be used
+     * Gets the list of the OIDs of the attribute types which can be used
      * with the matching rule.
+     * @return array of the OIDs of the attribute types which can be used
+     * with the matching rule
      */
     public String[] getAttributes() {
         return attributes;
     }
 
+    /**
+     * Gets the syntax of the schema element
+     * @return One of the following values:
+     * <UL>
+     * <LI><CODE>cis</CODE> (case-insensitive string)
+     * <LI><CODE>ces</CODE> (case-exact string)
+     * <LI><CODE>binary</CODE> (binary data)
+     * <LI><CODE>int</CODE> (integer)
+     * <LI><CODE>telephone</CODE> (telephone number -- identical to cis,
+     * but blanks and dashes are ignored during comparisons)
+     * <LI><CODE>dn</CODE> (distinguished name)
+     * <LI><CODE>unknown</CODE> (not a known syntax)
+     * </UL>
+     */
+    public int getSyntax() {
+        return syntaxElement.syntax;
+    }
+
+    /**
+     * Gets the syntax of the attribute type in dotted-decimal format,
+     * for example "1.2.3.4.5"
+     * @return The attribute syntax in dotted-decimal format.
+     */
+    public String getSyntaxString() {
+        return syntaxElement.syntaxString;
+    }
+
+    /**
+     * Prepare a value in RFC 2252 format for submitting to a server
+     *
+     * @param quotingBug <CODE>true</CODE> if SUP and SYNTAX values are to
+     * be quoted; that is to satisfy bugs in certain LDAP servers.
+     * @return a String ready to be submitted to an LDAP server
+     */
     String getValue( boolean quotingBug ) {
         String s = getValuePrefix();
-        s += "SYNTAX ";
-        if ( quotingBug ) {
-            s += '\'';
+        if ( syntaxElement.syntaxString != null ) {
+            s += "SYNTAX ";
+            if ( quotingBug ) {
+                s += '\'';
+            }
+            s += syntaxElement.syntaxString;
+            if ( quotingBug ) {
+                s += '\'';
+            }
+            s += ' ';
         }
-        s += syntaxString;
-        if ( quotingBug ) {
-            s += '\'';
-        }
-        s += ' ';
         String val = getCustomValues();
         if ( val.length() > 0 ) {
             s += val + ' ';
@@ -193,7 +287,7 @@ public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
     }
 
     /**
-     * Get the matching rule definition in the string representation
+     * Gets the matching rule definition in the string representation
      * of the MatchingRuleDescription data type defined in X.501 (see
      * <A HREF="http://ds.internic.net/rfc/rfc2252.txt"
      * TARGET="_blank">RFC 2252, Lightweight Directory Access Protocol
@@ -207,16 +301,16 @@ public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
      * matching rule use description in these formats.)
      * <P>
      *
-     * @return A string in a format that can be used as the value of
+     * @return a string in a format that can be used as the value of
      * the <CODE>matchingrule</CODE> attribute (which describes
-     * a matching rule in the schema) of a <CODE>subschema</CODE> object.
+     * a matching rule in the schema) of a <CODE>subschema</CODE> object
      */
     public String getValue() {
         return getValue( false );
     }
 
     /**
-     * Get the matching rule use definition in the string representation
+     * Gets the matching rule use definition in the string representation
      * of the MatchingRuleUseDescription data type defined in X.501 (see
      * <A HREF="http://ds.internic.net/rfc/rfc2252.txt"
      * TARGET="_blank">RFC 2252, Lightweight Directory Access Protocol
@@ -230,36 +324,34 @@ public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
      * matching rule use description in these formats.)
      * <P>
      *
-     * @return A string in a format that can be used as the value of
+     * @return a string in a format that can be used as the value of
      * the <CODE>matchingruleuse</CODE> attribute (which describes the use of
-     * a matching rule in the schema) of a <CODE>subschema</CODE> object.
+     * a matching rule in the schema) of a <CODE>subschema</CODE> object
      */
     public String getUseValue() {
         String s = getValuePrefix();
-        s += "APPLIES ( ";
-        for( int i = 0; i < attributes.length; i++ ) {
-            if ( i > 0 )
-                s += " $ ";
-            s += attributes[i];
-        }
-        s += ") ";
-        String val = getCustomValues();
-        if ( val.length() > 0 ) {
-            s += val + ' ';
+        if ( (attributes != null) && (attributes.length > 0) ) {
+            s += "APPLIES ( ";
+            for( int i = 0; i < attributes.length; i++ ) {
+                if ( i > 0 )
+                    s += " $ ";
+                s += attributes[i];
+            }
+            s += " ) ";
         }
         s += ')';
         return s;
     }
 
     /**
-     * Add, remove or modify the definition from a Directory.
-     * @param ld An open connection to a Directory Server. Typically the
+     * Adds, removes or modifies the definition from a Directory.
+     * @param ld an open connection to a Directory Server. Typically the
      * connection must have been authenticated to add a definition.
-     * @param op Type of modification to make.
-     * @param name Name of attribute in the schema entry to modify. This
+     * @param op type of modification to make
+     * @param name name of attribute in the schema entry to modify. This
      * is ignored here.
-     * @param dn The entry at which to update the schema.
-     * @exception LDAPException if the definition can't be added/removed.
+     * @param dn the entry at which to update the schema
+     * @exception LDAPException if the definition can't be added/removed
      */
     protected void update( LDAPConnection ld, int op, String name, String dn )
                             throws LDAPException {
@@ -273,14 +365,14 @@ public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
     }
 
     /**
-     * Get the definition of the matching rule in a user friendly format.
+     * Gets the definition of the matching rule in a user friendly format.
      * This is the format that the matching rule definition uses when
      * you print the matching rule or the schema.
-     * @return Definition of the matching rule in a user friendly format.
+     * @return definition of the matching rule in a user friendly format
      */
     public String toString() {
         String s = "Name: " + name + "; OID: " + oid + "; Type: ";
-        s += syntaxToString();
+        s += syntaxElement.syntaxToString();
         s += "; Description: " + description;
         if ( attributes != null ) {
             s += "; Applies to: ";
@@ -291,8 +383,15 @@ public class LDAPMatchingRuleSchema extends LDAPAttributeSchema {
             }
         }
         s += getQualifierString( EXPLICIT );
+        s += getAliasString();
         return s;
     }
 
+    // Qualifiers tracked explicitly
+    static final String[] EXPLICIT = { OBSOLETE,
+                                       SYNTAX };
+    
     private String[] attributes = null;
+    private LDAPSyntaxSchemaElement syntaxElement =
+        new LDAPSyntaxSchemaElement();
 }

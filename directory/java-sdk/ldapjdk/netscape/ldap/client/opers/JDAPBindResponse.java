@@ -91,6 +91,6 @@ public class JDAPBindResponse extends JDAPResult implements JDAPProtocolOp {
      * @return string representation
      */
     public String toString() {
-        return "JDAPBindResponse " + super.getParamString();
+        return "BindResponse " + super.getParamString();
     }
 }

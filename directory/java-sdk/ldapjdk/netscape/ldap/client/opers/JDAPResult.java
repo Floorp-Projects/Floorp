@@ -248,6 +248,6 @@ public class JDAPResult {
      * @return string representation
      */
     public String toString() {
-        return "JDAPResult " + getParamString();
+        return "Result " + getParamString();
     }
 }

@@ -163,6 +163,25 @@ public class LDAPConnection
     public final static String LDAP_PROPERTY_SECURITY = "version.security";
 
     /**
+     * Name of the property to enable/disable LDAP message trace. <P>
+     *
+     * The property can be specified either as a system property 
+     * (java -D command line option),  or programmatically with
+     * <CODE>setProperty</CODE> method.
+     * <P>
+     * When -D command line option is used, defining the property with
+     * no value will send the trace output to the standard error. If the 
+     * value is defined, it is assumed to be the name of an output file.
+     * <P>
+     * When the property is set with <CODE>getProperty</CODE> method,
+     * the property must have an output stream as the value. To stop
+     * tracing, <CODE>null</CODE> should be passed as the property value.
+     * 
+     * @see netscape.ldap.LDAPConnection#setProperty(java.lang.String, java.lang.Object)
+     */
+    public final static String TRACE_PROPERTY = "com.netscape.ldap.trace";
+
+    /**
      * Specifies the serial connection setup policy when a list of hosts is
      * passed to  the <CODE>connect</CODE> method.
      * @see netscape.ldap.LDAPConnection#setConnSetupDelay(int)
@@ -408,6 +427,23 @@ public class LDAPConnection
             m_properties.put( SASL_PACKAGE_PROPERTY, val ); 
         } else if ( name.equalsIgnoreCase( "debug" ) ) {
             debug = ((String)val).equalsIgnoreCase( "true" ); 
+
+        } else if ( name.equalsIgnoreCase( TRACE_PROPERTY ) ) {
+
+            if (val == null) {
+                m_properties.remove(TRACE_PROPERTY);
+            }                
+            else if (! (val instanceof OutputStream)) {
+                throw new LDAPException(TRACE_PROPERTY + " must be OutputStream" );
+            }
+            else {
+                m_properties.put( TRACE_PROPERTY, val ); 
+            }
+            
+            if (m_thread != null) {
+                m_thread.setTraceOutputStream((OutputStream)val);
+            }
+
         } else {
             throw new LDAPException("Unknown property: " + name);
         }
@@ -862,6 +898,45 @@ public class LDAPConnection
         authenticateSSLConnection();
     }
 
+    /**
+     * Returns the trace output stream if set by the user
+     */
+    OutputStream getTraceOutputStream() {
+        
+        // Check first if trace output has been set using setProperty()
+        OutputStream os = (OutputStream)m_properties.get(TRACE_PROPERTY);
+        if (os != null) {
+            return os;
+        }
+        
+        // Check if the property has been set with java -Dcom.netscape.ldap.trace
+        // If the property does not have a value, send the trace to the System.err,
+        // otherwise use the value as the output file name
+        try {
+            String traceProp = System.getProperty(TRACE_PROPERTY);
+            if (traceProp != null) {
+                if (traceProp.length() == 0) {
+                    return System.err;
+                }
+                else {
+                    try {
+                        FileOutputStream fos = new FileOutputStream(traceProp);
+                        return new BufferedOutputStream(fos);
+                    }
+                    catch (Exception e) {
+                        System.err.println("Can not open output trace file: " + e);
+                        return null;
+                    }
+                }                    
+            }
+        }
+        catch (Exception e) {
+            ;// In browser access to property might not be allowed
+        }
+        return null;
+    }        
+        
+        
     private synchronized LDAPConnThread getNewThread(LDAPConnSetupMgr connMgr,
                                                      LDAPCache cache)
         throws LDAPException {
@@ -892,7 +967,8 @@ public class LDAPConnection
                             // need to move all the LDAPConnections from the dead thread
                             // to the new thread
                             try {
-                                newThread = new LDAPConnThread(connMgr, cache);
+                                newThread = new LDAPConnThread(connMgr, cache,
+                                                getTraceOutputStream());
                                 v = (Vector)m_threadConnTable.remove(connThread);
                                 break;
                             } catch (Exception e) {
@@ -913,7 +989,8 @@ public class LDAPConnection
             // connection is dead
             if (!connExists) {
                 try {
-                    newThread = new LDAPConnThread(connMgr, cache);
+                    newThread = new LDAPConnThread(connMgr, cache,
+                                    getTraceOutputStream());
                     v = new Vector();
                     v.addElement(this);
                 } catch (Exception e) {

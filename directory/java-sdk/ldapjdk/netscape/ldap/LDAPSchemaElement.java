@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -75,19 +75,22 @@ import java.util.*;
 
 public abstract class LDAPSchemaElement {
     /**
-     * Construct a blank element.
+     * Constructs a blank element.
      */
     protected LDAPSchemaElement() {
     }
 
     /**
-     * Construct a definition explicitly.
-     * @param name Name of element.
-     * @param oid Dotted-string object identifier.
-     * @param description Description of element.
+     * Constructs a definition explicitly.
+     * @param name name of element
+     * @param oid dotted-string object identifier
+     * @param description description of element
      */
     protected LDAPSchemaElement( String name, String oid,
                                  String description ) {
+        if ( (oid == null) || (oid.trim().length() < 1) ) {
+            throw new IllegalArgumentException( "OID required" );
+        }
         this.name = name;
         this.oid = oid;
         this.description = description;
@@ -95,8 +98,8 @@ public abstract class LDAPSchemaElement {
 
     /**
      * Gets the name of the object class, attribute type, or matching rule.
-     * @return The name of the object class, attribute type, or
-     * matching rule.
+     * @return the name of the object class, attribute type, or
+     * matching rule
      */
     public String getName() {
         return name;
@@ -105,30 +108,30 @@ public abstract class LDAPSchemaElement {
     /**
      * Gets the object ID (OID) of the object class, attribute type,
      * or matching rule in dotted-string format (for example, "1.2.3.4").
-     * @return The OID of the object class, attribute type,
-     * or matching rule.
+     * @return the OID of the object class, attribute type,
+     * or matching rule
      */
     public String getOID() {
         return oid;
     }
 
     /**
-     * Get the description of the object class, attribute type,
+     * Gets the description of the object class, attribute type,
      * or matching rule.
-     * @return The description of the object class, attribute type,
-     * or matching rule.
+     * @return the description of the object class, attribute type,
+     * or matching rule
      */
     public String getDescription() {
         return description;
     }
 
     /**
-     * Add, remove or modify the definition from a Directory.
-     * @param ld An open connection to a Directory Server. Typically the
+     * Adds, removes or modifies the definition from a Directory.
+     * @param ld an open connection to a Directory Server. Typically the
      * connection must have been authenticated to add a definition.
-     * @param op Type of modification to make.
-     * @param atrr Attribute in the schema entry to modify.
-     * @exception LDAPException if the definition can't be added/removed.
+     * @param op type of modification to make
+     * @param attr attribute in the schema entry to modify
+     * @exception LDAPException if the definition can't be added/removed
      */
     protected void update( LDAPConnection ld, int op, LDAPAttribute attr,
                            String dn )
@@ -139,12 +142,12 @@ public abstract class LDAPSchemaElement {
     }
 
     /**
-     * Add, remove or modify the definition from a Directory.
-     * @param ld An open connection to a Directory Server. Typically the
+     * Adds, removes or modifies the definition from a Directory.
+     * @param ld an open connection to a Directory Server. Typically the
      * connection must have been authenticated to add a definition.
-     * @param op Type of modification to make.
-     * @param attrs Attributes in the schema entry to modify.
-     * @exception LDAPException if the definition can't be added/removed.
+     * @param op type of modification to make
+     * @param attrs attributes in the schema entry to modify
+     * @exception LDAPException if the definition can't be added/removed
      */
     protected void update( LDAPConnection ld, int op, LDAPAttribute[] attrs,
                            String dn )
@@ -158,12 +161,12 @@ public abstract class LDAPSchemaElement {
     }
 
     /**
-     * Add, remove or modify the definition from a Directory.
-     * @param ld An open connection to a Directory Server. Typically the
+     * Adds, removes or modifies the definition from a Directory.
+     * @param ld an open connection to a Directory Server. Typically the
      * connection must have been authenticated to add a definition.
-     * @param op Type of modification to make.
-     * @param name Name of attribute in the schema entry to modify.
-     * @exception LDAPException if the definition can't be added/removed.
+     * @param op type of modification to make
+     * @param name name of attribute in the schema entry to modify
+     * @exception LDAPException if the definition can't be added/removed
      */
     protected void update( LDAPConnection ld, int op, String name,
                            String dn )
@@ -180,11 +183,11 @@ public abstract class LDAPSchemaElement {
      * definition to the schema. Typically, most servers
      * will require you to authenticate before allowing you to
      * edit the schema.
-     * @param ld The <CODE>LDAPConnection</CODE> object representing
-     * a connection to an LDAP server.
-     * @param dn The entry at which to add the schema definition.
-     * @exception LDAPException The specified definition cannot be
-     * added to the schema.
+     * @param ld the <CODE>LDAPConnection</CODE> object representing
+     * a connection to an LDAP server
+     * @param dn the entry at which to add the schema definition
+     * @exception LDAPException if the specified definition cannot be
+     * added to the schema
      */
     public void add( LDAPConnection ld, String dn ) throws LDAPException {
         update( ld, LDAPModification.ADD, attrName, dn );
@@ -195,26 +198,26 @@ public abstract class LDAPSchemaElement {
      * definition to the schema at the root DSE. Typically, most servers
      * will require you to authenticate before allowing you to
      * edit the schema.
-     * @param ld The <CODE>LDAPConnection</CODE> object representing
-     * a connection to an LDAP server.
-     * @exception LDAPException The specified definition cannot be
-     * added to the schema.
+     * @param ld the <CODE>LDAPConnection</CODE> object representing
+     * a connection to an LDAP server
+     * @exception LDAPException if the specified definition cannot be
+     * added to the schema
      */
     public void add( LDAPConnection ld ) throws LDAPException {
         add( ld, "" );
     }
 
     /**
-     * Replace a single value of the object class, attribute type,
+     * Replaces a single value of the object class, attribute type,
      * or matching rule definition in the schema. Typically, most servers
      * will require you to authenticate before allowing you to
      * edit the schema.
-     * @param ld The <CODE>LDAPConnection</CODE> object representing
-     * a connection to an LDAP server.
-     * @param newValue The new value
-     * @param dn The entry at which to modify the schema definition.
-     * @exception LDAPException The specified definition cannot be
-     * modified.
+     * @param ld the <CODE>LDAPConnection</CODE> object representing
+     * a connection to an LDAP server
+     * @param newValue the new value
+     * @param dn the entry at which to modify the schema definition
+     * @exception LDAPException if the specified definition cannot be
+     * modified
      */
     public void modify( LDAPConnection ld, LDAPSchemaElement newValue,
                         String dn )
@@ -232,16 +235,16 @@ public abstract class LDAPSchemaElement {
     }
 
     /**
-     * Replace a single value of the object class, attribute type,
+     * Replaces a single value of the object class, attribute type,
      * or matching rule definition in the schema at the root DSE.
      * Typically, most servers
      * will require you to authenticate before allowing you to
      * edit the schema.
-     * @param ld The <CODE>LDAPConnection</CODE> object representing
-     * a connection to an LDAP server.
-     * @param newValue The new value
-     * @exception LDAPException The specified definition cannot be
-     * modified.
+     * @param ld the <CODE>LDAPConnection</CODE> object representing
+     * a connection to an LDAP server
+     * @param newValue the new value
+     * @exception LDAPException if the specified definition cannot be
+     * modified
      */
     public void modify( LDAPConnection ld, LDAPSchemaElement newValue )
                         throws LDAPException {
@@ -253,11 +256,11 @@ public abstract class LDAPSchemaElement {
      * definition from the schema. Typically, most servers
      * will require you to authenticate before allowing you to
      * edit the schema.
-     * @param ld The <CODE>LDAPConnection</CODE> object representing
-     * a connection to an LDAP server.
-     * @param dn The entry at which to remove the schema definition.
-     * @exception LDAPException The specified definition cannot be
-     * removed from the schema.
+     * @param ld the <CODE>LDAPConnection</CODE> object representing
+     * a connection to an LDAP server
+     * @param dn the entry at which to remove the schema definition
+     * @exception LDAPException if the specified definition cannot be
+     * removed from the schema
      */
     public void remove( LDAPConnection ld, String dn ) throws LDAPException {
         update( ld, LDAPModification.DELETE, attrName, dn );
@@ -268,28 +271,28 @@ public abstract class LDAPSchemaElement {
      * definition from the schema at the root DSE. Typically, most servers
      * will require you to authenticate before allowing you to
      * edit the schema.
-     * @param ld The <CODE>LDAPConnection</CODE> object representing
-     * a connection to an LDAP server.
-     * @exception LDAPException The specified definition cannot be
-     * removed from the schema.
+     * @param ld the <CODE>LDAPConnection</CODE> object representing
+     * a connection to an LDAP server
+     * @exception LDAPException if the specified definition cannot be
+     * removed from the schema
      */
     public void remove( LDAPConnection ld ) throws LDAPException {
         remove( ld, "" );
     }
 
     /**
-     * Report if the element is marked as obsolete.
+     * Reports if the element is marked as obsolete.
      * @return <CODE>true<CODE> if the element is defined as obsolete.
      */
     public boolean isObsolete() {
-        return obsolete;
+        return properties.containsKey(OBSOLETE);
     }
 
     /**
-     * Parse a raw schema value into OID, name, description, and
+     * Parses a raw schema value into OID, name, description, and
      * a Hashtable of other qualifiers and values
      *
-     * @param raw A raw schema definition
+     * @param raw a raw schema definition
      */
     protected void parseValue( String raw ) {
         if ( properties == null ) {
@@ -333,10 +336,10 @@ public abstract class LDAPSchemaElement {
                 // Found a token
                 s = new String( ch, ind, last-ind );
                 ind = last;
-				if ( novalsTable.containsKey( s ) ) {
-					properties.put( s, "" );
-					continue;
-				}
+                if ( novalsTable.containsKey( s ) ) {
+                    properties.put( s, "" );
+                    continue;
+                }
             } else {
                 // Reached end of string with no end of token
                 s = "";
@@ -362,7 +365,7 @@ public abstract class LDAPSchemaElement {
                 while( (last < l) && (ch[last] != '\'') ) {
                     last++;
                 }
-			} else if ( ch[ind] == '(' ) {
+            } else if ( ch[ind] == '(' ) {
                 // The value is a list
                 list = true;
                 ind++;
@@ -375,42 +378,54 @@ public abstract class LDAPSchemaElement {
                     last++;
                 }
             }
-            if ( (ind < last) && (last < l) ) {
-				if ( list ) {
-					Vector v = new Vector();
+            if ( (ind < last) && (last <= l) ) {
+                if ( list ) {
+                    Vector v = new Vector();
                     val = new String( ch, ind+1, last-ind-1 );
-                    StringTokenizer st = new StringTokenizer( val, " " );
+                    // Is this a quoted list? If so, use ' as delimiter,
+                    // otherwise use ' '. The space between quoted
+                    // values will be returned as tokens containing only
+                    // white space. White space is not valid in a list
+                    // value, so we just remove all tokens containing
+                    // only white space.
+                    String delim = (val.indexOf( '\'' ) >= 0) ? "'" : " ";
+                    StringTokenizer st = new StringTokenizer( val, delim );
                     while ( st.hasMoreTokens() ) {
-                        String tok = st.nextToken();
-                        if ( !tok.equals( "$" ) ) {
-							// Remove quotes, if any
-							if ( tok.charAt( 0 ) == '\'' ) {
-								tok = tok.substring( 1, tok.length()-1 );
-							}
+                        String tok = st.nextToken().trim();
+                        if ( (tok.length() > 0) && !tok.equals( "$" ) ) {
                             v.addElement( tok );
                         }
                     }
-					properties.put( s, v );
-				} else {
-					val = new String( ch, ind, last-ind );
-					if ( s.equals( "NAME" ) ) {
-						name = val;
-					} else if ( s.equals( "DESC" ) ) {
-						description = val;
-					} else {
-						properties.put( s, val );
-					}
-					if ( quoted ) {
-						last++;
-					}
+                    properties.put( s, v );
+                } else {
+                    val = new String( ch, ind, last-ind );
+                    if ( s.equals( "NAME" ) ) {
+                        name = val;
+                    } else if ( s.equals( "DESC" ) ) {
+                        description = val;
+                    } else {
+                        properties.put( s, val );
+                    }
+                    if ( quoted ) {
+                        last++;
+                    }
                 }
             }
             ind = last + 1;
         }
+        // Aliases end up as values of NAME
+        String[] vals = getQualifier( "NAME" );
+        if ( (vals != null) && (vals.length > 0) ) {
+            name = vals[0];
+            if ( vals.length > 1 ) {
+                aliases = new String[vals.length-1];
+                System.arraycopy( vals, 1, aliases, 0, aliases.length );
+            }
+        }
     }
 
     /**
-     * Format a String in the format defined in X.501 (see
+     * Formats a String in the format defined in X.501 (see
      * <A HREF="http://ds.internic.net/rfc/rfc2252.txt"
      * >RFC 2252, Lightweight Directory Access Protocol
      * (v3): Attribute Syntax Definitions</A>
@@ -424,24 +439,40 @@ public abstract class LDAPSchemaElement {
      * <P>
      * @param quotingBug <CODE>true</CODE> if single quotes are to be
      * supplied around the SYNTAX and SUP value
-     * @return A formatted String for defining a schema element
+     * @return a formatted String for defining a schema element
      */
     public String getValue() {
         return getValue( false );
     }
 
-    abstract String getValue( boolean quotingBug );
+    String getValue( boolean quotingBug ) {
+        return null;
+    }
 
     /**
-     * Prepare the initial common part of a schema element value in
+     * Prepares the initial common part of a schema element value in
      * RFC 2252 format for submitting to a server
      *
-     * @return The OID, name, description, and possibly OBSOLETE
+     * @return the OID, name, description, and possibly OBSOLETE
      * fields of a schema element definition
      */
-	String getValuePrefix() {
-        String s = "( " + oid + " NAME \'" + name + "\' DESC \'" +
-            description + "\' ";
+    String getValuePrefix() {
+        String s = "( " + oid + ' ';
+        if ( name != null ) {
+            s += "NAME ";
+            if ( aliases != null ) {
+                s += "( " + '\'' + name + "\' ";
+                for( int i = 0; i < aliases.length; i++ ) {
+                    s += '\'' + aliases[i] + "\' ";
+                }
+                s += ") ";
+            } else {
+                s += '\'' + name + "\' ";
+            }
+        }
+        if ( description != null ) {
+            s += "DESC \'" + description + "\' ";
+        }
         if ( isObsolete() ) {
             s += OBSOLETE + ' ';
         }
@@ -449,9 +480,9 @@ public abstract class LDAPSchemaElement {
     }
 
     /**
-     * Get qualifiers which may or may not be present
+     * Gets qualifiers which may or may not be present
      *
-     * @param names List of qualifiers to look up
+     * @param names list of qualifiers to look up
      * @return String in RFC 2252 format containing any values
      * found, not terminated with ' '
      */
@@ -467,32 +498,41 @@ public abstract class LDAPSchemaElement {
     }
 
     /**
-     * Get any qualifiers marked as custom
+     * Gets any qualifiers marked as custom (starting with "X-")
      *
      * @return String in RFC 2252 format, without a terminating
      * ' '
      */
     protected String getCustomValues() {
         String s = "";
-		Enumeration en = properties.keys();
-		while( en.hasMoreElements() ) {
-			String key = (String)en.nextElement();
-			if ( !key.startsWith( "X-" ) ) {
+        Enumeration en = properties.keys();
+        while( en.hasMoreElements() ) {
+            String key = (String)en.nextElement();
+            if ( !key.startsWith( "X-" ) ) {
                 continue;
             }
-			s += getValue( key, true );
-		}
-		return s;
-	}
+            s += getValue( key, true, false ) + ' ';
+        }
+        // Strip trailing ' '
+        if ( (s.length() > 0) && (s.charAt( s.length() - 1 ) == ' ') ) {
+            s = s.substring( 0, s.length() - 1 );
+        }
+        return s;
+    }
 
     /**
-     * Get a qualifier's value or values, if present, and format
+     * Gets a qualifier's value or values, if present, and formats
      * the String according to RFC 2252
      *
+     * @param key the qualifier to get
+     * @param doQuote <CODE>true</CODE> if values should be enveloped
+     * with single quotes
+     * @param doDollar <CODE>true</CODE> if a list of values should use
+     * " $ " as separator; that is true for object class attribute lists
      * @return String in RFC 2252 format, without a terminating
      * ' '
      */
-    String getValue( String key, boolean doQuote ) {
+    String getValue( String key, boolean doQuote, boolean doDollar ) {
         String s = "";
         Object o = properties.get( key );
         if ( o == null ) {
@@ -521,19 +561,34 @@ public abstract class LDAPSchemaElement {
                     s += '\'';
                 }
                 s += ' ';
-                if ( i < (v.size() - 1) ) {
+                if ( doDollar && (i < (v.size() - 1)) ) {
                     s += "$ ";
                 }
             }
             s += ')';
         }
-		return s;
-	}
+        return s;
+    }
 
     /**
-     * Keep track of qualifiers which are not predefined.
-     * @param name Name of qualifier
-     * @param value Value of qualifier. "" for no value
+     * Gets a qualifier's value or values, if present, and format
+     * the String according to RFC 2252
+     *
+     * @param key the qualifier to get
+     * @param doQuote <CODE>true</CODE> if values should be enveloped
+     * with single quotes
+     * @return String in RFC 2252 format, without a terminating
+     * ' '
+     */
+    String getValue( String key, boolean doQuote ) {
+        return getValue( key, doQuote, true );
+    }
+
+    /**
+     * Keeps track of qualifiers which are not predefined.
+     * @param name name of qualifier
+     * @param value value of qualifier. "" for no value, <CODE>null</CODE>
+     * to remove the qualifier
      */
     public void setQualifier( String name, String value ) {
         if ( properties == null ) {
@@ -547,9 +602,9 @@ public abstract class LDAPSchemaElement {
     }
 
     /**
-     * Keep track of qualifiers which are not predefined.
+     * Keeps track of qualifiers which are not predefined.
      * @param name Name of qualifier
-     * @param values Array of values
+     * @param values array of values
      */
     public void setQualifier( String name, String[] values ) {
         if ( values == null ) {
@@ -559,16 +614,16 @@ public abstract class LDAPSchemaElement {
             properties = new Hashtable();
         }
         Vector v = new Vector();
-        for( int i = 0; i < v.size(); i++ ) {
+        for( int i = 0; i < values.length; i++ ) {
             v.addElement( values[i] );
         }
         properties.put( name, v );
     }
 
     /**
-     * Get the value of a qualifier which is not predefined.
-     * @param name Name of qualifier
-     * @return Value or values of qualifier. <CODE>null</CODE> if not
+     * Gets the value of a qualifier which is not predefined.
+     * @param name name of qualifier
+     * @return value or values of qualifier; <CODE>null</CODE> if not
      * present, a zero-length array if present but with no value
      */
     public String[] getQualifier( String name ) {
@@ -594,18 +649,27 @@ public abstract class LDAPSchemaElement {
     }
 
     /**
-     * Get an enumeration of all qualifiers which are not predefined.
-     * @return Enumeration of qualifiers.
+     * Gets an enumeration of all qualifiers which are not predefined.
+     * @return Enumeration of qualifiers
      */
     public Enumeration getQualifierNames() {
         return properties.keys();
     }
 
     /**
-     * Create a string for use in toString with any qualifiers of the element.
+     * Gets the aliases of the attribute, if any
+     * @return the aliases of the attribute, or <CODE>null</CODE> if
+     * it does not have any aliases
+     */
+    public String[] getAliases() {
+        return aliases;
+    }
+
+    /**
+     * Creates a string for use in toString with any qualifiers of the element.
      *
-     * @param ignore Any qualifiers to NOT include
-     * @return A String with any known qualifiers
+     * @param ignore any qualifiers to NOT include
+     * @return a String with any known qualifiers
      */
     String getQualifierString( String[] ignore ) {
         Hashtable toIgnore = null;
@@ -633,7 +697,27 @@ public abstract class LDAPSchemaElement {
                 s += vals[i] + ' ';
             }
         }
+        // Strip trailing ' '
+        if ( (s.length() > 0) && (s.charAt( s.length() - 1 ) == ' ') ) {
+            s = s.substring( 0, s.length() - 1 );
+        }
         return s;
+    }
+
+    /**
+     * Gets any aliases for this element
+     *
+     * @return a string with any aliases, for use in toString()
+     */
+    String getAliasString() {
+        if ( aliases != null ) {
+            String s = "; aliases:";
+            for( int i = 0; i < aliases.length; i++ ) {
+                s += ' ' + aliases[i];
+            }
+            return s;
+        }
+        return "";
     }
 
     // Constants for known syntax types
@@ -657,19 +741,22 @@ public abstract class LDAPSchemaElement {
                                       "1.3.6.1.4.1.1466.115.121.1.27";
     protected static final String dnString =
                                       "1.3.6.1.4.1.1466.115.121.1.12";
-	// Predefined qualifiers which apply to any schema element type
-	public static final String OBSOLETE = "OBSOLETE";
-	public static final String SUPERIOR = "SUP";
+    // Predefined qualifiers which apply to any schema element type
+    public static final String OBSOLETE = "OBSOLETE";
+    public static final String SUPERIOR = "SUP";
+
+    // Predefined qualifiers
+    public static final String SYNTAX = "SYNTAX";
 
     // Properties which are common to all schema elements
-	protected String oid = null;
+    protected String oid = null;
     protected String name = "";
     protected String description = "";
     protected String attrName = null;
-    protected boolean obsolete = false;
     protected String rawValue = null;
+    protected String[] aliases = null;
     // Additional qualifiers
     protected Hashtable properties = null;
     // Qualifiers known to not have values
-	static protected Hashtable novalsTable = new Hashtable();
+    static protected Hashtable novalsTable = new Hashtable();
 }

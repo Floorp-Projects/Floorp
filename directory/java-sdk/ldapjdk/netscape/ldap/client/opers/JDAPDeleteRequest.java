@@ -92,6 +92,6 @@ public class JDAPDeleteRequest extends JDAPBaseDNRequest
      * @return string representation
      */
     public String toString() {
-        return "JDAPDeleteRequest {entry=" + m_dn + "}";
+        return "DeleteRequest {entry=" + m_dn + "}";
     }
 }

@@ -184,6 +184,32 @@ public class LDAPVirtualListResponse extends LDAPControl {
         return con;
     }
 
+    public String toString() {
+         StringBuffer sb = new StringBuffer("{VirtListResponseCtrl:");
+        
+        sb.append(" isCritical=");
+        sb.append(isCritical());
+        
+        sb.append(" firstPosition=");
+        sb.append(m_firstPosition);
+        
+        sb.append(" contentCount=");
+        sb.append(m_contentCount);
+
+        sb.append(" resultCode=");
+        sb.append(m_resultCode);
+        
+        if (m_context != null) {
+            sb.append(" conext=");
+            sb.append(m_context);
+        }
+
+        sb.append("}");
+
+        return sb.toString();
+    }
+
+    
     private int m_firstPosition = 0;
     private int m_contentCount = 0;
     private int m_resultCode = -1;

@@ -40,6 +40,7 @@
 71=Affects multiple DSAs
 80=Unknown error
 81=Cannot contact LDAP server
+85=Client Timelimit exceeded
 89=Bad parameter to an LDAP method
 91=Cannot connect to the LDAP server
 92=Not supported by this version of the LDAP protocol

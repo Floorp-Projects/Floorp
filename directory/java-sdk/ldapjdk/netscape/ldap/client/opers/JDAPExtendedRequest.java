@@ -96,6 +96,6 @@ public class JDAPExtendedRequest implements JDAPProtocolOp {
      * @return string representation of add request
      */
     public String toString() {
-        return "JDAPExtendedRequest " + getParamString();
+        return "ExtendedRequest " + getParamString();
     }
 }
