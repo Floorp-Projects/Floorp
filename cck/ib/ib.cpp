@@ -350,6 +350,8 @@ int StartIB(CString parms, WIDGET *curWidget)
 	}
 	// Didn't work...
 	CreateRshell ();
+	CString shellPath = workspacePath + "\\Autorun\\Shell\\";
+	CopyDir(shellPath, cdPath, NULL, FALSE);
 
 	ReplaceINIFile();
 
