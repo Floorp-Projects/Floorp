@@ -64,8 +64,8 @@ function StartUp()
   }
   introTextItem.childNodes[0].nodeValue = introText;
 
-  var dirServ = Components.classes['@mozilla.org/file/directory_service;1'].createInstance();
-  dirServ = dirServ.QueryInterface(Components.interfaces.nsIProperties);
+  var dirServ = Components.classes['@mozilla.org/file/directory_service;1']
+                          .getService(Components.interfaces.nsIProperties);
 
   // "AggRegF" stands for Application Registry File.
   // Forgive the weird name directory service has adapted for
