@@ -190,14 +190,14 @@ static char * GetGreLocationFromRegistry()
     // 1. Note the usage of the "Software\\Mozilla\\GRE" subkey - this allows
     //    us to have multiple versions of GREs on the same machine by having
     //    subkeys such as 1.0, 1.1, 2.0 etc. under it.
-    // 2. In this sample below we're looking for the location of GRE version 1.2
-    //    i.e. we're compatible with GRE 1.2 and we're trying to find it's install
+    // 2. In this sample below we're looking for the location of GRE version 1.3
+    //    i.e. we're compatible with GRE 1.3 and we're trying to find it's install
     //    location.
     //
     // Please see http://www.mozilla.org/projects/embedding/MRE.html for
     // more info.
     //
-    strcpy(szKey, "Software\\Mozilla\\GRE\\1.2b");
+    strcpy(szKey, "Software\\Mozilla\\GRE\\1.3a");
 
     if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE, szKey, 0, KEY_QUERY_VALUE, &hRegKey) == ERROR_SUCCESS) 
     {
