@@ -189,7 +189,7 @@ nsCheckboxControlFrame::AttributeChanged(nsIPresContext* aPresContext,
 
 
 void 
-nsCheckboxControlFrame::MouseUp(nsIPresContext* aPresContext) 
+nsCheckboxControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
   if ( IsTristateCheckbox() ) {
     CheckState newState = eOn;
@@ -272,13 +272,8 @@ NS_METHOD nsCheckboxControlFrame::HandleEvent(nsIPresContext& aPresContext,
 {
   if (nsEventStatus_eConsumeNoDefault == aEventStatus)
     return NS_OK;
-
   if (nsFormFrame::GetDisabled(this))
     return NS_OK;
-
-  if (NS_MOUSE_LEFT_BUTTON_UP == aEvent->message) {
-    MouseUp(&aPresContext);
-  }
 
   return(nsNativeFormControlFrame::HandleEvent(aPresContext, aEvent, aEventStatus));
 }

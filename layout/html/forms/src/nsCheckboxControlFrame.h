@@ -71,7 +71,7 @@ public:
   virtual PRInt32 GetMaxNumValues();
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames);
-  virtual void MouseUp(nsIPresContext* aPresContext);
+  virtual void MouseClicked(nsIPresContext* aPresContext);
 
    // nsFormControlFrame overrides
   nsresult RequiresWidget(PRBool &aHasWidget);
