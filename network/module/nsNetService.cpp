@@ -618,6 +618,12 @@ nsNetlibService::SetCookieString(nsIURL *aURL, const nsString& aCookie)
 
 #ifdef SingleSignon
 NS_IMETHODIMP
+nsNetlibService::SI_DisplaySignonInfoAsHTML(){
+    ::SI_DisplaySignonInfoAsHTML(NULL);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsNetlibService::SI_RememberSignonData
         (char* URLName, LO_FormSubmitData *submit) {
     ::SI_RememberSignonData(URLName, submit);
@@ -632,6 +638,58 @@ nsNetlibService::SI_RestoreSignonData
 }
 
 #endif
+
+#ifdef CookieManagement
+NS_IMETHODIMP
+nsNetlibService::NET_DisplayCookieInfoAsHTML(){
+    ::NET_DisplayCookieInfoAsHTML(NULL);
+    return NS_OK;
+}
+
+#ifdef PrivacySiteInfo
+NS_IMETHODIMP
+nsNetlibService::NET_DisplayCookieInfoOfSiteAsHTML(char * URLName){
+    ::NET_DisplayCookieInfoOfSiteAsHTML(NULL, URLName);
+    return NS_OK;
+}
+NS_IMETHODIMP
+nsNetlibService::NET_CookiePermission(char* URLName, PRInt32* permission){
+    *permission = ::NET_CookiePermission(URLName);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetlibService::NET_CookieCount(char* URLName, PRInt32* count){
+    *count = ::NET_CookieCount(URLName);
+    return NS_OK;
+}
+
+#endif
+#endif
+
+NS_IMETHODIMP
+nsNetlibService::NET_AnonymizeCookies(){
+    ::NET_AnonymizeCookies();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetlibService::NET_UnanonymizeCookies(){
+    ::NET_UnanonymizeCookies();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetlibService::SI_AnonymizeSignons(){
+    ::SI_AnonymizeSignons();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetlibService::SI_UnanonymizeSignons(){
+    ::SI_UnanonymizeSignons();
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsNetlibService::GetProxyHTTP(nsString& aProxyHTTP) {
