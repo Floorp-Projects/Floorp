@@ -1,5 +1,11 @@
+Add support for historical Tinderbox images
+	(flames, stars)
+
 Mozilla layout preferences are now 
-standard.
+standard 
+(non uniform row spacing, 
+ truely empty cells, 
+ legend on bottom of page).
 	
 Allow users to backdate notices
 
