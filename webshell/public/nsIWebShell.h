@@ -134,8 +134,10 @@ public:
   // History api's
   NS_IMETHOD Back() = 0;
   NS_IMETHOD Forward() = 0;
+  NS_IMETHOD Reload() = 0;
   NS_IMETHOD LoadURL(const nsString& aURLSpec,
-                     nsIPostData* aPostData=nsnull) = 0;
+                     nsIPostData* aPostData=nsnull,
+                     PRBool aModifyHistory=PR_TRUE) = 0;
   NS_IMETHOD GoTo(PRInt32 aHistoryIndex) = 0;
   NS_IMETHOD GetHistoryIndex(PRInt32& aResult) = 0;
   NS_IMETHOD GetURL(PRInt32 aHistoryIndex, nsString& aURLResult) = 0;
