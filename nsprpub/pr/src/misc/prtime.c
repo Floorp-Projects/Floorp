@@ -1666,7 +1666,7 @@ PR_FormatTime(char *buf, int buflen, const char *fmt, const PRExplodedTime *tm)
  */
 
 #if defined(SUNOS4) || (__GLIBC__ >= 2) || defined(XP_BEOS) \
-        || defined(NETBSD) || defined(OPENBSD)
+        || defined(NETBSD) || defined(OPENBSD) || defined(FREEBSD)
     a.tm_zone = NULL;
     a.tm_gmtoff = tm->tm_params.tp_gmt_offset + tm->tm_params.tp_dst_offset;
 #endif
