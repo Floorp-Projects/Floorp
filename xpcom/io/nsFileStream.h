@@ -746,6 +746,8 @@ public:
     nsInputStream&                    operator >> (nsInputStream& (*pf)(nsInputStream&))
                                          { return nsInputStream::operator >>(pf); }
 
+	virtual void flush() {if (mFileOutputStream) mFileOutputStream->Flush();}
+
     // DATA
 protected:
     nsCOMPtr<nsIFileOutputStream>     mFileOutputStream;
