@@ -32,7 +32,10 @@
 
  */
 
+#ifndef XP_UNIX
 #include <io.h>
+#endif
+
 #include "nsIContent.h"
 #include "nsIEventQueueService.h"
 #include "nsIInputStream.h"
