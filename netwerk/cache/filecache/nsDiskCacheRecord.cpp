@@ -210,7 +210,8 @@ nsDiskCacheRecord::GetStoredContentLength(PRUint32 *aStoredContentLength)
 {
   PRInt64 fileSize; 
   nsresult rv = mFile->GetFileSize( &fileSize) ;
-  LL_L2UI( *aStoredContentLength, fileSize );	 
+  if (NS_SUCCEEDED(rv))
+    LL_L2UI( *aStoredContentLength, fileSize );	 
   return rv;
 }
 
@@ -219,11 +220,11 @@ NS_IMETHODIMP
 nsDiskCacheRecord::SetStoredContentLength(PRUint32 aStoredContentLength)
 {
   PRUint32 len = 0 ;
-   PRInt64 fileSize; 
+  PRInt64 fileSize; 
   nsresult rv = mFile->GetFileSize( &fileSize) ;
-  LL_L2UI( len, fileSize );	 
   if(NS_FAILED(rv))
     return rv ;
+  LL_L2UI( len, fileSize );	 
 
   if(len < aStoredContentLength)
   {
