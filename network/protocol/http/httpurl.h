@@ -26,6 +26,12 @@
 #define DEF_HTTP_PORT 80
 #define DEF_HTTPS_PORT 443
 
+typedef enum {
+    POINT_NINE,
+    ONE_POINT_O,
+    ONE_POINT_ONE
+} HTTP_Version;
+
 extern void
 NET_SetSendRefererHeader(Bool b);
 
