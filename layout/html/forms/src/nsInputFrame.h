@@ -174,10 +174,11 @@ public:
   static  PRInt32 GetScrollbarWidth(float aPixToTwip);
   virtual PRInt32 GetVerticalBorderWidth(float aPixToTwip) const;
   virtual PRInt32 GetHorizontalBorderWidth(float aPixToTwip) const;
-  virtual PRInt32 GetVerticalInsidePadding(float aPixToTwip,
-                                           PRInt32 aInnerHeight) const;
-  virtual PRInt32 GetHorizontalInsidePadding(float aPixToTwip, 
-                                             PRInt32 aInnerWidth) const;
+  virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
+                                           nscoord aInnerHeight) const;
+  virtual nscoord GetHorizontalInsidePadding(float aPixToTwip, 
+                                             nscoord aInnerWidth,
+                                             nscoord aCharWidth) const;
 
 protected:
 

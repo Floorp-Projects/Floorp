@@ -126,10 +126,11 @@ public:
 
   virtual PRInt32 GetVerticalBorderWidth(float aPixToTwip) const;
   virtual PRInt32 GetHorizontalBorderWidth(float aPixToTwip) const;
-  virtual PRInt32 GetVerticalInsidePadding(float aPixToTwip,
-                                           PRInt32 aInnerHeight) const;
-  virtual PRInt32 GetHorizontalInsidePadding(float aPixToTwip, 
-                                             PRInt32 aInnerWidth) const;
+  virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
+                                           nscoord aInnerHeight) const;
+  virtual nscoord GetHorizontalInsidePadding(float aPixToTwip, 
+                                             nscoord aInnerWidth,
+                                             nscoord aCharWidth) const;
 
 protected:
   virtual  ~nsInputButtonFrame();
@@ -221,7 +222,7 @@ nsInputButton::GetDefaultLabel(nsString& aString)
   } else if (kButton_Submit == mType) {
     aString = "Submit Query";
   } else if (kButton_Browse == mType) {
-    aString = "   Browse...   ";
+    aString = "Browse...";
   } else {
     aString = " ";
   }
@@ -369,33 +370,34 @@ PRInt32 nsInputButtonFrame::GetHorizontalBorderWidth(float aPixToTwip) const
   return GetVerticalBorderWidth(aPixToTwip);
 }
 
-PRInt32 nsInputButtonFrame::GetVerticalInsidePadding(float aPixToTwip, 
-                                                     PRInt32 aInnerHeight) const
+nscoord nsInputButtonFrame::GetVerticalInsidePadding(float aPixToTwip, 
+                                                     nscoord aInnerHeight) const
 {
   //return (int)(4 * aPixToTwip + 0.5);
 #ifdef XP_PC
-  return (int)(aInnerHeight * .25 + 0.5);
+  return (nscoord)(aInnerHeight * .25 + 0.5);
 #endif
 #ifdef XP_UNIX
-  return (int)(aInnerHeight * .50 + 0.5);
+  return (nscoord)(aInnerHeight * .50 + 0.5);
 #endif
 }
 
-PRInt32 nsInputButtonFrame::GetHorizontalInsidePadding(float aPixToTwip, 
-                                                       PRInt32 aInnerWidth) const
+nscoord nsInputButtonFrame::GetHorizontalInsidePadding(float aPixToTwip, 
+                                                       nscoord aInnerWidth,
+                                                       nscoord aCharWidth) const
 {
 #ifdef XP_PC
   if (kBackwardMode == GetMode()) {
-    return (int)(aInnerWidth * .25 + 0.5)+8;
+    return (nscoord)((aInnerWidth * .25) + 0.5);
   } else {
-    return (int)(10 * aPixToTwip + 0.5)+8;
+    return (nscoord)(10 * aPixToTwip + 0.5)+8;
   }
 #endif
 #ifdef XP_UNIX
   if (kBackwardMode == GetMode()) {
-    return (int)(aInnerWidth * .5 + 0.5);
+    return (nscoord)(aInnerWidth * .5 + 0.5);
   } else {
-    return (int)(20 * aPixToTwip + 0.5);
+    return (nscoord)(20 * aPixToTwip + 0.5);
   }
 #endif
 }
@@ -522,14 +524,6 @@ nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                 &defaultLabel, 1, PR_FALSE, nsnull, 1);
       CalculateSize(aPresContext, this, styleSize, spec, size, 
                     widthExplicit, heightExplicit, ignore);
-#if 0
-      if (!widthExplicit) {
-        size.width += 100;
-      } 
-      if (!heightExplicit) {
-        size.height += 100;
-      } 
-#endif
       aDesiredLayoutSize.width = size.width;
       aDesiredLayoutSize.height= size.height;
     }
@@ -566,7 +560,7 @@ nsInputButtonFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aVie
         // use arial, scaled down one HTML size
         // italics, decoration & variant(?) get used
         nsFont  widgetFont(styleFont->mFont);
-        widgetFont.name = "Arail";  // XXX windows specific font
+        widgetFont.name = "Arial";  // XXX windows specific font
         widgetFont.weight = NS_FONT_WEIGHT_NORMAL; 
         const nsFont& normal = aPresContext->GetDefaultFont();
         PRInt32 scaler = aPresContext->GetFontScaler();

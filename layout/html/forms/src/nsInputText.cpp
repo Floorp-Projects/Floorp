@@ -51,10 +51,11 @@ public:
 
   virtual PRInt32 GetVerticalBorderWidth(float aPixToTwip) const;
   virtual PRInt32 GetHorizontalBorderWidth(float aPixToTwip) const;
-  virtual PRInt32 GetVerticalInsidePadding(float aPixToTwip,
-                                           PRInt32 aInnerHeight) const;
-  virtual PRInt32 GetHorizontalInsidePadding(float aPixToTwip, 
-                                             PRInt32 aInnerWidth) const;
+  virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
+                                           nscoord aInnerHeight) const;
+  virtual nscoord GetHorizontalInsidePadding(float aPixToTwip, 
+                                             nscoord aInnerWidth,
+                                             nscoord aCharWidth) const;
 protected:
 
   virtual ~nsInputTextFrame();
@@ -87,21 +88,47 @@ PRInt32 nsInputTextFrame::GetHorizontalBorderWidth(float aPixToTwip) const
   return GetVerticalBorderWidth(aPixToTwip);
 }
 
-PRInt32 nsInputTextFrame::GetVerticalInsidePadding(float aPixToTwip, 
-                                                     PRInt32 aInnerHeight) const
+// for a text area aInnerHeight is the height of one line
+nscoord nsInputTextFrame::GetVerticalInsidePadding(float aPixToTwip, 
+                                                   nscoord aInnerHeight) const
 {
 #ifdef XP_PC
-  return (int)(5 * aPixToTwip + 0.5);
+  nsAutoString type;
+  ((nsInput*)mContent)->GetType(type);
+  if (type.EqualsIgnoreCase("textarea")) {
+    return (nscoord)((aInnerHeight * .40) + 0.5);
+  } else {
+    return (nscoord)((aInnerHeight * .25) + 0.5);
+  }
 #endif
 #ifdef XP_UNIX
-  return (int)(10 * aPixToTwip + 0.5);
+  return (nscoord)(10 * aPixToTwip + 0.5); // XXX this is probably wrong
 #endif
 }
 
-PRInt32 nsInputTextFrame::GetHorizontalInsidePadding(float aPixToTwip, 
-                                                       PRInt32 aInnerWidth) const
+nscoord nsInputTextFrame::GetHorizontalInsidePadding(float aPixToTwip, 
+                                                     nscoord aInnerWidth,
+                                                     nscoord aCharWidth) const
 {
-  return (int)(6 * aPixToTwip + 0.5);
+#ifdef XP_PC
+  nscoord padding;
+  nsAutoString type;
+  ((nsInput*)mContent)->GetType(type);
+  if (type.EqualsIgnoreCase("textarea")) {
+    padding = (nscoord)(40 * aCharWidth / 100);
+  } else {
+    padding = (nscoord)(55 * aCharWidth / 100);
+  }
+  nscoord min = (nscoord)((3 * aPixToTwip) + 0.5);
+  if (padding > min) {
+    return padding;
+  } else {
+    return min;
+  }
+#endif
+#ifdef XP_UNIX
+  return (nscoord)(6 * aPixToTwip + 0.5);  // XXX this is probably wrong
+#endif
 }
 
 const nsIID&
@@ -181,20 +208,18 @@ nsInputTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
                   widthExplicit, heightExplicit, ignore);
   }
 
-  float p2t = aPresContext->GetPixelsToTwips();
-  PRInt32 scrollbarWidth = GetScrollbarWidth(p2t);
-  if (!heightExplicit) {
-    if (kInputText_Area == textType) {
+  if (kInputText_Area == textType) {
+    float p2t = aPresContext->GetPixelsToTwips();
+    PRInt32 scrollbarWidth = GetScrollbarWidth(p2t);
+
+    if (!heightExplicit) {
       size.height += scrollbarWidth;
-      if (kBackwardMode == GetMode()) {
-        size.height += (int)(7 * p2t + 0.5);
-      }
     } 
+    if (!widthExplicit) {
+      size.width += scrollbarWidth;
+    }
   }
 
-  if (!widthExplicit && (kInputText_Area == textType)) {
-    size.width += scrollbarWidth;
-  }
 
   aDesiredLayoutSize.width  = size.width;
   aDesiredLayoutSize.height = size.height;

@@ -62,10 +62,11 @@ public:
 
   virtual PRInt32 GetVerticalBorderWidth(float aPixToTwip) const;
   virtual PRInt32 GetHorizontalBorderWidth(float aPixToTwip) const;
-  virtual PRInt32 GetVerticalInsidePadding(float aPixToTwip,
-                                           PRInt32 aInnerHeight) const;
-  virtual PRInt32 GetHorizontalInsidePadding(float aPixToTwip, 
-                                             PRInt32 aInnerWidth) const;
+  virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
+                                           nscoord aInnerHeight) const;
+  virtual nscoord GetHorizontalInsidePadding(float aPixToTwip, 
+                                             nscoord aInnerWidth,
+                                             nscoord aCharWidth) const;
 protected:
 
   virtual ~nsSelectFrame();
@@ -172,16 +173,33 @@ PRInt32 nsSelectFrame::GetHorizontalBorderWidth(float aPixToTwip) const
   return GetVerticalBorderWidth(aPixToTwip);
 }
 
-PRInt32 nsSelectFrame::GetVerticalInsidePadding(float aPixToTwip, 
-                                               PRInt32 aInnerHeight) const
+nscoord nsSelectFrame::GetVerticalInsidePadding(float aPixToTwip, 
+                                               nscoord aInnerHeight) const
 {
-   return (int)(1 * aPixToTwip + 0.5);
+#ifdef XP_PC
+  return (nscoord)((aInnerHeight * .15) + 0.5);
+#endif
+#ifdef XP_UNIX
+  return (nscoord)(1 * aPixToTwip + 0.5); // XXX this is probably wrong
+#endif
 }
 
 PRInt32 nsSelectFrame::GetHorizontalInsidePadding(float aPixToTwip, 
-                                                 PRInt32 aInnerWidth) const
+                                                 nscoord aInnerWidth,
+                                                 nscoord aCharWidth) const
 {
-   return (int)(7 * aPixToTwip + 0.5);
+#ifdef XP_PC
+  nscoord padding = (nscoord)((aCharWidth * .40) + 0.5);
+  nscoord min = (nscoord)((3 * aPixToTwip) + 0.5);
+  if (padding > min) {
+    return padding;
+  } else {
+    return min;
+  }
+#endif
+#ifdef XP_UNIX
+  return (nscoord)(7 * aPixToTwip + 0.5); // XXX this is probably wrong
+#endif
 }
 
 const nsIID&
@@ -334,7 +352,7 @@ nsSelectFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
     // use arial, scaled down one HTML size
     // italics, decoration & variant(?) get used
     nsFont  widgetFont(styleFont->mFont);
-    widgetFont.name = "Arail";  // XXX windows specific font
+    widgetFont.name = "Arial";  // XXX windows specific font
     widgetFont.weight = NS_FONT_WEIGHT_NORMAL; 
     const nsFont& normal = aPresContext->GetDefaultFont();
     PRInt32 scaler = aPresContext->GetFontScaler();
