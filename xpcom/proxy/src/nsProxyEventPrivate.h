@@ -99,6 +99,7 @@ public:
     REFNSIID             GetIID()   const {return GetClass()->GetIID();}
     nsProxyEventClass*   GetClass() const { return mClass; }
 
+    nsISupports*         GetRealObject() const { return mProxyObject->GetRealObject(); }
     nsProxyEventObject*  GetRootProxyObject() const { return mRoot; }
     
     nsProxyEventObject*  Find(REFNSIID aIID);
