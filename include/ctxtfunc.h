@@ -24,7 +24,6 @@
 #define _ContextFunctions_
 
 #include "il_types.h"
-#include "cl_types.h"
 #include "xp_obs.h"
 
 struct _ContextFuncs {
