@@ -69,7 +69,7 @@ progressmeter[mode="undetermined"] {
 
 .progress-bar[mode="undetermined"],
 .progress-remainder[mode="undetermined"] {
-  visibility: collapsed;
+  visibility: collapse;
 }
 
 /* ::::: statusbar progressmeter ::::: */
