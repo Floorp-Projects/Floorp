@@ -20,36 +20,40 @@
  * Contributor(s): 
  */
 
-var insertNew = true;
-var tagName = "anchor";
-var anchorElement = null;
-var originalName = "";
+var gInsertNew = true;
+var gAnchorElement = null;
+var gOriginalName = "";
+const kTagName = "anchor";
 
 // dialog initialization code
 function Startup()
 {
-  if (!InitEditorShell())
+  var editor = GetCurrentEditor();
+  if (!editor)
+  {
+    window.close();
     return;
+  }
 
   gDialog.OkButton  = document.documentElement.getButton("accept");
   gDialog.NameInput = document.getElementById("nameInput");
 
   // Get a single selected element of the desired type
-  anchorElement = editorShell.GetSelectedElement(tagName);
+  gAnchorElement = editor.getSelectedElement(kTagName);
 
-  if (anchorElement) {
+  if (gAnchorElement) {
     // We found an element and don't need to insert one
-    insertNew = false;
+    gInsertNew = false;
 
     // Make a copy to use for AdvancedEdit
-    globalElement = anchorElement.cloneNode(false);
-    originalName = ConvertToCDATAString(anchorElement.name);
+    globalElement = gAnchorElement.cloneNode(false);
+    gOriginalName = ConvertToCDATAString(gAnchorElement.name);
   } else {
-    insertNew = true;
+    gInsertNew = true;
     // We don't have an element selected, 
     //  so create one with default attributes
-    anchorElement = editorShell.CreateElementWithDefaults(tagName);
-    if (anchorElement) {
+    gAnchorElement = editor.createElementWithDefaults(kTagName);
+    if (gAnchorElement) {
       // Use the current selection as suggested name
       var name = GetSelectionAsText();
       // Get 40 characters of the selected text and don't add "...",
@@ -60,11 +64,11 @@ function Startup()
         name += "_"
 
       // Make a copy to use for AdvancedEdit
-      globalElement = anchorElement.cloneNode(false);
+      globalElement = gAnchorElement.cloneNode(false);
       globalElement.setAttribute("name",name);
     }
   }
-  if(!anchorElement)
+  if(!gAnchorElement)
   {
     dump("Failed to get selected element or create a new one!\n");
     window.close();
@@ -104,7 +108,11 @@ function DoEnabling()
 
 function AnchorNameExists(name)
 {
-  var anchorList = editorShell.editorDocument.anchors;
+  var anchorList;
+  try {
+    anchorList = GetCurrentEditor().document.anchors;
+  } catch (e) {}
+
   if (anchorList) {
     for (var i = 0; i < anchorList.length; i++) {
       if (anchorList[i].name == name)
@@ -130,13 +138,13 @@ function ValidateData()
     //  have to UnConverAndEscape beforehand - too messy!
     name = ConvertToCDATAString(name);
 
-    if (originalName != name && AnchorNameExists(name))
+    if (gOriginalName != name && AnchorNameExists(name))
     {
       ShowInputErrorMessage(GetString("DuplicateAnchorNameError").replace(/%name%/,name));            
       SetTextboxFocus(gDialog.NameInput);
       return false;
     }
-    globalElement.setAttribute("name",name);
+    globalElement.name = name;
   }
   return true;
 }
@@ -145,19 +153,27 @@ function onAccept()
 {
   if (ValidateData())
   {
-    if (originalName != globalElement.name)
+    if (gOriginalName != globalElement.name)
     {
-      // Copy attributes to element we are changing or inserting
-      editorShell.CloneAttributes(anchorElement, globalElement);
+      var editor = GetCurrentEditor();
+      editor.beginTransaction();
 
-      if (insertNew) {
-        // Don't delete selected text when inserting
-        try {
-          editorShell.InsertElementAtSelection(anchorElement, false);
-        } catch (e) {
-          dump("Exception occured in InsertElementAtSelection\n");
+      try {
+        // "false" = don't delete selected text when inserting
+        if (gInsertNew)
+        {
+          // We must insert element before copying CSS style attribute,
+          //  but we must set the name else it won't insert at all
+          gAnchorElement.name = globalElement.name;
+          editor.insertElementAtSelection(gAnchorElement, false);
         }
-      }
+
+        // Copy attributes to element we are changing or inserting
+        editor.cloneAttributes(gAnchorElement, globalElement);
+
+      } catch (e) {}
+
+      editor.endTransaction();
     }
     SaveWindowLocation();
     return true;

@@ -61,8 +61,25 @@ var gRequestObserver =
 
 function Startup()
 {
-  if (!InitEditorShell())
+  var editor = GetCurrentEditor();
+  if (!editor)
+  {
+    window.close();
     return;
+  }
+
+  // Get all objects that refer to other locations
+  var objects;
+  try {
+    objects = editor.getLinkedObjects();
+  } catch (e) {}
+
+  if (!objects || objects.count == 0)
+  {
+    AlertWithTitle(GetString("Alert"), GetString("NoLinksToCheck");
+    window.close();
+    return;
+  }
 
   gDialog.LinksList = document.getElementById("LinksList");
   gDialog.Close     = document.documentElement.getButton("cancel");
@@ -70,11 +87,9 @@ function Startup()
   // Set window location relative to parent window (based on persisted attributes)
   SetWindowLocation();
 
-  // Get all objects that refer to other locations
-  var objects = editorShell.GetLinkedObjects();
 
   // Loop over the nodes that have links:
-  for (var i = 0; i < objects.Count(); i++)
+  for (var i = 0; i < objects.count; i++)
   {
     var refobj = objects.GetElementAt(gNumLinksToCheck).QueryInterface(Components.interfaces.nsIURIRefObject);
     // Loop over the links in this node:

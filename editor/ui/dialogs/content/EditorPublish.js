@@ -38,14 +38,12 @@ function Startup()
 {
   window.opener.ok = false;
 
-  if (!InitEditorShell()) return;
-
   // Element to edit is passed in
   gInitialSiteName = window.arguments[1];
   gReturnData = window.arguments[2];
-  if (!gReturnData)
+  if (!gReturnData || !GetCurrentEditor())
   {
-    dump("Publish: Return data object not supplied\n");
+    dump("Publish: No editor or return data object not supplied\n");
     window.close();
     return;
   }
@@ -155,7 +153,7 @@ function Startup()
     }
   }
   try {
-    gPreviousTitle = editorShell.GetDocumentTitle();
+    gPreviousTitle = GetDocumentTitle();
   } catch (e) {}
 
   gDialog.PageTitleInput.value = gPreviousTitle;
@@ -578,11 +576,7 @@ function onAccept()
 
     var title = TrimString(gDialog.PageTitleInput.value);
     if (title != gPreviousTitle)
-    {
-      try {
-        editorShell.SetDocumentTitle(title);
-      } catch (e) {}
-    }
+      SetDocumentTitle(title);
 
     SaveWindowLocation();
     window.opener.ok = true;

@@ -23,16 +23,18 @@
 // dialog initialization code
 function Startup()
 {
-  if (!InitEditorShell())
+  if (!GetCurrentEditor())
+  {
+    window.close();
     return;
+  }
   
   SetWindowLocation();
 }
 
 function KeepCurrentPage()
 {
-dump("KeepCurrentPage\n");
-  // Simple close dialog and don't change current page
+  // Simply close dialog and don't change current page
   //TODO: Should we force saving of the current page?
   SaveWindowLocation();
   return true;
@@ -40,8 +42,8 @@ dump("KeepCurrentPage\n");
 
 function UseOtherPage()
 {
-dump("UseOtherPage\n");
   // Reload the URL -- that will get other editor's contents
+  // XXX TODO: Need to replace editorShell.LoadUrl with something in nsIEditingSession?
   setTimeout("editorShell.LoadUrl(GetDocumentUrl())", 10);
   SaveWindowLocation();
   return true;

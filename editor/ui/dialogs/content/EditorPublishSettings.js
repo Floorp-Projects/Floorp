@@ -35,7 +35,11 @@ var gPasswordManagerOn = true;
 // Dialog initialization code
 function Startup()
 {
-  if (!InitEditorShell()) return;
+  if (!GetCurrentEditor())
+  {
+    window.close();
+    return;
+  }
 
   gDialog.SiteList            = document.getElementById("SiteList");
   gDialog.SiteNameInput       = document.getElementById("SiteNameInput");

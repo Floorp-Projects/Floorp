@@ -19,6 +19,7 @@
  * 
  * Contributor(s): 
  *   Daniel Glazman (glazman@netscape.com)
+ *   Charles Manske (cmanske@netscape.com)
  */
 
 
@@ -69,13 +70,10 @@ function Startup()
     var prefs = GetPrefs();
     var IsCSSPrefChecked = prefs.getBoolPref("editor.use_css");
 
-    editorShell = window.opener.editorShell;
-    if (editorShell)
+    if (GetCurrentEditor())
     {
-      editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
-
       window.title = GetString(ColorType+"Color");
-      if (editorShell && ColorType == "Page" && IsCSSPrefChecked && editorShell.editorType == "html")
+      if (ColorType == "Page" && IsCSSPrefChecked && isHTMLEditor())
         window.title = GetString("BlockColor");
     }
   }

@@ -78,9 +78,6 @@ const kAccessDenied = 2152857621;
 
 function Startup()
 {
-  if (!InitEditorShell())
-    return;
-
   gPublishData = window.arguments[0];
   if (!gPublishData)
   {
@@ -96,7 +93,10 @@ function Startup()
   gDialog.Close              = document.documentElement.getButton("cancel");
 
   SetWindowLocation();
-  window.title = GetString("PublishProgressCaption").replace(/%title%/, editorShell.GetDocumentTitle());
+  var title = GetDocumentTitle();
+  if (!title)
+    title = "("+GetString("untitled")+")";
+  window.title = GetString("PublishProgressCaption").replace(/%title%/, title);
 
   document.getElementById("PublishToSite").value = 
     GetString("PublishToSite").replace(/%title%/, TruncateStringAtWordEnd(gPublishData.siteName, 25)); 
@@ -349,13 +349,14 @@ function onEnterKey()
 
 function RequestCloseDialog()
 {
-  if (gFinished && !gDialog.KeepOpen.checked)
+  // Finish progress messages, settings buttons etc.
+  SetProgressFinished(null, 0);
+
+  if (!gDialog.KeepOpen.checked)
   {
     // Leave window open a minimum amount of time 
     gTimerID = setTimeout("CloseDialog();", 3000);
   }
-  // Finish progress messages, settings buttons etc.
-  SetProgressFinished(null,0);
 
   // Set "completed" message if we succeeded
   // (Some image files may have failed,
