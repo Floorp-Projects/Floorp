@@ -47,6 +47,11 @@
         void clearInterval(in long timerID);
         long setTimeout(/* ... */);
         long setInterval(/* ... */);
+
+		void createPopup(in Element element, in Element popupContent,
+					     in long xPos, in long yPos, 
+						 in DOMString popupType, in DOMString popupAlignment);
+
         Window open(/* ... */);
         Window openDialog(/* ... */);
       };

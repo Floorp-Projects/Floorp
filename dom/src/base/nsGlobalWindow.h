@@ -149,6 +149,10 @@ public:
   NS_IMETHOD    OpenDialog(JSContext *cx, jsval *argv, PRUint32 argc, 
                             nsIDOMWindow** aReturn);
 
+  NS_IMETHOD    CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
+                            PRInt32 aXPos, PRInt32 aYPos, 
+                            const nsString& aPopupType, const nsString& aPopupAlignment);
+    
   // nsIDOMEventCapturer interface
   NS_IMETHOD    CaptureEvent(const nsString& aType);
   NS_IMETHOD    ReleaseEvent(const nsString& aType);
