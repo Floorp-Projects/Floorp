@@ -80,7 +80,7 @@ bin/components/libraptorhtmlpars.so
 bin/components/libraptorview.so
 bin/components/librdf.so
 bin/components/librelated.so
-bin/components/libsample.so
+bin/components/libsidebar.so
 bin/components/libstreamconv.so
 bin/components/libstrres.so
 bin/components/libtimer_gtk.so
@@ -117,6 +117,7 @@ bin/components/necko_ftp.xpt
 bin/components/necko_http.xpt
 bin/components/necko_socket.xpt
 bin/components/necko_stream_converter.xpt
+bin/components/nsSidebar.js
 bin/components/nsxpi.xpt
 bin/components/oji.xpt
 bin/components/pref.xpt
@@ -125,7 +126,7 @@ bin/components/proxyObjInst.xpt
 bin/components/proxytest.xpt
 bin/components/rdf.xpt
 bin/components/related.xpt
-bin/components/sample.xpt
+bin/components/sidebar.xpt
 bin/components/signonviewer.xpt
 bin/components/unicharutil.xpt
 bin/components/uriloader.xpt
@@ -168,7 +169,7 @@ bin/defaults/pref/config.js
 bin/defaults/pref/initpref.js
 bin/defaults/pref/unix.js
 bin/defaults/pref/xpinstall.js
-bin/defaults/profile/bookmarks.html
+bin/defaults/profile/*
 bin/plugins/*
 bin/res/entityTables/*
 bin/res/html.css

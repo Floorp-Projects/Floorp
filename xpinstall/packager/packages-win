@@ -97,6 +97,7 @@ bin\components\nsjpg.dll
 bin\components\nslocale.dll
 bin\components\nspng.dll
 bin\components\nsprefm.dll
+bin\components\nsSidebar.js
 bin\components\oji.dll
 bin\components\oji.xpt
 bin\components\pics.dll
@@ -115,6 +116,8 @@ bin\components\related.dll
 bin\components\related.xpt
 bin\components\search.dll
 bin\components\search.xpt
+bin\components\sidebar.dll
+bin\components\sidebar.xpt
 bin\components\signonviewer.xpt
 bin\components\streamconv.xpt
 bin\components\stremcnv.dll

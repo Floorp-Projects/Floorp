@@ -94,6 +94,7 @@ viewer:Components:Network.shlb
 viewer:Components:nsIStringBundle.xpt 
 viewer:Components:nslocale.shlb 
 viewer:Components:nsLocale.xpt 
+viewer:Components:nsSidebar.js
 viewer:Components:oji.xpt 
 viewer:Components:pngdecoder.shlb 
 viewer:Components:prefm.shlb 
@@ -111,6 +112,8 @@ viewer:Components:related.xpt
 viewer:Components:resource.shlb 
 viewer:Components:Search.shlb 
 viewer:Components:search.xpt 
+viewer:Components:sidebar.shlb 
+viewer:Components:sidebar.xpt 
 viewer:Components:streamconv.shlb 
 viewer:Components:streamconv.xpt 
 viewer:Components:strres.shlb 
