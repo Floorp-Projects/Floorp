@@ -65,7 +65,10 @@ nsMsgCreateTempFileSpec(char *tFileName)
     tFileName = "nsmail.tmp";
 
   nsFileSpec *tmpSpec = new nsFileSpec(nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory));
-  
+
+  if (!tmpSpec)
+    return nsnull;
+
   *tmpSpec += tFileName;
   tmpSpec->MakeUnique();
 

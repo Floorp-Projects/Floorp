@@ -42,6 +42,7 @@
 #include "nsCOMPtr.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsXPIDLString.h"
+#include "nsSpecialSystemDirectory.h"
 
 static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
@@ -211,15 +212,15 @@ nsMimeXULEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWrit
 nsresult
 nsMimeXULEmitter::OhTheHumanityCleanupTempFileHack()
 {
-  // Age old question, where to store temp files....ugh!
-  char  *tDir = GetTheTempDirectoryOnTheSystem();
-  if (!tDir)
+  // Age old question, where to find temp files....ugh!
+  nsFileSpec *tmpSpec = new nsFileSpec(nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory));
+
+  if (!tmpSpec)
     return NS_OK;
 
-  nsFileSpec tempDir(tDir);
-  if (tempDir.Exists())
+  if (tmpSpec->Exists())
   {
-    for (nsDirectoryIterator i(tempDir, PR_FALSE); i.Exists(); i++) 
+    for (nsDirectoryIterator i(*tmpSpec, PR_FALSE); i.Exists(); i++) 
     {
       nsFileSpec possibleTempFile = i.Spec();
       char       *filename = possibleTempFile.GetLeafName();
@@ -235,7 +236,7 @@ nsMimeXULEmitter::OhTheHumanityCleanupTempFileHack()
     }
   }
 
-  PR_FREEIF(tDir);
+  delete tmpSpec;
   return NS_OK;
 }
 

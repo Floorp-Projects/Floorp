@@ -46,6 +46,7 @@
 #include "nsIMsgComposeService.h"
 #include "nsIMsgCompose.h"
 #include "nsMsgI18N.h"
+#include "nsSpecialSystemDirectory.h"
 
 //
 // Header strings...
@@ -101,38 +102,6 @@ nsMimeNewURI(nsIURI** aInstancePtrResult, const char *aSpec)
 //
 #define     TPATH_LEN   1024
 
-static char *
-GetTheTempDirectoryOnTheSystem(void)
-{
-  char *retPath = (char *)PR_Malloc(TPATH_LEN);
-  if (!retPath)
-    return nsnull;
-
-  retPath[0] = '\0';
-#ifdef WIN32
-  if (getenv("TEMP"))
-    PL_strncpy(retPath, getenv("TEMP"), TPATH_LEN);  // environment variable
-  else if (getenv("TMP"))
-    PL_strncpy(retPath, getenv("TMP"), TPATH_LEN);   // How about this environment variable?
-  else
-    GetWindowsDirectory(retPath, TPATH_LEN);
-#endif 
-
-#if defined(XP_UNIX) || defined(XP_BEOS)
-  char *tPath = getenv("TMPDIR");
-  if (!tPath)
-    PL_strncpy(retPath, "/tmp/", TPATH_LEN);
-  else
-    PL_strncpy(retPath, tPath, TPATH_LEN);
-#endif
-
-#ifdef XP_MAC
-  PL_strncpy(retPath, "", TPATH_LEN);
-#endif
-
-  return retPath;
-}
-
 //
 // Create a file spec for the a unique temp file
 // on the local machine. Caller must free memory
@@ -141,24 +110,15 @@ nsFileSpec *
 nsMsgCreateTempFileSpec(char *tFileName)
 {
   if ((!tFileName) || (!*tFileName))
-    tFileName = "nsmail.tmp";
+    tFileName = "nsmime.tmp";
 
-  // Age old question, where to store temp files....ugh!
-  char  *tDir = GetTheTempDirectoryOnTheSystem();
-  if (!tDir)
-    return (new nsFileSpec("mozmail.tmp"));  // No need to I18N
-
-  nsFileSpec *tmpSpec = new nsFileSpec(tDir);
+  nsFileSpec *tmpSpec = new nsFileSpec(nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory));
   if (!tmpSpec)
-  {
-    PR_FREEIF(tDir);
-    return (new nsFileSpec("mozmail.tmp"));  // No need to I18N
-  }
-
+    return nsnull;
+  
   *tmpSpec += tFileName;
   tmpSpec->MakeUnique();
 
-  PR_FREEIF(tDir);
   return tmpSpec;
 }
 
