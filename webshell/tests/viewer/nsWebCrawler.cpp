@@ -259,12 +259,8 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
       vm->GetRootView(rootView);
       vm->UpdateView(rootView, nsnull, NS_VMREFRESH_IMMEDIATE);
     }
-    NS_RELEASE(shell);
-  }
 
-  if (mOutputDir.Length() > 0) {
-    nsIPresShell* shell = GetPresShell();
-    if (nsnull != shell) {
+    if (mOutputDir.Length() > 0) {
       nsIFrame* root;
       shell->GetRootFrame(&root);
       if (nsnull != root) {
@@ -300,34 +296,35 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
         else
           root->DumpRegressionData(stdout, 0);
       }
-      NS_RELEASE(shell);
     }
-    else {
-      fputs("null pres shell\n", stdout);
+
+    if (mJiggleLayout) {
+      nsRect r;
+      mBrowser->GetBounds(r);
+      nscoord oldWidth = r.width;
+      while (r.width > 100) {
+        r.width -= 10;
+        mBrowser->SizeTo(r.width, r.height);
+      }
+      while (r.width < oldWidth) {
+        r.width += 10;
+        mBrowser->SizeTo(r.width, r.height);
+      }
     }
+
+    if (mCrawl) {
+      FindMoreURLs();
+    }
+
+    if (0 == mDelay) {
+      LoadNextURL();
+    }
+    NS_RELEASE(shell);
+  }
+  else {
+    fputs("null pres shell\n", stdout);
   }
 
-  if (mJiggleLayout) {
-    nsRect r;
-    mBrowser->GetBounds(r);
-    nscoord oldWidth = r.width;
-    while (r.width > 100) {
-      r.width -= 10;
-      mBrowser->SizeTo(r.width, r.height);
-    }
-    while (r.width < oldWidth) {
-      r.width += 10;
-      mBrowser->SizeTo(r.width, r.height);
-    }
-  }
-
-  if (mCrawl) {
-    FindMoreURLs();
-  }
-
-  if (0 == mDelay) {
-    LoadNextURL();
-  }
   return NS_OK;
 }
 
