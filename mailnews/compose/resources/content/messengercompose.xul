@@ -107,7 +107,6 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 -->
 
 <!-- box id="toolbar" align="vertical" style="width:100%;height:100%" -->
-<toolbox>
   <menubar>
 	<menu id="menu_File">
       <menupopup id="menu_FilePopup">
@@ -289,7 +288,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 	<menu id="menu_Help"/>
 	<spring flex="100%"/>
   </menubar>
-
+  <toolbox>
     <toolbar id="composeToolbar" class="standard" persist="collapsed">
 		<box id="toolbar_button_box">
 	 		<titledbutton id="button_send" class="button28" align="top" value="&sendButton.label;" onclick="SendMessage()"/>
