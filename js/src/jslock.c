@@ -824,9 +824,6 @@ js_SetupLocks(int listc, int globc)
     return JS_TRUE;
 }
 
-/* pull in the cleanup function from jsdtoa.c */
-extern void js_FinishDtoa(void);
-
 void
 js_CleanupLocks()
 {

@@ -114,6 +114,12 @@ JS_dtostr(char *buffer, size_t bufferSize, JSDToStrMode mode, int precision, dou
 JS_FRIEND_API(char *)
 JS_dtobasestr(int base, double d);
 
+/*
+ * Clean up any persistent RAM allocated during the execution of DtoA
+ * routines, and remove any locks that might have been created.
+ */
+extern void js_FinishDtoa(void);
+
 JS_END_EXTERN_C
 
 #endif /* jsdtoa_h___ */
