@@ -1536,14 +1536,16 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 				  JSVAL_TO_INT(sprop->id) < fun->nvars);
                     } else if (clasp == &js_CallClass) {
                         if (sprop->getter == js_GetCallVariable) {
-                            /* Referencing a variable introduced by a var
+                            /* 
+                             * Referencing a variable introduced by a var
                              * statement in the enclosing function. Check
                              * that the slot number we have is in range.
                              */
 			    PR_ASSERT(JSVAL_IS_INT(sprop->id) &&
 				      JSVAL_TO_INT(sprop->id) < fun->nvars);
                         } else {
-                            /* A variable introduced through another eval:
+                            /* 
+                             * A variable introduced through another eval:
                              * don't use the special getters and setters
                              * since we can't allocate a slot in the frame.
                              */
@@ -1561,7 +1563,8 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 		sprop->attrs &= ~JSPROP_READONLY;
 	    }
 	} else {
-            /* Property not found in current variable scope: we have not 
+            /* 
+             * Property not found in current variable scope: we have not 
              * seen this variable before.
              * Define a new variable by adding a property to the current
              * scope, or by allocating more slots in the function's frame.
@@ -1573,8 +1576,8 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    }
             if (getter == js_GetCallVariable) {
                 /* Can't increase fun->nvars in an active frame! */
-	        getter = js_GetProperty;
-	        setter = js_SetProperty;
+	        getter = clasp->getProperty;
+	        setter = clasp->setProperty;
             }
 	    ok = OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID,
 				     getter, setter,
@@ -1583,8 +1586,9 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    if (ok && prop) {
 		pobj = obj;
 		if (getter == js_GetLocalVariable) {
-                    /* Allocate more room for variables in the 
-                     * function's frame. We can only do this 
+                    /* 
+                     * Allocate more room for variables in the 
+                     * function's frame. We can do this only 
                      * before the function is called.
                      */
 		    sprop = (JSScopeProperty *)prop;
