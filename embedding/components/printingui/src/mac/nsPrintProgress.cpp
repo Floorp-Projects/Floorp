@@ -76,7 +76,6 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(nsIDOMWindowInternal *parent,
                                                   nsIObserver *openDialogObserver,
                                                   PRBool *notifyOnOpen)
 {
-  *notifyOnOpen = PR_TRUE;
   m_observer = openDialogObserver;
 
   nsresult rv = NS_ERROR_FAILURE;
@@ -111,6 +110,9 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(nsIDOMWindowInternal *parent,
                             NS_LITERAL_STRING("_blank"),
                             NS_LITERAL_STRING("chrome,titlebar,dependent,centerscreen"),
                             array, getter_AddRefs(newWindow));
+    if (NS_SUCCEEDED(rv)) {
+      *notifyOnOpen = PR_TRUE;
+    }
   }
 
   return rv;

@@ -278,6 +278,8 @@ nsPrintingPromptService::ShowProgress(nsIDOMWindow*            parent,
     NS_ENSURE_ARG(printProgressParams);
     NS_ENSURE_ARG(notifyOnOpen);
 
+    *notifyOnOpen = PR_FALSE;
+
     // If running on OS X, the printing manager displays a nice progress dialog
     // so we don't need to do this. Keeping this code here in order to support
     // running TARGET_CARBON builds on OS 9.
