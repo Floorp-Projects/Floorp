@@ -1806,6 +1806,11 @@ PasteAsQuotation(nsIEditor *aEditor, PRInt32 aSelectionType)
 nsresult
 GetListState(nsIEditor *aEditor, PRBool *aMixed, PRUnichar **_retval)
 {
+  if (!aMixed || !_retval || !aEditor) 
+    return NS_ERROR_NULL_POINTER;
+  *_retval = nsnull;
+  *aMixed = PR_FALSE;
+
   nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(aEditor);
   nsresult err = NS_ERROR_NO_INTERFACE;
   if (htmlEditor)
