@@ -143,26 +143,33 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
   nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
   if (!docShell) return NS_ERROR_FAILURE;
 
-  nsresult rv = docShell->SetAllowPlugins(PR_FALSE);
-  if (NS_FAILED(rv)) return rv;
-
   // register as a content listener, so that we can fend off URL
   // loads from sidebar
+  nsresult rv;
   nsCOMPtr<nsIURIContentListener> listener = do_GetInterface(docShell, &rv);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = listener->SetParentContentListener(this);
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Disable JavaScript in this document:
-  PRBool scriptsEnabled;
-  rv = docShell->GetAllowJavascript(&scriptsEnabled);
-  if (NS_FAILED(rv)) return rv;
-  mScriptsEnabled = scriptsEnabled;
-  if (scriptsEnabled) {
-    rv = docShell->SetAllowJavascript(PR_FALSE);
-    if (NS_FAILED(rv)) return rv;
-  }
+  PRBool tmp;
+  rv = docShell->GetAllowJavascript(&tmp);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mScriptsEnabled = tmp;
+
+  rv = docShell->SetAllowJavascript(PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Disable plugins in this document:
+  rv = docShell->GetAllowPlugins(&tmp);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mPluginsEnabled = tmp;
+
+  rv = docShell->SetAllowPlugins(PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Always remove existing editor
   TearDownEditorOnWindow(aWindow);
@@ -616,6 +623,10 @@ nsEditingSession::TearDownEditorOnWindow(nsIDOMWindow *aWindow)
   // Make things the way they were before we started editing.
   if (mScriptsEnabled) {
     docShell->SetAllowJavascript(PR_TRUE);
+  }
+
+  if (mPluginsEnabled) {
+    docShell->SetAllowPlugins(PR_TRUE);
   }
 
   nsCOMPtr<nsIDOMWindowUtils> utils(do_GetInterface(aWindow));

@@ -141,6 +141,10 @@ protected:
   // off, otherwise false.
   PRPackedBool    mScriptsEnabled;
 
+  // True if plugins were enabled before the editor turned plugins
+  // off, otherwise false.
+  PRPackedBool    mPluginsEnabled;
+
   PRPackedBool    mProgressListenerRegistered;
 
   // The image animation mode before it was turned off.
