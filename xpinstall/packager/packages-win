@@ -199,10 +199,10 @@ bin\res\html.css
 bin\res\ua.css
 bin\res\quirk.css
 bin\res\arrow.gif
-bin\res\FieldSchema.tbl
-bin\res\SchemaConcat.tbl
-bin\res\URLFieldSchema.tbl
-bin\res\DistinguishedSchema.tbl
+bin\defaults\wallet\FieldSchema.tbl
+bin\defaults\wallet\SchemaConcat.tbl
+bin\defaults\wallet\URLFieldSchema.tbl
+bin\defaults\wallet\DistinguishedSchema.tbl
 bin\res\wincharset.properties
 bin\res\charsetalias.properties
 bin\res\charsetData.properties

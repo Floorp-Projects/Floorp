@@ -201,10 +201,10 @@ bin/defaults/profile/*
 ; bin/plugins/*
 bin/searchplugins/*
 bin/res/entityTables/*
-bin/res/FieldSchema.tbl
-bin/res/SchemaConcat.tbl
-bin/res/URLFieldSchema.tbl
-bin/res/DistinguishedSchema.tbl
+bin/defaults/wallet/FieldSchema.tbl
+bin/defaults/wallet/SchemaConcat.tbl
+bin/defaults/wallet/URLFieldSchema.tbl
+bin/defaults/wallet/DistinguishedSchema.tbl
 bin/res/arrow.gif
 bin/res/charsetalias.properties
 bin/res/acceptlanguage.properties

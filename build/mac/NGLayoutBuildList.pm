@@ -504,7 +504,7 @@ sub MakeResourceAliases()
 
     _InstallResources(":mozilla:gfx:src:MANIFEST",                                      "$resource_dir"."gfx:");
 
-    _InstallResources(":mozilla:extensions:wallet:src:MANIFEST",                        "$resource_dir");
+    _InstallResources(":mozilla:extensions:wallet:src:MANIFEST",                        "$defaults_dir"."wallet:");
     my($entitytab_dir) = "$resource_dir" . "entityTables";
     _InstallResources(":mozilla:intl:unicharutil:tables:MANIFEST",                      "$entitytab_dir");
 

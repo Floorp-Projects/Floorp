@@ -1493,13 +1493,14 @@ PUBLIC nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec) {
   return res;
 }
 
-PUBLIC nsresult Wallet_ResourceDirectory(nsFileSpec& dirSpec) {
+PUBLIC nsresult Wallet_DefaultsDirectory(nsFileSpec& dirSpec) {
   nsIFileSpec* spec =
-    NS_LocateFileOrDirectory(nsSpecialFileSpec::App_ResDirectory);
+    NS_LocateFileOrDirectory(nsSpecialFileSpec::App_DefaultsFolder50);
   if (!spec) {
     return NS_ERROR_FAILURE;
   }
   nsresult res = spec->GetFileSpec(&dirSpec);
+  dirSpec += "wallet";
   NS_RELEASE(spec);
   return res;
 }
@@ -1655,7 +1656,7 @@ wallet_ReadFromFile
   if (!strm.is_open()) {
     if (!localFile) {
       /* if we failed to download the file, see if an initial version of it exists */
-      rv = Wallet_ResourceDirectory(dirSpec);
+      rv = Wallet_DefaultsDirectory(dirSpec);
       if (NS_FAILED(rv)) {
         return;
       }
@@ -1782,7 +1783,7 @@ wallet_ReadFromURLFieldToSchemaFile
   nsInputFileStream strm(dirSpec + filename);
   if (!strm.is_open()) {
     /* if we failed to download the file, see if an initial version of it exists */
-    rv = Wallet_ResourceDirectory(dirSpec);
+    rv = Wallet_DefaultsDirectory(dirSpec);
     if (NS_FAILED(rv)) {
       return;
     }
