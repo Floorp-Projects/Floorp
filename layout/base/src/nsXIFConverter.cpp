@@ -399,6 +399,6 @@ void nsXIFConverter::Write()
   char* s = mBuffer.ToNewCString();
   out << s;
   out.close();
-  delete s;
+  delete[] s;
 #endif
 }
