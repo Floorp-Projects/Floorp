@@ -135,9 +135,13 @@ nsHTTPChannel::Resume(void)
 NS_IMETHODIMP
 nsHTTPChannel::GetURI(nsIURI* *o_URL)
 {
-    if (o_URL)
+    if (o_URL) {
         *o_URL = m_URI;
-    return NS_OK;
+        NS_IF_ADDREF(*o_URL);
+        return NS_OK;
+    } else {
+        return NS_ERROR_NULL_POINTER;
+    }
 }
 
 NS_IMETHODIMP

@@ -104,62 +104,65 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
                           nsIEventQueue *i_eventQueue,
                           nsIChannel **o_Instance)
 {
-    //Assert that iURL's scheme is HTTP
-    //This should only happen in debug checks... TODO
+    nsresult rv;
+    nsHTTPChannel* pChannel = nsnull;
     char* scheme = 0;
-    if (i_URL)
-    {
-        i_URL->GetScheme(&scheme);
-        PRBool isHttp = PL_strcasecmp(scheme, "http") == 0;
-        if (isHttp)
-        {
-            nsHTTPChannel* pConn = nsnull;
-            nsIURI* pURL = nsnull;
-            //Check to see if an instance already exists in the active list
-            PRUint32 count;
-            PRInt32 index;
-            m_pConnections->Count(&count);
-            for (index=count-1; index >= 0; --index) 
-            {
-                //switch to static_cast...
-                pConn = (nsHTTPChannel*)((nsIHTTPChannel*) m_pConnections->ElementAt(index));
-                //Do other checks here as well... TODO
-                if ((NS_OK == pConn->GetURI(&pURL)) && (pURL == i_URL))
-                {
-                    NS_ADDREF(pConn);
-                    *o_Instance = pConn;
-                    return NS_OK; // TODO return NS_USING_EXISTING... or NS_DUPLICATE_REQUEST something like that.
-                }
-            }
 
-            // Verify that the event sink is http
-            nsCOMPtr<nsIHTTPEventSink>  httpEventSink;
-            nsresult rv = eventSinkGetter->GetEventSink(verb, nsIHTTPEventSink::GetIID(),
-                                                        (nsISupports**)(nsIHTTPEventSink**)getter_AddRefs(httpEventSink));
-            if (NS_FAILED(rv)) return rv;
-
-            // Create one
-            nsHTTPChannel* pNewInstance = new nsHTTPChannel(i_URL, 
-                                                            i_eventQueue,
-                                                            httpEventSink,
-                                                            this);
-            if (pNewInstance)
-            {
-                NS_ADDREF(pNewInstance);
-                pNewInstance->Init();
-                pNewInstance->QueryInterface(nsIChannel::GetIID(), (void**)o_Instance);
-                // add this instance to the active list of connections
-                // TODO!
-                NS_RELEASE(pNewInstance);
-                return NS_OK;
-            }
-            else
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-        NS_ASSERTION(0, "Non-HTTP request coming to HTTP Handler!!!");
-        //return NS_ERROR_MISMATCHED_URL;
+    // Initial checks...
+    if (!i_URL || !o_Instance) {
+        return NS_ERROR_NULL_POINTER;
     }
-    return NS_ERROR_NULL_POINTER;
+
+    i_URL->GetScheme(&scheme);
+    if (0 == PL_strcasecmp(scheme, "http")) {
+        nsCOMPtr<nsIURI> channelURI;
+        PRUint32 count;
+        PRInt32 index;
+
+        //Check to see if an instance already exists in the active list
+        m_pConnections->Count(&count);
+        for (index=count-1; index >= 0; --index) {
+            //switch to static_cast...
+            pChannel = (nsHTTPChannel*)((nsIHTTPChannel*) m_pConnections->ElementAt(index));
+            //Do other checks here as well... TODO
+            rv = pChannel->GetURI(getter_AddRefs(channelURI));
+            if (NS_SUCCEEDED(rv) && (channelURI == i_URL))
+            {
+                NS_ADDREF(pChannel);
+                *o_Instance = pChannel;
+                return NS_OK; // TODO return NS_USING_EXISTING... or NS_DUPLICATE_REQUEST something like that.
+            }
+        }
+
+        // Verify that the event sink is http
+        nsCOMPtr<nsIHTTPEventSink>  httpEventSink;
+
+        if (eventSinkGetter) {
+            rv = eventSinkGetter->GetEventSink(verb, nsIHTTPEventSink::GetIID(),
+                                              (nsISupports**)(nsIHTTPEventSink**)getter_AddRefs(httpEventSink));
+            if (NS_FAILED(rv)) return rv;
+        }
+        // Create one
+        pChannel = new nsHTTPChannel(i_URL, 
+                                     i_eventQueue,
+                                     httpEventSink,
+                                     this);
+        if (pChannel) {
+            NS_ADDREF(pChannel);
+            pChannel->Init();
+            rv = pChannel->QueryInterface(nsIChannel::GetIID(), (void**)o_Instance);
+            // add this instance to the active list of connections
+            // TODO!
+            NS_RELEASE(pChannel);
+        } else {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+        return rv;
+    }
+
+    NS_ERROR("Non-HTTP request coming to HTTP Handler!!!");
+    //return NS_ERROR_MISMATCHED_URL;
+    return NS_ERROR_FAILURE;
 }
 
 nsresult
