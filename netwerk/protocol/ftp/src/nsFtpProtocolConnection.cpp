@@ -42,7 +42,7 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 nsFtpProtocolConnection::nsFtpProtocolConnection()
     : mUrl(nsnull), mEventSink(nsnull), mPasv(TRUE),
     mServerType(FTP_GENERIC_TYPE), mConnected(FALSE),
-    mResponseCode(0) {
+    mResponseCode(0), mList(FALSE) {
 
     mEventQueue = PL_CreateEventQueue("FTP Event Queue", PR_CurrentThread());
 }
@@ -238,7 +238,7 @@ nsFtpProtocolConnection::OnStopBinding(nsISupports* context,
             
             // send off the command
             mState = FTP_R_PASV;
-            mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
+            mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamObserver*, this));
             break;
 
         case FTP_R_PASS:
@@ -251,7 +251,7 @@ nsFtpProtocolConnection::OnStopBinding(nsISupports* context,
 
 			// send off the command
 			mState = FTP_R_SYST;
-			mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
+			mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamObserver*, this));
 			break;
 
 		case FTP_R_SYST:
@@ -264,10 +264,22 @@ nsFtpProtocolConnection::OnStopBinding(nsISupports* context,
 
 			// send off the command
 			mState = FTP_R_ACCT;			
-			mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
+			mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamObserver*, this));
 			break;
 
 		case FTP_R_ACCT:
+			mCPipe->AsyncRead(nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
+			break;
+
+		case FTP_S_MACB:
+			buffer = "MACB ENABLE\r\n";
+			stream->Fill(buffer, strlen(buffer), &bytesWritten);
+
+			mState = FTP_R_MACB;
+			mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamObserver*, this));
+			break;
+
+		case FTP_R_MACB:
 			mCPipe->AsyncRead(nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
 			break;
 
@@ -277,7 +289,7 @@ nsFtpProtocolConnection::OnStopBinding(nsISupports* context,
 
 			// send off the command
 			mState = FTP_R_PWD;
-			mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
+			mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamObserver*, this));
 			break;
 
 		case FTP_R_PWD:
@@ -345,8 +357,14 @@ nsFtpProtocolConnection::OnDataAvailable(nsISupports* context,
 
 		case FTP_R_SYST:
 			if (mResponseCode == 2) {
-				SetSystInternals();
-				// XXX various states can be set here.
+				SetSystInternals(); // must be called first to setup member vars.
+
+				// setup next state based on server type.
+				if (mServerType == FTP_PETER_LEWIS_TYPE || mServerType == FTP_WEBSTAR_TYPE) {
+					mState = FTP_S_MACB;
+				} else if (mServerType == FTP_TCPC_TYPE || mServerType == FTP_GENERIC_TYPE) {
+					mState = FTP_S_PWD;
+				} 
 			} else {
 				mState = FTP_S_PWD;		
 			}
@@ -360,6 +378,19 @@ nsFtpProtocolConnection::OnDataAvailable(nsISupports* context,
 				// XXX use a more descriptive error code.
 				return NS_ERROR_NOT_IMPLEMENTED;
 			}
+			break;
+
+		case FTP_R_MACB:
+			if (mResponseCode == 2) {
+				// set the mac binary
+				if (mServerType == FTP_UNIX_TYPE) {
+					// This state is carry over from the old ftp implementation
+					// I'm not sure what's really going on here.
+					// original comment /* we were unsure here */
+					mServerType = FTP_NCSA_TYPE;	
+				}
+			}
+
 			break;
 
 		case FTP_R_PWD:
@@ -385,15 +416,19 @@ void
 nsFtpProtocolConnection::SetSystInternals(void) {
     if (mResponseMsg.Equals("UNIX Type: L8 MAC-OS MachTen", 28)) {
 		mServerType = FTP_MACHTEN_TYPE;
+		mList = TRUE;
 	}
 	else if (mResponseMsg.Find("UNIX") > -1) {
 		mServerType = FTP_UNIX_TYPE;
+		mList = TRUE;
 	}
 	else if (mResponseMsg.Find("Windows_NT") > -1) {
 		mServerType = FTP_NT_TYPE;
+		mList = TRUE;
 	}
 	else if (mResponseMsg.Equals("VMS", 3)) {
 		mServerType = FTP_VMS_TYPE;
+		mList = TRUE;
 	}
 	else if (mResponseMsg.Equals("VMS/CMS", 6) || mResponseMsg.Equals("VM ", 3)) {
 		mServerType = FTP_CMS_TYPE;
@@ -403,12 +438,15 @@ nsFtpProtocolConnection::SetSystInternals(void) {
 	}
 	else if (mResponseMsg.Find("MAC-OS TCP/Connect II") > -1) {
 		mServerType = FTP_TCPC_TYPE;
+		mList = TRUE;
 	}
 	else if (mResponseMsg.Equals("MACOS Peter's Server", 20)) {
 		mServerType = FTP_PETER_LEWIS_TYPE;
+		mList = TRUE;
 	}
 	else if (mResponseMsg.Equals("MACOS WebSTAR FTP", 17)) {
 		mServerType = FTP_WEBSTAR_TYPE;
+		mList = TRUE;
 	}
 }
 ////////////////////////////////////////////////////////////////////////////////
