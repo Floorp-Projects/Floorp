@@ -28,4 +28,5 @@ include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\cck\InitDist.win>
 
 export::
-	$(MAKE_INSTALL) * $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell
+	$(MAKE_INSTALL) bmps* $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell
+	$(MAKE_INSTALL) nsetup32* $(CCKDIST)\CCKTool\WSTemplate\Workspace\Autorun\Shell
