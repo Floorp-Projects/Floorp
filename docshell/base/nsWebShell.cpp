@@ -56,6 +56,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
 #include "nsIStreamObserver.h"
+#include "nsIWebShellServices.h"
 
 #ifdef XP_PC
 #include <windows.h>
@@ -116,6 +117,7 @@ void nsWebShell_SetUnixEventQueue(PLEventQueue* aEventQueue)
 
 class nsWebShell : public nsIWebShell,
                    public nsIWebShellContainer,
+                   public nsIWebShellServices,
                    public nsILinkHandler,
                    public nsIScriptContextOwner,
                    public nsIDocumentLoaderObserver,
@@ -241,6 +243,11 @@ public:
   NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode);
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
   NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
+
+  // nsIWebShellServices
+  NS_IMETHOD LoadDocument(const char* aURL);
+  NS_IMETHOD StopDocumentLoad(void);
+  NS_IMETHOD SetRendering(PRBool aRender);
 
   // nsILinkHandler
   NS_IMETHOD OnLinkClick(nsIContent* aContent, 
@@ -424,6 +431,7 @@ static NS_DEFINE_IID(kIStreamObserverIID,     NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kINetSupportIID,         NS_INETSUPPORT_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
+static NS_DEFINE_IID(kIWebShellServicesIID,   NS_IWEB_SHELL_SERVICES_IID);
 static NS_DEFINE_IID(kIWidgetIID,             NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIPluginManagerIID,      NS_IPLUGINMANAGER_IID);
 static NS_DEFINE_IID(kIPluginHostIID,         NS_IPLUGINHOST_IID);
@@ -615,6 +623,11 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kIWebShellServicesIID)) {
+    *aInstancePtr = (void*)(nsIWebShellServices*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
   }
   if (aIID.Equals(kIWebShellIID)) {
     *aInstancePtr = (void*)(nsIWebShell*)this;
@@ -1919,6 +1932,30 @@ nsWebShell::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken)
  
   return NS_OK;
 }
+
+
+//----------------------------------------------------------------------
+// Web Shell Services API
+
+NS_IMETHODIMP
+nsWebShell::LoadDocument(const char* aURL)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::StopDocumentLoad(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShell::SetRendering(PRBool aRender)
+{
+  return NS_OK;
+}
+
+
 //----------------------------------------------------------------------
 
 // WebShell link handling
