@@ -375,7 +375,7 @@ CNavDTD::~CNavDTD(){
   nsCParserNode* theNode=0;
 
 #ifdef NS_DEBUG
-#if 1
+#if 0
   PRInt32 count=gNodeCount-mSharedNodes.GetSize();
   if(count) {
     printf("%i of %i nodes leaked!\n",count,gNodeCount);
