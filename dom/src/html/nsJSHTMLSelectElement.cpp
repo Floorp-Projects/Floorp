@@ -251,10 +251,10 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     JSString *jsstring = JS_ValueToString(cx, id);
     if (nsnull != jsstring) {
-      name.SetString(JS_GetStringChars(jsstring));
+      name.Assign(JS_GetStringChars(jsstring));
     }
     else {
-      name.SetString("");
+      name.SetLength(0);
     }
 
     if (NS_OK == a->QueryInterface(kINSHTMLSelectElementIID, (void **)&b)) {
@@ -508,14 +508,14 @@ HTMLSelectElementAdd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIHTMLElementIID,
-                                           "HTMLElement",
+                                           NS_ConvertToString("HTMLElement"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b1),
                                            kIHTMLElementIID,
-                                           "HTMLElement",
+                                           NS_ConvertToString("HTMLElement"),
                                            cx,
                                            argv[1])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);

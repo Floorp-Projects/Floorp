@@ -172,7 +172,7 @@ NS_IMETHODIMP
 nsDOMException::GetMessage(nsString& aMessage)
 {
   if (mMessage) {
-    aMessage.Assign(mMessage);
+    aMessage.AssignWithConversion(mMessage);
   }
   else {
     aMessage.Truncate();
@@ -185,7 +185,7 @@ NS_IMETHODIMP
 nsDOMException::GetName(nsString& aName)
 {
   if (mName) {
-    aName.Assign(mName);
+    aName.AssignWithConversion(mName);
   }
   else {
     aName.Truncate();
@@ -211,7 +211,7 @@ nsDOMException::ToString(nsString& aReturn)
   GetCode(&code);
   char* temp = PR_smprintf(format, msg, code, mResult, resultName, location);
   if (temp) {
-    aReturn.Assign(temp);
+    aReturn.AssignWithConversion(temp);
     PR_smprintf_free(temp);
   }
 

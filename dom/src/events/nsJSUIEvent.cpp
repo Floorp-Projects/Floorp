@@ -421,7 +421,7 @@ UIEventInitUIEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
     }
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b3),
                                            kIAbstractViewIID,
-                                           "AbstractView",
+                                           NS_ConvertToString("AbstractView"),
                                            cx,
                                            argv[3])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);

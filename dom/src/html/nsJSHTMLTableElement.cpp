@@ -302,7 +302,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_SUCCEEDED(rv)) {
           nsIDOMHTMLTableCaptionElement* prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                  kIHTMLTableCaptionElementIID, "HTMLTableCaptionElement",
+                                                  kIHTMLTableCaptionElementIID, NS_ConvertToString("HTMLTableCaptionElement"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
           }
@@ -318,7 +318,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_SUCCEEDED(rv)) {
           nsIDOMHTMLTableSectionElement* prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                  kIHTMLTableSectionElementIID, "HTMLTableSectionElement",
+                                                  kIHTMLTableSectionElementIID, NS_ConvertToString("HTMLTableSectionElement"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
           }
@@ -334,7 +334,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_SUCCEEDED(rv)) {
           nsIDOMHTMLTableSectionElement* prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                  kIHTMLTableSectionElementIID, "HTMLTableSectionElement",
+                                                  kIHTMLTableSectionElementIID, NS_ConvertToString("HTMLTableSectionElement"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
           }

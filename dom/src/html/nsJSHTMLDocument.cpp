@@ -471,7 +471,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_SUCCEEDED(rv)) {
           nsIDOMHTMLElement* prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-                                                  kIHTMLElementIID, "HTMLElement",
+                                                  kIHTMLElementIID, NS_ConvertToString("HTMLElement"),
                                                   cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_OBJECT_ERR;
           }
@@ -1086,7 +1086,7 @@ NSHTMLDocumentRouteEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
                                            kIEventIID,
-                                           "Event",
+                                           NS_ConvertToString("Event"),
                                            cx,
                                            argv[0])) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);

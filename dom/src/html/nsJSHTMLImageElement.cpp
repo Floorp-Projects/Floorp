@@ -592,7 +592,7 @@ HTMLImageElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
     return JS_FALSE;
   }
 
-  result = manager->LookupName("HTMLImageElement", PR_TRUE, classID);
+  result = manager->LookupName(NS_ConvertToString("HTMLImageElement"), PR_TRUE, classID);
   if (NS_OK != result) {
     return JS_FALSE;
   }
