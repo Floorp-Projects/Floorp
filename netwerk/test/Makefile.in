@@ -36,6 +36,10 @@ CPPSRCS		= \
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
 
+ifdef NO_LD_ARCHIVE_FLAGS
+LOST_SYM_LIBS	= -lxpcomds_s -lxptinfo
+endif
+
 LIBS		= \
 		-lmozreg \
 		-lmozjs \
@@ -47,6 +51,7 @@ LIBS		= \
 		-lxp \
 		-ljsurl \
 		-lmozdbm \
+		$(LOST_SYM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
