@@ -72,10 +72,6 @@ CPPSRCS		= \
 EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) \
 		    -L.. -lwidget_gtk2
 
-# Add you header files need to be exported  here
-EXPORTS		= \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
 CFLAGS		+= $(MOZ_GTK2_CFLAGS)
