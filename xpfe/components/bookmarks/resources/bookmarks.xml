@@ -835,26 +835,30 @@
                 return;
             }
 
-            RDFC.Init(kBMDS, rContainer);
-            var dropIx = RDFC.IndexOf(rTarget);
-            // XXX if any of the following fails, the nodes are gone for good!
+            var dropIndex;
+            if (orientation == Components.interfaces.nsITreeView.inDropAfter &&
+                this.mOuter.treeBoxObject.view.isContainer(row)     &&
+                this.mOuter.treeBoxObject.view.isContainerOpen(row) &&
+               !this.mOuter.treeBoxObject.view.isContainerEmpty(row)) {
+              rContainer = rTarget;
+              dropIndex = 1;        
+            } 
+            else {
+              RDFC.Init(kBMDS, rContainer);
+              dropIndex = RDFC.IndexOf(rTarget);
+              if (dropIndex == -1)
+                break;
+              if (orientation == Components.interfaces.nsITreeView.inDropAfter) {
+                ++dropIndex;
+              }
+            }
+
             const kDSIID = Components.interfaces.nsIDragService;
             const kCopyAction = kDSIID.DRAGDROP_ACTION_COPY + kDSIID.DRAGDROP_ACTION_LINK;
             if (rParent) {
               if (!(dragSession.dragAction & kCopyAction)) {
-                try {
-                  RDFC.Init(kBMDS, rParent);
-                  ix = RDFC.IndexOf(rSource);
-                  if (ix >= 1) {
-                    var index = this.mOuter.treeBuilder.getIndexOfResource(rSource);
-                    RDFC.RemoveElementAt(ix, true);
-                    // only need to decrement the target row if the index of the resource
-                    // we're removing is before it 
-                    if (index < row)
-                      --row;
-                  }
-                }
-                catch (ex) { }
+                RDFC.Init(kBMDS, rParent);
+                RDFC.RemoveElement(rSource, false);
               }
             }
     
@@ -864,17 +868,15 @@
               if (dragSession.dragAction & kCopyAction)
                 rSource = BookmarksUtils.cloneFolder(rSource, rContainer, rTarget);
             }
-            if (orientation == Components.interfaces.nsITreeView.inDropBefore ||
-                orientation == Components.interfaces.nsITreeView.inDropAfter) {
-              if (dropIx == -1) break;
+            if (orientation != Components.interfaces.nsITreeView.inDropOn) {
               RDFC.Init(kBMDS, rContainer);
-              RDFC.InsertElementAt(rSource, rParent ? dropIx : (orientation == Components.interfaces.nsITreeView.inDropAfter ? ++dropIx : dropIx), true);
+              RDFC.InsertElementAt(rSource, dropIndex, true);
             }
             else {
-              var cont = this.mOuter.treeBuilder.getResourceAtIndex(row);
-              RDFC.Init(kBMDS, cont);
-              RDFC.AppendElement(rSource); // drop on
+              RDFC.Init(kBMDS, rTarget);
+              RDFC.AppendElement(rSource);
             }
+
             dirty = true;
 
             //if (rParent) {
