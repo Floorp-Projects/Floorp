@@ -544,6 +544,42 @@ safe_fgets(char* buf, unsigned size, FILE* fp)
 }
 
 static int
+EhSymTableSetSymbolState(EhSymTable* table, char* name, EhSymState new_state)
+{
+	EhSym* sym = EhSymTableFind(table, name);
+
+	if (sym == NULL) {
+		sym = EhSymNewDefined(name, NULL);
+
+		EhSymTableInsert(table, sym);
+	}
+
+	/* new_state must be EH_SYM_DEFINED || EH_SYM_ZAPPED */
+	if (sym->state == EH_SYM_DEFINED || sym->state == EH_SYM_ZAPPED) {
+		sym->state = new_state;
+	} else if (sym->state == EH_SYM_INLINE) {
+		char* state_name;
+		if (new_state == EH_SYM_DEFINED)
+			state_name = "global";
+		else
+			state_name = "static";
+		fprintf(stderr,
+				"WARNING: Symbol %s is an inline.\n"
+				"         Forcing the symbol %s will be ignored.\n",
+				name,
+				state_name);
+	} else { /* EH_SYM_UNDEFINED */
+		/*
+		 *    This call is being made after objects have started being
+		 *    read. This is too late. I'm not sure I care though.
+		 */
+		return -1;
+	}
+
+	return 0;
+}
+
+static int
 EhSymTableFpLoad(EhSymTable* table, FILE* fp)
 {
 	char* buf = NULL; /* I hope this is big enough */
@@ -2386,6 +2422,8 @@ usage(void)
 			"gtscc [gtscc_options] [compiler_options] -c file.c file.cpp ...\n"
 			"gtscc_options:\n"
 			"-gtsfile <db.gts>       the gts database file (use this)\n"
+			"-gtszapsymbol <name>    convert symbol <name>\n"
+			"-gtsnozapsymbol <name>  don't convert symbol <name>\n"
 			"-gtsrootdir <directory> the root for the tree (use this)\n"
 			"-gtsverbose             be more verbose (3 levels)\n"
 			"-gtsnozap               don't convert globals to statics\n"
@@ -2394,6 +2432,8 @@ usage(void)
 			"gtscc [gtscc_options] [linker_options] file.o ... libxx.a ...\n"
 			"gtscc_options:\n"
 			"-gtsfile <db.gts>       the gts database file (use this)\n"
+			"-gtszapsymbol <name>    convert symbol <name>\n"
+			"-gtsnozapsymbol <name>  don't convert symbol <name>\n"
 			"-gtsrootdir <directory> the root for the tree (use this)\n"
 			"-gtspref <directory>    please recompile these paths first\n"
 			"-gtsunpref <directory>  please try to avoid recompiling these\n"
@@ -2561,6 +2601,26 @@ main(int argc, char** argv)
 				fclose(zap_fp);
 			}
 
+			n++;
+
+		} else if (strcmp(argv[n], "-gtszapsymbol") == 0) {
+			if (argc < n+2) {
+				fprintf(stderr,	"-gtszapsymbol requires an argument\n");
+				usage();
+				return 2;
+			}
+
+			EhSymTableSetSymbolState(table, argv[n+1], EH_SYM_ZAPPED);
+			n++;
+
+		} else if (strcmp(argv[n], "-gtsnozapsymbol") == 0) {
+			if (argc < n+2) {
+				fprintf(stderr,	"-gtsnozapsymbol requires an argument\n");
+				usage();
+				return 2;
+			}
+
+			EhSymTableSetSymbolState(table, argv[n+1], EH_SYM_DEFINED);
 			n++;
 
 		} else if (strcmp(argv[n], "-gtsname") == 0) {
