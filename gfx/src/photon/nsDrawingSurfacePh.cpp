@@ -57,7 +57,7 @@ nsDrawingSurfacePh :: ~nsDrawingSurfacePh()
 {
   if( mIsOffscreen )
   {
-    PmMemFlush( (PmMemoryContext_t *) mGC, mPixmap );
+//kirk hack 10/18   PmMemFlush( (PmMemoryContext_t *) mGC, mPixmap );
     PmMemReleaseMC( (PmMemoryContext_t *) mGC);
     PgShmemDestroy( mPixmap->image );
     PR_Free (mPixmap);
@@ -189,9 +189,6 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Unlock(void)
 
     Select();
 
-/* Kirk Hack to see what this does 9/27/99 */
-/* No apparent problems improvements or problems... */
-#if 1
     if (Mask)
     {
       int bpl;
@@ -213,7 +210,6 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Unlock(void)
 		return NS_ERROR_FAILURE;
 	  }
     }
-#endif
   }
 
   PR_Free(mImage->image);
@@ -259,7 +255,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC )
   mIsOffscreen = PR_FALSE;	// is onscreen
   mPixmap = NULL; // is onscreen
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t this=<%p>\n",this));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t=<%p> this=<%p>\n",aGC, this));
 
   return NS_OK;
 }
@@ -267,14 +263,14 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC )
 NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
                                           PRUint32 aHeight, PRUint32 aFlags)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t + width/height this=<%p> w,h=(%ld,%ld)\n", this, aWidth, aHeight));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t + width/height this=<%p> w,h=(%ld,%ld) aGC=<%p>\n", this, aWidth, aHeight, aGC));
 
   mholdGC = aGC;
   mWidth = aWidth;
   mHeight = aHeight;
   mFlags = aFlags;
 
-// we can draw on this offscreen because it has no parent
+  // we can draw on this offscreen because it has no parent
   mIsOffscreen = PR_TRUE;
 
   PhImage_t   *image = NULL;
@@ -303,7 +299,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
     dim.w ++;
 #endif
 
-//printf ("kedl: create drawing surface: %d %d %d %d, %lu\n",area.pos.x,area.pos.y,area.size.w,area.size.h,image);
+printf ("nsDrawingSurfacePh::Init create drawing surface: area=<%d,%d,%d,%d> %p\n",area.pos.x,area.pos.y,area.size.w,area.size.h,image);
 
   PhPoint_t           translation = { 0, 0 };
   PmMemoryContext_t   *mc;
@@ -329,6 +325,9 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
     return NS_ERROR_FAILURE;
   }
   	
+  /* Kirk: 10/18/99 Set the type and see if it helps... */
+  PmMemSetType(mc, Pm_IMAGE_CONTEXT);
+  
   mGC = (PhGC_t *) mc;
 
   // now all drawing goes into the memory context
@@ -378,12 +377,15 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Select( void )
       int err;
 	  PhDrawContext_t *oldDC;
 	  
+#if 0
+/* Why flush what might be in there?? */
       err=PmMemFlush( (PmMemoryContext_t *) mGC, mPixmap ); // get the image
       if (err == -1)
 	  {
 		NS_ASSERTION(0, "nsDrawingSurfacePh::Select - Error calling PmMemFlush");
 		return NS_ERROR_FAILURE;
 	  }
+#endif
 
       oldDC=PmMemStart( (PmMemoryContext_t *) mGC);
       if (oldDC == NULL)

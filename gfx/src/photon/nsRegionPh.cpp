@@ -55,6 +55,8 @@ static void DumpTiles(PhTile_t *t)
 
 nsRegionPh :: nsRegionPh()
 {
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::nsRegion Constructor this=<%p>\n", this));
+
   NS_INIT_REFCNT();
 
   mRegion = NULL;
@@ -64,7 +66,7 @@ nsRegionPh :: nsRegionPh()
 
 nsRegionPh :: ~nsRegionPh()
 {
-PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::~nsRegion Destructor\n"));
+PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::~nsRegion Destructor this=<%p>\n", this));
   
 #ifdef DEBUG_REGION
   DumpTiles(mRegion);
@@ -72,19 +74,31 @@ PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::~nsRegion Destructor\n"));
 
   if (mRegion)
     PhFreeTiles(mRegion);
+
+  mRegion = nsnull;
 }
 
 NS_IMPL_ISUPPORTS1(nsRegionPh, nsIRegion)
 
 nsresult nsRegionPh :: Init(void)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Init\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Init this=<%p>\n", this));
+
+  /* This looks like a memory leak kirk 10/18/99 */
+#if 0
+  mRegion = NULL;
+  mRegionType = eRegionComplexity_empty;
+#else
+  SetRegionEmpty();		//HACK!
+#endif
+  
   return NS_OK;
 }
 
 void nsRegionPh :: SetTo(const nsIRegion &aRegion)
 {
   PhTile_t *tiles;
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::SetTo this=<%p> aRegion=<%p>\n", this, aRegion));
 
   aRegion.GetNativeRegion((void*&) tiles);
 
@@ -95,14 +109,13 @@ void nsRegionPh :: SetTo(const nsIRegion &aRegion)
 
 void nsRegionPh :: SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::SetTo2 aX=<%d> aY=<%d> aWidth=<%d> aHeight=<%d>\n", aX, aY, aWidth, aHeight));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::SetTo2 this=<%p> aX=<%d> aY=<%d> aWidth=<%d> aHeight=<%d>\n", this, aX, aY, aWidth, aHeight));
 
   SetRegionEmpty();
 
-  if(( aWidth > 0 ) && ( aHeight > 0 ))
+  if ( (aWidth > 0) && (aHeight > 0) )
   {
     /* Create a temporary tile to  assign to mRegion */
-
     PhTile_t *tile = PhGetTile();
     tile->rect.ul.x = aX;
     tile->rect.ul.y = aY;
@@ -116,7 +129,7 @@ void nsRegionPh :: SetTo(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight
 
 void nsRegionPh :: Intersect(const nsIRegion &aRegion)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Intersect with nsIRegion\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Intersect with nsIRegion this=<%p>\n", this));
 
   PhTile_t *orig_Tiles = mRegion;
   PhTile_t *tiles;
@@ -132,7 +145,7 @@ void nsRegionPh :: Intersect(const nsIRegion &aRegion)
 
 void nsRegionPh :: Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Intersect2 aX=<%d> aY=<%d> aWidth=<%d> aHeight=<%d>\n", aX, aY, aWidth, aHeight));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Intersect2 this=<%p> aX=<%d> aY=<%d> aWidth=<%d> aHeight=<%d>\n", this, aX, aY, aWidth, aHeight));
 
   if(( aWidth > 0 ) && ( aHeight > 0 ))
   {
@@ -156,7 +169,7 @@ void nsRegionPh :: Intersect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHe
 
 void nsRegionPh :: Union(const nsIRegion &aRegion)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Union\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Union this=<%p> aRegion=<%p>\n", this, aRegion));
 
   int added;
   PhTile_t *tiles;
@@ -168,7 +181,7 @@ void nsRegionPh :: Union(const nsIRegion &aRegion)
 
 void nsRegionPh :: Union(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Union2 aX=<%d> aY=<%d> aWidth=<%d> aHeight=<%d>\n", aX, aY, aWidth, aHeight));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Union2 aX=<%d> aY=<%d> aWidth=<%d> aHeight=<%d> this=<%p>\n", aX, aY, aWidth, aHeight, this));
 
   if(( aWidth > 0 ) && ( aHeight > 0 ))
   {
@@ -192,7 +205,7 @@ void nsRegionPh :: Subtract(const nsIRegion &aRegion)
   PhTile_t *tiles;
   aRegion.GetNativeRegion((void*&)tiles);
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Subtract with nsIRegion mRegion=<%p> tiles=<%p>\n", mRegion, tiles));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Subtract with nsIRegion this=<%p> mRegion=<%p> tiles=<%p>\n", this, mRegion, tiles));
 
   mRegion = PhClipTilings(mRegion, tiles, NULL);
 }
@@ -200,7 +213,7 @@ void nsRegionPh :: Subtract(const nsIRegion &aRegion)
 
 void nsRegionPh :: Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Subtract aX=<%d> aY=<%d> aWidth=<%d> aHeight=<%d>\n", aX, aY, aWidth, aHeight));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Subtract this=<%p> aX=<%d> aY=<%d> aWidth=<%d> aHeight=<%d>\n", this, aX, aY, aWidth, aHeight));
 
   if(( aWidth > 0 ) && ( aHeight > 0 ))
   {
@@ -223,7 +236,7 @@ PRBool nsRegionPh :: IsEmpty(void)
 {
   PRBool result = PR_FALSE;
 
-//  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::IsEmpty mRegion=<%p>\n", mRegion));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::IsEmpty this=<%p> mRegion=<%p>\n", this, mRegion));
 
   if (!mRegion)
     result = PR_TRUE;
@@ -234,7 +247,8 @@ PRBool nsRegionPh :: IsEmpty(void)
 
 PRBool nsRegionPh :: IsEqual(const nsIRegion &aRegion)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::IsEqual\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::IsEqual this=<%p>\n", this));
+
   PRBool result = PR_TRUE;
   PhTile_t *tiles;
   aRegion.GetNativeRegion((void*&)tiles);
@@ -272,13 +286,22 @@ PRBool nsRegionPh :: IsEqual(const nsIRegion &aRegion)
 
 void nsRegionPh :: GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::GetBoundingBox mRegion=<%p>\n", mRegion));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::GetBoundingBox this=<%p> mRegion=<%p>\n", this, mRegion));
   int bX=0, bY=0;
-  
-  *aX = 0;
-  *aY = 0;
+
+  *aX = 32767; //0
+  *aY = 32767; //0
 
    PhTile_t *t = mRegion;
+
+#if 0
+  if (t == nsnull)
+  {
+	*aX = *aY = *aWidth = *aHeight = 0;
+    return;
+  }
+#endif
+  
    while(t)
    {
      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::GetBoundingBox t=<%p> t->next=<%p>\n", t, t->next));
@@ -299,7 +322,7 @@ void nsRegionPh :: GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRI
 
 void nsRegionPh :: Offset(PRInt32 aXOffset, PRInt32 aYOffset)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Offset aXOffset=<%d> aYOffset=<%d>\n", aXOffset, aYOffset));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::Offset this=<%p> aXOffset=<%d> aYOffset=<%d>\n", this, aXOffset, aYOffset));
   if (mRegion)
   {
     PhPoint_t p;
@@ -313,7 +336,7 @@ void nsRegionPh :: Offset(PRInt32 aXOffset, PRInt32 aYOffset)
 
 PRBool nsRegionPh :: ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::ContainsRect mRegion=<%p> (%d,%d) -> (%d,%d)\n", mRegion, aX, aY, aWidth, aHeight));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRegionPh::ContainsRect this=<%p> mRegion=<%p> (%d,%d) -> (%d,%d)\n", this, mRegion, aX, aY, aWidth, aHeight));
 
   if (mRegion)
   {

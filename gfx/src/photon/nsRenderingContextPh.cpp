@@ -388,7 +388,7 @@ NS_IMETHODIMP nsRenderingContextPh :: SelectOffScreenDrawingSurface(nsDrawingSur
   PgSetClipping( 0, NULL );
   PgSetMultiClip( 0, NULL );
   PgSetFillColor(FillColorVal[cur_color]);
-//  PgDrawIRect( 0, 0, 1024,768, Pg_DRAW_FILL_STROKE );
+//  PgDrawIRect( 0, 0, 1024,768, Pg_DRAW_FILL_STROKE ); 
   cur_color++;
   cur_color &= 0x7;
 
@@ -1492,6 +1492,8 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const char *aString, PRUint32 a
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawString1 first aString=<%s> of %d at (%d,%d) aSpacing=<%p>.\n",aString, aLength, aX, aY, aSpacing));
 
+  int err;
+  
   nscoord x = aX;
   nscoord y = aY;
 
@@ -1516,9 +1518,29 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const char *aString, PRUint32 a
   {
     mTMatrix->TransformCoord(&x,&y);
     PhPoint_t pos = { x, y };
-
+ 	
     SELECT(mSurface);
-    PgDrawTextChars( aString, aLength, &pos, (Pg_TEXT_LEFT | Pg_TEXT_TOP));
+
+  /* HACK to see if we have a clipping problem */
+  //PgSetClipping(0,NULL);
+
+#if 1
+    err=PgDrawTextChars( aString, aLength, &pos, (Pg_TEXT_LEFT | Pg_TEXT_TOP));
+#else
+	/* This is garbage and doesn't work */
+    int char_count, byte_count; 
+    char *new_str;
+    byte_count = mbstrnlen(aString, aLength, 0, &char_count);
+	printf("nsRenderingContextPh::DrawString1 aLength=<%d> char_count=<%d> byte_count=<%d>\n", aLength, char_count, byte_count);
+    new_str = malloc(byte_count+1);
+	memcpy(new_str, aString, byte_count+1);
+    err=PgDrawTextmx( new_str, byte_count, &pos, (Pg_TEXT_LEFT | Pg_TEXT_TOP));
+#endif
+
+    if ( err == -1)
+	{
+	  printf("nsRenderingContextPh::DrawString1 returned error code\n");
+	}
   }
 
   return NS_OK;
@@ -1643,6 +1665,8 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits this=<%p> aSrcSurf=<%p> aSrcPt=(%d,%d) aCopyFlags=<%d> DestRect=<%d,%d,%d,%d>\n",
      this, aSrcSurf, aSrcX, aSrcY, aCopyFlags, aDestBounds.x, aDestBounds.y, aDestBounds.width, aDestBounds.height));
 
+printf("nsRenderingContextPh::CopyOffScreenBits 0\n");
+
   PhArea_t              area;
   PRInt32               srcX = aSrcX;
   PRInt32               srcY = aSrcY;
@@ -1651,7 +1675,8 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 
   if ( (aSrcSurf==NULL) || (mTMatrix==NULL) || (mSurface==NULL))
   {
-    NS_ASSERTION(0, "nsRenderingContextPh::CopyOffScreenBits STarted with NULL pointer");
+    NS_ASSERTION(0, "nsRenderingContextPh::CopyOffScreenBits Started with NULL pointer");
+	printf("nsRenderingContextPh::CopyOffScreenBits Started with NULL pointer\n");
     return NS_ERROR_FAILURE;  
   }
   
@@ -1668,14 +1693,17 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
   if( mBufferIsEmpty )
   {
     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits Buffer empty, skipping.\n"));
+    printf("nsRenderingContextPh::CopyOffScreenBits Buffer empty, skipping.\n");
+
     SELECT( destsurf );
     PgSetGC(saveGC);
+
     return NS_OK;
   }
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  flags=%X\n", aCopyFlags ));
 
-#if 0
+#if 1
   printf("nsRenderingContextPh::CopyOffScreenBits() flags=\n");
 
   if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
@@ -1704,17 +1732,22 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
   area.size.w=drect.width;
   area.size.h=drect.height;
 
-//  printf ("location: %d, %p %p (%d %d) %d %d %d %d\n",aCopyFlags,aSrcSurf,destsurf,srcX,srcY,area.pos.x,area.pos.y,area.size.w,area.size.h);
+  printf ("nsRenderingContextPh::CopyOffScreenBits 1 CopyFlags=<%d>, SrcSurf=<%p> DestSurf=<%p> Src=(%d,%d) Area=(%d,%d,%d,%d)\n",
+    aCopyFlags,aSrcSurf,destsurf,srcX,srcY,area.pos.x,area.pos.y,area.size.w,area.size.h);
 
   nsRect rect;
   PRBool valid;
   GetClipRect(rect,valid);
+
+#if 0
+/* this is shit */
   if (valid)
   {
-    //printf ("clip: %d %d %d %d\n",rect.x,rect.y,rect.width,rect.height);
+    printf ("nsRenderingContextPh::CopyOffScreenBits clip rect=<%d,%d,%d,%d>\n",rect.x,rect.y,rect.width,rect.height);
     area.size.w = rect.width; 
     area.size.h = rect.height; 
   }
+#endif
   
   ((nsDrawingSurfacePh *)aSrcSurf)->Stop();
   PhImage_t *image;
@@ -1725,7 +1758,7 @@ if (aSrcSurf==destsurf)
 {
   if (image==0)
   {
-	printf ("fubar: onscreen to onscreen copy!!\n");
+	printf ("nsRenderingContextPh::CopyOffScreenBits: Unsupported onscreen to onscreen copy!!\n");
   }
   else
   {
@@ -1734,7 +1767,12 @@ if (aSrcSurf==destsurf)
     unsigned char *ptr;
     ptr = image->image;
     ptr += image->bpl * srcY + srcX*3 ;
-    PgDrawImagemx( ptr, image->type , &pos, &size, image->bpl, 0); 
+    //PgDrawImagemx( ptr, image->type , &pos, &size, image->bpl, 0); 
+    int err = PgDrawImagemx( ptr, image->type , &pos, &size, image->bpl, 0); 
+    if (err == -1)
+	{
+	  printf ("nsRenderingContextPh::CopyOffScreenBits Error calling PgDrawImage\n");
+	}
   }
 }
   else
