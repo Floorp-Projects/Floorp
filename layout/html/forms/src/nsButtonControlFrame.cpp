@@ -50,8 +50,6 @@
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIButtonIID,      NS_IBUTTON_IID);
-static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 void
 nsButtonControlFrame::GetDefaultLabel(nsString& aString) 
@@ -136,14 +134,14 @@ nsButtonControlFrame::GetHorizontalBorderWidth(float aPixToTwip) const
 }
 
 nscoord 
-nsButtonControlFrame::GetVerticalInsidePadding(float aPixToTwip, 
-                                                     nscoord aInnerHeight) const
+nsButtonControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+                                               float aPixToTwip, 
+                                               nscoord aInnerHeight) const
 {
   float pad;
-  nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  nsCOMPtr<nsILookAndFeel> lookAndFeel;
+  if (NS_SUCCEEDED(aPresContext.GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_ButtonVerticalInsidePadding,  pad);
-   NS_RELEASE(lookAndFeel);
   }
   return (nscoord)NSToIntRound((float)aInnerHeight * pad);
 }
@@ -160,12 +158,11 @@ nsButtonControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
   float   pad;
   PRInt32 padQuirks;
   PRInt32 padQuirksOffset;
-  nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  nsCOMPtr<nsILookAndFeel> lookAndFeel;
+  if (NS_SUCCEEDED(aPresContext.GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
     lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_ButtonHorizontalInsidePadding,  pad);
     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ButtonHorizontalInsidePaddingNavQuirks,  padQuirks);
     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks,  padQuirksOffset);
-    NS_RELEASE(lookAndFeel);
   }
   if (eCompatibility_NavQuirks == mode) {
     return (nscoord)NSToIntRound(float(aInnerWidth) * pad);
