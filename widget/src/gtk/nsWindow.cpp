@@ -331,13 +331,11 @@ void nsWindow::InitCallbacks(char * aName)
                            this);
 
   InstallButtonPressSignal(mWidget);
-
   InstallButtonReleaseSignal(mWidget);
 
   InstallMotionNotifySignal(mWidget);
 
   InstallEnterNotifySignal(mWidget);
-
   InstallLeaveNotifySignal(mWidget);
 
   gtk_signal_connect(GTK_OBJECT(mWidget),

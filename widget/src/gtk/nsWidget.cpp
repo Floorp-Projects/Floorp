@@ -1155,7 +1155,10 @@ nsWidget::InstallRealizeSignal(GtkWidget * aWidget)
 
 #ifdef TRACE_MOUSE_EVENTS
 static void
-DebugPrintMouseEvent(nsMouseEvent & aEvent,char * sMessage,void * instance)
+DebugPrintMouseEvent(nsMouseEvent & aEvent,
+                     char *         sMessage,
+                     nsWidget *     aInstance,
+                     GtkWidget *    aGtkWidget)
 {
   char * eventName = nsnull;
 
@@ -1227,14 +1230,14 @@ DebugPrintMouseEvent(nsMouseEvent & aEvent,char * sMessage,void * instance)
 
   static int sPrintCount=0;
 
-  printf("%4d %s(this=%p,%s,x=%d,y=%d,click=%d)\n",
+  printf("%4d %s(this=%p,name=%s,event=%s,x=%d,y=%d)\n",
          sPrintCount++,
          sMessage,
-         instance,
+         aInstance,
+         gtk_widget_get_name(aGtkWidget),
          eventName,
          aEvent.point.x,
-         aEvent.point.y,
-         aEvent.clickCount);
+         aEvent.point.y);
 }
 #endif // TRACE_MOUSE_EVENTS
 //////////////////////////////////////////////////////////////////
@@ -1262,7 +1265,7 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
   // the GtkWidget corresponding to the sButtonMotionTarget and
   // marking if nsnull in there.
   //
-  if (sButtonMotionTarget != nsnull)
+  if (nsnull != sButtonMotionTarget)
   {
     gint diffX;
     gint diffY;
@@ -1298,7 +1301,7 @@ nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
   }
   
 #ifdef TRACE_MOUSE_EVENTS
-  DebugPrintMouseEvent(event,"Motion",this);
+  DebugPrintMouseEvent(event,"Motion",this,mWidget);
 #endif
   
   AddRef();
@@ -1318,7 +1321,7 @@ nsWidget::OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
   //
   // XXX ramiro - Same as above.
   //
-  if (sButtonMotionTarget != nsnull)
+  if (nsnull != sButtonMotionTarget)
   {
     return;
   }
@@ -1337,7 +1340,7 @@ nsWidget::OnEnterNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
   }
 
 #ifdef TRACE_MOUSE_EVENTS
-  DebugPrintMouseEvent(event,"Enter",this);
+  DebugPrintMouseEvent(event,"Enter",this,mWidget);
 #endif
 
   AddRef();
@@ -1357,7 +1360,7 @@ nsWidget::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
   //
   // XXX ramiro - Same as above.
   //
-  if (sButtonMotionTarget != nsnull)
+  if (nsnull != sButtonMotionTarget)
   {
     return;
   }
@@ -1376,7 +1379,7 @@ nsWidget::OnLeaveNotifySignal(GdkEventCrossing * aGdkCrossingEvent)
   }
 
 #ifdef TRACE_MOUSE_EVENTS
-  DebugPrintMouseEvent(event,"Leave",this);
+  DebugPrintMouseEvent(event,"Leave",this,mWidget);
 #endif
 
   AddRef();
@@ -1455,7 +1458,7 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   InitMouseEvent(aGdkButtonEvent, event, eventType);
 
 #ifdef TRACE_MOUSE_EVENTS
-  DebugPrintMouseEvent(event,"ButtonPress",this);
+  DebugPrintMouseEvent(event,"ButtonPress",this,mWidget);
 #endif
 
   // Set the button motion target and remeber the widget and root coords
@@ -1503,13 +1506,16 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
   InitMouseEvent(aGdkButtonEvent, event, eventType);
 
 #ifdef TRACE_MOUSE_EVENTS
-  DebugPrintMouseEvent(event,"ButtonRelease",this);
+  DebugPrintMouseEvent(event,"ButtonRelease",this,mWidget);
 #endif
 
-  sButtonMotionTarget = nsnull;
+  if (nsnull != sButtonMotionTarget)
+  {
+    sButtonMotionTarget = nsnull;
 
-  sButtonMotionRootX = -1;
-  sButtonMotionRootY = -1;
+    sButtonMotionRootX = -1;
+    sButtonMotionRootY = -1;
+  }
 
   AddRef();
 

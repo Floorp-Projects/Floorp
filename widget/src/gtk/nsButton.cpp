@@ -65,6 +65,9 @@ void nsButton::InitCallbacks(char * aName)
   InstallButtonPressSignal(mWidget);
   InstallButtonReleaseSignal(mWidget);
 
+  InstallEnterNotifySignal(mWidget);
+  InstallLeaveNotifySignal(mWidget);
+
   // These are needed so that the events will go to us and not our parent.
   AddToEventMask(mWidget,
                  GDK_BUTTON_PRESS_MASK |

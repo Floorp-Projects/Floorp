@@ -57,6 +57,13 @@ protected:
 
   GtkWidget *mLabel;
   GtkWidget *mCheckButton;
+
+  // We need to maintain our own state to be in sync with the
+  // gecko check controlling frame.
+  PRBool     mState;
+
+  // See GetState()
+  PRBool     mFirstTime;
 };
 
 #endif // nsCheckButton_h__

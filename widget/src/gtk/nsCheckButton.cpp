@@ -35,6 +35,8 @@ nsCheckButton::nsCheckButton() : nsWidget() , nsICheckButton()
   NS_INIT_REFCNT();
   mLabel = nsnull;
   mCheckButton = nsnull;
+  mState = PR_FALSE;
+  mFirstTime = PR_TRUE;
 }
 
 //-------------------------------------------------------------------------
@@ -83,6 +85,9 @@ void nsCheckButton::InitCallbacks(char * aName)
 {
   InstallButtonPressSignal(mCheckButton);
   InstallButtonReleaseSignal(mCheckButton);
+
+  InstallEnterNotifySignal(mWidget);
+  InstallLeaveNotifySignal(mWidget);
 
   // These are needed so that the events will go to us and not our parent.
   AddToEventMask(mWidget,
@@ -133,13 +138,14 @@ nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::SetState(const PRBool aState)
 {
-  if (mWidget) {
-    GtkToggleButton * item = GTK_TOGGLE_BUTTON(mCheckButton);
+  mState = aState;
 
-    item->active = (gboolean) aState;
-
-    gtk_widget_queue_draw(GTK_WIDGET(item));
+  if (mWidget && mCheckButton)
+  {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(mCheckButton),
+                                 (gboolean) mState);
   }
+
   return NS_OK;
 }
 
@@ -150,14 +156,19 @@ NS_METHOD nsCheckButton::SetState(const PRBool aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::GetState(PRBool& aState)
 {
-  aState = PR_TRUE;
-  if (mWidget) {
-    aState = (PRBool) GTK_TOGGLE_BUTTON(mCheckButton)->active;
+  aState = mState;
 
-    // The check button will have been toggled twice (cough) -
-    // once by GTK and once by gecko.  This is obviously messed up.
-    aState = !aState;
+  // Pathetically lame hack to work around artificial intelligence 
+  // in the GtkToggleButton widget.  Because the gtk toggle widget
+  // changes its state on button press, we are out of whack by one
+  //
+  if (mFirstTime)
+  {
+    mFirstTime = PR_FALSE;
+
+    aState = !mState;
   }
+    
   return NS_OK;
 }
 
