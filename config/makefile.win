@@ -44,6 +44,8 @@ INSTALL_FILE_LIST=$(MOZ_TOOLS)\bin\fullsoft.dll $(MOZ_TOOLS)\bin\talkback.cnt $(
 INSTALL_DIR=$(DIST)\bin
 !endif
 
+GARBAGE = *.obj *.sbr *.pdb
+
 #//------------------------------------------------------------------------
 #//
 #// Include the common makefile rules
@@ -87,7 +89,7 @@ bin2rc.exe:: bin2rc.c
 makedep.exe:: makedep.cpp
     $(CC) -MT /O2 /GB $**
 
-export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe build_number
+export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe build_number INSTALL_FILES
 
 !ifdef MOZ_FULLCIRCLE
 

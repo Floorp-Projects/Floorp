@@ -23,16 +23,6 @@
  *
  */
 
-/*
-test cases:
-
-  cd d:\mozilla_src\mozilla\nsprpub
-   -i ..\dist\WIN954.0_DBG.OBJD\include\*.h ..\dist\WIN32_D.OBJ\include
-
-  cd d:\mozilla_src\mozilla\webshell
-  -i nsIBrowserWindow.h nsIContentViewer.h nsIContentViewerContainer.h nsIDocumentLoader.h nsIDocumentLoaderObserver.h nsIDocStreamLoaderFactory.h nsIDocumentViewer.h nsILinkHandler.h nsIThrobber.h nsIWebShell.h nsIWebShellServices.h nsIClipboardCommands.h nsweb.h ..\..\dist\public\raptor
- */
-
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,7 +46,7 @@ test cases:
 //static const char *prog;
 
 BOOL insertHashLine = FALSE;
-BOOL isWindowsNT = FALSE;
+BOOL trySymlink = FALSE;
 
 typedef WINBASEAPI BOOL (WINAPI* LPFNBackupWrite)(HANDLE, LPBYTE, DWORD, LPDWORD, BOOL, BOOL, LPVOID *);
 typedef WINBASEAPI HANDLE (WINAPI* LPFNCreateFileW)(LPCWSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE);
@@ -73,11 +63,9 @@ HINSTANCE hDLL = NULL;
 /*
 ** Flip any "unix style slashes" into "dos style backslashes" 
 */
-void FlipSlashes(char *name)
+inline void FlipSlashes(char *name)
 {
-    int i;
-
-    for( i=0; name[i]; i++ ) {
+    for( int i=0; name[i]; i++ ) {
         if( name[i] == '/' ) name[i] = '\\';
     }
 }
@@ -85,11 +73,9 @@ void FlipSlashes(char *name)
 /*
  * Flip any "dos style backslashes" into "unix style slashes"
  */
-void UnflipSlashes(char *name)
+inline void UnflipSlashes(char *name)
 {
-    int i;
-
-    for( i=0; name[i]; i++ ) {
+    for( int i=0; name[i]; i++ ) {
         if( name[i] == '\\' ) name[i] = '/';
     }
 }
@@ -375,7 +361,7 @@ int CopyIfNecessary(const char *oldFile, const char *newFile)
 		BOOL isNTFS = FALSE;
 		
 		// Find out what kind of volume this is.
-		if (isWindowsNT) {
+		if ( trySymlink ) {
 			char rootPathName[MAX_PATH];
 			char *c = strchr(fullPathName, '\\');
 
@@ -395,7 +381,7 @@ int CopyIfNecessary(const char *oldFile, const char *newFile)
 		}
 
 		if (isNTFS) {
-		    printf("+++ makecopy: Symlinking %s into %s\n", oldFile, newFile);
+		    printf("    Symlinking %s into %s\n", oldFile, newFile);
 
 			if (! hardSymLink(oldFile, newFile) ) {
 				return 1;
@@ -417,7 +403,9 @@ int CopyIfNecessary(const char *oldFile, const char *newFile)
 
 void Usage(void)
 {
-    fprintf(stderr, "makecopy: [-i|-c] <file1> [file2] [filen] <dir-path>\n");
+    fprintf(stderr, "makecopy: [-is] <file1> [file2 ... fileN] <dir-path>\n");
+    fprintf(stderr, "     -i  --  add #line directive\n");
+    fprintf(stderr, "     -s  --  use symlinks on NT when possible\n");
 }
 
 
@@ -436,18 +424,25 @@ int main( int argc, char *argv[] )
         return 2;
     }
 
-	if (stricmp(argv[i], "-i") == 0) {
-		insertHashLine = TRUE;
-		i++;
-	}
+    // parse option flags
+    for ( ; *argv[i] == '-' ; ++i) {
+        char *opt = argv[i]+1;
+        for ( ; *opt; ++opt) {
+            if ( *opt == 'i' )
+                insertHashLine = TRUE;
+            else if ( *opt == 's' )
+                trySymlink = TRUE;
+            else {
+                Usage();
+                return 2;
+            }
+        }
+    }
 
-	// -c option forces copy instead of symlink
-	if (stricmp(argv[i], "-c") == 0) {
-		isWindowsNT = FALSE;
-		i++;
-	} else {
+    if ( trySymlink ) {
 		OSVERSIONINFO osvi;
 
+        // Symlinking supported only on WinNT, not Win9x
 		// Is this Windows NT?
 		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 
@@ -455,9 +450,9 @@ int main( int argc, char *argv[] )
 			return ReportError();
 		}
 
-		isWindowsNT = (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT);
+		trySymlink = (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT);
 
-		if (isWindowsNT) {
+		if ( trySymlink ) {
 
 			hDLL = LoadLibrary("Kernel32");
 			if (hDLL != NULL)
@@ -497,8 +492,6 @@ int main( int argc, char *argv[] )
         return 1;
     }
 
-	//i++;
-
 	// copy all named source files
 	while (i < (argc - 1)) {
 		strcpy(old_path, argv[i]);
@@ -527,7 +520,7 @@ int main( int argc, char *argv[] )
 		FindClose(hFindFile);
 		i++;
 	}
-	if (isWindowsNT) {
+	if ( trySymlink ) {
 		FreeLibrary(hDLL);
 	}
     return 0;
