@@ -373,7 +373,7 @@ static UnicodeRange unicodeRanges[] =
 #ifdef NS_DEBUG
     56, "Hangul",
 #endif
-    0x3400, 0x3D2D
+    0xAC00, 0xD7A3
   },
   {
 #ifdef NS_DEBUG
