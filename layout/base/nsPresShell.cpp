@@ -283,26 +283,26 @@ protected:
   void DisplayTotals(PRUint32 * aArray, PRUint32 * aDupArray, char * aTitle);
   void DisplayHTMLTotals(PRUint32 * aArray, PRUint32 * aDupArray, char * aTitle);
 
-  static PRIntn RemoveItems(PLHashEntry *he, PRIntn i, void *arg);
-  static PRIntn RemoveIndiItems(PLHashEntry *he, PRIntn i, void *arg);
+  PR_STATIC_CALLBACK(PRIntn) RemoveItems(PLHashEntry *he, PRIntn i, void *arg);
+  PR_STATIC_CALLBACK(PRIntn) RemoveIndiItems(PLHashEntry *he, PRIntn i, void *arg);
   void CleanUp();
 
   // stdout Output Methods
-  static PRIntn DoSingleTotal(PLHashEntry *he, PRIntn i, void *arg);
-  static PRIntn DoSingleIndi(PLHashEntry *he, PRIntn i, void *arg);
+  PR_STATIC_CALLBACK(PRIntn) DoSingleTotal(PLHashEntry *he, PRIntn i, void *arg);
+  PR_STATIC_CALLBACK(PRIntn) DoSingleIndi(PLHashEntry *he, PRIntn i, void *arg);
 
   void DoGrandTotals();
   void DoIndiTotalsTree();
 
   // HTML Output Methods
-  static PRIntn DoSingleHTMLTotal(PLHashEntry *he, PRIntn i, void *arg);
+  PR_STATIC_CALLBACK(PRIntn) DoSingleHTMLTotal(PLHashEntry *he, PRIntn i, void *arg);
   void DoGrandHTMLTotals();
 
   // Zero Out the Totals
-  static PRIntn DoClearTotals(PLHashEntry *he, PRIntn i, void *arg);
+  PR_STATIC_CALLBACK(PRIntn) DoClearTotals(PLHashEntry *he, PRIntn i, void *arg);
 
   // Displays the Diff Totals
-  static PRIntn DoDisplayDiffTotals(PLHashEntry *he, PRIntn i, void *arg);
+  PR_STATIC_CALLBACK(PRIntn) DoDisplayDiffTotals(PLHashEntry *he, PRIntn i, void *arg);
 
   PLHashTable * mCounts;
   PLHashTable * mIndiFrameCounts;
