@@ -50,7 +50,7 @@ include $(DEPTH)/config/autoconf.mk
 #
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-DIRS = pinstripe
+DIRS = winstripe
 else
 DIRS = winstripe
 endif
