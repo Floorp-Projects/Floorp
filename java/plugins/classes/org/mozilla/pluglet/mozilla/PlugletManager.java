@@ -21,37 +21,57 @@
 package org.mozilla.pluglet.mozilla;
 import org.mozilla.pluglet.*;
 import java.net.URL;
-public interface  PlugletManager {
+
+/**
+ * The <code>PlugletManager</code> interface includes functionality to get and post
+ * URLs and return <code>userAgent</code> for the browser. It also includes a function 
+ * for reloading all Pluglets in the Pluglets 
+ * directory, allowing Pluglets to be installed and run without restarting the browser. 
+ */
+public interface  PlugletManager {   
     /**
-     * Causes the pluglets directory to be searched again for new pluglet 
-     * libraries.
-     *
-     * @param reloadPages indicates whether currently visible pages should 
-     * also be reloaded
+     * This method reloads all Pluglets in the Pluglets directory. 
+     * The browser knows about all installed Pluglets (and Plugins) 
+     * at startup. But if the user adds or removes any Pluglets 
+     * (or Plugins), the browser does not see them until it is restarted. 
+     * This method lets the user install a new Pluglet and load it, 
+     * or remove one, without having to restart the browser.
+     * <p>
+     * @param reloadPages <code>Boolean</code> value indicates whether currently visible
+     * pages should also be reloaded.
      */
     public void reloadPluglets(boolean reloadPages);
-
     /**
-     * Returns the user agent string for the browser. 
-     *
+     * Returns the <code>userAgent String</code> for the browser.
+     * <code>userAgent</code> is a property of the <code>navigator</code>
+     * object and contains information about the browser. 
+     * <p>
+     * @return Returns a <code>String</code> for the <code>userAgent</code>
+     * for the browser.
      */
     public String userAgent();
     /**
-     * Fetches a URL.
-     * @param pluglet the pluglet making the request. 
-     *        If null, the URL is fetched in the background.
-     * @param url the URL to fetch
-     * @param target the target window into which to load the URL
-     * @param notifyData when present, URLNotify is called passing the 
-     *        notifyData back to the client.
-     * @param altHost an IP-address string that will be used instead of 
-     *        the host specified in the URL. This is used to
-     * @param prevent DNS-spoofing attacks. Can be defaulted to null 
-     *        meaning use the host in the URL.
-     * @param referrer the referring URL (may be null)
-     * @param forceJSEnabled forces JavaScript to be enabled for 
-     *        'javascript:' URLs, even if the user currently has JavaScript 
-     *        disabled (usually specify false)
+     * Fetches a URL.   
+     * <p>
+     * @param pluglet This is the <code>Pluglet</code> instance making the request. 
+     * If <code>null</code>, the URL is fetched in the background.
+     * <p>
+     * @param url This is the URL to fetch.
+     * <p>
+     * @param target This is the target window into which to load the URL.
+     * <p>
+     * @param streamListener This is an instance of <code>PlugletStreamListener</code>.
+     * <p>
+     * @param altHost This is an IP-address string that will be used instead of 
+     * the host specified in the URL. This is used to prevent DNS-spoofing
+     * attacks. It can be defaulted to <code>null</code>, which will mean: use the host
+     * in the URL.
+     * <p>
+     * @param referrer This is the referring URL. (It may be <code>null</code>).
+     * <p>
+     * @param forceJSEnabled This will force JavaScript to be enabled for 
+     * <code>javascript:</code> URLs, even if the user currently has JavaScript 
+     * disabled. (Usually this should be set <code>false</code>.)
      */
     public void getURL(Pluglet pluglet,
                        URL url, String target,
@@ -59,31 +79,31 @@ public interface  PlugletManager {
                        String altHost, URL referrer,
                        boolean forceJSEnabled);
     /**
-     * Posts to a URL with post data and/or post headers.
-     *
-     * @param pluglet the pluglet making the request. If null, the URL
-     *   is fetched in the background.
-     * @param url the URL to fetch
-     * @param target the target window into which to load the URL
-     * @param postDataLength the length of postData (if non-null)
-     * @param postData the data to POST. null specifies that there is not post
-     *   data
-     * @param isFile whether the postData specifies the name of a file to 
-     *   post instead of data. The file will be deleted afterwards.
-     * @param notifyData when present, URLNotify is called passing the 
-     *   notifyData back to the client.
-     * @param altHost n IP-address string that will be used instead of the 
-     *   host specified in the URL. This is used to prevent DNS-spoofing 
-     *   attacks. Can be defaulted to null meaning use the host in the URL.
-     * @param referrer the referring URL (may be null)
-     * @param forceJSEnabled forces JavaScript to be enabled for 'javascript:'
-     *   URLs, even if the user currently has JavaScript disabled (usually 
-     *   specify false) 
-     * @param postHeadersLength the length of postHeaders (if non-null)
-     * @param postHeaders the headers to POST. null specifies that there 
-     *   are no post headers
+     * Posts to a URL with post data and/or post headers.<p>
+     * @param pluglet This is the <code>Pluglet</code> instance making the request. 
+     * If <code>null</code>, the URL is fetched in the background.<p>
+     * @param url This is the URL to fetch.<p>
+     * @param postDataLen This is the length of <code>postData</code>
+     * (if not <code>null</code>).<p>
+     * @param postData This is the data to post. <code>null</code> specifies that there 
+     * is no post data.<p>
+     * @param isFile This indicates whether <code>postData</code> specifies the name 
+     * of a file to post rather than data. The file will be deleted afterwards.<p>
+     * @param target This is the target window into which to load the URL.<p>
+     * @param streamListener This is an instance of <code>PlugletStreamListner</code>.<p>
+     * @param altHost This is an IP-address string that will be used instead 
+     * of the host specified in the URL. This is used to prevent DNS-spoofing 
+     * attacks. It can be defaulted to <code>null</code>, which will mean: use the host 
+     * in the URL.<p>
+     * @param referrer This is the referring URL. (It may be <code>null</code>.)<p>
+     * @param forceJSEnabled This will force JavaScript to be enabled for <code>javascript:</code>
+     * URLs, even if the user currently has JavaScript disabled (usually 
+     * specify false).<p> 
+     * @param postHeadersLength This is the length of <code>postHeaders</code> 
+     * (if not <code>null</code>).<p>
+     * @param postHeaders These are the headers to POST. <code>null</code> specifies that there 
+     * are no post headers.
      */
-
     public void postURL(Pluglet pluglet,
             URL url,
             int postDataLen, 

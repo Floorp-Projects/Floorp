@@ -20,20 +20,42 @@
  */
 package org.mozilla.pluglet.mozilla;
 
+/**
+ * This interface returns various information about the stream such as the
+ * MIME type and whether the stream is seekable. 
+ */
 public interface PlugletStreamInfo {
     /**
-     * Returns the MIME type.
+     * Returns the MIME type for a particular stream.<p>
+     * @return As stated above, returns the MIME type.
      */
     public String getContentType();
+    /**
+     * Indicates if a stream is seekable; that is, if it is possible
+     * to move to a particular point in the stream.<p>
+     * @return Returns true if the stream is seekable.
+     */
     public boolean isSeekable();
     /**
-     * Returns the number of bytes that can be read from this input stream
+     * Returns the length of a stream in bytes.
      */
     public int getLength();
+    /**
+     * Returns the time the data in the URL was last modified,
+     * measured in seconds since 12:00 midnight, GMT, January 1, 1970.
+     * <p>
+     * @return Returns an integer value for the time since last
+     * modification, as described above.
+     */
     public int getLastModified();
+    /** 
+     * Specifies the URL that was used to originally request the stream.
+     * <p>
+     * @return Returns a String for the URL as described above.
+     */ 
     public String getURL();
     /**
-     * Request reading from input stream
+     * Requests reading from the input stream.
      */
     public void requestRead(ByteRanges ranges );
 }

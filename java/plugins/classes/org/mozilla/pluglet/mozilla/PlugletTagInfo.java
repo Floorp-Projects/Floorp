@@ -21,7 +21,22 @@
 package org.mozilla.pluglet.mozilla;
 import java.util.*;
 
+/**
+ * This interface provides information about the HTML tag on the page.
+ */
 public interface PlugletTagInfo {
+    /**
+     * Returns all the name-value pairs found in the tag attributes.
+     * <p>
+     * @return Returns the attributes of an HTML tag as type 
+     * <code>java.util.Properties</code>.
+     */
     public Properties getAttributes();
+    /**
+     * Returns a value for a particular attribute. Returns <code>NULL</code> 
+     * if the attribute does not exist.<p>
+     * @param name This is the name of the attribute.<p>
+     * @return Returns the value of the named attribute as a <code>String</code>.
+     */
     public String getAttribute(String name);
 } 

@@ -22,21 +22,44 @@ package org.mozilla.pluglet;
 
 import org.mozilla.pluglet.mozilla.*;
 
+    /**
+     * This interface includes the functions to create an instance of <code>Pluglet</code>,   
+     * and initialize the <code>PlugletFactory</code> instance and shut it down when 
+     * no longer required.
+     */
+
 public interface PlugletFactory {
     /**
-     * Creates a new pluglet instance, based on a MIME type. This
-     * allows different impelementations to be created depending on
-     * the specified MIME type.
+     * Creates a new <code>Pluglet</code> instance based on a MIME type. This
+     * allows different implementations to be created depending on
+     * the specified MIME type.<p>
+     * While normally there will be only one <code>PlugletFactory</code> 
+     * implementation and one instance of it, 
+     * there can be multiple implementations of <code>Pluglet</code> and instances of them. 
+     * Given a MIME type, it is the responsibility of 
+     * the <code>createPluglet</code> method to create an instance 
+     * of the  implementation of <code>Pluglet</code> 
+     * for that MIME type. (Note: A single implementation of the <code>Pluglet</code> 
+     * interface could handle more than one MIME type; there may also be 
+     * separate implementations of the <code>Pluglet</code> interface for MIME types. 
+     * This is up to the developer implementing the <code>Pluglet</code> interface.)
+     * <p> 
+     * @param <code>mimeType</code> This is the MIME type for which a new <code>Pluglet</code>
+     * instance is to be created.
+     * @return Returns a new <code>Pluglet</code> instance based on the specified
+     * MIME type passed to the method.
      */
     public Pluglet createPluglet(String mimeType);
     /**
-     * Initializes the pluglet and will be called before any new instances are
-     * created.
+     * Initializes the <code>PlugletFactory</code> instance and is called before any new 
+     * <code>Pluglet</code> instances are created.<p>
+     * @param manager This is an instance of <code>PlugletManager</code> that is passed
+     * to this method.
      */
     public void initialize(PlugletManager manager);
     /**
-     * Called when the browser is done with the pluglet factory, or when
-     * the pluglet is disabled by the user.
+     * Called when the browser is done with a <code>PlugletFactory</code> instance. Normally
+     * there is only one <code>PlugletFactory</code> instance. 
      */
     public void shutdown();
 }
