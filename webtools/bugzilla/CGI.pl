@@ -208,8 +208,15 @@ sub CheckFormField (\%$;\@) {
          (defined($legalsRef) && 
           lsearch($legalsRef, $formRef->{$fieldname})<0) ){
 
-        print "A legal $fieldname was not set; ";
-        print Param("browserbugmessage");
+        SendSQL("SELECT description FROM fielddefs WHERE name=" . SqlQuote($fieldname));
+        my $result = FetchOneColumn();
+        if ($result) {
+            PuntTryAgain("A legal $result was not set.");
+        }
+        else {
+            PuntTryAgain("A legal $fieldname was not set.");
+            print Param("browserbugmessage");
+        }
         PutFooter();
         exit 0;
       }
