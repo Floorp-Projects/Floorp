@@ -25,6 +25,7 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 EXPORTS =                           \
         nsMultiMixedConv.h                   \
+        nsFTPDirListingConv.h           \
         $(NULL)
 
 LLIBS= $(LLIBS) \
@@ -36,6 +37,8 @@ LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
 CPP_OBJS =                                         \
         .\$(OBJDIR)\nsMultiMixedConv.obj          \
+        .\$(OBJDIR)\nsFTPDirListingConv.obj       \
+        .\$(OBJDIR)\nsConvFactories.obj           \
         $(NULL)
 
 LOCAL_INCLUDES=-I.

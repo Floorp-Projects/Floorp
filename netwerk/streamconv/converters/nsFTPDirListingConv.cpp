@@ -19,12 +19,14 @@
 #include "nsFTPDirListingConv.h"
 #include "nsIAllocator.h"
 #include "plstr.h"
+#include "prlog.h"
 #include "nsIStringStream.h"
 #include "nsIHTTPChannel.h"
 #include "nsIAtom.h"
 #include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"
 #include "nsCOMPtr.h"
+#include "nsEscape.h"
 #include "nsIIOService.h"
 #include "nsIStringStream.h"
 #include "nsILocaleService.h"
@@ -34,6 +36,24 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 static NS_DEFINE_CID(kDateTimeCID, NS_DATETIMEFORMAT_CID);
+
+
+#if defined(PR_LOGGING)
+//
+// Log module for FTP dir listing stream converter logging...
+//
+// To enable logging (see prlog.h for full details):
+//
+//    set NSPR_LOG_MODULES=nsFTPDirListConv:5
+//    set NSPR_LOG_FILE=nspr.log
+//
+// this enables PR_LOG_DEBUG level information and places all output in
+// the file nspr.log
+//
+PRLogModuleInfo* gFTPDirListConvLog = nsnull;
+
+#endif /* PR_LOGGING */
+
 
 PRBool is_charAlpha(char chr) {
     if ( ( ((chr >= 'a') && (chr <= 'z')) || ((chr >= 'A') && (chr <= 'Z')) ) ) 
@@ -121,6 +141,9 @@ nsFTPDirListingConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnicha
     NS_RELEASE(uri);
     if (NS_FAILED(rv)) return rv;
 
+    PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, 
+        ("nsFTPDirListingConv::AsyncConvertData() converting FROM raw %s, TO application/http-index-format\n", fromMIMEString.GetBuffer()));
+
     return NS_OK;
 }
 
@@ -133,8 +156,9 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
     nsresult rv;
     PRUint32 read, streamLen;
     nsCString indexFormat;
+    indexFormat.SetCapacity(72); // quick guess 
 
-    rv = inStr->GetLength(&streamLen);
+    rv = inStr->Available(&streamLen);
     if (NS_FAILED(rv)) return rv;
 
     char *buffer = (char*)nsAllocator::Alloc(streamLen + 1);
@@ -144,6 +168,8 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
     // the dir listings are ascii text, null terminate this sucker.
     buffer[streamLen] = '\0';
 
+    PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("nsFTPDirListingConv::OnData(channel = %x, ctxt = %x, inStr = %x, sourceOffset = %d, count = %d)\n", channel, ctxt, inStr, sourceOffset, count));
+
     if (!mBuffer.IsEmpty()) {
         // we have data left over from a previous OnDataAvailable() call.
         // combine the buffers so we don't lose any data.
@@ -152,6 +178,8 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
         buffer = mBuffer.ToNewCString();
         mBuffer.Truncate();
     }
+
+    PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer) );
 
     if (!mSentHeading) {
         // build up the 300: line
@@ -171,7 +199,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
         // END 300:
 
         // build up the column heading; 200:
-        indexFormat.Append("200: Filename\tContent-Length\tContent-Type\tFile-type\tLast-Modified\n");
+        indexFormat.Append("200: filename content-length last-modified file-type\n");
         // END 200:
 
         mSentHeading = PR_TRUE;
@@ -179,10 +207,19 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
 
     char *line = buffer;
     char *eol;
+    PRBool cr = PR_FALSE;
 
     // while we have new lines, parse 'em into application/http-index-format.
     while ( line && (eol = PL_strchr(line, '\n')) ) {
-        *eol = '\0';
+        // yank any carriage returns too.
+        if (eol > line && *(eol-1) == '\r') {
+            eol--;
+            *eol = '\0';
+            cr = PR_TRUE;
+        } else {
+            *eol = '\0';
+            cr = PR_FALSE;
+        }
         indexEntry *thisEntry = nsnull;
         NS_NEWXPCOM(thisEntry, indexEntry);
         if (!thisEntry) return NS_ERROR_OUT_OF_MEMORY;
@@ -200,7 +237,10 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
 					|| (PL_strstr(line, "Permission denied") != NULL)
                     || 	(PL_strstr(line, "not available") != NULL)) {
                 NS_DELETEXPCOM(thisEntry);
-                line = eol+1;
+                if (cr)
+                    line = eol+2;
+                else
+                    line = eol+1;
                 continue;
             }
 
@@ -232,7 +272,10 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
             rv = ParseLSLine(line, thisEntry);
             if ( NS_FAILED(rv) || (thisEntry->mName == "..") || (thisEntry->mName == ".") ) {
                 NS_DELETEXPCOM(thisEntry);
-                line = eol+1;
+                if (cr)
+                    line = eol+2;
+                else
+                    line = eol+1;
                 continue;
             }
 
@@ -265,7 +308,10 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
             rv = ParseVMSLine(line, thisEntry);
             if (NS_FAILED(rv)) {
                 NS_DELETEXPCOM(thisEntry);
-                line = eol+1;
+                if (cr)
+                    line = eol+2;
+                else
+                    line = eol+1;
                 continue;
             }
 
@@ -324,17 +370,35 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
         indexFormat.Append("201: ");
         // FILENAME
         indexFormat.Append(thisEntry->mName);
-        indexFormat.Append('\t');
+        indexFormat.Append(' ');
 
         // CONTENT LENGTH
-        indexFormat.Append(thisEntry->mContentLen);
-        indexFormat.Append('\t');
+        if (!thisEntry->mSupressSize) {
+            indexFormat.Append(thisEntry->mContentLen);
+        } else {
+            indexFormat.Append('0');
+        }
+        indexFormat.Append(' ');
+
 
         // CONTENT TYPE (not very useful for ftp listings)
         // XXX this field is currently meaningless for FTP
         //indexFormat.Append(thisEntry->mContentType);
-        indexFormat.Append("n/a");
-        indexFormat.Append('\t');
+        //indexFormat.Append('\t');
+
+
+        // MODIFIED DATE
+        nsString lDate;
+        nsStr::Initialize(lDate, eOneByte);
+        rv = mDateTimeFormat->FormatPRTime(mLocale, kDateFormatShort, kTimeFormatNoSeconds, thisEntry->mMDTM, lDate);
+        if (NS_FAILED(rv)) return rv;
+
+        char *escapedDate = nsEscape(lDate.GetBuffer(), url_Path);
+
+        indexFormat.Append(escapedDate);
+        nsAllocator::Free(escapedDate);
+        indexFormat.Append(' ');
+
 
         // ENTRY TYPE
         switch (thisEntry->mType) {
@@ -347,27 +411,28 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
         default:
             indexFormat.Append("File");
         }
-        indexFormat.Append('\t');
-
-        // MODIFIED DATE
-        nsString lDate;
-        rv = mDateTimeFormat->FormatPRTime(mLocale, kDateFormatShort, kTimeFormatNoSeconds, thisEntry->mMDTM, lDate);
-        if (NS_FAILED(rv)) return rv;
-        indexFormat.Append(lDate);
-
+        indexFormat.Append(' ');
 
         indexFormat.Append('\n'); // complete this line
         // END 201:
 
         NS_DELETEXPCOM(thisEntry);
-        line = eol+1;
+
+        if (cr)
+            line = eol+2;
+        else
+            line = eol+1;
     } // end while(eol)
 
-    
+    PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() sending the following %x bytes...\n\n%s\n\n", 
+        indexFormat.Length(), indexFormat.GetBuffer()) );
+  
 
     // if there's any data left over, buffer it.
     if (line && *line) {
         mBuffer.Append(line);
+        PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() buffering the following %x bytes...\n\n%s\n\n",
+            PL_strlen(line), line) );
     }
 
     nsAllocator::Free(buffer);
@@ -441,6 +506,16 @@ nsFTPDirListingConv::Init() {
     rv = comMgr->CreateInstance(kDateTimeCID, nsnull, NS_GET_IID(nsIDateTimeFormat), (void**)&mDateTimeFormat);
     if (NS_FAILED(rv)) return rv;
 
+#if defined(PR_LOGGING)
+    //
+    // Initialize the global PRLogModule for FTP Protocol logging 
+    // if necessary...
+    //
+    if (nsnull == gFTPDirListConvLog) {
+        gFTPDirListConvLog = PR_NewLogModule("nsFTPDirListingConv");
+    }
+#endif /* PR_LOGGING */
+
     return NS_OK;
 }
 
@@ -452,46 +527,50 @@ nsFTPDirListingConv::MonthNumber(const char *month) {
         return -1;
 
     char c1 = month[1], c2 = month[2];
+    PRInt8 rv = -1;
+
+    PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("nsFTPDirListingConv::MonthNumber(month = %s) ", month) );
 
     switch (*month) {
     case 'f': case 'F':
-        return 1;
+        rv = 1; break;
     case 'm': case 'M':
         if (c1 == 'a' || c1 == 'A') 
-            if (c2 == 'r' || c2 == 'R') 
-                return 2;
+            if (c2 == 'r' || c2 == 'R')
+                rv = 2;
             else if (c2 == 'y' || c2 == 'Y')
-                return 4;
+                rv = 4;
         break;
     case 'a': case 'A':
         if (c1 == 'p' || c1 == 'P')
-            return 3;
+            rv = 3;
         else if (c1 == 'u' || c1 == 'U')
-            return 7;
+            rv = 7;
         break;
-
     case 'j': case 'J':
         if (c1 == 'u' || c1 == 'U')
             if (c2 == 'n' || c2 == 'N')
-                return 5;
+                rv = 5;
             else if (c2 == 'l' || c2 == 'L')
-                return 6;
+                rv = 6;
         else if (c1 == 'a' || c1 == 'A')
-            return 0;
+            rv = 0;
         break;
     case 's': case 'S':
-        return 8;
+        rv = 8; break;
     case 'o': case 'O':
-        return 9;
+        rv = 9; break;
     case 'n': case 'N':
-        return 10;
+        rv = 10; break;
     case 'd': case 'D':
-        return 11;
+        rv = 11; break;
     default:
-        return -1;
+        rv = -1;
     }
 
-    return -1;
+    PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("returning %d\n", rv) );
+
+    return rv;
 }
 
 
@@ -561,7 +640,7 @@ nsFTPDirListingConv::IsLSDate(char *aCStr) {
 }
 
        
-// Converts a date string from 'ls -l' to a time_t number
+// Converts a date string from 'ls -l' to a PRTime number
 // "Sep  1  1990 " or
 // "Sep 11 11:59 " or
 // "Dec 12 1989  " or
@@ -580,12 +659,10 @@ nsFTPDirListingConv::ConvertUNIXDate(char *aCStr) {
     // MONTH
     char tmpChar = bcol[3];
     bcol[3] = '\0';
-    nsCAutoString lMonth(bcol);
-    bcol[3] = tmpChar;
-    lMonth.ToUpperCase();
 
-    if ((curTime.tm_month = MonthNumber(lMonth.GetBuffer())) < 0)
+    if ((curTime.tm_month = MonthNumber(bcol)) < 0)
     	return (PRTime) 0;
+    bcol[3] = tmpChar;
 
     // DAY
     ecol = &bcol[3];                        
@@ -596,24 +673,17 @@ nsFTPDirListingConv::ConvertUNIXDate(char *aCStr) {
     PRInt32 error;
     nsCAutoString day(bcol);
     curTime.tm_mday = day.ToInteger(&error, 10);
-    //time_info->tm_mday = atoi(bcol);
     curTime.tm_wday     = 0;
-    //time_info->tm_wday = 0;
     curTime.tm_yday = 0;
-    //time_info->tm_yday = 0;
 
     // YEAR
     bcol = ++ecol;
     if ((ecol = PL_strchr(bcol, ':')) == NULL) {
         nsCAutoString intStr(bcol);
         curTime.tm_year = intStr.ToInteger(&error, 10);
-    	//time_info->tm_year = atoi(bcol)-1900;
     	curTime.tm_sec  = 0;
-        //time_info->tm_sec = 0;
     	curTime.tm_min  = 0;
-        //time_info->tm_min = 0;
         curTime.tm_hour = 0;
-    	//time_info->tm_hour = 0;
     } else { 
         // TIME
     	/* If the time is given as hh:mm, then the file is less than 1 year
@@ -622,20 +692,16 @@ nsFTPDirListingConv::ConvertUNIXDate(char *aCStr) {
 		 */
     	*ecol = '\0';
         curTime.tm_sec = 0;
-    	//time_info->tm_sec = 0;
         nsCAutoString intStr(++ecol);
-        curTime.tm_min = intStr.ToInteger(&error, 10);
-        //time_info->tm_min = atoi(++ecol);           /* Right side of ':' */
+        curTime.tm_min = intStr.ToInteger(&error, 10);   // Right side of ':' 
 
         intStr = bcol;
-        curTime.tm_hour = intStr.ToInteger(&error, 10);
-    	//time_info->tm_hour = atoi(bcol);         /* Left side of ':' */
+        curTime.tm_hour = intStr.ToInteger(&error, 10);  // Left side of ':' 
     	//if (mktime(time_info) > curtime)
         //	--time_info->tm_year;
       }
 
     return PR_ImplodeTime(&curTime); // compacts the curTime struct into a PRTime (64 bit int)
-    //return ((tval = mktime(time_info)) == -1 ? (time_t) 0 : tval);
 }
 
 PRTime
@@ -654,14 +720,13 @@ nsFTPDirListingConv::ConvertVMSDate(char *aCStr) {
     nsCAutoString intStr(col);
     PRInt32 error;
     curTime.tm_mday = intStr.ToInteger(&error, 10);
-    //time_info->tm_mday = atoi(col);                   
+
+    // XXX the following two sets may be skewing the Imploded time
+    // XXX we're not supposed to set wday and yday (see prtime.h)
     curTime.tm_wday = 0;
-    //time_info->tm_wday = 0;
     curTime.tm_yday = 0;
-    //time_info->tm_yday = 0;
 
     if ((col = strtok(nsnull, "-")) == nsnull || (curTime.tm_month = MonthNumber(col)) < 0)
-    //if ((col = strtok(NULL, "-")) == NULL || (time_info->tm_mon = MonthNumber(col)) < 0)
     	return (PRTime) 0;
 
     // YEAR
@@ -671,7 +736,6 @@ nsFTPDirListingConv::ConvertVMSDate(char *aCStr) {
 
     intStr = col;
     curTime.tm_year = intStr.ToInteger(&error, 10);
-    //time_info->tm_year = atoi(col)-1900;
 
     // HOUR
     if ((col = strtok(NULL, ":")) == NULL)               
@@ -679,7 +743,6 @@ nsFTPDirListingConv::ConvertVMSDate(char *aCStr) {
     
     intStr = col;
     curTime.tm_hour = intStr.ToInteger(&error, 10);
-    //time_info->tm_hour = atoi(col);
 
     // MINS
     if ((col = strtok(NULL, " ")) == NULL)
@@ -687,12 +750,9 @@ nsFTPDirListingConv::ConvertVMSDate(char *aCStr) {
 
     intStr = col;
     curTime.tm_min = intStr.ToInteger(&error, 10);
-    //time_info->tm_min = atoi(col);
     curTime.tm_sec = 0;
-    //time_info->tm_sec = 0;
 
     return PR_ImplodeTime(&curTime);
-    //return ((tval = mktime(time_info)) < 0 ? (time_t) 0 : tval);
 }
 
 PRTime
@@ -775,21 +835,19 @@ nsFTPDirListingConv::ParseVMSLine(char *aLine, indexEntry *aEntry) {
         static char ThisYear[5];
         static PRBool HaveYear = PR_FALSE; 
 
-        /**  Get rid of blank lines, and information lines.  **/
-        /**  Valid lines have the ';' version number token.  **/
+        //  Get rid of blank lines, and information lines.
+        //  Valid lines have the ';' version number token.
         if (!PL_strlen(aLine) || (cp=PL_strchr(aLine, ';')) == NULL) 
 		  {
            // entry_info->display = FALSE;
             return NS_ERROR_FAILURE;
           }
 
-        /** Cut out file or directory name at VMS version number. **/
+        // Cut out file or directory name at VMS version number. 
     	*cp++ ='\0';
-		/* escape and copy
-	 	 */
         aEntry->mName = aLine;
 
-        /** Cast VMS file and directory names to lowercase. **/
+        // Cast VMS file and directory names to lowercase. 
         aEntry->mName.ToLowerCase();
 
         /** Uppercase terminal .z's or _z's. **/
@@ -828,8 +886,7 @@ nsFTPDirListingConv::ParseVMSLine(char *aLine, indexEntry *aEntry) {
         	HaveYear = PR_TRUE;
     	  }
 
-        /* get the date. 
-		 */
+        // get the date. 
         if ((cpd=PL_strchr(cp, '-')) != NULL &&
                 PL_strlen(cpd) > 9 && IS_DIGITx(*(cpd-1)) &&
                 is_charAlpha(*(cpd+1)) && *(cpd+4) == '-') 

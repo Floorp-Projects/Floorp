@@ -29,6 +29,9 @@
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
+// other converters for the converter export factory fuctions
+#include "nsFTPDirListingConv.h"
+
 
 // nsISupports implementation
 NS_IMPL_ISUPPORTS2(nsMultiMixedConv, nsIStreamConverter, nsIStreamListener);
@@ -423,70 +426,6 @@ nsresult
 MultiMixedFactory::LockFactory(PRBool aLock){
     return NS_OK;
 }
-
-// return the proper factory to the caller
-extern "C" PR_IMPLEMENT(nsresult)
-NSGetFactory(nsISupports* aServMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory) {
-    nsresult rv;
-    if (aFactory == nsnull)
-        return NS_ERROR_NULL_POINTER;
-
-    nsIGenericFactory* fact;
-    if (aClass.Equals(kMultiMixedConverterCID)) {
-        rv = NS_NewGenericFactory(&fact, nsMultiMixedConv::Create);
-    }
-    else {
-        rv = NS_ERROR_FAILURE;
-    }
-
-    if (NS_SUCCEEDED(rv))
-        *aFactory = fact;
-    return rv;
-}
-
-
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSRegisterSelf(nsISupports* aServMgr , const char* aPath) {
-    nsresult rv;
-
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = compMgr->RegisterComponent(kMultiMixedConverterCID,
-                                    "MultiMixedConverter",
-                                    "component:||netscape|streamConverters|multimixedconverter",
-                                    aPath, PR_TRUE, PR_TRUE);
-
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
-}
-
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSUnregisterSelf(nsISupports* aServMgr, const char* aPath) {
-    nsresult rv;
-
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    NS_WITH_SERVICE(nsIComponentManager, compMgr, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = compMgr->UnregisterComponent(kMultiMixedConverterCID, aPath);
-    if (NS_FAILED(rv)) return rv;
-
-    return NS_OK;
-}
-
 
 ////////////////////////////////////////////////////////////////////////
 // Factory END
