@@ -717,7 +717,7 @@ nsHTMLSelectElement::GetValue(nsString& aValue)
             }
             return NS_OK;
           }
-
+#if 0 // temporary for bug 4050
           // first check to see if label is there and has a value
           rv = option->GetHTMLAttribute(nsHTMLAtoms::label, value);
           if (NS_CONTENT_ATTR_HAS_VALUE == rv) {
@@ -728,7 +728,7 @@ nsHTMLSelectElement::GetValue(nsString& aValue)
             }
             return NS_OK;
           } 
-
+#endif
           nsCOMPtr<nsIDOMHTMLOptionElement> optElement = do_QueryInterface(node);
           if (optElement) {
             optElement->GetText(aValue);
