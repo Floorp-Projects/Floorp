@@ -60,7 +60,7 @@ is(lsearch(\@list,'<"\\%'),3,'lsearch 2');
 is(lsearch(\@list,'kiwi'),-1,'lsearch 3 (missing item)');
 
 #max() and min():
-my @list = (7,27,636,2);
+@list = (7,27,636,2);
 is(max(@list),636,'max()');
 is(min(@list),2,'min()');
 
