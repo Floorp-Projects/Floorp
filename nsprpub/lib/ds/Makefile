@@ -34,7 +34,6 @@ CSRCS = \
 	plarena.c \
 	plevent.c \
 	plhash.c \
-	plvector.c \
 	$(NULL)
 
 HEADERS = \
@@ -42,7 +41,6 @@ HEADERS = \
 	plarena.h \
 	plevent.h \
 	plhash.h \
-	plvector.h \
 	$(NULL)
 
 ifeq ($(OS_ARCH), WINNT)
