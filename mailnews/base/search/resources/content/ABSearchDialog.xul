@@ -64,6 +64,8 @@ Rights Reserved.
   <script src="chrome://messenger/content/addressbook/abCommon.js"/>
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
+  <broadcaster id="Communicator:WorkMode"/>
+
   <dummy class="usesMailWidgets"/>
     
     <vbox flex="1">
