@@ -253,7 +253,9 @@ foreach $checkin (@list) {
           my ($file, $version) = split(/\|/, $fullinfo);
           $versioninfo .= "$$info{person}|$$info{dir}|$file|$version,";
      }
-     print "<TD WIDTH=100%>$$info{'log'}</td>\n";
+     my $comment = $$info{'log'};
+     $comment =~ s/\n/<br>/g;
+     print "<TD WIDTH=100%>$comment</td>\n";
      print "</tr>\n\n";
 }
 print "</table>\n";
