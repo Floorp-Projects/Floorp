@@ -49,14 +49,14 @@
 
 #include "nsIAtom.h"  //hack!  Need a way to define a component as threadsafe (ie. sta).
 
-//#define NESTED_Q
-
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
         
 static void* PR_CALLBACK EventHandler(PLEvent *self);
 static void  PR_CALLBACK DestroyHandler(PLEvent *self);
 static void* PR_CALLBACK CompletedEventHandler(PLEvent *self);
 static void PR_CALLBACK CompletedDestroyHandler(PLEvent *self) ;
+static void* PR_CALLBACK ProxyDestructorEventHandler(PLEvent *self);
+static void PR_CALLBACK ProxyDestructorDestroyHandler(PLEvent *self) ;
 
 nsProxyObjectCallInfo::nsProxyObjectCallInfo( nsProxyObject* owner,
                                               nsXPTMethodInfo *methodInfo,
@@ -215,8 +215,7 @@ nsProxyObjectCallInfo::SetCallersQueue(nsIEventQueue* queue)
 
 
 NS_IMPL_THREADSAFE_ADDREF(nsProxyObject)
-NS_IMPL_THREADSAFE_RELEASE(nsProxyObject)
-NS_IMPL_QUERY_INTERFACE0(nsProxyObject)
+NS_IMPL_THREADSAFE_QUERY_INTERFACE0(nsProxyObject)
 
 nsProxyObject::nsProxyObject()
 {
@@ -258,6 +257,55 @@ nsProxyObject::~nsProxyObject()
     mDestQueue  = 0;
 }
 
+
+
+NS_IMETHODIMP_(nsrefcnt)
+nsProxyObject::Release(void)
+{
+  NS_PRECONDITION(0 != mRefCnt, "dup release");             
+
+  nsrefcnt count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);
+
+  if (count == 0)
+  {
+       NS_LOG_RELEASE(this, mRefCnt, "nsProxyObject");
+       mRefCnt = 1; /* stabilize */
+
+        PRBool callDirectly;
+        mDestQueue->IsQueueOnCurrentThread(&callDirectly);
+
+        if (callDirectly)
+        {
+            NS_DELETEXPCOM(this); 
+            return 0;
+        }
+
+      // need to do something special here so that
+      // the real object will always be deleted on
+      // the correct thread..
+      
+        PLEvent *event = PR_NEW(PLEvent);
+        if (event == nsnull)
+        {
+            NS_ASSERTION(0, "Could not create a plevent. Leaking nsProxyObject!");
+             return 0;  // if this happens we are going to leak.
+        }
+       
+        PL_InitEvent(event, 
+                     this,
+                     ProxyDestructorEventHandler,
+                     ProxyDestructorDestroyHandler);  
+
+        // fire it off.
+        mDestQueue->PostSynchronousEvent(event, nsnull);
+        
+        delete event;
+        return 0;
+  }                          
+  return mRefCnt;
+}                
+
+
 // GetRealObject
 //  This function must return the real pointer to the object to be proxied.
 //  It must not be a comptr or be addreffed.
@@ -286,23 +334,16 @@ nsProxyObject::PostAndWait(nsProxyObjectCallInfo *proxyInfo)
     rv = mEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
     if (NS_FAILED(rv))
     {
-        rv = mEventQService->CreateThreadEventQueue();
+        rv = mEventQService->CreateMonitoredThreadEventQueue();
         eventLoopCreated = PR_TRUE;
         if (NS_FAILED(rv))
             return rv;
         
         rv = mEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
     }
-#ifdef NESTED_Q
-    else
-    {
-        rv = mEventQService->PushThreadEventQueue(getter_AddRefs(eventQ));
-    }
-#endif
 
     if (NS_FAILED(rv))
         return rv;
-//---------------------
     
     proxyInfo->SetCallersQueue(eventQ);
 
@@ -326,16 +367,6 @@ nsProxyObject::PostAndWait(nsProxyObjectCallInfo *proxyInfo)
          mEventQService->DestroyThreadEventQueue();
          eventQ = 0;
     }
-#ifdef NESTED_Q
-    else
-    {
-        nsIEventQueue *dumbAddref = eventQ;
-        NS_ADDREF(dumbAddref);  // PopThreadEventQueue released the nsCOMPtr, 
-                            // then we crash while leaving this functions.
-        mEventQService->PopThreadEventQueue(dumbAddref);  // this is totally evil
-    }
-#endif
-
     
     return rv;
 }
@@ -372,22 +403,12 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
     if (methodInfo->IsNotXPCOM())
         return NS_ERROR_PROXY_INVALID_IN_PARAMETER;
     
+        
     PLEvent *event = PR_NEW(PLEvent);
     
     if (event == nsnull) 
         return NS_ERROR_OUT_OF_MEMORY;   
-        
-#ifdef AUTOPROXIFICATION  
-    // this should move into the nsProxyObjectCallInfo.
-    rv = AutoProxyParameterList(methodIndex, methodInfo, params, interfaceInfo, convertInParameters);
-    
-    if (NS_FAILED(rv))
-    {
-        delete event;
-        return rv;
-    }
-#endif
-    
+
     nsXPTCVariant *fullParam;
     uint8 paramCount; 
     rv = convertMiniVariantToVariant(methodInfo, params, &fullParam, &paramCount);
@@ -439,10 +460,6 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
         
         rv = proxyInfo->GetResult();
         delete proxyInfo;
-
-#ifdef AUTOPROXIFICATION
-        rv = AutoProxyParameterList(methodIndex, methodInfo, params, interfaceInfo, convertOutParameters);
-#endif
         return rv;
     }
     
@@ -463,7 +480,7 @@ static void DestroyHandler(PLEvent *self)
     
     if (proxyObject == nsnull)
         return;
-
+ 
     if (proxyObject->GetProxyType() & PROXY_ASYNC)
     {        
         delete owner;
@@ -509,225 +526,14 @@ static void* CompletedEventHandler(PLEvent *self)
     return nsnull;
 }
 
-#ifdef AUTOPROXIFICATION
-/* ssc@netscape.com wishes he could get rid of this instance of
- * |NS_DEFINE_IID|, but |ProxyEventClassIdentity| is not visible from
- * here.
- */
-static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
-
-nsresult
-AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, 
-                                      nsIInterfaceInfo *interfaceInfo, AutoProxyConvertTypes convertType)
-{
-    nsresult rv = NS_OK;
-
-    uint8 paramCount = methodInfo->GetParamCount();
-
-    for (PRUint32 i = 0; i < paramCount; i++)
-    {
-        nsXPTParamInfo paramInfo = methodInfo->GetParam(i);
-
-        if (! paramInfo.GetType().IsInterfacePointer() )
-            continue;
-
-        if ( (convertType == convertOutParameters && paramInfo.IsOut())  || 
-             (convertType == convertInParameters && paramInfo.IsIn())    )
-        {
-            // We found an out parameter which is a interface, check for proxy
-            if (params[i].val.p == nsnull)
-                continue;
-            
-            nsISupports* anInterface = nsnull;
-
-            if (paramInfo.IsOut())
-                anInterface = *((nsISupports**)params[i].val.p);
-            else
-                anInterface = ((nsISupports*)params[i].val.p);
-
-
-            if (anInterface == nsnull)
-                continue;
-
-            nsISupports *aProxyObject;
-            nsISupports *aIdentificationObject;
-
-            rv = anInterface->QueryInterface(kProxyObject_Identity_Class_IID, (void**)&aIdentificationObject);
-        
-            if (NS_FAILED(rv))
-            {
-                // create a proxy
-                nsIProxyObjectManager*  manager;
-
-                rv = nsServiceManager::GetService( NS_XPCOMPROXY_PROGID, 
-                                                   NS_GET_IID(nsIProxyObjectManager),
-                                                   (nsISupports **)&manager);
-        
-                if (NS_SUCCEEDED(rv))
-                {   
-                    const nsXPTType& type = paramInfo.GetType();
-                    nsIID* iid = nsnull;
-                    if(type.TagPart() == nsXPTType::T_INTERFACE_IS)
-                    {
-                        uint8 arg_num;
-                        
-                        rv = interfaceInfo->GetInterfaceIsArgNumberForParam(methodIndex, &paramInfo, &arg_num);
-                        if(NS_FAILED(rv))
-                        {
-                            // This is really bad that we are here.  
-                            rv = NS_ERROR_PROXY_INVALID_IN_PARAMETER;
-                            continue;
-                        }
-
-                        const nsXPTParamInfo& param = methodInfo->GetParam(arg_num);
-                        const nsXPTType& currentType = param.GetType();
-
-                        if( !currentType.IsPointer() || 
-                            currentType.TagPart() != nsXPTType::T_IID ||
-                            !(iid = (nsIID*) nsMemory::Clone(params[arg_num].val.p, sizeof(nsIID))))
-                        {
-                            // This is really bad that we are here.  
-                            rv = NS_ERROR_PROXY_INVALID_IN_PARAMETER;
-                        }
-                    }
-                    else
-                    {
-                        interfaceInfo->GetIIDForParam((PRUint16)methodIndex, &paramInfo, &iid);
-                    }
-                    
-                    if (iid == nsnull)
-                    {
-                        // could not get a IID for the parameter that is in question!
-
-#ifdef DEBUG
-                        char* interfaceName;
-
-                        interfaceInfo->GetName(&interfaceName);
-                        
-                        printf("**************************************************\n");
-                        printf("xpcom-proxy: could not invoke method: %s::%s().\n", interfaceName, methodInfo->GetName());
-                        printf("             could not find an IID for a parameter: %d\n", (i) );
-                        printf("**************************************************\n");
-
-                        nsMemory::Free((void*)interfaceName);
-#endif /* DEBUG */
-
-
-                        rv = NS_ERROR_PROXY_INVALID_IN_PARAMETER; //TODO: Change error code
-                    }
-                    else
-                    {
-
-                        nsCOMPtr<nsIEventQueue> eventQ;
-                        /* 
-                           if the parameter is coming |in|, it should only be called on the callers thread.
-                           else, if the parameter is an |out| thread, it should only be called on the proxy
-                           objects thread
-                        */
-
-                        if (paramInfo.IsOut())
-                        {
-                            eventQ = GetQueue();
-                        }
-                        else
-                        {
-                            if (mEventQService == nsnull) return NS_ERROR_NULL_POINTER;
-
-                            rv = mEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
-                            if ( NS_FAILED( rv ) )
-                            {
-                                // the caller does not have an eventQ of their own.  bad.
-                                eventQ = GetQueue();
-                                rv = NS_OK; // todo: remove!
-#ifdef DEBUG
-                                printf("**************************************************\n");
-                                printf("xpcom-proxy: Caller does not have an EventQ\n");
-                                printf("**************************************************\n");
-#endif /* DEBUG */
-                            }   
-                        }
-
-                        /* This is a hack until we can do some lookup 
-                           in the register to find the threading model
-                           of an object.  right now, nsIAtom should be
-                           treated as a free threaded object since layout
-                           does evil things like compare pointer for direct
-                           equality.  Again, this will go away when we can 
-                           use co-classes to find the ClassID.  Then look in
-                           the register for the thread model
-                        */
-
-                        if (NS_SUCCEEDED( rv ) && iid && iid->Equals(NS_GET_IID(nsIAtom)))
-                        {
-                            nsMemory::Free((void*)iid);
-                            NS_RELEASE(manager);
-                            continue;
-                        }
-                
-
-                        if ( NS_SUCCEEDED( rv ) )
-                        {
-                                rv = manager->GetProxyForObject(eventQ, 
-                                                                *iid,
-                                                                 anInterface, 
-                                                                 GetProxyType(), 
-                                                                 (void **) &aProxyObject);
-                        }
-                        
-                    }
-
-                    nsMemory::Free((void*)iid);
-                    NS_RELEASE(manager);
-
-                    if (NS_FAILED(rv))
-                        return rv;
-
-                    // stuff the new proxies into the val.p.  If it is an OUT parameter, release once
-                    // the real object to force the proxy to be the owner.
-                    if (paramInfo.IsOut())
-                    {
-                        anInterface->Release();    
-                        *((void**)params[i].val.p) = ((void*)aProxyObject);
-                    }
-                    else
-                    {
-                        (params[i].val.p)  = ((void*)aProxyObject);                    
-                    }
-                }
-                else
-                {   
-                    // Could not get nsIProxyObjectManager
-                    return rv;
-                }
-            } 
-            else
-            {
-                // It already is a proxy!
-            }
-        }
-        else if ( (convertType == convertOutParameters) && paramInfo.IsIn() )
-        {
-            // we need to Release() any |in| parameters that we created proxies for
-            // and replace the proxied object with the real object on the stack.
-            nsProxyEventObject* replaceInterface = ((nsProxyEventObject*)params[i].val.p);
-            if (replaceInterface)
-            {
-                /* ssc@netscape.com wishes he could get rid of this
-                 * instance of |NS_DEFINE_IID|, but
-                 * |ProxyEventClassIdentity| is not visible from here
-                 */
-                nsISupports *aIdentificationObject;
-                rv = replaceInterface->QueryInterface(kProxyObject_Identity_Class_IID, (void**)&aIdentificationObject);
-        
-                if (NS_SUCCEEDED(rv))
-                {
-                    nsISupports* realObject = replaceInterface->GetRealObject();
-                    replaceInterface->Release();   
-                    (params[i].val.p)  = ((void*)realObject);  
-                }
-            }
-        }
-    }
-    return rv;
+static void* ProxyDestructorEventHandler(PLEvent *self)
+{              
+    nsProxyObject* owner = (nsProxyObject*) PL_GetEventOwner(self);               
+    NS_DELETEXPCOM(owner);                                                                                              
+    return nsnull;                                            
 }
-#endif
+
+static void ProxyDestructorDestroyHandler(PLEvent *self)
+{
+}
+

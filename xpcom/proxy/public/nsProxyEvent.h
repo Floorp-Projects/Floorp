@@ -37,7 +37,7 @@
     
 class nsProxyObjectCallInfo;
 
-#define PROXY_SYNC    0x0001  // act just like a function call.
+#define PROXY_SYNC    0x0001  // acts just like a function call.
 #define PROXY_ASYNC   0x0002  // fire and forget.  This will return immediately and you will lose all return information.
 #define PROXY_ALWAYS  0x0004   // ignore check to see if the eventQ is on the same thread as the caller, and alway return a proxied object.
 
@@ -113,19 +113,6 @@ private:
                                          nsXPTCVariant     **fullParam, 
                                          uint8 *paramCount);
 
-#ifdef AUTOPROXIFICATION       
-    typedef enum
-    {
-        convertOutParameters = 1, 
-        convertInParameters,
-        convertAllParameters
-
-    } AutoProxyConvertTypes;
-
-
-    nsresult            AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMiniVariant * params, 
-                                               nsIInterfaceInfo *interfaceInfo, AutoProxyConvertTypes convertType);
-#endif
 };
 
 
