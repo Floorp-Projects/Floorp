@@ -598,7 +598,7 @@ sub query_to_english {
         }
     }
 
-    if( $::query_who ne '' ){
+    if( $::query_who) {
         $english .= "by $::query_who ";
     }
 
