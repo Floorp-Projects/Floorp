@@ -1658,11 +1658,15 @@ nsBlockFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
     mFirstLineStyle = aPresContext.
       ProbePseudoStyleContextFor(mContent, nsHTMLAtoms::firstLinePseudo,
                                  mStyleContext);
+#if 0
     mFirstLetterStyle = aPresContext.
       ProbePseudoStyleContextFor(mContent, nsHTMLAtoms::firstLetterPseudo,
                                  (nsnull != mFirstLineStyle
                                   ? mFirstLineStyle
                                   : mStyleContext));
+#else
+    mFirstLetterStyle = nsnull;
+#endif
   }
 
   return NS_OK;
