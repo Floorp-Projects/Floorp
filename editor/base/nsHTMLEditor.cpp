@@ -3398,6 +3398,7 @@ nsHTMLEditor::InsertFormattingForNode(nsIDOMNode* aNode)
 NS_IMETHODIMP 
 nsHTMLEditor::Undo(PRUint32 aCount)
 {
+  ForceCompositionEnd();
   nsresult result = NS_OK;
 
   BeginUpdateViewBatch();
@@ -3476,6 +3477,7 @@ NS_IMETHODIMP nsHTMLEditor::Copy()
 
 NS_IMETHODIMP nsHTMLEditor::Paste()
 {
+  ForceCompositionEnd();
   nsAutoString stuffToPaste;
 
   // Get Clipboard Service
