@@ -48,16 +48,20 @@ CPPSRCS		= \
 		nsEmptyEnumerator.cpp \
 		nsEnumeratorUtils.cpp \
 		nsFixedSizeAllocator.cpp \
+		nsFragmenedString.cpp \
 		nsHashtable.cpp \
 		nsHashtableEnumerator.cpp \
 		nsObserver.cpp \
 		nsObserverList.cpp \
 		nsObserverService.cpp \
+		nsPrintfCString.cpp \
 		nsProperties.cpp \
 		nsPersistentProperties.cpp \
 		nsQuickSort.cpp \
 		nsReadableUtils.cpp \
+		nsSharedBufferList.cpp \
 		nsSizeOfHandler.cpp \
+		nsSlidingString.cpp \
 		nsStaticNameTable.cpp \
 		nsStatistics.cpp \
 		nsStr.cpp \
@@ -97,6 +101,7 @@ EXPORTS		= \
 		nsCharTraits.h \
 		nsAReadableString.h \
 		nsAWritableString.h \
+		nsPrintfCString.h \
 		nsReadableUtils.h \
 		nsSharedBufferList.h \
 		nsSharedString.h \

@@ -51,6 +51,7 @@ EXPORTS =                          \
         nsCharTraits.h             \
         nsAReadableString.h        \
         nsAWritableString.h        \
+        nsPrintfCString.h          \
         nsReadableUtils.h          \
         nsSharedBufferList.h       \
         nsSharedString.h           \
@@ -113,6 +114,7 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsEmptyEnumerator.obj         \
         .\$(OBJDIR)\nsEnumeratorUtils.obj         \
         .\$(OBJDIR)\nsFixedSizeAllocator.obj      \
+        .\$(OBJDIR)\nsFragmentedString.obj        \
         .\$(OBJDIR)\nsHashtable.obj               \
         .\$(OBJDIR)\nsHashtableEnumerator.obj     \
         .\$(OBJDIR)\nsObserver.obj                \
@@ -120,9 +122,12 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsObserverService.obj         \
         .\$(OBJDIR)\nsProperties.obj              \
         .\$(OBJDIR)\nsPersistentProperties.obj    \
+        .\$(OBJDIR)\nsPrintfCString.obj           \
         .\$(OBJDIR)\nsQuickSort.obj               \
         .\$(OBJDIR)\nsReadableUtils.obj           \
+        .\$(OBJDIR)\nsSharedBufferList.obj        \
         .\$(OBJDIR)\nsSizeOfHandler.obj           \
+        .\$(OBJDIR)\nsSlidingString.obj           \
         .\$(OBJDIR)\nsStaticNameTable.obj         \
         .\$(OBJDIR)\nsStatistics.obj              \
         .\$(OBJDIR)\nsStr.obj                     \
