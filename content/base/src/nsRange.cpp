@@ -1019,6 +1019,7 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
   {
     // Loop over the nodes contained in this Range:
     // XXX Getting the nodes still needs to be implemented!
+    return NS_ERROR_NOT_IMPLEMENTED;
 #if 0
     while (1)
     {
@@ -1043,7 +1044,8 @@ nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
 #endif
   }
 
-  NS_IF_RELEASE(document);
+  NS_IF_RELEASE(docfrag);
+  return res;
 }
 
 nsresult nsRange::Clone(nsIDOMRange** aReturn)
