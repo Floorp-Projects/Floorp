@@ -97,6 +97,7 @@ secmod_NewModule(void)
     newMod->moduleDBOnly = PR_FALSE;
     newMod->trustOrder = 0;
     newMod->cipherOrder = 0;
+    newMod->evControlMask = 0;
 #ifdef PKCS11_USE_THREADS
     newMod->refLock = (void *)PZ_NewLock(nssILockRefLock);
     if (newMod->refLock == NULL) {
@@ -163,9 +164,12 @@ pk11_mkModuleSpec(SECMODModule * module)
 {
     char *nss = NULL, *modSpec = NULL, **slotStrings = NULL;
     int slotCount, i, si;
+    SECMODListLock *moduleLock = SECMOD_GetDefaultModuleListLock();
 
     /* allocate target slot info strings */
     slotCount = 0;
+
+    SECMOD_GetReadLock(moduleLock);
     if (module->slotCount) {
 	for (i=0; i < module->slotCount; i++) {
 	    if (module->slots[i]->defaultFlags !=0) {
@@ -178,6 +182,7 @@ pk11_mkModuleSpec(SECMODModule * module)
 
     slotStrings = (char **)PORT_ZAlloc(slotCount*sizeof(char *));
     if (slotStrings == NULL) {
+        SECMOD_ReleaseReadLock(moduleLock);
 	goto loser;
     }
 
@@ -208,6 +213,7 @@ pk11_mkModuleSpec(SECMODModule * module)
 	}
     }
 
+    SECMOD_ReleaseReadLock(moduleLock);
     nss = pk11_mkNSS(slotStrings,slotCount,module->internal, module->isFIPS,
 	module->isModuleDB, module->moduleDBOnly, module->isCritical,
 	module->trustOrder,module->cipherOrder,module->ssl[0],module->ssl[1]);
@@ -386,8 +392,12 @@ SECMOD_LoadUserModule(char *modulespec,SECMODModule *parent, PRBool recurse)
 {
     SECStatus rv = SECSuccess;
     SECMODModule * newmod = SECMOD_LoadModule(modulespec, parent, recurse);
+    SECMODListLock *moduleLock = SECMOD_GetDefaultModuleListLock();
+
     if (newmod) {
+	SECMOD_GetReadLock(moduleLock);
         rv = STAN_AddModuleToDefaultTrustDomain(newmod);
+	SECMOD_ReleaseReadLock(moduleLock);
         if (SECSuccess != rv) {
             SECMOD_DestroyModule(newmod);
             return NULL;
@@ -404,10 +414,14 @@ SECStatus SECMOD_UnloadUserModule(SECMODModule *mod)
 {
     SECStatus rv = SECSuccess;
     int atype = 0;
+    SECMODListLock *moduleLock = SECMOD_GetDefaultModuleListLock();
     if (!mod) {
         return SECFailure;
     }
+
+    SECMOD_GetReadLock(moduleLock);
     rv = STAN_RemoveModuleFromDefaultTrustDomain(mod);
+    SECMOD_ReleaseReadLock(moduleLock);
     if (SECSuccess != rv) {
         return SECFailure;
     }

@@ -38,7 +38,7 @@
 #define PKIT_H
 
 #ifdef DEBUG
-static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.15 $ $Date: 2004/05/17 20:08:37 $ $Name:  $";
+static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.16 $ $Date: 2004/07/29 23:38:14 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -71,6 +71,10 @@ static const char PKIT_CVS_ID[] = "@(#) $RCSfile: pkit.h,v $ $Revision: 1.15 $ $
 #ifndef DEVT_H
 #include "devt.h"
 #endif /* DEVT_H */
+
+#ifndef nssrwlkt_h__
+#include "nssrwlkt.h"
+#endif /* nssrwlkt_h__ */
 
 PR_BEGIN_EXTERN_C
 
@@ -174,6 +178,7 @@ struct NSSTrustDomainStr {
     nssList *tokenList;
     nssListIterator *tokens;
     nssTDCertificateCache *cache;
+    NSSRWLock *tokensLock;
 #ifdef NSS_3_4_CODE
     void *spkDigestInfo;
     CERTStatusConfig *statusConfig;

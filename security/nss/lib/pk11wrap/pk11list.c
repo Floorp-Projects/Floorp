@@ -43,37 +43,26 @@
 #include "secmod.h"
 #include "secmodi.h"
 #include "secmodti.h"
-
-#define ISREADING 1
-#define ISWRITING 2
-#define WANTWRITE 4
-#define ISLOCKED 3
+#include "nssrwlk.h"
 
 /*
  * create a new lock for a Module List
  */
-SECMODListLock *SECMOD_NewListLock() {
-    SECMODListLock *modLock;
-
-    modLock = (SECMODListLock*)PORT_Alloc(sizeof(SECMODListLock));
+SECMODListLock *SECMOD_NewListLock()
+{
 #ifdef PKCS11_USE_THREADS
-    modLock->mutex = NULL;
-    modLock->monitor = PZ_NewMonitor(nssILockList);
+    return (SECMODListLock *) NSSRWLock_New( 10, "moduleListLock");
 #else
-    modLock->mutex = NULL;
-    modLock->monitor = NULL;
+    return (SECMODListLock *) 1;
 #endif
-    modLock->state = 0;
-    modLock->count = 0;
-    return modLock;
 }
 
 /*
  * destroy the lock
  */
-void SECMOD_DestroyListLock(SECMODListLock *lock) {
-    PK11_USE_THREADS(PZ_DestroyMonitor(lock->monitor);)
-    PORT_Free(lock);
+void SECMOD_DestroyListLock(SECMODListLock *lock) 
+{
+    PK11_USE_THREADS(NSSRWLock_Destroy((NSSRWLock *)lock);)
 }
 
 
@@ -81,52 +70,26 @@ void SECMOD_DestroyListLock(SECMODListLock *lock) {
  * Lock the List for Read: NOTE: this assumes the reading isn't so common
  * the writing will be starved.
  */
-void SECMOD_GetReadLock(SECMODListLock *modLock) {
-#ifdef PKCS11_USE_THREADS
-    if (modLock == NULL) return;
-    PZ_EnterMonitor(modLock->monitor);
-    while (modLock->state & ISWRITING) {
-	PZ_Wait(modLock->monitor,PR_INTERVAL_NO_TIMEOUT); /* wait until woken up */
-    }
-    modLock->state |= ISREADING;
-    modLock->count++;
-    PZ_ExitMonitor(modLock->monitor);
-#endif
+void SECMOD_GetReadLock(SECMODListLock *modLock) 
+{
+    PK11_USE_THREADS(NSSRWLock_LockRead((NSSRWLock *)modLock);)
 }
 
 /*
  * Release the Read lock
  */
-void SECMOD_ReleaseReadLock(SECMODListLock *modLock) {
-#ifdef PKCS11_USE_THREADS
-    if (modLock == NULL) return;
-    PZ_EnterMonitor(modLock->monitor);
-    modLock->count--;
-    if (modLock->count == 0) {
-	modLock->state &= ~ISREADING;
-	if (modLock->state & WANTWRITE) {
-	    PZ_Notify(modLock->monitor);  /* only one writer at a time */
-	}
-    }
-    PZ_ExitMonitor(modLock->monitor);
-#endif
+void SECMOD_ReleaseReadLock(SECMODListLock *modLock) 
+{
+    PK11_USE_THREADS(NSSRWLock_UnlockRead((NSSRWLock *)modLock);)
 }
 
 
 /*
  * lock the list for Write
  */
-void SECMOD_GetWriteLock(SECMODListLock *modLock) {
-#ifdef PKCS11_USE_THREADS
-    if (modLock == NULL) return;
-    PZ_EnterMonitor(modLock->monitor);
-    while (modLock->state & ISLOCKED) {
-	modLock->state |= WANTWRITE;
-	PZ_Wait(modLock->monitor,PR_INTERVAL_NO_TIMEOUT); /* wait until woken up */
-    }
-    modLock->state = ISWRITING;
-    PZ_ExitMonitor(modLock->monitor);
-#endif
+void SECMOD_GetWriteLock(SECMODListLock *modLock) 
+{
+    PK11_USE_THREADS(NSSRWLock_LockWrite((NSSRWLock *)modLock);)
 }
 
 
@@ -134,14 +97,9 @@ void SECMOD_GetWriteLock(SECMODListLock *modLock) {
  * Release the Write Lock: NOTE, this code is pretty inefficient if you have
  * lots of write collisions.
  */
-void SECMOD_ReleaseWriteLock(SECMODListLock *modLock) {
-#ifdef PKCS11_USE_THREADS
-    if (modLock == NULL) return;
-    PZ_EnterMonitor(modLock->monitor);
-    modLock->state = 0;
-    PR_NotifyAll(modLock->monitor); /* enable all the readers */
-    PZ_ExitMonitor(modLock->monitor);
-#endif
+void SECMOD_ReleaseWriteLock(SECMODListLock *modLock) 
+{
+    PK11_USE_THREADS(NSSRWLock_UnlockWrite((NSSRWLock *)modLock);)
 }
 
 
@@ -149,7 +107,8 @@ void SECMOD_ReleaseWriteLock(SECMODListLock *modLock) {
  * must Hold the Write lock
  */
 void
-SECMOD_RemoveList(SECMODModuleList **parent, SECMODModuleList *child) {
+SECMOD_RemoveList(SECMODModuleList **parent, SECMODModuleList *child) 
+{
     *parent = child->next;
     child->next = NULL;
 }
@@ -159,7 +118,8 @@ SECMOD_RemoveList(SECMODModuleList **parent, SECMODModuleList *child) {
  */
 void
 SECMOD_AddList(SECMODModuleList *parent, SECMODModuleList *child, 
-							SECMODListLock *lock) {
+							SECMODListLock *lock) 
+{
     if (lock) { SECMOD_GetWriteLock(lock); }
 
     child->next = parent->next;

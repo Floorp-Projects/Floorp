@@ -93,7 +93,25 @@ struct SECMODModuleStr {
     PRBool	moduleDBOnly;	/* this module only has lists of PKCS #11 modules */
     int		trustOrder;	/* order for this module's certificate trust rollup */
     int		cipherOrder;	/* order for cipher operations */
+    unsigned long evControlMask; /* control the running and shutdown of slot
+				  * events (SECMOD_WaitForAnyTokenEvent) */
 };
+
+/* evControlMask flags */
+/*
+ * These bits tell the current state of a SECMOD_WaitForAnyTokenEvent.
+ *
+ * SECMOD_WAIT_PKCS11_EVENT - we're waiting in the PKCS #11 module in
+ *  C_WaitForSlotEvent().
+ * SECMOD_WAIT_SIMULATED_EVENT - we're waiting in the NSS simulation code
+ *  which polls for token insertion and removal events.
+ * SECMOD_END_WAIT - SECMOD_CancelWait has been called while the module is
+ *  waiting in SECMOD_WaitForAnyTokenEvent. SECMOD_WaitForAnyTokenEvent
+ *  should return immediately to it's caller.
+ */ 
+#define SECMOD_END_WAIT 	    0x01
+#define SECMOD_WAIT_SIMULATED_EVENT 0x02 
+#define SECMOD_WAIT_PKCS11_EVENT    0x04
 
 struct SECMODModuleListStr {
     SECMODModuleList	*next;
