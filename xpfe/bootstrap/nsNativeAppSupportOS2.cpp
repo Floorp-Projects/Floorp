@@ -401,6 +401,7 @@ private:
     static HSZ   mApplication, mTopics[ topicCount ];
     static DWORD mInstance;
     static char *mAppName;
+    static nsIDOMWindow *mInitialWindow;
     friend struct MessageWindow;
 }; // nsNativeAppSupportOS2
 
