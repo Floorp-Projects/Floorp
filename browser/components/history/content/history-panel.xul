@@ -83,10 +83,14 @@
              callback="searchHistory(gSearchBox.value);"/>
     <toolbarbutton id="viewButton" type="menu" label="&view.label;" selectedsort="day" persist="selectedsort">
       <menupopup>
-        <menuitem id="byday" label="&byDate.label;" accesskey="&byDate.accesskey;" type="radio"
-                  oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'day'); GroupBy('day');"/>
+        <menuitem id="bydayandsite" label="&byDayAndSite.label;" accesskey="&byDayAndSite.accesskey;" type="radio"
+                  oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'dayandsite'); GroupBy('dayandsite'); SortBy('dayandsite');"/>
         <menuitem id="bysite" label="&bySite.label;" accesskey="&bySite.accesskey;" type="radio"
                   oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'site'); GroupBy('none'); SortBy('name');"/>
+        <menuitem id="byday" label="&byDate.label;" accesskey="&byDate.accesskey;"
+                  type="radio"
+                  oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'day');
+                             GroupBy('day'); SortBy('day');"/>
         <menuitem id="byvisited" label="&byMostVisited.label;" accesskey="&byMostVisited.accesskey;"
                   type="radio"
                   oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'visited');

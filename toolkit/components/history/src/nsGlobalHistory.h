@@ -189,7 +189,7 @@ protected:
   //
   // search stuff - find URL stuff, etc
   //
-  nsresult GetRootDayQueries(nsISimpleEnumerator **aResult);
+  nsresult GetRootDayQueries(nsISimpleEnumerator **aResult, PRBool aBySite);
   nsresult GetFindUriName(const char *aURL, nsIRDFNode **aResult);
   nsresult CreateFindEnumerator(nsIRDFResource *aSource,
                                 nsISimpleEnumerator **aResult);
@@ -351,6 +351,7 @@ protected:
   static nsIRDFResource* kNC_URL;  // XXX do we need?
   static nsIRDFResource* kNC_HistoryRoot;
   static nsIRDFResource* kNC_HistoryByDate;
+  static nsIRDFResource* kNC_HistoryByDateAndSite;
 
   static nsIMdbFactory* gMdbFactory;
   static nsIPrefBranch* gPrefBranch;
