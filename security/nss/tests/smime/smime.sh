@@ -65,9 +65,9 @@ echo "<TR><TH width=500>Test Case</TH><TH width=50>Result</TH></TR>" >> ${RESULT
 echo "********************** Creating a CA Certificate **********************"
 echo nss > ${PWFILE}
 echo "   certutil -N -d ${CADIR} -f ${PWFILE} redir ${CERTUTILOUT}" 
-rm ${CERTUTILOUT}
+rm ${CERTUTILOUT} 2>/dev/null
 echo "   certutil -N -d ${CADIR} -f ${PWFILE} redir ${CERTUTILOUT}"  >${CERTUTILOUT}
-certutil -N -d ${CADIR} -f ${PWFILE} >>${CERTUTILOUT}
+certutil -N -d ${CADIR} -f ${PWFILE} >>${CERTUTILOUT} 2>&1
 
 echo initialized
 echo 5 > ${CERTSCRIPT}
@@ -83,7 +83,7 @@ echo 9 >> ${CERTSCRIPT}
 echo n >> ${CERTSCRIPT}
 echo    "certutil -S -n \"TestCA\" -s \"CN=NSS Test CA, O=BOGUS NSS, L=Mountain View, ST=California, C=US\" -t \"CTu,CTu,CTu\" -v 60 -x -d ${CADIR} -1 -2 -5 -f ${PWFILE} -z ${NOISE_FILE} redir ${CERTUTILOUT}"
 echo    "certutil -S -n \"TestCA\" -s \"CN=NSS Test CA, O=BOGUS NSS, L=Mountain View, ST=California, C=US\" -t \"CTu,CTu,CTu\" -v 60 -x -d ${CADIR} -1 -2 -5 -f ${PWFILE} -z ${NOISE_FILE} redir ${CERTUTILOUT}" >>${CERTUTILOUT}
-certutil -S -n "TestCA" -s "CN=NSS Test CA, O=BOGUS NSS, L=Mountain View, ST=California, C=US" -t "CTu,CTu,CTu" -v 60 -x -d ${CADIR} -1 -2 -5 -f ${PWFILE} -z ${NOISE_FILE} < ${CERTSCRIPT} >>${CERTUTILOUT}
+certutil -S -n "TestCA" -s "CN=NSS Test CA, O=BOGUS NSS, L=Mountain View, ST=California, C=US" -t "CTu,CTu,CTu" -v 60 -x -d ${CADIR} -1 -2 -5 -f ${PWFILE} -z ${NOISE_FILE} < ${CERTSCRIPT} >>${CERTUTILOUT} 2>&1
 
 if [ $? -ne 0 ]; then
     echo "<TR><TD>Creating CA Cert</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
@@ -92,7 +92,7 @@ else
 fi
 echo "   certutil -L -n \"TestCA\" -r -d ${CADIR} > root.cert"
 echo "   certutil -L -n \"TestCA\" -r -d ${CADIR} > root.cert" >>${CERTUTILOUT}
-certutil -L -n "TestCA" -r -d ${CADIR} > root.cert
+certutil -L -n "TestCA" -r -d ${CADIR} > root.cert 2>>${CERTUTILOUT}
 if [ $? -ne 0 ]; then
    CERTFAILED=${CERTFAILED-"Export Root"}
 fi
@@ -100,35 +100,35 @@ fi
 echo "**************** Creating Client CA Issued Certificates ****************"
 echo "   certutil -N -d ${ALICEDIR} -f ${PWFILE} redir $CERTUTILOUT"
 echo "   certutil -N -d ${ALICEDIR} -f ${PWFILE} redir $CERTUTILOUT" >>${CERTUTILOUT}
-certutil -N -d ${ALICEDIR} -f ${PWFILE} >>${CERTUTILOUT}
+certutil -N -d ${ALICEDIR} -f ${PWFILE} >>${CERTUTILOUT} 2>&1
 netstat >> ${NOISE_FILE} 2>&1
 date >> ${NOISE_FILE} 2>&1
 cd ${ALICEDIR}
 echo "Import the root CA"
 echo "   certutil -A -n \"TestCA\" -t \"TC,TC,TC\" -f ${PWFILE} -d ${ALICEDIR} -i ${CADIR}/root.cert redir ${CERTUTILOUT}"
 echo "   certutil -A -n \"TestCA\" -t \"TC,TC,TC\" -f ${PWFILE} -d ${ALICEDIR} -i ${CADIR}/root.cert redir ${CERTUTILOUT}" >>${CERTUTILOUT}
-certutil -A -n "TestCA" -t "TC,TC,TC" -f ${PWFILE} -d ${ALICEDIR} -i ${CADIR}/root.cert >>${CERTUTILOUT}
+certutil -A -n "TestCA" -t "TC,TC,TC" -f ${PWFILE} -d ${ALICEDIR} -i ${CADIR}/root.cert >>${CERTUTILOUT} 2>&1
 if [ $? -ne 0 ]; then
    CERTFAILED=${CERTFAILED-"Import Root"}
 fi
 echo "Generate a Certificate request"
 echo  "  certutil -R -s \"CN=Alice, E=alice@bogus.com, O=BOGUS Netscape, L=Mountain View, ST=California, C=US\" -d ${ALICEDIR}  -f ${PWFILE} -z ${NOISE_FILE} -o req redir ${CERTUTILOUT}"
 echo  "  certutil -R -s \"CN=Alice, E=alice@bogus.com, O=BOGUS Netscape, L=Mountain View, ST=California, C=US\" -d ${ALICEDIR}  -f ${PWFILE} -z ${NOISE_FILE} -o req redir ${CERTUTILOUT}" >>${CERTUTILOUT}
-certutil -R -s "CN=Alice, E=alice@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US" -d ${ALICEDIR}  -f ${PWFILE} -z ${NOISE_FILE} -o req >>${CERTUTILOUT}
+certutil -R -s "CN=Alice, E=alice@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US" -d ${ALICEDIR}  -f ${PWFILE} -z ${NOISE_FILE} -o req >>${CERTUTILOUT} 2>&1
 if [ $? -ne 0 ]; then
    CERTFAILED=${CERTFAILED-"Generate Request"}
 fi
 echo "Sign the Certificate request"
 echo  "certutil -C -c "TestCA" -m 3 -v 60 -d ${CADIR} -f ${PWFILE} -i req -o alice.cert redir ${CERTUTILOUT}"
 echo  "certutil -C -c "TestCA" -m 3 -v 60 -d ${CADIR} -f ${PWFILE} -i req -o alice.cert redir ${CERTUTILOUT}" >>${CERTUTILOUT}
-certutil -C -c "TestCA" -m 3 -v 60 -d ${CADIR} -i req -o alice.cert -f ${PWFILE} >>${CERTUTILOUT}
+certutil -C -c "TestCA" -m 3 -v 60 -d ${CADIR} -i req -o alice.cert -f ${PWFILE} >>${CERTUTILOUT} 2>&1
 if [ $? -ne 0 ]; then
    CERTFAILED=${CERTFAILED-"Sign Alice's Cert"}
 fi
 echo "Import the new Cert"
 echo "certutil -A -n \"Alice\" -t \"u,u,u\" -d ${ALICEDIR} -f ${PWFILE} -i alice.cert redir ${CERTUTILOUT}"
 echo "certutil -A -n \"Alice\" -t \"u,u,u\" -d ${ALICEDIR} -f ${PWFILE} -i alice.cert redir ${CERTUTILOUT}" >>${CERTUTILOUT}
-certutil -A -n "Alice" -t "u,u,u" -d ${ALICEDIR} -f ${PWFILE} -i alice.cert >>${CERTUTILOUT}
+certutil -A -n "Alice" -t "u,u,u" -d ${ALICEDIR} -f ${PWFILE} -i alice.cert >>${CERTUTILOUT} 2>&1
 if [ $? -ne 0 ]; then
    CERTFAILED=${CERTFAILED-"Import Alice's cert"}
 fi
@@ -142,33 +142,33 @@ netstat >> ${NOISE_FILE} 2>&1
 date >> ${NOISE_FILE} 2>&1
 echo "certutil  -N -d ${BOBDIR} -f  redir ${CERTUTILOUT}"
 echo "certutil  -N -d ${BOBDIR} -f  redir ${CERTUTILOUT}" >>${CERTUTILOUT}
-certutil -N -d ${BOBDIR} -f ${PWFILE} >>${CERTUTILOUT}
+certutil -N -d ${BOBDIR} -f ${PWFILE} >>${CERTUTILOUT} 2>&1
 cd ${BOBDIR}
 echo "Import the root CA"
 echo "   certutil -A -n \"TestCA\" -t \"TC,TC,TC\" -f ${PWFILE} -d ${BOBDIR} -i ${CADIR}/root.cert redir ${CERTUTILOUT}"
 echo "   certutil -A -n \"TestCA\" -t \"TC,TC,TC\" -f ${PWFILE} -d ${BOBDIR} -i ${CADIR}/root.cert redir ${CERTUTILOUT}" >>${CERTUTILOUT}
-certutil -A -n "TestCA" -t "TC,TC,TC" -f ${PWFILE} -d ${BOBDIR} -i ${CADIR}/root.cert >>${CERTUTILOUT}
+certutil -A -n "TestCA" -t "TC,TC,TC" -f ${PWFILE} -d ${BOBDIR} -i ${CADIR}/root.cert >>${CERTUTILOUT} 2>&1
 if [ $? -ne 0 ]; then
    CERTFAILED=${CERTFAILED-"Import Root"}
 fi
 echo "Generate a Certificate request"
 echo  "  certutil -R -s \"CN=Bob, E=bob@bogus.com, O=BOGUS Netscape, L=Mountain View, ST=California, C=US\" -d ${BOBDIR}  -f ${PWFILE} -z ${NOISE_FILE} -o req redir ${CERTUTILOUT}"
 echo  "  certutil -R -s \"CN=Bob, E=bob@bogus.com, O=BOGUS Netscape, L=Mountain View, ST=California, C=US\" -d ${BOBDIR}  -f ${PWFILE} -z ${NOISE_FILE} -o req redir ${CERTUTILOUT}" >>${CERTUTILOUT}
-certutil -R -s "CN=Bob, E=bob@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US" -d ${BOBDIR}  -f ${PWFILE} -z ${NOISE_FILE} -o req >>${CERTUTILOUT}
+certutil -R -s "CN=Bob, E=bob@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US" -d ${BOBDIR}  -f ${PWFILE} -z ${NOISE_FILE} -o req >>${CERTUTILOUT} 2>&1
 if [ $? -ne 0 ]; then
    CERTFAILED=${CERTFAILED-"Generate Request"}
 fi
 echo "Sign the Certificate request"
 echo  "certutil -C -c "TestCA" -m 4 -v 60 -d ${CADIR} -f ${PWFILE} -i req -o bob.cert redir ${CERTUTILOUT}"
 echo  "certutil -C -c "TestCA" -m 4 -v 60 -d ${CADIR} -f ${PWFILE} -i req -o bob.cert redir ${CERTUTILOUT}" >>${CERTUTILOUT}
-certutil -C -c "TestCA" -m 4 -v 60 -d ${CADIR} -i req -o bob.cert -f ${PWFILE} >>${CERTUTILOUT}
+certutil -C -c "TestCA" -m 4 -v 60 -d ${CADIR} -i req -o bob.cert -f ${PWFILE} >>${CERTUTILOUT} 2>&1
 if [ $? -ne 0 ]; then
    CERTFAILED=${CERTFAILED-"Sign Bob's cert"}
 fi
 echo "Import the new Cert"
 echo "certutil -A -n \"Bob\" -t \"u,u,u\" -d ${BOBDIR} -f ${PWFILE} -i bob.cert redir ${CERTUTILOUT}"
 echo "certutil -A -n \"Bob\" -t \"u,u,u\" -d ${BOBDIR} -f ${PWFILE} -i bob.cert redir ${CERTUTILOUT}" >>${CERTUTILOUT}
-certutil -A -n "Bob" -t "u,u,u" -d ${BOBDIR} -f ${PWFILE} -i bob.cert >>${CERTUTILOUT}
+certutil -A -n "Bob" -t "u,u,u" -d ${BOBDIR} -f ${PWFILE} -i bob.cert >>${CERTUTILOUT} 2>&1
 if [ $? -ne 0 ]; then
    CERTFAILED=${CERTFAILED-"Import Bob's cert"}
 fi
@@ -184,38 +184,38 @@ cd ${CADIR}
 echo "Generate a third cert"
 echo "certutil -S -n \"Dave\" -c \"TestCA\" -t \"u,u,u\" -s \"CN=Dave, E=dave@bogus.com, O=BOGUS Netscape, L=Mountain View, ST=California, C=US\" -d ${CADIR} -f ${PWFILE} -z ${NOISE_FILE} -m 5 -v 60 redir ${CERTUTILOUT}"
 echo "certutil -S -n \"Dave\" -c \"TestCA\" -t \"u,u,u\" -s \"CN=Dave, E=dave@bogus.com, O=BOGUS Netscape, L=Mountain View, ST=California, C=US\" -d ${CADIR} -f ${PWFILE} -z ${NOISE_FILE} -m 5 -v 60 redir ${CERTUTILOUT}" >>${CERTUTILOUT}
-certutil -S -n "Dave" -c "TestCA" -t "u,u,u" -s "CN=Dave, E=dave@bogus.com, O=BOGUS Netscape, L=Mountain View, ST=California, C=US" -d ${CADIR} -f ${PWFILE} -z ${NOISE_FILE} -m 5 -v 60 >>${CERTUTILOUT}
+certutil -S -n "Dave" -c "TestCA" -t "u,u,u" -s "CN=Dave, E=dave@bogus.com, O=BOGUS Netscape, L=Mountain View, ST=California, C=US" -d ${CADIR} -f ${PWFILE} -z ${NOISE_FILE} -m 5 -v 60 >>${CERTUTILOUT} 2>&1
 
 echo "Import Alices's cert into Bob's db"
 echo "certutil -E -t \"u,u,u\" -d ${BOBDIR} -f ${PWFILE} -i ${ALICEDIR}/alice.cert redir ${CERTUTILOUT}"
 echo "certutil -E -t \"u,u,u\" -d ${BOBDIR} -f ${PWFILE} -i ${ALICEDIR}/alice.cert redir ${CERTUTILOUT}" >>${CERTUTILOUT}
-certutil -E -t "u,u,u" -d ${BOBDIR} -f ${PWFILE} -i ${ALICEDIR}/alice.cert >>${CERTUTILOUT}
+certutil -E -t "u,u,u" -d ${BOBDIR} -f ${PWFILE} -i ${ALICEDIR}/alice.cert >>${CERTUTILOUT} 2>&1
 if [ $? -ne 0 ]; then
    CERTFAILED=${CERTFAILED-"Import Alice's cert into Bob's db"}
 fi
 echo "Import Bob's cert into Alice's db"
 echo "certutil -E -t \"u,u,u\" -d ${ALICEDIR} -f ${PWFILE} -i ${BOBDIR}/bob.cert redir ${CERTUTILOUT}"
 echo "certutil -E -t \"u,u,u\" -d ${ALICEDIR} -f ${PWFILE} -i ${BOBDIR}/bob.cert redir ${CERTUTILOUT}" >>${CERTUTILOUT}
-certutil -E -t "u,u,u" -d ${ALICEDIR} -f ${PWFILE} -i ${BOBDIR}/bob.cert >>${CERTUTILOUT}
+certutil -E -t "u,u,u" -d ${ALICEDIR} -f ${PWFILE} -i ${BOBDIR}/bob.cert >>${CERTUTILOUT} 2>&1
 if [ $? -ne 0 ]; then
    CERTFAILED=${CERTFAILED-"Import Bob's cert into Alice's db"}
 fi
 echo "Import Dave's cert into Alice's and Bob's dbs"
 echo "   certutil -L -n \"Dave\" -r -d ${CADIR} > dave.cert"
 echo "   certutil -L -n \"Dave\" -r -d ${CADIR} > dave.cert" >>${CERTUTILOUT}
-certutil -L -n "Dave" -r -d ${CADIR} > dave.cert
+certutil -L -n "Dave" -r -d ${CADIR} > dave.cert 2>>${CERTUTILOUT}
 if [ $? -ne 0 ]; then
    CERTFAILED=${CERTFAILED-"Export Dave's cert"}
 fi
 echo "certutil -E -t \"u,u,u\" -d ${ALICEDIR} -f ${PWFILE} -i ${CADIR}/dave.cert redir ${CERTUTILOUT}"
 echo "certutil -E -t \"u,u,u\" -d ${ALICEDIR} -f ${PWFILE} -i ${CADIR}/dave.cert redir ${CERTUTILOUT}" >>${CERTUTILOUT}
-certutil -E -t "u,u,u" -d ${ALICEDIR} -f ${PWFILE} -i ${CADIR}/dave.cert >>${CERTUTILOUT}
+certutil -E -t "u,u,u" -d ${ALICEDIR} -f ${PWFILE} -i ${CADIR}/dave.cert >>${CERTUTILOUT} 2>&1
 if [ $? -ne 0 ]; then
    CERTFAILED=${CERTFAILED-"Import Dave's cert into Alice's db"}
 fi
 echo "certutil -E -t \"u,u,u\" -d ${BOBDIR} -f ${PWFILE} -i ${CADIR}/dave.cert redir ${CERTUTILOUT}"
 echo "certutil -E -t \"u,u,u\" -d ${BOBDIR} -f ${PWFILE} -i ${CADIR}/dave.cert redir ${CERTUTILOUT}" >>${CERTUTILOUT}
-certutil -E -t "u,u,u" -d ${BOBDIR} -f ${PWFILE} -i ${CADIR}/dave.cert >>${CERTUTILOUT}
+certutil -E -t "u,u,u" -d ${BOBDIR} -f ${PWFILE} -i ${CADIR}/dave.cert >>${CERTUTILOUT} 2>&1
 if [ $? -ne 0 ]; then
    CERTFAILED=${CERTFAILED-"Import Dave's cert into Bob's db"}
 fi
