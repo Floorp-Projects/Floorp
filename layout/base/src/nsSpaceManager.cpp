@@ -1141,7 +1141,6 @@ nsSpaceManager::BandRect::HasSameFrameList(const BandRect* aBandRect) const
 PRInt32
 nsSpaceManager::BandRect::Length() const
 {
-  nscoord   topOfBand = top;
   PRInt32   len = 1;
   BandRect* bandRect = Next();
 
