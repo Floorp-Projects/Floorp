@@ -59,7 +59,6 @@ static char* gHTMLTypes[] = {
   "text/html",
   "text/plain",
   "text/rtf",
-  "text/cpp",
   "text/css",
   0
 };

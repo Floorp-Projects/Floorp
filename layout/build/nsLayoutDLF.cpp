@@ -62,9 +62,14 @@ static char* gHTMLTypes[] = {
   "text/html",
   "text/plain",
   "text/rtf",
-  "text/cpp",
   "text/css",
+  "text/javascript",
+  "application/x-javascript",
   "text/html; x-view-type=view-source",
+  "text/plain; x-view-type=view-source",
+  "text/css; x-view-type=view-source",
+  "text/javascript; x-view-type=view-source",
+  "application/x-javascript; x-view-type=view-source",
   0
 };
   
@@ -83,6 +88,8 @@ static char* gRDFTypes[] = {
   "text/rdf",
   "application/vnd.mozilla.xul+xml",
   "mozilla.application/cached-xul",
+  "application/vnd.mozilla.xul+xml; x-view-type=view-source",
+  "mozilla.application/cached-xul; x-view-type=view-source",
   0
 };
 
