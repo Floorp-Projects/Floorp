@@ -172,18 +172,6 @@ sub LookupNamedQuery {
     return $result;
 }
 
-sub LookupSeries {
-    my ($series_id) = @_;
-    detaint_natural($series_id) || ThrowCodeError("invalid_series_id");
-    
-    my $dbh = Bugzilla->instance->dbh;
-    my $result = $dbh->selectrow_array("SELECT query FROM series " .
-                                       "WHERE series_id = $series_id");
-    $result
-           || ThrowCodeError("invalid_series_id", {'series_id' => $series_id});
-    return $result;
-}
-
 sub GetQuip {
 
     my $quip;
@@ -263,12 +251,6 @@ if ($::FORM{'cmdtype'} eq "dorem" && $::FORM{'remaction'} =~ /^run/) {
 if ($::FORM{'cmdtype'} eq "dorem") {  
     if ($::FORM{'remaction'} eq "run") {
         $::buffer = LookupNamedQuery($::FORM{"namedcmd"});
-        $vars->{'title'} = "Bug List: $::FORM{'namedcmd'}";
-        $params = new Bugzilla::CGI($::buffer);
-        $order = $params->param('order') || $order;
-    }
-    elsif ($::FORM{'remaction'} eq "runseries") {
-        $::buffer = LookupSeries($::FORM{"series_id"});
         $vars->{'title'} = "Bug List: $::FORM{'namedcmd'}";
         $params = new Bugzilla::CGI($::buffer);
         $order = $params->param('order') || $order;
