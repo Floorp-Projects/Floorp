@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -160,7 +160,7 @@ DOM_NewNodeObject(JSContext *cx, DOM_Node *node)
     obj = JS_ConstructObject(cx, &DOM_NodeClass, NULL, NULL);
     if (!obj)
         return NULL;
-    
+
     if (!JS_SetPrivate(cx, obj, node)) {
         return NULL;
     }
@@ -285,15 +285,15 @@ node_insertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     newNode->sibling = refNode;
     newNode->prev_sibling = refNode->prev_sibling;
-    
+
     refNode->prev_sibling = newNode;
-    
+
     return node->ops->insertBefore(cx, node, newNode, refNode, JS_TRUE);
 }
 
 static JSBool
 node_replaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-		  jsval *vp)
+                  jsval *vp)
 {
     JSObject *oldChild, *newChild;
     DOM_Node *oldNode, *newNode, *node;
@@ -317,19 +317,19 @@ node_replaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!node->ops->replaceChild(cx, node, newNode, oldNode, JS_TRUE))
         return JS_FALSE;
     REMOVE_FROM_TREE(newNode);
-    
+
     newNode->parent = node;
     oldNode->sibling->prev_sibling = newNode;
     oldNode->prev_sibling->sibling = newNode;
 
     oldNode->parent = oldNode->sibling = oldNode->prev_sibling = NULL;
-    
+
     return node->ops->replaceChild(cx, node, newNode, oldNode, JS_FALSE);
 }
 
 static JSBool
 node_removeChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-		 jsval *vp)
+                 jsval *vp)
 {
     JSObject *deadChild;
     DOM_Node *deadNode, *node;
@@ -354,11 +354,11 @@ node_removeChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 static JSBool
 node_appendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-		 jsval *vp)
+                 jsval *vp)
 {
     JSObject *newChild;
     DOM_Node *newNode, *node, *iter;
-    
+
     if (!JS_ConvertArguments(cx, argc, argv, "o", &newChild))
         return JS_FALSE;
 
@@ -389,7 +389,7 @@ node_appendChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 static JSBool
 node_cloneNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-	       jsval *vp)
+               jsval *vp)
 {
     JSBool deep;
     if (!JS_ConvertArguments(cx, argc, argv, "b", &deep))
@@ -416,43 +416,43 @@ node_equals(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *vp)
 }
 
 static JSFunctionSpec node_methods[] = {
-    {"insertBefore",	node_insertBefore,	2},
-    {"replaceChild",	node_replaceChild,	2},
-    {"removeChild",		node_removeChild,	1},
-    {"appendChild",		node_appendChild,	1},
-    {"cloneNode",		node_cloneNode,		1},
-    {"equals",			node_equals,		2},
+    {"insertBefore",    node_insertBefore,      2},
+    {"replaceChild",    node_replaceChild,      2},
+    {"removeChild",     node_removeChild,       1},
+    {"appendChild",     node_appendChild,       1},
+    {"cloneNode",       node_cloneNode,         1},
+    {"equals",          node_equals,            2},
     {0}
 };
 
 JSPropertySpec dom_node_props[] = {
-    {"nodeName",		DOM_NODE_NODENAME},
-    {"nodeValue",		DOM_NODE_NODEVALUE},
-    {"nodeType",		DOM_NODE_NODETYPE},
-    {"parentNode",		DOM_NODE_PARENTNODE},
-    {"childNodes",		DOM_NODE_CHILDNODES},
-    {"firstChild",		DOM_NODE_FIRSTCHILD},
-    {"lastChild",		DOM_NODE_LASTCHILD},
-    {"previousSibling",	DOM_NODE_PREVIOUSSIBLING},
-    {"nextSibling",		DOM_NODE_NEXTSIBLING},
-    {"attributes",		DOM_NODE_ATTRIBUTES},
-    {"hasChildNodes",	DOM_NODE_HASCHILDNODES},
+    {"nodeName",        DOM_NODE_NODENAME},
+    {"nodeValue",       DOM_NODE_NODEVALUE},
+    {"nodeType",        DOM_NODE_NODETYPE},
+    {"parentNode",      DOM_NODE_PARENTNODE},
+    {"childNodes",      DOM_NODE_CHILDNODES},
+    {"firstChild",      DOM_NODE_FIRSTCHILD},
+    {"lastChild",       DOM_NODE_LASTCHILD},
+    {"previousSibling", DOM_NODE_PREVIOUSSIBLING},
+    {"nextSibling",     DOM_NODE_NEXTSIBLING},
+    {"attributes",      DOM_NODE_ATTRIBUTES},
+    {"hasChildNodes",   DOM_NODE_HASCHILDNODES},
     {0}
 };
 
 static JSConstDoubleSpec node_static_props[] = {
-    {NODE_TYPE_ELEMENT,			"ELEMENT"},
-    {NODE_TYPE_ATTRIBUTE,		"ATTRIBUTE"},
-    {NODE_TYPE_PI,		       	"PROCESSING_INSTRUCTION"},
-    {NODE_TYPE_CDATA,			"CDATA_SECTION"},
-    {NODE_TYPE_TEXT,			"TEXT"},
-    {NODE_TYPE_ENTITY_REF,		"ENTITY_REFERENCE"},
-    {NODE_TYPE_ENTITY,			"ENTITY"},
-    {NODE_TYPE_COMMENT,			"COMMENT"},
-    {NODE_TYPE_DOCUMENT,		"DOCUMENT"},
-    {NODE_TYPE_DOCTYPE,			"DOCUMENT_TYPE"},
-    {NODE_TYPE_DOCFRAGMENT,		"DOCUMENT_FRAGMENT"},
-    {NODE_TYPE_NOTATION,		"NOTATION"},
+    {NODE_TYPE_ELEMENT,         "ELEMENT"},
+    {NODE_TYPE_ATTRIBUTE,       "ATTRIBUTE"},
+    {NODE_TYPE_PI,              "PROCESSING_INSTRUCTION"},
+    {NODE_TYPE_CDATA,           "CDATA_SECTION"},
+    {NODE_TYPE_TEXT,            "TEXT"},
+    {NODE_TYPE_ENTITY_REF,      "ENTITY_REFERENCE"},
+    {NODE_TYPE_ENTITY,          "ENTITY"},
+    {NODE_TYPE_COMMENT,         "COMMENT"},
+    {NODE_TYPE_DOCUMENT,        "DOCUMENT"},
+    {NODE_TYPE_DOCTYPE,         "DOCUMENT_TYPE"},
+    {NODE_TYPE_DOCFRAGMENT,     "DOCUMENT_FRAGMENT"},
+    {NODE_TYPE_NOTATION,        "NOTATION"},
     {0}
 };
 

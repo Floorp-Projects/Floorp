@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -23,7 +23,7 @@
 #include "dom_priv.h"
 
 static JSPropertySpec element_props[] = {
-    {"tagName",		DOM_ELEMENT_TAGNAME,	JSPROP_READONLY,	0, 0},
+    {"tagName",         DOM_ELEMENT_TAGNAME,    JSPROP_READONLY,        0, 0},
     {0}
 };
 
@@ -38,7 +38,7 @@ element_getter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     slot = JSVAL_TO_INT(id);
 
-    /* 
+    /*
      * Look, ma!  Inheritance!
      * We handle .attributes ourselves because we return something other
      * than null, unlike every other Node subclass.
@@ -56,15 +56,15 @@ element_getter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (slot == DOM_ELEMENT_TAGNAME) {
         JSString *tagName;
 #ifdef DEBUG_shaver_0
-            fprintf(stderr, "getting tagName %s", 
-                    element->tagName ? element->tagName : "#tag");
-            tagName = JS_InternString(cx, element->tagName ?
-                                      element->tagName : "#tag");
-            fprintf(stderr, ": %x\n", tagName);
+        fprintf(stderr, "getting tagName %s", 
+                element->tagName ? element->tagName : "#tag");
+        tagName = JS_InternString(cx, element->tagName ?
+                                  element->tagName : "#tag");
+        fprintf(stderr, ": %x\n", tagName);
 #else
-            
-            tagName = JS_NewStringCopyZ(cx,
-                            element->tagName ? element->tagName : "#tag");
+        tagName = JS_NewStringCopyZ(cx, element->tagName
+                                        ? element->tagName
+                                        : "#tag");
 #endif
         if (!tagName)
             return JS_FALSE;
@@ -106,11 +106,12 @@ element_getAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_FALSE;
 
     if (entry && entry->value) {
-        *rval = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, entry->value));
-        if (!JSVAL_TO_STRING(*rval))
+        JSString *valstr = JS_NewStringCopyZ(cx, entry->value);
+        if (!valstr)
             return JS_FALSE;
+        *rval = STRING_TO_JSVAL(valstr);
     } else {
-        *rval = STRING_TO_JSVAL(JS_GetEmptyStringValue(cx));
+        *rval = JS_GetEmptyStringValue(cx);
     }
 
     return JS_TRUE;
@@ -176,11 +177,11 @@ element_removeAttributeNode(JSContext *cx, JSObject *obj, uintN argc,
 }
 
 static JSFunctionSpec element_methods[] = {
-    {"setAttribute",	element_setAttribute, 2},
-    {"getAttribute",	element_getAttribute, 1},
-    {"removeAttribute", element_removeAttribute, 1},
-    {"setAttributeNode", element_setAttributeNode, 1},
-    {"getAttributeNode", element_getAttributeNode, 1},
+    {"setAttribute",        element_setAttribute,        2},
+    {"getAttribute",        element_getAttribute,        1},
+    {"removeAttribute",     element_removeAttribute,     1},
+    {"setAttributeNode",    element_setAttributeNode,    1},
+    {"getAttributeNode",    element_getAttributeNode,    1},
     {"removeAttributeNode", element_removeAttributeNode, 1},
     {0}
 };
@@ -208,7 +209,7 @@ JSObject *
 DOM_NewElementObject(JSContext *cx, DOM_Element *element)
 {
     JSObject *obj;
-    
+
     obj = JS_ConstructObject(cx, &DOM_ElementClass, NULL, NULL);
     if (!obj)
         return NULL;
@@ -342,9 +343,9 @@ JSObject *
 dom_ElementInit(JSContext *cx, JSObject *scope, JSObject *node_proto)
 {
     JSObject *proto = JS_InitClass(cx, scope, node_proto, &DOM_ElementClass,
-				   Element, 0,
-				   element_props, element_methods,
-				   NULL, NULL);
+                                   Element, 0,
+                                   element_props, element_methods,
+                                   NULL, NULL);
     if (!JS_DefineProperties(cx, proto, dom_node_props))
         return NULL;
     return proto;

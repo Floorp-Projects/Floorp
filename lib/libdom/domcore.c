@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -183,7 +183,7 @@ dom_hasFeature(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     *rval = JSVAL_FALSE;
     return JS_TRUE;
 }
-           
+
 static JSFunctionSpec dom_methods[] = {
     {"hasFeature",  dom_hasFeature,     2},
     {0}

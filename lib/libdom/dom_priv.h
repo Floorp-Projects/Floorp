@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -26,9 +26,7 @@
 #define DOM_PRIV_H
 
 #include "dom.h"
-#include "xp_mem.h"             /* XP_NEW_ZAP, XP_FREE */
-#include "xpassert.h"           /* XP_ASSERT */
-#include "xp_str.h"             /* XP_STRDUP */
+#include "xp.h"
 
 JSObject *
 dom_NodeInit(JSContext *cx, JSObject *obj);

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -50,9 +50,9 @@ enum {
 };
 
 static JSPropertySpec attribute_props[] = {
-    {"specified",	ATTRIBUTE_SPECIFIED, 	JSPROP_ENUMERATE, 0, 0},
-    {"name",		ATTRIBUTE_NAME,			JSPROP_ENUMERATE, 0, 0},
-    {"value",		ATTRIBUTE_VALUE,		JSPROP_ENUMERATE, 0, 0},
+    {"specified",       ATTRIBUTE_SPECIFIED,    JSPROP_ENUMERATE, 0, 0},
+    {"name",            ATTRIBUTE_NAME,         JSPROP_ENUMERATE, 0, 0},
+    {"value",           ATTRIBUTE_VALUE,        JSPROP_ENUMERATE, 0, 0},
     {0}
 };
 
@@ -68,9 +68,8 @@ DOM_NewAttributeObject(JSContext *cx, DOM_Attribute *attr)
     if (!obj)
         return NULL;
 
-    if (!JS_SetPrivate(cx, obj, attr)) {
+    if (!JS_SetPrivate(cx, obj, attr))
         return NULL;
-    }
 
     str = JS_NewStringCopyZ(cx, node->name);
     v = STRING_TO_JSVAL(str);
@@ -91,8 +90,8 @@ DOM_NewAttribute(const char *name, const char *value, DOM_Element *element)
     DOM_Attribute *attr;
     attr = XP_NEW_ZAP(DOM_Attribute);
     if (!attr)
-	return NULL;
-    
+        return NULL;
+
     attr->node.name = XP_STRDUP(name);
     attr->element = element;
     return attr;
@@ -102,7 +101,7 @@ JSObject *
 DOM_ObjectForAttribute(JSContext *cx, DOM_Attribute *attr)
 {
     if (!attr)
-	return NULL;
+        return NULL;
 
     if (attr->node.mocha_object)
         return attr->node.mocha_object;

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -39,10 +39,10 @@ typedef struct DOM_StyleRule DOM_StyleRule;
 /* this may become int or something later, for speed */
 typedef const char *DOM_StyleToken;
 
-#define DOM_STYLE_PSEUDO_TAG		(1 << 7)
-#define DOM_SELECTOR_IS_PSEUDO(sel)	((sel) & DOM_STYLE_PSEUDO_TAG)
-#define DOM_STYLE_SELECTOR_TYPE(sel)	((sel) & ~DOM_STYLE_PSEUDO_TAG)
-#define DOM_PSEUDOIZE(sel)		((sel) | DOM_STYLE_PSEUDO_TAG)
+#define DOM_STYLE_PSEUDO_TAG            (1 << 7)
+#define DOM_SELECTOR_IS_PSEUDO(sel)     ((sel) & DOM_STYLE_PSEUDO_TAG)
+#define DOM_STYLE_SELECTOR_TYPE(sel)    ((sel) & ~DOM_STYLE_PSEUDO_TAG)
+#define DOM_PSEUDOIZE(sel)              ((sel) | DOM_STYLE_PSEUDO_TAG)
 
 enum {
     SELECTOR_UNKNOWN = 0
@@ -110,7 +110,7 @@ struct DOM_StyleRule {
 
 JSBool
 DOM_StyleAddRule(JSContext *cx, DOM_StyleDatabase *db, const char *rule,
-		 uintN len, intN baseWeight);
+                 uintN len, intN baseWeight);
 
 /*
  * Get a style property for a node.

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -37,14 +37,14 @@ cdata_getter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
-    
+
     slot = JSVAL_TO_INT(id);
     /* Look, ma!  Inheritance! */
     if (slot <= DOM_NODE_NODENAME &&
         slot >= DOM_NODE_HASCHILDNODES) {
         return dom_node_getter(cx, obj, id, vp);
     }
-    
+
     cdata = (DOM_CharacterData *)JS_GetPrivate(cx, obj);
     if (!cdata)
         return JS_TRUE;
@@ -73,17 +73,17 @@ cdata_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     intN slot;
     DOM_CharacterData *cdata;
     JSString *str;
-    
+
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
-    
+
     slot = JSVAL_TO_INT(id);
     /* Look, ma!  Inheritance! */
     if (slot <= DOM_NODE_NODENAME &&
         slot >= DOM_NODE_HASCHILDNODES) {
         return dom_node_setter(cx, obj, id, vp);
     }
-    
+
     cdata = (DOM_CharacterData *)JS_GetPrivate(cx, obj);
     if (!cdata)
         return JS_TRUE;
@@ -118,7 +118,7 @@ cdata_substringData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     cdata = (DOM_CharacterData *)JS_GetPrivate(cx, obj);
     if (!cdata) {
-        *vp = STRING_TO_JSVAL(JS_GetEmptyStringValue(cx));
+        *vp = JS_GetEmptyStringValue(cx);
         return JS_TRUE;
     }
 
@@ -129,11 +129,11 @@ cdata_substringData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     if (offset + count > cdata->len)
         count = cdata->len - offset;
-    
+
     substr = JS_NewStringCopyN(cx, cdata->data + offset, count);
     if (!substr)
         return JS_FALSE;
-    
+
     *vp = STRING_TO_JSVAL(substr);
     return JS_TRUE;
 }
@@ -143,8 +143,9 @@ cdata_appendData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                  jsval *vp)
 {
     JSString *newData;
-    uint32 newlen;
     DOM_CharacterData *cdata;
+    uint32 newlen;
+    char *data2;
 
     if (!JS_ConvertArguments(cx, argc, argv, "S", &newData))
         return JS_FALSE;
@@ -155,14 +156,14 @@ cdata_appendData(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     newlen = JS_GetStringLength(newData);
 
-    cdata->data = XP_REALLOC(cdata->data, cdata->len + newlen);
-    if (!cdata->data)
+    data2 = XP_REALLOC(cdata->data, cdata->len + newlen);
+    if (!data2)
         return JS_FALSE;
 
-    XP_MEMCPY(cdata->data + cdata->len, JS_GetStringBytes(newData),
-              newlen);
+    XP_MEMCPY(data2 + cdata->len, JS_GetStringBytes(newData), newlen);
+    cdata->data = data2;
     cdata->len += newlen;
-    
+
     return cdata->notify(cx, cdata, CDATA_APPEND);
 }
 
@@ -289,8 +290,8 @@ static JSClass DOM_CDataClass = {
 };
 
 static JSPropertySpec cdata_props[] = {
-    {"data",	DOM_CDATA_DATA,		JSPROP_ENUMERATE, 0, 0},
-    {"length",	DOM_CDATA_LENGTH,	JSPROP_ENUMERATE | JSPROP_READONLY,
+    {"data",    DOM_CDATA_DATA,         JSPROP_ENUMERATE, 0, 0},
+    {"length",  DOM_CDATA_LENGTH,       JSPROP_ENUMERATE | JSPROP_READONLY,
      0, 0},
     {0}
 };
@@ -299,7 +300,7 @@ static JSFunctionSpec cdata_methods[] = {
     {"substringData", cdata_substringData, 2},
     {"appendData",    cdata_appendData,    1},
     {"insertData",    cdata_insertData,    2},
-    {"deleteData",	  cdata_deleteData,	   2},
+    {"deleteData",    cdata_deleteData,    2},
     {"replaceData",   cdata_replaceData,   3},
     {0}
 };
@@ -316,9 +317,9 @@ dom_CharacterDataInit(JSContext *cx, JSObject *scope, JSObject *node_proto)
 {
     JSObject *proto;
     proto = JS_InitClass(cx, scope, node_proto, &DOM_CDataClass,
-			 CharacterData, 0,
-			 cdata_props, cdata_methods,
-			 NULL, NULL);
+                         CharacterData, 0,
+                         cdata_props, cdata_methods,
+                         NULL, NULL);
     return proto;
 }
 
@@ -388,7 +389,7 @@ DOM_ObjectForText(JSContext *cx, DOM_Text *text)
 
     if (text->cdata.node.mocha_object)
         return text->cdata.node.mocha_object;
-    
+
     return DOM_NewTextObject(cx, text);
 }
 
@@ -403,9 +404,9 @@ dom_TextInit(JSContext *cx, JSObject *scope, JSObject *cdata_proto)
 {
     JSObject *proto;
     proto = JS_InitClass(cx, scope, cdata_proto, &DOM_TextClass,
-			 Text, 0,
-			 cdata_props, text_methods,
-			 NULL, NULL);
+                         Text, 0,
+                         cdata_props, text_methods,
+                         NULL, NULL);
     return proto;
 }
 

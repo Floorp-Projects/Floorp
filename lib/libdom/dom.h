@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -21,9 +21,10 @@
  * See http://www.w3.org/DOM/ for details.
  */
 
-#include "jsapi.h"
 #ifndef DOM_H
 #define DOM_H
+
+#include "jsapi.h"
 
 typedef enum DOM_NodeType {
     NODE_TYPE_ELEMENT = 1,
@@ -56,16 +57,16 @@ typedef enum DOM_ExceptionCode {
 } DOM_ExceptionCode;
 
 /* struct typedefs */
-typedef struct DOM_Node				DOM_Node;
-typedef struct DOM_NodeOps			DOM_NodeOps;
-typedef struct DOM_AttributeEntry   DOM_AttributeEntry;
-typedef struct DOM_Element			DOM_Element;
-typedef struct DOM_ElementOps		DOM_ElementOps;
-typedef struct DOM_AttributeList	DOM_AttributeList;
-typedef struct DOM_Attribute		DOM_Attribute;
-typedef struct DOM_Document			DOM_Document;
-typedef struct DOM_CharacterData 	DOM_CharacterData;
-typedef struct DOM_Text				DOM_Text;
+typedef struct DOM_Node                 DOM_Node;
+typedef struct DOM_NodeOps              DOM_NodeOps;
+typedef struct DOM_AttributeEntry       DOM_AttributeEntry;
+typedef struct DOM_Element              DOM_Element;
+typedef struct DOM_ElementOps           DOM_ElementOps;
+typedef struct DOM_AttributeList        DOM_AttributeList;
+typedef struct DOM_Attribute            DOM_Attribute;
+typedef struct DOM_Document             DOM_Document;
+typedef struct DOM_CharacterData        DOM_CharacterData;
+typedef struct DOM_Text                 DOM_Text;
 
 /*
  * All of these handlers are called before the DOM tree is manipulated, with
@@ -84,20 +85,20 @@ typedef struct DOM_Text				DOM_Text;
  * at this point, or signal an exception and return false.
  */
 struct DOM_NodeOps {
-    JSBool	(*insertBefore)(JSContext *cx, DOM_Node *node, DOM_Node *child,
-                            DOM_Node *ref, JSBool before);
-    JSBool	(*replaceChild)(JSContext *cx, DOM_Node *node, DOM_Node *child,
-                            DOM_Node *old, JSBool before);
-    JSBool	(*removeChild) (JSContext *cx, DOM_Node *node, DOM_Node *old,
-                            JSBool before);
-    JSBool	(*appendChild) (JSContext *cx, DOM_Node *node, DOM_Node *child,
-                            JSBool before);
+    JSBool      (*insertBefore)(JSContext *cx, DOM_Node *node, DOM_Node *child,
+                                DOM_Node *ref, JSBool before);
+    JSBool      (*replaceChild)(JSContext *cx, DOM_Node *node, DOM_Node *child,
+                                DOM_Node *old, JSBool before);
+    JSBool      (*removeChild) (JSContext *cx, DOM_Node *node, DOM_Node *old,
+                                JSBool before);
+    JSBool      (*appendChild) (JSContext *cx, DOM_Node *node, DOM_Node *child,
+                                JSBool before);
 
     /* free up Node-private data */
-    void		(*destroyNode) (JSContext *cx, DOM_Node *node);
+    void        (*destroyNode) (JSContext *cx, DOM_Node *node);
 
     /* construct a JSObject and fill in Node-private data as appropriate. */
-    JSObject *	(*reflectNode) (JSContext *cx, DOM_Node *node);
+    JSObject *  (*reflectNode) (JSContext *cx, DOM_Node *node);
 
 };
 
@@ -138,18 +139,18 @@ struct DOM_ElementOps {
      * DOM_SignalException(cx, DOM_INVALID_NAME_ERR) if it's an
      * invalid name.  (The DOM_NO_MODIFICATION_ALLOWED_ERR case is
      * handled in the DOM code itself, and no call will be made to the
-     * setAttribute handler in that case.)  
+     * setAttribute handler in that case.)
      */
-    JSBool			(*setAttribute)(JSContext *cx, DOM_Element *element,
-                                    const char *name, const char *value);
+    JSBool              (*setAttribute)(JSContext *cx, DOM_Element *element,
+                                        const char *name, const char *value);
 
     /* returns attribute value (caller must copy) or NULL if not found */
-    const char * 	(*getAttribute)(JSContext *cx, DOM_Element *element,
-                                    const char *name, JSBool *cacheable);
+    const char *        (*getAttribute)(JSContext *cx, DOM_Element *element,
+                                        const char *name, JSBool *cacheable);
 
     /* returns number of attributes, or -1 if the number isn't known */
-    intN			(*getNumAttrs)(JSContext *cx, DOM_Element *element,
-                                   JSBool *cacheable);
+    intN                (*getNumAttrs)(JSContext *cx, DOM_Element *element,
+                                       JSBool *cacheable);
 };
 
 /* stubs */
@@ -171,15 +172,15 @@ DOM_SignalException(JSContext *cx, DOM_ExceptionCode exception);
 /* The basic node */
 
 struct DOM_Node {
-    DOM_NodeType 	type;
-    DOM_NodeOps		*ops;
-    char	    	*name;
-    struct DOM_Node *sibling;
-    struct DOM_Node *prev_sibling;
-    struct DOM_Node *child;
-    struct DOM_Node *parent;
-    JSObject		*mocha_object;
-    void			*data;           /* embedding-private data */
+    DOM_NodeType        type;
+    DOM_NodeOps         *ops;
+    char                *name;
+    struct DOM_Node     *sibling;
+    struct DOM_Node     *prev_sibling;
+    struct DOM_Node     *child;
+    struct DOM_Node     *parent;
+    JSObject            *mocha_object;
+    void                *data;           /* embedding-private data */
 };
 
 JSBool
@@ -219,10 +220,10 @@ struct DOM_AttributeEntry {
 };
 
 struct DOM_Element {
-    DOM_Node 		   node;
-    DOM_ElementOps	   *ops;
-    const char		   *tagName;
-    uintN			   nattrs;
+    DOM_Node            node;
+    DOM_ElementOps      *ops;
+    const char          *tagName;
+    uintN               nattrs;
     DOM_AttributeEntry *attrs;
     void               *style;  /* later, later... */
 };
