@@ -73,27 +73,15 @@ endif
 ####################################
 # CVS
 
-# Basic CVS flags
-ifndef MOZ_CVS_FLAGS
-  MOZ_CVS_FLAGS := -q -z 3
-endif
-
-# Anything that we should use on all checkouts
-ifdef MOZ_CO_FLAGS
-  CVS_CO_FLAGS := $(MOZ_CO_FLAGS)
-else
-  CVS_CO_FLAGS := -P
-endif
-
-# Add the CVS root to CVS_CO_FLAGS if needed
+# Add the CVS root to CVS_FLAGS if needed
 CVS_ROOT_IN_TREE  := $(shell cat $(TOPSRCDIR)/CVS/Root 2>/dev/null)
 ifneq ($(CVS_ROOT_IN_TREE),)
 ifneq ($(CVS_ROOT_IN_TREE),$(CVSROOT))
-  MOZ_CVS_FLAGS := $(MOZ_CVS_FLAGS) -d $(CVS_ROOT_IN_TREE)
+  CVS_FLAGS := $(CVS_ROOT_IN_TREE)
 endif
 endif
 
-CVSCO	      := cvs $(MOZ_CVS_FLAGS) co $(CVS_CO_FLAGS)
+CVSCO	      = cvs $(CVS_FLAGS) co $(CVS_CO_FLAGS)
 CVSCO_LOGFILE := $(ROOTDIR)/cvsco.log
 
 ####################################
@@ -114,6 +102,20 @@ include $(TOPSRCDIR)/.client-defs.mk
 
 ####################################
 # Options that may come from mozconfig
+
+# MOZ_CVS_FLAGS - Basic CVS flags
+ifeq "$(origin MOZ_CVS_FLAGS)" "undefined"
+  CVS_FLAGS := $(CVS_FLAGS) -q -z 3
+else
+  CVS_FLAGS := $(MOZ_CVS_FLAGS)
+endif
+
+# MOZ_CO_FLAGS - Anything that we should use on all checkouts
+ifeq "$(origin MOZ_CO_FLAGS)" "undefined"
+  CVS_CO_FLAGS := -P
+else
+  CVS_CO_FLAGS := $(MOZ_CO_FLAGS)
+endif
 
 ifdef MOZ_CO_BRANCH
   CVSCO := $(CVSCO) -r $(MOZ_CO_BRANCH)
