@@ -148,7 +148,7 @@
 
 
   <menulist id="downloadsRetentionPolicy" hidden="true"
-            preftype="int" prefstring="browser.download.retention" prefdefval="0">
+            preftype="int" prefstring="browser.download.manager.retention" prefdefval="0">
     <menupopup>
       <menuitem value="0" label="&downloadsRemoveImmediately.label;"/>
       <menuitem value="1" label="&downloadsRemoveExit.label;"/>

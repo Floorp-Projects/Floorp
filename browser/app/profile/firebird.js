@@ -124,12 +124,12 @@ pref("accessibility.typeaheadfind.enabletimeout", true);
 pref("accessibility.typeaheadfind.soundURL", "default");
 pref("accessibility.typeaheadfind.enablesound", true);
 
-pref("browser.download.openSidebar", false);
 pref("browser.download.useDownloadDir", true);
 pref("browser.download.folderList", 0);
-pref("browser.download.retention", 2);
-pref("browser.download.showWhenStarting", true);
-pref("browser.download.closeWhenDone", true);
+pref("browser.download.manager.retention", 2);
+pref("browser.download.manager.showWhenStarting", true);
+pref("browser.download.manager.closeWhenDone", true);
+pref("browser.download.manager.openDelay", 500);
 
 // pointer to the default engine name
 pref("browser.search.defaultenginename", "chrome://browser-region/locale/region.properties");
