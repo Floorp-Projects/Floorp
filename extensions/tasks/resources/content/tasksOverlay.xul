@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://tasks/skin/tasksOverlay.css" type="text/css"?> 
+
+<!DOCTYPE overlay SYSTEM "chrome://tasks/locale/tasksOverlay.dtd" >
+
+<overlay id="TasksMenuID"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="application/x-javascript" src="chrome://tasks/content/tasksOverlay.js"/>
+
+<keyset id="tasksKeys">
+  <key id="key_other_cal" key="&other-cal-cmd.commandkey;" command="Tasks:OtherCal" modifiers="accel"/>
+</keyset>
+
+<commandset id="tasksCommands">
+  <command id="Tasks:OtherCal" oncommand="openOtherCal();"/>
+</commandset>
+
+<menupopup id="windowPopup" >
+  <menuitem 
+	hidden="true"
+        id="tasksMenuOtherCal"
+        label="&other-cal-cmd.label;"
+        accesskey="&other-cal-cmd.accesskey;"
+        key="key_other_cal"
+        command="Tasks:OtherCal"
+        insertbefore="sep-window-list"
+        class="menuitem-iconic icon-other-cal16 menu-iconic"/>
+</menupopup>
+
+<statusbarpanel id="component-bar">
+    <toolbarbutton class="taskbutton" id="mini-other-cal" oncommand="openOtherCal();" hidden="true"
+    position="&other-cal-cmd.commandkey;" tooltiptext="&other-cal-cmd.label;"/>
+</statusbarpanel>
+
+</overlay>
