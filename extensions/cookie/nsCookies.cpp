@@ -634,6 +634,17 @@ cookie_FindPosition(cookie_CookieStruct *aCookie,
     cookieInList = NS_STATIC_CAST(cookie_CookieStruct*, sCookieList->ElementAt(i));
     NS_ASSERTION(cookieInList, "corrupt cookie list");
 
+    // check if we've passed the location where we might find a previous cookie.
+    // sCookieList is sorted in order of descending path length,
+    // so since we're enumerating forwards, we look for aCookie path length
+    // to become greater than cookieInList path length.
+    // if we've found a position to insert the cookie at (either replacing a 
+    // previous cookie, or inserting at a new position), we don't need to keep looking.
+    if (aInsertPosition == -1 &&
+        path.Length() > cookieInList->path.Length()) {
+      aInsertPosition = i;
+    }
+
     if (cookie_IsInDomain(cookieInList->host, host, cookieInList->isDomain)) {
       ++countFromHost;
 
@@ -642,23 +653,11 @@ cookie_FindPosition(cookie_CookieStruct *aCookie,
         oldestPositionFromHost = i;
       }
 
-      // if we've found a position to insert the cookie at (either replacing a 
-      // previous cookie, or inserting at a new position), we don't need to keep looking.
-      if (aInsertPosition != -1) {
-        continue;
-      }
-
-      // check if we've passed the location where we might find a previous cookie.
-      // sCookieList is sorted in order of descending path length,
-      // so since we're enumerating forwards, we look for aCookie path length
-      // to become greater than cookieInList path length.
-      if (aCookie->path.Length() > cookieInList->path.Length()) {
-        aInsertPosition = i;
-      
       // check if we've found the previous cookie
-      } else if (path.Equals(cookieInList->path) &&
-                 host.Equals(cookieInList->host) &&
-                 name.Equals(cookieInList->name)) {
+      if (aInsertPosition == -1 &&
+          path.Equals(cookieInList->path) &&
+          host.Equals(cookieInList->host) &&
+          name.Equals(cookieInList->name)) {
         aInsertPosition = i;
         foundCookie = PR_TRUE;
       }
