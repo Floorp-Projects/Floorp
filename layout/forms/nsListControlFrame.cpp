@@ -638,7 +638,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
       visibleWidth = scrolledAreaWidth;
     } else {
-      visibleWidth = aReflowState.mComputedWidth - scrollbarWidth;
+      visibleWidth = aReflowState.mComputedWidth;// - scrollbarWidth;
       // XXX rods - this hould not be subtracted in
       //visibleWidth  -= (border.left + border.right + padding.left + padding.right);
     }
