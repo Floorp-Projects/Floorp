@@ -269,15 +269,16 @@ abbr, acronym, del, dfn, ins, q, span {
 ins { text-decoration: underline; }
 del { text-decoration: line-through; }
 dfn { font-style: italic; }
-sub {
+sub, sup {
   display: inline;
-  vertical-align: sub;
   font-size: smaller;
+  line-height: normal;
+}
+sub {
+  vertical-align: sub;
 }
 sup {
-  display: inline;
   vertical-align: super;
-  font-size: smaller;
 }
 ilayer {
   position: relative;
