@@ -39,12 +39,16 @@ EXPORTS		= setuprsc.h
 CPPSRCS		= setuprsc.cpp
 
 GARBAGE		+= $(DIST)/install/$(SHARED_LIBRARY)
+GARBAGE_DIRS	+= $(DIST)/include/$(MODULE)
 
 include $(topsrcdir)/config/rules.mk
 
 # Hack to get around the default rules insisting that .lib should exist
 $(IMPORT_LIBRARY):
 	touch $@
+
+export:: $(EXPORTS)
+	$(INSTALL) $< $(DIST)/include/$(MODULE)/
 
 libs:: $(SHARED_LIBRARY)
 	$(INSTALL) $< $(DIST)/install
