@@ -417,13 +417,29 @@ sub ConfigureBuildSystem()
 
 sub Checkout()
 {
+    print <<EOS;
+----------------------------------------------------------------------
+You are using the old build scripts, which are going away soon. Please
+start using the new scripts, in mozilla/build/mac/build_scripts. The
+new scripts are new and improved in the following ways:
+1. Build progress allows you to restart stalled builds automatically.
+2. The 'build' script now pulls as well, so you can pull and build
+   in one step.
+3. Build options are customizable via a local prefs file.
+4. Better user interaction and error reporting.
+
+If you have any questions, contact Simon Fraser (sfraser@netscape.com)
+----------------------------------------------------------------------
+
+EOS
+
     unless ( $main::pull{all} || $main::pull{moz} || $main::pull{runtime} ) { return;}
 
     # give application activation a chance to happen
     WaitNextEvent();
     WaitNextEvent();
     WaitNextEvent();
-    
+        
     _assertRightDirectory();
     my($cvsfile) = _pickWithMemoryFile("::nglayout.cvsloc");
     my($session) = MacCVS->new( $cvsfile );
