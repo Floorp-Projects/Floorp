@@ -291,6 +291,9 @@ public:
   // call if you change style data after creation
   virtual void    RecalcAutomaticData(nsIPresContext* aPresContext) = 0;
 
+  // compute the effective difference between two contexts
+  NS_IMETHOD  CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint) const = 0;
+
   // debugging
   virtual void  List(FILE* out, PRInt32 aIndent) = 0;
 };

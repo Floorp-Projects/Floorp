@@ -58,6 +58,7 @@ struct StyleFontImpl : public nsStyleFont {
   {}
 
   void ResetFrom(const nsStyleFont* aParent, nsIPresContext* aPresContext);
+  PRInt32 CalcDifference(const StyleFontImpl& aOther) const;
 
 private:  // These are not allowed
   StyleFontImpl(const StyleFontImpl& aOther);
@@ -78,6 +79,16 @@ void StyleFontImpl::ResetFrom(const nsStyleFont* aParent, nsIPresContext* aPresC
   }
 }
 
+PRInt32 StyleFontImpl::CalcDifference(const StyleFontImpl& aOther) const
+{
+  if (mFont.Equals(aOther.mFont) && mFixedFont.Equals(aOther.mFixedFont) &&
+      (mFlags == aOther.mFlags)) {
+    return NS_STYLE_HINT_NONE;
+  }
+  return NS_STYLE_HINT_REFLOW;
+}
+
+
 // --------------------
 // nsStyleColor
 //
@@ -88,6 +99,7 @@ struct StyleColorImpl: public nsStyleColor {
   StyleColorImpl(void)  { }
 
   void ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPresContext);
+  PRInt32 CalcDifference(const StyleColorImpl& aOther) const;
 
 private:  // These are not allowed
   StyleColorImpl(const StyleColorImpl& aOther);
@@ -125,6 +137,23 @@ void StyleColorImpl::ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPre
   mCursor = NS_STYLE_CURSOR_AUTO;
 }
 
+PRInt32 StyleColorImpl::CalcDifference(const StyleColorImpl& aOther) const
+{
+  if ((mColor == aOther.mColor) && 
+      (mBackgroundAttachment == aOther.mBackgroundAttachment) &&
+      (mBackgroundFlags == aOther.mBackgroundFlags) &&
+      (mBackgroundRepeat == aOther.mBackgroundRepeat) &&
+      (mBackgroundColor == aOther.mBackgroundColor) &&
+      (mBackgroundXPosition == aOther.mBackgroundXPosition) &&
+      (mBackgroundYPosition == aOther.mBackgroundYPosition) &&
+      (mBackgroundImage == aOther.mBackgroundImage) &&
+      (mCursor == aOther.mCursor) &&
+      (mCursorImage == aOther.mCursorImage) &&
+      (mOpacity == aOther.mOpacity)) {
+    return NS_STYLE_HINT_NONE;
+  }
+  return NS_STYLE_HINT_VISUAL;
+}
 
 // --------------------
 // nsStyleSpacing
@@ -361,6 +390,7 @@ struct StyleSpacingImpl: public nsStyleSpacing {
 
   void ResetFrom(const nsStyleSpacing* aParent, nsIPresContext* aPresContext);
   void RecalcData(nsIPresContext* aPresContext, nscolor color);
+  PRInt32 CalcDifference(const StyleSpacingImpl& aOther) const;
 };
 
 void StyleSpacingImpl::ResetFrom(const nsStyleSpacing* aParent, nsIPresContext* aPresContext)
@@ -513,6 +543,23 @@ void StyleSpacingImpl::RecalcData(nsIPresContext* aPresContext, nscolor color)
 
 }
 
+PRInt32 StyleSpacingImpl::CalcDifference(const StyleSpacingImpl& aOther) const
+{
+  if ((mMargin == aOther.mMargin) && 
+      (mPadding == aOther.mPadding) && 
+      (mBorder == aOther.mBorder)) {
+    PRInt32 index;
+    for (index = 0; index < 4; index++) {
+      if ((mBorderStyle[index] != aOther.mBorderStyle[index]) || 
+          (mBorderColor[index] != aOther.mBorderColor[index])) {
+        return NS_STYLE_HINT_VISUAL;
+      }
+    }
+    return NS_STYLE_HINT_NONE;
+  }
+  return NS_STYLE_HINT_REFLOW;
+}
+
 
 // --------------------
 // nsStyleList
@@ -524,6 +571,7 @@ struct StyleListImpl: public nsStyleList {
   StyleListImpl(void) { }
 
   void ResetFrom(const nsStyleList* aParent, nsIPresContext* aPresContext);
+  PRInt32 CalcDifference(const StyleListImpl& aOther) const;
 };
 
 void StyleListImpl::ResetFrom(const nsStyleList* aParent, nsIPresContext* aPresContext)
@@ -540,6 +588,21 @@ void StyleListImpl::ResetFrom(const nsStyleList* aParent, nsIPresContext* aPresC
   }
 }
 
+PRInt32 StyleListImpl::CalcDifference(const StyleListImpl& aOther) const
+{
+  if (mListStylePosition == aOther.mListStylePosition) {
+    if (mListStyleImage == aOther.mListStyleImage) {
+      if (mListStyleType == aOther.mListStyleType) {
+        return NS_STYLE_HINT_NONE;
+      }
+      return NS_STYLE_HINT_VISUAL;
+    }
+    return NS_STYLE_HINT_CONTENT;
+  }
+  return NS_STYLE_HINT_REFLOW;
+}
+
+
 // --------------------
 // nsStylePosition
 //
@@ -549,6 +612,7 @@ struct StylePositionImpl: public nsStylePosition {
   StylePositionImpl(void) { }
 
   void ResetFrom(const nsStylePosition* aParent, nsIPresContext* aPresContext);
+  PRInt32 CalcDifference(const StylePositionImpl& aOther) const;
 
 private:  // These are not allowed
   StylePositionImpl(const StylePositionImpl& aOther);
@@ -573,6 +637,24 @@ void StylePositionImpl::ResetFrom(const nsStylePosition* aParent, nsIPresContext
   mZIndex.SetAutoValue();
 }
 
+PRInt32 StylePositionImpl::CalcDifference(const StylePositionImpl& aOther) const
+{
+  if (mPosition == aOther.mPosition) {
+    if ((mOffset == aOther.mOffset) &&
+        (mWidth == aOther.mWidth) &&
+        (mMinWidth == aOther.mMinWidth) &&
+        (mMaxWidth == aOther.mMaxWidth) &&
+        (mHeight == aOther.mHeight) &&
+        (mMinHeight == aOther.mMinHeight) &&
+        (mMaxHeight == aOther.mMaxHeight) &&
+        (mZIndex == aOther.mZIndex)) {
+      return NS_STYLE_HINT_NONE;
+    }
+    return NS_STYLE_HINT_REFLOW;
+  }
+  return NS_STYLE_HINT_FRAMECHANGE;
+}
+
 // --------------------
 // nsStyleText
 //
@@ -583,6 +665,7 @@ struct StyleTextImpl: public nsStyleText {
   StyleTextImpl(void) { }
 
   void ResetFrom(const nsStyleText* aParent, nsIPresContext* aPresContext);
+  PRInt32 CalcDifference(const StyleTextImpl& aOther) const;
 };
 
 void StyleTextImpl::ResetFrom(const nsStyleText* aParent, nsIPresContext* aPresContext)
@@ -615,6 +698,24 @@ void StyleTextImpl::ResetFrom(const nsStyleText* aParent, nsIPresContext* aPresC
 
 }
 
+PRInt32 StyleTextImpl::CalcDifference(const StyleTextImpl& aOther) const
+{
+  if ((mTextAlign == aOther.mTextAlign) &&
+      (mTextTransform == aOther.mTextTransform) &&
+      (mWhiteSpace == aOther.mWhiteSpace) &&
+      (mLetterSpacing == aOther.mLetterSpacing) &&
+      (mLineHeight == aOther.mLineHeight) &&
+      (mTextIndent == aOther.mTextIndent) &&
+      (mWordSpacing == aOther.mWordSpacing) &&
+      (mVerticalAlign == aOther.mVerticalAlign)) {
+    if (mTextDecoration == aOther.mTextDecoration) {
+      return NS_STYLE_HINT_NONE;
+    }
+    return NS_STYLE_HINT_VISUAL;
+  }
+  return NS_STYLE_HINT_REFLOW;
+}
+
 // --------------------
 // nsStyleDisplay
 //
@@ -625,6 +726,7 @@ struct StyleDisplayImpl: public nsStyleDisplay {
   StyleDisplayImpl(void) { }
 
   void ResetFrom(const nsStyleDisplay* aParent, nsIPresContext* aPresContext);
+  PRInt32 CalcDifference(const StyleDisplayImpl& aOther) const;
 };
 
 void StyleDisplayImpl::ResetFrom(const nsStyleDisplay* aParent, nsIPresContext* aPresContext)
@@ -647,6 +749,27 @@ void StyleDisplayImpl::ResetFrom(const nsStyleDisplay* aParent, nsIPresContext* 
   mClip.SizeTo(0,0,0,0);
 }
 
+PRInt32 StyleDisplayImpl::CalcDifference(const StyleDisplayImpl& aOther) const
+{
+  if ((mDisplay == aOther.mDisplay) &&
+      (mFloats == aOther.mFloats) &&
+      (mOverflow == aOther.mOverflow)) {
+    if ((mDirection == aOther.mDirection) &&
+        (mBreakType == aOther.mBreakType) &&
+        (mBreakBefore == aOther.mBreakBefore) &&
+        (mBreakAfter == aOther.mBreakAfter)) {
+      if ((mVisible == aOther.mVisible) &&
+          (mClipFlags == aOther.mClipFlags) &&
+          (mClip == aOther.mClip)) {
+        return NS_STYLE_HINT_NONE;
+      }
+      return NS_STYLE_HINT_VISUAL;
+    }
+    return NS_STYLE_HINT_REFLOW;
+  }
+  return NS_STYLE_HINT_FRAMECHANGE;
+}
+
 // --------------------
 // nsStyleTable
 //
@@ -657,6 +780,7 @@ struct StyleTableImpl: public nsStyleTable {
   StyleTableImpl(void);
 
   void ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPresContext);
+  PRInt32 CalcDifference(const StyleTableImpl& aOther) const;
 };
 
 StyleTableImpl::StyleTableImpl()
@@ -681,6 +805,26 @@ void StyleTableImpl::ResetFrom(const nsStyleTable* aParent, nsIPresContext* aPre
   mSpan=1;
 }
 
+PRInt32 StyleTableImpl::CalcDifference(const StyleTableImpl& aOther) const
+{
+  if ((mLayoutStrategy == aOther.mLayoutStrategy) &&
+      (mFrame == aOther.mFrame) &&
+      (mRules == aOther.mRules) &&
+      (mBorderCollapse == aOther.mBorderCollapse) &&
+      (mBorderSpacingX == aOther.mBorderSpacingX) &&
+      (mBorderSpacingY == aOther.mBorderSpacingY) &&
+      (mCellPadding == aOther.mCellPadding) &&
+      (mCaptionSide == aOther.mCaptionSide) &&
+      (mCols == aOther.mCols) &&
+      (mSpan == aOther.mSpan) &&
+      (mSpanWidth == aOther.mSpanWidth)) {
+    if (mEmptyCells == aOther.mEmptyCells) {
+      return NS_STYLE_HINT_NONE;
+    }
+    return NS_STYLE_HINT_VISUAL;
+  }
+  return NS_STYLE_HINT_REFLOW;
+}
 
 //----------------------------------------------------------------------
 
@@ -713,6 +857,7 @@ public:
 
   virtual void ForceUnique(void);
   virtual void RecalcAutomaticData(nsIPresContext* aPresContext);
+  NS_IMETHOD  CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint) const;
 
   virtual void  List(FILE* out, PRInt32 aIndent);
 
@@ -1237,9 +1382,77 @@ void StyleContextImpl::ForceUnique(void)
 void StyleContextImpl::RecalcAutomaticData(nsIPresContext* aPresContext)
 {
   mSpacing.RecalcData(aPresContext, mColor.mColor);
-
-  
 }
+
+NS_IMETHODIMP
+StyleContextImpl::CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint) const
+{
+  if (aOther) {
+    PRInt32 hint;
+    const StyleContextImpl* other = (const StyleContextImpl*)aOther;
+
+    aHint = mFont.CalcDifference(other->mFont);
+    if (aHint < NS_STYLE_HINT_MAX) {
+      hint = mColor.CalcDifference(other->mColor);
+      if (aHint < hint) {
+        aHint = hint;
+      }
+    }
+    if (aHint < NS_STYLE_HINT_MAX) {
+      hint = mSpacing.CalcDifference(other->mSpacing);
+      if (aHint < hint) {
+        aHint = hint;
+      }
+    }
+    if (aHint < NS_STYLE_HINT_MAX) {
+      hint = mList.CalcDifference(other->mList);
+      if (aHint < hint) {
+        aHint = hint;
+      }
+    }
+    if (aHint < NS_STYLE_HINT_MAX) {
+      hint = mPosition.CalcDifference(other->mPosition);
+      if (aHint < hint) {
+        aHint = hint;
+      }
+    }
+    if (aHint < NS_STYLE_HINT_MAX) {
+      hint = mText.CalcDifference(other->mText);
+      if (aHint < hint) {
+        aHint = hint;
+      }
+    }
+    if (aHint < NS_STYLE_HINT_MAX) {
+      hint = mDisplay.CalcDifference(other->mDisplay);
+      if (aHint < hint) {
+        aHint = hint;
+      }
+    }
+    if (aHint < NS_STYLE_HINT_MAX) {
+      if (mTable) {
+        if (other->mTable) {
+          hint = mTable->CalcDifference(*(other->mTable));
+        }
+        else {
+          hint = NS_STYLE_HINT_REFLOW;
+        }
+      }
+      else {
+        if (other->mTable) {
+          hint = NS_STYLE_HINT_REFLOW;
+        }
+        else {
+          hint = NS_STYLE_HINT_NONE;
+        }
+      }
+      if (aHint < hint) {
+        aHint = hint;
+      }
+    }
+  }
+  return NS_OK;
+}
+
 
 void StyleContextImpl::List(FILE* out, PRInt32 aIndent)
 {
