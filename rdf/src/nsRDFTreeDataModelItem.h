@@ -17,20 +17,20 @@
  */
 
 
-#ifndef nsRDFTreeItem_h__
-#define nsRDFTreeItem_h__
+#ifndef nsRDFTreeDataModelItem_h__
+#define nsRDFTreeDataModelItem_h__
 
 #include "rdf.h"
 #include "nsRDFDataModelItem.h"
 #include "nsITreeDMItem.h"
 
-class nsRDFTreeModel;
+class nsRDFTreeDataModel;
 
 ////////////////////////////////////////////////////////////////////////
 
 class nsRDFTreeDataModelItem : public nsRDFDataModelItem, nsITreeDMItem {
 public:
-    nsRDFTreeDataModelItem(nsRDFTreeModel& tree, RDF_Resource& resource);
+    nsRDFTreeDataModelItem(nsRDFTreeDataModel& tree, RDF_Resource& resource);
     virtual ~nsRDFTreeDataModelItem(void);
 
     ////////////////////////////////////////////////////////////////////////
@@ -55,14 +55,15 @@ public:
 
 
 private:
-    nsRDFTreeModel&  mTree;
-    PRBool           mOpen;
-    PRBool           mEnabled;
-    mutable PRUint32 mCachedIndentationLevel;
+    nsRDFTreeDataModel&  mTree;
+    PRBool               mOpen;
+    PRBool               mEnabled;
+    mutable PRUint32     mCachedIndentationLevel;
+
     static const PRUint32 kInvalidIndentationLevel;
 };
 
 ////////////////////////////////////////////////////////////////////////
 
 
-#endif // nsRDFDataModelItem_h__
+#endif // nsRDFTreeDataModelItem_h__
