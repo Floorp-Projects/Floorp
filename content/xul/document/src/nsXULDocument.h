@@ -69,7 +69,9 @@ class nsIXULPrototypeScript;
 #include "nsIObjectOutputStream.h"
 #include "nsXULElement.h"
 #endif
-
+#include "nsURIHashKey.h"
+#include "nsInterfaceHashtable.h"
+ 
 struct JSObject;
 struct PRLogModuleInfo;
 
@@ -204,6 +206,9 @@ protected:
                            const char* aCommand,
                            nsIPrincipal* aDocumentPrincipal,
                            nsIParser** aResult);
+
+    nsresult 
+    LoadOverlayInternal(nsIURI* aURI, PRBool aIsDynamic, PRBool* aShouldReturn);
 
     nsresult ApplyPersistentAttributes();
     nsresult ApplyPersistentAttributesToElements(nsIRDFResource* aResource,
@@ -441,7 +446,7 @@ protected:
         nsCOMPtr<nsIContent> mOverlay; // [OWNER]
         PRBool mResolved;
 
-        nsresult Merge(nsIContent* aTargetNode, nsIContent* aOverlayNode);
+        nsresult Merge(nsIContent* aTargetNode, nsIContent* aOverlayNode, PRBool aNotify);
 
     public:
         OverlayForwardReference(nsXULDocument* aDocument, nsIContent* aOverlay)
@@ -484,11 +489,11 @@ protected:
 
     static
     nsresult
-    InsertElement(nsIContent* aParent, nsIContent* aChild);
+    InsertElement(nsIContent* aParent, nsIContent* aChild, PRBool aNotify);
 
     static 
     nsresult
-    RemoveElement(nsIContent* aParent, nsIContent* aChild);
+    RemoveElement(nsIContent* aParent, nsIContent* aChild, PRBool aNotify);
 
     /**
      * The current prototype that we are walking to construct the
@@ -574,6 +579,10 @@ protected:
      */
     PLDHashTable* mBroadcasterMap;
 
+    nsInterfaceHashtable<nsURIHashKey,nsIObserver> mOverlayLoadObservers;
+    nsInterfaceHashtable<nsURIHashKey,nsIObserver> mPendingOverlayLoadNotifications;
+    
+    PRBool mInitialLayoutComplete;
 private:
     // helpers
 
