@@ -47,4 +47,9 @@ EXTRA_DSO_LDOPTS += -L$(DEPTH)/dist/lib -lgtkxtbin -lgtksuperwin -L/usr/X11R6/li
 endif
 endif
 
+# check for OS type
+ifeq ($(OS_ARCH),Linux)
+INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/linux -I.. -I../../src_share $(INCLUDES)
+else
 INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris -I.. -I../../src_share $(INCLUDES)
+endif

@@ -50,7 +50,11 @@ include $(topsrcdir)/config/rules.mk
 ifneq ($(BAL_INTERFACE),)
 INCLUDES := -I../bal -I../bal/solaris $(INCLUDES) 
 else
-INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris $(INCLUDES) 
+ifeq ($(OS_ARCH),Linux)
+INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/linux $(INCLUDES)
+else
+INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris $(INCLUDES)
+endif
 endif
 
 

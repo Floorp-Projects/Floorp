@@ -17,7 +17,9 @@
 #
 # Contributor(s): 
 # Ed Burns <edburns@acm.org>
-
+# Macadamian Technologies :
+#      Louis-philippe Gagnon
+#      Jason Mawdsley
 
 
 # this script must be run in the directory in which it resides.
@@ -56,7 +58,14 @@ if ($SEP eq "/") {
 }
 
 if ($IS_UNIX) {
-  $BINDIR = $ENV{"PWD"} . $SEP . $ARGV[0];
+# Under red hat linux $ENV{"PWD"} is undefined,
+# so it only appends a '/' to argv[0].
+  if ( $ENV{"PWD"} == "" ) {
+      $BINDIR = $ARGV[0];
+  }
+  else {
+    $BINDIR = $ENV{"PWD"} . $SEP . $ARGV[0];
+  }
 }
 else {
   open(CD, "cd |");

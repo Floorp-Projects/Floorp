@@ -85,8 +85,15 @@ else
 EXTRA_DSO_LDOPTS += -lwc_share
 endif
 
+
+ifeq ($(OS_ARCH),Linux)
+INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/linux $(INCLUDES) \
+       -I$(DEPTH)/widget/src/gtk -I../src_share
+else
 INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris $(INCLUDES) \
 	-I$(DEPTH)/widget/src/gtk -I../src_share
+endif
+
 
 export:: linkSetupRegistry
 
