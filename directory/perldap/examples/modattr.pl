@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: modattr.pl,v 1.3 1998/07/30 09:52:33 leif Exp $
+# $Id: modattr.pl,v 1.4 1998/07/30 09:55:12 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -117,7 +117,7 @@ while ($entry)
       $conn->printError() if $conn->getError();
     }
 
-  $entry = $conn->entry;
+  $entry = $conn->nextEntry();
 }
 
 
