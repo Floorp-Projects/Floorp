@@ -104,7 +104,6 @@
 // skip to the first nntp command.
 //#define HAVE_PUSH_AUTH_AND_EXTENSIONS
 
-#define NEWS_MSGS_URL       "chrome://messenger/locale/news.properties"
 // ***jt -- the following were pirated from xpcom/io/nsByteBufferInputStream
 // which is not currently in the build system
 class nsDummyBufferStream : public nsIInputStream
@@ -159,8 +158,6 @@ static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kCMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kPrefServiceCID,NS_PREF_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 typedef struct _cancelInfoEntry {
     char *from;
@@ -872,7 +869,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 	   */
 	  m_currentGroup = group;
 
-	  if (PL_strchr ((const char *)m_currentGroup, '*')) {
+	  if (m_currentGroup.FindChar(PRUnichar('*')) != kNotFound) {
 		m_typeWanted = LIST_WANTED;
 	  }
 	  else {
@@ -892,11 +889,11 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 		PRBool containsGroup = PR_TRUE;
 		NS_ASSERTION(m_nntpServer,"no nntp server");
 		if (m_nntpServer) {
-			rv = m_nntpServer->ContainsNewsgroup((const char *)m_currentGroup,&containsGroup);
+			rv = m_nntpServer->ContainsNewsgroup(m_currentGroup,&containsGroup);
 			if (NS_FAILED(rv)) return rv;
 
 			if (!containsGroup) {
-				rv = m_nntpServer->SubscribeToNewsgroup((const char *)m_currentGroup);
+				rv = m_nntpServer->SubscribeToNewsgroup(m_currentGroup);
 				if (NS_FAILED(rv)) return rv;
 			}
 		}
@@ -2202,7 +2199,7 @@ PRInt32 nsNNTPProtocol::BeginArticle()
           msgurl->GetAddDummyEnvelope(&needDummyHeaders);
           if (needDummyHeaders)
           {
-              nsCString result;
+              nsCAutoString result;
               char *ct;
               PRUint32 writeCount;
               time_t now = time ((time_t*) 0);
@@ -2410,37 +2407,37 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 
 void nsNNTPProtocol::ParseHeaderForCancel(char *buf)
 {
-    nsCString header(buf);
+    nsCAutoString header(buf);
     PRInt32 colon = header.FindChar(':');
     if (!colon)
 		return;
 
-    nsCString value("");
+    nsCAutoString value;
     header.Right(value, header.Length() - colon -1);
     value.StripWhitespace();
     
     switch (header.First()) {
     case 'F': case 'f':
         if (header.Find("From") == 0) {
-            if (m_cancelFromHdr) PR_FREEIF(m_cancelFromHdr);
+            PR_FREEIF(m_cancelFromHdr);
 			m_cancelFromHdr = PL_strdup(value.GetBuffer());
         }
         break;
     case 'M': case 'm':
         if (header.Find("Message-ID") == 0) {
-            if (m_cancelID) PR_FREEIF(m_cancelID);
+            PR_FREEIF(m_cancelID);
 			m_cancelID = PL_strdup(value.GetBuffer());
         }
         break;
     case 'N': case 'n':
         if (header.Find("Newsgroups") == 0) {
-            if (m_cancelNewsgroups) PR_FREEIF(m_cancelNewsgroups);
+            PR_FREEIF(m_cancelNewsgroups);
 			m_cancelNewsgroups = PL_strdup(value.GetBuffer());
         }
         break;
      case 'D': case 'd':
         if (header.Find("Distributions") == 0) {
-            if (m_cancelDistribution) PR_FREEIF(m_cancelDistribution);
+            PR_FREEIF(m_cancelDistribution);
 			m_cancelDistribution = PL_strdup(value.GetBuffer());
         }       
         break;
@@ -3017,12 +3014,11 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
         	    nsCOMPtr <nsIMsgStatusFeedback> msgStatusFeedback;
 
         	    rv = m_msgWindow->GetStatusFeedback(getter_AddRefs(msgStatusFeedback));
-        	    if (NS_FAILED(rv)) return rv;
-// XXXXX
+                NS_ENSURE_SUCCESS(rv, rv);
+
                 nsXPIDLString statusString;
 		
-                nsCOMPtr<nsIStringBundleService> bundleService = 
-                do_GetService(kStringBundleServiceCID, &rv);
+                nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
                 NS_ENSURE_SUCCESS(rv, rv);
 
                	nsCOMPtr<nsIStringBundle> bundle;
@@ -3030,7 +3026,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
                                             getter_AddRefs(bundle));
                 NS_ENSURE_SUCCESS(rv, rv);
 
-                nsString bytesStr; 
+                nsAutoString bytesStr; 
                 bytesStr.AppendInt(mBytesReceived / 1024);
 
                 // compute the rate, and then convert it have one 
@@ -3040,16 +3036,14 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
                 char rate_buf[RATE_STR_BUF_LEN];
                 PR_snprintf(rate_buf,RATE_STR_BUF_LEN,"%.1f", rate);
 
-                nsString rateStr;
+                nsAutoString rateStr;
                 rateStr.AppendWithConversion(rate_buf);
 
-                nsString numGroupsStr;
+                nsAutoString numGroupsStr;
                 numGroupsStr.AppendInt(mNumGroupsListed);
 
                 const PRUnichar *formatStrings[3] = { numGroupsStr.GetUnicode(), bytesStr.GetUnicode(), rateStr.GetUnicode() };
-                NS_NAMED_LITERAL_STRING(literalPropertyTag, "bytesReceived");
-				const PRUnichar *propertyTag = literalPropertyTag.get();
-                rv = bundle->FormatStringFromName(propertyTag,
+                rv = bundle->FormatStringFromName(NS_LITERAL_STRING("bytesReceived"),
                                                   formatStrings, 3,
                                                   getter_Copies(statusString));
 
@@ -3502,72 +3496,67 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
 
 nsresult nsNNTPProtocol::GetNewsStringByID(PRInt32 stringID, PRUnichar **aString)
 {
-	nsresult res;
-	nsAutoString	resultString; resultString.AssignWithConversion("???");
+	nsresult rv;
+	nsAutoString resultString(NS_LITERAL_STRING("???"));
+
 	if (!m_stringBundle)
 	{
 		char*       propertyURL = NEWS_MSGS_URL;
 
-		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
-		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
-		{
-			nsILocale   *locale = nsnull;
+        nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-			res = sBundleService->CreateBundle(propertyURL, locale, getter_AddRefs(m_stringBundle));
-		}
+		rv = bundleService->CreateBundle(propertyURL, nsnull, getter_AddRefs(m_stringBundle));
+        NS_ENSURE_SUCCESS(rv, rv);
 	}
+
 	if (m_stringBundle) {
 		PRUnichar *ptrv = nsnull;
-		res = m_stringBundle->GetStringFromID(stringID, &ptrv);
+		rv = m_stringBundle->GetStringFromID(stringID, &ptrv);
 
-		if (NS_FAILED(res)) 
-		{
-			resultString.AssignWithConversion("[StringID");
+		if (NS_FAILED(rv)) {
+			resultString.Assign(NS_LITERAL_STRING("[StringID"));
 			resultString.AppendInt(stringID, 10);
-			resultString.AppendWithConversion("?]");
+			resultString.Append(NS_LITERAL_STRING("?]"));
 			*aString = resultString.ToNewUnicode();
 		}
-		else
-		{
+		else {
 			*aString = ptrv;
 		}
 	}
-	else
-	{
-		res = NS_OK;
+	else {
+		rv = NS_OK;
 		*aString = resultString.ToNewUnicode();
 	}
-	return res;
+	return rv;
 }
 
 nsresult nsNNTPProtocol::GetNewsStringByName(const char *aName, PRUnichar **aString)
 {
-	nsresult res;
-	nsAutoString	resultString; resultString.AssignWithConversion("???");
+	nsresult rv;
+	nsAutoString resultString(NS_LITERAL_STRING("???"));
 	if (!m_stringBundle)
 	{
 		char*       propertyURL = NEWS_MSGS_URL;
 
-		NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res); 
-		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
-		{
-			nsILocale   *locale = nsnull;
+        nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-			res = sBundleService->CreateBundle(propertyURL, locale, getter_AddRefs(m_stringBundle));
-		}
+		rv = bundleService->CreateBundle(propertyURL, nsnull, getter_AddRefs(m_stringBundle));
 	}
+
 	if (m_stringBundle)
 	{
 		nsAutoString unicodeName; unicodeName.AssignWithConversion(aName);
 
 		PRUnichar *ptrv = nsnull;
-		res = m_stringBundle->GetStringFromName(unicodeName.GetUnicode(), &ptrv);
+		rv = m_stringBundle->GetStringFromName(unicodeName.GetUnicode(), &ptrv);
 
-		if (NS_FAILED(res)) 
+		if (NS_FAILED(rv)) 
 		{
-			resultString.AssignWithConversion("[StringName");
+			resultString.Assign(NS_LITERAL_STRING("[StringName"));
 			resultString.AppendWithConversion(aName);
-			resultString.AppendWithConversion("?]");
+			resultString.Append(NS_LITERAL_STRING("?]"));
 			*aString = resultString.ToNewUnicode();
 		}
 		else
@@ -3577,10 +3566,10 @@ nsresult nsNNTPProtocol::GetNewsStringByName(const char *aName, PRUnichar **aStr
 	}
 	else
 	{
-		res = NS_OK;
+		rv = NS_OK;
 		*aString = resultString.ToNewUnicode();
 	}
-	return res;
+	return rv;
 }
 
 // sspitzer:  PostMessageInFile is derived from nsSmtpProtocol::SendMessageInFile()
@@ -3738,19 +3727,47 @@ PRInt32 nsNNTPProtocol::CheckForArticle()
   }
 }
 
-#define NEWS_GROUP_DISPLAY_FREQ		20
+#define NEWS_GROUP_DISPLAY_FREQ 5
+
+nsresult
+nsNNTPProtocol::SetCheckingForNewNewsStatus(PRInt32 current, PRInt32 total)
+{
+    nsresult rv;
+    nsXPIDLString statusString;
+
+    nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIStringBundle> bundle;
+    rv = bundleService->CreateBundle(NEWS_MSGS_URL, nsnull, getter_AddRefs(bundle));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString thisGroupStr; thisGroupStr.AppendInt(current);
+    nsAutoString totalGroupStr; totalGroupStr.AppendInt(total);
+
+    const PRUnichar *formatStrings[] = { thisGroupStr.GetUnicode(),totalGroupStr.GetUnicode() };
+
+    rv = bundle->FormatStringFromName(NS_LITERAL_STRING("checkingForNewNews"),
+                                                  formatStrings, 2,
+                                                  getter_Copies(statusString));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+	rv = SetProgressStatus(statusString);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    SetProgressBarPercent(current, total);
+    return NS_OK;
+}
 
 PRInt32 nsNNTPProtocol::DisplayNewsRC()
 {
+    PRInt32 status = 0;
     nsresult rv;
-	PRInt32 status = 0; 
 
-	if(!TestFlag(NNTP_NEWSRC_PERFORMED))
-	{
+	if(!TestFlag(NNTP_NEWSRC_PERFORMED)) {
 		SetFlag(NNTP_NEWSRC_PERFORMED);
         rv = m_nntpServer->GetNumGroupsNeedingCounts(&m_newsRCListCount);
-		if (NS_FAILED(rv))
-      return -1;
+        NS_ENSURE_SUCCESS(rv, rv);
 	}
 	
 	nsCOMPtr <nsISupports> currChild;
@@ -3759,87 +3776,23 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 		ClearFlag(NNTP_NEWSRC_PERFORMED);
 		return -1;
 	}
-  else if (!currChild)
-  {
+    else if (!currChild) {
 		ClearFlag(NNTP_NEWSRC_PERFORMED);
-    m_nextState = NEWS_DONE;
-    return 0;
-  }
+        m_nextState = NEWS_DONE;
 
-	nsCOMPtr<nsIFolder> currFolder;
-    currFolder = do_QueryInterface(currChild, &rv);
-	if (NS_FAILED(rv)) return -1;
-	if (!currFolder) return -1;
+		if (m_newsRCListCount) {
+            rv = SetCheckingForNewNewsStatus(m_newsRCListCount, m_newsRCListCount);
+            NS_ENSURE_SUCCESS(rv, rv);
 
-    m_newsFolder = do_QueryInterface(currFolder, &rv);
-	if (NS_FAILED(rv)) return -1;
-	if (!m_newsFolder) return -1;
+            // clear the status text.
+            // rv = SetProgressStatus(NS_LITERAL_STRING(""));
+            NS_ENSURE_SUCCESS(rv, rv);
 
-	nsXPIDLCString name;
-    rv = m_newsFolder->GetAsciiName(getter_Copies(name));
-	if (NS_FAILED(rv)) return -1;
-	if (!name) return -1;
-
-	m_currentGroup = (const char *)name;
-
-	if(NS_SUCCEEDED(rv) && ((const char *)m_currentGroup))
-    {
-		/* send group command to server
-		 */
-		char outputBuffer[OUTPUT_BUFFER_SIZE];
-
-		PR_snprintf(outputBuffer, OUTPUT_BUFFER_SIZE, "GROUP %.512s" CRLF, (const char *)m_currentGroup);
-		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-		if (mailnewsurl)
-			status = SendData(mailnewsurl, outputBuffer);
-		SetProgressBarPercent(m_newsRCListCount, m_newsRCListIndex);
-		
-		/* only update every 20 groups for speed */
-		if ((m_newsRCListCount >= NEWS_GROUP_DISPLAY_FREQ) && ((m_newsRCListIndex % NEWS_GROUP_DISPLAY_FREQ) == 0 ||
-									(m_newsRCListIndex == m_newsRCListCount)))
-		{
-                nsXPIDLString statusString;
-
-                nsCOMPtr<nsIStringBundleService> bundleService =
-                do_GetService(kStringBundleServiceCID, &rv);
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                nsCOMPtr<nsIStringBundle> bundle;
-                rv = bundleService->CreateBundle(NEWS_MSGS_URL, nsnull,
-                                            getter_AddRefs(bundle));
-                NS_ENSURE_SUCCESS(rv, rv);
-
-                nsAutoString thisGroupStr; thisGroupStr.AppendInt((long) m_newsRCListIndex);
-                nsAutoString totalGroupStr; totalGroupStr.AppendInt((long) m_newsRCListCount);
-
-                const PRUnichar *formatStrings[] = { thisGroupStr.GetUnicode(),totalGroupStr.GetUnicode() };
-
-                NS_NAMED_LITERAL_STRING(literalPropertyTag, "checkingForNewNews");
-                const PRUnichar *propertyTag = literalPropertyTag.get();
-                rv = bundle->FormatStringFromName(propertyTag,
-                                                  formatStrings, 2,
-                                                  getter_Copies(statusString));
-                NS_ENSURE_SUCCESS(rv, rv);
-
-				rv = SetProgressStatus((const PRUnichar *)statusString);
-                NS_ENSURE_SUCCESS(rv, rv);
-		}
-		
-		m_newsRCListIndex++;
-
-		SetFlag(NNTP_PAUSE_FOR_READ);
-		m_nextState = NNTP_RESPONSE;
-		m_nextStateAfterResponse = NEWS_DISPLAY_NEWS_RC_RESPONSE;
-    }
-	else
-	{
-		if (m_newsRCListCount)
-		{
 			SetProgressBarPercent(0, -1);
 			m_newsRCListCount = 0;
+            status = 0;
 		}
-		else if (m_responseCode == MK_NNTP_RESPONSE_LIST_OK)  
-		{
+		else if (m_responseCode == MK_NNTP_RESPONSE_LIST_OK)  {
 			/*
 			 * 5-9-96 jefft 
 			 * If for some reason the news server returns an empty 
@@ -3847,18 +3800,53 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 			 * newsgroups follows. We set status to MK_EMPTY_NEWS_LIST
 			 * to end the infinite dialog loop.
 			 */
-			status = MK_EMPTY_NEWS_LIST;
-		}
-		m_nextState = NEWS_DONE;
-	
-		if(status > -1)
-		  return MK_DATA_LOADED; 
-		else
-		  return(status);
-	}
+            status = MK_EMPTY_NEWS_LIST;
+        }
 
-	return(status); /* keep going */
+        if(status > -1)
+          return MK_DATA_LOADED; 
+        else
+          return(status);
+    }
 
+	nsCOMPtr<nsIFolder> currFolder;
+    currFolder = do_QueryInterface(currChild, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+	if (!currFolder) return NS_ERROR_FAILURE;
+
+    m_newsFolder = do_QueryInterface(currFolder, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+	if (!m_newsFolder) return NS_ERROR_FAILURE;
+
+	nsXPIDLCString name;
+    rv = m_newsFolder->GetAsciiName(getter_Copies(name));
+    NS_ENSURE_SUCCESS(rv, rv);
+	if (!name) return NS_ERROR_FAILURE;
+
+	m_currentGroup = (const char *)name;
+
+	/* send group command to server */
+	char outputBuffer[OUTPUT_BUFFER_SIZE];
+
+	PR_snprintf(outputBuffer, OUTPUT_BUFFER_SIZE, "GROUP %.512s" CRLF, (const char *)m_currentGroup);
+	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+	if (mailnewsurl) {
+		status = SendData(mailnewsurl, outputBuffer);
+    }
+
+	/* only update every NEWS_GROUP_DISPLAY_FREQ groups for speed */
+	if ((m_newsRCListCount >= NEWS_GROUP_DISPLAY_FREQ) && ((m_newsRCListIndex % NEWS_GROUP_DISPLAY_FREQ) == 0 || (m_newsRCListIndex == m_newsRCListCount))) {
+        rv = SetCheckingForNewNewsStatus(m_newsRCListIndex, m_newsRCListCount);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+		
+	m_newsRCListIndex++;
+
+	SetFlag(NNTP_PAUSE_FOR_READ);
+	m_nextState = NNTP_RESPONSE;
+	m_nextStateAfterResponse = NEWS_DISPLAY_NEWS_RC_RESPONSE;
+
+	return status; /* keep going */
 }
 
 /* Parses output of GROUP command */
@@ -3911,7 +3899,7 @@ PRInt32 nsNNTPProtocol::DisplayNewsRCResponse()
 	  }
 	  else if (m_responseCode == MK_NNTP_RESPONSE_GROUP_NO_GROUP)
 	  {
-          m_newsHost->GroupNotFound((const char *)m_currentGroup, PR_FALSE);
+          m_newsHost->GroupNotFound(m_currentGroup, PR_FALSE);
 	  }
 	  /* it turns out subscribe ui depends on getting this displaysubscribedgroup call,
 	     even if there was an error.
@@ -4009,7 +3997,7 @@ PRBool nsNNTPProtocol::CheckIfAuthor(nsISupports *aElement, void *data)
 
 PRInt32 nsNNTPProtocol::DoCancel()
 {
-    int status = 0;
+    PRInt32 status = 0;
     PRBool failure = PR_FALSE;
     nsresult rv = NS_OK;
     char *id = nsnull;
@@ -4049,9 +4037,9 @@ PRInt32 nsNNTPProtocol::DoCancel()
   cancelInfo.old_from = m_cancelFromHdr;
   cancelInfo.from = nsnull;
 
-  nsCOMPtr <nsIPref> prefs = do_GetService(kPrefServiceCID, &rv);
-  if (NS_FAILED(rv) || !prefs) return -1;  /* unable to get the pref service */
-  
+  nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
   nsCOMPtr<nsIPrompt> dialog;
   if (m_runningURL)
   {
@@ -4192,7 +4180,7 @@ PRInt32 nsNNTPProtocol::DoCancel()
     if (status < 0) {
 		nsCAutoString errorText;
 		errorText.AppendInt(status);
-		AlertError(MK_TCP_WRITE_ERROR,(const char *)errorText);
+		AlertError(MK_TCP_WRITE_ERROR, errorText);
                 failure = PR_TRUE;
 		goto FAIL;
 	}
@@ -5001,7 +4989,7 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 		        break;
 
             case NEWS_DISPLAY_NEWS_RC:
-		        status = DisplayNewsRC(); 
+		        status = DisplayNewsRC();
 				break;
             case NEWS_DISPLAY_NEWS_RC_RESPONSE:
 				if (inputStream == nsnull)
@@ -5302,15 +5290,10 @@ NS_IMETHODIMP nsNNTPProtocol::GetContentType(char * *aContentType)
 
   // otherwise do what we did before...
 
-	if ((const char *)m_currentGroup && nsCRT::strlen((const char *)m_currentGroup)) {
-		// if it is an article url, it has a @ or %40 in it.
-    if (PL_strchr((const char *)m_currentGroup,'@') || PL_strstr((const char *)m_currentGroup,"%40") 
-        || m_typeWanted == ARTICLE_WANTED) {
-			*aContentType = nsCRT::strdup("message/rfc822");
-		}
-		else {
-			*aContentType = nsCRT::strdup("x-application-newsgroup");
-		}
+	if (m_typeWanted != ARTICLE_WANTED && !m_currentGroup.IsEmpty() &&
+	    // if it is an article url, it has a @ or %40 in it.
+	    m_currentGroup.Find("@") == kNotFound && m_currentGroup.Find("%40") == kNotFound) {
+		*aContentType = nsCRT::strdup("x-application-newsgroup");
 	}
 	else {
 		*aContentType = nsCRT::strdup("message/rfc822");
@@ -5322,28 +5305,31 @@ NS_IMETHODIMP nsNNTPProtocol::GetContentType(char * *aContentType)
 nsresult
 nsNNTPProtocol::AlertError(PRInt32 errorCode, const char *text)
 {
-	nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
 
   // get the prompt from the running url....
-  if (m_runningURL)
-  {
+  if (m_runningURL) {
     nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(m_runningURL));
     nsCOMPtr<nsIPrompt> dialog;
     rv = GetPromptDialogFromUrl(msgUrl, getter_AddRefs(dialog));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsXPIDLString newsString;
-	  rv = GetNewsStringByID(errorCode, getter_Copies(newsString));
-	  if (NS_FAILED(rv)) return rv;
+    nsAutoString alertText;
+    nsXPIDLString str;
+    rv = GetNewsStringByName("newsError", getter_Copies(str));
+    NS_ENSURE_SUCCESS(rv,rv);
+	alertText.Append(str);
 
-	  nsAutoString alertText;
-	  alertText.AssignWithConversion("NEWS ERROR:  ");
-	  alertText.Append((const PRUnichar *)newsString);
+	rv = GetNewsStringByID(errorCode, getter_Copies(str));
+    NS_ENSURE_SUCCESS(rv, rv);
+	alertText.Append(str);
 
-	  if (text)
-		  alertText.AppendWithConversion(text);
+	if (text) {
+	  alertText.AppendWithConversion(text);
+    }
 
-	  rv = dialog->Alert(nsnull, alertText.GetUnicode());
+	rv = dialog->Alert(nsnull, alertText.GetUnicode());
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   
   return rv;

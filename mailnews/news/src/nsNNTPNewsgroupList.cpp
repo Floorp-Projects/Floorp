@@ -57,7 +57,8 @@
 #include "nsINNTPHost.h"
 #include "nsNNTPHost.h"
 
-#include "msgCore.h"
+#include "nntpCore.h"
+#include "nsIStringBundle.h"
 
 #include "plstr.h"
 #include "prmem.h"
@@ -84,7 +85,6 @@
 #include "nsIScriptContext.h"
 
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
-static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID);
 
 extern PRInt32 net_NewsChunkSize;
 
@@ -133,7 +133,6 @@ nsNNTPNewsgroupList::Initialize(nsINNTPHost *host, nsINntpUrl *runningURL, nsINN
 
     m_finishingXover = PR_FALSE;
 
-	m_startedUpdate = PR_FALSE;
 	memset(&m_knownArts, 0, sizeof(m_knownArts));
 	m_knownArts.group_name = m_groupName;
 	m_host = host;
@@ -282,16 +281,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow * aMsgWindow,
 	*first = 0;
 	*last = 0;
 
-#ifdef HAVE_PANES
-	if (m_pane != NULL && !m_finishingXover && !m_startedUpdate)
-	{
-		m_startedUpdate = PR_TRUE;
-		m_pane->StartingUpdate(MSG_NotifyNone, 0, 0);
-	}
-#endif
-
-	if (!m_newsDB)
-	{
+	if (!m_newsDB) {
 		nsresult err;
 		if ((err = GetDatabase(GetURI(), &m_newsDB)) != NS_OK) {
             return err;
@@ -348,19 +338,18 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow * aMsgWindow,
 			m_newsDB->ExpireUpTo(first_possible, m_pane->GetContext());
 			m_pane->EndingUpdate(MSG_NotifyNone, 0, 0);
 #endif /* HAVE_PANES */
-			if (m_knownArts.set->IsMember(last_possible))	// will this be progress pane?
-			{
-#ifdef HAVE_PANES
-				char *noNewMsgs = XP_GetString(MK_NO_NEW_DISC_MSGS);
-				MWContext *context = m_pane->GetContext();
-				MSG_Pane* parentpane = m_pane->GetParentPane();
-				// send progress to parent pane, if any, because progress pane is going down.
-				if (parentpane)
-					context = parentpane->GetContext();
-				FE_Progress (context, noNewMsgs);
-#else
-				SetProgressStatus("There are no new messages on the server.");
-#endif /* HAVE_PANES */
+			if (m_knownArts.set->IsMember(last_possible))	{
+                nsXPIDLString statusString;
+                nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                nsCOMPtr<nsIStringBundle> bundle;
+                rv = bundleService->CreateBundle(NEWS_MSGS_URL, nsnull, getter_AddRefs(bundle));
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                rv = bundle->GetStringFromName(NS_LITERAL_STRING("noNewMessages"), getter_Copies(statusString));
+                NS_ENSURE_SUCCESS(rv, rv);
+				SetProgressStatus(statusString);
 			}
 		}
 	}
@@ -421,11 +410,8 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow * aMsgWindow,
 
 	if (m_getOldMessages || !m_knownArts.set->IsMember(last_possible)) 
 	{
-        NS_WITH_SERVICE(nsIPref, prefs, kCPrefServiceCID, &rv);
-        if (NS_FAILED(rv) || (!prefs)) {
-            return rv;
-        }    
-
+        nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv,rv);
 		
 		PRBool notifyMaxExceededOn = PR_TRUE;
 		rv = nntpServer->GetNotifyOn(&notifyMaxExceededOn);
@@ -590,7 +576,7 @@ nsNNTPNewsgroupList::InitXOVER(PRInt32 first_msg, PRInt32 last_msg)
 	return status;
 }
 
-#define NEWS_ART_DISPLAY_FREQ		10
+#define NEWS_ART_DISPLAY_FREQ   20
 
 /* Given a string and a length, removes any "Re:" strings from the front.
    It also deals with that "Re[2]:" thing that some mailers do.
@@ -866,27 +852,37 @@ nsNNTPNewsgroupList::ProcessXOVERLINE(const char *line, PRUint32 *status)
 	*/
 	if (m_lastMsgNumber > m_firstMsgNumber)
 	{
-		PRInt32	totToDownload = m_lastMsgToDownload - m_firstMsgToDownload + 1;
+		PRInt32	totalToDownload = m_lastMsgToDownload - m_firstMsgToDownload + 1;
 		PRInt32	lastIndex = m_lastProcessedNumber - m_firstMsgNumber + 1;
 		PRInt32	numDownloaded = lastIndex;
 		PRInt32	totIndex = m_lastMsgNumber - m_firstMsgNumber + 1;
 
-		PRInt32 	percent = (totIndex) ? (PRInt32)(100.0 * (double)numDownloaded / (double)totToDownload) : 0;
+		PRInt32 	percent = (totIndex) ? (PRInt32)(100.0 * (double)numDownloaded / (double)totalToDownload) : 0;
 
 		SetProgressBarPercent(percent);
 		
-		/* only update every  NEWS_ART_DISPLAY_FREQ articles for speed */
+		/* only update every NEWS_ART_DISPLAY_FREQ articles for speed */
 		if ( (totIndex <= NEWS_ART_DISPLAY_FREQ) || ((lastIndex % NEWS_ART_DISPLAY_FREQ) == 0) || (lastIndex == totIndex))
 		{
-#ifdef HAVE_XPGETSTRING
-			char *statusTemplate = XP_GetString (MK_HDR_DOWNLOAD_COUNT);
-			char *statusString = PR_smprintf (statusTemplate, numDownloaded, totToDownload);
-#else
-			char *statusString = PR_smprintf ("Downloading %d of %d headers", numDownloaded, totToDownload);
-#endif
+            nsAutoString numDownloadedStr;
+            numDownloadedStr.AppendInt(numDownloaded);
+
+            nsAutoString totalToDownloadStr;
+            totalToDownloadStr.AppendInt(totalToDownload);
+
+            nsXPIDLString statusString;
+            nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nsCOMPtr<nsIStringBundle> bundle;
+            rv = bundleService->CreateBundle(NEWS_MSGS_URL, nsnull, getter_AddRefs(bundle));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            const PRUnichar *formatStrings[2] = { numDownloadedStr.GetUnicode(), totalToDownloadStr.GetUnicode() };
+            rv = bundle->FormatStringFromName(NS_LITERAL_STRING("downloadingHeaders"), formatStrings, 2, getter_Copies(statusString));
+            NS_ENSURE_SUCCESS(rv, rv);
 
 			SetProgressStatus(statusString);
-			PR_FREEIF(statusString);
 		}
 	}
     
@@ -921,6 +917,7 @@ nsNNTPNewsgroupList::ProcessNonXOVER (const char * /*line*/)
 nsresult
 nsNNTPNewsgroupList::FinishXOVERLINE(int status, int *newstatus)
 {
+    nsresult rv;
 	struct MSG_NewsKnown* k;
 
 	/* If any XOVER lines from the last time failed to come in, mark those
@@ -960,46 +957,34 @@ nsNNTPNewsgroupList::FinishXOVERLINE(int status, int *newstatus)
 		}
 	}
 
-    if (m_finishingXover)
+    if (!m_finishingXover)
 	{
 		// turn on m_finishingXover - this is a horrible hack to avoid recursive 
 		// calls which happen when the fe selects a message as a result of getting EndingUpdate,
 		// which interrupts this url right before it was going to finish and causes FinishXOver
 		// to get called again.
         m_finishingXover = PR_TRUE;
-		// if we haven't started an update, start one so the fe
-		// will know to update the size of the view.
-		if (!m_startedUpdate)
-		{
-#ifdef HAVE_PANES
-			m_pane->StartingUpdate(MSG_NotifyNone, 0, 0);
-#endif
-			m_startedUpdate = PR_TRUE;
-		}
-#ifdef HAVE_PANES
-		m_pane->EndingUpdate(MSG_NotifyNone, 0, 0);
-#endif
-		m_startedUpdate = PR_FALSE;
 
-		if (m_lastMsgNumber > 0)
-		{
-#ifdef HAVE_PANES
-			MWContext *context = m_pane->GetContext();
-			MSG_Pane* parentpane = m_pane->GetParentPane();
-			// send progress to parent pane, if any, because progress pane is going down.
-			if (parentpane)
-				context = parentpane->GetContext();
+		if (m_lastMsgNumber > 0) {
+            nsAutoString firstStr;
+            firstStr.AppendInt(m_lastProcessedNumber - m_firstMsgNumber + 1);
 
-			char *statusTemplate = XP_GetString (MK_HDR_DOWNLOAD_COUNT);
-			char *statusString = PR_smprintf (statusTemplate,  m_lastProcessedNumber - m_firstMsgNumber + 1, m_lastMsgNumber - m_firstMsgNumber + 1);
-#else
-			char *statusString = PR_smprintf ("Downloading articles %d-%d",  m_lastProcessedNumber - m_firstMsgNumber + 1, m_lastMsgNumber - m_firstMsgNumber + 1);
-#endif
-			if (statusString)
-			{
-				SetProgressStatus(statusString);
-				PR_FREEIF(statusString);
-			}
+            nsAutoString lastStr;
+            lastStr.AppendInt(m_lastMsgNumber - m_firstMsgNumber + 1);
+
+            nsXPIDLString statusString;
+            nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            nsCOMPtr<nsIStringBundle> bundle;
+            rv = bundleService->CreateBundle(NEWS_MSGS_URL, nsnull, getter_AddRefs(bundle));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            const PRUnichar *formatStrings[2] = { firstStr.GetUnicode(), lastStr.GetUnicode() };
+            rv = bundle->FormatStringFromName(NS_LITERAL_STRING("downloadingArticles"), formatStrings, 2, getter_Copies(statusString));
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            SetProgressStatus(statusString);
 		}
 #ifdef HAVE_PANES
 		nsINNTPNewsgroup *newsFolder =
@@ -1046,11 +1031,8 @@ nsNNTPNewsgroupList::GetGroupName(char **_retval)
 }
 
 void
-nsNNTPNewsgroupList::SetProgressBarPercent(int percent)
+nsNNTPNewsgroupList::SetProgressBarPercent(PRInt32 percent)
 {
-#ifdef DEBUG_NEWS
-        printf("nsNNTPNewsgroupList::SetProgressBarPercent(%d)\n",percent);
-#endif
         if (!m_runningURL) return;
 
         nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
@@ -1065,14 +1047,8 @@ nsNNTPNewsgroupList::SetProgressBarPercent(int percent)
 } 
 
 void
-nsNNTPNewsgroupList::SetProgressStatus(char *message)
+nsNNTPNewsgroupList::SetProgressStatus(const PRUnichar *message)
 {
-#ifdef DEBUG_NEWS
-        printf("nsNNTPNewsgroupList::SetProgressStatus(%s)\n",message);
-#endif
-        PRUnichar *progressMsg = nsnull;
-        // PRUnichar *progressMsg = NNTPGetStringByID(aMsgId);
-
         if (!m_runningURL) return;
 
         nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
@@ -1080,17 +1056,10 @@ nsNNTPNewsgroupList::SetProgressStatus(char *message)
                 nsCOMPtr <nsIMsgStatusFeedback> feedback;
                 mailnewsUrl->GetStatusFeedback(getter_AddRefs(feedback));
 
-                char *printfString = PR_smprintf("%s", message);
-                if (printfString) {
-                        nsString formattedString; formattedString.AssignWithConversion(printfString);
-                        progressMsg = nsCRT::strdup(formattedString.GetUnicode());
-						PR_FREEIF(printfString);
-                }
                 if (feedback) {
-                        feedback->ShowStatusString(progressMsg);
+                        feedback->ShowStatusString(message);
                 }
         }
-        PR_FREEIF(progressMsg);
 }     
 
 NS_IMETHODIMP nsNNTPNewsgroupList::SetGetOldMessages(PRBool aGetOldMessages) 

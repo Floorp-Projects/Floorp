@@ -86,12 +86,11 @@ private:
   nsresult			ParseLine(char *line, PRUint32 *message_number);
   PRBool			msg_StripRE(const char **stringP, PRUint32 *lengthP);
   nsresult			GetDatabase(const char *uri, nsIMsgDatabase **db);
-  void				SetProgressBarPercent(int percent);
-  void				SetProgressStatus(char *message);
+  void				SetProgressBarPercent(PRInt32 percent);
+  void				SetProgressStatus(const PRUnichar *message);
 
 protected:
   nsIMsgDatabase	*m_newsDB;
-  PRBool			m_startedUpdate;
   PRBool			m_getOldMessages;
   PRBool			m_promptedAlready;
   PRBool			m_downloadAll;

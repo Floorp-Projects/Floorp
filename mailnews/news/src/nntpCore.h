@@ -23,9 +23,7 @@
 #ifndef _NNTPCore_H__
 #define _NNTPCore_H__
 
-#if defined (DEBUG_seth_) || defined(DEBUG_sspitzer_)
-#define DEBUG_NEWS 1
-#endif
+#define NEWS_MSGS_URL       "chrome://messenger/locale/news.properties"
 
 // The following string constants are protocol strings. I'm defining them as macros here
 // so I don't have to sprinkle all of the strings throughout the protocol. 
