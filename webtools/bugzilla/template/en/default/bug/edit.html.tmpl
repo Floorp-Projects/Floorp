@@ -60,9 +60,9 @@
       <td>&nbsp;</td>
 
       <td align="right">
-        <b>Platform:</b>
+        <b><u>P</u>latform:</b>
       </td>
-      [% PROCESS select selname = "rep_platform" %]
+      [% PROCESS select selname => "rep_platform" accesskey => "p" %]
       
       <td align="right">
         <b>Reporter:</b>
@@ -74,20 +74,20 @@
     
     <tr>
       <td align="right">
-        <b>Product:</b>
+        <b>P<u>r</u>oduct:</b>
       </td>
-      [% PROCESS select selname => "product" %]
+      [% PROCESS select selname => "product" accesskey => "r" %]
       
       <td align="right">
-        <b>OS:</b>
+        <b><u>O</u>S:</b>
       </td>
-      [% PROCESS select selname => "op_sys" %]
+      [% PROCESS select selname => "op_sys" accesskey => "o" %]
 
       <td align="right">
-        <b>Add&nbsp;CC:</b>
+        <b><u>A</u>dd&nbsp;CC:</b>
       </td>
       <td>
-        <input name="newcc" size="30" value="">
+        <input name="newcc" size="30" value="" accesskey="a">
       </td>
     </tr>
 
@@ -97,25 +97,27 @@
       <td align="right">
         <b>
           <a href="describecomponents.cgi?product=[% bug.product FILTER url_quote %]">
-            Component</a>:
+            Co<u>m</u>ponent</a>:
         </b>
       </td>
       <td>
-        <select name="component">
-          [% FOREACH x = component_ %]
-            <option value="[% x FILTER html %]"
-              [% " selected" IF x == bug.component %]>[% x FILTER html %]
-            </option>
-          [% END %]
-        </select>
+        <label for="component" accesskey="m">
+          <select name="component" id="component">
+            [% FOREACH x = component_ %]
+              <option value="[% x FILTER html %]"
+                [% " selected" IF x == bug.component %]>[% x FILTER html %]
+              </option>
+            [% END %]
+          </select>
+        </label>
       </td>
 
       <td>&nbsp;</td>
  
       <td align="right">
-        <b>Version:</b>
+        <b><u>V</u>ersion:</b>
       </td>
-      [% PROCESS select selname => "version"  %]
+      [% PROCESS select selname => "version" accesskey => "v" %]
       
       <td rowspan="4" align="right" valign="top">
         <b>CC:</b>
@@ -146,9 +148,9 @@
       <td>&nbsp;</td>
       
       <td align="right">
-        <b><a href="bug_status.html#priority">Priority</a>:</b>
+        <b><a href="bug_status.html#priority">Pr<u>i</u>ority</a>:</b>
       </td>
-      [% PROCESS select selname => "priority" %]
+      [% PROCESS select selname => "priority" accesskey => "i" %]
     </tr>
     
     <tr>
@@ -161,9 +163,9 @@
       <td>&nbsp;</td>
       
       <td align="right">
-        <b><a href="bug_status.html#severity">Severity</a>:</b>
+        <b><a href="bug_status.html#severity">S<u>e</u>verity</a>:</b>
       </td>
-      [% PROCESS select selname = "bug_severity" %]
+      [% PROCESS select selname = "bug_severity" accesskey => "e" %]
       
     </tr>
     
@@ -179,10 +181,11 @@
       [% IF Param("usetargetmilestone") && bug.target_milestone %]
         <td align="right">
           <b>
-            <a href="[% bug.milestoneurl FILTER html %]">Target Milestone</a>:
+            <a href="[% bug.milestoneurl FILTER html %]"><u>T</u>arget
+            Milestone</a>:
           </b>
         </td>
-        [% PROCESS select selname = "target_milestone" %]
+        [% PROCESS select selname = "target_milestone" accesskey => "t" %]
       [% ELSE %]
         <td colspan="3">&nbsp;</td>
       [% END %]
@@ -193,10 +196,10 @@
    [% IF Param('useqacontact') %]
      <tr>
        <td align="right">
-       <b>QA Contact:</b>
+       <b><u>Q</u>A Contact:</b>
        </td>
        <td colspan="7">
-         <input name="qa_contact" 
+         <input name="qa_contact" accesskey="q"
                 value="[% bug.qa_contact FILTER html %]" size="60">
        </td>
      </tr>
@@ -206,24 +209,24 @@
     <td align="right">
       <b>
         [% IF bug.bug_file_loc %]
-          <a href="[% bug.bug_file_loc FILTER html %]">URL</a>:
+          <a href="[% bug.bug_file_loc FILTER html %]"><u>U</u>RL</a>:
         [% ELSE %]
-          URL:
+          <u>U</u>RL:
         [% END %]
       </b>
     </td>
     <td colspan="7">
-      <input name="bug_file_loc" 
+      <input name="bug_file_loc" accesskey="u"
              value="[% bug.bug_file_loc FILTER html %]" size="60">
     </td>
   </tr>
   
   <tr>
     <td align="right">
-      <b>Summary:</b>
+      <b><u>S</u>ummary:</b>
     </td>
     <td colspan="7">
-      <input name="short_desc" 
+      <input name="short_desc" accesskey="s"
              value="[% bug.short_desc FILTER html %]" size="60">
     </td>
   </tr>
@@ -231,10 +234,10 @@
   [% IF Param('usestatuswhiteboard') %] 
     <tr>
       <td align="right">
-        <b>Status Whiteboard:</b>
+        <b>Status <u>W</u>hiteboard:</b>
       </td>
       <td colspan="7">
-        <input name="status_whiteboard" 
+        <input name="status_whiteboard" accesskey="w"
                value="[% bug.status_whiteboard FILTER html %]" size="60">
       </td>
     </tr>
@@ -244,10 +247,10 @@
     <tr>
       <td align="right">
         <b>
-          <a href="describekeywords.cgi">Keywords</a>:
+          <a href="describekeywords.cgi"><u>K</u>eywords</a>:
         </b>
       <td colspan="7">
-        <input name="keywords" 
+        <input name="keywords" accesskey="k"
                value="[% bug.keywords.join(', ') FILTER html %]" size="60">
       </td>
     </tr> 
@@ -265,8 +268,8 @@
   [% IF Param('usedependencies') %]
   <table>
     <tr>
-    [% PROCESS dependencies 
-       dep = { title => "depends on", fieldname => "dependson" } %]
+    [% PROCESS dependencies accesskey = "d"
+       dep = { title => "<u>d</u>epends on", fieldname => "dependson" } %]
       <td rowspan="2">
         <a href="showdependencytree.cgi?id=[% bug.bug_id %]">Show 
         dependency tree</a>  
@@ -280,8 +283,8 @@
     </tr>
 
     <tr>
-    [% PROCESS dependencies 
-       dep = { title => "blocks", fieldname => "blocked" } %]
+    [% PROCESS dependencies accesskey = "b"
+       dep = { title => "<u>b</u>locks", fieldname => "blocked" } %]
     </tr>
   </table>
   [% END %]
@@ -306,7 +309,7 @@
 [%# *** Comments Groups *** %]
 
   <br>
-  <b>Additional Comments:</b>
+  <b>Additional <u>C</u>omments:</b>
   <br>
   <textarea wrap="hard" name="comment" rows="10" cols="80"
             accesskey="c"></textarea>
@@ -522,7 +525,7 @@
   [% END %]
   </td>
   <td>
-    <input name="[% dep.fieldname %]" 
+    <input name="[% dep.fieldname %]" accesskey="[% accesskey %]"
            value="[% bug.${dep.fieldname}.join(', ') %]">
   </td>
 [% END %]
@@ -534,13 +537,15 @@
 
 [% BLOCK select %]  
   <td>
-    <select name="[% selname %]">
-      [% FOREACH x = ${selname} %]
-        <option value="[% x FILTER html %]"
-          [% " selected" IF x == bug.${selname} %]>[% x FILTER html %]
-        </option>
-      [% END %]
-    </select>
+    <label for="[% selname %]" accesskey="[% accesskey %]">
+      <select name="[% selname %]" id="[% selname %]">
+        [% FOREACH x = ${selname} %]
+          <option value="[% x FILTER html %]"
+            [% " selected" IF x == bug.${selname} %]>[% x FILTER html %]
+          </option>
+        [% END %]
+      </select>
+    </label>
   </td>
   <td>&nbsp;</td>
 [% END %]
