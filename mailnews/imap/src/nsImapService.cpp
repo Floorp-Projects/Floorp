@@ -435,7 +435,7 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
         if (NS_SUCCEEDED(rv) && aStreamListener)
         {
           nsCOMPtr<nsIChannel> aChannel;
-          rv = NewChannel(nsnull, url, nsnull, nsnull, getter_AddRefs(aChannel));
+          rv = NewChannel(nsnull, url, nsnull, nsnull, nsnull, getter_AddRefs(aChannel));
           if (NS_FAILED(rv)) return rv;
 
           nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(url);
@@ -2178,7 +2178,9 @@ NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
     return rv;
 }
 
-NS_IMETHODIMP nsImapService::NewChannel(const char *verb, nsIURI *aURI, nsILoadGroup *aGroup, nsIEventSinkGetter *eventSinkGetter, nsIChannel **_retval)
+NS_IMETHODIMP nsImapService::NewChannel(const char *verb, nsIURI *aURI, nsILoadGroup *aGroup,
+                                        nsIEventSinkGetter *eventSinkGetter, nsIURI* originalURI,
+                                        nsIChannel **_retval)
 {
     // imap can't open and return a channel right away...the url needs to go in the imap url queue 
     // until we find a connection which can run the url..in order to satisfy necko, we're going to return
@@ -2190,6 +2192,8 @@ NS_IMETHODIMP nsImapService::NewChannel(const char *verb, nsIURI *aURI, nsILoadG
 
     if (NS_FAILED(rv)) return rv;
 
+    // XXX this mock channel stuff is wrong -- the channel really should be owning the URL
+    // and the originalURL, not the other way around
     rv = imapUrl->GetMockChannel(getter_AddRefs(mockChannel));
     if (NS_FAILED(rv) || !mockChannel) return rv;
 

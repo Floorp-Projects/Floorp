@@ -105,14 +105,16 @@ NS_IMETHODIMP
 nsDataHandler::NewChannel(const char* verb, nsIURI* url,
                           nsILoadGroup *aGroup,
                           nsIEventSinkGetter* eventSinkGetter,
-                          nsIChannel* *result) {
+                          nsIURI* originalURI,
+                          nsIChannel* *result)
+{
     nsresult rv;
     
     nsDataChannel* channel;
     rv = nsDataChannel::Create(nsnull, NS_GET_IID(nsIDataChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->Init(verb, url, aGroup, eventSinkGetter);
+    rv = channel->Init(verb, url, aGroup, eventSinkGetter, originalURI);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;

@@ -60,7 +60,8 @@ NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup *aGroup,
     if (NS_FAILED(rv)) return rv;
 
     nsIChannel* channel;
-    rv = serv->NewChannelFromURI("load", uri, aGroup, eventSinkGetter, &channel);
+    rv = serv->NewChannelFromURI("load", uri, aGroup, eventSinkGetter, 
+                                 nsnull, &channel);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;

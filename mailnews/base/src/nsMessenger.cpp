@@ -469,6 +469,7 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
                                                    -1,          // contentLength
                                                    nsnull,      // inputStream
                                                    nsnull,      // loadGroup
+                                                   nsnull,      // originalURI
                                                    getter_AddRefs(aListener->m_channel));
             nsAutoString from, to;
             from = "message/rfc822";
@@ -596,6 +597,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile)
                                                          -1,          // contentLength
                                                          nsnull,      // inputStream
                                                          nsnull,      // loadGroup
+                                                         nsnull,      // originalURI
                                                          getter_AddRefs(aListener->m_channel));
                   nsAutoString from, to;
                   from = "message/rfc822";

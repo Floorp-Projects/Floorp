@@ -36,7 +36,7 @@
 class NS_MSG_BASE nsMsgProtocol : public nsIStreamListener, public nsIChannel
 {
 public:
-	nsMsgProtocol();
+	nsMsgProtocol(nsIURI * aURL, nsIURI* originalURI);
 	virtual ~nsMsgProtocol();
 
 	NS_DECL_ISUPPORTS
@@ -44,8 +44,8 @@ public:
 	NS_DECL_NSICHANNEL
 	NS_DECL_NSIREQUEST
   
-  NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSISTREAMOBSERVER
 
 	// LoadUrl -- A protocol typically overrides this function, sets up any local state for the url and
 	// then calls the base class which opens the socket if it needs opened. If the socket is 
@@ -99,7 +99,8 @@ protected:
 	nsFileSpec	m_tempMsgFileSpec;  // we currently have a hack where displaying a msg involves writing it to a temp file first
 
 	// the following is a catch all for nsIChannel related data
-	nsCOMPtr<nsIURI>  m_url; // the running url
+	nsCOMPtr<nsIURI>            m_originalUrl;  // the original url
+	nsCOMPtr<nsIURI>            m_url;          // the running url
 	nsCOMPtr<nsIStreamListener> m_channelListener;
 	nsCOMPtr<nsISupports>		m_channelContext;
 	nsCOMPtr<nsILoadGroup>		m_loadGroup;

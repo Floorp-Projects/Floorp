@@ -184,6 +184,7 @@ nsresult  rv;
                                          -1,          // contentLength
                                          nsnull,      // inputStream
                                          nsnull,      // loadGroup
+                                         nsnull,      // originalURI
                                          getter_AddRefs(mQuoteChannel));
 
   NS_ASSERTION(!mQuoteListener, "Oops quote listener exists\n");

@@ -213,6 +213,7 @@ NS_IMETHODIMP
 nsIOService::NewChannelFromURI(const char* verb, nsIURI *aURI,
                                nsILoadGroup *aGroup,
                                nsIEventSinkGetter *eventSinkGetter,
+                               nsIURI* originalURI,
                                nsIChannel **result)
 {
     nsresult rv;
@@ -226,7 +227,8 @@ nsIOService::NewChannelFromURI(const char* verb, nsIURI *aURI,
     if (NS_FAILED(rv)) return rv;
 
     nsIChannel* channel;
-    rv = handler->NewChannel(verb, aURI, aGroup, eventSinkGetter, &channel);
+    rv = handler->NewChannel(verb, aURI, aGroup, eventSinkGetter, 
+                             originalURI, &channel);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;
@@ -238,6 +240,7 @@ nsIOService::NewChannel(const char* verb, const char *aSpec,
                         nsIURI *aBaseURI,
                         nsILoadGroup *aGroup,
                         nsIEventSinkGetter *eventSinkGetter,
+                        nsIURI* originalURI,
                         nsIChannel **result)
 {
     nsresult rv;
@@ -245,7 +248,8 @@ nsIOService::NewChannel(const char* verb, const char *aSpec,
     nsCOMPtr<nsIProtocolHandler> handler;
     rv = NewURI(aSpec, aBaseURI, getter_AddRefs(uri), getter_AddRefs(handler));
     if (NS_FAILED(rv)) return rv;
-    rv = handler->NewChannel(verb, uri, aGroup, eventSinkGetter, result);
+    rv = handler->NewChannel(verb, uri, aGroup, eventSinkGetter, 
+                             originalURI, result);
     return rv;
 }
 
@@ -417,14 +421,14 @@ NS_IMETHODIMP
 nsIOService::NewInputStreamChannel(nsIURI* uri, const char *contentType, 
                                    PRInt32 contentLength,
                                    nsIInputStream *inStr, nsILoadGroup* group,
-                                   nsIChannel **result)
+                                   nsIURI* originalURI, nsIChannel **result)
 {
     nsresult rv;
     nsInputStreamChannel* channel;
     rv = nsInputStreamChannel::Create(nsnull, NS_GET_IID(nsIChannel),
                                       (void**)&channel);
     if (NS_FAILED(rv)) return rv;
-    rv = channel->Init(uri, contentType, contentLength, inStr, group);
+    rv = channel->Init(uri, contentType, contentLength, inStr, group, originalURI);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;

@@ -30,22 +30,17 @@ static const char kURI[] = "chrome://global/content/about.html";
 
 NS_IMETHODIMP
 nsAbout::NewChannel(const char *verb,
-                         nsIURI *aURI,
-                         nsILoadGroup *aGroup,
-                         nsIEventSinkGetter *eventSinkGetter,
-                         nsIChannel **result)
+                    nsIURI *aURI,
+                    nsILoadGroup *aGroup,
+                    nsIEventSinkGetter *eventSinkGetter,
+                    nsIURI* originalURI,
+                    nsIChannel **result)
 {
     nsresult rv;
-    
-    nsCOMPtr<nsIURI> URI;
-    
-   
-    
     NS_WITH_SERVICE(nsIIOService, ioService, kIOServiceCID, &rv);
     if ( NS_FAILED(rv) )
-    	return rv;
-    rv = ioService->NewURI(kURI, NULL, getter_AddRefs(URI));
-   	rv = ioService->NewChannelFromURI( verb, URI ,aGroup, eventSinkGetter, result);
+        return rv;
+   	rv = ioService->NewChannel( verb, kURI, NULL ,aGroup, eventSinkGetter, originalURI, result);
     return rv;
 }
 

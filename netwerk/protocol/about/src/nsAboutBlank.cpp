@@ -32,6 +32,7 @@ nsAboutBlank::NewChannel(const char *verb,
                          nsIURI *aURI,
                          nsILoadGroup *aGroup,
                          nsIEventSinkGetter *eventSinkGetter,
+                         nsIURI* originalURI,
                          nsIChannel **result)
 {
     nsresult rv;
@@ -50,7 +51,7 @@ nsAboutBlank::NewChannel(const char *verb,
 
     rv = serv->NewInputStreamChannel(aURI, "text/html", 
                                      nsCRT::strlen(kBlankPage),
-                                     in, aGroup, &channel);
+                                     in, aGroup, originalURI, &channel);
     NS_RELEASE(in);
     if (NS_FAILED(rv)) return rv;
 

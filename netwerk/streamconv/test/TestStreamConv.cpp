@@ -276,7 +276,7 @@ main(int argc, char* argv[])
     if (NS_FAILED(rv)) return rv;
     rv = serv->NewInputStreamChannel(dummyURI, "multipart/x-mixed-replace;boundary= --aBoundary",
                                      -1,        // XXX fix contentLength
-                                     nsnull, nsnull, &dummyChannel);
+                                     nsnull, nsnull, nsnull, &dummyChannel);
     NS_RELEASE(dummyURI);
     if (NS_FAILED(rv)) return rv;
 

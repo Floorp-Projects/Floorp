@@ -67,7 +67,7 @@ class nsMailboxProtocol : public nsMsgProtocol
 public:
 	// Creating a protocol instance requires the URL which needs to be run AND it requires
 	// a transport layer. 
-	nsMailboxProtocol(nsIURI * aURL);
+	nsMailboxProtocol(nsIURI * aURL, nsIURI* originalURI);
 	virtual ~nsMailboxProtocol();
 
 	// the consumer of the url might be something like an nsIWebShell....

@@ -6197,19 +6197,18 @@ NS_IMETHODIMP nsImapMockChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsImapMockChannel::GetOriginalURI(nsIURI * *aURI)
+{
+    *aURI = m_originalUrl;
+    NS_IF_ADDREF(*aURI);
+    return NS_OK; 
+}
+ 
 NS_IMETHODIMP nsImapMockChannel::GetURI(nsIURI * *aURI)
 {
-	nsresult rv = NS_OK;
-	if (aURI)
-	{
-		if (m_url)
-			rv = m_url->QueryInterface(NS_GET_IID(nsIURI), (void **) aURI);
-		else
-			*aURI = nsnull;
-	}
-	else
-		rv = NS_ERROR_NULL_POINTER;
-	return rv;
+    *aURI = m_url;
+    NS_IF_ADDREF(*aURI);
+    return NS_OK; 
 }
  
 NS_IMETHODIMP nsImapMockChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount, nsIInputStream **_retval)

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -343,25 +343,27 @@ net_pop3_free_state(Pop3UidlHost* host)
   Pop3AllocedString* tmp;
   Pop3AllocedString* next;
   while (host) {
-	h = host->next;
-	PR_Free(host->host);
-	PR_Free(host->user);
-	PL_HashTableDestroy(host->hash);
-	tmp = host->strings;
-	while (tmp) {
-	  next = tmp->next;
-	  PR_Free(tmp->str);
-	  PR_Free(tmp);
-	  tmp = next;
-	}
-	PR_Free(host);
-	host = h;
+    h = host->next;
+    PR_Free(host->host);
+    PR_Free(host->user);
+    PL_HashTableDestroy(host->hash);
+    tmp = host->strings;
+    while (tmp) {
+      next = tmp->next;
+      PR_Free(tmp->str);
+      PR_Free(tmp);
+      tmp = next;
+    }
+    PR_Free(host);
+    host = h;
   }
 }
 
 // nsPop3Protocol class implementation
 
-nsPop3Protocol::nsPop3Protocol(nsIURI* aURL) : nsMsgLineBuffer(NULL, PR_FALSE)
+nsPop3Protocol::nsPop3Protocol(nsIURI* aURL)
+    : nsMsgLineBuffer(NULL, PR_FALSE),
+      nsMsgProtocol(aURL, aURL)
 {
 	SetLookingForCRLF(MSG_LINEBREAK_LEN == 2);
 	Initialize(aURL);
@@ -369,40 +371,40 @@ nsPop3Protocol::nsPop3Protocol(nsIURI* aURL) : nsMsgLineBuffer(NULL, PR_FALSE)
 
 void nsPop3Protocol::Initialize(nsIURI * aURL)
 {
-	nsresult rv = NS_OK;
-    m_pop3ConData = nsnull;
+  nsresult rv = NS_OK;
+  m_pop3ConData = nsnull;
 
-	m_pop3CapabilityFlags = POP3_AUTH_LOGIN_UNDEFINED |
-				            POP3_XSENDER_UNDEFINED |
-				            POP3_GURL_UNDEFINED |
-                            POP3_UIDL_UNDEFINED |
-                            POP3_TOP_UNDEFINED |
-				            POP3_XTND_XLST_UNDEFINED;
+  m_pop3CapabilityFlags = POP3_AUTH_LOGIN_UNDEFINED |
+    POP3_XSENDER_UNDEFINED |
+    POP3_GURL_UNDEFINED |
+    POP3_UIDL_UNDEFINED |
+    POP3_TOP_UNDEFINED |
+    POP3_XTND_XLST_UNDEFINED;
 
-	m_pop3ConData = (Pop3ConData *)PR_NEWZAP(Pop3ConData);
-	m_totalBytesReceived = 0;
-	m_bytesInMsgReceived = 0; 
-    m_totalFolderSize = 0;    
-  	m_totalDownloadSize = 0;
-	m_totalBytesReceived = 0;
+  m_pop3ConData = (Pop3ConData *)PR_NEWZAP(Pop3ConData);
+  m_totalBytesReceived = 0;
+  m_bytesInMsgReceived = 0; 
+  m_totalFolderSize = 0;    
+  m_totalDownloadSize = 0;
+  m_totalBytesReceived = 0;
 
-    PR_ASSERT(m_pop3ConData);
+  PR_ASSERT(m_pop3ConData);
 
-	if (aURL)
-	{
-		// extract out message feedback if there is any.
-		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aURL);
-		if (mailnewsUrl)
-			mailnewsUrl->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
+  if (aURL)
+  {
+    // extract out message feedback if there is any.
+    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aURL);
+    if (mailnewsUrl)
+      mailnewsUrl->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
 
-		m_nsIPop3URL = do_QueryInterface(aURL);
-		if (m_nsIPop3URL)
-		{
-			rv = OpenNetworkSocket(aURL);
-		}
-	} // if we got a url...
+    m_nsIPop3URL = do_QueryInterface(aURL);
+    if (m_nsIPop3URL)
+    {
+      rv = OpenNetworkSocket(aURL);
+    }
+  } // if we got a url...
 
-	m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, CRLF, PR_TRUE);
+  m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, CRLF, PR_TRUE);
 }
 
 nsPop3Protocol::~nsPop3Protocol()

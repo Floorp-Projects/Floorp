@@ -143,6 +143,7 @@ NS_IMETHODIMP
 nsFileProtocolHandler::NewChannel(const char* verb, nsIURI* url,
                                   nsILoadGroup *aGroup,
                                   nsIEventSinkGetter* eventSinkGetter,
+                                  nsIURI* originalURI,
                                   nsIChannel* *result)
 {
     nsresult rv;
@@ -151,7 +152,7 @@ nsFileProtocolHandler::NewChannel(const char* verb, nsIURI* url,
     rv = nsFileChannel::Create(nsnull, NS_GET_IID(nsIFileChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->Init(this, verb, url, aGroup, eventSinkGetter);
+    rv = channel->Init(this, verb, url, aGroup, eventSinkGetter, originalURI);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;
@@ -178,6 +179,7 @@ nsFileProtocolHandler::NewChannelFromNativePath(const char* nativePath,
                     uri,
                     nsnull,  // XXX bogus load group
                     nsnull,  // XXX bogus getter
+                    nsnull,  // originalURI same as uri
                     (nsIChannel**)result);
     NS_RELEASE(uri);
     return rv;

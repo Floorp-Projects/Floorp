@@ -653,7 +653,7 @@ nsresult nsIMAP4TestDriver::OnTestUrlParsing()
 
 		printf("Host name test: %s\n", PL_strcmp(urlHost, hostName) == 0 ? "PASSED." : "FAILED!");
 		if (port > 0) // did the user try to test the port?
-			printf("Port test: %s\n", port == urlPort ? "PASSED." : "FAILED!");
+			printf("Port test: %s\n", port == (PRUint32)urlPort ? "PASSED." : "FAILED!");
 
 		NS_IF_RELEASE(imapUrl);
 	}

@@ -132,6 +132,7 @@ NS_IMETHODIMP
 nsAboutProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                                    nsILoadGroup *aGroup,
                                    nsIEventSinkGetter* eventSinkGetter,
+                                   nsIURI* originalURI,
                                    nsIChannel* *result)
 {
     // about:what you ask?
@@ -157,7 +158,7 @@ nsAboutProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     if (NS_SUCCEEDED(rv)) {
         // The standard return case:
         return aboutMod->NewChannel(verb, uri, aGroup, eventSinkGetter, 
-                                    result);
+                                    originalURI, result);
     }
 
     // mumble...

@@ -56,10 +56,10 @@ static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
  */
 #define OUTPUT_BUFFER_SIZE (4096*2)
 
-nsMailboxProtocol::nsMailboxProtocol(nsIURI * aURL)
+nsMailboxProtocol::nsMailboxProtocol(nsIURI * aURI, nsIURI* originalURI)
+    : nsMsgProtocol(aURI, originalURI)
 {
-	Initialize(aURL);
-	SetUrl(aURL);
+	Initialize(aURI);
 
     // initialize the pr log if it hasn't been initialiezed already
 	if (!MAILBOX)

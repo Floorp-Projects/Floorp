@@ -84,6 +84,7 @@ public:
     NS_IMETHOD               NewChannel(const char* verb, nsIURI* url,
                                         nsILoadGroup *aGroup,
                                         nsIEventSinkGetter *eventSinkGetter,
+                                        nsIURI* originalURI,
                                         nsIChannel **_retval);
     
     NS_IMETHOD               NewURI(const char *aSpec, nsIURI *aBaseURI,

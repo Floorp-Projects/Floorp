@@ -172,6 +172,7 @@ NS_IMETHODIMP
 nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
                                  nsILoadGroup *aGroup,
                                  nsIEventSinkGetter* eventSinkGetter,
+                                 nsIURI* originalURI,
                                  nsIChannel* *result)
 {
     nsresult rv;
@@ -180,7 +181,7 @@ nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
     rv = nsFTPChannel::Create(nsnull, NS_GET_IID(nsIFTPChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    rv = channel->Init(verb, url, aGroup, eventSinkGetter, this);
+    rv = channel->Init(verb, url, aGroup, eventSinkGetter, originalURI, this);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpProtocolHandler::NewChannel() FAILED\n"));

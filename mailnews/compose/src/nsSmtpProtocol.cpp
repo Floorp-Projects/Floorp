@@ -204,6 +204,7 @@ esmtp_value_encode(char *addr)
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 nsSmtpProtocol::nsSmtpProtocol(nsIURI * aURL)
+    : nsMsgProtocol(aURL, aURL)
 {
   Initialize(aURL);
 }

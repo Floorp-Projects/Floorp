@@ -157,6 +157,7 @@ NS_METHOD
 nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
                           nsILoadGroup *aGroup,
                           nsIEventSinkGetter *eventSinkGetter,
+                          nsIURI* originalURI,
                           nsIChannel **o_Instance)
 {
     nsresult rv;
@@ -207,6 +208,7 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
         pChannel = new nsHTTPChannel(i_URL, 
                                      verb,
                                      eventSinkGetter,
+                                     originalURI,
                                      this);
         if (pChannel) {
             NS_ADDREF(pChannel);

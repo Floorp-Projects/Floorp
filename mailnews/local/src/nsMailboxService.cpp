@@ -186,7 +186,7 @@ nsresult nsMailboxService::RunMailboxUrl(nsIURI * aMailboxUrl, nsISupports * aDi
 {
 	// create a protocol instance to run the url..
 	nsresult rv = NS_OK;
-	nsMailboxProtocol * protocol = new nsMailboxProtocol(aMailboxUrl);
+	nsMailboxProtocol * protocol = new nsMailboxProtocol(aMailboxUrl, aMailboxUrl);
 
 	if (protocol)
 	{
@@ -298,10 +298,12 @@ NS_IMETHODIMP nsMailboxService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIU
 	return rv;
 }
 
-NS_IMETHODIMP nsMailboxService::NewChannel(const char *verb, nsIURI *aURI, nsILoadGroup *aGroup, nsIEventSinkGetter *eventSinkGetter, nsIChannel **_retval)
+NS_IMETHODIMP nsMailboxService::NewChannel(const char *verb, nsIURI *aURI, nsILoadGroup *aGroup,
+                                           nsIEventSinkGetter *eventSinkGetter, nsIURI* originalURI,
+                                           nsIChannel **_retval)
 {
 	nsresult rv = NS_OK;
-	nsMailboxProtocol * protocol = new nsMailboxProtocol(aURI);
+	nsMailboxProtocol * protocol = new nsMailboxProtocol(aURI, originalURI);
 	protocol->SetLoadGroup(aGroup);
 	if (protocol)
 	{

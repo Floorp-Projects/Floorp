@@ -30,7 +30,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 NS_IMPL_ISUPPORTS3(nsMsgProtocol, nsIStreamListener, nsIStreamObserver, nsIChannel)
 
-nsMsgProtocol::nsMsgProtocol()
+nsMsgProtocol::nsMsgProtocol(nsIURI * aURL, nsIURI* originalURI)
 {
 	NS_INIT_REFCNT();
 	m_flags = 0;
@@ -40,6 +40,8 @@ nsMsgProtocol::nsMsgProtocol()
 		
 	m_tempMsgFileSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory);
 	m_tempMsgFileSpec += "tempMessage.eml";
+    m_url = aURL;
+    m_originalUrl = originalURI ? originalURI : aURL;
 }
 
 nsMsgProtocol::~nsMsgProtocol()
@@ -93,6 +95,7 @@ nsresult nsMsgProtocol::OpenFileSocket(nsIURI * aURL, const nsFileSpec * aFileSp
                                     nsnull,     // null base URI
                                     nsnull,     // null load group
                                     nsnull,     // null eventsink getter
+                                    nsnull,     // originalURI
                                     getter_AddRefs(m_channel));
 		PR_FREEIF(urlSpec);
 
@@ -244,19 +247,18 @@ nsresult nsMsgProtocol::SetLoadGroup(nsILoadGroup * aLoadGroup)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgProtocol::GetOriginalURI(nsIURI * *aURI)
+{
+    *aURI = m_originalUrl;
+    NS_IF_ADDREF(*aURI);
+    return NS_OK;
+}
+ 
 NS_IMETHODIMP nsMsgProtocol::GetURI(nsIURI * *aURI)
 {
-	nsresult rv = NS_OK;
-	if (aURI)
-	{
-		if (m_url)
-			rv = m_url->QueryInterface(NS_GET_IID(nsIURI), (void **) aURI);
-		else
-			*aURI = nsnull;
-	}
-	else
-		rv = NS_ERROR_NULL_POINTER;
-	return rv;
+    *aURI = m_url;
+    NS_IF_ADDREF(*aURI);
+    return NS_OK;
 }
  
 NS_IMETHODIMP nsMsgProtocol::OpenInputStream(PRUint32 startPosition, PRInt32 readCount, nsIInputStream **_retval)

@@ -155,7 +155,7 @@ MimeMultipartAppleDouble_parse_begin (MimeObject *obj)
 	  newopt.fancy_headers_p = PR_TRUE;
 	  newopt.headers = (all_headers_p ? MimeHeadersAll : MimeHeadersSome);
 
-	FAIL:
+//	FAIL:
 	  PR_FREEIF(id);
 	  PR_FREEIF(id_url);
 	  PR_FREEIF(id_imap);

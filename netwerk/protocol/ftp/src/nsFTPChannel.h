@@ -59,10 +59,11 @@ public:
     // and returns it so the protocol handler can cache it and
     // join() it on shutdown.
     nsresult Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
-                  nsIEventSinkGetter* getter,
+                  nsIEventSinkGetter* getter, nsIURI* originalURI,
                   nsIProtocolHandler* aHandler);
 
 protected:
+    nsCOMPtr<nsIURI>        mOriginalURI;
     nsIURI*                 mUrl;
     nsIEventQueue*          mEventQueue;
     nsIProgressEventSink*   mEventSink;

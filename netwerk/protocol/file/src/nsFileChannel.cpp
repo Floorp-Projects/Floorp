@@ -60,12 +60,13 @@ nsFileChannel::nsFileChannel()
 
 nsresult
 nsFileChannel::Init(nsIFileProtocolHandler* handler, const char* command, nsIURI* uri,
-                    nsILoadGroup *aGroup, nsIEventSinkGetter* getter)
+                    nsILoadGroup *aGroup, nsIEventSinkGetter* getter, nsIURI* originalURI)
 {
     nsresult rv;
 
     mGetter = getter;
     mHandler = handler;
+    mOriginalURI = originalURI ? originalURI : uri;
     mURI = uri;
     mCommand = nsCRT::strdup(command);
     if (mCommand == nsnull)
@@ -199,6 +200,14 @@ nsFileChannel::Resume()
 ////////////////////////////////////////////////////////////////////////////////
 // From nsIChannel
 ////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsFileChannel::GetOriginalURI(nsIURI * *aURI)
+{
+    *aURI = mOriginalURI;
+    NS_ADDREF(*aURI);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsFileChannel::GetURI(nsIURI * *aURI)
@@ -727,6 +736,7 @@ nsFileChannel::CreateFileChannelFromFileSpec(nsFileSpec& spec, nsIFileChannel **
                           nsnull,
                           mLoadGroup,
                           mGetter,
+                          nsnull,
                           &channel);
 
     if (NS_FAILED(rv)) return rv;

@@ -59,7 +59,9 @@ static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, 
                              const char *i_Verb,
                              nsIEventSinkGetter* i_EventSinkGetter,
+                             nsIURI* originalURI,
                              nsHTTPHandler* i_Handler): 
+    mOriginalURI(dont_QueryInterface(originalURI ? originalURI : i_URL)),
     mURI(dont_QueryInterface(i_URL)),
     mConnected(PR_FALSE),
     mHandler(dont_QueryInterface(i_Handler)),
@@ -199,15 +201,19 @@ nsHTTPChannel::Resume(void)
 // nsIChannel methods:
 
 NS_IMETHODIMP
+nsHTTPChannel::GetOriginalURI(nsIURI* *o_URL)
+{
+    *o_URL = mOriginalURI;
+    NS_IF_ADDREF(*o_URL);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTTPChannel::GetURI(nsIURI* *o_URL)
 {
-    if (o_URL) {
-        *o_URL = mURI;
-        NS_IF_ADDREF(*o_URL);
-        return NS_OK;
-    } else {
-        return NS_ERROR_NULL_POINTER;
-    }
+    *o_URL = mURI;
+    NS_IF_ADDREF(*o_URL);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -768,7 +774,7 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
 #endif /* PR_LOGGING */
 
   rv = serv->NewChannelFromURI(mVerb.GetBuffer(), newURI, mLoadGroup, mEventSinkGetter, 
-                               getter_AddRefs(channel));
+                               mOriginalURI, getter_AddRefs(channel));
   if (NS_FAILED(rv)) return rv;
 
   // Copy the load attributes into the new channel...
@@ -928,7 +934,7 @@ nsHTTPChannel::Authenticate(const char *iChallenge, nsIChannel **oChannel)
 
     // This smells like a clone function... maybe there is a benefit in doing that, think. TODO.
     rv = serv->NewChannelFromURI(mVerb.GetBuffer(), mURI, 
-                                mLoadGroup, mEventSinkGetter,
+                                mLoadGroup, mEventSinkGetter, mOriginalURI,
                                 getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv; 
 

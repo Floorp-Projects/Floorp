@@ -89,7 +89,8 @@ NS_IMPL_ISUPPORTS4(nsFTPChannel, nsIChannel, nsIFTPChannel, nsIStreamListener, n
 
 nsresult
 nsFTPChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
-                   nsIEventSinkGetter* getter, nsIProtocolHandler* aHandler)
+                   nsIEventSinkGetter* getter, nsIURI* originalURI,
+                   nsIProtocolHandler* aHandler)
 {
     nsresult rv;
 
@@ -99,6 +100,7 @@ nsFTPChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
     if (mConnected)
         return NS_ERROR_FAILURE;
 
+    mOriginalURI = originalURI ? originalURI : uri;
     mUrl = uri;
     NS_ADDREF(mUrl);
 
@@ -209,6 +211,14 @@ nsFTPChannel::Resume(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIChannel methods:
+
+NS_IMETHODIMP
+nsFTPChannel::GetOriginalURI(nsIURI * *aURL)
+{
+    *aURL = mOriginalURI;
+    NS_ADDREF(*aURL);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsFTPChannel::GetURI(nsIURI * *aURL)

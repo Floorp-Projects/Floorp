@@ -437,7 +437,8 @@ nsDummyBufferStream::QueryInterface(REFNSIID aIID, void** result)
     return NS_ERROR_NO_INTERFACE;
 }
 
-nsNNTPProtocol::nsNNTPProtocol()
+nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL)
+    : nsMsgProtocol(aURL, nsnull)
 {
 	m_messageID = nsnull;
 	m_cancelFromHdr = nsnull;
@@ -456,19 +457,14 @@ nsNNTPProtocol::~nsNNTPProtocol()
     delete m_lineStreamBuffer;
 }
 
-nsresult nsNNTPProtocol::Initialize(nsIURI * aURL)
+nsresult nsNNTPProtocol::Initialize(void)
 {
     nsresult rv = NS_OK;
-	if (!aURL)
-		return NS_ERROR_NULL_POINTER;
+    net_NewsChunkSize = DEFAULT_NEWS_CHUNK_SIZE;
 
-	SetUrl(aURL);
- 
-        net_NewsChunkSize = DEFAULT_NEWS_CHUNK_SIZE;
-
-	rv = aURL->GetHost(getter_Copies(m_hostName));
+	rv = m_url->GetHost(getter_Copies(m_hostName));
 	if (NS_FAILED(rv)) return rv;
-	rv = aURL->GetPreHost(getter_Copies(m_userName));
+	rv = m_url->GetPreHost(getter_Copies(m_userName));
 	if (NS_FAILED(rv)) return rv;
 
     // retrieve the AccountManager
@@ -496,7 +492,7 @@ nsresult nsNNTPProtocol::Initialize(nsIURI * aURL)
 		}
 	}
 
-	NS_PRECONDITION(aURL, "invalid URL passed into NNTP Protocol");
+	NS_PRECONDITION(m_url, "invalid URL passed into NNTP Protocol");
 
 	// Right now, we haven't written an nsNNTPURL yet. When we do, we'll pull the event sink
 	// data out of it and set our event sink member variables from it. For now, just set them
@@ -504,7 +500,7 @@ nsresult nsNNTPProtocol::Initialize(nsIURI * aURL)
 	
 	// query the URL for a nsINNTPUrl
    
-	m_runningURL = do_QueryInterface(aURL);
+	m_runningURL = do_QueryInterface(m_url);
 	if (NS_SUCCEEDED(rv) && m_runningURL)
 	{
 		// okay, now fill in our event sinks...Note that each getter ref counts before
@@ -521,7 +517,7 @@ nsresult nsNNTPProtocol::Initialize(nsIURI * aURL)
 	
     
 	// call base class to set up the transport
-	rv = OpenNetworkSocket(aURL);
+	rv = OpenNetworkSocket(m_url);
 
 	m_dataBuf = (char *) PR_Malloc(sizeof(char) * OUTPUT_BUFFER_SIZE);
 	m_dataBufSize = OUTPUT_BUFFER_SIZE;

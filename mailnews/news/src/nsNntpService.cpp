@@ -652,10 +652,10 @@ nsresult nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgro
   // almost there...now create a nntp protocol instance to run the url in...
   nsNNTPProtocol *nntpProtocol = nsnull;
 
-  nntpProtocol = new nsNNTPProtocol();
+  nntpProtocol = new nsNNTPProtocol(mailnewsurl);
   if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;;
   
-  rv = nntpProtocol->Initialize(mailnewsurl);
+  rv = nntpProtocol->Initialize();
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr <nsINNTPNewsgroupPost> post;
@@ -727,10 +727,10 @@ nsNntpService::RunNewsUrl(nsIURI * aUri, nsISupports * aConsumer)
   // almost there...now create a nntp protocol instance to run the url in...
   nsNNTPProtocol *nntpProtocol = nsnull;
 
-  nntpProtocol = new nsNNTPProtocol();
+  nntpProtocol = new nsNNTPProtocol(aUri);
   if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;
   
-  nsresult rv = nntpProtocol->Initialize(aUri);
+  nsresult rv = nntpProtocol->Initialize();
   if (NS_FAILED(rv)) return rv;
   
   rv = nntpProtocol->LoadUrl(aUri, aConsumer);
@@ -941,22 +941,18 @@ NS_IMETHODIMP nsNntpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
 	return rv;
 }
 
-NS_IMETHODIMP nsNntpService::NewChannel(const char *verb, nsIURI *aURI, nsILoadGroup *aGroup, nsIEventSinkGetter *eventSinkGetter, nsIChannel **_retval)
+NS_IMETHODIMP nsNntpService::NewChannel(const char *verb, nsIURI *aURI, nsILoadGroup *aGroup,
+                                        nsIEventSinkGetter *eventSinkGetter, nsIURI* originalURI,
+                                        nsIChannel **_retval)
 {
 	nsresult rv = NS_OK;
-	nsNNTPProtocol *nntpProtocol = new nsNNTPProtocol();
+	nsNNTPProtocol *nntpProtocol = new nsNNTPProtocol(aURI);
 	if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;
   
-	rv = nntpProtocol->Initialize(aURI);
+	rv = nntpProtocol->Initialize();
+    if (NS_FAILED(rv)) return rv;
 	nntpProtocol->SetLoadGroup(aGroup);
-	if (nntpProtocol)
-	{
-		rv = nntpProtocol->QueryInterface(NS_GET_IID(nsIChannel), (void **) _retval);
-	}
-	else
-		rv = NS_ERROR_NULL_POINTER;
-
-	return rv;
+    return nntpProtocol->QueryInterface(NS_GET_IID(nsIChannel), (void **) _retval);
 }
 
 NS_IMETHODIMP

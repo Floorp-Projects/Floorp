@@ -552,6 +552,7 @@ protected:
     // we CANNOT own the uri else we will have a circular ref count
     // because the imap uri ref counts us....so don't think about
     // turning this into a com ptr!
+    nsCOMPtr<nsIURI> m_originalUrl;
     nsIURI * m_url;
     nsCOMPtr<nsILoadGroup> m_loadGroup;
     nsCOMPtr<nsIStreamListener> m_channelListener;

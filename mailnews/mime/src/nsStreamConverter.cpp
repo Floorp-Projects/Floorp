@@ -420,7 +420,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 	NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
 	rv = netService->NewInputStreamChannel(aURI, mOutputFormat,
                                          -1,    // XXX fix contentLength
-                                         nsnull, nsnull, getter_AddRefs(mOutgoingChannel));
+                                         nsnull, nsnull, nsnull, getter_AddRefs(mOutgoingChannel));
 	if (NS_FAILED(rv)) 
 		return rv;
 

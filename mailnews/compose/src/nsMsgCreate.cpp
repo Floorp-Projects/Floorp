@@ -197,6 +197,7 @@ nsresult  rv;
                                          -1,          // contentLength
                                          nsnull,      // inputStream
                                          nsnull,      // loadGroup
+                                         nsnull,      // originalURI
                                          getter_AddRefs(dummyChannel));
   if (NS_FAILED(mimeParser->AsyncConvertData(nsnull, nsnull, nsnull, dummyChannel)))
   {

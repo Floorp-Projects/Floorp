@@ -145,11 +145,11 @@ class nsNNTPProtocol : public nsMsgProtocol
 public:
 	// Creating a protocol instance requires the URL 
 	// need to call Initialize after we do a new of nsNNTPProtocol
-	nsNNTPProtocol();	
+	nsNNTPProtocol(nsIURI * aURL);	
 	virtual ~nsNNTPProtocol();
 
 	// initialization function given a news url
-	NS_IMETHOD Initialize(nsIURI * aURL);
+	NS_IMETHOD Initialize(void);
 
 	// aConsumer is typically a display stream you may want the results to be displayed into...
 	virtual nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer = nsnull);
