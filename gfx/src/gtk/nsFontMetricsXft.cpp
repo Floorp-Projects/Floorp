@@ -298,7 +298,7 @@ nsFontMetricsXft::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 
         name.Append(char('.'));
 
-        nsCAutoString name;
+        const char* langGroup;
         mLangGroup->GetUTF8String(&langGroup);
 
         name.Append(langGroup);
@@ -803,10 +803,8 @@ nsFontMetricsXft::SetupFCPattern(void)
 
         // language group
         const char *name;
-        mLangGroup->Get(&name);
-        nsCAutoString cname;
-        cname.Assign(name);
-        printf("\tlang group: %s\n", cname.get());
+        mLangGroup->GetUTF8String(&name);
+        printf("\tlang group: %s\n", name);
 
 
     }
