@@ -27,6 +27,7 @@
 
 interface nsIDocShell;
 interface nsIUrlbarHistory;
+interface nsIInputStream;
 
 [scriptable, uuid(8AF0FA40-598D-11d3-806A-00600811A9C3)]
 interface nsIBrowserInstance : nsISupports {
@@ -65,6 +66,7 @@ interface nsIBrowserInstance : nsISupports {
     void SetForcedCharset(in wstring charset);
     void SetForcedDetector();
       attribute nsIUrlbarHistory urlbarHistory;
+      attribute nsIInputStream   postData;
     
     // File.
 

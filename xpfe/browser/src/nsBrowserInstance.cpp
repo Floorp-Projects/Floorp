@@ -37,6 +37,7 @@
 #include "nsIWebProgress.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsPIDOMWindow.h"
+#include "nsIHTTPChannel.h"
 
 ///  Unsorted Includes
 
@@ -1647,6 +1648,7 @@ nsBrowserInstance::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* cha
   if (parent)
   isFrame = PR_TRUE;
 
+
   
   nsCOMPtr<nsIDocumentLoader> docLoader;
   GetContentAreaDocLoader(getter_AddRefs(docLoader));
@@ -1684,15 +1686,21 @@ nsBrowserInstance::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* cha
       // nsISimpleEnumerator.
 
       /* To satisfy a request from the QA group */
+      nsCOMPtr<nsIInputStream> postData;
       if (aStatus == NS_OK) {
+        // Remember post data for http channels.
+        nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface( channel );
+        if ( httpChannel ) {
+            httpChannel->GetUploadStream( getter_AddRefs( postData ) );
+        }
         fprintf(stdout, "Document %s loaded successfully\n", (const char*)url);
         fflush(stdout);
-    }
-      else {
+      } else {
         fprintf(stdout, "Error loading URL %s: %0x \n", 
                 (const char*)url, aStatus);
         fflush(stdout);
-    }
+      }
+      this->SetPostData( postData );
   } //if (!isFrame)
 
 #ifdef DEBUG_warren
@@ -2622,4 +2630,18 @@ int PR_CALLBACK ButtonShowHideCallback(const char* aPref, void* aClosure)
   }
 
   return 0;
+}
+
+NS_IMETHODIMP
+nsBrowserInstance::GetPostData( nsIInputStream **aResult ) {
+    NS_ENSURE_ARG_POINTER( aResult );
+    *aResult = mPostData;
+    NS_IF_ADDREF( *aResult );
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserInstance::SetPostData( nsIInputStream *aInputStream ) {
+    mPostData = aInputStream;
+    return NS_OK;
 }
