@@ -681,12 +681,10 @@ nsAppRootAccessible::AddRootAccessible(nsRootAccessibleWrap *aRootAccWrap)
     NS_ENSURE_ARG_POINTER(aRootAccWrap);
 
     nsresult rv = NS_ERROR_FAILURE;
-    nsCOMPtr<nsIAccessibleDocument> docAcc =
-        do_QueryInterface(aRootAccWrap, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
 
     // add by weak reference
-    rv = mChildren->AppendElement(docAcc, PR_TRUE);
+    rv = mChildren->AppendElement(NS_STATIC_CAST(nsIAccessibleDocument*, aRootAccWrap),
+                                  PR_TRUE);
 
 #ifdef MAI_LOGGING
     PRUint32 count = 0;
@@ -710,13 +708,10 @@ nsAppRootAccessible::RemoveRootAccessible(nsRootAccessibleWrap *aRootAccWrap)
 
     PRUint32 index = 0;
     nsresult rv = NS_ERROR_FAILURE;
-    nsCOMPtr<nsIAccessibleDocument> docAcc =
-        do_QueryInterface(aRootAccWrap, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
 
     // we must use weak ref to get the index
     nsCOMPtr<nsIWeakReference> weakPtr =
-        do_GetWeakReference(docAcc);
+        do_GetWeakReference(NS_STATIC_CAST(nsIAccessibleDocument*, aRootAccWrap));
     rv = mChildren->IndexOf(0, weakPtr, &index);
 
 #ifdef MAI_LOGGING
