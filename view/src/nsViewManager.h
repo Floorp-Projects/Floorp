@@ -186,10 +186,6 @@ public:
 
   NS_IMETHOD  GetDeviceContext(nsIDeviceContext *&aContext);
 
-  NS_IMETHOD  ShowQuality(PRBool aShow);
-  NS_IMETHOD  GetShowQuality(PRBool &aResult);
-  NS_IMETHOD  SetQuality(nsContentQuality aQuality);
-
   NS_IMETHOD  DisableRefresh(void);
   NS_IMETHOD  EnableRefresh(PRUint32 aUpdateFlags);
 

@@ -152,7 +152,7 @@ nsLoggingSink::WillBuildModel() {
 }
 
 NS_IMETHODIMP
-nsLoggingSink::DidBuildModel(PRInt32 aQualityLevel) {
+nsLoggingSink::DidBuildModel() {
   
   WriteTabs(mOutput,--mLevel);
   PR_fprintf(mOutput, "</begin>\n");
@@ -160,7 +160,7 @@ nsLoggingSink::DidBuildModel(PRInt32 aQualityLevel) {
   //proxy the call to the real sink if you have one.
   nsresult theResult=NS_OK;
   if(mSink) {
-    theResult=mSink->DidBuildModel(aQualityLevel);
+    theResult=mSink->DidBuildModel();
   }
 
   return theResult;

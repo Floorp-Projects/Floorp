@@ -131,7 +131,7 @@ public:
 
     // nsIContentSink
     NS_IMETHOD WillBuildModel(void);
-    NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel);
+    NS_IMETHOD DidBuildModel(void);
     NS_IMETHOD WillInterrupt(void);
     NS_IMETHOD WillResume(void);
     NS_IMETHOD SetParser(nsIParser* aParser);  
@@ -453,25 +453,8 @@ XULContentSinkImpl::WillBuildModel(void)
 }
 
 NS_IMETHODIMP 
-XULContentSinkImpl::DidBuildModel(PRInt32 aQualityLevel)
+XULContentSinkImpl::DidBuildModel(void)
 {
-#if FIXME
-    // XXX this is silly; who cares?
-    PRInt32 i, ns = mDocument->GetNumberOfShells();
-    for (i = 0; i < ns; i++) {
-        nsCOMPtr<nsIPresShell> shell;
-        mDocument->GetShellAt(i, getter_AddRefs(shell));
-        if (nsnull != shell) {
-            nsIViewManager* vm;
-            shell->GetViewManager(&vm);
-            if(vm) {
-                vm->SetQuality(nsContentQuality(aQualityLevel));
-            }
-            NS_RELEASE(vm);
-        }
-    }
-#endif
-
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
     if (doc) {
         doc->EndLoad();

@@ -51,13 +51,6 @@ class nsRegion;
 class nsIDeviceContext;
 class nsIViewObserver;
 
-enum nsContentQuality {
-  nsContentQuality_kGood = 0,
-  nsContentQuality_kFair,
-  nsContentQuality_kPoor,
-  nsContentQuality_kUnknown
-};
-
 enum nsRectVisibility { 
   nsRectVisibility_kVisible, 
   nsRectVisibility_kAboveViewport, 
@@ -359,24 +352,6 @@ public:
    * @result device context
    */
   NS_IMETHOD  GetDeviceContext(nsIDeviceContext *&aContext) = 0;
-
-  /**
-   * Select whether quality level should be displayed in root view
-   * @param aShow if PR_TRUE, quality level will be displayed, else hidden
-   */
-  NS_IMETHOD  ShowQuality(PRBool aShow) = 0;
-
-  /**
-   * Query whether quality level should be displayed in view frame
-   * @return if PR_TRUE, quality level will be displayed, else hidden
-   */
-  NS_IMETHOD  GetShowQuality(PRBool &aResult) = 0;
-
-  /**
-   * Select quality level
-   * @param aShow if PR_TRUE, quality level will be displayed, else hidden
-   */
-  NS_IMETHOD  SetQuality(nsContentQuality aQuality) = 0;
 
   /**
    * prevent the view manager from refreshing.

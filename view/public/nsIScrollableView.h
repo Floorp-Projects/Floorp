@@ -116,24 +116,6 @@ public:
   NS_IMETHOD  GetScrolledView(nsIView *&aScrolledView) const = 0;
 
   /**
-   * Select whether quality level should be displayed in view frame
-   * @param aShow if PR_TRUE, quality level will be displayed, else hidden
-   */
-  NS_IMETHOD  ShowQuality(PRBool aShow) = 0;
-
-  /**
-   * Query whether quality level should be displayed in view frame
-   * @return if PR_TRUE, quality level will be displayed, else hidden
-   */
-  NS_IMETHOD  GetShowQuality(PRBool &aShow) const = 0;
-
-  /**
-   * Select whether quality level should be displayed in view frame
-   * @param aShow if PR_TRUE, quality level will be displayed, else hidden
-   */
-  NS_IMETHOD  SetQuality(nsContentQuality aQuality) = 0;
-
-  /**
    * Select whether scroll bars should be displayed all the time, never or
    * only when necessary.
    * @param aPref desired scrollbar selection

@@ -80,11 +80,9 @@ public:
    * This method gets called when the parser concludes the process
    * of building the content model via the content sink.
    *
-   * @param  aQualityLevel describes how well formed the doc was.
-   *         0=GOOD; 1=FAIR; 2=POOR;
    * @update 5/7/98 gess
    */     
-  NS_IMETHOD DidBuildModel(PRInt32 aQualityLevel)=0;
+  NS_IMETHOD DidBuildModel()=0;
 
   /**
    * This method gets called when the parser gets i/o blocked,
