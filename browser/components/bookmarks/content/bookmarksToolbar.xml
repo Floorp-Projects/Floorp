@@ -213,7 +213,12 @@
           else if (item == "NC:BookmarksRoot")
             parent = null;
           else if (this.isBTBookmark(item)) {
-            parent = aNode.parentNode.parentNode.parentNode.id;
+            parent = aNode.parentNode.parentNode;
+            if (parent.getAttribute("class") == "chevron")
+               parent = parent.parentNode;
+            if (parent.localName == "stack")
+               parent = parent.parentNode;
+            parent = parent.id;
             switch (parent) {
             case "bookmarks-toolbar":
               parent = "NC:PersonalToolbarFolder"
