@@ -111,6 +111,8 @@ classic.jar:
   skin/classic/global/filepicker/blank.gif                              (global/filepicker/blank.gif)
   skin/classic/global/filepicker/dir-closed.gif                         (global/filepicker/dir-closed.gif)
   skin/classic/global/filepicker/dir-open.gif                           (global/filepicker/dir-open.gif)
+  skin/classic/global/filepicker/folder-up.gif                          (global/filepicker/folder-up.gif)
+  skin/classic/global/filepicker/folder-home.gif                        (global/filepicker/folder-home.gif)
   skin/classic/global/arrow/arrow-dn-dis.gif                            (global/arrow/arrow-dn-dis.gif)
   skin/classic/global/arrow/arrow-dn-hov.gif                            (global/arrow/arrow-dn-hov.gif)
   skin/classic/global/arrow/arrow-dn-sharp.gif                          (global/arrow/arrow-dn-sharp.gif)

@@ -47,6 +47,8 @@
   <menulist id="lookInMenuList" flex="1" oncommand="onDirectoryChanged(event.target);" crop="start">
     <menupopup id="lookInMenu"/>
   </menulist>
+  <button id="folderUpButton" class="up-button" tooltiptext="&folderUp.tooltiptext;" oncommand="goUp();"/>
+  <button id="homeButton" class="home-button" tooltiptext="&folderHome.tooltiptext;" oncommand="goHome();"/>
 </hbox>
 
 <hbox flex="1">

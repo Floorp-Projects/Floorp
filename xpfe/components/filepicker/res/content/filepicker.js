@@ -554,6 +554,10 @@ function goUp() {
   }
 }
 
+function goHome() {
+  gotoDirectory(homeDir);
+}
+
 function gotoDirectory(directory) {
   window.setCursor("wait");
   try {

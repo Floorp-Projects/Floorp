@@ -73,3 +73,14 @@ outlinerchildren:-moz-outliner-image(FilenameColumn, file) {
   border-color: #000000;
 }
 
+/* ::::: button items ::::: */
+
+.up-button {
+  list-style-image: url("chrome://global/skin/filepicker/folder-up.gif");
+  max-width: 36px;
+}
+
+.home-button {
+  list-style-image: url("chrome://global/skin/filepicker/folder-home.gif");
+  max-width: 36px;
+}
