@@ -44,15 +44,24 @@ use vars @::legal_platform,
 
 if (!defined $::FORM{'product'}) {
     GetVersionTable();
-    my @prodlist = keys %::versions;
-    if ($#prodlist != 0) {
+    my @prodlist;
+    foreach my $p (sort(keys %::versions)) {
+        if (defined $::proddesc{$p} && $::proddesc{$p} eq '0') {
+            # Special hack.  If we stuffed a "0" into proddesc, that means
+            # that disallownew was set for this bug, and so we don't want
+            # to allow people to specify that product here.
+            next;
+        }
+        push(@prodlist, $p);
+    }
+    if (1 != @prodlist) {
         print "Content-type: text/html\n\n";
         PutHeader("Enter Bug");
         
         print "<H2>First, you must pick a product on which to enter\n";
         print "a bug.</H2>\n";
         print "<table>";
-        foreach my $p (sort (@prodlist)) {
+        foreach my $p (@prodlist) {
             if (defined $::proddesc{$p} && $::proddesc{$p} eq '0') {
                 # Special hack.  If we stuffed a "0" into proddesc, that means
                 # that disallownew was set for this bug, and so we don't want
