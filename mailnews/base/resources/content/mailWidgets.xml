@@ -16,15 +16,15 @@
   <binding id="mail-toggle-headerfield">
     <content>
       <xul:hbox class="headerNameBox" align="start">
-          <xul:image class="expandHeaderViewButton" xbl:inherits="onclick=ontwistyclick"/>
-          <xul:spacer flex="1"/>
+        <xul:image class="expandHeaderViewButton" xbl:inherits="onclick=ontwistyclick"/>
+        <xul:spacer flex="1"/>
         <xul:label class="headerName" xbl:inherits="value=label"/>  
       </xul:hbox>
-      <xul:label class="headerValue" anonid="headerValue" flex="1">*</xul:label>
+      <xul:textbox originalclass="headerValue plain" appendoriginalclass="true" keywordrelated="true" class="headerValue plain" anonid="headerValue" flex="1" readonly="true"/>
     </content>
 
     <implementation>      
-      <property name="headerValue" onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'headerValue').firstChild.nodeValue = val;"/>
+      <property name="headerValue" onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'headerValue').value = val;"/>
     </implementation>
   </binding>
 
@@ -36,11 +36,11 @@
       <xul:hbox class="headerNameBox" align="start">
         <xul:label class="headerName" xbl:inherits="value=label" flex="1"/>
       </xul:hbox>
-      <xul:label class="headerValue" anonid="headerValue" flex="1">*</xul:label>
+      <xul:textbox originalclass="headerValue plain" appendoriginalclass="true" keywordrelated="true" class="headerValue plain" anonid="headerValue" flex="1" readonly="true"/> 
     </content>
 
     <implementation>      
-      <property name="headerValue" onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'headerValue').firstChild.nodeValue = val;" />                             
+      <property name="headerValue" onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'headerValue').value = val;"/>  
     </implementation>
   </binding>
 
@@ -48,8 +48,8 @@
     <content>
       <xul:hbox class="headerNameBox" align="start">
         <xul:label class="headerName" xbl:inherits="value=label" flex="1"/>
-        </xul:hbox>
-        <xul:mail-emailaddress anonid="emailAddressNode"/>
+      </xul:hbox>
+      <xul:mail-emailaddress anonid="emailAddressNode"/>
     </content>
 
     <implementation>

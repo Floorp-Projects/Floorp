@@ -55,9 +55,9 @@ Rights Reserved.
 <tooltip id="attachmentListTooltip"
          onpopupshowing="return FillInAttachmentTooltip(document.tooltipNode);"/> 
 
-<hbox id="msgHeaderView" originalclass="none" persist="state">
+<hbox id="msgHeaderView" keywordrelated="true" originalclass="none" persist="state">
 
-<grid id="collapsedHeaderView" class="header-part1" originalclass="header-part1" flex="1" collapsed="true">
+<grid id="collapsedHeaderView" class="header-part1" keywordrelated="true" originalclass="header-part1" flex="1" collapsed="true">
   <rows>
     <row flex="1"/>
   </rows>
@@ -70,11 +70,11 @@ Rights Reserved.
     </column>
       
     <column id="collapsedsubjectBox" collapsed="true" flex="1">
-      <hbox align="start">
+      <hbox>
         <label class="collapsedHeaderDisplayName" value="&subjectField.label;"/>
-        <label id="collapsedsubjectValue" class="collapsedHeaderValue" crop="right" flex="1"/>
+        <textbox id="collapsedsubjectValue" keywordrelated="true" class="collapsedHeaderValue plain" originalclass="collapsedHeaderValue plain" readonly="true" crop="right" appendoriginalclass="true" flex="1"/>
       </hbox>
-	</column>
+    </column>
 
     <column id="collapsedfromBox" collapsed="true">
       <hbox align="start">
@@ -85,13 +85,13 @@ Rights Reserved.
 
     <column id = "collapseddateBox" collapsed="true">
       <hbox align="start">
-        <label id="collapseddateValue" class="collapsedHeaderValue"/>
+        <textbox id="collapseddateValue" keywordrelated="true" class="collapsedHeaderValue plain" originalclass="collapsedHeaderValue plain" appendoriginalclass="true" readonly="true"/>
       </hbox>
     </column>
 
     <column id="collapsedKeywordBox">
       <hbox align="start">
-      <image id="collapsedKeywordImage" originalclass="none"/>  
+      <image id="collapsedKeywordImage" keywordrelated="true" originalclass="none"/>  
       </hbox>
     </column>
 
@@ -103,38 +103,38 @@ Rights Reserved.
   </columns>
 </grid>
 
-<hbox id="expandedHeaderView" class="header-part1" originalclass="header-part1" flex="1" collapsed="true">
+<hbox id="expandedHeaderView" class="header-part1" keywordrelated="true" originalclass="header-part1" flex="1" collapsed="true">
   <vbox id="expandedHeaders" flex="1">
-    <mail-toggle-headerfield id="expandedsubjectBox" class="subjectvalue" label="&subjectField.label;" ontwistyclick="ToggleHeaderView();" collapsed="true"/>
+    <mail-toggle-headerfield keywordrelated="true" id="expandedsubjectBox" class="subjectvalue" label="&subjectField.label;" ontwistyclick="ToggleHeaderView();" collapsed="true"/>
     
     <mail-emailheaderfield id="expandedfromBox" label="&fromField.label;" collapsed="true"/>
     <mail-emailheaderfield id="expandedreply-toBox" label="&replyToField.label;" collapsed="true"/>
 
-    <mail-headerfield id="expandeddateBox" label="&dateField.label;" collapsed="true"/>
+    <mail-headerfield keywordrelated="true" id="expandeddateBox" label="&dateField.label;" collapsed="true"/>
 
     <mail-multi-emailHeaderField id="expandedtoBox"  label="&toField.label;"  collapsed="true"/>
     <mail-multi-emailHeaderField id="expandedccBox"  label="&ccField.label;"  collapsed="true"/>
     <mail-multi-emailHeaderField id="expandedbccBox" label="&bccField.label;" collapsed="true"/>
 
-    <mail-headerfield id="expandednewsgroupsBox"  label="&newsgroupsField.label;" collapsed="true"/>
-    <mail-headerfield id="expandedfollowup-toBox" label="&followupToField.label;" collapsed="true"/>
-    <mail-headerfield id="expandeduser-agentBox"  label="&userAgentField.label;"  collapsed="true"/>
+    <mail-headerfield keywordrelated="true" id="expandednewsgroupsBox"  label="&newsgroupsField.label;" collapsed="true"/>
+    <mail-headerfield keywordrelated="true" id="expandedfollowup-toBox" label="&followupToField.label;" collapsed="true"/>
+    <mail-headerfield keywordrelated="true" id="expandeduser-agentBox"  label="&userAgentField.label;"  collapsed="true"/>
    
    </vbox>
 
    <vbox id="expandedKeywordBox">
      <spacer flex="1"/>
-     <image id="expandedKeywordImage" originalclass="none" />
+     <image id="expandedKeywordImage" keywordrelated="true" originalclass="none" />
      <spacer flex="1"/>  
    </vbox>
    
-   <vbox id="editMessageBox" class="header-part1" originalclass="header-part1" collapsed="true">
+   <vbox id="editMessageBox" class="header-part1" keywordrelated="true" originalclass="header-part1" collapsed="true">
      <spacer flex="1"/>
      <button id="editMessageButton" label="&editMessage.label;" oncommand="MsgComposeDraftMessage()"/>
      <spacer flex="1"/>
    </vbox> 
 
-   <vbox id="expandedAttachmentBox" class="header-part1" originalclass="header-part1" collapsed="true">
+   <vbox id="expandedAttachmentBox" class="header-part1" keywordrelated="true" originalclass="header-part1" collapsed="true">
      <label id="attachmentText" value="&attachmentsTree.label;" crop="right"/>
      <listbox id="attachmentList" flex="2"
               onclick="attachmentListClick(event);" ondraggesture="nsDragAndDrop.startDrag(event,attachmentAreaDNDObserver);" ondragover="nsDragAndDrop.dragOver(event, attachmentAreaDNDObserver);" context="attachmentListContext"/>

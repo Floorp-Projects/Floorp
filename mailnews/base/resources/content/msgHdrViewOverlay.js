@@ -501,7 +501,7 @@ function updateHeaderValue(headerEntry, headerValue)
 
 function updateHeaderValueInTextNode(headerEntry, headerValue)
 {
-  headerEntry.textNode.setAttribute("value", headerValue);
+  headerEntry.textNode.value = headerValue;
 }
 
 function createNewHeaderView(headerName)
@@ -510,8 +510,9 @@ function createNewHeaderView(headerName)
   var newHeader = document.createElement("mail-headerfield");
   newHeader.setAttribute('id', idName);
   newHeader.setAttribute('label', currentHeaderData[headerName].headerName + ':');
+  // all mail-headerfield elements are keyword related
+  newHeader.setAttribute('keywordrelated','true');
   newHeader.collapsed = true;
-
 
   // this new element needs to be inserted into the view...
   var topViewNode = document.getElementById('expandedHeaders');

@@ -585,16 +585,30 @@ function SetKeywords(aKeywords)
     return;
 
   // these are the UI elements who care about keywords
-  var ids = ["expandedKeywordImage","expandedHeaderView","msgHeaderView","collapsedHeaderView","collapsedKeywordImage","editMessageBox","expandedAttachmentBox"];
-  for (i in ids) {
-    var element = document.getElementById(ids[i]);
-    if (element) {
-      if (aKeywords) 
-        element.setAttribute("class", aKeywords);
-      else {
-        // if no keywords, reset class to the original class
-        element.setAttribute("class", element.getAttribute("originalclass"));
+  var elements = document.getElementsByAttribute("keywordrelated","true");
+  var len = elements.length;
+  for (var i=0; i<len; i++) {
+    var element = elements[i];
+    var originalclass = element.getAttribute("originalclass");
+
+    // we use XBL for certain headers.
+    // if the element has keywordrelated="true"
+    // but no original class, it's an XBL widget
+    // so to get the real element, use getAnonymousElementByAttribute()
+    if (!originalclass) {
+      element = document.getAnonymousElementByAttribute(element, "keywordrelated", "true");
+      originalclass = element.getAttribute("originalclass");
+    }
+
+    if (aKeywords) {
+      if (element.getAttribute("appendoriginalclass") == "true") {
+        aKeywords += " " + originalclass;
       }
+      element.setAttribute("class", aKeywords);
+    }
+    else {
+      // if no keywords, reset class to the original class
+      element.setAttribute("class", originalclass);
     }
   }
 
