@@ -206,6 +206,7 @@ sub print_page_head {
     };
   }
   if ($bonsai_tree) {
+    print "<a NAME=\"status\"></a>";
     print "The tree is currently <font size=+2>";
     print (&tree_open ? 'OPEN' : 'CLOSED');
     print "</font>\n";
