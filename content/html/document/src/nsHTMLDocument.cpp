@@ -4155,7 +4155,7 @@ struct MidasCommand {
   PRPackedBool convertToBoolean;
 };
 
-static struct MidasCommand gMidasCommandTable[] = {
+static const struct MidasCommand gMidasCommandTable[] = {
   { "bold",          "cmd_bold",            "", PR_TRUE,  PR_FALSE },
   { "italic",        "cmd_italic",          "", PR_TRUE,  PR_FALSE },
   { "underline",     "cmd_underline",       "", PR_TRUE,  PR_FALSE },
@@ -4213,17 +4213,16 @@ struct MidasParam {
   const char*  internalParamString;
 };
 
-static struct MidasParam gMidasParamTable[] = {
-  { "Heading 1",          "H1" },
-  { "Heading 2",          "H2" },
-  { "Heading 3",          "H3" },
-  { "Heading 4",          "H4" },
-  { "Heading 5",          "H5" },
-  { "Heading 6",          "H6" },
-#if 0
-// Not sure how to do this yet
-  { "Normal",             "" },
-#endif
+static const struct MidasParam gMidasParamTable[] = {
+  { "<P>",                "P" },
+  { "<H1>",               "H1" },
+  { "<H2>",               "H2" },
+  { "<H3>",               "H3" },
+  { "<H4>",               "H4" },
+  { "<H5>",               "H5" },
+  { "<H6>",               "H6" },
+  { "<PRE>",              "PRE" },
+  { "<ADDRESS>",          "ADDRESS" },
   { NULL, NULL }
 };
 
