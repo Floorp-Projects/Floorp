@@ -46,14 +46,16 @@ static NS_DEFINE_IID(kIScreenIID, NS_IDOMSCREEN_IID);
 // Screen property ids
 //
 enum Screen_slots {
-  SCREEN_WIDTH = -1,
-  SCREEN_HEIGHT = -2,
-  SCREEN_PIXELDEPTH = -3,
-  SCREEN_COLORDEPTH = -4,
-  SCREEN_AVAILWIDTH = -5,
-  SCREEN_AVAILHEIGHT = -6,
-  SCREEN_AVAILLEFT = -7,
-  SCREEN_AVAILTOP = -8
+  SCREEN_TOP = -1,
+  SCREEN_LEFT = -2,
+  SCREEN_WIDTH = -3,
+  SCREEN_HEIGHT = -4,
+  SCREEN_PIXELDEPTH = -5,
+  SCREEN_COLORDEPTH = -6,
+  SCREEN_AVAILWIDTH = -7,
+  SCREEN_AVAILHEIGHT = -8,
+  SCREEN_AVAILLEFT = -9,
+  SCREEN_AVAILTOP = -10
 };
 
 /***********************************************************************/
@@ -76,6 +78,30 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!secMan)
         return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
+      case SCREEN_TOP:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_SCREEN_TOP, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetTop(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
+        }
+        break;
+      }
+      case SCREEN_LEFT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_SCREEN_LEFT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetLeft(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
+        }
+        break;
+      }
       case SCREEN_WIDTH:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_SCREEN_WIDTH, PR_FALSE);
@@ -275,6 +301,8 @@ JSClass ScreenClass = {
 //
 static JSPropertySpec ScreenProperties[] =
 {
+  {"top",    SCREEN_TOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"left",    SCREEN_LEFT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"width",    SCREEN_WIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"height",    SCREEN_HEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"pixelDepth",    SCREEN_PIXELDEPTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
