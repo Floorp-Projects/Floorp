@@ -100,20 +100,20 @@
 }
 
 #button-newim {
-  -moz-image-region: rect(126px 23px 147px 0px);
+ list-style-image: url("chrome://messenger/skin/addressbook/icons/im.gif");
 }
-
+ 
 #button-newim:hover {
-  -moz-image-region: rect(126px 46px 147px 23px);
+ list-style-image: url("chrome://messenger/skin/addressbook/icons/im-hov.gif");
 } 
-
-#button-newim:hover:active {
-  -moz-image-region: rect(126px 69px 147px 46px);
+ 
+button-newim:hover:active {
+ list-style-image: url("chrome://messenger/skin/addressbook/icons/im-act.gif");
 } 
-
+ 
 #button-newim[disabled] {
-  -moz-image-region: rect(126px 92px 147px 69px) !important;
-}
+ list-style-image: url("chrome://messenger/skin/addressbook/icons/im-dis.gif");
+} 
 
 #button-delete {
   -moz-image-region: rect(210px 23px 231px 0px);

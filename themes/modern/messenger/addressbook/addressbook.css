@@ -120,19 +120,19 @@
 } 
 
 #button-newim {
-  -moz-image-region: rect(170px 49px 203px 0);
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/im.gif");
 }
 
 #button-newim:hover {
-  -moz-image-region: rect(170px 99px 203px 50px);
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/im-hov.gif");
 } 
 
 #button-newim:hover:active {
-  -moz-image-region: rect(170px 149px 203px 100px);
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/im-act.gif");
 } 
 
 #button-newim[disabled] {
-  -moz-image-region: rect(170px 199px 203px 150px) !important;
+  list-style-image: url("chrome://messenger/skin/addressbook/icons/im-dis.gif");
 } 
 
 #button-delete {
