@@ -59,32 +59,12 @@
           var idString = aGrippyID.substring("moz_tb_collapsed_".length, aGrippyID.length);
           var toolbar = document.getElementById(idString);
           toolbar.setAttribute("moz-collapsed", "false");
-          var collapsedTray = this.findNodeByAttribute("tbattr", "collapsed-tray");
+          var collapsedTray = document.getAnonymousElementByAttribute(this, "tbattr", "collapsed-tray");
           var collapsedToolbar = document.getElementById("moz_tb_collapsed_" + toolbar.id);
           collapsedTray.removeChild(collapsedToolbar);
           if (!collapsedTray.hasChildNodes()) 
-            this.findNodeByAttribute("tbattr", "collapsed-tray-holder").setAttribute("moz-collapsed", "true");
+            document.getAnonymousElementByAttribute(this, "tbattr", "collapsed-tray-holder").setAttribute("moz-collapsed", "true");
           document.persist(toolbar.id, "moz-collapsed");
-        ]]>
-        </body>
-      </method>
-      
-      <method name="findNodeByAttribute">
-        <parameter name="aAttribute"/>
-        <parameter name="aValue"/>
-        <body>
-        <![CDATA[
-          var nodes = document.getAnonymousNodes(this);
-          for (var i = 0; i < nodes.length; i++) {
-            if (nodes[i].getAttribute(aAttribute) == aValue)
-              return nodes[i];
-            else {
-              var subnodes = nodes[i].getElementsByAttribute(aAttribute, aValue);
-              if (!subnodes.length) continue;
-              return subnodes[0];
-            }
-          }
-          return null;
         ]]>
         </body>
       </method>
@@ -95,7 +75,7 @@
         <![CDATA[
           const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
           try {
-            var grippy = aToolbar.findNodeByAttribute("tbattr", "toolbar-grippy");
+            var grippy = document.getAnonymousElementByAttribute(aToolbar, "tbattr", "toolbar-grippy");
             var boxObject = grippy.boxObject.QueryInterface(Components.interfaces.nsIBoxObject);
             var collapsedGrippy = document.createElementNS(XUL_NS, "toolbargrippy");
             if (collapsedGrippy) {
@@ -107,10 +87,10 @@
               collapsedGrippy.setAttribute("id", "moz_tb_collapsed_" + aToolbar.id);
               collapsedGrippy.setAttribute("moz_grippy_collapsed", "true"); 
               collapsedGrippy.setAttribute("tbgrippy-collapsed", "true");
-              var collapsedTrayHolder = this.findNodeByAttribute("tbattr", "collapsed-tray-holder");
+              var collapsedTrayHolder = document.getAnonymousElementByAttribute(this, "tbattr", "collapsed-tray-holder");
               if (collapsedTrayHolder.getAttribute("moz-collapsed") == "true")
                 collapsedTrayHolder.removeAttribute("moz-collapsed");
-              this.findNodeByAttribute("tbattr", "collapsed-tray").appendChild(collapsedGrippy);
+              document.getAnonymousElementByAttribute(this, "tbattr", "collapsed-tray").appendChild(collapsedGrippy);
               collapsedGrippy = document.getElementById("moz_tb_collapsed_" + aToolbar.id);
             }
           }
@@ -158,25 +138,6 @@
             this.parentNode.createCollapsedGrippy(this);
         ]]>
       </constructor>
-
-      <method name="findNodeByAttribute">
-        <parameter name="aAttribute"/>
-        <parameter name="aValue"/>
-        <body>
-        <![CDATA[
-          var nodes = document.getAnonymousNodes(this);
-          for (var i = 0; i < nodes.length; i++) {
-            if (nodes[i].getAttribute(aAttribute) == aValue)
-              return nodes[i];
-            else {
-              var subnodes = nodes[i].getElementsByAttribute(aAttribute, aValue);
-              return subnodes.length ? subnodes[0] : null;
-            }
-          }
-          return null;
-        ]]>
-        </body>
-      </method>
     </implementation>
   </binding>
 
@@ -263,25 +224,6 @@
             this.parentNode.createCollapsedGrippy(this);
         ]]>
       </constructor>
-
-      <method name="findNodeByAttribute">
-        <parameter name="aAttribute"/>
-        <parameter name="aValue"/>
-        <body>
-        <![CDATA[
-          var nodes = document.getAnonymousNodes(this);
-          for (var i = 0; i < nodes.length; i++) {
-            if (nodes[i].getAttribute(aAttribute) == aValue)
-              return nodes[i];
-            else {
-              var subnodes = nodes[i].getElementsByAttribute(aAttribute, aValue);
-              return subnodes.length ? subnodes[0] : null;
-            }
-          }
-          return null;
-        ]]>
-        </body>
-      </method>
     </implementation>
   </binding>
 
