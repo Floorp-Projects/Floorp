@@ -255,9 +255,11 @@ NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddSeparator() 
 {
-
-  //Widget widget = XtVaCreateManagedWidget("__sep", xmSeparatorGadgetClass, mMenu, NULL);
-
+  // HACK - This is nasty. We're not really appending an nsMenuItem but it 
+  // needs to be here to make sure that event dispatching isn't off by one.
+  mMenuItemVoidArray.AppendElement(nsnull);
+  ::InsertMenuItem(mMacMenuHandle, "\p(-", mNumMenuItems );
+  mNumMenuItems++;
   return NS_OK;
 }
 
