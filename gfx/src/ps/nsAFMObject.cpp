@@ -286,10 +286,22 @@ PRBool  bvalue;
 AFMKey  key;
 double  value;
 PRInt32 ivalue;
-nsAutoCString AFMFileName(aFontName.name); // file we will open
+char* AFMFileName= aFontName.name.ToNewUTF8String(); // file we will open
+
+  if(nsnull == AFMFileName) 
+    return (success);
+
+    if((0==strcmp(AFMFileName,"..")) || (0==strcmp(AFMFileName,"."))) {
+      Recycle(AFMFileName);
+      return (success);
+    }
+
+   // Open the file
+  mAFMFile = fopen((const char *)AFMFileName,"r");
+  Recycle(AFMFileName);
 
 
-  // Open the file
+
   mAFMFile = fopen((const char *)AFMFileName,"r");
 
   if(nsnull != mAFMFile) {
