@@ -3882,7 +3882,7 @@ SHLIB_LDENDFILE=
 MOZ_JPEG_CFLAGS=
 MOZ_JPEG_LIBS='-L$(DIST)/lib -ljpeg'
 MOZ_ZLIB_CFLAGS=
-MOZ_ZLIB_LIBS='-L$(DIST)/lib -lzlib'
+MOZ_ZLIB_LIBS='-L$(DIST)/lib -lz'
 MOZ_PNG_CFLAGS=
 MOZ_PNG_LIBS='-L$(DIST)/lib -lpng'
 
@@ -4340,7 +4340,7 @@ EOF
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS=''
     MOZ_JPEG_LIBS='$(DIST)/lib/jpeg.$(LIB_SUFFIX)'
-    MOZ_ZLIB_LIBS='$(DIST)/lib/zlib.$(LIB_SUFFIX)'
+    MOZ_ZLIB_LIBS='$(DIST)/lib/z.$(LIB_SUFFIX)'
     MOZ_PNG_LIBS='$(DIST)/lib/png.$(LIB_SUFFIX)'
     MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
 
