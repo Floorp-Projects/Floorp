@@ -236,7 +236,7 @@ NS_IMETHODIMP nsTableDecoderSupport::ConvertNoBuff(const char * aSrc,
 
   if (mHelper == nsnull) {
     res = nsComponentManager::CreateInstance(kUnicodeDecodeHelperCID, NULL, 
-        NS_GET_IID(nsIUnicodeEncodeHelper), (void**) & mHelper);
+        NS_GET_IID(nsIUnicodeDecodeHelper), (void**) & mHelper);
     
     if (NS_FAILED(res)) return NS_ERROR_UDEC_NOHELPER;
   }
