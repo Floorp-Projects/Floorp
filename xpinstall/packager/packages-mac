@@ -189,6 +189,7 @@ viewer:chrome:Search:*
 viewer:chrome:sidebar:* 
 viewer:chrome:wallet:*
 viewer:chrome:xpinstall:* 
+viewer:chrome:layout:* 
 viewer:chrome:xul.css
 viewer:chrome:xulBindings.xml
 viewer:chrome:htmlBindings.xml
