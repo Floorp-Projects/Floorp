@@ -41,21 +41,21 @@ public:
 
     /**
      * Adds a RadioButton to the group
-     * @param nsIRadioButton* the radio button to be added
+     * @param aRadioBtn the radio button to be added
      *
      */
     virtual void Add(nsIRadioButton * aRadioBtn) = 0;
 
     /**
      * Removes a RadioButton from the group
-     * @param nsIRadioButton* the radio button to be removed
+     * @param aRadioBtn the radio button to be removed
      *
      */
     virtual void Remove(nsIRadioButton * aRadioBtn) = 0;
 
     /**
      * Setd the name of the RadioGroup
-     * @param nsString The new name of the radio group
+     * @param aName The new name of the radio group
      *
      */
     virtual void SetName(const nsString &aName) = 0;
@@ -63,14 +63,14 @@ public:
     /**
      * Tells the RadioGroup that a child RadioButton has been clicked and it should set 
      * the approproate state on the other buttons
-     * @param nsIRadioButton* THe RadioButton that was clicked
+     * @param aChild The RadioButton that was clicked
      *
      */
     virtual void Clicked(nsIRadioButton * aChild) = 0;
 
     /**
      * Gets the enumeration of children
-     * @param PRBool nsIEnumerator* The enumeration of children (radio buttons) in the RadioGroup
+     * @param nsIEnumerator* The enumeration of children (radio buttons) in the RadioGroup
      *
      */
     virtual nsIEnumerator* GetChildren() = 0;

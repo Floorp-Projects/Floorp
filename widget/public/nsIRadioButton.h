@@ -39,7 +39,7 @@ class nsIRadioButton : public nsIButton {
 
     /**
      * Set the radio state.
-     * @param PRBool PR_TRUE sets the RadioButton and unsets all siblings, PR_FALSE unsets it
+     * @param aState PR_TRUE sets the RadioButton and unsets all siblings, PR_FALSE unsets it
      *
      */
     virtual void SetState(PRBool aState) = 0;
@@ -47,7 +47,7 @@ class nsIRadioButton : public nsIButton {
     /**
      * Tells the RadioButton NOT to notify the RadioGroup that it value has been changed
      *
-     * @param PRBool PR_TRUE sets the RadioButton and unsets all siblings, PR_FALSE unsets it
+     * @param aState PR_TRUE sets the RadioButton and unsets all siblings, PR_FALSE unsets it
      *
      */
     virtual void SetStateNoNotify(PRBool aState) = 0;
@@ -63,7 +63,7 @@ class nsIRadioButton : public nsIButton {
     /**
      * Gets the RadioGroup associated with this button
      *
-     * @return     nsIRadioGroup* its RadioGroup
+     * @return nsIRadioGroup* its RadioGroup
      *
      */
     virtual nsIRadioGroup* GetRadioGroup() = 0;
@@ -71,7 +71,7 @@ class nsIRadioButton : public nsIButton {
     /**
      * Sets the RadioGroup associated with this button
      *
-     * @param      nsIRadioGroup* the new RadioGroup
+     * @param aGroup the new RadioGroup
      *
      */
     virtual void SetRadioGroup(nsIRadioGroup* aGroup) = 0;
