@@ -498,16 +498,16 @@ GtkMozillaContainer::StartStream(const char *base_url,
   if (NS_FAILED(rv)) 
     goto error;
   
-  rv = NS_NewLoadGroup(nsnull, &mLoadGroup);
+  rv = NS_NewLoadGroup(&mLoadGroup, nsnull);
   if (NS_FAILED(rv)) 
     goto error;
   
-  rv = NS_NewInputStreamChannel(url, content_type, 
-                                1024/*len*/, istream,
-                                mLoadGroup, 
-                                nsnull,      // notificationCallbacks
-                                nsIChannel::LOAD_NORMAL,
-                                nsnull, 0, 0, &mChannel);
+  rv = NS_NewInputStreamChannel(&mChannel, url, istream, content_type, 
+                                1024/*len*/);
+  if (NS_FAILED(rv)) 
+    goto error;
+
+  rv = mChannel->SetLoadGroup(mLoadGroup);
   if (NS_FAILED(rv)) 
     goto error;
   
