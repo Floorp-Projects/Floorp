@@ -347,9 +347,9 @@ public:
 
   // Invalidate part of the frame by asking the view manager to repaint.
   // aDamageRect is in the frame's local coordinate space
-  NS_IMETHOD        Invalidate(nsIPresContext* aPresContext,
-                               const nsRect& aDamageRect,
-                               PRBool aImmediate = PR_FALSE) const;
+  void        Invalidate(nsIPresContext* aPresContext,
+                         const nsRect& aDamageRect,
+                         PRBool aImmediate = PR_FALSE) const;
 
   // Helper function to return the index in parent of the frame's content
   // object. Returns -1 on error or if the frame doesn't have a content object

@@ -311,9 +311,6 @@ nsHTMLAnchorElement::SetFocus(nsIPresContext* aPresContext)
     aPresContext->GetEventStateManager(getter_AddRefs(stateManager));
 
     if (stateManager) {
-      nsCOMPtr<nsIContent> oldFocus;
-      stateManager->GetFocusedContent(getter_AddRefs(oldFocus));
-
       stateManager->SetContentState(this, NS_EVENT_STATE_FOCUS);
 
       // Make sure the presentation is up-to-date
@@ -330,14 +327,6 @@ nsHTMLAnchorElement::SetFocus(nsIPresContext* aPresContext)
         if (frame) {
           presShell->ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_ANYWHERE,
                                          NS_PRESSHELL_SCROLL_ANYWHERE);
-          nsIFrame* oldFocusFrame = nsnull;
-          presShell->GetPrimaryFrameFor(oldFocus, &oldFocusFrame);
-          if (oldFocusFrame) {
-            // Invalidate the area that the old frame covers
-            nsRect rect;
-            oldFocusFrame->GetRect(rect);
-            oldFocusFrame->Invalidate(aPresContext, rect, PR_FALSE);
-          }
         }
       }
     }
