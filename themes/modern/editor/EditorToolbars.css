@@ -647,32 +647,32 @@
 }
 
 .insert-smile > .menu-iconic-left {
-  list-style-image:url(chrome://editor/skin/images/smile_n.gif); 
+  list-style-image:url(chrome://editor/skin/icons/smiley/smile_n.gif); 
 }
 
 .insert-tongue > .menu-iconic-left {
-  list-style-image:url(chrome://editor/skin/images/tongue_n.gif); 
+  list-style-image:url(chrome://editor/skin/icons/smiley/tongue_n.gif); 
 }
 
 .insert-frown > .menu-iconic-left {
-  list-style-image:url(chrome://editor/skin/images/frown_n.gif); 
+  list-style-image:url(chrome://editor/skin/icons/smiley/frown_n.gif); 
  }
 
 .insert-wink > .menu-iconic-left {
-  list-style-image:url(chrome://editor/skin/images/wink_n.gif); 
+  list-style-image:url(chrome://editor/skin/icons/smiley/wink_n.gif); 
  }
 
 .insert-laughing > .menu-iconic-left {
-  list-style-image:url(chrome://editor/skin/images/laughing_n.gif); 
+  list-style-image:url(chrome://editor/skin/icons/smiley/laughing_n.gif); 
  }
 
 .insert-embarrassed > .menu-iconic-left {
-  list-style-image:url(chrome://editor/skin/images/embarrassed_n.gif); 
+  list-style-image:url(chrome://editor/skin/icons/smiley/embarrassed_n.gif); 
  }
 
 
 .insert-undecided > .menu-iconic-left {
-  list-style-image:url(chrome://editor/skin/images/undecided_n.gif); 
+  list-style-image:url(chrome://editor/skin/icons/smiley/undecided_n.gif); 
 }
 
 .smiley > .menu-iconic-left {
