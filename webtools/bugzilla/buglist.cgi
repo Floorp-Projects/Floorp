@@ -294,8 +294,8 @@ sub GetQuip {
                                     . " FROM quips WHERE approved = 1");
     my $random = int(rand($count));
     my $quip = 
-        $dbh->selectrow_array("SELECT quip FROM quips"
-                            . " WHERE approved = 1 LIMIT $random,1");
+        $dbh->selectrow_array("SELECT quip FROM quips WHERE approved = 1 " . 
+                              $dbh->sql_limit(1, $random));
     return $quip;
 }
 
@@ -746,10 +746,10 @@ my $search = new Bugzilla::Search('fields' => \@selectnames,
 my $query = $search->getSQL();
 
 if ($::FORM{'limit'} && detaint_natural($::FORM{'limit'})) {
-    $query .= " LIMIT $::FORM{'limit'}";
+    $query .= " " . $dbh->sql_limit($::FORM{'limit'});
 }
 elsif ($fulltext) {
-    $query .= " LIMIT 200";
+    $query .= " " . $dbh->sql_limit(200);
 }
 
 

@@ -69,7 +69,8 @@ my $sth_next_scheduled_event = $dbh->prepare(
     "LEFT JOIN whine_events " .
     " ON whine_events.id = whine_schedules.eventid " .
     "WHERE run_next <= NOW() " .
-    "ORDER BY run_next LIMIT 1"
+    "ORDER BY run_next " .
+    $dbh->sql_limit(1)
 );
 
 # get all pending schedules matching an eventid

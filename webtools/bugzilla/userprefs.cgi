@@ -49,6 +49,7 @@ my @reasons = ("Removeme", "Comments", "Attachments", "Status", "Resolved",
 # SaveFoo may be called before DoFoo.    
 ###############################################################################
 sub DoAccount {
+    my $dbh = Bugzilla->dbh;
     SendSQL("SELECT realname FROM profiles WHERE userid = $userid");
     $vars->{'realname'} = FetchSQLData();
 
@@ -57,7 +58,7 @@ sub DoAccount {
                     FROM tokens
                     WHERE userid = $userid
                     AND tokentype LIKE 'email%' 
-                    ORDER BY tokentype ASC LIMIT 1");
+                    ORDER BY tokentype ASC " . $dbh->sql_limit(1));
         if(MoreSQLData()) {
             my ($tokentype, $change_date, $eventdata) = &::FetchSQLData();
             $vars->{'login_change_date'} = $change_date;

@@ -258,8 +258,9 @@ sub calculate_dupes {
 sub regenerate_stats {
     my $dir = shift;
     my $product = shift;
-    my $when = localtime(time());
 
+    my $dbh = Bugzilla->dbh;
+    my $when = localtime(time());
     my $tstart = time();
 
     # NB: Need to mangle the product for the filename, but use the real
@@ -287,7 +288,7 @@ sub regenerate_stats {
             "to_days('1970-01-01') " . 
             "FROM bugs $from_product WHERE to_days(creation_ts) != 'NULL' " .
             $and_product .
-            "ORDER BY start LIMIT 1");
+            "ORDER BY start " . $dbh->sql_limit(1));
     
     my ($start, $end, $base) = FetchSQLData();
     if (!defined $start) {
@@ -353,7 +354,8 @@ FIN
                         "AND fielddefs.name = 'bug_status' " .
                         "AND bugs_activity.bug_id = $bug " .
                         "AND bugs_activity.bug_when >= from_days($day) " .
-                        "ORDER BY bugs_activity.bug_when LIMIT 1");
+                        "ORDER BY bugs_activity.bug_when " .
+                        $dbh->sql_limit(1));
                 
                 my $status;
                 if (@row = FetchSQLData()) {
@@ -374,7 +376,8 @@ FIN
                         "AND fielddefs.name = 'resolution' " .
                         "AND bugs_activity.bug_id = $bug " .
                         "AND bugs_activity.bug_when >= from_days($day) " .
-                        "ORDER BY bugs_activity.bug_when LIMIT 1");
+                        "ORDER BY bugs_activity.bug_when " . 
+                        $dbh->sql_limit(1));
                         
                 if (@row = FetchSQLData()) {
                     $status = $row[0];

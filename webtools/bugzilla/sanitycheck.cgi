@@ -118,7 +118,7 @@ if (defined $cgi->param('rebuildvotecache')) {
 if (defined $cgi->param('rederivegroups')) {
     Status("OK, All users' inherited permissions will be rechecked when " .
            "they next access Bugzilla.");
-    SendSQL("UPDATE groups SET last_changed = NOW() LIMIT 1");
+    SendSQL("UPDATE groups SET last_changed = NOW() " . $dbh->sql_limit(1));
 }
 
 # rederivegroupsnow is REALLY only for testing.
@@ -152,8 +152,8 @@ if (defined $cgi->param('cleangroupsnow')) {
     $dbh->bz_lock_tables('user_group_map WRITE', 'profiles WRITE');
     SendSQL("SELECT userid FROM profiles " .
             "WHERE refreshed_when > 0 " .
-            "AND refreshed_when < " . SqlQuote($cutoff) .
-            " LIMIT 1000");
+            "AND refreshed_when < " . SqlQuote($cutoff) . " " .
+            $dbh->sql_limit(1000));
     my $count = 0;
     while ((my $id) = FetchSQLData()) {
         $count++;

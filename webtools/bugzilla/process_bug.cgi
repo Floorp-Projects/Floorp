@@ -696,7 +696,7 @@ if ($::FORM{'product'} ne $::FORM{'dontchange'}) {
     $::query .= "product_id = $prod_id";
 } else {
     SendSQL("SELECT DISTINCT product_id FROM bugs WHERE bug_id IN (" .
-            join(',', @idlist) . ") LIMIT 2");
+            join(',', @idlist) . ") " . $dbh->sql_limit(2));
     $prod_id = FetchOneColumn();
     $prod_id = undef if (FetchOneColumn());
 }

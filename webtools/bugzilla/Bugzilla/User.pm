@@ -539,6 +539,7 @@ sub match {
 
     my $wildstr = $str;
     my $user = Bugzilla->user;
+    my $dbh = Bugzilla->dbh;
 
     if ($wildstr =~ s/\*/\%/g && # don't do wildcards if no '*' in the string
         Param('usermatchmode') ne 'off') { # or if we only want exact matches
@@ -561,7 +562,7 @@ sub match {
         }
         $query    .= " AND disabledtext = '' " if $exclude_disabled;
         $query    .= "ORDER BY length(login_name) ";
-        $query    .= "LIMIT $limit " if $limit;
+        $query    .= $dbh->sql_limit($limit) if $limit;
 
         # Execute the query, retrieve the results, and make them into
         # User objects.
@@ -611,7 +612,7 @@ sub match {
         }
         $query    .= " AND disabledtext = '' " if $exclude_disabled;
         $query    .= "ORDER BY length(login_name) ";
-        $query    .= "LIMIT $limit " if $limit;
+        $query    .= $dbh->sql_limit($limit) if $limit;
         &::PushGlobalSQLState();
         &::SendSQL($query);
         push(@users, new Bugzilla::User(&::FetchSQLData())) while &::MoreSQLData();

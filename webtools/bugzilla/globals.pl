@@ -386,10 +386,11 @@ sub AnyEntryGroups {
     $product_id = 0 unless ($product_id);
     return $::CachedAnyEntryGroups{$product_id} 
         if defined($::CachedAnyEntryGroups{$product_id});
+    my $dbh = Bugzilla->dbh;
     PushGlobalSQLState();
     my $query = "SELECT 1 FROM group_control_map WHERE entry != 0";
     $query .= " AND product_id = $product_id" if ($product_id);
-    $query .= " LIMIT 1";
+    $query .= " " . $dbh->sql_limit(1);
     SendSQL($query);
     if (MoreSQLData()) {
        $::CachedAnyEntryGroups{$product_id} = MoreSQLData();
@@ -406,13 +407,14 @@ sub AnyEntryGroups {
 # one bug to another.
 sub AnyDefaultGroups {
     return $::CachedAnyDefaultGroups if defined($::CachedAnyDefaultGroups);
+    my $dbh = Bugzilla->dbh;
     PushGlobalSQLState();
     SendSQL("SELECT 1 FROM group_control_map, groups WHERE " .
             "groups.id = group_control_map.group_id " .
             "AND isactive != 0 AND " .
             "(membercontrol = " . CONTROLMAPDEFAULT .
             " OR othercontrol = " . CONTROLMAPDEFAULT .
-            ") LIMIT 1");
+            ") " . $dbh->sql_limit(1));
     $::CachedAnyDefaultGroups = MoreSQLData();
     FetchSQLData();
     PopGlobalSQLState();
@@ -424,6 +426,7 @@ sub AnyDefaultGroups {
 # bugs in this product at all.
 sub CanEditProductId {
     my ($productid) = @_;
+    my $dbh = Bugzilla->dbh;
     my $query = "SELECT group_id FROM group_control_map " .
                 "WHERE product_id = $productid " .
                 "AND canedit != 0 "; 
@@ -431,7 +434,7 @@ sub CanEditProductId {
         $query .= "AND group_id NOT IN(" . 
                    join(',', values(%{Bugzilla->user->groups})) . ") ";
     }
-    $query .= "LIMIT 1";
+    $query .= $dbh->sql_limit(1);
     PushGlobalSQLState();
     SendSQL($query);
     my ($result) = FetchSQLData();
@@ -462,6 +465,7 @@ sub IsInClassification {
 # product.
 sub CanEnterProduct {
     my ($productname) = @_;
+    my $dbh = Bugzilla->dbh;
     my $query = "SELECT group_id IS NULL " .
                 "FROM products " .
                 "LEFT JOIN group_control_map " .
@@ -471,7 +475,8 @@ sub CanEnterProduct {
         $query .= "AND group_id NOT IN(" . 
                    join(',', values(%{Bugzilla->user->groups})) . ") ";
     }
-    $query .= "WHERE products.name = " . SqlQuote($productname) . " LIMIT 1";
+    $query .= "WHERE products.name = " . SqlQuote($productname) . " " .
+              $dbh->sql_limit(1);
     PushGlobalSQLState();
     SendSQL($query);
     my ($ret) = FetchSQLData();

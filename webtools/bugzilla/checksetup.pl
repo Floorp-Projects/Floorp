@@ -3552,7 +3552,9 @@ if (($fielddef = GetFieldDef("attachments", "creation_ts")) &&
 
     # Restrict this as much as possible in order to avoid false positives, and
     # keep the db search time down
-    my $sth2 = $dbh->prepare("SELECT bug_when FROM longdescs WHERE bug_id=? AND who=? AND thetext LIKE ? ORDER BY bug_when LIMIT 1");
+    my $sth2 = $dbh->prepare("SELECT bug_when FROM longdescs
+                              WHERE bug_id=? AND who=? AND thetext LIKE ?
+                              ORDER BY bug_when " . $dbh->sql_limit(1));
     while (my ($bug_id, $attach_id, $submitter_id) = $sth->fetchrow_array()) {
         $sth2->execute($bug_id, $submitter_id, "Created an attachment (id=$attach_id)%");
         my ($when) = $sth2->fetchrow_array();
@@ -4037,8 +4039,8 @@ if (TableExists("user_series_map")) {
 # 2003-06-26 Copy the old charting data into the database, and create the
 # queries that will keep it all running. When the old charting system goes
 # away, if this code ever runs, it'll just find no files and do nothing.
-my $series_exists = $dbh->selectrow_array("SELECT 1 FROM series LIMIT 1");
-
+my $series_exists = $dbh->selectrow_array("SELECT 1 FROM series " .
+                                          $dbh->sql_limit(1));
 if (!$series_exists) {
     print "Migrating old chart data into database ...\n" unless $silent;
     

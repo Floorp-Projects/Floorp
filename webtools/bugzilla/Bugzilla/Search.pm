@@ -1393,6 +1393,8 @@ sub ListIDsForEmail {
     my $old = $self->{"emailcache"}{"$type,$email"};
     return undef if ($old && $old eq "---");
     return $old if $old;
+    
+    my $dbh = Bugzilla->dbh;
     my @list = ();
     my $list = "---";
     if ($type eq 'anyexact') {
@@ -1406,7 +1408,7 @@ sub ListIDsForEmail {
         $list = join(',', @list);
     } elsif ($type eq 'substring') {
         &::SendSQL("SELECT userid FROM profiles WHERE INSTR(login_name, " .
-            &::SqlQuote($email) . ") LIMIT 51");
+            &::SqlQuote($email) . ") " . $dbh->sql_limit(51));
         while (&::MoreSQLData()) {
             my ($id) = &::FetchSQLData();
             push(@list, $id);

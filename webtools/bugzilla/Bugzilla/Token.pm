@@ -260,10 +260,11 @@ sub HasEmailChangeToken {
     # Returns an email change token if the user has one. 
     
     my ($userid) = @_;
-    
+
+    my $dbh = Bugzilla->dbh;
     &::SendSQL("SELECT token FROM tokens WHERE userid = $userid " . 
                "AND (tokentype = 'emailnew' OR tokentype = 'emailold') " . 
-               "LIMIT 1");
+               $dbh->sql_limit(1));
     my ($token) = &::FetchSQLData();
     
     return $token;
