@@ -2084,12 +2084,7 @@ if test ! "$GNU_CXX"; then
 
     case $target in
     *-solaris*)
-	dnl The C++ compiler in Workshop 5.0+ uses standard iostreams by
-	dnl default. -library=iostream will force use of classic iostreams.
-	dnl We need -liostream to be inserted before the standard C++ library
-	dnl (which isn't -lC on Workshop5+, but is dnl a set of libraries).
-	CXX="$CXX -library=iostream"
-	LIBS="-liostream -lCrun $LIBS"
+	LIBS="-lCrun $LIBS"
 	;;
     *-aix*)
 	AC_CHECK_LIB(C_r, demangle)
