@@ -38,21 +38,22 @@ function ThreadPaneOnClick(event)
        HandleColumnClick(t.id);
     }
     else if (event.detail == 2 && t.localName == "outlinerbody") {
-       ThreadPaneDoubleClick();
+       var row = new Object;
+       var colID = new Object;
+       var childElt = new Object;
+
+       var outliner = GetThreadOutliner();
+       // figure out what cell the click was in
+       outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).getCellAt(event.clientX, event.clientY, row, colID, childElt);
+
+       // if the cell is in a "cycler" column
+       // don't open the message in a new window
+       var col = document.getElementById(colID.value);
+       if (col && col.getAttribute("cycler") != "true") {
+         ThreadPaneDoubleClick();
+       }
     }
 }
-
-function SetHiddenAttributeOnThreadOnlyColumns(value)
-{
-  // todo, cache these?
-
-  var totalCol = document.getElementById("totalCol");
-  var unreadCol = document.getElementById("unreadCol");
-
-  totalCol.setAttribute("hidden",value);
-  unreadCol.setAttribute("hidden",value);
-}
-
 
 function nsMsgDBViewCommandUpdater()
 {}
@@ -84,16 +85,21 @@ nsMsgDBViewCommandUpdater.prototype =
 
 function HandleColumnClick(columnID)
 {
-  // if they click on the "threadCol", we need to show the threaded-only columns
-  if ((columnID[0] == 't') && (columnID[1] == 'h')) {  
-    SetHiddenAttributeOnThreadOnlyColumns(""); // this will show them
+  var sortType = ConvertColumnIDToSortType(columnID);
+
+  // if sortType is 0, this is an unsupported sort type
+  // return, since we can't sort by that column.
+  if (sortType == 0) {
+    return;
+  }
+
+  var dbview = GetDBView();
+  if (dbview.sortType == sortType) {
+    MsgReverseSortThreadPane();
   }
   else {
-    SetHiddenAttributeOnThreadOnlyColumns("true");  // this will hide them
+    MsgSortThreadPane(sortType);
   }
-  
-  ShowAppropriateColumns();
-  PersistViewAttributesOnFolder();
 }
 
 function PersistViewAttributesOnFolder()
@@ -118,16 +124,12 @@ function MsgComposeDraftMessage()
 
 function ThreadPaneDoubleClick()
 {
-	var loadedFolder;
-	var messageArray;
-	var messageUri;
-
 	if (IsSpecialFolderSelected(MSG_FOLDER_FLAG_DRAFTS)) {
 		MsgComposeDraftMessage();
 	}
 	else if(IsSpecialFolderSelected(MSG_FOLDER_FLAG_TEMPLATES)) {
-		loadedFolder = GetLoadedMsgFolder();
-		messageArray = GetSelectedMessages();
+		var loadedFolder = GetLoadedMsgFolder();
+		var messageArray = GetSelectedMessages();
 		ComposeMessage(msgComposeType.Template, msgComposeFormat.Default, loadedFolder, messageArray);
 	}
 	else {
@@ -203,20 +205,69 @@ function MsgSortByThread()
 
 function MsgSortThreadPane(sortType)
 {
-    gDBView.sort(sortType, nsMsgViewSortOrder.ascending);
-
-    ShowAppropriateColumns();
+    var dbview = GetDBView();
+    dbview.sort(sortType, nsMsgViewSortOrder.ascending);
+    UpdateSortIndicators(sortType, nsMsgViewSortOrder.ascending);
     PersistViewAttributesOnFolder();
+}
+
+function MsgReverseSortThreadPane()
+{
+  var dbview = GetDBView();
+  if (dbview.sortOrder == nsMsgViewSortOrder.ascending) {
+    MsgSortDescending();
+  }
+  else {
+    MsgSortAscending();
+  }
 }
 
 function MsgSortAscending()
 {
-    gDBView.sort(gDBView.sortType, nsMsgViewSortOrder.ascending);
+  var dbview = GetDBView();
+  dbview.sort(dbview.sortType, nsMsgViewSortOrder.ascending);
+  UpdateSortIndicators(dbview.sortType, nsMsgViewSortOrder.ascending);
+  PersistViewAttributesOnFolder();
 }
 
 function MsgSortDescending()
 {
-    gDBView.sort(gDBView.sortType, nsMsgViewSortOrder.descending);
+  var dbview = GetDBView();
+  dbview.sort(dbview.sortType, nsMsgViewSortOrder.descending);
+  UpdateSortIndicators(dbview.sortType, nsMsgViewSortOrder.descending);
+  PersistViewAttributesOnFolder();
+}
+
+function UpdateSortIndicators(sortType, sortOrder)
+{
+  var colID = ConvertSortTypeToColumnID(sortType);
+  var sortedColumn;
+
+  // set the sort indicator on the column we are sorted by
+  if (colID) {
+    sortedColumn = document.getElementById(colID);
+    if (sortedColumn) {
+      if (sortOrder == nsMsgViewSortOrder.ascending) {
+        sortedColumn.setAttribute("sortDirection","ascending");
+      }
+      else {
+        sortedColumn.setAttribute("sortDirection","descending");
+      }
+    }
+  }
+
+  // remove the sort indicator from all the columns
+  // except the one we are sorted by
+  var currCol = GetThreadOutliner().firstChild;
+  while (currCol) {
+    while (currCol && currCol.localName != "outlinercol")
+      currCol = currCol.nextSibling;
+    if (currCol && (currCol != sortedColumn)) {
+      currCol.removeAttribute("sortDirection");
+    }
+    if (currCol) 
+      currCol = currCol.nextSibling;
+  }
 }
 
 function IsSpecialFolderSelected(flags)

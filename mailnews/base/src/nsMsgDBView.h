@@ -113,10 +113,6 @@ protected:
   nsresult FetchPriority(nsIMsgHdr *aHdr, PRUnichar ** aPriorityString);
   nsresult CycleThreadedColumn(nsIDOMElement * aElement);
 
-  // toggles ascending/descending or adds the sort attribute
-  // also cleans up the attributes on the previously sorted column.
-  nsresult UpdateSortUI(nsIDOMElement * aNewSortColumn);
-
   // Save and Restore Selection are a pair of routines you should
   // use when performing an operation which is going to change the view
   // and you want to remember the selection. (i.e. for sorting). 
@@ -266,7 +262,6 @@ protected:
   nsMsgViewSortTypeValue  m_sortType;
   nsMsgViewSortOrderValue m_sortOrder;
   nsMsgViewFlagsTypeValue m_viewFlags;
-  nsCOMPtr<nsIDOMElement> mCurrentSortColumn;
 
   // I18N date formater service which we'll want to cache locally.
   nsCOMPtr<nsIDateTimeFormat> mDateFormater;

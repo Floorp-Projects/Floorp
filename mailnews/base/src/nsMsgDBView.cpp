@@ -383,22 +383,6 @@ nsresult nsMsgDBView::FetchPriority(nsIMsgHdr *aHdr, PRUnichar ** aPriorityStrin
   return NS_OK;
 }
 
-// call this AFTER calling ::Sort.
-nsresult nsMsgDBView::UpdateSortUI(nsIDOMElement * aNewSortColumn)
-{
-  if (mCurrentSortColumn && aNewSortColumn != mCurrentSortColumn)
-    mCurrentSortColumn->RemoveAttribute(NS_LITERAL_STRING("sortDirection"));
-
-  // set the new sort direction on the new sort column
-  mCurrentSortColumn = aNewSortColumn;
-
-  if (m_sortOrder == nsMsgViewSortOrder::ascending)
-    mCurrentSortColumn->SetAttribute(NS_LITERAL_STRING("sortDirection"), NS_LITERAL_STRING("ascending"));
-  else
-    mCurrentSortColumn->SetAttribute(NS_LITERAL_STRING("sortDirection"), NS_LITERAL_STRING("descending"));
-  return NS_OK;
-}
-
 nsresult nsMsgDBView::SaveSelection(nsMsgKeyArray *aMsgKeyArray)
 {
   if (!mOutlinerSelection)
@@ -859,6 +843,9 @@ NS_IMETHODIMP nsMsgDBView::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, 
 
 NS_IMETHODIMP nsMsgDBView::GetLevel(PRInt32 index, PRInt32 *_retval)
 {
+  if (!IsValidIndex(index))
+    return NS_MSG_INVALID_DBVIEW_INDEX;
+
   if (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay)
     *_retval = m_levels[index];
   else
@@ -997,98 +984,9 @@ NS_IMETHODIMP nsMsgDBView::ToggleOpenState(PRInt32 index)
 
 NS_IMETHODIMP nsMsgDBView::CycleHeader(const PRUnichar * aColID, nsIDOMElement * aElement)
 {
-  // if the header is a sortable column then we want to call Sort
-  // otherwise, we'll do something else =)
-
-  nsMsgViewSortTypeValue sortType = nsMsgViewSortType::bySubject;
-  nsMsgViewSortOrderValue sortOrder = nsMsgViewSortOrder::descending;
-  PRBool performSort = PR_TRUE;
-
-  nsAutoString sortOrderValue;
-  aElement->GetAttribute(NS_LITERAL_STRING("sortDirection"), sortOrderValue);
-  if (!sortOrderValue.IsEmpty() && sortOrderValue.Equals(NS_LITERAL_STRING("ascending")))
-     sortOrder = nsMsgViewSortOrder::ascending;
-
-  if ((aColID[0] != 't') && (aColID[1] != 'h')) {
-    m_viewFlags &= ~nsMsgViewFlagsType::kThreadedDisplay;
-  }
-
-  switch (aColID[0])
-  {
-  case 's':
-    if (aColID[1] == 'u') // sort the subject
-    {
-      sortType = nsMsgViewSortType::bySubject;
-    }
-    else if (aColID[1] == 'e') // sort by sender
-    {
-      if (mIsSpecialFolder)
-        sortType = nsMsgViewSortType::byRecipient;
-      else
-        sortType = nsMsgViewSortType::byAuthor;
-    }
-    else if (aColID[1] == 'i') // size
-    {
-      sortType = nsMsgViewSortType::bySize;
-    }
-    else
-    {
-      sortType = nsMsgViewSortType::byStatus;
-    }
-    break;
-  case 'u': 
-    if (aColID[6] == 'B') // unreadButtonColHeader
-    {
-      sortType = nsMsgViewSortType::byUnread;
-    }
-    else  // unreadCol
-    {
-      NS_ASSERTION(0,"fix this");
-      performSort = PR_FALSE;
-    }
-    break;
-  case 'd': // date
-    sortType = nsMsgViewSortType::byDate;
-    break;
-  case 'p': // priority
-    sortType = nsMsgViewSortType::byPriority;
-    break;
-  case 't': // thread column
-    if (aColID[1] == 'h') {
-      sortType = nsMsgViewSortType::byThread;
-      m_viewFlags |= nsMsgViewFlagsType::kThreadedDisplay;
-    }
-    else {
-      NS_ASSERTION(0,"fix this");
-      //sortType = nsMsgViewSortType::byTotal;
-      performSort = PR_FALSE;
-    }
-    break;
-  case 'f': // flagged
-    sortType = nsMsgViewSortType::byFlagged;
-    break;
-  default:
-    performSort = PR_FALSE;
-    break;
-  }
-  
-  if (performSort)
-  {
-    // if we are already sorted by the same order, then toggle ascending / descending.
-    if (m_sortType == sortType)
-    {
-      if (sortOrder == nsMsgViewSortOrder::ascending)
-        sortOrder = nsMsgViewSortOrder::descending;
-      else
-        sortOrder = nsMsgViewSortOrder::ascending;
-    }
-
-    Sort(sortType, sortOrder);
-    UpdateSortUI(aElement);
-
-  } // if performSort
-
-  return NS_OK;
+    // let HandleColumnClick() in threadPane.js handle it
+    // since it will set / clear the sort indicators.
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDBView::CycleCell(PRInt32 row, const PRUnichar *colID)
@@ -1134,23 +1032,6 @@ NS_IMETHODIMP nsMsgDBView::PerformActionOnRow(const PRUnichar *action, PRInt32 r
 
 NS_IMETHODIMP nsMsgDBView::PerformActionOnCell(const PRUnichar *action, PRInt32 row, const PRUnichar *colID)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgDBView::GetSortedColumn(nsIDOMElement ** aColumn)
-{
-  *aColumn = mCurrentSortColumn;
-  NS_IF_ADDREF(*aColumn);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgDBView::SetSortedColumn(nsIDOMElement * aColumn)
-{
-  if (!mCurrentSortColumn)
-    UpdateSortUI(aColumn);
-
-  mCurrentSortColumn = aColumn;
   return NS_OK;
 }
 
@@ -1696,7 +1577,6 @@ nsresult nsMsgDBView::DownloadFlaggedForOffline(nsIMsgWindow *window)
   m_folder->DownloadMessagesForOffline(messageArray, window);
   return rv;
 }
-
 
 // read/unread handling.
 nsresult nsMsgDBView::ToggleReadByIndex(nsMsgViewIndex index)

@@ -564,26 +564,8 @@ function CreateDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
   else
     gDBView.supressMsgDisplay = false;
 
-  var colID = ConvertSortTypeToColumnID(gCurSortType);
-  if (colID) {
-    var column = document.getElementById(colID);
-    gDBView.sortedColumn = column;
-  }
-
-  ShowAppropriateColumns();
+  UpdateSortIndicators(gCurSortType, sortOrder);
   PersistViewAttributesOnFolder();
-}
-
-function ShowAppropriateColumns()
-{
-    if (gDBView && (gDBView.sortType == nsMsgViewSortType.byThread)) {
-      // don't hide them when sorted by thread
-      SetHiddenAttributeOnThreadOnlyColumns("");
-    }
-    else {
-      // hide them when not sorted by thread
-      SetHiddenAttributeOnThreadOnlyColumns("true");
-    }
 }
 
 function SetViewFlags(viewFlags)

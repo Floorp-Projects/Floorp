@@ -25,7 +25,6 @@
 
 interface nsIMsgFolder;
 interface nsIMsgWindow;
-interface nsIDOMElement;
 interface nsIMessenger;
 interface nsIMsgDBHdr;
 interface nsIMsgDBViewCommandUpdater;
@@ -242,8 +241,6 @@ interface nsIMsgDBView : nsISupports
      */
     boolean navigateStatus(in nsMsgNavigationTypeValue motion);
 
-	attribute nsIDOMElement sortedColumn;
-   
     readonly attribute nsIMsgFolder msgFolder;
 
     nsMsgKey getKeyAt(in nsMsgViewIndex index);

@@ -191,9 +191,11 @@ function searchOnLoad()
   // hide the thread related columns.  you can't thread search results
   var threadCol = document.getElementById("threadCol");
   threadCol.setAttribute("hidden","true");
-  SetHiddenAttributeOnThreadOnlyColumns("true");
+  var totalCol = document.getElementById("totalCol");
+  totalCol.setAttribute("hidden","true");
+  var unreadCol = document.getElementById("unreadCol");
+  unreadCol.setAttribute("hidden","true");
 }
-
 
 function searchOnUnload()
 {
