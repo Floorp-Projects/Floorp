@@ -1,1 +1,4 @@
-/* Localized versions of Info.plist keys */CFBundleName = "Mozilla Thunderbird";NSHumanReadableCopyright = "Copyright © 2003 mozilla.org.";
+/* Localized versions of Info.plist keys */
+
+CFBundleName = "Thunderbird";
+NSHumanReadableCopyright = "Copyright © 2004 mozilla.org.";
