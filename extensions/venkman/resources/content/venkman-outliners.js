@@ -433,14 +433,13 @@ function sr_loadsrc (cb)
             }
             
             sourceRec.isLoaded = true;
-            var ary = data.split(/$/m);
+            var ary = data.split(/\r\n|\n|\r/m);
             for (var i = 0; i < ary.length; ++i)
             {
                 /* We use "new String" here so we can decorate the source line
                  * with attributes used while displaying the source, like
                  * "breakpoint", "breakable", and "warning".
-                 * The replace() strips control characters, including whatever
-                 * line endings we just split() on.  we leave the tabs in
+                 * The replace() strips control characters, we leave the tabs in
                  * so we can expand them to a per-file width before actually
                  * displaying them.
                  */
