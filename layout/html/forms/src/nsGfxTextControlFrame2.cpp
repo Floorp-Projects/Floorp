@@ -1323,7 +1323,20 @@ PRInt32 nsGfxTextControlFrame2::GetMaxNumValues(){return 1;}/**/
 PRBool  nsGfxTextControlFrame2::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames)
 {
-  return PR_FALSE;
+  if (!aValues || !aNames) { return PR_FALSE; }
+
+  nsAutoString name;
+  nsresult result = GetName(&name);
+  if ((aMaxNumValues <= 0) || (NS_CONTENT_ATTR_NOT_THERE == result)) {
+    return PR_FALSE;
+  }
+
+  aNames[0] = name;  
+  aNumValues = 1;
+
+  GetText(&(aValues[0]), PR_FALSE);
+  // XXX: error checking
+  return PR_TRUE;
 }
 
 nscoord 
