@@ -687,56 +687,6 @@ endif
 SUB_LOBJS	= $(shell for lib in $(SHARED_LIBRARY_LIBS); do $(AR_LIST) $${lib} $(CLEANUP1); done;)
 endif
 
-ifdef USE_IMPLICIT_ARCHIVE
-# This rule overrides the builtin rule that tells make how to insert object
-# files into archive libraries.  A few notes about what is going on:
-# The whole point of doing this is to avoid having to store the .o files in
-# addition to the .a files, but not have regenerate all the .o files every time
-# we regenerate the .a file.  Make knows how to do this by itself.  However,
-# it wants to insert the .o files into the .a file 1 at a time which is both
-# slow and also breaks parallel builds.  These rules get make to build all
-# the .o files ahead of time and insert them all at once.  We use the
-# .timestamp file to make this work reliably.
-#
-# I have learned that $(shell) and $(wildcard) variables do not necessarily
-# get evaluated when they are used.  All the $(shell) variables for a rule
-# seem to get evaluated right before the rules commands are executed, not
-# as we proceed from command to the next.  This means that the "ar t" is
-# evaluating the library before we insert new objects.
-#
-ifndef SHARED_LIBRARY_LIBS
-$(LIBRARY)(%.o): %.o
-	@echo 'queueing $< for insertion into $(LIBRARY)'; \
-	touch $(LIBRARY:%.a=.%.timestamp)
-
-$(LIBRARY:%.a=.%.timestamp) :
-	@touch $@
-
-ifneq (, $(LIBRARY))
-AR_FILES_TO_REMOVE := $(filter-out \
-	$(filter %.o, $(LIBRARY)($(OBJS) $(LOBJS)) ), \
-	$(shell [ -f $(LIBRARY) ] && $(AR_LIST) $(LIBRARY)))
-endif
-
-$(LIBRARY): $(LIBRARY)($(OBJS) $(LOBJS)) $(LIBRARY:%.a=.%.timestamp) Makefile.in Makefile
-	@touch $(LIBRARY:%.a=.%.timestamp)
-	$(AR) $(AR_FLAGS) $(filter $filter(%.o, $^), $(shell echo *.o))
-	if [ "${AR_FILES_TO_REMOVE}" != "" ]; then $(AR_DELETE) $(LIBRARY) $(AR_FILES_TO_REMOVE); else true; fi
-	@touch $@
-
-else
-
-$(LIBRARY): $(OBJS) $(LOBJS) Makefile Makefile.in
-	rm -f $@
-	@rm -f $(SUB_LOBJS)
-	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
-	$(AR) $(AR_FLAGS) $(OBJS) $(LOBJS) $(SUB_LOBJS)
-	$(RANLIB) $@
-	@rm -f foodummyfilefoo $(SUB_LOBJS)
-endif # ! SHARED_LIBRARY_LIBS
-
-else # ! USE_IMPLICIT_ARCHIVE
-
 $(LIBRARY): $(OBJS) $(LOBJS) Makefile Makefile.in
 	rm -f $@
 ifdef SHARED_LIBRARY_LIBS
@@ -747,7 +697,6 @@ endif
 	$(RANLIB) $@
 	@rm -f foodummyfilefoo $(SUB_LOBJS)
 
-endif # USE_IMPLICIT_ARCHIVE
 else # OS2
 ifdef SHARED_LIBRARY
 $(DEF_FILE): $(DEF_OBJS)

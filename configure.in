@@ -2927,12 +2927,6 @@ AC_ARG_ENABLE(verbose-config-defs,
 	VERBOSE_CONFIG_DEFS=
     fi])
 
-dnl use GNU make's implicit archive feature to save space
-MOZ_ARG_ENABLE_BOOL(implicit-archive,
-[  --enable-implicit-archive
-                          Use GNU make's implicit archive feature],
-    USE_IMPLICIT_ARCHIVE=1)
-
 dnl ========================================================
 dnl =
 dnl = --diable-dtd-debug
@@ -3058,7 +3052,6 @@ AC_SUBST(MOZ_USER_DIR)
 dnl AC_SUBST(MOZ_SMART_MAIL)
 AC_SUBST(FULL_STATIC_BUILD)
 AC_SUBST(BUILD_IDLC)
-AC_SUBST(USE_IMPLICIT_ARCHIVE)
 
 AC_SUBST(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
 
