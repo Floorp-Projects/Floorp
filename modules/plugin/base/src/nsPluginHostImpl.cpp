@@ -5910,8 +5910,7 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
 
     nsCOMPtr<nsIChannel> channel;
 
-    rv = NS_NewChannel(getter_AddRefs(channel), aURL, nsnull, loadGroup, nsnull,
-       /* prevents throbber from becoming active */ nsIRequest::LOAD_BACKGROUND);
+    rv = NS_NewChannel(getter_AddRefs(channel), aURL, nsnull, loadGroup, nsnull);
     if (NS_SUCCEEDED(rv)) {
       // if this is http channel, set referrer, some servers are configured
       // to reject requests without referrer set, see bug 157796
