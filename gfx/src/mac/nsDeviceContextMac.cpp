@@ -22,6 +22,7 @@
 
 #include "math.h"
 #include "nspr.h"
+#include "il_util.h"
 #include <FixMath.h>
 
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
@@ -97,7 +98,7 @@ NS_IMETHODIMP nsDeviceContextMac :: GetDrawingSurface(nsIRenderingContext &aCont
 
 NS_IMETHODIMP nsDeviceContextMac::GetDepth(PRUint32& aDepth)
 {
-  aDepth = 24;
+  aDepth = mDepth;
   return NS_OK;
 }
 
@@ -110,6 +111,37 @@ NS_IMETHODIMP nsDeviceContextMac::CreateILColorSpace(IL_ColorSpace*& aColorSpace
 
   return result;
 }
+
+//------------------------------------------------------------------------
+
+
+NS_IMETHODIMP nsDeviceContextMac::GetILColorSpace(IL_ColorSpace*& aColorSpace)
+{
+
+  if (nsnull == mColorSpace) {
+    IL_RGBBits colorRGBBits;
+  
+    // Default is to create a 32-bit color space
+    colorRGBBits.red_shift = 16;  
+    colorRGBBits.red_bits = 8;
+    colorRGBBits.green_shift = 8;
+    colorRGBBits.green_bits = 8; 
+    colorRGBBits.blue_shift = 0; 
+    colorRGBBits.blue_bits = 8;  
+  
+    mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 32);
+    if (nsnull == mColorSpace) {
+      aColorSpace = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  NS_POSTCONDITION(nsnull != mColorSpace, "null color space");
+  aColorSpace = mColorSpace;
+  IL_AddRefToColorSpace(aColorSpace);
+  return NS_OK;
+}
+
 
 //------------------------------------------------------------------------
 
