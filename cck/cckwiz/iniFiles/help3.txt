@@ -1,0 +1,36 @@
+Help | Feedback
+
+
+                   >> Community:
+
+
+
+                      >> Forum: microsoft.public.vc.mfc
+                         >> Thread: how to handle event at run time ?
+                            >> Message 4 of 16
+                    
+
+                   Subject:
+                          Re: how to handle event at run time ?
+                   Date:
+                          1999/05/11
+                   Author:
+                          Phaedrus <phaedrus@halcyon.com>
+                            Posting History
+
+
+
+                    In article <uSlazi8m#GA.52@cppssbbsa02.microsoft.com>,
+                    Mostafa <hamos@caramail.com> wrote:
+                    >David Wilkinson <davewilk@worldnet.att.net> wrote in message
+                    >news:3738457A.D8986E10@worldnet.att.net...
+                    >> Mostafa wrote:
+                    >> > I'm adding a button at run time, and I want ot handle the onclick event?
+                    >> > it is possible to do it ?
+                    >> Just do exactly what ClassWizard does when you add a handler for a
+                    button
+                    >> on the template, but place the code outside the ClassWizard delimited
+                    area.
+                     
+                    >At the begenning I have no reference to my button .
+                    >
