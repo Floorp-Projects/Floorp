@@ -857,8 +857,7 @@ nsGenericHTMLElement::GetInnerHTML(nsAWritableString& aInnerHTML)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHTMLContentSink> sink;
-  rv = NS_New_HTML_ContentSinkStream(getter_AddRefs(sink), &aInnerHTML,
-                                     nsIDocumentEncoder::OutputNoDoctype);
+  rv = NS_New_HTML_ContentSinkStream(getter_AddRefs(sink), &aInnerHTML, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   parser->SetContentSink(sink);

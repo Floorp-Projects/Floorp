@@ -50,7 +50,7 @@ var gEditModeBar;
 // Bummer! Can't get at enums from nsIDocumentEncoder.h
 var gOutputSelectionOnly = 1;
 var gOutputFormatted     = 2;
-var gOutputNoDoctype     = 4;
+//var gOutputNoDoctype     = 4;  // OutputNoDoctype has been obsoleted
 var gOutputBodyOnly      = 8;
 var gOutputPreformatted  = 16;
 var gOutputWrap          = 32;
@@ -895,7 +895,7 @@ function SetEditMode(mode)
     {
       // Get the entire document's source string
 
-      var flags = gOutputNoDoctype | gOutputEncodeEntities;
+      var flags = gOutputEncodeEntities;
       // 
       var prettyPrint = gPrefs.GetBoolPref("editor.prettyprint");
       if (prettyPrint)

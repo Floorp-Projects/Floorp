@@ -24,6 +24,13 @@
 
 // --------------------------- Output ---------------------------
 
+
+function EditorSerialize()
+{
+  var s = new XMLSerializer();
+  dump(s.serializeToString(editorShell.editorDocument) + "\n");
+}
+
 function EditorGetText()
 {
   if (editorShell) {

@@ -74,8 +74,8 @@ public:
     // (Probably not well tested for HTML output.)
     OutputFormatted     = 2,
 
-    // Don't output the html doctype and gecko output system comment headers
-    OutputNoDoctype     = 4,
+    // OutputNoDoctype is obsolete, flag 4 available for other uses
+    //OutputNoDoctype     = 4,
 
     // No html head tags
     OutputBodyOnly      = 8,
