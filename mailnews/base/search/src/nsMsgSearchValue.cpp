@@ -44,6 +44,8 @@ NS_IMPL_ISUPPORTS1(nsMsgSearchValueImpl, nsIMsgSearchValue)
 NS_IMETHODIMP
 nsMsgSearchValueImpl::GetStr(char** aResult)
 {
+    NS_ENSURE_ARG_POINTER(aResult);
+    NS_ENSURE_TRUE(IS_STRING_ATTRIBUTE(mValue.attribute), NS_ERROR_ILLEGAL_VALUE);
     *aResult = nsCRT::strdup(mValue.u.string);
     return NS_OK;
 }
@@ -51,6 +53,7 @@ nsMsgSearchValueImpl::GetStr(char** aResult)
 NS_IMETHODIMP
 nsMsgSearchValueImpl::SetStr(const char* aValue)
 {
+    NS_ENSURE_TRUE(IS_STRING_ATTRIBUTE(mValue.attribute), NS_ERROR_ILLEGAL_VALUE);
     if (mValue.u.string)
         nsCRT::free(mValue.u.string);
     mValue.u.string = nsCRT::strdup(aValue);
@@ -60,12 +63,15 @@ nsMsgSearchValueImpl::SetStr(const char* aValue)
 NS_IMETHODIMP
 nsMsgSearchValueImpl::GetPriority(nsMsgPriorityValue *aResult)
 {
+    NS_ENSURE_ARG_POINTER(aResult);
+    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::Priority, NS_ERROR_ILLEGAL_VALUE);
     *aResult = mValue.u.priority;
     return NS_OK;
 }
 NS_IMETHODIMP
 nsMsgSearchValueImpl::SetPriority(nsMsgPriorityValue aValue)
 {
+    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::Priority, NS_ERROR_ILLEGAL_VALUE);
     aValue = mValue.u.priority;
     return NS_OK;
 }
@@ -73,6 +79,8 @@ nsMsgSearchValueImpl::SetPriority(nsMsgPriorityValue aValue)
 NS_IMETHODIMP
 nsMsgSearchValueImpl::GetStatus(PRUint32 *aResult)
 {
+    NS_ENSURE_ARG_POINTER(aResult);
+    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::MsgStatus, NS_ERROR_ILLEGAL_VALUE);
     *aResult = mValue.u.msgStatus;
     return NS_OK;
 }
@@ -80,6 +88,7 @@ nsMsgSearchValueImpl::GetStatus(PRUint32 *aResult)
 NS_IMETHODIMP
 nsMsgSearchValueImpl::SetStatus(PRUint32 aValue)
 {
+    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::MsgStatus, NS_ERROR_ILLEGAL_VALUE);
     mValue.u.msgStatus = aValue;
     return NS_OK;
 }
@@ -87,6 +96,8 @@ nsMsgSearchValueImpl::SetStatus(PRUint32 aValue)
 NS_IMETHODIMP
 nsMsgSearchValueImpl::GetSize(PRUint32 *aResult)
 {
+    NS_ENSURE_ARG_POINTER(aResult);
+    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::Size, NS_ERROR_ILLEGAL_VALUE);
     *aResult = mValue.u.size;
     return NS_OK;
 }
@@ -94,6 +105,7 @@ nsMsgSearchValueImpl::GetSize(PRUint32 *aResult)
 NS_IMETHODIMP
 nsMsgSearchValueImpl::SetSize(PRUint32 aValue)
 {
+    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::Size, NS_ERROR_ILLEGAL_VALUE);
     mValue.u.size = aValue;
     return NS_OK;
 }
@@ -101,6 +113,8 @@ nsMsgSearchValueImpl::SetSize(PRUint32 aValue)
 NS_IMETHODIMP
 nsMsgSearchValueImpl::GetMsgKey(nsMsgKey *aResult)
 {
+    NS_ENSURE_ARG_POINTER(aResult);
+    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::MessageKey, NS_ERROR_ILLEGAL_VALUE);
     *aResult = mValue.u.key;
     return NS_OK;
 }
@@ -108,6 +122,7 @@ nsMsgSearchValueImpl::GetMsgKey(nsMsgKey *aResult)
 NS_IMETHODIMP
 nsMsgSearchValueImpl::SetMsgKey(nsMsgKey aValue)
 {
+    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::MessageKey, NS_ERROR_ILLEGAL_VALUE);
     mValue.u.key = aValue;
     return NS_OK;
 }
@@ -115,12 +130,15 @@ nsMsgSearchValueImpl::SetMsgKey(nsMsgKey aValue)
 NS_IMETHODIMP
 nsMsgSearchValueImpl::GetAge(PRUint32 *aResult)
 {
+    NS_ENSURE_ARG_POINTER(aResult);
+    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::AgeInDays, NS_ERROR_ILLEGAL_VALUE);
     *aResult = mValue.u.age;
     return NS_OK;
 }
 NS_IMETHODIMP
 nsMsgSearchValueImpl::SetAge(PRUint32 aValue)
 {
+    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::AgeInDays, NS_ERROR_ILLEGAL_VALUE);
     mValue.u.age = aValue;
     return NS_OK;
 }
@@ -128,6 +146,8 @@ nsMsgSearchValueImpl::SetAge(PRUint32 aValue)
 NS_IMETHODIMP
 nsMsgSearchValueImpl::GetFolder(nsIMsgFolder* *aResult)
 {
+    NS_ENSURE_ARG_POINTER(aResult);
+    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::FolderInfo, NS_ERROR_ILLEGAL_VALUE);
     *aResult = mValue.u.folder;
     NS_IF_ADDREF(*aResult);
     return NS_OK;
@@ -135,6 +155,7 @@ nsMsgSearchValueImpl::GetFolder(nsIMsgFolder* *aResult)
 NS_IMETHODIMP
 nsMsgSearchValueImpl::SetFolder(nsIMsgFolder* aValue)
 {
+    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::FolderInfo, NS_ERROR_ILLEGAL_VALUE);
     mValue.u.folder = aValue;
     
     return NS_OK;
@@ -143,12 +164,15 @@ nsMsgSearchValueImpl::SetFolder(nsIMsgFolder* aValue)
 NS_IMETHODIMP
 nsMsgSearchValueImpl::GetDate(PRTime *aResult)
 {
+    NS_ENSURE_ARG_POINTER(aResult);
+    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::Date, NS_ERROR_ILLEGAL_VALUE);
     *aResult = mValue.u.date;
     return NS_OK;
 }
 NS_IMETHODIMP
 nsMsgSearchValueImpl::SetDate(PRTime aValue)
 {
+    NS_ENSURE_TRUE(mValue.attribute == nsMsgSearchAttrib::Date, NS_ERROR_ILLEGAL_VALUE);
     mValue.u.date = aValue;
     return NS_OK;
 }
@@ -170,3 +194,32 @@ nsMsgSearchValueImpl::SetAttrib(nsMsgSearchAttribValue aValue)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgSearchValueImpl::ToString(PRUnichar **aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+    
+    if (IS_STRING_ATTRIBUTE(mValue.attribute)) {
+        nsCAutoString str(mValue.u.string);
+        *aResult = str.ToNewUnicode();
+        return NS_OK;
+    }
+
+    
+    switch (mValue.attribute) {
+
+    case nsMsgSearchAttrib::Priority:
+    case nsMsgSearchAttrib::Date:
+    case nsMsgSearchAttrib::MsgStatus:
+    case nsMsgSearchAttrib::MessageKey:
+    case nsMsgSearchAttrib::Size:
+    case nsMsgSearchAttrib::AgeInDays:
+    case nsMsgSearchAttrib::FolderInfo:
+        *aResult = nsnull;
+        break;
+    default:
+        NS_ASSERTION(0, "Unknown search value type");
+    }        
+            
+    return NS_OK;
+}
