@@ -50,12 +50,7 @@ nsDrawingSurfaceBeOS :: nsDrawingSurfaceBeOS()
   mBitmap = nsnull;
   mWidth = 0; 
   mHeight = 0; 
-  mLockBitmap = nsnull;  
-  mLockWidth = 0; 
-  mLockHeight = 0;
   mLockFlags = 0;
-  mLockX = 0; 
-  mLockY = 0; 
   mLocked = PR_FALSE;
 }
 
@@ -69,9 +64,6 @@ nsDrawingSurfaceBeOS :: ~nsDrawingSurfaceBeOS()
     mView = nsnull;
     mBitmap = nsnull;
   }
-  if (mLockBitmap)
-    delete mLockBitmap;
-  mLockBitmap = nsnull;  
 }
 
 /** 
@@ -96,70 +88,33 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Lock(PRInt32 aX, PRInt32 aY,
                                           void **aBits, PRInt32 *aStride,
                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
-  mLockX = aX; 
-  mLockY = aY; 
-  mLockWidth = aWidth; 
-  mLockHeight = aHeight; 
   mLockFlags = aFlags;
 
-  if (mBitmap &&   !mLocked)
+  if (mBitmap && !mLocked)
   {
 
     if (mLockFlags & NS_LOCK_SURFACE_READ_ONLY)
       mBitmap->LockBits();
-    // we use for BeOS surfaces 32-bit bitmaps only
-    mLockBitmap = new BBitmap(BRect(mLockX, mLockY, mLockX + mLockWidth - 1,
-                              mLockY + mLockHeight -1 ),B_RGB32,false);
-    if (mLockBitmap && mLockBitmap->IsValid())
-    {
-      if (!(mLockFlags & NS_LOCK_SURFACE_WRITE_ONLY))
-      {
-        uint32 srcstride = mBitmap->BytesPerRow();
-        uint32 deststride = mLockBitmap->BytesPerRow();
-        uint8 *src = (uint8 *)mBitmap->Bits() + mLockX*4 + mLockY*srcstride;
-        uint8 *dest=(uint8 *)mLockBitmap->Bits();
-        for (uint32 i = 0; i < mLockHeight; ++i)
-        {
-          memcpy(dest, src, deststride);
-          src += srcstride;
-          dest += deststride;
-        }
-      }
-      *aBits = mLockBitmap->Bits();
-      *aStride = mLockBitmap->BytesPerRow();
-      *aWidthBytes = aWidth*4;
-      mLocked = PR_TRUE;
-    }
+    *aStride = mBitmap->BytesPerRow();
+    *aBits = (uint8 *)mBitmap->Bits() + aX*4 + *aStride * aY;
+    *aWidthBytes = aWidth*4;
+    mLocked = PR_TRUE; 
+  }
+  else
+  {
+    NS_ASSERTION(0, "nested lock attempt");
+    return NS_ERROR_FAILURE;
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceBeOS :: Unlock(void)
 {
-
   if (mBitmap && mLocked)
   {
-    if (mLockBitmap)
-    {
-      if (!(mLockFlags & NS_LOCK_SURFACE_READ_ONLY))
-      {
-        uint32 deststride = mBitmap->BytesPerRow();
-        uint32 srcstride = mLockBitmap->BytesPerRow();
-        uint8 *dest = (uint8 *)mBitmap->Bits() + mLockX*4 + mLockY*deststride;
-        uint8 *src=(uint8 *)mLockBitmap->Bits();
-        for (uint32 i = 0; i < mLockHeight; ++i)
-        {
-          memcpy(dest, src, srcstride);
-          src += srcstride;
-          dest += deststride;
-        }
-      }
-      delete mLockBitmap;
-      mLockBitmap = nsnull;
-      mLocked = PR_FALSE; 
-      if (mLockFlags & NS_LOCK_SURFACE_READ_ONLY)
-        mBitmap->UnlockBits();
-    }
+    if (mLockFlags & NS_LOCK_SURFACE_READ_ONLY)
+      mBitmap->UnlockBits();
+    mLocked = PR_FALSE; 
   }
   return NS_OK;
 }
@@ -256,9 +211,6 @@ NS_IMETHODIMP nsDrawingSurfaceBeOS :: Init(BView *aView, PRUint32 aWidth,
     mView->SetViewColor(B_TRANSPARENT_32_BIT);
     mBitmap->AddChild(mView);
   }
-  if (mLockBitmap)
-  	delete mLockBitmap;
-  mLockBitmap = nsnull;
   
   return NS_OK;
 }
