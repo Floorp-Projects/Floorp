@@ -3890,21 +3890,44 @@ void nsImapMailFolder::UpdatePendingCounts(PRBool countUnread, PRBool missingAre
   nsresult rv;
   if (m_copyState)
   {
-    ChangeNumPendingTotalMessages(m_copyState->m_totalCount);
+    if (!m_copyState->m_isCrossServerOp)
+      ChangeNumPendingTotalMessages(m_copyState->m_totalCount);
+    else
+      ChangeNumPendingTotalMessages(1);
 
     if (countUnread)
     {
       // count the moves that were unread
       int numUnread = 0;
       nsCOMPtr <nsIMsgFolder> srcFolder = do_QueryInterface(m_copyState->m_srcSupport);
-      for (PRUint32 keyIndex=0; keyIndex < m_copyState->m_totalCount; keyIndex++)
+      if (!m_copyState->m_isCrossServerOp)
+        for (PRUint32 keyIndex=0; keyIndex < m_copyState->m_totalCount; keyIndex++)
+        {
+          nsCOMPtr<nsIMsgDBHdr> message;
+
+          nsCOMPtr<nsISupports> aSupport =
+          getter_AddRefs(m_copyState->m_messages->ElementAt(keyIndex));
+          message = do_QueryInterface(aSupport, &rv);
+          // if the key is not there, then assume what the caller tells us to.
+          PRBool isRead = missingAreRead;
+          PRUint32 flags;
+          if (message )
+          {
+            message->GetFlags(&flags);
+            isRead = flags & MSG_FLAG_READ;
+          }
+
+          if (!isRead)
+            numUnread++;
+        }
+      else
       {
         nsCOMPtr<nsIMsgDBHdr> message;
 
         nsCOMPtr<nsISupports> aSupport =
-          getter_AddRefs(m_copyState->m_messages->ElementAt(keyIndex));
+          getter_AddRefs(m_copyState->m_messages->ElementAt(m_copyState->m_curIndex));
         message = do_QueryInterface(aSupport, &rv);
-        // if the key is not there, then assume what the caller tells us to.
+          // if the key is not there, then assume what the caller tells us to.
         PRBool isRead = missingAreRead;
         PRUint32 flags;
         if (message )
