@@ -87,6 +87,8 @@
 #include "nsLayoutCID.h"
 #include "nsIDOMNSRange.h"
 #include "nsEditorUtils.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIEventStateManager.h"
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kLookAndFeelCID,          NS_LOOKANDFEEL_CID);
@@ -989,9 +991,61 @@ nsTextEditorFocusListener::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
+static PRBool
+IsTargetFocused(nsIDOMEventTarget* aTarget)
+{
+  // The event target could be either a content node or a document.
+  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aTarget);
+  if (content)
+    content->GetDocument(getter_AddRefs(doc));
+  else
+    doc = do_QueryInterface(aTarget);
+
+  if (!doc)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIPresShell> shell;
+  doc->GetShellAt(0, getter_AddRefs(shell));
+  if (!shell)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIPresContext> presContext;
+  shell->GetPresContext(getter_AddRefs(presContext));
+  if (!presContext)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIEventStateManager> esm;
+  presContext->GetEventStateManager(getter_AddRefs(esm));
+  if (!esm)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIContent> focusedContent;
+  esm->GetFocusedContent(getter_AddRefs(focusedContent));
+
+  // focusedContent will be null in the case where the document has focus,
+  // and so will content.
+
+  return (focusedContent == content);
+}
+
 nsresult
 nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
 {
+  // It's possible for us to receive a focus when we're really not focused.
+  // This happens, for example, when an onfocus handler that's hooked up
+  // before this listener focuses something else.  In that case, all of the
+  // onblur handlers will be fired synchronously, then the remaining focus
+  // handlers will be fired from the original event.  So, check to see that
+  // we're really focused.  (Note that the analogous situation does not
+  // happen for blurs, due to the ordering in
+  // nsEventStateManager::SendFocuBlur().
+
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aEvent->GetTarget(getter_AddRefs(target));
+  if (!IsTargetFocused(target))
+    return NS_OK;
+
   // turn on selection and caret
   if (mEditor)
   {

@@ -2003,6 +2003,9 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
         //Find the view whose coordinates system we're in.
         baseView = nsView::GetViewFor(aEvent->widget);
 
+        if (aEvent->message == NS_DEACTIVATE)
+          mMouseGrabber = mKeyGrabber = nsnull;
+
         //Find the view to which we're initially going to send the event 
         //for hittesting.
         if (nsnull != mMouseGrabber && (NS_IS_MOUSE_EVENT(aEvent) || (NS_IS_DRAG_EVENT(aEvent)))) {
