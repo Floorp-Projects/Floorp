@@ -40,6 +40,9 @@
 #include "nsLayoutCID.h"
 #include "nsINetService.h"
 
+#include "nsIEditor.h"
+
+
 #ifdef XP_PC
 #define WIDGET_DLL "raptorwidget.dll"
 #define GFXWIN_DLL "raptorgfxwin.dll"
@@ -51,6 +54,7 @@
 #define DOM_DLL    "jsdom.dll"
 #define LAYOUT_DLL "raptorhtml.dll"
 #define NETLIB_DLL "netlib.dll"
+#define EDITOR_DLL "ender.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
@@ -70,6 +74,7 @@
 #define DOM_DLL    "libjsdom.so"
 #define LAYOUT_DLL "libraptorhtml.so"
 #define NETLIB_DLL "libnetlib.so"
+#define EDITOR_DLL "libender.so"
 #endif
 #endif
 
@@ -115,6 +120,7 @@ static NS_DEFINE_IID(kCXMLDocument, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCImageDocument, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kCHTMLImageElementFactory, NS_HTMLIMAGEELEMENTFACTORY_CID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
 
 extern "C" void
 NS_SetupRegistry()
@@ -160,4 +166,5 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCImageDocument, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCHTMLImageElementFactory, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kIEditFactoryIID, EDITOR_DLL, PR_FALSE, PR_FALSE);
 }

@@ -77,7 +77,8 @@ INCLUDES += \
 			-I$(PUBLIC)/js \
 			-I$(PUBLIC)/pref \
 			-I$(PUBLIC)/network \
-			-I$(PUBLIC)/xp
+			-I$(PUBLIC)/xp \
+			-I$(PUBLIC)/editor
 
 OBJS    = $(CPPSRCS:.cpp=.o)
 
