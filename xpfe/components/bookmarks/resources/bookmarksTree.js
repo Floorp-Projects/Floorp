@@ -407,7 +407,7 @@ BookmarksTree.prototype = {
     gSelectionTracker.currentItem = this.tree.currentItem;
     gSelectionTracker.currentCell = aEvent.target;
 
-    if (gSelectionTracker.currentItem.getAttribute("type") != NC_NS + "Bookmark" || 
+    if (gSelectionTracker.currentItem.getAttribute("type") != NC_NS + "Bookmark" && 
         gSelectionTracker.currentItem.getAttribute("type") != NC_NS + "Folder")
       return;
 

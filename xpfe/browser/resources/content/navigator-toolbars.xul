@@ -154,7 +154,7 @@
     <!--
     <rule>
       <button uri="..."
-              class="http://home.netscape.com/NC-rdf#Class button-toolbar bookmarkitem"
+              class="http://home.netscape.com/NC-rdf#Class button-toolbar bookmark-item"
               value="http://home.netscape.com/NC-rdf#Name"
               src="http://home.netscape.com/NC-rdf#Icon"
               type="http://home.netscape.com/NC-rdf#Type"
@@ -192,7 +192,7 @@
                  object="?item-busy"/>                 
       </bindings>
       <action>
-        <button uri="?item" class="button-toolbar bookmarkitem ?item-class ?item-type" value="?item-name" 
+        <button uri="?item" class="button-toolbar bookmark-item ?item-class ?item-type" value="?item-name" 
                 src="?item-icon" type="?item-icon" crop="right" 
                 content="?item-URL" loading="?item-busy"/> 
                 <!-- popup="panelpopup"/> -->
@@ -248,7 +248,7 @@
                 object="?content"/>
       </conditions>
       <action>
-        <button uri="?item" class="button-toolbar bookmarkitem" 
+        <button uri="?item" class="button-toolbar bookmark-item" 
                 value="?content" content="?content"
                 popup="panelpopup"/>
       </action>

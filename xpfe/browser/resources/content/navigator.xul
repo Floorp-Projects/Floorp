@@ -195,14 +195,14 @@ Contributor(s): ______________________________________. -->
              tbautostretch="always">
 
       <!-- "Bookmarks" button on personal toolbar -->                           
-      <menubutton class="button-toolbar bookmarkfolder" id="bookmarks-button"   
+      <menubutton class="button-toolbar bookmark-item" id="bookmarks-button"   
                   persist="hidden" value="&bookmarksButton.label;"
                   datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex"
                   ref="NC:BookmarksRoot" container="true" flags="dont-test-empty">
         <template>
           <rule iscontainer="true">
             <menupopup>
-              <menu class="menu-iconic bookmarkfolder" uri="rdf:*"
+              <menu class="menu-iconic bookmark-item" uri="rdf:*"
                     value="rdf:http://home.netscape.com/NC-rdf#Name" >
                 <menupopup/>
               </menu>
@@ -215,7 +215,7 @@ Contributor(s): ______________________________________. -->
           </rule>
           <rule>
             <menupopup>
-              <menuitem class="menuitem-iconic bookmarkitem" uri="rdf:*"
+              <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
                         value="rdf:http://home.netscape.com/NC-rdf#Name"
                         oncommand="OpenBookmarkURL(event.target,document.getElementById('BookmarksMenu').database)" />
             </menupopup>
@@ -236,7 +236,7 @@ Contributor(s): ______________________________________. -->
            ref="NC:PersonalToolbarFolder" flags="dont-test-empty">
         <template>
           <rule parent="box" iscontainer="true">
-            <menubutton class="button-toolbar bookmarkfolder" uri="rdf:*" 
+            <menubutton class="button-toolbar bookmark-item" uri="rdf:*" 
                         tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
                         value="rdf:http://home.netscape.com/NC-rdf#Name">
               <menupopup/>
@@ -248,7 +248,7 @@ Contributor(s): ______________________________________. -->
           </rule>
 
           <rule parent="box">
-            <button class="button-toolbar bookmarkitem" uri="rdf:*" 
+            <button class="button-toolbar bookmark-item" uri="rdf:*" 
               tooltip="aTooltip" tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
               value="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"
               oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database);"/>
@@ -256,7 +256,7 @@ Contributor(s): ______________________________________. -->
         
           <rule iscontainer="true">
             <menupopup>
-              <menu class="menu-iconic bookmarkfolder" uri="rdf:*" 
+              <menu class="menu-iconic bookmark-item" uri="rdf:*" 
                     value="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup/>
               </menu>
@@ -269,14 +269,14 @@ Contributor(s): ______________________________________. -->
           </rule>
           <rule>
             <menupopup>
-              <menuitem class="menuitem-iconic bookmarkitem" uri="rdf:*"
+              <menuitem class="menuitem-iconic bookmark-item" uri="rdf:*"
                         value="rdf:http://home.netscape.com/NC-rdf#Name"
                         oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)"/>
             </menupopup>
           </rule>
         </template>
        
-        <button class="button-toolbar bookmarkitem" id="home-button" value="&homeButton.label;"
+        <button class="button-toolbar bookmark-item" id="home-button" value="&homeButton.label;"
                 tooltip="aTooltip" persist="hidden"
                 ondraggesture="nsDragAndDrop.startDrag(event, homeButtonObserver);"
                 ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
