@@ -90,20 +90,20 @@ const PaneIDT Hyper_Scroller_PaneID = 1005;
 const PaneIDT Status_Bar_PaneID = 'StBv';
 const PaneIDT CoBrandLogo_PaneID = 'Bnet';
 
+// These are obsolete once scc puts in the configurable toolbars. They should go away for 5.0
 const char* Pref_ShowToolbar = "browser.chrome.show_toolbar";
 const char* Pref_ShowLocationBar = "browser.chrome.show_url_bar";
-const char* Pref_ShowPersonalToolbar = "browser.chrome.show_personal_toolbar";	// is this right?
-
-
-CPopdownRDFCoordinator* CBrowserWindow::sPopdownParent = NULL;
-LCommander* CBrowserWindow::sSavedPopdownTarget = NULL;
-
+const char* Pref_ShowPersonalToolbar = "browser.chrome.show_personal_toolbar";
 
 enum {  eNavigationBar,
 		eLocationBar,
 		eStatusBar,
 		ePersonalToolbar };
-				
+
+
+CPopdownRDFCoordinator* CBrowserWindow::sPopdownParent = NULL;
+
+			
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -126,6 +126,9 @@ CBrowserWindow::CBrowserWindow(LStream* inStream)
 	mIsHTMLHelp = false;
 	mHTMLView = nil;
 	mNavCenterParent = nil;
+	
+	mPopdownParent = nil;			// popdown tree view stuff
+	mSavedPopdownTarget = nil;
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -142,10 +145,9 @@ CBrowserWindow::~CBrowserWindow()
 		// Kludgy, but prevents crash in LUndoer caused by view being destroyed before
 		// attachments.  This happens if a form element which is a text field exists.
 
-	// if there is a popdown window and it is our child, it will be destroyed when the
-	// window closes down. 
-	if ( sPopdownParent && sPopdownParent->GetSuperView() == this )
-		ClosePopdownTreeView();
+	// if there is a popdown window it will be destroyed when the view hierarchy is
+	// destroyed so we don't need to delete it ourselves.
+	ClosePopdownTreeView();
 	
 }
 
@@ -1796,7 +1798,7 @@ void CBrowserWindow :: ReadWindowStatus ( LStream *inStatusData )
 
 
 //
-// IsPopdownTreeViewVisible [static]
+// IsPopdownTreeViewVisible
 //
 // Allows anyone to check and see if there is a popdown tree view currently displayed
 // in a browser window
@@ -1810,7 +1812,7 @@ CBrowserWindow :: IsPopdownTreeViewVisible ( )
 
 
 //
-// ClipOutPopdown [static]
+// ClipOutPopdown
 //
 // Adds to the current clipRgn the popdown box, if visible. |inView| is needed so we
 // know what view we're drawing in for coordinate adjustments
@@ -1843,19 +1845,20 @@ CBrowserWindow :: ClipOutPopdown ( LView* inView )
 void
 CBrowserWindow :: PopDownTreeView ( Uint16 inLeft, Uint16 inTop, HT_Resource inResource )
 {
-	// blow away the old one if it is around.
-	if ( sPopdownParent )
+	// hide the old one if it is around.
+	if ( mPopdownParent )
 		ClosePopdownTreeView();
+	else {	
+		try { 
+			mPopdownParent = dynamic_cast<CPopdownRDFCoordinator*>
+										(UReanimator::CreateView(CPopdownRDFCoordinator::res_ID, this, this));
+		}
+		catch ( ... ) {
+			mPopdownParent = NULL;
+		}
+	}
 		
-	try { 
-		sPopdownParent = dynamic_cast<CPopdownRDFCoordinator*>
-									(UReanimator::CreateView(CPopdownRDFCoordinator::res_ID, this, this));
-	}
-	catch ( ... ) {
-		sPopdownParent = NULL;
-	}
-	
-	if ( sPopdownParent ) {
+	if ( mPopdownParent ) {
 		// compute the height of tree (80% of the space between top of tree and bottom of browser)
 		const Uint16 kMinTreeHeight = 75;
 		const Uint16 kMaxTreeHeight = 700;
@@ -1871,20 +1874,22 @@ CBrowserWindow :: PopDownTreeView ( Uint16 inLeft, Uint16 inTop, HT_Resource inR
 		if ( newHeight > kMaxTreeHeight )
 			newHeight = kMaxTreeHeight;
 		
-		sPopdownParent->ResizeFrameTo ( kTreeWidth, newHeight, false );
-		sPopdownParent->PlaceInSuperImageAt ( inLeft, inTop, false );
-		sPopdownParent->BuildHTPane ( inResource );
+		mPopdownParent->ResizeFrameTo ( kTreeWidth, newHeight, false );
+		mPopdownParent->PlaceInSuperImageAt ( inLeft, inTop, false );
+		mPopdownParent->BuildHTPane ( inResource );
 		
-		sSavedPopdownTarget = LCommander::GetTarget();
-		LCommander::SwitchTarget(sPopdownParent);
-		sPopdownParent->AddListener(this);		// listen for close messages
-		sPopdownParent->Show();
+		mSavedPopdownTarget = LCommander::GetTarget();
+		LCommander::SwitchTarget(mPopdownParent);
+		mPopdownParent->AddListener(this);		// listen for close messages
+		mPopdownParent->Show();
 		
 		// make sure that we draw NOW if this is created in response to a drag
 		// and drop.
 		if ( ::StillDown() )
-			sPopdownParent->Draw(nil);
+			mPopdownParent->Draw(nil);
 	}
+	
+	sPopdownParent = mPopdownParent;		// make this the globally accessible one
 	
 } // PopDownTreeView
 
@@ -1892,22 +1897,20 @@ CBrowserWindow :: PopDownTreeView ( Uint16 inLeft, Uint16 inTop, HT_Resource inR
 //
 // ClosePopdownTreeView
 //
-// Closes up the popdown tree view and deletes it. Why do we have to delete it, you ask?
-// The scrollbar control, when it is created, stores the window port. Obviously, when the
-// window in which the popdown was first created in goes away, kablooie.
+// Closes up the popdown tree view and resets the target to what was active before the
+// popdown was opened.
 //
 void
 CBrowserWindow :: ClosePopdownTreeView ( )
 {
-	if ( sPopdownParent ) {
-		sPopdownParent->Hide();
-		sPopdownParent->RemoveListener(this);
-		LCommander::SwitchTarget(sSavedPopdownTarget);
-
-		delete sPopdownParent;		// removes from parent view
-		sPopdownParent = NULL;
+	if ( mPopdownParent ) {
+		mPopdownParent->Hide();
+		LCommander::SwitchTarget(mSavedPopdownTarget);
 	}
 
+	// no parent visible, so clear this out.
+	sPopdownParent = NULL;
+	
 } // ClosePopdownTreeView
 
 

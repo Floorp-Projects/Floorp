@@ -244,13 +244,17 @@ class CBrowserWindow : public CNetscapeWindow, public CSaveWindowStatus, public 
 		Boolean					mIsViewSource;
 		Boolean					mIsHTMLHelp;
 		
-	private:		
-	
-			// the popup Aurora tree, etc. There only needs to be one of these for all browser
-			// windows. We also need to make sure we save/restore the current target when we
-			// create one of these popdowns.
-		static CPopdownRDFCoordinator*	sPopdownParent;
-		static LCommander*				sSavedPopdownTarget;
+	private:			
+		
+			// The popup Aurora tree. Each browser needs its own version because of
+			// timing issues with deleting it when it closes and the impossibility of 
+			// sharing one among multiple browser windows (the scroll bar cannot be shuffled
+			// around between windows once it has been created).
+		CPopdownRDFCoordinator*	mPopdownParent;
+		LCommander*				mSavedPopdownTarget;
+		
+			// the currently visible popdown. Needed so anyone can get to it if need be.
+		static CPopdownRDFCoordinator* sPopdownParent;
 		
 		CDockedRDFCoordinator*	mNavCenterParent;			// the docked Aurora tree, etc
 		CHTMLView*				mHTMLView;
