@@ -36,7 +36,6 @@ SDK_XPIDLSRCS   = \
 		nsIRequestObserver.idl \
 		nsIStreamListener.idl \
 		nsIURI.idl \
-		nsIURIChecker.idl \
 		nsIURL.idl \
 		$(NULL)
 
@@ -82,6 +81,7 @@ XPIDLSRCS	= \
 		nsIFileURL.idl \
 		nsIStandardURL.idl \
 		nsIURLParser.idl \
+		nsIURIChecker.idl \
 		nsIWebFilters.idl \
 		nsISecurityEventSink.idl \
 		nsISecretDecoderRing.idl \
