@@ -159,10 +159,10 @@
 
   <toolbar id="toolbox" orient="vertical">
   <box orient="vertical">
-    <button id="pointerButton" class="tool" toggled="1" onclick="changeTool(event, 'pointer')"/>
-    <button id="rectButton" class="tool" onclick="changeTool(event, 'rect')"/>
-    <button id="cirButton" class="tool" onclick="changeTool(event, 'cir')"/>
-    <button id="polyButton" class="tool" onclick="changeTool(event, 'poly')"/>
+    <button id="pointerButton" class="tool" toggled="1" oncommand="changeTool(event, 'pointer');"/>
+    <button id="rectButton" class="tool" oncommand="changeTool(event, 'rect');"/>
+    <button id="cirButton" class="tool" oncommand="changeTool(event, 'cir');"/>
+    <button id="polyButton" class="tool" oncommand="changeTool(event, 'poly');"/>
     <spring flex="1"/>
   </box>
   </toolbar>
@@ -188,7 +188,7 @@
     class   = "push dialog"
     id	    = "DelButton"
     value="&delSpotCmd.label;" 
-    onclick="deleteElement(currentElement)"/> -->
+    oncommand="deleteElement(currentElement);"/> -->
     
     <spring flex="1"/>
 

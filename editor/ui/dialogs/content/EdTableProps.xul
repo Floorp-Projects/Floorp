@@ -127,7 +127,7 @@
         <box valign="middle" autostretch="never">
           <text class="label" value="&backgroundColor.label;"/>
           <stack>
-            <button class="dialog color-button" onclick="GetColorAndUpdate('tableBackgroundCW')" flex="1"/>
+            <button class="dialog color-button" oncommand="GetColorAndUpdate('tableBackgroundCW');" flex="1"/>
     	      <box autostretch="never" valign="middle" mousethrough="always">
               <spring class="smallspacer"/>
               <spring id="tableBackgroundCW" class="color-well"/>
@@ -256,7 +256,7 @@
         <box valign="middle" autostretch="never">
           <checkbox id="CellColorCheckbox" value="&backgroundColor.label;"/>
           <stack>
-            <button class="dialog color-button" onclick="GetColorAndUpdate('cellBackgroundCW')" flex="1"/>
+            <button class="dialog color-button" oncommand="GetColorAndUpdate('cellBackgroundCW');" flex="1"/>
     	      <box autostretch="never" valign="middle" mousethrough="always">
               <spring class="smallspacer"/>
               <spring id="cellBackgroundCW" class="color-well"/>
