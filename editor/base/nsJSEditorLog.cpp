@@ -778,6 +778,12 @@ nsJSEditorLog::JoinTableCells()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsJSEditorLog::NormalizeTable(nsIDOMElement *aTable)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP 
 nsJSEditorLog::GetCellIndexes(nsIDOMElement *aCell, PRInt32 &aColIndex, PRInt32 &aRowIndex)
 {
