@@ -183,7 +183,7 @@ nsHTMLHRElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::size) {
-    if (ParseValue(aValue, 1, 100, aResult, eHTMLUnit_Pixel)) {
+    if (ParseValue(aValue, 1, 1000, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
