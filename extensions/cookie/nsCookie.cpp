@@ -2477,6 +2477,7 @@ COOKIE_GetPermissionListForViewer(nsString& aPermissionList, PRInt32 type) {
   permissionNum = 0;
 
   if (cookie_permissionList == nsnull) {
+    PR_FREEIF(buffer);
     return;
   }
 
