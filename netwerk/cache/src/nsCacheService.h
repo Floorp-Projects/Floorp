@@ -134,7 +134,7 @@ private:
     void             ClearActiveEntries(void);
 
     static
-    PLDHashOperator  CRT_CALLBACK DeactivateAndClearEntry(PLDHashTable *    table,
+    PLDHashOperator  CRT_CALL DeactivateAndClearEntry(PLDHashTable *    table,
                                                           PLDHashEntryHdr * hdr,
                                                           PRUint32          number,
                                                           void *            arg);
