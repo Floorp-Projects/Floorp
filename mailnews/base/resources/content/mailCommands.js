@@ -66,7 +66,30 @@ function GetNewMessages(selectedFolders, compositeDataSource)
 	}
 }
 
-function getIdentityForServer(server)
+function getBestIdentity(identities, optionalHint)
+{
+  var identity = null;
+
+  // if we have more than one identity and a hint to help us pick one
+  if (identities.Count() > 1 && optionalHint) {
+    // iterate over all of the identities
+    var tempID;
+    for (id = 0; id < identities.Count(); id++) { 
+      tempID = identities.GetElementAt(id).QueryInterface(Components.interfaces.nsIMsgIdentity);
+      if (optionalHint.search(tempID.email) >= 0) {
+        identity = tempID;
+        break;
+      }
+    }
+  }
+
+  if (!identity)
+    identity = identities.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIdentity); 
+
+  return identity;
+}
+
+function getIdentityForServer(server, optionalHint)
 {
     var identity = null;
     if(server) {
@@ -74,8 +97,8 @@ function getIdentityForServer(server)
         var identities = accountManager.GetIdentitiesForServer(server);
         // dump("identities = " + identities + "\n");
         // just get the first one
-        if (identities.Count() > 0 ) {
-            identity = identities.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIdentity);  
+        if (identities.Count() > 0 ) { 
+          identity = getBestIdentity(identities, optionalHint);
         }
     }
 
@@ -115,6 +138,8 @@ function ComposeMessage(type, format, folder, messageArray)
         type = msgComposeType.NewsPost;
         newsgroup = folder.folderURL;
 			}
+
+      // 
       identity = getIdentityForServer(server);
       // dump("identity = " + identity + "\n");
 		}
@@ -163,6 +188,13 @@ function ComposeMessage(type, format, folder, messageArray)
 		for (var i = 0; i < messageArray.length; i ++)
 		{	
 			var messageUri = messageArray[i];
+
+      var hdr = messenger.messageServiceFromURI(messageUri).messageURIToMsgHdr(messageUri);
+      var hintForIdentity = hdr.recipients + hdr.ccList;
+
+      if (server)
+        identity = getIdentityForServer(server, hintForIdentity);
+
 			if (type == msgComposeType.Reply || type == msgComposeType.ReplyAll || type == msgComposeType.ForwardInline ||
 				type == msgComposeType.ReplyToGroup || type == msgComposeType.ReplyToSender || 
 				type == msgComposeType.ReplyToSenderAndGroup ||
