@@ -21,6 +21,7 @@
 #include"PlugletsDir.h"
 #include "prenv.h"
 #include "PlugletLog.h"
+#include "nsSpecialSystemDirectory.h"
 
 PlugletsDir::PlugletsDir(void) {
     list = NULL;
@@ -41,6 +42,20 @@ void PlugletsDir::LoadPluglets() {
     if (!list) {
 	list = new List();
 	char * path = PR_GetEnv("PLUGLET");
+	char defpath[2000];
+	if (!path) {
+	    nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory); 
+	    sysdir += "plugins"; 
+	    const char *pluginsDir = sysdir.GetCString(); // native path
+	    if (pluginsDir != NULL)
+	    {
+		const char* allocPath;
+		path = PL_strdup(pluginsDir);
+	    }
+	}
+	if (!path) {
+	    return;
+	}
 	int pathLength = strlen(path);
 	PlugletFactory *plugletFactory;
 	nsFileSpec dir(path);
