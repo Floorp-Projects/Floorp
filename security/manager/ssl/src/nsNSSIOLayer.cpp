@@ -1451,425 +1451,432 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 								   CERTCertificate** pRetCert,
 								   SECKEYPrivateKey** pRetKey)
 {
-	void* wincx = NULL;
-	SECStatus ret = SECFailure;
-	nsresult rv;
-	nsNSSSocketInfo* info = NULL;
-    PRArenaPool* arena = NULL;
-    char** caNameStrings;
-    CERTCertificate* cert = NULL;
-    CERTCertificate* serverCert = NULL;
-    SECKEYPrivateKey* privKey = NULL;
-    CERTCertList* certList = NULL;
-    CERTCertListNode* node;
-    CERTCertNicknames* nicknames = NULL;
-    char* extracted = NULL;
-    PRIntn keyError = 0; /* used for private key retrieval error */
-    SSM_UserCertChoice certChoice;
+  void* wincx = NULL;
+  SECStatus ret = SECFailure;
+  nsresult rv;
+  nsNSSSocketInfo* info = NULL;
+  PRArenaPool* arena = NULL;
+  char** caNameStrings;
+  CERTCertificate* cert = NULL;
+  CERTCertificate* serverCert = NULL;
+  SECKEYPrivateKey* privKey = NULL;
+  CERTCertList* certList = NULL;
+  CERTCertListNode* node;
+  CERTCertNicknames* nicknames = NULL;
+  char* extracted = NULL;
+  PRIntn keyError = 0; /* used for private key retrieval error */
+  SSM_UserCertChoice certChoice;
+  PRUint32 NumberOfCerts = 0;
 	
-	/* do some argument checking */
-	if (socket == NULL || caNames == NULL || pRetCert == NULL ||
-		pRetKey == NULL) {
-        PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-        return SECFailure;
-	}
-	
-	/* get PKCS11 pin argument */
-	wincx = SSL_RevealPinArg(socket);
-	if (wincx == NULL) {
-		return SECFailure;
-	}
-	
-	/* get the socket info */
-	info = (nsNSSSocketInfo*)socket->higher->secret;
+  /* do some argument checking */
+  if (socket == NULL || caNames == NULL || pRetCert == NULL ||
+      pRetKey == NULL) {
+    PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
+    return SECFailure;
+  }
 
-    /* create caNameStrings */
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if (arena == NULL) {
-        goto loser;
+  /* get PKCS11 pin argument */
+  wincx = SSL_RevealPinArg(socket);
+  if (wincx == NULL) {
+    return SECFailure;
+  }
+
+  /* get the socket info */
+  info = (nsNSSSocketInfo*)socket->higher->secret;
+
+  /* create caNameStrings */
+  arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+  if (arena == NULL) {
+    goto loser;
+  }
+
+  caNameStrings = (char**)PORT_ArenaAlloc(arena, 
+                                          sizeof(char*)*(caNames->nnames));
+  if (caNameStrings == NULL) {
+    goto loser;
+  }
+
+
+  ret = nsConvertCANamesToStrings(arena, caNameStrings, caNames);
+  if (ret != SECSuccess) {
+    goto loser;
+  }
+
+  /* get the preference */
+  if (NS_FAILED(nsGetUserCertChoice(&certChoice))) {
+    goto loser;
+  }
+
+  /* find valid user cert and key pair */	
+  if (certChoice == AUTO) {
+    /* automatically find the right cert */
+
+    /* find all user certs that are valid and for SSL */
+    certList = CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(), 
+                                         certUsageSSLClient, PR_TRUE,
+                                         PR_TRUE, wincx);
+    if (certList == NULL) {
+      goto noCert;
     }
 
-    caNameStrings = (char**)PORT_ArenaAlloc(arena, 
-                                            sizeof(char*)*(caNames->nnames));
-    if (caNameStrings == NULL) {
-        goto loser;
-    }
-
-
-    ret = nsConvertCANamesToStrings(arena, caNameStrings, caNames);
+    /* filter the list to those issued by CAs supported by the server */
+    ret = CERT_FilterCertListByCANames(certList, caNames->nnames,
+                                       caNameStrings, certUsageSSLClient);
     if (ret != SECSuccess) {
-        goto loser;
+      goto noCert;
     }
 
-    /* get the preference */
-	if (NS_FAILED(nsGetUserCertChoice(&certChoice))) {
-		goto loser;
-	}
+    /* make sure the list is not empty */
+    node = CERT_LIST_HEAD(certList);
+    if (CERT_LIST_END(node, certList)) {
+      goto noCert;
+    }
 
-	/* find valid user cert and key pair */	
-	if (certChoice == AUTO) {
-		/* automatically find the right cert */
-
-        /* find all user certs that are valid and for SSL */
-        certList = CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(), 
-                                             certUsageSSLClient, PR_TRUE,
-                                             PR_TRUE, wincx);
-        if (certList == NULL) {
-            goto noCert;
-        }
-
-        /* filter the list to those issued by CAs supported by the server */
-        ret = CERT_FilterCertListByCANames(certList, caNames->nnames,
-                                          caNameStrings, certUsageSSLClient);
-        if (ret != SECSuccess) {
-            goto noCert;
-        }
-
-        /* make sure the list is not empty */
-        node = CERT_LIST_HEAD(certList);
-        if (CERT_LIST_END(node, certList)) {
-            goto noCert;
-        }
-
-        /* loop through the list until we find a cert with a key */
-        while (!CERT_LIST_END(node, certList)) {
-            /* if the certificate has restriction and we do not satisfy it
-             * we do not use it
-             */
+    /* loop through the list until we find a cert with a key */
+    while (!CERT_LIST_END(node, certList)) {
+      /* if the certificate has restriction and we do not satisfy it
+       * we do not use it
+       */
 #if 0		/* XXX This must be re-enabled */
-            if (!CERT_MatchesScopeOfUse(node->cert, info->GetHostName,
-                                        info->GetHostIP, info->GetHostPort)) {
-                node = CERT_LIST_NEXT(node);
-                continue;
-            }
+      if (!CERT_MatchesScopeOfUse(node->cert, info->GetHostName,
+                                  info->GetHostIP, info->GetHostPort)) {
+          node = CERT_LIST_NEXT(node);
+          continue;
+      }
 #endif
 
-            privKey = PK11_FindKeyByAnyCert(node->cert, wincx);
-            if (privKey != NULL) {
-                /* this is a good cert to present */
-                cert = CERT_DupCertificate(node->cert);
-                break;
-            }
-            keyError = PR_GetError();
-            if (keyError == SEC_ERROR_BAD_PASSWORD) {
-                /* problem with password: bail */
-                goto loser;
-            }
+      privKey = PK11_FindKeyByAnyCert(node->cert, wincx);
+      if (privKey != NULL) {
+          /* this is a good cert to present */
+          cert = CERT_DupCertificate(node->cert);
+          break;
+      }
+      keyError = PR_GetError();
+      if (keyError == SEC_ERROR_BAD_PASSWORD) {
+          /* problem with password: bail */
+          goto loser;
+      }
 
-            node = CERT_LIST_NEXT(node);
-        }
-        if (cert == NULL) {
-            goto noCert;
-        }
-	}
-	else {
-        /* user selects a cert to present */
-        int i;
-	    nsIClientAuthDialogs *dialogs = NULL;
-		PRUnichar *cn = NULL;
-		PRUnichar *org = NULL;
-		PRUnichar *issuer = NULL;
-		PRInt32 selectedIndex = -1;
-		PRUnichar **certNicknameList = NULL;
-		PRUnichar **certDetailsList = NULL;
-		PRBool canceled;
+      node = CERT_LIST_NEXT(node);
+    }
 
+    if (cert == NULL) {
+        goto noCert;
+    }
+  }
+  else {
+    /* user selects a cert to present */
+    int i;
+    nsIClientAuthDialogs *dialogs = NULL;
+    PRUnichar *cn = NULL;
+    PRUnichar *org = NULL;
+    PRUnichar *issuer = NULL;
+    PRInt32 selectedIndex = -1;
+    PRUnichar **certNicknameList = NULL;
+    PRUnichar **certDetailsList = NULL;
+    PRBool canceled;
 
-        /* find all user certs that are valid and for SSL */
-        /* note that we are allowing expired certs in this list */
-        certList = CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(), 
-                                             certUsageSSLClient, PR_TRUE, 
-                                             PR_FALSE, wincx);
-        if (certList == NULL) {
-            goto noCert;
-        }
+    /* find all user certs that are valid and for SSL */
+    /* note that we are allowing expired certs in this list */
+    certList = CERT_FindUserCertsByUsage(CERT_GetDefaultCertDB(), 
+                                         certUsageSSLClient, PR_TRUE, 
+                                         PR_FALSE, wincx);
+    if (certList == NULL) {
+      goto noCert;
+    }
 
-        if (caNames->nnames != 0) {
-            /* filter the list to those issued by CAs supported by the 
-             * server 
-             */
-            ret = CERT_FilterCertListByCANames(certList, caNames->nnames, 
-                                              caNameStrings, 
-                                              certUsageSSLClient);
-            if (ret != SECSuccess) {
-                goto loser;
-            }
-        }
+    if (caNames->nnames != 0) {
+      /* filter the list to those issued by CAs supported by the 
+       * server 
+       */
+      ret = CERT_FilterCertListByCANames(certList, caNames->nnames, 
+                                        caNameStrings, 
+                                        certUsageSSLClient);
+      if (ret != SECSuccess) {
+        goto loser;
+      }
+    }
 
-        if (CERT_LIST_END(CERT_LIST_HEAD(certList), certList)) {
-            /* list is empty - no matching certs */
-            goto noCert;
-        }
+    if (CERT_LIST_END(CERT_LIST_HEAD(certList), certList)) {
+      /* list is empty - no matching certs */
+      goto noCert;
+    }
 
-        /* filter it further for hostname restriction */
-        node = CERT_LIST_HEAD(certList);
-        while (!CERT_LIST_END(node, certList)) {
+    /* filter it further for hostname restriction */
+    node = CERT_LIST_HEAD(certList);
+    while (!CERT_LIST_END(node, certList)) {
+      ++NumberOfCerts;
 #if 0 /* XXX Fix this */
-            if (!CERT_MatchesScopeOfUse(node->cert, conn->hostName,
-                                        conn->hostIP, conn->port)) {
-                CERTCertListNode* removed = node;
-                node = CERT_LIST_NEXT(removed);
-                CERT_RemoveCertListNode(removed);
-            }
-            else {
-                node = CERT_LIST_NEXT(node);
-            }
+      if (!CERT_MatchesScopeOfUse(node->cert, conn->hostName,
+                                  conn->hostIP, conn->port)) {
+        CERTCertListNode* removed = node;
+        node = CERT_LIST_NEXT(removed);
+        CERT_RemoveCertListNode(removed);
+      }
+      else {
+        node = CERT_LIST_NEXT(node);
+      }
 #endif
-            node = CERT_LIST_NEXT(node);
+      node = CERT_LIST_NEXT(node);
+    }
+    if (CERT_LIST_END(CERT_LIST_HEAD(certList), certList)) {
+      goto noCert;
+    }
+
+    nicknames = CERT_NicknameStringsFromCertList(certList,
+                                                 NICKNAME_EXPIRED_STRING,
+                                                 NICKNAME_NOT_YET_VALID_STRING);
+
+    if (nicknames == NULL) {
+      goto loser;
+    }
+
+    NS_ASSERTION(nicknames->numnicknames == NumberOfCerts, "nicknames->numnicknames != NumberOfCerts");
+
+    /* Get the SSL Certificate */
+    serverCert = SSL_PeerCertificate(socket);
+    if (serverCert == NULL) {
+      /* couldn't get the server cert: what do I do? */
+      goto loser;
+    }
+
+    /* Get CN and O of the subject and O of the issuer */
+    cn = NS_ConvertUTF8toUCS2(CERT_GetCommonName(&serverCert->subject)).ToNewUnicode();
+    org = NS_ConvertUTF8toUCS2(CERT_GetOrgName(&serverCert->subject)).ToNewUnicode();
+    issuer = NS_ConvertUTF8toUCS2(CERT_GetOrgName(&serverCert->issuer)).ToNewUnicode();
+
+    certNicknameList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
+    certDetailsList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
+
+    nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
+    NS_DEFINE_CID(nssComponentCID, NS_NSSCOMPONENT_CID);
+    nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(nssComponentCID, &rv));
+
+    if (proxyman && nssComponent)
+    for (i = 0, node = CERT_LIST_HEAD(certList);
+         !CERT_LIST_END(node, certList);
+         ++i, node = CERT_LIST_NEXT(node)
+        )
+    {
+      nsNSSCertificate *tempCert = new nsNSSCertificate(node->cert);
+      NS_ADDREF(tempCert);
+
+      nsCOMPtr<nsIX509Cert> x509 = do_QueryInterface(tempCert);
+
+      nsCOMPtr<nsIX509Cert> x509Proxy;
+      proxyman->GetProxyForObject( NS_UI_THREAD_EVENTQ,
+                                   nsIX509Cert::GetIID(),
+                                   x509,
+                                   PROXY_SYNC | PROXY_ALWAYS,
+                                   getter_AddRefs(x509Proxy));
+
+      if (x509Proxy) {
+        nsAutoString nickWithSerial;
+        nsAutoString str;
+        nsAutoString info;
+        PRUnichar *temp1 = 0;
+
+        nickWithSerial.Append(NS_ConvertUTF8toUCS2(nicknames->nicknames[i]));
+
+        if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoIssuedFor").get(), info))) {
+          str.Append(info);
+          str.Append(NS_LITERAL_STRING("\n"));
         }
-        if (CERT_LIST_END(CERT_LIST_HEAD(certList), certList)) {
-            goto noCert;
+
+        if (NS_SUCCEEDED(x509Proxy->GetSubjectName(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
+          str.Append(NS_LITERAL_STRING("  "));
+          if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSubject").get(), info))) {
+            str.Append(info);
+            str.Append(NS_LITERAL_STRING(": "));
+          }
+          str.Append(temp1);
+          nsMemory::Free(temp1);
+          str.Append(NS_LITERAL_STRING("\n"));
         }
 
-        nicknames = CERT_NicknameStringsFromCertList(certList,
-                                                     NICKNAME_EXPIRED_STRING,
-                                                     NICKNAME_NOT_YET_VALID_STRING);
-        if (nicknames == NULL) {
-            goto loser;
-	    }
+        if (NS_SUCCEEDED(x509Proxy->GetSerialNumber(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
+          str.Append(NS_LITERAL_STRING("  "));
+          if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSerialNo").get(), info))) {
+            str.Append(info);
+            str.Append(NS_LITERAL_STRING(": "));
+          }
+          str.Append(temp1);
 
-		/* Get the SSL Certificate */
-		serverCert = SSL_PeerCertificate(socket);
-		if (serverCert == NULL) {
-			/* couldn't get the server cert: what do I do? */
-			goto loser;
-		}
+          nickWithSerial.Append(NS_LITERAL_STRING(" ["));
+          nickWithSerial.Append(temp1);
+          nickWithSerial.Append(NS_LITERAL_STRING("]"));
 
-		/* Get CN and O of the subject and O of the issuer */
-		cn = NS_ConvertUTF8toUCS2(CERT_GetCommonName(&serverCert->subject)).ToNewUnicode();
-		org = NS_ConvertUTF8toUCS2(CERT_GetOrgName(&serverCert->subject)).ToNewUnicode();
-		issuer = NS_ConvertUTF8toUCS2(CERT_GetOrgName(&serverCert->issuer)).ToNewUnicode();
-
-		certNicknameList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
-		certDetailsList = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * nicknames->numnicknames);
-
-                nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
-                NS_DEFINE_CID(nssComponentCID, NS_NSSCOMPONENT_CID);
-                nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(nssComponentCID, &rv));
-
-                if (proxyman && nssComponent)
-                for (i = 0, node = CERT_LIST_HEAD(certList);
-                     !CERT_LIST_END(node, certList);
-                     ++i, node = CERT_LIST_NEXT(node)
-                    )
-                {
-                    nsNSSCertificate *c0 = new nsNSSCertificate(node->cert);
-
-                    nsCOMPtr<nsIX509Cert> c1 = c0;
-
-                    nsCOMPtr<nsIX509Cert> c2;
-                    proxyman->GetProxyForObject( NS_UI_THREAD_EVENTQ,
-                                                 nsIX509Cert::GetIID(),
-                                                 c1,
-                                                 PROXY_SYNC | PROXY_ALWAYS,
-                                                 getter_AddRefs(c2));
-
-                    if (!c2)
-                      break;
-
-                    nsAutoString nickWithSerial;
-                    nsAutoString str;
-                    nsAutoString info;
-                    PRUnichar *temp1 = 0;
-
-                    nickWithSerial.Append(NS_ConvertUTF8toUCS2(nicknames->nicknames[i]));
-
-                    if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoIssuedFor").get(), info))) {
-                      str.Append(info);
-                      str.Append(NS_LITERAL_STRING("\n"));
-                    }
-
-                    if (NS_SUCCEEDED(c2->GetSubjectName(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
-                      str.Append(NS_LITERAL_STRING("  "));
-                      if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSubject").get(), info))) {
-                        str.Append(info);
-                        str.Append(NS_LITERAL_STRING(": "));
-                      }
-                      str.Append(temp1);
-                      nsMemory::Free(temp1);
-                      str.Append(NS_LITERAL_STRING("\n"));
-                    }
-
-                    if (NS_SUCCEEDED(c2->GetSerialNumber(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
-                      str.Append(NS_LITERAL_STRING("  "));
-                      if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSerialNo").get(), info))) {
-                        str.Append(info);
-                        str.Append(NS_LITERAL_STRING(": "));
-                      }
-                      str.Append(temp1);
-                      
-                      nickWithSerial.Append(NS_LITERAL_STRING(" ["));
-                      nickWithSerial.Append(temp1);
-                      nickWithSerial.Append(NS_LITERAL_STRING("]"));
-                      
-                      nsMemory::Free(temp1);
-                      str.Append(NS_LITERAL_STRING("\n"));
-                    }
+          nsMemory::Free(temp1);
+          str.Append(NS_LITERAL_STRING("\n"));
+        }
 
 
-                    {
-                      nsCOMPtr<nsIX509CertValidity> validity;
-                      nsCOMPtr<nsIX509CertValidity> originalValidity;
-                      rv = c2->GetValidity(getter_AddRefs(originalValidity));
-                      if (NS_SUCCEEDED(rv) && originalValidity) {
-                        proxyman->GetProxyForObject( NS_UI_THREAD_EVENTQ,
-                                                     nsIX509CertValidity::GetIID(),
-                                                     originalValidity,
-                                                     PROXY_SYNC | PROXY_ALWAYS,
-                                                     getter_AddRefs(validity));
-                      }
+        {
+          nsCOMPtr<nsIX509CertValidity> validity;
+          nsCOMPtr<nsIX509CertValidity> originalValidity;
+          rv = x509Proxy->GetValidity(getter_AddRefs(originalValidity));
+          if (NS_SUCCEEDED(rv) && originalValidity) {
+            proxyman->GetProxyForObject( NS_UI_THREAD_EVENTQ,
+                                         nsIX509CertValidity::GetIID(),
+                                         originalValidity,
+                                         PROXY_SYNC | PROXY_ALWAYS,
+                                         getter_AddRefs(validity));
+          }
 
-                      if (validity) {
-                        str.Append(NS_LITERAL_STRING("  "));
-                        if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoValid").get(), info))) {
-                          str.Append(info);
-                        }
-
-                        if (NS_SUCCEEDED(validity->GetNotBeforeLocalTime(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
-                          str.Append(NS_LITERAL_STRING(" "));
-                          if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoFrom").get(), info))) {
-                            str.Append(info);
-                          }
-                          str.Append(NS_LITERAL_STRING(" "));
-                          str.Append(temp1);
-                          nsMemory::Free(temp1);
-                        }
-
-                        if (NS_SUCCEEDED(validity->GetNotBeforeLocalTime(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
-                          str.Append(NS_LITERAL_STRING(" "));
-                          if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoTo").get(), info))) {
-                            str.Append(info);
-                          }
-                          str.Append(NS_LITERAL_STRING(" "));
-                          str.Append(temp1);
-                          nsMemory::Free(temp1);
-                        }
-
-                        str.Append(NS_LITERAL_STRING("\n"));
-                      }
-                    }
-
-                    PRUint32 tempInt = 0;
-                    if (NS_SUCCEEDED(c2->GetPurposes(&tempInt, &temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
-                      str.Append(NS_LITERAL_STRING("  "));
-                      if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoPurposes").get(), info))) {
-                        str.Append(info);
-                      }
-                      str.Append(NS_LITERAL_STRING(": "));
-                      str.Append(temp1);
-                      nsMemory::Free(temp1);
-                      str.Append(NS_LITERAL_STRING("\n"));
-                    }
-
-                    if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoIssuedBy").get(), info))) {
-                      str.Append(info);
-                      str.Append(NS_LITERAL_STRING("\n"));
-                    }
-
-                    if (NS_SUCCEEDED(c2->GetIssuerName(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
-                      str.Append(NS_LITERAL_STRING("  "));
-                      if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSubject").get(), info))) {
-                        str.Append(info);
-                        str.Append(NS_LITERAL_STRING(": "));
-                      }
-                      str.Append(temp1);
-                      nsMemory::Free(temp1);
-                      str.Append(NS_LITERAL_STRING("\n"));
-                    }
-  
-                    /*
-                      the above produces output the following output:
-                    
-                      Issued to: 
-                        Subject: $subjectName
-                        Serial number: $serialNumber
-                        Valid from: $starting_date to $expriation_date
-                        Purposes: $purposes
-                      Issued by:
-                        Subject: $issuerName
-                    */
-
-		    certNicknameList[i] = nickWithSerial.ToNewUnicode();
-		    certDetailsList[i] = str.ToNewUnicode();
-                }
-
-		/* Throw up the client auth dialog and get back the index of the selected cert */
-		rv = getNSSDialogs((void**)&dialogs,
-			               NS_GET_IID(nsIClientAuthDialogs));
-
-		if (NS_FAILED(rv)) goto loser;
-
-		rv = dialogs->ChooseCertificate(NULL, cn, org, issuer, 
-                  (const PRUnichar**)certNicknameList, (const PRUnichar**)certDetailsList,
-                  nicknames->numnicknames, &selectedIndex, &canceled);
-
-                for (i = 0; i < nicknames->numnicknames; ++i) {
-                  nsMemory::Free(certNicknameList[i]);
-                  nsMemory::Free(certDetailsList[i]);
-                }
-                nsMemory::Free(certNicknameList);
-                nsMemory::Free(certDetailsList);
-
-		NS_RELEASE(dialogs);
-		if (NS_FAILED(rv)) goto loser;
-
-		if (canceled) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
-
-        for (i = 0, node = CERT_LIST_HEAD(certList);
-             !CERT_LIST_END(node, certList);
-             ++i, node = CERT_LIST_NEXT(node)
-            ) {
-            if (i == selectedIndex) {
-                cert = CERT_DupCertificate(node->cert);
-                break;
+          if (validity) {
+            str.Append(NS_LITERAL_STRING("  "));
+            if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoValid").get(), info))) {
+              str.Append(info);
             }
+
+            if (NS_SUCCEEDED(validity->GetNotBeforeLocalTime(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
+              str.Append(NS_LITERAL_STRING(" "));
+              if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoFrom").get(), info))) {
+                str.Append(info);
+              }
+              str.Append(NS_LITERAL_STRING(" "));
+              str.Append(temp1);
+              nsMemory::Free(temp1);
+            }
+
+            if (NS_SUCCEEDED(validity->GetNotBeforeLocalTime(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
+              str.Append(NS_LITERAL_STRING(" "));
+              if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoTo").get(), info))) {
+                str.Append(info);
+              }
+              str.Append(NS_LITERAL_STRING(" "));
+              str.Append(temp1);
+              nsMemory::Free(temp1);
+            }
+
+            str.Append(NS_LITERAL_STRING("\n"));
+          }
         }
 
-        if (cert == NULL) {
-            goto loser;
+        PRUint32 tempInt = 0;
+        if (NS_SUCCEEDED(x509Proxy->GetPurposes(&tempInt, &temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
+          str.Append(NS_LITERAL_STRING("  "));
+          if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoPurposes").get(), info))) {
+            str.Append(info);
+          }
+          str.Append(NS_LITERAL_STRING(": "));
+          str.Append(temp1);
+          nsMemory::Free(temp1);
+          str.Append(NS_LITERAL_STRING("\n"));
         }
-	
-        /* go get the private key */
-        privKey = PK11_FindKeyByAnyCert(cert, wincx);
-        if (privKey == NULL) {
-            keyError = PR_GetError();
-            if (keyError == SEC_ERROR_BAD_PASSWORD) {
-                /* problem with password: bail */
-                goto loser;
-            }
-            else {
-                goto noCert;
-            }
+
+        if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertInfoIssuedBy").get(), info))) {
+          str.Append(info);
+          str.Append(NS_LITERAL_STRING("\n"));
         }
-	}
-	goto done;
+
+        if (NS_SUCCEEDED(x509Proxy->GetIssuerName(&temp1)) && temp1 && nsCharTraits<PRUnichar>::length(temp1)) {
+          str.Append(NS_LITERAL_STRING("  "));
+          if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSubject").get(), info))) {
+            str.Append(info);
+            str.Append(NS_LITERAL_STRING(": "));
+          }
+          str.Append(temp1);
+          nsMemory::Free(temp1);
+          str.Append(NS_LITERAL_STRING("\n"));
+        }
+
+        /*
+          the above produces output the following output:
+
+          Issued to: 
+            Subject: $subjectName
+            Serial number: $serialNumber
+            Valid from: $starting_date to $expriation_date
+            Purposes: $purposes
+          Issued by:
+            Subject: $issuerName
+        */
+
+        certNicknameList[i] = nickWithSerial.ToNewUnicode();
+        certDetailsList[i] = str.ToNewUnicode();
+      }
+
+      NS_RELEASE(tempCert);
+    }
+
+    /* Throw up the client auth dialog and get back the index of the selected cert */
+    rv = getNSSDialogs((void**)&dialogs, NS_GET_IID(nsIClientAuthDialogs));
+
+    if (NS_FAILED(rv)) goto loser;
+
+    rv = dialogs->ChooseCertificate(NULL, cn, org, issuer, 
+      (const PRUnichar**)certNicknameList, (const PRUnichar**)certDetailsList,
+      nicknames->numnicknames, &selectedIndex, &canceled);
+
+    for (i = 0; i < nicknames->numnicknames; ++i) {
+      nsMemory::Free(certNicknameList[i]);
+      nsMemory::Free(certDetailsList[i]);
+    }
+    nsMemory::Free(certNicknameList);
+    nsMemory::Free(certDetailsList);
+
+    NS_RELEASE(dialogs);
+    if (NS_FAILED(rv)) goto loser;
+
+    if (canceled) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
+
+    for (i = 0, node = CERT_LIST_HEAD(certList);
+         !CERT_LIST_END(node, certList);
+         ++i, node = CERT_LIST_NEXT(node)) {
+
+      if (i == selectedIndex) {
+        cert = CERT_DupCertificate(node->cert);
+        break;
+      }
+    }
+
+    if (cert == NULL) {
+      goto loser;
+    }
+
+    /* go get the private key */
+    privKey = PK11_FindKeyByAnyCert(cert, wincx);
+    if (privKey == NULL) {
+      keyError = PR_GetError();
+      if (keyError == SEC_ERROR_BAD_PASSWORD) {
+          /* problem with password: bail */
+          goto loser;
+      }
+      else {
+          goto noCert;
+      }
+    }
+  }
+  goto done;
+
 noCert:
 loser:
-    if (ret == SECSuccess) {
-        ret = SECFailure;
-    }
-    if (cert != NULL) {
-        CERT_DestroyCertificate(cert);
-        cert = NULL;
-    }
+  if (ret == SECSuccess) {
+    ret = SECFailure;
+  }
+  if (cert != NULL) {
+    CERT_DestroyCertificate(cert);
+    cert = NULL;
+  }
 done:
-    if (extracted != NULL) {
-        PR_Free(extracted);
-    }
-    if (nicknames != NULL) {
-        CERT_FreeNicknames(nicknames);
-    }
-    if (certList != NULL) {
-        CERT_DestroyCertList(certList);
-    }
-    if (arena != NULL) {
-        PORT_FreeArena(arena, PR_FALSE);
-    }
+  if (extracted != NULL) {
+    PR_Free(extracted);
+  }
+  if (nicknames != NULL) {
+    CERT_FreeNicknames(nicknames);
+  }
+  if (certList != NULL) {
+    CERT_DestroyCertList(certList);
+  }
+  if (arena != NULL) {
+    PORT_FreeArena(arena, PR_FALSE);
+  }
 
-    *pRetCert = cert;
-    *pRetKey = privKey;
+  *pRetCert = cert;
+  *pRetKey = privKey;
 
-	return ret;
+  return ret;
 }
 
 static SECStatus
