@@ -350,6 +350,9 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
         LOG(("setting path=/"));
         mDirectory.mPos = mFilePath.mPos = mPath.mPos = i;
         mDirectory.mLen = mFilePath.mLen = mPath.mLen = 1;
+        // basename must exist, even if empty (bug 113508)
+        mBasename.mPos = i+1;
+        mBasename.mLen = 0;
         buf[i++] = '/';
     }
     else {
