@@ -42,10 +42,8 @@
 
  */
 
-#include "nsNetUtil.h"
-#include "nsIURI.h"
-#include "nsIIOService.h"
-#include "nsIOutputStream.h"
+#include "nsIFileSpec.h"
+#include "nsFileStream.h"
 #include "nsIComponentManager.h"
 #include "nsILocalStore.h"
 #include "nsIRDFDataSource.h"
@@ -398,42 +396,34 @@ LocalStoreImpl::LoadData()
     // directory. Bomb if we can't find it.
 
     nsCOMPtr<nsIFile> aFile;
+    nsCOMPtr<nsIFileSpec> tempSpec;
+
     rv = NS_GetSpecialDirectory(NS_APP_LOCALSTORE_50_FILE, getter_AddRefs(aFile));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIURI> aURI;
-    rv = NS_NewFileURI(getter_AddRefs(aURI), aFile);
+    // Turn the nsIFile into a nsFileSpec.
+    // This is evil! nsOutputFileStream needs
+    // to take an nsILocalFile (bug #46394)
+    nsXPIDLCString pathBuf;
+    rv = aFile->GetPath(getter_Copies(pathBuf));
     if (NS_FAILED(rv)) return rv;
+    nsFileSpec spec((const char *)pathBuf);
 
-    PRBool fileExistsFlag = PR_FALSE;
-    (void)aFile->Exists(&fileExistsFlag);
-    if (!fileExistsFlag) {
-        nsCOMPtr<nsIOutputStream> outStream;
-        rv = NS_NewLocalFileOutputStream(getter_AddRefs(outStream), aFile);
-        if (NS_FAILED(rv))
-            return rv;
+    if (! spec.Exists()) {
+        {
+            nsOutputFileStream os(spec);
 
-        const char defaultRDF[] = 
-            "<?xml version=\"1.0\"?>\n" \
-            "<RDF:RDF xmlns:RDF=\"" RDF_NAMESPACE_URI "\"\n" \
-            "         xmlns:NC=\""  NC_NAMESPACE_URI "\">\n" \
-            "  <!-- Empty -->\n" \
-            "</RDF:RDF>\n";
-
-        PRUint32 count;
-        rv = outStream->Write(defaultRDF, sizeof(defaultRDF)-1, &count);
-        if (NS_FAILED(rv))
-            return rv;
-
-        if (count != sizeof(defaultRDF)-1)
-            return NS_ERROR_UNEXPECTED;
+            os << "<?xml version=\"1.0\"?>" << nsEndl;
+            os << "<RDF:RDF xmlns:RDF=\"" << RDF_NAMESPACE_URI << "\"" << nsEndl;
+            os << "         xmlns:NC=\""  << NC_NAMESPACE_URI  << "\">" << nsEndl;
+            os << "  <!-- Empty -->" << nsEndl;
+            os << "</RDF:RDF>" << nsEndl;
+        }
 
         // Okay, now see if the file exists _for real_. If it's still
         // not there, it could be that the profile service gave us
         // back a read-only directory. Whatever.
-        fileExistsFlag = PR_FALSE;
-        (void)aFile->Exists(&fileExistsFlag);
-        if (!fileExistsFlag)
+        if (! spec.Exists())
             return NS_ERROR_UNEXPECTED;
     }
 
@@ -443,11 +433,7 @@ LocalStoreImpl::LoadData()
     nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsXPIDLCString spec;
-    rv = aURI->GetSpec(getter_Copies(spec));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = remote->Init(spec);
+    rv = remote->Init((const char*) nsFileURL(spec));
     if (NS_FAILED(rv)) return rv;
 
     // Read the datasource synchronously.
