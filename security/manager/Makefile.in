@@ -94,23 +94,12 @@ clean clobber clobber_all realclean distclean::
 ifeq ($(ABS_topsrcdir),$(MOZ_BUILD_ROOT))
 	cd $(MOZ_BUILD_ROOT)/security/coreconf; $(MAKE) $(DEFAULT_GMAKE_FLAGS) clean
 	cd $(MOZ_BUILD_ROOT)/security/nss; $(MAKE) $(DEFAULT_GMAKE_FLAGS) clean
-	cd $(MOZ_BUILD_ROOT)/security/psm/ui; $(MAKE) $(DEFAULT_GMAKE_FLAGS) clean
-	cd $(MOZ_BUILD_ROOT)/security/psm/server; $(MAKE) $(DEFAULT_GMAKE_FLAGS) clean
 else
 	if test -d $(MOZ_BUILD_ROOT)/security/nss; then \
 		rm -rf $(MOZ_BUILD_ROOT)/security/nss;  \
 	fi;
 	if test -d $(MOZ_BUILD_ROOT)/security/coreconf; then    \
 		rm -rf $(MOZ_BUILD_ROOT)/security/coreconf;     \
-	fi;
-	if test -d $(MOZ_BUILD_ROOT)/security/psm/server; then  \
-		rm -rf $(MOZ_BUILD_ROOT)/security/psm/server;   \
-	fi;
-	if test -d $(MOZ_BUILD_ROOT)/security/psm/ui; then      \
-	rm -rf $(MOZ_BUILD_ROOT)/security/psm/ui;       \
-	fi;
-	if test -d $(MOZ_BUILD_ROOT)/security/psm/doc; then     \
-	rm -rf $(MOZ_BUILD_ROOT)/security/psm/doc;      \
 	fi;
 	if test -d $(MOZ_BUILD_ROOT)/dist/$(CORECONF_OBJDIR); then      \
 		rm -rf $(MOZ_BUILD_ROOT)/dist/$(CORECONF_OBJDIR);       \
