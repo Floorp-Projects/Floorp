@@ -43,6 +43,7 @@
 #include "nsIPop3IncomingServer.h"
 #include "nsINoIncomingServer.h"
 #include "nsIMsgMessageService.h"
+#include "nsIFileSpecWithUI.h"
 #include "nsFileSpec.h"
 
 #include "nsIMessage.h"
@@ -403,6 +404,33 @@ nsMessenger::OpenURL(const char * url)
 		}
 	}
 	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMessenger::SaveAs(const char* url, PRBool asFile)
+{
+	nsresult rv = NS_OK;
+    
+    if (url)
+    {
+      nsIMsgMessageService* messageService = nsnull;
+      rv = GetMessageServiceFromURI(url, &messageService);
+      if (NS_SUCCEEDED(rv) && messageService)
+      {
+        if (asFile)
+        {
+          nsCOMPtr<nsIFileSpecWithUI>
+            fileSpec(getter_AddRefs(NS_CreateFileSpecWithUI()));
+          if (!fileSpec) return NS_ERROR_FAILURE;
+          rv = fileSpec->ChooseOutputFile("Save Message", "",
+                                  nsIFileSpecWithUI::eAllMailOutputFilters);
+          if (NS_SUCCEEDED(rv))
+            messageService->SaveMessageToDisk(url, fileSpec, PR_FALSE, nsnull,
+                                              nsnull);
+        }                                
+      }
+    }
+	return rv;
 }
 
 nsresult
