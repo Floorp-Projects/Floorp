@@ -235,6 +235,17 @@ pascal void nsFilePicker :: FileDialogEventHandlerProc(NavEventCallbackMessage m
       }
       break;
     
+    case kNavCBStart:
+    {
+      NavMenuItemSpec  menuItem;
+      menuItem.version = kNavMenuItemSpecVersion;
+      menuItem.menuType = self->mSelectedType;
+      menuItem.menuCreator = self->mSelectedType;
+      menuItem.menuItemName[0] = 0;
+      (void)::NavCustomControl(cbRec->context, kNavCtlSelectCustomType, &menuItem);
+    }
+    break;
+    
     case kNavCBPopupMenuSelect:
       // Format menu boinked - see what's happening
       if (self)
@@ -1125,7 +1136,7 @@ NS_IMETHODIMP nsFilePicker::GetFilterIndex(PRInt32 *aFilterIndex)
 
 //-------------------------------------------------------------------------
 //
-// Set the filter index - currently not used but here to balance GetFilterIndex
+// Set the filter index
 //
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::SetFilterIndex(PRInt32 aFilterIndex)
