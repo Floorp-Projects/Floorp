@@ -49,17 +49,29 @@ GMAKE_FLAGS = $(GMAKE_FLAGS) OS_TARGET=WIN16
 GMAKE_FLAGS = $(GMAKE_FLAGS) OS_TARGET=WIN95
 !ifdef MOZ_DEBUG
 !ifdef MOZ_NO_DEBUG_RTL
+!IF "$(CPU)" == "ALPHA"
+PR_OBJDIR = WIN954.0ALPHA_DBG.OBJ
+!else
 PR_OBJDIR = WIN954.0_DBG.OBJ
+!endif
 !else
 GMAKE_FLAGS = $(GMAKE_FLAGS) USE_DEBUG_RTL=1
+!IF "$(CPU)" == "ALPHA"
+PR_OBJDIR = WIN954.0ALPHA_DBG.OBJD
+!else
 PR_OBJDIR = WIN954.0_DBG.OBJD
 !endif
+!endif
+!else
+!IF "$(CPU)" == "ALPHA"
+PR_OBJDIR = WIN954.0ALPHA_OPT.OBJ
 !else
 PR_OBJDIR = WIN954.0_OPT.OBJ
 !endif
-
 !endif
 
+!endif
+ 
 
 #
 # The rules.  Simply invoke gmake with the same target.
