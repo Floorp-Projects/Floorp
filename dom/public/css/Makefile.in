@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DEFINES = -D_IMPL_NS_DOM
+DEFINES += -D_IMPL_NS_DOM
 
 EXPORTS =               \
 	nsIDOMCSSFontFaceRule.h \
@@ -32,7 +32,7 @@ EXPORTS =               \
 	nsIDOMCSSStyleRule.h \
 	nsIDOMCSSStyleRuleCollection.h \
 	nsIDOMCSSStyleRuleSimple.h \
-	nsIDOMCSSStyleSheet.h
+	nsIDOMCSSStyleSheet.h \
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
