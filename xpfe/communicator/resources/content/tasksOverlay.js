@@ -21,9 +21,12 @@
  *  Peter Annema <disttsc@bart.nl>
  */
 
+var gJVMMgr = Components.classes['@mozilla.org/oji/jvm-mgr;1']
+                        .getService(Components.interfaces.nsIJVMManager)
+
 function toNavigator()
 {
-	CycleWindow('navigator:browser', getBrowserURL());
+    CycleWindow('navigator:browser', getBrowserURL());
 }
 
 // Set up a lame hack to avoid opening two bookmarks.
@@ -63,20 +66,22 @@ function toHistory()
 
 function toJavaScriptConsole()
 {
-	toOpenWindowByType("global:console", "chrome://global/content/console.xul");
+    toOpenWindowByType("global:console", "chrome://global/content/console.xul");
 }
 
+function javaItemEnabling()
+{
+    var enabled = gJVMMgr.JavaEnabled();
+    var element = document.getElementById("java");
+    if (enabled)
+      element.removeAttribute("disabled");
+    else
+      element.setAttribute("disabled", "true");
+}
+            
 function toJavaConsole()
 {
-	try{
-		var cid =
-			Components.classes['@mozilla.org/oji/jvm-mgr;1'];
-		var iid = Components.interfaces.nsIJVMManager;
-		var jvmMgr = cid.getService(iid);
-		jvmMgr.ShowJavaConsole();
-	} catch(e) {
-		
-	}
+    gJVMMgr.ShowJavaConsole();
 }
 
 function toOpenWindowByType( inType, uri )
