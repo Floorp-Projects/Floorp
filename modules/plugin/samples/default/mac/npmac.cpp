@@ -332,7 +332,7 @@ void NPN_ReloadPlugins(NPBool reloadPages)
 	CallNPN_ReloadPluginsProc(gNetscapeFuncs.reloadplugins, reloadPages);
 }
 
-
+#ifdef OJI
 JRIEnv* NPN_GetJavaEnv(void)
 {
 	return CallNPN_GetJavaEnvProc( gNetscapeFuncs.getJavaEnv );
@@ -342,6 +342,7 @@ jobject  NPN_GetJavaPeer(NPP instance)
 {
 	return CallNPN_GetJavaPeerProc( gNetscapeFuncs.getJavaPeer, instance );
 }
+#endif
 
 NPError NPN_GetValue(NPP instance, NPNVariable variable, void *value)
 {
@@ -524,7 +525,7 @@ void Private_URLNotify(NPP instance, const char* url, NPReason reason, void* not
 	ExitCodeResource();
 }
 
-
+#ifdef OJI
 jobject Private_GetJavaClass(void)
 {
 	EnterCodeResource();
@@ -539,7 +540,7 @@ jobject Private_GetJavaClass(void)
     }
     return NULL;
 }
-
+#endif
 
 void SetUpQD(void);
 void SetUpQD(void)
@@ -749,10 +750,14 @@ DEFINE_API_C(NPError) main(NPNetscapeFuncs* nsTable, NPPluginFuncs* pluginFuncs,
 		{	
 			pluginFuncs->urlnotify = NewNPP_URLNotifyProc(PLUGIN_TO_HOST_GLUE(urlnotify, Private_URLNotify));			
 		}
+#ifdef OJI
 		if( navMinorVers >= NPVERS_HAS_LIVECONNECT )
 		{
 			pluginFuncs->javaClass	= (JRIGlobalRef) Private_GetJavaClass();
 		}
+#else
+                pluginFuncs->javaClass = NULL;
+#endif
 		*unloadUpp = NewNPP_ShutdownProc(PLUGIN_TO_HOST_GLUE(shutdown, Private_Shutdown));
 
 		SetUpQD();
