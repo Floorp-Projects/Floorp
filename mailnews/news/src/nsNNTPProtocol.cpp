@@ -3608,7 +3608,10 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 	
 	nsCOMPtr <nsISupports> currChild;
 	rv = m_nntpServer->GetFirstGroupNeedingCounts(getter_AddRefs(currChild));
-	if (NS_FAILED(rv)) return -1;
+	if (NS_FAILED(rv)) {
+		ClearFlag(NNTP_NEWSRC_PERFORMED);
+		return -1;
+	}
 
 	nsCOMPtr<nsIFolder> currFolder;
     currFolder = do_QueryInterface(currChild, &rv);
