@@ -311,25 +311,13 @@ StyleRulesViewer.prototype =
 
 };
 
-function doesQI(aObject, aInterface)
-{
-  if (!("QueryInterface" in aObject)) return false;
-  
-  try {
-    var result = aObject.QueryInterface(Components.interfaces[aInterface]);
-    return true;
-  } catch (ex) {
-    return false;
-  }
-}
-
 ////////////////////////////////////////////////////////////////////////////
 //// StyleRuleView
 
 function StyleRuleView(aObject)
 {
   this.mDOMUtils = XPCU.getService("@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
-  if (doesQI(aObject, "nsIDOMCSSStyleSheet")) {
+  if (aObject instanceof Components.interfaces.nsIDOMCSSStyleSheet) {
     this.mSheetRules = aObject.cssRules;
   } else {
     this.mRules = this.mDOMUtils.getCSSStyleRules(aObject);

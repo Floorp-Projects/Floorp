@@ -19,11 +19,11 @@
 
   ins:icon      This sets an icon for the viewer.  Currently unused.
 
-  ins:filter    This determines which nodes (or in the case of JavaScript Object viewer, values), the viewer 
-                referenced is valid for.
-                For example, ins:filter="return doesQI(object, 'nsIDOMDocument');" is a JavaScript fragment
-                ViewerRegistry.js uses to define a filter function if the panel's subject node is an instance
-                of nsIDOMDocument.
+  ins:filter    This determines which nodes (or in the case of JavaScript Object
+                viewer, values), the viewer referenced is valid for. For example,
+                ins:filter="return object instanceof Components.interfaces.nsIDOMDocument;"
+                is a JavaScript fragment ViewerRegistry.js uses to define a filter
+                function if the panel's subject node is an instance of nsIDOMDocument.
 -->
 
   <rdf:Seq about="inspector:viewers">
@@ -32,49 +32,49 @@
       ins:panels="bxDocPanel"
       ins:description="DOM Nodes"
       ins:icon="chrome://inspector/content/viewers/dom/dom-icon.gif"
-      ins:filter="return doesQI(object, 'nsIDOMDocument');"/>
+      ins:filter="return object instanceof Components.interfaces.nsIDOMDocument;"/>
     </rdf:li>
 
     <rdf:li><rdf:Description 
       ins:uid="stylesheets"
       ins:panels="bxDocPanel"
       ins:description="Stylesheets"
-      ins:filter="return doesQI(object, 'nsIDOMDocument');"/>
+      ins:filter="return object instanceof Components.interfaces.nsIDOMDocument;"/>
     </rdf:li>
 
     <rdf:li><rdf:Description 
       ins:uid="domNode"
       ins:panels="bxObjectPanel bxObjPanel"
       ins:description="DOM Node"
-      ins:filter="return doesQI(object, 'nsIDOMNode')"/>
+      ins:filter="return object instanceof Components.interfaces.nsIDOMNode;"/>
     </rdf:li>
 
     <rdf:li><rdf:Description 
       ins:uid="boxModel"
       ins:panels="bxObjectPanel bxObjPanel"
       ins:description="Box Model"
-      ins:filter="return doesQI(object, 'nsIDOMElement');"/>
+      ins:filter="return object instanceof Components.interfaces.nsIDOMElement;"/>
     </rdf:li>
 
     <rdf:li><rdf:Description 
       ins:uid="xblBindings"
       ins:panels="bxObjectPanel bxObjPanel"
       ins:description="XBL Bindings"
-      ins:filter="return doesQI(object, 'nsIDOMElement');"/>
+      ins:filter="return object instanceof Components.interfaces.nsIDOMElement;"/>
     </rdf:li>
 
     <rdf:li><rdf:Description
       ins:uid="styleRules"
       ins:panels="bxObjectPanel bxObjPanel"
       ins:description="CSS Style Rules"
-      ins:filter="return doesQI(object, 'nsIDOMElement') || doesQI(object, 'nsIDOMCSSStyleSheet');"/>
+      ins:filter="return object instanceof Components.interfaces.nsIDOMElement || object instanceof Components.interfaces.nsIDOMCSSStyleSheet;"/>
     </rdf:li>
 
     <rdf:li><rdf:Description 
       ins:uid="computedStyle"
       ins:panels="bxObjectPanel bxObjPanel"
       ins:description="Computed Style"
-      ins:filter="return doesQI(object, 'nsIDOMElement');"/>
+      ins:filter="return object instanceof Components.interfaces.nsIDOMElement;"/>
     </rdf:li>
 
     <rdf:li><rdf:Description 
