@@ -53,7 +53,7 @@ public:
     NS_IMETHOD GetBindInfo(void);
     NS_IMETHOD OnProgress(void);
     NS_IMETHOD OnStartBinding(void);
-    NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream);
+    NS_IMETHOD OnDataAvailable(nsIInputStream *pIStream, PRInt32 length);
     NS_IMETHOD OnStopBinding(void);
 
 protected:
@@ -105,12 +105,12 @@ NS_IMETHODIMP TestConsumer::OnStartBinding(void)
 }
 
 
-NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIInputStream *pIStream) 
+NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length) 
 {
     PRInt32 len;
 
     if (bTraceEnabled) {
-        printf("+++ TestConsumer::OnDataAvailable\n");
+        printf("+++ TestConsumer::OnDataAvailable: %d bytes available...\n", length);
     }
 
     do {
