@@ -305,7 +305,7 @@ GlobalWindowImpl::ClearControllers()
       nsCOMPtr<nsIController> controller;
       mControllers->GetControllerAt(count, getter_AddRefs(controller));
 
-      nsCOMPtr<nsIControllerContext> context = do_GetInterface(controller);
+      nsCOMPtr<nsIControllerContext> context = do_QueryInterface(controller);
       if (context)
         context->SetCommandContext(nsnull);
     }
