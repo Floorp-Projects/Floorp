@@ -25,6 +25,7 @@
 <!ENTITY  validation.crl.label      "CRL">
 <!ENTITY  validation.crl.description "Use the CRL Manager to manage the Certificate Revocation Lists (CRL) that are stored in your certificate database.">
 <!ENTITY  validation.managecrls.button      "Manage CRLs...">
+<!ENTITY  validation.managecrls.accesskey   "M">
 <!ENTITY  validation.crlmanager.label       "Manage CRLs">
 <!ENTITY  validation.crlname.label          "Name">
 <!ENTITY  validation.crllastupdate.label    "Last Update">
@@ -61,4 +62,6 @@
 <!ENTITY certOCSP.label "Use OCSP to validate only certificates that specify an OCSP service URL">
 <!ENTITY proxyOCSP.label "Use OCSP to validate all certificates using this URL and signer:">
 <!ENTITY serviceURL.label "Service URL:">
+<!ENTITY serviceURL.accesskey "S">
 <!ENTITY signingCA.label "Response Signer:">
+<!ENTITY signingCA.accesskey "R">

@@ -44,7 +44,7 @@
   <groupbox>
     <caption label="&recentFiles.title;"/>
     <hbox align="center">
-      <label value="&documentsInMenu;"/>
+      <label value="&documentsInMenu;" accesskey="&documentsInMenu.accesskey;" control="recentFiles"/>
       <textbox
         id="recentFiles"
         name="recent string" 

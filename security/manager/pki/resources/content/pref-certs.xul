@@ -64,6 +64,7 @@
       <button label="&managecerts.button;"
               oncommand="openCertManager();" 
               id="openCertManagerButton"
+              accesskey="&managecerts.accesskey;"
               prefstring="security.disable_button.openCertManager"/>
     </hbox>
   </groupbox>
@@ -76,6 +77,7 @@
       <button label="&managedevices.button;"
               oncommand="openDeviceManager();"
               id="openDeviceManagerButton"
+              accesskey="&managedevices.accesskey;"
               prefstring="security.disable_button.openDeviceManager"/>
     </hbox>
   </groupbox>

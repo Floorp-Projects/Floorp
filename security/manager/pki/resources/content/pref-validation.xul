@@ -50,6 +50,7 @@
       <button label="&validation.managecrls.button;"
               oncommand="openCrlManager();"
               id="managecrlbutton"
+              accesskey="&validation.managecrls.accesskey;"
               prefstring="security.OCSP.disable_button.managecrl"/>
     </hbox>
   </groupbox>
@@ -72,14 +73,14 @@
           
           <rows>
             <row align="center">
-              <label value="&signingCA.label;" control="signingCA"/>
+              <label value="&signingCA.label;" accesskey="&signingCA.accesskey;" control="signingCA"/>
               <menulist id="signingCA" preftype="string" prefstring="security.OCSP.signingCA"
                         flex="1" oncommand="changeURL()">
                 <menupopup/>
               </menulist>
             </row>
             <row align="center">
-              <label value="&serviceURL.label;" control="serviceURL"/>
+              <label value="&serviceURL.label;" accesskey="&serviceURL.accesskey;" control="serviceURL"/>
               <textbox id="serviceURL" prefstring="security.OCSP.URL"/>
             </row>
          </rows>

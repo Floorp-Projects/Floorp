@@ -41,7 +41,7 @@
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
 
   <vbox>
-    <label value="&authorName.label;"/>
+    <label value="&authorName.label;" accesskey="&authorName.accesskey;" control="editorAuthor"/>
     <hbox>
       <textbox id="editorAuthor" flex="1"
                prefstring="editor.author"/>
@@ -68,28 +68,32 @@
         <columns><column/><column/></columns>
         <rows>
           <row align="center">
-            <label id="Text" value="&normalText.label;&colon.character;" />
+            <label id="Text" value="&normalText.label;&colon.character;" 
+                   accesskey="&normalText.accesskey;" control="TextButton"/>
             <button id="TextButton" class="color-button" oncommand="GetColorAndUpdate('textCW');">
               <spacer id="textCW" class="color-well"/>
             </button>
             <data id="textData" pref="true" preftype="color" prefstring="editor.text_color" prefattribute="value" wsm_attributes="value"/>
           </row>
           <row align="center">
-            <label id="Link" value="&linkText.label;&colon.character;" />
+            <label id="Link" value="&linkText.label;&colon.character;" 
+                   accesskey="&linkText.accesskey;" control="LinkButton"/>
             <button id="LinkButton" class="color-button" oncommand="GetColorAndUpdate('linkCW');">
               <spacer id="linkCW" class="color-well"/>
             </button>
             <data id="linkData" pref="true" preftype="color" prefstring="editor.link_color" prefattribute="value" wsm_attributes="value"/>
           </row>
           <row align="center">
-            <label id="Active" value="&activeLinkText.label;&colon.character;" />
+            <label id="Active" value="&activeLinkText.label;&colon.character;" 
+                   accesskey="&activeLinkText.accesskey;" control="ActiveLinkButton"/>
             <button id="ActiveLinkButton" class="color-button" oncommand="GetColorAndUpdate('activeCW');">
               <spacer id="activeCW" class="color-well"/>
             </button>
             <data id="aLinkData" pref="true" preftype="color" prefstring="editor.active_link_color" prefattribute="value" wsm_attributes="value"/>
           </row>
           <row align="center">
-            <label id="Visited" value ="&visitedLinkText.label;&colon.character;" />
+            <label id="Visited" value ="&visitedLinkText.label;&colon.character;" 
+                   accesskey="&visitedLinkText.accesskey;" control="VisitedLinkButton"/>
             <button id="VisitedLinkButton" class="color-button" oncommand="GetColorAndUpdate('visitedCW');">
               <spacer id="visitedCW" class="color-well"/>
             </button>
@@ -118,7 +122,7 @@
       <spacer flex="1"/>
     </hbox>
     <spacer class="spacer"/>
-    <label value="&backgroundImage.label;" accesskey="&backgroundImage.accesskey;"/>
+    <label value="&backgroundImage.label;" accesskey="&backgroundImage.accesskey;" control="BackgroundImageInput"/>
     <hbox align="center">
       <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage();" style="min-width: 23em" flex="1" class="uri-element">
         <observes element="backgroundImageData" attribute="disabled"/>

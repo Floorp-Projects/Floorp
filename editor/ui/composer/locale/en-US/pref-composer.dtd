@@ -33,7 +33,9 @@
 <!ENTITY  chooseButton.label        "Choose">
 
 <!ENTITY  recentFiles.title         "Recent Pages Menu">
+<!ENTITY  documentsInMenu.accesskey     "n">
 <!ENTITY  documentsInMenu           "Maximum number of pages listed:">
+
 
 <!ENTITY  cssEditing.label          "Cascading Style Sheets (CSS) Editing">
 <!ENTITY  useCSS.label              "Use CSS styles instead of HTML elements and attributes">

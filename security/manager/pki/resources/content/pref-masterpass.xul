@@ -55,6 +55,7 @@
       <button label="&changepassword.button;"
               oncommand="ChangePW();"
               id="changePasswordButton"
+              accesskey="&changepassword.accesskey;"
               prefstring="security.disable_button.changePassword"/>
     </hbox>
   </groupbox>
@@ -99,6 +100,7 @@
       <button label="&resetpassword.button;"
               oncommand="ResetPW();"
               id="resetPasswordButton"
+              accesskey="&resetpassword.accesskey;"
               prefstring="security.disable_button.resetPassword"/>
     </hbox>
   </groupbox>

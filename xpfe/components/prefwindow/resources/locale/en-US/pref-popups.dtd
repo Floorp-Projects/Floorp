@@ -9,7 +9,10 @@
 <!ENTITY popupBlock.label               "Suppress popups">
 <!ENTITY popupBlock.accesskey           "S">
 
-<!ENTITY popupView.label                "Exceptions...">
+<!ENTITY popupViewAllow.label           "Exceptions...">
+<!ENTITY popupViewAllow.accesskey       "x">
+<!ENTITY popupViewBlock.label           "Exceptions...">
+<!ENTITY popupViewBlock.accesskey       "c">
 
 <!ENTITY whenBlock.description          "When a popup window has been suppressed:">
 <!ENTITY playSound.label                "Play a sound:">

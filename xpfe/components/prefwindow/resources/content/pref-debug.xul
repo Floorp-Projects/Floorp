@@ -86,10 +86,11 @@
         
         <rows>
           <row align="center">
-            <label value="&acceleratorKey.label;" for="acceleratorKeyValue"/>
+            <label value="&acceleratorKey.label;" for="acceleratorKeyValue"
+                   accesskey="&acceleratorKey.accesskey;" control="acceleratorKeyValue"/>
             <textbox id="acceleratorKeyValue"  preftype="int"
               prefstring="ui.key.accelKey" size="5"/>
-            <label value="&menuAccessKey.label;" control="menuAccessKeyValue"/>
+            <label value="&menuAccessKey.label;" accesskey="&menuAccessKey.accesskey;" control="menuAccessKeyValue"/>
             <textbox id="menuAccessKeyValue"  preftype="int"
               prefstring="ui.key.menuAccessKey" size="5"/>
           </row>

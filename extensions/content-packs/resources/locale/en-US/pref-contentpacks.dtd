@@ -5,8 +5,10 @@
 <!ENTITY restartOnLangChange.label      "Changes to content or language packs take effect when you restart &brandShortName;.">
 <!ENTITY installedContentPacks.label    "Installed content packs:">
 <!ENTITY installedLanguagePacks.label   "Installed language packs:">
-<!ENTITY downloadContentPacks.accesskey "D">
 <!ENTITY downloadContentPacks.label     "Download More...">
+<!ENTITY downloadContentPacks.accesskey "w">
+<!ENTITY downloadLanguagePacks.label    "Download More...">
+<!ENTITY downloadLanguagePacks.accesskey "D">
 <!ENTITY update.label                   "(needs update)">
 <!ENTITY uninstallContentPack.accesskey "u">
 <!ENTITY uninstallContentPack.label     "Uninstall">
