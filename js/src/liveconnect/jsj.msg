@@ -52,7 +52,7 @@ MSG_DEF(JSJMSG_BAD_PACKAGE_PREDEF,  35, 1, "Illegal predefined package definitio
 MSG_DEF(JSJMSG_NULL_MEMBER_NAME,    36, 0, "illegal null member name")
 MSG_DEF(JSJMSG_NULL_FUNCTION_NAME,  37, 0, "illegal null JavaScript function name")
 MSG_DEF(JSJMSG_NULL_EVAL_ARG,       38, 0, "illegal null string eval argument")
-MSG_DEF(JSJMSG_MULTIPLE_JTHREADS,   39, 0, "Java thread in simultaneous use by more than one JSContext ?")
+MSG_DEF(JSJMSG_MULTIPLE_JTHREADS,   39, 0, "[Obsolete error message]")
 MSG_DEF(JSJMSG_ABSTRACT_JCLASS,     40, 1, "Java class {0} is abstract and therefore may not be instantiated")
 MSG_DEF(JSJMSG_IS_INTERFACE,        41, 1, "{0} is a Java interface and therefore may not be instantiated")
 MSG_DEF(JSJMSG_NOT_PUBLIC,          42, 1, "Java class {0} is not public and therefore may not be instantiated")
