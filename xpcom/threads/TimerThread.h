@@ -41,8 +41,6 @@
 #ifndef TimerThread_h___
 #define TimerThread_h___
 
-#include "nsWeakReference.h"
-
 #include "nsIEventQueueService.h"
 #include "nsIObserver.h"
 #include "nsIRunnable.h"
@@ -56,8 +54,7 @@
 #include "prinrval.h"
 #include "prlock.h"
 
-class TimerThread : public nsSupportsWeakReference,
-                    public nsIRunnable,
+class TimerThread : public nsIRunnable,
                     public nsIObserver
 {
 public:

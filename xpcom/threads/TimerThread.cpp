@@ -47,7 +47,7 @@
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(TimerThread, nsIRunnable, nsISupportsWeakReference, nsIObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS2(TimerThread, nsIRunnable, nsIObserver)
 
 TimerThread::TimerThread() :
   mInitInProgress(0),
@@ -77,13 +77,6 @@ TimerThread::~TimerThread()
     nsTimerImpl *timer = NS_STATIC_CAST(nsTimerImpl *, mTimers[n]);
     NS_RELEASE(timer);
   }
-
-  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1");
-  if (observerService) {
-    observerService->RemoveObserver(this, "sleep_notification");
-    observerService->RemoveObserver(this, "wake_notification");
-  }
-
 }
 
 nsresult
@@ -131,8 +124,9 @@ nsresult TimerThread::Init()
           mThread = nsnull;
         }
         else {
-          observerService->AddObserver(this, "sleep_notification", PR_TRUE);
-          observerService->AddObserver(this, "wake_notification", PR_TRUE);
+          // We'll be released at xpcom shutdown
+          observerService->AddObserver(this, "sleep_notification", PR_FALSE);
+          observerService->AddObserver(this, "wake_notification", PR_FALSE);
         }
       }
     }
