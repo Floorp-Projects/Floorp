@@ -212,7 +212,7 @@ extern char * XP_StripLine (char *s);
 
 /* Match = 0, NoMatch = 1, Abort = -1 */
 /* Based loosely on sections of wildmat.c by Rich Salz */
-extern int xp_RegExpSearch(char *str, char *exp);
+extern int xp_RegExpSearch(char *str, char *regexp);
 
 /* 
  * These are "safe" versions of the runtime library routines. The RTL

@@ -78,7 +78,7 @@
 
 #ifndef MOZILLA_CLIENT
 #define RES_START
-#define BEGIN_STR(arg) static char * (arg) (int16 i) { switch (i) {
+#define BEGIN_STR(arg) static char * (arg) (int32 i) { switch (i) {
 #define ResDef(name,id,msg)	case (id)+RES_OFFSET: return (msg);
 #define END_STR(arg) } return NULL; }
 #else /* MOZILLA_CLIENT */
@@ -108,7 +108,7 @@
 #define END_STR(arg) }
 #else
 #define RES_START
-#define BEGIN_STR(arg) static char *(arg)(int16 i) { switch (i) {
+#define BEGIN_STR(arg) static char *(arg)(int32 i) { switch (i) {
 #define ResDef(name,id,msg)	case (id)+RES_OFFSET: return (msg);
 #define END_STR(arg) } return NULL; }
 #endif /* RESOURCE_STR_X */
