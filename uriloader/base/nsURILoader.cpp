@@ -436,8 +436,8 @@ nsresult nsDocumentOpenInfo::RetargetOutput(nsIChannel * aChannel, const char * 
   {
       NS_WITH_SERVICE(nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
       if (NS_FAILED(rv)) return rv;
-      nsAutoString from_w (aSrcContentType);
-      nsAutoString to_w (aOutContentType);
+      nsAutoString from_w; from_w.AssignWithConversion (aSrcContentType);
+      nsAutoString to_w; to_w.AssignWithConversion (aOutContentType);
 
       // The following call binds this channelListener's mNextListener (typically
       // the nsDocumentBindInfo) to the underlying stream converter, and returns
@@ -521,7 +521,7 @@ NS_IMETHODIMP nsURILoader::GetTarget(const char * aWindowTarget,
                                      nsISupports * aWindowContext,
                                      nsISupports ** aRetargetedWindowContext)
 {
-  nsAutoString name(aWindowTarget);
+  nsAutoString name; name.AssignWithConversion(aWindowTarget);
   nsCOMPtr<nsIDocShellTreeItem> windowCtxtAsTreeItem (do_GetInterface(aWindowContext));
   nsCOMPtr<nsIDocShellTreeItem>  treeItem;
   *aRetargetedWindowContext = nsnull;
