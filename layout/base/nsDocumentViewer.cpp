@@ -131,6 +131,7 @@ static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 // Printing Events
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
+#include "nsPrintPreviewListener.h"
 
 // Printing
 #include "nsIWebBrowserPrint.h"
@@ -421,6 +422,7 @@ public:
 
   nsCOMPtr<nsIPrintSettings>  mPrintSettings;
   nsCOMPtr<nsIPrintOptions>   mPrintOptions;
+  nsPrintPreviewListener*     mPPEventListeners;
 
 #ifdef DEBUG_PRINTING
   FILE *           mDebugFD;
@@ -589,6 +591,7 @@ private:
   void InstallNewPresentation();
   void ReturnToGalleyPresentation();
   void TurnScriptingOn(PRBool aDoTurnOn);
+  void InstallPrintPreviewListener();
 #endif
 
 
@@ -810,7 +813,7 @@ PrintData::PrintData() :
   mIsAborted(PR_FALSE), mPreparingForPrint(PR_FALSE), mDocWasToBeDestroyed(PR_FALSE),
   mShrinkToFit(PR_FALSE), mPrintFrameType(nsIPrintSettings::kFramesAsIs), 
   mNumPrintableDocs(0), mNumDocsPrinted(0), mNumPrintablePages(0), mNumPagesPrinted(0),
-  mShrinkRatio(1.0), mOrigDCScale(1.0)
+  mShrinkRatio(1.0), mOrigDCScale(1.0), mPPEventListeners(NULL)
 {
 #ifdef DEBUG_PRINTING
   mDebugFD = fopen("printing.log", "w");
@@ -819,6 +822,12 @@ PrintData::PrintData() :
 
 PrintData::~PrintData() 
 {
+  // remove the event listeners
+  if (mPPEventListeners) {
+    mPPEventListeners->RemoveListeners();
+    NS_RELEASE(mPPEventListeners);
+  }
+
   // Only Send an OnEndPrinting if we have started printing
   if (mOnStartSent) {
     OnEndPrinting();
@@ -3854,6 +3863,11 @@ DocumentViewerImpl::FindXMostFrameInList(nsIPresContext* aPresContext,
       rect.x += aX;
       rect.y += aY;
       nscoord xMost = rect.XMost();
+      // make sure we have a reasonable value
+      NS_ASSERTION(xMost < NS_UNCONSTRAINEDSIZE, "Some frame's size is bad.");
+      if (xMost >= NS_UNCONSTRAINEDSIZE) {
+        xMost = 0;
+      }
 
 #ifdef DEBUG_PRINTING // keep this here but leave it turned off
       nsAutoString tmp;
@@ -5106,6 +5120,24 @@ DocumentViewerImpl::TurnScriptingOn(PRBool aDoTurnOn)
   scx->SetScriptsEnabled(aDoTurnOn, PR_TRUE);
 }
 
+//-------------------------------------------------------
+// Install our event listeners on the document to prevent 
+// some events from being processed while in PrintPreview 
+//
+// No return code - if this fails, there isn't much we can do
+void
+DocumentViewerImpl::InstallPrintPreviewListener()
+{
+  if (!mPrt->mPPEventListeners) {
+    nsCOMPtr<nsIDOMEventReceiver> evRec (do_QueryInterface(mDocument));
+    mPrt->mPPEventListeners = new nsPrintPreviewListener(evRec);
+
+    if (mPrt->mPPEventListeners) {
+      mPrt->mPPEventListeners->AddListeners();
+    }
+  }
+}
+
 //----------------------------------------------------------------------
 static nsresult GetSeqFrameAndCountPages(PrintObject*  aPO,
                                          nsIFrame*&    aSeqFrame, 
@@ -5390,6 +5422,8 @@ DocumentViewerImpl::InstallNewPresentation()
     }
   }
 #endif
+
+  InstallPrintPreviewListener();
 
   // Install the new Presentation
   mPresShell    = prtObjToDisplay->mPresShell;

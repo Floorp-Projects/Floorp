@@ -60,6 +60,7 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
+		nsPrintPreviewListener.cpp \
 		nsCommentNode.cpp \
 		nsContentIterator.cpp \
 		nsContentList.cpp \
