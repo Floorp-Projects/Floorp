@@ -137,8 +137,6 @@ private:
 
   nscoord GetBorderWidth(nsIFrame* aFrame, PRUint8 aEdge) const;
 
-  nscoord GetPadding(nsIFrame* aFrame, PRUint8 aEdge) const;
-
   PRUint8 GetOpposingEdge(PRUint8 aEdge);
 
   void CalculateBorders(nsTableFrame* aTableFrame,
