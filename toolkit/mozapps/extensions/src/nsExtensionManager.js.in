@@ -2181,7 +2181,12 @@ nsExtensionManager.prototype = {
     aXPIFile.copyTo(tempDir, fileName);
     var xpiFile = tempDir.clone();
     xpiFile.append(fileName);
-    
+
+    // if the source file was read-only, fix permissions
+    if (!xpiFile.isWritable()) {
+      xpiFile.permissions = 0644;
+    }
+
     var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
                               .createInstance(Components.interfaces.nsIZipReader);
     zipReader.init(xpiFile);
@@ -2435,6 +2440,11 @@ nsExtensionManager.prototype = {
     if (extensionFile.exists())
       extensionFile.remove(false);
     aZipReader.file.copyTo(dir, extensionFileName);
+
+    // if the source file was readonly, fix the permissions
+    if (!extensionFile.isWritable()) {
+      extensionFile.permissions = 0644;
+    }
   },
   
   // This function is called on the next startup 
