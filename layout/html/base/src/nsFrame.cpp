@@ -1403,10 +1403,15 @@ NS_IMETHODIMP nsFrame::GetPrevInFlow(nsIFrame** aPrevInFlow) const
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::SetPrevInFlow(nsIFrame*)
+NS_IMETHODIMP nsFrame::SetPrevInFlow(nsIFrame* aPrevInFlow)
 {
-  NS_ERROR("not splittable");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // Ignore harmless requests to set it to NULL
+  if (aPrevInFlow) {
+    NS_ERROR("not splittable");
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsFrame::GetNextInFlow(nsIFrame** aNextInFlow) const
