@@ -61,7 +61,7 @@ public:
      * Creates a new ProcessorState for the given XSL document
      * And result Document
     **/
-    ProcessorState(Document& xslDocument, Document& resultDocument);
+    ProcessorState(Document& sourceDocument, Document& xslDocument, Document& resultDocument);
 
     /**
      * Destroys this ProcessorState
@@ -195,6 +195,12 @@ public:
      * Determines if the given XSL node allows Whitespace stripping
     **/
     MBool isXSLStripSpaceAllowed(Node* node);
+
+    /**
+     * Returns the current XSLT action from the top of the stack.
+     * @returns the XSLT action from the top of the stack
+    **/
+    Node* peekAction();
 
     /**
      * Adds the set of names to the Whitespace preserving element set
@@ -418,7 +424,10 @@ private:
 
     XSLTAction*    currentAction;
     Stack          nodeSetStack;
+    Document*      mSourceDocument;
     Document*      xslDocument;
+    String         mMainSourceURL;
+    String         mMainStylesheetURL;
     Document*      resultDocument;
     NamedMap       exprHash;
     NamedMap       patternExprHash;

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -24,23 +24,15 @@
  */
 
 #include "nsSyncLoader.h"
-#include "nsNetUtil.h"
-#include "nsLayoutCID.h"
-#include "nsIEventQueueService.h"
+#include "nsAppShellCIDs.h"
+#include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIXPConnect.h"
-#include "nsIDocShell.h"
-#include "nsIDocShellTreeItem.h"
-#include "nsIScriptContext.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIDOMWindowInternal.h"
-#include "nsAppShellCIDs.h"
-#include "nsIAppShellService.h"
-#include "nsIDocShellTreeOwner.h"
-#include "nsIInterfaceRequestor.h"
-#include "jsapi.h"
+#include "nsIEventQueueService.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsLayoutCID.h"
+#include "nsNetUtil.h"
 
 static const char* kLoadAsData = "loadAsData";
 
@@ -98,7 +90,7 @@ txLoadListenerProxy::HandleEvent(nsIDOMEvent* aEvent)
     if (listener) {
         return listener->HandleEvent(aEvent);
     }
-  
+
     return NS_OK;
 }
 
@@ -122,7 +114,7 @@ txLoadListenerProxy::Unload(nsIDOMEvent* aEvent)
     if (listener) {
         return listener->Unload(aEvent);
     }
-  
+
     return NS_OK;
 }
 
@@ -134,7 +126,7 @@ txLoadListenerProxy::Abort(nsIDOMEvent* aEvent)
     if (listener) {
         return listener->Abort(aEvent);
     }
-  
+
     return NS_OK;
 }
 
@@ -146,7 +138,7 @@ txLoadListenerProxy::Error(nsIDOMEvent* aEvent)
     if (listener) {
         return listener->Error(aEvent);
     }
-  
+
     return NS_OK;
 }
 
@@ -157,177 +149,147 @@ nsSyncLoader::nsSyncLoader()
 
 nsSyncLoader::~nsSyncLoader()
 {
-    //if (XML_HTTP_REQUEST_SENT == mStatus) {
-    //    Abort();
-    //}
-    if (mChromeWindow)
-        mChromeWindow->ExitModalEventLoop(NS_OK);
+    if (mLoading && mChannel) {
+        mChannel->Cancel(NS_BINDING_ABORTED);
+    }
 }
 
 NS_IMPL_ISUPPORTS3(nsSyncLoader, nsISyncLoader, nsIDOMLoadListener, nsISupportsWeakReference)
 
 NS_IMETHODIMP
-nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDOMDocument **_retval)
+nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDocument *aLoader, nsIDOMDocument **_retval)
 {
     nsresult rv = NS_OK;
 
+    nsCOMPtr<nsIURI> loaderURI;
+    aLoader->GetDocumentURL(getter_AddRefs(loaderURI));
+
+    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+        do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = securityManager->CheckLoadURI(loaderURI, documentURI,
+                                       nsIScriptSecurityManager::STANDARD);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsILoadGroup> loadGroup;
-
-    // If we have a base document, use it for the base URL and loadgroup
-    //if (mBaseDocument) {
-    //    rv = mBaseDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-    //    if (NS_FAILED(rv)) return rv;
-    //}
-
-    //rv = NS_NewURI(getter_AddRefs(uri), url, mBaseURI);
-    //if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIChannel> channel;
-    rv = NS_OpenURI(getter_AddRefs(channel), documentURI, nsnull, loadGroup);
-    if (NS_FAILED(rv)) return rv;
-  
-    nsCOMPtr<nsIInputStream> postDataStream;
-
-    // Make sure we've been opened
-    if (!channel) {
-        return NS_ERROR_NOT_INITIALIZED;
-    }
+    rv = aLoader->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Get and initialize a DOMImplementation
-    nsCOMPtr<nsIDOMDOMImplementation> implementation = do_CreateInstance(kIDOMDOMImplementationCID, &rv);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  
-    //if (mBaseURI) {
-    //    nsCOMPtr<nsIPrivateDOMImplementation> privImpl = do_QueryInterface(implementation);
-    //    if (privImpl) {
-    //        privImpl->Init(mBaseURI);
-    //    }
-    //}
+    nsCOMPtr<nsIDOMDOMImplementation> implementation = 
+        do_CreateInstance(kIDOMDOMImplementationCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     // Create an empty document from it
-    nsAutoString emptyStr;
+    nsString emptyStr;
     nsCOMPtr<nsIDOMDocument> DOMDocument;
     rv = implementation->CreateDocument(emptyStr, 
                                         emptyStr, 
                                         nsnull, 
                                         getter_AddRefs(DOMDocument));
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = NS_OpenURI(getter_AddRefs(mChannel), documentURI, nsnull, loadGroup);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Make sure we've been opened
+    if (!mChannel) {
+        return NS_ERROR_NOT_INITIALIZED;
+    }
+
+    // Tell the document to start loading
+    nsCOMPtr<nsIDocument> document = do_QueryInterface(DOMDocument, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Partial Reset
+    document->SetDocumentURL(documentURI);
+    document->SetBaseURL(documentURI);
+    document->SetBaseTarget(NS_LITERAL_STRING(""));
+
+    nsCOMPtr<nsIEventQueueService> service = 
+        do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIEventQueue> currentThreadQ;
+    rv = service->PushThreadEventQueue(getter_AddRefs(currentThreadQ));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     // Register as a load listener on the document
     nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(DOMDocument);
+    txLoadListenerProxy* proxy;
     if (target) {
         nsWeakPtr requestWeak = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIDOMLoadListener*, this)));
-        txLoadListenerProxy* proxy = new txLoadListenerProxy(requestWeak);
-        if (!proxy) return NS_ERROR_OUT_OF_MEMORY;
+        proxy = new txLoadListenerProxy(requestWeak);
+        if (!proxy) {
+            service->PopThreadEventQueue(currentThreadQ);
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
 
         // This will addref the proxy
         rv = target->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*, 
                                                           proxy), 
-                                                          NS_GET_IID(nsIDOMLoadListener));
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    }
-
-    // Tell the document to start loading
-    nsCOMPtr<nsIStreamListener> listener;
-    nsCOMPtr<nsIDocument> document = do_QueryInterface(DOMDocument);
-    if (!document) {
-        return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIEventQueue> modalEventQueue;
-    nsCOMPtr<nsIEventQueueService> eventQService;
-  
-    nsCOMPtr<nsIXPCNativeCallContext> cc;
-    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-    if(NS_SUCCEEDED(rv)) {
-        rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(cc));
-    }
-
-    JSContext* cx;
-    if (NS_SUCCEEDED(rv) && cc) {
-        rv = cc->GetJSContext(&cx);
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    }
-    else {
-        nsCOMPtr<nsIAppShellService> appshellSvc = 
-                 do_GetService(kAppShellServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsIDOMWindowInternal> junk;
-        rv = appshellSvc->GetHiddenWindowAndJSContext(getter_AddRefs(junk), &cx);
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    }
-    if (NS_SUCCEEDED(rv)) {
-        nsIScriptContext* scriptCX;
-
-        // We can only do this if we're called from a DOM script context
-        scriptCX = (nsIScriptContext*)JS_GetContextPrivate(cx);
-        if (!scriptCX) return NS_OK;
-
-        // Get the nsIDocShellTreeOwner associated with the window
-        // containing this script context
-        // XXX Need to find a better way to do this rather than
-        // chaining through a bunch of getters and QIs
-        nsCOMPtr<nsIScriptGlobalObject> global;
-        scriptCX->GetGlobalObject(getter_AddRefs(global));
-        if (!global) return NS_ERROR_FAILURE;
-
-        nsCOMPtr<nsIDocShell> docshell;
-        rv = global->GetDocShell(getter_AddRefs(docshell));
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-      
-        nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(docshell);
-        if (!item) return NS_ERROR_FAILURE;
-
-        nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-        rv = item->GetTreeOwner(getter_AddRefs(treeOwner));
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-        nsCOMPtr<nsIInterfaceRequestor> treeRequestor(do_GetInterface(treeOwner));
-        if (!treeRequestor) return NS_ERROR_FAILURE;
-
-        treeRequestor->GetInterface(NS_GET_IID(nsIWebBrowserChrome), getter_AddRefs(mChromeWindow));
-        if (mChromeWindow) return NS_ERROR_FAILURE;
-
-        eventQService = do_GetService(kEventQueueServiceCID);
-        if(!eventQService || 
-           NS_FAILED(eventQService->PushThreadEventQueue(getter_AddRefs(modalEventQueue)))) {
-            return NS_ERROR_FAILURE;
+                                           NS_GET_IID(nsIDOMLoadListener));
+        if (NS_FAILED(rv)) {
+            service->PopThreadEventQueue(currentThreadQ);
+            return rv;
         }
     }
+    
+    mLoadSuccess = PR_FALSE;
 
-    rv = document->StartDocumentLoad(kLoadAsData, channel, 
-                                     nsnull, nsnull, 
+    nsCOMPtr<nsIStreamListener> listener;
+    rv = document->StartDocumentLoad(kLoadAsData, mChannel, 
+                                     loadGroup, nsnull, 
                                      getter_AddRefs(listener),
                                      PR_FALSE);
 
-    if (NS_FAILED(rv)) {
-        if (modalEventQueue) {
-            eventQService->PopThreadEventQueue(modalEventQueue);
+    if (NS_SUCCEEDED(rv)) {
+        // Start reading from the channel
+        rv = mChannel->AsyncOpen(listener, nsnull);
+
+        if (NS_SUCCEEDED(rv)) {
+            mLoading = PR_TRUE;
+
+            // process events until we're finished.
+            PLEvent *event;
+            while (mLoading && NS_SUCCEEDED(rv)) {
+                rv = currentThreadQ->WaitForEvent(&event);
+                NS_ASSERTION(NS_SUCCEEDED(rv), ": currentThreadQ->WaitForEvent failed...\n");
+                if (NS_SUCCEEDED(rv)) {
+                    rv = currentThreadQ->HandleEvent(event);
+                    NS_ASSERTION(NS_SUCCEEDED(rv), ": currentThreadQ->HandleEvent failed...\n");
+                }
+            }
         }
-        return NS_ERROR_FAILURE;
     }
 
-    // Start reading from the channel
-    rv = channel->AsyncOpen(listener, nsnull);
+    mChannel = 0;
 
     if (NS_FAILED(rv)) {
-        if (modalEventQueue) {
-            eventQService->PopThreadEventQueue(modalEventQueue);
-        }
-        return NS_ERROR_FAILURE;
-    }  
-
-    // Spin an event loop here and wait
-    if (mChromeWindow) {
-        rv = mChromeWindow->ShowAsModal();
-    
-        eventQService->PopThreadEventQueue(modalEventQueue);
-    
-        if (NS_FAILED(rv)) return NS_ERROR_FAILURE;      
+        service->PopThreadEventQueue(currentThreadQ);
+        // This will release the proxy
+        target->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*, 
+                                                        proxy), 
+                                         NS_GET_IID(nsIDOMLoadListener));
+        return rv;
     }
 
-    *_retval = DOMDocument;
-    NS_ADDREF(*_retval);
+    // This will release the proxy
+    rv = target->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMEventListener*, 
+                                                         proxy), 
+                                          NS_GET_IID(nsIDOMLoadListener));
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
+
+    if (mLoadSuccess) {
+        *_retval = DOMDocument;
+        NS_ADDREF(*_retval);
+    }
+
+    rv = service->PopThreadEventQueue(currentThreadQ);
+
     return rv;
 }
 
@@ -342,9 +304,9 @@ nsSyncLoader::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsSyncLoader::Load(nsIDOMEvent* aEvent)
 {
-    if (mChromeWindow) {
-        mChromeWindow->ExitModalEventLoop(NS_OK);
-        mChromeWindow = 0;
+    if (mLoading) {
+        mLoading = PR_FALSE;
+        mLoadSuccess = PR_TRUE;
     }
 
     return NS_OK;
@@ -359,9 +321,8 @@ nsSyncLoader::Unload(nsIDOMEvent* aEvent)
 nsresult
 nsSyncLoader::Abort(nsIDOMEvent* aEvent)
 {
-    if (mChromeWindow) {
-        mChromeWindow->ExitModalEventLoop(NS_OK);
-        mChromeWindow = 0;
+    if (mLoading) {
+        mLoading = PR_FALSE;
     }
 
     return NS_OK;
@@ -370,9 +331,8 @@ nsSyncLoader::Abort(nsIDOMEvent* aEvent)
 nsresult
 nsSyncLoader::Error(nsIDOMEvent* aEvent)
 {
-    if (mChromeWindow) {
-        mChromeWindow->ExitModalEventLoop(NS_OK);
-        mChromeWindow = 0;
+    if (mLoading) {
+        mLoading = PR_FALSE;
     }
 
     return NS_OK;

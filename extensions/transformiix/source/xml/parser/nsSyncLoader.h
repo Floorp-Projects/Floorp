@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -27,12 +27,11 @@
 #define nsSyncLoader_h__
 
 #include "nsCOMPtr.h"
-#include "nsString.h"
+#include "nsIChannel.h"
 #include "nsIDOMLoadListener.h"
-#include "nsIDocument.h"
-#include "nsIWebBrowserChrome.h"
-#include "nsWeakReference.h"
 #include "nsISyncLoader.h"
+#include "nsString.h"
+#include "nsWeakReference.h"
 
 class nsSyncLoader : public nsISyncLoader,
                      public nsIDOMLoadListener,
@@ -56,7 +55,8 @@ public:
     NS_IMETHOD Error(nsIDOMEvent* aEvent);
 
 protected:
-    nsCOMPtr<nsIWebBrowserChrome> mChromeWindow;
+    nsCOMPtr<nsIChannel> mChannel;
+    PRBool mLoading, mLoadSuccess;
 };
 
 #endif

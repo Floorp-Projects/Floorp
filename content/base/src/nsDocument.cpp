@@ -682,7 +682,7 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
   return rv;
 }
 
-nsresult 
+NS_IMETHODIMP 
 nsDocument::SetDocumentURL(nsIURI* aURI)
 {
   NS_IF_RELEASE(mDocumentURL);

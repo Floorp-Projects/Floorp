@@ -28,20 +28,21 @@
 #ifndef MITRE_XMLPARSER_H
 #define MITRE_XMLPARSER_H
 
-#include <iostream.h>
+#include "dom.h"
+
+#ifdef TX_EXE
 #ifndef XML_UNICODE
 #define XML_UNICODE
 #endif
-#ifdef TX_EXE
+
 #include "xmlparse.h"
-#include "URIUtils.h"
-#endif
-#include "dom.h"
+#include <iostream.h>
 
 typedef struct  {
     Document* document;
     Node*  currentNode;
 } ParserState;
+#endif
 
 /**
  * Implementation of an In-Memory DOM based XML parser.  The actual XML
@@ -66,7 +67,7 @@ class XMLParser
     XMLParser();
    ~XMLParser();
 
-    Document* getDocumentFromURI(const String& href, const String& baseUri, String& errMsg);
+    Document* getDocumentFromURI(const String& href, const String& baseUri, Document* aLoader, String& errMsg);
 #ifdef TX_EXE
     Document* parse(istream& inputStream, const String& uri);
     const String& getErrorString();

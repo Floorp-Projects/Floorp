@@ -111,11 +111,6 @@ public:
   NS_IMETHOD SetCurrentPrototype(nsIXULPrototypeDocument* aDocument) = 0;
 
   /**
-   * Set the doc's URL
-   */
-  NS_IMETHOD SetDocumentURL(nsIURI* aURI) = 0;
-
-  /**
    * Load inline and attribute style sheets
    */
   NS_IMETHOD PrepareStyleSheets(nsIURI* aURI) = 0;
