@@ -769,35 +769,39 @@ nsresult nsScanner::ReadTagIdentifier(nsString& aString) {
   end = mEndPosition;
 
   while(current != end) {
- 
     theChar=*current;
-    if(theChar) {
-      found = PR_TRUE;
-      switch(theChar) {
-        case '\n':
-        case '\r':
-        case ' ' :
-        case '\b':
-        case '\t':
-        case '\v':
-        case '\f':
-        case '<':
-        case '>':
-        case '/':
-          found = PR_FALSE;
-          break;
-        default:
-          break;
-      }
 
-      if(!found) {
-        // If we the current character isn't a valid character for
-        // the identifier, we're done. Append the results to
-        // the string passed in.
-        AppendUnicodeTo(mCurrentPosition, current, aString);
+    found = PR_TRUE;
+    switch(theChar) {
+      case '\n':
+      case '\r':
+      case ' ' :
+      case '\b':
+      case '\t':
+      case '\v':
+      case '\f':
+      case '<':
+      case '>':
+      case '/':
+      case '\0':
+        found = PR_FALSE;
         break;
-      }
+      default:
+        break;
     }
+
+    if(!found) {
+      // If the current character isn't a valid character for
+      // the identifier, we're done. Append the results to
+      // the string passed in.
+      AppendUnicodeTo(mCurrentPosition, current, aString);
+      break;
+    }
+    ++current;
+  }
+
+  // Drop NULs on the floor since nobody really likes them.
+  while (current != end && !*current) {
     ++current;
   }
 
