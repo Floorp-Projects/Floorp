@@ -597,7 +597,7 @@ void nsSmtpUrl::ReconstructSpec(void)
 	ParseMessageToPost(m_search);
 }
 
-nsresult nsSmtpUrl::GetUserName(const char ** aUserName)
+nsresult nsSmtpUrl::GetUserEmailAddress(const char ** aUserName)
 {
 	nsresult rv = NS_OK;
 	if (aUserName)
@@ -617,7 +617,7 @@ nsresult nsSmtpUrl::GetUserPassword(const char ** aUserPassword)
 	return rv;
 }
 
-nsresult nsSmtpUrl::SetUserName(const char * aUserName)
+nsresult nsSmtpUrl::SetUserEmailAddress(const char * aUserName)
 {
 	nsresult rv = NS_OK;
 	if (aUserName)
@@ -679,6 +679,51 @@ nsresult nsSmtpUrl::GetMessageContents(const char ** aToPart, const char ** aCcP
 		*aNewsHostPart = m_newsHostPart;
 	if (aForcePlainText)
 		*aForcePlainText = m_forcePlainText;
+	return NS_OK;
+}
+
+// Caller must call PR_FREE on list when it is done with it. This list is a list of all
+// recipients to send the email to. each name is NULL terminated...
+nsresult nsSmtpUrl::GetAllRecipients(char ** aRecipientsList)
+{
+	if (aRecipientsList)
+		*aRecipientsList = nsnull;
+	return NS_OK;
+}
+
+// all headers are separated by new lines...
+nsresult nsSmtpUrl::GetHeaders(const char ** aHeadersList)
+{
+	if (aHeadersList)
+		*aHeadersList = nsnull;
+
+	return NS_OK;
+}
+
+nsresult nsSmtpUrl::GetBody (const char ** aBody)
+{
+	if (aBody)
+		*aBody = nsnull;
+	return NS_OK;
+}
+nsresult nsSmtpUrl::GetBodySize(PRUint32 * aBodySize)
+{
+	if (aBodySize)
+		*aBodySize = 0;
+	return NS_OK;
+}
+
+// is the url a post message url or a bring up the compose window url? 
+nsresult nsSmtpUrl::IsPostMessage(PRBool * aPostMessage)
+{
+	if (aPostMessage)
+		*aPostMessage = PR_TRUE;
+	return NS_OK;
+}
+	
+// used to set the url as a post message url...
+nsresult nsSmtpUrl::SetPostMessage(PRBool aPostMessage)
+{
 	return NS_OK;
 }
 
@@ -925,87 +970,3 @@ nsresult nsSmtpUrl::ToString(PRUnichar* *aString) const
 ////////////////////////////////////////////////////////////////////////////////////
 // End of functions which should be made obsolete after modifying nsIURL
 ////////////////////////////////////////////////////////////////////////////////////
-
-
-
-////////////////////////////////////////////////////////////////////////////////////////////
-// TEMPORARY HARD CODED FUNCTIONS 
-///////////////////////////////////////////////////////////////////////////////////////////
-#ifdef XP_WIN
-char *XP_AppCodeName = "Mozilla";
-#else
-const char *XP_AppCodeName = "Mozilla";
-#endif
-#define NET_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isspace(x))
-typedef PRUint32 MessageKey;
-const MessageKey MSG_MESSAGEKEYNONE = 0xffffffff;
-
-/*
- * This function takes an error code and associated error data
- * and creates a string containing a textual description of
- * what the error is and why it happened.
- *
- * The returned string is allocated and thus should be freed
- * once it has been used.
- *
- * This function is defined in mkmessag.c.
- */
-char * NET_ExplainErrorDetails (int code, ...)
-{
-	char * rv = PR_smprintf("%s", "Error descriptions not implemented yet");
-	return rv;
-}
-
-char * NET_SACopy (char **destination, const char *source)
-{
-	if(*destination)
-	  {
-	    XP_FREE(*destination);
-		*destination = 0;
-	  }
-    if (! source)
-	  {
-        *destination = NULL;
-	  }
-    else 
-	  {
-        *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
-        if (*destination == NULL) 
- 	        return(NULL);
-
-        PL_strcpy (*destination, source);
-      }
-    return *destination;
-}
-
-/*  Again like strdup but it concatinates and free's and uses Realloc
-*/
-char * NET_SACat (char **destination, const char *source)
-{
-    if (source && *source)
-      {
-        if (*destination)
-          {
-            int length = PL_strlen (*destination);
-            *destination = (char *) PR_Realloc (*destination, length + PL_strlen(source) + 1);
-            if (*destination == NULL)
-            return(NULL);
-
-            PL_strcpy (*destination + length, source);
-          }
-        else
-          {
-            *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
-            if (*destination == NULL)
-                return(NULL);
-
-             PL_strcpy (*destination, source);
-          }
-      }
-    return *destination;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////
-// END OF TEMPORARY HARD CODED FUNCTIONS 
-///////////////////////////////////////////////////////////////////////////////////////////
