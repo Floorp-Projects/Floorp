@@ -279,7 +279,7 @@ static PRBool GetProfileDirectory(nsFileSpec& outSpec)
 //----------------------------------------------------------------------------------------
 static void GetDefaultUserProfileRoot(nsFileSpec& outSpec)
 // UNIX    : ~/.mozilla/
-// WIN    : Program Files\Netscape\Users50\  
+// WIN    : <Application Data folder on user's machine>\Mozilla\Users50  
 // Mac    : :Documents:Mozilla:Users50:
 //----------------------------------------------------------------------------------------
 {
@@ -300,10 +300,11 @@ static void GetDefaultUserProfileRoot(nsFileSpec& outSpec)
 
 #elif defined(XP_PC)
     // set its directory an aunt of the moz bin directory
-    nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::Moz_BinDirectory);
+    nsSpecialSystemDirectory cwd(nsSpecialSystemDirectory::Win_Appdata);
 
-    // Users50 directory is kept 1 level above the executable directory.
-    cwd.GetParent(cwd); 
+    cwd += "Mozilla";
+    if (!cwd.Exists())
+        cwd.CreateDir();
 
     cwd += "Users50";
     if (!cwd.Exists())
