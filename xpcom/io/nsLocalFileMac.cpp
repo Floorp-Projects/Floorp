@@ -384,6 +384,21 @@ static nsresult	ConvertMacTimeToUnixTime( PRInt64* aLastModificationDate, PRInt3
 	return NS_OK;
 }
 
+static nsresult ConvertUnixTimeToMacTime(PRInt64 aUnixTime, PRUint32 *aOutMacTime)
+{
+	NS_ENSURE_ARG( aOutMacTime );
+		
+	PRTime oneMillion, dateInSeconds;
+	dateInSeconds = LL_ZERO;
+	
+	LL_I2L(oneMillion, 1000000UL);
+	LL_DIV(dateInSeconds, aUnixTime, oneMillion); // dateInSeconds = aUnixTime/1,000,000
+	LL_L2UI(*aOutMacTime, dateInSeconds);
+	*aOutMacTime += 2082844800; // dateInSeconds + Mac epoch
+	
+	return NS_OK;
+}
+
 
 #pragma mark -
 
@@ -1412,9 +1427,40 @@ NS_IMETHODIMP
 nsLocalFile::SetLastModificationDate(PRInt64 aLastModificationDate)
 {
 	MakeDirty();
-
-	NS_ASSERTION(0, "Not implemented");
-	return NS_ERROR_NOT_IMPLEMENTED;
+	nsresult rv = ResolveAndStat( PR_TRUE );
+	if ( NS_FAILED(rv) )
+		return rv;
+	
+	CInfoPBRec pb;
+	PRUint32 macTime = 0;
+	OSErr err = noErr;
+	PRBool bIsDir = PR_FALSE;
+	
+	ConvertUnixTimeToMacTime(aLastModificationDate, &macTime);
+	rv = IsDirectory(&bIsDir);
+	if ( NS_FAILED(rv) )
+		return rv;
+		
+	err = GetTargetSpecCatInfo(pb);
+	if (err == noErr)
+	{
+		if (bIsDir)
+		{
+			pb.dirInfo.ioDrMdDat = macTime; 
+			pb.dirInfo.ioDrParID = mTargetSpec.parID;
+		}
+		else
+		{
+			pb.hFileInfo.ioFlMdDat = macTime;
+			pb.hFileInfo.ioDirID = mTargetSpec.parID;
+		}	
+			
+		err = ::PBSetCatInfoSync(&pb);
+		if (err != noErr)
+			return MacErrorMapper(err);
+	}
+	
+	return MacErrorMapper(err);
 }
 
 NS_IMETHODIMP  
