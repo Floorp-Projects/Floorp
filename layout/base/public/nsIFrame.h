@@ -1031,17 +1031,6 @@ public:
                                   nsIRenderingContext& aRenderingContext,
                                   PRBool               aCheckVis,
                                   PRBool*              aIsVisible) = 0;
-
-  /**
-   * Invalidate part of the frame by asking the view manager to repaint.
-   * @param aPresContext a PresContext for this frame
-   * @param aDamageRect area of the frame to repaint, in the frame's local coordinate space
-   * @param aImmedaite repaint synchronously
-   */
-  NS_IMETHOD Invalidate(nsIPresContext* aPresContext,
-                        const nsRect& aDamageRect,
-                        PRBool aImmediate = PR_FALSE) const = 0;
-
 #ifdef IBMBIDI
   /**
    *  retrieve and set Bidi property of this frame

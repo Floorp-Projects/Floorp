@@ -36,6 +36,7 @@
 #include "nsIClipView.h"
 #include "nsISupportsArray.h"
 #include "nsIScrollPositionListener.h"
+#include "nsIRegion.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -1676,6 +1677,12 @@ void nsScrollingView::Scroll(nsIView *aScrolledView, PRInt32 aDx, PRInt32 aDy, f
 {
   if ((aDx != 0) || (aDy != 0))
   {
+    // Since we keep track of the dirty region as absolute screen coordintes,
+    // we need to offset it by the amount we scrolled.
+    nsCOMPtr<nsIRegion> dirtyRegion;
+    GetDirtyRegion(*getter_AddRefs(dirtyRegion));
+    dirtyRegion->Offset(aDx, aDy);
+
     nsIWidget *clipWidget;
 
     mClipView->GetWidget(clipWidget);
