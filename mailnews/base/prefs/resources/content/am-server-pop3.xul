@@ -9,9 +9,4 @@
       align="vertical"
       onload = "">
 
-<box align="vertical" class="cleanborder" flex="100%">
-  <html:div><html:input type="checkbox"/>&leaveOnServer.label;</html:div>
-  <html:div><html:input type="checkbox"/>&deleteOnServer.label;</html:div>
-  <html:div><html:input type="checkbox"/>&emptyTrashOnExit.label;</html:div>
-</box>
 </window>

@@ -10,21 +10,24 @@
   <html:script src="am-server.js"/>
 
   <html:input type="hidden" name="server.type" id="server.type"/>
+  <html:input type="hidden" name="server.hostName" id="server.hostName"/>
+  <html:input type="hidden" name="server.username" id="server.username"/>
+
   <html:div>&serverSettings.label;</html:div>
-  <box align="vertical" class="cleanborder">
+  <box align="vertical">
   <box align="horizontal">
     <html:div flex="20%">&serverType.label;</html:div>
-    <html:div flex="80%" id="server.type.verbose"/>
+    <html:div flex="80%" id="servertype.verbose"/>
   </box>
 
   <box align="horizontal">
     <html:div flex="20%">&serverName.label;</html:div>
-    <html:input flex="80%" type="text" name="server.hostName"/>
+    <html:div flex="80%" id="servername.verbose"/>
   </box>
 
   <box>
     <html:div flex="20%">&userName.label;</html:div>
-    <html:input flex="80%" type="text" name="server.username"/>
+    <html:div flex="80%" id="username.verbose"/>
   </box>
 
   <html:div><html:input name="server.rememberPassword"
@@ -36,5 +39,34 @@
             <html:spacer/>&biffEnd.label;
   </html:div>
   </box>
-  <html:iframe id="server-type" src="am-server-pop3.xul" scrolling="auto" style="border: none" flex="100%"/>
+  <tabcontrol>
+    <deck id="serverdeck">
+      <!-- POP -->
+      <box align="vertical" flex="100%">
+        <html:div><html:input type="checkbox"/>&leaveOnServer.label;</html:div>
+        <html:div><html:input type="checkbox"/>&deleteOnServer.label;</html:div>
+        <html:div><html:input type="checkbox"/>&emptyTrashOnExit.label;</html:div>
+      </box>
+      <!-- IMAP -->
+      <box align="vertical" flex="100%">
+        <html:div>&deleteMessagePrefix.label;</html:div>
+        <html:div>
+          <html:select name="server.deleteModel">
+            <html:option value="0">&modelMoveToTrash.label;</html:option>
+            <html:option value="1">&modelMarkDeleted.label;</html:option>
+            <html:option value="2">&modelDeleteImmediately.label;</html:option>
+          </html:select>
+        </html:div>
+        <html:div><html:input type="checkbox"/>&expungeOnExit.label;</html:div>
+        <html:div><html:input type="checkbox"/>&emptyTrashOnExit.label;</html:div>
+      </box>
+      <!-- News -->
+      <box align="vertical" flex="100%">
+       
+      </box>
+      <!-- None -->
+      <box align="vertical" flex="100%">
+      </box>
+    </deck>
+  </tabcontrol>
 </window>

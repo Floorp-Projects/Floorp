@@ -25,18 +25,40 @@ function onInit() {
 
 function initServerType() {
   var serverType = document.getElementById("server.type").value;
-  var serverTypeVerbose = document.getElementById("server.type.verbose");
-  if (!serverTypeVerbose) return;
   
   var verboseName;
-  
-  if (serverType == "pop3") verboseName = "POP Mail server";
-  if (serverType == "imap") verboseName = "IMAP Mail server";
-  if (serverType == "nntp") verboseName = "News server";
+  var index;
+  if (serverType == "pop3") {
+      verboseName = "POP Mail server";
+      index = 0;
+  } else if (serverType == "imap") {
+      verboseName = "IMAP Mail server";
+      index = 1;
+  } else if (serverType == "nntp") {
+      verboseName = "News server";
+      index = 2;
+  } else if (serverType == "none") {
+      verboseName = "Local Mail store";
+      index = 3;
+  }
 
-  if (serverTypeVerbose.firstChild)
-    serverTypeVerbose.removeChild(serverTypeVerbose.firstChild);
+  if (index) {
+      var deck = document.getElementById("serverdeck");
+      dump("deck index was " + deck.getAttribute("index") + "\n");
+      deck.setAttribute("index", index);
+  }
 
-  serverTypeVerbose.appendChild(document.createTextNode(verboseName));
+  var hostname = document.getElementById("server.hostName").value;
+  var username = document.getElementById("server.username").value;
+
+  setDivText("servertype.verbose", verboseName);
+  setDivText("servername.verbose", hostname);
+  setDivText("username.verbose", username);
 }
 
+function setDivText(divname, value) {
+    var div = document.getElementById(divname);
+    if (div.firstChild)
+        div.removeChild(div.firstChild);
+    div.appendChild(document.createTextNode(value));
+}
