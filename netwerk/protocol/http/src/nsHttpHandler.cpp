@@ -954,7 +954,7 @@ nsHttpHandler::InitUserAgentComponents()
                 mOscpu.Adopt(nsCRT::strdup("WinNT3.51"));
             else if (info.dwMajorVersion == 4)
                 mOscpu.Adopt(nsCRT::strdup("WinNT4.0"));
-            else if (info.dwMajorVersion >= 5) {
+            else {
                 char *buf = PR_smprintf("Windows NT %ld.%ld",
                                         info.dwMajorVersion,
                                         info.dwMinorVersion);
@@ -963,15 +963,22 @@ nsHttpHandler::InitUserAgentComponents()
                     PR_smprintf_free(buf);
                 }
             }
-            else
-                mOscpu.Adopt(nsCRT::strdup("WinNT"));
-        } else if (info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
+        } else if (info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS &&
+                   info.dwMajorVersion == 4) {
             if (info.dwMinorVersion == 90)
-                mOscpu.Adopt(nsCRT::strdup("Win 9x 4.90"));
+                mOscpu.Adopt(nsCRT::strdup("Win 9x 4.90"));  // Windows Me
             else if (info.dwMinorVersion > 0)
                 mOscpu.Adopt(nsCRT::strdup("Win98"));
             else
                 mOscpu.Adopt(nsCRT::strdup("Win95"));
+        } else {
+            char *buf = PR_smprintf("Windows %ld.%ld",
+                                    info.dwMajorVersion,
+                                    info.dwMinorVersion);
+            if (buf) {
+                mOscpu.Adopt(nsCRT::strdup(buf));
+                PR_smprintf_free(buf);
+            }
         }
     }
 #elif defined (XP_UNIX) || defined (XP_BEOS)
