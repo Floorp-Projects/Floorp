@@ -44,9 +44,7 @@
 #pragma profile on
 #endif
 
-#ifdef PRIVACY_POLICIES
 #include "privacy.h"
-#endif
 
 #ifdef TRANSACTION_RECEIPTS 
 #include "receipt.h"
@@ -3351,18 +3349,12 @@ LO_SubmitForm(MWContext *context, LO_FormElementStruct *form_element)
 		return(NULL);
 	}
 
-#ifdef PRIVACY_POLICIES
 	/* Privacy Policy check.. Should this go elsewhere? */
-
 	if (!PRVCY_PrivacyPolicyConfirmSubmit(context,form_element))
 		return(NULL);
 
-#endif /* PRIVACY_POLICIES */
-
 #ifdef TRANSACTION_RECEIPTS
-#ifdef DEBUG_dfm
 	RT_SaveDocument(context, form_element);
-#endif
 #endif /* TRANSACTION_RECEIPTS */
 
 	return(submit_data);

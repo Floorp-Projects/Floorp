@@ -41,10 +41,8 @@
 #include "libmocha.h"
 #include "libevent.h"
 
-#ifdef PRIVACY_POLICIES
 #include "shist.h"
 #include "privacy.h"
-#endif
 
 #include "intl_csi.h"
 /* WEBFONTS are defined only in laytags.c and layout.c */
@@ -6722,7 +6720,6 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 						}
 					}						
 
-#ifdef PRIVACY_POLICIES
 					else if (!strcasecomp((char *)buff, "privacypolicy"))
 					{
 						char *policyURL;
@@ -6750,7 +6747,6 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 								hist->privacy_policy_url = policyURL;
 						}	
 					}				
-#endif /* PRIVACY_POLICIES */		
 
 					PA_FREE(buff);
 				}
