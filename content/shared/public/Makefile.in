@@ -58,9 +58,9 @@ ifdef MOZ_SVG
 EXPORTS += nsSVGAtomList.h nsSVGAtoms.h
 endif
 
+include $(topsrcdir)/config/rules.mk
+
 ifdef IBMBIDI
 EXPORTS += nsBidiUtils.h
 endif
-
-include $(topsrcdir)/config/rules.mk
 
