@@ -2662,7 +2662,7 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
         nsCSSRect* ourBorderColor = ourMargin->mBorderColor;
         nscolor borderColor;
         nscolor unused = NS_RGB(0,0,0);
-
+        // top
         if (eCSSUnit_Inherit == ourBorderColor->mTop.GetUnit()) {
           if (parentBorder->GetBorderColor(NS_SIDE_TOP, borderColor)) {
             border->SetBorderColor(NS_SIDE_TOP, borderColor);
@@ -2675,9 +2675,17 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
           border->SetBorderColor(NS_SIDE_TOP, borderColor);
         }
         else if (eCSSUnit_Enumerated == ourBorderColor->mTop.GetUnit()) {
-          border->SetBorderTransparent(NS_SIDE_TOP);
+          switch (ourBorderColor->mTop.GetIntValue()) {
+            case NS_STYLE_COLOR_TRANSPARENT:
+              border->SetBorderTransparent(NS_SIDE_TOP);
+              break;
+            case NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR:
+              const nsStyleColor* ourColor = (const nsStyleColor*)aContext->GetStyleData(eStyleStruct_Color);
+              border->SetBorderColor(NS_SIDE_TOP, ourColor->mColor);
+              break;
+          }
         }
-
+        // right
         if (eCSSUnit_Inherit == ourBorderColor->mRight.GetUnit()) {
           if (parentBorder->GetBorderColor(NS_SIDE_RIGHT, borderColor)) {
             border->SetBorderColor(NS_SIDE_RIGHT, borderColor);
@@ -2689,10 +2697,18 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
         else if (SetColor(ourBorderColor->mRight, unused, aPresContext, borderColor)) {
           border->SetBorderColor(NS_SIDE_RIGHT, borderColor);
         }
-        else if (eCSSUnit_Enumerated == ourBorderColor->mRight.GetUnit()) {
-          border->SetBorderTransparent(NS_SIDE_RIGHT);
+        else if (eCSSUnit_Enumerated == ourBorderColor->mTop.GetUnit()) {
+          switch (ourBorderColor->mRight.GetIntValue()) {
+            case NS_STYLE_COLOR_TRANSPARENT:
+              border->SetBorderTransparent(NS_SIDE_RIGHT);
+              break;
+            case NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR:
+              const nsStyleColor* ourColor = (const nsStyleColor*)aContext->GetStyleData(eStyleStruct_Color);
+              border->SetBorderColor(NS_SIDE_RIGHT, ourColor->mColor);
+              break;
+          }
         }
-
+        // bottom
         if (eCSSUnit_Inherit == ourBorderColor->mBottom.GetUnit()) {
           if (parentBorder->GetBorderColor(NS_SIDE_BOTTOM, borderColor)) {
             border->SetBorderColor(NS_SIDE_BOTTOM, borderColor);
@@ -2704,10 +2720,18 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
         else if (SetColor(ourBorderColor->mBottom, unused, aPresContext, borderColor)) {
           border->SetBorderColor(NS_SIDE_BOTTOM, borderColor);
         }
-        else if (eCSSUnit_Enumerated == ourBorderColor->mBottom.GetUnit()) {
-          border->SetBorderTransparent(NS_SIDE_BOTTOM);
+        else if (eCSSUnit_Enumerated == ourBorderColor->mTop.GetUnit()) {
+          switch (ourBorderColor->mBottom.GetIntValue()) {
+            case NS_STYLE_COLOR_TRANSPARENT:
+              border->SetBorderTransparent(NS_SIDE_BOTTOM);
+              break;
+            case NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR:
+              const nsStyleColor* ourColor = (const nsStyleColor*)aContext->GetStyleData(eStyleStruct_Color);
+              border->SetBorderColor(NS_SIDE_BOTTOM, ourColor->mColor);
+              break;
+          }
         }
-
+        // left
         if (eCSSUnit_Inherit == ourBorderColor->mLeft.GetUnit()) {
           if (parentBorder->GetBorderColor(NS_SIDE_LEFT, borderColor)) {
             border->SetBorderColor(NS_SIDE_LEFT, borderColor);
@@ -2719,8 +2743,16 @@ MapDeclarationMarginInto(nsICSSDeclaration* aDeclaration,
         else if (SetColor(ourBorderColor->mLeft, unused, aPresContext, borderColor)) {
           border->SetBorderColor(NS_SIDE_LEFT, borderColor);
         }
-        else if (eCSSUnit_Enumerated == ourBorderColor->mLeft.GetUnit()) {
-          border->SetBorderTransparent(NS_SIDE_LEFT);
+        else if (eCSSUnit_Enumerated == ourBorderColor->mTop.GetUnit()) {
+          switch (ourBorderColor->mLeft.GetIntValue()) {
+            case NS_STYLE_COLOR_TRANSPARENT:
+              border->SetBorderTransparent(NS_SIDE_LEFT);
+              break;
+            case NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR:
+              const nsStyleColor* ourColor = (const nsStyleColor*)aContext->GetStyleData(eStyleStruct_Color);
+              border->SetBorderColor(NS_SIDE_LEFT, ourColor->mColor);
+              break;
+          }
         }
       }
 

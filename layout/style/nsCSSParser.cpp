@@ -3953,8 +3953,8 @@ PRBool CSSParserImpl::ParseBorder(PRInt32& aErrorCode, nsICSSDeclaration* aDecla
     values[1].SetNoneValue();
   }
 
-  if (0 == (found & 4)) { // clear missing color values so color property will be used
-    values[2].Reset();
+  if (0 == (found & 4)) { // text color will be used
+    values[2].SetIntValue(NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR, eCSSUnit_Enumerated);
   }
 
   PRInt32 index;
