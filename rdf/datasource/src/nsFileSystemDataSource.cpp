@@ -202,8 +202,8 @@ FileSystemDataSource::FileSystemDataSource(void)
 
         PR_ASSERT(NS_SUCCEEDED(rv));
 
-	gRDFService->GetResource(NC_NAMESPACE_URI "FileSystemRoot",   &kNC_FileSystemRoot);
-	gRDFService->GetResource(NC_NAMESPACE_URI "Child",            &kNC_Child);
+	gRDFService->GetResource(kURINC_FileSystemRoot,               &kNC_FileSystemRoot);
+	gRDFService->GetResource(NC_NAMESPACE_URI "child",            &kNC_Child);
 	gRDFService->GetResource(NC_NAMESPACE_URI "Name",             &kNC_Name);
 	gRDFService->GetResource(NC_NAMESPACE_URI "URL",              &kNC_URL);
 	gRDFService->GetResource(NC_NAMESPACE_URI "FileSystemObject", &kNC_FileSystemObject);
