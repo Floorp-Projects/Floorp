@@ -248,8 +248,7 @@ public:
   PRInt32 ExtractFile(const char * zipEntry, const char * aOutname,
                       PRFileDesc* aFd);
 
-  PRInt32 ExtractFileToFileDesc(const char * zipEntry, PRFileDesc* outFD,
-                                nsZipItem **outItem,
+  PRInt32 ExtractItemToFileDesc(nsZipItem* item, PRFileDesc* outFD,
                                 PRFileDesc* aFd);
 
   /**

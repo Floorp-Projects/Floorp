@@ -232,7 +232,7 @@ nsJAR::Open()
   nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(mZipFile, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  rv = localFile->OpenNSPRFileDesc(PR_RDONLY, 0664, &mFd);
+  rv = localFile->OpenNSPRFileDesc(PR_RDONLY, 0000, &mFd);
   if (NS_FAILED(rv)) return rv;
 
   PRInt32 err = mZip.OpenArchiveWithFileDesc(mFd);
@@ -274,12 +274,19 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
   nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(outFile, &rv);
   if (NS_FAILED(rv)) return rv;
 
+  nsZipItem *item = 0;
+  PRInt32 err = mZip.GetItem(zipEntry, &item);
+  if (err != ZIP_OK)
+    return ziperr2nsresult(err);
+
+  // Remove existing file so we set permissions correctly.
+  localFile->Remove(PR_FALSE);
+
   PRFileDesc* fd;
-  rv = localFile->OpenNSPRFileDesc(PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 0664, &fd);
+  rv = localFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE, item->mode, &fd);
   if (NS_FAILED(rv)) return NS_ERROR_FILE_ACCESS_DENIED;
 
-  nsZipItem *item = 0;
-  PRInt32 err = mZip.ExtractFileToFileDesc(zipEntry, fd, &item, mFd);
+  err = mZip.ExtractItemToFileDesc(item, fd, mFd);
   PR_Close(fd);
 
   if (err != ZIP_OK)
@@ -287,15 +294,14 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
   else
   {
 #if defined(XP_UNIX)
-    nsCAutoString path;
-    rv = outFile->GetNativePath(path);
-    if (NS_SUCCEEDED(rv)) 
+    if (item->flags & ZIFLAG_SYMLINK) 
     {
-      if (item->flags & ZIFLAG_SYMLINK) 
+      nsCAutoString path;
+      rv = outFile->GetNativePath(path);
+      if (NS_SUCCEEDED(rv)) 
       {
         err = mZip.ResolveSymlink(path.get(),item);
       }
-      chmod(path.get(), item->mode);
     }
 #endif
 
@@ -446,7 +452,7 @@ nsJAR::OpenFile()
   if (NS_FAILED(rv)) return nsnull;
 
   PRFileDesc* fd;
-  rv = localFile->OpenNSPRFileDesc(PR_RDONLY, 0664, &fd);
+  rv = localFile->OpenNSPRFileDesc(PR_RDONLY, 0000, &fd);
   if (NS_FAILED(rv)) return nsnull;
 
   return fd;
