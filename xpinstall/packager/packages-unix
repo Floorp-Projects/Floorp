@@ -231,6 +231,7 @@ bin/res/acceptlanguage.properties
 bin/res/unixcharset.properties
 bin/res/charsetData.properties
 bin/res/charsetTitles.properties
+bin/res/langGroups.properties
 bin/res/html.css
 bin/res/html/*
 bin/res/rdf/article.gif
