@@ -88,6 +88,7 @@
 #include "nsIPresShell.h"
 #include "nsIPrincipal.h"
 #include "nsIRDFCompositeDataSource.h"
+#include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
 #include "nsIScriptContext.h"
@@ -1887,25 +1888,6 @@ nsXULElement::ForceElementToOwnResource(PRBool aForce)
         mSlots->mOwnedResource = nsnull;
     }
 
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsXULElement::InitTemplateRoot(nsIRDFCompositeDataSource* aDatabase,
-                               nsIXULTemplateBuilder* aBuilder)
-{
-    // Sanity check
-    NS_PRECONDITION(Database() == nsnull, "already initialized");
-    if (Database())
-        return NS_ERROR_ALREADY_INITIALIZED;
-
-    nsresult rv;
-    rv = EnsureSlots();
-    if (NS_FAILED(rv)) return rv;
-
-    mSlots->mDatabase = aDatabase;
-    mSlots->mBuilder = aBuilder;
     return NS_OK;
 }
 
@@ -3882,8 +3864,14 @@ nsXULElement::GetResource(nsIRDFResource** aResource)
 NS_IMETHODIMP
 nsXULElement::GetDatabase(nsIRDFCompositeDataSource** aDatabase)
 {
-    *aDatabase = Database();
-    NS_IF_ADDREF(*aDatabase);
+    nsCOMPtr<nsIXULTemplateBuilder> builder;
+    GetBuilder(getter_AddRefs(builder));
+
+    if (builder)
+        builder->GetDatabase(aDatabase);
+    else
+        *aDatabase = nsnull;
+
     return NS_OK;
 }
 
@@ -3891,8 +3879,14 @@ nsXULElement::GetDatabase(nsIRDFCompositeDataSource** aDatabase)
 NS_IMETHODIMP
 nsXULElement::GetBuilder(nsIXULTemplateBuilder** aBuilder)
 {
-    *aBuilder = Builder();
-    NS_IF_ADDREF(*aBuilder);
+    *aBuilder = nsnull;
+
+    if (mDocument) {
+        nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mDocument);
+        if (xuldoc)
+            xuldoc->GetTemplateBuilderFor(NS_STATIC_CAST(nsIStyledContent*, this), aBuilder);
+    }
+
     return NS_OK;
 }
 
@@ -3918,14 +3912,35 @@ nsXULElement::EnsureContentsGenerated(void) const
         // getters if needed.
         unconstThis->mLazyState &= ~nsIXULContent::eChildrenMustBeRebuilt;
 
-        nsCOMPtr<nsIXULDocument> rdfDoc = do_QueryInterface(mDocument);
-        if (! mDocument)
-            return NS_OK;
+        // Walk up our ancestor chain, looking for an element with a
+        // XUL content model builder attached to it.
+        nsCOMPtr<nsIContent> element
+            = do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, unconstThis));
 
-        nsresult rv = rdfDoc->CreateContents(NS_STATIC_CAST(nsIStyledContent*, unconstThis));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "problem creating kids");
-        if (NS_FAILED(rv)) return rv;
+        do {
+            nsCOMPtr<nsIDOMXULElement> xulele = do_QueryInterface(element);
+            if (xulele) {
+                nsCOMPtr<nsIXULTemplateBuilder> builder;
+                xulele->GetBuilder(getter_AddRefs(builder));
+                if (builder) {
+                    nsCOMPtr<nsIRDFContentModelBuilder> contentBuilder =
+                        do_QueryInterface(builder);
+
+                    if (contentBuilder)
+                        return contentBuilder->CreateContents(NS_STATIC_CAST(nsIStyledContent*, unconstThis));
+                }
+            }
+
+            nsCOMPtr<nsIContent> parent;
+            element->GetParent(*getter_AddRefs(parent));
+
+            element = parent;
+        } while (element);
+
+        NS_ERROR("lazy state set with no XUL content builder in ancestor chain");
+        return NS_ERROR_UNEXPECTED;
     }
+
     return NS_OK;
 }
 
@@ -4645,7 +4660,6 @@ nsXULElement::Slots::Slots(nsXULElement* aElement)
     : mElement(aElement),
       mBroadcastListeners(nsnull),
       mBroadcaster(nsnull),
-      mBuilder(nsnull),
       mAttributes(nsnull),
       mInnerXULElement(nsnull)
 {

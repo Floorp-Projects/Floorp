@@ -31,8 +31,26 @@ LIBRARY_NAME	= gkconxultmpl_s
 REQUIRES	= xpcom string js xpconnect timer caps widget dom rdf necko locale xul xuldoc xultmpl
 
 CPPSRCS		= \
+		nsClusterKey.cpp \
+		nsClusterKeySet.cpp \
+		nsConflictSet.cpp \
+		nsContentSupportMap.cpp \
+		nsContentTagTestNode.cpp \
+		nsContentTestNode.cpp \
+		nsInstantiationNode.cpp \
+		nsOutlinerRowTestNode.cpp \
+		nsOutlinerRows.cpp \
+		nsRDFConInstanceTestNode.cpp \
+		nsRDFConMemberTestNode.cpp \
+		nsRDFPropertyTestNode.cpp \
+		nsResourceSet.cpp \
 		nsRuleNetwork.cpp \
+		nsTemplateMatch.cpp \
+		nsTemplateMatchSet.cpp \
+		nsTemplateRule.cpp \
+		nsXULContentBuilder.cpp \
 		nsXULContentUtils.cpp \
+		nsXULOutlinerBuilder.cpp \
 		nsXULSortService.cpp \
 		nsXULTemplateBuilder.cpp \
 		$(NULL)

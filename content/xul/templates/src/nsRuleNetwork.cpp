@@ -44,40 +44,84 @@
 #include "nsRuleNetwork.h"
 #include "plhash.h"
 
+#include "prlog.h"
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* gXULTemplateLog;
+#endif
 
 //----------------------------------------------------------------------
 //
 // nsRuleNetwork
 //
 
-nsRuleNetwork::nsRuleNetwork()
-    : mNextVariable(0)
+static PLDHashNumber CRT_CALL
+HashEntry(PLDHashTable* aTable, const void* aKey)
 {
+    return nsCRT::HashCode(NS_STATIC_CAST(const PRUnichar*, aKey));
 }
 
-nsRuleNetwork::~nsRuleNetwork()
+static PRBool CRT_CALL
+MatchEntry(PLDHashTable* aTable, const PLDHashEntryHdr* aEntry, const void* aKey)
 {
-    Clear();
+    const nsRuleNetwork::SymtabEntry* entry =
+        NS_REINTERPRET_CAST(const nsRuleNetwork::SymtabEntry*, aEntry);
+
+    return 0 == nsCRT::strcmp(entry->mSymbol, NS_STATIC_CAST(const PRUnichar*, aKey));
 }
 
-nsresult
-nsRuleNetwork::CreateVariable(PRInt32* aVariable)
+static void CRT_CALL
+ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {
-    *aVariable = ++mNextVariable;
-    return NS_OK;
+    nsRuleNetwork::SymtabEntry* entry =
+        NS_REINTERPRET_CAST(nsRuleNetwork::SymtabEntry*, aEntry);
+
+    nsCRT::free(entry->mSymbol);
+    PL_DHashClearEntryStub(aTable, aEntry);
+}
+
+static PLDHashOperator
+RemoveEach(PLDHashTable* aTable, PLDHashEntryHdr* aEntry, PRUint32 aNumber, void* aArg)
+{
+    return PL_DHASH_REMOVE;
 }
 
 
-nsresult
-nsRuleNetwork::Clear()
+static void CRT_CALL
+FinalizeTable(PLDHashTable* aTable)
 {
+    PL_DHashTableEnumerate(aTable, RemoveEach, nsnull);
+    PL_DHashFinalizeStub(aTable);
+}
+
+PLDHashTableOps nsRuleNetwork::gOps = {
+    PL_DHashAllocTable,
+    PL_DHashFreeTable,
+    PL_DHashGetKeyStub,
+    HashEntry,
+    MatchEntry,
+    PL_DHashMoveEntryStub,
+    ClearEntry,
+    FinalizeTable
+};
+
+void
+nsRuleNetwork::Init()
+{
+    mNextVariable = 0;
+    PL_DHashTableInit(&mSymtab, &gOps, nsnull, sizeof(SymtabEntry), PL_DHASH_MIN_SIZE);
+}
+
+void
+nsRuleNetwork::Finish()
+{
+    PL_DHashTableFinish(&mSymtab);
+
     // We "own" the nodes. So it's up to us to delete 'em
     for (NodeSet::Iterator node = mNodes.First(); node != mNodes.Last(); ++node)
         delete *node;
 
     mNodes.Clear();
     mRoot.RemoveAllChildren();
-    return NS_OK;
 }
 
 
@@ -85,6 +129,33 @@ nsRuleNetwork::Clear()
 //
 // Value
 //
+
+#ifdef DEBUG
+/**
+ * A debug-only implementation that verifies that 1) aValue really
+ * is an nsISupports, and 2) that it really does support the IID
+ * that is being asked for.
+ */
+nsISupports*
+value_to_isupports(const nsIID& aIID, const Value& aValue)
+{
+    nsresult rv;
+
+    // Need to const_cast aValue because QI() & Release() are not const
+    nsISupports* isupports = NS_STATIC_CAST(nsISupports*, NS_CONST_CAST(Value&, aValue));
+    if (isupports) {
+        nsISupports* dummy;
+        rv = isupports->QueryInterface(aIID, (void**) &dummy);
+        if (NS_SUCCEEDED(rv)) {
+            NS_RELEASE(dummy);
+        }
+        else {
+            NS_ERROR("value does not support expected interface");
+        }
+    }
+    return isupports;
+}
+#endif
 
 Value::Value(const Value& aValue)
     : mType(aValue.mType)
@@ -103,24 +174,33 @@ Value::Value(const Value& aValue)
     case eString:
         mString = nsCRT::strdup(aValue.mString);
         break;
+
+    case eInteger:
+        mInteger = aValue.mInteger;
+        break;
     }
 }
 
 Value::Value(nsISupports* aISupports)
+    : mType(eISupports)
 {
     MOZ_COUNT_CTOR(Value);
-
-    mType = eISupports;
     mISupports = aISupports;
     NS_IF_ADDREF(mISupports);
 }
 
 Value::Value(const PRUnichar* aString)
+    : mType(eString)
 {
     MOZ_COUNT_CTOR(Value);
-
-    mType = eString;
     mString = nsCRT::strdup(aString);
+}
+
+Value::Value(PRInt32 aInteger)
+    : mType(eInteger)
+{
+    MOZ_COUNT_CTOR(Value);
+    mInteger = aInteger;
 }
 
 Value&
@@ -141,6 +221,10 @@ Value::operator=(const Value& aValue)
 
     case eString:
         mString = nsCRT::strdup(aValue.mString);
+        break;
+
+    case eInteger:
+        mInteger = aValue.mInteger;
         break;
     }
 
@@ -182,6 +266,7 @@ void
 Value::Clear()
 {
     switch (mType) {
+    case eInteger:
     case eUndefined:
         break;
 
@@ -192,6 +277,7 @@ Value::Clear()
     case eString:
         nsCRT::free(mString);
         break;
+
     }
 }
 
@@ -209,6 +295,9 @@ Value::Equals(const Value& aValue) const
 
         case eString:
             return nsCRT::strcmp(mString, aValue.mString) == 0;
+
+        case eInteger:
+            return mInteger == aValue.mInteger;
         }
     }
     return PR_FALSE;
@@ -224,6 +313,12 @@ PRBool
 Value::Equals(const PRUnichar* aString) const
 {
     return (mType == eString) && (nsCRT::strcmp(aString, mString) == 0);
+}
+
+PRBool
+Value::Equals(PRInt32 aInteger) const
+{
+    return (mType == eInteger) && (mInteger == aInteger);
 }
 
 
@@ -250,6 +345,10 @@ Value::Hash() const
             }
         }
         break;
+
+    case eInteger:
+        temp = mInteger;
+        break;
     }
 
     return temp;
@@ -266,6 +365,12 @@ Value::operator const PRUnichar*() const
 {
     NS_ASSERTION(mType == eString, "not a string");
     return (mType == eString) ? mString : 0;
+}
+
+Value::operator PRInt32() const
+{
+    NS_ASSERTION(mType == eInteger, "not an integer");
+    return (mType == eInteger) ? mInteger : 0;
 }
 
 
@@ -590,9 +695,15 @@ InstantiationSet::HasAssignmentFor(PRInt32 aVariable) const
 nsresult
 RootNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
 {
+    PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+           ("RootNode[%p]: Propogate() begin", this));
+
     NodeSet::Iterator last = mKids.Last();
     for (NodeSet::Iterator kid = mKids.First(); kid != last; ++kid)
         kid->Propogate(aInstantiations, aClosure);
+
+    PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+           ("RootNode[%p]: Propogate() end", this));
 
     return NS_OK;
 }
@@ -600,6 +711,9 @@ RootNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
 nsresult
 RootNode::Constrain(InstantiationSet& aInstantiations, void* aClosure)
 {
+    PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+           ("RootNode[%p]: Constrain()", this));
+
     return NS_OK;
 }
 
@@ -866,15 +980,25 @@ TestNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
 {
     nsresult rv;
 
+    PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+           ("TestNode[%p]: Propogate() begin", this));
+
     InstantiationSet instantiations = aInstantiations;
     rv = FilterInstantiations(instantiations, aClosure);
     if (NS_FAILED(rv)) return rv;
 
     if (! instantiations.Empty()) {
         NodeSet::Iterator last = mKids.Last();
-        for (NodeSet::Iterator kid = mKids.First(); kid != last; ++kid)
+        for (NodeSet::Iterator kid = mKids.First(); kid != last; ++kid) {
+            PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+                   ("TestNode[%p]: Propogate() passing to child %p", this, kid.operator->()));
+
             kid->Propogate(instantiations, aClosure);
+        }
     }
+
+    PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+           ("TestNode[%p]: Propogate() end", this));
 
     return NS_OK;
 }
@@ -885,17 +1009,30 @@ TestNode::Constrain(InstantiationSet& aInstantiations, void* aClosure)
 {
     nsresult rv;
 
+    PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+           ("TestNode[%p]: Constrain() begin", this));
+
     rv = FilterInstantiations(aInstantiations, aClosure);
     if (NS_FAILED(rv)) return rv;
 
     if (! aInstantiations.Empty()) {
         // if we still have instantiations, then ride 'em on up to the
         // parent to narrow them.
+
+        PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+               ("TestNode[%p]: Constrain() passing to parent %p", this, mParent));
+
         rv = mParent->Constrain(aInstantiations, aClosure);
     }
     else {
+        PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+               ("TestNode[%p]: Constrain() failed", this));
+
         rv = NS_OK;
     }
+
+    PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+           ("TestNode[%p]: Constrain() end", this));
 
     return rv;
 }

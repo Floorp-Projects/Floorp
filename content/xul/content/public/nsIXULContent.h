@@ -104,12 +104,6 @@ public:
      * should call this method, think again. You shouldn't.
      */
     NS_IMETHOD ForceElementToOwnResource(PRBool aForce) = 0;
-
-    /**
-     * Initialize the root element in a XUL template
-     */
-    NS_IMETHOD InitTemplateRoot(nsIRDFCompositeDataSource* aDatabase,
-                                nsIXULTemplateBuilder* aBuilder) = 0;
 };
 
 #endif // nsIXULContent_h__

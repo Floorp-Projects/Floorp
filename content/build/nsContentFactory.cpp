@@ -171,6 +171,7 @@ extern nsresult NS_NewContentPolicy(nsIContentPolicy** aResult);
 
 static NS_DEFINE_CID(kXULSortServiceCID,     NS_XULSORTSERVICE_CID);
 static NS_DEFINE_CID(kXULTemplateBuilderCID, NS_XULTEMPLATEBUILDER_CID);
+static NS_DEFINE_CID(kXULOutlinerBuilderCID, NS_XULOUTLINERBUILDER_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,     NS_XULCONTENTSINK_CID);
 static NS_DEFINE_CID(kXULDocumentCID,        NS_XULDOCUMENT_CID);
 static NS_DEFINE_CID(kXULPopupListenerCID,   NS_XULPOPUPLISTENER_CID);
@@ -530,9 +531,16 @@ nsContentFactory::CreateInstance(nsISupports *aOuter,
     }
   }
   else if (mClassID.Equals(kXULTemplateBuilderCID)) {
-    res = NS_NewXULTemplateBuilder((nsIRDFContentModelBuilder**) &inst);
+    res = NS_NewXULContentBuilder(nsnull, aIID, (void**) &inst);
     if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewXULTemplateBuilder", res);
+      LOG_NEW_FAILURE("NS_NewXULContentBuilder", res);
+      return res;
+    }
+  }
+  else if (mClassID.Equals(kXULOutlinerBuilderCID)) {
+    res = NS_NewXULOutlinerBuilder(nsnull, aIID, (void**) &inst);
+    if (NS_FAILED(res)) {
+      LOG_NEW_FAILURE("NS_NewXULOutlinerBuilder", res);
       return res;
     }
   }

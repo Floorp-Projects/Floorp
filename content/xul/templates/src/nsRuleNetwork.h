@@ -17,10 +17,8 @@
  * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author(s):
- *   Chris Waterson <waterson@netscape.com>
- *
  * Contributor(s): 
+ *   Chris Waterson <waterson@netscape.com>
  */
 
 /*
@@ -51,6 +49,7 @@
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "plhash.h"
+#include "pldhash.h"
 
 class nsIRDFResource;
 class nsIRDFNode;
@@ -63,7 +62,7 @@ class nsIRDFNode;
  */
 class Value {
 public:
-    enum Type { eUndefined, eISupports, eString };
+    enum Type { eUndefined, eISupports, eString, eInteger };
 
 protected:
     Type mType;
@@ -71,11 +70,13 @@ protected:
     union {
         nsISupports* mISupports;
         PRUnichar*   mString;
+        PRInt32      mInteger;
     };
 
     PRBool Equals(const Value& aValue) const;
     PRBool Equals(nsISupports* aISupports) const;
     PRBool Equals(const PRUnichar* aString) const;
+    PRBool Equals(PRInt32 aInteger) const;
 
     void Clear();
 
@@ -86,20 +87,24 @@ public:
     Value(const Value& aValue);
     Value(nsISupports* aISupports);
     Value(const PRUnichar* aString);
+    Value(PRInt32 aInteger);
 
     Value& operator=(const Value& aValue);
     Value& operator=(nsISupports* aISupports);
     Value& operator=(const PRUnichar* aString);
+    Value& operator=(PRInt32 aInteger);
 
     ~Value();
 
     PRBool operator==(const Value& aValue) const { return Equals(aValue); }
     PRBool operator==(nsISupports* aISupports) const { return Equals(aISupports); }
     PRBool operator==(const PRUnichar* aString) const { return Equals(aString); }
+    PRBool operator==(PRInt32 aInteger) const { return Equals(aInteger); }
 
     PRBool operator!=(const Value& aValue) const { return !Equals(aValue); }
     PRBool operator!=(nsISupports* aISupports) const { return !Equals(aISupports); }
     PRBool operator!=(const PRUnichar* aString) const { return !Equals(aString); }
+    PRBool operator!=(PRInt32 aInteger) const { return !Equals(aInteger); }
 
     /**
      * Get the value's type
@@ -122,8 +127,34 @@ public:
      */
     operator const PRUnichar*() const;
 
+    /**
+     * Treat the value as an integer.
+     * @return the value as an integer, or zero if the value is
+     *   not an integer
+     */
+    operator PRInt32() const;
+
     PLHashNumber Hash() const;
 };
+
+#ifdef DEBUG
+extern nsISupports*
+value_to_isupports(const nsIID& aIID, const Value& aValue);
+
+#  define VALUE_TO_ISUPPORTS(type, v) \
+        NS_STATIC_CAST(type*, value_to_isupports(NS_GET_IID(type), (v)))
+#else
+#  define VALUE_TO_ISUPPORTS(type, v) \
+        NS_STATIC_CAST(type*, NS_STATIC_CAST(nsISupports*, (v)))
+#endif
+
+// Convenience wrappers for |Value::operator nsISupports*()|. In a
+// debug build, they expand to versions that will call QI() and verify
+// that the types are kosher. In an optimized build, they'll just cast
+// n' go. Rock on!
+#define VALUE_TO_IRDFRESOURCE(v) VALUE_TO_ISUPPORTS(nsIRDFResource, (v))
+#define VALUE_TO_IRDFNODE(v)     VALUE_TO_ISUPPORTS(nsIRDFNode, (v))
+#define VALUE_TO_ICONTENT(v)     VALUE_TO_ISUPPORTS(nsIContent, (v))
 
 //----------------------------------------------------------------------
 
@@ -1054,15 +1085,21 @@ protected:
 class nsRuleNetwork
 {
 public:
-    nsRuleNetwork();
-    ~nsRuleNetwork();
+    struct SymtabEntry {
+        PLDHashEntryHdr mHdr;
+        PRUnichar*      mSymbol;
+        PRInt32         mVariable;
+    };
+    
+    nsRuleNetwork() { Init(); }
+    ~nsRuleNetwork() { Finish(); }
 
     /**
      * Remove all the nodes from the network. The nodes will be 
      * destroyed
      * @return NS_OK if no errors occur
      */ 
-    nsresult Clear();
+    void Clear() { Finish(); Init(); }
 
     /**
      * Add a node to the network. The network assumes ownership of the
@@ -1075,24 +1112,79 @@ public:
     nsresult AddNode(ReteNode* aNode) { return mNodes.Add(aNode); }
 
     /**
-     * Create a new, unique variable.
-     * @param aVariable an out parameter that receives the new
-     *   variable.
-     * @return NS_OK if no errors occur
-     */
-    nsresult CreateVariable(PRInt32* aVariable);
-
-    /**
      * Retrieve the root node in the rule network
      * @return the root node in the rule network
      */
     RootNode* GetRoot() { return &mRoot; };
 
+    /**
+     * Create an unnamed variable
+     */
+    PRInt32 CreateAnonymousVariable() { return ++mNextVariable; }
+
+    /**
+     * Assign a symbol to a variable
+     */
+    void PutSymbol(const PRUnichar* aSymbol, PRInt32 aVariable) {
+        NS_PRECONDITION(LookupSymbol(aSymbol) == 0, "symbol already defined");
+
+        SymtabEntry* entry =
+            NS_REINTERPRET_CAST(SymtabEntry*,
+                                PL_DHashTableOperate(&mSymtab,
+                                                     aSymbol,
+                                                     PL_DHASH_ADD));
+
+        if (entry) {
+            entry->mSymbol   = nsCRT::strdup(aSymbol);
+            entry->mVariable = aVariable;
+        } };
+                                
+    /**
+     * Lookup the variable associated with the symbol
+     */
+    PRInt32 LookupSymbol(const PRUnichar* aSymbol, PRBool aCreate = PR_FALSE) {
+        SymtabEntry* entry =
+            NS_REINTERPRET_CAST(SymtabEntry*,
+                                PL_DHashTableOperate(&mSymtab,
+                                                     aSymbol,
+                                                     PL_DHASH_LOOKUP));
+
+        if (PL_DHASH_ENTRY_IS_BUSY(&entry->mHdr))
+            return entry->mVariable;
+
+        PRInt32 result = 0;
+        if (aCreate) {
+            result = CreateAnonymousVariable();
+            PutSymbol(aSymbol, result);
+        }
+
+        return result; }
+
 protected:
+    /**
+     * The root node in the network
+     */
+    RootNode mRoot;
+
+    /**
+     * Other nodes in the network
+     */
     NodeSet mNodes;
+
+    void Init();
+    void Finish();
+
+    /**
+     * Symbol table, mapping symbolic names to variable identifiers
+     */
+    PLDHashTable mSymtab;
+
+    /**
+     * The next available variable identifier
+     */
     PRInt32 mNextVariable;
 
-    RootNode mRoot;
+    static PLDHashTableOps gOps;
 };
 
 

@@ -1598,8 +1598,11 @@ nsXULContentBuilder::SetContainerAttrs(nsIContent *aElement, const nsTemplateMat
     PRBool iscontainer, isempty;
     CheckContainer(VALUE_TO_IRDFRESOURCE(containerval), &iscontainer, &isempty);
 
+    NS_NAMED_LITERAL_STRING(true_, "true");
+    NS_NAMED_LITERAL_STRING(false_, "false");
+    
     const nsAReadableString& newcontainer =
-        iscontainer ? NS_LITERAL_STRING("true") : NS_LITERAL_STRING("false");
+        iscontainer ? true_ : false_;
 
     if (oldcontainer != newcontainer) {
         aElement->SetAttribute(kNameSpaceID_None, nsXULAtoms::container,
@@ -1611,9 +1614,7 @@ nsXULContentBuilder::SetContainerAttrs(nsIContent *aElement, const nsTemplateMat
         aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::empty, oldempty);
 
         const nsAReadableString& newempty =
-            (iscontainer && isempty)
-            ? NS_LITERAL_STRING("true")
-            : NS_LITERAL_STRING("false");
+            (iscontainer && isempty) ? true_ : false_;
 
         if (oldempty != newempty) {
             aElement->SetAttribute(kNameSpaceID_None, nsXULAtoms::empty,
@@ -2025,7 +2026,7 @@ nsXULContentBuilder::OpenContainer(nsIContent* aElement)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsXULContentBuilder::CloseContainer(nsIContent* aElement)
 {
     NS_PRECONDITION(aElement != nsnull, "null ptr");
