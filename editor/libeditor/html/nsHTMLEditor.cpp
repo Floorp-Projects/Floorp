@@ -1684,7 +1684,7 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAReadableString& aSourceString)
   nsReadingIterator<PRUnichar> endtotal;
   aSourceString.EndReading(endtotal);
 
-  res = InsertHTML(Substring(beginbody,endtotal));
+  res = LoadHTML(Substring(beginbody,endtotal));
   if (NS_FAILED(res)) return res;
   selection->Collapse(bodyElement, 0);
 

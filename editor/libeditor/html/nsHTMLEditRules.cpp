@@ -403,7 +403,9 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
         // (action == nsEditor::kOpInsertIMEText) ||
         (action == nsHTMLEditor::kOpInsertElement) ||
         (action == nsHTMLEditor::kOpInsertQuotation) ||
-        (action == nsEditor::kOpInsertNode))
+        (action == nsEditor::kOpInsertNode) ||
+        (action == nsHTMLEditor::kOpHTMLPaste ||
+        (action == nsHTMLEditor::kOpHTMLLoad)))
     {
       res = ReplaceNewlines(mDocChangeRange);
     }
@@ -431,7 +433,8 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
         (action == nsEditor::kOpInsertIMEText) ||
         (action == nsEditor::kOpDeleteSelection) ||
         (action == nsEditor::kOpInsertBreak) || 
-        (action == nsHTMLEditor::kOpHTMLPaste))
+        (action == nsHTMLEditor::kOpHTMLPaste ||
+        (action == nsHTMLEditor::kOpHTMLLoad)))
     {
       res = AdjustSelection(selection, aDirection);
       if (NS_FAILED(res)) return res;
@@ -760,9 +763,18 @@ nsHTMLEditRules::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
       return NS_ERROR_FAILURE;
   *aCanIndent = PR_TRUE;    
   *aCanOutdent = PR_FALSE;
-  
+
+  // get selection
+  nsCOMPtr<nsISelection>selection;
+  nsresult res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
+  if (!selPriv)
+    return NS_ERROR_FAILURE;
+
+  // contruct a list of nodes to act on.
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
-  nsresult res = GetListActionNodes(address_of(arrayOfNodes), PR_FALSE, PR_TRUE);
+  res = GetNodesFromSelection(selection, kIndent, address_of(arrayOfNodes), PR_TRUE);
   if (NS_FAILED(res)) return res;
 
   // examine nodes in selection for blockquotes or list elements;
@@ -1082,7 +1094,8 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     
   if (aAction == kInsertTextIME) 
   { 
-    res = mHTMLEditor->InsertTextImpl(*inString, address_of(selNode), &selOffset, doc);
+    nsWSRunObject wsObj(mHTMLEditor, selNode, selOffset);
+    res = wsObj.InsertText(*inString, address_of(selNode), &selOffset, doc);
     if (NS_FAILED(res)) return res;
   }
   else // aAction == kInsertText
@@ -1183,7 +1196,6 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
         // is it a tab?
         if (subStr.Equals(tabStr))
         {
-//        res = mHTMLEditor->InsertTextImpl(tabString, address_of(curNode), &curOffset, doc);
           res = wsObj.InsertText(tabString, address_of(curNode), &curOffset, doc);
           if (NS_FAILED(res)) return res;
           pos++;
@@ -1191,14 +1203,12 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
         // is it a return?
         else if (subStr.Equals(newlineStr))
         {
-//        res = mHTMLEditor->CreateBRImpl(address_of(curNode), &curOffset, address_of(unused), nsIEditor::eNone);
           res = wsObj.InsertBreak(address_of(curNode), &curOffset, address_of(unused), nsIEditor::eNone);
           if (NS_FAILED(res)) return res;
           pos++;
         }
         else
         {
-//        res = mHTMLEditor->InsertTextImpl(subStr, address_of(curNode), &curOffset, doc);
           res = wsObj.InsertText(subStr, address_of(curNode), &curOffset, doc);
           if (NS_FAILED(res)) return res;
         }
@@ -2513,14 +2523,10 @@ nsHTMLEditRules::WillMakeBasicBlock(nsISelection *aSelection,
   nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
   *aHandled = PR_TRUE;
 
-  nsCOMPtr<nsISupportsArray> arrayOfRanges;
-  res = GetPromotedRanges(aSelection, address_of(arrayOfRanges), kMakeBasicBlock);
-  if (NS_FAILED(res)) return res;
-  
-  // use these ranges to contruct a list of nodes to act on.
+  // contruct a list of nodes to act on.
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
-  res = GetNodesForOperation(arrayOfRanges, address_of(arrayOfNodes), kMakeBasicBlock);
-  if (NS_FAILED(res)) return res;                                 
+  res = GetNodesFromSelection(aSelection, kMakeBasicBlock, address_of(arrayOfNodes));
+  if (NS_FAILED(res)) return res;
   
   nsString tString(*aBlockType);
 
@@ -2702,13 +2708,8 @@ nsHTMLEditRules::WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool * 
     // this basically just expands the range to include the immediate
     // block parent, and then further expands to include any ancestors
     // whose children are all in the range
-    
-    res = GetPromotedRanges(aSelection, address_of(arrayOfRanges), kIndent);
+    res = GetNodesFromSelection(aSelection, kIndent, address_of(arrayOfNodes));
     if (NS_FAILED(res)) return res;
-    
-    // use these ranges to contruct a list of nodes to act on.
-    res = GetNodesForOperation(arrayOfRanges, address_of(arrayOfNodes), kIndent);
-    if (NS_FAILED(res)) return res;                                 
   }
   
   // if nothing visible in list, make an empty block
@@ -2847,17 +2848,10 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
   // this basically just expands the range to include the immediate
   // block parent, and then further expands to include any ancestors
   // whose children are all in the range
-  
-  nsCOMPtr<nsISupportsArray> arrayOfRanges;
-  res = GetPromotedRanges(aSelection, address_of(arrayOfRanges), kOutdent);
-  if (NS_FAILED(res)) return res;
-  
-  // use these ranges to contruct a list of nodes to act on.
-
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
-  res = GetNodesForOperation(arrayOfRanges, address_of(arrayOfNodes), kOutdent);
-  if (NS_FAILED(res)) return res;                                 
-                                     
+  res = GetNodesFromSelection(aSelection, kOutdent, address_of(arrayOfNodes));
+  if (NS_FAILED(res)) return res;
+
   // Ok, now go through all the nodes and remove a level of blockquoting, 
   // or whatever is appropriate.  Wohoo!
 
@@ -3284,15 +3278,9 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
   // block parent, and then further expands to include any ancestors
   // whose children are all in the range
   *aHandled = PR_TRUE;
-
-  nsCOMPtr<nsISupportsArray> arrayOfRanges;
-  res = GetPromotedRanges(aSelection, address_of(arrayOfRanges), kAlign);
-  if (NS_FAILED(res)) return res;
-
-  // use these ranges to contruct a list of nodes to act on.
   nsCOMPtr<nsISupportsArray> arrayOfNodes;
-  res = GetNodesForOperation(arrayOfRanges, address_of(arrayOfNodes), kAlign);
-  if (NS_FAILED(res)) return res;                                 
+  res = GetNodesFromSelection(aSelection, kAlign, address_of(arrayOfNodes));
+  if (NS_FAILED(res)) return res;
 
   // if we don't have any nodes, or we have only a single br, then we are
   // creating an empty alignment div.  We have to do some different things for these.
@@ -4432,12 +4420,8 @@ nsHTMLEditRules::GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes,
     }
   }
   
-  nsCOMPtr<nsISupportsArray> arrayOfRanges;
-  res = GetPromotedRanges(selection, address_of(arrayOfRanges), kMakeList);
-  if (NS_FAILED(res)) return res;
-  
-  // use these ranges to contruct a list of nodes to act on.
-  res = GetNodesForOperation(arrayOfRanges, outArrayOfNodes, kMakeList, aDontTouchContent);
+  // contruct a list of nodes to act on.
+  res = GetNodesFromSelection(selection, kMakeList, outArrayOfNodes, aDontTouchContent);
   if (NS_FAILED(res)) return res;                                 
                
   // pre process our list of nodes...                      
@@ -4564,14 +4548,10 @@ nsHTMLEditRules::GetParagraphFormatNodes(nsCOMPtr<nsISupportsArray> *outArrayOfN
   nsresult res = mHTMLEditor->GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
 
-  nsCOMPtr<nsISupportsArray> arrayOfRanges;
-  res = GetPromotedRanges(selection, address_of(arrayOfRanges), kMakeList);
+  // contruct a list of nodes to act on.
+  res = GetNodesFromSelection(selection, kMakeBasicBlock, outArrayOfNodes, aDontTouchContent);
   if (NS_FAILED(res)) return res;
-  
-  // use these ranges to contruct a list of nodes to act on.
-  res = GetNodesForOperation(arrayOfRanges, outArrayOfNodes, kMakeBasicBlock, aDontTouchContent);
-  if (NS_FAILED(res)) return res;                                 
-               
+
   // pre process our list of nodes...                      
   PRUint32 listCount;
   PRInt32 i;
@@ -4745,6 +4725,31 @@ nsHTMLEditRules::GetHighestInlineParent(nsIDOMNode* aNode)
   }
   return inlineNode;
 }
+
+
+///////////////////////////////////////////////////////////////////////////
+// GetNodesFromSelection: given a particular operation, construct a list  
+//                     of nodes from the selection that will be operated on. 
+//                       
+nsresult 
+nsHTMLEditRules::GetNodesFromSelection(nsISelection *selection,
+                                       PRInt32 operation,
+                                       nsCOMPtr<nsISupportsArray> *arrayOfNodes,
+                                       PRBool dontTouchContent)
+{
+  if (!selection || !arrayOfNodes) return NS_ERROR_NULL_POINTER;
+  nsresult res;
+  
+  // promote selection ranges
+  nsCOMPtr<nsISupportsArray> arrayOfRanges;
+  res = GetPromotedRanges(selection, address_of(arrayOfRanges), operation);
+  if (NS_FAILED(res)) return res;
+  
+  // use these ranges to contruct a list of nodes to act on.
+  res = GetNodesForOperation(arrayOfRanges, arrayOfNodes, operation, dontTouchContent); 
+  return res;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 // MakeTransitionList: detect all the transitions in the array, where a 
