@@ -396,8 +396,12 @@ XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
   setView(browserView);   
   setMenubar(menu_bar_spec);
 
-  if (fe_globalPrefs.autoload_images_p) {
-    m_toolbar->hideButton(xfeCmdShowImages, PUSHBUTTON);
+  if (fe_globalPrefs.autoload_images_p) 
+  {
+	  if (m_toolbar)
+	  {
+		  m_toolbar->hideButton(xfeCmdShowImages, PUSHBUTTON);
+	  }
   }
 
   fe_set_scrolled_default_size(m_context);
