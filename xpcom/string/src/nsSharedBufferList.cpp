@@ -145,6 +145,13 @@ nsSharedBufferList::UnlinkBuffer( Buffer* aBufferToUnlink )
   }
 
 
+void
+nsSharedBufferList::DiscardSuffix( PRUint32 /* aLengthToDiscard */ )
+  {
+    // XXX
+  }
+
+
 
 #if 0
 template <class CharT>
