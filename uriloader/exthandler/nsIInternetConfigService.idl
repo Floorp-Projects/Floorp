@@ -94,7 +94,7 @@ interface nsIInternetConfigService : nsISupports
   
   boolean hasMappingForMIMEType(in string mimetype);
   
-  boolean hasProtocalHandler(in string protocol);
+  boolean hasProtocolHandler(in string protocol);
   
   // pass in a mime type or a file extension.....
   void fillInMIMEInfo(in string mimetype, in string aFileExtension, out nsIMIMEInfo mimeinfo);
