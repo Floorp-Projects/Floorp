@@ -49,12 +49,24 @@ public class Main {
     Preferences prefs = PreferencesFactory.Get();
     String pref = prefs.getString("mail.layout", "multi_pane");
     Properties props = new Properties();
+    File mailDir;
     // I'm borrowing pretty heavily from jwz's TestFolderViewer here,
     // I may change this later, then again, I may not... (talisman)
     
     if (prefs.getString("mail.directory", "") == "") {
-      File userHome = new File(System.getProperty("user.home"));
-      File mailDir = new File(userHome, "grndlmail");
+      // get the operating system in use and Do The Right Thing(tm)
+      if (System.getProperty("os.name").substring(0, 6).equals("Windows")) {
+        File userHome = new File(System.getProperty("user.dir"));
+        mailDir = new File(userHome, "grndlmail");
+      } else if (System.getProperty("os.name").equals("Mac OS")) {
+        File userHome = new File(System.getProperty("user.dir"));
+        mailDir = new File(userHome, "grndlmail");
+        // Need to find out for sure what OS/2 reports as "os.name"
+        // and add a sub for OS/2 (talisman)
+      } else {    // if we're not Win or Mac, assume some kind of unix
+        File userHome = new File(System.getProperty("user.home"));
+        mailDir = new File(userHome, "grndlmail");
+      }
 
       if (!mailDir.exists()) {
         if (mailDir.mkdir()) {
