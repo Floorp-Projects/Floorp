@@ -140,3 +140,39 @@ function ResultsPaneSelectionChange()
 	}
 }
 
+function SortResultPane(column, sortKey)
+{
+	var node = document.getElementById(column);
+	if(!node)
+		return false;
+
+	var rdfCore = XPAppCoresManager.Find("RDFCore");
+	if (!rdfCore)
+	{
+		rdfCore = new RDFCore();
+		if (!rdfCore)
+		{
+			return(false);
+		}
+
+		rdfCore.Init("RDFCore");
+
+	}
+
+	// sort!!!
+	sortDirection = "ascending";
+    var currentDirection = node.getAttribute('sortDirection');
+    if (currentDirection == "ascending")
+            sortDirection = "descending";
+    else if (currentDirection == "descending")
+            sortDirection = "ascending";
+    else    sortDirection = "ascending";
+
+    rdfCore.doSort(node, sortKey, sortDirection);
+
+    return(true);
+
+
+}
+
+

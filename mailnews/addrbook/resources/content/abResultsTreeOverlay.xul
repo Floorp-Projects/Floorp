@@ -63,9 +63,9 @@ Rights Reserved.
 		
 		<treehead>
 			<treerow>
-				<treecell>&nameColumn.label;</treecell>
-				<treecell>&emailColumn.label;</treecell>
-				<treecell>&phoneColumn.label;</treecell>
+				<treecell onclick="return top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#DisplayName');">&nameColumn.label;</treecell>
+				<treecell onclick="return top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail');">&emailColumn.label;</treecell>
+				<treecell onclick="return top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone');">&phoneColumn.label;</treecell>
 			</treerow>
 		</treehead>
 
