@@ -46,7 +46,7 @@
 #endif
 
 /* larubbio */
-#include "mcom_db.h"
+/* #include "mcom_db.h" */
 /* #include "jri.h" */
 
 /*
@@ -234,8 +234,9 @@ class MSG_Pane;
 /* moved from mkextcac, this is used for 197 SAR caches, 
  * and external cache
  */
+/*
 typedef struct _ExtCacheDBInfo {
-    DB      *database;
+   DB      *database; 
     char    *filename;
     char    *path;
     char    *name;
@@ -247,6 +248,7 @@ typedef struct _ExtCacheDBInfo {
     void    *logFile;
 
 } ExtCacheDBInfo;
+*/
 
 typedef enum {
     Normal_priority,
@@ -484,7 +486,7 @@ struct URL_Struct_ {
                                            * URLConnection object of Java
                                            */
     int ref_count;          /* how many people have a pointer to me */
-    ExtCacheDBInfo *SARCache;                         /* a pointer to the structure telling
+  /*    ExtCacheDBInfo *SARCache;  */                       /* a pointer to the structure telling
                                            * us which cache this is in, if it's 
                                            * NULL it's in the normal navigator
                                            * cache
@@ -1204,7 +1206,7 @@ extern int32 NET_RemoveLastMemoryCacheObject(void);
 /* returns and creates a handle to the specified SAR cache 
  * the user is responsible for freeing the return struct
  */
-extern ExtCacheDBInfo * CACHE_GetCache(ExtCacheDBInfo *db);
+/* extern ExtCacheDBInfo * CACHE_GetCache(ExtCacheDBInfo *db); */
 
 /* 
  * Adds the specified file to the cache.
@@ -1217,22 +1219,22 @@ extern Bool CACHE_Put(char *filename, URL_Struct *url_s);
 extern int CACHE_FindURLInCache(URL_Struct *URL_s, MWContext *ctxt);
 
 /* Flushes the caches data to disk */
-extern void CACHE_FlushCache(ExtCacheDBInfo *db_info);
+/* extern void CACHE_FlushCache(ExtCacheDBInfo *db_info); */
 
 /* Closes the SARcache database */
-extern int CACHE_CloseCache(ExtCacheDBInfo *db);
+/* extern int CACHE_CloseCache(ExtCacheDBInfo *db); */
 
 /* Emptys all the URL's from a cache */
-extern int CACHE_EmptyCache(ExtCacheDBInfo *db);
+/* extern int CACHE_EmptyCache(ExtCacheDBInfo *db); */
 
 /* Removes the URL from the cache */
 extern void NET_RemoveURLFromCache(URL_Struct *URL_s);
 
 /* Removes the cache from the list of cache's being managed */
-extern int CACHE_RemoveCache(ExtCacheDBInfo *db);
+/* extern int CACHE_RemoveCache(ExtCacheDBInfo *db); */
 
 /* Returns an already opened ExtCache struct */
-extern ExtCacheDBInfo * CACHE_GetCacheStruct(char * path, char * filename, char * name);
+/* extern ExtCacheDBInfo * CACHE_GetCacheStruct(char * path, char * filename, char * name); */
 
 /* Returns the platform specific path to a cache file */
 extern char * CACHE_GetCachePath(char * filename);
@@ -1241,10 +1243,10 @@ extern char * CACHE_GetCachePath(char * filename);
 extern XP_List * CACHE_GetManagedCacheList();
 
 /* Saves the cache struct to the DB */
-extern void CACHE_SaveCacheInfoToDB(ExtCacheDBInfo *db_info);
+/* extern void CACHE_SaveCacheInfoToDB(ExtCacheDBInfo *db_info); */
 
 /* Writes any changes to the cache's properties to disk */
-extern void CACHE_UpdateCache(ExtCacheDBInfo *db_info);
+/* extern void CACHE_UpdateCache(ExtCacheDBInfo *db_info); */
 
 extern int32 NET_RemoveLastDiskCacheObject(void);
 
