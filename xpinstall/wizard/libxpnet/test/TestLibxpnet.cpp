@@ -25,6 +25,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
+#ifdef macintosh
+#include <console.h>
+#endif
 
 #include "nsFTPConn.h"
 #include "nsHTTPConn.h"
@@ -33,10 +38,19 @@ const int kProxySrvrLen = 1024;
 const char kHTTP[8] = "http://";
 const char kFTP[7] = "ftp://";
 const char kLoclFile[7] = "zzzFTP";
+static int sTotalSize = 0;
 
 int
 ProgressCB(int aBytesSoFar, int aTotalFinalSize)
 {
+    static int bTotalSizeFound = FALSE;
+    
+    if (!bTotalSizeFound && aTotalFinalSize > 0)
+    {
+        sTotalSize = aTotalFinalSize;
+        bTotalSizeFound = TRUE;
+    }
+    
     printf(".");
     return 0;
 }
@@ -60,6 +74,13 @@ main(int argc, char **argv)
     char *proxyUser = 0, *proxyPswd = 0;
     char proxyURL[kProxySrvrLen];
     int rv = 0;
+    time_t startTime, endTime;
+    double dlTime = 0;  /* download time */
+    float dlRate = 0;   /* download rate */
+    
+#ifdef macintosh
+    argc = ccommand(&argv);
+#endif
 
     if (argc < 2)
     {
@@ -91,7 +112,9 @@ main(int argc, char **argv)
         rv = conn->Open();
         spew("nsHTTPConn::Open", rv);
 
+        startTime = time(NULL);
         rv = conn->Get(ProgressCB, NULL); // use leaf from URL
+        endTime = time(NULL);
         printf("\n"); // newline after progress completes
         spew("nsHTTPConn::Get", rv);
     
@@ -108,7 +131,9 @@ main(int argc, char **argv)
             rv = conn->Open();
             spew("nsHTTPConn::Open", rv);
 
+            startTime = time(NULL);
             rv = conn->Get(ProgressCB, NULL);
+            endTime = time(NULL);
             printf("\n"); // newline after progress completes
             spew("nsHTTPConn::Get", rv);
 
@@ -132,7 +157,9 @@ main(int argc, char **argv)
 
             if (strrchr(path, '/') != (path + strlen(path)))
                 file = strrchr(path, '/') + 1; // set to leaf name
+            startTime = time(NULL);
             rv = conn->Get(path, file, nsFTPConn::BINARY, 1, ProgressCB);
+            endTime = time(NULL);
             printf("\n"); // newline after progress completes
             spew("nsFTPConn::Get", rv);
 
@@ -153,6 +180,20 @@ main(int argc, char **argv)
             usage(argv[0]);
         }
     }
+    
+    /* compute rate */
+    if (sTotalSize > 0)
+    {
+        dlTime = difftime(endTime, startTime);
+        if (dlTime > 0)
+            dlRate = sTotalSize/dlTime;
+    }
+    printf("Download rate = %f\tTotal size = %d\tTotal time = %f\n", 
+            dlRate, sTotalSize, dlTime);
+
+#ifdef macintosh
+    int fin = getchar();
+#endif
 
     return 0;
 }

@@ -33,6 +33,8 @@
 #elif defined(_WINDOWS)
 #include <windows.h>
 #define MAXPATHLEN MAX_PATH
+#elif defined(macintosh)
+#define MAXPATHLEN 512
 #endif
 
 #include "nsSocket.h"

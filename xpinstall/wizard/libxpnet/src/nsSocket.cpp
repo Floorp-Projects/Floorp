@@ -29,7 +29,7 @@
 #include <ctype.h>
 
 /* Platform-specific headers for socket functionality */
-#if defined(__unix) || defined(__unix__)
+#if defined(__unix) || defined(__unix__) || defined(macintosh)
 #include <unistd.h>
 #include <netdb.h>
 #include <sys/socket.h>
@@ -46,7 +46,9 @@
 
 #define MAXSOCKADDR 128
 
+#ifndef macintosh
 #include "platform.h" // for SOLARIS define
+#endif
 #if defined(SOLARIS) || defined(_WINDOWS)
 #define socklen_t int
 #endif
@@ -225,7 +227,7 @@ nsSocket::Send(unsigned char *aBuf, int *aBufSize)
     int timeout = 0;
     fd_set selset;
 
-    if (!aBuf || aBufSize <= 0 || mFd < 0)
+    if (!aBuf || (aBufSize && (*aBufSize <= 0)) || mFd < 0)
         return E_PARAM;
 
     while (timeout < kTimeoutThresholdUsecs)
@@ -280,7 +282,7 @@ nsSocket::Recv(unsigned char *aBuf, int *aBufSize)
     fd_set selset;
     int bufsize;
 
-    if (!aBuf || *aBufSize <= 0 || mFd < 0)
+    if (!aBuf || (aBufSize && (*aBufSize <= 0)) || mFd < 0)
         return E_PARAM;
     memset(aBuf, 0, *aBufSize);
 
