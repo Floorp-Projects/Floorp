@@ -171,6 +171,8 @@ static const PRUnichar sHTMLTagUnicodeName_listing[] =
   {'l', 'i', 's', 't', 'i', 'n', 'g', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_map[] =
   {'m', 'a', 'p', '\0'};
+static const PRUnichar sHTMLTagUnicodeName_marquee[] =
+  {'m', 'a', 'r', 'q', 'u', 'e', 'e', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_menu[] =
   {'m', 'e', 'n', 'u', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_meta[] =
@@ -265,7 +267,6 @@ static const PRUnichar sHTMLTagUnicodeName_wbr[] =
   {'w', 'b', 'r', '\0'};
 static const PRUnichar sHTMLTagUnicodeName_xmp[] =
   {'x', 'm', 'p', '\0'};
-
 
 // static array of unicode tag names
 #define HTML_TAG(_tag) sHTMLTagUnicodeName_##_tag,

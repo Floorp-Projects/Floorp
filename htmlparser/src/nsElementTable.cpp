@@ -802,6 +802,15 @@ void InitializeElementTable(void) {
       /*parent,incl,exclgroups*/          kSpecial, kInlineEntity|kBlockEntity, kNone,	
       /*special props, prop-range*/       kOmitWS, kDefaultPropRange,
       /*special parents,kids,skip*/       0,&gMapKids,eHTMLTag_unknown);
+   
+    Initialize( 
+      /*tag*/                             eHTMLTag_marquee,
+      /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+      /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
+      /*autoclose starttags and endtags*/ 0,0,0,0,
+      /*parent,incl,exclgroups*/          kBlock, kFlowEntity, kNone,	
+      /*special props, prop-range*/       0, kDefaultPropRange,
+      /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
       /*tag*/                             eHTMLTag_menu,
