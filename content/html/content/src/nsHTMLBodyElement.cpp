@@ -505,9 +505,14 @@ NS_IMETHODIMP
 BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext)
 {
   // XXX do any other body processing here
+
+  nsCOMPtr<nsIStyleContext> parentContext;
+  parentContext = getter_AddRefs(aContext->GetParent());
   
+  const nsStyleColor* parentStyleColor;
   const nsStyleColor* styleColor;
   styleColor = (const nsStyleColor*)aContext->GetStyleData(eStyleStruct_Color);
+  parentStyleColor = (const nsStyleColor*)parentContext->GetStyleData(eStyleStruct_Color);
 
   // Use the CSS precedence rules for dealing with BODY background: if the value
   // of the 'background' property for the HTML element is different from
@@ -515,38 +520,28 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aP
   // for the BODY element
 
   // See if the BODY has a background specified
-  if (!styleColor->BackgroundIsTransparent()) {
-    // Get the parent style context
-    nsIStyleContext*  parentContext = aContext->GetParent();
+  if ((!styleColor->BackgroundIsTransparent()) || 
+      (parentStyleColor->BackgroundIsTransparent() || 
+       (NS_STYLE_BG_PROPAGATED_FROM_CHILD == (parentStyleColor->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_FROM_CHILD))) ) {
+    // Have the parent (initial containing block) use the BODY's background
+    nsStyleColor* mutableStyleColor;
+    mutableStyleColor = (nsStyleColor*)parentContext->GetMutableStyleData(eStyleStruct_Color);
 
-    // Look at its 'background' property
-    const nsStyleColor* parentStyleColor;
-    parentStyleColor = (const nsStyleColor*)parentContext->GetStyleData(eStyleStruct_Color);
+    mutableStyleColor->mBackgroundAttachment = styleColor->mBackgroundAttachment;
+    mutableStyleColor->mBackgroundFlags = styleColor->mBackgroundFlags | NS_STYLE_BG_PROPAGATED_FROM_CHILD;
+    mutableStyleColor->mBackgroundRepeat = styleColor->mBackgroundRepeat;
+    mutableStyleColor->mBackgroundColor = styleColor->mBackgroundColor;
+    mutableStyleColor->mBackgroundXPosition = styleColor->mBackgroundXPosition;
+    mutableStyleColor->mBackgroundYPosition = styleColor->mBackgroundYPosition;
+    mutableStyleColor->mBackgroundImage = styleColor->mBackgroundImage;
 
-    // See if it's 'transparent' or set by us
-    if (parentStyleColor->BackgroundIsTransparent() || 
-        (NS_STYLE_BG_PROPAGATED_FROM_CHILD == (parentStyleColor->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_FROM_CHILD))) {
-      // Have the parent (initial containing block) use the BODY's background
-      nsStyleColor* mutableStyleColor;
-      mutableStyleColor = (nsStyleColor*)parentContext->GetMutableStyleData(eStyleStruct_Color);
-
-      mutableStyleColor->mBackgroundAttachment = styleColor->mBackgroundAttachment;
-      mutableStyleColor->mBackgroundFlags = styleColor->mBackgroundFlags | NS_STYLE_BG_PROPAGATED_FROM_CHILD;
-      mutableStyleColor->mBackgroundRepeat = styleColor->mBackgroundRepeat;
-      mutableStyleColor->mBackgroundColor = styleColor->mBackgroundColor;
-      mutableStyleColor->mBackgroundXPosition = styleColor->mBackgroundXPosition;
-      mutableStyleColor->mBackgroundYPosition = styleColor->mBackgroundYPosition;
-      mutableStyleColor->mBackgroundImage = styleColor->mBackgroundImage;
-
-      // Reset the BODY's background to transparent
-      mutableStyleColor = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
-      mutableStyleColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
-                                            NS_STYLE_BG_IMAGE_NONE |
-                                            NS_STYLE_BG_PROPAGATED_TO_PARENT;
-      mutableStyleColor->mBackgroundImage.SetLength(0);
-      mutableStyleColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
-    }
-    NS_RELEASE(parentContext);
+    // Reset the BODY's background to transparent
+    mutableStyleColor = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
+    mutableStyleColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
+                                          NS_STYLE_BG_IMAGE_NONE |
+                                          NS_STYLE_BG_PROPAGATED_TO_PARENT;
+    mutableStyleColor->mBackgroundImage.SetLength(0);
+    mutableStyleColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
   }
 
   nsCOMPtr<nsIPresShell> presShell;
