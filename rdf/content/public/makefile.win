@@ -36,6 +36,7 @@ EXPORTS	= \
 	nsIDOMXULFocusTracker.h \
 	nsIXULFocusTracker.h \
 	nsIStreamLoadableDocument.h  \
+	nsIXULKeyListener.h  \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
