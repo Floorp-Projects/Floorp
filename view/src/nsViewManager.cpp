@@ -1872,7 +1872,16 @@ PRBool nsViewManager::UpdateAllCoveringWidgets(nsIView *aView, nsIView *aTarget,
     }
   }
 
-  return noCropping && (hasWidget || childCovers);
+  PRBool hasVisibleWidget = PR_FALSE;
+  if (hasWidget) {
+    nsViewVisibility visible;
+    aView->GetVisibility(visible);
+    if (visible == nsViewVisibility_kShow) {
+      hasVisibleWidget = PR_TRUE;
+    }
+  }
+
+  return noCropping && (hasVisibleWidget || childCovers);
 }
 
 NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags)
