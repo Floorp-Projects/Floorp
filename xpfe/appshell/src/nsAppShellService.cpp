@@ -292,13 +292,8 @@ nsAppShellService::DoProfileStartup(nsICmdLineService *aCmdLineService, PRBool c
 
       if (numProfiles == 0) {
         nsCOMPtr<nsIProfileMigrator> pm(do_CreateInstance("@mozilla.org/profile/migrator;1", &rv));
-        if (NS_SUCCEEDED(rv)) {
-          nsCOMPtr<nsIObserver> obs(do_QueryInterface(pm));
-
-          nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-          os->AddObserver(obs, "profile-initial-state", PR_FALSE);
+        if (NS_SUCCEEDED(rv))
           rv = pm->Migrate();
-        }
         if (NS_FAILED(rv)) {
           // Migration failed for some reason, or there was no profile migrator. 
           // Create a generic default profile. 
