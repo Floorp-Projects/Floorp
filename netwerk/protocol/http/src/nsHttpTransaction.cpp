@@ -571,7 +571,7 @@ nsresult
 nsHttpTransaction::HandleContent(char *buf,
                                  PRUint32 count,
                                  PRUint32 *contentRead,
-                                 PRUint32 *bufRead)
+                                 PRUint32 *contentRemaining)
 {
     nsresult rv;
 
@@ -579,7 +579,7 @@ nsHttpTransaction::HandleContent(char *buf,
         this, count));
 
     *contentRead = 0;
-    *bufRead = 0;
+    *contentRemaining = 0;
 
     if (mTransactionDone)
         return NS_OK;
@@ -594,7 +594,7 @@ nsHttpTransaction::HandleContent(char *buf,
     if (mChunkedDecoder) {
         // give the buf over to the chunked decoder so it can reformat the
         // data and tell us how much is really there.
-        rv = mChunkedDecoder->HandleChunkedContent(buf, count, contentRead, bufRead);
+        rv = mChunkedDecoder->HandleChunkedContent(buf, count, contentRead, contentRemaining);
         if (NS_FAILED(rv)) return rv;
     }
     else if (mContentLength >= 0) {
@@ -603,22 +603,22 @@ nsHttpTransaction::HandleContent(char *buf,
         // allowances for a possibly invalid Content-Length header. Thus, if
         // NOT persistent, we simply accept everything in |buf|.
         if (mConnection->IsPersistent()) {
-            *bufRead = PRUint32(mContentLength) - mContentRead;
-            *bufRead = PR_MIN(count, *bufRead);
+            *contentRead = PRUint32(mContentLength) - mContentRead;
+            *contentRead = PR_MIN(count, *contentRead);
         }
         else {
-            *bufRead = count;
+            *contentRead = count;
             // mContentLength might need to be increased...
-            if (*bufRead + mContentRead > (PRUint32) mContentLength) {
-                mContentLength = *bufRead + mContentRead;
+            if (*contentRead + mContentRead > (PRUint32) mContentLength) {
+                mContentLength = *contentRead + mContentRead;
                 //mResponseHead->SetContentLength(mContentLength);
             }
         }
-        *contentRead = *bufRead;
+        *contentRemaining = (count - *contentRead);
     }
     else {
         // when we are just waiting for the server to close the connection...
-        *contentRead = *bufRead = count;
+        *contentRead = count;
     }
 
     if (*contentRead) {
@@ -899,32 +899,28 @@ nsHttpTransaction::Read(char *buf, PRUint32 count, PRUint32 *bytesWritten)
     // even though count may be 0, we still want to call HandleContent
     // so it can complete the transaction if this is a "no-content" response.
     if (mHaveAllHeaders) {
-        PRUint32 countConsumed = 0;
+        PRUint32 bytesRemaining = 0;
         //
         // buf layout:
         // 
-        //  +----------------------------------------+----+-------+
-        //  | buf                                    |    |       |
-        //  +----------------------------------------+----+-------+
-        //                                           |    |       |
-        //                                           |    |       count
-        //                                           |    |
-        //                                           |    countConsumed
-        //                                           |
-        //                                           bytesWritten
+        // +-----------------------------------------+----------------+-----+
+        // |              bytesWritten               | bytesRemaining |     |
+        // +-----------------------------------------+----------------+-----+
         //
-        // count         : size of buf
-        // countConsumed : portion of buf corresponding to this transaction
-        // bytesWritten  : portion of buf corresponding to this transaction,
-        //                 minus chunked encoding boundaries.
+        // count          : bytes read from the socket
+        // bytesWritten   : bytes corresponding to this transaction
+        // bytesRemaining : bytes corresponding to next pipelined transaction
         //
-        rv = HandleContent(buf, count, bytesWritten, &countConsumed);
+        // NOTE:
+        // count > bytesWritten + bytesRemaining <==> chunked transfer encoding
+        //
+        rv = HandleContent(buf, count, bytesWritten, &bytesRemaining);
         if (NS_FAILED(rv)) return rv;
         // we may have read more than our share, in which case we must give
         // the excess bytes back to the connection
-        if (mResponseIsComplete && (count > countConsumed)) {
+        if (mResponseIsComplete && bytesRemaining) {
             NS_ASSERTION(mConnection, "no connection");
-            mConnection->PushBack(buf + countConsumed, count - countConsumed);
+            mConnection->PushBack(buf + *bytesWritten, bytesRemaining);
         }
         return rv;
     }

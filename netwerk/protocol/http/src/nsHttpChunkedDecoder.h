@@ -43,7 +43,7 @@ public:
     nsresult HandleChunkedContent(char *buf,
                                   PRUint32 count,
                                   PRUint32 *contentRead,
-                                  PRUint32 *bufRead);
+                                  PRUint32 *contentRemaining);
 
     nsHttpHeaderArray *Trailers() { return mTrailers; }
 
