@@ -14,6 +14,7 @@ skins/classic.jar:
     communicator/skin/online.gif                                 (communicator/online.gif)
     communicator/skin/securityOverlay.css                        (communicator/securityOverlay.css)
     communicator/skin/smallheader-bg.gif                         (communicator/smallheader-bg.gif)
+    communicator/skin/smallheader-bg-pale.gif                    (communicator/smallheader-bg-pale.gif)
     communicator/skin/search.gif                                 (communicator/search.gif)
     communicator/skin/search-hover.gif                           (communicator/search-hover.gif)
     communicator/skin/search-active.gif                          (communicator/search-active.gif)
