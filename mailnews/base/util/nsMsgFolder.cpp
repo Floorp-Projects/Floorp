@@ -724,6 +724,14 @@ nsMsgFolder::GetCanFileMessages(PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   
+//varada - checking folder flag to see if it is the "Unsent Messages"
+//and if so return FALSE
+  if (mFlags & MSG_FOLDER_FLAG_QUEUE)
+  {
+	  *aResult = PR_FALSE;
+	  return NS_OK;
+  }
+
   PRBool isServer = PR_FALSE;
   nsresult rv = GetIsServer(&isServer);
   if (NS_FAILED(rv)) return rv;
