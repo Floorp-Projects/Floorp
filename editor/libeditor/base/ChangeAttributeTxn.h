@@ -25,6 +25,7 @@ class nsIDOMElement;
 
 /**
  * A transaction that changes an attribute of a content node. 
+ * This transaction covers add, remove, and change attribute.
  */
 class ChangeAttributeTxn : public EditTxn
 {
@@ -33,7 +34,8 @@ public:
   ChangeAttributeTxn(nsEditor *aEditor,
                      nsIDOMElement *aElement,
                      const nsString& aAttribute,
-                     const nsString& aValue);
+                     const nsString& aValue,
+                     PRBool aRemoveAttribute);
 
   virtual nsresult Do(void);
 
@@ -52,11 +54,24 @@ public:
   virtual nsresult GetRedoString(nsString **aString);
 
 protected:
+  
+  /** the element to operate upon */
   nsIDOMElement *mElement;
+  
+  /** the attribute to change */
   nsString mAttribute;
+
+  /** the value to set the attribute to (ignored if mRemoveAttribute==PR_TRUE) */
   nsString mValue;
+
+  /** the value to set the attribute to for undo */
   nsString mUndoValue;
+
+  /** PR_TRUE if the mAttribute was set on mElement at the time of execution */
   PRBool   mAttributeWasSet;
+
+  /** PR_TRUE if the operation is to remove mAttribute from mElement */
+  PRBool   mRemoveAttribute;
 };
 
 #endif
