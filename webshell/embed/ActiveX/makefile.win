@@ -28,7 +28,7 @@ MAKE_OBJ_TYPE = DLL
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 RESFILE = $(DLLNAME).res
 DEFFILE = $(DLLNAME).def
-OS_CFLAGS = /D "WIN32"
+OS_CFLAGS = /D "WIN32" /GX
 
 OBJS =                                     \
 	.\$(OBJDIR)\StdAfx.obj             \
