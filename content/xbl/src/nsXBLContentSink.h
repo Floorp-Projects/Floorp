@@ -134,6 +134,11 @@ protected:
   // nsXMLContentSink overrides
   nsresult FlushText(PRBool aCreateTextNode=PR_TRUE,
                      PRBool* aDidFlush=nsnull);
+
+  // nsIExpatSink overrides
+  NS_IMETHOD ReportError(const PRUnichar* aErrorText,
+                         const PRUnichar* aSourceText);
+
 protected:
   XBLPrimaryState mState;
   XBLSecondaryState mSecondaryState;
