@@ -119,7 +119,7 @@ NS_IMETHODIMP nsMsgHeaderParserResult::GetAddressAndName(PRUnichar ** aAddress, 
     if (NS_SUCCEEDED(rv) && (const char*)fullAddress)
     {
       result = MIME_DecodeMimeHeader(fullAddress, NULL, PR_FALSE, PR_TRUE);
-      *aName = NS_ConvertUTF8toUCS2(result ? result : (const char*)fullAddress).ToNewUnicode();
+      *aFullAddress = NS_ConvertUTF8toUCS2(result ? result : (const char*)fullAddress).ToNewUnicode();
       PR_FREEIF(result);
     }
 
