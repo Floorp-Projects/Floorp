@@ -106,7 +106,7 @@ typedef MSG nsEmbedNativeEvent;
 #endif
 
 /* OS/2 specific stuff */
-#ifdef OS2
+#ifdef XP_OS2
 #include "os2.h"
 
 /**
