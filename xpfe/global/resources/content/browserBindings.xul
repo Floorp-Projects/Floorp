@@ -16,7 +16,7 @@
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollPageDown');
             controller.doCommand('cmd_scrollPageDown');"/>
-    <key id="space" keycode="VK_SPACE" shift="false" control="false"
+    <key id="space" key=" " shift="false" control="false"
         onkeypress="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollPageDown');

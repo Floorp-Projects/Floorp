@@ -76,5 +76,15 @@
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollPageDown');
             controller.doCommand('cmd_scrollPageDown');"/>
+    <key id="key_undo" key="z" xulkey="true" shift="false" control="false"
+        onkeypress="
+            var controller =
+            document.commandDispatcher.getControllerForCommand('cmd_undo');
+            controller.doCommand('cmd_undo');"/>
+    <key id="key_undo" key="y" xulkey="true" shift="false" control="false"
+        onkeypress="
+            var controller =
+            document.commandDispatcher.getControllerForCommand('cmd_redo');
+            controller.doCommand('cmd_redo');"/>
   </keyset>
 </window>
