@@ -148,6 +148,10 @@ void NS_NameSpaceManagerShutdown()
 
 static PRInt32 FindNameSpaceID(const nsAString& aURI)
 {
+  if (aURI.IsEmpty()) {
+    return kNameSpaceID_None;  // xmlns="", see bug 75700 for details
+  }
+  
   NS_ASSERTION(gURIToIDTable, "no URI table");
   const nsPromiseFlatString& flatString = PromiseFlatString(aURI); 
   nsStringKey key(flatString);
@@ -155,6 +159,7 @@ static PRInt32 FindNameSpaceID(const nsAString& aURI)
   if (value) {
     return NS_PTR_TO_INT32(value);
   }
+  
   return kNameSpaceID_Unknown;
 }
 
@@ -460,18 +465,15 @@ NameSpaceManagerImpl::RegisterNameSpace(const nsAString& aURI,
   PRInt32 id = FindNameSpaceID(aURI);
 
   if (kNameSpaceID_Unknown == id) {
-    if (aURI.IsEmpty()) {
-      id = kNameSpaceID_None; // xmlns="", see bug 75700 for details
-    } else {
-      nsString* uri = new nsString(aURI);
-      if (!uri)
-        return NS_ERROR_OUT_OF_MEMORY;
-      gURIArray->AppendElement(uri); 
-      id = gURIArray->Count();  // id is index + 1
-      nsStringKey key(*uri);
-      gURIToIDTable->Put(&key, (void*)id);
-    }
+    nsString* uri = new nsString(aURI);
+    if (!uri)
+      return NS_ERROR_OUT_OF_MEMORY;
+    gURIArray->AppendElement(uri); 
+    id = gURIArray->Count();  // id is index + 1
+    nsStringKey key(*uri);
+    gURIToIDTable->Put(&key, (void*)id);
   }
+  
   aNameSpaceID = id;
   return NS_OK;
 }
