@@ -24,8 +24,6 @@
 #include "plstr.h"
 #include <stdlib.h>
 #include "nsCOMPtr.h"
-#include "nsIOutputStream.h"
-#include "nsIFileStream.h"
 #include "nsCRT.h"
 
 #if defined(_WIN32)
@@ -66,24 +64,21 @@ static PRLock* gTraceLock;
 #define UNLOCK_TRACELOG()
 #endif /* ! NS_MT_SUPPORTED */
 
-static PRLogModuleInfo* gTraceRefcntLog;
-
 static PLHashTable* gBloatView;
 static PLHashTable* gTypesToLog;
 
 static PRBool gLogging;
-static PRBool gLogAllRefcnts;
-static PRBool gLogSomeRefcnts;
 static PRBool gLogToLeaky;
-static PRBool gTrackBloat;
-static PRBool gLogCalls;
-static PRBool gLogNewAndDelete;
-static PRBool gDumpLeaksOnly;
+static PRBool gLogLeaksOnly;
 
 static void (*leakyLogAddRef)(void* p, int oldrc, int newrc);
 static void (*leakyLogRelease)(void* p, int oldrc, int newrc);
 
-static FILE *gLoggingStream = stderr;
+static PRBool gInitialized = PR_FALSE;
+static FILE *gBloatLog = nsnull;
+static FILE *gRefcntsLog = nsnull;
+static FILE *gAllocLog = nsnull;
+static FILE *gLeakyLog = nsnull;
 
 #define XPCOM_REFCNT_TRACK_BLOAT  0x1
 #define XPCOM_REFCNT_LOG_ALL      0x2
@@ -173,7 +168,7 @@ public:
   static PRIntn DumpNewEntry(PLHashEntry *he, PRIntn i, void *arg) {
     BloatEntry* entry = (BloatEntry*)he->value;
     if (entry) {
-      nsresult rv = entry->Dump(i, (nsIOutputStream*)arg, &entry->mNewStats);
+      nsresult rv = entry->Dump(i, (FILE*)arg, &entry->mNewStats);
       NS_ASSERTION(NS_SUCCEEDED(rv), "Dump failed");
       entry->Accumulate();
     }
@@ -184,7 +179,7 @@ public:
     BloatEntry* entry = (BloatEntry*)he->value;
     if (entry) {
       entry->Accumulate();
-      nsresult rv = entry->Dump(i, (nsIOutputStream*)arg, &entry->mAllStats);
+      nsresult rv = entry->Dump(i, (FILE*)arg, &entry->mAllStats);
       NS_ASSERTION(NS_SUCCEEDED(rv), "Dump failed");
     }
     return HT_ENUMERATE_NEXT;
@@ -210,7 +205,7 @@ public:
     total->mClassSize += mClassSize;    // adjust for average in DumpTotal
   }
 
-  nsresult DumpTotal(PRUint32 nClasses, nsIOutputStream* out) {
+  nsresult DumpTotal(PRUint32 nClasses, FILE* out) {
     mClassSize /= nClasses;
     return Dump(-1, out, &mAllStats);
   }
@@ -242,30 +237,17 @@ public:
             (stats->mCreates != stats->mDestroys));
   }
 
-  static nsresult PrintDumpHeader(nsIOutputStream* out, const char* msg) {
-    nsresult rv;
-    char buf[256];
-    PRUint32 cnt, writeCnt;
-    cnt = PR_snprintf(buf, 256, 
-        "                                 %s -- Bloaty: Refcounting and Memory Bloat Statistics\n", msg);
-    rv = out->Write(buf, cnt, &writeCnt);
-    if (NS_FAILED(rv)) return rv;
-    NS_ASSERTION(cnt == writeCnt, "failed to write all data");
-    cnt = PR_snprintf(buf, 256, 
+  static nsresult PrintDumpHeader(FILE* out, const char* msg) {
+    fprintf(out, "\n== BloatView: %s\n\n", msg);
+    fprintf(out, 
         "     |<------Class----->|<-----Bytes------>|<----------------Objects---------------->|<--------------References-------------->|\n");
-    rv = out->Write(buf, cnt, &writeCnt);
-    if (NS_FAILED(rv)) return rv;
-    NS_ASSERTION(cnt == writeCnt, "failed to write all data");
-    cnt = PR_snprintf(buf, 256, 
+    fprintf(out,
         "                          Per-Inst   Leaked    Total      Rem      Mean       StdDev     Total      Rem      Mean       StdDev\n");
-    rv = out->Write(buf, cnt, &writeCnt);
-    if (NS_FAILED(rv)) return rv;
-    NS_ASSERTION(cnt == writeCnt, "failed to write all data");
     return NS_OK;
   }
 
-  nsresult Dump(PRIntn i, nsIOutputStream* out, nsTraceRefcntStats* stats) {
-    if (gDumpLeaksOnly && !HaveLeaks(stats)) {
+  nsresult Dump(PRIntn i, FILE* out, nsTraceRefcntStats* stats) {
+    if (gLogLeaksOnly && !HaveLeaks(stats)) {
       return NS_OK;
     }
     double nRefs = stats->mAddRefs + stats->mReleases;
@@ -289,23 +271,18 @@ public:
         stats->mCreates != 0 ||
         meanObjs != 0 ||
         stddevObjs != 0) {
-      char buf[256];
-      PRUint32 cnt, writeCnt;
-      cnt = PR_snprintf(buf, 256, "%4d %-20.20s %8d %8d %8d %8d (%8.2f +/- %8.2f) %8d %8d (%8.2f +/- %8.2f)\n",
-                        i+1, mClassName,
-                        mClassSize,
-                        (stats->mCreates - stats->mDestroys) * mClassSize,
-                        stats->mCreates,
-                        (stats->mCreates - stats->mDestroys),
-                        meanObjs,
-                        stddevObjs, 
-                        stats->mAddRefs,
-                        (stats->mAddRefs - stats->mReleases),
-                        meanRefs,
-                        stddevRefs);
-      nsresult rv = out->Write(buf, cnt, &writeCnt);
-      if (NS_FAILED(rv)) return rv;
-      NS_ASSERTION(cnt == writeCnt, "failed to write all data");
+      fprintf(out, "%4d %-20.20s %8d %8d %8d %8d (%8.2f +/- %8.2f) %8d %8d (%8.2f +/- %8.2f)\n",
+              i+1, mClassName,
+              mClassSize,
+              (stats->mCreates - stats->mDestroys) * mClassSize,
+              stats->mCreates,
+              (stats->mCreates - stats->mDestroys),
+              meanObjs,
+              stddevObjs, 
+              stats->mAddRefs,
+              (stats->mAddRefs - stats->mReleases),
+              meanRefs,
+              stddevRefs);
     }
     return NS_OK;
   }
@@ -351,50 +328,47 @@ GetBloatEntry(const char* aTypeName, PRUint32 aInstanceSize)
 #endif /* NS_BUILD_REFCNT_LOGGING */
 
 nsresult
-nsTraceRefcnt::DumpStatistics(StatisticsType type,
-                              nsIOutputStream* out)
+nsTraceRefcnt::DumpStatistics(StatisticsType type, FILE* out)
 {
   nsresult rv = NS_OK;
 #ifdef NS_BUILD_REFCNT_LOGGING
-  if (!gTrackBloat || !gBloatView) {
-    return NS_OK;
+  if (gBloatLog == nsnull || gBloatView == nsnull) {
+    fprintf(stdout, "### ERROR: Can't dump bloat statistics because XPCOM_MEM_BLOAT_LOG isn't set.\n");
+    return NS_ERROR_FAILURE;
+  }
+  if (out == nsnull) {
+    out = gBloatLog;
   }
 
   LOCK_TRACELOG();
-  if (gDumpLeaksOnly) {
-    fprintf(gLoggingStream, "Bloaty: Only dumping data about objects that leaked\n");
-  }
 
   PRBool wasLogging = gLogging;
   gLogging = PR_FALSE;  // turn off logging for this method
   
   BloatEntry total("TOTAL", 0);
-  nsCOMPtr<nsIOutputStream> outStr = dont_QueryInterface(out);
-  if (out == nsnull) {
-    nsCOMPtr<nsISupports> outSupports;
-    rv = NS_NewOutputConsoleStream(getter_AddRefs(outSupports));
-    if (NS_FAILED(rv)) goto done;
-    outStr = do_QueryInterface(outSupports, &rv);
-    if (NS_FAILED(rv)) goto done;
-  }
-
   PRIntn (*dump)(PLHashEntry *he, PRIntn i, void *arg);
   const char* msg;
   if (type == NEW_STATS) {
     dump = BloatEntry::DumpNewEntry;
-    msg = "NEW RESULTS";
+    if (gLogLeaksOnly)
+      msg = "NEW (incremental) LEAK STATISTICS";
+    else
+      msg = "NEW (incremental) LEAK AND BLOAT STATISTICS";
   }
   else {
     dump = BloatEntry::DumpAllEntry;
-    msg = "ALL RESULTS";
+    if (gLogLeaksOnly)
+      msg = "ALL (cumulative) LEAK STATISTICS";
+    else
+      msg = "ALL (cumulative) LEAK AND BLOAT STATISTICS";
   }
-  rv = BloatEntry::PrintDumpHeader(outStr, msg);
+  rv = BloatEntry::PrintDumpHeader(out, msg);
   if (NS_FAILED(rv)) goto done;
 
   PL_HashTableEnumerateEntries(gBloatView, BloatEntry::TotalEntries, &total);
-  total.DumpTotal(gBloatView->nentries, outStr);
+  total.DumpTotal(gBloatView->nentries, out);
 
-  PL_HashTableEnumerateEntries(gBloatView, dump, outStr);
+  PL_HashTableEnumerateEntries(gBloatView, dump, out);
 
 done:
   gLogging = wasLogging;
@@ -443,115 +417,118 @@ static PRBool LogThisType(const char* aTypeName)
   return nsnull != he;
 }
 
+static PRBool InitLog(const char* envVar, const char* msg, FILE* *result)
+{
+  const char* value = getenv(envVar);
+  if (value) {
+    if (nsCRT::strcmp(value, "1") == 0) {
+      *result = stdout;
+      fprintf(stdout, "### %s defined -- logging %s to stdout\n", 
+              envVar, msg);
+      return PR_TRUE;
+    }
+    else if (nsCRT::strcmp(value, "2") == 0) {
+      *result = stderr;
+      fprintf(stdout, "### %s defined -- logging %s to stderr\n", 
+              envVar, msg);
+      return PR_TRUE;
+    }
+    else {
+      FILE *stream = ::fopen(value, "w");
+      if (stream != NULL) {
+        *result = stream;
+        fprintf(stdout, "### %s defined -- logging %s to %s\n", 
+                envVar, msg, value);
+        return PR_TRUE;
+      }
+      else {
+        fprintf(stdout, "### %s defined -- unable to log %s to %s\n", 
+                envVar, msg, value);
+        return PR_FALSE;
+      }
+    }
+  }
+  return PR_FALSE;
+}
+
 static void InitTraceLog(void)
 {
-  if (0 == gTraceRefcntLog) {
-    gTraceRefcntLog = PR_NewLogModule("xpcomrefcnt");
+  if (gInitialized) return;
+  gInitialized = PR_TRUE;
 
-    if (getenv("MOZ_DUMP_LEAKS")) {
-      gDumpLeaksOnly = PR_TRUE;
+  PRBool defined;
+  defined = InitLog("XPCOM_MEM_BLOAT_LOG", "bloat/leaks", &gBloatLog);
+  if (!defined)
+    gLogLeaksOnly = InitLog("XPCOM_MEM_LEAK_LOG", "leaks", &gBloatLog);
+  if (defined || gLogLeaksOnly) {
+    RecreateBloatView();
+    if (NS_WARN_IF_FALSE(gBloatView, "out of memory")) {
+      gBloatLog = nsnull;
+      gLogLeaksOnly = PR_FALSE;
     }
-    
-    // See if user is redirecting the trace.
-	const char* traceLogName = getenv("MOZ_TRACE_LOG");
-	if (traceLogName) {
-	  FILE *stream = ::fopen(traceLogName, "w");
-	  if (stream != NULL)
-	    gLoggingStream = stream;
-	}
+  }
 
-    // See if bloaty is enabled
-    if (XPCOM_REFCNT_TRACK_BLOAT & gTraceRefcntLog->level) {
-      gTrackBloat = PR_TRUE;
-      RecreateBloatView();
-      if (NS_WARN_IF_FALSE(gBloatView, "out of memory")) {
-        gTrackBloat = PR_FALSE;
-      }
-      else {
-        fprintf(gLoggingStream, "XPCOM: using turbo mega bloatvision\n");
-      }
-    }
+  (void)InitLog("XPCOM_MEM_REFCNT_LOG", "refcounts", &gRefcntsLog);
 
-    // See if raw nspr logging is enabled
-    if (XPCOM_REFCNT_LOG_ALL & gTraceRefcntLog->level) {
-      gLogAllRefcnts = PR_TRUE;
-      fprintf(gLoggingStream, "XPCOM: logging all refcnt calls\n");
-    }
-    else if (XPCOM_REFCNT_LOG_SOME & gTraceRefcntLog->level) {
-      gLogSomeRefcnts = PR_TRUE;
-      gTypesToLog = PL_NewHashTable(256,
-                                    PL_HashString,
-                                    PL_CompareStrings,
-                                    PL_CompareValues,
-                                    NULL, NULL);
-      if (NS_WARN_IF_FALSE(gTypesToLog, "out of memory")) {
-        gLogSomeRefcnts = PR_FALSE;
-      }
-      else {
-#if defined(XP_UNIX) || defined (XP_PC) || defined(XP_MAC)
-        char* types = getenv("MOZ_TRACE_REFCNT_TYPES");
-        if (types) {
-          fprintf(gLoggingStream, "XPCOM: logging some refcnt calls: ");
-          char* cp = types;
-          for (;;) {
-            char* cm = strchr(cp, ',');
-            if (cm) {
-              *cm = '\0';
-            }
-            PL_HashTableAdd(gTypesToLog, nsCRT::strdup(cp), (void*)1);
-            fprintf(gLoggingStream, "%s ", cp);
-            if (!cm) break;
-            *cm = ',';
-            cp = cm + 1;
-          }
-          fprintf(gLoggingStream, "\n");
-        }
-        else {
-          fprintf(gLoggingStream, "XPCOM: MOZ_TRACE_REFCNTS_TYPE wasn't set; can't log some refcnts\n");
-          gLogSomeRefcnts = PR_FALSE;
-        }
-#endif
-      }
-    }
-    if (XPCOM_REFCNT_LOG_CALLS & gTraceRefcntLog->level) {
-      gLogCalls = PR_TRUE;
-    }
-    if (XPCOM_REFCNT_LOG_NEW & gTraceRefcntLog->level) {
-      gLogNewAndDelete = PR_TRUE;
-    }
+  (void)InitLog("XPCOM_MEM_ALLOC_LOG", "new/delete", &gAllocLog);
 
-    // See if we should log to leaky instead of to nspr
-    if (XPCOM_REFCNT_LOG_TO_LEAKY & gTraceRefcntLog->level) {
-      gLogToLeaky = PR_TRUE;
+  defined = InitLog("XPCOM_MEM_LEAKY_LOG", "for leaky", &gLeakyLog);
+  if (defined) {
+    gLogToLeaky = PR_TRUE;
+    void* p = nsnull;
+    void* q = nsnull;
 #ifdef HAVE_LIBDL
-      void* p = dlsym(0, "__log_addref");
-      if (p) {
-        leakyLogAddRef = (void (*)(void*,int,int)) p;
-        p = dlsym(0, "__log_release");
-        if (p) {
-          leakyLogRelease = (void (*)(void*,int,int)) p;
-          fprintf(gLoggingStream, "XPCOM: logging addref/release calls to leaky\n");
-        }
-        else {
-          gLogToLeaky = PR_FALSE;
-        }
-      }
-      else {
-        gLogToLeaky = PR_FALSE;
-      }
+    p = dlsym(0, "__log_addref");
+    q = dlsym(0, "__log_release");
 #endif
+    if (p && q) {
+      leakyLogAddRef = (void (*)(void*,int,int)) p;
+      leakyLogRelease = (void (*)(void*,int,int)) q;
     }
+    else {
+      gLogToLeaky = PR_FALSE;
+      fprintf(stdout, "### ERROR: XPCOM_MEM_LEAKY_LOG defined, but can't locate __log_addref and __log_release symbols\n");
+    }
+  }
 
-    if (gTrackBloat || gLogAllRefcnts || gLogSomeRefcnts ||
-        gLogCalls || gLogNewAndDelete) {
-      gLogging = PR_TRUE;
+  const char* classes = getenv("XPCOM_MEM_LOG_CLASSES");
+  if (classes) {
+    // if XPCOM_LOG_REFCNTS was set to some value, the value is interpreted
+    // as a list of class names to track
+    gTypesToLog = PL_NewHashTable(256,
+                                  PL_HashString,
+                                  PL_CompareStrings,
+                                  PL_CompareValues,
+                                  NULL, NULL);
+    if (NS_WARN_IF_FALSE(gTypesToLog, "out of memory")) {
+      fprintf(stdout, "### XPCOM_MEM_LOG_CLASSES defined -- unable to log specific classes\n");
     }
+    else {
+      fprintf(stdout, "### XPCOM_MEM_LOG_CLASSES defined -- only logging these classes: ");
+      const char* cp = classes;
+      for (;;) {
+        char* cm = strchr(cp, ',');
+        if (cm) {
+          *cm = '\0';
+        }
+        PL_HashTableAdd(gTypesToLog, nsCRT::strdup(cp), (void*)1);
+        fprintf(stdout, "%s ", cp);
+        if (!cm) break;
+        *cm = ',';
+        cp = cm + 1;
+      }
+      fprintf(stdout, "\n");
+    }
+  }
+
+  if (gBloatLog || gRefcntsLog || gAllocLog || gLeakyLog) {
+    gLogging = PR_TRUE;
+  }
 
 #if defined(NS_MT_SUPPORTED)
-    gTraceLock = PR_NewLock();
+  gTraceLock = PR_NewLock();
 #endif /* NS_MT_SUPPORTED */
 
-  }
 }
 #endif
 
@@ -902,9 +879,10 @@ nsTraceRefcnt::LoadLibrarySymbols(const char* aLibraryName,
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
 #if defined(_WIN32) && defined(_M_IX86) /* Win32 x86 only */
-  if (gTraceRefcntLog == nsnull)
+  if (!gInitialized)
     InitTraceLog();
-  if (PR_LOG_TEST(gTraceRefcntLog,PR_LOG_DEBUG)) {
+
+  if (gAllocLog || gRefcntsLog) {
     HANDLE myProcess = ::GetCurrentProcess();
 
     if (!SymInitialize(myProcess, ".;..\\lib", TRUE)) {
@@ -919,7 +897,7 @@ nsTraceRefcnt::LoadLibrarySymbols(const char* aLibraryName,
                              0);
 //  DWORD lastError = 0;
 //  if (!b) lastError = ::GetLastError();
-//  fprintf(gLoggingStream, "loading symbols for library %s => %s [%d]\n", aLibraryName,
+//  fprintf(gLogStream, "loading symbols for library %s => %s [%d]\n", aLibraryName,
 //         b ? "true" : "false", lastError);
   }
 #endif
@@ -941,12 +919,12 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
                          PRUint32 classSize)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
-  if (gTraceRefcntLog == nsnull)
+  if (!gInitialized)
     InitTraceLog();
   if (gLogging) {
     LOCK_TRACELOG();
     
-    if (gTrackBloat) {
+    if (gBloatLog) {
       BloatEntry* entry = GetBloatEntry(aClazz, classSize);
       if (entry) {
         entry->AddRef(aRefCnt);
@@ -959,23 +937,23 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogNewXPCOM instead to get file and line numbers.)
     PRBool loggingThisType = (gTypesToLog && LogThisType(aClazz));
-    if (aRefCnt == 1 && (gLogNewAndDelete || loggingThisType)) {
-      fprintf(gLoggingStream, "\n<%s> 0x%08X Create\n",
+    if (aRefCnt == 1 && (gAllocLog || loggingThisType)) {
+      fprintf(gAllocLog, "\n<%s> 0x%08X Create\n",
               aClazz, PRInt32(aPtr));
-      WalkTheStack(gLoggingStream);
+      WalkTheStack(gAllocLog);
     }
 
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogAddRefCall instead to get file and line numbers.)
-    if (gLogAllRefcnts || loggingThisType) {
+    if (gRefcntsLog || loggingThisType) {
       if (gLogToLeaky) {
         (*leakyLogAddRef)(aPtr, aRefCnt - 1, aRefCnt);
       }
       else {
         // Can't use PR_LOG(), b/c it truncates the line
-        fprintf(gLoggingStream,
+        fprintf(gRefcntsLog,
                 "\n<%s> 0x%08X AddRef %d\n", aClazz, PRInt32(aPtr), aRefCnt);
-        WalkTheStack(gLoggingStream);
+        WalkTheStack(gRefcntsLog);
       }
     }
 #endif
@@ -992,12 +970,12 @@ nsTraceRefcnt::LogRelease(void* aPtr,
                           const char* aClazz)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
-  if (gTraceRefcntLog == nsnull)
+  if (!gInitialized)
     InitTraceLog();
   if (gLogging) {
     LOCK_TRACELOG();
 
-    if (gTrackBloat) {
+    if (gBloatLog) {
       BloatEntry* entry = GetBloatEntry(aClazz, (PRUint32)-1);
       if (entry) {
         entry->Release(aRefCnt);
@@ -1008,15 +986,15 @@ nsTraceRefcnt::LogRelease(void* aPtr,
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogReleaseCall instead to get file and line numbers.)
     PRBool loggingThisType = (gTypesToLog && LogThisType(aClazz));
-    if (gLogAllRefcnts || loggingThisType) {
+    if (gRefcntsLog || loggingThisType) {
       if (gLogToLeaky) {
         (*leakyLogRelease)(aPtr, aRefCnt + 1, aRefCnt);
       }
       else {
         // Can't use PR_LOG(), b/c it truncates the line
-        fprintf(gLoggingStream,
+        fprintf(gRefcntsLog,
                 "\n<%s> 0x%08X Release %d\n", aClazz, PRInt32(aPtr), aRefCnt);
-        WalkTheStack(gLoggingStream);
+        WalkTheStack(gRefcntsLog);
       }
     }
 
@@ -1025,11 +1003,11 @@ nsTraceRefcnt::LogRelease(void* aPtr,
 
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogDeleteXPCOM instead to get file and line numbers.)
-    if (aRefCnt == 0 && (gLogNewAndDelete || loggingThisType)) {
-      fprintf(gLoggingStream,
+    if (aRefCnt == 0 && (gAllocLog || loggingThisType)) {
+      fprintf(gAllocLog,
               "\n<%s> 0x%08X Destroy\n",
               aClazz, PRInt32(aPtr));
-      WalkTheStack(gLoggingStream);
+      WalkTheStack(gAllocLog);
     }
 #endif
 
@@ -1046,14 +1024,14 @@ nsTraceRefcnt::LogAddRefCall(void* aPtr,
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
 #ifdef NS_LOSING_ARCHITECTURE
-  if (gTraceRefcntLog == nsnull)
+  if (!gInitialized)
     InitTraceLog();
-  if (gLogCalls) {
+  if (gRefcntsLog) {
     LOCK_TRACELOG();
 
-    fprintf(gLoggingStream, "\n<Call> 0x%08X AddRef %d=>%d in %s (line %d)\n",
+    fprintf(gRefcntsLog, "\n<Call> 0x%08X AddRef %d=>%d in %s (line %d)\n",
             aPtr, aNewRefcnt-1, aNewRefcnt, aFile, aLine);
-    WalkTheStack(gLoggingStream);
+    WalkTheStack(gRefcntsLog);
 
     UNLOCK_TRACELOG();
   }
@@ -1070,15 +1048,15 @@ nsTraceRefcnt::LogReleaseCall(void* aPtr,
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
 #ifdef NS_LOSING_ARCHITECTURE
-  if (gTraceRefcntLog == nsnull)
+  if (!gInitialized)
     InitTraceLog();
 
-  if (gLogCalls) {
+  if (gRefcntsLog) {
     LOCK_TRACELOG();
 
-    fprintf(gLoggingStream, "\n<Call> 0x%08X Release %d=>%d in %s (line %d)\n",
+    fprintf(gRefcntsLog, "\n<Call> 0x%08X Release %d=>%d in %s (line %d)\n",
             aPtr, aNewRefcnt+1, aNewRefcnt, aFile, aLine);
-    WalkTheStack(gLoggingStream);
+    WalkTheStack(gRefcntsLog);
 
     UNLOCK_TRACELOG();
   }
@@ -1096,15 +1074,15 @@ nsTraceRefcnt::LogNewXPCOM(void* aPtr,
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
 #ifdef NS_LOSING_ARCHITECTURE
-  if (gTraceRefcntLog == nsnull)
+  if (!gInitialized)
     InitTraceLog();
 
-  if (gLogNewAndDelete) {
+  if (gAllocLog) {
     LOCK_TRACELOG();
 
-    fprintf(gLoggingStream, "\n<%s> 0x%08X NewXPCOM in %s (line %d)\n",
+    fprintf(gAllocLog, "\n<%s> 0x%08X NewXPCOM in %s (line %d)\n",
             aType, aPtr, aFile, aLine);
-    WalkTheStack(gLoggingStream);
+    WalkTheStack(gAllocLog);
 
     UNLOCK_TRACELOG();
   }
@@ -1119,15 +1097,15 @@ nsTraceRefcnt::LogDeleteXPCOM(void* aPtr,
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
 #ifdef NS_LOSING_ARCHITECTURE
-  if (gTraceRefcntLog == nsnull)
+  if (!gInitialized)
     InitTraceLog();
 
-  if (gLogNewAndDelete) {
+  if (gAllocLog) {
     LOCK_TRACELOG();
 
-    fprintf(gLoggingStream, "\n<%s> 0x%08X Destroy in %s (line %d)\n",
-            aType, aPtr, aFile, aLine);
-    WalkTheStack(gLoggingStream);
+    fprintf(gAllocLog, "\n<%s> 0x%08X Destroy in %s (line %d)\n",
+            "?", aPtr, aFile, aLine);
+    WalkTheStack(gAllocLog);
 
     UNLOCK_TRACELOG();
   }
@@ -1141,13 +1119,13 @@ nsTraceRefcnt::LogCtor(void* aPtr,
                        PRUint32 aInstanceSize)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
-  if (gTraceRefcntLog == nsnull)
+  if (!gInitialized)
     InitTraceLog();
 
   if (gLogging) {
     LOCK_TRACELOG();
 
-    if (gTrackBloat) {
+    if (gBloatLog) {
       BloatEntry* entry = GetBloatEntry(aType, aInstanceSize);
       if (entry) {
         entry->Ctor();
@@ -1157,10 +1135,10 @@ nsTraceRefcnt::LogCtor(void* aPtr,
 #ifndef NS_LOSING_ARCHITECTURE
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogNewXPCOM instead to get file and line numbers.)
-    if (gLogNewAndDelete || (gTypesToLog && LogThisType(aType))) {
-      fprintf(gLoggingStream, "\n<%s> 0x%08X Ctor (%d)\n",
+    if (gAllocLog || (gTypesToLog && LogThisType(aType))) {
+      fprintf(gAllocLog, "\n<%s> 0x%08X Ctor (%d)\n",
              aType, PRInt32(aPtr), aInstanceSize);
-      WalkTheStack(gLoggingStream);
+      WalkTheStack(gAllocLog);
     }
 #endif
 
@@ -1174,13 +1152,13 @@ nsTraceRefcnt::LogDtor(void* aPtr, const char* aType,
                        PRUint32 aInstanceSize)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
-  if (gTraceRefcntLog == nsnull)
+  if (!gInitialized)
     InitTraceLog();
 
   if (gLogging) {
     LOCK_TRACELOG();
 
-    if (gTrackBloat) {
+    if (gBloatLog) {
       BloatEntry* entry = GetBloatEntry(aType, aInstanceSize);
       if (entry) {
         entry->Dtor();
@@ -1190,10 +1168,10 @@ nsTraceRefcnt::LogDtor(void* aPtr, const char* aType,
 #ifndef NS_LOSING_ARCHITECTURE
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogDeleteXPCOM instead to get file and line numbers.)
-    if (gLogNewAndDelete || (gTypesToLog && LogThisType(aType))) {
-      fprintf(gLoggingStream, "\n<%s> 0x%08X Dtor (%d)\n",
+    if (gAllocLog || (gTypesToLog && LogThisType(aType))) {
+      fprintf(gAllocLog, "\n<%s> 0x%08X Dtor (%d)\n",
              aType, PRInt32(aPtr), aInstanceSize);
-      WalkTheStack(gLoggingStream);
+      WalkTheStack(gAllocLog);
     }
 #endif
 
