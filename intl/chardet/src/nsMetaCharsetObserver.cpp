@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-dd
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -21,8 +21,10 @@
 #undef NS_IMPL_IDS
 
 #include "nsMetaCharsetObserver.h"
+#include "nsIMetaCharsetService.h"
 #include "nsIElementObserver.h"
 #include "nsIObserver.h"
+#include "nsIObserverService.h"
 #include "nsISupports.h"
 #include "nsCRT.h"
 #include "nsIParser.h"
@@ -32,14 +34,18 @@
 
 static NS_DEFINE_IID(kIElementObserverIID, NS_IELEMENTOBSERVER_IID);
 static NS_DEFINE_IID(kIObserverIID, NS_IOBSERVER_IID);
+static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIMetaCharsetServiceIID, NS_IMETA_CHARSET_SERVICE_IID);
 
 //========================================================================== 
 //
 // Class declaration for the class 
 //
 //========================================================================== 
-class nsMetaCharsetObserver: public nsIElementObserver, public nsIObserver {
+class nsMetaCharsetObserver: public nsIElementObserver, 
+                             public nsIObserver, 
+                             public nsIMetaCharsetService {
 
   NS_DECL_ISUPPORTS
 
@@ -48,6 +54,7 @@ public:
   nsMetaCharsetObserver();
   virtual ~nsMetaCharsetObserver();
 
+  /* methode for nsIElementObserver */
   /*
    *   This method return the tag which the observer care about
    */
@@ -64,8 +71,14 @@ public:
   NS_IMETHOD Notify(PRUint32 aDocumentID, eHTMLTags aTag, PRUint32 numOfAttributes, 
                     const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
 
+  /* methode for nsIObserver */
   NS_IMETHOD Notify(nsISupports** result);
 
+  /* methode for nsIMetaCharsetService */
+  NS_IMETHOD Start();
+  NS_IMETHOD End();
+private:
+  nsIObserver* mHack;
 };
 
 //-------------------------------------------------------------------------
@@ -73,6 +86,7 @@ nsMetaCharsetObserver::nsMetaCharsetObserver()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(& g_InstanceCount);
+  mHack = this;
 }
 //-------------------------------------------------------------------------
 nsMetaCharsetObserver::~nsMetaCharsetObserver()
@@ -100,6 +114,12 @@ NS_IMETHODIMP nsMetaCharsetObserver::QueryInterface(REFNSIID aIID, void** aInsta
   }
   if( aIID.Equals ( kIObserverIID )) {
     *aInstancePtr = (void*) ((nsIObserver*) this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  if( aIID.Equals ( kIMetaCharsetServiceIID )) {
+    *aInstancePtr = (void*) ((nsIMetaCharsetService*) this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -229,6 +249,46 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
 NS_IMETHODIMP nsMetaCharsetObserver::Notify(nsISupports** result) 
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsMetaCharsetObserver::Start() 
+{
+    nsresult res = NS_OK;
+    nsAutoString htmlTopic("htmlparser");
+    nsIObserverService* anObserverService = nsnull;
+
+    res = nsServiceManager::GetService(kObserverServiceCID, 
+                                       nsIObserverService::GetIID(),
+                                       (nsISupports**) &anObserverService);
+    if(NS_FAILED(res)) 
+        goto done;
+     
+    res = anObserverService->AddObserver(&mHack, &htmlTopic);
+
+    nsServiceManager::ReleaseService(kObserverServiceCID, 
+                                    anObserverService);
+done:
+    return res;
+}
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsMetaCharsetObserver::End() 
+{
+    nsresult res = NS_OK;
+    nsAutoString htmlTopic("htmlparser");
+    nsIObserverService* anObserverService = nsnull;
+
+    res = nsServiceManager::GetService(kObserverServiceCID, 
+                                       nsIObserverService::GetIID(),
+                                       (nsISupports**) &anObserverService);
+    if(NS_FAILED(res)) 
+        goto done;
+     
+    res = anObserverService->RemoveObserver(&mHack, &htmlTopic);
+
+    nsServiceManager::ReleaseService(kObserverServiceCID, 
+                                    anObserverService);
+done:
+    return res;
 }
 //========================================================================== 
 

@@ -25,6 +25,7 @@ MODULE		= chardet
 
 EXPORTS		= \
 	nsMetaCharsetCID.h \
+	nsIMetaCharsetService.h \
 		  $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

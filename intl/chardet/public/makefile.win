@@ -20,6 +20,7 @@ IGNORE_MANIFEST=1
 
 EXPORTS = \
         nsMetaCharsetCID.h \
+	nsIMetaCharsetService.h \
         $(NULL)
 
 MODULE=chardet
