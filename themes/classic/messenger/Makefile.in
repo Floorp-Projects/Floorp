@@ -96,6 +96,7 @@ EXPORT_RESOURCE_SAMPLES_1 = \
 
 EXPORT_RESOURCE_SAMPLES_2 = \
 	mailfolder.gif \
+	mailheader.css \
 	message-mail-attach.gif \
 	message-mail-imapdelete.gif \
 	message-mail-new.gif \
