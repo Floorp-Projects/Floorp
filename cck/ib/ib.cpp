@@ -37,6 +37,7 @@ CString Setup1Short = "C&ustom";
 
 COMPONENT Components[100];
 int		numComponents;
+int		componentOrder;
 
 int findXPI(CString xpiname, CString filename)
 {
@@ -392,9 +393,10 @@ void invisible()
 		if (Components[i].selected)
 		{
 			component = Components[i].compname;	
-			Cee.Format("C%d", i);
+			Cee.Format("C%d", componentOrder);
 			WritePrivateProfileString("Setup Type0",(LPCTSTR)Cee,(LPCTSTR)component, iniDstPath);
 			WritePrivateProfileString("Setup Type1",(LPCTSTR)Cee,(LPCTSTR)component, iniDstPath);
+			componentOrder++;
 		}
 		else
 			WritePrivateProfileString(Components[i].compname, "Attributes", "INVISIBLE", iniDstPath);
@@ -470,7 +472,8 @@ void AddThirdParty()
 	if (!tpCompPath1.IsEmpty())
 	{
 		componentName.Format("Component%d", (numComponents));
-		cName.Format("C%d", (numComponents -1));
+		cName.Format("C%d", componentOrder);
+		componentOrder++;
 
 		WritePrivateProfileString("Setup Type0", cName, componentName, iniDstPath);
 		WritePrivateProfileString("Setup Type1", cName, componentName, iniDstPath);
@@ -483,7 +486,7 @@ void AddThirdParty()
 	if (!tpCompPath2.IsEmpty())
 	{
 		componentName.Format("Component%d", (numComponents));
-		cName.Format("C%d", (numComponents -1));
+		cName.Format("C%d", componentOrder);
 
 		WritePrivateProfileString("Setup Type0", cName, componentName, iniDstPath);
 		WritePrivateProfileString("Setup Type1", cName, componentName, iniDstPath);
@@ -642,7 +645,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 	char *fgetsrv;
 	int rv = TRUE;
 	char	olddir[1024];
-
+	componentOrder =0;
 	rootPath	= GetGlobal("Root");
 	configName	= GetGlobal("CustomizationList");
 	configPath  = rootPath + "Configs\\" + configName;
