@@ -66,7 +66,7 @@ nsHTTPResponseListener::nsHTTPResponseListener(nsHTTPChannel* aConnection):
 
     NS_ASSERTION(aConnection, "HTTPChannel is null.");
     mChannel = aConnection;
-    NS_IF_ADDREF(mChannel);
+    NS_ADDREF(mChannel);
     mChannel->mRawResponseListener = this;
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
@@ -79,6 +79,8 @@ nsHTTPResponseListener::~nsHTTPResponseListener()
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Deleting nsHTTPResponseListener [this=%x].\n", this));
 
+    // These two should go away in the OnStopRequest() callback.
+    // But, just in case...
     NS_IF_RELEASE(mChannel);
     NS_IF_RELEASE(mResponse);
 }
@@ -129,6 +131,7 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
         //
         if (!mFirstLineParsed) {
             rv = ParseStatusLine(bufferInStream, i_Length, &actualBytesRead);
+            NS_ASSERTION(i_Length - actualBytesRead <= i_Length, "wrap around");
             i_Length -= actualBytesRead;
         }
 
@@ -332,8 +335,10 @@ nsresult nsHTTPResponseListener::ParseStatusLine(nsIBufferInputStream* in,
   }
 
   // Look for the LF which ends the Status-Line.
+  // n.b. Search looks at all pending data not just the first aLength bytes
   rv = in->Search("\n", PR_FALSE, &bFoundString, &offsetOfEnd);
   if (NS_FAILED(rv)) return rv;
+  if (bFoundString && offsetOfEnd >= aLength) bFoundString = PR_FALSE;
 
   if (!bFoundString) {
     //
@@ -430,6 +435,8 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBufferInputStream* in,
 
       rv = in->Search(" ", PR_FALSE, &bFoundString, &offsetOfEnd);
       if (NS_FAILED(rv)) return rv;
+      if (bFoundString && offsetOfEnd >= aLength) bFoundString = PR_FALSE;
+
       if (!bFoundString && offsetOfEnd == 0) 
           return NS_OK;     // Need to wait for more data to see if the header is complete
 
@@ -437,6 +444,8 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBufferInputStream* in,
           // then check for tab too
           rv = in->Search("\t", PR_FALSE, &bFoundString, &offsetOfEnd);
           if (NS_FAILED(rv)) return rv;
+          if (bFoundString && offsetOfEnd >= aLength) bFoundString = PR_FALSE;
+
           NS_ASSERTION(!(!bFoundString && offsetOfEnd == 0), "should have been checked above");
           if (!bFoundString || offsetOfEnd != 0) {
               break; // neither space nor tab, so jump out of the loop
@@ -448,6 +457,8 @@ nsresult nsHTTPResponseListener::ParseHTTPHeader(nsIBufferInputStream* in,
     // Look for the next LF in the buffer...
     rv = in->Search("\n", PR_FALSE, &bFoundString, &offsetOfEnd);
     if (NS_FAILED(rv)) return rv;
+    if (bFoundString && offsetOfEnd >= aLength) bFoundString = PR_FALSE;
+
 
     if (!bFoundString) {
       //
