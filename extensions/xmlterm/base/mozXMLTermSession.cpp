@@ -823,6 +823,7 @@ NS_IMETHODIMP mozXMLTermSession::DisplayInput(const nsString& aString,
     return NS_ERROR_FAILURE;
 
   if ((cursorCol > 0) || (mPromptHTML.Length() > 0)) {
+    // Collapse selection to new cursor location
     result = selection->Collapse(mInputTextNode, cursorCol);
 
   } else {
@@ -981,13 +982,13 @@ NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
       return result;
 
 
-    nsCOMPtr<nsIWebShell> webShell;
-    result = mXMLTerminal->GetWebShell(getter_AddRefs(webShell));
+    nsCOMPtr<nsIDocShell> webShell;
+    result = mXMLTerminal->GetDocShell(getter_AddRefs(webShell));
     if (NS_FAILED(result) || !webShell)
       return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIDOMWindow> outerDOMWindow;
-    result = mozXMLTermUtils::ConvertWebShellToDOMWindow(webShell,
+    result = mozXMLTermUtils::ConvertDocShellToDOMWindow(webShell,
                                               getter_AddRefs(outerDOMWindow));
 
     if (NS_FAILED(result) || !outerDOMWindow) {
@@ -997,8 +998,12 @@ NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
     }
 
     // Initialize markup handling
-    nsCAutoString iframeName = "iframet";
-    //iframeName.Append(mCurrentEntryNumber,10);
+    nsCAutoString iframeName = "iframe";
+#if 0
+    iframeName.Append("t");
+#else
+    iframeName.Append(mCurrentEntryNumber,10);
+#endif
 
     nsCAutoString contentType;
     switch (streamMarkupType) {

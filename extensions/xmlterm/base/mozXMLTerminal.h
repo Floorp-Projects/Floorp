@@ -52,7 +52,7 @@ class mozXMLTerminal : public mozIXMLTerminal,
 
   // mozIXMLTerminal interface
 
-  NS_IMETHOD Init(nsIWebShell* aWebShell,
+  NS_IMETHOD Init(nsIDocShell* aDocShell,
                   mozIXMLTermShell* aXMLTermShell,
                   const PRUnichar* aURL,
                   const PRUnichar* args);
@@ -74,7 +74,7 @@ class mozXMLTerminal : public mozIXMLTerminal,
 
   NS_IMETHOD GetDocument(nsIDOMDocument** aDoc);
 
-  NS_IMETHOD GetWebShell(nsIWebShell** aWebShell);
+  NS_IMETHOD GetDocShell(nsIDocShell** aDocShell);
 
   NS_IMETHOD GetPresShell(nsIPresShell** aPresShell);
 
@@ -128,8 +128,8 @@ class mozXMLTerminal : public mozIXMLTerminal,
   /** non-owning reference to containing XMLTermShell object */
   mozIXMLTermShell*  mXMLTermShell;
 
-  /** non-owning reference to containing web shell */
-  nsIWebShell*       mWebShell;
+  /** non-owning reference to containing doc shell */
+  nsIDocShell*       mDocShell;
 
   /** non-owning (??) reference to presentation shell for XMLterm */
   nsIPresShell*      mPresShell;

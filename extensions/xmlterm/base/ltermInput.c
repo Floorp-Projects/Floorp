@@ -377,7 +377,7 @@ static int ltermLineInput(struct lterms *lts,
     } else if (lti->escapeCSIFlag) {
       /* Character part of escape code sequence */
 
-      if ((uch >= U_ZERO && uch <= U_NINE)) {
+      if ((uch >= (UNICHAR)U_ZERO && uch <= (UNICHAR)U_NINE)) {
         /* Process numerical argument to escape code sequence */
         lti->escapeCSIArg = lti->escapeCSIArg*10 + (uch - U_ZERO);
         uch = U_NUL;
@@ -406,8 +406,8 @@ static int ltermLineInput(struct lterms *lts,
       }
     }
 
-    if ( ((uch >= U_SPACE) && (uch != U_DEL)) ||
-         ((uch == U_TAB) && (lti->inputMode <= LTERM2_EDIT_MODE)) ) {
+    if ( ((uch >= (UNICHAR)U_SPACE) && (uch != (UNICHAR)U_DEL)) ||
+         ((uch == (UNICHAR)U_TAB) && (lti->inputMode <= LTERM2_EDIT_MODE)) ) {
       /* printable character or non-completion mode TAB; insert in buffer */
       /* (NEED TO UPDATE THIS CHECK FOR UNICODE PRINTABILITY) */
 

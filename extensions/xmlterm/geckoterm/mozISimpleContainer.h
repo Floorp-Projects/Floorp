@@ -18,7 +18,7 @@
  * Contributor(s):
  */
 
-// mozISimpleContainer.h: a simple WebShell container interface
+// mozISimpleContainer.h: a simple DocShell container interface
 //                        for use in simple programs using the layout engine
 //                        (unregistered interface)
 
@@ -28,7 +28,7 @@
 #include "nscore.h"
 
 #include "nsISupports.h"
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIPref.h"
 #include "nsIPresShell.h"
 #include "nsIDOMDocument.h"
@@ -41,49 +41,10 @@
   {0x0eb82bF0, 0x43a2, 0x11d3, \
     { 0x8e, 0x76, 0x00, 0x60, 0x08, 0x94, 0x8a, 0xf5 }}
 
-class mozISimpleContainer : public nsIWebShellContainer {
+class mozISimpleContainer : public nsIDocumentLoaderObserver {
 
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(MOZISIMPLE_CONTAINER_IID)
-
-  // nsIWebShellContainer interface
-  NS_IMETHOD WillLoadURL(nsIWebShell* aShell,
-                         const PRUnichar* aURL,
-                         nsLoadType aReason) = 0;
- 
-  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell,
-                          const PRUnichar* aURL) = 0;
- 
-
-  NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell,
-                             const PRUnichar* aURL,
-                             PRInt32 aProgress,
-                             PRInt32 aProgressMax) = 0;
- 
-  NS_IMETHOD EndLoadURL(nsIWebShell* aShell,
-                        const PRUnichar* aURL,
-                        nsresult aStatus) = 0;
- 
-  NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
-                         PRBool aVisible,
-                         nsIWebShell *&aNewWebShell) = 0;
-  
-  NS_IMETHOD FindWebShellWithName(const PRUnichar* aName,
-                                  nsIWebShell*& aResult) = 0;
-  
-  NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell,
-                               nsIContent* frameNode) = 0;
-
-  NS_IMETHOD CreatePopup(nsIDOMElement* aElement,
-                         nsIDOMElement* aPopupContent, 
-                         PRInt32 aXPos, PRInt32 aYPos, 
-                         const nsString& aPopupType,
-                         const nsString& anAnchorAlignment,
-                         const nsString& aPopupAlignment,
-                         nsIDOMWindow* aWindow, nsIDOMWindow** outPopup) = 0;
-
-  NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell,
-                            PRBool& aFocusTaken) = 0;
 
   // other
 
@@ -109,19 +70,9 @@ public:
   NS_IMETHOD LoadURL(const char* aURL) = 0;
 
   /** Gets web shell in container
-   * @param aWebShell (output) web shell object
+   * @param aDocShell (output) web shell object
    */
-  NS_IMETHOD GetWebShell(nsIWebShell*& aWebShell) = 0;
-
-  /** Gets DOM document in container
-   * @param aDocument (output) DOM document
-   */
-  NS_IMETHOD GetDocument(nsIDOMDocument*& aDocument) = 0;
-
-  /** Gets presentation shell associated with container
-   * @param aPresShell (output) presentation shell
-   */
-  NS_IMETHOD GetPresShell(nsIPresShell*& aPresShell) = 0;
+  NS_IMETHOD GetDocShell(nsIDocShell*& aDocShell) = 0;
 };
 
 #define MOZSIMPLE_CONTAINER_CID              \

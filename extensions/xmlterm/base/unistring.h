@@ -264,10 +264,13 @@ void ucsprint(FILE* stream, const UNICHAR* us, int nus);
 #define U_NOBRKSPACE  0xA0U      /* no-break space */
 #define U_LATIN1HI    0xFFU      /* highest Latin1 extension character */
 
-#define IS_ASCII_LETTER(x) ( (((x) >= U_A_CHAR) && ((x) <= U_Z_CHAR)) || \
-                             (((x) >= U_a_CHAR) && ((x) <= U_z_CHAR)) )
+#define IS_ASCII_LETTER(x) ( (((x) >= (UNICHAR)U_A_CHAR) &&  \
+                              ((x) <= (UNICHAR)U_Z_CHAR)) || \
+                             (((x) >= (UNICHAR)U_a_CHAR) &&  \
+                              ((x) <= (UNICHAR)U_z_CHAR)) )
 
-#define IS_ASCII_DIGIT(x)  ( ((x) >= U_ZERO) && ((x) <= U_NINE) )
+#define IS_ASCII_DIGIT(x)  ( ((x) >= (UNICHAR)U_ZERO) && \
+                             ((x) <= (UNICHAR)U_NINE) )
 
 
 #ifdef  __cplusplus

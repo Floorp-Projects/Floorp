@@ -97,7 +97,7 @@ mozXMLTerminal::mozXMLTerminal() :
   mFirstInput(""),
 
   mXMLTermShell(nsnull),
-  mWebShell(nsnull),
+  mDocShell(nsnull),
   mPresShell(nsnull),
   mDOMDocument(nsnull),
 
@@ -195,20 +195,20 @@ NS_IMETHODIMP mozXMLTerminal::SetPrompt(const PRUnichar* aPrompt)
 
 
 // Initialize by starting load of Init page for XMLTerm
-NS_IMETHODIMP mozXMLTerminal::Init(nsIWebShell* aWebShell,
+NS_IMETHODIMP mozXMLTerminal::Init(nsIDocShell* aDocShell,
                                    mozIXMLTermShell* aXMLTermShell,
                                    const PRUnichar* aURL,
                                    const PRUnichar* args)
 {
   XMLT_LOG(mozXMLTerminal::Init,20,("\n"));
 
-  if (!aWebShell)
+  if (!aDocShell)
       return NS_ERROR_NULL_POINTER;
 
-  if (mWebShell)
+  if (mDocShell)
     return NS_ERROR_ALREADY_INITIALIZED;
 
-  mWebShell = aWebShell;          // containing webshell; no addref
+  mDocShell = aDocShell;          // containing docshell; no addref
 
   mXMLTermShell = aXMLTermShell;  // containing xmlterm shell; no addref
 
@@ -216,9 +216,9 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIWebShell* aWebShell,
 
   printf("mozXMLTerminal::Init, check1\n");
   nsCOMPtr<nsIContentViewer> contViewer;
-  result = mWebShell->GetContentViewer(getter_AddRefs(contViewer));
+  result = mDocShell->GetContentViewer(getter_AddRefs(contViewer));
   printf("mozXMLTerminal::Init, check2, result=%x, contViewer=%x\n",
-         result, contViewer.get());
+         result, (unsigned int) contViewer.get());
 
   // NOTE: Need to parse args string!!!
   mCommand = "";
@@ -233,16 +233,26 @@ NS_IMETHODIMP mozXMLTerminal::Init(nsIWebShell* aWebShell,
     XMLT_LOG(mozXMLTerminal::Init,22,("setting DocLoaderObs\n"));
 
     // About to create owning reference to this
-    result = mWebShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*)this);
+    result = mDocShell->SetDocLoaderObserver((nsIDocumentLoaderObserver*)this);
     if (NS_FAILED(result))
       return NS_ERROR_FAILURE;
 
     XMLT_LOG(mozXMLTerminal::Init,22,("done setting DocLoaderObs\n"));
 
     // Load initial XMLterm background document
-    nsAutoString urlString(aURL);
+    nsCAutoString urlCString(aURL);
 
-    result = mWebShell->LoadURL(urlString.GetUnicode());
+    nsCOMPtr<nsIURI> uri;
+    result = uri->SetSpec(urlCString.GetBuffer());
+    if (NS_FAILED(result))
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIPresContext> presContext;
+    result = mDocShell->GetPresContext(getter_AddRefs(presContext));
+    if (NS_FAILED(result) || !presContext)
+      return NS_ERROR_FAILURE;
+
+    result = mDocShell->LoadURI(uri, presContext);
     if (NS_FAILED(result))
       return NS_ERROR_FAILURE;
 
@@ -307,10 +317,10 @@ NS_IMETHODIMP mozXMLTerminal::Finalize(void)
     mLineTermAux = nsnull;
   }
 
-  if (mWebShell) {
+  if (mDocShell) {
     // Stop observing document loading
-    mWebShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)nsnull);
-    mWebShell = nsnull;
+    mDocShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)nsnull);
+    mDocShell = nsnull;
   }
 
   mPresShell = nsnull;
@@ -349,11 +359,11 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
   }
 
   nsCOMPtr<nsIDOMWindow> outerDOMWindow;
-  result = mozXMLTermUtils::ConvertWebShellToDOMWindow(mWebShell,
+  result = mozXMLTermUtils::ConvertDocShellToDOMWindow(mDocShell,
                                               getter_AddRefs(outerDOMWindow));
 
   if (NS_FAILED(result) || !outerDOMWindow) {
-    fprintf(stderr, "mozXMLTerminal::Activate: Failed to convert webshell\n");
+    fprintf(stderr, "mozXMLTerminal::Activate: Failed to convert docshell\n");
     return NS_ERROR_FAILURE;
   }
 
@@ -383,15 +393,14 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
   if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
-  PR_ASSERT(mWebShell != nsnull);
+  PR_ASSERT(mDocShell != nsnull);
 
   if ((mDOMDocument != nsnull) || (mPresShell != nsnull))
     return NS_ERROR_FAILURE;
 
   // Get reference to DOMDocument
   nsCOMPtr<nsIDOMDocument> domDocument;
-  result = mozXMLTermUtils::GetWebShellDOMDocument(mWebShell,
-                                                 getter_AddRefs(domDocument));
+  result = mDocShell->GetDocument(getter_AddRefs(domDocument));
 
   if (NS_FAILED(result) || !domDocument)
     return NS_ERROR_FAILURE;
@@ -401,14 +410,12 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIPresContext> presContext;
-  result = mozXMLTermUtils::GetWebShellPresContext(mWebShell,
-                                                  getter_AddRefs(presContext));
+  result = mDocShell->GetPresContext(getter_AddRefs(presContext));
   if (NS_FAILED(result) || !presContext)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIPresShell> presShell;
-  result = presContext->GetShell(getter_AddRefs(presShell));
-
+  result = mDocShell->GetPresShell(getter_AddRefs(presShell));
   if (NS_FAILED(result) || !presShell)
     return NS_ERROR_FAILURE;
 
@@ -707,18 +714,18 @@ NS_IMETHODIMP mozXMLTerminal::GetDocument(nsIDOMDocument** aDoc)
 }
 
 
-// Returns web shell associated with XMLTerm
-NS_IMETHODIMP mozXMLTerminal::GetWebShell(nsIWebShell** aWebShell)
+// Returns doc shell associated with XMLTerm
+NS_IMETHODIMP mozXMLTerminal::GetDocShell(nsIDocShell** aDocShell)
 {
-  if (!aWebShell)
+  if (!aDocShell)
     return NS_ERROR_NULL_POINTER;
-  *aWebShell = nsnull;
+  *aDocShell = nsnull;
 
-  NS_PRECONDITION(mWebShell, "bad state, null mWebShell");
-  if (!mWebShell)
+  NS_PRECONDITION(mDocShell, "bad state, null mDocShell");
+  if (!mDocShell)
     return NS_ERROR_NOT_INITIALIZED;
-  return mWebShell->QueryInterface(NS_GET_IID(nsIWebShell),
-                                    (void **)aWebShell);
+  return mDocShell->QueryInterface(NS_GET_IID(nsIDocShell),
+                                    (void **)aDocShell);
 }
 
 

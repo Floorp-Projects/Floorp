@@ -77,7 +77,7 @@ static void event_processor_configure(GtkWidget *window,
 
   //fprintf(stderr, "event_processor_configure:\n");
 
-  // Resize web shell window
+  // Resize doc shell window
   gSimpleContainer->Resize(alloc->width, alloc->height);
 
   return;
@@ -215,7 +215,7 @@ int main( int argc, char *argv[] )
   // Determine window dimensions
   GtkAllocation *alloc = &GTK_WIDGET(mainWin)->allocation;
     
-  // Initialize container it to hold a web shell
+  // Initialize container it to hold a doc shell
   result = gSimpleContainer->Init((nsNativeWidget *) superWin,
                               alloc->width, alloc->height, mPref);
 
@@ -223,11 +223,11 @@ int main( int argc, char *argv[] )
     return result; // Exit main program
   }
 
-  // Get reference to web shell embedded in a simple container
-  nsCOMPtr<nsIWebShell> webShell;
-  result = gSimpleContainer->GetWebShell(*getter_AddRefs(webShell));
+  // Get reference to doc shell embedded in a simple container
+  nsCOMPtr<nsIDocShell> docShell;
+  result = gSimpleContainer->GetDocShell(*getter_AddRefs(docShell));
 
-  if (NS_FAILED(result) || !webShell) {
+  if (NS_FAILED(result) || !docShell) {
     return result; // Exit main program
   }
 
@@ -249,7 +249,7 @@ int main( int argc, char *argv[] )
   }
 
   nsCOMPtr<nsIDOMWindow> outerDOMWindow;
-  result = mozXMLTermUtils::ConvertWebShellToDOMWindow(webShell,
+  result = mozXMLTermUtils::ConvertDocShellToDOMWindow(docShell,
                                               getter_AddRefs(outerDOMWindow));
 
   if (NS_FAILED(result) || !outerDOMWindow)
@@ -289,12 +289,12 @@ int main( int argc, char *argv[] )
     result = NS_ERROR_OUT_OF_MEMORY;
 
   if (NS_SUCCEEDED(result)) {
-    result = gXMLTerminal->Init(webShell, nsnull, nsnull);
+    result = gXMLTerminal->Init(docShell, nsnull, nsnull);
   }
 #endif
 
   // Discard reference to web shell
-  webShell = nsnull;
+  docShell = nsnull;
 
   // GTK event loop
   gtk_main();

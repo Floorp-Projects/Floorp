@@ -283,8 +283,8 @@ int ltermWrite(struct lterms *lts, int *opcodes)
                                     lti->inputBufBytes/sizeof(UNICHAR)));
 
     /* Check if one or more complete records is now available in buffer */
-    lts->inputBufRecord = (lti->inputBufBytes >= sizeof(UNICHAR)) &&
-       (lti->inputBufBytes >= (PIPEHEADER+lti->inputBuf[0])*sizeof(UNICHAR));
+    lts->inputBufRecord = (lti->inputBufBytes >= (int)sizeof(UNICHAR)) &&
+  (lti->inputBufBytes >= (PIPEHEADER+lti->inputBuf[0])*((int)sizeof(UNICHAR)));
 
     if (!lts->inputBufRecord) {
       /* Incomplete input record; return */
@@ -424,8 +424,8 @@ int ltermWrite(struct lterms *lts, int *opcodes)
   lti->inputBufBytes -= processedChars*sizeof(UNICHAR);
 
   /* Check if one or more complete records is now left in buffer */
-  lts->inputBufRecord = (lti->inputBufBytes >= sizeof(UNICHAR)) &&
-     (lti->inputBufBytes >= (PIPEHEADER+lti->inputBuf[0])*sizeof(UNICHAR));
+  lts->inputBufRecord = (lti->inputBufBytes >= (int)sizeof(UNICHAR)) &&
+  (lti->inputBufBytes >= (PIPEHEADER+lti->inputBuf[0])*((int)sizeof(UNICHAR)));
 
   LTERM_LOG(ltermWrite,21,
             ("return opcodes=0x%x, inputBufBytes=%d, inputBufRecord=%d\n",

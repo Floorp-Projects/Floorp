@@ -73,8 +73,8 @@ protected:
   /** non-owning reference to content window for XMLterm */		
   nsIDOMWindow* mContentWindow;
 
-  /** non-owning reference (??) to web shell for content window */
-  nsIWebShell* mContentAreaWebShell;
+  /** non-owning reference (??) to doc shell for content window */
+  nsIDocShell* mContentAreaDocShell;
 
   /** owning reference to XMLTerminal object created by us */
   nsCOMPtr<mozIXMLTerminal> mXMLTerminal;

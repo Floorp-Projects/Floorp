@@ -121,7 +121,7 @@ int ltermProcessOutput(struct lterms *lts, int *opcodes, int *opvals,
     } else if (lto->outputMode == LTERM1_SCREEN_MODE) {
       /* Screen mode processing */
 
-      if ((uch >= U_SPACE) && (uch != U_DEL)) {
+      if ((uch >= (UNICHAR)U_SPACE) && (uch != (UNICHAR)U_DEL)) {
         /* Printable non-TAB character */
 
         LTERM_LOG(ltermProcessOutput,39,("Screen mode, printable char - %c\n",
@@ -198,8 +198,8 @@ int ltermProcessOutput(struct lterms *lts, int *opcodes, int *opvals,
     } else {
       /* Line mode processing */
 
-      if ( ((uch >= U_SPACE) && (uch != U_DEL)) ||
-           (uch == U_TAB)) {
+      if ( ((uch >= (UNICHAR)U_SPACE) && (uch != (UNICHAR)U_DEL)) ||
+           (uch == (UNICHAR)U_TAB)) {
         /* Printable/TAB character; replace/insert at current cursor location
            or append to end of line */
 

@@ -36,6 +36,7 @@
 #include "nsIDocumentViewer.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
+#include "nsIDocumentLoaderFactory.h"
 
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
@@ -244,11 +245,11 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindow* aDOMWindow,
     mDOMWindow = aDOMWindow;
   }
 
-  // Get webshell for DOM window
-  nsCOMPtr<nsIWebShell> webShell;
-  result = mozXMLTermUtils::ConvertDOMWindowToWebShell(mDOMWindow,
-                                                    getter_AddRefs(webShell));
-  if (NS_FAILED(result) || !webShell)
+  // Get docshell for DOM window
+  nsCOMPtr<nsIDocShell> docShell;
+  result = mozXMLTermUtils::ConvertDOMWindowToDocShell(mDOMWindow,
+                                                    getter_AddRefs(docShell));
+  if (NS_FAILED(result) || !docShell)
     return NS_ERROR_FAILURE;
 
 #ifdef NO_WORKAROUND
@@ -300,7 +301,7 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindow* aDOMWindow,
                                             mChannel,
                                             mLoadGroup,
                                             contentType,
-                                            webShell,
+                                            docShell,
                                             nsnull,
                                             getter_AddRefs(mStreamListener),
                                             getter_AddRefs(contentViewer) );
@@ -308,11 +309,12 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindow* aDOMWindow,
     return result;
 
   nsCOMPtr<nsIContentViewerContainer> contViewContainer =
-                                             do_QueryInterface(webShell);
+                                             do_QueryInterface(docShell);
   result = contentViewer->SetContainer(contViewContainer);
   if (NS_FAILED(result))
     return result;
 
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
   result = webShell->Embed(contentViewer, command, (nsISupports*) nsnull);
   if (NS_FAILED(result))
     return result;
@@ -325,7 +327,8 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindow* aDOMWindow,
 
   nsCOMPtr<nsIDOMDocument> innerDOMDoc;
   result = mDOMWindow->GetDocument(getter_AddRefs(innerDOMDoc));
-  printf("mozXMLTermStream::Open,check1, 0x%x\n", result);
+  printf("mozXMLTermStream::Open,check1, 0x%x, 0x%x\n",
+         result, (int) innerDOMDoc.get());
   if (NS_FAILED(result) || !innerDOMDoc)
     return NS_ERROR_FAILURE;
 
@@ -404,17 +407,16 @@ NS_IMETHODIMP mozXMLTermStream::SizeToContentHeight(PRInt32 maxHeight)
 {
   nsresult result;
 
-  // Get webshell
-  nsCOMPtr<nsIWebShell> webShell;
-  result = mozXMLTermUtils::ConvertDOMWindowToWebShell(mDOMWindow,
-                                                   getter_AddRefs(webShell));
-  if (NS_FAILED(result) || !webShell)
+  // Get docshell
+  nsCOMPtr<nsIDocShell> docShell;
+  result = mozXMLTermUtils::ConvertDOMWindowToDocShell(mDOMWindow,
+                                                   getter_AddRefs(docShell));
+  if (NS_FAILED(result) || !docShell)
     return NS_ERROR_FAILURE;
 
   // Get pres context
   nsCOMPtr<nsIPresContext> presContext;
-  result = mozXMLTermUtils::GetWebShellPresContext(webShell,
-                                                getter_AddRefs(presContext));
+  result = docShell->GetPresContext(getter_AddRefs(presContext));
   if (NS_FAILED(result) || !presContext)
     return NS_ERROR_FAILURE;
 
@@ -442,7 +444,7 @@ NS_IMETHODIMP mozXMLTermStream::SizeToContentHeight(PRInt32 maxHeight)
   PRInt32 scrollBarWidth = PRInt32(sbWidth*pixelScale);
   PRInt32 scrollBarHeight = PRInt32(sbHeight*pixelScale);
 
-  // Determine webshell size in pixels
+  // Determine docshell size in pixels
   nsRect shellArea;
   result = presContext->GetVisibleArea(shellArea);
   if (NS_FAILED(result))
@@ -469,7 +471,7 @@ NS_IMETHODIMP mozXMLTermStream::SizeToContentHeight(PRInt32 maxHeight)
          pageWidth, pageHeight, pixelScale);
 
   if ((pageHeight > shellHeight) || (pageWidth > shellWidth)) {
-    // Page larger than webshell
+    // Page larger than docshell
     nsAutoString attHeight = "height";
     nsAutoString attWidth = "width";
     nsAutoString attValue = "";
