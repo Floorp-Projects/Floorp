@@ -41,165 +41,476 @@
 #include "nsICategoryManager.h"
 #include "nsCategoryManager.h"
 
+#include "plarena.h"
+#include "prio.h"
+#include "prprf.h"
+#include "prlock.h"
 #include "nsCOMPtr.h"
-#include "nsHashtable.h"
+#include "nsTHashtable.h"
+#include "nsClassHashtable.h"
 #include "nsIFactory.h"
+#include "nsIStringEnumerator.h"
 #include "nsSupportsPrimitives.h"
+#include "nsIServiceManagerUtils.h"
 #include "nsIObserver.h"
-#include "nsComponentManager.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
-
-#include "nsHashtableEnumerator.h"
 #include "nsEnumeratorUtils.h"
 
+class nsIComponentLoaderManager;
 
-  /*
-    CategoryDatabase
-      contains 0 or more 1-1 mappings of string to Category
-        each Category contains 0 or more 1-1 mappings of string keys to string values
+/*
+  CategoryDatabase
+  contains 0 or more 1-1 mappings of string to Category
+  each Category contains 0 or more 1-1 mappings of string keys to string values
 
-    In other words, the CategoryDatabase is a tree, whose root is a hashtable.
-    Internal nodes (or Categories) are hashtables.
-    Leaf nodes are strings.
-  */
+  In other words, the CategoryDatabase is a tree, whose root is a hashtable.
+  Internal nodes (or Categories) are hashtables. Leaf nodes are strings.
 
-// this function is not public yet, hence it is externed here.
-extern nsresult NS_GetComponentLoaderManager(nsIComponentLoaderManager* *result);
+  The leaf strings are allocated in an arena, because we assume they're not
+  going to change much ;)
+*/
 
 #define NS_CATEGORYMANAGER_ARENA_SIZE (1024 * 8)
 
 // pulled in from nsComponentManager.cpp
-char* ArenaStrndup(const char* s, PRUint32 len, PLArenaPool* aArena);
 char* ArenaStrdup(const char* s, PLArenaPool* aArena);
 
-static
-NS_IMETHODIMP
-ExtractKeyString( nsHashKey* key, void*, void*, nsISupports** _retval )
-  /*
-    ...works with |nsHashtableEnumerator| to make the hash keys enumerable.
-  */
+//
+// BaseStringEnumerator is subclassed by EntryEnumerator and
+// CategoryEnumerator
+//
+class BaseStringEnumerator
+  : public nsISimpleEnumerator,
+           nsIUTF8StringEnumerator
 {
-  nsresult status = NS_ERROR_FAILURE;
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISIMPLEENUMERATOR
+  NS_DECL_NSIUTF8STRINGENUMERATOR
 
-  nsCOMPtr<nsISupportsCString> obj = new nsSupportsCStringImpl();
-  if ( obj ) {
-    nsCStringKey* strkey = NS_STATIC_CAST(nsCStringKey*, key);
-    status = obj->SetData(nsDependentCString(strkey->GetString(),
-                                             strkey->GetStringLength()));
+protected:
+  BaseStringEnumerator()
+    : mArray(nsnull),
+      mCount(0),
+      mSimpleCurItem(0),
+      mStringCurItem(0) { }
+  virtual ~BaseStringEnumerator()
+  {
+    if (mArray)
+      delete mArray;
   }
 
-  *_retval = obj;
-  NS_IF_ADDREF(*_retval);
-  return status;
+  const char** mArray;
+  PRUint32 mCount;
+  PRUint32 mSimpleCurItem;
+  PRUint32 mStringCurItem;
+};
+
+NS_IMPL_ISUPPORTS2(BaseStringEnumerator, nsISimpleEnumerator, nsIUTF8StringEnumerator);
+
+NS_IMETHODIMP
+BaseStringEnumerator::HasMoreElements(PRBool *_retval)
+{
+  *_retval = (mSimpleCurItem < mCount);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BaseStringEnumerator::GetNext(nsISupports **_retval)
+{
+  if (mSimpleCurItem >= mCount)
+    return NS_ERROR_FAILURE;
+
+  nsSupportsDependentCString* str =
+    new nsSupportsDependentCString(mArray[mSimpleCurItem++]);
+  if (!str)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  *_retval = str;
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BaseStringEnumerator::HasMore(PRBool *_retval)
+{
+  *_retval = (mStringCurItem < mCount);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BaseStringEnumerator::GetNext(nsACString& _retval)
+{
+  if (mStringCurItem >= mCount)
+    return NS_ERROR_FAILURE;
+
+  _retval = nsDependentCString(mArray[mStringCurItem++]);
+  return NS_OK;
 }
 
 
+//
+// EntryEnumerator is the wrapper that allows nsICategoryManager::EnumerateCategory
+//
+class EntryEnumerator
+  : public BaseStringEnumerator
+{
+public:
+  static EntryEnumerator* Create(nsTHashtable<CategoryLeaf>& aTable);
 
-class CategoryNode
-    : public nsObjectHashtable
-  {
-    public:
-      CategoryNode()
-          : nsObjectHashtable((nsHashtableCloneElementFunc) 0, 0,
-                                (nsHashtableEnumFunc) 0, 0 )
-        {
-          // Nothing else to do here...
-        }
+private:
+  static PLDHashOperator PR_CALLBACK
+    enumfunc_createenumerator(CategoryLeaf* aLeaf, void* userArg);
+};
 
-      const char* find_leaf( const char* );
-  };
 
-const char*
-CategoryNode::find_leaf( const char* aLeafName )
-  {
-    nsCStringKey leafNameKey(aLeafName);
-    return NS_STATIC_CAST(char*, Get(&leafNameKey));
+PLDHashOperator PR_CALLBACK
+EntryEnumerator::enumfunc_createenumerator(CategoryLeaf* aLeaf, void* userArg)
+{
+  EntryEnumerator* mythis = NS_STATIC_CAST(EntryEnumerator*, userArg);
+  mythis->mArray[mythis->mCount++] = aLeaf->GetKey();
+
+  return PL_DHASH_NEXT;
+}
+
+EntryEnumerator*
+EntryEnumerator::Create(nsTHashtable<CategoryLeaf>& aTable)
+{
+  EntryEnumerator* enumObj = new EntryEnumerator();
+  if (!enumObj)
+    return nsnull;
+
+  enumObj->mArray = new char const* [aTable.Count()];
+  if (!enumObj->mArray) {
+    delete enumObj;
+    return nsnull;
   }
 
-  /*
-    We keep a hashtable of hashtables, therefore, we need a suitable
-    destruction function to register with the outer table for destroying
-    elements which are the inner tables.
-  */
-static
-PRBool
-Destroy_CategoryNode( nsHashKey*, void* aElement, void* )
-  {
-    delete NS_STATIC_CAST(CategoryNode*, aElement);
-    return PR_TRUE;
-  }
+  aTable.EnumerateEntries(enumfunc_createenumerator, enumObj);
+
+  return enumObj;
+}
 
 
-
-
-
-
-
-class nsCategoryManager
-    : public nsICategoryManager,
-      public nsObjectHashtable
-  {
-    private:
-      friend class nsCategoryManagerFactory;
-      nsCategoryManager();
-
-    public:
-        virtual ~nsCategoryManager();
-
-      NS_DECL_ISUPPORTS
-      NS_DECL_NSICATEGORYMANAGER
-
-    private:
-      CategoryNode* find_category( const char* );
-
-    PLArenaPool mArena;
-  };
-
-NS_IMPL_ISUPPORTS1(nsCategoryManager, nsICategoryManager)
-
-nsCategoryManager::nsCategoryManager()
-    : nsObjectHashtable((nsHashtableCloneElementFunc) 0, 0,
-                                (nsHashtableEnumFunc) Destroy_CategoryNode, 0 )
-
-  {
-    PL_INIT_ARENA_POOL(&mArena, "CategoryManagerArena",
-                       NS_CATEGORYMANAGER_ARENA_SIZE);
-  }
-
-nsCategoryManager::~nsCategoryManager()
-  {
-    PL_FinishArenaPool(&mArena);
-  }
+//
+// CategoryNode implementations
+//
 
 CategoryNode*
-nsCategoryManager::find_category( const char* aCategoryName )
-  {
-    nsCStringKey categoryNameKey(aCategoryName);
-    return NS_STATIC_CAST(CategoryNode*, Get(&categoryNameKey));
+CategoryNode::Create(PLArenaPool* aArena)
+{
+  CategoryNode* node = new(aArena) CategoryNode();
+  if (!node)
+    return nsnull;
+
+  if (!node->mTable.Init()) {
+    delete node;
+    return nsnull;
   }
+
+  node->mLock = PR_NewLock();
+  if (!node->mLock) {
+    delete node;
+    return nsnull;
+  }
+
+  return node;
+}
+
+CategoryNode::~CategoryNode()
+{
+  if (mLock)
+    PR_DestroyLock(mLock);
+}
+
+void*
+CategoryNode::operator new(size_t aSize, PLArenaPool* aArena)
+{
+  void* p;
+  PL_ARENA_ALLOCATE(p, aArena, aSize);
+  return p;
+}
+
+NS_METHOD
+CategoryNode::GetLeaf(const char* aEntryName,
+                      char** _retval)
+{
+  PR_Lock(mLock);
+  nsresult rv = NS_ERROR_NOT_AVAILABLE;
+  CategoryLeaf* ent =
+    mTable.GetEntry(aEntryName);
+
+  // we only want the non-persistent value
+  if (ent && ent->nonpValue) {
+    *_retval = nsCRT::strdup(ent->nonpValue);
+    if (*_retval)
+      rv = NS_OK;
+  }
+  PR_Unlock(mLock);
+
+  return rv;
+}
+
+NS_METHOD
+CategoryNode::AddLeaf(const char* aEntryName,
+                      const char* aValue,
+                      PRBool aPersist,
+                      PRBool aReplace,
+                      char** _retval,
+                      PLArenaPool* aArena)
+{
+  PR_Lock(mLock);
+  CategoryLeaf* leaf = 
+    mTable.GetEntry(aEntryName);
+
+  nsresult rv = NS_OK;
+  if (leaf) {
+    //if the entry was found, aReplace must be specified
+    if (!aReplace && (leaf->nonpValue || (aPersist && leaf->pValue )))
+      rv = NS_ERROR_INVALID_ARG;
+  } else {
+    const char* arenaEntryName = ArenaStrdup(aEntryName, aArena);
+    if (!arenaEntryName) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    } else {
+      leaf = mTable.PutEntry(arenaEntryName);
+      if (!leaf)
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    const char* arenaValue = ArenaStrdup(aValue, aArena);
+    if (!arenaValue) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    } else {
+      leaf->nonpValue = arenaValue;
+      if (aPersist)
+        leaf->pValue = arenaValue;
+    }
+  }
+    
+  PR_Unlock(mLock);
+  return rv;
+}
+
+NS_METHOD
+CategoryNode::DeleteLeaf(const char* aEntryName,
+                         PRBool aDontPersist)
+{
+  // we don't throw any errors, because it normally doesn't matter
+  // and it makes JS a lot cleaner
+  PR_Lock(mLock);
+
+  if (aDontPersist) {
+    // we can just remove the entire hash entry without introspection
+    mTable.RemoveEntry(aEntryName);
+  } else {
+    // if we are keeping the persistent value, we need to look at
+    // the contents of the current entry
+    CategoryLeaf* leaf = mTable.GetEntry(aEntryName);
+    if (leaf) {
+      if (leaf->pValue) {
+        leaf->nonpValue = nsnull;
+      } else {
+        // if there is no persistent value, just remove the entry
+        mTable.RawRemoveEntry(leaf);
+      }
+    }
+  }
+  PR_Unlock(mLock);
+
+  return NS_OK;
+}
+
+NS_METHOD 
+CategoryNode::Enumerate(nsISimpleEnumerator **_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  PR_Lock(mLock);
+  EntryEnumerator* enumObj = EntryEnumerator::Create(mTable);
+  PR_Unlock(mLock);
+
+  if (!enumObj)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  *_retval = enumObj;
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+struct persistent_userstruct {
+  PRFileDesc* fd;
+  const char* categoryName;
+  PRBool      success;
+};
+
+PLDHashOperator PR_CALLBACK
+enumfunc_pentries(CategoryLeaf* aLeaf, void* userArg)
+{
+  persistent_userstruct* args =
+    NS_STATIC_CAST(persistent_userstruct*, userArg);
+
+  PLDHashOperator status = PL_DHASH_NEXT;
+
+  if (aLeaf->pValue) {
+    if (PR_fprintf(args->fd,
+                   "%s,%s,%s\n",
+                   args->categoryName,
+                   aLeaf->GetKey(),
+                   aLeaf->pValue) == (PRUint32) -1) {
+      args->success = PR_FALSE;
+      status = PL_DHASH_STOP;
+    }
+  }
+
+  return status;
+}
+
+PRBool
+CategoryNode::WritePersistentEntries(PRFileDesc* fd, const char* aCategoryName)
+{
+  persistent_userstruct args = {
+    fd,
+    aCategoryName,
+    PR_TRUE
+  };
+
+  PR_Lock(mLock);
+  mTable.EnumerateEntries(enumfunc_pentries, &args);
+  PR_Unlock(mLock);
+
+  return args.success;
+}
+
+
+//
+// CategoryEnumerator class
+//
+
+class CategoryEnumerator
+  : public BaseStringEnumerator
+{
+public:
+  static CategoryEnumerator* Create(nsClassHashtable<nsDepCharHashKey, CategoryNode>& aTable);
+
+private:
+  static PLDHashOperator PR_CALLBACK
+  enumfunc_createenumerator(const char* aStr,
+                            CategoryNode* aNode,
+                            void* userArg);
+};
+
+CategoryEnumerator*
+CategoryEnumerator::Create(nsClassHashtable<nsDepCharHashKey, CategoryNode>& aTable)
+{
+  CategoryEnumerator* enumObj = new CategoryEnumerator();
+  if (!enumObj)
+    return nsnull;
+
+  enumObj->mArray = new const char* [aTable.Count()];
+  if (!enumObj->mArray) {
+    delete enumObj;
+    return nsnull;
+  }
+
+  aTable.EnumerateRead(enumfunc_createenumerator, enumObj);
+
+  return enumObj;
+}
+
+PLDHashOperator PR_CALLBACK
+CategoryEnumerator::enumfunc_createenumerator(const char* aStr, CategoryNode* aNode, void* userArg)
+{
+  CategoryEnumerator* mythis = NS_STATIC_CAST(CategoryEnumerator*, userArg);
+
+  // if a category has no entries, we pretend it doesn't exist
+  if (aNode->Count())
+    mythis->mArray[mythis->mCount++] = aStr;
+
+  return PL_DHASH_NEXT;
+}
+
+
+//
+// nsCategoryManager implementations
+//
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsCategoryManager, nsICategoryManager);
+
+nsCategoryManager*
+nsCategoryManager::Create()
+{
+  nsCategoryManager* manager = new nsCategoryManager();
+  
+  if (!manager)
+    return nsnull;
+
+  PL_INIT_ARENA_POOL(&(manager->mArena), "CategoryManagerArena",
+                     NS_CATEGORYMANAGER_ARENA_SIZE); // this never fails
+
+  if (!manager->mTable.Init()) {
+    delete manager;
+    return nsnull;
+  }
+
+  manager->mLock = PR_NewLock();
+
+  if (!manager->mLock) {
+    delete manager;
+    return nsnull;
+  }
+
+  return manager;
+}
+
+nsCategoryManager::~nsCategoryManager()
+{
+  if (mLock)
+    PR_DestroyLock(mLock);
+
+  // the hashtable contains entries that must be deleted before the arena is
+  // destroyed, or else you will have PRLocks undestroyed and other Really
+  // Bad Stuff (TM)
+  mTable.Clear();
+
+  PL_FinishArenaPool(&mArena);
+}
+
+inline CategoryNode*
+nsCategoryManager::get_category(const char* aName) {
+  CategoryNode* node;
+  if (!mTable.Get(aName, &node)) {
+    return nsnull;
+  }
+  return node;
+}
 
 NS_IMETHODIMP
 nsCategoryManager::GetCategoryEntry( const char *aCategoryName,
                                      const char *aEntryName,
                                      char **_retval )
-  {
-    NS_ASSERTION(aCategoryName, "aCategoryName is NULL!");
-    NS_ASSERTION(aEntryName,    "aEntryName is NULL!");
-    NS_ASSERTION(_retval,       "_retval is NULL!");
+{
+  NS_ENSURE_ARG_POINTER(aCategoryName);
+  NS_ENSURE_ARG_POINTER(aEntryName);
+  NS_ENSURE_ARG_POINTER(_retval);
 
-    nsresult status = NS_ERROR_NOT_AVAILABLE;
-    CategoryNode* category = find_category(aCategoryName);
-    if (category) 
-      {
-        nsCStringKey entryKey(aEntryName);
-        const char* entry = NS_STATIC_CAST(char*, category->Get(&entryKey));
-        if (entry)
-          status = (*_retval = nsCRT::strdup(entry)) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-      }
+  nsresult status = NS_ERROR_NOT_AVAILABLE;
 
-    return status;
+  PR_Lock(mLock);
+  CategoryNode* category = get_category(aCategoryName);
+  PR_Unlock(mLock);
+
+  if (category) {
+    status = category->GetLeaf(aEntryName, _retval);
   }
+
+  return status;
+}
 
 NS_IMETHODIMP
 nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
@@ -208,203 +519,169 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
                                      PRBool aPersist,
                                      PRBool aReplace,
                                      char **_retval )
-  {
-    NS_ASSERTION(aCategoryName, "aCategoryName is NULL!");
-    NS_ASSERTION(aEntryName,    "aEntryName is NULL!");
-    NS_ASSERTION(aValue,        "aValue is NULL!");
+{
+  NS_ENSURE_ARG_POINTER(aCategoryName);
+  NS_ENSURE_ARG_POINTER(aEntryName);
+  NS_ENSURE_ARG_POINTER(aValue);
 
+  // Before we can insert a new entry, we'll need to
+  //  find the |CategoryNode| to put it in...
+  PR_Lock(mLock);
+  CategoryNode* category = get_category(aCategoryName);
 
-      /*
-        Note: if |_retval| is |NULL|, I won't bother returning a copy
-        of the replaced value.
-      */
-
-    if ( _retval )
-      *_retval = 0;
-
-
-      // Before we can insert a new entry, we'll need to
-      //  find the |CategoryNode| to put it in...
-    CategoryNode* category;
-    if ( !(category = find_category(aCategoryName)) )
-      {
-          // That category doesn't exist yet; let's make it.
-        category = new CategoryNode;
+  if (!category) {
+    // That category doesn't exist yet; let's make it.
+    category = CategoryNode::Create(&mArena);
         
-        PRUint32 len = strlen(aCategoryName);
-        char* categoryName = ArenaStrndup(aCategoryName, len, &mArena);
-        nsCStringKey categoryNameKey(categoryName, len, nsCStringKey::NEVER_OWN);
-        Put(&categoryNameKey, category);
-      }
-
-      // See if this entry is already in this category
-    const char* entry = category->find_leaf(aEntryName);
-
-    nsresult status = NS_OK;
-    if ( entry )
-      {
-          // If this entry is in the category already,
-          //  then you better have said 'replace'!
-
-        if ( aReplace )
-          {
-              // return the value that we're replacing
-            if ( _retval )
-              *_retval = nsCRT::strdup(entry);
-          }
-        else
-          status = NS_ERROR_INVALID_ARG; // ...stops us from putting the value in
-      }
-
-      // If you didn't say 'replace', and there was already an entry there,
-      //  then we can't put your value in (that's why we set |status|, above),
-      //  or make it persistent (see below)
-
-    if ( NS_SUCCEEDED(status) )
-      { // it's OK to put a value in
-
-        // we can't delete the entry because we're
-        // arena-allocated.. just pretend we do this.
-        // delete entry;
-
-        // now put in the new value entry
-        entry = ArenaStrdup(aValue, &mArena);
-        
-        PRUint32 len = strlen(aEntryName);
-        char* entryName = ArenaStrndup(aEntryName, len, &mArena);
-        
-        nsCStringKey entryNameKey(entryName, len, nsCStringKey::NEVER_OWN);
-        category->Put(&entryNameKey, (void*)entry);
-
-        nsCOMPtr<nsIComponentLoaderManager> mgr;
-        NS_GetComponentLoaderManager(getter_AddRefs(mgr));
-        if (mgr)
-          mgr->FlushPersistentStore(PR_FALSE);
-      }
-
-    return status;
+    char* categoryName = ArenaStrdup(aCategoryName, &mArena);
+    mTable.Put(categoryName, category);
   }
+  PR_Unlock(mLock);
 
+  if (!category)
+    return NS_ERROR_OUT_OF_MEMORY;
 
+  return category->AddLeaf(aEntryName,
+                           aValue,
+                           aPersist,
+                           aReplace,
+                           _retval,
+                           &mArena);
+}
 
 NS_IMETHODIMP
 nsCategoryManager::DeleteCategoryEntry( const char *aCategoryName,
                                         const char *aEntryName,
                                         PRBool aDontPersist)
-  {
+{
+  NS_ENSURE_ARG_POINTER(aCategoryName);
+  NS_ENSURE_ARG_POINTER(aEntryName);
 
-    NS_ASSERTION(aCategoryName, "aCategoryName is NULL!");
-    NS_ASSERTION(aEntryName,    "aEntryName is NULL!");
+  /*
+    Note: no errors are reported since failure to delete
+    probably won't hurt you, and returning errors seriously
+    inconveniences JS clients
+  */
 
-      /*
-        Note: no errors are reported since failure to delete
-        probably won't hurt you, and returning errors seriously
-        inconveniences JS clients
-      */
+  PR_Lock(mLock);
+  CategoryNode* category = get_category(aCategoryName);
+  PR_Unlock(mLock);
 
-    CategoryNode* category = find_category(aCategoryName);
-    if (category)
-      {
-        nsCStringKey entryKey(aEntryName);
-        category->RemoveAndDelete(&entryKey);
-
-        nsCOMPtr<nsIComponentLoaderManager> mgr;
-        NS_GetComponentLoaderManager(getter_AddRefs(mgr));
-        if (mgr)
-          mgr->FlushPersistentStore(PR_FALSE);
-
-      }
-
+  if (!category)
     return NS_OK;
-  }
 
-
+  return category->DeleteLeaf(aEntryName,
+                              aDontPersist);
+}
 
 NS_IMETHODIMP
 nsCategoryManager::DeleteCategory( const char *aCategoryName )
-  {
-    NS_ASSERTION(aCategoryName, "aCategoryName is NULL!");
+{
+  NS_ENSURE_ARG_POINTER(aCategoryName);
 
-    nsCOMPtr<nsIComponentLoaderManager> mgr;
-    NS_GetComponentLoaderManager(getter_AddRefs(mgr));
-    if (mgr)
-      mgr->FlushPersistentStore(PR_FALSE);
+  // the categories are arena-allocated, so we don't
+  // actually delete them. We just remove all of the
+  // leaf nodes.
 
-      // QUESTION: consider whether this should be an error
-    nsCStringKey categoryKey(aCategoryName);
-    return RemoveAndDelete(&categoryKey) ? NS_OK : NS_ERROR_NOT_AVAILABLE;
-  }
+  PR_Lock(mLock);
+  CategoryNode* category = get_category(aCategoryName);
+  PR_Unlock(mLock);
 
+  if (category)
+    category->Clear();
 
-
-
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsCategoryManager::EnumerateCategory( const char *aCategoryName,
                                       nsISimpleEnumerator **_retval )
-  {
-    NS_ASSERTION(aCategoryName, "aCategoryName is NULL!");
-    NS_ASSERTION(_retval,       "_retval is NULL!");
+{
+  NS_ENSURE_ARG_POINTER(aCategoryName);
+  NS_ENSURE_ARG_POINTER(_retval);
 
-    *_retval = 0;
-
-    nsresult status = NS_ERROR_NOT_AVAILABLE;
-    CategoryNode* category = find_category(aCategoryName);
-    if (category)
-      {
-        status = NS_NewHashtableEnumerator(category, ExtractKeyString, 0, _retval);
-      }
-
-      // If you couldn't find the category, or had trouble creating an enumerator...
-    if ( NS_FAILED(status) )
-      {
-        NS_IF_RELEASE(*_retval);
-        status = NS_NewEmptyEnumerator(_retval);
-      }
-
-    return status;
+  PR_Lock(mLock);
+  CategoryNode* category = get_category(aCategoryName);
+  PR_Unlock(mLock);
+  
+  if (!category) {
+    return NS_NewEmptyEnumerator(_retval);
   }
 
+  return category->Enumerate(_retval);
+}
 
 NS_IMETHODIMP 
 nsCategoryManager::EnumerateCategories(nsISimpleEnumerator **_retval)
 {
-    NS_ASSERTION(_retval, "_retval is NULL!");
-    *_retval = 0;
+  NS_ENSURE_ARG_POINTER(_retval);
 
-    nsresult status = NS_ERROR_NOT_AVAILABLE;
+  PR_Lock(mLock);
+  CategoryEnumerator* enumObj = CategoryEnumerator::Create(mTable);
+  PR_Unlock(mLock);
 
-    status = NS_NewHashtableEnumerator(this, ExtractKeyString, 0, _retval);
- 
-    // If you couldn't find the category, or had trouble creating an
-    // enumerator...
-    if ( NS_FAILED(status) )
-    {
-        NS_IF_RELEASE(*_retval);
-        status = NS_NewEmptyEnumerator(_retval);
-    }
-    return status;
+  if (!enumObj)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  *_retval = enumObj;
+  NS_ADDREF(*_retval);
+  return NS_OK;
+}
+
+struct writecat_struct {
+  PRFileDesc* fd;
+  PRBool      success;
+};
+
+PLDHashOperator PR_CALLBACK
+enumfunc_categories(const char* aKey, CategoryNode* aCategory, void* userArg)
+{
+  writecat_struct* args = NS_STATIC_CAST(writecat_struct*, userArg);
+
+  PLDHashOperator result = PL_DHASH_NEXT;
+
+  if (!aCategory->WritePersistentEntries(args->fd, aKey)) {
+    args->success = PR_FALSE;
+    result = PL_DHASH_STOP;
+  }
+
+  return result;
+}
+
+NS_METHOD
+nsCategoryManager::WriteCategoryManagerToRegistry(PRFileDesc* fd)
+{
+  writecat_struct args = {
+    fd,
+    PR_TRUE
+  };
+
+  PR_Lock(mLock);
+  mTable.EnumerateRead(enumfunc_categories, &args);
+  PR_Unlock(mLock);
+
+  if (!args.success) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
 }
 
 class nsCategoryManagerFactory : public nsIFactory
    {
      public:
-       nsCategoryManagerFactory();
+       nsCategoryManagerFactory() { }
 
        NS_DECL_ISUPPORTS
-      NS_DECL_NSIFACTORY
+       NS_DECL_NSIFACTORY
    };
 
 NS_IMPL_ISUPPORTS1(nsCategoryManagerFactory, nsIFactory)
 
-nsCategoryManagerFactory::nsCategoryManagerFactory()
-  {
-  }
-
 NS_IMETHODIMP
 nsCategoryManagerFactory::CreateInstance( nsISupports* aOuter, const nsIID& aIID, void** aResult )
   {
-    // assert(aResult);
+    NS_ENSURE_ARG_POINTER(aResult);
 
     *aResult = 0;
 
@@ -413,8 +690,8 @@ nsCategoryManagerFactory::CreateInstance( nsISupports* aOuter, const nsIID& aIID
       status = NS_ERROR_NO_AGGREGATION;
     else
       {
-        nsCategoryManager* raw_category_manager;
-        nsCOMPtr<nsICategoryManager> new_category_manager = (raw_category_manager = new nsCategoryManager);
+        nsCategoryManager* raw_category_manager = nsCategoryManager::Create();
+        nsCOMPtr<nsICategoryManager> new_category_manager = raw_category_manager;
         if ( new_category_manager )
               status = new_category_manager->QueryInterface(aIID, aResult);
         else

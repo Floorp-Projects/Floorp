@@ -46,7 +46,7 @@
 #include "nsIComponentRegistrar.h"
 #include "nsIComponentManagerObsolete.h"
 #include "nsIComponentLoaderManager.h"
-#include "nsICategoryManager.h"
+#include "nsCategoryManager.h"
 #include "nsIServiceManager.h"
 #include "nsIFactory.h"
 #include "nsIInterfaceRequestor.h"
@@ -140,8 +140,6 @@ public:
 
     nsresult WritePersistentRegistry();
     nsresult ReadPersistentRegistry();
-private:
-    nsresult WriteCategoryManagerToRegistry(PRFileDesc* fd);
 public:
 
     nsresult Shutdown(void);
@@ -238,7 +236,7 @@ protected:
 
     PRBool              mRegistryDirty;
     nsHashtable         mAutoRegEntries;
-    nsCOMPtr<nsICategoryManager>  mCategoryManager;
+    nsCOMPtr<nsCategoryManager>  mCategoryManager;
 
     PLArenaPool   mArena;
 

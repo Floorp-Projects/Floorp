@@ -46,7 +46,6 @@
 #include "nsComponentManagerObsolete.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsICategoryManager.h"
 #include "nsCategoryManager.h"
 #include "nsCategoryManagerUtils.h"
 #include "nsIComponentLoader.h"
@@ -1361,72 +1360,6 @@ AutoRegEntryWriter(nsHashKey *aKey, void *aData, void* aClosure)
 }
 
 nsresult
-nsComponentManagerImpl::WriteCategoryManagerToRegistry(PRFileDesc* fd)
-{
-    nsCOMPtr<nsICategoryManager> catMan;
-    nsCOMPtr<nsISimpleEnumerator> outerEnum;
-    nsCOMPtr<nsISimpleEnumerator> innerEnum;
-    nsCOMPtr<nsISupports> supports;
-    nsCOMPtr<nsISupportsCString> supStr;
-
-    if (!mCategoryManager) {
-        NS_WARNING("Could not access category manager.  Will not be able to save categories!");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    nsresult rv = mCategoryManager->EnumerateCategories(getter_AddRefs(outerEnum));
-    if (NS_FAILED(rv)) return rv;
-
-    PRBool hasMore;
-    while (NS_SUCCEEDED(outerEnum->HasMoreElements(&hasMore)) && hasMore) {
-
-        if (NS_FAILED(outerEnum->GetNext(getter_AddRefs(supports))))
-            continue;
-
-       supStr = do_QueryInterface(supports);
-        if (!supStr)
-            continue;
-
-        nsCAutoString categoryType;
-        if (NS_FAILED(supStr->GetData(categoryType)))
-            continue;
-
-        rv = mCategoryManager->EnumerateCategory(categoryType.get(), getter_AddRefs(innerEnum));
-        if (NS_FAILED(rv)) 
-            continue;
-
-        PRBool hasMore2;
-        while (NS_SUCCEEDED(innerEnum->HasMoreElements(&hasMore2)) && hasMore2) {
-            if (NS_FAILED(innerEnum->GetNext(getter_AddRefs(supports))))
-                continue;
-
-            supStr = do_QueryInterface(supports);
-            if (!supStr)
-                continue;
-
-            nsCAutoString category;
-            if (NS_FAILED(supStr->GetData(category)))
-                continue;
-
-            nsXPIDLCString value;
-            rv = mCategoryManager->GetCategoryEntry(categoryType.get(), 
-                                                    category.get(),
-                                                    getter_Copies(value));
-
-            if (NS_FAILED(rv)) continue;
-
-            // categoryType, categoryName, value 
-            PR_fprintf(fd,
-                       "%s,%s,%s\n",
-                       categoryType.get(),
-                       category.get(),
-                       value.get());
-        }
-    }
-    return NS_OK;
-}
-
-nsresult
 nsComponentManagerImpl::WritePersistentRegistry()
 {
     if (!mRegistryFile)
@@ -1452,16 +1385,22 @@ nsComponentManagerImpl::WritePersistentRegistry()
     if (NS_FAILED(rv))
         return rv;
 
-    if (!PR_fprintf(fd, "Generated File. Do not edit.\n"))
+    if (PR_fprintf(fd, "Generated File. Do not edit.\n") == (PRUint32) -1) {
+        rv = NS_ERROR_UNEXPECTED;
         goto out;
+    }
 
-    if (!PR_fprintf(fd, "\n[HEADER]\nVersion,%d,%d\n",
-                    PERSISTENT_REGISTRY_VERSION_MAJOR,
-                    PERSISTENT_REGISTRY_VERSION_MINOR))
+    if (PR_fprintf(fd, "\n[HEADER]\nVersion,%d,%d\n",
+                   PERSISTENT_REGISTRY_VERSION_MAJOR,
+                   PERSISTENT_REGISTRY_VERSION_MINOR) == (PRUint32) -1) {
+        rv = NS_ERROR_UNEXPECTED;
         goto out;
+    }
 
-    if (!PR_fprintf(fd, "\n[COMPONENTS]\n"))
+    if (PR_fprintf(fd, "\n[COMPONENTS]\n") == (PRUint32) -1) {
+        rv = NS_ERROR_UNEXPECTED;
         goto out;
+    }
 
     mAutoRegEntries.Enumerate(AutoRegEntryWriter, (void*)fd);
 
@@ -1469,30 +1408,41 @@ nsComponentManagerImpl::WritePersistentRegistry()
     args.mFD = fd;
     args.mLoaderData = mLoaderData;
 
-    if (!PR_fprintf(fd, "\n[CLASSIDS]\n"))
+    if (PR_fprintf(fd, "\n[CLASSIDS]\n") == (PRUint32) -1) {
+        rv = NS_ERROR_UNEXPECTED;
         goto out;
+    }
+
 
     PL_DHashTableEnumerate(&mFactories, ClassIDWriter, (void*)&args);
 
-    if (!PR_fprintf(fd, "\n[CONTRACTIDS]\n"))
+    if (PR_fprintf(fd, "\n[CONTRACTIDS]\n") == (PRUint32) -1) {
+        rv = NS_ERROR_UNEXPECTED;
         goto out;
+    }
+
 
     PL_DHashTableEnumerate(&mContractIDs, ContractIDWriter, (void*)&args);
 
-    if (!PR_fprintf(fd, "\n[CATEGORIES]\n"))
+    if (PR_fprintf(fd, "\n[CATEGORIES]\n") == (PRUint32) -1) {
+        rv = NS_ERROR_UNEXPECTED;
         goto out;
+    }
 
-    // slow slow slow slow....
-    rv = WriteCategoryManagerToRegistry(fd);
 
+    if (!mCategoryManager) {
+        NS_WARNING("Could not access category manager.  Will not be able to save categories!");
+        rv = NS_ERROR_UNEXPECTED;
+    } else {
+        rv = mCategoryManager->WriteCategoryManagerToRegistry(fd);
+    }
 
 out:
     if (fd)
         PR_Close(fd);
 
     // don't create the file is there was a problem????
-    if (NS_FAILED(rv))
-        return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (!mRegistryFile)
         return NS_ERROR_NOT_INITIALIZED;

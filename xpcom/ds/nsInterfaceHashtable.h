@@ -57,15 +57,28 @@ class nsInterfaceHashtable :
 public:
   typedef typename KeyClass::KeyType KeyType;
   typedef Interface* UserDataType;
-  /**
-   * @copydoc nsBaseHashtable::nsBaseHashtable
-   */
-  nsInterfaceHashtable() { }
 
   /**
-   * destructor, cleans up properly
+   * @copydoc nsBaseHashtable::Get
+   * @param pData This is an XPCOM getter, so pData is already_addrefed.
+   *   If the key doesn't exist, pData will be set to nsnull.
    */
-  ~nsInterfaceHashtable() { }
+  PRBool Get(KeyType aKey, UserDataType* pData) const;
+};
+
+/**
+ * Thread-safe version of nsInterfaceHashtable
+ * @param KeyClass a wrapper-class for the hashtable key, see nsHashKeys.h
+ *   for a complete specification.
+ * @param Interface the interface-type being wrapped
+ */
+template<class KeyClass,class Interface>
+class nsInterfaceHashtableMT :
+  public nsBaseHashtableMT< KeyClass, nsCOMPtr<Interface> , Interface* >
+{
+public:
+  typedef typename KeyClass::KeyType KeyType;
+  typedef Interface* UserDataType;
 
   /**
    * @copydoc nsBaseHashtable::Get
@@ -76,7 +89,7 @@ public:
 
 protected:
 #ifdef HAVE_CPP_AMBIGUITY_RESOLVING_USING
-  using nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*>::mLock;
+  using nsBaseHashtableMT<KeyClass, nsCOMPtr<Interface>, Interface*>::mLock;
 #endif
 };
 
@@ -90,9 +103,6 @@ PRBool
 nsInterfaceHashtable<KeyClass,Interface>::Get
   (KeyType aKey, UserDataType* pInterface) const
 {
-  if (mLock)
-    PR_RWLock_Rlock(mLock);
-
   typename nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*>::EntryType* ent =
     GetEntry(aKey);
 
@@ -105,8 +115,42 @@ nsInterfaceHashtable<KeyClass,Interface>::Get
       NS_IF_ADDREF(*pInterface);
     }
 
-    if (mLock)
-      PR_RWLock_Unlock(mLock);
+    return PR_TRUE;
+  }
+
+  // if the key doesn't exist, set *pInterface to null
+  // so that it is a valid XPCOM getter
+  if (pInterface)
+    *pInterface = nsnull;
+
+  return PR_FALSE;
+}
+
+
+//
+// nsInterfaceHashtableMT definitions
+//
+
+template<class KeyClass,class Interface>
+PRBool
+nsInterfaceHashtableMT<KeyClass,Interface>::Get
+  (KeyType aKey, UserDataType* pInterface) const
+{
+  PR_Lock(mLock);
+
+  typename nsBaseHashtableMT<KeyClass, nsCOMPtr<Interface>, Interface*>::EntryType* ent =
+    GetEntry(aKey);
+
+  if (ent)
+  {
+    if (pInterface)
+    {
+      *pInterface = ent->mData;
+
+      NS_IF_ADDREF(*pInterface);
+    }
+
+    PR_Unlock(mLock);
 
     return PR_TRUE;
   }
@@ -116,8 +160,7 @@ nsInterfaceHashtable<KeyClass,Interface>::Get
   if (pInterface)
     *pInterface = nsnull;
 
-  if (mLock)
-    PR_RWLock_Unlock(mLock);
+  PR_Unlock(mLock);
 
   return PR_FALSE;
 }
