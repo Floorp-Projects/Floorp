@@ -194,5 +194,6 @@ file:///s:/mozilla/layout/html/tests/block/bugs/126213-2.html
 file:///s:/mozilla/layout/html/tests/block/bugs/148245.html
 file:///s:/mozilla/layout/html/tests/block/bugs/151620.html
 file:///s:/mozilla/layout/html/tests/block/bugs/154741.html
+file:///s:/mozilla/layout/html/tests/block/bugs/161644.html
 file:///s:/mozilla/layout/html/tests/block/bugs/169620.html
 
