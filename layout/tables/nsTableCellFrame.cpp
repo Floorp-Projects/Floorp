@@ -297,7 +297,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
     availSize.height = 1;
   nsSize maxKidElementSize;
   if (gsDebug==PR_TRUE)
-    printf("  nsTableCellFrame::ResizeReflow calling ReflowChild with availSize=%d,%d\n",
+    printf("  nsTableCellFrame::Reflow calling ReflowChild with availSize=%d,%d\n",
            availSize.width, availSize.height);
   nsReflowMetrics kidSize(pMaxElementSize);
   kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
@@ -306,7 +306,13 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   mFirstChild->WillReflow(aPresContext);
   mFirstChild->MoveTo(leftInset, topInset);
   aStatus = ReflowChild(mFirstChild, &aPresContext, kidSize, kidReflowState);
-
+#ifdef NS_DEBUG
+      if (kidSize.width > availSize.width)
+      {
+        printf("WARNING: cell content returned desired width %d given avail width %d\n",
+                kidSize.width, availSize.width);
+      }
+#endif
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
   {
     if (nsnull!=pMaxElementSize)
@@ -323,6 +329,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   mLastContentOffset = bodyPseudoFrame->GetLastContentOffset();
 
   // Place the child
+  //////////////////////////////// HACK //////////////////////////////
+  kidSize.width = PR_MIN(kidSize.width, availSize.width);
+  ///////////////////////////// END HACK /////////////////////////////
   mFirstChild->SetRect(nsRect(leftInset, topInset,
                            kidSize.width, kidSize.height));  
     
