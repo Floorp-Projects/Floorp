@@ -409,6 +409,7 @@ nsresult nsMsgAccountManager::RemoveAccountFromBiff(nsIMsgAccount *account)
 	return rv;
 }
 
+#if 0
 NS_IMETHODIMP
 nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
 {
@@ -423,7 +424,7 @@ nsMsgAccountManager::RemoveAccount(nsIMsgAccount *aAccount)
   m_accounts->Remove(key);
   return NS_OK;
 }
-
+#endif
 /* get the default account. If no default account, pick the first account */
 NS_IMETHODIMP
 nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
