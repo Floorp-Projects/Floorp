@@ -255,7 +255,7 @@ NS_METHOD nsListBox::SelectItem(PRInt32 aPosition)
   int count = 0;
   XtVaGetValues(mCList,  XmNitemCount, &count, nsnull);
   if (aPosition >= 0 && aPosition < count) {
-    XmListSelectPos(mCList, aPosition+1, FALSE);
+    XmListSelectPos(mCList, aPosition+1, PR_FALSE);
   }
 */
   return NS_OK;

@@ -102,11 +102,11 @@ void nsRadioButton::Armed()
 void nsRadioButton::DisArmed()
 {
   if (mValueWasSet) {
-    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), TRUE);
-//    XmToggleButtonSetState(mRadioBtn, mNewValue, TRUE);
+    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), PR_TRUE);
+//    XmToggleButtonSetState(mRadioBtn, mNewValue, PR_TRUE);
   } else {
-    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), TRUE);
-//    XmToggleButtonSetState(mRadioBtn, mInitialState, TRUE);
+    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), PR_TRUE);
+//    XmToggleButtonSetState(mRadioBtn, mInitialState, PR_TRUE);
   }
   mIsArmed = PR_FALSE;
 }
@@ -123,7 +123,7 @@ NS_METHOD nsRadioButton::SetState(const PRBool aState)
     mNewValue    = aState;
     mValueWasSet = PR_TRUE;
   }
-//  XmToggleButtonSetState(mRadioBtn, aState, TRUE);
+//  XmToggleButtonSetState(mRadioBtn, aState, PR_TRUE);
   gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), aState);
   return NS_OK;
 }

@@ -167,7 +167,7 @@ NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
     GdkEventExpose event;
 
     event.type = GDK_EXPOSE;
-    event.send_event = TRUE;
+    event.send_event = PR_TRUE;
     event.window = GTK_WIDGET(mWidget)->window;
     event.area.width = mBounds.width;
     event.area.height = mBounds.height;
@@ -523,7 +523,7 @@ nsresult nsWidget::StandardWindowCreate(nsIWidget *aParent,
 
   CreateNative (parentWidget);
 
-  Resize(mBounds.width, mBounds.height, TRUE);
+  Resize(mBounds.width, mBounds.height, PR_TRUE);
 
   if (parentWidget)
   {

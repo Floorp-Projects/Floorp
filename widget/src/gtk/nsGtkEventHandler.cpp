@@ -236,16 +236,16 @@ gint nsGtkWidget_ExposureMask_EventHandler(GtkWidget *w, GdkEventExpose *event, 
   rect.height = event->area.height;
 
   if (event->type == GDK_NO_EXPOSE) {
-    return FALSE;
+    return PR_FALSE;
   }
 /* FIXME
   Display* display = XtDisplay(w);
   Window   window = XtWindow(w);
   XEvent xev;
 
-  XSync(display, FALSE);
+  XSync(display, PR_FALSE);
 
-  while (XCheckTypedWindowEvent(display, window, Expose, &xev) == TRUE) {
+  while (XCheckTypedWindowEvent(display, window, Expose, &xev) == PR_TRUE) {
       rect.x      = xev.xexpose.x;
       rect.y      = xev.xexpose.y;
       rect.width  = xev.xexpose.width;
@@ -254,7 +254,7 @@ gint nsGtkWidget_ExposureMask_EventHandler(GtkWidget *w, GdkEventExpose *event, 
 */
   widgetWindow->OnPaint(pevent);
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 //==============================================================
@@ -265,7 +265,7 @@ gint nsGtkWidget_ButtonPressMask_EventHandler(GtkWidget *w, GdkEvent * event, gp
   nsGtkWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_LEFT_BUTTON_DOWN);
   widgetWindow->DispatchMouseEvent(mevent);
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 //==============================================================
@@ -276,7 +276,7 @@ gint nsGtkWidget_ButtonReleaseMask_EventHandler(GtkWidget *w, GdkEvent * event, 
   nsGtkWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_LEFT_BUTTON_UP);
   widgetWindow->DispatchMouseEvent(mevent);
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 //==============================================================
@@ -288,7 +288,7 @@ gint nsGtkWidget_ButtonMotionMask_EventHandler(GtkWidget *w, GdkEvent * event, g
   nsGtkWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_MOVE);
   widgetWindow->DispatchMouseEvent(mevent);
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 //==============================================================
@@ -299,7 +299,7 @@ gint nsGtkWidget_MotionMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointe
   nsGtkWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_MOVE);
   widgetWindow->DispatchMouseEvent(mevent);
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 //==============================================================
@@ -310,7 +310,7 @@ gint nsGtkWidget_EnterMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer
   nsGtkWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_ENTER);
   widgetWindow->DispatchMouseEvent(mevent);
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 //==============================================================
@@ -322,7 +322,7 @@ gint nsGtkWidget_LeaveMask_EventHandler(GtkWidget *w, GdkEvent * event, gpointer
   nsGtkWidget_InitNSMouseEvent(event, p, mevent, NS_MOUSE_EXIT);
   widgetWindow->DispatchMouseEvent(mevent);
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 //==============================================================
@@ -339,7 +339,7 @@ gint nsGtkWidget_Focus_Callback(GtkWidget *w, gpointer p)
   widgetWindow->DispatchFocus(event);
 #endif
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 //==============================================================
@@ -354,7 +354,7 @@ gint nsGtkWidget_Toggle_Callback(GtkWidget *w, gpointer p)
   XmToggleButtonCallbackStruct * cbs = (XmToggleButtonCallbackStruct*)call_data;
 #endif
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 //==============================================================
@@ -366,7 +366,7 @@ gint nsGtkWidget_CheckButton_Toggle_Callback(GtkWidget *w, gpointer p)
   else
     checkBtn->DisArmed();
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 //==============================================================
@@ -382,7 +382,7 @@ gint nsGtkWidget_RadioButton_ArmCallback(GtkWidget *w, gpointer p)
   radioBtn->DispatchMouseEvent(mevent);
 #endif
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 //==============================================================
@@ -399,7 +399,7 @@ gint nsGtkWidget_RadioButton_DisArmCallback(GtkWidget *w, gpointer p)
   radioBtn->DispatchMouseEvent(mevent);
 #endif
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 
@@ -538,7 +538,7 @@ gint nsGtkWidget_FSBCancel_Callback(GtkWidget *w, gpointer p)
   }
 #endif
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 //==============================================================
@@ -552,7 +552,7 @@ gint nsGtkWidget_FSBOk_Callback(GtkWidget *w, gpointer p)
   }
 #endif
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 //==============================================================
@@ -580,7 +580,7 @@ gint nsGtkWidget_KeyPressMask_EventHandler(GtkWidget *w, GdkEvent * event, gpoin
   nsWindow * widgetWindow = (nsWindow *) p ;
   widgetWindow->OnKey(NS_KEY_DOWN, kevent.keyCode, &kevent);
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 //==============================================================
@@ -591,7 +591,7 @@ gint nsGtkWidget_KeyReleaseMask_EventHandler(GtkWidget *w, GdkEvent * event, gpo
   nsWindow * widgetWindow = (nsWindow *) p ;
   widgetWindow->OnKey(NS_KEY_UP, kevent.keyCode, &kevent);
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 //==============================================================
@@ -612,7 +612,7 @@ gint nsGtkWidget_Menu_Callback(GtkWidget *w, gpointer p)
     mevent.widget->DispatchEvent((nsGUIEvent *)&mevent, status);
   }
 
-  return FALSE;
+  return PR_FALSE;
 }
 
 gint nsGtkWidget_Resize_EventHandler(GtkWidget *w, GtkAllocation *allocation, gpointer data)
@@ -638,5 +638,5 @@ gint nsGtkWidget_Resize_EventHandler(GtkWidget *w, GtkAllocation *allocation, gp
     pevent.rect = (nsRect *)&winBounds;
     win->OnPaint(pevent);
   }
-  return FALSE;
+  return PR_FALSE;
 }

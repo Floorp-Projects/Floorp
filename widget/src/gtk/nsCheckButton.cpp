@@ -100,14 +100,14 @@ void nsCheckButton::Armed()
 void nsCheckButton::DisArmed()
 {
   if (mValueWasSet) {
-    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), TRUE);
+    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), PR_TRUE);
 /*
-    XmToggleButtonSetState(mWidget, mNewValue, TRUE);
+    XmToggleButtonSetState(mWidget, mNewValue, PR_TRUE);
 */
   } else {
-    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), TRUE);
+    gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(mWidget), PR_TRUE);
 /*
-    XmToggleButtonSetState(mWidget, mInitialState, TRUE);
+    XmToggleButtonSetState(mWidget, mInitialState, PR_TRUE);
 */
   }
   mIsArmed = PR_FALSE;

@@ -276,7 +276,7 @@ NS_METHOD  nsComboBox::CreateNative(GtkWidget *parentWindow)
 {
   mWidget = gtk_combo_new();
   gtk_widget_set_name(mWidget, "nsComboBox");
-//  gtk_combo_set_value_in_list(GTK_COMBO(mWidget), TRUE, TRUE);
+//  gtk_combo_set_value_in_list(GTK_COMBO(mWidget), PR_TRUE, PR_TRUE);
 
   return NS_OK;
 }
