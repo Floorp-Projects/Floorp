@@ -3444,7 +3444,7 @@ static SECItem *pk11_PackagePrivateKey(PK11Object *key, CK_RV *crvp)
     SECItem *fordebug;
     int savelen;
     int i;
-#endif`
+#endif
 
     if(!key) {
 	*crvp = CKR_KEY_HANDLE_INVALID; /* really can't happen */
