@@ -135,6 +135,7 @@ LINCS=-I$(PUBLIC)\jtools	\
     -I$(PUBLIC)\netcnvts	\
     -I$(PUBLIC)\httpurl		\
     -I$(PUBLIC)\cnetinit	\
+    -I$(PUBLIC)\mimetype	\
     -I$(PUBLIC)\security 
 #!endif
 
