@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORT_DIR	= $(DIST)/bin/defaults/isp
+EXPORT_DIR	= $(DIST)/bin/chrome/locales/en-US/messenger/locale/isp
 
 EXPORT_RESOURCE_FILES = \
 		aol.rdf			\

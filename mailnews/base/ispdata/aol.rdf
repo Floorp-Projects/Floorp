@@ -4,17 +4,18 @@
     xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 
   <RDF:Description about="NC:ispinfo">
-    <NC:provider>
+    <NC:providers>
       <NC:nsIMsgAccount about="domain:aol.com">
 
         <!-- server info -->
         <NC:incomingServer>
           <NC:nsIMsgIncomingServer>
             <NC:prettyName>AOL account</NC:prettyName>
-            <NC:hostName>imap.aol.com</NC:hostName>
+            <NC:hostName>imap.mail.aol.com</NC:hostName>
             <NC:type>imap</NC:type>
             <NC:rememberPassword>false</NC:rememberPassword>
             <NC:redirectorType>aol</NC:redirectorType>
+            <NC:deleteModel>2</NC:deleteModel>
           </NC:nsIMsgIncomingServer>
         </NC:incomingServer>
 
@@ -44,7 +45,7 @@
         <NC:wizardLongName>America Online</NC:wizardLongName>
         <NC:wizardPromote>true</NC:wizardPromote>
       </NC:nsIMsgAccount>
-    </NC:provider>
+    </NC:providers>
   </RDF:Description>
 
 </RDF:RDF>
