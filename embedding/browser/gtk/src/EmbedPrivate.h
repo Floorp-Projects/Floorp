@@ -159,7 +159,7 @@ class EmbedPrivate {
   static void     ShutdownProfile(void);
 
   // offscreen window methods and the offscreen widget
-  static void       CreateOffscreenWindow(void);
+  static void       EnsureOffscreenWindow(void);
   static void       DestroyOffscreenWindow(void);
   static GtkWidget *sOffscreenWindow;
   static GtkWidget *sOffscreenFixed;
