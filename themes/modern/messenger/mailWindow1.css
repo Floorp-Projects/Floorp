@@ -73,12 +73,12 @@
   border-right: none;
   border-bottom: none;
   border-left: none;
-  min-width: 7px;
+  min-width: 5px;
 }
 
 #threadpane-splitter {
   border: none;
-  min-height: 7px;
+  min-height: 5px;
 }
 
 #sidebar-panels-splitter {
