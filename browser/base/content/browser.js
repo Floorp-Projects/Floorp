@@ -59,7 +59,7 @@ var gClickSelectsAll = true;
 var gIgnoreFocus = false;
 var gIgnoreClick = false;
 
-var pref = null;
+var gPrefService = null;
 
 var appCore = null;
 
@@ -2661,8 +2661,9 @@ nsBrowserStatusHandler.prototype =
   },
 
   onLinkIconAvailable : function(aHref) {
-    if (gProxyFavIcon && pref.getBoolPref("browser.chrome.site_icons"))
-    {
+    if (gProxyFavIcon) {
+      
+      // XXXBlake pref.getBoolPref("browser.chrome.site_icons"))
       gProxyFavIcon.setAttribute("src", aHref);
 
       // update any bookmarks with new icon reference
