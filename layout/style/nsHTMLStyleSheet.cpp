@@ -2347,7 +2347,7 @@ HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
       // determine where in the list they should be inserted...
       if (nsnull != absoluteItems.childList) {
         absoluteItems.containingBlock->AppendFrames(*aPresContext, *shell,
-                                                    nsnull,
+                                                    nsLayoutAtoms::absoluteList,
                                                     absoluteItems.childList);
       }
     }
