@@ -337,6 +337,9 @@ To use the wonders of bugzilla, you can use the following:
 		$::COOKIE{"Bugzilla_logincookie"} .
 		" and profiles.userid = logincookies.userid");
         $loginok = FetchOneColumn();
+        if (!defined $loginok) {
+            $loginok = 0;
+        }
     }
 
     if ($loginok ne "1") {
