@@ -66,7 +66,7 @@ $CVSCO         = 'checkout -P';
 # Set moz_cvsroot to something like:
 # :pserver:$ENV{USER}%netscape.com\@cvs.mozilla.org:/cvsroot
 # :pserver:anonymous\@cvs-mirror.mozilla.org:/cvsroot
-$moz_cvsroot   = ;
+$moz_cvsroot   = $ENV{CVSROOT};
 
 #- Set these proper values for your tinderbox server
 $Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';

@@ -21,7 +21,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.130 $ ';
+$::UtilsVersion = '$Revision: 1.131 $ ';
 
 package TinderUtils;
 
@@ -173,8 +173,7 @@ sub GetSystemInfo {
     #$Settings::ObjDir = '';
     my $build_type = $Settings::BuildDepend ? 'Depend' : 'Clobber';
     my $host = ::hostname();
-    $host =~ s/\..*$//;
-    
+    $host = $1 if $host =~ /(.*?)\./;
     chomp($Settings::OS, $os_ver, $Settings::CPU, $host);
     
     if ($Settings::OS eq 'AIX') {
@@ -186,18 +185,18 @@ sub GetSystemInfo {
     $Settings::OS = 'BSD_OS' if $Settings::OS eq 'BSD/OS';
     $Settings::OS = 'IRIX'   if $Settings::OS eq 'IRIX64';
     
+    if ($Settings::OS eq 'SCO_SV') {
+        $Settings::OS = 'SCOOS';
+        $os_ver = '5.0';
+    }
+    $Settings::DirName = "${Settings::OS}_${os_ver}_$build_type";
     if ($Settings::OS eq 'QNX') {
         $os_ver = `uname -v`;
         chomp($os_ver);
         $os_ver =~ s/^([0-9])([0-9]*)$/$1.$2/;
     }
-    if ($Settings::OS eq 'SCO_SV') {
-        $Settings::OS = 'SCOOS';
-        $os_ver = '5.0';
-    }
     
     $Settings::BuildName = "$host $Settings::OS ${os_ver} $build_type";
-    $Settings::DirName = "${Settings::OS}_${os_ver}_$build_type";
     
     # Make the build names reflect architecture/OS
     
@@ -277,7 +276,7 @@ sub SetupEnv {
 
 	# Assume this file lives in the base dir, this will
 	# avoid human error from setting this manually.
-	$Settings::BaseDir = Cwd::getcwd();
+	$Settings::BaseDir = get_system_cwd();
 
     my $topsrcdir = "$Settings::BaseDir/$Settings::DirName/mozilla";
 
@@ -313,19 +312,19 @@ sub SetupPath {
         $ENV{PATH} = "/builds/local/bin:$ENV{PATH}:/usr/lpp/xlC/bin";
         $Settings::ConfigureArgs   .= '--x-includes=/usr/include/X11 '
           . '--x-libraries=/usr/lib --disable-shared';
-        $Settings::ConfigureEnvArgs = 'CC=xlC_r CXX=xlC_r';
-        $Settings::Compiler = 'xlC_r';
+        $Settings::ConfigureEnvArgs ||= 'CC=xlC_r CXX=xlC_r';
+        $Settings::Compiler ||= 'xlC_r';
         $Settings::NSPRArgs .= 'NS_USE_NATIVE=1 USE_PTHREADS=1';
     }
     
     if ($Settings::OS eq 'BSD_OS') {
         $ENV{PATH}        = "/usr/contrib/bin:/bin:/usr/bin:$ENV{PATH}";
         #$Settings::ConfigureArgs .= '--disable-shared';
-        #$Settings::ConfigureEnvArgs = 'CC=shlicc2 CXX=shlicc2';
-        #$Settings::Compiler = 'shlicc2';
-        #$Settings::mail = '/usr/ucb/mail';
+        #$Settings::ConfigureEnvArgs ||= 'CC=shlicc2 CXX=shlicc2';
+        #$Settings::Compiler ||= 'shlicc2';
+        #$Settings::mail ||= '/usr/ucb/mail';
         # Because ld dies if it encounters -include
-        #$Settings::MakeOverrides = 'CPP_PROG_LINK=0 CCF=shlicc2';
+        #$Settings::MakeOverrides ||= 'CPP_PROG_LINK=0 CCF=shlicc2';
         $Settings::NSPRArgs .= 'NS_USE_GCC=1 NS_USE_NATIVE=';
     }
     
@@ -335,7 +334,7 @@ sub SetupPath {
             $Settings::ConfigureEnvArgs = 'CC=egcc CXX=eg++';
             $Settings::Compiler = 'egcc';
         }
-        $Settings::mail = '/usr/bin/mail';
+        $Settings::mail ||= '/usr/bin/mail';
     }
     
     if ($Settings::OS eq 'HP-UX') {
@@ -345,8 +344,8 @@ sub SetupPath {
         $ENV{SHLIB_PATH} = $ENV{LPATH};
         $Settings::ConfigureArgs   .= '--x-includes=/usr/include/X11 '
           . '--x-libraries=/usr/lib --disable-gtktest ';
-        $Settings::ConfigureEnvArgs = 'CC="cc -Ae" CXX="aCC -ext"';
-        $Settings::Compiler = 'cc/aCC';
+        $Settings::ConfigureEnvArgs ||= 'CC="cc -Ae" CXX="aCC -ext"';
+        $Settings::Compiler ||= 'cc/aCC';
         # Use USE_PTHREADS=1 instead of CLASSIC_NSPR if DCE is installed.
         $Settings::NSPRArgs .= 'NS_USE_NATIVE=1 CLASSIC_NSPR=1';
     }
@@ -355,27 +354,27 @@ sub SetupPath {
         $ENV{PATH} = "/opt/bin:$ENV{PATH}";
         $ENV{LD_LIBRARY_PATH}   .= ':/opt/lib';
         $ENV{LD_LIBRARYN32_PATH} = $ENV{LD_LIBRARY_PATH};
-        $Settings::ConfigureEnvArgs = 'CC=cc CXX=CC CFLAGS="-n32 -O" CXXFLAGS="-n32 -O"';
-        $Settings::Compiler = 'cc/CC';
+        $Settings::ConfigureEnvArgs ||= 'CC=cc CXX=CC CFLAGS="-n32 -O" CXXFLAGS="-n32 -O"';
+        $Settings::Compiler ||= 'cc/CC';
         $Settings::NSPRArgs .= 'NS_USE_NATIVE=1 USE_PTHREADS=1';
     }
     
     if ($Settings::OS eq 'NetBSD') {
         $ENV{PATH} = "/bin:/usr/bin:$ENV{PATH}";
         $ENV{LD_LIBRARY_PATH} .= ':/usr/X11R6/lib';
-        $Settings::ConfigureEnvArgs = 'CC=egcc CXX=eg++';
-        $Settings::Compiler = 'egcc';
-        $Settings::mail = '/usr/bin/mail';
+        $Settings::ConfigureEnvArgs ||= 'CC=egcc CXX=eg++';
+        $Settings::Compiler ||= 'egcc';
+        $Settings::mail ||= '/usr/bin/mail';
     }
     
     if ($Settings::OS eq 'OSF1') {
         $ENV{PATH} = "/usr/gnu/bin:$ENV{PATH}";
         $ENV{LD_LIBRARY_PATH} .= ':/usr/gnu/lib';
-        $Settings::ConfigureEnvArgs = 'CC="cc -readonly_strings" CXX="cxx"';
-        $Settings::Compiler = 'cc/cxx';
-        $Settings::MakeOverrides = 'SHELL=/usr/bin/ksh';
+        $Settings::ConfigureEnvArgs ||= 'CC="cc -readonly_strings" CXX="cxx"';
+        $Settings::Compiler ||= 'cc/cxx';
+        $Settings::MakeOverrides ||= 'SHELL=/usr/bin/ksh';
         $Settings::NSPRArgs .= 'NS_USE_NATIVE=1 USE_PTHREADS=1';
-        $Settings::ShellOverride = '/usr/bin/ksh';
+        $Settings::ShellOverride ||= '/usr/bin/ksh';
     }
     
     if ($Settings::OS eq 'QNX') {
@@ -383,9 +382,9 @@ sub SetupPath {
         $ENV{LD_LIBRARY_PATH} .= ':/usr/X11/lib';
         $Settings::ConfigureArgs .= '--x-includes=/usr/X11/include '
           . '--x-libraries=/usr/X11/lib --disable-shared ';
-        $Settings::ConfigureEnvArgs = 'CC="cc -DQNX" CXX="cc -DQNX"';
-        $Settings::Compiler = 'cc';
-        $Settings::mail = '/usr/bin/sendmail';
+        $Settings::ConfigureEnvArgs ||= 'CC="cc -DQNX" CXX="cc -DQNX"';
+        $Settings::Compiler ||= 'cc';
+        $Settings::mail ||= '/usr/bin/sendmail';
     }
     
     if ($Settings::OS eq 'SunOS') {
@@ -394,8 +393,8 @@ sub SetupPath {
             $ENV{LD_LIBRARY_PATH} = "/home/motif/usr/lib:$ENV{LD_LIBRARY_PATH}";
             $Settings::ConfigureArgs .= '--x-includes=/home/motif/usr/include/X11 '
               . '--x-libraries=/home/motif/usr/lib';
-            $Settings::ConfigureEnvArgs = 'CC="egcc -DSUNOS4" CXX="eg++ -DSUNOS4"';
-            $Settings::Compiler = 'egcc';
+            $Settings::ConfigureEnvArgs ||= 'CC="egcc -DSUNOS4" CXX="eg++ -DSUNOS4"';
+            $Settings::Compiler ||= 'egcc';
         } else {
             $ENV{PATH} = '/usr/ccs/bin:' . $ENV{PATH};
         }
@@ -403,8 +402,8 @@ sub SetupPath {
             $ENV{PATH} = '/opt/gnu/bin:' . $ENV{PATH};
             $ENV{LD_LIBRARY_PATH} .= ':/opt/gnu/lib';
  	    if ($Settings::ConfigureEnvArgs eq '') {
-            	$Settings::ConfigureEnvArgs = 'CC=egcc CXX=eg++';
-            	$Settings::Compiler = 'egcc';
+            	$Settings::ConfigureEnvArgs ||= 'CC=egcc CXX=eg++';
+            	$Settings::Compiler ||= 'egcc';
 	    }
             
             # Possible NSPR bug... If USE_PTHREADS is defined, then
@@ -417,10 +416,10 @@ sub SetupPath {
                 $ENV{PATH} = "/tools/ns/workshop/bin:/usrlocal/bin:$ENV{PATH}";
                 $ENV{LD_LIBRARY_PATH} = '/tools/ns/workshop/lib:/usrlocal/lib:'
                       . $ENV{LD_LIBRARY_PATH};
-                $Settings::ConfigureEnvArgs = 'CC=cc CXX=CC';
+                $Settings::ConfigureEnvArgs ||= 'CC=cc CXX=CC';
                 my $comptmp   = `cc -V 2>&1 | head -1`;
                 chomp($comptmp);
-                $Settings::Compiler = "cc/CC \($comptmp\)";
+                $Settings::Compiler ||= "cc/CC \($comptmp\)";
                 $Settings::NSPRArgs .= 'NS_USE_NATIVE=1';
             } else {
                 $Settings::NSPRArgs .= 'NS_USE_GCC=1 NS_USE_NATIVE=';
@@ -548,7 +547,7 @@ sub BuildIt {
     mkdir $Settings::DirName, 0777;
     chdir $Settings::DirName or die "Couldn't enter $Settings::DirName";
     
-    my $build_dir = Cwd::getcwd();
+    my $build_dir = get_system_cwd();
 
     my $binary_basename = "$Settings::BinaryName";
     my $binary_dir = "$build_dir/$Settings::Topsrcdir/${Settings::ObjDir}/dist/bin";
@@ -609,7 +608,7 @@ sub BuildIt {
         print "Opening $logfile\n";
         open LOG, ">$logfile"
           or die "Cannot open logfile, $logfile: $?\n";
-        print_log "current dir is -- " . $ENV{HOST} . ":$build_dir\n";
+        print_log "current dir is -- " . ($ENV{HOST}||$ENV{HOSTNAME}) . ":$build_dir\n";
         print_log "Build Administrator is $Settings::BuildAdministrator\n";
         
 		# Print user comment if there is one.
@@ -1069,7 +1068,7 @@ sub run_all_tests {
 		# Test for Time::HiRes and report the time.
 		$time = Time::PossiblyHiRes::getTime();
 		
-		$cwd = Cwd::getcwd();
+		$cwd = get_system_cwd();
 		print "cwd = $cwd\n";
 		$url  = "\"file:$build_dir/../startup-test.html?begin=$time\"";
 		print "url = $url\n";
@@ -1417,6 +1416,12 @@ sub run_system_cmd {
     my $result = wait_for_pid($pid, $timeout_secs);
 
 	return $result;
+}
+
+sub get_system_cwd {
+    my $a = Cwd::getcwd()||`pwd`;
+    chomp($a);
+    return $a;
 }
 
 sub print_test_errors {
