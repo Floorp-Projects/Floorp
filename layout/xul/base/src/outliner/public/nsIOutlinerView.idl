@@ -52,6 +52,10 @@ interface nsIOutlinerView : nsISupports
   // to be matched on the ::moz-outliner-cell pseudoelement.
   void getCellProperties(in long row, in wstring colID, in nsISupportsArray properties);
   
+  // Called to get properties to paint a column background.  For shading the sort
+  // column, etc.
+  void getColumnProperties(in wstring colID, in nsIDOMElement colElt, in nsISupportsArray properties);
+
   // Methods that can be used to test whether or not a twisty should be drawn,
   // and if so, whether an open or closed twisty should be used.
   boolean isContainer(in long index);

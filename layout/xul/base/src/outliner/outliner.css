@@ -4,6 +4,10 @@ outlinerbody {
   -moz-user-select: none;
 }
 
+:-moz-outliner-column
+{
+}
+
 :-moz-outliner-row(selected)
 {
   background-color: blue;
