@@ -26,12 +26,14 @@
 #include "nsRenderingContextGTK.h"
 #include "nsImageGTK.h"
 #include "nsDeviceContextGTK.h"
+#include "nsRegionGTK.h"
 
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
 static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
+static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -133,7 +135,10 @@ nsresult nsGfxFactoryGTK::CreateInstance(nsISupports *aOuter,
   else if (mClassID.Equals(kCImage)) {
     inst = (nsISupports *)new nsImageGTK();
   }
-
+  else if (mClassID.Equals(kCRegion)) {
+    inst = (nsISupports *)new nsRegionGTK();
+  }
+	
   if (inst == NULL) {  
     return NS_ERROR_OUT_OF_MEMORY;  
   }  
