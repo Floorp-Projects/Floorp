@@ -30,6 +30,11 @@
 #include "nsIParser.h"
 #include "prlog.h"
 
+#ifdef EXTERNAL_ENTITY_SUPPORT
+#include "nsINetService.h"
+#include "nsIServiceManager.h"
+#endif
+
  /************************************************************************
   And now for the main class -- nsExpatTokenizer...
  ************************************************************************/
@@ -115,6 +120,9 @@ void nsExpatTokenizer::SetupExpatCallbacks(void) {
     XML_SetUnparsedEntityDeclHandler(mExpatParser, HandleUnparsedEntityDecl);
     XML_SetNotationDeclHandler(mExpatParser, HandleNotationDecl);
     XML_SetExternalEntityRefHandler(mExpatParser, HandleExternalEntityRef);
+#ifdef EXTERNAL_ENTITY_SUPPORT
+    XML_SetExternalDTDLoader(mExpatParser, LoadExternalDTD);
+#endif
     XML_SetUnknownEncodingHandler(mExpatParser, HandleUnknownEncoding, NULL);    
   }
 }
@@ -448,6 +456,54 @@ int nsExpatTokenizer::HandleExternalEntityRef(XML_Parser parser,
   int result=0;
   return result;
 }
+
+#ifdef EXTERNAL_ENTITY_SUPPORT
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
+static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+
+int nsExpatTokenizer::LoadExternalDTD(const XML_Char * base, 
+                                      const XML_Char * systemId,
+                                      char ** data)
+{
+  // XXX free resources when not needed anymore & generally clean this code
+
+  nsINetService * netService = nsnull;
+  nsresult res = nsServiceManager::GetService(kNetServiceCID,
+    kINetServiceIID, (nsISupports**) &netService);
+  if (NS_FAILED(res)) {
+    return -1;
+  }
+
+  // XXX try to compose this using base url
+  nsIURL * url = nsnull;
+  nsString * s = new nsString((PRUnichar *)systemId);
+  res = netService->CreateURL(&url, *s);
+  if (NS_FAILED(res)) {
+    return -1;
+  }
+
+  nsIInputStream * in = nsnull;
+  res = netService->OpenBlockingStream(url, nsnull, &in);
+  if (NS_FAILED(res)) {
+    NS_RELEASE(url);
+    return -1;
+  }
+
+  // XXX yuck!
+  char * buff = (char *) malloc(1000);
+  PRUnichar * buff2 = (PRUnichar *) malloc(1000);
+  PRUint32 len = 0;
+  PRUint32 j;
+  res = in->Read(buff, 1000, &len);
+  for (j=0 ; j<len; j++) buff2[j] = (PRUnichar) buff[j];
+
+  NS_RELEASE(url);
+  NS_RELEASE(in);
+
+  *data = (char *)buff2;
+  return len*2;
+}
+#endif
 
 int nsExpatTokenizer::HandleUnknownEncoding(void *encodingHandlerData,
                                        const XML_Char *name,
