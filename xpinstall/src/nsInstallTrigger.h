@@ -53,6 +53,8 @@ class nsInstallTrigger: public nsIScriptObjectOwner,
         
     private:
         void *mScriptObject;
+
+        NS_IMETHOD    InitRegistry(void);
 };
 
 #define NS_INSTALLTRIGGERCOMPONENT_CONTRACTID NS_IAPPSHELLCOMPONENT_CONTRACTID "/xpinstall/installtrigger;1"
