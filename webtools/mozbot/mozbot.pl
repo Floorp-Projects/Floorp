@@ -312,7 +312,7 @@ sub connect {
            $bot = $irc->newconn(
              Server => $server,
              Port => $port,
-             Password => $password,
+             Password => $password ne '' ? $password : undef, # '' will cause PASS to be sent
              Nick => $nicks[$nick],
              Ircname => $ircname,
              Username => $identd,
@@ -333,7 +333,7 @@ sub connect {
         $mailed = &Mails::ServerDown($server, $port, $localAddr, $nicks[$nick], $ircname, $identd) unless $mailed;
         sleep($sleepdelay);
         &Configuration::Get($cfgfile, &configStructure(\$server, \$port, \$password, \@nicks, \$nick, \$owner, \$sleepdelay));
-        &debug("connecting to $server:$port...");
+        &debug("connecting to $server:$port again...");
     }
 
     &debug("connected! woohoo!");
@@ -356,9 +356,10 @@ sub connect {
 
     $bot->add_global_handler([ # Informational messages -- print these to the console
         'snotice', # server notices
+        461, # need more arguments for PASS command
         409, # noorigin
         405, # toomanychannels  XXX should do something about this!
-        404, # cannot sent to channel
+        404, # cannot send to channel
         403, # no such channel
         401, # no such server
         402, # no such nick
@@ -370,10 +371,13 @@ sub connect {
         422, # nomotd
     ], \&on_connect);
 
+    $bot->add_handler('welcome', \&on_set_nick); # when we connect, to get our nick
     $bot->add_global_handler([ # when to change nick name
+        'erroneusnickname',
         433, # ERR_NICKNAMEINUSE
         436, # nick collision
     ], \&on_nick_taken);
+    $bot->add_handler('nick', \&on_nick); # when someone changes nick
 
     $bot->add_global_handler([ # when to give up and go home
         'disconnect', 'kill', # bad connection, booted offline
@@ -390,7 +394,6 @@ sub connect {
     $bot->add_handler('notopic', \&on_topic); # when topic in a channel is cleared
     $bot->add_handler('invite', \&on_invite); # when someone invites us
     $bot->add_handler('quit', \&on_quit); # when someone quits IRC
-    $bot->add_handler('nick', \&on_nick); # when someone changes nick
     $bot->add_handler('kick', \&on_kick); # when someone (or us) is kicked
     $bot->add_handler('mode', \&on_mode); # when modes change
     $bot->add_handler('umode', \&on_umode); # when modes of user change (by IRCop or ourselves)
@@ -454,6 +457,24 @@ sub on_whois {
 
 my ($nickHadProblem, $nickProblemEscalated, $nickOriginal) = (0, 0, 0);
 
+# this is called both for the welcome message (001) and by the on_nick handler
+sub on_set_nick {
+    my ($self, $event) = @_;
+    my($value) = $event->args; # (args can be either array or scalar, either way we want the first value)
+    # Find nick's index.
+    my $newnick = 0;
+    $newnick++ while (($newnick < @nicks) and ($value ne $nicks[$newnick]));
+    # If nick isn't there, add it.
+    if ($newnick >= @nicks) {
+        push(@nicks, $value);
+    }
+    # set variable
+    $nick = $newnick;
+    &debug("using nick '$nicks[$nick]'");
+    # save
+    &Configuration::Save($cfgfile, &::configStructure(\$nick, \@nicks));
+}
+
 sub on_nick_taken {
     my ($self, $event, $nickSlept) = @_, 0;
     return unless $self->connected();
@@ -464,7 +485,17 @@ sub on_nick_taken {
         $nickOriginal = $nick;
     } else {
         if (!$nickHadProblem) {
-            &debug("preferred nick ($nicks[$nick]) in use, searching for another...");
+            if ($event->type eq 'erroneusnickname') {
+                my ($currentNick, $triedNick, $err) = $event->args; # current, tried, errmsg
+                &debug("preferred nick ($triedNick) refused by server ('$err')");
+                if ($currentNick eq $nicks[$nick]) {
+                    # report the error, somehow
+                    &debug("silently abandoning nick change idea :-)");
+                    return;
+                }
+            } else {
+                &debug("preferred nick ($nicks[$nick]) in use, searching for another...");
+            }
             $nickOriginal = $nick;
             $nickHadProblem++;
         } # else we are currently looping
@@ -473,7 +504,7 @@ sub on_nick_taken {
         if ($nick == $nickOriginal) {
             # looped!
             local $" = ", ";
-            &debug("could not find an unused nick");
+            &debug("could not find an acceptable nick");
             &debug("nicks tried: @nicks");
             if (-t) {
                 print "Please suggest a nick (blank to abort): ";
@@ -484,7 +515,7 @@ sub on_nick_taken {
                     &debug("saving nicks: @nicks");
                     &Configuration::Save($cfgfile, &configStructure(\@nicks));
                 } else {
-                    &debug("Could not find an unused nick");
+                    &debug("Could not find an acceptable nick");
                     exit(1);
                 }
             } else {
@@ -515,7 +546,6 @@ sub on_connect {
         return;
     }
 
-    &debug("using nick '$nicks[$nick]'");
     if ($nickHadProblem) {
         # Remember which nick we are using
         &Configuration::Save($cfgfile, &configStructure(\$nick));
@@ -571,7 +601,7 @@ sub on_connect {
     @channels = ();
 
     # try to get our hostname
-    $self->whois($self->nick);
+    $self->whois($nicks[$nick]);
 
     # tell the modules to set up the scheduled commands
     &debug('setting up scheduler...');
@@ -693,7 +723,7 @@ sub targetted {
 sub on_public {
     my ($self, $event) = @_;
     my $data = join(' ', $event->args);
-    if (defined($_ = targetted($data, quotemeta($self->nick)))) {
+    if (defined($_ = targetted($data, quotemeta($nicks[$nick])))) {
         if ($_ ne '') {
             $event->args($_);
             $event->{'__mozbot__fulldata'} = $data;
@@ -724,7 +754,7 @@ sub on_noticemsg {
 sub on_private {
     my ($self, $event) = @_;
     my $data = join(' ', $event->args);
-    my $nick = quotemeta($self->nick);
+    my $nick = quotemeta($nicks[$nick]);
     if (($data =~ /^($nick(?:[-\s,:;.!?]|\s*-+>?\s+))(.+)$/is) and ($2)) {
         # we do this so that you can say 'mozbot do this' in both channels
         # and /query screens alike (otherwise, in /query screens you would
@@ -740,7 +770,7 @@ sub on_me {
     my @data = $event->args;
     my $data = join(' ', @data);
     $event->args($data);
-    my $nick = quotemeta($self->nick);
+    my $nick = quotemeta($nicks[$nick]);
     if ($data =~ /(?:^|[\s":<([])$nick(?:[])>.,?!\s'&":]|$)/is) {
         &do($self, $event, 'Felt');
     } else {
@@ -771,7 +801,7 @@ sub on_kick {
     $event->to($channel);
     foreach (@$who) {
         $event->args($_);
-        if ($_ eq $self->nick) {
+        if ($_ eq $nicks[$nick]) {
             &do(@_, 'Kicked');
         } else {
             &do(@_, 'SpottedKick');
@@ -803,12 +833,20 @@ sub on_gender {
     $self->ctcp_reply($nick, 'female'); # changed to female by special request
 }
 
+# on_nick: A nick changed -- was it ours?
+sub on_nick {
+    my ($self, $event) = @_;
+    if ($event->nick eq $nicks[$nick]) {
+        on_set_nick($self, $event);
+    }
+    &do(@_, 'SpottedNickChange');
+}
+
 # simple handler for when users do various things and stuff
 sub on_join { &do(@_, 'SpottedJoin'); }
 sub on_part { &do(@_, 'SpottedPart'); }
 sub on_quit { &do(@_, 'SpottedQuit'); }
 sub on_invite { &do(@_, 'Invited'); }
-sub on_nick { &do(@_, 'SpottedNickChange'); }
 sub on_mode { &do(@_, 'ModeChange'); } # XXX need to parse modes # XXX on key change, change %channelKeys hash
 sub on_umode { &do(@_, 'UModeChange'); }
 sub on_version { &do(@_, 'CTCPVersion'); }
@@ -831,7 +869,7 @@ sub toToChannel {
             } else {
                 $channel = $_;
             }
-        } elsif ($_ eq $self->nick) {
+        } elsif ($_ eq $nicks[$nick]) {
             return '';
         }
     }
@@ -855,7 +893,7 @@ sub do {
         'to' => $to,
         'subtype' => $event->type,
         'firsttype' => $_[0],
-        'nick' => $self->nick(),
+        'nick' => $nicks[$nick],
         # level   (set below)
         # type  (set below)
     });
@@ -993,7 +1031,7 @@ sub drainmsgqueue {
                     'bot' => $self,
                     '_event' => undef,
                     'channel' => &toToChannel($self, $who),
-                    'from' => $self->nick,
+                    'from' => $nicks[$nick],
                     'target' => $who,
                     'user' => undef, # XXX
                     'data' => $msg,
@@ -1001,7 +1039,7 @@ sub drainmsgqueue {
                     'to' => $who,
                     'subtype' => undef,
                     'firsttype' => $type,
-                    'nick' => $self->nick,
+                    'nick' => $nicks[$nick],
                     'level' => 0,
                     'type' => $type,
                 }));
@@ -1870,18 +1908,7 @@ sub setAway {
 sub setNick {
     my $self = shift;
     my ($event, $value) = @_;
-    # Find nick's index.
-    my $newnick = 0;
-    $newnick++ while (($newnick < @nicks) and ($value ne $nicks[$newnick]));
-    # If nick isn't there, add it.
-    if ($newnick >= @nicks) {
-        push(@nicks, $value);
-    }
-    # set variable
-    $nick = $newnick;
-    $event->{'bot'}->nick($nicks[$nick]);
-    # save
-    &Configuration::Save($cfgfile, &::configStructure(\$nick, \@nicks));
+    $event->{'bot'}->nick($value);
 }
 
 sub mode {
@@ -2396,7 +2423,7 @@ sub Get {
     my ($event, $variable) = @_;
     # First let's special case some magic variables...
     if ($variable eq 'currentnick') {
-        return $event->{'bot'}->nick(); # at this point, $event->{'nick'} would work too
+        return $event->{'nick'};
     } elsif ($variable eq 'users') {
         my @users = sort keys %users;
         return \@users;
