@@ -1257,8 +1257,12 @@ nsresult nsExternalAppHandler::OpenWithApplication(nsIFile * aApplication)
     if (helperAppService)
     {
       rv = helperAppService->LaunchAppWithTempFile(mMimeInfo, mFinalFileDestination);
-      // Note that it is considered a bad idea to delete a file after passing it
-      // off to a helper app so we no longer call DeleteTemporaryFileOnExit()
+
+#ifndef XP_MAC
+      // Mac users have been very verbal about temp files being deleted on app exit - they
+      // don't like it - but we'll continue to do this on other platforms for now
+      helperAppService->DeleteTemporaryFileOnExit(mFinalFileDestination);
+#endif
     }
   }
 
