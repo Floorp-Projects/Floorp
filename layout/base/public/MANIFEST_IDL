@@ -4,3 +4,4 @@
 
 nsIChromeEventHandler.idl
 nsISelectionController.idl
+nsIContentPolicy.idl
