@@ -1982,41 +1982,15 @@ SetFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
           nsStyleFont::UnZoomText(aPresContext, aParentFont->mSize);
 
       if (NS_STYLE_FONT_SIZE_LARGER == value) {
-        PRInt32 index = nsStyleUtil::FindNextLargerFontSize(parentSize, (PRInt32)aDefaultFont.size,
+        aFont->mSize = nsStyleUtil::FindNextLargerFontSize(parentSize, (PRInt32)aDefaultFont.size,
+                                                           scaleFactor, aPresContext, eFontSize_CSS);
+        NS_ASSERTION(aFont->mSize > parentSize, "FindNextLargerFontSize failed.");
+      } 
+      else {
+        aFont->mSize = nsStyleUtil::FindNextSmallerFontSize(parentSize, (PRInt32)aDefaultFont.size,
                                                             scaleFactor, aPresContext, eFontSize_CSS);
-        nscoord largerSize = nsStyleUtil::CalcFontPointSize(index, (PRInt32)aDefaultFont.size,
-                                                            scaleFactor, aPresContext, eFontSize_CSS);
-        aFont->mSize = PR_MAX(largerSize, aParentFont->mSize);
-        if (index == 6 &&
-            aFont->mSize == aParentFont->mSize) {
-          // 6 is the maximal answer from nsStyleUtil::FindNextLargerFontSize
-          // when eFontSize_CSS parameter is passed; we reached the limit for
-          // CSS named sizes, let's apply a %age.
-          // 150% is more or less the ratio between xx-large and x-large in
-          // all tables defined in nsStyleUtil.cpp
-          aFont->mSize = (nscoord)((float)(aParentFont->mSize) * 1.5);
-        }
-        else if (index == 0) {
-          largerSize = (nscoord)((float)(aParentFont->mSize) / 0.9);
-          aFont->mSize = PR_MIN(largerSize, aFont->mSize);
-        }
-      } else {
-        PRInt32 index = nsStyleUtil::FindNextSmallerFontSize(parentSize, (PRInt32)aDefaultFont.size,
-                                                             scaleFactor, aPresContext, eFontSize_CSS);
-        nscoord smallerSize = nsStyleUtil::CalcFontPointSize(index, (PRInt32)aDefaultFont.size,
-                                                             scaleFactor, aPresContext, eFontSize_CSS);
-        aFont->mSize = PR_MIN(smallerSize, aParentFont->mSize);
-        if (index == 0 &&
-            aFont->mSize == aParentFont->mSize) {
-          // 0 is the miminal answer from nsStyleUtil::FindNextLargerFontSize
-          // when eFontSize_CSS parameter is passed; we reached the limit for
-          // CSS named sizes, let's apply a %age
-          aFont->mSize = (nscoord)((float)(aParentFont->mSize) * 0.9);
-        }
-        else if (index == 6) {
-          smallerSize = (nscoord)((float)(aParentFont->mSize) / 1.5);
-          aFont->mSize = PR_MAX(smallerSize, aFont->mSize);
-        }
+        NS_ASSERTION(aFont->mSize < parentSize, 
+            "FindNextSmallerFontSize failed; this is expected if parentFont size <= 1px");
       }
     } else {
       NS_NOTREACHED("unexpected value");
