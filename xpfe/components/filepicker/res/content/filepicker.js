@@ -300,10 +300,10 @@ function selectOnOK()
   retvals.file = file;
   retvals.buttonStatus = ret;
 
-  if (ret == nsIFilePicker.returnCancel)
-    return false;
-  else
-    return true;
+  var filterMenuList = document.getElementById("filterMenuList");
+  retvals.filterIndex = filterMenuList.selectedIndex;
+  
+  return (ret != nsIFilePicker.returnCancel);
 }
 
 function onCancel()

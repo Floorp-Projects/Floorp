@@ -102,7 +102,7 @@ nsFilePicker.prototype = {
 
   /* attribute long filterIndex; */
   set filterIndex(a) { this.mFilterIndex = a; },
-  get filterInrex() { return this.mFilterIndex; },
+  get filterIndex() { return this.mFilterIndex; },
 
   /* methods */
   init: function(parent, title, mode) {
@@ -185,7 +185,7 @@ nsFilePicker.prototype = {
                         "chrome,modal,titlebar,resizable=yes,dependent=yes",
                         o);
       this.mFile = o.retvals.file;
-      this.mFilterIndex = o.retvals.filterindex;
+      this.mFilterIndex = o.retvals.filterIndex;
       lastDirectory = o.retvals.directory;
       return o.retvals.buttonStatus;
     } catch(ex) { dump("unable to open file picker\n" + ex + "\n"); }
