@@ -359,10 +359,20 @@ NS_IMETHODIMP CBrowserImpl::SetTitle(const PRUnichar* aTitle)
 
 NS_IMETHODIMP CBrowserImpl::GetVisibility(PRBool *aVisibility)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	if(! m_pBrowserFrameGlue)
+		return NS_ERROR_FAILURE;
+
+    m_pBrowserFrameGlue->GetBrowserFrameVisibility(aVisibility);
+
+	return NS_OK;
 }
 
 NS_IMETHODIMP CBrowserImpl::SetVisibility(PRBool aVisibility)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+    if(! m_pBrowserFrameGlue)
+        return NS_ERROR_FAILURE;
+
+    m_pBrowserFrameGlue->ShowBrowserFrame(PR_TRUE);
+
+    return NS_OK;
 }
