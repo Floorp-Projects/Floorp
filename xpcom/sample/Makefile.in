@@ -39,4 +39,5 @@ include $(topsrcdir)/config/rules.mk
 
 install:: $(TARGETS)
 	$(INSTALL) $(srcdir)/xpconnect-sample.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/nsSample.js $(DIST)/bin/components
 
