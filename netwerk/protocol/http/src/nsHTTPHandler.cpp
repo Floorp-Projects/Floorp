@@ -235,6 +235,16 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
             if (NS_FAILED(rv)) goto done;
             rv = pChannel->SetNotificationCallbacks(notificationCallbacks);
             if (NS_FAILED(rv)) goto done;
+
+           if (originalURI) 
+           {
+              // Referer - misspelled, but per the HTTP spec
+              nsCOMPtr<nsIAtom> key = NS_NewAtom("referer");
+              nsXPIDLCString spec;
+              originalURI->GetSpec(getter_Copies(spec));
+              if (spec)
+                pChannel->SetRequestHeader(key, spec);
+            }
             rv = pChannel->QueryInterface(NS_GET_IID(nsIChannel), 
                                           (void**)o_Instance);
             // add this instance to the active list of connections
