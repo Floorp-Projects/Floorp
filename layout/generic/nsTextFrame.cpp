@@ -3116,7 +3116,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
       PRBool keepSearching; //if you run out of chars before you hit the end of word, maybe next frame has more text to select?
       PRInt32 start;
       PRBool found = PR_FALSE;
-      PRBool isWhitespace;
+      PRBool isWhitespace, wasTransformed;
       PRInt32 wordLen, contentLen;
       if (aPos->mDirection == eDirPrevious){
         keepSearching = PR_TRUE;
@@ -3164,7 +3164,7 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
         printf("Next- Start=%d aPos->mEatingWS=%s\n", aPos->mStartOffset, aPos->mEatingWS ? "TRUE" : "FALSE");
 #endif
 
-        if (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, PR_FALSE) &&
+        if (tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE) &&
           (aPos->mStartOffset + contentLen <= (mContentLength + mContentOffset))){
 
 #ifdef DEBUGWORDJUMP
@@ -3176,7 +3176,8 @@ nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
             //check for whitespace next.
             keepSearching = PR_TRUE;
             aPos->mEatingWS = PR_TRUE;
-            while (!isWhitespace && tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, PR_FALSE)){
+            while (!isWhitespace &&
+                   tx.GetNextWord(PR_FALSE, &wordLen, &contentLen, &isWhitespace, &wasTransformed, PR_TRUE, PR_FALSE)){
 #ifdef DEBUGWORDJUMP
               printf("2-GetNextWord return non null, wordLen%d, contentLen%d isWhitespace=%s\n", 
                      wordLen, contentLen, isWhitespace ? "WS" : "NOT WS");
@@ -4339,8 +4340,7 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
   tx.Init(aTextFrame, aContent, 0);
   PRBool isWhitespace, wasTransformed;
   PRInt32 wordLen, contentLen;
-  PRUnichar* bp = tx.GetNextWord(PR_TRUE, &wordLen, &contentLen,
-                                 &isWhitespace, &wasTransformed);
+  PRUnichar* bp = tx.GetNextWord(PR_TRUE, &wordLen, &contentLen, &isWhitespace, &wasTransformed);
   if (!bp || isWhitespace) {
     // Don't bother measuring nothing
     *aStop = PR_TRUE;
