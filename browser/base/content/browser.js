@@ -390,6 +390,7 @@ function LoadBookmarksCallback()
     personalToolbar.builder.rebuild();
   } catch (e) {
   }
+  var ptoolbar = document.getElementById("PersonalToolbar");
 }
 
 function WindowFocusTimerCallback(element)
