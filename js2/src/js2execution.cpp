@@ -904,7 +904,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         JSValue result;
                         if (target->isNative()) {
                             JSValue *argBase = new JSValue[dimCount + 1];
-                            for (int i = 0; i < (dimCount + 1); i++)
+                            for (uint32 i = 0; i < (dimCount + 1); i++)
                                 argBase[i] = baseValue[i];
                             resizeStack(stackSize() - (dimCount + 1));
                             result = target->getNativeCode()(this, argBase[0], argBase, dimCount + 1);
@@ -952,7 +952,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         JSValue result;
                         if (target->isNative()) {
                             JSValue *argBase = new JSValue[dimCount + 2];
-                            for (int i = 0; i < (dimCount + 2); i++)
+                            for (uint32 i = 0; i < (dimCount + 2); i++)
                                 argBase[i] = baseValue[i];
                             resizeStack(stackSize() - (dimCount + 2));
                             result = target->getNativeCode()(this, *baseValue, baseValue, (dimCount + 2));
@@ -999,7 +999,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         JSValue result;
                         if (target->isNative()) {
                             JSValue *argBase = new JSValue[dimCount + 1];
-                            for (int i = 0; i < (dimCount + 1); i++)
+                            for (uint32 i = 0; i < (dimCount + 1); i++)
                                 argBase[i] = baseValue[i];
                             resizeStack(stackSize() - (dimCount + 1));
                             result = target->getNativeCode()(this, argBase[0], argBase, dimCount + 1);
@@ -1228,7 +1228,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     JSValue result;
                     if (target->isNative()) {
                         JSValue *tArgBase = new JSValue[argCount];
-                        for (int i = 0; i < argCount; i++)
+                        for (uint32 i = 0; i < argCount; i++)
                             tArgBase[i] = argBase[i];
                         resizeStack(stackSize() - cleanUp);
                         result = target->getNativeCode()(this, newThis, tArgBase, argCount);
@@ -1527,55 +1527,77 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
     return result;
 }
 
+float64 JSValue::getNumberValue() const
+{
+    if (isNumber())
+        return f64;
+    ASSERT(isObject() && (getType() == Number_Type));
+    return *((float64 *)(object->mPrivate));
+}
+
+const String *JSValue::getStringValue() const
+{
+    if (isString())
+        return string;
+    ASSERT(isObject() && (getType() == String_Type));
+    return (const String *)(object->mPrivate);
+}
+
+bool JSValue::getBoolValue() const
+{
+    if (isBool())
+        return boolean;
+    ASSERT(isObject() && (getType() == Boolean_Type));
+    return (object->mPrivate != 0);
+}
 
 static JSValue numberPlus(Context *, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue(r1.f64 + r2.f64);
+    return JSValue(argv[0].getNumberValue() + argv[1].getNumberValue());
 }
 
 static JSValue integerPlus(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue(r1.f64 + r2.f64);
+    return JSValue(argv[0].getNumberValue() + argv[1].getNumberValue());
 }
 
 static JSValue objectPlus(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
     JSValue &r1 = argv[0];
     JSValue &r2 = argv[1];
-    if (r1.isNumber() && r2.isNumber()) {        
-        return JSValue(r1.toNumber(cx).f64 + r2.toNumber(cx).f64);
+    JSType *t1 = r1.getType();
+    JSType *t2 = r2.getType();
+
+    if ((t1 == Number_Type) && (t2 == Number_Type)) {        
+        return JSValue(r1.getNumberValue() + r2.getNumberValue());
     }
 
-    if (r1.isString()) {
-        if (r2.isString())
-            return JSValue(new String(*r1.string + *r2.string));
+    if (t1 == String_Type) {
+        if (t2 == String_Type)
+            return JSValue(new String(*r1.getStringValue() + *r2.getStringValue()));
         else
-            return JSValue(new String(*r1.string + *r2.toString(cx).string));
+            return JSValue(new String(*r1.getStringValue() + *r2.toString(cx).string));
     }
     else {
-        if (r2.isString()) 
-            return JSValue(new String(*r1.toString(cx).string + *r2.string));
+        if (t2 == String_Type) 
+            return JSValue(new String(*r1.toString(cx).string + *r2.getStringValue()));
         else {
             JSValue r1p = r1.toPrimitive(cx);
             JSValue r2p = r2.toPrimitive(cx);
-            if (r1p.isString() || r2p.isString()) {
-                if (r1p.isString())
-                    if (r2p.isString())
-                        return JSValue(new String(*r1p.string + *r2p.string));
-                    else
-                        return JSValue(new String(*r1p.string + *r2p.toString(cx).string));
+            // gar-on-teed tagged values now
+            if (r1p.isString())
+                if (r2p.isString())
+                    return JSValue(new String(*r1p.string + *r2p.string));
                 else
+                    return JSValue(new String(*r1p.string + *r2p.toString(cx).string));
+            else
+                if (r2p.isString())
                     return JSValue(new String(*r1p.toString(cx).string + *r2p.string));
-            }
-            else {
-                JSValue num1(r1.toNumber(cx));
-                JSValue num2(r2.toNumber(cx));
-                return JSValue(num1.f64 + num2.f64);
-            }
+                else {
+                    JSValue num1(r1.toNumber(cx));
+                    JSValue num2(r2.toNumber(cx));
+                    return JSValue(num1.f64 + num2.f64);
+                }
         }
     }
 }
@@ -1584,16 +1606,12 @@ static JSValue objectPlus(Context *cx, const JSValue& /*thisValue*/, JSValue *ar
 
 static JSValue integerMinus(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue(r1.f64 - r2.f64);
+    return JSValue(argv[0].getNumberValue() - argv[1].getNumberValue());
 }
 
 static JSValue numberMinus(Context *, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue(r1.f64 - r2.f64);
+    return JSValue(argv[0].getNumberValue() - argv[1].getNumberValue());
 }
 
 static JSValue objectMinus(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
@@ -1607,9 +1625,7 @@ static JSValue objectMinus(Context *cx, const JSValue& /*thisValue*/, JSValue *a
 
 static JSValue integerMultiply(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue(r1.f64 * r2.f64);
+    return JSValue(argv[0].getNumberValue() * argv[1].getNumberValue());
 }
 
 static JSValue objectMultiply(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
@@ -1623,9 +1639,9 @@ static JSValue objectMultiply(Context *cx, const JSValue& /*thisValue*/, JSValue
 
 static JSValue integerDivide(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    float64 d = r1.f64 / r2.f64;
+    float64 f1 = argv[0].getNumberValue();
+    float64 f2 = argv[1].getNumberValue();
+    float64 d = f1 / f2;
     bool neg = (d < 0);
     d = fd::floor(neg ? -d : d);
     d = neg ? -d : d;
@@ -1643,9 +1659,9 @@ static JSValue objectDivide(Context *cx, const JSValue& /*thisValue*/, JSValue *
 
 static JSValue integerRemainder(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    float64 d = fd::fmod(r1.f64, r2.f64);
+    float64 f1 = argv[0].getNumberValue();
+    float64 f2 = argv[1].getNumberValue();
+    float64 d = fd::fmod(f1, f2);
     bool neg = (d < 0);
     d = fd::floor(neg ? -d : d);
     d = neg ? -d : d;
@@ -1673,9 +1689,9 @@ static JSValue objectRemainder(Context *cx, const JSValue& /*thisValue*/, JSValu
 
 static JSValue integerShiftLeft(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue((float64)( (int32)(r1.f64) << ( (uint32)(r2.f64) & 0x1F)) );
+    float64 f1 = argv[0].getNumberValue();
+    float64 f2 = argv[1].getNumberValue();
+    return JSValue((float64)( (int32)(f1) << ( (uint32)(f2) & 0x1F)) );
 }
 
 static JSValue objectShiftLeft(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
@@ -1689,9 +1705,9 @@ static JSValue objectShiftLeft(Context *cx, const JSValue& /*thisValue*/, JSValu
 
 static JSValue integerShiftRight(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue((float64) ( (int32)(r1.f64) >> ( (uint32)(r2.f64) & 0x1F)) );
+    float64 f1 = argv[0].getNumberValue();
+    float64 f2 = argv[1].getNumberValue();
+    return JSValue((float64) ( (int32)(f1) >> ( (uint32)(f2) & 0x1F)) );
 }
 
 static JSValue objectShiftRight(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
@@ -1705,9 +1721,9 @@ static JSValue objectShiftRight(Context *cx, const JSValue& /*thisValue*/, JSVal
 
 static JSValue integerUShiftRight(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue((float64) ( (uint32)(r1.f64) >> ( (uint32)(r2.f64) & 0x1F)) );
+    float64 f1 = argv[0].getNumberValue();
+    float64 f2 = argv[1].getNumberValue();
+    return JSValue((float64) ( (uint32)(f1) >> ( (uint32)(f2) & 0x1F)) );
 }
 
 static JSValue objectUShiftRight(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
@@ -1721,9 +1737,9 @@ static JSValue objectUShiftRight(Context *cx, const JSValue& /*thisValue*/, JSVa
 
 static JSValue integerBitAnd(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue((float64)( (int32)(r1.f64) & (int32)(r2.f64) ));
+    float64 f1 = argv[0].getNumberValue();
+    float64 f2 = argv[1].getNumberValue();
+    return JSValue((float64)( (int32)(f1) & (int32)(f2) ));
 }
 
 static JSValue objectBitAnd(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
@@ -1737,9 +1753,9 @@ static JSValue objectBitAnd(Context *cx, const JSValue& /*thisValue*/, JSValue *
 
 static JSValue integerBitXor(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue((float64)( (int32)(r1.f64) ^ (int32)(r2.f64) ));
+    float64 f1 = argv[0].getNumberValue();
+    float64 f2 = argv[1].getNumberValue();
+    return JSValue((float64)( (int32)(f1) ^ (int32)(f2) ));
 }
 
 static JSValue objectBitXor(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
@@ -1753,9 +1769,9 @@ static JSValue objectBitXor(Context *cx, const JSValue& /*thisValue*/, JSValue *
 
 static JSValue integerBitOr(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
 {
-    JSValue &r1 = argv[0];
-    JSValue &r2 = argv[1];
-    return JSValue((float64)( (int32)(r1.f64) | (int32)(r2.f64) ));
+    float64 f1 = argv[0].getNumberValue();
+    float64 f2 = argv[1].getNumberValue();
+    return JSValue((float64)( (int32)(f1) | (int32)(f2) ));
 }
 
 static JSValue objectBitOr(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
@@ -1812,22 +1828,25 @@ static JSValue objectLessEqual(Context *cx, const JSValue& /*thisValue*/, JSValu
 
 static JSValue compareEqual(Context *cx, JSValue r1, JSValue r2)
 {
-    if (r1.getType() != r2.getType()) {
+    JSType *t1 = r1.getType();
+    JSType *t2 = r2.getType();
+
+    if (t1 != t2) {
         if (r1.isNull() && r2.isUndefined())
             return kTrueValue;
         if (r1.isUndefined() && r2.isNull())
             return kTrueValue;
-        if (r1.isNumber() && r2.isString())
+        if ((t1 == Number_Type) && (t2 == String_Type))
             return compareEqual(cx, r1, r2.toNumber(cx));
-        if (r1.isString() && r2.isNumber())
+        if ((t1 == String_Type) && (t2 == Number_Type))
             return compareEqual(cx, r1.toNumber(cx), r2.toString(cx));
-        if (r1.isBool())
+        if (t1 == Boolean_Type)
             return compareEqual(cx, r1.toNumber(cx), r2);
-        if (r2.isBool())
+        if (t2 == Boolean_Type)
             return compareEqual(cx, r1, r2.toNumber(cx));
-        if ( (r1.isString() || r1.isNumber()) && (r2.isObject()) )
+        if ( ((t1 == String_Type) || (t1 == Number_Type)) && r2.isObject() )
             return compareEqual(cx, r1, r2.toPrimitive(cx));
-        if ( (r1.isObject()) && (r2.isString() || r2.isNumber()) )
+        if ( (r1.isObject()) && ((t2 == String_Type) || (t2 == Number_Type)) )
             return compareEqual(cx, r1.toPrimitive(cx), r2);
         return kFalseValue;
     }
@@ -1836,18 +1855,23 @@ static JSValue compareEqual(Context *cx, JSValue r1, JSValue r2)
             return kTrueValue;
         if (r1.isNull())
             return kTrueValue;
-        if (r1.isNumber()) {
+        if (t1 == Number_Type) {
+            
+            float64 f1 = r1.getNumberValue();
+            float64 f2 = r2.getNumberValue();
+
             if (r1.isNaN())
                 return kFalseValue;
             if (r2.isNaN())
                 return kFalseValue;
+
             return JSValue(r1.f64 == r2.f64);
         }
         else {
-            if (r1.isString())
-                return JSValue(bool(r1.string->compare(*r2.string) == 0));
-            if (r1.isBool())
-                return JSValue(r1.boolean == r2.boolean);
+            if (t1 == String_Type)
+                return JSValue(bool(r1.getStringValue()->compare(*r2.getStringValue()) == 0));
+            if (t1 == Boolean_Type)
+                return JSValue(r1.getBoolValue() == r2.getBoolValue());
             if (r1.isObject())
                 return JSValue(r1.object == r2.object);
             if (r1.isType())
@@ -2010,7 +2034,7 @@ JSValue JSValue::valueToNumber(Context *cx, const JSValue& value)
         return JSValue(stringToNumber(value.string));
     case object_tag:
     case function_tag:
-        return value.toPrimitive(cx, NumberHint).toNumber(cx);
+        return value.toPrimitive(cx, NoHint).toNumber(cx);
     case boolean_tag:
         return JSValue((value.boolean) ? 1.0 : 0.0);
     case undefined_tag:
@@ -2097,6 +2121,8 @@ JSValue JSValue::toPrimitive(Context *cx, Hint hint) const
 
     case object_tag:
         obj = object;
+        if ((hint == NoHint) && (obj->getType() == Date_Type))
+            hint = StringHint;
         break;
     case function_tag:
         obj = function;
@@ -2109,42 +2135,42 @@ JSValue JSValue::toPrimitive(Context *cx, Hint hint) const
 
     // The following is [[DefaultValue]]
     //
-	ASSERT(obj);
+    ASSERT(obj);
     JSFunction *target = NULL;
-	JSValue result;
+    JSValue result;
     PropertyIterator i;
-	
-	StringAtom *first = &cx->ValueOf_StringAtom;
-	StringAtom *second = &cx->ToString_StringAtom;
+
+    StringAtom *first = &cx->ValueOf_StringAtom;
+    StringAtom *second = &cx->ToString_StringAtom;
 
     if (hint == StringHint) {
-		first = &cx->ToString_StringAtom;
-		second = &cx->ValueOf_StringAtom;
-	}
+        first = &cx->ToString_StringAtom;
+        second = &cx->ValueOf_StringAtom;
+    }
 
 
     if (obj->hasProperty(*first, CURRENT_ATTR, Read, &i)) {
         JSValue v = obj->getPropertyValue(i);
         if (v.isFunction()) {
             target = v.function;
-			if (target) {
-				result = cx->invokeFunction(target, *this, NULL, 0);
-				if (result.isPrimitive())
-					return result;
-			}
-		}
-	}
+            if (target) {
+                result = cx->invokeFunction(target, *this, NULL, 0);
+                if (result.isPrimitive())
+                    return result;
+            }
+        }
+    }
     if (obj->hasProperty(*second, CURRENT_ATTR, Read, &i)) {
         JSValue v = obj->getPropertyValue(i);
         if (v.isFunction()) {
             target = v.function;
-			if (target) {
-				result = cx->invokeFunction(target, *this, NULL, 0);
-				if (result.isPrimitive())
-					return result;
-			}
-		}
-	}
+            if (target) {
+                result = cx->invokeFunction(target, *this, NULL, 0);
+                if (result.isPrimitive())
+                    return result;
+            }
+        }
+    }
     throw new Exception(Exception::runtimeError, "toPrimitive");    // XXX
     return kUndefinedValue;
 }
@@ -2299,6 +2325,7 @@ JSValue JSValue::valueToBoolean(Context *cx, const JSValue& value)
     case function_tag:
         return kTrueValue;
         break;
+    case null_tag:
     case undefined_tag:
         return kFalseValue;
     default:
@@ -2345,6 +2372,22 @@ JSValue Context::mapValueToType(JSValue v, JSType *t)
     reportError(Exception::typeError, "Invalid type cast");
     return kUndefinedValue;
 }
+
+JSType *JSValue::getType() const {
+    switch (tag) {
+    case f64_tag:       return Number_Type;
+    case boolean_tag:   return Boolean_Type;
+    case string_tag:    return (JSType *)String_Type;
+    case object_tag:    return object->getType();
+    case undefined_tag: return Void_Type;
+    case null_tag:      return Object_Type;
+    case function_tag:  return Function_Type;
+    default: 
+        NOT_REACHED("bad type"); 
+        return NULL;
+    }
+}
+
 
 
     

@@ -199,6 +199,10 @@ static const double two31 = 2147483648.0;
                                                                 *this : valueToObject(cx, *this)); }
         JSValue toBoolean(Context *cx) const            { return (isBool() ? *this : valueToBoolean(cx, *this)); }
 
+        float64 getNumberValue() const;
+        const String *getStringValue() const;
+        bool getBoolValue() const;
+
         /* These are for use in 'toPrimitive' calls */
         enum Hint {
             NumberHint, StringHint, NoHint
@@ -608,24 +612,6 @@ XXX ...couldn't get this to work...
     };
 
     Formatter& operator<<(Formatter& f, const JSObject& obj);
-    
-
-    // had to be after JSObject defn.
-    inline JSType *JSValue::getType() const {
-        switch (tag) {
-        case f64_tag: return Number_Type;
-        case boolean_tag: return Boolean_Type;
-        case string_tag: return (JSType *)String_Type;
-        case object_tag: return object->getType();
-        case undefined_tag: return Void_Type;
-        case null_tag: return Object_Type;
-        case function_tag: return Function_Type;
-        default: NOT_REACHED("bad type"); return NULL;
-        }
-    }
-
-
-
     
 
 

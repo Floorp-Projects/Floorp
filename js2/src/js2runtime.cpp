@@ -1664,13 +1664,26 @@ void Context::buildRuntimeForStmt(StmtNode *p)
 }
 
 
-static JSValue Object_Constructor(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static JSValue Object_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
-    JSValue v = thisValue;
-    if (v.isNull())
-        v = Object_Type->newInstance(cx);
-    ASSERT(v.isObject());
-    return v;
+    JSValue thatValue = thisValue;  // incoming 'new this' potentially supplied by constructor sequence
+
+    if (argc != 0) {
+        if (argv[0].isObject())
+            thatValue = argv[0];
+        else
+        if (argv[0].isString() || argv[0].isBool() || argv[0].isNumber())
+            thatValue = argv[0].toObject(cx);
+        else {
+            if (thatValue.isNull())
+                thatValue = Object_Type->newInstance(cx);
+        }
+    }
+    else {
+        if (thatValue.isNull())
+            thatValue = Object_Type->newInstance(cx);
+    }
+    return thatValue;
 }
 
 static JSValue Object_toString(Context *, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
@@ -1748,7 +1761,7 @@ static JSValue Function_Constructor(Context *cx, const JSValue& thisValue, JSVal
             s = widenCString("() {") + *argv[0].toString(cx).string + "}";
         else {
             s = widenCString("(");         // ')'
-            for (int i = 0; i < (argc - 1); i++) {
+            for (uint32 i = 0; i < (argc - 1); i++) {
                 s += *argv[i].toString(cx).string;
                 if (i < (argc - 2))
                     s += widenCString(", ");
@@ -1834,9 +1847,9 @@ static JSValue Number_Constructor(Context *cx, const JSValue& thisValue, JSValue
     ASSERT(v.isObject());
     JSObject *thisObj = v.object;
     if (argc > 0)
-        thisObj->mPrivate = (void *)(new double(argv[0].toNumber(cx).f64));
+        thisObj->mPrivate = (void *)(new float64(argv[0].toNumber(cx).f64));
     else
-        thisObj->mPrivate = (void *)(new double(0.0));
+        thisObj->mPrivate = (void *)(new float64(0.0));
     return v;
 }
 
@@ -1846,7 +1859,7 @@ static JSValue Number_toString(Context *cx, const JSValue& thisValue, JSValue * 
     if (thisValue.getType() != Number_Type)
         cx->reportError(Exception::typeError, "Number.toString called on something other than a Number object");
     JSObject *thisObj = thisValue.object;
-    return JSValue(numberToString(*((double *)(thisObj->mPrivate))));
+    return JSValue(numberToString(*((float64 *)(thisObj->mPrivate))));
 }
 
 static JSValue Number_valueOf(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
@@ -1855,7 +1868,7 @@ static JSValue Number_valueOf(Context *cx, const JSValue& thisValue, JSValue * /
     if (thisValue.getType() != Number_Type)
         cx->reportError(Exception::typeError, "Number.valueOf called on something other than a Number object");
     JSObject *thisObj = thisValue.object;
-    return JSValue(*((double *)(thisObj->mPrivate)));
+    return JSValue(*((float64 *)(thisObj->mPrivate)));
 }
 
 static JSValue Integer_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
@@ -1949,7 +1962,7 @@ static JSValue GlobalObject_ParseInt(Context *cx, const JSValue& /*thisValue*/, 
     ASSERT(argc >= 1);
     int radix = 0;      // default for stringToInteger
     if (argc == 2)
-        radix = argv[1].toInt32(cx).f64;
+        radix = (int)(argv[1].toInt32(cx).f64);
     if ((radix < 0) || (radix > 36))
         return kNaNValue;
 
