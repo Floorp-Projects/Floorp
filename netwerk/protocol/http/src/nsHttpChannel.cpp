@@ -2306,7 +2306,8 @@ nsHttpChannel::SetAuthorizationHeader(nsHttpAuthCache *authCache,
         if (header == nsHttp::Authorization) {
             nsHttpAuthIdentity temp;
             GetIdentityFromURI(0, temp);
-            if (nsCRT::strcmp(temp.User(), entry->Identity().User()) != 0)
+            if (!temp.IsEmpty() &&
+                    nsCRT::strcmp(temp.User(), entry->Identity().User()) != 0)
                 return; // different username; let the server challenge us.
         }
 
