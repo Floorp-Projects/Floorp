@@ -39,12 +39,22 @@ EX_LIBS = \
 	$(DIST)/lib/libplc21.a	\
 	$(DIST)/lib/libplds21.a	\
 	$(DIST)/lib/libnspr21.a	\
+	$(NULL)
+
+ifeq ($(ARCH),IRIX)
+EX_LIBS += \
+	-lXm
+endif
+
+ifeq ($(ARCH),linux)
+EX_LIBS += \
 	/usr/local/lib/libXm.so \
 	/usr/X11/lib/libXt.so	\
 	/usr/X11/lib/libSM.so	\
 	/usr/X11/lib/libICE.so	\
 	/usr/X11/lib/libX11.so	\
 	$(NULL)
+endif
 
 PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
 
