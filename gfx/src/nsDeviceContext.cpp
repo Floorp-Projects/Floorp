@@ -528,9 +528,10 @@ nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
   nsIFontMetrics *&aMetrics)
 {
   // First check our cache
-  PRInt32 n = mFontMetrics.Count();
+  PRInt32 n = mFontMetrics.Count()-1;
 
-  for (PRInt32 cnt = 0; cnt < n; cnt++)
+  // start from the end, which is where we put the most-recent-used element
+  for (PRInt32 cnt = n; cnt >= 0; --cnt)
   {
     nsIFontMetrics* metrics = NS_STATIC_CAST(nsIFontMetrics*, mFontMetrics[cnt]);
 
@@ -540,9 +541,9 @@ nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
       nsCOMPtr<nsIAtom> langGroup;
       metrics->GetLangGroup(getter_AddRefs(langGroup));
       if (aLangGroup == langGroup.get()) {
-        if (cnt != 0) {
-          // promote it to the front of the cache
-          mFontMetrics.MoveElement(0, cnt);
+        if (cnt != n) {
+          // promote it to the end of the cache
+          mFontMetrics.MoveElement(cnt, n);
         }
         NS_ADDREF(aMetrics = metrics);
         return NS_OK;
@@ -567,6 +568,8 @@ nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
     return rv;
   }
 
+  // the mFontMetrics list has the "head" at the end, because append is
+  // cheaper than insert
   mFontMetrics.AppendElement(fm);
 
   NS_ADDREF(fm);
