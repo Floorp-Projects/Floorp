@@ -84,10 +84,10 @@ else
 }
 
 # Copy the setup files to the dist setup directory.
-system("xcopy /f config.ini                 $inDistPath");
-system("xcopy /f config.ini                 $inDistPath\\setup");
-system("xcopy /f $inDistPath\\setup.exe     $inDistPath\\setup");
-system("xcopy /f $inDistPath\\setuprsc.dll  $inDistPath\\setup");
+system("xcopy /f config.ini                 $inDistPath\\");
+system("xcopy /f config.ini                 $inDistPath\\setup\\");
+system("xcopy /f $inDistPath\\setup.exe     $inDistPath\\setup\\");
+system("xcopy /f $inDistPath\\setuprsc.dll  $inDistPath\\setup\\");
 
 # build the self-extracting .exe file.
 print "\nbuilding self-extracting installer ($seiFileNameSpecific)...\n";
