@@ -764,152 +764,6 @@ perl -pi -e 's@#\!/usr/bonsaitools/bin/perl@#\!/usr/bin/perl@' *cgi *pl Bug.pm s
     </section>
 
     <section>
-      <title>Securing MySQL</title>
-
-      <para>If you followed the installation instructions for setting up your
-      "bugs" and "root" user in MySQL, much of this should not apply to you.
-      If you are upgrading an existing installation of Bugzilla, you should
-      pay close attention to this section.</para>
-
-      <para>Most MySQL installs have "interesting" default security
-      parameters: 
-      <simplelist>
-        <member>mysqld defaults to running as root</member>
-
-        <member>it defaults to allowing external network connections</member>
-
-        <member>it has a known port number, and is easy to detect</member>
-
-        <member>it defaults to no passwords whatsoever</member>
-
-        <member>it defaults to allowing "File_Priv"</member>
-      </simplelist>
-      </para>
-
-      <para>This means anyone from anywhere on the Internet can not only drop
-      the database with one SQL command, and they can write as root to the
-      system.</para>
-
-      <para>To see your permissions do: 
-      <simplelist>
-        <member>
-          <computeroutput>
-            <prompt>bash#</prompt>
-
-            <command>mysql -u root -p</command>
-          </computeroutput>
-        </member>
-
-        <member>
-          <computeroutput>
-            <prompt>mysql&gt;</prompt>
-
-            <command>use mysql;</command>
-          </computeroutput>
-        </member>
-
-        <member>
-          <computeroutput>
-            <prompt>mysql&gt;</prompt>
-
-            <command>show tables;</command>
-          </computeroutput>
-        </member>
-
-        <member>
-          <computeroutput>
-            <prompt>mysql&gt;</prompt>
-
-            <command>select * from user;</command>
-          </computeroutput>
-        </member>
-
-        <member>
-          <computeroutput>
-            <prompt>mysql&gt;</prompt>
-
-            <command>select * from db;</command>
-          </computeroutput>
-        </member>
-      </simplelist>
-      </para>
-
-      <para>To fix the gaping holes: 
-      <simplelist>
-        <member>DELETE FROM user WHERE User='';</member>
-
-        <member>UPDATE user SET Password=PASSWORD('new_password') WHERE
-        user='root';</member>
-
-        <member>FLUSH PRIVILEGES;</member>
-      </simplelist>
-      </para>
-
-      <para>If you're not running "mit-pthreads" you can use: 
-      <simplelist>
-        <member>GRANT USAGE ON *.* TO bugs@localhost;</member>
-
-        <member>GRANT ALL ON bugs.* TO bugs@localhost;</member>
-
-        <member>REVOKE DROP ON bugs.* FROM bugs@localhost;</member>
-
-        <member>FLUSH PRIVILEGES;</member>
-      </simplelist>
-      </para>
-
-      <para>With "mit-pthreads" you'll need to modify the "globals.pl"
-      Mysql-&gt;Connect line to specify a specific host name instead of
-      "localhost", and accept external connections: 
-      <simplelist>
-        <member>GRANT USAGE ON *.* TO bugs@bounce.hop.com;</member>
-
-        <member>GRANT ALL ON bugs.* TO bugs@bounce.hop.com;</member>
-
-        <member>REVOKE DROP ON bugs.* FROM bugs@bounce.hop.com;</member>
-
-        <member>FLUSH PRIVILEGES;</member>
-      </simplelist>
-      </para>
-
-      <para>Consider also: 
-      <orderedlist>
-        <listitem>
-          <para>Turning off external networking with "--skip-networking",
-          unless you have "mit-pthreads", in which case you can't. Without
-          networking, MySQL connects with a Unix domain socket.</para>
-        </listitem>
-
-        <listitem>
-          <para>using the --user= option to mysqld to run it as an
-          unprivileged user.</para>
-        </listitem>
-
-        <listitem>
-          <para>running MySQL in a chroot jail</para>
-        </listitem>
-
-        <listitem>
-          <para>running the httpd in a chroot jail</para>
-        </listitem>
-
-        <listitem>
-          <para>making sure the MySQL passwords are different from the OS
-          passwords (MySQL "root" has nothing to do with system
-          "root").</para>
-        </listitem>
-
-        <listitem>
-          <para>running MySQL on a separate untrusted machine</para>
-        </listitem>
-
-        <listitem>
-          <para>making backups ;-)</para>
-        </listitem>
-      </orderedlist>
-      </para>
-    </section>
-    
-    <section>
       <title>Configuring Bugzilla</title>
       <para>
       You should run through the parameters on the Edit Parameters page
@@ -1160,85 +1014,6 @@ bash# perl -pi -e "s/Content-Type\: text\/html/Content-Type\: text\/html\; chars
       </note>
     </section>    
     
-    <section id="htaccess" xreflabel=".htaccess files and security">
-      <title>
-      <filename>.htaccess</filename>
-      files and security</title>
-
-      <para>To enhance the security of your Bugzilla installation, Bugzilla's
-      <filename>checksetup.pl</filename> script will generate 
-      <glossterm>
-        <filename>.htaccess</filename>
-      </glossterm>
-
-      files which the Apache webserver can use to restrict access to the
-      bugzilla data files. 
-      These .htaccess files will not work with Apache 1.2.x - but this
-      has security holes, so you shouldn't be using it anyway. 
-      <note>
-        <para>If you are using an alternate provider of 
-        <productname>webdot</productname>
-
-        services for graphing (as described when viewing 
-        <filename>editparams.cgi</filename>
-
-        in your web browser), you will need to change the ip address in 
-        <filename>data/webdot/.htaccess</filename>
-
-        to the ip address of the webdot server that you are using.</para>
-      </note>
-      </para>
-
-      <para>The default .htaccess file may not provide adequate access
-      restrictions, depending on your web server configuration. Be sure to
-      check the &lt;Directory&gt; entries for your Bugzilla directory so that
-      the 
-      <filename>.htaccess</filename>
-
-      file is allowed to override web server defaults. For instance, let's
-      assume your installation of Bugzilla is installed to 
-      <filename>/usr/local/bugzilla</filename>
-
-      . You should have this &lt;Directory&gt; entry in your 
-      <filename>httpd.conf</filename>
-
-      file:</para>
-
-      <para>
-      
-<programlisting><![CDATA[
-<Directory /usr/local/bugzilla/>
-  Options +FollowSymLinks +Indexes +Includes +ExecCGI
-  AllowOverride All
-</Directory>
-]]></programlisting>
-
-      </para>
-
-      <para>The important part above is 
-      <quote>AllowOverride All</quote>
-
-      . Without that, the 
-      <filename>.htaccess</filename>
-
-      file created by 
-      <filename>checksetup.pl</filename>
-
-      will not have sufficient permissions to protect your Bugzilla
-      installation.</para>
-
-      <para>If you are using Internet Information Server (IIS) or another 
-      web server which does not observe 
-      <filename>.htaccess</filename>
-      conventions, you can disable their creation by editing 
-      <filename>localconfig</filename>
-      and setting the 
-      <varname>$create_htaccess</varname>
-      variable to 
-      <parameter>0</parameter>.
-      </para>
-    </section>
-
     <section id="directoryindex" xreflabel="Modifying the Apache
     DirectoryIndex parameter to use index.cgi">
       <title>
@@ -1358,11 +1133,11 @@ C:\perl&gt; <command>ppm &lt;module name&gt;</command>
           </para>
         </note>
 
-        <note>
+        <tip>
           <para>A complete list of modules that can be installed using ppm can
           be found at <ulink url="http://www.activestate.com/PPMPackages/5.6plus">http://www.activestate.com/PPMPackages/5.6plus</ulink>.
           </para>
-        </note>
+        </tip>
       </section>
 
       <section id="win32-code-changes">
@@ -1398,19 +1173,6 @@ my $webservergid = getgrnam($my_webservergroup)
           <programlisting>
 my $webservergid = '8'
           </programlisting>
-        </section>
-
-        <section id="win32-code-mail">
-          <title>Making mail work</title>
-
-          <para>The easiest way to get mail working is to use the mail patches
-          on <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=124174">bug
-          124174</ulink>. With any luck, this patch will receive the required
-          reviews and integrated into the main Bugzilla distribution very soon.
-          Until that happens, there's at least one report of this patch working
-          well on Windows.
-          </para>
-
         </section>
 
         <section>
@@ -1459,7 +1221,7 @@ system("C:\\perl\\bin\\perl", "$webdotbase","-Tpng","-o","$pngfilename","$filena
         <para>As is the case on Unix based systems, any web server should be
         able to handle Bugzilla; however, the Bugzilla Team still recommends
         Apache whenever asked. No matter what web server you choose, be sure
-        to pay attention to the security notes in <xref linkend="security"/>.
+        to pay attention to the security notes in <xref linkend="security-access"/>.
         More information on configuring specific web servers can be found in
         <xref linkend="http"/>.
         </para>
@@ -1480,7 +1242,7 @@ system("C:\\perl\\bin\\perl", "$webdotbase","-Tpng","-o","$pngfilename","$filena
     <section id="os-macosx">
       <title><productname>Mac OS X</productname></title>
 
-      <!-- XXX - Clean me up... (Mac OS X) -->
+      <!-- TODO: Clean me up... (Mac OS X) -->
       <para>There are a lot of common libraries and utilities out there that
       Apple did not include with Mac OS X, but which run perfectly well on it.
       The GD library, which Bugzilla needs to do bug graphs, is one of
@@ -1559,7 +1321,7 @@ system("C:\\perl\\bin\\perl", "$webdotbase","-Tpng","-o","$pngfilename","$filena
     that can be configured to run <glossterm linkend="gloss-cgi">CGI</glossterm> scripts
     should be able to handle Bugzilla. No matter what web server you choose, but
     especially if you choose something other than Apache, you should be sure to read
-    <xref linkend="security"/>.
+    <xref linkend="security-access"/>.
     </para>
 
     <para>The plan for this section is to eventually document the specifics of how to lock
@@ -1696,7 +1458,7 @@ deny from all
 
       <para>Also, and this can't be stressed enough, make sure that files such as
       <filename>localconfig</filename> and your <filename class="directory">data</filename>
-      directory are secured as described in <xref linkend="security"/>.
+      directory are secured as described in <xref linkend="security-access"/>.
       </para>
 
     </section>

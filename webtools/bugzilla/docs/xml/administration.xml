@@ -764,155 +764,273 @@
     <note>
       <para>These instructions must, of necessity, be somewhat vague since
       Bugzilla runs on so many different platforms. If you have refinements
-      of these directions for specific platforms, please submit them to 
-      <ulink url="mailto://mozilla-webtools@mozilla.org">
-      mozilla-webtools@mozilla.org</ulink>
+      of these directions, please submit a bug to &bzg-bugs;.
       </para>
     </note>
 
-    <para>To secure your installation:
-     
-    <orderedlist>
-      <listitem>
-        <para>
-        <emphasis>There is no substitute for understanding the tools on your
-        system!</emphasis>
+    <warning>
+      <para>This is not meant to be a comprehensive list of every possible
+      security issue regarding the tools mentioned in this section. There is
+      no subsitute for reading the information written by the authors of any
+      software running on your system.
+      </para>
+    </warning>
 
-        Read 
-        <ulink url="http://www.mysql.com/doc/P/r/Privilege_system.html">
-        The MySQL Privilege System</ulink>
-        until you can recite it from memory!</para>
-      </listitem>
+    <section id="security-networking">
+      <title>TCP/IP Ports</title>
 
-      <listitem>
-        <para>Lock down <filename>/etc/inetd.conf</filename>. Heck, disable
-        inet entirely on this box. It should only listen to port 25 for
-        Sendmail and port 80 for Apache.</para>
-      </listitem>
+      <!-- TODO: Make this make sense (TCP/IP) -->
+      <para>TCP/IP defines 65,000 some ports for trafic. Of those, Bugzilla
+      only needs 1... 2 if you need to use features that require e-mail such
+      as bug moving or the e-mail interface from contrib. You should audit
+      your server and make sure that you aren't listening on any ports you
+      don't need to be. You may also wish to use some kind of firewall
+      software to be sure that trafic can only be recieved on ports you
+      specify.
+      </para>
+    </section>
 
-      <listitem>
-        <para>Do not run Apache as 
-        <quote>nobody</quote>
+    <section id="security-mysql">
+      <title>MySQL</title>
 
-        . This will require very lax permissions in your Bugzilla
-        directories. Run it, instead, as a user with a name, set via your
-        httpd.conf file. 
-        <note>
-          <para>
-          <quote>nobody</quote>
+      <para>MySQL ships by default with many settings that should be changed.
+      By defaults it allows anybody to connect from localhost without a
+      password and have full administrative capabilities. It also defaults to
+      not have a root password (this is <emphasis>not</emphasis> the same as
+      the system root). Also, many installations default to running
+      <application>mysqld</application> as the system root.
+      </para>
 
-          is a real user on UNIX systems. Having a process run as user id 
-          <quote>nobody</quote>
-
-          is absolutely no protection against system crackers versus using
-          any other user account. As a general security measure, I recommend
-          you create unique user ID's for each daemon running on your system
-          and, if possible, use "chroot" to jail that process away from the
-          rest of your system.</para>
-        </note>
-        </para>
-      </listitem>
-
-      <listitem>
-        <para>Ensure you have adequate access controls for the
-        <filename>$BUGZILLA_HOME/data/</filename> directory, as well as the
-        <filename>$BUGZILLA_HOME/localconfig</filename> file.
-        The localconfig file stores your "bugs" database account password. 
-        In addition, some
-        files under <filename>$BUGZILLA_HOME/data/</filename> store sensitive
-        information.
-        </para>
-
-        <para>Also, beware that some text editors create backup files in the
-        current working directory so you need to also secure files like
-        <filename>localconfig~</filename>.
-        </para>
-
-        <note>
-          <para>Simply blocking <computeroutput>.*localconfig.*</computeroutput>
-          won't work because the QuickSearch feature requires the web browser
-          to be able to retrieve <filename>localconfig.js</filename> and
-          others may be introduced in the future (see 
-          <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=186383">bug
-          186383</ulink> for more information.
+      <orderedlist>
+        <listitem>
+          <para>Consult the documentation that came with your system for
+          information on making <application>mysqld</application> run as an
+          unprivleged user.
           </para>
-        </note>
+        </listitem>
 
-        <para>Bugzilla provides default <filename>.htaccess</filename> files
-        to protect the most common Apache installations. However, you should
-        verify these are adequate according to the site-wide security policy
-        of your web server, and ensure that the <filename>.htaccess</filename>
-        files are allowed to <quote>override</quote> default permissions set
-        in your Apache configuration files. Covering Apache security is beyond
-        the scope of this Guide; please consult the Apache documentation for
-        details.
+        <listitem>
+          <para>You should also be sure to disable the anonymous user account
+          and set a password for the root user. This is accomplished using the
+          following commands:
+          </para>
+          <programlisting>
+<prompt>bash$</prompt> mysql mysql
+<prompt>mysql&gt;</prompt> DELETE FROM user WHERE user = '';
+<prompt>mysql&gt;</prompt> UPDATE user SET password = password('<replaceable>new_password</replaceable>') WHERE user = 'root';
+<prompt>mysql&gt;</prompt> FLUSH PRIVILEGES;
+          </programlisting>
+          <para>From this point forward you will need to use
+          <command>mysql -u root -p</command> and enter
+          <replaceable>new_password</replaceable> when prompted when using the
+          mysql client.
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>If you run MySQL on the same machine as your httpd server, you
+          should consider disabling networking from within MySQL by adding
+          the following to your <filename>/etc/my.conf</filename>:
+          </para>
+          <programlisting>
+[myslqd]
+# Prevent network access to MySQL.
+skip-networking
+          </programlisting>
+        </listitem>
+
+        <listitem>
+          <para>You may also consider running MySQL, or even all of Bugzilla
+          in a chroot jail; however, instructions for doing that are beyond
+          the scope of this document.
+          </para>
+        </listitem>
+
+      </orderedlist>
+
+    </section>
+
+    <section id="security-daemon">
+      <title>Daemon Accounts</title>
+
+      <para>Many daemons, such as Apache's httpd and MySQL's mysqld default to
+      running as either <quote>root</quote> or <quote>nobody</quote>. Running
+      as <quote>root</quote> introduces obvious security problems, but the
+      problems introduced by running everything as <quote>nobody</quote> may
+      not be so obvious. Basically, if you're running every daemon as
+      <quote>nobody</quote> and one of them gets comprimised, they all get
+      comprimised. For this reason it is recommended that you create a user
+      account for each daemon.
+      </para>
+
+      <note>
+        <para>You will need to set the <varname>webservergroup</varname> to
+        the group you created for your webserver to run as in
+        <filename>localconfig</filename>. This will allow
+        <command>./checksetup.pl</command> to better adjust the file
+        permissions on your Bugzilla install so as to not require making
+        anything world-writable.
         </para>
+      </note>
 
-        <para>If you are using a web server that does not support the
-        <filename>.htaccess</filename> control method, 
-        <emphasis>you are at risk!</emphasis>
+    </section>
 
-        After installing, check to see if you can view the file
-        <filename>localconfig</filename> in your web browser (e.g.: 
-        <ulink url="http://bugzilla.mozilla.org/localconfig">
-        http://bugzilla.mozilla.org/localconfig</ulink>
+    <section id="security-access">
+      <title>Web Server Access Controls</title>
 
-        ). If you can read the contents of this file, your web server has
-        not secured your bugzilla directory properly and you must fix this
-        problem before deploying Bugzilla. If, however, it gives you a
-        "Forbidden" error, then it probably respects the .htaccess
-        conventions and you are good to go.</para>
-      </listitem>
+      <para>There are many files that are placed in the Bugzilla directory
+      area that should not be accessable from the web. Because of the way
+      Bugzilla is currently layed out, the list of what should and should
+      not be accessible is rather complicated. A new installation method
+      is currently in the works which should solve this by allowing files
+      that shouldn't be accessible from the web to be placed in directory
+      outside the webroot. See
+      <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=44659">bug
+      44659</ulink> for more information.
+      </para>
 
-      <listitem>
-        <para>When you run checksetup.pl, the script will attempt to modify
-        various permissions on files which Bugzilla uses. If you do not have
-        a webservergroup set in the <filename>localconfig</filename> file,
-        then Bugzilla will have to make certain files world readable and/or
-        writable. 
-        <emphasis>THIS IS INSECURE!</emphasis>
+      <itemizedlist spacing="compact">
+        <listitem>
+          <para>In the main Bugzilla directory, you should:</para>
+          <itemizedlist spacing="compact">
+            <listitem>
+              <para>Block:
+              <simplelist type="inline">
+                <member><filename>*.pl</filename></member>
+                <member><filename>*localconfig*</filename></member>
+                <member><filename>runtests.sh</filename></member>
+              </simplelist>
+              </para>
+            </listitem>
+            <listitem>
+              <para>But allow:
+              <simplelist type="inline">
+                <member><filename>localconfig.js</filename></member>
+                <member><filename>localconfig.rdf</filename></member>
+              </simplelist>
+              </para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
 
-        . This means that anyone who can get access to your system can do
-        whatever they want to your Bugzilla installation.</para>
+        <listitem>
+          <para>In <filename class="directory">data</filename>:</para>
+          <itemizedlist spacing="compact">
+            <listitem>
+              <para>Block everything</para>
+            </listitem>
+            <listitem>
+              <para>But allow:
+              <simplelist type="inline">
+                <member><filename>duplicates.rdf</filename></member>
+              </simplelist>
+              </para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
 
-        <note>
-          <para>This also means that if your webserver runs all cgi scripts
-          as the same user/group, anyone on the system who can run cgi
-          scripts will be able to take control of your Bugzilla
-          installation.</para>
-        </note>
+        <listitem>
+          <para>In <filename class="directory">data/webdot</filename>:</para>
+          <itemizedlist spacing="compact">
+            <listitem>
+              <para>If you use a remote webdot server:</para>
+              <itemizedlist spacing="compact">
+                <listitem>
+                  <para>Block everything</para>
+                </listitem>
+                <listitem>
+                  <para>But allow
+                  <simplelist type="inline">
+                    <member><filename>*.dot</filename></member>
+                  </simplelist>
+                  only for the remote webdot server</para>
+                </listitem>
+              </itemizedlist>
+            </listitem>
+            <listitem>
+              <para>Otherwise, if you use a local GraphViz:</para>
+              <itemizedlist spacing="compact">
+                <listitem>
+                  <para>Block everything</para>
+                </listitem>
+                <listitem>
+                  <para>But allow:
+                  <simplelist type="inline">
+                    <member><filename>*.png</filename></member>
+                    <member><filename>*.gif</filename></member>
+                    <member><filename>*.jpg</filename></member>
+                    <member><filename>*.map</filename></member>
+                  </simplelist>
+                  </para>
+                </listitem>
+              </itemizedlist>
+            </listitem>
+            <listitem>
+              <para>And if you don't use any dot:</para>
+              <itemizedlist spacing="compact">
+                <listitem>
+                  <para>Block everything</para>
+                </listitem>
+              </itemizedlist>
+            </listitem>
+          </itemizedlist>
+        </listitem>
 
-        <para>On Apache, you can use <filename>.htaccess</filename> files to
-        protect access to these directories, as outlined in Bugs 
-        <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=57161">
-        57161</ulink> and
-        <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=186383">
-        186383</ulink>
+        <listitem>
+          <para>In <filename class="directory">Bugzilla</filename>:</para>
+          <itemizedlist spacing="compact">
+            <listitem>
+              <para>Block everything</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
 
-        for the <filename>localconfig</filename> file, and 
-        <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=65572">Bug
-        65572</ulink>
+        <listitem>
+          <para>In <filename class="directory">template</filename>:</para>
+          <itemizedlist spacing="compact">
+            <listitem>
+              <para>Block everything</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </itemizedlist>
 
-        for adequate protection in your <filename>data/</filename> directory.
-        Also, don't forget about the <filename>template/</filename> and
-        <filename>Bugzilla/</filename> directories and to allow access to the
-        <filename>data/webdot</filename> directory for the
-        <computeroutput>192.20.225.10</computeroutput> IP address if you are
-        using webdot from research.att.com.  The easiest way to
-        accomplish this is to set <function>$create_htaccess</function> to 1
-        in <filename>localconfig</filename>.  However, the information below
-        is provided for those that want to know exactly what is created.
+      <tip>
+        <para>Bugzilla ships with the ability to generate
+        <filename>.htaccess</filename> files instructing
+        <glossterm linkend="gloss-apache">Apache</glossterm> which files
+        should and should not be accessible. For more information, see
+        <xref linkend="http-apache"/>.
         </para>
+      </tip>
 
-        <para>FIX ME BEFORE RELEASE!!!!!
-        Note the instructions which follow are Apache-specific. If you
-        use IIS, Netscape, or other non-Apache web servers, please consult
-        your system documentation for how to secure these files from being
-        transmitted to curious users.</para>
+      <para>You should test to make sure that the files mentioned above are
+      not accessible from the Internet, especially your
+      <filename>localconfig</filename> file which contains your database
+      password. To test, simply point your web browser at the file; for
+      example, to test mozilla.org's installation, we'd try to access
+      <ulink url="http://bugzilla.mozilla.org/localconfig"/>. You should
+      get a <errorcode>403</errorcode> <errorname>Forbidden</errorname>
+      error.
+      </para>
 
-      </listitem>
-    </orderedlist>
-    </para>
+      <caution>
+        <para>Not following the instructions in this section, including
+        testing, may result in sensitive information being globally
+        accessible.
+        </para>
+      </caution>
+
+      <tip>
+        <para>You should check <xref linkend="http"/> to see if instructions
+        have been included for your web server. You should also compare those
+        instructions with this list to make sure everything is properly
+        accounted for.
+        </para>
+      </tip>
+
+    </section>
+
   </section>
 
   <section id="cust-templates">

@@ -242,17 +242,24 @@
       </glossdef>
     </glossentry>
 
-    <glossentry>
-      <glossterm>mysqld</glossterm>
+    <glossentry id="gloss-mysql">
+      <glossterm>MySQL</glossterm>
 
       <glossdef>
-        <para>mysqld is the name of the 
-        <glossterm>daemon</glossterm>
-
-        for the MySQL database. In general, it is invoked automatically
-        through the use of the System V init scripts on GNU/Linux and
-        AT&amp;T System V-based systems, such as Solaris and HP/UX, or
-        through the RC scripts on BSD-based systems.</para>
+        <para>MySQL is currently the required
+        <glossterm linkend="gloss-rdbms">RDBMS</glossterm> for Bugzilla. MySQL
+        can be downloaded from <ulink url="http://www.mysql.com"/>. While you
+        should familiarize yourself with all of the documentation, some high
+        points are:
+        </para>
+        <itemizedlist>
+          <listitem>
+            <para><ulink url="http://www.mysql.com/doc/P/r/Privilege_system.html">MySQL
+            Privilege System</ulink> - Much more detailed information about
+            the suggestions in <xref linkend="security-mysql"/>.
+            </para>
+          </listitem>
+        </itemizedlist>
       </glossdef>
     </glossentry>
   </glossdiv>
@@ -307,6 +314,21 @@
         <quote>QA Contact</quote>
 
         field in a bug.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv id="gloss-r">
+    <title>R</title>
+
+    <glossentry id="gloss-rdbms">
+      <glossterm>Relational DataBase Managment System</glossterm>
+      <acronym>RDBMS</acronym>
+
+      <glossdef>
+        <para>A relational database management system is a database system
+        that stores information in tables that are related to each other.
+        </para>
       </glossdef>
     </glossentry>
   </glossdiv>
