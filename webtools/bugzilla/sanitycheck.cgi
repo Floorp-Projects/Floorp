@@ -27,10 +27,25 @@ require "CGI.pl";
 
 use vars %::FORM;
 
+ConnectToDatabase();
+
+confirm_login();
+
+# Make sure the user is authorized to access sanitycheck.cgi.  Access
+# is restricted to logged-in users who have "editbugs" privileges,
+# which is a reasonable compromise between allowing all users to access
+# the script (creating the potential for denial of service attacks)
+# and restricting access to this installation's administrators (which
+# prevents users with a legitimate interest in Bugzilla integrity
+# from accessing the script).
+UserInGroup("editbugs")
+  || DisplayError("You are not authorized to access this script,
+                   which is reserved for users with the ability to edit bugs.")
+  && exit;
+
 print "Content-type: text/html\n";
 print "\n";
 
-ConnectToDatabase();
 SendSQL("set SQL_BIG_TABLES=1");
 
 my $offervotecacherebuild = 0;
