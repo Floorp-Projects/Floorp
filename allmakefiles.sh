@@ -827,6 +827,12 @@ extensions/transformiix/source/Makefile
 extensions/transformiix/Makefile
 "
 
+MAKEFILES_tridentprofile="
+extensions/tridentprofile/Makefile
+extensions/tridentprofile/public/Makefile
+extensions/tridentprofile/src/Makefile
+"
+
 MAKEFILES_typeaheadfind="
 extensions/typeaheadfind/public/Makefile
 extensions/typeaheadfind/resources/Makefile
@@ -1109,6 +1115,9 @@ for extension in $MOZ_EXTENSIONS; do
             " ;;
         transformiix ) MAKEFILES_extensions="$MAKEFILES_extensions
             $MAKEFILES_transformiix"
+            ;;
+        tridentprofile ) MAKEFILES_extensions="$MAKEFILES_extensions
+            $MAKEFILES_tridentprofile"
             ;;
         universalchardet ) MAKEFILES_extensions="$MAKEFILES_extensions
             extensions/universalchardet/Makefile

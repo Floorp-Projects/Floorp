@@ -3461,6 +3461,22 @@ if test -z "$MOZ_JSDEBUGGER" && test `echo "$MOZ_EXTENSIONS" | grep -c venkman` 
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|venkman||'`
 fi
 
+dnl This might be temporary: build tridentprofile only on Windows
+if test `echo "$MOZ_EXTENSIONS" | grep -c tridentprofile` -ne 0 && test "$OS_ARCH" != "WINNT"; then
+    AC_MSG_WARN([tridentprofile extension works only on Windows at this time. Removing tridentprofile from MOZ_EXTENSIONS.])
+    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|tridentprofile||'`
+fi
+
+dnl cookie must be built before tridentprofile. put it at list's end.
+if test `echo "$MOZ_EXTENSIONS" | grep -c tridentprofile` -ne 0; then
+  MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|tridentprofile||'`
+  if test `echo "$MOZ_EXTENSIONS" | grep -c cookie` -eq 0; then
+    AC_MSG_WARN([tridentprofile extension requires cookie. Removing tridentprofile.])
+  else
+    MOZ_EXTENSIONS="$MOZ_EXTENSIONS tridentprofile"
+  fi
+fi
+
 dnl Remove dupes
 if test -n "${_CYGWIN_PERL}"; then
 MOZ_EXTENSIONS=`${PERL} ${srcdir}/build/unix/uniq.pl ${MOZ_EXTENSIONS}`
