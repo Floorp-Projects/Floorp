@@ -165,6 +165,33 @@ CPPSRCS += nsNativeAppSupportWin.cpp nsNativeAppSupportBase.cpp
 OS_LIBS += comctl32.lib comdlg32.lib uuid.lib shell32.lib ole32.lib oleaut32.lib version.lib winspool.lib
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+DESKTOP_ICONS = \
+	abcardWindow.ico \
+	addressbookWindow.ico \
+	bmPropsWindow.ico \
+	bookmark-window.ico \
+	calendar-window.ico \
+	chatzilla-window.ico \
+	downloadManager.ico \
+	editorWindow.ico \
+	findBookmarkWindow.ico \
+	findHistoryWindow.ico \
+	history-window.ico \
+	jsconsoleWindow.ico \
+	main-window.ico \
+	messengerWindow.ico \
+	msgcomposeWindow.ico \
+	venkman-window.ico \
+	winInspectorMain.ico \
+	$(NULL) 
+
+GARBAGE	+= $(addprefix $(DIST)/bin/chrome/icons/default/,$(DESKTOP_ICONS))
+
+libs:: $(DESKTOP_ICONS)
+	$(INSTALL) $^ $(DIST)/bin/chrome/icons/default
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 CMMSRCS += nsNativeAppSupportForCocoa.mm
 LDFLAGS += \
