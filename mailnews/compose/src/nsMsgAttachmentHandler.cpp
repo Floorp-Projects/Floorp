@@ -710,7 +710,8 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
     if (icService)
     {
       PRInt32 icFlags;
-      nsresult rv = icService->GetFileMappingFlags(&fsSpec, PR_FALSE, &icFlags);
+      // be sure to look up by extension first (so pass in PR_TRUE). See Bug #229855
+      nsresult rv = icService->GetFileMappingFlags(&fsSpec, PR_TRUE, &icFlags);
       if (NS_SUCCEEDED(rv) && icFlags != -1 && !(icFlags & nsIInternetConfigService::eIICMapFlag_NotOutgoingMask))
       {
         sendResourceFork = (icFlags & nsIInternetConfigService::eIICMapFlag_ResourceForkMask);
