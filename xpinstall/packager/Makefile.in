@@ -41,7 +41,7 @@ endif
 
 MAKE_PACKAGE	= echo "Sorry, don't know how to build a $(MOZ_PKG_FORMAT) file yet...."
 
-PKG_BASENAME	:= $(MOZ_PKG_APPNAME)-$(shell $(topsrcdir)/build/autoconf/config.guess)
+PKG_BASENAME	:= $(MOZ_PKG_APPNAME)-$(TARGET_CPU)-$(TARGET_VENDOR)-$(TARGET_OS)
 PACKAGE		= $(PKG_BASENAME)$(PKG_SUFFIX)
 
 TAR_CREATE_FLAGS = -cvhf
