@@ -930,7 +930,7 @@ nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
                                            (nsISupports **)&dragService);
   if (NS_OK == rv) {
     dragService->SetCanDrop(PR_TRUE);
-    NS_RELEASE(dragService);
+    nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
   }
 #endif
   return NS_OK;
@@ -947,7 +947,7 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
                                            (nsISupports **)&dragService);
   if (NS_OK == rv) {
     dragService->SetCanDrop(PR_TRUE);
-    NS_RELEASE(dragService);
+    nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
   }
 #endif
   return NS_OK;
@@ -973,18 +973,18 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
                                              kIDragServiceIID,
                                              (nsISupports **)&dragService);
   if (NS_OK == rv) {
-    nsIGenericTransferable *genericTrans = 0;
+    nsCOMPtr<nsIGenericTransferable> genericTrans;
     rv = nsComponentManager::CreateInstance(kCGenericTransferableCID, nsnull, 
-                                            kIGenericTransferableIID, (void**) &genericTrans);
+                                            kIGenericTransferableIID, (void**) getter_AddRefs(genericTrans));
     if (NS_OK == rv) {
-      nsIDataFlavor *flavor = 0;
-      rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) &flavor);
+      nsCOMPtr<nsIDataFlavor> flavor;
+      rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) getter_AddRefs(flavor));
       if (NS_OK == rv) {
         flavor->Init(kTextMime, "Text");
 
         genericTrans->AddDataFlavor(flavor);
 
-        nsCOMPtr<nsITransferable> trans = do_QueryInterface(genericTrans);
+        nsCOMPtr<nsITransferable> trans (do_QueryInterface(genericTrans));
         if (trans) {
 
           dragService->GetData(trans);
@@ -994,19 +994,13 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
           trans->GetTransferData(flavor, (void **)&str, &len);
 
           if (str) {
-            if (str[len-1] == 0) {
-              len--;
-            }
             stuffToPaste.SetString(str, len);
             mEditor->InsertText(stuffToPaste);
           }
-
         }
-        NS_IF_RELEASE(flavor);
       }
-      NS_IF_RELEASE(genericTrans);
     }
-    NS_IF_RELEASE(dragService);
+    nsServiceManager::ReleaseService(kCDragServiceCID, dragService);
   }
 
 #endif  
