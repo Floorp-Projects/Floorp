@@ -540,14 +540,20 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
                                                                kCFPreferencesAnyApplication,
                                                                kCFPreferencesCurrentUser,
                                                                kCFPreferencesAnyHost);
-        PRInt32 fullKeyboardAccessPrefVal;
-        ::CFNumberGetValue(fullKeyboardAccessProperty, kCFNumberIntType,
-                           &fullKeyboardAccessPrefVal);
 
-        if (fullKeyboardAccessPrefVal == 3) // "Full keyboard access" is on
-          aMetric = 7; // everything that can be focused
-        else
-          aMetric = 1; // Textboxes
+        if (fullKeyboardAccessProperty) {
+          PRInt32 fullKeyboardAccessPrefVal;
+          ::CFNumberGetValue(fullKeyboardAccessProperty, kCFNumberIntType,
+                             &fullKeyboardAccessPrefVal);
+
+          if (fullKeyboardAccessPrefVal == 3) // "Full keyboard access" is on
+            aMetric = 7; // everything that can be focused
+          else
+            aMetric = 1; // Textboxes
+        }
+        else // By default, "Full keyboard accees" preference is off
+          aMetric = 1;
+
         break;
     default:
         aMetric = 0;
