@@ -36,6 +36,7 @@
 
 #include "nsplugindefs.h"
 #include "nsMacEventHandler.h"
+#include "nsMacResources.h"
 
 
 //-------------------------------------------------------------------------
@@ -426,6 +427,7 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 	if (nsToolkit::HasAppearanceManager())
 	{
 		short cursor = -1;
+		bool localResource = false;
 	  switch (aCursor)
 	  {
 	    case eCursor_standard:	cursor = kThemeArrowCursor;		break;
@@ -433,23 +435,44 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 	    case eCursor_select:		cursor = kThemeIBeamCursor;		break;
 	    case eCursor_hyperlink:	cursor = kThemePointingHandCursor;		break;
 			case eCursor_sizeWE:		cursor = kThemeResizeLeftRightCursor;	break;
-			case eCursor_sizeNS:		cursor = kThemeResizeLeftRightCursor;	break;	//¥TODO: bad id
+			case eCursor_sizeNS:		cursor = 129;	localResource = true; 	break;
 	  }
 	  if (cursor >= 0)
-	  	::SetThemeCursor(cursor);
+	  {
+	  	if (localResource)
+	  	{
+				nsMacResources::OpenLocalResourceFile();
+		  	::SetCursor(*(::GetCursor(cursor)));
+				nsMacResources::CloseLocalResourceFile();
+			}
+			else
+	  		::SetThemeCursor(cursor);
+	  }
   }
   else
   {
 		short cursor = -1;
+		bool localResource = false;
 	  switch (aCursor)
 	  {
 	    case eCursor_standard:	::InitCursor();					break;
 	    case eCursor_wait:			cursor = watchCursor;		break;
 	    case eCursor_select:		cursor = iBeamCursor;		break;
 	    case eCursor_hyperlink:	cursor = plusCursor;		break;
+			case eCursor_sizeWE:		cursor = 128;	localResource = true; 	break;
+			case eCursor_sizeNS:		cursor = 129;	localResource = true; 	break;
 	  }
 	  if (cursor > 0)
-	  	::SetCursor(*(::GetCursor(cursor)));
+	  {
+	  	if (localResource)
+	  	{
+				nsMacResources::OpenLocalResourceFile();
+		  	::SetCursor(*(::GetCursor(cursor)));
+				nsMacResources::CloseLocalResourceFile();
+			}
+			else
+			  	::SetCursor(*(::GetCursor(cursor)));
+	  }
   }
  
   return NS_OK;
