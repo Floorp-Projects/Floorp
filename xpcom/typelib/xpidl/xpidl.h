@@ -28,8 +28,8 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <glib.h>
+#include <string.h> /* After glib.h to avoid warnings about shadowing 'index'. */
 
 #ifndef XP_MAC
 #include <libIDL/IDL.h>
@@ -89,11 +89,12 @@ struct TreeState {
 
 /*
  * Process an IDL file, generating InterfaceInfo, documentation and headers as
- * appropriate.
+ * appropriate.  Use file_basename instead of basename to avoid conflict
+ * warnings with basename from some versions of string.h.
  */
 int
 xpidl_process_idl(char *filename, IncludePathEntry *include_path,
-                  char *basename, ModeData *mode);
+                  char *file_basename, ModeData *mode);
 
 /*
  * Iterate over an IDLN_LIST -- why is this not part of libIDL?
