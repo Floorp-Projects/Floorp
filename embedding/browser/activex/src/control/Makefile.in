@@ -78,6 +78,7 @@ REQUIRES = \
     composer \
     commandhandler \
     ax_common \
+    locale \
     $(NULL)
 
 CPPSRCS = \

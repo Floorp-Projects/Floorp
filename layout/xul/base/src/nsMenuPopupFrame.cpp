@@ -884,14 +884,13 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   //   The dimensions of the frame invoking the popup. 
   nsRect parentRect = aFrame->GetRect();
 
-  float p2t, t2p;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
+  float p2t = aPresContext->ScaledPixelsToTwips();
 
   nsIViewManager* viewManager = containingView->GetViewManager();
     
   nsCOMPtr<nsIDeviceContext> dx;
   viewManager->GetDeviceContext(*getter_AddRefs(dx));
-  t2p = dx->AppUnitsToDevUnits();
+  float t2p = dx->AppUnitsToDevUnits();
 
   // get the document and the global script object
   nsIPresShell *presShell = aPresContext->PresShell();

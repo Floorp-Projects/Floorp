@@ -373,9 +373,7 @@ nsSliderFrame::DoLayout(nsBoxLayoutState& aState)
   else if (curpospx > maxpospx)
      curpospx = maxpospx;
 
-  float p2t;
-  aState.PresContext()->GetScaledPixelsToTwips(&p2t);
-  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  nscoord onePixel = aState.PresContext()->IntScaledPixelsToTwips(1);
 
   // get max pos in twips
   nscoord maxpos = maxpospx*onePixel;
@@ -469,9 +467,7 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
        // convert start to twips
        nscoord startpx = mDragStartPx;
 
-       float p2t;
-       aPresContext->GetScaledPixelsToTwips(&p2t);
-       nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+       nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
        nscoord start = startpx*onePixel;
 
        nsIFrame* thumbFrame = mFrames.FirstChild();
@@ -623,9 +619,7 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
       || (gMiddlePref && aEvent->message == NS_MOUSE_MIDDLE_BUTTON_DOWN)) {
     // convert coord from twips to pixels
     nscoord pos = isHorizontal ? aEvent->point.x : aEvent->point.y;
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
-    nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+    nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
     nscoord pospx = pos/onePixel;
 
    // adjust so that the middle of the thumb is placed under the click
@@ -758,10 +752,7 @@ nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
       curpos = maxpos;
 
     // convert to pixels
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
-    nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-
+    nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
     nscoord curpospx = curpos*onePixel;
 
     // get the thumb's rect
@@ -938,9 +929,7 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 
     // mouseEvent has click coordinates in pixels, convert to twips first
     isHorizontal ? mouseEvent->GetClientX(&pospx) : mouseEvent->GetClientY(&pospx);
-    float p2t;
-    GetPresContext()->GetScaledPixelsToTwips(&p2t);
-    nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+    nscoord onePixel = GetPresContext()->IntScaledPixelsToTwips(1);
     pos = pospx * onePixel;
 
     // then get it into our coordinate system by subtracting our parents offsets.

@@ -534,9 +534,7 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
     // convert start to twips
     nscoord startpx = mDragStartPx;
 
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
-    nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+    nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
     nscoord start = startpx*onePixel;
 
     // get it into our coordintate system by subtracting our parents offsets.
@@ -1062,9 +1060,7 @@ nsSplitterFrameInner::AdjustChildren(nsIPresContext* aPresContext, nsSplitterInf
 
   nsBoxLayoutState state(aPresContext);
 
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
 
   // first set all the widths.
   nsIBox* child = nsnull;

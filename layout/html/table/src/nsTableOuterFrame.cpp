@@ -54,7 +54,6 @@
 #endif
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
-#include "nsIPrintContext.h"
 
 /* ----------- nsTableCaptionFrame ---------- */
 
@@ -941,9 +940,9 @@ nsTableOuterFrame::BalanceLeftRightCaption(nsIPresContext* aPresContext,
   else {
     aCaptionWidth = (nscoord) ((capPercent / innerPercent) * aInnerWidth);
   }
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-  aCaptionWidth = nsTableFrame::RoundToPixel(aCaptionWidth, p2t, eAlwaysRoundDown);
+  aCaptionWidth = nsTableFrame::RoundToPixel(aCaptionWidth,
+                                           aPresContext->ScaledPixelsToTwips(),
+                                             eAlwaysRoundDown);
 }
 
 nsresult 
@@ -963,8 +962,7 @@ nsTableOuterFrame::GetCaptionOrigin(nsIPresContext*  aPresContext,
   }
   if (!mCaptionFrame) return NS_OK;
 
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
+  float p2t = aPresContext->ScaledPixelsToTwips();
 
   switch(aCaptionSide) {
   case NS_SIDE_BOTTOM: {
@@ -1075,8 +1073,7 @@ nsTableOuterFrame::GetInnerOrigin(nsIPresContext*  aPresContext,
     return NS_OK;
   }
 
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
+  float p2t = aPresContext->ScaledPixelsToTwips();
 
   nscoord minCapWidth = aCaptionSize.width;
   if (NS_AUTOMARGIN != aCaptionMargin.left)
@@ -1261,11 +1258,11 @@ nsTableOuterFrame::OuterReflowChild(nsIPresContext*            aPresContext,
   aMargin = aPadding = nsMargin(0,0,0,0);
 
   // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord availHeight = aOuterRS.availableHeight;
   if (NS_UNCONSTRAINEDSIZE != availHeight) {
-    availHeight = nsTableFrame::RoundToPixel(availHeight, p2t, eAlwaysRoundDown);
+    availHeight = nsTableFrame::RoundToPixel(availHeight,
+                                           aPresContext->ScaledPixelsToTwips(),
+                                             eAlwaysRoundDown);
   }
   nsSize availSize(aAvailWidth, availHeight);
   if (mCaptionFrame == aChildFrame) {

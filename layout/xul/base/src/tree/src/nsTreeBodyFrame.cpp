@@ -2219,10 +2219,10 @@ nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
   // If a -moz-appearance is provided, use theme drawing only if the current row
   // is not selected (since we draw the selection as part of drawing the background).
   PRBool useTheme = PR_FALSE;
-  nsCOMPtr<nsITheme> theme;
+  nsITheme *theme = nsnull;
   const nsStyleDisplay* displayData = rowContext->GetStyleDisplay();
   if (displayData->mAppearance) {
-    aPresContext->GetTheme(getter_AddRefs(theme));
+    theme = aPresContext->GetTheme();
     if (theme && theme->ThemeSupportsWidget(aPresContext, nsnull, displayData->mAppearance))
       useTheme = PR_TRUE;
   }
@@ -2314,10 +2314,10 @@ nsTreeBodyFrame::PaintSeparator(PRInt32              aRowIndex,
   // Resolve style for the separator.
   nsStyleContext* separatorContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreeseparator);
   PRBool useTheme = PR_FALSE;
-  nsCOMPtr<nsITheme> theme;
+  nsITheme *theme = nsnull;
   const nsStyleDisplay* displayData = separatorContext->GetStyleDisplay();
   if ( displayData->mAppearance ) {
-    aPresContext->GetTheme(getter_AddRefs(theme));
+    theme = aPresContext->GetTheme();
     if (theme && theme->ThemeSupportsWidget(aPresContext, nsnull, displayData->mAppearance))
       useTheme = PR_TRUE;
   }
@@ -2551,10 +2551,10 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
   nsStyleContext* twistyContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreetwisty);
 
   PRBool useTheme = PR_FALSE;
-  nsCOMPtr<nsITheme> theme;
+  nsITheme *theme = nsnull;
   const nsStyleDisplay* twistyDisplayData = twistyContext->GetStyleDisplay();
   if ( twistyDisplayData->mAppearance ) {
-    aPresContext->GetTheme(getter_AddRefs(theme));
+    theme = aPresContext->GetTheme();
     if (theme && theme->ThemeSupportsWidget(aPresContext, nsnull, twistyDisplayData->mAppearance))
       useTheme = PR_TRUE;
   }
@@ -2585,8 +2585,7 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
     theme->GetMinimumWidgetSize(&aRenderingContext, this, twistyDisplayData->mAppearance, &minTwistySize, &canOverride);
     
     // GMWS() returns size in pixels, we need to convert it back to twips
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
+    float p2t = aPresContext->ScaledPixelsToTwips();
     minTwistySize.width = NSIntPixelsToTwips(minTwistySize.width, p2t);
     minTwistySize.height = NSIntPixelsToTwips(minTwistySize.height, p2t);
 
@@ -2904,8 +2903,7 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
 #endif
 #ifdef IBMBIDI
   nsresult rv = NS_ERROR_FAILURE;
-  nsBidiPresUtils* bidiUtils;
-  aPresContext->GetBidiUtils(&bidiUtils);
+  nsBidiPresUtils* bidiUtils = aPresContext->GetBidiUtils();
 
   if (bidiUtils) {
     const nsStyleVisibility* vis = GetStyleVisibility();

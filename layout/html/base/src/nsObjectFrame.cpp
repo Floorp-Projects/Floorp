@@ -95,8 +95,6 @@
 #include "nsIDocumentEncoder.h"
 #include "nsXPIDLString.h"
 #include "nsIDOMRange.h"
-#include "nsIPrintContext.h"
-#include "nsIPrintPreviewContext.h"
 #include "nsIPluginWidget.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
@@ -879,8 +877,7 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   // for EMBED and APPLET, default to 240x200 for compatibility
   nsIAtom *atom = mContent->Tag();
   if (atom == nsHTMLAtoms::applet || atom == nsHTMLAtoms::embed) {
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
+    float p2t = aPresContext->ScaledPixelsToTwips();
     if (aMetrics.width == NS_UNCONSTRAINEDSIZE) {
       aMetrics.width = PR_MIN(PR_MAX(NSIntPixelsToTwips(EMBED_DEF_WIDTH, p2t),
                                      aReflowState.mComputedMinWidth),
@@ -982,9 +979,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   // if we are printing or print previewing, bail for now
-  nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
-  nsCOMPtr<nsIPrintPreviewContext> thePrintPreviewContext = do_QueryInterface(aPresContext);
-  if (thePrinterContext || thePrintPreviewContext) {
+  if (aPresContext->Medium() == nsLayoutAtoms::print) {
     aStatus = NS_FRAME_COMPLETE;
     return rv;
   }
@@ -1515,14 +1510,12 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
   }
 
   // If we are painting in Print Preview do nothing....
-  nsCOMPtr<nsIPrintPreviewContext> thePrintPreviewContext = do_QueryInterface(aPresContext);
-  if (thePrintPreviewContext) {
+  if (aPresContext->Type() == nsIPresContext::eContext_PrintPreview) {
     return NS_OK;
   }
 
   // determine if we are printing
-  nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
-  if  (thePrinterContext) {
+  if (aPresContext->Type() == nsIPresContext::eContext_Print) {
     // UNIX Plugins can't PP at this time, so draw an empty box
     // we only want to print on the content layer pass
     if (eFramePaintLayer_Content != aWhichLayer)
@@ -3914,7 +3907,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 
   nsIView   *view;
   nsresult  rv = NS_ERROR_FAILURE;
-  float p2t;
 
   if (mOwner)
   {
@@ -3929,7 +3921,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
       mInstance->GetValue(nsPluginInstanceVariable_WindowlessBool, (void *)&windowless);
 
       // always create widgets in Twips, not pixels
-      mContext->GetScaledPixelsToTwips(&p2t);
+      float p2t = mContext->ScaledPixelsToTwips();
       rv = mOwner->CreateWidget(mContext,
                                 NSIntPixelsToTwips(mPluginWindow->width, p2t),
                                 NSIntPixelsToTwips(mPluginWindow->height, p2t),

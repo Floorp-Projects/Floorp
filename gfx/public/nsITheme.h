@@ -36,6 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsITheme_h_
+#define nsITheme_h_
+
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsColor.h"
@@ -94,3 +97,5 @@ public:
 
 // Creator function
 extern NS_METHOD NS_NewNativeTheme(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+#endif

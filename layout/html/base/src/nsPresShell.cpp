@@ -146,7 +146,6 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsPIDOMWindow.h"
 #include "nsIFocusController.h"
-#include "nsIPrintPreviewContext.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -196,7 +195,6 @@
 #include "nsContentCID.h"
 static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
-static NS_DEFINE_CID(kPrintPreviewContextCID,  NS_PRINT_PREVIEW_CONTEXT_CID);
 
 // convert a color value to a string, in the CSS format #RRGGBB
 // *  - initially created for bugs 31816, 20760, 22963
@@ -3541,8 +3539,7 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
           // if it is then get the scrolled frame
           scrollable->GetScrolledFrame(nsnull, child);
       } else {
-        nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(mPresContext);
-        if (ppContext) {
+        if (mPresContext->Type() == nsIPresContext::eContext_PrintPreview) {
           child = child->GetFirstChild(nsnull);
         }
       }
@@ -5700,7 +5697,8 @@ PresShell::HandleEvent(nsIView         *aView,
 
   // Check for a theme change up front, since the frame type is irrelevant
   if (aEvent->message == NS_THEMECHANGED && mPresContext) {
-    return mPresContext->ThemeChanged();
+    mPresContext->ThemeChanged();
+    return NS_OK;
   }
 
   // Check for a system color change up front, since the frame type is
@@ -5717,7 +5715,8 @@ PresShell::HandleEvent(nsIView         *aView,
       if (view == aView) {
         aHandled = PR_TRUE;
         *aEventStatus = nsEventStatus_eConsumeDoDefault;
-        return mPresContext->SysColorChanged();
+        mPresContext->SysColorChanged();
+        return NS_OK;
       }
     }
     return NS_OK;
@@ -7027,16 +7026,12 @@ PresShell::VerifyIncrementalReflow()
   nsIPresShell* sh;
 
   // Create a presentation context to view the new frame tree
-  nsresult rv;
-  if (mPresContext->IsPaginated()) {
-    nsCOMPtr<nsIPrintPreviewContext> ppx = do_CreateInstance(kPrintPreviewContextCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      ppx->QueryInterface(NS_GET_IID(nsIPresContext),(void**)&cx);
-    }
-  }
-  else {
-    rv = NS_NewGalleyContext(&cx);
-  }
+  NS_IF_ADDREF(cx = new nsIPresContext(mPresContext->IsPaginated() ?
+                                       nsIPresContext::eContext_PrintPreview :
+                                       nsIPresContext::eContext_Galley));
+
+  if (!cx)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsISupports> container = mPresContext->GetContainer();
   if (container) {
@@ -7047,9 +7042,8 @@ PresShell::VerifyIncrementalReflow()
     }
   }
 
-  NS_ASSERTION(NS_SUCCEEDED (rv), "failed to create presentation context");
   nsIDeviceContext *dc = mPresContext->DeviceContext();
-  rv = cx->Init(dc);
+  nsresult rv = cx->Init(dc);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Get our scrolling preference
@@ -7548,8 +7542,7 @@ void ReflowCountMgr::PaintCount(const char *    aName,
       nsFont font("Times", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,
                   NS_FONT_WEIGHT_NORMAL,0,NSIntPointsToTwips(8));
 
-      nsCOMPtr<nsIFontMetrics> fm;
-      aPresContext->GetMetricsFor(font, getter_AddRefs(fm));
+      nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(font);
       aRenderingContext->SetFont(fm);
       char buf[16];
       sprintf(buf, "%d", counter->mCount);

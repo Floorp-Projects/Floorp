@@ -205,8 +205,8 @@ nsMathMLTokenFrame::Place(nsIPresContext*      aPresContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
-  nsCOMPtr<nsIFontMetrics> fm;
-  aPresContext->GetMetricsFor(GetStyleFont()->mFont, getter_AddRefs(fm));
+  nsCOMPtr<nsIFontMetrics> fm =
+    aPresContext->GetMetricsFor(GetStyleFont()->mFont);
   nscoord ascent, descent;
   fm->GetMaxAscent(ascent);
   fm->GetMaxDescent(descent);

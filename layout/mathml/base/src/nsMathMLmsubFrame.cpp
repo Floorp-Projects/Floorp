@@ -142,9 +142,7 @@ nsMathMLmsubFrame::PlaceSubScript (nsIPresContext*      aPresContext,
   if (!mathMLFrame) return NS_ERROR_INVALID_ARG;
 
   // force the scriptSpace to be atleast 1 pixel 
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-  aScriptSpace = PR_MAX(NSIntPixelsToTwips(1, p2t), aScriptSpace);
+  aScriptSpace = PR_MAX(aPresContext->IntScaledPixelsToTwips(1), aScriptSpace);
 
   ////////////////////////////////////
   // Get the children's desired sizes
@@ -179,10 +177,9 @@ nsMathMLmsubFrame::PlaceSubScript (nsIPresContext*      aPresContext,
   // get min subscript shift limit from x-height
   // = h(x) - 4/5 * sigma_5, Rule 18b, App. G, TeXbook
   nscoord xHeight = 0;
-  nsCOMPtr<nsIFontMetrics> fm;
+  nsCOMPtr<nsIFontMetrics> fm =
+    aPresContext->GetMetricsFor(baseFrame->GetStyleFont()->mFont);
 
-  aPresContext->GetMetricsFor (baseFrame->GetStyleFont()->mFont,
-                               getter_AddRefs(fm));
   fm->GetXHeight (xHeight);
   nscoord minShiftFromXHeight = (nscoord) 
     (bmSubScript.ascent - (4.0f/5.0f) * xHeight);

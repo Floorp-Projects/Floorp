@@ -217,8 +217,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(const nsHTMLReflowState& aReflowSt
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugTimeMethod(nsTableFrame::eBalanceCols, *mTableFrame, (nsHTMLReflowState&)aReflowState, PR_TRUE);
 #endif
-  float p2t;
-  mTableFrame->GetPresContext()->GetScaledPixelsToTwips(&p2t);
+  float p2t = mTableFrame->GetPresContext()->ScaledPixelsToTwips();
 
   ContinuingFrameCheck();
 
@@ -1003,8 +1002,7 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nscoord                  aMax
   PRInt32 colX, rowX; 
   mCellSpacingTotal = 0;
   PRBool hasPctCol = PR_FALSE; // return value
-  float pixelToTwips;
-  mTableFrame->GetPresContext()->GetScaledPixelsToTwips(&pixelToTwips);
+  float pixelToTwips = mTableFrame->GetPresContext()->ScaledPixelsToTwips();
 
   PRInt32 rawPropTotal = -1; // total of numbers of the type 1*, 2*, etc 
   PRInt32 numColsForColsAttr = 0; // Nav Quirks cols attribute for equal width cols
@@ -1242,8 +1240,7 @@ BasicTableLayoutStrategy::CalcPctAdjTableWidth(const nsHTMLReflowState& aReflowS
   PRInt32 numRows  = mTableFrame->GetRowCount();
   PRInt32 numCols  = mTableFrame->GetColCount(); // consider cols at end without orig cells 
   PRInt32 colX, rowX; 
-  float pixelToTwips;
-  mTableFrame->GetPresContext()->GetScaledPixelsToTwips(&pixelToTwips);
+  float pixelToTwips = mTableFrame->GetPresContext()->ScaledPixelsToTwips();
 
   // For an auto table, determine the potentially new percent adjusted width based 
   // on percent cells/cols. This probably should only be a NavQuirks thing, since

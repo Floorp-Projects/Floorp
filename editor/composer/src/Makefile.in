@@ -71,6 +71,7 @@ REQUIRES	= xpcom \
 		  commandhandler \
 		  composer \
 		  appshell \
+		  locale \
 		  $(NULL)
 
 CPPSRCS  = \

@@ -69,7 +69,6 @@ CPPSRCS		= \
 		nsFrameList.cpp \
 		nsFrameTraversal.cpp \
 		nsFrameUtil.cpp \
-		nsGalleyContext.cpp \
 		nsImageLoader.cpp \
 		nsIntervalSet.cpp \
 		nsLayoutDebugger.cpp \
@@ -77,8 +76,6 @@ CPPSRCS		= \
 		nsLayoutUtils.cpp \
 		nsPresContext.cpp \
 		nsPresState.cpp \
-		nsPrintContext.cpp \
-		nsPrintPreviewContext.cpp \
 		nsSpaceManager.cpp \
 		nsStyleChangeList.cpp \
 		$(NULL)

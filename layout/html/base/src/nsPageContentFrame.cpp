@@ -44,7 +44,6 @@
 #include "nsIPresShell.h"
 #include "nsIDeviceContext.h"
 #include "nsReadableUtils.h"
-#include "nsIPrintPreviewContext.h"
 #include "nsSimplePageSequence.h"
 
 #include "nsIView.h"

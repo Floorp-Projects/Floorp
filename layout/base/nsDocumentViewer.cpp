@@ -99,7 +99,6 @@
 #include "nsILayoutHistoryState.h"
 #include "nsLayoutAtoms.h"
 #include "nsIParser.h"
-#include "nsIPrintContext.h"
 #include "nsGUIEvent.h"
 #include "nsHTMLReflowState.h"
 #include "nsIDOMHTMLAnchorElement.h"
@@ -160,7 +159,6 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "nsIPluginDocument.h"
 
 // Print Preview
-#include "nsIPrintPreviewContext.h"
 #include "imgIContainer.h" // image animation mode constants
 
 // Print Progress
@@ -195,8 +193,6 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 #include "prenv.h"
 #include <stdio.h>
 
-static NS_DEFINE_CID(kGalleyContextCID,  NS_GALLEYCONTEXT_CID);
-
 static const char kDOMStringBundleURL[] =
   "chrome://communicator/locale/dom/dom.properties";
 
@@ -229,9 +225,6 @@ static PRLogModuleInfo * kPrintingLogMod = PR_NewLogModule("printing");
 //-----------------------------------------------------
 
 class DocumentViewerImpl;
-
-// New PrintPreview
-static NS_DEFINE_CID(kPrintPreviewContextCID,  NS_PRINT_PREVIEW_CONTEXT_CID);
 
 // a small delegate class used to avoid circular references
 
@@ -797,15 +790,12 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
   if (aDoCreation) {
     if (aParentWidget && !mPresContext) {
       // Create presentation context
-      if (GetIsCreatingPrintPreview()) {
-        mPresContext = do_CreateInstance(kPrintPreviewContextCID, &rv);
-      } else {
-        mPresContext = do_CreateInstance(kGalleyContextCID, &rv);
-      }
-      if (NS_FAILED(rv))
-        return rv;
+      mPresContext = new nsIPresContext(GetIsCreatingPrintPreview() ?
+                                        nsIPresContext::eContext_PrintPreview :
+                                        nsIPresContext::eContext_Galley);
+      NS_ENSURE_TRUE(mPresContext, NS_ERROR_OUT_OF_MEMORY);
 
-      rv = mPresContext->Init(aDeviceContext); 
+      nsresult rv = mPresContext->Init(aDeviceContext); 
       if (NS_FAILED(rv)) {
         mPresContext = nsnull;
         return rv;
@@ -1500,8 +1490,8 @@ DocumentViewerImpl::Show(void)
     }
 
     NS_ASSERTION(!mPresContext, "Shouldn't have a prescontext if we have no shell!");
-    mPresContext = do_CreateInstance(kGalleyContextCID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+    mPresContext = new nsIPresContext(nsIPresContext::eContext_Galley);
+    NS_ENSURE_TRUE(mPresContext, NS_ERROR_OUT_OF_MEMORY);
 
     rv = mPresContext->Init(mDeviceContext);
     if (NS_FAILED(rv)) {
@@ -2644,7 +2634,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetBidiOptions(PRUint32* aBidiOptions)
 {
   if (aBidiOptions) {
     if (mPresContext) {
-      mPresContext->GetBidi(aBidiOptions);
+      *aBidiOptions = mPresContext->GetBidi();
     }
     else
       *aBidiOptions = IBMBIDI_DEFAULT_BIDI_OPTIONS;

@@ -5343,8 +5343,7 @@ static void DisplayReflowEnterPrint(nsIPresContext*          aPresContext,
     else 
       printf("cnt=%d \n", DR_state->mCount);
     if (DR_state->mDisplayPixelErrors) {
-      float p2t;
-      aPresContext->GetScaledPixelsToTwips(&p2t);
+      float p2t = aPresContext->ScaledPixelsToTwips();
       CheckPixelError(aReflowState.availableWidth, p2t);
       CheckPixelError(aReflowState.availableHeight, p2t);
       CheckPixelError(aReflowState.mComputedWidth, p2t);
@@ -5422,8 +5421,7 @@ void nsFrame::DisplayReflowExit(nsIPresContext*      aPresContext,
     }
     printf("\n");
     if (DR_state->mDisplayPixelErrors) {
-      float p2t;
-      aPresContext->GetScaledPixelsToTwips(&p2t);
+      float p2t = aPresContext->ScaledPixelsToTwips();
       CheckPixelError(aMetrics.width, p2t);
       CheckPixelError(aMetrics.height, p2t);
       if (aMetrics.mComputeMEW) 

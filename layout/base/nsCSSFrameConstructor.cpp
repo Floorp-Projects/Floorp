@@ -103,7 +103,6 @@
 #include "nsFormControlHelper.h"
 #include "nsObjectFrame.h"
 #include "nsRuleNode.h"
-#include "nsIPrintPreviewContext.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsChildIterator.h"
 #include "nsCSSRendering.h"
@@ -3709,7 +3708,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
     //   the entire canvas as specified by the CSS2 spec
 
     PRBool isPaginated = aPresContext->IsPaginated();
-    nsCOMPtr<nsIPrintPreviewContext> printPreviewContext(do_QueryInterface(aPresContext));
+    PRBool isPrintPreview =
+      aPresContext->Type() == nsIPresContext::eContext_PrintPreview;
 
     nsIFrame* rootFrame = nsnull;
     nsIAtom* rootPseudo;
@@ -3789,7 +3789,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   }
 
   if (isPaginated) {
-    if (printPreviewContext) { // print preview
+    if (isPrintPreview) {
       isScrollable = aPresContext->HasPaginatedScrolling();
     } else {
       isScrollable = PR_FALSE; // we are printing
@@ -3814,7 +3814,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   nsIFrame* parentFrame = viewportFrame;
 
   // If paginated, make sure we don't put scrollbars in
-  if (isPaginated && !printPreviewContext)
+  if (isPaginated && !isPrintPreview)
     rootPseudoStyle = styleSet->ResolvePseudoStyleFor(nsnull,
                                                       rootPseudo,
                                                       viewportPseudoStyle);
@@ -3911,7 +3911,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   rootFrame->Init(aPresContext, aDocElement, parentFrame,
                   rootPseudoStyle, nsnull);
   
-  if (!isPaginated || printPreviewContext) {
+  if (!isPaginated || isPrintPreview) {
     if (isScrollable) {
       FinishBuildingScrollFrame(aPresContext, 
                                 state,
@@ -5809,11 +5809,13 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell*            aPresSh
   // If the parent is a viewportFrame then we are the scrollbars for the UI
   // if not then we are scrollbars inside the document.
   PRBool noScalingOfTwips = PR_FALSE;
-  nsCOMPtr<nsIPrintPreviewContext> printPreviewContext(do_QueryInterface(aPresContext));
-  if (printPreviewContext) {
+  PRBool isPrintPreview =
+    aPresContext->Type() == nsIPresContext::eContext_PrintPreview;
+
+  if (isPrintPreview) {
     noScalingOfTwips = aParentFrame->GetType() == nsLayoutAtoms::viewportFrame;
     if (noScalingOfTwips) {
-      printPreviewContext->SetScalingOfTwips(PR_FALSE);
+      aPresContext->SetScalingOfTwips(PR_FALSE);
     }
   }
 
@@ -5877,8 +5879,8 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell*            aPresSh
   }
 
 
-  if (printPreviewContext && noScalingOfTwips) {
-    printPreviewContext->SetScalingOfTwips(PR_TRUE);
+  if (isPrintPreview && noScalingOfTwips) {
+    aPresContext->SetScalingOfTwips(PR_TRUE);
   }
 
   return aScrolledChildStyle;;
@@ -5976,11 +5978,10 @@ nsCSSFrameConstructor::BuildScrollFrame(nsIPresShell*            aPresShell,
     // If the parent is a viewportFrame then we are the scrollbars for the UI
     // if not then we are scrollbars inside the document.
     PRBool noScalingOfTwips = PR_FALSE;
-    nsCOMPtr<nsIPrintPreviewContext> printPreviewContext(do_QueryInterface(aPresContext));
-    if (printPreviewContext) {
+    if (aPresContext->Type() == nsIPresContext::eContext_PrintPreview) {
       noScalingOfTwips = aParentFrame->GetType() == nsLayoutAtoms::viewportFrame;
       if (noScalingOfTwips) {
-        printPreviewContext->SetScalingOfTwips(PR_FALSE);
+        aPresContext->SetScalingOfTwips(PR_FALSE);
       }
     }
 
@@ -6018,7 +6019,7 @@ nsCSSFrameConstructor::BuildScrollFrame(nsIPresShell*            aPresShell,
     aState.mFrameManager->SetPrimaryFrameFor( aContent, aNewFrame );
 
     if (noScalingOfTwips) {
-      printPreviewContext->SetScalingOfTwips(PR_TRUE);
+      aPresContext->SetScalingOfTwips(PR_TRUE);
     }
 
     return NS_OK;
@@ -9950,13 +9951,14 @@ nsCSSFrameConstructor::DoContentStateChanged(nsIPresContext* aPresContext,
       if (primaryFrame) {
         PRUint8 app = primaryFrame->GetStyleDisplay()->mAppearance;
         if (app) {
-          nsCOMPtr<nsITheme> theme;
-          aPresContext->GetTheme(getter_AddRefs(theme));
-          PRBool repaint = PR_FALSE;
-          if (theme && theme->ThemeSupportsWidget(aPresContext, primaryFrame, app))
+          nsITheme *theme = aPresContext->GetTheme();
+          if (theme && theme->ThemeSupportsWidget(aPresContext, primaryFrame, app)) {
+            PRBool repaint = PR_FALSE;
             theme->WidgetStateChanged(primaryFrame, app, nsnull, &repaint);
-          if (repaint)
-            ApplyRenderingChangeToTree(aPresContext, primaryFrame, nsnull, nsChangeHint_RepaintFrame);
+            if (repaint) {
+              ApplyRenderingChangeToTree(aPresContext, primaryFrame, nsnull, nsChangeHint_RepaintFrame);
+            }
+          }
         }
       }
 
@@ -10042,8 +10044,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
   if (primaryFrame) {
     const nsStyleDisplay* disp = primaryFrame->GetStyleDisplay();
     if (disp->mAppearance) {
-      nsCOMPtr<nsITheme> theme;
-      aPresContext->GetTheme(getter_AddRefs(theme));
+      nsITheme *theme = aPresContext->GetTheme();
       if (theme && theme->ThemeSupportsWidget(aPresContext, primaryFrame, disp->mAppearance)) {
         PRBool repaint = PR_FALSE;
         theme->WidgetStateChanged(primaryFrame, disp->mAppearance, aAttribute, &repaint);

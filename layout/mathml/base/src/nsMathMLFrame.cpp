@@ -418,9 +418,8 @@ nsMathMLFrame::CalcLength(nsIPresContext*   aPresContext,
   nsCSSUnit unit = aCSSValue.GetUnit();
 
   if (eCSSUnit_Pixel == unit) {
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
-    return NSFloatPixelsToTwips(aCSSValue.GetFloatValue(), p2t);
+    return NSFloatPixelsToTwips(aCSSValue.GetFloatValue(),
+                                aPresContext->ScaledPixelsToTwips());
   }
   else if (eCSSUnit_EM == unit) {
     const nsStyleFont* font = aStyleContext->GetStyleFont();
@@ -429,8 +428,7 @@ nsMathMLFrame::CalcLength(nsIPresContext*   aPresContext,
   else if (eCSSUnit_XHeight == unit) {
     nscoord xHeight;
     const nsStyleFont* font = aStyleContext->GetStyleFont();
-    nsCOMPtr<nsIFontMetrics> fm;
-    aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
+    nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(font->mFont);
     fm->GetXHeight(xHeight);
     return NSToCoordRound(aCSSValue.GetFloatValue() * (float)xHeight);
   }

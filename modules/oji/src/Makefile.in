@@ -69,6 +69,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  webbrwsr \
 		  intl \
+		  locale \
 		  $(NULL)
 
 LIBRARY_NAME	= oji

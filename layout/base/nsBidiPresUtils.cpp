@@ -819,8 +819,7 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
   nsresult rv = NS_OK;
   // ahmed 
   //adjusted for correct numeral shaping  
-  PRUint32 bidiOptions;
-  aPresContext->GetBidi(&bidiOptions);
+  PRUint32 bidiOptions = aPresContext->GetBidi();
   switch (GET_BIDI_OPTION_NUMERAL(bidiOptions)) {
 
     case IBMBIDI_NUMERAL_HINDI:

@@ -747,12 +747,9 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
   // a * (b / c) because of its reduced accuracy relative to a * b / c
   // or (a * b) / c (which are equivalent).
 
-  float t2p, sp2t;
-  t2p = aPresContext->TwipsToPixels();
-  aPresContext->GetScaledPixelsToTwips(&sp2t);
-
   // convert from normal twips to scaled twips (printing...)
-  float t2st = t2p * sp2t; // twips to scaled twips
+  float t2st = aPresContext->TwipsToPixels() *
+    aPresContext->ScaledPixelsToTwips(); // twips to scaled twips
   nscoord intrinsicWidth =
       NSToCoordRound(float(mIntrinsicSize.width) * t2st);
   nscoord intrinsicHeight =
@@ -990,10 +987,8 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
       aMetrics.height > aReflowState.availableHeight) { 
     // split an image frame but not an image control frame
     if (nsLayoutAtoms::imageFrame == GetType()) {
-      float p2t;
-      aPresContext->GetScaledPixelsToTwips(&p2t);
       // our desired height was greater than 0, so to avoid infinite splitting, use 1 pixel as the min
-      aMetrics.height = PR_MAX(NSToCoordRound(p2t), aReflowState.availableHeight);
+      aMetrics.height = PR_MAX(NSToCoordRound(aPresContext->ScaledPixelsToTwips()), aReflowState.availableHeight);
       aStatus = NS_FRAME_NOT_COMPLETE;
     }
   }
@@ -1164,9 +1159,8 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
   GetInnerArea(aPresContext, inner);
 
   // Display a recessed one pixel border
-  float   p2t;
   nscoord borderEdgeWidth;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
+  float   p2t = aPresContext->ScaledPixelsToTwips();
   borderEdgeWidth = NSIntPixelsToTwips(ALT_BORDER_WIDTH, p2t);
 
   // if inner area is empty, then make it big enough for at least the icon
@@ -1987,8 +1981,7 @@ void nsImageFrame::InvalidateIcon()
   // invalidate the inner area, where the icon lives
 
   nsIPresContext *presContext = GetPresContext();
-  float   p2t;
-  presContext->GetScaledPixelsToTwips(&p2t);
+  float   p2t = presContext->ScaledPixelsToTwips();
   nsRect inner;
   GetInnerArea(presContext, inner);
 

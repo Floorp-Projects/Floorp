@@ -1153,12 +1153,10 @@ return;}
 return aReturn;} 
 
 #define GET_PIXELS_TO_TWIPS(presContext,var) \
-  float var; \
-  (presContext)->GetScaledPixelsToTwips(&var);
+  float var = (presContext)->ScaledPixelsToTwips();
 
 #define GET_TWIPS_TO_PIXELS(presContext,var) \
-  float var; \
-  (presContext)->GetScaledPixelsToTwips(&var); \
+  float var = (presContext)->ScaledPixelsToTwips(); \
   var = 1.0f / var;
 
 #endif

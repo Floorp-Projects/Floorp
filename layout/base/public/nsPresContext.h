@@ -46,11 +46,18 @@
 #include "nsIPresShell.h"
 #include "nsRect.h"
 #include "nsIDeviceContext.h"
+#include "nsHashtable.h"
+#include "nsFont.h"
+#include "nsIWeakReference.h"
+#include "nsITheme.h"
+#include "nsILanguageAtomService.h"
+#include "nsIObserver.h"
+#include "nsCRT.h"
+#include "nsIPrintSettings.h"
 #ifdef IBMBIDI
 class nsBidiPresUtils;
 #endif // IBMBIDI
 
-struct nsFont;
 struct nsRect;
 
 class imgIRequest;
@@ -69,7 +76,6 @@ class nsIURI;
 class nsILookAndFeel;
 class nsICSSPseudoComparator;
 class nsIAtom;
-class nsITheme;
 struct nsStyleStruct;
 struct nsStyleBackground;
 
@@ -78,8 +84,8 @@ class nsIRenderingContext;
 #endif
 
 #define NS_IPRESCONTEXT_IID   \
-{ 0xa394329f, 0x3b10, 0x49ac, \
-  {0x8f, 0xf2, 0xeb, 0x0b, 0x66, 0x93, 0x82, 0x38} }
+{ 0x96e4bc06, 0x8e72, 0x4941, \
+  {0xa6, 0x6c, 0x70, 0xee, 0x7d, 0x1b, 0x58, 0x21} }
 
 enum nsWidgetType {
   eWidgetType_Button  	= 1,
@@ -109,20 +115,35 @@ const PRUint8 kPresContext_DefaultFixedFont_ID    = 0x01; // kGenericFont_moz_fi
 
 // An interface for presentation contexts. Presentation contexts are
 // objects that provide an outer context for a presentation shell.
-class nsIPresContext : public nsISupports {
+class nsIPresContext : public nsIObserver {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRESCONTEXT_IID)
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  enum nsPresContextType {
+    eContext_Galley,       // unpaginated screen presentation
+    eContext_PrintPreview, // paginated screen presentation
+    eContext_Print         // paginated printer presentation
+  };
+
+  nsIPresContext(nsPresContextType aType) NS_HIDDEN;
 
   /**
    * Initialize the presentation context from a particular device.
    */
-  NS_IMETHOD Init(nsIDeviceContext* aDeviceContext) = 0;
+  NS_HIDDEN_(nsresult) Init(nsIDeviceContext* aDeviceContext);
 
   /**
    * Set the presentation shell that this context is bound to.
    * A presentation context may only be bound to a single shell.
    */
-  NS_IMETHOD SetShell(nsIPresShell* aShell) = 0;
+  NS_HIDDEN_(void) SetShell(nsIPresShell* aShell);
+
+
+  NS_HIDDEN_(nsPresContextType) Type() const { return mType; }
 
   /**
    * Get the PresentationShell that this context is bound to.
@@ -151,13 +172,21 @@ public:
    * relying on a default.
    */
   nsCompatibility CompatibilityMode() const { return mCompatibilityMode; }
-  virtual void    SetCompatibilityMode(nsCompatibility aMode) = 0;
+  NS_HIDDEN_(void) SetCompatibilityMode(nsCompatibility aMode);
 
   /**
    * Access the image animation mode for this context
    */
   PRUint16     ImageAnimationMode() const { return mImageAnimationMode; }
-  virtual void SetImageAnimationMode(PRUint16 aMode) = 0;
+  virtual void SetImageAnimationModeExternal(PRUint16 aMode);
+  NS_HIDDEN_(void) SetImageAnimationModeInternal(PRUint16 aMode);
+#ifdef _IMPL_NS_LAYOUT
+  void SetImageAnimationMode(PRUint16 aMode)
+  { SetImageAnimationModeInternal(aMode); }
+#else
+  void SetImageAnimationMode(PRUint16 aMode)
+  { SetImageAnimationModeExternal(aMode); }
+#endif
 
   /**
    * Get cached look and feel service.  This is faster than obtaining it
@@ -173,7 +202,7 @@ public:
   /**
    * Clear style data from the root frame downwards, and reflow.
    */
-  virtual void ClearStyleDataAndReflow() = 0;
+  NS_HIDDEN_(void) ClearStyleDataAndReflow();
 
   void* AllocateFromShell(size_t aSize)
   {
@@ -191,13 +220,31 @@ public:
   /**
    * Get the font metrics for a given font.
    */
-  NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult) = 0;
+  virtual already_AddRefed<nsIFontMetrics>
+   GetMetricsForExternal(const nsFont& aFont);
+  NS_HIDDEN_(already_AddRefed<nsIFontMetrics>)
+    GetMetricsForInternal(const nsFont& aFont);
+#ifdef _IMPL_NS_LAYOUT
+  already_AddRefed<nsIFontMetrics> GetMetricsFor(const nsFont& aFont)
+  { return GetMetricsForInternal(aFont); }
+#else
+  already_AddRefed<nsIFontMetrics> GetMetricsFor(const nsFont& aFont)
+  { return GetMetricsForExternal(aFont); }
+#endif
 
   /**
    * Get the default font correponding to the given ID.  This object is
    * read-only, you must copy the font to modify it.
    */
-  virtual const nsFont* GetDefaultFont(PRUint8 aFontID) const = 0;
+  virtual const nsFont* GetDefaultFontExternal(PRUint8 aFontID) const;
+  NS_HIDDEN_(const nsFont*) GetDefaultFontInternal(PRUint8 aFontID) const;
+#ifdef _IMPL_NS_LAYOUT
+  const nsFont* GetDefaultFont(PRUint8 aFontID) const
+  { return GetDefaultFontInternal(aFontID); }
+#else
+  const nsFont* GetDefaultFont(PRUint8 aFontID) const
+  { return GetDefaultFontExternal(aFontID); }
+#endif
 
   /** Get a cached boolean pref, by its type */
   // *  - initially created for bugs 31816, 20760, 22963
@@ -263,19 +310,26 @@ public:
    * method will be invoked (via the ViewManager) so that the
    * appropriate damage repair is done.
    */
-  virtual nsresult LoadImage(imgIRequest* aImage,
-                             nsIFrame* aTargetFrame,
-                             imgIRequest **aRequest) = 0;
+  NS_HIDDEN_(imgIRequest*) LoadImage(imgIRequest* aImage,
+                                     nsIFrame* aTargetFrame);
 
   /**
    * This method is called when a frame is being destroyed to
    * ensure that the image load gets disassociated from the prescontext
    */
-  virtual void StopImagesFor(nsIFrame* aTargetFrame) = 0;
+  NS_HIDDEN_(void) StopImagesFor(nsIFrame* aTargetFrame);
 
-  virtual void SetContainer(nsISupports* aContainer) = 0;
+  NS_HIDDEN_(void) SetContainer(nsISupports* aContainer);
 
-  virtual already_AddRefed<nsISupports> GetContainer() = 0;
+  virtual already_AddRefed<nsISupports> GetContainerExternal();
+  NS_HIDDEN_(already_AddRefed<nsISupports>) GetContainerInternal();
+#ifdef _IMPL_NS_LAYOUT
+  already_AddRefed<nsISupports> GetContainer()
+  { return GetContainerInternal(); }
+#else
+  already_AddRefed<nsISupports> GetContainer()
+  { return GetContainerExternal(); }
+#endif
 
   // XXX this are going to be replaced with set/get container
   void SetLinkHandler(nsILinkHandler* aHandler) { mLinkHandler = aHandler; }
@@ -305,7 +359,7 @@ public:
    * Sets whether the presentation context can scroll for a paginated
    * context.
    */
-  virtual void SetPaginatedScrolling(PRBool aResult) = 0;
+  NS_HIDDEN_(void) SetPaginatedScrolling(PRBool aResult);
 
   /**
    * Return true if this presentation context can scroll for paginated
@@ -322,7 +376,7 @@ public:
    * @param aActualRect returns the size of the actual device/surface
    * @param aRect returns the adjusted size 
    */
-  virtual void GetPageDim(nsRect* aActualRect, nsRect* aAdjRect) = 0;
+  NS_HIDDEN_(void) GetPageDim(nsRect* aActualRect, nsRect* aAdjRect);
 
   /**
    * Sets the "adjusted" rect for the page Dimimensions, 
@@ -331,20 +385,27 @@ public:
    *
    * @param aRect returns the adjusted size 
    */
-  virtual void SetPageDim(nsRect* aRect) = 0;
+  NS_HIDDEN_(void) SetPageDim(const nsRect& aRect);
 
   float PixelsToTwips() const { return mDeviceContext->DevUnitsToAppUnits(); }
 
   float TwipsToPixels() const { return mDeviceContext->AppUnitsToDevUnits(); }
 
-  NS_IMETHOD GetTwipsToPixelsForFonts(float* aResult) const = 0;
+  NS_HIDDEN_(float) TwipsToPixelsForFonts() const;
 
   //XXX this is probably not an ideal name. MMP
   /** 
    * Do pixels to twips conversion taking into account
    * differing size of a "pixel" from device to device.
    */
-  NS_IMETHOD GetScaledPixelsToTwips(float* aScale) const = 0;
+  NS_HIDDEN_(float) ScaledPixelsToTwips() const;
+
+  /* Convenience method for converting one pixel value to twips */
+  nscoord IntScaledPixelsToTwips(nscoord aPixels) const
+  { return NSIntPixelsToTwips(aPixels, ScaledPixelsToTwips()); }
+
+  /* Set whether twip scaling is used */
+  void SetScalingOfTwips(PRBool aOn) { mDoScaledTwips = aOn; }
 
   nsIDeviceContext* DeviceContext() { return mDeviceContext; }
   nsIEventStateManager* EventStateManager() { return mEventManager; }
@@ -394,14 +455,20 @@ public:
    *
    *  @lina 07/12/2000
    */
-  virtual PRBool BidiEnabled() const = 0;
+  virtual PRBool BidiEnabledExternal() const;
+  NS_HIDDEN_(PRBool) BidiEnabledInternal() const;
+#ifdef _IMPL_NS_LAYOUT
+  PRBool BidiEnabled() const { return BidiEnabledInternal(); }
+#else
+  PRBool BidiEnabled() const { return BidiEnabledExternal(); }
+#endif
 
   /**
    *  Set bidi enabled. This means we should apply the Unicode Bidi Algorithm
    *
    *  @lina 07/12/2000
    */
-  virtual void SetBidiEnabled(PRBool aBidiEnabled) const  = 0;
+  NS_HIDDEN_(void) SetBidiEnabled(PRBool aBidiEnabled) const;
 
   /**
    *  Set visual or implicit mode into the pres context.
@@ -435,17 +502,18 @@ public:
   /**
    * Get a Bidi presentation utilities object
    */
-  NS_IMETHOD GetBidiUtils(nsBidiPresUtils** aBidiUtils) = 0;
+  NS_HIDDEN_(nsBidiPresUtils*) GetBidiUtils();
 
   /**
    * Set the Bidi options for the presentation context
    */  
-  NS_IMETHOD SetBidi(PRUint32 aBidiOptions, PRBool aForceReflow = PR_FALSE) = 0;
+  NS_HIDDEN_(void) SetBidi(PRUint32 aBidiOptions,
+                           PRBool aForceReflow = PR_FALSE);
 
   /**
    * Get the Bidi options for the presentation context
    */  
-  NS_IMETHOD GetBidi(PRUint32* aBidiOptions) const = 0;
+  NS_HIDDEN_(PRUint32) GetBidi() const { return mBidi; }
 
   /**
    * Set the Bidi capabilities of the system
@@ -478,7 +546,7 @@ public:
   /*
    * Obtain a native them for rendering our widgets (both form controls and html)
    */
-  NS_IMETHOD GetTheme(nsITheme** aResult) = 0;
+  NS_HIDDEN_(nsITheme*) GetTheme();
 
   /*
    * Notify the pres context that the theme has changed.  An internal switch
@@ -486,23 +554,42 @@ public:
    * Otherwise, the OS is telling us that the native theme for the platform
    * has changed.
    */
-  NS_IMETHOD ThemeChanged() = 0;
+  NS_HIDDEN_(void) ThemeChanged();
 
   /*
    * Notify the pres context that a system color has changed
    */
-  NS_IMETHOD SysColorChanged() = 0;
+  NS_HIDDEN_(void) SysColorChanged();
+
+  /** Printing methods below should only be used for Medium() == print **/
+  NS_HIDDEN_(void) SetPrintSettings(nsIPrintSettings *aPrintSettings);
+
+  nsIPrintSettings* GetPrintSettings() { return mPrintSettings; }
 
 #ifdef MOZ_REFLOW_PERF
-  NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame) = 0;
-  NS_IMETHOD PaintCount(const char * aName, nsIRenderingContext* aRendingContext, nsIFrame * aFrame, PRUint32 aColor) = 0;
+  NS_HIDDEN_(void) CountReflows(const char * aName,
+                                PRUint32 aType, nsIFrame * aFrame);
+  NS_HIDDEN_(void) PaintCount(const char * aName,
+                              nsIRenderingContext* aRendingContext,
+                              nsIFrame * aFrame, PRUint32 aColor);
 #endif
 
 protected:
+  NS_HIDDEN_(void) SetImgAnimations(nsIContent *aParent, PRUint16 aMode);
+  NS_HIDDEN_(void) GetDocumentColorPreferences();
+  NS_HIDDEN_(void) PreferenceChanged(const char* aPrefName);
+  static NS_HIDDEN_(int) PR_CALLBACK PrefChangedCallback(const char*, void*);
+
+  NS_HIDDEN_(void) GetUserPreferences();
+  NS_HIDDEN_(void) GetFontPreferences();
+
+  NS_HIDDEN_(void) UpdateCharSet(const char* aCharSet);
+
   // IMPORTANT: The ownership implicit in the following member variables
   // has been explicitly checked.  If you add any members to this class,
   // please make the ownership explicit (pinkerton, scc).
   
+  nsPresContextType     mType;
   nsIPresShell*         mShell;         // [WEAK]
   nsIDeviceContext*     mDeviceContext; // [STRONG] could be weak, but
                                         // better safe than sorry.
@@ -517,11 +604,24 @@ protected:
   nsILinkHandler*       mLinkHandler;   // [WEAK]
   nsIAtom*              mLangGroup;     // [STRONG]
 
+  nsSupportsHashtable   mImageLoaders;
+  nsWeakPtr             mContainer;
+
+#ifdef IBMBIDI
+  nsBidiPresUtils*      mBidiUtils;
+  nsCString             mCharset;                 // the charset we are using
+#endif
+
+  nsCOMPtr<nsITheme> mTheme;
+  nsCOMPtr<nsILanguageAtomService> mLangService;
+  nsCOMPtr<nsIPrintSettings> mPrintSettings;
+
   nsLanguageSpecificTransformType mLanguageSpecificTransformType;
   PRInt32               mFontScaler;
   nscoord               mMinimumFontSize;
 
   nsRect                mVisibleArea;
+  nsRect                mPageDim;
 
   nscolor               mDefaultColor;
   nscolor               mBackgroundColor;
@@ -538,6 +638,15 @@ protected:
 
   nsCompatibility       mCompatibilityMode;
   PRUint16              mImageAnimationMode;
+  PRUint16              mImageAnimationModePref;
+
+  nsFont                mDefaultVariableFont;
+  nsFont                mDefaultFixedFont;
+  nsFont                mDefaultSerifFont;
+  nsFont                mDefaultSansSerifFont;
+  nsFont                mDefaultMonospaceFont;
+  nsFont                mDefaultCursiveFont;
+  nsFont                mDefaultFantasyFont;
 
   unsigned              mUseDocumentFonts : 1;
   unsigned              mUseDocumentColors : 1;
@@ -551,21 +660,41 @@ protected:
   unsigned              mNoTheme : 1;
   unsigned              mPaginated : 1;
   unsigned              mCanPaginatedScroll : 1;
+  unsigned              mDoScaledTwips : 1;
+  unsigned              mEnableJapaneseTransform : 1;
 #ifdef IBMBIDI
   unsigned              mIsVisual : 1;
   unsigned              mIsBidiSystem : 1;
+
+  PRUint32              mBidi;
 #endif
+#ifdef DEBUG
+  PRBool                mInitialized;
+#endif
+
+
+private:
+
+  ~nsIPresContext() NS_HIDDEN;
+
+  // these are private, use the list in nsFont.h if you want a public list
+  enum {
+    eDefaultFont_Variable,
+    eDefaultFont_Fixed,
+    eDefaultFont_Serif,
+    eDefaultFont_SansSerif,
+    eDefaultFont_Monospace,
+    eDefaultFont_Cursive,
+    eDefaultFont_Fantasy,
+    eDefaultFont_COUNT
+  };
+
 };
 
 // Bit values for StartLoadImage's aImageStatus
 #define NS_LOAD_IMAGE_STATUS_ERROR      0x1
 #define NS_LOAD_IMAGE_STATUS_SIZE       0x2
 #define NS_LOAD_IMAGE_STATUS_BITS       0x4
-
-// Factory method to create a "galley" presentation context (galley is
-// a kind of view that has no limit to the size of a page)
-nsresult
-NS_NewGalleyContext(nsIPresContext** aInstancePtrResult);
 
 #ifdef MOZ_REFLOW_PERF
 

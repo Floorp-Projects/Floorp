@@ -58,7 +58,6 @@
 #include "gfxIImageFrame.h"
 #include "nsCSSRendering.h"
 #include "nsCSSColorUtils.h"
-#include "nsIPrintContext.h"
 #include "nsITheme.h"
 #include "nsThemeConstants.h"
 #include "nsIServiceManager.h"
@@ -1634,8 +1633,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
   // may be different!  Always use |aStyleContext|!
   const nsStyleDisplay* displayData = aStyleContext->GetStyleDisplay();
   if (displayData->mAppearance) {
-    nsCOMPtr<nsITheme> theme;
-    aPresContext->GetTheme(getter_AddRefs(theme));
+    nsITheme *theme = aPresContext->GetTheme();
     if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame, displayData->mAppearance))
       return; // Let the theme handle it.
   }
@@ -1795,10 +1793,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
     }
   }
   /* Get our conversion values */
-  nscoord twipsPerPixel;
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-  twipsPerPixel = NSIntPixelsToTwips(1,p2t);
+  nscoord twipsPerPixel = aPresContext->IntScaledPixelsToTwips(1);
 
   static PRUint8 sideOrder[] = { NS_SIDE_BOTTOM, NS_SIDE_LEFT, NS_SIDE_TOP, NS_SIDE_RIGHT };
   nscolor sideColor;
@@ -2791,8 +2786,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
   // renderer draw the background and bail out.
   const nsStyleDisplay* displayData = aForFrame->GetStyleDisplay();
   if (displayData->mAppearance) {
-    nsCOMPtr<nsITheme> theme;
-    aPresContext->GetTheme(getter_AddRefs(theme));
+    nsITheme *theme = aPresContext->GetTheme();
     if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame, displayData->mAppearance)) {
       theme->DrawWidgetBackground(&aRenderingContext, aForFrame, 
                                   displayData->mAppearance, aBorderArea, aDirtyRect); 
@@ -2834,14 +2828,14 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
   // We have a background image
 
   // Lookup the image
-  nsCOMPtr<imgIRequest> req;
-  nsresult rv = aPresContext->LoadImage(aColor.mBackgroundImage, aForFrame, getter_AddRefs(req));
+  imgIRequest *req = aPresContext->LoadImage(aColor.mBackgroundImage,
+                                             aForFrame);
 
   PRUint32 status = imgIRequest::STATUS_ERROR;
   if (req)
     req->GetImageStatus(&status);
 
-  if (NS_FAILED(rv) || !req || !(status & imgIRequest::STATUS_FRAME_COMPLETE) || !(status & imgIRequest::STATUS_SIZE_AVAILABLE)) {
+  if (!req || !(status & imgIRequest::STATUS_FRAME_COMPLETE) || !(status & imgIRequest::STATUS_SIZE_AVAILABLE)) {
     PaintBackgroundColor(aPresContext, aRenderingContext, aForFrame, bgClipArea,
                          aColor, aBorder, aPadding, canDrawBackgroundColor);
     return;

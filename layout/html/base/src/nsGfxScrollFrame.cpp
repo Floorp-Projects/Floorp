@@ -66,7 +66,6 @@
 #include "nsITextControlFrame.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsNodeInfoManager.h"
-#include "nsIPrintPreviewContext.h"
 #include "nsIURI.h"
 #include "nsGUIEvent.h"
 #include "nsContentCreatorFunctions.h"
@@ -1934,13 +1933,10 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   GetScrolledSize(aState.PresContext(),&scrolledContentSize.width, &scrolledContentSize.height);
 
   nsIPresContext* presContext = aState.PresContext();
-  float p2t;
-  presContext->GetScaledPixelsToTwips(&p2t);
-  mOnePixel = NSIntPixelsToTwips(1, p2t);
+  mOnePixel = presContext->IntScaledPixelsToTwips(1);
   const nsStyleFont* font = mOuter->GetStyleFont();
   const nsFont& f = font->mFont;
-  nsCOMPtr<nsIFontMetrics> fm;
-  presContext->GetMetricsFor(f, getter_AddRefs(fm));
+  nsCOMPtr<nsIFontMetrics> fm = presContext->GetMetricsFor(f);
   nscoord fontHeight = 1;
   NS_ASSERTION(fm,"FontMetrics is null assuming fontHeight == 1");
   if (fm)

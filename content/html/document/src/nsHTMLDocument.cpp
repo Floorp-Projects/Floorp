@@ -756,9 +756,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   nsCOMPtr<nsIPresContext> cx;
   docShell->GetPresContext(getter_AddRefs(cx));
   if(cx){
-    PRUint32 mBidiOption;
-    cx->GetBidi(&mBidiOption);
-    mTexttype = GET_BIDI_OPTION_TEXTTYPE(mBidiOption);
+    mTexttype = GET_BIDI_OPTION_TEXTTYPE(cx->GetBidi());
   }
   //
   // The following logic is mirrored in nsWebShell::Embed!

@@ -100,7 +100,6 @@
 #include "nsIWindowWatcher.h"
 #include "nsIObserverService.h"
 #include "nsLayoutAtoms.h"
-#include "nsIPrintPreviewContext.h"
 
 #include "nsIPrivateTextEvent.h"
 #include "nsIPrivateCompositionEvent.h"
@@ -2495,8 +2494,7 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
 
   nsCOMPtr<nsIPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
-  nsCOMPtr<nsIPrintPreviewContext> printPreview(do_QueryInterface(presContext));
-  if (printPreview) {
+  if (presContext->Type() == nsIPresContext::eContext_PrintPreview) {
     // Typeaheadfind is not designed to work in print preview.
     // You can't navigate through the links there.
     if (lastShell != presShell) {

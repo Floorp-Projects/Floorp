@@ -46,8 +46,6 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsIDeviceContext.h"
 #include "nsReadableUtils.h"
-#include "nsIPrintPreviewContext.h"
-#include "nsIPrintContext.h"
 #include "nsPageContentFrame.h"
 #include "nsTextFrame.h" // for function BinarySearchForPosition
 
@@ -127,8 +125,8 @@ nsPageFrame::SetInitialChildList(nsIPresContext* aPresContext,
 {
   nsIView* view = aChildList->GetView();
   if (view && mDoCreateWidget) {
-    nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
-    if (ppContext && view->GetNearestWidget(nsnull)) {
+    if (aPresContext->Type() == nsIPresContext::eContext_PrintPreview &&
+        view->GetNearestWidget(nsnull)) {
       view->CreateWidget(kCChildCID);  
     }
   }
@@ -187,9 +185,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
       nsSize  maxSize(mPD->mReflowRect.width - mPD->mReflowMargin.right - mPD->mReflowMargin.left, 
                       avHeight);
       // Get the number of Twips per pixel from the PresContext
-      float p2t;
-      aPresContext->GetScaledPixelsToTwips(&p2t);
-      nscoord onePixelInTwips = NSToCoordRound(p2t);
+      nscoord onePixelInTwips = aPresContext->IntScaledPixelsToTwips(1);
       NS_ASSERTION(maxSize.width >= onePixelInTwips, "maxSize.width must be >= 1 pixel");
       NS_ASSERTION(maxSize.height >= onePixelInTwips, "maxSize.height must be >= 1 pixel");
       // insurance against infinite reflow, when reflowing less than a pixel
@@ -536,8 +532,7 @@ nsPageFrame::DrawHeaderFooter(nsIPresContext*      aPresContext,
     nsresult rv = NS_ERROR_FAILURE;
 
     if (aPresContext->BidiEnabled()) {
-      nsBidiPresUtils* bidiUtils;
-      aPresContext->GetBidiUtils(&bidiUtils);
+      nsBidiPresUtils* bidiUtils = aPresContext->GetBidiUtils();
       
       if (bidiUtils) {
         PRUnichar* buffer = str.BeginWriting();
@@ -598,8 +593,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
 
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
 
-    nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
-    if (ppContext) {
+    if (aPresContext->Type() == nsIPresContext::eContext_PrintPreview) {
       // fill page with White
       aRenderingContext.SetColor(NS_RGB(255,255,255));
       rect.x = 0;
@@ -648,9 +642,8 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer && !mSupressHF) {
     // For PrintPreview the 
     if (!mPD->mPrintSettings) {
-      nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
-      if (ppContext) {
-        ppContext->GetPrintSettings(getter_AddRefs(mPD->mPrintSettings));
+      if (aPresContext->Type() == nsIPresContext::eContext_PrintPreview) {
+        mPD->mPrintSettings = aPresContext->GetPrintSettings();
       }
     }
     NS_ASSERTION(mPD->mPrintSettings, "Must have a good PrintSettings here!");
@@ -776,9 +769,7 @@ nsPageBreakFrame::GetDesiredSize(nsIPresContext*          aPresContext,
                                  nsHTMLReflowMetrics&     aDesiredSize)
 {
   NS_PRECONDITION(aPresContext, "null pres context");
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-  nscoord onePixel = NSToCoordRound(p2t);
+  nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
 
   aDesiredSize.width  = onePixel;
   if (mHaveReflowed) {

@@ -2989,8 +2989,7 @@ nsDocument::GetDir(nsAString& aDirection)
     nsCOMPtr<nsIPresContext> context;
     shell->GetPresContext(getter_AddRefs(context));
     if (context) {
-      PRUint32 options;
-      context->GetBidi(&options);
+      PRUint32 options = context->GetBidi();
       for (const DirTable* elt = dirAttributes; elt->mName; elt++) {
         if (GET_BIDI_OPTION_DIRECTION(options) == elt->mValue) {
           CopyASCIItoUTF16(elt->mName, aDirection);
@@ -3022,8 +3021,7 @@ nsDocument::SetDir(const nsAString& aDirection)
   shell->GetPresContext(getter_AddRefs(context));
   NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
 
-  PRUint32 options;
-  context->GetBidi(&options);
+  PRUint32 options = context->GetBidi();
 
   for (const DirTable* elt = dirAttributes; elt->mName; elt++) {
     if (aDirection == NS_ConvertASCIItoUCS2(elt->mName)) {

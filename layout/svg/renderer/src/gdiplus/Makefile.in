@@ -51,6 +51,7 @@ REQUIRES = 	xpcom \
 			necko \
 			content \
 			unicharutil \
+			locale \
 			$(NULL)
 
 CPPSRCS = 	\

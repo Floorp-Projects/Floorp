@@ -75,6 +75,7 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  layout \
 		  js \
+		  locale \
 		  $(NULL)
 
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))

@@ -106,7 +106,6 @@
 
 // Needed for Print Preview
 #include "nsIDocument.h"
-#include "nsIPrintPreviewContext.h"
 #include "nsIURI.h"
 
 
@@ -752,8 +751,7 @@ nsBoxFrame::IsInitialReflowForPrintPreview(nsBoxLayoutState& aState,
   const nsHTMLReflowState* reflowState = aState.GetReflowState();
   if (reflowState->reason == eReflowReason_Initial) {
     // See if we are doing Print Preview
-    nsCOMPtr<nsIPrintPreviewContext> ppContent(do_QueryInterface(aState.PresContext()));
-    if (ppContent) {
+    if (aState.PresContext()->Type() == nsIPresContext::eContext_PrintPreview) {
       // Now, get the current URI to see if we doing chrome
       nsIPresShell *presShell = aState.PresShell();
       if (!presShell) return PR_FALSE;
@@ -1674,10 +1672,7 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
 #ifdef DEBUG_LAYOUT
   if (mState & NS_STATE_CURRENTLY_IN_DEBUG) 
   {
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
-    nscoord onePixel = NSIntPixelsToTwips(1, p2t);
-
+    nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
     GetContentRect(r);
 
     if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
@@ -2076,9 +2071,7 @@ nsBoxFrame::PaintDebug(nsIBox*              aBox,
     
         PRBool isHorizontal = IsHorizontal();
 
-        float p2t;
-        aPresContext->GetScaledPixelsToTwips(&p2t);
-        nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+        nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
 
         nsMargin debugBorder(0,0,0,0);
         nsMargin debugMargin(0,0,0,0);
@@ -2213,9 +2206,7 @@ nsBoxFrame::FillRect(nsIRenderingContext& aRenderingContext, PRBool aHorizontal,
 void 
 nsBoxFrame::DrawSpacer(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize)
 {    
-        float p2t;
-        aPresContext->GetScaledPixelsToTwips(&p2t);
-        nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+         nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
 
      // if we do draw the coils
         int distance = 0;
@@ -2278,9 +2269,7 @@ nsBoxFrame::GetDebugPadding(nsMargin& aPadding)
 void 
 nsBoxFrame::PixelMarginToTwips(nsIPresContext* aPresContext, nsMargin& aMarginPixels)
 {
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
   aMarginPixels.left   *= onePixel;
   aMarginPixels.right  *= onePixel;
   aMarginPixels.top    *= onePixel;
@@ -2292,8 +2281,7 @@ nsBoxFrame::PixelMarginToTwips(nsIPresContext* aPresContext, nsMargin& aMarginPi
 void
 nsBoxFrame::GetValue(nsIPresContext* aPresContext, const nsSize& a, const nsSize& b, char* ch) 
 {
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
+    float p2t = aPresContext->ScaledPixelsToTwips();
 
     char width[100];
     char height[100];

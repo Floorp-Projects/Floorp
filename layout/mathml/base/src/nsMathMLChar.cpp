@@ -2078,9 +2078,7 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
   nsRect clipRect;
   nscoord dx, dy;
 
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
 
   // get metrics data to be re-used later
   PRInt32 i;
@@ -2255,9 +2253,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
   nsRect clipRect;
   nscoord dx, dy;
 
-  float p2t;
-  aPresContext->GetScaledPixelsToTwips(&p2t);
-  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
 
   // get metrics data to be re-used later
   PRInt32 i;

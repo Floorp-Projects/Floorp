@@ -367,9 +367,8 @@ nsSVGOuterSVGFrame::Reflow(nsIPresContext*          aPresContext,
 #if defined(DEBUG) && defined(SVG_DEBUG_PRINTING)
   {
     printf("nsSVGOuterSVGFrame(%p)::Reflow()[\n",this);
-    float twipsPerScPx,twipsPerPx;
-    aPresContext->GetScaledPixelsToTwips(&twipsPerScPx);
-    twipsPerPx = aPresContext->PixelsToTwips();
+    float twipsPerScPx = aPresContext->ScaledPixelsToTwips();
+    float twipsPerPx = aPresContext->PixelsToTwips();
     printf("tw/sc(px)=%f tw/px=%f\n", twipsPerScPx, twipsPerPx);
     printf("]\n");
   }
@@ -789,9 +788,8 @@ nsSVGOuterSVGFrame::Paint(nsIPresContext* aPresContext,
     float sx=1.0f,sy=1.0f;
     xform->TransformNoXLate(&sx,&sy);
     printf("scale=(%f,%f)\n", sx, sy);
-    float twipsPerScPx,twipsPerPx;
-    aPresContext->GetScaledPixelsToTwips(&twipsPerScPx);
-    twipsPerPx = aPresContext->PixelsToTwips();
+    float twipsPerScPx = aPresContext->ScaledPixelsToTwips();
+    float twipsPerPx = aPresContext->PixelsToTwips();
     printf("tw/sc(px)=%f tw/px=%f\n", twipsPerScPx, twipsPerPx);
     int fontsc;
     aPresContext->GetFontScaler(&fontsc);
@@ -1042,9 +1040,7 @@ float nsSVGOuterSVGFrame::GetPxPerTwips()
 
 float nsSVGOuterSVGFrame::GetTwipsPerPx()
 {
-  float twipsPerPx;
-  GetPresContext()->GetScaledPixelsToTwips(&twipsPerPx);
-  return twipsPerPx;
+  return GetPresContext()->ScaledPixelsToTwips();
 }
 
 void nsSVGOuterSVGFrame::InitiateReflow()
@@ -1177,9 +1173,7 @@ nsSVGOuterSVGFrame::SetViewportDimensions(nsISVGViewportRect* vp,
 nsresult
 nsSVGOuterSVGFrame::SetViewportScale(nsISVGViewportRect* vp, nsIPresContext *context)
 {
-  float TwipsPerPx;
-  context->GetScaledPixelsToTwips(&TwipsPerPx);
-  float mmPerPx = TwipsPerPx / TWIPS_PER_POINT_FLOAT / (72.0f * 0.03937f);
+  float mmPerPx = context->ScaledPixelsToTwips() / TWIPS_PER_POINT_FLOAT / (72.0f * 0.03937f);
 
   nsCOMPtr<nsIDOMSVGNumber> scaleX;
   {
