@@ -35,7 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"
+#include "nsICategoryManager.h"
 #include "ipcService.h"
 #include "ipcCID.h"
 #include "ipcConfig.h"
@@ -46,6 +48,39 @@
 // NOTE: This creates an instance of objects by using the default constructor
 //-----------------------------------------------------------------------------
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(ipcService, Init)
+
+NS_METHOD
+ipcServiceRegisterProc(nsIComponentManager *aCompMgr,
+                       nsIFile *aPath,
+                       const char *registryLocation,
+                       const char *componentType,
+                       const nsModuleComponentInfo *info)
+{
+    //
+    // add ipcService to the XPCOM startup category
+    //
+    nsCOMPtr<nsICategoryManager> catman(do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
+    if (catman) {
+        nsXPIDLCString prevEntry;
+        catman->AddCategoryEntry(NS_XPCOM_STARTUP_OBSERVER_ID, "ipcService",
+                                 IPC_SERVICE_CONTRACTID, PR_TRUE, PR_TRUE,
+                                 getter_Copies(prevEntry));
+    }
+    return NS_OK;
+}
+
+NS_METHOD
+ipcServiceUnregisterProc(nsIComponentManager *aCompMgr,
+                         nsIFile *aPath,
+                         const char *registryLocation,
+                         const nsModuleComponentInfo *info)
+{
+    nsCOMPtr<nsICategoryManager> catman(do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
+    if (catman)
+        catman->DeleteCategoryEntry(NS_XPCOM_STARTUP_OBSERVER_ID, 
+                                    IPC_SERVICE_CONTRACTID, PR_TRUE);
+    return NS_OK;
+}
 
 #ifdef XP_UNIX
 #include "ipcSocketProviderUnix.h"
@@ -61,7 +96,9 @@ static const nsModuleComponentInfo components[] = {
   { IPC_SERVICE_CLASSNAME,
     IPC_SERVICE_CID,
     IPC_SERVICE_CONTRACTID,
-    ipcServiceConstructor, },
+    ipcServiceConstructor,
+    ipcServiceRegisterProc,
+    ipcServiceUnregisterProc },
 #ifdef XP_UNIX
   { IPC_SOCKETPROVIDER_CLASSNAME,
     IPC_SOCKETPROVIDER_CID,
