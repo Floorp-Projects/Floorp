@@ -190,7 +190,7 @@ struct MathConstantEntry {
 //  the properties of the Math object
 void JSMath::initMathObject(JSScope *g)
 {
-    int i;
+    uint i;
     JSMath *m = new JSMath();
     m->setClass(new JSString("Math"));
 

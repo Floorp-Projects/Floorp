@@ -121,7 +121,7 @@
             f << opcodeNames[BRANCH] << "\t" << "Offset " << ((mOp1) ? mOp1->mOffset : NotAnOffset);
             return f;
         }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             return f;
         }
     };
@@ -258,7 +258,7 @@
             f << opcodeNames[DEBUGGER];
             return f;
         }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             return f;
         }
     };
@@ -435,7 +435,7 @@
             f << opcodeNames[JSR] << "\t" << "Offset " << ((mOp1) ? mOp1->mOffset : NotAnOffset);
             return f;
         }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             return f;
         }
     };
@@ -635,7 +635,7 @@
             f << opcodeNames[NOP];
             return f;
         }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             return f;
         }
     };
@@ -732,7 +732,7 @@
             f << opcodeNames[RETURN_VOID];
             return f;
         }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             return f;
         }
     };
@@ -747,7 +747,7 @@
             f << opcodeNames[RTS];
             return f;
         }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             return f;
         }
     };
@@ -967,7 +967,7 @@
             f << opcodeNames[TRYIN] << "\t" << "Offset " << ((mOp1) ? mOp1->mOffset : NotAnOffset) << ", " << "Offset " << ((mOp2) ? mOp2->mOffset : NotAnOffset);
             return f;
         }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             return f;
         }
     };
@@ -982,7 +982,7 @@
             f << opcodeNames[TRYOUT];
             return f;
         }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             return f;
         }
     };
@@ -1038,7 +1038,7 @@
             f << opcodeNames[WITHOUT];
             return f;
         }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+        virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {
             return f;
         }
     };

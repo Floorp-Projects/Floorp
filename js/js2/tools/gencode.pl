@@ -429,8 +429,11 @@ sub collect {
             my $printops_body = &get_printops_body(@types);
             my $printops_decl =  "virtual Formatter& printOperands(Formatter& f, ";
 
-            $printops_decl .= ($dec_list =~ /ArgumentList/) ?
-                               "const JSValues& registers" :
+#            $printops_decl .= ($dec_list =~ /ArgumentList/) ?
+#                               "const JSValues& registers" :
+#                               "const JSValues& registers";
+            $printops_decl .= ($printops_body eq "") ?
+                               "const JSValues& /*registers*/" :
                                "const JSValues& registers";
             $printops_decl .= ") {\n";
 

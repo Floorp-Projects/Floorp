@@ -661,7 +661,7 @@ namespace JSTypes {
         static JSObject* BooleanPrototypeObject;
         static JSString* BooleanString;
     public:
-        JSBoolean(bool value) : mValue(value), JSObject(BooleanPrototypeObject) { setClass(BooleanString); }
+        JSBoolean(bool value) : JSObject(BooleanPrototypeObject), mValue(value) { setClass(BooleanString); }
 
         static void initBooleanObject(JSScope *g);
 
