@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.42 $ $Date: 2002/04/26 14:34:05 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: trustdomain.c,v $ $Revision: 1.43 $ $Date: 2002/08/27 23:38:29 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -1261,7 +1261,7 @@ nssTrustDomain_FindTrustForCertificate
 	}
     }
     if (pkio) {
-	rvt = nssTrust_Create(pkio);
+	rvt = nssTrust_Create(pkio, &c->encoding);
 	if (!rvt) {
 	    goto loser;
 	}

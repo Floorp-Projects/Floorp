@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.24 $ $Date: 2002/08/09 18:05:24 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.25 $ $Date: 2002/08/27 23:37:55 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -552,6 +552,7 @@ nssCryptokiTrust_GetAttributes
 (
   nssCryptokiObject *trustObject,
   nssSession *sessionOpt,
+  NSSItem *sha1_hash,
   nssTrustLevel *serverAuth,
   nssTrustLevel *clientAuth,
   nssTrustLevel *codeSigning,
@@ -564,7 +565,7 @@ nssCryptokiTrust_GetAttributes
     CK_BBOOL isToken;
     CK_TRUST saTrust, caTrust, epTrust, csTrust;
     CK_ATTRIBUTE_PTR attr;
-    CK_ATTRIBUTE trust_template[5];
+    CK_ATTRIBUTE trust_template[6];
     CK_ULONG trust_size;
 
     /* Use the trust object to find the trust settings */
@@ -574,6 +575,7 @@ nssCryptokiTrust_GetAttributes
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_CLIENT_AUTH,      caTrust);
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_EMAIL_PROTECTION, epTrust);
     NSS_CK_SET_ATTRIBUTE_VAR(attr, CKA_TRUST_CODE_SIGNING,     csTrust);
+    NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CERT_SHA1_HASH,     sha1_hash);
     NSS_CK_TEMPLATE_FINISH(trust_template, attr, trust_size);
 
     status = nssToken_GetCachedObjectAttributes(trustObject->token, NULL,

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.38 $ $Date: 2002/08/01 01:21:27 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.39 $ $Date: 2002/08/27 23:38:29 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -53,6 +53,8 @@ static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.38 $
 
 #ifdef NSS_3_4_CODE
 #include "pki3hack.h"
+#include "pk11func.h"
+#include "hasht.h"
 #endif
 
 #ifndef BASE_H
@@ -950,15 +952,20 @@ nssCertificateList_AddReferences
 NSS_IMPLEMENT NSSTrust *
 nssTrust_Create
 (
-  nssPKIObject *object
+  nssPKIObject *object,
+  NSSItem *certData
 )
 {
     PRStatus status;
     PRUint32 i;
     PRUint32 lastTrustOrder, myTrustOrder;
+    unsigned char sha1_hashcmp[SHA1_LENGTH];
+    unsigned char sha1_hashin[SHA1_LENGTH];
+    NSSItem sha1_hash;
     NSSTrust *rvt;
     nssCryptokiObject *instance;
     nssTrustLevel serverAuth, clientAuth, codeSigning, emailProtection;
+    SECStatus rv; /* Should be stan flavor */
     lastTrustOrder = 1<<16; /* just make it big */
     PR_ASSERT(object->instances != NULL && object->numInstances > 0);
     rvt = nss_ZNEW(object->arena, NSSTrust);
@@ -966,17 +973,30 @@ nssTrust_Create
 	return (NSSTrust *)NULL;
     }
     rvt->object = *object;
+
+    /* should be stan flavor of Hashbuf */
+    rv = PK11_HashBuf(SEC_OID_SHA1,sha1_hashcmp,certData->data,certData->size);
+    if (rv != SECSuccess) {
+	return (NSSTrust *)NULL;
+    }
+    sha1_hash.data = sha1_hashin;
+    sha1_hash.size = sizeof (sha1_hashin);
     /* trust has to peek into the base object members */
     PZ_Lock(object->lock);
     for (i=0; i<object->numInstances; i++) {
 	instance = object->instances[i];
 	myTrustOrder = nssToken_GetTrustOrder(instance->token);
 	status = nssCryptokiTrust_GetAttributes(instance, NULL,
+						&sha1_hash,
 	                                        &serverAuth,
 	                                        &clientAuth,
 	                                        &codeSigning,
 	                                        &emailProtection);
 	if (status != PR_SUCCESS) {
+	    PZ_Unlock(object->lock);
+	    return (NSSTrust *)NULL;
+	}
+	if (PORT_Memcmp(sha1_hashin,sha1_hashcmp,SHA1_LENGTH) != 0) {
 	    PZ_Unlock(object->lock);
 	    return (NSSTrust *)NULL;
 	}
