@@ -115,6 +115,8 @@ GraphicsState :: ~GraphicsState()
 
 nsDrawingSurfaceWin :: nsDrawingSurfaceWin()
 {
+  NS_INIT_REFCNT();
+
   mDC = NULL;
   mDCOwner = nsnull;
   mOrigBitmap = nsnull;
@@ -126,30 +128,33 @@ nsDrawingSurfaceWin :: nsDrawingSurfaceWin()
 
 nsDrawingSurfaceWin :: ~nsDrawingSurfaceWin()
 {
+  if ((nsnull != mDC) && (nsnull != mOrigBitmap))
+  {
+    HBITMAP bits = ::SelectObject(mDC, mOrigBitmap);
+
+    if (nsnull != bits)
+      ::DeleteObject(bits);
+
+    mOrigBitmap = nsnull;
+  }
+
 #ifdef NGLAYOUT_DDRAW
   if (NULL != mSurface)
   {
     if (NULL != mDC)
     {
-      if (nsnull != mOrigBitmap)
-        ::SelectObject(mDC, mOrigBitmap);
-
       mSurface->ReleaseDC(mDC);
       mDC = NULL;
     }
 
-    mSurface->Release();
+    NS_RELEASE(mSurface);
     mSurface = NULL;
-    mOrigBitmap = nsnull;
   }
   else
 #endif
   {
     if (NULL != mDC)
     {
-      if (nsnull != mOrigBitmap)
-        ::SelectObject(mDC, mOrigBitmap);
-
       if (nsnull != mDCOwner)
       {
         ::ReleaseDC((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW), mDC);
@@ -159,7 +164,6 @@ nsDrawingSurfaceWin :: ~nsDrawingSurfaceWin()
         ::DeleteDC(mDC);
 
       mDC = NULL;
-      mOrigBitmap = nsnull;
     }
   }
 }
@@ -187,11 +191,12 @@ nsresult nsDrawingSurfaceWin :: Init(HDC aDC)
 nsresult nsDrawingSurfaceWin :: Init(nsIWidget *aOwner)
 {
   mDCOwner = aOwner;
-  NS_IF_ADDREF(mDCOwner);
 
   if (nsnull != mDCOwner)
   {
+    NS_ADDREF(mDCOwner);
     mDC = (HWND)mDCOwner->GetNativeData(NS_NATIVE_GRAPHIC);
+
     return NS_OK;
   }
 
