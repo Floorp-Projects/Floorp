@@ -291,8 +291,13 @@
       </method>
 
       <method name="_hitEnter">
+        <parameter name="evt"/>
         <body>
         <![CDATA[
+          var target = evt.originalTarget;
+          if ((target.localName == "textarea")&&(target.namespaceURI == "http://www.w3.org/1999/xhtml")) {
+            return;
+          }
           // if a button is focused, do nothing, so that activating the button 
           // doesn't cause the dialog to exit
           if (!this.enterDefaultAlways) {
@@ -312,8 +317,8 @@
     </implementation>
     
     <handlers>
-      <handler event="keypress" keycode="VK_ENTER" action="this._hitEnter();"/>
-      <handler event="keypress" keycode="VK_RETURN" action="this._hitEnter();"/>
+      <handler event="keypress" keycode="VK_ENTER" action="this._hitEnter(event);"/>
+      <handler event="keypress" keycode="VK_RETURN" action="this._hitEnter(event);"/>
       <handler event="keypress" keycode="VK_ESCAPE" action="this.cancelDialog();"/>
     </handlers>
 
