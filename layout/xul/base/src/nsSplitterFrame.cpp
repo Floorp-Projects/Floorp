@@ -144,8 +144,6 @@ public:
   PRInt32 mChildInfosBeforeCount;
   PRInt32 mChildInfosAfterCount;
   State mState;
-  nsString mCollapsedChildStyle;
-  nsCOMPtr<nsIContent> mCollapsedChild;
   nscoord mSplitterPos;
   nscoord mSplitterViewPos;
 
@@ -878,66 +876,46 @@ nsSplitterFrameInner::GetCollapseDirection()
 void
 nsSplitterFrameInner::UpdateState()
 {
-
-
-  // states
-  //
-  // Open      -> Dragging
-  // Open      -> Collapsed
-  // Collapsed -> Open
-  // Collapsed -> Dragging
-  // Dragging  -> Open
-  // Dragging  -> Collapsed (auto collapse)
+  // State Transitions:
+  //   Open      -> Dragging
+  //   Open      -> Collapsed
+  //   Collapsed -> Open
+  //   Collapsed -> Dragging
+  //   Dragging  -> Open
+  //   Dragging  -> Collapsed (auto collapse)
 
   State newState = GetState(); 
 
-  // if the state are the same we are done
-  if (newState == mState)
+  if (newState == mState) {
+    // No change.
 	  return;
-
-  nsString style;
-
-  if (mState == Collapsed) {
-      // Collapsed -> Open
-      // Collapsed -> Dragging
-
-      // set the old style back
-    style = mCollapsedChildStyle;
-  } else if ((mState == Open || mState == Dragging) && newState == Collapsed) {
-    // when clicked see if we are in a splitter. 
-    nsIFrame* splitter = mOuter;
-
-    // get the splitters content node
-    nsCOMPtr<nsIContent> content;
-    splitter->GetContent(getter_AddRefs(content));
-
- 
-    CollapseDirection d = GetCollapseDirection();
-
-    if (d != None) {
-        // find the child just in the box just before the splitter. If we are not currently collapsed then
-        // then get the childs style attribute and store it. Then set the child style attribute to be display none.
-        // if we are already collapsed then set the child's style back to our stored value.
-        nsIFrame* child = nsFrameNavigator::GetChildBeforeAfter(mOuter->mPresContext, splitter,(d == Before));
-        if (child == nsnull)
-          return;
-
-        child->GetContent(getter_AddRefs(mCollapsedChild));
-
-        style = "visibility: collapse";
-        mCollapsedChildStyle = "";
-        mCollapsedChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::style, mCollapsedChildStyle);
-    } else {
-        mState = newState;
-        return;
-    }
-  } else {
-      mState = newState;
-      return;
   }
 
-  mCollapsedChild->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::style, style, PR_TRUE);
+  CollapseDirection direction = GetCollapseDirection();
+  if (direction != None) {
+    nsIFrame* splitter = mOuter;
+    // Find the splitter's immediate sibling.
+    nsIFrame* splitterSibling =
+      nsFrameNavigator::GetChildBeforeAfter(mOuter->mPresContext, splitter,
+                                            (direction == Before));
+    if (splitterSibling) {
+      nsCOMPtr<nsIContent> sibling;
+      splitterSibling->GetContent(getter_AddRefs(sibling));
 
+      if (mState == Collapsed) {
+        // Collapsed -> Open
+        // Collapsed -> Dragging
+        sibling->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,
+                                PR_TRUE);
+      } else if ((mState == Open || mState == Dragging) 
+                 && newState == Collapsed) {
+        // Open -> Collapsed
+        // Dragging -> Collapsed
+        sibling->SetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,
+                              "true", PR_TRUE);
+      }
+    }
+  }
   mState = newState;
 }
 
