@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 // sorry, this has to be before the pre-compiled header
 #define FORCE_PR_LOG /* Allow logging in the release build */
 
@@ -314,7 +315,6 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 {
 	char *line = nsnull;
 	PRUint32 status = 0;
-	nsresult rv = NS_OK;
 
 	// if we are doing a move or a copy, forward the data onto the copy handler...
 	// if we want to display the message then parse the incoming data...
