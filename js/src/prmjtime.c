@@ -49,13 +49,12 @@
 
 #define PRMJ_DO_MILLISECONDS 1
 
-#ifdef XP_PC
-#ifndef __MWERKS__
+#ifdef XP_OS2
 #include <sys/timeb.h>
-#else
+#endif
+#ifdef XP_WIN
 #include <WINDEF.H>
 #include <WINBASE.H>
-#endif
 #endif
 
 #ifdef XP_MAC
@@ -305,14 +304,16 @@ PRMJ_ToExtendedTime(JSInt32 base_time)
 JSInt64
 PRMJ_Now(void)
 {
-#ifdef XP_PC
+#ifdef XP_OS2
     JSInt64 s, us, ms2us, s2us;
-#ifndef __MWERKS__
     struct timeb b;
-#else
-    SYSTEMTIME time;
-#endif /* __MWERKS__ */
-#endif /* XP_PC */
+#endif
+#ifdef XP_WIN
+    JSInt64 s, us,
+    win2un = JSLL_INIT(0x19DB1DE, 0xD53E8000),
+    ten = JSLL_INIT(0, 10);
+    FILETIME time, midnight;
+#endif
 #if defined(XP_UNIX) || defined(XP_BEOS)
     struct timeval tv;
     JSInt64 s, us, s2us;
@@ -326,8 +327,7 @@ PRMJ_Now(void)
     JSInt64	 s2us;
 #endif /* XP_MAC */
 
-#ifdef XP_PC
-#ifndef __MWERKS__
+#ifdef XP_OS2
     ftime(&b);
     JSLL_UI2L(ms2us, PRMJ_USEC_PER_MSEC);
     JSLL_UI2L(s2us, PRMJ_USEC_PER_SEC);
@@ -337,17 +337,27 @@ PRMJ_Now(void)
     JSLL_MUL(s, s, s2us);
     JSLL_ADD(s, s, us);
     return s;
-#else
-    GetLocalTime(&time);
-    JSLL_UI2L(ms2us, PRMJ_USEC_PER_MSEC);
-    JSLL_UI2L(s2us, PRMJ_USEC_PER_SEC);
-    JSLL_UI2L(s, time.wSecond);
-    JSLL_UI2L(us, time.wMilliseconds);
-    JSLL_MUL(us, us, ms2us);
-    JSLL_MUL(s, s, s2us);
+#endif
+#ifdef XP_WIN
+    /* The windows epoch is around 1600. The unix epoch is around 1970.
+       win2un is the difference (in windows time units which are 10 times
+       more precise than the JS time unit) */
+    GetSystemTimeAsFileTime(&time);
+    /* Win9x gets confused at midnight
+       http://support.microsoft.com/default.aspx?scid=KB;en-us;q224423
+       So if the low part (precision <8mins) is 0 then we get the time
+       again. */
+    if (!time.dwLowDateTime) {
+        GetSystemTimeAsFileTime(&midnight);
+        time.dwHighDateTime = midnight.dwHighDateTime;
+    }
+    JSLL_UI2L(s, time.dwHighDateTime);
+    JSLL_UI2L(us, time.dwLowDateTime);
+    JSLL_SHL(s, s, 32);
     JSLL_ADD(s, s, us);
+    JSLL_SUB(s, s, win2un);
+    JSLL_DIV(s, s, ten);
     return s;
-#endif /* __MWERKS__ */
 #endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
