@@ -616,8 +616,8 @@ cleanup_and_return:
 nsXFontAAScaledBitmap::nsXFontAAScaledBitmap(Display *aDisplay,
                                              int aScreen,
                                              GdkFont *aGdkFont,
-                                             PRUint32 aSize,
-                                             PRUint32 aUnscaledSize)
+                                             PRUint16 aSize,
+                                             PRUint16 aUnscaledSize)
 {
   mAlreadyLoaded       = PR_FALSE;
   mDisplay             = aDisplay;
