@@ -185,17 +185,17 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
       nsMemory::Free(family);
 
       // look up prefs
-      char *real_family = NULL;
+      nsXPIDLCString real_family;
       nsresult res = NS_ERROR_FAILURE;
       //NS_WITH_SERVICE( nsIPref, prefs, kPrefCID, &res );
       nsCOMPtr<nsIPref> prefs = do_GetService( kPrefCID, &res );
       if (res == NS_OK) 
       {
-        prefs->CopyCharPref( prop, &real_family );
+        prefs->CopyCharPref( prop, getter_Copies(real_family));
 
-        if ((real_family) && count_font_styles((font_family)real_family) > 0) 
+        if (real_family.get() && strlen(real_family.get()) <= B_FONT_FAMILY_LENGTH + 1  && count_font_styles((font_family)real_family.get()) > 0) 
         {
-          mFontHandle.SetFamilyAndStyle( (font_family)real_family, NULL );
+          mFontHandle.SetFamilyAndStyle( (font_family)real_family.get(), NULL );
           fontfound = PR_TRUE;
           break;        
         }
