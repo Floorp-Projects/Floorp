@@ -23,14 +23,19 @@
 #include "nscore.h"
 
 class nsIStreamListener;
+class nsIURLGroup;
 typedef PRBool (*nsReconnectCB)(void* arg, nsIStreamListener* aListener);
 
 extern "C" NS_GFX_(nsresult)
   NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
+                        nsIURLGroup* aURLGroup,
                         nsReconnectCB aReconnectCallback,
                         void* aReconnectArg);
 
-extern "C" NS_GFX_(nsresult) NS_NewImageURL(ilIURL **aInstancePtrResult,  const char *aURL);
+extern "C" NS_GFX_(nsresult) 
+  NS_NewImageURL(ilIURL **aInstancePtrResult,  
+                 const char *aURL, 
+                 nsIURLGroup* aURLGroup);
 
 extern "C" NS_GFX_(nsresult) NS_NewImageRenderer(ilIImageRenderer  **aInstancePtrResult);
 
