@@ -524,7 +524,8 @@ nsPluginManager::GetURL(nsISupports* peer, const char* url, const char* target,
                 e->altHost = altHost;
                 e->referrer = referrer;
                 e->forceJSEnabled = forceJSEnabled;
-                rslt = (NPError)PL_PostSynchronousEvent(mozilla_event_queue, &e->event);
+                /*rslt = (NPError)*/PL_PostSynchronousEvent(mozilla_event_queue, &e->event);
+                rslt = NPERR_NO_ERROR;  /* XXX irix c++ compiler doesn't like the above cast */
             }
         }
         instPeer->Release();
@@ -620,7 +621,8 @@ nsPluginManager::PostURL(nsISupports* peer, const char* url, const char* target,
                 e->isFile = isFile;
                 e->postHeadersLen = postHeadersLen;
                 e->postHeaders = postHeaders;
-                rslt = (NPError)PL_PostSynchronousEvent(mozilla_event_queue, &e->event);
+                /*rslt = (NPError)*/PL_PostSynchronousEvent(mozilla_event_queue, &e->event);
+                rslt = NPERR_NO_ERROR;  /* XXX irix c++ compiler doesn't like the above cast */
             }
         }
         instPeer->Release();
