@@ -37,12 +37,12 @@
 #ifndef nsPageContentFrame_h___
 #define nsPageContentFrame_h___
 
-#include "nsContainerFrame.h"
+#include "nsViewportFrame.h"
 class nsPageFrame;
 class nsSharedPageData;
 
 // Page frame class used by the simple page sequence frame
-class nsPageContentFrame : public nsContainerFrame {
+class nsPageContentFrame : public ViewportFrame {
 
 public:
   friend nsresult NS_NewPageContentFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
@@ -80,8 +80,9 @@ public:
 
 protected:
   nsPageContentFrame();
-  nsRect mClipRect;
-  nsSharedPageData* mPD;
+
+  nsRect                    mClipRect;
+  nsSharedPageData*         mPD;
 };
 
 #endif /* nsPageContentFrame_h___ */

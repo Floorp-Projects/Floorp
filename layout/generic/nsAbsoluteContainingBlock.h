@@ -39,6 +39,7 @@
 
 #include "nsFrameList.h"
 #include "nsHTMLReflowState.h"
+#include "nsLayoutAtoms.h"
 
 class nsIAtom;
 class nsIFrame;
@@ -58,6 +59,12 @@ class nsIPresContext;
 class nsAbsoluteContainingBlock
 {
 public:
+  nsAbsoluteContainingBlock() { }          // useful for debugging
+
+  virtual ~nsAbsoluteContainingBlock() { } // useful for debugging
+
+  virtual nsIAtom* GetChildListName() const { return nsLayoutAtoms::absoluteList; }
+
   nsresult FirstChild(const nsIFrame* aDelegatingFrame,
                       nsIAtom*        aListName,
                       nsIFrame**      aFirstChild) const;
@@ -93,15 +100,15 @@ public:
   // function will reflow any absolutely positioned child frames that need to
   // be reflowed, e.g., because the absolutely positioned child frame has
   // 'auto' for an offset, or a percentage based width or height.
-  // Returns (in the local coordinate space) the bounding rect of the absolutely
-  // positioned child elements taking into account their overflow area (if it
-  // is visible)
+  // If aChildBounds is set, it returns (in the local coordinate space) the 
+  // bounding rect of the absolutely positioned child elements taking into 
+  // account their overflow area (if it is visible)
   nsresult Reflow(nsIFrame*                aDelegatingFrame,
                   nsIPresContext*          aPresContext,
                   const nsHTMLReflowState& aReflowState,
                   nscoord                  aContainingBlockWidth,
                   nscoord                  aContainingBlockHeight,
-                  nsRect&                  aChildBounds);
+                  nsRect*                  aChildBounds = nsnull);
 
   // Called only for a reflow reason of eReflowReason_Incremental. The
   // aWasHandled return value indicates whether the reflow command was

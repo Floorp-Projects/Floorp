@@ -1131,7 +1131,7 @@ NS_NewPositionedInlineFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsPositionedInlineFrame* it = new (aPresShell) nsPositionedInlineFrame;
+  nsPositionedInlineFrame* it = new (aPresShell) nsPositionedInlineFrame();
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1153,7 +1153,7 @@ nsPositionedInlineFrame::SetInitialChildList(nsIPresContext* aPresContext,
 {
   nsresult  rv;
 
-  if (nsLayoutAtoms::absoluteList == aListName) {
+  if (mAbsoluteContainer.GetChildListName() == aListName) {
     rv = mAbsoluteContainer.SetInitialChildList(this, aPresContext, aListName, aChildList);
   } else {
     rv = nsInlineFrame::SetInitialChildList(aPresContext, aListName, aChildList);
@@ -1170,7 +1170,7 @@ nsPositionedInlineFrame::AppendFrames(nsIPresContext* aPresContext,
 {
   nsresult  rv;
   
-  if (nsLayoutAtoms::absoluteList == aListName) {
+  if (mAbsoluteContainer.GetChildListName() == aListName) {
     rv = mAbsoluteContainer.AppendFrames(this, aPresContext, aPresShell, aListName,
                                          aFrameList);
   } else {
@@ -1190,7 +1190,7 @@ nsPositionedInlineFrame::InsertFrames(nsIPresContext* aPresContext,
 {
   nsresult  rv;
 
-  if (nsLayoutAtoms::absoluteList == aListName) {
+  if (mAbsoluteContainer.GetChildListName() == aListName) {
     rv = mAbsoluteContainer.InsertFrames(this, aPresContext, aPresShell, aListName,
                                          aPrevFrame, aFrameList);
   } else {
@@ -1209,7 +1209,7 @@ nsPositionedInlineFrame::RemoveFrame(nsIPresContext* aPresContext,
 {
   nsresult  rv;
 
-  if (nsLayoutAtoms::absoluteList == aListName) {
+  if (mAbsoluteContainer.GetChildListName() == aListName) {
     rv = mAbsoluteContainer.RemoveFrame(this, aPresContext, aPresShell, aListName, aOldFrame);
   } else {
     rv = nsInlineFrame::RemoveFrame(aPresContext, aPresShell, aListName, aOldFrame);
@@ -1225,7 +1225,7 @@ nsPositionedInlineFrame::ReplaceFrame(nsIPresContext* aPresContext,
                                       nsIFrame*       aOldFrame,
                                       nsIFrame*       aNewFrame)
 {
-  if (nsLayoutAtoms::absoluteList == aListName) {
+  if (mAbsoluteContainer.GetChildListName() == aListName) {
     return mAbsoluteContainer.ReplaceFrame(this, aPresContext, aPresShell,
                                            aListName, aOldFrame, aNewFrame);
   } else {
@@ -1241,7 +1241,7 @@ nsPositionedInlineFrame::GetAdditionalChildListName(PRInt32   aIndex,
   NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
   *aListName = nsnull;
   if (0 == aIndex) {
-    *aListName = nsLayoutAtoms::absoluteList;
+    *aListName = mAbsoluteContainer.GetChildListName();
     NS_ADDREF(*aListName);
   }
   return NS_OK;
@@ -1253,7 +1253,7 @@ nsPositionedInlineFrame::FirstChild(nsIPresContext* aPresContext,
                                     nsIFrame**      aFirstChild) const
 {
   NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
-  if (aListName == nsLayoutAtoms::absoluteList) {
+  if (mAbsoluteContainer.GetChildListName() == aListName) {
     return mAbsoluteContainer.FirstChild(this, aListName, aFirstChild);
   }
 
@@ -1347,7 +1347,7 @@ nsPositionedInlineFrame::Reflow(nsIPresContext*          aPresContext,
 
     rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState,
                                    containingBlockWidth, containingBlockHeight,
-                                   childBounds);
+                                   &childBounds);
     
     // XXX Although this seems like the correct thing to do the line layout
     // code seems to reset the NS_FRAME_OUTSIDE_CHILDREN and so it is ignored

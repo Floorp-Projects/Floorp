@@ -3993,49 +3993,15 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   
   if (isPaginated) { // paginated
     // Create the first page
-    nsIFrame* pageFrame;
-    NS_NewPageFrame(aPresShell, &pageFrame);
-
-    // The page is the containing block for 'fixed' elements. which are repeated
-    // on every page
-    mFixedContainingBlock = pageFrame;
-
-    // Initialize the page and force it to have a view. This makes printing of
-    // the pages easier and faster.
-    nsCOMPtr<nsIStyleContext> pagePseudoStyle;
-
-    aPresContext->ResolvePseudoStyleContextFor(nsnull,
-                                               nsCSSAnonBoxes::page,
-                                               rootPseudoStyle,
-                                               getter_AddRefs(pagePseudoStyle));
-
-    pageFrame->Init(aPresContext, nsnull, rootFrame, pagePseudoStyle,
-                    nsnull);
-    nsHTMLContainerFrame::CreateViewForFrame(aPresContext, pageFrame,
-                                             pagePseudoStyle, nsnull, PR_TRUE);
-    nsIFrame* pageContentFrame = nsnull;
-    NS_NewPageContentFrame(aPresShell, &pageContentFrame);
-
-    nsCOMPtr<nsIStyleContext> pageContentPseudoStyle;
-    aPresContext->ResolvePseudoStyleContextFor(nsnull,
-                                               nsCSSAnonBoxes::pageContent,
-                                               pagePseudoStyle,
-                                               getter_AddRefs(pageContentPseudoStyle));
-
-    pageContentFrame->Init(aPresContext, nsnull, pageFrame, pageContentPseudoStyle, nsnull);
-    nsHTMLContainerFrame::CreateViewForFrame(aPresContext, pageContentFrame,
-                                             pageContentPseudoStyle, nsnull, PR_TRUE);
-
-    // The eventual parent of the document element frame
-    mDocElementContainingBlock = pageContentFrame;
-    mFixedContainingBlock = pageContentFrame;
-
     // Set the initial child lists
-    pageFrame->SetInitialChildList(aPresContext, nsnull, pageContentFrame);
-
-    // Set the initial child lists
+    nsIFrame *pageFrame, *pageContentFrame;
+    ConstructPageFrame(aPresShell, aPresContext, rootFrame, nsnull, 
+                       pageFrame, pageContentFrame);
     rootFrame->SetInitialChildList(aPresContext, nsnull, pageFrame);
 
+    // The eventual parent of the document element frame.
+    // XXX should this be set for every new page (in ConstructPageFrame)?
+    mDocElementContainingBlock = pageContentFrame;
   }
 
   viewportFrame->SetInitialChildList(aPresContext, nsnull, newFrame);
@@ -4047,6 +4013,84 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   return NS_OK;  
 }
 
+NS_IMETHODIMP
+nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*   aPresShell, 
+                                          nsIPresContext* aPresContext,
+                                          nsIFrame*       aParentFrame,
+                                          nsIFrame*       aPrevPageFrame,
+                                          nsIFrame*&      aPageFrame,
+                                          nsIFrame*&      aPageContentFrame)
+{
+  nsresult rv = NS_OK;
+  rv = NS_NewPageFrame(aPresShell, &aPageFrame);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIStyleContext> parentStyleContext;
+  aParentFrame->GetStyleContext(getter_AddRefs(parentStyleContext));
+
+  nsCOMPtr<nsIStyleContext> pagePseudoStyle;
+  aPresContext->ResolvePseudoStyleContextFor(nsnull, nsCSSAnonBoxes::page,
+                                             parentStyleContext,
+                                             getter_AddRefs(pagePseudoStyle));
+  // Initialize the page frame and force it to have a view. This makes printing of
+  // the pages easier and faster.
+  aPageFrame->Init(aPresContext, nsnull, aParentFrame, pagePseudoStyle, aPrevPageFrame);
+  rv = nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aPageFrame,
+                                                pagePseudoStyle, nsnull, PR_TRUE);
+  if (NS_FAILED(rv))
+    return NS_ERROR_NULL_POINTER;
+
+  NS_NewPageContentFrame(aPresShell, &aPageContentFrame);
+
+  nsCOMPtr<nsIStyleContext> pageContentPseudoStyle;
+  aPresContext->ResolvePseudoStyleContextFor(nsnull, nsCSSAnonBoxes::pageContent,
+                                             pagePseudoStyle,
+                                             getter_AddRefs(pageContentPseudoStyle));
+  // Initialize the page content frame and force it to have a view. Also make it the
+  // containing block for fixed elements which are repeated on every page.
+  aPageContentFrame->Init(aPresContext, nsnull, aPageFrame, pageContentPseudoStyle, nsnull);
+  nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aPageContentFrame,
+                                           pageContentPseudoStyle, nsnull, PR_TRUE);
+  if (NS_FAILED(rv))
+    return NS_ERROR_NULL_POINTER;
+  mFixedContainingBlock = aPageContentFrame;
+
+  aPageFrame->SetInitialChildList(aPresContext, nsnull, aPageContentFrame);
+
+  if (aPrevPageFrame) {
+    // Get aPrevPageFrame's page content frame
+    nsIFrame* prevPCFrame;
+    aPrevPageFrame->FirstChild(aPresContext, nsnull, &prevPCFrame);
+
+    nsFrameItems fixedPlaceholders;
+    nsIFrame* firstFixed;
+    prevPCFrame->FirstChild(aPresContext, nsLayoutAtoms::fixedList, &firstFixed);
+
+    nsFrameConstructorState state(aPresContext, aPageContentFrame,
+                                  mInitialContainingBlock, mInitialContainingBlock);
+    // Iterate the fixed frames and replicate each
+    for (nsIFrame* fixed = firstFixed; fixed; fixed->GetNextSibling(&fixed)) {
+      nsIContent* content;
+      fixed->GetContent(&content);
+      rv = ConstructFrame(aPresShell, aPresContext, state, content, 
+                          aPageContentFrame, fixedPlaceholders);
+      if (NS_FAILED(rv))
+        return NS_ERROR_NULL_POINTER;
+    }
+    // Add the fixed frames and their placeholders to aPageContentFrame
+    if (firstFixed) {
+      // Add the placeholders to the primary child list. They will not be reflowed 
+      // (only the area frame child is reflowed) but must not be destroyed until the 
+      // page content frame is destroyed.
+      aPageContentFrame->SetInitialChildList(aPresContext, nsnull, fixedPlaceholders.childList);
+      // Add the fixed frames to the fixed child list.
+      aPageContentFrame->SetInitialChildList(aPresContext, nsLayoutAtoms::fixedList, 
+                                             state.mFixedItems.childList);
+    }
+  }
+  return rv;
+}
 
 nsresult
 nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*    aPresShell, 
@@ -8309,7 +8353,6 @@ GetAdjustedParentFrame(nsIPresContext* aPresContext,
   return (newParent) ? newParent : aParentFrame;
 }
 
-
 NS_IMETHODIMP
 nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
                                        nsIContent*     aContainer,
@@ -9332,9 +9375,9 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
     // XXX We can't just assume these frames are being appended, we need to
     // determine where in the list they should be inserted...
     if (state.mFixedItems.childList) {
-      state.mFixedItems.containingBlock->AppendFrames(aPresContext, *shell,
-                                                      nsLayoutAtoms::fixedList,
-                                                      state.mFixedItems.childList);
+      rv = state.mFixedItems.containingBlock->AppendFrames(aPresContext, *shell,
+                                                           nsLayoutAtoms::fixedList,
+                                                           state.mFixedItems.childList);
     }
         
     // If there are new floating child frames, then notify
@@ -11261,8 +11304,8 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
       // determine where in the list they should be inserted...
       if (state.mFixedItems.childList) {
         rv = state.mFixedItems.containingBlock->AppendFrames(aPresContext, *presShell,
-                                                  nsLayoutAtoms::fixedList,
-                                                  state.mFixedItems.childList);
+                                                             nsLayoutAtoms::fixedList,
+                                                             state.mFixedItems.childList);
       }
   
       // If there are new floating child frames, then notify the parent
@@ -11515,29 +11558,9 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
     }
 
   } else if (nsLayoutAtoms::pageFrame == frameType) {
-    rv = NS_NewPageFrame(aPresShell, &newFrame);
-    if (NS_SUCCEEDED(rv)) {
-      newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
-      nsHTMLContainerFrame::CreateViewForFrame(aPresContext, newFrame,
-                                               styleContext, nsnull, PR_TRUE);
-      nsIFrame* pageContentFrame = nsnull;
-      NS_NewPageContentFrame(aPresShell, &pageContentFrame);
-
-      nsCOMPtr<nsIStyleContext> pageContentPseudoStyle;
-      aPresContext->ResolvePseudoStyleContextFor(nsnull,
-                                                 nsCSSAnonBoxes::pageContent,
-                                                 styleContext,
-                                                 getter_AddRefs(pageContentPseudoStyle));
-
-      pageContentFrame->Init(aPresContext, nsnull, newFrame, pageContentPseudoStyle, nsnull);
-      nsHTMLContainerFrame::CreateViewForFrame(aPresContext, pageContentFrame,
-                                               pageContentPseudoStyle, nsnull, PR_TRUE);
-
-     // Set the initial child lists
-      newFrame->SetInitialChildList(aPresContext, nsnull, pageContentFrame);
-
-    }
-
+    nsIFrame* pageContentFrame;
+    rv = ConstructPageFrame(aPresShell, aPresContext, aParentFrame, aFrame, 
+                            newFrame, pageContentFrame);
   } else if (nsLayoutAtoms::tableOuterFrame == frameType) {
     rv = CreateContinuingOuterTableFrame(aPresShell, aPresContext, aFrame, aParentFrame,
                                          content, styleContext, &newFrame);
@@ -13337,8 +13360,8 @@ nsCSSFrameConstructor::CreateListBoxContent(nsIPresContext* aPresContext,
       // determine where in the list they should be inserted...
       if (state.mFixedItems.childList) {
         rv = state.mFixedItems.containingBlock->AppendFrames(aPresContext, *shell,
-                                                      nsLayoutAtoms::fixedList,
-                                                      state.mFixedItems.childList);
+                                                             nsLayoutAtoms::fixedList,
+                                                             state.mFixedItems.childList);
       }
       
       // If there are new floating child frames, then notify
