@@ -489,6 +489,26 @@ NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
 }
 
 
+// Are both windows from this app?
+BOOL bothFromSameWindow( HWND hwnd1, HWND hwnd2 )
+{
+   HWND hwnd1Owner = WinQueryWindow( hwnd1, QW_OWNER);
+   HWND hwnd1GOwner = WinQueryWindow( hwnd1Owner, QW_OWNER);
+   HWND hwnd2Owner = WinQueryWindow( hwnd2, QW_OWNER);
+   HWND hwnd2GOwner = WinQueryWindow( hwnd2Owner, QW_OWNER);
+   while( hwnd1GOwner) {
+      hwnd1 = hwnd1Owner;
+      hwnd1Owner = hwnd1GOwner;
+      hwnd1GOwner = WinQueryWindow( hwnd1Owner, QW_OWNER);
+   }
+   while( hwnd2GOwner) {
+      hwnd2 = hwnd2Owner;
+      hwnd2Owner = hwnd2GOwner;
+      hwnd2GOwner = WinQueryWindow( hwnd2Owner, QW_OWNER);
+   }
+   return (hwnd1 == hwnd2);
+}
+
 // --------------------------------------------------------------------------
 // PM messaging layer - wndproc, subclasser, default handler ----------------
 
@@ -504,22 +524,24 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
    nsWindow *wnd = NS_HWNDToWindow( hwnd);
 
    // check to see if we have a rollup listener registered
-   if (nsnull != gRollupListener && nsnull != gRollupWidget) {
-      if (msg == WM_ACTIVATE || msg == WM_BUTTON1DOWN ||
+   if( nsnull != gRollupListener && nsnull != gRollupWidget) {
+      if( msg == WM_ACTIVATE || msg == WM_BUTTON1DOWN ||
           msg == WM_BUTTON2DOWN || msg == WM_BUTTON3DOWN) {
          // Rollup if the event is outside the popup
-         if (PR_FALSE == nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget)) {
+         if( PR_FALSE == nsWindow::EventIsInsideWindow( (nsWindow*)gRollupWidget)) {
             gRollupListener->Rollup();
 
             // if we are supposed to be consuming events and it is
             // a Mouse Button down, let it go through
-//            if (gRollupConsumeRollupEvent && msg != WM_BUTTON1DOWN) {
+//            if( gRollupConsumeRollupEvent && msg != WM_BUTTON1DOWN) {
 //               return FALSE;
 //            }
          } 
       }
-      else if (msg == WM_SETFOCUS) {
-         if (!mp2 && hwnd != WinQueryWindow((HWND)mp1, QW_OWNER)) {
+      else if( msg == WM_SETFOCUS) {
+         if( !mp2 && 
+             !bothFromSameWindow( ((nsWindow*)gRollupWidget)->GetMainWindow(), 
+                                  (HWND)mp1) ) {
             gRollupListener->Rollup();
          }
       }
