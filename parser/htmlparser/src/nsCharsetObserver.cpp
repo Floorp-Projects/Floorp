@@ -19,6 +19,10 @@
 
 
 #include "nsCharsetObserver.h"
+#include "nsIServiceManager.h"
+
+#define NS_IMPL_IDS
+#include "nsICharsetAlias.h"
 
 static NS_DEFINE_IID(kIElementObserverIID, NS_IELEMENTOBSERVER_IID);
 static NS_DEFINE_IID(kIObserverIID, NS_IOBSERVER_IID);
@@ -63,26 +67,65 @@ NS_IMETHODIMP nsCharsetObserver::QueryInterface(REFNSIID aIID, void** aInstanceP
   return NS_NOINTERFACE;
 }
 
-NS_IMETHODIMP nsCharsetObserver::GetTagName(nsString& oTag)
+NS_IMETHODIMP_(const char*) nsCharsetObserver::GetTagName()
 {
-  oTag = "META";
-  return NS_OK;
+  return "META";
 }
 
 NS_IMETHODIMP nsCharsetObserver::Notify(
                      PRUint32 aDocumentID, 
-                     const nsString& aTag, 
+                     eHTMLTags aTag, 
                      PRUint32 numOfAttributes, 
                      const nsString* nameArray, 
                      const nsString* valueArray)
 {
+    if(eHTMLTag_meta != aTag) 
+        return NS_ERROR_ILLEGAL_VALUE;
+
     nsresult res = NS_OK;
-    if(aTag.EqualsIgnoreCase("META")) 
+
+    // Only process if we get the HTTP-EQUIV=Content-Type in meta
+    // We totaly need 4 attributes
+    //   HTTP-EQUIV
+    //   CONTENT
+    //   currentCharset            - pseudo attribute fake by parser
+    //   currentCharsetSource      - pseudo attribute fake by parser
+
+    if((numOfAttributes >= 4) && 
+       (nameArray[0].EqualsIgnoreCase("HTTP-EQUIV")) &&
+       (valueArray[0].EqualsIgnoreCase("Content-Type")))
     {
-      if((numOfAttributes >= 2) && 
-         (nameArray[0].EqualsIgnoreCase("HTTP-EQUIV")) &&
-         (valueArray[0].EqualsIgnoreCase("Content-Type")) && 
-         (nameArray[1].EqualsIgnoreCase("CONTENT")) ) 
+      nsAutoString currentCharset("unknown");
+      nsAutoString charsetSourceStr("unknown");
+
+      for(PRUint32 i=0; i < numOfAttributes; i++) 
+      {
+         if(nameArray[i].EqualsIgnoreCase("currentCharset")) 
+         {
+           currentCharset = valueArray[i];
+         } else if(nameArray[i].EqualsIgnoreCase("currentCharsetSource")) {
+           charsetSourceStr = valueArray[i];
+         }
+      }
+
+      // if we cannot find currentCharset or currentCharsetSource
+      // return error.
+      if( currentCharset.Equals("unknown") ||
+          charsetSourceStr.Equals("unknown") )
+      {
+         return NS_ERROR_ILLEGAL_VALUE;
+      }
+
+      PRInt32 err;
+      PRInt32 charsetSourceInt = charsetSourceStr.ToInteger(&err);
+
+      // if we cannot convert the string into nsCharsetSource, return error
+      if(NS_FAILED(err))
+         return NS_ERROR_ILLEGAL_VALUE;
+
+      nsCharsetSource currentCharsetSource = (nsCharsetSource)charsetSourceInt;
+
+      if (nameArray[1].EqualsIgnoreCase("CONTENT")) 
       {
          nsAutoString type;
          valueArray[2].Left(type, 9); // length of "text/html" == 9
@@ -96,16 +139,36 @@ NS_IMETHODIMP nsCharsetObserver::Notify(
                      charsetValueEnd = valueArray[2].Length();
                   nsAutoString theCharset;
                   valueArray[2].Mid(theCharset, charsetValueStart, charsetValueEnd - charsetValueStart);
-                  // XXX 
-                  // Get the charest in theCharset
-                  // Now, how can we verify the object, if
-                  // we pass the object  (nsScanner) when we create this object
-                  // then it mean we need to create one nsIElementObserver
-                  // for every nsParser object
-                  // However, currently we register ourself to a global
-                  // nsIObserverService, not to a nsParser. 
+
+                  if(kCharsetFromMetaTag > currentCharsetSource)
+                  {
+                     nsICharsetAlias* calias = nsnull;
+                     res = nsServiceManager::GetService(
+                                kCharsetAliasCID,
+                                kICharsetAliasIID,
+                                (nsISupports**) &calias);
+                     if(NS_SUCCEEDED(res) && (nsnull != calias) ) {
+                         PRBool same = PR_FALSE;
+                         res = calias->Equals( theCharset, currentCharset, &same);
+                         if(NS_SUCCEEDED(res) && (! same))
+                         {
+                            nsAutoString preferred;
+                            res = calias->GetPreferred(theCharset, preferred);
+                            if(NS_SUCCEEDED(res))
+                            {
+                               // XXX
+                               // ask nsWebShellProxy to load docuement
+                               // where the docuemtn ID is euqal to aDocuemntID
+                               // Charset equal to preferred
+                               // and charsetSource is kCharetFromMetaTag        
+                            }
+                         }
+                         nsServiceManager::ReleaseService(kCharsetAliasCID, calias);
+                     }
+                  }
                   
-             } // if
+            } // if
+          
          } // if
       } // if
     } // if

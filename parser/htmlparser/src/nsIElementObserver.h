@@ -28,6 +28,8 @@
 
 #include "nsISupports.h"
 #include "prtypes.h"
+#include "nsHTMLTokens.h"
+
 class nsString;
 
 // {4672AA04-F6AE-11d2-B3B7-00805F8A6670}
@@ -42,7 +44,7 @@ public:
   /*
    *   This method return the tag which the observer care about
    */
-  NS_IMETHOD GetTagName(nsString& oTag) = 0;
+  NS_IMETHOD_(const char*)GetTagName() = 0;
 
   /*
    *   Subject call observer when the parser hit the tag
@@ -52,7 +54,7 @@ public:
    *   @param nameArray - array of name. 
    *   @param valueArray - array of value
    */
-  NS_IMETHOD Notify(PRUint32 aDocumentID, const nsString& aTag, PRUint32 numOfAttributes, 
+  NS_IMETHOD Notify(PRUint32 aDocumentID, eHTMLTags aTag, PRUint32 numOfAttributes, 
                  const nsString* nameArray, const nsString* valueArray) = 0;
 
 
