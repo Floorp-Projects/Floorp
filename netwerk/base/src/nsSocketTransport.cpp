@@ -254,7 +254,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
   // Enter the socket transport lock...  
   // This lock protects access to socket transport member data...
   //
-  nsAutoLock lock(mLock);
+  nsAutoLock aLock(mLock);
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("+++ Entering nsSocketTransport::Process() [this=%x].\t"
@@ -1061,7 +1061,7 @@ nsSocketTransport::Suspend(void)
   nsresult rv = NS_OK;
 
   // Enter the socket transport lock...
-  nsAutoLock lock(mLock);
+  nsAutoLock aLock(mLock);
 
   mSuspendCount += 1;
   //
@@ -1089,7 +1089,7 @@ nsSocketTransport::Resume(void)
   nsresult rv = NS_OK;
 
   // Enter the socket transport lock...
-  nsAutoLock lock(mLock);
+  nsAutoLock aLock(mLock);
 
   if (mSuspendCount) {
     mSuspendCount -= 1;
@@ -1125,7 +1125,7 @@ nsSocketTransport::OnFull(nsIBuffer* aBuffer)
          ("nsSocketTransport::OnFull() [this=%x] nsIBuffer=%x.\n", 
          this, aBuffer));
 
-  if (aBuffer == mReadBuffer) {
+  if (aBuffer == mReadBuffer.get()) {
     NS_ASSERTION(!GetFlag(eSocketRead_Wait), "Already waiting!");
 
     SetFlag(eSocketRead_Wait);
@@ -1145,9 +1145,9 @@ nsSocketTransport::OnWrite(nsIBuffer* aBuffer, PRUint32 aCount)
          ("nsSocketTransport::OnWrite() [this=%x]. nsIBuffer=%x Count=%d\n", 
          this, aBuffer, aCount));
 
-  if (aBuffer == mWriteBuffer) {
+  if (aBuffer == mWriteBuffer.get()) {
     // Enter the socket transport lock...
-    nsAutoLock lock(mLock);
+    nsAutoLock aLock(mLock);
 
     mWriteCount += aCount;
     if (GetFlag(eSocketWrite_Wait)) {
@@ -1173,9 +1173,9 @@ nsSocketTransport::OnEmpty(nsIBuffer* aBuffer)
          ("nsSocketTransport::OnEmpty() [this=%x] nsIBuffer=%x.\n", 
          this, aBuffer));
 
-  if (aBuffer == mReadBuffer) {
+  if (aBuffer == mReadBuffer.get()) {
     // Enter the socket transport lock...
-    nsAutoLock lock(mLock);
+    nsAutoLock aLock(mLock);
 
     if (GetFlag(eSocketRead_Wait)) {
       ClearFlag(eSocketRead_Wait);
@@ -1208,7 +1208,7 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
   nsresult rv = NS_OK;
   
   // Enter the socket transport lock...
-  nsAutoLock lock(mLock);
+  nsAutoLock aLock(mLock);
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("+++ Entering nsSocketTransport::AsyncRead() [this=%x]\t"
@@ -1278,7 +1278,7 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
   nsresult rv = NS_OK;
 
   // Enter the socket transport lock...
-  nsAutoLock lock(mLock);
+  nsAutoLock aLock(mLock);
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("+++ Entering nsSocketTransport::AsyncWrite() [this=%x]\t"
@@ -1336,7 +1336,7 @@ nsSocketTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
   NS_ASSERTION(startPosition == 0, "fix me");
 
   // Enter the socket transport lock...
-  nsAutoLock lock(mLock);
+  nsAutoLock aLock(mLock);
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("+++ Entering nsSocketTransport::OpenInputStream() [this=%x].\n", 
@@ -1389,7 +1389,7 @@ nsSocketTransport::OpenOutputStream(PRUint32 startPosition, nsIOutputStream* *re
   NS_ASSERTION(startPosition == 0, "fix me");
 
   // Enter the socket transport lock...
-  nsAutoLock lock(mLock);
+  nsAutoLock aLock(mLock);
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("+++ Entering nsSocketTransport::OpenOutputStream() [this=%x].\n", 
