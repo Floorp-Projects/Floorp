@@ -121,12 +121,13 @@ Py_nsIClassInfo::getattr(const char *name)
 		ret = MakeStringOrNone(str_ret);
 		nsAllocator::Free(str_ret);
 	} else if (strcmp(name, "classID")==0) {
-		nsIID iid;
+		nsIID *iid;
 		Py_BEGIN_ALLOW_THREADS;
 		nr = pI->GetClassID(&iid);
 		Py_END_ALLOW_THREADS;
 		GETATTR_CHECK_RESULT(nr);
-		ret = Py_nsIID::PyObjectFromIID(iid);
+		ret = Py_nsIID::PyObjectFromIID(*iid);
+		nsAllocator::Free(iid);
 	} else if (strcmp(name, "implementationLanguage")==0) {
 		PRUint32 i;
 		Py_BEGIN_ALLOW_THREADS;
