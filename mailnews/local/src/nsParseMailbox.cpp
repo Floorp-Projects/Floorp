@@ -44,13 +44,14 @@
 #include "nsIMsgFilterService.h"
 #include "nsIMsgFilterList.h"
 #include "nsIMsgFilter.h"
-
+#include "nsIIOService.h"
 #include "nsIPref.h"
 
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ISUPPORTS_INHERITED(nsMsgMailboxParser, nsParseMailMessageState, nsIStreamListener);
@@ -79,6 +80,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIChannel * /* aChannel */, ns
 	// we have an error.
 	nsresult rv = NS_OK;
 
+    NS_WITH_SERVICE(nsIIOService, ioServ, kIOServiceCID, &rv);
 
 	nsCOMPtr<nsIMailboxUrl> runningUrl = do_QueryInterface(ctxt, &rv);
 
@@ -90,12 +92,20 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIChannel * /* aChannel */, ns
 
 		// okay, now fill in our event sinks...Note that each getter ref counts before
 		// it returns the interface to us...we'll release when we are done
-		nsXPIDLCString fileName;
-		url->GetFilePath(getter_Copies(fileName));
-		url->GetFileName(getter_Copies(m_folderName));
+        nsXPIDLCString fileName;
+        nsXPIDLCString folderName;
+        rv = url->GetFilePath(getter_Copies(fileName));
+		url->GetFileName(getter_Copies(folderName));
+        char* tempfolder = nsnull;
+        rv = ioServ->Unescape(folderName, &tempfolder);
+        m_folderName = tempfolder;
+        CRTFREEIF(tempfolder);
 		if (fileName)
 		{
-			nsFilePath dbPath(fileName);
+            char* result = nsnull;
+            rv = ioServ->Unescape(fileName, &result);
+			nsFilePath dbPath(result);
+            CRTFREEIF(result);
 			nsFileSpec dbName(dbPath);
 
 			// the size of the mailbox file is our total base line for measuring progress
@@ -115,7 +125,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIChannel * /* aChannel */, ns
 			printf("url file = %s\n", (const char *)fileName);
 #endif
 		}
-	}
+ 	}
 
 	// need to get the mailbox name out of the url and call SetMailboxName with it.
 	// then, we need to open the mail db for this parser.

@@ -320,6 +320,26 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetPreHost(const char * aPreHost)
 	return m_baseURL->SetPreHost(aPreHost);
 }
 
+NS_IMETHODIMP nsMsgMailNewsUrl::GetUsername(char * *aUsername)
+{
+	return m_baseURL->GetUsername(aUsername);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetUsername(const char * aUsername)
+{
+	return m_baseURL->SetUsername(aUsername);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::GetPassword(char * *aPassword)
+{
+	return m_baseURL->GetPassword(aPassword);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetPassword(const char * aPassword)
+{
+	return m_baseURL->SetPassword(aPassword);
+}
+
 NS_IMETHODIMP nsMsgMailNewsUrl::GetHost(char * *aHost)
 {
 	return m_baseURL->GetHost(aHost);
@@ -348,6 +368,16 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetPath(char * *aPath)
 NS_IMETHODIMP nsMsgMailNewsUrl::SetPath(const char * aPath)
 {
 	return m_baseURL->SetPath(aPath);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::GetURLParser(nsIURLParser * *aURLParser)
+{
+	return m_baseURL->GetURLParser(aURLParser);
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetURLParser(nsIURLParser* aURLParser)
+{
+	return m_baseURL->SetURLParser(aURLParser);
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::Equals(nsIURI *other, PRBool *_retval)

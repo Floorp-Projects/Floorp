@@ -42,10 +42,12 @@
 #include "nsIAllocator.h"
 #include "nsIURL.h"
 #include "nsMsgUtils.h" // for NS_MsgHashIfNecessary()
+#include "nsIIOService.h"
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
+static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
 PRInt32 nsMsgFolder::gInstanceCount	= 0;
 
@@ -448,6 +450,8 @@ nsMsgFolder::parseURI(PRBool needServer)
   rv = url->SetSpec(mURI);
   if (NS_FAILED(rv)) return rv;
 
+  NS_WITH_SERVICE(nsIIOService, ioServ, kIOServiceCID, &rv);
+
   //
   // pull some info out of the URI
   //
@@ -473,7 +477,10 @@ nsMsgFolder::parseURI(PRBool needServer)
     rv = url->GetFileName(getter_Copies(fileName));
     if (NS_SUCCEEDED(rv)) {
       // XXX conversion to unicode here? is fileName in UTF8?
-      mName = fileName;
+
+      char* result = nsnull;
+      rv = ioServ->Unescape(fileName, &result);
+      mName = result;
     }
   }
 
@@ -541,6 +548,9 @@ nsMsgFolder::parseURI(PRBool needServer)
     nsXPIDLCString urlPath;
     url->GetFilePath(getter_Copies(urlPath));
 
+    char* result = nsnull;
+    rv = ioServ->Unescape(urlPath, &result);
+
     // transform the filepath from the URI, such as
     // "/folder1/folder2/foldern"
     // to
@@ -553,7 +563,7 @@ nsMsgFolder::parseURI(PRBool needServer)
     char *newStr=nsnull;
     nsCAutoString hashedToken;
     char *token =
-      nsCRT::strtok(NS_CONST_CAST(char *,(const char*)urlPath), "/", &newStr);
+      nsCRT::strtok(NS_CONST_CAST(char *,(const char*)result), "/", &newStr);
 
     // trick to make sure we only add the path to the first n-1 folders
     PRBool haveFirst=PR_FALSE;
@@ -593,6 +603,7 @@ nsMsgFolder::parseURI(PRBool needServer)
 
     // URI is completely parsed when we've attempted to get the server
     mHaveParsedURI=PR_TRUE;
+    CRTFREEIF(result);
   }
     
   return NS_OK;

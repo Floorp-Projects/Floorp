@@ -158,7 +158,7 @@ NS_NET nsresult
 ExtractString(char* i_Src, char* *o_Dest, PRUint32 length)
 {
     NS_PRECONDITION( (nsnull != i_Src), "Extract called on empty string!");
-    /*    CRTFREEIF(*o_Dest);*/
+    CRTFREEIF(*o_Dest);
     *o_Dest = PL_strndup(i_Src, length);
     return (*o_Dest ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
 }
@@ -201,8 +201,10 @@ CoaleseDirs(char* io_Path)
             (*fwdPtr != '?') && 
             (*fwdPtr != '#'); ++fwdPtr)
     {
+#ifdef XP_PC
         if (*fwdPtr == '\\')
             *fwdPtr = '/';
+#endif
         if (*fwdPtr == '/' && *(fwdPtr+1) == '.' && 
             (*(fwdPtr+2) == '/' || *(fwdPtr+2) == '\\'))
         {
@@ -255,7 +257,6 @@ CoaleseDirs(char* io_Path)
 NS_NET void 
 ToLowerCase(char* str)
 {
-#ifdef UNDEF
     if (str) {
         char* lstr = str;
         PRInt8 shift = 'a' - 'A';
@@ -266,5 +267,4 @@ ToLowerCase(char* str)
                 *(lstr) = *(lstr) + shift;
         }
     }
-#endif
 }

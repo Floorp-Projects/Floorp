@@ -393,22 +393,21 @@ nsIOService::SetOffline(PRBool offline)
 NS_IMETHODIMP
 nsIOService::Escape(const char *str, PRInt16 mask, char **result)
 {
-    // XXX Andreas
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsURLEscape((char*)str,mask,result);
 }
 
 NS_IMETHODIMP
 nsIOService::Unescape(const char *str, char **result)
 {
-    // XXX Andreas
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return nsURLUnescape((char*)str,result);
 }
 
 NS_IMETHODIMP
 nsIOService::ExtractPort(const char *str, PRInt32 *result)
 {
-    // XXX Andreas
-    return NS_ERROR_NOT_IMPLEMENTED;
+    PRInt32 returnValue = -1;
+    *result = (0 < PR_sscanf(str, "%d", &returnValue)) ? returnValue : -1;
+    return NS_OK;
 }
 
 NS_IMETHODIMP

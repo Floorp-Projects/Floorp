@@ -318,6 +318,26 @@ NS_IMETHODIMP nsMailtoUrl::SetPreHost(const char * aPreHost)
 	return m_baseURL->SetPreHost(aPreHost);
 }
 
+NS_IMETHODIMP nsMailtoUrl::GetUsername(char * *aUsername)
+{
+	return m_baseURL->GetUsername(aUsername);
+}
+
+NS_IMETHODIMP nsMailtoUrl::SetUsername(const char * aUsername)
+{
+	return m_baseURL->SetUsername(aUsername);
+}
+
+NS_IMETHODIMP nsMailtoUrl::GetPassword(char * *aPassword)
+{
+	return m_baseURL->GetPassword(aPassword);
+}
+
+NS_IMETHODIMP nsMailtoUrl::SetPassword(const char * aPassword)
+{
+	return m_baseURL->SetPassword(aPassword);
+}
+
 NS_IMETHODIMP nsMailtoUrl::GetHost(char * *aHost)
 {
 	return m_baseURL->GetHost(aHost);
@@ -353,6 +373,15 @@ NS_IMETHODIMP nsMailtoUrl::Equals(nsIURI *other, PRBool *_retval)
 	return m_baseURL->Equals(other, _retval);
 }
 
+NS_IMETHODIMP nsMailtoUrl::GetURLParser(nsIURLParser * *aURLParser)
+{
+	return m_baseURL->GetURLParser(aURLParser);
+}
+
+NS_IMETHODIMP nsMailtoUrl::SetURLParser(nsIURLParser * aURLParser)
+{
+	return m_baseURL->SetURLParser(aURLParser);
+}
 
 NS_IMETHODIMP nsMailtoUrl::Clone(nsIURI **_retval)
 {

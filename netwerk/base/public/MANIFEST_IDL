@@ -13,3 +13,4 @@ nsIFileTransportService.idl
 nsIFileSystem.idl
 nsIPrompt.idl
 nsIStreamLoader.idl
+nsIURLParser.idl

@@ -3188,7 +3188,7 @@ NS_IMETHODIMP nsImapMailFolder::GetPath(nsIFileSpec ** aPathName)
        return NS_ERROR_OUT_OF_MEMORY;
 
     rv = nsImapURI2Path(kImapRootURI, mURI, *m_pathName);
-//         printf("constructing path %s\n", (const char *) *m_pathName);
+    //    printf("constructing path %s\n", (const char *) *m_pathName);
     if (NS_FAILED(rv)) return rv;
   }
   rv = NS_NewFileSpecWithSpec(*m_pathName, aPathName);

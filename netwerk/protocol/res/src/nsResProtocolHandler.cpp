@@ -193,7 +193,7 @@ nsResProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 NS_IMETHODIMP
 nsResProtocolHandler::GetScheme(char* *result)
 {
-    *result = nsCRT::strdup("res");
+    *result = nsCRT::strdup("resource");
     if (*result == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;

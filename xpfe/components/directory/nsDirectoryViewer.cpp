@@ -59,7 +59,8 @@
 #include "nsXPIDLString.h"
 #include "rdf.h"
 #include "nsIInterfaceRequestor.h"
-
+#include "iostream.h"
+#include "nsIIOService.h"
 
 ////////////////////////////////////////////////////////////////////////
 // Common CIDs
@@ -72,6 +73,7 @@ static NS_DEFINE_CID(kComponentManagerCID,       NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kDirectoryViewerFactoryCID, NS_DIRECTORYVIEWERFACTORY_CID);
 static NS_DEFINE_CID(kGenericFactoryCID,         NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
 #define HTTPINDEX_NAMESPACE_URI "urn:http-index-format:"
 
@@ -610,6 +612,7 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
   // make sure that the mDirectoryURI ends with a '/' before
   // concatenating.
   nsresult rv;
+  NS_WITH_SERVICE(nsIIOService, ioServ, kIOServiceCID, &rv);
   nsCOMPtr<nsIURI> realbase;
 
   {
@@ -687,7 +690,11 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
     if (field && field->mProperty == kHTTPIndex_Filename) {
       // we found the filename; construct a resource for its entry
       nsAutoString entryuri;
-      rv = NS_MakeAbsoluteURI(value, realbase, entryuri);
+      char* result = nsnull;
+      rv = ioServ->Escape(value.mStr, nsIIOService::url_FileBaseName, 
+                          &result);
+      rv = NS_MakeAbsoluteURI(result, realbase, entryuri);
+      CRTFREEIF(result);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable make absolute URI");
       if (NS_FAILED(rv)) break;
       rv = gRDF->GetResource(nsCAutoString(entryuri), getter_AddRefs(entry));

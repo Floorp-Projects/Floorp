@@ -275,6 +275,7 @@ nsresult nsImapUrl::ParseUrl()
 
 	char * imapPartOfUrl = nsnull;
 	rv = GetPath(&imapPartOfUrl);
+    imapPartOfUrl = nsUnescape(imapPartOfUrl);
 	if (NS_SUCCEEDED(rv) && imapPartOfUrl && imapPartOfUrl+1)
 	{
 		ParseImapPart(imapPartOfUrl+1);  // GetPath leaves leading '/' in the path!!!
@@ -410,6 +411,7 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 {
 	m_tokenPlaceHolder = imapPartOfUrl;
 	m_urlidSubString = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
+
 	if (!m_urlidSubString)
 	{
 		m_validUrl = PR_FALSE;

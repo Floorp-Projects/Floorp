@@ -29,6 +29,7 @@
 #include "nsIFileTransportService.h" 
 #include "nsIDNSService.h" 
 #include "nsCOMPtr.h"
+#include "nsURLHelper.h"
 
 class nsIOService : public nsIIOService
 {
