@@ -2459,8 +2459,8 @@ float greyBrightness;
 void nsPostScriptObj::setfont(const nsCString& aFontName, PRUint32 aHeight,
                               PRInt32 aSubFont)
 {
-  fprintf(mScriptFP, "%d /%s%s Msf\n", aHeight, aFontName.get(),
-          aSubFont >= 0 ? nsPrintfCString(".Set%d", aSubFont).get() : "");
+  fprintf(mScriptFP, "%d /%s.Set%d Msf\n", aHeight, aFontName.get(),
+          aSubFont);
 }
 
 /** ---------------------------------------------------

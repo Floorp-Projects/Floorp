@@ -696,7 +696,7 @@ outputType1SubFont(nsIFreeType2 *aFt2, FT_Face aFace,
     fputc('\n', aFile);
 
   // output mandatory 512 0's
-  const static char *sixtyFourZeros =  
+  const static char sixtyFourZeros[] =  
       "0000000000000000000000000000000000000000000000000000000000000000\n";
   for (i = 0; i < 8; i++) 
     fprintf(aFile, sixtyFourZeros);
