@@ -33,6 +33,8 @@ EXPORTS= \
 		nsIDBChangeListener.h	    \
 		nsIDBFolderInfo.h \
 		nsIMessage.h	    \
+		nsIMsgThread.h \
+		nsMsgThread.h \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

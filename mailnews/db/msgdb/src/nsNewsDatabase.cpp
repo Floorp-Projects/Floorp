@@ -161,3 +161,10 @@ nsresult nsNewsDatabase::GetPurgeArticleInfo(MSG_PurgeInfo *purgeInfo);
 	// caller needs to free
 /* static */ char				*nsNewsDatabase::GetGroupNameFromURL(const char *url);
 
+
+// should we thread messages with common subjects that don't start with Re: together?
+// I imagine we might have separate preferences for mail and news, so this is a virtual method.
+PRBool	nsNewsDatabase::ThreadBySubjectWithoutRe()
+{
+	return PR_TRUE;
+}

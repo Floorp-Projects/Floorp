@@ -34,6 +34,7 @@ CPPSRCS = \
 	nsMsgHdr.cpp\
 	nsNewsDatabase.cpp\
 	nsMailDatabase.cpp\
+	nsMsgThread.cpp\
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = \

@@ -79,6 +79,7 @@ public:
 	// caller needs to free
 	static char				*GetGroupNameFromURL(const char *url);
 protected:
+	virtual PRBool	ThreadBySubjectWithoutRe() ;
 
 	char*				m_groupURL;
 //	MSG_FilterList*		m_filterList;

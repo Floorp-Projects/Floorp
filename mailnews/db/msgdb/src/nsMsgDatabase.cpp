@@ -35,6 +35,10 @@
 #include "nsILocaleFactory.h"
 #include "nsICollation.h"
 #include "nsCollationCID.h"
+#include "nsIPref.h"
+
+static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
   
 static   NS_DEFINE_CID(kCMimeHeaderConverterCID, NS_MIME_HEADER_CONVERTER_CID);
 
@@ -304,7 +308,7 @@ void nsMsgDatabase::DumpCache()
 nsMsgDatabase::nsMsgDatabase()
     : m_dbFolderInfo(nsnull), m_mdbEnv(nsnull), m_mdbStore(nsnull),
       m_mdbAllMsgHeadersTable(nsnull), m_dbName(""), m_newSet(nsnull),
-      mRefCnt(0), m_mdbTokensInitialized(PR_FALSE), m_ChangeListeners(nsnull),
+      m_mdbTokensInitialized(PR_FALSE), m_ChangeListeners(nsnull),
       m_hdrRowScopeToken(0),
       m_hdrTableKindToken(0),
       m_subjectColumnToken(0),
@@ -320,6 +324,7 @@ nsMsgDatabase::nsMsgDatabase()
       m_numLinesColumnToken(0),
       m_ccListColumnToken(0)
 {
+	NS_INIT_REFCNT();
 }
 
 nsMsgDatabase::~nsMsgDatabase()
@@ -1644,6 +1649,8 @@ NS_IMETHODIMP nsMsgDatabase::CreateNewHdrAndAddToDB(PRBool *newThread, nsMsgHdrS
 	if (NS_FAILED(err)) return err;
 
     err = CreateMsgHdr(hdrRow, m_dbName, hdrStruct->m_messageKey, pnewHdr);
+	if (NS_SUCCEEDED(err))
+		err = AddNewHdrToDB(*pnewHdr, notify);
 	return err;
 }
 
@@ -1664,6 +1671,48 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrStructFromnsMsgHdr(nsIMessage *msg, nsMsgH
         nsMsgKey key;
         (void)msgHdr->GetMessageKey(&key);
 		hdrStruct->m_messageKey = key;
+	}
+	return err;
+}
+
+NS_IMETHODIMP nsMsgDatabase::CopyHdrFromExistingHdr(nsMsgKey key, nsIMessage *existingHdr, nsIMessage **newHdr)
+{
+	nsresult	err = NS_OK;
+
+	if (existingHdr)
+	{
+	    nsMsgHdr* sourceMsgHdr = NS_STATIC_CAST(nsMsgHdr*, existingHdr);      // closed system, cast ok
+		nsMsgHdr *destMsgHdr = nsnull;
+#ifdef MDB_DOES_CELL_CURSORS_OR_COPY_ROW
+		CreateNewHdr(key, &destMsgHdr);
+		nsIMdbRow	sourceRow = sourceMsgHdr->GetMDBRow() ;
+		{
+			nsIMdbRowCellCursor* cellCursor = nsnull;
+			mdb_err res = sourceRow->GetRowCellCursor(GetEnv(), -1, &cellCursor) ; // acquire new cursor instance
+			if (res == 0 && cellCursor)
+			{
+				do
+				{
+					nsIMdbCell ioCell;
+					mdb_column outColumn;
+					mdb_pos outPos;
+
+					res = cellCursor->NextCell(GetEnv(), &ioCell, &outColumn, &outPos);
+    
+				}
+				while (outPos >= 0 && res == 0);
+			}
+		}
+#else
+		nsMsgHdrStruct hdrStruct;
+		err = GetMsgHdrStructFromnsMsgHdr(existingHdr, &hdrStruct);
+		if (NS_SUCCEEDED(err))
+		{
+			PRBool newThread;
+			hdrStruct.m_messageKey = key;
+			err = CreateNewHdrAndAddToDB(&newThread, &hdrStruct, newHdr, PR_FALSE);
+		}
+#endif // MDB_DOES_CELL_CURSORS_OR_COPY_ROW
 	}
 	return err;
 }
@@ -1834,6 +1883,31 @@ nsresult nsMsgDatabase::SetSummaryValid(PRBool valid /* = PR_TRUE */)
 
 	// for default db (and news), there's no nothing to set to make it it valid
 	return NS_OK;
+}
+
+// protected routines
+
+// should we thread messages with common subjects that don't start with Re: together?
+// I imagine we might have separate preferences for mail and news, so this is a virtual method.
+PRBool	nsMsgDatabase::ThreadBySubjectWithoutRe()
+{
+	return PR_TRUE;
+}
+
+nsresult nsMsgDatabase::GetBoolPref(const char *prefName, PRBool *result)
+{
+	PRBool prefValue = PR_FALSE;
+	nsIPref* prefs = nsnull;
+	nsresult rv;
+	rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
+    if (prefs && NS_SUCCEEDED(rv))
+	{
+//		prefs->Startup("prefs.js");
+
+		rv = prefs->GetBoolPref(prefName, result);
+		nsServiceManager::ReleaseService(kPrefCID, prefs);
+	}
+	return rv;
 }
 
 #ifdef DEBUG

@@ -31,7 +31,7 @@ CPPSRCS=    nsMsgDatabase.cpp\
 			nsMailDatabase.cpp\
 			nsNewsDatabase.cpp\
 			nsMsgHdr.cpp\
-			mdbstubs.cpp \
+			nsMsgThread.cpp\
 			$(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsMsgDatabase.obj  \
@@ -39,6 +39,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgDatabase.obj  \
 			.\$(OBJDIR)\nsMailDatabase.obj\
 			.\$(OBJDIR)\nsNewsDatabase.obj\
 			.\$(OBJDIR)\nsMsgHdr.obj\
+			.\$(OBJDIR)\nsMsgThread.obj\
 			$(NULL)
 
 
@@ -46,7 +47,15 @@ EXPORTS=	\
 			$(NULL)
 
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\rdf -I$(PUBLIC)\rdfutil -I$(PUBLIC)\mime -I$(PUBLIC)\locale
+LINCS=-I$(PUBLIC)\xpcom \
+	 -I$(PUBLIC)\mailnews \
+	 -I$(PUBLIC)\raptor \
+	 -I$(PUBLIC)\rdf \
+	 -I$(PUBLIC)\rdfutil \
+	 -I$(PUBLIC)\mime \
+	 -I$(PUBLIC)\locale \
+	 -I$(PUBLIC)\pref \
+	 -I$(PUBLIC)\js
 
 
 LCFLAGS = \

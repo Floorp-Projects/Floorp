@@ -489,6 +489,24 @@ void nsMailDatabase::SetReparse(PRBool reparse)
 }
 
 
+static PRBool gGotThreadingPrefs = FALSE;
+static PRBool gThreadWithoutRe = FALSE;
+
+
+// should we thread messages with common subjects that don't start with Re: together?
+// I imagine we might have separate preferences for mail and news, so this is a virtual method.
+PRBool	nsMailDatabase::ThreadBySubjectWithoutRe()
+{
+	if (!gGotThreadingPrefs)
+	{
+		GetBoolPref("mail.thread_without_re", &gThreadWithoutRe);
+		gGotThreadingPrefs = TRUE;
+	}
+
+	return gThreadWithoutRe;
+}
+
+
 #ifdef DEBUG	// strictly for testing purposes
 nsresult nsMailDatabase::PrePopulate()
 {

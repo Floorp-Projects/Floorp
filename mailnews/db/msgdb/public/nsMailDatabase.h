@@ -79,6 +79,9 @@ protected:
 									 MsgFlags flag, nsIOFileStream **ppFileStream);
 	virtual void			SetReparse(PRBool reparse);
 
+protected:
+	virtual PRBool	ThreadBySubjectWithoutRe() ;
+
 	MSG_Master				*m_master;
 	PRBool					m_reparse;
 	nsFileSpec				m_folderName;

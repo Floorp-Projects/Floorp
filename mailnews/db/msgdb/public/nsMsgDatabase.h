@@ -73,7 +73,7 @@ public:
   // a new header, fill in its properties, and then call AddNewHdrToDB.
   // AddNewHdrToDB will send notifications to any listeners.
   NS_IMETHOD CreateNewHdr(nsMsgKey key, nsIMessage **newHdr);
-//  NS_IMETHOD CopyHdrFromExistingHdr(nsMsgKey key, nsIMessage *existingHdr, nsIMessage **newHdr);
+  NS_IMETHOD CopyHdrFromExistingHdr(nsMsgKey key, nsIMessage *existingHdr, nsIMessage **newHdr);
   NS_IMETHOD AddNewHdrToDB(nsIMessage *newHdr, PRBool notify);
   // extract info from an nsIMessage into a nsMsgHdrStruct
   NS_IMETHOD GetMsgHdrStructFromnsMsgHdr(nsIMessage *msgHdr, 
@@ -211,6 +211,11 @@ protected:
 
     nsresult CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage* *result,
 						  PRBool createKeyFromHeader = PR_FALSE);
+	// prefs stuff - in future, we might want to cache the prefs interface
+	nsresult GetBoolPref(const char *prefName, PRBool *result);
+	virtual PRBool	ThreadBySubjectWithoutRe() ;
+
+	// open db cache
     static void		AddToCache(nsMsgDatabase* pMessageDB) 
 						{GetDBCache()->AppendElement(pMessageDB);}
 	static void		RemoveFromCache(nsMsgDatabase* pMessageDB);
@@ -220,6 +225,8 @@ protected:
 #ifdef XP_PC	// this should go away when we can provide our own file stream to MDB/Mork
 	static void		UnixToNative(char*& ioPath);
 #endif
+
+	// Flag handling routines
 	virtual nsresult SetKeyFlag(nsMsgKey key, PRBool set, PRInt32 flag,
 							  nsIDBChangeListener *instigator = NULL);
 	virtual PRBool	SetHdrFlag(nsIMessage *, PRBool bSet, MsgFlags flag);

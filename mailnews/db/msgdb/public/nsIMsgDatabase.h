@@ -94,6 +94,7 @@ public:
   NS_IMETHOD GetMsgHdrStructFromnsMsgHdr(nsIMessage *msgHdr, 
                                          nsMsgHdrStruct *hdrStruct) = 0;
 
+  NS_IMETHOD CopyHdrFromExistingHdr(nsMsgKey key, nsIMessage *existingHdr, nsIMessage **newHdr) = 0;
 #if HAVE_INT_ENUMERATORS
   NS_IMETHOD EnumerateKeys(nsIEnumerator* *outputKeys) = 0;
 #else

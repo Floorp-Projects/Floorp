@@ -49,6 +49,8 @@ void nsMsgHdr::Init()
 	m_csID = 0;
 	m_flags = 0;
 	m_mdbRow = NULL;
+	m_numReferences = 0;
+	m_threadId = nsMsgKey_None;
 
 }
 
