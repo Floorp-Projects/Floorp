@@ -262,6 +262,16 @@ nsWebDAVService::ChannelFromResource(nsIWebDAVResource *aResource,
     rv = mIOService->NewChannelFromURI(resourceURL, getter_AddRefs(baseChannel));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsLoadFlags loadFlags;
+    rv = baseChannel->GetLoadFlags(&loadFlags);
+    if (NS_SUCCEEDED(rv)) {
+        rv = baseChannel->SetLoadFlags(loadFlags | 
+                                       nsIRequest::VALIDATE_ALWAYS);
+        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+                         "nsWebDavService::ChannelFromResource(): "
+                         "Couldn't set loadflags on channel");
+    }
+
     rv = CallQueryInterface(baseChannel, aChannel);
 
     if (NS_SUCCEEDED(rv) && aResourceURI) {
