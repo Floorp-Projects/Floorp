@@ -18,6 +18,7 @@
     	      case 'INPUT':
               switch (v.getAttribute('type').toLowerCase()) {
 		            case 'button':
+		            case 'image':
 		            case 'submit':
 		            case 'reset':
 		            case 'checkbox':
