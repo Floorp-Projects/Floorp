@@ -625,12 +625,13 @@ NS_METHOD nsDOMEvent::GetRangeParent(nsIDOMNode** aRangeParent)
   if (targetFrame) {
     nsIContent* parent = nsnull;
     PRInt32 offset, endOffset;
-
-    if (NS_SUCCEEDED(targetFrame->GetPosition(*mPresContext, 
-                                              mEvent->point.x,
+    PRBool beginOfContent;
+    if (NS_SUCCEEDED(targetFrame->GetContentAndOffsetsFromPoint(*mPresContext, 
+                                              mEvent->point,
                                               &parent,
                                               offset,
-                                              endOffset))) {
+                                              endOffset,
+                                              beginOfContent))) {
       if (parent && NS_SUCCEEDED(parent->QueryInterface(kIDOMNodeIID, (void**)aRangeParent))) {
         NS_RELEASE(parent);
         return NS_OK;
@@ -655,12 +656,13 @@ NS_METHOD nsDOMEvent::GetRangeOffset(PRInt32* aRangeOffset)
   if (targetFrame) {
     nsIContent* parent = nsnull;
     PRInt32 endOffset;
-
-    if (NS_SUCCEEDED(targetFrame->GetPosition(*mPresContext, 
-                                              mEvent->point.x,
+    PRBool beginOfContent;
+    if (NS_SUCCEEDED(targetFrame->GetContentAndOffsetsFromPoint(*mPresContext, 
+                                              mEvent->point,
                                               &parent,
                                               *aRangeOffset,
-                                              endOffset))) {
+                                              endOffset,
+                                              beginOfContent))) {
       NS_IF_RELEASE(parent);
       return NS_OK;
     }

@@ -84,6 +84,7 @@ struct nsPeekOffsetStruct
   PRInt32 mStartOffset;
   nsCOMPtr<nsIContent> mResultContent;
   PRInt32 mContentOffset;
+  PRInt32 mContentOffsetEnd;
   nsIFrame *mResultFrame;
   PRBool mEatingWS;
   PRBool mPreferLeft;
@@ -132,9 +133,11 @@ public:
    *  @param aContinueSelection is the flag that tells the selection to keep the old anchor point or not.
    *  @param aMultipleSelection will tell the frame selector to replace /or not the old selection. 
    *         cannot coexist with aContinueSelection
+   *  @param aHint will tell the selection which direction geometrically to actually show the caret on. 
+   *         1 = end of this line 0 = beggining of this line
    */
   NS_IMETHOD HandleClick(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset , 
-                       PRBool aContinueSelection, PRBool aMultipleSelection) = 0;
+                       PRBool aContinueSelection, PRBool aMultipleSelection, PRBool aHint) = 0;
 
   /** HandleDrag extends the selection to contain the frame closest to aPoint.
    *  @param aPresContext is the context to use when figuring out what frame contains the point.
