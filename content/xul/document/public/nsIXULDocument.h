@@ -162,11 +162,6 @@ public:
   NS_IMETHOD OnPrototypeLoadDone() = 0;
 
   /**
-   * Callback from the content sink upon resumption from the parser.
-   */
-  NS_IMETHOD OnResumeContentSink() = 0;
-
-  /**
    * Notify the XUL document that it's being hidden
    */
   NS_IMETHOD OnHide() = 0;

@@ -48,7 +48,7 @@
   Notes
   -----
 
-  1. We do some monkey business in the document observer methods to
+  1. We do some monkey business in the document observer methods to`
      keep the element map in sync for HTML elements. Why don't we just
      do it for _all_ elements? Well, in the case of XUL elements,
      which may be lazily created during frame construction, the
@@ -156,8 +156,6 @@
 #include "nsMimeTypes.h"
 #include "nsISelectionController.h"
 #include "nsContentUtils.h"
-#include "nsAppDirectoryServiceDefs.h"
-#include "nsIFastLoadFileControl.h"
 #include "nsIFastLoadService.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
@@ -193,7 +191,7 @@ static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 static PRBool IsChromeURI(nsIURI* aURI)
 {
     // why is this check a member function of nsXULDocument? -gagan
-    PRBool isChrome=PR_FALSE;
+    PRBool isChrome = PR_FALSE;
     if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) && isChrome)
         return PR_TRUE;
     return PR_FALSE;
@@ -422,9 +420,8 @@ nsXULDocument::nsXULDocument(void)
       mNextSrcLoadWaiter(nsnull),
       mDisplaySelection(PR_FALSE),
       mIsPopup(PR_FALSE),
-      mIsFastLoad(PR_FALSE),
       mApplyingPersistedAttrs(PR_FALSE),
-      mNextFastLoad(nsnull),
+      mIsWritingFastLoad(PR_FALSE),
       mBoxObjectTable(nsnull),
       mTemplateBuilderTable(nsnull),
       mResolutionPhase(nsForwardReference::eStart),
@@ -448,10 +445,6 @@ nsXULDocument::nsXULDocument(void)
 
     mSubDocuments = nsnull;
 }
-
-nsIFastLoadService* nsXULDocument::gFastLoadService = nsnull;
-nsIFile*            nsXULDocument::gFastLoadFile = nsnull;
-nsXULDocument*      nsXULDocument::gFastLoadList = nsnull;
 
 nsXULDocument::~nsXULDocument()
 {
@@ -531,20 +524,21 @@ nsXULDocument::~nsXULDocument()
         }
 
         if (gXULCache) {
+            // Remove the current document here from the FastLoad table in 
+            // case the document did not make it past StartLayout in 
+            // ResumeWalk. The FastLoad table must be clear of entries so 
+            // that the FastLoad file footer can be properly written.
+            gXULCache->RemoveFromFastLoadSet(mDocumentURL);
+
             nsServiceManager::ReleaseService(kXULPrototypeCacheCID, gXULCache);
             gXULCache = nsnull;
         }
-
-        NS_IF_RELEASE(gFastLoadService); // don't need ReleaseService nowadays!
-        NS_IF_RELEASE(gFastLoadFile);
     }
 
     if (mNodeInfoManager) {
         mNodeInfoManager->DropDocumentReference();
     }
 
-    if (mIsFastLoad)
-        RemoveFromFastLoadList();
 }
 
 
@@ -732,26 +726,28 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
     rv = PrepareStyleSheets(mDocumentURL);
     if (NS_FAILED(rv)) return rv;
 
-    // Get the content type, if possible, to see if it's a cached XUL
-    // load. We explicitly ignore failure at this point, because
-    // certain hacks (cough, the directory viewer) need to be able to
-    // StartDocumentLoad() before the channel's content type has been
-    // detected.
+    // Look in the chrome cache: we've got this puppy loaded
+    // already.
+    nsCOMPtr<nsIXULPrototypeDocument> proto;
+    gXULCache->GetPrototype(mDocumentURL, getter_AddRefs(proto));
 
-    nsCAutoString contentType;
-    aChannel->GetContentType(contentType);
-
-    if (contentType.Equals(NS_LITERAL_CSTRING("mozilla.application/cached-xul"))) {
-        // Look in the chrome cache: we've got this puppy loaded
-        // already.
-        nsCOMPtr<nsIXULPrototypeDocument> proto;
-        rv = gXULCache->GetPrototype(mDocumentURL, getter_AddRefs(proto));
-        if (NS_FAILED(rv)) return rv;
-
-        NS_ASSERTION(proto != nsnull, "no prototype on cached load");
-        if (! proto)
-            return NS_ERROR_UNEXPECTED;
-
+    // Same comment as nsChromeProtocolHandler::NewChannel and 
+    // nsXULDocument::ResumeWalk
+    // - Ben Goodger
+    //
+    // We don't abort on failure here because there are too many valid
+    // cases that can return failure, and the null-ness of |proto| is enough
+    // to trigger the fail-safe parse-from-disk solution. Example failure cases
+    // (for reference) include:
+    //
+    // NS_ERROR_NOT_AVAILABLE: the URI cannot be found in the FastLoad cache, 
+    //                         parse from disk
+    // other: the FastLoad cache file, XUL.mfl, could not be found, probably
+    //        due to being accessed before a profile has been selected (e.g.
+    //        loading chrome for the profile manager itself). This must be 
+    //        parsed from disk. 
+    
+    if (proto) {
         // If we're racing with another document to load proto, wait till the
         // load has finished loading before trying to add cloned style sheets.
         // nsXULDocument::EndLoad will call proto->NotifyLoadDone, which will
@@ -784,19 +780,15 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
         gXULCache->GetEnabled(&useXULCache);
         PRBool fillXULCache = (useXULCache && IsChromeURI(mDocumentURL));
 
-        // Try to open a FastLoad file for reading, or create one for writing.
-        // If one exists and looks valid, the nsIFastLoadService will purvey
-        // a non-null input stream via its GetInputStream method, and we will
-        // deserialize saved objects from that stream.  Otherwise, we'll write
-        // to the output stream returned by GetOutputStream.
-        if (fillXULCache && nsCRT::strcmp(aCommand, "view-source") != 0)
-            StartFastLoad();
 
         // It's just a vanilla document load. Create a parser to deal
         // with the stream n' stuff.
+
         nsCOMPtr<nsIParser> parser;
         rv = PrepareToLoad(aContainer, aCommand, aChannel, aLoadGroup, getter_AddRefs(parser));
         if (NS_FAILED(rv)) return rv;
+
+        mIsWritingFastLoad = PR_TRUE;
 
         nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(parser, &rv);
         NS_ASSERTION(NS_SUCCEEDED(rv), "parser doesn't support nsIStreamListener");
@@ -1744,6 +1736,7 @@ nsXULDocument::EndLoad()
 
     // Whack the prototype document into the cache so that the next
     // time somebody asks for it, they don't need to load it by hand.
+
     nsCOMPtr<nsIURI> uri;
     rv = mCurrentPrototype->GetURI(getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
@@ -1752,8 +1745,16 @@ nsXULDocument::EndLoad()
     PRBool useXULCache;
     gXULCache->GetEnabled(&useXULCache);
 
+    // If the current prototype is an overlay document (non-master prototype) 
+    // and we're filling the FastLoad disk cache, tell the cache we're done 
+    // loading it, and write the prototype. 
+    if (useXULCache && mIsWritingFastLoad && 
+        mMasterPrototype != mCurrentPrototype)
+        gXULCache->WritePrototype(mCurrentPrototype);
+
     nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
     if (NS_FAILED(rv)) return rv;
+
     nsCOMPtr<nsISupportsArray> sheets;
     reg->GetStyleSheets(uri, getter_AddRefs(sheets));
 
@@ -1784,11 +1785,6 @@ nsXULDocument::EndLoad()
         rv = mCurrentPrototype->NotifyLoadDone();
         if (NS_FAILED(rv)) return rv;
 
-        if (mIsFastLoad) {
-            rv = gFastLoadService->EndMuxedDocument(uri);
-            if (NS_FAILED(rv))
-                AbortFastLoads();
-        }
     }
 
     // Now walk the prototype to build content.
@@ -1825,23 +1821,6 @@ nsXULDocument::OnPrototypeLoadDone()
     return ResumeWalk();
 }
 
-
-NS_IMETHODIMP
-nsXULDocument::OnResumeContentSink()
-{
-    if (mIsFastLoad) {
-        nsresult rv;
-        nsCOMPtr<nsIURI> uri;
-
-        rv = mCurrentPrototype->GetURI(getter_AddRefs(uri));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = gFastLoadService->SelectMuxedDocument(uri);
-        if (NS_FAILED(rv))
-            AbortFastLoads();
-    }
-    return NS_OK;
-}
 
 PR_STATIC_CALLBACK(PRBool)
 ClearPresentationStuff(nsHashKey *aKey, void *aData, void* aClosure)
@@ -2154,6 +2133,7 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
 
     return NS_OK;
 }
+
 NS_IMETHODIMP
 nsXULDocument::AttributeChanged(nsIContent* aElement,
                                 PRInt32 aNameSpaceID,
@@ -4917,411 +4897,6 @@ nsXULDocument::CreateElement(nsINodeInfo *aNodeInfo, nsIContent** aResult)
 }
 
 
-const char XUL_FASTLOAD_FILE_BASENAME[] = "XUL";
-
-// XXXbe move to nsXULPrototypeDocument.cpp in the nsISerializable section.
-// We'll increment (or maybe decrement, for easier deciphering) this maigc
-// number as we flesh out the FastLoad file to include more and more data
-// induced by the master prototype document.
-
-#define XUL_FASTLOAD_FILE_VERSION       (0xfeedbeef - 3)
-
-#define XUL_SERIALIZATION_BUFFER_SIZE   (64 * 1024)
-#define XUL_DESERIALIZATION_BUFFER_SIZE (8 * 1024)
-
-
-class nsXULFastLoadFileIO : public nsIFastLoadFileIO
-{
-  public:
-    nsXULFastLoadFileIO(nsIFile* aFile)
-      : mFile(aFile) {
-        NS_INIT_REFCNT();
-        MOZ_COUNT_CTOR(nsXULFastLoadFileIO);
-    }
-
-    virtual ~nsXULFastLoadFileIO() {
-        MOZ_COUNT_DTOR(nsXULFastLoadFileIO);
-    }
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIFASTLOADFILEIO
-
-    nsCOMPtr<nsIFile>         mFile;
-    nsCOMPtr<nsIInputStream>  mInputStream;
-    nsCOMPtr<nsIOutputStream> mOutputStream;
-};
-
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsXULFastLoadFileIO, nsIFastLoadFileIO)
-MOZ_DECL_CTOR_COUNTER(nsXULFastLoadFileIO)
-
-
-NS_IMETHODIMP
-nsXULFastLoadFileIO::GetInputStream(nsIInputStream** aResult)
-{
-    if (! mInputStream) {
-        nsresult rv;
-        nsCOMPtr<nsIInputStream> fileInput;
-        rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInput), mFile);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = NS_NewBufferedInputStream(getter_AddRefs(mInputStream),
-                                       fileInput,
-                                       XUL_DESERIALIZATION_BUFFER_SIZE);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    NS_ADDREF(*aResult = mInputStream);
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsXULFastLoadFileIO::GetOutputStream(nsIOutputStream** aResult)
-{
-    if (! mOutputStream) {
-        PRInt32 ioFlags = PR_WRONLY;
-        if (! mInputStream)
-            ioFlags |= PR_CREATE_FILE | PR_TRUNCATE;
-
-        nsresult rv;
-        nsCOMPtr<nsIOutputStream> fileOutput;
-        rv = NS_NewLocalFileOutputStream(getter_AddRefs(fileOutput), mFile,
-                                         ioFlags, 0644);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = NS_NewBufferedOutputStream(getter_AddRefs(mOutputStream),
-                                        fileOutput,
-                                        XUL_SERIALIZATION_BUFFER_SIZE);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    NS_ADDREF(*aResult = mOutputStream);
-    return NS_OK;
-}
-
-
-static PRBool gDisableXULFastLoad = PR_FALSE;           // enabled by default
-static PRBool gChecksumXULFastLoadFile = PR_TRUE;       // XXXbe too paranoid
-
-static const char kDisableXULFastLoadPref[] = "nglayout.debug.disable_xul_fastload";
-static const char kChecksumXULFastLoadFilePref[] = "nglayout.debug.checksum_xul_fastload_file";
-
-PR_STATIC_CALLBACK(int)
-FastLoadPrefChangedCallback(const char* aPref, void* aClosure)
-{
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-    if (prefs) {
-        PRBool wasEnabled = !gDisableXULFastLoad;
-        prefs->GetBoolPref(kDisableXULFastLoadPref, &gDisableXULFastLoad);
-
-        if (wasEnabled && gDisableXULFastLoad)
-            nsXULDocument::AbortFastLoads();
-
-        prefs->GetBoolPref(kChecksumXULFastLoadFilePref, &gChecksumXULFastLoadFile);
-    }
-    return 0;
-}
-
-
-nsresult
-nsXULDocument::StartFastLoad()
-{
-    nsresult rv;
-
-    // Test gFastLoadList to decide whether this is the first nsXULDocument
-    // participating in FastLoad.  If gFastLoadList is non-null, this document
-    // must not be first, but it can join the FastLoad process.  Examples of
-    // multiple master documents participating include hiddenWindow.xul and
-    // navigator.xul on the Mac, and multiple-app-component (e.g., mailnews
-    // and browser) startup due to command-line arguments.
-    //
-    // XXXbe we should attempt to update the FastLoad file after startup!
-    //
-    // XXXbe we do not yet use nsFastLoadPtrs, but once we do, we must keep
-    // the FastLoad input stream open for the life of the app.
-    if (gFastLoadList) {
-        mIsFastLoad = PR_TRUE;
-        mNextFastLoad = gFastLoadList;
-        gFastLoadList = this;
-        return NS_OK;
-    }
-    NS_ASSERTION(!gFastLoadService,
-                 "gFastLoadList null but gFastLoadService non-null!");
-
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-    if (prefs) {
-        prefs->GetBoolPref(kDisableXULFastLoadPref, &gDisableXULFastLoad);
-        prefs->GetBoolPref(kChecksumXULFastLoadFilePref, &gChecksumXULFastLoadFile);
-        prefs->RegisterCallback(kDisableXULFastLoadPref,
-                                FastLoadPrefChangedCallback,
-                                nsnull);
-        prefs->RegisterCallback(kChecksumXULFastLoadFilePref,
-                                FastLoadPrefChangedCallback,
-                                nsnull);
-        if (gDisableXULFastLoad)
-            return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    // Get the chrome directory to validate against the one stored in the
-    // FastLoad file, or to store there if we're generating a new file.
-    nsCOMPtr<nsIFile> chromeDir;
-    rv = NS_GetSpecialDirectory(NS_APP_CHROME_DIR, getter_AddRefs(chromeDir));
-    if (NS_FAILED(rv))
-        return rv;
-    nsCAutoString chromePath;
-    rv = chromeDir->GetPath(chromePath);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // Use a local to refer to the service till we're sure we succeeded, then
-    // commit to gFastLoadService.  Same for gFastLoadFile, which is used to
-    // delete the FastLoad file on abort.
-    nsCOMPtr<nsIFastLoadService> fastLoadService(do_GetFastLoadService());
-    if (! fastLoadService)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIFile> file;
-    rv = fastLoadService->NewFastLoadFile(XUL_FASTLOAD_FILE_BASENAME,
-                                          getter_AddRefs(file));
-    if (NS_FAILED(rv)) return rv;
-
-    // Give the FastLoad service an object by which it can get or create a
-    // file output stream given an input stream on the same file.
-    nsXULFastLoadFileIO* xio = new nsXULFastLoadFileIO(file);
-    nsCOMPtr<nsIFastLoadFileIO> io = NS_STATIC_CAST(nsIFastLoadFileIO*, xio);
-    if (! io)
-        return NS_ERROR_OUT_OF_MEMORY;
-    fastLoadService->SetFileIO(io);
-
-    // Try to read an existent FastLoad file.
-    PRBool exists = PR_FALSE;
-    if (NS_SUCCEEDED(file->Exists(&exists)) && exists) {
-        nsCOMPtr<nsIInputStream> input;
-        rv = io->GetInputStream(getter_AddRefs(input));
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIObjectInputStream> objectInput;
-        rv = fastLoadService->NewInputStream(input, getter_AddRefs(objectInput));
-
-        if (NS_SUCCEEDED(rv)) {
-            if (gChecksumXULFastLoadFile) {
-                nsCOMPtr<nsIFastLoadReadControl>
-                    readControl(do_QueryInterface(objectInput));
-                if (readControl) {
-                    // Verify checksum, using the fastLoadService's checksum
-                    // cache to avoid computing more than once per session.
-                    PRUint32 checksum;
-                    rv = readControl->GetChecksum(&checksum);
-                    if (NS_SUCCEEDED(rv)) {
-                        PRUint32 verified;
-                        rv = fastLoadService->ComputeChecksum(file,
-                                                              readControl,
-                                                              &verified);
-                        if (NS_SUCCEEDED(rv) && verified != checksum) {
-#ifdef DEBUG
-                            printf("bad FastLoad file checksum\n");
-#endif
-                            rv = NS_ERROR_FAILURE;
-                        }
-                    }
-                }
-            }
-
-            if (NS_SUCCEEDED(rv)) {
-                // XXXbe get version number, scripts only for now -- bump
-                // version later when rest of prototype document header is
-                // serialized
-                PRUint32 version;
-                rv = objectInput->Read32(&version);
-                if (NS_SUCCEEDED(rv)) {
-                    if (version != XUL_FASTLOAD_FILE_VERSION) {
-#ifdef DEBUG
-                        printf("bad FastLoad file version\n");
-#endif
-                        rv = NS_ERROR_UNEXPECTED;
-                    } else {
-                        nsXPIDLCString fileChromePath;
-                        rv = objectInput->ReadStringZ(
-                                                 getter_Copies(fileChromePath));
-                        if (NS_SUCCEEDED(rv) &&
-                            !fileChromePath.Equals(chromePath)) {
-                            rv = NS_ERROR_UNEXPECTED;
-                        }
-                    }
-                }
-            }
-        }
-
-        if (NS_SUCCEEDED(rv)) {
-            fastLoadService->SetInputStream(objectInput);
-        } else {
-            // NB: we must close before attempting to remove, for non-Unix OSes
-            // that can't do open-unlink.
-            if (objectInput)
-                objectInput->Close();
-            else
-                input->Close();
-            xio->mInputStream = nsnull;
-
-#ifdef DEBUG
-            file->MoveTo(nsnull, NS_LITERAL_CSTRING("Invalid.mfasl"));
-#else
-            file->Remove(PR_FALSE);
-#endif
-            exists = PR_FALSE;
-        }
-    }
-
-    // FastLoad file not found, or invalid: write a new one.
-    if (! exists) {
-        nsCOMPtr<nsIOutputStream> output;
-        rv = io->GetOutputStream(getter_AddRefs(output));
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIObjectOutputStream> objectOutput;
-        rv = fastLoadService->NewOutputStream(output,
-                                              getter_AddRefs(objectOutput));
-        if (NS_SUCCEEDED(rv)) {
-            rv = objectOutput->Write32(XUL_FASTLOAD_FILE_VERSION);
-            if (NS_SUCCEEDED(rv))
-                rv = objectOutput->WriteStringZ(chromePath.get());
-        }
-
-        // Remove here even though some errors above will lead to a FastLoad
-        // file invalidation.  Other errors (failure to note the dependency on
-        // installed-chrome.txt, e.g.) will not cause invalidation, and we may
-        // as well tidy up now.
-        if (NS_FAILED(rv)) {
-            if (objectOutput)
-                objectOutput->Close();
-            else
-                output->Close();
-            xio->mOutputStream = nsnull;
-
-            file->Remove(PR_FALSE);
-            return rv;
-        }
-
-        fastLoadService->SetOutputStream(objectOutput);
-    }
-
-    // If this fails, some weird reentrancy or multi-threading has occurred.
-    NS_ASSERTION(!gFastLoadService && !gFastLoadFile && !gFastLoadList,
-                 "something's very wrong!");
-
-    // Success!  Insert this nsXULDocument into the (empty) gFastLoadList,
-    // and commit locals to globals.
-    mIsFastLoad = PR_TRUE;
-    gFastLoadList = this;
-    NS_ADDREF(gFastLoadService = fastLoadService);
-    NS_ADDREF(gFastLoadFile = file);
-    return NS_OK;
-}
-
-
-nsresult
-nsXULDocument::EndFastLoad()
-{
-    nsresult rv = NS_OK, rv2 = NS_OK;
-
-    // Exclude all non-chrome loads and XUL cache hits right away.
-    if (! mIsFastLoad)
-        return rv;
-
-    // Remove this document from the global FastLoad list.  We use the list's
-    // emptiness instead of a counter, to decide when the FastLoad process has
-    // finally completed.  We use a singly-linked list because there won't be
-    // more than a handful of master XUL documents racing, worst case.
-    mIsFastLoad = PR_FALSE;
-    RemoveFromFastLoadList();
-
-    // Fetch the current input (if FastLoad file existed) or output (if we're
-    // creating the FastLoad file during this app startup) stream.
-    nsCOMPtr<nsIObjectInputStream> objectInput;
-    nsCOMPtr<nsIObjectOutputStream> objectOutput;
-    gFastLoadService->GetInputStream(getter_AddRefs(objectInput));
-    gFastLoadService->GetOutputStream(getter_AddRefs(objectOutput));
-
-    if (objectOutput) {
-#if 0
-        // XXXbe for now, write scripts as we sink content...
-        rv = objectOutput->WriteObject(mMasterPrototype, PR_TRUE);
-#endif
-
-        // If this is the last of one or more XUL master documents loaded
-        // together at app startup, close the FastLoad service's singleton
-        // output stream now.
-        //
-        // NB: we must close input after output, in case the output stream
-        // implementation needs to read from the input stream, to compute a
-        // FastLoad file checksum.  In that case, the implementation used
-        // nsIFastLoadFileIO to get the corresponding input stream for this
-        // output stream.
-        if (! gFastLoadList) {
-            gFastLoadService->SetOutputStream(nsnull);
-            rv = objectOutput->Close();
-
-            if (NS_SUCCEEDED(rv) && gChecksumXULFastLoadFile) {
-                rv = gFastLoadService->CacheChecksum(gFastLoadFile,
-                                                     objectOutput);
-            }
-        }
-    }
-
-    if (objectInput) {
-        // If this is the last of one or more XUL master documents loaded
-        // together at app startup, close the FastLoad service's singleton
-        // input stream now.
-        if (! gFastLoadList) {
-            gFastLoadService->SetInputStream(nsnull);
-            rv2 = objectInput->Close();
-        }
-    }
-
-    // If the list is empty now, the FastLoad process is done.
-    if (! gFastLoadList) {
-        NS_RELEASE(gFastLoadService);
-        NS_RELEASE(gFastLoadFile);
-    }
-
-    return NS_FAILED(rv) ? rv : rv2;
-}
-
-
-nsresult
-nsXULDocument::AbortFastLoads()
-{
-#ifdef DEBUG_brendan
-    NS_BREAK();
-#endif
-
-    // Save a strong ref to the FastLoad file, so we can remove it after we
-    // close open streams to it.
-    nsCOMPtr<nsIFile> file = gFastLoadFile;
-
-    // End all pseudo-concurrent XUL document FastLoads, which will close any
-    // i/o streams open on the FastLoad file.
-    while (gFastLoadList)
-        gFastLoadList->EndFastLoad();
-
-    // Now rename or remove the file.
-    if (file) {
-#ifdef DEBUG
-        file->MoveTo(nsnull, NS_LITERAL_CSTRING("Aborted.mfasl"));
-#else
-        file->Remove(PR_FALSE);
-#endif
-    }
-
-    // Flush the XUL cache for good measure, in case we cached a bogus/downrev
-    // script, somehow.
-    if (gXULCache)
-        gXULCache->Flush();
-    return NS_OK;
-}
-
-
 nsresult
 nsXULDocument::PrepareToLoad(nsISupports* aContainer,
                              const char* aCommand,
@@ -5363,30 +4938,6 @@ nsXULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
 
     rv = mCurrentPrototype->SetURI(aURI);
     if (NS_FAILED(rv)) return rv;
-
-    // If we're reading or writing a FastLoad file, tell the FastLoad
-    // service to start multiplexing data from aURI, associating it in
-    // the file with the URL's string.  Each time the parser resumes
-    // sinking content, it "selects" the memorized document from the
-    // FastLoad multiplexor, using the nsIURI* as a fast identifier.
-    if (mIsFastLoad) {
-        nsCAutoString urlspec;
-        rv = aURI->GetAsciiSpec(urlspec);
-        if (NS_FAILED(rv)) return rv;
-
-        // If StartMuxedDocument returns NS_ERROR_NOT_AVAILABLE, then
-        // we must be reading the file, and urlspec was not associated
-        // with any multiplexed stream in it.  The FastLoad service
-        // will therefore arrange to update the file, writing new data
-        // at the end while old (available) data continues to be read
-        // from the pre-existing part of the file.
-        rv = gFastLoadService->StartMuxedDocument(aURI, urlspec.get(),
-                                          nsIFastLoadService::NS_FASTLOAD_READ |
-                                          nsIFastLoadService::NS_FASTLOAD_WRITE);
-        NS_ASSERTION(rv != NS_ERROR_NOT_AVAILABLE, "only reading FastLoad?!");
-        if (NS_FAILED(rv))
-            AbortFastLoads();
-    }
 
     // Create a XUL content sink, a parser, and kick off a load for
     // the overlay.
@@ -6012,9 +5563,24 @@ nsXULDocument::ResumeWalk()
 #endif
         // Look in the prototype cache for the prototype document with
         // the specified overlay URI.
-        rv = gXULCache->GetPrototype(uri, getter_AddRefs(mCurrentPrototype));
-        if (NS_FAILED(rv)) return rv;
+        gXULCache->GetPrototype(uri, getter_AddRefs(mCurrentPrototype));
 
+        // Same comment as nsChromeProtocolHandler::NewChannel and 
+        // nsXULDocument::StartDocumentLoad
+        // - Ben Goodger
+        //
+        // We don't abort on failure here because there are too many valid
+        // cases that can return failure, and the null-ness of |proto| is enough
+        // to trigger the fail-safe parse-from-disk solution. Example failure cases
+        // (for reference) include:
+        //
+        // NS_ERROR_NOT_AVAILABLE: the URI cannot be found in the FastLoad cache, 
+        //                         parse from disk
+        // other: the FastLoad cache file, XUL.mfl, could not be found, probably
+        //        due to being accessed before a profile has been selected (e.g.
+        //        loading chrome for the profile manager itself). This must be 
+        //        parsed from disk. 
+    
         PRBool cache;
         gXULCache->GetEnabled(&cache);
 
@@ -6049,6 +5615,8 @@ nsXULDocument::ResumeWalk()
             nsCOMPtr<nsIParser> parser;
             rv = PrepareToLoadPrototype(uri, "view", nsnull, getter_AddRefs(parser));
             if (NS_FAILED(rv)) return rv;
+
+            mIsWritingFastLoad = PR_TRUE;
 
             nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(parser);
             if (! listener)
@@ -6100,10 +5668,11 @@ nsXULDocument::ResumeWalk()
 
     StartLayout();
 
-    // Since we've bothered to load and parse all this fancy XUL, let's try to
-    // save a condensed serialization of it for faster loading next time.  We
-    // do this after StartLayout() in case we want to serialize frames.
-    EndFastLoad();
+    PRBool useXULCache;
+    gXULCache->GetEnabled(&useXULCache);
+
+    if (useXULCache && mIsWritingFastLoad)
+        gXULCache->WritePrototype(mMasterPrototype);
 
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
@@ -6122,9 +5691,9 @@ nsXULDocument::ResumeWalk()
             mPlaceHolderRequest = nsnull;
         }
     }
+    
     return rv;
 }
-
 
 nsresult
 nsXULDocument::LoadScript(nsXULPrototypeScript* aScriptProto, PRBool* aBlock)
@@ -6250,27 +5819,33 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
         // before serializing script data under scriptProto->Compile, and
         // End muxing afterward.
         nsCOMPtr<nsIURI> uri = scriptProto->mSrcURI;
-        if (mIsFastLoad) {
+
+        nsCOMPtr<nsIFastLoadService> fastLoadService;
+        gXULCache->GetFastLoadService(getter_AddRefs(fastLoadService));
+
+        if (fastLoadService) {
             nsCAutoString urispec;
             uri->GetAsciiSpec(urispec);
-            rv = gFastLoadService->StartMuxedDocument(uri, urispec.get(),
-                                          nsIFastLoadService::NS_FASTLOAD_WRITE);
+            rv = fastLoadService->StartMuxedDocument(uri, urispec.get(),
+                                                     nsIFastLoadService::NS_FASTLOAD_WRITE);
             NS_ASSERTION(rv != NS_ERROR_NOT_AVAILABLE, "reading FastLoad?!");
-            if (NS_SUCCEEDED(rv))
-                gFastLoadService->SelectMuxedDocument(uri);
+            if (NS_SUCCEEDED(rv)) {
+                nsCOMPtr<nsIURI> oldURI;
+                fastLoadService->SelectMuxedDocument(uri, getter_AddRefs(oldURI));
+            }
         }
 
         nsString stringStr; stringStr.AssignWithConversion(string, stringLen);
         rv = scriptProto->Compile(stringStr.get(), stringLen, uri, 1, this,
-                                  mMasterPrototype);
+                                  mCurrentPrototype);
 
         // End muxing the .js file into the FastLoad file.  We don't Abort
         // the FastLoad process here, when writing, as we do when reading.
         // XXXbe maybe we should...
         // NB: we don't need to Select mDocumentURL again, because scripts
         // load after their including prototype document has fully loaded.
-        if (mIsFastLoad)
-            gFastLoadService->EndMuxedDocument(uri);
+        if (fastLoadService)
+            fastLoadService->EndMuxedDocument(uri);
 
         aStatus = rv;
         if (NS_SUCCEEDED(rv) && scriptProto->mJSObject) {

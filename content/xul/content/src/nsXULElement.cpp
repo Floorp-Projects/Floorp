@@ -23,6 +23,7 @@
  *   Peter Annema <disttsc@bart.nl>
  *   Brendan Eich <brendan@mozilla.org>
  *   Mike Shaver <shaver@mozilla.org>
+ *   Ben Goodger <ben@netscape.com>
  *
  * This Original Code has been modified by IBM Corporation.
  * Modifications made by IBM described herein are
@@ -81,6 +82,7 @@
 #include "nsIDocument.h"
 #include "nsIEventListenerManager.h"
 #include "nsIEventStateManager.h"
+#include "nsIFastLoadService.h"
 #include "nsIHTMLContentContainer.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIStyleContext.h"
@@ -152,6 +154,9 @@
 class nsIWebShell;
 
 // Global object maintenance
+nsINodeInfoManager* nsXULPrototypeElement::sNodeInfoManager = nsnull;
+nsICSSParser* nsXULPrototypeElement::sCSSParser = nsnull;
+nsIXULPrototypeCache* nsXULPrototypeScript::sXULPrototypeCache = nsnull;
 nsIXBLService * nsXULElement::gXBLService = nsnull;
 
 // XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
@@ -444,25 +449,6 @@ PRUint32             nsXULPrototypeAttribute::gNumCacheHits;
 PRUint32             nsXULPrototypeAttribute::gNumCacheSets;
 PRUint32             nsXULPrototypeAttribute::gNumCacheFills;
 #endif
-
-//----------------------------------------------------------------------
-// nsXULNode
-//  XXXbe temporary, make 'em pure when all subclasses implement
-
-nsresult
-nsXULPrototypeNode::Serialize(nsIObjectOutputStream* aStream,
-                              nsIScriptContext* aContext)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
-nsXULPrototypeNode::Deserialize(nsIObjectInputStream* aStream,
-                                nsIScriptContext* aContext)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 
 //----------------------------------------------------------------------
 // nsXULElement
@@ -4932,38 +4918,182 @@ nsXULPrototypeElement::Serialize(nsIObjectOutputStream* aStream,
 {
     nsresult rv;
 
-#if 0
-    // XXXbe partial deserializer is not ready for this yet
-    rv = aStream->Write32(PRUint32(mNumChildren));
-    if (NS_FAILED(rv)) return rv;
-#endif
+    // Write basic prototype data
+    rv = aStream->Write32(mType);
+    rv |= aStream->Write32(mLineNo);
 
-    // XXXbe check for failure once all elements have been taught to serialize
-    for (PRInt32 i = 0; i < mNumChildren; i++) {
-        rv = mChildren[i]->Serialize(aStream, aContext);
-        NS_ASSERTION(NS_SUCCEEDED(rv) || rv == NS_ERROR_NOT_IMPLEMENTED,
-                     "can't serialize!");
+    // Write Node Info
+    nsAutoString namespaceURI;
+    rv |= mNodeInfo->GetNamespaceURI(namespaceURI);
+    rv |= aStream->WriteWStringZ(namespaceURI.get());
+
+    nsAutoString qualifiedName;
+    rv |= mNodeInfo->GetQualifiedName(qualifiedName);
+    rv |= aStream->WriteWStringZ(qualifiedName.get());
+
+    // Write Attributes
+    rv |= aStream->Write32(mNumAttributes);    
+
+    nsAutoString attributeValue, attributeNamespaceURI, attributeName;
+    PRInt32 i;
+    for (i = 0; i < mNumAttributes; ++i) {
+        rv |= mAttributes[i].mNodeInfo->GetNamespaceURI(attributeNamespaceURI);
+        rv |= aStream->WriteWStringZ(attributeNamespaceURI.get());
+
+        rv |= mAttributes[i].mNodeInfo->GetQualifiedName(attributeName);
+        rv |= aStream->WriteWStringZ(attributeName.get());
+
+        rv |= mAttributes[i].mValue.GetValue(attributeValue);
+        rv |= aStream->WriteWStringZ(attributeValue.get());
     }
-    return NS_OK;
+
+    // Now write children
+    rv |= aStream->Write32(PRUint32(mNumChildren));
+    for (i = 0; i < mNumChildren; i++) {
+        nsXULPrototypeNode* child = mChildren[i];
+        switch (child->mType) {
+        case eType_Element:
+        case eType_Text:
+            rv |= child->Serialize(aStream, aContext);
+            break;
+        case eType_Script:
+            rv |= aStream->Write32(child->mType);
+            nsXULPrototypeScript* script = NS_STATIC_CAST(nsXULPrototypeScript*, child);
+
+            if (script) {
+                rv |= aStream->WriteBoolean(script->mOutOfLine);
+                if (! script->mOutOfLine)
+                    rv |= script->Serialize(aStream, aContext);
+                else
+                    rv |= aStream->WriteCompoundObject(script->mSrcURI, 
+                                                       NS_GET_IID(nsIURI), 
+                                                       PR_TRUE);
+            }
+            break;
+        }         
+    }
+
+    return rv;
 }
 
 nsresult
 nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
-                                   nsIScriptContext* aContext)
+                                   nsIScriptContext* aContext, 
+                                   nsIURI* aDocumentURI)
 {
     nsresult rv;
 
-    PRUint32 numChildren;
-    rv = aStream->Read32(&numChildren);
-    if (NS_FAILED(rv)) return rv;
+    PRUint32 number;
+    rv = aStream->Read32(&number);
+    mLineNo = (PRInt32)number;
 
-    // XXXbe temporary until we stop parsing tags when deserializing
-    NS_ASSERTION(PRInt32(numChildren) == mNumChildren, "XUL/FastLoad mismatch");
+    // Read Node Info
+    nsXPIDLString namespaceURI;
+    rv |= aStream->ReadWStringZ(getter_Copies(namespaceURI));
+    
+    nsXPIDLString qualifiedName;
+    rv |= aStream->ReadWStringZ(getter_Copies(qualifiedName));
 
-    // XXXbe check for failure once all elements have been taught to serialize
-    for (PRInt32 i = 0; i < mNumChildren; i++)
-        (void) mChildren[i]->Deserialize(aStream, aContext);
-    return NS_OK;
+    nsINodeInfoManager* nimgr = GetNodeInfoManager();
+    rv |= nimgr->GetNodeInfo(qualifiedName, namespaceURI, *getter_AddRefs(mNodeInfo));
+
+    // Read Attributes
+    rv |= aStream->Read32(&number);
+    mNumAttributes = PRInt32(number);
+	
+    PRInt32 i;
+    if (mNumAttributes > 0) {
+        mAttributes = new nsXULPrototypeAttribute[mNumAttributes];
+        if (! mAttributes)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        nsXPIDLString attributeValue, attributeNamespaceURI, attributeName;
+        for (i = 0; i < mNumAttributes; ++i) {
+            rv |= aStream->ReadWStringZ(getter_Copies(attributeNamespaceURI));
+            rv |= aStream->ReadWStringZ(getter_Copies(attributeName));
+
+            rv |= nimgr->GetNodeInfo(attributeName, attributeNamespaceURI, 
+                                     *getter_AddRefs(mAttributes[i].mNodeInfo));
+
+            rv |= aStream->ReadWStringZ(getter_Copies(attributeValue));
+            mAttributes[i].mValue.SetValue(attributeValue);
+        }
+
+        // Compute the element's class list if the element has a 'class' attribute.
+        nsAutoString value;
+        if (NS_SUCCEEDED(GetAttr(kNameSpaceID_None, nsXULAtoms::clazz, value)))
+            rv |= nsClassList::ParseClasses(&mClassList, value);
+
+        // Parse the element's 'style' attribute
+        if (NS_SUCCEEDED(GetAttr(kNameSpaceID_None, nsXULAtoms::style, value))) {
+            nsICSSParser* parser = GetCSSParser();
+
+            rv |= parser->ParseStyleAttribute(value, aDocumentURI,
+                                              getter_AddRefs(mInlineStyleRule));
+
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to parse style rule");
+        }
+    }
+
+    rv |= aStream->Read32(&number);
+    mNumChildren = PRInt32(number);
+    
+    if (mNumChildren > 0) {
+        mChildren = new nsXULPrototypeNode*[mNumChildren];
+        if (! mChildren)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+
+        for (i = 0; i < mNumChildren; i++) {
+            rv |= aStream->Read32(&number);
+            Type childType = (Type)number;
+
+            nsXULPrototypeNode* child = nsnull;
+
+            switch (childType) {
+            case eType_Element:
+                child = new nsXULPrototypeElement(-1);
+                if (! child) 
+                    return NS_ERROR_OUT_OF_MEMORY;
+                child->mType = childType;
+
+                rv |= child->Deserialize(aStream, aContext, aDocumentURI);
+                break;
+            case eType_Text:
+                child = new nsXULPrototypeText(-1);
+                if (! child)
+                    return NS_ERROR_OUT_OF_MEMORY;
+                child->mType = childType;
+          
+                rv |= child->Deserialize(aStream, aContext, aDocumentURI);
+                break;
+            case eType_Script:
+                // language version obtained during deserialization.
+                child = new nsXULPrototypeScript(-1, nsnull);
+                if (! child)
+                    return NS_ERROR_OUT_OF_MEMORY;
+                child->mType = childType;
+
+                nsXULPrototypeScript* script = NS_STATIC_CAST(nsXULPrototypeScript*, child);
+                if (script) {
+                    rv |= aStream->ReadBoolean(&script->mOutOfLine);
+                    if (! script->mOutOfLine)
+                        rv |= script->Deserialize(aStream, aContext, aDocumentURI);
+                    else {
+                        rv |= aStream->ReadObject(PR_TRUE, getter_AddRefs(script->mSrcURI));
+
+                        rv |= script->DeserializeOutOfLineScript(aStream, aContext);
+                    }
+                }
+
+                break;
+            }
+
+            mChildren[i] = child;
+        }
+    }
+
+    return rv;
 }
 
 
@@ -4989,6 +5119,7 @@ nsXULPrototypeElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsAString& 
 nsXULPrototypeScript::nsXULPrototypeScript(PRInt32 aLineNo, const char *aVersion)
     : nsXULPrototypeNode(eType_Script, aLineNo),
       mSrcLoading(PR_FALSE),
+      mOutOfLine(PR_TRUE),
       mSrcLoadWaiters(nsnull),
       mJSObject(nsnull),
       mLangVersion(aVersion)
@@ -5011,16 +5142,11 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
 {
     nsresult rv;
 
+    // Write basic prototype data
+    aStream->Write32(mLineNo);
+
     NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nsnull || !mJSObject,
                  "script source still loading when serializing?!");
-    
-#if 0
-    // XXXbe redundant while we're still parsing XUL instead of deserializing it
-    // XXXbe also, we should serialize mType and mLineNo first.
-    rv = NS_WriteOptionalCompoundObject(aStream, mSrcURI, NS_GET_IID(nsIURI),
-                                        PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
-#endif
 
     JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
                                         aContext->GetNativeContext());
@@ -5072,21 +5198,20 @@ nsXULPrototypeScript::Serialize(nsIObjectOutputStream* aStream,
 
 nsresult
 nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
-                                  nsIScriptContext* aContext)
+                                  nsIScriptContext* aContext, 
+                                  nsIURI* aDocumentURI)
 {
     NS_TIMELINE_MARK_FUNCTION("chrome js deserialize");
     nsresult rv;
 
+    // Read basic prototype data
+    PRUint32 number;
+    aStream->Read32(&number);
+    mLineNo = (PRInt32)number;
+    
     NS_ASSERTION(!mSrcLoading || mSrcLoadWaiters != nsnull || !mJSObject,
                  "prototype script not well-initialized when deserializing?!");
     
-#if 0
-    // XXXbe redundant while we're still parsing XUL instead of deserializing it
-    // XXXbe also, we should deserialize mType and mLineNo first.
-    rv = NS_ReadOptionalObject(aStream, PR_TRUE, getter_AddRefs(mSrcURI));
-    if (NS_FAILED(rv)) return rv;
-#endif
-
     PRUint32 size;
     rv = aStream->Read32(&size);
     if (NS_FAILED(rv)) return rv;
@@ -5157,8 +5282,106 @@ nsXULPrototypeScript::Deserialize(nsIObjectInputStream* aStream,
     return NS_OK;
 }
 
-// XXXbe temporary, goes away when we serialize entire XUL prototype document
-#include "nsIFastLoadService.h"
+
+nsresult
+nsXULPrototypeScript::DeserializeOutOfLineScript(nsIObjectInputStream* aInput,
+                                                 nsIScriptContext* aContext)
+{
+    nsIXULPrototypeCache* cache = GetXULCache();
+    nsCOMPtr<nsIFastLoadService> fastLoadService;
+    cache->GetFastLoadService(getter_AddRefs(fastLoadService));
+
+    nsCOMPtr<nsIObjectInputStream> objectInput;
+    if (fastLoadService)
+        fastLoadService->GetInputStream(getter_AddRefs(objectInput));
+
+    if (objectInput) {
+        PRBool useXULCache = PR_TRUE;
+        if (mSrcURI) {
+            // NB: we must check the XUL script cache early, to avoid
+            // multiple deserialization attempts for a given script, which
+            // would exhaust the multiplexed stream containing the singly
+            // serialized script.  Note that nsXULDocument::LoadScript
+            // checks the XUL script cache too, in order to handle the
+            // serialization case.
+            //
+            // We need do this only for <script src='strres.js'> and the
+            // like, i.e., out-of-line scripts that are included by several
+            // different XUL documents multiplexed in the FastLoad file.
+            cache->GetEnabled(&useXULCache);
+
+            if (useXULCache) {
+                cache->GetScript(mSrcURI, NS_REINTERPRET_CAST(void**, &mJSObject));
+            }
+        }
+
+        if (! mJSObject) {
+            // Keep track of FastLoad failure via rv, so we can
+            // AbortFastLoads if things look bad.
+            nsresult rv = NS_OK;
+
+            nsCOMPtr<nsIURI> oldURI;
+
+            if (mSrcURI) {
+                nsCAutoString spec;
+                mSrcURI->GetAsciiSpec(spec);
+                rv = fastLoadService->StartMuxedDocument(mSrcURI, spec.get(),
+                                                          nsIFastLoadService::NS_FASTLOAD_READ);
+                if (NS_SUCCEEDED(rv))
+                    rv = fastLoadService->SelectMuxedDocument(mSrcURI, getter_AddRefs(oldURI));
+            } else {
+                // An inline script: check FastLoad multiplexing direction
+                // and skip Deserialize if we're not reading from a
+                // muxed stream to get inline objects that are contained in
+                // the current document.
+                PRInt32 direction;
+                fastLoadService->GetDirection(&direction);
+                if (direction != nsIFastLoadService::NS_FASTLOAD_READ)
+                    rv = NS_ERROR_NOT_AVAILABLE;
+            }
+
+            // Don't reflect errors into rv: mJSObject will be null
+            // after any error, which suffices to cause the script to
+            // be reloaded (from the src= URI, if any) and recompiled.
+            // We're better off slow-loading than bailing out due to a
+            // FastLoad error.
+            if (NS_SUCCEEDED(rv))
+                rv = Deserialize(objectInput, aContext, nsnull);
+
+            if (NS_SUCCEEDED(rv) && mSrcURI) {
+                rv = fastLoadService->EndMuxedDocument(mSrcURI);
+
+                if (NS_SUCCEEDED(rv)) {
+                    nsCOMPtr<nsIURI> tempURI;
+                    rv = fastLoadService->SelectMuxedDocument(oldURI, getter_AddRefs(tempURI));
+
+                    NS_ASSERTION(NS_SUCCEEDED(rv) && (!tempURI || tempURI == mSrcURI), 
+                                 "not currently deserializing into the script we thought we were!");
+                }
+            }
+
+            if (NS_SUCCEEDED(rv)) {
+                if (useXULCache && mSrcURI) {
+                    PRBool isChrome = PR_FALSE;
+                    mSrcURI->SchemeIs("chrome", &isChrome);
+                    if (isChrome) {
+                        nsIXULPrototypeCache* cache = GetXULCache();
+                        cache->PutScript(mSrcURI, NS_REINTERPRET_CAST(void*, mJSObject));
+                    }
+                }
+            } else {
+                // If mSrcURI is not in the FastLoad multiplex,
+                // rv will be NS_ERROR_NOT_AVAILABLE and we'll try to
+                // update the FastLoad file to hold a serialization of
+                // this script, once it has finished loading.
+                if (rv != NS_ERROR_NOT_AVAILABLE)
+                    cache->AbortFastLoads();
+            }
+        }
+    }
+
+    return NS_OK;
+}
 
 nsresult
 nsXULPrototypeScript::Compile(const PRUnichar* aText,
@@ -5229,7 +5452,7 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
                                 (void**)&mJSObject);
 
     if (NS_FAILED(rv)) return rv;
-
+    
     if (mJSObject) {
         // Root the compiled prototype script object.
         JSContext* cx = NS_REINTERPRET_CAST(JSContext*,
@@ -5237,18 +5460,64 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
         if (!cx)
             return NS_ERROR_UNEXPECTED;
 
-        // XXXbe temporary, until we serialize/deserialize everything from the
-        //       nsXULPrototypeDocument on down...
-        nsCOMPtr<nsIFastLoadService> fastLoadService(do_GetFastLoadService());
-        nsCOMPtr<nsIObjectOutputStream> objectOutput;
-        fastLoadService->GetOutputStream(getter_AddRefs(objectOutput));
-        if (objectOutput) {
-            rv = Serialize(objectOutput, context);
-            if (NS_FAILED(rv))
-                nsXULDocument::AbortFastLoads();
+        
+        if (mOutOfLine) {
+            nsCOMPtr<nsIFastLoadService> fastLoadService;
+
+            nsIXULPrototypeCache* cache = GetXULCache();
+            cache->GetFastLoadService(getter_AddRefs(fastLoadService));
+            
+            if (fastLoadService) {
+                nsCOMPtr<nsIObjectOutputStream> objectOutput;
+                fastLoadService->GetOutputStream(getter_AddRefs(objectOutput));
+                if (objectOutput) {
+                    rv = Serialize(objectOutput, context);
+                    if (NS_FAILED(rv))
+                        cache->AbortFastLoads();
+                }
+            }
         }
     }
 
     return NS_OK;
 
+}
+
+//----------------------------------------------------------------------
+//
+// nsXULPrototypeText
+//
+
+nsresult
+nsXULPrototypeText::Serialize(nsIObjectOutputStream* aStream,
+                              nsIScriptContext* aContext)
+{
+    nsresult rv;
+
+    // Write basic prototype data
+    rv = aStream->Write32(mType);
+    rv |= aStream->Write32(mLineNo);
+
+    rv |= aStream->WriteWStringZ(mValue.get());
+
+    return rv;
+}
+
+nsresult
+nsXULPrototypeText::Deserialize(nsIObjectInputStream* aStream,
+                                nsIScriptContext* aContext, 
+                                nsIURI* aDocumentURI)
+{
+    nsresult rv;
+
+    // Write basic prototype data
+    PRUint32 number;
+    rv = aStream->Read32(&number);
+    mLineNo = (PRInt32)number;
+    
+    PRUnichar* str = nsnull;
+    rv |= aStream->ReadWStringZ(&str);
+    mValue.Adopt(str);
+    
+    return rv;
 }

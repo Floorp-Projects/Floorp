@@ -55,8 +55,6 @@
 #include "nsXBLProtoImplMethod.h"
 #include "nsXBLProtoImplField.h"
 
-static NS_DEFINE_CID(kCSSParserCID,              NS_CSSPARSER_CID);
-
 nsresult
 NS_NewXBLContentSink(nsIXMLContentSink** aResult,
                      nsIDocument* aDoc,

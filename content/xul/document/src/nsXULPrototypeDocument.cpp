@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Chris Waterson <waterson@netscape.com>
  *   L. David Baron <dbaron@fas.harvard.edu>
+ *   Ben Goodger <ben@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -286,8 +287,6 @@ NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 // nsISerializable methods
 //
 
-#define XUL_FAST_LOAD_VERSION   0
-
 NS_IMETHODIMP
 nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
 {
@@ -295,16 +294,67 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
 
     PRUint32 version;
     rv = aStream->Read32(&version);
-    if (NS_FAILED(rv)) return rv;
-
-    if (version != XUL_FAST_LOAD_VERSION)
+    if (version != XUL_FASTLOAD_FILE_VERSION)
         return NS_ERROR_FAILURE;
 
-    rv = aStream->ReadObject(PR_TRUE, getter_AddRefs(mURI));
-    if (NS_FAILED(rv)) return rv;
+    rv |= aStream->ReadObject(PR_TRUE, getter_AddRefs(mURI));
 
-    // XXXbe more to come
-    return NS_OK;
+    PRUint32 referenceCount;
+    nsCOMPtr<nsIURI> referenceURI;
+
+    PRUint32 i;
+    // nsISupportsArray mStyleSheetReferences
+    rv |= aStream->Read32(&referenceCount);
+    if (NS_FAILED(rv)) return rv;
+    for (i = 0; i < referenceCount; ++i) {
+        rv |= aStream->ReadObject(PR_TRUE, getter_AddRefs(referenceURI));
+        
+        mStyleSheetReferences->AppendElement(referenceURI);
+    }
+
+    // nsISupportsArray mOverlayReferences
+    rv |= aStream->Read32(&referenceCount);
+    for (i = 0; i < referenceCount; ++i) {
+        rv |= aStream->ReadObject(PR_TRUE, getter_AddRefs(referenceURI));
+        
+        mOverlayReferences->AppendElement(referenceURI);
+    }
+
+    // nsIPrincipal mDocumentPrincipal
+    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
+
+    if (! securityManager)
+        return NS_ERROR_FAILURE;
+
+    rv |= securityManager->GetCodebasePrincipal(mURI, getter_AddRefs(mDocumentPrincipal));
+    rv |= NS_ReadOptionalObject(aStream, PR_TRUE, getter_AddRefs(mDocumentPrincipal));
+
+    // nsIScriptGlobalObject mGlobalObject
+    mGlobalObject = new nsXULPDGlobalObject();
+    if (! mGlobalObject)
+        return NS_ERROR_OUT_OF_MEMORY;
+    rv |= mGlobalObject->SetGlobalObjectOwner(this); // does not refcount
+
+    mRoot = new nsXULPrototypeElement(-1);
+    if (! mRoot)
+       return NS_ERROR_OUT_OF_MEMORY;
+
+    nsCOMPtr<nsIScriptContext> scriptContext;
+    rv |= mGlobalObject->GetContext(getter_AddRefs(scriptContext));
+    NS_ASSERTION(scriptContext != nsnull,
+                 "no prototype script context!");
+
+    PRUint32 type;
+    rv |= aStream->Read32(&type);
+
+    if ((nsXULPrototypeNode::Type)type != nsXULPrototypeNode::eType_Element)
+        return NS_ERROR_FAILURE;
+
+    rv |= mRoot->Deserialize(aStream, scriptContext, mURI);
+    rv |= NotifyLoadDone();
+
+    return rv;
 }
 
 
@@ -313,27 +363,49 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
 {
     nsresult rv;
 
-    rv = aStream->Write32(XUL_FAST_LOAD_VERSION);
-    if (NS_FAILED(rv)) return rv;
+    rv = aStream->Write32(XUL_FASTLOAD_FILE_VERSION);
+    
+    rv |= aStream->WriteCompoundObject(mURI, NS_GET_IID(nsIURI), PR_TRUE);
+    
+    PRUint32 referenceCount;
+    nsCOMPtr<nsIURI> referenceURI;
 
-    rv = aStream->WriteCompoundObject(mURI, NS_GET_IID(nsIURI), PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    PRUint32 i;
 
+    // nsISupportsArray mStyleSheetReferences
+    mStyleSheetReferences->Count(&referenceCount);
+    rv |= aStream->Write32(referenceCount);
+    
+    for (i = 0; i < referenceCount; ++i) {
+        mStyleSheetReferences->QueryElementAt(i, NS_GET_IID(nsIURI), getter_AddRefs(referenceURI));
+        
+        rv |= aStream->WriteCompoundObject(referenceURI, NS_GET_IID(nsIURI), PR_TRUE);
+    }
+
+    // nsISupportsArray mOverlayReferences
+    mOverlayReferences->Count(&referenceCount);
+    rv |= aStream->Write32(referenceCount);
+    
+    for (i = 0; i < referenceCount; ++i) {
+        mOverlayReferences->QueryElementAt(i, NS_GET_IID(nsIURI), getter_AddRefs(referenceURI));
+        
+        rv |= aStream->WriteCompoundObject(referenceURI, NS_GET_IID(nsIURI), PR_TRUE);
+    }
+
+    // nsIPrincipal mDocumentPrincipal
+    rv |= NS_WriteOptionalObject(aStream, mDocumentPrincipal, PR_TRUE);
+    
+    // Now serialize the document contents
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    rv |= GetScriptGlobalObject(getter_AddRefs(globalObject));
+    
     nsCOMPtr<nsIScriptContext> scriptContext;
-    rv = mGlobalObject->GetContext(getter_AddRefs(scriptContext));
-    if (NS_FAILED(rv)) return rv;
-
-#if 0
-    rv = mRoot->Serialize(aStream, scriptContext);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsISupportsArray> mStyleSheetReferences;
-    nsCOMPtr<nsISupportsArray> mOverlayReferences;
-    nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
-
-    nsCOMPtr<nsIScriptGlobalObject> mGlobalObject;
-#endif
-    return NS_OK;
+    rv |= globalObject->GetContext(getter_AddRefs(scriptContext));
+    
+    if (mRoot)
+        rv |= mRoot->Serialize(aStream, scriptContext);
+ 
+    return rv;
 }
 
 
@@ -416,7 +488,6 @@ nsXULPrototypeDocument::GetOverlayReferences(nsISupportsArray** aResult)
     NS_ADDREF(*aResult);
     return NS_OK;
 }
-
 
 
 NS_IMETHODIMP

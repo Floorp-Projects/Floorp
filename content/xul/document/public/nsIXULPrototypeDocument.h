@@ -56,6 +56,7 @@ class nsString;
 class nsVoidArray;
 class nsXULPrototypeElement;
 class nsIXULDocument;
+class nsIScriptGlobalObject;
 
 // {187A63D0-8337-11d3-BE47-00104BDE6048}
 #define NS_IXULPROTOTYPEDOCUMENT_IID \

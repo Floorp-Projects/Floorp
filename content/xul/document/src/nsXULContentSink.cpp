@@ -42,10 +42,7 @@
 /*
 
   An implementation for a Gecko-style content sink that knows how
-  to build an RDF content model from XUL.
-
-  For each container tag, an RDF Sequence object is created that
-  contains the order set of children of that container.
+  to build a content model from XUL.
 
   For more information on XUL, see http://www.mozilla.org/xpfe
 
@@ -74,8 +71,6 @@
 #include "nsINodeInfo.h"
 #include "nsIParser.h"
 #include "nsIPresShell.h"
-#include "nsIRDFCompositeDataSource.h"
-#include "nsIRDFService.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
@@ -120,7 +115,6 @@ static PRLogModuleInfo* gLog;
 static const char kXULNameSpaceURI[] = XUL_NAMESPACE_URI;
 
 
-static NS_DEFINE_CID(kCSSParserCID,              NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,       NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 
@@ -553,10 +547,6 @@ XULContentSinkImpl::WillInterrupt(void)
 NS_IMETHODIMP 
 XULContentSinkImpl::WillResume(void)
 {
-    nsCOMPtr<nsIXULDocument> xuldoc(do_QueryReferent(mDocument));
-    if (xuldoc)
-        xuldoc->OnResumeContentSink();
-
     // XXX Notify the webshell, if necessary
     return NS_OK;
 }
@@ -950,6 +940,8 @@ XULContentSinkImpl::HandleEndElement(const PRUnichar *aName)
         // If given a src= attribute, we must ignore script tag content.
         if (! script->mSrcURI && ! script->mJSObject) {
             nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
+
+            script->mOutOfLine = PR_FALSE;
 
             rv = script->Compile(mText, mTextLength, mDocumentURL,
                                  script->mLineNo, doc, mPrototype);
@@ -1484,109 +1476,6 @@ XULContentSinkImpl::OpenScript(const PRUnichar** aAttributes,
           if (NS_FAILED(rv)) {
               delete script;
               return rv;
-          }
-      }
-
-      // XXXbe temporary, until we serialize/deserialize everything from
-      //       the nsXULPrototypeDocument on down...
-      nsCOMPtr<nsIFastLoadService> fastLoadService;
-      nsCOMPtr<nsIObjectInputStream> objectInput;
-      nsXULDocument::GetFastLoadService(getter_AddRefs(fastLoadService));
-      if (fastLoadService)
-          fastLoadService->GetInputStream(getter_AddRefs(objectInput));
-
-      if (objectInput) {
-          PRBool useXULCache = PR_TRUE;
-          if (script->mSrcURI) {
-              // NB: we must check the XUL script cache early, to avoid
-              // multiple deserialization attempts for a given script, which
-              // would exhaust the multiplexed stream containing the singly
-              // serialized script.  Note that nsXULDocument::LoadScript
-              // checks the XUL script cache too, in order to handle the
-              // serialization case.
-              //
-              // We need do this only for <script src='strres.js'> and the
-              // like, i.e., out-of-line scripts that are included by several
-              // different XUL documents multiplexed in the FastLoad file.
-              gXULCache->GetEnabled(&useXULCache);
-
-              if (useXULCache) {
-                  gXULCache->GetScript(script->mSrcURI,
-                                       NS_REINTERPRET_CAST(void**, &script->mJSObject));
-              }
-          }
-
-          if (! script->mJSObject) {
-              nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner(do_QueryInterface(mPrototype));
-              nsCOMPtr<nsIScriptGlobalObject> globalObject;
-              globalOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
-              NS_ASSERTION(globalObject != nsnull, "no prototype global object!");
-
-              nsCOMPtr<nsIScriptContext> scriptContext;
-              globalObject->GetContext(getter_AddRefs(scriptContext));
-              NS_ASSERTION(scriptContext != nsnull,
-                           "no prototype script context!");
-
-              // Keep track of FastLoad failure via rv2, so we can
-              // AbortFastLoads if things look bad.
-              nsresult rv2 = NS_OK;
-              if (script->mSrcURI) {
-                  nsCAutoString spec;
-                  script->mSrcURI->GetAsciiSpec(spec);
-                  rv2 = fastLoadService->StartMuxedDocument(script->mSrcURI,
-                                                            spec.get(),
-                                                            nsIFastLoadService::NS_FASTLOAD_READ);
-                  if (NS_SUCCEEDED(rv2))
-                      rv2 = fastLoadService->SelectMuxedDocument(script->mSrcURI);
-              } else {
-                  // An inline script: check FastLoad multiplexing direction
-                  // and skip script->Deserialize if we're not reading from a
-                  // muxed stream to get inline objects that are contained in
-                  // the current document.
-                  PRInt32 direction;
-                  fastLoadService->GetDirection(&direction);
-                  if (direction != nsIFastLoadService::NS_FASTLOAD_READ)
-                      rv2 = NS_ERROR_NOT_AVAILABLE;
-              }
-
-              // Don't reflect errors into rv: mJSObject will be null
-              // after any error, which suffices to cause the script to
-              // be reloaded (from the src= URI, if any) and recompiled.
-              // We're better off slow-loading than bailing out due to a
-              // FastLoad error.
-              if (NS_SUCCEEDED(rv2))
-                  rv2 = script->Deserialize(objectInput, scriptContext);
-
-              if (NS_SUCCEEDED(rv2) && script->mSrcURI) {
-                  rv2 = fastLoadService->EndMuxedDocument(script->mSrcURI);
-                  if (NS_SUCCEEDED(rv2)) {
-                      // We must reselect the including XUL document now,
-                      // in case the next script in it is an inline one
-                      // whose data comes from its stream, not from the
-                      // now-exhausted document that was multiplexed for
-                      // script->mSrcURI.  Inline scripts are compiled in
-                      // XULContentSinkImpl::CloseContainer.
-                      rv2 = fastLoadService->SelectMuxedDocument(mDocumentURL);
-                  }
-              }
-
-              if (NS_SUCCEEDED(rv2)) {
-                  if (useXULCache && script->mSrcURI) {
-                      PRBool isChrome = PR_FALSE;
-                      script->mSrcURI->SchemeIs("chrome", &isChrome);
-                      if (isChrome) {
-                          gXULCache->PutScript(script->mSrcURI,
-                                               NS_REINTERPRET_CAST(void*, script->mJSObject));
-                      }
-                  }
-              } else {
-                  // If script->mSrcURI is not in the FastLoad multiplex,
-                  // rv2 will be NS_ERROR_NOT_AVAILABLE and we'll try to
-                  // update the FastLoad file to hold a serialization of
-                  // this script, once it has finished loading.
-                  if (rv2 != NS_ERROR_NOT_AVAILABLE)
-                      nsXULDocument::AbortFastLoads();
-              }
           }
       }
 
