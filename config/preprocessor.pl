@@ -32,20 +32,20 @@ my $stack = new stack;
 my @includes;
 while ($_ = $ARGV[0], defined($_) && /^-./) {
     shift;
-    last if /^--$/;
-    if (/^-D(.*)$/) { 
+    last if /^--$/os;
+    if (/^-D(.*)$/os) { 
         for ($1) {
-            if (/^(\w+)=(.*)$/) {
+            if (/^(\w+)=(.*)$/os) {
                 $stack->define($1, $2);
-            } elsif (/^(\w+)$/) {
+            } elsif (/^(\w+)$/os) {
                 $stack->define($1, 1);
             } else {
                 die "$0: invalid argument to -D: $_\n";
             }
         }
-    } elsif (/^-I(.*)$/) { 
+    } elsif (/^-I(.*)$/os) { 
         push(@includes, $1);
-    } elsif (/^-E$/) { 
+    } elsif (/^-E$/os) { 
         foreach (keys %ENV) {
             $stack->define($_, $ENV{$_});
         }
@@ -72,13 +72,14 @@ sub include {
     open(FILE, $filename);
     while (<FILE>) {
         $stack->newline;
-        if (/^\#([a-z]+)$/) { # argumentless processing instruction
+        if (/^\#([a-z]+)\n?$/os) { # argumentless processing instruction
             process($stack, $1);
-        } elsif (/^\#([a-z]+)\s(.*?)$/) { # processing instruction with arguments
+        } elsif (/^\#([a-z]+)\s(.*?)\n?$/os) { # processing instruction with arguments
             process($stack, $1, $2);
-        } elsif (/^\#/) { # comment
+        } elsif (/^\#\n?/os) { # comment
             # ignore it
         } else {
+            # print it, including any newlines
             print $_ if $stack->enabled;
         }
     }
@@ -197,10 +198,10 @@ sub define {
     die "argument expected\n" unless @_;
     my $argument = shift;
     for ($argument) {
-        /^(\w+)\s(.*)$/ && do {
+        /^(\w+)\s(.*)$/os && do {
             return $stack->define($1, $2);
         };
-        /^(\w+)$/ && do {
+        /^(\w+)$/os && do {
             return $stack->define($1, 1);
         };
         die "invalid argument\n";
@@ -231,19 +232,19 @@ sub if {
     die "argument expected\n" unless @_;
     my $argument = shift;
     for ($argument) {
-        /^(\w+)==(.*)$/ && do {
+        /^(\w+)==(.*)$/os && do {
             # equality
             return $stack->push($stack->get($1) eq $2);
         };
-        /^(\w+)!=(.*)$/ && do {
+        /^(\w+)!=(.*)$/os && do {
             # inequality
             return $stack->push($stack->get($1) ne $2);
         };
-        /^(\w+)$/ && do {
+        /^(\w+)$/os && do {
             # true value
             return $stack->push($stack->get($1));
         };
-        /^!(\w+)$/ && do {
+        /^!(\w+)$/os && do {
             # false value
             return $stack->push(not $stack->get($1));
         };
