@@ -20,7 +20,7 @@
 #   Mark Hammond <MarkH@ActiveState.com>
 #
 
-DEPTH		= ../../..
+DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
