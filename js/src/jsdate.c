@@ -1556,7 +1556,8 @@ date_format(JSContext *cx, jsdouble date, formatspec format, jsval *rval)
         if (tzbuf[0] != '(' || tzbuf[1] == ')')
             usetz = JS_FALSE;
 
-        if (format == FORMATSPEC_FULL) {
+        switch (format) {
+          case FORMATSPEC_FULL:
             /*
              * Avoid dependence on PRMJ_FormatTimeUSEnglish, because it
              * requires a PRMJTime... which only has 16-bit years.  Sub-ECMA.
@@ -1574,7 +1575,8 @@ date_format(JSContext *cx, jsdouble date, formatspec format, jsval *rval)
                         usetz ? tzbuf : "",
                         usetz ? " " : "",
                         YearFromTime(local));
-        } else if (format == FORMATSPEC_DATE) {
+            break;
+          case FORMATSPEC_DATE:
             /* Tue Oct 31 2000 */
             JS_snprintf(buf, sizeof buf,
                         "%s %s %.2d %.4d",
@@ -1582,7 +1584,8 @@ date_format(JSContext *cx, jsdouble date, formatspec format, jsval *rval)
                         months[MonthFromTime(local)],
                         DateFromTime(local),
                         YearFromTime(local));
-        } else if (format == FORMATSPEC_TIME) {
+            break;
+          case FORMATSPEC_TIME:
             /* 09:41:40 GMT-0800 (PST) */
             JS_snprintf(buf, sizeof buf,
                         "%.2d:%.2d:%.2d GMT%+.4d%s%s",
@@ -1592,8 +1595,7 @@ date_format(JSContext *cx, jsdouble date, formatspec format, jsval *rval)
                         offset,
                         usetz ? " " : "",
                         usetz ? tzbuf : "");
-        } else {
-            return JS_FALSE;
+            break;
         }
     }
 
