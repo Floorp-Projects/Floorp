@@ -574,6 +574,7 @@ public final class Context {
     public ScriptableObject initStandardObjects(ScriptableObject scope, 
                                                 boolean sealed) 
     {
+        final String omj = "org.mozilla.javascript.";
         try {
             if (scope == null)
                 scope = new NativeObject();
@@ -610,11 +611,10 @@ public final class Context {
             for (int i=0; i < classes.length; i+=2) {
                 try {
                     if (sealed) {
-                        Class c = Class.forName("org.mozilla.javascript." + 
-                                                classes[i]);
+                        Class c = Class.forName(omj + classes[i]);
                         ScriptableObject.defineClass(scope, c, sealed);
                     } else {
-                        String s = "org.mozilla.javascript." + classes[i];
+                        String s = omj + classes[i];
                         new LazilyLoadedCtor(scope, classes[i+1], s, 
                                              ScriptableObject.DONTENUM);
                     }
@@ -634,6 +634,10 @@ public final class Context {
             try {
                 Class adapterClass = Class.forName(adapterName);
                 ScriptableObject.defineClass(scope, adapterClass, sealed);
+                
+                // This creates the Packages and java package roots.
+                Class c = Class.forName(omj + "NativeJavaPackage");
+                ScriptableObject.defineClass(scope, c, sealed);
             } catch (ClassNotFoundException e) {
                 // If the class is not found, proceed without it.
             } catch (SecurityException e) {
@@ -643,9 +647,6 @@ public final class Context {
                 //  java.util.PropertyPermission 
                 //        org.mozilla.javascript.JavaAdapter read
             }
-            
-            // This creates the Packages and java package roots.
-            NativeJavaPackage.init(scope);
         }
         // All of these exceptions should not occur since we are initializing
         // from known classes
