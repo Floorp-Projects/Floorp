@@ -208,20 +208,13 @@ ssl_cov()
           is_selfserv_alive
           echo "tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} \\"
           echo "        -f -d . < ${REQUEST_FILE}"
-          if [ `uname -s` = "HP-UX" ] ; then
-              echo "workaround for HP-UX to avoid client and server writes at "
-              echo "       the same time"
-              rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
-              tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f \
+
+          rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
+          tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f \
                   -d . < ${REQUEST_FILE} >${TMP}/$HOST.tmp.$$  2>&1
-              ret=$?
-              cat ${TMP}/$HOST.tmp.$$ 
-              rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
-          else
-              tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f \
-                  -d . < ${REQUEST_FILE}
-              ret=$?
-          fi
+          ret=$?
+          cat ${TMP}/$HOST.tmp.$$ 
+          rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
           html_msg $ret 0 "${testname}"
       fi
   done
@@ -245,19 +238,12 @@ ssl_auth()
 
           echo "tstclnt -p ${PORT} -h ${HOST} -f -d . ${cparam} \\"
           echo "        < ${REQUEST_FILE}"
-          if [ `uname -s` = "HP-UX" ] ; then
-              echo "workaround for HP-UX to avoid client and server writes at "
-              echo "       the same time"
-              rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
-              tstclnt -p ${PORT} -h ${HOST} -f ${cparam} \
+          rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
+          tstclnt -p ${PORT} -h ${HOST} -f ${cparam} \
                   -d . < ${REQUEST_FILE} >${TMP}/$HOST.tmp.$$  2>&1
-              ret=$?
-              cat ${TMP}/$HOST.tmp.$$ 
-              rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
-          else
-            tstclnt -p ${PORT} -h ${HOST} -f -d . ${cparam} < ${REQUEST_FILE}
-            ret=$?
-          fi
+          ret=$?
+          cat ${TMP}/$HOST.tmp.$$ 
+          rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
 
           html_msg $ret $value "${testname}" \
                    "produced a returncode of $ret, expected is $value"
