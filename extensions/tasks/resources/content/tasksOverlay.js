@@ -48,8 +48,10 @@ function OtherTasksOnLoad()
   var appFile = getAppFile("task.calendar.location");
   if (appFile && !haveInternalCalendar())
   {
-    otherCalTaskBarIcon.hidden = false;
-    otherCalMenuItem.hidden = false;
+    if (otherCalTaskBarIcon)
+      otherCalTaskBarIcon.hidden = false;
+    if (otherCalMenuItem)
+      otherCalMenuItem.hidden = false;
   }
 }
 
