@@ -834,6 +834,13 @@ JSValue JSValue::convert(JSType *toType)
         return valueToInteger(*this);
     else if (toType == &String_Type)
         return valueToString(*this);
+    else if (toType == &Function_Type)
+    {
+        if (tag == function_tag)
+            return *this;
+        else
+            throw new JSException("Can't cast to function");
+    }
     else {
         JSClass *toClass = dynamic_cast<JSClass *>(toType);
         if (toClass) {
@@ -860,7 +867,7 @@ JSValue JSValue::convert(JSType *toType)
 
 JSFunction::~JSFunction()
 {
-    delete mICode;
+    if (mICode) delete mICode;
 }
 
 JSString::JSString(const String& str)

@@ -475,10 +475,10 @@ TypedRegister ICodeGenerator::binaryOp(ICodeOp op, TypedRegister source1,
     return dest;
 } 
     
-TypedRegister ICodeGenerator::call(TypedRegister target, TypedRegister thisArg, ArgumentList *args)
+TypedRegister ICodeGenerator::call(TypedRegister target, ArgumentList *args)
 {
     TypedRegister dest(getTempRegister(), &Any_Type);
-    Call *instr = new Call(dest, target, thisArg, args);
+    Call *instr = new Call(dest, target, args);
     iCode->push_back(instr);
     return dest;
 }
@@ -488,6 +488,13 @@ TypedRegister ICodeGenerator::directCall(JSFunction *target, ArgumentList *args)
     TypedRegister dest(getTempRegister(), &Any_Type);
     DirectCall *instr = new DirectCall(dest, target, args);
     iCode->push_back(instr);
+    return dest;
+}
+
+TypedRegister ICodeGenerator::bindThis(TypedRegister thisArg, TypedRegister target)
+{
+    TypedRegister dest(getTempRegister(), &Function_Type);
+    iCode->push_back(new BindThis(dest, thisArg, target));
     return dest;
 }
 
@@ -888,20 +895,20 @@ TypedRegister ICodeGenerator::handleIdentifier(IdentifierExprNode *p, ExprNode::
         {
             switch (lValueKind) {
             case Var:
-                ret = call(v, TypedRegister(NotARegister, &Null_Type), args);
+                ret = call(v, args);
                 break;
             case Name:
-                ret = call(loadName(name), TypedRegister(NotARegister, &Null_Type), args);
+                ret = call(loadName(name), args);
                 break;
             case Method:
-                ret = call(getMethod(thisBase, slotIndex), thisBase, args);
+                ret = call(getMethod(thisBase, slotIndex), args);
                 break;
             case Static:
-                ret = call(getStatic(mClass, name), TypedRegister(NotARegister, &Null_Type), args);
+                ret = call(getStatic(mClass, name), args);
                 break;
             case Constructor:
                 ret = newClass(mClass);
-                call(getStatic(mClass, name), ret, args);
+                call(bindThis(ret, getStatic(mClass, name)), args);
                 break;
             default:
                 NOT_REACHED("Bad lvalue kind");
@@ -981,17 +988,17 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
         case ExprNode::call:
             switch (lValueKind) {
             case Static:
-                ret = call(getStatic(clazz, fieldName), TypedRegister(NotARegister, &Null_Type), args);
+                ret = call(getStatic(clazz, fieldName), args);
                 break;
             case Constructor:
                 ret = newClass(clazz);
-                call(getStatic(clazz, fieldName), ret, args);
+                call(bindThis(ret, getStatic(clazz, fieldName)), args);
                 break;
             case Property:
-                ret = call(getProperty(base, fieldName), base, args);
+                ret = call(bindThis(base, getProperty(base, fieldName)), args);
                 break;
             case Method:
-                ret = call(getMethod(base, slotIndex), base, args);
+                ret = call(getMethod(base, slotIndex), args);
                 break;
             default:
                 NOT_REACHED("Bad lvalue kind");
@@ -1019,6 +1026,9 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
                 break;
             case Slot:
                 v = getSlot(base, slotIndex);
+                break;
+            case Method:
+                v = getMethod(base, slotIndex);
                 break;
             default:
                 NOT_REACHED("Bad lvalue kind");
@@ -1170,7 +1180,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                     JSClass* clazz = dynamic_cast<JSClass*>(value.type);
                     if (clazz) {
                         ret = newClass(clazz);
-                        ret = call(getStatic(clazz, className), ret, args);
+                        ret = call(bindThis(ret, getStatic(clazz, className)), args);
                     }
                     else {
                         //
@@ -1187,7 +1197,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                     if (value.isFunction()) {
                         TypedRegister f = loadName(className, value.type);
                         ret = newObject(f);
-                        ret = call(f, ret, args);
+                        ret = call(bindThis(ret, f), args);
                     }
                     else
                         NOT_REACHED("new <name>, where <name> is not a function");   // XXX Runtime error.
@@ -1238,7 +1248,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                     if (i->op->getKind() == ExprNode::index) {
                         InvokeExprNode *ii = static_cast<InvokeExprNode *>(i->op);
                         TypedRegister base = genExpr(ii->op);
-                        ret = call(getElement(base, genExpr(ii->pairs->value)), base, args);     // FIXME, only taking first index
+                        ret = call(bindThis(base, getElement(base, genExpr(ii->pairs->value))), args);     // FIXME, only taking first index
                     }
                     else
                         ASSERT("WAH!");
@@ -1762,11 +1772,11 @@ ICodeModule *ICodeGenerator::genFunction(FunctionStmtNode *f, bool isConstructor
                 }
             }
             if (!foundSuperCall) {         // invoke the default superclass constructor
-                icg.call(icg.getStatic(superclass, superclass->getName()), thisValue, args);
+                icg.call(icg.bindThis(thisValue, icg.getStatic(superclass, superclass->getName())), args);
             }
         }
         if (mClass->hasStatic(mInitName))
-            icg.call(icg.getStatic(mClass, mInitName), thisValue, args);   // ok, so it's mis-named
+            icg.call(icg.bindThis(thisValue, icg.getStatic(mClass, mInitName)), args);   // ok, so it's mis-named
 
     }
     if (f->function.body)
@@ -1981,9 +1991,9 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                     ICodeGenerator icg(classContext, thisClass, kIsStaticMethod);
                     icg.allocateParameter(mContext->getWorld().identifiers["this"], false, thisClass);   // always parameter #0
                     if (superclass)
-                        icg.call(icg.getStatic(superclass, superclass->getName()), thisValue, args);
+                        icg.call(icg.bindThis(thisValue, icg.getStatic(superclass, superclass->getName())), args);
                     if (thisClass->hasStatic(mInitName))
-                        icg.call(icg.getStatic(thisClass, mInitName), thisValue, args);
+                        icg.call(icg.bindThis(thisValue, icg.getStatic(thisClass, mInitName)), args);
                     icg.returnStmt(thisValue);
                     thisClass->defineConstructor(nameExpr->name);
                     scg.setStatic(thisClass, nameExpr->name, scg.newFunction(icg.complete(&Void_Type)));
@@ -2534,9 +2544,9 @@ void ICodeGenerator::readICode(const char *fileName)
                 ICodeGenerator icg(mContext, thisClass, kIsStaticMethod);
                 icg.allocateParameter(mContext->getWorld().identifiers["this"], false, thisClass);   // always parameter #0
                 if (superclass)
-                    icg.call(icg.getStatic(superclass, superclass->getName()), thisValue, args);
+                    icg.call(icg.bindThis(thisValue, icg.getStatic(superclass, superclass->getName())), args);
                 if (thisClass->hasStatic(mInitName))
-                    icg.call(icg.getStatic(thisClass, mInitName), thisValue, args);
+                    icg.call(icg.bindThis(thisValue, icg.getStatic(thisClass, mInitName)), args);
                 icg.returnStmt(thisValue);
                 thisClass->defineConstructor(className);
                 scg.setStatic(thisClass, mContext->getWorld().identifiers[className], scg.newFunction(icg.complete(&Void_Type)));

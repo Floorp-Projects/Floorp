@@ -68,6 +68,7 @@ namespace JSTypes {
     
     typedef uint32 Register;
 
+
     /**
      * All JavaScript data types.
      */        
@@ -270,16 +271,13 @@ namespace JSTypes {
         JSObject()                      { init(ObjectPrototypeObject); }
         JSObject(JSValue &constructor)  { init(constructor.object->getProperty(widenCString("prototype")).object); }
         JSObject(JSObject *prototype)   { init(prototype); }
-/*
-
-  I wanted to have this, but VCC complains about JSInstance instances not being deletable...
 
         virtual ~JSObject() 
         {
             if (mGetter) delete mGetter;
             if (mSetter) delete mSetter;
         }
-*/    
+    
         static void initObjectObject(JSScope *g);
 
         bool hasProperty(const String& name)
@@ -501,11 +499,11 @@ namespace JSTypes {
      * compiled code of the function.
      */
     class JSFunction : public JSObject {
+    protected:
         static JSString* FunctionString;
         static JSObject* FunctionPrototypeObject;
         ICodeModule* mICode;
         
-    protected:
 
    	    typedef JavaScript::gc_traits_finalizable<JSFunction> traits;
 	    typedef gc_allocator<JSFunction, traits> allocator;
@@ -522,7 +520,9 @@ namespace JSTypes {
             setClass(FunctionString);
         }
 
-        ~JSFunction();
+        virtual ~JSFunction();
+
+        virtual JSValue getThis()  { return kNullValue; }
     
         void* operator new(size_t) { return allocator::allocate(1); }
 
@@ -530,20 +530,37 @@ namespace JSTypes {
         virtual bool isNative()    { return false; }
     };
 
+    class JSBoundThis : public JSFunction {
+   	    typedef JavaScript::gc_traits_finalizable<JSBoundThis> traits;
+	    typedef gc_allocator<JSBoundThis, traits> allocator;
+    public:
+        JSBoundThis(JSValue aThis, JSFunction *aFunc) : JSFunction(*aFunc) { mBoundThis  = aThis; }
+        JSValue mBoundThis;
+        virtual ~JSBoundThis()     { mICode = NULL; }
+        virtual JSValue getThis()  { return mBoundThis; }
+        void* operator new(size_t) { return allocator::allocate(1); }
+    };
+
     class JSNativeFunction : public JSFunction {
+   	    typedef JavaScript::gc_traits_finalizable<JSNativeFunction> traits;
+	    typedef gc_allocator<JSNativeFunction, traits> allocator;
     public:
         typedef JSValue (*JSCode)(Context *cx, const JSValues& argv);
         JSCode mCode;
         JSNativeFunction(JSCode code) : mCode(code) {}
         virtual bool isNative()    { return true; }
+        void* operator new(size_t) { return allocator::allocate(1); }
     };
         
     class JSBinaryOperator : public JSFunction {
+   	    typedef JavaScript::gc_traits_finalizable<JSBinaryOperator> traits;
+	    typedef gc_allocator<JSBinaryOperator, traits> allocator;
     public:
         typedef JSValue (*JSBinaryCode)(const JSValue& arg1, const JSValue& arg2);
         JSBinaryCode mCode;
         JSBinaryOperator(JSBinaryCode code) : mCode(code) {}
         virtual bool isNative()    { return true; }
+        void* operator new(size_t) { return allocator::allocate(1); }
     };
 
    /**
