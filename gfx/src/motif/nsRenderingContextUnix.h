@@ -40,6 +40,12 @@
 #include "X11/Xlib.h"
 #include "X11/Xutil.h"
 
+#ifdef MITSHM
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <X11/extensions/XShm.h>
+#endif
+
 class GraphicsState;
 
 class nsRenderingContextUnix : public nsIRenderingContext
@@ -148,6 +154,12 @@ protected:
 
   //state management
   nsVoidArray       *mStateCache;
+
+#ifdef MITSHM
+private:
+  PRBool  mHasSharedMemory;
+  PRBool  mSupportsSharedPixmaps;
+#endif
 
 };
 
