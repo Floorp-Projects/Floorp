@@ -82,7 +82,7 @@ main()
     mysample->SetServer( "/tmp/.oecalendar" );
     rv = mysample->Test();
 
-    if ( rv != NS_OK )
+    if ( NS_SUCEEDED(NS_OK) )
     {
         printf("ERROR: Calling oeIICal::Test()\n");
         return 0;
