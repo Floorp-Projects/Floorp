@@ -32,23 +32,9 @@ void XXXNeverCalled()
     nsRDFParserUtils::IsJavaScriptLanguage(s);
 
     // rdfutils
-    rdf_IsOrdinalProperty(nsnull);
-    rdf_OrdinalResourceToIndex(nsnull, nsnull);
-    rdf_IndexToOrdinalResource(0, nsnull);
-    rdf_IsContainer(nsnull, nsnull);
-    rdf_IsBag(nsnull, nsnull);
-    rdf_IsSeq(nsnull, nsnull);
-    rdf_IsAlt(nsnull, nsnull);
     rdf_CreateAnonymousResource(s, nsnull);
     rdf_IsAnonymousResource(s, nsnull);
     rdf_PossiblyMakeRelative(s, s);
-    rdf_MakeBag(nsnull, nsnull);
-    rdf_MakeSeq(nsnull, nsnull);
-    rdf_MakeAlt(nsnull, nsnull);
-    rdf_ContainerAppendElement(nsnull, nsnull, nsnull);
-    rdf_ContainerRemoveElement(nsnull, nsnull, nsnull, PR_FALSE);
-    rdf_ContainerInsertElementAt(nsnull, nsnull, nsnull, 0, PR_FALSE);
-    rdf_ContainerIndexOf(nsnull, nsnull, nsnull, nsnull);
     NS_NewContainerEnumerator(nsnull, nsnull, nsnull);
     NS_NewEmptyEnumerator(nsnull);
 
