@@ -38,18 +38,16 @@
 
 # List files explicitly to exclude .java files in this dir we don't want
 # to compile.  Also hack in classfile stuff...
+
 SOURCES =						\
 	$(PATH_PREFIX)/Arguments.java			\
 	$(PATH_PREFIX)/BinaryDigitReader.java		\
 	$(PATH_PREFIX)/ClassDefinitionException.java	\
 	$(PATH_PREFIX)/ClassNameHelper.java		\
+	$(PATH_PREFIX)/ClassOutput.java			\
 	$(PATH_PREFIX)/Context.java			\
-	$(PATH_PREFIX)/DeepBytecodeHook.java		\
-	$(PATH_PREFIX)/DeepCallHook.java		\
-	$(PATH_PREFIX)/DeepErrorReporterHook.java	\
-	$(PATH_PREFIX)/DeepExecuteHook.java		\
-	$(PATH_PREFIX)/DeepNewObjectHook.java		\
-	$(PATH_PREFIX)/DeepScriptHook.java		\
+	$(PATH_PREFIX)/ContextListener.java		\
+	$(PATH_PREFIX)/DToA.java			\
 	$(PATH_PREFIX)/DefaultErrorReporter.java	\
 	$(PATH_PREFIX)/EcmaError.java			\
 	$(PATH_PREFIX)/ErrorReporter.java		\
@@ -64,6 +62,7 @@ SOURCES =						\
 	$(PATH_PREFIX)/InterpretedScript.java		\
 	$(PATH_PREFIX)/Interpreter.java			\
 	$(PATH_PREFIX)/InterpreterData.java		\
+	$(PATH_PREFIX)/InterpreterFrame.java		\
 	$(PATH_PREFIX)/JavaAdapter.java			\
 	$(PATH_PREFIX)/JavaMembers.java			\
 	$(PATH_PREFIX)/JavaScriptException.java		\
