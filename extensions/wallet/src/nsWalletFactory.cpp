@@ -76,8 +76,9 @@ NS_IMETHODIMP
 WalletFactoryImpl::QueryInterface(const nsIID &aIID,
 				      void **aResult)
 {
-    if (! aResult)
+    if (! aResult) {
 	return NS_ERROR_NULL_POINTER;
+    }
 
     // Always NULL result, in case of failure
     *aResult = nsnull;
@@ -102,30 +103,27 @@ WalletFactoryImpl::CreateInstance(nsISupports *aOuter,
 			     const nsIID &aIID,
 			     void **aResult)
 {
-    if (! aResult)
+    if (! aResult){
 	return NS_ERROR_NULL_POINTER;
-
-    if (aOuter)
+    }
+    if (aOuter) {
 	return NS_ERROR_NO_AGGREGATION;
-
+    }
     *aResult = nsnull;
 
     nsresult rv;
     nsISupports *inst = nsnull;
     if (mClassID.Equals(kWalletServiceCID)) {
-	if (NS_FAILED(rv = NS_NewWalletService((nsIWalletService**) &inst)))
+	if (NS_FAILED(rv = NS_NewWalletService((nsIWalletService**) &inst))) {
 	    return rv;
-    }
-    else {
+        }
+    } else {
         return NS_ERROR_NO_INTERFACE;
     }
 
-    if (NS_FAILED(rv = inst->QueryInterface(aIID, aResult))) {
-        // We didn't get the right interface, so clean up
-        delete inst;
-    }
 
-	NS_IF_RELEASE(inst);
+    rv = inst->QueryInterface(aIID, aResult);
+    NS_IF_RELEASE(inst);
     return rv;
 }
 
@@ -147,13 +145,13 @@ NSGetFactory(nsISupports* serviceMgr,
              const char *aProgID,
              nsIFactory **aFactory)
 {
-    if (! aFactory)
+    if (! aFactory) {
 	return NS_ERROR_NULL_POINTER;
-
+    }
     WalletFactoryImpl* factory = new WalletFactoryImpl(aClass);
-    if (factory == nsnull)
+    if (factory == nsnull) {
         return NS_ERROR_OUT_OF_MEMORY;
-
+    }
     NS_ADDREF(factory);
     *aFactory = factory;
     return NS_OK;
@@ -171,7 +169,9 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
     rv = servMgr->GetService(kComponentManagerCID,
                              nsIComponentManager::GetIID(),
                              (nsISupports**)&compMgr);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
 
     // register wallet service
     rv = compMgr->RegisterComponent(kWalletServiceCID,
@@ -191,13 +191,16 @@ NSUnregisterSelf(nsISupports* aServMgr , const char* aPath)
     nsresult rv;
 
     nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
-    if (NS_FAILED(rv)) return rv;
-
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
     nsIComponentManager* compMgr;
     rv = servMgr->GetService(kComponentManagerCID,
                              nsIComponentManager::GetIID(),
                              (nsISupports**)&compMgr);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
 
     // unregister wallet component
     rv = compMgr->UnregisterComponent(kWalletServiceCID, aPath);
@@ -205,4 +208,3 @@ NSUnregisterSelf(nsISupports* aServMgr , const char* aPath)
     (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
     return rv;
 }
-

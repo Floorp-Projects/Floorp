@@ -68,7 +68,8 @@ nsWalletlibService::QueryInterface(REFNSIID iid, void** result)
     return NS_ERROR_NULL_POINTER;
   }
   *result = nsnull;
-  if (iid.Equals(kIWalletServiceIID)) {
+
+  if (iid.Equals(NS_GET_IID(nsISupports)) || iid.Equals(kIWalletServiceIID)) {
     *result = NS_STATIC_CAST(nsIWalletService*, this);
     AddRef();
     return NS_OK;
