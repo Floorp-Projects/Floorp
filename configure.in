@@ -2362,6 +2362,20 @@ if test "$ac_cv_cpp_modern_specialize_template_syntax" = yes ; then
   AC_DEFINE(HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX)
 fi
 
+
+dnl Some compilers support only full specialization, and some don't.
+AC_CACHE_CHECK(whether partial template specialization works,
+               ac_cv_cpp_partial_specialization,
+               [AC_TRY_COMPILE(template <class T> class Foo {};
+                               template <class T> class Foo<T*> {};,
+                               return 0;,
+                               ac_cv_cpp_partial_specialization=yes,
+                               ac_cv_cpp_partial_specialization=no)])
+if test "$ac_cv_cpp_partial_specialization" = yes ; then
+  AC_DEFINE(HAVE_CPP_PARTIAL_SPECIALIZATION)
+fi
+
+
 dnl
 dnl We dont do exceptions on unix.  The only reason this used to be here
 dnl is that mozilla/xpcom/tests/TestCOMPtr.cpp has a test which uses 
