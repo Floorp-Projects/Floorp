@@ -357,7 +357,7 @@ nsComponentsDlg::Show(int aDirection)
             static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
             static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
 			20, 20);
-        frame = gtk_frame_new(DESCRIPTION);
+        frame = gtk_frame_new(gCtx->Res("DESCRIPTION"));
         gtk_table_attach_defaults(GTK_TABLE(descLongTable), frame, 0, 1, 0, 1);
         gtk_widget_show(frame);
 
@@ -390,7 +390,7 @@ nsComponentsDlg::Show(int aDirection)
     if (aDirection == nsXInstallerDlg::BACKWARD_MOVE) // from install dlg
     {
         gtk_container_remove(GTK_CONTAINER(gCtx->next), gCtx->installLabel);
-        gCtx->nextLabel = gtk_label_new(NEXT);
+        gCtx->nextLabel = gtk_label_new(gCtx->Res("NEXT"));
         gtk_container_add(GTK_CONTAINER(gCtx->next), gCtx->nextLabel);
         gtk_widget_show(gCtx->nextLabel);
         gtk_widget_show(gCtx->next);

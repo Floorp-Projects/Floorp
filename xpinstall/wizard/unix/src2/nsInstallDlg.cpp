@@ -250,7 +250,7 @@ nsInstallDlg::Show(int aDirection)
 
     // always change title of next button to "Install"
     gtk_container_remove(GTK_CONTAINER(gCtx->next), gCtx->nextLabel); 
-    gCtx->installLabel = gtk_label_new(INSTALL);
+    gCtx->installLabel = gtk_label_new(gCtx->Res("INSTALL"));
     gtk_container_add(GTK_CONTAINER(gCtx->next), gCtx->installLabel);
     gtk_widget_show(gCtx->installLabel);
     gtk_widget_show(gCtx->next);
@@ -359,7 +359,7 @@ nsInstallDlg::XPIProgressCB(const char *aMsg, int aVal, int aMax)
         gtk_progress_bar_update(GTK_PROGRESS_BAR(sMinorProgBar), percent);
         gtk_widget_show(sMinorProgBar);
 
-        sprintf(msg, PROCESSING_FILE, aVal, aMax);
+        sprintf(msg, gCtx->Res("PROCESSING_FILE"), aVal, aMax);
     }
     else
     {
@@ -413,15 +413,15 @@ nsInstallDlg::MajorProgressCB(char *aName, int aNum, int aTotal, int aActivity)
     {
         case ACT_DOWNLOAD:
             if (!bDownload)
-                sprintf(msg, PREPARING, aName);
+                sprintf(msg, gCtx->Res("PREPARING"), aName);
             break;
 
         case ACT_EXTRACT:
-            sprintf(msg, EXTRACTING, aName);
+            sprintf(msg, gCtx->Res("EXTRACTING"), aName);
             break;
 
         case ACT_INSTALL:
-            sprintf(msg, INSTALLING_XPI, aName);
+            sprintf(msg, gCtx->Res("INSTALLING_XPI"), aName);
             break;
 
         default:
@@ -460,7 +460,7 @@ nsInstallDlg::SetDownloadComp(char *aName, int aNum, int aTotal)
     char label[64];
 
     // major label format e.g., "Downloading Navigator [4/12] at 635 K/sec..."
-    sprintf(label, DOWNLOADING, aName, aNum, aTotal);
+    sprintf(label, gCtx->Res("DOWNLOADING"), aName, aNum, aTotal);
     gtk_label_set_text(GTK_LABEL(sMajorLabel), label);
 
     gettimeofday(&sDLStartTime, NULL);
@@ -486,7 +486,7 @@ nsInstallDlg::DownloadCB(int aBytesRd, int aTotal)
     percent = (gfloat)aBytesRd/(gfloat)aTotal;
 
     // only update rate in major label line
-    sprintf(label, DLRATE, rate);
+    sprintf(label, gCtx->Res("DLRATE"), rate);
     gtk_label_set_text(GTK_LABEL(sRateLabel), label);
     gtk_progress_bar_update(GTK_PROGRESS_BAR(sMajorProgBar), percent);
 
@@ -510,8 +510,8 @@ nsInstallDlg::ShowCompleteDlg()
 
     // throw up completion notification
     completeDlg = gtk_dialog_new();
-    label = gtk_label_new(COMPLETED);
-    okButton = gtk_button_new_with_label(OK_LABEL);
+    label = gtk_label_new(gCtx->Res("COMPLETED"));
+    okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
     packer = gtk_packer_new();
 
     gtk_packer_set_default_border_width(GTK_PACKER(packer), 20);

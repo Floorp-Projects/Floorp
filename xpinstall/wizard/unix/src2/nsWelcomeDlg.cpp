@@ -133,7 +133,7 @@ nsWelcomeDlg::Show(int aDirection)
         readmeContents = GetReadmeContents();
         if (!readmeContents)
         {
-            err = E_EMPTY_README;
+            err = ErrorHandler(E_EMPTY_README);
             goto BAIL;
         }
 
@@ -181,8 +181,8 @@ nsWelcomeDlg::Show(int aDirection)
         // change the button titles back to Back/Next
         gtk_container_remove(GTK_CONTAINER(gCtx->next), gCtx->acceptLabel);
         gtk_container_remove(GTK_CONTAINER(gCtx->back), gCtx->declineLabel);
-        gCtx->nextLabel = gtk_label_new(NEXT);
-        gCtx->backLabel = gtk_label_new(BACK);
+        gCtx->nextLabel = gtk_label_new(gCtx->Res("NEXT"));
+        gCtx->backLabel = gtk_label_new(gCtx->Res("BACK"));
         gtk_container_add(GTK_CONTAINER(gCtx->next), gCtx->nextLabel);
         gtk_container_add(GTK_CONTAINER(gCtx->back), gCtx->backLabel);
         gtk_widget_show(gCtx->nextLabel);

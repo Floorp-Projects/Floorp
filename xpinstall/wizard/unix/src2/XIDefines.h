@@ -28,38 +28,6 @@
 #include "XIErrors.h"
 #include <gtk/gtk.h>
 
-/*--------------------------------------------------------------------*
- *   Default Strings
- *--------------------------------------------------------------------*/
-#define NEXT "Next >"
-#define BACK "< Back"
-#define CANCEL "Cancel"
-#define ACCEPT "Accept"
-#define DECLINE "Decline"
-#define INSTALL "Install"
-#define DEFAULT_TITLE "Mozilla Installer"
-#define DEST_DIR "Destination Directory"
-#define BROWSE "Change..."
-#define SELECT_DIR "Select a directory"
-#define DOESNT_EXIST "Directory %s doesn't exist.  Create it?\n"
-#define YES_LABEL "Yes"
-#define NO_LABEL "No"
-#define OK_LABEL "OK"
-#define DELETE_LABEL "Delete"
-#define CANCEL_LABEL "Cancel"
-#define ERROR "Error [%d]: %s\n" 
-#define FATAL_ERROR "Fatal error [%d]: %s\n"
-#define WARNING "Warning [%d]: %s\n"
-#define DESCRIPTION "Description"
-#define DOWNLOADING "Downloading %s [%d/%d]"
-#define DLRATE " at %d K/sec..."
-#define PREPARING "Preparing %s..."
-#define EXTRACTING "Extracting %s..."
-#define INSTALLING_XPI "Installing %s..."
-#define PROCESSING_FILE "Processing file %d of %d..."
-#define EXTRACTING_FILES "Extracting files..."
-#define COMPLETED "Installation has completed."
-
 
 /*--------------------------------------------------------------------*
  *   Limits

@@ -31,8 +31,20 @@
 #include "nsComponentsDlg.h"
 #include "nsInstallDlg.h"
 #include "nsXIOptions.h"
+#include "nsINIParser.h"
+
+#define RES_FILE "installer.prop"
+#define RES_SECT "String Resources"
 
 class nsXInstaller;
+
+typedef struct _kvpair
+{
+    char *key;
+    char *val;
+
+    struct _kvpair *next;
+} kvpair;
 
 class nsXIContext
 {
@@ -81,6 +93,12 @@ public:
  *   Utilities
  *-------------------------------------------------------------------*/
     char    *itoa(int n);
+    int     LoadResources();        /* load string resources */
+    int     ReleaseResources();     /* release alloc'd resource strings */
+    char    *Res(char *aKey);       /* get string resource for key; NULL==err */
+
+private:
+    kvpair  *reslist;               /* string resource linked list */
 };
 
 #endif /* _NS_XICONTEXT_H_ */
