@@ -52,7 +52,7 @@ iframe {
 
 
     <toolbar id="tab" class="tabheader" onclick="sidebarwdth(0,'tab1')">
-        <titledbutton id="bookmarks" align="left" value="Bookmarks" />
+        <titledbutton id="Alerts" align="left" value="Alerts" />
         <titledbutton id="cust1" align="right" src="" value="customize"  />
     </toolbar>xul" id="tab1"  />
   <html:iframe src="resource:/res/rdf/flash.xul" id="tab1"   />
@@ -61,7 +61,7 @@ iframe {
 
 
     <toolbar id="tabbar2" class="tabheader" onclick="sidebarwdth(0,'tab2')">
-        <titledbutton align="left" src="" value="Other"  />
+	    <titledbutton id="bookmarks" align="left" value="Bookmarks" />
         <titledbutton align="left" src="" value="customize" />
     </toolbar>
 
