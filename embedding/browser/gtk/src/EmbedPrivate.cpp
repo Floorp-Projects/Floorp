@@ -217,7 +217,9 @@ EmbedPrivate::Realize(PRBool *aAlreadyRealized)
   // and, thanks to superwin we actually need the parent of that.
   tmp_window = gdk_window_get_parent(tmp_window);
   // save the widget ID - it should be the mozarea of the window.
-  gdk_window_get_user_data(tmp_window, &(gpointer)mMozWindowWidget);
+  gpointer data = nsnull;
+  gdk_window_get_user_data(tmp_window, &data);
+  mMozWindowWidget = NS_STATIC_CAST(GtkWidget *, data);
 
   return NS_OK;
 }
