@@ -262,6 +262,12 @@ nsFolderCompactState::Init(nsIMsgFolder *folder, const char *baseMsgUri, nsIMsgD
     return NS_ERROR_OUT_OF_MEMORY;
 
   pathSpec->GetFileSpec(&m_fileSpec);
+
+  // need to make sure the temp file goes in the same real directory
+  // as the original file, so resolve sym links.
+  PRBool ignored;
+  m_fileSpec.ResolveSymlink(ignored);
+
   m_fileSpec.SetLeafName("nstmp");
   m_fileSpec.MakeUnique();   //make sure we are not crunching existing nstmp file
   m_window = aMsgWindow;
@@ -365,11 +371,16 @@ nsFolderCompactState::FinishCompact()
   rv = m_folder->GetPath(getter_AddRefs(pathSpec));
   pathSpec->GetFileSpec(&fileSpec);
 
+  // need to make sure we put the .msf file in the same directory
+  // as the original mailbox, so resolve symlinks.
+  PRBool ignored;
+  fileSpec.ResolveSymlink(ignored);
+
   nsLocalFolderSummarySpec summarySpec(fileSpec);
-  nsXPIDLCString idlName;
+  nsXPIDLCString leafName;
   nsCAutoString dbName(summarySpec.GetLeafName());
 
-  pathSpec->GetLeafName(getter_Copies(idlName));
+  pathSpec->GetLeafName(getter_Copies(leafName));
 
     // close down the temp file stream; preparing for deleting the old folder
     // and its database; then rename the temp folder and database
@@ -397,7 +408,7 @@ nsFolderCompactState::FinishCompact()
   summarySpec.Delete(PR_FALSE);
     // rename the copied folder and database to be the original folder and
     // database 
-  m_fileSpec.Rename((const char*) idlName);
+  m_fileSpec.Rename(leafName.get());
   newSummarySpec.Rename(dbName.get());
  
   rv = ReleaseFolderLock();
@@ -633,9 +644,9 @@ nsOfflineStoreCompactState::FinishCompact()
   rv = m_folder->GetPath(getter_AddRefs(pathSpec));
   pathSpec->GetFileSpec(&fileSpec);
 
-  nsXPIDLCString idlName;
+  nsXPIDLCString leafName;
 
-  pathSpec->GetLeafName(getter_Copies(idlName));
+  pathSpec->GetLeafName(getter_Copies(leafName));
 
     // close down the temp file stream; preparing for deleting the old folder
     // and its database; then rename the temp folder and database
@@ -657,7 +668,7 @@ nsOfflineStoreCompactState::FinishCompact()
   fileSpec.Delete(PR_FALSE);
 
     // rename the copied folder to be the original folder 
-  m_fileSpec.Rename((const char*) idlName);
+  m_fileSpec.Rename(leafName.get());
 
   PRUnichar emptyStr = 0;
   ShowStatusMsg(&emptyStr);
