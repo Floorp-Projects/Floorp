@@ -2191,6 +2191,15 @@ nsTextFrame::SetSelected(nsIPresContext* aPresContext,
     }
     if (!details)
       frameState &= ~NS_FRAME_SELECTED_CONTENT;
+    else
+    {
+      SelectionDetails *sdptr = details;
+      while ((sdptr = details->mNext) != nsnull) {
+        delete details;
+        details = sdptr;
+      }
+      delete details;
+    }
   }
   SetFrameState(frameState);
   if (found){ //if range contains this frame...
