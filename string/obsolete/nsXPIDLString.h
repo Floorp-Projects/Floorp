@@ -172,7 +172,7 @@ inline
 void
 nsXPIDLString::Adopt( PRUnichar* aNewValue )
   {
-    *getter_Copies(*this) = aNewValue;
+    *StartAssignmentByValue() = aNewValue;
   }
 
 // XXX THESE ARE NOT strcmp()! DON'T TRY TO USE THEM AS SUCH!
@@ -284,7 +284,7 @@ inline
 void
 nsXPIDLCString::Adopt( char* aNewValue )
   {
-    *getter_Copies(*this) = aNewValue;
+    *StartAssignmentByValue() = aNewValue;
   }
 
 // XXX THESE ARE NOT strcmp()! DON'T TRY TO USE THEM AS SUCH!
