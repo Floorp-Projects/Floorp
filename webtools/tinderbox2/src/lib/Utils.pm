@@ -3,8 +3,8 @@
 # Utils.pm - General purpose utility functions.  Every project needs a
 # kludge bucket for common access.
 
-# $Revision: 1.30 $ 
-# $Date: 2002/05/03 19:41:44 $ 
+# $Revision: 1.31 $ 
+# $Date: 2002/05/03 20:28:24 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -252,13 +252,10 @@ sub chk_security {
   my (@trees) = TreeData::get_all_trees();
   foreach $tree (@trees) {
 
-    my ($dir);
-
-    $dir = FileStructure::get_filename($tree, 'TinderDB_Dir');
-    security_check_data_dir($dir);
-
-    $dir = FileStructure::get_filename($tree, 'TinderHeader_Dir');
-    security_check_data_dir($dir);
+      for my $dir_key (qw(TinderDB_Dir TinderHeader_Dir full-log brief-log)) {
+          my $dir = FileStructure::get_filename($tree, $dir_key);
+          security_check_data_dir($dir);
+      }
 
   }
 
