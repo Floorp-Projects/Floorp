@@ -3142,7 +3142,7 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), vp);
   }
 
-  return nsEventRecieverSH::SetProperty(wrapper, cx, obj, id, vp, _retval);
+  return nsEventReceiverSH::SetProperty(wrapper, cx, obj, id, vp, _retval);
 }
 
 NS_IMETHODIMP
@@ -4208,7 +4208,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       }
     }
 
-    return nsEventRecieverSH::NewResolve(wrapper, cx, obj, id, flags, objp,
+    return nsEventReceiverSH::NewResolve(wrapper, cx, obj, id, flags, objp,
                                          _retval);
   }
 
@@ -4393,11 +4393,11 @@ nsNodeSH::GetFlags(PRUint32 *aFlags)
   return NS_OK;
 }
 
-// EventReciever helper
+// EventReceiver helper
 
 // static
 PRBool
-nsEventRecieverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
+nsEventReceiverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
 {
   // I wonder if this is faster than using a hash...
 
@@ -4443,7 +4443,7 @@ nsEventRecieverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
 }
 
 nsresult
-nsEventRecieverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
+nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
                                           JSContext *cx, JSObject *obj,
                                           jsval id, PRBool compile,
                                           PRBool *did_compile)
@@ -4489,7 +4489,7 @@ nsEventRecieverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
 }
 
 NS_IMETHODIMP
-nsEventRecieverSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
+nsEventReceiverSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
                               JSContext *cx, JSObject *obj, jsval id,
                               PRUint32 flags, JSObject **objp, PRBool *_retval)
 {
@@ -4512,7 +4512,7 @@ nsEventRecieverSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
 }
 
 NS_IMETHODIMP
-nsEventRecieverSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
+nsEventReceiverSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
                                JSContext *cx, JSObject *obj, jsval id,
                                jsval *vp, PRBool *_retval)
 {
@@ -4527,7 +4527,7 @@ nsEventRecieverSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
 
 /*
 NS_IMETHODIMP
-nsEventRecieverSH::OnFinalize(...)
+nsEventReceiverSH::OnFinalize(...)
 {
   clear event handlers in mListener...
 }
