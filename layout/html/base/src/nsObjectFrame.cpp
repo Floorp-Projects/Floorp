@@ -829,6 +829,9 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aMetrics.ascent = 0;
   aMetrics.descent = 0;
 
+  if (IsHidden(PR_FALSE))
+    return;
+
   // for EMBED and APPLET, default to 240x200 for compatibility
   nsCOMPtr<nsIAtom> atom;
   mContent->GetTag(*getter_AddRefs(atom));
@@ -1348,22 +1351,19 @@ nsObjectFrame::GetBaseURL(nsIURI* &aURL)
 
 
 PRBool
-nsObjectFrame::IsHidden() const
+nsObjectFrame::IsHidden(PRBool aCheckVisibilityStyle) const
 {
-    // check the style visibility first
-  const nsStyleVisibility* vis = (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-  if (vis != nsnull)
-  {
-    if(!vis->IsVisibleOrCollapsed())
-      return PR_TRUE;
+  if (aCheckVisibilityStyle) {
+    const nsStyleVisibility* vis = (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+    if (vis && !vis->IsVisibleOrCollapsed())
+      return PR_TRUE;    
   }
 
   nsCOMPtr<nsIAtom> tag;
   mContent->GetTag(*getter_AddRefs(tag));
 
-  if (tag.get() != nsHTMLAtoms::object) {
-    // The <object> tag doesn't support the 'hidden' attribute, but
-    // everything else does...
+  // only <embed> tags support the HIDDEN attribute
+  if (tag.get() == nsHTMLAtoms::embed) {
     nsAutoString hidden;
     mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
 
@@ -1375,7 +1375,6 @@ nsObjectFrame::IsHidden() const
         !hidden.Equals(NS_LITERAL_STRING("false"), nsCaseInsensitiveStringComparator()) &&
         !hidden.Equals(NS_LITERAL_STRING("no"), nsCaseInsensitiveStringComparator()) &&
         !hidden.Equals(NS_LITERAL_STRING("off"), nsCaseInsensitiveStringComparator())) {
-      // The <embed> or <applet> is hidden.
       return PR_TRUE;
     }
   }
