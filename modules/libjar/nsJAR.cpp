@@ -148,7 +148,7 @@ DeleteManifestEntry(nsHashKey* aKey, void* aData, void* closure)
 // The following initialization makes a guess of 10 entries per jarfile.
 nsJAR::nsJAR(): mManifestData(nsnull, nsnull, DeleteManifestEntry, nsnull, 10),
                 mParsedManifest(PR_FALSE), mGlobalStatus(nsIZipReader::NOT_SIGNED),
-                mReleaseTime(0), mCache(nsnull), mLock(nsnull)
+                mReleaseTime(PR_INTERVAL_NO_TIMEOUT), mCache(nsnull), mLock(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -1101,17 +1101,18 @@ nsJARItem::GetCRC32(PRUint32 *aCrc32)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIZipReaderCache
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsZipReaderCache, nsIZipReaderCache)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsZipReaderCache, nsIZipReaderCache, nsIObserver)
 
 nsZipReaderCache::nsZipReaderCache()
   : mLock(nsnull),
-    mZips(16),
+    mZips(16)
 #ifdef ZIP_CACHE_HIT_RATE
+    ,
     mZipCacheLookups(0),
     mZipCacheHits(0),
     mZipCacheFlushes(0),
+    mZipSyncMisses(0)
 #endif
-    mFreeCount(0)
 {
   NS_INIT_REFCNT();
 }
@@ -1119,13 +1120,23 @@ nsZipReaderCache::nsZipReaderCache()
 NS_IMETHODIMP
 nsZipReaderCache::Init(PRUint32 cacheSize)
 {
+  nsresult rv;
 #ifdef xDEBUG_warren
   mCacheSize = 1;//cacheSize;   // XXX hack
 #else
-  mCacheSize = cacheSize;
+  mCacheSize = cacheSize; 
 #endif
+  
+// Register as a memory pressure observer 
+  NS_WITH_SERVICE(nsIObserverService, os, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv))   {
+    rv = os->AddObserver(this, NS_MEMORY_PRESSURE_TOPIC);
+  }
+// ignore failure of the observer registration.
+
   mLock = PR_NewLock();
   return mLock ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+
 }
 
 static PRBool PR_CALLBACK
@@ -1138,14 +1149,21 @@ DropZipReaderCache(nsHashKey *aKey, void *aData, void* closure)
 
 nsZipReaderCache::~nsZipReaderCache()
 {
+  nsresult rv;
   if (mLock)
     PR_DestroyLock(mLock);
   mZips.Enumerate(DropZipReaderCache, nsnull);
+// Unregister this memory pressure observer 
+  NS_WITH_SERVICE(nsIObserverService, os, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    rv = os->RemoveObserver(this, NS_MEMORY_PRESSURE_TOPIC);
+  }
 
 #ifdef ZIP_CACHE_HIT_RATE
-  printf("nsZipReaderCache size=%d hits=%d lookups=%d rate=%f%% flushes=%d\n",
-         mZipCacheHits, mZipCacheLookups, (float)mZipCacheHits / mZipCacheLookups,
-         mZipCacheFlushes);
+  printf("nsZipReaderCache size=%d hits=%d lookups=%d rate=%f%% flushes=%d missed %d\n",
+         mCacheSize, mZipCacheHits, mZipCacheLookups, 
+         (float)mZipCacheHits / mZipCacheLookups, 
+         mZipCacheFlushes, mZipSyncMisses);
 #endif
 }
 
@@ -1184,13 +1202,10 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
 #ifdef ZIP_CACHE_HIT_RATE
     mZipCacheHits++;
 #endif
-    if (zip->GetReleaseTime() != PR_INTERVAL_NO_TIMEOUT) {
-      // this was an otherwise-free entry, so decrement our free counter
-      NS_ASSERTION(mFreeCount > 0, "mFreeCount screwed up");
-      mFreeCount--;
-    }
+    zip->ClearReleaseTime();
   }
   else {
+printf("******************** Cache Miss %s \n",(const char*)path );
     zip = new nsJAR();
     if (zip == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1231,31 +1246,71 @@ FindOldestZip(nsHashKey *aKey, void *aData, void* closure)
   return PR_TRUE;
 }
 
+struct ZipFindData {nsJAR* zip; PRBool found;}; 
+
+static PRBool PR_CALLBACK
+FindZip(nsHashKey *aKey, void *aData, void* closure)
+{
+  ZipFindData* find_data = (ZipFindData*)closure;
+
+  if (find_data->zip == (nsJAR*)aData) {
+    find_data->found = PR_TRUE; 
+    return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
 nsresult
 nsZipReaderCache::ReleaseZip(nsJAR* zip)
 {
   nsresult rv;
   nsAutoLock lock(mLock);
 
+  // It is possible that two thread compete for this zip. The dangerous 
+  // case is where one thread Releases the zip and discovers that the ref
+  // count has gone to one. Before it can call this ReleaseZip method
+  // another thread calls our GetZip method. The ref count goes to two. That
+  // second thread then Releases the zip and the ref coutn goes to one. It
+  // Then tries to enter this ReleaseZip method and blocks while the first
+  // thread is still here. The first thread continues and remove the zip from 
+  // the cache and calls its Release method sending the ref count to 0 and
+  // deleting the zip. However, the second thread is still blocked at the
+  // start of ReleaseZip, but the 'zip' param now hold a reference to a
+  // deleted zip!
+  // 
+  // So, we are going to try safegaurding here by searching our hashtable while
+  // locked here for the zip. We return fast if it is not found. 
+
+  ZipFindData find_data = {zip, PR_FALSE};
+  mZips.Enumerate(FindZip, &find_data);
+  if (!find_data.found) {
+#ifdef ZIP_CACHE_HIT_RATE
+    mZipSyncMisses++;
+#endif
+    return NS_OK;
+  }
+
   zip->SetReleaseTime();
 
-  mFreeCount++;
   if (mZips.Count() <= mCacheSize)
     return NS_OK;
 
   nsJAR* oldest = nsnull;
-  if (mFreeCount == 1) {
-    // then this is our guy -- no need to search for the oldest
-    oldest = zip;
-  }
-  else {
-    mZips.Enumerate(FindOldestZip, &oldest);
-  }
-  NS_ASSERTION(oldest, "wacked");
+  mZips.Enumerate(FindOldestZip, &oldest);
+  
+  // Because of the craziness above it is possible that there is no zip that
+  // needs removing. 
+  if (!oldest)
+    return NS_OK;
 
 #ifdef ZIP_CACHE_HIT_RATE
     mZipCacheFlushes++;
 #endif
+
+  // Clear the cache pointer in case we gave out this oldest guy while
+  // his Release call was being made. Otherwise we could nest on ReleaseZip
+  // when the second owner calls Release and we are still here in this lock.
+  oldest->SetZipReaderCache(nsnull);
 
   // remove from hashtable
   nsCOMPtr<nsIFile> zipFile;
@@ -1270,6 +1325,48 @@ nsZipReaderCache::ReleaseZip(nsJAR* zip)
   PRBool removed = mZips.Remove(&key);  // Releases
   NS_ASSERTION(removed, "botched");
 
+#ifdef xDEBUG_jband
+  printf("dumped %s from the jar cache\n", (const char*) path);
+#endif
+
+  return NS_OK;
+}
+
+static PRBool PR_CALLBACK
+FindUnreferencedZip(nsHashKey *aKey, void *aData, void* closure)
+{
+  nsHashKey** unrefKeyPtr = (nsHashKey**)closure;
+  nsJAR* current = (nsJAR*)aData;
+  
+  if (current->GetReleaseTime() != PR_INTERVAL_NO_TIMEOUT) {
+      *unrefKeyPtr = aKey;
+	  current->SetZipReaderCache(nsnull);
+	  return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsZipReaderCache::Observe(nsISupports *aSubject,
+                          const PRUnichar *aTopic, 
+                          const PRUnichar *aSomeData)
+{
+  nsAutoLock lock(mLock);
+
+  while (PR_TRUE)
+  {
+    nsHashKey* unreferenced = nsnull;
+    mZips.Enumerate(FindUnreferencedZip, &unreferenced); 
+    if ( ! unreferenced )
+		break;
+    PRBool removed = mZips.Remove(unreferenced);  // Releases
+    NS_ASSERTION(removed, "botched");
+
+#ifdef xDEBUG_jband
+  printf("flushed something from the jar cache\n");
+#endif
+  }
+  
   return NS_OK;
 }
 

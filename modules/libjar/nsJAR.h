@@ -54,6 +54,7 @@
 #include "zipfile.h"
 #include "nsIPrincipal.h"
 #include "nsISignatureVerifier.h"
+#include "nsIObserverService.h"
 
 class nsIInputStream;
 class nsJARManifestItem;
@@ -84,10 +85,11 @@ class nsJAR : public nsIZipReader
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     PRIntervalTime GetReleaseTime() {
-      if (mRefCnt == 1)
         return mReleaseTime;
-      else
-        return PR_INTERVAL_NO_TIMEOUT;
+    }
+    
+    PRBool IsReleased() {
+        return mReleaseTime != PR_INTERVAL_NO_TIMEOUT;
     }
 
     void SetReleaseTime() {
@@ -180,15 +182,16 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifdef DEBUG_warren
+#if defined(DEBUG_warren) || defined(DEBUG_jband)
 #define ZIP_CACHE_HIT_RATE
 #endif
 
-class nsZipReaderCache : public nsIZipReaderCache
+class nsZipReaderCache : public nsIZipReaderCache, public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIZIPREADERCACHE
+  NS_DECL_NSIOBSERVER
 
   nsZipReaderCache();
   virtual ~nsZipReaderCache();
@@ -202,12 +205,12 @@ protected:
   PRLock*               mLock;
   PRInt32               mCacheSize;
   nsSupportsHashtable   mZips;
-  PRUint32              mFreeCount;
 
 #ifdef ZIP_CACHE_HIT_RATE
   PRUint32              mZipCacheLookups;
   PRUint32              mZipCacheHits;
   PRUint32              mZipCacheFlushes;
+  PRUint32              mZipSyncMisses;
 #endif
 
 };
