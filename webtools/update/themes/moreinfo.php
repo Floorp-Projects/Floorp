@@ -124,7 +124,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
 
     if ($_GET["vid"]) {
         $vid=$_GET["vid"];
-        $sql .=" AND TV.vID = '$vid' ";
+        $sql .=" AND TV.vID = '$vid' AND `approved` = 'YES' ";
 
     } else {
 
