@@ -43,14 +43,36 @@
   <property name="package.example" value="${package.home}/example"/>
   <property name="package.manifest" value="${build.home}/META-INF/MANIFEST.MF"/>
   <property name="package.version" value="1_3"/>
+  <property name="dist" value="${build.home}/.."/>
 
-  <target name="main" depends="prepare,build.webclient"/>
+  <target name="main" depends="prepare,set.debug.vars,build.webclient"/>
 
   <target name="prepare">
 
     <condition property="short.os.name" value="win32">
       <os family="dos" />
     </condition>
+
+    <condition property="win.bin" value="WIN32_O.OBJ">
+      <os family="dos" />
+    </condition>
+
+    <condition property="so.suffix" value="dll">
+      <os family="dos" />
+    </condition>
+
+    <condition property="so.suffix" value="so">
+      <os family="unix" />
+    </condition>
+
+    <condition property="ar.suffix" value="lib">
+      <os family="dos" />
+    </condition>
+
+    <condition property="ar.suffix" value="a">
+      <os family="unix" />
+    </condition>
+
 
     <mkdir dir="${package.home}"/>
     <mkdir dir="${package.lib}"/>
@@ -59,9 +81,31 @@
 
   </target>
 
+
+  <target name="set.debug.vars" if="compile.debug">
+
+    <!-- This target sets the WIN32_D.OBJ or WIN32_O.OBJ thingy -->
+
+    <condition property="win.bin" value="WIN32_D.OBJ"> 
+      <and>
+        <os family="dos" />
+        <equals arg1="${compile.debug}" arg2="true"/>
+      </and>
+    </condition>
+
+  </target>
+
   <target name="build.webclient" 
           depends="create.webclient.manifest,build.webclient.jar">
 
+    <copy file="${dist}/${win.bin}/bin/components/javadomjni.${so.suffix}" 
+          todir="${package.lib}"/>
+    <copy file="${dist}/${win.bin}/bin/components/javadom.${so.suffix}" 
+          todir="${package.lib}"/>
+    <copy file="${dist}/${win.bin}/bin/webclient.${so.suffix}" 
+          todir="${package.lib}"/>
+    <copy file="${dist}/${win.bin}/lib/wc_share.${ar.suffix}" 
+          todir="${package.lib}"/>
   </target>
 
   <target name="clean">
