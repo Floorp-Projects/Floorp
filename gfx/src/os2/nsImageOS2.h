@@ -49,6 +49,11 @@ public:
   virtual PRUint8*    GetBits()           { return mImageBits; }
   virtual PRInt32     GetLineStride()     { return mRowBytes; }
 
+  NS_IMETHOD     SetNaturalWidth(PRInt32 naturalwidth) { mNaturalWidth= naturalwidth; return NS_OK;}
+  NS_IMETHOD     SetNaturalHeight(PRInt32 naturalheight) { mNaturalHeight= naturalheight; return NS_OK;}
+  virtual PRInt32     GetNaturalWidth() {return mNaturalWidth; }
+  virtual PRInt32     GetNaturalHeight() {return mNaturalHeight; }
+
   NS_IMETHOD          SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2);        
   virtual PRInt32     GetDecodedX1() { return mDecodedX1;}
   virtual PRInt32     GetDecodedY1() { return mDecodedY1;}
@@ -187,6 +192,9 @@ public:
   PRUint8*            mImageBits;         // starting address of DIB bits
   PRBool              mIsOptimized;       // Did we convert our DIB to a HBITMAP
   nsColorMap*         mColorMap;          // Redundant with mColorTable, but necessary
+
+  PRInt32		      mNaturalWidth;
+  PRInt32             mNaturalHeight;
 
   PRInt32             mDecodedX1;       //Keeps track of what part of image
   PRInt32             mDecodedY1;       // has been decoded.

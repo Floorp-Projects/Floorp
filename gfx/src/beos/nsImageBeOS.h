@@ -55,6 +55,12 @@ public:
   virtual PRInt32     GetDecodedX2() { return mDecodedX2;}
   virtual PRInt32     GetDecodedY2() { return mDecodedY2;}
 
+  NS_IMETHOD     SetNaturalWidth(PRInt32 naturalwidth) { mNaturalWidth= naturalwidth; return NS_OK;}
+  NS_IMETHOD     SetNaturalHeight(PRInt32 naturalheight) { mNaturalHeight= naturalheight; return NS_OK;}
+  virtual PRInt32     GetNaturalWidth() {return mNaturalWidth; }
+  virtual PRInt32     GetNaturalHeight() {return mNaturalHeight; }
+
+
   NS_IMETHOD Draw(nsIRenderingContext &aContext,
                   nsDrawingSurface aSurface,
                   PRInt32 aX, PRInt32 aY,
@@ -118,6 +124,9 @@ private:
   PRInt32             mDecodedY1;       // has been decoded.
   PRInt32             mDecodedX2; 
   PRInt32             mDecodedY2;    
+
+  PRInt32		mNaturalWidth;
+  PRInt32		mNaturalHeight;
 
   // alpha layer members
   PRUint8    *mAlphaBits;

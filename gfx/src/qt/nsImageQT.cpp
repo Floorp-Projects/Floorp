@@ -47,6 +47,9 @@ nsImageQT::nsImageQT()
     mAlphaBits   = nsnull;
     mAlphaPixmap = nsnull;
     mImagePixmap = nsnull;
+    mNaturalWidth = 0;
+    mNaturalHeight = 0;
+
 }
 
 //------------------------------------------------------------
@@ -96,6 +99,8 @@ nsresult nsImageQT::Init(PRInt32 aWidth,
     }
 
     SetDecodedRect(0,0,0,0);  //init
+    SetNaturalWidth(0);
+    SetNaturalHeight(0);
 
     if (nsnull != mImageBits) 
     {

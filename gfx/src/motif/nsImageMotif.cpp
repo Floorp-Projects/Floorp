@@ -47,6 +47,9 @@ nsImageMotif :: nsImageMotif()
   mColorMap = nsnull;
   mAlphaBits = nsnull;
   mStaticImage = PR_FALSE;
+  mNaturalWidth = 0;
+  mNaturalHeight = 0;
+
 }
 
 //------------------------------------------------------------
@@ -101,6 +104,8 @@ nsresult nsImageMotif :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,ns
   mConverted = PR_FALSE;
 
   SetDecodedRect(0,0,0,0);  //init
+  SetNaturalWidth(0);
+  SetNaturalHeight(0);
 
   ComputePaletteSize(aDepth);
 

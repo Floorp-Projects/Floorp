@@ -66,6 +66,9 @@ nsImagePh :: nsImagePh()
   mAlphaLevel = 0;
   mImage.palette = nsnull;
   mImage.image = nsnull;
+  mNaturalWidth = 0;
+  mNaturalHeight = 0;
+
 }
 
 // ----------------------------------------------------------------
@@ -127,6 +130,8 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
   }
   
   SetDecodedRect(0,0,0,0);  //init
+  SetNaturalWidth(0);
+  SetNaturalHeight(0);
   
   if (24 == aDepth)
   {

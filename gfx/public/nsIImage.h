@@ -109,6 +109,11 @@ public:
   virtual PRInt32     GetDecodedX2() = 0;
   virtual PRInt32     GetDecodedY2() = 0;
 
+  NS_IMETHOD     SetNaturalWidth(PRInt32) = 0;
+  NS_IMETHOD     SetNaturalHeight(PRInt32) = 0;
+  virtual PRInt32     GetNaturalWidth() = 0;
+  virtual PRInt32     GetNaturalHeight() = 0;
+
   /**
    * Get a pointer to the bits for the pixelmap, only if it is not optimized
    * @update - dwc 2/1/99
