@@ -70,6 +70,8 @@ function getBestIdentity(identities, optionalHint)
 
   // if we have more than one identity and a hint to help us pick one
   if (identities.Count() > 1 && optionalHint) {
+    // normalize case on the optional hint to improve our chances of finding a match
+    optionalHint = optionalHint.toLowerCase();
     // iterate over all of the identities
     var tempID;
     for (id = 0; id < identities.Count(); id++) { 
