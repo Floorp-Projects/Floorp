@@ -23,6 +23,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsBookmarkDataSource.obj    \
         .\$(OBJDIR)\nsHistoryDataSource.obj    \
         .\$(OBJDIR)\nsFileSystemDataSource.obj  \
+        .\$(OBJDIR)\nsFindDataSource.obj  \
         .\$(OBJDIR)\nsXULContentSink.obj        \
         .\$(OBJDIR)\nsXULDataSource.obj         \
 	$(NULL)
