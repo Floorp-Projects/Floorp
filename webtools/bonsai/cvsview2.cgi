@@ -69,7 +69,7 @@ my $font_tag = "";
 # Figure out which directory bonsai is in by looking at argv[0]
 
 my $bonsaidir = $0;
-$bonsaidir =~ s:/[^/]*$::;      # Remove last word, and slash before it.
+$bonsaidir =~ s:/*[^/]*$::;      # Remove last word and any slashes
 if ($bonsaidir eq '') {
     $bonsaidir = '.';
 }
