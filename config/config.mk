@@ -239,7 +239,7 @@ TAR		= tar
 endif
 endif
 
-ifeq ($(OS_ARCH),OpenVMS)
+ifneq (,$(filter OpenVMS OSF1,$(OS_ARCH)))
 include $(topsrcdir)/config/$(OS_ARCH).mk
 endif
 
