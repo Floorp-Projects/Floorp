@@ -224,7 +224,7 @@ Boolean	CLICommander::AttemptQuit(long	inSaveOption)
 
 #endif //MOZ_LI
 
-#ifndef MOZ_LITE
+#ifdef MOZ_LOC_INDEP
 #include "uapp.h"
 
 // InitializeLocationIndependence
@@ -236,4 +236,4 @@ void CFrontApp::InitializeLocationIndependence()
 //	newCommander->VerifyLogin();
 //	newCommander->GetCriticalFiles();	
 }
-#endif
+#endif //MOZ_LOC_INDEP
