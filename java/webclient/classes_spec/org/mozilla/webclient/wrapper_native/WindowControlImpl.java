@@ -162,9 +162,8 @@ public void removeFocus()
 {
     myFactory.throwExceptionIfNotInitialized();
     
-    synchronized(myBrowserControl) {
-        nativeRemoveFocus(nativeWebShell);
-    }
+    throw new UnimplementedException("\nUnimplementedException -----\n API Function WindowControl::removeFocus has not yet been implemented.\n");
+
 }
     
 public void repaint(boolean forceRepaint)
@@ -189,9 +188,7 @@ public void setFocus()
 {
     myFactory.throwExceptionIfNotInitialized();
 
-    synchronized(myBrowserControl) {
-        nativeSetFocus(nativeWebShell);
-    }
+    throw new UnimplementedException("\nUnimplementedException -----\n API Function WindowControl::setFocus has not yet been implemented.\n");
 }
 
 
@@ -245,7 +242,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("WindowControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.6 2000/07/22 02:48:26 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: WindowControlImpl.java,v 1.7 2000/09/12 20:44:47 ashuk%eng.sun.com Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);
