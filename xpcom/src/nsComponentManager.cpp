@@ -145,7 +145,6 @@ nsComponentManagerImpl::nsComponentManagerImpl()
 
 nsresult nsComponentManagerImpl::Init(void) 
 {
-    nsresult rv;
     if (mFactories == NULL) {
         mFactories = new nsHashtable();
         if (mFactories == NULL)
@@ -176,16 +175,53 @@ nsresult nsComponentManagerImpl::Init(void)
 #endif
 
 #ifdef USE_NSREG
-    NR_StartupRegistry();       // XXX check error?
+
+#ifdef XP_UNIX
+    // Create ~/.mozilla as that is the default place for the registry file
+
+    /* The default registry on the unix system is $HOME/.mozilla/registry per
+     * vr_findGlobalRegName(). vr_findRegFile() will create the registry file
+     * if it doesn't exist. But it wont create directories.
+     *
+     * Hence we need to create the directory if it doesn't exist already.
+     *
+     * Why create it here as opposed to the app ?
+     * ------------------------------------------
+     * The app cannot create the directory in main() as most of the registry
+     * and initialization happens due to use of static variables.
+     * And we dont want to be dependent on the order in which
+     * these static stuff happen.
+     *
+     * Permission for the $HOME/.mozilla will be Read,Write,Execute
+     * for user only. Nothing to group and others.
+     */
+    char *home = getenv("HOME");
+    if (home != NULL)
+    {
+        char dotMozillaDir[1024];
+        PR_snprintf(dotMozillaDir, sizeof(dotMozillaDir),
+                    "%s/" NS_MOZILLA_DIR_NAME, home);
+        if (PR_Access(dotMozillaDir, PR_ACCESS_EXISTS) != PR_SUCCESS)
+        {
+            PR_MkDir(dotMozillaDir, NS_MOZILLA_DIR_PERMISSION);
+            printf("nsComponentManager: Creating Directory %s\n", dotMozillaDir);
+            PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
+               ("nsComponentManager: Creating Directory %s", dotMozillaDir));
+        }
+    }
+#endif /* XP_UNIX */
+    
+    // No error checking on the following because the program
+    // can work perfectly well even if no registry is available.
+
+    NR_StartupRegistry();
 
     // Check the version of registry. Nuke old versions.
-    rv = PlatformVersionCheck();
-    if (NS_FAILED(rv)) return rv;
+    PlatformVersionCheck();
 #endif
 
     // Initiate autoreg
-    rv = AutoRegister(NS_Startup, NULL);
-    if (NS_FAILED(rv)) return rv;
+    AutoRegister(NS_Startup, NULL);
 
     return NS_OK;
 }
