@@ -377,6 +377,9 @@ netwerk/testserver/Makefile
 uriloader/Makefile
 uriloader/base/Makefile
 uriloader/build/Makefile
+uriloader/extprotocol/Makefile
+uriloader/extprotocol/base/Makefile
+uriloader/extprotocol/unix/Makefile
 profile/Makefile
 profile/src/Makefile
 profile/public/Makefile
