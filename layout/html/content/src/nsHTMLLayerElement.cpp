@@ -28,7 +28,7 @@
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
 
-#define _I32_MIN  (-2147483647i32 - 1) /* minimum signed 32 bit value */
+#define _I32_MIN  (-2147483647 - 1) /* minimum signed 32 bit value */
 
 static NS_DEFINE_IID(kIDOMHTMLLayerElementIID, NS_IDOMHTMLELEMENT_IID);
 
