@@ -95,9 +95,25 @@ private:
     nsSpecialSystemDirectory::SystemDirectories sdKey; // sd for SystemDirectories
 };
 
+static PRBool DeleteSystemDirKeys(nsHashKey *aKey, void *aData, void* closure)
+{
+    delete ((nsFileSpec *)aData);
+    return PR_TRUE;
+}
+
 #define NS_SYSTEMDIR_HASH_NUM (10)
 static nsHashtable *systemDirectoriesLocations = NULL;
 
+NS_COM void StartupSpecialSystemDirectory(){}
+
+NS_COM void ShutdownSpecialSystemDirectory()
+{
+    if (systemDirectoriesLocations)
+    {
+        systemDirectoriesLocations->Reset(DeleteSystemDirKeys);
+        delete systemDirectoriesLocations;
+    }
+}
 
 #if defined (XP_WIN)
 
@@ -339,7 +355,6 @@ nsSpecialSystemDirectory::nsSpecialSystemDirectory(SystemDirectories aSystemSyst
 nsSpecialSystemDirectory::~nsSpecialSystemDirectory()
 //----------------------------------------------------------------------------------------
 {
-    // XXX [MLK] need to delete hash table and its contents
 }
 
 //----------------------------------------------------------------------------------------
