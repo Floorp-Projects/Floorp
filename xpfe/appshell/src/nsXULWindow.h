@@ -68,6 +68,8 @@ protected:
    NS_IMETHOD EnsurePrimaryContentTreeOwner();
    
    void OnChromeLoaded();
+   void StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
+                        PRInt32 aSpecWidth, PRInt32 aSpecHeight);
    NS_IMETHOD LoadPositionAndSizeFromXUL(PRBool aPosition, PRBool aSize);
    NS_IMETHOD LoadTitleFromXUL();
    NS_IMETHOD PersistPositionAndSize(PRBool aPosition, PRBool aSize, PRBool aSizeMode);
