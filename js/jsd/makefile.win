@@ -30,6 +30,15 @@ include <$(DEPTH)\config\config.mak>
 DIRS=idl
 !endif
 
+REQUIRES	= xpcom \
+		  string \
+		  js \
+		  xpconnect \
+		  widget \
+		  appshell \
+		  pref \
+		  $(NULL)
+
 #//------------------------------------------------------------------------
 #//
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
