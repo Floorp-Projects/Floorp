@@ -52,6 +52,7 @@ EXPORTS		= \
 		  nsXPComCIID.h		\
 		  nsXPIDLString.h	 \
 		  nsIEventQueueService.h \
+		  nsIEventQueue.h \
 		  nsIGenericFactory.h \
 		  nsIRegistry.h \
 		  nsrootidl.h \

@@ -23,12 +23,12 @@
 #include "nsISupports.h"
 #include "prthread.h"
 #include "plevent.h"
+#include "nsIEventQueue.h"
 
 /* a6cf90dc-15b3-11d2-932e-00805f8add32 */
 #define NS_IEVENTQUEUESERVICE_IID \
 { 0xa6cf90dc, 0x15b3, 0x11d2, \
   {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
-
 
 class nsIEventQueueService : public nsISupports
 {
@@ -36,7 +36,12 @@ public:
   NS_IMETHOD CreateThreadEventQueue(void) = 0;
   NS_IMETHOD DestroyThreadEventQueue(void) = 0;
 
-  NS_IMETHOD GetThreadEventQueue(PRThread* aThread, PLEventQueue** aResult) = 0;
+	NS_IMETHOD CreateFromPLEventQueue(PLEventQueue* aPLEventQueue, nsIEventQueue** aResult) = 0;
+
+	NS_IMETHOD PushThreadEventQueue(void) = 0;
+	NS_IMETHOD PopThreadEventQueue(void) = 0;
+
+  NS_IMETHOD GetThreadEventQueue(PRThread* aThread, nsIEventQueue** aResult) = 0;
   
 #ifdef XP_MAC
 // This is ment to be temporary until something better is worked out
