@@ -29,7 +29,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.
- *  $Id: mpmontg.c,v 1.9 2000/12/02 02:37:22 nelsonb%netscape.com Exp $
+ *  $Id: mpmontg.c,v 1.10 2000/12/28 03:41:50 nelsonb%netscape.com Exp $
  */
 
 /* This file implements moduluar exponentiation using Montgomery's
@@ -71,10 +71,6 @@ mp_err s_mp_redc(mp_int *T, mp_mont_modulus *mmm)
 {
   mp_err res;
   mp_size i;
-#ifdef DEBUG
-  mp_int m;
-  MP_DIGITS(&m) = 0;
-#endif
 
   i = MP_USED(T) + MP_USED(&mmm->N) + 2;
   MP_CHECKOK( s_mp_pad(T, i) );
@@ -86,17 +82,7 @@ mp_err s_mp_redc(mp_int *T, mp_mont_modulus *mmm)
   s_mp_clamp(T);
 
   /* T /= R */
-#ifdef DEBUG
-  MP_CHECKOK( mp_init(&m) );
-  MP_CHECKOK( mp_div_2d(T, mmm->b, T, &m));
-  /* here, remainder m should be equal to zero */
-  if (mp_cmp_z(&m) != 0) {
-    res = MP_UNDEF;
-    goto CLEANUP;
-  }
-#else
   s_mp_div_2d(T, mmm->b); 
-#endif
 
   if ((res = s_mp_cmp(T, &mmm->N)) >= 0) {
     /* T = T - N */
@@ -110,9 +96,6 @@ mp_err s_mp_redc(mp_int *T, mp_mont_modulus *mmm)
   }
   res = MP_OKAY;
 CLEANUP:
-#ifdef DEBUG
-  mp_clear(&m);
-#endif
   return res;
 }
 
@@ -187,43 +170,339 @@ CLEANUP:
   return res;
 }
 
+#ifdef MP_USING_MONT_MULF
+
+unsigned int mp_using_mont_mulf = 1;
+
+/* computes montgomery square of the integer in mResult */
+#define SQR \
+  conv_i32_to_d32_and_d16(dm1, d16Tmp, mResult, nLen); \
+  mont_mulf_noconv(mResult, dm1, d16Tmp, \
+		   dTmp, dn, MP_DIGITS(modulus), nLen, dn0)
+
+/* computes montgomery product of x and the integer in mResult */
+#define MUL(x) \
+  conv_i32_to_d32(dm1, mResult, nLen); \
+  mont_mulf_noconv(mResult, dm1, oddPowers[x], \
+		   dTmp, dn, MP_DIGITS(modulus), nLen, dn0)
+
+/* Do modular exponentiation using floating point multiply code. */
+mp_err mp_exptmod_f(const mp_int *   montBase, 
+                    const mp_int *   exponent, 
+		    const mp_int *   modulus, 
+		    mp_int *         result, 
+		    mp_mont_modulus *mmm, 
+		    int              nLen, 
+		    mp_size          bits_in_exponent, 
+		    mp_size          window_bits,
+		    mp_size          odd_ints)
+{
+  mp_digit *mResult;
+  double   *dBuf = 0, *dm1, *dn, *dSqr, *d16Tmp, *dTmp;
+  double    dn0;
+  mp_size   i;
+  mp_err    res;
+  int       expOff;
+  int       dSize = 0, oddPowSize, dTmpSize;
+  mp_int    accum1;
+  double   *oddPowers[MAX_ODD_INTS];
+
+  /* function for computing n0prime only works if n0 is odd */
+
+  MP_DIGITS(&accum1) = 0;
+
+  for (i = 0; i < MAX_ODD_INTS; ++i)
+    oddPowers[i] = 0;
+
+  MP_CHECKOK( mp_init_size(&accum1, 3 * nLen + 2) );
+
+  mp_set(&accum1, 1);
+  MP_CHECKOK( s_mp_to_mont(&accum1, mmm, &accum1) );
+  MP_CHECKOK( s_mp_pad(&accum1, nLen) );
+
+  oddPowSize = 2 * nLen + 1;
+  dTmpSize   = 2 * oddPowSize;
+  dSize = sizeof(double) * (nLen * 4 + 1 + 
+			    ((odd_ints + 1) * oddPowSize) + dTmpSize);
+  dBuf   = (double *)malloc(dSize);
+  dm1    = dBuf;		/* array of d32 */
+  dn     = dBuf   + nLen;	/* array of d32 */
+  dSqr   = dn     + nLen;    	/* array of d32 */
+  d16Tmp = dSqr   + nLen;	/* array of d16 */
+  dTmp   = d16Tmp + oddPowSize;
+
+  for (i = 0; i < odd_ints; ++i) {
+      oddPowers[i] = dTmp;
+      dTmp += oddPowSize;
+  }
+  mResult = (mp_digit *)(dTmp + dTmpSize);	/* size is nLen + 1 */
+
+  /* Make dn and dn0 */
+  conv_i32_to_d32(dn, MP_DIGITS(modulus), nLen);
+  dn0 = (double)(mmm->n0prime & 0xffff);
+
+  /* Make dSqr */
+  conv_i32_to_d32_and_d16(dm1, oddPowers[0], MP_DIGITS(montBase), nLen);
+  mont_mulf_noconv(mResult, dm1, oddPowers[0], 
+		   dTmp, dn, MP_DIGITS(modulus), nLen, dn0);
+  conv_i32_to_d32(dSqr, mResult, nLen);
+
+  for (i = 1; i < odd_ints; ++i) {
+    mont_mulf_noconv(mResult, dSqr, oddPowers[i - 1], 
+		     dTmp, dn, MP_DIGITS(modulus), nLen, dn0);
+    conv_i32_to_d16(oddPowers[i], mResult, nLen);
+  }
+
+  s_mp_copy(MP_DIGITS(&accum1), mResult, nLen); /* from, to, len */
+
+  for (expOff = bits_in_exponent - window_bits; expOff >= 0; expOff -= window_bits) {
+    mp_size smallExp;
+    MP_CHECKOK( mpl_get_bits(exponent, expOff, window_bits) );
+    smallExp = (mp_size)res;
+
+    if (window_bits == 4) {
+      if (!smallExp) {
+	SQR; SQR; SQR; SQR;
+      } else if (smallExp & 1) {
+	SQR; SQR; SQR; SQR; MUL(smallExp/2); 
+      } else if (smallExp & 2) {
+	SQR; SQR; SQR; MUL(smallExp/4); SQR; 
+      } else if (smallExp & 4) {
+	SQR; SQR; MUL(smallExp/8); SQR; SQR; 
+      } else if (smallExp & 8) {
+	SQR; MUL(smallExp/16); SQR; SQR; SQR; 
+      } else {
+	abort();
+      }
+    } else if (window_bits == 5) {
+      if (!smallExp) {
+	SQR; SQR; SQR; SQR; SQR; 
+      } else if (smallExp & 1) {
+	SQR; SQR; SQR; SQR; SQR; MUL(smallExp/2);
+      } else if (smallExp & 2) {
+	SQR; SQR; SQR; SQR; MUL(smallExp/4); SQR;
+      } else if (smallExp & 4) {
+	SQR; SQR; SQR; MUL(smallExp/8); SQR; SQR;
+      } else if (smallExp & 8) {
+	SQR; SQR; MUL(smallExp/16); SQR; SQR; SQR;
+      } else if (smallExp & 0x10) {
+	SQR; MUL(smallExp/32); SQR; SQR; SQR; SQR;
+      } else {
+	  abort();
+      }
+    } else if (window_bits == 6) {
+      if (!smallExp) {
+	SQR; SQR; SQR; SQR; SQR; SQR;
+      } else if (smallExp & 1) {
+	SQR; SQR; SQR; SQR; SQR; SQR; MUL(smallExp/2); 
+      } else if (smallExp & 2) {
+	SQR; SQR; SQR; SQR; SQR; MUL(smallExp/4); SQR; 
+      } else if (smallExp & 4) {
+	SQR; SQR; SQR; SQR; MUL(smallExp/8); SQR; SQR; 
+      } else if (smallExp & 8) {
+	SQR; SQR; SQR; MUL(smallExp/16); SQR; SQR; SQR; 
+      } else if (smallExp & 0x10) {
+	SQR; SQR; MUL(smallExp/32); SQR; SQR; SQR; SQR; 
+      } else if (smallExp & 0x20) {
+	SQR; MUL(smallExp/64); SQR; SQR; SQR; SQR; SQR; 
+      } else {
+	abort();
+      }
+    } else {
+      abort();
+    }
+  }
+
+  s_mp_copy(mResult, MP_DIGITS(&accum1), nLen); /* from, to, len */
+
+  res = s_mp_redc(&accum1, mmm);
+  mp_exch(&accum1, result);
+
+CLEANUP:
+  mp_clear(&accum1);
+  if (dBuf) {
+    if (dSize)
+      memset(dBuf, 0, dSize);
+    free(dBuf);
+  }
+
+  return res;
+}
+#undef SQR
+#undef MUL
+#endif
+
+#define SQR(a,b) \
+  MP_CHECKOK( mp_sqr(a, b) );\
+  MP_CHECKOK( s_mp_redc(b, mmm) )
+
+#if defined(MP_MONT_USE_MP_MUL)
+#define MUL(x,a,b) \
+  MP_CHECKOK( mp_mul(a, oddPowers + (x), b) ); \
+  MP_CHECKOK( s_mp_redc(b, mmm) ) 
+#else
+#define MUL(x,a,b) \
+  MP_CHECKOK( s_mp_mul_mont(a, oddPowers + (x), b, mmm) )
+#endif
+
+#define SWAPPA ptmp = pa1; pa1 = pa2; pa2 = ptmp
+
+/* Do modular exponentiation using integer multiply code. */
+mp_err mp_exptmod_i(const mp_int *   montBase, 
+                    const mp_int *   exponent, 
+		    const mp_int *   modulus, 
+		    mp_int *         result, 
+		    mp_mont_modulus *mmm, 
+		    int              nLen, 
+		    mp_size          bits_in_exponent, 
+		    mp_size          window_bits,
+		    mp_size          odd_ints)
+{
+  mp_int *pa1, *pa2, *ptmp;
+  mp_size i;
+  mp_err  res;
+  int     expOff;
+  mp_int  accum1, accum2, power2, oddPowers[MAX_ODD_INTS];
+
+  /* power2 = base ** 2; oddPowers[i] = base ** (2*i + 1); */
+  /* oddPowers[i] = base ** (2*i + 1); */
+
+  MP_DIGITS(&accum1) = 0;
+  MP_DIGITS(&accum2) = 0;
+  MP_DIGITS(&power2) = 0;
+  for (i = 0; i < MAX_ODD_INTS; ++i) {
+    MP_DIGITS(oddPowers + i) = 0;
+  }
+
+  MP_CHECKOK( mp_init_size(&accum1, 3 * nLen + 2) );
+  MP_CHECKOK( mp_init_size(&accum2, 3 * nLen + 2) );
+
+  MP_CHECKOK( mp_init_copy(&oddPowers[0], montBase) );
+
+  mp_init_size(&power2, nLen + 2 * MP_USED(montBase) + 2);
+  MP_CHECKOK( mp_sqr(montBase, &power2) );	/* power2 = montBase ** 2 */
+  MP_CHECKOK( s_mp_redc(&power2, mmm) );
+
+  for (i = 1; i < odd_ints; ++i) {
+    mp_init_size(oddPowers + i, nLen + 2 * MP_USED(&power2) + 2);
+    MP_CHECKOK( mp_mul(oddPowers + (i - 1), &power2, oddPowers + i) );
+    MP_CHECKOK( s_mp_redc(oddPowers + i, mmm) );
+  }
+
+  /* set accumulator to montgomery residue of 1 */
+  mp_set(&accum1, 1);
+  MP_CHECKOK( s_mp_to_mont(&accum1, mmm, &accum1) );
+  pa1 = &accum1;
+  pa2 = &accum2;
+
+  for (expOff = bits_in_exponent - window_bits; expOff >= 0; expOff -= window_bits) {
+    mp_size smallExp;
+    MP_CHECKOK( mpl_get_bits(exponent, expOff, window_bits) );
+    smallExp = (mp_size)res;
+
+    if (window_bits == 4) {
+      if (!smallExp) {
+	SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1);
+      } else if (smallExp & 1) {
+	SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); 
+	MUL(smallExp/2, pa1,pa2); SWAPPA;
+      } else if (smallExp & 2) {
+	SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); 
+	MUL(smallExp/4,pa2,pa1); SQR(pa1,pa2); SWAPPA;
+      } else if (smallExp & 4) {
+	SQR(pa1,pa2); SQR(pa2,pa1); MUL(smallExp/8,pa1,pa2); 
+	SQR(pa2,pa1); SQR(pa1,pa2); SWAPPA;
+      } else if (smallExp & 8) {
+	SQR(pa1,pa2); MUL(smallExp/16,pa2,pa1); SQR(pa1,pa2); 
+	SQR(pa2,pa1); SQR(pa1,pa2); SWAPPA;
+      } else {
+	abort();
+      }
+    } else if (window_bits == 5) {
+      if (!smallExp) {
+	SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); 
+	SQR(pa1,pa2); SWAPPA;
+      } else if (smallExp & 1) {
+	SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); 
+	SQR(pa1,pa2); MUL(smallExp/2,pa2,pa1);
+      } else if (smallExp & 2) {
+	SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); 
+	MUL(smallExp/4,pa1,pa2); SQR(pa2,pa1);
+      } else if (smallExp & 4) {
+	SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); 
+	MUL(smallExp/8,pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1);
+      } else if (smallExp & 8) {
+	SQR(pa1,pa2); SQR(pa2,pa1); MUL(smallExp/16,pa1,pa2); 
+	SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1);
+      } else if (smallExp & 0x10) {
+	SQR(pa1,pa2); MUL(smallExp/32,pa2,pa1); SQR(pa1,pa2); 
+	SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1);
+      } else {
+	  abort();
+      }
+    } else if (window_bits == 6) {
+      if (!smallExp) {
+	SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); 
+	SQR(pa1,pa2); SQR(pa2,pa1);
+      } else if (smallExp & 1) {
+	SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); 
+	SQR(pa1,pa2); SQR(pa2,pa1); MUL(smallExp/2,pa1,pa2); SWAPPA;
+      } else if (smallExp & 2) {
+	SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); 
+	SQR(pa1,pa2); MUL(smallExp/4,pa2,pa1); SQR(pa1,pa2); SWAPPA;
+      } else if (smallExp & 4) {
+	SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); 
+	MUL(smallExp/8,pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SWAPPA;
+      } else if (smallExp & 8) {
+	SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); 
+	MUL(smallExp/16,pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); 
+	SQR(pa1,pa2); SWAPPA;
+      } else if (smallExp & 0x10) {
+	SQR(pa1,pa2); SQR(pa2,pa1); MUL(smallExp/32,pa1,pa2); 
+	SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SWAPPA;
+      } else if (smallExp & 0x20) {
+	SQR(pa1,pa2); MUL(smallExp/64,pa2,pa1); SQR(pa1,pa2); 
+	SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SWAPPA;
+      } else {
+	abort();
+      }
+    } else {
+      abort();
+    }
+  }
+
+  res = s_mp_redc(pa1, mmm);
+  mp_exch(pa1, result);
+
+CLEANUP:
+  mp_clear(&accum1);
+  mp_clear(&accum2);
+  mp_clear(&power2);
+  for (i = 0; i < odd_ints; ++i) {
+    mp_clear(oddPowers + i);
+  }
+  return res;
+}
+#undef SQR
+#undef MUL
+
 
 mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent, 
 		  const mp_int *modulus, mp_int *result)
 {
   const mp_int *base;
-  mp_int *pa1, *pa2, *ptmp;
-  mp_size bits_in_exponent;
-  mp_size i;
-  mp_size window_bits, odd_ints;
+  mp_size bits_in_exponent, i, window_bits, odd_ints;
   mp_err  res;
-  int     expOff, nLen;
-  mp_int  square, accum1, accum2, goodBase;
+  int     nLen;
+  mp_int  montBase, goodBase;
   mp_mont_modulus mmm;
-#ifdef MP_USING_MONT_MULF
-  int      dSize = 0, oddPowSize, dTmpSize, dSqrSize;
-  double   dn0;
-  double   *dBuf = 0; 
-  double   *dm1, *dn, *dSqr, *d16Tmp, *oddPowers[MAX_ODD_INTS], *dTmp;
-  mp_digit *mResult;
-#else
-  /* power2 = base ** 2; oddPowers[i] = base ** (2*i + 1); */
-  /* oddPowers[i] = base ** (2*i + 1); */
-  mp_int power2, oddPowers[MAX_ODD_INTS];
-#endif
 
   /* function for computing n0prime only works if n0 is odd */
   if (!mp_isodd(modulus))
     return s_mp_exptmod(inBase, exponent, modulus, result);
 
-  MP_DIGITS(&square) = 0;
-  MP_DIGITS(&accum1) = 0;
-  MP_DIGITS(&accum2) = 0;
+  MP_DIGITS(&montBase) = 0;
   MP_DIGITS(&goodBase) = 0;
-#ifdef MP_USING_MONT_MULF
-  for (i = 0; i < MAX_ODD_INTS; ++i)
-    oddPowers[i] = 0;
-#endif
 
   if (mp_cmp(inBase, modulus) < 0) {
     base = inBase;
@@ -234,11 +513,8 @@ mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent,
   }
 
   nLen  = MP_USED(modulus);
-  MP_CHECKOK( mp_init_size(&square, 2 * nLen + 2) );
-  MP_CHECKOK( mp_init_size(&accum1, 3 * nLen + 2) );
-#ifndef MP_USING_MONT_MULF
-  MP_CHECKOK( mp_init_size(&accum2, 3 * nLen + 2) );
-#endif
+  MP_CHECKOK( mp_init_size(&montBase, 2 * nLen + 2) );
+
   mmm.N = *modulus;			/* a copy of the mp_int struct */
   i = mpl_significant_bits(modulus);
   i += MP_DIGIT_BIT - 1;
@@ -249,13 +525,8 @@ mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent,
   */
   mmm.n0prime = 0 - s_mp_invmod_radix( MP_DIGIT(modulus, 0) );
 
-  MP_CHECKOK( s_mp_to_mont(base, &mmm, &square) );
-#ifdef MP_USING_MONT_MULF
-  MP_CHECKOK( s_mp_pad(&square, nLen) );
-  mp_set(&accum1, 1);
-  MP_CHECKOK( s_mp_to_mont(&accum1, &mmm, &accum1) );
-  MP_CHECKOK( s_mp_pad(&accum1, nLen) );
-#endif
+  MP_CHECKOK( s_mp_to_mont(base, &mmm, &montBase) );
+
   bits_in_exponent = mpl_significant_bits(exponent);
   if (bits_in_exponent > 480)
     window_bits = 6;
@@ -268,192 +539,20 @@ mp_err mp_exptmod(const mp_int *inBase, const mp_int *exponent,
   if (i != 0) {
     bits_in_exponent += window_bits - i;
   } 
-  {
-#ifdef MP_USING_MONT_MULF
-    oddPowSize = 2 * nLen + 1;
-    dTmpSize   = 2 * oddPowSize;
-    dSize = sizeof(double) * (nLen * 4 + 1 + 
-			      ((odd_ints + 1) * oddPowSize) + dTmpSize);
-    dBuf   = (double *)malloc(dSize);
-    dm1    = dBuf;		/* array of d32 */
-    dn     = dBuf   + nLen;	/* array of d32 */
-    dSqr   = dn     + nLen;    	/* array of d32 */
-    d16Tmp = dSqr   + nLen;	/* array of d16 */
-    dTmp   = d16Tmp + oddPowSize;
-
-    for (i = 0; i < odd_ints; ++i) {
-	oddPowers[i] = dTmp;
-	dTmp += oddPowSize;
-    }
-    mResult = (mp_digit *)(dTmp + dTmpSize);	/* size is nLen + 1 */
-
-    /* Make dn and dn0 */
-    conv_i32_to_d32(dn, MP_DIGITS(modulus), nLen);
-    dn0 = (double)(mmm.n0prime & 0xffff);
-
-    /* Make dSqr */
-    conv_i32_to_d32_and_d16(dm1, oddPowers[0], MP_DIGITS(&square), nLen);
-    mont_mulf_noconv(mResult, dm1, oddPowers[0], 
-		     dTmp, dn, MP_DIGITS(modulus), nLen, dn0);
-    conv_i32_to_d32(dSqr, mResult, nLen);
-
-    for (i = 1; i < odd_ints; ++i) {
-      mont_mulf_noconv(mResult, dSqr, oddPowers[i - 1], 
-		       dTmp, dn, MP_DIGITS(modulus), nLen, dn0);
-      conv_i32_to_d16(oddPowers[i], mResult, nLen);
-    }
-
-    s_mp_copy(MP_DIGITS(&accum1), mResult, nLen);
-
-#define SWAPPA 
-
-/* computes montgomery square of the integer in mResult */
-#define SQR(a,b) \
-    conv_i32_to_d32_and_d16(dm1, d16Tmp, mResult, nLen); \
-    mont_mulf_noconv(mResult, dm1, d16Tmp, \
-		     dTmp, dn, MP_DIGITS(modulus), nLen, dn0)
-
-/* computes montgomery product of x and the integer in mResult */
-#define MUL(x,a,b) \
-    conv_i32_to_d32(dm1, mResult, nLen); \
-    mont_mulf_noconv(mResult, dm1, oddPowers[x], \
-		     dTmp, dn, MP_DIGITS(modulus), nLen, dn0)
-
-#else
-
-    MP_CHECKOK( mp_init_copy(oddPowers, &square) );
-
-    mp_init_size(&power2, nLen + 2 * MP_USED(&square) + 2);
-    MP_CHECKOK( mp_sqr(&square, &power2) );	/* square = square ** 2 */
-    MP_CHECKOK( s_mp_redc(&power2, &mmm) );
-
-    for (i = 1; i < odd_ints; ++i) {
-      mp_init_size(oddPowers + i, nLen + 2 * MP_USED(&power2) + 2);
-      MP_CHECKOK( mp_mul(oddPowers + (i - 1), &power2, oddPowers + i) );
-      MP_CHECKOK( s_mp_redc(oddPowers + i, &mmm) );
-    }
-    mp_set(&accum1, 1);
-    MP_CHECKOK( s_mp_to_mont(&accum1, &mmm, &accum1) );
-    pa1 = &accum1;
-    pa2 = &accum2;
-
-#define SQR(a,b) \
-    MP_CHECKOK( mp_sqr(a, b) );\
-    MP_CHECKOK( s_mp_redc(b, &mmm) )
-
-#if defined(MP_MONT_USE_MP_MUL)
-#define MUL(x,a,b) \
-    MP_CHECKOK( mp_mul(a, oddPowers + (x), b) ); \
-    MP_CHECKOK( s_mp_redc(b, &mmm) ) 
-#else
-#define MUL(x,a,b) \
-    MP_CHECKOK( s_mp_mul_mont(a, oddPowers + (x), b, &mmm) )
-#endif
-
-#define SWAPPA ptmp = pa1; pa1 = pa2; pa2 = ptmp
-#endif
-
-    for (expOff = bits_in_exponent - window_bits; expOff >= 0; expOff -= window_bits) {
-      mp_size smallExp;
-      MP_CHECKOK( mpl_get_bits(exponent, expOff, window_bits) );
-      smallExp = (mp_size)res;
-
-      if (window_bits == 4) {
-	if (!smallExp) {
-	  SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1);
-	} else if (smallExp & 1) {
-	  SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); 
-	  MUL(smallExp/2, pa1,pa2); SWAPPA;
-	} else if (smallExp & 2) {
-	  SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); 
-	  MUL(smallExp/4,pa2,pa1); SQR(pa1,pa2); SWAPPA;
-	} else if (smallExp & 4) {
-	  SQR(pa1,pa2); SQR(pa2,pa1); MUL(smallExp/8,pa1,pa2); 
-	  SQR(pa2,pa1); SQR(pa1,pa2); SWAPPA;
-	} else if (smallExp & 8) {
-	  SQR(pa1,pa2); MUL(smallExp/16,pa2,pa1); SQR(pa1,pa2); 
-	  SQR(pa2,pa1); SQR(pa1,pa2); SWAPPA;
-	} else {
-	  abort();
-	}
-      } else if (window_bits == 5) {
-	if (!smallExp) {
-	  SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); 
-	  SQR(pa1,pa2); SWAPPA;
-	} else if (smallExp & 1) {
-	  SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); 
-	  SQR(pa1,pa2); MUL(smallExp/2,pa2,pa1);
-	} else if (smallExp & 2) {
-	  SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); 
-	  MUL(smallExp/4,pa1,pa2); SQR(pa2,pa1);
-	} else if (smallExp & 4) {
-	  SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); 
-	  MUL(smallExp/8,pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1);
-	} else if (smallExp & 8) {
-	  SQR(pa1,pa2); SQR(pa2,pa1); MUL(smallExp/16,pa1,pa2); 
-	  SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1);
-	} else if (smallExp & 0x10) {
-	  SQR(pa1,pa2); MUL(smallExp/32,pa2,pa1); SQR(pa1,pa2); 
-	  SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1);
-	} else {
-	    abort();
-	}
-      } else if (window_bits == 6) {
-	if (!smallExp) {
-	  SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); 
-	  SQR(pa1,pa2); SQR(pa2,pa1);
-	} else if (smallExp & 1) {
-	  SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); 
-	  SQR(pa1,pa2); SQR(pa2,pa1); MUL(smallExp/2,pa1,pa2); SWAPPA;
-	} else if (smallExp & 2) {
-	  SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); 
-	  SQR(pa1,pa2); MUL(smallExp/4,pa2,pa1); SQR(pa1,pa2); SWAPPA;
-	} else if (smallExp & 4) {
-	  SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); 
-	  MUL(smallExp/8,pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SWAPPA;
-	} else if (smallExp & 8) {
-	  SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); 
-	  MUL(smallExp/16,pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); 
-	  SQR(pa1,pa2); SWAPPA;
-	} else if (smallExp & 0x10) {
-	  SQR(pa1,pa2); SQR(pa2,pa1); MUL(smallExp/32,pa1,pa2); 
-	  SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SWAPPA;
-	} else if (smallExp & 0x20) {
-	  SQR(pa1,pa2); MUL(smallExp/64,pa2,pa1); SQR(pa1,pa2); 
-	  SQR(pa2,pa1); SQR(pa1,pa2); SQR(pa2,pa1); SQR(pa1,pa2); SWAPPA;
-	} else {
-	  abort();
-	}
-      } else {
-	abort();
-      }
-    }
 
 #ifdef MP_USING_MONT_MULF
-    s_mp_copy(mResult, MP_DIGITS(&square), nLen);
-    pa1 = &square;
+  if (mp_using_mont_mulf) {
+    MP_CHECKOK( s_mp_pad(&montBase, nLen) );
+    res = mp_exptmod_f(&montBase, exponent, modulus, result, &mmm, nLen, 
+		     bits_in_exponent, window_bits, odd_ints);
+  } else
 #endif
-  }
-  res = s_mp_redc(pa1, &mmm);
-  mp_exch(pa1, result);
+  res = mp_exptmod_i(&montBase, exponent, modulus, result, &mmm, nLen, 
+		     bits_in_exponent, window_bits, odd_ints);
 
 CLEANUP:
-  mp_clear(&square);
-  mp_clear(&accum1);
+  mp_clear(&montBase);
   mp_clear(&goodBase);
-#ifdef MP_USING_MONT_MULF
-  if (dBuf) {
-    if (dSize)
-      memset(dBuf, 0, dSize);
-    free(dBuf);
-  }
-#else
-  mp_clear(&power2);
-  for (i = 0; i < odd_ints; ++i) {
-    mp_clear(oddPowers + i);
-  }
-  mp_clear(&accum2);
-#endif
   /* Don't mp_clear mmm.N because it is merely a copy of modulus.
   ** Just zap it.
   */
