@@ -25,7 +25,6 @@ CPPSRCS =				\
 	nsBlockFrame.cpp		\
 	nsBodyFrame.cpp			\
 	nsBodyPart.cpp			\
-	nsColumnFrame.cpp		\
 	nsGlobalVariables.cpp		\
 	nsHRPart.cpp			\
 	nsHTMLAtoms.cpp			\

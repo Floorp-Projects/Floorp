@@ -29,7 +29,6 @@ CPPSRCS=			\
  nsBlockFrame.cpp		\
  nsBodyFrame.cpp		\
  nsBodyPart.cpp			\
- nsColumnFrame.cpp		\
  nsGlobalVariables.cpp		\
  nsHRPart.cpp			\
  nsHTMLAtoms.cpp		\
@@ -60,7 +59,6 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsBlockFrame.obj		\
  .\$(OBJDIR)\nsBodyFrame.obj		\
  .\$(OBJDIR)\nsBodyPart.obj		\
- .\$(OBJDIR)\nsColumnFrame.obj		\
  .\$(OBJDIR)\nsGlobalVariables.obj	\
  .\$(OBJDIR)\nsHRPart.obj		\
  .\$(OBJDIR)\nsHTMLAtoms.obj		\
