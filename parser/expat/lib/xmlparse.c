@@ -2392,7 +2392,7 @@ doProlog(XML_Parser parser,
 	attVal = poolStart(&dtd.pool);
 	poolFinish(&dtd.pool);
 	if (dtd.complete
-	    // ID attributes aren't allowed to have a default
+	    /* ID attributes aren't allowed to have a default */
 	    && !defineAttribute(declElementType, declAttributeId, declAttributeIsCdata, 0, attVal))
 	  return XML_ERROR_NO_MEMORY;
 	break;
@@ -2407,7 +2407,7 @@ doProlog(XML_Parser parser,
 	  declEntity->textLen = poolLength(&dtd.pool);
 	  poolFinish(&dtd.pool);
 	  if (internalParsedEntityDeclHandler
-	      // Check it's not a parameter entity
+	      /* Check it's not a parameter entity */
 	      && ((ENTITY *)lookup(&dtd.generalEntities, declEntity->name, 0)
 		  == declEntity)) {
 	    *eventEndPP = s;
