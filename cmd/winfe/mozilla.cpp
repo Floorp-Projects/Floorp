@@ -96,6 +96,8 @@ BOOL bIsGold = FALSE;
 #include "../../../ns/fullsoft/public/fullsoft.h"
 #endif
 
+#include "prefs.h"
+
 #ifdef MOZ_NGLAYOUT
 #include "nsISupports.h"
 #include "nsRepository.h"
@@ -1208,7 +1210,7 @@ BOOL CNetscapeApp::InitInstance()
 	{
 		// only show splash if not embedded
 	m_splash.Create(NULL);
-#if !defined(DEBUG_chouck) && !defined(DEBUG_warren) && !defined(DEBUG_phil) && !defined(DEBUG_hyatt) && !defined(DEBUG_hshaw)
+#if !defined(DEBUG_chouck) && !defined(DEBUG_warren) && !defined(DEBUG_phil) && !defined(DEBUG_hyatt) && !defined(DEBUG_hshaw) && !defined(DEBUG_law)
 	m_splash.ShowWindow(SW_SHOW);
 #endif
 	m_splash.UpdateWindow();
@@ -1233,7 +1235,9 @@ BOOL CNetscapeApp::InitInstance()
 
 #ifdef XP_WIN32
 	// Check to see if we're the "default browser"
-	CheckDefaultBrowser();
+    if ( !m_bShowPrefsOnStartup ) {
+	    CheckDefaultBrowser();
+    }
 #endif // XP_WIN32
 
 	//Begin CRN_MIME
@@ -1690,7 +1694,7 @@ BOOL CNetscapeApp::InitInstance()
     if(prefBool)
 	FEU_OpenMapiLibrary();
 
-	if(m_bAutomated == FALSE && m_bEmbedded == FALSE  && csPrintCommand.IsEmpty())
+	if(m_bAutomated == FALSE && m_bEmbedded == FALSE && m_bShowPrefsOnStartup == FALSE && csPrintCommand.IsEmpty())
 	{
 		long iStartupMode=0;
 	    PRBool bStartMode = FALSE;
@@ -1733,7 +1737,7 @@ BOOL CNetscapeApp::InitInstance()
 		//Last chance to make sure at least the browser is launched if nothing else
 		//was set either in preferences or on the command line.
 		//--- Added STARTUP_ACCOUNT_SETUP here because we want browser in main window and error in DDE
-		if (iStartupMode == 0 || iStartupMode == STARTUP_ACCOUNT_SETUP)
+		if ( !m_bShowPrefsOnStartup && ( iStartupMode == 0 || iStartupMode == STARTUP_ACCOUNT_SETUP ))
 			iStartupMode |= STARTUP_BROWSER;
 
     void OpenDraftExit (URL_Struct *url_struct, int/*status*/,MWContext *pContext);
@@ -2094,6 +2098,12 @@ BOOL CNetscapeApp::InitInstance()
 		}
 
 	}
+
+    // Show preferences now.
+    if( m_bShowPrefsOnStartup ) {
+        wfe_DisplayPreferences(NULL);
+        return FALSE;
+    }
 
     //--------------------------------------------------------------------
     //                           IMPORTANT
