@@ -39,7 +39,7 @@
  * SW FORTEZZA to link with some low level security functions without dragging
  * in NSPR.
  *
- * $Id: nsprstub.c,v 1.1 2000/09/07 16:07:03 relyea%netscape.com Exp $
+ * $Id: nsprstub.c,v 1.2 2000/09/11 23:27:56 relyea%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -245,6 +245,7 @@ nss_ClearErrorStack(void)
     return;
 }
 
+#ifdef DEBUG
 /*
  * replace the pointer tracking stuff for the same reasons.
  *  If you want to turn pointer tracking on, simply ifdef out this code and 
@@ -280,6 +281,7 @@ nssPointerTracker_verify(nssPointerTracker *tracker, const void *pointer)
 {
      return PR_SUCCESS;
 }
+#endif
 
 PR_IMPLEMENT(PRThread *)
 PR_GetCurrentThread(void)
