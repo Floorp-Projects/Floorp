@@ -1283,9 +1283,20 @@ NET_I_XP_ReadDir(XP_Dir dir)
 // XXXXXXXXXXXXXXXXXXXXXXXXX NS_NET_FILE END XXXXXXXXXXXXXXXXXXXXXXXXX 
 #endif /* NS_NET_FILE */
 
+#ifdef XP_MAC
+char *
+WH_TempName(XP_FileType type, const char * prefix)
+{
+    MOZ_FUNCTION_STUB;
+    return NULL;
+}
+#endif
+
 // Begin vanilla versions of xp_file routines. These are simply stubs.
+#ifdef XP_PC
 
 #ifndef NS_NET_FILE
+
 char *
 WH_TempName(XP_FileType type, const char * prefix)
 {
@@ -1315,7 +1326,7 @@ WH_FileName (const char *NetName, XP_FileType type)
          * This is the body of XP_NetToDosFileName(...) which is implemented 
          * for Windows only in fegui.cpp
          */
-        BOOL bChopSlash = FALSE;
+        XP_Bool bChopSlash = FALSE;
         char *p, *newName;
 
         if(!NetName)
@@ -1383,6 +1394,26 @@ XP_FileOpen(const char * name, XP_FileType type, const XP_FilePerm perm)
     return NULL;
 }
 
+PUBLIC XP_Dir 
+XP_OpenDir(const char * name, XP_FileType type)
+{
+    MOZ_FUNCTION_STUB;
+    return NULL;
+}
+
+PUBLIC void 
+XP_CloseDir(XP_Dir dir)
+{
+    MOZ_FUNCTION_STUB;
+}
+
+PUBLIC XP_DirEntryStruct * 
+XP_ReadDir(XP_Dir dir)
+{                                         
+    MOZ_FUNCTION_STUB;
+    return NULL;
+}
+
 PUBLIC int 
 XP_FileRemove(const char * name, XP_FileType type)
 {
@@ -1418,26 +1449,7 @@ XP_Stat(const char * name, XP_StatStruct * info, XP_FileType type)
     }
     return result;
 }
-
-PUBLIC XP_Dir 
-XP_OpenDir(const char * name, XP_FileType type)
-{
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
-
-PUBLIC void 
-XP_CloseDir(XP_Dir dir)
-{
-    MOZ_FUNCTION_STUB;
-}
-
-PUBLIC XP_DirEntryStruct * 
-XP_ReadDir(XP_Dir dir)
-{                                         
-    MOZ_FUNCTION_STUB;
-    return NULL;
-}
+#endif /* XP_PC */
 
 PUBLIC void *
 FE_AboutData (const char *which,
