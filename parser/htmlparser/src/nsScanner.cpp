@@ -322,7 +322,7 @@ PRInt32 CScanner::GetChar(PRUnichar& aChar) {
  *  @param   
  *  @return  
  */
-PRInt32 CScanner::Peek(PRUnichar& aChar){
+PRInt32 CScanner::Peek(PRUnichar& aChar) {
   PRInt32 result=Eof();
   if(!result) {
     aChar=mBuffer[mOffset];        

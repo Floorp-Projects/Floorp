@@ -16,7 +16,7 @@
  * Reserved.
  */
   
-//#define __INCREMENTAL 1
+
 
 #include "nsParser.h"
 #include "nsIContentSink.h" 
@@ -31,13 +31,6 @@
 #include "nsIInputStream.h"
 #include "nsIParserFilter.h"
 
-/* UNCOMMENT THIS IF STUFF STOPS WORKING...
-#ifdef XP_PC
-#include <direct.h> //this is here for debug reasons...
-#endif
-#include <time.h>
-#include "prmem.h"
-*/
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kClassIID, NS_PARSER_IID); 

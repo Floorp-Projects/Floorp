@@ -285,6 +285,7 @@ CHTMLToken::CHTMLToken(eHTMLTags aTag) : CToken(GetTagName(aTag)) {
  */
 CStartToken::CStartToken(const nsString& aName) : CHTMLToken(aName) {
   mAttributed=PR_FALSE;
+  mEmpty=PR_FALSE;
 }
 
 /*
@@ -296,6 +297,7 @@ CStartToken::CStartToken(const nsString& aName) : CHTMLToken(aName) {
  */
 CStartToken::CStartToken(eHTMLTags aTag) : CHTMLToken(aTag) {
   mAttributed=PR_FALSE;
+  mEmpty=PR_FALSE;
 }
 
 /*
@@ -353,6 +355,28 @@ void CStartToken::SetAttributed(PRBool aValue) {
  */
 PRBool CStartToken::IsAttributed(void) {
   return mAttributed;
+}
+
+/*
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ */
+void CStartToken::SetEmpty(PRBool aValue) {
+  mEmpty=aValue;
+}
+
+/*
+ *  
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  
+ */
+PRBool CStartToken::IsEmpty(void) {
+  return mEmpty;
 }
 
 /*

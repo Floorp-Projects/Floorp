@@ -614,7 +614,7 @@ private:
      * @param   aToken is the next token (or null)
      * @return  error code
      */
-    PRInt32     ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    PRInt32     ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToken);
     
     /**
      * Retrieve a sequence of text from given scanner.
