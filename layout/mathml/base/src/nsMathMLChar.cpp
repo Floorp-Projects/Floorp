@@ -124,15 +124,6 @@ CheckFontExistence(nsIPresContext* aPresContext, nsString& aFontName)
   deviceContext->GetLocalFontName(aFontName, localName, aliased);
   PRBool rv = (aliased || (NS_OK == deviceContext->CheckFontExistence(localName)));
   // (see bug 35824 for comments about the aliased localName)
-#ifdef NS_DEBUG
-  if (!rv) {
-    // the font is not installed
-    char str[50];
-    localName.ToCString(str, sizeof(str));
-    printf("WARNING *** Missing the %s font to stretch MathML symbols!\n", str);
-    printf("            Why don't you install the %s font on your system for a better MathML experience!\n", str);
-  }
-#endif
   return rv;
 }
 
@@ -187,11 +178,9 @@ MOZ_DECL_CTOR_COUNTER(nsGlyphTable)
 
 class nsGlyphTable {
 public:
-  nsGlyphTable(nsIPresContext* aPresContext,
-               const nsString& aPrimaryFontName)
+  nsGlyphTable(const nsString& aPrimaryFontName)
   {
     MOZ_COUNT_CTOR(nsGlyphTable);
-    mPresContext = aPresContext;
     mFontName.AppendString(aPrimaryFontName);
     mType = NS_TABLE_TYPE_UNICODE;
     mState = NS_TABLE_STATE_EMPTY;
@@ -209,44 +198,44 @@ public:
 
   // True if this table contains some glyphs (variants and/or parts)
   // or contains child chars that can be used to render this char
-  PRBool Has(nsMathMLChar* aChar);
-  PRBool Has(PRUnichar aChar);
+  PRBool Has(nsIPresContext* aPresContext, nsMathMLChar* aChar);
+  PRBool Has(nsIPresContext* aPresContext, PRUnichar aChar);
 
   // True if this table contains variants of larger sizes to render this char
-  PRBool HasVariantsOf(nsMathMLChar* aChar);
-  PRBool HasVariantsOf(PRUnichar aChar);
+  PRBool HasVariantsOf(nsIPresContext* aPresContext, nsMathMLChar* aChar);
+  PRBool HasVariantsOf(nsIPresContext* aPresContext, PRUnichar aChar);
 
   // True if this table contains parts (or composite parts) to render this char
-  PRBool HasPartsOf(nsMathMLChar* aChar);
-  PRBool HasPartsOf(PRUnichar aChar);
+  PRBool HasPartsOf(nsIPresContext* aPresContext, nsMathMLChar* aChar);
+  PRBool HasPartsOf(nsIPresContext* aPresContext, PRUnichar aChar);
 
   // True if aChar is to be assembled from other child chars in this table
-  PRBool IsComposite(nsMathMLChar* aChar);
+  PRBool IsComposite(nsIPresContext* aPresContext, nsMathMLChar* aChar);
 
   // The number of child chars to assemble in order to render aChar
-  PRInt32 ChildCountOf(nsMathMLChar* aChar);
+  PRInt32 ChildCountOf(nsIPresContext* aPresContext, nsMathMLChar* aChar);
 
   // Getters for the parts
-  nsGlyphCode TopOf(nsMathMLChar* aChar) {
-    return ElementAt(aChar, 0);
+  nsGlyphCode TopOf(nsIPresContext* aPresContext, nsMathMLChar* aChar) {
+    return ElementAt(aPresContext, aChar, 0);
   }
-  nsGlyphCode MiddleOf(nsMathMLChar* aChar) {
-    return ElementAt(aChar, 1);
+  nsGlyphCode MiddleOf(nsIPresContext* aPresContext, nsMathMLChar* aChar) {
+    return ElementAt(aPresContext, aChar, 1);
   }
-  nsGlyphCode BottomOf(nsMathMLChar* aChar) {
-    return ElementAt(aChar, 2);
+  nsGlyphCode BottomOf(nsIPresContext* aPresContext, nsMathMLChar* aChar) {
+    return ElementAt(aPresContext, aChar, 2);
   }
-  nsGlyphCode GlueOf(nsMathMLChar* aChar) {
-    return ElementAt(aChar, 3);
+  nsGlyphCode GlueOf(nsIPresContext* aPresContext, nsMathMLChar* aChar) {
+    return ElementAt(aPresContext, aChar, 3);
   }
-  nsGlyphCode BigOf(nsMathMLChar* aChar, PRInt32 aSize) {
-    return ElementAt(aChar, 4 + aSize);
+  nsGlyphCode BigOf(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRInt32 aSize) {
+    return ElementAt(aPresContext, aChar, 4 + aSize);
   }
-  nsGlyphCode LeftOf(nsMathMLChar* aChar) {
-    return ElementAt(aChar, 0);
+  nsGlyphCode LeftOf(nsIPresContext* aPresContext, nsMathMLChar* aChar) {
+    return ElementAt(aPresContext, aChar, 0);
   }
-  nsGlyphCode RightOf(nsMathMLChar* aChar) {
-    return ElementAt(aChar, 2);
+  nsGlyphCode RightOf(nsIPresContext* aPresContext, nsMathMLChar* aChar) {
+    return ElementAt(aPresContext, aChar, 2);
   }
 
   // use these to measure/render a glyph that comes from this table
@@ -266,7 +255,7 @@ public:
 
 private:
   PRUnichar   GetAnnotation(nsMathMLChar* aChar, PRInt32 aPosition);
-  nsGlyphCode ElementAt(nsMathMLChar* aChar, PRUint32 aPosition);
+  nsGlyphCode ElementAt(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRUint32 aPosition);
 
   // The type is either NS_TABLE_TYPE_UNICODE or NS_TABLE_TYPE_GLYPH_INDEX
   PRInt32 mType;    
@@ -281,9 +270,6 @@ private:
 
   // The set of glyph data in this table, as provided by the MathFont Property File
   nsCOMPtr<nsIPersistentProperties> mGlyphProperties;
-
-  // Used to check the existence of fonts
-  nsIPresContext* mPresContext;
 
   // For speedy re-use, we always cache the last data used in the table.
   // mCharCache is the Unicode point of the last char that was queried in this
@@ -323,11 +309,14 @@ nsGlyphTable::GetAnnotation(nsMathMLChar* aChar, PRInt32 aPosition)
 }
 
 nsGlyphCode
-nsGlyphTable::ElementAt(nsMathMLChar* aChar, PRUint32 aPosition)
+nsGlyphTable::ElementAt(nsIPresContext* aPresContext, nsMathMLChar* aChar, PRUint32 aPosition)
 {
   if (mState == NS_TABLE_STATE_ERROR) return kNullGlyph;
   // Load glyph properties if this is the first time we have been here
   if (mState == NS_TABLE_STATE_EMPTY) {
+    if (!CheckFontExistence(aPresContext, *mFontName[0])) {
+      return kNullGlyph;
+    }
     nsresult rv = LoadProperties(*mFontName[0], mGlyphProperties);
 #ifdef NS_DEBUG
     nsAutoString uriStr;
@@ -352,9 +341,6 @@ nsGlyphTable::ElementAt(nsMathMLChar* aChar, PRUint32 aPosition)
       rv = mGlyphProperties->GetStringProperty(key, value);
       if (NS_FAILED(rv)) break;
       Clean(value);
-      if (!CheckFontExistence(mPresContext, value)) {
-        value.Truncate(); // font is not installed, we will just leave an empty slot
-      }
       mFontName.AppendString(value); // i.e., mFontName[i] holds this font name
     }
   }
@@ -415,7 +401,11 @@ nsGlyphTable::ElementAt(nsMathMLChar* aChar, PRUint32 aPosition)
         i += 2;
         font = value[i];
         // The char cannot be handled if this font is not installed
-        if (!mFontName[font-'0']->Length()) return kNullGlyph;
+        nsAutoString fontName;
+        mFontName.StringAt(font-'0', fontName);
+        if (!fontName.Length() || !CheckFontExistence(aPresContext, fontName)) {
+          return kNullGlyph;
+        }
       }
       buffer.Append(code);
       buffer.Append(font);
@@ -454,13 +444,13 @@ nsGlyphTable::ElementAt(nsMathMLChar* aChar, PRUint32 aPosition)
 }
 
 PRBool
-nsGlyphTable::IsComposite(nsMathMLChar* aChar)
+nsGlyphTable::IsComposite(nsIPresContext* aPresContext, nsMathMLChar* aChar)
 {
   // there is only one level of recursion in our model. a child
   // cannot be composite because it cannot have its own children
   if (aChar->mParent) return PR_FALSE;
   // shortcut to sync the cache with this char...
-  mCharCache = 0; mGlyphCache.Truncate(); ElementAt(aChar, 0);
+  mCharCache = 0; mGlyphCache.Truncate(); ElementAt(aPresContext, aChar, 0);
   // the cache remained empty if the char wasn't found in this table
   if (8 >= mGlyphCache.Length()) return PR_FALSE;
   // the lists of glyphs of a composite char are space-separated
@@ -468,64 +458,65 @@ nsGlyphTable::IsComposite(nsMathMLChar* aChar)
 }
 
 PRInt32
-nsGlyphTable::ChildCountOf(nsMathMLChar* aChar)
+nsGlyphTable::ChildCountOf(nsIPresContext* aPresContext, nsMathMLChar* aChar)
 {
   // this will sync the cache as well ...
-  if (!IsComposite(aChar)) return 0;
+  if (!IsComposite(aPresContext, aChar)) return 0;
   // the lists of glyphs of a composite char are space-separated
   return 1 + mGlyphCache.CountChar(kSpaceCh);
 }
 
 PRBool
-nsGlyphTable::Has(nsMathMLChar* aChar)
+nsGlyphTable::Has(nsIPresContext* aPresContext, nsMathMLChar* aChar)
 {
-  return (HasVariantsOf(aChar) || HasPartsOf(aChar));
+  return (HasVariantsOf(aPresContext, aChar) || HasPartsOf(aPresContext, aChar));
 }
 
 PRBool
-nsGlyphTable::Has(PRUnichar aChar)
+nsGlyphTable::Has(nsIPresContext* aPresContext, PRUnichar aChar)
 {
   nsMathMLChar tmp;
   tmp.mData = aChar;
   tmp.mDirection = GetStretchyDirection(aChar);
   return (tmp.mDirection == NS_STRETCH_DIRECTION_UNSUPPORTED)
     ? PR_FALSE
-    : Has(&tmp);
+    : Has(aPresContext, &tmp);
 }
 
 PRBool
-nsGlyphTable::HasVariantsOf(nsMathMLChar* aChar)
+nsGlyphTable::HasVariantsOf(nsIPresContext* aPresContext, nsMathMLChar* aChar)
 {
-  return BigOf(aChar, 1);
+  return BigOf(aPresContext, aChar, 1);
 }
 
 PRBool
-nsGlyphTable::HasVariantsOf(PRUnichar aChar)
-{
-  nsMathMLChar tmp;
-  tmp.mData = aChar;
-  tmp.mDirection = GetStretchyDirection(aChar);
-  return (tmp.mDirection == NS_STRETCH_DIRECTION_UNSUPPORTED)
-    ? PR_FALSE
-    : HasVariantsOf(&tmp);
-}
-
-PRBool
-nsGlyphTable::HasPartsOf(nsMathMLChar* aChar)
-{
-  return (IsComposite(aChar) || TopOf(aChar) ||
-          MiddleOf(aChar) || BottomOf(aChar) || GlueOf(aChar));
-}
-
-PRBool
-nsGlyphTable::HasPartsOf(PRUnichar aChar)
+nsGlyphTable::HasVariantsOf(nsIPresContext* aPresContext, PRUnichar aChar)
 {
   nsMathMLChar tmp;
   tmp.mData = aChar;
   tmp.mDirection = GetStretchyDirection(aChar);
   return (tmp.mDirection == NS_STRETCH_DIRECTION_UNSUPPORTED)
     ? PR_FALSE
-    : HasPartsOf(&tmp);
+    : HasVariantsOf(aPresContext, &tmp);
+}
+
+PRBool
+nsGlyphTable::HasPartsOf(nsIPresContext* aPresContext, nsMathMLChar* aChar)
+{
+  return  GlueOf(aPresContext, aChar) || TopOf(aPresContext, aChar) ||
+          BottomOf(aPresContext, aChar) || MiddleOf(aPresContext, aChar) ||
+          IsComposite(aPresContext, aChar);
+}
+
+PRBool
+nsGlyphTable::HasPartsOf(nsIPresContext* aPresContext, PRUnichar aChar)
+{
+  nsMathMLChar tmp;
+  tmp.mData = aChar;
+  tmp.mDirection = GetStretchyDirection(aChar);
+  return (tmp.mDirection == NS_STRETCH_DIRECTION_UNSUPPORTED)
+    ? PR_FALSE
+    : HasPartsOf(aPresContext, &tmp);
 }
 
 // Get the bounding box of a glyph.
@@ -648,7 +639,7 @@ public:
 
   nsGlyphTable* ElementAt(PRInt32 aIndex)
   {
-    return (nsGlyphTable*)mTableList.ElementAt(aIndex);
+    return NS_STATIC_CAST(nsGlyphTable*, mTableList.ElementAt(aIndex));
   }
 
   PRInt32 Count(PRBool aEverything = PR_FALSE)
@@ -660,17 +651,18 @@ public:
     return mTableList.AppendElement(aGlyphTable);
   }
 
-  // Add a glyph table in the list if the given font is installed
+  // Add a glyph table in the list
   nsresult
-  AddGlyphTable(nsIPresContext* aPresContext,
-                nsString&       aPrimaryFontName);
+  AddGlyphTable(nsString& aPrimaryFontName);
 
   // Find a glyph table in the list that has a glyph for the given char
   nsGlyphTable*
-  GetGlyphTableFor(nsMathMLChar* aChar);
+  GetGlyphTableFor(nsIPresContext* aPresContext,
+                   nsMathMLChar*   aChar);
 
   // Find the subset of glyph tables that are applicable to the given char,
-  // knowing that the stretchy style context of the char has the given font
+  // knowing that the stretchy style context of the char has the given font.
+  // aGlyphTableList is not cleared here, we just append to what may exist there.
   nsresult
   GetListFor(nsIPresContext* aPresContext,
              nsMathMLChar*   aChar,
@@ -678,9 +670,17 @@ public:
              nsVoidArray*    aGlyphTableList);
 
   // Retrieve the subset of preferred glyph tables that start at the given index
+  // Return the number of installed fonts that are retrieved or 0 if none is found.
+  // If at least one font is found, the preferred fonts become active and
+  // take precedence (i.e., whatever was in the existing aGlyphTableList is
+  // cleared). But if it turns out that no preferred font is actually installed,
+  // the code behaves as if no preferred font was specified at all (i.e., whatever
+  // was in aGlyphTableList is retained).
   nsresult
-  GetPreferredListAt(PRInt32      aStartingIndex, 
-                     nsVoidArray* aGlyphTableList);
+  GetPreferredListAt(nsIPresContext* aPresContext,
+                     PRInt32         aStartingIndex, 
+                     nsVoidArray*    aGlyphTableList,
+                     PRInt32*        aCount);
 
 private:
   // Ordered list of glyph tables subdivided in several null-separated segments.
@@ -753,26 +753,23 @@ nsGlyphTableList::Finalize()
 }
 
 nsresult
-nsGlyphTableList::AddGlyphTable(nsIPresContext* aPresContext,
-                                nsString&       aPrimaryFontName)
+nsGlyphTableList::AddGlyphTable(nsString& aPrimaryFontName)
 {
-  if (CheckFontExistence(aPresContext, aPrimaryFontName)) {
-    // allocate a table to be deleted at shutdown
-    nsGlyphTable* glyphTable = new nsGlyphTable(aPresContext, aPrimaryFontName);
-    if (!glyphTable) return NS_ERROR_OUT_OF_MEMORY;
-    mTableList.AppendElement(glyphTable);
-    mDefaultCount++;
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  // allocate a table to be deleted at shutdown
+  nsGlyphTable* glyphTable = new nsGlyphTable(aPrimaryFontName);
+  if (!glyphTable) return NS_ERROR_OUT_OF_MEMORY;
+  mTableList.AppendElement(glyphTable);
+  mDefaultCount++;
+  return NS_OK;
 }
 
 nsGlyphTable*
-nsGlyphTableList::GetGlyphTableFor(nsMathMLChar* aChar)
+nsGlyphTableList::GetGlyphTableFor(nsIPresContext* aPresContext, 
+                                   nsMathMLChar*   aChar)
 {
   for (PRInt32 i = 0; i < Count(); i++) {
     nsGlyphTable* glyphTable = ElementAt(i);
-    if (glyphTable->Has(aChar)) {
+    if (glyphTable->Has(aPresContext, aChar)) {
       return glyphTable;
     }
   }
@@ -780,8 +777,9 @@ nsGlyphTableList::GetGlyphTableFor(nsMathMLChar* aChar)
 }
 
 struct StretchyFontEnumContext {
-  nsMathMLChar* mChar;
-  nsVoidArray*  mGlyphTableList;
+  nsIPresContext* mPresContext;
+  nsMathMLChar*   mChar;
+  nsVoidArray*    mGlyphTableList;
 };
 
 // check if the current font is associated to a known glyph table, if so the
@@ -791,13 +789,15 @@ StretchyFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
   nsAutoString fontName;
   StretchyFontEnumContext* context = (StretchyFontEnumContext*)aData;
+  nsIPresContext* currPresContext = context->mPresContext;
   nsMathMLChar* currChar = context->mChar;
   nsVoidArray* currList = context->mGlyphTableList;
   // check if the current font is associated to a known glyph table
   for (PRInt32 i = 0; i < gGlyphTableList->Count(); i++) {
-    nsGlyphTable* glyphTable = (nsGlyphTable*)gGlyphTableList->ElementAt(i);
+    nsGlyphTable* glyphTable = gGlyphTableList->ElementAt(i);
     glyphTable->GetPrimaryFontName(fontName);
-    if (fontName.EqualsIgnoreCase(aFamily) && glyphTable->Has(currChar)) {
+    if (fontName.EqualsIgnoreCase(aFamily) &&
+        glyphTable->Has(currPresContext, currChar)) {
       currList->AppendElement(glyphTable); // the table is retained
       break;
     }
@@ -820,7 +820,7 @@ nsGlyphTableList::GetListFor(nsIPresContext* aPresContext,
   if (useDocumentFonts) {
     // Convert the list of fonts in aFont (from -moz-math-font-style-stretchy)
     // to an ordered list of corresponding glyph extension tables
-    StretchyFontEnumContext context = {aChar, aGlyphTableList};
+    StretchyFontEnumContext context = {aPresContext, aChar, aGlyphTableList};
     aFont->EnumerateFamilies(StretchyFontEnumCallback, &context);
   }
   // To stay on the safe side, always append the default tables
@@ -828,7 +828,7 @@ nsGlyphTableList::GetListFor(nsIPresContext* aPresContext,
   for (PRInt32 i = 0; i < count; i++) {
     nsGlyphTable* glyphTable = ElementAt(i);
     PRInt32 index = aGlyphTableList->IndexOf(glyphTable);
-    if ((kNotFound == index) && glyphTable->Has(aChar)) {
+    if ((kNotFound == index) && glyphTable->Has(aPresContext, aChar)) {
       aGlyphTableList->AppendElement(glyphTable);
     }
   }
@@ -836,22 +836,35 @@ nsGlyphTableList::GetListFor(nsIPresContext* aPresContext,
 }
 
 nsresult
-nsGlyphTableList::GetPreferredListAt(PRInt32      aStartingIndex, 
-                                     nsVoidArray* aGlyphTableList)
+nsGlyphTableList::GetPreferredListAt(nsIPresContext* aPresContext,
+                                     PRInt32         aStartingIndex, 
+                                     nsVoidArray*    aGlyphTableList,
+                                     PRInt32*        aCount)
 {
+  *aCount = 0;
+  if (aStartingIndex == kNotFound) {
+    return NS_OK;
+  }
+  nsAutoString fontName;
   PRInt32 index = aStartingIndex;
-  NS_ASSERTION(index != kNotFound && index < Count(PR_TRUE), "invalid call");
-  nsGlyphTable* glyphTable = ElementAt(index++);
+  NS_ASSERTION(index < Count(PR_TRUE), "invalid call");
+  nsGlyphTable* glyphTable = ElementAt(index);
   while (glyphTable) {
+    glyphTable->GetPrimaryFontName(fontName);
+    if (CheckFontExistence(aPresContext, fontName)) {
 #ifdef NOISY_SEARCH
-     char str[50];
-     nsAutoString fontName;
-     glyphTable->GetPrimaryFontName(fontName);
-     fontName.ToCString(str, sizeof(str));
-     printf("Found preferreed font %s\n", str);
+      char str[50];
+      fontName.ToCString(str, sizeof(str));
+      printf("Found preferreed font %s\n", str);
 #endif
-    aGlyphTableList->AppendElement(glyphTable);
-    glyphTable = ElementAt(index++);
+      if (index == aStartingIndex) {
+        // At least one font is found, clear aGlyphTableList
+        aGlyphTableList->Clear();
+      }
+      aGlyphTableList->AppendElement(glyphTable);
+      *aCount++;
+    }
+    glyphTable = ElementAt(++index);
   } 
   // XXX append other tables if UseDocumentFonts is set?
   return NS_OK;
@@ -860,7 +873,6 @@ nsGlyphTableList::GetPreferredListAt(PRInt32      aStartingIndex,
 // -----------------------------------------------------------------------------------
 
 struct PreferredFontEnumContext {
-  PRUnichar mChar;
   PRInt32   mCharIndex;
   PRBool    mIsFontForParts;
   PRInt32   mFontCount;
@@ -879,26 +891,20 @@ PreferredFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
     glyphTable->GetPrimaryFontName(fontName);
     if (fontName.EqualsIgnoreCase(aFamily)) {
       // Add this table to the list of preferred extension tables for this char
-      if (context->mIsFontForParts) {
-        if (glyphTable->HasPartsOf(context->mChar)) {
-          if (!context->mFontCount) { // this is the first font to be retained
-            // remember the starting index where the first glyphTable was appended
-            nsGlyphTableList::gParts[context->mCharIndex] 
-              = gGlyphTableList->Count(PR_TRUE);
-          }
-          gGlyphTableList->AppendElement(glyphTable);
-          context->mFontCount++;
+      if (!context->mFontCount) { 
+        // this is the first font to be retained, remember
+        // the starting index where the first glyphTable was appended
+        if (context->mIsFontForParts) {
+          nsGlyphTableList::gParts[context->mCharIndex] 
+            = gGlyphTableList->Count(PR_TRUE);
         }
-      }
-      else if (glyphTable->HasVariantsOf(context->mChar)) {
-        if (!context->mFontCount) { // this is the first font to be retained
-          // remember the starting index where the first glyphTable was appended
+        else {
           nsGlyphTableList::gVariants[context->mCharIndex]
             = gGlyphTableList->Count(PR_TRUE);
         }
-        gGlyphTableList->AppendElement(glyphTable);
-        context->mFontCount++;
       }
+      gGlyphTableList->AppendElement(glyphTable);
+      context->mFontCount++;
       break;
     }
   }
@@ -922,7 +928,7 @@ SetPreferredTableList(PRUnichar aChar, nsString& aExtension, nsString& aFamilyLi
     // We just want to iterate over the font-family list using the
     // callback mechanism that nsFont has...
     nsFont font(aFamilyList, 0, 0, 0, 0, 0);
-    PreferredFontEnumContext context = {aChar, k, isFontForParts, 0};
+    PreferredFontEnumContext context = {k, isFontForParts, 0};
     font.EnumerateFamilies(PreferredFontEnumCallback, &context);
     if (context.mFontCount) { // at least one font was retained
       // Append a null separator
@@ -932,7 +938,7 @@ SetPreferredTableList(PRUnichar aChar, nsString& aExtension, nsString& aFamilyLi
 }
 
 static nsresult
-InitGlobals(nsIPresContext* aPresContext)
+InitGlobals()
 {
   NS_ASSERTION(!gInitialized, "Error -- already initialized");
   gInitialized = PR_TRUE;
@@ -998,7 +1004,7 @@ InitGlobals(nsIPresContext* aPresContext)
     if (NS_FAILED(mathfontProp->GetStringProperty(key, value)))
       break;
     Clean(value);
-    gGlyphTableList->AddGlyphTable(aPresContext, value);
+    gGlyphTableList->AddGlyphTable(value);
   }
   // Append a null separator
   gGlyphTableList->AppendElement(nsnull);
@@ -1067,7 +1073,7 @@ nsMathMLChar::SetData(nsIPresContext* aPresContext,
 {
   NS_ASSERTION(!mParent, "invalid call - not allowed for child chars");
   if (!gInitialized) {
-    InitGlobals(aPresContext);
+    InitGlobals();
   }
   mData = aData;
   // some assumptions until proven otherwise
@@ -1081,7 +1087,7 @@ nsMathMLChar::SetData(nsIPresContext* aPresContext,
     if (k != kNotFound) {
       mDirection = nsMathMLOperators::GetStretchyDirectionAt(k);
       // default tentative table (not the one that is necessarily going to be used)
-      mGlyphTable = gGlyphTableList->GetGlyphTableFor(this);
+      mGlyphTable = gGlyphTableList->GetGlyphTableFor(aPresContext, this);
       // don't bother with the stretching if there is no glyph table for us...
       if (!mGlyphTable) {
         mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
@@ -1362,16 +1368,16 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   mStyleContext->GetStyle(eStyleStruct_Font, font);
 
   // initialize the search list for this char
+  PRBool alreadyCSS = PR_FALSE;
   nsAutoVoidArray tableList;
   PRInt32 index = nsMathMLOperators::FindStretchyOperator(uchar);
-  PRInt32 t = nsGlyphTableList::gVariants[index];
-  if (t != kNotFound) {
-    // there are user-specified preferred tables for the variants of this char
-    gGlyphTableList->GetPreferredListAt(t, &tableList);
-  }
-  else {
+  // see if there are user-specified preferred tables for the variants of this char
+  PRInt32 count, t = nsGlyphTableList::gVariants[index];
+  gGlyphTableList->GetPreferredListAt(aPresContext, t, &tableList, &count);
+  if (!count) {
     // get a list that attempts to honor the css font-family
     gGlyphTableList->GetListFor(aPresContext, this, &font.mFont, &tableList);
+    alreadyCSS = PR_TRUE;
   }
 
 #ifdef NOISY_SEARCH
@@ -1379,13 +1385,13 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
           tableList.Count(), uchar, uchar&0x00FF);
 #endif
 
-  PRInt32 count = tableList.Count();
+  count = tableList.Count();
   for (t = 0; t < count; t++) {
     // see if this table has a glyph that matches the container
-    glyphTable = (nsGlyphTable*)tableList.ElementAt(t);
+    glyphTable = NS_STATIC_CAST(nsGlyphTable*, tableList.ElementAt(t));
     // figure out the starting size : if this is a largeop, start at 2 else 1
     size = 1; // size=0 is the char at its normal size
-    if (largeop && glyphTable->BigOf(this, 2)) {
+    if (largeop && glyphTable->BigOf(aPresContext, this, 2)) {
       size = 2;
     }
     glyphTable->GetPrimaryFontName(fontName);
@@ -1396,7 +1402,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
     fontName.ToCString(str, sizeof(str));
     printf("  searching in %s ...\n", str);
 #endif
-    ch = glyphTable->BigOf(this, size++);
+    ch = glyphTable->BigOf(aPresContext, this, size++);
     while (ch) {
       NS_ASSERTION(ch != uchar, "glyph table incorrectly set -- duplicate found");
       rv = glyphTable->GetBoundingMetrics(aRenderingContext, font.mFont, ch, bm);
@@ -1431,7 +1437,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
       }
       // if largeopOnly is set, break now
       if (largeopOnly) break;
-      ch = glyphTable->BigOf(this, size++);
+      ch = glyphTable->BigOf(aPresContext, this, size++);
     }
   }
   if (largeopOnly) goto done; // the user doesn't want to stretch
@@ -1442,13 +1448,10 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
   // search for the first table with suitable parts for this char
   ////////////////////////////////////////////////////////////////////////////////////
 
+  // see if there are user-specified preferred tables for the parts of this char
   t = nsGlyphTableList::gParts[index];
-  if (t != kNotFound) {
-    // there are user-specified preferred tables for the parts of this char
-    tableList.Clear();
-    gGlyphTableList->GetPreferredListAt(t, &tableList);
-  }
-  else if (kNotFound != nsGlyphTableList::gVariants[index]) {
+  gGlyphTableList->GetPreferredListAt(aPresContext, t, &tableList, &count);
+  if (!count && !alreadyCSS) {
     // we didn't do this earlier... so we need to do it here:
     // get a list that attempts to honor the css font-family
     gGlyphTableList->GetListFor(aPresContext, this, &font.mFont, &tableList);
@@ -1461,11 +1464,11 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
 
   count = tableList.Count();
   for (t = 0; t < count; t++) {
-    glyphTable = (nsGlyphTable*)tableList.ElementAt(t);
-    if (!glyphTable->HasPartsOf(this)) continue; // to next table
+    glyphTable = NS_STATIC_CAST(nsGlyphTable*, tableList.ElementAt(t));
+    if (!glyphTable->HasPartsOf(aPresContext, this)) continue; // to next table
 
     // See if this is a composite character //////////////////////////////////////////
-    if (glyphTable->IsComposite(this)) {
+    if (glyphTable->IsComposite(aPresContext, this)) {
       // let the child chars do the job
       nsBoundingMetrics compositeSize;
       rv = ComposeChildren(aPresContext, aRenderingContext, glyphTable,
@@ -1474,7 +1477,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
       char str[50];
       fontName.ToCString(str, sizeof(str));
       printf("    Composing %d chars in font %s %s!\n",
-             glyphTable->ChildCountOf(this), str,
+             glyphTable->ChildCountOf(aPresContext, this), str,
              NS_SUCCEEDED(rv)? "OK" : "Rejected");
 #endif
       if (NS_FAILED(rv)) continue; // to next table
@@ -1496,13 +1499,13 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
     nsGlyphCode chdata[4];
     nsBoundingMetrics bmdata[4];
     nscoord computedSize, sizedata[4];
-    nsGlyphCode glue = glyphTable->GlueOf(this);
+    nsGlyphCode glue = glyphTable->GlueOf(aPresContext, this);
     for (i = 0; i < 4; i++) {
       switch (i) {
-        case 0: ch = glyphTable->TopOf(this);    break;
-        case 1: ch = glyphTable->MiddleOf(this); break;
-        case 2: ch = glyphTable->BottomOf(this); break;
-        case 3: ch = glue;                       break;
+        case 0: ch = glyphTable->TopOf(aPresContext, this);    break;
+        case 1: ch = glyphTable->MiddleOf(aPresContext, this); break;
+        case 2: ch = glyphTable->BottomOf(aPresContext, this); break;
+        case 3: ch = glue;                                     break;
       }
       // empty slots are filled with the glue if it is not null
       if (!ch) ch = glue;
@@ -1603,7 +1606,7 @@ nsMathMLChar::ComposeChildren(nsIPresContext*      aPresContext,
 {
   PRInt32 i = 0;
   nsMathMLChar* child;
-  PRInt32 count = aGlyphTable->ChildCountOf(this);
+  PRInt32 count = aGlyphTable->ChildCountOf(aPresContext, this);
   NS_ASSERTION(count, "something is wrong somewhere");
   if (!count) return NS_ERROR_FAILURE;
   // if we haven't been here before, create the linked list of children now
@@ -1812,13 +1815,13 @@ nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
   nsBoundingMetrics bm, bmdata[4];
   nscoord stride, offset[3], start[3], end[3];
   nscoord width = aRect.width;
-  nsGlyphCode glue = aGlyphTable->GlueOf(aChar);
+  nsGlyphCode glue = aGlyphTable->GlueOf(aPresContext, aChar);
   for (i = 0; i < 4; i++) {
     switch (i) {
-      case 0: ch = aGlyphTable->TopOf(aChar);    break;
-      case 1: ch = aGlyphTable->MiddleOf(aChar); break;
-      case 2: ch = aGlyphTable->BottomOf(aChar); break;
-      case 3: ch = glue;                         break;
+      case 0: ch = aGlyphTable->TopOf(aPresContext, aChar);    break;
+      case 1: ch = aGlyphTable->MiddleOf(aPresContext, aChar); break;
+      case 2: ch = aGlyphTable->BottomOf(aPresContext, aChar); break;
+      case 3: ch = glue;                                       break;
     }
     // empty slots are filled with the glue if it is not null
     if (!ch) ch = glue;
@@ -1994,13 +1997,13 @@ nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
   nsBoundingMetrics bm, bmdata[4];
   nscoord stride, offset[3], start[3], end[3];
   dy = aRect.y - aFontAscent;
-  nsGlyphCode glue = aGlyphTable->GlueOf(aChar);
+  nsGlyphCode glue = aGlyphTable->GlueOf(aPresContext, aChar);
   for (i = 0; i < 4; i++) {
     switch (i) {
-      case 0: ch = aGlyphTable->LeftOf(aChar);   break;
-      case 1: ch = aGlyphTable->MiddleOf(aChar); break;
-      case 2: ch = aGlyphTable->RightOf(aChar);  break;
-      case 3: ch = glue;                         break;
+      case 0: ch = aGlyphTable->LeftOf(aPresContext, aChar);   break;
+      case 1: ch = aGlyphTable->MiddleOf(aPresContext, aChar); break;
+      case 2: ch = aGlyphTable->RightOf(aPresContext, aChar);  break;
+      case 3: ch = glue;                                       break;
     }
     // empty slots are filled with the glue if it is not null
     if (!ch) ch = glue;
