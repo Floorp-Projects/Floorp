@@ -523,9 +523,18 @@ nsNntpService::GetFolderFromUri(const char *uri, nsIMsgFolder **folder)
 
     nsCOMPtr <nsIRDFService> rdf = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
     NS_ENSURE_SUCCESS(rv,rv);
-
+    
+    // the user might have typed in or clicked on a nntp:// url
+    // to support this, we turn it into a news:// url
     nsCOMPtr<nsIRDFResource> res;
-    rv = rdf->GetResource(uri, getter_AddRefs(res));
+    if ((nsCRT::strlen(uri) > kNntpRootURILen) && nsCRT::strncmp(uri, kNntpRootURI, kNntpRootURILen) == 0) {
+      nsCAutoString uriStr(kNewsRootURI);
+      uriStr.Append(uri+kNntpRootURILen);
+      rv = rdf->GetResource(uriStr.get(), getter_AddRefs(res));
+    }
+    else {
+      rv = rdf->GetResource(uri, getter_AddRefs(res));
+    }
     NS_ENSURE_SUCCESS(rv,rv);
 
     rv = res->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **)folder);

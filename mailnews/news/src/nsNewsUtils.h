@@ -42,10 +42,12 @@
 
 class nsIMsgNewsFolder;
 
+static const char kNntpRootURI[] = "nntp:/";
 static const char kNewsRootURI[] = "news:/";
 static const char kNewsMessageRootURI[] = "news_message:/";
 
 #define kNewsRootURILen 6
+#define kNntpRootURILen 6
 #define kNewsMessageRootURILen 14
 
 extern nsresult
