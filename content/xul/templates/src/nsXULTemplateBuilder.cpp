@@ -779,7 +779,11 @@ nsXULTemplateBuilder::LoadDataSources()
     rv = doc->GetPrincipal(getter_AddRefs(docPrincipal));
     if (NS_FAILED(rv)) return rv;
 
-    if (docPrincipal.get() == gSystemPrincipal) {
+    PRBool isTrusted = PR_FALSE;
+    rv = IsSystemPrincipal(docPrincipal.get(), &isTrusted);
+    if (NS_FAILED(rv)) return rv;
+
+    if (isTrusted) {
         // If we're a privileged (e.g., chrome) document, then add the
         // local store as the first data source in the db. Note that
         // we _might_ not be able to get a local store if we haven't
@@ -829,7 +833,7 @@ nsXULTemplateBuilder::LoadDataSources()
         // protocol) leaves uriStr unaltered.
         NS_MakeAbsoluteURI(uriStr, uriStr, docurl);
 
-        if (docPrincipal.get() != gSystemPrincipal) {
+        if (!isTrusted) {
             // Our document is untrusted, so check to see if we can
             // load the datasource that they've asked for.
             nsCOMPtr<nsIURI> uri;
@@ -2388,6 +2392,16 @@ NS_IMETHODIMP
 nsXULTemplateBuilder::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
 {
   *_retval = PL_strdup("AllAccess");
+  return NS_OK;
+}
+
+nsresult 
+nsXULTemplateBuilder::IsSystemPrincipal(nsIPrincipal *principal, PRBool *result)
+{
+  if (!gSystemPrincipal)
+    return NS_ERROR_UNEXPECTED;
+
+  *result = (principal == gSystemPrincipal);
   return NS_OK;
 }
 

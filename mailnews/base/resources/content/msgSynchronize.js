@@ -167,7 +167,7 @@ function onSynchronizeClick(event)
 
             if (GetFolderAttribute(gSynchronizeOutliner, folderResource, "IsServer") == "true") {
                 var server = msgFolder.server;
-                server.PerformExpand(gMsgWindow);
+                server.performExpand(gMsgWindow);
             }
             else {
                 var imapFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgImapMailFolder);

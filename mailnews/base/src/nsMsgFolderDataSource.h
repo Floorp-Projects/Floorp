@@ -112,6 +112,7 @@ protected:
   nsresult createFolderNode(nsIMsgFolder *folder, nsIRDFResource* property,
                             nsIRDFNode **target);
   nsresult createFolderNameNode(nsIMsgFolder *folder, nsIRDFNode **target, PRBool sort);
+  nsresult createFolderOpenNode(nsIMsgFolder *folder,nsIRDFNode **target);
   nsresult createFolderTreeNameNode(nsIMsgFolder *folder, nsIRDFNode **target, PRBool sort);
   nsresult createFolderTreeSimpleNameNode(nsIMsgFolder *folder, nsIRDFNode **target, PRBool sort);
   nsresult createFolderSpecialNode(nsIMsgFolder *folder, nsIRDFNode **target);
@@ -166,6 +167,7 @@ protected:
 							  nsISupportsArray *arguments);
 
   nsresult DoFolderAssert(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target);
+  nsresult DoFolderUnassert(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target);
 
   nsresult DoFolderHasAssertion(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target,
 													 PRBool tv, PRBool *hasAssertion);
@@ -193,6 +195,7 @@ protected:
   static nsIRDFResource* kNC_Child;
   static nsIRDFResource* kNC_Folder;
   static nsIRDFResource* kNC_Name;
+  static nsIRDFResource* kNC_Open;
   static nsIRDFResource* kNC_FolderTreeName;
   static nsIRDFResource* kNC_FolderTreeSimpleName;
   static nsIRDFResource* kNC_NameSort;
@@ -249,7 +252,8 @@ protected:
   static nsIAtom* kNewMessagesAtom;
   static nsIAtom* kNameAtom;
   static nsIAtom* kSynchronizeAtom;
-  
+  static nsIAtom* kOpenAtom;
+
   static nsrefcnt gFolderResourceRefCnt;
 
 	nsCOMPtr<nsISupportsArray> kFolderArcsOutArray;

@@ -37,6 +37,7 @@
             seltype="single">
     <outlinerbody flex="1"
                   datasources="rdf:null"
+                  statedatasource="rdf:mailnewsfolders"
                   ondraggesture="return BeginDragFolderOutliner(event);"
                   onselect="FolderPaneSelectionChange();">
       <template>

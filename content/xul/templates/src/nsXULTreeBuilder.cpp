@@ -53,6 +53,9 @@
 #include "nsXULTemplateBuilder.h"
 #include "nsVoidArray.h"
 
+// For security check
+#include "nsIDocument.h"
+
 /**
  * A XUL template builder that serves as an outliner view, allowing
  * (pretty much) arbitrary RDF to be presented in an outliner.
@@ -604,13 +607,50 @@ nsXULOutlinerBuilder::SetOutliner(nsIOutlinerBoxObject* outliner)
 
         LoadDataSources();
 
-        // So we can remember open state.
-        //
-        // XXX We should fix this so that if the document is
-        // ``trusted'', we use the localstore.
-        mPersistStateStore =
-            do_CreateInstance("@mozilla.org/rdf/datasource;1?name=in-memory-datasource");
+        nsCOMPtr<nsIDocument> doc;
+        mRoot->GetDocument(*getter_AddRefs(doc));
+        NS_ASSERTION(doc, "element has no document");
+        if (!doc)
+            return NS_ERROR_UNEXPECTED;
 
+        // Grab the doc's principal...
+        nsCOMPtr<nsIPrincipal> docPrincipal;
+        nsresult rv = doc->GetPrincipal(getter_AddRefs(docPrincipal));
+        if (NS_FAILED(rv)) 
+            return rv;
+
+        PRBool isTrusted = PR_FALSE;
+        rv = IsSystemPrincipal(docPrincipal.get(), &isTrusted);
+        if (NS_SUCCEEDED(rv) && isTrusted) {
+            // Get the datasource we intend to use to remember open state.
+            nsAutoString datasourceStr;
+            mRoot->GetAttr(kNameSpaceID_None, nsXULAtoms::statedatasource, datasourceStr);
+
+            // since we are trusted, use the user specified datasource
+            // if non specified, use localstore, which gives us
+            // persistance across sessions
+            if (datasourceStr.Length()) {
+                gRDFService->GetDataSource(NS_ConvertUCS2toUTF8(datasourceStr).get(),
+                                           getter_AddRefs(mPersistStateStore));
+            }
+            else {
+                gRDFService->GetDataSource("rdf:local-store",
+                                           getter_AddRefs(mPersistStateStore));
+            }
+        }
+
+        // Either no specific datasource was specified, or we failed
+        // to get one because we are not trusted.
+        //
+        // XXX if it were possible to ``write an arbitrary datasource
+        // back'', then we could also allow an untrusted document to
+        // use a statedatasource from the same codebase.
+        if (! mPersistStateStore) {
+            mPersistStateStore =
+                do_CreateInstance("@mozilla.org/rdf/datasource;1?name=in-memory-datasource");
+        }
+
+        NS_ASSERTION(mPersistStateStore, "failed to get a persistant state store");
         if (! mPersistStateStore)
             return NS_ERROR_FAILURE;
 
@@ -986,11 +1026,13 @@ nsXULOutlinerBuilder::ReplaceMatch(nsIRDFResource* aMember,
             // Use the persist store to remember if the container
             // is open or closed.
             PRBool open = PR_FALSE;
-            mPersistStateStore->HasAssertion(container,
-                                             nsXULContentUtils::NC_open,
-                                             nsXULContentUtils::true_,
-                                             PR_TRUE,
-                                             &open);
+
+            if (mPersistStateStore)
+                mPersistStateStore->HasAssertion(container,
+                                                 nsXULContentUtils::NC_open,
+                                                 nsXULContentUtils::true_,
+                                                 PR_TRUE,
+                                                 &open);
 
             if (open) {
                 parent = mRows.EnsureSubtreeFor(iter);

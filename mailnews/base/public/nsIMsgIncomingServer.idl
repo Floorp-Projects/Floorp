@@ -119,7 +119,7 @@ interface nsIMsgIncomingServer : nsISupports {
 
   /* are we already getting new Messages on the current server..
      This is used to help us prevent multiple get new msg commands from
-	 going off at the same time. */
+     going off at the same time. */
   attribute boolean serverBusy;
 
   /* should we use a secure channel? */
@@ -143,7 +143,7 @@ interface nsIMsgIncomingServer : nsISupports {
   readonly attribute boolean serverRequiresPasswordForBiff;
   
   /* this gets called when the server is expanded in the folder pane */
-  void PerformExpand(in nsIMsgWindow aMsgWindow);
+  void performExpand(in nsIMsgWindow aMsgWindow);
 
   /* Write out all known folder data to panacea.dat */
   void WriteToFolderCache(in nsIMsgFolderCache folderCache);
@@ -238,7 +238,7 @@ interface nsIMsgIncomingServer : nsISupports {
 
   /* create pretty name for migrated accounts */
   wstring generatePrettyNameForMigration(); 
-	
+
   /* does this server have disk space settings? */
   readonly attribute boolean supportsDiskSpace;
 

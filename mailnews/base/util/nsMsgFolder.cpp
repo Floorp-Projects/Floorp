@@ -84,6 +84,7 @@ nsIAtom * nsMsgFolder::kFlaggedAtom	= nsnull;
 nsIAtom * nsMsgFolder::kStatusAtom	= nsnull;
 nsIAtom * nsMsgFolder::kNameAtom	= nsnull;
 nsIAtom * nsMsgFolder::kSynchronizeAtom = nsnull;
+nsIAtom * nsMsgFolder::kOpenAtom = nsnull;
 
 #ifdef MSG_FASTER_URI_PARSING
 nsCOMPtr<nsIURL> nsMsgFolder::mParsingURL;
@@ -128,6 +129,7 @@ nsMsgFolder::nsMsgFolder(void)
     kStatusAtom              = NS_NewAtom("Status");
     kFlaggedAtom             = NS_NewAtom("Flagged");
     kSynchronizeAtom         = NS_NewAtom("Synchronize");
+    kOpenAtom                = NS_NewAtom("open");
 
     initializeStrings();
 
@@ -169,6 +171,7 @@ nsMsgFolder::~nsMsgFolder(void)
       NS_IF_RELEASE(kStatusAtom);
       NS_IF_RELEASE(kNameAtom);
       NS_IF_RELEASE(kSynchronizeAtom);
+	  NS_IF_RELEASE(kOpenAtom);
 
       CRTFREEIF(kInboxName);
       CRTFREEIF(kTrashName);
@@ -1595,6 +1598,11 @@ NS_IMETHODIMP nsMsgFolder::OnFlagChange(PRUint32 flag)
       if (flag & MSG_FOLDER_FLAG_OFFLINE) {
         PRBool newValue = mFlags & MSG_FOLDER_FLAG_OFFLINE;
         rv = NotifyBoolPropertyChanged(kSynchronizeAtom, !newValue, newValue);
+        NS_ENSURE_SUCCESS(rv,rv);
+      }
+	  else if (flag & MSG_FOLDER_FLAG_ELIDED) {
+        PRBool newValue = mFlags & MSG_FOLDER_FLAG_ELIDED;
+        rv = NotifyBoolPropertyChanged(kOpenAtom, newValue, !newValue);
         NS_ENSURE_SUCCESS(rv,rv);
       }
   }

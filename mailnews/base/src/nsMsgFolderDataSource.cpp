@@ -54,6 +54,7 @@ static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 nsIRDFResource* nsMsgFolderDataSource::kNC_Child = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Folder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Name= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_Open = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeName= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeSimpleName= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_NameSort= nsnull;
@@ -105,7 +106,7 @@ nsIAtom * nsMsgFolderDataSource::kTotalMessagesAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kTotalUnreadMessagesAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kNameAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kSynchronizeAtom = nsnull;
-
+nsIAtom * nsMsgFolderDataSource::kOpenAtom = nsnull;
 
 nsMsgFolderDataSource::nsMsgFolderDataSource()
 {
@@ -116,6 +117,7 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     rdf->GetResource(NC_RDF_CHILD,   &kNC_Child);
     rdf->GetResource(NC_RDF_FOLDER,  &kNC_Folder);
     rdf->GetResource(NC_RDF_NAME,    &kNC_Name);
+    rdf->GetResource(NC_RDF_OPEN,    &kNC_Open);
     rdf->GetResource(NC_RDF_FOLDERTREENAME,    &kNC_FolderTreeName);
     rdf->GetResource(NC_RDF_FOLDERTREESIMPLENAME,    &kNC_FolderTreeSimpleName);
     rdf->GetResource(NC_RDF_NAME_SORT,    &kNC_NameSort);
@@ -166,6 +168,7 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     kNewMessagesAtom             = NS_NewAtom("NewMessages");
     kNameAtom                    = NS_NewAtom("Name");
     kSynchronizeAtom             = NS_NewAtom("Synchronize");
+	kOpenAtom                    = NS_NewAtom("open");
   }
   
 	CreateLiterals(rdf);
@@ -181,6 +184,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 		NS_RELEASE2(kNC_Child, refcnt);
 		NS_RELEASE2(kNC_Folder, refcnt);
 		NS_RELEASE2(kNC_Name, refcnt);
+		NS_RELEASE2(kNC_Open, refcnt);
 		NS_RELEASE2(kNC_FolderTreeName, refcnt);
 		NS_RELEASE2(kNC_FolderTreeSimpleName, refcnt);
 		NS_RELEASE2(kNC_NameSort, refcnt);
@@ -230,6 +234,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
     NS_RELEASE(kNewMessagesAtom);
     NS_RELEASE(kNameAtom);
     NS_RELEASE(kSynchronizeAtom);
+	NS_RELEASE(kOpenAtom);
 	}
 
 }
@@ -411,6 +416,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
 			}
     }
     else if ((kNC_Name == property) ||
+             (kNC_Open == property) ||
              (kNC_FolderTreeName == property) ||
              (kNC_FolderTreeSimpleName == property) ||
              (kNC_SpecialFolder == property) ||
@@ -465,7 +471,10 @@ NS_IMETHODIMP nsMsgFolderDataSource::Unassert(nsIRDFResource* source,
                         nsIRDFResource* property,
                         nsIRDFNode* target)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv;
+  nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));
+  NS_ENSURE_SUCCESS(rv,rv);
+  return DoFolderUnassert(folder, property, target);
 }
 
 
@@ -502,6 +511,7 @@ nsMsgFolderDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, 
 	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(aSource, &rv));
 	if (NS_SUCCEEDED(rv)) {
     *result = (aArc == kNC_Name ||
+               aArc == kNC_Open ||
                aArc == kNC_FolderTreeName ||
                aArc == kNC_FolderTreeSimpleName ||
                aArc == kNC_SpecialFolder ||
@@ -565,6 +575,7 @@ nsMsgFolderDataSource::getFolderArcLabelsOut(nsISupportsArray **arcs)
 		return rv;
   
   (*arcs)->AppendElement(kNC_Name);
+  (*arcs)->AppendElement(kNC_Open);
   (*arcs)->AppendElement(kNC_FolderTreeName);
   (*arcs)->AppendElement(kNC_FolderTreeSimpleName);
   (*arcs)->AppendElement(kNC_SpecialFolder);
@@ -893,6 +904,9 @@ nsMsgFolderDataSource::OnItemBoolPropertyChanged(nsISupports *item,
     else if (kSynchronizeAtom == property) {
       NotifyPropertyChanged(resource, kNC_Synchronize, literalNode); 
     }
+	else if (kOpenAtom == property) {
+      NotifyPropertyChanged(resource, kNC_Open, literalNode);
+	}
   } 
 
   return rv;
@@ -956,6 +970,8 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
     rv = createFolderTreeSimpleNameNode(folder, target, PR_TRUE);
   else if (kNC_Name == property)
     rv = createFolderNameNode(folder, target, PR_FALSE);
+  else if(kNC_Open == property)
+    rv = createFolderOpenNode(folder, target);
   else if (kNC_FolderTreeName == property)
     rv = createFolderTreeNameNode(folder, target, PR_FALSE);
   else if (kNC_FolderTreeSimpleName == property)
@@ -1276,6 +1292,32 @@ nsMsgFolderDataSource::createFolderSyncDisabledNode(nsIMsgFolder* folder,
   return NS_OK;
 }
 
+
+nsresult
+nsMsgFolderDataSource::createFolderOpenNode(nsIMsgFolder *folder, nsIRDFNode **target)
+{
+  NS_ENSURE_ARG_POINTER(target);
+
+  // call GetSubFolders() to ensure mFlags is set correctly 
+  // from the folder cache on startup
+  nsCOMPtr<nsIEnumerator> subFolders;
+  nsresult rv = folder->GetSubFolders(getter_AddRefs(subFolders));
+  if (NS_FAILED(rv))
+    return NS_RDF_NO_VALUE;
+
+  PRBool closed;
+  rv = folder->GetFlag(MSG_FOLDER_FLAG_ELIDED, &closed);		
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  if (closed)
+    *target = kFalseLiteral;
+  else
+    *target = kTrueLiteral;
+
+  NS_IF_ADDREF(*target);
+  return NS_OK;
+}
 
 nsresult
 nsMsgFolderDataSource::createFolderIsSecureNode(nsIMsgFolder* folder,
@@ -1887,29 +1929,45 @@ nsresult nsMsgFolderDataSource::DoNewFolder(nsIMsgFolder *folder, nsISupportsArr
 
 nsresult nsMsgFolderDataSource::DoFolderAssert(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target)
 {
-	nsresult rv = NS_ERROR_FAILURE;
+  nsresult rv = NS_ERROR_FAILURE;
 
-	if((kNC_Charset == property))
-	{
-		nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(target));
-		if(literal)
-		{
-			PRUnichar *value;
-			rv = literal->GetValue(&value);
-			if(NS_SUCCEEDED(rv))
-			{
-				rv = folder->SetCharset(value);
-				nsMemory::Free(value);
-			}
-		}
-		else
-			rv = NS_ERROR_FAILURE;
-	}
+  if((kNC_Charset == property))
+  {
+    nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(target));
+    if(literal)
+    {
+      PRUnichar *value;
+      rv = literal->GetValue(&value);
+      if(NS_SUCCEEDED(rv))
+      {
+        rv = folder->SetCharset(value);
+        nsMemory::Free(value);
+      }
+    }
+    else
+      rv = NS_ERROR_FAILURE;
+  }
+  else if ((kNC_Open == property)) 
+  {
+	if (target == kTrueLiteral)
+      rv = folder->ClearFlag(MSG_FOLDER_FLAG_ELIDED);
+  }
 
-	return rv;
-
+  return rv;
 }
 
+nsresult nsMsgFolderDataSource::DoFolderUnassert(nsIMsgFolder *folder, nsIRDFResource *property, nsIRDFNode *target)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if((kNC_Open == property))
+  {
+    if (target == kTrueLiteral)
+      rv = folder->SetFlag(MSG_FOLDER_FLAG_ELIDED);
+  }
+
+  return rv;
+}
 
 nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
                                                      nsIRDFResource *property,
@@ -1941,6 +1999,7 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
 		}
 	}
 	else if ((kNC_Name == property) ||
+           (kNC_Open == property) ||
            (kNC_FolderTreeName == property) ||
            (kNC_FolderTreeSimpleName == property) ||
            (kNC_SpecialFolder == property) ||

@@ -24,8 +24,6 @@
 
 /* This is where functions related to the 3 pane window are kept */
 
-const MSG_FOLDER_FLAG_ELIDED = 0x0010;
-
 var showPerformance = false;
 
 var gFolderOutliner; 
@@ -449,8 +447,10 @@ function OnUnloadMessenger()
 function Create3PaneGlobals()
 {
 }
-
-function OpenAndExpandElidedServers()
+ 
+// because the "open" state persists, we'll call
+// PerformExpand() for all servers that are open at startup.            
+function PerformExpandForAllOpenServers()
 {
     var folderOutliner = GetFolderOutliner();
     var view = folderOutliner.outlinerBoxObject.view;
@@ -460,17 +460,18 @@ function OpenAndExpandElidedServers()
         {
             var folderResource = GetFolderResource(folderOutliner, i);
             var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-            var open = msgFolder.getFlag(MSG_FOLDER_FLAG_ELIDED)
-            if (open)
+            var isServer = GetFolderAttribute(folderOutliner, folderResource, "IsServer"); 
+            if (isServer == "true")
             {
-                view.toggleOpenState(i);
-                var isServer = GetFolderAttribute(folderOutliner, folderResource, "IsServer"); 
-                if (isServer == "true")
+                if (view.isContainerOpen(i))
                 {
                     var server = msgFolder.server;
                     // Don't do this for imap servers. See bug #41943
                     if (server.type != "imap")
-                        server.PerformExpand(msgWindow);
+                    {
+                        dump("perform expand #1" + msgFolder.URI + "\n");
+                        server.performExpand(msgWindow);
+                    }
                 }
             }
         }
@@ -479,8 +480,6 @@ function OpenAndExpandElidedServers()
 
 function loadStartFolder(initialUri)
 {
-    OpenAndExpandElidedServers();
-
     var folderOutliner = GetFolderOutliner();
     var defaultServer = null;
     var startFolderResource = null;
@@ -557,6 +556,10 @@ function loadStartFolder(initialUri)
                    defaultServer.PerformBiff();
             }
         } 
+
+        // because the "open" state persists, we'll call
+        // PerformExpand() for all servers that are open at startup.
+        PerformExpandForAllOpenServers();
     }
     catch(ex)
     {
@@ -577,7 +580,7 @@ function OpenTwistyForServer(folderOutliner, server)
     if (folderIndex >= 0)
     {
         var isContainerOpen = folderOutliner.outlinerBoxObject.view.isContainerOpen(folderIndex);
-        if (! isContainerOpen)
+        if (!isContainerOpen)
             folderOutliner.outlinerBoxObject.view.toggleOpenState(folderIndex);
     }
 }
@@ -820,16 +823,13 @@ function FolderPaneOnClick(event)
         var folderResource = GetFolderResource(folderOutliner, row.value);
         var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
 
-        if (folderOutliner.outlinerBoxObject.view.isContainerOpen(row.value))
-            msgFolder.clearFlag(MSG_FOLDER_FLAG_ELIDED);
-        else
+        if (!(folderOutliner.outlinerBoxObject.view.isContainerOpen(row.value)))
         {
-            msgFolder.setFlag(MSG_FOLDER_FLAG_ELIDED);
             var isServer = GetFolderAttribute(folderOutliner, folderResource, "IsServer");
             if (isServer == "true")
             {
                 var server = msgFolder.server;
-                server.PerformExpand(msgWindow);
+                server.performExpand(msgWindow);
             }
             else
             {
@@ -861,13 +861,10 @@ function FolderPaneDoubleClick(folderIndex, event)
 
     if (isServer == "true")
     {
-      if (folderOutliner.outlinerBoxObject.view.isContainerOpen(folderIndex))
-        msgFolder.clearFlag(MSG_FOLDER_FLAG_ELIDED);
-      else 
+      if (!(folderOutliner.outlinerBoxObject.view.isContainerOpen(folderIndex)))
       {
-        msgFolder.setFlag(MSG_FOLDER_FLAG_ELIDED);
         var server = msgFolder.server;
-        server.PerformExpand(msgWindow);
+        server.performExpand(msgWindow);
       }
     }
     else 

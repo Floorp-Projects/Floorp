@@ -60,6 +60,7 @@ typedef struct _nsMsgRDFNotification {
 
 #define NC_RDF_CHILD				NC_NAMESPACE_URI "child"
 #define NC_RDF_NAME					NC_NAMESPACE_URI "Name"
+#define NC_RDF_OPEN					NC_NAMESPACE_URI "open"
 #define NC_RDF_FOLDERTREENAME		NC_NAMESPACE_URI "FolderTreeName"
 #define NC_RDF_FOLDERTREESIMPLENAME		NC_NAMESPACE_URI "FolderTreeSimpleName"
 #define NC_RDF_FOLDER				NC_NAMESPACE_URI "Folder"
