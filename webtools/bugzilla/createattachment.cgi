@@ -105,9 +105,11 @@ What kind of file is this?
     AppendComment($id, $::COOKIE{"Bugzilla_login"},
                   "Created an attachment (id=$attachid)\n$desc\n");
 
-    print "<TABLE BORDER=1><TD><H2>Attachment to bug $id created</H2>\n";
+    print '<TABLE BORDER=1><TD><H2>Attachment <A TITLE="'.value_quote($desc).
+      "\" HREF=\"showattachment.cgi?attach_id=$attachid\">$attachid</A> to bug $id created</H2>\n";
     system("./processmail", $id, $::COOKIE{'Bugzilla_login'});
     print "<TD><A HREF=\"show_bug.cgi?id=$id\">Go Back to BUG# $id</A></TABLE>\n";
+    print "<P><A HREF=\"createattachment.cgi?id=$id\">Create another attachment to bug $id</A></P>\n";
 }
 
 PutFooter();
