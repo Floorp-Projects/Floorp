@@ -638,6 +638,15 @@ nsresult nsExternalAppHandler::RetargetLoadNotifications(nsIChannel * aChannel)
    return rv;
 }
 
+#define SALT_SIZE 8
+#define TABLE_SIZE 36
+const char table[] = 
+  { 'a','b','c','d','e','f','g','h','i','j',
+    'k','l','m','n','o','p','q','r','s','t',
+    'u','v','w','x','y','z','0','1','2','3',
+    '4','5','6','7','8','9'};
+
+
 nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 {
   nsresult rv = NS_OK;
@@ -668,7 +677,12 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   aChannel->GetURI(getter_AddRefs(mSourceUrl));
   nsCOMPtr<nsIURL> url = do_QueryInterface(mSourceUrl);
 
-  nsCAutoString tempLeafName;   
+  // We need to do two things here, (1) extract the file name that's part of the url
+  // and store this is as mSuggestedfileName. This way, when we show the user a file picker, 
+  // we can have it pre filled with the suggested file name. 
+  // (2) We need to generate a name for the temp file that we are going to be streaming data to. 
+  // We don't want this name to be predictable for security reasons so we are going to generate a 
+  // "salted" name.....
 
   if (url)
   {
@@ -677,28 +691,26 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
     nsXPIDLCString leafName;
     url->GetFileName(getter_Copies(leafName));
     if (leafName)
-    {
-      tempLeafName = leafName;
-
-      // store the file name in the url so we can present it as a "suggested" file name when 
-      // we prompt the user...
-      if (!tempLeafName.IsEmpty())
-        mSuggestedFileName.AssignWithConversion(tempLeafName);
-
-      // strip off whatever extension this file may have and force our own extension.
-      PRInt32 pos = tempLeafName.RFindCharInSet(".");
-      if (pos > 0) 
-        tempLeafName.Truncate(pos); // truncate everything after the first comma (including the comma)
-    }
+      mSuggestedFileName.AssignWithConversion(leafName);
   }
 
-  if (tempLeafName.IsEmpty())
-    tempLeafName = "test"; // this is bogus...what do i do if i can't get a file name from the url.
-  
-  // now append our extension.
-  tempLeafName.Append(mTempFileExtension);
+  // step (2), generate a salted file name for the temp file....
+  nsCAutoString saltedTempLeafName;
+  // this salting code was ripped directly from the profile manager.
+  // turn PR_Now() into milliseconds since epoch 1058 // and salt rand with that. 
+  double fpTime;
+  LL_L2D(fpTime, PR_Now());
+  srand((uint)(fpTime * 1e-6 + 0.5));
+  PRInt32 i;
+  for (i=0;i<SALT_SIZE;i++) 
+  {
+    saltedTempLeafName.Append(table[(rand()%TABLE_SIZE)]);
+  }
 
-  mTempFile->Append(tempLeafName); // make this file unique!!!
+  // now append our extension.
+  saltedTempLeafName.Append(mTempFileExtension);
+
+  mTempFile->Append(saltedTempLeafName); // make this file unique!!!
   mTempFile->CreateUnique(nsnull, nsIFile::NORMAL_FILE_TYPE, 0644);
 
   nsCOMPtr<nsIFileChannel> fileChannel = do_CreateInstance(NS_LOCALFILECHANNEL_CONTRACTID);
