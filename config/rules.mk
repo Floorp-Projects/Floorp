@@ -418,7 +418,7 @@ ifeq ($(OS_ARCH),WINNT)
 	$(CC) $(PROGOBJS) -Fe$@ -link $(LDFLAGS) $(OS_LIBS) $(EXTRA_LIBS)
 else
 ifeq ($(CPP_PROG_LINK),1)
-	$(CCC) $(CFLAGS) $(WRAP_MALLOC_CFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
+	$(CCC) $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 else
 	$(CCF) -o $@ $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
@@ -438,7 +438,7 @@ $(SIMPLE_PROGRAMS):$(OBJDIR)/%: $(OBJDIR)/%.o
 	@$(MAKE_OBJDIR)
 	@$(MAKE_DEPDIR)
 ifeq ($(CPP_PROG_LINK),1)
-	$(CCC) $(CFLAGS) $(WRAP_MALLOC_CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
+	$(CCC) $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 else
 	$(CCF) -o $@ $^ $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
@@ -450,7 +450,7 @@ endif
 #
 pure:	$(PROGRAM)
 ifeq ($(CPP_PROG_LINK),1)
-	$(PURIFY) $(CCC) $(CFLAGS) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(PURIFY) $(CCC) $(CXXFLAGS) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 else
 	$(PURIFY) $(CCF) -o $^.pure $(PROGOBJS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
 endif
@@ -540,32 +540,32 @@ $(OBJDIR)/%.o: %.S
 $(OBJDIR)/%: %.cpp
 	@$(MAKE_OBJDIR)
 	@$(MAKE_DEPDIR)
-	$(CCC) -o $@ $(CFLAGS) $< $(LDFLAGS)
+	$(CCC) -o $@ $(CXXFLAGS) $< $(LDFLAGS)
 
 #
 # Please keep the next two rules in sync.
 #
 $(OBJDIR)/%.o: %.cc
 	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ -c $(CFLAGS) $<
+	$(CCC) -o $@ -c $(CXXFLAGS) $<
 
 $(OBJDIR)/%.o: %.cpp
 	@$(MAKE_OBJDIR)
 	@$(MAKE_DEPDIR)
 ifdef STRICT_CPLUSPLUS_SUFFIX
 	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > $(OBJDIR)/t_$*.cc
-	$(CCC) -o $@ -c $(CFLAGS) $(OBJDIR)/t_$*.cc
+	$(CCC) -o $@ -c $(CXXFLAGS) $(OBJDIR)/t_$*.cc
 	rm -f $(OBJDIR)/t_$*.cc
 else
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
-	$(CCC) -Fo$@ -c $(CFLAGS) $<
+	$(CCC) -Fo$@ -c $(CXXFLAGS) $<
 else
-	$(CCC) -o $@ -c $(CFLAGS) $<
+	$(CCC) -o $@ -c $(CXXFLAGS) $<
 endif
 endif #STRICT_CPLUSPLUS_SUFFIX
 
 %.i: %.cpp
-	$(CCC) -C -E $(CFLAGS) $< > $*.i
+	$(CCC) -C -E $(CXXFLAGS) $< > $*.i
 
 %.i: %.c
 	$(CC) -C -E $(CFLAGS) $< > $*.i

@@ -170,13 +170,16 @@ dnl Assumes the native ld is being used.
     ;;
 
 alpha*-*-linux*)
-	CFLAGS="$CFLAGS -mieee" ;;
+    CFLAGS="$CFLAGS -mieee"
+    CXXFLAGS="$CXXFLAGS -mieee"
+    ;;
 
 alpha*-*-osf*)
     if [ test "$GNU_CC" = 1 ]; then
         DSO_LDOPTS='-shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     else
 	CFLAGS="$CFLAGS -std1 -ieee_with_inexact"
+	CXXFLAGS="$CXXFLAGS -std1 -ieee_with_inexact"
         DSO_LDOPTS='-shared -expect_unresolved \* -soname $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
         DSO_CFLAGS=
     fi ;;
@@ -241,6 +244,7 @@ alpha*-*-osf*)
     AC_DEFINE(IRIX6_3)
     DSO_LDOPTS='-elf -shared'
     CFLAGS="$CFLAGS -woff 3262"
+    CXXFLAGS="$CXXFLAGS -woff 3262"
     if test -z "$GNU_CC"; then
 	MKSHLIB_FORCE_ALL=-all
 	MKSHLIB_UNFORCE_ALL=-none
@@ -393,7 +397,7 @@ dnl By default, turn rtti and exceptions off on g++/egcs
 dnl ========================================================
 if [ test -n "$GNU_CXX" ]; then
 
-  MOZ_RTTI_FLAGS=-fno-rtti
+  _MOZ_RTTI_FLAGS=-fno-rtti
 
   AC_MSG_CHECKING(for C++ exceptions flag)
 
@@ -414,7 +418,7 @@ dnl They changed -f[no-]handle-exceptions to -f[no-]exceptions in g++ 2.8
   rm -f $_tmp_output ])
 
   AC_MSG_RESULT($ac_cv_cxx_exceptions_flags)
-  MOZ_EXCEPTIONS_FLAGS=$ac_cv_cxx_exceptions_flags
+  _MOZ_EXCEPTIONS_FLAGS=$ac_cv_cxx_exceptions_flags
 fi
 
 dnl Put your C++ language/feature checks below
@@ -575,10 +579,12 @@ AC_CACHE_VAL(ac_cv_cc_wall_flag,
                  [ac_cv_cc_wall_flag=false])])
 if test $ac_cv_cc_wall_flag = true ; then
   AC_MSG_RESULT(yes)
+  _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall"
 else
   AC_MSG_RESULT(no)
 fi  
 _SAVE_CC=$CC ; CC=$CXX
+CFLAGS="$CXXFLAGS -Wall"
 AC_MSG_CHECKING($CXX for \"-Wall\" support)
 AC_CACHE_VAL(ac_cv_cxx_wall_flag,
  [AC_TRY_COMPILE([],
@@ -587,12 +593,10 @@ AC_CACHE_VAL(ac_cv_cxx_wall_flag,
                  [ac_cv_cxx_wall_flag=false])])
 if test $ac_cv_cxx_wall_flag = true ; then
   AC_MSG_RESULT(yes)
+  _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall"
 else
   AC_MSG_RESULT(no)
 fi  
-if test $ac_cv_cc_wall_flag = true -a $ac_cv_cxx_wall_flag = true ; then
-  WARNINGS_CFLAGS="${WARNINGS_CFLAGS} -Wall"
-fi
 CC=$_SAVE_CC
 CFLAGS=$_SAVE_CFLAGS
 
@@ -650,7 +654,7 @@ dnl [ NO_UNIX_LDAP=1 ])
 
 MOZ_ARG_ENABLE_BOOL(mailnews,
 [  --enable-mailnews       Enable Mail & News],
-  MOZ_MAIL_NEWS=1)
+  [ MOZ_MAIL_NEWS=1 AC_DEFINE(MOZ_MAIL_NEWS) ] )
 
 dnl Note: This conflicts with --disable-shared
 MOZ_ARG_ENABLE_BOOL(oji,
@@ -699,20 +703,21 @@ MOZ_ARG_DISABLE_BOOL(asserts,
 
 MOZ_ARG_ENABLE_BOOL_OR_STRING(debug,
 [  --enable-debug          Enable debug symbols],
-  [ MOZ_DEBUG=1 CFLAGS="$CFLAGS -g" ],
+  [ MOZ_DEBUG=1 CFLAGS="$CFLAGS -g" CXXFLAGS="$CXXFLAGS -g" ],
   [],
   [MOZ_DEBUG_MODULES=`echo $enableval | sed 's|,| |g'` ])
 
 MOZ_ARG_ENABLE_BOOL(md,
 [  --enable-md             Use compiler-based dependencies ],
     [  COMPILER_DEPEND=1
-       DEPEND_CFLAGS='-Wp,-MMD,$(*D)/.deps/$(*F).pp' ]
+       _DEPEND_CFLAGS='-Wp,-MMD,$(*D)/.deps/$(*F).pp' ]
 )
 
 dnl Make pedantic a flag for now since the builds currently choke on it.
 MOZ_ARG_ENABLE_BOOL(pedantic,
 [  --enable-pedantic       Issue all warnings demanded by strict ANSI C ],
-  WARNINGS_CFLAGS="${WARNINGS_CFLAGS} -pedantic")
+  [ _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -pedantic"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -pedantic" ])
 
 dnl Note: This should not be disabled if --enable-oji is set
 MOZ_ARG_DISABLE_BOOL(shared,
@@ -723,21 +728,21 @@ dnl C++ rtti (g++/egcs only - for now)
 dnl Should be smarter and check that the compiler does indeed have rtti
 MOZ_ARG_ENABLE_BOOL(cpp-rtti,
 [  --enable-cpp-rtti       Enable C++ RTTI ],
-    [ MOZ_RTTI_FLAGS=-frtti ]
+    [ _MOZ_RTTI_FLAGS=-frtti ]
 )
 
 dnl C++ exceptions (g++/egcs only - for now)
 dnl Should be smarter and check that the compiler does indeed have exceptions
 MOZ_ARG_ENABLE_BOOL(cpp-exceptions,
 [  --enable-cpp-exceptions Enable C++ exceptions ],
-    [ MOZ_EXCEPTIONS_FLAGS=-fexceptions ]
+    [ _MOZ_EXCEPTIONS_FLAGS=-fexceptions ]
 )
 
 MOZ_ARG_HEADER(Profiling and Instrumenting)
 
 MOZ_ARG_ENABLE_BOOL(gprof,
 [  --enable-gprof          Enable gprof symbols],
-  [ GPROF_CFLAGS="-pg" ])
+  [ _GPROF_CFLAGS="-pg" ])
 
 MOZ_ARG_ENABLE_BOOL(insure,
 [  --enable-insure         Enable insure++ instrumentation (linux only)],
@@ -853,8 +858,6 @@ AC_SUBST(FULL_STATIC_BUILD)
 AC_SUBST(NO_UNIX_LDAP)
 AC_SUBST(MOZ_IDL_TOOL)
 AC_SUBST(COMPILER_DEPEND)
-AC_SUBST(MOZ_RTTI_FLAGS)
-AC_SUBST(MOZ_EXCEPTIONS_FLAGS)
 
 dnl Checks for X libraries.
 dnl Ordering is important.
@@ -1180,6 +1183,7 @@ AC_ARG_WITH(pthreads,
                     AC_DEFINE(_REENTRANT)
                 else
                     CFLAGS="$CFLAGS -pthread" 
+                    CXXFLAGS="$CXXFLAGS -pthread" 
                 fi ;;
             esac
         fi] )
@@ -1258,11 +1262,18 @@ dnl ========================================================
 
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
-	$WARNINGS_CFLAGS \
-	$GPROF_CFLAGS \
-	$DEPEND_CFLAGS \
+	$_WARNINGS_CFLAGS \
+	$_GPROF_CFLAGS \
+	$_DEPEND_CFLAGS \
 	$CFLAGS`
 
+CXXFLAGS=`echo \
+	$_MOZ_RTTI_FLAGS \
+	$_MOZ_EXCEPTIONS_FLAGS \
+	$_WARNINGS_CFLAGS \
+	$_GPROF_CFLAGS \
+	$_DEPEND_CFLAGS \
+	$CXXFLAGS`
 dnl Support for X11 makedepend, if found on the system
 dnl ========================================================
 AC_PATH_PROG(SYSTEM_MAKEDEPEND,makedepend)
@@ -1283,6 +1294,7 @@ AC_SUBST(NSPR_CFLAGS)
 AC_SUBST(NSPR_LIBS)
 
 AC_SUBST(CFLAGS)
+AC_SUBST(CXXFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(LIBS)
 

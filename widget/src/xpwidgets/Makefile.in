@@ -41,7 +41,7 @@ LOCAL_INCLUDES := \
 
 include $(topsrcdir)/config/config.mk
 
-CFLAGS += $(TK_CFLAGS)
+CXXFLAGS += $(TK_CFLAGS)
 
 MKSHLIB :=
 
