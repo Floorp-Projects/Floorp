@@ -37,6 +37,8 @@ public:
   virtual void PrependStyleRule(nsICSSStyleRule* aRule) = 0;
   virtual void AppendStyleRule(nsICSSStyleRule* aRule) = 0;
 
+  virtual PRInt32   StyleRuleCount(void) = 0;
+  virtual nsresult  GetStyleRuleAt(PRInt32 aIndex, nsICSSStyleRule*& aRule) = 0;
 };
 
 extern NS_HTML nsresult
