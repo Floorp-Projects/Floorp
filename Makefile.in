@@ -199,6 +199,10 @@ tier_9_dirs	+= xpfe/bootstrap/appleevents
 endif
 
 ifdef MOZ_PHOENIX
+ifdef MOZ_USE_OFFICIAL_BRANDING
+tier_9_dirs  += other-licenses/branding/firefox
+endif
+
 tier_9_dirs	+= toolkit/components/profile/public
 endif
 
@@ -320,9 +324,6 @@ endif
 endif # MOZ_COMPONENTLIB
 
 ifdef MOZ_PHOENIX
-ifdef MOZ_USE_OFFICIAL_BRANDING
-tire_99_dirs  += other-licenses/branding/firefox
-endif
 tier_99_dirs	+= browser xpfe/bootstrap/init.d
 endif
 

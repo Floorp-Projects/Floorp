@@ -3,7 +3,5 @@
 browser.jar:
 +       content/browser/aboutCredits.png
 +       content/browser/aboutFooter.png
-
-classic.jar:
-+       skin/classic/browser/about.png
++       content/browser/about.png
 
