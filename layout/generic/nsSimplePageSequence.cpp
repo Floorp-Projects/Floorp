@@ -632,14 +632,14 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*  aPresContext,
   //
   // Get default font name and size to be used for the headers and footers
   nsAutoString fontName;
-  rv = nsFormControlHelper::GetLocalizedString(PRINTING_PROPERTIES, "fontname", fontName);
+  rv = nsFormControlHelper::GetLocalizedString(PRINTING_PROPERTIES, NS_LITERAL_STRING("fontname").get(), fontName);
   if (NS_FAILED(rv)) {
     fontName.AssignWithConversion("serif");
   }
 
   nsAutoString fontSizeStr;
   nscoord      pointSize = 10;;
-  rv = nsFormControlHelper::GetLocalizedString(PRINTING_PROPERTIES, "fontsize", fontSizeStr);
+  rv = nsFormControlHelper::GetLocalizedString(PRINTING_PROPERTIES, NS_LITERAL_STRING("fontsize").get(), fontSizeStr);
   if (NS_SUCCEEDED(rv)) {
     PRInt32 errCode;
     pointSize = fontSizeStr.ToInteger(&errCode);
@@ -655,7 +655,7 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*  aPresContext,
 
   nsAutoString pageFormatStr;
   rv = nsFormControlHelper::GetLocalizedString(PRINTING_PROPERTIES, 
-                                               doingPageTotals?"pageofpages":"pagenumber",
+                                               doingPageTotals? NS_LITERAL_STRING("pageofpages").get():NS_LITERAL_STRING("pagenumber").get(),
                                                pageFormatStr);
   if (NS_FAILED(rv)) { // back stop formatting
     pageFormatStr.AssignWithConversion(doingPageTotals?"%ld of %ld":"%ld");
