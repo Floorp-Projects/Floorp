@@ -43,7 +43,6 @@ public:
   // nsIDragService
   NS_IMETHOD InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * anArrayTransferables,
                                 nsIScriptableRegion * aRegion, PRUint32 aActionType);
-  NS_IMETHOD GetCurrentSession (nsIDragSession ** aSession);
 
   // nsIDragSession
   NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 anItem);
