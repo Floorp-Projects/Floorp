@@ -161,7 +161,6 @@ nsLineLayout::nsLineLayout(nsIPresContext* aPresContext,
 
   // Stash away some style data that we need
   mStyleText = aOuterReflowState->frame->GetStyleText();
-  mStyleTextReset = aOuterReflowState->frame->GetStyleTextReset();
   mTextAlign = mStyleText->mTextAlign;
   mLineNumber = 0;
   mColumn = 0;
@@ -2038,21 +2037,15 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   // XXXldb If we really have empty continuations, then all these other
   // checks don't make sense for them.
   if ((emptyContinuation || mCompatMode != eCompatibility_FullStandards) &&
-      ((psd == mRootSpan)
-        ? (mCompatMode == eCompatibility_NavQuirks ||
-           (mStyleTextReset->mTextDecoration &
-            NS_STYLE_TEXT_DECORATION_LINES_MASK) == 0)
-        : ((0 == spanFramePFD->mBorderPadding.top) &&
-           (0 == spanFramePFD->mBorderPadding.right) &&
-           (0 == spanFramePFD->mBorderPadding.bottom) &&
-           (0 == spanFramePFD->mBorderPadding.left) &&
-           (0 == spanFramePFD->mMargin.top) &&
-           (0 == spanFramePFD->mMargin.right) &&
-           (0 == spanFramePFD->mMargin.bottom) &&
-           (0 == spanFramePFD->mMargin.left) &&
-           (mCompatMode == eCompatibility_NavQuirks ||
-            (spanFrame->GetStyleTextReset()->mTextDecoration &
-             NS_STYLE_TEXT_DECORATION_LINES_MASK) == 0)))) {
+      ((psd == mRootSpan) ||
+       ((0 == spanFramePFD->mBorderPadding.top) &&
+        (0 == spanFramePFD->mBorderPadding.right) &&
+        (0 == spanFramePFD->mBorderPadding.bottom) &&
+        (0 == spanFramePFD->mBorderPadding.left) &&
+        (0 == spanFramePFD->mMargin.top) &&
+        (0 == spanFramePFD->mMargin.right) &&
+        (0 == spanFramePFD->mMargin.bottom) &&
+        (0 == spanFramePFD->mMargin.left)))) {
     // This code handles an issue with compatability with non-css
     // conformant browsers. In particular, there are some cases
     // where the font-size and line-height for a span must be
