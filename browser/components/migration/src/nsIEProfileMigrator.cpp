@@ -448,7 +448,9 @@ nsIEProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnichar* 
 }
 
 NS_IMETHODIMP
-nsIEProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* aResult)
+nsIEProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
+                                    PRBool aReplace,
+                                    PRUint32* aResult)
 {
   // There's no harm in assuming everything is available.
   *aResult = nsIBrowserProfileMigrator::SETTINGS | nsIBrowserProfileMigrator::COOKIES | 

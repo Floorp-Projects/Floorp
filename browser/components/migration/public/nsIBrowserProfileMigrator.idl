@@ -66,9 +66,11 @@ interface nsIBrowserProfileMigrator : nsISupports
    * offers for import. 
    * @param   aProfile the profile that we are looking for available data
    *          to import
+   * @param   aReplace whether or not the profile is being run replace-current
+   *          data mode (automigration, before profile has started)
    * @returns bit field containing profile items (see above)
    */
-  unsigned long getMigrateData(in wstring aProfile);
+  unsigned long getMigrateData(in wstring aProfile, in boolean aReplace);
 
   /** 
    * Whether or not there is any data that can be imported from this 

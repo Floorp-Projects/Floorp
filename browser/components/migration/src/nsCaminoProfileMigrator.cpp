@@ -77,7 +77,9 @@ nsCaminoProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnich
 }
 
 NS_IMETHODIMP
-nsCaminoProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* aResult)
+nsCaminoProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
+                                        PRBool aReplace, 
+                                        PRUint32* aResult)
 {
   *aResult = 0; // XXXben implement me
   return NS_OK;

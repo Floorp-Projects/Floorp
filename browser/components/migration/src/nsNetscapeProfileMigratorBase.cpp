@@ -38,7 +38,11 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsCRT.h"
 #include "nsIBookmarksService.h"
+#include "nsICookieManager2.h"
 #include "nsIFile.h"
+#include "nsIInputStream.h"
+#include "nsILineInputStream.h"
+#include "nsInt64.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIPrefService.h"
@@ -49,9 +53,12 @@
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIURL.h"
 #include "nsNetscapeProfileMigratorBase.h"
+#include "nsNetUtil.h"
 #include "nsReadableUtils.h"
 #include "nsXPIDLString.h"
+#include "prtime.h"
 #include "prprf.h"
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
@@ -62,6 +69,8 @@
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define MIGRATION_BUNDLE "chrome://browser/locale/migration/migration.properties"
+
+#define FILE_NAME_PREFS_5X NS_LITERAL_STRING("prefs.js")
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsNetscapeProfileMigratorBase
@@ -388,5 +397,155 @@ nsNetscapeProfileMigratorBase::ImportNetscapeBookmarks(const nsAString& aBookmar
 
   nsCOMPtr<nsIRDFDataSource> ds(do_QueryInterface(bms));
   return ds->DoCommand(sources, importCmd, params);
+}
+
+nsresult
+nsNetscapeProfileMigratorBase::ImportNetscapeCookies(nsIFile* aCookiesFile)
+{
+  nsresult rv;
+  nsCOMPtr<nsIInputStream> cookiesStream;
+  rv = NS_NewLocalFileInputStream(getter_AddRefs(cookiesStream), aCookiesFile);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsILineInputStream> lineInputStream(do_QueryInterface(cookiesStream));
+
+  // This code is copied from mozilla/netwerk/cookie/src/nsCookieManager.cpp
+  static NS_NAMED_LITERAL_CSTRING(kTrue, "TRUE");
+
+  nsAutoString bufferUnicode;
+  nsCAutoString buffer;
+  PRBool isMore = PR_TRUE;
+  PRInt32 hostIndex = 0, isDomainIndex, pathIndex, secureIndex, expiresIndex, nameIndex, cookieIndex;
+  nsASingleFragmentCString::char_iterator iter;
+  PRInt32 numInts;
+  PRInt64 expires;
+  PRBool isDomain;
+  nsInt64 currentTime = nsInt64(PR_Now()) / nsInt64(1000000);
+
+  nsCOMPtr<nsICookieManager2> cookieManager(do_GetService(NS_COOKIEMANAGER_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  /* file format is:
+   *
+   * host \t isDomain \t path \t secure \t expires \t name \t cookie
+   *
+   * if this format isn't respected we move onto the next line in the file.
+   * isDomain is "TRUE" or "FALSE" (default to "FALSE")
+   * isSecure is "TRUE" or "FALSE" (default to "TRUE")
+   * expires is a PRInt64 integer
+   * note 1: cookie can contain tabs.
+   * note 2: cookies are written in order of lastAccessed time:
+   *         most-recently used come first; least-recently-used come last.
+   */
+
+  while (isMore && NS_SUCCEEDED(lineInputStream->ReadLine(bufferUnicode, &isMore))) {
+    // downconvert to ASCII. eventually, we want to fix nsILineInputStream
+    // to operate on a CString buffer...
+    CopyUCS2toASCII(bufferUnicode, buffer);
+
+    if (buffer.IsEmpty() || buffer.First() == '#')
+      continue;
+
+    // this is a cheap, cheesy way of parsing a tab-delimited line into
+    // string indexes, which can be lopped off into substrings. just for
+    // purposes of obfuscation, it also checks that each token was found.
+    // todo: use iterators?
+    if ((isDomainIndex = buffer.FindChar('\t', hostIndex)     + 1) == 0 ||
+        (pathIndex     = buffer.FindChar('\t', isDomainIndex) + 1) == 0 ||
+        (secureIndex   = buffer.FindChar('\t', pathIndex)     + 1) == 0 ||
+        (expiresIndex  = buffer.FindChar('\t', secureIndex)   + 1) == 0 ||
+        (nameIndex     = buffer.FindChar('\t', expiresIndex)  + 1) == 0 ||
+        (cookieIndex   = buffer.FindChar('\t', nameIndex)     + 1) == 0)
+      continue;
+
+    // check the expirytime first - if it's expired, ignore
+    // nullstomp the trailing tab, to avoid copying the string
+    buffer.BeginWriting(iter);
+    *(iter += nameIndex - 1) = char(0);
+    numInts = PR_sscanf(buffer.get() + expiresIndex, "%lld", &expires);
+    if (numInts != 1 || nsInt64(expires) < currentTime)
+      continue;
+
+    isDomain = Substring(buffer, isDomainIndex, pathIndex - isDomainIndex - 1).Equals(kTrue);
+    const nsASingleFragmentCString &host = Substring(buffer, hostIndex, isDomainIndex - hostIndex - 1);
+    // check for bad legacy cookies (domain not starting with a dot, or containing a port),
+    // and discard
+    if (isDomain && !host.IsEmpty() && host.First() != '.' ||
+        host.FindChar(':') != kNotFound)
+      continue;
+
+    // create a new nsCookie and assign the data.
+    rv = cookieManager->Add(host,
+                            Substring(buffer, pathIndex, secureIndex - pathIndex - 1),
+                            Substring(buffer, nameIndex, cookieIndex - nameIndex - 1),
+                            Substring(buffer, cookieIndex, buffer.Length() - cookieIndex),
+                            Substring(buffer, secureIndex, expiresIndex - secureIndex - 1).Equals(kTrue),
+                            PR_FALSE,
+                            expires);
+  }
+
+  return rv;
+}
+
+nsresult
+nsNetscapeProfileMigratorBase::GetSignonFileName(PRBool aReplace, char** aFileName)
+{
+  nsresult rv;
+  if (aReplace) {
+    // Find out what the signons file was called, this is stored in a pref
+    // in Seamonkey.
+    nsCOMPtr<nsIPrefService> psvc(do_GetService(NS_PREFSERVICE_CONTRACTID));
+    psvc->ResetPrefs();
+
+    nsCOMPtr<nsIFile> sourcePrefsName;
+    mSourceProfile->Clone(getter_AddRefs(sourcePrefsName));
+    sourcePrefsName->Append(FILE_NAME_PREFS_5X);
+    psvc->ReadUserPrefs(sourcePrefsName);
+
+    nsCOMPtr<nsIPrefBranch> branch(do_QueryInterface(psvc));
+    rv = branch->GetCharPref("signon.SignonFileName", aFileName);
+  }
+  else 
+    rv = LocateSignonsFile(aFileName);
+  return rv;
+}
+
+nsresult
+nsNetscapeProfileMigratorBase::LocateSignonsFile(char** aResult)
+{
+  nsCOMPtr<nsISimpleEnumerator> entries;
+  nsresult rv = mSourceProfile->GetDirectoryEntries(getter_AddRefs(entries));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCAutoString fileName;
+  do {
+    PRBool hasMore = PR_FALSE;
+    rv = entries->HasMoreElements(&hasMore);
+    if (NS_FAILED(rv) || !hasMore) break;
+
+    nsCOMPtr<nsISupports> supp;
+    rv = entries->GetNext(getter_AddRefs(supp));
+    if (NS_FAILED(rv)) break;
+
+    nsCOMPtr<nsIFile> currFile(do_QueryInterface(supp));
+
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewFileURI(getter_AddRefs(uri), currFile);
+    if (NS_FAILED(rv)) break;
+    nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+
+    nsCAutoString extn;
+    url->GetFileExtension(extn);
+
+    if (extn.EqualsIgnoreCase("s")) {
+      url->GetFileName(fileName);
+      break;
+    }
+  }
+  while (1);
+
+  *aResult = ToNewCString(fileName);
+
+  return NS_OK;
 }
 

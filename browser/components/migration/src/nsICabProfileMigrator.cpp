@@ -77,7 +77,9 @@ nsICabProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnichar
 }
 
 NS_IMETHODIMP
-nsICabProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* aResult)
+nsICabProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
+                                      PRBool aReplace,
+                                      PRUint32* aResult)
 {
   *aResult = 0; // XXXben implement me
   return NS_OK;

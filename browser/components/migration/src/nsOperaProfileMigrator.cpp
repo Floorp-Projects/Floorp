@@ -62,11 +62,13 @@
 #include "nsOperaProfileMigrator.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
+#include "nsToolkitCompsCID.h"
 #ifdef XP_WIN
 #include <windows.h>
 #endif
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
 #define MIGRATION_BUNDLE "chrome://browser/locale/migration/migration.properties"
 
 #ifdef XP_WIN
@@ -120,28 +122,43 @@ nsOperaProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUnicha
 }
 
 NS_IMETHODIMP
-nsOperaProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* aResult)
+nsOperaProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
+                                       PRBool aReplace,
+                                       PRUint32* aResult)
 {
   if (!mOperaProfile)
     GetOperaProfile(aProfile, getter_AddRefs(mOperaProfile));
 
-  PRBool exists;
-  const PRUnichar* fileNames[] = { OPERA_PREFERENCES_FILE_NAME.get(), 
-                                   OPERA_COOKIES_FILE_NAME.get(), 
-                                   OPERA_HISTORY_FILE_NAME.get(),
-                                   OPERA_BOOKMARKS_FILE_NAME.get() };
-  const PRUint32 sourceFlags[] = { nsIBrowserProfileMigrator::SETTINGS, 
-                                   nsIBrowserProfileMigrator::COOKIES, 
+  const MIGRATIONDATA data[] = { { ToNewUnicode(OPERA_PREFERENCES_FILE_NAME),
+                                   nsIBrowserProfileMigrator::SETTINGS,
+                                   PR_FALSE },
+                                 { ToNewUnicode(OPERA_COOKIES_FILE_NAME),
+                                   nsIBrowserProfileMigrator::COOKIES,
+                                   PR_FALSE },
+                                 { ToNewUnicode(OPERA_HISTORY_FILE_NAME),
                                    nsIBrowserProfileMigrator::HISTORY,
-                                   nsIBrowserProfileMigrator::BOOKMARKS };
+                                   PR_FALSE },
+                                 { ToNewUnicode(OPERA_BOOKMARKS_FILE_NAME),
+                                   nsIBrowserProfileMigrator::BOOKMARKS,
+                                   PR_FALSE } };
+                                                                  
   nsCOMPtr<nsIFile> sourceFile; 
+  PRBool exists;
   for (PRInt32 i = 0; i < 4; ++i) {
+    // Don't list items that can only be imported in replace-mode when
+    // we aren't being run in replace-mode.
+    if (!aReplace && data[i].replaceOnly) 
+      continue;
+
     mOperaProfile->Clone(getter_AddRefs(sourceFile));
-    sourceFile->Append(nsDependentString(fileNames[i]));
+    sourceFile->Append(nsDependentString(data[i].fileName));
     sourceFile->Exists(&exists);
     if (exists)
-      *aResult |= sourceFlags[i];
+      *aResult |= data[i].sourceFlag;
+
+    nsCRT::free(data[i].fileName);
   }
+
   return NS_OK;
 }
 
@@ -828,7 +845,7 @@ nsOperaCookieMigrator::ReadHeader()
 nsresult
 nsOperaProfileMigrator::CopyHistory(PRBool aReplace)
 {
-  nsCOMPtr<nsIBrowserHistory> hist(do_GetService(NS_GLOBALHISTORY_CONTRACTID));
+  nsCOMPtr<nsIBrowserHistory> hist(do_GetService(kGlobalHistoryCID));
 
   nsCOMPtr<nsIFile> temp;
   mOperaProfile->Clone(getter_AddRefs(temp));

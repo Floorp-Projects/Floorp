@@ -140,26 +140,40 @@ nsDogbertProfileMigrator::GetSourceProfile(const PRUnichar* aProfile)
 }
 
 NS_IMETHODIMP
-nsDogbertProfileMigrator::GetMigrateData(const PRUnichar* aProfile, PRUint32* aResult)
+nsDogbertProfileMigrator::GetMigrateData(const PRUnichar* aProfile, 
+                                         PRBool aReplace,
+                                         PRUint32* aResult)
 {
   if (!mSourceProfile) 
     GetSourceProfile(aProfile);
 
   PRBool exists;
-  const PRUnichar* fileNames[] = { PREF_FILE_NAME_IN_4x.get(), 
-                                   COOKIES_FILE_NAME_IN_4x.get(), 
-                                   BOOKMARKS_FILE_NAME_IN_4x.get() };
-  const PRUint32 sourceFlags[] = { nsIBrowserProfileMigrator::SETTINGS, 
-                                   nsIBrowserProfileMigrator::COOKIES, 
-                                   nsIBrowserProfileMigrator::BOOKMARKS };
+  const MIGRATIONDATA data[] = { { ToNewUnicode(PREF_FILE_NAME_IN_4x),
+                                   nsIBrowserProfileMigrator::SETTINGS,
+                                   PR_TRUE },
+                                 { ToNewUnicode(COOKIES_FILE_NAME_IN_4x),
+                                   nsIBrowserProfileMigrator::COOKIES,
+                                   PR_FALSE },
+                                 { ToNewUnicode(BOOKMARKS_FILE_NAME_IN_4x),
+                                   nsIBrowserProfileMigrator::BOOKMARKS,
+                                   PR_FALSE } };
+                                                                  
   nsCOMPtr<nsIFile> sourceFile; 
   for (PRInt32 i = 0; i < 3; ++i) {
+    // Don't list items that can only be imported in replace-mode when
+    // we aren't being run in replace-mode.
+    if (!aReplace && data[i].replaceOnly) 
+      continue;
+
     mSourceProfile->Clone(getter_AddRefs(sourceFile));
-    sourceFile->Append(nsDependentString(fileNames[i]));
+    sourceFile->Append(nsDependentString(data[i].fileName));
     sourceFile->Exists(&exists);
     if (exists)
-      *aResult |= sourceFlags[i];
+      *aResult |= data[i].sourceFlag;
+
+    nsCRT::free(data[i].fileName);
   }
+
   return NS_OK;
 }
 
@@ -365,7 +379,7 @@ nsDogbertProfileMigrator::CopyCookies(PRBool aReplace)
     mSourceProfile->Clone(getter_AddRefs(dogbertCookiesFile));
     dogbertCookiesFile->Append(COOKIES_FILE_NAME_IN_4x);
 
-    rv = cookieManager->ReadCookies(dogbertCookiesFile);
+    rv = ImportNetscapeCookies(dogbertCookiesFile);
   }
   return rv;
 }
@@ -464,7 +478,7 @@ nsDogbertProfileMigrator::CopyBookmarks(PRBool aReplace)
     return MigrateDogbertBookmarks();
 
   return ImportNetscapeBookmarks(BOOKMARKS_FILE_NAME_IN_4x, 
-                                 NS_LITERAL_STRING("sourceNameSeamonkey").get());
+                                 NS_LITERAL_STRING("sourceNameDogbert").get());
 }
 
 nsresult
