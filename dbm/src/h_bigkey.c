@@ -364,6 +364,7 @@ __big_return(
 	BUFHEAD *save_p;
 	uint16 *bp, len, off, save_addr;
 	char *tp;
+	int save_flags;
 
 	bp = (uint16 *)bufp->page;
 	while (bp[ndx + 1] == PARTIAL_KEY) {
@@ -428,7 +429,12 @@ __big_return(
 			return (0);
 		}
 
+	/* pin our saved buf so that we don't lose if 
+	 * we run out of buffers */
+ 	save_flags = save_p->flags;
+	save_p->flags |= BUF_PIN;
 	val->size = collect_data(hashp, bufp, (int)len, set_current);
+	save_p->flags = save_flags;
 	if (val->size == (size_t)-1)
 		return (-1);
 	if (save_p->addr != save_addr) {
@@ -440,9 +446,14 @@ __big_return(
 	val->data = (uint8 *)hashp->tmp_buf;
 	return (0);
 }
+
+
 /*
- * Count how big the total datasize is by recursing through the pages.  Then
- * allocate a buffer and copy the data as you recurse up.
+ * Count how big the total datasize is by looping through the pages.  Then
+ * allocate a buffer and copy the data in the second loop. NOTE: Our caller
+ * may already have a bp which it is holding onto. The caller is
+ * responsible for copying that bp into our temp buffer. 'len' is how much
+ * space to reserve for that buffer.
  */
 static int
 collect_data(
@@ -451,56 +462,81 @@ collect_data(
 	int len, int set)
 {
 	register uint16 *bp;
-	register char *p;
-	BUFHEAD *xbp;
-	uint16 save_addr;
+	BUFHEAD *save_bufp;
+	int save_flags;
 	int mylen, totlen;
 
-	p = bufp->page;
-	bp = (uint16 *)p;
-	mylen = hashp->BSIZE - bp[1];
-
-	/* if mylen ever goes negative it means that the 
-	 * page is screwed up.
+	/*
+	 * save the input buf head because we need to walk the list twice.
+	 * pin it to make sure it doesn't leave the buffer pool. 
+	 * This has the effect of growing the buffer pool if necessary.
 	 */
-	if(mylen < 0)
-		return (-1);
+	save_bufp = bufp;
+	save_flags = save_bufp->flags;
+	save_bufp->flags |= BUF_PIN;
 
-	save_addr = bufp->addr;
+	/* read the length of the buffer */
+	for (totlen = len; bufp ; bufp = __get_buf(hashp, bp[bp[0]-1], bufp, 0)) {
+		bp = (uint16 *)bufp->page;
+		mylen = hashp->BSIZE - bp[1];
 
-	if (bp[2] == FULL_KEY_DATA) {		/* End of Data */
-		totlen = len + mylen;
-		if (hashp->tmp_buf)
-			free(hashp->tmp_buf);
-		if ((hashp->tmp_buf = (char *)malloc((size_t)totlen)) == NULL)
+		/* if mylen ever goes negative it means that the
+		 * page is screwed up.
+		 */
+		if (mylen < 0) {
+			save_bufp->flags = save_flags;
 			return (-1);
-		if (set) {
-			hashp->cndx = 1;
-			if (bp[0] == 2) {	/* No more buckets in chain */
-				hashp->cpage = NULL;
+ 		}
+		totlen += mylen;
+		if (bp[2] == FULL_KEY_DATA) {		/* End of Data */
+			break;
+		}
+	}
+
+ 	if (!bufp) {
+		save_bufp->flags = save_flags;
+		return (-1);
+	}
+
+	/* allocate a temp buf */
+	if (hashp->tmp_buf)
+		free(hashp->tmp_buf);
+	if ((hashp->tmp_buf = (char *)malloc((size_t)totlen)) == NULL) {
+		save_bufp->flags = save_flags;
+		return (-1);
+ 	}
+
+	/* copy the buffers back into temp buf */
+	for (bufp = save_bufp; bufp ;
+				bufp = __get_buf(hashp, bp[bp[0]-1], bufp, 0)) {
+		bp = (uint16 *)bufp->page;
+		mylen = hashp->BSIZE - bp[1];
+		memmove(&hashp->tmp_buf[len], (bufp->page) + bp[1], (size_t)mylen);
+		len += mylen;
+		if (bp[2] == FULL_KEY_DATA) {
+			break;
+		}
+	}
+
+	/* 'clear' the pin flags */
+	save_bufp->flags = save_flags;
+
+	/* update the database cursor */
+	if (set) {
+		hashp->cndx = 1;
+		if (bp[0] == 2) {	/* No more buckets in chain */
+			hashp->cpage = NULL;
+			hashp->cbucket++;
+		} else {
+			hashp->cpage = __get_buf(hashp, bp[bp[0] - 1], bufp, 0);
+			if (!hashp->cpage)
+				return (-1);
+			else if (!((uint16 *)hashp->cpage->page)[0]) {
 				hashp->cbucket++;
-			} else {
-				hashp->cpage =
-				    __get_buf(hashp, bp[bp[0] - 1], bufp, 0);
-				if (!hashp->cpage)
-					return (-1);
-				else if (!((uint16 *)hashp->cpage->page)[0]) {
-					hashp->cbucket++;
-					hashp->cpage = NULL;
-				}
+				hashp->cpage = NULL;
 			}
 		}
-	} else {
-		xbp = __get_buf(hashp, bp[bp[0] - 1], bufp, 0);
-		if (!xbp || ((totlen =
-		    collect_data(hashp, xbp, len + mylen, set)) < 1))
-			return (-1);
 	}
-	if (bufp->addr != save_addr) {
-		errno = EINVAL;			/* Out of buffers. */
-		return (-1);
-	}
-	memmove(&hashp->tmp_buf[len], (bufp->page) + bp[1], (size_t)mylen);
 	return (totlen);
 }
 

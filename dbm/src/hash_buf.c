@@ -284,6 +284,12 @@ newbuf(HTAB *hashp, uint32 addr, BUFHEAD *prev_bp)
 				xbp->ovfl = 0;
 				xbp = next_xbp;
 
+				/* leave pinned pages alone, we are still using
+				 * them. */
+				if (xbp->flags & BUF_PIN) {
+					continue;
+				}
+
 				/* Check that ovfl pointer is up date. */
 				if (IS_BUCKET(xbp->flags) ||
 				    (oaddr != xbp->addr))
