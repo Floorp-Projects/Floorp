@@ -106,7 +106,7 @@ nsInstallInfo::nsInstallInfo(nsVector* fromURL, const nsString& arguments, const
 
 }
 
-
+void
 nsInstallInfo::DeleteVector(nsVector* vector)
 {
     if (vector != nsnull)
@@ -145,6 +145,7 @@ nsInstallInfo::~nsInstallInfo()
     delete mFlags;
 }
 
+void
 nsInstallInfo::MakeTempFile(nsString aURL, nsString& tempFileString)
 {
     // Checking to see if the url is local is a hack.  I should see if 
