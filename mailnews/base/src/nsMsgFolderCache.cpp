@@ -332,7 +332,8 @@ NS_IMETHODIMP nsMsgFolderCache::Close()
 		{
 			ret = commitThumb->DoMore(GetEnv(), &outTotal, &outCurrent, &outDone, &outBroken);
 		}
-		NS_RELEASE(commitThumb);
+		if(commitThumb)
+			commitThumb->CutStrongRef(m_mdbEnv);
 	}
 	// ### do something with error, but clear it now because mork errors out on commits.
 	if (GetEnv())
