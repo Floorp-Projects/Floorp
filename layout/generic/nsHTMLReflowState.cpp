@@ -52,6 +52,7 @@
 #include "nsIServiceManager.h"
 #include "nsIPercentHeightObserver.h"
 #include "nsContentUtils.h"
+#include "nsLayoutUtils.h"
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
 #endif
@@ -1386,19 +1387,6 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
   }
 }
 
-static PRBool
-IsInitialContainingBlock(nsIFrame* aFrame)
-{
-  nsIContent* content = aFrame->GetContent();
-
-  if (content && !content->GetParent()) {
-    // The containing block corresponds to the document element so it's
-    // the initial containing block
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
 nscoord 
 GetVerticalMarginBorderPadding(const nsHTMLReflowState* aReflowState)
 {
@@ -1578,7 +1566,7 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsPresContext*          aPres
       // This gives us a reasonable value against which to compute percentage
       // based heights and to do bottom relative positioning
       if ((NS_AUTOHEIGHT == aContainingBlockHeight) &&
-          IsInitialContainingBlock(aContainingBlockRS->frame)) {
+          nsLayoutUtils::IsInitialContainingBlock(aContainingBlockRS->frame)) {
 
         // Use the viewport height as the containing block height
         const nsHTMLReflowState* rs = aContainingBlockRS->parentReflowState;

@@ -189,18 +189,20 @@ public:
                                          nsIFrame*              aRemovedFrame,
                                          nsILayoutHistoryState* aFrameState);
 
+  nsIFrame* GetInitialContainingBlock() { return mInitialContainingBlock; }
+
 private:
 
   nsresult ReinsertContent(nsPresContext* aPresContext,
-                           nsIContent*     aContainer,
-                           nsIContent*     aChild);
+                           nsIContent*    aContainer,
+                           nsIContent*    aChild);
 
-  nsresult ConstructPageFrame(nsIPresShell*   aPresShell, 
+  nsresult ConstructPageFrame(nsIPresShell*  aPresShell, 
                               nsPresContext* aPresContext,
-                              nsIFrame*       aParentFrame,
-                              nsIFrame*       aPrevPageFrame,
-                              nsIFrame*&      aPageFrame,
-                              nsIFrame*&      aPageContentFrame);
+                              nsIFrame*      aParentFrame,
+                              nsIFrame*      aPrevPageFrame,
+                              nsIFrame*&     aPageFrame,
+                              nsIFrame*&     aPageContentFrame);
 
   void DoContentStateChanged(nsPresContext* aPresContext,
                              nsIContent*     aContent,
@@ -769,10 +771,9 @@ private:
   nsIContent* PropagateScrollToViewport(nsPresContext* aPresContext);
 
   // Build a scroll frame: 
-  //  Calls BeginBuildingScrollFrame, InitAndRestoreFrame, and then FinishBuildingScrollFrame
-  //
-  //  NOTE: this method does NOT set the primary frame for the content element
-  //
+  //  Calls BeginBuildingScrollFrame, InitAndRestoreFrame, and then FinishBuildingScrollFrame.
+  //  Sets the primary frame for the content to the output aNewFrame.
+  // @param aNewFrame the created scrollframe --- output only
   nsresult
   BuildScrollFrame(nsIPresShell*            aPresShell, 
                    nsPresContext*          aPresContext,
@@ -795,21 +796,15 @@ private:
                            nsIFrame*                aParentFrame,
                            nsIFrame*                aContentParentFrame,
                            nsIAtom*                 aScrolledPseudo,
-                           nsIDocument*             aDocument,
                            PRBool                   aIsRoot,
                            nsIFrame*&               aNewFrame, 
                            nsIFrame*&               aScrollableFrame);
 
   // Completes the building of the scrollframe:
-  //  Creates and necessary views for the scrollframe and sets up the initial child list
-  //
-  nsresult 
-  FinishBuildingScrollFrame(nsPresContext*          aPresContext,
-                            nsFrameConstructorState& aState,
-                            nsIContent*              aContent,
-                            nsIFrame*                aScrollFrame,
-                            nsIFrame*                aScrolledFrame,
-                            nsStyleContext*          scrolledPseudoStyle);
+  // Creates a view for the scrolledframe and makes it the child of the scrollframe.
+  void
+  FinishBuildingScrollFrame(nsIFrame* aScrollFrame,
+                            nsIFrame* aScrolledFrame);
 
   // Creates a new GfxScrollFrame, Initializes it, and creates a scroll port for it
   //
@@ -900,7 +895,15 @@ private:
 
   // |aContentParentFrame| should be null if it's really the same as
   // |aParentFrame|.
-  // aFrameItems is where we want to put the block in case it's in-flow
+  // @param aFrameItems where we want to put the block in case it's in-flow.
+  // @param aNewFrame an in/out parameter. On input it is the block to be
+  // constructed. On output it is reset to the outermost
+  // frame constructed (e.g. if we need to wrap the block in an
+  // nsColumnSetFrame.
+  // @param aParentFrame is the desired parent for the (possibly wrapped)
+  // block
+  // @param aContentParent is the parent the block would have if it
+  // were in-flow
   nsresult ConstructBlock(nsIPresShell*            aPresShell, 
                           nsPresContext*           aPresContext,
                           nsFrameConstructorState& aState,
