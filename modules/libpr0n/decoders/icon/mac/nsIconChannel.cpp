@@ -22,6 +22,7 @@
 
 
 #include "nsIconChannel.h"
+#include "nsIIconURI.h"
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsXPIDLString.h"
@@ -33,6 +34,8 @@
 #include "nsIMimeService.h"
 #include "nsCExternalHandlerService.h"
 #include "plstr.h"
+#include "nsILocalFileMac.h"
+#include "nsIFileChannel.h"
 
 #include <Files.h>
 #include <QuickDraw.h>
@@ -53,7 +56,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsIconChannel,
 
 nsresult nsIconChannel::Init(nsIURI* uri)
 {
-  nsresult rv;
   NS_ASSERTION(uri, "no uri");
   mUrl = uri;
   return NS_OK;
@@ -123,48 +125,90 @@ NS_IMETHODIMP nsIconChannel::GetURI(nsIURI* *aURI)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIconChannel::SetURI(nsIURI* aURI)
-{
-  mUrl = aURI;
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsIconChannel::Open(nsIInputStream **_retval)
 {
   return NS_ERROR_FAILURE;
 }
 
+nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, char ** aContentType, char ** aFileExtension)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIMozIconURI> iconURI (do_QueryInterface(mUrl, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  iconURI->GetImageSize(aDesiredImageSize);
+  iconURI->GetContentType(aContentType);
+  iconURI->GetFileExtension(aFileExtension);
+  
+  nsCOMPtr<nsIURI> fileURI;
+  rv = iconURI->GetIconFile(getter_AddRefs(fileURI));
+ if (NS_FAILED(rv) || !fileURI) return NS_OK;
+
+  nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(fileURI, &rv);
+  if (NS_FAILED(rv) || !fileURL) return NS_OK;
+
+  nsCOMPtr<nsIFile> file;
+  rv = fileURL->GetFile(getter_AddRefs(file));
+  if (NS_FAILED(rv) || !file) return NS_OK;
+  
+  nsCOMPtr<nsILocalFileMac> localFileMac (do_QueryInterface(file, &rv));
+  if (NS_FAILED(rv) || !localFileMac) return NS_OK;
+  
+  *aLocalFile = file;
+  NS_IF_ADDREF(*aLocalFile);
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
-  // get the file name from the url
-  nsXPIDLCString fileName; // will contain a dummy file we'll use to figure out the type of icon desired.
-  nsXPIDLCString filePath; // will contain an optional parameter for small vs. large icon. default is small
-  mUrl->GetHost(getter_Copies(fileName));
-  nsCOMPtr<nsIURL> url (do_QueryInterface(mUrl));
-  if (url)
-    url->GetFileBaseName(getter_Copies(filePath));
-  nsresult rv = NS_OK;  
+  nsXPIDLCString contentType;
+  nsXPIDLCString fileExtension;
+  nsCOMPtr<nsIFile> localFile; // file we want an icon for
+  PRUint32 desiredImageSize;
+  nsresult rv = ExtractIconInfoFromUrl(getter_AddRefs(localFile), &desiredImageSize, getter_Copies(contentType), getter_Copies(fileExtension));
+  
+  nsCOMPtr<nsILocalFileMac> localFileMac (do_QueryInterface(localFile, &rv));
+
   nsCOMPtr<nsIMIMEService> mimeService (do_GetService(NS_MIMESERVICE_CONTRACTID, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
   
-  // extract the extension out of the dummy file so we can look it up in the mime service.
-  char * chFileName = fileName.get(); // get the underlying buffer
-  char * fileExtension = PL_strrchr(chFileName, '.');
-  if (!fileExtension) return NS_ERROR_FAILURE; // no file extension to work from.
-  
-  // look the file extension up in the registry.
-  nsCOMPtr<nsIMIMEInfo> mimeInfo;
-  mimeService->GetFromExtension(fileExtension, getter_AddRefs(mimeInfo));
-  NS_ENSURE_TRUE(mimeInfo, NS_ERROR_FAILURE);
-  
-  // get the mac creator and file type for this mime object
+  // if the file exists, then just go ahead and use the creator and file types for the file.
   PRUint32 macType;
   PRUint32 macCreator;
+  PRBool fileExists = PR_FALSE;
+  if (localFile)
+  {
+    localFile->Exists(&fileExists);
+    if (fileExists)
+    { 
+      OSType macostype;
+      OSType macOSCreatorType;
+      localFileMac->GetFileTypeAndCreator(&macostype, &macOSCreatorType);
+      macType = macostype;
+      macCreator = macOSCreatorType;
+    }
+  }
   
-  mimeInfo->GetMacType(&macType);
-  mimeInfo->GetMacCreator(&macCreator);
+  if (!fileExists)
+  {
+    // if we were given an explicit content type, use it....
+    nsCOMPtr<nsIMIMEInfo> mimeInfo; 
+    if (*contentType.get())
+    {
+      mimeService->GetFromMIMEType(contentType, getter_AddRefs(mimeInfo));
+    }
+    if (!mimeInfo) // try to grab an extension for the dummy file in the url.
+    {
+        mimeService->GetFromExtension(fileExtension, getter_AddRefs(mimeInfo));  
+    }
+    if (!mimeInfo) return NS_ERROR_FAILURE; // we don't have enough info to fetch an application icon.
+  
+    // get the mac creator and file type for this mime object  
+    mimeInfo->GetMacType(&macType);
+    mimeInfo->GetMacCreator(&macCreator);
+  }
   
   // get a refernce to the desktop database  
   DTPBRec 	pb;
@@ -183,7 +227,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
   pb.ioTagInfo = 0;
   
   PRUint32 numPixelsInRow = 0;
-  if (filePath && !nsCRT::strcmp(filePath, "large"))
+  if (desiredImageSize > 16)
   {
     pb.ioDTReqCount = kLarge8BitIconSize;
     pb.ioIconType = kLarge8BitIcon;
@@ -241,7 +285,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
   
   // now that the color bitmask is taken care of, we need to do the same thing again for the transparency
   // bit mask....
-  if (filePath && !nsCRT::strcmp(filePath, "large"))
+  if (desiredImageSize > 16)
   {
     pb.ioDTReqCount = kLargeIconSize;
     pb.ioIconType = kLargeIcon;
@@ -286,17 +330,17 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
 
  nsCOMPtr<nsIInputStream> inputStr (do_QueryInterface(streamSupports));
  aListener->OnDataAvailable(this, ctxt, inputStr, 0, iconBuffer.Length());
- aListener->OnStopRequest(this, ctxt, NS_OK, nsnull);
+ aListener->OnStopRequest(this, ctxt, NS_OK);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIconChannel::GetLoadAttributes(PRUint32 *aLoadAttributes)
+NS_IMETHODIMP nsIconChannel::GetLoadFlags(PRUint32 *aLoadAttributes)
 {
   *aLoadAttributes = mLoadAttributes;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsIconChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
+NS_IMETHODIMP nsIconChannel::SetLoadFlags(PRUint32 aLoadAttributes)
 {
   mLoadAttributes = aLoadAttributes;
   return NS_OK;
