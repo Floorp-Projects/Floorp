@@ -43,6 +43,8 @@ struct App
 	void	(*html)(App *app, Buf *buf);
 	void	(*htmlAttributeName)(App *app, HTML *html, Buf *buf);
 	void	(*htmlAttributeValue)(App *app, HTML *html, Buf *buf);
+	void	(*htmlDeclaration)(App *app, Buf *buf);
+	void	(*htmlProcessingInstruction)(App *app, Buf *buf);
 	void	(*htmlTag)(App *app, HTML *html, Buf *buf);
 	void	(*htmlText)(App *app, Buf *buf);
 

@@ -36,6 +36,8 @@ typedef struct View
 void viewHTML(App *app, Buf *buf);
 void viewHTMLAttributeName(App *app, Buf *buf);
 void viewHTMLAttributeValue(App *app, Buf *buf);
+void viewHTMLDeclaration(App *app, Buf *buf);
+void viewHTMLProcessingInstruction(App *app, Buf *buf);
 void viewHTMLTag(App *app, Buf *buf);
 void viewHTMLText(App *app, Buf *buf);
 void viewHTTP(App *app, Buf *buf);

@@ -36,8 +36,6 @@
 typedef struct HTMLState
 {
 	unsigned short	mask;
-	unsigned short	saved;
-	unsigned short	unGotten;
 	HTML		*html;
 } HTMLState;
 
@@ -336,14 +334,6 @@ htmlGetByte(Buf *buf, HTMLState *state)
 {
 	unsigned short	c;
 	unsigned short	ret;
-	unsigned short	tmp;
-
-	if (state->unGotten != 256)
-	{
-		tmp = state->unGotten;
-		state->unGotten = 256;
-		return tmp;
-	}
 
 	c = bufGetByte(buf);
 	if (c == 256)
@@ -411,15 +401,7 @@ htmlGetByte(Buf *buf, HTMLState *state)
 		ret = c | state->mask;
 	}
 
-	state->saved = ret;
-
 	return ret;
-}
-
-static void
-htmlUnGetByte(HTMLState *state)
-{
-	state->unGotten = state->saved;
 }
 
 static unsigned short
@@ -469,6 +451,7 @@ readAttribute(App *app, Buf *buf, HTMLState *state, unsigned short c)
 	(
 		(c != 256) &&
 		(c != '>') &&
+		(c != '/') &&
 		(c != '=') &&
 		(c != ' ') &&
 		(c != '\t') &&
@@ -500,6 +483,10 @@ readAttribute(App *app, Buf *buf, HTMLState *state, unsigned short c)
 	state->html->currentAttribute = attr;
 	attr->name = bufCopyLower(buf);
 	app->htmlAttributeName(app, state->html, buf);
+	if (c == '/')
+	{
+		c = htmlGetByte(buf, state);
+	}
 	if ((c == 256) || (c == '>'))
 	{
 		return c;
@@ -507,6 +494,10 @@ readAttribute(App *app, Buf *buf, HTMLState *state, unsigned short c)
 	if (c != '=')
 	{
 		c = eatWhiteSpace(buf, state, c);
+	}
+	if (c == '/')
+	{
+		c = htmlGetByte(buf, state);
 	}
 	if ((c == 256) || (c == '>'))
 	{
@@ -542,6 +533,7 @@ readAttribute(App *app, Buf *buf, HTMLState *state, unsigned short c)
 			(
 				(c != 256) &&
 				(c != '>') &&
+				(c != '/') &&
 				(c != ' ') &&
 				(c != '\t') &&
 				(c != '\r') &&
@@ -560,12 +552,21 @@ readAttribute(App *app, Buf *buf, HTMLState *state, unsigned short c)
 			app->htmlAttributeValue(app, state->html, buf);
 		}
 		callHandler(app, state->html);
-		if (c == '>')
+		if (c == '/')
+		{
+			c = htmlGetByte(buf, state);
+		}
+		if ((c == 256) || (c == '>'))
 		{
 			return c;
 		}
 	}
-	return eatWhiteSpace(buf, state, c);
+	c = eatWhiteSpace(buf, state, c);
+	if (c == '/')
+	{
+		c = htmlGetByte(buf, state);
+	}
+	return c;
 }
 
 static int
@@ -604,95 +605,10 @@ endTag(App *app, Buf *buf, HTMLState *state)
 }
 
 static unsigned short
-readTag(App *app, Buf *buf, HTMLState *state)
+readTag(App *app, Buf *buf, HTMLState *state, unsigned short c)
 {
-	unsigned short	c;
-
-	bufMark(buf, -1);
+	bufMark(buf, c == '/' ? 0 : -1);
 	app->html(app, buf);
-
-	c = htmlGetByte(buf, state);
-	if (c == '!')
-	{
-		c = htmlGetByte(buf, state);
-		if (c == '-')
-		{
-			c = htmlGetByte(buf, state);
-			if (c == '-')
-			{
-				unsigned long beginningOfComment =
-					bufCurrent(buf);
-				while (1)
-				{
-					c = htmlGetByte(buf, state);
-					if (c == '-')
-					{
-						c = htmlGetByte(buf, state);
-						if (c == '-')
-						{
-							c = htmlGetByte(buf,
-							state);
-							if (c == '>')
-							{
-							    return endTag(app,
-							    buf, state);
-							}
-							else if (c == '-')
-							{
-							  do
-							  {
-							    c = htmlGetByte(buf, state);
-							  } while (c == '-');
-							  if (c == '>')
-							  {
-							    return endTag(app,
-							    buf, state);
-							  }
-							}
-						}
-					}
-					if (c == 256)
-					{
-					    bufSet(buf, beginningOfComment);
-					    while (1)
-					    {
-						c = htmlGetByte(buf, state);
-						if (c == '>')
-						{
-						    return endTag(app, buf, state);
-						}
-						else if (c == 256)
-						{
-						    fprintf(stderr,
-							"bad comment\n");
-						    bufMark(buf, -1);
-						    FREE(state->html->tag);
-						    state->html->tag =
-							copyString((unsigned
-								char *) "!--");
-						    state->html->tagIsKnown = 1;
-						    app->htmlTag(app,
-							state->html, buf);
-						    return c;
-						}
-					    }
-					}
-				}
-			}
-			else
-			{
-				htmlUnGetByte(state);
-			}
-		}
-		else
-		{
-			htmlUnGetByte(state);
-		}
-	}
-	else
-	{
-		htmlUnGetByte(state);
-	}
 
 	do
 	{
@@ -702,6 +618,7 @@ readTag(App *app, Buf *buf, HTMLState *state)
 	(
 		(c != 256) &&
 		(c != '>') &&
+		(c != '/') &&
 		(c != ' ') &&
 		(c != '\t') &&
 		(c != '\r') &&
@@ -710,8 +627,7 @@ readTag(App *app, Buf *buf, HTMLState *state)
 	bufMark(buf, -1);
 	FREE(state->html->tag);
 	state->html->tag = bufCopyLower(buf);
-	if (hashLookup(knownTagTable, (*state->html->tag == '/') ?
-		state->html->tag + 1 : state->html->tag))
+	if (hashLookup(knownTagTable, state->html->tag))
 	{
 		state->html->tagIsKnown = 1;
 	}
@@ -720,20 +636,28 @@ readTag(App *app, Buf *buf, HTMLState *state)
 		state->html->tagIsKnown = 0;
 	}
 	app->htmlTag(app, state->html, buf);
+	if (c == '/')
+	{
+		c = htmlGetByte(buf, state);
+	}
 	if (c == 256)
 	{
 		return c;
 	}
-	else if (c == '>')
+	if (c == '>')
 	{
 		return endTag(app, buf, state);
 	}
 	c = eatWhiteSpace(buf, state, c);
+	if (c == '/')
+	{
+		c = htmlGetByte(buf, state);
+	}
 	if (c == 256)
 	{
 		return c;
 	}
-	else if (c == '>')
+	if (c == '>')
 	{
 		return endTag(app, buf, state);
 	}
@@ -746,12 +670,85 @@ readTag(App *app, Buf *buf, HTMLState *state)
 	{
 		(*tagHandler)(app, state->html);
 	}
+	if (c == 256)
+	{
+		return c;
+	}
 	if (c == '>')
 	{
 		return endTag(app, buf, state);
 	}
 
 	return c;
+}
+
+static unsigned short
+readComment(App *app, Buf *buf, HTMLState *state)
+{
+	unsigned short	c;
+	unsigned long begin;
+
+	c = htmlGetByte(buf, state);
+	if (c != '-')
+	{
+		do
+		{
+			c = htmlGetByte(buf, state);
+		} while ((c != 256) && (c != '>'));
+		return c;
+	}
+	begin = bufCurrent(buf);
+	while (1)
+	{
+		c = htmlGetByte(buf, state);
+		if (c == '-')
+		{
+			c = htmlGetByte(buf, state);
+			if (c == '-')
+			{
+				c = htmlGetByte(buf,
+				state);
+				if (c == '>')
+				{
+					return endTag(app, buf, state);
+				}
+				if (c == '-')
+				{
+					do
+					{
+						c = htmlGetByte(buf, state);
+					} while (c == '-');
+					if (c == '>')
+					{
+						return endTag(app, buf, state);
+					}
+				}
+			}
+		}
+		if (c == 256)
+		{
+			bufSet(buf, begin);
+			while (1)
+			{
+				c = htmlGetByte(buf, state);
+				if (c == '>')
+				{
+					return endTag(app, buf, state);
+				}
+				if (c == 256)
+				{
+					fprintf(stderr, "bad comment\n");
+					bufMark(buf, -1);
+					FREE(state->html->tag);
+					state->html->tag = copyString(
+						(unsigned char *) "!--");
+					state->html->tagIsKnown = 1;
+					app->htmlTag(app, state->html, buf);
+					return c;
+				}
+			}
+		}
+	}
 }
 
 static unsigned short
@@ -817,8 +814,6 @@ htmlRead(App *app, Buf *buf, unsigned char *base)
 	html.currentAttribute = NULL;
 
 	state.mask = 0;
-	state.saved = 0;
-	state.unGotten = 256;
 	state.html = &html;
 
 	c = htmlGetByte(buf, &state);
@@ -827,17 +822,47 @@ htmlRead(App *app, Buf *buf, unsigned char *base)
 		if (c == '<')
 		{
 			c = htmlGetByte(buf, &state);
-			htmlUnGetByte(&state);
 			if
 			(
 				(('a' <= c) && (c <= 'z')) ||
 				(('A' <= c) && (c <= 'Z')) ||
-				(c == '/') ||
-				(c == '!')
+				(c == '/')
 			)
 			{
-				c = readTag(app, buf, &state);
+				c = readTag(app, buf, &state, c);
 				c = dealWithScript(buf, &state, c);
+			}
+			else if (c == '!')
+			{
+				c = htmlGetByte(buf, &state);
+				if (c == '-')
+				{
+					c = readComment(app, buf, &state);
+					continue;
+				}
+				while ((c != 256) && (c != '>'))
+				{
+					c = htmlGetByte(buf, &state);
+				}
+				if (c == '>')
+				{
+					c = htmlGetByte(buf, &state);
+				}
+				bufMark(buf, -1);
+				app->htmlDeclaration(app, buf);
+			}
+			else if (c == '?')
+			{
+				do
+				{
+					c = htmlGetByte(buf, &state);
+				} while ((c != 256) && (c != '>'));
+				if (c == '>')
+				{
+					c = htmlGetByte(buf, &state);
+				}
+				bufMark(buf, -1);
+				app->htmlProcessingInstruction(app, buf);
 			}
 			else
 			{

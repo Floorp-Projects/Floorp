@@ -265,10 +265,6 @@ addURLFunc(App *app, URL *url)
 static void
 robotHTTP(App *app, Buf *buf)
 {
-	Robot	*robot;
-
-	robot = app->data;
-
 	viewHTTP(app, buf);
 }
 
@@ -295,20 +291,12 @@ robotHTTPHeaderName(App *app, Buf *buf)
 static void
 robotHTTPHeaderValue(App *app, Buf *buf, unsigned char *url)
 {
-	Robot	*robot;
-
-	robot = app->data;
-
 	viewHTTPHeaderValue(app, buf);
 }
 
 static void
 robotHTML(App *app, Buf *buf)
 {
-	Robot	*robot;
-
-	robot = app->data;
-
 	viewHTML(app, buf);
 }
 
@@ -397,11 +385,19 @@ robotHTMLAttributeName(App *app, HTML *html, Buf *buf)
 static void
 robotHTMLAttributeValue(App *app, HTML *html, Buf *buf)
 {
-	Robot	*robot;
-
-	robot = app->data;
-
 	viewHTMLAttributeValue(app, buf);
+}
+
+static void
+robotHTMLDeclaration(App *app, Buf *buf)
+{
+	viewHTMLDeclaration(app, buf);
+}
+
+static void
+robotHTMLProcessingInstruction(App *app, Buf *buf)
+{
+	viewHTMLProcessingInstruction(app, buf);
 }
 
 static void
@@ -693,10 +689,12 @@ startHere(void *a)
 	app->httpResponseHeaderName = robotHTTPHeaderName;
 	app->httpResponseHeaderValue = robotHTTPHeaderValue;
 	app->html = robotHTML;
-	app->htmlText = robotHTMLText;
-	app->htmlTag = robotHTMLTag;
 	app->htmlAttributeName = robotHTMLAttributeName;
 	app->htmlAttributeValue = robotHTMLAttributeValue;
+	app->htmlDeclaration = robotHTMLDeclaration;
+	app->htmlProcessingInstruction = robotHTMLProcessingInstruction;
+	app->htmlTag = robotHTMLTag;
+	app->htmlText = robotHTMLText;
 	app->contentType = robotContentType;
 	app->httpResponseCharSet = robotHTTPCharSet;
 	app->data = &robot;

@@ -39,10 +39,10 @@ typedef struct HTML
 	unsigned char	*base;
 	unsigned char	*url;
 	unsigned char	*tag;
-	int		tagIsKnown;
 	HTMLAttribute	*attributes;
 	HTMLAttribute	*currentAttribute;
-	int		currentAttributeIsURL;
+	unsigned int	tagIsKnown : 1;
+	unsigned int	currentAttributeIsURL : 1;
 } HTML;
 
 typedef void (*HTMLHandler)(App *app, HTML *html);

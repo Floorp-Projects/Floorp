@@ -49,6 +49,8 @@ typedef struct Arg
 static void proxyHTML(App *app, Buf *buf);
 static void proxyHTMLAttributeName(App *app, HTML *html, Buf *buf);
 static void proxyHTMLAttributeValue(App *app, HTML *html, Buf *buf);
+static void proxyHTMLDeclaration(App *app, Buf *buf);
+static void proxyHTMLProcessingInstruction(App *app, Buf *buf);
 static void proxyHTMLTag(App *app, HTML *html, Buf *buf);
 static void proxyHTMLText(App *app, Buf *buf);
 static void proxyHTTP(App *app, Buf *buf);
@@ -191,6 +193,8 @@ proxyApp(FD *f)
 	app->html = proxyHTML;
 	app->htmlAttributeName = proxyHTMLAttributeName;
 	app->htmlAttributeValue = proxyHTMLAttributeValue;
+	app->htmlDeclaration = proxyHTMLDeclaration;
+	app->htmlProcessingInstruction = proxyHTMLProcessingInstruction;
 	app->htmlTag = proxyHTMLTag;
 	app->htmlText = proxyHTMLText;
 	app->httpResponse = proxyHTTP;
@@ -552,6 +556,18 @@ static void
 proxyHTMLAttributeValue(App *app, HTML *html, Buf *buf)
 {
 	viewHTMLAttributeValue(app, buf);
+}
+
+static void
+proxyHTMLDeclaration(App *app, Buf *buf)
+{
+	viewHTMLDeclaration(app, buf);
+}
+
+static void
+proxyHTMLProcessingInstruction(App *app, Buf *buf)
+{
+	viewHTMLProcessingInstruction(app, buf);
 }
 
 static void

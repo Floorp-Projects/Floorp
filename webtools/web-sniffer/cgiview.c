@@ -85,6 +85,18 @@ cgiviewHTMLAttributeValue(App *app, HTML *html, Buf *buf)
 }
 
 static void
+cgiviewHTMLDeclaration(App *app, Buf *buf)
+{
+	viewHTMLDeclaration(app, buf);
+}
+
+static void
+cgiviewHTMLProcessingInstruction(App *app, Buf *buf)
+{
+	viewHTMLProcessingInstruction(app, buf);
+}
+
+static void
 cgiviewHTMLTag(App *app, HTML *html, Buf *buf)
 {
 	viewHTMLTag(app, buf);
@@ -309,6 +321,8 @@ main(int argc, char *argv[])
 	app->html = cgiviewHTML;
 	app->htmlAttributeName = cgiviewHTMLAttributeName;
 	app->htmlAttributeValue = cgiviewHTMLAttributeValue;
+	app->htmlDeclaration = cgiviewHTMLDeclaration;
+	app->htmlProcessingInstruction = cgiviewHTMLProcessingInstruction;
 	app->htmlTag = cgiviewHTMLTag;
 	app->htmlText = cgiviewHTMLText;
 	app->httpRequest = cgiviewHTTPRequest;

@@ -178,6 +178,22 @@ viewHTMLAttributeValue(App *app, Buf *buf)
 }
 
 void
+viewHTMLDeclaration(App *app, Buf *buf)
+{
+	fprintf(app->view.out, "<font color=#999933><i>");
+	print(&app->view, buf);
+	fprintf(app->view.out, "</i></font>");
+}
+
+void
+viewHTMLProcessingInstruction(App *app, Buf *buf)
+{
+	fprintf(app->view.out, "<font color=#660000><i>");
+	print(&app->view, buf);
+	fprintf(app->view.out, "</i></font>");
+}
+
+void
 viewHTMLTag(App *app, Buf *buf)
 {
 	fprintf(app->view.out, "<font color=#CC33CC>");

@@ -45,6 +45,16 @@ appHTMLAttributeValue(App *app, HTML *html, Buf *buf)
 }
 
 static void
+appHTMLDeclaration(App *app, Buf *buf)
+{
+}
+
+static void
+appHTMLProcessingInstruction(App *app, Buf *buf)
+{
+}
+
+static void
 appHTMLTag(App *app, HTML *html, Buf *buf)
 {
 }
@@ -110,6 +120,8 @@ App appDefault =
 	appHTML,
 	appHTMLAttributeName,
 	appHTMLAttributeValue,
+	appHTMLDeclaration,
+	appHTMLProcessingInstruction,
 	appHTMLTag,
 	appHTMLText,
 	appHTTPRequest,
