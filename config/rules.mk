@@ -857,7 +857,7 @@ ifndef IS_COMPONENT
 	fi
 	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
 endif
-	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) VMSuni.opt;
+	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(EXTRA_LIBS) VMSuni.opt;
 endif
 else # OS2
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
