@@ -335,7 +335,6 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
     ok = js_GetLengthProperty(cx, obj, &length);
     if (!ok)
         return JS_FALSE;
-    ok = JS_TRUE;
 
     he = js_EnterSharpObject(cx, obj, NULL, &chars);
     if (!he)
@@ -405,7 +404,7 @@ array_join_sub(JSContext *cx, JSObject *obj, JSString *sep, JSBool literalize,
         if (!ok)
             goto done;
 
-        if (JSVAL_IS_VOID(v) || JSVAL_IS_NULL(v)) {
+        if (!literalize && (JSVAL_IS_VOID(v) || JSVAL_IS_NULL(v))) {
             str = cx->runtime->emptyString;
         } else {
             if (localeString) {
