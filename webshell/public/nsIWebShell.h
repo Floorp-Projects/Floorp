@@ -204,7 +204,7 @@ public:
   // Chrome api's
   NS_IMETHOD SetTitle(const PRUnichar *aTitle) = 0;
 
-  NS_IMETHOD GetTitle(const PRUnichar **aResult) = 0;
+  NS_IMETHOD GetTitle(PRUnichar **aResult) = 0;
   /********* XXX End Stuff to be replaced by nsIBaseWindow ******/
 
 
