@@ -1472,7 +1472,8 @@ void RemoveBackSlash(PSZ szInput)
 {
   ULONG ulInputLen;
   BOOL  bDone;
-  char  *ptrChar = NULL;
+  /* Workaround for compiler optimization bug */
+  volatile char  *ptrChar = NULL;
 
   if(szInput)
   {
@@ -4565,8 +4566,6 @@ void GetAlternateArchiveSearchPath(LPSTR lpszCmdLine)
 
 BOOL CheckForProcess(LPSTR szProcessName, DWORD dwProcessName)
 {
-#ifdef OLDCODE /* @MAK need to write */
-#endif
 }
 
 int PreCheckInstance(char *szSection, char *szIniFile)

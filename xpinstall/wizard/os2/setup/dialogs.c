@@ -298,7 +298,6 @@ MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
          {
          SWP swpDlgOrig;
          SWP swpDlgNew;
-         SWP swpFileST;
          SWP swpDirST;
          SWP swpDirLB;
          SWP swpDriveST;
@@ -306,7 +305,6 @@ MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
          SWP swpDriveCBEF;
          SWP swpOK;
          SWP swpCancel;
-         HWND hwndFileST;
          HWND hwndDirST;
          HWND hwndDirLB;
          HWND hwndDriveST;
@@ -314,10 +312,12 @@ MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
          HWND hwndOK;
          HWND hwndCancel;
          HWND hwndEF;
+         HENUM henum;
+         HWND hwndNext;
+         ULONG ulCurY, ulCurX;
 
-      WinSetPresParam(hwndDlg, PP_FONTNAMESIZE,
-                      strlen(sgInstallGui.szDefinedFont)+1, sgInstallGui.szDefinedFont);
-         hwndFileST = WinWindowFromID(hwndDlg, DID_FILENAME_TXT);
+         WinSetPresParam(hwndDlg, PP_FONTNAMESIZE,
+                         strlen(sgInstallGui.szDefinedFont)+1, sgInstallGui.szDefinedFont);
          hwndDirST = WinWindowFromID(hwndDlg, DID_DIRECTORY_TXT);
          hwndDirLB = WinWindowFromID(hwndDlg, DID_DIRECTORY_LB);
          hwndDriveST = WinWindowFromID(hwndDlg, DID_DRIVE_TXT);
@@ -325,68 +325,65 @@ MRESULT EXPENTRY DirDialogProc( HWND hwndDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
          hwndOK = WinWindowFromID(hwndDlg, DID_OK);
          hwndCancel = WinWindowFromID(hwndDlg, DID_CANCEL);
          
+#define SPACING 10
          // Reposition drives combobox
+         ulCurY = SPACING;
+         ulCurX = SPACING + gSystemInfo.lDlgFrameX;
          WinQueryWindowPos(hwndOK, &swpOK);
+         WinSetWindowPos(hwndOK, 0, ulCurX, ulCurY, 0, 0, SWP_MOVE);
+         ulCurY += swpOK.cy + SPACING;
          WinQueryWindowPos(hwndCancel, &swpCancel);
+         WinSetWindowPos(hwndCancel, 0, ulCurX+swpOK.cx+10, SPACING, 0, 0, SWP_MOVE);
+         WinQueryWindowPos(hwndDirLB, &swpDirLB);
+         WinSetWindowPos(hwndDirLB, 0, ulCurX, ulCurY, 0, 0, SWP_MOVE);
+         ulCurY += swpDirLB.cy + SPACING;
+         WinQueryWindowPos(hwndDirST, &swpDirST);
+         WinSetWindowPos(hwndDirST, 0, ulCurX, ulCurY, 0, 0, SWP_MOVE);
+         ulCurY += swpDirST.cy + SPACING;
          WinQueryWindowPos(hwndDriveCB, &swpDriveCB);
          WinQueryWindowPos(WinWindowFromID(hwndDriveCB, CBID_EDIT), &swpDriveCBEF);
-         WinSetWindowPos(hwndDriveCB, 0, swpDriveCB.x,
-                                         swpOK.y+swpOK.cy+swpDriveCBEF.cy-swpDriveCB.cy+20,
-                                         swpCancel.x+swpCancel.cx-swpOK.x, swpDriveCB.cy, SWP_MOVE | SWP_SIZE);
-
-         // Reposition drives text
-         WinQueryWindowPos(hwndDriveCB, &swpDriveCB);
+         WinSetWindowPos(hwndDriveCB, 0, ulCurX, ulCurY-(swpDriveCB.cy-swpDriveCBEF.cy)+5,
+                                         swpDirLB.cx,
+                                         swpDriveCB.cy,
+                                         SWP_SIZE | SWP_MOVE);
+         ulCurY += swpDriveCBEF.cy + SPACING;
          WinQueryWindowPos(hwndDriveST, &swpDriveST);
-         WinSetWindowPos(hwndDriveST, 0, swpDriveST.x, swpDriveCB.y+swpDriveCB.cy+5,
-                                         swpDriveST.cx*2, swpDriveST.cy, SWP_MOVE | SWP_SIZE);
-
-         // Reposition directories listbox 
-         WinQueryWindowPos(hwndDriveST, &swpDriveST);
-         WinQueryWindowPos(hwndDirLB, &swpDirLB);
-         WinSetWindowPos(hwndDirLB, 0, swpDirLB.x, swpDriveST.y+swpDriveST.cy+10,
-                                       swpDirLB.cx*2, swpDirLB.cy, SWP_MOVE | SWP_SIZE);
-
-         // Reposition file text
-         WinQueryWindowPos(hwndDirLB, &swpDirLB);
-         WinQueryWindowPos(hwndFileST, &swpFileST);
-         WinSetWindowPos(hwndFileST, 0, swpFileST.x, swpDirLB.y+swpDirLB.cy+5,
-                                        swpFileST.cx*2, swpFileST.cy, SWP_MOVE | SWP_SIZE);
-
-         // Begin repositioning dialog
-         WinQueryWindowPos(hwndDlg, &swpDlgOrig);
-         swpDlgNew = swpDlgOrig;
-         swpDlgNew.cy -= swpFileST.y;
-
-         // Reposition directory text
-         WinQueryWindowPos(hwndFileST, &swpFileST);
-         WinQueryWindowPos(hwndDirST, &swpDirST);
-         WinSetWindowPos(hwndDirST, 0, swpDirST.x, swpFileST.y+swpFileST.cy+5,
-                                       swpDirST.cx*2, swpDirST.cy, SWP_MOVE | SWP_SIZE);
-
-         // Size main dialog
-         swpDlgNew.cy += (swpFileST.y+swpFileST.cy+5);
-         swpDlgNew.cx = (swpDirLB.x*2)+swpDirLB.cx;
-         swpDlgNew.x += (swpDlgOrig.cx-swpDlgNew.cx)/2;
-         swpDlgNew.y += (swpDlgOrig.cy-swpDlgNew.cy)/2;
-         WinSetWindowPos(hwndDlg, 0, swpDlgNew.x, swpDlgNew.y,
-                                     swpDlgNew.cx, swpDlgNew.cy,
-                                     SWP_SIZE | SWP_MOVE);
+         WinSetWindowPos(hwndDriveST, 0, ulCurX, ulCurY, 0, 0, SWP_MOVE);
+         ulCurY += swpDriveST.cy + SPACING;
+         // Create an entryfield
+         hwndEF = WinCreateWindow(hwndDlg, WC_ENTRYFIELD, "", ES_MARGIN | WS_VISIBLE | ES_AUTOSCROLL,
+                                  ulCurX+3, ulCurY+3,
+                                  swpDirLB.cx-6, swpDriveCBEF.cy, hwndDlg, HWND_TOP, 777, NULL, NULL);
+         WinSendMsg(hwndEF, EM_SETTEXTLIMIT, CCHMAXPATH, 0);
+         ulCurY += swpDriveCBEF.cy + SPACING;
 
          // Hide unused stuff
-         WinShowWindow(WinWindowFromID(hwndDlg,DID_FILES_LB), FALSE);
-         WinShowWindow(WinWindowFromID(hwndDlg,DID_FILES_TXT), FALSE);
-         WinShowWindow(WinWindowFromID(hwndDlg,DID_FILTER_CB), FALSE);
-         WinShowWindow(WinWindowFromID(hwndDlg,DID_FILTER_TXT), FALSE);
-         WinShowWindow(WinWindowFromID(hwndDlg, DID_FILENAME_ED), FALSE);
-         WinShowWindow(WinWindowFromID(hwndDlg, 0x503D), FALSE);
+         henum = WinBeginEnumWindows(hwndDlg);
+         while ((hwndNext = WinGetNextWindow(henum)) != NULLHANDLE)
+         {
+           USHORT usID = WinQueryWindowUShort(hwndNext, QWS_ID);
+           if (usID != DID_DIRECTORY_TXT &&
+               usID != DID_DIRECTORY_LB &&
+               usID != DID_DRIVE_TXT &&
+               usID != DID_DRIVE_CB &&
+               usID != DID_OK &&
+               usID != DID_CANCEL &&
+               usID != FID_TITLEBAR &&
+               usID != FID_SYSMENU &&
+               usID != 777 &&
+               usID != FID_MINMAX) 
+           {
+             WinShowWindow(hwndNext, FALSE);
+           }
+         }
 
-         // Create an entryfield
-         hwndEF = WinCreateWindow(hwndDlg, WC_ENTRYFIELD, "", ES_MARGIN | WS_VISIBLE, swpFileST.x, swpFileST.y,
-                                  swpFileST.cx, swpFileST.cy, hwndDlg, HWND_TOP, 777, NULL, NULL);
-         WinSendMsg(hwndEF, EM_SETTEXTLIMIT, MAX_BUF, 0);
-
-         WinShowWindow(hwndFileST, FALSE);
-
+         WinSetWindowPos(hwndDlg,
+                         HWND_TOP,
+                         (gSystemInfo.lScreenX/2)-((swpDirLB.cx+2*SPACING+2*gSystemInfo.lDlgFrameX)/2),
+                         (gSystemInfo.lScreenY/2)-((ulCurY+2*gSystemInfo.lDlgFrameY+gSystemInfo.lTitleBarY)/2),
+                         swpDirLB.cx+2*SPACING+2*gSystemInfo.lDlgFrameX,
+                         ulCurY+2*gSystemInfo.lDlgFrameY+gSystemInfo.lTitleBarY,
+                         SWP_MOVE | SWP_SIZE);
          }
          break;
       case WM_CONTROL:
@@ -811,7 +808,7 @@ MRESULT EXPENTRY DlgProcSetupType(HWND hDlg, ULONG msg, MPARAM mp1, MPARAM mp2)
                   sprintf(szBuf, szECreateDirectory, szBufTemp);
 
                 WinMessageBox(HWND_DESKTOP, hDlg, szBuf, "", 0, MB_OK | MB_ERROR);
-                break;
+                return (MRESULT)TRUE;
               }
 
               if(*sgProduct.szSubPath != '\0')

@@ -1359,7 +1359,6 @@ UpdateGaugeFileProgressBar(double value)
   if(sgProduct.ulMode != SILENT)
   {
     ULONG ulPercentage = 100*value/100;
-    printf("ulp = %d\n", ulPercentage);
     WinSendMsg(WinWindowFromID(dlgInfo.hWndDlg, IDC_GAUGE_FILE), SLM_SETSLIDERINFO,
                                MPFROM2SHORT(SMA_SLIDERARMPOSITION, SMA_INCREMENTVALUE),
                                (MPARAM)(ulPercentage-1));

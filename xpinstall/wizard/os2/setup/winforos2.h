@@ -38,3 +38,9 @@ typedef CHAR TCHAR;
 
 
 #include "nsINIParser.h"
+
+#ifndef LIBPATHSTRICT
+#define LIBPATHSTRICT 3
+#endif
+
+

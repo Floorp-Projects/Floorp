@@ -63,6 +63,7 @@ HRESULT InitializeXPIStub()
   char szBuf[MAX_BUF];
   char szXPIStubFile[MAX_BUF];
   char szEDosQueryProcAddr[MAX_BUF];
+  APIRET rc;
 
   hXPIStubInst = NULL;
 
@@ -76,7 +77,10 @@ HRESULT InitializeXPIStub()
   strcat(szBuf, "bin");
   chdir(szBuf);
 
-  /* Add it to LIBPATH just in case */
+  /* Set LIBPATHSTRICT */
+  DosSetExtLIBPATH("T", LIBPATHSTRICT);
+
+  /* Add it to LIBPATH */
   DosSetExtLIBPATH(szBuf, BEGIN_LIBPATH);
 
   /* build full path to xpistub.dll */
@@ -88,7 +92,7 @@ HRESULT InitializeXPIStub()
     return(2);
 
   /* load xpistub.dll */
-  if(DosLoadModule(NULL, 0, szXPIStubFile, &hXPIStubInst) != NO_ERROR)
+  if (DosLoadModule(NULL, 0, szXPIStubFile, &hXPIStubInst) != NO_ERROR)
   {
     sprintf(szBuf, szEDllLoad, szXPIStubFile);
     PrintError(szBuf, ERROR_CODE_SHOW);
@@ -208,6 +212,9 @@ HRESULT SmartUpdateJars()
       strcat(szBuf, sgProduct.szSubPath);
     }
     hrResult = pfnXpiInit(szBuf, FILE_INSTALL_LOG, cbXPIProgress);
+
+    /* Unset LIBPATHSTRICT */
+    DosSetExtLIBPATH("F", LIBPATHSTRICT);
 
     ShowMessage(szMsgSmartUpdateStart, FALSE);
     InitProgressDlg();
@@ -396,7 +403,6 @@ static void
 UpdateGaugeArchiveProgressBar(unsigned value)
 {
   if(sgProduct.ulMode != SILENT) {
-    printf("value=%d\n");
     WinSendMsg(WinWindowFromID(dlgInfo.hWndDlg, IDC_GAUGE_ARCHIVE), SLM_SETSLIDERINFO,
                                MPFROM2SHORT(SMA_SLIDERARMPOSITION, SMA_INCREMENTVALUE),
                                (MPARAM)(value-1));
