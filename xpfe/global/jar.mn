@@ -40,18 +40,12 @@ packages/widget-toolkit.jar:
 	global/content/nsJSComponentManager.js      (resources/content/nsJSComponentManager.js) 
 	global/content/nsUserSettings.js            (resources/content/nsUserSettings.js) 
 	global/content/xul.css                      (resources/content/xul.css) 
-	global/content/platformGlobalOverlay.xul    (resources/content/win/platformGlobalOverlay.xul) 
-	global/content/platformDialogOverlay.xul    (resources/content/win/platformDialogOverlay.xul) 
-	global/content/platformInputBindings.xul    (resources/content/win/platformInputBindings.xul) 
-	global/content/platformTextAreaBindings.xul (resources/content/win/platformTextAreaBindings.xul) 
-	global/content/platformHTMLBindings.xml     (resources/content/win/platformHTMLBindings.xml) 
 	global/skin/htmlBindings.xml                (resources/skin/htmlBindings.xml)
 	global/skin/xulBindings.xml                 (resources/skin/xulBindings.xml)
 	global/skin/radioBindings.xml               (resources/skin/radioBindings.xml)
 	global/skin/treeBindings.xml                (resources/skin/treeBindings.xml)
 	global/skin/menulistBindings.xml            (resources/skin/menulistBindings.xml)
 	global/skin/xul.css                         (resources/skin/xul.css)
-        global/skin/platformHTMLBindings.xml        (resources/skin/win/platformHTMLBindings.xml)
 
 locales/en-US.jar:
     global/content/intl.css                    (resources/locale/en-US/intl.css) 
@@ -69,8 +63,3 @@ locales/en-US.jar:
     global/content/accept2locale.properties    (resources/locale/en-US/accept2locale.properties) 
     global/content/languageNames.properties    (resources/locale/en-US/languageNames.properties) 
     global/content/regionNames.properties      (resources/locale/en-US/regionNames.properties) 
-    global/content/platformGlobalOverlay.dtd   (resources/locale/en-US/win/platformGlobalOverlay.dtd) 
-    global/content/platformDialogOverlay.dtd   (resources/locale/en-US/win/platformDialogOverlay.dtd) 
-
-
-
