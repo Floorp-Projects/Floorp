@@ -117,22 +117,32 @@ nsresult nsMsgBiffManager::Shutdown()
 
 NS_IMETHODIMP nsMsgBiffManager::AddServerBiff(nsIMsgIncomingServer *server)
 {
-	PRInt32 serverIndex = FindServer(server);
 	nsresult rv;
-	//Only add it if it hasn't been added already.
-	if(serverIndex == -1)
-	{
-		nsBiffEntry *biffEntry = new nsBiffEntry;
-		if(!biffEntry)
-			return NS_ERROR_OUT_OF_MEMORY;
-		biffEntry->server = server;
-		nsTime currentTime;
-		rv = SetNextBiffTime(biffEntry, currentTime);
-		if(NS_FAILED(rv))
-			return rv;
+	PRInt32 biffMinutes;
 
-		AddBiffEntry(biffEntry);
-		SetupNextBiff();
+	rv = server->GetBiffMinutes(&biffMinutes);
+	if(NS_FAILED(rv))
+		return rv;
+
+	//Don't add if biffMinutes isn't > 0
+	if(biffMinutes > 0)
+	{
+		PRInt32 serverIndex = FindServer(server);
+		//Only add it if it hasn't been added already.
+		if(serverIndex == -1)
+		{
+			nsBiffEntry *biffEntry = new nsBiffEntry;
+			if(!biffEntry)
+				return NS_ERROR_OUT_OF_MEMORY;
+			biffEntry->server = server;
+			nsTime currentTime;
+			rv = SetNextBiffTime(biffEntry, currentTime);
+			if(NS_FAILED(rv))
+				return rv;
+
+			AddBiffEntry(biffEntry);
+			SetupNextBiff();
+		}
 	}
 	return NS_OK;
 }
