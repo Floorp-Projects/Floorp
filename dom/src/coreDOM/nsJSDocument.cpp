@@ -1303,7 +1303,6 @@ NSDocumentLoad(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   }
 
   nsAutoString b0;
-  nsAutoString b1;
   // If there's no private data, this must be the prototype, so ignore
   if (!nativeThis) {
     return JS_TRUE;
@@ -1318,14 +1317,13 @@ NSDocumentLoad(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
-    if (argc < 2) {
+    if (argc < 1) {
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
-    result = nativeThis->Load(b0, b1);
+    result = nativeThis->Load(b0);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -1400,7 +1398,7 @@ static JSFunctionSpec DocumentMethods[] =
   {"removeBinding",          DocumentXBLRemoveBinding,     2},
   {"createElementWithNameSpace",          NSDocumentCreateElementWithNameSpace,     2},
   {"createRange",          NSDocumentCreateRange,     0},
-  {"load",          NSDocumentLoad,     2},
+  {"load",          NSDocumentLoad,     1},
   {0}
 };
 

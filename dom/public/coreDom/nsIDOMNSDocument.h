@@ -49,7 +49,7 @@ public:
 
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn)=0;
 
-  NS_IMETHOD    Load(const nsString& aUrl, const nsString& aMimeType)=0;
+  NS_IMETHOD    Load(const nsString& aUrl)=0;
 };
 
 
@@ -59,7 +59,7 @@ public:
   NS_IMETHOD    GetCharacterSet(nsString& aCharacterSet);  \
   NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn);  \
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn);  \
-  NS_IMETHOD    Load(const nsString& aUrl, const nsString& aMimeType);  \
+  NS_IMETHOD    Load(const nsString& aUrl);  \
 
 
 
@@ -69,7 +69,7 @@ public:
   NS_IMETHOD    GetCharacterSet(nsString& aCharacterSet) { return _to GetCharacterSet(aCharacterSet); } \
   NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, const nsString& aNameSpace, nsIDOMElement** aReturn) { return _to CreateElementWithNameSpace(aTagName, aNameSpace, aReturn); }  \
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn) { return _to CreateRange(aReturn); }  \
-  NS_IMETHOD    Load(const nsString& aUrl, const nsString& aMimeType) { return _to Load(aUrl, aMimeType); }  \
+  NS_IMETHOD    Load(const nsString& aUrl) { return _to Load(aUrl); }  \
 
 
 #endif // nsIDOMNSDocument_h__
