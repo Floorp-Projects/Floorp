@@ -322,6 +322,7 @@ BASIC_LIBS_2	= \
 		  $(DIST)/lib/lib$(LITE_PREFIX)xp.a \
 		  $(DIST)/lib/libdbm.a \
 		  $(DIST)/lib/libcaps.a \
+		  $(DIST)/lib/libxpcom.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)rdf.a \
 		  $(NULL)
 
