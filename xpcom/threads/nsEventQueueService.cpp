@@ -78,16 +78,17 @@ public:
 class EventQueueEntry : public nsISupports 
 {
 public:
-  EventQueueEntry(nsEventQueueServiceImpl *aService, ThreadKey &aKey);
+  EventQueueEntry(nsEventQueueServiceImpl *aService, ThreadKey &aKey,
+                  PRBool aNative);
   virtual ~EventQueueEntry();
 
   // nsISupports interface...
   NS_DECL_ISUPPORTS
 
   nsIEventQueue* GetEventQueue(void); // addrefs!
-  nsresult       MakeNewQueue(PRThread* thread, nsIEventQueue **aQueue);
   
   nsresult       AddQueue(void);
+
   void           RemoveQueue(nsIEventQueue *aQueue); // queue goes dark, and is released
   ThreadKey     *TheThreadKey(void)
                    { return &mHashKey; }
@@ -99,6 +100,9 @@ public:
                    { return mNextEntry; }
 
 private:
+  nsresult       MakeNewQueue(PRThread* thread, PRBool aNative,
+                              nsIEventQueue **aQueue);
+
   nsIEventQueue           *mQueue;
   ThreadKey                mHashKey;
   nsEventQueueServiceImpl *mService; // weak reference, obviously
@@ -109,12 +113,12 @@ private:
 /* nsISupports interface implementation... */
 NS_IMPL_ISUPPORTS0(EventQueueEntry)
 
-EventQueueEntry::EventQueueEntry(nsEventQueueServiceImpl *aService, ThreadKey &aKey) :
+EventQueueEntry::EventQueueEntry(nsEventQueueServiceImpl *aService, ThreadKey &aKey, PRBool aNative) :
                  mHashKey(aKey), mPrevEntry(0), mNextEntry(0)
 {
   NS_INIT_REFCNT();
   mService = aService;
-  MakeNewQueue(aKey.id, &mQueue);
+  MakeNewQueue(aKey.id, aNative, &mQueue);
   NS_ASSERTION(mQueue, "EventQueueEntry constructor failed");
   if (mService)
     mService->AddEventQueueEntry(this);
@@ -144,7 +148,9 @@ nsIEventQueue* EventQueueEntry::GetEventQueue(void)
   return answer;
 }
 
-nsresult EventQueueEntry::MakeNewQueue(PRThread* thread, nsIEventQueue **aQueue)
+nsresult EventQueueEntry::MakeNewQueue(PRThread* thread,
+                                       PRBool aNative,
+                                       nsIEventQueue **aQueue)
 {
   nsIEventQueue *queue = 0;
   nsresult      rv;
@@ -153,7 +159,7 @@ nsresult EventQueueEntry::MakeNewQueue(PRThread* thread, nsIEventQueue **aQueue)
                 NS_GET_IID(nsIEventQueue), (void**) &queue);
 
   if (NS_SUCCEEDED(rv)) {
-    rv = queue->InitFromPRThread(thread);
+    rv = queue->InitFromPRThread(thread, aNative);
     if (NS_FAILED(rv)) {
       NS_RELEASE(queue);
       queue = 0;  // redundant, but makes me feel better
@@ -165,11 +171,13 @@ nsresult EventQueueEntry::MakeNewQueue(PRThread* thread, nsIEventQueue **aQueue)
 
 nsresult EventQueueEntry::AddQueue(void)
 {
+  PRBool        native;
   nsIEventQueue *newQueue = NULL;
   nsresult      rv = NS_ERROR_NOT_INITIALIZED;
 
   if (mQueue) {
-    rv = MakeNewQueue(PR_GetCurrentThread(), &newQueue);
+    mQueue->IsQueueNative(&native);
+    rv = MakeNewQueue(PR_GetCurrentThread(), native, &newQueue);
 
     // add it to our chain of queues
     if (NS_SUCCEEDED(rv)) {
@@ -301,21 +309,27 @@ NS_IMPL_ISUPPORTS1(nsEventQueueServiceImpl,nsIEventQueueService)
 /* nsIEventQueueService interface implementation... */
 
 NS_IMETHODIMP
-nsEventQueueServiceImpl::CreateThreadEventQueue(void)
+nsEventQueueServiceImpl::CreateThreadEventQueue()
 {
-  return CreateEventQueue(PR_GetCurrentThread());
+  return CreateEventQueue(PR_GetCurrentThread(), PR_TRUE);
+}
+
+NS_IMETHODIMP
+nsEventQueueServiceImpl::CreateMonitoredThreadEventQueue()
+{
+  return CreateEventQueue(PR_GetCurrentThread(), PR_FALSE);
 }
 
 NS_IMETHODIMP
 nsEventQueueServiceImpl::CreateFromIThread(
-    nsIThread *aThread, nsIEventQueue **aResult)
+    nsIThread *aThread, PRBool aNative, nsIEventQueue **aResult)
 {
   nsresult rv;
   PRThread *prThread;
 
   rv = aThread->GetPRThread(&prThread);
   if (NS_SUCCEEDED(rv)) {
-    rv = CreateEventQueue(prThread); // addrefs
+    rv = CreateEventQueue(prThread, aNative); // addrefs
     if (NS_SUCCEEDED(rv))
       rv = GetThreadEventQueue(prThread, aResult); // doesn't addref
   }
@@ -323,7 +337,7 @@ nsEventQueueServiceImpl::CreateFromIThread(
 }
 
 NS_IMETHODIMP
-nsEventQueueServiceImpl::CreateEventQueue(PRThread *aThread)
+nsEventQueueServiceImpl::CreateEventQueue(PRThread *aThread, PRBool aNative)
 {
   nsresult rv = NS_OK;
   ThreadKey  key(aThread);
@@ -335,7 +349,7 @@ nsEventQueueServiceImpl::CreateEventQueue(PRThread *aThread)
   /* create only one event queue chain per thread... */
   evQueueEntry = (EventQueueEntry*)mEventQTable->Get(&key);
   if (NULL == evQueueEntry) {
-    evQueueEntry = new EventQueueEntry(this, key);  
+    evQueueEntry = new EventQueueEntry(this, key, aNative);
     if (NULL == evQueueEntry) {
       rv = NS_ERROR_OUT_OF_MEMORY;
       goto done;
@@ -447,8 +461,10 @@ nsEventQueueServiceImpl::PushThreadEventQueue(nsIEventQueue **aNewQueue)
   PR_EnterMonitor(mEventQMonitor);
 
   evQueueEntry = (EventQueueEntry*)mEventQTable->Get(&key);
+  NS_ASSERTION(evQueueEntry, "pushed event queue on top of nothing");
   if (NULL == evQueueEntry) {
-    evQueueEntry = new EventQueueEntry(this, key);  
+    // shouldn't happen. as a fallback, we guess you wanted a native queue
+    evQueueEntry = new EventQueueEntry(this, key, PR_TRUE);  
     if (NULL == evQueueEntry) {
       rv = NS_ERROR_OUT_OF_MEMORY;
       goto done;

@@ -168,17 +168,16 @@ static PLEventQueue *
     self->removeMsg = PR_TRUE;
 #endif
     PR_INIT_CLIST(&self->queue);
-    if ( qtype == EventQueueIsNative )
-    {
+    if ( qtype == EventQueueIsNative ) {
         err = _pl_SetupNativeNotifier(self);
         if (err) goto error;
+        _md_CreateEventQueue( self );
     }
-    _md_CreateEventQueue( self );
     return self;
 
   error:
     if (mon != NULL)
-    PR_DestroyMonitor(mon);
+        PR_DestroyMonitor(mon);
     PR_DELETE(self);
     return NULL;
 } /* end _pl_CreateEventQueue() */
@@ -928,6 +927,12 @@ PL_IsQueueOnCurrentThread( PLEventQueue *queue )
     else
         return PR_FALSE;
 } /* end PL_IsQueueOnCurrentThread() */
+
+PR_EXTERN(PRBool)
+PL_IsQueueNative(PLEventQueue *queue)
+{
+    return queue->type == EventQueueIsNative ? PR_TRUE : PR_FALSE;
+}
 
 #if defined(WIN16) || defined(_WIN32)
 /*

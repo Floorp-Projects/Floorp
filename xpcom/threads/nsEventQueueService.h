@@ -57,12 +57,14 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIEventQueueService interface...
-  NS_IMETHOD CreateThreadEventQueue(void);
+  NS_IMETHOD CreateThreadEventQueue();
+  NS_IMETHOD CreateMonitoredThreadEventQueue();
   NS_IMETHOD DestroyThreadEventQueue(void);
   NS_IMETHOD GetThreadEventQueue(PRThread* aThread, nsIEventQueue** aResult);
   NS_IMETHOD ResolveEventQueue(nsIEventQueue* queueOrConstant, nsIEventQueue* *resultQueue);
 
-  NS_IMETHOD CreateFromIThread(nsIThread *aThread, nsIEventQueue **aResult);
+  NS_IMETHOD CreateFromIThread(nsIThread *aThread, PRBool aNative,
+                               nsIEventQueue **aResult);
   NS_IMETHOD CreateFromPLEventQueue(PLEventQueue* aPLEventQueue, nsIEventQueue** aResult);
 
   NS_IMETHOD PushThreadEventQueue(nsIEventQueue **aNewQueue);
@@ -70,7 +72,10 @@ public:
 
 
 private:
-  NS_IMETHOD CreateEventQueue(PRThread *aThread);
+             /* Create a queue for the given thread if one does not exist.
+                Addref the descriptor in any case. parameter aNative is
+                ignored if the queue already exists. */
+  NS_IMETHOD CreateEventQueue(PRThread *aThread, PRBool aNative);
   void       AddEventQueueEntry(EventQueueEntry *aEntry);
   void       RemoveEventQueueEntry(EventQueueEntry *aEntry);
 

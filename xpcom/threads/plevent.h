@@ -393,6 +393,12 @@ PL_GetEventQueueSelectFD(PLEventQueue* self);
 PR_EXTERN(PRBool)
     PL_IsQueueOnCurrentThread( PLEventQueue *queue );
 
+/*
+** Returns whether the queue is native (true) or monitored (false)
+*/
+PR_EXTERN(PRBool)
+PL_IsQueueNative(PLEventQueue *queue);
+
 /*******************************************************************************
  * Event Operations
  ******************************************************************************/
