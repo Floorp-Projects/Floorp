@@ -135,8 +135,8 @@ inline nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
                                 (const nsStyleStruct*&)borderData);
             if (borderData) {
               nsMargin border;
-                borderData->CalcBorderFor(frame, border);
-                baseWidth -= (border.left + border.right);
+              borderData->CalcBorderFor(frame, border);
+              baseWidth -= (border.left + border.right);
             }
             // if aFrame is not absolutely positioned, subtract
             // padding of containing block
