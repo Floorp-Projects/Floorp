@@ -35,6 +35,7 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
+<!ENTITY windowTitle.label "Color">
 <!ENTITY lastPickedColor.label "Last-picked color">
 <!ENTITY lastPickedColor.accessKey "L">
 <!ENTITY setColor1.label "Click on a color or">

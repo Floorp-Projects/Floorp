@@ -199,8 +199,8 @@ function onLoad() {
     msgProgress.registerListener(progressListener);
     moveToAlertPosition();
 
-    //We need to delay the set title else dom will overwrite it
-    window.setTimeout(SetTitle, 0, subject);
+    var prefix = itsASaveOperation ? "titlePrefixSave" : "titlePrefixSend";
+    document.title = getString(prefix) + " " + subject;
 }
 
 function onUnload() 
@@ -215,16 +215,6 @@ function onUnload()
     
    catch( exception ) {}
   }
-}
-
-function SetTitle(subject)
-{
-  var prefix;
-  if (itsASaveOperation)
-    prefix = getString("titlePrefixSave");
-  else
-    prefix = getString("titlePrefixSend");
-  window.title = prefix + " " + subject;
 }
 
 // If the user presses cancel, tell the app launcher and close the dialog...

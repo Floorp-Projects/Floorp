@@ -42,7 +42,8 @@
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 
 <!DOCTYPE dialog SYSTEM "chrome://editor/locale/EdColorPicker.dtd">
-<dialog
+
+<dialog title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Startup()"
     ondialogaccept="return onAccept();"

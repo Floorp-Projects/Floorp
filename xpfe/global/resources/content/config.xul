@@ -46,6 +46,7 @@
 
 <window id="config"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+        title="&window.title;"
         width="750"
         height="500"
         onunload="onConfigUnload();"

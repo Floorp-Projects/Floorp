@@ -87,14 +87,12 @@ function Startup()
 
     if (GetCurrentEditor())
     {
-      window.title = GetString(ColorType+"Color");
       if (ColorType == "Page" && IsCSSPrefChecked && IsHTMLEditor())
-        window.title = GetString("BlockColor");
+        document.title = GetString("BlockColor");
+      else
+        document.title = GetString(ColorType + "Color");
     }
   }
-  if (!window.title)
-    window.title = GetString("Color");
-
 
   gDialog.ColorInput.value = "";
   var tmpColor;
