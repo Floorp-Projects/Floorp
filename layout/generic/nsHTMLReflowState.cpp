@@ -324,13 +324,13 @@ nsHTMLReflowState::Init(nsIPresContext* aPresContext,
   mDebugHook = nsnull;
 #endif
 
-  GetStyleData(frame, &mStylePosition);
-  GetStyleData(frame, &mStyleDisplay);
-  GetStyleData(frame, &mStyleVisibility);
-  GetStyleData(frame, &mStyleBorder);
-  GetStyleData(frame, &mStyleMargin);
-  GetStyleData(frame, &mStylePadding);
-  GetStyleData(frame, &mStyleText);
+  mStylePosition = frame->GetStylePosition();
+  mStyleDisplay = frame->GetStyleDisplay();
+  mStyleVisibility = frame->GetStyleVisibility();
+  mStyleBorder = frame->GetStyleBorder();
+  mStyleMargin = frame->GetStyleMargin();
+  mStylePadding = frame->GetStylePadding();
+  mStyleText = frame->GetStyleText();
 
   mFrameType = DetermineFrameType(frame, mStyleDisplay);
   InitCBReflowState();
@@ -379,9 +379,7 @@ nsHTMLReflowState::GetContainingBlockContentWidth(const nsHTMLReflowState* aPare
 nsCSSFrameType
 nsHTMLReflowState::DetermineFrameType(nsIFrame* aFrame)
 {
-  const nsStyleDisplay* styleDisplay;
-  aFrame->GetStyleData(eStyleStruct_Display,
-                       (const nsStyleStruct*&)styleDisplay);
+  const nsStyleDisplay* styleDisplay = aFrame->GetStyleDisplay();
   return DetermineFrameType(aFrame, styleDisplay);
 }
 
@@ -484,8 +482,7 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
   // If neither 'left' not 'right' are auto, then we're over-constrained and
   // we ignore one of them
   if (!leftIsAuto && !rightIsAuto) {
-    const nsStyleVisibility* vis;
-    frame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+    const nsStyleVisibility* vis = frame->GetStyleVisibility();
     
     if (NS_STYLE_DIRECTION_LTR == vis->mDirection) {
       rightIsAuto = PR_TRUE;
@@ -845,8 +842,7 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
   }
   
   // Get the 'direction' of the block
-  const nsStyleVisibility* blockVis;
-  aBlockFrame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)blockVis);
+  const nsStyleVisibility* blockVis = aBlockFrame->GetStyleVisibility();
 
   // Get the placeholder x-offset and y-offset in the coordinate
   // space of the block frame that contains it
@@ -946,10 +942,9 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
 
   // The specified offsets are relative to the absolute containing block's padding
   // edge, and our current values are relative to the border edge so translate
-  nsMargin              border;
-  const nsStyleBorder* borderStyle;
-
-  aAbsoluteContainingBlockFrame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderStyle);
+  const nsStyleBorder* borderStyle =
+    aAbsoluteContainingBlockFrame->GetStyleBorder();
+  nsMargin border;
   if (!borderStyle->GetBorder(border)) {
     NS_NOTYETIMPLEMENTED("percentage border");
   }
@@ -2003,9 +1998,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
   // Check for blinking text and permission to display it
   mFlags.mBlinks = (parentReflowState && parentReflowState->mFlags.mBlinks);
   if (!mFlags.mBlinks && BlinkIsAllowed()) {
-    const nsStyleTextReset* st;
-    frame->GetStyleData(eStyleStruct_TextReset,
-                        (const nsStyleStruct*&)st);
+    const nsStyleTextReset* st = frame->GetStyleTextReset();
     mFlags.mBlinks = 
       ((st->mTextDecoration & NS_STYLE_TEXT_DECORATION_BLINK) != 0);
   }
@@ -2322,12 +2315,9 @@ ComputeLineHeight(nsIPresContext* aPresContext,
 
   nscoord lineHeight = -1;
 
-  const nsStyleText* text;
-  GetStyleData(aStyleContext, &text);
-  const nsStyleFont* font;
-  GetStyleData(aStyleContext, &font);
-  const nsStyleVisibility* vis;
-  GetStyleData(aStyleContext, &vis);
+  const nsStyleText* text = aStyleContext->GetStyleText();
+  const nsStyleFont* font = aStyleContext->GetStyleFont();
+  const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
   
   nsStyleUnit unit = text->mLineHeight.GetUnit();
 
@@ -2383,8 +2373,7 @@ nsHTMLReflowState::CalcLineHeight(nsIPresContext* aPresContext,
   if (lineHeight < 0) {
     // Negative line-heights are not allowed by the spec. Translate
     // them into "normal" when found.
-    const nsStyleFont* font = (const nsStyleFont*)
-      sc->GetStyleData(eStyleStruct_Font);
+    const nsStyleFont* font = sc->GetStyleFont();
     if (UseComputedHeight()) {
       lineHeight = font->mFont.size;
     }

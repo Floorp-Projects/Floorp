@@ -136,8 +136,7 @@ nsStackFrame::GetFrameForPoint(nsIPresContext* aPresContext,
       rv = NS_ERROR_FAILURE;
 
   if (NS_FAILED(rv)) {
-        const nsStyleColor* color =
-    (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+      const nsStyleBackground* color = GetStyleBackground();
 
       PRBool        transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
                                     (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);

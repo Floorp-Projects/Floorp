@@ -569,8 +569,6 @@ PRBool nsCaret::SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, n
 #ifdef IBMBIDI
   PRUint8 bidiLevel=0;
   // Mamdouh : modification of the caret to work at rtl and ltr with Bidi
-  const nsStyleVisibility* vis;
-  theFrame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&) vis);
   //
   // Direction Style from this->GetStyleData()
   // now in (visibility->mDirection)
@@ -594,7 +592,9 @@ PRBool nsCaret::SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, n
       bidiLevel &= ~BIDI_LEVEL_UNDEFINED;
       // There has been a reflow, so we reset the cursor Bidi level to the level of the current frame
       if (!presContext) // Use the style default or default to 0
-        newBidiLevel = (vis) ? vis->mDirection : 0;
+      {
+        newBidiLevel = theFrame->GetStyleVisibility()->mDirection;
+      }
       else
       {
         theFrame->GetBidiProperty(presContext, nsLayoutAtoms::embeddingLevel,
@@ -740,21 +740,17 @@ PRBool nsCaret::SetupDrawingFrameAndOffset(nsIDOMNode* aNode, PRInt32 aOffset, n
 #endif // IBMBIDI
 
   // now we have a frame, check whether it's appropriate to show the caret here
-  const nsStyleUserInterface* userinterface;
-  theFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
-  if (userinterface)
-  {
-    if (
+  const nsStyleUserInterface* userinterface = theFrame->GetStyleUserInterface();
+  if (
 #ifdef SUPPORT_USER_MODIFY
-          // editable content still defaults to NS_STYLE_USER_MODIFY_READ_ONLY at present. See bug 15284
-        (userinterface->mUserModify == NS_STYLE_USER_MODIFY_READ_ONLY) ||
+        // editable content still defaults to NS_STYLE_USER_MODIFY_READ_ONLY at present. See bug 15284
+      (userinterface->mUserModify == NS_STYLE_USER_MODIFY_READ_ONLY) ||
 #endif          
-        (userinterface->mUserInput == NS_STYLE_USER_INPUT_NONE) ||
-        (userinterface->mUserInput == NS_STYLE_USER_INPUT_DISABLED))
-    {
-      return PR_FALSE;
-    }  
-  }
+      (userinterface->mUserInput == NS_STYLE_USER_INPUT_NONE) ||
+      (userinterface->mUserInput == NS_STYLE_USER_INPUT_DISABLED))
+  {
+    return PR_FALSE;
+  }  
 
   // mark the frame, so we get notified on deletion.
   // frames are never unmarked, which means that we'll touch every frame we visit.
@@ -1035,12 +1031,10 @@ void nsCaret::GetCaretRectAndInvert()
   // after we've got an RC.
   if (frameRect.height == 0)
   {
-      const nsStyleFont* fontStyle;
-      const nsStyleVisibility* vis;
-      mLastCaretFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)fontStyle);
-      mLastCaretFrame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+      const nsStyleFont* fontStyle = mLastCaretFrame->GetStyleFont();
+      const nsStyleVisibility* vis = mLastCaretFrame->GetStyleVisibility();
       nsCOMPtr<nsIAtom> langGroup;
-      if (vis && vis->mLanguage)
+      if (vis->mLanguage)
         vis->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
       mRendContext->SetFont(fontStyle->mFont, langGroup);
 
@@ -1097,10 +1091,8 @@ void nsCaret::GetCaretRectAndInvert()
     {
       caretRect.x -= caretXMost - frameXMost;
 
-      const nsStyleVisibility* vis;
-      const nsStyleText* textStyle;
-      mLastCaretFrame->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
-      mLastCaretFrame->GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+      const nsStyleText* textStyle = mLastCaretFrame->GetStyleText();
+      const nsStyleVisibility* vis = mLastCaretFrame->GetStyleVisibility();
 
       if ((vis->mDirection == NS_STYLE_DIRECTION_LTR &&
            textStyle->mTextAlign == NS_STYLE_TEXT_ALIGN_RIGHT) ||

@@ -2872,11 +2872,6 @@ nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIFrame* aFrame,
     }
 
     nsIFrame* container = nsnull;
-    const nsStyleBorder* borderData = nsnull;
-    const nsStylePadding* paddingData = nsnull;
-    nsMargin border;
-    nsMargin padding;
-    nsSize size;
     switch(coord.GetUnit()) {
       case eStyleUnit_Coord:
         val->SetTwips(sign * coord.GetCoordValue());
@@ -2884,16 +2879,11 @@ nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIFrame* aFrame,
       case eStyleUnit_Percent:
         container = GetContainingBlock(aFrame);
         if (container) {
-          container->GetStyleData(eStyleStruct_Border,
-                                  (const nsStyleStruct*&)borderData);
-          if (borderData) {
-            borderData->CalcBorderFor(container, border);
-          }
-          container->GetStyleData(eStyleStruct_Padding,
-                                  (const nsStyleStruct*&)paddingData);
-          if (paddingData) {
-            paddingData->CalcPaddingFor(container, padding);
-          }
+          nsMargin border;
+          nsMargin padding;
+          nsSize size;
+          container->GetStyleBorder()->CalcBorderFor(container, border);
+          container->GetStylePadding()->CalcPaddingFor(container, padding);
           container->GetSize(size);
           if (aSide == NS_SIDE_LEFT || aSide == NS_SIDE_RIGHT) {
             val->SetTwips(sign * coord.GetPercentValue() *
@@ -3020,7 +3010,7 @@ nsComputedDOMStyle::GetStyleData(nsStyleStructID aID,
                                  nsIFrame* aFrame)
 {
   if (aFrame && !mPseudo) {
-    aFrame->GetStyleData(aID, aStyleStruct);
+    aStyleStruct = aFrame->GetStyleData(aID);
   } else if (mStyleContextHolder) {
     aStyleStruct = mStyleContextHolder->GetStyleData(aID);    
   } else {

@@ -257,10 +257,8 @@ nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
     // XXX Put view last in document order until we know how to do better
     viewManager->InsertChild(parentView, view, nsnull, PR_TRUE);
 
-    const nsStyleDisplay* display;
-    ::GetStyleData(mStyleContext, &display);
     // If it's fixed positioned, then create a widget too
-    CreateScrollingViewWidget(view, display);
+    CreateScrollingViewWidget(view, GetStyleDisplay());
 
     // Get the nsIScrollableView interface
     nsIScrollableView* scrollingView;
@@ -273,11 +271,9 @@ nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
       scrollingView->CreateScrollControls(); 
     }
 
-    const nsStyleBorder* borderStyle;
-    ::GetStyleData(mStyleContext, &borderStyle);
     // Set the scrolling view's insets to whatever our border is
     nsMargin border;
-    if (!borderStyle->GetBorder(border)) {
+    if (!GetStyleBorder()->GetBorder(border)) {
       NS_NOTYETIMPLEMENTED("percentage border");
       border.SizeTo(0, 0, 0, 0);
     }
@@ -608,13 +604,10 @@ nsScrollBoxFrame::Paint(nsIPresContext*      aPresContext,
 {
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     // Only paint the border and background if we're visible
-    const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
 
-    if (vis->IsVisibleOrCollapsed()) {
+    if (GetStyleVisibility()->IsVisibleOrCollapsed()) {
       // Paint our border only (no background)
-      const nsStyleBorder* border = (const nsStyleBorder*)
-        mStyleContext->GetStyleData(eStyleStruct_Border);
+      const nsStyleBorder* border = GetStyleBorder();
 
       nsRect  rect(0, 0, mRect.width, mRect.height);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,

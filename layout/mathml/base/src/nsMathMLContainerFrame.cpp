@@ -77,9 +77,7 @@ nsMathMLContainerFrame::ReflowError(nsIPresContext*      aPresContext,
 
   ///////////////
   // Set font
-  const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
-    mStyleContext->GetStyleData(eStyleStruct_Font));
-  aRenderingContext.SetFont(font->mFont, nsnull);
+  aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull);
 
   // bounding metrics
   nsAutoString errorMsg; errorMsg.AssignWithConversion("invalid-markup");
@@ -120,9 +118,7 @@ nsMathMLContainerFrame::PaintError(nsIPresContext*      aPresContext,
     NS_ASSERTION(NS_MATHML_HAS_ERROR(mPresentationData.flags),
                  "There is nothing wrong with this frame!");
     // Set color and font ...
-    const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
-      mStyleContext->GetStyleData(eStyleStruct_Font));
-    aRenderingContext.SetFont(font->mFont, nsnull);
+    aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull);
 
     aRenderingContext.SetColor(NS_RGB(255,0,0));
     aRenderingContext.FillRect(0, 0, mRect.width, mRect.height);
@@ -647,8 +643,7 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIPresContext* aPresContext,
       }
       fontsize.AppendInt(gap, 10);
       // we want to make sure that the size will stay readable
-      const nsStyleFont* font = NS_STATIC_CAST(const nsStyleFont*,
-        parentContext->GetStyleData(eStyleStruct_Font));
+      const nsStyleFont* font = parentContext->GetStyleFont();
       nscoord newFontSize = font->mFont.size;
       while (0 < gap--) {
         newFontSize = (nscoord)((float)(newFontSize) * scriptsizemultiplier);
@@ -1313,8 +1308,7 @@ nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
   mBoundingMetrics.Clear();
 
   // cache away thinspace
-  const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
-    mStyleContext->GetStyleData(eStyleStruct_Font));
+  const nsStyleFont* font = GetStyleFont();
   nscoord thinSpace = NSToCoordRound(float(font->mFont.size)*float(3) / float(18));
 
   PRInt32 count = 0;
@@ -1448,8 +1442,7 @@ GetInterFrameSpacingFor(nsIPresContext* aPresContext,
     if (aChildFrame == childFrame) {
       // get thinspace
       nsStyleContext* parentContext = aParentFrame->GetStyleContext();
-      const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
-        parentContext->GetStyleData(eStyleStruct_Font));
+      const nsStyleFont* font = parentContext->GetStyleFont();
       nscoord thinSpace = NSToCoordRound(float(font->mFont.size)*float(3) / float(18));
       // we are done
       return space * thinSpace;

@@ -513,9 +513,6 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext*          aPresCont
   aReflowState.path->mReflowCommand->GetType(type);
   nsIFrame *objectFrame;
   aReflowState.path->mReflowCommand->GetChildFrame(objectFrame); 
-  const nsStyleDisplay *childDisplay=nsnull;
-  if (nsnull!=objectFrame)
-    objectFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
   switch (type)
   {
   case eReflowType_StyleChanged :
@@ -595,9 +592,8 @@ nsTableColFrame * nsTableColGroupFrame::GetNextColumn(nsIFrame *aChildFrame)
     childFrame = mFrames.FirstChild();
   while (nsnull!=childFrame)
   {
-    const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN == childDisplay->mDisplay)
+    if (NS_STYLE_DISPLAY_TABLE_COLUMN ==
+        childFrame->GetStyleDisplay()->mDisplay)
     {
       result = (nsTableColFrame *)childFrame;
       break;
@@ -615,9 +611,8 @@ nsTableColFrame * nsTableColGroupFrame::GetColumnAt (PRInt32 aColIndex)
   nsIFrame *childFrame = mFrames.FirstChild();
 
   while (nsnull!=childFrame) {
-    const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_COLUMN == childDisplay->mDisplay) {
+    if (NS_STYLE_DISPLAY_TABLE_COLUMN ==
+        childFrame->GetStyleDisplay()->mDisplay) {
       nsTableColFrame *col = (nsTableColFrame *)childFrame;
       count++;
       if (aColIndex<=count) {

@@ -937,9 +937,7 @@ nsEventStateManager::HandleAccessKey(nsIPresContext* aPresContext,
         presShell->GetPrimaryFrameFor(content, &frame);
 
         if (frame) {
-          const nsStyleVisibility* vis;
-          frame->GetStyleData(eStyleStruct_Visibility,
-            ((const nsStyleStruct *&)vis));
+          const nsStyleVisibility* vis = frame->GetStyleVisibility();
           PRBool viewShown = PR_TRUE;
 
           nsIView* frameView = nsnull;
@@ -1884,8 +1882,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         PRBool suppressBlur = PR_FALSE;
         if (mCurrentTarget) {
           mCurrentTarget->GetContentForEvent(mPresContext, aEvent, getter_AddRefs(newFocus));
-          const nsStyleUserInterface* ui;
-          ::GetStyleData(mCurrentTarget, &ui);
+          const nsStyleUserInterface* ui = mCurrentTarget->GetStyleUserInterface();
           suppressBlur = (ui->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE);
         }
 
@@ -1898,15 +1895,13 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         while (currFrame) {
           // If the mousedown happened inside a popup, don't
           // try to set focus on one of its containing elements
-          const nsStyleDisplay* display;
-          ::GetStyleData(currFrame, &display);
+          const nsStyleDisplay* display = currFrame->GetStyleDisplay();
           if (display->mDisplay == NS_STYLE_DISPLAY_POPUP) {
             newFocus = nsnull;
             break;
           }
 
-          const nsStyleUserInterface* ui;
-          ::GetStyleData(currFrame, &ui);
+          const nsStyleUserInterface* ui = currFrame->GetStyleUserInterface();
           if ((ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE) &&
               (ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE)) {
             currFrame->GetContent(getter_AddRefs(newFocus));
@@ -3487,11 +3482,8 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
     nsCOMPtr<nsIContent> child;
     currentFrame->GetContent(getter_AddRefs(child));
 
-    const nsStyleVisibility* vis;
-    currentFrame->GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)vis));
-
-    const nsStyleUserInterface* ui;
-    currentFrame->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));
+    const nsStyleVisibility* vis = currentFrame->GetStyleVisibility();
+    const nsStyleUserInterface* ui = currentFrame->GetStyleUserInterface();
 
     PRBool viewShown = PR_TRUE;
 
@@ -3943,8 +3935,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
   // XXX This doesn't consider that |aState| is a bitfield.
   if (mCurrentTarget && (aState == NS_EVENT_STATE_ACTIVE || aState == NS_EVENT_STATE_HOVER))
   {
-    const nsStyleUserInterface* ui;
-    mCurrentTarget->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));
+    const nsStyleUserInterface* ui = mCurrentTarget->GetStyleUserInterface();
     if (ui->mUserInput == NS_STYLE_USER_INPUT_NONE)
       return NS_OK;
   }

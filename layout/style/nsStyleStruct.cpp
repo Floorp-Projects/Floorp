@@ -85,21 +85,21 @@ inline nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
           switch (aSpacing) {
             case NS_SPACING_MARGIN:
               {
-                const nsStyleMargin* parentMargin = (const nsStyleMargin*)parentContext->GetStyleData(eStyleStruct_Margin);
+                const nsStyleMargin* parentMargin = parentContext->GetStyleMargin();
                 parentMargin->CalcMarginFor(parentFrame, parentSpacing);  
               }
 
               break;
             case NS_SPACING_PADDING:
               {
-                const nsStylePadding* parentPadding = (const nsStylePadding*)parentContext->GetStyleData(eStyleStruct_Padding);
+                const nsStylePadding* parentPadding = parentContext->GetStylePadding();
                 parentPadding->CalcPaddingFor(parentFrame, parentSpacing);  
               }
 
               break;
             case NS_SPACING_BORDER:
               {
-                const nsStyleBorder* parentBorder = (const nsStyleBorder*)parentContext->GetStyleData(eStyleStruct_Border);
+                const nsStyleBorder* parentBorder = parentContext->GetStyleBorder();
                 parentBorder->CalcBorderFor(parentFrame, parentSpacing);  
               }
 
@@ -128,30 +128,17 @@ inline nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
             frame->GetSize(size);
             baseWidth = size.width;
             // subtract border of containing block
-            const nsStyleBorder* borderData = nsnull;
-            frame->GetStyleData(eStyleStruct_Border,
-                                (const nsStyleStruct*&)borderData);
-            if (borderData) {
-              nsMargin border;
-              borderData->CalcBorderFor(frame, border);
-              baseWidth -= (border.left + border.right);
-            }
+            nsMargin border;
+            frame->GetStyleBorder()->CalcBorderFor(frame, border);
+            baseWidth -= (border.left + border.right);
             // if aFrame is not absolutely positioned, subtract
             // padding of containing block
-            const nsStyleDisplay* displayData = nsnull;
-            aFrame->GetStyleData(eStyleStruct_Display,
-                                 (const nsStyleStruct*&)displayData);
-            if (displayData &&
-                displayData->mPosition != NS_STYLE_POSITION_ABSOLUTE &&
+            const nsStyleDisplay* displayData = aFrame->GetStyleDisplay();
+            if (displayData->mPosition != NS_STYLE_POSITION_ABSOLUTE &&
                 displayData->mPosition != NS_STYLE_POSITION_FIXED) {
-              const nsStylePadding* paddingData = nsnull;
-              frame->GetStyleData(eStyleStruct_Padding,
-                                  (const nsStyleStruct*&)paddingData);
-              if (paddingData) {
-                nsMargin padding;
-                paddingData->CalcPaddingFor(frame, padding);
-                baseWidth -= (padding.left + padding.right);
-              }
+              nsMargin padding;
+              frame->GetStylePadding()->CalcPaddingFor(frame, padding);
+              baseWidth -= (padding.left + padding.right);
             }
             break;
           }

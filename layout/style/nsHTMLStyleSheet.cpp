@@ -177,9 +177,7 @@ HTMLDocumentColorRule::Initialize(nsIPresContext* aPresContext)
   shell->GetPrimaryFrameFor(bodyContent, &bodyFrame);
   if (!bodyFrame)
     return;
-  const nsStyleColor *bodyColor;
-  ::GetStyleData(bodyFrame, &bodyColor);
-  mColor = bodyColor->mColor;
+  mColor = bodyFrame->GetStyleColor()->mColor;
 }
 
 class GenericTableRule: public nsIStyleRule {
@@ -261,8 +259,7 @@ static void PostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleDa
     nsStyleContext* parentContext = aRuleData->mStyleContext->GetParent();
 
     if (parentContext) {
-      const nsStyleText* parentStyleText = 
-          (const nsStyleText*)parentContext->GetStyleData(eStyleStruct_Text);
+      const nsStyleText* parentStyleText = parentContext->GetStyleText();
       PRUint8 parentAlign = parentStyleText->mTextAlign;
       text->mTextAlign = (NS_STYLE_TEXT_ALIGN_DEFAULT == parentAlign)
                               ? NS_STYLE_TEXT_ALIGN_CENTER : parentAlign;
@@ -300,15 +297,11 @@ ProcessTableRulesAttribute(nsStyleStruct* aStyleStruct,
       return;
   } 
   
-  const nsStyleTable* tableData = 
-    (const nsStyleTable*)tableContext->GetStyleData(eStyleStruct_Table);
-  if (tableData && ((aRulesArg1 == tableData->mRules) ||
-                    (aRulesArg2 == tableData->mRules) ||
-                    (aRulesArg3 == tableData->mRules))) {
-    const nsStyleBorder* tableBorderData = 
-      (const nsStyleBorder*)tableContext->GetStyleData(eStyleStruct_Border);
-    if (!tableBorderData)
-      return;
+  const nsStyleTable* tableData = tableContext->GetStyleTable();
+  if (aRulesArg1 == tableData->mRules ||
+      aRulesArg2 == tableData->mRules ||
+      aRulesArg3 == tableData->mRules) {
+    const nsStyleBorder* tableBorderData = tableContext->GetStyleBorder();
     PRUint8 tableBorderStyle = tableBorderData->GetBorderStyle(aSide);
 
     nsStyleBorder* borderData = (nsStyleBorder*)aStyleStruct;

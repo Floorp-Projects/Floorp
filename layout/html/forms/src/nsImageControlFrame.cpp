@@ -325,8 +325,7 @@ nsImageControlFrame::HandleEvent(nsIPresContext* aPresContext,
   }
 
   // do we have user-input style?
-  const nsStyleUserInterface* uiStyle;
-  GetStyleData(eStyleStruct_UserInterface,  (const nsStyleStruct *&)uiStyle);
+  const nsStyleUserInterface* uiStyle = GetStyleUserInterface();
   if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
@@ -411,13 +410,8 @@ nsImageControlFrame::GetCursor(nsIPresContext* aPresContext,
 {
   // Use style defined cursor if one is provided, otherwise when
   // the cursor style is "auto" we use the pointer cursor.
-  const nsStyleUserInterface* ui = (const nsStyleUserInterface*) mStyleContext->GetStyleData(eStyleStruct_UserInterface);
-  if (ui) {
-    aCursor = ui->mCursor;
-    if (NS_STYLE_CURSOR_AUTO == aCursor) {
-      aCursor = NS_STYLE_CURSOR_POINTER;
-    }
-  } else {
+  aCursor = GetStyleUserInterface()->mCursor;
+  if (NS_STYLE_CURSOR_AUTO == aCursor) {
     aCursor = NS_STYLE_CURSOR_POINTER;
   }
   return NS_OK;

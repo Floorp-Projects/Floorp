@@ -1387,10 +1387,8 @@ StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
   if (result &&
       (aPseudoTag == nsCSSPseudoElements::before ||
        aPseudoTag == nsCSSPseudoElements::after)) {
-    const nsStyleDisplay *display;
-    const nsStyleContent *content;
-    ::GetStyleData(result, &display);
-    ::GetStyleData(result, &content);
+    const nsStyleDisplay *display = result->GetStyleDisplay();
+    const nsStyleContent *content = result->GetStyleContent();
     // XXXldb What is contentCount for |content: ""|?
     if (display->mDisplay == NS_STYLE_DISPLAY_NONE ||
         content->ContentCount() == 0) {

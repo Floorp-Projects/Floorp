@@ -220,9 +220,7 @@ nsMathMLmfracFrame::Paint(nsIPresContext*      aPresContext,
            !NS_MATHML_HAS_ERROR(mPresentationData.flags) &&
            !mLineRect.IsEmpty()) {
     // paint the fraction line with the current text color
-    const nsStyleColor *color = NS_STATIC_CAST(const nsStyleColor*,
-      mStyleContext->GetStyleData(eStyleStruct_Color));
-    aRenderingContext.SetColor(color->mColor);
+    aRenderingContext.SetColor(GetStyleColor()->mColor);
     aRenderingContext.FillRect(mLineRect.x, mLineRect.y, 
                                mLineRect.width, mLineRect.height);
   }
@@ -282,9 +280,7 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
   aPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
-  const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
-    mStyleContext->GetStyleData(eStyleStruct_Font));
-  aRenderingContext.SetFont(font->mFont, nsnull);
+  aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull);
   nsCOMPtr<nsIFontMetrics> fm;
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
 

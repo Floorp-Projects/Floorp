@@ -3317,10 +3317,7 @@ nsSelection::FrameOrParentHasSpecialSelectionStyle(nsIFrame* aFrame, PRUint8 aSe
   
   while (thisFrame)
   {
-    const nsStyleUIReset* userinterface;
-    thisFrame->GetStyleData(eStyleStruct_UIReset, (const nsStyleStruct*&)userinterface);
-  
-    if (userinterface->mUserSelect == aSelectionStyle)
+    if (thisFrame->GetStyleUIReset()->mUserSelect == aSelectionStyle)
     {
       *foundFrame = thisFrame;
       return NS_OK;

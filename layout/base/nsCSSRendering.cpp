@@ -1566,8 +1566,7 @@ PRBool GetBGColorForHTMLElement( nsIPresContext *aPresContext,
             if (NS_SUCCEEDED(shell->GetPrimaryFrameFor(pContent, &pFrame)) && pFrame) {
               nsStyleContext *pContext = pFrame->GetStyleContext();
               if (pContext) {
-                const nsStyleBackground* color = (const nsStyleBackground*)pContext->GetStyleData(eStyleStruct_Background);
-                NS_ASSERTION(color,"ColorStyleData should not be null");
+                const nsStyleBackground* color = pContext->GetStyleBackground();
                 if (0 == (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
                   aBGColor = color;
                   // set the reslt to TRUE to indicate we mapped the color
@@ -1689,7 +1688,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
   // Check to see if we have an appearance defined.  If so, we let the theme
   // renderer draw the border.  DO not get the data from aForFrame, since the passed in style context
   // may be different!  Always use |aStyleContext|!
-  const nsStyleDisplay* displayData = (const nsStyleDisplay*)aStyleContext->GetStyleData(eStyleStruct_Display);
+  const nsStyleDisplay* displayData = aStyleContext->GetStyleDisplay();
   if (displayData->mAppearance) {
     nsCOMPtr<nsITheme> theme;
     aPresContext->GetTheme(getter_AddRefs(theme));
@@ -1697,7 +1696,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext* aPresContext,
       return; // Let the theme handle it.
   }
   // Get our style context's color struct.
-  const nsStyleColor* ourColor = (const nsStyleColor*)aStyleContext->GetStyleData(eStyleStruct_Color);
+  const nsStyleColor* ourColor = aStyleContext->GetStyleColor();
 
   // in NavQuirks mode we want to use the parent's context as a starting point 
   // for determining the background color
@@ -2120,7 +2119,7 @@ const nsStyleBackground* bgColor = nsCSSRendering::FindNonTransparentBackground(
 nscoord width;
 
   // Get our style context's color struct.
-  const nsStyleColor* ourColor = (const nsStyleColor*)aStyleContext->GetStyleData(eStyleStruct_Color);
+  const nsStyleColor* ourColor = aStyleContext->GetStyleColor();
 
   aOutlineStyle.GetOutlineWidth(width);
 
@@ -2582,7 +2581,7 @@ nsCSSRendering::FindNonTransparentBackground(nsStyleContext* aContext,
     // Have to .get() because some compilers won't match the template
     // otherwise (they don't look for implicit type conversions while doing
     // template matching?).
-    ::GetStyleData(context, &result);
+    result = context->GetStyleBackground();
     if (0 == (result->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT))
       break;
 
@@ -2661,8 +2660,7 @@ FindCanvasBackground(nsIPresContext* aPresContext,
   nsIFrame *firstChild;
   aForFrame->FirstChild(aPresContext, nsnull, &firstChild);
   if (firstChild) {
-    const nsStyleBackground *result;
-    GetStyleData(firstChild, &result);
+    const nsStyleBackground* result = firstChild->GetStyleBackground();
   
     // for printing and print preview.. this should be a pageContentFrame
     nsCOMPtr<nsIAtom> frameType;
@@ -2675,12 +2673,9 @@ FindCanvasBackground(nsIPresContext* aPresContext,
       while(firstChild){
         for (nsIFrame* kidFrame = firstChild; nsnull != kidFrame; ) {
           parentContext = kidFrame->GetStyleContext();
-          // Need to .get() because some compilers will not do the
-          // implicit .get() to match the template.
-          // See also rev 3.188 of this file.
-          ::GetStyleData(parentContext, &result);
+          result = parentContext->GetStyleBackground();
           if (!result->IsTransparent()) {
-            GetStyleData(kidFrame, aBackground);
+            *aBackground = kidFrame->GetStyleBackground();
             return PR_TRUE;
           } else {
             kidFrame->GetNextSibling(&kidFrame); 
@@ -2720,7 +2715,7 @@ FindCanvasBackground(nsIPresContext* aPresContext,
             nsIFrame *bodyFrame;
             nsresult rv = shell->GetPrimaryFrameFor(bodyContent, &bodyFrame);
             if (NS_SUCCEEDED(rv) && bodyFrame)
-              ::GetStyleData(bodyFrame, &result);
+              result = bodyFrame->GetStyleBackground();
           }
         }
       }
@@ -2731,7 +2726,7 @@ FindCanvasBackground(nsIPresContext* aPresContext,
     // This should always give transparent, so we'll fill it in with the
     // default color if needed.  This seems to happen a bit while a page is
     // being loaded.
-    GetStyleData(aForFrame, aBackground);
+    *aBackground = aForFrame->GetStyleBackground();
   }
   
   return PR_TRUE;
@@ -2753,7 +2748,7 @@ FindElementBackground(nsIPresContext* aPresContext,
       return PR_FALSE; // Background was already drawn for the canvas.
   }
 
-  ::GetStyleData(aForFrame, aBackground);
+  *aBackground = aForFrame->GetStyleBackground();
 
   nsCOMPtr<nsIContent> content;
   aForFrame->GetContent(getter_AddRefs(content));
@@ -2776,8 +2771,7 @@ FindElementBackground(nsIPresContext* aPresContext,
   if (!htmlDoc)
     return PR_TRUE;
 
-  const nsStyleBackground *htmlBG;
-  ::GetStyleData(parentFrame, &htmlBG);
+  const nsStyleBackground* htmlBG = parentFrame->GetStyleBackground();
   return !htmlBG->IsTransparent();
 }
 
@@ -2822,18 +2816,17 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
     // a root, other wise keep going in order to let the theme stuff
     // draw the background. The canvas really should be drawing the
     // bg, but there's no way to hook that up via css.
-    const nsStyleDisplay* displayData = nsnull;
-    aForFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct*&)displayData));
+    const nsStyleDisplay* displayData = aForFrame->GetStyleDisplay();
     if (displayData->mAppearance) {
       nsCOMPtr<nsIContent> content;
       aForFrame->GetContent(getter_AddRefs(content));
-      if ( content ) {
+      if (content) {
         nsCOMPtr<nsIContent> parent;
         content->GetParent(*getter_AddRefs(parent));
-        if ( parent )
+        if (parent)
           return;
         else
-          ::GetStyleData(aForFrame, &color);
+          color = aForFrame->GetStyleBackground();
       }
       else
         return;
@@ -2922,8 +2915,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
 
   // Check to see if we have an appearance defined.  If so, we let the theme
   // renderer draw the background and bail out.
-  const nsStyleDisplay* displayData;
-  aForFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct*&)displayData));
+  const nsStyleDisplay* displayData = aForFrame->GetStyleDisplay();
   if (displayData->mAppearance) {
     nsCOMPtr<nsITheme> theme;
     aPresContext->GetTheme(getter_AddRefs(theme));
@@ -3212,8 +3204,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
         firstRootElementFrame->GetRect(firstRootElementFrameArea);
 
         // Take the border out of the frame's rect
-        const nsStyleBorder* borderStyle;
-        firstRootElementFrame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderStyle);
+        const nsStyleBorder* borderStyle = firstRootElementFrame->GetStyleBorder();
         nsMargin border;
         borderStyle->GetBorder(border);
         firstRootElementFrameArea.Deflate(border);
@@ -3744,7 +3735,7 @@ nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderin
   PRInt16   thickness;
 
   // Get our style context's color struct.
-  const nsStyleColor* ourColor = (const nsStyleColor*)aStyleContext->GetStyleData(eStyleStruct_Color);
+  const nsStyleColor* ourColor = aStyleContext->GetStyleColor();
 
   NS_ASSERTION((aIsOutline && aOutlineStyle) || (!aIsOutline && aBorderStyle), "null params not allowed");
   // set the style information

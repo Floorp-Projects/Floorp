@@ -1690,8 +1690,7 @@ nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     rv = divContent->SetAttr(kNameSpaceID_None,nsHTMLAtoms::style, NS_ConvertASCIItoUCS2(DIV_STRING_SINGLELINE), PR_FALSE);
   else {
     nsAutoString divStr; divStr.AssignWithConversion(DIV_STRING);
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
+    const nsStyleDisplay* disp = GetStyleDisplay();
     if (disp->mOverflow == NS_STYLE_OVERFLOW_SCROLL)
       divStr += NS_LITERAL_STRING("overflow:scroll;");
     else if (disp->mOverflow == NS_STYLE_OVERFLOW_HIDDEN)
@@ -1942,8 +1941,7 @@ nsTextControlFrame::Reflow(nsIPresContext*   aPresContext,
   { // fix for bug 40596, width:auto means the control sets it's mMaxElementWidth to it's default width
     if (aDesiredSize.mComputeMEW)
     {
-      nsStylePosition *stylePosition;
-      GetStyleData(eStyleStruct_Position,  (const nsStyleStruct *&)stylePosition);
+      const nsStylePosition* stylePosition = GetStylePosition();
       nsStyleUnit widthUnit = stylePosition->mWidth.GetUnit();
       if (eStyleUnit_Auto == widthUnit) {
         aDesiredSize.mMaxElementWidth = aDesiredSize.width;

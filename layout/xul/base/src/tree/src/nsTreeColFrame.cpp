@@ -165,9 +165,7 @@ nsTreeColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     }
   }
   if (mRect.Contains(aPoint)) {
-    const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-    if (vis->IsVisible()) {
+    if (GetStyleVisibility()->IsVisible()) {
       *aFrame = this; // Capture all events.
       return NS_OK;
     }

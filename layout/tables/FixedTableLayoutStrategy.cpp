@@ -71,8 +71,7 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
                                                    float                    aPixelToTwips)
 {
   // NS_ASSERTION(aComputedWidth != NS_UNCONSTRAINEDSIZE, "bad computed width");
-  const nsStylePosition* tablePosition;
-  mTableFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)tablePosition);
+  const nsStylePosition* tablePosition = mTableFrame->GetStylePosition();
   PRBool tableIsFixedWidth = eStyleUnit_Coord   == tablePosition->mWidth.GetUnit() ||
                              eStyleUnit_Percent == tablePosition->mWidth.GetUnit();
 
@@ -112,8 +111,7 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
     }
 
     // Get the columns's style
-    const nsStylePosition* colPosition;
-    colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)colPosition);
+    const nsStylePosition* colPosition = colFrame->GetStylePosition();
 
     // get the fixed width if available
     if (eStyleUnit_Coord == colPosition->mWidth.GetUnit()) { 
@@ -138,8 +136,7 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
       nsTableCellFrame* cellFrame = mTableFrame->GetCellFrameAt(0, colX);
       if (nsnull != cellFrame) {
         // Get the cell's style
-        const nsStylePosition* cellPosition;
-        cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)cellPosition);
+        const nsStylePosition* cellPosition = cellFrame->GetStylePosition();
 
         nscoord cellWidth = 0;
         PRInt32 colSpan = mTableFrame->GetEffectiveColSpan(*cellFrame);

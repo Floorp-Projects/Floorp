@@ -111,8 +111,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(nsIPresContext* aPresContext,
       nsCompatibility compat;
       aPresContext->GetCompatibilityMode(&compat);
 
-      const nsStyleText* text;
-      ::GetStyleData(bf, &text);
+      const nsStyleText* text = bf->GetStyleText();
       PRBool isPre = NS_STYLE_WHITESPACE_PRE == text->mWhiteSpace ||
                      NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == text->mWhiteSpace;
 
@@ -374,11 +373,9 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
    * All other blocks proceed normally.
    */
   // XXXldb We should really fix this in nsHTMLReflowState::InitConstraints instead.
-  const nsStylePosition* position;
-  mFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+  const nsStylePosition* position = mFrame->GetStylePosition();
   nsStyleUnit widthUnit = position->mWidth.GetUnit();
-  const nsStyleDisplay* display;
-  mFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+  const nsStyleDisplay* display = mFrame->GetStyleDisplay();
 
   if ((eStyleUnit_Auto == widthUnit) &&
       ((NS_STYLE_FLOAT_LEFT == display->mFloats) ||
@@ -723,9 +720,7 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
                             mMetrics.height);
 
       // Apply CSS relative positioning to update x,y coordinates
-      const nsStyleDisplay* styleDisp;
-      mFrame->GetStyleData(eStyleStruct_Display,
-                           (const nsStyleStruct*&)styleDisp);
+      const nsStyleDisplay* styleDisp = mFrame->GetStyleDisplay();
       if (NS_STYLE_POSITION_RELATIVE == styleDisp->mPosition) {
         x += aComputedOffsets.left;
         y += aComputedOffsets.top;
@@ -791,8 +786,7 @@ nsBlockReflowContext::GetRealMarginLeftUnit()
     // Get parent style context
     sc = sc->GetParent();
     if (sc) {
-      const nsStyleMargin* margin = (const nsStyleMargin*)
-        sc->GetStyleData(eStyleStruct_Margin);
+      const nsStyleMargin* margin = sc->GetStyleMargin();
       unit = margin->mMargin.GetLeftUnit();
     }
   }
@@ -811,8 +805,7 @@ nsBlockReflowContext::GetRealMarginRightUnit()
     // Get parent style context
     sc = sc->GetParent();
     if (sc) {
-      const nsStyleMargin* margin = (const nsStyleMargin*)
-        sc->GetStyleData(eStyleStruct_Margin);
+      const nsStyleMargin* margin = sc->GetStyleMargin();
       unit = margin->mMargin.GetRightUnit();
     }
   }

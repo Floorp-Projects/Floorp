@@ -447,9 +447,7 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
     return PR_FALSE;
 
   // If visibility:hidden or visibility:collapsed then mark with STATE_INVISIBLE
-  const nsStyleVisibility* vis;
-  ::GetStyleData(frame, &vis);
-  if (!vis || !vis->IsVisible())
+  if (!frame->GetStyleVisibility()->IsVisible())
   {
       return PR_FALSE;
   }
@@ -1023,10 +1021,9 @@ NS_IMETHODIMP nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent
           // If this text is inside a block level frame (as opposed to span level), we need to add spaces around that 
           // block's text, so we don't get words jammed together in final name
           // Extra spaces will be trimmed out later
-          const nsStyleDisplay* display;
-          ::GetStyleData(frame, &display);
-          if (display && (display->IsBlockLevel() ||
-                          display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL))
+          const nsStyleDisplay* display = frame->GetStyleDisplay();
+          if (display->IsBlockLevel() ||
+              display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL)
           {
               isHTMLBlock = PR_TRUE;
               if (!aFlatString->IsEmpty())

@@ -479,10 +479,7 @@ nsListControlFrame::Paint(nsIPresContext*      aPresContext,
                           nsFramePaintLayer    aWhichLayer,
                           PRUint32             aFlags)
 {
-  const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-      
-  if (!vis->IsVisible()) {
+  if (!GetStyleVisibility()->IsVisible()) {
     return PR_FALSE;
   }
 
@@ -526,8 +523,7 @@ nsListControlFrame::Paint(nsIPresContext*      aPresContext,
 
   if (isVisible) {
     if (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND) {
-      const nsStyleDisplay* displayData;
-      GetStyleData(eStyleStruct_Display, ((const nsStyleStruct*&)displayData));
+      const nsStyleDisplay* displayData = GetStyleDisplay();
       if (displayData->mAppearance) {
         nsCOMPtr<nsITheme> theme;
         aPresContext->GetTheme(getter_AddRefs(theme));
@@ -939,8 +935,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   printf("\n");
 #if 0
     {
-      const nsStyleDisplay* display;
-      GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+      const nsStyleDisplay* display = GetStyleDisplay();
       printf("+++++++++++++++++++++++++++++++++ ");
       switch (display->mVisible) {
         case NS_STYLE_VISIBILITY_COLLAPSE: printf("NS_STYLE_VISIBILITY_COLLAPSE\n");break;
@@ -1183,7 +1178,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
       if (NS_SUCCEEDED(result) && optFrame != nsnull) {
         nsStyleContext* optStyle = optFrame->GetStyleContext();
         if (optStyle) {
-          const nsStyleFont* styleFont = (const nsStyleFont*)optStyle->GetStyleData(eStyleStruct_Font);
+          const nsStyleFont* styleFont = optStyle->GetStyleFont();
           nsCOMPtr<nsIDeviceContext> deviceContext;
           aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
           NS_ASSERTION(deviceContext, "Couldn't get the device context"); 
@@ -1743,8 +1738,7 @@ nsListControlFrame::HandleEvent(nsIPresContext* aPresContext,
 
   // do we have style that affects how we are selected?
   // do we have user-input style?
-  const nsStyleUserInterface* uiStyle;
-  GetStyleData(eStyleStruct_UserInterface,  (const nsStyleStruct *&)uiStyle);
+  const nsStyleUserInterface* uiStyle = GetStyleUserInterface();
   if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 
@@ -2787,8 +2781,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
     }
   }
 
-  const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+  const nsStyleVisibility* vis = GetStyleVisibility();
       
   if (!vis->IsVisible()) {
     REFLOW_DEBUG_MSG(">>>>>> Select is NOT visible");

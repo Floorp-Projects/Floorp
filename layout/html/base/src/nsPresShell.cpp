@@ -5453,9 +5453,7 @@ BuildFramechangeList(nsIFrame *aFrame, void *aClosure)
   nsStyleChangeList *changeList = NS_STATIC_CAST(nsStyleChangeList*, aClosure);
 
   // Ok, get our binding information.
-  const nsStyleDisplay* oldDisplay;
-  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)oldDisplay);
-  if (!oldDisplay->mBinding.IsEmpty()) {
+  if (!aFrame->GetStyleDisplay()->mBinding.IsEmpty()) {
     // We had a binding.
     nsCOMPtr<nsIContent> content;
     aFrame->GetContent(getter_AddRefs(content));
@@ -5811,8 +5809,7 @@ PresShell::BidiStyleChangeReflow()
 
 // Return TRUE if any clipping is to be done.
 static PRBool ComputeClipRect(nsIFrame* aFrame, nsRect& aResult) {
-  const nsStyleDisplay* display;
-  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+  const nsStyleDisplay* display = aFrame->GetStyleDisplay();
   
   // 'clip' only applies to absolutely positioned elements, and is
   // relative to the element's border edge. 'clip' applies to the entire

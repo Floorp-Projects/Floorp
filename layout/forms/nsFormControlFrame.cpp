@@ -499,9 +499,9 @@ nsFormControlFrame::DidReflow(nsIPresContext*           aPresContext,
     nsIView* view = nsnull;
     GetView(aPresContext, &view);
     if (view) {
-      const nsStyleVisibility* vis;
-      GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)vis));
-      nsViewVisibility newVis = vis->IsVisible() ? nsViewVisibility_kShow : nsViewVisibility_kHide;
+      nsViewVisibility newVis = GetStyleVisibility()->IsVisible()
+                                  ? nsViewVisibility_kShow
+                                  : nsViewVisibility_kHide;
       nsViewVisibility oldVis;
       // only change if different.
       view->GetVisibility(oldVis);
@@ -734,8 +734,7 @@ nsFormControlFrame::HandleEvent(nsIPresContext* aPresContext,
   }
 
   // Check for user-input:none style
-  const nsStyleUserInterface* uiStyle;
-  GetStyleData(eStyleStruct_UserInterface,  (const nsStyleStruct *&)uiStyle);
+  const nsStyleUserInterface* uiStyle = GetStyleUserInterface();
   if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE || uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED)
     return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 

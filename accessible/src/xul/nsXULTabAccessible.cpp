@@ -121,10 +121,9 @@ NS_IMETHODIMP nsXULTabAccessible::GetAccState(PRUint32 *_retval)
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
   if (presShell && content) {
     nsIFrame *frame = nsnull;
-    const nsStyleUserInterface* ui;
     presShell->GetPrimaryFrameFor(content, &frame);
     if (frame) {
-      frame->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));
+      const nsStyleUserInterface* ui = frame->GetStyleUserInterface();
       if (ui->mUserFocus == NS_STYLE_USER_FOCUS_NORMAL)
         *_retval |= STATE_FOCUSABLE;
     }

@@ -1927,9 +1927,7 @@ nsHTMLSelectElement::HandleDOMEvent(nsIPresContext* aPresContext,
       NS_SUCCEEDED(CallQueryInterface(formControlFrame, &formFrame)) &&
       formFrame)
   {
-    const nsStyleUserInterface* uiStyle;
-    formFrame->GetStyleData(eStyleStruct_UserInterface,
-                            (const nsStyleStruct *&)uiStyle);
+    const nsStyleUserInterface* uiStyle = formFrame->GetStyleUserInterface();
 
     if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
         uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED) {

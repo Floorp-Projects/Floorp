@@ -666,15 +666,11 @@ NS_IMETHODIMP nsAccessibleText::GetCharacterExtents(PRInt32 aOffset,
   shell->CreateRenderingContext(frame, getter_AddRefs(rc));
   NS_ENSURE_TRUE(rc, NS_ERROR_FAILURE);
 
-  const nsStyleFont *font;
-  frame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
-  NS_ENSURE_TRUE(font, NS_ERROR_FAILURE);
+  const nsStyleFont *font = frame->GetStyleFont();
 
-  const nsStyleVisibility *visibility;
-  frame->GetStyleData(eStyleStruct_Visibility,
-      (const nsStyleStruct *&)visibility);
+  const nsStyleVisibility *visibility = frame->GetStyleVisibility();
   nsCOMPtr<nsIAtom> langGroup;
-  if (visibility && visibility->mLanguage) {
+  if (visibility->mLanguage) {
     visibility->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
   }
 

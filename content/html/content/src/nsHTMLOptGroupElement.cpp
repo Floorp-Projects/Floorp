@@ -199,9 +199,7 @@ nsHTMLOptGroupElement::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   if (formFrame) {
-    const nsStyleUserInterface* uiStyle;
-    formFrame->GetStyleData(eStyleStruct_UserInterface,
-                            (const nsStyleStruct *&)uiStyle);
+    const nsStyleUserInterface* uiStyle = formFrame->GetStyleUserInterface();
     if (uiStyle->mUserInput == NS_STYLE_USER_INPUT_NONE ||
         uiStyle->mUserInput == NS_STYLE_USER_INPUT_DISABLED) {
       return NS_OK;

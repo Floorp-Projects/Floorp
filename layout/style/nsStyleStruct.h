@@ -1157,17 +1157,17 @@ struct nsStyleSVG : public nsStyleStruct {
   nsChangeHint CalcDifference(const nsStyleSVG& aOther) const;
 
   // all [inherit]ed
-  nsStyleSVGPaint  mFill;
-  float            mFillOpacity;
-  PRUint8          mFillRule; // see nsStyleConsts.h
-  nsStyleSVGPaint  mStroke;
-  nsString         mStrokeDasharray; // XXX we want a parsed value here
-  float            mStrokeDashoffset;
-  PRUint8          mStrokeLinecap;  // see nsStyleConsts.h
-  PRUint8          mStrokeLinejoin; // see nsStyleConsts.h
-  float            mStrokeMiterlimit;
-  float            mStrokeOpacity;
-  float            mStrokeWidth; // in pixels
+  nsStyleSVGPaint  mFill;              // [inherited]
+  float            mFillOpacity;       // [inherited]
+  PRUint8          mFillRule;          // [inherited] see nsStyleConsts.h
+  nsStyleSVGPaint  mStroke;            // [inherited]
+  nsString         mStrokeDasharray;   // [inherited] XXX we want a parsed value here
+  float            mStrokeDashoffset;  // [inherited]
+  PRUint8          mStrokeLinecap;     // [inherited] see nsStyleConsts.h
+  PRUint8          mStrokeLinejoin;    // [inherited] see nsStyleConsts.h
+  float            mStrokeMiterlimit;  // [inherited]
+  float            mStrokeOpacity;     // [inherited]
+  float            mStrokeWidth;       // [inherited] in pixels
 };
 #endif
 
@@ -1222,10 +1222,5 @@ inline nsBorderEdges::nsBorderEdges()
   mMaxBorderWidth.SizeTo(0,0,0,0);
   mOutsideEdge = PR_TRUE;
 };
-
-// typesafe mechanisms for accessing style data, global function
-// templates |GetStyleData(nsIFrame*, const T**)| and
-// |GetStyleData(nsStyleContext*, const T**)|, where T is derived from
-// nsStyleStruct, are located in nsStyleContext.h and nsIFrame.h
 
 #endif /* nsStyleStruct_h___ */

@@ -532,18 +532,15 @@ public:
               nsIRenderingContext& aRenderingContext,
               nsStyleContext* sc)
     {
-    mFont = nsnull;
-    mText = nsnull;
-    mColor = nsnull;
-    mNormalFont = nsnull;
-    mSmallFont = nsnull;
-    mLastFont = nsnull;
+      mNormalFont = nsnull;
+      mSmallFont = nsnull;
+      mLastFont = nsnull;
 
       // Get style data
-      mColor = (const nsStyleColor*) sc->GetStyleData(eStyleStruct_Color);
-      mFont = (const nsStyleFont*) sc->GetStyleData(eStyleStruct_Font);
-      mText = (const nsStyleText*) sc->GetStyleData(eStyleStruct_Text);
-      mVisibility = (const nsStyleVisibility*) sc->GetStyleData(eStyleStruct_Visibility);
+      mColor = sc->GetStyleColor();
+      mFont = sc->GetStyleFont();
+      mText = sc->GetStyleText();
+      mVisibility = sc->GetStyleVisibility();
 
       // Cache the original decorations and reuse the current font
       // to query metrics, rather than creating a new font which is expensive.
@@ -1039,12 +1036,11 @@ DrawSelectionIterator::DrawSelectionIterator(nsIContent *aContent,
 						    aStyleContext);
       if (sc) {
         mSelectionPseudoStyle = PR_TRUE;
-        const nsStyleBackground* bg = (const nsStyleBackground*)sc->GetStyleData(eStyleStruct_Background);
+        const nsStyleBackground* bg = sc->GetStyleBackground();
         mSelectionPseudoBGIsTransparent = PRBool(bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
         if (!mSelectionPseudoBGIsTransparent )
           mSelectionPseudoBGcolor = bg->mBackgroundColor;
-        const nsStyleColor* color =(const nsStyleColor*) sc->GetStyleData(eStyleStruct_Color);
-        mSelectionPseudoFGcolor = color->mColor;
+        mSelectionPseudoFGcolor = sc->GetStyleColor()->mColor;
       }
     }
 
@@ -1378,9 +1374,7 @@ nsTextFrame::GetCursor(nsIPresContext* aPresContext,
                        nsPoint& aPoint,
                        PRInt32& aCursor)
 {
-  const nsStyleUserInterface*    ui = (const nsStyleUserInterface*)
-      mStyleContext->GetStyleData(eStyleStruct_UserInterface);
-  aCursor = ui->mCursor;
+  aCursor = GetStyleUserInterface()->mCursor;
   if (NS_STYLE_CURSOR_AUTO == aCursor) {
     aCursor = NS_STYLE_CURSOR_TEXT;
   }
@@ -1805,36 +1799,32 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
     PRBool hasDecorations = context->HasTextDecorations();
 
     while (hasDecorations) {
-      const nsStyleTextReset* styleText;
-      ::GetStyleData(context, &styleText);
+      const nsStyleTextReset* styleText = context->GetStyleTextReset();
       if (!useOverride && 
           (NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL & 
            styleText->mTextDecoration)) {
         // This handles the <a href="blah.html"><font color="green">La 
         // la la</font></a> case. The link underline should be green.
-        const nsStyleColor* styleColor;
-        ::GetStyleData(context, &styleColor);
         useOverride = PR_TRUE;
-        overrideColor = styleColor->mColor;          
+        overrideColor = context->GetStyleColor()->mColor;          
       }
 
       PRUint8 useDecorations = decorMask & styleText->mTextDecoration;
       if (useDecorations) {// a decoration defined here
-        const nsStyleColor* styleColor;
-        ::GetStyleData(context, &styleColor);
+        nscolor color = context->GetStyleColor()->mColor;
     
         if (NS_STYLE_TEXT_DECORATION_UNDERLINE & useDecorations) {
-          underColor = useOverride ? overrideColor : styleColor->mColor;
+          underColor = useOverride ? overrideColor : color;
           decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
           decorations |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
         }
         if (NS_STYLE_TEXT_DECORATION_OVERLINE & useDecorations) {
-          overColor = useOverride ? overrideColor : styleColor->mColor;
+          overColor = useOverride ? overrideColor : color;
           decorMask &= ~NS_STYLE_TEXT_DECORATION_OVERLINE;
           decorations |= NS_STYLE_TEXT_DECORATION_OVERLINE;
         }
         if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & useDecorations) {
-          strikeColor = useOverride ? overrideColor : styleColor->mColor;
+          strikeColor = useOverride ? overrideColor : color;
           decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
           decorations |= NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
         }
@@ -2210,9 +2200,7 @@ nsTextFrame::IsVisibleForPainting(nsIPresContext *     aPresContext,
                                   PRBool*              aIsVisible)
 {
   if (aCheckVis) {
-    const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-    if (!vis->IsVisible()) {
+    if (!GetStyleVisibility()->IsVisible()) {
       *aIsVisible = PR_FALSE;
       return NS_OK;
     }
@@ -5644,8 +5632,7 @@ nsTextFrame::TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
   }
 
   nscoord dw = 0;
-  const nsStyleText* textStyle = (const nsStyleText*)
-    mStyleContext->GetStyleData(eStyleStruct_Text);
+  const nsStyleText* textStyle = GetStyleText();
   if (mContentLength &&
       (NS_STYLE_WHITESPACE_PRE != textStyle->mWhiteSpace) &&
       (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP != textStyle->mWhiteSpace)) {

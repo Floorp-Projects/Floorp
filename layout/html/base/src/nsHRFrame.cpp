@@ -119,9 +119,7 @@ HRuleFrame::Paint(nsIPresContext*      aPresContext,
     return NS_OK;
   }
 
-  const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)((nsStyleContext*)mStyleContext)->GetStyleData(eStyleStruct_Visibility);
-  if (!vis->IsVisible()) {
+  if (!GetStyleVisibility()->IsVisible()) {
     return NS_OK;
   }
 
@@ -201,8 +199,8 @@ HRuleFrame::Paint(nsIPresContext*      aPresContext,
   if (!noShadeAttribute) {
     nsRect rect(x0, y0, width, height);
 
-    const nsStyleBorder* border = (const nsStyleBorder*) mStyleContext->GetStyleData(eStyleStruct_Border);
-    const nsStylePadding* padding = (const nsStylePadding*) mStyleContext->GetStyleData(eStyleStruct_Padding);
+    const nsStyleBorder* border = GetStyleBorder();
+    const nsStylePadding* padding = GetStylePadding();
     
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext,
                                     this,aDirtyRect, rect,
@@ -302,8 +300,7 @@ HRuleFrame::Reflow(nsIPresContext*          aPresContext,
   // Compute height of "line" that hrule will layout within. Use the
   // font-size to do this.
   nscoord minLineHeight = thickness + twoPixels;
-  const nsStyleFont* font;
-  GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&) font);
+  const nsStyleFont* font = GetStyleFont();
   const nsFont& f = font->mFont;
   nsCOMPtr<nsIFontMetrics> fm;
   aPresContext->GetMetricsFor(f, getter_AddRefs(fm));

@@ -105,8 +105,7 @@ SpacerFrame::Reflow(nsIPresContext*          aPresContext,
   aMetrics.ascent = 0;
   aMetrics.descent = 0;
 
-  const nsStylePosition*  position;
-  GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+  const nsStylePosition* position = GetStylePosition();
 
   PRUint8 type = GetType();
   switch (type) {

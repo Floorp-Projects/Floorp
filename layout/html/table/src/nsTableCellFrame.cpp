@@ -230,11 +230,9 @@ void nsTableCellFrame::SetPass1MaxElementWidth(nscoord aMaxWidth,
                                                nscoord aMaxElementWidth)
 { 
   nscoord maxElemWidth = aMaxElementWidth;
-  const nsStylePosition* stylePosition;
-  const nsStyleText* styleText;
   // check for fixed width and not nowrap and not pre
-  GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)stylePosition));
-  GetStyleData(eStyleStruct_Text, ((const nsStyleStruct *&)styleText));
+  const nsStylePosition* stylePosition = GetStylePosition();
+  const nsStyleText* styleText = GetStyleText();
   if (stylePosition->mWidth.GetUnit() == eStyleUnit_Coord &&
       styleText->mWhiteSpace != NS_STYLE_WHITESPACE_NOWRAP &&
       styleText->mWhiteSpace != NS_STYLE_WHITESPACE_PRE) {
@@ -442,15 +440,11 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
     const nsStyleBorder*      myBorder       = nsnull;
     const nsStylePadding*     myPadding      = nsnull;
     const nsStyleTableBorder* cellTableStyle = nsnull;
-    const nsStyleVisibility* vis = 
-       (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+    const nsStyleVisibility* vis = GetStyleVisibility();
     if (vis->IsVisible()) {
-      myBorder = (const nsStyleBorder*)mStyleContext->GetStyleData(eStyleStruct_Border);
-      NS_ENSURE_TRUE(myBorder, NS_ERROR_NULL_POINTER);
-      myPadding = (const nsStylePadding*)mStyleContext->GetStyleData(eStyleStruct_Border);
-      NS_ENSURE_TRUE(myPadding, NS_ERROR_NULL_POINTER);
-
-      GetStyleData(eStyleStruct_TableBorder, ((const nsStyleStruct *&)cellTableStyle));
+      myBorder = GetStyleBorder();
+      myPadding = GetStylePadding();
+      cellTableStyle = GetStyleTableBorder();
 
       // paint the background when the cell is not empty or when showing empty cells or background
       paintBackground = (!GetContentEmpty()                                             ||
@@ -462,8 +456,7 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
                   *myBorder, *myPadding, paintBackground, paintChildren);
 
     if (vis->IsVisible()) {
-      const nsStyleBackground* myColor = 
-        (const nsStyleBackground*)mStyleContext->GetStyleData(eStyleStruct_Background); NS_ENSURE_TRUE(myColor, NS_ERROR_NULL_POINTER);
+      const nsStyleBackground* myColor = GetStyleBackground();
       DecorateForSelection(aPresContext, aRenderingContext,myColor); //ignore return value
     }
   }
@@ -478,8 +471,7 @@ nsTableCellFrame::Paint(nsIPresContext*      aPresContext,
 
   // paint the children unless we've been told not to
   if (paintChildren) {
-    const nsStyleDisplay* disp =
-      (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+    const nsStyleDisplay* disp = GetStyleDisplay();
     // if the cell originates in a row and/or col that is collapsed, the
     // bottom and/or right portion of the cell is painted by translating
     // the rendering context.
@@ -603,8 +595,7 @@ void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContex
                                             const nsHTMLReflowState& aReflowState,
                                             nscoord                  aMaxAscent)
 {
-  const nsStyleTextReset* textStyle =
-      (const nsStyleTextReset*)mStyleContext->GetStyleData(eStyleStruct_TextReset);
+  const nsStyleTextReset* textStyle = GetStyleTextReset();
   /* XXX: remove tableFrame when border-collapse inherits */
   GET_PIXELS_TO_TWIPS(aPresContext, p2t);
   nsMargin borderPadding = nsTableFrame::GetBorderPadding(aReflowState, p2t, this);
@@ -679,8 +670,7 @@ void nsTableCellFrame::VerticallyAlignChild(nsIPresContext*          aPresContex
 PRBool
 nsTableCellFrame::HasVerticalAlignBaseline()
 {
-  const nsStyleTextReset* textStyle;
-  GetStyleData(eStyleStruct_TextReset, (const nsStyleStruct*&)textStyle);
+  const nsStyleTextReset* textStyle = GetStyleTextReset();
   if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
     PRUint8 verticalAlignFlags = textStyle->mVerticalAlign.GetIntValue();
     if (verticalAlignFlags == NS_STYLE_VERTICAL_ALIGN_TOP ||
@@ -963,8 +953,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-  const nsStylePosition* pos;
-  GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)pos));
+  const nsStylePosition* pos = GetStylePosition();
 
   // calculate the min cell width
   nscoord onePixel = NSIntPixelsToTwips(1, p2t); 
@@ -1134,8 +1123,7 @@ void nsTableCellFrame::MapBorderPadding(nsIPresContext* aPresContext)
     return;
 
   // get the table frame style context, and from it get cellpadding, cellspacing, and border info
-  const nsStyleTable* tableStyle;
-  tableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
+  const nsStyleTable* tableStyle = tableFrame->GetStyleTable();
 
   MapVAlignAttribute(aPresContext, tableFrame);
   MapHAlignAttribute(aPresContext, tableFrame);
@@ -1147,8 +1135,7 @@ void nsTableCellFrame::MapBorderPadding(nsIPresContext* aPresContext)
 void nsTableCellFrame::MapVAlignAttribute(nsIPresContext* aPresContext, nsTableFrame *aTableFrame)
 {
 #if 0
-  const nsStyleTextReset* textStyle;
-  GetStyleData(eStyleStruct_TextReset,(const nsStyleStruct *&)textStyle);
+  const nsStyleTextReset* textStyle = GetStyleTextReset();
   // check if valign is set on the cell
   // this condition will also be true if we inherited valign from the row or rowgroup
   if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
@@ -1160,8 +1147,7 @@ void nsTableCellFrame::MapVAlignAttribute(nsIPresContext* aPresContext, nsTableF
   GetColIndex(colIndex);
   nsTableColFrame* colFrame = aTableFrame->GetColFrame(colIndex);
   if (colFrame) {
-    const nsStyleTextReset* colTextStyle;
-    colFrame->GetStyleData(eStyleStruct_TextReset,(const nsStyleStruct *&)colTextStyle);
+    const nsStyleTextReset* colTextStyle = colFrame->GetStyleTextReset();
     if (colTextStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
       nsStyleTextReset* cellTextStyle = (nsStyleTextReset*)mStyleContext->GetMutableStyleData(eStyleStruct_TextReset);
       cellTextStyle->mVerticalAlign.SetIntValue(colTextStyle->mVerticalAlign.GetIntValue(), eStyleUnit_Enumerated);
@@ -1182,8 +1168,7 @@ void nsTableCellFrame::MapHAlignAttribute(nsIPresContext* aPresContext,
                                           nsTableFrame*   aTableFrame)
 {
 #if 0
-  const nsStyleText* textStyle;
-  GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)textStyle);
+  const nsStyleText* textStyle = GetStyleText();
   // check if halign is set on the cell
   // cells do not inherited halign from the row or rowgroup
   if (NS_STYLE_TEXT_ALIGN_DEFAULT != textStyle->mTextAlign) {
@@ -1193,8 +1178,7 @@ void nsTableCellFrame::MapHAlignAttribute(nsIPresContext* aPresContext,
   // check if halign is set on the cell's ROW (or ROWGROUP by inheritance)
   nsIFrame* rowFrame;
   GetParent(&rowFrame);
-  const nsStyleText* rowTextStyle;
-  rowFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)rowTextStyle);
+  const nsStyleText* rowTextStyle = rowFrame->GetStyleText();
   if (NS_STYLE_TEXT_ALIGN_DEFAULT != rowTextStyle->mTextAlign) {
     nsStyleText* cellTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
     cellTextStyle->mTextAlign = rowTextStyle->mTextAlign;
@@ -1206,8 +1190,7 @@ void nsTableCellFrame::MapHAlignAttribute(nsIPresContext* aPresContext,
   GetColIndex(colIndex);
   nsTableColFrame* colFrame = aTableFrame->GetColFrame(colIndex);
   if (colFrame) {
-    const nsStyleText* colTextStyle;
-    colFrame->GetStyleData(eStyleStruct_Text,(const nsStyleStruct *&)colTextStyle);
+    const nsStyleText* colTextStyle = colFrame->GetStyleText();
     if (NS_STYLE_TEXT_ALIGN_DEFAULT != colTextStyle->mTextAlign) {
       nsStyleText* cellTextStyle = (nsStyleText*)mStyleContext->GetMutableStyleData(eStyleStruct_Text);
       cellTextStyle->mTextAlign = colTextStyle->mTextAlign;
@@ -1349,8 +1332,7 @@ nsTableCellFrame::GetBorderWidth(float      aPixelsToTwips,
 {
   aBorder.left = aBorder.right = aBorder.top = aBorder.bottom = 0;
 
-  const nsStyleBorder* borderData;
-  GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderData);
+  const nsStyleBorder* borderData = GetStyleBorder();
   borderData->GetBorder(aBorder);
   return &aBorder;
 }

@@ -612,7 +612,6 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
     }
   }
 
-  const nsStyleDisplay* display = nsnull;
   nsPoint origin(0, 0);
 
   if (!done) {
@@ -621,9 +620,9 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
 
     frame->GetOrigin(origin);
 
-    frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+    const nsStyleDisplay* display = frame->GetStyleDisplay();
 
-    if (display && display->IsPositioned()) {
+    if (display->IsPositioned()) {
       if (display->IsAbsolutelyPositioned()) {
         // If the primary frame or a parent is absolutely positioned
         // (fixed or absolute) we stop walking up the frame parent
@@ -639,18 +638,15 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
     frame->GetParent(&parent);
 
     while (parent) {
-      parent->GetStyleData(eStyleStruct_Display,
-                           (const nsStyleStruct*&)display);
+      display = parent->GetStyleDisplay();
 
-      if (display) {
-        if (display->IsPositioned()) {
-          // Stop at the first *parent* that is positioned (fixed,
-          // absolute, or relatiive)
+      if (display->IsPositioned()) {
+        // Stop at the first *parent* that is positioned (fixed,
+        // absolute, or relatiive)
 
-          parent->GetContent(aOffsetParent);
+        parent->GetContent(aOffsetParent);
 
-          break;
-        }
+        break;
       }
 
       // Add the parent's origin to our own to get to the
@@ -710,7 +706,6 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
   }
 
   // For the origin, add in the border for the frame
-  const nsStyleBorder* border = nsnull;
   nsStyleCoord coord;
 
 #if 0
@@ -718,38 +713,31 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
   // calculations, but I think that's wrong. My tests show that we
   // work more like IE if we don't do this, so lets try this and see
   // if people agree.
-  frame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border);
+  const nsStyleBorder* border = frame->GetStyleBorder();
 
-  if (border) {
-    if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
-      origin.x += border->mBorder.GetLeft(coord).GetCoordValue();
-    }
-    if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
-      origin.y += border->mBorder.GetTop(coord).GetCoordValue();
-    }
+  if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
+    origin.x += border->mBorder.GetLeft(coord).GetCoordValue();
+  }
+  if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
+    origin.y += border->mBorder.GetTop(coord).GetCoordValue();
   }
 #endif
 
   // And subtract out the border for the parent
   if (parent) {
     PRBool includeBorder = PR_TRUE;  // set to false if border-box sizing is used
-    const nsStylePosition* position = nsnull;
-    parent->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
-    if (position && position->mBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
+    const nsStylePosition* position = parent->GetStylePosition();
+    if (position->mBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
       includeBorder = PR_FALSE;
     }
     
     if (includeBorder) {
-      border = nsnull;
-
-      parent->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border);
-      if (border) {
-        if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
-          origin.x -= border->mBorder.GetLeft(coord).GetCoordValue();
-        }
-        if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
-          origin.y -= border->mBorder.GetTop(coord).GetCoordValue();
-        }
+      const nsStyleBorder* border = parent->GetStyleBorder();
+      if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
+        origin.x -= border->mBorder.GetLeft(coord).GetCoordValue();
+      }
+      if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
+        origin.y -= border->mBorder.GetTop(coord).GetCoordValue();
       }
     }
   }
@@ -1189,15 +1177,12 @@ nsGenericHTMLElement::GetClientAreaSize(nsIFrame *aFrame)
   nsRect rect;
   aFrame->GetRect(rect);
 
-  const nsStyleBorder* border = nsnull;
-  aFrame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border);
+  const nsStyleBorder* border = aFrame->GetStyleBorder();
 
-  if (border) {
-    nsMargin border_size;
-    border->CalcBorderFor(aFrame, border_size);
+  nsMargin border_size;
+  border->CalcBorderFor(aFrame, border_size);
 
-    rect.Deflate(border_size);
-  }
+  rect.Deflate(border_size);
 
   return nsSize(rect.width, rect.height);
 }

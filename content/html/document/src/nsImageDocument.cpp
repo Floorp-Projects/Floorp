@@ -541,8 +541,7 @@ nsImageDocument::CheckOverflowing()
   nsRefPtr<nsStyleContext> styleContext =
     context->ResolveStyleContextFor(content, nsnull);
 
-  const nsStyleMargin* marginData =
-    (const nsStyleMargin*)styleContext->GetStyleData(eStyleStruct_Margin);
+  const nsStyleMargin* marginData = styleContext->GetStyleMargin();
   nsMargin margin;
   marginData->GetMargin(margin);
   visibleArea.Deflate(margin);

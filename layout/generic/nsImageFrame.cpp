@@ -126,13 +126,13 @@
 nsImageFrame::IconLoad* nsImageFrame::mIconLoad = nsnull;
 
 // test if the width and height are fixed, looking at the style data
-static PRBool HaveFixedSize(const struct nsStylePosition& aStylePosition)
+static PRBool HaveFixedSize(const nsStylePosition* aStylePosition)
 {
   // check the width and height values in the reflow state's style struct
   // - if width and height are specified as either coord or percentage, then
   //   the size of the image frame is constrained
-  nsStyleUnit widthUnit = aStylePosition.mWidth.GetUnit();
-  nsStyleUnit heightUnit = aStylePosition.mHeight.GetUnit();
+  nsStyleUnit widthUnit = aStylePosition->mWidth.GetUnit();
+  nsStyleUnit heightUnit = aStylePosition->mHeight.GetUnit();
 
   return ((widthUnit  == eStyleUnit_Coord ||
            widthUnit  == eStyleUnit_Percent) &&
@@ -158,7 +158,7 @@ inline PRBool HaveFixedSize(const nsHTMLReflowState& aReflowState)
           (eStyleUnit_Percent == widthUnit && (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth ||
            0 == aReflowState.mComputedWidth)))
           ? PR_FALSE
-          : HaveFixedSize(*(aReflowState.mStylePosition)); 
+          : HaveFixedSize(aReflowState.mStylePosition); 
 }
 
 nsresult
@@ -477,9 +477,7 @@ nsImageFrame::HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell)
 
   PRBool useSizedBox;
   
-  const nsStyleUIReset* uiResetData;
-  ::GetStyleData(this, &uiResetData);
-  NS_ASSERTION(uiResetData, "null style position: frame is corrupted");
+  const nsStyleUIReset* uiResetData = GetStyleUIReset();
   if (uiResetData->mForceBrokenImageIcon) {
     useSizedBox = PR_TRUE;
   }
@@ -508,11 +506,7 @@ nsImageFrame::HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell)
       }
       else {
         // check whether we have fixed size
-        const nsStylePosition* stylePosition;
-        ::GetStyleData(this, &stylePosition);
-        NS_ASSERTION(stylePosition, "null style position: frame is corrupted");
-
-        useSizedBox = HaveFixedSize(*stylePosition);
+        useSizedBox = HaveFixedSize(GetStylePosition());
       }
     }
   }
@@ -707,10 +701,7 @@ nsImageFrame::FrameChanged(imgIContainer *aContainer,
                            gfxIImageFrame *aNewFrame,
                            nsRect *aDirtyRect)
 {
-  const nsStyleVisibility* vis;
-  ::GetStyleData(this, &vis);
-
-  if (!vis->IsVisible()) {
+  if (!GetStyleVisibility()->IsVisible()) {
     return NS_OK;
   }
 
@@ -1053,10 +1044,8 @@ nsImageFrame::DisplayAltText(nsIPresContext*      aPresContext,
                              const nsString&      aAltText,
                              const nsRect&        aRect)
 {
-  const nsStyleColor* color =
-    (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
   // Set font and color
-  aRenderingContext.SetColor(color->mColor);
+  aRenderingContext.SetColor(GetStyleColor()->mColor);
   SetFontFromStyle(&aRenderingContext, mStyleContext);
 
   // Format the text to display within the formatting rect
@@ -1260,8 +1249,7 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
     // FOREGROUND or BACKGROUND paint layer if the element is
     // inline-level or block-level, respectively (bug 36710).  (See
     // CSS2 9.5, which is the rationale for paint layers.)
-    const nsStyleDisplay *display;
-    ::GetStyleData(mStyleContext, &display);
+    const nsStyleDisplay* display = GetStyleDisplay();
     nsFramePaintLayer backgroundLayer = display->IsBlockLevel()
                                             ? NS_FRAME_PAINT_LAYER_BACKGROUND
                                             : NS_FRAME_PAINT_LAYER_FOREGROUND;
@@ -1384,10 +1372,8 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
       // paint the outline in the overlay layer (or if there is an image map) until the 
       // general problem of painting it outside the border box is solved.
       if (paintOutline) {
-        const nsStyleBorder* myBorder = (const nsStyleBorder*)
-          mStyleContext->GetStyleData(eStyleStruct_Border);
-        const nsStyleOutline* myOutline = (const nsStyleOutline*)
-          mStyleContext->GetStyleData(eStyleStruct_Outline);
+        const nsStyleBorder* myBorder = GetStyleBorder();
+        const nsStyleOutline* myOutline = GetStyleOutline();
         nsRect rect(0, 0, mRect.width, mRect.height);
         nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
                                      aDirtyRect, rect, *myBorder,
@@ -1778,9 +1764,7 @@ nsImageFrame::GetCursor(nsIPresContext* aPresContext,
     if (map->IsInside(p.x, p.y)) {
       // Use style defined cursor if one is provided, otherwise when
       // the cursor style is "auto" we use the pointer cursor.
-      const nsStyleUserInterface* styleUserInterface;
-      GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)styleUserInterface);
-      aCursor = styleUserInterface->mCursor;
+      aCursor = GetStyleUserInterface()->mCursor;
       if (NS_STYLE_CURSOR_AUTO == aCursor) {
         aCursor = NS_STYLE_CURSOR_POINTER;
       }

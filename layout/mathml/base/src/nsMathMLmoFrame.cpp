@@ -428,10 +428,8 @@ nsMathMLmoFrame::ProcessOperatorData(nsIPresContext* aPresContext)
       // cache the default values of lspace & rspace that we get from the dictionary.
       // since these values are relative to the 'em' unit, convert to twips now
       nscoord em;
-      const nsStyleFont* font;
-      GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
       nsCOMPtr<nsIFontMetrics> fm;
-      aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
+      aPresContext->GetMetricsFor(GetStyleFont()->mFont, getter_AddRefs(fm));
       GetEmHeight(fm, em);
 
       mEmbellishData.leftSpace = NSToCoordRound(lspace * em);
@@ -632,10 +630,8 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   nsIFrame* firstChild = mFrames.FirstChild();
 
   // get the axis height;
-  const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
-    mStyleContext->GetStyleData(eStyleStruct_Font));
   nsCOMPtr<nsIFontMetrics> fm;
-  aRenderingContext.SetFont(font->mFont, nsnull);
+  aRenderingContext.SetFont(GetStyleFont()->mFont, nsnull);
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
   nscoord axisHeight, height;
   GetAxisHeight(aRenderingContext, fm, axisHeight);

@@ -121,9 +121,7 @@ nsTableRowGroupFrame::GetRowCount()
   while (PR_TRUE) {
     if (!childFrame)
       break;
-    const nsStyleDisplay* childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
+    if (NS_STYLE_DISPLAY_TABLE_ROW == childFrame->GetStyleDisplay()->mDisplay)
       count++;
     GetNextFrame(childFrame, &childFrame);
   }
@@ -137,9 +135,7 @@ PRInt32 nsTableRowGroupFrame::GetStartRowIndex()
   while (PR_TRUE) {
     if (!childFrame)
       break;
-    const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay) {
+    if (NS_STYLE_DISPLAY_TABLE_ROW == childFrame->GetStyleDisplay()->mDisplay) {
       result = ((nsTableRowFrame *)childFrame)->GetRowIndex();
       break;
     }
@@ -228,8 +224,7 @@ NS_METHOD nsTableRowGroupFrame::Paint(nsIPresContext*      aPresContext,
 #endif
   // Standards mode background painting removed.  See bug 4510
 
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
+  const nsStyleDisplay* disp = GetStyleDisplay();
   if (disp && (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow)) {
     aRenderingContext.PushState();
     SetOverflowClipRect(aRenderingContext);
@@ -1612,9 +1607,7 @@ nsTableRowGroupFrame::GetHeightOfRows(nsIPresContext* aPresContext)
   rv = FirstChild(aPresContext, nsnull, &rowFrame);
   PRInt32 numRows = 0;
   while ((NS_SUCCEEDED(rv)) && rowFrame) {
-    const nsStyleDisplay* rowDisplay;
-    rowFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) { 
+    if (NS_STYLE_DISPLAY_TABLE_ROW == rowFrame->GetStyleDisplay()->mDisplay) {
       nsRect rowRect;
       rowFrame->GetRect(rowRect);
       height += rowRect.height;

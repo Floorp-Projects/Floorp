@@ -398,22 +398,15 @@ nsresult NS_NewSelectionImageService(nsISelectionImageService** aResult)
 // a handy utility to set font
 void SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC) 
 {
-  const nsStyleFont *font = (const nsStyleFont*)
-    aSC->GetStyleData(eStyleStruct_Font);
-  NS_ASSERTION(font, "invalid font in style context");
+  const nsStyleFont* font = aSC->GetStyleFont();
+  const nsStyleVisibility* visibility = aSC->GetStyleVisibility();
 
-  if (font) {
-    const nsStyleVisibility* visibility = (const nsStyleVisibility*) 
-      aSC->GetStyleData(eStyleStruct_Visibility);
-    NS_ASSERTION(visibility, "invalid visibility in style context");
-
-    nsCOMPtr<nsIAtom> langGroup;
-    if (visibility && visibility->mLanguage) {
-      visibility->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
-    }
-
-    aRC->SetFont(font->mFont, langGroup);
+  nsCOMPtr<nsIAtom> langGroup;
+  if (visibility->mLanguage) {
+    visibility->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
   }
+
+  aRC->SetFont(font->mFont, langGroup);
 }
 
 nsresult
@@ -754,10 +747,8 @@ nsFrame::SetOverflowClipRect(nsIRenderingContext& aRenderingContext)
   // 'overflow-clip' only applies to block-level elements and replaced
   // elements that have 'overflow' set to 'hidden', and it is relative
   // to the content area and applies to content only (not border or background)
-  const nsStyleBorder* borderStyle;
-  const nsStylePadding* paddingStyle;
-  GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderStyle);
-  GetStyleData(eStyleStruct_Padding, (const nsStyleStruct*&)paddingStyle);
+  const nsStyleBorder* borderStyle = GetStyleBorder();
+  const nsStylePadding* paddingStyle = GetStylePadding();
   
   // Start with the 'auto' values and then factor in user specified values
   nsRect  clipRect(0, 0, mRect.width, mRect.height);
@@ -959,12 +950,9 @@ nsFrame::PaintSelf(nsIPresContext*      aPresContext,
   }
 
   // Paint our background and border
-  const nsStyleBorder* border;
-  ::GetStyleData(mStyleContext, &border);
-  const nsStylePadding* padding;
-  ::GetStyleData(mStyleContext, &padding);
-  const nsStyleOutline* outline;
-  ::GetStyleData(mStyleContext, &outline);
+  const nsStyleBorder* border = GetStyleBorder();
+  const nsStylePadding* padding = GetStylePadding();
+  const nsStyleOutline* outline = GetStyleOutline();
 
   nsRect rect(0, 0, mRect.width, mRect.height);
   nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
@@ -1166,10 +1154,7 @@ nsFrame::FrameOrParentHasSpecialSelectionStyle(PRUint8 aSelectionStyle, nsIFrame
   
   while (thisFrame)
   {
-	  const nsStyleUserInterface* userinterface;
-	  thisFrame->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
-  
-    if (userinterface->mUserSelect == aSelectionStyle)
+    if (thisFrame->GetStyleUserInterface()->mUserSelect == aSelectionStyle)
     {
       *foundFrame = thisFrame;
       return NS_OK;
@@ -1211,23 +1196,20 @@ nsFrame::IsSelectable(PRBool* aSelectable, PRUint8* aSelectStyle) const
   nsIFrame* frame      = (nsIFrame*)this;
 
   while (frame && NS_SUCCEEDED(result)) {
-    const nsStyleUIReset* userinterface;
-    frame->GetStyleData(eStyleStruct_UIReset, (const nsStyleStruct*&)userinterface);
-    if (userinterface) {
-      switch (userinterface->mUserSelect) {
-        case NS_STYLE_USER_SELECT_ALL:
-        case NS_STYLE_USER_SELECT_NONE:
-        case NS_STYLE_USER_SELECT_MOZ_ALL:
-          // override the previous values
+    const nsStyleUIReset* userinterface = frame->GetStyleUIReset();
+    switch (userinterface->mUserSelect) {
+      case NS_STYLE_USER_SELECT_ALL:
+      case NS_STYLE_USER_SELECT_NONE:
+      case NS_STYLE_USER_SELECT_MOZ_ALL:
+        // override the previous values
+        selectStyle = userinterface->mUserSelect;
+        break;
+      default:
+        // otherwise return the first value which is not 'auto'
+        if (selectStyle == NS_STYLE_USER_SELECT_AUTO) {
           selectStyle = userinterface->mUserSelect;
-          break;
-        default:
-          // otherwise return the first value which is not 'auto'
-          if (selectStyle == NS_STYLE_USER_SELECT_AUTO) {
-            selectStyle = userinterface->mUserSelect;
-          }
-          break;
-      }
+        }
+        break;
     }
     result = frame->GetParent(&frame);
   }
@@ -2224,9 +2206,7 @@ nsFrame::GetCursor(nsIPresContext* aPresContext,
                    nsPoint& aPoint,
                    PRInt32& aCursor)
 {
-  const nsStyleUserInterface* styleUserInterface;
-  GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)styleUserInterface);
-  aCursor = styleUserInterface->mCursor;
+  aCursor = GetStyleUserInterface()->mCursor;
   if (NS_STYLE_CURSOR_AUTO == aCursor) {
     aCursor = NS_STYLE_CURSOR_DEFAULT;
   }
@@ -2241,9 +2221,7 @@ nsFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 {
   if ((aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) &&
       (mRect.Contains(aPoint))) {
-    const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)((nsStyleContext*)mStyleContext)->GetStyleData(eStyleStruct_Visibility);
-    if (vis->IsVisible()) {
+    if (GetStyleVisibility()->IsVisible()) {
       *aFrame = this;
       return NS_OK;
     }
@@ -2743,10 +2721,8 @@ nsFrame::Invalidate(nsIPresContext* aPresContext,
 
   // Checks to see if the damaged rect should be infalted 
   // to include the outline
-  const nsStyleOutline* outline;
-  GetStyleData(eStyleStruct_Outline, (const nsStyleStruct*&)outline);
   nscoord width;
-  outline->GetOutlineWidth(width);
+  GetStyleOutline()->GetOutlineWidth(width);
   if (width > 0) {
     damageRect.Inflate(width, width);
   }
@@ -2807,8 +2783,7 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
 // Style sizing methods
 NS_IMETHODIMP nsFrame::IsPercentageBase(PRBool& aBase) const
 {
-  const nsStyleDisplay* display;
-  ::GetStyleData(mStyleContext, &display);
+  const nsStyleDisplay* display = GetStyleDisplay();
 
   // Absolute positioning causes |display->mDisplay| to be set to block,
   // if needed.
@@ -3027,9 +3002,7 @@ nsFrame::IsVisibleForPainting(nsIPresContext *     aPresContext,
 {
   // first check to see if we are visible
   if (aCheckVis) {
-    const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)((nsStyleContext*)mStyleContext)->GetStyleData(eStyleStruct_Visibility);
-    if (!vis->IsVisible()) {
+    if (!GetStyleVisibility()->IsVisible()) {
       *aIsVisible = PR_FALSE;
       return NS_OK;
     }
@@ -4828,17 +4801,11 @@ nsFrame::GetProperty(nsIPresContext* aPresContext,
   return value;
 }
 
-NS_IMETHODIMP
-nsFrame::GetStyleDataExternal(nsStyleStructID aSID,
-                              const nsStyleStruct*& aStyleStruct) const
+/* virtual */ const nsStyleStruct*
+nsFrame::GetStyleDataExternal(nsStyleStructID aSID) const
 {
-  if (!mStyleContext) {
-    aStyleStruct = nsnull;
-    return NS_ERROR_FAILURE;
-  }
-
-  aStyleStruct = mStyleContext->GetStyleData(aSID);
-  return NS_OK;
+  NS_ASSERTION(mStyleContext, "unexpected null pointer");
+  return mStyleContext->GetStyleData(aSID);
 }
 
 #ifdef IBMBIDI

@@ -445,7 +445,7 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
   // Now that we've checked for the attribute it's time to check CSS.  For 
   // horizontal boxes we're checking PACK.  For vertical boxes we are checking
   // ALIGN.
-  const nsStyleXUL* boxInfo = (const nsStyleXUL*)mStyleContext->GetStyleData(eStyleStruct_XUL);
+  const nsStyleXUL* boxInfo = GetStyleXUL();
   if (IsHorizontal()) {
     switch (boxInfo->mBoxPack) {
       case NS_STYLE_BOX_PACK_START:
@@ -535,7 +535,7 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
   // Now that we've checked for the attribute it's time to check CSS.  For 
   // horizontal boxes we're checking ALIGN.  For vertical boxes we are checking
   // PACK.
-  const nsStyleXUL* boxInfo = (const nsStyleXUL*)mStyleContext->GetStyleData(eStyleStruct_XUL);
+  const nsStyleXUL* boxInfo = GetStyleXUL();
   if (IsHorizontal()) {
     switch (boxInfo->mBoxAlign) {
       case NS_STYLE_BOX_ALIGN_START:
@@ -588,9 +588,7 @@ nsBoxFrame::GetInitialOrientation(PRBool& aIsHorizontal)
     return;
 
   // Check the style system first.
-  const nsStyleXUL* boxInfo;
-  GetStyleData(eStyleStruct_XUL,
-               (const nsStyleStruct*&)boxInfo);
+  const nsStyleXUL* boxInfo = GetStyleXUL();
   if (boxInfo->mBoxOrient == NS_STYLE_BOX_ORIENT_HORIZONTAL)
     aIsHorizontal = PR_TRUE;
   else 
@@ -619,18 +617,13 @@ nsBoxFrame::GetInitialDirection(PRBool& aIsNormal)
   if (IsHorizontal()) {
     // For horizontal boxes only, we initialize our value based off the CSS 'direction' property.
     // This means that BiDI users will end up with horizontally inverted chrome.
-    const nsStyleVisibility* vis;
-    GetStyleData(eStyleStruct_Visibility,
-                 (const nsStyleStruct*&)vis);
-    aIsNormal = (vis->mDirection == NS_STYLE_DIRECTION_LTR); // If text runs RTL then so do we.
+    aIsNormal = (GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR); // If text runs RTL then so do we.
   }
   else
     aIsNormal = PR_TRUE; // Assume a normal direction in the vertical case.
 
   // Now check the style system to see if we should invert aIsNormal.
-  const nsStyleXUL* boxInfo;
-  GetStyleData(eStyleStruct_XUL,
-               (const nsStyleStruct*&)boxInfo);
+  const nsStyleXUL* boxInfo = GetStyleXUL();
   if (boxInfo->mBoxDirection == NS_STYLE_BOX_DIRECTION_REVERSE)
     aIsNormal = !aIsNormal; // Invert our direction.
   
@@ -691,8 +684,7 @@ nsBoxFrame::GetInitialAutoStretch(PRBool& aStretch)
   }
 
   // Check the CSS box-align property.
-  const nsStyleXUL* boxInfo;
-  GetStyleData(eStyleStruct_XUL, (const nsStyleStruct*&)boxInfo);
+  const nsStyleXUL* boxInfo = GetStyleXUL();
   aStretch = (boxInfo->mBoxAlign == NS_STYLE_BOX_ALIGN_STRETCH);
 
   return PR_TRUE;
@@ -1441,11 +1433,8 @@ nsBoxFrame::Paint(nsIPresContext*      aPresContext,
                   nsFramePaintLayer    aWhichLayer,
                   PRUint32             aFlags)
 {
-  const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-
   // if collapsed nothing is drawn
-  if (vis->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
+  if (GetStyleVisibility()->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
     return NS_OK;
 
   if (NS_FRAME_IS_UNFLOWABLE & mState) {
@@ -1475,8 +1464,7 @@ nsBoxFrame::Paint(nsIPresContext*      aPresContext,
   // Now paint the kids. Note that child elements have the opportunity to
   // override the visibility property and display even if their parent is
   // hidden.  Don't paint our children if the theme object is a leaf.
-  const nsStyleDisplay* display = 
-      (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  const nsStyleDisplay* display = GetStyleDisplay();
   if (!(display->mAppearance && nsBox::gTheme && 
         gTheme->ThemeSupportsWidget(aPresContext, this, display->mAppearance) &&
         !gTheme->WidgetIsContainer(display->mAppearance)))
@@ -1498,11 +1486,8 @@ nsBoxFrame::PaintChild(nsIPresContext*      aPresContext,
                        nsFramePaintLayer    aWhichLayer,
                        PRUint32             aFlags)
 {
-  const nsStyleVisibility* vis;
-  aFrame->GetStyleData(eStyleStruct_Visibility, ((const nsStyleStruct *&)vis));
-
   // if collapsed don't paint the child.
-  if (vis->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
+  if (aFrame->GetStyleVisibility()->mVisible == NS_STYLE_VISIBILITY_COLLAPSE)
      return;
 
   nsIView *pView;
@@ -1629,8 +1614,7 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
   }
 
 
-  const nsStyleDisplay* disp = (const nsStyleDisplay*)
-    mStyleContext->GetStyleData(eStyleStruct_Display);
+  const nsStyleDisplay* disp = GetStyleDisplay();
 
   // Child elements have the opportunity to override the visibility property
   // of their parent and display even if the parent is hidden
@@ -1835,8 +1819,7 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
   if (!mRect.Contains(aPoint))
     return NS_ERROR_FAILURE;
 
-  const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+  const nsStyleVisibility* vis = GetStyleVisibility();
   if (vis->mVisible == NS_STYLE_VISIBILITY_COLLAPSE)
     return NS_ERROR_FAILURE;
 
@@ -1952,8 +1935,7 @@ nsBoxFrame::GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor)
 NS_IMETHODIMP
 nsBoxFrame::GetMouseThrough(PRBool& aMouseThrough)
 {
-   const nsStyleColor* color = (const nsStyleColor*)
-   mStyleContext->GetStyleData(eStyleStruct_Color);
+   const nsStyleBackground* color = GetStyleBackground();
    PRBool transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
                          (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
 
@@ -2494,8 +2476,7 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
     PRBool isCanvas;
     PRBool hasBG =
         nsCSSRendering::FindBackground(aPresContext, aFrame, &bg, &isCanvas);
-    const nsStyleVisibility* vis = (const nsStyleVisibility*)
-      aStyleContext->GetStyleData(eStyleStruct_Visibility);
+    const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
 
     if (vis->mOpacity != 1.0f) {
       NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,

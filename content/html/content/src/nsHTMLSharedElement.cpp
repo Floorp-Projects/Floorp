@@ -306,8 +306,7 @@ SpacerMapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
   if (aData->mPositionData) {
     nsHTMLValue value;
 
-    const nsStyleDisplay* display = (const nsStyleDisplay*)
-      aData->mStyleContext->GetStyleData(eStyleStruct_Display);
+    const nsStyleDisplay* display = aData->mStyleContext->GetStyleDisplay();
 
     PRBool typeIsBlock = (display->mDisplay == NS_STYLE_DISPLAY_BLOCK);
 

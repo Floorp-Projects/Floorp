@@ -124,7 +124,7 @@ nsBulletFrame::Init(nsIPresContext*  aPresContext,
   
   nsresult  rv = nsFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  const nsStyleList* myList = (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
+  const nsStyleList* myList = GetStyleList();
 
   if (!myList->mListStyleImage.IsEmpty()) {
     nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
@@ -198,7 +198,7 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
 
   PRBool isVisible;
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && isVisible) {
-    const nsStyleList* myList = (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
+    const nsStyleList* myList = GetStyleList();
     PRUint8 listStyleType = myList->mListStyleType;
 
     if (!myList->mListStyleImage.IsEmpty() && mImageRequest) {
@@ -220,8 +220,8 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
       }
     }
 
-    const nsStyleFont* myFont = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-    const nsStyleColor* myColor = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+    const nsStyleFont* myFont = GetStyleFont();
+    const nsStyleColor* myColor = GetStyleColor();
 
     nsCOMPtr<nsIFontMetrics> fm;
     aRenderingContext.SetColor(myColor->mColor);
@@ -230,7 +230,7 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
     nsCharType charType = eCharType_LeftToRight;
     PRUint8 level = 0;
     PRBool isBidiSystem = PR_FALSE;
-    const nsStyleVisibility* vis = (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+    const nsStyleVisibility* vis = GetStyleVisibility();
     PRUint32 hints = 0;
 #endif // IBMBIDI
 
@@ -1118,8 +1118,7 @@ nsBulletFrame::GetListItemText(nsIPresContext* aCX,
                                nsString& result)
 {
 #ifdef IBMBIDI
-  const nsStyleVisibility* vis;
-  GetStyleData(eStyleStruct_Visibility, (const nsStyleStruct*&)vis);
+  const nsStyleVisibility* vis = GetStyleVisibility();
 
   // XXX For some of these systems, "." is wrong!  This should really be
   // pushed down into the individual cases!
@@ -1366,7 +1365,7 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aMetrics)
 {
-  const nsStyleList* myList = (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
+  const nsStyleList* myList = GetStyleList();
   nscoord ascent;
 
   if (!myList->mListStyleImage.IsEmpty() && mImageRequest) {
@@ -1463,8 +1462,7 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
     }
   }
 
-  const nsStyleFont* myFont =
-    (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
+  const nsStyleFont* myFont = GetStyleFont();
   nsCOMPtr<nsIFontMetrics> fm;
   aCX->GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
   nscoord bulletSize;
@@ -1589,7 +1587,7 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
     nsCOMPtr<nsIURI> baseURI;
     GetBaseURI(getter_AddRefs(baseURI));
 
-    const nsStyleList* myList = (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
+    const nsStyleList* myList = GetStyleList();
 
     if (!myList->mListStyleImage.IsEmpty()) {
 

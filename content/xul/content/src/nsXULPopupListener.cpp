@@ -323,8 +323,7 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
     if (!targetFrame) return NS_ERROR_FAILURE;
       
     PRBool suppressBlur = PR_FALSE;
-    const nsStyleUserInterface* ui;
-    targetFrame->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));
+    const nsStyleUserInterface* ui = targetFrame->GetStyleUserInterface();
     suppressBlur = (ui->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE);
 
     nsCOMPtr<nsIDOMElement> element;
@@ -333,8 +332,7 @@ XULPopupListenerImpl::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
     nsIFrame* currFrame = targetFrame;
     // Look for the nearest enclosing focusable frame.
     while (currFrame) {
-        const nsStyleUserInterface* ui;
-        currFrame->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));
+        const nsStyleUserInterface* ui = currFrame->GetStyleUserInterface();
         if ((ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE) &&
             (ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE)) 
         {

@@ -191,7 +191,6 @@ nsStackLayout::AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize
   nsSize offset(0,0);
   
   // get the left and top offsets
-  const nsStylePosition* pos;
   nsIFrame* frame;
   aChild->GetFrame(&frame);
   
@@ -204,7 +203,7 @@ nsStackLayout::AddOffset(nsBoxLayoutState& aState, nsIBox* aChild, nsSize& aSize
     return PR_FALSE;
   
   PRBool offsetSpecified = PR_FALSE;
-  frame->GetStyleData(eStyleStruct_Position,(const nsStyleStruct*&) pos);
+  const nsStylePosition* pos = frame->GetStylePosition();
   if (eStyleUnit_Coord == pos->mOffset.GetLeftUnit()) {
      nsStyleCoord left = 0;
      pos->mOffset.GetLeft(left);

@@ -430,12 +430,7 @@ nsHTMLBodyElement::GetBgColor(nsAString& aBgColor)
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (frame) {
-        const nsStyleBackground* StyleBackground;
-        rv = frame->GetStyleData(eStyleStruct_Background,
-                                   (const nsStyleStruct*&)StyleBackground);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        bgcolor = StyleBackground->mBackgroundColor;
+        bgcolor = frame->GetStyleBackground()->mBackgroundColor;
         nsHTMLValue(bgcolor).ToString(aBgColor);
       }
     }
