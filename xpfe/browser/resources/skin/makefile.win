@@ -21,42 +21,28 @@
 
 DEPTH=..\..\..\..
 
+CHROME_DIR=navigator
+CHROME_SKIN_DIR=skin
+CHROME_TYPE=skin
+
+CHROME_SKIN = \
+	.\alertl.gif \
+	.\errorl.gif \
+	.\messagel.gif \
+	.\navigator.css \
+	.\questionl.gif \
+	.\back.gif \
+	.\forward.gif \
+	.\home.gif \
+	.\location.gif \
+	.\location-hover.gif \
+	.\mynetscape.gif \
+	.\print.gif \
+	.\reload.gif \
+	.\search.gif \
+	.\stop.gif \
+	.\n-box-persbar.gif \
+	$(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
-DISTBROWSER=$(DIST)\bin\chrome\navigator\skin
-
-install::
-	$(MAKE_INSTALL) .\alertl.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\errorl.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\messagel.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\navigator.css $(DISTBROWSER)
-	$(MAKE_INSTALL) .\questionl.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\back.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\forward.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\home.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\location.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\location-hover.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\mynetscape.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\print.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\reload.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\search.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\stop.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\n-box-persbar.gif $(DISTBROWSER)
-
-
-clobber::
-  rm -f $(DISTBROWSER)\alertl.gif
-  rm -f $(DISTBROWSER)\errorl.gif
-  rm -f $(DISTBROWSER)\messagel.gif
-  rm -f $(DISTBROWSER)\navigator.css
-  rm -f $(DISTBROWSER)\questionl.gif
-  rm -f $(DISTBROWSER)\back.gif
-  rm -f $(DISTBROWSER)\forward.gif
-  rm -f $(DISTBROWSER)\home.gif
-  rm -f $(DISTBROWSER)\location.gif
-  rm -f $(DISTBROWSER)\mynetscape.gif
-  rm -f $(DISTBROWSER)\print.gif
-  rm -f $(DISTBROWSER)\reload.gif
-  rm -f $(DISTBROWSER)\search.gif
-  rm -f $(DISTBROWSER)\stop.gif
-  rm -f $(DISTBROWSER)\n-box-persbar.gif

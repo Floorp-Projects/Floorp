@@ -115,6 +115,8 @@ TESTFILES = \
     .\xul\tests\face-dunno.gif \
     $(NULL)
 
+CHROME_DIR=chatzilla
+CHROME_TYPE=content skin
 
 include <$(DEPTH)\config\rules.mak>
 
