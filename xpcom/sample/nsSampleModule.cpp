@@ -43,16 +43,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSampleImpl)
 //
 static nsModuleComponentInfo components[] =
 {
-  { NS_SAMPLE_CID, &nsSampleImplConstructor, NS_SAMPLE_PROGID,
-    "Sample Component" },
+  { "Sample Component", NS_SAMPLE_CID, NS_SAMPLE_PROGID, nsSampleImplConstructor }
 };
-
-////////////////////////////////////////////////////////////////////////
-// Implement the Module object
-//
-NS_IMPL_MODULE(nsSampleModule, components)
 
 ////////////////////////////////////////////////////////////////////////
 // Implment the NSGetModule() exported function for your module
 //
-NS_IMPL_NSGETMODULE(nsSampleModule)
+NS_IMPL_NSGETMODULE("nsSampleModule", components)

@@ -96,3 +96,191 @@ NS_NewGenericFactory(nsIGenericFactory* *result,
     return rv;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
+
+nsGenericModule::nsGenericModule(const char* moduleName, PRUint32 componentCount,
+                                 nsModuleComponentInfo* components)
+    : mInitialized(PR_FALSE), 
+      mModuleName(moduleName),
+      mComponentCount(componentCount),
+      mComponents(components),
+      mFactories(8, PR_FALSE)
+{
+    NS_INIT_ISUPPORTS();
+}
+
+nsGenericModule::~nsGenericModule()
+{
+    Shutdown();
+}
+
+NS_IMPL_ISUPPORTS(nsGenericModule, kIModuleIID)
+
+// Perform our one-time intialization for this module
+nsresult
+nsGenericModule::Initialize()
+{
+    if (mInitialized) {
+        return NS_OK;
+    }
+    mInitialized = PR_TRUE;
+    return NS_OK;
+}
+
+// Shutdown this module, releasing all of the module resources
+void
+nsGenericModule::Shutdown()
+{
+    // Release the factory objects
+    mFactories.Reset();
+}
+
+// Create a factory object for creating instances of aClass.
+NS_IMETHODIMP
+nsGenericModule::GetClassObject(nsIComponentManager *aCompMgr,
+                                const nsCID& aClass,
+                                const nsIID& aIID,
+                                void** r_classObj)
+{
+    nsresult rv;
+
+    // Defensive programming: Initialize *r_classObj in case of error below
+    if (!r_classObj) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *r_classObj = NULL;
+
+    // Do one-time-only initialization if necessary
+    if (!mInitialized) {
+        rv = Initialize();
+        if (NS_FAILED(rv)) {
+            // Initialization failed! yikes!
+            return rv;
+        }
+    }
+
+    // Choose the appropriate factory, based on the desired instance
+    // class type (aClass).
+    nsCOMPtr<nsIGenericFactory> fact;
+
+    nsIDKey key(aClass);
+    if (fact == nsnull) {
+        nsModuleComponentInfo* desc = mComponents;
+        for (PRUint32 i = 0; i < mComponentCount; i++) {
+            if (desc->mCID.Equals(aClass)) {
+                rv = NS_NewGenericFactory(getter_AddRefs(fact), desc->mConstructor);
+                if (NS_FAILED(rv)) return rv;
+
+                (void)mFactories.Put(&key, fact);
+                goto found;
+            }
+            desc++;
+        }
+        // not found in descriptions
+#ifdef DEBUG
+        char* cs = aClass.ToString();
+        printf("+++ nsGenericModule %s: unable to create factory for %s\n", mModuleName, cs);
+        nsCRT::free(cs);
+#endif
+        // XXX put in stop-gap so that we don't search for this one again
+		return NS_ERROR_FACTORY_NOT_REGISTERED;
+    }
+  found:    
+    rv = fact->QueryInterface(aIID, r_classObj);
+    return rv;
+}
+
+#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
+
+NS_IMETHODIMP
+nsGenericModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                              nsIFileSpec* aPath,
+                              const char* registryLocation,
+                              const char* componentType)
+{
+    nsresult rv = NS_OK;
+
+#ifdef DEBUG
+    printf("*** Registering %s components (all right -- a generic module!)\n", mModuleName);
+#endif
+
+    nsModuleComponentInfo* cp = mComponents;
+    while (cp->mConstructor != nsnull) {
+        rv = aCompMgr->RegisterComponentSpec(cp->mCID, cp->mDescription,
+                                             cp->mProgID, aPath, PR_TRUE,
+                                             PR_TRUE);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsGenericModule %s: unable to register %s component => %x\n",
+                   mModuleName, cp->mDescription, rv);
+#endif
+            break;
+        }
+        cp++;
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsGenericModule::UnregisterSelf(nsIComponentManager* aCompMgr,
+                            nsIFileSpec* aPath,
+                            const char* registryLocation)
+{
+#ifdef DEBUG
+    printf("*** Unregistering %s components (all right -- a generic module!)\n", mModuleName);
+#endif
+    nsModuleComponentInfo* cp = mComponents;
+    while (cp->mConstructor != nsnull) {
+        nsresult rv = aCompMgr->UnregisterComponentSpec(cp->mCID, aPath);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsGenericModule %s: unable to unregister %s component => %x\n",
+                   mModuleName, cp->mDescription, rv);
+#endif
+        }
+        cp++;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
+{
+    if (!okToUnload) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *okToUnload = PR_FALSE;
+    return NS_ERROR_FAILURE;
+}
+
+NS_COM nsresult
+NS_NewGenericModule(const char* moduleName,
+                    PRUint32 componentCount,
+                    nsModuleComponentInfo* components,
+                    nsIModule* *result)
+{
+    nsresult rv = NS_OK;
+
+    NS_ASSERTION(result, "Null argument");
+
+    // Create and initialize the module instance
+    nsGenericModule *m = 
+        new nsGenericModule(moduleName, componentCount, components);
+    if (!m) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Increase refcnt and store away nsIModule interface to m in return_cobj
+    rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)result);
+    if (NS_FAILED(rv)) {
+        delete m;
+        m = nsnull;
+    }
+    return rv;
+}
+
+////////////////////////////////////////////////////////////////////////////////

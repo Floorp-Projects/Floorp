@@ -2231,8 +2231,10 @@ NS_DEFINE_MODULE_INSTANCE_COUNTER()
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBrowserInstance, Init)
 
 static nsModuleComponentInfo components[] = {
-  { NS_BROWSERINSTANCE_CID, &nsBrowserInstanceConstructor, NS_IBROWSERINSTANCE_PROGID, "nsBrowserInstance", },
+  { "nsBrowserInstance",
+    NS_BROWSERINSTANCE_CID,
+    NS_IBROWSERINSTANCE_PROGID, 
+    nsBrowserInstanceConstructor }
 };
 
-NS_IMPL_MODULE(nsBrowserModule,components)
-NS_IMPL_NSGETMODULE(nsBrowserModule)
+NS_IMPL_NSGETMODULE("nsBrowserModule", components)
