@@ -98,6 +98,7 @@ public:
                       nsString& aControllerIID, nsIStreamObserver* anObserver,
                       nsIXULWindowCallbacks *aCallbacks,
                       PRInt32 aInitialWidth, PRInt32 aInitialHeight);
+  NS_IMETHOD Close();
   nsIWidget* GetWidget(void) { return mWindow; }
 
   // nsIDocumentLoaderObserver

@@ -276,6 +276,24 @@ nsresult nsWebShellWindow::Initialize(nsIWidget* aParent,
 
 
 /*
+ * Close the window
+ */
+NS_METHOD
+nsWebShellWindow::Close()
+{
+  NS_IF_RELEASE(mWindow);
+  NS_IF_RELEASE(mWebShell);
+  /* note: this next Release() seems like the right thing to do, but it doesn't
+     appear exactly necessary, and we are afraid of possible repercussions
+     unexplored at this time.  ("this time" being a stability release crunch.)
+     Revisit this later!?
+  */
+//  Release();
+  return NS_OK;
+}
+
+
+/*
  * Event handler function...
  *
  * This function is called to process events for the nsIWidget of the 
@@ -321,7 +339,6 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
                                           (nsISupports**)&appShell);
         if (NS_SUCCEEDED(rv)) {
           appShell->CloseTopLevelWindow(aEvent->widget);
-          
           nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
         }
         break;
