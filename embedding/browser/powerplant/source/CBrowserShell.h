@@ -86,6 +86,7 @@ public:
                                                  const EventRecord&	inMacEvent);
 
 	// LCommander
+	virtual void                BeTarget();
 	virtual void		        DontBeTarget();
 	virtual Boolean		        HandleKeyPress(const EventRecord	&inKeyEvent);
     virtual Boolean             ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioParam);

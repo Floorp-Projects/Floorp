@@ -187,6 +187,10 @@ void CBrowserShell::EventMouseUp(const EventRecord	&inMacEvent)
 {
     FocusDraw();
     mMessageSink.DispatchOSEvent((EventRecord&)inMacEvent, GetMacPort());
+    
+    LEventDispatcher *dispatcher = LEventDispatcher::GetCurrentEventDispatcher();
+    if (dispatcher)
+        dispatcher->UpdateMenus();
 }
 
 
@@ -207,10 +211,13 @@ void CBrowserShell::AdjustCursorSelf(Point				/* inPortPt */,
 //***    CBrowserShell: LCommander overrides
 //*****************************************************************************
 
-void CBrowserShell::DontBeTarget()
+void CBrowserShell::BeTarget()
 {
 }
 
+void CBrowserShell::DontBeTarget()
+{
+}
 
 Boolean CBrowserShell::HandleKeyPress(const EventRecord	&inKeyEvent)
 {
