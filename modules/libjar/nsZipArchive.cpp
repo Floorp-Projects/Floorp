@@ -1090,9 +1090,7 @@ PRInt32 nsZipArchive::CopyItemToDisk(const nsZipItem* aItem, PRFileDesc* fOut)
   if ( SeekToItem( aItem ) != ZIP_OK )
     return ZIP_ERR_CORRUPT;
   
-  char* buf = (char*)PR_Malloc(ZIP_BUFLEN);
-  if ( buf == 0 )
-    return ZIP_ERR_MEMORY;
+  char buf[ZIP_BUFLEN];
 
   //-- initialize crc
   crc = crc32(0L, Z_NULL, 0);
@@ -1125,7 +1123,6 @@ PRInt32 nsZipArchive::CopyItemToDisk(const nsZipItem* aItem, PRFileDesc* fOut)
   if ( (status == ZIP_OK) && (crc != aItem->crc32) )
       status = ZIP_ERR_CORRUPT;
 
-  PR_FREEIF( buf );
   return status;
 }
 
@@ -1177,13 +1174,8 @@ PRInt32 nsZipArchive::InflateItem( const nsZipItem* aItem, PRFileDesc* fOut,
     return ZIP_ERR_CORRUPT;
   
   //-- allocate deflation buffers
-  Bytef *inbuf  = (Bytef*)PR_Malloc(ZIP_BUFLEN);
-  Bytef *outbuf = (Bytef*)PR_Malloc(ZIP_BUFLEN);
-  if ( inbuf == 0 || outbuf == 0 )
-  {
-    status = ZIP_ERR_MEMORY;
-    goto cleanup;
-  }
+  Bytef inbuf[ZIP_BUFLEN];
+  Bytef outbuf[ZIP_BUFLEN];
   
   //-- set up the inflate
   memset( &zs, 0, sizeof(zs) );
@@ -1312,8 +1304,6 @@ cleanup:
     inflateEnd( &zs );
   }
 
-  PR_FREEIF( inbuf );
-  PR_FREEIF( outbuf );
   return status;
 }
 
@@ -1322,7 +1312,7 @@ cleanup:
 //---------------------------------------------
 PRInt32 nsZipArchive::TestItem( const nsZipItem* aItem )
 {
-  Bytef *inbuf = NULL, *outbuf = NULL, *old_next_out;
+  Bytef inbuf[ZIP_BUFLEN], outbuf[ZIP_BUFLEN], *old_next_out;
   PRUint32 size, chunk=0, inpos, crc;
   PRInt32 status = ZIP_OK; 
   int zerr = Z_OK;
@@ -1341,17 +1331,6 @@ PRInt32 nsZipArchive::TestItem( const nsZipItem* aItem )
   if ( SeekToItem( aItem ) != ZIP_OK )
     return ZIP_ERR_CORRUPT;
   
-  //-- allocate buffers
-  inbuf = (Bytef *) PR_Malloc(ZIP_BUFLEN);
-  if (aItem->compression == DEFLATED)
-    outbuf = (Bytef *) PR_Malloc(ZIP_BUFLEN);
-
-  if ( inbuf == 0 || (aItem->compression == DEFLATED && outbuf == 0) )
-  {
-    status = ZIP_ERR_MEMORY;
-    goto cleanup;
-  }
-
   //-- set up the inflate if DEFLATED
   if (aItem->compression == DEFLATED)
   {
@@ -1481,10 +1460,6 @@ cleanup:
     inflateEnd( &zs );
   }
 
-  PR_FREEIF(inbuf);
-  if (aItem->compression == DEFLATED)
-    PR_FREEIF(outbuf);
-           
   return status;
 }
 

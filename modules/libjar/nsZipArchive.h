@@ -30,7 +30,8 @@
 #define ZIP_MAGIC     0x5A49505FL   /* "ZIP_" */
 #define ZIPFIND_MAGIC 0x5A495046L   /* "ZIPF" */
 #define ZIP_TABSIZE   256
-#define ZIP_BUFLEN    32767
+// Keep this odd. The -1 is significant.
+#define ZIP_BUFLEN    (4 * 1024 - 1)
 
 #ifdef STANDALONE
 #define nsZipArchive nsZipArchiveStandalone
