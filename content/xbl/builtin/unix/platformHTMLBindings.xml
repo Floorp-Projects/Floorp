@@ -73,6 +73,7 @@
     <handler event="keypress" keycode="VK_F20" command="cmd_cut" />
     <handler event="keypress" keycode="VK_F16" command="cmd_copy" />
     <handler event="keypress" keycode="VK_F18" command="cmd_paste" />
+    <handler event="keypress" keycode="VK_F14" command="cmd_undo" />
     </handlers>
   </binding>
 
@@ -158,6 +159,7 @@
     <handler event="keypress" keycode="VK_F20" command="cmd_cut" />
     <handler event="keypress" keycode="VK_F16" command="cmd_copy" />
     <handler event="keypress" keycode="VK_F18" command="cmd_paste" />
+    <handler event="keypress" keycode="VK_F14" command="cmd_undo" />
     </handlers>
   </binding>
 
@@ -172,6 +174,7 @@
       <handler event="keypress" keycode="VK_F20" command="cmd_cut" /> 
       <handler event="keypress" keycode="VK_F16" command="cmd_copy" /> 
       <handler event="keypress" keycode="VK_F18" command="cmd_paste" /> 
+      <handler event="keypress" keycode="VK_F14" command="cmd_undo" />
       <handler event="keypress" keycode="VK_LEFT" modifiers="control" command="cmd_wordPrevious" />
       <handler event="keypress" keycode="VK_RIGHT" modifiers="control" command="cmd_wordNext" />
       <handler event="keypress" keycode="VK_LEFT" modifiers="control,shift" command="cmd_selectWordPrevious" />
@@ -227,6 +230,7 @@
       <handler event="keypress" keycode="VK_F20" command="cmd_cut" />
       <handler event="keypress" keycode="VK_F16" command="cmd_copy" />
       <handler event="keypress" keycode="VK_F18" command="cmd_paste" />
+      <handler event="keypress" keycode="VK_F14" command="cmd_undo" />
     </handlers>
   </binding>
 </bindings>
