@@ -128,7 +128,6 @@ NS_IMPL_RELEASE(nsRenderingContextGTK)
 NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
                                           nsIWidget *aWindow)
 {
-  fprintf(stderr, "nsRenderingContextGTK::Init called\n");
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
@@ -400,12 +399,20 @@ NS_IMETHODIMP nsRenderingContextGTK::GetColor(nscolor &aColor) const
 
 NS_IMETHODIMP nsRenderingContextGTK::SetFont(const nsFont& aFont)
 {
-  nsIFontMetrics *fontMetrics;
-  mContext->GetMetricsFor(aFont, fontMetrics);
-  NS_IMETHODIMP result = SetFont(fontMetrics);
-  NS_IF_RELEASE(fontMetrics);
+  NS_IF_RELEASE(mFontMetrics);
+  mContext->GetMetricsFor(aFont, mFontMetrics);
+  if (mFontMetrics)
+  {
+    nsFontHandle  fontHandle;
+    mFontMetrics->GetFontHandle(fontHandle);
+    mCurrentFont = (GdkFont *)fontHandle;
 
-  return result;
+    gdk_gc_set_font(mRenderingSurface->gc,
+                    mCurrentFont);
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetFont(nsIFontMetrics *aFontMetrics)
