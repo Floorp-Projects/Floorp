@@ -355,6 +355,8 @@ js_str_escape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
     }
 
     newchars = (jschar *) JS_malloc(cx, (newlength + 1) * sizeof(jschar));
+    if (!newchars)
+        return JS_FALSE;
     for (i = 0, ni = 0; i < length; i++) {
         if ((ch = chars[i]) < 128 && IS_OK(ch, mask)) {
             newchars[ni++] = ch;
@@ -408,6 +410,8 @@ str_unescape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* Don't bother allocating less space for the new string. */
     newchars = (jschar *) JS_malloc(cx, (length + 1) * sizeof(jschar));
+    if (!newchars)
+        return JS_FALSE;
     ni = i = 0;
     while (i < length) {
         ch = chars[i++];
