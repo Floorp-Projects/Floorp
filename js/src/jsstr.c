@@ -4028,7 +4028,7 @@ static int oneUcs4ToUtf8Char(unsigned char *utf8Buffer, uint32 ucs4Char)
         }
         i = utf8Length;
         while (--i) {
-            utf8Buffer[i] = (unsigned char)(ucs4Char & 0x3F | 0x80);
+            utf8Buffer[i] = (unsigned char)((ucs4Char & 0x3F) | 0x80);
             ucs4Char >>= 6;
         }
         *utf8Buffer = (unsigned char)(0x100 - (1 << (8-utf8Length)) + ucs4Char);
@@ -4050,10 +4050,10 @@ static uint32 utf8ToOneUcs4Char(const unsigned char *utf8Buffer, int utf8Length)
         JS_ASSERT(!(ucs4Char & 0x80));
     } else {
         JS_ASSERT((*utf8Buffer & (0x100 - (1 << (7-utf8Length)))) == (0x100 - (1 << (8-utf8Length))));
-        ucs4Char = *utf8Buffer++ & (1<<(7-utf8Length))-1;
+        ucs4Char = *utf8Buffer++ & ((1<<(7-utf8Length))-1);
         while (--utf8Length) {
             JS_ASSERT((*utf8Buffer & 0xC0) == 0x80);
-            ucs4Char = ucs4Char<<6 | *utf8Buffer++ & 0x3F;
+            ucs4Char = ucs4Char<<6 | (*utf8Buffer++ & 0x3F);
         }
     }
     return ucs4Char;
