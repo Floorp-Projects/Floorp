@@ -76,6 +76,9 @@ public:
 
   NS_IMETHOD_(void*) GetClosure() { return mClosure; }
 
+  NS_IMETHOD_(PRBool) isDeferred() { return mDeferred; }
+  NS_IMETHOD_(void) SetDeferred(PRBool bDefer) { mDeferred = bDefer; }
+
   virtual void Fire();
 
   void StartOSTimer(PRUint32 aDelay);
@@ -87,6 +90,7 @@ private:
   PRUint32 mDelay;
   PRUint32 mPriority;
   PRUint32 mType;
+  PRBool   mDeferred;
 
   nsTimerCallbackFunc mFunc;
   void *mClosure;

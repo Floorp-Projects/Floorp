@@ -92,6 +92,8 @@ NS_IMETHODIMP_(void) nsTimerManager::AddReadyQueue(nsITimer* timer)
   for (; i<mReadyQueue->Count(); i++) {
     nsTimer* cur = (nsTimer*) mReadyQueue->ElementAt(i);
     if (cur->GetPriority() < timer->GetPriority()) break;
+    if (cur->isDeferred()) 
+      ((nsTimer*)timer)->SetDeferred(PR_FALSE);  // Only one deferred on queue
   }
 
   mReadyQueue->InsertElementAt(timer, i);
@@ -106,6 +108,10 @@ NS_IMETHODIMP_(PRBool) nsTimerManager::HasReadyTimers(PRUint32 minTimerPriority)
 
   nsTimer* timer = (nsTimer*) mReadyQueue->ElementAt(0);
   if (timer == nsnull) return PR_FALSE;
+  if (timer->isDeferred()) {
+    timer->SetDeferred(PR_FALSE); // Unblock deferred timer now
+    return PR_FALSE;
+  }
 
   return timer->GetPriority() >= minTimerPriority;
 }
