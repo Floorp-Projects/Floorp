@@ -51,9 +51,6 @@ struct CantRenderReplacedElementEvent;
 class nsFrameManagerBase
 {
 public:
-  // force a vtable entry
-  virtual ~nsFrameManagerBase() {}
-
   struct PropertyList;
 
 protected:
