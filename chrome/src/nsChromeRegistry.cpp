@@ -326,7 +326,7 @@ SplitURL(nsIURI* aChromeURI, nsCString& aPackage, nsCString& aProvider, nsCStrin
     return NS_ERROR_INVALID_ARG;
 
   PRInt32 len = PL_strlen(str);
-  nsCAutoString spec = CBufDescriptor(str, PR_FALSE, len + 1, len);
+  nsCAutoString spec( CBufDescriptor(str, PR_FALSE, len + 1, len) );
 
   // We only want to deal with "chrome:" URLs here. We could return
   // an error code if the URL isn't properly prefixed here...
@@ -416,7 +416,7 @@ nsChromeRegistry::Canonify(nsIURI* aChromeURI)
   rv = SplitURL(aChromeURI, package, provider, file);
   if (NS_FAILED(rv)) return rv;
 
-  nsCAutoString canonical = kChromePrefix;
+  nsCAutoString canonical( kChromePrefix );
   canonical += package;
   canonical += "/";
   canonical += provider;
@@ -457,7 +457,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
       // We have to flush the chrome cache!
       RefreshSkins();
 
-      LoadStyleSheet(getter_AddRefs(mScrollbarSheet), "chrome://global/skin/scrollbars.css"); 
+      LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
       // This must always be the last line of profile initialization!
 
       nsCAutoString userSheetURL;
@@ -472,7 +472,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
       mInstallInitialized = PR_TRUE;
       AddToCompositeDataSource(PR_FALSE);
 
-      LoadStyleSheet(getter_AddRefs(mScrollbarSheet), "chrome://global/skin/scrollbars.css"); 
+      LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
         // This must always be the last line of install initialization!
     }
   }
@@ -722,7 +722,7 @@ NS_IMETHODIMP nsChromeRegistry::GetDynamicDataSource(nsIURI *aChromeURL, PRBool 
   if (NS_FAILED(rv)) return rv;
 
   // Retrieve the mInner data source.
-  nsCAutoString overlayFile = "overlayinfo/";
+  nsCAutoString overlayFile( "overlayinfo/" );
   overlayFile += package;
   overlayFile += "/";
 
@@ -752,7 +752,7 @@ NS_IMETHODIMP nsChromeRegistry::GetStyleSheets(nsIURI *aChromeURL, nsISupportsAr
       nsCOMPtr<nsICSSStyleSheet> sheet;
       char* str;
       url->GetSpec(&str);
-      LoadStyleSheet(getter_AddRefs(sheet), str);
+      LoadStyleSheet(getter_AddRefs(sheet), nsCAutoString(str));
       (*aResult)->AppendElement(sheet);
       nsMemory::Free(str);
     }
@@ -786,7 +786,7 @@ NS_IMETHODIMP nsChromeRegistry::GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOve
 
   // Get the chromeResource from this lookup string
   nsCOMPtr<nsIRDFResource> chromeResource;
-  if (NS_FAILED(rv = GetResource(lookup, getter_AddRefs(chromeResource)))) {
+  if (NS_FAILED(rv = GetResource(nsCAutoString(lookup), getter_AddRefs(chromeResource)))) {
       NS_ERROR("Unable to retrieve the resource corresponding to the chrome skin or content.");
       return rv;
   }
@@ -1317,20 +1317,20 @@ NS_IMETHODIMP nsChromeRegistry::UpdateDynamicDataSources(nsIRDFDataSource *aData
 NS_IMETHODIMP nsChromeRegistry::SelectSkin(const PRUnichar* aSkin,
                                         PRBool aUseProfile)
 {
-  return SetProvider("skin", mSelectedSkin, aSkin, aUseProfile, nsnull, PR_TRUE);
+  return SetProvider(nsCAutoString("skin"), mSelectedSkin, aSkin, aUseProfile, nsnull, PR_TRUE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::SelectLocale(const PRUnichar* aLocale,
                                           PRBool aUseProfile)
 {
-  return SetProvider("locale", mSelectedLocale, aLocale, aUseProfile, nsnull, PR_TRUE);
+  return SetProvider(nsCAutoString("locale"), mSelectedLocale, aLocale, aUseProfile, nsnull, PR_TRUE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::SelectLocaleForProfile(const PRUnichar *aLocale, 
                                                        const PRUnichar *aProfilePath)
 {
   // to be changed to use given path
-  return SetProvider("locale", mSelectedLocale, aLocale, PR_TRUE, NS_ConvertUCS2toUTF8(aProfilePath), PR_TRUE);
+  return SetProvider(nsCAutoString("locale"), mSelectedLocale, aLocale, PR_TRUE, NS_ConvertUCS2toUTF8(aProfilePath), PR_TRUE);
 }
 
 /* wstring getSelectedLocale (); */
@@ -1367,7 +1367,7 @@ NS_IMETHODIMP nsChromeRegistry::GetSelectedLocale(const PRUnichar *aPackageName,
   }
 
   if (!selectedProvider) {
-    rv = FindProvider(NS_ConvertUCS2toUTF8(packageStr.GetUnicode()), "locale", mSelectedLocale, getter_AddRefs(selectedProvider));
+    rv = FindProvider(NS_ConvertUCS2toUTF8(packageStr.GetUnicode()), nsCAutoString("locale"), mSelectedLocale, getter_AddRefs(selectedProvider));
     if (!selectedProvider)
       return rv;
   }
@@ -1411,13 +1411,13 @@ NS_IMETHODIMP nsChromeRegistry::GetSelectedLocale(const PRUnichar *aPackageName,
 NS_IMETHODIMP nsChromeRegistry::DeselectSkin(const PRUnichar* aSkin,
                                         PRBool aUseProfile)
 {
-  return SetProvider("skin", mSelectedSkin, aSkin, aUseProfile, nsnull, PR_FALSE);
+  return SetProvider(nsCAutoString("skin"), mSelectedSkin, aSkin, aUseProfile, nsnull, PR_FALSE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::DeselectLocale(const PRUnichar* aLocale,
                                           PRBool aUseProfile)
 {
-  return SetProvider("locale", mSelectedLocale, aLocale, aUseProfile, nsnull, PR_FALSE);
+  return SetProvider(nsCAutoString("locale"), mSelectedLocale, aLocale, aUseProfile, nsnull, PR_FALSE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::SetProvider(const nsCString& aProvider,
@@ -1428,7 +1428,7 @@ NS_IMETHODIMP nsChromeRegistry::SetProvider(const nsCString& aProvider,
 {
   // Build the provider resource str.
   // e.g., urn:mozilla:skin:aqua/1.0
-  nsCAutoString resourceStr = "urn:mozilla:";
+  nsCAutoString resourceStr( "urn:mozilla:" );
   resourceStr += aProvider;
   resourceStr += ":";
   resourceStr.AppendWithConversion(aProviderName);
@@ -1503,7 +1503,7 @@ NS_IMETHODIMP nsChromeRegistry::SetProvider(const nsCString& aProvider,
   }
 
   if(aProvider.Equals("skin")){
-    LoadStyleSheet(getter_AddRefs(mScrollbarSheet), "chrome://global/skin/scrollbars.css"); 
+    LoadStyleSheet(getter_AddRefs(mScrollbarSheet), nsCAutoString("chrome://global/skin/scrollbars.css")); 
   }
   return NS_OK;
 }
@@ -1518,7 +1518,7 @@ nsChromeRegistry::SetProviderForPackage(const nsCString& aProvider,
 {
   // Figure out which file we're needing to modify, e.g., is it the install
   // dir or the profile dir, and get the right datasource.
-  nsCAutoString dataSourceStr = "user-";
+  nsCAutoString dataSourceStr( "user-" );
   dataSourceStr += aProvider;
   dataSourceStr += "s.rdf";
   
@@ -1576,10 +1576,10 @@ NS_IMETHODIMP nsChromeRegistry::SelectProviderForPackage(const nsCString& aProvi
                                         nsIRDFResource* aSelectionArc, 
                                         PRBool aUseProfile, PRBool aIsAdding)
 {
-  nsCAutoString package = "urn:mozilla:package:";
+  nsCAutoString package( "urn:mozilla:package:" );
   package.AppendWithConversion(aPackageName);
 
-  nsCAutoString provider = "urn:mozilla:";
+  nsCAutoString provider( "urn:mozilla:" );
   provider += aProviderType;
   provider += ":";
   provider.AppendWithConversion(aProviderName);
@@ -1636,7 +1636,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
       return NS_ERROR_UNEXPECTED;
 
   // We need to read this synchronously.
-  nsCAutoString key = aBaseURL;
+  nsCAutoString key(aBaseURL);
   key += "manifest.rdf";
  
   rv = remote->Init(key);
@@ -1647,7 +1647,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
 
   // Load the install data source that we wish to manipulate.
   nsCOMPtr<nsIRDFDataSource> installSource;
-  nsCAutoString installStr = "all-";
+  nsCAutoString installStr( "all-" );
   installStr += aProviderType;
   installStr += "s.rdf";
   LoadDataSource(installStr, getter_AddRefs(installSource), aUseProfile, nsnull);
@@ -1682,7 +1682,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
 
   // Build the prefix string. Only resources with this prefix string will have their
   // assertions copied.
-  nsCAutoString prefix = "urn:mozilla:";
+  nsCAutoString prefix( "urn:mozilla:" );
   prefix += aProviderType;
   prefix += ":";
 
@@ -1780,7 +1780,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
                 nsCAutoString packageName;
                 value.Right(packageName, value.Length() - index - 1);
 
-                nsCAutoString resourceName = "urn:mozilla:package:";
+                nsCAutoString resourceName("urn:mozilla:package:");
                 resourceName += packageName;
                 nsCOMPtr<nsIRDFResource> packageResource;
                 GetResource(resourceName, getter_AddRefs(packageResource));
@@ -1837,37 +1837,37 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCString& aProviderType,
 NS_IMETHODIMP nsChromeRegistry::InstallSkin(const char* aBaseURL, PRBool aUseProfile, PRBool aAllowScripts)
 {
   nsCAutoString provider("skin");
-  return InstallProvider(provider, aBaseURL, aUseProfile, aAllowScripts, PR_FALSE);
+  return InstallProvider(provider, nsCAutoString(aBaseURL), aUseProfile, aAllowScripts, PR_FALSE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::InstallLocale(const char* aBaseURL, PRBool aUseProfile)
 {
   nsCAutoString provider("locale");
-  return InstallProvider(provider, aBaseURL, aUseProfile, PR_TRUE, PR_FALSE);
+  return InstallProvider(provider, nsCAutoString(aBaseURL), aUseProfile, PR_TRUE, PR_FALSE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::InstallPackage(const char* aBaseURL, PRBool aUseProfile)
 {
   nsCAutoString provider("package");
-  return InstallProvider(provider, aBaseURL, aUseProfile, PR_TRUE, PR_FALSE);
+  return InstallProvider(provider, nsCAutoString(aBaseURL), aUseProfile, PR_TRUE, PR_FALSE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::UninstallSkin(const PRUnichar* aSkinName, PRBool aUseProfile)
 {
   nsCAutoString provider("skin");
-  return InstallProvider(provider, "", aUseProfile, PR_TRUE, PR_TRUE);
+  return InstallProvider(provider, nsCAutoString(), aUseProfile, PR_TRUE, PR_TRUE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::UninstallLocale(const PRUnichar* aLocaleName, PRBool aUseProfile)
 {
   nsCAutoString provider("locale");
-  return InstallProvider(provider, "", aUseProfile, PR_TRUE, PR_TRUE);
+  return InstallProvider(provider, nsCAutoString(), aUseProfile, PR_TRUE, PR_TRUE);
 }
 
 NS_IMETHODIMP nsChromeRegistry::UninstallPackage(const PRUnichar* aPackageName, PRBool aUseProfile)
 {
   nsCAutoString provider("package");
-  return InstallProvider(provider, "", aUseProfile, PR_TRUE, PR_TRUE);
+  return InstallProvider(provider, nsCAutoString(), aUseProfile, PR_TRUE, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -2054,7 +2054,7 @@ nsChromeRegistry::AddToCompositeDataSource(PRBool aUseProfile)
 
   // Always load the install dir datasources
   nsCOMPtr<nsIRDFDataSource> dataSource;
-  nsCAutoString name = "user-skins.rdf";
+  nsCAutoString name( "user-skins.rdf" );
   LoadDataSource(name, getter_AddRefs(dataSource), PR_FALSE, nsnull);
   mChromeDataSource->AddDataSource(dataSource);
 
@@ -2081,7 +2081,7 @@ nsChromeRegistry::GetBackstopSheets(nsISupportsArray **aResult)
 {
   if (!mScrollbarSheet) {
     nsCOMPtr<nsICSSStyleSheet> dummy;
-    LoadStyleSheet(getter_AddRefs(dummy), "chrome://global/skin/scrollbars.css"); 
+    LoadStyleSheet(getter_AddRefs(dummy), nsCAutoString("chrome://global/skin/scrollbars.css")); 
   }
 
   if(mScrollbarSheet || mUserSheet)
