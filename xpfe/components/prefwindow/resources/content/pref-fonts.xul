@@ -37,7 +37,6 @@
 
   <box class="box-smallheader" title="&lHeader;"/>
   
-
   <titledbox orient="vertical">
     <title><text value="&displayFonts;"/></title>
 
@@ -87,7 +86,7 @@
             <menupopup/>
           </menulist>
           <text class="label" value="&size.label;" accesskey="&sizeVar.accesskey;" for="sizeVar"/>
-          <menulist id="sizeVar">
+          <menulist id="sizeVar" style="width: 4em;">
             <menupopup>
               <menuitem data="12" value="12"/>
               <menuitem data="13" value="13"/>
@@ -164,7 +163,7 @@
             <menupopup/>
           </menulist>
           <text class="label" value="&size.label;" accesskey="&sizeMono.accesskey;" for="sizeMono"/>
-          <menulist id="sizeMono">
+          <menulist id="sizeMono" style="width: 4em;">
             <menupopup>
               <menuitem data="12" value="12"/>
               <menuitem data="13" value="13"/>
