@@ -81,12 +81,14 @@
   <titledbox orient="vertical">
     <title><text value="&walletHeader.label;"/></title>
     <html>&walletDescription.label;</html>
+<!--
     <box autostretch="never">
       <text class="label" for="walletServer" value="&walletServer.label;" accesskey="&walletServer.accesskey;"/>
       <textfield id="walletServer" flex="1"
                  pref="true" preftype="string" prefstring="wallet.Server"
                  prefattribute="value"/>
     </box>
+-->
     <checkbox id="walletCaptureForms" value="&walletEnabled.label;" accesskey="&walletEnabled.accesskey;"
               pref="true" preftype="bool" prefstring="wallet.captureForms"
               prefattribute="checked"/>
