@@ -35,13 +35,13 @@
 *
 *
 * Date:    16 July 2002
-* SUMMARY: Just seeing we don't crash on this code
+* SUMMARY: Testing that we don't crash on Array.sort()
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=157652
 *
 */
 //-----------------------------------------------------------------------------
 var bug = 157652;
-var summary = "Just seeing we don't crash on this code";
+var summary = "Testing that we don't crash on Array.sort()";
 
 printBugNumber(bug);
 printStatus(summary);
