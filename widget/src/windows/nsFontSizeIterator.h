@@ -24,9 +24,16 @@
 
 class nsVoidArray;
 
+typedef struct {
+  nsString      mName;
+  PRBool        mIsScalable;
+  nsVoidArray * mSizes;
+} FontInfo;
+
+
 class nsFontSizeIterator: public nsIFontSizeIterator {
 public:
-  nsFontSizeIterator(nsVoidArray * aFontList);
+  nsFontSizeIterator();
   virtual ~nsFontSizeIterator();
 
   NS_DECL_ISUPPORTS
@@ -37,14 +44,12 @@ public:
 	NS_IMETHOD Advance();
 
   // Native impl
-	NS_IMETHOD SetFontName( const nsString& aFontName);
+	NS_IMETHOD SetFontInfo( FontInfo * aFontInfo );
 
 protected:
 
-  nsVoidArray * mFontList; //  this array is not owned by this object
-
-  nsString mFontName;      // the name of the font to be looked at
-  PRInt32 mSizeIterInx;    // current index of iter
+  FontInfo * mFontInfo;      
+  PRInt32  mSizeIterInx;   // current index of iter
 };
 
 #endif
