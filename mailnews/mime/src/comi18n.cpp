@@ -1260,10 +1260,16 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
     nsString aAlias(mInputCharset);
     if (aAlias.Length()) {
       res = calias->GetPreferred(aAlias, mInputCharset);
+      if (NS_FAILED(res)) {
+        mInputCharset.Assign("ISO-8859-1");
+      }
     }
     aAlias = mOutputCharset;
     if (aAlias.Length()) {
       res = calias->GetPreferred(aAlias, mOutputCharset);
+      if (NS_FAILED(res)) {
+        mOutputCharset.Assign("UTF-8");
+      }
     }
   }
 
