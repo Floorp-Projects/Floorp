@@ -575,7 +575,13 @@ xpmenubar button:hover {
   color:#333366;
   text-decoration: none;
 }
- 
+
+xpmenu[menuactive="true"] button {
+  border: 1px outset white;
+  color:#333366;
+  text-decoration: none;
+}
+
 xpmenubar button:hover:-moz-outline {
    border : 1px solid black;
 }
