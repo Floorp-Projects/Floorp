@@ -18,7 +18,7 @@
 
 -->
 
-<?xml-stylesheet href="xul.css" type="text/css"?>
+<?xml-stylesheet href="chrome:/global/skin/xul.css" type="text/css"?>
 <?xml-stylesheet href="manage-bookmarks.css" type="text/css"?>
 <?xml-stylesheet href="bookmarks.css" type="text/css"?>
 
