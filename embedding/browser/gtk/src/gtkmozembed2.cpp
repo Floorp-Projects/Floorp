@@ -39,6 +39,8 @@
 // so we can get callbacks from the mozarea
 #include <gtkmozarea.h>
 
+class nsIDirectoryServiceProvider;
+
 // Some "massaged" enum information for the GTK Type System
 static GtkFlagValue gtk_moz_embed_progress_flags_values[] = {
   { GTK_MOZ_EMBED_FLAG_START,
@@ -705,6 +707,11 @@ void
 gtk_moz_embed_set_profile_path(char *aDir, char *aName)
 {
   EmbedPrivate::SetProfilePath(aDir, aName);
+}
+
+void
+gtk_moz_embed_set_directory_service_provider(nsIDirectoryServiceProvider *appFileLocProvider) {
+  EmbedPrivate::SetDirectoryServiceProvider(appFileLocProvider);
 }
 
 void

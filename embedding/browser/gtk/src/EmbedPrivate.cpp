@@ -72,6 +72,7 @@ char        *EmbedPrivate::sProfileName = nsnull;
 nsIPref     *EmbedPrivate::sPrefs       = nsnull;
 GtkWidget   *EmbedPrivate::sOffscreenWindow = 0;
 GtkWidget   *EmbedPrivate::sOffscreenFixed  = 0;
+nsIDirectoryServiceProvider *EmbedPrivate::sAppFileLocProvider = nsnull;
 
 EmbedPrivate::EmbedPrivate(void)
 {
@@ -344,9 +345,15 @@ EmbedPrivate::PushStartup(void)
 	return;
     }
 
-    rv = NS_InitEmbedding(binDir, nsnull);
+    rv = NS_InitEmbedding(binDir, sAppFileLocProvider);
     if (NS_FAILED(rv))
       return;
+
+    // we no longer need a reference to the DirectoryServiceProvider
+    if (sAppFileLocProvider) {
+      NS_RELEASE(sAppFileLocProvider);
+      sAppFileLocProvider = nsnull;
+    }
 
     rv = StartupProfile();
     if (NS_FAILED(rv))
@@ -426,6 +433,18 @@ EmbedPrivate::SetProfilePath(char *aDir, char *aName)
   
   if (aName)
     sProfileName = (char *)nsMemory::Clone(aName, strlen(aDir) + 1);
+}
+
+void 
+EmbedPrivate::SetDirectoryServiceProvider(nsIDirectoryServiceProvider * appFileLocProvider) 
+{
+  if (sAppFileLocProvider)
+    NS_RELEASE(sAppFileLocProvider);
+  
+  if (appFileLocProvider) {
+    sAppFileLocProvider = appFileLocProvider;
+    NS_ADDREF(sAppFileLocProvider);
+  }
 }
 
 nsresult

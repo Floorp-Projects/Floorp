@@ -45,6 +45,7 @@ class EmbedEventListener;
 class EmbedStream;
 
 class nsPIDOMWindow;
+class nsIDirectoryServiceProvider;
 
 class EmbedPrivate {
 
@@ -67,6 +68,7 @@ class EmbedPrivate {
   static void PopStartup      (void);
   static void SetCompPath     (char *aPath);
   static void SetProfilePath  (char *aDir, char *aName);
+  static void SetDirectoryServiceProvider (nsIDirectoryServiceProvider * appFileLocProvider);
 
   nsresult OpenStream         (const char *aBaseURI, const char *aContentType);
   nsresult AppendToStream     (const char *aData, PRInt32 aLen);
@@ -133,6 +135,8 @@ class EmbedPrivate {
   static char                   *sProfileName;
   // for profiles
   static nsIPref                *sPrefs;
+
+  static nsIDirectoryServiceProvider * sAppFileLocProvider;
 
   // chrome mask
   PRUint32                       mChromeMask;
