@@ -21,6 +21,7 @@
 #include "nscore.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsTableRowFrame.h"  // need to actually include this here to inline GetRowIndex
+#include "nsIStyleContext.h"
 
 struct nsStyleSpacing;
 class nsTableFrame;
@@ -39,6 +40,16 @@ public:
   // default constructor supplied by the compiler
 
   void InitCellFrame(PRInt32 aColIndex);
+
+  void SetBorderEdge(PRUint8 aSide, 
+                     PRInt32 aRowIndex, 
+                     PRInt32 aColIndex, 
+                     nsBorderEdge *border);
+
+  void SetBorderEdgeLength(PRUint8 aSide, 
+                           PRInt32 aIndex, 
+                           nscoord aLength);
+
 
   /** instantiate a new instance of nsTableCellFrame.
     * @param aResult    the new object is returned in this out-param
@@ -193,14 +204,10 @@ protected:
   //XXX: mIsContentEmpty should get yanked in favor of using free a bit on the frame base class
   //     the FrameState slot (mState; GetFrameState/SetFrameState)
 
+  nsBorderEdges mBorderEdges;       // one list of border segments for each side of the table frame
+                                    // used only for the collapsing border model
+
 };
-
-inline void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
-{
-  NS_PRECONDITION(0<=aColIndex, "bad col index arg");
-  mColIndex = aColIndex;
-}
-
 
 inline PRInt32 nsTableCellFrame::GetRowIndex()
 {
