@@ -186,20 +186,7 @@ nsFTPDirListingConv::Convert(nsIInputStream *aFromStream,
 #endif // DEBUG_valeski
 
     // send the converted data out.
-    nsCOMPtr<nsIInputStream> inputData;
-    nsCOMPtr<nsISupports>    inputDataSup;
-
-    rv = NS_NewCStringInputStream(getter_AddRefs(inputDataSup), convertedData);
-    if (NS_FAILED(rv)) return rv;
-
-    inputData = do_QueryInterface(inputDataSup, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    *_retval = inputData.get();
-    NS_ADDREF(*_retval);
-
-    return NS_OK;
-
+    return NS_NewCStringInputStream(_retval, convertedData);
 }
 
 
@@ -323,12 +310,8 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
 
     // send the converted data out.
     nsCOMPtr<nsIInputStream> inputData;
-    nsCOMPtr<nsISupports>    inputDataSup;
 
-    rv = NS_NewCStringInputStream(getter_AddRefs(inputDataSup), indexFormat);
-    if (NS_FAILED(rv)) return rv;
-
-    inputData = do_QueryInterface(inputDataSup, &rv);
+    rv = NS_NewCStringInputStream(getter_AddRefs(inputData), indexFormat);
     if (NS_FAILED(rv)) return rv;
 
     rv = mFinalListener->OnDataAvailable(mPartChannel, ctxt, inputData, 0, indexFormat.Length());

@@ -343,7 +343,7 @@ class nsScanner {
        *  @param   aCharsetSource- where the charset info came from
        *  @return  
        */
-      nsresult SetDocumentCharset(const nsString& aCharset, PRInt32 aSource);
+      nsresult SetDocumentCharset(const nsAString& aCharset, PRInt32 aSource);
 
       void BindSubstring(nsSlidingSubstring& aSubstring, const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd);
       void CurrentPosition(nsReadingIterator<PRUnichar>& aPosition);

@@ -501,7 +501,7 @@ void nsParser::SetCommand(eParserCommands aParserCommand){
  *  @param   aCharsetSource- the soure of the chares
  *  @return	 nada
  */
-void nsParser::SetDocumentCharset(nsString& aCharset, PRInt32 aCharsetSource){
+void nsParser::SetDocumentCharset(const nsAString& aCharset, PRInt32 aCharsetSource){
   mCharset = aCharset;
   mCharsetSource = aCharsetSource; 
   if(mParserContext && mParserContext->mScanner)
@@ -756,7 +756,7 @@ static PRBool ParseDocTypeDecl(const nsString &aBuffer,
   // The PI-skipping is a bit of a hack.
   PRInt32 theIndex = 0;
   do {
-    theIndex = aBuffer.FindChar('<', PR_FALSE, theIndex, -1);
+    theIndex = aBuffer.FindChar('<', theIndex);
     if (theIndex == kNotFound) break;
     PRUnichar nextChar = aBuffer.CharAt(theIndex+1);
     if (nextChar == PRUnichar('!')) {
@@ -769,9 +769,9 @@ static PRBool ParseDocTypeDecl(const nsString &aBuffer,
       }
       theIndex = ParsePS(aBuffer,tmpIndex);
       // -1, not 0, in case it's another markup declaration
-      theIndex = aBuffer.FindChar('>', PR_FALSE, theIndex, -1);
+      theIndex = aBuffer.FindChar('>', theIndex);
     } else if (nextChar == PRUnichar('?')) {
-      theIndex = aBuffer.FindChar('>', PR_FALSE, theIndex, -1);
+      theIndex = aBuffer.FindChar('>', theIndex);
     } else {
       break;
     }
@@ -806,7 +806,7 @@ static PRBool ParseDocTypeDecl(const nsString &aBuffer,
 
     PRInt32 PublicIDStart = theIndex + 1;
     PRInt32 PublicIDEnd =
-        aBuffer.FindChar(lit, PR_FALSE, PublicIDStart, -1);
+        aBuffer.FindChar(lit, PublicIDStart);
     if (kNotFound == PublicIDEnd)
       return PR_FALSE;
     theIndex = ParsePS(aBuffer, PublicIDEnd + 1);
@@ -823,7 +823,7 @@ static PRBool ParseDocTypeDecl(const nsString &aBuffer,
       *aResultFlags |= PARSE_DTD_HAVE_SYSTEM_ID;
       PRInt32 SystemIDStart = theIndex + 1;
       PRInt32 SystemIDEnd =
-          aBuffer.FindChar(next, PR_FALSE, SystemIDStart, -1);
+          aBuffer.FindChar(next, SystemIDStart);
       if (kNotFound == SystemIDEnd)
         return PR_FALSE;
     } else if (next == PRUnichar('[')) {

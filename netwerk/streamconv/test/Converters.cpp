@@ -51,17 +51,7 @@ TestConverter::Convert(nsIInputStream *aFromStream,
 
     buf[read] = '\0';
 
-    nsString convDataStr;
-    convDataStr.AssignWithConversion(buf);
-    nsCOMPtr<nsISupports> inputDataSup;
-
-    rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup), convDataStr);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIInputStream> inputData(do_QueryInterface(inputDataSup));
-    *_retval = inputData;
-    NS_ADDREF(*_retval);
-    return NS_OK; 
+    return NS_NewCStringInputStream(_retval, nsDependentCString(buf));
 }
 
 /* This method initializes any internal state before the stream converter

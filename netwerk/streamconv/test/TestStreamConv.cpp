@@ -127,11 +127,10 @@ NS_IMPL_ISUPPORTS1(EndListener, nsIStreamListener);
 nsresult SendData(const char * aData, nsIStreamListener* aListener, nsIRequest* request) {
     nsString data;
     data.AssignWithConversion(aData);
-    nsCOMPtr<nsISupports> dataSup;
-    nsresult rv = NS_NewStringInputStream(getter_AddRefs(dataSup), data);
+    nsCOMPtr<nsIInputStream> dataStream;
+    nsresult rv = NS_NewStringInputStream(getter_AddRefs(dataStream), data);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIInputStream> dataStream(do_QueryInterface(dataSup));
     return aListener->OnDataAvailable(request, nsnull, dataStream, 0, -1);
 }
 #define SEND_DATA(x) SendData(x, converterListener, request)

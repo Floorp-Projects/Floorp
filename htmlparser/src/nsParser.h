@@ -160,9 +160,9 @@ class nsParser : public nsIParser,
      *  @param   aCharsetSource- the soure of the chares
      *  @return	 nada
      */
-    virtual void SetDocumentCharset(nsString& aCharset, PRInt32 aSource);
+    virtual void SetDocumentCharset(const nsAString& aCharset, PRInt32 aSource);
 
-    void GetDocumentCharset(nsString& aCharset, PRInt32& aSource)
+    void GetDocumentCharset(nsAString& aCharset, PRInt32& aSource)
     {
          aCharset = mCharset;
          aSource = mCharsetSource;

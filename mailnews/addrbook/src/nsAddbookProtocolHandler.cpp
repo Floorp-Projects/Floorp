@@ -129,13 +129,10 @@ nsAddbookProtocolHandler::GenerateXMLOutputChannel( nsString &aOutput,
   nsresult                  rv = NS_OK;
   nsIChannel                *channel;
   nsCOMPtr<nsIInputStream>  inStr;
-  nsCOMPtr<nsISupports>     s;
 
-  rv = NS_NewStringInputStream(getter_AddRefs(s), aOutput);
+  rv = NS_NewStringInputStream(getter_AddRefs(inStr), aOutput);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  inStr = do_QueryInterface(s, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
   rv = NS_NewInputStreamChannel(&channel, aURI, inStr, "text/xml", aOutput.Length());
   NS_ENSURE_SUCCESS(rv, rv);
   

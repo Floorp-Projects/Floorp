@@ -187,8 +187,8 @@ class nsIParser : public nsISupports {
      *  @param   aCharsetSource- the soure of the chares
      *  @return	 nada
      */
-    virtual void SetDocumentCharset(nsString& aCharset, PRInt32 aSource)=0;
-    virtual void GetDocumentCharset(nsString& oCharset, PRInt32& oSource)=0;
+    virtual void SetDocumentCharset(const nsAString& aCharset, PRInt32 aSource)=0;
+    virtual void GetDocumentCharset(nsAString& oCharset, PRInt32& oSource)=0;
 
     virtual nsIParserFilter* SetParserFilter(nsIParserFilter* aFilter) = 0;
 

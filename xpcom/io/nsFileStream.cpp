@@ -261,12 +261,9 @@ nsInputStringStream::nsInputStringStream(const char* stringToRead)
 nsInputStringStream::nsInputStringStream(const nsString& stringToRead)
 //----------------------------------------------------------------------------------------
 {
-	nsISupports* stream;
-	if (NS_FAILED(NS_NewStringInputStream(&stream, stringToRead)))
+	if (NS_FAILED(NS_NewStringInputStream(getter_AddRefs(mInputStream), stringToRead)))
 		return;
-	mInputStream = do_QueryInterface(stream);
-	mStore = do_QueryInterface(stream);
-	NS_RELEASE(stream);
+	mStore = do_QueryInterface(mInputStream);
 }
 
 //========================================================================================

@@ -516,11 +516,8 @@ nsHttpConnection::SetupSSLProxyConnect()
     request.Flatten(buf);
     buf.Append("\r\n");
 
-    nsCOMPtr<nsISupports> sup;
-    rv = NS_NewCStringInputStream(getter_AddRefs(sup), buf);
-    if (NS_FAILED(rv)) return rv;
+    rv = NS_NewCStringInputStream(getter_AddRefs(mSSLProxyConnectStream), buf);
 
-    mSSLProxyConnectStream = do_QueryInterface(sup, &rv);
     return rv;
 }
 
