@@ -31,9 +31,9 @@
 #include "PopupMenu.h"
 #include "BookmarkFrame.h"
 
-#ifdef MOZ_TASKBAR
-#include "TaskBar.h"
-#endif
+// #ifdef MOZ_TASKBAR
+// #include "TaskBar.h"
+// #endif
 
 #include <Xm/Form.h>
 #include <Xm/MwmUtil.h>
@@ -487,10 +487,11 @@ XFE_Dashboard::createDockedTaskBar()
 	
 	// Create the docked taskbar here
 	m_dockedTaskBar = new XFE_TaskBar(m_widget,m_parentFrame,False);
-	
+
 	// Add action cb to dashboard
-	XtAddCallback(m_dockedTaskBar->getBaseWidget(),
-				  XmNactionCallback,
+//	XtAddCallback(m_dockedTaskBar->getBaseWidget(),
+	XtAddCallback(m_dockedTaskBar->getUndockButton(),
+				  XmNactivateCallback,
 				  XFE_Dashboard::floatingActionCB,
 				  (XtPointer) this);
 	

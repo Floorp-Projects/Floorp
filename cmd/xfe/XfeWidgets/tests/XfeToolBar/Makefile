@@ -23,8 +23,7 @@ DEPTH			= ../../../../..
 CSRCS			= \
 				ChromeTest.c \
 				DashBoardTest.c \
-				TaskBarTestOne.c \
-				TaskBarTestTwo.c \
+				TaskBarTest.c \
 				ToolBarTest.c \
 				ToolBoxTest.c \
 				ToolScrollTest.c \

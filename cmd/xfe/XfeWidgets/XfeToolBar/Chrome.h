@@ -29,7 +29,6 @@
 
 #include <Xfe/ToolBox.h>
 #include <Xfe/DashBoard.h>
-#include <Xfe/TaskBar.h>
 #include <Xm/RowColumn.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION

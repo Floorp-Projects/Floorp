@@ -53,7 +53,6 @@
 #include <Xfe/Chrome.h>
 #include <Xfe/DashBoard.h>
 #include <Xfe/Tab.h>
-#include <Xfe/TaskBar.h>
 #include <Xfe/ToolBar.h>
 #include <Xfe/ToolBox.h>
 #include <Xfe/ToolItem.h>

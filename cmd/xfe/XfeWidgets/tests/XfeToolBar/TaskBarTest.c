@@ -18,7 +18,7 @@
 
 /*----------------------------------------------------------------------*/
 /*																		*/
-/* Name:		TaskBarTestTwo.c										*/
+/* Name:		TaskBarTest.c											*/
 /* Description:	Test for XfeTaskBar widget.								*/
 /* Author:		Ramiro Estrugo <ramiro@netscape.com>					*/
 /*																		*/
@@ -35,7 +35,7 @@ main(int argc,char *argv[])
 	Widget	form;
 	Widget	frame;
 
-	XfeAppCreateSimple("TaskBarTestTwo",&argc,argv,"MainFrame",&frame,&form);
+	XfeAppCreateSimple("TaskBarTest",&argc,argv,"MainFrame",&frame,&form);
 
     _docked_tb = XfeCreateLoadedTaskBar(form,
 										"DockedTaskBar",

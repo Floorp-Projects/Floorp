@@ -336,6 +336,7 @@ XfeCreateLoadedTaskBar(Widget			pw,
 					   WidgetList *		task_items_out)
 {
 	Widget			task_bar = NULL;
+	Widget			undock_button;
 	unsigned char	layout = 
 		large ? XmBUTTON_LABEL_ON_BOTTOM : XmBUTTON_PIXMAP_ONLY;
 
@@ -344,17 +345,20 @@ XfeCreateLoadedTaskBar(Widget			pw,
 
 	task_bar = XtVaCreateManagedWidget(
 		"TaskBar",
-		xfeTaskBarWidgetClass,
+		xfeToolBarWidgetClass,
 		pw,
 		XmNbackground,			XfeBackground(pw),
 		XmNbuttonLayout,		layout,
 		NULL);
 
-
-	XtVaSetValues(task_bar,
-				  XmNactionPixmap,	XfeGetPixmap(task_bar,"task_small_handle"),
-				  NULL);
-
+	undock_button = XtVaCreateManagedWidget(
+		"undockButton",
+		xfeButtonWidgetClass,
+		task_bar,
+		XmNpixmap,			XfeGetPixmap(task_bar,"task_small_handle"),
+		XmNbuttonLayout,	XmBUTTON_PIXMAP_ONLY,
+		NULL);
+	
 	if (task_count)
 	{
 		XfeLoadTaskBar(task_bar,

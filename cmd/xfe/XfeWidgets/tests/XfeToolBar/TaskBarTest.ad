@@ -17,7 +17,7 @@
 
 ! 
 
-TaskBarTestTwo*MainForm.width:				500
-TaskBarTestTwo*MainForm.height:				400
-TaskBarTestTwo*MainForm.background:			Gray70
-TaskBarTestTwo*MainForm.shadowThickness:	0
+TaskBarTest*MainForm.width:			500
+TaskBarTest*MainForm.height:			400
+TaskBarTest*MainForm.background:		Gray70
+TaskBarTest*MainForm.shadowThickness:	        0

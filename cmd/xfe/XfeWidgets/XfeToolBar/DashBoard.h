@@ -31,7 +31,7 @@
 #include <Xfe/Button.h>
 #include <Xfe/Label.h>
 #include <Xfe/ProgressBar.h>
-#include <Xfe/TaskBar.h>
+/* #include <Xfe/TaskBar.h> */
 #include <Xfe/ToolBar.h>
 
 XFE_BEGIN_CPLUSPLUS_PROTECTION

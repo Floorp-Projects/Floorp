@@ -40,8 +40,7 @@
 #include "xfe2_extern.h"
 #include "prefapi.h"
 
-#include <Xfe/TaskBar.h>
-#include <Xfe/Button.h>
+#include <Xfe/ToolBar.h>
 
 #ifdef MOZ_MAIL_NEWS
 #define SM_BIFF_UNKNOWN_ICONS TaskSm_MailU_group
@@ -52,9 +51,6 @@
 #define LG_BIFF_NEWMAIL_ICONS Task_MailY_group
 #define LG_BIFF_NOMAIL_ICONS  Task_MailN_group
 #endif
-
-#define FLOATING_TASK_BAR_NAME		"floatingTaskBar"
-#define DOCKED_TASK_BAR_NAME		"dockedTaskBar"
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -101,7 +97,7 @@ XFE_TaskBar::XFE_TaskBar(Widget			parent,
 	XFE_Component(parent_frame),
     m_isFloating(is_floating),
 	m_parentFrame(parent_frame),
-	m_actionButton(NULL)
+	m_undockButton(NULL)
 #ifdef MOZ_MAIL_NEWS
     ,m_biffNoticeInstalled(False)
 #endif
@@ -250,9 +246,7 @@ static void DropSiteDestroyCb(Widget,XtPointer cd,XtPointer)
     if (cd)
         delete (XFE_TaskBarDrop*)cd;
 }
-
-
-
+//////////////////////////////////////////////////////////////////////////
 Widget
 XFE_TaskBar::createTaskBarButton(TaskBarSpec *spec)
 {
@@ -329,40 +323,97 @@ XFE_TaskBar::createTaskBarButton(TaskBarSpec *spec)
 }
 //////////////////////////////////////////////////////////////////////////
 void
+XFE_TaskBar::createBaseToolBar(Widget parent,String name)
+{
+	XP_ASSERT( XfeIsAlive(parent) );
+	XP_ASSERT( name != NULL );
+
+	Widget toolbar = XtVaCreateWidget(name,
+									  xfeToolBarWidgetClass,
+									  parent,
+									  XmNusePreferredWidth,		True,
+									  XmNusePreferredHeight,	True,
+									  NULL);
+
+	setBaseWidget(toolbar);
+}
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_TaskBar::createUndockButton(Widget parent)
+{
+	XP_ASSERT( XfeIsAlive(parent) );
+
+	m_undockButton = XtVaCreateWidget("undockButton",
+									  xfeButtonWidgetClass,
+									  parent,
+									  NULL);
+	// Create the undock pixmap
+	if (!XfePixmapGood(TaskSm_Handle_group.pixmap_icon.pixmap))
+	{
+		IconGroup_createAllIcons(&TaskSm_Handle_group,
+								 
+								 XfeAncestorFindByClass(parent,
+														shellWidgetClass,
+														XfeFIND_ANY),
+								 
+								 XfeForeground(m_widget),
+								 
+								 XfeBackground(m_widget));
+	}
+
+	// Set the undock pixmap on the button if valid
+	if (XfePixmapGood(TaskSm_Handle_group.pixmap_icon.pixmap))
+	{
+		XtVaSetValues(m_undockButton,
+					  XmNpixmap, TaskSm_Handle_group.pixmap_icon.pixmap,
+					  NULL);
+	}
+
+	XtManageChild(m_undockButton);
+}
+//////////////////////////////////////////////////////////////////////////
+void
 XFE_TaskBar::createDockedWidgets(Widget parent)
 {
 	XP_ASSERT( XfeIsAlive(parent) );
 
 	// Create a horizontal task bar
-	m_widget = XtVaCreateWidget(DOCKED_TASK_BAR_NAME,
-								xfeTaskBarWidgetClass,
-								parent,
-								XmNorientation,			XmHORIZONTAL,
-								XmNusePreferredWidth,	True,
-								XmNusePreferredHeight,	True,
-								NULL);
+// 	m_widget = XtVaCreateWidget("dockedTaskBar",
+// 								xfeTaskBarWidgetClass,
+// 								parent,
+// 								XmNorientation,			XmHORIZONTAL,
+// 								XmNusePreferredWidth,	True,
+// 								XmNusePreferredHeight,	True,
+// 								NULL);
 
 	// Floating undock image
-	IconGroup_createAllIcons(&TaskSm_Handle_group,
+// 	IconGroup_createAllIcons(&TaskSm_Handle_group,
 
-							 XfeAncestorFindByClass(m_widget,
-													shellWidgetClass,
-													XfeFIND_ANY),
+// 							 XfeAncestorFindByClass(m_widget,
+// 													shellWidgetClass,
+// 													XfeFIND_ANY),
 
-							 XfeForeground(m_widget),
+// 							 XfeForeground(m_widget),
 
-							 XfeBackground(m_widget));
+// 							 XfeBackground(m_widget));
+
+	createBaseToolBar(parent,"dockedTaskBar");
+
+	XP_ASSERT( XfeIsAlive(m_widget) );
+	
+	createUndockButton(m_widget);
 
 	// Create floating buttons
 	createButtons(m_dockedSpec);
 	
-	if (XfePixmapGood(TaskSm_Handle_group.pixmap_icon.pixmap))
-	{
-		XtVaSetValues(m_widget,
-					  XmNactionPixmap, TaskSm_Handle_group.pixmap_icon.pixmap,
-					  NULL);
-	}
+// 	if (XfePixmapGood(TaskSm_Handle_group.pixmap_icon.pixmap))
+// 	{
+// 		XtVaSetValues(m_widget,
+// 					  XmNactionPixmap, TaskSm_Handle_group.pixmap_icon.pixmap,
+// 					  NULL);
+// 	}
 
+#if 0
 	// If the floating taskbar does not have any enabled buttons, then 
 	// we dont need to show the action button.
 	XFE_TaskBar * ftb = XFE_Dashboard::getFloatingTaskBar();
@@ -371,6 +422,7 @@ XFE_TaskBar::createDockedWidgets(Widget parent)
 	{
 		XtVaSetValues(m_widget,XmNshowActionButton,False,NULL);
 	}
+#endif
 }
 //////////////////////////////////////////////////////////////////////////
 void
@@ -382,14 +434,20 @@ XFE_TaskBar::createFloatingWidgets(Widget parent)
 		fe_globalPrefs.task_bar_horizontal ? XmHORIZONTAL : XmVERTICAL;
 	
 	// Create the floating task bar
-	m_widget = XtVaCreateWidget(FLOATING_TASK_BAR_NAME,
-								xfeTaskBarWidgetClass,
-								parent,
-								XmNorientation,			orientation,
-								XmNusePreferredWidth,	True,
-								XmNusePreferredHeight,	True,
-								NULL);
+// 	m_widget = XtVaCreateWidget("floatingTaskBar",
+// 								xfeTaskBarWidgetClass,
+// 								parent,
+// 								XmNorientation,			orientation,
+// 								XmNusePreferredWidth,	True,
+// 								XmNusePreferredHeight,	True,
+// 								NULL);
 
+	createBaseToolBar(parent,"dockedTaskBar");
+	
+	XP_ASSERT( XfeIsAlive(m_widget) );
+
+	XtVaSetValues(m_widget,XmNorientation,orientation,NULL);
+	
 	// Create floating buttons
 	createButtons(m_floatingSpec);
 
@@ -512,6 +570,12 @@ XFE_TaskBar::numEnabledButtons()
 	}
 
 	return num_managed;
+}
+//////////////////////////////////////////////////////////////////////////
+Widget
+XFE_TaskBar::getUndockButton()
+{
+	return m_undockButton;
 }
 //////////////////////////////////////////////////////////////////////////
 

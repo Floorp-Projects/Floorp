@@ -27,7 +27,7 @@
 #include <stdio.h>
 
 #include <Xfe/DashBoardP.h>
-#include <Xfe/TaskBarP.h>
+/* #include <Xfe/TaskBarP.h> */
 
 #include <Xm/DrawingA.h>
 #include <Xm/Form.h>
@@ -43,7 +43,7 @@
 #define MESSAGE4 "XmNstatusBar is a read-only resource."
 #define MESSAGE5 "XmNtaskBar is a read-only resource."
 #define MESSAGE6 "XmNtoolBar is a read-only resource."
-#define MESSAGE7 "The XmNfloatingShell must have a vali XfeTaskBar descendant."
+#define MESSAGE7 "The XmNfloatingShell must have a valid XfeToolBar descendant."
 #define MESSAGE8 "The class of XmNfloatingShell must be XmDialogShell."
 #define MESSAGE9 "The XmNfloatingShell must have a single valid child."
 
@@ -615,15 +615,10 @@ AcceptStaticChild(Widget child)
 	XfeDashBoardPart *		dp = _XfeDashBoardPart(w);
 	Boolean					accept = False;
 	
-	/* Look for task bar */
-	if (XfeIsTaskBar(child))
+	/* Look for tool bar and task bar */
+	if (XfeIsToolBar(child))
 	{
-		accept = !dp->docked_task_bar;
-	}
-	/* Look for button tool bar */
-	else if (XfeIsToolBar(child))
-	{
-		accept = !dp->tool_bar;
+		accept = (!dp->docked_task_bar || !dp->tool_bar);
 	}
 	/* Look for progress bar */
 	else if (ChildIsProgressBar(child))
@@ -646,24 +641,28 @@ InsertStaticChild(Widget child)
 	XfeDashBoardPart *		dp = _XfeDashBoardPart(w);
 	Boolean					layout = False;
 
-	/* Task bar */
-	if (XfeIsTaskBar(child))
+	/* Tool Bars bar */
+	if (XfeIsToolBar(child))
 	{
-		dp->docked_task_bar = child;
-
-		/* Add undock callback to docked task bar */
-		XtAddCallback(dp->docked_task_bar,XmNactionCallback,
-					  TaskBarActionCB,(XtPointer) w);
-		
-		/* Make sure the action button does show */
-		XtVaSetValues(dp->docked_task_bar,XmNshowActionButton,True,NULL);
-		
-		layout = True;
-	}
-	/* Button tool bar */
-	else if (XfeIsToolBar(child))
-	{
-		dp->tool_bar = child;
+		/* Task bar */
+		if (!dp->tool_bar)
+		{
+			dp->docked_task_bar = child;
+			
+#if FUCK
+			/* Add undock callback to docked task bar */
+			XtAddCallback(dp->docked_task_bar,XmNactionCallback,
+						  TaskBarActionCB,(XtPointer) w);
+			
+			/* Make sure the action button does show */
+			XtVaSetValues(dp->docked_task_bar,XmNshowActionButton,True,NULL);
+#endif
+		}
+		/* Tool bar */
+		else
+		{
+			dp->tool_bar = child;
+		}
 		
 		layout = True;
 	}
@@ -770,7 +769,10 @@ CheckFloatingWidgets(Widget w,Widget shell)
 			target = _XfemChildren(shell)[0];
 			
 			/* The docked taskbar is the first descendant of task bar class */
-			task_bar = XfeDescendantFindByClass(shell,xfeTaskBarWidgetClass,
+/* 			task_bar = XfeDescendantFindByClass(shell,xfeTaskBarWidgetClass, */
+/* 												XfeFIND_ALIVE,False); */
+
+			task_bar = XfeDescendantFindByClass(shell,xfeToolBarWidgetClass,
 												XfeFIND_ALIVE,False);
 			
 			/* Make sure the target is valid */
@@ -784,7 +786,8 @@ CheckFloatingWidgets(Widget w,Widget shell)
 			}
 			
 			/* Make sure the docked task bar is valid */
-			if (_XfeIsAlive(task_bar) && XfeIsTaskBar(task_bar))
+/* 			if (_XfeIsAlive(task_bar) && XfeIsTaskBar(task_bar)) */
+			if (_XfeIsAlive(task_bar) && XfeIsToolBar(task_bar))
 			{
 				result = True;
 			}
@@ -820,12 +823,15 @@ AddFloatingShell(Widget w,Widget shell)
 	dp->floating_shell		= shell;
 	dp->floating_target		= _XfemChildren(shell)[0];
 	dp->floating_task_bar	= XfeDescendantFindByClass(shell,
-													   xfeTaskBarWidgetClass,
+													   xfeToolBarWidgetClass,
+/* 													   xfeTaskBarWidgetClass, */
 													   XfeFIND_ALIVE,
 													   False);
 
+#if FUCK
 	/* Make sure the action button does not show */
 	XtVaSetValues(dp->floating_task_bar,XmNshowActionButton,False,NULL);
+#endif
 
 	/* Handle changes in view window structure */
 	XtAddEventHandler(dp->floating_shell,
@@ -1148,6 +1154,7 @@ UpdateUndockPixmap(Widget w)
 {
     XfeDashBoardPart *	dp = _XfeDashBoardPart(w);
 
+#if 0
 	if (dp->docked_task_bar)
 	{
 		if (_XfePixmapGood(dp->undock_pixmap))
@@ -1157,6 +1164,7 @@ UpdateUndockPixmap(Widget w)
 						  NULL);
 		}
 	}
+#endif
 }
 /*----------------------------------------------------------------------*/
 static void

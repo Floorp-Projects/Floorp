@@ -60,6 +60,8 @@ public:
 	void		updateFloatingAppearance	();
 
 	Cardinal	numEnabledButtons			();
+	
+	Widget		getUndockButton				();
 
 private:
   
@@ -68,7 +70,7 @@ private:
 	
 	XP_Bool				m_isFloating;
 	XFE_Frame *			m_parentFrame;
-	Widget				m_actionButton;
+	Widget				m_undockButton;
 
 #ifdef MOZ_MAIL_NEWS
 	XP_Bool				m_biffNoticeInstalled;
@@ -77,13 +79,17 @@ private:
 	XFE_CALLBACK_DECL(updateBiffStateNotice)
 #endif
 
-	void setIconGroupForCommand(CommandType cmd, IconGroup *icons);    
+	void		setIconGroupForCommand	(CommandType cmd,
+										 IconGroup * icons);
 	
-	Widget		createTaskBarButton			(TaskBarSpec *spec);
-	void		createButtons				(TaskBarSpec * spec);
+	void		createBaseToolBar		(Widget parent,String name);
+	void		createUndockButton		(Widget parent);
 
-	void		createFloatingWidgets		(Widget parent);
-	void		createDockedWidgets			(Widget parent);
+	Widget		createTaskBarButton		(TaskBarSpec * spec);
+	void		createButtons			(TaskBarSpec * spec);
+
+	void		createFloatingWidgets	(Widget parent);
+	void		createDockedWidgets		(Widget parent);
 
     // update the icon appearance
     XFE_CALLBACK_DECL(updateIconAppearance)

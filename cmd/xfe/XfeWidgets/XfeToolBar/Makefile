@@ -38,7 +38,6 @@ CSRCS			= \
 				Chrome.c \
 				DashBoard.c \
 				Tab.c \
-				TaskBar.c \
 				ToolBar.c \
 				ToolBox.c \
 				ToolItem.c \
@@ -56,8 +55,6 @@ EXPORTS			= \
 				DashBoardP.h \
 				Tab.h \
 				TabP.h \
-				TaskBar.h \
-				TaskBarP.h \
 				ToolBar.h \
 				ToolBarP.h \
 				ToolBox.h \
