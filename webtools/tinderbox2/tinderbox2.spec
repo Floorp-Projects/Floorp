@@ -44,13 +44,17 @@ make
 
 %install
 rm -rf $RPM_BUILD_ROOT
-mkdir -p $RPM_BUILD_ROOT/%{_prefix}/%{name}
+mkdir -p $RPM_BUILD_ROOT/%{_prefix}
 mkdir -p $RPM_BUILD_ROOT/%{_cgi_prefix}/%{name}
 
 make 	prefix=$RPM_BUILD_ROOT/%{_prefix} \
 	cgibin_prefix=$RPM_BUILD_ROOT/%{_cgi_prefix}/%{name} \
 	install
 
+
+# Do not put any testing (if present) directories into the package.
+
+rm -rf $RPM_BUILD_ROOT/%{_prefix}/local_conf
 
 %clean
 #rm -rf $RPM_BUILD_ROOT
