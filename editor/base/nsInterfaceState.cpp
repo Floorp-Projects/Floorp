@@ -376,30 +376,6 @@ nsInterfaceState::ForceUpdate(const PRUnichar *tagToUpdate)
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsInterfaceState::SetCommandStateData(const nsString& commandName, void* stateData)
-{
-  nsStringKey commandKey(commandName);
-  mCommandStateTable.Put(&commandKey, stateData);
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsInterfaceState::GetCommandStateData(const nsString& commandName, void* *outStateData)
-{
-  nsStringKey commandKey(commandName);
-  
-  // sucks that we have to do two hash lookups
-  if (!mCommandStateTable.Exists(&commandKey))
-    return NS_ERROR_UNEXPECTED;
-    
-  *outStateData = mCommandStateTable.Get(&commandKey);
-  return NS_OK;
-}
-
-
 PRBool
 nsInterfaceState::SelectionIsCollapsed()
 {
