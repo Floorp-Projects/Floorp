@@ -419,7 +419,9 @@ nsPop3Sink::IncorporateComplete()
     if (NS_FAILED(rv)) return rv;
     rv = m_outFileStream->flush();   //to make sure the message is written to the disk
     if (NS_FAILED(rv)) return rv;
-    m_newMailParser->PublishMsgHeader();
+    NS_ASSERTION(m_newMailParser, "could not get m_newMailParser");
+    if (m_newMailParser)
+      m_newMailParser->PublishMsgHeader();
 
 	// do not take out this printf as it is used by QA 
     // as part of the smoketest process!. They depend on seeing
