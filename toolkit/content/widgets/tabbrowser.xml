@@ -1157,7 +1157,6 @@
         <![CDATA[
         this.mCurrentBrowser = this.mPanelContainer.firstChild;
         this.mCurrentTab = this.mTabContainer.firstChild;
-        this.mTabBox.setAttribute("handleCtrlTab", "false");
         ]]>
       </constructor>
 
