@@ -235,7 +235,7 @@ calCalendarManager.prototype = {
         this.mInsertPref.reset();
 
         this.mDB.commitTransaction();
-    }
+    },
 
     deleteCalendarPref: function(calendar, name) {
         var calendarID = this.findCalendarID(calendar);
