@@ -37,7 +37,8 @@ var canRemoveImageMap = false;
 var imageMapDisabled = false;
 var dialog;
 var globalMap;
-var doAltTextError = true;
+var firstTimeOkUsed = true;
+var doAltTextError = false;
 var actualWidth = "";
 var gOriginalSrc = "";
 var actualHeight = "";
@@ -91,6 +92,7 @@ function Startup()
   dialog.PreviewWidth      = document.getElementById( "PreviewWidth" );
   dialog.PreviewHeight     = document.getElementById( "PreviewHeight" );
   dialog.PreviewSize       = document.getElementById( "PreviewSize" );
+  dialog.PreviewImage      = null;
 
   // Get a single selected image element
   var tagName = "img"
@@ -122,31 +124,6 @@ function Startup()
   // Make a copy to use for AdvancedEdit
   globalElement = imageElement.cloneNode(false);
 
-
-  // Get image map for image
-  var usemap = globalElement.getAttribute("usemap");
-  if (usemap)
-  {
-    var mapname = usemap.substring(1, usemap.length);
-    var mapCollection = editorShell.editorDocument.getElementsByName(mapname);
-    if (mapCollection[0] != null)
-    {
-      imageMap = mapCollection[0];
-      globalMap = imageMap;
-      canRemoveImageMap = true;
-      insertNewIMap = false;
-    }
-    else
-    {
-      insertNewIMap = true;
-      globalMap = null;
-    }
-  }
-  else
-  {
-    insertNewIMap = true;
-    globalMap = null;
-  }
   InitDialog();
 
   // Save initial source URL
@@ -178,16 +155,10 @@ function InitDialog()
 {
   // Set the controls to the image's attributes
 
-  var str = globalElement.getAttribute("src");
-  if (str)
-  {
-    dialog.srcInput.value = str;
-    GetImageFromURL();
-  }
+  dialog.srcInput.value= globalElement.getAttribute("src");
+  GetImageFromURL();
 
-  str = globalElement.getAttribute("alt");
-  if (str)
-    dialog.altTextInput.value = str;
+  dialog.altTextInput.value = globalElement.getAttribute("alt");
 
   // setup the height and width widgets
   var width = InitPixelOrPercentMenulist(globalElement,
@@ -233,10 +204,38 @@ function InitDialog()
       dialog.alignTypeSelect.value = "bottom";
   }
 
+  // Get image map for image
+  imageMap = GetImageMap();
+  //XXX: We should eliminate dual imageMap variables (bug 94749)
+  globalMap = imageMap;
+
   // we want to force an update so initialize "wasEnableAll" to be the opposite of what the actual state is
   wasEnableAll = !IsValidImage(dialog.srcInput.value);
   doOverallEnabling();
   doDimensionEnabling();
+}
+
+function GetImageMap()
+{
+  var usemap = globalElement.getAttribute("usemap");
+  if (usemap)
+  {
+    canRemoveImageMap = true;
+    var mapname = usemap.substring(1, usemap.length);
+    var mapCollection = editorShell.editorDocument.getElementsByName(mapname);
+    if (mapCollection[0] != null)
+    {
+      insertNewIMap = false;
+      return mapCollection[0];
+    }
+  }
+  else
+  {
+    canRemoveImageMap = false;
+  }
+
+  insertNewIMap = true;
+  return null;
 }
 
 function chooseFile()
@@ -302,7 +301,7 @@ function GetImageFromURL()
   if (imageSrc) imageSrc = imageSrc.trimString();
   if (!imageSrc) return;
 
-  if (IsValidImage(imageSrc))
+  if (IsValidImage(dialog.srcInput.value))
   {
     try {
       // Remove the image URL from image cache so it loads fresh
@@ -406,6 +405,8 @@ function doDimensionEnabling()
 
 function doOverallEnabling()
 {
+  // An image is "valid" if it loaded correctly in the preview window
+  //  or has the proper file extension
   var canEnableOk = IsValidImage(dialog.srcInput.value);
   if ( wasEnableAll == canEnableOk )
     return;
@@ -418,6 +419,7 @@ function doOverallEnabling()
   //TODO: Restore when Image Map editor is finished
   //SetElementEnabledById( "editImageMap",   canEnableOk );
   SetElementEnabledById( "removeImageMap", canRemoveImageMap);
+
 }
 
 function ToggleConstrain()
@@ -491,21 +493,25 @@ function editImageMap()
 function removeImageMap()
 {
   globalElement.removeAttribute("usemap");
-  if (imageMap){
-    canRemoveImageMap = false;
-    SetElementEnabledById( "removeImageMap", false);
+  if (imageMap)
+  {
     editorShell.DeleteElement(imageMap);
     insertNewIMap = true;
     globalMap = null;
+    imageMap = null;
   }
+  canRemoveImageMap = false;
+  SetElementEnabledById( "removeImageMap", false);
 }
 
 // Get data from widgets, validate, and set for the global element
 //   accessible to AdvancedEdit() [in EdDialogCommon.js]
 function ValidateData()
 {
-  if ( !IsValidImage(dialog.srcInput.value )) {
-    ShowInputErrorMessage(GetString("MissingImageError"));
+  if ( !IsValidImage(dialog.srcInput.value))
+  {
+    editorShell.AlertWithTitle(GetString("Alert"), GetString("MissingImageError"));
+    window.focus();
     return false;
   }
 
@@ -608,6 +614,12 @@ function doHelpButton()
 
 function onOK()
 {
+  // Show alt text error only once
+  // (we don't initialize doAltTextError=true
+  //  so Advanced edit button dialog doesn't trigger that error message)
+  doAltTextError = firstTimeOkUsed;
+  firstTimeOkUsed = false;
+
   // handle insertion of new image
   if (ValidateData())
   {
