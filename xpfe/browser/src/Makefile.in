@@ -40,6 +40,8 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/unknownContent.xul \
 	$(srcdir)/viewSource.xul \
 	$(srcdir)/viewsource.js \
+	$(srcdir)/openLocation.xul \
+	$(srcdir)/openLocation.js \
 	$(srcdir)/downloadProgress.xul \
 	$(srcdir)/downloadProgress.css \
 	$(srcdir)/navigator-shiny.css \

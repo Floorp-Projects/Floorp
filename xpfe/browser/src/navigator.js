@@ -1,4 +1,5 @@
   var appCore = null;
+  var appCoreName = "";
   function Startup()
   {
     dump("Doing Startup...\n");
@@ -6,7 +7,8 @@
     appCore = new BrowserAppCore();
     if (appCore != null) {
       dump("BrowserAppCore has been created.\n");
-      appCore.Init("BrowserAppCore." + ( new Date() ).getTime().toString() );
+	  appCoreName = "BrowserAppCore." + ( new Date() ).getTime().toString();
+	  appCore.Init( appCoreName );
 	  appCore.setWebShellWindow(window);
 	  appCore.setToolbarWindow(window);
 	  tryToSetContentWindow();
@@ -247,11 +249,17 @@
 
   function BrowserOpenWindow()
   {
-    if (appCore != null) {
-	    dump("Opening New Window\n");
-      appCore.openWindow();
+    core = XPAppCoresManager.Find("toolkitCore");
+    if ( !core ) {
+        core = new ToolkitCore();
+        if ( core ) {
+            core.Init("toolkitCore");
+        }
+    }
+    if ( core ) {
+        core.ShowWindowWithArgs( "resource:/res/samples/openLocation.xul", window, appCoreName );
     } else {
-      dump("BrowserAppCore has not been created!\n");
+        dump("Error; can't create toolkitCore\n");
     }
   }
 
