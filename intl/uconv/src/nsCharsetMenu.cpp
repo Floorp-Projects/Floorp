@@ -1508,7 +1508,7 @@ PRInt32 nsCharsetMenu::FindMenuItemInArray(nsVoidArray * aArray,
 
   for (PRUint32 i=0; i < count; i++) {
     nsMenuItem2 * item = (nsMenuItem2 *) aArray->ElementAt(i);
-    if (item->mCharset == aCharset) {
+    if (item->mCharset.get() == aCharset) {
       if (aResult != NULL) *aResult = item;
       return i;
     }
