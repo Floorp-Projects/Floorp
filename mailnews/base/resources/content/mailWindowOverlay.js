@@ -1084,7 +1084,7 @@ function MsgMarkAsFlagged(markFlagged)
 function MsgMarkAllRead()
 {
     var compositeDataSource = GetCompositeDataSource("MarkAllMessagesRead");
-    var folder = GetLoadedMsgFolder();
+    var folder = GetMsgFolderFromUri(GetSelectedFolderURI(), true);
 
     if(folder)
         MarkAllMessagesRead(compositeDataSource, folder);
