@@ -202,7 +202,7 @@ sub SendSQL {
     }
     # If we are shutdown, we don't want to run queries except in special cases
     if (Param('shutdownhtml')) {
-        if ($0 =~ m:[\\/](do)?editparams.cgi$:) {
+        if ($0 =~ m:[\\/]((do)?editparams.cgi|syncshadowdb)$:) {
             $::ignorequery = 0;
         } else {
             $::ignorequery = 1;
