@@ -27,15 +27,6 @@
 
 #include "nsISupportsUtils.h"
 
-
-// **************?????***********????*************????***********************
-// ***** IMPORTANT **** jefft -- this is a temporary implementation for the
-// testing purpose. Eventually, we will have a host service object in
-// controlling the host session list.
-// Remove the following when the host service object is in place.
-// **************************************************************************
-nsIMAPHostSessionList*gImapHostSessionList = nsnull;
-
 nsIMAPHostInfo::nsIMAPHostInfo(const char *hostName, const char *userName)
 {
 	fHostName = nsCRT::strdup(hostName);
