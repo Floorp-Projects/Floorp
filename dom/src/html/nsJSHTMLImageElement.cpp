@@ -64,7 +64,8 @@ enum HTMLImageElement_slots {
   HTMLIMAGEELEMENT_USEMAP = -10,
   HTMLIMAGEELEMENT_VSPACE = -11,
   HTMLIMAGEELEMENT_WIDTH = -12,
-  IMAGE_LOWSRC = -13
+  IMAGE_LOWSRC = -13,
+  IMAGE_COMPLETE = -14
 };
 
 /***********************************************************************/
@@ -319,6 +320,32 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           result = b->GetLowsrc(prop);
           if(NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return nsJSUtils::nsReportError(cx, obj, result);
+          }
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+        }
+        break;
+      }
+      case IMAGE_COMPLETE:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_IMAGE_COMPLETE, PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        PRBool prop;
+        nsIDOMImage* b;
+        if (NS_OK == a->QueryInterface(kIImageIID, (void **)&b)) {
+          nsresult result = NS_OK;
+          result = b->GetComplete(&prop);
+          if(NS_SUCCEEDED(result)) {
+          *vp = BOOLEAN_TO_JSVAL(prop);
             NS_RELEASE(b);
           }
           else {
@@ -634,6 +661,7 @@ static JSPropertySpec HTMLImageElementProperties[] =
   {"vspace",    HTMLIMAGEELEMENT_VSPACE,    JSPROP_ENUMERATE},
   {"width",    HTMLIMAGEELEMENT_WIDTH,    JSPROP_ENUMERATE},
   {"lowsrc",    IMAGE_LOWSRC,    JSPROP_ENUMERATE},
+  {"complete",    IMAGE_COMPLETE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

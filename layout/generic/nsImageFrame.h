@@ -66,6 +66,7 @@ public:
                               PRInt32 aHint);
   NS_IMETHOD GetFrameType(nsIAtom** aResult) const;
   NS_IMETHOD GetIntrinsicImageSize(nsSize& aSize);
+  NS_IMETHOD IsImageComplete(PRBool* aComplete);
 
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;

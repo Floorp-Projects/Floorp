@@ -902,6 +902,14 @@ nsImageFrame::GetIntrinsicImageSize(nsSize& aSize)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsImageFrame::IsImageComplete(PRBool* aComplete)
+{
+  NS_ENSURE_ARG_POINTER(aComplete);
+  *aComplete = (PRBool)(mImageLoader.GetLoadStatus() & NS_IMAGE_LOAD_STATUS_IMAGE_READY);
+  return NS_OK;
+}
+
 #ifdef DEBUG
 NS_IMETHODIMP
 nsImageFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const

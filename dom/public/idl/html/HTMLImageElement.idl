@@ -28,4 +28,5 @@
 
      void Image();
      attribute DOMString lowsrc;
+     readonly attribute boolean complete;
    };

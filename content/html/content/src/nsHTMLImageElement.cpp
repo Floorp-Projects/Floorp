@@ -118,6 +118,7 @@ public:
   // XXX Casing is different for backward compatibility
   NS_IMETHOD    GetLowsrc(nsString& aLowsrc);
   NS_IMETHOD    SetLowsrc(const nsString& aLowsrc);
+  NS_IMETHOD    GetComplete(PRBool* aComplete);
 
   // nsIScriptObjectOwner
   NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
@@ -151,7 +152,7 @@ public:
   nsresult SetSrcInner(nsIURI* aBaseURL, const nsString& aSrc);
   nsresult GetCallerSourceURL(JSContext* cx, nsIURI** sourceURL);
 
-  nsresult GetIntrinsicImageSize(nsSize& aSize);
+  nsresult GetImageFrame(nsImageFrame** aImageFrame);
 
 protected:
   nsGenericHTMLLeafElement mInner;
@@ -247,7 +248,7 @@ NS_IMPL_STRING_ATTR(nsHTMLImageElement, Vspace, vspace)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Lowsrc, lowsrc)
 
 nsresult
-nsHTMLImageElement::GetIntrinsicImageSize(nsSize& aSize) 
+nsHTMLImageElement::GetImageFrame(nsImageFrame** aImageFrame)
 {
   nsresult result;
   nsCOMPtr<nsIPresContext> context;
@@ -280,12 +281,27 @@ nsHTMLImageElement::GetIntrinsicImageSize(nsSize& aSize)
       // preferred the ugliness of a static cast to the weight of
       // a new interface.
       nsImageFrame* imageFrame = NS_STATIC_CAST(nsImageFrame*, frame);
+      *aImageFrame = imageFrame;
       
-      return imageFrame->GetIntrinsicImageSize(aSize);
+      return NS_OK;
     }
   }
 
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP    
+nsHTMLImageElement::GetComplete(PRBool* aComplete)
+{
+  nsresult result;
+  nsImageFrame* imageFrame;
+  
+  result = GetImageFrame(&imageFrame);
+  if (NS_SUCCEEDED(result)) {
+    result = imageFrame->IsImageComplete(aComplete);
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP
@@ -294,10 +310,12 @@ nsHTMLImageElement::GetHeight(nsString& aValue)
   nsresult result;
 
   if (NS_CONTENT_ATTR_NOT_THERE ==  mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::height, aValue)) {
-    nsSize size;
+    nsImageFrame* imageFrame;
     
-    result = GetIntrinsicImageSize(size);
+    result = GetImageFrame(&imageFrame);
     if (NS_SUCCEEDED(result)) {
+      nsSize size;
+      imageFrame->GetIntrinsicImageSize(size);
       aValue.Append(size.height);
     }
   }
@@ -317,10 +335,12 @@ nsHTMLImageElement::GetWidth(nsString& aValue)
   nsresult result;
 
   if (NS_CONTENT_ATTR_NOT_THERE ==  mInner.GetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, aValue)) {
-    nsSize size;
+    nsImageFrame* imageFrame;
     
-    result = GetIntrinsicImageSize(size);
+    result = GetImageFrame(&imageFrame);
     if (NS_SUCCEEDED(result)) {
+      nsSize size;
+      imageFrame->GetIntrinsicImageSize(size);
       aValue.Append(size.width);
     }
   }
