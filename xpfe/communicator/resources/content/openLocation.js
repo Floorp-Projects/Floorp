@@ -81,7 +81,12 @@ function doEnabling()
 
 function open()
 {
-  var url = browser.getShortcutOrURI(dialog.input.value);
+  var url;
+  if (browser)
+    url = browser.getShortcutOrURI(dialog.input.value);
+  else
+    url = dialog.input.value;
+
   try {
     switch (dialog.openAppList.value) {
       case "0":
@@ -121,8 +126,7 @@ function onChooseFile()
 {
   try {
     var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-    fp.init(window, bundle.GetStringFromName("chooseFileDialogTitle"), nsIFilePicker.modeOpen);
-
+    fp.init(window, dialog.bundle.getString("chooseFileDialogTitle"), nsIFilePicker.modeOpen);
     if (dialog.openAppList.value == "2") {
       // When loading into Composer, direct user to prefer HTML files and text files,
       // so we call separately to control the order of the filter list
