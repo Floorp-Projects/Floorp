@@ -66,7 +66,7 @@ interface nsMsgViewType {
     const nsMsgViewTypeValue eShowThreadsWithUnread = 2;
     const nsMsgViewTypeValue eShowWatchedThreadsWithUnread = 3;
     const nsMsgViewTypeValue eShowQuickSearchResults = 4;
-    const nsMsgViewtypeValue eShowVirtualFolderResults = 5;
+    const nsMsgViewTypeValue eShowVirtualFolderResults = 5;
 };
 
 [scriptable, uuid(64852276-1dd2-11b2-8103-afe12002c053)]
