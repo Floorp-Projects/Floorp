@@ -410,7 +410,7 @@ void LO_Reflow(MWContext *context, lo_DocState * state, LO_Element *startElement
 		
 		if ( lo_ele == NULL )
 		{
-			LO_UnlockLayout();
+			/* LO_UnlockLayout(); */
 			break;
 		}
 		
