@@ -44,12 +44,12 @@
 <html:form>
 	<html:table>
 		<html:tr><html:td><html:input name="fontwidth" type="radio"
-			id="pref:1:int:mail.fixed_width_messages" checked="true"/>
-			<html:label>&fixedWidth.label;</html:label>
+			id="pref:1:bool:mail.fixed_width_messages" checked="true"/>
+			<html:label for="pref:1:bool:mail.fixed_width_messages">&fixedWidth.label;</html:label>
 		</html:td></html:tr>
 		<html:tr><html:td><html:input name="fontwidth" type="radio"
-			id="pref:0:int:mail.fixed_width_messages"/>
-			<html:label>&variableWidth.label;</html:label>
+			id="pref:0:bool:mail.fixed_width_messages"/>
+			<html:label for="pref:0:bool:mail.fixed_width_messages">&variableWidth.label;</html:label>
 		</html:td></html:tr>
 	</html:table>
 </html:form>
