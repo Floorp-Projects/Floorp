@@ -170,7 +170,7 @@
     { 0x80, 0x39, 0x33, 0xde, 0x32, 0xd5, 0xa8, 0x82 }}
 
 #define NS_MSGSEARCHVALIDITYMANAGER_PROGID \
-  "component://netscape/messenger/search/validityManager"
+  "mozilla.mail.search.validityManager.1"
 
 //
 // nsMsgMailSession
