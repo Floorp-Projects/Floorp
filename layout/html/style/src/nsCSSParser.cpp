@@ -303,7 +303,6 @@ CSSParserImpl::CSSParserImpl()
     mGroupStack(nsnull)
 {
   NS_INIT_REFCNT();
-  nsCSSAtoms::AddRefAtoms();
 }
 
 NS_IMETHODIMP
@@ -328,7 +327,6 @@ CSSParserImpl::~CSSParserImpl()
   NS_IF_RELEASE(mGroupStack);
   NS_IF_RELEASE(mNameSpace);
   NS_IF_RELEASE(mSheet);
-  nsCSSAtoms::ReleaseAtoms();
 }
 
 NS_IMETHODIMP
