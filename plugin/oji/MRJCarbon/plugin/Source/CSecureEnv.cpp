@@ -192,7 +192,7 @@ static void CreateJNIThread(CSecureEnv* secureEnv)
 			jobject javaThread = env->NewObject(JNIThreadClass, constructorID, secureEnv);
 			for (;;) {
 				// give time to Java, to allow the thread to come up.
-				session->idle(kDefaultJMTime);
+				session->idle();
 				// has the thread made contact?
 				if (secureEnv->isInitialized())
 					break;
@@ -253,7 +253,7 @@ static void CreateNativeThread(CSecureEnv* secureEnv)
 			jmethodID sleepMethod = env->GetStaticMethodID(threadClass, "sleep", "(J)V");
 			if (sleepMethod != NULL) {
 				while (!secureEnv->isInitialized())
-					env->CallStaticVoidMethod(threadClass, sleepMethod, jlong(kDefaultJMTime));
+					env->CallStaticVoidMethod(threadClass, sleepMethod, jlong(1024));
 			}
 			env->DeleteLocalRef(threadClass);
 		}
@@ -1965,7 +1965,7 @@ void CSecureEnv::messageLoop(JNIEnv* env, JavaMessage* msg, JavaMessageQueue* se
 		}
 		// when busy waiting, must give time to browser between timed waits.
 		if (busyWaiting) {
-			receiveQueue->wait(kDefaultJMTime);
+			receiveQueue->wait(1024);
 			replyMsg = receiveQueue->getMessage();
 			if (replyMsg != NULL)
 				continue;
