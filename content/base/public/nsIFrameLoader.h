@@ -40,7 +40,7 @@
 #define nsIFrameLoader_h___
 
 #include "nsISupports.h"
-#include "nsAWritableString.h"
+#include "nsAString.h"
 
 // Forward declarations
 class nsIDOMElement;

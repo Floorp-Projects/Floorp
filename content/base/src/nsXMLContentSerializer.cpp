@@ -93,7 +93,7 @@ nsresult
 nsXMLContentSerializer::AppendTextData(nsIDOMNode* aNode, 
                                        PRInt32 aStartOffset,
                                        PRInt32 aEndOffset,
-                                       nsAWritableString& aStr,
+                                       nsAString& aStr,
                                        PRBool aTranslateEntities,
                                        PRBool aIncrColumn)
 {
@@ -137,7 +137,7 @@ NS_IMETHODIMP
 nsXMLContentSerializer::AppendText(nsIDOMText* aText, 
                                    PRInt32 aStartOffset,
                                    PRInt32 aEndOffset,
-                                   nsAWritableString& aStr)
+                                   nsAString& aStr)
 {
   NS_ENSURE_ARG(aText);
 
@@ -148,7 +148,7 @@ NS_IMETHODIMP
 nsXMLContentSerializer::AppendCDATASection(nsIDOMCDATASection* aCDATASection,
                                            PRInt32 aStartOffset,
                                            PRInt32 aEndOffset,
-                                           nsAWritableString& aStr)
+                                           nsAString& aStr)
 {
   NS_ENSURE_ARG(aCDATASection);
   nsresult rv;
@@ -165,7 +165,7 @@ NS_IMETHODIMP
 nsXMLContentSerializer::AppendProcessingInstruction(nsIDOMProcessingInstruction* aPI,
                                                     PRInt32 aStartOffset,
                                                     PRInt32 aEndOffset,
-                                                    nsAWritableString& aStr)
+                                                    nsAString& aStr)
 {
   NS_ENSURE_ARG(aPI);
   nsresult rv;
@@ -192,7 +192,7 @@ NS_IMETHODIMP
 nsXMLContentSerializer::AppendComment(nsIDOMComment* aComment,
                                       PRInt32 aStartOffset,
                                       PRInt32 aEndOffset,
-                                      nsAWritableString& aStr)
+                                      nsAString& aStr)
 {
   NS_ENSURE_ARG(aComment);
   nsresult rv;
@@ -220,7 +220,7 @@ nsXMLContentSerializer::AppendComment(nsIDOMComment* aComment,
 
 NS_IMETHODIMP 
 nsXMLContentSerializer::AppendDoctype(nsIDOMDocumentType *aDoctype,
-                                      nsAWritableString& aStr)
+                                      nsAString& aStr)
 {
   NS_ENSURE_ARG(aDoctype);
   nsresult rv;
@@ -289,8 +289,8 @@ nsXMLContentSerializer::AppendDoctype(nsIDOMDocumentType *aDoctype,
 #define kXMLNS NS_LITERAL_STRING("xmlns")
 
 nsresult
-nsXMLContentSerializer::PushNameSpaceDecl(const nsAReadableString& aPrefix,
-                                          const nsAReadableString& aURI,
+nsXMLContentSerializer::PushNameSpaceDecl(const nsAString& aPrefix,
+                                          const nsAString& aURI,
                                           nsIDOMElement* aOwner)
 {
   NameSpaceDecl* decl = new NameSpaceDecl();
@@ -326,8 +326,8 @@ nsXMLContentSerializer::PopNameSpaceDeclsFor(nsIDOMElement* aOwner)
  * moved/modified elements/attributes 
  */
 PRBool
-nsXMLContentSerializer::ConfirmPrefix(nsAWritableString& aPrefix,
-                                      const nsAReadableString& aURI)
+nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
+                                      const nsAString& aURI)
 {
   if (aPrefix.Equals(kXMLNS)) {
     return PR_FALSE;
@@ -382,10 +382,10 @@ nsXMLContentSerializer::ConfirmPrefix(nsAWritableString& aPrefix,
 }
 
 void
-nsXMLContentSerializer::SerializeAttr(const nsAReadableString& aPrefix,
-                                      const nsAReadableString& aName,
-                                      const nsAReadableString& aValue,
-                                      nsAWritableString& aStr,
+nsXMLContentSerializer::SerializeAttr(const nsAString& aPrefix,
+                                      const nsAString& aName,
+                                      const nsAString& aValue,
+                                      nsAString& aStr,
                                       PRBool aDoEscapeEntities)
 {
   AppendToString(PRUnichar(' '), aStr);
@@ -406,7 +406,7 @@ nsXMLContentSerializer::SerializeAttr(const nsAReadableString& aPrefix,
 
 NS_IMETHODIMP 
 nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
-                                           nsAWritableString& aStr)
+                                           nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
 
@@ -539,7 +539,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
 NS_IMETHODIMP 
 nsXMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
-                                         nsAWritableString& aStr)
+                                         nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
 
@@ -583,7 +583,7 @@ nsXMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
 void
 nsXMLContentSerializer::AppendToString(const PRUnichar* aStr,
                                        PRInt32 aLength,
-                                       nsAWritableString& aOutputStr)
+                                       nsAString& aOutputStr)
 {
   PRInt32 length = (aLength == -1) ? nsCRT::strlen(aStr) : aLength;
   
@@ -592,7 +592,7 @@ nsXMLContentSerializer::AppendToString(const PRUnichar* aStr,
 
 void 
 nsXMLContentSerializer::AppendToString(const PRUnichar aChar,
-                                       nsAWritableString& aOutputStr)
+                                       nsAString& aOutputStr)
 {
   aOutputStr.Append(aChar);
 }
@@ -619,8 +619,8 @@ static const char* kAttrEntities[] = {
 };
 
 void
-nsXMLContentSerializer::AppendToString(const nsAReadableString& aStr,
-                                       nsAWritableString& aOutputStr,
+nsXMLContentSerializer::AppendToString(const nsAString& aStr,
+                                       nsAString& aOutputStr,
                                        PRBool aTranslateEntities,
                                        PRBool aIncrColumn)
 {

@@ -48,7 +48,7 @@
 //----------------------------------------------------------------------
 
 nsDOMAttribute::nsDOMAttribute(nsIContent* aContent, nsINodeInfo *aNodeInfo,
-                               const nsAReadableString& aValue)
+                               const nsAString& aValue)
   : mContent(aContent), mNodeInfo(aNodeInfo), mValue(aValue), mChild(nsnull),
     mChildList(nsnull)
 {
@@ -108,7 +108,7 @@ nsDOMAttribute::GetContent(nsIContent** aContent)
 }
 
 nsresult
-nsDOMAttribute::GetName(nsAWritableString& aName)
+nsDOMAttribute::GetName(nsAString& aName)
 {
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
 
@@ -116,7 +116,7 @@ nsDOMAttribute::GetName(nsAWritableString& aName)
 }
 
 nsresult
-nsDOMAttribute::GetValue(nsAWritableString& aValue)
+nsDOMAttribute::GetValue(nsAString& aValue)
 {
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
 
@@ -140,7 +140,7 @@ nsDOMAttribute::GetValue(nsAWritableString& aValue)
 }
 
 nsresult
-nsDOMAttribute::SetValue(const nsAReadableString& aValue)
+nsDOMAttribute::SetValue(const nsAString& aValue)
 {
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
 
@@ -199,19 +199,19 @@ nsDOMAttribute::GetOwnerElement(nsIDOMElement** aOwnerElement)
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::GetNodeName(nsAWritableString& aNodeName)
+nsDOMAttribute::GetNodeName(nsAString& aNodeName)
 {
   return GetName(aNodeName);
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::GetNodeValue(nsAWritableString& aNodeValue)
+nsDOMAttribute::GetNodeValue(nsAString& aNodeValue)
 {
   return GetValue(aNodeValue);
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::SetNodeValue(const nsAReadableString& aNodeValue)
+nsDOMAttribute::SetNodeValue(const nsAString& aNodeValue)
 {
   return SetValue(aNodeValue);
 }
@@ -410,7 +410,7 @@ nsDOMAttribute::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 }
 
 NS_IMETHODIMP 
-nsDOMAttribute::GetNamespaceURI(nsAWritableString& aNamespaceURI)
+nsDOMAttribute::GetNamespaceURI(nsAString& aNamespaceURI)
 {
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
 
@@ -418,7 +418,7 @@ nsDOMAttribute::GetNamespaceURI(nsAWritableString& aNamespaceURI)
 }
 
 NS_IMETHODIMP 
-nsDOMAttribute::GetPrefix(nsAWritableString& aPrefix)
+nsDOMAttribute::GetPrefix(nsAString& aPrefix)
 {
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
 
@@ -426,7 +426,7 @@ nsDOMAttribute::GetPrefix(nsAWritableString& aPrefix)
 }
 
 NS_IMETHODIMP 
-nsDOMAttribute::SetPrefix(const nsAReadableString& aPrefix)
+nsDOMAttribute::SetPrefix(const nsAString& aPrefix)
 {
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
   nsCOMPtr<nsINodeInfo> newNodeInfo;
@@ -461,7 +461,7 @@ nsDOMAttribute::SetPrefix(const nsAReadableString& aPrefix)
 }
 
 NS_IMETHODIMP 
-nsDOMAttribute::GetLocalName(nsAWritableString& aLocalName)
+nsDOMAttribute::GetLocalName(nsAString& aLocalName)
 {
   NS_ENSURE_TRUE(mNodeInfo, NS_ERROR_FAILURE);
 
@@ -476,15 +476,15 @@ nsDOMAttribute::Normalize()
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::IsSupported(const nsAReadableString& aFeature,
-                            const nsAReadableString& aVersion,
+nsDOMAttribute::IsSupported(const nsAString& aFeature,
+                            const nsAString& aVersion,
                             PRBool* aReturn)
 {
   return nsGenericElement::InternalIsSupported(aFeature, aVersion, aReturn);
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::GetBaseURI(nsAWritableString &aURI)
+nsDOMAttribute::GetBaseURI(nsAString &aURI)
 {
   aURI.Truncate();
   nsresult rv = NS_OK;
@@ -495,8 +495,8 @@ nsDOMAttribute::GetBaseURI(nsAWritableString &aURI)
 }
 
 NS_IMETHODIMP    
-nsDOMAttribute::LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
-                                      nsAWritableString& aPrefix) 
+nsDOMAttribute::LookupNamespacePrefix(const nsAString& aNamespaceURI,
+                                      nsAString& aPrefix) 
 {
   aPrefix.Truncate();
   nsresult rv = NS_OK;
@@ -507,8 +507,8 @@ nsDOMAttribute::LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
 }
 
 NS_IMETHODIMP    
-nsDOMAttribute::LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,
-                                   nsAWritableString& aNamespaceURI)
+nsDOMAttribute::LookupNamespaceURI(const nsAString& aNamespacePrefix,
+                                   nsAString& aNamespaceURI)
 {
   aNamespaceURI.Truncate();
   nsresult rv = NS_OK;

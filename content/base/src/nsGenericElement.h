@@ -211,19 +211,19 @@ public:
   //                           PRBool aNotify);
   // NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify);
   // NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
-  // NS_IMETHOD NormalizeAttrString(const nsAReadableString& aStr,
+  // NS_IMETHOD NormalizeAttrString(const nsAString& aStr,
   //                                nsINodeInfo*& aNodeInfo);
   // NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-  //                    const nsAReadableString& aValue,
+  //                    const nsAString& aValue,
   //                    PRBool aNotify);
   // NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-  //                    const nsAReadableString& aValue,
+  //                    const nsAString& aValue,
   //                    PRBool aNotify);
   // NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
-  //                    nsAWritableString& aResult) const;
+  //                    nsAString& aResult) const;
   // NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
   //                    nsIAtom*& aPrefix,
-  //                    nsAWritableString& aResult) const;
+  //                    nsAString& aResult) const;
   // NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
   //                      PRBool aNotify);
   // NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
@@ -278,63 +278,63 @@ public:
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
-                               nsAWritableString& aResult) const;
+                               nsAString& aResult) const;
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAReadableString& aValue,
+                               const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD GetBaseURL(nsIURI*& aBaseURL) const;
-  NS_IMETHOD GetBaseTarget(nsAWritableString& aBaseTarget) const;
+  NS_IMETHOD GetBaseTarget(nsAString& aBaseTarget) const;
 
   // nsIDOMNode method implementation
-  NS_IMETHOD GetNodeName(nsAWritableString& aNodeName);
-  NS_IMETHOD GetLocalName(nsAWritableString& aLocalName);
-  NS_IMETHOD GetNodeValue(nsAWritableString& aNodeValue);
-  NS_IMETHOD SetNodeValue(const nsAReadableString& aNodeValue);
+  NS_IMETHOD GetNodeName(nsAString& aNodeName);
+  NS_IMETHOD GetLocalName(nsAString& aLocalName);
+  NS_IMETHOD GetNodeValue(nsAString& aNodeValue);
+  NS_IMETHOD SetNodeValue(const nsAString& aNodeValue);
   NS_IMETHOD GetNodeType(PRUint16* aNodeType);
   NS_IMETHOD GetParentNode(nsIDOMNode** aParentNode);
   NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap** aAttributes);
   NS_IMETHOD GetPreviousSibling(nsIDOMNode** aPreviousSibling);
   NS_IMETHOD GetNextSibling(nsIDOMNode** aNextSibling);
   NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
-  NS_IMETHOD GetNamespaceURI(nsAWritableString& aNamespaceURI);
-  NS_IMETHOD GetPrefix(nsAWritableString& aPrefix);
-  NS_IMETHOD SetPrefix(const nsAReadableString& aPrefix);
+  NS_IMETHOD GetNamespaceURI(nsAString& aNamespaceURI);
+  NS_IMETHOD GetPrefix(nsAString& aPrefix);
+  NS_IMETHOD SetPrefix(const nsAString& aPrefix);
   NS_IMETHOD Normalize();
-  NS_IMETHOD IsSupported(const nsAReadableString& aFeature,
-                         const nsAReadableString& aVersion, PRBool* aReturn);
+  NS_IMETHOD IsSupported(const nsAString& aFeature,
+                         const nsAString& aVersion, PRBool* aReturn);
   NS_IMETHOD HasAttributes(PRBool* aHasAttributes);
 
   // nsIDOMElement method implementation
-  NS_IMETHOD GetTagName(nsAWritableString& aTagName);
-  NS_IMETHOD GetAttribute(const nsAReadableString& aName,
-                          nsAWritableString& aReturn);
-  NS_IMETHOD SetAttribute(const nsAReadableString& aName,
-                          const nsAReadableString& aValue);
-  NS_IMETHOD RemoveAttribute(const nsAReadableString& aName);
-  NS_IMETHOD GetAttributeNode(const nsAReadableString& aName,
+  NS_IMETHOD GetTagName(nsAString& aTagName);
+  NS_IMETHOD GetAttribute(const nsAString& aName,
+                          nsAString& aReturn);
+  NS_IMETHOD SetAttribute(const nsAString& aName,
+                          const nsAString& aValue);
+  NS_IMETHOD RemoveAttribute(const nsAString& aName);
+  NS_IMETHOD GetAttributeNode(const nsAString& aName,
                               nsIDOMAttr** aReturn);
   NS_IMETHOD SetAttributeNode(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn);
   NS_IMETHOD RemoveAttributeNode(nsIDOMAttr* aOldAttr, nsIDOMAttr** aReturn);
-  NS_IMETHOD GetElementsByTagName(const nsAReadableString& aTagname,
+  NS_IMETHOD GetElementsByTagName(const nsAString& aTagname,
                                   nsIDOMNodeList** aReturn);
-  NS_IMETHOD GetAttributeNS(const nsAReadableString& aNamespaceURI,
-                            const nsAReadableString& aLocalName,
-                            nsAWritableString& aReturn);
-  NS_IMETHOD SetAttributeNS(const nsAReadableString& aNamespaceURI,
-                            const nsAReadableString& aQualifiedName,
-                            const nsAReadableString& aValue);
-  NS_IMETHOD RemoveAttributeNS(const nsAReadableString& aNamespaceURI,
-                               const nsAReadableString& aLocalName);
-  NS_IMETHOD GetAttributeNodeNS(const nsAReadableString& aNamespaceURI,
-                                const nsAReadableString& aLocalName,
+  NS_IMETHOD GetAttributeNS(const nsAString& aNamespaceURI,
+                            const nsAString& aLocalName,
+                            nsAString& aReturn);
+  NS_IMETHOD SetAttributeNS(const nsAString& aNamespaceURI,
+                            const nsAString& aQualifiedName,
+                            const nsAString& aValue);
+  NS_IMETHOD RemoveAttributeNS(const nsAString& aNamespaceURI,
+                               const nsAString& aLocalName);
+  NS_IMETHOD GetAttributeNodeNS(const nsAString& aNamespaceURI,
+                                const nsAString& aLocalName,
                                 nsIDOMAttr** aReturn);
   NS_IMETHOD SetAttributeNodeNS(nsIDOMAttr* aNewAttr, nsIDOMAttr** aReturn);
-  NS_IMETHOD GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
-                                    const nsAReadableString& aLocalName,
+  NS_IMETHOD GetElementsByTagNameNS(const nsAString& aNamespaceURI,
+                                    const nsAString& aLocalName,
                                     nsIDOMNodeList** aReturn);
-  NS_IMETHOD HasAttribute(const nsAReadableString& aName, PRBool* aReturn);
-  NS_IMETHOD HasAttributeNS(const nsAReadableString& aNamespaceURI,
-                            const nsAReadableString& aLocalName,
+  NS_IMETHOD HasAttribute(const nsAString& aName, PRBool* aReturn);
+  NS_IMETHOD HasAttributeNS(const nsAString& aNamespaceURI,
+                            const nsAString& aLocalName,
                             PRBool* aReturn);
 
   // Generic DOMNode implementations
@@ -349,7 +349,7 @@ public:
   nsresult RenderFrame(nsIPresContext*);
 
   nsresult AddScriptEventListener(nsIAtom* aAttribute,
-                                  const nsAReadableString& aValue);
+                                  const nsAString& aValue);
 
   nsresult TriggerLink(nsIPresContext* aPresContext,
                        nsLinkVerb aVerb,
@@ -364,8 +364,8 @@ public:
   static void SetDocumentInChildrenOf(nsIContent* aContent, 
 				      nsIDocument* aDocument, PRBool aCompileEventHandlers);
 
-  static nsresult InternalIsSupported(const nsAReadableString& aFeature,
-                                      const nsAReadableString& aVersion,
+  static nsresult InternalIsSupported(const nsAString& aFeature,
+                                      const nsAString& aVersion,
                                       PRBool* aReturn);
 
   static PRBool HasMutationListeners(nsIContent* aContent,
@@ -397,13 +397,13 @@ public:
                        PRBool aDeep);
 
   // nsIDOMElement methods
-  NS_METHOD GetAttribute(const nsAReadableString& aName,
-                        nsAWritableString& aReturn) 
+  NS_METHOD GetAttribute(const nsAString& aName,
+                        nsAString& aReturn) 
   {
     return nsGenericElement::GetAttribute(aName, aReturn);
   }
-  NS_METHOD SetAttribute(const nsAReadableString& aName,
-                        const nsAReadableString& aValue)
+  NS_METHOD SetAttribute(const nsAString& aName,
+                        const nsAString& aValue)
   {
     return nsGenericElement::SetAttribute(aName, aValue);
   }
@@ -434,18 +434,18 @@ public:
   }
 
   // Remainder of nsIContent
-  NS_IMETHOD NormalizeAttrString(const nsAReadableString& aStr,
+  NS_IMETHOD NormalizeAttrString(const nsAString& aStr,
                                  nsINodeInfo*& aNodeInfo);
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          const nsAReadableString& aValue,
+                          const nsAString& aValue,
                           PRBool aNotify);
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
-                     const nsAReadableString& aValue,
+                     const nsAString& aValue,
                      PRBool aNotify);
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     nsAWritableString& aResult) const;
+                     nsAString& aResult) const;
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                     nsIAtom*& aPrefix, nsAWritableString& aResult) const;
+                     nsIAtom*& aPrefix, nsAString& aResult) const;
   NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                        PRBool aNotify);
@@ -515,13 +515,13 @@ public:
 
 
 #define NS_FORWARD_NSIDOMNODE_NO_CLONENODE(_to)                               \
-  NS_IMETHOD GetNodeName(nsAWritableString& aNodeName) {                      \
+  NS_IMETHOD GetNodeName(nsAString& aNodeName) {                              \
     return _to GetNodeName(aNodeName);                                        \
   }                                                                           \
-  NS_IMETHOD GetNodeValue(nsAWritableString& aNodeValue) {                    \
+  NS_IMETHOD GetNodeValue(nsAString& aNodeValue) {                            \
     return _to GetNodeValue(aNodeValue);                                      \
   }                                                                           \
-  NS_IMETHOD SetNodeValue(const nsAReadableString& aNodeValue) {              \
+  NS_IMETHOD SetNodeValue(const nsAString& aNodeValue) {                      \
     return _to SetNodeValue(aNodeValue);                                      \
   }                                                                           \
   NS_IMETHOD GetNodeType(PRUint16* aNodeType) {                               \
@@ -551,16 +551,16 @@ public:
   NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument) {              \
     return _to GetOwnerDocument(aOwnerDocument);                              \
   }                                                                           \
-  NS_IMETHOD GetNamespaceURI(nsAWritableString& aNamespaceURI) {              \
+  NS_IMETHOD GetNamespaceURI(nsAString& aNamespaceURI) {                      \
     return _to GetNamespaceURI(aNamespaceURI);                                \
   }                                                                           \
-  NS_IMETHOD GetPrefix(nsAWritableString& aPrefix) {                          \
+  NS_IMETHOD GetPrefix(nsAString& aPrefix) {                                  \
     return _to GetPrefix(aPrefix);                                            \
   }                                                                           \
-  NS_IMETHOD SetPrefix(const nsAReadableString& aPrefix) {                    \
+  NS_IMETHOD SetPrefix(const nsAString& aPrefix) {                            \
     return _to SetPrefix(aPrefix);                                            \
   }                                                                           \
-  NS_IMETHOD GetLocalName(nsAWritableString& aLocalName) {                    \
+  NS_IMETHOD GetLocalName(nsAString& aLocalName) {                            \
     return _to GetLocalName(aLocalName);                                      \
   }                                                                           \
   NS_IMETHOD InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,       \
@@ -583,8 +583,8 @@ public:
   NS_IMETHOD Normalize() {                                                    \
     return _to Normalize();                                                   \
   }                                                                           \
-  NS_IMETHOD IsSupported(const nsAReadableString& aFeature,                   \
-                         const nsAReadableString& aVersion, PRBool* aReturn) {\
+  NS_IMETHOD IsSupported(const nsAString& aFeature,                           \
+                         const nsAString& aVersion, PRBool* aReturn) {        \
     return _to IsSupported(aFeature, aVersion, aReturn);                      \
   }                                                                           \
   NS_IMETHOD HasAttributes(PRBool* aReturn) {                                 \

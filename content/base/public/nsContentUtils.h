@@ -38,7 +38,7 @@
 #define nsContentUtils_h___
 
 #include "jspubtd.h"
-#include "nsAReadableString.h"
+#include "nsAString.h"
 #include "nsIDOMScriptObjectFactory.h"
 
 class nsIScriptContext;
@@ -74,13 +74,13 @@ public:
   static nsresult GetDynamicScriptContext(JSContext *aContext,
                                           nsIScriptContext** aScriptContext);
 
-  static PRUint32 CopyNewlineNormalizedUnicodeTo(const nsAReadableString& aSource, 
+  static PRUint32 CopyNewlineNormalizedUnicodeTo(const nsAString& aSource, 
                                                  PRUint32 aSrcOffset, 
                                                  PRUnichar* aDest, 
                                                  PRUint32 aLength,
                                                  PRBool& aLastCharCR);
 
-  static PRUint32 CopyNewlineNormalizedUnicodeTo(nsReadingIterator<PRUnichar>& aSrcStart, const nsReadingIterator<PRUnichar>& aSrcEnd, nsAWritableString& aDest);
+  static PRUint32 CopyNewlineNormalizedUnicodeTo(nsReadingIterator<PRUnichar>& aSrcStart, const nsReadingIterator<PRUnichar>& aSrcEnd, nsAString& aDest);
 
   static nsISupports *
   GetClassInfoInstance(nsDOMClassInfoID aID);

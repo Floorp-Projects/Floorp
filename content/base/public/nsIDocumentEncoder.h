@@ -162,7 +162,7 @@ public:
   /**
    *  Initialize with a pointer to the document and the mime type.
    */
-  NS_IMETHOD Init(nsIDocument* aDocument, const nsAReadableString& aMimeType,
+  NS_IMETHOD Init(nsIDocument* aDocument, const nsAString& aMimeType,
                   PRUint32 flags) = 0;
 
   /**
@@ -188,7 +188,7 @@ public:
    *
    *  Possible result codes: NS_ERROR_NO_CHARSET_CONVERTER
    */
-  NS_IMETHOD SetCharset(const nsAReadableString& aCharset) = 0;
+  NS_IMETHOD SetCharset(const nsAString& aCharset) = 0;
 
   /**
    *  Set a wrap column.  This may have no effect in some types of encoders.
@@ -201,7 +201,7 @@ public:
    *  if you ask it to copy html that really represents plaintext content.
    *  Call this AFTER Init() and SetSelection() have both been called.
    */
-  NS_IMETHOD GetMimeType(nsAWritableString& aMimeType) = 0;
+  NS_IMETHOD GetMimeType(nsAString& aMimeType) = 0;
   
   /**
    *  The document is encoded, the result is sent to the 
@@ -211,7 +211,7 @@ public:
    *  might have been encountered.
    */
   NS_IMETHOD EncodeToStream(nsIOutputStream* aStream) = 0;
-  NS_IMETHOD EncodeToString(nsAWritableString& aOutputString) = 0;
+  NS_IMETHOD EncodeToString(nsAString& aOutputString) = 0;
 
   /**
    *  The document is encoded, the result is sent to the 
@@ -219,9 +219,9 @@ public:
    *  to aContextString.  Extra context info is encoded in aInfoString.
    * 
    */
-  NS_IMETHOD EncodeToStringWithContext(nsAWritableString& aEncodedString, 
-                                       nsAWritableString& aContextString, 
-                                       nsAWritableString& aInfoString) = 0;
+  NS_IMETHOD EncodeToStringWithContext(nsAString& aEncodedString, 
+                                       nsAString& aContextString, 
+                                       nsAString& aInfoString) = 0;
 
   /**
    * Set the fixup object associated with node persistence.

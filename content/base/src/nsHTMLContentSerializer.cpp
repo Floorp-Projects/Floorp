@@ -160,7 +160,7 @@ NS_IMETHODIMP
 nsHTMLContentSerializer::AppendText(nsIDOMText* aText, 
                                     PRInt32 aStartOffset,
                                     PRInt32 aEndOffset,
-                                    nsAWritableString& aStr)
+                                    nsAString& aStr)
 {
   NS_ENSURE_ARG(aText);
 
@@ -202,7 +202,7 @@ nsHTMLContentSerializer::AppendText(nsIDOMText* aText,
 }
 
 PRBool
-nsHTMLContentSerializer::IsJavaScript(nsIAtom* aAttrNameAtom, const nsAReadableString& aValueString)
+nsHTMLContentSerializer::IsJavaScript(nsIAtom* aAttrNameAtom, const nsAString& aValueString)
 {
   if (aAttrNameAtom == nsHTMLAtoms::href
   || aAttrNameAtom == nsHTMLAtoms::src) {
@@ -241,7 +241,7 @@ nsHTMLContentSerializer::IsJavaScript(nsIAtom* aAttrNameAtom, const nsAReadableS
 }
 
 nsresult 
-nsHTMLContentSerializer::EscapeURI(const nsAReadableString& aURI, nsAWritableString& aEscapedURI)
+nsHTMLContentSerializer::EscapeURI(const nsAString& aURI, nsAString& aEscapedURI)
 {
   // URL escape %xx cannot be used in JS.
   // No escaping if the scheme is 'javascript'.
@@ -311,7 +311,7 @@ nsHTMLContentSerializer::EscapeURI(const nsAReadableString& aURI, nsAWritableStr
 void 
 nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
                                              nsIAtom* aTagName,
-                                             nsAWritableString& aStr)
+                                             nsAString& aStr)
 {
   nsresult rv;
   PRInt32 index, count;
@@ -411,7 +411,7 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
 
 NS_IMETHODIMP
 nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
-                                            nsAWritableString& aStr)
+                                            nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
   
@@ -513,7 +513,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   
 NS_IMETHODIMP 
 nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
-                                          nsAWritableString& aStr)
+                                          nsAString& aStr)
 {
   NS_ENSURE_ARG(aElement);
 
@@ -582,7 +582,7 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
 void
 nsHTMLContentSerializer::AppendToString(const PRUnichar* aStr,
                                         PRInt32 aLength,
-                                        nsAWritableString& aOutputStr)
+                                        nsAString& aOutputStr)
 {
   if (mBodyOnly && !mInBody) {
     return;
@@ -597,7 +597,7 @@ nsHTMLContentSerializer::AppendToString(const PRUnichar* aStr,
 
 void 
 nsHTMLContentSerializer::AppendToString(const PRUnichar aChar,
-                                        nsAWritableString& aOutputStr)
+                                        nsAString& aOutputStr)
 {
   if (mBodyOnly && !mInBody) {
     return;
@@ -609,8 +609,8 @@ nsHTMLContentSerializer::AppendToString(const PRUnichar aChar,
 }
 
 void 
-nsHTMLContentSerializer::AppendToStringWrapped(const nsAReadableString& aStr,
-                                               nsAWritableString& aOutputStr,
+nsHTMLContentSerializer::AppendToStringWrapped(const nsAString& aStr,
+                                               nsAString& aOutputStr,
                                                PRBool aTranslateEntities)
 {
   PRInt32 length = aStr.Length();
@@ -721,8 +721,8 @@ static const char* kAttrEntities[] = {
 };
 
 void
-nsHTMLContentSerializer::AppendToString(const nsAReadableString& aStr,
-                                        nsAWritableString& aOutputStr,
+nsHTMLContentSerializer::AppendToString(const nsAString& aStr,
+                                        nsAString& aOutputStr,
                                         PRBool aTranslateEntities,
                                         PRBool aIncrColumn)
 {
@@ -800,8 +800,8 @@ nsHTMLContentSerializer::AppendToString(const nsAReadableString& aStr,
 }
 
 void
-nsHTMLContentSerializer::AppendToStringConvertLF(const nsAReadableString& aStr,
-                                                 nsAWritableString& aOutputStr)
+nsHTMLContentSerializer::AppendToStringConvertLF(const nsAString& aStr,
+                                                 nsAString& aOutputStr)
 {
   // Convert line-endings to mLineBreak
   PRUint32 start = 0;
@@ -984,7 +984,7 @@ nsHTMLContentSerializer::LineBreakAfterClose(nsIAtom* aName,
 void
 nsHTMLContentSerializer::StartIndentation(nsIAtom* aName,
                                           PRBool aHasDirtyAttr,
-                                          nsAWritableString& aStr)
+                                          nsAString& aStr)
 {
   if ((mDoFormat || aHasDirtyAttr) && !mPreLevel && !mColPos) {
     for (PRInt32 i = mIndent; --i >= 0; ) {
@@ -1012,7 +1012,7 @@ nsHTMLContentSerializer::StartIndentation(nsIAtom* aName,
 void
 nsHTMLContentSerializer::EndIndentation(nsIAtom* aName,
                                         PRBool aHasDirtyAttr,
-                                        nsAWritableString& aStr)
+                                        nsAString& aStr)
 {
   if ((aName == nsHTMLAtoms::head) ||
       (aName == nsHTMLAtoms::table) ||
@@ -1065,7 +1065,7 @@ nsHTMLContentSerializer::HasLongLines(const nsString& text, PRInt32& aLastNewlin
 
 void 
 nsHTMLContentSerializer::SerializeLIValueAttribute(nsIDOMElement* aElement,
-                                                   nsAWritableString& aStr)
+                                                   nsAString& aStr)
 {
   // We are copying and we are at the "first" LI node of OL in selected range.
   // It may not be the first LI child of OL but it's first in the selected range.

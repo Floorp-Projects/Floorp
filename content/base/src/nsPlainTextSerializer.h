@@ -67,23 +67,23 @@ public:
                   nsIAtom* aCharSet, PRBool aIsCopying);
 
   NS_IMETHOD AppendText(nsIDOMText* aText, PRInt32 aStartOffset,
-                        PRInt32 aEndOffset, nsAWritableString& aStr);
+                        PRInt32 aEndOffset, nsAString& aStr);
   NS_IMETHOD AppendCDATASection(nsIDOMCDATASection* aCDATASection,
                                 PRInt32 aStartOffset, PRInt32 aEndOffset,
-                                nsAWritableString& aStr) { return NS_OK; }
+                                nsAString& aStr) { return NS_OK; }
   NS_IMETHOD AppendProcessingInstruction(nsIDOMProcessingInstruction* aPI,
                                          PRInt32 aStartOffset,
                                          PRInt32 aEndOffset,
-                                         nsAWritableString& aStr)  { return NS_OK; }
+                                         nsAString& aStr)  { return NS_OK; }
   NS_IMETHOD AppendComment(nsIDOMComment* aComment, PRInt32 aStartOffset,
-                           PRInt32 aEndOffset, nsAWritableString& aStr)  { return NS_OK; }
+                           PRInt32 aEndOffset, nsAString& aStr)  { return NS_OK; }
   NS_IMETHOD AppendDoctype(nsIDOMDocumentType *aDoctype,
-                           nsAWritableString& aStr)  { return NS_OK; }
+                           nsAString& aStr)  { return NS_OK; }
   NS_IMETHOD AppendElementStart(nsIDOMElement *aElement,
-                                nsAWritableString& aStr); 
+                                nsAString& aStr); 
   NS_IMETHOD AppendElementEnd(nsIDOMElement *aElement,
-                              nsAWritableString& aStr);
-  NS_IMETHOD Flush(nsAWritableString& aStr);
+                              nsAString& aStr);
+  NS_IMETHOD Flush(nsAString& aStr);
 
   // nsIContentSink
   NS_IMETHOD WillBuildModel(void) { return NS_OK; }
@@ -98,7 +98,7 @@ public:
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode) { return NS_OK; }
   NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0) { return NS_OK; }
   NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
-  NS_IMETHOD SetDocumentCharset(nsAWritableString& aCharset) { return NS_OK; }
+  NS_IMETHOD SetDocumentCharset(nsAString& aCharset) { return NS_OK; }
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
 
   // nsIHTMLContentSink
@@ -125,7 +125,7 @@ public:
   NS_IMETHOD DidProcessAToken(void) { return NS_OK; }
 
   // nsIHTMLToTextSink
-  NS_IMETHOD Initialize(nsAWritableString* aOutString,
+  NS_IMETHOD Initialize(nsAString* aOutString,
                         PRUint32 aFlags, PRUint32 aWrapCol);
 
 protected:
@@ -136,7 +136,7 @@ protected:
   void FlushLine();
   void OutputQuotesAndIndent(PRBool stripTrailingSpaces=PR_FALSE);
   void Output(nsString& aString);
-  void Write(const nsAReadableString& aString);
+  void Write(const nsAString& aString);
   PRBool IsBlockLevel(PRInt32 aId);
   PRBool IsContainer(PRInt32 aId);
   PRBool IsInPre();
@@ -145,7 +145,7 @@ protected:
   nsresult GetParserService(nsIParserService** aParserService);
   nsresult DoOpenContainer(PRInt32 aTag);
   nsresult DoCloseContainer(PRInt32 aTag);
-  nsresult DoAddLeaf(PRInt32 aTag, const nsAReadableString& aText);
+  nsresult DoAddLeaf(PRInt32 aTag, const nsAString& aText);
 
   // Inlined functions
   inline PRBool MayWrap()
@@ -217,7 +217,7 @@ protected:
   nsCOMPtr<nsIContent> mContent;
   nsIParserNode*       mParserNode;
 
-  nsAWritableString*            mOutputString;
+  nsAString*            mOutputString;
 
   // The tag stack: the stack of tags we're operating on, so we can nest:
   nsHTMLTag       *mTagStack;

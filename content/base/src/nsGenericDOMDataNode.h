@@ -69,8 +69,8 @@ public:
   virtual ~nsGenericDOMDataNode();
 
   // Implementation for nsIDOMNode
-  nsresult GetNodeValue(nsAWritableString& aNodeValue);
-  nsresult SetNodeValue(const nsAReadableString& aNodeValue);
+  nsresult GetNodeValue(nsAString& aNodeValue);
+  nsresult SetNodeValue(const nsAString& aNodeValue);
   nsresult GetParentNode(nsIDOMNode** aParentNode);
   nsresult GetAttributes(nsIDOMNamedNodeMap** aAttributes)
   {
@@ -141,31 +141,31 @@ public:
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
   nsresult GetOwnerDocument(nsIDOMDocument** aOwnerDocument);
-  nsresult GetNamespaceURI(nsAWritableString& aNamespaceURI);
-  nsresult GetLocalName(nsAWritableString& aLocalName);
-  nsresult GetPrefix(nsAWritableString& aPrefix);
-  nsresult SetPrefix(const nsAReadableString& aPrefix);
+  nsresult GetNamespaceURI(nsAString& aNamespaceURI);
+  nsresult GetLocalName(nsAString& aLocalName);
+  nsresult GetPrefix(nsAString& aPrefix);
+  nsresult SetPrefix(const nsAString& aPrefix);
   nsresult Normalize();
-  nsresult IsSupported(const nsAReadableString& aFeature,
-                       const nsAReadableString& aVersion,
+  nsresult IsSupported(const nsAString& aFeature,
+                       const nsAString& aVersion,
                        PRBool* aReturn);
-  nsresult GetBaseURI(nsAWritableString& aURI);
-  nsresult LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
-                                 nsAWritableString& aPrefix);
-  nsresult LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,
-                              nsAWritableString& aNamespaceURI);
+  nsresult GetBaseURI(nsAString& aURI);
+  nsresult LookupNamespacePrefix(const nsAString& aNamespaceURI,
+                                 nsAString& aPrefix);
+  nsresult LookupNamespaceURI(const nsAString& aNamespacePrefix,
+                              nsAString& aNamespaceURI);
 
   // Implementation for nsIDOMCharacterData
-  nsresult GetData(nsAWritableString& aData);
-  nsresult SetData(const nsAReadableString& aData);
+  nsresult GetData(nsAString& aData);
+  nsresult SetData(const nsAString& aData);
   nsresult GetLength(PRUint32* aLength);
   nsresult SubstringData(PRUint32 aOffset, PRUint32 aCount,
-                         nsAWritableString& aReturn);
-  nsresult AppendData(const nsAReadableString& aArg);
-  nsresult InsertData(PRUint32 aOffset, const nsAReadableString& aArg);
+                         nsAString& aReturn);
+  nsresult AppendData(const nsAString& aArg);
+  nsresult InsertData(PRUint32 aOffset, const nsAString& aArg);
   nsresult DeleteData(PRUint32 aOffset, PRUint32 aCount);
   nsresult ReplaceData(PRUint32 aOffset, PRUint32 aCount,
-                       const nsAReadableString& aArg);
+                       const nsAString& aArg);
 
   // Implementation for nsIContent
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const;
@@ -174,18 +174,18 @@ public:
   NS_IMETHOD GetParent(nsIContent*& aResult) const;
   NS_IMETHOD SetParent(nsIContent* aParent);
   NS_IMETHOD GetNameSpaceID(PRInt32& aID) const;
-  NS_IMETHOD NormalizeAttrString(const nsAReadableString& aStr,
+  NS_IMETHOD NormalizeAttrString(const nsAString& aStr,
                                  nsINodeInfo*& aNodeInfo);
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                     const nsAReadableString& aValue, PRBool aNotify);
+                     const nsAString& aValue, PRBool aNotify);
   NS_IMETHOD SetAttr(nsINodeInfo *aNodeInfo,
-                     const nsAReadableString& aValue, PRBool aNotify);
+                     const nsAString& aValue, PRBool aNotify);
   NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                        PRBool aNotify);
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
-                     nsAWritableString& aResult) const;
+                     nsAString& aResult) const;
   NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
-                     nsIAtom*& aPrefix, nsAWritableString& aResult) const;
+                     nsIAtom*& aPrefix, nsAString& aResult) const;
   NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute) const;
   NS_IMETHOD GetAttrNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, 
                            nsIAtom*& aName, nsIAtom*& aPrefix) const;
@@ -233,10 +233,10 @@ public:
 
   NS_IMETHOD GetText(const nsTextFragment** aFragmentsResult);
   NS_IMETHOD GetTextLength(PRInt32* aLengthResult);
-  NS_IMETHOD CopyText(nsAWritableString& aResult);
+  NS_IMETHOD CopyText(nsAString& aResult);
   NS_IMETHOD SetText(const PRUnichar* aBuffer, PRInt32 aLength,
                      PRBool aNotify);
-  NS_IMETHOD SetText(const nsAReadableString& aStr, PRBool aNotify);
+  NS_IMETHOD SetText(const nsAString& aStr, PRBool aNotify);
   NS_IMETHOD SetText(const char* aBuffer, PRInt32 aLength, PRBool aNotify);
   NS_IMETHOD IsOnlyWhitespace(PRBool* aResult);
   NS_IMETHOD CloneContent(PRBool aCloneText, nsITextContent** aClone);
@@ -244,7 +244,7 @@ public:
   //----------------------------------------
 
 #ifdef DEBUG
-  void ToCString(nsAWritableString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
+  void ToCString(nsAString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
 #endif
 
   static void Shutdown();
@@ -316,14 +316,14 @@ private:
  *       NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
  */
 #define NS_IMPL_NSIDOMNODE_USING_GENERIC_DOM_DATA                           \
-  NS_IMETHOD GetNodeName(nsAWritableString& aNodeName);                     \
-  NS_IMETHOD GetLocalName(nsAWritableString& aLocalName) {                  \
+  NS_IMETHOD GetNodeName(nsAString& aNodeName);                             \
+  NS_IMETHOD GetLocalName(nsAString& aLocalName) {                          \
     return nsGenericDOMDataNode::GetLocalName(aLocalName);                  \
   }                                                                         \
-  NS_IMETHOD GetNodeValue(nsAWritableString& aNodeValue) {                  \
+  NS_IMETHOD GetNodeValue(nsAString& aNodeValue) {                          \
     return nsGenericDOMDataNode::GetNodeValue(aNodeValue);                  \
   }                                                                         \
-  NS_IMETHOD SetNodeValue(const nsAReadableString& aNodeValue) {            \
+  NS_IMETHOD SetNodeValue(const nsAString& aNodeValue) {                    \
     return nsGenericDOMDataNode::SetNodeValue(aNodeValue);                  \
   }                                                                         \
   NS_IMETHOD GetNodeType(PRUint16* aNodeType);                              \
@@ -373,33 +373,33 @@ private:
   NS_IMETHOD GetOwnerDocument(nsIDOMDocument** aOwnerDocument) {            \
     return nsGenericDOMDataNode::GetOwnerDocument(aOwnerDocument);          \
   }                                                                         \
-  NS_IMETHOD GetNamespaceURI(nsAWritableString& aNamespaceURI) {            \
+  NS_IMETHOD GetNamespaceURI(nsAString& aNamespaceURI) {                    \
     return nsGenericDOMDataNode::GetNamespaceURI(aNamespaceURI);            \
   }                                                                         \
-  NS_IMETHOD GetPrefix(nsAWritableString& aPrefix) {                        \
+  NS_IMETHOD GetPrefix(nsAString& aPrefix) {                                \
     return nsGenericDOMDataNode::GetPrefix(aPrefix);                        \
   }                                                                         \
-  NS_IMETHOD SetPrefix(const nsAReadableString& aPrefix) {                  \
+  NS_IMETHOD SetPrefix(const nsAString& aPrefix) {                          \
     return nsGenericDOMDataNode::SetPrefix(aPrefix);                        \
   }                                                                         \
   NS_IMETHOD Normalize() {                                                  \
     return NS_OK;                                                           \
   }                                                                         \
-  NS_IMETHOD IsSupported(const nsAReadableString& aFeature,                 \
-                      const nsAReadableString& aVersion,                    \
+  NS_IMETHOD IsSupported(const nsAString& aFeature,                         \
+                      const nsAString& aVersion,                            \
                       PRBool* aReturn) {                                    \
     return nsGenericDOMDataNode::IsSupported(aFeature, aVersion, aReturn);  \
   }                                                                         \
-  NS_IMETHOD GetBaseURI(nsAWritableString& aURI) {                          \
+  NS_IMETHOD GetBaseURI(nsAString& aURI) {                                  \
     return nsGenericDOMDataNode::GetBaseURI(aURI);                          \
   }                                                                         \
-  NS_IMETHOD LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,  \
-                                   nsAWritableString& aPrefix) {            \
+  NS_IMETHOD LookupNamespacePrefix(const nsAString& aNamespaceURI,          \
+                                   nsAString& aPrefix) {                    \
     return nsGenericDOMDataNode::LookupNamespacePrefix(aNamespaceURI,       \
                                                        aPrefix);            \
   }                                                                         \
-  NS_IMETHOD LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,  \
-                                nsAWritableString& aNamespaceURI) {         \
+  NS_IMETHOD LookupNamespaceURI(const nsAString& aNamespacePrefix,          \
+                                nsAString& aNamespaceURI) {                 \
     return nsGenericDOMDataNode::LookupNamespaceURI(aNamespacePrefix,       \
                                                     aNamespaceURI);         \
   }                                                                         \

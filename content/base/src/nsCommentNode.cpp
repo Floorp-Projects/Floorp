@@ -121,7 +121,7 @@ nsCommentNode::GetTag(nsIAtom*& aResult) const
 }
 
 NS_IMETHODIMP
-nsCommentNode::GetNodeName(nsAWritableString& aNodeName)
+nsCommentNode::GetNodeName(nsAString& aNodeName)
 {
   aNodeName.Assign(NS_LITERAL_STRING("#comment"));
   return NS_OK;

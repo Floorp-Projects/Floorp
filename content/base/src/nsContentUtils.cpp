@@ -281,7 +281,7 @@ class CopyNormalizeNewlines
 
 // static
 PRUint32 
-nsContentUtils::CopyNewlineNormalizedUnicodeTo(const nsAReadableString& aSource, 
+nsContentUtils::CopyNewlineNormalizedUnicodeTo(const nsAString& aSource, 
                                                PRUint32 aSrcOffset, 
                                                PRUnichar* aDest, 
                                                PRUint32 aLength, 
@@ -301,7 +301,7 @@ nsContentUtils::CopyNewlineNormalizedUnicodeTo(const nsAReadableString& aSource,
 
 // static
 PRUint32 
-nsContentUtils::CopyNewlineNormalizedUnicodeTo(nsReadingIterator<PRUnichar>& aSrcStart, const nsReadingIterator<PRUnichar>& aSrcEnd, nsAWritableString& aDest)
+nsContentUtils::CopyNewlineNormalizedUnicodeTo(nsReadingIterator<PRUnichar>& aSrcStart, const nsReadingIterator<PRUnichar>& aSrcEnd, nsAString& aDest)
 {
   typedef nsWritingIterator<PRUnichar> WritingIterator;
   typedef NormalizeNewlinesCharTraits<WritingIterator> sink_traits;

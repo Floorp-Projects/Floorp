@@ -102,7 +102,7 @@ nsStyleLinkElement::GetCharset(nsAString& aCharset)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-void nsStyleLinkElement::ParseLinkTypes(const nsAReadableString& aTypes,
+void nsStyleLinkElement::ParseLinkTypes(const nsAString& aTypes,
                                         nsStringArray& aResult)
 {
   nsReadingIterator<PRUnichar> current;

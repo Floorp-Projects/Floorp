@@ -69,7 +69,7 @@ public:
 
   // Get data of this name space
   NS_IMETHOD GetNameSpaceID(PRInt32& aID) const = 0;
-  NS_IMETHOD GetNameSpaceURI(nsAWritableString& aURI) const = 0;
+  NS_IMETHOD GetNameSpaceURI(nsAString& aURI) const = 0;
   NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aPrefix) const = 0;
 
   NS_IMETHOD GetParentNameSpace(nsINameSpace*& aParent) const = 0;
@@ -81,7 +81,7 @@ public:
 
   // create new child name space
   NS_IMETHOD CreateChildNameSpace(nsIAtom* aPrefix, 
-                                  const nsAReadableString& aURI,
+                                  const nsAString& aURI,
                                   nsINameSpace*& aChildNameSpace) = 0;
 
   NS_IMETHOD CreateChildNameSpace(nsIAtom* aPrefix, PRInt32 aNameSpaceID,

@@ -40,7 +40,7 @@
 #define _nsIPlainTextSink_h__
 
 #include "nsISupports.h"
-#include "nsAWritableString.h"
+#include "nsAString.h"
 
 #define NS_PLAINTEXTSINK_CONTRACTID "@mozilla.org/layout/plaintextsink;1"
 
@@ -57,7 +57,7 @@ class nsIHTMLToTextSink : public nsISupports {
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IHTMLTOTEXTSINK_IID)
 
-  NS_IMETHOD Initialize(nsAWritableString* aOutString,
+  NS_IMETHOD Initialize(nsAString* aOutString,
                         PRUint32 aFlags, PRUint32 aWrapCol) = 0;
 };
 

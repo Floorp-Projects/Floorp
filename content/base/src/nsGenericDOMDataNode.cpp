@@ -185,13 +185,13 @@ NS_INTERFACE_MAP_END
 
 
 nsresult
-nsGenericDOMDataNode::GetNodeValue(nsAWritableString& aNodeValue)
+nsGenericDOMDataNode::GetNodeValue(nsAString& aNodeValue)
 {
   return GetData(aNodeValue);
 }
 
 nsresult
-nsGenericDOMDataNode::SetNodeValue(const nsAReadableString& aNodeValue)
+nsGenericDOMDataNode::SetNodeValue(const nsAString& aNodeValue)
 {
   return SetData(aNodeValue);
 }
@@ -317,7 +317,7 @@ nsGenericDOMDataNode::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 }
 
 nsresult
-nsGenericDOMDataNode::GetNamespaceURI(nsAWritableString& aNamespaceURI)
+nsGenericDOMDataNode::GetNamespaceURI(nsAString& aNamespaceURI)
 {
   SetDOMStringToNull(aNamespaceURI);
 
@@ -325,7 +325,7 @@ nsGenericDOMDataNode::GetNamespaceURI(nsAWritableString& aNamespaceURI)
 }
 
 nsresult
-nsGenericDOMDataNode::GetPrefix(nsAWritableString& aPrefix)
+nsGenericDOMDataNode::GetPrefix(nsAString& aPrefix)
 {
   SetDOMStringToNull(aPrefix);
 
@@ -333,13 +333,13 @@ nsGenericDOMDataNode::GetPrefix(nsAWritableString& aPrefix)
 }
 
 nsresult
-nsGenericDOMDataNode::SetPrefix(const nsAReadableString& aPrefix)
+nsGenericDOMDataNode::SetPrefix(const nsAString& aPrefix)
 {
   return NS_ERROR_DOM_NAMESPACE_ERR;
 }
 
 nsresult
-nsGenericDOMDataNode::GetLocalName(nsAWritableString& aLocalName)
+nsGenericDOMDataNode::GetLocalName(nsAString& aLocalName)
 {
   SetDOMStringToNull(aLocalName);
 
@@ -353,15 +353,15 @@ nsGenericDOMDataNode::Normalize()
 }
 
 nsresult
-nsGenericDOMDataNode::IsSupported(const nsAReadableString& aFeature,
-                                  const nsAReadableString& aVersion,
+nsGenericDOMDataNode::IsSupported(const nsAString& aFeature,
+                                  const nsAString& aVersion,
                                   PRBool* aReturn)
 {
   return nsGenericElement::InternalIsSupported(aFeature, aVersion, aReturn);
 }
 
 nsresult
-nsGenericDOMDataNode::GetBaseURI(nsAWritableString& aURI)
+nsGenericDOMDataNode::GetBaseURI(nsAString& aURI)
 {
   aURI.Truncate();
   nsresult rv = NS_OK;
@@ -385,8 +385,8 @@ nsGenericDOMDataNode::GetBaseURI(nsAWritableString& aURI)
 }
 
 nsresult
-nsGenericDOMDataNode::LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
-                                            nsAWritableString& aPrefix)
+nsGenericDOMDataNode::LookupNamespacePrefix(const nsAString& aNamespaceURI,
+                                            nsAString& aPrefix)
 {
   aPrefix.Truncate();
 
@@ -403,8 +403,8 @@ nsGenericDOMDataNode::LookupNamespacePrefix(const nsAReadableString& aNamespaceU
 }
 
 nsresult
-nsGenericDOMDataNode::LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,
-                                         nsAWritableString& aNamespaceURI)
+nsGenericDOMDataNode::LookupNamespaceURI(const nsAString& aNamespacePrefix,
+                                         nsAString& aNamespaceURI)
 {
   aNamespaceURI.Truncate();
 
@@ -425,7 +425,7 @@ nsGenericDOMDataNode::LookupNamespaceURI(const nsAReadableString& aNamespacePref
 // Implementation of nsIDOMCharacterData
 
 nsresult
-nsGenericDOMDataNode::GetData(nsAWritableString& aData)
+nsGenericDOMDataNode::GetData(nsAString& aData)
 {
   if (mText.Is2b()) {
     aData.Assign(mText.Get2b(), mText.GetLength());
@@ -441,7 +441,7 @@ nsGenericDOMDataNode::GetData(nsAWritableString& aData)
 }
 
 nsresult
-nsGenericDOMDataNode::SetData(const nsAReadableString& aData)
+nsGenericDOMDataNode::SetData(const nsAString& aData)
 {
   // inform any enclosed ranges of change
   // we can lie and say we are deleting all the text, since in a total
@@ -465,7 +465,7 @@ nsGenericDOMDataNode::GetLength(PRUint32* aLength)
 
 nsresult
 nsGenericDOMDataNode::SubstringData(PRUint32 aStart, PRUint32 aCount,
-                                    nsAWritableString& aReturn)
+                                    nsAString& aReturn)
 {
   aReturn.Truncate();
 
@@ -496,7 +496,7 @@ nsGenericDOMDataNode::SubstringData(PRUint32 aStart, PRUint32 aCount,
 //----------------------------------------------------------------------
 
 nsresult
-nsGenericDOMDataNode::AppendData(const nsAReadableString& aData)
+nsGenericDOMDataNode::AppendData(const nsAString& aData)
 {
 #if 1
   nsresult rv = NS_OK;
@@ -533,7 +533,7 @@ nsGenericDOMDataNode::AppendData(const nsAReadableString& aData)
 
 nsresult
 nsGenericDOMDataNode::InsertData(PRUint32 aOffset,
-                                 const nsAReadableString& aData)
+                                 const nsAString& aData)
 {
   return ReplaceData(aOffset, 0, aData);
 }
@@ -547,7 +547,7 @@ nsGenericDOMDataNode::DeleteData(PRUint32 aOffset, PRUint32 aCount)
 
 nsresult
 nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
-                                  const nsAReadableString& aData)
+                                  const nsAString& aData)
 {
   nsresult result = NS_OK;
 
@@ -647,7 +647,7 @@ nsGenericDOMDataNode::GetListenerManager(nsIEventListenerManager** aResult)
 
 #ifdef DEBUG
 void
-nsGenericDOMDataNode::ToCString(nsAWritableString& aBuf, PRInt32 aOffset,
+nsGenericDOMDataNode::ToCString(nsAString& aBuf, PRInt32 aOffset,
                                 PRInt32 aLen) const
 {
   if (mText.Is2b()) {
@@ -747,7 +747,7 @@ nsGenericDOMDataNode::GetNameSpaceID(PRInt32& aID) const
 }
 
 NS_IMETHODIMP
-nsGenericDOMDataNode::NormalizeAttrString(const nsAReadableString& aStr,
+nsGenericDOMDataNode::NormalizeAttrString(const nsAString& aStr,
                                           nsINodeInfo*& aNodeInfo)
 {
   aNodeInfo = nsnull;
@@ -756,14 +756,14 @@ nsGenericDOMDataNode::NormalizeAttrString(const nsAReadableString& aStr,
 
 NS_IMETHODIMP
 nsGenericDOMDataNode::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
-                              const nsAReadableString& aValue, PRBool aNotify)
+                              const nsAString& aValue, PRBool aNotify)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsGenericDOMDataNode::SetAttr(nsINodeInfo *aNodeInfo,
-                              const nsAReadableString& aValue, PRBool aNotify)
+                              const nsAString& aValue, PRBool aNotify)
 {
   return NS_OK;
 }
@@ -777,7 +777,7 @@ nsGenericDOMDataNode::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttr,
 
 NS_IMETHODIMP
 nsGenericDOMDataNode::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttr,
-                              nsAWritableString& aResult) const
+                              nsAString& aResult) const
 {
   aResult.Truncate();
 
@@ -787,7 +787,7 @@ nsGenericDOMDataNode::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttr,
 NS_IMETHODIMP
 nsGenericDOMDataNode::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttr,
                               nsIAtom*& aPrefix,
-                              nsAWritableString& aResult) const
+                              nsAString& aResult) const
 {
   aPrefix = nsnull;
   aResult.Truncate();
@@ -1211,7 +1211,7 @@ nsGenericDOMDataNode::GetTextLength(PRInt32* aLengthResult)
 }
 
 NS_IMETHODIMP
-nsGenericDOMDataNode::CopyText(nsAWritableString& aResult)
+nsGenericDOMDataNode::CopyText(nsAString& aResult)
 {
   if (mText.Is2b()) {
     aResult.Assign(mText.Get2b(), mText.GetLength());
@@ -1317,7 +1317,7 @@ nsGenericDOMDataNode::SetText(const char* aBuffer, PRInt32 aLength,
 }
 
 NS_IMETHODIMP
-nsGenericDOMDataNode::SetText(const nsAReadableString& aStr,
+nsGenericDOMDataNode::SetText(const nsAString& aStr,
                               PRBool aNotify)
 {
   if (aNotify && mDocument) {

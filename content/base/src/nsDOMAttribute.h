@@ -87,7 +87,7 @@ class nsDOMAttribute : public nsIDOMAttr,
 {
 public:
   nsDOMAttribute(nsIContent* aContent, nsINodeInfo *aNodeInfo,
-                 const nsAReadableString& aValue);
+                 const nsAString& aValue);
   virtual ~nsDOMAttribute();
 
   NS_DECL_ISUPPORTS

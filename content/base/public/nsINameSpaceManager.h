@@ -40,7 +40,7 @@
 #define nsINameSpaceManager_h___
 
 #include "nsISupports.h"
-#include "nsAWritableString.h"
+#include "nsAString.h"
 
 class nsIAtom;
 class nsString;
@@ -93,12 +93,12 @@ public:
 
   NS_IMETHOD CreateRootNameSpace(nsINameSpace*& aRootNameSpace) = 0;
 
-  NS_IMETHOD RegisterNameSpace(const nsAReadableString& aURI, 
+  NS_IMETHOD RegisterNameSpace(const nsAString& aURI, 
 			                         PRInt32& aNameSpaceID) = 0;
 
   NS_IMETHOD GetNameSpaceURI(PRInt32 aNameSpaceID,
-                             nsAWritableString& aURI) = 0;
-  NS_IMETHOD GetNameSpaceID(const nsAReadableString& aURI,
+                             nsAString& aURI) = 0;
+  NS_IMETHOD GetNameSpaceID(const nsAString& aURI,
                             PRInt32& aNameSpaceID) = 0;
 
   NS_IMETHOD GetElementFactory(PRInt32 aNameSpaceID,

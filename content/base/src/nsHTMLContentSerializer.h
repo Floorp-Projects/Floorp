@@ -57,12 +57,12 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   NS_IMETHOD AppendText(nsIDOMText* aText, 
                         PRInt32 aStartOffset,
                         PRInt32 aEndOffset,
-                        nsAWritableString& aStr);
+                        nsAString& aStr);
   NS_IMETHOD AppendElementStart(nsIDOMElement *aElement,
-                                nsAWritableString& aStr);
+                                nsAString& aStr);
   
   NS_IMETHOD AppendElementEnd(nsIDOMElement *aElement,
-                              nsAWritableString& aStr);
+                              nsAString& aStr);
  protected:
   PRBool HasDirtyAttr(nsIContent* aContent);
   PRBool LineBreakBeforeOpen(nsIAtom* aName, PRBool aHasDirtyAttr);
@@ -72,34 +72,34 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   PRBool IsFirstChildOfOL(nsIDOMElement* aElement);
   void StartIndentation(nsIAtom* aName, 
                         PRBool aHasDirtyAttr,
-                        nsAWritableString& aStr);
+                        nsAString& aStr);
   void EndIndentation(nsIAtom* aName, 
                       PRBool aHasDirtyAttr,
-                      nsAWritableString& aStr);
+                      nsAString& aStr);
   nsresult GetEntityConverter(nsIEntityConverter** aConverter);
   nsresult GetParserService(nsIParserService** aParserService);
   void SerializeAttributes(nsIContent* aContent,
                            nsIAtom* aTagName,
-                           nsAWritableString& aStr);
+                           nsAString& aStr);
   void SerializeLIValueAttribute(nsIDOMElement* aElement,
-                                 nsAWritableString& aStr);
+                                 nsAString& aStr);
   virtual void AppendToString(const PRUnichar* aStr,
                               PRInt32 aLength,
-                              nsAWritableString& aOutputStr);
+                              nsAString& aOutputStr);
   virtual void AppendToString(const PRUnichar aChar,
-                              nsAWritableString& aOutputStr);
-  virtual void AppendToString(const nsAReadableString& aStr,
-                              nsAWritableString& aOutputStr,
+                              nsAString& aOutputStr);
+  virtual void AppendToString(const nsAString& aStr,
+                              nsAString& aOutputStr,
                               PRBool aTranslateEntities = PR_FALSE,
                               PRBool aIncrColumn = PR_TRUE);
-  virtual void AppendToStringConvertLF(const nsAReadableString& aStr,
-                                       nsAWritableString& aOutputStr);
-  virtual void AppendToStringWrapped(const nsAReadableString& aStr,
-                                     nsAWritableString& aOutputStr,
+  virtual void AppendToStringConvertLF(const nsAString& aStr,
+                                       nsAString& aOutputStr);
+  virtual void AppendToStringWrapped(const nsAString& aStr,
+                                     nsAString& aOutputStr,
                                      PRBool aTranslateEntities);
   PRBool HasLongLines(const nsString& text, PRInt32& aLastNewlineOffset);
-  nsresult EscapeURI(const nsAReadableString& aURI, nsAWritableString& aEscapedURI);
-  PRBool IsJavaScript(nsIAtom* aAttrNameAtom, const nsAReadableString& aAttrValueString);
+  nsresult EscapeURI(const nsAString& aURI, nsAString& aEscapedURI);
+  PRBool IsJavaScript(nsIAtom* aAttrNameAtom, const nsAString& aAttrValueString);
 
   nsCOMPtr<nsIParserService> mParserService;
   nsCOMPtr<nsIEntityConverter> mEntityConverter;

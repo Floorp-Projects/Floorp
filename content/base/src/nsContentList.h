@@ -106,20 +106,20 @@ public:
                 nsIContent* aRootContent=nsnull);
   nsContentList(nsIDocument *aDocument, 
                 nsContentListMatchFunc aFunc,
-                const nsAReadableString& aData,
+                const nsAString& aData,
                 nsIContent* aRootContent=nsnull);
   virtual ~nsContentList();
 
   // nsIDOMHTMLCollection
   NS_IMETHOD GetLength(PRUint32* aLength);
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
-  NS_IMETHOD NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn);
+  NS_IMETHOD NamedItem(const nsAString& aName, nsIDOMNode** aReturn);
 
   /// nsIContentList
   NS_IMETHOD GetLength(PRUint32* aLength, PRBool aDoFlush);
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn,
                   PRBool aDoFlush);
-  NS_IMETHOD NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn,
+  NS_IMETHOD NamedItem(const nsAString& aName, nsIDOMNode** aReturn,
                        PRBool aDoFlush);
   NS_IMETHOD IndexOf(nsIContent *aContent, PRInt32& aIndex,
                      PRBool aDoFlush);

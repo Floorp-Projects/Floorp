@@ -40,7 +40,7 @@
 
 #include "nsISupports.h"
 #include "nsEvent.h"
-#include "nsAWritableString.h"
+#include "nsAString.h"
 #include "nsString.h"
 
 class nsIAtom;
@@ -151,15 +151,15 @@ public:
   /**
    * Get/Set the base target of a link in a document.
    */
-  NS_IMETHOD GetBaseTarget(nsAWritableString &aBaseTarget)=0;
-  NS_IMETHOD SetBaseTarget(const nsAReadableString &aBaseTarget)=0;
+  NS_IMETHOD GetBaseTarget(nsAString &aBaseTarget)=0;
+  NS_IMETHOD SetBaseTarget(const nsAString &aBaseTarget)=0;
 
   /**
    * Return a standard name for the document's character set. This will
    * trigger a startDocumentLoad if necessary to answer the question.
    */
-  NS_IMETHOD GetDocumentCharacterSet(nsAWritableString& oCharSetID) = 0;
-  NS_IMETHOD SetDocumentCharacterSet(const nsAReadableString& aCharSetID) = 0;
+  NS_IMETHOD GetDocumentCharacterSet(nsAString& oCharSetID) = 0;
+  NS_IMETHOD SetDocumentCharacterSet(const nsAString& aCharSetID) = 0;
 
   NS_IMETHOD GetDocumentCharacterSetSource(PRInt32* aCharsetSource) = 0;
   NS_IMETHOD SetDocumentCharacterSetSource(PRInt32 aCharsetSource) = 0;
@@ -176,7 +176,7 @@ public:
   /**
    * Return the language of this document.
    */
-  NS_IMETHOD GetContentLanguage(nsAWritableString& aContentLanguage) const = 0;
+  NS_IMETHOD GetContentLanguage(nsAString& aContentLanguage) const = 0;
 
 #ifdef IBMBIDI
   // The state BidiEnabled should persist across multiple views (screen, print)
@@ -209,8 +209,8 @@ public:
    * Access HTTP header data (this may also get set from other sources, like
    * HTML META tags).
    */
-  NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField, nsAWritableString& aData) const = 0;
-  NS_IMETHOD SetHeaderData(nsIAtom* aheaderField, const nsAReadableString& aData) = 0;
+  NS_IMETHOD GetHeaderData(nsIAtom* aHeaderField, nsAString& aData) const = 0;
+  NS_IMETHOD SetHeaderData(nsIAtom* aheaderField, const nsAString& aData) = 0;
 
   /**
    * Create a new presentation shell that will use aContext for
@@ -396,8 +396,8 @@ extern NS_EXPORT nsresult
                           nsIDocument* aOwnerDocument);
 extern NS_EXPORT nsresult
    NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
-                     const nsAReadableString& aNamespaceURI, 
-                     const nsAReadableString& aQualifiedName, 
+                     const nsAString& aNamespaceURI, 
+                     const nsAString& aQualifiedName, 
                      nsIDOMDocumentType* aDoctype,
                      nsIURI* aBaseURI);
 
