@@ -954,6 +954,8 @@ nsresult nsAddrDatabase::UpdateLastRecordKey()
 		pDataRow->CutStrongRef(GetEnv());
 		return NS_OK;
 	}
+	else if (!pDataRow)
+		err = InitLastRecorKey();
 	else
 		return NS_ERROR_NOT_AVAILABLE;
 	return err;
@@ -2566,7 +2568,13 @@ NS_IMETHODIMP nsAddrDatabase::GetNewListRow(nsIMdbRow * *newRow)
 NS_IMETHODIMP nsAddrDatabase::AddCardRowToDB(nsIMdbRow *newRow)
 {
 	if (m_mdbPabTable)
-		return m_mdbPabTable->AddRow(GetEnv(), newRow);
+	{
+		nsresult err = NS_OK;
+		err = m_mdbPabTable->AddRow(GetEnv(), newRow);
+		if (NS_SUCCEEDED(err))
+			AddRecordKeyColumnToRow(newRow);
+		return err;
+	}
 	else
 		return NS_ERROR_FAILURE;
 }
