@@ -359,13 +359,12 @@ function onOK()
     printService.printCommand = dialog.cmdInput.value;
     printService.toFileName   = dialog.fileInput.value;
 
-    var printtype;
     if (dialog.allpagesRadio.checked) {
-      printtype = gPrintOptInterface.kRangeAllPages;
+      printService.printRange = gPrintOptInterface.kRangeAllPages;
     } else if (dialog.rangeRadio.checked) {
-      printtype = gPrintOptInterface.kRangeSpecifiedPageRange;
+      printService.printRange = gPrintOptInterface.kRangeSpecifiedPageRange;
     } else if (dialog.selectionRadio.checked) {
-      printtype = gPrintOptInterface.kRangeSelection;
+      printService.printRange = gPrintOptInterface.kRangeSelection;
     }
     printService.startPageRange = dialog.frompageInput.value;
     printService.endPageRange   = dialog.topageInput.value;
