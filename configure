@@ -12127,10 +12127,6 @@ cat >> confdefs.h <<\EOF
 #define JS_THREADSAFE 1
 EOF
 
-cat >> confdefs.h <<\EOF
-#define LAYERS 1
-EOF
-
 
 
 # Used for LD_LIBRARY_PATH of run_viewer target
