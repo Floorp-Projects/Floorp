@@ -55,10 +55,6 @@ nsStyleCoord::nsStyleCoord(const nsStyleCoord& aCopy)
   }
 }
 
-nsStyleCoord::~nsStyleCoord(void)
-{
-}
-
 nsStyleCoord& nsStyleCoord::operator=(const nsStyleCoord& aCopy)
 {
   mUnit = aCopy.mUnit;
@@ -102,6 +98,12 @@ void nsStyleCoord::Set(float aValue)
   mValue.mFloat = aValue;
 }
 
+void nsStyleCoord::SetNormal(void)
+{
+  mUnit = eStyleUnit_Normal;
+  mValue.mInt = 0;
+}
+
 void nsStyleCoord::SetAuto(void)
 {
   mUnit = eStyleUnit_Auto;
@@ -129,12 +131,13 @@ void nsStyleCoord::AppendToString(nsString& aBuffer) const
   }
 
   switch (mUnit) {
-    case eStyleUnit_Twips:        aBuffer.Append("tw");   break;
-    case eStyleUnit_Percent:      aBuffer.Append("%");    break;
-    case eStyleUnit_Auto:         aBuffer.Append("Auto"); break;
-    case eStyleUnit_Inherit:      aBuffer.Append("Inherit"); break;
-    case eStyleUnit_Proportional: aBuffer.Append("*");    break;
-    case eStyleUnit_Enumerated:   aBuffer.Append("enum"); break;
+    case eStyleUnit_Twips:        aBuffer.Append("tw");       break;
+    case eStyleUnit_Percent:      aBuffer.Append("%");        break;
+    case eStyleUnit_Normal:       aBuffer.Append("Normal");   break;
+    case eStyleUnit_Auto:         aBuffer.Append("Auto");     break;
+    case eStyleUnit_Inherit:      aBuffer.Append("Inherit");  break;
+    case eStyleUnit_Proportional: aBuffer.Append("*");        break;
+    case eStyleUnit_Enumerated:   aBuffer.Append("enum");     break;
   }
   aBuffer.Append(' ');
 }
