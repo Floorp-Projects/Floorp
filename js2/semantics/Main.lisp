@@ -39,7 +39,7 @@
                                   #+mcl (truename *loading-file-source-file*))))
 
 
-;;; Convert a filename string possibly containing slashes into a Lisp relative pathname.
+; Convert a filename string possibly containing slashes into a Lisp relative pathname.
 (defun filename-to-relative-pathname (filename)
   (let ((directories nil))
     (loop
@@ -53,8 +53,8 @@
                     filename)))))))
 
 
-;;; Convert a filename string possibly containing slashes relative to *semantic-engine-directory*
-;;; into a Lisp absolute pathname.
+; Convert a filename string possibly containing slashes relative to *semantic-engine-directory*
+; into a Lisp absolute pathname.
 (defun filename-to-semantic-engine-pathname (filename)
   (merge-pathnames (filename-to-relative-pathname filename) *semantic-engine-directory*))
 
