@@ -645,9 +645,13 @@ function LoadHandler() {
 
   NewTip();
 
+  return false;
+
+  // The following code fragment is skipped because the chrome takes care of
+  // XMLterm initialization. This should eventually be deleted
   if (window.xmlterm) {
      // XMLTerm already initialized
-     return (false);
+     return false;
   }
 
   dump("LoadHandler: WINDOW.ARGUMENTS="+window.arguments+"\n");
