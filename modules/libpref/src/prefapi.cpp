@@ -495,26 +495,47 @@ PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
 // note that this appends to aResult, and does not assign!
 static void str_escape(const char * original, nsAFlatCString& aResult)
 {
+    /* JavaScript does not allow quotes, slashes, or line terminators inside
+     * strings so we must escape them. ECMAScript defines four line
+     * terminators, but we're only worrying about \r and \n here.  We currently
+     * feed our pref script to the JS interpreter as Latin-1 so  we won't
+     * encounter \u2028 (line separator) or \u2029 (paragraph separator).
+     *
+     * WARNING: There are hints that we may be moving to storing prefs
+     * as utf8. If we ever feed them to the JS compiler as UTF8 then
+     * we'll have to worry about the multibyte sequences that would be
+     * interpreted as \u2028 and \u2029
+     */
     const char *p;
-    
+
     if (original == NULL)
         return;
 
     /* Paranoid worst case all slashes will free quickly */
-    p = original;
-    while (*p)
+    for  (p=original; *p; ++p)
     {
         switch (*p)
         {
-            case '\\':
-            case '\"':
             case '\n':
-                aResult.Append('\\');
+                aResult.Append("\\n");
                 break;
+
+            case '\r':
+                aResult.Append("\\r");
+                break;
+
+            case '\\':
+                aResult.Append("\\\\");
+                break;
+
+            case '\"':
+                aResult.Append("\\\"");
+                break;
+
             default:
+                aResult.Append(*p);
                 break;
         }
-        aResult.Append(*p++);
     }
 }
 
@@ -618,9 +639,11 @@ pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg)
     else if (pref->flags & PREF_BOOL)
         prefValue = (sourcePref->boolVal) ? "true" : "false";
 
+    nsCAutoString prefName;
+    str_escape(pref->key, prefName);
 
     prefArray[i] = ToNewCString(NS_LITERAL_CSTRING("user_pref(\"") +
-                                nsDependentCString(pref->key) +
+                                prefName +
                                 NS_LITERAL_CSTRING("\", ") +
                                 prefValue +
                                 NS_LITERAL_CSTRING(");"));
