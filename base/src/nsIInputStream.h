@@ -18,15 +18,14 @@
 #ifndef nsIInputStream_h___
 #define nsIInputStream_h___
 
-#include "nscore.h"
-#include "nsISupports.h"
+#include "nsIBaseStream.h"
 
 #define NS_IINPUTSTREAM_IID   \
 { 0x022396f0, 0x93b5, 0x11d1, \
   {0x89, 0x5b, 0x00, 0x60, 0x08, 0x91, 0x1b, 0x81} }
 
 /** Abstract byte input stream */
-class nsIInputStream : public nsISupports {
+class nsIInputStream : public nsIBaseStream {
 public:
   /** Read data from the stream.
    *  @param aErrorCode the error code if an error occurs
@@ -39,9 +38,6 @@ public:
                        char* aBuf,
                        PRInt32 aOffset,
                        PRInt32 aCount) = 0;
-
-  /** Close the stream. */
-  virtual void Close() = 0;
 };
 
 /** Error codes */
@@ -60,15 +56,5 @@ public:
 /// For unichar streams
 #define NS_INPUTSTREAM_BAD_CONVERSION 6
 //@}
-
-/** Open a file using a local file name. Return an input stream that
- can read the file. Use an implementation of nsIByteBuffer to do
- buffered reading of the stream. */
-extern NS_BASE nsresult NS_OpenFile(nsIInputStream** aInstancePtrResult,
-                                    const char* aLocalFileName);
-
-/** Open a stream from a resource file name.  Need two sents? */
-extern NS_BASE nsresult NS_OpenResource(nsIInputStream** aInstancePtrResult,
-                                        const char* aResourceFileName);
 
 #endif /* nsInputStream_h___ */
