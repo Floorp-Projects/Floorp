@@ -1167,7 +1167,7 @@ sub MakeResourceAliases()
 	BuildFolderResourceAliases(":mozilla:rdf:resources:",								"$rdf_dir");
 
 	my($xpinstall_dir) = "$resource_dir" . "xpinstall:";
-	BuildFolderResourceAliases(":mozilla:xpinstall:res:",								"$xpinstall_dir");
+	_InstallResources(":mozilla:xpinstall:res:MANIFEST"                                 "$xpinstall_dir");
 	
 	my($profile_dir) = "$resource_dir" . "profile:";
 	BuildFolderResourceAliases(":mozilla:profile:resources:",							"$profile_dir");
@@ -1213,10 +1213,10 @@ sub MakeResourceAliases()
 
 	# if ($main::build{mailnews})
 	{
-        my($mailnews_dir) = "$resource_dir" . "mailnews";
-        my($messenger_chrome_dir) = "$chrome_dir" . "messenger";
-        my($messengercomposer_chrome_dir) = "$chrome_dir" . "messengercompose";
-        my($addressbook_chrome_dir) = "$chrome_dir" . "addressbook";
+        my($mailnews_dir) = "$resource_dir" . "Mailnews";
+        my($messenger_chrome_dir) = "$chrome_dir" . "Messenger";
+        my($messengercomposer_chrome_dir) = "$chrome_dir" . "MessengerCompose";
+        my($addressbook_chrome_dir) = "$chrome_dir" . "Addressbook";
         
         _InstallResources(":mozilla:mailnews:base:resources:content:MANIFEST",           "$messenger_chrome_dir:content:default:", 0);
         _InstallResources(":mozilla:mailnews:base:resources:skin:MANIFEST",              "$messenger_chrome_dir:skin:default:", 0);
@@ -1300,7 +1300,7 @@ sub MakeResourceAliases()
 	_InstallResources(":mozilla:extensions:wallet:walletpreview:MANIFEST",			"$samples_dir");
 	_InstallResources(":mozilla:extensions:wallet:editor:MANIFEST",					"$samples_dir");
 	{
-		my($pref_chrome_dir) = "$chrome_dir" . "pref";
+		my($pref_chrome_dir) = "$chrome_dir" . "Pref";
 		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:content:MANIFEST",	"$pref_chrome_dir:content:default:", 0);
 		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:skin:MANIFEST",		"$pref_chrome_dir:skin:default:", 0);
 		_InstallResources(":mozilla:xpfe:components:prefwindow:resources:locale:en-US:MANIFEST",		"$pref_chrome_dir:locale:en-US:", 0);
