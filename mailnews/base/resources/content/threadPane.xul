@@ -47,9 +47,9 @@ Rights Reserved.
   <splitter class="tree-splitter"/>
   <outlinercol id="flaggedCol" fixed="true" persist="hidden ordinal" class="outlinercol-image flagColumnHeader" display="&flagColumn.label;" cycler="true"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="priorityCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&priorityColumn.label;"/>
+  <outlinercol id="labelCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&labelColumn.label;"/>
   <splitter class="tree-splitter"/>
-  <outlinercol id="labelCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&labelColumn.label;" hidden="true"/>
+  <outlinercol id="priorityCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&priorityColumn.label;"/>
   <splitter class="tree-splitter"/>
   <outlinercol id="unreadCol" class="sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="&unreadColumn.label;"/>
   <splitter class="tree-splitter"/>
