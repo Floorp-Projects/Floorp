@@ -101,7 +101,7 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
     // The nsIMIMEInfo should have either the default or preferred 
     // application handler attribute set to match the preferredAction!
     if (!application)
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_FILE_NOT_FOUND;
     
     if (LOG_ENABLED()) {
       nsCAutoString appPath;
