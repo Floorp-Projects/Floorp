@@ -1086,7 +1086,9 @@ char *intl_decode_mime_part2_str(const char *header,
       goto badsyntax;
 
     // Override charset if requested.  Never override labeled UTF-8.
-    if (override_charset && 0 != nsCRT::strcasecmp(charset, "UTF-8")) {
+    // Use default charset instead of UNKNOWN-8BIT
+    if ((override_charset && 0 != nsCRT::strcasecmp(charset, "UTF-8")) ||
+        (default_charset && 0 == nsCRT::strcasecmp(charset, "UNKNOWN-8BIT"))) {
       PL_strncpy(charset, default_charset, sizeof(charset)-1);
       charset[sizeof(charset)-1] = '\0';
     }
