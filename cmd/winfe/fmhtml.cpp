@@ -254,11 +254,11 @@ void CFormHtmlarea::UseCurrentData()
 			if(m_pWidget)	{
 				//	Determine the default text to set.
 				char *pCurrent = "";
-				if(GetElementHtmlareaData() && GetElementHtmlareaData()->default_text)	{
-					pCurrent = (char *)GetElementHtmlareaData()->default_text;
+				if(GetElementHtmlareaData() && GetElementHtmlareaData()->current_text)	{
+					pCurrent = (char *)GetElementHtmlareaData()->current_text;
 				}
 				if (pCurrent)
-					EDT_SetDefaultText( m_pWidget->GetContext()->GetContext(), pCurrent );
+					EDT_SetDefaultHTML( m_pWidget->GetContext()->GetContext(), pCurrent );
 				// We have to SetContext to the widget before we SetWindowText
 				// Otherwise, the widget don't know what csid the text is.
 				//m_pWidget->SetContext(GetContext());//, GetElement());
@@ -380,7 +380,10 @@ void CFormHtmlarea::UpdateCurrentData()
 					XP_FREE(GetElementHtmlareaData()->current_text);
 					GetElementHtmlareaData()->current_text = NULL;
 				}
-				EDT_SaveToBuffer(m_pWidget->GetContext()->GetContext(),(char **)&GetElementHtmlareaData()->current_text);
+//                if (EDT_DirtyFlag(m_pWidget->GetContext()->GetContext()))
+//                {
+				    EDT_SaveToBuffer(m_pWidget->GetContext()->GetContext(),(char **)&GetElementHtmlareaData()->current_text);
+//                }
 			}
 		}
 		else if(GetContext()->IsPureDCContext())	
