@@ -472,70 +472,71 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
 
   nsresult result = NS_OK;
 
-  if (aTokenizer && mSink && aParser) {
+  if (aTokenizer && aParser) {
     nsITokenizer*  oldTokenizer = mTokenizer;
 
     mTokenizer      = aTokenizer;
     mParser         = (nsParser*)aParser;
     mTokenAllocator = mTokenizer->GetTokenAllocator();
     
+    if (mSink) {
+      if (mBodyContext->GetCount() == 0) {
+        CStartToken* theToken=nsnull;
+        if(ePlainText==mDocType) {
+          //we do this little trick for text files, in both normal and viewsource mode...
+          theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_pre));
+          if(theToken) {
+            mTokenizer->PushTokenFront(theToken);
+          }
+        }
 
-    if (mBodyContext->GetCount() == 0) {
-      CStartToken* theToken=nsnull;
-      if(ePlainText==mDocType) {
-        //we do this little trick for text files, in both normal and viewsource mode...
-        theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_pre));
-        if(theToken) {
+        // always open a body if frames are disabled....
+        if(!(mFlags & NS_DTD_FLAG_FRAMES_ENABLED)) {
+          theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_LITERAL_STRING("body")));
           mTokenizer->PushTokenFront(theToken);
         }
-      }
-
-      // always open a body if frames are disabled....
-      if(!(mFlags & NS_DTD_FLAG_FRAMES_ENABLED)) {
-        theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_LITERAL_STRING("body")));
-        mTokenizer->PushTokenFront(theToken);
-      }
-        //if the content model is empty, then begin by opening <html>...
-      theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_LITERAL_STRING("html")));
-      if(theToken) {
-        mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack.
-      }
-    }
-    
-    mSink->WillProcessTokens();
-
-    while (NS_SUCCEEDED(result)) {
-      if (!(mFlags & NS_DTD_FLAG_STOP_PARSING)) {
-        CToken* theToken = mTokenizer->PopToken();
-        if (theToken) { 
-          result = HandleToken(theToken,aParser);
+          //if the content model is empty, then begin by opening <html>...
+        theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_LITERAL_STRING("html")));
+        if(theToken) {
+          mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack.
         }
-        else break;
       }
-      else {
-        result = NS_ERROR_HTMLPARSER_STOPPARSING;
-        break;
-      }
+    
+      mSink->WillProcessTokens();
 
-      if ((NS_ERROR_HTMLPARSER_INTERRUPTED == mSink->DidProcessAToken())) {
-        // The content sink has requested that DTD interrupt processing tokens
-        // So we need to make sure the parser is in a state where it can be
-        // interrupted. 
-        // The mParser->CanInterrupt will return TRUE if BuildModel was called
-        // from a place in the parser where it prepared to handle a return value of
-        // NS_ERROR_HTMLPARSER_INTERRUPTED.
-        // If the parser has mPrevContext then it may be processing
-        // Script so we should not allow it to be interrupted.
-        
-        if ((mParser->CanInterrupt()) && 
-          (nsnull == mParser->PeekContext()->mPrevContext) && 
-          (eHTMLTag_unknown==mSkipTarget)) {     
-          result = NS_ERROR_HTMLPARSER_INTERRUPTED;
+      while (NS_SUCCEEDED(result)) {
+        if (!(mFlags & NS_DTD_FLAG_STOP_PARSING)) {
+          CToken* theToken = mTokenizer->PopToken();
+          if (theToken) { 
+            result = HandleToken(theToken,aParser);
+          }
+          else break;
+        }
+        else {
+          result = NS_ERROR_HTMLPARSER_STOPPARSING;
           break;
         }
-      }
-    }//while
-    mTokenizer = oldTokenizer;
+
+        if ((NS_ERROR_HTMLPARSER_INTERRUPTED == mSink->DidProcessAToken())) {
+          // The content sink has requested that DTD interrupt processing tokens
+          // So we need to make sure the parser is in a state where it can be
+          // interrupted. 
+          // The mParser->CanInterrupt will return TRUE if BuildModel was called
+          // from a place in the parser where it prepared to handle a return value of
+          // NS_ERROR_HTMLPARSER_INTERRUPTED.
+          // If the parser has mPrevContext then it may be processing
+          // Script so we should not allow it to be interrupted.
+        
+          if ((mParser->CanInterrupt()) && 
+            (nsnull == mParser->PeekContext()->mPrevContext) && 
+            (eHTMLTag_unknown==mSkipTarget)) {     
+            result = NS_ERROR_HTMLPARSER_INTERRUPTED;
+            break;
+          }
+        }
+      }//while
+      mTokenizer = oldTokenizer;
+    }
   }
 
   return result;
