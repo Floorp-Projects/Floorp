@@ -855,7 +855,7 @@ public:
   NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle);
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList);
-  NS_IMETHOD ReconstructStyleData();
+  NS_IMETHOD ReconstructStyleData(PRBool aRebuildRuleTree);
   NS_IMETHOD SetPreferenceStyleRules(PRBool aForceReflow);
   NS_IMETHOD EnablePrefStyleRules(PRBool aEnable, PRUint8 aPrefType=0xFF);
   NS_IMETHOD ArePrefStyleRulesEnabled(PRBool& aEnabled);
@@ -1904,7 +1904,11 @@ PresShell::SelectAlternateStyleSheet(const nsString& aSheetTitle)
         }
       }
     }
-    ReconstructFrames();
+    // We don't need to rebuild the
+    // rule tree, since no rule nodes have been rendered invalid by the
+    // addition of new rule content.  They can simply lurk in the tree
+    // until the stylesheet is enabled once more.
+    return ReconstructStyleData(PR_FALSE);
   }
   return NS_OK;
 }
@@ -5323,7 +5327,7 @@ FlushMiscWidgetInfo(nsStyleChangeList& aChangeList, nsIPresContext* aPresContext
 }
 
 NS_IMETHODIMP
-PresShell::ReconstructStyleData()
+PresShell::ReconstructStyleData(PRBool aRebuildRuleTree)
 {
   nsIFrame* rootFrame;
   GetRootFrame(&rootFrame);
@@ -5346,17 +5350,22 @@ PresShell::ReconstructStyleData()
   // Now handle some of our more problematic widgets (and also deal with
   // skin XBL changing).
   nsStyleChangeList changeList;
-  FlushMiscWidgetInfo(changeList, mPresContext, rootFrame);
-  cssFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
-  changeList.Clear();
+  if (aRebuildRuleTree) {
+    // Handle those widgets that have special style contexts cached
+    // that will point to invalid rule nodes following a rule tree
+    // reconstruction.
+    FlushMiscWidgetInfo(changeList, mPresContext, rootFrame);
+    cssFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
+    changeList.Clear();
 
-  // Clear all undisplayed content in the undisplayed content map.
-  // These cached style contexts will no longer be valid following
-  // a full rule tree reconstruct.
-  frameManager->ClearUndisplayedContentMap();
+    // Clear all undisplayed content in the undisplayed content map.
+    // These cached style contexts will no longer be valid following
+    // a full rule tree reconstruct.
+    frameManager->ClearUndisplayedContentMap();
 
-  // Now do a complete re-resolve of our style tree.
-  set->BeginRuleTreeReconstruct();
+    // Now do a complete re-resolve of our style tree.
+    set->BeginRuleTreeReconstruct();
+  }
  
   PRInt32 frameChange = NS_STYLE_HINT_NONE;
   frameManager->ComputeStyleChangeFor(mPresContext, rootFrame, 
@@ -5368,7 +5377,8 @@ PresShell::ReconstructStyleData()
   else
     cssFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
 
-  set->EndRuleTreeReconstruct();
+  if (aRebuildRuleTree)
+    set->EndRuleTreeReconstruct();
   return NS_OK;
 }
 
@@ -5376,7 +5386,10 @@ NS_IMETHODIMP
 PresShell::StyleSheetAdded(nsIDocument *aDocument,
                            nsIStyleSheet* aStyleSheet)
 {
-  return ReconstructFrames();
+  // If style information is being added, we don't need to rebuild the
+  // rule tree, since no rule nodes have been rendered invalid by the
+  // addition of new rule content.
+  return ReconstructStyleData(PR_FALSE);
 }
 
 NS_IMETHODIMP 
@@ -5384,11 +5397,8 @@ PresShell::StyleSheetRemoved(nsIDocument *aDocument,
                              nsIStyleSheet* aStyleSheet)
 {
   // XXXdwh We'd like to be able to use ReconstructStyleData in all the
-  // other style sheet added/changed calls, but it doesn't
-  // quite work because of HTML tables.
-  // See bug 115787 for a testcase and example.  Track this bug
-  // to follow progress on using ReconstructStyleData everywhere.
-  return ReconstructStyleData();
+  // other style sheet calls, but it doesn't quite work because of HTML tables.
+  return ReconstructStyleData(PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -5410,8 +5420,12 @@ PresShell::StyleSheetDisabledStateChanged(nsIDocument *aDocument,
     rv = mStyleSet->RemoveBodyFixupRule(aDocument);
     if (NS_FAILED(rv)) return rv;
   }
-  // rebuild the frame-world
-  return ReconstructFrames();
+
+  // We don't need to rebuild the
+  // rule tree, since no rule nodes have been rendered invalid by the
+  // addition of new rule content.  They can simply lurk in the tree
+  // until the stylesheet is enabled once more.
+  return ReconstructStyleData(PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -5441,8 +5455,11 @@ PresShell::StyleRuleAdded(nsIDocument *aDocument,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  // XXX For now reconstruct everything
-  return ReconstructFrames();
+
+  // We don't need to rebuild the
+  // rule tree, since no rule nodes have been rendered invalid by the
+  // addition of new rule content.  
+  return ReconstructStyleData(PR_FALSE);
 }
 
 NS_IMETHODIMP
