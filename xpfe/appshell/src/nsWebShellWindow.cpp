@@ -370,7 +370,7 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
   }
 
   mWindow->SetClientData(this);
-  mWindow->Create(parentWidget,                       // Parent nsIWidget
+  mWindow->Create((nsIWidget *)parentWidget,          // Parent nsIWidget
                   r,                                  // Widget dimensions
                   nsWebShellWindow::HandleEvent,      // Event handler function
                   nsnull,                             // Device context
