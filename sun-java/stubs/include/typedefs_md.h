@@ -28,18 +28,21 @@
 
 PR_BEGIN_EXTERN_C
 
-#if (defined(__sun) && !defined(SOLARIS2_6)) || defined(HPUX9) || defined(HPUX10_10) || defined(XP_PC) || !defined(AIX) || defined(OSF1) || defined(XP_MAC) || defined(SONY) || defined(SNI) || defined(UNIXWARE) || defined(LINUX) || defined(DGUX)
+#ifndef HAVE_INT16_T
 typedef int16 int16_t;
+#endif
+
+#ifndef HAVE_INT32_T
 typedef int32 int32_t;
 #endif
 
-#if !defined(IRIX6_2) && !defined(IRIX6_3) && !defined(SOLARIS2_6) && !defined(HPUX10_20) && !defined(HPUX10_30) && !defined(HPUX11) && !defined(AIX)
+#ifndef HAVE_UINT16_T
 typedef uint16 uint16_t;
 #ifndef	_UINT32_T
 #define	_UINT32_T
 typedef uint32 uint32_t;
-#endif /* _UINT32_T */
-#endif /* !defined(IRIX6_2) && !defined(IRIX6_3) && !defined(SOLARIS2_6) */
+#endif
+#endif
 
 typedef prword_t uintVP_t; /* unsigned that is same size as a void pointer */
 
@@ -56,15 +59,16 @@ typedef int64 int64_t;
 #if defined(XP_PC) || (defined(__sun) && !defined(SVR4)) || defined(HPUX) || defined(LINUX) || defined(BSDI)  /* || defined(XP_MAC) */
 typedef unsigned int uint_t;
 #elif defined(XP_MAC)
-	/* we have to push/pop to avoid breaking existing projects that
-		have "treat warnings as errors" on. This is two, two, TWO hacks in one! (pinkerton) */
-	#pragma warning_errors off
-	#ifndef __OPENTRANSPORT__
-	typedef unsigned long uint_t;	/* this is already declared in OpenTransport.h, but we don't want to drag in
-										all the other defines present there. This is a bad solution, but the
-										least bad given the alternatives. */
-	#endif /* __OPENTRANSPORT__ */
-	#pragma warning_errors reset
+/* we have to push/pop to avoid breaking existing projects that
+** have "treat warnings as errors" on. This is two, two, TWO hacks in one! (pinkerton)
+*/
+#pragma warning_errors off
+#ifndef __OPENTRANSPORT__
+typedef unsigned long uint_t;	/* this is already declared in OpenTransport.h, but we don't want to drag in
+					all the other defines present there. This is a bad solution, but the
+					least bad given the alternatives. */
+#endif /* __OPENTRANSPORT__ */
+#pragma warning_errors reset
 #endif
 
 #if defined(XP_PC) && !defined(XP_OS2)
