@@ -809,14 +809,7 @@ nscoord nsTableOuterFrame::ComputeAvailableTableWidth(const nsHTMLReflowState& a
       maxWidth = aReflowState.availableWidth;
       break;
     }
-  
-    // Subtract out border and padding
-    const nsStyleSpacing* spacing =
-      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-    nsMargin borderPadding;
-    spacing->CalcBorderPaddingFor(this, borderPadding);
-  
-    maxWidth -= borderPadding.left + borderPadding.right;
+
     if (maxWidth <= 0) {
       // Nonsense style specification
       maxWidth = 0;
