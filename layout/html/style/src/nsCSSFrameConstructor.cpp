@@ -6220,10 +6220,15 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
     }
     // Create the block frame
     rv = NS_NewBlockFrame(aPresShell, &newFrame);
-    if (NS_SUCCEEDED(rv)) {
-      // That worked so construct the block and its children
+    if (NS_SUCCEEDED(rv)) { // That worked so construct the block and its children
+      nsPseudoFrames savePseudo;
+      aState.mPseudoFrames.Reset(&savePseudo);
       rv = ConstructBlock(aPresShell, aPresContext, aState, aDisplay, aContent,
                           adjParentFrame, aStyleContext, newFrame);
+      if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+        ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+      }
+      aState.mPseudoFrames = savePseudo;
     }
   }
   // See if it's an inline frame of some sort
@@ -6234,11 +6239,16 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
     }
     // Create the inline frame
     rv = NS_NewInlineFrame(aPresShell, &newFrame);
-    if (NS_SUCCEEDED(rv)) {
-      // That worked so construct the inline and its children
+    if (NS_SUCCEEDED(rv)) { // That worked so construct the inline and its children
+      nsPseudoFrames savePseudo;
+      aState.mPseudoFrames.Reset(&savePseudo);
       rv = ConstructInline(aPresShell, aPresContext, aState, aDisplay, aContent,
                            adjParentFrame, aStyleContext, PR_FALSE, newFrame,
                            &newBlock, &nextInline);
+      if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+        ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+      }
+      aState.mPseudoFrames = savePseudo;
     }
 
     // To keep the hash table small don't add inline frames (they're
