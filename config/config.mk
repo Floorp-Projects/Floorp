@@ -436,28 +436,6 @@ endif
 endif
 
 
-# Set link flags according to whether we want a console.
-ifdef MOZ_WINCONSOLE
-ifeq ($(MOZ_WINCONSOLE),1)
-ifeq ($(MOZ_OS2_TOOLS),EMX)
-BIN_FLAGS	:= -Zlinker /PM:VIO -Zlinker /Stack:0x30000
-endif
-ifeq ($(OS_ARCH),WINNT)
-WIN32_EXE_LDFLAGS	+= /SUBSYSTEM:CONSOLE
-endif
-else # MOZ_WINCONSOLE
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-LDFLAGS += /PM:PM
-endif
-ifeq ($(MOZ_OS2_TOOLS),EMX)
-BIN_FLAGS	:= -Zlinker /PM:PM -Zlinker /Stack:0x30000
-endif
-ifeq ($(OS_ARCH),WINNT)
-WIN32_EXE_LDFLAGS	+= /SUBSYSTEM:WINDOWS
-endif
-endif
-endif
-
 #
 # Personal makefile customizations go in these optional make include files.
 #
@@ -711,6 +689,28 @@ MKDEPEND	= $(MOZ_NATIVE_MAKEDEPEND)
 else
 MKDEPEND_DIR	= $(CONFIG_TOOLS)/mkdepend
 MKDEPEND	= $(MKDEPEND_DIR)/mkdepend$(BIN_SUFFIX)
+endif
+
+# Set link flags according to whether we want a console.
+ifdef MOZ_WINCONSOLE
+ifeq ($(MOZ_WINCONSOLE),1)
+ifeq ($(MOZ_OS2_TOOLS),EMX)
+BIN_FLAGS	:= -Zlinker /PM:VIO -Zlinker /Stack:0x30000
+endif
+ifeq ($(OS_ARCH),WINNT)
+WIN32_EXE_LDFLAGS	+= /SUBSYSTEM:CONSOLE
+endif
+else # MOZ_WINCONSOLE
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+LDFLAGS += /PM:PM
+endif
+ifeq ($(MOZ_OS2_TOOLS),EMX)
+BIN_FLAGS	:= -Zlinker /PM:PM -Zlinker /Stack:0x30000
+endif
+ifeq ($(OS_ARCH),WINNT)
+WIN32_EXE_LDFLAGS	+= /SUBSYSTEM:WINDOWS
+endif
+endif
 endif
 
 #
