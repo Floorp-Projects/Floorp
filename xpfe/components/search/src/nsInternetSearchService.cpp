@@ -653,7 +653,6 @@ void
 InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 {
 	InternetSearchDataSource *search = NS_STATIC_CAST(InternetSearchDataSource *, aClosure);
-	nsresult rv;
 	if (!search)	return;
 
 #ifndef	REPEATING_TIMERS
@@ -662,6 +661,9 @@ InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 		mTimer->Cancel();
 		mTimer = nsnull;
 	}
+
+	nsresult rv;
+
 	mTimer = do_CreateInstance("component://netscape/timer", &rv);
 	if (NS_FAILED(rv) || (!mTimer)) return;
 	mTimer->Init(InternetSearchDataSource::FireTimer, search,
@@ -3043,7 +3045,7 @@ InternetSearchDataSource::MapEncoding(const nsString &numericEncoding, nsString 
 		{	"1286", "windows-1256"	},
 		{	"1536", "us-ascii"	},
 		{	"1584", "GB2312"	},
-		{	"1585", "x-gbk"	},
+		{	"1585", "x-gbk"		},
 		{	"1600", "EUC-KR"	},
 		{	"2080", "ISO-2022-JP"	},
 		{	"2096", "ISO-2022-CN"	},
@@ -3054,14 +3056,14 @@ InternetSearchDataSource::MapEncoding(const nsString &numericEncoding, nsString 
 		{	"2368", "EUC-KR"	},
 		{	"2561", "Shift_JIS"	},
 		{	"2562", "KOI8-R"	},
-		{	"2563", "Big5"	},
+		{	"2563", "Big5"		},
 		{	"2565", "HZ-GB-2312"	},
 
 		{	nsnull, nsnull		}
 	};
 
-	// make "UTF-8" as the default
-	stringEncoding.AssignWithConversion("UTF-8");
+	// make "ISO-8859-1" as the default (not "UTF-8")
+	stringEncoding= NS_ConvertASCIItoUCS2("ISO-8859-1");
 
 	PRUint32	loop = 0;
 	while (encodingList[loop].numericEncoding != nsnull)
