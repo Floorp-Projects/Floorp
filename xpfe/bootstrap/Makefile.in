@@ -52,7 +52,6 @@ LIBS = \
 	-lftpurl	\
 	-lremoturl	\
 	-lxp		\
-	-lnetutil	\
 	-lnetcache	\
 	-lnetcnvts	\
 	-lmimetype	\
