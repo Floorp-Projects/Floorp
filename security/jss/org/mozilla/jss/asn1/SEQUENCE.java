@@ -494,7 +494,7 @@ public static class Template implements ASN1Template {
             this.implicitTag = implicitTag;
         }
 
-        private boolean doesProduceOutput;
+        private boolean doesProduceOutput = true;
         boolean producesOutput() {
             return doesProduceOutput;
         }
