@@ -2676,6 +2676,17 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 	PRInt32 status = 0;
 	nsXPIDLCString cachedUsername;
 
+	if (!m_newsFolder && m_nntpServer) {
+		nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_nntpServer);
+		if (m_nntpServer) {
+			nsCOMPtr<nsIFolder> rootFolder;
+			rv = server->GetRootFolder(getter_AddRefs(rootFolder));
+			if (NS_SUCCEEDED(rv) && rootFolder) {
+				m_newsFolder = do_QueryInterface(rootFolder);
+			}
+		}
+    }
+
     NS_ASSERTION(m_newsFolder, "no m_newsFolder");
     if (m_newsFolder) {
 	    rv = m_newsFolder->GetGroupUsername(getter_Copies(cachedUsername));
