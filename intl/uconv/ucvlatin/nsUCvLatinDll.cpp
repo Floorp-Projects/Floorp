@@ -918,6 +918,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports * aServMgr,
 
   char name[128];
   char progid[128];
+  char * cid_string;
   for (i=0; i<ARRAY_SIZE; i++) {
     if(0==PL_strcmp(g_FactoryData[i].mCharsetSrc,"Unicode"))
     {
@@ -938,8 +939,9 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports * aServMgr,
 
     // register component info
     // XXX take these KONSTANTS out of here
-    // XXX free the string from "ToString()"
-    sprintf(buff, "%s/%s", "software/netscape/intl/uconv", (g_FactoryData[i].mCID -> ToString()));
+    cid_string = g_FactoryData[i].mCID->ToString();
+    sprintf(buff, "%s/%s", "software/netscape/intl/uconv", cid_string);
+    nsCRT::free(cid_string);
     res = registry -> AddSubtree(nsIRegistry::Common, buff, &key);
     if (NS_FAILED(res)) goto done;
     res = registry -> SetString(key, "source", g_FactoryData[i].mCharsetSrc);
