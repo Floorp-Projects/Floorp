@@ -565,8 +565,8 @@ SrcNotes(JSContext *cx, JSFunction *fun )
 		       (uintN) js_GetSrcNoteOffset(sn, 1),
 		       (uintN) js_GetSrcNoteOffset(sn, 2));
 		break;
-	      case SRC_COMMA:
 	      case SRC_PCBASE:
+	      case SRC_PCDELTA:
 		printf(" offset %u", (uintN) js_GetSrcNoteOffset(sn, 0));
 		break;
 	      case SRC_LABEL:

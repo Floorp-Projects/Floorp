@@ -938,7 +938,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    todo = -2;
 		    goto do_forloop;
 
-		  case SRC_COMMA:
+		  case SRC_PCDELTA:
 		    /* Pop and save to avoid blowing stack depth budget. */
 		    lval = JS_strdup(cx, POP_STR());
 		    if (!lval)
@@ -1681,7 +1681,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 			off2 = 0;
 		    } else {
 			sn = js_GetSrcNote(jp->script, pc2);
-			PR_ASSERT(sn && SN_TYPE(sn) == SRC_COMMA);
+			PR_ASSERT(sn && SN_TYPE(sn) == SRC_PCDELTA);
 			off2 = js_GetSrcNoteOffset(sn, 0);
 		    }
 		}
@@ -1704,7 +1704,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		    table[i].offset = caseOff + GET_JUMP_OFFSET(pc2);
 		    if (*pc2 == JSOP_CASE) {
 			sn = js_GetSrcNote(jp->script, pc2);
-			PR_ASSERT(sn && SN_TYPE(sn) == SRC_COMMA);
+			PR_ASSERT(sn && SN_TYPE(sn) == SRC_PCDELTA);
 			off2 = js_GetSrcNoteOffset(sn, 0);
 		    }
 		}
@@ -1860,7 +1860,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		sn = js_GetSrcNote(jp->script, pc);
 		todo = Sprint(&ss->sprinter, "%s%s%c",
 			      rval,
-			      (sn && SN_TYPE(sn) == SRC_COMMA) ? ", " : "",
+			      (sn && SN_TYPE(sn) == SRC_PCDELTA) ? ", " : "",
 			      /* [balance */
 			      (*rval == '{') ? '}' : ']');
 		break;

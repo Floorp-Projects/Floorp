@@ -863,7 +863,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 		}
 		if (pn3->pn_type == TOK_DEFAULT)
 		    continue;
-		caseNoteIndex = js_NewSrcNote2(cx, cg, SRC_COMMA, 0);
+		caseNoteIndex = js_NewSrcNote2(cx, cg, SRC_PCDELTA, 0);
 		if (caseNoteIndex < 0)
 		    return JS_FALSE;
 		off = js_Emit3(cx, cg, JSOP_CASE, 0, 0);
@@ -1548,7 +1548,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 	    if (!pn2->pn_next)
 		break;
 	    off = tmp;
-	    noteIndex = js_NewSrcNote2(cx, cg, SRC_COMMA, 0);
+	    noteIndex = js_NewSrcNote2(cx, cg, SRC_PCDELTA, 0);
 	    if (noteIndex < 0 ||
 		js_Emit1(cx, cg, JSOP_POP) < 0) {
 		return JS_FALSE;
@@ -1626,7 +1626,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
       case TOK_COMMA:
 	/*
-	 * Emit SRC_COMMA notes on each JSOP_POP between comma operands.
+	 * Emit SRC_PCDELTA notes on each JSOP_POP between comma operands.
 	 * These notes help the decompiler bracket the bytecodes generated
 	 * from each sub-expression that follows a comma.
 	 */
@@ -1642,7 +1642,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 	    if (!pn2->pn_next)
 		break;
 	    off = tmp;
-	    noteIndex = js_NewSrcNote2(cx, cg, SRC_COMMA, 0);
+	    noteIndex = js_NewSrcNote2(cx, cg, SRC_PCDELTA, 0);
 	    if (noteIndex < 0 ||
 		js_Emit1(cx, cg, JSOP_POP) < 0) {
 		return JS_FALSE;
@@ -2016,7 +2016,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
 
 	if (pn->pn_extra) {
 	    /* Emit a source note so we know to decompile an extra comma. */
-	    if (js_NewSrcNote(cx, cg, SRC_COMMA) < 0)
+	    if (js_NewSrcNote(cx, cg, SRC_PCDELTA) < 0)
 		return JS_FALSE;
 	}
 
@@ -2170,7 +2170,7 @@ JS_FRIEND_DATA(const char *) js_SrcNoteName[] = {
     "for",
     "continue",
     "var",
-    "comma",
+    "pcdelta",
     "assignop",
     "cond",
     "paren",
@@ -2198,7 +2198,7 @@ uint8 js_SrcNoteArity[] = {
     3,  /* SRC_FOR */
     0,  /* SRC_CONTINUE */
     0,  /* SRC_VAR */
-    1,  /* SRC_COMMA */
+    1,  /* SRC_PCDELTA */
     0,  /* SRC_ASSIGNOP */
     0,  /* SRC_COND */
     0,  /* SRC_PAREN */
