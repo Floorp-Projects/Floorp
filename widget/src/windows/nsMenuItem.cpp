@@ -308,7 +308,7 @@ NS_IMETHODIMP nsMenuItem::GetDOMNode(nsIDOMNode ** aDOMNode)
 }
 
 //----------------------------------------------------------------------
-NS_IMETHODIMP nsMenuItem::SetDOMNode(nsIDOMNode ** aDOMNode)
+NS_IMETHODIMP nsMenuItem::SetDOMNode(nsIDOMNode * aDOMNode)
 {
   return NS_OK;
 }
