@@ -3840,7 +3840,8 @@ NS_IMETHODIMP nsMsgDBFolder::GetNumNewMessages(PRBool deep, PRInt32 *aNumNewMess
 {
   NS_ENSURE_ARG_POINTER(aNumNewMessages);
 
-  PRInt32 numNewMessages = mNumNewBiffMessages;
+  PRInt32 numNewMessages = (!deep || ! (mFlags & MSG_FOLDER_FLAG_VIRTUAL))
+    ? mNumNewBiffMessages : 0;
   if (deep)
   {
     PRUint32 count;

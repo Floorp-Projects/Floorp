@@ -2223,7 +2223,7 @@ nsMsgAccountManager::findIdentitiesForServer(nsISupports* element, void *aData)
   if (NS_FAILED(rv)) return PR_TRUE;
   nsXPIDLCString serverKey;
     
-  NS_ASSERTION(thisServer, "thisServer is null");
+//  NS_ASSERTION(thisServer, "thisServer is null");
   NS_ASSERTION(entry, "entry is null");
   NS_ASSERTION(entry->server, "entry->server is null");
   // if this happens, bail.
@@ -2690,6 +2690,7 @@ NS_IMETHODIMP VirtualFolderChangeListener::OnHdrChange(nsIMsgDBHdr *aHdrChanged,
     nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
 
     rv = m_virtualFolder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(virtDatabase));
+    NS_ENSURE_SUCCESS(rv, rv);
     PRInt32 totalDelta = 0,  unreadDelta = 0;
     if (oldMatch != newMatch)
     {
@@ -2713,6 +2714,14 @@ NS_IMETHODIMP VirtualFolderChangeListener::OnHdrChange(nsIMsgDBHdr *aHdrChanged,
       dbFolderInfo->ChangeNumUnreadMessages(unreadDelta);
     if (totalDelta)
       dbFolderInfo->ChangeNumMessages(totalDelta);
+    if (unreadDelta == -1 && aOldFlags & MSG_FLAG_NEW)
+    {
+      PRInt32 numNewMessages;
+      m_virtualFolder->GetNumNewMessages(PR_FALSE, &numNewMessages);
+      m_virtualFolder->SetNumNewMessages(numNewMessages - 1);
+      if (numNewMessages == 1)
+        m_virtualFolder->SetHasNewMessages(PR_FALSE);
+    }
     m_virtualFolder->UpdateSummaryTotals(PR_TRUE); // force update from db.
     virtDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
   }
@@ -2738,6 +2747,16 @@ NS_IMETHODIMP VirtualFolderChangeListener::OnHdrDeleted(nsIMsgDBHdr *aHdrDeleted
     if (!msgHdrIsRead)
       dbFolderInfo->ChangeNumUnreadMessages(-1);
     dbFolderInfo->ChangeNumMessages(-1);
+    PRUint32 hdrFlags;
+    aHdrDeleted->GetFlags(&hdrFlags);
+    if (hdrFlags & MSG_FLAG_NEW)
+    {
+      PRInt32 numNewMessages;
+      m_virtualFolder->GetNumNewMessages(PR_FALSE, &numNewMessages);
+      m_virtualFolder->SetNumNewMessages(numNewMessages - 1);
+      if (numNewMessages == 1)
+        m_virtualFolder->SetHasNewMessages(PR_FALSE);
+    }
     m_virtualFolder->UpdateSummaryTotals(PR_TRUE); // force update from db.
     virtDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
   }
@@ -2765,7 +2784,12 @@ NS_IMETHODIMP VirtualFolderChangeListener::OnHdrAdded(nsIMsgDBHdr *aNewHdr, nsMs
     if (!msgHdrIsRead)
       dbFolderInfo->ChangeNumUnreadMessages(1);
     if (msgFlags & MSG_FLAG_NEW)
+    {
+      PRInt32 numNewMessages;
+      m_virtualFolder->GetNumNewMessages(PR_FALSE, &numNewMessages);
       m_virtualFolder->SetHasNewMessages(PR_TRUE);
+      m_virtualFolder->SetNumNewMessages(numNewMessages + 1);
+    }
     dbFolderInfo->ChangeNumMessages(1);
     m_virtualFolder->UpdateSummaryTotals(true); // force update from db.
     virtDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
