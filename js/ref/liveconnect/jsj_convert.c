@@ -260,6 +260,74 @@ if (!JSVAL_IS_NUMBER(v)) {                                               \
             java_value->member_name = member_name;                       \
     }
 
+#if XP_MAC
+
+// on MRJ jlong is typedef'd to wide, which is a struct.
+#include <Math64.h>
+
+static jsint jlong_to_jsint(jlong lvalue)
+{
+	SInt64 val = WideToSInt64(lvalue);
+	return S32Set(val);
+}
+
+static jlong jsint_to_jlong(jsint ivalue)
+{
+	SInt64 val = S64Set(ivalue);
+	return SInt64ToWide(val);
+}
+
+static jdouble jlong_to_jdouble(lvalue)
+{
+	SInt64 val = WideToSInt64(lvalue);
+	return SInt64ToLongDouble(val);
+}
+
+static jlong jdouble_to_jlong(jdouble dvalue)
+{
+	SInt64 val = LongDoubleToSInt64(dvalue);
+	return SInt64ToWide(val);
+}
+
+#define JSVAL_TO_JLONG_JVALUE(member_name, member_type, jsvalue, java_value) \
+if (!JSVAL_IS_NUMBER(jsvalue)) {                                         \
+        if (!JS_ConvertValue(cx, jsvalue, JSTYPE_NUMBER, &jsvalue))      \
+	    goto conversion_error;                                           \
+	(*cost)++;                                                           \
+    }                                                                    \
+    {                                                                    \
+        member_type member_name;                                         \
+                                                                         \
+        if (JSVAL_IS_INT(jsvalue)) {                                     \
+            jsint ival = JSVAL_TO_INT(jsvalue);                          \
+            member_name = jsint_to_jlong(ival);                          \
+                                                                         \
+            /* Check to see if the jsval's magnitude is too large to be  \
+               representable in the target java type */                  \
+            if (jlong_to_jsint(member_name) != ival)                     \
+                goto conversion_error;                                   \
+        } else {                                                         \
+            jdouble dval = *JSVAL_TO_DOUBLE(jsvalue);                    \
+            member_name = jdouble_to_jlong(dval);                        \
+                                                                         \
+            /* Don't allow a non-integral number */                      \
+            if (jlong_to_jdouble(member_name) != dval)                   \
+                goto conversion_error;                                   \
+        }                                                                \
+        if (java_value)                                                  \
+            java_value->member_name = member_name;                       \
+    }
+
+#else
+
+#define jlong_to_jsint(lvalue) ((jsint) lvalue)
+#define jsint_to_jlong(ivalue) ((jlong) ivalue)
+
+#define jlong_to_jdouble(lvalue) ((jdouble) lvalue)
+#define jdouble_to_jlong(dvalue) ((jlong) dvalue)
+
+#endif
+
 /*
  * Convert a JS value to a Java value of the given type signature.  The cost
  * variable is incremented if coercion is required, e.g. the source value is
@@ -311,7 +379,11 @@ jsj_ConvertJSValueToJavaValue(JSContext *cx, JNIEnv *jEnv, jsval v,
         break;
 
     case JAVA_SIGNATURE_LONG:
+#if XP_MAC
+		JSVAL_TO_JLONG_JVALUE(j, jlong, v, java_value);
+#else
         JSVAL_TO_INTEGRAL_JVALUE(long, j, jlong, v, java_value);
+#endif
         break;
     
     case JAVA_SIGNATURE_FLOAT:
@@ -638,7 +710,7 @@ jsj_ConvertJavaValueToJSValue(JSContext *cx, JNIEnv *jEnv,
         return JS_TRUE;
 
     case JAVA_SIGNATURE_LONG:
-        return JS_NewDoubleValue(cx, (jsdouble)java_value->j, vp);
+    	return JS_NewDoubleValue(cx, jlong_to_jdouble(java_value->j), vp);
   
     case JAVA_SIGNATURE_FLOAT:
         return JS_NewDoubleValue(cx, java_value->f, vp);
