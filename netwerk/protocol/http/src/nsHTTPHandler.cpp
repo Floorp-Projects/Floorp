@@ -1644,9 +1644,6 @@ nsHTTPHandler::PrefsChanged(const char* pref)
     mPrefs->GetIntPref("network.http.keep-alive.max-connections-per-server",
                 &mMaxAllowedKeepAlivesPerServer);
 
-#if defined(DEBUG_tao_)
-        printf("\n--> nsHTTPHandler::PrefsChanged:pref=%s\n", pref?pref:"null");
-#endif
     if ( (bChangedAll)|| !PL_strcmp(pref, INTL_ACCEPT_LANGUAGES) ) // intl.accept_languages
     {
         nsXPIDLString acceptLanguages;
@@ -1654,10 +1651,6 @@ nsHTTPHandler::PrefsChanged(const char* pref)
                 getter_Copies(acceptLanguages));
         if (NS_SUCCEEDED(rv))
             SetAcceptLanguages(NS_ConvertUCS2toUTF8(acceptLanguages).get());
-#if defined(DEBUG_tao_)
-        printf("\n--> nsHTTPHandler::PrefsChanged: intl.accept_languages=%s\n",
-               (const char *)NS_ConvertUCS2toUTF8(acceptLanguages));
-#endif
     }
     if ( (bChangedAll)|| !PL_strcmp(pref, INTL_ACCEPT_CHARSET) ) // intl.charset.default
     {
@@ -1666,10 +1659,6 @@ nsHTTPHandler::PrefsChanged(const char* pref)
                 getter_Copies(acceptCharset));
         if (NS_SUCCEEDED(rv))
             SetAcceptCharset(NS_ConvertUCS2toUTF8(acceptCharset).get());
-#if defined(DEBUG_tao)
-        printf("\n--> nsHTTPHandler::PrefsChanged: intl.charset.default=%s\n",
-               (const char *)NS_ConvertUCS2toUTF8(acceptCharset));
-#endif
     }
 
     // general.useragent.override
@@ -1692,10 +1681,6 @@ nsHTTPHandler::PrefsChanged(const char* pref)
         if (NS_SUCCEEDED(rv)) {
             mAppLanguage = NS_ConvertUCS2toUTF8(uval);
             //
-#if defined(DEBUG_tao_)
-            printf("\n--> nsHTTPHandler::PrefsChanged:general.useragent.locale=%s\n",
-                   NS_ConvertUCS2toUTF8(uval).get());
-#endif
             BuildUserAgent();
         }
     }
