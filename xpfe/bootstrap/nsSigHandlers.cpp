@@ -28,6 +28,7 @@
  */
 
 #include <signal.h>
+#include <stdio.h>
 #include "prthread.h"
 #include "plstr.h"
 
@@ -36,6 +37,11 @@
 extern "C" const char * strsignal(int);
 #else
 extern "C" char * strsignal(int);
+#endif
+
+#ifdef NTO
+#include <photon/PhProto.h>
+#include <sys/mman.h>			/* for munlockall() */
 #endif
 
 static char _progname[1024] = "huh?";
@@ -51,7 +57,7 @@ void abnormal_exit_handler(int signum)
   /* Free any shared memory that has been allocated */
   PgShmemCleanup();
 
-#if 1
+#if defined(DEBUG)
   if (    (signum == SIGSEGV)
        || (signum == SIGILL)
 	   || (signum == SIGABRT)
@@ -118,6 +124,10 @@ void InstallUnixSignalHandlers(const char *ProgramName)
   signal(SIGSEGV, abnormal_exit_handler);
   signal(SIGILL,  abnormal_exit_handler);
   signal(SIGABRT, abnormal_exit_handler);
+
+/* Tell the OS it can page any part of this program to virtual memory */
+  munlockall();
+  
 #elif defined(CRAWL_STACK_ON_SIGSEGV)
   signal(SIGSEGV, ah_crap_handler);
   signal(SIGILL, ah_crap_handler);
