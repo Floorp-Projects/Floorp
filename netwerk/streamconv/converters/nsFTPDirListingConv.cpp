@@ -248,7 +248,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
 
             // check first character of ls -l output
             // For example: "dr-x--x--x" is what we're starting with.
-            if (toupper(line[0]) == 'D') {
+            if (line[0] == 'D' || line[0] == 'd') {
                 /* it's a directory */
                 thisEntry->mType = Dir;
                 thisEntry->mSupressSize = PR_TRUE;
@@ -348,7 +348,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
                     thisEntry->mContentLen = atol(size.GetBuffer());
                 }
 
-                thisEntry->mMDTM = ConvertDOSDate(date);
+                ConvertDOSDate(date, thisEntry->mMDTM);
 
                 thisEntry->mName = name;
 			  }
@@ -646,8 +646,8 @@ nsFTPDirListingConv::IsLSDate(char *aCStr) {
 // "Dec 12 1989  " or
 // "FCv 23 1990  " ...
 // Returns 0 on error.
-PRTime
-nsFTPDirListingConv::ConvertUNIXDate(char *aCStr) {
+PRBool
+nsFTPDirListingConv::ConvertUNIXDate(char *aCStr, PRTime& outDate) {
 
     PRExplodedTime curTime;
 
@@ -661,7 +661,7 @@ nsFTPDirListingConv::ConvertUNIXDate(char *aCStr) {
     bcol[3] = '\0';
 
     if ((curTime.tm_month = MonthNumber(bcol)) < 0)
-    	return (PRTime) 0;
+    	return PR_FALSE;
     bcol[3] = tmpChar;
 
     // DAY
@@ -701,11 +701,13 @@ nsFTPDirListingConv::ConvertUNIXDate(char *aCStr) {
         //	--time_info->tm_year;
       }
 
-    return PR_ImplodeTime(&curTime); // compacts the curTime struct into a PRTime (64 bit int)
+    // set the out param
+    outDate = PR_ImplodeTime(&curTime);
+    return PR_TRUE;
 }
 
-PRTime
-nsFTPDirListingConv::ConvertVMSDate(char *aCStr) {
+PRBool
+nsFTPDirListingConv::ConvertVMSDate(char *aCStr, PRTime& outDate) {
 
     PRExplodedTime curTime;
 
@@ -714,7 +716,7 @@ nsFTPDirListingConv::ConvertVMSDate(char *aCStr) {
     char *col;
 
     if ((col = strtok(aCStr, "-")) == NULL)
-    	return (PRTime) 0;
+    	return PR_FALSE;
 
     // DAY
     nsCAutoString intStr(col);
@@ -727,11 +729,11 @@ nsFTPDirListingConv::ConvertVMSDate(char *aCStr) {
     curTime.tm_yday = 0;
 
     if ((col = strtok(nsnull, "-")) == nsnull || (curTime.tm_month = MonthNumber(col)) < 0)
-    	return (PRTime) 0;
+    	return PR_FALSE;
 
     // YEAR
     if ((col = strtok(NULL, " ")) == NULL)               
-    	return (PRTime) 0;
+    	return PR_FALSE;
 
 
     intStr = col;
@@ -739,24 +741,25 @@ nsFTPDirListingConv::ConvertVMSDate(char *aCStr) {
 
     // HOUR
     if ((col = strtok(NULL, ":")) == NULL)               
-    	return (PRTime) 0;
+    	return PR_FALSE;
     
     intStr = col;
     curTime.tm_hour = intStr.ToInteger(&error, 10);
 
     // MINS
     if ((col = strtok(NULL, " ")) == NULL)
-    	return (PRTime) 0;
+    	return PR_FALSE;
 
     intStr = col;
     curTime.tm_min = intStr.ToInteger(&error, 10);
     curTime.tm_sec = 0;
 
-    return PR_ImplodeTime(&curTime);
+    outDate = PR_ImplodeTime(&curTime);
+    return PR_TRUE;
 }
 
-PRTime
-nsFTPDirListingConv::ConvertDOSDate(char *aCStr) {
+PRBool
+nsFTPDirListingConv::ConvertDOSDate(char *aCStr, PRTime& outDate) {
 
     PRExplodedTime curTime;
 
@@ -777,7 +780,8 @@ nsFTPDirListingConv::ConvertDOSDate(char *aCStr) {
     curTime.tm_yday = 0;
     curTime.tm_sec = 0;
 
-    return PR_ImplodeTime(&curTime);
+    outDate = PR_ImplodeTime(&curTime);
+    return PR_TRUE;
 }
 
 nsresult
@@ -794,7 +798,7 @@ nsFTPDirListingConv::ParseLSLine(char *aLine, indexEntry *aEntry) {
 	save_char = *ptr;
     *ptr = '\0';
     if (ptr > aLine+13) {
-        aEntry->mMDTM = ConvertUNIXDate(ptr-12);
+        ConvertUNIXDate(ptr-12, aEntry->mMDTM);
     } else {
 	    // must be a dl listing
 		// unterminate the line
@@ -895,8 +899,15 @@ nsFTPDirListingConv::ParseVMSLine(char *aLine, indexEntry *aEntry) {
             /* Month 
 			 */
             *(cpd+4) = '\0';
-            *(cpd+2) = tolower(*(cpd+2));
-            *(cpd+3) = tolower(*(cpd+3));
+
+            // lowercase these two chars
+            PRInt8 shift = 'A' - 'a';
+            if ( !(*(cpd+2) <= 'z') && !(*(cpd+2) >= 'a') )
+                *(cpd+2) = *(cpd+2) - shift;
+
+            if ( !(*(cpd+3) <= 'z') && !(*(cpd+2) >= 'a') )
+                *(cpd+3) = *(cpd+3) - shift;
+
             sprintf(date, "%.32s ", cpd+1);
             *(cpd+4) = '-';
 
@@ -922,7 +933,7 @@ nsFTPDirListingConv::ParseVMSLine(char *aLine, indexEntry *aEntry) {
                 *(cpd+9) = ' ';
               }
 
-            aEntry->mMDTM = ConvertVMSDate(date);
+            ConvertVMSDate(date, aEntry->mMDTM);
           }
 
         /* get the size 
