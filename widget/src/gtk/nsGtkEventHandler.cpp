@@ -46,7 +46,7 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 #include <X11/Xutil.h>
 
 #ifdef DEBUG_pavlov
-#define DEBUG_EVENTS 1
+//#define DEBUG_EVENTS 1
 #endif
 
 struct EventInfo {
