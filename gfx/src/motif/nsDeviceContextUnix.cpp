@@ -203,10 +203,10 @@ uint8 nsDeviceContextUnix :: AllocColor(uint8 aRed, uint8 aGreen, uint8 aBlue, P
   unsigned long d;
   int dr, dg, db;
   // No color found so look for the closest match
-  for (int i = 0; i < 256; i++) {
-    r = mDeviceColors[i].red >> 8;
-    g = mDeviceColors[i].green >> 8;
-    b = mDeviceColors[i].blue >> 8;
+  for (int colorindex = 0; colorindex < 256; colorindex++) {
+    r = mDeviceColors[colorindex].red >> 8;
+    g = mDeviceColors[colorindex].green >> 8;
+    b = mDeviceColors[colorindex].blue >> 8;
     dr = r - aRed; 
     dg = g - aGreen; 
     db = b - aBlue; 
@@ -216,7 +216,7 @@ uint8 nsDeviceContextUnix :: AllocColor(uint8 aRed, uint8 aGreen, uint8 aBlue, P
     d = (dr << 1) + (dg << 2) + db;
     if (d < distance) {
      distance = d;
-     closest = mDeviceColors[i].pixel;
+     closest = mDeviceColors[colorindex].pixel;
     }
   }
 
@@ -450,6 +450,7 @@ void nsDeviceContextUnix::AllocColors()
       d = XtDisplay((Widget)mWidget);
     }
 
+#if 0
     IL_RGB  reserved[RESERVED_SIZE];
     //memset(reserved, 0, sizeof(reserved));
     // Setup the reserved colors
@@ -459,6 +460,9 @@ void nsDeviceContextUnix::AllocColors()
      reserved[i].blue = sReservedColors[i].blue;
      index[i] = i;
     }
+#else
+    IL_RGB  reserved[1]; //XXX REMOVE THIS here and below
+#endif
 
     IL_ColorMap* colorMap = IL_NewCubeColorMap(reserved, RESERVED_SIZE, COLOR_CUBE_SIZE + RESERVED_SIZE);
 
@@ -469,8 +473,8 @@ void nsDeviceContextUnix::AllocColors()
      XColor xcolor;
      NI_RGB* map = colorSpace->cmap.map;    
 
-     for (PRInt32 i = RESERVED_SIZE; i < (COLOR_CUBE_SIZE + RESERVED_SIZE); i++)     {
-       index[i] = AllocColor(map->red, map->green, map->blue, PR_TRUE);
+     for (PRInt32 colorindex = RESERVED_SIZE; colorindex < (COLOR_CUBE_SIZE + RESERVED_SIZE); colorindex++)     {
+       index[colorindex] = AllocColor(map->red, map->green, map->blue, PR_TRUE);
        map++;
      }
 
