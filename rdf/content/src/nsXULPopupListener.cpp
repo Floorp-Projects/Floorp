@@ -597,7 +597,7 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
   // Handle the _child case for popups and context menus
   nsCOMPtr<nsIDOMElement> popupContent;
 
-  if (identifier.EqualsWithConversion("_child")) {
+  if (identifier == NS_LITERAL_STRING("_child")) {
     nsCOMPtr<nsIContent> popupset;
     nsCOMPtr<nsIContent> popup;
     GetImmediateChild(content, nsXULAtoms::popupset, getter_AddRefs(popupset));
@@ -649,10 +649,10 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
       if (domWindow != nsnull) {
         // Find out if we're anchored.
         nsAutoString anchorAlignment; anchorAlignment.AssignWithConversion("none");
-        mElement->GetAttribute(NS_ConvertASCIItoUCS2("popupanchor"), anchorAlignment);
+        mElement->GetAttribute(NS_LITERAL_STRING("popupanchor"), anchorAlignment);
 
         nsAutoString popupAlignment; popupAlignment.AssignWithConversion("topleft");
-        mElement->GetAttribute(NS_ConvertASCIItoUCS2("popupalign"), popupAlignment);
+        mElement->GetAttribute(NS_LITERAL_STRING("popupalign"), popupAlignment);
 
         PRInt32 xPos = aClientX, yPos = aClientY;
         
@@ -708,8 +708,8 @@ XULPopupListenerImpl :: sTooltipCallback (nsITimer *aTimer, void *aClosure)
         if ( element ) {
           // check that node is enabled before showing tooltip
           nsAutoString disabledState;
-          element->GetAttribute ( NS_ConvertASCIItoUCS2("disabled"), disabledState );
-          if ( !disabledState.EqualsWithConversion("true") ) {
+          element->GetAttribute ( NS_LITERAL_STRING("disabled"), disabledState );
+          if ( disabledState != NS_LITERAL_STRING("true") ) {
             doc->SetTooltipNode ( element );        
             doc->SetPopupNode ( element );        
             self->LaunchPopup (self->mMouseClientX, self->mMouseClientY+21);
