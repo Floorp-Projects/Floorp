@@ -202,24 +202,19 @@ nsRenderingContextPh :: ~nsRenderingContextPh()
 NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
                                            nsIWidget *aWindow)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init with a widget aContext=<%p> aWindow=<%p>\n", aContext, aWindow));
   NS_PRECONDITION(PR_FALSE == mInitialized, "double init");
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init with a widget 2 aContext=<%p> mContext=<%p>\n", aContext, mContext));
 
   nsresult res;
 
   mContext = aContext;
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init with a widget 3 aContext=<%p> mContext=<%p>\n", aContext, mContext));
 
   NS_IF_ADDREF(mContext);
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init with a widget 4 aContext=<%p> mContext=<%p>\n", aContext, mContext));
 
   NS_ASSERTION(mContext,"mContext is NULL 2");
   if (!mContext)
   {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init mContext is NULL 2\n"));
     abort();
   }
   
@@ -234,7 +229,6 @@ NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
 
   PhRid_t    rid = PtWidgetRid( mWidget );
   
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init this=<%p> mWidget=<%p> rid=<%d>\n", this, mWidget, rid ));
 
   if (rid == 0)
   {
@@ -258,7 +252,6 @@ NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
     mSurface = new nsDrawingSurfacePh();
     if (mSurface)
     {
-    //printf("New nsDrawingSurfacePh\n");
       res = mSurface->Init(mGC);
       if (res != NS_OK)
       {
@@ -289,11 +282,6 @@ NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
 NS_IMETHODIMP nsRenderingContextPh :: Init(nsIDeviceContext* aContext,
                                            nsDrawingSurface aSurface)
 {
-
-  //printf ("nsRenderingContextPh::Init  with a surface!!!! %p\n",aSurface);
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Init with a Drawing Surface this=<%p> aContext=<%p> aSurface=<%p>\n", this, aContext, aSurface));
-
   NS_PRECONDITION(PR_FALSE == mInitialized, "double init");
 
   mContext = aContext;
@@ -385,8 +373,6 @@ PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::UnlockDrawingSurface\n"))
 
 NS_IMETHODIMP nsRenderingContextPh :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SelectOffScreenDrawingSurface this=<%p> aSurface=<%p>\n", this, aSurface));
-
   if (nsnull==aSurface)
   {
     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SelectOffScreenDrawingSurface  selecting offscreen (private)\n"));
@@ -398,18 +384,8 @@ NS_IMETHODIMP nsRenderingContextPh :: SelectOffScreenDrawingSurface(nsDrawingSur
     mSurface = (nsDrawingSurfacePh *) aSurface;
   }
 
-//printf("SelectOffScreenDrawingSurface\n");
   mSurface->Select();
 
-#if 0
-  // to clear the buffer to black to clean up transient rips during redraw....
-  PgSetClipping( 0, NULL );
-  PgSetMultiClip( 0, NULL );
-  PgSetFillColor(FillColorVal[cur_color]);
-  PgDrawIRect( 0, 0, 1024,768, Pg_DRAW_FILL_STROKE ); 
-  cur_color++;
-  cur_color &= 0x7;
-#endif
 
   mBufferIsEmpty = PR_TRUE;
 
@@ -418,7 +394,6 @@ NS_IMETHODIMP nsRenderingContextPh :: SelectOffScreenDrawingSurface(nsDrawingSur
 
 NS_IMETHODIMP nsRenderingContextPh :: GetDrawingSurface(nsDrawingSurface *aSurface)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetDrawingSurface\n"));
   *aSurface = (void *) mSurface;
   return NS_OK;
 }
@@ -426,8 +401,6 @@ NS_IMETHODIMP nsRenderingContextPh :: GetDrawingSurface(nsDrawingSurface *aSurfa
 
 NS_IMETHODIMP nsRenderingContextPh :: GetHints(PRUint32& aResult)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetHints\n"));
-
   PRUint32 result = 0;
 
   // Most X servers implement 8 bit text rendering alot faster than
@@ -447,15 +420,12 @@ NS_IMETHODIMP nsRenderingContextPh :: GetHints(PRUint32& aResult)
 
 NS_IMETHODIMP nsRenderingContextPh :: Reset()
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Reset  - Not Implemented\n"));
   return NS_OK;
 }
 
 
 NS_IMETHODIMP nsRenderingContextPh :: GetDeviceContext(nsIDeviceContext *&aContext)
 {
-//  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetDeviceContext\n"));
-
   NS_IF_ADDREF( mContext );
   aContext = mContext;
   return NS_OK;
@@ -464,8 +434,6 @@ NS_IMETHODIMP nsRenderingContextPh :: GetDeviceContext(nsIDeviceContext *&aConte
 
 NS_IMETHODIMP nsRenderingContextPh :: PushState(void)
 {
-  //PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::PushState\n"));
-
   //  Get a new GS
 #ifdef USE_GS_POOL
   nsGraphicsState *state = nsGraphicsStatePool::GetNewGS();
@@ -792,8 +760,6 @@ NS_IMETHODIMP nsRenderingContextPh :: SetFont(const nsFont& aFont)
 
 NS_IMETHODIMP nsRenderingContextPh :: SetFont(nsIFontMetrics *aFontMetrics)
 {
-  //PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetFont with nsIFontMetrics mFontMetrics=<%p> aFontMetrics=<%p>\n", mFontMetrics, aFontMetrics));
-	  
   nsFontHandle  fontHandle;			/* really a nsString */
   char      *pFontHandle;
 
@@ -815,11 +781,6 @@ NS_IMETHODIMP nsRenderingContextPh :: SetFont(nsIFontMetrics *aFontMetrics)
     mPhotonFontName = strdup(pFontHandle);
     if (mPhotonFontName)
    	{
-  	  /* Cache the Font metrics locally, costs ~1400 bytes per font */
-      PfLoadMetrics( mPhotonFontName );
-
-      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::SetFont with nsIFontMetrics Photon Font Name is <%s> <%s>\n", mPhotonFontName, pFontHandle));
-
       PgSetFont( mPhotonFontName );
     }
 	else
@@ -839,8 +800,6 @@ NS_IMETHODIMP nsRenderingContextPh :: SetFont(nsIFontMetrics *aFontMetrics)
 
 NS_IMETHODIMP nsRenderingContextPh :: GetFontMetrics(nsIFontMetrics *&aFontMetrics)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetFontMetrics mFontMetrics=<%p>\n", mFontMetrics));
-
   NS_IF_ADDREF(mFontMetrics);
   aFontMetrics = mFontMetrics;
   return NS_OK;
@@ -850,7 +809,6 @@ NS_IMETHODIMP nsRenderingContextPh :: GetFontMetrics(nsIFontMetrics *&aFontMetri
 // add the passed in translation to the current translation
 NS_IMETHODIMP nsRenderingContextPh :: Translate(nscoord aX, nscoord aY)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Translate (%i,%i)\n", aX, aY));
   mTMatrix->AddTranslation((float)aX,(float)aY);
   return NS_OK;
 }
@@ -859,7 +817,6 @@ NS_IMETHODIMP nsRenderingContextPh :: Translate(nscoord aX, nscoord aY)
 // add the passed in scale to the current scale
 NS_IMETHODIMP nsRenderingContextPh :: Scale(float aSx, float aSy)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::Scale (%f,%f)\n", aSx, aSy ));
   mTMatrix->AddScale(aSx, aSy);
   return NS_OK;
 }
@@ -867,7 +824,6 @@ NS_IMETHODIMP nsRenderingContextPh :: Scale(float aSx, float aSy)
 
 NS_IMETHODIMP nsRenderingContextPh :: GetCurrentTransform(nsTransform2D *&aTransform)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetCurrentTransform\n"));
   aTransform = mTMatrix;
   return NS_OK;
 }
@@ -875,80 +831,54 @@ NS_IMETHODIMP nsRenderingContextPh :: GetCurrentTransform(nsTransform2D *&aTrans
 
 NS_IMETHODIMP nsRenderingContextPh :: CreateDrawingSurface(nsRect *aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CreateDrawingSurface this=<%p> aBounds=<%d,%d,%d,%d>\n", this, aBounds->x, aBounds->y, aBounds->width, aBounds->height));
-//  printf("nsRenderingContextPh::CreateDrawingSurface this=<%p> %p aBounds=<%d,%d,%d,%d>\n", this,aSurfFlags,aBounds->x, aBounds->y, aBounds->width, aBounds->height);
+	if (nsnull == mSurface)
+	{
+		aSurface = nsnull;
+		return NS_ERROR_FAILURE;
+	}
 
-  if (nsnull==mSurface)
-  {
-    aSurface = nsnull;
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("  mSurface is NULL - failure!\n"));
-    return NS_ERROR_FAILURE;
-  }
-
-  nsDrawingSurfacePh *surf = new nsDrawingSurfacePh();
-
-  if (surf)
-  {
-    NS_ADDREF(surf);
-    PhGC_t *gc = mSurface->GetGC();
-    //printf("CreateDrawingSurface\n");
-    surf->Init(gc, aBounds->width, aBounds->height, aSurfFlags);
-  }
-  else
-  {
-    NS_ASSERTION(surf, "nsRenderingContextPh::CreateDrawingSurface new nsDrawingSurfacePh is NULL");
-    return NS_ERROR_FAILURE;
-  }
+  	nsDrawingSurfacePh *surf = new nsDrawingSurfacePh();
+  	if (surf)
+  	{
+		NS_ADDREF(surf);
+		PhGC_t *gc = mSurface->GetGC();
+		surf->Init(gc, aBounds->width, aBounds->height, aSurfFlags);
+  	}
+	else
+	{
+		NS_ASSERTION(surf, "nsRenderingContextPh::CreateDrawingSurface new nsDrawingSurfacePh is NULL");
+		return NS_ERROR_FAILURE;
+	}
    
-  aSurface = (nsDrawingSurface) surf;
+  	aSurface = (nsDrawingSurface) surf;
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CreateDrawingSurface  new surface = %p\n", aSurface));
-//  printf("nsRenderingContextPh::CreateDrawingSurface  new surface = %p\n", aSurface);
-
-  return NS_OK;
+  	return NS_OK;
 }
 
 
 NS_IMETHODIMP nsRenderingContextPh :: DestroyDrawingSurface(nsDrawingSurface aDS)
 {
    nsDrawingSurfacePh *surf = (nsDrawingSurfacePh *) aDS;
-
-   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DestroyDrawingSurface this=<%p> surface=<%p>\n", this, surf));
-
    NS_IF_RELEASE(surf);
-
-   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DestroyDrawingSurface after Release\n"));
-
    return NS_OK;
 }
 
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawLine (%ld,%ld,%ld,%ld)\n", aX0, aY0, aX1, aY1 ));
-  nscoord x0,y0,x1,y1;
   int err = 0;
 
   mTMatrix->TransformCoord(&aX0,&aY0);
   mTMatrix->TransformCoord(&aX1,&aY1);
 
-  if (aY0 != aY1) {
+  if (aY0 != aY1)
     aY1--;
-  }
-  if (aX0 != aX1) {
+  if (aX0 != aX1)
     aX1--;
-  }
-
-  x0 = aX0;
-  y0 = aY0;
-  x1 = aX1;
-  y1 = aY1;
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawLine (%ld,%ld,%ld,%ld)\n", x0, y0, x1, y1 ));
 
   SELECT(mSurface);
   
-  err = PgDrawILine( x0, y0, x1, y1 );
+  err = PgDrawILine(aX0, aY0, aX1, aY1);
   if (err == -1)
   {
 	NS_ASSERTION(0, "nsRenderingContextPh::DrawLine failed");
@@ -956,15 +886,11 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawLine(nscoord aX0, nscoord aY0, nscoord
 	return NS_ERROR_FAILURE;  
   }
 
-  PgFLUSH();	//kedl
-
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawLine (%ld,%ld,%ld,%ld)\n", aX0, aY0, aX1, aY1 ));
-  nscoord x0,y0,x1,y1;
   int err = 0;
 
   if (aY0 != aY1) 
@@ -972,16 +898,9 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawStdLine(nscoord aX0, nscoord aY0, nsco
   if (aX0 != aX1)
     aX1--;
 
-  x0 = aX0;
-  y0 = aY0;
-  x1 = aX1;
-  y1 = aY1;
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawLine (%ld,%ld,%ld,%ld)\n", x0, y0, x1, y1 ));
-
   SELECT(mSurface);
   
-  err = PgDrawILine( x0, y0, x1, y1 );
+  err = PgDrawILine(aX0, aY0, aX1, aY1);
   if (err == -1)
   {
 	NS_ASSERTION(0, "nsRenderingContextPh::DrawLine failed");
@@ -989,65 +908,23 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawStdLine(nscoord aX0, nscoord aY0, nsco
 	return NS_ERROR_FAILURE;  
   }
 
-printf("DrawStdLine\n");
-
-  PgFLUSH();	//kedl
-
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawPolyLine\n"));
-#if 1
   return DrawPolygon(aPoints, aNumPoints);
-#else
-
-  if( nsLineStyle_kNone == mCurrentLineStyle )
-    return NS_OK;
-
-printf("DrawPolyLine\n");
-  PhPoint_t *pts;
-
-  if(( pts = new PhPoint_t [aNumPoints] ) != NULL )
-  {
-    PhPoint_t pos = {0,0};
-    PRInt32 i;
-
-    for(i=0;i<aNumPoints;i++)
-    {
-    int x,y;
-      x = aPoints[i].x;
-      y = aPoints[i].y;
-      mTMatrix->TransformCoord(&x,&y);
-      pts[i].x = x;
-      pts[i].y = y;
-    }
-
-    SELECT(mSurface);
-    // SetPhLineStyle();
-    PgDrawPolygon( pts, aNumPoints, &pos, Pg_DRAW_STROKE );
-
-    delete [] pts;
-  }
-  PgFLUSH();	//kedl
-  return NS_OK;
-#endif
 }
 
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawRect(const nsRect& aRect)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawRect 1 \n"));
-
   return DrawRect( aRect.x, aRect.y, aRect.width, aRect.height );
 }
 
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawRect 2 \n"));
-
   nscoord x,y,w,h;
 
   x = aX;
@@ -1058,31 +935,21 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawRect(nscoord aX, nscoord aY, nscoord a
 
   SELECT(mSurface);
 
-
   if (w && h)
-  {
-// briane  
     PgDrawIRect( x, y, x + w - 1, y + h - 1, Pg_DRAW_STROKE );
-    //PgDrawIRect( x, y, x + w, y + h, Pg_DRAW_STROKE );
-//briane 
-  }
   
-  PgFLUSH();	//kedl
   return NS_OK;
 }
 
 
 NS_IMETHODIMP nsRenderingContextPh :: FillRect(const nsRect& aRect)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::FillRect 1 (%i,%i,%i,%i)\n", aRect.x, aRect.y, aRect.width, aRect.height ));
-
   return FillRect( aRect.x, aRect.y, aRect.width, aRect.height );
 }
 
 
 NS_IMETHODIMP nsRenderingContextPh :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::FillRect 2 (%i,%i,%i,%i)\n", aX, aY, aWidth, aHeight ));
   nscoord x,y,w,h;
 
   x = aX;
@@ -1094,12 +961,7 @@ NS_IMETHODIMP nsRenderingContextPh :: FillRect(nscoord aX, nscoord aY, nscoord a
 
   SELECT(mSurface);
   if (w && h)
-// briane
-    //PgDrawIRect( x, y, x + w, y + h, Pg_DRAW_FILL);
     PgDrawIRect( x, y, x + w - 1, y + h - 1, Pg_DRAW_FILL);
-// briane
-
-  PgFLUSH();	//kedl
 
   return NS_OK;
 }
@@ -1107,22 +969,14 @@ NS_IMETHODIMP nsRenderingContextPh :: FillRect(nscoord aX, nscoord aY, nscoord a
 NS_IMETHODIMP 
 nsRenderingContextPh :: InvertRect(const nsRect& aRect)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::InvertRect with nsRect\n"));
-  nsresult res;
-  
-  res = InvertRect( aRect.x, aRect.y, aRect.width, aRect.height );
-
-  return res;
+  return (InvertRect(aRect.x, aRect.y, aRect.width, aRect.height));
 }
 
 NS_IMETHODIMP 
 nsRenderingContextPh :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
- PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::InvertRect rect=(%d,%d,%d,%d)\n", aX,aY,aWidth,aHeight));
-
- if (nsnull == mTMatrix || nsnull == mSurface) {
+ if (nsnull == mTMatrix || nsnull == mSurface) 
     return NS_ERROR_FAILURE;
-  }
   
   nscoord x,y,w,h;
 
@@ -1130,143 +984,96 @@ nsRenderingContextPh :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
   y = aY;
   w = aWidth;
   h = aHeight;
-
-
   mTMatrix->TransformCoord(&x,&y,&w,&h);
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::InvertRect after transform rect=(%d,%d,%d,%d)\n", x,y,w,h));
 
   SELECT(mSurface);
 
   PgSetFillColor(Pg_INVERT_COLOR);
   PgSetDrawMode(Pg_DRAWMODE_XOR);
-//briane
   PgDrawIRect( x, y, x + w - 1, y + h - 1, Pg_DRAW_FILL );
-  //PgDrawIRect( x, y, x + w , y + h , Pg_DRAW_FILL );
-//briane
   PgSetDrawMode(Pg_DRAWMODE_OPAQUE);
 
-  /* To Fix a PHOTON BUG draw anything after changing back to OPAQUE */
-  mSurface->Flush(); //PgDrawIRect( x, y, x, y, Pg_DRAW_FILL );
+  mSurface->Flush();
   
-  PgFLUSH();	//kedl
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawPolygon\n"));
+  	PhPoint_t *pts;
+  	int err = 0;
 
-  PhPoint_t *pts;
-  int err = 0;
-  
-  if ( (pts = new PhPoint_t [aNumPoints]) != NULL )
-  {
-    PhPoint_t pos = {0,0};
-    PRInt32 i,c;
-    int x,y;
+  	if (aNumPoints == 0)
+  		return NS_OK;
 
-	  /* Put the first point into pts */
-      x = aPoints[0].x;
-      y = aPoints[0].y;
-      mTMatrix->TransformCoord(&x,&y);
-      pts[0].x = x;
-      pts[0].y = y;	  
+	if ( (pts = new PhPoint_t [aNumPoints]) != NULL )
+	{
+		PhPoint_t pos = {0,0};
+		PRInt32 i;
+		int x,y;
 
-    for(i=1,c=0;i<aNumPoints;i++)
-    {
-      x = aPoints[i].x;
-      y = aPoints[i].y;
-      mTMatrix->TransformCoord(&x,&y);
+		for (i = 0; i < aNumPoints; i++)
+		{
+			x = aPoints[i].x;
+			y = aPoints[i].y;
+			mTMatrix->TransformCoord(&x, &y);
+			pts[i].x = x;
+			pts[i].y = y;
+		}
+		PgDrawPolygon( pts, aNumPoints, &pos, Pg_DRAW_STROKE );
 
-      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::FillPolygon %d (%d,%d) -> (%d,%d) \n", i, aPoints[i].x, aPoints[i].y, x, y));
-
-      if ((pts[c].x != x) || (pts[c].y != y))
-	  {
-		c++;
-        pts[c].x = x;
-        pts[c].y = y;
-      }
-    }
-
-    SELECT(mSurface);
-    PgDrawPolygon( pts, aNumPoints, &pos, Pg_DRAW_STROKE );
-
-    delete [] pts;
-  }
-
-  PgFLUSH();	//kedl
-  return NS_OK;
+		delete [] pts;
+	}
+	
+  	return NS_OK;
 }
 
 
 NS_IMETHODIMP nsRenderingContextPh :: FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::FillPolygon aNumPoints=%d\n", aNumPoints));
+	PhPoint_t *pts;
+	int err = 0;
 
-  PhPoint_t *pts;
-  int err = 0;
-  
-  if ( (pts = new PhPoint_t [aNumPoints]) != NULL )
-  {
-    PhPoint_t pos = {0,0};
-    PRInt32 i,c;
-    int x,y;
+	if (aNumPoints == 0)
+		return NS_OK;
 
-	  /* Put the first point into pts */
-      x = aPoints[0].x;
-      y = aPoints[0].y;
-      mTMatrix->TransformCoord(&x,&y);
-      pts[0].x = x;
-      pts[0].y = y;	  
-
-    for(i=1,c=0;i<aNumPoints;i++)
-    {
-      x = aPoints[i].x;
-      y = aPoints[i].y;
-      mTMatrix->TransformCoord(&x,&y);
-
-      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::FillPolygon %d (%d,%d) -> (%d,%d) \n", i, aPoints[i].x, aPoints[i].y, x, y));
-
-      if ((pts[c].x != x) || (pts[c].y != y))
-	  {
-		c++;
-        pts[c].x = x;
-        pts[c].y = y;
-      }
-    }
-
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::FillPolygon calling SELECT with %d points\n", (c+1) ));
-
-    SELECT(mSurface);
-    err=PgDrawPolygon( pts, (c+1), &pos, Pg_DRAW_FILL );
-    if (err == -1)
+	if ( (pts = new PhPoint_t [aNumPoints]) != NULL )
 	{
-	  NS_ASSERTION(NULL,  "nsRenderingContextPh::FillPolygon  Draw Buffer too small");
-	  abort();
-	  return NS_ERROR_FAILURE;
-	}
+		PhPoint_t pos = {0,0};
+		PRInt32 i;
+		int x,y;
+
+		for (i = 0; i < aNumPoints; i++)
+		{
+			x = aPoints[i].x;
+			y = aPoints[i].y;
+			mTMatrix->TransformCoord(&x, &y);
+			pts[i].x = x;
+			pts[i].y = y;
+		}
+	    err=PgDrawPolygon( pts, aNumPoints, &pos, Pg_DRAW_FILL );
+    	if (err == -1)
+		{
+	  		NS_ASSERTION(NULL,  "nsRenderingContextPh::FillPolygon  Draw Buffer too small");
+	  		abort();
+	  		return NS_ERROR_FAILURE;
+		}
 	
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::FillPolygon after PgDrawPolgon err=<%d>\n", err));
+    	delete [] pts;
+  	}
+  	else
+  	{
+	 	NS_ASSERTION(NULL, "nsRenderingContextPh::FillPolygon Probably out of memory");
+	 	abort();
+	 	return NS_ERROR_FAILURE;
+	}  
 
-    delete [] pts;
-  }
-  else
-  {
-	 NS_ASSERTION(NULL, "nsRenderingContextPh::FillPolygon Probably out of memory");
-	 abort();
-	 return NS_ERROR_FAILURE;
-  }  
-
-  PgFLUSH();	//kedl
-  return NS_OK;
+  	return NS_OK;
 }
 
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawEllipse(const nsRect& aRect)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawEllipse.\n"));
-
   DrawEllipse( aRect.x, aRect.y, aRect.width, aRect.height );
 
   return NS_OK;
@@ -1275,7 +1082,6 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawEllipse(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawEllipse.\n"));
   nscoord x,y,w,h;
   PhPoint_t center;
   PhPoint_t radii;
@@ -1285,8 +1091,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawEllipse(nscoord aX, nscoord aY, nscoor
   y = aY;
   w = aWidth;
   h = aHeight;
-
-  mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mTMatrix->TransformCoord(&x, &y, &w, &h);
 
   center.x = x;
   center.y = y;
@@ -1296,15 +1101,12 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawEllipse(nscoord aX, nscoord aY, nscoor
   SELECT(mSurface);
   PgDrawEllipse( &center, &radii, flags );
 
-  PgFLUSH();	//kedl
   return NS_OK;
 }
 
 
 NS_IMETHODIMP nsRenderingContextPh :: FillEllipse(const nsRect& aRect)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::FillEllipse.\n"));
-
   FillEllipse( aRect.x, aRect.y, aRect.width, aRect.height );
 
   return NS_OK;
@@ -1313,7 +1115,6 @@ NS_IMETHODIMP nsRenderingContextPh :: FillEllipse(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextPh :: FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::FillEllipse.\n"));
   nscoord x,y,w,h;
   PhPoint_t center;
   PhPoint_t radii;
@@ -1323,7 +1124,6 @@ NS_IMETHODIMP nsRenderingContextPh :: FillEllipse(nscoord aX, nscoord aY, nscoor
   y = aY;
   w = aWidth;
   h = aHeight;
-
   mTMatrix->TransformCoord(&x,&y,&w,&h);
 
   center.x = x;
@@ -1334,7 +1134,6 @@ NS_IMETHODIMP nsRenderingContextPh :: FillEllipse(nscoord aX, nscoord aY, nscoor
   SELECT(mSurface);
   PgDrawEllipse( &center, &radii, flags );
 
-  PgFLUSH();	//kedl
   return NS_OK;
 }
 
@@ -1342,8 +1141,6 @@ NS_IMETHODIMP nsRenderingContextPh :: FillEllipse(nscoord aX, nscoord aY, nscoor
 NS_IMETHODIMP nsRenderingContextPh :: DrawArc(const nsRect& aRect,
                                  float aStartAngle, float aEndAngle)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawArc - Not implemented.\n"));
-
   return DrawArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle);
 }
 
@@ -1351,7 +1148,6 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawArc(const nsRect& aRect,
 NS_IMETHODIMP nsRenderingContextPh :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawArc\n"));
   nscoord x,y,w,h;
   PhPoint_t center;
   PhPoint_t radii;
@@ -1372,7 +1168,6 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawArc(nscoord aX, nscoord aY, nscoord aW
   SELECT(mSurface);
   PgDrawArc( &center, &radii, aStartAngle, aEndAngle, flags );
 
-  PgFLUSH();	//kedl
   return NS_OK;
 }
 
@@ -1380,7 +1175,6 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawArc(nscoord aX, nscoord aY, nscoord aW
 NS_IMETHODIMP nsRenderingContextPh :: FillArc(const nsRect& aRect,
                                  float aStartAngle, float aEndAngle)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::FillArc\n"));
   return FillArc(aRect.x,aRect.y,aRect.width,aRect.height,aStartAngle,aEndAngle);
 }
 
@@ -1388,7 +1182,6 @@ NS_IMETHODIMP nsRenderingContextPh :: FillArc(const nsRect& aRect,
 NS_IMETHODIMP nsRenderingContextPh :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::FillArc - Not implemented.\n"));
   nscoord x,y,w,h;
   PhPoint_t center;
   PhPoint_t radii;
@@ -1398,7 +1191,6 @@ NS_IMETHODIMP nsRenderingContextPh :: FillArc(nscoord aX, nscoord aY, nscoord aW
   y = aY;
   w = aWidth;
   h = aHeight;
-
   mTMatrix->TransformCoord(&x,&y,&w,&h);
 
   center.x = x;
@@ -1409,10 +1201,8 @@ NS_IMETHODIMP nsRenderingContextPh :: FillArc(nscoord aX, nscoord aY, nscoord aW
   SELECT(mSurface);
   PgDrawArc( &center, &radii, aStartAngle, aEndAngle, flags );
 
-  PgFLUSH();	//kedl
   return NS_OK;
 }
-
 
 NS_IMETHODIMP nsRenderingContextPh :: GetWidth(char ch, nscoord& aWidth)
 {
@@ -1426,9 +1216,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(char ch, nscoord& aWidth)
     return fontMetricsPh->GetSpaceWidth(aWidth);
   }
 
-  ret_code =  GetWidth(&ch, 1, aWidth);
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth1 for <%c> aWidth=<%d> ret_code=<%d>\n", ch, aWidth, ret_code));
-  return ret_code;
+  return (GetWidth(&ch, 1, aWidth));
 }
 
 
@@ -1440,21 +1228,13 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(PRUnichar ch, nscoord &aWidth, PR
   /* turn it into a string */
   buf[0] = ch;
   buf[1] = nsnull;
-
-  ret_code = GetWidth(buf, 1, aWidth, aFontID);  
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth2 for <%c> aWidth=<%d> aFontId=<%p> ret_code=<%d>\n", (char) ch, aWidth, aFontID, ret_code));
-  return ret_code;
+  return (GetWidth(buf, 1, aWidth, aFontID));
 }
 
 
 NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const char* aString, nscoord& aWidth)
 {
-  nsresult ret_code;
-
-  ret_code = GetWidth(aString, strlen(aString), aWidth);  
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth3 for <%s> aWidth=<%d> ret_code=<%d>\n", aString, aWidth, ret_code));
-
-  return ret_code;
+  return (GetWidth(aString, strlen(aString), aWidth));
 }
 
 
@@ -1471,27 +1251,14 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const char* aString,
   {
     PhRect_t      extent;
 
-/* derek
-    if(aLength == 1)
-    {  PfQueryFont(mPhotonFontName, &tsInfo);
-
-       aWidth = (int)(tsInfo.width * mP2T);
-
-       ret_code = NS_OK;
-    }
-    else
-*/
     if (PfExtentText(&extent, NULL, mPhotonFontName, aString, aLength))
     {
-      aWidth = (int) ((extent.lr.x - extent.ul.x + 1) * mP2T);
-      ret_code = NS_OK;
+    	aWidth = NSToCoordRound((int) ((extent.lr.x - extent.ul.x + 1) * mP2T));
+      	ret_code = NS_OK;
     }
   }
   else
-  {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth4 FAILED = a NULL mFontMetrics detected\n"));
-    ret_code = NS_ERROR_FAILURE;
-  }  
+    	ret_code = NS_ERROR_FAILURE;
 
   return ret_code;
 }
@@ -1499,22 +1266,10 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const char* aString,
 
 NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const nsString& aString, nscoord& aWidth, PRInt32 *aFontID)
 {
-#if defined(DEBUG) && 1
-  /* DEBUG ONLY */
-  char *str = aString.ToNewCString();
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth5 aString=<%s>\n", str));
-  delete [] str;
-#endif
-
   nsresult ret_code;
 
   ret_code = GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);  
 
-  /* What the heck? I copied this from Windows */
-  if (nsnull != aFontID)
-    *aFontID = 0;
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth5  aWidth=<%d> ret_code=<%d>\n", aWidth, ret_code));
   return ret_code;
 }
 
@@ -1524,42 +1279,20 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth(const PRUnichar *aString,
                                                 nscoord &aWidth,
                                                 PRInt32 *aFontID)
 {
-  nsresult ret_code = NS_ERROR_FAILURE;
+  	nsresult ret_code = NS_ERROR_FAILURE;
 
-#if defined(DEBUG) && 1
-  /* DEBUG ONLY */
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth6 aString=<%s>\n", aString));
-#endif
+  	aWidth = 0;	// Initialize to zero in case we fail.
+  	if (nsnull != mFontMetrics)
+  	{
+		PhRect_t      extent;
 
-  
-  aWidth = 0;	// Initialize to zero in case we fail.
-  if (nsnull != mFontMetrics)
-  {
-    PhRect_t      extent;
-
-    if (PfExtentWideText(&extent, NULL, mPhotonFontName, (const uint16_t *) aString, (aLength*2)))
-    {
-      aWidth = (int) ((extent.lr.x - extent.ul.x + 1) * mP2T);
-      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth6 aWidth=<%d>mPhotonFontName=<%s>\n", aWidth, mPhotonFontName));
-      ret_code = NS_OK;
+		NS_ConvertUCS2toUTF8    theUnicodeString (aString, aLength);
+		ret_code = GetWidth(theUnicodeString.GetBuffer(), strlen(theUnicodeString.GetBuffer()), aWidth);
     }
-    else
-    {
-       NS_ASSERTION(0,"PfExtentWideText failed in nsRenderingContextPh::GetWidth6\n");
-    }
-  }
-  else
-  {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth6 FAILED = a NULL mFontMetrics detected\n"));
-  }  
+	if (nsnull != aFontID)
+	  *aFontID = 0;
 
-  if (nsnull != aFontID)
-  {
-    *aFontID = 0;
-  }
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::GetWidth6  aLength=<%d> aWidth=<%d> ret_code=<%d>\n", aLength, aWidth, ret_code));
-  return ret_code;
+  	return ret_code;
 }
 
 
@@ -1567,78 +1300,39 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const char *aString, PRUint32 a
                                                   nscoord aX, nscoord aY,
                                                   const nscoord* aSpacing)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawString1 first aString=<%s> of %d at (%d,%d) aSpacing=<%p>.\n",aString, aLength, aX, aY, aSpacing));
+	int err = 0;
+	nscoord x = aX;
+	nscoord y = aY;
 
-  int err = 0;
-  
-  nscoord x = aX;
-  nscoord y = aY;
-//  printf ("nsRenderingContextPh::draw string 1 %p\n", ((nsDrawingSurfacePh *)mSurface)->GetDC() );
-
-  if (nsnull != aSpacing)
-  {
-/* REVISIT this code will break with an ACTUAL multi-byte multi-byte string */
-    // Render the string, one character at a time...
-    const char* end = aString + aLength;
-	while (aString < end)
+	if (nsnull != aSpacing)
 	{
-	  char ch = *aString++;
-      nscoord xx = x;
-	  nscoord yy = y;
-	  mTMatrix->TransformCoord(&xx, &yy);
-      PhPoint_t pos = { xx, yy };
-      SELECT(mSurface);
-      PgDrawText( &ch, 1, &pos, (Pg_TEXT_LEFT | Pg_TEXT_TOP));
-      x += *aSpacing++;
-    }
-  }
-  else
-  {
-    mTMatrix->TransformCoord(&x,&y);
-    PhPoint_t pos = { x, y };
- 	
-    SELECT(mSurface);
-
-    err=PgDrawTextChars( aString, aLength, &pos, (Pg_TEXT_LEFT | Pg_TEXT_TOP));
-    if ( err == -1)
-	{
-	  printf("nsRenderingContextPh::DrawString1 returned an error code\n");
-	  abort();
-	}
-  }
-
-  PgFLUSH();	//kedl
-
-  return NS_OK;
-}
-
-
-size_t my_wcstombs(char *s, char *wc, size_t n, int max) 
-{
-size_t                  num;
-int                     len;
-char                    buff[MB_CUR_MAX];
-int count=0;
-
-	for (num = 0; n; n -= len) 
-	{
-		len = wctomb(buff, *wc);
-	        if(len == -1) { return -1; }
-		if(len == 0) 
+		const char* end = aString + aLength;
+		while (aString < end)
 		{
-			*s++ = '\0';
-			break;
+			char ch = *aString++;
+			nscoord xx = x;
+			nscoord yy = y;
+			mTMatrix->TransformCoord(&xx, &yy);
+			PhPoint_t pos = { xx, yy };
+			SELECT(mSurface);
+			PgDrawText( &ch, 1, &pos, (Pg_TEXT_LEFT | Pg_TEXT_TOP));
+			x += *aSpacing++;
 		}
-		if(len > n) { break; }
-		memcpy(s, buff, len);
-		s += len;
-		num += len;
-		count++;
-		if (count>max) break;
-		wc++;
-		wc++;
+  	}
+	else
+	{
+		mTMatrix->TransformCoord(&x,&y);
+		PhPoint_t pos = { x, y };
+
+		SELECT(mSurface);
+		err=PgDrawTextChars( aString, aLength, &pos, Pg_TEXT_LEFT | Pg_TEXT_TOP);
+		PgColor_t cc = PgSetTextColor(Pg_BLACK);
+		PgSetTextColor(cc);
+		if ( err == -1)
+	   		abort();
 	}
-	return num;
+
+  	return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawString(const PRUnichar *aString, PRUint32 aLength,
@@ -1646,165 +1340,86 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString(const PRUnichar *aString, PRUin
                                                   PRInt32 aFontID,
                                                   const nscoord* aSpacing)
 {
-  const int BUFFER_SIZE = (aLength * 3);
-  char buffer[BUFFER_SIZE];
-  int len;
-
-  // kedl, using my copy of wcstombs because theirs doesn't let you set a limit on the input
-  // but this is still a hack....
-#if 0
-  len = my_wcstombs(buffer, (char *) aString, BUFFER_SIZE,aLength);
-  return DrawString( (char *) buffer, aLength, aX, aY, aSpacing);
-#else
+  	nsresult ret = NS_ERROR_FAILURE;
+  	char *str;
 	NS_ConvertUCS2toUTF8    theUnicodeString (aString, aLength);
-	return DrawString(theUnicodeString.GetBuffer(), strlen(theUnicodeString.GetBuffer()),
-	                    aX, aY, aSpacing);
-#endif
+	ret = DrawString(theUnicodeString.GetBuffer(), strlen(theUnicodeString.GetBuffer()),
+		aX, aY, aSpacing);
+	return ret;
 }
-
 
 NS_IMETHODIMP nsRenderingContextPh :: DrawString(const nsString& aString,
                                                   nscoord aX, nscoord aY,
                                                   PRInt32 aFontID,
                                                   const nscoord* aSpacing)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawString3 at (%d,%d) aSpacing=<%p>.\n", aX, aY, aSpacing));
-
-#if 0
-  return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aFontID, aSpacing);
-#else
+  	nsresult ret = NS_ERROR_FAILURE;
 	NS_ConvertUCS2toUTF8    theUnicodeString (aString.GetUnicode(), aString.Length());
-	return DrawString(theUnicodeString.GetBuffer(), strlen(theUnicodeString.GetBuffer()),
-	                    aX, aY, aSpacing);
-#endif
+	ret = DrawString(theUnicodeString.GetBuffer(), strlen(theUnicodeString.GetBuffer()),
+			aX, aY, aSpacing);
+	return ret;
 }
 
 
 NS_IMETHODIMP nsRenderingContextPh::DrawImage(nsIImage *aImage,
                                                nscoord aX, nscoord aY)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawImage1 this=<%p> pt=(%d,%d)\n", this, aX, aY));
-
   nscoord width, height;
-  nsresult res;
 
   // we have to do this here because we are doing a transform below
   width = NSToCoordRound(mP2T * aImage->GetWidth());
   height = NSToCoordRound(mP2T * aImage->GetHeight());
 
-  res = DrawImage(aImage, aX, aY, width, height);
-
-  return res;
+  return (DrawImage(aImage, aX, aY, width, height));
 }
 
 NS_IMETHODIMP nsRenderingContextPh::DrawImage(nsIImage *aImage, const nsRect& aRect)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawImage4 this=<%p>\n", this));
-
-  nsresult res;
-
-  res = DrawImage(aImage,
-                   aRect.x,
-                   aRect.y,
-                   aRect.width,
-                   aRect.height);
-  return res;
+  return (DrawImage(aImage, aRect.x, aRect.y, aRect.width, aRect.height));
 }
 
 NS_IMETHODIMP nsRenderingContextPh::DrawImage(nsIImage *aImage,
                                                nscoord aX, nscoord aY,
                                                nscoord aWidth, nscoord aHeight)
 {
-  nscoord x, y, w, h;
-  nsresult res = NS_OK;
+  	nscoord x, y, w, h;
+  	nsresult res = NS_OK;
+	int ww,hh;
 
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawImage2 this=<%p> coords=(%d,%d,%d,%d)\n", this, aX, aY, aWidth, aHeight));
-  //printf("nsRenderingContextPh::DrawImage2 this=<%p> coords=(%d,%d,%d,%d)\n", this, aX, aY, aWidth, aHeight);
-
+#if 0 // printing
   if (mClipRegion->IsEmpty())
   {
     // this is bad!
     //    printf("drawing image with empty clip region\n");
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawImage2 drawing image with empty clip region\n"));
     //printf("nsRenderingContextPh::DrawImage2 drawing image with empty clip region\n");
     return NS_ERROR_FAILURE;
   }
+#endif 
 
-  x = aX;
-  y = aY;
-  w = aWidth;
-  h = aHeight;
-
-  mTMatrix->TransformCoord(&x, &y, &w, &h);
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawImage2 after transform coords=(%d,%d,%d,%d)\n", x,y,w,h));
-  //printf("nsRenderingContextPh::DrawImage2 after transform coords=(%d,%d,%d,%d)\n", x,y,w,h);
+	x = aX;
+	y = aY;
+	w = aWidth;
+	h = aHeight;
+	mTMatrix->TransformCoord(&x, &y, &w, &h);
 
   SELECT(mSurface);
 
-//  printf ("kedl: draw image 2: %d %d %d %d\n",x,y,w,h);
-int ww,hh;
-
 	ww = mSurface->mWidth;
 	hh = mSurface->mHeight;
-	if (x >= ww || y >=hh)
-	{
-//		printf ("skip\n");
-		return NS_OK;
+
+    nsDeviceContextPh  *phContext = (nsDeviceContextPh *)mContext;
+    if (!phContext || !(phContext->IsPrinting()))
+    {
+		if (x >= ww || y >=hh)
+			return NS_OK;
 	}
 
-#if 0
-if (w==1000)
-{
-static int skip=0;
+	if (x + w > ww) 
+		w = ww - x;
+	if (y + h > hh) 
+		h = hh - y;
 
-if (skip++!=4) return NS_OK;
-skip=0;
-}
-#endif
-	if (x + w > ww) w = ww - x;
-	if (y + h > hh) h = hh - y;
-
-  res = aImage->Draw(*this, mSurface, x, y, w, h);
-
-// PgFLUSH();	//kedl
-
-#if 0
-#ifdef DEBUG
-{
-  //mSurface->Flush();
-
-  PhImage_t *image;
-  PRUint32  w, h;
-  
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawImage2 dump surface to BMP mSurface=<%p>\n", mSurface));
-
-  if (mSurface)
-  {
-    image = ((nsDrawingSurfacePh *)mSurface)->mPixmap;
-  
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawImage2 dump surface image=<%p>\n", image));
-
-	/* Make sure its an off screen surface */
-    if (image)
-	{
-      ((nsDrawingSurfacePh *)mSurface)->GetDimensions(&w,&h);
-      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawImage2 dump surface w,h=<%d,%d)\n", w,h));
-
-      unsigned char *ptr;
-      ptr = image->image;  
-
-      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawImage2 dump surface ptr=<%p>\n",ptr));
-      do_bmp(ptr,image->bpl,w,h);
-    }
-	
-  }
-}
-#endif
-#endif
-
-  return res;
+  	return (aImage->Draw(*this, mSurface, x, y, w, h));
 }
 
 
@@ -1812,8 +1427,6 @@ NS_IMETHODIMP nsRenderingContextPh::DrawImage(nsIImage *aImage,
                                                const nsRect& aSRect,
                                                const nsRect& aDRect)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::DrawImage3\n"));
-
   nsRect	sr,dr;
   nsresult  res = NS_OK;
 
@@ -1824,26 +1437,15 @@ NS_IMETHODIMP nsRenderingContextPh::DrawImage(nsIImage *aImage,
     return NS_ERROR_FAILURE;
   }
 
-  sr = aSRect;
-  mTMatrix->TransformCoord(&sr.x, &sr.y,
-                            &sr.width, &sr.height);
-
-  dr = aDRect;
-  mTMatrix->TransformCoord(&dr.x, &dr.y,
-                           &dr.width, &dr.height);
+	sr = aSRect;
+	mTMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
+	dr = aDRect;
+	mTMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
 
   SELECT(mSurface);
 
-//  printf ("kedl: draw image 3\n");
-  res = aImage->Draw(*this, mSurface,
-                      sr.x, sr.y,
-                      sr.width, sr.height,
-                      dr.x, dr.y,
-                      dr.width, dr.height);
-
-  PgFLUSH();	//kedl
-
-  return res;
+  	return (aImage->Draw(*this, mSurface, sr.x, sr.y, sr.width, sr.height, \
+  		dr.x, dr.y, dr.width, dr.height));
 }
 
 /** ---------------------------------------------------
@@ -1854,8 +1456,15 @@ NS_IMETHODIMP
 nsRenderingContextPh::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
                                                     nscoord aWidth,nscoord aHeight)
 {
-printf("DRAWTILE: %d, %d\n", aWidth, aHeight);
-  return NS_OK;
+	mTranMatrix->TransformCoord(&aX0,&aY0,&aWidth,&aHeight);
+	mTranMatrix->TransformCoord(&aX1,&aY1);
+
+	nsRect srcRect (0, 0, aWidth,  aHeight);
+	nsRect tileRect(aX0, aY0, aX1-aX0, aY1-aY0);
+
+	((nsImagePh*)aImage)->DrawTile(*this, mSurface, srcRect, tileRect);
+
+  	return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1870,7 +1479,7 @@ nsRenderingContextPh::DrawTile(nsIImage *aImage, nscoord aSrcXOffset, nscoord aS
 	if ((tileRect.width > 0) && (tileRect.height > 0))
   		((nsImagePh*)aImage)->DrawTile(*this, mSurface, srcRect.width, srcRect.height, tileRect);
 
-  return NS_OK;
+  	return NS_OK;
 }
 
 
@@ -1879,12 +1488,8 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
                                                          const nsRect &aDestBounds,
                                                          PRUint32 aCopyFlags)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits this=<%p> mBufferIsEmpty=<%d> aSrcSurf=<%p> aSrcPt=(%d,%d) aCopyFlags=<%d> DestRect=<%d,%d,%d,%d>\n",
-     this, mBufferIsEmpty, aSrcSurf, aSrcX, aSrcY, aCopyFlags, aDestBounds.x, aDestBounds.y, aDestBounds.width, aDestBounds.height));
-//  printf("CopyOffScreenBits this=<%p> mBufferIsEmpty=<%d> aSrcSurf=<%p> aSrcPt=(%d,%d) aCopyFlags=<%d> DestRect=<%d,%d,%d,%d>\n",
-  //   this, mBufferIsEmpty, aSrcSurf, aSrcX, aSrcY, aCopyFlags, aDestBounds.x, aDestBounds.y, aDestBounds.width, aDestBounds.height);
 
-  PhArea_t              area;
+  PhArea_t              darea, sarea;
   PRInt32               srcX = aSrcX;
   PRInt32               srcY = aSrcY;
   nsRect                drect = aDestBounds;
@@ -1894,10 +1499,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
 
   if ( (aSrcSurf==NULL) || (mTMatrix==NULL) || (mSurface==NULL))
   {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits  Started with NULL pointer"));
     NS_ASSERTION(0, "nsRenderingContextPh::CopyOffScreenBits Started with NULL pointer");
-	printf("nsRenderingContextPh::CopyOffScreenBits Started with NULL pointer\n");
-
     return NS_ERROR_FAILURE;  
   }
   
@@ -1905,31 +1507,9 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
   {
     NS_ASSERTION(!(nsnull == mSurface), "no back buffer");
     destsurf = mSurface;
-//printf ("kedl: onscreen\n");
-//return NS_OK;
   }
   else
-  {
-//printf ("kedl: offscreen\n");
     destsurf = mOffscreenSurface;
-  }
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits destsurf=<%p> mBufferIsEmpty=<%d>\n",destsurf, mBufferIsEmpty));
-
-#if 0
-  if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits NS_COPYBITS_USE_SOURCE_CLIP_REGION flag enabled\n"));
-
-  if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits NS_COPYBITS_XFORM_SOURCE_VALUES flag enabled\n"));
-
-  if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits NS_COPYBITS_XFORM_DEST_VALUES flag enabled\n"));
-
-  if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits NS_COPYBITS_TO_BACK_BUFFER flag enabled\n"));
-#endif
-
 
   if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
     mTMatrix->TransformCoord(&srcX, &srcY);
@@ -1937,10 +1517,10 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
   if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
     mTMatrix->TransformCoord(&drect.x, &drect.y, &drect.width, &drect.height);
 
-  area.pos.x=drect.x;
-  area.pos.y=drect.y;
-  area.size.w=drect.width;
-  area.size.h=drect.height;
+  darea.pos.x=drect.x;
+  darea.pos.y=drect.y;
+  darea.size.w=drect.width;
+  darea.size.h=drect.height;
 
   nsRect rect;
   PRBool valid;
@@ -1948,97 +1528,17 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
   /* Is this really needed?? */
   GetClipRect(rect,valid);
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits Src X,Y=(%d,%d)\n",srcX, srcY));
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits area(x,y,w,h)=<%d,%d,%d,%d>\n",area.pos.x, area.pos.y,area.size.w, area.size.h ));
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits clip valid=<%d> rect(x,y,w,h)=<%d,%d,%d,%d>\n",valid, rect.x,rect.y,rect.width,rect.height));
-
-  PhPoint_t pos = { area.pos.x,area.pos.y };
-  PhDim_t size = { area.size.w,area.size.h };
-
   /* Flush the Source buffer, Really need this  */
   ((nsDrawingSurfacePh *)aSrcSurf)->Flush();
-  
-  PhImage_t *image;
-  PhImage_t *image2;
-  image  = ((nsDrawingSurfacePh *)aSrcSurf)->mPixmap;
-  image2 = destsurf->mPixmap;
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits aSrcSurf=<%p> destsurf=<%p>\n", aSrcSurf, destsurf ));
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits image=<%p> image2=<%p>\n", image, image2));
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits image->size=(%d,%d)\n",image->size.w, image->size.h));
-  if (image2) {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits image2->size=(%d,%d)\n",image2->size.w, image2->size.h));
-  }
-
-#if defined(DEBUG) && 0
-{
-  PRUint32       w, h;
-  unsigned char *ptr;
-
-     /* Ouput the source buffer as a bmp */
-    ((nsDrawingSurfacePh *)aSrcSurf)->GetDimensions(&w,&h);
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits dump offscreen buffer as BMP image=<%p> area=<%d,%d>\n",image, w,h));
-    if (image)
-	{
-      ptr = (unsigned char *)image->image;
-      if (ptr)
-       do_bmp(ptr,image->bpl,w,h);
-    }
-	
-    ((nsDrawingSurfacePh *)destsurf)->GetDimensions(&w,&h);
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits dump onscreen buffer as BMP image2=<%p> area=<%d,%d>\n", image2,w,h));
-    if ((image2) && (image !=image2))
-    {
-      ptr = (unsigned char *)image2->image;
-  	  if (ptr)
-      {
-        do_bmp(ptr,image2->bpl,w,h);
-	  }
-    }
-}
-#endif
-
-#if defined(DEBUG) && 0
-  /* If the area is larger than the source image display a warning */
-  int x = image->size.w;
-  int y = image->size.h;
-
-  if ( (x < (area.size.w+srcX-1)) || (y < (area.size.h+srcY-1)) )
-  {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits  src image too small\n"));
-    printf("nsRenderingContextPh::CopyOffScreenBits src image too small image=<%d,%d> area=<%d,%d>\n",x,y,(area.size.w+srcX), (area.size.h+srcY));
-	//abort();
-  }
-#endif
-
-#if 1
-  /* If this is valid only copy this part of the offscreen image */
-  if (valid)
-  {
-	size.w = PR_MIN(image->size.w+1,area.size.w);
-	size.h = PR_MIN(image->size.h+1,area.size.h);
-
-    /* What does this fix? */
-    //PhRect_t r = {rect.x, rect.y, rect.x+rect.width-1, rect.y+rect.height-1};
-    //PgSetClipping(1, &r);
-  }
-#endif
-
-  if ((aSrcSurf == destsurf) && (image == nsnull))
-  {
-    NS_ASSERTION(image, "nsRenderingContextPh::CopyOffScreenBits: Unsupported onscreen to onscreen copy!!\n");
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits  Unsupported onscreen to onscreen copy!!\n"));
+  if (aSrcSurf == destsurf)
     abort();
-  } 
 
-   ptr = (unsigned char *)image->image;
-   ptr += image->bpl * srcY + srcX*4 ;		// xyz, was 3
-	  
    if (aSrcSurf != destsurf)
    {
-   //printf("CopyOffScreenBits\n");
      destsurf->Select();
    }
+
 {//xyz
 PhRect_t rsrc,rdst;
 PdOffscreenContext_t *d;
@@ -2053,73 +1553,42 @@ int rid;
 
 	destsurf->IsOffscreen(&off);
 	if (off)
-	{
-//		printf ("really offscreen\n");
 		d = (PdOffscreenContext_t *) destsurf->GetDC();
-//		if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
-//		{
-//			ApplyClipping(d->dc.gc);
-//		}
-	}
 	else
 	{
-//		printf ("really onscreen\n");
 		d=NULL;
-  //printf("PhDCSetCurrent (CopyOffScreenBits): NULL\n");
  		PhDCSetCurrent(NULL);
 		(PgGetGC())->target_rid = 0;	// kedl, fix the animations showing thru all regions
-						// darrin will fix in the photon lib shortly
-//		oldgc = PgGetGC();
-//		if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
-//		{
-//			ApplyClipping(oldgc);
-//		}
 	}
 
 	ww = destsurf->mWidth;
 	hh = destsurf->mHeight;
-//	printf ("kedl: blit: %p, %d %d %d %d\n",d,pos.x,pos.y,size.w,size.h);
-//	printf ("kedl: %d %d\n",ww,hh);
-	if (d && (pos.x >= ww || pos.y >=hh))
-	{
-//		printf ("skip\n");
+	if (d && (darea.pos.x >= ww || darea.pos.y >=hh))
 		return NS_OK;
-	}
-	if (d)
-	{
-		if (pos.x + size.w > ww) size.w = ww - pos.x;
-		if (pos.y + size.h > hh) size.h = hh - pos.y;
-	}
-	rsrc.ul.x = 0;
-	rsrc.ul.y = 0;
-	rsrc.lr.x = size.w-1;
-	rsrc.lr.y = size.h-1;
-	rdst.ul.x = pos.x;
-	rdst.ul.y = pos.y;
-	rdst.lr.x = pos.x+size.w-1;
-	rdst.lr.y = pos.y+size.h-1;		// kedl, fixes rip under blue bar for back/forward/etc
+	
+	PhArea_t sarea;
+	sarea.pos.x = srcX;
+	sarea.pos.y = srcY;
+	sarea.size.w = darea.size.w;
+	sarea.size.h = darea.size.h;
 
+	PhDCSetCurrent(d);
 	rid = PtWidgetRid(mWidget);
-  	PgSetRegion(rid);
-	//printf("COPY: RID=%d SRC: (%d, %d) (%d, %d)\n", rid, rsrc.ul.x, rsrc.ul.y, rsrc.lr.x, rsrc.lr.y);
-	//printf("\tDC=%X DST: (%d, %d) (%d, %d)\n", d, rdst.ul.x, rdst.ul.y, rdst.lr.x, rdst.lr.y);
-  	//sleep(2);
-	PgContextBlit((PdOffscreenContext_t *) ((nsDrawingSurfacePh *)aSrcSurf)->GetDC(), &rsrc, d, &rdst);
+	PgSetRegion(rid);
+
+	PgContextBlitArea((PdOffscreenContext_t *) ((nsDrawingSurfacePh *)aSrcSurf)->GetDC(), &sarea, d, &darea);
+	
 	PgSetRegion(oldrid);
 	PgSetGC(oldgc);
 	ApplyClipping(oldgc);
-
-        err=0;
 }
 
-//xyz   err = PgDrawImagemx( ptr, image->type , &pos, &size, image->bpl, 0); 
    if (err == -1)
    {
      printf ("nsRenderingContextPh::CopyOffScreenBits Error calling PgDrawImage\n");
 	 abort();
    }
 
-   /* The need for this is questionable */
    destsurf->Flush();
 	  
   mBufferIsEmpty = PR_TRUE;
@@ -2129,31 +1598,27 @@ int rid;
 
 NS_IMETHODIMP nsRenderingContextPh::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::RetrieveCurrentNativeGraphicData - Not implemented.\n"));
   if (ngd != nsnull)
-  {
     *ngd = nsnull;
-  }
   	
   return NS_OK;
 }
 
 void nsRenderingContextPh :: PushClipState(void)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::PushClipState - Not implemented.\n"));
 }
 
 
 void nsRenderingContextPh::ApplyClipping( PhGC_t *gc )
 {
-	PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping this=<%p> gc=<%p> mClipRegion=<%p>\n",this,  gc, mClipRegion));
-
+#if 0 // briane
 	if (!gc)
 	{
 		NS_ASSERTION(0,"nsRenderingContextPh::ApplyClipping gc is NULL");
 		abort(); /* Is this an error? Try Test10 */
 		return;
 	}
+#endif	
 
 	PgSetGC(mGC);	/* new */
   
@@ -2167,30 +1632,13 @@ void nsRenderingContextPh::ApplyClipping( PhGC_t *gc )
 		/* no offset needed use the normal tile list */
 		mClipRegion->GetNativeRegion((void*&)tiles);
 
-		PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping tiles=<%p>\n", tiles));
-
 		if (tiles != nsnull)
 		{
 			rects = PhTilesToRects(tiles, &rect_count);
-			PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping Calling PgSetMultiClipping with %d rects\n", rect_count));
-#if 0
-			/* Print out the new Clipping rects */
-			PhTile_t	*tile = tiles;
-			int		rect_index=0;
-
-			while (tile)
-			{
-				PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping rect %d is from (%d,%d) to (%d,%d)\n", rect_index++, tile->rect.ul.x, tile->rect.ul.y, tile->rect.lr.x,tile->rect.lr.y )); 
-//				printf("nsRenderingContextPh::ApplyClipping rect %d is from (%d,%d) to (%d,%d)\n", rect_index++, tile->rect.ul.x, tile->rect.ul.y, tile->rect.lr.x,tile->rect.lr.y ); 
-				tile = tile->next;		 	   
-			}
-#endif
-
 			err=PgSetMultiClip(rect_count,rects);
 	
 			if (err == -1)
 			{
-				PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping Error in PgSetMultiClip probably not enough memory"));
 				NS_ASSERTION(0,"nsRenderingContextPh::ApplyClipping Error in PgSetMultiClip probably not enough memory");
 				abort();
 			}
@@ -2199,260 +1647,32 @@ void nsRenderingContextPh::ApplyClipping( PhGC_t *gc )
 		}
 		else
 		{
-			PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping tiles are null\n"));
 			PgSetMultiClip( 0, NULL );
 		}
 	}
 	else
-	{
-		PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::ApplyClipping  mClipRegion is NULL"));
 		printf("nsRenderingContextPh::ApplyClipping  mClipRegion is NULL");
-//		NS_ASSERTION(mClipRegion,"nsRenderingContextPh::ApplyClipping mClipRegion is NULL");
-	}
 }
 
 
 void nsRenderingContextPh::SetPhLineStyle()
 {
-  switch( mCurrentLineStyle )
-  {
-  case nsLineStyle_kSolid:
-    PgSetStrokeDash( nsnull, 0, 0x10000 );
-    break;
+	switch( mCurrentLineStyle )
+	{
+		case nsLineStyle_kSolid:
+			PgSetStrokeDash( nsnull, 0, 0x10000 );
+			break;
 
-  case nsLineStyle_kDashed:
-    PgSetStrokeDash( (const unsigned char *)"\10\4", 2, 0x10000 );
-    break;
+		case nsLineStyle_kDashed:
+			PgSetStrokeDash( (const unsigned char *)"\10\4", 2, 0x10000 );
+			break;
 
-  case nsLineStyle_kDotted:
-    PgSetStrokeDash( (const unsigned char *)"\1", 1, 0x10000 );
-    break;
+		case nsLineStyle_kDotted:
+			PgSetStrokeDash( (const unsigned char *)"\1", 1, 0x10000 );
+			break;
 
-  case nsLineStyle_kNone:
-  default:
-    break;
-  }
+		case nsLineStyle_kNone:
+			default:
+			break;
+	}
 }
-
-
-
-#if DEBUG
-
-/*******************************************/
-static void putshort(FILE *fp, int i)
-{
-  int c, c1;
-
-  c = ((unsigned int ) i) & 0xff;  c1 = (((unsigned int) i)>>8) & 0xff;
-  putc(c, fp);   putc(c1,fp);
-}
-
-
-/*******************************************/
-static void putint(FILE *fp, int i)
-{
-  int c, c1, c2, c3;
-  c  = ((unsigned int ) i)      & 0xff;
-  c1 = (((unsigned int) i)>>8)  & 0xff;
-  c2 = (((unsigned int) i)>>16) & 0xff;
-  c3 = (((unsigned int) i)>>24) & 0xff;
-
-  putc(c, fp);   putc(c1,fp);  putc(c2,fp);  putc(c3,fp);
-}
-
-/*******************************************/
-static void writeBMP24(FILE *fp, unsigned char *pic24,int w,int h)
-{
-  int   i,j,c,padb;
-  unsigned char *pp;
-  int xx,yy;	
-  unsigned char r,g,b;
-  unsigned char p1,p2;
-  unsigned long ar,ag,ab;
-
-  padb = (4 - ((w/scale*3) % 4)) & 0x03;  /* # of pad bytes to write at EOscanline */
-
-  for (i=h-1; i>=0; i-=scale) 
-  {
-    pp = pic24 + DEPTH*x + DEPTH*y*X + (i * X * DEPTH);
-
-    for (j=0; j<w/scale; j++)
-    {
-	ar=0; ab=0; ag=0;
-	for (yy=0;yy<scale;yy++)
-	for (xx=0;xx<scale;xx++)
-	{
-		if (real_depth==24)
-		{
-			ar+=pp[0+xx*DEPTH-yy*DEPTH*X];
-			ag+=pp[1+xx*DEPTH-yy*DEPTH*X];
-			ab+=pp[2+xx*DEPTH-yy*DEPTH*X];
-		}
-		else
-		if (real_depth==16)
-		{
-			p1=pp[0+xx*DEPTH+yy*DEPTH*X];
-			p2=pp[1+xx*DEPTH+yy*DEPTH*X];
-			ab+= (p1 & 0x1f);
-			ag+= ((p1 >> 5) | ((p2 & 7) << 3));
-			ar+= (p2 >> 3);
-		}
-		else
-		if (real_depth==15)
-		{
-			p1=pp[0+xx*DEPTH+yy*DEPTH*X];
-			p2=pp[1+xx*DEPTH+yy*DEPTH*X];
-			ab+= (p1 & 0x1f);
-			ag+= ((p1 >> 5) | ((p2 & 3) << 3));
-			ar+= ((p2 & 0x7f) >> 2);
-		}
-	}
-	r = ar/(scale*scale);
-	g = ag/(scale*scale);
-	b = ab/(scale*scale);
-	if (real_depth==24)
-	{
-		putc(r, fp);
-		putc(g, fp);
-		putc(b, fp);
-	}
-	else
-	if (real_depth==16)
-	{
-		putc(b<<3, fp);
-		putc(g<<2, fp);
-		putc(r<<3, fp);
-	}
-	else
-	if (real_depth==15)
-	{
-		putc(b<<3, fp);
-		putc(g<<3, fp);
-		putc(r<<3, fp);
-	}
-      pp += DEPTH*scale;
-    }
-
-    for (j=0; j<padb; j++) putc(0, fp);
-  }
-}
-
-extern "C" void do_bmp(unsigned char *ptr, int bpl, int W, int H)
-{
-  char *p;
-  FILE *fp;
-  int i, nc, nbits, bperlin, cmaplen;
-  int w=W;
-  int h=H;
-  unsigned long aperature=0;
-  //  bobbyc unsigned char filename[255]="grab.bmp";
-  unsigned char filename[255]="/fs/hd0-dos/grab.bmp";
-  int c;
-  static int loop=1;
-  char out[255];
-  char buf[255];
-  char *cp;
-  unsigned char *buffer=0;
-  int fildes;
-  FILE *test;
-
-	X=bpl/3;
-	Y=H;
-	DEPTH=24;
-
-	// don't write bmp file if not wanted
-	test = fopen ("/dev/shmem/grab","r");
-	if (test==0) 
-	  return;
-
-	fclose(test);
-
-	p = (char *)ptr;
-	x=0;
-	y=0;
-	if (x+w>X || w==0) 
-	  w = X-x;
-	if (y+h>Y || h==0) 
-	  h = Y-y;
-
-    //printf( "aperature 0x%x\n",aperature );
-	printf ("X:%d Y:%d DEPTH:%d\n",X,Y,DEPTH);
-	printf ("x:%d y:%d w:%d h:%d scale:%d\n",x,y,w,h,scale);
-
-PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::do_bmp X:%d Y:%d DEPTH:%d\n",X,Y,DEPTH));
-PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::do_bmp x:%d y:%d w:%d h:%d scale:%d\n",x,y,w,h,scale));
-
-	if (DEPTH!=24 && DEPTH!=16 && DEPTH!=15)
-	{
-	  printf("Depth must be 15,16 or 24 for now.\n");
-	  exit(0);
-	}
-
-	real_depth=DEPTH;
-	DEPTH = (DEPTH+1)/8;
-
-	if (loop)
-	{
-		cp = strstr((const char *)filename,".");
-		if (cp==0)
-			sprintf (buf,"%s%d",filename,loop++);
-		else
-		{
-			*cp = 0;
-			sprintf (buf,"%s%d.%s",filename,loop++,cp+1);
-			*cp = '.';
-		}
-	}
-	else
-	{
-		strcpy((char *)buf,(const char *)filename);
-	}
-
-	printf ("bmp file: %s\n",buf);
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::do_bmp bmp file: %s\n",buf));
-
-	fp = fopen (buf,"w");
-
-	{
-   nbits = 24;
-   cmaplen = 0;
-   nc = 0;
-   bperlin = ((w * nbits + 31) / 32) * 4;   /* # bytes written per line */
-
-  putc('B', fp);  putc('M', fp);           /* BMP file magic number */
-
-  /* compute filesize and write it */
-  i = 14 +                /* size of bitmap file header */
-      40 +                /* size of bitmap info header */
-      (nc * 4) +          /* size of colormap */
-      bperlin * h;        /* size of image data */
-
-  putint(fp, i);
-  putshort(fp, 0);        /* reserved1 */
-  putshort(fp, 0);        /* reserved2 */
-  putint(fp, 14 + 40 + (nc * 4));  /* offset from BOfile to BObitmap */
-
-  putint(fp, 40);         /* biSize: size of bitmap info header */
-  putint(fp, w/scale);          /* biWidth */
-  putint(fp, h/scale);          /* biHeight */
-  putshort(fp, 1);        /* biPlanes:  must be '1' */
-  putshort(fp, nbits);    /* biBitCount: 1,4,8, or 24 */
-#define BI_RGB 0
-  putint(fp, BI_RGB);     /* biCompression:  BI_RGB, BI_RLE8 or BI_RLE4 */
-  putint(fp, bperlin*h);  /* biSizeImage:  size of raw image data */
-  putint(fp, 75 * 39);    /* biXPelsPerMeter: (75dpi * 39" per meter) */
-  putint(fp, 75 * 39);    /* biYPelsPerMeter: (75dpi * 39" per meter) */
-  putint(fp, nc);         /* biClrUsed: # of colors used in cmap */
-  putint(fp, nc);         /* biClrImportant: same as above */
-
-  if (buffer)
-	writeBMP24(fp,buffer,w,h);
-  else
-	writeBMP24(fp,(unsigned char *)p,w,h);
-	}
-	fclose(fp);
-}
-
-#endif
-
-

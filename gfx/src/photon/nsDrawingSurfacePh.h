@@ -58,9 +58,6 @@ public:
   /* Make this DrawingSurface active */
   NS_IMETHOD Select(void);
 
-  /* Deactivate an Off-Screen Drawing Surface */
-  NS_IMETHOD Stop(void);
-
   /* Flush the Off-Screen draw buffer to the pixmap or PgFlush the On-Screen */
   NS_IMETHOD Flush(void);
 
@@ -70,11 +67,9 @@ public:
 
   /* Is this Drawing Surface Active? */
   PRBool      IsActive();
+  void *GetDrawContext(void);
 
 public:
-  /* This needs to be accessed by nsRenderingPh a lot so make it public */
-  PhImage_t  *mPixmap;
-
   PRUint32			mWidth;
   PRUint32			mHeight;
 
@@ -82,16 +77,13 @@ private:
 
   PRBool			mIsOffscreen;
   PhGC_t        	*mGC;
-//xyz  PmMemoryContext_t *mMC;
-  PdOffscreenContext_t *mMC;
   PhDrawContext_t	*mDrawContext;
-  PhDrawContext_t	*moldDrawContext;
   
   PRUint32			mFlags;
   nsPixelFormat 	mPixFormat;
 
   /* for lock & unlock */
-  PhImage_t 		*mImage;
+  PhDrawContext_t	*mLockDrawContext;
   PRInt32			mLockX;
   PRInt32			mLockY;
   PRUint32			mLockWidth;

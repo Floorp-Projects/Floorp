@@ -28,89 +28,56 @@
 #include <Pt.h>
 #include <errno.h>
 
-/* Should be defined in the Photon headers somewhere */
-extern "C" {
-void PdReleaseDirectContext( PdDirectContext_t *DirectContext );
-}
-
-/* The Transparency Mask of the last image Draw'd in nsRenderingContextPh */
-/* This is needed for locking and unlocking */
-extern void *Mask;
-
-
 NS_IMPL_ISUPPORTS2(nsDrawingSurfacePh, nsIDrawingSurface, nsIDrawingSurfacePh)
 
 nsDrawingSurfacePh :: nsDrawingSurfacePh()
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::nsDrawingSurfacePh this=<%p>\n", this));
+	PhSysInfo_t sysinfo;
+	PhRect_t    rect = {{0, 0}, {SHRT_MAX, SHRT_MAX}};
+	char        *p;
+	int         inp_grp;
+	PhRegion_t  rid;
 
-  NS_INIT_REFCNT();
+	NS_INIT_REFCNT();
 
-  mIsOffscreen = PR_FALSE;
-  mPixmap      = nsnull;
-  mGC          = nsnull;
-  mMC          = nsnull;
-  mDrawContext = nsnull;
-  mWidth       = 0;
-  mHeight      = 0;
-  mFlags       = 0;
+	mDrawContext = nsnull;
+	mGC = nsnull;
+	mWidth = 0;
+	mHeight = 0;
+	mFlags = 0;
 
-  mImage       = nsnull;
-  mLockWidth   = 0;
-  mLockHeight  = 0;
-  mLockFlags   = 0;
-  mLocked      = PR_FALSE;
+  	mIsOffscreen = PR_FALSE;
+	mLockDrawContext = nsnull;
+	mLockWidth = 0;
+	mLockHeight = 0;
+	mLockFlags = 0;
+	mLockX = 0;
+	mLockY = 0;
+	mLocked = PR_FALSE;
 
-  mPixFormat.mRedMask = 0xff0000;
-  mPixFormat.mGreenMask = 0x00ff00;
-  mPixFormat.mBlueMask = 0x0000ff;
-  mPixFormat.mAlphaMask = 0;
-
-  mPixFormat.mRedShift = 16;
-  mPixFormat.mGreenShift = 8;
-  mPixFormat.mBlueShift = 0;
-  mPixFormat.mAlphaShift = 0;
+	mPixFormat.mRedMask = 0xff0000;
+	mPixFormat.mGreenMask = 0x00ff00;
+	mPixFormat.mBlueMask = 0x0000ff;
+	mPixFormat.mAlphaMask = 0;
+	mPixFormat.mRedShift = 16;
+	mPixFormat.mGreenShift = 8;
+	mPixFormat.mBlueShift = 0;
+	mPixFormat.mAlphaShift = 0;
 }
 
 nsDrawingSurfacePh :: ~nsDrawingSurfacePh()
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::~nsDrawingSurfacePh this=<%p> mIsOffscreen=<%d> mGC=<%p> mImage=<%p>\n", this, mIsOffscreen, mGC, mImage));
-
-  if (mImage)
-  {
-    /* This will be defined if the surface is still locked... */
-	/* maybe I should unlock it? */
-    PR_Free(mImage->image);
-    mImage->image = nsnull;
-	PR_Free(mImage);
-	mImage = nsnull;
-  }
-
-    Stop();
-	
-  if (mIsOffscreen)
-  {
-//    mMC->dc.gc=0;					// leave gc for now (leaks "less")
-//xyz    PmMemReleaseMC( mMC);				/* this function has an error! */
 	if (mDrawContext)
-{
-//printf ("release DC: %p\n",mDrawContext);
-//    PhDCSetCurrent( moldDrawContext );
-  //printf("PhDCSetCurrent: NULL\n");
-  PhDCSetCurrent(NULL);
-//  PgSetGC(mGC);
-//  PgSetRegion(mGC->rid);
-	mDrawContext->gc=0;
-     PdReleaseDirectContext((PdDirectContext_t *)mDrawContext);	/* this function has an error! */
-    mDrawContext=0;
-}
-//      free(mMC);
-    mMC = nsnull;
-//    PgShmemDestroy( mPixmap->image );
-	mPixmap->image = nsnull;
-    PR_Free (mPixmap);
-	mPixmap = nsnull;
-  }
+		 PhDCRelease(mDrawContext);
+	mDrawContext = nsnull;
+
+	if (mLockDrawContext)
+		 PhDCRelease(mLockDrawContext);
+	mLockDrawContext = nsnull;
+
+//	if (mGC)
+//		PgDestroyGC(mGC);
+	mGC = nsnull;
 }
 
   /**
@@ -135,116 +102,100 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock(PRInt32 aX, PRInt32 aY,
                                           void **aBits, PRInt32 *aStride,
                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
-printf ("kedl: uhoh, calling lock!............................................................\n");
+	printf("Lock()\n");
+	PhArea_t    dst_area, src_area;
+	int         format = 0, bpl;
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Lock this=<%p> mLocked=<%d>\n", this, mLocked));
+	if (mLocked)
+	{
+		NS_ASSERTION(0, "nested lock attempt");
+		return NS_ERROR_FAILURE;
+	}
+	mLocked = PR_TRUE;
 
-  if (mLocked)
-  {
-    NS_ASSERTION(0, "nested lock attempt");
-    return NS_ERROR_FAILURE;
-  }
+	mLockX = aX;
+	mLockY = aY;
+	mLockWidth = aWidth;
+	mLockHeight = aHeight;
+	mLockFlags = aFlags;
 
-  mLocked = PR_TRUE;
-  mLockX = aX;
-  mLockY = aY;
-  mLockWidth = aWidth;
-  mLockHeight = aHeight;
-  mLockFlags = aFlags;
+	// create a offscreen context to save the locked rectangle into
+//	if (mIsOffscreen)
+//	{
+		PdOffscreenContext_t *odc = (PdOffscreenContext_t *) mDrawContext;
+		format = odc->format;
+//	}
+	mLockDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext(format, aWidth, aHeight, \
+		Pg_OSC_MEM_PAGE_ALIGN);
+	if (!mLockDrawContext)
+	{
+		NS_ASSERTION(0, "Failed to create Offscreen area for lock.");
+		return NS_ERROR_FAILURE;
+	}
+	dst_area.pos.x = dst_area.pos.y = 0;
+	dst_area.size.w = aWidth;
+	dst_area.size.h = aHeight;
+	src_area.pos.x = aX;
+	src_area.pos.y = aY;
+	src_area.size.w = aWidth;
+	src_area.size.h = aHeight;
+	PgContextBlitArea((PdOffscreenContext_t *)mDrawContext, &src_area, (PdOffscreenContext_t *)mLockDrawContext, &dst_area);
 
-  PhImage_t  *image;
-  PhDim_t    dim;
-  short      bytes_per_pixel = 4;
+	*aBits = PdGetOffscreenContextPtr((PdOffscreenContext_t *)mLockDrawContext);
+	switch (format)
+	{
+		case Pg_IMAGE_PALETTE_BYTE:
+			bpl = 1;
+			break;
+		case Pg_IMAGE_DIRECT_8888:
+			bpl = 4;
+			break;
+		case Pg_IMAGE_DIRECT_888:
+			bpl = 3;
+			break;
+		case Pg_IMAGE_DIRECT_565:
+		case Pg_IMAGE_DIRECT_555:
+			bpl = 2;
+			break;
+	}
+	*aStride = *aWidthBytes = bpl * dst_area.size.w;
 
-  image = (PhImage_t  *) PR_CALLOC( sizeof(PhImage_t) );
-  if (image == NULL)
-  {
-	abort();
-    return NS_ERROR_FAILURE;
-  }
-  
-  mImage = image;
-
-  dim.w = mLockWidth;
-  dim.h = mLockHeight;
-  
-  /* Force all the Draw Events out to the image */
-  Flush();
-  
-  image->type = Pg_IMAGE_DIRECT_8888; // 4 bytes per pixel with this type
-  image->size = dim;
-  image->image = (char *) PR_Malloc( dim.w * dim.h * bytes_per_pixel);
-  if (image->image == NULL)
-  {
-	abort();
-    return NS_ERROR_FAILURE;
-  }
-  	  
-  image->bpl = bytes_per_pixel*dim.w;
-
-  for (int y=0; y<dim.h; y++)
-  {
-	memcpy( image->image+y*dim.w*bytes_per_pixel,
-	        mPixmap->image+bytes_per_pixel*mLockX+(mLockY+y)*mPixmap->bpl,
-			dim.w*bytes_per_pixel);
-  }
-  
-  *aBits = mImage->image;
-  *aWidthBytes = aWidth*bytes_per_pixel;
-  *aStride = mImage->bpl;    /* kirkj: I think this is wrong... */
-
-  return NS_OK;
+	printf("end Lock()\n");
+	return NS_OK;
 }
-
 
 NS_IMETHODIMP nsDrawingSurfacePh :: Unlock(void)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Unlock this=<%p> mLocked=<%d> \n", this, mLocked));
+	printf("UnLock\n");
+	PdOffscreenContext_t *off_dc = (PdOffscreenContext_t *) mDrawContext;
+	PhArea_t    dst_area, src_area;
 
-  if (!mLocked)
-  {
-    NS_ASSERTION(0, "nsDrawingSurfacePh::Unlock - attempting to unlock an DS that isn't locked");
-    return NS_ERROR_FAILURE;
-  }
-
-  // If the lock was not read only, put the bits back on the pixmap
-  if (!(mLockFlags & NS_LOCK_SURFACE_READ_ONLY))
-  {
-    PhPoint_t pos = { mLockX, mLockY };
-    int err;
-
-//printf("Unlock\n");
-    Select();
-
-    if (Mask)
-    {
-      int bpl;
-      bpl = (mLockWidth+7)/8;
-      bpl = (bpl + 3) & ~0x3;
-      err=PgDrawTImage( mImage->image, mImage->type, &pos, &mImage->size, mImage->bpl, 0 ,Mask,bpl);
-      if (err == -1)
-      {
-	    NS_ASSERTION(0, "nsDrawingSurfacePh::Unlock PgDrawTImage failed");
-		return NS_ERROR_FAILURE;
-	  }
-    }
-    else
+	if (!mLocked)
 	{
-      err=PgDrawImage( mImage->image, mImage->type, &pos, &mImage->size, mImage->bpl, 0 );
-      if (err == -1)
-	  {
-	    NS_ASSERTION(0, "nsDrawingSurfacePh::Unlock PgDrawImage failed");
+		NS_ASSERTION(0, "attempting to unlock an DS that isn't locked");
 		return NS_ERROR_FAILURE;
-	  }
-    }
-  }
+	}
 
-  PR_Free(mImage->image);
-  PR_Free(mImage);
-  mImage = nsnull;
-  mLocked = PR_FALSE;
+	// If the lock was not read only, put the bits back on the draw context
+	if (!(mLockFlags & NS_LOCK_SURFACE_READ_ONLY))
+	{
+		dst_area.pos.x = mLockX;
+		dst_area.pos.y = mLockY;
+		dst_area.size.w = mLockWidth;
+		dst_area.size.h = mLockHeight;
+		src_area.pos.x = src_area.pos.y = 0;
+		src_area.size.w = mLockWidth;
+		src_area.size.h = mLockHeight;
+		PgContextBlitArea((PdOffscreenContext_t *)mLockDrawContext, &src_area, (PdOffscreenContext_t *)mDrawContext, &dst_area);
+		// release the mLockDrawContext somehow !!
+		PhDCRelease((PdDirectContext_t *)mLockDrawContext);
+		mLockDrawContext = nsnull;
+	}
 
-  return NS_OK;
+	mLocked = PR_FALSE;
+
+	printf("end UnLock\n");
+  	return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight)
@@ -252,14 +203,12 @@ NS_IMETHODIMP nsDrawingSurfacePh :: GetDimensions(PRUint32 *aWidth, PRUint32 *aH
   *aWidth = mWidth;
   *aHeight = mHeight;
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::GetDimensions this=<%p> w,h=(%ld,%ld)\n", this, mWidth, mHeight));
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: IsOffscreen(PRBool *aOffScreen)
 {
   *aOffScreen = mIsOffscreen;
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::IsOffScreen mIsOffscreen=<%d>\n", mIsOffscreen));
 
   return NS_OK;
 }
@@ -267,7 +216,6 @@ NS_IMETHODIMP nsDrawingSurfacePh :: IsOffscreen(PRBool *aOffScreen)
 NS_IMETHODIMP nsDrawingSurfacePh :: IsPixelAddressable(PRBool *aAddressable)
 {
   *aAddressable = PR_FALSE;
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::IsPixelAddressable - Not Implemented\n"));
   return NS_OK;
 }
 
@@ -277,188 +225,48 @@ NS_IMETHODIMP nsDrawingSurfacePh :: GetPixelFormat(nsPixelFormat *aFormat)
   return NS_OK;
 }
 
+
 NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC )
 {
-  /* Init a OnScreen Drawing Surface */
-  mGC          = aGC;
-  mIsOffscreen = PR_FALSE;
-  mPixmap      = NULL;
-  mDrawContext = nsnull;
+//	if (mGC)
+  //  	PgDestroyGC(mGC);
 
-  /* this is definatly going to be on the screen, as it will be the window of a
-     widget or something. */
-  mIsOffscreen = PR_FALSE;
-  PgSetDrawBufferSize(16 * 1024 );  
+    mGC = aGC;
 
-  /* Code to clear the clipping from the GC */
-  /* Activate this GC */
+    // this is definatly going to be on the screen, as it will be the window of a
+    // widget or something.
+    mIsOffscreen = PR_FALSE;
 
-#if 1 //briane
-PhDrawContext_t *dc;
-dc = PhDCSetCurrent(mDrawContext);
-PgSetMultiClip(0,NULL);
-//printf("PhDCSetCurrent (Init): %X\n", dc);
-PhDCSetCurrent(dc);
-#else
-  //printf("Init\n");
-  Select();
-  
-  /* Clear out the Multi-clip, it will be reset later if needed */
-  /* This fixed the toolbar drawing */
-  PgSetMultiClip(0,NULL);
-#endif
+    // create an onscreen context with the current video modes image depth
+    //mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext(0, 0, 0, Pg_OSC_MAIN_DISPLAY);
+    mDrawContext = nsnull;
 
-  /* Clear out the Image if its still set */
-  if (mImage)
-  {
-    /* This will be defined if the surface is still locked... */
-	/* maybe I should unlock it? */
-    PR_Free(mImage->image);
-    mImage->image = nsnull;
-	PR_Free(mImage);
-	mImage = nsnull;
-  }
-  
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t=<%p> for onscreen drawing this=<%p> mDrawContext=<%p>\n",aGC, this, mDrawContext));
-  return NS_OK;
+  	return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
                                           PRUint32 aHeight, PRUint32 aFlags)
 {
-  /* Init a Off-Screen Drawing Surface */
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t + width/height this=<%p> w,h=(%ld,%ld) aGC=<%p>\n", this, aWidth, aHeight, aGC));
+//	if (mGC)
+//		PgDestroyGC(mGC);
 
-  PgSetDrawBufferSize(16 * 1024 );  
+	mGC = aGC;
+	mWidth = aWidth;
+	mHeight = aHeight;
+	mFlags = aFlags;
 
-  mGC = aGC;
-  mWidth = aWidth;
-  mHeight = aHeight;
-  mFlags = aFlags;
+	// we can draw on this offscreen because it has no parent
+	mIsOffscreen = PR_TRUE;
 
-  /* we can draw on this offscreen because it has no parent */
-  mIsOffscreen = PR_TRUE;
+	// create an offscreen context with the current video modes image depth
+	mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext(0, mWidth, mHeight, 0);
+	if (!mDrawContext)
+	{
+		NS_ASSERTION(0, "Failed to create Offscreen Context for DrawingSurface");
+		return NS_ERROR_FAILURE;
+	}
 
-  PhDim_t     dim;
-  PhArea_t    area;
-  PtArg_t     arg[3];
-
-  if (mPixmap)
-  {
-    NS_ASSERTION(NULL, "nsDrawingSurfacePh::Init with mPixmap already created");
-	abort();
-  }
-
-  mPixmap = (PhImage_t  *) PR_CALLOC(sizeof(PhImage_t) );
-  if (mPixmap == NULL)
-  {
-    NS_ASSERTION(NULL, "nsDrawingSurfacePh::Init can't CALLOC pixmap, out of memory");
-    abort();
-    return NS_ERROR_FAILURE;
-  }
-  	
-  area.pos.x  = 0;
-  area.pos.y  = 0;
-  area.size.w = aWidth;
-  area.size.h = aHeight;
-  dim.w       = area.size.w;
-  dim.h       = area.size.h;
-
-/* This fixes a PHOTON BUG */
-  /* 
-   *  Fix a problem on Test1 when a font is rendered partially out/off of
-   *  the drawing surface nothing is drawn. Increase the Surface to make sure
-   *  the font is always on the surface so it can be blitted correctly.
-   */	 
-  dim.h += 100;
-
-  /*
-   * Kedl thinks this fixes a bug on test 2
-   */  
-//  dim.w ++;
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init create drawing surface: area=<%d,%d,%d,%d> mPixmap=<%p>\n",
-    area.pos.x,area.pos.y,area.size.w,area.size.h,mPixmap));
-
-  PhPoint_t           translation = { 0, 0 };
-  short               bytes_per_pixel = 4;
-
-  mPixmap->type = Pg_IMAGE_DIRECT_8888; // 4 bytes per pixel with this type
-  mPixmap->size = dim;
-  mPixmap->bpl = bytes_per_pixel * dim.w;
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init  Before calling PmMemCreateMC\n"));
-
-  moldDrawContext = PhDCGetCurrent();
-
-    /*   Some cards need to be forced to 2048 to work right... */
-int w;
-#define GRAN 512
-  w = dim.w;
-  w = (w+GRAN)/GRAN*GRAN;
-  mDrawContext = (PhDrawContext_t *)PdCreateOffscreenContext( 0 ,w,dim.h,0);
-
-  if (mDrawContext == NULL)
-  {
-    NS_ASSERTION(0, "nsDrawingSurfacePh::Init Out of Memory calling PdCreateOffscreenContext");
-	abort();
-    return NS_ERROR_FAILURE;
-  }
- 	
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init  mMC=<%p> mDrawContext=<%p> CurrentMC=<%p>\n", mMC, mDrawContext, PhDCGetCurrent()));
-
-  PhDrawContext_t *oldDC;
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init  Before calling PmMemStart this=<%p>\n", this));
-
-  // after the Start all drawing goes into the memory context
-  oldDC = PhDCSetCurrent( (PdDirectContext_t *)mDrawContext );
-    //printf("OFFSCREEN: PhDCSetCurrent: %X\n", mDrawContext);
-  if (oldDC == NULL)
-  {
-	NS_ASSERTION(0, "nsDrawingSurfacePh::Init - Error calling PmMemStart");
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init - Error calling PmMemStart"));
-	abort();
-	return NS_ERROR_FAILURE;
-  }
-
-  /* Code to clear the clipping from the GC */
-  /* Activate this GC */
-#if 1 //briane
-PhDrawContext_t *dc;
-dc = PhDCSetCurrent(mDrawContext);
-PgSetMultiClip(0,NULL);
-PgSetFillColor(0x0);
-PgDrawIRect( 0, 0, dim.w,dim.h, Pg_DRAW_FILL_STROKE ); 
-//printf("PhDCSetCurrent (Init2): %X\n", dc);
-PhDCSetCurrent(dc);
-#else
-  //printf("Init2\n");
-  Select();
-  
-  /* Clear out the Multi-clip, it will be reset later if needed */
-  /* This fixed the toolbar drawing */
-  PgSetMultiClip(0,NULL);
-
-// clear the new buffer
-  PgSetFillColor(0x0);
-  PgDrawIRect( 0, 0, dim.w,dim.h, Pg_DRAW_FILL_STROKE ); 
-#endif
-
-  /* Clear out the Image if its still set */
-  if (mImage)
-  {
-    /* This will be defined if the surface is still locked... */
-	/* maybe I should unlock it? */
-    PR_Free(mImage->image);
-    mImage->image = nsnull;
-	PR_Free(mImage);
-	mImage = nsnull;
-  }
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init  Finished calling PmMemStart oldDC=<%p> new mc=<%p> CurrentDC=<%p>\n", oldDC, mMC, PhDCGetCurrent()));
-	    
-  return NS_OK;
+  	return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: Select( void )
@@ -466,104 +274,17 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Select( void )
   PhGC_t *gc = PgGetGC();
   PhDrawContext_t *dc = PhDCGetCurrent();
   
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Select this=<%p> CurrentGC=<%p> mIsOffscreen=<%d> CurrentDC=<%p> mDrawContext=<%p>\n", this, gc, mIsOffscreen, dc, mDrawContext));
-
   if (mDrawContext != dc)
   {
     PhDrawContext_t *old_dc;
-	/* Reset the Draw Context */
-//    printf ("PhDCSetCurrent 2: %p\n",mDrawContext);
-//	PhDCSetCurrent(0);	//777
-//	PgSetClipping( 0, NULL );
-//	PgSetMultiClip( 0, NULL );
-//	PgSetFillColor(0xffffff);
-//	PgDrawIRect( 0, 0, 50,50, Pg_DRAW_FILL_STROKE ); 
     old_dc = PhDCSetCurrent(mDrawContext);
-    //printf("SELECT: PhDCSetCurrent: %X\n", mDrawContext);
-    if (old_dc == NULL)
-	{
-	  NS_ASSERTION(old_dc, "nsDrawingSurfacePh::Select new DC can not be made active");
-	  abort();	
-	}
 
     gc = PgGetGC();
-    dc = PhDCGetCurrent();
-  
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Select after set DrawContext CurrentGC=<%p> CurrentDC=<%p>\n", gc, dc));
-  }
-  else
-  {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Select mDrawContext== CurrentDC\n"));
-  }
-
-  gc = PgGetGC();
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Select mGC=<%p> mMC=<%p> gc=<%p>\n", mGC, mMC, gc));
-  
-  if (gc != mGC)
-  {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Select Setting GC to mGC=<%p>\n", mGC));
-    PgSetGC(mGC);  
-  }
-
-  /* Clear out the Multi-clip, it will be reset if needed */
-  /* This fixed the toolbar drawing */
-//    PgSetMultiClip(0,NULL);		/* Moved this to the Init section  */
-
-#ifdef DEBUG
-  PhRect_t  *rect;
-  int       rect_count;
-  gc = PgGetGC();
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Select   GC Information: rid=<%d> target_rid=<%d>\n", gc->rid, gc->target_rid));
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t n_clip_rects=<%d> max_clip_rects=<%d>\n", gc->n_clip_rects,gc->max_clip_rects));
-  rect_count=gc->n_clip_rects;
-  rect = gc->clip_rects;
-  while(rect_count--)
-  {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t\t %d (%d,%d) to (%d,%d)\n", rect_count, rect->ul.x, rect->ul.y, rect->lr.x, rect->lr.y));
-    rect++;
-  }
-  
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t n__user_clip_rects=<%d> max_user_clip_rects=<%d>\n", gc->n_user_clip_rects,gc->max_user_clip_rects));
-  rect_count=gc->n_user_clip_rects;
-  rect = gc->user_clip_rects;
-  while(rect_count--)
-  {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t\t %d (%d,%d) to (%d,%d)\n", rect_count, rect->ul.x, rect->ul.y, rect->lr.x, rect->lr.y));
-    rect++;
-  }
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t aux_clip_valid=<%d>\n", gc->aux_clip_valid));
-#endif
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDrawingSurfacePh::Stop(void)
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Stop this=<%p> mIsOffscreen=<%d> mGC=<%p>\n", this, mIsOffscreen, mGC));
-
-  Flush();
-  
-  if (mIsOffscreen)
-  {
-    PhDrawContext_t *theMC;
-    PhDrawContext_t *dc = PhDCGetCurrent();
-  
-    /* Is my Memory Context even active? */
-    if (mDrawContext == dc)
-    {
-//xyz      theMC = PmMemStop( (PmMemoryContext_t *) mGC );
-//xyz      theMC = PdDirectStop( (PdDirectContext_t *) mGC );
-	  if (theMC == NULL)
-	  {
-	    NS_WARNING("nsDrawingSurfacePh::Stop - Error calling PmMemStop");
-	    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Stop - Error calling PmMemStop this=<%p>\n", this));
- 	  }
-	  else
-	  {
-	    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Stop - PmMemStop Successful\n"));
-	  }
-    }
+	if (gc != mGC)
+	{
+		PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Select Setting GC to mGC=<%p>\n", mGC));
+		PgSetGC(mGC);  
+	}
   }
 
   return NS_OK;
@@ -571,58 +292,23 @@ NS_IMETHODIMP nsDrawingSurfacePh::Stop(void)
 
 PhGC_t *nsDrawingSurfacePh::GetGC(void)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::GetGC this=<%p> mGC=<%p> mMC=<%p> mIsOffscreen=<%d>", this, mGC, mMC, mIsOffscreen));
   return mGC;
 }
 
 PhDrawContext_t *nsDrawingSurfacePh::GetDC(void)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::GetGC this=<%p> mGC=<%p> mMC=<%p> mIsOffscreen=<%d>", this, mGC, mMC, mIsOffscreen));
   return mDrawContext;	// xyz
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh::Flush(void)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Flush this=<%p> mIsOffscreen=<%d> mGC=<%p> mMC=<%p> mPixmap=<%p>\n", this, mIsOffscreen, mGC, mMC, mPixmap));
   int err;
 
-  // briane
   return NS_OK;
-  // briane
-
-
-  if (mIsOffscreen)
-  {
-//xyz    NS_ASSERTION(mMC, "nsDrawingSurfacePh::Flush  mMC is NULL\n");
-    //NS_ASSERTION(mPixmap, "nsDrawingSurfacePh::Flush  mPixmap is NULL\n");
-
-/*xyz
-    err = PmMemFlush( mMC, mPixmap ); 
-    if (err == -1)
-	{
-	  NS_ASSERTION(0,"nsDrawingSurfacePh::Flush  Invalid Memory Context");
-	  abort();
-	}
-*/
-
-    PgFlush();		/* not sure if I need this or not */
-  }
-  else
-  {
-	err=PgFlush();  
-    if (err == -1)
-	{
-	  NS_ASSERTION(0,"nsDrawingSurfacePh::Flush  Error with PgFlush of Offscreen DrawingSurface");
-      DebugBreak();
-	  //abort();	
-	}
-  }
 }
 
 PRBool nsDrawingSurfacePh::IsActive(void)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::IsActive this=<%p> mIsOffscreen=<%d> mGC=<%p> mMC=<%p> mPixmap=<%p>\n", this, mIsOffscreen, mGC, mMC, mPixmap));
-
   PhDrawContext_t *dc = PhDCGetCurrent();
   
   /* Is my Memory Context even active? */
