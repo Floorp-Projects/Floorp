@@ -27,6 +27,7 @@
 
 class nsFactoryEntry;
 class nsDll;
+class nsIServiceManager;
 
 // Registry Factory creation function defined in nsRegistry.cpp
 // We hook into this function locally to create and register the registry
@@ -152,6 +153,7 @@ protected:
     nsDll *CreateCachedDll(const char *persistentDescriptor, PRUint32 modDate, PRUint32 size);
     nsDll *CreateCachedDll(nsIFileSpec *dllSpec);
     nsDll *CreateCachedDllName(const char *dllName);
+    nsresult UnloadLibraries(nsIServiceManager *servmgr);
 
     // The following functions are the only ones that operate on the persistent
     // registry
