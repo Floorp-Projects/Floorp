@@ -432,7 +432,7 @@
         
         this.setAttribute("disabled", "true");
 
-        this.mIFrameEl = this.getAnonElByAttr("anonid", "viewer-iframe");
+        this.mIFrameEl = document.getAnonymousElementByAttribute(this, "anonid", "viewer-iframe");
       ]]></constructor>
     
       <destructor><![CDATA[
@@ -483,9 +483,9 @@
       
       <method name="initialize">
         <body><![CDATA[
-          this.mListEl = this.getAnonElByAttr("anonid", "viewer-list");
-          this.mTitleEl = this.getAnonElByAttr("anonid", "viewer-title");
-          this.mMenuEl = this.getAnonElByAttr("anonid", "viewer-menu");
+          this.mListEl = document.getAnonymousElementByAttribute(this, "anonid", "viewer-list");
+          this.mTitleEl = document.getAnonymousElementByAttribute(this, "anonid", "viewer-title");
+          this.mMenuEl = document.getAnonymousElementByAttribute(this, "anonid", "viewer-menu");
           
           if (this.hasAttribute("linkedpanel"))
             this.linkedPanel = document.getElementById(this.getAttribute("linkedpanel"));
@@ -790,27 +790,6 @@
             case "subjectChange":
               this.mObsMan.dispatchEvent("subjectChange", aEvent);
           };
-        ]]></body>
-      </method>
-      
-  <!-- ////////////////////////////////////////////////////////////////////////////
-      // We need this method only because document.getAnonymousElementByAttribute 
-      // is crashing (as of 2/26/2001) 
-      //////////////////////////////////////////////////////////////////////// -->
-
-      <method name="getAnonElByAttr">
-        <parameter name="aAttr"/>
-        <parameter name="aVal"/>
-        <body><![CDATA[
-          var kids = document.getAnonymousNodes(this);
-          for (var i = 0; i < kids.length; ++i) {
-            if (kids[i].getAttribute(aAttr) == aVal)
-              return kids[i];
-            var kids2 = kids[i].getElementsByAttribute(aAttr, aVal);
-            if (kids2.length > 0)
-              return kids2[0];
-          }
-          return null;
         ]]></body>
       </method>
 
