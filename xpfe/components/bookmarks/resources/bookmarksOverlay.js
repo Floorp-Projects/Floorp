@@ -116,7 +116,6 @@ BookmarksUIElement.prototype = {
   createContextMenu: function (aEvent)
   {
     var popup = aEvent.target;
-    
     // clear out the old context menu contents (if any)
     while (popup.hasChildNodes()) 
       popup.removeChild(popup.firstChild);
@@ -130,7 +129,6 @@ BookmarksUIElement.prototype = {
       aEvent.preventDefault();
       return;
     }
-
     if (!("getContextSelection" in this)) 
       throw "Clients must implement getContextSelection!";
     var selection = this.getContextSelection (itemNode);
@@ -217,31 +215,31 @@ BookmarksUIElement.prototype = {
     var commands = [];
     switch (type) {
     case "http://home.netscape.com/NC-rdf#BookmarkSeparator":
-      commands = ["find", "separator", "bm_cut", "bm_copy", "bm_paste", 
+      commands = ["bm_find", "separator", "bm_cut", "bm_copy", "bm_paste", 
                   "bm_delete", "separator", "bm_fileBookmark", "separator", 
-                  "newfolder"];
+                  "bm_newfolder"];
       break;
     case "http://home.netscape.com/NC-rdf#Bookmark":
-      commands = ["open", "find", "separator", "bm_cut", 
-                  "bm_copy", "bm_paste", "bm_delete", "separator", "rename",
-                  "separator", "bm_fileBookmark", "separator", "newfolder", 
-                  "separator", "properties"];
+      commands = ["bm_open", "bm_find", "separator", "bm_cut", 
+                  "bm_copy", "bm_paste", "bm_delete", "separator", "bm_rename",
+                  "separator", "bm_fileBookmark", "separator", "bm_newfolder", 
+                  "separator", "bm_properties"];
       break;
     case "http://home.netscape.com/NC-rdf#Folder":
-      commands = ["openfolder", "openfolderinnewwindow", "find", "separator", 
-                  "bm_cut", "bm_copy", "bm_paste", "bm_delete", "separator", "rename", 
+      commands = ["bm_openfolder", "bm_openfolderinnewwindow", "bm_find", "separator", 
+                  "bm_cut", "bm_copy", "bm_paste", "bm_delete", "separator", "bm_rename", 
                   "separator", "bm_fileBookmark", "separator", 
-                  "newfolder", "separator", "properties"];
+                  "bm_newfolder", "separator", "bm_properties"];
       break;
     case "http://home.netscape.com/NC-rdf#IEFavoriteFolder":
-      commands = ["open", "find", "separator", "bm_copy", "bm_delete", "separator", "rename", "separator",
-                  "bm_fileBookmark", "separator", "separator", "properties"];
+      commands = ["bm_open", "bm_find", "separator", "bm_copy", "bm_delete", "separator", "bm_rename", "separator",
+                  "bm_fileBookmark", "separator", "separator", "bm_properties"];
       break;
     case "http://home.netscape.com/NC-rdf#IEFavorite":
-      commands = ["open", "find", "separator", "bm_copy"];
+      commands = ["bm_open", "bm_find", "separator", "bm_copy"];
       break;
     case "http://home.netscape.com/NC-rdf#FileSystemObject":
-      commands = ["open", "find", "separator", "bm_copy"];
+      commands = ["bm_open", "bm_find", "separator", "bm_copy"];
       break;
     default: 
       var source = this.RDF.GetResource(aNodeID);
@@ -290,35 +288,35 @@ BookmarksUIElement.prototype = {
     if (selection.length >= 1) 
       var selectedItem = selection[0];
     switch (aCommandID) {
-    case "open":
+    case "bm_open":
       this.open(null, selectedItem);
       break;
-    case "openfolder":
+    case "bm_openfolder":
       this.commands.openFolder(selectedItem);
       break;
-    case "openfolderinnewwindow":
+    case "bm_openfolderinnewwindow":
       this.openFolderInNewWindow(selectedItem);
       break;
-    case "rename":
+    case "bm_rename":
       // XXX - this is SO going to break if we ever do column re-ordering.
       this.commands.editCell(selectedItem, 0);
       break;
-    case "editurl":
+    case "bm_editurl":
       this.commands.editCell(selectedItem, 1);
       break;
-    case "setnewbookmarkfolder":
-    case "setpersonaltoolbarfolder":
-    case "setnewsearchfolder":
+    case "bm_setnewbookmarkfolder":
+    case "bm_setpersonaltoolbarfolder":
+    case "bm_setnewsearchfolder":
       BookmarksUtils.doBookmarksCommand(NODE_ID(selectedItem),
                                         NC_NS_CMD + aCommandID, args);
       // XXX - The containing node seems to be closed here and the 
       //       focus/selection is destroyed.
       this.selectElement(selectedItem);
       break;
-    case "properties":
+    case "bm_properties":
       this.showPropertiesForNode(selectedItem);
       break;
-    case "find":
+    case "bm_find":
       this.findInBookmarks();
       break;
     case "bm_cut":
@@ -356,16 +354,16 @@ BookmarksUIElement.prototype = {
         gBookmarksShell.flushDataSource();
       }
       break;
-    case "newfolder":
+    case "bm_newfolder":
       var nfseln = this.getBestItem();
       this.commands.createBookmarkItem("folder", nfseln);
       break;
-    case "newbookmark":
+    case "bm_newbookmark":
       var folder = this.getSelectedFolder();
       openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
                  "centerscreen,chrome,modal=yes,dialog=yes,resizable=no", null, null, folder, null, "newBookmark");
       break;
-    case "newseparator":
+    case "bm_newseparator":
       nfseln = this.getBestItem();
       var parentNode = this.findRDFNode(nfseln, false);
       args = [{ property: NC_NS + "parent", 
@@ -373,9 +371,9 @@ BookmarksUIElement.prototype = {
       BookmarksUtils.doBookmarksCommand(NODE_ID(nfseln), 
                                         NC_NS_CMD + "newseparator", args);
       break;
-    case "import":
-    case "export":
-      const isImport = aCommandID == "import";
+    case "bm_import":
+    case "bm_export":
+      const isImport = aCommandID == "bm_import";
       try {
         const kFilePickerContractID = "@mozilla.org/filepicker;1";
         const kFilePickerIID = Components.interfaces.nsIFilePicker;
