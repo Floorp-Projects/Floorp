@@ -3451,3 +3451,27 @@ xlib_rgb_get_screen (void)
   return NULL;
 }
 
+
+static void * _app_context = 0;
+
+void
+xlib_set_xt_app_context(void * app_context)
+{
+  if (_app_context != NULL)
+  {
+    abort();
+  }
+
+  _app_context = app_context;
+}
+
+void *
+xlib_get_xt_app_context()
+{
+  if (_app_context == NULL)
+  {
+    abort();
+  }
+
+  return _app_context;
+}
