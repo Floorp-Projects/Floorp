@@ -224,7 +224,7 @@ print %article->{'Subject'} ."\n";
 print "</B></FONT>\n";
 print "</TD></TR><TR><TD>\n";
 print %article->{'Summary'};
-print "</TD></TR><TR><TD ALIGN="right">\n";
+print "</TD></TR><TR><TD ALIGN=\"right\">\n";
 print "<FONT SIZE=-1>\nPosted: " . %article->{'Date'} ."\n</FONT>";
 print "<BR>";
 print %article->{'Newsgroups'} . "\n";
