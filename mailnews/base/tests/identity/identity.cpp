@@ -59,9 +59,6 @@ int main() {
     exit(1);
   }
 
-  rv = prefs->Startup("prefs50.js");
-  if (NS_FAILED(rv)) printf("Couldn't read prefs\n");
-
   nsIMsgAccountManager *accountManager;
   rv = nsComponentManager::CreateInstance(kMsgAccountManagerCID,
                                           nsnull,
@@ -195,21 +192,11 @@ printIncomingServer(nsIMsgIncomingServer *server)
   rv = server->GetPassword(&value);
   if (NS_SUCCEEDED(rv) && value) printf("\tPassword: %s\n", value);  
 
-  /* see if it's a pop server */
-  nsIPop3IncomingServer *popServer=nsnull;
-  rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
-                              (void **)&popServer);
-  
-  if (NS_SUCCEEDED(rv) && popServer) {
-    printf("\tThis is a pop3 server!\n");
-    value=nsnull;
-    rv = popServer->GetRootFolderPath(&value);
-    if (NS_SUCCEEDED(rv) && value) printf("\t\tPop3 root folder path: %s\n",
+  value=nsnull;
+  rv = server->GetLocalPath(&value);
+  if (NS_SUCCEEDED(rv) && value) printf("\t\troot folder path: %s\n",
                                           value);
     
-  } else {
-    printf("Not a pop3 server\n");
-  }
   
   return NS_OK;
 }
