@@ -48,6 +48,10 @@ ns4xPlugin::CheckClassInitialized(void)
     CALLBACKS.size = sizeof(CALLBACKS);
     CALLBACKS.version = (NP_VERSION_MAJOR << 8) + NP_VERSION_MINOR;
 
+#if !TARGET_CARBON
+// pinkerton - these macros rely on BuildRoutineDescriptor(), which is no longer in
+// Carbon. Our easy solution to this is to drop support for 68K plugins. Now we just
+// need to do the work...
     CALLBACKS.geturl           = NewNPN_GetURLProc(_geturl);
     CALLBACKS.posturl          = NewNPN_PostURLProc(_posturl);
     CALLBACKS.requestread      = NewNPN_RequestReadProc(_requestread);
@@ -69,6 +73,7 @@ ns4xPlugin::CheckClassInitialized(void)
     CALLBACKS.invalidaterect   = NewNPN_InvalidateRectProc(_invalidaterect);
     CALLBACKS.invalidateregion = NewNPN_InvalidateRegionProc(_invalidateregion);
     CALLBACKS.forceredraw      = NewNPN_ForceRedrawProc(_forceredraw);
+#endif
 
     initialized = TRUE;
 };
