@@ -212,6 +212,7 @@ bin\components\xpinstall.xpt
 bin\components\xppref32.dll
 bin\components\xml-rpc.xpt
 bin\components\nsDictionary.js
+bin\components\nsProxyAutoConfig.js
 bin\components\nsXmlRpcClient.js
 bin\plugins\npnul32.dll
 bin\components\xmlextras.xpt

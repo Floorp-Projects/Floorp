@@ -208,6 +208,7 @@ bin/components/xpcom_components.xpt
 bin/components/xpcom_threads.xpt
 bin/components/xml-rpc.xpt
 bin/components/nsDictionary.js
+bin/components/nsProxyAutoConfig.js
 bin/components/nsXmlRpcClient.js
 bin/components/libxremote_client.so
 bin/components/windowwatcher.xpt
