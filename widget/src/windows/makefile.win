@@ -16,22 +16,39 @@
 # Reserved.
 
 DEPTH=..\..\..
-IGNORE_MANIFEST=1
+#IGNORE_MANIFEST=1
 
-MAKE_OBJ_TYPE   = DLL
-DLLNAME = raptorwidget
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-RESFILE = widget.res
+LIBRARY_NAME = raptorwidget_s
+REQUIRES=xpcom gfxwin raptor
+DEFINES =-D_IMPL_NS_WIDGET
 
-MISCDEP =                       \
- $(DIST)\lib\xpcom32.lib        \
- $(DIST)\lib\raptorbase.lib     \
- $(DIST)\lib\raptorgfxwin.lib   \
- $(DIST)\lib\raptorbasewidget_s.lib     
+CPPSRCS =              \
+	nsPopUpMenu.cpp      \
+	nsMenuBar.cpp        \
+	nsMenu.cpp           \
+	nsMenuItem.cpp       \
+	nsObject.cpp         \
+	nsWindow.cpp         \
+	nsButton.cpp         \
+	nsCheckButton.cpp    \
+	nsRadioButton.cpp    \
+	nsListBox.cpp        \
+	nsComboBox.cpp       \
+	nsTextWidget.cpp     \
+	nsTextHelper.cpp     \
+	nsTextAreaWidget.cpp \
+	nsFileWidget.cpp     \
+	nsScrollbar.cpp      \
+	nsTabWidget.cpp      \
+	nsTooltipWidget.cpp  \
+	nsAppShell.cpp       \
+	nsLookAndFeel.cpp    \
+	nsDialog.cpp         \
+	nsLabel.cpp          \
+	nsToolkit.cpp        \
+	$(NULL)
 
 MODULE=raptor 
-
-DEFINES =-D_IMPL_NS_WIDGET
 
 OBJS =                             \
 	.\$(OBJDIR)\nsPopUpMenu.obj  \
@@ -57,37 +74,24 @@ OBJS =                             \
 	.\$(OBJDIR)\nsDialog.obj    \
 	.\$(OBJDIR)\nsLabel.obj    \
 	.\$(OBJDIR)\nsToolkit.obj        \
-	.\$(OBJDIR)\nsWidgetSupport.obj  \
-	.\$(OBJDIR)\nsWidgetFactory.obj  \
 	$(NULL)
 
 LINCS=                                  \
 	-I$(PUBLIC)\raptor              \
 	-I$(PUBLIC)\xpcom               \
-	-I..               \
+	-I..\xpwidgets               \
 	$(NULL)
 
 LCFLAGS =                               \
 	$(LCFLAGS)                      \
-	-D_IMPL_NS_WIDGET               \
-	-DNS_DLLNAME=$(DLLNAME).dll     \
+  $(DEFINES) \
 	$(NULL)
-
-LLIBS=                                  \
- comctl32.lib                           \
- comdlg32.lib                           \
- $(DIST)\lib\xpcom32.lib                \
- $(DIST)\lib\raptorgfxwin.lib           \
- $(DIST)\lib\raptorbase.lib             \
- $(DIST)\lib\raptorbasewidget_s.lib     \
- $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+libs:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).dll
-	rm -f $(DIST)\lib\$(DLLNAME).lib
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+	rm -f $(PDBFILE).pdb
