@@ -86,42 +86,47 @@ NS_METHOD BulletFrame::Paint(nsIPresContext& aCX,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect& aDirtyRect)
 {
-  nsStyleFont* myFont =
-    (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
-  nsStyleColor* myColor =
-    (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
-  nsStyleList* myList =
-    (nsStyleList*)mStyleContext->GetData(eStyleStruct_List);
-  nsIFontMetrics* fm = aCX.GetMetricsFor(myFont->mFont);
+  nsStyleDisplay* disp =
+    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
 
-  nscoord pad;
+  if (disp->mVisible) {
+    nsStyleFont* myFont =
+      (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
+    nsStyleColor* myColor =
+      (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
+    nsStyleList* myList =
+      (nsStyleList*)mStyleContext->GetData(eStyleStruct_List);
+    nsIFontMetrics* fm = aCX.GetMetricsFor(myFont->mFont);
 
-  nsAutoString text;
-  switch (myList->mListStyleType) {
-  case NS_STYLE_LIST_STYLE_NONE:
-    break;
+    nscoord pad;
 
-  case NS_STYLE_LIST_STYLE_DISC:
-  case NS_STYLE_LIST_STYLE_CIRCLE:
-  case NS_STYLE_LIST_STYLE_SQUARE:
-    pad = PAD_DISC;
-    aRenderingContext.SetColor(myColor->mColor);
-    aRenderingContext.FillRect(pad, pad, mRect.width - (pad + pad),
-                               mRect.height - (pad + pad));/* XXX */
-    break;
+    nsAutoString text;
+    switch (myList->mListStyleType) {
+    case NS_STYLE_LIST_STYLE_NONE:
+      break;
 
-  case NS_STYLE_LIST_STYLE_DECIMAL:
-  case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
-  case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
-  case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
-  case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
-    GetListItemText(&aCX, text, *myList);
-    aRenderingContext.SetColor(myColor->mColor);
-    aRenderingContext.SetFont(myFont->mFont);
-    aRenderingContext.DrawString(text, 0, 0, fm->GetWidth(text));
-    break;
+    case NS_STYLE_LIST_STYLE_DISC:
+    case NS_STYLE_LIST_STYLE_CIRCLE:
+    case NS_STYLE_LIST_STYLE_SQUARE:
+      pad = PAD_DISC;
+      aRenderingContext.SetColor(myColor->mColor);
+      aRenderingContext.FillRect(pad, pad, mRect.width - (pad + pad),
+                                 mRect.height - (pad + pad));/* XXX */
+      break;
+
+    case NS_STYLE_LIST_STYLE_DECIMAL:
+    case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
+    case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
+    case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
+    case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
+      GetListItemText(&aCX, text, *myList);
+      aRenderingContext.SetColor(myColor->mColor);
+      aRenderingContext.SetFont(myFont->mFont);
+      aRenderingContext.DrawString(text, 0, 0, fm->GetWidth(text));
+      break;
+    }
+    NS_RELEASE(fm);
   }
-  NS_RELEASE(fm);
   return NS_OK;
 }
 

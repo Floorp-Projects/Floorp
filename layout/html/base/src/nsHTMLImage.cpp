@@ -326,23 +326,28 @@ ImageFrame::Paint(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
-  // First paint background and borders
-  nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+  nsStyleDisplay* disp =
+    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
 
-  // XXX when rendering the broken image, do not scale!
-  // XXX when we don't have the image, draw the we-don't-have-an-image look
+  if (disp->mVisible) {
+    // First paint background and borders
+    nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
 
-  nsIImage* image = mImageLoader.GetImage();
-  if (nsnull == image) {
-    // No image yet
-    return NS_OK;
+    // XXX when rendering the broken image, do not scale!
+    // XXX when we don't have the image, draw the we-don't-have-an-image look
+
+    nsIImage* image = mImageLoader.GetImage();
+    if (nsnull == image) {
+      // No image yet
+      return NS_OK;
+    }
+
+    // Now render the image into our inner area (the area without the
+    // borders and padding)
+    nsRect inner;
+    GetInnerArea(&aPresContext, inner);
+    aRenderingContext.DrawImage(image, inner);
   }
-
-  // Now render the image into our inner area (the area without the
-  // borders and padding)
-  nsRect inner;
-  GetInnerArea(&aPresContext, inner);
-  aRenderingContext.DrawImage(image, inner);
 
   if (GetShowFrameBorders()) {
     nsIImageMap* map = GetImageMap();

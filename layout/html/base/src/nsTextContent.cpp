@@ -431,31 +431,36 @@ NS_METHOD TextFrame::Paint(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
-  // Get style data
-  nsStyleColor* color =
-    (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
-  nsStyleFont* font =
-    (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
+  nsStyleDisplay* disp =
+    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
 
-  // Set font and color
-  aRenderingContext.SetColor(color->mColor);
-  aRenderingContext.SetFont(font->mFont);
+  if (disp->mVisible) {
+    // Get style data
+    nsStyleColor* color =
+      (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
+    nsStyleFont* font =
+      (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
 
-  if (nsnull != mWords) {
-    PaintJustifiedText(aRenderingContext, aDirtyRect, 0, 0);
+    // Set font and color
+    aRenderingContext.SetColor(color->mColor);
+    aRenderingContext.SetFont(font->mFont);
+
+    if (nsnull != mWords) {
+      PaintJustifiedText(aRenderingContext, aDirtyRect, 0, 0);
+      if (font->mThreeD) {
+        nscoord onePixel = nscoord(1.0f * aPresContext.GetPixelsToTwips());
+        aRenderingContext.SetColor(color->mBackgroundColor);
+        PaintJustifiedText(aRenderingContext, aDirtyRect, onePixel, onePixel);
+      }
+      return NS_OK;
+    }
+    PaintRegularText(aPresContext, aRenderingContext, aDirtyRect, 0, 0);
+    //nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
     if (font->mThreeD) {
       nscoord onePixel = nscoord(1.0f * aPresContext.GetPixelsToTwips());
       aRenderingContext.SetColor(color->mBackgroundColor);
-      PaintJustifiedText(aRenderingContext, aDirtyRect, onePixel, onePixel);
+      PaintRegularText(aPresContext, aRenderingContext, aDirtyRect, onePixel, onePixel);
     }
-    return NS_OK;
-  }
-  PaintRegularText(aPresContext, aRenderingContext, aDirtyRect, 0, 0);
-  //nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
-  if (font->mThreeD) {
-    nscoord onePixel = nscoord(1.0f * aPresContext.GetPixelsToTwips());
-    aRenderingContext.SetColor(color->mBackgroundColor);
-    PaintRegularText(aPresContext, aRenderingContext, aDirtyRect, onePixel, onePixel);
   }
 
   return NS_OK;

@@ -32,14 +32,19 @@ NS_METHOD nsLeafFrame::Paint(nsIPresContext& aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect& aDirtyRect)
 {
-  nsStyleColor* myColor =
-    (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
-  nsStyleSpacing* mySpacing =
-    (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
-  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, mRect, *myColor);
-  nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                              aDirtyRect, mRect, *mySpacing, 0);
+  nsStyleDisplay* disp =
+    (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
+
+  if (disp->mVisible) {
+    nsStyleColor* myColor =
+      (nsStyleColor*)mStyleContext->GetData(eStyleStruct_Color);
+    nsStyleSpacing* mySpacing =
+      (nsStyleSpacing*)mStyleContext->GetData(eStyleStruct_Spacing);
+    nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                    aDirtyRect, mRect, *myColor);
+    nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                aDirtyRect, mRect, *mySpacing, 0);
+  }
   return NS_OK;
 }
 
