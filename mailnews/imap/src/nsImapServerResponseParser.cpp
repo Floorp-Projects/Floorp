@@ -1783,9 +1783,17 @@ void nsImapServerResponseParser::resp_text_code()
     }
     else if (!PL_strcasecmp(fNextToken,"PERMANENTFLAGS"))
     {
+      PRUint32 saveSettableFlags = fSettablePermanentFlags;
       fSupportsUserDefinedFlags = 0;		// assume no unless told
       fSettablePermanentFlags = 0;            // assume none, unless told otherwise.
       parse_folder_flags();
+      // if the server tells us there are no permanent flags, we're
+      // just going to pretend that the FLAGS response flags, if any, are
+      // permanent in case the server is broken. This will allow us
+      // to store delete and seen flag changes - if they're not permanent, 
+      // they're not permanent, but at least we'll try to set them.
+      if (!fSettablePermanentFlags)
+        fSettablePermanentFlags = saveSettableFlags;
       fGotPermanentFlags = PR_TRUE;
     }
     else if (!PL_strcasecmp(fNextToken,"READ-ONLY]"))
