@@ -121,8 +121,6 @@ public:
     NS_IMETHOD            GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
     NS_IMETHOD            SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
     NS_IMETHOD            DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
-    NS_IMETHOD            GetClientBounds(nsRect &aRect);
-    NS_IMETHOD            GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight);
     NS_IMETHOD            EnableFileDrop(PRBool aEnable);
     NS_IMETHOD            CaptureMouse(PRBool aCapture);
 
