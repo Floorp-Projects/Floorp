@@ -29,8 +29,8 @@
 # issue to work out.
 
 
-# $Revision: 1.20 $ 
-# $Date: 2003/08/04 17:15:07 $ 
+# $Revision: 1.21 $ 
+# $Date: 2004/07/12 01:03:38 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TreeData.pm,v $ 
 # $Name:  $ 
@@ -54,10 +54,8 @@
 # Rights Reserved.
 #
 
-# complete rewrite by Ken Estes:
-#	 kestes@staff.mail.com Old work.
-#	 kestes@reefedge.com New work.
-#	 kestes@walrus.com Home.
+# complete rewrite by Ken Estes for contact info see the
+#     mozilla/webtools/tinderbox2/Contact file.
 # Contributor(s): 
 
 
@@ -220,7 +218,7 @@ $VERSION = '#tinder_version#';
 
                    # Here is an example of "everything"
 
-                   # branch => '//',
+                   # branch => '//depot/',
                    # module => '...',
 
                    # Here is an example of a branch "2.5" which is
@@ -228,7 +226,7 @@ $VERSION = '#tinder_version#';
                    # a subdirectory which contains the "web" part of
                    # this release.
 
-                   # branch => '//releases/v2.5',
+                   # branch => '//depot/releases/v2.5',
                    # module => '/webmodule/...',
 #                  },
 
@@ -284,10 +282,10 @@ sub TreeName2DirPattern {
 sub Tree2Filespec {
     my ($treename) = @_;
 
-    my $branch = $VC_TREE{$treename}{'branch'};
     my $module = $VC_TREE{$treename}{'module'};
+    my $branch = $VC_TREE{$treename}{'branch'};
 
-    my $filespec = $branch.$module;
+    my $filespec = $module.$branch;
 
     # This quick test for a reasonable filespec, and fix for strings
     # which look wrong, comes in handy when I am testing (I tend to
@@ -295,7 +293,7 @@ sub Tree2Filespec {
     # help a user who has totally botched their branch/module
     # specifications to at least get a working system.
 
-    ($filespec =~ m!//.*\.\.\.!) ||
+    ($filespec =~ m!//depot/.*\.\.\.!) ||
         ($filespec = '//...');
 
    return $filespec;
