@@ -1059,7 +1059,6 @@ fun_finalize(JSContext *cx, JSObject *obj)
         return;
     if (fun->interpreted)
         js_DestroyScript(cx, fun->u.script);
-    JS_free(cx, fun);
 }
 
 #if JS_HAS_XDR
@@ -1302,6 +1301,7 @@ fun_mark(JSContext *cx, JSObject *obj, void *arg)
 
     fun = (JSFunction *) JS_GetPrivate(cx, obj);
     if (fun) {
+        JS_MarkGCThing(cx, fun, js_private_str, arg);
         if (fun->atom)
             GC_MARK_ATOM(cx, fun->atom, arg);
         if (fun->interpreted)
@@ -1886,7 +1886,7 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
     JSFunction *fun;
 
     /* Allocate a function struct. */
-    fun = (JSFunction *) JS_malloc(cx, sizeof *fun);
+    fun = (JSFunction *) js_NewGCThing(cx, GCX_PRIVATE, sizeof(JSFunction));
     if (!fun)
         return NULL;
 
@@ -1895,10 +1895,8 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
         OBJ_SET_PARENT(cx, funobj, parent);
     } else {
         funobj = js_NewObject(cx, &js_FunctionClass, NULL, parent);
-        if (!funobj) {
-            JS_free(cx, fun);
+        if (!funobj)
             return NULL;
-        }
     }
 
     /* Initialize all function members. */
@@ -1918,7 +1916,6 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
     /* Link fun to funobj and vice versa. */
     if (!js_LinkFunctionObject(cx, fun, funobj)) {
         cx->newborn[GCX_OBJECT] = NULL;
-        JS_free(cx, fun);
         return NULL;
     }
     return fun;

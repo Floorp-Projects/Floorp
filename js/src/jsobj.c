@@ -1776,6 +1776,70 @@ static JSBool
 GetClassPrototype(JSContext *cx, JSObject *scope, const char *name,
                   JSObject **protop);
 
+static jsval *
+AllocSlots(JSContext *cx, jsval *slots, uint32 nslots)
+{
+    size_t nbytes, obytes, minbytes;
+    uint32 i, oslots;
+    jsval *newslots;
+
+    nbytes = (nslots + 1) * sizeof(jsval);
+    if (slots) {
+        oslots = slots[-1];
+        obytes = (oslots + 1) * sizeof(jsval);
+    } else {
+        oslots = 0;
+        obytes = 0;
+    }
+
+    if (nbytes <= GC_NBYTES_MAX) {
+        newslots = (jsval *) js_NewGCThing(cx, GCX_PRIVATE, nbytes);
+    } else {
+        newslots = (jsval *)
+                   JS_realloc(cx,
+                              (obytes <= GC_NBYTES_MAX) ? NULL : slots - 1,
+                              nbytes);
+    }
+    if (!newslots)
+        return NULL;
+
+    if (obytes != 0) {
+        /* If either nbytes or obytes fit in a GC-thing, we must copy. */
+        minbytes = JS_MIN(nbytes, obytes);
+        if (minbytes <= GC_NBYTES_MAX)
+            memcpy(newslots + 1, slots, minbytes - sizeof(jsval));
+
+        /* If nbytes are in a GC-thing but obytes aren't, free obytes. */
+        if (nbytes <= GC_NBYTES_MAX && obytes > GC_NBYTES_MAX)
+            JS_free(cx, slots - 1);
+
+        /* If we're extending an allocation, initialize free slots. */
+        if (nslots > oslots) {
+            for (i = 1 + oslots; i <= nslots; i++)
+                newslots[i] = JSVAL_VOID;
+        }
+    }
+
+    newslots[0] = nslots;
+    return ++newslots;
+}
+
+static void
+FreeSlots(JSContext *cx, jsval *slots)
+{
+    size_t nbytes;
+
+    /*
+     * NB: We count on smaller GC-things being finalized before larger things
+     * that become garbage during the same GC.  Without this assumption, we
+     * couldn't load slots[-1] here without possibly loading a gcFreeList link
+     * (see struct JSGCThing in jsgc.h).
+     */
+    nbytes = (slots[-1] + 1) * sizeof(jsval);
+    if (nbytes > GC_NBYTES_MAX)
+        JS_free(cx, slots - 1);
+}
+
 JSObject *
 js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
 {
@@ -1787,7 +1851,7 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     jsval *newslots;
 
     /* Allocate an object from the GC heap and zero it. */
-    obj = (JSObject *) js_AllocGCThing(cx, GCX_OBJECT);
+    obj = (JSObject *) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
     if (!obj)
         return NULL;
 
@@ -1844,14 +1908,12 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     }
 
     /* Allocate a slots vector, with a -1'st element telling its length. */
-    newslots = (jsval *) JS_malloc(cx, (nslots + 1) * sizeof(jsval));
+    newslots = AllocSlots(cx, NULL, nslots);
     if (!newslots) {
         js_DropObjectMap(cx, obj->map, obj);
         obj->map = NULL;
         goto bad;
     }
-    newslots[0] = nslots;
-    newslots++;
 
     /* Set the proto, parent, and class properties. */
     newslots[JSSLOT_PROTO] = OBJECT_TO_JSVAL(proto);
@@ -1996,7 +2058,7 @@ js_FinalizeObject(JSContext *cx, JSObject *obj)
     /* Drop map and free slots. */
     js_DropObjectMap(cx, map, obj);
     obj->map = NULL;
-    JS_free(cx, obj->slots - 1);
+    FreeSlots(cx, obj->slots);
     obj->slots = NULL;
 }
 
@@ -2007,7 +2069,7 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
 {
     JSObjectMap *map;
     JSClass *clasp;
-    uint32 nslots, i;
+    uint32 nslots;
     jsval *newslots;
 
     map = obj->map;
@@ -2024,14 +2086,11 @@ js_AllocSlot(JSContext *cx, JSObject *obj, uint32 *slotp)
         JS_ASSERT(nslots >= JS_INITIAL_NSLOTS);
         nslots += (nslots + 1) / 2;
 
-        newslots = (jsval *)
-            JS_realloc(cx, obj->slots - 1, (nslots + 1) * sizeof(jsval));
+        newslots = AllocSlots(cx, obj->slots, nslots);
         if (!newslots)
             return JS_FALSE;
-        for (i = 1 + newslots[0]; i <= nslots; i++)
-            newslots[i] = JSVAL_VOID;
-        newslots[0] = map->nslots = nslots;
-        obj->slots = newslots + 1;
+        map->nslots = nslots;
+        obj->slots = newslots;
     }
 
 #ifdef TOO_MUCH_GC
@@ -2061,12 +2120,11 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
         if (nslots < JS_INITIAL_NSLOTS)
             nslots = JS_INITIAL_NSLOTS;
 
-        newslots = (jsval *)
-            JS_realloc(cx, obj->slots - 1, (nslots + 1) * sizeof(jsval));
+        newslots = AllocSlots(cx, obj->slots, nslots);
         if (!newslots)
             return;
-        newslots[0] = map->nslots = nslots;
-        obj->slots = newslots + 1;
+        map->nslots = nslots;
+        obj->slots = newslots;
     }
 }
 
@@ -3875,6 +3933,10 @@ js_Mark(JSContext *cx, JSObject *obj, void *arg)
     if (clasp->mark)
         (void) clasp->mark(cx, obj, arg);
 
+    /* Mark slots if they are small enough to be GC-allocated. */
+    if (obj->slots[-1] * sizeof(jsval) <= GC_NBYTES_MAX)
+        JS_MarkGCThing(cx, obj->slots - 1, js_private_str, arg);
+
     if (scope->object != obj) {
         /*
          * An unmutated object that shares a prototype's scope.  We can't tell
@@ -3940,7 +4002,7 @@ JSBool
 js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 {
     JSScope *scope;
-    uint32 nslots, i;
+    uint32 nslots;
     JSClass *clasp;
     jsval *newslots;
 
@@ -3965,18 +4027,14 @@ js_SetRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
             nslots += clasp->reserveSlots(cx, obj);
         JS_ASSERT(slot < nslots);
 
-        newslots = (jsval *)
-            JS_realloc(cx, obj->slots - 1, (nslots + 1) * sizeof(jsval));
+        newslots = AllocSlots(cx, obj->slots, nslots);
         if (!newslots) {
             JS_UNLOCK_SCOPE(cx, scope);
             return JS_FALSE;
         }
-        for (i = 1 + newslots[0]; i <= nslots; i++)
-            newslots[i] = JSVAL_VOID;
         if (scope->object == obj)
             scope->map.nslots = nslots;
-        newslots[0] = nslots;
-        obj->slots = newslots + 1;
+        obj->slots = newslots;
     }
 
     /* Whether or not we grew nslots, we may need to advance freeslot. */
