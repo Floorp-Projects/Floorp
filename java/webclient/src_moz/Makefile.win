@@ -26,6 +26,8 @@ MAKE_OBJ_TYPE	= DLL
 
 MODULE=webclient 
 
+DIRS=win32
+
 
 OBJS =                              \
     .\$(OBJDIR)\ns_util.obj  \
@@ -55,6 +57,7 @@ OBJS =                              \
     .\$(OBJDIR)\PreferencesImpl.obj  \
     .\$(OBJDIR)\PreferencesActionEvents.obj  \
     .\$(OBJDIR)\ISupportsPeer.obj  \
+    .\win32\$(OBJDIR)\Win32BrowserControlCanvas.obj  \
     $(NULL)
 
 
@@ -85,6 +88,7 @@ LLIBS = \
 	$(DIST)\lib\nspr4.lib \
 	$(DIST)\lib\plc4.lib \
 	$(DIST)\lib\plds4.lib \
+	$(JDKHOME)\jre\lib\jawt.lib \
 	$(NULL)  
 
 WIN_LIBS=                       \
