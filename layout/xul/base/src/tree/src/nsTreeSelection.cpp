@@ -35,13 +35,13 @@
 // A helper class for managing our ranges of selection.
 struct nsOutlinerRange
 {
+  nsOutlinerSelection* mSelection;
+
+  nsOutlinerRange* mPrev;
+  nsOutlinerRange* mNext;
+
   PRInt32 mMin;
   PRInt32 mMax;
-
-  nsOutlinerRange* mNext;
-  nsOutlinerRange* mPrev;
-
-  nsOutlinerSelection* mSelection;
 
   nsOutlinerRange(nsOutlinerSelection* aSel, PRInt32 aSingleVal)
     :mSelection(aSel), mPrev(nsnull), mNext(nsnull), mMin(aSingleVal), mMax(aSingleVal) {};
@@ -537,10 +537,108 @@ NS_IMETHODIMP nsOutlinerSelection::SetCurrentIndex(PRInt32 aIndex)
   return NS_OK;
 }
 
+#define ADD_NEW_RANGE(macro_range, macro_selection, macro_start, macro_end) \
+  { \
+    nsOutlinerRange* macro_new_range = new nsOutlinerRange(macro_selection, (macro_start), (macro_end)); \
+    if (macro_range) \
+      macro_range->Insert(macro_new_range); \
+    else \
+      macro_range = macro_new_range; \
+  }
+
 NS_IMETHODIMP
 nsOutlinerSelection::AdjustSelection(PRInt32 aIndex, PRInt32 aCount)
 {
-  // XXX Write me!
+  NS_ASSERTION(aCount != 0, "adjusting by zero");
+  if (!aCount) return NS_OK;
+
+  // adjust mShiftSelectPivot, if necessary
+  if ((mShiftSelectPivot != 1) && (aIndex <= mShiftSelectPivot)) {
+    // if we are deleting and the delete includes the shift select pivot, reset it
+    if (aCount < 0 && (mShiftSelectPivot <= (aIndex -aCount -1))) {
+        mShiftSelectPivot = -1;
+    }
+    else {
+        mShiftSelectPivot += aCount;
+    }
+  }
+
+  // adjust mCurrentIndex, if necessary
+  if ((mCurrentIndex != -1) && (aIndex <= mCurrentIndex)) {
+    // if we are deleting and the delete includes the current index, reset it
+    if (aCount < 0 && (mCurrentIndex <= (aIndex -aCount -1))) {
+        mCurrentIndex = -1;
+    }
+    else {
+        mCurrentIndex += aCount;
+    }
+  }
+
+  // no selection, so nothing to do.
+  if (!mFirstRange) return NS_OK;
+
+  nsOutlinerRange* newRange = nsnull;
+
+  nsOutlinerRange* curr = mFirstRange;
+  while (curr) {
+    if (aCount > 0) {
+      // inserting
+      if (aIndex > curr->mMax) {
+        // adjustment happens after the range, so no change
+        ADD_NEW_RANGE(newRange, this, curr->mMin, curr->mMax);
+      }
+      else if (aIndex <= curr->mMin) {  
+        // adjustment happens before the start of the range, so shift down
+        ADD_NEW_RANGE(newRange, this, curr->mMin + aCount, curr->mMax + aCount);
+      }
+      else {
+        // adjustment happen inside the range.
+        // break apart the range and create two ranges
+        ADD_NEW_RANGE(newRange, this, curr->mMin, aIndex - 1);
+        ADD_NEW_RANGE(newRange, this, aIndex + aCount, curr->mMax + aCount);
+      }
+    }
+    else {
+      // deleting
+      if (aIndex > curr->mMax) {
+        // adjustment happens after the range, so no change
+        ADD_NEW_RANGE(newRange, this, curr->mMin, curr->mMax);
+      }
+      else {
+        // remember, aCount is negative
+        PRInt32 lastIndexOfAdjustment = aIndex - aCount - 1;
+        if (aIndex <= curr->mMin) {
+          if (lastIndexOfAdjustment < curr->mMin) {
+            // adjustment happens before the start of the range, so shift up
+            ADD_NEW_RANGE(newRange, this, curr->mMin + aCount, curr->mMax + aCount);
+          }
+          else if (lastIndexOfAdjustment >= curr->mMax) {
+            // adjustment contains the range.  remove the range by not adding it to the newRange
+          }
+          else {
+            // adjustment starts before the range, and ends in the middle of it, so trim the range
+            ADD_NEW_RANGE(newRange, this, aIndex, curr->mMax + aCount)
+          }
+        }
+        else if (lastIndexOfAdjustment >= curr->mMax) {
+         // adjustment starts in the middle of the current range, and contains the end of the range, so trim the range
+         ADD_NEW_RANGE(newRange, this, curr->mMin, aIndex - 1)
+        }
+        else {
+          // range contains the adjustment, so shorten the range
+          ADD_NEW_RANGE(newRange, this, curr->mMin, curr->mMax + aCount)
+        }
+      }
+    }
+    curr = curr->mNext;
+  }
+
+  delete mFirstRange;
+  mFirstRange = newRange;
+
+  // Fire the select event
+  FireOnSelectHandler();
+
   return NS_OK;
 }
 
