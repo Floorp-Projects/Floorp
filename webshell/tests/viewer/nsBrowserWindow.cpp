@@ -450,6 +450,7 @@ nsBrowserWindow::QueryInterface(const nsIID& aIID,
 
 nsresult
 nsBrowserWindow::Init(nsIAppShell* aAppShell,
+                      nsIPref* aPrefs,
                       const nsRect& aBounds,
                       PRUint32 aChromeMask)
 {
@@ -477,6 +478,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), r);
   mWebShell->SetContainer((nsIWebShellContainer*) this);
   mWebShell->SetObserver((nsIStreamObserver*)this);
+  mWebShell->SetPrefs(aPrefs);
   mWebShell->Show();
 
   if (NS_CHROME_MENU_BAR_ON & aChromeMask) {
@@ -510,9 +512,9 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
 
 // XXX This sort of thing should be in a resource
 #define TOOL_BAR_FONT      "Helvetica"
-#define TOOL_BAR_FONT_SIZE 7
+#define TOOL_BAR_FONT_SIZE 12
 #define STATUS_BAR_FONT      "Helvetica"
-#define STATUS_BAR_FONT_SIZE 5
+#define STATUS_BAR_FONT_SIZE 10
 
 nsresult
 nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
