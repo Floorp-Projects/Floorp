@@ -74,9 +74,10 @@ nsresult NS_NewXMLContentSerializer(nsIContentSerializer** aSerializer)
 }
 
 nsXMLContentSerializer::nsXMLContentSerializer()
+  : mPrefixIndex(0),
+    mInAttribute(PR_FALSE),
+    mAddNewline(PR_FALSE)
 {
-  mPrefixIndex = 0;
-  mInAttribute = PR_FALSE;
 }
  
 nsXMLContentSerializer::~nsXMLContentSerializer()
@@ -174,6 +175,8 @@ nsXMLContentSerializer::AppendProcessingInstruction(nsIDOMProcessingInstruction*
   nsresult rv;
   nsAutoString target, data;
 
+  MaybeAddNewline(aStr);
+
   rv = aPI->GetTarget(target);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
@@ -187,6 +190,7 @@ nsXMLContentSerializer::AppendProcessingInstruction(nsIDOMProcessingInstruction*
     AppendToString(data, aStr);
   }
   AppendToString(NS_LITERAL_STRING("?>"), aStr);
+  MaybeFlagNewline(aPI);
   
   return NS_OK;
 }
@@ -204,6 +208,8 @@ nsXMLContentSerializer::AppendComment(nsIDOMComment* aComment,
   rv = aComment->GetData(data);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
+  MaybeAddNewline(aStr);
+
   AppendToString(NS_LITERAL_STRING("<!--"), aStr);
   if (aStartOffset || (aEndOffset != -1)) {
     PRInt32 length = (aEndOffset == -1) ? data.Length() : aEndOffset;
@@ -217,6 +223,7 @@ nsXMLContentSerializer::AppendComment(nsIDOMComment* aComment,
     AppendToString(data, aStr);
   }
   AppendToString(NS_LITERAL_STRING("-->"), aStr);
+  MaybeFlagNewline(aComment);
   
   return NS_OK;
 }
@@ -237,6 +244,8 @@ nsXMLContentSerializer::AppendDoctype(nsIDOMDocumentType *aDoctype,
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   rv = aDoctype->GetInternalSubset(internalSubset);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+  MaybeAddNewline(aStr);
 
   AppendToString(NS_LITERAL_STRING("<!DOCTYPE "), aStr);
   AppendToString(name, aStr);
@@ -286,6 +295,7 @@ nsXMLContentSerializer::AppendDoctype(nsIDOMDocumentType *aDoctype,
   }
     
   AppendToString(PRUnichar('>'), aStr);
+  MaybeFlagNewline(aDoctype);
 
   return NS_OK;
 }
@@ -516,6 +526,8 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
   PRBool addNSAttr;
     
+  MaybeAddNewline(aStr);
+
   addNSAttr = ConfirmPrefix(tagPrefix, tagNamespaceURI);
   // Serialize the qualified name of the element
   AppendToString(NS_LITERAL_STRING("<"), aStr);
@@ -587,6 +599,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   // We don't output a separate end tag for empty element
   if (!aHasChildren) {
     AppendToString(NS_LITERAL_STRING("/>"), aStr);    
+    MaybeFlagNewline(aElement);
   } else {
     AppendToString(NS_LITERAL_STRING(">"), aStr);    
   }
@@ -625,6 +638,7 @@ nsXMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   }
   AppendToString(tagLocalName, aStr);
   AppendToString(NS_LITERAL_STRING(">"), aStr);
+  MaybeFlagNewline(aElement);
   
   PopNameSpaceDeclsFor(aElement);
   
@@ -809,6 +823,27 @@ nsXMLContentSerializer::IsShorthandAttr(const nsIAtom* aAttrName,
   return PR_FALSE;
 }
 
+void
+nsXMLContentSerializer::MaybeAddNewline(nsAString& aStr)
+{
+  if (mAddNewline) {
+    aStr.Append((PRUnichar)'\n');
+    mAddNewline = PR_FALSE;
+  }
+}
+
+void
+nsXMLContentSerializer::MaybeFlagNewline(nsIDOMNode* aNode)
+{
+  nsCOMPtr<nsIDOMNode> parent;
+  aNode->GetParentNode(getter_AddRefs(parent));
+  if (parent) {
+    PRUint16 type;
+    parent->GetNodeType(&type);
+    mAddNewline = type == nsIDOMNode::DOCUMENT_NODE;
+  }
+}
+
 NS_IMETHODIMP
 nsXMLContentSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
                                             nsAString& aStr)
@@ -839,6 +874,7 @@ nsXMLContentSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
   }
 
   aStr += NS_LITERAL_STRING("?>");
+  mAddNewline = PR_TRUE;
 
   return NS_OK;
 }

@@ -702,6 +702,12 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     AppendToString(PRUnichar(' '), aStr);
     mAddSpace = PR_FALSE;
   }
+  else {
+    MaybeAddNewline(aStr);
+  }
+  // Always reset to avoid false newlines in case MaybeAddNewline wasn't
+  // called
+  mAddNewline = PR_FALSE;
 
   StartIndentation(name, hasDirtyAttr, aStr);
 
@@ -846,6 +852,9 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
     AppendToString(mLineBreak, aStr);
     mMayIgnoreLineBreakSequence = PR_TRUE;
     mColPos = 0;
+  }
+  else {
+    MaybeFlagNewline(aElement);
   }
 
   mInCDATA = PR_FALSE;
