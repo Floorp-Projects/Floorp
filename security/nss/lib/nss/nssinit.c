@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.6 2001/01/06 01:57:48 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.7 2001/01/07 07:37:18 nelsonb%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -107,7 +107,7 @@ nss_OpenCertDB(const char * configdir,  const char *prefix, PRBool readOnly)
     	return SECSuccess;	/* idempotency */
 
     name = PR_smprintf("%s/%s",configdir,prefix);
-    if (name = NULL) goto loser;
+    if (name == NULL) goto loser;
 
     certdb = (CERTCertDBHandle*)PORT_ZAlloc(sizeof(CERTCertDBHandle));
     if (certdb == NULL) 
@@ -135,9 +135,9 @@ nss_OpenKeyDB(const char * configdir, const char *prefix, PRBool readOnly)
     if (keydb)
     	return SECSuccess;
     name = PR_smprintf("%s/%s",configdir,prefix);
-    if (name = NULL) 
+    if (name == NULL) 
 	return SECFailure;
-    keydb = SECKEY_OpenKeyDB(readOnly, nss_keydb_name_cb, (void *)configdir);
+    keydb = SECKEY_OpenKeyDB(readOnly, nss_keydb_name_cb, (void *)name);
     if (keydb == NULL)
 	return SECFailure;
     SECKEY_SetDefaultKeyDB(keydb);
