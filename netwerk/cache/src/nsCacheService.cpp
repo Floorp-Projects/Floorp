@@ -388,7 +388,7 @@ nsCacheService::ActivateEntry(nsCacheRequest * request,
           request->WillDoomEntriesIfExpired())))
     {
         // this is FORCE-WRITE request or the entry has expired
-        rv = DoomEntry_Internal(entry);
+        rv = DoomEntry_Locked(entry);
         if (NS_FAILED(rv)) {
             // XXX what to do?  Increment FailedDooms counter?
         }
@@ -483,12 +483,12 @@ nsresult
 nsCacheService::DoomEntry(nsCacheEntry * entry)
 {
     nsAutoLock lock(mCacheServiceLock);
-    return DoomEntry_Internal(entry);
+    return DoomEntry_Locked(entry);
 }
 
 
 nsresult
-nsCacheService::DoomEntry_Internal(nsCacheEntry * entry)
+nsCacheService::DoomEntry_Locked(nsCacheEntry * entry)
 {
     if (entry->IsDoomed())  return NS_OK;
 
