@@ -92,8 +92,8 @@ typedef struct _cookie_CookieStruct {
   time_t lastAccessed;
   PRBool isSecure;
   PRBool isDomain;   /* is it a domain instead of an absolute host? */
-  nsCookieStatus_t status;
-  nsCookiePolicy_t policy;
+  nsCookieStatus status;
+  nsCookiePolicy policy;
 } cookie_CookieStruct;
 
 typedef enum {
@@ -826,7 +826,7 @@ cookie_isForeign (char * curURL, char * firstURL, nsIIOService* ioService) {
   return retval;
 }
 
-nsCookieStatus_t
+nsCookieStatus
 cookie_GetStatus(char decision) {
   switch (decision) {
     case ' ':
@@ -841,7 +841,7 @@ cookie_GetStatus(char decision) {
   return nsICookie::STATUS_UNKNOWN;
 }
 
-nsCookiePolicy_t
+nsCookiePolicy
 cookie_GetPolicy(int policy) {
   switch (policy) {
     case P3P_NoPolicy:
@@ -900,7 +900,7 @@ cookie_P3PUserPref(PRInt32 policy, PRBool foreign) {
 /*
  * returns STATUS_ACCEPT, STATUS_DOWNGRADE, STATUS_FLAG, or STATUS_REJECT based on user's preferences
  */
-nsCookieStatus_t
+nsCookieStatus
 cookie_P3PDecision (char * curURL, char * firstURL, nsIIOService* ioService, nsIHttpChannel* aHttpChannel) {
   return cookie_GetStatus(
            cookie_P3PUserPref(
@@ -987,7 +987,7 @@ cookie_Count(char * host) {
 PRIVATE void
 cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCookieHeader,
                        time_t timeToExpire, nsIIOService* ioService,
-                       nsIHttpChannel* aHttpChannel, nsCookieStatus_t status) {
+                       nsIHttpChannel* aHttpChannel, nsCookieStatus status) {
   cookie_CookieStruct * prev_cookie;
   char *path_from_header=nsnull, *host_from_header=nsnull;
   char *name_from_header=nsnull, *cookie_from_header=nsnull;
@@ -1094,7 +1094,12 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
       int domain_length, cur_host_length;
 
       /* allocate more than we need */
-      nsCAutoString domain(ptr+7);
+      nsCAutoString domain;
+      if (*(ptr+7) != '.') { // force domain name to start with a dot
+        domain = '.';
+      }
+      domain.Append(ptr+7);
+
       domain.CompressWhitespace();
       CKutil_StrAllocCopy(domain_from_header, domain.get());
 
@@ -1416,7 +1421,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
   time_t gmtCookieExpires=0, expires=0, sDate;
 
   /* check to see if P3P pref is satisfied */
-  nsCookieStatus_t status = nsICookie::STATUS_UNKNOWN;
+  nsCookieStatus status = nsICookie::STATUS_UNKNOWN;
   if (cookie_GetBehaviorPref() == PERMISSION_P3P) {
     status = cookie_P3PDecision(curURL, firstURL, ioService, aHttpChannel);
     if (status == nsICookie::STATUS_REJECTED) {
@@ -1772,8 +1777,8 @@ COOKIE_Enumerate
      char ** path,
      PRBool * isSecure,
      PRUint64 * expires,
-     nsCookieStatus_t * status,
-     nsCookiePolicy_t * policy) {
+     nsCookieStatus * status,
+     nsCookiePolicy * policy) {
   if (count > COOKIE_Count()) {
     return NS_ERROR_FAILURE;
   }
@@ -1800,7 +1805,7 @@ COOKIE_Enumerate
 
 PUBLIC void
 COOKIE_Remove
-    (const char* host, const char* name, const char* path, const PRBool permanent) {
+    (const char* host, const char* name, const char* path, const PRBool blocked) {
   cookie_CookieStruct * cookie;
   PRInt32 count = 0;
 
@@ -1814,7 +1819,7 @@ COOKIE_Remove
       if ((PL_strcmp(cookie->host, host) == 0) &&
           (PL_strcmp(cookie->name, name) == 0) &&
           (PL_strcmp(cookie->path, path) == 0)) {
-        if (permanent && cookie->host) {
+        if (blocked && cookie->host) {
           char * hostname = nsnull;
           char * hostnameAfterDot = cookie->host;
           while (*hostnameAfterDot == '.') {

@@ -74,9 +74,9 @@ extern nsresult COOKIE_Enumerate
      char ** path,
      PRBool * isSecure,
      PRUint64 * expires,
-     nsCookieStatus_t * status,
-     nsCookiePolicy_t * policy);
+     nsCookieStatus * status,
+     nsCookiePolicy * policy);
 extern void COOKIE_Remove
-  (const char* host, const char* name, const char* path, const PRBool permanent);
+  (const char* host, const char* name, const char* path, const PRBool blocked);
 
 #endif /* COOKIES_H */

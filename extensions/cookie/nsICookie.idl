@@ -21,61 +21,88 @@
 
 #include "nsISupports.idl"
 
-typedef long nsCookieStatus_t;
-typedef long nsCookiePolicy_t;
+/** 
+ * An optional interface for embedding clients wishing to access an
+ * HTTP or javascript cookie object
+ * 
+ * @status FROZEN
+ */
+
+typedef long nsCookieStatus;
+typedef long nsCookiePolicy;
 
 [scriptable, uuid(E9FCB9A4-D376-458f-B720-E65E7DF593BC)]
 
-/**
-  This interface represents a HTTP or Javascript "cookie" object.
-*/
-
 interface nsICookie : nsISupports {
 
-    /* the name of the cookie */
-    readonly attribute string name;
+    /**
+     * the name of the cookie
+     */
+    readonly attribute ACString name;
 
-    /* the cookie value */
-    readonly attribute string value;
+    /**
+     * the cookie value
+     */
+    readonly attribute ACString value;
 
-    /* true if the cookie is a domain cookie, false otherwise */
+    /**
+     * true if the cookie is a domain cookie, false otherwise
+     */
     readonly attribute boolean isDomain;
 
-    /* the host (possibly fully qualified) of the cookie */
-    readonly attribute string host;
+    /**
+     * the host (possibly fully qualified) of the cookie
+     */
+    readonly attribute AUTF8String host;
 
-    /* the path pertaining to the cookie */
-    readonly attribute string path;
+    /**
+     * the path pertaining to the cookie
+     */
+    readonly attribute AUTF8String path;
 
-    /* true if the cookie was transmitted over ssl, false otherwise */
+    /**
+     * true if the cookie was transmitted over ssl, false otherwise
+     */
     readonly attribute boolean isSecure;
 
-    /* expiration time (local timezone) expressed as number of seconds since Jan 1, 1970 */
+    /**
+     * expiration time (local timezone) expressed as number of seconds since Jan 1, 1970
+     */
     readonly attribute PRUint64 expires;
 
-    /* P3P status -- accepted, downgraded, flagged, or rejected */
-    const nsCookieStatus_t STATUS_UNKNOWN=0;
-    const nsCookieStatus_t STATUS_ACCEPTED=1;
-    const nsCookieStatus_t STATUS_DOWNGRADED=2;
-    const nsCookieStatus_t STATUS_FLAGGED=3;
-    const nsCookieStatus_t STATUS_REJECTED=4;
+    /**
+     * P3P status of cookie.  Values are
+     *
+     *   STATUS_UNKNOWN -- cookie collected in a previous session and this info no longer available
+     *   STATUS_ACCEPTED -- cookie was accepted as it
+     *   STATUS_DOWNGRADED -- cookie was accepted but downgraded to a session cookie
+     *   STATUS_FLAGGED -- cookie was accepted with a warning being issued to the user
+     *   STATUS_REJECTED -- cookie was not accepted
+     */
+    const nsCookieStatus STATUS_UNKNOWN=0;
+    const nsCookieStatus STATUS_ACCEPTED=1;
+    const nsCookieStatus STATUS_DOWNGRADED=2;
+    const nsCookieStatus STATUS_FLAGGED=3;
+    const nsCookieStatus STATUS_REJECTED=4;
 
-    readonly attribute nsCookieStatus_t status;
+    readonly attribute nsCookieStatus status;
 
-    /* Site's compact policy -- none, noConsent, implicitConsent, explicitConsent, noII */
-    const nsCookiePolicy_t POLICY_UNKNOWN=0;
-    const nsCookiePolicy_t POLICY_NONE=1;
-    const nsCookiePolicy_t POLICY_NO_CONSENT=2;
-    const nsCookiePolicy_t POLICY_IMPLICIT_CONSENT=3;
-    const nsCookiePolicy_t POLICY_EXPLICIT_CONSENT=4;
-    const nsCookiePolicy_t POLICY_NO_II=5;
-    readonly attribute nsCookiePolicy_t policy;
+    /**
+     * Site's compact policy.  Values are
+     *
+     *   POLICY_UNKNOWN -- cookie collected in a previous session and this info no longer available
+     *   POLICY_NONE -- site did not send a compact policy along with the cookie
+     *   POLICY_NO_CONSENT -- site collects identfiable information without user involvement
+     *   POLICY_IMPLICIT_CONSENT -- site collects identifiable information unless user opts out
+     *   POLICY_EXPLICIT_CONSENT -- site does not collect identifiable information unless user opts in
+     *   POLICY_NO_II -- site does not collect identifiable information
+     */
+    const nsCookiePolicy POLICY_UNKNOWN=0;
+    const nsCookiePolicy POLICY_NONE=1;
+    const nsCookiePolicy POLICY_NO_CONSENT=2;
+    const nsCookiePolicy POLICY_IMPLICIT_CONSENT=3;
+    const nsCookiePolicy POLICY_EXPLICIT_CONSENT=4;
+    const nsCookiePolicy POLICY_NO_II=5;
+    readonly attribute nsCookiePolicy policy;
 
 };
-
-%{ C++
-// {E9FCB9A4-D376-458f-B720-E65E7DF593BC}
-#define NS_COOKIE_CID \
-{ 0xe9fcb9a4, 0xd376, 0x458f, { 0xb7, 0x20, 0xe6, 0x5e, 0x7d, 0xf5, 0x93, 0xbc } }
-#define NS_COOKIE_CONTRACTID "@mozilla.org/cookie;1"
-%}

@@ -73,8 +73,8 @@ class nsCookieEnumerator : public nsISimpleEnumerator
           char * path;
           PRBool isSecure;
           PRUint64 expires;
-          nsCookieStatus_t status;
-          nsCookiePolicy_t policy;
+          nsCookieStatus status;
+          nsCookiePolicy policy;
           nsresult rv = COOKIE_Enumerate
             (mCookieCount++, &name, &value, &isDomain, &host, &path, &isSecure, &expires,
               &status, &policy);
@@ -139,7 +139,12 @@ NS_IMETHODIMP nsCookieManager::GetEnumerator(nsISimpleEnumerator * *entries)
 }
 
 NS_IMETHODIMP nsCookieManager::Remove
-  (const char* host, const char* name, const char* path, const PRBool permanent) {
-  ::COOKIE_Remove(host, name, path, permanent);
+  (const nsACString& host, const nsACString& name, const nsACString& path, PRBool blocked) {
+//  (const nsAUTF8String& host, const nsACString& name, const nsAUTF8String& path, PRBool blocked) {
+// using nsACString above instead of nsAUTF8String because the latter doesn't exist yet
+
+  ::COOKIE_Remove(PromiseFlatCString(host).get(),
+                  PromiseFlatCString(name).get(),
+                  PromiseFlatCString(path).get(), blocked);
   return NS_OK;
 }
