@@ -70,7 +70,10 @@ class nsScanner;
 class nsIParserFilter;
 #include <fstream.h>
 
+#ifndef XP_MAC
 #pragma warning( disable : 4275 )
+#endif
+
 
 CLASS_EXPORT_HTMLPARS nsParser : public nsIParser, public nsIStreamListener {
             
