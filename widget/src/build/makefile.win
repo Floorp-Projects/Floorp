@@ -55,7 +55,9 @@ WIN_LIBS=                               \
 # imm32.lib								\
  Uuid.lib								\
  ole32.lib								\
- shell32.lib
+ shell32.lib \
+ oleacc.lib \
+ oleaut32.lib
 
 LLIBS= \
  $(DIST)\lib\xpcom.lib                \

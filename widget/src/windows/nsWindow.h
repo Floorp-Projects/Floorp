@@ -44,6 +44,7 @@ class nsNativeDragTarget;
 class nsIRollupListener;
 
 class nsIMenuBar;
+struct IAccessible;
 
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
@@ -286,6 +287,7 @@ public:
             WNDPROC         GetPrevWindowProc() { return mPrevWndProc; }
 
     virtual PRBool          DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint = nsnull);
+    virtual PRBool          DispatchAccessibleEvent(PRUint32 aEventType, nsIAccessible** aAccessible, nsPoint* aPoint = nsnull);
     virtual PRBool          AutoErase();
     nsPoint*                GetLastPoint() { return &mLastPoint; }
 
