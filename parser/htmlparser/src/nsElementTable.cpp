@@ -120,9 +120,9 @@ DECL_TAG_LIST(gLIKids,{eHTMLTag_ol COMMA eHTMLTag_ul})
 DECL_TAG_LIST(gMapKids,{eHTMLTag_area})
 DECL_TAG_LIST(gPreKids,{eHTMLTag_hr COMMA eHTMLTag_center})  //note that CENTER is here for backward compatibility; it's not 4.0 spec.
 
-DECL_TAG_LIST(gTableKids,{eHTMLTag_caption COMMA eHTMLTag_col COMMA eHTMLTag_colgroup COMMA eHTMLTag_form COMMA  eHTMLTag_thead COMMA eHTMLTag_tbody COMMA eHTMLTag_tfoot COMMA  eHTMLTag_map COMMA eHTMLTag_script})// Removed INPUT - Ref. Bug 20087, 25382
+DECL_TAG_LIST(gTableKids,{eHTMLTag_caption COMMA eHTMLTag_col COMMA eHTMLTag_colgroup COMMA eHTMLTag_form COMMA  eHTMLTag_thead COMMA eHTMLTag_tbody COMMA eHTMLTag_tfoot COMMA eHTMLTag_script})// Removed INPUT - Ref. Bug 20087, 25382
   
-DECL_TAG_LIST(gTableElemKids,{eHTMLTag_form COMMA eHTMLTag_map COMMA eHTMLTag_noscript COMMA eHTMLTag_script COMMA eHTMLTag_td COMMA eHTMLTag_th COMMA eHTMLTag_tr})
+DECL_TAG_LIST(gTableElemKids,{eHTMLTag_form COMMA eHTMLTag_noscript COMMA eHTMLTag_script COMMA eHTMLTag_td COMMA eHTMLTag_th COMMA eHTMLTag_tr})
 DECL_TAG_LIST(gTRKids,{eHTMLTag_td COMMA eHTMLTag_th COMMA eHTMLTag_form COMMA eHTMLTag_script})// Removed INPUT - Ref. Bug 20087, 25382 |  Removed MAP to fix 58942
 DECL_TAG_LIST(gTBodyKids,{eHTMLTag_tr COMMA eHTMLTag_form}) // Removed INPUT - Ref. Bug 20087, 25382
 DECL_TAG_LIST(gULKids,{eHTMLTag_li COMMA eHTMLTag_p})
