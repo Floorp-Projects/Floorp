@@ -65,13 +65,6 @@
 #endif /* HAVE_BOUTELL_GD */
 
 /*
-** Forward declarations
-**/
-#if defined(DEBUG_dp)
-extern void printCategoryTree(STCategoryNode* root);
-#endif
-
-/*
 ** AddRule
 **
 ** Add a rule into the list of rules maintainted in global
@@ -594,14 +587,12 @@ PRBool freeNodeRunProcessor(void* clientData, STCategoryNode* node)
 PRBool printNodeProcessor(void* clientData, STCategoryNode* node)
 {
     STCategoryNode* root = (STCategoryNode*) clientData;
-    if (node->nchildren)
-        fprintf(stderr, "%-25s [%d children]\n", node->categoryName, node->nchildren);
-    else
-        fprintf(stderr, "%-25s [ %7d allocations, %7d size, %4.1f%% ]\n", node->categoryName,
-                node->run ? node->run->mStats.mCompositeCount:0,
-                node->run ? node->run->mStats.mSize:0,
-                node->run ? ((double)node->run->mStats.mSize / root->run->mStats.mSize * 100):0
-                );
+    fprintf(stderr, "%-25s [ %9s size", node->categoryName,
+            FormatNumber(node->run ? node->run->mStats.mSize:0));
+    fprintf(stderr, ", %5.1f%%",
+            node->run ? ((double)node->run->mStats.mSize / root->run->mStats.mSize * 100):0);
+    fprintf(stderr, ", %7s allocations ]\n",
+            FormatNumber(node->run ? node->run->mStats.mCompositeCount:0));
     return PR_TRUE;
 }
 
