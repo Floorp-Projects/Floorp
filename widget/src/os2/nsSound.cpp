@@ -43,6 +43,8 @@
 #include "plstr.h"
 #include <stdio.h>
 
+#define INCL_DOS
+#define INCL_DOSERRORS
 #include <os2.h>
 
 #include "nsSound.h"
@@ -54,9 +56,29 @@
 
 NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 
+static int                gInitialized = 0;
+static PRBool             gMMPMInstalled = PR_FALSE;
+
+static void
+InitGlobals(void)
+{
+  APIRET ulrc;
+  HMODULE hmod;
+  char LoadError[CCHMAXPATH];
+  ulrc = DosLoadModule(LoadError, CCHMAXPATH, "MMPM", &hmod);
+  if (ulrc == NO_ERROR) {
+    gMMPMInstalled = PR_TRUE;
+  }
+  gInitialized = 1;
+}
+
+
 ////////////////////////////////////////////////////////////////////////
 nsSound::nsSound()
 {
+  if (!gInitialized) {
+    InitGlobals();
+  }
 }
 
 nsSound::~nsSound()
@@ -92,7 +114,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
     return NS_ERROR_FAILURE;
   }
 
-  if (PL_strncmp(string, "RIFF", 4)) {
+  if (PL_strncmp(string, "RIFF", 4) || (!gMMPMInstalled)) {
 #ifdef DEBUG
     printf("We only support WAV files currently.\n");
 #endif
@@ -193,7 +215,8 @@ NS_IMETHODIMP nsSound::Init()
 NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)
 {
   /* We don't have a default mail sound on OS/2, so just beep */
-  if (strcmp("_moz_mailbeep", aSoundAlias) == 0) {
+  /* Also just beep if MMPM isn't installed */
+  if ((strcmp("_moz_mailbeep", aSoundAlias) == 0) || (!gMMPMInstalled)) {
     Beep();
   }
   else {
