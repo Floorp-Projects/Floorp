@@ -30,8 +30,6 @@ CPPSRCS =              \
 	Ienumfe.cpp      \
 	nsDataObj.cpp      \
 	nsClipboard.cpp      \
-	nsTransferable.cpp      \
-	nsDataFlavor.cpp      \
 #	DataObj.cpp      \
 #	DragDrop.cpp      \
 #	DropSrc.cpp      \
@@ -73,8 +71,6 @@ OBJS =                             \
 	.\$(OBJDIR)\Ienumfe.obj  \
 	.\$(OBJDIR)\nsDataObj.obj  \
 	.\$(OBJDIR)\nsClipboard.obj  \
-	.\$(OBJDIR)\nsTransferable.obj  \
-	.\$(OBJDIR)\nsDataFlavor.obj  \
 #	.\$(OBJDIR)\DataObj.obj  \
 #	.\$(OBJDIR)\DragDrop.obj  \
 #	.\$(OBJDIR)\DropSrc.obj  \
