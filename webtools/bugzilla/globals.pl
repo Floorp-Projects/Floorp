@@ -911,7 +911,7 @@ sub quoteUrls {
     }
 
     $text = value_quote($text);
-    $text =~ s/\&#010;/\n/g;
+    $text =~ s/\&#013;/\n/g;
 
     # Stuff everything back from the array.
     for (my $i=0 ; $i<$count ; $i++) {
