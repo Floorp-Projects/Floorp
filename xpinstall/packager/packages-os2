@@ -105,6 +105,7 @@ bin/components/search.xpt
 bin/components/caps.dll
 bin/components/caps.xpt
 ;bin/components/chardetc.dll
+bin/components/nsComposerCmdLineHandler.js
 ;bin/components/universalchardet.dll
 bin/components/ucdet.dll
 bin/components/chrome.dll
