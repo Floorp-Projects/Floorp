@@ -1,6 +1,6 @@
 
   Simple html page
-  
+
 Here is a link to the mozilla.org <http://www.mozilla.org> page. Here
 is some _underlined and *bold*ened_ified text plus some <angle bracket
 entities>.
@@ -13,7 +13,7 @@ Here is a /list/:
 
     * An item
     * A nested ordered list:
-    * 
+    *
          1. item one
          2. item two
     * last item
