@@ -36,5 +36,5 @@ classic.jar:
   skin/classic/browser/bookmarks/folderarrow.png            (bookmarks/folderarrow.png)
   skin/classic/browser/pref/Options.png                     (pref/Options.png)
   skin/classic/browser/pref/pref.css                        (pref/pref.css)
-  preview.png
+  ./preview.png
   
