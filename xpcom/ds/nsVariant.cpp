@@ -159,6 +159,7 @@ static nsresult ToManageableNumber(const nsDiscriminatedUnion& inData,
     case nsIDataType::VTYPE_INTERFACE:
     case nsIDataType::VTYPE_INTERFACE_IS:
     case nsIDataType::VTYPE_ARRAY:
+    case nsIDataType::VTYPE_EMPTY_ARRAY:
     case nsIDataType::VTYPE_EMPTY:
     default:
         return NS_ERROR_CANNOT_CONVERT_DATA;
@@ -227,6 +228,7 @@ static void FreeArray(nsDiscriminatedUnion* data)
         case nsIDataType::VTYPE_WSTRING_SIZE_IS:
         case nsIDataType::VTYPE_STRING_SIZE_IS:
         case nsIDataType::VTYPE_ARRAY:
+        case nsIDataType::VTYPE_EMPTY_ARRAY:
         case nsIDataType::VTYPE_EMPTY:
         default:
             NS_ERROR("bad type in array!");
@@ -320,6 +322,7 @@ static nsresult CloneArray(PRUint16 inType, const nsIID* inIID,
         case nsIDataType::VTYPE_WSTRING_SIZE_IS:
         case nsIDataType::VTYPE_VOID:
         case nsIDataType::VTYPE_ARRAY:
+        case nsIDataType::VTYPE_EMPTY_ARRAY:
         case nsIDataType::VTYPE_EMPTY:
         default:
             NS_ERROR("bad type in array!");
@@ -434,6 +437,7 @@ static nsresult CloneArray(PRUint16 inType, const nsIID* inIID,
         // The rest are illegal.
         case nsIDataType::VTYPE_VOID:
         case nsIDataType::VTYPE_ARRAY:
+        case nsIDataType::VTYPE_EMPTY_ARRAY:
         case nsIDataType::VTYPE_EMPTY:
         case nsIDataType::VTYPE_ASTRING:
         case nsIDataType::VTYPE_DOMSTRING:
@@ -774,6 +778,7 @@ static nsresult ToString(const nsDiscriminatedUnion& data,
     // XXX We might want stringified versions of these... ???
 
     case nsIDataType::VTYPE_VOID:
+    case nsIDataType::VTYPE_EMPTY_ARRAY:
     case nsIDataType::VTYPE_EMPTY:
     case nsIDataType::VTYPE_ARRAY:
     case nsIDataType::VTYPE_INTERFACE:
@@ -1352,6 +1357,9 @@ nsVariant::SetFromVariant(nsDiscriminatedUnion* data, nsIVariant* aValue)
         case nsIDataType::VTYPE_VOID:
             rv = nsVariant::SetToVoid(data);
             break;
+        case nsIDataType::VTYPE_EMPTY_ARRAY:
+            rv = nsVariant::SetToEmptyArray(data);
+            break;
         case nsIDataType::VTYPE_EMPTY:
             rv = nsVariant::SetToEmpty(data);
             break;
@@ -1544,6 +1552,12 @@ nsVariant::SetToEmpty(nsDiscriminatedUnion* data)
     DATA_SETTER_PROLOGUE(data);
     DATA_SETTER_EPILOGUE(data, VTYPE_EMPTY);
 }
+/* static */ nsresult
+nsVariant::SetToEmptyArray(nsDiscriminatedUnion* data)
+{
+    DATA_SETTER_PROLOGUE(data);
+    DATA_SETTER_EPILOGUE(data, VTYPE_EMPTY_ARRAY);
+}
 
 /***************************************************************************/
 
@@ -1600,6 +1614,7 @@ nsVariant::Cleanup(nsDiscriminatedUnion* data)
         case nsIDataType::VTYPE_ARRAY:
             FreeArray(data);
             break;
+        case nsIDataType::VTYPE_EMPTY_ARRAY:
         case nsIDataType::VTYPE_EMPTY:
             break;
         default:
@@ -2047,6 +2062,13 @@ NS_IMETHODIMP nsVariant::SetAsEmpty()
 {
     if(!mWritable) return NS_ERROR_OBJECT_IS_IMMUTABLE;
     return nsVariant::SetToEmpty(&mData);
+}
+
+/* void setAsEmptyArray (); */
+NS_IMETHODIMP nsVariant::SetAsEmptyArray()
+{
+    if(!mWritable) return NS_ERROR_OBJECT_IS_IMMUTABLE;
+    return nsVariant::SetToEmptyArray(&mData);
 }
 
 /* void setFromVariant (in nsIVariant aValue); */

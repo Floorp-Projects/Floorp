@@ -275,9 +275,15 @@ JSBool XPCVariant::InitializeData(XPCCallContext& ccx)
 
     jsuint len;
 
-    if(JS_IsArrayObject(ccx, jsobj) && 
-       JS_GetArrayLength(ccx, jsobj, &len) && len)
+    if(JS_IsArrayObject(ccx, jsobj) && JS_GetArrayLength(ccx, jsobj, &len))
     {
+        if(!len) 
+        {
+            // Zero length array
+            nsVariant::SetToEmptyArray(&mData);
+            return JS_TRUE;
+        }
+        
         nsXPTType type;
         nsID id;
 
@@ -527,6 +533,7 @@ XPCVariant::VariantDataToJS(XPCCallContext& ccx,
                 case nsIDataType::VTYPE_WSTRING_SIZE_IS:        
                 case nsIDataType::VTYPE_STRING_SIZE_IS:        
                 case nsIDataType::VTYPE_ARRAY:
+                case nsIDataType::VTYPE_EMPTY_ARRAY:
                 case nsIDataType::VTYPE_EMPTY:
                 default:
                     NS_ERROR("bad type in array!");
@@ -544,6 +551,14 @@ VARIANT_DONE:
             nsVariant::Cleanup(&du);
             return success;
         }        
+        case nsIDataType::VTYPE_EMPTY_ARRAY: 
+        {
+            JSObject* array = JS_NewArrayObject(ccx, 0, nsnull);
+            if(!array) 
+                return JS_FALSE;
+            *pJSVal = OBJECT_TO_JSVAL(array);
+            return JS_TRUE;
+        }
         case nsIDataType::VTYPE_VOID:        
         case nsIDataType::VTYPE_EMPTY:
             *pJSVal = JSVAL_VOID;

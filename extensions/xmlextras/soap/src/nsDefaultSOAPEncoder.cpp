@@ -719,11 +719,12 @@ static nsresult GetNativeType(PRUint16 aType, nsAString & aSchemaNamespaceURI, n
     aSchemaType.Assign(kBooleanSchemaType);
     break;
   case nsIDataType::VTYPE_ARRAY:
+  case nsIDataType::VTYPE_EMPTY_ARRAY:
     aSchemaType.Assign(kArraySOAPType);
     aSchemaNamespaceURI.Assign(nsSOAPUtils::kSOAPEncURI);
     break;
-  case nsIDataType::VTYPE_VOID:
-  case nsIDataType::VTYPE_EMPTY:
+//  case nsIDataType::VTYPE_VOID:
+//  case nsIDataType::VTYPE_EMPTY:
 //  Empty may be either simple or complex.
     break;
   case nsIDataType::VTYPE_INTERFACE_IS:
@@ -768,6 +769,7 @@ NS_IMETHODIMP
     if (simple) {
       switch (typevalue) {
       case nsIDataType::VTYPE_ARRAY:
+      case nsIDataType::VTYPE_EMPTY_ARRAY:
       case nsIDataType::VTYPE_INTERFACE_IS:
       case nsIDataType::VTYPE_INTERFACE:
         simple = PR_FALSE;
@@ -1054,10 +1056,24 @@ static nsresult GetArrayType(nsIVariant* aSource, PRUint32 aDimensionCount, PRUi
   nsIID iid;
   PRUint32 count;
   void* array;
+  nsresult rc;
   PRUint32 i;
-  nsresult rc = aSource->GetAsArray(&type, &iid, &count, &array);        // First, get the array, if any.
+  rc = aSource->GetDataType(&type);
   if (NS_FAILED(rc))
     return rc;
+  if (type == nsIDataType::VTYPE_EMPTY
+      || type == nsIDataType::VTYPE_VOID
+      || type == nsIDataType::VTYPE_EMPTY_ARRAY) {
+    rc = NS_OK;
+    count = 0;
+    type = nsIDataType::VTYPE_EMPTY;
+    array = nsnull;
+  }
+  else {
+    rc = aSource->GetAsArray(&type, &iid, &count, &array);        // First, get the array, if any.
+    if (NS_FAILED(rc))
+      return rc;
+  }
   if (count > aDimensionSizes[0]) {
     aDimensionSizes[0] = count;
   }
@@ -1132,9 +1148,22 @@ static nsresult EncodeArray(nsISOAPEncoding* aEncoding, nsIVariant* aSource, nsI
   PRUint32 count;
   void *array;
   if (aSource != nsnull) {
-    rc = aSource->GetAsArray(&type, &iid, &count, &array);        // First, get the array, if any.
+    nsresult rc = aSource->GetDataType(&type);
     if (NS_FAILED(rc))
       return rc;
+    if (type == nsIDataType::VTYPE_EMPTY
+        || type == nsIDataType::VTYPE_VOID
+        || type == nsIDataType::VTYPE_EMPTY_ARRAY) {
+      rc = NS_OK;
+      count = 0;
+      type = nsIDataType::VTYPE_EMPTY;
+      array = nsnull;
+    }
+    else {
+      rc = aSource->GetAsArray(&type, &iid, &count, &array);        // First, get the array, if any.
+      if (NS_FAILED(rc))
+        return rc;
+    }
   }
   else {  //  If the source is null, then just add a bunch of nulls to the array.
     count = (PRUint32)aDimensionSizes[--aDimensionCount];
@@ -1297,6 +1326,7 @@ static nsresult EncodeArray(nsISOAPEncoding* aEncoding, nsIVariant* aSource, nsI
         break;
       }
   
+    case nsIDataType::VTYPE_EMPTY_ARRAY:
     case nsIDataType::VTYPE_EMPTY:
       break;  //  I think an empty array needs no elements?
   //  Don't support these array types, as they seem meaningless.
@@ -2509,7 +2539,7 @@ static nsresult CreateArray(nsIWritableVariant* aResult, PRUint16 aType, const n
   PRUint32 aDimensionCount, PRInt32* aDimensionSizes, PRUint32 aSizeof, PRUint8* aArray)
 {
   if (aSizeof == 0) {  //  Variants do not support construction of null-sized arrays
-    return aResult->SetAsEmpty();
+    return aResult->SetAsEmptyArray();
   }
   if (aDimensionCount > 1) {                  //  We cannot reuse variants because they are kept by resulting array
     PRInt32 count = aDimensionSizes[0];
