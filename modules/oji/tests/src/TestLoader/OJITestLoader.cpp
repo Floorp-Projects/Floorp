@@ -24,9 +24,7 @@
 static NS_DEFINE_IID(kISupportsIID,    NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIOJITestLoaderIID, OJITESTLOADER_IID);
 
-NS_IMPL_QUERY_INTERFACE(OJITestLoader, kIOJITestLoaderIID);
-NS_IMPL_ADDREF(OJITestLoader)
-NS_IMPL_RELEASE(OJITestLoader)
+NS_IMPL_ISUPPORTS1(OJITestLoader, OJITestLoader)
 
 OJITestLoader::OJITestLoader(void) 
 {

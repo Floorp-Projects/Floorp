@@ -197,7 +197,7 @@ protected:
   char mCharset[65];
 };
 
-NS_IMPL_ISUPPORTS(nsNativeStringDetector, NS_GET_IID(nsIStringCharsetDetector));
+NS_IMPL_ISUPPORTS1(nsNativeStringDetector, nsIStringCharsetDetector)
 
 //----------------------------------------------------------
 nsNativeStringDetector::nsNativeStringDetector(PRUint32 aCodePage)
@@ -273,8 +273,7 @@ private:
 };
 
 //--------------------------------------------------------------
-NS_DEFINE_IID( kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS( nsNativeDetectorFactory , kIFactoryIID);
+NS_IMPL_ISUPPORTS1(nsNativeDetectorFactory, nsIFactory)
 
 NS_IMETHODIMP nsNativeDetectorFactory::CreateInstance(
     nsISupports* aDelegate, const nsIID &aIID, void** aResult)
