@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: installation.xml,v 1.53 2003/07/03 20:23:43 jake%bugzilla.org Exp $ -->
+<!-- $Id: installation.xml,v 1.54 2003/10/07 20:44:06 jocuri%softhome.net Exp $ -->
 <chapter id="installation">
   <title>Installation</title>
 
@@ -1072,7 +1072,7 @@ man 5 crontab
       incorporate the code changes necessary to fulfill the CERT advisory
       requirements mentioned in 
       <ulink
-      url="http://www.cet.org/tech_tips/malicious_code_mitigation.html/#3"/>.
+      url="http://www.cert.org/tech_tips/malicious_code_mitigation.html/#3"/>.
       Making the change below will fix the problem if your installation is for
       an English speaking audience.
       </para>
