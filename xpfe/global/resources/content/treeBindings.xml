@@ -334,7 +334,7 @@
              parentNode.currentItem = event.target.parentNode.parentNode;
            }
            else {
-		     parentNode.suppressOnSelect = true;
+             parentNode.suppressOnSelect = true;
              var selectedItems = parentNode.selectedItems;
              var i = 0;
              while (i < selectedItems.length) {
@@ -342,8 +342,8 @@
                  parentNode.removeItemFromSelection(selectedItems[i]);
                else
                  i++;
-              }
-			 parentNode.suppressOnSelect = false;
+             }
+             parentNode.suppressOnSelect = false;
            }
          }
       ]]>
