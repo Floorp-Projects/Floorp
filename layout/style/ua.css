@@ -392,8 +392,8 @@ img {
   display: inline;
 }
 img:-moz-text {
-  font-family: sans-serif;
-  font-size: 8.5pt;
+  /* font-family: sans-serif; */
+  /* font-size: 8.5pt; */
 }
 spacer {
   display: inline;
