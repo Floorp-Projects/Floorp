@@ -63,6 +63,26 @@ class NS_COM nsDependentString
       Rebind( const char_type* aStartPtr, const char_type* aEndPtr )
         {
           NS_ASSERTION(aStartPtr && aEndPtr, "nsDependentString must wrap a non-NULL buffer");
+
+          /*
+           * If you see the following assertion, it means that
+           * |nsDependentString| is being used in a way that violates
+           * the meaning of |nsAFlatString| (that the string object
+           * wraps a buffer that is a null-terminated single fragment).
+           * The way to fix the problem is to use the global |Substring|
+           * function to return a string that is an
+           * |nsASingleFragmentString| rather than an |nsAFlatString|.
+           *
+           * In other words, replace:
+           *   nsDependentString(startPtr, endPtr)
+           * with 
+           *   Substring(startPtr, endPtr)
+           *
+           * or replace
+           *   nsDependentString(startPtr, length)
+           * with
+           *   Substring(startPtr, startPtr+length)
+           */
           NS_ASSERTION(!*aEndPtr, "nsDependentString must wrap only null-terminated strings");
           mHandle.DataStart(aStartPtr);
           mHandle.DataEnd(aEndPtr);
@@ -117,6 +137,26 @@ class NS_COM nsDependentCString
       Rebind( const char_type* aStartPtr, const char_type* aEndPtr )
         {
           NS_ASSERTION(aStartPtr && aEndPtr, "nsDependentCString must wrap a non-NULL buffer");
+
+          /*
+           * If you see the following assertion, it means that
+           * |nsDependentCString| is being used in a way that violates
+           * the meaning of |nsAFlatCString| (that the string object
+           * wraps a buffer that is a null-terminated single fragment).
+           * The way to fix the problem is to use the global |Substring|
+           * function to return a string that is an
+           * |nsASingleFragmentCString| rather than an |nsAFlatCString|.
+           *
+           * In other words, replace:
+           *   nsDependentCString(startPtr, endPtr)
+           * with 
+           *   Substring(startPtr, endPtr)
+           *
+           * or replace
+           *   nsDependentString(startPtr, length)
+           * with
+           *   Substring(startPtr, startPtr+length)
+           */
           NS_ASSERTION(!*aEndPtr, "nsDependentCString must wrap only null-terminated strings");
           mHandle.DataStart(aStartPtr);
           mHandle.DataEnd(aEndPtr);
