@@ -817,7 +817,6 @@ nsMsgComposeAndSend::GatherMimeAttachments()
     m_plaintext->PickEncoding(mCompFields->GetCharacterSet(), this);
     const char *charset = mCompFields->GetCharacterSet();
     hdrs = mime_generate_attachment_headers(m_plaintext->m_type,
-                        nsnull,
                         m_plaintext->m_encoding,
                         m_plaintext->m_description,
                         m_plaintext->m_x_mac_type,
@@ -986,7 +985,6 @@ nsMsgComposeAndSend::GatherMimeAttachments()
   {
     const char *charset = mCompFields->GetCharacterSet();
     hdrs = mime_generate_attachment_headers (m_attachment1_type,
-                        nsnull,
                          m_attachment1_encoding,
                          0, 0, 0, 0, 0,
                          m_digest_p,
@@ -1192,9 +1190,7 @@ nsMsgComposeAndSend::PreProcessPart(nsMsgAttachmentHandler  *ma,
     }
   else
     ma->mURL->GetSpec(turl);
-  hdrs = mime_generate_attachment_headers (ma->m_type,
-                                           ma->m_type_param,
-                                           ma->m_encoding,
+  hdrs = mime_generate_attachment_headers (ma->m_type, ma->m_encoding,
                                            ma->m_description,
                                            ma->m_x_mac_type,
                                            ma->m_x_mac_creator,
@@ -2232,8 +2228,6 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
             }
           }
         }
-        else
-          element->GetContentTypeParam(&m_attachments[newLoc].m_type_param);
 
 #ifdef XP_MAC
         //We always need to snarf the file to figure out how to send it, maybe we need to use apple double...
