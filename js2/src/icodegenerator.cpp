@@ -174,6 +174,12 @@ namespace ICG {
          iCode->push_back(instr);
     } 
 
+    void ICodeGenerator::complement(Register destination, Register source)
+    {
+         Not *instr = new Not(destination, source);
+         iCode->push_back(instr);
+    } 
+
     Register ICodeGenerator::op(ICodeOp op, Register source1, 
                                 Register source2)
     {

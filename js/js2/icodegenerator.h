@@ -107,7 +107,7 @@ namespace ICG {
         Register getRegister() \
         { return topRegister++; }
         void resetTopRegister() \
-        { markMaxRegister(); topRegister = stitcher.empty() ? registerBase : \
+        { markMaxRegister(); topRegister = stitcher.empty() ? registerBase :
             stitcher.back()->registerBase; }
         
         void addStitcher(ICodeState *ics) \
@@ -119,7 +119,7 @@ namespace ICG {
         Register topRegister;
         Register registerBase;        
         uint32   maxRegister;
-	    uint32   statementLabelBase;;
+	    uint32   statementLabelBase;
         
         void setLabel(Label *label);
         void setLabel(InstructionStream *stream, Label *label);
@@ -150,7 +150,7 @@ namespace ICG {
         Register call(Register target, RegisterList args);
 
         void move(Register destination, Register source);
-        void not(Register destination, Register source);
+        void complement(Register destination, Register source);
         
         Register compare(ICodeOp op, Register source1, Register source2);
         
