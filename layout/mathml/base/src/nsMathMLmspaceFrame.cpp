@@ -114,7 +114,7 @@ nsMathMLmspaceFrame::Init(nsIPresContext*  aPresContext,
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::depth_, value)) {
     if (ParseNumericValue(value, cssValue) && cssValue.IsLengthUnit()) {
-      mHeight = CalcLength(aPresContext, mStyleContext, cssValue);
+      mDepth = CalcLength(aPresContext, mStyleContext, cssValue);
     }
   }
 
