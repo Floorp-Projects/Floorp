@@ -106,7 +106,7 @@ BookmarksToolbar.prototype = {
 
     editCell: function (aSelectedItem, aXXXLameAssIndex)
     {
-      goDoCommand("cmd_properties");
+      goDoCommand("cmd_bm_properties");
       return; // Disable Inline Edit for now. See bug 77125 for why this is being disabled
               // on the personal toolbar for the moment. 
 
@@ -414,12 +414,12 @@ BookmarksToolbar.prototype = {
       case "cmd_openfolderinnewwindow":
         seln = gBookmarksShell.getSelection();
         return document.popupNode != null && seln[0].getAttributeNS(RDF_NS, "type") == NC_NS + "Folder";
-      case "cmd_find":
-      case "cmd_newbookmark":
-      case "cmd_newfolder":
-      case "cmd_newseparator":
-      case "cmd_import":
-      case "cmd_export":
+      case "cmd_bm_find":
+      case "cmd_bm_newbookmark":
+      case "cmd_bm_newfolder":
+      case "cmd_bm_newseparator":
+      case "cmd_bm_import":
+      case "cmd_bm_export":
         return true;
       case "cmd_bm_properties":
       case "cmd_bm_rename":
@@ -472,7 +472,7 @@ BookmarksToolbar.prototype = {
       case "cmd_bm_import":
       case "cmd_bm_export":
       case "cmd_bm_fileBookmark":
-        gBookmarksShell.execCommand(aCommand.substring("cmd_bm_".length));
+        gBookmarksShell.execCommand(aCommand.substring("cmd_".length));
         break;
       case "cmd_bm_selectAll":
         break;

@@ -93,7 +93,7 @@
         var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
         var bundleURL = "chrome://communicator/locale/bookmarks/bookmark.properties";
         this._bundle = stringBundleService.createBundle(bundleURL, localeService.GetApplicationLocale());
-        // setTimeout(this.refreshSort, 0, this);
+        setTimeout(this.refreshSort, 0, this);
       ]]></constructor>
       <destructor><![CDATA[
         this.outlinerBuilder.removeObserver(this.builderObserver);
@@ -185,6 +185,20 @@
           } catch(e) {
           }
           return "chrome://navigator/content/navigator.xul";
+        ]]></getter>
+      </property>
+      
+      <field name="_type">null</field>
+ 
+      <property name="type">
+        <getter><![CDATA[
+          if (!this._type) {
+            var type = this.getAttribute("type");
+            if (!type)
+              type = "multi-column";
+            this._type = type;
+          }
+          return this._type;
         ]]></getter>
       </property>
       
@@ -454,7 +468,7 @@
             this.mOuter.selectAll();
             break;
           case "cmd_bm_open":
-            this.mOuter.openItem();
+            this.mOuter.openItem(true);
             break;
           case "cmd_bm_openfolder":
             this.mOuter.outlinerBoxObject.view.toggleOpenState(this.mOuter.currentIndex);
@@ -608,7 +622,25 @@
             }
             var rSource = this.mOuter.rdf.GetResource(sourceID[i]);
             var rParent = parentID[i] ? this.mOuter.rdf.GetResource(parentID[i]) : null;
+
             const kBMDS = this.mOuter.bookmarksDS;
+            var bmType = this.mOuter.resolveType(rSource);
+            var rType = this.mOuter.rdf.GetResource(this.mOuter.RDF_NS + "type");
+            if (!bmType) 
+              kBMDS.Assert(rSource, rType, rBookmark, true);
+            
+            // prevent dropping folder within itself or one of its subfolders
+            if (bmType == this.mOuter.NC_NS + "Folder") {
+              var currRow = row;
+              do {
+                var currURI = this.mOuter.outlinerBuilder.getResourceAtIndex(currRow).Value;
+                currRow = this.mOuter.outlinerBoxObject.view.getParentIndex(currRow);
+              }
+              while (currRow != -1 && currURI != "NC:BookmarksRoot" && currURI != rSource.Value);
+              if (currURI == rSource.Value)
+                return;
+            }
+
             RDFC.Init(kBMDS, rContainer);
             var dropIx = RDFC.IndexOf(rTarget);
             // XXX if any of the following fails, the nodes are gone for good!
@@ -619,18 +651,15 @@
                 try {
                   RDFC.Init(kBMDS, rParent);
                   ix = RDFC.IndexOf(rSource);
-                  if (ix >= 1) 
+                  if (ix >= 1) {
                     RDFC.RemoveElementAt(ix, true);
+                    --row;
+                  }
                 }
                 catch (ex) { }
               }
             }
     
-            var bmType = kBMDS.GetTarget(this.mOuter.rdf.GetResource(sourceID[i]), this.mOuter.rdf.GetResource(this.mOuter.RDF_NS + "type"), true);
-            var rType = this.mOuter.rdf.GetResource(this.mOuter.RDF_NS + "type");
-            if (!bmType) 
-              kBMDS.Assert(rSource, rType, rBookmark, true);
-
             if (bmType == this.mOuter.NC_NS + "Folder") {
               // If we're going to copy a folder type, we need to clone the folder 
               // rather than just asserting the new node as a child of the drop folder.
@@ -643,8 +672,8 @@
               RDFC.InsertElementAt(rSource, rParent ? dropIx : (orientation == this.inDropAfter ? ++dropIx : dropIx), true);
             }
             else {
-              rContainer = this.mOuter.outlinerBuilder.getResourceAtIndex(row);
-              RDFC.Init(kBMDS, rContainer);
+              var cont = this.mOuter.outlinerBuilder.getResourceAtIndex(row);
+              RDFC.Init(kBMDS, cont);
               RDFC.AppendElement(rSource); // drop on
             }
             dirty = true;
@@ -1523,8 +1552,10 @@
       ]]></body>
       </method>
      
+      // requires utilityOverlay.js if opening in new window for opentopwin()
       <method name="openItem">
       <parameter name="aEvent"/>
+      <parameter name="aInNewWindow"/>
         <body><![CDATA[
           if (this.outlinerBoxObject.view.isContainer(this.outlinerBoxObject.selection.currentIndex))
             return;
@@ -1535,9 +1566,10 @@
           if (urlValue.substring(0,3) == "NC:" || !urlValue) return;
           if (aEvent && aEvent.altKey)
             this.openPropertiesForItem();
-          else
+          else if (aInNewWindow)
             openDialog (this._browserURL, "_blank", "chrome,all,dialog=no", urlValue);
-
+          else
+            openTopWin(urlValue);
           if (aEvent) 
             aEvent.preventBubble();
         ]]></body>
@@ -1568,9 +1600,10 @@
         <menupopup id="bmContext" 
                    onpopupshowing="this.parentNode.createContextMenu(event);"/>
       <vbox flex="1">
-        <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner" enableColumnDrag="true">
+        <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner" enableColumnDrag="true"
+                           onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.openItem(event, true);">
           <outlinerbody anonid="bookmarks-outlinerbody" datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" flex="1" ref="NC:BookmarksRoot"
-                        ondblclick="this.parentNode.parentNode.parentNode.openItem(event);"
+                        ondblclick="this.parentNode.parentNode.parentNode.openItem(event, true);"
                         ondraggesture="nsDragAndDrop.startDrag(event, this.parentNode.parentNode.parentNode.DNDObserver);"
                         onselect="this.parentNode.parentNode.parentNode.outlinerBoxObject.view.selectionChanged();">
             <template>
@@ -1617,10 +1650,11 @@
                  contextmenu="_child">
       <menupopup id="bmContext" 
                  onpopupshowing="this.parentNode.createContextMenu(event);"/>
-      <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner" inherits="class=outlinerclass" enableColumnDrag="true">
+      <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner" inherits="class" enableColumnDrag="true"
+                         onkeypress="if (event.keyCode == 13) this.parentNode.openItem(event, false);">
         <outlinerbody anonid="bookmarks-outlinerbody" datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" flex="1" ref="NC:BookmarksRoot"
-                      ondblclick="this.parentNode.parentNode.openItem(event);"
                       ondraggesture="nsDragAndDrop.startDrag(event, this.parentNode.parentNode.DNDObserver);"
+                      onclick="this.parentNode.parentNode.openItem(event, false);"
                       onselect="this.parentNode.parentNode.outlinerBoxObject.view.selectionChanged();">
           <template>
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
@@ -1641,7 +1675,7 @@
   <!-- Outliner with folders only -->
   <binding id="bookmarks-outliner-folders" extends="chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-outliner">
     <xbl:content xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" xmlns:xbl="http://www.mozilla.org/xbl">
-      <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner" inherits="class=outlinerclass">
+      <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner" inherits="class">
         <outlinerbody anonid="bookmarks-outlinerbody" datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" flex="1" ref="NC:BookmarksRoot"
                       onselect="this.parentNode.parentNode.outlinerBoxObject.view.selectionChanged();">
           <template>
