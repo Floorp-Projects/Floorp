@@ -715,7 +715,7 @@ sub targettedSay {
     my $self = shift;
     my($event, $message, $direct) = @_;
     if ($direct and length($message)) {
-        $message = "$event->{'from'}: $message";
+        $self->say($event, $message);              
     }
 }
 
