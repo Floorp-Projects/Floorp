@@ -85,18 +85,6 @@ public:
     return mRightEdge - mX;
   }
 
-  static PRUintn CalculateBlockMarginsFor(nsIPresContext& aPresContext,
-                                          nsIFrame* aFrame,
-                                          const nsHTMLReflowState* aParentRS,
-                                          const nsStyleSpacing* aSpacing,
-                                          nsMargin& aMargin);
-
-// Return value from CalculateBlockMarginsFor
-#define NS_TOP_MARGIN_IS_AUTO    0x1
-#define NS_BOTTOM_MARGIN_IS_AUTO 0x2
-
-  static nscoord MaxMargin(nscoord a, nscoord b);
-
   /**
    * Calculate the line-height value for a given frame.
    */
@@ -107,15 +95,11 @@ public:
 protected:
   nsresult SetFrame(nsIFrame* aFrame);
 
-  PRBool TreatFrameAsBlockFrame();
-
   const nsStyleDisplay* GetDisplay();
 
   const nsStylePosition* GetPosition();
 
   const nsStyleSpacing* GetSpacing();
-
-  void CalculateMargins();
 
   void ApplyTopLeftMargins();
 

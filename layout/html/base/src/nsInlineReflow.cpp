@@ -201,32 +201,6 @@ nsInlineReflow::GetSpacing()
   return mSpacing;
 }
 
-// XXX use frameType instead after constructing a reflow state
-PRBool
-nsInlineReflow::TreatFrameAsBlockFrame()
-{
-  const nsStyleDisplay* display = GetDisplay();
-  const nsStylePosition* position = GetPosition();
-
-  if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
-    return PR_FALSE;
-  }
-  if (NS_STYLE_FLOAT_NONE != display->mFloats) {
-    return PR_FALSE;
-  }
-  switch (display->mDisplay) {
-  case NS_STYLE_DISPLAY_BLOCK:
-  case NS_STYLE_DISPLAY_LIST_ITEM:
-  case NS_STYLE_DISPLAY_COMPACT:
-  case NS_STYLE_DISPLAY_RUN_IN:
-  case NS_STYLE_DISPLAY_TABLE:
-    return PR_TRUE;
-  default:
-    break;
-  }
-  return PR_FALSE;
-}
-
 nsresult
 nsInlineReflow::SetFrame(nsIFrame* aFrame)
 {
@@ -274,7 +248,9 @@ nsInlineReflow::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus)
 
   // Next figure out how much available space there is for the frame.
   // Calculate raw margin values.
-  CalculateMargins();
+  PerFrameData* pfd = mFrameData;
+  nsHTMLReflowState::ComputeMarginFor(pfd->mFrame, &mOuterReflowState,
+                                      pfd->mMargin);
 
   // Apply top+left margins (as appropriate) to the frame computing
   // the new starting x,y coordinates for the frame.
@@ -299,51 +275,6 @@ nsInlineReflow::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus)
     }
   }
 
-  return rv;
-}
-
-void
-nsInlineReflow::CalculateMargins()
-{
-  // Get the margins from the style system
-  PerFrameData* pfd = mFrameData;
-  nsHTMLReflowState::ComputeMarginFor(pfd->mFrame, &mOuterReflowState,
-                                      pfd->mMargin);
-}
-
-PRUintn
-nsInlineReflow::CalculateBlockMarginsFor(nsIPresContext& aPresContext,
-                                         nsIFrame* aFrame,
-                                         const nsHTMLReflowState* aParentRS,
-                                         const nsStyleSpacing* aSpacing,
-                                         nsMargin& aMargin)
-{
-  PRUint32 rv = 0;
-
-  nsHTMLReflowState::ComputeMarginFor(aFrame, aParentRS, aMargin);
-
-  // Get font height if we will be doing an auto margin. We use the
-  // default font height for the auto margin value.
-  nsStyleUnit topUnit = aSpacing->mMargin.GetTopUnit();
-  nsStyleUnit bottomUnit = aSpacing->mMargin.GetBottomUnit();
-  nscoord fontHeight = 0;
-  if ((eStyleUnit_Auto == topUnit) || (eStyleUnit_Auto == bottomUnit)) {
-    // XXX Use the font for the frame, not the default font???
-    const nsFont& defaultFont = aPresContext.GetDefaultFont();
-    nsIFontMetrics* fm = aPresContext.GetMetricsFor(defaultFont);
-    fm->GetHeight(fontHeight);
-    NS_RELEASE(fm);
-  }
-
-  // For auto margins use the font height computed above
-  if (eStyleUnit_Auto == topUnit) {
-    aMargin.top = fontHeight;
-    rv |= NS_CARRIED_TOP_MARGIN_IS_AUTO;
-  }
-  if (eStyleUnit_Auto == bottomUnit) {
-    aMargin.bottom = fontHeight;
-    rv |= NS_CARRIED_BOTTOM_MARGIN_IS_AUTO;
-  }
   return rv;
 }
 
@@ -431,6 +362,7 @@ nsInlineReflow::ComputeAvailableSize()
     return PR_TRUE;
   }
 
+#if XXX
   // Give up now if there is no chance. Note that we allow a reflow if
   // the available space is zero because that way things that end up
   // zero sized won't trigger a new line to be created. We also allow
@@ -440,6 +372,7 @@ nsInlineReflow::ComputeAvailableSize()
       ((mFrameAvailSize.width < 0) || (mFrameAvailSize.height < 0))) {
     return PR_FALSE;
   }
+#endif
   return PR_TRUE;
 }
 
@@ -476,6 +409,11 @@ nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
   reflowState.lineLayout = &mLineLayout;
   reflowState.reason = reason;
   mLineLayout.SetUnderstandsWhiteSpace(PR_FALSE);
+
+  // Capture this state *before* we reflow the frame in case it clears
+  // the state out. We need to know how to treat the current frame
+  // when breaking.
+  mInWord = mLineLayout.InWord();
 
   // Let frame know that are reflowing it
   nscoord x = pfd->mBounds.x;
@@ -594,6 +532,32 @@ nsInlineReflow::CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
     }
   }
 
+  // Set outside to PR_TRUE if the result of the reflow leads to the
+  // frame sticking outside of our available area.
+  PRBool outside = pfd->mBounds.XMost() + mRightMargin > mRightEdge;
+
+  // There are several special conditions that exist which allow us to
+  // ignore outside. If they are true then we can place frame and
+  // return PR_TRUE.
+  if (!mCanBreakBeforeFrame || mInWord || mOuterReflowState.mNoWrap) {
+    return PR_TRUE;
+  }
+
+  if (0 == pfd->mMargin.left + pfd->mBounds.width + pfd->mMargin.right) {
+    // Empty frames always fit right where they are
+    return PR_TRUE;
+  }
+
+  if (0 == mFrameNum) {
+    return PR_TRUE;
+  }
+
+  if (outside) {
+    aStatus = NS_INLINE_LINE_BREAK_BEFORE();
+    return PR_FALSE;
+  }
+  return PR_TRUE;
+#if XXX
   // If this is the first frame going into this inline reflow or it's
   // the first placed frame in the line or wrapping is disabled then
   // the frame fits regardless of who much room there is. This
@@ -604,8 +568,7 @@ nsInlineReflow::CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
   if ((0 == mFrameNum) ||
       (0 == mLineLayout.GetPlacedFrames()) ||
       mOuterReflowState.mNoWrap ||
-      mInWord ||
-      (0 == pfd->mMargin.left + pfd->mBounds.width + pfd->mMargin.right)) {
+      mInWord) {
     return PR_TRUE;
   }
 
@@ -617,6 +580,7 @@ nsInlineReflow::CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
   }
 
   return PR_TRUE;
+#endif
 }
 
 /**
@@ -917,7 +881,7 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
 }
 
 void
-nsInlineReflow::HorizontalAlignFrames(nsRect& aLineBox, PRBool aIsLastLine)
+nsInlineReflow::HorizontalAlignFrames(nsRect& aLineBox, PRBool aAllowJustify)
 {
   // Before we start, trim any trailing whitespace off of the last
   // frame in the line.
@@ -959,7 +923,7 @@ nsInlineReflow::HorizontalAlignFrames(nsRect& aLineBox, PRBool aIsLastLine)
       // If this is not the last line then go ahead and justify the
       // frames in the line. If it is the last line then if the
       // direction is right-to-left then we right-align the frames.
-      if (!aIsLastLine) {
+      if (aAllowJustify) {
         JustifyFrames(maxWidth, aLineBox);
         return;
       }
