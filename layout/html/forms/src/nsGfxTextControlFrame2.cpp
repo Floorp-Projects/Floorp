@@ -1813,6 +1813,9 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   nsFormControlFrame::GetStyleSize(aPresContext, *aReflowState, styleSize);
 
 
+ if (mState & NS_FRAME_FIRST_REFLOW)
+   mNotifyOnInput = PR_TRUE;//its ok to notify now. all has been prepared.
+
   if (!aReflowState)
     return NS_OK;
 
