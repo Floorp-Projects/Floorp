@@ -358,8 +358,8 @@ nsXMLHttpRequest::SetOnerror(nsIDOMEventListener * aOnerror)
   return NS_OK;
 }
 
-/* readonly attribute nsIHttpChannel channel; */
-NS_IMETHODIMP nsXMLHttpRequest::GetChannel(nsIHttpChannel **aChannel)
+/* readonly attribute nsIChannel channel; */
+NS_IMETHODIMP nsXMLHttpRequest::GetChannel(nsIChannel **aChannel)
 {
   NS_ENSURE_ARG_POINTER(aChannel);
   *aChannel = mChannel;
@@ -535,10 +535,13 @@ NS_IMETHODIMP nsXMLHttpRequest::GetResponseText(PRUnichar **aResponseText)
 NS_IMETHODIMP 
 nsXMLHttpRequest::GetStatus(PRUint32 *aStatus)
 {
-  if (mChannel) {
-    return mChannel->GetResponseStatus(aStatus);
-  }
-  
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
+
+  if (httpChannel) {
+    return httpChannel->GetResponseStatus(aStatus);
+  } 
+  *aStatus = 0;
+
   return NS_OK;
 }
 
@@ -547,10 +550,12 @@ NS_IMETHODIMP
 nsXMLHttpRequest::GetStatusText(char * *aStatusText)
 {
   NS_ENSURE_ARG_POINTER(aStatusText);
-  *aStatusText = nsnull;
-  if (mChannel) {
-    return mChannel->GetResponseStatusText(aStatusText);
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
+
+  if (httpChannel) {
+    return httpChannel->GetResponseStatusText(aStatusText);
   }
+  *aStatusText = nsnull;
   
   return NS_OK;
 }
@@ -572,14 +577,15 @@ nsXMLHttpRequest::GetAllResponseHeaders(char **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
-  if (mChannel) {
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
+  if (httpChannel) {
     nsHeaderVisitor *visitor = nsnull;
     NS_NEWXPCOM(visitor, nsHeaderVisitor);
     if (!visitor)
       return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(visitor);
 
-    nsresult rv = mChannel->VisitResponseHeaders(visitor);
+    nsresult rv = httpChannel->VisitResponseHeaders(visitor);
     if (NS_SUCCEEDED(rv))
       *_retval = ToNewCString(visitor->Headers());
 
@@ -596,10 +602,11 @@ nsXMLHttpRequest::GetResponseHeader(const char *header, char **_retval)
 {
   NS_ENSURE_ARG(header);
   NS_ENSURE_ARG_POINTER(_retval);
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
 
   *_retval = nsnull;
-  if (mChannel)
-    return mChannel->GetResponseHeader(header, _retval);
+  if (httpChannel)
+    return httpChannel->GetResponseHeader(header, _retval);
   
   return NS_OK;
 }
@@ -629,14 +636,6 @@ nsXMLHttpRequest::OpenRequest(const char *method,
   rv = NS_NewURI(getter_AddRefs(uri), url, mBaseURI);
   if (NS_FAILED(rv)) return rv;
 
-  // Only http URLs are allowed
-  // The following check takes the place of nsScriptSecurityManager::CheckLoadURI
-  // since loads of http URLs are always allowed.
-  PRBool isHTTP = PR_FALSE;
-  uri->SchemeIs("http", &isHTTP);
-  if (!isHTTP)
-      return NS_ERROR_INVALID_ARG;
-
   if (user) {
     nsCAutoString prehost;
     prehost.Assign(user);
@@ -648,18 +647,15 @@ nsXMLHttpRequest::OpenRequest(const char *method,
     authp = PR_TRUE;
   }
 
-  nsCOMPtr<nsIChannel> channel;
-  rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull, nsnull);
+  rv = NS_OpenURI(getter_AddRefs(mChannel), uri, nsnull, nsnull);
   if (NS_FAILED(rv)) return rv;
   
-  mChannel = do_QueryInterface(channel);
-  if (!mChannel) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
   //mChannel->SetAuthTriedWithPrehost(authp);
 
-  rv = mChannel->SetRequestMethod(method);
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
+  if (httpChannel) {
+    rv = httpChannel->SetRequestMethod(method);
+  }
 
   mStatus = XML_HTTP_REQUEST_OPENED;
 
@@ -794,16 +790,21 @@ nsXMLHttpRequest::GetStreamForWString(const PRUnichar* aStr,
     nsMemory::Free(postData);
     return NS_ERROR_FAILURE;
   }
+
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
+  if (!httpChannel) {
+    return NS_ERROR_FAILURE;
+  }
   
   // If no content type header was set by the client, we set it to text/xml.
   nsXPIDLCString header;
-  if( NS_OK != mChannel->GetRequestHeader("Content-Type", getter_Copies(header)) )  
-    mChannel->SetRequestHeader("Content-Type", "text/xml" );
+  if( NS_OK != httpChannel->GetRequestHeader("Content-Type", getter_Copies(header)) )  
+    httpChannel->SetRequestHeader("Content-Type", "text/xml" );
 
   // set the content length header
   char charLengthBuf [32];
   PR_snprintf(charLengthBuf, sizeof(charLengthBuf), "%d", charLength);
-  mChannel->SetRequestHeader("Content-Length", charLengthBuf );
+  httpChannel->SetRequestHeader("Content-Length", charLengthBuf );
 
   // Shove in the trailing and leading CRLF
   postData[0] = nsCRT::CR;
@@ -928,9 +929,13 @@ nsXMLHttpRequest::Send(nsISupports *body)
 
   // Ignore argument if method is GET, there is no point in trying to upload anything
   nsXPIDLCString method;
-  mChannel->GetRequestMethod(getter_Copies(method)); // If GET, method name will be uppercase
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
 
-  if (body && nsCRT::strcmp("GET",method.get()) != 0) {
+  if (httpChannel) {
+    httpChannel->GetRequestMethod(getter_Copies(method)); // If GET, method name will be uppercase
+  }
+
+  if (body && httpChannel && nsCRT::strcmp("GET",method.get()) != 0) {
     nsCOMPtr<nsIInputStream> postDataStream;
 
     nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(body));
@@ -969,7 +974,7 @@ nsXMLHttpRequest::Send(nsISupports *body)
     }
 
     if (postDataStream) {
-      rv = mChannel->SetUploadStream(postDataStream);
+      rv = httpChannel->SetUploadStream(postDataStream);
     }
   }
 
@@ -1120,8 +1125,10 @@ nsXMLHttpRequest::Send(nsISupports *body)
 NS_IMETHODIMP 
 nsXMLHttpRequest::SetRequestHeader(const char *header, const char *value)
 {
-  if (mChannel)
-    return mChannel->SetRequestHeader(header, value);
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
+
+  if (httpChannel)
+    return httpChannel->SetRequestHeader(header, value);
   
   return NS_OK;
 }
