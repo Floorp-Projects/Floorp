@@ -453,6 +453,7 @@ nsProfileAccess::GetFirstProfile(char **firstProfile)
 void
 nsProfileAccess::SetCurrentProfile(const char *profileName)
 {
+	CRTFREEIF(mCurrentProfile);
 	mCurrentProfile = nsCRT::strdup(profileName);
 	mProfileDataChanged = PR_TRUE;
 }
