@@ -32,9 +32,16 @@
 #include "nsIStyleContext.h"
 #include "nsStyleUtil.h"
 #include "nsIFormControl.h"
+#include "nsIDOMHTMLInputElement.h"
+
+
+#ifdef XP_PC
+#define NS_PC_DESIRED_CHECKBOX_SIZE 20
+#endif
+
 
 static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
-//static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 
 class nsCheckboxControlFrame : public nsFormControlFrame {
 public:
@@ -66,6 +73,22 @@ public:
 
   NS_IMETHOD GetChecked(PRBool* aResult);
 
+  virtual void GetCurrentCheckState(PRBool* aState);
+
+  virtual void PaintFixedSizeCheckMark(nsIRenderingContext& aRenderingContext, 
+                                     float aPixelsToTwips);
+
+  virtual void PaintCheckBox(nsIPresContext& aPresContext,
+                  nsIRenderingContext& aRenderingContext,
+                  const nsRect& aDirtyRect);
+
+  virtual void PaintFixedSizeCheckMarkBorder(nsIRenderingContext& aRenderingContext,
+                         float aPixelsToTwips);
+
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                  nsIRenderingContext& aRenderingContext,
+                  const nsRect& aDirtyRect);
+  
 protected:
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
@@ -106,12 +129,8 @@ nsCheckboxControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   float p2t;
   aPresContext->GetScaledPixelsToTwips(p2t);
 #ifdef XP_PC
-  aDesiredWidgetSize.width  = NSIntPixelsToTwips(12, p2t);
-  aDesiredWidgetSize.height = NSIntPixelsToTwips(12, p2t);
-#endif
-#ifdef XP_PC
-  aDesiredWidgetSize.width  = NSIntPixelsToTwips(20, p2t);
-  aDesiredWidgetSize.height = NSIntPixelsToTwips(20, p2t);
+   aDesiredWidgetSize.width  = NSIntPixelsToTwips(NS_PC_DESIRED_CHECKBOX_SIZE, p2t);
+   aDesiredWidgetSize.height = NSIntPixelsToTwips(NS_PC_DESIRED_CHECKBOX_SIZE, p2t);
 #endif
   aDesiredLayoutSize.width  = aDesiredWidgetSize.width;
   aDesiredLayoutSize.height = aDesiredWidgetSize.height;
@@ -155,7 +174,7 @@ nsCheckboxControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& 
     PRBool checked;
     nsresult result = GetChecked(&checked);
     if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-	    checkbox->SetState(checked);
+      checkbox->SetState(checked);
     }
     NS_RELEASE(checkbox);
   }
@@ -187,15 +206,35 @@ nsCheckboxControlFrame::AttributeChanged(nsIPresContext* aPresContext,
   return result;
 }
 
+void nsCheckboxControlFrame::GetCurrentCheckState(PRBool *aState)
+{
+  nsIDOMHTMLInputElement* inputElement;
+  if (NS_OK == mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement)) {
+    inputElement->GetChecked(aState);
+    NS_RELEASE(inputElement);
+  }
+}
+
+//XXX: This may be needed later when we actually need the correct state for the checkbox
+//void nsCheckboxControlFrame::SetCurrentCheckState(PRBool aState)
+//{
+//   nsIDOMHTMLInputElement* inputElement;
+//  if (NS_OK == mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement)) {
+//    inputElement->SetDefaultChecked(aState); //XXX: TEMPORARY this should be GetChecked but it get's it's state from the widget instead
+//    NS_RELEASE(inputElement);
+//  }
+//}
+
 void 
 nsCheckboxControlFrame::MouseClicked(nsIPresContext* aPresContext) 
 {
   nsICheckButton* checkbox = nsnull;
   if (mWidget && (NS_OK == mWidget->QueryInterface(GetIID(),(void**)&checkbox))) {
-  	PRBool oldState;
-  	checkbox->GetState(oldState);
-		PRBool newState = oldState ? PR_FALSE : PR_TRUE;
-		checkbox->SetState(newState);
+    PRBool oldState;
+    checkbox->GetState(oldState);
+    PRBool newState = oldState ? PR_FALSE : PR_TRUE;
+    checkbox->SetState(newState);
+ //   SetCurrentCheckState(newState); // Let content model know about the change
     NS_IF_RELEASE(checkbox);
   }
 }
@@ -256,4 +295,145 @@ nsCheckboxControlFrame::Reset()
     NS_RELEASE(checkBox);
   }
 }  
+
+void
+nsCheckboxControlFrame::PaintFixedSizeCheckMark(nsIRenderingContext& aRenderingContext,
+                         float aPixelsToTwips)
+{
+   //XXX: Check mark is always draw in black. If the this code is used to Render the widget 
+   //to the screen the color should be set using the CSS style color instead.
+  aRenderingContext.SetColor(NS_RGB(0, 0, 0));
+    // Offsets to x,y location, These offsets are used to place the checkmark in the middle
+    // of it's 12X12 pixel box.
+  const PRUint32 ox = 3;
+  const PRUint32 oy = 3;
+
+  nscoord onePixel = NSIntPixelsToTwips(1, aPixelsToTwips);
+
+    // Draw checkmark using a series of rectangles. This builds an replica of the
+    // way the checkmark looks under Windows. Using a polygon does not correctly 
+    // represent a checkmark under Windows. This is due to round-off error in the
+    // Twips to Pixel conversions.
+  DrawLine(aRenderingContext, 0 + ox, 2 + oy, 0 + ox, 4 + oy, PR_FALSE, 1, onePixel);
+  DrawLine(aRenderingContext, 1 + ox, 3 + oy, 1 + ox, 5 + oy, PR_FALSE, 1, onePixel);
+  DrawLine(aRenderingContext, 2 + ox, 4 + oy, 2 + ox, 6 + oy, PR_FALSE, 1, onePixel);
+  DrawLine(aRenderingContext, 3 + ox, 3 + oy, 3 + ox, 5 + oy, PR_FALSE, 1, onePixel);
+  DrawLine(aRenderingContext, 4 + ox, 2 + oy, 4 + ox, 4 + oy, PR_FALSE, 1, onePixel);
+  DrawLine(aRenderingContext, 5 + ox, 1 + oy, 5 + ox, 3 + oy, PR_FALSE, 1, onePixel);
+  DrawLine(aRenderingContext, 6 + ox, 0 + oy, 6 + ox, 2 + oy, PR_FALSE, 1, onePixel);
+}
+
+void
+nsCheckboxControlFrame::PaintFixedSizeCheckMarkBorder(nsIRenderingContext& aRenderingContext,
+                         float aPixelsToTwips)
+{
+ //XXX: Future, use CSS to paint border instead of painting it ourselves here.   
+// nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+
+    // Offsets to x,y location
+  PRUint32 ox = 0;
+  PRUint32 oy = 0;
+
+  nscoord onePixel = NSIntPixelsToTwips(1, aPixelsToTwips);
+  nscoord twoPixels = NSIntPixelsToTwips(2, aPixelsToTwips);
+  nscoord ninePixels = NSIntPixelsToTwips(9, aPixelsToTwips);
+  nscoord twelvePixels = NSIntPixelsToTwips(12, aPixelsToTwips);
+
+    // Draw Background
+  nsRect rect(0, 0, twelvePixels, twelvePixels);
+  aRenderingContext.SetColor(NS_RGB(255, 255, 255));
+  aRenderingContext.FillRect(rect);
+
+    // Draw Border
+  aRenderingContext.SetColor(NS_RGB(128, 128, 128));
+  DrawLine(aRenderingContext, 0 + ox, 0 + oy, 11 + ox, 0 + oy, PR_TRUE, 1, onePixel);
+  DrawLine(aRenderingContext, 0 + ox, 0 + oy, 0 + ox, 11 + oy, PR_FALSE, 1, onePixel);
+
+  aRenderingContext.SetColor(NS_RGB(192, 192, 192));
+  DrawLine(aRenderingContext, 1 + ox, 11 + oy, 11 + ox, 11 + oy, PR_TRUE, 1, onePixel);
+  DrawLine(aRenderingContext, 11 + ox, 1 + oy, 11 + ox, 11 + oy, PR_FALSE, 1, onePixel);
+
+  aRenderingContext.SetColor(NS_RGB(0, 0, 0));
+  DrawLine(aRenderingContext, 1 + ox, 1 + oy, 10 + ox, 1 + oy, PR_TRUE, 1, onePixel);
+  DrawLine(aRenderingContext, 1 + ox, 1 + oy, 1 + ox, 10 + oy, PR_FALSE, 1, onePixel);
+
+}
+
+#if 0
+//XXX: Future, use the following code to draw a checkmark in any size.
+void
+nsCheckboxControlFrame::PaintScaledCheckMark(nsIRenderingContext& aRenderingContext,
+                         float aPixelsToTwips, PRUint32 aWidth, PRUint32 aHeight)
+{
+#define NS_CHECKED_POINTS 7
+
+    // Points come from the coordinates on a 11X11 pixels rectangle with 0,0 at the lower
+    // left. 
+  nscoord checkedPolygonDef[] = {0,2, 2,4, 6,0 , 6,2, 2,6, 0,4, 0,2 };
+  nsPoint checkedPolygon[NS_CHECKED_POINTS];
+  PRUint32 defIndex = 0;
+  PRUint32 polyIndex = 0;
+  PRBool scalable = PR_FALSE;
+  aRenderingContext.SetColor(color->mColor);
+  PRUint32 height = aHeight; 
+
+  for (defIndex = 0; defIndex < (NS_CHECKED_POINTS * 2); defIndex++) {
+    checkedPolygon[polyIndex].x = nscoord(((checkedPolygonDef[defIndex])) * (height / 11.0) + (height / 11.0));
+    defIndex++;
+    checkedPolygon[polyIndex].y = nscoord((((checkedPolygonDef[defIndex]))) * (height / 11.0) + (height / 11.0));
+    polyIndex++;
+  }
+  
+  aRenderingContext.FillPolygon(checkedPolygon, NS_CHECKED_POINTS);
+
+}
+#endif
+
+void
+nsCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
+                  nsIRenderingContext& aRenderingContext,
+                  const nsRect& aDirtyRect)
+{
+  aRenderingContext.PushState();
+
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(p2t);
+ 
+    //XXX:??? Offset for rendering, Not sure why we need this??? When rendering the 
+    //checkbox to the screen this is not needed. But it is needed when Printing. Looks
+    // Like it offsets from the middle of the control during Printing, but not when rendered
+    // to the screen?
+  const int printOffsetX = (NS_PC_DESIRED_CHECKBOX_SIZE / 2);
+  const int printOffsetY = (NS_PC_DESIRED_CHECKBOX_SIZE / 2);
+  aRenderingContext.Translate(NSIntPixelsToTwips(printOffsetX, p2t), 
+                              NSIntPixelsToTwips(printOffsetY, p2t));
+
+    // Draw's background + border
+  PaintFixedSizeCheckMarkBorder(aRenderingContext, p2t);
+ 
+  PRBool checked = PR_TRUE;
+  GetCurrentCheckState(&checked); // Get check state from the content model
+
+  if (PR_TRUE == checked) {
+    PaintFixedSizeCheckMark(aRenderingContext, p2t);
+  }
+  PRBool clip;
+  aRenderingContext.PopState(clip);
+}
+
+NS_METHOD 
+nsCheckboxControlFrame::Paint(nsIPresContext& aPresContext,
+                  nsIRenderingContext& aRenderingContext,
+                  const nsRect& aDirtyRect)
+{
+#ifdef XP_PC
+  //XXX: This call and the Paint Methods could be moved to the Widget library instead of
+  // being done here. In the future, If we decide to have the Widgets GFX rendered and use
+  // CSS style to control all aspects of the widgets appearance, it may make sense to keep
+  // The rendering code for the widget here in the Frame.
+  PaintCheckBox(aPresContext, aRenderingContext, aDirtyRect);
+#endif
+  return NS_OK;
+}
+
 
