@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.36 $ ';
+$Version = '$Revision: 1.37 $ ';
 
 
 sub PrintUsage {
@@ -848,7 +848,7 @@ $CVS           = 'cvs -q';
 $CVSCO         = 'checkout -P';
 
 #- Set these proper values for your tinderbox server
-$Tinderbox_server = 'tinderbox-daemon@cvs-mirror.mozilla.org';
+$Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';
 
 #-
 #- The rest should not need to be changed
