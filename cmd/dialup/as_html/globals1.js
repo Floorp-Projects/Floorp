@@ -28,6 +28,7 @@ parent.ondblclick = cancelEvent;
 var oneStepSemaphore = false;
 var selectedISP = null;
 var supportWindow = null;
+var currentProfileDirectory = null;
 
 function getSelectedISPName()
 {
@@ -122,7 +123,7 @@ function loadUserInput()
 				}
 			}
 	
-		var userInputFile = document.setupPlugin.GetCurrentProfileDirectory();
+		userInputFile = currentProfileDirectory;
 		if (userInputFile != null && userInputFile != "")	{
 			userInputFile = userInputFile + "ACCTSET.DAT";
 			var theSection="Account Setup User Input";
@@ -321,7 +322,8 @@ function loadGlobalData()
 		
 		
 		// load in user input (if any)
-		var userInputFile = document.setupPlugin.GetCurrentProfileDirectory();
+		currentProfileDirectory = document.setupPlugin.GetCurrentProfileDirectory();
+		var userInputFile = currentProfileDirectory;
 		if ( userInputFile != null && userInputFile != "" )
 		{
 
@@ -387,7 +389,7 @@ function saveExternalEditor()
 	// as a preference in ACCTSET.DAT.  This is it.
 	
 	netscape.security.PrivilegeManager.enablePrivilege( "AccountSetup" );
-	var userInputFile = document.setupPlugin.GetCurrentProfileDirectory();
+	var userInputFile = currentProfileDirectory;
 	if ( userInputFile != null && userInputFile != "" )
 	{
 		userInputFile = userInputFile + "ACCTSET.DAT";
@@ -435,7 +437,7 @@ function saveGlobalData()
 
 
 	// save user input (if any)
-	var userInputFile = document.setupPlugin.GetCurrentProfileDirectory();
+	var userInputFile = currentProfileDirectory;
 	if (userInputFile != null && userInputFile != "")
 	{
 		userInputFile = userInputFile + "ACCTSET.DAT";
