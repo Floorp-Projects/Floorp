@@ -1265,7 +1265,7 @@ public:
   MakeByteRangeString(nsByteRange* aRangeList, nsACString &string, PRInt32 *numRequests);
 
   PRBool
-  nsPluginStreamInfo::UseExistingPluginCacheFile(nsPluginStreamInfo* psi, nsIFile* file);
+  UseExistingPluginCacheFile(nsPluginStreamInfo* psi, nsIFile* file);
 
 private:
 
