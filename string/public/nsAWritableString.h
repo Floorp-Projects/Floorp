@@ -308,6 +308,17 @@ class basic_nsAWritableString
 
 
       void Replace( PRUint32 cutStart, PRUint32 cutLength, const basic_nsAReadableString<CharT>& );
+
+
+    private:
+      typedef typename nsCharTraits<CharT>::incompatible_char_type incompatible_char_type;
+
+        // NOT TO BE IMPLEMENTED
+      void operator=  ( incompatible_char_type );
+      void Assign     ( incompatible_char_type );
+      void operator+= ( incompatible_char_type );
+      void Append     ( incompatible_char_type );
+      void Insert     ( incompatible_char_type, PRUint32 );
       
 
     protected:
