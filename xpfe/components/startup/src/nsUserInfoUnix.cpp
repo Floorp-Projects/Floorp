@@ -103,10 +103,9 @@ nsUserInfo::GetDomain(char * *aDomain)
     }
  
     // I need to see why on linux it is __domainname, yet for the header file, it is domainname
-#if 1
+#ifdef __linux__
     domainname = buf.__domainname;
-#else
-    domainname = buf.domainname;
+    //domainname = buf.domainname;
 #endif
 
     if (domainname && nsCRT::strlen(domainname)) {   
