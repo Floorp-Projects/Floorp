@@ -480,13 +480,23 @@ NS_METHOD nsFrame::LastChild(nsIFrame*& aLastChild) const
 }
 
 
-PRBool nsFrame::DisplaySelection(nsIPresContext& aPresContext)
+PRBool nsFrame::DisplaySelection(nsIPresContext& aPresContext, PRBool isOkToTurnOn)
 {
-  nsIPresShell  *shell      = aPresContext.GetShell();
-  nsIDocument   *doc        = shell->GetDocument();
-  PRBool        result = doc->GetDisplaySelection();
-  NS_RELEASE(shell);
-  NS_RELEASE(doc);
+  PRBool result = PR_FALSE;
+
+  nsIPresShell *shell = aPresContext.GetShell();
+  if (nsnull != shell) {
+    nsIDocument *doc = shell->GetDocument();
+    if (nsnull != doc) {
+      result = doc->GetDisplaySelection();
+      if (isOkToTurnOn && !result) {
+        doc->SetDisplaySelection(PR_TRUE);
+        result = PR_TRUE;
+      }
+      NS_RELEASE(doc);
+    }
+    NS_RELEASE(shell);
+  }
   
   return result;
 }
@@ -558,8 +568,11 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
     mContent->HandleDOMEvent(aPresContext, (nsEvent*)aEvent, nsnull, DOM_EVENT_INIT, aEventStatus);
   }
 
-  if (DisplaySelection(aPresContext) == PR_FALSE)
-    return NS_OK;
+  if (DisplaySelection(aPresContext) == PR_FALSE) {
+    if (aEvent->message != NS_MOUSE_LEFT_BUTTON_DOWN) {
+      return NS_OK;
+    }
+  }
 
   if(nsEventStatus_eIgnore == aEventStatus) {
     if (aEvent->message == NS_MOUSE_MOVE && mDoingSelection ||
@@ -597,7 +610,7 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
                                nsEventStatus&  aEventStatus,
                                nsFrame *       aFrame)
 {
-  if (DisplaySelection(aPresContext) == PR_FALSE)
+  if (DisplaySelection(aPresContext, PR_TRUE) == PR_FALSE)
   {
     aEventStatus = nsEventStatus_eIgnore;
     return NS_OK;
