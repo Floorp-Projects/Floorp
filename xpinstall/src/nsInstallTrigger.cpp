@@ -244,7 +244,7 @@ nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString
         {
             // either component is not in the registry or it's a file
             // node and the physical file is missing
-            needJar = true;
+            needJar = PR_TRUE;
         }
         else
         {
@@ -261,7 +261,7 @@ nsInstallTrigger::ConditionalSoftwareUpdate(const nsString& aURL, const nsString
 
 
             if ( status != REGERR_OK )
-                needJar = true;
+                needJar = PR_TRUE;
             else if ( aDiffLevel < 0 )
             {
                 aVersion->CompareTo(&oldInstallVersion, &diffValue); 
