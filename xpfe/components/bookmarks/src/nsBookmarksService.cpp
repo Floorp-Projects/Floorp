@@ -129,6 +129,7 @@ static const char kURINC_BookmarksRoot[]          = "NC:BookmarksRoot"; // XXX?
 static const char kURINC_IEFavoritesRoot[]        = "NC:IEFavoritesRoot"; // XXX?
 static const char kURINC_NewBookmarkFolder[]      = "NC:NewBookmarkFolder"; // XXX?
 static const char kURINC_PersonalToolbarFolder[]  = "NC:PersonalToolbarFolder"; // XXX?
+static const char kURINC_NewSearchFolder[]        = "NC:NewSearchFolder"; // XXX?
 static const char kDefaultPersonalToolbarFolder[] = "Personal Toolbar Folder";
 static const char kBookmarkCommand[]              = "http://home.netscape.com/NC-rdf#command?";
 
@@ -152,6 +153,7 @@ nsIRDFResource		*kNC_IEFavoriteFolder;
 nsIRDFResource		*kNC_IEFavoritesRoot;
 nsIRDFResource		*kNC_Name;
 nsIRDFResource		*kNC_NewBookmarkFolder;
+nsIRDFResource		*kNC_NewSearchFolder;
 nsIRDFResource		*kNC_PersonalToolbarFolder;
 nsIRDFResource		*kNC_ShortcutURL;
 nsIRDFResource		*kNC_URL;
@@ -176,6 +178,7 @@ nsIRDFResource		*kNC_BookmarkCommand_DeleteBookmarkFolder;
 nsIRDFResource		*kNC_BookmarkCommand_DeleteBookmarkSeparator;
 nsIRDFResource		*kNC_BookmarkCommand_SetNewBookmarkFolder;
 nsIRDFResource		*kNC_BookmarkCommand_SetPersonalToolbarFolder;
+nsIRDFResource		*kNC_BookmarkCommand_SetNewSearchFolder;
 
 
 
@@ -202,6 +205,7 @@ bm_AddRefGlobals()
 		gRDF->GetResource(kURINC_IEFavoritesRoot,                 &kNC_IEFavoritesRoot);
 		gRDF->GetResource(kURINC_NewBookmarkFolder,               &kNC_NewBookmarkFolder);
 		gRDF->GetResource(kURINC_PersonalToolbarFolder,           &kNC_PersonalToolbarFolder);
+		gRDF->GetResource(kURINC_NewSearchFolder,                 &kNC_NewSearchFolder);
 
 		gRDF->GetResource(NC_NAMESPACE_URI "Bookmark",            &kNC_Bookmark);
 		gRDF->GetResource(NC_NAMESPACE_URI "BookmarkSeparator",   &kNC_BookmarkSeparator);
@@ -237,6 +241,7 @@ bm_AddRefGlobals()
 		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=deletebookmarkseparator", &kNC_BookmarkCommand_DeleteBookmarkSeparator);
 		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=setnewbookmarkfolder",    &kNC_BookmarkCommand_SetNewBookmarkFolder);
 		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=setpersonaltoolbarfolder",&kNC_BookmarkCommand_SetPersonalToolbarFolder);
+		gRDF->GetResource(NC_NAMESPACE_URI "command?cmd=setnewsearchfolder",      &kNC_BookmarkCommand_SetNewSearchFolder);
 	}
 	return NS_OK;
 }
@@ -272,6 +277,7 @@ bm_ReleaseGlobals()
 		NS_IF_RELEASE(kNC_IEFavoritesRoot);
 		NS_IF_RELEASE(kNC_Name);
 		NS_IF_RELEASE(kNC_NewBookmarkFolder);
+		NS_IF_RELEASE(kNC_NewSearchFolder);
 		NS_IF_RELEASE(kNC_PersonalToolbarFolder);
 		NS_IF_RELEASE(kNC_ShortcutURL);
 		NS_IF_RELEASE(kNC_URL);
@@ -296,6 +302,7 @@ bm_ReleaseGlobals()
 
 		NS_IF_RELEASE(kNC_BookmarkCommand_SetNewBookmarkFolder);
 		NS_IF_RELEASE(kNC_BookmarkCommand_SetPersonalToolbarFolder);
+		NS_IF_RELEASE(kNC_BookmarkCommand_SetNewSearchFolder);
 	}
 }
 
@@ -514,6 +521,7 @@ static const char kOpenDD[]     = "<DD>";
 static const char kOpenMeta[]   = "<META ";
 
 static const char kNewBookmarkFolderEquals[]      = "NEW_BOOKMARK_FOLDER=\"";
+static const char kNewSearchFolderEquals[]        = "NEW_SEARCH_FOLDER=\"";
 static const char kPersonalToolbarFolderEquals[]  = "PERSONAL_TOOLBAR_FOLDER=\"";
 
 static const char kTargetEquals[]          = "TARGET=\"";
@@ -1370,6 +1378,10 @@ BookmarkParser::ParseBookmarkHeader(const nsString &aLine,
 	ParseAttribute(aLine, kNewBookmarkFolderEquals, sizeof(kNewBookmarkFolderEquals) - 1,
 		newBookmarkFolderHint);
 
+	nsAutoString	newSearchFolderHint;
+	ParseAttribute(aLine, kNewSearchFolderEquals, sizeof(kNewSearchFolderEquals) - 1,
+		newSearchFolderHint);
+
 	nsAutoString	personalToolbarFolderHint;
 	ParseAttribute(aLine, kPersonalToolbarFolderEquals, sizeof(kPersonalToolbarFolderEquals) - 1,
 		personalToolbarFolderHint);
@@ -1419,6 +1431,10 @@ BookmarkParser::ParseBookmarkHeader(const nsString &aLine,
 	if (newBookmarkFolderHint.EqualsIgnoreCase("true"))
 	{
 		rv = setFolderHint(folder, kNC_NewBookmarkFolder);
+	}
+	if (newSearchFolderHint.EqualsIgnoreCase("true"))
+	{
+		rv = setFolderHint(folder, kNC_NewSearchFolder);
 	}
 	if (personalToolbarFolderHint.EqualsIgnoreCase("true"))
 	{
@@ -2735,8 +2751,16 @@ nsBookmarksService::AddBookmark(const char *aURI, const PRUnichar *aOptionalTitl
 	if (NS_FAILED(rv)) return rv;
 
 	// figure out where to add the new bookmark
+	nsCOMPtr<nsIRDFResource>	bookmarkType = kNC_NewBookmarkFolder;
+
+	// hack: route "internetsearch:" URLs if necessary
+	if (!nsCRT::strncmp(aURI, "internetsearch:", 15))
+	{
+		bookmarkType = kNC_NewSearchFolder;
+	}
+
 	nsCOMPtr<nsIRDFResource>	newBookmarkFolder;
-	if (NS_FAILED(rv = getFolderViaHint(kNC_NewBookmarkFolder,
+	if (NS_FAILED(rv = getFolderViaHint(bookmarkType,
 			getter_AddRefs(newBookmarkFolder))))
 		return(rv);
 
@@ -3023,6 +3047,8 @@ nsBookmarksService::GetTarget(nsIRDFResource* aSource,
 			getLocaleString("SetNewBookmarkFolder", name);
 		else if (aSource == kNC_BookmarkCommand_SetPersonalToolbarFolder)
 			getLocaleString("SetPersonalToolbarFolder", name);
+		else if (aSource == kNC_BookmarkCommand_SetNewSearchFolder)
+			getLocaleString("SetNewSearchFolder", name);
 
 		if (name.Length() > 0)
 		{
@@ -3392,12 +3418,14 @@ nsBookmarksService::GetAllCmds(nsIRDFResource* source,
 	}
 	if (isBookmarkFolder)
 	{
-		nsCOMPtr<nsIRDFResource>	newBookmarkFolder, personalToolbarFolder;
+		nsCOMPtr<nsIRDFResource>	newBookmarkFolder, personalToolbarFolder, newSearchFolder;
 		getFolderViaHint(kNC_NewBookmarkFolder, getter_AddRefs(newBookmarkFolder));
 		getFolderViaHint(kNC_PersonalToolbarFolder, getter_AddRefs(personalToolbarFolder));
+		getFolderViaHint(kNC_NewSearchFolder, getter_AddRefs(newSearchFolder));
 
 		cmdArray->AppendElement(kNC_BookmarkSeparator);
 		if (source != newBookmarkFolder.get())		cmdArray->AppendElement(kNC_BookmarkCommand_SetNewBookmarkFolder);
+		if (source != newSearchFolder.get())		cmdArray->AppendElement(kNC_BookmarkCommand_SetNewSearchFolder);
 		if (source != personalToolbarFolder.get())	cmdArray->AppendElement(kNC_BookmarkCommand_SetPersonalToolbarFolder);
 	}
 
@@ -3708,6 +3736,14 @@ nsBookmarksService::getFolderViaHint(nsIRDFResource *objType, nsIRDFResource **f
 			}
 		}
 	}
+
+	// if we couldn't find a real "New Internet Search Folder", fallback to looking for
+	// a "New Bookmark Folder", and if can't find that, then default to the bookmarks root
+	if ((!(*folder)) && (objType == kNC_NewSearchFolder))
+	{
+		rv = getFolderViaHint(kNC_NewBookmarkFolder, folder);
+	}
+
 	if (!(*folder))
 	{
 		// fallback to some well-known defaults
@@ -3786,6 +3822,11 @@ nsBookmarksService::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aComma
 		else if (aCommand == kNC_BookmarkCommand_SetPersonalToolbarFolder)
 		{
 			if (NS_FAILED(rv = setFolderHint(src, kNC_PersonalToolbarFolder)))
+				return(rv);
+		}
+		else if (aCommand == kNC_BookmarkCommand_SetNewSearchFolder)
+		{
+			if (NS_FAILED(rv = setFolderHint(src, kNC_NewSearchFolder)))
 				return(rv);
 		}
 	}
@@ -4287,6 +4328,11 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 						PR_TRUE, &hasType)) && (hasType == PR_TRUE))
 					{
 						strm << " " << kNewBookmarkFolderEquals << "true\"";
+					}
+					if (NS_SUCCEEDED(rv = mInner->HasAssertion(child, kNC_FolderType, kNC_NewSearchFolder,
+						PR_TRUE, &hasType)) && (hasType == PR_TRUE))
+					{
+						strm << " " << kNewSearchFolderEquals << "true\"";
 					}
 					if (NS_SUCCEEDED(rv = mInner->HasAssertion(child, kNC_FolderType, kNC_PersonalToolbarFolder,
 						PR_TRUE, &hasType)) && (hasType == PR_TRUE))
