@@ -280,6 +280,10 @@ struct nsHTMLReflowState : nsReflowState {
 
   static nsCSSFrameType DetermineFrameType(nsIFrame* aFrame);
 
+  void ComputeContainingBlockRectangle(const nsHTMLReflowState* aContainingBlockRS,
+                                       nscoord& aContainingBlockWidth,
+                                       nscoord& aContainingBlockHeight);
+
 protected:
   // This method initializes various data members. It is automatically
   // called by the various constructors
@@ -291,10 +295,6 @@ protected:
                                const nsHTMLReflowState* cbrs,
                                nscoord aContainingBlockWidth,
                                nscoord aContainingBlockHeight);
-
-  void ComputeContainingBlockRectangle(const nsHTMLReflowState* aContainingBlockRS,
-                                       nscoord& aContainingBlockWidth,
-                                       nscoord& aContainingBlockHeight);
 
   void ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
                               nscoord aContainingBlockWidth,
