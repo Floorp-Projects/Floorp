@@ -29,6 +29,10 @@ interface nsISmtpServer : nsISupports {
     attribute string hostname;
     attribute string username;
     attribute string password;
+
+    /* what kind of logon redirector to use for this server, if any */
+    attribute string redirectorType;
+    
     attribute long authMethod;
 
     readonly attribute string serverURI;

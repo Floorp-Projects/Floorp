@@ -278,3 +278,28 @@ nsSmtpServer::getPrefString(const char *pref, nsCAutoString& result)
     return NS_OK;
 }
     
+NS_IMETHODIMP
+nsSmtpServer::SetRedirectorType(const char *aRedirectorType)
+{
+    nsresult rv;
+    nsCAutoString pref;
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    getPrefString("redirector_type", pref);
+    if (aRedirectorType)
+        return prefs->SetCharPref(pref, aRedirectorType);
+    else
+        prefs->ClearUserPref(pref);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSmtpServer::GetRedirectorType(char **aResult)
+{
+    nsresult rv;
+    nsCAutoString pref;
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    getPrefString("redirector_type", pref);
+    rv = prefs->CopyCharPref(pref, aResult);
+    if (NS_FAILED(rv)) *aResult=nsnull;
+    return NS_OK;
+}
