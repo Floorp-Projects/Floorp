@@ -636,8 +636,7 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
 
       if (temp) {
         temp->GetValue(oldUserValue);
-        if (oldUserValue.IsEmpty())
-          userField = temp;
+        userField = temp;
       } else {
         continue;
       }
@@ -649,8 +648,7 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
 
       if (temp) {
         temp->GetValue(oldPassValue);
-        if (oldPassValue.IsEmpty())
-          passField = temp;
+        passField = temp;
       } else {
         continue;
       }
