@@ -261,7 +261,8 @@ nsTreeLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
       // lazily and we only worry about what is on screen during layout.
       nsCOMPtr<nsIXULTreeSlice> slice(do_QueryInterface(box));
       PRInt32 rowCount = 0;
-      slice->GetOnScreenRowCount(&rowCount);
+      if (slice)
+          slice->GetOnScreenRowCount(&rowCount);
 
       // if we are a row then we could potential change the row size. We
       // don't know the height of a row until layout so tell the outer group
@@ -382,14 +383,16 @@ nsTreeLayout::LazyRowCreator(nsBoxLayoutState& aState, nsXULTreeGroupFrame* aGro
     // on screen rows not total rows.
     nsCOMPtr<nsIXULTreeSlice> slice(do_QueryInterface(box));
 
-    PRInt32 rowCount = 0;
-    slice->GetOnScreenRowCount(&rowCount);
+    if (slice) {
+        PRInt32 rowCount = 0;
+        slice->GetOnScreenRowCount(&rowCount);
 
-    availableHeight -= rowHeight*rowCount;
-    
-    // should we continue? Is the enought height?
-    if (!aGroup->ContinueReflow(availableHeight))
-      break;
+        availableHeight -= rowHeight*rowCount;
+
+        // should we continue? Is the enought height?
+        if (!aGroup->ContinueReflow(availableHeight))
+            break;
+    }
 
     // get the next tree box. Create one if needed.
     box = aGroup->GetNextTreeBox(box, &created);

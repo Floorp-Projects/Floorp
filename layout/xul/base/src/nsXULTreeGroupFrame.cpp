@@ -199,8 +199,10 @@ nsXULTreeGroupFrame::GetOnScreenRowCount(PRInt32* aCount)
     while(box) {
       PRInt32 count = 0;
       nsCOMPtr<nsIXULTreeSlice> slice(do_QueryInterface(box));
-      slice->GetOnScreenRowCount(&count);
-      mOnScreenRowCount += count;
+      if (slice) {
+          slice->GetOnScreenRowCount(&count);
+          mOnScreenRowCount += count;
+      }
       box->GetNextBox(&box);
     }
   }
