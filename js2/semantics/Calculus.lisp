@@ -26,7 +26,7 @@
 (defvar *trace-variables* nil)
 
 
-#+mcl (dolist (indent-spec '((production . 3) (rule . 2) (function . 1) (letexc . 1) (deftype . 1) (tuple . 1) (%text . 1)))
+#+mcl (dolist (indent-spec '((apply . 1) (funcall . 1) (production . 3) (rule . 2) (function . 1) (letexc . 1) (deftype . 1) (tuple . 1) (%text . 1)))
         (pushnew indent-spec ccl:*fred-special-indent-alist* :test #'equal))
 
 
@@ -51,7 +51,7 @@
 ;;; DOUBLE-PRECISION FLOATING-POINT NUMBERS
 
 (deftype double ()
-  '(or float (member :+inf :-inf :nan)))
+         '(or float (member :+inf :-inf :nan)))
 
 (defun double? (n)
   (or (floatp n)
@@ -321,6 +321,79 @@
   (if (zerop n)
     rest
     (intern-n-vars-with-prefix prefix (1- n) (cons (intern (format nil "~A~D" prefix n)) rest))))
+
+
+;;; ------------------------------------------------------------------------------------------------------
+;;; LF TOKENS
+
+;;; Each symbol in the LF package is a variant of a terminal that represents that terminal preceded by one
+;;; or more line breaks.
+
+(defvar *lf-package* (make-package "LF" :use nil))
+
+(defun make-lf-terminal (terminal)
+  (assert-true (not (lf-terminal? terminal)))
+  (multiple-value-bind (lf-terminal present) (intern (symbol-name terminal) *lf-package*)
+    (unless (eq present :external)
+      (export lf-terminal *lf-package*)
+      (setf (get lf-terminal :sort-key) (concatenate 'string (symbol-name terminal) " "))
+      (setf (get lf-terminal :origin) terminal)
+      (setf (get terminal :lf-terminal) lf-terminal))
+    lf-terminal))
+
+(defun lf-terminal? (terminal)
+  (eq (symbol-package terminal) *lf-package*))
+
+
+(declaim (inline terminal-lf-terminal lf-terminal-terminal))
+(defun terminal-lf-terminal (terminal)
+  (get terminal :lf-terminal))
+(defun lf-terminal-terminal (lf-terminal)
+  (get lf-terminal :origin))
+
+
+; Ensure that for each transition on a LF: terminal in the grammar there exists a corresponding transition
+; on a non-LF: terminal.
+(defun ensure-lf-subset (grammar)
+  (all-state-transitions
+   #'(lambda (state transitions-hash)
+       (dolist (transition-pair (state-transitions state))
+         (let ((terminal (car transition-pair)))
+           (when (lf-terminal? terminal)
+             (unless (equal (cdr transition-pair) (gethash (lf-terminal-terminal terminal) transitions-hash))
+               (format *error-output* "State ~S: transition on ~S differs from transition on ~S~%"
+                       state terminal (lf-terminal-terminal terminal)))))))
+   grammar))
+
+
+; Print a list of transitions on non-LF: terminals that do not have corresponding LF: transitions.
+; Return a list of non-LF: terminals which behave identically to the corresponding LF: terminals.
+(defun show-non-lf-only-transitions (grammar)
+  (let ((invariant-terminalset (make-full-terminalset grammar))
+        (terminals-vector (grammar-terminals grammar)))
+    (dotimes (n (length terminals-vector))
+      (let ((terminal (svref terminals-vector n)))
+        (when (lf-terminal? terminal)
+          (terminalset-difference-f invariant-terminalset (make-terminalset grammar terminal)))))
+    (all-state-transitions
+     #'(lambda (state transitions-hash)
+         (dolist (transition-pair (state-transitions state))
+           (let ((terminal (car transition-pair)))
+             (unless (lf-terminal? terminal)
+               (let ((lf-terminal (terminal-lf-terminal terminal)))
+                 (when lf-terminal
+                   (let ((lf-terminal-transition (gethash lf-terminal transitions-hash)))
+                     (cond
+                      ((null lf-terminal-transition)
+                       (terminalset-difference-f invariant-terminalset (make-terminalset grammar terminal))
+                       (format *error-output* "State ~S has transition on ~S but not on ~S~%"
+                               state terminal lf-terminal))
+                      ((not (equal (cdr transition-pair) lf-terminal-transition))
+                       (terminalset-difference-f invariant-terminalset (make-terminalset grammar terminal))
+                       (format *error-output* "State ~S transition on ~S differs from transition on ~S~%"
+                               state terminal lf-terminal))))))))))
+     grammar)
+    (terminalset-list grammar invariant-terminalset)))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -616,20 +689,20 @@
 ;;; TYPES
 
 (deftype typekind ()
-  '(member     ;tags             ;parameters
-    :bottom    ;nil              ;nil
-    :void      ;nil              ;nil
-    :boolean   ;nil              ;nil
-    :integer   ;nil              ;nil
-    :rational  ;nil              ;nil
-    :double    ;nil              ;nil
-    :character ;nil              ;nil
-    :->        ;nil              ;(result-type arg1-type arg2-type ... argn-type)
-    :vector    ;nil              ;(element-type)
-    :set       ;nil              ;(element-type)
-    :tuple     ;(tag1 ... tagn)  ;(element1-type ... elementn-type)
-    :oneof     ;(tag1 ... tagn)  ;(element1-type ... elementn-type)
-    :address)) ;nil              ;(element-type)
+         '(member     ;tags             ;parameters
+           :bottom    ;nil              ;nil
+           :void      ;nil              ;nil
+           :boolean   ;nil              ;nil
+           :integer   ;nil              ;nil
+           :rational  ;nil              ;nil
+           :double    ;nil              ;nil
+           :character ;nil              ;nil
+           :->        ;nil              ;(result-type arg1-type arg2-type ... argn-type)
+           :vector    ;nil              ;(element-type)
+           :set       ;nil              ;(element-type)
+           :tuple     ;(tag1 ... tagn)  ;(element1-type ... elementn-type)
+           :oneof     ;(tag1 ... tagn)  ;(element1-type ... elementn-type)
+           :address)) ;nil              ;(element-type)
 
 
 ; Return true if typekind1 is the same or more specific (i.e. a subtype) than typekind2.
@@ -844,7 +917,7 @@
       (setf (first data) t)
       (second data)))))
 
-  
+
 ; Create or reuse a type with the given kind, tags, and parameters.
 ; A type is reused if one already exists with equal kind, tags, and parameters.
 ; Return the type.
@@ -1348,7 +1421,7 @@
                    (or shallow (value-has-type (cdr value) (address-element-type type)))))
     (t (error "Bad typekind ~S" (type-kind type)))))
 
-  
+
 ; Print the value nicely on the given stream.  type is the value's type.
 (defun print-value (value type &optional (stream t))
   (assert-true (value-has-type value type t))
@@ -1681,7 +1754,7 @@
                                                       "~" (symbol-name action-symbol))
                                          (world-package world))))
       (gen-lambda args named-body-code))))
-    
+
 
 ; Return a list of all grammar symbols's symbols that are present in at least one expr-annotation:action
 ; in the annotated expression.  The symbols are returned in no particular order.
@@ -2093,7 +2166,7 @@
           (ecase (car ,oneof-var) ,@(nreverse case-codes)))
        body-type
        (list* 'expr-annotation:special-form special-form oneof-annotated-expr oneof-type (nreverse case-annotated-exprs))))))
-    
+
 
 ; (select <tag> <oneof-expr>)
 ; Returns the tag's value or bottom if <oneof-expr> has a different tag.
@@ -2345,6 +2418,7 @@
      (define preprocess-define)
      (action preprocess-action)
      (grammar preprocess-grammar)
+     (line-grammar preprocess-line-grammar)
      (lexer preprocess-lexer)
      (grammar-argument preprocess-grammar-argument)
      (production preprocess-production)
@@ -2489,7 +2563,7 @@
     (char>= (-> (character character) boolean) #'char>= :infix :greater-or-equal t %relational% %term% %term%)
     
     (string-equal (-> (string string) boolean) #'string= :infix "=" t %relational% %term% %term%)
-
+    
     (integer-set-length (-> (integer-set) integer) #'intset-length :unary "|" "|" %primary% %expr%)
     (integer-set-min (-> (integer-set) integer) #'integer-set-min :unary ((:semantic-keyword "min") " ") nil %min-max% %prefix%)
     (integer-set-max (-> (integer-set) integer) #'integer-set-max :unary ((:semantic-keyword "max") " ") nil %min-max% %prefix%)
@@ -2507,7 +2581,7 @@
     (character-set-difference (-> (character-set character-set) character-set) #'intset-difference :infix :minus t %term% %term% %factor%)
     (character-set-member (-> (character character-set) boolean) #'character-set-member :infix :member-10 t %relational% %term% %term%)
     (character-set= (-> (character-set character-set) boolean) #'intset= :infix "=" t %relational% %term% %term%)
-
+    
     (digit-value (-> (character) integer) #'digit-char-36)
     (is-ordinary-initial-identifier-character (-> (character) boolean) #'ordinary-initial-identifier-character?)
     (is-ordinary-continuing-identifier-character (-> (character) boolean) #'ordinary-continuing-identifier-character?)))
@@ -2560,7 +2634,7 @@
     (let ((name (symbol-lower-mixed-case-name name)))
       `(:global :markup1 ((:global-variable ,name)) :markup2 ,name :level ,%primary%))))
 
-  
+
 ; Create a world with the given name and set up the built-in properties of its symbols.
 (defun init-world (name)
   (let ((world (make-world name)))
@@ -2568,16 +2642,16 @@
       (let ((property (car specials-list)))
         (dolist (special-spec (cdr specials-list))
           (apply #'add-special
-                 property
-                 (world-intern world (first special-spec))
-                 (rest special-spec)))))
+            property
+            (world-intern world (first special-spec))
+            (rest special-spec)))))
     (dolist (primitive-spec *default-primitives*)
       (let ((name (world-intern world (first primitive-spec))))
         (apply #'declare-primitive
-               name
-               (second primitive-spec)
-               (third primitive-spec)
-               (process-primitive-spec-appearance name (cdddr primitive-spec)))))
+          name
+          (second primitive-spec)
+          (third primitive-spec)
+          (process-primitive-spec-appearance name (cdddr primitive-spec)))))
     (dolist (type-spec *default-types*)
       (add-type-name world (make-type world (cdr type-spec) nil nil) (world-intern world (car type-spec)) nil))
     (add-type-name world (make-vector-type world (make-type world :character nil nil)) (world-intern world 'string) nil)
@@ -2818,6 +2892,7 @@
   (start-symbol nil :type symbol)                     ;Start symbol of the grammar being accumulated or nil if none
   (grammar-source-reverse nil :type list)             ;List of productions in the grammar being accumulated (in reverse order)
   (excluded-nonterminals-source nil :type list)       ;List of nonterminals to be excluded from the grammar
+  (grammar-options nil :type list)                    ;List of other options for make-grammar
   (charclasses-source nil)                            ;List of charclasses in the lexical grammar being accumulated
   (lexer-actions-source nil)                          ;List of lexer actions in the lexical grammar being accumulated
   (grammar-infos-reverse nil :type list))             ;List of grammar-infos already completed (in reverse order)
@@ -2838,27 +2913,31 @@
          (let ((parametrization (preprocessor-state-parametrization preprocessor-state))
                (start-symbol (preprocessor-state-start-symbol preprocessor-state))
                (grammar-source (nreverse (preprocessor-state-grammar-source-reverse preprocessor-state)))
-               (excluded-nonterminals-source (preprocessor-state-excluded-nonterminals-source preprocessor-state)))
+               (excluded-nonterminals-source (preprocessor-state-excluded-nonterminals-source preprocessor-state))
+               (grammar-options (preprocessor-state-grammar-options preprocessor-state)))
            (multiple-value-bind (grammar lexer extra-commands)
                                 (ecase kind
                                   (:grammar
-                                   (values (make-and-compile-grammar (preprocessor-state-kind2 preprocessor-state)
-                                                                     parametrization
-                                                                     start-symbol
-                                                                     grammar-source
-                                                                     excluded-nonterminals-source)
+                                   (values (apply #'make-and-compile-grammar
+                                             (preprocessor-state-kind2 preprocessor-state)
+                                             parametrization
+                                             start-symbol
+                                             grammar-source
+                                             :excluded-nonterminals excluded-nonterminals-source
+                                             grammar-options)
                                            nil
                                            nil))
                                   (:lexer 
                                    (multiple-value-bind (lexer extra-commands)
-                                                        (make-lexer-and-grammar
-                                                         (preprocessor-state-kind2 preprocessor-state)
-                                                         (preprocessor-state-charclasses-source preprocessor-state)
-                                                         (preprocessor-state-lexer-actions-source preprocessor-state)
-                                                         parametrization
-                                                         start-symbol
-                                                         grammar-source
-                                                         excluded-nonterminals-source)
+                                                        (apply #'make-lexer-and-grammar
+                                                          (preprocessor-state-kind2 preprocessor-state)
+                                                          (preprocessor-state-charclasses-source preprocessor-state)
+                                                          (preprocessor-state-lexer-actions-source preprocessor-state)
+                                                          parametrization
+                                                          start-symbol
+                                                          grammar-source
+                                                          :excluded-nonterminals excluded-nonterminals-source
+                                                          grammar-options)
                                      (values (lexer-grammar lexer) lexer extra-commands))))
              (let ((grammar-info (make-grammar-info (preprocessor-state-name preprocessor-state) grammar lexer)))
                (setf (preprocessor-state-kind preprocessor-state) nil)
@@ -2868,6 +2947,7 @@
                (setf (preprocessor-state-start-symbol preprocessor-state) nil)
                (setf (preprocessor-state-grammar-source-reverse preprocessor-state) nil)
                (setf (preprocessor-state-excluded-nonterminals-source preprocessor-state) nil)
+               (setf (preprocessor-state-grammar-options preprocessor-state) nil)
                (setf (preprocessor-state-charclasses-source preprocessor-state) nil)
                (setf (preprocessor-state-lexer-actions-source preprocessor-state) nil)
                (push grammar-info (preprocessor-state-grammar-infos-reverse preprocessor-state))
@@ -2965,7 +3045,7 @@
           nil))
 
 
-(defun preprocess-grammar-or-lexer (preprocessor-state kind kind2 name start-symbol)
+(defun preprocess-grammar-or-lexer (preprocessor-state kind kind2 name start-symbol &rest grammar-options)
   (assert-type name identifier)
   (let ((commands (preprocessor-state-finish-grammar preprocessor-state)))
     (when (find name (preprocessor-state-grammar-infos-reverse preprocessor-state) :key #'grammar-info-name)
@@ -2975,6 +3055,7 @@
     (setf (preprocessor-state-name preprocessor-state) name)
     (setf (preprocessor-state-parametrization preprocessor-state) (make-grammar-parametrization))
     (setf (preprocessor-state-start-symbol preprocessor-state) start-symbol)
+    (setf (preprocessor-state-grammar-options preprocessor-state) grammar-options)
     (values
      (nconc commands (list (list 'set-grammar name)))
      nil)))
@@ -2989,6 +3070,25 @@
 (defun preprocess-grammar (preprocessor-state command name kind2 start-symbol)
   (declare (ignore command))
   (preprocess-grammar-or-lexer preprocessor-state :grammar kind2 name start-symbol))
+
+
+(defun generate-no-line-break-constraint (terminal)
+  (assert-type terminal user-terminal)
+  (list (list (make-lf-terminal terminal) :no-line-break)))
+
+
+; (line-grammar <name> <kind> <start-symbol>)
+;   ==>
+; grammar:
+;   Begin accumulating a grammar with the given name and start symbol.
+;   Allow :no-line-break constraints.
+; commands:
+;   (set-grammar <name>)
+(defun preprocess-line-grammar (preprocessor-state command name kind2 start-symbol)
+  (declare (ignore command))
+  (preprocess-grammar-or-lexer preprocessor-state :grammar kind2 name start-symbol
+                               :variant-constraint-names '(:no-line-break)
+                               :variant-generator #'generate-no-line-break-constraint))
 
 
 ; (lexer <name> <kind> <start-symbol> <charclasses-source> <lexer-actions-source>)
