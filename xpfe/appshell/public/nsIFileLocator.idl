@@ -63,10 +63,7 @@ inline nsIFileSpec* NS_LocateFileOrDirectory(PRUint32 selector)
     nsIFileSpec* spec = nsnull;
     NS_WITH_SERVICE(nsIFileLocator, locator, NS_FILELOCATOR_PROGID, &rv);
     if (NS_SUCCEEDED(rv) && locator)
-    {
-	    rv = locator->GetFileLocation(selector, &spec);
-	    NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: File locator cannot locate file.");
-    }
+        locator->GetFileLocation(selector, &spec);
     return spec;
 }
 
