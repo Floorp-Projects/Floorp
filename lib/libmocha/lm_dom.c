@@ -36,7 +36,8 @@
 #endif
 
 #ifdef DEBUG_shaver
-#define DEBUG_shaver_verbose
+/* #define DEBUG_shaver_verbose */
+#define DEBUG_shaver_treegen
 #endif
 
 #define LAYLOCKED(code)                                                       \
@@ -517,18 +518,22 @@ LM_ReflectTagNode(PA_Tag *tag, void *doc_state, MWContext *context)
         return CURRENT_NODE(doc);
 
     if (tag->is_end) {
-        DOM_Node *last_node;
+        DOM_Node *last_node, *closing_node;
         LOCAL_ASSERT(CURRENT_NODE(doc)->type == NODE_TYPE_ELEMENT ||
                      CURRENT_NODE(doc)->type == NODE_TYPE_TEXT);
+        closing_node = CURRENT_NODE(doc);
         last_node = (DOM_Node *)DOM_HTMLPopElementByType(tag->type,
                                             (DOM_Element *)CURRENT_NODE(doc));
         if (!last_node)
             return NULL;
         LOCAL_ASSERT(last_node->parent &&
                      last_node->type == NODE_TYPE_ELEMENT);
+        /*
+         * The caller is interested in the node that we just closed.
+         */
         CURRENT_NODE(doc) = last_node;
         ACTIVE_NODE(doc) = CURRENT_NODE(doc);
-        return last_node;
+        return closing_node;
     }
 
     node = lm_NodeForTag(cx, tag, CURRENT_NODE(doc), context, csid);
@@ -605,7 +610,7 @@ DOM_Element *
 DOM_HTMLPopElementByType(TagType type, DOM_Element *element)
 {
     DOM_Node *closing;
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_verbose
     int new_indent = LM_Node_indent;
 #endif
 
@@ -623,13 +628,13 @@ DOM_HTMLPopElementByType(TagType type, DOM_Element *element)
 
     /* if we don't match, just mark it closed */
     if (ELEMENT_PRIV(closing)->tagtype != type) {
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_treegen
         fprintf(stderr, "</%s> doesn't close <%s> ", PA_TagString(type),
                 PA_TagString(ELEMENT_PRIV(closing)->tagtype));
 #endif
         /* find it, mark it closed, and return. */
         do {
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_treegen
             fprintf(stderr, "skipping <%s>",
                     PA_TagString(ELEMENT_PRIV(closing)->tagtype));
 #endif
@@ -639,13 +644,13 @@ DOM_HTMLPopElementByType(TagType type, DOM_Element *element)
                  ELEMENT_PRIV(closing)->tagtype != P_HTML);
         if (closing->type == NODE_TYPE_ELEMENT &&
             ELEMENT_PRIV(closing)->tagtype == type) {
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_treegen
             fprintf(stderr, "found <%s>, marking closed\n",
                     PA_TagString(ELEMENT_PRIV(closing)->tagtype));
 #endif
             LM_SetNodeFlags(closing, NODE_CLOSED);
         } else {
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_treegen
             fprintf(stderr, "didn't find <%s>\n", PA_TagString(type));
 #endif
         }
@@ -657,13 +662,13 @@ DOM_HTMLPopElementByType(TagType type, DOM_Element *element)
      * We should call LO_CloseNode so that it can close layers and the like
      * as appropriate.
      */
-#ifdef DEBUG_shaver
-    fprintf(stderr, "closing <%s> ", PA_TagString(type));
+#ifdef DEBUG_shaver_treegen
+    fprintf(stderr, "closing matched <%s> ", PA_TagString(type));
 #endif
-    if (ELEMENT_PRIV(element->node.parent)->flags & NODE_CLOSED) {
-        closing = element->node.parent;
+    closing = element->node.parent;
+    if (ELEMENT_PRIV(closing)->flags & NODE_CLOSED) {
         do {
-#ifdef DEBUG_shaver
+#ifdef DEBUG_shaver_treegen
             fprintf(stderr, "<%s> already closed ",
                     PA_TagString(ELEMENT_PRIV(closing)->tagtype));
 #endif

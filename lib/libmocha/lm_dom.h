@@ -36,18 +36,19 @@ typedef struct DOM_HTMLElementPrivate {
 } DOM_HTMLElementPrivate;
 
 
-#define STYLE_NODE_NEED_TO_POP_TABLE         0x0001
-#define STYLE_NODE_NEED_TO_POP_LIST          0x0002
-#define STYLE_NODE_NEED_TO_POP_MARGINS       0x0004
-#define STYLE_NODE_NEED_TO_POP_FONT          0x0008
-#define STYLE_NODE_NEED_TO_POP_PRE           0x0010
-#define STYLE_NODE_NEED_TO_POP_ALIGNMENT     0x0020
-#define STYLE_NODE_NEED_TO_POP_LINE_HEIGHT   0x0040
-#define STYLE_NODE_NEED_TO_POP_LAYER         0x0080
-#define NODE_CLOSED                          0x0100
+#define STYLE_NODE_NEED_TO_POP_TABLE          0x0001
+#define STYLE_NODE_NEED_TO_POP_LIST           0x0002
+#define STYLE_NODE_NEED_TO_POP_MARGINS        0x0004
+#define STYLE_NODE_NEED_TO_POP_FONT           0x0008
+#define STYLE_NODE_NEED_TO_POP_PRE            0x0010
+#define STYLE_NODE_NEED_TO_POP_ALIGNMENT      0x0020
+#define STYLE_NODE_NEED_TO_POP_LINE_HEIGHT    0x0040
+#define STYLE_NODE_NEED_TO_POP_LAYER          0x0080
+#define STYLE_NODE_NEED_TO_POP_CONTENT_HIDING 0x0100
+#define NODE_CLOSED                           0x1000
 
-#define LM_NODE_FLAGS_ALL                    0x01ff
-#define LM_NODE_FLAGS_STYLE                  0x00ff
+#define LM_NODE_FLAGS_ALL                     0x11ff
+#define LM_NODE_FLAGS_STYLE                   0x01ff
 
 #define ELEMENT_PRIV(e) ((DOM_HTMLElementPrivate *)(((DOM_Node *)(e))->data))
 #define CURRENT_NODE(d) ((DOM_Node *)((d)->top_state->current_node))
