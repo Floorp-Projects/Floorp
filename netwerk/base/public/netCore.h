@@ -47,6 +47,9 @@
 #define NS_ERROR_IN_PROGRESS \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 15)
 
+// internal unknown content-type
+#define UNKNOWN_MIME "application/x-unknown-content-type"
+
 #undef NS_NET
 #ifdef _IMPL_NS_NET
 #ifdef XP_PC
