@@ -146,10 +146,10 @@ EXTRA_SHARED_LIBS += \
 	$(NULL)
 endif
 
-#ifeq ($(OS_ARCH),SunOS)
-#MKSHLIB += -z text -M mapfile
-#endif
+ifeq ($(OS_ARCH),SunOS)
+MKSHLIB += -M mapfile
+endif
 
-#ifeq ($(OS_ARCH),Linux)
-#MKSHLIB += -Wl,--version-script,mapfile
-#endif
+ifeq ($(OS_ARCH),Linux)
+MKSHLIB += -Wl,--version-script,mapfile
+endif
