@@ -27,11 +27,10 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/pref-editing.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        orient="vertical" 
-        onload="parent.initPanel('chrome://editor/content/pref-editing.xul');">
+<page xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      orient="vertical" 
+      onload="parent.initPanel('chrome://editor/content/pref-editing.xul');">
 
   <script lanugage="JavaScript">
   <![CDATA[
@@ -137,4 +136,4 @@
       <data id="backgroundImageData" pref="true" preftype="string" prefstring="editor.default_background_image" prefattribute="value"/>
     </hbox>
   </groupbox>
-</window>
+</page>

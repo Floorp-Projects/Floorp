@@ -8,10 +8,10 @@
 
 <?xml-stylesheet href="chrome://inspector/skin/viewers/styleRules/styleRules.css"?>
 
-<window id="winStyleRules" class="color-dialog" 
-        orient="vertical"
-        xmlns:domi="http://www.mozilla.org/inspector"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<page id="winStyleRules"
+      orient="vertical"
+      xmlns:domi="http://www.mozilla.org/inspector"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <!--============================= SCRIPTS ============================= -->
 
@@ -74,4 +74,4 @@
     <outlinerbody id="olbStyleProps" flex="1"/>
   </outliner>
 
-</window>
+</page>

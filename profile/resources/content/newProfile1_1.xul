@@ -31,18 +31,12 @@
 %profileDTD;
 ]>
 
-<window 
+<page 
     xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-    class="color-dialog wizardPanel"
     orient="vertical"
 		onload="parent.wizardManager.onPageLoad('newProfile1_1');"> 
 
-    <html>&pnl1.p1.text;</html>
-    <html>&pnl1.p2.text;</html>
-    <html>&pnl1.p3.text;</html>
-    <spacer flex="1"/>
-    <html>&pnl1.p4.text;</html>
 
-</window>
+</page>
 

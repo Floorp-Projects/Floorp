@@ -24,15 +24,14 @@
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-charset.dtd" >
 
-<window
+<page
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   id="main-box"
+  orient="vertical"
   title="&charset.customize.title.label;"
-  class="dialog"
   windowtype="sidebar:customize"
   onload="Init();"
-  orient="vertical"
   persist="width height"
   width="500" height="394">
 
@@ -96,5 +95,5 @@
 
   <hbox id="okCancelButtonsRight"/>
   
-</window>
+</page>
 

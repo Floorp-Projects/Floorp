@@ -30,11 +30,10 @@
 %prefBookmarkDTD;
 ]>
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        orient="vertical"
-        onload="parent.initPanel('chrome://communicator/content/bookmarks/pref-bookmarks.xul');">
+<page xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      orient="vertical"
+      onload="parent.initPanel('chrome://communicator/content/bookmarks/pref-bookmarks.xul');">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -117,5 +116,5 @@
   </groupbox>              
 
 
-</window>
+</page>
 

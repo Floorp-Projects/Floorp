@@ -7,9 +7,9 @@
 
 <?xml-stylesheet href="chrome://inspector/skin/viewers/xblBindings/xblBindings.css"?>
 
-<window id="winXBLBindings" class="color-dialog" 
-        orient="vertical"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<page id="winXBLBindings"
+      orient="vertical"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inBaseOutlinerView.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/xblBindings/xblBindings.js"/>
@@ -76,4 +76,4 @@
       <textbox id="txbFunction" class="plain" readonly="true" multiline="true" flex="1"/>
     </multipanel>
   </multipanelset>
-</window>
+</page>

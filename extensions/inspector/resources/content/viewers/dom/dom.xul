@@ -8,9 +8,9 @@
 
 <?xml-stylesheet href="chrome://inspector/skin/viewers/dom/dom.css"?>
 
-<window id="winDOMViewer" class="color-dialog" 
-        orient="vertical"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<page id="winDOMViewer"
+      orient="vertical"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/dom/dom.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
@@ -73,4 +73,4 @@
       <template/>
     </outlinerbody>
   </outliner>
-</window>
+</page>

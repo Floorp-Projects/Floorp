@@ -8,10 +8,10 @@
 <?xml-stylesheet href="chrome://inspector/skin/viewers/boxModel/boxModel.css"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 
-<window id="winBoxModel" class="color-dialog" 
-        orient="vertical"
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<page id="winBoxModel"
+      orient="vertical"
+      xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/boxModel/boxModel.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
@@ -110,4 +110,4 @@
     </hbox>
   </vbox>
 
-</window>
+</page>

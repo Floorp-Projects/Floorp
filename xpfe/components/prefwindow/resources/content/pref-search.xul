@@ -24,11 +24,10 @@
 <?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-search.dtd" >
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        class="color-dialog"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="parent.initPanel('chrome://communicator/content/pref/pref-search.xul');checkEngine()"
-        orient="vertical">
+<page xmlns:html="http://www.w3.org/1999/xhtml"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      orient="vertical"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-search.xul');checkEngine()">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -83,4 +82,4 @@
     </radiogroup>
   </groupbox>
 
-</window>
+</page>
