@@ -62,7 +62,8 @@
 #include "nsIStringBundle.h"
 #include "nsISupportsArray.h"
 
-#define TYPEAHEADFIND_BUNDLE_URL "chrome://typeaheadfind/locale/typeaheadfind.properties"
+#define TYPEAHEADFIND_BUNDLE_URL \
+        "chrome://typeaheadfind/locale/typeaheadfind.properties"
 
 enum { eRepeatingNone, eRepeatingChar, eRepeatingForward, eRepeatingReverse}; 
 
@@ -82,7 +83,7 @@ public:
 
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_TYPEAHEADFIND_CID);
 
-  NS_DECL_ISUPPORTS  // This macro expands into declaration of nsISupports interface
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSITYPEAHEADFIND
 
@@ -105,11 +106,14 @@ public:
   NS_IMETHOD Error(nsIDOMEvent* aEvent);
 
   // ----- nsIScrollPositionListener --------------------
-  NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
-  NS_IMETHOD ScrollPositionDidChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
+  NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView, 
+                                      nscoord aX, nscoord aY);
+  NS_IMETHOD ScrollPositionDidChange(nsIScrollableView *aView, 
+                                     nscoord aX, nscoord aY);
 
   // ----- nsISelectionListener -------------------------
-  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason);
+  NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel,
+                                    short aReason);
 
   // ----- nsITimerCallback ------------------------------------
   NS_IMETHOD_(void) Notify(nsITimer *timer);
@@ -118,7 +122,7 @@ public:
   static void ReleaseInstance(void);
 
 protected:
-  static int PR_CALLBACK TypeAheadFindPrefsReset(const char* aPrefName, void* instance_data);
+  static int PR_CALLBACK PrefsReset(const char* aPrefName, void* instance);
 
   // Helper methods
   nsresult HandleFocusInternal(nsIDOMEventTarget *aDOMEventTarget);
@@ -134,16 +138,26 @@ protected:
 
   void RangeStartsInsideLink(nsIDOMRange *aRange, nsIPresShell *aPresShell, 
                              PRBool *aIsInsideLink, PRBool *aIsStartingLink);
-  void GetSelection(nsIPresShell *aPresShell,   // If aCurrentNode is nsnull, gets selection for document
-                    nsIDOMNode *aCurrentNode, nsISelectionController **aSelCon, nsISelection **aDomSel);
-  PRBool IsRangeVisible(nsIPresShell *aPresShell, nsIPresContext *aPresContext, 
-                         nsIDOMRange *aRange, PRBool aMustBeVisible, nsIDOMRange **aNewRange);
-  nsresult FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinksOnly, PRBool aIsFirstVisiblePreferred, PRBool aIsBackspace);
-  nsresult GetSearchContainers(nsISupports *aContainer, PRBool aIsRepeatingSameChar,
-                               PRBool aIsFirstVisiblePreferred, PRBool aCanUseDocSelection,
-                               nsIPresShell **aPresShell, nsIPresContext **aPresContext,
-                               nsIDOMRange **aSearchRange, nsIDOMRange **aStartRange, nsIDOMRange **aEndRange);
-  void DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent, PRBool aClearStatus);
+
+  // GetSelection: if aCurrentNode is nsnull, gets selection for document
+  void GetSelection(nsIPresShell *aPresShell, nsIDOMNode *aCurrentNode, 
+                    nsISelectionController **aSelCon, nsISelection **aDomSel);
+  PRBool IsRangeVisible(nsIPresShell *aPresShell, nsIPresContext *aPresContext,
+                         nsIDOMRange *aRange, PRBool aMustBeVisible, 
+                         nsIDOMRange **aNewRange);
+  nsresult FindItNow(PRBool aIsRepeatingSameChar, PRBool aIsLinksOnly, 
+                     PRBool aIsFirstVisiblePreferred, PRBool aIsBackspace);
+  nsresult GetSearchContainers(nsISupports *aContainer, 
+                               PRBool aIsRepeatingSameChar,
+                               PRBool aIsFirstVisiblePreferred, 
+                               PRBool aCanUseDocSelection,
+                               nsIPresShell **aPresShell, 
+                               nsIPresContext **aPresContext,
+                               nsIDOMRange **aSearchRange, 
+                               nsIDOMRange **aStartRange, 
+                               nsIDOMRange **aEndRange);
+  void DisplayStatus(PRBool aSuccess, nsIContent *aFocusedContent, 
+                     PRBool aClearStatus);
   nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);
 
   // Used by GetInstance and ReleaseInstance
@@ -159,17 +173,16 @@ protected:
   PRBool mLiteralTextSearchOnly;
   PRBool mDontTryExactMatch;
   PRInt32 mRepeatingMode;
-  PRInt32 mTimeoutLength; // Amount of time before find is automatically cancelled
-  static PRBool gIsFindingText; // this flag prevents side effects from listener callbacks while selecting/focusing found text
-  static PRInt32 gAccelKey;  // magic value of -1 indicates unitialized state
-  nsCOMPtr<nsIDOMRange> mStartFindRange;  // where selection was when user started the find
-  nsCOMPtr<nsIDOMRange> mOverrideStartPointRange;
+  PRInt32 mTimeoutLength; // time in ms before find is automatically cancelled
 
-#ifdef RESTORE_SEARCH
-  // Old nsIFindService state
-  nsString mOldSearchString;
-  PRBool mOldWrapSetting, mOldCaseSetting, mOldWordSetting, mOldDirectionSetting;
-#endif
+  // gIsFindingText: this flag prevents side effects from listener callbacks 
+  // while selecting/focusing found text.
+  static PRBool gIsFindingText; 
+
+  static PRInt32 gAccelKey;  // magic value of -1 indicates unitialized state
+
+  // where selection was when user started the find
+  nsCOMPtr<nsIDOMRange> mStartFindRange;
 
   // Cached useful interfaces
   nsCOMPtr<nsIFind> mFind;
@@ -183,7 +196,7 @@ protected:
   nsCOMPtr<nsIDOMWindow> mFocusedWindow;
   nsCOMPtr<nsIWeakReference> mFocusedWeakShell;
 
-  // The windows where type ahead find does not start automatically as the user types
-  nsCOMPtr<nsISupportsArray> mManualFindWindows; // List of windows where automatic typeahead find is disabled
+  // Windows where typeaheadfind doesn't auto start as the user types
+  nsCOMPtr<nsISupportsArray> mManualFindWindows;
 };
 
