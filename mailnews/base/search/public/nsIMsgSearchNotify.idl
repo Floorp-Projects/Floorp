@@ -29,7 +29,7 @@ interface nsIMsgSearchSession;
 // when a search is run, this interface is passed in as a listener
 // on the search.
 [scriptable, uuid(ca37784d-352b-4c39-8ccb-0abc1a93f681)]
-interface nsIMsgSearchHitNotify : nsISupports
+interface nsIMsgSearchNotify : nsISupports
 {
   void onSearchHit(in nsIMsgHdr header);
 
