@@ -8,16 +8,19 @@ scrollbar {
 
 slider {
    user-focus: ignore;
+   user-select: none;
 }
 
 scrollbarbutton {
   display: inline;
   user-focus: ignore;
+  user-select: none;
 }
 
 scrollbar[value="hidden"] {
    visibility: hidden;
    user-focus: ignore;
+   user-select: none;
 }
 
 /********* XP Scrollbar *********/
@@ -25,6 +28,7 @@ scrollbar[value="hidden"] {
 thumb {
   behavior: url(resource:/chrome/xulBindings.xml#thumb);
   user-focus: ignore;
+  user-select: none;
   background-color: #CCCCCC;
   border: 1px outset #CCCCCC;
   list-style-image: url("chrome://global/skin/scroll-thumb-horiz.gif")
@@ -32,6 +36,7 @@ thumb {
 
 thumb[disabled="true"] {
    user-focus: ignore;
+   user-select: none;
    list-style-image: url("chrome://global/skin/scroll-thumb-horiz-disabled.gif");
 }
 
@@ -41,6 +46,7 @@ thumb[align="vertical"] {
 
 scrollbarbutton {
   user-focus: ignore;
+  user-select: none;
   vertical-align: bottom;
   cursor: default;
 
@@ -53,6 +59,7 @@ scrollbarbutton {
 
 scrollbarbutton:active {
   user-focus: ignore;
+  user-select: none;
   border-style: inset;
 
   padding-left: 2px;
@@ -63,52 +70,62 @@ scrollbarbutton:active {
 
 scrollbarbutton[type="decrement"] {
    user-focus: ignore;
+   user-select: none;
    list-style-image: url("chrome://global/skin/scroll-left.gif")
 }
 
 scrollbarbutton[type="decrement"][disabled="true"] {
    user-focus: ignore;
+   user-select: none;
    list-style-image: url("chrome://global/skin/scroll-left-disabled.gif") 
 }
 
 scrollbarbutton[type="increment"] {
    user-focus: ignore;
+   user-select: none;
    list-style-image: url("chrome://global/skin/scroll-right.gif")
 }
 
 
 scrollbarbutton[type="increment"][disabled="true"] {
    user-focus: ignore;
+   user-select: none;
    list-style-image: url("chrome://global/skin/scroll-right-disabled.gif") 
 }
 
 
 scrollbar[align="vertical"] scrollbarbutton[type="decrement"] {
    user-focus: ignore;
+   user-select: none;
    list-style-image: url("chrome://global/skin/scroll-up.gif")
 }
 
 scrollbar[align="vertical"] scrollbarbutton[type="decrement"][disabled="true"] {
    user-focus: ignore;
+   user-select: none;
    list-style-image: url("chrome://global/skin/scroll-up-disabled.gif") 
 }
 
 scrollbar[align="vertical"] scrollbarbutton[type="increment"] {
    user-focus: ignore;
+   user-select: none;
    list-style-image: url("chrome://global/skin/scroll-down.gif")
 }
 
 scrollbar[align="vertical"] scrollbarbutton[type="increment"][disabled="true"] {
    user-focus: ignore;
+   user-select: none;
    list-style-image: url("chrome://global/skin/scroll-down-disabled.gif") 
 }
 
 slider[align="vertical"] thumb:active {
    user-focus: ignore;
+   user-select: none;
    background-color: #CCCCCC;
 }
 
 slider {
    user-focus: ignore;
+   user-select: none;
    background-color: #999999;
 }
