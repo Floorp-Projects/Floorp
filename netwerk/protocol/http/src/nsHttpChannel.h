@@ -93,9 +93,10 @@ public:
                   PRUint8 capabilities,
                   nsIProxyInfo* proxyInfo);
 
-private:
+public: /* internal; workaround lame compilers */ 
     typedef void (nsHttpChannel:: *nsAsyncCallback)(void);
 
+private:
     //
     // AsyncCall may be used to call a member function asynchronously.
     //
@@ -103,6 +104,7 @@ private:
     {
         nsAsyncCallback mFuncPtr;
     };
+
     nsresult AsyncCall(nsAsyncCallback funcPtr);
 
     nsresult Connect(PRBool firstTime = PR_TRUE);
