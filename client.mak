@@ -137,13 +137,11 @@ build_all:
 
 build_layout:
 	@cd $(MOZ_SRC)\mozilla\.
-	set DIST_DIRS=1
 	set LAYOUT_DIRS=1
 	nmake -f makefile.win all
 
 build_dist:
 	@cd $(MOZ_SRC)\mozilla\.
-	rd /s /q dist
 	set DIST_DIRS=1
 	nmake -f makefile.win all
 
