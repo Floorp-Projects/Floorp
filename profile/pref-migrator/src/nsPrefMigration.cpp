@@ -917,17 +917,17 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
 
     m_prefs->CopyCharPref(PREF_NETWORK_HOSTS_POP_SERVER, &popServerName);
 
-	//popServerName = strtok (popServerName,":");
-    int i =0;
-	while (popServerName[i] != '\0' ){
-		if ( popServerName[i] == ':' ) { 
-			popServerName[i] = '\0';
-			break;
-		}
-		 i++;
-  }
-	    
+    nsCAutoString popServerNamewithoutPort(popServerName);
+    PRInt32 colonPos = popServerNamewithoutPort.FindChar(':');
+
+    if (colonPos != -1 ) {
+	popServerNamewithoutPort.Truncate(colonPos);
+	rv = newPOPMailPath->AppendRelativeUnixPath(popServerNamewithoutPort);
+    }
+    else {
 	rv = newPOPMailPath->AppendRelativeUnixPath(popServerName);
+    }
+
     if (NS_FAILED(rv)) return rv;				  
     
     rv = newPOPMailPath->Exists(&exists);
