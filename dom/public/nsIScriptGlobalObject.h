@@ -74,7 +74,7 @@ public:
   virtual nsIDocShell *GetDocShell() = 0;
   virtual void SetOpenerWindow(nsIDOMWindowInternal *aOpener)=0;
 
-    /**
+  /**
    * Let the script global object know who its owner is.
    * The script global object should not addref the owner. It
    * will be told when the owner goes away.
@@ -105,7 +105,7 @@ public:
   virtual void OnFinalize(JSObject *aJSObject) = 0;
 
   /**
-   * Called when scripts are enabled/disabled.
+   * Called to enable/disable scripts.
    */
   virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts) = 0;
 };
