@@ -19,7 +19,7 @@
  * Cross platform html dialogs
  *
  *
- * $Id: htmldlgs.c,v 3.1 1998/03/28 03:29:14 ltabb Exp $
+ * $Id: htmldlgs.c,v 3.2 1998/06/01 22:10:21 raman Exp $
  */
 
 #include "xp.h"
@@ -56,6 +56,10 @@ extern int XP_SEC_LOGOUT;
 extern int XP_SEC_SETPASSWORD;
 extern int XP_SEC_SAVEAS;
 extern int XP_SEC_FETCH;
+extern int XP_SEC_GRANT;
+extern int XP_SEC_DENY;
+extern int XP_SEC_DETAILS;
+extern int XP_SEC_CERTIFICATE;
 
 extern int XP_DIALOG_CANCEL_BUTTON_STRINGS;
 extern int XP_DIALOG_CANCEL_CONTINUE_BUTTON_STRINGS;
@@ -575,6 +579,38 @@ XP_PutDialogStringsToStream(HTMLDialogStream *stream, XPDialogStrings *strs,
 	} else if (!PORT_Strcmp(token, "sec-banner-end")) {
 	    rv = putStringToStream(stream,
 			"</b></font></td></tr></table><br>", quote);
+	    if (rv) {
+		return(SECFailure);
+	    }
+	}
+	else if (!PORT_Strcmp(token, "grant")) {
+	    rv = putStringToStream(stream,
+				   XP_GetString(XP_SEC_GRANT),
+				   quote);
+	    if (rv) {
+		return(SECFailure);
+	    }
+	}
+	else if (!PORT_Strcmp(token, "deny")) {
+	    rv = putStringToStream(stream,
+				   XP_GetString(XP_SEC_DENY),
+				   quote);
+	    if (rv) {
+		return(SECFailure);
+	    }
+	}
+	else if (!PORT_Strcmp(token, "details")) {
+	    rv = putStringToStream(stream,
+				   XP_GetString(XP_SEC_DETAILS),
+				   quote);
+	    if (rv) {
+		return(SECFailure);
+	    }
+	}
+	else if (!PORT_Strcmp(token, "certificate")) {
+	    rv = putStringToStream(stream,
+				   XP_GetString(XP_SEC_CERTIFICATE),
+				   quote);
 	    if (rv) {
 		return(SECFailure);
 	    }
