@@ -178,7 +178,7 @@ bin/components/nsXmlRpcClient.js
 bin/chrome/locales/en-US/*
 bin/chrome/packages/widget-toolkit/*
 bin/chrome/packages/core/*
-bin/chrome/skins/modern/*
+bin/chrome/skins/*
 -bin/chrome/packages/core/editor/content/EditorInitPage.html
 -bin/chrome/packages/core/editor/content/EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
