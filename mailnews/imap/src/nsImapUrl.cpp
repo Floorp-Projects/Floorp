@@ -24,7 +24,9 @@
 
 #include "nsIURL.h"
 #include "nsImapUrl.h"
+
 #include "nsINetService.h"
+#include "nsIMsgMailSession.h"
 
 #include "nsString.h"
 #include "prmem.h"
@@ -37,12 +39,14 @@
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
+static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 nsImapUrl::nsImapUrl()
 {
     NS_INIT_REFCNT();
 
 	m_errorMessage = nsnull;
+	m_identity = nsnull;
 	
 	// nsINetLibUrl specific state
     m_URL_s = nsnull;
@@ -73,6 +77,7 @@ nsImapUrl::~nsImapUrl()
     NS_IF_RELEASE(m_imapMessage);
     NS_IF_RELEASE(m_imapExtension);
     NS_IF_RELEASE(m_imapMiscellaneous);
+	NS_IF_RELEASE(m_identity);
 
 	NS_IF_RELEASE(m_urlListeners);
 	PR_FREEIF(m_errorMessage);
@@ -133,6 +138,53 @@ NS_IMETHODIMP nsImapUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 ////////////////////////////////////////////////////////////////////////////////////
 // Begin nsIImapUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP nsImapUrl::SetIdentity(nsIMsgIdentity * aMsgIdentity)
+{
+	if (aMsgIdentity)
+	{
+		NS_IF_RELEASE(m_identity);
+		m_identity = aMsgIdentity;
+		NS_ADDREF(m_identity);
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP nsImapUrl::GetIdentity(nsIMsgIdentity **aMsgIdentity)
+{
+	nsresult rv = NS_OK;
+
+	if (aMsgIdentity) // valid argument to return result in?
+	{
+		// if we weren't given an identity, let's be creative and go fetch the default current
+		// identity. 
+		if (!m_identity)
+		{
+			nsIMsgMailSession * session = nsnull;
+			rv = nsServiceManager::GetService(kMsgMailSessionCID, nsIMsgMailSession::GetIID(),
+										 (nsISupports **) &session);
+			if (NS_SUCCEEDED(rv) && session)
+			{
+				// store the identity in m_identity so we don't have to do this again.
+				rv = session->GetCurrentIdentity(&m_identity);
+				nsServiceManager::ReleaseService(kMsgMailSessionCID, session);
+			}
+		}
+
+		// if we were given an identity then use it. 
+		if (m_identity)
+		{
+			*aMsgIdentity = m_identity;
+			NS_ADDREF(m_identity);
+		}
+		else
+			*aMsgIdentity = nsnull;
+	} // if aMsgIdentity
+
+	return rv;
+}
 
 NS_IMETHODIMP nsImapUrl::GetImapLog(nsIImapLog ** aImapLog)
 {

@@ -21,7 +21,8 @@
 
 #include "nsIImapUrl.h"
 #include "nsIUrlListenerManager.h"
-#include "nsINetlibURL.h" /* this should be temporary until Network N2 project lands */
+#include "nsINetlibURL.h" /* this should be temporary until nunet project lands */
+#include "nsIMsgIdentity.h"
 
 class nsImapUrl : public nsIImapUrl, public nsINetlibURL
 {
@@ -43,6 +44,9 @@ public:
 	/////////////////////////////////////////////////////////////////////////////// 
 	// we support the nsIImapUrl interface
 	///////////////////////////////////////////////////////////////////////////////
+	NS_IMETHOD SetIdentity(nsIMsgIdentity * aMsgIdentity);
+	NS_IMETHOD GetIdentity(nsIMsgIdentity ** aMsgIdentity);
+
 	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog);
 	NS_IMETHOD SetImapLog(nsIImapLog  * aImapLog);
 
@@ -60,11 +64,17 @@ public:
 
 	NS_IMPL_CLASS_GETSET(ImapAction, nsImapAction, m_imapAction);
 
-	// from nsINetlibURL:
+	/////////////////////////////////////////////////////////////////////////////// 
+	// we support the nsINetlibURL interface
+	///////////////////////////////////////////////////////////////////////////////
+
     NS_IMETHOD GetURLInfo(URL_Struct_ **aResult) const;
     NS_IMETHOD SetURLInfo(URL_Struct_ *URL_s);
 
-	// from nsIURL:
+	/////////////////////////////////////////////////////////////////////////////// 
+	// we support the nsIURL interface
+	///////////////////////////////////////////////////////////////////////////////
+
 	// mscott: some of these we won't need to implement..as part of the netlib re-write we'll be removing them
 	// from nsIURL and then we can remove them from here as well....
     NS_IMETHOD_(PRBool) Equals(const nsIURL *aURL) const;
@@ -124,6 +134,8 @@ protected:
     nsIImapMessage* m_imapMessage;
     nsIImapExtension* m_imapExtension;
     nsIImapMiscellaneous* m_imapMiscellaneous;
+
+	nsIMsgIdentity  *m_identity;
 };
 
 #endif /* nsImapUrl_h___ */
