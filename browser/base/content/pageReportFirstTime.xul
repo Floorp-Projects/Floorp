@@ -34,7 +34,7 @@
 <dialog id="pageReportFirstTime"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&caption.label;"
-        onload="onLoad()"
+        onload="setTimeout('sizeToContent()', 0);"
         style="width: 40em;"
         buttons="accept"
         persist="screenX screenY"
@@ -48,7 +48,7 @@
 
   <hbox pack="center">
     <statusbar style="width:20em">
-      <statusbarpanel class="statusbarpanel-iconic" id="page-report-button" blocked="true"/>
+      <statusbarpanel class="statusbarpanel-iconic" style="min-height:18px" id="page-report-button" blocked="true"/>
       <statusbarpanel flex="1" pack="left"><description>Document: Done</description></statusbarpanel>
     </statusbar>
   </hbox>
