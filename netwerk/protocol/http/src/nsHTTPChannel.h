@@ -46,7 +46,6 @@ public:
 
     // Constructors and Destructor
     nsHTTPChannel(nsIURI* i_URL, 
-                  nsIEventQueue* i_EQ, 
                   nsIHTTPEventSink* i_HTTPEventSink,
                   nsIHTTPHandler* i_Handler);
 
@@ -66,13 +65,11 @@ public:
     NS_IMETHOD OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval);
     NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                          nsISupports *ctxt,
-                         nsIEventQueue *eventQueue,
                          nsIStreamListener *listener);
     NS_IMETHOD AsyncWrite(nsIInputStream *fromStream,
                           PRUint32 startPosition,
                           PRInt32 writeCount,
                           nsISupports *ctxt,
-                          nsIEventQueue *eventQueue,
                           nsIStreamObserver *observer);
     NS_IMETHOD GetLoadAttributes(PRUint32 *aLoadAttributes);
     NS_IMETHOD SetLoadAttributes(PRUint32 aLoadAttributes);
@@ -91,7 +88,6 @@ public:
     // nsHTTPChannel methods:
     nsresult            Init();
     nsresult            Open();
-    nsIEventQueue*      EventQueue(void) const { return m_pEventQ; };
     nsresult            SetResponse(nsHTTPResponse* i_pResp);
     nsresult            GetResponseContext(nsISupports** aContext);
 
@@ -100,7 +96,6 @@ protected:
     PRBool                      m_bConnected; 
     nsCOMPtr<nsIHTTPHandler>    m_pHandler;
     HTTPState                   m_State;
-    nsCOMPtr<nsIEventQueue>     m_pEventQ;
     nsCOMPtr<nsIHTTPEventSink>  m_pEventSink;
     nsHTTPRequest*              m_pRequest;
     nsHTTPResponse*             m_pResponse;

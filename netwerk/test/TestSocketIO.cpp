@@ -193,7 +193,7 @@ TestWriteObserver::OnStopBinding(nsISupports* context,
   printf("\n+++ TestWriteObserver::OnStopBinding (status = %x) +++\n", aStatus);
 
   if (NS_SUCCEEDED(aStatus)) {
-    mTransport->AsyncRead(0, -1, nsnull, gEventQ, new InputTestConsumer);
+    mTransport->AsyncRead(0, -1, nsnull, new InputTestConsumer);
   } else {
     gKeepRunning = 0;
   }
@@ -274,7 +274,7 @@ main(int argc, char* argv[])
     TestWriteObserver* observer = new TestWriteObserver(transport);
 
     gElapsedTime = PR_Now();
-    transport->AsyncWrite(stream, 0, bytesWritten, nsnull, gEventQ, observer);
+    transport->AsyncWrite(stream, 0, bytesWritten, nsnull, observer);
 
     NS_RELEASE(transport);
   }

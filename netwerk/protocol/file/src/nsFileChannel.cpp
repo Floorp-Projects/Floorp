@@ -35,6 +35,7 @@
 #include "nsIURL.h"
 #include "prio.h"
 
+static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -373,7 +374,6 @@ nsFileChannel::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **result
 NS_IMETHODIMP
 nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                          nsISupports *ctxt,
-                         nsIEventQueue *eventQueue,
                          nsIStreamListener *listener)
 {
     nsAutoLock lock(mLock);
@@ -383,7 +383,14 @@ nsFileChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = serv->NewAsyncStreamListener(listener, eventQueue, &mListener);
+    if (!mEventQueue) {
+        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+        if (NS_FAILED(rv)) return rv;
+        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &mEventQueue);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    rv = serv->NewAsyncStreamListener(listener, mEventQueue, &mListener);
     if (NS_FAILED(rv)) return rv;
 
     rv = nsAsyncOutputStream::Create(&mBufferInputStream,
@@ -410,7 +417,6 @@ NS_IMETHODIMP
 nsFileChannel::AsyncWrite(nsIInputStream *fromStream,
                           PRUint32 startPosition, PRInt32 writeCount,
                           nsISupports *ctxt,
-                          nsIEventQueue *eventQueue,
                           nsIStreamObserver *observer)
 {
     nsAutoLock lock(mLock);

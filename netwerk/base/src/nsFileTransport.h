@@ -23,6 +23,7 @@
 #include "nsIThread.h"
 #include "nsIEventQueue.h"
 #include "prmon.h"
+#include "nsIEventQueueService.h"
 
 class nsFileTransportService;
 class nsIBaseStream;
@@ -46,12 +47,10 @@ public:
     NS_IMETHOD OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval);
     NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount,
                          nsISupports *ctxt,
-                         nsIEventQueue *eventQueue,
                          nsIStreamListener *listener);
     NS_IMETHOD AsyncWrite(nsIInputStream *fromStream, 
                           PRUint32 startPosition, PRInt32 writeCount,
                           nsISupports *ctxt,
-                          nsIEventQueue *eventQueue,
                           nsIStreamObserver *observer);
 
     // nsIRunnable methods:
@@ -92,6 +91,7 @@ protected:
     nsresult                    mStatus;
     PRUint32                    mSourceOffset;
     PRInt32                     mAmount;
+    nsIEventQueue*              mEventQueue;
 
 private:
     PRMonitor*                  mMonitor;

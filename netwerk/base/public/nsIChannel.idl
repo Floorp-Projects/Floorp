@@ -21,7 +21,6 @@
 interface nsIURI;
 interface nsIInputStream;
 interface nsIOutputStream;
-interface nsIEventQueue;
 interface nsIStreamObserver;
 interface nsIStreamListener;
 
@@ -68,7 +67,6 @@ interface nsIChannel : nsIRequest
     void AsyncRead(in unsigned long startPosition,
                    in long readCount,
                    in nsISupports ctxt,
-                   in nsIEventQueue eventQueue,
                    in nsIStreamListener listener);
 
     /**
@@ -84,7 +82,6 @@ interface nsIChannel : nsIRequest
                     in unsigned long startPosition,
                     in long writeCount,
                     in nsISupports ctxt,
-                    in nsIEventQueue eventQueue,
                     in nsIStreamObserver observer);
 
     /**

@@ -22,6 +22,8 @@
 
 #include "nspr.h"
 #include "nsCRT.h"
+#include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
 #include "nscore.h"
 #include "netCore.h"
 #include "nsIStreamListener.h"
@@ -31,6 +33,9 @@
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
 #include "nsAutoLock.h"
+
+static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
+
 
 //
 // This is the State table which maps current state to next state
@@ -148,6 +153,7 @@ nsSocketTransport::nsSocketTransport()
   mSourceOffset   = 0;
   mService        = nsnull;
   mLoadAttributes = LOAD_NORMAL;
+  mEventQueue     = nsnull;
 
   //
   // Set up Internet defaults...
@@ -194,6 +200,7 @@ nsSocketTransport::~nsSocketTransport()
   NS_IF_RELEASE(mWriteContext);
   
   NS_IF_RELEASE(mService);
+  NS_IF_RELEASE(mEventQueue);
 
   if (mHostName) {
     nsCRT::free(mHostName);
@@ -1034,8 +1041,7 @@ nsSocketTransport::GetURI(nsIURI * *aURL)
 
 NS_IMETHODIMP
 nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
-                             nsISupports* aContext, 
-                             nsIEventQueue* aAppEventQueue,
+                             nsISupports* aContext,
                              nsIStreamListener* aListener)
 {
   // XXX deal with startPosition and readCount parameters
@@ -1070,8 +1076,15 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     mReadContext = aContext;
     NS_IF_ADDREF(mReadContext);
 
+    if (!mEventQueue) {
+        NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+        if (NS_FAILED(rv)) return rv;
+        rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &mEventQueue);
+        if (NS_FAILED(rv)) return rv;
+    }
+
     // Create a marshalling stream listener to receive notifications...
-    rv = NS_NewAsyncStreamListener(&mReadListener, aAppEventQueue, aListener);
+    rv = NS_NewAsyncStreamListener(&mReadListener, mEventQueue, aListener);
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -1092,7 +1105,6 @@ NS_IMETHODIMP
 nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream, 
                               PRUint32 startPosition, PRInt32 writeCount,
                               nsISupports* aContext,
-                              nsIEventQueue* aAppEventQueue,
                               nsIStreamObserver* aObserver)
 {
   // XXX deal with startPosition and writeCount parameters
@@ -1122,7 +1134,13 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
     // Create a marshalling stream observer to receive notifications...
     NS_IF_RELEASE(mWriteObserver);
     if (aObserver) {
-      rv = NS_NewAsyncStreamObserver(&mWriteObserver, aAppEventQueue, aObserver);
+        if (!mEventQueue) {
+            NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
+            if (NS_FAILED(rv)) return rv;
+            rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &mEventQueue);
+            if (NS_FAILED(rv)) return rv;
+        }
+      rv = NS_NewAsyncStreamObserver(&mWriteObserver, mEventQueue, aObserver);
     }
 
     mWriteCount = writeCount;
