@@ -123,7 +123,7 @@ sub print_script_preview {
     <h1>Configurator Script Preview</h1>
 
     <p>Check the script to make sure the options are correct.
-    Then, save this script as <code class="filename">$<var>HOME</var>/.mozconfig</code>.
+    Then, save this script as <code class="filename">\$<var>HOME</var>/.mozconfig</code>.
 
     <form action='.mozconfig' method='get'>
     <input type='hidden' name='saveas' value='1'>
