@@ -71,11 +71,17 @@
 // The sort arrow for a header.
 #define NS_THEME_TREEVIEW_HEADER_SORTARROW                 47
 
-// A progress bar.
+// A horizontal progress bar.
 #define NS_THEME_PROGRESSBAR                               51
 
 // The progress bar's progress indicator
 #define NS_THEME_PROGRESSBAR_CHUNK                         52
+
+// A vertical progress bar.
+#define NS_THEME_PROGRESSBAR_VERTICAL                      53
+
+// A vertical progress chunk
+#define NS_THEME_PROGRESSBAR_CHUNK_VERTICAL                54
 
 // A single tab in a tab widget.
 #define NS_THEME_TAB                                       61

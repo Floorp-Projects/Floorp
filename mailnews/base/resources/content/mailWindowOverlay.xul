@@ -1482,8 +1482,10 @@ Rights Reserved.
 <statusbar class="chromeclass-status" id="status-bar"> 
   <hbox insertbefore="unreadMessageCount" flex="1">
     <statusbarpanel id="component-bar"/>
-    <statusbarpanel id="statusText" label="&statusText.label;" flex="1"/> 
-    <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0" oncommand="dumpProgress()"/> 
+    <statusbarpanel id="statusText" label="&statusText.label;" flex="1"/>
+    <statusbarpanel class="statusbarpanel-progress">
+      <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0" oncommand="dumpProgress()"/>
+    </statusbarpanel>
   </hbox>
   <hbox insertafter="totalMessageCount">
     <statusbarpanel checkfunc="MailCheckBeforeOfflineChange()" id="offline-status" class="statusbarpanel-iconic"/> 

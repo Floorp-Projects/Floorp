@@ -146,9 +146,11 @@ editor.xul has these - do we need them?
 
       <statusbar id="status-bar">
         <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>
-        <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0">
-            <observes element="Editor:Throbber" attribute="busy"/>
-        </progressmeter>
+        <statusbarpanel class="statusbarpanel-progress">
+          <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0">
+              <observes element="Editor:Throbber" attribute="busy"/>
+          </progressmeter>
+        </statusbarpanel>
         <statusbarpanel id="statusText" label="&statusText.label;" flex="1" crop="right"/>
       </statusbar>
 

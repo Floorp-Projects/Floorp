@@ -59,15 +59,17 @@
 #define THEME_COLOR 204
 #define THEME_FONT  210
 
+// Generic state constants
+#define TS_NORMAL    1
+#define TS_HOVER     2
+#define TS_ACTIVE    3
+#define TS_DISABLED  4
+
 // Button constants
-#define TP_BUTTON    1
-#define TP_RADIO     2
-#define TP_CHECKBOX  3
-#define BP_NORMAL    1
-#define BP_HOVER     2
-#define BP_ACTIVE    3
-#define BP_DISABLED  4
-#define BP_DEFAULT   5
+#define BP_BUTTON    1
+#define BP_RADIO     2
+#define BP_CHECKBOX  3
+#define BS_DEFAULT   5
 
 // Scrollbar constants
 #define SP_BUTTON          1
@@ -79,6 +81,12 @@
 #define SP_TRACKENDVERT    7
 #define SP_GRIPPERHOR      8
 #define SP_GRIPPERVERT     9
+
+// Progress bar constants
+#define PP_BAR             1
+#define PP_BARVERT         2
+#define PP_CHUNK           3
+#define PP_CHUNKVERT       4
 
 // Tab constants
 #define TABP_TAB_SELAFTER    2
@@ -126,6 +134,7 @@ nsNativeThemeWin::nsNativeThemeWin() {
   mButtonTheme = NULL;
   mToolbarTheme = NULL;
   mRebarTheme = NULL;
+  mProgressTheme = NULL;
   mScrollbarTheme = NULL;
   mStatusbarTheme = NULL;
   mTabTheme = NULL;
@@ -190,6 +199,14 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
       if (!mToolbarTheme)
         mToolbarTheme = openTheme(NULL, L"Toolbar");
       return mToolbarTheme;
+    }
+    case NS_THEME_PROGRESSBAR:
+    case NS_THEME_PROGRESSBAR_VERTICAL:
+    case NS_THEME_PROGRESSBAR_CHUNK:
+    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL: {
+      if (!mProgressTheme)
+        mProgressTheme = openTheme(NULL, L"Progress");
+      return mProgressTheme;
     }
     case NS_THEME_TAB:
     case NS_THEME_TAB_PANEL: {
@@ -313,43 +330,43 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
 {
   switch (aWidgetType) {
     case NS_THEME_BUTTON: {
-      aPart = TP_BUTTON;
+      aPart = BP_BUTTON;
       if (!aFrame) {
-        aState = BP_NORMAL;
+        aState = TS_NORMAL;
         return NS_OK;
       }
 
       if (IsDisabled(aFrame)) {
-        aState = BP_DISABLED;
+        aState = TS_DISABLED;
         return NS_OK;
       }
       PRInt32 eventState = GetContentState(aFrame);
       if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
-        aState = BP_ACTIVE;
+        aState = TS_ACTIVE;
       else if (eventState & NS_EVENT_STATE_FOCUS)
-        aState = BP_DEFAULT;
+        aState = BS_DEFAULT;
       else if (eventState & NS_EVENT_STATE_HOVER)
-        aState = BP_HOVER;
+        aState = TS_HOVER;
       else 
-        aState = BP_NORMAL;
+        aState = TS_NORMAL;
       
       return NS_OK;
     }
     case NS_THEME_CHECKBOX:
     case NS_THEME_RADIO: {
-      aPart = (aWidgetType == NS_THEME_CHECKBOX) ? TP_CHECKBOX : TP_RADIO; 
+      aPart = (aWidgetType == NS_THEME_CHECKBOX) ? BP_CHECKBOX : BP_RADIO; 
       if (!aFrame)
-        aState = BP_NORMAL;
+        aState = TS_NORMAL;
       else if (IsDisabled(aFrame))
-        aState = BP_DISABLED;
+        aState = TS_DISABLED;
       else {
         PRInt32 eventState = GetContentState(aFrame);
         if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
-          aState = BP_ACTIVE;
+          aState = TS_ACTIVE;
         else if (eventState & NS_EVENT_STATE_HOVER)
-          aState = BP_HOVER;
+          aState = TS_HOVER;
         else 
-          aState = BP_NORMAL;
+          aState = TS_NORMAL;
       }
 
       // XXXdwh This check will need to be more complicated, since HTML radio groups
@@ -360,24 +377,44 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         aState += 4; // 4 unchecked states, 4 checked states.
       return NS_OK;
     }
+    case NS_THEME_PROGRESSBAR: {
+      aPart = PP_BAR;
+      aState = TS_NORMAL;
+      return NS_OK;
+    }
+    case NS_THEME_PROGRESSBAR_CHUNK: {
+      aPart = PP_CHUNK;
+      aState = TS_NORMAL;
+      return NS_OK;
+    }
+    case NS_THEME_PROGRESSBAR_VERTICAL: {
+      aPart = PP_BARVERT;
+      aState = TS_NORMAL;
+      return NS_OK;
+    }
+    case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL: {
+      aPart = PP_CHUNKVERT;
+      aState = TS_NORMAL;
+      return NS_OK;
+    }
     case NS_THEME_TOOLBAR_BUTTON: {
-      aPart = TP_BUTTON;
+      aPart = BP_BUTTON;
       if (!aFrame) {
-        aState = BP_NORMAL;
+        aState = TS_NORMAL;
         return NS_OK;
       }
 
       if (IsDisabled(aFrame)) {
-        aState = BP_DISABLED;
+        aState = TS_DISABLED;
         return NS_OK;
       }
       PRInt32 eventState = GetContentState(aFrame);
       if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
-        aState = BP_ACTIVE;
+        aState = TS_ACTIVE;
       else if (eventState & NS_EVENT_STATE_HOVER)
-        aState = BP_HOVER;
+        aState = TS_HOVER;
       else 
-        aState = BP_NORMAL;
+        aState = TS_NORMAL;
       
       return NS_OK;
     }
@@ -388,17 +425,17 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       aPart = SP_BUTTON;
       aState = (aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP)*4;
       if (!aFrame)
-        aState += BP_NORMAL;
+        aState += TS_NORMAL;
       else if (IsDisabled(aFrame))
-        aState += BP_DISABLED;
+        aState += TS_DISABLED;
       else {
         PRInt32 eventState = GetContentState(aFrame);
         if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
-          aState += BP_ACTIVE;
+          aState += TS_ACTIVE;
         else if (eventState & NS_EVENT_STATE_HOVER)
-          aState += BP_HOVER;
+          aState += TS_HOVER;
         else 
-          aState += BP_NORMAL;
+          aState += TS_NORMAL;
       }
       return NS_OK;
     }
@@ -406,7 +443,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL: {
       aPart = (aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL) ?
               SP_TRACKSTARTHOR : SP_TRACKSTARTVERT;
-      aState = BP_NORMAL;
+      aState = TS_NORMAL;
       return NS_OK;
     }
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
@@ -414,19 +451,19 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       aPart = (aWidgetType == NS_THEME_SCROLLBAR_THUMB_HORIZONTAL) ?
               SP_THUMBHOR : SP_THUMBVERT;
       if (!aFrame)
-        aState = BP_NORMAL;
+        aState = TS_NORMAL;
       else if (IsDisabled(aFrame))
-        aState = BP_DISABLED;
+        aState = TS_DISABLED;
       else {
         PRInt32 eventState = GetContentState(aFrame);
         if (eventState & NS_EVENT_STATE_ACTIVE) // Hover is not also a requirement for
                                                 // the thumb, since the drag is not canceled
                                                 // when you move outside the thumb.
-          aState = BP_ACTIVE;
+          aState = TS_ACTIVE;
         else if (eventState & NS_EVENT_STATE_HOVER)
-          aState = BP_HOVER;
+          aState = TS_HOVER;
         else 
-          aState = BP_NORMAL;
+          aState = TS_NORMAL;
       }
       return NS_OK;
     }
@@ -435,9 +472,9 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       aPart = (aWidgetType == NS_THEME_SCROLLBAR_GRIPPER_HORIZONTAL) ?
               SP_GRIPPERHOR : SP_GRIPPERVERT;
       if (!aFrame)
-        aState = BP_NORMAL;
+        aState = TS_NORMAL;
       else if (IsDisabled(aFrame))
-        aState = BP_DISABLED;
+        aState = TS_DISABLED;
       else {
         // XXXdwh The gripper needs to get a hover attribute set on it, since it
         // never goes into :hover.
@@ -445,11 +482,11 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         if (eventState & NS_EVENT_STATE_ACTIVE) // Hover is not also a requirement for
                                                 // the gripper, since the drag is not canceled
                                                 // when you move outside the gripper.
-          aState = BP_ACTIVE;
+          aState = TS_ACTIVE;
         else if (eventState & NS_EVENT_STATE_HOVER)
-          aState = BP_HOVER;
+          aState = TS_HOVER;
         else 
-          aState = BP_NORMAL;
+          aState = TS_NORMAL;
       }
       return NS_OK;
     }
@@ -463,35 +500,35 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_STATUSBAR_RESIZER_PANEL:
     case NS_THEME_RESIZER: {
       aPart = (aWidgetType - NS_THEME_STATUSBAR_PANEL) + 1;
-      aState = BP_NORMAL;
+      aState = TS_NORMAL;
       return NS_OK;
     }
     case NS_THEME_TAB: {
       aPart = TABP_TAB;
       if (!aFrame) {
-        aState = BP_NORMAL;
+        aState = TS_NORMAL;
         return NS_OK;
       }
       
       if (IsDisabled(aFrame)) {
-        aState = BP_DISABLED;
+        aState = TS_DISABLED;
         return NS_OK;
       }
 
       if (IsSelected(aFrame)) {
         aPart = TABP_TAB_SELECTED;
-        aState = BP_ACTIVE; // The selected tab is always "pressed".
+        aState = TS_ACTIVE; // The selected tab is always "pressed".
       }
       else {
         PRInt32 eventState = GetContentState(aFrame);
         if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
-          aState = BP_ACTIVE;
+          aState = TS_ACTIVE;
         else if (eventState & NS_EVENT_STATE_FOCUS)
-          aState = BP_DEFAULT;
+          aState = BS_DEFAULT;
         else if (eventState & NS_EVENT_STATE_HOVER)
-          aState = BP_HOVER;
+          aState = TS_HOVER;
         else 
-          aState = BP_NORMAL;
+          aState = TS_NORMAL;
       }
       
       return NS_OK;
@@ -577,12 +614,11 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
   if (!getThemeContentRect)
     return NS_ERROR_FAILURE;
 
+  (*aResult).top = (*aResult).bottom = (*aResult).left = (*aResult).right = 0;
+
   if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR || 
       aWidgetType == NS_THEME_STATUSBAR || 
-      aWidgetType == NS_THEME_RESIZER ||
-      aWidgetType == NS_THEME_SCROLLBAR ||
-      aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL || 
-      aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL)
+      aWidgetType == NS_THEME_RESIZER)
     return NS_OK; // Don't worry about it.
 
   HANDLE theme = GetTheme(aWidgetType);
@@ -621,8 +657,11 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
   if (!getThemePartSize)
     return NS_ERROR_FAILURE;
 
+  (*aResult).width = (*aResult).height = 0;
+
   if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR || 
-      aWidgetType == NS_THEME_STATUSBAR)
+      aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
+      aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL)
     return NS_OK; // Don't worry about it.
 
   HANDLE theme = GetTheme(aWidgetType);
@@ -660,7 +699,11 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
       aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL || 
       aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL || 
       aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_STATUSBAR_PANEL ||
-      aWidgetType == NS_THEME_STATUSBAR_RESIZER_PANEL) {
+      aWidgetType == NS_THEME_STATUSBAR_RESIZER_PANEL ||
+      aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
+      aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL ||
+      aWidgetType == NS_THEME_PROGRESSBAR ||
+      aWidgetType == NS_THEME_PROGRESSBAR_VERTICAL) {
     *aShouldRepaint = PR_FALSE;
     return NS_OK;
   }
@@ -687,9 +730,6 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
 void
 nsNativeThemeWin::CloseData()
 {
-  // XXXdwh Calling closeTheme trashes the this ptr and causes horrible things
-  // to happen.  For now, just drop the stale handles without closing them.
-  // Is this a bug in the API, or is there something I'm doing wrong?
   if (mToolbarTheme) {
     closeTheme(mToolbarTheme);
     mToolbarTheme = NULL;
@@ -701,6 +741,10 @@ nsNativeThemeWin::CloseData()
   if (mRebarTheme) {
     closeTheme(mRebarTheme);
     mRebarTheme = NULL;
+  }
+  if (mProgressTheme) {
+    closeTheme(mProgressTheme);
+    mProgressTheme = NULL;
   }
   if (mButtonTheme) {
     closeTheme(mButtonTheme);

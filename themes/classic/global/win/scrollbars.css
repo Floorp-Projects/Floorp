@@ -30,21 +30,24 @@
 /* ::::: scrollbar ::::: */
 
 scrollbar {
-  -moz-appearance: scrollbar;
+  -moz-appearance: scrollbartrack-horizontal;
   -moz-binding: url("chrome://global/content/bindings/scrollbar.xml#scrollbar");
   cursor: default;
+  background: url("chrome://global/skin/scrollbar/slider.gif") scrollbar;
+}
+
+scrollbar[orient="vertical"] 
+{
+   -moz-appearance: scrollbartrack-vertical;
 }
 
 /* ::::: slider ::::: */
 
 slider {
-  -moz-appearance: scrollbartrack-horizontal;
   height: 16px;
-  background: url("chrome://global/skin/scrollbar/slider.gif") scrollbar;
 }
 
 slider[orient="vertical"] {
-   -moz-appearance: scrollbartrack-vertical;
   width: 16px;
 }
 

@@ -151,6 +151,8 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_treeheadersortarrow,    NS_THEME_TREEVIEW_HEADER_SORTARROW,
   eCSSKeyword_progressbar,            NS_THEME_PROGRESSBAR,
   eCSSKeyword_progresschunk,          NS_THEME_PROGRESSBAR_CHUNK,
+  eCSSKeyword_progressbar_vertical,   NS_THEME_PROGRESSBAR_VERTICAL,
+  eCSSKeyword_progresschunk_vertical, NS_THEME_PROGRESSBAR_CHUNK_VERTICAL,
   eCSSKeyword_tab,                    NS_THEME_TAB,
   eCSSKeyword_tabpanel,               NS_THEME_TAB_PANEL,
   eCSSKeyword_tooltip,                NS_THEME_TOOLTIP,

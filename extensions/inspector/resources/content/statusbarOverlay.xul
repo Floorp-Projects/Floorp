@@ -5,7 +5,9 @@
 
   <statusbar id="status-bar">
     <statusbarpanel id="txStatusPanel" flex="1"/>
-    <progressmeter id="pmStatus" mode="normal" value="0" class="progressmeter-statusbar"/>
+    <statusbarpanel class="statusbarpanel-progress">
+      <progressmeter id="pmStatus" mode="normal" value="0" class="progressmeter-statusbar"/>
+    </statusbarpanel>
   </statusbar>
 
 </overlay>

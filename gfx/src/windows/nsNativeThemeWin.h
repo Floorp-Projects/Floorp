@@ -72,6 +72,7 @@ private:
   HANDLE mButtonTheme;
   HANDLE mToolbarTheme;
   HANDLE mRebarTheme;
+  HANDLE mProgressTheme;
   HANDLE mScrollbarTheme;
   HANDLE mStatusbarTheme;
   HANDLE mTabTheme;

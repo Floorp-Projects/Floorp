@@ -1295,6 +1295,10 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
           aState.GetPresContext()->GetScaledPixelsToTwips(&p2t);
           aSize.width = NSIntPixelsToTwips(size.width, p2t);
           aSize.height = NSIntPixelsToTwips(size.height, p2t);
+          if (aSize.width)
+            widthSet = PR_TRUE;
+          if (aSize.height)
+            heightSet = PR_TRUE;
         }
       }
     }
@@ -1308,7 +1312,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
     // we will assume 0 means not set.
     if (position->mMinWidth.GetUnit() == eStyleUnit_Coord) {
         nscoord min = position->mMinWidth.GetCoordValue();
-        if (min != 0) {
+        if (min && min > aSize.width) {
            aSize.width = min;
            widthSet = PR_TRUE;
         }
@@ -1316,7 +1320,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
 
     if (position->mMinHeight.GetUnit() == eStyleUnit_Coord) {
         nscoord min = position->mMinHeight.GetCoordValue();
-        if (min != 0) {
+        if (min && min > aSize.height) {
            aSize.height = min;
            heightSet = PR_TRUE;
         }

@@ -138,6 +138,21 @@ statusbarpanel {
   padding: 0px 4px;
 }
 
+.statusbar-resizerpanel 
+{
+  border: 0px;
+  -moz-box-align: end;
+  -moz-box-pack: end;
+  padding: 0px;
+}
+
+.statusbarpanel-progress {
+  -moz-box-align: stretch;
+  border: 0px;
+  margin: 0px;
+  padding: 0px;
+}
+
 .statusbarpanel-iconic {
   padding: 0px;
 }
