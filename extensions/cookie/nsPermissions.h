@@ -45,7 +45,8 @@ class nsIURI;
 
 #define COOKIEPERMISSION 0
 #define IMAGEPERMISSION 1
-#define NUMBER_OF_PERMISSIONS 2
+#define WINDOWPERMISSION 2
+#define NUMBER_OF_PERMISSIONS 3
 
 typedef enum {
   PERMISSION_Accept,

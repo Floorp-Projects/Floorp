@@ -72,6 +72,7 @@ PRIVATE PRBool permission_changed = PR_FALSE;
 
 PRIVATE PRBool cookie_rememberChecked;
 PRIVATE PRBool image_rememberChecked;
+PRIVATE PRBool window_rememberChecked;
 
 PRIVATE nsVoidArray * permission_list=0;
 
@@ -162,13 +163,13 @@ permission_CheckFromList(const char * hostname, PRBool &permission, PRInt32 type
 
 PRBool
 permission_GetRememberChecked(PRInt32 type) {
-  if (type == COOKIEPERMISSION) {
+  if (type == COOKIEPERMISSION)
     return cookie_rememberChecked;
-  } else if (type == IMAGEPERMISSION) {
+  if (type == IMAGEPERMISSION)
     return image_rememberChecked;
-  } else {
-    return PR_FALSE;
-  }
+  if (type == WINDOWPERMISSION)
+    return window_rememberChecked;
+  return PR_FALSE;
 }
 
 void
@@ -177,6 +178,8 @@ permission_SetRememberChecked(PRInt32 type, PRBool value) {
     cookie_rememberChecked = value;
   } else if (type == IMAGEPERMISSION) {
     image_rememberChecked = value;
+  } else if (type == WINDOWPERMISSION) {
+    window_rememberChecked = value;
   }
 }
 
