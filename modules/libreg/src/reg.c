@@ -2755,6 +2755,7 @@ VR_INTERFACE(REGERR) NR_RegGetEntryInfo( HREG hReg, RKEY key, char *name,
                 }
             }
         }
+
         nr_Unlock( reg );
     }
 
@@ -2819,6 +2820,7 @@ VR_INTERFACE(REGERR) NR_RegGetEntryString( HREG  hReg, RKEY  key, char  *name,
                 }
             }
         }
+
         nr_Unlock( reg );
     }
 
@@ -2949,6 +2951,7 @@ VR_INTERFACE(REGERR) NR_RegGetEntry( HREG hReg, RKEY key, char *name,
                 *size = desc.valuelen;
             }
         }
+
         nr_Unlock( reg );
     }
 
@@ -3152,6 +3155,7 @@ VR_INTERFACE(REGERR) NR_RegSetEntry( HREG hReg, RKEY key, char *name, uint16 typ
                 /* other errors fall through */
             }
         }
+
         /* unlock registry */
         nr_Unlock( reg );
     }
@@ -3841,31 +3845,34 @@ VR_INTERFACE(REGERR) NR_StartupRegistry(void)
     }
 #endif
 
-    if ( status == REGERR_OK && regStartCount == 0 )
+    if ( status == REGERR_OK )
     {
-        ++regStartCount;
+        if ( ++regStartCount == 1 )
+        {
+            /* first time only initialization */
 
+            vr_findGlobalRegName();
+
+            /* check to see that we have a valid registry */
+            /* or create one if it doesn't exist */
+            if (REGERR_OK == nr_RegOpen("", &reg))
+            {
+                nr_RegClose(reg);
+            }
+
+            /* initialization for version registry */
 #ifndef STANDALONE_REGISTRY
-        vr_monitor = PR_NewMonitor();
-        XP_ASSERT( vr_monitor != NULL );
+            vr_monitor = PR_NewMonitor();
+            XP_ASSERT( vr_monitor != NULL );
 #endif 
 
 #ifdef XP_UNIX
-        bGlobalRegistry = ( getenv(UNIX_GLOBAL_FLAG) != NULL );
+            bGlobalRegistry = ( getenv(UNIX_GLOBAL_FLAG) != NULL );
 #endif
 
-        vr_findGlobalRegName();
+        } /* if ( regStartCount == 1 ) */
 
-        /* check to see that we have a valid registry */
-        /* or create one if it doesn't exist */
-        if (REGERR_OK == nr_RegOpen("", &reg))
-        {
-            nr_RegClose(reg);
-        }
-
-#ifndef STANDALONE_REGISTRY
         PR_Unlock( reglist_lock );
-#endif
     }
 
     return status;
@@ -3882,13 +3889,15 @@ VR_INTERFACE(void) NR_ShutdownRegistry(void)
      */
     if ( reglist_lock == NULL ) 
         return;  /* was not started successfully */
+#endif
 
     PR_Lock( reglist_lock );
-#endif
 
     --regStartCount;
     if ( regStartCount == 0 )
     {
+        /* shutdown for real. */
+        /* Close version registry first */
 #ifndef STANDALONE_REGISTRY
         if ( vr_monitor != NULL ) 
         {
@@ -3911,20 +3920,18 @@ VR_INTERFACE(void) NR_ShutdownRegistry(void)
     
         XP_FREEIF(user_name);
         XP_FREEIF(globalRegName);
+    }
+
+    PR_Unlock( reglist_lock );
 
 #ifndef STANDALONE_REGISTRY    
-        PR_Unlock( reglist_lock );
-
-        if ( reglist_lock != NULL ) 
-        {
-            PR_DestroyLock( reglist_lock );
-            reglist_lock = NULL;
-        }
+    if ( regStartCount == 0 ) 
+    {
+        PR_DestroyLock( reglist_lock );
+        reglist_lock = NULL;
     }
-    else {
-        PR_Unlock( reglist_lock );
 #endif
-    }
+
 }   /* NR_ShutdownRegistry */
 
 #ifdef XP_MAC
