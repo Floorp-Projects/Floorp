@@ -1590,6 +1590,7 @@ CIRCNetwork.prototype.onDisconnect =
 function my_netdisconnect (e)
 {
     var msg;
+    var msgType = "ERROR";
 
     if (typeof e.disconnectStatus != "undefined")
     {
@@ -1634,6 +1635,13 @@ function my_netdisconnect (e)
                      [this.getURL(), e.server.getURL()]);
     }
 
+    // e.quitting signals the disconnect was intended: use "INFO", not "ERROR".
+    if (e.quitting)
+    {
+        msgType = "INFO";
+        msg = getMsg(MSG_CONNECTION_QUIT, [this.getURL(), e.server.getURL()]);
+    }
+
     /* If we were only /trying/ to connect, and failed, just put an error on
      * the network tab. If we were actually connected ok, put it on all tabs.
      */
@@ -1642,7 +1650,7 @@ function my_netdisconnect (e)
         this.busy = false;
         updateProgress();
 
-        this.displayHere(msg, "ERROR");
+        this.displayHere(msg, msgType);
     }
     else
     {
@@ -1653,7 +1661,7 @@ function my_netdisconnect (e)
             {
                 var details = getObjectDetails(obj);
                 if ("server" in details && details.server == e.server)
-                    obj.displayHere(msg, "ERROR");
+                    obj.displayHere(msg, msgType);
             }
         }
     }
@@ -1671,6 +1679,12 @@ function my_netdisconnect (e)
     if ("userClose" in client && client.userClose &&
         client.getConnectionCount() == 0)
         window.close();
+
+    if (("reconnect" in this) && this.reconnect)
+    {
+        this.connect(this.requireSecurity);
+        delete this.reconnect;
+    }
 }
 
 CIRCNetwork.prototype.onCTCPReplyPing =

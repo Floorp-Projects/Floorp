@@ -106,7 +106,10 @@ function initMenus()
         ]
     };
 
+    var notInChannel = "((cx.TYPE == 'IRCChannel') and !cx.channel.active)";
     var inChannel = "((cx.TYPE == 'IRCChannel') and cx.channel.active)";
+    var netConnected = "cx.network and cx.network.isConnected()";
+    var netDisconnected = "cx.network and !cx.network.isConnected()";
 
     client.menuSpecs["mainmenu:file"] = {
         label: MSG_MNU_FILE,
@@ -121,8 +124,10 @@ function initMenus()
          //["manage-plugins"],
          ["-"],
          ["leave",       {visibleif: inChannel}],
+         ["rejoin",      {visibleif: notInChannel}],
          ["delete-view", {visibleif: "!" + inChannel}],
-         ["disconnect"],
+         ["disconnect",  {visibleif: netConnected}],
+         ["reconnect",   {visibleif: netDisconnected}],
          ["-"],
          ["print"],
          ["-"],
@@ -349,8 +354,10 @@ function initMenus()
          ["version", {visibleif: "cx.nickname"}],
          ["-"],
          ["leave",       {visibleif: inChannel}],
+         ["rejoin",      {visibleif: notInChannel}],
          ["delete-view", {visibleif: "!" + inChannel}],
-         ["disconnect"],
+         ["disconnect",  {visibleif: netConnected}],
+         ["reconnect",   {visibleif: netDisconnected}],
          ["-"],
          ["toggle-text-dir"]
         ]
@@ -367,8 +374,10 @@ function initMenus()
                   checkedif: "isStartupURL(cx.sourceObject.getURL())"}],
          ["-"],
          ["leave",       {visibleif: inChannel}],
+         ["rejoin",      {visibleif: notInChannel}],
          ["delete-view", {visibleif: "!" + inChannel}],
-         ["disconnect"],
+         ["disconnect",  {visibleif: netConnected}],
+         ["reconnect",   {visibleif: netDisconnected}],
          ["-"],
          ["toggle-text-dir"]
         ]

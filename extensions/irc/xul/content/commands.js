@@ -92,6 +92,7 @@ function initCommands()
          ["delete-view",       cmdDeleteView,                      CMD_CONSOLE],
          ["disable-plugin",    cmdAblePlugin,                      CMD_CONSOLE],
          ["disconnect",        cmdDisconnect,       CMD_NEED_SRV | CMD_CONSOLE],
+         ["disconnect-all",    cmdDisconnectAll,                   CMD_CONSOLE],
          ["echo",              cmdEcho,                            CMD_CONSOLE],
          ["enable-plugin",     cmdAblePlugin,                      CMD_CONSOLE],
          ["eval",              cmdEval,                            CMD_CONSOLE],
@@ -144,6 +145,10 @@ function initCommands()
          ["quote",             cmdQuote,            CMD_NEED_SRV | CMD_CONSOLE],
          ["reload-plugin",     cmdReload,                          CMD_CONSOLE],
          ["rlist",             cmdRlist,            CMD_NEED_SRV | CMD_CONSOLE],
+         ["reconnect",         cmdReconnect,        CMD_NEED_NET | CMD_CONSOLE],
+         ["reconnect-all",     cmdReconnectAll,                    CMD_CONSOLE],
+         ["rejoin",            cmdRejoin,
+                                   CMD_NEED_SRV |  CMD_NEED_CHAN | CMD_CONSOLE],
          ["reload-ui",         cmdReloadUI,                                  0],
          ["save",              cmdSave,                            CMD_CONSOLE],
          ["say",               cmdSay,              CMD_NEED_SRV | CMD_CONSOLE],
@@ -1383,6 +1388,25 @@ function cmdDisconnect(e)
     e.network.quit(e.reason);
 }
 
+function cmdDisconnectAll(e)
+{
+    if (confirmEx(MSG_CONFIRM_DISCONNECT_ALL, ["!yes", "!no"]) != 0)
+        return;
+
+    var conNetworks = client.getConnectedNetworks();
+    if (conNetworks.length <= 0)
+    {
+        display(MSG_NO_CONNECTED_NETS, MT_ERROR);
+        return;
+    }
+
+    if (typeof e.reason != "string")
+        e.reason = client.userAgent;
+
+    for (var i = 0; i < conNetworks.length; i++)
+        conNetworks[i].quit(e.reason);
+}
+
 function cmdDeleteView(e)
 {
     if (!e.view)
@@ -1486,6 +1510,51 @@ function cmdNames(e)
 
     e.channel.pendingNamesReply = true;
     e.server.sendData("NAMES " + e.channel.encodedName + "\n");
+}
+
+function cmdReconnect(e)
+{
+    if (e.network.isConnected())
+    {
+        // Set reconnect flag
+        e.network.reconnect = true;
+        if (typeof e.reason != "string")
+            e.reason = MSG_RECONNECTING;
+        // Now we disconnect.
+        e.network.quit(e.reason);
+    }
+    else
+    {
+        e.network.connect(e.network.requireSecurity);
+    }
+}
+
+function cmdReconnectAll(e)
+{
+    var reconnected = false;
+    for (var net in client.networks)
+    {
+        if (client.networks[net].isConnected() || 
+            ("messages" in client.networks[net]))
+        {
+            client.networks[net].dispatch("reconnect", { reason: e.reason });
+            reconnected = true;
+        }
+    }
+    if (!reconnected)
+        display(MSG_NO_RECONNECTABLE_NETS, MT_ERROR);
+}
+
+function cmdRejoin(e)
+{
+    if (e.channel.joined)
+    {
+        if (!e.reason)
+            e.reason = "";
+        e.channel.part(e.reason);
+    }
+
+    e.channel.join(e.channel.mode.key);
 }
 
 function cmdTogglePref (e)
@@ -2015,7 +2084,7 @@ function cmdLeave(e)
                     /* Their channel name was invalid, but we have a channel
                      * view, so we'll assume they did "/leave part msg".
                      */
-                    e.reason = e.channelName + " " + e.reason;
+                    e.reason = e.channelName + (e.reason ? " " + e.reason : "");
                 }
                 else
                 {

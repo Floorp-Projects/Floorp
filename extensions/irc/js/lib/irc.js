@@ -190,8 +190,8 @@ function net_connect(requireSecurity)
     this.state = NET_CONNECTING;
     this.connectAttempt = 0;
     this.nextHost = 0;
+    this.requireSecurity = requireSecurity || false;
     var ev = new CEvent("network", "do-connect", this, "onDoConnect");
-    ev.requireSecurity = requireSecurity;
     ev.password = null;
     this.eventPump.addEvent(ev);
 }
@@ -285,7 +285,7 @@ function net_doconnect(e)
         host = 0;
     }
 
-    if (this.serverList[host].isSecure || !e.requireSecurity)
+    if (this.serverList[host].isSecure || !this.requireSecurity)
     {
         ev = new CEvent ("network", "startconnect", this, "onStartConnect");
         ev.debug = "Connecting to " + this.serverList[host].unicodeName + ":" +
@@ -303,7 +303,6 @@ function net_doconnect(e)
             {
                 /* connect failed, try again  */
                 ev = new CEvent ("network", "do-connect", this, "onDoConnect");
-                ev.requireSecurity = e.requireSecurity;
                 this.eventPump.addEvent (ev);
             }
         }
@@ -324,7 +323,6 @@ function net_doconnect(e)
     {
         /* server doesn't use SSL as requested, try next one.  */
         ev = new CEvent ("network", "do-connect", this, "onDoConnect");
-        ev.requireSecurity = e.requireSecurity;
         this.eventPump.addEvent (ev);
     }
 
@@ -891,6 +889,8 @@ function serv_disconnect(e)
     e.server = this;
     e.set = "network";
     e.destObject = this.parent;
+
+    e.quitting = this.quitting;
 
     for (var c in this.channels)
     {
@@ -2683,9 +2683,12 @@ function chan_join (key)
 }
 
 CIRCChannel.prototype.part =
-function chan_part ()
+function chan_part (reason)
 {
-    this.parent.sendData ("PART " + this.encodedName + "\n");
+    if (!reason)
+        reason = "";
+    this.parent.sendData ("PART " + this.encodedName + " :" +
+                          fromUnicode(reason, this) + "\n");
     this.users = new Object();
     return true;
 }

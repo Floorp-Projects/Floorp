@@ -642,6 +642,18 @@ function isVisible (id)
     return (e.getAttribute ("collapsed") != "true");
 }
 
+client.getConnectedNetworks =
+function getConnectedNetworks() 
+{
+    var rv = [];
+    for (var n in client.networks)
+    {
+        if (client.networks[n].isConnected())
+            rv.push(client.networks[n]);
+    }
+    return rv;
+}
+
 function insertLink (matchText, containerTag)
 {
     var href;
