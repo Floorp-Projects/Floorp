@@ -150,6 +150,7 @@ nsHTMLOptionElement::~nsHTMLOptionElement()
 // ISupports
 
 NS_IMPL_ADDREF(nsHTMLOptionElement)
+NS_IMPL_RELEASE(nsHTMLOptionElement)
 
 nsresult
 nsHTMLOptionElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -171,17 +172,6 @@ nsHTMLOptionElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 // the option has a ref to the form, but not vice versa. The form can get to the
 // options via the select.
-NS_IMETHODIMP_(nsrefcnt)
-nsHTMLOptionElement::Release()
-{
-  --mRefCnt;
-	if (mRefCnt <= 0) {
-    delete this;                                       
-    return 0;                                          
-  } else {
-    return mRefCnt;
-  }
-}
 
 NS_IMETHODIMP 
 nsHTMLOptionElement::SetParent(nsIContent* aParent)
