@@ -62,15 +62,6 @@ function startupTests()
 {
     if (0)
     {   
-        /*
-        dispatchCommand ("fbreak ContextMenu 199");
-
-        function loaded (data, url)
-        {
-            showNextSourceLine (url, 100);
-        }
-        loadSource ("chrome://venkman/content/venkman-debugger.js", loaded);
-        */
         openDialog("chrome://venkman/content/tests/tree.xul", "", "");
     }
     
@@ -392,7 +383,9 @@ function init()
     console._munger.addRule ("word-hyphenator",
                              new RegExp ("(\\S{" + MAX_WORD_LEN + ",})"),
                              insertHyphenatedWord);
-    
+
+    console._lastStackDepth = -1;
+
     initDebugger(); /* debugger may need display() to init */
 
     display(MSG_HELLO, MT_HELLO);
