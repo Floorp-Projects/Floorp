@@ -1710,3 +1710,7 @@ ifneq (,$(filter $(PROGRAM) $(SIMPLE_PROGRAMS) $(LIBRARY) $(SHARED_LIBRARY),$(TA
 	zip $(DEPTH)/makefiles $(subst $(topsrcdir),$(MOZ_SRC)/mozilla,$(srcdir)/Makefile.in)
 endif
 	+$(LOOP_OVER_MOZ_DIRS)
+
+documentation:
+	@cd $(DEPTH)
+	$(DOXYGEN) $(topsrcdir)/config/doxygen.cfg
