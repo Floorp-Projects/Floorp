@@ -129,7 +129,7 @@ ifdef MOZ_OJI
 ifeq ($(OS_ARCH),WINNT)
 EXTRA_DSO_LIBS	+= jsj$(MOZ_BITS)$(VERSION_NUMBER)
 else
-XP_DIST_LIBS		+= -ljsj
+EXTRA_DSO_LIBS	+= jsj
 endif
 endif
 ifdef MOZ_PERF_METRICS
