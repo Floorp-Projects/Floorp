@@ -1,6 +1,6 @@
 <!ENTITY pref-irc.window.title "ChatZilla">
 
 <!ENTITY pref-irc.open.title     "ChatZilla's Preferences">
-<!ENTITY pref-irc.open.desc      "ChatZilla's preferences are too extensive to fit into this preference window so, instead, you can open it's preferences window from here.">
+<!ENTITY pref-irc.open.desc      "ChatZilla's preferences are too extensive to fit into this preference window so, instead, you can open its preferences window from here.">
 <!ENTITY pref-irc.open.label     "Open ChatZilla's Preferences">
 <!ENTITY pref-irc.open.accesskey "O">
