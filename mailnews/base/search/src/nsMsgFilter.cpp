@@ -81,37 +81,45 @@ nsMsgFilter::~nsMsgFilter()
 
 NS_IMPL_ISUPPORTS1(nsMsgFilter, nsIMsgFilter)
 
-NS_IMETHODIMP nsMsgFilter::GetFilterType(nsMsgFilterTypeType *aResult)
+NS_IMPL_GETTER(nsMsgFilter::GetFilterType, nsMsgFilterTypeType, m_type);
+NS_IMPL_GETSET(nsMsgFilter, Enabled, PRBool, m_enabled);
+NS_IMPL_GETSET(nsMsgFilter, Temporary, PRBool, m_temporary);
+NS_IMPL_GETSET(nsMsgFilter, Action, nsMsgRuleActionType, m_action.m_type);
+
+NS_IMETHODIMP nsMsgFilter::SetActionPriority(nsMsgPriorityValue aPriority)
 {
-  NS_ENSURE_ARG_POINTER(aResult);
-	*aResult = m_type;
-	return NS_OK;
+    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::ChangePriority,
+                   NS_ERROR_ILLEGAL_VALUE);
+    m_action.m_priority = aPriority;
+    return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilter::GetEnabled(PRBool *aResult)
+NS_IMETHODIMP
+nsMsgFilter::GetActionPriority(nsMsgPriorityValue *aResult)
 {
-  NS_ENSURE_ARG_POINTER(aResult);
-	*aResult = m_enabled;
-	return NS_OK;
+    NS_ENSURE_ARG_POINTER(aResult);
+    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::ChangePriority,
+                   NS_ERROR_ILLEGAL_VALUE);
+    *aResult = m_action.m_priority;
+    return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilter::SetEnabled(PRBool enabled)
+NS_IMETHODIMP nsMsgFilter::SetActionLabel(nsMsgLabelValue aLabel)
 {
-  m_enabled = enabled;
-  return NS_OK;
+    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::Label,
+                   NS_ERROR_ILLEGAL_VALUE);
+    m_action.m_label = aLabel;
+    return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilter::GetTemporary(PRBool *aTemporary)
+NS_IMETHODIMP
+nsMsgFilter::GetActionLabel(nsMsgLabelValue *aResult)
 {
-  NS_ENSURE_ARG_POINTER(aTemporary);
-  *aTemporary = m_temporary;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgFilter::SetTemporary(PRBool aTemporary)
-{
-  m_temporary = aTemporary;
-  return NS_OK;
+    NS_ENSURE_ARG_POINTER(aResult);
+    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::Label,
+                   NS_ERROR_ILLEGAL_VALUE);
+    *aResult = m_action.m_label;
+     return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilter::GetFilterName(PRUnichar **name)
@@ -219,25 +227,6 @@ NS_IMETHODIMP nsMsgFilter::GetScope(nsIMsgSearchScopeTerm **aResult)
     return NS_OK;
 }
 
-
-/* if type is acChangePriority, value is a pointer to priority.
-   If type is acMoveToFolder, value is pointer to folder name.
-   Otherwise, value is ignored.
-*/
-NS_IMETHODIMP nsMsgFilter::SetAction(nsMsgRuleActionType type)
-{
-    m_action.m_type = type;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgFilter::SetActionPriority(nsMsgPriorityValue aPriority)
-{
-    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::ChangePriority,
-                   NS_ERROR_ILLEGAL_VALUE);
-    m_action.m_priority = aPriority;
-    return NS_OK;
-}
-
 NS_IMETHODIMP
     nsMsgFilter::SetActionTargetFolderUri(const char *aUri)
 {
@@ -252,32 +241,6 @@ NS_IMETHODIMP
     return rv;
 }
 
-NS_IMETHODIMP nsMsgFilter::SetActionLabel(nsMsgLabelValue aLabel)
-{
-    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::Label,
-                   NS_ERROR_ILLEGAL_VALUE);
-    m_action.m_label = aLabel;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgFilter::GetAction(nsMsgRuleActionType *type)
-{
-  NS_ENSURE_ARG_POINTER(type);
-  *type = m_action.m_type;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgFilter::GetActionPriority(nsMsgPriorityValue *aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::ChangePriority,
-                   NS_ERROR_ILLEGAL_VALUE);
-    *aResult = m_action.m_priority;
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsMsgFilter::GetActionTargetFolderUri(char** aResult)
 {
@@ -286,16 +249,6 @@ nsMsgFilter::GetActionTargetFolderUri(char** aResult)
                    NS_ERROR_ILLEGAL_VALUE);
     if (m_action.m_folderUri.get())
       *aResult = ToNewCString(m_action.m_folderUri);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgFilter::GetActionLabel(nsMsgLabelValue *aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_ENSURE_TRUE(m_action.m_type == nsMsgFilterAction::Label,
-                   NS_ERROR_ILLEGAL_VALUE);
-    *aResult = m_action.m_label;
     return NS_OK;
 }
 

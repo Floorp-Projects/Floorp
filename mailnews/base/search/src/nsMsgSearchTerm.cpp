@@ -1223,35 +1223,8 @@ nsresult nsMsgSearchTerm::InitHeaderAddressParser()
 	return res;
 }
 
-NS_IMETHODIMP
-nsMsgSearchTerm::GetAttrib(nsMsgSearchAttribValue *aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    *aResult = m_attribute;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchTerm::SetAttrib(nsMsgSearchAttribValue aValue)
-{
-    m_attribute = aValue;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchTerm::GetOp(nsMsgSearchOpValue *aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    *aResult = m_operator;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgSearchTerm::SetOp(nsMsgSearchOpValue aValue)
-{
-    m_operator = aValue;
-    return NS_OK;
-}
+NS_IMPL_GETSET(nsMsgSearchTerm, Attrib, nsMsgSearchAttribValue, m_attribute);
+NS_IMPL_GETSET(nsMsgSearchTerm, Op, nsMsgSearchOpValue, m_operator);
 
 
 NS_IMETHODIMP

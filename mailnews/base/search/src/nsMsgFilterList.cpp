@@ -95,11 +95,7 @@ NS_IMETHODIMP nsMsgFilterList::CreateFilter(const PRUnichar *name,class nsIMsgFi
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilterList::SetLoggingEnabled(PRBool enable)
-{
-	m_loggingEnabled = enable;
-	return NS_OK;
-}
+NS_IMPL_GETSET(nsMsgFilterList, LoggingEnabled, PRBool, m_loggingEnabled);
 
 NS_IMETHODIMP nsMsgFilterList::GetFolder(nsIMsgFolder **aFolder)
 {
@@ -113,14 +109,6 @@ NS_IMETHODIMP nsMsgFilterList::SetFolder(nsIMsgFolder *aFolder)
 {
   m_folder = aFolder;
   return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgFilterList::GetLoggingEnabled(PRBool *aResult)
-{
-	if (!aResult)
-		return NS_ERROR_NULL_POINTER;
-	*aResult = m_loggingEnabled;
-	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFilterList::SaveToFile(nsIOFileStream *stream)
@@ -221,106 +209,6 @@ nsMsgFilterList::SaveToDefaultFile()
 
     return filterService->SaveFilterList(this, m_defaultFile);
 }
-
-#if 0
-nsresult nsMsgFilterList::Open(nsMsgFilterTypeType type, nsIMsgFolder *folder, nsIMsgFilterList **filterList)
-{
-	nsresult	err = NS_OK;
-	nsMsgFilterList	*newFilterList;
-
-	if (type != filterInbox
-		&& type != filterNews)
-		return FilterError_InvalidFilterType;
-
-	if (nsnull == filterList)
-		return NS_ERROR_NULL_POINTER;
-
-	newFilterList = new nsMsgFilterList;
-	if (newFilterList == nsnull)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-	newFilterList->m_master = master;
-
-	// hack up support for news filters by checking the current folder of the pane and massaging input params.
-	if (pane != nsnull && folderInfo == nsnull)
-	{
-		folderInfo = pane->GetFolder();
-		if (folderInfo)
-		{
-			if (folderInfo->IsNews())
-				type = filterNews;
-		}
-	}
-
-	newFilterList->m_folderInfo = folderInfo;
-	newFilterList->m_pane = pane;
-
-	*filterList = newFilterList;
-	const char *upgradeIMAPFiltersDestFileName = 0;
-
-	if (type == filterNews)
-	{
-		MSG_FolderInfoNews *newsFolder = folderInfo->GetNewsFolderInfo();
-		if (newsFolder)
-			newFilterList->m_filterFileName = newsFolder->GetXPRuleFileName();
-		newFilterList->m_fileType = xpNewsSort;
-	}
-	else
-	{
-		MSG_IMAPFolderInfoMail *imapMailFolder = (folderInfo) ? folderInfo->GetIMAPFolderInfoMail() : (MSG_IMAPFolderInfoMail *)nsnull;
-
-		newFilterList->m_filterFileName = "";
-		newFilterList->m_fileType = xpMailSort;
-		if (imapMailFolder)
-		{
-			MSG_IMAPHost *defaultHost = imapMailFolder->GetMaster()->GetIMAPHostTable()->GetDefaultHost();
-			if (imapMailFolder->GetIMAPHost() == defaultHost)
-			{
-				PRBool defaultHostFiltersExist = !XP_Stat(imapMailFolder->GetIMAPHost()->GetHostName(), &outStat, newFilterList->m_fileType);
-				if (!defaultHostFiltersExist)
-					upgradeIMAPFiltersDestFileName = imapMailFolder->GetIMAPHost()->GetHostName();
-			}
-
-			// if it's not the default imap host or there are no filters for the default host, or the old local mail filters 
-			// don't exist, set the filter file name to the filter name for the imap host.
-			if (!upgradeIMAPFiltersDestFileName || XP_Stat(newFilterList->m_filterFileName, &outStat, newFilterList->m_fileType))
-				newFilterList->m_filterFileName = imapMailFolder->GetIMAPHost()->GetHostName();
-		}
-
-	}
-
-	if (XP_Stat(newFilterList->m_filterFileName, &outStat, newFilterList->m_fileType))
-	{
-		// file must not exist - no rules, we're done.
-		return NS_OK;
-	}
-	fid = XP_FileOpen(newFilterList->m_filterFileName, newFilterList->m_fileType, XP_FILE_READ_BIN);
-	if (fid) 
-	{
-		err = newFilterList->LoadTextFilters(fid);
-		XP_FileClose(fid);
-		// if the file version changed, save it out right away.
-		if (newFilterList->GetVersion() != kFileVersion || upgradeIMAPFiltersDestFileName)
-		{
-			if (upgradeIMAPFiltersDestFileName)
-				newFilterList->m_filterFileName = upgradeIMAPFiltersDestFileName;
-			newFilterList->Close();
-		}
-	}
-	else
-	{
-		err = FilterError_FileError;
-	}
-
-	return err;
-}
-
-extern "C" MSG_FolderInfo *MSG_GetFolderInfoForFilterList(nsMsgFilterList *filterList)
-{
-	return filterList ? filterList->GetFolderInfo() : (MSG_FolderInfo *)nsnull;
-}
-#endif
-
 
 typedef struct
 {
@@ -763,38 +651,7 @@ nsMsgFilterList::~nsMsgFilterList()
 
 nsresult nsMsgFilterList::Close()
 {
-#ifdef HAVE_PORT
-	nsresult err = FilterError_FileError;
-	XP_File			fid;
-	XP_FileType		retType;
-	const char		*finalName = m_filterFileName;
-	char			*tmpName = (finalName) ? FE_GetTempFileFor(nsnull, finalName, m_fileType, &retType) : (char *)nsnull;
-
-
-	if (!tmpName || !finalName) 
-		return NS_ERROR_OUT_OF_MEMORY;
-	m_fileStream = new nsIOFileStream
-	fid = XP_FileOpen(tmpName, xpTemporary,
-								 XP_FILE_TRUNCATE_BIN);
-	if (fid) 
-	{
-		err = SaveTextFilters(fid);
-		XP_FileClose(fid);
-		if (err == NS_OK)
-		{
-			int status = XP_FileRename(tmpName, xpTemporary, finalName, m_fileType);
-			PR_ASSERT(status >= 0);
-		}
-	}
-
-	PR_FREEIF(tmpName);
-	// tell open DB's that the filter list might have changed.
-	NewsGroupDB::NotifyOpenDBsOfFilterChange(m_folderInfo);
-
-	return err;
-#else
 	return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 }
 
 nsresult nsMsgFilterList::GetFilterCount(PRUint32 *pCount)
