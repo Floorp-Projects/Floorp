@@ -91,12 +91,12 @@ interface nsIImapMailFolderSink : nsISupports {
 
   void NotifySearchHit(in nsIMsgMailNewsUrl aUrl, in string hitLine);
 
-  void copyNextStreamMessage(in boolean copySucceeded);
-  // these two hokey methods are needed so we can try to make sure the imap url is released
-  // on the UI thread. This in turn ensures that the objects the imap url holds on to
-  // are only released / destroyed from the UI thread.
-  void prepareToReleaseUrl(in nsIMsgMailNewsUrl aUrl);
-  void releaseUrl();
+  void copyNextStreamMessage(in boolean copySucceeded, in nsISupports copyState);
+  // these two hokey methods are needed so we can try to make sure the imap objects are released
+  // on the UI thread. This in turn ensures that the objects the imap object holds on to
+  // are only released / destroyed from the UI thread. This is used for urls and copy state objects now.
+  void prepareToReleaseObject(in nsISupports aISupports);
+  void releaseObject();
   void closeMockChannel(in nsIImapMockChannel aChannel);
   void setUrlState(in nsIImapProtocol aProtocol, in nsIMsgMailNewsUrl aUrl, in boolean isRunning, in nsresult status);
   void releaseUrlCacheEntry(in nsIMsgMailNewsUrl aUrl);

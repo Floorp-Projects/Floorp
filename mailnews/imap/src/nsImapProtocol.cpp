@@ -715,11 +715,13 @@ void nsImapProtocol::ReleaseUrlState()
     // for real.
     if (m_imapMailFolderSink)
     {
-      m_imapMailFolderSink->PrepareToReleaseUrl(mailnewsurl);
+      nsCOMPtr <nsISupports> supports = do_QueryInterface(mailnewsurl);
+      m_imapMailFolderSink->PrepareToReleaseObject(supports);
+      supports = nsnull;
       mailnewsurl = nsnull;
       // at this point in time, we MUST have released all of our references to 
       // the url from the imap protocol. otherwise this whole exercise is moot.
-      m_imapMailFolderSink->ReleaseUrl();
+      m_imapMailFolderSink->ReleaseObject();
     }
   }
 
@@ -1211,10 +1213,9 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   m_lastActiveTime = PR_Now(); // ** jt -- is this the best place for time stamp
   SetFlag(IMAP_CLEAN_UP_URL_STATE);
 
-#ifdef DEBUG_bienvenu1
-    mailnewsurl->GetSpec(getter_Copies(urlSpec));
-    printf("end processing url %s\n", (const char *) urlSpec);
-#endif
+  nsCOMPtr <nsISupports> copyState;
+  if (m_runningUrl)
+    m_runningUrl->GetCopyState(getter_AddRefs(copyState));
   // this is so hokey...we MUST clear any local references to the url 
   // BEFORE calling ReleaseUrlState
   mailnewsurl = nsnull;
@@ -1229,7 +1230,10 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 
   if (GetConnectionStatus() >= 0 && imapMailFolderSink)
   {
-      imapMailFolderSink->CopyNextStreamMessage(GetServerStateParser().LastCommandSuccessful());
+      imapMailFolderSink->PrepareToReleaseObject(copyState);
+      imapMailFolderSink->CopyNextStreamMessage(GetServerStateParser().LastCommandSuccessful(), copyState);
+      copyState = nsnull;
+      imapMailFolderSink->ReleaseObject();
       imapMailFolderSink = nsnull;
   }
 
@@ -4775,6 +4779,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
       rv = fileInputStream->Read(dataBuffer, COPY_BUFFER_SIZE, &readCount);
       if (NS_SUCCEEDED(rv))
       {
+        NS_ASSERTION(readCount <= (PRUint32) totalSize, "got more bytes than there should be");
         dataBuffer[readCount] = 0;
         rv = SendData(dataBuffer);
         totalSize -= readCount;

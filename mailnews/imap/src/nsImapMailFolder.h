@@ -468,7 +468,7 @@ protected:
 
   nsMsgIMAPFolderACL *m_folderACL;
 
-  nsCOMPtr<nsIMsgMailNewsUrl> mUrlToRelease;
+  nsCOMPtr<nsISupports> mSupportsToRelease;
 
   // offline imap support
   PRBool m_downloadMessageForOfflineUse;

@@ -3751,16 +3751,17 @@ nsImapMailFolder::OnlineCopyCompleted(nsIImapProtocol *aProtocol, ImapOnlineCopy
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::PrepareToReleaseUrl(nsIMsgMailNewsUrl * aUrl)
+nsImapMailFolder::PrepareToReleaseObject(nsISupports * aSupports)
 {
-  mUrlToRelease = aUrl;
+  NS_ASSERTION(!mSupportsToRelease, "can't prepare to release w/o releasing prev object");
+  mSupportsToRelease = aSupports;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::ReleaseUrl()
+nsImapMailFolder::ReleaseObject()
 {
-  mUrlToRelease = nsnull;
+  mSupportsToRelease = nsnull;
   return NS_OK;
 }
 
@@ -5382,38 +5383,44 @@ nsImapMailFolder::ProcessTunnel(nsIImapProtocol* aProtocol,
 }
 
 NS_IMETHODIMP
-nsImapMailFolder::CopyNextStreamMessage(PRBool copySucceeded)
+nsImapMailFolder::CopyNextStreamMessage(PRBool copySucceeded, nsISupports *copyState)
 {
     //if copy has failed it could be either user interrupted it or for some other reason
     //don't do any subsequent copies or delete src messages if it is move
 
-    if (!copySucceeded || !m_copyState)
+
+    if (!copySucceeded)
       return NS_OK;
 
     nsresult rv;
 
-    if (!m_copyState->m_streamCopy) 
+    nsCOMPtr<nsImapMailCopyState> mailCopyState = do_QueryInterface(copyState,
+                                                                    &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!mailCopyState->m_streamCopy) 
       return NS_OK;
-    if (m_copyState->m_curIndex < m_copyState->m_totalCount)
+
+    if (mailCopyState->m_curIndex < mailCopyState->m_totalCount)
     {
        nsCOMPtr<nsISupports> aSupport =
-            getter_AddRefs(m_copyState->m_messages->ElementAt
-                           (m_copyState->m_curIndex));
-        m_copyState->m_message = do_QueryInterface(aSupport,
+            getter_AddRefs(mailCopyState->m_messages->ElementAt
+                           (mailCopyState->m_curIndex));
+        mailCopyState->m_message = do_QueryInterface(aSupport,
                                                      &rv);
         if (NS_SUCCEEDED(rv))
         {
-            rv = CopyStreamMessage(m_copyState->m_message,
-                                   this, m_copyState->m_msgWindow, m_copyState->m_isMove);
+            rv = CopyStreamMessage(mailCopyState->m_message,
+                                   this, mailCopyState->m_msgWindow, mailCopyState->m_isMove);
         }
     }
-    else if (m_copyState->m_isMove)  
+    else if (mailCopyState->m_isMove)  
     {
         nsCOMPtr<nsIMsgFolder> srcFolder =
-            do_QueryInterface(m_copyState->m_srcSupport, &rv);
+            do_QueryInterface(mailCopyState->m_srcSupport, &rv);
         if (NS_SUCCEEDED(rv) && srcFolder)
         {
-          srcFolder->DeleteMessages(m_copyState->m_messages, nsnull,
+          srcFolder->DeleteMessages(mailCopyState->m_messages, nsnull,
             PR_TRUE, PR_TRUE, nsnull, PR_FALSE);
           // we want to send this notification after the source messages have
           // been deleted.
