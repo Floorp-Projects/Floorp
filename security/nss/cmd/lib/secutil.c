@@ -1517,31 +1517,6 @@ SECU_PrintExtensions(FILE *out, CERTCertExtension **extensions,
 		    secu_PrintBasicConstraints(out,tmpitem,"Data",level+1);
 		    break;
 
-		case SEC_OID_X509_SUBJECT_ALT_NAME:
-		case SEC_OID_X509_ISSUER_ALT_NAME:
-	      /*
-	       * We should add at least some of the more interesting cases
-	       * here, but need to have subroutines to back them up.
-	       */
-		case SEC_OID_NS_CERT_EXT_NETSCAPE_OK:
-		case SEC_OID_NS_CERT_EXT_ISSUER_LOGO:
-		case SEC_OID_NS_CERT_EXT_SUBJECT_LOGO:
-		case SEC_OID_NS_CERT_EXT_ENTITY_LOGO:
-		case SEC_OID_NS_CERT_EXT_USER_PICTURE:
-		case SEC_OID_NS_KEY_USAGE_GOVT_APPROVED:
-
-		/* x.509 v3 Extensions */
-		case SEC_OID_X509_SUBJECT_DIRECTORY_ATTR:
-		case SEC_OID_X509_SUBJECT_KEY_ID:
-		case SEC_OID_X509_KEY_USAGE:
-		case SEC_OID_X509_PRIVATE_KEY_USAGE_PERIOD:
-		case SEC_OID_X509_NAME_CONSTRAINTS:
-		case SEC_OID_X509_CRL_DIST_POINTS:
-		case SEC_OID_X509_POLICY_MAPPINGS:
-		case SEC_OID_X509_POLICY_CONSTRAINTS:
-		case SEC_OID_X509_AUTH_KEY_ID:
-		    goto defualt;
-
 		case SEC_OID_X509_EXT_KEY_USAGE:
 		    PrintExtKeyUsageExten(out, tmpitem, "", level+1);
 		    break;
@@ -1572,9 +1547,32 @@ SECU_PrintExtensions(FILE *out, CERTCertExtension **extensions,
 		case SEC_OID_EXT_KEY_USAGE_CODE_SIGN:
 		case SEC_OID_EXT_KEY_USAGE_EMAIL_PROTECT:
 		case SEC_OID_EXT_KEY_USAGE_TIME_STAMP:
+		case SEC_OID_X509_SUBJECT_ALT_NAME:
+		case SEC_OID_X509_ISSUER_ALT_NAME:
+	      /*
+	       * We should add at least some of the more interesting cases
+	       * here, but need to have subroutines to back them up.
+	       */
+		case SEC_OID_NS_CERT_EXT_NETSCAPE_OK:
+		case SEC_OID_NS_CERT_EXT_ISSUER_LOGO:
+		case SEC_OID_NS_CERT_EXT_SUBJECT_LOGO:
+		case SEC_OID_NS_CERT_EXT_ENTITY_LOGO:
+		case SEC_OID_NS_CERT_EXT_USER_PICTURE:
+		case SEC_OID_NS_KEY_USAGE_GOVT_APPROVED:
+
+		/* x.509 v3 Extensions */
+		case SEC_OID_X509_SUBJECT_DIRECTORY_ATTR:
+		case SEC_OID_X509_SUBJECT_KEY_ID:
+		case SEC_OID_X509_KEY_USAGE:
+		case SEC_OID_X509_PRIVATE_KEY_USAGE_PERIOD:
+		case SEC_OID_X509_NAME_CONSTRAINTS:
+		case SEC_OID_X509_CRL_DIST_POINTS:
+		case SEC_OID_X509_POLICY_MAPPINGS:
+		case SEC_OID_X509_POLICY_CONSTRAINTS:
+		case SEC_OID_X509_AUTH_KEY_ID:
+
 
 	        default:
-          defualt:
 		secu_PrintAny(out, tmpitem, "Data", level+1);
 		break;
 	    }
@@ -1630,35 +1628,41 @@ printflags(char *trusts, unsigned int flags)
 
 /* callback for listing certs through pkcs11 */
 SECStatus
-SECU_PrintCertNickname(CERTCertificate *cert, void *data)
+SECU_PrintCertNickname(CERTCertListNode *node, void *data)
 {
     CERTCertTrust *trust;
+    CERTCertificate* cert;
     FILE *out;
     char trusts[30];
     char *name;
 
+    cert = node->cert;
+
     PORT_Memset (trusts, 0, sizeof (trusts));
     out = (FILE *)data;
     
-	name = cert->nickname;
-	if ( name == NULL ) {
-	    name = cert->emailAddr;
-	}
-	if ( name == NULL ) {
-	    name = "(NULL)";
-	}
-	
-        trust = cert->trust;
-	if (trust) {
-	    printflags(trusts, trust->sslFlags);
-	    PORT_Strcat(trusts, ",");
-	    printflags(trusts, trust->emailFlags);
-	    PORT_Strcat(trusts, ",");
-	    printflags(trusts, trust->objectSigningFlags);
-	} else {
-	    PORT_Memcpy(trusts,",,",3);
-	}
-	fprintf(out, "%-60s %-5s\n", name, trusts);
+    name = node->appData;
+    if ( name == NULL) {
+        name = cert->nickname;
+    }
+    if ( name == NULL ) {
+        name = cert->emailAddr;
+    }
+    if ( name == NULL ) {
+        name = "(NULL)";
+    }
+
+    trust = cert->trust;
+    if (trust) {
+        printflags(trusts, trust->sslFlags);
+        PORT_Strcat(trusts, ",");
+        printflags(trusts, trust->emailFlags);
+        PORT_Strcat(trusts, ",");
+        printflags(trusts, trust->objectSigningFlags);
+    } else {
+        PORT_Memcpy(trusts,",,",3);
+    }
+    fprintf(out, "%-60s %-5s\n", name, trusts);
 
     return (SECSuccess);
 }
