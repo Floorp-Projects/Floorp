@@ -78,11 +78,6 @@ nsMetaCharsetObserver::nsMetaCharsetObserver()
 //-------------------------------------------------------------------------
 nsMetaCharsetObserver::~nsMetaCharsetObserver()
 {
-  // should we release mAlias
-  if (bMetaCharsetObserverStarted == PR_TRUE)  {
-    // call to end the ObserverService
-    End();
-  }
 }
 
 //-------------------------------------------------------------------------
@@ -400,41 +395,38 @@ NS_IMETHODIMP nsMetaCharsetObserver::Observe(nsISupports *aSubject,
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMetaCharsetObserver::Start() 
 {
-    nsresult res = NS_OK;
+  nsresult rv = NS_OK;
 
   if (bMetaCharsetObserverStarted == PR_FALSE)  {
     bMetaCharsetObserverStarted = PR_TRUE;
 
-    nsCOMPtr<nsIParserService> parserService(do_GetService(kParserServiceCID));
-    
-    if (!parserService) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    nsCOMPtr<nsIParserService> parserService(do_GetService("@mozilla.org/parser/parser-service;1", &rv));
 
-    res = parserService->RegisterObserver(this,
-                                          NS_LITERAL_STRING("text/html"),
-                                          gWatchTags);
+    if (NS_FAILED(rv))
+      return rv;
+
+    rv = parserService->RegisterObserver(this,
+                                         NS_LITERAL_STRING("text/html"),
+                                         gWatchTags);
   }
 
-  return res;
+  return rv;
 }
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMetaCharsetObserver::End() 
 {
-    nsresult res = NS_OK;
+  nsresult rv = NS_OK;
   if (bMetaCharsetObserverStarted == PR_TRUE)  {
     bMetaCharsetObserverStarted = PR_FALSE;
 
-    nsCOMPtr<nsIParserService> parserService(do_GetService(kParserServiceCID));
+    nsCOMPtr<nsIParserService> parserService(do_GetService("@mozilla.org/parser/parser-service;1", &rv));
 
-    if (!parserService) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    if (NS_FAILED(rv))
+      return rv;
     
-    res = parserService->UnregisterObserver(this,
-                                            NS_LITERAL_STRING("text/html"));
+    rv = parserService->UnregisterObserver(this, NS_LITERAL_STRING("text/html"));
   }
-  return res;
+  return rv;
 }
 //========================================================================== 
 
