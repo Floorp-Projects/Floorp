@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.3 $ $Date: 2000/09/06 22:23:55 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: instance.c,v $ $Revision: 1.4 $ $Date: 2002/02/13 02:26:45 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -488,10 +488,6 @@ nssCKFWInstance_CreateMutex
     return (NSSCKFWMutex *)NULL;
   }
 #endif /* NSSDEBUG */
-
-  if( (NSSArena *)NULL == arena ) {
-    arena = fwInstance->arena;
-  }
 
   mutex = nssCKFWMutex_Create(fwInstance->pInitArgs, arena, pError);
   if( (NSSCKFWMutex *)NULL == mutex ) {
