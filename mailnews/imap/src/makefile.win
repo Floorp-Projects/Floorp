@@ -20,43 +20,49 @@ IGNORE_MANIFEST=1
 
 include <$(DEPTH)\config\config.mak>
 
-LIBRARY_NAME=imap
+LIBRARY_NAME=msgimap
 MODULE= mailnews
 REQUIRES=xpcom js nspr netlib
 
 CPPSRCS=    nsImapUrl.cpp								\
 			nsImapProtocol.cpp							\
-			nsImapProxyEvent.cpp								\
-			nsIMAPHostSessionList.cpp								\
-			nsIMAPGenericParser.cpp		\
-			nsIMAPBodyShell.cpp								\
-			nsIMAPNamespace.cpp								\
-			nsImapSearchResults.cpp \
-			nsImapFlagAndUidState.cpp \
-			nsImapServerResponseParser.cpp \
+			nsImapProxyEvent.cpp						\
+			nsIMAPHostSessionList.cpp					\
+			nsIMAPGenericParser.cpp						\
+			nsIMAPBodyShell.cpp							\
+			nsIMAPNamespace.cpp							\
+			nsImapSearchResults.cpp						\
+			nsImapFlagAndUidState.cpp					\
+			nsImapServerResponseParser.cpp				\
+			nsImapService.cpp							\
+			nsImapIncomingServer.cpp					\
 			$(NULL)
 
 CPP_OBJS=   .\$(OBJDIR)\nsImapUrl.obj					\
 			.\$(OBJDIR)\nsImapProtocol.obj				\
-			.\$(OBJDIR)\nsImapProxyEvent.obj				\
-			.\$(OBJDIR)\nsIMAPHostSessionList.obj				\
-			.\$(OBJDIR)\nsIMAPBodyShell.obj						\
-			.\$(OBJDIR)\nsIMAPGenericParser.obj					\
-			.\$(OBJDIR)\nsIMAPNamespace.obj					\
-			.\$(OBJDIR)\nsImapSearchResults.obj \
-			.\$(OBJDIR)\nsImapFlagAndUidState.obj \
-			.\$(OBJDIR)\nsImapServerResponseParser.obj \
+			.\$(OBJDIR)\nsImapProxyEvent.obj			\
+			.\$(OBJDIR)\nsIMAPHostSessionList.obj		\
+			.\$(OBJDIR)\nsIMAPBodyShell.obj				\
+			.\$(OBJDIR)\nsIMAPGenericParser.obj			\
+			.\$(OBJDIR)\nsIMAPNamespace.obj				\
+			.\$(OBJDIR)\nsImapSearchResults.obj			\
+			.\$(OBJDIR)\nsImapFlagAndUidState.obj		\
+			.\$(OBJDIR)\nsImapServerResponseParser.obj	\
+			.\$(OBJDIR)\nsImapService.obj				\
+			.\$(OBJDIR)\nsImapIncomingServer.obj		\
 			$(NULL)
 
 
 EXPORTS=	nsImapUrl.h									\
 			nsImapProtocol.h							\
-			nsImapCore.h							\
+			nsImapCore.h								\
 			nsImapProxyEvent.h							\
 			nsImapHostSessionList.h						\
+			nsImapService.h								\
 			nsImapServerResponseParser.h				\
 			nsIMAPGenericParser.h						\
 			nsImapSearchResults.h						\
+			nsImapIncomingServer.h						\
             $(NULL)
 
 LINCS=													\
@@ -66,6 +72,7 @@ LINCS=													\
 		-I$(PUBLIC)\js									\
 		-I$(PUBLIC)\raptor								\
 		-I$(PUBLIC)\netlib								\
+		-I$(PUBLIC)\pref								\
 		 $(NULL)
 
 LCFLAGS =		   \
