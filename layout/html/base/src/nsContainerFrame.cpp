@@ -505,11 +505,11 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
                                            PRUint32        aFlags)
 {
   if (aView) {
-    nsIViewManager  *vm;
-    nsFrameState    kidState;
-    nsSize          frameSize;
+    nsCOMPtr<nsIViewManager> vm;
+    nsFrameState             kidState;
+    nsSize                   frameSize;
     
-    aView->GetViewManager(vm);
+    aView->GetViewManager(*getter_AddRefs(vm));
     aFrame->GetFrameState(&kidState);
     aFrame->GetSize(frameSize);
     
@@ -581,11 +581,10 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
     }
     else if (NS_STYLE_VISIBILITY_HIDDEN == vis->mVisible) {
       // If it has a widget, hide the view because the widget can't deal with it
-      nsIWidget* widget = nsnull;
-      aView->GetWidget(widget);
+      nsCOMPtr<nsIWidget> widget;
+      aView->GetWidget(*getter_AddRefs(widget));
       if (widget) {
         viewIsVisible = PR_FALSE;
-        NS_RELEASE(widget);
       }
       else {
         // If it's a scroll frame or a list control frame which is derived from the scrollframe, 
@@ -593,8 +592,8 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
         // child elements can't override their parent's visibility, but
         // it's not practical to leave it visible in all cases because
         // the scrollbars will be showing
-        nsIAtom*  frameType;
-        aFrame->GetFrameType(&frameType);
+        nsCOMPtr<nsIAtom> frameType;
+        aFrame->GetFrameType(getter_AddRefs(frameType));
 
         if (frameType == nsLayoutAtoms::scrollFrame || frameType == nsLayoutAtoms::listControlFrame) {
           viewIsVisible = PR_FALSE;
@@ -616,7 +615,6 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
             viewIsVisible = PR_FALSE;
           }
         }
-        NS_IF_RELEASE(frameType);
       }
     }
 
@@ -739,8 +737,6 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
     if (viewIsVisible) {
       vm->SetViewContentTransparency(aView, viewHasTransparentContent);
     }
-
-    NS_RELEASE(vm);
   }
 }
 
