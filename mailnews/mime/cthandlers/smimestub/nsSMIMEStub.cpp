@@ -132,7 +132,13 @@ MimeInlineTextSMIMEStub_parse_eof (MimeObject *obj, PRBool abort_p)
   char* html = NULL;
   
   if (obj->closed_p) return 0;
-  
+
+  if (  (obj->options) && 
+        ((obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting) ||
+         (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting))
+     )
+    return 0;
+
   /* Run parent method first, to flush out any buffered data. */
   status = ((MimeObjectClass*)COM_GetmimeInlineTextClass())->parse_eof(obj, abort_p);
   if (status < 0) 
