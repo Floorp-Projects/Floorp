@@ -316,12 +316,12 @@ GetFileLocation(const char* aPrefName,
     If we have an env var we should check whether the pref is a user
     pref.  If we do not, we don't care.
   */
-  nsCOMPtr<nsISupportsWString> prefFileName;
+  nsCOMPtr<nsISupportsString> prefFileName;
   PRBool isUserPref = PR_FALSE;
   prefBranch->PrefHasUserValue(aPrefName, &isUserPref);
   if (isUserPref) {
     rv = prefBranch->GetComplexValue(aPrefName,
-                                     NS_GET_IID(nsISupportsWString),
+                                     NS_GET_IID(nsISupportsString),
                                      getter_AddRefs(prefFileName));
     if (NS_SUCCEEDED(rv)) {
       return prefFileName->GetData(aFileLocation);
@@ -353,7 +353,7 @@ GetFileLocation(const char* aPrefName,
   }
   
   rv = prefBranch->GetComplexValue(aPrefName,
-                                   NS_GET_IID(nsISupportsWString),
+                                   NS_GET_IID(nsISupportsString),
                                    getter_AddRefs(prefFileName));
   if (NS_SUCCEEDED(rv)) {
     return prefFileName->GetData(aFileLocation);

@@ -805,7 +805,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
 #endif
     if (flavor.Equals(NS_LITERAL_STRING(kHTMLMime)))
     {
-      nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
+      nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
       if (textDataObj && len > 0)
       {
         PRUnichar* text = nsnull;
@@ -821,7 +821,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
     }
     else if (flavor.Equals(NS_LITERAL_STRING(kUnicodeMime)))
     {
-      nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
+      nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
       if (textDataObj && len > 0)
       {
         PRUnichar* text = nsnull;
@@ -943,7 +943,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
     nsAutoString contextStr, infoStr;
     nsCOMPtr<nsISupports> contextDataObj, infoDataObj;
     PRUint32 contextLen, infoLen;
-    nsCOMPtr<nsISupportsWString> textDataObj;
+    nsCOMPtr<nsISupportsString> textDataObj;
     
     nsCOMPtr<nsITransferable> contextTrans = do_CreateInstance(kCTransferableCID);
     NS_ENSURE_TRUE(contextTrans, NS_ERROR_NULL_POINTER);
@@ -1264,9 +1264,9 @@ NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
     // if we have an empty string, we're done; otherwise continue
     if ( !buffer.IsEmpty() )
     {
-      nsCOMPtr<nsISupportsWString> dataWrapper, contextWrapper, infoWrapper;
+      nsCOMPtr<nsISupportsString> dataWrapper, contextWrapper, infoWrapper;
 
-      dataWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
+      dataWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
       NS_ENSURE_TRUE(dataWrapper, NS_ERROR_FAILURE);
       rv = dataWrapper->SetData( NS_CONST_CAST(PRUnichar*, buffer.get()) );
       if (NS_FAILED(rv)) return rv;
@@ -1285,9 +1285,9 @@ NS_IMETHODIMP nsHTMLEditor::DoDrag(nsIDOMEvent *aDragEvent)
       }
       else
       {
-        contextWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
+        contextWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
         NS_ENSURE_TRUE(contextWrapper, NS_ERROR_FAILURE);
-        infoWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
+        infoWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
         NS_ENSURE_TRUE(infoWrapper, NS_ERROR_FAILURE);
 
         contextWrapper->SetData ( NS_CONST_CAST(PRUnichar*,parents.get()) );
@@ -1367,7 +1367,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
       nsAutoString contextStr, infoStr;
       nsCOMPtr<nsISupports> contextDataObj, infoDataObj;
       PRUint32 contextLen, infoLen;
-      nsCOMPtr<nsISupportsWString> textDataObj;
+      nsCOMPtr<nsISupportsString> textDataObj;
       
       nsCOMPtr<nsITransferable> contextTrans = do_CreateInstance(kCTransferableCID);
       NS_ENSURE_TRUE(contextTrans, NS_ERROR_NULL_POINTER);
@@ -1437,9 +1437,9 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
   // add the flavors for all editors
   for (const char* const* flavor = textEditorFlavors; *flavor; flavor++)
   {
-    nsCOMPtr<nsISupportsString> flavorString;            
-    nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
-         NS_GET_IID(nsISupportsString), getter_AddRefs(flavorString));
+    nsCOMPtr<nsISupportsCString> flavorString;            
+    nsComponentManager::CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, nsnull, 
+         NS_GET_IID(nsISupportsCString), getter_AddRefs(flavorString));
     if (flavorString)
     {
       flavorString->SetData(*flavor);
@@ -1454,9 +1454,9 @@ NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
          *htmlFlavor;
          htmlFlavor++)
     {
-      nsCOMPtr<nsISupportsString> flavorString;            
-      nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
-           NS_GET_IID(nsISupportsString), getter_AddRefs(flavorString));
+      nsCOMPtr<nsISupportsCString> flavorString;            
+      nsComponentManager::CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, nsnull, 
+           NS_GET_IID(nsISupportsCString), getter_AddRefs(flavorString));
       if (flavorString)
       {
         flavorString->SetData(*htmlFlavor);
@@ -1578,7 +1578,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
     nsAutoString stuffToPaste;
     if (flavor.Equals(NS_LITERAL_STRING(kUnicodeMime)))
     {
-      nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
+      nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
       if (textDataObj && len > 0)
       {
         PRUnichar* text = nsnull;

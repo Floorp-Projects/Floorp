@@ -6257,7 +6257,7 @@ DocumentViewerImpl::CheckForPrinters(nsIPrintOptions*  aPrintOptions,
       aPrintSettings->GetPrinterName(&defPrinterName);
       if (!defPrinterName || (defPrinterName && !*defPrinterName)) {
         if (defPrinterName) nsMemory::Free(defPrinterName);
-        nsCOMPtr<nsISupportsWString> wStr = do_QueryInterface(supps);
+        nsCOMPtr<nsISupportsString> wStr = do_QueryInterface(supps);
         if (wStr) {
           PRUnichar* defPrinterName;
           wStr->ToString(&defPrinterName);

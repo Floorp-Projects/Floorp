@@ -40,7 +40,7 @@ object, thereby allowing explicit control over the type of variant created.</p>
 term collectively the <i>nsISupports Primitives Interfaces</i>.&nbsp; These
 are a set of interfaces a component can support to allow automatic conversion to
 and from many basic types.&nbsp; For example, an interface can define that it
-supports the <i>nsISupportsString</i> interface, and this could be used by any
+supports the <i>nsISupportsCString</i> interface, and this could be used by any
 program that wishes to get a string representation of the object.&nbsp; If an
 interface wishes to expose itself as a &quot;boolean value&quot;, it may choose
 to support the <i>nsISupportsPRBool</i> interface.</p>
@@ -48,8 +48,8 @@ to support the <i>nsISupportsPRBool</i> interface.</p>
 calling), you can use
 the builtin functions <i>str()</i>, <i>int()</i>, <i>long()</i> etc., on the
 object<i>.</i>&nbsp; In the
-case of <i>str()</i>, if the object does not support the <i>nsISupportsString</i>
-or <i>nsISupportsWString</i> interfaces, the default string <i>str()</i> for the
+case of <i>str()</i>, if the object does not support the <i>nsISupportsCString</i>
+or <i>nsISupportsString</i> interfaces, the default string <i>str()</i> for the
 object will be returned (i.e., what is normally returned for most XPCOM objects -
 support for these interface is not very common!).&nbsp; In the case of the numeric functions, a <i>ValueError</i>
 exception will be raised if the objects do not support any interface that can be
@@ -71,8 +71,8 @@ of these interfaces:</p>
   </li>
   <li>If your class does not define support for these interfaces, the framework
     will use standard Python class semantics to implement them - i.e., if your
-    class provides a <i>__str__</i> method, it will be used to implement <i>nsISupportsString</i>
-    and <i>nsISupportsWString</i>, if you provide <i>__int__</i>, <i>__long__</i>,
+    class provides a <i>__str__</i> method, it will be used to implement <i>nsISupportsCString</i>
+    and <i>nsISupportsString</i>, if you provide <i>__int__</i>, <i>__long__</i>,
     <i>__float__</i> etc., methods, they will be used to implement the numeric
     interfaces.&nbsp; If your class defines no such special methods, then the <i>
     QueryInterface()</i> for those interfaces fails (rather than the QI succeeding
@@ -83,7 +83,7 @@ of these interfaces:</p>
 possible.&nbsp; Consider Python code that does a <i>str()</i> on an&nbsp; XPCOM
 interface, and where the XPCOM interface itself is implemented in Python and
 provides a <i>__str__</i> method.&nbsp; The <i>str()</i> on the original
-interface queries for the <i>nsISupportsString</i> interface.&nbsp; The
+interface queries for the <i>nsISupportsCString</i> interface.&nbsp; The
 Python implemented object responds to this interface and delegates to the <i>__str__</i>
 method. At the end of all this, <i>str()</i> returns the same result
 as if the objects were native Python objects with no XPCOM layer in between.</p>

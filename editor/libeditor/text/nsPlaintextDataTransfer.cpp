@@ -165,7 +165,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertTextFromTransferable(nsITransferable *tra
     flavor.AssignWithConversion( bestFlavor );   // just so we can use flavor.Equals()
     if (flavor.Equals(NS_LITERAL_STRING(kUnicodeMime)))
     {
-      nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
+      nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
       if (textDataObj && len > 0)
       {
         PRUnichar* text = nsnull;
@@ -493,7 +493,7 @@ NS_IMETHODIMP nsPlaintextEditor::DoDrag(nsIDOMEvent *aDragEvent)
     // if we have an empty string, we're done; otherwise continue
     if ( !buffer.IsEmpty() )
     {
-      nsCOMPtr<nsISupportsWString> dataWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
+      nsCOMPtr<nsISupportsString> dataWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
       NS_ENSURE_TRUE(dataWrapper, NS_ERROR_FAILURE);
 
       rv = dataWrapper->SetData( NS_CONST_CAST(PRUnichar*, buffer.get()) );
@@ -601,9 +601,9 @@ NS_IMETHODIMP nsPlaintextEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPa
   // add the flavors for text editors
   for (const char* const* flavor = textEditorFlavors; *flavor; flavor++)
   {
-    nsCOMPtr<nsISupportsString> flavorString;            
-    nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
-         NS_GET_IID(nsISupportsString), getter_AddRefs(flavorString));
+    nsCOMPtr<nsISupportsCString> flavorString;            
+    nsComponentManager::CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, nsnull, 
+         NS_GET_IID(nsISupportsCString), getter_AddRefs(flavorString));
     if (flavorString)
     {
       flavorString->SetData(*flavor);

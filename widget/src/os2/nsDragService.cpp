@@ -121,7 +121,7 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode, nsISupports
     nsCOMPtr<nsISupports> genericURL;
     if ( NS_SUCCEEDED(item->GetTransferData(kURLMime, getter_AddRefs(genericURL), &len)) )
     {
-      nsCOMPtr<nsISupportsWString> urlObject ( do_QueryInterface(genericURL) );
+      nsCOMPtr<nsISupportsString> urlObject ( do_QueryInterface(genericURL) );
       if( urlObject )
       {
         nsXPIDLString urlInfo;
@@ -186,7 +186,7 @@ NS_IMETHODIMP nsDragService::GetData(nsITransferable *aTransferable, PRUint32 aI
     return NS_ERROR_INVALID_ARG;
 
   // get flavor list that includes all acceptable flavors (including
-  // ones obtained through conversion). Flavors are nsISupportsStrings
+  // ones obtained through conversion). Flavors are nsISupportsCStrings
   // so that they can be seen from JS.
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsISupportsArray> flavorList;
@@ -201,7 +201,7 @@ NS_IMETHODIMP nsDragService::GetData(nsITransferable *aTransferable, PRUint32 aI
   for (unsigned int i= 0; i < cnt; ++i ) {
     nsCOMPtr<nsISupports> genericWrapper;
     flavorList->GetElementAt(i, getter_AddRefs(genericWrapper));
-    nsCOMPtr<nsISupportsString> currentFlavor;
+    nsCOMPtr<nsISupportsCString> currentFlavor;
     currentFlavor = do_QueryInterface(genericWrapper);
     if (currentFlavor) {
       nsXPIDLCString flavorStr;
@@ -252,7 +252,7 @@ NS_IMETHODIMP nsDragService::IsDataFlavorSupported(const char *aDataFlavor, PRBo
         for ( PRUint32 flavorIndex = 0; flavorIndex < numFlavors ; ++flavorIndex ) {
           nsCOMPtr<nsISupports> genericWrapper;
           flavorList->GetElementAt (flavorIndex, getter_AddRefs(genericWrapper));
-          nsCOMPtr<nsISupportsString> currentFlavor;
+          nsCOMPtr<nsISupportsCString> currentFlavor;
           currentFlavor = do_QueryInterface(genericWrapper);
           if (currentFlavor) {
             nsXPIDLCString flavorStr;

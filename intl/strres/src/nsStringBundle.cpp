@@ -503,7 +503,7 @@ nsExtensibleStringBundle::Init(const char * aCategory,
     if (NS_FAILED(rv))
       continue;
 
-    nsCOMPtr<nsISupportsString> supStr = do_QueryInterface(supports, &rv);
+    nsCOMPtr<nsISupportsCString> supStr = do_QueryInterface(supports, &rv);
     if (NS_FAILED(rv))
       continue;
 

@@ -46,14 +46,14 @@ var nsJSSupportsUtils = {
 
   createSupportsWString: function ()
     {  
-      return Components.classes["@mozilla.org/supports-wstring;1"]
-                       .createInstance(Components.interfaces.nsISupportsWString);
+      return Components.classes["@mozilla.org/supports-string;1"]
+                       .createInstance(Components.interfaces.nsISupportsString);
     },
     
   createSupportsString: function ()
     {
-      return Components.classes["@mozilla.org/supports-string;1"]
-                       .createInstance(Components.interfaces.nsISupportsString);
+      return Components.classes["@mozilla.org/supports-cstring;1"]
+                       .createInstance(Components.interfaces.nsISupportsCString);
     }                                                 
 
 };

@@ -42,10 +42,10 @@
 const nsTransferable_contractid = "@mozilla.org/widget/transferable;1";
 const clipboard_contractid = "@mozilla.org/widget/clipboard;1";
 const rdf_contractid = "@mozilla.org/rdf/rdf-service;1";
-const supportswstring_contractid = "@mozilla.org/supports-wstring;1";
+const supportswstring_contractid = "@mozilla.org/supports-string;1";
 const rdfc_contractid = "@mozilla.org/rdf/container;1";
 
-const nsISupportsWString = Components.interfaces.nsISupportsWString;
+const nsISupportsString = Components.interfaces.nsISupportsString;
 const nsIClipboard = Components.interfaces.nsIClipboard;
 const nsITransferable = Components.interfaces.nsITransferable;
 const nsIRDFLiteral = Components.interfaces.nsIRDFLiteral;
@@ -68,7 +68,7 @@ function nsTreeController_SetTransferData(transferable, flavor, text)
 {
   if (!text)
     return;
-  var textData = Components.classes[supportswstring_contractid].createInstance(nsISupportsWString);
+  var textData = Components.classes[supportswstring_contractid].createInstance(nsISupportsString);
   textData.data = text;
 
   transferable.addDataFlavor(flavor);

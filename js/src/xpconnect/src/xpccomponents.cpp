@@ -389,7 +389,7 @@ nsXPCComponents_Classes::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
             if(NS_SUCCEEDED(e->HasMoreElements(&hasMore)) && hasMore &&
                NS_SUCCEEDED(e->GetNext(getter_AddRefs(isup))) && isup)
             {
-                nsCOMPtr<nsISupportsString> holder(do_QueryInterface(isup));
+                nsCOMPtr<nsISupportsCString> holder(do_QueryInterface(isup));
                 if(holder)
                 {
                     char* name;

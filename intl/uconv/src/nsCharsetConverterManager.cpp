@@ -297,7 +297,7 @@ nsCharsetConverterManager::GetList(const nsACString& aCategory,
     if (NS_FAILED(enumerator->GetNext(getter_AddRefs(supports))))
       continue;
     
-    nsCOMPtr<nsISupportsString> supStr = do_QueryInterface(supports);
+    nsCOMPtr<nsISupportsCString> supStr = do_QueryInterface(supports);
     if (!supStr)
       continue;
 

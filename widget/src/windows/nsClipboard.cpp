@@ -162,7 +162,7 @@ nsresult nsClipboard::SetupNativeDataObject(nsITransferable * aTransferable, IDa
   for (i=0;i<cnt;i++) {
     nsCOMPtr<nsISupports> genericFlavor;
     dfList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
-    nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
+    nsCOMPtr<nsISupportsCString> currentFlavor ( do_QueryInterface(genericFlavor) );
     if ( currentFlavor ) {
       nsXPIDLCString flavorStr;
       currentFlavor->ToString(getter_Copies(flavorStr));
@@ -550,7 +550,7 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
   for (i=0;i<cnt;i++) {
     nsCOMPtr<nsISupports> genericFlavor;
     flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
-    nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
+    nsCOMPtr<nsISupportsCString> currentFlavor ( do_QueryInterface(genericFlavor) );
     if ( currentFlavor ) {
       nsXPIDLCString flavorStr;
       currentFlavor->ToString(getter_Copies(flavorStr));
@@ -885,7 +885,7 @@ NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(nsISupportsArray *aFlavorList,
   for ( PRUint32 i = 0;i < cnt; ++i ) {
     nsCOMPtr<nsISupports> genericFlavor;
     aFlavorList->GetElementAt (i, getter_AddRefs(genericFlavor));
-    nsCOMPtr<nsISupportsString> currentFlavor (do_QueryInterface(genericFlavor));
+    nsCOMPtr<nsISupportsCString> currentFlavor (do_QueryInterface(genericFlavor));
     if (currentFlavor) {
       nsXPIDLCString flavorStr;
       currentFlavor->ToString(getter_Copies(flavorStr));

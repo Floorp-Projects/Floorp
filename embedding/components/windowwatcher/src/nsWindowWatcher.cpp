@@ -1736,8 +1736,8 @@ nsWindowWatcher::AddSupportsTojsvals(nsISupports *aArg,
   argPrimitive->GetType(&type);
 
   switch(type) {
-    case nsISupportsPrimitive::TYPE_STRING : {
-      nsCOMPtr<nsISupportsString> p(do_QueryInterface(argPrimitive));
+    case nsISupportsPrimitive::TYPE_CSTRING : {
+      nsCOMPtr<nsISupportsCString> p(do_QueryInterface(argPrimitive));
       NS_ENSURE_TRUE(p, NS_ERROR_UNEXPECTED);
 
       char *data;
@@ -1751,8 +1751,8 @@ nsWindowWatcher::AddSupportsTojsvals(nsISupports *aArg,
 
       break;
     }
-    case nsISupportsPrimitive::TYPE_WSTRING : {
-      nsCOMPtr<nsISupportsWString> p(do_QueryInterface(argPrimitive));
+    case nsISupportsPrimitive::TYPE_STRING : {
+      nsCOMPtr<nsISupportsString> p(do_QueryInterface(argPrimitive));
       NS_ENSURE_TRUE(p, NS_ERROR_UNEXPECTED);
 
       PRUnichar *data;

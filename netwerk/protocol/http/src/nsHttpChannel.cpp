@@ -3271,8 +3271,8 @@ nsHttpChannel::nsContentEncodings::GetNext(nsISupports** aNextEncoding)
     encoding.BeginReading(start);
     encoding.EndReading(end);
 
-    nsCOMPtr<nsISupportsString> str;
-    str = do_CreateInstance("@mozilla.org/supports-string;1");
+    nsCOMPtr<nsISupportsCString> str;
+    str = do_CreateInstance("@mozilla.org/supports-cstring;1");
     if (!str)
         return NS_ERROR_FAILURE;
 

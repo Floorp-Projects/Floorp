@@ -150,15 +150,15 @@ nsHTMLFormatConverter::GetOutputDataFlavors(nsISupportsArray **_retval)
 //
 // AddFlavorToList
 //
-// Convenience routine for adding a flavor wrapped in an nsISupportsString object
+// Convenience routine for adding a flavor wrapped in an nsISupportsCString object
 // to a list
 //
 nsresult
 nsHTMLFormatConverter :: AddFlavorToList ( nsISupportsArray* inList, const char* inFlavor )
 {
-  nsCOMPtr<nsISupportsString> dataFlavor;
-  nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
-                                                    NS_GET_IID(nsISupportsString), getter_AddRefs(dataFlavor));
+  nsCOMPtr<nsISupportsCString> dataFlavor;
+  nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, nsnull, 
+                                                    NS_GET_IID(nsISupportsCString), getter_AddRefs(dataFlavor));
   if ( dataFlavor ) {
     dataFlavor->SetData ( NS_CONST_CAST(char*, inFlavor) );
     // add to list as an nsISupports so the correct interface gets the addref
@@ -230,9 +230,9 @@ nsHTMLFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDa
     nsCAutoString toFlavor ( aToDataFlavor );
 
     // HTML on clipboard is going to always be double byte so it will be in a primitive
-    // class of nsISupportsWString. Also, since the data is in two byte chunks the 
+    // class of nsISupportsString. Also, since the data is in two byte chunks the 
     // length represents the length in 1-byte chars, so we need to divide by two.
-    nsCOMPtr<nsISupportsWString> dataWrapper0 ( do_QueryInterface(aFromData) );
+    nsCOMPtr<nsISupportsString> dataWrapper0 ( do_QueryInterface(aFromData) );
     if ( dataWrapper0 ) {
       nsXPIDLString data;
       dataWrapper0->ToString ( getter_Copies(data) );  //еее COPY #1

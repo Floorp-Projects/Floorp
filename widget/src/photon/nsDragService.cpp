@@ -173,7 +173,7 @@ NS_IMETHODIMP nsDragService::GetRawData( nsISupportsArray* aArrayTransferables, 
 	nsCOMPtr<nsITransferable> aTransferable (do_QueryInterface(genericItem));
 
   // get flavor list that includes all acceptable flavors (including
-  // ones obtained through conversion). Flavors are nsISupportsStrings
+  // ones obtained through conversion). Flavors are nsISupportsCStrings
   // so that they can be seen from JS.
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsISupportsArray> flavorList;
@@ -192,7 +192,7 @@ NS_IMETHODIMP nsDragService::GetRawData( nsISupportsArray* aArrayTransferables, 
   for ( i = 0; i < cnt; ++i ) {
     nsCOMPtr<nsISupports> genericWrapper;
     flavorList->GetElementAt(i,getter_AddRefs(genericWrapper));
-    nsCOMPtr<nsISupportsString> currentFlavor;
+    nsCOMPtr<nsISupportsCString> currentFlavor;
     currentFlavor = do_QueryInterface(genericWrapper);
     if (currentFlavor) {
       // find our gtk flavor

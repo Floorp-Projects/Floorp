@@ -20,7 +20,7 @@ import new
 from xpcom import xpt, COMException, nsError
 
 # Suck in stuff from _xpcom we use regularly to prevent a module lookup
-from xpcom._xpcom import IID_nsISupports, IID_nsIClassInfo, IID_nsISupportsString, IID_nsISupportsWeakReference, \
+from xpcom._xpcom import IID_nsISupports, IID_nsIClassInfo, IID_nsISupportsCString, IID_nsISupportsWeakReference, \
         IID_nsIWeakReference, XPTI_GetInterfaceInfoManager, NS_GetGlobalComponentManager, XPTC_InvokeByIndex
 
 # Attribute names we may be __getattr__'d for, but know we don't want to delegate
@@ -159,7 +159,7 @@ class _XPCOMBase:
     # See if the object support strings.
     def __str__(self):
         try:
-            self._comobj_.QueryInterface(IID_nsISupportsString, 0)
+            self._comobj_.QueryInterface(IID_nsISupportsCString, 0)
             return str(self._comobj_)
         except COMException:
             return self.__repr__()

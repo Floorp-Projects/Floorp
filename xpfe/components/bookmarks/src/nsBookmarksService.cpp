@@ -2518,7 +2518,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
             nsCOMPtr<nsISupportsArray> suppArray;
             rv = NS_NewISupportsArray(getter_AddRefs(suppArray));
             if (NS_FAILED(rv)) return rv;
-            nsCOMPtr<nsISupportsString> suppString(do_CreateInstance("@mozilla.org/supports-string;1", &rv));
+            nsCOMPtr<nsISupportsCString> suppString(do_CreateInstance("@mozilla.org/supports-cstring;1", &rv));
             if (!suppString) return rv;
             rv = suppString->SetData(uri);
             if (NS_FAILED(rv)) return rv;

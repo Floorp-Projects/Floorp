@@ -188,7 +188,7 @@ NS_IMETHODIMP nsDragService::GetData(nsITransferable *aTransferable, PRUint32 an
     nsCOMPtr <nsISupports> genericWrapper;
 
     flavorList->GetElementAt(i, getter_AddRefs(genericWrapper));
-    nsCOMPtr <nsISupportsString> currentFlavor;
+    nsCOMPtr <nsISupportsCString> currentFlavor;
     currentFlavor = do_QueryInterface(genericWrapper);
 
     if (currentFlavor) {

@@ -429,8 +429,8 @@ BookmarksUIElement.prototype = {
     const kSuppArrayIID = Components.interfaces.nsISupportsArray;
     var itemArray = Components.classes[kSuppArrayContractID].createInstance(kSuppArrayIID);
 
-    const kSuppWStringContractID = "@mozilla.org/supports-wstring;1";
-    const kSuppWStringIID = Components.interfaces.nsISupportsWString;
+    const kSuppWStringContractID = "@mozilla.org/supports-string;1";
+    const kSuppWStringIID = Components.interfaces.nsISupportsString;
     var bmstring = Components.classes[kSuppWStringContractID].createInstance(kSuppWStringIID);
     var unicodestring = Components.classes[kSuppWStringContractID].createInstance(kSuppWStringIID);
     var htmlstring = Components.classes[kSuppWStringContractID].createInstance(kSuppWStringIID);
@@ -485,7 +485,7 @@ BookmarksUIElement.prototype = {
     var length = { };
     xferable.getAnyTransferData(flavour, data, length);
     var nodes = []; var names = [];
-    data = data.value.QueryInterface(Components.interfaces.nsISupportsWString).data;
+    data = data.value.QueryInterface(Components.interfaces.nsISupportsString).data;
     switch (flavour.value) {
     case "moz/bookmarkclipboarditem":
       nodes = data.split("\n");
@@ -581,8 +581,8 @@ BookmarksUIElement.prototype = {
     const kSuppArrayContractID = "@mozilla.org/supports-array;1";
     const kSuppArrayIID = Components.interfaces.nsISupportsArray;
     var flavourArray = Components.classes[kSuppArrayContractID].createInstance(kSuppArrayIID);
-    const kSuppStringContractID = "@mozilla.org/supports-string;1";
-    const kSuppStringIID = Components.interfaces.nsISupportsString;
+    const kSuppStringContractID = "@mozilla.org/supports-cstring;1";
+    const kSuppStringIID = Components.interfaces.nsISupportsCString;
     
     var flavours = ["moz/bookmarkclipboarditem", "text/x-moz-url"];
     for (var i = 0; i < flavours.length; ++i) {

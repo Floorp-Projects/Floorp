@@ -2280,7 +2280,7 @@ function EditorSetDefaultPrefsAndDoctype()
     try
     {
       prefAuthorString = gPrefs.getComplexValue("editor.author",
-                                                Components.interfaces.nsISupportsWString).data;
+                                                Components.interfaces.nsISupportsString).data;
     }
     catch (ex) {}
     if ( prefAuthorString && prefAuthorString != 0)

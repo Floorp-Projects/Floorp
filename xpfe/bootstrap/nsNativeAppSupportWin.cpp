@@ -2089,7 +2089,7 @@ nsNativeAppSupportWin::OpenWindow( const char*urlstr, const char *args ) {
   nsresult rv = NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-  nsCOMPtr<nsISupportsString> sarg(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+  nsCOMPtr<nsISupportsCString> sarg(do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
   if (sarg)
     sarg->SetData(args);
 
@@ -2450,8 +2450,8 @@ nsNativeAppSupportWin::StartServerMode() {
 
     // Create some of the objects we'll need.
     nsCOMPtr<nsIWindowWatcher>   ww(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-    nsCOMPtr<nsISupportsWString> arg1(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
-    nsCOMPtr<nsISupportsWString> arg2(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
+    nsCOMPtr<nsISupportsString> arg1(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+    nsCOMPtr<nsISupportsString> arg2(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
     if ( !ww || !arg1 || !arg2 ) {
         return NS_OK;
     }

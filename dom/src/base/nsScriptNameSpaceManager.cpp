@@ -176,10 +176,10 @@ nsScriptNameSpaceManager::FillHash(nsICategoryManager *aCategoryManager,
   nsCOMPtr<nsISupports> entry;
 
   while (NS_SUCCEEDED(e->GetNext(getter_AddRefs(entry)))) {
-    nsCOMPtr<nsISupportsString> category(do_QueryInterface(entry));
+    nsCOMPtr<nsISupportsCString> category(do_QueryInterface(entry));
 
     if (!category) {
-      NS_WARNING("Category entry not an nsISupportsString!");
+      NS_WARNING("Category entry not an nsISupportsCString!");
 
       continue;
     }
@@ -302,10 +302,10 @@ nsScriptNameSpaceManager::RegisterExternalInterfaces(PRBool aAsProto)
   PRBool found_old, dom_prefix;
 
   while (NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(entry)))) {
-    nsCOMPtr<nsISupportsString> category(do_QueryInterface(entry));
+    nsCOMPtr<nsISupportsCString> category(do_QueryInterface(entry));
 
     if (!category) {
-      NS_WARNING("Category entry not an nsISupportsString!");
+      NS_WARNING("Category entry not an nsISupportsCString!");
 
       continue;
     }

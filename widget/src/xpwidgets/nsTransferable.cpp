@@ -41,7 +41,7 @@
 Notes to self:
 
 - at some point, strings will be accessible from JS, so we won't have to wrap
-   flavors in an nsISupportsString. Until then, we're kinda stuck with
+   flavors in an nsISupportsCString. Until then, we're kinda stuck with
    this crappy API of nsISupportsArrays.
 
 */
@@ -312,7 +312,7 @@ nsTransferable::~nsTransferable()
 //
 // Returns a copy of the internal list of flavors. This does NOT take into 
 // account any converter that may be registered. This list consists of
-// nsISupportsString objects so that the flavor list can be accessed from JS.
+// nsISupportsCString objects so that the flavor list can be accessed from JS.
 //
 NS_IMETHODIMP
 nsTransferable :: GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList)
@@ -326,9 +326,9 @@ nsTransferable :: GetTransferDataFlavors(nsISupportsArray ** aDataFlavorList)
   if ( *aDataFlavorList ) {
     for ( PRInt32 i=0; i<mDataArray->Count(); ++i ) {
       DataStruct * data = (DataStruct *)mDataArray->ElementAt(i);
-      nsCOMPtr<nsISupportsString> flavorWrapper;
-      rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
-                                               NS_GET_IID(nsISupportsString), getter_AddRefs(flavorWrapper));
+      nsCOMPtr<nsISupportsCString> flavorWrapper;
+      rv = nsComponentManager::CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, nsnull, 
+                                               NS_GET_IID(nsISupportsCString), getter_AddRefs(flavorWrapper));
       if ( flavorWrapper ) {
         flavorWrapper->SetData ( NS_CONST_CAST(char*, data->GetFlavor().get()) );
         nsCOMPtr<nsISupports> genericWrapper ( do_QueryInterface(flavorWrapper) );
@@ -577,7 +577,7 @@ nsTransferable :: FlavorsTransferableCanImport(nsISupportsArray **_retval)
         nsCOMPtr<nsISupports> genericFlavor;
         convertedList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
 
-        nsCOMPtr<nsISupportsString> flavorWrapper ( do_QueryInterface (genericFlavor) );
+        nsCOMPtr<nsISupportsCString> flavorWrapper ( do_QueryInterface (genericFlavor) );
         nsXPIDLCString flavorStr;
         flavorWrapper->ToString( getter_Copies(flavorStr) );
 
@@ -621,7 +621,7 @@ nsTransferable :: FlavorsTransferableCanExport(nsISupportsArray **_retval)
         nsCOMPtr<nsISupports> genericFlavor;
         convertedList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
 
-        nsCOMPtr<nsISupportsString> flavorWrapper ( do_QueryInterface (genericFlavor) );
+        nsCOMPtr<nsISupportsCString> flavorWrapper ( do_QueryInterface (genericFlavor) );
         nsXPIDLCString flavorStr;
         flavorWrapper->ToString( getter_Copies(flavorStr) );
 

@@ -154,7 +154,7 @@ function constructFontList(fontList)
         while (fontEnumerator.hasMoreElements())
 		{
 		  var fontName = fontEnumerator.getNext();
-		  fontName = fontName.QueryInterface(Components.interfaces.nsISupportsWString);
+		  fontName = fontName.QueryInterface(Components.interfaces.nsISupportsString);
 		  var fontNameStr = fontName.toString();
 		  if (fontEnumerator.hasMoreElements())
 		    tempres = tempres + fontNameStr + ", ";

@@ -340,10 +340,10 @@ var ToolbarShell = {
   getSupportedFlavours: function () 
   {
     var flavourList = { };
-    flavourList["moz/toolbaritem"]  = { width: 2, iid: "nsISupportsWString" };
-    flavourList["text/x-moz-url"]   = { width: 2, iid: "nsISupportsWString" };
-    flavourList["text/html"]        = { width: 2, iid: "nsISupportsWString" };
-    flavourList["text/unicode"]     = { width: 2, iid: "nsISupportsWString" };
+    flavourList["moz/toolbaritem"]  = { width: 2, iid: "nsISupportsString" };
+    flavourList["text/x-moz-url"]   = { width: 2, iid: "nsISupportsString" };
+    flavourList["text/html"]        = { width: 2, iid: "nsISupportsString" };
+    flavourList["text/unicode"]     = { width: 2, iid: "nsISupportsString" };
     return flavourList;
   }
   

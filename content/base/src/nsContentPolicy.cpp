@@ -78,7 +78,7 @@ nsContentPolicy::nsContentPolicy()
      */
     nsCOMPtr<nsISupports> item;
     while (NS_SUCCEEDED(catEnum->GetNext(getter_AddRefs(item)))) {
-	nsCOMPtr<nsISupportsString> string = do_QueryInterface(item, &rv);
+	nsCOMPtr<nsISupportsCString> string = do_QueryInterface(item, &rv);
 	if (NS_FAILED(rv))
 	    continue;
 	

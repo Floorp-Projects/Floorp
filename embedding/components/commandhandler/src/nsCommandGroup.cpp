@@ -126,7 +126,7 @@ nsGroupsEnumerator::GetNext(nsISupports **_retval)
 
 	char *thisGroupName = mGroupNames[mIndex];
 	
-	nsCOMPtr<nsISupportsString> supportsString = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+	nsCOMPtr<nsISupportsCString> supportsString = do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
 	if (NS_FAILED(rv)) return rv;
 
 	supportsString->SetData(thisGroupName);
@@ -222,7 +222,7 @@ nsNamedGroupEnumerator::GetNext(nsISupports **_retval)
 	PRUnichar		*thisGroupName = (PRUnichar *)mGroupArray->ElementAt(mIndex);
 	
 	nsresult rv;
-	nsCOMPtr<nsISupportsWString> supportsString = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, &rv);
+	nsCOMPtr<nsISupportsString> supportsString = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
 	if (NS_FAILED(rv)) return rv;
 
 	supportsString->SetData(thisGroupName);

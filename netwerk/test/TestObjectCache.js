@@ -29,9 +29,9 @@ function openCacheEntry(clientID, url)
 
 function wrapString(str)
 {
-    var nsISupportsString = Components.interfaces.nsISupportsString;
-    var factory = Components.classes["@mozilla.org/supports-string;1"];
-    var wrapper = factory.createInstance(nsISupportsString);
+    var nsISupportsCString = Components.interfaces.nsISupportsCString;
+    var factory = Components.classes["@mozilla.org/supports-cstring;1"];
+    var wrapper = factory.createInstance(nsISupportsCString);
     wrapper.data = str;
     return wrapper;
 }

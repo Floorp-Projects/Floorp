@@ -55,7 +55,7 @@
 //
 // Given some data and the flavor it corresponds to, creates the appropriate
 // nsISupports* wrapper for passing across IDL boundaries. Right now, everything
-// creates a two-byte |nsISupportsWString|, except for "text/plain" and native
+// creates a two-byte |nsISupportsString|, except for "text/plain" and native
 // platform HTML (CF_HTML on win32)
 //
 void
@@ -66,9 +66,9 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
     return;
 
   if ( strcmp(aFlavor,kTextMime) == 0 || strcmp(aFlavor,kNativeHTMLMime) == 0 ) {
-    nsCOMPtr<nsISupportsString> primitive;
-    nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
-                                       NS_GET_IID(nsISupportsString), getter_AddRefs(primitive));
+    nsCOMPtr<nsISupportsCString> primitive;
+    nsComponentManager::CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, nsnull, 
+                                       NS_GET_IID(nsISupportsCString), getter_AddRefs(primitive));
     if ( primitive ) {
       primitive->SetDataWithLength ( aDataLen, NS_STATIC_CAST(char*, aDataBuff) );
       nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );
@@ -77,9 +77,9 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
     }
   }
   else {
-    nsCOMPtr<nsISupportsWString> primitive;
-    nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID, nsnull, 
-                                                      NS_GET_IID(nsISupportsWString), getter_AddRefs(primitive));
+    nsCOMPtr<nsISupportsString> primitive;
+    nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 
+                                                      NS_GET_IID(nsISupportsString), getter_AddRefs(primitive));
     if (NS_SUCCEEDED(rv) && primitive ) {
       // recall that SetDataWithLength() takes length as characters, not bytes
       primitive->SetDataWithLength ( aDataLen / 2, NS_STATIC_CAST(PRUnichar*, aDataBuff) );
@@ -107,12 +107,12 @@ nsPrimitiveHelpers :: CreateDataFromPrimitive ( const char* aFlavor, nsISupports
     return;
 
   if ( strcmp(aFlavor,kTextMime) == 0 ) {
-    nsCOMPtr<nsISupportsString> plainText ( do_QueryInterface(aPrimitive) );
+    nsCOMPtr<nsISupportsCString> plainText ( do_QueryInterface(aPrimitive) );
     if ( plainText )
       plainText->GetData ( NS_REINTERPRET_CAST(char**, aDataBuff) );
   }
   else {
-    nsCOMPtr<nsISupportsWString> doubleByteText ( do_QueryInterface(aPrimitive) );
+    nsCOMPtr<nsISupportsString> doubleByteText ( do_QueryInterface(aPrimitive) );
     if ( doubleByteText )
       doubleByteText->GetData ( NS_REINTERPRET_CAST(PRUnichar**, aDataBuff) );
   }

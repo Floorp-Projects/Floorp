@@ -788,7 +788,7 @@
             var len = {};
             trans.getAnyTransferData(bestFlavor, dataObj, len);
             if (dataObj)
-              dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
+              dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
             if (!dataObj)
               continue;
             sourceUri = dataObj.data.substring(0, len.value);
@@ -1046,7 +1046,7 @@
           var length = { };
           xferable.getAnyTransferData(flavour, data, length);
           var nodes = []; var names = [];
-          data = data.value.QueryInterface(Components.interfaces.nsISupportsWString).data;
+          data = data.value.QueryInterface(Components.interfaces.nsISupportsString).data;
           switch (flavour.value) {
           case "moz/bookmarkclipboarditem":
             nodes = data.split("\n");
@@ -1130,8 +1130,8 @@
           const kRDFContractID = "@mozilla.org/rdf/rdf-service;1";
           const kRDFIID = Components.interfaces.nsIRDFService;
           const ksRDF = Components.classes[kRDFContractID].getService(kRDFIID);
-          const kSuppWStringContractID = "@mozilla.org/supports-wstring;1";
-          const kSuppWStringIID = Components.interfaces.nsISupportsWString;
+          const kSuppWStringContractID = "@mozilla.org/supports-string;1";
+          const kSuppWStringIID = Components.interfaces.nsISupportsString;
           var bmstring = Components.classes[kSuppWStringContractID].createInstance(kSuppWStringIID);
           var unicodestring = Components.classes[kSuppWStringContractID].createInstance(kSuppWStringIID);
           var htmlstring = Components.classes[kSuppWStringContractID].createInstance(kSuppWStringIID);

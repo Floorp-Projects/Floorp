@@ -68,10 +68,10 @@ var nsTransferable = {
           trans.addDataFlavor(currFlavour);
           var supports = null; // nsISupports data
           var length = 0;
-          if (currData.flavour.dataIIDKey == "nsISupportsWString")
+          if (currData.flavour.dataIIDKey == "nsISupportsString")
             {
-              supports = Components.classes["@mozilla.org/supports-wstring;1"]
-                                   .createInstance(Components.interfaces.nsISupportsWString);
+              supports = Components.classes["@mozilla.org/supports-string;1"]
+                                   .createInstance(Components.interfaces.nsISupportsString);
 
               supports.data = currData.supports;
               length = supports.data.length;
@@ -199,7 +199,7 @@ FlavourSet.prototype = {
 function Flavour(aContentType, aDataIIDKey)
 {
   this.contentType = aContentType;
-  this.dataIIDKey = aDataIIDKey || "nsISupportsWString";
+  this.dataIIDKey = aDataIIDKey || "nsISupportsString";
 
   this._XferID = "Flavour";
 }
@@ -271,10 +271,10 @@ FlavourData.prototype = {
   get data ()
   {
     if (this.flavour && 
-        this.flavour.dataIIDKey != "nsISupportsWString" )
+        this.flavour.dataIIDKey != "nsISupportsString" )
       return this.supports.QueryInterface(Components.interfaces[this.flavour.dataIIDKey]); 
     else {
-      var unicode = this.supports.QueryInterface(Components.interfaces.nsISupportsWString);
+      var unicode = this.supports.QueryInterface(Components.interfaces.nsISupportsString);
       if (unicode) 
         return unicode.data.substring(0, this.contentLength/2);
      

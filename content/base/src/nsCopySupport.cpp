@@ -195,14 +195,14 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
       }
       
       // get wStrings to hold clip data
-      nsCOMPtr<nsISupportsWString> dataWrapper, contextWrapper, infoWrapper;
-      dataWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
+      nsCOMPtr<nsISupportsString> dataWrapper, contextWrapper, infoWrapper;
+      dataWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
       NS_ENSURE_TRUE(dataWrapper, NS_ERROR_FAILURE);
       if (bIsHTMLCopy)
       {
-        contextWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
+        contextWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
         NS_ENSURE_TRUE(contextWrapper, NS_ERROR_FAILURE);
-        infoWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
+        infoWrapper = do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
         NS_ENSURE_TRUE(infoWrapper, NS_ERROR_FAILURE);
       }
       

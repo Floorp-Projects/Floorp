@@ -294,8 +294,8 @@ class DefaultPolicy:
         return self._doHandleException(name, exc_info)
 
 _supports_primitives_data_ = [
+    ("nsISupportsCString", "__str__", str),
     ("nsISupportsString", "__str__", str),
-    ("nsISupportsWString", "__str__", str),
     ("nsISupportsPRUint64", "__long__", long),
     ("nsISupportsPRInt64", "__long__", long),
     ("nsISupportsPRUint32", "__int__", int),

@@ -613,7 +613,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
         {
            while (PR_TRUE) 
            {
-               nsCOMPtr<nsISupportsString> contractid;
+               nsCOMPtr<nsISupportsCString> contractid;
 
                rv = enumItem->GetNext(getter_AddRefs(contractid));
                if (NS_FAILED(rv) || !contractid) break;

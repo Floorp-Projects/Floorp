@@ -143,7 +143,7 @@ PyXPCOM_TypeObject::Py_str(PyObject *self)
 	char *val = NULL;
 	Py_BEGIN_ALLOW_THREADS;
 	{ // scope to kill pointer while thread-lock released.
-	nsCOMPtr<nsISupportsString> ss( do_QueryInterface(pis->m_obj, &rv ));
+	nsCOMPtr<nsISupportsCString> ss( do_QueryInterface(pis->m_obj, &rv ));
 	if (NS_SUCCEEDED(rv))
 		rv = ss->ToString(&val);
 	} // end-scope 

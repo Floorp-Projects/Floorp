@@ -17,7 +17,7 @@
 
 # Test our support for the interfaces defined in nsISupportsPrimitives.idl
 #
-# The framework supports nsISupportsString and nsISupportsWString, but
+# The framework supports nsISupportsCString and nsISupportsString, but
 # only if our class doesnt provide explicit support.
 
 from xpcom import components
@@ -32,7 +32,7 @@ class ImplicitSupportsString:
         return "<MyImplicitStrObject>"
 
 class ExplicitSupportsString:
-    _com_interfaces_ = [components.interfaces.nsISupports, components.interfaces.nsISupportsString]
+    _com_interfaces_ = [components.interfaces.nsISupports, components.interfaces.nsISupportsCString]
     # __str__ will be ignored by XPCOM, as we have _explicit_ support.
     def __str__(self):
         return "<MyImplicitStrObject>"

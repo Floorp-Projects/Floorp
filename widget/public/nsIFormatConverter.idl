@@ -43,14 +43,14 @@
 interface nsIFormatConverter : nsISupports
 {  
   /**
-    * Get the list of the "input" data flavors (mime types as nsISupportsString),
+    * Get the list of the "input" data flavors (mime types as nsISupportsCString),
     * in otherwords, the flavors that this converter can convert "from" (the 
     * incoming data to the converter).
     */
   nsISupportsArray getInputDataFlavors ( ) ;
 
   /**
-    * Get the list of the "output" data flavors (mime types as nsISupportsString),
+    * Get the list of the "output" data flavors (mime types as nsISupportsCString),
     * in otherwords, the flavors that this converter can convert "to" (the 
     * outgoing data to the converter).
     *

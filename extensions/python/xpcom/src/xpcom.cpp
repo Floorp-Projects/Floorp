@@ -579,7 +579,7 @@ init_xpcom() {
 	Py_XDECREF(obFuncPtr);
 
 	REGISTER_IID(nsISupports);
-	REGISTER_IID(nsISupportsString);
+	REGISTER_IID(nsISupportsCString);
 	REGISTER_IID(nsIModule);
 	REGISTER_IID(nsIFactory);
 	REGISTER_IID(nsIWeakReference);

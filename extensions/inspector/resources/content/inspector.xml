@@ -307,8 +307,8 @@
         <parameter name="aFlavor"/>
         <body><![CDATA[
           if (aFlavor == "text/unicode") {
-            var iid = Components.interfaces.nsISupportsWString;
-            var cid = "@mozilla.org/supports-wstring;1";
+            var iid = Components.interfaces.nsISupportsString;
+            var cid = "@mozilla.org/supports-string;1";
             data = Components.classes[cid].createInstance(iid);
             data.data = aObject;
 
