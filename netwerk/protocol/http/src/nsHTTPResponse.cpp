@@ -184,6 +184,12 @@ nsresult nsHTTPResponse::SetServerVersion(const char* i_Version)
   offset = str.Find("HTTP/");
   // Malformed Version string - Not prefixed by 'HTTP/'.
   if (0 != offset) {
+    // Some broken servers don't provide version number (for example, NCSA/1.5.2)
+    offset = str.Find("HTTP");
+    if (offset == 0) {
+      mServerVersion = HTTP_ONE_ZERO;
+      return rv;
+    }
     return NS_ERROR_FAILURE;
   }
   str.Cut(0, 5);

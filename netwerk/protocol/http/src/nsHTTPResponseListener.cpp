@@ -886,7 +886,7 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIInputStream* in,
 
     PRUint32 bL = mHeaderBuffer.Length();
 
-    if (bL > 0 && mHeaderBuffer.Find("HTTP/", PR_FALSE, 0, 5) != 0) {
+    if (bL > 0 && mHeaderBuffer.Find("HTTP", PR_FALSE, 0, 4) != 0) {
         // this is simple http response
         mSimpleResponse = PR_TRUE;
         mHeadersDone    = PR_TRUE;
