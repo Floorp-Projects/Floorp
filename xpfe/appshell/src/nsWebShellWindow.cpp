@@ -69,6 +69,11 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 
+// HACK for M4, should be removed by M5
+#ifdef XP_MAC
+#include <Menus.h>
+#endif
+		
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kWindowCID,           NS_WINDOW_CID);
@@ -657,6 +662,12 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
       
         // HACK: force a paint for now
         pnsMenuBar->Paint();
+        
+        // HACK for M4, should be removed by M5
+        #ifdef XP_MAC
+        Handle tempMenuBar = ::GetMenuBar(); // Get a copy of the menu list
+		pnsMenuBar->SetNativeData((void*)tempMenuBar);
+		#endif
     } // end if ( nsnull != pnsMenuBar )
     }
   } // end if (menuBar)
