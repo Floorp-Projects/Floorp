@@ -89,40 +89,35 @@ NS_IMETHODIMP nsMsgQuickSearchDBView::GetViewType(nsMsgViewTypeValue *aViewType)
     return NS_OK;
 }
 
-nsresult nsMsgQuickSearchDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, PRBool ensureListed)
+nsresult nsMsgQuickSearchDBView::OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey aParentKey, PRBool ensureListed)
 {
-  nsresult	rv;
-  nsCOMPtr <nsIMsgDBHdr> msgHdr;
-  rv = m_db->GetMsgHdrForKey(newKey, getter_AddRefs(msgHdr));
-  if (NS_SUCCEEDED(rv) && msgHdr != nsnull)
+  if (newHdr)
   {
     PRBool match=PR_FALSE;
     nsCOMPtr <nsIMsgSearchSession> searchSession = do_QueryReferent(m_searchSession);
     if (searchSession)
-      searchSession->MatchHdr(msgHdr, m_db, &match);
+      searchSession->MatchHdr(newHdr, m_db, &match);
     if (match)
-      AddHdr(msgHdr); // do not add a new message if there isn't a match.
+      AddHdr(newHdr); // do not add a new message if there isn't a match.
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgQuickSearchDBView::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, 
+NS_IMETHODIMP nsMsgQuickSearchDBView::OnHdrChange(nsIMsgDBHdr *aHdrChanged, PRUint32 aOldFlags, 
                                        PRUint32 aNewFlags, nsIDBChangeListener *aInstigator)
 {
-  nsresult rv = nsMsgDBView::OnKeyChange(aKeyChanged, aOldFlags, aNewFlags, aInstigator);
+  nsresult rv = nsMsgDBView::OnHdrChange(aHdrChanged, aOldFlags, aNewFlags, aInstigator);
   // flags haven't really changed - check if the message is newly classified as junk 
   if ((aOldFlags == aNewFlags) && (aOldFlags & MSG_FLAG_NEW)) 
   {
-    nsCOMPtr <nsIMsgDBHdr> msgHdr;
-    rv = m_db->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(msgHdr));
-    if (NS_SUCCEEDED(rv) && msgHdr != nsnull)
+    if (aHdrChanged)
     {
       nsXPIDLCString junkScoreStr;
-      (void) msgHdr->GetStringProperty("junkscore", getter_Copies(junkScoreStr));
+      (void) aHdrChanged->GetStringProperty("junkscore", getter_Copies(junkScoreStr));
       if (atoi(junkScoreStr.get()) > 50)
       {
         nsXPIDLCString originStr;
-        (void) msgHdr->GetStringProperty("junkscoreorigin", 
+        (void) aHdrChanged->GetStringProperty("junkscoreorigin", 
                                        getter_Copies(originStr));
 
         // if this was classified by the plugin, see if we're supposed to
@@ -132,11 +127,11 @@ NS_IMETHODIMP nsMsgQuickSearchDBView::OnKeyChange(nsMsgKey aKeyChanged, PRUint32
           PRBool match=PR_FALSE;
           nsCOMPtr <nsIMsgSearchSession> searchSession = do_QueryReferent(m_searchSession);
           if (searchSession)
-            searchSession->MatchHdr(msgHdr, m_db, &match);
+            searchSession->MatchHdr(aHdrChanged, m_db, &match);
           if (!match)
           {
             // remove hdr from view
-            nsMsgViewIndex deletedIndex = m_keys.FindIndex(aKeyChanged);
+            nsMsgViewIndex deletedIndex = FindHdr(aHdrChanged);
             if (deletedIndex != nsMsgViewIndex_None)
               RemoveByIndex(deletedIndex);
           }

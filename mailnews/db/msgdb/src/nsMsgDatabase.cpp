@@ -571,7 +571,7 @@ NS_IMETHODIMP nsMsgDatabase::RemoveListener(nsIDBChangeListener *listener)
 }
 
 // change announcer methods - just broadcast to all listeners.
-NS_IMETHODIMP nsMsgDatabase::NotifyKeyChangeAll(nsMsgKey keyChanged, PRUint32 oldFlags, PRUint32 newFlags,
+NS_IMETHODIMP nsMsgDatabase::NotifyHdrChangeAll(nsIMsgDBHdr *aHdrChanged, PRUint32 oldFlags, PRUint32 newFlags,
 	nsIDBChangeListener *instigator)
 {
   if (!m_ChangeListeners)
@@ -584,7 +584,7 @@ NS_IMETHODIMP nsMsgDatabase::NotifyKeyChangeAll(nsMsgKey keyChanged, PRUint32 ol
     nsCOMPtr<nsIDBChangeListener> changeListener;
     m_ChangeListeners->QueryElementAt(i, NS_GET_IID(nsIDBChangeListener), (void **) getter_AddRefs(changeListener));
 
-    nsresult rv = changeListener->OnKeyChange(keyChanged, oldFlags, newFlags, instigator); 
+    nsresult rv = changeListener->OnHdrChange(aHdrChanged, oldFlags, newFlags, instigator); 
     if (NS_FAILED(rv)) 
       return rv;
   }
@@ -627,7 +627,7 @@ NS_IMETHODIMP nsMsgDatabase::NotifyJunkScoreChanged(nsIDBChangeListener *instiga
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDatabase::NotifyKeyDeletedAll(nsMsgKey keyDeleted, nsMsgKey parentKey, PRInt32 flags, 
+NS_IMETHODIMP nsMsgDatabase::NotifyHdrDeletedAll(nsIMsgDBHdr *aHdrDeleted, nsMsgKey parentKey, PRInt32 flags, 
 	nsIDBChangeListener *instigator)
 {
   if (m_ChangeListeners == nsnull)
@@ -638,14 +638,14 @@ NS_IMETHODIMP nsMsgDatabase::NotifyKeyDeletedAll(nsMsgKey keyDeleted, nsMsgKey p
   {
     nsCOMPtr<nsIDBChangeListener> changeListener;
     m_ChangeListeners->QueryElementAt(i, NS_GET_IID(nsIDBChangeListener), (void **) getter_AddRefs(changeListener));
-    nsresult rv = changeListener->OnKeyDeleted(keyDeleted, parentKey, flags, instigator); 
+    nsresult rv = changeListener->OnHdrDeleted(aHdrDeleted, parentKey, flags, instigator); 
     if (NS_FAILED(rv)) 
       return rv;
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDatabase::NotifyKeyAddedAll(nsMsgKey keyAdded, nsMsgKey parentKey, PRInt32 flags, 
+NS_IMETHODIMP nsMsgDatabase::NotifyHdrAddedAll(nsIMsgDBHdr *aHdrAdded, nsMsgKey parentKey, PRInt32 flags, 
 	nsIDBChangeListener *instigator)
 {
 #ifdef DEBUG_bienvenu1
@@ -660,7 +660,7 @@ NS_IMETHODIMP nsMsgDatabase::NotifyKeyAddedAll(nsMsgKey keyAdded, nsMsgKey paren
     nsCOMPtr<nsIDBChangeListener> changeListener;
     m_ChangeListeners->QueryElementAt(i, NS_GET_IID(nsIDBChangeListener), (void **) getter_AddRefs(changeListener));
 
-    nsresult rv = changeListener->OnKeyAdded(keyAdded, parentKey, flags, instigator); 
+    nsresult rv = changeListener->OnHdrAdded(aHdrAdded, parentKey, flags, instigator); 
     if (NS_FAILED(rv))
       return rv;
   }
@@ -1827,7 +1827,7 @@ NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMsgDBHdr *msg, nsIDBChangeListener 
   if (notify /* && NS_SUCCEEDED(ret)*/)
   {
     
-    NotifyKeyDeletedAll(key, threadParent, flags, instigator); // tell listeners
+    NotifyHdrDeletedAll(msg, threadParent, flags, instigator); // tell listeners
   }
   //	if (!onlyRemoveFromThread)	// to speed up expiration, try this. But really need to do this in RemoveHeaderFromDB
   nsresult ret = RemoveHeaderFromDB(msgHdr);
@@ -2016,7 +2016,7 @@ nsresult nsMsgDatabase::MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
   if (oldFlags == flags)
     return NS_OK;
   
-  return NotifyKeyChangeAll(key, oldFlags, flags, instigator);
+  return NotifyHdrChangeAll(msgHdr, oldFlags, flags, instigator);
 }
 
 NS_IMETHODIMP nsMsgDatabase::MarkRead(nsMsgKey key, PRBool bRead, 
@@ -2102,8 +2102,10 @@ nsMsgDatabase::MarkThreadIgnored(nsIMsgThread *thread, nsMsgKey threadKey, PRBoo
     threadFlags &= ~MSG_FLAG_IGNORED;
   thread->SetFlags(threadFlags);
   
-  NotifyKeyChangeAll(threadKey, oldThreadFlags, threadFlags, instigator);
-  return NS_OK;
+  nsCOMPtr <nsIMsgDBHdr> msg;
+  nsresult rv = GetMsgHdrForKey(threadKey, getter_AddRefs(msg));
+
+  return NotifyHdrChangeAll(msg, oldThreadFlags, threadFlags, instigator);
 }
 
 NS_IMETHODIMP
@@ -2122,9 +2124,12 @@ nsMsgDatabase::MarkThreadWatched(nsIMsgThread *thread, nsMsgKey threadKey, PRBoo
   else
     threadFlags &= ~MSG_FLAG_WATCHED;
 
-  NotifyKeyChangeAll(threadKey, oldThreadFlags, threadFlags, instigator);
+  nsCOMPtr <nsIMsgDBHdr> msg;
+  GetMsgHdrForKey(threadKey, getter_AddRefs(msg));
+
+  nsresult rv  = NotifyHdrChangeAll(msg, oldThreadFlags, threadFlags, instigator);
   thread->SetFlags(threadFlags);
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgDatabase::MarkMarked(nsMsgKey key, PRBool mark,
@@ -2165,8 +2170,7 @@ NS_IMETHODIMP nsMsgDatabase::SetStringProperty(nsMsgKey aKey, const char *aPrope
   PRUint32 flags;
   (void)msgHdr->GetFlags(&flags);
   
-  NotifyKeyChangeAll(aKey, flags, flags, nsnull);
-  return rv;
+  return NotifyHdrChangeAll(msgHdr, flags, flags, nsnull);
 }
 
 NS_IMETHODIMP nsMsgDatabase::SetLabel(nsMsgKey key, nsMsgLabelValue label)
@@ -2262,13 +2266,11 @@ nsresult  nsMsgDatabase::SetKeyFlag(nsMsgKey key, PRBool set, PRUint32 flag,
   if (oldFlags == flags)
     return NS_OK;
 
-  NotifyKeyChangeAll(key, oldFlags, flags, instigator);
-  return rv;
+  return NotifyHdrChangeAll(msgHdr, oldFlags, flags, instigator);
 }
 
 nsresult nsMsgDatabase::SetMsgHdrFlag(nsIMsgDBHdr *msgHdr, PRBool set, PRUint32 flag, nsIDBChangeListener *instigator)
 {
-  nsresult rv;
   PRUint32 oldFlags;
   msgHdr->GetFlags(&oldFlags);
 
@@ -2280,12 +2282,7 @@ nsresult nsMsgDatabase::SetMsgHdrFlag(nsIMsgDBHdr *msgHdr, PRBool set, PRUint32 
   if (oldFlags == flags)
     return NS_OK;
 
-  PRUint32 key;
-  rv = msgHdr->GetMessageKey(&key);
-    
-  if(NS_SUCCEEDED(rv))
-    NotifyKeyChangeAll(key, oldFlags, flags, instigator);
-	return rv;
+  return NotifyHdrChangeAll(msgHdr, oldFlags, flags, instigator);
 }
 
 // Helper routine - lowest level of flag setting - returns PR_TRUE if flags change,
@@ -2477,13 +2474,11 @@ NS_IMETHODIMP nsMsgDatabase::ClearNewList(PRBool notify /* = FALSE */)
       err = GetMsgHdrForKey(lastNewKey, getter_AddRefs(msgHdr));
       if (NS_SUCCEEDED(err))
       {
-        nsMsgKey key;
-        (void)msgHdr->GetMessageKey(&key);
         PRUint32 flags;
         (void)msgHdr->GetFlags(&flags);
         
         if ((flags | MSG_FLAG_NEW) != flags)
-          NotifyKeyChangeAll(key, flags | MSG_FLAG_NEW, flags, nsnull);
+          NotifyHdrChangeAll(msgHdr, flags | MSG_FLAG_NEW, flags, nsnull);
       }
       if (elementIndex == 0)
         break;
@@ -2977,7 +2972,7 @@ NS_IMETHODIMP nsMsgDatabase::AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify)
       nsMsgKey threadParent;
       
       newHdr->GetThreadParent(&threadParent);
-      NotifyKeyAddedAll(key, threadParent, flags, NULL);
+      NotifyHdrAddedAll(newHdr, threadParent, flags, NULL);
     }
   }
   NS_ASSERTION(NS_SUCCEEDED(err), "error creating thread");

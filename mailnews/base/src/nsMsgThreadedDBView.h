@@ -62,7 +62,7 @@ public:
 protected:
   virtual const char * GetViewName(void) {return "ThreadedDBView"; }
   nsresult InitThreadedView(PRInt32 *pCount);
-  virtual nsresult OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, PRBool ensureListed);
+  virtual nsresult OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey aParentKey, PRBool ensureListed);
   virtual nsresult AddMsgToThreadNotInView(nsIMsgThread *threadHdr, nsIMsgDBHdr *msgHdr, PRBool ensureListed);
   nsresult ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnly, nsMsgKey *pOutput, PRInt32 *pFlags, char *pLevels, 
                         PRInt32 numToList, PRInt32 *pNumListed, PRInt32 *pTotalHeaders);

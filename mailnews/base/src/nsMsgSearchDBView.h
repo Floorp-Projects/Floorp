@@ -64,7 +64,7 @@ public:
   // override to get location
   NS_IMETHOD GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsAString& aValue);
   virtual nsresult GetMsgHdrForViewIndex(nsMsgViewIndex index, nsIMsgDBHdr **msgHdr);
-  virtual nsresult OnNewHeader(nsMsgKey newKey, nsMsgKey parentKey, PRBool ensureListed);
+  virtual nsresult OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey parentKey, PRBool ensureListed);
   NS_IMETHOD GetFolderForViewIndex(nsMsgViewIndex index, nsIMsgFolder **folder);
 
   virtual nsresult GetFolders(nsISupportsArray **aFolders);
@@ -76,8 +76,9 @@ protected:
   virtual nsresult RemoveByIndex(nsMsgViewIndex index);
   virtual nsresult CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices, PRBool isMove, nsIMsgFolder *destFolder);
   virtual nsresult DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices, PRBool deleteStorage);
-  nsresult InitializeGlobalsForDeleteAndFile(nsMsgViewIndex *indices, PRInt32 numIndices);
+  nsresult GetFoldersAndHdrsForSelection(nsMsgViewIndex *indices, PRInt32 numIndices);
   nsresult GroupSearchResultsByFolder();
+  nsresult PartitionSelectionByFolder(nsMsgViewIndex *indices, PRInt32 numIndices, nsUInt32Array **indexArrays, PRInt32 *numArrays);
   
   nsCOMPtr <nsISupportsArray> m_folders; // maybe we should store ranges, or the actual headers instead.
   nsCOMPtr <nsISupportsArray> m_hdrsForEachFolder;

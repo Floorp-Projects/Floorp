@@ -39,19 +39,20 @@
 #include "MailNewsTypes2.idl"
 
 interface nsIDBChangeListener;
+interface nsIMsgDBHdr;
 
-[scriptable, uuid(2aa6733a-2b36-11d3-a51c-0060b0fc04b7)]
+[scriptable, uuid(22baf00b-939d-42c3-ac51-21d99dfa1f05)]
 
 interface nsIDBChangeAnnouncer  : nsISupports {
  /* these 2 calls return NS_OK on success, NS_COMFALSE on failure */
   void AddListener(in nsIDBChangeListener listener);
   void RemoveListener(in nsIDBChangeListener listener);
 
-  void NotifyKeyChangeAll(in nsMsgKey keyChanged, in unsigned long aOldFlags, in unsigned long aNewFlags, 
+  void NotifyHdrChangeAll(in nsIMsgDBHdr aHdrChanged, in unsigned long aOldFlags, in unsigned long aNewFlags, 
                                 in nsIDBChangeListener instigator);
-  void NotifyKeyAddedAll(in nsMsgKey keyAdded, in nsMsgKey parentKey, in long flags, 
+  void NotifyHdrAddedAll(in nsIMsgDBHdr aHdrAdded, in nsMsgKey parentKey, in long flags, 
                                in nsIDBChangeListener instigator);
-  void NotifyKeyDeletedAll(in nsMsgKey keyDeleted, in nsMsgKey parentKey, in long flags, 
+  void NotifyHdrDeletedAll(in nsIMsgDBHdr aHdrDeleted, in nsMsgKey parentKey, in long flags, 
                                  in nsIDBChangeListener instigator);
   void NotifyParentChangedAll(in nsMsgKey keyReparented, in nsMsgKey oldParent, in nsMsgKey newParent, in nsIDBChangeListener instigator); 
 

@@ -204,6 +204,7 @@ private:
   // handle virtual folders
   nsresult GetVirtualFoldersFile(nsCOMPtr<nsILocalFile>& file);
   nsresult LoadVirtualFolders();
+  nsresult WriteLineToOutputStream(const char *prefix, const char * line, nsIOutputStream *outputStream);
 
   static void getUniqueKey(const char* prefix,
                            nsHashtable *hashTable,

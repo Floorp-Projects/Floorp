@@ -552,18 +552,19 @@ nsresult nsMsgThreadedDBView::InitSort(nsMsgViewSortTypeValue sortType, nsMsgVie
   return NS_OK;
 }
 
-nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, PRBool ensureListed)
+nsresult nsMsgThreadedDBView::OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey aParentKey, PRBool ensureListed)
 {
-  nsresult	rv;
+  nsresult rv = NS_OK;
+  nsMsgKey newKey;
+  newHdr->GetMessageKey(&newKey);
+
   // views can override this behaviour, which is to append to view.
   // This is the mail behaviour, but threaded views want
   // to insert in order...
-  nsCOMPtr <nsIMsgDBHdr> msgHdr;
-  rv = m_db->GetMsgHdrForKey(newKey, getter_AddRefs(msgHdr));
-  if (NS_SUCCEEDED(rv) && msgHdr != nsnull)
+  if (newHdr)
   {
     PRUint32 msgFlags;
-    msgHdr->GetFlags(&msgFlags);
+    newHdr->GetFlags(&msgFlags);
     if ((m_viewFlags & nsMsgViewFlagsType::kUnreadOnly) && !ensureListed && (msgFlags & MSG_FLAG_READ))
       return NS_OK;
     // Currently, we only add the header in a threaded view if it's a thread.
@@ -572,7 +573,7 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
 
     // for search view we don't support threaded display so just add it to the view.   
     if (!(m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay)) // || msgHdr->GetMessageKey() == m_messageDB->GetKeyOfFirstMsgInThread(msgHdr->GetMessageKey()))
-      rv = AddHdr(msgHdr);
+      rv = AddHdr(newHdr);
     else	// need to find the thread we added this to so we can change the hasnew flag
       // added message to existing thread, but not to view
     {	// Fix flags on thread header.
@@ -585,13 +586,13 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
         PRUint32	flags = m_flags[threadIndex];
         // if we have a collapsed thread which just got a new
         // top of thread, change the keys array.
-        PRInt32 level = FindLevelInThread(msgHdr, threadIndex);
+        PRInt32 level = FindLevelInThread(newHdr, threadIndex);
         if (((flags & MSG_FLAG_ELIDED) || threadCount == 1)
           && (!(m_viewFlags & nsMsgViewFlagsType::kUnreadOnly) || !(msgFlags & MSG_FLAG_READ)))
         {
           if (level == 0) {
             nsMsgKey msgKey;
-            msgHdr->GetMessageKey(&msgKey);
+            newHdr->GetMessageKey(&msgKey);
             m_keys.SetAt(threadIndex, msgKey);
           }
           // note change, to update the parent thread's unread and total counts
@@ -609,7 +610,7 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
         {								// insert child into thread
           // levels of other hdrs may have changed!
           PRUint32	newFlags = msgFlags;
-          nsMsgViewIndex insertIndex = GetInsertInfoForNewHdr(msgHdr, threadIndex, level);
+          nsMsgViewIndex insertIndex = GetInsertInfoForNewHdr(newHdr, threadIndex, level);
           // this header is the new king! try collapsing the existing thread,
           // removing it, installing this header as king, and expanding it.
           if (level == 0)	
@@ -638,10 +639,10 @@ nsresult nsMsgThreadedDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, 
       else // adding msg to thread that's not in view.
       {
         nsCOMPtr <nsIMsgThread> threadHdr;
-        m_db->GetThreadContainingMsgHdr(msgHdr, getter_AddRefs(threadHdr));
+        m_db->GetThreadContainingMsgHdr(newHdr, getter_AddRefs(threadHdr));
         if (threadHdr)
         {
-          AddMsgToThreadNotInView(threadHdr, msgHdr, ensureListed);
+          AddMsgToThreadNotInView(threadHdr, newHdr, ensureListed);
         }
       }
     }

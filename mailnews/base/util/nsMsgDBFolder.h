@@ -131,7 +131,7 @@ protected:
   virtual nsresult GetDatabase(nsIMsgWindow *aMsgWindow) = 0;
   virtual nsresult SendFlagNotifications(nsISupports *item, PRUint32 oldFlags, PRUint32 newFlags);
   nsresult CheckWithNewMessagesStatus(PRBool messageAdded);
-  nsresult OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, PRBool added);
+  nsresult OnHdrAddedOrDeleted(nsIMsgDBHdr *hdrChanged, PRBool added);
   nsresult CreateFileSpecForDB(const char *userLeafName, nsFileSpec &baseDir, nsIFileSpec **dbFileSpec);
 
   nsresult GetFolderCacheKey(nsIFileSpec **aFileSpec);

@@ -114,6 +114,7 @@ CPPSRCS		= \
 		nsMsgSpecialViews.cpp \
 		nsMsgQuickSearchDBView.cpp \
 		nsMsgSearchDBView.cpp \
+		nsMsgXFVirtualFolderDBView.cpp \
 		nsMsgOfflineManager.cpp \
 		nsMsgProgress.cpp \
 		nsMessengerContentHandler.cpp \

@@ -39,15 +39,16 @@
 #include "MailNewsTypes2.idl"
 
 interface nsIDBChangeAnnouncer;
+interface nsIMsgDBHdr;
 
-[scriptable, uuid(ad0f7f90-baff-11d2-8d67-00805f8a6617)]
+[scriptable, uuid(1d409e71-3b4e-4611-9759-6335c7362f5c)]
 
 interface  nsIDBChangeListener : nsISupports {
-    void onKeyChange(in nsMsgKey aKeyChanged, in unsigned long aOldFlags, in unsigned long aNewFlags, 
+    void onHdrChange(in nsIMsgDBHdr aHdrChanged, in unsigned long aOldFlags, in unsigned long aNewFlags, 
                            in nsIDBChangeListener aInstigator);
-    void onKeyDeleted(in nsMsgKey aKeyChanged, in nsMsgKey aParentKey, in long aFlags, 
+    void onHdrDeleted(in nsIMsgDBHdr aHdrChanged, in nsMsgKey aParentKey, in long aFlags, 
                             in nsIDBChangeListener aInstigator);
-    void onKeyAdded(in nsMsgKey aKeyChanged, in nsMsgKey aParentKey, in long aFlags, 
+    void onHdrAdded(in nsIMsgDBHdr aHdrChanged, in nsMsgKey aParentKey, in long aFlags, 
                           in nsIDBChangeListener aInstigator);
 	void onParentChanged (in nsMsgKey aKeyChanged, in nsMsgKey oldParent, in nsMsgKey newParent, in nsIDBChangeListener aInstigator);
     void onAnnouncerGoingAway(in nsIDBChangeAnnouncer instigator);

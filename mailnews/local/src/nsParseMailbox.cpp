@@ -172,20 +172,17 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIRequest *request, nsISupports
 
 
 
-/* void OnKeyChange (in nsMsgKey aKeyChanged, in unsigned long aOldFlags, in unsigned long aNewFlags, in nsIDBChangeListener aInstigator); */
-NS_IMETHODIMP nsMsgMailboxParser::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, nsIDBChangeListener *aInstigator)
+NS_IMETHODIMP nsMsgMailboxParser::OnHdrChange(nsIMsgDBHdr *aHdrChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, nsIDBChangeListener *aInstigator)
 {
     return NS_OK;
 }
 
-/* void OnKeyDeleted (in nsMsgKey aKeyChanged, in nsMsgKey aParentKey, in long aFlags, in nsIDBChangeListener aInstigator); */
-NS_IMETHODIMP nsMsgMailboxParser::OnKeyDeleted(nsMsgKey aKeyChanged, nsMsgKey aParentKey, PRInt32 aFlags, nsIDBChangeListener *aInstigator)
+NS_IMETHODIMP nsMsgMailboxParser::OnHdrDeleted(nsIMsgDBHdr *aHdrChanged, nsMsgKey aParentKey, PRInt32 aFlags, nsIDBChangeListener *aInstigator)
 {
     return NS_OK;
 }
 
-/* void OnKeyAdded (in nsMsgKey aKeyChanged, in nsMsgKey aParentKey, in long aFlags, in nsIDBChangeListener aInstigator); */
-NS_IMETHODIMP nsMsgMailboxParser::OnKeyAdded(nsMsgKey aKeyChanged, nsMsgKey aParentKey, PRInt32 aFlags, nsIDBChangeListener *aInstigator)
+NS_IMETHODIMP nsMsgMailboxParser::OnHdrAdded(nsIMsgDBHdr *aHdrAdded, nsMsgKey aParentKey, PRInt32 aFlags, nsIDBChangeListener *aInstigator)
 {
     return NS_OK;
 }

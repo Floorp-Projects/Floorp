@@ -93,7 +93,7 @@
 #include "nsMsgFolderCompactor.h"
 #include "nsMsgThreadedDBView.h"
 #include "nsMsgSpecialViews.h"
-#include "nsMsgSearchDBView.h"
+#include "nsMsgXFVirtualFolderDBView.h"
 #include "nsMsgQuickSearchDBView.h"
 #include "nsMsgOfflineManager.h"
 #include "nsMsgProgress.h"
@@ -316,6 +316,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgThreadedDBView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgThreadsWithUnreadDBView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgWatchedThreadsWithUnreadDBView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSearchDBView)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgXFVirtualFolderDBView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuickSearchDBView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgOfflineManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgProgress)
@@ -733,6 +734,10 @@ static const nsModuleComponentInfo gComponents[] = {
     { "quick search db view", NS_MSGQUICKSEARCHDBVIEW_CID,
       NS_MSGQUICKSEARCHDBVIEW_CONTRACTID,
       nsMsgQuickSearchDBViewConstructor,
+    },
+    { "cross folder virtual folder db view", NS_MSG_XFVFDBVIEW_CID,
+       NS_MSGXFVFDBVIEW_CONTRACTID,
+       nsMsgXFVirtualFolderDBViewConstructor,
     },
     { "Messenger Offline Manager", NS_MSGOFFLINEMANAGER_CID,
       NS_MSGOFFLINEMANAGER_CONTRACTID,

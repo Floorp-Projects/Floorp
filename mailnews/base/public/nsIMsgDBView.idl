@@ -65,6 +65,7 @@ interface nsMsgViewType {
     const nsMsgViewTypeValue eShowThreadsWithUnread = 2;
     const nsMsgViewTypeValue eShowWatchedThreadsWithUnread = 3;
     const nsMsgViewTypeValue eShowQuickSearchResults = 4;
+    const nsMsgViewtypeValue eShowVirtualFolderResults = 5;
 };
 
 [scriptable, uuid(64852276-1dd2-11b2-8103-afe12002c053)]
@@ -266,7 +267,7 @@ interface nsIMsgDBView : nsISupports
     readonly attribute nsMsgViewSortTypeValue sortType;
     readonly attribute nsMsgViewSortOrderValue sortOrder;
     readonly attribute nsMsgKey keyForFirstSelectedMessage;
-
+    readonly attribute nsMsgViewIndex viewIndexForFirstSelectedMsg;
     /**
      * this method will automatically expand the destination thread, 
      * if needs be. 
@@ -290,6 +291,7 @@ interface nsIMsgDBView : nsISupports
     readonly attribute string URIForFirstSelectedMessage;
     readonly attribute nsIMsgDBHdr hdrForFirstSelectedMessage;
     void loadMessageByMsgKey(in nsMsgKey aMsgKey);
+    void loadMessageByViewIndex(in nsMsgViewIndex aIndex);
     void loadMessageByUrl(in string aUrl);
     void reloadMessage();
     void reloadMessageWithAllParts();

@@ -72,6 +72,7 @@ NS_IMETHODIMP nsMsgSearchDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeVal
 
     if (pCount)
       *pCount = 0;
+    m_folder = nsnull;
     return rv;
 }
 
@@ -112,7 +113,7 @@ nsresult nsMsgSearchDBView::FetchLocation(PRInt32 aRow, PRUnichar ** aLocationSt
   return NS_OK;
 }
 
-nsresult nsMsgSearchDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, PRBool /*ensureListed*/)
+nsresult nsMsgSearchDBView::OnNewHeader(nsIMsgDBHdr *newHdr, nsMsgKey aParentKey, PRBool /*ensureListed*/)
 {
    return NS_OK;
 }
@@ -239,8 +240,32 @@ nsMsgSearchDBView::DoCommandWithFolder(nsMsgViewCommandTypeValue command, nsIMsg
 
 NS_IMETHODIMP nsMsgSearchDBView::DoCommand(nsMsgViewCommandTypeValue command)
 {
-    mCommand = command;
+  mCommand = command;
+  if (command == nsMsgViewCommandType::deleteMsg || command == nsMsgViewCommandType::deleteNoTrash
+    || command == nsMsgViewCommandType::selectAll)
     return nsMsgDBView::DoCommand(command);
+  nsresult rv = NS_OK;
+  nsUInt32Array selection;
+  GetSelectedIndices(&selection);
+
+  nsMsgViewIndex *indices = selection.GetData();
+  PRInt32 numIndices = selection.GetSize();
+
+  // we need to break apart the selection by folders, and then call
+  // ApplyCommandToIndices with the command and the indices in the
+  // selection that are from that folder.
+
+  nsUInt32Array *indexArrays;
+  PRInt32 numArrays;
+  rv = PartitionSelectionByFolder(indices, numIndices, &indexArrays, &numArrays);
+  NS_ENSURE_SUCCESS(rv, rv);
+  for (PRInt32 folderIndex = 0; folderIndex < numArrays; folderIndex++)
+  {
+    rv = ApplyCommandToIndices(command, indexArrays[folderIndex].GetData(), indexArrays[folderIndex].GetSize());
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return rv;
 }
 
 // This method just removes the specified line from the view. It does
@@ -258,7 +283,7 @@ nsresult nsMsgSearchDBView::RemoveByIndex(nsMsgViewIndex index)
 nsresult nsMsgSearchDBView::DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices, PRBool deleteStorage)
 {
     nsresult rv;
-    InitializeGlobalsForDeleteAndFile(indices, numIndices);
+    GetFoldersAndHdrsForSelection(indices, numIndices);
     if (mDeleteModel != nsMsgImapDeleteModels::MoveToTrash)
       deleteStorage = PR_TRUE;
     if (!deleteStorage)
@@ -272,7 +297,7 @@ nsresult
 nsMsgSearchDBView::CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices, PRBool isMove, nsIMsgFolder *destFolder)
 {
     nsresult rv;
-    InitializeGlobalsForDeleteAndFile(indices, numIndices);
+    GetFoldersAndHdrsForSelection(indices, numIndices);
 
     rv = ProcessRequestsInOneFolder(window);
 
@@ -280,7 +305,43 @@ nsMsgSearchDBView::CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, P
 }
 
 nsresult
-nsMsgSearchDBView::InitializeGlobalsForDeleteAndFile(nsMsgViewIndex *indices, PRInt32 numIndices)
+nsMsgSearchDBView::PartitionSelectionByFolder(nsMsgViewIndex *indices, PRInt32 numIndices, nsUInt32Array **indexArrays, PRInt32 *numArrays)
+{
+  nsresult rv = NS_OK; 
+  nsCOMPtr <nsISupportsArray> uniqueFoldersSelected = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
+  mCurIndex = 0;
+
+  //Build unique folder list based on headers selected by the user
+  for (nsMsgViewIndex i = 0; i < (nsMsgViewIndex) numIndices; i++)
+  {
+     nsCOMPtr <nsISupports> curSupports = getter_AddRefs(m_folders->ElementAt(indices[i]));
+     if ( uniqueFoldersSelected->IndexOf(curSupports) < 0)
+       uniqueFoldersSelected->AppendElement(curSupports); 
+  }
+
+  PRUint32 numFolders =0; 
+  rv = uniqueFoldersSelected->Count(&numFolders);   //group the headers selected by each folder 
+  *indexArrays = new nsUInt32Array[numFolders];
+  *numArrays = numFolders;
+  NS_ENSURE_TRUE(*indexArrays, NS_ERROR_OUT_OF_MEMORY);
+  for (PRUint32 folderIndex=0; folderIndex < numFolders; folderIndex++)
+  {
+     nsCOMPtr <nsIMsgFolder> curFolder =
+         do_QueryElementAt(uniqueFoldersSelected, folderIndex, &rv);
+     for (nsMsgViewIndex i = 0; i < (nsMsgViewIndex) numIndices; i++) 
+     {
+       nsCOMPtr <nsIMsgFolder> msgFolder = do_QueryElementAt(m_folders,
+                                                             indices[i], &rv);
+       if (NS_SUCCEEDED(rv) && msgFolder && msgFolder == curFolder) 
+          (*indexArrays)[folderIndex].Add(indices[i]);
+     }
+  }
+  return rv;
+
+}
+
+nsresult
+nsMsgSearchDBView::GetFoldersAndHdrsForSelection(nsMsgViewIndex *indices, PRInt32 numIndices)
 {
   nsresult rv = NS_OK; 
   mCurIndex = 0;

@@ -788,15 +788,13 @@ nsMsgDBFolder::OnJunkScoreChanged(nsIDBChangeListener * aInstigator)
 
 
 // 1.  When the status of a message changes.
-NS_IMETHODIMP nsMsgDBFolder::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
+NS_IMETHODIMP nsMsgDBFolder::OnHdrChange(nsIMsgDBHdr *aHdrChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, 
                                          nsIDBChangeListener * aInstigator)
 {
-  nsCOMPtr<nsIMsgDBHdr> pMsgDBHdr;
-  nsresult rv = mDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(pMsgDBHdr));
-  if(NS_SUCCEEDED(rv) && pMsgDBHdr)
+  if(aHdrChanged)
   {
-    nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(pMsgDBHdr, &rv));
-    if(NS_SUCCEEDED(rv))
+    nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(aHdrChanged));
+    if(msgSupports)
       SendFlagNotifications(msgSupports, aOldFlags, aNewFlags);
     UpdateSummaryTotals(PR_TRUE);
   }
@@ -839,7 +837,7 @@ nsresult nsMsgDBFolder::CheckWithNewMessagesStatus(PRBool messageAdded)
 
 // 3.  When a message gets deleted, we need to see if it was new
 //     When we lose a new message we need to check if there are still new messages 
-NS_IMETHODIMP nsMsgDBFolder::OnKeyDeleted(nsMsgKey aKeyChanged, nsMsgKey  aParentKey, PRInt32 aFlags, 
+NS_IMETHODIMP nsMsgDBFolder::OnHdrDeleted(nsIMsgDBHdr *aHdrChanged, nsMsgKey  aParentKey, PRInt32 aFlags, 
                           nsIDBChangeListener * aInstigator)
 {
     // check to see if a new message is being deleted
@@ -847,31 +845,26 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyDeleted(nsMsgKey aKeyChanged, nsMsgKey  aParen
     // the folder newness has to be cleared.
     CheckWithNewMessagesStatus(PR_FALSE);
 
-    return OnKeyAddedOrDeleted(aKeyChanged, PR_FALSE);
+    return OnHdrAddedOrDeleted(aHdrChanged, PR_FALSE);
 }
 
 // 2.  When a new messages gets added, we need to see if it's new.
-NS_IMETHODIMP nsMsgDBFolder::OnKeyAdded(nsMsgKey aKeyChanged, nsMsgKey  aParentKey , PRInt32 aFlags, 
+NS_IMETHODIMP nsMsgDBFolder::OnHdrAdded(nsIMsgDBHdr *aHdrChanged, nsMsgKey  aParentKey , PRInt32 aFlags, 
                         nsIDBChangeListener * aInstigator)
 {
   if(aFlags & MSG_FLAG_NEW) 
     CheckWithNewMessagesStatus(PR_TRUE);
   
-  return OnKeyAddedOrDeleted(aKeyChanged, PR_TRUE);
+  return OnHdrAddedOrDeleted(aHdrChanged, PR_TRUE);
 }
 
-nsresult nsMsgDBFolder::OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, PRBool added)
+nsresult nsMsgDBFolder::OnHdrAddedOrDeleted(nsIMsgDBHdr *aHdrChanged, PRBool added)
 {
-  nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
-  nsresult rv = mDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(msgDBHdr));
-  if(NS_SUCCEEDED(rv) && msgDBHdr)
-  {
-    if(added)
-      NotifyItemAdded(msgDBHdr);
-    else
-      NotifyItemRemoved(msgDBHdr);
-    UpdateSummaryTotals(PR_TRUE);
-  }
+  if(added)
+    NotifyItemAdded(aHdrChanged);
+  else
+    NotifyItemRemoved(aHdrChanged);
+  UpdateSummaryTotals(PR_TRUE);
   return NS_OK;
   
 }
@@ -880,13 +873,18 @@ nsresult nsMsgDBFolder::OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, PRBool added)
 NS_IMETHODIMP nsMsgDBFolder::OnParentChanged(nsMsgKey aKeyChanged, nsMsgKey oldParent, nsMsgKey newParent, 
             nsIDBChangeListener * aInstigator)
 {
+  nsCOMPtr<nsIMsgDBHdr> hdrChanged;
+  mDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(hdrChanged));
   //In reality we probably want to just change the parent because otherwise we will lose things like
   //selection.
 
-  //First delete the child from the old threadParent
-  OnKeyAddedOrDeleted(aKeyChanged, PR_FALSE);
-  //Then add it to the new threadParent
-  OnKeyAddedOrDeleted(aKeyChanged, PR_TRUE);
+  if (hdrChanged)
+  {
+    //First delete the child from the old threadParent
+    OnHdrAddedOrDeleted(hdrChanged, PR_FALSE);
+    //Then add it to the new threadParent
+    OnHdrAddedOrDeleted(hdrChanged, PR_TRUE);
+  }
   return NS_OK;
 }
 
