@@ -30,10 +30,8 @@
 #include "nsIScrollableView.h"
 #include "nsLayoutAtoms.h"
 #include "nsIDrawingSurface.h"
-
-#ifdef DCDEBUG
 #include "nsTransform2D.h"
-#endif
+#include "nsIDeviceContext.h"
 
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
@@ -58,7 +56,7 @@ enum ePathTypes{
 };
 
 static void GetPath(nsPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,PRInt32 &aC1Index,float aFrac=0);
-static void TileImage(nsIRenderingContext& aRC,nsDrawingSurface  aDS,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight,PRInt32 aFlag);
+static void TileImage(nsIRenderingContext& aRC,nsDrawingSurface  aDS,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight);
 
 
 // Draw a line, skipping that portion which crosses aGap. aGap defines a rectangle gap
@@ -2088,80 +2086,101 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       }
     }
 
+#define DOTILE
 #ifdef DOTILE
-    nsIDrawingSurface  *theSurface,*ts;
-    nsRect              srcRect,destRect;
-    PRUint32            x,y;
-    PRInt32             flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_XFORM_SOURCE_VALUES;
+    nsIDrawingSurface  *theSurface,*ts=nsnull;
+    nsRect              srcRect,destRect,vrect,tvrect;
+    nscoord             x,y;
+    PRInt32             flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES;
     PRUint32            dsFlag = 0;
+    float               t2p,xscale,yscale,app2dev;
+    PRBool              clip;
+    nsTransform2D       *theTransform;
+    nsIDeviceContext    *theDevContext;
 
 
     aRenderingContext.GetDrawingSurface((void**)&theSurface);
-    theSurface->GetDimensions(&x,&y);
-    srcRect.SetRect(0,0,x,y);
-    //ts = newSurface;
-    aRenderingContext.CreateDrawingSurface(&srcRect,dsFlag,(nsDrawingSurface&)ts);
-    aRenderingContext.SelectOffScreenDrawingSurface(ts);
+    aPresContext.GetVisibleArea(srcRect);
+    tvrect.SetRect(0,0,x1-x0,y1-y0);
+    aPresContext.GetTwipsToPixels(&t2p);
 
+    if ((tileWidth<(tvrect.width/16)) || (tileHeight<(tvrect.height/16))) {
+      //tvrect.width /=4;
+      //tvrect.height /=4;
 
-    // create a bigger tile in our new drawingsurface
-    // XXX pushing state to fix clipping problem, need to look into why the clip is set here
-    srcRect.x = x0;
-    srcRect.y = y0;
-    srcRect.width = tileWidth;
-    srcRect.height = tileHeight;
-    aRenderingContext.PushState();
-    PRBool  clip;
-    aRenderingContext.SetClipRect(aBorderArea, nsClipCombine_kReplace, clip);
+      tvrect.width = ((tvrect.width)/tileWidth);  //total x number of tiles
+      tvrect.width *=tileWidth;
 
-    // copy the initial image to our buffer
-    aRenderingContext.DrawImage(image,srcRect.x,srcRect.y,tileWidth,tileHeight);
-    //if(anchor.x<0) {
-    if(x0<dirtyRect.x) {
-      aRenderingContext.DrawImage(image,x0+tileWidth,y0,tileWidth,tileHeight);
-      srcRect.x =dirtyRect.x;
-    }
-    //if(anchor.y<0) {
-    if(y0<dirtyRect.y) {
-      aRenderingContext.DrawImage(image,x0,y0+tileHeight,tileWidth,tileHeight);
-      srcRect.y = dirtyRect.y;
-      if(x0<dirtyRect.x) {
-        aRenderingContext.DrawImage(image,x0+tileWidth,y0+tileHeight,tileWidth,tileHeight);
-      }
+      tvrect.height = ((tvrect.height)/tileHeight); //total y number of tiles
+      tvrect.height *=tileHeight;
+
+      // create a new drawing surface... using pixels as the size
+      vrect.height = tvrect.height * t2p;
+      vrect.width = tvrect.width * t2p;
+      aRenderingContext.CreateDrawingSurface(&vrect,dsFlag,(nsDrawingSurface&)ts);
     }
 
+    // did we need to create an offscreen drawing surface because the image was so small
+    if( nsnull != ts) {
+      aRenderingContext.SelectOffScreenDrawingSurface(ts);
 
-    //aRenderingContext.GetDrawingSurface(&theSurface);
-    TileImage(aRenderingContext,ts,srcRect,x1-x0,y1-y0,flag);
+      // create a bigger tile in our new drawingsurface                    
+      // XXX pushing state to fix clipping problem, need to look into why the clip is set here
+      aRenderingContext.PushState();
+      aRenderingContext.GetCurrentTransform(theTransform);
+      aRenderingContext.GetDeviceContext(theDevContext);
+      theDevContext->GetAppUnitsToDevUnits(app2dev);
+      theTransform->SetToIdentity();  
+	    theTransform->AddScale(app2dev, app2dev);
 
-    // setting back the clip from the background clip push
-    aRenderingContext.PopState(clip);
+      aRenderingContext.SetClipRect(srcRect, nsClipCombine_kReplace, clip);
+
+      // copy the initial image to our buffer, this takes twips and converts to pixels.. 
+      // which is what the image is in
+      aRenderingContext.DrawImage(image,0,0,tileWidth,tileHeight);
+
+      // duplicate the image in the upperleft corner to fill up the nsDrawingSurface
+      srcRect.SetRect(0,0,tileWidth,tileHeight);
+      TileImage(aRenderingContext,ts,srcRect,tvrect.width,tvrect.height);
+
+      // setting back the clip from the background clip push
+      aRenderingContext.PopState(clip);
     
-    // set back to the old drawingsurface
-    aRenderingContext.SelectOffScreenDrawingSurface((void**)theSurface);
+      // set back to the old drawingsurface
+      aRenderingContext.SelectOffScreenDrawingSurface((void**)theSurface);
 
+     // now duplicate our tile into the background
+      destRect = srcRect;
+      for(y=y0;y<y1;y+=tvrect.height){
+        for(x=x0;x<x1;x+=tvrect.width){
+          destRect.x = x;
+          destRect.y = y;
+          aRenderingContext.CopyOffScreenBits(ts,0,0,destRect,flag);
+        }
+      } 
 
-   // use the tile to fill in the rest of the image
-    destRect = srcRect;
-
-    for(y=srcRect.y;y<(PRUint32)y1;y+=srcRect.height){
-      for(x=srcRect.x;x<(PRUint32)x1;x+=srcRect.width){
-        destRect.x = x;
-        destRect.y = y;
-        aRenderingContext.CopyOffScreenBits(ts,srcRect.x,srcRect.y,destRect,flag);
+      aRenderingContext.DestroyDrawingSurface(ts);
+    } else {
+      // slow blitting, one tile at a time....
+      nscoord x,y;
+      for(y=y0;y<y1;y+=tileHeight){
+        for(x=x0;x<x1;x+=tileWidth){
+          aRenderingContext.DrawImage(image,x,y,tileWidth,tileHeight);
+        }
       }
-    } 
-
-    aRenderingContext.DestroyDrawingSurface(ts);
+    }
 
 #endif
 
+//#define NOTNOW
+#ifdef NOTNOW
     nscoord x,y;
     for(y=y0;y<y1;y+=tileHeight){
       for(x=x0;x<x1;x+=tileWidth){
         aRenderingContext.DrawImage(image,x,y,tileWidth,tileHeight);
       }
     }
+#endif
 
     // Restore clipping
     aRenderingContext.PopState(clipState);
@@ -2202,29 +2221,31 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
  *	@update 4/13/99 dwc
  *  @param aRC -- Rendering Context to render to
  *  @param aDS -- Target drawing surface for the rendering context
- *  @param aWidth -- width of the tile
+ *  @param aSrcRect -- Rectangle we are build with the image
  *  @param aHeight -- height of the tile
- *  @param aWidth -- flags for the rendering context to use
+ *  @param aWidth -- width of the tile
  */
 static void
-TileImage(nsIRenderingContext& aRC,nsDrawingSurface  aDS,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight,PRInt32 aFlag)
+TileImage(nsIRenderingContext& aRC,nsDrawingSurface  aDS,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight)
 {
 nsRect  destRect;
+PRInt32 flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES | NS_COPYBITS_XFORM_SOURCE_VALUES;
+PRInt32 flag1 = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES;
   
-  if( ((aSrcRect.width)<<1) < (aWidth)) {
+  if( aSrcRect.width < aWidth) {
     // width is less than double so double our source bitmap width
     destRect = aSrcRect;
     destRect.x += aSrcRect.width;
-    aRC.CopyOffScreenBits(aDS,aSrcRect.x,aSrcRect.y,destRect,aFlag);
+    aRC.CopyOffScreenBits(aDS,aSrcRect.x,aSrcRect.y,destRect,flag1);
     aSrcRect.width*=2; 
-    TileImage(aRC,aDS,aSrcRect,aWidth,aHeight,aFlag);
-  } else if (((aSrcRect.height)<<1) < (aHeight)) {
+    TileImage(aRC,aDS,aSrcRect,aWidth,aHeight);
+  } else if (aSrcRect.height < aHeight) {
     // height is less than double so double our source bitmap height
     destRect = aSrcRect;
     destRect.y += aSrcRect.height;
-    aRC.CopyOffScreenBits(aDS,aSrcRect.x,aSrcRect.y,destRect,aFlag);
+    aRC.CopyOffScreenBits(aDS,aSrcRect.x,aSrcRect.y,destRect,flag1);
     aSrcRect.height*=2;
-    TileImage(aRC,aDS,aSrcRect,aWidth,aHeight,aFlag);
+    TileImage(aRC,aDS,aSrcRect,aWidth,aHeight);
   } 
 }
 
