@@ -1614,6 +1614,9 @@ if test ! "$GNU_CXX"; then
 	    AC_CHECK_LIB(C, demangle)
 	fi
 	;;
+    *-aix*)
+	AC_CHECK_LIB(C_r, demangle)
+	;;
      *)
 	AC_CHECK_LIB(C, demangle)
 	;;
