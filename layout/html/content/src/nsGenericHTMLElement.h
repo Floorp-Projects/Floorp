@@ -419,7 +419,7 @@ public:
   nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify);
   nsresult RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 
-  nsVoidArray mChildren;
+  nsCheapVoidArray mChildren;
 };
 
 //----------------------------------------------------------------------

@@ -141,6 +141,211 @@ nsChildContentList::DropReference()
 
 //----------------------------------------------------------------------
 
+nsCheapVoidArray::nsCheapVoidArray()
+{
+  mChildren = nsnull;
+}
+
+nsCheapVoidArray::~nsCheapVoidArray()
+{
+  if (!HasSingleChild()) {
+    nsVoidArray* vector = GetChildVector();
+    if (vector) {
+      delete vector;
+    }
+  }
+}
+
+PRInt32 
+nsCheapVoidArray::Count() const 
+{
+  if (HasSingleChild()) {
+    return 1;
+  }
+  else {
+    nsVoidArray* vector = GetChildVector();
+    if (vector) {
+      return vector->Count();
+    }
+    }
+  
+  return 0;
+}
+
+void* 
+nsCheapVoidArray::ElementAt(PRInt32 aIndex) const 
+{
+  if (HasSingleChild()) {
+    if (0 == aIndex) {
+      return (void*)GetSingleChild();
+    }
+  }
+  else {
+    nsVoidArray* vector = GetChildVector();
+    if (vector) {
+      return vector->ElementAt(aIndex);
+    }
+  }
+  
+  return nsnull;
+}
+
+PRInt32 
+nsCheapVoidArray::IndexOf(void* aPossibleElement) const 
+{
+  if (HasSingleChild()) {
+    if (aPossibleElement == (void*)GetSingleChild()) {
+      return 0;
+    }
+  }
+  else {
+    nsVoidArray* vector = GetChildVector();
+    if (vector) {
+      return vector->IndexOf(aPossibleElement);
+    }
+  }
+  
+  return -1;
+}
+   
+PRBool 
+nsCheapVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex) 
+{
+  nsVoidArray* vector;
+  if (HasSingleChild()) {
+    vector = SwitchToVector();
+  }
+  else {
+    vector = GetChildVector();
+    if (!vector) {
+      if (0 == aIndex) {
+        SetSingleChild(aElement);
+        return PR_TRUE;
+      }
+      else {
+        return PR_FALSE;
+      }
+    }
+  }
+    
+  return vector->InsertElementAt(aElement, aIndex);
+}
+
+PRBool 
+nsCheapVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex) 
+{
+  if (HasSingleChild()) {
+    if (aIndex == 0) {
+      SetSingleChild(aElement);
+      return PR_TRUE;
+    }
+    else {
+      return PR_FALSE;
+    }
+  }
+  else {
+    nsVoidArray* vector = GetChildVector();
+    if (vector) {
+      return vector->ReplaceElementAt(aElement, aIndex);
+    }
+    else {
+      return PR_FALSE;
+    }
+  }
+}
+
+PRBool 
+nsCheapVoidArray::AppendElement(void* aElement) 
+{
+  nsVoidArray* vector;
+  if (HasSingleChild()) {
+    vector = SwitchToVector();
+  }
+  else {
+    vector = GetChildVector();
+    if (!vector) {
+      SetSingleChild(aElement);
+      return PR_TRUE;
+    }
+  }
+  
+  return vector->AppendElement(aElement);
+}
+
+PRBool 
+nsCheapVoidArray::RemoveElement(void* aElement) 
+{
+  if (HasSingleChild()) {
+    if (aElement == GetSingleChild()) {
+      SetSingleChild(nsnull);
+      return PR_TRUE;
+    }
+  }
+  else {
+    nsVoidArray* vector = GetChildVector();
+    if (vector) {
+      return vector->RemoveElement(aElement);
+    }
+  }
+  
+  return PR_FALSE;
+}
+
+PRBool 
+nsCheapVoidArray::RemoveElementAt(PRInt32 aIndex) 
+{
+  if (HasSingleChild()) {
+    if (0 == aIndex) {
+      SetSingleChild(nsnull);
+      return PR_TRUE;
+    }
+  }
+  else {
+    nsVoidArray* vector = GetChildVector();
+    if (vector) {
+      return vector->RemoveElementAt(aIndex);
+    }
+  }
+  
+  return PR_FALSE;
+}
+
+void 
+nsCheapVoidArray::Compact() 
+{
+  if (!HasSingleChild()) {
+    nsVoidArray* vector = GetChildVector();
+    if (vector) {
+      vector->Compact();
+    }
+  }
+}
+
+void
+nsCheapVoidArray::SetSingleChild(void* aChild)
+{ 
+  if (aChild) 
+    mChildren = (void*)(PtrBits(aChild) | 0x1);
+  else 
+    mChildren = nsnull;
+}
+
+nsVoidArray* 
+nsCheapVoidArray::SwitchToVector()
+{
+  void* child = GetSingleChild();
+  
+  mChildren = (void*)new nsVoidArray();
+  nsVoidArray* vector = GetChildVector();
+  if (vector && child) {
+    vector->AppendElement(child);
+  }
+
+  return vector;
+}
+
+//----------------------------------------------------------------------
+
 // XXX Currently, the script object factory is global. The way we
 // obtain it should, at least, be made thread-safe later. Ideally,
 // we'd find a better way.
