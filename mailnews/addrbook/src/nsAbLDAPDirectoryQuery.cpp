@@ -64,7 +64,6 @@ public:
 
     nsAbQueryLDAPMessageListener (
         nsAbLDAPDirectoryQuery* directoryQuery,
-        PRInt32 contextID,
         nsILDAPURL* url,
         nsILDAPConnection* connection,
         nsIAbDirectoryQueryArguments* queryArguments,
@@ -87,6 +86,8 @@ protected:
     friend class nsAbLDAPDirectoryQuery;
     nsresult Cancel ();
     nsresult Initiate ();
+    nsresult DoSearch();
+
 
 protected:
     nsAbLDAPDirectoryQuery* mDirectoryQuery;
@@ -102,6 +103,7 @@ protected:
     PRBool mFinished;
     PRBool mInitialized;
     PRBool mCanceled;
+    PRBool mWaitingForPrevQueryToFinish;
 
     nsCOMPtr<nsILDAPOperation> mSearchOperation;
 
@@ -113,7 +115,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbQueryLDAPMessageListener, nsILDAPMessageListen
 
 nsAbQueryLDAPMessageListener::nsAbQueryLDAPMessageListener (
         nsAbLDAPDirectoryQuery* directoryQuery,
-        PRInt32 contextID,
         nsILDAPURL* url,
         nsILDAPConnection* connection,
         nsIAbDirectoryQueryArguments* queryArguments,
@@ -121,7 +122,6 @@ nsAbQueryLDAPMessageListener::nsAbQueryLDAPMessageListener (
         PRInt32 resultLimit,
         PRInt32 timeOut) :
     mDirectoryQuery (directoryQuery),
-    mContextID (contextID),
     mUrl (url),
     mConnection (connection),
     mQueryArguments (queryArguments),
@@ -132,6 +132,7 @@ nsAbQueryLDAPMessageListener::nsAbQueryLDAPMessageListener (
     mFinished (PR_FALSE),
     mInitialized(PR_FALSE),
     mCanceled (PR_FALSE),
+    mWaitingForPrevQueryToFinish(PR_FALSE),
     mLock(0)
 
 {
@@ -175,6 +176,8 @@ nsresult nsAbQueryLDAPMessageListener::Cancel ()
         return NS_OK;
 
     mCanceled = PR_TRUE;
+    if (!mFinished)
+      mWaitingForPrevQueryToFinish = PR_TRUE;
 
     return NS_OK;
 }
@@ -219,10 +222,14 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPMessage(nsILDAPMessage *aMessa
             NS_ENSURE_SUCCESS(rv, rv);
             break;
         case nsILDAPMessage::RES_SEARCH_ENTRY:
+            if (!mFinished && !mWaitingForPrevQueryToFinish)
+            {
             rv = OnLDAPMessageSearchEntry (aMessage, getter_AddRefs (queryResult));
             NS_ENSURE_SUCCESS(rv, rv);
+            }
             break;
         case nsILDAPMessage::RES_SEARCH_RESULT:
+            mWaitingForPrevQueryToFinish = PR_FALSE;
             rv = OnLDAPMessageSearchResult (aMessage, getter_AddRefs (queryResult));
             NS_ENSURE_SUCCESS(rv, rv);
         default:
@@ -235,6 +242,12 @@ NS_IMETHODIMP nsAbQueryLDAPMessageListener::OnLDAPMessage(nsILDAPMessage *aMessa
             rv = mSearchOperation->Abandon ();
 
         rv = QueryResultStatus (nsnull, getter_AddRefs (queryResult), nsIAbDirectoryQueryResult::queryResultStopped);
+        // reset because we might re-use this listener...except don't do this
+        // until the search is done, so we'll ignore results from a previous
+        // search.
+        if (messageType == nsILDAPMessage::RES_SEARCH_RESULT)
+          mCanceled = mFinished = PR_FALSE;
+
     }
 
     if (queryResult)
@@ -444,6 +457,15 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageBind (nsILDAPMessage *aMessa
         return NS_OK;
     }
 
+    mBound = PR_TRUE;
+    return DoSearch();
+}
+
+ nsresult nsAbQueryLDAPMessageListener::DoSearch()
+ {
+   nsresult rv;
+   mCanceled = mFinished = PR_FALSE;
+
     mSearchOperation = do_CreateInstance(NS_LDAPOPERATION_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -478,9 +500,6 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageBind (nsILDAPMessage *aMessa
     rv = mSearchOperation->SearchExt (dn, scope, filter,
             attributes.GetSize (), attributes.GetArray (),
             mTimeOut, mResultLimit);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    mBound = PR_TRUE;
     return rv;
 }
 
@@ -592,8 +611,6 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchEntry (nsILDAPMessage 
 nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageSearchResult (nsILDAPMessage *aMessage,
         nsIAbDirectoryQueryResult** result)
 {
-    mDirectoryQuery->RemoveListener (mContextID);
-
     nsresult rv;
     PRInt32 errorCode;
     rv = aMessage->GetErrorCode(&errorCode);
@@ -631,7 +648,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbLDAPDirectoryQuery, nsIAbDirectoryQuery)
 nsAbLDAPDirectoryQuery::nsAbLDAPDirectoryQuery() :
     mProtocolVersion (nsILDAPConnection::VERSION3),
     mInitialized(PR_FALSE),
-    mCounter (1),
     mLock (nsnull)
 {
 }
@@ -664,7 +680,7 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
         PRInt32* _retval)
 {
     nsresult rv;
-
+    PRBool alreadyInitialized = mInitialized;
     rv = Initiate ();
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -673,10 +689,7 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
     PRBool doSubDirectories;
     rv = arguments->GetQuerySubDirectories (&doSubDirectories);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (doSubDirectories)
-        scope = "sub";
-    else
-        scope = "one";
+    scope = (doSubDirectories) ? "sub" : "one";
 
     // Get the return attributes
     nsCAutoString returnAttributes;
@@ -785,22 +798,24 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
     rv = GetLDAPConnection (getter_AddRefs (ldapConnection));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Initiate contextID for message listener
-    PRInt32 contextID;
-    // Enter lock
+    // too soon? Do we need a new listener?
+    if (alreadyInitialized)
     {
-        nsAutoLock lock (mLock);
-        contextID = mCounter++;
+      nsAbQueryLDAPMessageListener *msgListener = 
+        NS_STATIC_CAST(nsAbQueryLDAPMessageListener *, 
+        NS_STATIC_CAST(nsILDAPMessageListener *, mListener.get()));
+      if (msgListener)
+      {
+        msgListener->mUrl = url;
+        return msgListener->DoSearch();
+      }
     }
-    // Exit lock
 
 
     // Initiate LDAP message listener
-    nsCOMPtr<nsILDAPMessageListener> messageListener;
     nsAbQueryLDAPMessageListener* _messageListener =
         new nsAbQueryLDAPMessageListener (
                 this,
-                contextID,
                 url,
                 ldapConnection,
                 arguments,
@@ -809,22 +824,13 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::DoQuery(nsIAbDirectoryQueryArguments* argu
                 timeOut);
     if (_messageListener == NULL)
             return NS_ERROR_OUT_OF_MEMORY;
-    messageListener = _messageListener;
-    nsVoidKey key (NS_REINTERPRET_CAST(void *,contextID));
-
-    // Enter lock
-    {
-        nsAutoLock lock1(mLock);
-        mListeners.Put (&key, _messageListener);
-    }
-    // Exit lock
-
-    *_retval = contextID;
+    mListener = _messageListener;
+    *_retval = 1;
 
     // Now lets initialize the LDAP connection properly. We'll kick
     // off the bind operation in the callback function, |OnLDAPInit()|.
     rv = ldapConnection->Init(host.get(), port, options, mLogin,
-                              messageListener, nsnull, mProtocolVersion);
+                              mListener, nsnull, mProtocolVersion);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return rv;
@@ -838,43 +844,16 @@ NS_IMETHODIMP nsAbLDAPDirectoryQuery::StopQuery(PRInt32 contextID)
     rv = Initiate ();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAbQueryLDAPMessageListener* _messageListener;  
-
-    // Enter Lock
-    {
-        nsAutoLock lock(mLock);
-
-        nsVoidKey key (NS_REINTERPRET_CAST(void *,contextID));
-
-         _messageListener = (nsAbQueryLDAPMessageListener* )mListeners.Remove (&key);
-
-        if (!_messageListener)
+    if (!mListener)
             return NS_OK;
 
-    }
-    // Exit Lock
-
-    rv = _messageListener->Cancel ();
-
+    nsAbQueryLDAPMessageListener *listener = 
+      NS_STATIC_CAST(nsAbQueryLDAPMessageListener *, 
+      NS_STATIC_CAST(nsILDAPMessageListener *, mListener.get()));
+    if (listener)
+      rv = listener->Cancel ();
     return rv;
 }
-
-nsresult nsAbLDAPDirectoryQuery::RemoveListener (PRInt32 contextID)
-{
-    nsresult rv;
-
-    rv = Initiate ();
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsAutoLock lock(mLock);
-
-    nsVoidKey key (NS_REINTERPRET_CAST(void *,contextID));
-
-    mListeners.Remove (&key);
-
-    return NS_OK;
-}
-
 
 
 nsresult nsAbLDAPDirectoryQuery::getLdapReturnAttributes (

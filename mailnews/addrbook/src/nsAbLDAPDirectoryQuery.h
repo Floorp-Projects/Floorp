@@ -63,7 +63,6 @@ public:
     virtual nsresult GetLDAPURL (nsILDAPURL** url) = 0;
     virtual nsresult CreateCard (nsILDAPURL* url, const char* dn, nsIAbCard** card) = 0;
 
-
 protected:
     nsresult getLdapReturnAttributes (
         nsIAbDirectoryQueryArguments* arguments,
@@ -71,16 +70,14 @@ protected:
 
 protected:
     friend class nsAbQueryLDAPMessageListener;
-    nsresult RemoveListener (PRInt32 contextID);
     nsresult Initiate ();
     nsXPIDLCString mLogin; // authenticate to the LDAP server as...
     nsCOMPtr<nsILDAPURL> mDirectoryUrl; // the URL for the server
     PRUint32 mProtocolVersion; // version of LDAP (see nsILDAPConnection.idl)
 
 private:
-    nsHashtable mListeners;
+    nsCOMPtr <nsILDAPMessageListener> mListener;
     PRBool mInitialized;
-    PRInt32 mCounter;
 
     PRLock* mLock;
 };
