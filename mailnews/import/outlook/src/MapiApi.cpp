@@ -33,7 +33,8 @@ nsVoidArray	*CMapiApi::m_pStores = NULL;
 LPMAPISESSION CMapiApi::m_lpSession = NULL;
 LPMDB		CMapiApi::m_lpMdb = NULL;
 HRESULT		CMapiApi::m_lastError;
-
+PRUnichar *	CMapiApi::m_pUniBuff = NULL;
+int			CMapiApi::m_uniBuffLen = 0;
 /*
 Type: 1, name: Calendar, class: IPF.Appointment
 Type: 1, name: Contacts, class: IPF.Contact
@@ -164,7 +165,7 @@ CMapiApi::~CMapiApi()
 	m_clients--;
 	if (!m_clients) {
 		HRESULT	hr;
-
+		
 		ClearMessageStores();
 		delete m_pStores;
 		m_pStores = NULL;
@@ -186,6 +187,27 @@ CMapiApi::~CMapiApi()
 		}
 
 		UnloadMapi();
+		
+		if (m_pUniBuff)
+			delete [] m_pUniBuff;
+		m_pUniBuff = NULL;
+		m_uniBuffLen = 0;
+	}
+}
+
+void CMapiApi::CStrToUnicode( const char *pStr, nsString& result)
+{
+	result.Truncate( 0);
+	int wLen = MultiByteToWideChar( CP_ACP, 0, pStr, -1, m_pUniBuff, 0);
+	if (wLen >= m_uniBuffLen) {
+		if (m_pUniBuff)
+			delete [] m_pUniBuff;
+		m_pUniBuff = new PRUnichar[wLen + 64];
+		m_uniBuffLen = wLen + 64;
+	}
+	if (wLen) {
+		MultiByteToWideChar( CP_ACP, 0, pStr, -1, m_pUniBuff, m_uniBuffLen);
+		result = m_pUniBuff;
 	}
 }
 
@@ -1075,6 +1097,16 @@ BOOL CMapiApi::GetLargeStringProperty( LPMAPIPROP pProp, ULONG tag, nsCString& v
 	return( bResult);
 }
 
+BOOL CMapiApi::GetLargeStringProperty( LPMAPIPROP pProp, ULONG tag, nsString& val)
+{
+	nsCString	result;
+	if (GetLargeStringProperty( pProp, tag, result)) {
+		CStrToUnicode( result, val);
+		return( TRUE);
+	}
+
+	return( FALSE);
+}
 // If the value is a string, get it...
 BOOL CMapiApi::GetEntryIdFromProp( LPSPropValue pVal, ULONG& cbEntryId, LPENTRYID& lpEntryId, BOOL delVal)
 {
@@ -1137,8 +1169,7 @@ BOOL CMapiApi::GetStringFromProp( LPSPropValue pVal, nsString& val, BOOL delVal)
 {
 	BOOL bResult = TRUE;
 	if ( pVal && (PROP_TYPE( pVal->ulPropTag) == PT_STRING8)) {
-		val = pVal->Value.lpszA;
-		// Convert this str to a wide char!
+		CStrToUnicode( (const char *)pVal->Value.lpszA, val);
 	}
 	else if ( pVal && (PROP_TYPE( pVal->ulPropTag) == PT_UNICODE)) {
 		val = (PRUnichar *) pVal->Value.lpszW;

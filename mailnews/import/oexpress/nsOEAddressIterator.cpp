@@ -103,9 +103,9 @@ nsOEAddressIterator::~nsOEAddressIterator()
 	NS_IF_RELEASE( m_database);
 }
 
-PRBool nsOEAddressIterator::EnumUser( LPCTSTR pName, LPENTRYID pEid, ULONG cbEid)
+PRBool nsOEAddressIterator::EnumUser( const PRUnichar * pName, LPENTRYID pEid, ULONG cbEid)
 {
-	IMPORT_LOG1( "User: %s\n", pName);
+	IMPORT_LOG1( "User: %S\n", pName);
 	
 	nsresult 	rv = NS_OK;
 	
@@ -131,9 +131,9 @@ PRBool nsOEAddressIterator::EnumUser( LPCTSTR pName, LPENTRYID pEid, ULONG cbEid
 	return( PR_TRUE);
 }
 
-PRBool nsOEAddressIterator::EnumList( LPCTSTR pName, LPENTRYID pEid, ULONG cbEid)
+PRBool nsOEAddressIterator::EnumList( const PRUnichar * pName, LPENTRYID pEid, ULONG cbEid)
 {
-	IMPORT_LOG1( "List: %s\n", pName);
+	IMPORT_LOG1( "List: %S\n", pName);
 	return( PR_TRUE);
 }
 
@@ -165,7 +165,7 @@ void nsOEAddressIterator::SplitString( nsString& val1, nsString& val2)
 	}
 }
 
-PRBool nsOEAddressIterator::BuildCard( LPCTSTR pName, nsIMdbRow *newRow, LPMAILUSER pUser)
+PRBool nsOEAddressIterator::BuildCard( const PRUnichar * pName, nsIMdbRow *newRow, LPMAILUSER pUser)
 {
 	
 	nsString		lastName;
@@ -204,18 +204,10 @@ PRBool nsOEAddressIterator::BuildCard( LPCTSTR pName, nsIMdbRow *newRow, LPMAILU
 		SanitizeValue( nickName);
 		m_pWab->FreeProperty( pProp);
 	}
-	if (nickName.IsEmpty())
-		nickName = pName;
-	if (firstName.IsEmpty()) {
-		firstName = nickName;
-		middleName.Truncate();
-		lastName.Truncate();
-	}
-	if (lastName.IsEmpty())
-		middleName.Truncate();
-
-	if (eMail.IsEmpty())
-		eMail = nickName;
+	
+	// The idea here is that firstName and lastName cannot both be empty!
+	if (firstName.IsEmpty() && lastName.IsEmpty())
+		firstName = pName;
 
 	nsString	displayName;
 	pProp = m_pWab->GetUserProperty( pUser, PR_DISPLAY_NAME);
@@ -226,7 +218,7 @@ PRBool nsOEAddressIterator::BuildCard( LPCTSTR pName, nsIMdbRow *newRow, LPMAILU
 	}
 	if (displayName.IsEmpty()) {
 		if (firstName.IsEmpty())
-			displayName = nickName;
+			displayName = pName;
 		else {
 			displayName = firstName;
 			if (!middleName.IsEmpty()) {

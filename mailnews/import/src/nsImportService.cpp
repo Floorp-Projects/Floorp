@@ -22,7 +22,12 @@
  */
 
 
-#include "nscore.h"
+#define NS_IMPL_IDS
+#include "nsICharsetConverterManager.h"
+#include "nsICharsetAlias.h"
+#include "nsIPlatformCharset.h"
+#undef NS_IMPL_IDS
+
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsIComponentManager.h"
@@ -47,6 +52,7 @@
 static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 static NS_DEFINE_IID(kImportModuleIID,		NS_IIMPORTMODULE_IID);
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
 
 static nsIImportService *	gImportService = nsnull;
@@ -61,46 +67,11 @@ class nsImportService : public nsIImportService
 public:
 
 	nsImportService();
-	virtual ~nsImportService();
+	~nsImportService();
 	
 	NS_DECL_ISUPPORTS
 
-	/* void DiscoverModules (); */
-	NS_IMETHOD DiscoverModules(void);
-	
-	/* long GetModuleCount (in string filter); */
-	NS_IMETHOD GetModuleCount(const char *filter, PRInt32 *_retval);
-	
-	/* void GetModuleInfo (in string filter, in long index, out string name, out string description); */
-	NS_IMETHOD GetModuleInfo(const char *filter, PRInt32 index, PRUnichar **name, PRUnichar **description);
-	
-	/* wstring GetModuleName (in string filter, in long index); */
-	NS_IMETHOD GetModuleName(const char *filter, PRInt32 index, PRUnichar **_retval);
-	
-	/* wstring GetModuleDescription (in string filter, in long index); */
-	NS_IMETHOD GetModuleDescription(const char *filter, PRInt32 index, PRUnichar **_retval);
-
-	/* nsIImportModule GetModule (in string filter, in long index); */
-	NS_IMETHOD GetModule(const char *filter, PRInt32 index, nsIImportModule **_retval);
-	
-	/* nsIImportModule GetModuleWithCID (in nsCIDRef cid); */
-	NS_IMETHOD GetModuleWithCID(const nsCID & cid, nsIImportModule **_retval);
-	
-	/* nsIImportFieldMap CreateNewFieldMap (); */
-	NS_IMETHOD CreateNewFieldMap(nsIImportFieldMap **_retval);
-	
-	/* nsIImportMailboxDescriptor CreateNewMailboxDescriptor (); */
-	NS_IMETHOD CreateNewMailboxDescriptor(nsIImportMailboxDescriptor **_retval);
-
-	/* nsIImportABDescriptor CreateNewABDescriptor (); */
-	NS_IMETHOD CreateNewABDescriptor(nsIImportABDescriptor **_retval);
-
-	/* nsIImportGeneric CreateNewGenericMail (); */
-	NS_IMETHOD CreateNewGenericMail(nsIImportGeneric **_retval);
-
-	/* nsIImportGeneric CreateNewGenericAddressBooks (); */
-	NS_IMETHOD CreateNewGenericAddressBooks(nsIImportGeneric **_retval);
-
+	NS_DECL_NSIIMPORTSERVICE
 
 private:
 	nsresult	LoadModuleInfo( const char *pClsId, const char *pSupports);
@@ -109,6 +80,8 @@ private:
 private:
 	nsImportModuleList *	m_pModules;
 	PRBool					m_didDiscovery;	
+	nsString				m_sysCharset;
+	nsIUnicodeDecoder *		m_pDecoder;
 };
 
 // extern nsresult NS_NewImportService(nsIImportService** aImportService);
@@ -204,11 +177,20 @@ nsImportService::nsImportService() : m_pModules( nsnull)
 	IMPORT_LOG0( "* nsImport Service Created\n");
 
 	m_didDiscovery = PR_FALSE;
+	m_pDecoder = nsnull;
+
+	// Go ahead an initialize the charset converter to avoid any 
+	// thread issues later.
+	nsString	str;
+	SystemStringToUnicode( "Dummy", str);
 }
 
 
 nsImportService::~nsImportService()
 {
+	if (m_pDecoder)
+		NS_RELEASE( m_pDecoder);
+
 	gImportService = nsnull;
 
     if (m_pModules != nsnull)
@@ -249,6 +231,90 @@ NS_IMETHODIMP nsImportService::CreateNewABDescriptor(nsIImportABDescriptor **_re
   rv = nsImportABDescriptor::Create( nsnull, NS_GET_IID(nsIImportABDescriptor), (void**)_retval);
   return rv;
 }
+
+NS_IMETHODIMP nsImportService::SystemStringToUnicode(const char *sysStr, nsString & uniStr)
+{
+  
+	nsresult	rv;
+	if (m_sysCharset.IsEmpty()) {
+		nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+		if (NS_SUCCEEDED(rv)) 
+			rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, m_sysCharset);
+
+		if (NS_FAILED(rv)) 
+			m_sysCharset.Assign("ISO-8859-1");
+	}
+
+	if (!sysStr) {
+		uniStr.Truncate();
+		return( NS_OK);
+	}
+  
+	if (*sysStr == '\0') {
+		uniStr.Truncate();
+		return( NS_OK);
+	}
+	
+
+	if (m_sysCharset.IsEmpty() ||
+		m_sysCharset.EqualsIgnoreCase("us-ascii") ||
+		m_sysCharset.EqualsIgnoreCase("ISO-8859-1")) {
+		uniStr.Assign( sysStr);
+		return( NS_OK);
+	}
+	
+
+
+	
+	if (!m_pDecoder) {
+		nsAutoString convCharset;
+
+		// Resolve charset alias
+		NS_WITH_SERVICE( nsICharsetAlias, calias, kCharsetAliasCID, &rv); 
+		if (NS_SUCCEEDED( rv)) {
+			nsAutoString aAlias( m_sysCharset);
+			if (aAlias.Length()) {
+				rv = calias->GetPreferred( aAlias, convCharset);
+			}
+		}
+
+		if (NS_FAILED( rv)) {
+			IMPORT_LOG0( "*** Error getting charset alias to convert to uinicode\n");
+			uniStr.Assign( sysStr);
+			return( rv);
+		}
+
+		NS_WITH_SERVICE( nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+
+		if (NS_SUCCEEDED( rv) && (nsnull != ccm)) {
+			// get an unicode converter
+			rv = ccm->GetUnicodeDecoder( &convCharset, &m_pDecoder);
+		}	    
+	}
+
+	if (m_pDecoder) {
+		PRInt32		srcLen = PL_strlen( sysStr);
+		PRUnichar *	unichars;
+		PRInt32 unicharLength = 0;
+		rv = m_pDecoder->GetMaxLength( sysStr, srcLen, &unicharLength);
+		// allocale an output buffer
+		unichars = (PRUnichar *) PR_Malloc(unicharLength * sizeof(PRUnichar));
+		if (unichars != nsnull) {
+			// convert to unicode
+			rv = m_pDecoder->Convert( sysStr, &srcLen, unichars, &unicharLength);
+			uniStr.Assign(unichars, unicharLength);
+			PR_Free(unichars);
+		}
+		else
+			rv = NS_ERROR_OUT_OF_MEMORY;
+	}
+	
+	if (NS_FAILED( rv))
+		uniStr.Assign( sysStr);
+
+	return( rv);
+}
+
 
 extern nsresult NS_NewGenericMail(nsIImportGeneric** aImportGeneric);
 

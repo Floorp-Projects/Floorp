@@ -913,6 +913,8 @@ ImportMailThread( void *stuff)
 
 					pData->currentSize = 0;
 					pData->currentTotal += size;
+					
+					outBox->CloseStream();
 
 					if (fatalError) {
 						IMPORT_LOG1( "*** ImportMailbox returned fatalError, mailbox #%d\n", (int) i);

@@ -100,7 +100,10 @@ AddrImportField		extraUserFields[kExtraUserFields] = {
 CWAB::CWAB(nsIFileSpec *file)
 {
     // Here we load the WAB Object and initialize it
-    m_bInitialized = PR_FALSE;
+    m_pUniBuff = NULL;
+	m_uniBuffLen = 0;
+
+	m_bInitialized = PR_FALSE;
 	m_lpAdrBook = NULL;
 	m_lpWABObject = NULL;
 	m_hinstWAB = NULL;
@@ -168,6 +171,9 @@ CWAB::CWAB(nsIFileSpec *file)
 //
 CWAB::~CWAB()
 {
+	if (m_pUniBuff)
+		delete [] m_pUniBuff;
+
     if(m_bInitialized)
     {
         if(m_lpAdrBook)
@@ -201,6 +207,8 @@ HRESULT CWAB::IterateWABContents(CWabIterator *pIter, int *pDone)
 	LPENTRYID		lpEID = NULL;
 	ULONG			rowCount = 0;
 	ULONG			curCount = 0;
+
+	nsString		uniStr;
 
     // Get the entryid of the root PAB container
     //
@@ -293,7 +301,8 @@ HRESULT CWAB::IterateWABContents(CWabIterator *pIter, int *pDone)
                     // on the listview item representing that object. This enables
                     // us to uniquely identify the object later if we need to
                     //
-					keepGoing = pIter->EnumUser( lpsz, lpEID, cbEID);
+					CStrToUnicode( lpsz, uniStr);
+					keepGoing = pIter->EnumUser( uniStr.GetUnicode(), lpEID, cbEID);
 					curCount++;
 					if (pDone) {
 						*pDone = (curCount * 100) / rowCount;
@@ -344,7 +353,8 @@ HRESULT CWAB::IterateWABContents(CWabIterator *pIter, int *pDone)
                     // on the listview item representing that object. This enables
                     // us to uniquely identify the object later if we need to
                     //
-					keepGoing = pIter->EnumList( lpsz, lpEID, cbEID);
+					CStrToUnicode( lpsz, uniStr);
+					keepGoing = pIter->EnumList( uniStr.GetUnicode(), lpEID, cbEID);
 					curCount++;
 					if (pDone) {
 						*pDone = (curCount * 100) / rowCount;
@@ -474,6 +484,22 @@ LPSPropValue CWAB::GetUserProperty( LPMAILUSER pUser, ULONG tag)
 	return( lpProp);
 }
 
+void CWAB::CStrToUnicode( const char *pStr, nsString& result)
+{
+	result.Truncate( 0);
+	int wLen = MultiByteToWideChar( CP_ACP, 0, pStr, -1, m_pUniBuff, 0);
+	if (wLen >= m_uniBuffLen) {
+		if (m_pUniBuff)
+			delete [] m_pUniBuff;
+		m_pUniBuff = new PRUnichar[wLen + 64];
+		m_uniBuffLen = wLen + 64;
+	}
+	if (wLen) {
+		MultiByteToWideChar( CP_ACP, 0, pStr, -1, m_pUniBuff, m_uniBuffLen);
+		result = m_pUniBuff;
+	}
+}
+
 // If the value is a string, get it...
 void CWAB::GetValueString( LPSPropValue pVal, nsString& val)
 {
@@ -483,17 +509,19 @@ void CWAB::GetValueString( LPSPropValue pVal, nsString& val)
 		return;
 
     switch( PROP_TYPE( pVal->ulPropTag)) {
-		case PT_STRING8:
-			// Do we need to call OS routines like MultiByteToWideChar?
-			val = (char *) (pVal->Value.lpszA);
+	case PT_STRING8: {
+			CStrToUnicode( (const char *) (pVal->Value.lpszA), val);
+		}
         break;
 		case PT_UNICODE:
 			val = (PRUnichar *) (pVal->Value.lpszW);
 		break;
 		case PT_MV_STRING8: {
+			nsString	tmp;
             ULONG	j;
             for(j = 0; j < pVal->Value.MVszA.cValues; j++) {
-                val += (char *) (pVal->Value.MVszA.lppszA[j]);
+				CStrToUnicode( (const char *) (pVal->Value.MVszA.lppszA[j]), tmp);
+                val += tmp;
                 val += TR_OUTPUT_EOL;
             }
         }

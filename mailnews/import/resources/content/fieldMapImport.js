@@ -9,7 +9,7 @@ var dialogResult = null;
 function OnLoadFieldMapImport()
 {
 	// top.bundle = srGetStrBundle("chrome://messenger/locale/importMsgs.properties");
-	top.importService = Components.classes["component://mozilla/import/import-service"].createInstance();
+	top.importService = Components.classes["component://mozilla/import/import-service"].getService();
 	top.importService = top.importService.QueryInterface(Components.interfaces.nsIImportService);
 	top.transferType = "moz/fieldmap";
 	top.recordNum = 0;

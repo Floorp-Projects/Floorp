@@ -903,7 +903,7 @@ nsresult nsOutlookMail::ImportAddresses( PRUint32 *pCount, PRUint32 *pTotal, con
 	LPMESSAGE		lpMsg;
 	nsCString		type;
 	LPSPropValue	pVal;
-	nsCString		subject;
+	nsString		subject;
 
 	while (!done) {
 		(*pCount)++;
@@ -941,7 +941,7 @@ nsresult nsOutlookMail::ImportAddresses( PRUint32 *pCount, PRUint32 *pTotal, con
 					// isn't added to the database.  Candice's code in nsAddressBook
 					// never releases it but that doesn't seem right to me!
 					if (newRow) {
-						if (BuildCard( subject, pDb, newRow, lpMsg, pFieldMap)) {
+						if (BuildCard( subject.GetUnicode(), pDb, newRow, lpMsg, pFieldMap)) {
 							pDb->AddCardRowToDB( newRow);
 						}
 					}
@@ -986,7 +986,7 @@ void nsOutlookMail::SplitString( nsString& val1, nsString& val2)
 	}
 }
 
-PRBool nsOutlookMail::BuildCard( const char *pName, nsIAddrDatabase *pDb, nsIMdbRow *newRow, LPMAPIPROP pUser, nsIImportFieldMap *pFieldMap)
+PRBool nsOutlookMail::BuildCard( const PRUnichar *pName, nsIAddrDatabase *pDb, nsIMdbRow *newRow, LPMAPIPROP pUser, nsIImportFieldMap *pFieldMap)
 {
 	
 	nsString		lastName;
@@ -1023,16 +1023,7 @@ PRBool nsOutlookMail::BuildCard( const char *pName, nsIAddrDatabase *pDb, nsIMdb
 	}
 	if (firstName.IsEmpty() && lastName.IsEmpty()) {
 		firstName = pName;
-		middleName.Truncate();
-		lastName.Truncate();
 	}
-	if (lastName.IsEmpty()) {
-		lastName = middleName;
-		middleName.Truncate();
-	}
-
-	if (eMail.IsEmpty())
-		eMail = pName;
 
 	nsString	displayName;
 	pProp = m_mapi.GetMapiProperty( pUser, PR_DISPLAY_NAME);

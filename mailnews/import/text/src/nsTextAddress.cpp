@@ -16,15 +16,17 @@
  * Reserved.
  */
 
-#include "nsCOMPtr.h"
 #include "nsTextAddress.h"
 
+#include "nsIServiceManager.h"
+#include "nsIImportService.h"
 #include "nsIAddrDatabase.h"
 #include "nsAbBaseCID.h"
 #include "nsIAbCard.h"
 
 static NS_DEFINE_CID(kAbCardCID,			NS_ABCARD_CID);
 static NS_DEFINE_CID(kAbCardPropertyCID,	NS_ABCARDPROPERTY_CID);
+static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 
 #include "TextDebugLog.h"
 
@@ -53,6 +55,18 @@ nsTextAddress::~nsTextAddress()
 	NS_IF_RELEASE( m_fieldMap);
 }
 
+
+void nsTextAddress::ConvertToUnicode( const char *pStr, nsString& str)
+{
+	if (!m_pService) {
+		m_pService = do_GetService( kImportServiceCID);
+	}
+	if (m_pService) {
+		m_pService->SystemStringToUnicode( pStr, str);
+	}
+	else
+		str.Assign( pStr);
+}
 
 nsresult nsTextAddress::ImportLDIF( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsString& errors)
 {
@@ -489,7 +503,7 @@ nsresult nsTextAddress::ProcessLine( const char *pLine, PRInt32 len, nsString& e
 						}
 					}
 					if (newRow) {
-						uVal = (const char *)fieldVal;
+						ConvertToUnicode( fieldVal, uVal);
 						rv = m_fieldMap->SetFieldValue( m_database, newRow, fieldNum, uVal.GetUnicode());
 					}
 				}

@@ -142,6 +142,9 @@ NS_IMETHODIMP nsOutlookSettings::Import(nsIMsgAccount **localMailAccount, PRBool
 HKEY OutlookSettings::FindAccountsKey( void)
 {
 	HKEY	sKey;
+	if (::RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Office\\Outlook\\OMI Account Manager\\Accounts", 0, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS, &sKey) == ERROR_SUCCESS) {
+		return( sKey);
+	}
 	if (::RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Office\\8.0\\Outlook\\OMI Account Manager\\Accounts", 0, KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS, &sKey) == ERROR_SUCCESS) {
 		return( sKey);
 	}
@@ -165,11 +168,15 @@ PRBool OutlookSettings::DoImport( nsIMsgAccount **ppAccount)
 		return( PR_FALSE);
 	}
 
-	HKEY		subKey;
+	HKEY		subKey = NULL;
 	nsCString	defMailName;
 
-	// First let's get the default mail account key name
-	if (::RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Office\\8.0\\Outlook\\OMI Account Manager", 0, KEY_QUERY_VALUE, &subKey) == ERROR_SUCCESS) {
+	if (::RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Office\\Outlook\\OMI Account Manager", 0, KEY_QUERY_VALUE, &subKey) != ERROR_SUCCESS)
+		if (::RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Office\\8.0\\Outlook\\OMI Account Manager", 0, KEY_QUERY_VALUE, &subKey) != ERROR_SUCCESS)
+			subKey = NULL;
+
+	if (subKey != NULL) {
+		// First let's get the default mail account key name
 		BYTE *	pBytes = nsOutlookRegUtil::GetValueBytes( subKey, "Default Mail Account");
 		::RegCloseKey( subKey);
 		if (pBytes) {

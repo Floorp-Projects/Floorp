@@ -20,12 +20,13 @@
 #define nsTextAddress_h__
 
 #include "nscore.h"
+#include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsIFileSpec.h"
 #include "nsISupportsArray.h"
 #include "nsIImportFieldMap.h"
-
+#include "nsIImportService.h"
 
 class nsIAddrDatabase;
 class nsIMdbRow;
@@ -53,6 +54,7 @@ public:
 
 private:
 	nsresult		ProcessLine( const char *pLine, PRInt32 len, nsString& errors);
+	void			ConvertToUnicode( const char *pStr, nsString& str);
 	
 	static PRBool		IsLineComplete( const char *pLine, PRInt32 len, char delim);
 	static PRInt32		CountFields( const char *pLine, PRInt32 maxLen, char delim);
@@ -72,6 +74,7 @@ private:
 	char				m_delim;
 	nsIAddrDatabase *	m_database;
 	nsIImportFieldMap *	m_fieldMap;
+	nsCOMPtr<nsIImportService> m_pService;
 };
 
 

@@ -39,6 +39,106 @@
 // defines _MAPIUTIL_H_
 #define _MAPIUTIL_H
 
+class CMapiFolderList;
+class CMsgStore;
+class CMapiFolder;
+
+class CMapiContentIter {
+public:
+	virtual BOOL HandleContentItem( ULONG oType, ULONG cb, LPENTRYID pEntry) = 0;
+};
+
+class CMapiHierarchyIter {
+public:
+	virtual BOOL HandleHierarchyItem( ULONG oType, ULONG cb, LPENTRYID pEntry) = 0;
+};
+
+class CMapiApi {
+public:
+	CMapiApi();
+	~CMapiApi();
+
+	static BOOL		LoadMapi( void);
+	static BOOL		LoadMapiEntryPoints( void);
+	static void		UnloadMapi( void);
+
+	static HINSTANCE	m_hMapi32;
+
+	static void		MAPIUninitialize( void);
+	static HRESULT	MAPIInitialize( LPVOID lpInit);
+	static SCODE	MAPIAllocateBuffer( ULONG cbSize, LPVOID FAR * lppBuffer);
+	static ULONG	MAPIFreeBuffer( LPVOID lpBuff);
+	static HRESULT	MAPILogonEx( ULONG ulUIParam, LPTSTR lpszProfileName, LPTSTR lpszPassword, FLAGS flFlags, LPMAPISESSION FAR * lppSession);
+	static HRESULT	OpenStreamOnFile( LPALLOCATEBUFFER lpAllocateBuffer, LPFREEBUFFER lpFreeBuffer, ULONG ulFlags, LPTSTR lpszFileName, LPTSTR lpszPrefix, LPSTREAM FAR * lppStream);
+	static void		FreeProws( LPSRowSet prows);
+
+
+	BOOL	Initialize( void);
+	BOOL	LogOn( void);
+
+	void	AddMessageStore( CMsgStore *pStore);
+	void	SetCurrentMsgStore( LPMDB lpMdb) { m_lpMdb = lpMdb;}
+
+	// Open any given entry from the current Message Store	
+	BOOL	OpenEntry( ULONG cbEntry, LPENTRYID pEntryId, LPUNKNOWN *ppOpen);
+	static BOOL OpenMdbEntry( LPMDB lpMdb, ULONG cbEntry, LPENTRYID pEntryId, LPUNKNOWN *ppOpen);
+
+	// Fill in the folders list with the heirarchy from the given
+	// message store.
+	BOOL	GetStoreFolders( ULONG cbEid, LPENTRYID lpEid, CMapiFolderList& folders, int startDepth);
+	BOOL	GetStoreAddressFolders( ULONG cbEid, LPENTRYID lpEid, CMapiFolderList& folders);
+	BOOL	OpenStore( ULONG cbEid, LPENTRYID lpEid, LPMDB *ppMdb);
+
+	// Iteration
+	BOOL	IterateStores( CMapiFolderList& list);
+	BOOL	IterateContents( CMapiContentIter *pIter, LPMAPIFOLDER pFolder, ULONG flags = 0);
+	BOOL	IterateHierarchy( CMapiHierarchyIter *pIter, LPMAPIFOLDER pFolder, ULONG flags = 0);
+	
+	// Properties
+	static LPSPropValue	GetMapiProperty( LPMAPIPROP pProp, ULONG tag);
+	static BOOL			GetEntryIdFromProp( LPSPropValue pVal, ULONG& cbEntryId, LPENTRYID& lpEntryId, BOOL delVal = TRUE);
+	static BOOL			GetStringFromProp( LPSPropValue pVal, nsCString& val, BOOL delVal = TRUE);
+	static BOOL			GetStringFromProp( LPSPropValue pVal, nsString& val, BOOL delVal = TRUE);
+	static LONG			GetLongFromProp( LPSPropValue pVal, BOOL delVal = TRUE);
+	static BOOL			GetLargeStringProperty( LPMAPIPROP pProp, ULONG tag, nsCString& val);
+	static BOOL			GetLargeStringProperty( LPMAPIPROP pProp, ULONG tag, nsString& val);
+	static BOOL			IsLargeProperty( LPSPropValue pVal);
+
+	// Debugging & reporting stuff
+	static void			ListProperties( LPMAPIPROP lpProp, BOOL getValues = TRUE);
+	static void			ListPropertyValue( LPSPropValue pVal, nsCString& s);
+
+protected:
+	BOOL			HandleHierarchyItem( ULONG oType, ULONG cb, LPENTRYID pEntry);
+	BOOL			HandleContentsItem( ULONG oType, ULONG cb, LPENTRYID pEntry);
+	void			GetStoreInfo( CMapiFolder *pFolder, long *pSzContents);
+
+	// array of available message stores, cached so that
+	// message stores are only opened once, preventing multiple
+	// logon's by the user if the store requires a logon.
+	CMsgStore *		FindMessageStore( ULONG cbEid, LPENTRYID lpEid);
+	void			ClearMessageStores( void);
+
+	static void			CStrToUnicode( const char *pStr, nsString& result);
+
+	// Debugging & reporting stuff
+	static void			GetPropTagName( ULONG tag, nsCString& s);
+	static void			ReportStringProp( const char *pTag, LPSPropValue pVal);
+	static void			ReportUIDProp( const char *pTag, LPSPropValue pVal);
+	static void			ReportLongProp( const char *pTag, LPSPropValue pVal);
+
+
+private:
+	static int				m_clients;
+	static BOOL				m_initialized;
+	static nsVoidArray *	m_pStores;
+	static LPMAPISESSION	m_lpSession;
+	static LPMDB			m_lpMdb;
+	static HRESULT			m_lastError;
+	static PRUnichar *		m_pUniBuff;
+	static int				m_uniBuffLen;
+};
+
 
 
 class CMapiFolder {
@@ -117,97 +217,6 @@ private:
 	ULONG		m_cbEid;
 	BYTE *		m_lpEid;
 	LPMDB		m_lpMdb;
-};
-
-class CMapiContentIter {
-public:
-	virtual BOOL HandleContentItem( ULONG oType, ULONG cb, LPENTRYID pEntry) = 0;
-};
-
-class CMapiHierarchyIter {
-public:
-	virtual BOOL HandleHierarchyItem( ULONG oType, ULONG cb, LPENTRYID pEntry) = 0;
-};
-
-class CMapiApi {
-public:
-	CMapiApi();
-	~CMapiApi();
-
-	static BOOL		LoadMapi( void);
-	static BOOL		LoadMapiEntryPoints( void);
-	static void		UnloadMapi( void);
-
-	static HINSTANCE	m_hMapi32;
-
-	static void		MAPIUninitialize( void);
-	static HRESULT	MAPIInitialize( LPVOID lpInit);
-	static SCODE	MAPIAllocateBuffer( ULONG cbSize, LPVOID FAR * lppBuffer);
-	static ULONG	MAPIFreeBuffer( LPVOID lpBuff);
-	static HRESULT	MAPILogonEx( ULONG ulUIParam, LPTSTR lpszProfileName, LPTSTR lpszPassword, FLAGS flFlags, LPMAPISESSION FAR * lppSession);
-	static HRESULT	OpenStreamOnFile( LPALLOCATEBUFFER lpAllocateBuffer, LPFREEBUFFER lpFreeBuffer, ULONG ulFlags, LPTSTR lpszFileName, LPTSTR lpszPrefix, LPSTREAM FAR * lppStream);
-	static void		FreeProws( LPSRowSet prows);
-
-
-	BOOL	Initialize( void);
-	BOOL	LogOn( void);
-
-	void	AddMessageStore( CMsgStore *pStore);
-	void	SetCurrentMsgStore( LPMDB lpMdb) { m_lpMdb = lpMdb;}
-
-	// Open any given entry from the current Message Store	
-	BOOL	OpenEntry( ULONG cbEntry, LPENTRYID pEntryId, LPUNKNOWN *ppOpen);
-	static BOOL OpenMdbEntry( LPMDB lpMdb, ULONG cbEntry, LPENTRYID pEntryId, LPUNKNOWN *ppOpen);
-
-	// Fill in the folders list with the heirarchy from the given
-	// message store.
-	BOOL	GetStoreFolders( ULONG cbEid, LPENTRYID lpEid, CMapiFolderList& folders, int startDepth);
-	BOOL	GetStoreAddressFolders( ULONG cbEid, LPENTRYID lpEid, CMapiFolderList& folders);
-	BOOL	OpenStore( ULONG cbEid, LPENTRYID lpEid, LPMDB *ppMdb);
-
-	// Iteration
-	BOOL	IterateStores( CMapiFolderList& list);
-	BOOL	IterateContents( CMapiContentIter *pIter, LPMAPIFOLDER pFolder, ULONG flags = 0);
-	BOOL	IterateHierarchy( CMapiHierarchyIter *pIter, LPMAPIFOLDER pFolder, ULONG flags = 0);
-	
-	// Properties
-	static LPSPropValue	GetMapiProperty( LPMAPIPROP pProp, ULONG tag);
-	static BOOL			GetEntryIdFromProp( LPSPropValue pVal, ULONG& cbEntryId, LPENTRYID& lpEntryId, BOOL delVal = TRUE);
-	static BOOL			GetStringFromProp( LPSPropValue pVal, nsCString& val, BOOL delVal = TRUE);
-	static BOOL			GetStringFromProp( LPSPropValue pVal, nsString& val, BOOL delVal = TRUE);
-	static LONG			GetLongFromProp( LPSPropValue pVal, BOOL delVal = TRUE);
-	static BOOL			GetLargeStringProperty( LPMAPIPROP pProp, ULONG tag, nsCString& val);
-	static BOOL			IsLargeProperty( LPSPropValue pVal);
-
-	// Debugging & reporting stuff
-	static void			ListProperties( LPMAPIPROP lpProp, BOOL getValues = TRUE);
-	static void			ListPropertyValue( LPSPropValue pVal, nsCString& s);
-
-protected:
-	BOOL			HandleHierarchyItem( ULONG oType, ULONG cb, LPENTRYID pEntry);
-	BOOL			HandleContentsItem( ULONG oType, ULONG cb, LPENTRYID pEntry);
-	void			GetStoreInfo( CMapiFolder *pFolder, long *pSzContents);
-
-	// array of available message stores, cached so that
-	// message stores are only opened once, preventing multiple
-	// logon's by the user if the store requires a logon.
-	CMsgStore *		FindMessageStore( ULONG cbEid, LPENTRYID lpEid);
-	void			ClearMessageStores( void);
-
-	// Debugging & reporting stuff
-	static void			GetPropTagName( ULONG tag, nsCString& s);
-	static void			ReportStringProp( const char *pTag, LPSPropValue pVal);
-	static void			ReportUIDProp( const char *pTag, LPSPropValue pVal);
-	static void			ReportLongProp( const char *pTag, LPSPropValue pVal);
-
-
-private:
-	static int				m_clients;
-	static BOOL				m_initialized;
-	static nsVoidArray *	m_pStores;
-	static LPMAPISESSION	m_lpSession;
-	static LPMDB			m_lpMdb;
-	static HRESULT			m_lastError;
 };
 
 

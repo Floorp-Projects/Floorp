@@ -63,7 +63,7 @@ private:
 	void		MakeAddressBookNameUnique( nsCString& name, nsCString& list);
 	void		SanitizeValue( nsString& val);
 	void		SplitString( nsString& val1, nsString& val2);
-	PRBool		BuildCard( const char *pName, nsIAddrDatabase *pDb, nsIMdbRow *newRow, LPMAPIPROP pUser, nsIImportFieldMap *pFieldMap);
+	PRBool		BuildCard( const PRUnichar *pName, nsIAddrDatabase *pDb, nsIMdbRow *newRow, LPMAPIPROP pUser, nsIImportFieldMap *pFieldMap);
 
 private:
 	PRBool				m_gotFolders;

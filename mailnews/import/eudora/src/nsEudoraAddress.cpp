@@ -22,9 +22,11 @@
 #include "nsIAddrDatabase.h"
 #include "nsABBaseCID.h"
 #include "nsIAbCard.h"
+#include "nsIServiceManager.h"
 
 static NS_DEFINE_CID(kAbCardCID,			NS_ABCARD_CID);
 static NS_DEFINE_CID(kAbCardPropertyCID,	NS_ABCARDPROPERTY_CID);
+static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 
 #include "EudoraDebugLog.h"
 
@@ -694,6 +696,18 @@ void nsEudoraAddress::SplitString( nsCString& val1, nsCString& val2)
 	}
 }
 
+void nsEudoraAddress::ConvertToUnicode( const char *pStr, nsString& uniStr)
+{
+	if (!m_pService) {
+		m_pService = do_GetService( kImportServiceCID);
+	}
+	if (m_pService) {
+		m_pService->SystemStringToUnicode( pStr, uniStr);
+	}
+	else
+		uniStr.Assign( pStr);
+}
+
 void nsEudoraAddress::BuildSingleCard( CAliasEntry *pEntry, CAliasData *pData, nsIAddrDatabase *pDb)
 {
 	// we have a nickname always
@@ -738,44 +752,45 @@ void nsEudoraAddress::BuildSingleCard( CAliasEntry *pEntry, CAliasData *pData, n
 	nsString	uniStr;
 
 	if (newRow) {
-		uniStr = displayName;
+		ConvertToUnicode( displayName, uniStr);
 		pDb->AddDisplayName( newRow, pCStr = uniStr.ToNewUTF8String());
 		nsCRT::free( pCStr);
 				
-		uniStr = pEntry->m_name;
+		ConvertToUnicode( pEntry->m_name, uniStr);
 		pDb->AddNickName( newRow, pCStr = uniStr.ToNewUTF8String());
 		nsCRT::free( pCStr);
 		
-		uniStr = pData->m_email;
+			
+		ConvertToUnicode( pData->m_email, uniStr);
 		pDb->AddPrimaryEmail( newRow, pCStr = uniStr.ToNewUTF8String());
 		nsCRT::free( pCStr);
 		
 		if (!fax.IsEmpty()) {
-			uniStr = fax;
+			ConvertToUnicode( fax, uniStr);
 			pDb->AddFaxNumber( newRow, pCStr = uniStr.ToNewUTF8String());
 			nsCRT::free( pCStr);
 		}
 
 		if (!phone.IsEmpty()) {
-			uniStr = phone;
+			ConvertToUnicode( phone, uniStr);
 			pDb->AddHomePhone( newRow, pCStr = uniStr.ToNewUTF8String());
 			nsCRT::free( pCStr);
 		}
 
 		if (!address.IsEmpty()) {
-			uniStr = address;
+			ConvertToUnicode( address, uniStr);
 			pDb->AddHomeAddress( newRow, pCStr = uniStr.ToNewUTF8String());
 			nsCRT::free( pCStr);
 		}
 
 		if (!address2.IsEmpty()) {
-			uniStr = address2;
+			ConvertToUnicode( address2, uniStr);
 			pDb->AddHomeAddress2( newRow, pCStr = uniStr.ToNewUTF8String());
 			nsCRT::free( pCStr);
 		}
 
 		if (!note.IsEmpty()) {
-			uniStr = note;
+			ConvertToUnicode( note, uniStr);
 			pDb->AddNotes( newRow, pCStr = uniStr.ToNewUTF8String());
 			nsCRT::free( pCStr);
 		}

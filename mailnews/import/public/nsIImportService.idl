@@ -28,11 +28,18 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#include "nsString.h"
+%}
+
+
 interface nsIImportModule;
 interface nsIImportMailboxDescriptor;
 interface nsIImportABDescriptor;
 interface nsIImportGeneric;
 interface nsIImportFieldMap;
+
+[ref] native nsStringRef(nsString);
 
 [scriptable, uuid(50d7ea80-1726-11d3-a206-00a0cc26da63)]
 interface nsIImportService : nsISupports
@@ -51,6 +58,9 @@ interface nsIImportService : nsISupports
 	nsIImportABDescriptor		CreateNewABDescriptor();	
 	nsIImportGeneric			CreateNewGenericMail();
 	nsIImportGeneric			CreateNewGenericAddressBooks();
+
+	[noscript] void SystemStringToUnicode( in string sysStr, in nsStringRef uniStr);
+
 };
 
 

@@ -624,17 +624,25 @@ NS_IMETHODIMP ImportAddressImpl::GetSampleData( PRInt32 index, PRBool *pFound, P
 	PRInt32	lineLen;
 	PRInt32	bufSz = 10240;
 	char	*pLine = new char[bufSz];
+	
+	NS_WITH_SERVICE( nsIImportService, impSvc, kImportServiceCID, &rv);
 
 	rv = nsTextAddress::ReadRecordNumber( m_fileLoc, pLine, bufSz, m_delim, &lineLen, index);
 	if (NS_SUCCEEDED( rv)) {
 		nsString	str;
 		nsCString	field;
+		nsString	uField;
 		PRInt32		fNum = 0;
 		while (nsTextAddress::GetField( pLine, lineLen, fNum, field, m_delim)) {
 			if (fNum)
 				str.Append( "\n");
 			SanitizeSampleData( field);
-			str.Append( field);
+			if (impSvc)
+				impSvc->SystemStringToUnicode( field, uField);
+			else
+				uField.Assign( field);
+
+			str.Append( uField);
 			fNum++;
 			field.Truncate();
 		}

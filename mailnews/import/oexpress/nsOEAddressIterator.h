@@ -32,11 +32,11 @@ public:
 	nsOEAddressIterator( CWAB *pWab, nsIAddrDatabase *database);
 	~nsOEAddressIterator();
 	
-	virtual PRBool	EnumUser( LPCTSTR pName, LPENTRYID pEid, ULONG cbEid);
-	virtual PRBool	EnumList( LPCTSTR pName, LPENTRYID pEid, ULONG cbEid);
+	virtual PRBool	EnumUser( const PRUnichar * pName, LPENTRYID pEid, ULONG cbEid);
+	virtual PRBool	EnumList( const PRUnichar * pName, LPENTRYID pEid, ULONG cbEid);
 
 private:
-	PRBool		BuildCard( LPCTSTR pName, nsIMdbRow *card, LPMAILUSER pUser);
+	PRBool		BuildCard( const PRUnichar * pName, nsIMdbRow *card, LPMAILUSER pUser);
 	void		SanitizeValue( nsString& val);
 	void		SplitString( nsString& val1, nsString& val2);
 

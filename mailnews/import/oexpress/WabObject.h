@@ -34,8 +34,8 @@
 
 class CWabIterator {
 public:
-	virtual PRBool	EnumUser( LPCTSTR pName, LPENTRYID pEid, ULONG cbEid) = 0;
-	virtual PRBool	EnumList( LPCTSTR pName, LPENTRYID pEid, ULONG cbEid) = 0;
+	virtual PRBool	EnumUser( const PRUnichar *pName, LPENTRYID pEid, ULONG cbEid) = 0;
+	virtual PRBool	EnumList( const PRUnichar *pName, LPENTRYID pEid, ULONG cbEid) = 0;
 };
 
 
@@ -59,12 +59,15 @@ public:
 	void			FreeProperty( LPSPropValue pVal) { if (pVal) m_lpWABObject->FreeBuffer( pVal);}
 	void			GetValueString( LPSPropValue pVal, nsString& val);
 
+	void			CStrToUnicode( const char *pStr, nsString& result);
+
 	// Utility stuff used by iterate
 	void			FreeProws(LPSRowSet prows);
 
 
 private:
- 
+	PRUnichar *	m_pUniBuff;
+	int			m_uniBuffLen;
 	PRBool      m_bInitialized;
     HINSTANCE   m_hinstWAB;
     LPWABOPEN   m_lpfnWABOpen;
