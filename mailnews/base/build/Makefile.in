@@ -62,7 +62,7 @@ REQUIRES	= xpcom \
 		  msgnews \
 		  msgimap \
 		  gfx \
-		  webBrowser_core \
+		  webbrwsr \
 		  $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME),1)
