@@ -256,7 +256,7 @@ function ToDoProgressAtom( calendarToDo )
       var dueDate       = new Date( calendarToDo.due.getTime() );
       var tonightMidnight = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 00 );
       
-      if( tonightMidnight.getTime() > dueDate.getTime() )
+      if( thisMorning.getTime() > dueDate.getTime() )
       {
          return("overdue");
       } else 
