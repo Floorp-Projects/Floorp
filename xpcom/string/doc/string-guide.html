@@ -38,6 +38,15 @@
   </ul>
 </div>
 
+<p>
+  Please direct all comments, requests, and contributions to,
+      in order of preference,
+    the tracking bug <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=70076">#70076</a> for this document,
+    the author <a class="exact-uri" href="mailto:scc@mozilla.org?subject=string-guide">scc@mozilla.org</a>, and/or
+    the newsgroup <a class="exact-uri" href="news:netscape.public.mozilla.xpcom">news:netscape.public.mozilla.xpcom</a>
+      (should there be a strings newsgroup?)
+</p>
+
 <div class="author-note">
   <p>
     A note to potential editors:
@@ -82,7 +91,7 @@
 </p>
 
   <h3>readable and writable</h3>
-  <h3>promises</h3>
+  <h3>dependent strings</h3>
   <h3>flat strings</h3>
   <h3>encoding</h3>
   <h3>sharing</h3>
@@ -348,7 +357,7 @@
         <span class="code">PromiseFlatString</span> does the work to allocate, copy, terminate, and manage
         a temporary flat string.
       Since the result of <span class="code">PromiseFlatString</span> is a temporary,
-        you must be careful not to get and hold a pointer to it's data for longer than the temporary itself lives.
+        you must be careful not to get and hold a pointer to its data for longer than the temporary itself lives.
     </dd>
     <dd>
 <div class="source-code">
@@ -1389,7 +1398,7 @@ Subject: Re: nsWritingIterator?
 <p>You got it right... it's <span class="code">nsWritingIterator<CharT></span> for whichever
 character type you care about, either <span class="code">char</span> or <span class="code">PRUnichar</span>.  You
 _can_ use this iterator like a character pointer ... that is, you can
-dereference it, assign into it's dereference, etc.  It is more
+dereference it, assign into its dereference, etc.  It is more
 efficient, though, to directly address a particular range of
 characters around where it points by asking it for its actual
 character pointer with <span class="code">get</span>, and knowing that there are
