@@ -90,9 +90,6 @@ protected:
                         
    NS_METHOD            SetLocation(const nsString& aLocation);
                         
-   NS_METHOD				BeginDocumentLoad(nsIDocumentLoader *aLoader, nsIURI *aURL, const char *aCommand);
-   NS_METHOD				EndDocumentLoad(nsIDocumentLoader *loader, nsIChannel *aChannel, PRUint32 aStatus);
-
 	NS_METHOD            OnStatusNetStart(nsIChannel *aChannel);
 	NS_METHOD            OnStatusNetStop(nsIChannel *aChannel);
 	NS_METHOD            OnStatusDNS(nsIChannel *aChannel);
