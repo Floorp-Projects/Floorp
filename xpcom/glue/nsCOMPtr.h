@@ -43,26 +43,53 @@
                                                         T* rawTptr;
     class nsCOMPtr<T>                                   nsCOMPtr<T> smartTptr;
 
-    null_nsCOMPtr()                                     smartTptr = null_nsCOMPtr();
-
     do_QueryInterface( nsISupports* )                   smartTptr = do_QueryInterface(other_ptr);
     do_QueryInterface( nsISupports*, nsresult* )        smartTptr = do_QueryInterface(other_ptr, &status);
 
     dont_QueryInterface( T* )                           smartTptr = dont_QueryInterface(rawTptr);
 
-    getter_AddRefs( nsCOMPtr<T>& )
-    getter_AddRefs( T* )
-    dont_AddRef( T* )
+    getter_AddRefs( nsCOMPtr<T>& )											rv = SomeGetter( getter_AddRefs(smartTptr) );
+    getter_AddRefs( T* )                                smartTptr = getter_AddRefs( SomeGetter() );
+    dont_AddRef( T* )                                   smartTptr = dont_AddRef(rawTptr);
 
-    CallQueryInterface( nsISupports*, T** )
-    CallQueryInterface( nsISupports*, nsCOMPtr<T>* )
+		do_QueryReferent( nsIWeakReference* )
+		do_QueryReferent( nsIWeakReference*, nsresult* )
+
+		SameCOMIdentity( nsISupports*, nsISupports* )       if ( SameCOMIdentity(rawTptr, rawUptr) )
+		                                                      ...
+
+                                                        smartTptr == smartUptr
+                                                        smartTptr != smartUptr
+                                                        smartTptr == rawUptr
+                                                        smartTptr != rawUptr
+                                                        rawTptr == smartUptr
+                                                        rawTptr != smartUptr
+                                                        smartTptr == 0
+                                                        smartTptr != 0
+                                                        0 == smartTptr  // Don't use this form
+                                                        0 != smartTptr  //   some compilers just don't like it
+
+    Anytime you are comparing |nsCOMPtr|s with raw pointers, it is always safe to use the |.get()| notation.
+    Some compilers have some ambiguity issues, and |.get()| will resolve them.  Try to write you comparisons
+    like this
+    
+      if ( smartTptr )
+        ...
+
+      if ( !smartTptr )
+        ...
+
+      if ( smartTptr1 == smartTptr2 )
+        ...
+
+      if ( smartTptr.get() != rawTptr )
+        ...
 */
 
 /*
   Having problems?
   
   See the User Manual at:
-    <http://www.meer.net/ScottCollins/doc/nsCOMPtr.html>, or
     <http://www.mozilla.org/projects/xpcom/nsCOMPtr.html>
 */
 
@@ -272,63 +299,25 @@ dont_QueryInterface( T* aRawPtr )
   }
 
 
-#if 1
+template <class T>
+struct
+nsCOMPtrQueryRequest
+  {
+    T*         mRawPtr;
+    nsresult*  mErrorPtr;
 
-  template <class T>
-  struct
-  nsCOMPtrQueryRequest
-    {
-      T*        mRawPtr;
-      nsresult*  mErrorPtr;
+    explicit
+    nsCOMPtrQueryRequest( T* aRawPtr, nsresult* error = 0 )
+        : mRawPtr(aRawPtr),
+          mErrorPtr(error)
+      {
+        // nothing else to do here
+      }
+  };
 
-      explicit
-      nsCOMPtrQueryRequest( T* aRawPtr, nsresult* error = 0 )
-          : mRawPtr(aRawPtr),
-            mErrorPtr(error)
-        {
-          // nothing else to do here
-        }
-    };
+typedef nsCOMPtrQueryRequest<nsISupports>       nsQueryInterface;
+typedef nsCOMPtrQueryRequest<nsIWeakReference>  nsQueryReferent;
 
-  typedef nsCOMPtrQueryRequest<nsISupports>        nsQueryInterface;
-  typedef nsCOMPtrQueryRequest<nsIWeakReference>  nsQueryReferent;
-
-#else
-
-  struct nsQueryInterface
-      /*
-        ...
-
-        DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |do_QueryInterface()| instead.
-      */
-    {
-      explicit
-      nsQueryInterface( nsISupports* aRawPtr, nsresult* error = 0 )
-          : mRawPtr(aRawPtr),
-            mErrorPtr(error)
-        {
-          // nothing else to do here
-        }
-
-      nsISupports* mRawPtr;
-      nsresult*    mErrorPtr;
-    };
-
-  struct nsQueryReferent
-    {
-      explicit
-      nsQueryReferent( nsIWeakReference* aRawPtr, nsresult* error = 0 )
-          : mRawPtr(aRawPtr),
-            mErrorPtr(error)
-        {
-          // nothing else to do here
-        }
-
-      nsIWeakReference* mRawPtr;
-      nsresult*          mErrorPtr;
-    };
-
-#endif
 
 inline
 const nsQueryInterface
@@ -345,6 +334,9 @@ do_QueryReferent( nsIWeakReference* aRawPtr, nsresult* error = 0 )
   }
 
 
+  /**
+   * |null_nsCOMPtr| is deprecated.  Please use the value |0| instead.
+   */
 #define null_nsCOMPtr() (0)
 
 
@@ -847,14 +839,17 @@ SameCOMIdentity( nsISupports* lhs, nsISupports* rhs )
   }
 
 
-template <class DestinationType>
-inline
-nsresult
-CallQueryInterface( nsISupports* aSource, nsCOMPtr<DestinationType>* aDestination )
-    // a type-safe shortcut for calling the |QueryInterface()| member function
-  {
-    return CallQueryInterface(aSource, getter_AddRefs(*aDestination));
-      // this calls the _other_ |CallQueryInterface|
-  }
+#if 0
+    // We don't really need this routine, and it confuses Solaris ... so out it goes
+  template <class DestinationType>
+  inline
+  nsresult
+  CallQueryInterface( nsISupports* aSource, nsCOMPtr<DestinationType>* aDestination )
+      // a type-safe shortcut for calling the |QueryInterface()| member function
+    {
+      return CallQueryInterface(aSource, getter_AddRefs(*aDestination));
+        // this calls the _other_ |CallQueryInterface|
+    }
+#endif
 
 #endif // !defined(nsCOMPtr_h___)
