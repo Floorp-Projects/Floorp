@@ -34,7 +34,7 @@ PL_CompareFileAssoc(const void *v1, const void *v2)
     nsFileAssoc *a = (nsFileAssoc*)v1;
     nsFileAssoc *b = (nsFileAssoc*)v2;
 
-    return *a->name == *b->name;
+    return *a->name.GetUnicode() == *b->name.GetUnicode();
 }
 
 nsNetFile::nsNetFile() {
