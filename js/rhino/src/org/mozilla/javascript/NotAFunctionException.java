@@ -38,9 +38,9 @@
 package org.mozilla.javascript;
 
 /**
- * Thrown if call is attempted on an object that is not a function.
+ * @deprecated Exceptions of this type are no longer thrown.
  */
-public class NotAFunctionException extends Exception {
+public class NotAFunctionException extends Error {
 
     public NotAFunctionException() {
     }

@@ -1045,19 +1045,15 @@ public class Context {
      * @param scope the scope to search for the constructor and to evaluate
      *              against
      * @return the new object
-     * @exception PropertyException if "Object" cannot be found in
-     *            the scope
-     * @exception NotAFunctionException if the "Object" found in the scope
-     *            is not a function
+     * @exception EvaluatorException if "Object" cannot be found in
+     *            the scope or is not a function
      * @exception JavaScriptException if an uncaught JavaScript exception
      *            occurred while creating the object
      */
     public Scriptable newObject(Scriptable scope)
-        throws PropertyException,
-               NotAFunctionException,
-               JavaScriptException
+        throws EvaluatorException, JavaScriptException
     {
-        return newObject(scope, "Object", null);
+        return newObject(scope, "Object", ScriptRuntime.emptyArgs);
     }
 
     /**
@@ -1069,19 +1065,15 @@ public class Context {
      * @param scope the scope to search for the constructor and to evaluate against
      * @param constructorName the name of the constructor to call
      * @return the new object
-     * @exception PropertyException if a property with the constructor
-     *            name cannot be found in the scope
-     * @exception NotAFunctionException if the property found in the scope
-     *            is not a function
+     * @exception EvaluatorException if a property with the constructor
+     *            name cannot be found in the scope or is not a function
      * @exception JavaScriptException if an uncaught JavaScript exception
      *            occurred while creating the object
      */
     public Scriptable newObject(Scriptable scope, String constructorName)
-        throws PropertyException,
-               NotAFunctionException,
-               JavaScriptException
+        throws EvaluatorException, JavaScriptException
     {
-        return newObject(scope, constructorName, null);
+        return newObject(scope, constructorName, ScriptRuntime.emptyArgs);
     }
 
     /**
@@ -1102,33 +1094,20 @@ public class Context {
      * @param constructorName the name of the constructor to call
      * @param args the array of arguments for the constructor
      * @return the new object
-     * @exception PropertyException if a property with the constructor
-     *            name cannot be found in the scope
-     * @exception NotAFunctionException if the property found in the scope
-     *            is not a function
+     * @exception EvaluatorException if a property with the constructor
+     *            name cannot be found in the scope or is not a function
      * @exception JavaScriptException if an uncaught JavaScript exception
      *            occurs while creating the object
      */
     public Scriptable newObject(Scriptable scope, String constructorName,
                                 Object[] args)
-        throws PropertyException,
-               NotAFunctionException,
-               JavaScriptException
+        throws EvaluatorException, JavaScriptException
     {
         scope = ScriptableObject.getTopLevelScope(scope);
-        Object ctorVal = ScriptableObject.getProperty(scope, constructorName);
-        if (ctorVal instanceof Function) {
-            Function ctor = (Function) ctorVal;
-            if (args == null) { args = ScriptRuntime.emptyArgs; }
-            return ctor.construct(this, scope, args);
-        }
-        if (ctorVal == Scriptable.NOT_FOUND) {
-            String message = getMessage1("msg.ctor.not.found", constructorName);
-            throw new PropertyException(message);
-        } else {
-            String message = getMessage1("msg.not.ctor", constructorName);
-            throw new NotAFunctionException(message);
-        }
+        Function ctor = ScriptRuntime.getExistingCtor(this, scope,
+                                                      constructorName);
+        if (args == null) { args = ScriptRuntime.emptyArgs; }
+        return ctor.construct(this, scope, args);
     }
 
     /**

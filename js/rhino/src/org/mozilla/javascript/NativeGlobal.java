@@ -610,13 +610,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
             return new EcmaError((NativeError)errorObject, sourceName,
                                  lineNumber, columnNumber, lineSource);
         }
-        catch (PropertyException x) {
-            throw new RuntimeException(x.toString());
-        }
         catch (JavaScriptException x) {
-            throw new RuntimeException(x.toString());
-        }
-        catch (NotAFunctionException x) {
             throw new RuntimeException(x.toString());
         }
     }
