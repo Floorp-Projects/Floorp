@@ -1791,14 +1791,17 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
 
 static void
 StyleChangeReflow(nsIPresContext* aPresContext,
-                  nsIFrame* aFrame)
+                  nsIFrame* aFrame,
+                  nsIAtom * aAttribute)
 {
   nsIPresShell* shell;
   shell = aPresContext->GetShell();
     
   nsIReflowCommand* reflowCmd;
   nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
-                                        nsIReflowCommand::StyleChanged);
+                                        nsIReflowCommand::StyleChanged,
+                                        nsnull,
+                                        aAttribute);
   if (NS_SUCCEEDED(rv)) {
     shell->AppendReflowCommand(reflowCmd);
     NS_RELEASE(reflowCmd);
@@ -1862,7 +1865,7 @@ PRBool HTMLStyleSheetImpl::AttributeRequiresReflow(nsIAtom* aAttribute)
 
 PRBool HTMLStyleSheetImpl::AttributeRequiresRepaint(nsIAtom* aAttribute)
 {
-  // these are attributes that always require a restyle and a repaint
+  // these are attributes that always require a restyle and a repaint, but not a reflow
   // regardless of the tag they are associated with
   return (PRBool)
     (aAttribute==nsHTMLAtoms::bgcolor ||
@@ -1983,7 +1986,7 @@ HTMLStyleSheetImpl::AttributeChanged(nsIPresContext* aPresContext,
       NS_NOTYETIMPLEMENTED("frame change reflow");
     }
     else if (PR_TRUE == reflow) {
-      StyleChangeReflow(aPresContext, frame);
+      StyleChangeReflow(aPresContext, frame, aAttribute);
     }
     else if (PR_TRUE == render) {
       ApplyRenderingChangeToTree(aPresContext, frame);

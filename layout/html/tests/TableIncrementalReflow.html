@@ -174,7 +174,7 @@ function deleteRow() {
 
 function changeRowStyle() {
   var row = document.getElementsByTagName("TR")[0];
-  row.align="right";
+  row.vAlign="top";
   dump("SCRIPT: changed default align for first ROW to right\n");
 }
 
@@ -208,8 +208,8 @@ function deleteCell() {
 
 function changeCellStyle() {
   var cell = document.getElementsByTagName("TD")[0];
-  cell.width="right";
-  dump("SCRIPT: changed align for first CELL to right\n");
+  cell.width=400;
+  dump("SCRIPT: changed width for first CELL to 400\n");
 }
 
 function AddALot() {
