@@ -305,7 +305,9 @@ var transferUtils = {
       case "application/x-moz-file":
         var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                                   .getService(Components.interfaces.nsIIOService);
-        return ioService.getURLSpecFromFile(aData);
+        var fileHandler = ioService.getProtocolHandler("file")
+                                   .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+        return fileHandler.getURLSpecFromFile(aData);
     }
     return null;                                                   
   }
