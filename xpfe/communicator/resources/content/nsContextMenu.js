@@ -185,7 +185,7 @@ nsContextMenu.prototype = {
         this.showItem( "context-redo", this.onTextInput );
         this.showItem( "context-sep-undo", this.onTextInput );
         this.showItem( "context-cut", this.onTextInput );
-        this.showItem( "context-copy", true );
+        this.showItem( "context-copy", this.isTextSelected || this.onTextInput);
         this.showItem( "context-paste", this.onTextInput );
         this.showItem( "context-delete", this.onTextInput );
         this.showItem( "context-sep-paste", this.onTextInput );
