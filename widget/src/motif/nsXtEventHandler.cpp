@@ -630,12 +630,12 @@ void nsXtWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent, Widget w, 
   XtTranslateKeycode(xKeyEvent->display,xKeyEvent->keycode, xKeyEvent->state, &modout, &res); 
   res = XKeycodeToKeysym(xKeyEvent->display, xKeyEvent->keycode, 0);
 
-  aKeyEvent.keyCode   = nsConvertKey(res) - 0xFF00;
+  aKeyEvent.keyCode   = nsConvertKey(res) & 0x00FF;
   aKeyEvent.time      = xKeyEvent->time; 
   aKeyEvent.isShift   = (xKeyEvent->state & ShiftMask) ? PR_TRUE : PR_FALSE; 
   aKeyEvent.isControl = (xKeyEvent->state & ControlMask) ? PR_TRUE : PR_FALSE;
   aKeyEvent.isAlt     = (xKeyEvent->state & Mod1Mask) ? PR_TRUE : PR_FALSE;
- printf("KEY Event type %d %d shift %d control %d alt %d \n", aEventType == NS_KEY_DOWN, aKeyEvent.keyCode, aKeyEvent.isShift, aKeyEvent.isControl, aKeyEvent.isAlt);
+// printf("KEY Event type %d %d shift %d control %d alt %d \n", aEventType == NS_KEY_DOWN, aKeyEvent.keyCode, aKeyEvent.isShift, aKeyEvent.isControl, aKeyEvent.isAlt);
 }
 
 //==============================================================
