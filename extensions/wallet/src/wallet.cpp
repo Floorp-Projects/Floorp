@@ -38,6 +38,7 @@
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLOptionElement.h"
+#include "nsICommonDialogs.h"
 #include "nsIURL.h"
 
 #include "nsFileStream.h"
@@ -72,6 +73,7 @@ static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
+static NS_DEFINE_CID(kCommonDialogsCID, NS_CommonDialog_CID );
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 
@@ -737,26 +739,26 @@ Wallet_Localize(char* genericString) {
 /**********************/
 
 PUBLIC PRBool
-Wallet_Confirm(PRUnichar * szMessage)
+Wallet_Confirm(PRUnichar * szMessage, nsIDOMWindow* window)
 {
   PRBool retval = PR_TRUE; /* default value */
 
   nsresult res;  
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res);
   if (NS_FAILED(res)) {
     return retval;
   }
 
   const nsAutoString message = szMessage;
   retval = PR_FALSE; /* in case user exits dialog by clicking X */
-  res = dialog->Confirm(nsnull, message.GetUnicode(), &retval);
+  res = dialog->Confirm(window, nsnull, message.GetUnicode(), &retval);
   return retval;
 }
 
 PUBLIC PRBool
-Wallet_ConfirmYN(PRUnichar * szMessage) {
+Wallet_ConfirmYN(PRUnichar * szMessage, nsIDOMWindow* window) {
   nsresult res;  
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res);
   if (NS_FAILED(res)) {
     return PR_FALSE;
   }
@@ -767,6 +769,7 @@ Wallet_ConfirmYN(PRUnichar * szMessage) {
   PRUnichar * confirm_string = Wallet_Localize("Confirm");
 
   res = dialog->UniversalDialog(
+    window, /* parent window */
     NULL, /* title message */
     confirm_string, /* title text in top line of window */
     szMessage, /* this is the main message */
@@ -793,10 +796,10 @@ Wallet_ConfirmYN(PRUnichar * szMessage) {
 }
 
 PUBLIC PRInt32
-Wallet_3ButtonConfirm(PRUnichar * szMessage)
+Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindow* window)
 {
   nsresult res;  
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res);
   if (NS_FAILED(res)) {
     return 0; /* default value is NO */
   }
@@ -808,6 +811,7 @@ Wallet_3ButtonConfirm(PRUnichar * szMessage)
   PRUnichar * confirm_string = Wallet_Localize("Confirm");
 
   res = dialog->UniversalDialog(
+    window, /* parent window */
     NULL, /* title message */
     confirm_string, /* title text in top line of window */
     szMessage, /* this is the main message */
@@ -851,9 +855,11 @@ Wallet_Alert(PRUnichar * szMessage)
 }
 
 PUBLIC PRBool
-Wallet_CheckConfirmYN(PRUnichar * szMessage, PRUnichar * szCheckMessage, PRBool* checkValue) {
+Wallet_CheckConfirmYN
+    (PRUnichar * szMessage, PRUnichar * szCheckMessage, PRBool* checkValue,
+     nsIDOMWindow* window) {
   nsresult res;  
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res);
   if (NS_FAILED(res)) {
     *checkValue = 0;
     return PR_FALSE;
@@ -865,6 +871,7 @@ Wallet_CheckConfirmYN(PRUnichar * szMessage, PRUnichar * szCheckMessage, PRBool*
   PRUnichar * confirm_string = Wallet_Localize("Confirm");
 
   res = dialog->UniversalDialog(
+    window, /* parent window */
     NULL, /* title message */
     confirm_string, /* title text in top line of window */
     szMessage, /* this is the main message */
@@ -2583,7 +2590,7 @@ Wallet_SignonViewerReturn(const nsString& results)
  * see if user wants to capture data on current page
  */
 PRIVATE PRBool
-wallet_OKToCapture(char* urlName) {
+wallet_OKToCapture(char* urlName, nsIDOMWindow* window) {
   nsAutoString url; url.AssignWithConversion(urlName);
 
   /* exit if pref is not set */
@@ -2604,7 +2611,7 @@ wallet_OKToCapture(char* urlName) {
   /* ask user if we should capture the values on this form */
   PRUnichar * message = Wallet_Localize("WantToCaptureForm?");
 
-  PRInt32 button = Wallet_3ButtonConfirm(message);
+  PRInt32 button = Wallet_3ButtonConfirm(message, window);
   if (button == NEVER_BUTTON) {
     /* add URL to list with NO_CAPTURE indicator set */
     value.SetCharAt('y', NO_CAPTURE);
@@ -3355,7 +3362,7 @@ public:
 };
 
 PUBLIC void
-WLLT_OnSubmit(nsIContent* currentForm) {
+WLLT_OnSubmit(nsIContent* currentForm, nsIDOMWindow* window) {
 
   nsCOMPtr<nsIDOMHTMLFormElement> currentFormNode(do_QueryInterface(currentForm));
 
@@ -3503,7 +3510,7 @@ WLLT_OnSubmit(nsIContent* currentForm) {
           if (currentFormNode == formNode) {
             NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
             if (NS_SUCCEEDED(rv)) {
-              SINGSIGN_RememberSignonData(dialog, URLName, signonData);
+              SINGSIGN_RememberSignonData(dialog, URLName, signonData, window);
             }
           }
           PRInt32 count2 = signonData->Count();
@@ -3525,7 +3532,8 @@ WLLT_OnSubmit(nsIContent* currentForm) {
           }
 #else
           /* save form if it meets all necessary conditions */
-          if (wallet_GetFormsCapturingPref() && (OKToPrompt) && wallet_OKToCapture(URLName)) {
+          if (wallet_GetFormsCapturingPref() &&
+              (OKToPrompt) && wallet_OKToCapture(URLName, window)) {
 
             /* conditions all met, now save it */
             for (PRUint32 elementY = 0; elementY < numElements; elementY++) {

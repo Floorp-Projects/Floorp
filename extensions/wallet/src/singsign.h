@@ -33,6 +33,7 @@
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsIPref.h"
+#include "nsIDOMWindow.h"
 
 /* Duplicates defines as in nsIPrompt.idl -- keep in sync! */
 #define SINGSIGN_SAVE_PASSWORD_NEVER 0
@@ -116,7 +117,8 @@ extern PRBool
 SINGSIGN_ReencryptAll();
 
 extern void
-SINGSIGN_RememberSignonData(nsIPrompt* dialog, const char* URLName, nsVoidArray * signonData);
+SINGSIGN_RememberSignonData
+  (nsIPrompt* dialog, const char* URLName, nsVoidArray * signonData, nsIDOMWindow* window);
 
 XP_END_PROTOS
 

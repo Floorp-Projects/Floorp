@@ -75,7 +75,7 @@ extern void
 WLLT_GetPrefillListForViewer(nsString& aPrefillList);
 
 extern void
-WLLT_OnSubmit(nsIContent* formNode);
+WLLT_OnSubmit(nsIContent* formNode, nsIDOMWindow* window);
 
 extern void
 WLLT_FetchFromNetCenter();
@@ -98,9 +98,9 @@ extern PRUnichar * Wallet_Localize(char * genericString);
 
 extern char* Wallet_RandomName(char* suffix);
 
-extern PRBool Wallet_ConfirmYN(PRUnichar * szMessage);
+extern PRBool Wallet_ConfirmYN(PRUnichar * szMessage, nsIDOMWindow* window);
 
-extern PRInt32 Wallet_3ButtonConfirm(PRUnichar * szMessage);
+extern PRInt32 Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindow* window);
 
 extern nsresult
 Wallet_Encrypt2(const nsString& text, nsString& crypt);
