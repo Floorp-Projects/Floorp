@@ -22,9 +22,8 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = pop3 
-#commented out because it doesn't build
-#DIRS += mailbox 
+#commented out because they don't build
+#DIRS = pop3 mailbox
 
 include $(topsrcdir)/config/config.mk
 
