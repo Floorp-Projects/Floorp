@@ -7877,7 +7877,9 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
     nsCOMPtr<nsIDocument> document;
     nsCOMPtr<nsIContent> firstAppendedChild;
     aContainer->ChildAt(aNewIndexInContainer, *getter_AddRefs(firstAppendedChild));
-    firstAppendedChild->GetDocument(*getter_AddRefs(document));
+    if (firstAppendedChild) {
+      firstAppendedChild->GetDocument(*getter_AddRefs(document));
+    }
     if (document)
       document->GetBindingManager(getter_AddRefs(bindingManager));
     if (bindingManager) {
@@ -10231,10 +10233,10 @@ nsCSSFrameConstructor::StyleRuleRemoved(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-static void
-GetAlternateTextFor(nsIContent* aContent,
-                    nsIAtom*    aTag,  // content object's tag
-                    nsString&   aAltText)
+//STATIC
+void nsCSSFrameConstructor::GetAlternateTextFor(nsIContent* aContent,
+                                                nsIAtom*    aTag,  // content object's tag
+                                                nsString&   aAltText)
 {
   nsresult  rv;
 
@@ -10242,24 +10244,17 @@ GetAlternateTextFor(nsIContent* aContent,
   // when the image can not be displayed
   rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, aAltText);
 
-  // If there's no "alt" attribute, then use the value of the "title"
-  // attribute. Note that this is not the same as a value of ""
-  if (NS_CONTENT_ATTR_NOT_THERE == rv) {
-    rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::title, 
+  // If there's no "alt" attribute, and aContent is an input    
+  // element, then use the value of the "value" attribute
+  if ((NS_CONTENT_ATTR_NOT_THERE == rv) && (nsHTMLAtoms::input == aTag)) {
+    rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value,
                            aAltText);
 
-    // If there's no "alt" or "title" attribute, and aContent is an input    
-    // element, then use the value of the "value" attribute
-    if ((NS_CONTENT_ATTR_NOT_THERE == rv) && (nsHTMLAtoms::input == aTag)) {
-      rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value,
-                             aAltText);
-
-      // If there's no "value" attribute either, then use the localized string 
-      // for "Submit" as the alternate text.
-      if (NS_CONTENT_ATTR_NOT_THERE == rv) {
-        nsFormControlHelper::GetLocalizedString(nsFormControlHelper::GetHTMLPropertiesFileName(),
-                                                NS_LITERAL_STRING("Submit").get(), aAltText);      
-      }
+    // If there's no "value" attribute either, then use the localized string 
+    // for "Submit" as the alternate text.
+    if (NS_CONTENT_ATTR_NOT_THERE == rv) {
+      nsFormControlHelper::GetLocalizedString(nsFormControlHelper::GetHTMLPropertiesFileName(),
+                                              NS_LITERAL_STRING("Submit").get(), aAltText);      
     }
   }
 }

@@ -70,6 +70,10 @@ public:
   static nsresult InitGlobals() { return CallGetService("@mozilla.org/xbl;1", &gXBLService); }
   static void ReleaseGlobals() { NS_IF_RELEASE(gXBLService); }
 
+  // get the alternate text for a content node
+  static void GetAlternateTextFor(nsIContent* aContent,
+                                  nsIAtom*    aTag,  // content object's tag
+                                  nsString&   aAltText);
 private: 
   // These are not supported and are not implemented! 
   nsCSSFrameConstructor(const nsCSSFrameConstructor& aCopy); 
