@@ -21,11 +21,56 @@
 interface nsIChannel;
 interface nsIEventSinkGetter;
 
-[scriptable, uuid(78406350-0ce5-11d3-9331-00104ba0fd40)]
+/**
+ * The nsIURL interface provides convenience methods that further
+ * break down the path portion of nsIURI:
+ *
+ * http://directory/fileBaseName.fileExtension?query
+ * http://directory/fileBaseName.fileExtension#ref
+ * http://directory/fileBaseName.fileExtension;param
+ *       \          \                       /
+ *        \          -----------------------
+ *         \                   |          /
+ *          \               fileName     /
+ *           ----------------------------
+ *                       |
+ *                   filePath
+ */
+[scriptable, uuid(d6116970-8034-11d3-9399-00104ba0fd40)]
 interface nsIURL : nsIURI
 {
-    // The following 4 attributes breakdown the Path attribute 
-    // into its constituents...
+    ////////////////////////////////////////////////////////////////////////////
+    // The path attribute is broken down into the following attributes:
+    // filePath, param, query, and ref:
+
+    /**
+     * Returns a path including the directory and file portions of a
+     * URL. E.g. The filePath of "http://foo/bar.html#baz" is
+     * "/foo/bar.html". 
+     */
+    attribute string filePath;
+
+    /**
+     * Returns the parameters specified after the ; in the URL. 
+     *
+     */
+    attribute string param;
+
+    /**
+     * Returns the query portion (the part after the "?") of the URL.
+     * If there isn't one, an empty string is returned.
+     */
+    attribute string query;
+
+    /**
+     * Returns the reference portion (the part after the "#") of the URL.
+     * If there isn't one, an empty string is returned.
+     */
+    attribute string ref;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // The filePath attribute is further broken down into the following
+    // attributes: directory, file:
 
     /**
      * Returns the directory portion of a URL. 
@@ -35,11 +80,11 @@ interface nsIURL : nsIURI
      * empty string. If the trailing slash is omitted, then the
      * Directory is /foo/ and the file is bar (i.e. this is a 
      * syntactic, not a semantic breakdown of the Path).
-	 * And hence dont rely on this for something to be a definitely 
-	 * be a file. But you can get just the leading directory portion 
-	 * for sure.
+     * And hence dont rely on this for something to be a definitely 
+     * be a file. But you can get just the leading directory portion 
+     * for sure.
      */
-    attribute string Directory;
+    attribute string directory;
 
     /**
      * Returns the file name portion of a URL.
@@ -47,39 +92,22 @@ interface nsIURL : nsIURI
      * e.g. http://foo/bar/, then the Directory attribute accesses
      * the complete /foo/bar/ portion, and the FileName is the 
      * empty string. Note that this is purely based on searching 
-	 * for the last trailing slash. And hence dont rely on this to 
-	 * be a definite file. 
+     * for the last trailing slash. And hence dont rely on this to 
+     * be a definite file. 
      */
-    attribute string FileName;
+    attribute string fileName;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // The fileName attribute is further broken down into the following
+    // attributes: fileName, fileExtension:
+
+    attribute string fileBaseName;
 
     /**
      * Returns the file extension portion of a filename in a url.
      * If a file extension does not exist, the empty string is returned.
      */
-    readonly attribute string FileExtension;
-
-	/**
-	 * Returns the parameters specified after the ; in the URL. 
-	 *
-	 */
-    attribute string Param;
-
-    /**
-     * Returns the query portion (the part after the "?") of the URL.
-     * If there isn't one, an empty string is returned.
-     */
-    attribute string Query;
-
-    /**
-     * Returns the reference portion (the part after the "#") of the URL.
-     * If there isn't one, an empty string is returned.
-     */
-    attribute string Ref;
-
-	 /**
-	  * Returns the Directory + Filename. Just a convenience function
-	  */
-	 void DirFile(out string o_DirFile);
+    attribute string fileExtension;
 };
 
 %{C++
@@ -93,11 +121,11 @@ interface nsIURL : nsIURI
  */
 
 #define NS_STANDARDURL_CID                           \
-{ /* 46fc2a26-ff66-11d2-8ccb-0060b0fc14a3 */         \
-    0x46fc2a26,                                      \
-    0xff66,                                          \
-    0x11d2,                                          \
-    {0x8c, 0xcb, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+{ /* de9472d0-8034-11d3-9399-00104ba0fd40 */         \
+    0xde9472d0,                                      \
+    0x8034,                                          \
+    0x11d3,                                          \
+    {0x93, 0x99, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
 %}

@@ -214,7 +214,12 @@ nsSimpleURI::Clone(nsIURI* *result)
     return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsSimpleURI::SetRelativePath(const char *i_RelativePath)
+{ 
+    NS_ASSERTION(PR_FALSE, "This is meaningless in hack context!"); 
+    return NS_ERROR_FAILURE;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -28,7 +28,7 @@ interface nsIInputStream;
 [scriptable, uuid(60fdf550-5392-11d3-9a97-0080c7cb1080)]
 interface nsILoadGroupListenerFactory : nsISupports
 {
-	nsIStreamListener CreateLoadGroupListener(in nsIStreamListener alistener);
+    nsIStreamListener createLoadGroupListener(in nsIStreamListener alistener);
 };
 
 
@@ -38,7 +38,7 @@ interface nsILoadGroupListenerFactory : nsISupports
 [scriptable, uuid(19845248-29ab-11d3-8cce-0060b0fc14a3)]
 interface nsILoadGroup : nsIRequest
 {
-    void Init(in nsIStreamObserver observer,
+    void init(in nsIStreamObserver observer,
               in nsILoadGroup parent);
 
     /**
@@ -46,14 +46,14 @@ interface nsILoadGroup : nsIRequest
      * a flag word. Setting the default load attributes will cause them
      * to be applied to each new channel inserted into the group.
      */
-    attribute unsigned long DefaultLoadAttributes;
+    attribute unsigned long defaultLoadAttributes;
 
-	/**
-	 * Accesses the default load channel for the group.  Each time a number
-	 * of channels are added to a group, the DefaultLoadChannel may be set
-	 * to indicate that all of the channels are related to a particular URL.
-	 */
-	attribute nsIChannel DefaultLoadChannel;
+    /**
+     * Accesses the default load channel for the group.  Each time a number
+     * of channels are added to a group, the DefaultLoadChannel may be set
+     * to indicate that all of the channels are related to a particular URL.
+     */
+    attribute nsIChannel defaultLoadChannel;
 
     /**
      * Adds a new channel to the group. This will cause the default load
@@ -61,7 +61,7 @@ interface nsILoadGroup : nsIRequest
      * the first channel in the group, the group's observer's OnStartRequest
      * method is called.
      */
-    void AddChannel(in nsIChannel channel,
+    void addChannel(in nsIChannel channel,
                     in nsISupports ctxt);
 
     /**
@@ -69,7 +69,7 @@ interface nsILoadGroup : nsIRequest
      * the last channel in the group, the group's observer's OnStopRequest
      * method is called.
      */
-    void RemoveChannel(in nsIChannel channel, 
+    void removeChannel(in nsIChannel channel, 
                        in nsISupports ctxt,
                        in nsresult status,
                        in wstring errorMsg);
@@ -78,25 +78,25 @@ interface nsILoadGroup : nsIRequest
      * Returns the channels contained directly in this group.
      * Enumerator element type: nsIChannel.
      */
-    readonly attribute nsISimpleEnumerator Channels;
+    readonly attribute nsISimpleEnumerator channels;
 
     /**
      * Adds a new sub-group to the group.
      */
-    void AddSubGroup(in nsILoadGroup group);
+    void addSubGroup(in nsILoadGroup group);
 
     /**
      * Removes a sub-group from the group.
      */
-    void RemoveSubGroup(in nsILoadGroup group);
+    void removeSubGroup(in nsILoadGroup group);
 
     /**
      * Returns the sub-groups of a group.
      * Enumerator element type: nsILoadGroup.
      */
-    readonly attribute nsISimpleEnumerator SubGroups;
+    readonly attribute nsISimpleEnumerator subGroups;
 
-	attribute nsILoadGroupListenerFactory GroupListenerFactory;
+    attribute nsILoadGroupListenerFactory groupListenerFactory;
 };
 
 %{C++

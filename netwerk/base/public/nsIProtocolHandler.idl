@@ -26,11 +26,11 @@ interface nsILoadGroup;
 [scriptable, uuid(8984a6f0-1893-11d3-9337-00104ba0fd40)]
 interface nsIProtocolHandler : nsISupports
 {
-    readonly attribute string Scheme;
+    readonly attribute string scheme;
 
-    readonly attribute long DefaultPort;
+    readonly attribute long defaultPort;
 
-    string MakeAbsolute(in string aRelativeSpec, in nsIURI aBaseURI);
+    string makeAbsolute(in string aRelativeSpec, in nsIURI aBaseURI);
 
     /**
      * Makes a URI object that is suitable for loading by this protocol.
@@ -38,11 +38,11 @@ interface nsIProtocolHandler : nsISupports
      * needed), this method just constructs a standard URI using the
      * component manager with kStandardURLCID.
      */
-    nsIURI NewURI(in string aSpec, in nsIURI aBaseURI);
+    nsIURI newURI(in string aSpec, in nsIURI aBaseURI);
 
-    nsIChannel NewChannel(in string verb,
+    nsIChannel newChannel(in string verb,
                           in nsIURI aURI,
-						  in nsILoadGroup aLoadGroup,
+                          in nsILoadGroup aLoadGroup,
                           in nsIEventSinkGetter eventSinkGetter);
 };
 

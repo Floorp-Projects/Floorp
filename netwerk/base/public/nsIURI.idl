@@ -58,7 +58,7 @@ interface nsIURI : nsISupports
      * the spec (or any of the accessors) causes also any currently
      * open streams on the URI's channel to be closed.
      */
-    attribute string Spec;
+    attribute string spec;
 
     /**
      * The Scheme is the protocol to which this URI refers. Setting
@@ -67,19 +67,19 @@ interface nsIURI : nsISupports
      * and passes the it to the nsIOService to create a new URI for
      * the new scheme.
      */
-    attribute string Scheme;
+    attribute string scheme;
 
     /**
      * The PreHost portion includes elements like the optional 
      * username:password, or maybe other scheme specific items. 
      */
-    attribute string PreHost;
+    attribute string preHost;
 
     /**
      * The Host is the internet domain name to which this URI refers. 
      * Note that it could be an IP address as well. 
      */
-    attribute string Host;
+    attribute string host;
 
     /**
      * A return value of -1 indicates that no port value is set and the 
@@ -90,14 +90,14 @@ interface nsIURI : nsISupports
      * However after setting a port (even if its default), the port number will
      * appear in the ToNewCString function.
      */
-    attribute long Port;
+    attribute long port;
 
     /**
      * Note that the path includes the leading '/' Thus if no path is 
      * available the Path accessor will return a "/" 
      * For SetPath if none is provided, one would be prefixed to the path. 
      */
-    attribute string Path;
+    attribute string path;
 
     /**
      * Note that this comparison is only on char* level. Use 
@@ -107,7 +107,7 @@ interface nsIURI : nsISupports
      * but this function through nsIURI alone will not return equality
      * for this case.
      */
-    boolean Equals(in nsIURI other);
+    boolean equals(in nsIURI other);
 
     /**
      * Clones the current URI. The newly created URI will be in a closed
@@ -115,7 +115,7 @@ interface nsIURI : nsISupports
      * Cloning allows the current location to be retained since once the
      * channel is opened the URI may get redirected to a new location.
      */
-    nsIURI Clone();
+    nsIURI clone();
 
 	/**
 	 * Sets the given string to be a relative path for this URL, and 
@@ -124,7 +124,7 @@ interface nsIURI : nsISupports
 	 * change this to http://foo.com/baz and calling it with "baz" will
 	 * change this to http://foo.com/bar/baz. 
 	 */
-	 void SetRelativePath(in string i_RelativePath);
+	 void setRelativePath(in string i_RelativePath);
 };
 
 %{C++

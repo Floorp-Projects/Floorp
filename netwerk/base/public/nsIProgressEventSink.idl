@@ -32,7 +32,7 @@ interface nsIProgressEventSink : nsISupports
     /**
      * Notify the EventSink that progress as occurred for the URL load.<BR>
      */
-    void OnProgress(in nsIChannel channel,
+    void onProgress(in nsIChannel channel,
                     in nsISupports ctxt,
                     in unsigned long aProgress,
                     in unsigned long aProgressMax);
@@ -40,7 +40,7 @@ interface nsIProgressEventSink : nsISupports
     /**
      * Notify the EventSink with a status message for the URL load.<BR>
      */
-    void OnStatus(in nsIChannel channel,
+    void onStatus(in nsIChannel channel,
                   in nsISupports ctxt,
                   in wstring aMsg);
 

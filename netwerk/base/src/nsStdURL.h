@@ -150,6 +150,12 @@ nsStdURL::GetFileExtension(char* *o_FileExtension)
 }
 
 inline NS_METHOD
+nsStdURL::SetFileExtension(const char* FileExtension)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+inline NS_METHOD
 nsStdURL::GetRef(char* *o_Ref)
 {
     return DupString(o_Ref, mRef);

@@ -24,20 +24,20 @@ interface nsIPrompt : nsISupports
     /**
      * Puts up an alert dialog with an OK button.
      */
-    void Alert(in wstring text);
+    void alert(in wstring text);
 
     /**
      * Puts up a dialog with OK and Cancel buttons.
      * @return true for OK, false for Cancel
      */
-    boolean Confirm(in wstring text);
+    boolean confirm(in wstring text);
 
     /**
      * Puts up a dialog with OK and Cancel buttons, and
      * a message with a single checkbox.
      * @return true for OK, false for Cancel
      */
-    boolean ConfirmCheck(in wstring text,
+    boolean confirmCheck(in wstring text,
                          in wstring checkMsg,
                          out boolean checkValue);
 
@@ -45,14 +45,14 @@ interface nsIPrompt : nsISupports
      * Puts up a dialog with Yes and No buttons.
      * @return true for OK, false for Cancel
      */
-    boolean ConfirmYN(in wstring text);
+    boolean confirmYN(in wstring text);
 
     /**
      * Puts up a dialog with Yes and No buttons, and
      * a message with a single checkbox.
      * @return true for OK, false for Cancel
      */
-    boolean ConfirmCheckYN(in wstring text,
+    boolean confirmCheckYN(in wstring text,
                          in wstring checkMsg,
                          out boolean checkValue);
 
@@ -60,7 +60,7 @@ interface nsIPrompt : nsISupports
      * Puts up a text input dialog with OK and Cancel buttons.
      * @return true for OK, false for Cancel
      */
-    boolean Prompt(in wstring text,
+    boolean prompt(in wstring text,
                    in wstring defaultText, 
                    out wstring result);
 
@@ -68,7 +68,7 @@ interface nsIPrompt : nsISupports
      * Puts up a username/password dialog with OK and Cancel buttons.
      * @return true for OK, false for Cancel
      */
-    boolean PromptUsernameAndPassword(in wstring text,
+    boolean promptUsernameAndPassword(in wstring text,
                                       out wstring user, 
                                       out wstring pwd);
 
@@ -76,6 +76,6 @@ interface nsIPrompt : nsISupports
      * Puts up a password dialog with OK and Cancel buttons.
      * @return true for OK, false for Cancel
      */
-    boolean PromptPassword(in wstring text, 
+    boolean promptPassword(in wstring text, 
                            out wstring pwd);
 };

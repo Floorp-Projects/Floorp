@@ -35,7 +35,7 @@ interface nsIStatusCodeEventSink : nsISupports
      * Notify the EventSink with a status code for the URL load.<BR>
      * Use IOService to request converting that code to a string. 
      */
-    void OnStatus(in nsIChannel channel,
+    void onStatus(in nsIChannel channel,
                   in nsISupports ctxt,
                   in unsigned long aCode);
 

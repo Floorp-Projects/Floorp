@@ -24,10 +24,10 @@ interface nsIChannel;
 [scriptable, uuid(fd91e2e0-1481-11d3-9333-00104ba0fd40)]
 interface nsIStreamObserver : nsISupports
 {
-    void OnStartRequest(in nsIChannel channel,
+    void onStartRequest(in nsIChannel channel,
                         in nsISupports ctxt);
 
-    void OnStopRequest(in nsIChannel channel,
+    void onStopRequest(in nsIChannel channel,
                        in nsISupports ctxt, 
                        in nsresult status,
                        in wstring errorMsg);
