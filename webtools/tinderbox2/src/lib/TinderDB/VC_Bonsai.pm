@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.48 $ 
-# $Date: 2002/05/06 23:04:10 $ 
+# $Revision: 1.49 $ 
+# $Date: 2002/05/06 23:38:38 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.48 $ )[1];
+$VERSION = ( qw $Revision: 1.49 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -358,13 +358,13 @@ sub status_table_start {
   my ($first_cell_seconds) = 2*($row_times->[0] - $row_times->[1]);
   my ($earliest_data) = $row_times->[0] + $first_cell_seconds;
 
-  $NEXT_DB = 0;
-  while ( ($DB_TIMES[$NEXT_DB] > $earliest_data) &&    
-          ($NEXT_DB < $#DB_TIMES) ) {
-    $NEXT_DB++
+  $NEXT_DB{$tree} = 0;
+  while ( ($DB_TIMES[$NEXT_DB{$tree}] > $earliest_data) &&    
+          ($NEXT_DB{$tree} < $#DB_TIMES) ) {
+    $NEXT_DB{$tree}++
   }
 
-  $LAST_TREESTATE = '';
+  $LAST_TREESTATE{$tree} = '';
   $NEXT_ROW{$tree} = 0;
 
   return ;  
@@ -381,25 +381,25 @@ sub is_break_cell {
     # structure use it.
 
     if (defined($DATABASE{$tree}{$time}{'treestate'})) {
-        $LAST_TREESTATE = $DATABASE{$tree}{$time}{'treestate'};
+        $LAST_TREESTATE{$tree} = $DATABASE{$tree}{$time}{'treestate'};
     }
 
     my $is_state1_different = 
         (
-         (defined($LAST_TREESTATE)) &&
+         (defined($LAST_TREESTATE{$tree})) &&
          (defined($DATABASE{$tree}{$next_time}{'treestate'})) &&
-         ($LAST_TREESTATE ne $DATABASE{$tree}{$next_time}{'treestate'}) &&
+         ($LAST_TREESTATE{$tree} ne $DATABASE{$tree}{$next_time}{'treestate'}) &&
          1);
 
     my $is_state2_different = 
         (
-         (defined($LAST_TREESTATE)) &&
+         (defined($LAST_TREESTATE{$tree})) &&
          (defined($DATABASE{$tree}{$time}{'treestate'})) &&
          ($LAST_TREESTATE ne $DATABASE{$tree}{$time}{'treestate'}) &&
          1);
 
     my $is_state_different = $is_state1_different || $is_state2_different;    
-    my $is_author_data = defined($DATABASE{$tree}{$time}{'author'});
+    my $is_author_data = defined($DATABASE{$tree}{$next_time}{'author'});
     
     my $is_break_cell = ( ($is_state_different) || ($is_author_data) );
     
@@ -432,21 +432,21 @@ sub status_table_row {
 
   # first find out what time the break will occur at.
 
-  my $next_index = $NEXT_DB;
+  while (
+         ( $DB_TIMES[$NEXT_DB{$tree}] > $row_times->[$row_index+1] ) &&
 
-  while (!(
-         is_break_cell(
-                       $tree,
-                       $DB_TIMES[$next_index],
-                       $DB_TIMES[$next_index+1],
-                       )
-         )) {
-
-      $next_index++;
-
+         (!(
+            is_break_cell(
+                          $tree,
+                          $DB_TIMES[$NEXT_DB{$tree}],
+                          $DB_TIMES[$NEXT_DB{$tree}+1],
+                          )
+            )) 
+    ) {
+    $NEXT_DB{$tree}++
   }
 
-  $next_time = $DB_TIMES[$next_index];
+  $next_time = $DB_TIMES[$NEXT_DB{$tree}];
 
 
   # If there is no treestate, then the tree state has not changed
@@ -454,17 +454,17 @@ sub status_table_row {
   # apply_db_updates().  It is possible that there are no treestates at
   # all this should not prevent the VC column from being rendered.
 
-  if (!($LAST_TREESTATE)) {
-      $LAST_TREESTATE = $TinderHeader::HEADER2DEFAULT_HTML{'TreeState'};
+  if (!($LAST_TREESTATE{$tree})) {
+      $LAST_TREESTATE{$tree} = $TinderHeader::HEADER2DEFAULT_HTML{'TreeState'};
   }
 
-  my ($cell_color) = TreeData::TreeState2color($LAST_TREESTATE);
-  my ($char) = TreeData::TreeState2char($LAST_TREESTATE);
+  my ($cell_color) = TreeData::TreeState2color($LAST_TREESTATE{$tree});
+  my ($char) = TreeData::TreeState2char($LAST_TREESTATE{$tree});
 
   my $cell_options;
   my $text_browser_color_string;
   
-  if ( ($LAST_TREESTATE) && ($cell_color) ) {
+  if ( ($LAST_TREESTATE{$tree}) && ($cell_color) ) {
       $cell_options = "bgcolor=$cell_color ";
 
       $text_browser_color_string = 
@@ -520,15 +520,15 @@ sub status_table_row {
   my (%authors) = ();
   
   while (1) {
-   my ($time) = $DB_TIMES[$NEXT_DB];
+   my ($time) = $DB_TIMES[$NEXT_DB{$tree}];
 
     # find the DB entries which are needed for this cell
     ($time < $row_times->[$row_index]) && last;
 
-    $NEXT_DB++;
+    $NEXT_DB{$tree}++;
 
     if (defined($DATABASE{$tree}{$time}{'treestate'})) {
-      $LAST_TREESTATE = $DATABASE{$tree}{$time}{'treestate'};
+      $LAST_TREESTATE{$tree} = $DATABASE{$tree}{$time}{'treestate'};
     }
 
    # Now invert the data structure.
