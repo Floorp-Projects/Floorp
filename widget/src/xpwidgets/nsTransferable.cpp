@@ -36,6 +36,7 @@ NS_IMPL_RELEASE(nsTransferable)
 
 // million bytes
 #define LARGE_DATASET_SIZE 1000000 
+//#define LARGE_DATASET_SIZE 10 
 
 struct DataStruct {
   DataStruct (const nsString & aString)
@@ -99,9 +100,11 @@ void DataStruct::SetData ( char* aData, PRUint32 aDataLen )
 //-------------------------------------------------------------------------
 void DataStruct::GetData ( char** aData, PRUint32 *aDataLen )
 {
+
   // check here to see if the data is cached on disk
   if (nsnull == mData && nsnull != mCacheFileName) {
     // if so, read it in and pass it back
+    // ReadCache creates memory and copies the data into it.
     if (NS_OK == ReadCache(aData, aDataLen)) {
       printf("->>>>>>>>>>>>>> Read Clipboard from cache file\n");
       return;
@@ -109,9 +112,15 @@ void DataStruct::GetData ( char** aData, PRUint32 *aDataLen )
   } else {
     printf("->>>>>>>>>>>>>> Read Clipboard from memory\n");
   }
-  // this either passes back the right about
-  // or zeros it out
-  *aData    = mData;
+  // OK, we create memory and copy the contents into it.
+  char * data = new char[mDataLen];
+  if (nsnull != mData && mDataLen > 0) {
+    memcpy(data, mData, mDataLen);
+    *aData    = data;
+  } else {
+    // zeros it out
+    *aData = nsnull;
+  }
   *aDataLen = mDataLen;
 }
 
