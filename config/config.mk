@@ -270,6 +270,55 @@ OS_CFLAGS += $(_DEBUG_CFLAGS)
 OS_CXXFLAGS += $(_DEBUG_CFLAGS)
 OS_LDFLAGS += $(_DEBUG_LDFLAGS)
 
+# MOZ_PROFILE & MOZ_COVERAGE equivs for win32
+ifeq ($(OS_ARCH),WINNT)
+ifdef MOZ_DEBUG
+ifneq (,$(MOZ_BROWSE_INFO)$(MOZ_BSCFILE))
+OS_CFLAGS += /FR
+OS_CXXFLAGS += /FR
+endif
+else
+# if MOZ_DEBUG is not set and MOZ_PROFILE is set, then we generate
+# an optimized build with debugging symbols. Useful for debugging
+# compiler optimization bugs, as well as running with Quantify.
+ifdef MOZ_PROFILE
+_WIN32_PROFILE_FLAGS=-Zi -O1 -UDEBUG -DNDEBUG
+OS_CFLAGS += $(_WIN32_PROFILE_FLAGS)
+OS_CXXFLAGS += $(_WIN32_PROFILE_FLAGS)
+OS_LDFLAGS += /DEBUG /DEBUGTYPE:CV /PDB:NONE /OPT:REF /OPT:nowin98
+endif
+
+# if MOZ_COVERAGE is set, we handle pdb files slightly differently
+ifdef MOZ_COVERAGE
+_WIN32_COVERAGE_FLAGS=-Zi -O1 -UDEBUG -DNDEBUG
+OS_CFLAGS += $(_WIN32_COVERAGE_FLAGS)
+OS_CXXFLAGS += $(_WIN32_COVERAGE_FLAGS)
+OS_LDFLAGS += /DEBUG /DEBUGTYPE:CV /PDB:$(PDBFILE) /OPT:REF /OPT:nowin98
+endif
+# MOZ_COVERAGE
+
+#
+# Handle trace-malloc in optimized builds.
+# No opt to give sane callstacks.
+#
+ifdef NS_TRACE_MALLOC
+_WIN32_TM_FLAGS=-Zi -Od -UDEBUG -DNDEBUG
+OS_CFLAGS += $(_WIN32_TM_FLAGS)
+OS_CXXFLAGS += $(_WIN32_TM_FLAGS)
+OS_LDFLAGS += /DEBUG /DEBUGTYPE:CV /PDB:NONE /OPT:REF /OPT:nowin98
+endif
+# MOZ_TRACE_MALLOC
+
+# if MOZ_DEBUG is not set and MOZ_MAPINFO
+ifdef MOZ_MAPINFO
+OS_LDFLAGS += /MAP:$(MAPFILE) /MAPINFO:LINES
+endif
+#MOZ_MAPINFO
+
+endif # MOZ_DEBUG
+endif # WINNT
+
+
 #
 # -ffunction-sections is needed to reorder functions using a GNU ld
 # script.
