@@ -33,7 +33,7 @@ LIBRARY_NAME	= msgbase
 RESFILE		= mail.res
 endif
 META_COMPONENT = mail
-Expcom_obsolete_LIBRARY = 1
+EXPORT_LIBRARY = 1
 IS_COMPONENT	= 1
 MODULE_NAME	= nsMsgBaseModule
 REQUIRES	= xpcom \
