@@ -105,7 +105,7 @@ enum ValueKind	// Concrete?  RegOrMem?      #words (as defined by the Java stack
 	vkMemory,	//   no    no    yes   no      N/A		// Value representing all of memory in data flow edges
 	vkTuple		//   no    no    no    no      N/A		// Value representing a tuple of other values
 };
-const nValueKinds = vkTuple + 1;
+const uint nValueKinds = vkTuple + 1;
 
 inline ValueKind typeKindToValueKind(TypeKind tk);
 

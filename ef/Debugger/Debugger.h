@@ -95,8 +95,8 @@ public:
 protected:
 	DebuggerServerChannel(PRFileDesc* inSync, PRFileDesc* inAsync) :
 		EventListener(gCompileOrLoadBroadcaster),
-	    mAsync(inAsync),
-	    mSync(inSync) { }
+	    mSync(inSync),
+	    mAsync(inAsync) { }
 
 	void    handleRequest(Int32 inRequest);	
 	void    handleMethodToAddress();

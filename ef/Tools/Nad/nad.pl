@@ -104,7 +104,7 @@ outputNodeTemplates($DataNodeTemplateFN, \@gPrimitiveInfo);
 unlink ($PrimitiveOperationsEnumFN) or break;
 $gLastPrimEnumName = outputEnumFromListX("PrimitiveOperation", $PrimitiveOperationsEnumFN, 0, \@gPrimitiveInfo, \&primInfoToEnumDescriptor);
 open FILE, ">>$PrimitiveOperationsEnumFN" or die "Couldn't open $PrimitiveOperationsEnumFN: $!\n";
-print FILE "\nconst nPrimitiveOperations = $gLastPrimEnumName + 1;\n";
+print FILE "\nconst uint nPrimitiveOperations = $gLastPrimEnumName + 1;\n";
 close FILE;
 
 # now handle the BURG section of the file

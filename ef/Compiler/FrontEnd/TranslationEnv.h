@@ -397,7 +397,7 @@ inline void TranslationBinding::define(const VariableOrConstant &poc, ControlNod
 // ----------------------------------------------------------------------------
 
 
-const initialPhiSize = 3;
+const Uint32 initialPhiSize = 3;
 
 //
 // Create a new translation binding environment.

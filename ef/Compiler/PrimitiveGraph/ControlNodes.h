@@ -63,7 +63,7 @@ enum ControlKind	// NormalIncoming?		  NormalOutgoing?		 OneNormalOutgoing?
 	ckCatch,		//		no		   yes			yes		   no			yes
 	ckReturn		//		yes		   no			no		   no			no
 };
-const nControlKinds = ckReturn + 1;
+const uint nControlKinds = ckReturn + 1;
 
 struct ControlKindProperties
 {
