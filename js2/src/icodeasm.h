@@ -126,7 +126,7 @@ namespace ICodeASM {
     class ICodeParser 
     {
     private:
-        StringAtom(const StringAtom&); /* No copy constructor */
+        ICodeParser(const ICodeParser&); /* No copy constructor */
 
         Interpreter::Context *mCx;
         uint mMaxRegister;
@@ -136,7 +136,7 @@ namespace ICodeASM {
         LabelMap mNamedLabels;
 
     public:
-        ICodeParser (Interpreter::Context *aCx) : mCx(aCx) {}
+        ICodeParser (Interpreter::Context *aCx = 0) : mCx(aCx) {}
         void ParseSourceFromString (const string &source);
 
         /* locate the beginning of the next token and take a guess at what it
