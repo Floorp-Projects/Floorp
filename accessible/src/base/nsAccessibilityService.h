@@ -40,10 +40,10 @@
 #define __nsAccessibilityService_h__
 
 #include "nsIAccessibilityService.h"
-class nsIContent;
-class nsIPresShell;
-class nsIDocShell;
-class nsObjectFrame;
+#include "nsIContent.h"
+#include "nsIPresShell.h"
+#include "nsIDocShell.h"
+#include "nsObjectFrame.h"
 
 class nsIFrame;
 class nsIWeakReference;

@@ -61,9 +61,6 @@
 #include "nsTransferable.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
-#ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
-#endif
 
 #include "nsIGenericFactory.h"
 
@@ -81,9 +78,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFullScreen)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-#ifdef ACCESSIBILITY
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccessibilityService)
-#endif
 
 static NS_IMETHODIMP
 nsHorizScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -213,12 +207,6 @@ static const nsModuleComponentInfo components[] =
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
     nsBidiKeyboardConstructor },
-#ifdef ACCESSIBILITY
-  { "AccessibilityService", 
-    NS_ACCESSIBILITY_SERVICE_CID,
-    "@mozilla.org/accessibilityService;1", 
-    nsAccessibilityServiceConstructor },
-#endif
 };
 
 

@@ -53,7 +53,6 @@
 #include "nsBidiKeyboard.h"
 
 #ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
 #include "nsAccessibilityInterface.h"
 #endif
 
@@ -69,9 +68,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsClipboard, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
-#ifdef ACCESSIBILITY
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccessibilityService)
-#endif
 
 static
 nsresult nsHorizScrollbarConstructor (nsISupports *aOuter,
@@ -189,12 +185,6 @@ static const nsModuleComponentInfo components[] =
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
     nsBidiKeyboardConstructor },
-#ifdef ACCESSIBILITY
-  { "AccessibilityService",
-    NS_ACCESSIBILITY_SERVICE_CID,
-    "@mozilla.org/accessibilityService;1",
-    nsAccessibilityServiceConstructor },
-#endif
 };
 
 PR_STATIC_CALLBACK(void)

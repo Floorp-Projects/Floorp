@@ -66,23 +66,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)xpwidgets_s.$(LIB_SUFFIX) \
 	$(NULL)
 
-ifdef ACCESSIBILITY
-REQUIRES	+= accessibility
-SHARED_LIBRARY_LIBS += \
-    $(DIST)/lib/$(LIB_PREFIX)accessibility_base_s.$(LIB_SUFFIX) \
-    $(DIST)/lib/$(LIB_PREFIX)accessibility_html_s.$(LIB_SUFFIX) \
-    $(NULL)
-
-ifdef MOZ_XUL
-SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)accessibility_xul_s.$(LIB_SUFFIX)
-endif
-endif
-
 EXTRA_DSO_LIBS	= gkgfx
-
-ifdef ACCESSIBILITY
-EXTRA_DSO_LIBS += gkconshared_s
-endif
 
 EXTRA_DSO_LDOPTS = \
 		$(EXTRA_DSO_LIBS) \
@@ -107,8 +91,7 @@ ifeq ($(MOZ_OS2_TOOLS),EMX)
 DEFINES   += -DUSE_OS2_TOOLKIT_HEADERS
 endif
 
-LOCAL_INCLUDES	= -I. -I$(srcdir)/../xpwidgets -I$(srcdir) \
-									-I$(srcdir)/../../../accessible/src/base
+LOCAL_INCLUDES	= -I. -I$(srcdir)/../xpwidgets -I$(srcdir)
 
 export::
 	test -d ./res || mkdir ./res

@@ -75,6 +75,7 @@ bin/mozturbo.exe
 bin/regxpcom.exe
 bin/xpicleanup.exe
 bin/res/cmessage.txt
+;bin/components/accessibility.dll
 bin/components/access.dll
 bin/components/accessibility.xpt
 ;bin/components/AcctIdl.dll

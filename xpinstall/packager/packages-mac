@@ -87,6 +87,7 @@ viewer:Essential Files:PrintDialogPDE.plugin
 -viewer:Essential Files:PrintDialogPDE.plugin:Contents:Resources:English.lproj:CVS
 
 viewer:Components:compreg.dat
+viewer:Components:accessibility.shlb
 viewer:Components:accessibility.xpt
 viewer:Components:docshell.shlb
 viewer:Components:AppShell.shlb 

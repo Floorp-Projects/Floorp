@@ -58,9 +58,6 @@
 #include "nsClipboardHelper.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
-#ifdef ACCESSIBILITY
-#include "nsAccessibilityService.h"
-#endif
 
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
@@ -76,9 +73,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-#ifdef ACCESSIBILITY
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsAccessibilityService)
-#endif
 
 static nsresult nsHorizScrollbarConstructor(nsISupports *aOuter,REFNSIID aIID,
                                             void **aResult)
@@ -194,12 +188,6 @@ static const nsModuleComponentInfo components[] =
     NS_FILEPICKER_CID,
     "@mozilla.org/filepicker;1",
     nsFilePickerConstructor },
-#ifdef ACCESSIBILITY
-  { "AccessibilityService", 
-    NS_ACCESSIBILITY_SERVICE_CID,
-    "@mozilla.org/accessibilityService;1", 
-    nsAccessibilityServiceConstructor },
-#endif
 };
 
 NS_IMPL_NSGETMODULE(nsWidgetBeOSModule,components)
