@@ -1935,6 +1935,9 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength) {
   nsCAutoString locale("locale");
   nsCAutoString skin("skin");
   nsCAutoString profile("profile");
+  nsCAutoString path("path");
+  nsCAutoString fileURL;
+  nsCAutoString chromeURL;
 
   static const char *delim = ",\r\n";
 
@@ -1946,7 +1949,7 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength) {
     chromeProfile = strtok(0, delim);
     if (!chromeProfile || chromeProfile > bufferEnd)
       break;
-    chromeLocType = strtok(0, delim); // unused for now. assume "path"
+    chromeLocType = strtok(0, delim);
     if (!chromeLocType || chromeProfile > bufferEnd)
       break;
     chromeLocation = strtok(0, delim);
@@ -1954,9 +1957,21 @@ nsChromeRegistry::ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength) {
       break;
 
     isProfile = profile.Equals(chromeProfile);
-    nsFileSpec chromeFile(chromeLocation);
-    nsFileURL fileURL(chromeFile);
-    const char* chromeURL = fileURL.GetURLString();
+
+    if (path.Equals(chromeLocType)) {
+      // location is a (full) path. convert it to an URL.
+      nsFileSpec chromeFile(chromeLocation);
+      nsFileURL file(chromeFile);
+      chromeURL = file.GetURLString();
+      if (chromeFile.IsFile()) {
+        // path points to a file. must be a jar file. convert to a jar url.
+        fileURL = "jar:";
+        fileURL += chromeURL;
+        fileURL += "!/";
+        chromeURL = fileURL;
+      }
+    } else // not "path". assume "url".
+      chromeURL = chromeLocation;
 
     // process the line
     if (skin.Equals(chromeType))
