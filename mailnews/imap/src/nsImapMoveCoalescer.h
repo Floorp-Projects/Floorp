@@ -40,7 +40,7 @@ class nsImapMailFolder;
 class nsImapMoveCoalescer 
 {
 public:
-	nsImapMoveCoalescer(nsImapMailFolder *sourceFolder);
+	nsImapMoveCoalescer(nsImapMailFolder *sourceFolder, nsIMsgWindow *msgWindow);
 	virtual ~nsImapMoveCoalescer();
 
 	nsresult AddMove(nsIMsgFolder *folder, nsMsgKey key);
@@ -49,6 +49,7 @@ protected:
 	// m_sourceKeySets and m_destFolders are parallel arrays.
 	nsVoidArray					m_sourceKeyArrays;
 	nsCOMPtr <nsISupportsArray> m_destFolders;
+  nsCOMPtr <nsIMsgWindow> m_msgWindow;
 	nsImapMailFolder			*m_sourceFolder;
 };
 

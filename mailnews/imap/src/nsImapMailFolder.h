@@ -229,7 +229,7 @@ public:
 	NS_IMETHOD LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
                                      PRUint32 uidValidity);
 	NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
-                              PRUint32 aMsgId, const char *extraInfo);
+                              PRUint32 aMsgId, const PRUnichar *extraInfo);
 	NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
                                ProgressInfo* aInfo);
 	NS_IMETHOD TunnelOutStream(nsIImapProtocol* aProtocol,
@@ -270,6 +270,8 @@ protected:
 
 	nsresult SyncFlags(nsIImapFlagAndUidState *flagState);
 
+  nsresult MarkMessagesImapDeleted(nsMsgKeyArray *keyArray, nsIMsgDatabase *db);
+
 	void UpdatePendingCounts(PRBool countUnread, PRBool missingAreRead);
 	void SetIMAPDeletedFlag(nsIMsgDatabase *mailDB, const nsMsgKeyArray &msgids, PRBool markDeleted);
 	virtual PRBool ShowDeletedMessages();
@@ -279,6 +281,8 @@ protected:
 	nsresult GetTrashFolder(nsIMsgFolder **pTrashFolder);
   PRBool InTrash(nsIMsgFolder* folder);
 	nsresult GetServerKey(char **serverKey);
+
+  nsresult DisplayStatusMsg(nsIImapUrl *aImapUrl, const PRUnichar *msg);
 
   //nsresult RenameLocal(const char *newName);
   nsresult AddDirectorySeparator(nsFileSpec &path);

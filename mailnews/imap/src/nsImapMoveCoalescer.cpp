@@ -30,9 +30,11 @@
 
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 
-nsImapMoveCoalescer::nsImapMoveCoalescer(nsImapMailFolder *sourceFolder)
+nsImapMoveCoalescer::nsImapMoveCoalescer(nsImapMailFolder *sourceFolder, nsIMsgWindow *msgWindow)
 {
 	m_sourceFolder = sourceFolder;
+  m_msgWindow = msgWindow;
+  NS_IF_ADDREF(msgWindow);
 	if (sourceFolder)
 		NS_ADDREF(sourceFolder);
 }
@@ -129,7 +131,7 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
 					}
 				}
 				rv = destFolder->CopyMessages(m_sourceFolder,
-                               messages, PR_TRUE, nsnull,
+                               messages, PR_TRUE, m_msgWindow,
                                /*nsIMsgCopyServiceListener* listener*/ nsnull);
 //			   rv = imapService->OnlineMessageCopy(eventQueue,
 //						m_sourceFolder, messageIds.GetBuffer(),

@@ -601,9 +601,16 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
     nsCOMPtr <nsIFileSpec> dbFileSpec;
 
     nsXPIDLCString uniqueLeafName;
+    nsCAutoString proposedDBName(folderName);
+    proposedDBName += ".msf";
 
-    rv = CreatePlatformLeafNameForDisk(folderName, path, getter_Copies(uniqueLeafName));
-    path.SetLeafName(uniqueLeafName);
+    rv = CreatePlatformLeafNameForDisk(proposedDBName, path, getter_Copies(uniqueLeafName));
+
+    // take off the ".msf" on the end.
+    proposedDBName = uniqueLeafName;
+    proposedDBName.Truncate(proposedDBName.Length() - 4);
+
+    path.SetLeafName(proposedDBName);
 
     NS_NewFileSpecWithSpec(path, getter_AddRefs(dbFileSpec));
     rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB));
@@ -1012,6 +1019,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateSummaryTotals(PRBool force)
     NotifyIntPropertyChanged(kTotalUnreadMessagesAtom, oldUnreadMessages, newUnreadMessages);
   }
 
+  FlushToFolderCache();
     return rv;
 }
     
@@ -1373,6 +1381,18 @@ nsImapMailFolder::AllocateUidStringFromKeyArray(nsMsgKeyArray &keyArray, nsCStri
     return rv;
 }
 
+nsresult nsImapMailFolder::MarkMessagesImapDeleted(nsMsgKeyArray *keyArray, nsIMsgDatabase *db)
+{
+  PRBool allKeysImapDeleted;
+  db->AllMsgKeysImapDeleted(keyArray, &allKeysImapDeleted);
+	for (PRUint32 kindex = 0; kindex < keyArray->GetSize(); kindex++)
+	{
+		nsMsgKey key = keyArray->ElementAt(kindex);
+    db->MarkImapDeleted(key, !allKeysImapDeleted, nsnull);
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
                                                nsIMsgWindow *msgWindow,
                                                PRBool deleteStorage, PRBool isMove)
@@ -1434,13 +1454,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
       {
         if (deleteModel == nsMsgImapDeleteModels::IMAPDelete) 
         {
-          PRBool allKeysImapDeleted;
-          mDatabase->AllMsgKeysImapDeleted(&srcKeyArray, &allKeysImapDeleted);
-	        for (PRUint32 kindex = 0; kindex < srcKeyArray.GetSize(); kindex++)
-	        {
-		        nsMsgKey key = srcKeyArray.ElementAt(kindex);
-            mDatabase->MarkImapDeleted(key, !allKeysImapDeleted, nsnull);
-          }
+          MarkMessagesImapDeleted(&srcKeyArray, mDatabase);
         }
         else
         {
@@ -1584,7 +1598,9 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow)
     if (NS_SUCCEEDED(rv) && pEventQService)
       pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
                         getter_AddRefs(eventQ));
+    inbox->SetGettingNewMessages(PR_TRUE);
     rv = imapService->SelectFolder(eventQ, inbox, this, aWindow, nsnull);
+
     return rv;
 }
 
@@ -1765,17 +1781,24 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
       }
       else 
       {
-            // let the imap libnet module know that we don't need headers
-      if (aProtocol)
-        aProtocol->NotifyHdrsToDownload(NULL, 0);
-      // wait until we can get body id monitor before continuing.
-//      IMAP_BodyIdMonitor(adoptedBoxSpec->connection, PR_TRUE);
-      // I think the real fix for this is to seperate the header ids from body id's.
-      // this is for fetching bodies for offline use
-      if (aProtocol)
-        aProtocol->NotifyBodysToDownload(NULL, 0/*keysToFetch.GetSize() */);
-//      NotifyFetchAnyNeededBodies(aSpec->connection, mailDB);
-//      IMAP_BodyIdMonitor(adoptedBoxSpec->connection, PR_FALSE);
+              // let the imap libnet module know that we don't need headers
+        if (aProtocol)
+          aProtocol->NotifyHdrsToDownload(NULL, 0);
+        // wait until we can get body id monitor before continuing.
+  //      IMAP_BodyIdMonitor(adoptedBoxSpec->connection, PR_TRUE);
+        // I think the real fix for this is to seperate the header ids from body id's.
+        // this is for fetching bodies for offline use
+        if (aProtocol)
+          aProtocol->NotifyBodysToDownload(NULL, 0/*keysToFetch.GetSize() */);
+        PRBool gettingNewMessages;
+        GetGettingNewMessages(&gettingNewMessages);
+        if (gettingNewMessages)
+        {
+          ProgressStatus(aProtocol,IMAP_NO_NEW_MESSAGES, nsnull);
+        }
+
+  //      NotifyFetchAnyNeededBodies(aSpec->connection, mailDB);
+  //      IMAP_BodyIdMonitor(adoptedBoxSpec->connection, PR_FALSE);
       }
     }
 
@@ -1913,8 +1936,26 @@ NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
         if (NS_SUCCEEDED(rv) && headers)
         {
           if (m_filterList)
+          {
+            nsCOMPtr <nsIMsgWindow> msgWindow;
+            if (aProtocol)
+            {
+              nsCOMPtr <nsIImapUrl> aImapUrl;
+              nsCOMPtr <nsIMsgMailNewsUrl> msgUrl;
+              rv = aProtocol->GetRunningImapURL(getter_AddRefs(aImapUrl));
+              if (NS_SUCCEEDED(rv) && aImapUrl)
+              {
+                msgUrl = do_QueryInterface(aImapUrl);
+                if (msgUrl)
+                  msgUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+              }
+
+            }
+            if (!m_moveCoalescer)
+              m_moveCoalescer = new nsImapMoveCoalescer(this, msgWindow);
             m_filterList->ApplyFiltersToHdr(nsMsgFilterType::InboxRule, newMsgHdr, this, mDatabase, 
                                             headers, headersSize, this);
+          }
         }
       }
     }
@@ -2184,10 +2225,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 
           keysToFlag.Add(msgKey);
           StoreImapFlags(kImapMsgSeenFlag | kImapMsgDeletedFlag, PR_TRUE, keysToFlag);
-          m_msgMovedByFilter = PR_TRUE;
-//          if (!showDeletedMessages)
-//            msgMoved = PR_TRUE; // this will prevent us from adding the header to the db.
-
+          m_msgMovedByFilter = PR_TRUE; // this will prevent us from adding the header to the db.
         }
       }
       // note that delete falls through to move.
@@ -2243,13 +2281,11 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
           }
           nsresult err = MoveIncorporatedMessage(msgHdr, mDatabase, actionTargetFolderUri, filter);
           if (NS_SUCCEEDED(err))
-          {
             m_msgMovedByFilter = PR_TRUE;
-            *applyMore = PR_FALSE;
-          }
-
         }
       }
+      // don't apply any more filters, even if it was a move to the same folder
+        *applyMore = PR_FALSE; 
         break;
       case nsMsgFilterAction::MarkRead:
         {
@@ -2378,8 +2414,6 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 {
   nsresult err = NS_OK;
   
-  if (!m_moveCoalescer)
-    m_moveCoalescer = new nsImapMoveCoalescer(this);
   if (m_moveCoalescer)
   {
 
@@ -2439,7 +2473,7 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 // both of these algorithms assume that key arrays and flag states are sorted by increasing key.
 void nsImapMailFolder::FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsgKeyArray &keysToDelete, nsIImapFlagAndUidState *flagState)
 {
-  PRBool imapDeleteIsMoveToTrash = DeleteIsMoveToTrash();
+  PRBool showDeletedMessages = ShowDeletedMessages();
   PRUint32 total = existingKeys.GetSize();
   PRInt32 messageIndex;
 
@@ -2461,7 +2495,7 @@ void nsImapMailFolder::FindKeysToDelete(const nsMsgKeyArray &existingKeys, nsMsg
     // delete this key if it is not there or marked deleted
     if ( (onlineIndex >= messageIndex ) ||
        (existingKeys[keyIndex] != uidOfMessage) ||
-       ((flags & kImapMsgDeletedFlag) && imapDeleteIsMoveToTrash) )
+       ((flags & kImapMsgDeletedFlag) && !showDeletedMessages) )
     {
       nsMsgKey doomedKey = existingKeys[keyIndex];
       if ((PRInt32) doomedKey < 0 && doomedKey != nsMsgKey_None)
@@ -2683,19 +2717,21 @@ nsImapMailFolder::ParseAdoptedMsgLine(const char *adoptedMessageLine, nsMsgKey u
 }
     
 NS_IMETHODIMP
-nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage)
+nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage, PRBool markRead)
 {
   nsresult res = NS_OK;
   if (m_tempMessageStream)
     m_tempMessageStream->Close();
 
-  nsCOMPtr<nsIMsgDBHdr> msgHdr;
+  if (markRead)
+  {
+    nsCOMPtr<nsIMsgDBHdr> msgHdr;
 
-  m_curMsgUid = uidOfMessage;
-  res = GetMessageHeader(m_curMsgUid, getter_AddRefs(msgHdr));
-  if (NS_SUCCEEDED(res))
-    msgHdr->MarkRead(PR_TRUE);
-
+    m_curMsgUid = uidOfMessage;
+    res = GetMessageHeader(m_curMsgUid, getter_AddRefs(msgHdr));
+    if (NS_SUCCEEDED(res))
+      msgHdr->MarkRead(PR_TRUE);
+  }
   return res;
 }
 
@@ -3097,9 +3133,14 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                         do_QueryInterface(m_copyState->m_undoMsgTxn); 
                     if (msgTxn)
                         msgTxn->GetSrcKeyArray(srcKeyArray);
+                  if (!ShowDeletedMessages())
                     srcDB->DeleteMessages(&srcKeyArray, nsnull);
-                    srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+                  else
+                    MarkMessagesImapDeleted(&srcKeyArray, srcDB);
                 }
+                // even if we're showing deleted messages, 
+                // we still need to notify FE so it will show the imap deleted flag
+                srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
               }
               if (m_transactionManager)
                 m_transactionManager->Do(m_copyState->m_undoMsgTxn);
@@ -3180,6 +3221,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
     if (mailUrl)
       rv = mailUrl->UnRegisterListener(this);
   }
+  SetGettingNewMessages(PR_FALSE); // if we're not running a url, we must not be getting new mail :-)
   return rv;
 }
 
@@ -3541,10 +3583,26 @@ NS_IMETHODIMP nsImapMailFolder::SetPath(nsIFileSpec * aPathName)
   return aPathName->GetFileSpec(m_pathName);                                  
 }                                                                               
                                                                                  
-                                                               
+
+nsresult nsImapMailFolder::DisplayStatusMsg(nsIImapUrl *aImapUrl, const PRUnichar *msg)
+{
+  nsCOMPtr<nsIImapMockChannel> mockChannel;
+  aImapUrl->GetMockChannel(getter_AddRefs(mockChannel));
+  if (mockChannel)
+  {
+    nsCOMPtr<nsIProgressEventSink> progressSink;
+    mockChannel->GetProgressEventSink(getter_AddRefs(progressSink));
+    if (progressSink)
+    {
+      progressSink->OnStatus(mockChannel, nsnull, NS_OK, msg);      // XXX i18n message
+    }
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
-                                 PRUint32 aMsgId, const char *extraInfo)
+                                 PRUint32 aMsgId, const PRUnichar *extraInfo)
 {
   PRUnichar *progressMsg = nsnull;
 
@@ -3565,26 +3623,16 @@ nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
     aProtocol->GetRunningImapURL(getter_AddRefs(imapUrl));
     if (imapUrl)
     {
-      nsCOMPtr<nsIImapMockChannel> mockChannel;
-      imapUrl->GetMockChannel(getter_AddRefs(mockChannel));
-      if (mockChannel)
+      if (extraInfo)
       {
-        nsCOMPtr<nsIProgressEventSink> progressSink;
-        mockChannel->GetProgressEventSink(getter_AddRefs(progressSink));
-        if (progressSink)
+        PRUnichar *printfString = nsTextFormatter::smprintf(progressMsg, extraInfo);
+        if (printfString)
         {
-          if (extraInfo)
-          {
-            PRUnichar *printfString = nsTextFormatter::smprintf(progressMsg, extraInfo);
-            if (printfString)
-            {
-              progressMsg = nsCRT::strdup(printfString);  
-              nsTextFormatter::smprintf_free(printfString);
-            }
-          }
-          progressSink->OnStatus(mockChannel, nsnull, NS_OK, progressMsg);      // XXX i18n message
+          progressMsg = nsCRT::strdup(printfString);  
+          nsTextFormatter::smprintf_free(printfString);
         }
       }
+      DisplayStatusMsg(imapUrl, progressMsg);
     }
   }
   PR_FREEIF(progressMsg);
@@ -3856,7 +3904,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
                                             srcFolder, messageIds.GetBuffer(),
                                             this, PR_TRUE, isMove,
                                             urlListener, nsnull,
-                                            copySupport);
+                                            copySupport, msgWindow);
     if (NS_SUCCEEDED(rv))
     {
         nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(

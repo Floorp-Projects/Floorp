@@ -2742,9 +2742,12 @@ nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
   {
     PRUint32 count = 0;
     char * line = downloadLineDontDelete->adoptedMessageLine;
-    nsresult rv = m_channelOutputStream->Write(line, PL_strlen(line), &count);
-    if (NS_SUCCEEDED(rv))
-      m_channelListener->OnDataAvailable(m_mockChannel, m_channelContext, m_channelInputStream, 0, count);   
+    if (m_channelOutputStream)
+    {
+      nsresult rv = m_channelOutputStream->Write(line, PL_strlen(line), &count);
+      if (NS_SUCCEEDED(rv))
+        m_channelListener->OnDataAvailable(m_mockChannel, m_channelContext, m_channelInputStream, 0, count);   
+    }
   }
   else if (m_imapMessageSink && downloadLineDontDelete)
   {
@@ -2907,9 +2910,13 @@ void nsImapProtocol::NormalMessageEndDownload()
 //        m_channelListener->OnDataAvailable(m_mockChannel, m_channelContext, m_channelInputStream, 0, inlength);   
     }
 
-    // need to know if we're downloading for display or not.
+    // need to know if we're downloading for display or not. We'll use action == nsImapMsgFetch for now 
+    nsImapAction imapAction = nsIImapUrl::nsImapSelectFolder; // just set it to some legal value
+    if (m_runningUrl)
+      m_runningUrl->GetImapAction(&imapAction);
+
     if (m_imapMessageSink)
-      m_imapMessageSink->NormalEndMsgWriteStream(m_downloadLineCache.CurrentUID());
+      m_imapMessageSink->NormalEndMsgWriteStream(m_downloadLineCache.CurrentUID(), imapAction == nsIImapUrl::nsImapMsgFetch);
   
     if (m_runningUrl && m_imapMailFolderSink)
     {
@@ -4013,8 +4020,11 @@ nsImapProtocol::ProgressEventFunctionUsingIdWithString(PRUint32 aMsgId, const
     if (m_imapMiscellaneousSink)
   {
 
-    // ### FIXME - need to format this string, and pass it status. Or, invent a new interface
-        m_imapMiscellaneousSink->ProgressStatus(this, aMsgId, aExtraInfo);
+	    nsXPIDLString unicodeStr;
+
+	    nsresult rv = CreateUnicodeStringFromUtf7(aExtraInfo, getter_Copies(unicodeStr));
+	    if (NS_SUCCEEDED(rv))
+        m_imapMiscellaneousSink->ProgressStatus(this, aMsgId, unicodeStr);
   }
 }
 

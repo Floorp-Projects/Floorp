@@ -548,7 +548,7 @@ nsImapMiscellaneousSinkProxy::LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsImapMiscellaneousSinkProxy::ProgressStatus(nsIImapProtocol* aProtocol,
-                                         PRUint32 aMsgId, const char *extraInfo)
+                                         PRUint32 aMsgId, const PRUnichar *extraInfo)
 {
     nsresult res = NS_OK;
     NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
@@ -1145,7 +1145,7 @@ LiteSelectUIDValidityProxyEvent::HandleEvent()
 }
 
 ProgressStatusProxyEvent::ProgressStatusProxyEvent(
-    nsImapMiscellaneousSinkProxy* aProxy, PRUint32 aMsgId, const char *extraInfo) :
+    nsImapMiscellaneousSinkProxy* aProxy, PRUint32 aMsgId, const PRUnichar *extraInfo) :
     nsImapMiscellaneousSinkProxyEvent(aProxy)
 {
 	m_statusMsgId = aMsgId;

@@ -112,7 +112,7 @@ public:
     NS_IMETHOD LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
                                      PRUint32 uidValidity);
 	  NS_IMETHOD ProgressStatus(nsIImapProtocol* aProtocol,
-                              PRUint32 statusMsgId, const char *extraInfo);
+                              PRUint32 statusMsgId, const PRUnichar *extraInfo);
     NS_IMETHOD PercentProgress(nsIImapProtocol* aProtocol,
                                ProgressInfo* aInfo);
     NS_IMETHOD TunnelOutStream(nsIImapProtocol* aProtocol,
@@ -293,11 +293,11 @@ struct LiteSelectUIDValidityProxyEvent : public nsImapMiscellaneousSinkProxyEven
 struct ProgressStatusProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {
     ProgressStatusProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                            PRUint32 statusMsgId, const char *extraInfo);
+                            PRUint32 statusMsgId, const PRUnichar *extraInfo);
     virtual ~ProgressStatusProxyEvent();
     NS_IMETHOD HandleEvent();
     PRUint32 m_statusMsgId;
-	char	*m_extraInfo;
+	PRUnichar	*m_extraInfo;
 };
 
 struct PercentProgressProxyEvent : public nsImapMiscellaneousSinkProxyEvent

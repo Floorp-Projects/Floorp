@@ -158,7 +158,8 @@ interface nsIImapService : nsISupports
                          in boolean aIsMove,
                          in nsIUrlListener aUrlListener,
                          out nsIURI aURL,
-                         in nsISupports aCopyState);
+                         in nsISupports aCopyState,
+						 in nsIMsgWindow aWindow);
 
 
   void appendMessageFromFile(in nsIEventQueue aClientEventQueue, 

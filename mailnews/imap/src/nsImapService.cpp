@@ -1701,7 +1701,8 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
                                  PRBool isMove,
                                  nsIUrlListener* aUrlListener,
                                  nsIURI** aURL,
-                                 nsISupports* copyState)
+                                 nsISupports* copyState,
+                                 nsIMsgWindow *aMsgWindow)
 {
     NS_ASSERTION(aSrcFolder && aDstFolder && messageIds && aClientEventQueue,
                  "Fatal ... missing key parameters");
@@ -1739,6 +1740,9 @@ nsImapService::OnlineMessageCopy(nsIEventQueue* aClientEventQueue,
         SetImapUrlSink(aSrcFolder, imapUrl);
         imapUrl->SetCopyState(copyState);
 
+        nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(imapUrl));
+
+        msgurl->SetMsgWindow(aMsgWindow);
         nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
 
         if (isMove)
