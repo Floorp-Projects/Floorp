@@ -29,19 +29,17 @@
 package PLIF::Controller;
 use strict;
 use vars qw(@ISA);
-use PLIF;
+use PLIF::Service;
 use PLIF::MagicPipingArray;
 use PLIF::MagicSelectingArray;
 use PLIF::MagicCollectingArray;
-@ISA = qw(PLIF);
+@ISA = qw(PLIF::Service);
 1;
 
 # setup everything (typically called from the constructor)
 sub init {
     my $self = shift;
     $self->SUPER::init(@_);
-    # initialise our app name to be the name of the executable
-    $self->name($0); # may be overridden by descendants
     # prepare the services array for the registration system
     $self->services([]);
     $self->objects([]);
@@ -243,6 +241,9 @@ sub getServiceInstance {
 # are never asked for as normal services.
 
 
+# unrelated to 'dispatch' from the service method, which only
+# dispatches to the current object; this finds a service that supports
+# the method and dispatches the call to them.
 sub dispatchMethod {
     my $self = shift;
     my($service, $prefix, $method, @arguments) = @_;

@@ -209,18 +209,13 @@ sub hash {
 
 # If you override this one, only call $self->SUPER::dispatch(@_) if
 # you couldn't dispatch the command.
-# Note: Don't confuse this method with the identically named method in
-# the Service class hierarchy that does something similar!
-# Also Note: Application.pm overrides this to forward commands to
+# Note: Application.pm overrides this to forward commands to
 # services implementing the 'dispatcher.commands' service.
 sub dispatch {
     my $self = shift;
     my($command) = @_;
     # the \u makes the first letter of the $command uppercase
-    my $method = $self->can("cmd\u$command");
-    if ($method) {
-        &$method($self);
-    } else {
+    if (not $self->SUPER::dispatch($self, "cmd\u$command")) {
         $self->unknownCommand();
     }
 }
@@ -242,5 +237,7 @@ sub noCommand {
 
 sub name {
     my $self = shift;
-    $self->notImplemented();
+    # default our app name to be the name of the executable
+    # may be overridden by descendants
+    return $0;
 }
