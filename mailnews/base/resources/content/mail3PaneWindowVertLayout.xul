@@ -128,9 +128,10 @@ Rights Reserved.
 				<tree id="threadTree" flex="2" style="width:0px" context="threadPaneContext"/>
 			</box>
 			<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePnae() -->
-			<splitter id="gray_horizontal_splitter" collapse="after" persist="state"
-			 onclick="OnClickThreadAndMessagePaneSplitter()"/>
-			
+			<splitter id="threadpane-splitter" collapse="after" persist="state"
+			 onclick="OnClickThreadAndMessagePaneSplitter()" orient="vertical" autostretch="never">
+			<grippy/>
+			</splitter>
 			<!-- msg header view -->
 			<box id="messagepanebox" orient="vertical" flex="4" persist="collapsed">
 				<toolbox id="msgHeaderView"/>

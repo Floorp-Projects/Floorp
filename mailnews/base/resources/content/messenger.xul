@@ -132,6 +132,7 @@ Rights Reserved.
      
 			<tree id="threadTree" flex="2" style="height:0px" context="threadPaneContext" class="window-focusborder" focusring="false"/>
 
+			<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
 			<splitter collapse="after" persist="state" onclick="OnClickThreadAndMessagePaneSplitter()"
                 id="threadpane-splitter" orient="vertical" autostretch="never">
         <grippy/>

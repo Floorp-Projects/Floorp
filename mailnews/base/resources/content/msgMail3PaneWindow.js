@@ -485,7 +485,7 @@ function FindInSidebar(currentWindow, id)
 function GetThreadAndMessagePaneSplitter()
 {
 	if(gThreadAndMessagePaneSplitter) return gThreadAndMessagePaneSplitter;
-	var splitter = document.getElementById('gray_horizontal_splitter');
+	var splitter = document.getElementById('threadpane-splitter');
 	gThreadAndMessagePaneSplitter = splitter;
 	return splitter;
 }
