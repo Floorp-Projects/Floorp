@@ -1,0 +1,76 @@
+<?xml version="1.0"?> 
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+--> 
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/addressingWidgetOverlay.dtd">
+
+
+<overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script type="application/x-javascript" src="chrome://messenger/content/messengercompose/addressingWidgetOverlay.js"/>
+
+  <!-- Addressing Widget -->
+  <listbox id="addressingWidget" seltype="multiple" rows="4"
+    onkeydown="awKeyDown(event, this)"
+    onclick="awClickEmptySpace(event.originalTarget, true)"
+    ondragover="DragOverAddressingWidget(event);"
+    ondragdrop="return DropOnAddressingWidget(event);">
+    
+    <listcols>
+      <listcol id="typecol-addressingWidget"/>
+      <listcol id="textcol-addressingWidget" flex="1"/>
+    </listcols>
+  
+    <listitem class="addressingWidgetItem" allowevents="true">
+      <listcell class="addressingWidgetCell" align="stretch">
+        <menulist id="addressCol1#1" disableonsend="true"
+                  class="aw-menulist menulist-compact" flex="1"  
+                  oncommand="gContentChanged=true; awSetAutoComplete(this.id.slice(this.id.lastIndexOf('#') + 1));">
+          <menupopup>
+            <menuitem value="addr_to" label="&toAddr.label;"/>
+            <menuitem value="addr_cc" label="&ccAddr.label;"/>
+            <menuitem value="addr_bcc" label="&bccAddr.label;"/>
+            <menuitem value="addr_reply" label="&replyAddr.label;"/>
+            <menuitem value="addr_newsgroups" label="&newsgroupsAddr.label;"/>
+            <menuitem value="addr_followup" label="&followupAddr.label;"/>
+          </menupopup>
+        </menulist>
+      </listcell>
+      
+      <listcell class="addressingWidgetCell">
+        <textbox id="addressCol2#1" class="plain textbox-addressingWidget"
+                 type="autocomplete" flex="1"
+                 searchSessions="addrbook" timeout="300" maxrows="4" 
+                 autoFill="true" autoFillAfterMatch="true" forceComplete="true"
+                 minResultsForPopup="3" 
+                 ontextcommand="awRecipientTextCommand(eventParam, this)"
+                 onerrorcommand="awRecipientErrorCommand(eventParam, this)"
+                 oninput="gContentChanged=true; setupAutocomplete();" disableonsend="true"
+                 onkeypress="awRecipientKeyPress(event, this)"
+                 onkeydown="awRecipientKeyDown(event, this)">
+          <image class="person-icon"/>
+        </textbox>
+      </listcell>
+    </listitem>
+
+  </listbox>
+  
+</overlay>
