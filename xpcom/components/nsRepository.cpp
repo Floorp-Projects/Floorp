@@ -1473,7 +1473,7 @@ nsresult nsRepository::AutoRegister(NSRegistrationInstant when,
 	ProcessSerialNumber	psn;
 	ProcessInfoRec		pInfo;
 	FSSpec			appFSSpec;
-	long			theDirID, oldLen, newLen;
+	long			theDirID;
 	Str255			name;
 #endif
 
