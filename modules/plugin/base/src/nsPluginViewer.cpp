@@ -430,7 +430,40 @@ PluginViewerImpl::LoadComplete(nsresult aStatus)
 NS_IMETHODIMP
 PluginViewerImpl::Destroy(void)
 {
-  return NS_ERROR_FAILURE;
+  // XXX ripped off from nsObjectFrame::Destroy()
+  
+  // we need to finish with the plugin before native window is destroyed
+  // doing this in the destructor is too late.
+  if(mOwner != nsnull)
+  {
+    nsIPluginInstance *inst;
+    if(NS_OK == mOwner->GetInstance(inst))
+    {
+      PRBool doCache = PR_TRUE;
+      PRBool doCallSetWindowAfterDestroy = PR_FALSE;
+
+      // first, determine if the plugin wants to be cached
+      inst->GetValue(nsPluginInstanceVariable_DoCacheBool, 
+                     (void *) &doCache);
+      if (!doCache) {
+        // then determine if the plugin wants Destroy to be called after
+        // Set Window.  This is for bug 50547.
+        inst->GetValue(nsPluginInstanceVariable_CallSetWindowAfterDestroyBool, 
+                       (void *) &doCallSetWindowAfterDestroy);
+        !doCallSetWindowAfterDestroy ? inst->SetWindow(nsnull) : 0;
+        inst->Stop();
+        inst->Destroy();
+        doCallSetWindowAfterDestroy ? inst->SetWindow(nsnull) : 0;      }
+      else {
+        inst->SetWindow(nsnull);
+        inst->Stop();
+      }
+      NS_RELEASE(inst);
+    }
+  }
+
+	
+	return NS_OK;
 }
 
 NS_IMETHODIMP
