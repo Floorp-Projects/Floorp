@@ -467,11 +467,11 @@ sub interdiff
   $ENV{'PATH'} = $::diffpath;
   open my $interdiff_fh, "$::interdiffbin $old_filename $new_filename|";
   binmode $interdiff_fh;
-  my ($iter, $last_iter) = setup_iterators("");
+  my ($reader, $last_reader) = setup_patch_readers("");
   if ($::FORM{'format'} eq "raw")
   {
-    require PatchIterator::DiffPrinter::raw;
-    $last_iter->sends_data_to(new PatchIterator::DiffPrinter::raw());
+    require PatchReader::DiffPrinter::raw;
+    $last_reader->sends_data_to(new PatchReader::DiffPrinter::raw());
     # Actually print out the patch
     print $cgi->header(-type => 'text/plain',
                        -expires => '+3M');
@@ -487,9 +487,9 @@ sub interdiff
     delete $vars->{attachid};
     delete $vars->{do_context};
     delete $vars->{context};
-    setup_template_iterator($iter, $last_iter);
+    setup_template_patch_reader($last_reader);
   }
-  $iter->iterate_fh($interdiff_fh, "interdiff #$::FORM{'oldid'} #$::FORM{'newid'}");
+  $reader->iterate_fh($interdiff_fh, "interdiff #$::FORM{'oldid'} #$::FORM{'newid'}");
   close $interdiff_fh;
   $ENV{'PATH'} = '';
 
@@ -505,10 +505,10 @@ sub get_unified_diff
   my ($id) = @_;
 
   # Bring in the modules we need
-  require PatchIterator::Raw;
-  require PatchIterator::FixPatchRoot;
-  require PatchIterator::DiffPrinter::raw;
-  require PatchIterator::PatchInfoGrabber;
+  require PatchReader::Raw;
+  require PatchReader::FixPatchRoot;
+  require PatchReader::DiffPrinter::raw;
+  require PatchReader::PatchInfoGrabber;
   require File::Temp;
 
   # Get the patch
@@ -520,18 +520,29 @@ sub get_unified_diff
   }
 
   # Reads in the patch, converting to unified diff in a temp file
-  my $iter = new PatchIterator::Raw;
+  my $reader = new PatchReader::Raw;
+  my $last_reader = $reader;
+
   # fixes patch root (makes canonical if possible)
-  my $fix_patch_root = new PatchIterator::FixPatchRoot(Param('cvsroot'));
-  $iter->sends_data_to($fix_patch_root);
+  if (Param('cvsroot')) {
+    my $fix_patch_root = new PatchReader::FixPatchRoot(Param('cvsroot'));
+    $last_reader->sends_data_to($fix_patch_root);
+    $last_reader = $fix_patch_root;
+  }
+
   # Grabs the patch file info
-  my $patch_info_grabber = new PatchIterator::PatchInfoGrabber();
-  $fix_patch_root->sends_data_to($patch_info_grabber);
+  my $patch_info_grabber = new PatchReader::PatchInfoGrabber();
+  $last_reader->sends_data_to($patch_info_grabber);
+  $last_reader = $patch_info_grabber;
+
   # Prints out to temporary file
   my ($fh, $filename) = File::Temp::tempfile();
-  $patch_info_grabber->sends_data_to(new PatchIterator::DiffPrinter::raw($fh));
+  my $raw_printer = new PatchReader::DiffPrinter::raw($fh);
+  $last_reader->sends_data_to($raw_printer);
+  $last_reader = $raw_printer;
+
   # Iterate!
-  $iter->iterate_string($id, $thedata);
+  $reader->iterate_string($id, $thedata);
 
   return ($bugid, $description, $filename, $patch_info_grabber->patch_info()->{files});
 }
@@ -557,7 +568,7 @@ sub warn_if_interdiff_might_fail {
   return undef;
 }
 
-sub setup_iterators {
+sub setup_patch_readers {
   my ($diff_root) = @_;
 
   #
@@ -568,36 +579,36 @@ sub setup_iterators {
   # headers=0|1
   #
 
-  # Define the iterators
-  # The iterator that reads the patch in (whatever its format)
-  require PatchIterator::Raw;
-  my $iter = new PatchIterator::Raw;
-  my $last_iter = $iter;
+  # Define the patch readers
+  # The reader that reads the patch in (whatever its format)
+  require PatchReader::Raw;
+  my $reader = new PatchReader::Raw;
+  my $last_reader = $reader;
   # Fix the patch root if we have a cvs root
   if (Param('cvsroot'))
   {
-    require PatchIterator::FixPatchRoot;
-    $last_iter->sends_data_to(new PatchIterator::FixPatchRoot(Param('cvsroot')));
-    $last_iter->sends_data_to->diff_root($diff_root) if defined($diff_root);
-    $last_iter = $last_iter->sends_data_to;
+    require PatchReader::FixPatchRoot;
+    $last_reader->sends_data_to(new PatchReader::FixPatchRoot(Param('cvsroot')));
+    $last_reader->sends_data_to->diff_root($diff_root) if defined($diff_root);
+    $last_reader = $last_reader->sends_data_to;
   }
   # Add in cvs context if we have the necessary info to do it
   if ($::FORM{'context'} ne "patch" && $::cvsbin && Param('cvsroot_get'))
   {
-    require PatchIterator::AddCVSContext;
-    $last_iter->sends_data_to(
-        new PatchIterator::AddCVSContext($::FORM{'context'},
+    require PatchReader::AddCVSContext;
+    $last_reader->sends_data_to(
+        new PatchReader::AddCVSContext($::FORM{'context'},
                                          Param('cvsroot_get')));
-    $last_iter = $last_iter->sends_data_to;
+    $last_reader = $last_reader->sends_data_to;
   }
-  return ($iter, $last_iter);
+  return ($reader, $last_reader);
 }
 
-sub setup_template_iterator
+sub setup_template_patch_reader
 {
-  my ($iter, $last_iter) = @_;
+  my ($last_reader) = @_;
 
-  require PatchIterator::DiffPrinter::template;
+  require PatchReader::DiffPrinter::template;
 
   my $format = $::FORM{'format'};
 
@@ -614,7 +625,7 @@ sub setup_template_iterator
   # Print everything out
   print $cgi->header(-type => 'text/html',
                      -expires => '+3M');
-  $last_iter->sends_data_to(new PatchIterator::DiffPrinter::template($template,
+  $last_reader->sends_data_to(new PatchReader::DiffPrinter::template($template,
                              "attachment/diff-header.$format.tmpl",
                              "attachment/diff-file.$format.tmpl",
                              "attachment/diff-footer.$format.tmpl",
@@ -638,17 +649,17 @@ sub diff
     return;
   }
 
-  my ($iter, $last_iter) = setup_iterators();
+  my ($reader, $last_reader) = setup_patch_readers();
 
   if ($::FORM{'format'} eq "raw")
   {
-    require PatchIterator::DiffPrinter::raw;
-    $last_iter->sends_data_to(new PatchIterator::DiffPrinter::raw());
+    require PatchReader::DiffPrinter::raw;
+    $last_reader->sends_data_to(new PatchReader::DiffPrinter::raw());
     # Actually print out the patch
     use vars qw($cgi);
     print $cgi->header(-type => 'text/plain',
                        -expires => '+3M');
-    $iter->iterate_string("Attachment " . $::FORM{'id'}, $thedata);
+    $reader->iterate_string("Attachment " . $::FORM{'id'}, $thedata);
   }
   else
   {
@@ -674,9 +685,9 @@ sub diff
     $vars->{bugid} = $bugid;
     $vars->{attachid} = $::FORM{'id'};
     $vars->{description} = $description;
-    setup_template_iterator($iter, $last_iter);
+    setup_template_patch_reader($last_reader);
     # Actually print out the patch
-    $iter->iterate_string("Attachment " . $::FORM{'id'}, $thedata);
+    $reader->iterate_string("Attachment " . $::FORM{'id'}, $thedata);
   }
 }
 
@@ -937,6 +948,11 @@ sub edit
   $vars->{'attachments'} = \@bugattachments; 
   $vars->{'GetBugLink'} = \&GetBugLink;
 
+  # Determine if PatchReader is installed
+  eval {
+    require PatchReader;
+    $vars->{'patchviewerinstalled'} = 1;
+  };
   print Bugzilla->cgi->header();
 
   # Generate and return the UI (HTML page) from the appropriate template.

@@ -268,6 +268,7 @@ my $chartbase   = have_vers("Chart::Base","0.99");
 my $xmlparser   = have_vers("XML::Parser",0);
 my $gdgraph     = have_vers("GD::Graph",0);
 my $gdtextalign = have_vers("GD::Text::Align",0);
+my $patchreader = have_vers("PatchReader",0);
 
 print "\n" unless $silent;
 if ((!$gd || !$chartbase) && !$silent) {
@@ -295,6 +296,17 @@ if ((!$gd || !$gdgraph || !$gdtextalign) && !$silent) {
            "-e'install \"GD::Text::Align\"'\n" if !$gdtextalign;
     print "\n";
 }
+if (!$patchreader && !$silent) {
+    print "If you want to see pretty HTML views of patches, you should ";
+    print "install the \nPatchReader module, which can be downloaded at:\n";
+    print "http://search.cpan.org/CPAN/authors/id/J/JK/JKEISER/PatchReader-0.9.2.tar.gz\n";
+    print "When you get it, do the following to install:\n";
+    print "tar xzvf PatchReader-0.9.2.tar.gz\n";
+    print "cd PatchReader-0.9.2\n";
+    print "perl Makefile.PL\n";
+    print "make install\n\n";
+}
+
 if (%missing) {
     print "\n\n";
     print "Bugzilla requires some Perl modules which are either missing from your\n",
@@ -461,6 +473,14 @@ END
 if (!LocalVarExists('interdiffbin')) {
     my $interdiff_executable = `which interdiff`;
     if ($interdiff_executable =~ /no interdiff/ || $interdiff_executable eq '') {
+        if (!$silent) {
+            print "\nOPTIONAL NOTE: If you want to ";
+            print "be able to use the\n 'difference between two patches";
+            print "feature of Bugzilla (requires\n the PatchReader Perl module";
+            print "as well), you should install\n patchutils from ";
+            print "http://cyberelk.net/tim/patchutils/\n\n";
+        }
+
         # If which didn't find it, set to blank
         $interdiff_executable = "";
     } else {

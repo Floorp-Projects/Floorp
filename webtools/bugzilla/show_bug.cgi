@@ -73,6 +73,12 @@ if ($single) {
     }
 }
 
+# Determine if Patch Viewer is installed, for Diff link
+eval {
+  require PatchReader;
+  $vars->{'patchviewerinstalled'} = 1;
+};
+
 $vars->{'bugs'} = \@bugs;
 
 # Next bug in list (if there is one)
