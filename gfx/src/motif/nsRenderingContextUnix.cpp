@@ -102,45 +102,62 @@ nsRenderingContextUnix :: nsRenderingContextUnix()
 
 nsRenderingContextUnix :: ~nsRenderingContextUnix()
 {
-
+printf("1 - \n");
   if (mRegion) {
     ::XDestroyRegion(mRegion);
     mRegion = nsnull;
   }
 
+printf("1 - \n");
   mTMatrix = nsnull;
 
   // Destroy the State Machine
   if (nsnull != mStateCache)
   {
+printf("1 - \n");
     PRInt32 cnt = mStateCache->Count();
 
+printf("4 - cnt %d\n", cnt);
     while (--cnt >= 0)
     {
+printf("5 - mStateCache %x\n", mStateCache);
       GraphicsState *state = (GraphicsState *)mStateCache->ElementAt(cnt);
+printf("a - %x\n", state);
       mStateCache->RemoveElementAt(cnt);
+printf("b - \n");
 
       if (nsnull != state)
         delete state;
     }
 
+printf("c - \n");
     delete mStateCache;
+printf("d - \n");
     mStateCache = nsnull;
+printf("e - \n");
   }
 
+printf("f - \n");
   // Destroy the front buffer and it's GC if one was allocated for it
   if (nsnull != mFrontBuffer) {
+printf("g - \n");
     delete mFrontBuffer;
   }
 
+printf("h - \n");
 
   NS_IF_RELEASE(mFontMetrics);
+printf("i - \n");
   NS_IF_RELEASE(mContext);
 
+printf("j - \n");
   if (nsnull != mDrawStringBuf) {
+printf("k - \n");
     PR_Free(mDrawStringBuf);
+printf("m - \n");
   }
 
+printf("n - \n");
 }
 
 NS_IMPL_QUERY_INTERFACE(nsRenderingContextUnix, kRenderingContextIID)
@@ -1122,12 +1139,12 @@ NS_IMETHODIMP nsRenderingContextUnix :: GetWidth(const PRUnichar *aString,
 
   // Make the temporary buffer larger if needed.
   if (nsnull == mDrawStringBuf) {
-    mDrawStringBuf = (XChar2b *) PR_Malloc(aLength);
+    mDrawStringBuf = (XChar2b *) PR_Malloc(desiredSize);
     mDrawStringSize = aLength;
   }
   else {
     if (mDrawStringSize < PRInt32(aLength)) {
-      mDrawStringBuf = (XChar2b *) PR_Realloc(mDrawStringBuf, aLength);
+      mDrawStringBuf = (XChar2b *) PR_Realloc(mDrawStringBuf, desiredSize);
       mDrawStringSize = aLength;
     }
   }
@@ -1203,6 +1220,7 @@ void nsRenderingContextUnix :: DrawString(const PRUnichar *aString, PRUint32 aLe
 {
   nscoord x = aX;
   nscoord y = aY;
+  PRUint32 desiredSize = sizeof(XChar2b) * aLength;
 
   // Substract xFontStruct ascent since drawing specifies baseline
   if (mFontMetrics) {
@@ -1214,12 +1232,12 @@ void nsRenderingContextUnix :: DrawString(const PRUnichar *aString, PRUint32 aLe
 
   // Make the temporary buffer larger if needed.
   if (nsnull == mDrawStringBuf) {
-    mDrawStringBuf = (XChar2b *) PR_Malloc(aLength);
+    mDrawStringBuf = (XChar2b *) PR_Malloc(desiredSize);
     mDrawStringSize = aLength;
   }
   else {
     if (mDrawStringSize < PRInt32(aLength)) {
-      mDrawStringBuf = (XChar2b *) PR_Realloc(mDrawStringBuf, aLength);
+      mDrawStringBuf = (XChar2b *) PR_Realloc(mDrawStringBuf, desiredSize);
       mDrawStringSize = aLength;
     }
   }
