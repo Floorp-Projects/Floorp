@@ -17,7 +17,7 @@
  */
 
 #include "nsJSSecurityManager.h"
-#include "nsICapsManager.h"
+#include "nsCCapsManager.h"
 #include "nsIServiceManager.h"
 #ifdef OJI
 #include "jvmmgr.h"
@@ -50,8 +50,8 @@ nsJSSecurityManager::nsJSSecurityManager()
 
 nsJSSecurityManager::~nsJSSecurityManager()
 {
-  nsServiceManager::ReleaseService(kPrefServiceCID, mPrefs);
-  NS_IF_RELEASE(mCapsManager);
+	nsServiceManager::ReleaseService(kPrefServiceCID, mPrefs);
+	NS_IF_RELEASE(mCapsManager);
 }
 
 NS_IMETHODIMP
@@ -84,18 +84,16 @@ NS_IMPL_RELEASE(nsJSSecurityManager)
 NS_IMETHODIMP
 nsJSSecurityManager::Init() 
 {
-  return nsServiceManager::GetService(kPrefServiceCID, nsIPref::GetIID(), (nsISupports**)&mPrefs);
+	return nsServiceManager::GetService(kPrefServiceCID, nsIPref::GetIID(), (nsISupports**)&mPrefs);
 }
 
 NS_IMETHODIMP
-nsJSSecurityManager::CheckScriptAccess(nsIScriptContext* aContext, void* aObj, 
-                                       const char* aProp, PRBool* aResult)
+nsJSSecurityManager::CheckScriptAccess(nsIScriptContext* aContext, void* aObj, const char* aProp, PRBool* aResult)
 {
 #ifdef SECURITY_ENABLED
   *aResult = PR_FALSE;
   JSContext* cx = (JSContext*)aContext->GetNativeContext();
   PRInt32 secLevel = CheckForPrivilege(cx, (char*)aProp, nsnull);
-
   switch (secLevel) {
     case SCRIPT_SECURITY_ALL_ACCESS:
       *aResult = PR_TRUE;
@@ -118,12 +116,8 @@ nsJSSecurityManager::CheckScriptAccess(nsIScriptContext* aContext, void* aObj,
 void
 nsJSSecurityManager::InitCaps(void)
 {
-  if (nsnull == mCapsManager) {
-    return;
-  }
-
-  nsresult res = nsServiceManager::GetService(kCCapsManagerCID, kICapsManagerIID,
-                                              (nsISupports**)&mCapsManager);
+  if (nsnull == mCapsManager) return;
+  nsresult res = nsServiceManager::GetService(kCCapsManagerCID, kICapsManagerIID, (nsISupports**)& mCapsManager);
   if ((NS_OK == res) && (nsnull != mCapsManager)) {
     mCapsManager->InitializeFrameWalker(this);
   }
@@ -496,7 +490,7 @@ nsJSSecurityManager::PrincipalsCanAccessTarget(JSContext *aCx, PRInt16 aTarget)
   nsPrivilegeTable * annotation;
   JSStackFrame *fp;
   void *annotationRef;
-  void *principalArray = nsnull;
+  nsIPrincipalArray * principalArray = nsnull;
 #ifdef OJI
   JSStackFrame *pFrameToStartLooking = *JVM_GetStartJSFrameFromParallelStack();
   JSStackFrame *pFrameToEndLooking   = JVM_GetEndJSFrameFromParallelStack(pFrameToStartLooking);
@@ -522,40 +516,30 @@ nsJSSecurityManager::PrincipalsCanAccessTarget(JSContext *aCx, PRInt16 aTarget)
   //NS_ASSERTION(aTarget < sizeof(targetStrings)/sizeof(targetStrings[0]), "");
 
   /* Find annotation */
-  annotationRef = nsnull;
-  principalArray = nsnull;
-  fp = pFrameToStartLooking;
-  while ((fp = JS_FrameIterator(aCx, &fp)) != pFrameToEndLooking) {
-    void *current;
-    if (JS_GetFrameScript(aCx, fp) == nsnull)
-        continue;
-    current = JS_GetFramePrincipalArray(aCx, fp);
-    if (current == nsnull) {
-        return PR_FALSE;
-    }
-    annotationRef = (void *) JS_GetFrameAnnotation(aCx, fp);
-    if (annotationRef) {
-      if (nsnull != principalArray) {
-        PRBool canExtend;
-        mCapsManager->CanExtendTrust(current, principalArray, &canExtend);
-        if (!canExtend) {
-            return PR_FALSE;
-        }
-        break;
-      }
-    }
-    if (nsnull != principalArray) {
-      mCapsManager->IntersectPrincipalArray(principalArray, current, &principalArray);
-    }
-    else {
-      principalArray =  current;
-    }
-  }
-
-  if (annotationRef) {
-    annotation = (nsPrivilegeTable *)annotationRef;
-  } 
-  else {
+	annotationRef = nsnull;
+	principalArray = nsnull;
+	fp = pFrameToStartLooking;
+	while ((fp = JS_FrameIterator(aCx, &fp)) != pFrameToEndLooking) {
+		nsIPrincipalArray * current;
+		if (JS_GetFrameScript(aCx, fp) == nsnull) continue;
+		current = (nsIPrincipalArray *)JS_GetFramePrincipalArray(aCx, fp);
+		if (current == nsnull) return PR_FALSE;
+		annotationRef = (void *) JS_GetFrameAnnotation(aCx, fp);
+		if (annotationRef) {
+			if (principalArray != nsnull) {
+				PRBool canExtend;
+				nsIPrincipalManager * prinMan;
+				mCapsManager->GetPrincipalManager(& prinMan);
+				prinMan->CanExtendTrust(current, principalArray, & canExtend);
+				if (!canExtend) return PR_FALSE;
+				break;
+			}
+		}
+		if (principalArray != nsnull) current->IntersectPrincipalArray(principalArray,& principalArray);
+		else principalArray =  current;
+	}
+	if (annotationRef) annotation = (nsPrivilegeTable *)annotationRef;
+	else {
 #ifdef OJI
   /*
    * Call from Java into JS. Just call the Java routine for checking
@@ -1004,8 +988,8 @@ nsJSSecurityManager::SetDocumentDomain(JSContext *aCx, JSPrincipals *aPrincipals
     return NS_ERROR_FAILURE;
   }
   if (data->principalsArrayRef != nsnull) {
-    mCapsManager->FreePrincipalArray((void*)(data->principalsArrayRef));
-    data->principalsArrayRef = nsnull;
+	((nsIPrincipalArray *)data->principalsArrayRef)->FreePrincipalArray();
+	data->principalsArrayRef = nsnull;
   }
   *aReturn = PR_TRUE;
   return NS_OK;
@@ -1266,12 +1250,10 @@ DestroyJSPrincipals(JSContext *aCx, JSPrincipals *aPrincipals)
     }
     if (data->principalsArrayRef != nsnull) {
       /* XXX: raman: Should we free up the principals that are in that array also? */
-      nsICapsManager* capsMan;
-      nsresult res = nsServiceManager::GetService(kCCapsManagerCID, kICapsManagerIID,
-                                                  (nsISupports**)&capsMan);
-
+      nsICapsManager * capsMan;
+      nsresult res = nsServiceManager::GetService(kCCapsManagerCID, kICapsManagerIID, (nsISupports**)&capsMan);
       if ((NS_OK == res) && (nsnull != capsMan)) {
-        capsMan->FreePrincipalArray((void*)(data->principalsArrayRef));
+		((nsIPrincipalArray *)data->principalsArrayRef)->FreePrincipalArray();
         NS_RELEASE(capsMan);
       }
     }
@@ -1287,8 +1269,7 @@ DestroyJSPrincipals(JSContext *aCx, JSPrincipals *aPrincipals)
 
     if (data->zip)
       //ns_zip_close(data->zip);
-    if (data->url)
-      NS_RELEASE(data->url);
+    if (data->url) NS_RELEASE(data->url);
     PR_Free(data);
   }
 }
@@ -1300,18 +1281,16 @@ GetPrincipalArray(JSContext *aCx, struct JSPrincipals *aPrincipals)
   nsJSPrincipalsData *data = (nsJSPrincipalsData *)aPrincipals;
 
   //Get array of principals 
-  if (data->principalsArrayRef == nsnull) {
-    nsICapsManager* capsMan;
-    nsresult res = nsServiceManager::GetService(kCCapsManagerCID, kICapsManagerIID,
-                                                (nsISupports**)&capsMan);
-
-    if ((NS_OK == res) && (nsnull != capsMan)) {
-      capsMan->CreateMixedPrincipalArray(nsnull, nsnull, 
-                                         aPrincipals->codebase,
-                                         (void**)&(data->principalsArrayRef));
-      NS_RELEASE(capsMan);
-    }
-  }
+	if (data->principalsArrayRef == nsnull) {
+		nsICapsManager * capsMan;
+		nsresult res = nsServiceManager::GetService(kCCapsManagerCID, kICapsManagerIID, (nsISupports**)& capsMan);
+		if ((NS_OK == res) && (nsnull != capsMan)) {
+			nsIPrincipalManager * prinMan;
+			capsMan->GetPrincipalManager(& prinMan);
+//			prinMan->CreateMixedPrincipalArray(nsnull, nsnull, aPrincipals->codebase, (nsIPrincipalArray * *)&(data->principalsArrayRef));
+			NS_RELEASE(capsMan);
+		}
+	}
 
   return data->principalsArrayRef;
 }
@@ -1329,20 +1308,20 @@ GlobalPrivilegesEnabled(JSContext *aCx, JSPrincipals *aPrincipals)
 void
 nsJSSecurityManager::PrintPrincipalsToConsole(JSContext *aCx, JSPrincipals *aPrincipals)
 {
-  void *principalsArray;
-  nsIPrincipal *principal;
+	nsIPrincipalArray * principalsArray;
+	nsIPrincipal *principal;
 //cd ..  char *vendor;
   PRUint32 i, count;
   static char emptyStr[] = "<empty>\n";
-  principalsArray = aPrincipals->getPrincipalArray(aCx, aPrincipals);
+  principalsArray = (nsIPrincipalArray *)aPrincipals->getPrincipalArray(aCx, aPrincipals);
   if (principalsArray == nsnull) {
     PrintToConsole(emptyStr);
     return;
   }
   PrintToConsole("[\n");
-  mCapsManager->GetPrincipalArraySize(principalsArray, &count);
-  for (i = 0; i < count; i++) {
-    mCapsManager->GetPrincipalArrayElement(principalsArray, i, &principal);
+	principalsArray->GetPrincipalArraySize(& count);
+	for (i = 0; i < count; i++) {
+		principalsArray->GetPrincipalArrayElement(i, & principal);
 //    mCapsManager->GetVendor(principal, &vendor);
 //    if (vendor == nsnull) {
 //      JS_ReportOutOfMemory(aCx);
@@ -1362,9 +1341,9 @@ nsJSSecurityManager::InvalidateCertPrincipals(JSContext *aCx, JSPrincipals *aPri
   if (data->principalsArrayRef) {
     PrintToConsole("Invalidating certificate principals in ");
     PrintPrincipalsToConsole(aCx, aPrincipals);
-    mCapsManager->FreePrincipalArray((void*)(data->principalsArrayRef));
-    data->principalsArrayRef = nsnull;
-  }
+		((nsIPrincipalArray *)data->principalsArrayRef)->FreePrincipalArray();
+		data->principalsArrayRef = nsnull;
+	}
   data->signedness = HAS_UNSIGNED_SCRIPTS;
 }
 
@@ -1397,6 +1376,9 @@ nsJSSecurityManager::FindOriginURL(JSContext *aCx, JSObject *aGlobal)
 PRBool
 nsJSSecurityManager::CanExtendTrust(JSContext *aCx, void *aFrom, void *aTo)
 {
+// this code is already taken care of by nsPrivilegeManager, there is no need for the
+//JSContext object, this needs to be reviewed and modified, i don't think this method
+//should exist at all in this class
   if (aFrom == nsnull || aTo == nsnull) {
     return PR_FALSE;
   }
@@ -1404,25 +1386,26 @@ nsJSSecurityManager::CanExtendTrust(JSContext *aCx, void *aFrom, void *aTo)
     return PR_TRUE;
   }
 
-  PRBool canExtend;
-  mCapsManager->CanExtendTrust(aFrom, aTo, &canExtend);
-
-  return canExtend;
+	PRBool canExtend;
+	nsIPrincipalManager * prinMan;
+	mCapsManager->GetPrincipalManager(& prinMan);
+	prinMan->CanExtendTrust((nsIPrincipalArray *)aFrom,(nsIPrincipalArray *) aTo, &canExtend);
+	return canExtend;
 }
 
 PRUint32
 nsJSSecurityManager::GetPrincipalsCount(JSContext *aCx, JSPrincipals *aPrincipals)
 {
-    void *principalArray;
+// again, why???????
+// these methods are handled by nsIPrincipalArray, get rid of duplicates
+    nsIPrincipalArray * principalArray;
     PRUint32 count;
 
-    principalArray = aPrincipals->getPrincipalArray(aCx, aPrincipals);
-    if (nsnull == principalArray) {
-      return 0;
-    }
-
-    mCapsManager->GetPrincipalArraySize(principalArray, &count);
-    return count;
+	principalArray = (nsIPrincipalArray *)aPrincipals->getPrincipalArray(aCx, aPrincipals);
+	// this check is already done in nsPrincipalArray
+//    if (nsnull == principalArray) return 0;
+	principalArray->GetPrincipalArraySize(& count);
+	return count;
 }
 
 char *
@@ -1847,8 +1830,7 @@ nsJSSecurityManager::CheckEarlyAccess(JSContext* aCx, JSPrincipals *aPrincipals)
  * "principals". Return true iff the intersection is nonnsnull.
  */
 PRBool
-nsJSSecurityManager::IntersectPrincipals(JSContext *aCx, JSPrincipals *aPrincipals,
-                     JSPrincipals *aNewPrincipals)
+nsJSSecurityManager::IntersectPrincipals(JSContext *aCx, JSPrincipals *aPrincipals, JSPrincipals *aNewPrincipals)
 {
   nsJSPrincipalsData* data = (nsJSPrincipalsData*)aPrincipals;
   nsJSPrincipalsData* newData = (nsJSPrincipalsData*)aNewPrincipals;
@@ -1872,23 +1854,19 @@ nsJSSecurityManager::IntersectPrincipals(JSContext *aCx, JSPrincipals *aPrincipa
     return PR_TRUE;
   }
   // Compute the intersection.
-  void* principalArray = aPrincipals->getPrincipalArray(aCx, aPrincipals);
-  void* newPrincipalArray = aNewPrincipals->getPrincipalArray(aCx, aNewPrincipals);
-
+	nsIPrincipalArray * principalArray = (nsIPrincipalArray *)aPrincipals->getPrincipalArray(aCx, aPrincipals);
+	nsIPrincipalArray * newPrincipalArray = (nsIPrincipalArray *)aNewPrincipals->getPrincipalArray(aCx, aNewPrincipals);
   if (principalArray == nsnull || newPrincipalArray == nsnull) {
     InvalidateCertPrincipals(aCx, aPrincipals);
     return PR_TRUE;
   }
 
-  void* intersectArray;
-  mCapsManager->IntersectPrincipalArray(principalArray, 
-                                         newPrincipalArray, 
-                                         &intersectArray);
-
-  if (nsnull == intersectArray) {
-    InvalidateCertPrincipals(aCx, aPrincipals);
-    return PR_TRUE;
-  }
+	nsIPrincipalArray * intersectArray;
+	principalArray->IntersectPrincipalArray(newPrincipalArray, & intersectArray);
+	if (nsnull == intersectArray) {
+		InvalidateCertPrincipals(aCx, aPrincipals);
+		return PR_TRUE;
+	}
 
   data->principalsArrayRef = intersectArray;
   return PR_TRUE;
@@ -1907,13 +1885,12 @@ nsJSSecurityManager::PrincipalsEqual(JSContext *aCx, JSPrincipals *aPrinA, JSPri
     if (dataA->signedness != dataB->signedness)
         return PR_FALSE;
 
-    void* arrayA = aPrinA->getPrincipalArray(aCx, aPrinA);
-    void* arrayB = aPrinB->getPrincipalArray(aCx, aPrinB);
+	nsIPrincipalArray * arrayA = (nsIPrincipalArray *)aPrinA->getPrincipalArray(aCx, aPrinA);
+	nsIPrincipalArray * arrayB = (nsIPrincipalArray *)aPrinB->getPrincipalArray(aCx, aPrinB);
 
-    PRInt16 comparisonType;
-    mCapsManager->ComparePrincipalArray(arrayA, arrayB, & comparisonType);
-
-    return (PRBool)(nsPrivilegeManager::SetComparisonType_Equal == comparisonType);
+	PRInt16 comparisonType;
+	arrayA->ComparePrincipalArray(arrayB, & comparisonType);
+	return (PRBool)(nsIPrincipalArray::SetComparisonType_Equal == comparisonType);
 }
 
 /*******************************************************************************
@@ -1955,24 +1932,20 @@ nsJSSecurityManager::NewJSFrameIterator(void *aContext)
 PRBool
 nsJSSecurityManager::NextJSJavaFrame(struct nsJSFrameIterator *aIterator)
 {
-    void *current;
-    void *previous;
-
-    if (aIterator->fp == 0) {
-        return PR_FALSE;
-    }
-
-    current = JS_GetFramePrincipalArray(aIterator->cx, aIterator->fp);
+	nsIPrincipalArray * current;
+	nsIPrincipalArray * previous;
+    if (aIterator->fp == 0) return PR_FALSE;
+    current = (nsIPrincipalArray *)JS_GetFramePrincipalArray(aIterator->cx, aIterator->fp);
     if (current == nsnull) {
         if (JS_GetFrameScript(aIterator->cx, aIterator->fp))
             aIterator->sawEmptyPrincipals = PR_TRUE;
     } else {
-        void* arrayIntersect;
+        nsIPrincipalArray * arrayIntersect;
         if (aIterator->intersect) {
-            previous = aIterator->intersect;
-            mCapsManager->IntersectPrincipalArray(current, previous, &arrayIntersect);
+            previous = (nsIPrincipalArray *)aIterator->intersect;
+            current->IntersectPrincipalArray(previous,& arrayIntersect);
             /* XXX: raman: should we do a free the previous principal Array */
-            mCapsManager->FreePrincipalArray((void*)(aIterator->intersect));
+            ((nsIPrincipalArray *)aIterator->intersect)->FreePrincipalArray();
         }
         aIterator->intersect = current;
     }
@@ -1985,14 +1958,13 @@ nsJSSecurityManager::NextJSFrame(struct nsJSFrameIterator **aIterator)
 {
   nsJSFrameIterator *iterator = *aIterator;
   PRBool result = NextJSJavaFrame(iterator);
-  if (!result) {
-    if (iterator->intersect) {
-        mCapsManager->FreePrincipalArray((void*)(iterator->intersect));
-    }
-    PR_Free(iterator);
-    *aIterator = nsnull;
-  }
-  return result;
+	if (!result) {
+		if (iterator->intersect) 
+			((nsIPrincipalArray *)(* aIterator)->intersect)->FreePrincipalArray();
+		PR_Free(iterator);
+		* aIterator = nsnull;
+	}
+	return result;
 }
 
 /**

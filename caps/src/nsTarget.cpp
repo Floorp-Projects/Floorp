@@ -19,6 +19,7 @@
 #include "prlog.h"
 #include "nsTarget.h"
 #include "nsPrivilegeManager.h"
+#include "nsPrincipalManager.h"
 #include "nsUserTarget.h"
 #include "nsUserDialogHelper.h"
 #include "xp.h"
@@ -705,9 +706,11 @@ nsTarget::RegisterTarget(void * context, nsITarget * * targetResult)
 		targetResult = & targ;
 		return NS_OK;
 	}
-	nsPrivilegeManager * mgr = nsPrivilegeManager::GetPrivilegeManager();
-	if ((mgr != NULL) && (context != NULL) && 
-		(!mgr->CheckMatchPrincipal(context, itsPrincipal, 1))) {
+	nsPrivilegeManager * privMgr = nsPrivilegeManager::GetPrivilegeManager();
+	nsPrincipalManager * prinMgr = nsPrincipalManager::GetPrincipalManager();
+	PRBool cmp = PR_FALSE;
+	prinMgr->CheckMatchPrincipal((nsIScriptContext *)context, itsPrincipal, 1,& cmp);
+	if ((privMgr != NULL) && (context != NULL) && !cmp) {
 		nsCaps_unlock();
 		targetResult = NULL;
 		return NS_OK;
@@ -719,7 +722,7 @@ nsTarget::RegisterTarget(void * context, nsITarget * * targetResult)
 	theTargetRegistry->Put(&targKey, this); // hash table will "canonicalize" name
 	if (!theSystemTargetRegistry) theSystemTargetRegistry = new nsHashtable();
 	PRBool eq;
-	itsPrincipal->Equals(nsPrivilegeManager::GetSystemPrincipal(),&eq);
+	itsPrincipal->Equals(nsPrincipalManager::GetSystemPrincipal(),& eq);
 	if (eq) {
 		IntegerKey ikey(PL_HashString(itsName));
 		theSystemTargetRegistry->Put(&ikey, this); 
@@ -753,7 +756,7 @@ nsITarget *
 nsTarget::FindTarget(char * name, nsIPrincipal * prin)
 {
 	PRBool eq;
-	prin->Equals(nsPrivilegeManager::GetSystemPrincipal(),&eq);
+	prin->Equals(nsPrincipalManager::GetSystemPrincipal(),&eq);
 	if (eq) return nsTarget::FindTarget(name);
 	/* name and principal combination uniquely identfies a target */
 	nsITarget * targ = new nsTarget((char *)name, prin, 
@@ -769,13 +772,13 @@ nsTarget::FindTarget(char * name, nsIPrincipal * prin)
 //WHAT THE HELL IS VOID * DATA????????????????????????????????????????????????????
 // these methods are already done by the privilege manager, get them outa here
 nsIPrivilege * 
-nsTarget::CheckPrivilegeEnabled(nsPrincipalArray * prinArray, void * data)
+nsTarget::CheckPrivilegeEnabled(nsTargetArray * prinArray, void * data)
 {
 	return nsPrivilegeManager::FindPrivilege(nsIPrivilege::PrivilegeState_Blank, nsIPrivilege::PrivilegeDuration_Session);
 }
 
 nsIPrivilege * 
-nsTarget::CheckPrivilegeEnabled(nsPrincipalArray* prinArray)
+nsTarget::CheckPrivilegeEnabled(nsTargetArray * prinArray)
 {
 	return this->CheckPrivilegeEnabled(prinArray, NULL);
 }

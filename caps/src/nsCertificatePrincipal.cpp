@@ -23,10 +23,9 @@ static NS_DEFINE_IID(kICertificatePrincipalIID, NS_ICERTIFICATEPRINCIPAL_IID);
 NS_IMPL_ISUPPORTS(nsCertificatePrincipal, kICertificatePrincipalIID);
 
 NS_IMETHODIMP
-nsCertificatePrincipal::GetPublicKey(char ** publicKey, PRUint32 * publicKeyLength)
+nsCertificatePrincipal::GetPublicKey(char ** publicKey)
 {
-	publicKey = & this->itsKey;
-	publicKeyLength = & this->itsKeyLength;
+	* publicKey = (char *)this->itsKey;
 	return (itsKey == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }
 
@@ -98,10 +97,16 @@ nsCertificatePrincipal::Equals(nsIPrincipal * other, PRBool * result)
 	return NS_OK;
 }
 
-nsCertificatePrincipal::nsCertificatePrincipal(PRInt16 * type, const unsigned char **certChain, 
-								PRUint32 *certChainLengths, PRUint32 noOfCerts, nsresult *result)
+nsCertificatePrincipal::nsCertificatePrincipal(PRInt16 type, const char * key)
 {
-	this->itsType = * type;
+	this->itsType = type;
+	this->itsKey = key;
+}
+
+nsCertificatePrincipal::nsCertificatePrincipal(PRInt16 type, const unsigned char **certChain, 
+								PRUint32 *certChainLengths, PRUint32 noOfCerts)
+{
+	this->itsType = type;
 	/*
    m_pNSPrincipal = new nsPrincipal(nsPrincipalType_CertChain, certChain, 
                                     certChainLengths, noOfCerts);

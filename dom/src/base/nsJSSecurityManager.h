@@ -24,8 +24,7 @@
 #include "nsIXPCSecurityManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsICapsSecurityCallbacks.h"
-
-class nsICapsManager;
+#include "nsICapsManager.h"
 class nsIPref;
 
 typedef struct nsJSFrameIterator {
@@ -181,7 +180,7 @@ private:
 	
 	//Local vars
 	nsIPref* mPrefs;
-	nsICapsManager* mCapsManager;
+	nsICapsManager * mCapsManager;
 };
 
 //XXX temporarily bit flags for determining what we want to parse from the URL

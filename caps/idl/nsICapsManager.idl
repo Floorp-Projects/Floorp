@@ -1,0 +1,72 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsIPrincipal.idl"
+#include "nsIPrincipalArray.idl"
+#include "nsIPrincipalManager.idl"
+#include "nsIPrivilegeManager.idl"
+#include "nsITarget.idl"
+#include "nsICapsSecurityCallbacks.idl"
+
+interface nsIScriptContext;
+
+[uuid(7cb78236-47b0-11d3-ba17-0060b0f199a2)]
+interface nsICapsManager : nsISupports {
+
+	void GetPrincipalManager(out nsIPrincipalManager prinMan);
+
+	void GetPrivilegeManager(out nsIPrivilegeManager privMan);
+
+	void CreateCodebasePrincipal([const] in string codebaseURL, out nsIPrincipal prin);
+%{C++
+	NS_IMETHOD
+	CreateCertificatePrincipal(const unsigned char * * certChain, PRUint32 * certChainLengths, PRUint32 noOfCerts, nsIPrincipal * * prin) = 0;
+%}
+
+	void GetPermission(in nsIPrincipal prin, in nsITarget target, out short privilegeState);
+
+	void SetPermission(in nsIPrincipal prin, in nsITarget target, in short privilegeState);
+
+	void AskPermission(in nsIPrincipal prin, in nsITarget target, out short privilegeState);
+
+	void Initialize(out boolean result);
+
+	void InitializeFrameWalker(in nsICapsSecurityCallbacks aInterface);
+
+	void EnablePrivilege(in nsIScriptContext cx, [const] in string targetName, in long callerDepth, out boolean result);
+
+	void IsPrivilegeEnabled(in nsIScriptContext cx, [const] in string targetName, in long callerDepth, out boolean result);
+
+	void RevertPrivilege(in nsIScriptContext cx, [const] in string targetName, in long callerDepth, out boolean result);
+
+	void DisablePrivilege(in nsIScriptContext cx, [const] in string targetName, in long callerDepth, out boolean result);
+
+	void IsAllowed(in voidStar annotation, [const] in string target, out boolean result);
+
+};
+
+%{C++
+#define NS_CCAPSMANAGER_CID                          \
+{ /* fd347500-307f-11d2-97f0-00805f8a28d0 */         \
+    0xfd347500,                                      \
+    0x307f,                                          \
+    0x11d2,                                          \
+    {0x97, 0xf0, 0x00, 0x80, 0x5f, 0x8a, 0x28, 0xd0} \
+}
+%}

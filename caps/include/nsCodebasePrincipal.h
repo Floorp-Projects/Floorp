@@ -50,12 +50,12 @@ public:
 	NS_IMETHOD
 	Equals(nsIPrincipal * other, PRBool * result);
 
-	nsCodebasePrincipal(PRInt16 * type, const char *codebaseURL);
+	nsCodebasePrincipal(PRInt16 type, const char *codebaseURL);
 	virtual ~nsCodebasePrincipal(void);
 
 protected:
-	const char * codeBaseURL;
-	PRInt16  * itsType;
+	const char * itsCodeBaseURL;
+	PRInt16 itsType;
 };
 
 #endif // _NS_CODEBASE_PRINCIPAL_H_

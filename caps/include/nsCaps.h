@@ -26,8 +26,7 @@ class nsTarget;
 class nsIPrincipal;
 class nsIPrivilege;
 class nsPrivilegeTable;
-
-struct nsPrivilegeManager;
+class nsPrivilegeManager;
 struct NSJSJavaFrameWrapper;
 
 /* wrappers for nsPrivilegeManager object */
@@ -52,12 +51,6 @@ nsCapsDisablePrivilege(void* context, class nsITarget * target, PRInt32 callerDe
 PR_EXTERN(void*) 
 nsCapsGetClassPrincipalsFromStack(void* context, PRInt32 callerDepth);
 
-PR_EXTERN(PRInt16) 
-nsCapsComparePrincipalArray(void* prin1Array, void* prin2Array);
-
-PR_EXTERN(void*) 
-nsCapsIntersectPrincipalArray(void* prin1Array, void* prin2Array);
-
 PR_EXTERN(PRBool) 
 nsCapsCanExtendTrust(void* from, void* to);
 
@@ -79,19 +72,6 @@ nsCapsPrincipalGetVendor(nsIPrincipal * principal);
 
 PR_EXTERN(void *) 
 nsCapsNewPrincipalArray(PRUint32 count);
-
-PR_EXTERN(void) 
-nsCapsFreePrincipalArray(void * prinArray);
-
-PR_EXTERN(void *) 
-nsCapsGetPrincipalArrayElement(void * prinArray, PRUint32 index);
-
-PR_EXTERN(void) 
-nsCapsSetPrincipalArrayElement(void * prinArray, PRUint32 index, void *element);
-
-PR_EXTERN(PRUint32) 
-nsCapsGetPrincipalArraySize(void * prinArray);
-
 
 /* wrappers for nsITarget object */
 PR_EXTERN(class nsITarget *) 
