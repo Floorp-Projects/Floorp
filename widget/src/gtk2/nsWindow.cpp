@@ -529,6 +529,32 @@ nsWindow::PlaceBehind(nsTopLevelWidgetZPlacement  aPlacement,
 }
 
 NS_IMETHODIMP
+nsWindow::SetZIndex(PRInt32 aZIndex)
+{
+    nsIWidget* oldPrev = GetPrevSibling();
+
+    nsBaseWidget::SetZIndex(aZIndex);
+
+    if (GetPrevSibling() == oldPrev) {
+        return NS_OK;
+    }
+
+    NS_ASSERTION(!mContainer, "Expected Mozilla child widget");
+
+    if (!GetNextSibling()) {
+        // We're to be on top.
+        gdk_window_raise(mDrawingarea->clip_window);
+    } else {
+        // All the siblings before us need to be below our widget. 
+        for (nsWindow* w = this; w;
+             w = NS_STATIC_CAST(nsWindow*, w->GetPrevSibling())) {
+            gdk_window_lower(w->mDrawingarea->clip_window);
+        }
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWindow::SetSizeMode(PRInt32 aMode)
 {
     nsresult rv;

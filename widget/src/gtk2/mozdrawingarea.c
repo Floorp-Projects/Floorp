@@ -202,8 +202,8 @@ moz_drawingarea_set_visibility (MozDrawingarea *drawingarea,
                                 gboolean visibility)
 {
     if (visibility) {
-        gdk_window_show(drawingarea->inner_window);
-        gdk_window_show(drawingarea->clip_window);
+        gdk_window_show_unraised(drawingarea->inner_window);
+        gdk_window_show_unraised(drawingarea->clip_window);
     }
     else    {
         gdk_window_hide(drawingarea->clip_window);

@@ -829,34 +829,16 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
                             nscoord aHeight,
                             PRBool  aViewOnly)
 {
-  // Create our view and widget
-
-  nsRect boundBox(0, 0, aWidth, aHeight);
-
-  nsIView *parView = GetAncestorWithView()->GetView();
-  nsIViewManager* viewMan = parView->GetViewManager();
-
-  //  nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
-    // initialize the view as hidden since we don't know the (x,y) until Paint
-  nsIView *view = viewMan->CreateView(boundBox, parView, nsViewVisibility_kHide);
-  //  if (nsnull != initData) {
-  //    delete(initData);
-  //  }
-
+  nsIView* view = GetView();
+  NS_ASSERTION(view, "Object frames must have views");  
   if (!view) {
     return NS_OK;       //XXX why OK? MMP
   }
 
-#if 0
-  // set the content's widget, so it can get content modified by the widget
-  nsIWidget *widget = view->GetWidget();
-  if (widget) {
-    nsInput* content = (nsInput *)mContent; // change this cast to QueryInterface 
-    content->SetWidget(widget);
-  } else {
-    NS_ASSERTION(0, "could not get widget");
-  }
-#endif
+  nsIViewManager* viewMan = view->GetViewManager();
+  // make the view as hidden since we don't know the (x,y) until Paint
+  // XXX is the above comment correct?
+  viewMan->SetViewVisibility(view, nsViewVisibility_kHide);
 
   // Turn off double buffering on the Mac. This depends on bug 49743 and partially
   // fixes 32327, 19931 amd 51787
@@ -867,11 +849,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
   viewMan->AllowDoubleBuffering(doubleBuffer);
 #endif
   
-  // XXX Put this last in document order
-  // XXX Should we be setting the z-index here?
-  viewMan->InsertChild(parView, view, nsnull, PR_TRUE);
-  
-  if (aViewOnly != PR_TRUE) {
+  if (!aViewOnly) {
     // Bug 179822: Create widget and allow non-unicode SubClass
     nsWidgetInitData initData;
     initData.mUnicode = PR_FALSE;
@@ -905,10 +883,10 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     nsPoint origin;
     nsRect r(0, 0, mRect.width, mRect.height);
 
-    viewMan->SetViewVisibility(view, nsViewVisibility_kShow);
     GetOffsetFromView(origin, &parentWithView);
     viewMan->ResizeView(view, r);
     viewMan->MoveViewTo(view, origin.x, origin.y);
+    viewMan->SetViewVisibility(view, nsViewVisibility_kShow);
   }
 
   SetView(view);

@@ -3132,17 +3132,6 @@ NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, P
     UpdateView(view, NS_VMREFRESH_NO_SYNC);
   }
 
-  // Native widgets ultimately just can't deal with the awesome power
-  // of CSS2 z-index. However, we set the z-index on the widget anyway
-  // because in many simple common cases the widgets do end up in the
-  // right order. Even if they don't, we'll still render correctly as
-  // long as there are no plugins around (although there may be more
-  // flickering and other perf issues than if the widgets were in a
-  // good order).
-  if (view->HasWidget()) {
-    view->GetWidget()->SetZIndex(aZIndex);
-  }
-
   nsZPlaceholderView* zParentView = view->GetZParent();
   if (nsnull != zParentView) {
     SetViewZIndex(zParentView, aAutoZIndex, aZIndex, aTopMost);

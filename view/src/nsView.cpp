@@ -559,6 +559,40 @@ NS_IMETHODIMP nsView::SetContentTransparency(PRBool aTransparent)
   return NS_OK;
 }
 
+// Native widgets ultimately just can't deal with the awesome power of
+// CSS2 z-index. However, we set the z-index on the widget anyway
+// because in many simple common cases the widgets do end up in the
+// right order. We set each widget's z-index to the z-index of the
+// nearest ancestor that has non-auto z-index.
+static void UpdateNativeWidgetZIndexes(nsView* aView, PRInt32 aZIndex)
+{
+  if (aView->HasWidget()) {
+    nsIWidget* widget = aView->GetWidget();
+    PRInt32 curZ;
+    widget->GetZIndex(&curZ);
+    if (curZ != aZIndex) {
+      widget->SetZIndex(aZIndex);
+    }
+  } else {
+    for (nsView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
+      if (v->GetZIndexIsAuto()) {
+        UpdateNativeWidgetZIndexes(v, aZIndex);
+      }
+    }
+  }
+}
+
+static PRInt32 FindNonAutoZIndex(nsView* aView)
+{
+  while (aView) {
+    if (!aView->GetZIndexIsAuto()) {
+      return aView->GetZIndex();
+    }
+    aView = aView->GetParent();
+  }
+  return 0;
+}
+
 nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
                                nsWidgetInitData *aWidgetInitData,
                                nsNativeWidget aNative,
@@ -620,7 +654,7 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
       }
       
       // propagate the z-index to the widget.
-      mWindow->SetZIndex(mZIndex);
+      UpdateNativeWidgetZIndexes(v, FindNonAutoZIndex(v));
     }
   }
 
@@ -637,12 +671,13 @@ nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
 
 void nsView::SetZIndex(PRBool aAuto, PRInt32 aZIndex, PRBool aTopMost)
 {
+  PRBool oldIsAuto = GetZIndexIsAuto();
   mVFlags = (mVFlags & ~NS_VIEW_FLAG_AUTO_ZINDEX) | (aAuto ? NS_VIEW_FLAG_AUTO_ZINDEX : 0);
   mZIndex = aZIndex;
   SetTopMost(aTopMost);
   
-  if (nsnull != mWindow) {
-    mWindow->SetZIndex(aZIndex);
+  if (HasWidget() || !oldIsAuto || !aAuto) {
+    UpdateNativeWidgetZIndexes(this, FindNonAutoZIndex(this));
   }
 }
 
@@ -668,6 +703,8 @@ NS_IMETHODIMP nsView::SetWidget(nsIWidget *aWidget)
 
   mVFlags &= ~NS_VIEW_FLAG_HAS_POSITIONED_WIDGET;
 
+  UpdateNativeWidgetZIndexes(this, FindNonAutoZIndex(this));
+
   return NS_OK;
 }
 
@@ -691,7 +728,6 @@ nsresult nsView::LoadWidget(const nsCID &aClassIID)
   }
 
   mVFlags &= ~NS_VIEW_FLAG_HAS_POSITIONED_WIDGET;
-
   return rv;
 }
 
@@ -715,8 +751,10 @@ void nsIView::List(FILE* out, PRInt32 aIndent) const
     nonclientBounds *= p2t;
     nsrefcnt widgetRefCnt = mWindow->AddRef() - 1;
     mWindow->Release();
-    fprintf(out, "(widget=%p[%d] pos={%d,%d,%d,%d}) ",
-            (void*)mWindow, widgetRefCnt,
+    PRInt32 Z;
+    mWindow->GetZIndex(&Z);
+    fprintf(out, "(widget=%p[%d] z=%d pos={%d,%d,%d,%d}) ",
+            (void*)mWindow, widgetRefCnt, Z,
             nonclientBounds.x, nonclientBounds.y,
             windowBounds.width, windowBounds.height);
   }

@@ -887,6 +887,10 @@ nsContainerFrame::FrameNeedsView(nsIFrame* aFrame)
     return PR_TRUE;
   }
 
+  if (aFrame->GetType() == nsLayoutAtoms::objectFrame) {
+    return PR_TRUE;
+  }
+
   // See if the frame is block-level and has 'overflow' set to 'hidden'. If
   // so, then we need to give it a view so clipping
   // of any child views works correctly. Note that if it's floated it is also
