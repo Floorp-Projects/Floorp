@@ -34,3 +34,14 @@ function doCancelButton()
 		top.window.close();
 }
 
+function moveToAlertPosition()
+{
+	var xOffset = opener.outerWidth/2 - window.outerWidth/2;
+	var yOffset = (opener.outerHeight *2)/10;
+	
+	xOffset  = xOffset> 0 ? xOffset : 0;
+	dump( "Move window by " + xOffset + ","+yOffset+"\n");
+	dump( "screen x "+ opener.screenX +"screen y "+ opener.screenY +"\n");
+	window.moveTo( opener.screenX + xOffset, opener.screenY + yOffset );
+
+}
