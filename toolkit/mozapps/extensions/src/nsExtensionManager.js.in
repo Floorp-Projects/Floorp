@@ -1102,7 +1102,7 @@ nsThemeInstaller.prototype = {
     // We do a basic version check first just to make sure we somehow weren't 
     // tricked into installing an incompatible theme...
     this._themeID = this._em.canInstallItem(themeMetadata);
-    if (this._themeID != -1) {
+    if (isNaN(parseInt(this._themeID))) {
       // Create a logger to log install operations for uninstall
       this._writer = new nsInstallLogWriter(this._themeID, aIsProfile);
       this._writer.open();
@@ -2008,10 +2008,17 @@ nsExtensionManager.prototype = {
   // This function is called on the next startup 
   _finalizeInstall: function (aExtensionID)
   {
+    var isProfile = this._ds.isProfileItem(aExtensionID);
+    if (aExtensionID == 0 || aExtensionID == -1) {
+      this._ds.removeCorruptItem(aExtensionID, 
+                                 nsIUpdateItem.TYPE_EXTENSION, 
+                                 isProfile);
+      return;
+    }
+    
     if (!this._extInstaller)
       this._extInstaller = new nsExtensionInstaller(this._ds);
       
-    var isProfile = this._ds.isProfileItem(aExtensionID);
     this._extInstaller.install(aExtensionID, isProfile);
     
     // Update the Components Manifest
@@ -2894,6 +2901,14 @@ nsExtensionsDataSource.prototype = {
     ctr.RemoveElement(item, true);
     
     this._flush(aIsProfile);
+  },
+
+  // Removes a corrupt item entry from the extension list added due to 
+  // buggy code in previous EM versions!  
+  removeCorruptItem: function (aItemID, aItemType, aIsProfile)
+  {
+    this.removeItemMetadata(aItemID, aItemType);
+    this.removeItemFromContainer(aItemID, aItemType, aIsProfile);
   },
   
   addItemMetadata: function (aItemID, aItemType, aSourceDS, aIsProfile)
