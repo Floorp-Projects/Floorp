@@ -129,12 +129,14 @@ NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIAtom* aLangGroup,
   float  dev2app;
   mContext->GetDevUnitsToAppUnits(dev2app);
 
-  mAscent = NSToCoordRound(float(fInfo.ascent) * dev2app);
-  mDescent = NSToCoordRound(float(fInfo.descent) * dev2app);
-  mLeading = NSToCoordRound(float(fInfo.leading) * dev2app);
-  mHeight = mAscent + mDescent + mLeading;
-  mMaxAscent = mAscent;
-  mMaxDescent = mDescent;
+  mLeading    = NSToCoordRound(float(fInfo.leading) * dev2app);
+  mEmAscent   = NSToCoordRound(float(fInfo.ascent) * dev2app);
+  mEmDescent  = NSToCoordRound(float(fInfo.descent) * dev2app);
+  mEmHeight   = mEmAscent + mEmDescent;
+
+	mMaxHeight  = mEmHeight + mLeading;
+  mMaxAscent  = mEmAscent;
+  mMaxDescent = mEmDescent;
 
 	GrafPtr thePort;
 	::GetPort(&thePort);
@@ -298,13 +300,47 @@ nsFontMetricsMac :: GetUnderline(nscoord& aOffset, nscoord& aSize)
 
 NS_IMETHODIMP nsFontMetricsMac :: GetHeight(nscoord &aHeight)
 {
-  aHeight = mHeight;
+  aHeight = mMaxHeight;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFontMetricsMac :: GetNormalLineHeight(nscoord &aHeight)
+{
+  aHeight = mMaxHeight; // on Windows, it's mEmHeight + mLeading (= mMaxHeight on the Mac)
   return NS_OK;
 }
 
 NS_IMETHODIMP nsFontMetricsMac :: GetLeading(nscoord &aLeading)
 {
   aLeading = mLeading;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsMac :: GetEmHeight(nscoord &aHeight)
+{
+  aHeight = mEmHeight;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsMac :: GetEmAscent(nscoord &aAscent)
+{
+  aAscent = mEmAscent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsMac :: GetEmDescent(nscoord &aDescent)
+{
+  aDescent = mEmDescent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsMac :: GetMaxHeight(nscoord &aHeight)
+{
+  aHeight = mMaxHeight;
   return NS_OK;
 }
 
