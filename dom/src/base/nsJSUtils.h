@@ -94,7 +94,7 @@ public:
   }
 
   explicit nsDependentJSString(JSString *str)
-    : nsDependentString(::JS_GetStringChars(str), ::JS_GetStringLength(str))
+    : nsDependentString((PRUnichar *)::JS_GetStringChars(str), ::JS_GetStringLength(str))
   {
   }
 
