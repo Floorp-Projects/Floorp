@@ -65,7 +65,7 @@
     <key id="decreaseindentkb"  key="&formatoutdent.keybinding;"  observes="cmd_outdent"  modifiers="accel"/>
 
     <key id="removestyleskb"       key="&formatremovestyles.keybinding;"   observes="cmd_removeStyles"  modifiers="shift, accel"/>
-    <key id="removelinkskb"        key="&formatremovelinks.keybinding;"    observes="cmd_removeLinks"  modifiers="shift, accel"/>
+    <key id="removelinkskb"        key="&formatremovelinks.keybinding;"    observes="cmd_removeLinks"  modifiers="accel"/>
     <key id="decreasefontsizekb"   key="&decreaseFontSize.keybinding;"     observes="cmd_decreaseFont"  modifiers="shift, accel"/>
     <key id="increasefontsizekb"   key="&increaseFontSize.keybinding;"     observes="cmd_increaseFont"  modifiers="shift, accel"/>
   </keyset>
