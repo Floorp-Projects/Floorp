@@ -29,6 +29,7 @@
 #include "nsStyleConsts.h"
 #include "nsIContentDelegate.h"
 #include "nsHTMLIIDs.h"
+#include "nsHTMLAtoms.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -253,6 +254,51 @@ nsTableRow::RemoveChildAt (int aIndex, PRBool aNotify)
   NS_IF_RELEASE(oldChild);                    // oldChild: REFCNT--
   return rv;
 }
+
+void nsTableRow::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+{
+  NS_PRECONDITION(nsnull!=aAttribute, "bad attribute arg");
+  nsHTMLValue val;
+  if ((aAttribute == nsHTMLAtoms::align) &&
+      ParseDivAlignParam(aValue, val)) {
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return;
+  }
+  if ((aAttribute == nsHTMLAtoms::valign) &&
+      ParseAlignParam(aValue, val)) {
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return;
+  }
+}
+
+void nsTableRow::MapAttributesInto(nsIStyleContext* aContext,
+                                   nsIPresContext* aPresContext)
+{
+  NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
+  NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
+  if (nsnull != mAttributes) {
+    nsHTMLValue value;
+    nsStyleText* textStyle = nsnull;
+
+    // align: enum
+    GetAttribute(nsHTMLAtoms::align, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) 
+    {
+      textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      textStyle->mTextAlign = value.GetIntValue();
+    }
+    
+    // valign: enum
+    GetAttribute(nsHTMLAtoms::valign, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) 
+    {
+      if (nsnull==textStyle)
+        textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
+    }
+  }
+}
+
 
 nsresult
 nsTableRow::CreateFrame(nsIPresContext* aPresContext,
