@@ -25,13 +25,13 @@
  *    -- fixed memory leak in NamedMap::hashKey method by deleting
  *       up char[] chars;
  *
- * $Id: NamedMap.cpp,v 1.7 2001/04/08 14:36:06 peterv%netscape.com Exp $
+ * $Id: NamedMap.cpp,v 1.8 2001/06/20 06:00:31 margaret.chan%sun.com Exp $
  */
 
 /**
  * A Named Map for TxObjects
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.7 $ $Date: 2001/04/08 14:36:06 $
+ * @version $Revision: 1.8 $ $Date: 2001/06/20 06:00:31 $
 **/
 
 #include "NamedMap.h"
@@ -122,8 +122,8 @@ void NamedMap::clear(MBool deleteObjects) {
 } //-- clear
 
 void NamedMap::dumpMap() {
-
-
+#if 0
+    // XXX DEBUG OUTPUT
     cout << "#NamedMap -------- { "<<endl;
 
     for (int i = 0; i < numberOfBuckets; i++) {
@@ -143,6 +143,7 @@ void NamedMap::dumpMap() {
         cout << "}"<<endl;
     }
     cout <<"} #NamedMap"<<endl;
+#endif
 } //-- dumpMap
 
 /**

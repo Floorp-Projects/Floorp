@@ -21,12 +21,12 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: LocationStep.cpp,v 1.6 2001/05/14 14:22:47 axel%pike.org Exp $
+ * $Id: LocationStep.cpp,v 1.7 2001/06/20 06:00:33 margaret.chan%sun.com Exp $
  */
 
 /*
   Implementation of an XPath LocationStep
-  @version $Revision: 1.6 $ $Date: 2001/05/14 14:22:47 $
+  @version $Revision: 1.7 $ $Date: 2001/06/20 06:00:33 $
 */
 
 #include "Expr.h"
@@ -170,7 +170,10 @@ ExprResult* LocationStep::evaluate(Node* context, ContextState* cs) {
             }
             break;
         case NAMESPACE_AXIS : //-- not yet implemented
+#if 0
+            // XXX DEBUG OUTPUT
             cout << "namespace axis not yet implemented"<<endl;
+#endif
             break;
         case PARENT_AXIS :
         {
