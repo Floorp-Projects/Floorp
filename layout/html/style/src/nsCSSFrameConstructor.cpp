@@ -7584,7 +7584,8 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
 
 // XTF
 #ifdef MOZ_XTF
-  if (NS_SUCCEEDED(rv) &&
+  if (aNameSpaceID > kNameSpaceID_LastBuiltin &&
+      NS_SUCCEEDED(rv) &&
       ((nsnull == aFrameItems.childList) ||
        (lastChild == aFrameItems.lastChild))) {
     nsCOMPtr<nsIXTFElementWrapperPrivate> xtfElem = do_QueryInterface(aContent);
