@@ -193,7 +193,7 @@ void
 usage (void)
 {
   PR_fprintf(outputFD, "\n");
-  PR_fprintf(outputFD, "%s %s - a signing tool for jar files\n", LONG_PROGRAM_NAME, VERSION);
+  PR_fprintf(outputFD, "%s %s - a signing tool for jar files\n", LONG_PROGRAM_NAME, NSS_VERSION);
   PR_fprintf(outputFD, "\n");
   PR_fprintf(outputFD, "Usage:  %s [options] directory-tree \n\n", PROGRAM_NAME);
   PR_fprintf(outputFD, "    -b \"basename\"\t\tbasename of .sf, .rsa files for signing\n");

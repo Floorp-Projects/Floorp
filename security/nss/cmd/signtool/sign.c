@@ -451,7 +451,7 @@ manifesto (char *dirname, char *install_script, PRBool recurse)
 }
 
 /*
- *  m a n i f e s t o _xpi_ f n
+ *  m a n i f e s t o _ x p i _ f n
  *
  *  Called by pointer from SignArchive(), once for
  *  each file within the directory. This function
@@ -462,7 +462,11 @@ static int manifesto_xpi_fn
      (char *relpath, char *basedir, char *reldir, char *filename, void *arg)
 {		
     char fullname [FNSIZE];
-	
+
+	if(verbosity >= 0) {
+		PR_fprintf(outputFD, "--> %s\n", relpath);
+	}
+
 	/* extension matching */
 	if(extensionsGiven) {
 	    char *ext;
