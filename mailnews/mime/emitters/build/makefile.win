@@ -22,7 +22,7 @@
 #
 
 DEPTH=..\..\..\..
-MODULE=mimeemitter
+MODULE=emitter
 
 ################################################################################
 ## exports
@@ -35,7 +35,7 @@ EXPORTS =              			\
 ################################################################################
 ## library
 
-LIBNAME = .\$(OBJDIR)\mimeemitter
+LIBNAME = .\$(OBJDIR)\emitter
 DLL = $(LIBNAME).dll
 DEFINES= -NS_DEBUG
 
