@@ -46,6 +46,7 @@
 
 #define MAX_RSA_MODULUS_BYTES (1024/8)
 #define DEFAULT_ITERS 10
+#define DEFAULT_DURATION 10
 
 extern NSSLOWKEYPrivateKey * getDefaultRSAPrivateKey(void);
 extern NSSLOWKEYPublicKey  * getDefaultRSAPublicKey(void);
@@ -150,12 +151,13 @@ char *TimingGenerateString(TimingContext *ctx) {
 void
 Usage(char *progName)
 {
-    fprintf(stderr, "Usage: %s [-d certdir] [-i iterations] [-s | -e]"
+    fprintf(stderr, "Usage: %s [-d certdir] [-i iterations | -p period] [-s | -e]"
 	            " -n nickname\n",
 	    progName);
     fprintf(stderr, "%-20s Cert database directory (default is ~/.netscape)\n",
 	    "-d certdir");
     fprintf(stderr, "%-20s How many operations to perform\n", "-i iterations");
+    fprintf(stderr, "%-20s How many seconds to run\n", "-p period");
     fprintf(stderr, "%-20s Perform signing (private key) operations\n", "-s");
     fprintf(stderr, "%-20s Perform encryption (public key) operations\n", "-e");
     fprintf(stderr, "%-20s Nickname of certificate or key\n", "-n nickname");
@@ -248,13 +250,16 @@ main(int argc, char **argv)
     CERTCertDBHandle 	* certdb;
     unsigned char 	  buf[1024];
     unsigned char 	  buf2[1024];
+    int                   seconds = DEFAULT_DURATION;
+    PRBool                doIters = PR_FALSE;
+    PRBool                doTime = PR_FALSE;
 
     progName = strrchr(argv[0], '/');
     if (!progName)
 	progName = strrchr(argv[0], '\\');
     progName = progName ? progName+1 : argv[0];
 
-    optstate = PL_CreateOptState(argc, argv, "d:i:sen:");
+    optstate = PL_CreateOptState(argc, argv, "d:i:sen:p:");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	case '?':
@@ -265,6 +270,7 @@ main(int argc, char **argv)
 	    break;
 	case 'i':
 	    iters = (atol(optstate->value)>0?atol(optstate->value):iters);
+	    doIters = PR_TRUE;
 	    break;
 	case 's':
 	    doPriv = PR_TRUE;
@@ -275,6 +281,10 @@ main(int argc, char **argv)
 	case 'n':
 	    nickname = PORT_Strdup(optstate->value);
 	    break;
+        case 'p':
+            seconds = (atol(optstate->value)>0?atol(optstate->value):DEFAULT_DURATION);
+            doTime = PR_TRUE;
+            break;
 	}
     }
     if (optstatus == PL_OPT_BAD)
@@ -283,6 +293,12 @@ main(int argc, char **argv)
     if ((doPriv && doPub) || (nickname == NULL)) Usage(progName);
 
     if (!doPriv && !doPub) doPriv = PR_TRUE;
+
+    if (doIters && doTime) Usage(progName);
+
+    if (!doTime) {
+        doIters = PR_TRUE;
+    }
 
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
 
@@ -380,20 +396,38 @@ main(int argc, char **argv)
 
     timeCtx = CreateTimingContext();
     TimingBegin(timeCtx);
-    i = iters;
-    while (i--) {
-	rv = fn(rsaKey, buf2, buf);
-	if (rv != SECSuccess) {
-	    PRErrorCode errNum = PR_GetError();
-	    const char * errStr = SECU_Strerror(errNum);
-	    fprintf(stderr, "Error in RSA operation: %d : %s\n", 
-		    errNum, errStr);
-	    exit(1);
-	}
+    if (doIters) {
+        i = iters;
+        while (i--) {
+            rv = fn(rsaKey, buf2, buf);
+            if (rv != SECSuccess) {
+                PRErrorCode errNum = PR_GetError();
+                const char * errStr = SECU_Strerror(errNum);
+                fprintf(stderr, "Error in RSA operation: %d : %s\n", 
+                errNum, errStr);
+                exit(1);
+            }
+        }
+    } else {
+        PRIntervalTime total = PR_SecondsToInterval(seconds);
+        PRIntervalTime start = PR_IntervalNow();
+        iters = 0;
+        while (PR_IntervalNow() - start < total) {
+            rv = fn(rsaKey, buf2, buf);
+            if (rv != SECSuccess) {
+                PRErrorCode errNum = PR_GetError();
+                const char * errStr = SECU_Strerror(errNum);
+                fprintf(stderr, "Error in RSA operation: %d : %s\n", 
+                errNum, errStr);
+                exit(1);
+            }
+            iters++;
+        }
     }
     TimingEnd(timeCtx);
     printf("%ld iterations in %s\n",
 	   iters, TimingGenerateString(timeCtx));
+    printf("%.2f operations/s .\n", (double)(iters*1000000) / (double)timeCtx->interval );
     TimingDivide(timeCtx, iters);
     printf("one operation every %s\n", TimingGenerateString(timeCtx));
 
