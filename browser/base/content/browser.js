@@ -305,11 +305,13 @@ function Startup()
   if (!document.documentElement.hasAttribute("width")) {
     var defaultWidth = 994, defaultHeight;
     if (screen.availHeight <= 600) {
+      dump("*** screen res < 600px high\n");
       document.documentElement.setAttribute("sizemode", "maximized");
       defaultWidth = 610;
       defaultHeight = 450;
     }
     else {
+      dump("*** screen res > 600px high\n");
       // Create a narrower window for large or wide-aspect displays, to suggest
       // side-by-side page view. 
       if ((screen.availWidth / 2) >= 800)
