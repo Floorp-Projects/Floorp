@@ -316,14 +316,25 @@ nsSVGForeignObjectFrame::Reflow(nsIPresContext*          aPresContext,
   // transform x,y,width,height according to the current ctm:
   // XXX we're ignoring rotation at the moment
 
+  // (x, y): (left, top) -> (center_x, center_y)
+  x+=width/2.0f;
+  y+=height/2.0f;
+
+  // (x, y): (cx, cy) -> (cx', cy')
   TransformPoint(x, y);
   
-  float e1x = 1, e1y = 0, e2x = 0, e2y = 1;
+  // find new ex & ey unit vectors
+  float e1x = 1.0f, e1y = 0.0f, e2x = 0.0f, e2y = 1.0f;
   TransformVector(e1x, e1y);
   TransformVector(e2x, e2y);
+  // adopt the scale of them for (w,h)
   width  *= (float)sqrt(e1x*e1x + e1y*e1y);
   height *= (float)sqrt(e2x*e2x + e2y*e2y);
   
+  // (x, y): (cx', cy') -> (left', top')
+  x -= width/2.0f;
+  y -= height/2.0f;
+
   // move ourselves to (x,y):
   MoveTo(aPresContext, (nscoord) (x*twipsPerPx), (nscoord) (y*twipsPerPx));
   // XXX: if we have a view, move that 
@@ -424,12 +435,6 @@ nsSVGForeignObjectFrame::DidModifySVGObservable (nsISVGValue* observable)
 NS_IMETHODIMP
 nsSVGForeignObjectFrame::Paint(nsSVGRenderingContext* renderingContext)
 {
-#ifdef XP_UNIX
-  //XXX - Workaround to make sure that ForeignObject's are displayed on unix
-  // even when they are not preloaded in cache.
-  mIsDirty = PR_TRUE;
-#endif
-
   if (mIsDirty) {
     ArtUta* dirtyRegion = DoReflow();
     if (dirtyRegion) {
@@ -681,7 +686,7 @@ void nsSVGForeignObjectFrame::TransformVector(float& x, float& y)
   // XXX This is crazy. What we really want is
   // nsIDOMSVGMatrix::TransformVector(x,y);
   
-  float x0,y0;
+  float x0=0.0f, y0=0.0f;
   TransformPoint(x0, y0);
   TransformPoint(x,y);
   x -= x0;
