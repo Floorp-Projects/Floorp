@@ -449,17 +449,33 @@ function MsgFirstUnreadMessage() {}
 function MsgFirstFlaggedMessage() {}
 function MsgNextMessage()
 {
-	GoNextMessage();
+	GoNextMessage(GoMessage, false);
 }
 
 function MsgNextUnreadMessage()
 {
-	GoNextUnreadMessage();
+	GoNextMessage(GoUnreadMessage, true);
 }
-function MsgNextFlaggedMessage() {}
-function MsgPreviousMessage() {}
-function MsgPreviousUnreadMessage() {}
-function MsgPreviousFlaggedMessage() {}
+function MsgNextFlaggedMessage()
+{
+	GoNextMessage(GoFlaggedMessage, true);
+}
+
+function MsgPreviousMessage()
+{
+	GoPreviousMessage(GoMessage, false);
+}
+
+function MsgPreviousUnreadMessage()
+{
+	GoPreviousMessage(GoUnreadMessage, true);
+}
+
+function MsgPreviousFlaggedMessage()
+{
+	GoPreviousMessage(GoFlaggedMessage, true);
+}
+
 function MsgGoBack() {}
 function MsgGoForward() {}
 function MsgEditMessageAsNew() {}
