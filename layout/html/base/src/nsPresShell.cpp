@@ -2133,7 +2133,15 @@ nsIFrame*
 PresShell::GetCurrentEventFrame()
 {
   if (!mCurrentEventFrame && mCurrentEventContent) {
-    GetPrimaryFrameFor(mCurrentEventContent, &mCurrentEventFrame);
+    // Make sure the content still has a document reference. If not,
+    // then we assume it is no longer in the content tree and the
+    // frame shouldn't get an event, nor should we even assume its
+    // safe to try and find the frame.
+    nsCOMPtr<nsIDocument> doc;
+    nsresult result = mCurrentEventContent->GetDocument(*getter_AddRefs(doc));
+    if (NS_SUCCEEDED(result) && doc) {
+      GetPrimaryFrameFor(mCurrentEventContent, &mCurrentEventFrame);
+    }
   }
 
   return mCurrentEventFrame;

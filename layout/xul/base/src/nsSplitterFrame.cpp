@@ -39,7 +39,7 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
-#include "nsIDOMUIEvent.h"
+#include "nsIDOMMouseEvent.h"
 #include "nsIPresShell.h"
 #include "nsFrameNavigator.h"
 #include "nsHTMLParts.h"
@@ -767,7 +767,7 @@ nsSplitterFrameImpl::MouseDown(nsIDOMEvent* aMouseEvent)
   if (resizeAfter == Grow)
      mChildInfosAfterCount = 0;
 
-  nsCOMPtr<nsIDOMUIEvent> uiEvent(do_QueryInterface(aMouseEvent));
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aMouseEvent));
 
   nsRect vr(0,0,0,0);
   nsIView *v;
@@ -776,11 +776,11 @@ nsSplitterFrameImpl::MouseDown(nsIDOMEvent* aMouseEvent)
 
   PRInt32 c = 0;
   if (isHorizontal) {
-     uiEvent->GetClientX(&c);
+     mouseEvent->GetClientX(&c);
      mSplitterPos = mSplitter->mRect.x;
      mSplitterViewPos = vr.x;
   } else {
-     uiEvent->GetClientY(&c);
+     mouseEvent->GetClientY(&c);
      mSplitterPos = mSplitter->mRect.y;
      mSplitterViewPos = vr.y;
   }

@@ -27,7 +27,7 @@
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMUIEvent.h"
+#include "nsIDOMKeyEvent.h"
 #include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
@@ -95,9 +95,9 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
   // On a press of the ALT key by itself, we toggle the menu's 
   // active/inactive state.
   // Get the ascii key code.
-  nsCOMPtr<nsIDOMUIEvent> theEvent = do_QueryInterface(aKeyEvent);
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   PRUint32 theChar;
-	theEvent->GetKeyCode(&theChar);
+	keyEvent->GetKeyCode(&theChar);
   if (theChar == NS_VK_ALT && mAltKeyDown) {
     // The ALT key was down and is now up.
     mAltKeyDown = PR_FALSE;
@@ -116,9 +116,9 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
   PRBool active = mMenuBarFrame->IsActive();
 
-  nsCOMPtr<nsIDOMUIEvent> theEvent = do_QueryInterface(aKeyEvent);
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   PRUint32 theChar;
-	theEvent->GetKeyCode(&theChar);
+	keyEvent->GetKeyCode(&theChar);
   if (theChar == NS_VK_ALT) {
     // The ALT key just went down. Track this.
     mAltKeyDown = PR_TRUE;
@@ -150,11 +150,11 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
   }
   else if (active || altKeyWasDown) {
     // Get the character code.
-    nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aKeyEvent);
-    if (uiEvent) {
+    nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
+    if (keyEvent) {
       // See if a letter was pressed.
       PRUint32 charCode;
-      uiEvent->GetKeyCode(&charCode);
+      keyEvent->GetKeyCode(&charCode);
 
       // Do shortcut navigation.
       // A letter was pressed. We want to see if a shortcut gets matched. If
@@ -171,7 +171,7 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
 nsresult
 nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-  nsCOMPtr<nsIDOMUIEvent> theEvent = do_QueryInterface(aKeyEvent);
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
 
   PRBool active = mMenuBarFrame->IsActive();
   

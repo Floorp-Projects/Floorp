@@ -33,6 +33,7 @@ class nsIPresContext;
 {0xbd, 0x89, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
 
 class nsIDOMNode;
+class nsIDOMEvent;
 
 class nsIPrivateDOMEvent : public nsISupports {
 

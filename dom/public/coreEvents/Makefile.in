@@ -27,6 +27,8 @@ MODULE		= dom
 EXPORTS		= \
 		nsIDOMEvent.h \
 		nsIDOMUIEvent.h \
+		nsIDOMKeyEvent.h \
+		nsIDOMMouseEvent.h \
 		nsIDOMEventListener.h \
 		nsIDOMEventCapturer.h \
 		nsIDOMEventReceiver.h \

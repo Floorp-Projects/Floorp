@@ -68,7 +68,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIDOMUIEvent.h"
 #include "nsIPresShell.h"
 #include "nsIEventStateManager.h"
 #include "nsStyleUtil.h"
@@ -2697,9 +2696,9 @@ nsEnderEventListener::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsEnderEventListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
-  uiEvent = do_QueryInterface(aKeyEvent);
-  if (!uiEvent) { //non-key event passed to keydown.  bad things.
+  nsCOMPtr<nsIDOMKeyEvent>keyEvent;
+  keyEvent = do_QueryInterface(aKeyEvent);
+  if (!keyEvent) { //non-key event passed to keydown.  bad things.
     return NS_OK;
   }
 
@@ -2714,12 +2713,12 @@ nsEnderEventListener::KeyDown(nsIDOMEvent* aKeyEvent)
     event.widget = nsnull;
     event.message = NS_KEY_DOWN;
     event.flags = NS_EVENT_FLAG_INIT;
-    uiEvent->GetKeyCode(&(event.keyCode));
+    keyEvent->GetKeyCode(&(event.keyCode));
     event.charCode = 0;
-    uiEvent->GetShiftKey(&(event.isShift));
-    uiEvent->GetCtrlKey(&(event.isControl));
-    uiEvent->GetAltKey(&(event.isAlt));
-    uiEvent->GetMetaKey(&(event.isMeta));
+    keyEvent->GetShiftKey(&(event.isShift));
+    keyEvent->GetCtrlKey(&(event.isControl));
+    keyEvent->GetAltKey(&(event.isAlt));
+    keyEvent->GetMetaKey(&(event.isMeta));
 
     nsIEventStateManager *manager=nsnull;
     result = mContext->GetEventStateManager(&manager);
@@ -2749,9 +2748,9 @@ nsEnderEventListener::KeyDown(nsIDOMEvent* aKeyEvent)
 nsresult
 nsEnderEventListener::KeyUp(nsIDOMEvent* aKeyEvent)
 {
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
-  uiEvent = do_QueryInterface(aKeyEvent);
-  if (!uiEvent) { //non-key event passed to keydown.  bad things.
+  nsCOMPtr<nsIDOMKeyEvent>keyEvent;
+  keyEvent = do_QueryInterface(aKeyEvent);
+  if (!keyEvent) { //non-key event passed to keydown.  bad things.
     return NS_OK;
   }
 
@@ -2766,12 +2765,12 @@ nsEnderEventListener::KeyUp(nsIDOMEvent* aKeyEvent)
     event.widget = nsnull;
     event.message = NS_KEY_UP;
     event.flags = NS_EVENT_FLAG_INIT;
-    uiEvent->GetKeyCode(&(event.keyCode));
+    keyEvent->GetKeyCode(&(event.keyCode));
     event.charCode = 0;
-    uiEvent->GetShiftKey(&(event.isShift));
-    uiEvent->GetCtrlKey(&(event.isControl));
-    uiEvent->GetAltKey(&(event.isAlt));
-    uiEvent->GetMetaKey(&(event.isMeta));
+    keyEvent->GetShiftKey(&(event.isShift));
+    keyEvent->GetCtrlKey(&(event.isControl));
+    keyEvent->GetAltKey(&(event.isAlt));
+    keyEvent->GetMetaKey(&(event.isMeta));
 
     nsIEventStateManager *manager=nsnull;
     result = mContext->GetEventStateManager(&manager);
@@ -2801,9 +2800,9 @@ nsEnderEventListener::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsEnderEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
-  uiEvent = do_QueryInterface(aKeyEvent);
-  if (!uiEvent) { //non-key event passed to keydown.  bad things.
+  nsCOMPtr<nsIDOMKeyEvent>keyEvent;
+  keyEvent = do_QueryInterface(aKeyEvent);
+  if (!keyEvent) { //non-key event passed to keydown.  bad things.
     return NS_OK;
   }
 
@@ -2818,12 +2817,12 @@ nsEnderEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
     event.widget = nsnull;
     event.message = NS_KEY_PRESS;
     event.flags = NS_EVENT_FLAG_INIT;
-    uiEvent->GetKeyCode(&(event.keyCode));
-    uiEvent->GetCharCode(&(event.charCode));
-    uiEvent->GetShiftKey(&(event.isShift));
-    uiEvent->GetCtrlKey(&(event.isControl));
-    uiEvent->GetAltKey(&(event.isAlt));
-    uiEvent->GetMetaKey(&(event.isMeta));
+    keyEvent->GetKeyCode(&(event.keyCode));
+    keyEvent->GetCharCode(&(event.charCode));
+    keyEvent->GetShiftKey(&(event.isShift));
+    keyEvent->GetCtrlKey(&(event.isControl));
+    keyEvent->GetAltKey(&(event.isAlt));
+    keyEvent->GetMetaKey(&(event.isMeta));
 
     nsIEventStateManager *manager=nsnull;
     result = mContext->GetEventStateManager(&manager);
@@ -2867,7 +2866,7 @@ void GetWidgetForView(nsIView *aView, nsIWidget *&aWidget)
 }
 
 nsresult
-nsEnderEventListener::DispatchMouseEvent(nsIDOMUIEvent *aEvent, PRInt32 aEventType)
+nsEnderEventListener::DispatchMouseEvent(nsIDOMMouseEvent *aEvent, PRInt32 aEventType)
 {
   nsresult result = NS_OK;
   if (aEvent)
@@ -2923,9 +2922,9 @@ nsEnderEventListener::DispatchMouseEvent(nsIDOMUIEvent *aEvent, PRInt32 aEventTy
 nsresult
 nsEnderEventListener::MouseDown(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
-  uiEvent = do_QueryInterface(aEvent);
-  if (!uiEvent) { //non-key event passed in.  bad things.
+  nsCOMPtr<nsIDOMMouseEvent>mouseEvent;
+  mouseEvent = do_QueryInterface(aEvent);
+  if (!mouseEvent) { //non-key event passed in.  bad things.
     return NS_OK;
   }
 
@@ -2934,7 +2933,7 @@ nsEnderEventListener::MouseDown(nsIDOMEvent* aEvent)
   if (mContent && mContext && mView)
   {
     PRUint16 button;
-    uiEvent->GetButton(&button);
+    mouseEvent->GetButton(&button);
     PRInt32 eventType;
     switch(button)
     {
@@ -2951,7 +2950,7 @@ nsEnderEventListener::MouseDown(nsIDOMEvent* aEvent)
         NS_ASSERTION(0, "bad button type");
         return NS_OK;
     }
-    result = DispatchMouseEvent(uiEvent, eventType);
+    result = DispatchMouseEvent(mouseEvent, eventType);
   }  
   return result;
 }
@@ -2959,9 +2958,9 @@ nsEnderEventListener::MouseDown(nsIDOMEvent* aEvent)
 nsresult
 nsEnderEventListener::MouseUp(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
-  uiEvent = do_QueryInterface(aEvent);
-  if (!uiEvent) { //non-key event passed in.  bad things.
+  nsCOMPtr<nsIDOMMouseEvent>mouseEvent;
+  mouseEvent = do_QueryInterface(aEvent);
+  if (!mouseEvent) { //non-key event passed in.  bad things.
     return NS_OK;
   }
 
@@ -2970,7 +2969,7 @@ nsEnderEventListener::MouseUp(nsIDOMEvent* aEvent)
   if (mContent && mContext && mView)
   {
     PRUint16 button;
-    uiEvent->GetButton(&button);
+    mouseEvent->GetButton(&button);
     PRInt32 eventType;
     switch(button)
     {
@@ -2987,7 +2986,7 @@ nsEnderEventListener::MouseUp(nsIDOMEvent* aEvent)
         NS_ASSERTION(0, "bad button type");
         return NS_OK;
     }
-    result = DispatchMouseEvent(uiEvent, eventType);
+    result = DispatchMouseEvent(mouseEvent, eventType);
   }
   return result;
 }
@@ -2995,9 +2994,9 @@ nsEnderEventListener::MouseUp(nsIDOMEvent* aEvent)
 nsresult
 nsEnderEventListener::MouseClick(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
-  uiEvent = do_QueryInterface(aEvent);
-  if (!uiEvent) { //non-key event passed in.  bad things.
+  nsCOMPtr<nsIDOMMouseEvent>mouseEvent;
+  mouseEvent = do_QueryInterface(aEvent);
+  if (!mouseEvent) { //non-key event passed in.  bad things.
     return NS_OK;
   }
 
@@ -3007,7 +3006,7 @@ nsEnderEventListener::MouseClick(nsIDOMEvent* aEvent)
   {
     // Dispatch the event
     PRUint16 button;
-    uiEvent->GetButton(&button);
+    mouseEvent->GetButton(&button);
     PRInt32 eventType;
     switch(button)
     {
@@ -3024,7 +3023,7 @@ nsEnderEventListener::MouseClick(nsIDOMEvent* aEvent)
         NS_ASSERTION(0, "bad button type");
         return NS_OK;
     }
-    result = DispatchMouseEvent(uiEvent, eventType);
+    result = DispatchMouseEvent(mouseEvent, eventType);
   }
   return result;
 }
@@ -3032,9 +3031,9 @@ nsEnderEventListener::MouseClick(nsIDOMEvent* aEvent)
 nsresult
 nsEnderEventListener::MouseDblClick(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
-  uiEvent = do_QueryInterface(aEvent);
-  if (!uiEvent) { //non-key event passed in.  bad things.
+  nsCOMPtr<nsIDOMMouseEvent>mouseEvent;
+  mouseEvent = do_QueryInterface(aEvent);
+  if (!mouseEvent) { //non-key event passed in.  bad things.
     return NS_OK;
   }
 
@@ -3044,7 +3043,7 @@ nsEnderEventListener::MouseDblClick(nsIDOMEvent* aEvent)
   {
     // Dispatch the event
     PRUint16 button;
-    uiEvent->GetButton(&button);
+    mouseEvent->GetButton(&button);
     PRInt32 eventType;
     switch(button)
     {
@@ -3061,7 +3060,7 @@ nsEnderEventListener::MouseDblClick(nsIDOMEvent* aEvent)
         NS_ASSERTION(0, "bad button type");
         return NS_OK;
     }
-    result = DispatchMouseEvent(uiEvent, eventType);
+    result = DispatchMouseEvent(mouseEvent, eventType);
   }
   
   return result;
@@ -3070,9 +3069,9 @@ nsEnderEventListener::MouseDblClick(nsIDOMEvent* aEvent)
 nsresult
 nsEnderEventListener::MouseOver(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
-  uiEvent = do_QueryInterface(aEvent);
-  if (!uiEvent) { //non-key event passed in.  bad things.
+  nsCOMPtr<nsIDOMMouseEvent>mouseEvent;
+  mouseEvent = do_QueryInterface(aEvent);
+  if (!mouseEvent) { //non-key event passed in.  bad things.
     return NS_OK;
   }
 
@@ -3081,7 +3080,7 @@ nsEnderEventListener::MouseOver(nsIDOMEvent* aEvent)
   if (mContent && mContext && mView)
   {
     // XXX: Need to synthesize MouseEnter here
-    result = DispatchMouseEvent(uiEvent, NS_MOUSE_MOVE);
+    result = DispatchMouseEvent(mouseEvent, NS_MOUSE_MOVE);
   }
   
   return result;
@@ -3090,9 +3089,9 @@ nsEnderEventListener::MouseOver(nsIDOMEvent* aEvent)
 nsresult
 nsEnderEventListener::MouseOut(nsIDOMEvent* aEvent)
 {
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
-  uiEvent = do_QueryInterface(aEvent);
-  if (!uiEvent) { //non-key event passed in.  bad things.
+  nsCOMPtr<nsIDOMMouseEvent>mouseEvent;
+  mouseEvent = do_QueryInterface(aEvent);
+  if (!mouseEvent) { //non-key event passed in.  bad things.
     return NS_OK;
   }
 
@@ -3100,7 +3099,7 @@ nsEnderEventListener::MouseOut(nsIDOMEvent* aEvent)
 
   if (mContent && mContext && mView)
   {
-    result = DispatchMouseEvent(uiEvent, NS_MOUSE_EXIT);
+    result = DispatchMouseEvent(mouseEvent, NS_MOUSE_EXIT);
   }
   
   return result;

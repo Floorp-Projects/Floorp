@@ -39,6 +39,7 @@ EXPORTS		= \
 		nsIDOMBarProp.h \
 		nsIDOMDOMException.h \
 		nsPIDOMWindow.h \
+		nsIDOMAbstractView.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

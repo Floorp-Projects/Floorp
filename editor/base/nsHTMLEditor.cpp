@@ -28,7 +28,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMEventReceiver.h" 
-#include "nsIDOMUIEvent.h"
+#include "nsIDOMKeyEvent.h"
 #include "nsIDOMKeyListener.h" 
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMSelection.h"
@@ -600,7 +600,7 @@ void nsHTMLEditor::InitRules()
 #pragma mark -
 #endif
 
-NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMUIEvent* aKeyEvent)
+NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMKeyEvent* aKeyEvent)
 {
   PRUint32 keyCode, character;
   PRBool   isShift, ctrlKey, altKey, metaKey;
@@ -617,17 +617,17 @@ NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMUIEvent* aKeyEvent)
     // this royally blows: because tabs come in from keyDowns instead
     // of keyPress, and because GetCharCode refuses to work for keyDown
     // i have to play games.
-    if (keyCode == nsIDOMUIEvent::DOM_VK_TAB) character = '\t';
+    if (keyCode == nsIDOMKeyEvent::DOM_VK_TAB) character = '\t';
     else aKeyEvent->GetCharCode(&character);
     
-    if (keyCode == nsIDOMUIEvent::DOM_VK_TAB && !(mFlags&eEditorPlaintextBit))
+    if (keyCode == nsIDOMKeyEvent::DOM_VK_TAB && !(mFlags&eEditorPlaintextBit))
     {
       PRBool bHandled = PR_FALSE;
       res = TabInTable(isShift, &bHandled);
       if (NS_FAILED(res)) return res;
       if (bHandled) return res;
     }
-    else if (keyCode == nsIDOMUIEvent::DOM_VK_RETURN)
+    else if (keyCode == nsIDOMKeyEvent::DOM_VK_RETURN)
     {
       nsAutoString empty;
       if (isShift && !(mFlags&eEditorPlaintextBit))

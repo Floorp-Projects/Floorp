@@ -41,6 +41,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIControllers.h"
 #include "nsPIDOMWindow.h"
+#include "nsIDOMAbstractView.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -68,7 +69,7 @@ class HistoryImpl;
 // Global object for scripting
 class GlobalWindowImpl : public nsIScriptObjectOwner, public nsIScriptGlobalObject, public nsIDOMWindow, 
                          public nsIJSScriptObject, public nsIScriptGlobalObjectData, public nsIDOMEventReceiver,
-                         public nsPIDOMWindow
+                         public nsPIDOMWindow, public nsIDOMAbstractView
 {
 public:
   GlobalWindowImpl();

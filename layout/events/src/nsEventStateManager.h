@@ -53,6 +53,7 @@ public:
 
   NS_IMETHOD GetEventTarget(nsIFrame **aFrame);
   NS_IMETHOD GetEventTargetContent(nsIContent** aContent);
+  NS_IMETHOD GetEventRelatedContent(nsIContent** aContent);
 
   NS_IMETHOD GetContentState(nsIContent *aContent, PRInt32& aState);
   NS_IMETHOD SetContentState(nsIContent *aContent, PRInt32 aState);
@@ -84,6 +85,7 @@ protected:
   //Any frames here must be checked for validity in ClearFrameRefs
   nsIFrame* mCurrentTarget;
   nsIContent* mCurrentTargetContent;
+  nsIContent* mCurrentRelatedContent;
   nsIFrame* mLastMouseOverFrame;
   nsIFrame* mLastDragOverFrame;
   

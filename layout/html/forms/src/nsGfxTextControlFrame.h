@@ -33,8 +33,9 @@
 #include "nsIDOMDocument.h"
 #include "nsIPresContext.h"
 #include "nsIContent.h"
+#include "nsIDOMMouseEvent.h"
+#include "nsIDOMKeyEvent.h"
 #include "nsITextContent.h"
-#include "nsIDOMUIEvent.h"
 #include "nsHTMLValue.h"
 
 class nsIFrame;
@@ -270,7 +271,7 @@ protected:
   nsEnderEventListener();
 
   /** mouse event dispatch helper */
-  nsresult DispatchMouseEvent(nsIDOMUIEvent *aEvent, PRInt32 aEventType);
+  nsresult DispatchMouseEvent(nsIDOMMouseEvent *aEvent, PRInt32 aEventType);
 
 
 protected:

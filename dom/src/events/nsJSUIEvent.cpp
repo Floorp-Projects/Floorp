@@ -29,6 +29,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPtr.h"
 #include "nsString.h"
+#include "nsIDOMAbstractView.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMUIEvent.h"
@@ -37,10 +38,12 @@
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIAbstractViewIID, NS_IDOMABSTRACTVIEW_IID);
 static NS_DEFINE_IID(kINSUIEventIID, NS_IDOMNSUIEVENT_IID);
 static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIUIEventIID, NS_IDOMUIEVENT_IID);
 
+NS_DEF_PTR(nsIDOMAbstractView);
 NS_DEF_PTR(nsIDOMNSUIEvent);
 NS_DEF_PTR(nsIDOMNode);
 NS_DEF_PTR(nsIDOMUIEvent);
@@ -49,26 +52,17 @@ NS_DEF_PTR(nsIDOMUIEvent);
 // UIEvent property ids
 //
 enum UIEvent_slots {
-  UIEVENT_SCREENX = -1,
-  UIEVENT_SCREENY = -2,
-  UIEVENT_CLIENTX = -3,
-  UIEVENT_CLIENTY = -4,
-  UIEVENT_ALTKEY = -5,
-  UIEVENT_CTRLKEY = -6,
-  UIEVENT_SHIFTKEY = -7,
-  UIEVENT_METAKEY = -8,
-  UIEVENT_CHARCODE = -9,
-  UIEVENT_KEYCODE = -10,
-  UIEVENT_BUTTON = -11,
-  UIEVENT_CLICKCOUNT = -12,
-  NSUIEVENT_LAYERX = -13,
-  NSUIEVENT_LAYERY = -14,
-  NSUIEVENT_PAGEX = -15,
-  NSUIEVENT_PAGEY = -16,
-  NSUIEVENT_WHICH = -17,
-  NSUIEVENT_RANGEPARENT = -18,
-  NSUIEVENT_RANGEOFFSET = -19,
-  NSUIEVENT_CANCELBUBBLE = -20
+  UIEVENT_VIEW = -1,
+  UIEVENT_DETAIL = -2,
+  NSUIEVENT_LAYERX = -3,
+  NSUIEVENT_LAYERY = -4,
+  NSUIEVENT_PAGEX = -5,
+  NSUIEVENT_PAGEY = -6,
+  NSUIEVENT_WHICH = -7,
+  NSUIEVENT_RANGEPARENT = -8,
+  NSUIEVENT_RANGEOFFSET = -9,
+  NSUIEVENT_CANCELBUBBLE = -10,
+  NSUIEVENT_ISCHAR = -11
 };
 
 /***********************************************************************/
@@ -92,214 +86,35 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
-      case UIEVENT_SCREENX:
+      case UIEVENT_VIEW:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.screenx", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.view", PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        nsIDOMAbstractView* prop;
+        nsresult result = NS_OK;
+        result = a->GetView(&prop);
+        if (NS_SUCCEEDED(result)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, result);
+        }
+        break;
+      }
+      case UIEVENT_DETAIL:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(scriptCX, obj, "uievent.detail", PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
         PRInt32 prop;
         nsresult result = NS_OK;
-        result = a->GetScreenX(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, result);
-        }
-        break;
-      }
-      case UIEVENT_SCREENY:
-      {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.screeny", PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetScreenY(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, result);
-        }
-        break;
-      }
-      case UIEVENT_CLIENTX:
-      {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.clientx", PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetClientX(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, result);
-        }
-        break;
-      }
-      case UIEVENT_CLIENTY:
-      {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.clienty", PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-        }
-        PRInt32 prop;
-        nsresult result = NS_OK;
-        result = a->GetClientY(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, result);
-        }
-        break;
-      }
-      case UIEVENT_ALTKEY:
-      {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.altkey", PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-        }
-        PRBool prop;
-        nsresult result = NS_OK;
-        result = a->GetAltKey(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, result);
-        }
-        break;
-      }
-      case UIEVENT_CTRLKEY:
-      {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.ctrlkey", PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-        }
-        PRBool prop;
-        nsresult result = NS_OK;
-        result = a->GetCtrlKey(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, result);
-        }
-        break;
-      }
-      case UIEVENT_SHIFTKEY:
-      {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.shiftkey", PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-        }
-        PRBool prop;
-        nsresult result = NS_OK;
-        result = a->GetShiftKey(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, result);
-        }
-        break;
-      }
-      case UIEVENT_METAKEY:
-      {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.metakey", PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-        }
-        PRBool prop;
-        nsresult result = NS_OK;
-        result = a->GetMetaKey(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, result);
-        }
-        break;
-      }
-      case UIEVENT_CHARCODE:
-      {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.charcode", PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-        }
-        PRUint32 prop;
-        nsresult result = NS_OK;
-        result = a->GetCharCode(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, result);
-        }
-        break;
-      }
-      case UIEVENT_KEYCODE:
-      {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.keycode", PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-        }
-        PRUint32 prop;
-        nsresult result = NS_OK;
-        result = a->GetKeyCode(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, result);
-        }
-        break;
-      }
-      case UIEVENT_BUTTON:
-      {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.button", PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-        }
-        PRUint16 prop;
-        nsresult result = NS_OK;
-        result = a->GetButton(&prop);
-        if (NS_SUCCEEDED(result)) {
-          *vp = INT_TO_JSVAL(prop);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, result);
-        }
-        break;
-      }
-      case UIEVENT_CLICKCOUNT:
-      {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "uievent.clickcount", PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-        }
-        PRUint16 prop;
-        nsresult result = NS_OK;
-        result = a->GetClickCount(&prop);
+        result = a->GetDetail(&prop);
         if (NS_SUCCEEDED(result)) {
           *vp = INT_TO_JSVAL(prop);
         }
@@ -517,6 +332,32 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case NSUIEVENT_ISCHAR:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(scriptCX, obj, "nsuievent.ischar", PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        PRBool prop;
+        nsIDOMNSUIEvent* b;
+        if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
+          nsresult result = NS_OK;
+          result = b->GetIsChar(&prop);
+          if(NS_SUCCEEDED(result)) {
+          *vp = BOOLEAN_TO_JSVAL(prop);
+            NS_RELEASE(b);
+          }
+          else {
+            NS_RELEASE(b);
+            return nsJSUtils::nsReportError(cx, result);
+          }
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
@@ -615,6 +456,75 @@ ResolveUIEvent(JSContext *cx, JSObject *obj, jsval id)
 }
 
 
+//
+// Native method InitUIEvent
+//
+PR_STATIC_CALLBACK(JSBool)
+UIEventInitUIEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMUIEvent *nativeThis = (nsIDOMUIEvent*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsAutoString b0;
+  PRBool b1;
+  PRBool b2;
+  nsIDOMAbstractViewPtr b3;
+  PRInt32 b4;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "uievent.inituievent",PR_FALSE , &ok);
+    if (!ok) {
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+    }
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    if (argc < 5) {
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+    if (!nsJSUtils::nsConvertJSValToBool(&b1, cx, argv[1])) {
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_BOOLEAN_ERR);
+    }
+    if (!nsJSUtils::nsConvertJSValToBool(&b2, cx, argv[2])) {
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_BOOLEAN_ERR);
+    }
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b3,
+                                           kIAbstractViewIID,
+                                           "AbstractView",
+                                           cx,
+                                           argv[3])) {
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
+    if (!JS_ValueToInt32(cx, argv[4], (int32 *)&b4)) {
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
+
+    result = nativeThis->InitUIEvent(b0, b1, b2, b3, b4);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for UIEvent
@@ -638,18 +548,8 @@ JSClass UIEventClass = {
 //
 static JSPropertySpec UIEventProperties[] =
 {
-  {"screenX",    UIEVENT_SCREENX,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"screenY",    UIEVENT_SCREENY,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"clientX",    UIEVENT_CLIENTX,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"clientY",    UIEVENT_CLIENTY,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"altKey",    UIEVENT_ALTKEY,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"ctrlKey",    UIEVENT_CTRLKEY,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"shiftKey",    UIEVENT_SHIFTKEY,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"metaKey",    UIEVENT_METAKEY,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"charCode",    UIEVENT_CHARCODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"keyCode",    UIEVENT_KEYCODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"button",    UIEVENT_BUTTON,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"clickCount",    UIEVENT_CLICKCOUNT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"view",    UIEVENT_VIEW,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"detail",    UIEVENT_DETAIL,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"layerX",    NSUIEVENT_LAYERX,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"layerY",    NSUIEVENT_LAYERY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"pageX",    NSUIEVENT_PAGEX,    JSPROP_ENUMERATE | JSPROP_READONLY},
@@ -658,6 +558,7 @@ static JSPropertySpec UIEventProperties[] =
   {"rangeParent",    NSUIEVENT_RANGEPARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"rangeOffset",    NSUIEVENT_RANGEOFFSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"cancelBubble",    NSUIEVENT_CANCELBUBBLE,    JSPROP_ENUMERATE},
+  {"isChar",    NSUIEVENT_ISCHAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -667,6 +568,7 @@ static JSPropertySpec UIEventProperties[] =
 //
 static JSFunctionSpec UIEventMethods[] = 
 {
+  {"initUIEvent",          UIEventInitUIEvent,     5},
   {0}
 };
 
@@ -714,347 +616,6 @@ extern "C" NS_DOM nsresult NS_InitUIEventClass(nsIScriptContext *aContext, void 
                          nsnull);       // ctor funcs (static)
     if (nsnull == proto) {
       return NS_ERROR_FAILURE;
-    }
-
-    if ((PR_TRUE == JS_LookupProperty(jscontext, global, "UIEvent", &vp)) &&
-        JSVAL_IS_OBJECT(vp) &&
-        ((constructor = JSVAL_TO_OBJECT(vp)) != nsnull)) {
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_CANCEL);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_CANCEL", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_BACK);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_BACK", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_TAB);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_TAB", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_CLEAR);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_CLEAR", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_RETURN);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_RETURN", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_ENTER);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_ENTER", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_SHIFT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_SHIFT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_CONTROL);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_CONTROL", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_ALT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_ALT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_PAUSE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_PAUSE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_CAPS_LOCK);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_CAPS_LOCK", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_ESCAPE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_ESCAPE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_SPACE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_SPACE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_PAGE_UP);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_PAGE_UP", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_PAGE_DOWN);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_PAGE_DOWN", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_END);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_END", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_HOME);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_HOME", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_LEFT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_LEFT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_UP);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_UP", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_RIGHT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_RIGHT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_DOWN);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DOWN", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_PRINTSCREEN);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_PRINTSCREEN", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_INSERT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_INSERT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_DELETE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DELETE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_0);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_0", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_1);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_1", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_2);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_2", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_3);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_3", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_4);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_4", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_5);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_5", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_6);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_6", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_7);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_7", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_8);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_8", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_9);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_9", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_SEMICOLON);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_SEMICOLON", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_EQUALS);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_EQUALS", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_A);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_A", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_B);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_B", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_C);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_C", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_D);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_D", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_E);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_E", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_G);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_G", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_H);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_H", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_I);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_I", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_J);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_J", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_K);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_K", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_L);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_L", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_M);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_M", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_N);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_N", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_O);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_O", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_P);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_P", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_Q);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_Q", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_R);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_R", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_S);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_S", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_T);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_T", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_U);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_U", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_V);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_V", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_W);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_W", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_X);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_X", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_Y);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_Y", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_Z);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_Z", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_NUMPAD0);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_NUMPAD0", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_NUMPAD1);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_NUMPAD1", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_NUMPAD2);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_NUMPAD2", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_NUMPAD3);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_NUMPAD3", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_NUMPAD4);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_NUMPAD4", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_NUMPAD5);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_NUMPAD5", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_NUMPAD6);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_NUMPAD6", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_NUMPAD7);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_NUMPAD7", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_NUMPAD8);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_NUMPAD8", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_NUMPAD9);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_NUMPAD9", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_MULTIPLY);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_MULTIPLY", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_ADD);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_ADD", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_SEPARATOR);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_SEPARATOR", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_SUBTRACT);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_SUBTRACT", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_DECIMAL);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DECIMAL", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_DIVIDE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_DIVIDE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F1);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F1", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F2);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F2", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F3);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F3", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F4);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F4", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F5);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F5", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F6);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F6", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F7);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F7", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F8);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F8", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F9);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F9", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F10);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F10", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F11);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F11", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F12);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F12", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F13);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F13", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F14);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F14", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F15);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F15", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F16);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F16", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F17);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F17", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F18);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F18", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F19);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F19", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F20);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F20", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F21);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F21", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F22);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F22", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F23);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F23", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_F24);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_F24", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_NUM_LOCK);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_NUM_LOCK", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_SCROLL_LOCK);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_SCROLL_LOCK", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_COMMA);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_COMMA", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_PERIOD);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_PERIOD", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_SLASH);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_SLASH", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_BACK_QUOTE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_BACK_QUOTE", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_OPEN_BRACKET);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_OPEN_BRACKET", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_BACK_SLASH);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_BACK_SLASH", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_CLOSE_BRACKET);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_CLOSE_BRACKET", &vp);
-
-      vp = INT_TO_JSVAL(nsIDOMUIEvent::DOM_VK_QUOTE);
-      JS_SetProperty(jscontext, constructor, "DOM_VK_QUOTE", &vp);
-
     }
 
   }

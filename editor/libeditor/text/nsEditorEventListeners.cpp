@@ -29,7 +29,8 @@
 #include "nsIEditProperty.h"
 #include "nsISupportsArray.h"
 #include "nsIStringStream.h"
-#include "nsIDOMUIEvent.h"
+#include "nsIDOMKeyEvent.h"
+#include "nsIDOMMouseEvent.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsIPrivateTextEvent.h"
 #include "nsIPrivateCompositionEvent.h"
@@ -125,13 +126,13 @@ nsresult
 nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
   PRUint32 keyCode;
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
-  uiEvent = do_QueryInterface(aKeyEvent);
-  if (uiEvent) 
+  nsCOMPtr<nsIDOMKeyEvent>keyEvent;
+  keyEvent = do_QueryInterface(aKeyEvent);
+  if (keyEvent) 
   {
-    if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)))
+    if (NS_SUCCEEDED(keyEvent->GetKeyCode(&keyCode)))
     {
-      if (nsIDOMUIEvent::DOM_VK_TAB==keyCode)
+      if (nsIDOMKeyEvent::DOM_VK_TAB==keyCode)
       {
         nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
         PRUint32 flags=0;
@@ -140,7 +141,7 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
           return NS_OK; // let it be used for focus switching
 
         // else we insert the tab straight through
-        htmlEditor->EditorKeyPress(uiEvent);
+        htmlEditor->EditorKeyPress(keyEvent);
         ScrollSelectionIntoView();
         return NS_ERROR_BASE; // "I handled the event, don't do default processing"
       }
@@ -160,9 +161,9 @@ nsTextEditorKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
-  uiEvent = do_QueryInterface(aKeyEvent);
-  if (!uiEvent) 
+  nsCOMPtr<nsIDOMKeyEvent>keyEvent;
+  keyEvent = do_QueryInterface(aKeyEvent);
+  if (!keyEvent) 
   {
     //non-key event passed to keydown.  bad things.
     return NS_OK;
@@ -176,7 +177,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
   if (PR_FALSE==keyProcessed)
   {
     PRUint32     keyCode;
-    uiEvent->GetKeyCode(&keyCode);
+    keyEvent->GetKeyCode(&keyCode);
 
     nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
     if (!htmlEditor) return NS_ERROR_NO_INTERFACE;
@@ -185,23 +186,23 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     // so look for special keys using keyCode
     if (0 != keyCode)
     {
-      if (nsIDOMUIEvent::DOM_VK_SHIFT==keyCode
-          || nsIDOMUIEvent::DOM_VK_CONTROL==keyCode
-          || nsIDOMUIEvent::DOM_VK_ALT==keyCode)
+      if (nsIDOMKeyEvent::DOM_VK_SHIFT==keyCode
+          || nsIDOMKeyEvent::DOM_VK_CONTROL==keyCode
+          || nsIDOMKeyEvent::DOM_VK_ALT==keyCode)
         return NS_ERROR_BASE; // consumed
-      if (nsIDOMUIEvent::DOM_VK_BACK==keyCode) 
+      if (nsIDOMKeyEvent::DOM_VK_BACK_SPACE==keyCode) 
       {
         mEditor->DeleteSelection(nsIEditor::eDeletePrevious);
         ScrollSelectionIntoView();
         return NS_ERROR_BASE; // consumed
       }   
-      if (nsIDOMUIEvent::DOM_VK_DELETE==keyCode)
+      if (nsIDOMKeyEvent::DOM_VK_DELETE==keyCode)
       {
         mEditor->DeleteSelection(nsIEditor::eDeleteNext);
         ScrollSelectionIntoView();
         return NS_ERROR_BASE; // consumed
       }   
-      if (nsIDOMUIEvent::DOM_VK_TAB==keyCode)
+      if (nsIDOMKeyEvent::DOM_VK_TAB==keyCode)
       {
         PRUint32 flags=0;
         mEditor->GetFlags(&flags);
@@ -209,18 +210,18 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
           return NS_OK; // let it be used for focus switching
 
         // else we insert the tab straight through
-        htmlEditor->EditorKeyPress(uiEvent);
+        htmlEditor->EditorKeyPress(keyEvent);
         ScrollSelectionIntoView();
         return NS_ERROR_BASE; // "I handled the event, don't do default processing"
       }
-      if (nsIDOMUIEvent::DOM_VK_RETURN==keyCode) 
+      if (nsIDOMKeyEvent::DOM_VK_RETURN==keyCode) 
       {
         PRUint32 flags=0;
         mEditor->GetFlags(&flags);
         if (!(flags & nsIHTMLEditor::eEditorSingleLineMask))
         {
           //htmlEditor->InsertBreak();
-          htmlEditor->EditorKeyPress(uiEvent);
+          htmlEditor->EditorKeyPress(keyEvent);
           ScrollSelectionIntoView();
           return NS_ERROR_BASE; // consumed
         }
@@ -233,13 +234,13 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     
 #if 0    
       // XXX: this must change.  DOM_VK_tab must be handled here, not in keyDown
-      if (nsIDOMUIEvent::DOM_VK_TAB==keyCode) 
+      if (nsIDOMKeyEvent::DOM_VK_TAB==keyCode) 
       {
         return NS_OK; // ignore tabs here, they're handled in keyDown if at all
       }
 #endif
 
-    htmlEditor->EditorKeyPress(uiEvent);
+    htmlEditor->EditorKeyPress(keyEvent);
     ScrollSelectionIntoView();
   }
   else
@@ -258,18 +259,18 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
   PRBool ctrlKey;
   PRBool isAltKey, isMetaKey, isShiftKey;
 
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
-  uiEvent = do_QueryInterface(aKeyEvent);
-  if (!uiEvent) {
+  nsCOMPtr<nsIDOMKeyEvent>keyEvent;
+  keyEvent = do_QueryInterface(aKeyEvent);
+  if (!keyEvent) {
     //non-key event passed in.  bad things.
     return NS_OK;
   }
 
-  if (NS_SUCCEEDED(uiEvent->GetCharCode(&charCode)) && 
-      NS_SUCCEEDED(uiEvent->GetAltKey(&isAltKey)) &&
-      NS_SUCCEEDED(uiEvent->GetMetaKey(&isMetaKey)) &&
-      NS_SUCCEEDED(uiEvent->GetShiftKey(&isShiftKey)) &&
-      NS_SUCCEEDED(uiEvent->GetCtrlKey(&ctrlKey)) ) 
+  if (NS_SUCCEEDED(keyEvent->GetCharCode(&charCode)) && 
+      NS_SUCCEEDED(keyEvent->GetAltKey(&isAltKey)) &&
+      NS_SUCCEEDED(keyEvent->GetMetaKey(&isMetaKey)) &&
+      NS_SUCCEEDED(keyEvent->GetShiftKey(&isShiftKey)) &&
+      NS_SUCCEEDED(keyEvent->GetCtrlKey(&ctrlKey)) ) 
   {
 #ifdef XP_MAC
     // hack to make Mac work for hard-coded keybindings
@@ -486,9 +487,9 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
   if (!aMouseEvent)
     return NS_OK;   // NS_OK means "we didn't process the event".  Go figure.
 
-  nsCOMPtr<nsIDOMUIEvent>uiEvent;
-  uiEvent = do_QueryInterface(aMouseEvent);
-  if (!uiEvent) {
+  nsCOMPtr<nsIDOMMouseEvent>mouseEvent;
+  mouseEvent = do_QueryInterface(aMouseEvent);
+  if (!mouseEvent) {
     //non-ui event passed in.  bad things.
     return NS_OK;
   }
@@ -505,7 +506,7 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
    if (!doc) { return NS_OK; }
 
   PRUint16 button = 0;
-  uiEvent->GetButton(&button);
+  mouseEvent->GetButton(&button);
    // left button click might be a drag-start
    if (1==button)
    {
@@ -586,15 +587,15 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
    {
 
     // Set the selection to the point under the mouse cursor:
-      nsCOMPtr<nsIDOMNSUIEvent> mouseEvent (do_QueryInterface(aMouseEvent));
+      nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aMouseEvent));
 
-      if (!mouseEvent)
+      if (!nsuiEvent)
          return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
       nsCOMPtr<nsIDOMNode> parent;
-      if (!NS_SUCCEEDED(mouseEvent->GetRangeParent(getter_AddRefs(parent))))
+      if (!NS_SUCCEEDED(nsuiEvent->GetRangeParent(getter_AddRefs(parent))))
          return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
       PRInt32 offset = 0;
-      if (!NS_SUCCEEDED(mouseEvent->GetRangeOffset(&offset)))
+      if (!NS_SUCCEEDED(nsuiEvent->GetRangeOffset(&offset)))
          return NS_ERROR_BASE; // NS_ERROR_BASE means "We did process the event".
 
       nsCOMPtr<nsIDOMSelection> selection;
@@ -603,8 +604,9 @@ nsTextEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
 
       // If the ctrl key is pressed, we'll do paste as quotation.
       // Would've used the alt key, but the kde wmgr treats alt-middle specially. 
+      nsCOMPtr<nsIDOMMouseEvent> mouseEvent (do_QueryInterface(aMouseEvent));
       PRBool ctrlKey = PR_FALSE;
-      uiEvent->GetCtrlKey(&ctrlKey);
+      mouseEvent->GetCtrlKey(&ctrlKey);
 
       if (ctrlKey)
       {

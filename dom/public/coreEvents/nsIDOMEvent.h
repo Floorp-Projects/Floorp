@@ -47,11 +47,17 @@ public:
 
   NS_IMETHOD    GetEventPhase(PRUint16* aEventPhase)=0;
 
+  NS_IMETHOD    GetBubbles(PRBool* aBubbles)=0;
+
+  NS_IMETHOD    GetCancelable(PRBool* aCancelable)=0;
+
   NS_IMETHOD    PreventBubble()=0;
 
   NS_IMETHOD    PreventCapture()=0;
 
   NS_IMETHOD    PreventDefault()=0;
+
+  NS_IMETHOD    InitEvent(const nsString& aEventTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg)=0;
 };
 
 
@@ -60,9 +66,12 @@ public:
   NS_IMETHOD    GetTarget(nsIDOMNode** aTarget);  \
   NS_IMETHOD    GetCurrentNode(nsIDOMNode** aCurrentNode);  \
   NS_IMETHOD    GetEventPhase(PRUint16* aEventPhase);  \
+  NS_IMETHOD    GetBubbles(PRBool* aBubbles);  \
+  NS_IMETHOD    GetCancelable(PRBool* aCancelable);  \
   NS_IMETHOD    PreventBubble();  \
   NS_IMETHOD    PreventCapture();  \
   NS_IMETHOD    PreventDefault();  \
+  NS_IMETHOD    InitEvent(const nsString& aEventTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg);  \
 
 
 
@@ -71,9 +80,12 @@ public:
   NS_IMETHOD    GetTarget(nsIDOMNode** aTarget) { return _to GetTarget(aTarget); } \
   NS_IMETHOD    GetCurrentNode(nsIDOMNode** aCurrentNode) { return _to GetCurrentNode(aCurrentNode); } \
   NS_IMETHOD    GetEventPhase(PRUint16* aEventPhase) { return _to GetEventPhase(aEventPhase); } \
+  NS_IMETHOD    GetBubbles(PRBool* aBubbles) { return _to GetBubbles(aBubbles); } \
+  NS_IMETHOD    GetCancelable(PRBool* aCancelable) { return _to GetCancelable(aCancelable); } \
   NS_IMETHOD    PreventBubble() { return _to PreventBubble(); }  \
   NS_IMETHOD    PreventCapture() { return _to PreventCapture(); }  \
   NS_IMETHOD    PreventDefault() { return _to PreventDefault(); }  \
+  NS_IMETHOD    InitEvent(const nsString& aEventTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg) { return _to InitEvent(aEventTypeArg, aCanBubbleArg, aCancelableArg); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitEventClass(nsIScriptContext *aContext, void **aPrototype);

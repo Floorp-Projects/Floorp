@@ -40,7 +40,8 @@
 #include "nsHTMLParts.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIEventStateManager.h"
-#include "nsIDOMUIEvent.h"
+#include "nsIDOMKeyEvent.h"
+#include "nsIDOMMouseEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIStatefulFrame.h"
 #include "nsISupportsArray.h"
@@ -823,11 +824,11 @@ nsListControlFrame::HandleListSelection(nsIDOMEvent* aEvent)
   PRBool multipleSelections = PR_FALSE;
   GetMultiple(&multipleSelections);
   if (multipleSelections) {
-    nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aEvent);
+    nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aEvent);
     PRBool isShift;
     PRBool isControl;
-    uiEvent->GetCtrlKey(&isControl);
-    uiEvent->GetShiftKey(&isShift);
+    mouseEvent->GetCtrlKey(&isControl);
+    mouseEvent->GetShiftKey(&isShift);
     MultipleSelection(isShift, isControl);
   } else {
     SingleSelection();
@@ -2352,11 +2353,11 @@ nsListControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
         stateManager->GetEventTarget(&frame);
         nsCOMPtr<nsIListControlFrame> listFrame(do_QueryInterface(frame));
         if (listFrame) {
-          nsCOMPtr<nsIDOMUIEvent> uiEvent(do_QueryInterface(aMouseEvent));
+          nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aMouseEvent));
           PRInt32 scrX;
           PRInt32 scrY;
-          uiEvent->GetScreenX(&scrX);
-          uiEvent->GetScreenY(&scrY);
+          mouseEvent->GetScreenX(&scrX);
+          mouseEvent->GetScreenY(&scrY);
           nsRect rect;
           mComboboxFrame->GetAbsoluteRect(&rect);
           if (!rect.Contains(scrX, scrY)) {
@@ -2425,12 +2426,12 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
 nsresult
 nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-  nsCOMPtr<nsIDOMUIEvent> uiEvent = do_QueryInterface(aKeyEvent);
-  if (uiEvent) {
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
+  if (keyEvent) {
     PRUint32 code;
     //uiEvent->GetCharCode(&code);
     //printf("%c %d   ", code, code);
-    uiEvent->GetKeyCode(&code);
+    keyEvent->GetKeyCode(&code);
     //printf("%c %d\n", code, code);
 
     nsresult rv = NS_ERROR_FAILURE; 
@@ -2443,7 +2444,7 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
       if (numOptions == 0) {
         rv = NS_OK;
       } else {
-        if (code == nsIDOMUIEvent::DOM_VK_UP) {
+        if (code == nsIDOMKeyEvent::DOM_VK_UP) {
           printf("DOM_VK_UP   mSelectedIndex: %d ", mSelectedIndex);
           if (mSelectedIndex > 0) {
             mOldSelectedIndex = mSelectedIndex;
@@ -2454,7 +2455,7 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
             }
           }
           printf("  After: %d\n", mSelectedIndex);
-        } if (code == nsIDOMUIEvent::DOM_VK_DOWN) {
+        } if (code == nsIDOMKeyEvent::DOM_VK_DOWN) {
           printf("DOM_VK_DOWN mSelectedIndex: %d ", mSelectedIndex);
           if ((mSelectedIndex+1) < (PRInt32)numOptions) {
             mOldSelectedIndex = mSelectedIndex;
@@ -2465,13 +2466,13 @@ nsListControlFrame::KeyDown(nsIDOMEvent* aKeyEvent)
             }
           }
           printf("  After: %d\n", mSelectedIndex);
-        } if (code == nsIDOMUIEvent::DOM_VK_RETURN) {
+        } if (code == nsIDOMKeyEvent::DOM_VK_RETURN) {
           if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
             mComboboxFrame->ListWasSelected(mPresContext);
           } else {
 	          UpdateSelection(PR_TRUE, PR_FALSE, mContent);
 	        }
-        } if (code == nsIDOMUIEvent::DOM_VK_ESCAPE) {
+        } if (code == nsIDOMKeyEvent::DOM_VK_ESCAPE) {
           if (IsInDropDownMode() == PR_TRUE && mComboboxFrame) {
             ResetSelectedItem();
             mComboboxFrame->ListWasSelected(mPresContext); 

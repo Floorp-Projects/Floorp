@@ -103,6 +103,7 @@ static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kIDOMAbstractViewIID, NS_IDOMABSTRACTVIEW_IID);
 
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -211,6 +212,11 @@ GlobalWindowImpl::QueryInterface(const nsIID& aIID,
   }
   if (aIID.Equals(nsPIDOMWindow::GetIID())) {
     *aInstancePtrResult = (void*)(nsISupports*)(nsPIDOMWindow*)this;
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kIDOMAbstractViewIID)) {
+    *aInstancePtrResult = (void*)(nsISupports*)(nsIDOMAbstractView*)this;
     AddRef();
     return NS_OK;
   }

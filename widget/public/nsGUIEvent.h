@@ -136,6 +136,8 @@ struct nsKeyEvent : public nsInputEvent {
     PRUint32        keyCode;   
                 /// OS translated Unicode char
     PRUint32        charCode;
+                // indicates whether the event signifies a printable character
+    PRBool          isChar;
 };
 
 /**
@@ -162,6 +164,7 @@ struct nsTextEvent : public nsInputEvent {
 	nsTextEventReply	theReply;
 	PRUint32			rangeCount;
 	nsTextRangeArray	rangeArray;
+  PRBool          isChar;
 };
 
 struct nsCompositionEvent : public nsInputEvent {

@@ -92,7 +92,7 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(mContext);
-  if (NS_OK != NS_NewScriptUIEvent(mScriptCX, aEvent, nsnull, (void**)&eventObj)) {
+  if (NS_OK != NS_NewScriptKeyEvent(mScriptCX, aEvent, nsnull, (void**)&eventObj)) {
     return NS_ERROR_FAILURE;
   }
 
