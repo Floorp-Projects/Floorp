@@ -335,9 +335,13 @@ namespace MetaData {
             JSLL_L2I(i, *JS2VAL_TO_LONG(x));
             return i;
         }
-        ASSERT(JS2VAL_IS_ULONG(x));
-        JSLL_UL2I(i, *JS2VAL_TO_ULONG(x));
-        return i;
+        else
+        if (JS2VAL_IS_ULONG(x)) {
+            JSLL_UL2I(i, *JS2VAL_TO_ULONG(x));
+            return i;
+        }
+        ASSERT(JS2VAL_IS_INT(x));
+        return JS2VAL_TO_INT(x);
     }
 
     float64 JS2Engine::truncateFloat64(float64 d)
@@ -457,7 +461,7 @@ namespace MetaData {
 
 #ifdef DEBUG
 
-    enum { BRANCH_OFFSET = 1, STR_PTR, TYPE_PTR, NAME_INDEX, FRAME_INDEX, BRANCH_PAIR, U16, FLOAT64, BREAK_OFFSET_AND_COUNT };
+    enum { BRANCH_OFFSET = 1, STR_PTR, TYPE_PTR, NAME_INDEX, FRAME_INDEX, BRANCH_PAIR, U16, FLOAT64, S32, BREAK_OFFSET_AND_COUNT };
     struct {
         JS2Op op;
         char *name;
@@ -494,6 +498,7 @@ namespace MetaData {
         { eUndefined,  "Undefined", 0 },
         { eLongZero,  "0(64)", 0 },
         { eNumber,  "Number", FLOAT64 },
+        { eInteger,  "Integer", S32 },
         { eRegExp,  "RegExp", U16 },
         { eFunction,  "Function", U16 },
         { eUInt64,  "UInt64", 0 },
@@ -657,6 +662,12 @@ namespace MetaData {
                 pc += sizeof(short);
             }
             break;
+        case S32:
+            {
+                printFormat(stdOut, " %d", BytecodeContainer::getInt32(pc));
+                pc += sizeof(int32);
+            }
+            break;
         case FRAME_INDEX:
         case U16:
             {
@@ -761,6 +772,7 @@ namespace MetaData {
         case eTrue:
         case eFalse:
         case eNumber:
+        case eInteger:
         case eUInt64:
         case eInt64:
         case eNull:

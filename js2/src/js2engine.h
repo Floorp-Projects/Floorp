@@ -76,6 +76,7 @@ enum JS2Op {
     eUndefined,
     eLongZero,
     eNumber,
+    eInteger,
     eRegExp,
     eFunction,
     eUInt64,

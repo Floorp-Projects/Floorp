@@ -659,7 +659,6 @@ namespace MetaData {
 
         bool result = defaultWriteProperty(meta, base, limit, multiname, lookupKind, createIfMissing, newValue, false);
         if (result && (multiname->nsList->size() == 1) && (multiname->nsList->back() == meta->publicNamespace)) {
-
             const char16 *numEnd;        
             float64 f = stringToDouble(multiname->name->data(), multiname->name->data() + multiname->name->length(), numEnd);
             uint32 index = JS2Engine::float64toUInt32(f);
@@ -842,6 +841,35 @@ VariableMemberCommon:
     {
         LookupKind lookup(false, JS2VAL_NULL);
         return limit->deleteProperty(meta, base, limit, multiname, &lookup, result);
+    }
+
+    js2val defaultImplicitCoerce(JS2Metadata *meta, js2val newValue, JS2Class *isClass)
+    {
+        if (JS2VAL_IS_NULL(newValue) || meta->objectType(newValue)->isAncestor(isClass) )
+            return newValue;
+        meta->reportError(Exception::badValueError, "Illegal coercion", meta->engine->errorPos());
+        return JS2VAL_VOID;
+    }
+
+    js2val integerImplicitCoerce(JS2Metadata *meta, js2val newValue, JS2Class *isClass)
+    {
+        if (JS2VAL_IS_UNDEFINED(newValue))
+            return JS2VAL_ZERO;
+        if (JS2VAL_IS_NUMBER(newValue)) {
+            int64 x = meta->engine->checkInteger(newValue);
+            if (LONG_IS_INT(x)) {
+                int32 i = 0;
+                JSLL_L2I(x, i);
+                return INT_TO_JS2VAL(i);
+            }
+        }        
+        meta->reportError(Exception::badValueError, "Illegal coercion", meta->engine->errorPos());
+        return JS2VAL_VOID;
+    }
+
+    js2val defaultIs(JS2Metadata *meta, js2val newValue, JS2Class *isClass)
+    {
+        return BOOLEAN_TO_JS2VAL(meta->objectType(newValue) == isClass);
     }
 
 

@@ -139,6 +139,9 @@ public:
     void addShort(uint16 v)                 { mBuffer.insert(mBuffer.end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint16)); }
     static uint16 getShort(void *pc)        { return *((uint16 *)pc); }
 
+    void addInt32(int32 v)                  { addOffset(v); }
+    static int32 getInt32(void *pc)         { return *((int32 *)pc); }
+
 
     // Maintain list of associated pointers, so as to keep the objects safe across gc's
     void addMultiname(Multiname *mn)        { mMultinameList.push_back(mn); addShort((uint16)(mMultinameList.size() - 1)); }

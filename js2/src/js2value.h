@@ -78,8 +78,8 @@
 #define INT_FITS_IN_JS2VAL(i)    ((uint32)((i)+JS2VAL_INT_MAX) <= 2*JS2VAL_INT_MAX)
 #define INT_FITS_IN_JSVAL(i)     ((jsuint)((i)+JSVAL_INT_MAX) <= 2*JSVAL_INT_MAX)
 
-#define LONG_FITS_IN_JS2VAL(x)   (JSLL_CMP((x), >, -JS2VAL_INT_MAX) && JSLL_CMP(JS2VAL_INT_MAX, >, (x)))
-#define ULONG_FITS_IN_JS2VAL(x)  (JSLL_CMP(JS2VAL_INT_MAX, >, (x)))
+#define LONG_IS_INT(x)           (JSLL_CMP((x), >, -JS2VAL_INT_MAX) && JSLL_CMP(JS2VAL_INT_MAX, >, (x)))
+#define ULONG_IS_INT(x)          (JSLL_CMP(JS2VAL_INT_MAX, >, (x)))
 
 #define JS2VAL_VOID              INT_TO_JS2VAL(0 - JS2VAL_INT_POW2(30))
 #define JS2VAL_NULL              OBJECT_TO_JS2VAL(0)

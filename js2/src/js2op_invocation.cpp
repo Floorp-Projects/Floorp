@@ -236,14 +236,13 @@
         {
             b = pop();
             a = pop();      // doing 'a is b'
-
             if (!JS2VAL_IS_OBJECT(b))
                 meta->reportError(Exception::badValueError, "Type expected", errorPos());
             JS2Object *obj = JS2VAL_TO_OBJECT(b);
             if (obj->kind != ClassKind)
                  meta->reportError(Exception::badValueError, "Type expected", errorPos());
             JS2Class *isClass = checked_cast<JS2Class *>(obj);
-            push(BOOLEAN_TO_JS2VAL(meta->objectType(a) == isClass));
+            push(isClass->is(meta, a, isClass));
         }
         break;
 
@@ -340,6 +339,6 @@
             JS2Class *c = BytecodeContainer::getType(pc);
             pc += sizeof(JS2Class *);
             a = pop();
-            push(c->implicitCoerce(meta, a));
+            push(c->implicitCoerce(meta, a, c));
         }
         break;

@@ -67,6 +67,8 @@ typedef bool (DeletePublic)(JS2Metadata *meta, js2val base, JS2Class *limit, con
 typedef bool (BracketRead)(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval);
 typedef bool (BracketWrite)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue);
 typedef bool (BracketDelete)(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, bool *result);
+typedef js2val (ImplicitCoerce)(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
+typedef js2val (Is)(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
 
 bool defaultReadProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);
 bool defaultReadPublicProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, const String *name, Phase phase, js2val *rval);
@@ -79,6 +81,9 @@ bool defaultDeleteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Mult
 bool defaultDeletePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool *result);
 bool defaultBracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, bool *result);
 bool arrayWritePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue);
+js2val defaultImplicitCoerce(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
+js2val defaultIs(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
+js2val integerImplicitCoerce(JS2Metadata *meta, js2val newValue, JS2Class *isClass);
 
 
 
@@ -741,8 +746,6 @@ public:
 
     Callor *call;                               // A procedure to call when this class is used in a call expression
     Constructor *construct;                     // A procedure to call when this class is used in a new expression
-    js2val implicitCoerce(JS2Metadata *meta, js2val newValue);
-                                                // A procedure to call when a value is assigned whose type is this class
 
     void emitDefaultValue(BytecodeContainer *bCon, size_t pos);
 
@@ -756,7 +759,8 @@ public:
     BracketRead *bracketRead;    
     BracketWrite *bracketWrite;
     BracketDelete *bracketDelete;
-
+    ImplicitCoerce *implicitCoerce;
+    Is *is;
 
     bool isAncestor(JS2Class *heir);
 

@@ -1255,7 +1255,7 @@ namespace MetaData {
                                 if (vb->initializer) {
                                     try {
                                         js2val newValue = EvalExpression(env, CompilePhase, vb->initializer);
-                                        v->value = type->implicitCoerce(this, newValue);
+                                        v->value = type->implicitCoerce(this, newValue, type);
                                     }
                                     catch (Exception x) {
                                         // If a compileExpressionError occurred, then the initialiser is 
@@ -1327,7 +1327,7 @@ namespace MetaData {
                             v->type = t;
                             if (vb->initializer) {
                                 js2val newValue = EvalExpression(env, CompilePhase, vb->initializer);
-                                v->defaultValue = t->implicitCoerce(this, newValue);
+                                v->defaultValue = t->implicitCoerce(this, newValue, t);
                             }
                             else
                                 v->defaultValue = t->defaultValue;
@@ -3557,6 +3557,7 @@ bool nullClass_BracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, Mu
         MAKEBUILTINCLASS(generalNumberClass, objectClass, false, false, engine->allocStringPtr(&world.identifiers["general number"]), engine->nanValue);
         MAKEBUILTINCLASS(numberClass, generalNumberClass, false, true, engine->allocStringPtr(&world.identifiers["Number"]), engine->nanValue);
         MAKEBUILTINCLASS(integerClass, numberClass, false, true, engine->allocStringPtr(&world.identifiers["Integer"]), JS2VAL_ZERO);
+        integerClass->implicitCoerce = integerImplicitCoerce;
         MAKEBUILTINCLASS(characterClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["Character"]), JS2VAL_ZERO);
         MAKEBUILTINCLASS(stringClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["String"]), JS2VAL_NULL);
         MAKEBUILTINCLASS(namespaceClass, objectClass, false, true, engine->allocStringPtr(&world.identifiers["namespace"]), JS2VAL_NULL);
@@ -3634,7 +3635,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
 /*** ECMA 4  Integer Class ***/
         v = new Variable(classClass, OBJECT_TO_JS2VAL(integerClass), true);
         defineLocalMember(env, &world.identifiers["Integer"], NULL, Attribute::NoOverride, false, ReadWriteAccess, v, 0, true);
-
+        
 
 /*** ECMA 3  Date Class ***/
         MAKEBUILTINCLASS(dateClass, objectClass, true, true, engine->allocStringPtr(&world.identifiers["Date"]), JS2VAL_NULL);
@@ -3935,7 +3936,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                 Slot *s = findSlot(containerVal, mv);
                 if (mv->immutable && !JS2VAL_IS_UNINITIALIZED(s->value))
                     reportError(Exception::compileExpressionError, "Reinitialization of constant", engine->errorPos());
-                s->value = mv->type->implicitCoerce(this, newValue);
+                s->value = mv->type->implicitCoerce(this, newValue, mv->type);
                 return true;
             }
         default:
@@ -4020,7 +4021,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                         reportError(Exception::propertyAccessError, "Forbidden access", engine->errorPos());
                     else    // quietly ignore the write for JS1 compatibility
                         return true;
-                v->value = v->type->implicitCoerce(this, newValue);
+                v->value = v->type->implicitCoerce(this, newValue, v->type);
             }
             return true;
         case LocalMember::FrameVariableMember:
@@ -4282,6 +4283,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             bracketRead(defaultBracketRead),
             bracketWrite(defaultBracketWrite),
             bracketDelete(defaultBracketDelete),
+            implicitCoerce(defaultImplicitCoerce),
+            is(defaultIs),
             slotCount(super ? super->slotCount : 0)
     {
     }
@@ -4329,14 +4332,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         return false;
     }
 
-    js2val JS2Class::implicitCoerce(JS2Metadata *meta, js2val newValue)
-    {
-        if (JS2VAL_IS_NULL(newValue) || meta->objectType(newValue)->isAncestor(this) )
-            return newValue;
-        meta->reportError(Exception::badValueError, "Illegal coercion", meta->engine->errorPos());
-        return JS2VAL_VOID;
-    }
-
     void JS2Class::emitDefaultValue(BytecodeContainer *bCon, size_t pos)
     {
         if (JS2VAL_IS_NULL(defaultValue))
@@ -4351,6 +4346,11 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         if ((JS2VAL_IS_LONG(defaultValue) || JS2VAL_IS_ULONG(defaultValue)) 
                 && (*JS2VAL_TO_LONG(defaultValue) == 0))
             bCon->emitOp(eLongZero, pos);
+        else
+        if (JS2VAL_IS_INT(defaultValue)) {
+            bCon->emitOp(eInteger, pos);
+            bCon->addInt32(JS2VAL_TO_INT(defaultValue));
+        }
         else
             NOT_REACHED("unrecognized default value");
     }

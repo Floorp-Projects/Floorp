@@ -40,6 +40,13 @@
         }
         break;
 
+    case eInteger: 
+        {
+            push(INT_TO_JS2VAL(BytecodeContainer::getInt32(pc)));
+            pc += sizeof(int32);
+        }
+        break;
+
     case eUInt64: 
         {
             pushULong(BytecodeContainer::getUInt64(pc));
