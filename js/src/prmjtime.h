@@ -66,7 +66,7 @@ PRMJ_FormatTime(char *buf, int buflen, char *fmt, PRMJTime *tm);
 
 /* Get the DST offset for the local time passed in */
 extern JSInt64
-PRMJ_DSTOffset(JSInt64 time);
+PRMJ_DSTOffset(JSInt64 local_time);
 
 JS_END_EXTERN_C
 
