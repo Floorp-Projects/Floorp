@@ -325,12 +325,15 @@ ToNewCString( const nsAString& aSource )
 
 NS_COM
 char*
-ToNewUTF8String( const nsAString& aSource )
+ToNewUTF8String( const nsAString& aSource, PRUint32 *aUTF8Count )
   {
     nsAString::const_iterator start, end;
     CalculateUTF8Size calculator;
     copy_string(aSource.BeginReading(start), aSource.EndReading(end),
                 calculator);
+
+    if (aUTF8Count)
+      *aUTF8Count = calculator.Size();
 
     char *result = NS_STATIC_CAST(char*,
         nsMemory::Alloc(calculator.Size() + 1));
@@ -385,12 +388,15 @@ ToNewUnicode( const nsACString& aSource )
 
 NS_COM
 PRUnichar*
-UTF8ToNewUnicode( const nsACString& aSource )
+UTF8ToNewUnicode( const nsACString& aSource, PRUint32 *aUTF16Count )
   {
     nsACString::const_iterator start, end;
     CalculateUTF8Length calculator;
     copy_string(aSource.BeginReading(start), aSource.EndReading(end),
                 calculator);
+
+    if (aUTF16Count)
+      *aUTF16Count = calculator.Length();
 
     PRUnichar *result = NS_STATIC_CAST(PRUnichar*,
         nsMemory::Alloc(sizeof(PRUnichar) * (calculator.Length() + 1)));
