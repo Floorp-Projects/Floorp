@@ -148,6 +148,8 @@ PORT_Free;
 PORT_GetError;
 PORT_SetError;
 PORT_SetUCS4_UTF8ConversionFunction;
+PORT_SetUCS2_UTF8ConversionFunction;
+PORT_SetUCS2_ASCIIConversionFunction;
 SECITEM_CopyItem;
 SECITEM_DupItem;
 SECITEM_FreeItem;
