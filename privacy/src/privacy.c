@@ -256,7 +256,7 @@ prvcy_checkStandardLocation_finished
   Check for privacy policy at standard location
  */
 
-extern char* PRVCY_POLICY_FILE_NAME;
+extern int PRVCY_POLICY_FILE_NAME;
 
 PUBLIC void
 PRVCY_CheckStandardLocation(MWContext * context)
@@ -282,7 +282,7 @@ PRVCY_CheckStandardLocation(MWContext * context)
     /* Create a URL for privacy_policy.html */
     privacyURL = NET_ParseURL(entry->address, GET_PROTOCOL_PART | GET_HOST_PART);
     StrAllocCat(privacyURL, "/");
-    StrAllocCat(privacyURL, PRVCY_POLICY_FILE_NAME);
+    StrAllocCat(privacyURL, XP_GetDialogStrings(PRVCY_POLICY_FILE_NAME));
     if (prvcy_inCache(privacyURL, &found)) {
       if (found) {
 	entry->privacy_policy_url = privacyURL;
