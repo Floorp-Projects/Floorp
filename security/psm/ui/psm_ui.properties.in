@@ -1080,31 +1080,59 @@ function makeClientAuthPref(d)
     if (client_auth_auto_select == true) {
         d.write('checked ');
     }
-    d.writeln('onClick="top.client_auth_auto_select = checked;"></td><td><p>' + autoSelectStr + '</p></td></tr>');
+    d.writeln('onClick="top.enableClientAuthAutoSelect();"></td><td><p>' + autoSelectStr + '</p></td></tr>');
 
     d.write('<tr><td><div><input type=radio name="client_auth_auto_select" value="false" ');
     if (client_auth_auto_select == false) {
         d.write('checked ');
     }
-    d.writeln('onClick="top.client_auth_auto_select = !checked;"></td><td><p>' + manualSelectStr + '</p></td></tr>');
+    d.writeln('onClick="top.disableClientAuthAutoSelect();"></td><td><p>' + manualSelectStr + '</p></td></tr>');
+}
+
+function enableClientAuthAutoSelect()
+{
+    top.client_auth_auto_select = true;
+}
+
+function disableClientAuthAutoSelect()
+{
+    top.client_auth_auto_select = false;
 }
 
 // creates the HTML string for SSL cipher family prefs
 var enableSSL2Str = {adv_enable_SSL2};
 var enableSSL3Str = {adv_enable_SSL3};
+function toggleSSL2Cipher()
+{
+  if (top.enable_ssl2) {
+    top.enable_ssl2 = false;
+  } else {
+    top.enable_ssl2 = true;
+  }
+}
+
+function toggleSSL3Cipher()
+{
+  if (top.enable_ssl3) {
+    top.enable_ssl3 = false;
+  } else {
+    top.enable_ssl3 = true;
+  }
+}
+
 function makeSSLCipherPref(d)
 {
     d.write('<tr><td><input type=checkbox name="enable_ssl2" value="true" ');
     if (enable_ssl2 == true) {
         d.write('checked ');
     }
-    d.writeln('onClick="top.enable_ssl2 = checked;"></td><td><p>' + enableSSL2Str + '</p></td></tr>');
+    d.writeln('onClick="top.toggleSSL2Cipher();"></td><td><p>' + enableSSL2Str + '</p></td></tr>');
 
     d.write('<tr><td><input type=checkbox name="enable_ssl3" value="true" ');
     if (enable_ssl3 == true) {
         d.write('checked ');
     }
-    d.writeln('onClick="top.enable_ssl3 = checked;"></td><td><p>' + enableSSL3Str + '</p></td></tr>');
+    d.writeln('onClick="top.toggleSSL3Cipher();"></td><td><p>' + enableSSL3Str + '</p></td></tr>');
 }
 
 // these functions create the HTML strings for various navigator & messenger
