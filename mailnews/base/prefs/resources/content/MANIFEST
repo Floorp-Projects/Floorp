@@ -21,9 +21,11 @@ AccountManager.js
 accounttree.xul
 am-main.xul
 am-server.xul
+am-server.js
 am-server-top.xul
 am-server-pop3.xul
 am-copies.xul
+am-copies.js
 am-advanced.xul
 pref-mailnews.xul
 pref-winsetting.xul

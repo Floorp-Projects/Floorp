@@ -7,11 +7,14 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/TR/REC-html40" align="vertical">
 
+  <html:script src="am-server.js"/>
+
+  <html:input type="hidden" name="server.type" id="server.type"/>
   <html:div>&serverSettings.label;</html:div>
   <box align="vertical" class="cleanborder">
   <box align="horizontal">
     <html:div flex="20%">&serverType.label;</html:div>
-    <html:div flex="80%">&popServer.label;</html:div>
+    <html:div flex="80%" id="server.type.verbose"/>
   </box>
 
   <box align="horizontal">
@@ -24,10 +27,12 @@
     <html:input flex="80%" type="text" name="server.username"/>
   </box>
 
-  <html:div><html:input type="checkbox"/>&savePassword.label;</html:div>
-  <html:div><html:input type="checkbox"/>&biffStart.label;
+  <html:div><html:input name="server.rememberPassword"
+                        type="checkbox"/>&savePassword.label;</html:div>
+  <html:div><html:input name="server.doBiff"
+                        type="checkbox"/>&biffStart.label;
             <html:spacer/>
-            <html:input type="text" size="3"/>
+            <html:input name="server.biffMinutes" type="text" size="3"/>
             <html:spacer/>&biffEnd.label;
   </html:div>
   </box>

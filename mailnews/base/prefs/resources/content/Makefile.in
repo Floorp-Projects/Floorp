@@ -34,9 +34,11 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/accounttree.xul	\
 	$(srcdir)/am-main.xul		\
 	$(srcdir)/am-server.xul		\
+	$(srcdir)/am-server.js		\
 	$(srcdir)/am-server-top.xul	\
 	$(srcdir)/am-server-pop3.xul	\
 	$(srcdir)/am-copies.xul		\
+	$(srcdir)/am-copies.js		\
 	$(srcdir)/am-advanced.xul	\
 	$(srcdir)/pref-mailnews.xul \
 	$(srcdir)/pref-winsetting.xul \

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -115,14 +115,20 @@ function showDeckPage(deckBoxId) {
 //
 function savePage(serverId, pageId) {
   if (!serverId || !pageId) return;
+
+  // tell the page that it's about to save
+  if (top.frames[pageId].onSave)
+      top.frames[pageId].onSave();
   
   var accountValues = getValueArrayFor(serverId);
   var pageElements = getPageFormElements(pageId);
 
   // store the value in the account
   for (var i=0; i<pageElements.length; i++) {
-    accountValues[pageElements[i].name] =
-      getFormElementValue(pageElements[i]);
+      if (pageElements[i].name) {
+          accountValues[pageElements[i].name] =
+              getFormElementValue(pageElements[i]);
+      }
   }
 
 }
@@ -138,8 +144,14 @@ function restorePage(serverId, pageId) {
 
   // restore the value from the account
   for (var i=0; i<pageElements.length; i++) {
-    setFormElementValue(pageElements[i],account[pageElements[i].name]);
+      if (pageElements[i].name) {
+          setFormElementValue(pageElements[i],account[pageElements[i].name]);
+      }
   }
+
+  // tell the page that new values have been loaded
+  if (top.frames[pageId].onInit)
+      top.frames[pageId].onInit();
 }
 
 //
@@ -147,9 +159,12 @@ function restorePage(serverId, pageId) {
 //
 function getFormElementValue(formElement) {
   dump("Getting " + formElement.name + " value = " + formElement.value + "\n");
-  if (formElement.type=="checkbox")
-    return formElement.checked;
-  else
+  if (formElement.type=="checkbox") {
+    if (formElement.getAttribute("reversed"))
+      return !formElement.checked;
+    else
+      return formElement.checked;
+  } else
     return formElement.value;
 }
 
@@ -158,14 +173,17 @@ function getFormElementValue(formElement) {
 //
 function setFormElementValue(formElement, value) {
   dump("Setting " + formElement.name + " to " + value + "\n");
-  if (value) {
-    if (formElement.type=="checkbox")
-      formElement.checked = value;
+  if (formElement.type == "checkbox") {
+    if (value)
+      if (formElement.getAttribute("reversed"))
+        formElement.checked = !value;
+      else
+        formElement.checked = value;
     else
-      formElement.value = value;
-  } else {
-    if (formElement.type=="checkbox")
       formElement.checked = formElement.defaultChecked;
+  } else {
+    if (value)
+      formElement.value = value;
     else
       formElement.value = formElement.defaultValue;
   }

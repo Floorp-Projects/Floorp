@@ -6,24 +6,31 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       align="vertical">
-
+<html:script src="am-copies.js"/>
+<html:input type="hidden" name="identity.fccFolder" id="identity.fccFolder"/>
+<html:input type="hidden" name="identity.draftFolder" id="identity.draftFolder"/>
+<html:input type="hidden" name="identity.stationaryFolder" id="identity.stationaryFolder"/>
+<html:input type="hidden" name="identity.junkMailFolder" id="identity.junkMailFolder"/>
+<html:input type="hidden" name="identity.email" id="identity.email"/>
 
 <html:div>&copyAndFolderTitle.label;</html:div>
 <box align="vertical" class="cleanborder" flex="100%">
 <html:div>&sendingPrefix.label;</html:div>
 
   <box align="horizontal">
-    <html:input type="checkbox"/>
+    <html:input name="identity.doFcc" type="checkbox"/>
     <html:div>&fccLocalSent.label;</html:div>
     <spring flex="100%"/>
-    <html:button type="button">&chooseFolderButton.label;</html:button>
+    <titledbutton value="&chooseFolderButton.label;"/>
   </box>
   <box align="horizontal">
-    <html:input type="checkbox"/>
+    <html:input name="identity.bccSelf" type="checkbox"/>
     <html:div>&bccAccount.label;</html:div>
+    <html:spacer/>
+    <html:div id="bccemail"/>
   </box>
   <box align="horizontal">
-    <html:input type="checkbox"/>
+    <html:input name="identity.bccOthers" type="checkbox"/>
     <html:div>&bccAddress.label;</html:div>
     <html:input type="text"/>
   </box>
@@ -32,19 +39,22 @@
 <html:div>&specialFolderTitle.label;</html:div>
 <box align="vertical" class="cleanborder" flex="100%">
   <box align="horizontal">
-    <html:div>&junkMailFolder.label;</html:div>
-    <spring flex="100%"/>
-    <html:button type="button">&chooseFolderButton.label;</html:button>
-  </box>
-  <box align="horizontal">
     <html:div>&draftMailFolder.label;</html:div>
+    <html:div id="identity.drafts"/>
     <spring flex="100%"/>
-    <html:button type="button">&chooseFolderButton.label;</html:button>
+    <titledbutton value="&chooseFolderButton.label;"/>
   </box>
   <box align="horizontal">
     <html:div>&templateMailFolder.label;</html:div>
+    <html:div id="identity.stationary"/>
     <spring flex="100%"/>
-    <html:button type="button">&chooseFolderButton.label;</html:button>
+    <titledbutton value="&chooseFolderButton.label;"/>
+  </box>
+  <box align="horizontal">
+    <html:div>&junkMailFolder.label;</html:div>
+    <html:div id="identity.junkmail"/>
+    <spring flex="100%"/>
+    <titledbutton value="&chooseFolderButton.label;"/>
   </box>
 </box>
 

@@ -25,9 +25,11 @@ install::
 	$(MAKE_INSTALL) accounttree.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-main.xul			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-server.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) am-server.js		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-server-top.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-server-pop3.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-copies.xul		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) am-copies.js		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-advanced.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) pref-mailnews.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) pref-winsetting.xul $(DIST)\bin\chrome\messenger\content\default
@@ -49,9 +51,11 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\accounttree.xul
 	rm -f $(DIST)\chrome\messenger\content\default\am-main.xul
 	rm -f $(DIST)\chrome\messenger\content\default\am-server.xul
+	rm -f $(DIST)\chrome\messenger\content\default\am-server.js
 	rm -f $(DIST)\chrome\messenger\content\default\am-server-top.xul
 	rm -f $(DIST)\chrome\messenger\content\default\am-server-pop3.xul
 	rm -f $(DIST)\chrome\messenger\content\default\am-copies.xul
+	rm -f $(DIST)\chrome\messenger\content\default\am-copies.js
 	rm -f $(DIST)\chrome\messenger\content\default\am-advanced.xul
 	rm -f $(DIST)\chrome\messenger\content\default\AccountWizard.xul
 	rm -f $(DIST)\chrome\messenger\content\default\AccountWizard.js
