@@ -304,8 +304,13 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
             result = mEditor->GetDomInterface(&doc);
             if (NS_SUCCEEDED(result))
             {
+              PRUint32 position=0;
+              if (PR_TRUE==ctrlKey)
+                position=CreateElementTxn::eAppend;
+              else
+                position=0;
               CreateElementTxn *txn;
-              txn = new CreateElementTxn(mEditor, doc, imgTag, currentNode, 0);
+              txn = new CreateElementTxn(mEditor, doc, imgTag, currentNode, position);
               mEditor->ExecuteTransaction(txn);
             }
           }
