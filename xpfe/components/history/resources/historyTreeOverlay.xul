@@ -42,6 +42,7 @@
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsOutlinerController.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsOutlinerSorting.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/history/history.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
   
