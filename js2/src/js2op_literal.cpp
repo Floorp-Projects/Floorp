@@ -91,9 +91,34 @@
 
     case eFunction: 
         {
-            JS2Object *x = checked_cast<JS2Object *>(bCon->mObjectList[BytecodeContainer::getShort(pc)]);
+            FunctionInstance *x = checked_cast<FunctionInstance *>(bCon->mObjectList[BytecodeContainer::getShort(pc)]);
             push(OBJECT_TO_JS2VAL(x));
             pc += sizeof(short);
+        }
+        break;
+
+    case eClosure: 
+        {
+            FunctionInstance *x = checked_cast<FunctionInstance *>(bCon->mObjectList[BytecodeContainer::getShort(pc)]);
+            pc += sizeof(short);
+
+            x->fWrap->env = new Environment(meta->env);
+/*
+            // For each active plural frame in the function definition environment, we need
+            // to find it's current singular counterpart and use that as the dohickey
+            FrameListIterator closure_fi = x->fWrap.env->getBegin();
+            FrameListIterator current_fi = meta->env->getBegin();
+            while (true) {
+                Frame *closure_fr = closure_fi->first;
+                Frame *current_fr = current_fi->first;
+                ASSERT(closure_fr->kind == current_fr->kind);
+                if ((closure_fr->kind == ClassKind) || (closure_fr->kind == PackageKind) || (closure_fr->kind == SystemKind))
+                    break;
+
+
+                
+            }
+*/
         }
         break;
 

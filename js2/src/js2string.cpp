@@ -278,7 +278,7 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
     const String *replaceStr = meta->toString(replaceValue);
     DEFINE_ROOTKEEPER(rk2, replaceStr);
 
-    if (meta->objectType(searchValue) != meta->regexpClass) {
+    if (meta->objectType(searchValue) == meta->regexpClass) {
         RegExpInstance *reInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(searchValue)); 
         JS2RegExp *re = reInst->mRegExp;
         REMatchResult *match;

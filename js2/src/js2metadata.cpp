@@ -94,10 +94,10 @@ namespace MetaData {
         FunctionInstance *result = new FunctionInstance(this, functionClass->prototype, functionClass);
         DEFINE_ROOTKEEPER(rk2, result);
         result->fWrap = new FunctionWrapper(unchecked, compileFrame, env);
-        fnDef->fWrap = result->fWrap;
+        fnDef->fn = result;
 
         Frame *curTopFrame = env->getTopFrame();
-        CompilationData *oldData = startCompilationUnit(fnDef->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
+        CompilationData *oldData = startCompilationUnit(result->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
         try {
             env->addFrame(compileFrame);
             VariableBinding *pb = fnDef->parameters;
@@ -713,7 +713,14 @@ namespace MetaData {
                 {
                     UnaryStmtNode *w = checked_cast<UnaryStmtNode *>(p);
                     ValidateExpression(cxt, env, w->expr);
-                    ValidateStmt(cxt, env, pl, w->stmt);
+                    if (w->stmt->getKind() != StmtNode::block) {
+                        w->compileFrame = new BlockFrame();
+                        env->addFrame(w->compileFrame);
+                        ValidateStmt(cxt, env, pl, w->stmt);
+                        env->removeTopFrame();
+                    }
+                    else
+                        ValidateStmt(cxt, env, pl, w->stmt);
                 }
                 break;
             case StmtNode::empty:
@@ -1294,18 +1301,21 @@ namespace MetaData {
                     if (r) r->emitReadBytecode(bCon, p->pos);
                     bCon->emitOp(eReturn, p->pos);
                 }
+                else
+                    bCon->emitOp(eReturnVoid, p->pos);
             }
             break;
         case StmtNode::Function:
             {
                 FunctionStmtNode *f = checked_cast<FunctionStmtNode *>(p);
                 CompilationData *oldData = NULL;
+                FunctionInstance *fnInst = f->function.fn;
                 try {
-                    oldData = startCompilationUnit(f->function.fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
-                    env->addFrame(f->function.fWrap->compileFrame);
-#ifdef DEBUG
+                    oldData = startCompilationUnit(fnInst->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
+                    env->addFrame(fnInst->fWrap->compileFrame);
+//#ifdef DEBUG
                     bCon->fName = *f->function.name;
-#endif
+//#endif
                     VariableBinding *pb = f->function.parameters;
                     while (pb) {
                         FrameVariable *v = checked_cast<FrameVariable *>(pb->member);
@@ -1316,9 +1326,9 @@ namespace MetaData {
                         pb = pb->next;
                     }
                     if (f->function.resultType)
-                        f->function.fWrap->resultType = EvalTypeExpression(env, CompilePhase, f->function.resultType);
+                        fnInst->fWrap->resultType = EvalTypeExpression(env, CompilePhase, f->function.resultType);
                     else
-                        f->function.fWrap->resultType = objectClass;
+                        fnInst->fWrap->resultType = objectClass;
 
                     SetupStmt(env, phase, f->function.body);
                     // XXX need to make sure that all paths lead to an exit of some kind
@@ -1331,6 +1341,8 @@ namespace MetaData {
                         restoreCompilationUnit(oldData);
                     throw x;
                 }
+                bCon->emitOp(eClosure, p->pos);
+                bCon->addObject(fnInst);
             }
             break;
         case StmtNode::Var:
@@ -1483,7 +1495,16 @@ namespace MetaData {
                 Reference *r = SetupExprNode(env, phase, w->expr, &exprType);
                 if (r) r->emitReadBytecode(bCon, p->pos);
                 bCon->emitOp(eWithin, p->pos);
-                SetupStmt(env, phase, w->stmt);                        
+                if (w->stmt->getKind() != StmtNode::block) {
+                    env->addFrame(w->compileFrame);
+                    bCon->emitOp(ePushFrame, p->pos);
+                    bCon->addFrame(w->compileFrame);
+                    SetupStmt(env, phase, w->stmt);                        
+                    bCon->emitOp(ePopFrame, p->pos);
+                    env->removeTopFrame();
+                }
+                else
+                    SetupStmt(env, phase, w->stmt);                        
                 bCon->emitOp(eWithout, p->pos);
             }
             break;
@@ -1872,6 +1893,7 @@ namespace MetaData {
         case ExprNode::Instanceof:
         case ExprNode::identical:
         case ExprNode::notIdentical:
+        case ExprNode::In:
 
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
@@ -1938,7 +1960,7 @@ namespace MetaData {
         case ExprNode::functionLiteral:
             {
                 FunctionExprNode *f = checked_cast<FunctionExprNode *>(p);
-                f->obj = validateStaticFunction(cxt, env, &f->function, true, true, false, p->pos);
+                validateStaticFunction(cxt, env, &f->function, true, true, false, p->pos);
             }
             break;
         case ExprNode::superStmt:
@@ -2391,8 +2413,8 @@ doUnary:
                                     returnRef = new (*referenceArena) ParameterSlotReference(checked_cast<FrameVariable *>(m)->frameSlot);
                                     break;
                                 }                                
-                                keepLooking = false;
                             }
+                            keepLooking = false;
                         }
                         break;
                     case BlockFrameKind:
@@ -2703,18 +2725,29 @@ doUnary:
                 bCon->emitOp(eInstanceof, p->pos);
             }
             break;
+        case ExprNode::In:
+            {
+                BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
+                Reference *rVal = SetupExprNode(env, phase, b->op1, exprType);
+                if (rVal) rVal->emitReadBytecode(bCon, p->pos);
+                rVal = SetupExprNode(env, phase, b->op2, exprType);
+                if (rVal) rVal->emitReadBytecode(bCon, p->pos);
+                bCon->emitOp(eIn, p->pos);
+            }
+            break;
         case ExprNode::functionLiteral:
             {
                 FunctionExprNode *f = checked_cast<FunctionExprNode *>(p);
-                CompilationData *oldData = startCompilationUnit(f->function.fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
-                env->addFrame(f->function.fWrap->compileFrame);
+                FunctionInstance *fnInst = f->function.fn;
+                CompilationData *oldData = startCompilationUnit(fnInst->fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
+                env->addFrame(fnInst->fWrap->compileFrame);
                 SetupStmt(env, phase, f->function.body);
                 // XXX need to make sure that all paths lead to an exit of some kind
                 bCon->emitOp(eReturnVoid, p->pos);
                 env->removeTopFrame();
                 restoreCompilationUnit(oldData);
                 bCon->emitOp(eFunction, p->pos);
-                bCon->addObject(f->obj);
+                bCon->addObject(fnInst);
             }
             break;
         case ExprNode::superStmt:
@@ -2856,7 +2889,7 @@ doUnary:
                 {
                     LocalMember *m = meta->findLocalMember(f, multiname, ReadAccess);
                     if (m)
-                        result = meta->readLocalMember(m, phase, rval);
+                        result = meta->readLocalMember(m, phase, rval, f);
                 }
                 break;
             case WithFrameKind:
@@ -3214,7 +3247,7 @@ doUnary:
         // region if they haven't been marked as such already.
         if (innerFrame != regionalFrame) {
             fi = env->getBegin();
-            Frame *fr = ++fi->first;
+            Frame *fr = (++fi)->first;
             while (true) {
                 if (fr->kind != WithFrameKind) {
                     NonWithFrame *nwfr = checked_cast<NonWithFrame *>(fr);
@@ -3241,7 +3274,7 @@ doUnary:
                 }
                 if (fr == regionalFrame)
                     break;
-                fr = ++fi->first;
+                fr = (++fi)->first;
             }
         }
         return multiname;
@@ -4256,7 +4289,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         return false;
     }
 
-    bool JS2Metadata::readLocalMember(LocalMember *m, Phase phase, js2val *rval)
+    bool JS2Metadata::readLocalMember(LocalMember *m, Phase phase, js2val *rval, Frame *container)
     {
         switch (m->memberKind) {
         case LocalMember::ForbiddenMember:
@@ -4272,25 +4305,27 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             }
         case LocalMember::FrameVariableMember:
             {
+                ASSERT(container);
                 if (phase == CompilePhase) 
                     reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
-                FrameVariable *f = checked_cast<FrameVariable *>(m);
-                switch (f->kind) {
+                FrameVariable *fv = checked_cast<FrameVariable *>(m);
+                switch (fv->kind) {
                 case FrameVariable::Package:
-                    *rval = (*env->getPackageFrame()->slots)[f->frameSlot];
+                    {
+                        ASSERT(container->kind == PackageKind);
+                        *rval = (*(checked_cast<Package *>(container))->slots)[fv->frameSlot];
+                    }
                     break;
                 case FrameVariable::Local:
                     {
-                        FrameListIterator fi = env->getRegionalFrame();
-                        ASSERT((fi->first)->kind == ParameterFrameKind);
-                        *rval = (*checked_cast<NonWithFrame *>((fi - 1)->first)->slots)[f->frameSlot];
+                        ASSERT(container->kind == BlockFrameKind);
+                        *rval = (*(checked_cast<NonWithFrame *>(container))->slots)[fv->frameSlot];
                     }
                     break;
                 case FrameVariable::Parameter:
                     {
-                        FrameListIterator fi = env->getRegionalFrame();
-                        ASSERT((fi->first)->kind == ParameterFrameKind);
-                        *rval = (*checked_cast<NonWithFrame *>(fi->first)->slots)[f->frameSlot];
+                        ASSERT(container->kind == ParameterFrameKind);
+                        *rval = (*(checked_cast<ParameterFrame *>(container))->slots)[fv->frameSlot];
                     }
                     break;
                 }
@@ -4352,14 +4387,16 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                     {
                         FrameListIterator fi = env->getRegionalFrame();
                         ASSERT((fi->first)->kind == ParameterFrameKind);
-                        (*checked_cast<NonWithFrame *>((fi - 1)->first)->slots)[f->frameSlot] = newValue;
+                        NonWithFrame *nwf = checked_cast<NonWithFrame *>((fi - 1)->first);
+                        (*nwf->slots)[f->frameSlot] = newValue;
                     }
                     break;
                 case FrameVariable::Parameter:
                     {
                         FrameListIterator fi = env->getRegionalFrame();
                         ASSERT((fi->first)->kind == ParameterFrameKind);
-                        (*checked_cast<NonWithFrame *>(fi->first)->slots)[f->frameSlot] = newValue;
+                        ParameterFrame *pFrame = checked_cast<ParameterFrame *>(fi->first);
+                        (*pFrame->slots)[f->frameSlot] = newValue;
                     }
                     break;
                 }
@@ -5252,9 +5289,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                     p->resetMark();      // might have lingering mark from previous gc
                     p->clearFlags();
                     p->setFlag(flag);
-#ifdef DEBUG
+//#ifdef DEBUG
                     memset((p + 1), 0xB7, p->getSize() - sizeof(PondScum));
-#endif
+//#endif
                     return (p + 1);
                 }
                 pre = p;
@@ -5272,9 +5309,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         }
         // there was room, so acquire it
         PondScum *p = (PondScum *)pondTop;
-#ifdef DEBUG
+//#ifdef DEBUG
         memset(p, 0xB7, sz);
-#endif
+//#endif
         p->owner = this;
         p->setSize(sz);
         p->setFlag(flag);
@@ -5288,9 +5325,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     {
         p->owner = (Pond *)freeHeader;
         uint8 *t = (uint8 *)(p + 1);
-#ifdef DEBUG
+//#ifdef DEBUG
         memset(t, 0xB3, p->getSize() - sizeof(PondScum));
-#endif
+//#endif
         freeHeader = p;
         return p->getSize() - sizeof(PondScum);
     }

@@ -64,7 +64,6 @@ namespace JavaScript {
         class Member;
         class InstanceMember;
         class Multiname;
-        class FunctionWrapper;
         class BlockFrame;
         class FunctionInstance;
         typedef uint32 LabelID;
@@ -315,7 +314,7 @@ namespace JavaScript {
 
         void print(PrettyPrinter &f, const AttributeStmtNode *attributes, bool noSemi) const;
 #ifdef EPIMETHEUS
-        MetaData::FunctionWrapper *fWrap;       // Runtime data, bytecode, parameters etc.
+        MetaData::FunctionInstance *fn;       // Runtime data, bytecode, parameters etc.
 #endif
     };
 
@@ -398,9 +397,6 @@ namespace JavaScript {
         explicit FunctionExprNode(size_t pos): ExprNode(pos, functionLiteral) {}
 
         void print(PrettyPrinter &f) const;
-#ifdef EPIMETHEUS
-		MetaData::FunctionInstance *obj;		// used by backend to store the function object
-#endif
     };
 
     struct ExprPairList: ArenaObject {
@@ -595,6 +591,7 @@ namespace JavaScript {
 #ifdef EPIMETHEUS
         MetaData::LabelID breakLabelID;
         MetaData::LabelID continueLabelID;
+        MetaData::BlockFrame *compileFrame; 
 #endif
     };
 

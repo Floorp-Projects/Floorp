@@ -76,16 +76,18 @@ namespace MetaData {
             FunctionExprNode *fnExpr = parser.parseFunctionExpression(meta->engine->errorPos());
             ASSERT(parser.lexer.peek(true).hasKind(Token::end));
             ASSERT(fnExpr);     // otherwise, an exception would have been thrown out of here
-            fnExpr->obj = NULL;
-            DEFINE_ROOTKEEPER(rk, fnExpr->obj);
+            fnExpr->function.fn = NULL;
+            DEFINE_ROOTKEEPER(rk, fnExpr->function.fn);
             meta->ValidateExpression(&meta->cxt, meta->env, fnExpr);
             Arena *oldArena = meta->referenceArena;
             meta->referenceArena = new Arena;
             try {
-                CompilationData *oldData = meta->startCompilationUnit(fnExpr->function.fWrap->bCon, *bodyStr, srcLoc);
-                meta->env->addFrame(fnExpr->function.fWrap->compileFrame);
+                FunctionInstance *fnInst = fnExpr->function.fn;
+                ASSERT(fnInst);
+                CompilationData *oldData = meta->startCompilationUnit(fnInst->fWrap->bCon, *bodyStr, srcLoc);
+                meta->env->addFrame(fnInst->fWrap->compileFrame);
                 meta->SetupStmt(meta->env, RunPhase, fnExpr->function.body);
-                fnExpr->function.fWrap->bCon->emitOp(eReturnVoid, meta->engine->errorPos());
+                fnInst->fWrap->bCon->emitOp(eReturnVoid, meta->engine->errorPos());
                 meta->env->removeTopFrame();
                 meta->restoreCompilationUnit(oldData);
             }
@@ -97,7 +99,7 @@ namespace MetaData {
             meta->referenceArena->clear();
             meta->referenceArena = oldArena;
             ASSERT(fnExpr);
-            return OBJECT_TO_JS2VAL(fnExpr->obj);
+            return OBJECT_TO_JS2VAL(fnExpr->function.fn);
         }
         else {  // construct an empty function wrapper
             js2val thatValue = OBJECT_TO_JS2VAL(new FunctionInstance(meta, meta->functionClass->prototype, meta->functionClass));

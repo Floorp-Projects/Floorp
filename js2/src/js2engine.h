@@ -78,7 +78,8 @@ enum JS2Op {
     eNumber,
     eInteger,
     eRegExp,
-    eFunction,
+    eFunction,          // <object index:u16>
+    eClosure,           // <object index:u16>
     eUInt64,
     eInt64,
     eString,            // <string pointer:u32>
@@ -163,6 +164,7 @@ enum JS2Op {
     eTypeof,
     eInstanceof,
     eIs,
+    eIn,
 
     ePopv,
     ePop,
@@ -370,9 +372,9 @@ public:
 
 };
 
-#ifdef DEBUG
+//#ifdef DEBUG
 uint8 *printInstruction(uint8 *pc, uint8 *start, BytecodeContainer *bCon, JS2Engine *engine);
-#endif
+//#endif
 
 }
 }

@@ -652,14 +652,15 @@ namespace MetaData {
                 return false;
         }
         switch (m->memberKind) {
+        case Member::FrameVariableMember:
+            return meta->readLocalMember(checked_cast<LocalMember *>(m), phase, rval, checked_cast<Frame *>(JS2VAL_TO_OBJECT(*base)));
         case Member::ForbiddenMember:
         case Member::DynamicVariableMember:
-        case Member::FrameVariableMember:
         case Member::VariableMember:
         case Member::ConstructorMethodMember:
         case Member::SetterMember:
         case Member::GetterMember:
-            return meta->readLocalMember(checked_cast<LocalMember *>(m), phase, rval);
+            return meta->readLocalMember(checked_cast<LocalMember *>(m), phase, rval, NULL);
         case Member::InstanceVariableMember:
         case Member::InstanceMethodMember:
         case Member::InstanceGetterMember:

@@ -282,6 +282,22 @@ doCall:
         }
         break;
 
+    case eIn:
+        {
+            b = pop();
+            a = pop();      // doing 'a in b'
+            astr = meta->toString(a);
+            Multiname mn(astr);
+            JS2Class *c = meta->objectType(b);
+            bool result = ( (meta->findBaseInstanceMember(c, &mn, ReadAccess) != NULL)
+                            || (meta->findBaseInstanceMember(c, &mn, WriteAccess) != NULL)
+                            || (meta->findCommonMember(&b, &mn, ReadAccess, false) != NULL)
+                            || (meta->findCommonMember(&b, &mn, WriteAccess, false) != NULL));
+            push(BOOLEAN_TO_JS2VAL(result));
+            astr = NULL;
+        }
+        break;
+
     case eInstanceof:   // XXX prototype version
         {
             b = pop();

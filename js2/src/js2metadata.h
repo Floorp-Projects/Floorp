@@ -1492,7 +1492,7 @@ public:
 
 
 
-    bool readLocalMember(LocalMember *m, Phase phase, js2val *rval);
+    bool readLocalMember(LocalMember *m, Phase phase, js2val *rval, Frame *container);
     bool readInstanceMember(js2val containerVal, JS2Class *c, InstanceMember *mBase, Phase phase, js2val *rval);
     bool JS2Metadata::hasOwnProperty(JS2Object *obj, const String *name);
 

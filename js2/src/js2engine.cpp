@@ -107,10 +107,10 @@ namespace MetaData {
             try {
                 a = JS2VAL_VOID;
                 b = JS2VAL_VOID;
-#ifdef DEBUG
+//#ifdef DEBUG
                 if (traceInstructions)
                     printInstruction(pc, bCon->getCodeStart(), bCon, this);
-#endif
+//#endif
                 JS2Op op = (JS2Op)*pc++;
                 switch (op) {
         #include "js2op_arithmetic.cpp"
@@ -493,7 +493,7 @@ namespace MetaData {
         delete [] activationStack;
     }
 
-#ifdef DEBUG
+//#ifdef DEBUG
 
     enum { BRANCH_OFFSET = 1, STR_PTR, TYPE_PTR, NAME_INDEX, FRAME_INDEX, BRANCH_PAIR, U16, FLOAT64, S32, BREAK_OFFSET_AND_COUNT };
     struct {
@@ -535,6 +535,7 @@ namespace MetaData {
         { eInteger,  "Integer", S32 },
         { eRegExp,  "RegExp", U16 },
         { eFunction,  "Function", U16 },
+        { eClosure,  "Closure", U16 },
         { eUInt64,  "UInt64", 0 },
         { eInt64,  "Int64", 0 },
         { eString,  "String", STR_PTR },            // <string pointer:u32>
@@ -619,6 +620,7 @@ namespace MetaData {
         { eTypeof,  "Typeof", 0 },
         { eInstanceof,  "Instanceof", 0 },
         { eIs,  "Is", 0 },
+        { eIn,  "In", 0 },
 
         { ePopv,  "Popv", 0 },
         { ePop,  "Pop", 0 },
@@ -749,7 +751,7 @@ namespace MetaData {
         }
     }
 
-#endif          // DEBUG
+//#endif          // DEBUG
 
     // Return the effect of an opcode on the execution stack.
     // Some ops (e.g. eCall) have a variable effect, those are handled separately
@@ -791,6 +793,7 @@ namespace MetaData {
 
         case eIs:           // pop expr, pop type, push boolean
         case eInstanceof:
+        case eIn:
             return 1;
 
         case eCoerce:       // pop value, push coerced value (type is arg)
@@ -820,6 +823,9 @@ namespace MetaData {
         case eUndefined:
         case eLongZero:
             return 1;       // push literal value
+
+        case eClosure:
+            return 0;
 
         case eSuperExpr:
             return 0;
