@@ -1174,11 +1174,9 @@ nsMathMLContainerFrame::PlaceTokenFor(nsIFrame*            aFrame,
   aFrame->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)font);
   nsCOMPtr<nsIFontMetrics> fm;
   aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
-  nscoord ascent = 0, descent = 0;
-  if (fm) {
-    fm->GetMaxAscent(ascent);
-    fm->GetMaxDescent(descent);
-  }
+  nscoord ascent, descent;
+  fm->GetMaxAscent(ascent);
+  fm->GetMaxDescent(descent);
 
   nsBoundingMetrics bm;
   NS_STATIC_CAST(nsMathMLContainerFrame*, aFrame)->GetBoundingMetrics(bm);

@@ -2287,11 +2287,6 @@ ComputeLineHeight(nsIPresContext* aPresContext,
     }
     nsCOMPtr<nsIFontMetrics> fm;
     deviceContext->GetMetricsFor(font->mFont, langGroup, *getter_AddRefs(fm));
-
-    if (!fm) {
-      NS_WARNING( "null font metrics for the device context - we have to fix this someday...");
-    }
-
     if (unit == eStyleUnit_Factor) {
       // For factor units the computed value of the line-height property 
       // is found by multiplying the factor by the font's <b>actual</b> 
@@ -2305,7 +2300,7 @@ ComputeLineHeight(nsIPresContext* aPresContext,
       // precise layout in the face of imprecise fonts.
       nscoord emHeight = font->mFont.size;
 #ifdef NEW_FONT_HEIGHT_APIS
-      if (!nsHTMLReflowState::UseComputedHeight() && fm) {
+      if (!nsHTMLReflowState::UseComputedHeight()) {
         fm->GetEmHeight(emHeight);
       }
 #endif
@@ -2314,7 +2309,7 @@ ComputeLineHeight(nsIPresContext* aPresContext,
       NS_ASSERTION(eStyleUnit_Normal == unit, "bad unit");
       lineHeight = font->mFont.size;
 #ifdef NEW_FONT_HEIGHT_APIS
-      if (!nsHTMLReflowState::UseComputedHeight() && fm) {
+      if (!nsHTMLReflowState::UseComputedHeight()) {
         lineHeight = GetNormalLineHeight(fm);
       }
 #endif
