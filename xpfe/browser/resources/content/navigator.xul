@@ -228,7 +228,7 @@ Contributor(s): ______________________________________. -->
       //     - pinkerton
       <menu id="PersonalMenu" datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
             ref="NC:BookmarksRoot">
-        <titledbutton align="right" class="bmenu" container="true"
+        <titledbutton align="right" class="bookmarkFolder" container="true"
           value="&bookmarksButton.label;" crop="right"/>
         <template>
           <!-- Recursive rules for nested folders -->
@@ -272,10 +272,10 @@ Contributor(s): ______________________________________. -->
 		    <template>
 		      <!-- Rules for content hanging _directly_ off the toolbar -->
 		      <rule parent="box" iscontainer="true">
-		        <menu uri="...">
+		        <menu uri="..." class="standard">
 		          <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name"
 		                        align="right" class="bookmarkFolder"/>
-		          <menupopup/>
+		          <menupopup class="standard"/>
 		        </menu>
 				<spring uri="rdf:*" class="personaltoolbarspacer" flex="1"/>
 		      </rule>
@@ -288,21 +288,21 @@ Contributor(s): ______________________________________. -->
 
 		      <!-- Recursive rules for nested folders -->
 		      <rule iscontainer="true">
-		        <menupopup>
-		          <menu uri="rdf:*" crop="right" flex="1" align="left"
+		        <menupopup class="standard">
+		          <menu class="standard" uri="rdf:*" crop="right" flex="1" align="left"
 		            value="rdf:http://home.netscape.com/NC-rdf#Name" >
-		            <menupopup />
+		            <menupopup class="standard"/>
 		          </menu>
 		        </menupopup>
 		      </rule>
 		      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
 		        <menupopup>
-		          <menuseparator uri="rdf:*" />
+		          <menuseparator class="standard" uri="rdf:*" />
 		        </menupopup>
 		      </rule>
 		      <rule>
 		        <menupopup>
-		          <menuitem align="left" uri="..." 
+		          <menuitem class="standard" align="left" uri="..." 
 		            value="rdf:http://home.netscape.com/NC-rdf#Name"
 		            oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)"/>
 		        </menupopup>
