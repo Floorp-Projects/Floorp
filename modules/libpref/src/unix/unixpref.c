@@ -29,7 +29,7 @@
 #include "jsbuffer.h"
 #include "xpassert.h"
 #include "fe_proto.h"
-#include "icondata.h"
+
 
 static struct fe_icon_type* splash_screen = NULL;
 
