@@ -236,6 +236,7 @@ protected:
                               nsHTMLReflowMetrics& aDesiredSize);
 
   nsCOMPtr<nsIBaseWindow> mSubShell;
+  nsWeakPtr mPresShellWeak;   // weak reference to the nsIPresShell
   PRBool mCreatingViewer;
 };
 
@@ -549,6 +550,7 @@ nsHTMLFrameInnerFrame::nsHTMLFrameInnerFrame()
   : nsLeafFrame()
 {
   mCreatingViewer = PR_FALSE;
+  mPresShellWeak = nsnull;
 }
 
 nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
@@ -587,8 +589,16 @@ nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
                                      PR_FALSE);
   }
 
-  if(mSubShell)
+  if(mSubShell) {
+  // notify the pres shell that a docshell has been destroyed
+    if (mPresShellWeak) {
+      nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+      if (ps) {
+        ps->SetSubShellFor(mContent, nsnull);
+      }
+    }
     mSubShell->Destroy();
+  }
   mSubShell = nsnull; // This is the location it was released before...
                       // Not sure if there is ordering depending on this.
 }
@@ -914,6 +924,8 @@ nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext,
     nsCOMPtr<nsISupports> subShellAsSupports(do_QueryInterface(mSubShell));
     NS_ENSURE_TRUE(subShellAsSupports, NS_ERROR_FAILURE);
     presShell->SetSubShellFor(mContent, subShellAsSupports);
+    //We need to be able to get back to the presShell to unset the subshell at destruction
+    mPresShellWeak = getter_AddRefs(NS_GetWeakReference(presShell));   
   }
   
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mSubShell));
