@@ -121,13 +121,13 @@ protected:
   static nsIRDFResource* kHTTPIndex_Loading;
   static nsIRDFLiteral*  kTrueLiteral;
 
-  static nsresult ParseLiteral(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult);
-  static nsresult ParseDate(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult);
-  static nsresult ParseInt(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult);
+  static nsresult ParseLiteral(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult);
+  static nsresult ParseDate(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult);
+  static nsresult ParseInt(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult);
 
   struct Field {
     const char*     mName;
-    nsresult        (*mParse)(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult);
+    nsresult        (*mParse)(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult);
     nsIRDFResource* mProperty;
   };
 
@@ -730,7 +730,7 @@ nsHTTPIndexParser::ParseData(const char* aDataStr)
 
 
 nsresult
-nsHTTPIndexParser::ParseLiteral(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult)
+nsHTTPIndexParser::ParseLiteral(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult)
 {
   nsresult rv;
 
@@ -742,7 +742,7 @@ nsHTTPIndexParser::ParseLiteral(nsIRDFResource *arc, const nsString& aValue, nsI
   	{
   		if (aValue[len - 1] == '/')
   		{
-//  			aValue.SetLength(len - 1);
+  			aValue.SetLength(len - 1);
   		}
   	}
   }
@@ -757,7 +757,7 @@ nsHTTPIndexParser::ParseLiteral(nsIRDFResource *arc, const nsString& aValue, nsI
 
 
 nsresult
-nsHTTPIndexParser::ParseDate(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult)
+nsHTTPIndexParser::ParseDate(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult)
 {
   PRTime tm;
   PRStatus err = PR_ParseTimeString(nsCAutoString(aValue), PR_TRUE, &tm);
@@ -775,7 +775,7 @@ nsHTTPIndexParser::ParseDate(nsIRDFResource *arc, const nsString& aValue, nsIRDF
 
 
 nsresult
-nsHTTPIndexParser::ParseInt(nsIRDFResource *arc, const nsString& aValue, nsIRDFNode** aResult)
+nsHTTPIndexParser::ParseInt(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult)
 {
   PRInt32 err;
   PRInt32 i = aValue.ToInteger(&err);
