@@ -28,6 +28,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMText.h"
 #include "nsIDOMNodeList.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
@@ -771,11 +772,116 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
     *aCancel = PR_TRUE;
     return NS_OK;
   }
+  
+  nsresult res = NS_OK;
+  
+  if (mFlags & nsIPlaintextEditor::eEditorPasswordMask)
+  {
+    // manage the password buffer
+    PRInt32 start, end;
+    mEditor->GetTextSelectionOffsets(aSelection, start, end);
+    if (end==start)
+    { // collapsed selection
+      if (nsIEditor::ePrevious==aCollapsedAction && 0<start) { // del back
+        mPasswordText.Cut(start-1, 1);
+      }
+      else if (nsIEditor::eNext==aCollapsedAction) {      // del forward
+        mPasswordText.Cut(start, 1);
+      }
+      // otherwise nothing to do for this collapsed selection
+    }
+    else {  // extended selection
+      mPasswordText.Cut(start, end-start);
+    }
+  }
+  else
+  {
+    PRBool bCollapsed;
+    res = aSelection->GetIsCollapsed(&bCollapsed);
+    if (NS_FAILED(res)) return res;
+  
+    nsCOMPtr<nsIDOMNode> startNode, nextNode, selNode;
+    PRInt32 startOffset;
+  
+    res = mEditor->GetStartNodeAndOffset(aSelection, address_of(startNode), &startOffset);
+    if (NS_FAILED(res)) return res;
+    if (!startNode) return NS_ERROR_FAILURE;
+    
+    if (bCollapsed)
+    {
+      nsCOMPtr<nsIDOMText> textNode;
+      PRUint32 strLength;
+      
+      // destroy any empty text nodes in our path
+      if (mEditor->IsTextNode(startNode))
+      {
+        textNode = do_QueryInterface(startNode);
+        res = textNode->GetLength(&strLength);
+        if (NS_FAILED(res)) return res;
+        // if it has a length and we aren't at the edge, we are done
+        if (strLength && !( ((aCollapsedAction == nsIEditor::ePrevious) && startOffset) ||
+                            ((aCollapsedAction == nsIEditor::eNext) && startOffset==strLength) ) )
+          return NS_OK;
+        
+        // remember where we are
+        selNode = startNode;
+        res = nsEditor::GetNodeLocation(selNode, address_of(startNode), &startOffset);
+        if (NS_FAILED(res)) return res;
+        
+        // delete this text node if empty
+        if (!strLength)
+        {
+          // delete empty text node
+          res = mEditor->DeleteNode(selNode);
+          if (NS_FAILED(res)) return res;
+        }
+        else
+        {
+          // if text node isn't empty, but we are at end of it, remeber that we are after it
+          if (aCollapsedAction == nsIEditor::eNext)
+            startOffset++;
+        }
+      }
+
+      // find next node (we know we are in container here)
+      nsCOMPtr<nsIContent> child, content(do_QueryInterface(startNode));
+      if (!content) return NS_ERROR_NULL_POINTER;
+      if (aCollapsedAction == nsIEditor::ePrevious)
+        --startOffset;
+      res = content->ChildAt(startOffset, *getter_AddRefs(child));
+      if (NS_FAILED(res)) return res;
+      nextNode = do_QueryInterface(child);
+      
+      // scan for next node, deleting empty text nodes on way
+      while (nextNode && mEditor->IsTextNode(nextNode))
+      {
+        textNode = do_QueryInterface(nextNode);
+        if (!textNode) break;// found a br, stop there
+
+        res = textNode->GetLength(&strLength);
+        if (NS_FAILED(res)) return res;
+        if (strLength) break;  // found a non-empty text node
+        
+        // delete empty text node
+        res = mEditor->DeleteNode(nextNode);
+        if (NS_FAILED(res)) return res;
+        
+        // find next node
+        if (aCollapsedAction == nsIEditor::ePrevious)
+          --startOffset;
+          // don't need to increment startOffset for nsIEditor::eNext
+        res = content->ChildAt(startOffset, *getter_AddRefs(child));
+        if (NS_FAILED(res)) return res;
+        nextNode = do_QueryInterface(child);
+      }
+    }
+  }
+
 #ifdef IBMBIDI // Test for distance between caret and text that will be deleted
   nsCOMPtr<nsIDOMNode> node;
   PRInt32 offset;
 
-  nsresult res = mEditor->GetStartNodeAndOffset(aSelection, address_of(node), &offset);
+  res = mEditor->GetStartNodeAndOffset(aSelection, address_of(node), &offset);
   if (NS_FAILED(res)) return res;
   if (!node) return NS_ERROR_FAILURE;
   nsCOMPtr<nsIPresShell> shell;
@@ -827,126 +933,34 @@ nsTextEditRules::WillDeleteSelection(nsISelection *aSelection,
   }
 #endif // IBMBIDI
 
-  if (mFlags & nsIPlaintextEditor::eEditorPasswordMask)
-  {
-    // manage the password buffer
-    PRInt32 start, end;
-    mEditor->GetTextSelectionOffsets(aSelection, start, end);
-    if (end==start)
-    { // collapsed selection
-      if (nsIEditor::ePrevious==aCollapsedAction && 0<start) { // del back
-        mPasswordText.Cut(start-1, 1);
-      }
-      else if (nsIEditor::eNext==aCollapsedAction) {      // del forward
-        mPasswordText.Cut(start, 1);
-      }
-      // otherwise nothing to do for this collapsed selection
-    }
-    else {  // extended selection
-      mPasswordText.Cut(start, end-start);
-    }
-
-#ifdef DEBUG_buster
-    char *password = mPasswordText.ToNewCString();
-    printf("mPasswordText is %s\n", password);
-    nsCRT::free(password);
-#endif
-  }
-  return NS_OK;
+  return res;
 }
 
-// if the document is empty, insert a bogus text node with a &nbsp;
-// if we ended up with consecutive text nodes, merge them
 nsresult
 nsTextEditRules::DidDeleteSelection(nsISelection *aSelection, 
                                     nsIEditor::EDirection aCollapsedAction, 
                                     nsresult aResult)
 {
-  nsresult res = aResult;  // if aResult is an error, we just return it
-  if (!aSelection) { return NS_ERROR_NULL_POINTER; }
-  PRBool isCollapsed;
-  aSelection->GetIsCollapsed(&isCollapsed);
-  NS_ASSERTION(PR_TRUE==isCollapsed, "selection not collapsed after delete selection.");
-  if (NS_SUCCEEDED(res)) // only do this work if DeleteSelection completed successfully
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIDOMNode> startNode;
+  PRInt32 startOffset;
+  
+  res = mEditor->GetStartNodeAndOffset(aSelection, address_of(startNode), &startOffset);
+  if (NS_FAILED(res)) return res;
+  if (!startNode) return NS_ERROR_FAILURE;
+  
+  // delete empty text nodes at selection
+  if (mEditor->IsTextNode(startNode))
   {
-    // if we don't have an empty document, check the selection to see if any collapsing is necessary
-    if (!mBogusNode)
+    nsCOMPtr<nsIDOMText> textNode = do_QueryInterface(startNode);
+    PRUint32 strLength;
+    res = textNode->GetLength(&strLength);
+    if (NS_FAILED(res)) return res;
+    
+    // are we in an empty text node?
+    if (!strLength)
     {
-      // get the node that contains the selection point
-      nsCOMPtr<nsIDOMNode>anchor;
-      PRInt32 offset;
-      res = aSelection->GetAnchorNode(getter_AddRefs(anchor));
-      if (NS_FAILED(res)) return res;
-      if (!anchor) return NS_ERROR_NULL_POINTER;
-      res = aSelection->GetAnchorOffset(&offset);
-      if (NS_FAILED(res)) return res;
-      // selectedNode is either the anchor itself, 
-      // or if anchor has children, it's the referenced child node
-      // XXX ----------------------------------------------- XXX
-      //  I believe this s wrong.  Assuming anchor and focus
-      // alwas correspond to selection endpoints, it is possible 
-      // for the first node after the selectin start point to not
-      // be selected.  As an example consider a selection that
-      // starts right before a <ul>, and ends after the first character
-      // in the text of the first list item.  Really all that is
-      // selected is one letter of text, not the <ul>
-      nsCOMPtr<nsIDOMNode> selectedNode = do_QueryInterface(anchor);
-      PRBool hasChildren=PR_FALSE;
-      anchor->HasChildNodes(&hasChildren);
-      if (PR_TRUE==hasChildren)
-      { // if anchor has children, set selectedNode to the child pointed at        
-        nsCOMPtr<nsIDOMNodeList> anchorChildren;
-        res = anchor->GetChildNodes(getter_AddRefs(anchorChildren));
-        if ((NS_SUCCEEDED(res)) && anchorChildren) {              
-          res = anchorChildren->Item(offset, getter_AddRefs(selectedNode));
-        }
-      }
-
-      if ((NS_SUCCEEDED(res)) && selectedNode && !DeleteEmptyTextNode(selectedNode))
-      {
-        nsCOMPtr<nsIDOMCharacterData>selectedNodeAsText;
-        selectedNodeAsText = do_QueryInterface(selectedNode);
-        if (selectedNodeAsText && mEditor->IsEditable(selectedNode))
-        {
-          nsCOMPtr<nsIDOMNode> siblingNode;
-          selectedNode->GetPreviousSibling(getter_AddRefs(siblingNode));
-          if (siblingNode && !DeleteEmptyTextNode(siblingNode))
-          {
-            nsCOMPtr<nsIDOMCharacterData>siblingNodeAsText;
-            siblingNodeAsText = do_QueryInterface(siblingNode);
-            if (siblingNodeAsText && mEditor->IsEditable(siblingNode))
-            {
-              PRUint32 siblingLength; // the length of siblingNode before the join
-              siblingNodeAsText->GetLength(&siblingLength);
-              nsCOMPtr<nsIDOMNode> parentNode;
-              res = selectedNode->GetParentNode(getter_AddRefs(parentNode));
-              if (NS_FAILED(res)) return res;
-              if (!parentNode) return NS_ERROR_NULL_POINTER;
-              res = mEditor->JoinNodes(siblingNode, selectedNode, parentNode);
-              // selectedNode will remain after the join, siblingNode is removed
-            }
-          }
-          selectedNode->GetNextSibling(getter_AddRefs(siblingNode));
-          if (siblingNode && !DeleteEmptyTextNode(siblingNode))
-          {
-            nsCOMPtr<nsIDOMCharacterData>siblingNodeAsText;
-            siblingNodeAsText = do_QueryInterface(siblingNode);
-            if (siblingNodeAsText && mEditor->IsEditable(siblingNode))
-            {
-              PRUint32 selectedNodeLength; // the length of siblingNode before the join
-              selectedNodeAsText->GetLength(&selectedNodeLength);
-              nsCOMPtr<nsIDOMNode> parentNode;
-              res = selectedNode->GetParentNode(getter_AddRefs(parentNode));
-              if (NS_FAILED(res)) return res;
-              if (!parentNode) return NS_ERROR_NULL_POINTER;
-
-              res = mEditor->JoinNodes(selectedNode, siblingNode, parentNode);
-              if (NS_FAILED(res)) return res;
-              // selectedNode will remain after the join, siblingNode is removed
-            }
-          }
-        }
-      }
+      res = mEditor->DeleteNode(startNode);
     }
   }
   return res;
