@@ -194,7 +194,8 @@ protected:
   nsFrameList mPopupFrames;
   PRPackedBool mIsMenu; // Whether or not we can even have children or not.
   PRPackedBool mMenuOpen;
-  PRPackedBool mChecked;              // if so, are we checked?
+  PRPackedBool mCreateHandlerSucceeded;  // Did the create handler succeed?
+  PRPackedBool mChecked;              // are we checked?
   nsMenuType mType;
 
   nsCOMPtr<nsIContent> mMenuText;
