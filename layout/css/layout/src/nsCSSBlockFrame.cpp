@@ -41,6 +41,10 @@
 #include "nsHTMLValue.h"// XXX list ordinal hack
 #include "nsIHTMLContent.h"// XXX list ordinal hack
 
+//#include "js/jsapi.h"
+//#include "nsDOMEvent.h"
+#define DOM_EVENT_INIT      0x0001
+
 #include "prprf.h"
 
 // XXX mLastContentOffset, mFirstContentOffset, mLastContentIsComplete
@@ -159,8 +163,23 @@ public:
                             nsIFrame*            aFloater,
                             nsPlaceholderFrame*  aPlaceholder);
 
+#ifdef DO_SELECTION
+  NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext,
+                          nsGUIEvent* aEvent,
+                          nsEventStatus& aEventStatus);
+
+  NS_IMETHOD  HandleDrag(nsIPresContext& aPresContext, 
+                         nsGUIEvent*     aEvent,
+                         nsEventStatus&  aEventStatus);
+
+  nsIFrame * FindHitFrame(nsCSSBlockFrame * aBlockFrame, 
+                          const nscoord aX, const nscoord aY,
+                          const nsPoint & aPoint);
+
+#endif
 protected:
   ~nsCSSBlockFrame();
+
 
 #if 0
   PRInt32 GetFirstContentOffset() const;
@@ -4288,3 +4307,159 @@ nsCSSBlockFrame::VerifyTree() const
 #endif
   return NS_OK;
 }
+
+#ifdef DO_SELECTION
+nsIFrame * nsCSSBlockFrame::FindHitFrame(nsCSSBlockFrame * aBlockFrame, 
+                                         const nscoord aX,
+                                         const nscoord aY,
+                                         const nsPoint & aPoint)
+{
+  nsPoint mousePoint(aPoint.x-aX, aPoint.y-aY);
+
+  nsIFrame * contentFrame = nsnull;
+  LineData * line         = aBlockFrame->mLines;
+  if (nsnull != line) {
+    // First find the line that contains the aIndex
+    while (nsnull != line && contentFrame == nsnull) {
+      nsIFrame* frame = line->mFirstChild;
+      PRInt32 n = line->mChildCount;
+      while (--n >= 0) {
+        nsRect bounds;
+        frame->GetRect(bounds);
+        if (bounds.Contains(mousePoint)) {
+           nsCSSBlockFrame * blockFrame;
+          if (NS_OK == frame->QueryInterface(kBlockFrameCID, (void**)&blockFrame)) {
+            frame = FindHitFrame(blockFrame, bounds.x, bounds.y, aPoint);
+            //NS_RELEASE(blockFrame);
+            return frame;
+          } else {
+            return frame;
+          }
+        }
+        frame->GetNextSibling(frame);
+      }
+      line = line->mNext;
+    }
+  }
+  return aBlockFrame;
+}
+
+NS_METHOD nsCSSBlockFrame::HandleEvent(nsIPresContext& aPresContext,
+                                       nsGUIEvent* aEvent,
+                                       nsEventStatus& aEventStatus)
+{
+  if (0) {
+    nsHTMLContainerFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  }
+
+  //return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+    aEventStatus = nsEventStatus_eIgnore;
+  
+  //if (nsnull != mContent && (aEvent->message != NS_MOUSE_LEFT_BUTTON_UP ||
+  //    (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP && !mDoingSelection))) {
+  if (nsnull != mContent) {
+    mContent->HandleDOMEvent(aPresContext, (nsEvent*)aEvent, nsnull, DOM_EVENT_INIT, aEventStatus);
+  }
+
+  if (DisplaySelection(aPresContext) == PR_FALSE) {
+    if (aEvent->message != NS_MOUSE_LEFT_BUTTON_DOWN) {
+      return NS_OK;
+    }
+  }
+
+  if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
+    int x = 0;
+  }
+
+  //nsRect bounds;
+  //GetRect(bounds);
+  //nsIFrame * contentFrame = FindHitFrame(this, bounds.x, bounds.y, aEvent->point);
+  nsIFrame * contentFrame = FindHitFrame(this, 0,0, aEvent->point);
+
+  if (contentFrame == nsnull) {
+    return NS_OK;
+  }
+
+  if(nsEventStatus_eConsumeNoDefault != aEventStatus) {
+    if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
+    } else if (aEvent->message == NS_MOUSE_MOVE && mDoingSelection ||
+               aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+      // no-op
+    } else {
+      return NS_OK;
+    }
+
+
+    if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+      if (mDoingSelection) {
+        contentFrame->HandleRelease(aPresContext, aEvent, aEventStatus);
+      }
+    } else if (aEvent->message == NS_MOUSE_MOVE) {
+      mDidDrag = PR_TRUE;
+      contentFrame->HandleDrag(aPresContext, aEvent, aEventStatus);
+    } else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
+      contentFrame->HandlePress(aPresContext, aEvent, aEventStatus);
+    }
+  }
+
+  return NS_OK;
+
+}
+
+nsIFrame * gNearByFrame = nsnull;
+
+NS_METHOD nsCSSBlockFrame::HandleDrag(nsIPresContext& aPresContext, 
+                                      nsGUIEvent*     aEvent,
+                                      nsEventStatus&  aEventStatus)
+{
+  if (DisplaySelection(aPresContext) == PR_FALSE)
+  {
+    aEventStatus = nsEventStatus_eIgnore;
+    return NS_OK;
+  }
+
+  // Keep old start and end
+  //nsIContent * startContent = mSelectionRange->GetStartContent(); // ref counted
+  //nsIContent * endContent   = mSelectionRange->GetEndContent();   // ref counted
+
+  mDidDrag = PR_TRUE;
+
+
+  nsIFrame * contentFrame = nsnull;
+  LineData* line = mLines;
+  if (nsnull != line) {
+    // First find the line that contains the aIndex
+    while (nsnull != line && contentFrame == nsnull) {
+      nsIFrame* frame = line->mFirstChild;
+      PRInt32 n = line->mChildCount;
+      while (--n >= 0) {
+        nsRect bounds;
+        frame->GetRect(bounds);
+        if (aEvent->point.y >= bounds.y && aEvent->point.y < bounds.y+bounds.height) {
+          contentFrame = frame;
+          if (frame != gNearByFrame) {
+            if (gNearByFrame != nsnull) {
+              int x = 0;
+            }
+            aEvent->point.x = bounds.x+bounds.width-50;
+            gNearByFrame = frame;
+            return contentFrame->HandleDrag(aPresContext, aEvent, aEventStatus);
+          } else {
+            return NS_OK;
+          }
+          //break;
+        }
+        frame->GetNextSibling(frame);
+      }
+      line = line->mNext;
+    }
+  }
+
+  
+  
+  return NS_OK;
+
+}
+
+
+#endif
