@@ -600,7 +600,7 @@ NET_WritePostData(MWContext  *context,
 		memset(data_obj, 0, sizeof(struct WritePostDataData));
 
 		data_obj->last_line_was_complete = TRUE;
-		data_obj->buffer = (char *) PR_Malloc(POST_DATA_BUFFER_SIZE);
+		data_obj->buffer = (char *) PR_Calloc(1, POST_DATA_BUFFER_SIZE);
 
 		if(!data_obj->buffer)
 		{
