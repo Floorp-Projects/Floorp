@@ -36,6 +36,7 @@ CPPSRCS =				\
 	nsHTMLContentSink.cpp		\
 	nsHTMLDocument.cpp		\
 	nsHTMLIFrame.cpp    \
+	nsHTMLParts.cpp    \
 	$(NULL)
 
 EXPORTS = \
