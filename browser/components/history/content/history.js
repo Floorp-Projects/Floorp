@@ -248,7 +248,11 @@ function historyAddBookmarks()
 
 function historyCopyLink()
 {
-  dump("Not yet implemented!");
+  var builder = gHistoryTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
+  var url = builder.getResourceAtIndex(gHistoryTree.currentIndex).Value;
+  var clipboard = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+                            .getService(Components.interfaces.nsIClipboardHelper );
+  clipboard.copyString(url);
 }
 
 function buildContextMenu()
