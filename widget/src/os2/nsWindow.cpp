@@ -1111,7 +1111,7 @@ NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
      else if( mQmsg.msg >= WM_MOUSETRANSLATEFIRST &&
               mQmsg.msg <= WM_MOUSETRANSLATELAST)
         isMouseEvent = PR_TRUE;
-     else if( mQmsg.msg == WMU_MOUSEENTER || mQmsg.msg == WMU_MOUSELEAVE)
+     else if( mQmsg.msg == WM_MOUSEENTER || mQmsg.msg == WM_MOUSELEAVE)
         isMouseEvent = PR_TRUE;
   }
  
@@ -1811,167 +1811,163 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
 // 'Window procedure'
 PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
 {
-   PRBool result = PR_FALSE; // call the default window procedure
+    PRBool result = PR_FALSE; // call the default window procedure
             
-   switch( msg)
-   {
+    switch (msg) {
 #if 0
-      case WM_COMMAND: // fire off menu selections
-      {
-         USHORT usSrc = SHORT1FROMMP( mp2);
-         if( usSrc == CMDSRC_MENU || usSrc == CMDSRC_ACCELERATOR)
+        case WM_COMMAND: // fire off menu selections
+        {
+          USHORT usSrc = SHORT1FROMMP( mp2);
+          if( usSrc == CMDSRC_MENU || usSrc == CMDSRC_ACCELERATOR)
             result = OnMenuClick( SHORT1FROMMP(mp1));
-         break;
-      }
+          break;
+        }
 
-      case WM_INITMENU:
-         result = OnActivateMenu( HWNDFROMMP(mp2), TRUE);
-         break;
+        case WM_INITMENU:
+          result = OnActivateMenu( HWNDFROMMP(mp2), TRUE);
+          break;
 
-      case WM_MENUEND:
-         result = OnActivateMenu( HWNDFROMMP(mp2), FALSE);
-         break;
+        case WM_MENUEND:
+          result = OnActivateMenu( HWNDFROMMP(mp2), FALSE);
+          break;
 #endif
 
 #if 0  // Tooltips appear to be gone
-      case WMU_SHOW_TOOLTIP:
-      {
-         nsTooltipEvent event;
-         InitEvent( event, NS_SHOW_TOOLTIP);
-         event.tipIndex = LONGFROMMP(mp1);
-         event.eventStructType = NS_TOOLTIP_EVENT;
-         result = DispatchWindowEvent(&event);
-// OS2TODO       NS_RELEASE(event.widget);
-         break;
-      }
+        case WMU_SHOW_TOOLTIP:
+        {
+          nsTooltipEvent event;
+          InitEvent( event, NS_SHOW_TOOLTIP);
+          event.tipIndex = LONGFROMMP(mp1);
+          event.eventStructType = NS_TOOLTIP_EVENT;
+          result = DispatchWindowEvent(&event);
+// OS2TODO        NS_RELEASE(event.widget);
+          break;
+        }
 
-      case WMU_HIDE_TOOLTIP:
-         result = DispatchStandardEvent( NS_HIDE_TOOLTIP);
-         break;
+        case WMU_HIDE_TOOLTIP:
+          result = DispatchStandardEvent( NS_HIDE_TOOLTIP);
+          break;
 #endif
-      case WM_CONTROL: // remember this is resent to the orginator...
-         result = OnControl( mp1, mp2);
-         break;
+        case WM_CONTROL: // remember this is resent to the orginator...
+          result = OnControl( mp1, mp2);
+          break;
 
-      case WM_HSCROLL:
-      case WM_VSCROLL:
-         result = OnScroll( mp1, mp2);
-         break;
+        case WM_CLOSE:  // close request
+          DispatchStandardEvent(NS_XUL_CLOSE);
+          result = PR_TRUE; // abort window closure
+          break;
 
-      case WM_DESTROY: // clean up object
-         OnDestroy();
-         break;
+        case WM_DESTROY:
+            // clean up.
+            OnDestroy();
+            result = PR_TRUE;
+            break;
 
-      case WM_CLOSE:
-      {
-         // for now... eventually there'll be an nsIFrameWindow which will
-         // generate 'close' events which will be veto-able.  Hopefully.
-         // (that'll be `re-write the hierarchy' time for us...)
-         Destroy();
-         result = PR_TRUE;
-         break;
-      }
+        case WM_PAINT:
+            result = OnPaint();
+            break;
 
-      case WM_PAINT:
-         result = OnPaint();
-         break;
+        case WM_CHAR:
+            result = OnKey( mp1, mp2);
+            break;
 
-      case WM_CHAR:
-         result = OnKey( mp1, mp2);
-         break;
+        // Mouseclicks: we don't dispatch CLICK events because they just cause
+        // trouble: gecko seems to expect EITHER buttondown/up OR click events
+        // and so that's what we give it.
+        //
+        // Plus we make WM_CHORD do a button3down in order to get warp-4 paste
+        // behaviour (see nsEditorEventListeners.cpp)
+    
+        case WM_BUTTON1DOWN:
+          result = DispatchMouseEvent( NS_MOUSE_LEFT_BUTTON_DOWN, mp1, mp2);
+          break;
+        case WM_BUTTON1UP:
+          result = DispatchMouseEvent( NS_MOUSE_LEFT_BUTTON_UP, mp1, mp2);
+          break;
+        case WM_BUTTON1DBLCLK:
+          result = DispatchMouseEvent( NS_MOUSE_LEFT_DOUBLECLICK, mp1, mp2);
+          break;
+    
+        case WM_BUTTON2DOWN:
+          result = DispatchMouseEvent( NS_MOUSE_RIGHT_BUTTON_DOWN, mp1, mp2);
+          break;
+        case WM_BUTTON2UP:
+          result = DispatchMouseEvent( NS_MOUSE_RIGHT_BUTTON_UP, mp1, mp2);
+          break;
+        case WM_BUTTON2DBLCLK:
+          result = DispatchMouseEvent( NS_MOUSE_RIGHT_DOUBLECLICK, mp1, mp2);
+          break;
+    
+        case WM_CHORD:
+          result = DispatchMouseEvent( 0, mp1, mp2);
+          break;
+        case WM_BUTTON3DOWN:
+          result = DispatchMouseEvent( NS_MOUSE_MIDDLE_BUTTON_DOWN, mp1, mp2);
+          break;
+        case WM_BUTTON3UP:
+          result = DispatchMouseEvent( NS_MOUSE_MIDDLE_BUTTON_UP, mp1, mp2);
+          break;
+        case WM_BUTTON3DBLCLK:
+          result = DispatchMouseEvent( NS_MOUSE_MIDDLE_DOUBLECLICK, mp1, mp2);
+          break;
+    
+        case WM_MOUSEMOVE:
+          result = DispatchMouseEvent( NS_MOUSE_MOVE, mp1, mp2);
+          break;
+        case WM_MOUSEENTER:
+          result = DispatchMouseEvent( NS_MOUSE_ENTER, mp1, mp2);
+          break;
+        case WM_MOUSELEAVE:
+          result = DispatchMouseEvent( NS_MOUSE_EXIT, mp1, mp2);
+          break;
+    
+        case WM_HSCROLL:
+        case WM_VSCROLL:
+          result = OnScroll( mp1, mp2);
+          break;
 
-      // Mouseclicks: we don't dispatch CLICK events because they just cause
-      // trouble: gecko seems to expect EITHER buttondown/up OR click events
-      // and so that's what we give it.
-      //
-      // Plus we make WM_CHORD do a button3down in order to get warp-4 paste
-      // behaviour (see nsEditorEventListeners.cpp)
-
-      case WM_BUTTON1DOWN:
-         result = DispatchMouseEvent( NS_MOUSE_LEFT_BUTTON_DOWN, mp1, mp2);
-         break;
-      case WM_BUTTON1UP:
-         result = DispatchMouseEvent( NS_MOUSE_LEFT_BUTTON_UP, mp1, mp2);
-         break;
-      case WM_BUTTON1DBLCLK:
-         result = DispatchMouseEvent( NS_MOUSE_LEFT_DOUBLECLICK, mp1, mp2);
-         break;
-
-      case WM_BUTTON2DOWN:
-         result = DispatchMouseEvent( NS_MOUSE_RIGHT_BUTTON_DOWN, mp1, mp2);
-         break;
-      case WM_BUTTON2UP:
-         result = DispatchMouseEvent( NS_MOUSE_RIGHT_BUTTON_UP, mp1, mp2);
-         break;
-      case WM_BUTTON2DBLCLK:
-         result = DispatchMouseEvent( NS_MOUSE_RIGHT_DOUBLECLICK, mp1, mp2);
-         break;
-
-      case WM_CHORD:
-         result = DispatchMouseEvent( 0, mp1, mp2);
-         break;
-      case WM_BUTTON3DOWN:
-         result = DispatchMouseEvent( NS_MOUSE_MIDDLE_BUTTON_DOWN, mp1, mp2);
-         break;
-      case WM_BUTTON3UP:
-         result = DispatchMouseEvent( NS_MOUSE_MIDDLE_BUTTON_UP, mp1, mp2);
-         break;
-      case WM_BUTTON3DBLCLK:
-         result = DispatchMouseEvent( NS_MOUSE_MIDDLE_DOUBLECLICK, mp1, mp2);
-         break;
-
-      case WM_MOUSEMOVE:
-         result = DispatchMouseEvent( NS_MOUSE_MOVE, mp1, mp2);
-         break;
-      case WMU_MOUSEENTER:
-         result = DispatchMouseEvent( NS_MOUSE_ENTER, mp1, mp2);
-         break;
-      case WMU_MOUSELEAVE:
-         result = DispatchMouseEvent( NS_MOUSE_EXIT, mp1, mp2);
-         break;
-
-      case WM_SETFOCUS:
-         result = DispatchStandardEvent( SHORT1FROMMP( mp2) ? NS_GOTFOCUS
-                                                            : NS_LOSTFOCUS);
-         break;
-
-      case WM_WINDOWPOSCHANGED: 
-         result = OnReposition( (PSWP) mp1);
-         break;
-
-
-      case WM_REALIZEPALETTE:           // hopefully only nsCanvas & nsFrame
-         result = OnRealizePalette();   // will need this
-         break;
-
-      case WM_PRESPARAMCHANGED:
-         // This is really for font-change notifies.  Do that first.
-         rc = GetPrevWP()( mWnd, msg, mp1, mp2);
-         OnPresParamChanged( mp1, mp2);
-         result = PR_TRUE;
-         break;
-
-      case DM_DRAGOVER:
-         result = OnDragOver( mp1, mp2, rc);
-         break;
-
-      case DM_DRAGLEAVE:
-         result = OnDragLeave( mp1, mp2);
-         break;
-
-      case DM_DROP:
-         result = OnDrop( mp1, mp2);
-         break;
-
-      // Need to handle this method in order to keep track of whether there
-      // is a drag inside the window; we need to do *this* so that we can
-      // generate DRAGENTER messages [which os/2 doesn't provide].
-      case DM_DROPHELP:
-         mDragInside = FALSE;
-         break;
-   }
-
-   return result;
+        case WM_FOCUSCHANGED:
+          result = DispatchStandardEvent( SHORT1FROMMP( mp2) ? NS_GOTFOCUS
+                                                             : NS_LOSTFOCUS);
+          break;
+    
+        case WM_WINDOWPOSCHANGED: 
+          result = OnReposition( (PSWP) mp1);
+          break;
+    
+    
+        case WM_REALIZEPALETTE:          // hopefully only nsCanvas & nsFrame
+          result = OnRealizePalette();   // will need this
+          break;
+    
+        case WM_PRESPARAMCHANGED:
+          // This is really for font-change notifies.  Do that first.
+          rc = GetPrevWP()( mWnd, msg, mp1, mp2);
+          OnPresParamChanged( mp1, mp2);
+          result = PR_TRUE;
+          break;
+    
+        case DM_DRAGOVER:
+          result = OnDragOver( mp1, mp2, rc);
+          break;
+    
+        case DM_DRAGLEAVE:
+          result = OnDragLeave( mp1, mp2);
+          break;
+    
+        case DM_DROP:
+          result = OnDrop( mp1, mp2);
+          break;
+    
+        // Need to handle this method in order to keep track of whether there
+        // is a drag inside the window; we need to do *this* so that we can
+        // generate DRAGENTER messages [which os/2 doesn't provide].
+        case DM_DROPHELP:
+          mDragInside = FALSE;
+          break;
+    }
+    
+    return result;
 }
 
 

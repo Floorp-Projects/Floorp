@@ -147,10 +147,17 @@ typedef struct _WZDROPXFER
 // Tab control uses messages from TABM_BASE, which is currently (WM_USER+50).
 // See tabapi.h for details.
 
-// WMU'd to avoid potential clash with offical names.
 // MP2 is the other window.
-#define WMU_MOUSEENTER 0x041e
-#define WMU_MOUSELEAVE 0x041f
+#ifndef WM_MOUSEENTER
+#define WM_MOUSEENTER   0x041E
+#endif
+#ifndef WM_MOUSELEAVE
+#define WM_MOUSELEAVE   0x041F
+#endif
+
+#ifndef WM_FOCUSCHANGED
+#define WM_FOCUSCHANGED 0x000E
+#endif
 
 #ifndef FCF_CLOSEBUTTON // defined in the Merlin toolkit
 #define FCF_CLOSEBUTTON 0x04000000L
