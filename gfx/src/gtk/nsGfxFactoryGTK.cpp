@@ -78,7 +78,6 @@ nsGfxFactoryGTK::nsGfxFactoryGTK(const nsCID &aClass)
 
 nsGfxFactoryGTK::~nsGfxFactoryGTK()   
 {   
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
 nsresult nsGfxFactoryGTK::QueryInterface(const nsIID &aIID,   

@@ -68,7 +68,6 @@ nsGfxFactoryMotif::nsGfxFactoryMotif(const nsCID &aClass)
 
 nsGfxFactoryMotif::~nsGfxFactoryMotif()   
 {   
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
 nsresult nsGfxFactoryMotif::QueryInterface(const nsIID &aIID,   

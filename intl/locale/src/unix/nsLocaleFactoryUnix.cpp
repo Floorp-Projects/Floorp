@@ -43,7 +43,6 @@ nsLocaleUnixFactory::nsLocaleUnixFactory(const nsCID &aClass)
 
 nsLocaleUnixFactory::~nsLocaleUnixFactory()   
 {   
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
 nsresult nsLocaleUnixFactory::QueryInterface(const nsIID &aIID,   

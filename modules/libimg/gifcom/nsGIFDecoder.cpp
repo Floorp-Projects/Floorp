@@ -51,7 +51,6 @@ GIFDecoder::GIFDecoder(il_container* aContainer)
 
 GIFDecoder::~GIFDecoder(void)
 {
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 };
 
 NS_IMETHODIMP

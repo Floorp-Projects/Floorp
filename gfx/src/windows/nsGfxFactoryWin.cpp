@@ -90,7 +90,6 @@ nsGfxFactoryWin::nsGfxFactoryWin(const nsCID &aClass)
 
 nsGfxFactoryWin::~nsGfxFactoryWin()   
 {   
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
 nsresult nsGfxFactoryWin::QueryInterface(const nsIID &aIID,   

@@ -113,7 +113,6 @@ nsLayoutFactory::nsLayoutFactory(const nsCID &aClass)
 
 nsLayoutFactory::~nsLayoutFactory()
 {
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 #if 0
   char* cs = mClassID.ToString();
   printf("+++ Destroying layout factory for %s\n", cs);

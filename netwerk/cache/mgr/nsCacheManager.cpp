@@ -551,7 +551,6 @@ nsCacheManagerFactory::nsCacheManagerFactory( )
 
 nsCacheManagerFactory::~nsCacheManagerFactory( )
 {
-  NS_ASSERTION(mRefCnt == 0, "Wrong ref count") ;
   PR_AtomicDecrement(&gInstanceCnt) ;
 }
 

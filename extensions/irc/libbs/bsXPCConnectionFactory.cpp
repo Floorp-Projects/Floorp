@@ -74,7 +74,6 @@ bsConnectionFactory::bsConnectionFactory(const nsCID &aClass,
 
 bsConnectionFactory::~bsConnectionFactory()
 {
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 NS_IMETHODIMP

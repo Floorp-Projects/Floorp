@@ -71,7 +71,6 @@ CookieViewerFactoryImpl::CookieViewerFactoryImpl(const nsCID &aClass,
 
 CookieViewerFactoryImpl::~CookieViewerFactoryImpl()
 {
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 NS_IMETHODIMP

@@ -42,7 +42,6 @@ nsLocaleMacFactory::nsLocaleMacFactory(const nsCID &aClass)
 
 nsLocaleMacFactory::~nsLocaleMacFactory()   
 {   
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
 nsresult nsLocaleMacFactory::QueryInterface(const nsIID &aIID,   

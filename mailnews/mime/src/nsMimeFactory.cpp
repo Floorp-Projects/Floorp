@@ -91,7 +91,6 @@ nsMimeFactory::nsMimeFactory(const nsCID &aClass)
 
 nsMimeFactory::~nsMimeFactory()   
 {   
-	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
 nsresult nsMimeFactory::QueryInterface(const nsIID &aIID, void **aResult)   

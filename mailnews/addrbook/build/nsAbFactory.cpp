@@ -94,7 +94,6 @@ nsAbFactory::nsAbFactory(const nsCID &aClass, const char* aClassName, const char
 
 nsAbFactory::~nsAbFactory()   
 {
-	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 //	NS_IF_RELEASE(mServiceManager);
 	PL_strfree(mClassName);
 	PL_strfree(mProgID);

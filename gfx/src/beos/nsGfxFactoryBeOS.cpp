@@ -73,7 +73,6 @@ nsGfxFactoryBeOS::nsGfxFactoryBeOS(const nsCID &aClass)
 
 nsGfxFactoryBeOS::~nsGfxFactoryBeOS()   
 {   
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
 nsresult nsGfxFactoryBeOS::QueryInterface(const nsIID &aIID,   

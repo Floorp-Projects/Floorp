@@ -78,7 +78,6 @@ nsMimeEmitterFactory::nsMimeEmitterFactory(const nsCID &aClass,
 
 nsMimeEmitterFactory::~nsMimeEmitterFactory()   
 {
-	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 	PL_strfree(mClassName);
 	PL_strfree(mProgID);
 }   

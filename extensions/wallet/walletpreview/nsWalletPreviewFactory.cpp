@@ -71,7 +71,6 @@ WalletPreviewFactoryImpl::WalletPreviewFactoryImpl(const nsCID &aClass,
 
 WalletPreviewFactoryImpl::~WalletPreviewFactoryImpl()
 {
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 NS_IMETHODIMP

@@ -216,7 +216,6 @@ nsCacheObject::~nsCacheObject()
     if (m_pStream)
         delete m_pStream;
 
-	NS_ASSERTION(mRefCnt == 0, "wrong ref count") ;
 	PR_AtomicDecrement(&gInstanceCnt) ;
 }
 
@@ -733,7 +732,6 @@ nsCacheObjectFactory::nsCacheObjectFactory ()
 
 nsCacheObjectFactory::~nsCacheObjectFactory ()
 {
-	NS_ASSERTION(mRefCnt == 0,"Wrong ref count");
 	PR_AtomicDecrement(&gInstanceCnt);
 }
 

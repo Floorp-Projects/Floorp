@@ -71,7 +71,6 @@ nsGfxFactoryMac::nsGfxFactoryMac(const nsCID &aClass)
 
 nsGfxFactoryMac::~nsGfxFactoryMac()   
 {   
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
 nsresult nsGfxFactoryMac::QueryInterface(const nsIID &aIID,   

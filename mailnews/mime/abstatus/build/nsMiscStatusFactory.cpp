@@ -77,7 +77,6 @@ nsMimeMiscStatusFactory::nsMimeMiscStatusFactory(const nsCID &aClass,
 
 nsMimeMiscStatusFactory::~nsMimeMiscStatusFactory()   
 {
-	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 	PL_strfree(mClassName);
 	PL_strfree(mProgID);
 }   

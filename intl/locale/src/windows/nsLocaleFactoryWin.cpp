@@ -42,7 +42,6 @@ nsLocaleWinFactory::nsLocaleWinFactory(const nsCID &aClass)
 
 nsLocaleWinFactory::~nsLocaleWinFactory()   
 {   
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
 nsresult nsLocaleWinFactory::QueryInterface(const nsIID &aIID,   

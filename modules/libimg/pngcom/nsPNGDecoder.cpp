@@ -54,7 +54,6 @@ PNGDecoder::PNGDecoder(il_container* aContainer)
 
 PNGDecoder::~PNGDecoder(void)
 {
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 };
 
 static NS_DEFINE_IID(kPNGDecoderIID, NS_PNGDECODER_IID);

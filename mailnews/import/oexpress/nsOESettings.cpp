@@ -88,7 +88,6 @@ nsOESettings::nsOESettings()
 
 nsOESettings::~nsOESettings()
 {
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 NS_IMPL_ISUPPORTS(nsOESettings, nsIImportSettings::GetIID());

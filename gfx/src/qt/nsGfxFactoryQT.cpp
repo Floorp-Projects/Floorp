@@ -76,7 +76,6 @@ nsGfxFactoryQT::nsGfxFactoryQT(const nsCID &aClass)
 nsGfxFactoryQT::~nsGfxFactoryQT()   
 {   
     PR_LOG(QtGfxLM, PR_LOG_DEBUG, ("nsGfxFactoryQT::~nsGfxFactoryQT()\n"));
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
 nsresult nsGfxFactoryQT::QueryInterface(const nsIID &aIID,   

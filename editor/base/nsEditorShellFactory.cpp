@@ -47,7 +47,6 @@ nsEditorShellFactoryImpl::nsEditorShellFactoryImpl(const nsCID &aClass,
 
 nsEditorShellFactoryImpl::~nsEditorShellFactoryImpl(void)
 {
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 

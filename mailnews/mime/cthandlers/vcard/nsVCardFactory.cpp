@@ -76,8 +76,6 @@ nsVCardFactory::nsVCardFactory(const nsCID &aClass,
 
 nsVCardFactory::~nsVCardFactory()   
 {
-	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
-  
   NS_IF_RELEASE(mServiceManager);
   PL_strfree(mClassName);
   PL_strfree(mProgID);

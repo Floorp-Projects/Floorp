@@ -310,7 +310,6 @@ nsDocumentEncoderFactory::nsDocumentEncoderFactory()
 nsDocumentEncoderFactory::~nsDocumentEncoderFactory()
 {
   MOZ_COUNT_DTOR(nsDocumentEncoderFactory);
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }
 
 NS_IMPL_ADDREF(nsDocumentEncoderFactory)

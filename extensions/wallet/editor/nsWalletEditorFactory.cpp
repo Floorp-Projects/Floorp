@@ -71,7 +71,6 @@ WalletEditorFactoryImpl::WalletEditorFactoryImpl(const nsCID &aClass,
 
 WalletEditorFactoryImpl::~WalletEditorFactoryImpl()
 {
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 NS_IMETHODIMP

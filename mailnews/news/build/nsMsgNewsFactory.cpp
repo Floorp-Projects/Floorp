@@ -89,8 +89,6 @@ nsMsgNewsFactory::nsMsgNewsFactory(const nsCID &aClass,
 
 nsMsgNewsFactory::~nsMsgNewsFactory()   
 {
-	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
-  
 	PL_strfree(mClassName);
 	PL_strfree(mProgID);
 }   
