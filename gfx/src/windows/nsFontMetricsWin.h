@@ -86,10 +86,18 @@ typedef struct nsGlobalFont
   nsString*     name;
   LOGFONT       logFont;
   PRUint32*     map;
-  PRUint8       skip;
   FONTSIGNATURE signature;
   int           fonttype;
+  PRUint32      flags;
 } nsGlobalFont;
+
+// Bits used for nsGlobalFont.flags
+// If this bit is set, then the font is to be ignored
+#define NS_GLOBALFONT_SKIP      0x80000000L
+// If this bit is set, then the font is a TrueType font
+#define NS_GLOBALFONT_TRUETYPE  0x40000000L
+// If this bit is set, then the font is a Symbol font (SYMBOL_CHARSET)
+#define NS_GLOBALFONT_SYMBOL    0x20000000L
 
 class nsFontMetricsWin : public nsIFontMetrics
 {
