@@ -109,8 +109,6 @@ if (defined $::FORM{'dup_id'} && $::FORM{'knob'} eq "duplicate") {
 
 ValidateComment($::FORM{'comment'});
 
-$::FORM{'dontchange'} = '' unless exists $::FORM{'dontchange'};
-
 # If the bug(s) being modified have dependencies, validate them
 # and rebuild the list with the validated values.  This is important
 # because there are situations where validation changes the value
@@ -1204,22 +1202,21 @@ foreach my $id (@idlist) {
     SendSQL("select now()");
     $timestamp = FetchOneColumn();
 
-    if (UserInGroup(Param('timetrackinggroup'))) {
-        if ($::FORM{'work_time'} > 99999.99) {
-            ThrowUserError("value_out_of_range", {field => 'work_time'});
-        }
-        if (defined $::FORM{'comment'} || defined $::FORM{'work_time'}) {
-            if ($::FORM{'work_time'} != 0 && 
-                (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/)) {
-                ThrowUserError('comment_required');
-            } else {
-                AppendComment($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'},
-                              $::FORM{'commentprivacy'}, $timestamp, $::FORM{'work_time'});
-                if ($::FORM{'work_time'} != 0) {
-                    LogActivityEntry($id, "work_time", "", $::FORM{'work_time'},
-                                     $whoid, $timestamp);
-                    $bug_changed = 1;
-                }
+    if ($::FORM{'work_time'} > 99999.99) {
+        ThrowUserError("value_out_of_range", {field => 'work_time'});
+    }
+    if (defined $::FORM{'comment'} || defined $::FORM{'work_time'}) {
+        if ($::FORM{'work_time'} != 0 && 
+            (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/)) {
+        
+            ThrowUserError('comment_required');
+        } else {
+            AppendComment($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'},
+                $::FORM{'commentprivacy'}, $timestamp, $::FORM{'work_time'});
+            if ($::FORM{'work_time'} != 0) {
+                LogActivityEntry($id, "work_time", "", $::FORM{'work_time'},
+                                 $whoid, $timestamp);
+                $bug_changed = 1;
             }
         }
     }

@@ -164,7 +164,7 @@ sub GetBug {
          $bug->{'assignee_email'}) = FetchSQLData();
      }
     
-    $bug->{'open'} = $bug->{'exists'} && IsOpenedState($bug->{'status'});
+    $bug->{'open'} = IsOpenedState($bug->{'status'});
     $bug->{'dependencies'} = [];
     
     return $bug;
