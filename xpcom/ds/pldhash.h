@@ -235,7 +235,8 @@ typedef void
  * moved via moveEntry callbacks.
  */
 typedef const void *
-(* PR_CALLBACK PLDHashGetKey)    (PLDHashTable *table, PLDHashEntryHdr *entry);
+(* PR_CALLBACK PLDHashGetKey)    (PLDHashTable *table,
+                                      PLDHashEntryHdr *entry);
 
 /*
  * Compute the hash code for a given key to be looked up, added, or removed
