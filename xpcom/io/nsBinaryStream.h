@@ -42,7 +42,10 @@ private:
 
     // nsIBinaryOutputStream methods
     NS_DECL_NSIBINARYOUTPUTSTREAM
-    
+
+    // Call Write(), ensuring that all proffered data is written
+    nsresult WriteFully(const char *aBuf, PRUint32 aCount);
+
 protected:
     nsCOMPtr<nsIOutputStream> mOutputStream;
 };
