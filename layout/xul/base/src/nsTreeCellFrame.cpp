@@ -17,6 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+#include "nsIDOMElement.h"
 #include "nsINameSpaceManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsTreeCellFrame.h"
@@ -231,23 +232,25 @@ nsTreeCellFrame::HandleDoubleClickEvent(nsIPresContext& aPresContext,
 	  // Iterate up the chain to the row and then to the item.
 	  nsCOMPtr<nsIContent> pTreeItemContent;
 	  mContent->GetParent(*getter_AddRefs(pTreeItemContent));
+    nsCOMPtr<nsIDOMElement> pTreeItem( do_QueryInterface(pTreeItemContent) );
+    NS_ASSERTION(pTreeItem, "not a DOM element");
+    if (! pTreeItem)
+      return NS_ERROR_UNEXPECTED;
 	  
 	  // Take the tree item content and toggle the value of its open attribute.
-	  nsString attrValue;
-    nsCOMPtr<nsIAtom> kOpenAtom ( dont_AddRef(NS_NewAtom("open")) );
-    nsresult result = pTreeItemContent->GetAttribute(kNameSpaceID_None, kOpenAtom, attrValue);
+	  nsAutoString attrValue;
+    nsresult result = pTreeItem->GetAttribute("open", attrValue);
     attrValue.ToLowerCase();
-    PRBool isExpanded =  (result == NS_CONTENT_ATTR_NO_VALUE ||
-						 (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
+    PRBool isExpanded = (attrValue=="true");
     if (isExpanded)
 	  {
 		  // We're collapsing and need to remove frames from the flow.
-		  pTreeItemContent->UnsetAttribute(kNameSpaceID_None, kOpenAtom, PR_TRUE);
+		  pTreeItem->RemoveAttribute("open");
 	  }
 	  else
 	  {
 		  // We're expanding and need to add frames to the flow.
-		  pTreeItemContent->SetAttribute(kNameSpaceID_None, kOpenAtom, "true", PR_TRUE);
+		  pTreeItem->SetAttribute("open", "true");
 	  }
   }
   return NS_OK;
