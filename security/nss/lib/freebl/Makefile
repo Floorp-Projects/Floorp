@@ -72,6 +72,11 @@ ifneq ($(OS_ARCH),WINNT)
 endif
 endif
 
+ifeq ($(OS_ARCH),OSF1)
+    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_NO_MP_WORD
+    MPI_SRCS += mpvalpha.c
+endif
+
 ifeq ($(OS_ARCH),WINNT)
 ifneq ($(OS_TARGET),WIN16)
     ASFILES  = mpi_x86.asm
