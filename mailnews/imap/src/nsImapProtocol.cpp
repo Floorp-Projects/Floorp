@@ -7001,6 +7001,12 @@ NS_IMETHODIMP nsImapMockChannel::SetOwner(nsISupports * aPrincipal)
 // From nsIRequest
 ////////////////////////////////////////////////////////////////////////////////
 
+NS_IMETHODIMP nsImapMockChannel::GetName(PRUnichar* *result)
+{
+    NS_NOTREACHED("nsImapMockChannel::GetName");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsImapMockChannel::IsPending(PRBool *result)
 {
     *result = PR_TRUE;

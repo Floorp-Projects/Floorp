@@ -226,6 +226,13 @@ nsDataChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 // nsIRequest methods:
 
 NS_IMETHODIMP
+nsDataChannel::GetName(PRUnichar* *result)
+{
+    NS_NOTREACHED("nsDataChannel::GetName");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsDataChannel::IsPending(PRBool *result)
 {
     NS_NOTREACHED("nsDataChannel::IsPending");

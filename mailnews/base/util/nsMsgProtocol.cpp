@@ -598,6 +598,14 @@ nsMsgProtocol::GetSecurityInfo(nsISupports * *aSecurityInfo)
 // From nsIRequest
 ////////////////////////////////////////////////////////////////////////////////
 
+NS_IMETHODIMP nsMsgProtocol::GetName(PRUnichar* *result)
+{
+    if (m_channel)
+        return m_channel->GetName(result);
+    NS_NOTREACHED("nsMsgProtocol::GetName");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsMsgProtocol::IsPending(PRBool *result)
 {
     *result = PR_TRUE;

@@ -157,6 +157,12 @@ NS_IMPL_THREADSAFE_ISUPPORTS7(nsHTTPChannel,
 // nsIRequest methods:
 
 NS_IMETHODIMP
+nsHTTPChannel::GetName(PRUnichar* *result)
+{
+  return mRequest->GetName(result);
+}
+
+NS_IMETHODIMP
 nsHTTPChannel::IsPending(PRBool *result)
 {
   return mRequest->IsPending(result);

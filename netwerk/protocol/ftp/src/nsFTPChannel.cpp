@@ -135,6 +135,21 @@ nsFTPChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 // cross thread call.
 
 NS_IMETHODIMP
+nsFTPChannel::GetName(PRUnichar* *result)
+{
+    if (mProxyChannel)
+        return mProxyChannel->GetName(result);
+    nsresult rv;
+    nsXPIDLCString urlStr;
+    rv = mURL->GetSpec(getter_Copies(urlStr));
+    if (NS_FAILED(rv)) return rv;
+    nsString name;
+    name.AppendWithConversion(urlStr);
+    *result = name.ToNewUnicode();
+    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
 nsFTPChannel::IsPending(PRBool *result) {
     nsAutoLock lock(mLock);
     if (mProxyChannel)

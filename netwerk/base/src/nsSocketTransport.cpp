@@ -1507,6 +1507,18 @@ nsSocketTransport::GetSecurityInfo(nsISupports **info)
 // nsIRequest implementation...
 // --------------------------------------------------------------------------
 //
+
+NS_IMETHODIMP
+nsSocketTransport::GetName(PRUnichar* *result)
+{
+    nsString name;
+    name.AppendWithConversion(mHostName);
+    name.AppendWithConversion(":");
+    name.AppendInt(mPort);
+    *result = name.ToNewUnicode();
+    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
 NS_IMETHODIMP
 nsSocketTransport::IsPending(PRBool *result)
 {

@@ -479,6 +479,12 @@ NS_IMETHODIMP nsMailtoChannel::SetOwner(nsISupports * aPrincipal)
 // From nsIRequest
 ////////////////////////////////////////////////////////////////////////////////
 
+NS_IMETHODIMP nsMailtoChannel::GetName(PRUnichar* *result)
+{
+    NS_NOTREACHED("nsMailtoChannel::GetName");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP nsMailtoChannel::IsPending(PRBool *result)
 {
     *result = PR_TRUE;

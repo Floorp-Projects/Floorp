@@ -164,6 +164,19 @@ nsResChannel::Substitutions::Next(char* *result)
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
+nsResChannel::GetName(PRUnichar* *result)
+{
+    nsresult rv;
+    nsXPIDLCString urlStr;
+    rv = mResourceURI->GetSpec(getter_Copies(urlStr));
+    if (NS_FAILED(rv)) return rv;
+    nsString name;
+    name.AppendWithConversion(urlStr);
+    *result = name.ToNewUnicode();
+    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
 nsResChannel::IsPending(PRBool *result)
 {
     if (mResolvedChannel)

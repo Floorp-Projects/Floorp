@@ -168,6 +168,15 @@ nsFileTransport::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
+nsFileTransport::GetName(PRUnichar* *result)
+{
+    nsString name;
+    name.AppendWithConversion(mStreamName);
+    *result = name.ToNewUnicode();
+    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
 nsFileTransport::IsPending(PRBool *result)
 {
     *result = mXferState != CLOSED;

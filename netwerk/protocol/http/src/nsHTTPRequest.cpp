@@ -115,6 +115,22 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsHTTPRequest, nsIRequest)
 // nsIRequest methods:
 
 NS_IMETHODIMP
+nsHTTPRequest::GetName(PRUnichar* *result)
+{
+    if (mPipelinedRequest)
+        return mPipelinedRequest->GetName(result);
+
+    nsresult rv;
+    nsXPIDLCString urlStr;
+    rv = mURI->GetSpec(getter_Copies(urlStr));
+    if (NS_FAILED(rv)) return rv;
+    nsString name;
+    name.AppendWithConversion(urlStr);
+    *result = name.ToNewUnicode();
+    return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
 nsHTTPRequest::IsPending(PRBool *result)
 {
     nsresult rv = NS_OK;
@@ -947,6 +963,16 @@ nsHTTPPipelinedRequest::RestartRequest(PRUint32 aType)
         }
     }
     return rval;
+}
+
+nsresult
+nsHTTPPipelinedRequest::GetName(PRUnichar* *result)
+{
+    if (mTransport)
+        return mTransport->GetName(result);
+
+    NS_NOTREACHED("nsHTTPPipelinedRequest::GetName");
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult

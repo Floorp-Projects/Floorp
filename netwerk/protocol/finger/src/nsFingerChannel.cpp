@@ -120,6 +120,13 @@ nsFingerChannel::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 // nsIRequest methods:
 
 NS_IMETHODIMP
+nsFingerChannel::GetName(PRUnichar* *result)
+{
+    NS_NOTREACHED("nsFingerChannel::GetName");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsFingerChannel::IsPending(PRBool *result)
 {
     NS_NOTREACHED("nsFingerChannel::IsPending");
