@@ -199,6 +199,7 @@ viewer:res:language.properties
 viewer:res:entityTables:*
 viewer:defaults:wallet:SchemaConcat.tbl
 viewer:defaults:wallet:FieldSchema.tbl
+viewer:defaults:wallet:VcardSchema.tbl
 viewer:defaults:wallet:DistinguishedSchema.tbl
 viewer:defaults:wallet:SchemaStrings.tbl
 viewer:defaults:wallet:PositionalSchema.tbl

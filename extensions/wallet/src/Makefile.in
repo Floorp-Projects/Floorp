@@ -42,6 +42,7 @@ CPPSRCS		= \
 DEFAULTS_FILES	= \
 		$(srcdir)/DistinguishedSchema.tbl \
 		$(srcdir)/FieldSchema.tbl \
+		$(srcdir)/VcardSchema.tbl \
 		$(srcdir)/SchemaConcat.tbl \
 		$(srcdir)/SchemaStrings.tbl \
 		$(srcdir)/PositionalSchema.tbl \

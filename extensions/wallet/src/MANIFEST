@@ -1,4 +1,5 @@
 FieldSchema.tbl
+VcardSchema.tbl
 SchemaConcat.tbl
 DistinguishedSchema.tbl
 SchemaStrings.tbl

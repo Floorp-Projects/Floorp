@@ -77,6 +77,7 @@ clobber::
 	rm -f $(DIST)\lib\$(DLLNAME).lib
 	rm -f $(DIST)\bin\defaults\wallet\DistinguishedSchema.tbl
 	rm -f $(DIST)\bin\defaults\wallet\FieldSchema.tbl
+	rm -f $(DIST)\bin\defaults\wallet\VcardSchema.tbl
 	rm -f $(DIST)\bin\defaults\wallet\SchemaConcat.tbl
 	rm -f $(DIST)\bin\defaults\wallet\SchemaStrings.tbl
 	rm -f $(DIST)\bin\defaults\wallet\PositionalSchema.tbl
@@ -86,6 +87,7 @@ install:: $(DLL)
 		$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 		$(MAKE_INSTALL) DistinguishedSchema.tbl $(DIST)\bin\defaults\wallet
 		$(MAKE_INSTALL) FieldSchema.tbl $(DIST)\bin\defaults\wallet
+		$(MAKE_INSTALL) VcardSchema.tbl $(DIST)\bin\defaults\wallet
 		$(MAKE_INSTALL) SchemaConcat.tbl $(DIST)\bin\defaults\wallet
 		$(MAKE_INSTALL) SchemaStrings.tbl $(DIST)\bin\defaults\wallet
 		$(MAKE_INSTALL) PositionalSchema.tbl $(DIST)\bin\defaults\wallet

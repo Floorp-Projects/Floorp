@@ -276,6 +276,7 @@ public:
 wallet_HelpMac * helpMac;
 
 PRIVATE nsVoidArray * wallet_FieldToSchema_list=0;
+PRIVATE nsVoidArray * wallet_VcardToSchema_list=0;
 PRIVATE nsVoidArray * wallet_SchemaToValue_list=0;
 PRIVATE nsVoidArray * wallet_SchemaConcat_list=0;
 PRIVATE nsVoidArray * wallet_SchemaStrings_list=0;
@@ -980,7 +981,8 @@ wallet_WriteToList(
   wallet_MapElement * mapElement;
   if (list == wallet_FieldToSchema_list || list == wallet_SchemaStrings_list ||
       list == wallet_PositionalSchema_list || list == wallet_StateSchema_list ||
-      list == wallet_SchemaConcat_list  || list == wallet_DistinguishedSchema_list) {
+      list == wallet_SchemaConcat_list  || list == wallet_DistinguishedSchema_list ||
+      list == wallet_VcardToSchema_list) {
     mapElement = wallet_AllocateMapElement();
   } else {
     mapElement = new wallet_MapElement;
@@ -1286,6 +1288,7 @@ char* schemaValueFileName = nsnull;
 const char URLFileName[] = "URL.tbl";
 const char allFileName[] = "wallet.tbl";
 const char fieldSchemaFileName[] = "FieldSchema.tbl";
+const char vcardSchemaFileName[] = "VcardSchema.tbl";
 const char schemaConcatFileName[] = "SchemaConcat.tbl";
 const char schemaStringsFileName[] = "SchemaStrings.tbl";
 const char positionalSchemaFileName[] = "PositionalSchema.tbl";
@@ -2420,7 +2423,12 @@ wallet_GetPrefills(
           nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
           if (element) {
             nsAutoString vcard; vcard.AssignWithConversion("VCARD_NAME");
-            result = element->GetAttribute(vcard, schema);
+            nsAutoString vcardValue;
+            result = element->GetAttribute(vcard, vcardValue);
+            if (NS_OK == result) {
+              nsVoidArray* dummy;
+              wallet_ReadFromList(vcardValue, schema, dummy, wallet_VcardToSchema_list, PR_FALSE);
+            }
           }
         }
 
@@ -2520,6 +2528,7 @@ if (schema.Length()) {
 PUBLIC void
 Wallet_ReleaseAllLists() {
     wallet_Clear(&wallet_FieldToSchema_list); /* otherwise we will duplicate the list */
+    wallet_Clear(&wallet_VcardToSchema_list); /* otherwise we will duplicate the list */
     wallet_Clear(&wallet_SchemaConcat_list); /* otherwise we will duplicate the list */
     wallet_Clear(&wallet_SchemaStrings_list); /* otherwise we will duplicate the list */
     wallet_Clear(&wallet_PositionalSchema_list); /* otherwise we will duplicate the list */
@@ -2561,6 +2570,7 @@ wallet_Initialize(PRBool unlockDatabase=PR_TRUE) {
     wallet_ReadFromFile(distinguishedSchemaFileName, wallet_DistinguishedSchema_list, PR_FALSE);
 #endif
     wallet_ReadFromFile(fieldSchemaFileName, wallet_FieldToSchema_list, PR_FALSE);
+    wallet_ReadFromFile(vcardSchemaFileName, wallet_VcardToSchema_list, PR_FALSE);
     wallet_ReadFromFile(schemaConcatFileName, wallet_SchemaConcat_list, PR_FALSE);
     wallet_ReadFromFile(schemaStringsFileName, wallet_SchemaStrings_list, PR_FALSE, BY_LENGTH);
     wallet_ReadFromFile(positionalSchemaFileName, wallet_PositionalSchema_list, PR_FALSE);
@@ -2604,6 +2614,9 @@ wallet_Initialize(PRBool unlockDatabase=PR_TRUE) {
 #if DEBUG
 //    fprintf(stdout,"Field to Schema table \n");
 //    wallet_Dump(wallet_FieldToSchema_list);
+
+//    fprintf(stdout,"Vcard to Schema table \n");
+//    wallet_Dump(wallet_VcardToSchema_list);
 
 //    fprintf(stdout,"SchemaConcat table \n");
 //    wallet_Dump(wallet_SchemaConcat_list);
@@ -3539,7 +3552,12 @@ wallet_CaptureInputElement(nsIDOMNode* elementNode, nsIDocument* doc) {
           nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
           if (element) {
             nsAutoString vcardName; vcardName.AssignWithConversion("VCARD_NAME");
-            result = element->GetAttribute(vcardName, schema);
+            nsAutoString vcardValue;
+            result = element->GetAttribute(vcardName, vcardValue);
+            if (NS_OK == result) {
+              nsVoidArray* dummy;
+              wallet_ReadFromList(vcardValue, schema, dummy, wallet_VcardToSchema_list, PR_FALSE);
+            }
           }
 
 #ifdef IgnoreFieldNames
@@ -3598,7 +3616,12 @@ wallet_CaptureSelectElement(nsIDOMNode* elementNode, nsIDocument* doc) {
                 nsCOMPtr<nsIDOMElement> element = do_QueryInterface(elementNode);
                 if (element) {
                   nsAutoString vcardName; vcardName.AssignWithConversion("VCARD_NAME");
-                  result = element->GetAttribute(vcardName, schema);
+                  nsAutoString vcardValue;
+                  result = element->GetAttribute(vcardName, vcardValue);
+                  if (NS_OK == result) {
+                    nsVoidArray* dummy;
+                    wallet_ReadFromList(vcardValue, schema, dummy, wallet_VcardToSchema_list, PR_FALSE);
+                  }
                 }
 
 #ifdef IgnoreFieldNames
