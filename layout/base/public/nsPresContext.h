@@ -121,6 +121,9 @@ public:
 
   /**
    * Access compatibility mode for this context
+   *
+   * All users must explicitly set the compatibility mode rather than
+   * relying on a default.
    */
   NS_IMETHOD GetCompatibilityMode(nsCompatibility* aModeResult) = 0;
   NS_IMETHOD SetCompatibilityMode(nsCompatibility aMode) = 0;
