@@ -9,7 +9,7 @@
   <!-- :::/ widgets \ ::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
 
   <binding id="toolbar-menu-button" display="xul:menu"
-           extends="chrome://global/content/widgets/toolbarbutton.xml#menu-button">
+           extends="chrome://global/content/bindings/toolbarbutton.xml#menu-button">
     <content>
       <children includes="observes|template|menupopup|tooltip"/>
       <xul:stack class="box-inherit toolbarbutton-menubutton-stack" flex="1">

@@ -7,8 +7,6 @@ toolkit.jar:
 * content/mozapps/downloads/editAction.xul                  (downloads/content/editAction.xul)
 * content/mozapps/downloads/editAction.js                   (downloads/content/editAction.js)
   content/mozapps/contents.rdf                              (contents-content.rdf)
-  content/global/bindings/splitter.xml                      (compat/content/splitter.xml)
-  content/global/bindings/tree.xml                          (compat/content/tree.xml)
 
 en-US.jar:
 * locale/en-US/mozapps/downloads/unknownContentType.properties (downloads/locale/unknownContentType.properties)

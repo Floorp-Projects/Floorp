@@ -12,7 +12,7 @@
   </binding>
 
   <binding id="tabbox" display="xul:box"
-           extends="chrome://global/content/widgets/tabbox.xml#tab-base">
+           extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <implementation implements="nsIAccessibleProvider">
       <property name="accessible">
         <getter>
@@ -175,7 +175,7 @@
   </binding>
 
   <binding id="tabs" display="xul:box"
-           extends="chrome://global/content/widgets/tabbox.xml#tab-base">
+           extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <content>
       <xul:spacer class="tabs-left"/>
       <children/>
@@ -359,7 +359,7 @@
   </binding>
   
   <binding id="tabs-closebutton" 
-           extends="chrome://global/content/widgets/tabbox.xml#tabs">
+           extends="chrome://global/content/bindings/tabbox.xml#tabs">
     <content>
       <xul:hbox flex="1" style="min-width: 1px;">
         <children/>
@@ -375,7 +375,7 @@
   </binding>
   
   <binding id="tabpanels"
-           extends="chrome://global/content/widgets/tabbox.xml#tab-base">
+           extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <implementation implements="nsIAccessibleProvider">
       <property name="accessible">
         <getter>
@@ -433,7 +433,7 @@
   </binding>
 
   <binding id="tab" display="xul:button"
-           extends="chrome://global/content/widgets/tabbox.xml#tab-base">
+           extends="chrome://global/content/bindings/tabbox.xml#tab-base">
     <content>
       <xul:image class="tab-icon" xbl:inherits="validate,src=image"/>
       <xul:label class="tab-text" xbl:inherits="value=label,accesskey,crop,disabled" flex="1"/>

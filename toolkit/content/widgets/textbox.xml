@@ -109,7 +109,7 @@
     </handlers>    
   </binding>
 
-  <binding id="timed-textbox" extends="chrome://global/content/widgets/textbox.xml#textbox">
+  <binding id="timed-textbox" extends="chrome://global/content/bindings/textbox.xml#textbox">
     <implementation>
       <field name="_timer">null</field>
       <property name="timeout"
@@ -156,7 +156,7 @@
     </handlers>
   </binding>
 
-  <binding id="textarea" extends="chrome://global/content/widgets/textbox.xml#textbox">
+  <binding id="textarea" extends="chrome://global/content/bindings/textbox.xml#textbox">
     <content>
       <xul:hbox class="textbox-input-box" flex="1" xbl:inherits="context">
         <html:textarea class="textbox-textarea" flex="1" anonid="input"

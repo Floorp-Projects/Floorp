@@ -11,7 +11,7 @@
     </resources>
   </binding>
 
-  <binding id="groupbox" extends="chrome://global/content/widgets/groupbox.xml#groupbox-base">
+  <binding id="groupbox" extends="chrome://global/content/bindings/groupbox.xml#groupbox-base">
     <content>
       <xul:hbox class="groupbox-title" align="center" pack="start">
         <children includes="caption"/>
@@ -33,7 +33,7 @@
     </implementation>
   </binding>
 
-  <binding id="caption" extends="chrome://global/content/widgets/general.xml#basetext">
+  <binding id="caption" extends="chrome://global/content/bindings/general.xml#basetext">
     <resources>
       <stylesheet src="chrome://global/skin/groupbox.css"/>
     </resources>

@@ -13,7 +13,7 @@
   </binding>
 
   <binding id="menulist" display="xul:menu" 
-           extends="chrome://global/content/widgets/menulist.xml#menulist-base">
+           extends="chrome://global/content/bindings/menulist.xml#menulist-base">
     <content sizetopopup="pref">
       <xul:hbox class="menulist-label-box" flex="1">
         <xul:image class="menulist-icon" xbl:inherits="src"/>
@@ -259,7 +259,7 @@
     </implementation>  
   </binding>
 
-  <binding id="menulist-editable" extends="chrome://global/content/widgets/menulist.xml#menulist">
+  <binding id="menulist-editable" extends="chrome://global/content/bindings/menulist.xml#menulist">
     <content sizetopopup="pref">
       <xul:hbox class="menulist-editable-box textbox-input-box" xbl:inherits="context" flex="1">
         <html:input class="menulist-editable-input" flex="1" anonid="input" allowevents="true"
@@ -441,7 +441,7 @@
   </binding>
   
   <binding id="menulist-compact" display="xul:menu" 
-           extends="chrome://global/content/widgets/menulist.xml#menulist">
+           extends="chrome://global/content/bindings/menulist.xml#menulist">
     <content sizetopopup="false">
       <xul:dropmarker class="menulist-dropmarker" type="menu"/>
       <xul:image class="menulist-icon" xbl:inherits="src"/>

@@ -11,7 +11,7 @@
     </resources>
   </binding>
 
-  <binding id="tree" extends="chrome://global/content/widgets/tree.xml#tree-base">
+  <binding id="tree" extends="chrome://global/content/bindings/tree.xml#tree-base">
     <content>
       <children includes="treecols"/>
       <xul:treerows class="tree-rows" flex="1">
@@ -641,7 +641,7 @@
     </handlers>    
   </binding>
 
-  <binding id="treecols" extends="chrome://global/content/widgets/tree.xml#tree-base">
+  <binding id="treecols" extends="chrome://global/content/bindings/tree.xml#tree-base">
     <content>
       <children includes="treecol|splitter"/>
       <xul:treecolpicker class="treecol-image" fixed="true" ordinal="2147483647" xbl:inherits="tooltiptext=pickertooltiptext"/>
@@ -658,7 +658,7 @@
     </implementation>
   </binding>
 
-  <binding id="treerows" extends="chrome://global/content/widgets/tree.xml#tree-base">
+  <binding id="treerows" extends="chrome://global/content/bindings/tree.xml#tree-base">
     <content>
       <xul:hbox flex="1" class="tree-bodybox">
         <children/>
@@ -681,7 +681,7 @@
     </handlers>
   </binding>
 
-  <binding id="treebody" extends="chrome://global/content/widgets/tree.xml#tree-base">
+  <binding id="treebody" extends="chrome://global/content/bindings/tree.xml#tree-base">
     <implementation>
       <constructor>
         if ("_ensureColumnOrder" in this.parentNode)
@@ -812,7 +812,7 @@
     </handlers>
   </binding>
 
-  <binding id="treecol-base" extends="chrome://global/content/widgets/tree.xml#tree-base">
+  <binding id="treecol-base" extends="chrome://global/content/bindings/tree.xml#tree-base">
     <implementation>
       <constructor>
         this.parentNode.parentNode._columnsDirty = true;
@@ -978,7 +978,7 @@
     </handlers>
   </binding>
 
-  <binding id="treecol" extends="chrome://global/content/widgets/tree.xml#treecol-base">
+  <binding id="treecol" extends="chrome://global/content/bindings/tree.xml#treecol-base">
     <content>
       <xul:label class="treecol-text" xbl:inherits="crop,value=label" flex="1" crop="right"/>
       <xul:image class="treecol-sortdirection" xbl:inherits="sortDirection"/>
@@ -999,7 +999,7 @@
     </handlers>
   </binding>
 
-  <binding id="treecol-image" extends="chrome://global/content/widgets/tree.xml#treecol-base">
+  <binding id="treecol-image" extends="chrome://global/content/bindings/tree.xml#treecol-base">
     <content>
       <xul:image class="treecol-icon" xbl:inherits="src"/>
     </content>
@@ -1009,7 +1009,7 @@
   </binding>
 
   <binding id="columnpicker" display="xul:button"
-           extends="chrome://global/content/widgets/tree.xml#tree-base">
+           extends="chrome://global/content/bindings/tree.xml#tree-base">
     <content>
       <xul:image class="tree-columnpicker-icon"/>
       <xul:menupopup anonid="popup"/>

@@ -9,7 +9,7 @@
   <!-- :::/ widgets \ ::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
 
   <binding id="toolbar-menu-button" display="xul:menu"
-           extends="chrome://global/content/widgets/toolbarbutton.xml#menu-button">
+           extends="chrome://global/content/bindings/toolbarbutton.xml#menu-button">
     <content>
       <children includes="observes|template|menupopup|tooltip"/>
 	<xul:stack class="box-inherit toolbarbutton-menubutton-stack" flex="1">
@@ -29,7 +29,7 @@
     </content>
   </binding>
 
-  <binding id="bm-toolbarbutton" display="xul:button"            extends="chrome://global/content/widgets/toolbarbutton.xml#toolbarbutton">     <resources>       <stylesheet src="chrome://global/skin/toolbarbutton.css"/>     </resources>          <content>       <children includes="observes|template|menupopup|tooltip"/>       <xul:spacer class="bookmark-image-left" xbl:inherits="accesskey,crop,toolbarmode,buttonstyle"/>
+  <binding id="bm-toolbarbutton" display="xul:button"            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton">     <resources>       <stylesheet src="chrome://global/skin/toolbarbutton.css"/>     </resources>          <content>       <children includes="observes|template|menupopup|tooltip"/>       <xul:spacer class="bookmark-image-left" xbl:inherits="accesskey,crop,toolbarmode,buttonstyle"/>
 	<xul:label class="toolbarbutton-text" crop="right" flex="1"                  xbl:inherits="value=label,accesskey,crop,toolbarmode,buttonstyle"/>
 	<xul:spacer class="bookmark-image-right" xbl:inherits="accesskey,crop,toolbarmode,buttonstyle"/>     </content>   </binding>
 </bindings>

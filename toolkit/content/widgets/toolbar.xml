@@ -24,7 +24,7 @@
     </implementation>
   </binding>
   
-  <binding id="toolbox" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base">  
+  <binding id="toolbox" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">  
     <implementation>
       <field name="palette">
         null
@@ -82,7 +82,7 @@
     </implementation>
   </binding>
   
-  <binding id="toolbar" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base">
+  <binding id="toolbar" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base">
     <implementation>
       <field name="firstPermanentChild">
         null
@@ -267,7 +267,7 @@
     </implementation>
   </binding>
 
-  <binding id="menubar" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base" display="xul:menubar">
+  <binding id="menubar" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base" display="xul:menubar">
     <implementation implements="nsIAccessibleProvider">
       <property name="accessible">
         <getter>
@@ -317,9 +317,9 @@
     </handlers>
   </binding>
 
-  <binding id="toolbardecoration" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base"/>
+  <binding id="toolbardecoration" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base"/>
 
-  <binding id="toolbarpaletteitem" extends="chrome://global/content/widgets/toolbar.xml#toolbar-base" display="xul:button">
+  <binding id="toolbarpaletteitem" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base" display="xul:button">
     <content>
       <xul:hbox class="toolbarpaletteitem-box" flex="1" xbl:inherits="type,place">
         <children/>
@@ -327,7 +327,7 @@
     </content>
   </binding>
     
-  <binding id="toolbarpaletteitem-palette" extends="chrome://global/content/widgets/toolbar.xml#toolbarpaletteitem">
+  <binding id="toolbarpaletteitem-palette" extends="chrome://global/content/bindings/toolbar.xml#toolbarpaletteitem">
     <content>
       <xul:hbox class="toolbarpaletteitem-box" xbl:inherits="type,place">
         <children/>

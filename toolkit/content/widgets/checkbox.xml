@@ -5,13 +5,13 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="checkbox" extends="chrome://global/content/widgets/checkbox.xml#checkbox-baseline">
+  <binding id="checkbox" extends="chrome://global/content/bindings/checkbox.xml#checkbox-baseline">
     <resources>
       <stylesheet src="chrome://global/skin/checkbox.css"/>
     </resources>
   </binding>
 
-  <binding id="checkbox-baseline" extends="chrome://global/content/widgets/general.xml#basetext">
+  <binding id="checkbox-baseline" extends="chrome://global/content/bindings/general.xml#basetext">
     <content>
       <xul:image class="checkbox-check" xbl:inherits="checked,disabled"/>
       <xul:hbox class="checkbox-label-box" flex="1">

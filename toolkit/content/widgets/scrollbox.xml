@@ -11,7 +11,7 @@
     </resources>
   </binding>
 
-  <binding id="scrollbox" extends="chrome://global/content/widgets/scrollbox.xml#scrollbox-base">
+  <binding id="scrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
     <content>
       <xul:box class="box-inherit scrollbox-innerbox" xbl:inherits="orient,align,pack,dir">
         <children/>
@@ -19,7 +19,7 @@
     </content>
   </binding>
 
-  <binding id="arrowscrollbox" extends="chrome://global/content/widgets/scrollbox.xml#scrollbox-base">
+  <binding id="arrowscrollbox" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
     <content>
       <xul:autorepeatbutton class="autorepeatbutton-up" collapsed="true"
                             oncommand="this.parentNode.scrollByIndex(-1); event.preventBubble();"/>
@@ -63,7 +63,7 @@
     </handlers>
   </binding>
 
-  <binding id="autorepeatbutton" extends="chrome://global/content/widgets/scrollbox.xml#scrollbox-base">
+  <binding id="autorepeatbutton" extends="chrome://global/content/bindings/scrollbox.xml#scrollbox-base">
     <content>
       <xul:image class="autorepeatbutton-icon"/>
     </content>
