@@ -80,6 +80,7 @@ public:
   static PRBool IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent);
   
   static PRBool IsLeafNode(nsIDOMNode *aNode);
+  static PRBool SupportsAlignAttr(nsIDOMNode *aNode);
 
 };
 
