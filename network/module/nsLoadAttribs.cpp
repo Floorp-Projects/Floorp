@@ -21,6 +21,10 @@
 #include "nsILoadAttribs.h"
 #include "prtypes.h"
 
+#if defined(XP_PC)
+#include <windows.h>  // Needed for Interlocked APIs defined in nsISupports.h
+#endif /* XP_PC */
+
 
 // nsLoadAttribs definition.
 class nsLoadAttribs : public nsILoadAttribs {
