@@ -303,10 +303,10 @@ nsBinaryInputStream::ReadStringZ(char* *aString)
         rv = Read(&c, 1, &actualBytesRead);
         if (NS_FAILED(rv) || actualBytesRead != 1)
             return NS_ERROR_FAILURE;
-        if (c)
-            result += c;
-        else
+        if (!c)
             break;
+
+        result.AppendWithConversion(c);
     }
 
     *aString = result.ToNewCString();
