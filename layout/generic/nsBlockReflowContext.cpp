@@ -314,8 +314,10 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
                            (const nsStyleStruct*&)display);
   if ((eStyleUnit_Auto == widthUnit) &&
       ((NS_STYLE_FLOAT_LEFT == display->mFloats) ||
-       (NS_STYLE_FLOAT_RIGHT == display->mFloats)))
-  {
+       (NS_STYLE_FLOAT_RIGHT == display->mFloats))) {
+    // Construct the reflow state using the ctor that explicitly
+    // constrains the containing block's width and height to the
+    // available width and height.
     nsHTMLReflowState autoReflowState(mPresContext, mOuterReflowState, aFrame,
                                       availSpace, aSpace.width, aSpace.height);
     autoReflowState.reason = reason;
@@ -325,8 +327,10 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
                        aComputedOffsets,
                        aFrameReflowStatus);
   }
-  else
-  {
+  else {
+    // Construct the reflow state using the ctor that will use the
+    // containing block's computed width and height (or handle derive
+    // appropriate values for an absolutely positioned frame).
     nsHTMLReflowState normalReflowState(mPresContext, mOuterReflowState, aFrame,
                                         availSpace, reason);
     rv = DoReflowBlock(normalReflowState, reason, aFrame, aSpace, 

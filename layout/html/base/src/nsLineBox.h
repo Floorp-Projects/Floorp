@@ -67,6 +67,9 @@ public:
   // the containing block frame.
   nsRect mCombinedArea;
 
+  // The max element size for the floater.
+  nscoord mMaxElementWidth;
+
 protected:
   nsFloaterCache* mNext;
 

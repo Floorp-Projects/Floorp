@@ -43,6 +43,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   : mBlock(aFrame),
     mPresContext(aPresContext),
     mReflowState(aReflowState),
+    mLastFloaterY(0),
     mNextRCFrame(nsnull),
     mPrevBottomMargin(0),
     mLineNumber(0),
@@ -93,18 +94,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     else if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMaxWidth) {
       // Choose a width based on the content (shrink wrap width) up
       // to the maximum width
-      // Part 2 of a possible fix for 38157
-#ifdef FIX_BUG_38157
-      const nsMargin& margin = Margin();
-      nscoord availContentWidth = aReflowState.availableWidth;
-      if (NS_UNCONSTRAINEDSIZE != availContentWidth) {
-        availContentWidth -= (borderPadding.left + borderPadding.right) +
-                             (margin.left + margin.right);
-      }       
-      mContentArea.width = PR_MIN(aReflowState.mComputedMaxWidth, availContentWidth);
-#else
       mContentArea.width = aReflowState.mComputedMaxWidth;
-#endif
       SetFlag(BRS_SHRINKWRAPWIDTH, PR_TRUE);
     }
     else {
@@ -606,6 +596,7 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
       }
 #endif
       mSpaceManager->AddRectRegion(floater, fc->mRegion);
+      mLastFloaterY = fc->mRegion.y;
       fc = fc->Next();
     }
 #ifdef DEBUG
@@ -702,13 +693,9 @@ nsBlockReflowState::AddFloater(nsLineLayout& aLineLayout,
     nscoord dy = oy - mSpaceManagerY;
     mSpaceManager->Translate(-dx, -dy);
 
-    // Reflow the floater
-    mBlock->ReflowFloater(*this, aPlaceholder, fc->mCombinedArea,
-                          fc->mMargins, fc->mOffsets);
-
     // And then place it
     PRBool isLeftFloater;
-    PlaceFloater(fc, &isLeftFloater);
+    FlowAndPlaceFloater(fc, &isLeftFloater);    
 
     // Pass on updated available space to the current inline reflow engine
     GetAvailableSpace();
@@ -907,8 +894,8 @@ nsBlockReflowState::CanPlaceFloater(const nsRect& aFloaterRect,
 }
 
 void
-nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
-                                 PRBool* aIsLeftFloater)
+nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
+                                        PRBool* aIsLeftFloater)
 {
   // Save away the Y coordinate before placing the floater. We will
   // restore mY at the end after placing the floater. This is
@@ -916,9 +903,14 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
   // placement are for the floater only, not for any non-floating
   // content.
   nscoord saveY = mY;
+
+  // Grab the compatibility mode
+  nsCompatibility mode;
+  mPresContext->GetCompatibilityMode(&mode);
+
   nsIFrame* floater = aFloaterCache->mPlaceholder->GetOutOfFlowFrame();
 
-  // Get the type of floater
+  // Grab the floater's display information
   const nsStyleDisplay* floaterDisplay;
   const nsStylePosition* floaterPosition;
   floater->GetStyleData(eStyleStruct_Display,
@@ -926,58 +918,71 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
   floater->GetStyleData(eStyleStruct_Position,
                         (const nsStyleStruct*&)floaterPosition);
 
-  // See if the floater should clear any preceeding floaters...
-  if (NS_STYLE_CLEAR_NONE != floaterDisplay->mBreakType) {
-    ClearFloaters(mY, floaterDisplay->mBreakType);
-  }
-  else {
-    // Get the band of available space
-    GetAvailableSpace();
-  }
-
-  // Get the floaters bounding box and margin information
+  // This will hold the floater's geometry when we've found a place
+  // for it to live.
   nsRect region;
-  floater->GetRect(region);
 
-  // Adjust the floater size by its margin. That's the area that will
-  // impact the space manager.
-  region.width += aFloaterCache->mMargins.left + aFloaterCache->mMargins.right;
-  region.height += aFloaterCache->mMargins.top + aFloaterCache->mMargins.bottom;
+  // Advance mY to mLastFloaterY (if it's not past it already) to
+  // enforce 9.5.1 rule [2]; i.e., make sure that a float isn't
+  // ``above'' another float that preceded it in the flow.
+  mY = NS_MAX(mLastFloaterY, mY);
 
-  // Find a place to place the floater. The CSS2 spec doesn't want
-  // floaters overlapping each other or sticking out of the containing
-  // block if possible (CSS2 spec section 9.5.1, see the rule list).
-  NS_ASSERTION((NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) ||
-               (NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats),
-               "invalid float type");
-
-  // While there is not enough room for the floater, clear past other
-  // floaters until there is room (or the band is not impacted by a
-  // floater).
-  // 
-  // Note: The CSS2 spec says that floaters should be placed as high
-  // as possible.
-  //
-#ifdef FIX_BUG_37657
-  // Also note that in backwards compatibility mode, we skip this step
-  // for tables, since in old browsers, floating tables are horizontally
-  // stacked regardless of available space.  (See bug 43086 about
-  // tables vs. non-tables.)
-  nsCompatibility mode;
-  mPresContext->GetCompatibilityMode(&mode);
-  if ((eCompatibility_NavQuirks != mode) ||
-      (NS_STYLE_DISPLAY_TABLE != floaterDisplay->mDisplay)) {
-    while (!CanPlaceFloater(region, floaterDisplay->mFloats)) {
-      mY += mAvailSpaceRect.height;
+  while (1) {
+    // See if the floater should clear any preceeding floaters...
+    if (NS_STYLE_CLEAR_NONE != floaterDisplay->mBreakType) {
+      ClearFloaters(mY, floaterDisplay->mBreakType);
+    }
+    else {
+      // Get the band of available space
       GetAvailableSpace();
     }
-  }
-#else
-  while (!CanPlaceFloater(region, floaterDisplay->mFloats)) {
-    mY += mAvailSpaceRect.height;
-    GetAvailableSpace();
-  }
+
+    // Reflow the floater
+    mBlock->ReflowFloater(*this, aFloaterCache->mPlaceholder, aFloaterCache->mCombinedArea,
+                          aFloaterCache->mMargins, aFloaterCache->mOffsets,
+                          aFloaterCache->mMaxElementWidth);
+
+    // Get the floaters bounding box and margin information
+    floater->GetRect(region);
+
+#ifdef DEBUG
+    if (nsBlockFrame::gNoisyReflow) {
+      nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
+      printf("flowed floater: ");
+      nsFrame::ListTag(stdout, floater);
+      printf(" (%d,%d,%d,%d), max-element-width=%d\n",
+             region.x, region.y, region.width, region.height,
+             aFloaterCache->mMaxElementWidth);
+    }
 #endif
+
+    // Adjust the floater size by its margin. That's the area that will
+    // impact the space manager.
+    region.width += aFloaterCache->mMargins.left + aFloaterCache->mMargins.right;
+    region.height += aFloaterCache->mMargins.top + aFloaterCache->mMargins.bottom;
+
+    // Find a place to place the floater. The CSS2 spec doesn't want
+    // floaters overlapping each other or sticking out of the containing
+    // block if possible (CSS2 spec section 9.5.1, see the rule list).
+    NS_ASSERTION((NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) ||
+                 (NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats),
+                 "invalid float type");
+
+    // In backwards compatibility mode, we don't bother to see if a
+    // floated table can ``really'' fit: in old browsers, floating
+    // tables are horizontally stacked regardless of available space.
+    // (See bug 43086 about tables vs. non-tables.)
+    if ((eCompatibility_NavQuirks == mode) &&
+        (NS_STYLE_DISPLAY_TABLE == floaterDisplay->mDisplay))
+      break;
+
+    // Can the floater fit here?
+    if (CanPlaceFloater(region, floaterDisplay->mFloats))
+        break;
+
+    // Nope. Advance to the next band.
+    mY += mAvailSpaceRect.height;
+  }
 
   // Assign an x and y coordinate to the floater. Note that the x,y
   // coordinates are computed <b>relative to the translation in the
@@ -1082,6 +1087,9 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
     nsBlockFrame::CombineRects(combinedArea, mFloaterCombinedArea);
   }
 
+  // Remember the y-coordinate of the floater we've just placed
+  mLastFloaterY = mY;
+
   // Now restore mY
   mY = saveY;
 
@@ -1091,7 +1099,7 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
     floater->GetRect(r);
     nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
     printf("placed floater: ");
-    ((nsFrame*)floater)->ListTag(stdout);
+    nsFrame::ListTag(stdout, floater);
     printf(" %d,%d,%d,%d\n", r.x, r.y, r.width, r.height);
   }
 #endif
@@ -1114,12 +1122,10 @@ nsBlockReflowState::PlaceBelowCurrentLineFloaters(nsFloaterCacheList& aList)
         printf("\n");
       }
 #endif
-      mBlock->ReflowFloater(*this, fc->mPlaceholder, fc->mCombinedArea,
-                            fc->mMargins, fc->mOffsets);
 
       // Place the floater
       PRBool isLeftFloater;
-      PlaceFloater(fc, &isLeftFloater);
+      FlowAndPlaceFloater(fc, &isLeftFloater);
     }
     fc = fc->Next();
   }
