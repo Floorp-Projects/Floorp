@@ -23,6 +23,7 @@
 #ifndef nsTime_h__
 #define nsTime_h__
 
+#include <algorithm> // to get all comparisons given operator== and operator<
 #include "prtime.h"
 #include "nsInt64.h"
 #include "nscore.h"
@@ -115,11 +116,7 @@ public:
 
     // Comparison operators
     friend const PRBool operator ==(const nsTime& aTime1, const nsTime& aTime2);
-    friend const PRBool operator !=(const nsTime& aTime1, const nsTime& aTime2);
     friend const PRBool operator <(const nsTime& aTime1, const nsTime& aTime2);
-    friend const PRBool operator <=(const nsTime& aTime1, const nsTime& aTime2);
-    friend const PRBool operator >(const nsTime& aTime1, const nsTime& aTime2);
-    friend const PRBool operator >=(const nsTime& aTime1, const nsTime& aTime2);
 };
 
 /**
@@ -155,43 +152,11 @@ operator ==(const nsTime& aTime1, const nsTime& aTime2) {
 }
 
 /**
- * Determine if two times are different
- */
-inline const PRBool
-operator !=(const nsTime& aTime1, const nsTime& aTime2) {
-    return aTime1.mValue != aTime2.mValue;
-}
-
-/**
  * Determine if one time is strictly less than another
  */
 inline const PRBool
 operator <(const nsTime& aTime1, const nsTime& aTime2) {
     return aTime1.mValue < aTime2.mValue;
-}
-
-/**
- * Determine if one time is less than or equal to another
- */
-inline const PRBool
-operator <=(const nsTime& aTime1, const nsTime& aTime2) {
-    return aTime1.mValue <= aTime2.mValue;
-}
-
-/**
- * Determine if one time is strictly greater than another
- */
-inline const PRBool
-operator >(const nsTime& aTime1, const nsTime& aTime2) {
-    return aTime1.mValue > aTime2.mValue;
-}
-
-/**
- * Determine if one time is greater than or equal to another
- */
-inline const PRBool
-operator >=(const nsTime& aTime1, const nsTime& aTime2) {
-    return aTime1.mValue >= aTime2.mValue;
 }
 
 #endif // nsTime_h__
