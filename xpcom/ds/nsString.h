@@ -776,6 +776,7 @@ public:
   virtual       ~nsAutoString();
 
   nsAutoString& operator=(const nsString& aString) {nsString::operator=(aString); return *this;}
+  nsAutoString& operator=(const nsAutoString& aString) {nsString::operator=(aString); return *this;}
   nsAutoString& operator=(const char* aCString) {nsString::operator=(aCString); return *this;}
   nsAutoString& operator=(char aChar) {nsString::operator=(aChar); return *this;}
   nsAutoString& operator=(const PRUnichar* aBuffer) {nsString::operator=(aBuffer); return *this;}
