@@ -17,6 +17,7 @@
  */
 
 #include "nsRenderingContextWin.h"
+#include "nsFontMetricsWin.h"
 #include "nsRegionWin.h"
 #include <math.h>
 #include "libimg.h"
@@ -1445,6 +1446,8 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const nsString& aString, nscoord
   return GetWidth(aString.GetUnicode(), aString.Length(), aWidth, aFontID);
 }
 
+#ifndef FONT_SWITCHING
+
 NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
                                                 PRUint32 aLength,
                                                 nscoord &aWidth,
@@ -1466,6 +1469,84 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
   else
     return NS_ERROR_FAILURE;
 }
+
+#else /* FONT_SWITCHING */
+
+NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
+                                                PRUint32 aLength,
+                                                nscoord &aWidth,
+                                                PRInt32 *aFontID)
+{
+  if (nsnull != mFontMetrics)
+  {
+    nsFontMetricsWin* metrics = (nsFontMetricsWin*) mFontMetrics;
+    HFONT prevFont = nsnull;
+    SIZE size;
+
+    SetupFontAndColor();
+
+    LONG width = 0;
+    PRUint32 start = 0;
+    for (PRUint32 i = 0; i < aLength; i++) {
+      PRUnichar c = aString[i];
+      HFONT currFont = mCurrFont;
+      nsFontWin* font = metrics->mLoadedFonts;
+      nsFontWin* end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
+      while (font < end) {
+        if (FONT_HAS_GLYPH(font->map, c)) {
+          currFont = font->font;
+          goto FoundFont; // for speed -- avoid "if" statement
+        }
+        font++;
+      }
+      font = metrics->FindLocalFont(mDC, c);
+      if (font) {
+        currFont = font->font;
+      }
+      else {
+        // XXX get CSS to pass inherited or default font list?
+        font = metrics->FindGlobalFont(mDC, c);
+        if (font) {
+          currFont = font->font;
+        }
+      }
+FoundFont:
+      // XXX avoid this test by duplicating code
+      if (prevFont) {
+        if (currFont != prevFont) {
+          ::SelectObject(mDC, prevFont);
+          ::GetTextExtentPoint32W(mDC, &aString[start], i - start, &size);
+          width += size.cx;
+          prevFont = currFont;
+          start = i;
+        }
+      }
+      else {
+        prevFont = currFont;
+        start = i;
+      }
+    }
+
+    if (prevFont) {
+      ::SelectObject(mDC, prevFont);
+      ::GetTextExtentPoint32W(mDC, &aString[start], i - start, &size);
+      width += size.cx;
+    }
+
+    aWidth = NSToCoordRound(float(width) * mP2T);
+
+    ::SelectObject(mDC, mCurrFont);
+
+    if (nsnull != aFontID)
+      *aFontID = 0;
+
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_FAILURE;
+}
+
+#endif /* FONT_SWITCHING */
 
 NS_IMETHODIMP nsRenderingContextWin :: DrawString(const char *aString, PRUint32 aLength,
                                                   nscoord aX, nscoord aY,
@@ -1495,6 +1576,8 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const char *aString, PRUint32 
 
   return NS_OK;
 }
+
+#ifndef FONT_SWITCHING
 
 NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                                   nscoord aX, nscoord aY,
@@ -1551,6 +1634,122 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUi
 
   return NS_OK;
 }
+
+#else /* FONT_SWITCHING */
+
+NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUint32 aLength,
+                                                  nscoord aX, nscoord aY,
+                                                  PRInt32 aFontID,
+                                                  const nscoord* aSpacing)
+{
+  if (nsnull != mFontMetrics)
+  {
+    PRInt32 x = aX;
+    PRInt32 y = aY;
+    mTMatrix->TransformCoord(&x, &y);
+    nsFontMetricsWin* metrics = (nsFontMetricsWin*) mFontMetrics;
+    HFONT prevFont = nsnull;
+    SIZE size;
+
+    SetupFontAndColor();
+
+    PRUint32 start = 0;
+    for (PRUint32 i = 0; i < aLength; i++) {
+      PRUnichar c = aString[i];
+      HFONT currFont = mCurrFont;
+      nsFontWin* font = metrics->mLoadedFonts;
+      nsFontWin* end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
+      while (font < end) {
+        if (FONT_HAS_GLYPH(font->map, c)) {
+          currFont = font->font;
+          goto FoundFont; // for speed -- avoid "if" statement
+        }
+        font++;
+      }
+      font = metrics->FindLocalFont(mDC, c);
+      if (font) {
+        currFont = font->font;
+      }
+      else {
+        // XXX get CSS to pass UA's default font list?
+        font = metrics->FindGlobalFont(mDC, c);
+        if (font) {
+          currFont = font->font;
+        }
+      }
+FoundFont:
+      if (prevFont) {
+        if (currFont != prevFont) {
+          ::SelectObject(mDC, prevFont);
+          if (aSpacing) {
+            // XXX Fix path to use a twips transform in the DC and use the
+            // spacing values directly and let windows deal with the sub-pixel
+            // positioning.
+
+            // Slow, but accurate rendering
+            const PRUnichar* str = &aString[start];
+            const PRUnichar* end = &aString[i];
+            while (str < end) {
+              // XXX can shave some cycles by inlining a version of transform
+              // coord where y is constant and transformed once
+              x = aX;
+              y = aY;
+              mTMatrix->TransformCoord(&x, &y);
+              ::ExtTextOutW(mDC, x, y, 0, NULL, str, 1, NULL);
+              aX += *aSpacing++;
+              str++;
+            }
+          }
+          else {
+            ::ExtTextOutW(mDC, x, y, 0, NULL, &aString[start], i - start, NULL);
+            ::GetTextExtentPoint32W(mDC, &aString[start], i - start, &size);
+            x += size.cx;
+          }
+          prevFont = currFont;
+          start = i;
+        }
+      }
+      else {
+        prevFont = currFont;
+        start = i;
+      }
+    }
+
+    if (prevFont) {
+      ::SelectObject(mDC, prevFont);
+      if (aSpacing) {
+        // XXX Fix path to use a twips transform in the DC and use the
+        // spacing values directly and let windows deal with the sub-pixel
+        // positioning.
+
+        // Slow, but accurate rendering
+        const PRUnichar* str = &aString[start];
+        const PRUnichar* end = &aString[i];
+        while (str < end) {
+          // XXX can shave some cycles by inlining a version of transform
+          // coord where y is constant and transformed once
+          x = aX;
+          y = aY;
+          mTMatrix->TransformCoord(&x, &y);
+          ::ExtTextOutW(mDC, x, y, 0, NULL, str, 1, NULL);
+          aX += *aSpacing++;
+          str++;
+        }
+      }
+      else {
+        ::ExtTextOutW(mDC, x, y, 0, NULL, &aString[start], i - start, NULL);
+      }
+    }
+
+    ::SelectObject(mDC, mCurrFont);
+
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_FAILURE;
+}
+
+#endif /* FONT_SWITCHING */
 
 NS_IMETHODIMP nsRenderingContextWin :: DrawString(const nsString& aString,
                                                   nscoord aX, nscoord aY,
