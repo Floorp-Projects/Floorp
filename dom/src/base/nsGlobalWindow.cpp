@@ -4910,7 +4910,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     // print-preview, for instance), this means we shouldn't run any
     // timeouts at this point.
     //
-    // If scrips are enabled in this window again we'll fire the
+    // If scripts are enabled in this window again we'll fire the
     // timeouts that are due at that point.
 
     return;
