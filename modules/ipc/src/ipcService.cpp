@@ -35,20 +35,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef XP_UNIX
-#include <pwd.h>
-#include <unistd.h>
-#include <sys/types.h>
-#endif
-
 #include "plstr.h"
 
-#include "nsIFile.h"
 #include "nsIServiceManager.h"
-#include "nsDirectoryServiceUtils.h"
-#include "nsDirectoryServiceDefs.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsIObserverService.h"
+#include "nsICategoryManager.h"
+#include "nsCategoryManagerUtils.h"
 
 #include "ipcConfig.h"
 #include "ipcLog.h"
@@ -153,14 +147,7 @@ ipcService::Init()
     if (appName.IsEmpty())
         appName = NS_LITERAL_CSTRING("test-app");
 
-    // get socket path from directory service
-    nsCAutoString socketPath;
-#ifdef XP_UNIX 
-    if (NS_FAILED(GetSocketPath(socketPath)))
-        socketPath = NS_LITERAL_CSTRING(IPC_DEFAULT_SOCKET_PATH);
-#endif
-
-    rv = mTransport->Init(appName, socketPath, this);
+    rv = mTransport->Init(appName, this);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -198,28 +185,6 @@ ipcService::HandleQueryResult(const ipcMessage *rawMsg, PRBool succeeded)
     NS_IF_RELEASE(info);
     mQueryQ.DeleteFirst();
 }
-
-#ifdef XP_UNIX
-nsresult
-ipcService::GetSocketPath(nsACString &socketPath)
-{
-    nsCOMPtr<nsIFile> file;
-    NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(file));
-    if (!file)
-        return NS_ERROR_FAILURE;
-    // XXX may want to use getpwuid_r when available
-    struct passwd *pw = getpwuid(geteuid());
-    if (!pw)
-        return NS_ERROR_UNEXPECTED;
-    nsCAutoString leaf;
-    leaf = NS_LITERAL_CSTRING(".mozilla-ipc-")
-         + nsDependentCString(pw->pw_name);
-    file->AppendNative(leaf);
-    file->AppendNative(NS_LITERAL_CSTRING("ipcd"));
-    file->GetNativePath(socketPath);
-    return NS_OK;
-}
-#endif
 
 //-----------------------------------------------------------------------------
 // interface impl
@@ -373,16 +338,39 @@ void
 ipcService::OnConnectionEstablished(PRUint32 clientID)
 {
     mClientID = clientID;
+
+    //
+    // enumerate ipc startup category...
+    //
+    NS_CreateServicesFromCategory(IPC_SERVICE_STARTUP_CATEGORY,
+                                  NS_STATIC_CAST(nsISupports *, this),
+                                  IPC_SERVICE_STARTUP_TOPIC);
 }
 
 void
 ipcService::OnConnectionLost()
 {
-    //
-    // XXX error out any pending queries
-    //
- 
     mClientID = 0;
+
+    //
+    // error out any pending queries
+    //
+    while (mQueryQ.First()) {
+        ipcClientQuery *query = mQueryQ.First();
+        query->mObserver->OnClientStatus(query->mReqToken,
+                                         ipcIClientObserver::CLIENT_DOWN,
+                                         nsnull);
+        mQueryQ.DeleteFirst();
+    }
+
+    //
+    // broadcast ipc shutdown...
+    //
+    nsCOMPtr<nsIObserverService> observ(
+            do_GetService("@mozilla.org/observer-service;1"));
+    if (observ)
+        observ->NotifyObservers(NS_STATIC_CAST(nsISupports *, this),
+                                IPC_SERVICE_SHUTDOWN_TOPIC, nsnull);
 }
 
 void

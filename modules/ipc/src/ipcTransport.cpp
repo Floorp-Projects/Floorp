@@ -60,17 +60,17 @@
 
 nsresult
 ipcTransport::Init(const nsACString &appName,
-                   const nsACString &socketPath,
                    ipcTransportObserver *obs)
 {
     mAppName = appName;
     mObserver = obs;
 
-#ifdef XP_UNIX
-    InitUnix(socketPath);
-#endif
-
     LOG(("ipcTransport::Init [app-name=%s]\n", mAppName.get()));
+
+#ifdef XP_UNIX
+    nsresult rv = InitUnix();
+    if (NS_FAILED(rv)) return rv;
+#endif
 
     // XXX service should be the observer
     nsCOMPtr<nsIObserverService> observ(do_GetService("@mozilla.org/observer-service;1"));

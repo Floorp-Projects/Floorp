@@ -41,6 +41,12 @@ interface nsISimpleEnumerator;
 interface ipcIMessageObserver;
 interface ipcIClientObserver;
 
+%{C++
+#define IPC_SERVICE_STARTUP_CATEGORY "ipc-startup-category"
+#define IPC_SERVICE_STARTUP_TOPIC    "ipc-startup"
+#define IPC_SERVICE_SHUTDOWN_TOPIC   "ipc-shutdown"
+%}
+
 /**
  * the IPC service provides the means to communicate with an external IPC
  * daemon and/or other mozilla-based applications on the same physical system.
@@ -50,10 +56,8 @@ interface ipcIClientObserver;
  * at application startup, the IPC service will attempt to establish a
  * connection with the IPC daemon.  the IPC daemon will be automatically
  * started if necessary.  when a connection has been established, the IPC
- * service will broadcast an "ipc-startup" notification using the observer
- * service.
- *
- * XXX startup category
+ * service will enumerate the "ipc-startup-category" and broadcast an
+ * "ipc-startup" notification using the observer service.
  *
  * when the connection to the IPC daemon is closed, an "ipc-shutdown"
  * notification will be broadcast.

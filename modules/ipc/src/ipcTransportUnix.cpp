@@ -35,7 +35,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <pwd.h>
+#include <unistd.h>
+#include <sys/types.h>
+
+#include "nsIFile.h"
 #include "nsIServiceManager.h"
+#include "nsDirectoryServiceUtils.h"
+#include "nsDirectoryServiceDefs.h"
 #include "ipcSocketProviderUnix.h"
 #include "nsISocketTransportService.h"
 #include "nsIInputStream.h"
@@ -56,9 +63,11 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 //-----------------------------------------------------------------------------
 
 nsresult
-ipcTransport::InitUnix(const nsACString &socketPath)
+ipcTransport::InitUnix()
 {
-    mSocketPath = socketPath;
+    nsresult rv = GetSocketPath(mSocketPath);
+    if (NS_FAILED(rv)) return rv;
+
     ipcSocketProviderUnix::SetSocketPath(socketPath);
     return NS_OK;
 }
@@ -182,6 +191,26 @@ ipcTransport::CreateTransport()
                                     1024*16,
                                     getter_AddRefs(mTransport));
     return rv;
+}
+
+nsresult
+ipcTransport::GetSocketPath(nsACString &socketPath)
+{
+    nsCOMPtr<nsIFile> file;
+    NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(file));
+    if (!file)
+        return NS_ERROR_FAILURE;
+    // XXX may want to use getpwuid_r when available
+    struct passwd *pw = getpwuid(geteuid());
+    if (!pw)
+        return NS_ERROR_UNEXPECTED;
+    nsCAutoString leaf;
+    leaf = NS_LITERAL_CSTRING(".mozilla-ipc-")
+         + nsDependentCString(pw->pw_name);
+    file->AppendNative(leaf);
+    file->AppendNative(NS_LITERAL_CSTRING("ipcd"));
+    file->GetNativePath(socketPath);
+    return NS_OK;
 }
 
 //-----------------------------------------------------------------------------

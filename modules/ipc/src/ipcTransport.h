@@ -91,7 +91,6 @@ public:
     virtual ~ipcTransport() {}
 
     nsresult Init(const nsACString &appName,
-                  const nsACString &socketPath, // ignored if not UNIX
                   ipcTransportObserver *observer);
     nsresult Shutdown();
 
@@ -140,8 +139,9 @@ private:
     //
     // unix specific helpers
     //
-    nsresult InitUnix(const nsACString &socketPath);
+    nsresult InitUnix();
     nsresult CreateTransport();
+    nsresult GetSocketPath(nsACString &);
 
 public:
     //
