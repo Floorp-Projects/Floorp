@@ -72,7 +72,8 @@ public:
     PRBool   OnKey(nsKeyEvent &aEvent);
     PRBool   DispatchFocus(nsGUIEvent &aEvent);
     virtual  PRBool OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
-    virtual  PRBool OnResize(nsSizeEvent &aEvent);
+  // in nsWidget now
+  //    virtual  PRBool OnResize(nsSizeEvent &aEvent);
 
     char gInstanceClassName[256];
   

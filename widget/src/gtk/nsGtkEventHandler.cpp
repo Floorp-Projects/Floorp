@@ -19,6 +19,7 @@
 #include "gtk/gtk.h"
 #include "nsGtkEventHandler.h"
 
+#include "nsWidget.h"
 #include "nsWindow.h"
 #include "nsTextWidget.h"
 #include "nsCheckButton.h"
@@ -347,33 +348,49 @@ static gboolean reset_resize_handler (gpointer data)
 
 void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
 {
-  g_print("size_allocate: %p, {x=%i, y=%i, w=%i, h=%i}\n", w, alloc->x,
-           alloc->y,
-	   alloc->width,
-	   alloc->height);
-  
-  nsSizeEvent sevent;
-  InitAllocationEvent(alloc, p, sevent, NS_SIZE);
-
-  sevent.mWinWidth = alloc->width;
-  sevent.mWinHeight = alloc->height;
-/*  sevent.mWinWidth = gtk_widget_get_toplevel(w)->allocation.width;
-    sevent.mWinHeight = gtk_widget_get_toplevel(w)->allocation.height;
-*/
-
-  nsWindow *win = (nsWindow *)p;
-  win->OnResize(sevent);
-
-
-  /* block the signal for a few nanosecs */
-/*
-  gtk_signal_disconnect_by_func(GTK_OBJECT(w),
-          GTK_SIGNAL_FUNC(handle_size_allocate),
-	  win);
-  gtk_timeout_add (10, reset_resize_handler, win);
-*/
+  nsWidget *widget = (nsWidget *)p;
+  nsRect   rect;
+#if 0
+  g_print("size_allocate: %s (%p), {x=%i, y=%i, w=%i, h=%i}\n",
+          gtk_widget_get_name(w),
+          p,
+          alloc->x,
+          alloc->y,
+          alloc->width,
+          alloc->height);
+#endif
+  rect.x = 0;
+  rect.y = 0;
+  rect.width = alloc->width;
+  rect.height = alloc->height;
+  if (widget->mIsToplevel || widget->mResizeEventsPending) {
+    //    printf("%d resize events pending.\n", widget->mResizeEventsPending);
+    // reset the counter
+    widget->mResizeEventsPending = 0;
+    // only send the event it we are not already doing a move
+    if (widget->OnResizing == PR_FALSE) {
+      widget->OnResizing = PR_TRUE;
+      widget->OnResize(rect);
+      widget->OnResizing = PR_FALSE;
+    } else {
+      printf("handle_size_allocate: skipping notification of resize event - OnResize already in progress.\n");
+    }
+  }
+  if (widget->mMoveEventsPending) {
+    // reset the counter
+    widget->mMoveEventsPending = 0;
+    // careful not to reenter the resizing
+    if (widget->OnMoving == PR_FALSE) {
+      widget->OnMoving = PR_TRUE;
+      widget->OnMove(alloc->x, alloc->y);
+      widget->OnMoving = PR_FALSE;
+    } else {
+      printf("handle_size_allocate: skipping notification of move event - OnMove already in progress.\n");
+    }
+  }
 }
 
+#if 0
 gint handle_configure_event(GtkWidget *w, GdkEventConfigure *conf, gpointer p)
 {
   g_print("configure_event: {x=%i, y=%i, w=%i, h=%i}\n", conf->x,
@@ -390,6 +407,7 @@ gint handle_configure_event(GtkWidget *w, GdkEventConfigure *conf, gpointer p)
 
   return PR_FALSE;
 }
+#endif
 
 gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p)
 {
