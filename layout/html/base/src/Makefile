@@ -20,35 +20,36 @@ DEPTH=../../../..
 LIBRARY_NAME = raptorhtmlbase_s
 
 # Note the sophisticated alphabetical ordering :-|
-CPPSRCS =				\
+CPPSRCS=				\
 	nsAbsoluteFrame.cpp		\
-	nsBRPart.cpp			\
+	nsBRFrame.cpp			\
 	nsBodyFrame.cpp			\
 	nsGlobalVariables.cpp		\
-	nsHRPart.cpp			\
+	nsHRFrame.cpp			\
 	nsHTMLAtoms.cpp			\
 	nsHTMLBase.cpp			\
 	nsHTMLBullet.cpp		\
-	nsHTMLContainer.cpp		\
 	nsHTMLContainerFrame.cpp	\
-	nsHTMLContent.cpp		\
 	nsHTMLIIDs.cpp			\
-	nsHTMLImage.cpp			\
+	nsHTMLFrame.cpp			\
 	nsHTMLReflowCommand.cpp		\
-	nsHTMLTagContent.cpp		\
+	nsImageFrame.cpp		\
 	nsImageMap.cpp			\
 	nsLeafFrame.cpp			\
 	nsObjectFrame.cpp		\
 	nsPageFrame.cpp			\
 	nsPlaceholderFrame.cpp		\
-	nsRootPart.cpp			\
 	nsScrollFrame.cpp		\
-	nsSpacerPart.cpp		\
-	nsTextContent.cpp		\
-	nsWBRPart.cpp			\
+	nsSpacerFrame.cpp		\
+	nsTextFrame.cpp			\
+	nsWBRFrame.cpp			\
 	nsDOMNodeList.cpp		\
 	nsDOMAttributes.cpp		\
+	nsHTMLContainer.cpp		\
+	nsHTMLContent.cpp		\
+	nsHTMLTagContent.cpp		\
 	$(NULL)
+
 EXPORTS =				\
 	nsGlobalVariables.h		\
 	$(NULL)
