@@ -16,8 +16,8 @@
 # Copyright (C) 2000-2002 Christopher Seawood. All Rights Reserved.
 #
 #
-BUILD_MODULE_DIRS := config build include
-BUILD_MODULE_CVS = config build include
+BUILD_MODULE_DIRS := config build
+BUILD_MODULE_CVS = config build
 
 # client.mk does not have topsrcdir set
 ifndef topsrcdir
