@@ -24,3 +24,7 @@
 window {
     font-size: 12px;
 }
+
+.treecell-error {
+    white-space: normal;
+}

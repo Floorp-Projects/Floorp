@@ -30,6 +30,7 @@
 .treecell-error {
   border-bottom: 1px solid #000000 !important;
   padding: 0px;
+  white-space: normal;
 }
 
 .treecell-error[type="error"] {
