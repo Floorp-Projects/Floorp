@@ -72,7 +72,7 @@ public:
   									                                // (Currently only used for plaintext
   									                                // converted from HTML.) 
 
-  nsresult              LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData);
+  nsresult              LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData, PRBool charsetConversion);
 
   //////////////////////////////////////////////////////////////////////
   // Member vars...

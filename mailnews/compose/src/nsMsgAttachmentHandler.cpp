@@ -783,7 +783,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 }
 
 nsresult
-nsMsgAttachmentHandler::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
+nsMsgAttachmentHandler::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData, PRBool charsetConversion)
 {
   PRInt32       readSize;
   char          *readBuf;
@@ -801,7 +801,15 @@ nsMsgAttachmentHandler::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
   readSize = tempFile.read(readBuf, readSize);
   tempFile.close();
 
-  sigData.AssignWithConversion(readBuf);
+  if (charsetConversion)
+  {
+    nsAutoString charset; charset.AssignWithConversion(m_charset);
+    if (NS_FAILED(ConvertToUnicode(charset, readBuf, sigData)))
+      sigData.AssignWithConversion(readBuf);
+  }
+  else
+      sigData.AssignWithConversion(readBuf);
+
   PR_FREEIF(readBuf);
   return NS_OK;
 }
@@ -903,7 +911,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
       //
       nsString      conData;
 
-      if (NS_SUCCEEDED(LoadDataFromFile(*mFileSpec, conData)))
+      if (NS_SUCCEEDED(LoadDataFromFile(*mFileSpec, conData, PR_TRUE)))
       {
         if (NS_SUCCEEDED(ConvertBufToPlainText(conData, UseFormatFlowed(m_charset))))
         {
@@ -912,10 +920,13 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
           nsOutputFileStream tempfile(*mFileSpec);
 		      if (tempfile.is_open()) 
           {
-            char    *tData = conData.ToNewCString();
+            char    *tData = nsnull;
+            nsAutoString charset; charset.AssignWithConversion(m_charset);
+            if (NS_FAILED(ConvertFromUnicode(charset, conData, &tData)))
+              tData = conData.ToNewCString();
             if (tData)
             {
-              (void) tempfile.write(tData, conData.Length());
+              (void) tempfile.write(tData, nsCRT::strlen(tData));
               PR_FREEIF(tData);
             }
             tempfile.close();
