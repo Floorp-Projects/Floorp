@@ -117,7 +117,7 @@ nsFTPChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
     NS_IF_ADDREF(mLoadGroup);
 
     if (getter) {
-        nsIProgressEventSink* eventSink;
+        nsIProgressEventSink* eventSink = nsnull;
         rv = getter->GetEventSink(verb, nsCOMTypeInfo<nsIProgressEventSink>::GetIID(), 
                                   (nsISupports**)&eventSink);
         if (NS_FAILED(rv)) {
