@@ -42,7 +42,7 @@ public:
      *
      * @param aFilename     path to INI file
      */
-    nsINIParser(char *aFilename);
+    nsINIParser(const char *aFilename);
     ~nsINIParser();
 
     /**

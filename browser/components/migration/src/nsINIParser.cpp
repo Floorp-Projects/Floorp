@@ -25,7 +25,7 @@
 
 #include "nsINIParser.h"
 
-nsINIParser::nsINIParser(char *aFilename)
+nsINIParser::nsINIParser(const char *aFilename)
 {
     FILE    *fd = NULL;
     long    eofpos = 0;
