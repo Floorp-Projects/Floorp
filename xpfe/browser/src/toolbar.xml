@@ -9,6 +9,7 @@
     <xul:command name="nsCmd:BrowserReload" onCommand="window.reload();"/>
     <xul:command name="nsCmd:BrowserStop" onCommand="window.stop();"/>
     <xul:command name="nsCmd:BrowserHome" onCommand="window.home();"/>
+    <xul:command name="nsCmd:BrowserPrint" onCommand="window.print();"/>
     <!-- other parameters of command are assumed to have
       some useful initial value -->
   </xul:commands>
@@ -27,6 +28,9 @@
           </html:button>
           <html:button cmd="nsCmd:BrowserHome" style="background-color:rgb(192,192,192);">
                           <html:img src="resource:/res/toolbar/TB_Home.gif"/><html:BR/>Home
+          </html:button>
+          <html:button cmd="nsCmd:BrowserPrint" style="background-color:rgb(192,192,192);">
+                          <html:img src="resource:/res/toolbar/TB_Print.gif"/><html:BR/>Print
           </html:button>
           <html:input cols=30 style="width: 295px;"></html:input>
           <html:a style="position:relative; direction:rtl; right:3; top: 2px;" href="http://www.netscape.com">

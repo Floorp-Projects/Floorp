@@ -26,6 +26,7 @@ include $(topsrcdir)/config/rules.mk
 
 EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/appshell.html \
+	$(srcdir)/status.html \
 	$(srcdir)/toolbar.xml \
 	$(srcdir)/xul.css \
 	$(NULL)
