@@ -15,19 +15,20 @@
 
 DEPTH = ../../..
 
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+topsrcdir   = @top_srcdir@
+srcdir      = @srcdir@
+VPATH       = @srcdir@
 
 LIBRARY_NAME = neckoutil_s
 
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS =				\
-	nsNeckoUtil.cpp		\
+CPPSRCS =               \
+    nsNetStreamLoader.cpp \
+    nsNeckoUtil.cpp     \
         $(NULL)
 
-EXPORTS =			   \
+EXPORTS =              \
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
