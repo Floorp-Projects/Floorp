@@ -56,6 +56,8 @@
  * nsIMutableArray for modification. If the interface in question had
  * intended the array to be modified, it would have returned an
  * nsIMutableArray!
+ *
+ * @status UNDER_REVIEW
  */
 [scriptable, uuid(114744d9-c369-456e-b55a-52fe52880d2d)]
 interface nsIArray : nsISupports
@@ -96,6 +98,14 @@ interface nsIArray : nsISupports
      */
 };
 
+/**
+ * nsIMutableArray
+ * A seperate set of methods that will act on the array. Consumers of
+ * nsIArray should not QueryInterface to nsIMutableArray unless they
+ * own the array.
+ *
+ * @status UNDER_REVIEW
+ */
 [scriptable, uuid(2cd0b2f8-d4dd-48b8-87ba-b0200501f079)]
 interface nsIMutableArray : nsIArray
 {
