@@ -19,11 +19,11 @@
     var tc = 0;
     var testcases = new Array();
 
-    LabelTest( { p1:"hi,", p2:" norris" }, "hi, norris", "norrishi, " );
+    LabelTest( { p1:"hi,", p2:" norris" }, "hi, norris", " norrishi," );
     LabelTest( { 0:"zero", 1:"one" }, "zeroone", "onezero" );
 
-    LabelTest2( { p1:"hi,", p2:" norris" }, "hi," );
-    LabelTest2( { 0:"zero", 1:"one" }, "zero" );
+    LabelTest2( { p1:"hi,", p2:" norris" }, "hi,", " norris" );
+    LabelTest2( { 0:"zero", 1:"one" }, "zero", "one" );
 
     test();
 
@@ -39,7 +39,7 @@
             result == expect1 || result == expect2 );
     }
 
-    function LabelTest2( object, expect ) {
+    function LabelTest2( object, expect1, expect2 ) {
         result = "";
 
         yoohoo:  { for ( property in object ) { result += object[property]; break yoohoo } }; ;
@@ -47,7 +47,7 @@
         testcases[tc++] = new TestCase(
             SECTION,
             "yoohoo: for ( property in object ) { result += object[property]; break yoohoo }}",
-            expect,
-            result );
+            true,
+            result == expect1 || result == expect2 );
     }
 
