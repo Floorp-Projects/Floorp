@@ -351,6 +351,8 @@ nsPopupSetFrame::ShowPopup(nsIContent* aElementContent, nsIContent* aPopupConten
     entry = mPopupList->GetEntry(aPopupContent);
   if (!entry) {
     entry = new nsPopupFrameList(aPopupContent, mPopupList);
+    if (!entry)
+      return NS_ERROR_OUT_OF_MEMORY;
     mPopupList = entry;
   }
 
@@ -801,6 +803,8 @@ nsPopupSetFrame::AddPopupFrame(nsIFrame* aPopup)
     entry = mPopupList->GetEntry(content);
   if (!entry) {
     entry = new nsPopupFrameList(content, mPopupList);
+    if (!entry)
+      return NS_ERROR_OUT_OF_MEMORY;
     mPopupList = entry;
   }
   
