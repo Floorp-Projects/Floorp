@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.7 $ $Date: 2001/01/30 19:43:20 $ $Name:  $"
+MAKEFILE_CVS_ID = "@(#) $RCSfile: Makefile,v $ $Revision: 1.8 $ $Date: 2001/05/23 05:55:13 $ $Name:  $"
 
 include manifest.mn
 include $(CORE_DEPTH)/coreconf/config.mk
@@ -70,7 +70,8 @@ endif
 
 include $(CORE_DEPTH)/coreconf/rules.mk
 
-certdata.c: certdata.txt certdata.perl
+# Generate certdata.c.
+generate:
 	perl certdata.perl < certdata.txt
 
 # This'll need some help from a build person.
