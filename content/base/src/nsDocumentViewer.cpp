@@ -3088,13 +3088,6 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
 #ifdef NS_PRINTING
   INIT_RUNTIME_ERROR_CHECKING();
 
-  // Temporary code for Bug 136185
-  nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
-  if (xulDoc) {
-    nsPrintEngine::ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_NO_XUL);
-    return NS_ERROR_FAILURE;
-  }
-
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mContainer));
   NS_ASSERTION(docShell, "This has to be a docshell");
 
@@ -3176,14 +3169,6 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
 
   if (GetIsPrinting()) {
     nsPrintEngine::CloseProgressDialog(aWebProgressListener);
-    return NS_ERROR_FAILURE;
-  }
-
-  // Temporary code for Bug 136185
-  nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
-  if (xulDoc) {
-    nsPrintEngine::CloseProgressDialog(aWebProgressListener);
-    nsPrintEngine::ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_NO_XUL, PR_FALSE);
     return NS_ERROR_FAILURE;
   }
 
