@@ -1871,6 +1871,51 @@ sub BuildExtensionsProjects()
 }
 
 #//--------------------------------------------------------------------------------------------------
+#// Build Plugins Projects
+#//--------------------------------------------------------------------------------------------------
+
+sub BuildPluginsProjects()
+{
+    my($plugin_path) = ":mozilla:plugin:oji:MRJ:plugin:";
+    my($project_path) = $plugin_path . "MRJPlugin.mcp";
+    my($xml_path) = $plugin_path . "MRJPlugin.xml";
+
+    my($project_modtime) = (-e $project_path ? getModificationDate($project_path) : 0);
+    my($xml_modtime) = (-e $xml_path ? getModificationDate($xml_path) : 0);
+
+    if ($xml_modtime > $project_modtime) {
+        print("MRJPlugin.mcp is out of date, reimporting from MRJPlugin.xml.\n");
+        
+        # delete the old project file.
+        unlink($project_path);
+
+        # import the xml project.
+        system($plugin_path . "MRJPlugin.import");
+
+        # wait for the file to be created.
+        while (!(-e $project_path)) { WaitNextEvent(); }
+
+        # wait for script to finish, so that we see correct results.
+        while (_processRunning("MRJPlugin.import")) { WaitNextEvent(); }
+    }
+    
+    # Build MRJPlugin
+    BuildProject($project_path, "MRJPlugin");
+    
+    # Build MRJPlugin.jar (if Java tools exist)
+	my($linker_path) = getCodeWarriorPath("CodeWarrior Plugins:Linkers:Java Linker");
+	if (-e $linker_path) {
+	    print("CodeWarrior Java tools detected, building MRJPlugin.jar.\n");
+	    BuildProject($project_path, "MRJPlugin.jar");
+	}
+	
+	# Copy MRJPlugin, MRJPlugin.jar to appropriate plugins folder.
+    my($plugin_dist) = _getDistDirectory() . "Plugins:";
+    MakeAlias($plugin_path . "MRJPlugin", $plugin_dist);
+    MakeAlias($plugin_path . "MRJPlugin.jar", $plugin_dist);
+}
+
+#//--------------------------------------------------------------------------------------------------
 #// Build MailNews Projects
 #//--------------------------------------------------------------------------------------------------
 
@@ -2004,6 +2049,9 @@ sub BuildProjects()
 	BuildExtensionsProjects();
 	BuildMailNewsProjects();
 	BuildMozilla();
+
+    # Build plugins.
+    # BuildPluginsProjects();
 
 	# do this last so as not to pollute dist with non-include files
 	# before building projects.
