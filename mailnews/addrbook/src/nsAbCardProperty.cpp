@@ -238,9 +238,9 @@ nsresult nsAbCardProperty::GetAttributeName(char **aName, char* pValue)
 	if (aName)
 	{
 		if (pValue)
-			*aName = PL_strdup(pValue);
+			*aName = nsCRT::strdup(pValue);
 		else
-			*aName = PL_strdup("");
+			*aName = nsCRT::strdup("");
 		return NS_OK;
 	}
 	else
@@ -253,8 +253,8 @@ nsresult nsAbCardProperty::SetAttributeName(char *aName, char **arrtibute)
 	if (aName)
 	{
 		char *pValue = *arrtibute;
-		PR_FREEIF(pValue);
-		*arrtibute = PL_strdup(aName);
+		nsCRT::free(pValue);
+		*arrtibute = nsCRT::strdup(aName);
 	}
 	return NS_OK;
 }

@@ -39,6 +39,7 @@
 #include "nsMorkCID.h"
 #include "nsIPref.h"
 #include "nsIMdbFactoryFactory.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_CID(kCMorkFactory, NS_MORK_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
@@ -923,294 +924,150 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 	// add the row to the singleton table.
 	if (NS_SUCCEEDED(err) && cardRow)
 	{
-		char* pStr = nsnull;
-		card->GetFirstName(&pStr);
+		nsXPIDLCString pStr;
+		card->GetFirstName(getter_Copies(pStr));
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddFirstName(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddFirstName(cardRow, pStr);
 
-		card->GetLastName(&pStr);
+		card->GetLastName(getter_Copies(pStr));
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddLastName(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddLastName(cardRow, pStr);
 
-		card->GetDisplayName(&pStr);
+		card->GetDisplayName(getter_Copies(pStr));
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddDisplayName(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddDisplayName(cardRow, pStr);
 
-		card->GetNickName(&pStr);
+		card->GetNickName(getter_Copies(pStr));
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddNickName(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddNickName(cardRow, pStr);
 
-		card->GetPrimaryEmail(&pStr);
+		card->GetPrimaryEmail(getter_Copies(pStr));
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddPrimaryEmail(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddPrimaryEmail(cardRow, pStr);
 
-		card->GetSecondEmail(&pStr);
+		card->GetSecondEmail(getter_Copies(pStr));
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			Add2ndEmail(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			Add2ndEmail(cardRow, pStr);
 
-		card->GetWorkPhone(&pStr);
+		card->GetWorkPhone(getter_Copies(pStr));
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddWorkPhone(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddWorkPhone(cardRow, pStr);
 
-		card->GetHomePhone(&pStr);
+		card->GetHomePhone(getter_Copies(pStr));
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddHomePhone(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddHomePhone(cardRow, pStr);
 
-		card->GetFaxNumber(&pStr);
+		card->GetFaxNumber(getter_Copies(pStr));
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddFaxNumber(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddFaxNumber(cardRow, pStr);
 
-		card->GetPagerNumber(&pStr);
+		card->GetPagerNumber(getter_Copies(pStr));
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddPagerNumber(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddPagerNumber(cardRow,pStr);
 
-		card->GetCellularNumber(&pStr);
+		card->GetCellularNumber(getter_Copies(pStr));
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddCellularNumber(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddCellularNumber(cardRow,pStr);
 
-		card->GetHomeAddress(&pStr);
+		card->GetHomeAddress(getter_Copies(pStr));
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddHomeAddress(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddHomeAddress(cardRow, pStr);
 
-		card->GetHomeAddress2(&pStr); 
+		card->GetHomeAddress2(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddHomeAddress2(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddHomeAddress2(cardRow, pStr);
 
-		card->GetHomeCity(&pStr); 
+		card->GetHomeCity(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddHomeCity(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddHomeCity(cardRow,pStr);
 
-		card->GetHomeState(&pStr); 
+		card->GetHomeState(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddHomeState(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddHomeState(cardRow, pStr);
 
-		card->GetHomeZipCode(&pStr); 
+		card->GetHomeZipCode(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddHomeZipCode(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddHomeZipCode(cardRow, pStr);
 
-		card->GetHomeCountry(&pStr); 
+		card->GetHomeCountry(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddHomeCountry(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddHomeCountry(cardRow, pStr);
 
-		card->GetWorkAddress(&pStr);  
+		card->GetWorkAddress(getter_Copies(pStr));  
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddWorkAddress(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddWorkAddress(cardRow, pStr);
 
-		card->GetWorkAddress2(&pStr); 
+		card->GetWorkAddress2(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddWorkAddress2(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddWorkAddress2(cardRow, pStr);
 
-		card->GetWorkCity(&pStr); 
+		card->GetWorkCity(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddWorkCity(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddWorkCity(cardRow, pStr);
 
-		card->GetWorkState(&pStr); 
+		card->GetWorkState(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddWorkState(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddWorkState(cardRow, pStr);
 
-		card->GetWorkZipCode(&pStr); 
+		card->GetWorkZipCode(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddWorkZipCode(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddWorkZipCode(cardRow, pStr);
 
-		card->GetWorkCountry(&pStr); 
+		card->GetWorkCountry(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddWorkCountry(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddWorkCountry(cardRow, pStr);
 
-		card->GetJobTitle(&pStr); 
+		card->GetJobTitle(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddJobTitle(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddJobTitle(cardRow, pStr);
 
-		card->GetDepartment(&pStr); 
+		card->GetDepartment(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddDepartment(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddDepartment(cardRow, pStr);
 
-		card->GetCompany(&pStr); 
+		card->GetCompany(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddCompany(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddCompany(cardRow, pStr);
 
-		card->GetWebPage1(&pStr); 
+		card->GetWebPage1(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddWebPage1(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddWebPage1(cardRow,pStr);
 
-		card->GetWebPage2(&pStr); 
+		card->GetWebPage2(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddWebPage2(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddWebPage2(cardRow, pStr);
 
-		card->GetBirthYear(&pStr); 
+		card->GetBirthYear(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddBirthYear(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddBirthYear(cardRow, pStr);
 
-		card->GetBirthMonth(&pStr); 
+		card->GetBirthMonth(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddBirthMonth(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddBirthMonth(cardRow, pStr);
 
-		card->GetBirthDay(&pStr); 
+		card->GetBirthDay(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddBirthDay(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddBirthDay(cardRow, pStr);
 
-		card->GetCustom1(&pStr); 
+		card->GetCustom1(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddCustom1(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddCustom1(cardRow,pStr);
 
-		card->GetCustom2(&pStr); 
+		card->GetCustom2(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddCustom2(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddCustom2(cardRow, pStr);
 
-		card->GetCustom3(&pStr); 
+		card->GetCustom3(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddCustom3(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddCustom3(cardRow, pStr);
 
-		card->GetCustom4(&pStr); 
+		card->GetCustom4(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddCustom4(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddCustom4(cardRow, pStr);
 
-		card->GetNotes(&pStr); 
+		card->GetNotes(getter_Copies(pStr)); 
 		if (pStr)
-		{
-			nsString nameStr(pStr);
-			AddNotes(cardRow, &nameStr);
-		}
-		PR_FREEIF(pStr);
+			AddNotes(cardRow, pStr);
 	}
 	return NS_OK;
 }
@@ -1622,11 +1479,11 @@ void nsAddrDatabase::GetIntYarn(PRUint32 nValue, struct mdbYarn* intYarn)
 	intYarn->mYarn_Fill = PL_strlen((const char *) intYarn->mYarn_Buf);
 }
 
-mdb_err nsAddrDatabase::AddCharStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, char* str)
+mdb_err nsAddrDatabase::AddCharStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, const char* str)
 {
 	struct mdbYarn yarn;
 
-	GetCharStringYarn(str, &yarn);
+	GetCharStringYarn((char *) str, &yarn);
 	mdb_err err = cardRow->AddColumn(GetEnv(),  inColumn, &yarn);
 
 	return err;

@@ -323,7 +323,7 @@ class AddressBookParser
 {
 protected:
 
-    nsAutoString	mLine;
+    nsCAutoString	mLine;
 	nsIFileSpecWithUI*	mFileSpec;
 	char*			mDbUri;
 	nsCOMPtr<nsIAddrDatabase> mDatabase;  
@@ -342,7 +342,6 @@ public:
 };
 
 AddressBookParser::AddressBookParser(nsIFileSpecWithUI* fileSpec)
-	:mLine(eOneByte)
 {
 	mFileSpec = fileSpec;
 	mDbUri = nsnull;
@@ -497,7 +496,7 @@ nsresult AddressBookParser::ParseTabFile(PRFileDesc* file)
 
 void AddressBookParser::AddTabRowToDatabase()
 {
-    nsAutoString column(eOneByte);
+    nsCAutoString column;
 	
 	nsIMdbRow* newRow;
 	mDatabase->GetNewRow(&newRow); 
@@ -513,11 +512,11 @@ void AddressBookParser::AddTabRowToDatabase()
 	for (int i = 0; i < nSize; i++)
 	{
 //        PRUnichar c = mLine[i];
-        char c = mLine[i];
+        char c = (mLine.GetBuffer())[i];
 		while (c != '\t')
 		{
 			column.Append(c);
-			c = mLine[++i];
+			c = (mLine.GetBuffer()) [++i];
 		}
 		
 		nCol += 1;
@@ -526,75 +525,75 @@ void AddressBookParser::AddTabRowToDatabase()
 		{
 		case POS_FIRST_NAME:
 			if (column.Length() > 0)
-				mDatabase->AddFirstName(newRow, &column);
+				mDatabase->AddFirstName(newRow, column);
 			break;
 		case POS_LAST_NAME:
 			if (column.Length() > 0)
-				mDatabase->AddLastName(newRow, &column);
+				mDatabase->AddLastName(newRow, column);
 			break;
 		case POS_DISPLAY_NAME:
 			if (column.Length() > 0)
-				mDatabase ->AddDisplayName(newRow, &column);
+				mDatabase ->AddDisplayName(newRow, column);
 			break;
 		case POS_NICK_NAME:
 			if (column.Length() > 0)
-				mDatabase->AddNickName(newRow, &column);
+				mDatabase->AddNickName(newRow, column);
 			break;
 		case POS_EMAIL:
 			if (column.Length() > 0)
-        		mDatabase->AddPrimaryEmail(newRow, &column);
+        		mDatabase->AddPrimaryEmail(newRow, column);
 			break;
 		case POS_WORK_NUMBER:
 			if (column.Length() > 0)
-        		mDatabase->AddWorkPhone(newRow, &column);
+        		mDatabase->AddWorkPhone(newRow, column);
 			break;
 		case POS_HOME_NUMBER:
 			if (column.Length() > 0)
-        		mDatabase->AddHomePhone(newRow, &column);
+        		mDatabase->AddHomePhone(newRow, column);
 			break;
 		case POS_PAGE_NUMBER:
 			if (column.Length() > 0)
-        		mDatabase->AddPagerNumber(newRow, &column);
+        		mDatabase->AddPagerNumber(newRow, column);
 			break;
 		case POS_CELLULAR_NUMBER:
 			if (column.Length() > 0)
-        		mDatabase->AddCellularNumber(newRow, &column);
+        		mDatabase->AddCellularNumber(newRow, column);
 			break;
 		case POS_FAX_NUMBER:
 			if (column.Length() > 0)
-        		mDatabase->AddFaxNumber(newRow, &column);
+        		mDatabase->AddFaxNumber(newRow, column);
 			break;
 		case POS_ADDRESS:
 			if (column.Length() > 0)
-        		mDatabase->AddWorkAddress(newRow, &column);
+        		mDatabase->AddWorkAddress(newRow, column);
 			break;
 		case POS_CITY:
 			if (column.Length() > 0)
-        		mDatabase->AddWorkCity(newRow, &column);
+        		mDatabase->AddWorkCity(newRow, column);
 			break;
 		case POS_STATE:
 			if (column.Length() > 0)
-        		mDatabase->AddWorkState(newRow, &column);
+        		mDatabase->AddWorkState(newRow, column);
 			break;
 		case POS_ZIP:
 			if (column.Length() > 0)
-        		mDatabase->AddWorkZipCode(newRow, &column);
+        		mDatabase->AddWorkZipCode(newRow, column);
 			break;
 		case POS_COUNTRY:
 			if (column.Length() > 0)
-        		mDatabase->AddWorkCountry(newRow, &column);
+        		mDatabase->AddWorkCountry(newRow, column);
 			break;
 		case POS_TITLE:
 			if (column.Length() > 0)
-        		mDatabase->AddJobTitle(newRow, &column);
+        		mDatabase->AddJobTitle(newRow, column);
 			break;
 		case POS_ORGANIZATION:
 			if (column.Length() > 0)
-        		mDatabase->AddDepartment(newRow, &column);
+        		mDatabase->AddDepartment(newRow, column);
 			break;
 		case POS_NOTE:
 			if (column.Length() > 0)
-        		mDatabase->AddNotes(newRow, &column);
+        		mDatabase->AddNotes(newRow, column);
 			break;
 		case POS_UNKNOWN:
 		default:
@@ -676,8 +675,8 @@ nsresult AddressBookParser::ParseLdifFile(PRFileDesc* file)
 
 void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow)
 {
-    nsAutoString colType(eOneByte);
-    nsAutoString column(eOneByte);
+    nsCAutoString colType;
+    nsCAutoString column;
 	
 //	const PRUnichar *str = nsnull;
 //	const char *str = nsnull;
@@ -687,7 +686,7 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow)
 	for (int i = 0; i < nSize; i++)
 	{
 //        PRUnichar c = mLine[i];
-        char c = mLine[i];
+        char c = (mLine.GetBuffer())[i];
 		if (!bGetType)
 		{
 			column.Append(c);
@@ -696,37 +695,37 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow)
 		while (bGetType && c != ':' && i < nSize)
 		{
 			colType.Append(c);
-			c = mLine[++i];
+			c = (mLine.GetBuffer())[++i];
 		}
 		if (c != ':')
 		{
 			bGetType = PR_FALSE;
-			c = mLine[++i];
+			c = (mLine.GetBuffer())[++i];
 			if (c == ':')
 				i++;
 		}
 	}
  
-	mdb_u1 firstByte = (mdb_u1)colType[0];
+	mdb_u1 firstByte = (mdb_u1) (colType.GetBuffer()) [0];
 	switch ( firstByte )
 	{
 	case 'b':
 	  if ( -1 != colType.Find("birthyear") )
-		mDatabase->AddBirthYear(newRow, &column);
+		mDatabase->AddBirthYear(newRow, column);
 	  break; // 'b'
 
 	case 'c':
 	  if ( -1 != colType.Find("cn") || -1 != colType.Find("commonname") )
-		mDatabase->AddDisplayName(newRow, &column);
+		mDatabase->AddDisplayName(newRow, column);
 
 	  else if ( -1 != colType.Find("countryName") )
-		mDatabase->AddWorkCountry(newRow, &column);
+		mDatabase->AddWorkCountry(newRow, column);
 
 	  // else if ( -1 != colType.Find("charset") )
 	  //   ioRow->AddColumn(ev, this->ColCharset(), yarn);
 
 	  else if ( -1 != colType.Find("cellphone") )
-		mDatabase->AddCellularNumber(newRow, &column);
+		mDatabase->AddCellularNumber(newRow, column);
 
 //		  else if ( -1 != colType.Find("calendar") )
 //			ioRow->AddColumn(ev, this->ColCalendar(), yarn);
@@ -735,37 +734,37 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow)
 //			ioRow->AddColumn(ev, this->ColCar(), yarn);
 
 	  else if ( -1 != colType.Find("carphone") )
-		mDatabase->AddCellularNumber(newRow, &column);
+		mDatabase->AddCellularNumber(newRow, column);
 //			ioRow->AddColumn(ev, this->ColCarPhone(), yarn);
 
 //		  else if ( -1 != colType.Find("carlicense") )
 //			ioRow->AddColumn(ev, this->ColCarLicense(), yarn);
         
 	  else if ( -1 != colType.Find("custom1") )
-		mDatabase->AddCustom1(newRow, &column);
+		mDatabase->AddCustom1(newRow, column);
         
 	  else if ( -1 != colType.Find("custom2") )
-		mDatabase->AddCustom2(newRow, &column);
+		mDatabase->AddCustom2(newRow, column);
         
 	  else if ( -1 != colType.Find("custom3") )
-		mDatabase->AddCustom3(newRow, &column);
+		mDatabase->AddCustom3(newRow, column);
         
 	  else if ( -1 != colType.Find("custom4") )
-		mDatabase->AddCustom4(newRow, &column);
+		mDatabase->AddCustom4(newRow, column);
         
 	  else if ( -1 != colType.Find("company") )
-		mDatabase->AddCompany(newRow, &column);
+		mDatabase->AddCompany(newRow, column);
 	  break; // 'c'
 
 	case 'd':
 	  if ( -1 != colType.Find("description") )
-		mDatabase->AddNotes(newRow, &column);
+		mDatabase->AddNotes(newRow, column);
 
 //		  else if ( -1 != colType.Find("dn") ) // distinuished name
 //			ioRow->AddColumn(ev, this->ColDistName(), yarn);
 
 	  else if ( -1 != colType.Find("department") )
-		mDatabase->AddDepartment(newRow, &column);
+		mDatabase->AddDepartment(newRow, column);
 
 //		  else if ( -1 != colType.Find("departmentnumber") )
 //			ioRow->AddColumn(ev, this->ColDepartmentNumber(), yarn);
@@ -787,12 +786,12 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow)
 
 	  if ( -1 != colType.Find("fax") ||
 		-1 != colType.Find("facsimiletelephonenumber") )
-		mDatabase->AddFaxNumber(newRow, &column);
+		mDatabase->AddFaxNumber(newRow, column);
 	  break; // 'f'
 
 	case 'g':
 	  if ( -1 != colType.Find("givenname") )
-		mDatabase->AddFirstName(newRow, &column);
+		mDatabase->AddFirstName(newRow, column);
 
 //		  else if ( -1 != colType.Find("gif") )
 //			ioRow->AddColumn(ev, this->ColGif(), yarn);
@@ -804,10 +803,10 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow)
 
 	case 'h':
 	  if ( -1 != colType.Find("homephone") )
-		mDatabase->AddHomePhone(newRow, &column);
+		mDatabase->AddHomePhone(newRow, column);
 
 	  else if ( -1 != colType.Find("homeurl") )
-		mDatabase->AddWebPage1(newRow, &column);
+		mDatabase->AddWebPage1(newRow, column);
 	  break; // 'h'
 
 	case 'i':
@@ -832,7 +831,7 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow)
 
 	case 'l':
 	  if ( -1 != colType.Find("l") || -1 != colType.Find("locality") )
-		mDatabase->AddWorkCity(newRow, &column);
+		mDatabase->AddWorkCity(newRow, column);
 
 //		  else if ( -1 != colType.Find("language") )
 //			ioRow->AddColumn(ev, this->ColLanguage(), yarn);
@@ -847,7 +846,7 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow)
 
 	case 'm':
 	  if ( -1 != colType.Find("mail") )
-		mDatabase->AddPrimaryEmail(newRow, &column);
+		mDatabase->AddPrimaryEmail(newRow, column);
 
 //		  else if ( -1 != colType.Find("member") && list )
 //		  {
@@ -870,7 +869,7 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow)
 //			ioRow->AddColumn(ev, this->ColNote(), yarn);
 
 	  if ( -1 != colType.Find("notes") )
-		mDatabase->AddNotes(newRow, &column);
+		mDatabase->AddNotes(newRow, column);
 
 //		  else if ( -1 != colType.Find("n") )
 //			ioRow->AddColumn(ev, this->ColN(), yarn);
@@ -907,14 +906,14 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow)
 
 	case 'p':
 	  if ( -1 != colType.Find("postalcode") )
-		mDatabase->AddWorkZipCode(newRow, &column);
+		mDatabase->AddWorkZipCode(newRow, column);
 
 	  else if ( -1 != colType.Find("postOfficeBox") )
-		mDatabase->AddWorkAddress(newRow, &column);
+		mDatabase->AddWorkAddress(newRow, column);
 
 	  else if ( -1 != colType.Find("pager") ||
 		-1 != colType.Find("pagerphone") )
-		mDatabase->AddPagerNumber(newRow, &column);
+		mDatabase->AddPagerNumber(newRow, column);
                     
 //		  else if ( -1 != colType.Find("photo") )
 //			ioRow->AddColumn(ev, this->ColPhoto(), yarn);
@@ -935,7 +934,7 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow)
 
 	case 'r':
 	  if ( -1 != colType.Find("region") )
-		mDatabase->AddWorkState(newRow, &column);
+		mDatabase->AddWorkState(newRow, column);
 
 //		  else if ( -1 != colType.Find("rfc822mailbox") )
 //			ioRow->AddColumn(ev, this->ColPrimaryEmail(), yarn);
@@ -949,13 +948,13 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow)
 
 	case 's':
 	  if ( -1 != colType.Find("sn") || -1 != colType.Find("surname") )
-		mDatabase->AddLastName(newRow, &column);
+		mDatabase->AddLastName(newRow, column);
 
 	  else if ( -1 != colType.Find("st") )
-		mDatabase->AddWorkState(newRow, &column);
+		mDatabase->AddWorkState(newRow, column);
 
 	  else if ( -1 != colType.Find("streetaddress") )
-		mDatabase->AddWorkAddress2(newRow, &column);
+		mDatabase->AddWorkAddress2(newRow, column);
 
 //		  else if ( -1 != colType.Find("secretary") )
 //			ioRow->AddColumn(ev, this->ColSecretary(), yarn);
@@ -970,10 +969,10 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow)
 
 	case 't':
 	  if ( -1 != colType.Find("title") )
-		mDatabase->AddJobTitle(newRow, &column);
+		mDatabase->AddJobTitle(newRow, column);
 
 	  else if ( -1 != colType.Find("telephonenumber") )
-		mDatabase->AddWorkPhone(newRow, &column);
+		mDatabase->AddWorkPhone(newRow, column);
 
 //		  else if ( -1 != colType.Find("tiff") )
 //			ioRow->AddColumn(ev, this->ColTiff(), yarn);
@@ -1005,13 +1004,13 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow)
 
 	case 'w':
 	  if ( -1 != colType.Find("workurl") )
-		mDatabase->AddWebPage2(newRow, &column);
+		mDatabase->AddWebPage2(newRow, column);
 
 	  break; // 'w'
 
 	case 'x':
 	  if ( -1 != colType.Find("xmozillanickname") )
-		mDatabase->AddNickName(newRow, &column);
+		mDatabase->AddNickName(newRow, column);
 
 	  else if ( -1 != colType.Find("xmozillausehtmlmail") )
 	  {
@@ -1022,7 +1021,7 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow)
 
 	case 'z':
 	  if ( -1 != colType.Find("zip") ) // alias for postalcode
-		mDatabase->AddWorkZipCode(newRow, &column);
+		mDatabase->AddWorkZipCode(newRow, column);
 
 	  break; // 'z'
 
