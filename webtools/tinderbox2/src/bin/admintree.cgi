@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.15 $ 
-# $Date: 2001/07/20 19:04:47 $ 
+# $Revision: 1.16 $ 
+# $Date: 2001/08/13 20:11:55 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
@@ -531,7 +531,7 @@ sub make_all_changes {
       push @results, change_ignore_builds();
       push @results, change_motd();
       push @results, ("Check changes are correct on the status page, ".
-                      "different administrators can cange ".
+                      "different administrators can change ".
                       "the settings at the same time.");
 
       # I believe this will work, it is too hard to get the full
@@ -539,7 +539,7 @@ sub make_all_changes {
       # may play strange games with our ARGV and prevent us from
       # updating the state.
 
-#      system( (basename($0).'tinder.cgi'), '--daemon-mode' );
+      system( (basename($0).'/tinder.cgi'), '--daemon-mode' );
     } else {
       push @results, "No changes attempted due to security issues.";
     }
