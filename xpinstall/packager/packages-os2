@@ -462,10 +462,10 @@ bin/res/inspector/viewer-registry.rdf
 bin/res/inspector/search-registry.rdf
 
 [spellcheck]
-bin\components\myspell.dll
-bin\components\spellchk.dll
-bin\components\spellchecker.xpt
-bin\components\myspell\*
+bin/components/myspell.dll
+bin/components/spellchk.dll
+bin/components/spellchecker.xpt
+bin/components/myspell/*
 
 ;Things that aren't packaged and why (or not why)
 ;accproxy.dll - I don't know
