@@ -40,6 +40,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOM3Node.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMDocument.h"
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gDAVLog = nsnull;
@@ -77,3 +78,24 @@ NS_WD_ElementTextChildValue(nsIDOMElement *elt, const nsAString &tagName,
     return node3->GetTextContent(value);
 }
 
+nsresult
+NS_WD_AppendElementWithNS(nsIDOMDocument *doc, nsIDOMNode *parent,
+                          const nsAString& ns, const nsAString& tagName,
+                          nsIDOMElement **child)
+{
+    nsresult rv;
+    nsCOMPtr<nsIDOMElement> childElt;
+    nsCOMPtr<nsIDOMNode> junk;
+
+    rv = doc->CreateElementNS(ns, tagName, getter_AddRefs(childElt));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    rv = parent->AppendChild(childElt, getter_AddRefs(junk));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    *child = childElt.get();
+    NS_ADDREF(*child);
+    
+    return NS_OK;
+}
+                          

@@ -39,6 +39,7 @@
 #include "nsIWebDAVResource.idl"
 
 interface nsIStreamListener;
+interface nsIOutputStream;
 
 [scriptable,uuid(173ef52e-2a2f-45ca-8f9f-abc7429163c2)]
 interface nsIWebDAVService : nsISupports
@@ -67,13 +68,15 @@ interface nsIWebDAVService : nsISupports
     void getResourceOptions(in nsIWebDAVResource resource,
                             in nsIWebDAVMetadataListener listener);
 
-    void getChildren(in nsIWebDAVResource resource,
-                     in PRUint32 depth, in nsIWebDAVChildrenListener listener);
-
     void get(in nsIWebDAVResource resource,
              in nsIStreamListener listener);
 
+    void getToOutputStream(in nsIWebDAVResource resource,
+                           in nsIOutputStream stream,
+                           in nsIWebDAVOperationListener listener);
+
     void put(in nsIWebDAVResourceWithData resource,
+             in ACString contentType,
              in nsIWebDAVOperationListener listener);
 
     void remove(in nsIWebDAVResource resource,

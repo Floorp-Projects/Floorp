@@ -44,9 +44,7 @@ interface nsIWebDAVMetadataListener : nsISupports
 {
     void onGetPropertyNamesResult(in unsigned long aStatusCode,
                                   in AUTF8String aResource,
-                                  in PRUint32 nameCount,
-                                  [array, size_is(nameCount)]
-                                  in string propertyNames);
+                                  in nsIProperties aPropertyNames);
 
     void onGetPropertiesResult(in unsigned long aStatusCode,
                                in AUTF8String aResource,
@@ -59,7 +57,7 @@ interface nsIWebDAVMetadataListener : nsISupports
 
     void onMetadataComplete(in unsigned long aStatusCode,
                             in nsIWebDAVResource aResource,
-                            in string method);
+                            in ACString method);
 };
 
 [scriptable,uuid(e198a0fd-9e62-4299-84e3-d93c0cd68881)]
@@ -73,17 +71,8 @@ interface nsIWebDAVOperationListener : nsISupports
                       in nsIWebDAVResource aResource);
     void onCopyResult(in unsigned long aStatusCode,
                       in nsIWebDAVResource aResource);
-};
-
-[scriptable,uuid(c368540a-b4c3-45d7-b20f-1474c140c0dd)]
-interface nsIWebDAVChildrenListener : nsISupports
-{
-    void hasChild(in unsigned long aStatusCode,
-                  in AUTF8String aParent,
-                  in AUTF8String aChild);
-
-    void childListComplete(in AUTF8String aParent);
-
-    void childListFailed(in unsigned long aStatusCode,
-                         in AUTF8String aParent);
+    void onPutResult(in unsigned long aStatusCode,
+                     in nsIWebDAVResource aResource);
+    void onGetResult(in unsigned long aStatusCode,
+                     in nsIWebDAVResource aResource);
 };

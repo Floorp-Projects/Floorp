@@ -58,9 +58,10 @@ REQUIRES        = xpcom     \
 		  xmlextras \
 		  $(NULL)
 
-CPPSRCS         = nsWebDAVService.cpp          \
-		  nsPropfindStreamListener.cpp \
-		  nsWebDAVUtils.cpp            \
+CPPSRCS         = nsWebDAVService.cpp            \
+		  nsPropfindStreamListener.cpp   \
+		  nsOperationStreamListeners.cpp \
+		  nsWebDAVUtils.cpp              \
 		  $(NULL)
 
 include $(topsrcdir)/config/rules.mk

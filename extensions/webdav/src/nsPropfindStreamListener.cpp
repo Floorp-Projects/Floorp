@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Mike Shaver <shaver@off.net> (original author)
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -62,8 +63,9 @@ public:
     NS_DECL_NSISTREAMLISTENER
 
     PropfindStreamListener(nsIWebDAVResource *resource,
-                           nsIWebDAVMetadataListener *listener) :
-        mResource(resource), mListener(listener) { }
+                           nsIWebDAVMetadataListener *listener,
+                           PRBool isPropname) :
+        mResource(resource), mListener(listener), mNameOnly(isPropname) { }
     virtual ~PropfindStreamListener() { }
 protected:
 
@@ -79,7 +81,8 @@ protected:
             mResource->GetUrlSpec(spec);
             LOG(("PROPFIND completed for %s: %d", spec.get(), aStatusCode));
         }
-        mListener->OnMetadataComplete(aStatusCode, mResource, "PROPFIND");
+        mListener->OnMetadataComplete(aStatusCode, mResource,
+                                      NS_LITERAL_CSTRING("PROPFIND"));
         return NS_OK;
     }
 
@@ -91,6 +94,7 @@ protected:
     nsCOMPtr<nsIWebDAVMetadataListener> mListener;
     nsCOMPtr<nsIDOMDocument>            mXMLDoc;
     nsCString                           mBody;
+    PRBool                              mNameOnly;
 };
 
 NS_IMPL_ISUPPORTS1(PropfindStreamListener, nsIStreamListener)
@@ -152,6 +156,15 @@ PropfindStreamListener::PropertiesFromPropElt(nsIDOMElement *propElt,
         rv = node->GetLocalName(propName);
         NS_ENSURE_SUCCESS(rv, rv);
 
+        NS_ConvertUTF16toUTF8 propkey(nsStr + NS_LITERAL_STRING(" ") +
+                                      propName);
+        if (mNameOnly) {
+            LOG(("  propname: %s", propkey.get()));
+            rv = props->Set(propkey.get(), nsnull);
+            NS_ENSURE_SUCCESS(rv, rv);
+            continue;
+        }
+
         nsCOMPtr<nsIDocumentEncoder> encoder =
           do_CreateInstance(NS_DOC_ENCODER_CONTRACTID_BASE "text/xml", &rv);
 
@@ -175,8 +188,6 @@ PropfindStreamListener::PropertiesFromPropElt(nsIDOMElement *propElt,
         NS_ENSURE_SUCCESS(rv, rv);
         suppString->SetData(valueStr);
 
-        NS_ConvertUTF16toUTF8 propkey(nsStr + NS_LITERAL_STRING(" ") +
-                                      propName);
         LOG(("  %s = %s", propkey.get(),
              NS_ConvertUTF16toUTF8(valueStr).get()));
         rv = props->Set(propkey.get(), suppString);
@@ -240,7 +251,14 @@ PropfindStreamListener::ProcessResponse(nsIDOMElement *responseElt)
         PRInt32 statusVal = nsCAutoString(Substring(statusUTF8, 8)).ToInteger(&res, 10);
         NS_ENSURE_SUCCESS(res, (nsresult)res);
         
-        mListener->OnGetPropertiesResult((PRUint32)statusVal, hrefUTF8, props);
+
+        if (mNameOnly) {
+            mListener->OnGetPropertyNamesResult((PRUint32)statusVal, hrefUTF8,
+                                                props);
+        } else {
+            mListener->OnGetPropertiesResult((PRUint32)statusVal, hrefUTF8,
+                                             props);
+        }
     }
     return NS_OK;
 }
@@ -346,8 +364,9 @@ PropfindStreamListener::OnDataAvailable(nsIRequest *aRequest,
 }
 
 nsIStreamListener *
-NS_NewPropfindStreamListener(nsIWebDAVResource *resource,
-                             nsIWebDAVMetadataListener *listener)
+NS_WD_NewPropfindStreamListener(nsIWebDAVResource *resource,
+                                nsIWebDAVMetadataListener *listener,
+                                PRBool isPropname)
 {
-  return new PropfindStreamListener(resource, listener);
+    return new PropfindStreamListener(resource, listener, isPropname);
 }

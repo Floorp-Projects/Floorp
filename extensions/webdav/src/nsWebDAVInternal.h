@@ -42,6 +42,7 @@
 #include "nsString.h"
 
 class nsIStreamListener;
+class nsIRequestObserver;
 
 #include "nsIDOMElement.h"
 #include "nsIWebDAVListener.h"
@@ -53,8 +54,17 @@ class nsIStreamListener;
 extern PRLogModuleInfo *gDAVLog;
 
 nsIStreamListener *
-NS_NewPropfindStreamListener(nsIWebDAVResource *resource,
-                             nsIWebDAVMetadataListener *listener);
+NS_WD_NewPropfindStreamListener(nsIWebDAVResource *resource,
+                                nsIWebDAVMetadataListener *listener,
+                                PRBool isPropname);
+
+nsIStreamListener *
+NS_WD_NewPutOperationStreamListener(nsIWebDAVResource *resource,
+                                    nsIWebDAVOperationListener *listener);
+
+nsIRequestObserver *
+NS_WD_NewGetOperationRequestObserver(nsIWebDAVResource *resource,
+                                     nsIWebDAVOperationListener *listener);
 
 nsresult
 NS_WD_GetElementByTagName(nsIDOMElement *parentElt, const nsAString &tagName,
@@ -63,5 +73,10 @@ NS_WD_GetElementByTagName(nsIDOMElement *parentElt, const nsAString &tagName,
 nsresult
 NS_WD_ElementTextChildValue(nsIDOMElement *elt, const nsAString &tagName,
                             nsAString &value);
+
+nsresult
+NS_WD_AppendElementWithNS(nsIDOMDocument *doc, nsIDOMNode *parent,
+                          const nsAString& ns, const nsAString& tagName,
+                          nsIDOMElement **child);
 
 #endif /* nsWebDAVInternal_h__ */
