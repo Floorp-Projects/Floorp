@@ -198,7 +198,7 @@ static PRUnichar* UTF8ToUCS2(const char *aSrc, PRUint32 aSrcLen,
                 ucs4 |= tmp;
                 if (0 == state) {
                     if (ucs4 >= 0x00010000) {
-                        if (ucs4 >= 0x001F0000) {
+                        if (ucs4 >= 0x00110000) {
                             *out++ = 0xFFFD;
                         } else {
                             ucs4 -= 0x00010000;
