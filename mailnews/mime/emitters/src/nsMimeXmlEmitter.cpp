@@ -199,7 +199,7 @@ nsMimeXmlEmitter::WriteXMLHeader(const char *msgID)
   UtilityWrite("\">");
 
   mXMLHeaderStarted = PR_TRUE;
-  PR_FREEIF(newValue);
+  nsCRT::free(newValue);
   return NS_OK;
 }
 
@@ -246,8 +246,8 @@ nsMimeXmlEmitter::WriteXMLTag(const char *tagName, const char *value)
   UtilityWrite(newValue);
   UtilityWrite("</header>");
 
-  delete[] upCaseTag;
-  PR_FREEIF(newValue);
+  nsCRT::free(upCaseTag);
+  nsCRT::free(newValue);
 
   return NS_OK;
 }

@@ -240,8 +240,8 @@ nsMimeHtmlEmitter::AddHeaderField(const char *field, const char *value)
 
   UtilityWrite("</TR>");
 
-  PR_FREEIF(newValue);
-  PR_FREEIF(upCaseField);
+  nsCRT::free(newValue);
+  nsCRT::free(upCaseField);
   return NS_OK;
 }
 
@@ -382,7 +382,7 @@ nsMimeHtmlEmitter::AddAttachmentField(const char *field, const char *value)
   UtilityWrite("</td>");
   UtilityWrite("</TR>");
 
-  PR_FREEIF(newValue);
+  nsCRT::free(newValue);
   return NS_OK;
 }
 

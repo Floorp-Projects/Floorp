@@ -480,8 +480,8 @@ nsMimeXULEmitter::AddHeaderFieldHTML(const char *field, const char *value)
 
   UtilityWrite("</TR>");
 
-  PR_FREEIF(newValue);
-  PR_FREEIF(upCaseField);
+  nsCRT::free(newValue);
+  nsCRT::free(upCaseField);
   return NS_OK;
 }
 
@@ -559,7 +559,7 @@ nsMimeXULEmitter::WriteXULHeader(const char *msgID)
   // Output the message ID to make it query-able via the DOM
   UtilityWrite("<message id=\"");
   UtilityWrite(newValue);
-  PR_FREEIF(newValue);
+  nsCRT::free(newValue);
   UtilityWriteCRLF("\"/>");
 
   // Now, the JavaScript...
@@ -1040,10 +1040,14 @@ nsMimeXULEmitter::WriteMiscXULTag(const char *tagName, const char *value)
   // Now write out the actual value itself and move on!
   char  *newValue = nsEscapeHTML(value);
   if (newValue) 
+  {
     UtilityWrite(newValue);
+    nsCRT::free(newValue);
+  }
   else
+  {
     UtilityWrite(value);
-  PR_FREEIF(newValue);
+  }
   ////
 
   UtilityWriteCRLF("</html:td>");
@@ -1112,16 +1116,17 @@ nsMimeXULEmitter::OutputEmailAddresses(const char *aHeader, const char *aEmailAd
 	PRUint32    numAddresses;
 	char	      *names;
 	char	      *addresses;
-  char        *newValue = nsEscapeHTML(aEmailAddrs);
  
   if ( (!mHeaderParser) ||
        NS_FAILED(mHeaderParser->ParseHeaderAddresses ("UTF-8", aEmailAddrs, 
                  &names, &addresses, &numAddresses)) )
   {
+    char *newValue = nsEscapeHTML(aEmailAddrs);
     if (newValue) 
+    {
       UtilityWrite(newValue);
-
-    PR_FREEIF(newValue);
+      nsCRT::free(newValue);
+    }
     return NS_OK;
   }
 
@@ -1247,7 +1252,7 @@ char      *workAddr = nsnull;
   if (link)
     UtilityWriteCRLF("</html:a>");
 
-  PR_FREEIF(link);
+  nsCRT::free(link);
   PR_FREEIF(tLink);
 
   // Misc here
