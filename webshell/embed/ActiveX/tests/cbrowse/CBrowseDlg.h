@@ -19,7 +19,7 @@ class CBrowseDlg : public CDialog
 {
 // Construction
 public:
-	CControlSiteInstance *m_pControlSite;
+	CBrowserCtlSiteInstance *m_pControlSite;
 	CLSID m_clsid;
 
 	CBrowseDlg(CWnd* pParent = NULL);	// standard constructor

@@ -285,7 +285,7 @@ TestResult __cdecl tstTesters(BrowserInfo &cInfo)
 
 TestResult __cdecl tstControlActive(BrowserInfo &cInfo)
 {
-	CControlSiteInstance *pControlSite = cInfo.pControlSite;
+	CBrowserCtlSiteInstance *pControlSite = cInfo.pControlSite;
 	if (pControlSite == NULL)
 	{
 		cInfo.OutputString(_T("Error: No control site"));

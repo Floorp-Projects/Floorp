@@ -28,7 +28,7 @@ class BrowserInfo
 public:
 	Test *pTest;
 	TestResult nResult;
-	CControlSiteInstance *pControlSite;
+	CBrowserCtlSiteInstance *pControlSite;
 	IUnknown *pIUnknown;
 	CLSID clsid;
 	CBrowseDlg *pBrowseDlg;

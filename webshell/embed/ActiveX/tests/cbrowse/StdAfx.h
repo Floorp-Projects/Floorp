@@ -42,6 +42,7 @@ extern CBrowseModule _Module;
 
 #include <exdisp.h>
 #include <mshtml.h>
+#include <mshtmhst.h>
 #include <activscp.h>
 
 #include <string>
@@ -57,6 +58,7 @@ extern CBrowseModule _Module;
 #include "..\..\ControlSite.h"
 #include "..\..\ActiveScriptSite.h"
 
+#include "CBrowserCtlSite.h"
 #include "Tests.h"
 
 #define SECTION_TEST             _T("Test")
