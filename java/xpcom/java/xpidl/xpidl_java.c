@@ -755,6 +755,10 @@ attribute_declaration(TreeState *state)
 
     gboolean method_noscript = 
         (IDL_tree_property_get(ATTR_PROPS(state->tree), "noscript") != NULL);
+
+    gboolean method_notxpcom = 
+        (IDL_tree_property_get(ATTR_PROPS(state->tree), "notxpcom") != NULL);
+
     GSList *doc_comments =
         IDL_IDENT(IDL_LIST(IDL_ATTR_DCL
                            (state->tree).simple_declarations).data).comments;
@@ -763,6 +767,7 @@ attribute_declaration(TreeState *state)
         fputs("    ", FILENAME(state));
         printlist(FILENAME(state), doc_comments);
     }
+    
 
 #if 0
     /*
@@ -776,6 +781,9 @@ attribute_declaration(TreeState *state)
     /* Comment */
     fputc('\n', FILENAME(state));
     write_comment(state);
+
+    if (method_notxpcom || method_noscript)
+        return TRUE;
 
     state->tree = ATTR_TYPE_DECL(state->tree);
 
