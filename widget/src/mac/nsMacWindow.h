@@ -117,7 +117,9 @@ public:
     NS_IMETHOD            	GetScreenBounds(nsRect &aRect);
     virtual PRBool          OnPaint(nsPaintEvent &event);
 
-		NS_IMETHOD              SetTitle(const nsString& aTitle);
+    NS_IMETHOD              SetTitle(const nsString& aTitle);
+
+    void                    UserStateForResize();
 
   	// nsIKBStateControl interface
   	NS_IMETHOD ResetInputState();
@@ -148,16 +150,17 @@ protected:
                                                EventRef inEvent, void* userData ) ;
 #endif
 
-	PRBool							mWindowMadeHere; // true if we created the window
-	PRBool							mIsDialog;       // true if the window is a dialog
-	PRBool							mIsSheet;        // true if the window is a sheet (Mac OS X)
-	PRBool							mIgnoreDeactivate;  // true if this window has a (Mac OS X) sheet opening
-	auto_ptr<nsMacEventHandler>		mMacEventHandler;
+	PRPackedBool                    mWindowMadeHere; // true if we created the window
+	PRPackedBool                    mIsDialog;       // true if the window is a dialog
+	PRPackedBool                    mIsSheet;        // true if the window is a sheet (Mac OS X)
+	PRPackedBool                    mIgnoreDeactivate;  // true if this window has a (Mac OS X) sheet opening
+	PRPackedBool                    mAcceptsActivation;
+	PRPackedBool                    mIsActive;
+	PRPackedBool                    mZoomOnShow;
+	PRPackedBool                    mZooming;
+	PRPackedBool                    mResizeIsFromUs;    // we originated the resize, prevent infinite recursion
+	auto_ptr<nsMacEventHandler>     mMacEventHandler;
 	nsIWidget                      *mOffsetParent;
-	PRBool                          mAcceptsActivation;
-	PRBool                          mIsActive;
-	PRBool                          mZoomOnShow;
-	PRBool                          mResizeIsFromUs;    // we originated the resize, prevent infinite recursion
 	
 #if !TARGET_CARBON
 	ControlHandle      mPhantomScrollbar;  // a native scrollbar for the scrollwheel
