@@ -19,7 +19,8 @@
  *
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Mike Pinkerton (pinkerton@netscape.com)
  *   Dean Tessman <dean_tessman@hotmail.com>
  */
 
@@ -167,6 +168,8 @@ protected:
   nsCOMPtr<nsITimer> mCloseTimer; // Close timer.
 
   PRBool mIsContextMenu;  // is this a context menu?
+  
+  PRBool mMenuCanOverlapOSBar;    // can we appear over the taskbar/menubar?
 
 }; // class nsMenuPopupFrame
 
