@@ -978,6 +978,9 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
 	  PRBool isSecure = PR_FALSE;
 	  if (nsCRT::strcasecmp("snews",(const char *)scheme) == 0) {
 		  isSecure = PR_TRUE;
+          if ((port == 0) || (port == -1)) {
+              port = SECURE_NEWS_PORT;
+          }
 	  }
 	  rv = CreateNewsAccount((const char *)userName,(const char *)hostName,isSecure,port,getter_AddRefs(server));
   }
