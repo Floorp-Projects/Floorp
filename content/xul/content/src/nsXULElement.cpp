@@ -527,6 +527,7 @@ RDFElementImpl::GetFirstChild(nsIDOMNode** aFirstChild)
     nsresult rv;
     nsIContent* child;
     if (NS_SUCCEEDED(rv = ChildAt(0, child))) {
+	if (nsnull == child) return(NS_ERROR_FAILURE);
         rv = child->QueryInterface(kIDOMNodeIID, (void**) aFirstChild);
         NS_ASSERTION(NS_SUCCEEDED(rv), "not a DOM node");
         NS_RELEASE(child); // balance the AddRef in ChildAt()
