@@ -79,9 +79,9 @@ PRBool nsFileWidget::Show()
   gtk_signal_connect(GTK_OBJECT(fs->cancel_button), "clicked",
 	             GTK_SIGNAL_FUNC(file_cancel_clicked),
 		     &ret);
+  // start new loop.   ret is set in the above callbacks.
   gtk_main();
-// returning true causes the browser to try and display the dir structure...
-//  return PR_TRUE;
+
   return ret;
 }
 
@@ -148,9 +148,6 @@ NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
 
   mWidget = gtk_file_selection_new(title);
 
-//  mWnd = (HWND) ((aParent) ? aParent->GetNativeData(NS_NATIVE_WINDOW) : 0); 
-//  mTitle.SetLength(0);
-//  mTitle.Append(aTitle);
   return NS_OK;
 }
 
