@@ -7,37 +7,50 @@
 
 <?xul-overlay href="chrome://inspector/content/inspectorOverlay.xul"?>
 <?xul-overlay href="chrome://inspector/content/toolboxOverlay.xul"?>
+<?xul-overlay href="chrome://inspector/content/popupOverlay.xul"?>
 <?xul-overlay href="chrome://inspector/content/commandOverlay.xul"?>
 <?xul-overlay href="chrome://inspector/content/keysetOverlay.xul"?>
 <?xul-overlay href="chrome://inspector/content/statusbarOverlay.xul"?>
 
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
+
 <?xml-stylesheet href="chrome://inspector/skin/inspectorWindow.css"?>
 
 <window id="winInspectorMain" class="color-dialog" 
-        title="Document Inspector"
+        title="&Inspector.title;"
         width="1024" height="768" orient="vertical"
+        persist="screenX screenY width height maximized"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
 
-  <popupset id="psTooltipSet">
-    <popup id="ppTooltip" class="tooltip" oncreate="return inspector.fillInTooltip(document.tooltipNode);"> 
-      <text id="txTooltip"/>
-    </popup>
-  </popupset>
+  <popupset id="aTooltipSet"/>
   
   <popupset id="ppsGlobalPopupset"/>
+  <popupset id="ppsViewerPopupset"/>
+  
   <keyset id="ksGlobalKeyset"/>
-  <broadcasterset id="brsGlobalCommands"/>
+  <commandset id="cmdsGlobalCommands"/>
+
+  <commandset id="tasksCommands">
+    <command id="cmd_quit"/>
+  </commandset>
+  
+  <keyset id="tasksKeys">
+    <key id="key_close"/>
+    <key id="key_quit"/>
+  </keyset>
 
   <toolbox id="tbxInsToolbox">
     <menubar id="mbrInspectorMain"/>
     <toolbar id="tbInspectorPrimary"/>
   </toolbox>
 
-  <hbox id="bxInspectorMain" flex="1"/>
+  <vbox id="bxInspectorMain" flex="1"/>
   
-  <hbox id="bxStatus"/>
+  <statusbar id="status-bar"/>
 </window>
 
         

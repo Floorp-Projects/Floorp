@@ -5,15 +5,50 @@
   <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
 ]>
 
-<?xml-stylesheet href="chrome://communicator/skin"?>
+<?xml-stylesheet href="chrome://inspector/skin/"?>
 
 <window id="winJSObject" class="color-dialog" 
         orient="vertical"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  
+
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/jsObject/jsObject.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/ClipboardUtils.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/hooks.js"/>
+  
+  <commandset>
+    <command id="cmdCopyValue" oncommand="viewer.cmdCopyValue()"/>
+    <command id="cmdEvalExpr" oncommand="viewer.cmdEvalExpr()"/>
+    <command id="cmdInspectInNewView" oncommand="viewer.cmdInspectInNewView()"/>
+  </commandset>
+  
+  <popupset>
+    <popup id="popupContext" oncreate="return viewer.onCreateContext(this)">
+      <menuitem label="Inspect in New Window" observes="cmdInspectInNewView"/>
+      <menuseparator/>
+      <menuitem label="Copy Value" observes="cmdCopyValue"/>
+      <menuitem label="Evaluate Javascript..." observes="cmdEvalExpr"/>
+    </popup>
+  </popupset>
+  
+  <tree id="treeJSObject" flex="1" context="popupContext">
+    
+    <treecolgroup>
+      <treecol flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol flex="1"/>
+    </treecolgroup>
+      
+    <treehead>
+      <treerow>
+        <treecell class="treecell-header" label="Property"/>
+        <treecell class="treecell-header" label="Value"/>
+      </treerow>
+    </treehead>
+    
+    <treechildren id="trchJSObject" flex="1"/>
+  </tree>
 
-  <text value="Not Yet Implemented"/>
 </window>

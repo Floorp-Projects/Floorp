@@ -6,14 +6,12 @@
 ]>
 
 <overlay id="ovInspector"
-         xmlns:ins="&INS-rdf;"
+         xmlns:domi="http://www.mozilla.org/inspector"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/x-javascript" src="chrome://inspector/content/InspectorApp.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/inspector.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/ViewerRegistry.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/ViewerPane.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/Flasher.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFArray.js"/>
@@ -21,6 +19,7 @@
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/PrefUtils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/FilePickerUtils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/file.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/search/inSearchService.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/search/inSearchModule.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inFormManager.js"/>
@@ -30,40 +29,28 @@
 
   <vbox id="bxInspectorMain">
 
-    <hbox id="bxInspectorPanes" flex="1" hide="true">
-      <vbox id="bxDocPane" class="viewer-pane" flex="1">
-        <hbox id="bxDocHeader" class="viewer-pane-header" autostretch="never">
-          <menubutton class="viewer-list" ins-role="viewer-list" disabled="true"/>
-          <text class="viewer-title" ins-role="viewer-title" flex="1"/>
-          <menubutton class="viewer-menu" ins-role="viewer-menu" disabled="true"/>
-        </hbox>
-        <iframe id="ifDocViewer" class="viewer-iframe" flex="1" ins-role="viewer-iframe"/>
-      </vbox>
-      
-      <splitter orient="vertical" collapse="before">
-        <grippy/>
-      </splitter>
+    <domi:panelset id="bxPanelSet" flex="1" viewercommandset="cmdsGlobalCommands">
+      <domi:panel id="bxDocPanel" title="&bxDocPanel.title;" 
+                  flex="1" persist="width"/>
 
-      <vbox id="bxObjectPane" class="viewer-pane" flex="1">
-        <hbox id="bxObjHeader" class="viewer-pane-header" autostretch="never">
-          <menubutton class="viewer-list" ins-role="viewer-list" disabled="true"/>
-          <text class="viewer-title" ins-role="viewer-title" flex="1"/>
-          <menubutton class="viewer-menu" ins-role="viewer-menu" disabled="true"/>
-        </hbox>
-        <iframe id="ifObjViewer" class="viewer-iframe" flex="1" ins-role="viewer-iframe"/>
-      </vbox>
-    </hbox>
+      <splitter id="splPanels" orient="vertical"/>
+      
+      <domi:panel id="bxObjectPanel" title="&bxObjectPanel.title;" linkedpanel="bxDocPanel"
+                  flex="1" persist="width"/>
+    </domi:panelset>
 
     <splitter id="splBrowser" class="titled-splitter" 
         onopen="inspector.onSplitterOpen(this)"
-        value="Browser" closebutton="true" collapse="after"/>
+        label="Browser" closebutton="true" collapse="after"/>
+        
     <hbox id="bxBrowser" flex="1">
       <browser id="ifBrowser" type="content-primary" flex="1" src="about:blank"/>
     </hbox>
 
     <splitter id="splSearch" class="titled-splitter" 
         onopen="inspector.onSplitterOpen(this)"
-        value="Search Results" closebutton="true" collapse="after"/>
+        label="Search Results" closebutton="true" collapse="after"/>
+        
     <vbox id="bxSearch">
       <tree id="trSearch" flex="1" context="ppSearchResults" datasources="rdf:null">
         <template/>
@@ -72,5 +59,7 @@
       <!-- TEMPORARY UNTIL FIX FOR 54237 -->
       <browser id="inSearchServiceLoader" height="1"/>
     </vbox>
+    
   </vbox>
+
 </overlay>

@@ -5,15 +5,23 @@
   <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
 ]>
 
-<?xml-stylesheet href="chrome://communicator/skin"?>
+<?xml-stylesheet href="chrome://inspector/skin/"?>
 
 <window id="winComputedStyle" class="color-dialog" 
         orient="vertical"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inBaseOutlinerView.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/computedStyle/computedStyle.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
-
-  <text value="Not Yet Implemented"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
+  
+  <outliner id="olStyles" flex="1"  onselect="viewer.onItemSelected()">
+    <outlinercol id="olcStyleName" label="Style" flex="1"/>
+    <splitter class="tree-splitter"/>
+    <outlinercol id="olcStyleValue" label="Value" flex="1"/>
+    <outlinerbody id="olbStyles" flex="1"/>
+  </outliner>
 </window>

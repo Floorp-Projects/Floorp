@@ -1,41 +1,32 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Joe Hewitt <hewitt@netscape.com> (original author)
+ */
+
 @import url("chrome://inspector/skin");
 
-#mlViewers {
-  min-width: 10em;
-  max-width: 10em;
-}
-
-.toolbar-header1 {
-  margin: 2px;
-  color: #000000;
-  font-size: 14px;
-  font-weight: bold;
-}
-
 #bxURLBar {
-  padding: 3px;
-}
-
-#bxURLBarContainer {
-  margin: 0px 3px 0px 3px;
-  border: 1px inset ThreeDFace;
-  padding: 0px 1px 0px 1px;
-  background-color: -moz-field;
-}
-
-#mbHistory.menubutton-icon {
-  border: 1px outset ThreeDFace;
-  background-color: ThreeDFace;
-  list-style-image: url("chrome://global/skin/scroll-down.gif");
-}
-
-.button-toolbar-3 {
-  margin: 0px !important;
-  border: 0px !important;
+  padding: 2px;
 }
 
 #imgURLBarIcon {
-  margin: 1px 1px 0px 1px;
   list-style-image: url("chrome://communicator/skin/bookmarks/location.gif");
 }
 
@@ -43,14 +34,29 @@
   height: 150px;
 }
 
-#bxStatus {
-  border-top: 1px outset ThreeDFace;
-  padding: 2px;
-  min-width: 1px;
-  background-color: ThreeDFace;
-  font-size: smaller;
+#splPanels {
+  width: 5px;
 }
 
-#txStatus {
-  margin-left: 5px;
+/* ::::: toolbar buttons ::::: */
+
+#btnSelecting {
+  list-style-image: url("chrome://inspector/skin/btnSelecting.gif");
 }
+
+#btnSelecting[toggled="true"] {
+  list-style-image: url("chrome://inspector/skin/btnSelecting-act.gif");
+}
+
+#btnSelecting[disabled="true"] {
+  list-style-image: url("chrome://inspector/skin/btnSelecting-dis.gif");
+}
+
+#btnFind {
+  list-style-image: url("chrome://inspector/skin/btnFind.gif");
+}
+
+#btnFind[disabled="true"] {
+  list-style-image: url("chrome://inspector/skin/btnFind-dis.gif");
+}
+

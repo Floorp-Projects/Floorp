@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay [
+  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+  <!ENTITY % dtd3 SYSTEM "chrome://inspector/locale/viewers/dom.dtd"> %dtd3;
+]>
+
+<?xml-stylesheet href="chrome://inspector/skin/viewers/styleRules/styleRules.css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<window id="winPseudoClasses" class="color-dialog" 
+        title="&pseudoClasses.title;"
+        orient="vertical"
+        persist="screenX screenY width height"
+        xmlns:domi="http://www.mozilla.org/inspector"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <!--============================= SCRIPTS ============================= -->
+
+  <script type="application/x-javascript" src="chrome://inspector/content/viewers/dom/pseudoClassDialog.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+
+  <keyset id="dialogKeys"/>
+
+  <groupbox style="width: 25em;">
+    <label value="&pseudoClasses.title;"/>
+    <vbox>
+      <checkbox id="cbxStateHover" label="&stateHover.label;"/>
+      <checkbox id="cbxStateActive" label="&stateActive.label;"/>
+      <checkbox id="cbxStateFocus" label="&stateFocus.label;"/>
+    </vbox>
+  </groupbox>
+
+  <hbox id="okCancelButtonsRight"/>
+  
+</window>
+
+        

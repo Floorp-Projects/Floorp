@@ -10,47 +10,67 @@
 
 <window id="winDOMViewer" class="color-dialog" 
         orient="vertical"
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns:ins="http://www.mozilla.org/inspector#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/dom/dom.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/Flasher.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/system/PrefUtils.js"/>
-  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inTreeTableBuilder.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inOutlinerBuilder.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/DNDUtils.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/hooks.js"/>
 
   <!--============================= COMMANDS ============================== -->
 
-  <broadcasterset>
-    <broadcaster id="cmdDeleteNode"
+  <commandset>
+    <command id="cmdInsertNode"
       oncommand="viewer.cmdDeleteSelectedNode()"/>
 
-    <broadcaster id="cmdInspectBrowser" 
+    <command id="cmdDeleteNode"
+      oncommand="viewer.cmdDeleteSelectedNode()"/>
+
+    <command id="cmdCopyXML"
+      oncommand="viewer.cmdCopySelectedXML()"/>
+
+    <command id="cmdInspectBrowser" 
       isvalid="return viewer.cmdInspectBrowserIsValid()"
       oncommand="viewer.cmdInspectBrowser()"/>
-  </broadcasterset>
+
+    <command id="cmdInspectInNewWindow" 
+      oncommand="viewer.cmdInspectInNewWindow()"/>
+
+    <command id="cmdShowPseudoClasses"
+      oncommand="viewer.cmdShowPseudoClasses()"/>
+  </commandset>
   
   <!--============================= POPUPS ============================== -->
 
   <popupset id="psPopups">
     <popup id="ppDOMContext" oncreate="viewer.onContextCreate(this)">
-      <menuitem label="&cmdDeleteNode.label;" observes="cmdDeleteNode"/>
+      <menuitem label="&cmdInspectInNewWindow.label;" observes="cmdInspectInNewWindow"/>
       <menuitem label="&cmdInspectBrowser.label;" observes="cmdInspectBrowser"/>
+      <menuseparator/>
+      <menuitem label="&cmdInsertNode.label;" observes="cmdInsertNode"/>
+      <menuitem label="&cmdDeleteNode.label;" observes="cmdDeleteNode"/>
+      <menuseparator/>
+      <menuitem label="&cmdCopyXML.label;" observes="cmdCopyXML"/>
+      <menuitem label="&cmdShowPseudoClasses.label;" observes="cmdShowPseudoClasses"/>
     </popup>
   </popupset>
 
   <!-- ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-    The template for this tree will be filled in by inTreeTableBuilder
+    The template for this outliner will be filled in by inOutlinerBuilder
     ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: -->
   
-  <tree id="trDOMTree" 
-    flex="1" onselect="viewer.onTreeItemSelected()"
-    context="ppDOMContext"
-    datasources="rdf:null" ref="inspector:DOMRoot"
-    containment="&INS-rdf;HasChildren" flags="dont-test-empty">
-    <template/>
-  </tree>
+  <outliner id="trDOMOutliner" flex="1" class="outliner-nocolpicker"
+            onselect="viewer.onItemSelected()">
+    <outlinerbody id="trDOMOutlinerBody" flex="1" context="ppDOMContext"
+                  datasources="rdf:null" ref="inspector:DOMRoot"
+                  containment="&INS-rdf;HasChildren" flags="dont-test-empty">
+      <template/>
+    </outlinerbody>
+  </outliner>
 </window>

@@ -1,0 +1,40 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Joe Hewitt <hewitt@netscape.com> (original author)
+ */
+
+.multipanel-label-box {
+  border-bottom: 1px solid #555555;
+  background-color: #A7B5C2;
+  color: #000000;
+}
+
+.multipanel-label-box-2 {
+  border-top: 1px solid #DEE7EE;
+  border-right: 1px solid #8998AA;
+  border-bottom: 1px solid #8998AA;
+  border-left: 1px solid #DEE7EE;
+  padding: 2px 4px;
+}
+
+multipanel[disabled="true"] > .multipanel-label-box {
+  color: #8C99AB;
+}
+

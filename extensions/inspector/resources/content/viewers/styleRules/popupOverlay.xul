@@ -5,11 +5,12 @@
 <overlay id="ovStyleRulesViewerPopup"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <popupset id="ppsGlobalPopupset">
+  <popupset id="ppsViewerPopupset">
+    <!--
+    <menupopup id="ppViewerContext-styleRules">
+    </menupopup>
+    -->
   </popupset>
-
-  <menupopup id="mppSearch">
-  </menupopup>
 
 </overlay>
 

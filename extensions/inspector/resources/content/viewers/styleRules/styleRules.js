@@ -1,3 +1,25 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Joe Hewitt <hewitt@netscape.com> (original author)
+ */
+
 /***************************************************************
 * StyleRulesViewer --------------------------------------------
 *  The viewer for CSS style rules that apply to a DOM element.
@@ -17,7 +39,13 @@ var viewer;
 var kCSSRuleDataSourceIID = "@mozilla.org/rdf/datasource;1?name=Inspector_CSSRules";
 var kCSSDecDataSourceIID  = "@mozilla.org/rdf/datasource;1?name=Inspector_CSSDec";
 
-//////////////////////////////////////////////////
+var nsEventStateUnspecificed = 0;
+var nsEventStateActive = 1;
+var nsEventStateFocus = 2;
+var nsEventStateHover = 4;
+var nsEventStateDragOver = 8;
+
+/////////////////////////////////////////////////
 
 window.addEventListener("load", StyleRulesViewer_initialize, false);
 
@@ -32,19 +60,13 @@ function StyleRulesViewer_initialize()
 
 function StyleRulesViewer() // implements inIViewer
 {
+  this.mObsMan = new ObserverManager();
+  
   this.mURL = window.location;
-  this.mRuleTree = document.getElementById("trStyleRules");
-  this.mDecTree = document.getElementById("trStyleDec");
-
-  // create the rules datasource
-  var ds = XPCU.createInstance(kCSSRuleDataSourceIID, "nsICSSRuleDataSource");
-  this.mRuleDS = ds;
-  this.mRuleTree.database.AddDataSource(ds);
-
-  // create the declaration datasource
-  var ds = XPCU.createInstance(kCSSDecDataSourceIID, "nsICSSDecDataSource");
-  this.mDecDS = ds;
-  this.mDecTree.database.AddDataSource(ds);
+  this.mRuleOutliner = document.getElementById("olStyleRules");
+  this.mRuleBoxObject = XPCU.QI(this.mRuleOutliner.boxObject, "nsIOutlinerBoxObject");
+  this.mPropsOutliner = document.getElementById("olStyleProps");
+  this.mPropsBoxObject = XPCU.QI(this.mPropsOutliner.boxObject, "nsIOutlinerBoxObject");
 }
 
 StyleRulesViewer.prototype = 
@@ -55,7 +77,7 @@ StyleRulesViewer.prototype =
   
   mRuleDS: null,
   mDecDS: null,
-  mViewee: null,
+  mSubject: null,
 
   ////////////////////////////////////////////////////////////////////////////
   //// interface inIViewer
@@ -63,28 +85,37 @@ StyleRulesViewer.prototype =
   get uid() { return "styleRules" },
   get pane() { return this.mPane },
   
-  get viewee() { return this.mViewee },
-  set viewee(aObject)
+  get selection() { return null },
+  
+  get subject() { return this.mSubject },
+  set subject(aObject)
   {
-    this.mViewee = aObject;
-    this.mRuleDS.element = aObject;
-    this.mRuleTree.builder.rebuild();
+    this.mSubject = aObject;
+    // update the rule outliner
+    this.mRuleView = new StyleRuleView(aObject);
+    this.mRuleBoxObject.view = this.mRuleView;
+    // clear the props outliner
+    this.mPropsView = null;
+    this.mPropsBoxObject.view = null;
+    
+    this.mObsMan.dispatchEvent("subjectChange", { subject: aObject });
   },
 
   initialize: function(aPane)
   {
     this.mPane = aPane;
-    aPane.onViewerConstructed(this);
+    aPane.notifyViewerReady(this);
   },
 
   destroy: function()
   {
-    this.mRuleTree.database.RemoveDataSource(this.mRuleDS);
-    this.mRuleDS = null;
-
-    this.mDecTree.database.RemoveDataSource(this.mDecDS);
-    this.mDecDS = null;
   },
+
+  ////////////////////////////////////////////////////////////////////////////
+  //// event dispatching
+
+  addObserver: function(aEvent, aObserver) { this.mObsMan.addObserver(aEvent, aObserver); },
+  removeObserver: function(aEvent, aObserver) { this.mObsMan.removeObserver(aEvent, aObserver); },
 
   ////////////////////////////////////////////////////////////////////////////
   //// UI Commands
@@ -105,7 +136,7 @@ StyleRulesViewer.prototype =
 
   cmdOpenSelectedFileInEditor: function()
   {
-    var item = this.mRuleTree.selectedItems[0];
+    var item = this.mRuleOutliner.selectedItems[0];
     if (item)
     {
       var path = null;
@@ -136,77 +167,167 @@ StyleRulesViewer.prototype =
       }
     }
   },
-
+  
   //////// property contextual commands
   
   cmdNewProperty: function()
   {
     var propname = prompt("Enter the property name:", "");
+    if (!propname) return;
     var propval = prompt("Enter the property value:", "");
-    if (propname && propval){
-      this.mDecDS.setCSSProperty(propname, propval, "");
-      this.mDecTree.builder.rebuild();
-    }
+    if (!propval) return;
+    
+    var style = this.getSelectedRule().style;
+    style.setProperty(propname, propval, "");
+    this.mPropsBoxObject.invalidate();
   },
   
   cmdEditSelectedProperty: function()
   {
-    var item = this.mDecTree.selectedItems[0];
-    var cell = item.getElementsByAttribute("ins-type", "value")[0];
-    this.mDecTree.startEdit(cell);
+    var style = this.getSelectedRule().style;
+    var propname = this.getSelectedProp();
+    var propval = style.getPropertyValue(propname);
+    var priority = style.getPropertyPriority(propname);
+
+    propval = prompt("Enter the property value:", propval);
+    if (!propval) return;
+
+    style.removeProperty(propname);
+    style.setProperty(propname, propval, priority);
+    this.mPropsBoxObject.invalidate();
   },
 
   cmdDeleteSelectedProperty: function()
   {
-    var propname = this.getSelectedPropertyValue("PropertyName");
-    this.mDecDS.removeCSSProperty(propname);
-    this.mDecTree.builder.rebuild();
-  },
-
-  cmdSetSelectedPropertyValue: function(aItem, aNewValue)
-  {
-    // XXX can't depend on selection, use the item object passed into function instead
-    var propname = this.getSelectedPropertyValue("PropertyName");
-    var priority = this.getSelectedPropertyValue("PropertyPriority");
-    this.mDecDS.setCSSProperty(propname, aNewValue, priority);
+    var style = this.getSelectedRule().style;
+    var propname = this.getSelectedProp();
+    style.removeProperty(propname);
+    this.mPropsBoxObject.invalidate();
   },
 
   cmdToggleSelectedImportant: function()
   {
-    var priority = this.getSelectedPropertyValue("PropertyPriority");
-    priority = priority == "!important" ? "!blah" : "!important";
-    var propname = this.getSelectedPropertyValue("PropertyName");
-    var propval = this.getSelectedPropertyValue("PropertyValue");
+    var style = this.getSelectedRule().style;
+    var propname = this.getSelectedProp();
+    var propval = style.getPropertyValue(propname);
 
-    // sadly, we must remove it first or it don't work
-    this.mDecDS.removeCSSProperty(propname); 
-    this.mDecDS.setCSSProperty(propname, propval, priority);
-    this.mDecTree.builder.rebuild();
+    var priority = style.getPropertyPriority(propname);
+    priority = priority == "!important" ? "!blah" : "!important";
+
+    style.removeProperty(propname);
+    style.setProperty(propname, propval, priority);
+    
+    this.mPropsBoxObject.invalidate();
   },
   
   ////////////////////////////////////////////////////////////////////////////
   //// Uncategorized
 
-  getSelectedPropertyValue: function(aProperty)
+  getSelectedRule: function()
   {
-    var item = this.mDecTree.selectedItems[0];
-    return InsUtil.getDSProperty(this.mDecDS, item.id, aProperty);
+    var idx = this.mRuleOutliner.currentIndex;
+    return this.mRuleView.getRuleAt(idx);
+  },
+
+  getSelectedProp: function()
+  {
+    var rule = this.getSelectedRule();
+    var idx = this.mPropsOutliner.currentIndex;
+    return rule.style.item(idx);
+  },
+  
+  onRuleSelect: function()
+  {
+    var rule = this.getSelectedRule();
+    this.mPropsView = new StylePropsView(rule);
+    this.mPropsBoxObject.view = this.mPropsView;
   },
 
   onCreateRulePopup: function()
   {
-  },
-
-  onRuleSelect: function()
-  {
-    var tree = this.mRuleTree;
-    var item = tree.selectedItems[0];
-
-    var res = gRDF.GetResource(item.id);
-    this.mDecDS.refResource = res;
-    tree = this.mDecTree;
-    tree.builder.rebuild();
   }
 
 };
 
+////////////////////////////////////////////////////////////////////////////
+//// StyleRuleView
+
+function StyleRuleView(aElement)
+{
+  this.mDOMUtils = XPCU.createInstance("@mozilla.org/inspector/dom-utils;1", "inIDOMUtils");
+  this.mRules = this.mDOMUtils.getStyleRules(aElement);
+}
+
+StyleRuleView.prototype = new inBaseOutlinerView();
+
+StyleRuleView.prototype.__defineGetter__("rowCount",
+function() 
+{
+  return this.mRules ? this.mRules.Count() : 0;
+});
+
+StyleRuleView.prototype.getRuleAt = 
+function(aRow) 
+{
+  var rule = this.mRules.GetElementAt(aRow);
+  return XPCU.QI(rule, "nsIDOMCSSStyleRule");
+}
+
+StyleRuleView.prototype.getCellText = 
+function(aRow, aColId) 
+{
+  var rule = this.getRuleAt(aRow);
+  
+  if (aColId == "olcSelector") {
+    return rule.selectorText;
+  } else if (aColId == "olcFileURL") {
+    return rule.parentStyleSheet.href;
+  } else if (aColId == "olcWeight") {
+    return this.mDOMUtils.getRuleWeight(rule);
+  } else if (aColId == "olcLine") {
+    return this.mDOMUtils.getRuleLine(rule);
+  }
+  
+  return "";
+}
+
+////////////////////////////////////////////////////////////////////////////
+//// StylePropsView
+
+function StylePropsView(aRule)
+{
+  this.mDec = aRule.style;
+}
+
+StylePropsView.prototype = new inBaseOutlinerView();
+
+StylePropsView.prototype.__defineGetter__("rowCount",
+function() 
+{
+  return this.mDec ? this.mDec.length : 0;
+});
+
+StylePropsView.prototype.getCellProperties = 
+function(aRow, aColId, aProperties) 
+{
+  if (aColId == "olcPropPriority") {
+    var prop = this.mDec.item(aRow);
+    if (this.mDec.getPropertyPriority(prop) == "!important") {
+      aProperties.AppendElement(this.createAtom("important"));
+    }
+  }
+}
+
+StylePropsView.prototype.getCellText = 
+function(aRow, aColId) 
+{
+  var prop = this.mDec.item(aRow);
+  
+  if (aColId == "olcPropName") {
+    return prop;
+  } else if (aColId == "olcPropValue") {
+    return this.mDec.getPropertyValue(prop)
+  }
+  
+  return "";
+}

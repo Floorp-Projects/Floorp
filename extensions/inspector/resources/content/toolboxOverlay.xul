@@ -5,10 +5,7 @@
   <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
 ]>
 
-<?xul-overlay href="chrome://inspector/content/popupOverlay.xul"?>
-
 <overlay id="ovToolbox"
-         xmlns:ins="http://www.mozilla.org/inspector#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <popupset id="ppsGlobalPopupset"/>
@@ -16,19 +13,7 @@
   <menubar id="mbrInspectorMain">
 
     <menu id="mnFile" label="&mnFile.label;" accesskey="&mnFile.accesskey;">
-      <menupopup id="mppFile">
-        <menu 
-          id="mnWindowsFile" label="&mnWindows.label;" accesskey="&mnWindows.accesskey;"
-          datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
-          <template>
-            <rule>
-              <menupopup>
-                <menuitem uri="rdf:*" label="&NC-rdf;Name" oncommand="inspector.goToWindow(this)"/>
-              </menupopup>
-            </rule>
-          </template>
-        </menu>
-      </menupopup>
+      <menupopup id="mppFile"/>
     </menu>
 
     <menu id="mnEdit" label="&mnEdit.label;" accesskey="&mnEdit.accesskey;">
@@ -43,53 +28,33 @@
       <menupopup id="mppView"/>
     </menu>
 
-    <menu id="mnHelp" label="&mnHelp.label;" accesskey="&mnHelp.accesskey;">
-      <menupopup id="mppHelp"/>
-    </menu>
+    <menu id="tasksMenu"/>
+    <menu id="menu_Help"/>
 
   </menubar>
 
   <toolbar id="tbInspectorPrimary">
 
-    <hbox id="bxURLBar" flex="1" autostretch="never" valign="middle">
-      <text id="txDocument" class="toolbar-header1" value="&txDocument.label;"/>
+    <hbox id="bxURLBar" flex="1">
+      <button id="btnSelecting" class="button-toolbar" observes="cmd:selectByClick" 
+              tooltip="aTooltip" tooltiptext="&btnSelecting.tooltip;"/>
+
+      <button id="btnFind" class="button-toolbar" observes="cmd:find" 
+              tooltip="aTooltip" tooltiptext="&btnFind.tooltip;"/>
+
       <hbox id="bxURLBarContainer" flex="1">
         <hbox autostretch="never" valign="middle" flex="1">
-          <image id="imgURLBarIcon"/>
-
-          <textbox
-            id="tfURLBar" class="plain" flex="1" 
-            observes="cmdGotoURL"
-            tooltip="PPTooltip" tooltiptext="Enter a URL to inspect"/>  
+          <textbox id="tfURLBar" type="autocomplete" flex="1"
+            searchSessions="history" timeout="50" maxrows="6"
+            observes="cmdGotoURL">
+            <image id="imgURLBarIcon"/>
+            
+          </textbox>
         </hbox>
 
-        <menubutton id="mbHistory" class="menubutton-icon">
-
-          <menupopup 
-            id="mppHistory"
-            popupalign="topright" popupanchor="bottomright"
-            datasources="rdf:null" ref="inspector:history">
-
-            <template>
-              <rule>
-                <conditions>
-                  <content uri="?uri"/>
-                  <member container="?uri" child="?item"/>
-                  <triple subject="?item" predicate="&INS-rdf;URL" object="?url"/>
-                </conditions>
-
-                <action>
-                  <menuitem uri="?item" label="?url" oncommand="inspector.goToHistoryItem(this)"/>
-                </action>
-              </rule>
-            </template>
-          
-          </menupopup>
-
-        </menubutton>
       </hbox>
 
-      <button class="button-toolbar-3" label="&btnInspect.label;" observes="cmdGotoURL"/>
+      <button class="button-toolbar" label="&btnInspect.label;" observes="cmdGotoURL"/>
     </hbox>
 
   </toolbar>

@@ -8,15 +8,15 @@
 <overlay id="ovUnusedImagesCommands"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <broadcasterset id="brsGlobalCommands">
+  <commandset id="cmdsGlobalCommands">
 
-    <broadcaster id="cmd:startJunkImgs"
+    <command id="cmd:startJunkImgs"
       oncommand="inspector.startSearchModule('chrome://inspector/content/search/modules/junkImgs/junkImgs.xml')"/>
 
-    <broadcaster id="cmd:startFindFiles"
+    <command id="cmd:startFindFiles"
       oncommand="inspector.startSearchModule('chrome://inspector/content/search/modules/findFiles/findFiles.xml')"/>
 
-  </broadcasterset>
+  </commandset>
 
 </overlay>
 

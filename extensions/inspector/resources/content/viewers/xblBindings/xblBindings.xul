@@ -5,15 +5,75 @@
   <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
 ]>
 
-<?xml-stylesheet href="chrome://communicator/skin"?>
+<?xml-stylesheet href="chrome://inspector/skin/viewers/xblBindings/xblBindings.css"?>
 
 <window id="winXBLBindings" class="color-dialog" 
         orient="vertical"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inBaseOutlinerView.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/xblBindings/xblBindings.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/utils.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/hooks.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xul/inOutlinerBuilder.js"/>
+  
+  <menulist id="mlBindings" oncommand="viewer.displayBinding(this.value)">
+    <menupopup id="mpBindings"/>
+  </menulist>
+  
+  <multipanelset id="mpsBinding" flex="1">
+    <multipanel id="bxContent" label="Content" open="true" persist="open" onopen="if (viewer) {viewer.initContent();} else {gInitContent = true;}">
+      <outliner id="olContent" class="outliner-list" flex="1">
+        <outlinerbody id="olbContent" flex="1" datasources="rdf:null" 
+                      containment="&INS-rdf;HasChildren" flags="dont-test-empty">
+          <template/>
+        </outlinerbody>
+      </outliner>
+    </multipanel>
+  
+    <multipanel id="bxMethods" label="Methods" open="true" persist="open">
+      <outliner id="olMethods" class="outliner-list" flex="1"
+                onselect="viewer.onMethodSelected()">
+        <outlinercol id="olcMethodName" flex="1"/>
+        <outlinerbody id="olbMethods" flex="1" context="ppDOMContext"/>
+      </outliner>
+    </multipanel>
+  
+    <multipanel id="bxProps" label="Properties" open="true" persist="open">
+      <vbox flex="1">
+        <radiogroup class="outset">
+          <radio id="raPropGetter" label="getter" checked="true" oncommand="viewer.onPropSelected()"/>
+          <radio id="raPropSetter" label="setter" oncommand="viewer.onPropSelected()"/>
+        </radiogroup>
+        <outliner id="olProps" class="outliner-list" flex="1"
+                  onselect="viewer.onPropSelected()">
+          <outlinercol id="olcPropName" label="Property" flex="1"/>
+          <outlinerbody id="olbProps" flex="1" context="ppDOMContext"/>
+        </outliner>
+      </vbox>
+    </multipanel>
 
-  <text value="Not Yet Implemented"/>
+    <multipanel id="bxHandlers" label="Handlers" persist="open">
+      <outliner id="olHandlers" class="outliner-list" flex="1"
+                onselect="viewer.onHandlerSelected()">
+        <outlinercol id="olcHandlerEvent" flex="1"/>
+        <outlinercol id="olcHandlerPhase"/>
+        <outlinerbody id="olbHandlers" flex="1" context="ppDOMContext"/>
+      </outliner>
+    </multipanel>
+  
+    <multipanel id="bxResources" label="Resources" persist="open">
+      <outliner id="olResources" class="outliner-list" flex="1">
+        <outlinercol id="olcResourceType" flex="1"/>
+        <outlinercol id="olcResourceSrc" flex="2"/>
+        <outlinerbody id="olbResources" flex="1" context="ppDOMContext"/>
+      </outliner>
+    </multipanel>
+
+    <multipanel id="bxFunction" label="Source Code" open="true" persist="open">
+      <textbox id="txbFunction" class="plain" readonly="true" multiline="true" flex="1"/>
+    </multipanel>
+  </multipanelset>
 </window>

@@ -9,6 +9,9 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script type="application/x-javascript" src="chrome://inspector/content/extensions/wsm-colorpicker.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/prefs/pref-sidebar.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
 
   <script type="application/x-javascript"><![CDATA[
     var _elementIDs = [
@@ -16,7 +19,8 @@
       "txfElBorderWidth",
       "txfElDuration",
       "txfElSpeed",
-      "cbElOn"
+      "cbElOn",
+      "cbxNavIntegration"
      ];
     
     function initFunction()
@@ -26,12 +30,12 @@
 
     AddColorPicker(initFunction);
 
-  ]]/>
+  ]]></script>
 
   <hbox class="box-smallheader" title="&Inspector.label;"/>
 
-  <hbox id="bxGeneralPrefs">
-    <groupbox>
+  <vbox id="bxGeneralPrefs">
+    <groupbox id="tbxBlink" flex="1">
       <label value="Element Blinking"/>
       <vbox>
         <grid>
@@ -79,5 +83,22 @@
         </hbox>
       </vbox>
     </groupbox>
-  </hbox>
+    
+    <groupbox id="tbxSidebar" flex="1">
+      <label value="Sidebar"/>
+      <vbox flex="1">
+        <vbox id="bxSidebarInstall" flex="1">
+          <hbox>
+            <html id="txSidebarMsg" flex="1">The DOM Inspector Sidebar is not currently installed.  Click the 'Install' button to add it to your Sidebar.</html>
+          </hbox>
+          <button id="btnSidebarInstall" label="Install" onclick="sidebarPref.installSidebar()"/>
+        </vbox>
+      </vbox>
+    </groupbox>
+    
+    <vbox>
+      <checkbox id="cbxNavIntegration" label="Add contextual menus to Navigator"
+                pref="true" preftype="bool" prefstring="inspector.hooks.navigator" prefattribute="checked"/>
+    </vbox>
+  </vbox>
 </window>

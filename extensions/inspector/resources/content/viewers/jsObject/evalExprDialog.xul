@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE overlay [
+  <!ENTITY % dtd1 SYSTEM "chrome://inspector/locale/inspector.dtd"> %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://inspector/content/util.dtd"> %dtd2;
+]>
+
+<?xml-stylesheet href="chrome://communicator/skin"?>
+
+<window id="winEvalExpr" class="dialog" 
+        title="Evaluate Expression"
+        orient="vertical"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <script type="application/x-javascript" src="chrome://inspector/content/viewers/jsObject/evalExprDialog.js"/>
+  <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
+  
+  <commandset id="cmdsCommands">
+    <command id="cmdExec" oncommand="dialog.doExec()"/>
+    <command id="cmdCancel" oncommand="dialog.doCancel()"/>
+  </commandset>
+
+  <keyset id="ksKeys">
+    <key id="kExec" keycode="VK_RETURN" observes="cmdExec"/>
+    <key id="kCancel" keycode="VK_ESCAPE" observes="cmdCancel"/>
+  </keyset>
+
+  <vbox style="width: 350px;">
+    <html>Enter a javascript expression.  The variable "target" is the object that is currently selected.  Any value that you return will be displayed in the Javascript Object Viewer.</html>
+    
+    <textbox id="txfExprInput" value=""/>
+    
+    <checkbox id="cbxNewView" label="Inspect in new window"/>
+  </vbox>
+    
+  <hbox>
+    <button label="Execute" observes="cmdExec" default="true"/>
+    <button label="Cancel" observes="cmdCancel"/>
+  </hbox>
+
+</window>
+        

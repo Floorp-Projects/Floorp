@@ -1,3 +1,24 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Joe Hewitt <hewitt@netscape.com> (original author)
+ */
 
 .titled-splitter {
   border: 1px solid #000000;
@@ -29,16 +50,22 @@ box[orient="vertical"] > .titled-splitter {
 }
 
 .titledsplitter-closebutton {
+  -moz-binding: none;
   margin: 1px;
-  border: 1px outset #D4B3C4;
-  padding: 1px;
-  min-width: 14px;
-  min-height: 14px;
-  background: #D4B3C4 url("chrome://inspector/skin/titledsplitter-close.gif") no-repeat center center;
+  border: 1px outset #C7D0D9;
+  -moz-border-radius: 0px !important;
+  padding: 2px;
+  min-width: 0px;
+  background-color: #C7D0D9;
+}
+
+.titledsplitter-closeimage {
+  list-style-image: url("chrome://inspector/skin/titledsplitter-close.gif");
 }
 
 .titledsplitter-closebutton:hover:active {
   border-style: inset;
+  padding: 3px 1px 1px 3px;
 }
 
 

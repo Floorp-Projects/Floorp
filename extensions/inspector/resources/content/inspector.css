@@ -1,10 +1,58 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Joe Hewitt <hewitt@netscape.com> (original author)
+ */
 
-@namespace ins url("http://www.mozilla.org/inspector#");
+@import url("chrome://inspector/content/extensions/titledSplitter.css");
+@import url("chrome://inspector/content/extensions/multipanel.css");
+
+@namespace domi url("http://www.mozilla.org/inspector");
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 *[hide="true"] {
   visibility: hidden;
 }
 
-row {
-  vertical-align: middle;
+domi|panelset {
+  -moz-binding: url("chrome://inspector/content/inspector.xml#panelset");
+  display: -moz-xul-box;
+}
+
+domi|panel {
+  -moz-binding: url("chrome://inspector/content/inspector.xml#panel");
+  display: -moz-xul-box;
+}
+
+#ppsViewerPopupset {
+  display: none;
+}
+
+.outliner-list > outlinercol,
+.outliner-list > .outliner-columns > outlinercol {
+  -moz-binding: none;
+  background-color: transparent !important;
+  margin: 0px !important;
+  border: none !important;
+  padding: 0px !important;
+}
+
+.outliner-nocolpicker > .outliner-columns > .outliner-columnpicker {
+  visibility: collapse;
 }

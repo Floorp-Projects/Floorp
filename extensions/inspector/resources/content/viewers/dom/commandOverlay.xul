@@ -5,25 +5,33 @@
 ]>
 
 <overlay id="ovDOMViewerCommands"
-        xmlns:ins="http://www.mozilla.org/inspector#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <broadcasterset id="brsGlobalCommands">
-    <broadcaster id="cmd:selectByClick" viewer="dom"
-      oncommand="inspector.getViewer('dom').selectByClick()"/>
+  <commandset id="cmdsGlobalCommands">
+    <command id="cmd:selectByClick" viewer="dom"
+             oncommand="inspector.getViewer('dom').selectByClick()"/>
 
-    <broadcaster id="cmd:find" viewer="dom"
-      oncommand="inspector.getViewer('dom').showFindDialog()"/>
+    <command id="cmd:find" viewer="dom"
+             oncommand="inspector.getViewer('dom').showFindDialog()"/>
 
-    <broadcaster id="cmd:findNext" viewer="dom"
-      oncommand="inspector.getViewer('dom').findNext()"/>
+    <command id="cmd:findNext" viewer="dom"
+             oncommand="inspector.getViewer('dom').findNext()"/>
 
-    <broadcaster id="cmd:toggleAnon" viewer="dom"
-      oncommand="inspector.getViewer('dom').toggleAnonContent()"/>
+    <command id="cmd:toggleAnon" viewer="dom"
+             oncommand="inspector.getViewer('dom').toggleAnonContent()"/>
 
-    <broadcaster id="cmd:showColumns" viewer="dom"
-      oncommand="inspector.getViewer('dom').showColumnsDialog()"/>
-  </broadcasterset>
+    <command id="cmd:toggleSubDocs" viewer="dom"
+             oncommand="inspector.getViewer('dom').toggleSubDocs()"/>
+
+    <command id="cmd:flashSelected" viewer="dom"
+             oncommand="inspector.getViewer('dom').toggleFlashSelected()"/>
+      
+    <command id="cmd:toggleAttributes" viewer="dom"
+             oncommand="inspector.getViewer('dom').toggleAttributes()"/>
+
+    <command id="cmd:showColumns" viewer="dom"
+             oncommand="inspector.getViewer('dom').showColumnsDialog()"/>
+  </commandset>
 
 </overlay>
 

@@ -6,25 +6,26 @@
 
 <window id="winFind" class="dialog" 
         title="Find"
+        style="width: 30em;"
         persist="screenX screenY"
         orient="horizontal"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/dom/FindDialog.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/rdf/RDFU.js"/>
 
-  <broadcasterset id="brsBroadcasters">
-    <broadcaster id="cmdFind" oncommand="dialog.doFind()" onkeypress="if (event.keyCode == 13) dialog.doFind()"/>
-    <broadcaster id="cmdClose" oncommand="dialog.close()"/>
-  </broadcasterset>
+  <commandset id="cmdsCommands">
+    <command id="cmdFind" oncommand="dialog.doFind()"/>
+    <command id="cmdClose" oncommand="dialog.close()"/>
+  </commandset>
 
   <keyset id="ksKeys">
+    <key id="kFind" keycode="VK_RETURN" observes="cmdFind"/>
     <key id="kClose" keycode="VK_ESCAPE" observes="cmdClose"/>
   </keyset>
 
-  <vbox autostretch="never">
+  <vbox flex="1">
     <grid>
       <columns>
         <column/>
@@ -32,29 +33,34 @@
       </columns>
       <rows>
         <row id="rwRow1">
-          <text id="txText1" value=""/>
-          <textbox id="tfText1" observes="cmdFind"/>
+          <deck id="rwRow1Text">
+            <text id="txText1Id" value="Id"/>
+            <text id="txText1Tag" value="Tag"/>
+            <text id="txText1Attr" value="Attr"/>
+          </deck>
+          <textbox id="tfText1"/>
         </row>
         <row id="rwRow2">
-          <text id="txText2" value=""/>
-          <textbox id="tfText2" observes="cmdFind"/>
+          <text id="txText2" value="Value"/>
+          <textbox id="tfText2"/>
         </row>
       </rows>
     </grid>
-    <hbox autostretch="never" style="vertical-align: top">
+    
+    <hbox valign="top">
       <groupbox id="tbxType">
         <label value="Search By"/>
         <radiogroup id="rgType" orient="vertical">
-          <radio id="rdType_id" label="ID" oncommand="dialog.toggleType('id')"/>
-          <radio id="rdType_tag" label="Tag" oncommand="dialog.toggleType('tag')"/>
-          <radio id="rdType_attr" label="Attribute" oncommand="dialog.toggleType('attr')"/>
+          <radio group="rgType" id="rdType_id" label="ID" value="id" oncommand="dialog.toggleType('id')"/>
+          <radio group="rgType" id="rdType_tag" label="Tag" value="tag" oncommand="dialog.toggleType('tag')"/>
+          <radio group="rgType" id="rdType_attr" label="Attribute" value="attr" oncommand="dialog.toggleType('attr')"/>
         </radiogroup>
       </groupbox>
       <groupbox id="tbxDirection" hide="true">
         <label value="Direction"/>
-        <radiogroup id="rgDirection" orient="horizontal">
-          <radio id="rdDir_up" label="Up"/>
-          <radio id="rdDir_down" label="Down"/>
+        <radiogroup id="rgDirection" orient="vertical">
+          <radio id="rdDir_up" group="rgDirection" value="up" label="Up"/>
+          <radio id="rdDir_down" group="rgDirection" value="down" label="Down"/>
         </radiogroup>
       </groupbox>
     </hbox>
@@ -62,6 +68,7 @@
 
   <vbox>
     <button label="Find" observes="cmdFind" default="true"/>
-    <button label="Close" observes="cmdClose"/>
+    <button label="Cancel" observes="cmdClose"/>
   </vbox>
+
 </window>

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<window id="inspectorUtilWindow"
+<window id="winUtil"
         width="200" height="200"
         persist="screenX screenY width height sizemode"
         onload="opener.UtilWindowOpenListener(window)"
