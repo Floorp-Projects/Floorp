@@ -373,7 +373,7 @@ nsresult nsSmtpTestDriver::OnSendMessageInFile()
 
 	nsFilePath filePath (fileName);
 	nsIURL * url = nsnull;
-	m_smtpService->SendMailMessage(filePath, userName, recipients, &url);
+	m_smtpService->SendMailMessage(filePath, m_host, userName, recipients, &url);
 	if (url)
 		url->QueryInterface(nsISmtpUrl::IID(), (void **) &m_smtpUrl);
 	NS_IF_RELEASE(url);
