@@ -25,7 +25,7 @@
 class nsNetConverterStream : public nsINetOStream {
 public:
     nsNetConverterStream();
-    ~nsNetConverterStream();
+    virtual ~nsNetConverterStream();
 
     NS_DECL_ISUPPORTS
 

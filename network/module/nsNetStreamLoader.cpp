@@ -32,7 +32,7 @@ public:
   nsUnicharStreamLoader(nsIURL* aURL,
                         nsStreamCompleteFunc aFunc,
                         void* aRef);
-  ~nsUnicharStreamLoader();
+  virtual ~nsUnicharStreamLoader();
 
   NS_DECL_ISUPPORTS
   
