@@ -862,6 +862,17 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
   // if the on stop request was actually issued then it's now time to actually perform the file move....
   if (mStopRequestIssued && fileToUse)
   {
+    // Unfortunately, MoveTo will fail if a file already exists at the user specified location....
+    // but the user has told us, this is where they want the file! (when we threw up the save to file dialog,
+    // it told them the file already exists and do they wish to over write it. So it should be okay to delete
+    // fileToUse if it already exists.
+    PRBool equalToTempFile = PR_FALSE;
+    PRBool filetoUseAlreadyExists = PR_FALSE;
+    fileToUse->Equals(mTempFile, &equalToTempFile);
+    fileToUse->Exists(&filetoUseAlreadyExists);
+    if (filetoUseAlreadyExists && !equalToTempFile)
+      fileToUse->Delete(PR_FALSE);
+
      // extract the new leaf name from the file location
      nsXPIDLCString fileName;
      fileToUse->GetLeafName(getter_Copies(fileName));
