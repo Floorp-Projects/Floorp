@@ -152,14 +152,14 @@ typedef struct _net_AuthStruct {
     char *			domain;			/* SimpleMD5 only */
     char *			nonce;			/* SimpleMD5 only */
     char *			opaque;			/* SimpleMD5 only */
-    XP_Bool			oldNonce;		/* SimpleMD5 only */
+    PRBool			oldNonce;		/* SimpleMD5 only */
 	int				oldNonce_retries;
 #endif
     char *                      challenge;
     char *                      certChain;
     char *                      signature;
     char *                      clientRan;
-    XP_Bool                     oldChallenge;
+    PRBool                     oldChallenge;
     int                         oldChallenge_retries;
 } net_AuthStruct;
 
@@ -449,7 +449,7 @@ NET_AskForAuthString(MWContext *context,
 					 char * prot_template,
 					 Bool   already_sent_auth)
 {
-	static XP_Bool first_time=TRUE;
+	static PRBool first_time=TRUE;
 	net_AuthStruct *prev_auth;
 	char *address=URL_s->address;
 	char *host=NET_ParseURL(address, GET_HOST_PART);
@@ -463,7 +463,7 @@ NET_AskForAuthString(MWContext *context,
 	char *buf=NULL;
 	int32 len=0;
 	int status;
-	XP_Bool re_authorize=FALSE;
+	PRBool re_authorize=FALSE;
 
 	TRACEMSG(("Entering NET_AskForAuthString"));
 
@@ -718,7 +718,7 @@ NET_AskForAuthString(MWContext *context,
 	 */
 	if(!password || re_authorize)
 	  {
-		XP_Bool remember_password;
+		PRBool remember_password;
 	   	host = NET_ParseURL(address, GET_HOST_PART);
 
 		/* malloc memory here to prevent buffer overflow */
@@ -1095,12 +1095,12 @@ NET_DeleteCookie(char* cookieURL)
 	StrAllocCat(cookieURL2, cookie->path);
         StrAllocCat(cookieURL2, "!");
 	StrAllocCat(cookieURL2, cookie->name);
-	if (XP_STRCMP(cookieURL, cookieURL2)==0) {
+	if (PL_strcmp(cookieURL, cookieURL2)==0) {
 	    net_FreeCookie(cookie);
 	    break;
 	}
     }
-    XP_FREEIF(cookieURL2);
+    PR_FREEIF(cookieURL2);
     net_unlock_cookie_list();
 }
 
@@ -1352,7 +1352,7 @@ net_CheckForCookiePermission(char * hostname) {
     list_ptr = net_cookie_permission_list;
     while((cookie_s = (net_CookiePermissionStruct *) XP_ListNextObject(list_ptr))!=0) {
 	if(hostname && cookie_s->host
-		&& !XP_STRCMP(hostname, cookie_s->host)) {
+		&& !PL_strcmp(hostname, cookie_s->host)) {
 	    net_unlock_cookie_permission_list();
 	    return(cookie_s);
 	}
@@ -1543,7 +1543,7 @@ net_AddCookiePermission
      * cookie permission list lock
      */
 
-    cookie_permission = XP_NEW(net_CookiePermissionStruct);
+    cookie_permission = PR_NEW(net_CookiePermissionStruct);
     if (cookie_permission) {
 	XP_List * list_ptr = net_cookie_permission_list;
 
@@ -1566,7 +1566,7 @@ net_AddCookiePermission
 	    Bool permissionAdded = FALSE;
 	    while((tmp_cookie_permission = (net_CookiePermissionStruct *)
 					   XP_ListNextObject(list_ptr))!=0) {
-		if (XP_STRCMP
+		if (PL_strcmp
 			(cookie_permission->host,tmp_cookie_permission->host)<0) {
 		    XP_ListInsertObject
 			(net_cookie_permission_list,
@@ -1617,7 +1617,7 @@ net_IntSetCookieString(MWContext * context,
 	char *cur_host = NET_ParseURL(cur_url, GET_HOST_PART);
 	char *semi_colon, *ptr, *equal;
 	const char *script_name;
-	XP_Bool set_secure=FALSE, is_domain=FALSE, ask=FALSE, accept=FALSE;
+	PRBool set_secure=FALSE, is_domain=FALSE, ask=FALSE, accept=FALSE;
 	MWContextType type;
 
 	if(!context) {
@@ -1913,10 +1913,10 @@ net_IntSetCookieString(MWContext * context,
 	cookie_permission = net_CheckForCookiePermission(host_from_header);
 	if (cookie_permission != NULL) {
 	    if (cookie_permission->permission == FALSE) {
-		XP_FREEIF(path_from_header);
-		XP_FREEIF(host_from_header);
-		XP_FREEIF(name_from_header);
-		XP_FREEIF(cookie_from_header);
+		PR_FREEIF(path_from_header);
+		PR_FREEIF(host_from_header);
+		PR_FREEIF(name_from_header);
+		PR_FREEIF(cookie_from_header);
 		return;
 	    } else {
 		accept = TRUE;
@@ -1944,7 +1944,7 @@ net_IntSetCookieString(MWContext * context,
 		while((cookie = (net_CookieStruct *)
 				XP_ListNextObject(list_ptr))!=0) {
 		    if (tmp_host && cookie->host &&
-			    XP_STRCMP(tmp_host, cookie->host) == 0) {
+			    PL_strcmp(tmp_host, cookie->host) == 0) {
 			count++;
 		    }
 		}
@@ -2015,7 +2015,7 @@ net_IntSetCookieString(MWContext * context,
 		}
 		net_unlock_cookie_permission_list();
 		if (!userHasAccepted) {
-			XP_FREEIF(new_string);
+			PR_FREEIF(new_string);
 			return;
 		}
 	    }
@@ -2391,7 +2391,7 @@ net_ReadCookiePermissions(char * filename)
 	}
 	host = buffer;
 
-        if( !(permission = XP_STRCHR(host, '\t')) ) {
+        if( !(permission = PL_strchr(host, '\t')) ) {
 	    continue;
 	}
         *permission++ = '\0';
@@ -2400,7 +2400,7 @@ net_ReadCookiePermissions(char * filename)
 	}
         XP_StripLine(permission); /* remove '\n' from end of permission */
 
-        if(!XP_STRCMP(permission, "TRUE")) {
+        if(!PL_strcmp(permission, "TRUE")) {
 	    net_AddCookiePermission(host, TRUE, FALSE);
 	} else {
 	    net_AddCookiePermission(host, FALSE, FALSE);
@@ -2770,7 +2770,7 @@ bin2hex(unsigned char *data, int len)
  */
 #define SKIP_WS(p) while((*(p)) && XP_IS_SPACE(*(p))) p++
 
-PRIVATE XP_Bool
+PRIVATE PRBool
 next_params(char **pp, char **name, char **value)
 {
     char *q, *p = *pp;
@@ -3066,7 +3066,7 @@ NET_AskForProxyAuth(MWContext * context,
 					PRBool  already_sent_auth)
 {
 	net_AuthStruct * prev;
-	XP_Bool new_entry = FALSE;
+	PRBool new_entry = FALSE;
 	char * username = NULL;
 	char * password = NULL;
 	char * buf;
@@ -3226,7 +3226,7 @@ net_DisplayCookieDetailsAsHTML(MWContext *context,
     char* cookie_name, char* cookie_cookie,
     time_t cookie_expires, Bool cookie_secure, Bool cookie_is_domain)
 {
-    char *buffer = (char*)XP_ALLOC(BUFLEN);
+    char *buffer = (char*)PR_Malloc(BUFLEN);
     char *buffer2 = 0;
     int g = 0;
     XP_List *list=net_cookie_list;
@@ -3308,20 +3308,20 @@ net_DisplayCookieDetailsAsHTML(MWContext *context,
 
     /* free buffer since it is no longer needed */
     if (buffer) {
-	XP_FREE(buffer);
+	PR_Free(buffer);
     }
 
     /* do html dialog */
     strings = XP_GetDialogStrings(XP_EMPTY_STRINGS);
     if (!strings) {
 	if (buffer2) {
-	    XP_FREE(buffer2);
+	    PR_Free(buffer2);
 	}
 	return;
     }
     if (buffer2) {
 	XP_CopyDialogString(strings, 0, buffer2);
-	XP_FREE(buffer2);
+	PR_Free(buffer2);
 	buffer2 = NULL;
     }
     XP_MakeHTMLDialog(context, &dialogInfo, MK_ACCESS_YOUR_COOKIES,
@@ -3346,7 +3346,7 @@ Bool net_InSequence(char* sequence, int number) {
     for (ptr = sequence ; ptr ; ptr = endptr) {
 
 	/* get to next comma */
-        endptr = XP_STRCHR(ptr, ',');
+        endptr = PL_strchr(ptr, ',');
 
 	/* if comma found, set it to null */
 	if (endptr) {
@@ -3393,7 +3393,7 @@ net_AboutCookiesDialogDone(XPDialogState* state, char** argv, int argc,
 
     buttonName = XP_FindValueInArgs("button", argv, argc);
     if (buttonName &&
-	    !XP_STRCASECMP(buttonName, XP_GetString(SA_VIEW_BUTTON_LABEL))) {
+	    !PL_strcasecmp(buttonName, XP_GetString(SA_VIEW_BUTTON_LABEL))) {
 
 	/* view button was pressed */
 
@@ -3429,7 +3429,7 @@ net_AboutCookiesDialogDone(XPDialogState* state, char** argv, int argc,
 
     /* get the comma-separated sequence of cookies to be deleted */
     gone = XP_FindValueInArgs("goneC", argv, argc);
-    XP_ASSERT(gone);
+    PR_ASSERT(gone);
     if (!gone) {
 	return PR_FALSE;
     }
@@ -3457,7 +3457,7 @@ net_AboutCookiesDialogDone(XPDialogState* state, char** argv, int argc,
 
     /* get the comma-separated sequence of permissions to be deleted */
     gone = XP_FindValueInArgs("goneP", argv, argc);
-    XP_ASSERT(gone);
+    PR_ASSERT(gone);
     if (!gone) {
 	return PR_FALSE;
     }
@@ -3491,7 +3491,7 @@ net_AboutCookiesDialogDone(XPDialogState* state, char** argv, int argc,
 MODULE_PRIVATE void
 NET_DisplayCookieInfoAsHTML(ActiveEntry * cur_entry)
 {
-    char *buffer = (char*)XP_ALLOC(BUFLEN);
+    char *buffer = (char*)PR_Malloc(BUFLEN);
     char *buffer2 = 0;
     int g = 0, numOfCookies, cookieNum;
     XP_List *cookie_list=net_cookie_list;
@@ -3660,20 +3660,20 @@ after_stats:
 
     /* free buffer since it is no longer needed */
     if (buffer) {
-	XP_FREE(buffer);
+	PR_Free(buffer);
     }
 
     /* do html dialog */
     strings = XP_GetDialogStrings(XP_EMPTY_STRINGS);
     if (!strings) {
 	if (buffer2) {
-	    XP_FREE(buffer2);
+	    PR_Free(buffer2);
 	}
 	return;
     }
     if (buffer2) {
 	XP_CopyDialogString(strings, 0, buffer2);
-	XP_FREE(buffer2);
+	PR_Free(buffer2);
 	buffer2 = NULL;
     }
     XP_MakeHTMLDialog(context, &dialogInfo, MK_ACCESS_YOUR_COOKIES,
