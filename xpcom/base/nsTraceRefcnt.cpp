@@ -32,7 +32,7 @@
 
 #if defined(_WIN32)
 #include <windows.h>
-#elif defined(linux) && defined(__GLIBC__) && defined(__i386)
+#elif defined(linux) && defined(__GLIBC__) && (defined(__i386) || defined(PPC))
 #include <setjmp.h>
 
 //
@@ -45,7 +45,6 @@
 #endif
 
 #include <dlfcn.h>
-
 #endif
 
 #ifdef HAVE_LIBDL
@@ -870,7 +869,7 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
   }
 }
 
-#elif defined(linux) && defined(__GLIBC__) && defined(__i386) // i386 Linux stackwalking code
+#elif defined(linux) && defined(__GLIBC__) && (defined(__i386) || defined(PPC)) // i386 or PPC Linux stackwalking code
 
 void
 nsTraceRefcnt::WalkTheStack(FILE* aStream)
@@ -878,8 +877,13 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
   jmp_buf jb;
   setjmp(jb);
 
-  // Stack walking code courtesy Kipp's "leaky". 
+  // Stack walking code courtesy Kipp's "leaky".
+#if defined(__i386) 
   u_long* bp = (u_long*) (jb[0].__jmpbuf[JB_BP]);
+#elif defined(PPC)
+  u_long* bp = (u_long*) (jb[0].__jmpbuf[JB_GPR1]);
+#endif
+
   int skip = 2;
   for (;;) {
     u_long* nextbp = (u_long*) *bp++;
@@ -914,7 +918,6 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
     bp = nextbp;
   }
 }
-
 #elif defined(XP_MAC)
 
 /**
