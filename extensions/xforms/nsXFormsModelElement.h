@@ -57,6 +57,11 @@ class nsIDOMNode;
 class nsIDOMXPathEvaluator;
 class nsXFormsControl;
 
+/**
+ * XForms event types
+ *
+ * @see http://www.w3.org/TR/xforms/slice4.html#rpm-events
+ */
 enum nsXFormsModelEvent {
   eEvent_ModelConstruct,
   eEvent_ModelConstructDone,
@@ -73,6 +78,14 @@ enum nsXFormsModelEvent {
   eEvent_ComputeException
 };
 
+/**
+ * Implementation of the XForms \<model\> element.
+ *
+ * This includes all of the code for loading the model's external resources and
+ * initializing the model and its controls.
+ *
+ * @see http://www.w3.org/TR/xforms/slice3.html#structure-model
+ */
 class nsXFormsModelElement : public nsXFormsStubElement,
                              public nsIModelElementPrivate,
                              public nsISchemaLoadListener,

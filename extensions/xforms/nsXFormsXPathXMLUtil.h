@@ -40,7 +40,7 @@
 #include "nsString.h"
 
 /**
- * Misc. utility functions for determining the class of a character, used by
+ * Miscellaneous utility functions for determining the class of a character, used by
  * nsXFormsXPathScanner.
  * 
  * @note Should be reimplemented and moved to Transformiix

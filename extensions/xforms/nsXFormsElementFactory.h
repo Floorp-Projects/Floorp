@@ -41,6 +41,9 @@
 #define NS_XFORMSELEMENTFACTORY_CID \
 {0xc068f682, 0x03b5, 0x4e96, {0x81, 0xe1, 0x60, 0x13, 0xf9, 0x12, 0x88, 0xb2}}
 
+/**
+ * Factory class for all XForms elements
+ */
 class nsXFormsElementFactory : public nsIXTFElementFactory
 {
  public:

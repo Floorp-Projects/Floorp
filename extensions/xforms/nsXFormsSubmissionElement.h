@@ -54,6 +54,11 @@ class nsString;
 
 class SubmissionAttachmentArray;
 
+/**
+ * Implementation of the XForms \<submission\> element.
+ *
+ * @see http://www.w3.org/TR/xforms/slice3.html#structure-model-submission
+ */
 class nsXFormsSubmissionElement : public nsXFormsStubElement,
                                   public nsIRequestObserver
 {

@@ -39,6 +39,9 @@
 #ifndef __NSXFORMSTYPES_H__
 #define __NSXFORMSTYPES_H__
 
+/**
+ * The types of Model Item Properties (MIP) in XForms
+ */
 enum ModelItemPropName
 {
   eModel_type,

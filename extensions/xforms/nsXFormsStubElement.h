@@ -41,6 +41,12 @@
 
 #include "nsIXTFGenericElement.h"
 
+/**
+ * An implementation of a generic non-UI XForms element.
+ * 
+ * This is used for e.g. bind so that the id attribute works correctly for
+ * these nodes.
+ */
 class nsXFormsStubElement : public nsIXTFGenericElement
 {
   NS_DECL_ISUPPORTS

@@ -38,12 +38,11 @@
 
 #include "nsISupports.idl"
 
+interface nsIDOMDocument;
+
 /**
  * Private interface implemented by the instance element.
  */
-
-interface nsIDOMDocument;
-
 [uuid(8c9dd10d-4189-4a7b-a2eb-fd695cf33b27)]
 interface nsIInstanceElementPrivate : nsISupports
 {

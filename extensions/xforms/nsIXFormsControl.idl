@@ -36,12 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsISupports.idl"
+
 /**
  * Interface implemented by all XForms form control classes.
  */
-
-#include "nsISupports.idl"
-
 [uuid(8377c845-5d55-4eee-9a76-0f86751dcbc8)]
 interface nsIXFormsControl : nsISupports
 {

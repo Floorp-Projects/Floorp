@@ -38,6 +38,9 @@
 
 #include "nsStaticAtom.h"
 
+/**
+ * Class for singleton XForms nsIAtom pointers
+ */
 class nsXFormsAtoms
 {
  public:

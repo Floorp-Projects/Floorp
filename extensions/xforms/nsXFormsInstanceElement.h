@@ -36,12 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- * nsXFormsInstanceElement implements the xforms <instance> element.
- * It creates an instance document by either cloning the inline instance data
- * or loading an external xml document given by the src attribute.
- */
-
 #ifndef nsXFormsInstanceElement_h_
 #define nsXFormsInstanceElement_h_
 
@@ -53,6 +47,12 @@
 #include "nsIInstanceElementPrivate.h"
 
 class nsIDOMElement;
+
+/**
+ * Implementation of the XForms \<instance\> element.
+ * It creates an instance document by either cloning the inline instance data
+ * or loading an external xml document given by the src attribute.
+ */
 
 class nsXFormsInstanceElement : public nsXFormsStubElement,
                                 public nsIInstanceElementPrivate,

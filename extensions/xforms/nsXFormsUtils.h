@@ -39,11 +39,6 @@
 #ifndef nsXFormsUtils_h_
 #define nsXFormsUtils_h_
 
-/**
- * This class has static helper methods that don't fit into a specific place
- * in the class hierarchy.
- */
-
 #include "prtypes.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMXPathResult.h"
@@ -58,6 +53,10 @@ class nsString;
 #define NS_NAMESPACE_XML_SCHEMA          "http://www.w3.org/2001/XMLSchema"
 #define NS_NAMESPACE_XML_SCHEMA_INSTANCE "http://www.w3.org/2001/XMLSchema-instance"
 
+/**
+ * This class has static helper methods that don't fit into a specific place
+ * in the class hierarchy.
+ */
 class nsXFormsUtils
 {
 public:
@@ -82,7 +81,7 @@ public:
 
   /**
    * Locate the model that |aElement| is bound to, and if applicable, the
-   * <bind> element that it uses.  The model is returned and the
+   * \<bind\> element that it uses.  The model is returned and the
    * bind element is returned (addrefed) in |aBindElement|.
    */
   static NS_HIDDEN_(nsIDOMNode*)

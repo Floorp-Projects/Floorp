@@ -36,17 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- * Private interface implemented by the model element for other
- * elements to use.
- */
-
 #include "nsIXFormsModelElement.idl"
 
 interface nsIXFormsControl;
 interface nsISchemaType;
 interface nsIInstanceElementPrivate;
 
+/**
+ * Private interface implemented by the model element for other
+ * elements to use.
+ */
 [uuid(b21b65d3-3305-4ce0-a604-3648cff61aca)]
 interface nsIModelElementPrivate : nsIXFormsModelElement
 {

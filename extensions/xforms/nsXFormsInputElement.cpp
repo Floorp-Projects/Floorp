@@ -63,6 +63,9 @@ static const nsIID sScriptingIIDs[] = {
   NS_IDOM3NODE_IID
 };
 
+/**
+ * Implementation of the XForms \<input\> element.
+ */
 class nsXFormsInputElement : public nsIXTFXMLVisual,
                              public nsIDOMFocusListener,
                              public nsIXFormsControl
