@@ -73,11 +73,13 @@ public:
                                     nsMsgHdrStruct *hdrStruct,
                                     nsIMessage **newHdr,
                                     PRBool notify);
-
   // Must call AddNewHdrToDB after creating. The idea is that you create
   // a new header, fill in its properties, and then call AddNewHdrToDB.
   // AddNewHdrToDB will send notifications to any listeners.
   NS_IMETHOD CreateNewHdr(nsMsgKey key, nsIMessage **newHdr);
+
+  virtual nsresult CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage **result, PRBool createKeyFromHeader) = 0;
+
   NS_IMETHOD CopyHdrFromExistingHdr(nsMsgKey key, nsIMessage *existingHdr, nsIMessage **newHdr);
   NS_IMETHOD AddNewHdrToDB(nsIMessage *newHdr, PRBool notify);
   // extract info from an nsIMessage into a nsMsgHdrStruct
@@ -218,17 +220,6 @@ public:
     friend class nsMsgDBEnumerator;
 	friend class nsMsgDBThreadEnumerator;
 protected:
-    nsISupportsArray/*<nsIDBChangeListener>*/* m_ChangeListeners;
-	nsDBFolderInfo 	*m_dbFolderInfo;
-	nsIMdbEnv		*m_mdbEnv;	// to be used in all the db calls.
-	nsIMdbStore		*m_mdbStore;
-	nsIMdbTable		*m_mdbAllMsgHeadersTable;
-	nsFileSpec		m_dbName;
-	nsIMsgRFC822Parser	*m_rfc822Parser;
-	nsNewsSet		*m_newSet;		// new messages since last open.
-
-    nsresult CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage* *result,
-						  PRBool createKeyFromHeader = PR_FALSE);
 	// prefs stuff - in future, we might want to cache the prefs interface
 	nsresult GetBoolPref(const char *prefName, PRBool *result);
 	// retrieval methods
@@ -279,8 +270,15 @@ protected:
 	nsresult			InitExistingDB();
 	nsresult			InitNewDB();
 	nsresult			InitMDBInfo();
-	PRBool				m_mdbTokensInitialized;
 
+	nsDBFolderInfo      *m_dbFolderInfo;
+	nsIMdbEnv		    *m_mdbEnv;	// to be used in all the db calls.
+	nsIMdbStore	 	    *m_mdbStore;
+	nsIMdbTable		    *m_mdbAllMsgHeadersTable;
+	nsFileSpec		    m_dbName;
+	nsNewsSet		    *m_newSet;		// new messages since last open.
+	PRBool				m_mdbTokensInitialized;
+    nsISupportsArray/*<nsIDBChangeListener>*/ *m_ChangeListeners;
 	mdb_token			m_hdrRowScopeToken;
 	mdb_token			m_hdrTableKindToken;
 	mdb_token			m_threadTableKindToken;
@@ -296,12 +294,13 @@ protected:
 	mdb_token			m_statusOffsetColumnToken;
 	mdb_token			m_numLinesColumnToken;
 	mdb_token			m_ccListColumnToken;
-	mdb_token			m_threadIdColumnToken;
 	mdb_token			m_threadFlagsColumnToken;
+	mdb_token			m_threadIdColumnToken;
 	mdb_token			m_threadChildrenColumnToken;
 	mdb_token			m_threadUnreadChildrenColumnToken;
 	mdb_token			m_messageThreadIdColumnToken;
 	mdb_token			m_numReferencesColumnToken;
+	nsIMsgRFC822Parser	*m_rfc822Parser;
 };
 
 #endif
