@@ -405,7 +405,15 @@ nsActivePlugin::~nsActivePlugin()
       rv = peer->GetOwner(*getter_AddRefs(owner));
       owner->SetInstance(nsnull);
     }
-    mInstance->Destroy();
+
+    // now check for cached plugins because they haven't had nsIPluginInstance::Destroy()
+    // called yet. For non-cached plugins, nsIPluginInstance::Destroy() is called 
+    // in either nsObjectFrame::Destroy() or nsActivePluginList::stopRunning()
+    PRBool doCache = PR_TRUE;    
+    mInstance->GetValue(nsPluginInstanceVariable_DoCacheBool, (void *) &doCache);
+    if (doCache) 
+      mInstance->Destroy();
+
     NS_RELEASE(mInstance);
     NS_RELEASE(mPeer);
   }
@@ -601,6 +609,7 @@ void nsActivePluginList::stopRunning()
       else {
         p->mInstance->SetWindow(nsnull);
         p->mInstance->Stop();
+        p->mInstance->Destroy();
       }
       doCallSetWindowAfterDestroy = PR_FALSE;
       p->setStopped(PR_TRUE);
