@@ -2595,7 +2595,7 @@ int PR_CALLBACK ButtonShowHideCallback(const char* aPref, void* aClosure)
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
 
-    if (NS_SUCCEEDED(windowMediator->GetEnumerator(NS_LITERAL_STRING("navigator:browser"), 
+    if (NS_SUCCEEDED(windowMediator->GetEnumerator(NS_LITERAL_STRING("navigator:browser").get(), 
                                                    getter_AddRefs(windowEnumerator)))) {
       // Get each dom window
       PRBool more;
