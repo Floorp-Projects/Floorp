@@ -1222,8 +1222,8 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
   if (gsDebug==PR_TRUE) 
   {
     printf("-----------------------------------------------------------------\n");
-    printf("nsTableFrame::Reflow: table %p given maxSize=%d,%d\n",
-            this, aReflowState.maxSize.width, aReflowState.maxSize.height);
+    printf("nsTableFrame::Reflow: table %p reason %d given maxSize=%d,%d\n",
+            this, aReflowState.reason, aReflowState.maxSize.width, aReflowState.maxSize.height);
   }
 
 #ifdef NS_DEBUG
@@ -1817,8 +1817,13 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*        aPresContext,
           NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == childDisplay->mDisplay ||
           NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay )
       {
+        // we don't want to adjust the maxElementSize if this is an initial reflow
+        // it was set by the TableLayoutStrategy and shouldn't be changed.
+        nsSize *requestedMaxElementSize = nsnull;
+        if (eReflowReason_Initial != aState.reflowState.reason)
+          requestedMaxElementSize = aMaxElementSize;
         PlaceChild(aPresContext, aState, kidFrame, kidRect,
-                   aMaxElementSize, kidMaxElementSize);
+                   requestedMaxElementSize, kidMaxElementSize);
         if (bottomMargin < 0) {
           aState.prevMaxNegBottomMargin = -bottomMargin;
         } else {
