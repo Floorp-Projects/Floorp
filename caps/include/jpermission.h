@@ -31,7 +31,7 @@ PR_PUBLIC_API(void)
 java_netscape_security_savePrivilege(nsPermState permState);
 
 PR_PUBLIC_API(nsPermState)
-nsJSJavaDisplayDialog(char *prinStr, char *targetStr, char *rsikStr, PRBool isCert);
+nsJSJavaDisplayDialog(char *prinStr, char *targetStr, char *rsikStr, PRBool isCert, void*cert);
 
 PR_PUBLIC_API(void)
 java_netscape_security_getTargetDetails(const char *charSetName,

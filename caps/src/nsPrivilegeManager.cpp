@@ -24,9 +24,11 @@
 #include "prprf.h"
 #include "plbase64.h"
 #include "jpermission.h"
-#include "rdf.h"
 
+#ifdef ENABLE_RDF
+#include "rdf.h"
 #include "jsec2rdf.h"
+#endif /* ENABLE_RDF */
 
 static nsPrivilegeManager * thePrivilegeManager = NULL;
 
@@ -53,7 +55,11 @@ nsPrivilegeTable *gPrivilegeTable;
 
 static PRBool getPrincipalString(nsHashKey *aKey, void *aData, void* closure);
 
+#ifdef ENABLE_RDF
 static nsPrincipal *RDF_getPrincipal(JSec_Principal jsec_pr);
+static JSec_Principal RDF_CreatePrincipal(nsPrincipal *prin);
+#endif /* ENABLE_RDF */
+
 static PRBool RDF_RemovePrincipal(nsPrincipal *prin);
 static PRBool RDF_RemovePrincipalsPrivilege(nsPrincipal *prin, nsTarget *target);
 
@@ -1354,6 +1360,7 @@ nsPrivilegeManager::getPrivilegeTableFromStack(void *context, PRInt32 callerDept
   return privTable;
 }
 
+#ifdef ENABLE_RDF
 static JSec_Principal 
 RDF_CreatePrincipal(nsPrincipal *prin)
 {
@@ -1373,13 +1380,18 @@ RDF_CreatePrincipal(nsPrincipal *prin)
   RDFJSec_AddPrincipal(pr);
   return pr;
 }
+#endif /* ENABLE_RDF */
+
 
 static PRBool 
 RDF_RemovePrincipal(nsPrincipal *prin)
 {
-  nsCaps_lock();
+  PRBool found = PR_FALSE;
 
+#ifdef ENABLE_RDF
+  nsCaps_lock();
   RDFJSec_InitPrivilegeDB();
+
   RDF_Cursor prin_cursor = RDFJSec_ListAllPrincipals();
   if (prin_cursor == NULL) {
     nsCaps_unlock();
@@ -1388,7 +1400,6 @@ RDF_RemovePrincipal(nsPrincipal *prin)
   
   JSec_Principal jsec_prin;
   nsPrincipal *cur_prin = NULL;
-  PRBool found = PR_FALSE;
   while ((jsec_prin = RDFJSec_NextPrincipal(prin_cursor)) != NULL) {
     if ((cur_prin = RDF_getPrincipal(jsec_prin)) == NULL) {
       continue;
@@ -1404,8 +1415,13 @@ RDF_RemovePrincipal(nsPrincipal *prin)
     RDFJSec_DeletePrincipal(jsec_prin);
   }
   nsCaps_unlock();
+
+#endif /* ENABLE_RDF */
   return found;
 }
+
+
+#ifdef ENABLE_RDF
 
 static nsPrincipal *
 RDF_getPrincipal(JSec_Principal jsec_pr)
@@ -1441,11 +1457,18 @@ RDF_getTarget(JSec_Target jsec_target)
   char *targetName = RDFJSec_GetTargetName(jsec_target);
   return nsTarget::findTarget(targetName);
 }
+#endif /* ENABLE_RDF */
+
 
 static PRBool 
 RDF_RemovePrincipalsPrivilege(nsPrincipal *prin, nsTarget *target)
 {
+  PRBool found = PR_FALSE;
+
+#ifdef ENABLE_RDF
+
   nsCaps_lock();
+
 
   RDFJSec_InitPrivilegeDB();
   RDF_Cursor prin_cursor = RDFJSec_ListAllPrincipals();
@@ -1456,7 +1479,6 @@ RDF_RemovePrincipalsPrivilege(nsPrincipal *prin, nsTarget *target)
   
   JSec_Principal jsec_prin;
   nsPrincipal *cur_prin = NULL;
-  PRBool found = PR_FALSE;
   JSec_PrincipalUse jsec_pr_use = NULL;
 
   while ((jsec_prin = RDFJSec_NextPrincipal(prin_cursor)) != NULL) {
@@ -1492,6 +1514,8 @@ RDF_RemovePrincipalsPrivilege(nsPrincipal *prin, nsTarget *target)
     RDFJSec_DeletePrincipalUse(jsec_prin, jsec_pr_use);
   }
   nsCaps_unlock();
+#endif /* ENABLE_RDF */
+
   return found;
 }
 
@@ -1506,6 +1530,9 @@ void nsPrivilegeManager::save(nsPrincipal *prin,
   if (prin->equals(getSystemPrincipal())) {
     return;
   }
+
+#ifdef ENABLE_RDF
+
   nsCaps_lock();
   RDFJSec_InitPrivilegeDB();
   JSec_Principal pr = RDF_CreatePrincipal(prin);
@@ -1515,6 +1542,8 @@ void nsPrivilegeManager::save(nsPrincipal *prin,
   RDFJSec_AddPrincipalUse(pr, prUse);
   
   nsCaps_unlock();
+#endif /* ENABLE_RDF */
+
 }
 
 /* The following routine should be called after setting up the system targets 
@@ -1522,6 +1551,8 @@ void nsPrivilegeManager::save(nsPrincipal *prin,
  */
 void nsPrivilegeManager::load(void)
 {
+#ifdef ENABLE_RDF
+
   nsCaps_lock();
   RDFJSec_InitPrivilegeDB();
   RDF_Cursor prin_cursor = RDFJSec_ListAllPrincipals();
@@ -1559,6 +1590,8 @@ void nsPrivilegeManager::load(void)
 
   RDFJSec_ReleaseCursor(prin_cursor);
   nsCaps_unlock();
+#endif /* ENABLE_RDF */
+
 }
 
 
@@ -1581,7 +1614,10 @@ PRBool nsPrivilegeManagerInitialize(void)
   theUnknownPrincipalArray->Add(theUnknownPrincipal);
 
   thePrivilegeManager = new nsPrivilegeManager();
+#ifdef ENABLE_RDF
   RDFJSec_InitPrivilegeDB();
+#endif /* ENABLE_RDF */
+
   return PR_FALSE;
 }
 

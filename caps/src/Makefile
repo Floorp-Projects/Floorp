@@ -34,11 +34,11 @@ CPPSRCS		=	        \
 		nsUserTarget.cpp                  \
 		admin.cpp                         \
 		nsCaps.cpp                        \
-  nsCCapsManager.cpp				            \
-  nsCCertPrincipal.cpp				          \
-  nsCCodebasePrincipal.cpp			       \
-  nsCCapsManagerFactory.cpp			      \
-  nsCCodeSourcePrincipal.cpp        \
+		nsCCapsManager.cpp		  \
+		nsCCertPrincipal.cpp		  \
+		nsCCodebasePrincipal.cpp	  \
+		nsCCapsManagerFactory.cpp	  \
+		nsCCodeSourcePrincipal.cpp        \
 		$(NULL)
 
 REQUIRES	= nspr xpcom security layer js jar zlib pref img util rdf caps 
@@ -52,5 +52,6 @@ CSRCS		=	        \
 include $(DEPTH)/config/rules.mk
 
 INCLUDES	+=	-I$(DEPTH)/include \
-		 		-I$(PUBLIC)/public \
+		 	-I$(PUBLIC)/public \
+			$(NULL)
 

@@ -414,7 +414,7 @@ char * nsPrincipal::getNickname(void)
     return "Classes for whom we don't the principal";
   }
 
-  if ((nsPrincipalType_CertKey != itsType) ||
+  if ((nsPrincipalType_CertKey != itsType) &&
       (nsPrincipalType_CertChain != itsType))
     return itsKey;
 
@@ -427,6 +427,17 @@ nsPrincipalType
 nsPrincipal::getType()
 {
   return itsType;
+}
+
+void*
+nsPrincipal::getCertificate()
+{
+  void* cert=NULL;
+  if ((itsType == nsPrincipalType_CertChain) &&
+      (itsCertArray != NULL)) {
+    cert = itsCertArray->Get(0);
+  }
+  return cert;
 }
 
 char *
@@ -756,7 +767,7 @@ nsPrincipal::getCertAttribute(int attrib)
         attributeStr = SECNAV_GetJarCertInfo(cert, snjExpirationDate);
         break;
       case ZIG_C_NICKNAME:
-        attributeStr = SECNAV_GetJarCertInfo(cert, snjNickname);
+        attributeStr = SECNAV_GetJarCertInfo(cert, snjCommonName);
         break;
       case ZIG_C_FP:
         attributeStr = SECNAV_GetJarCertInfo(cert, snjFingerprint);
@@ -765,10 +776,14 @@ nsPrincipal::getCertAttribute(int attrib)
       default:
         return NULL;
       }
-      attrStr = new char[strlen(attributeStr)+1];
-      XP_STRCPY(attrStr, attributeStr);
-      PR_FREEIF(attributeStr);
-      return attrStr;
+      if (attributeStr) {
+          attrStr = new char[strlen(attributeStr)+1];
+          XP_STRCPY(attrStr, attributeStr);
+         PR_FREEIF(attributeStr);
+         return attrStr;
+      } else {
+         return "Untrusted certificate (unknown attributes)";
+      }
     }
     
     if (SOB_cert_attribute(attrib, zig, 

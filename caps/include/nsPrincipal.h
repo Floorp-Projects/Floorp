@@ -62,6 +62,8 @@ public:
 
 	nsPrincipalType getType();
 
+	void *getCertificate();
+
 	char *getKey();
 
 	PRUint32 getKeyLength();
