@@ -200,7 +200,7 @@ NS_METHOD nsGenericFactory::Create(nsISupports* outer, const nsIID& aIID, void* 
     return res;
 }
 
-NS_COM nsresult
+NS_COM_GLUE nsresult
 NS_NewGenericFactory(nsIGenericFactory* *result,
                      const nsModuleComponentInfo *info)
 {
@@ -506,7 +506,7 @@ nsGenericModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
     return NS_ERROR_FAILURE;
 }
 
-NS_COM nsresult
+NS_COM_GLUE nsresult
 NS_NewGenericModule2(nsModuleInfo* info, nsIModule* *result)
 {
     nsresult rv = NS_OK;
@@ -524,7 +524,7 @@ NS_NewGenericModule2(nsModuleInfo* info, nsIModule* *result)
     return rv;
 }
 
-NS_COM nsresult
+NS_COM_GLUE nsresult
 NS_NewGenericModule(const char* moduleName,
                     PRUint32 componentCount,
                     nsModuleComponentInfo* components,

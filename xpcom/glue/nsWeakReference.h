@@ -50,7 +50,7 @@ class nsWeakReference;
 #undef  IMETHOD_VISIBILITY
 #define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
 
-class NS_COM nsSupportsWeakReference : public nsISupportsWeakReference
+class NS_COM_GLUE nsSupportsWeakReference : public nsISupportsWeakReference
   {
     public:
       nsSupportsWeakReference()
@@ -85,7 +85,7 @@ class NS_COM nsSupportsWeakReference : public nsISupportsWeakReference
 #undef  IMETHOD_VISIBILITY
 #define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
 
-class NS_COM nsWeakReference : public nsIWeakReference
+class NS_COM_GLUE nsWeakReference : public nsIWeakReference
   {
     public:
     // nsISupports...

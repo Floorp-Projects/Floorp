@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 #include "nsIAppStartupNotifier.h"
 #include "nsIStringBundle.h"
@@ -46,9 +47,6 @@
 
 #include "nsXPCOM.h"
 #include "nsEmbedAPI.h"
-#include "nsCOMPtr.h"
-#include "nsComponentManagerUtils.h"
-#include "nsIServiceManagerUtils.h"
 
 static nsIServiceManager *sServiceManager = nsnull;
 static PRBool             sRegistryInitializedFlag = PR_FALSE;
@@ -112,65 +110,87 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
     // Register components
     if (!sRegistryInitializedFlag)
     {
-        nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(sServiceManager, &rv);
+#ifdef DEBUG
+        nsIComponentRegistrar *registrar;
+        rv = sServiceManager->QueryInterface(NS_GET_IID(nsIComponentRegistrar),
+                                             (void **) &registrar);
         if (NS_FAILED(rv))
         {
             NS_WARNING("Could not QI to registrar");
             return rv;
         }
-#ifdef DEBUG
         rv = registrar->AutoRegister(nsnull);
-
         if (NS_FAILED(rv))
         {
             NS_WARNING("Could not AutoRegister");
-            return rv;
         }
-
-        // If the application is using an GRE, then, 
-        // auto register components in the GRE directory as well.
-        //
-        // The application indicates that it's using an GRE by
-        // returning a valid nsIFile when queried (via appFileLocProvider)
-        // for the NS_GRE_DIR atom as shown below
-        //
-        if (appFileLocProvider)
+        else
         {
-            nsCOMPtr<nsIFile> greDir;
-            PRBool persistent = PR_TRUE;
+            // If the application is using an GRE, then, auto register components
+            // in the GRE directory as well.
+            //
+            // The application indicates that it's using an GRE by returning a
+            // valid nsIFile when queried (via appFileLocProvider) for the
+            // NS_GRE_DIR atom as shown below
 
-            appFileLocProvider->GetFile(NS_GRE_DIR, &persistent, getter_AddRefs(greDir));
-
-            if (greDir)
+            if (appFileLocProvider)
             {
-                rv = registrar->AutoRegister(greDir);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "Could not AutoRegister GRE components");
+                nsIFile *greDir = nsnull;
+                PRBool persistent = PR_TRUE;
+
+                appFileLocProvider->GetFile(NS_GRE_DIR, &persistent,
+                                            &greDir);
+                if (greDir)
+                {
+                    rv = registrar->AutoRegister(greDir);
+                    if (NS_FAILED(rv))
+                        NS_WARNING("Could not AutoRegister GRE components");
+                    NS_RELEASE(greDir);
+                }
             }
         }
+        NS_RELEASE(registrar);
+        if (NS_FAILED(rv))
+            return rv;
 #endif
         sRegistryInitializedFlag = PR_TRUE;
     }
 
-	nsCOMPtr<nsIObserver> mStartupNotifier = do_CreateInstance(NS_APPSTARTUPNOTIFIER_CONTRACTID, &rv);
-	if(NS_FAILED(rv))
-		return rv;
-	mStartupNotifier->Observe(nsnull, APPSTARTUP_TOPIC, nsnull);
+    nsIComponentManager *compMgr;
+    rv = sServiceManager->QueryInterface(NS_GET_IID(nsIComponentManager),
+                                         (void **) &compMgr);
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsIObserver *startupNotifier;
+    rv = compMgr->CreateInstanceByContractID(NS_APPSTARTUPNOTIFIER_CONTRACTID,
+                                             NULL,
+                                             NS_GET_IID(nsIObserver),
+                                             (void **) &startupNotifier);
+    NS_RELEASE(compMgr);
+    if (NS_FAILED(rv))
+        return rv;
+
+	  startupNotifier->Observe(nsnull, APPSTARTUP_TOPIC, nsnull);
+    NS_RELEASE(startupNotifier);
 
 #ifdef HACK_AROUND_THREADING_ISSUES
     // XXX force certain objects to be created on the main thread
-    nsCOMPtr<nsIStringBundleService> sBundleService;
-    sBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+    nsIStringBundleService *bundleService;
+    rv = sServiceManager->GetServiceByContractID(NS_STRINGBUNDLE_CONTRACTID,
+                                                 NS_GET_IID(nsIStringBundleService),
+                                                 (void **) &bundleService);
     if (NS_SUCCEEDED(rv))
     {
-        nsCOMPtr<nsIStringBundle> stringBundle;
+        nsIStringBundle *stringBundle;
         const char propertyURL[] = "chrome://necko/locale/necko.properties";
-        rv = sBundleService->CreateBundle(propertyURL,
-                                          getter_AddRefs(stringBundle));
+        rv = bundleService->CreateBundle(propertyURL, &stringBundle);
+        NS_RELEASE(stringBundle);
+        NS_RELEASE(bundleService);
     }
 #endif
 
     return NS_OK;
-
 }
 
 nsresult NS_TermEmbedding()

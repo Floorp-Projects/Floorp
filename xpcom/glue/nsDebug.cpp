@@ -75,7 +75,7 @@ void GlueShutdownDebug()
 }
 #endif
 
-NS_COM void nsDebug::Abort(const char* aFile, PRIntn aLine)
+NS_COM_GLUE void nsDebug::Abort(const char* aFile, PRIntn aLine)
 {     
   if (!ENSURE_DEBUGOBJECT)
     return;    
@@ -83,7 +83,7 @@ NS_COM void nsDebug::Abort(const char* aFile, PRIntn aLine)
   gDebugObject->Abort(aFile, aLine);
 }     
 
-NS_COM void nsDebug::Break(const char* aFile, PRIntn aLine)
+NS_COM_GLUE void nsDebug::Break(const char* aFile, PRIntn aLine)
 { 
   if (!ENSURE_DEBUGOBJECT)
     return;    
@@ -91,7 +91,7 @@ NS_COM void nsDebug::Break(const char* aFile, PRIntn aLine)
   gDebugObject->Break(aFile, aLine);
 }
 
-NS_COM void nsDebug::Warning(const char* aStr,
+NS_COM_GLUE void nsDebug::Warning(const char* aStr,
                              const char* aFile, 
                              PRIntn aLine)
 { 
@@ -100,7 +100,7 @@ NS_COM void nsDebug::Warning(const char* aStr,
   gDebugObject->Warning(aStr, aFile, aLine);
 }
 
-NS_COM void nsDebug::Assertion(const char* aStr, const char* aExpr,
+NS_COM_GLUE void nsDebug::Assertion(const char* aStr, const char* aExpr,
                                const char* aFile, PRIntn aLine)
 { 
   if (!ENSURE_DEBUGOBJECT)

@@ -1,3 +1,4 @@
+# vim:set ts=8 sw=8 sts=8 noet:
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -82,5 +83,4 @@ include $(topsrcdir)/config/rules.mk
 export::
 	rm -f $(XPCOM_GLUE_SRC_CSRCS:.cpp=.$(OBJ_SUFFIX))
 
-DEFINES		+= \
-		-D_IMPL_NS_COM
+DEFINES		+= -DMOZILLA_STRICT_API

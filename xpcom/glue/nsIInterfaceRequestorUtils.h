@@ -55,7 +55,7 @@ CallGetInterface( T* aSource, DestinationType** aDestination )
                                  NS_REINTERPRET_CAST(void**, aDestination));
   }
 
-class NS_COM nsGetInterface : public nsCOMPtr_helper
+class NS_COM_GLUE nsGetInterface : public nsCOMPtr_helper
   {
     public:
       nsGetInterface( nsISupports* aSource, nsresult* error )
