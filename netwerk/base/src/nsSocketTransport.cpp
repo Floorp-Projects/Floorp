@@ -850,6 +850,7 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
     PRStatus status;
     nsresult rv = NS_OK;
     PRBool proxyTransparent = PR_FALSE;
+    PRBool usingSSL = PR_FALSE;
 
     NS_ASSERTION(eSocketState_WaitConnect == mCurrentState, "Wrong state.");
 
@@ -909,15 +910,17 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
                 if (NS_FAILED(rv) || !mSocketFD) break;
 
                 // if the service was ssl or starttls, we want to hold onto the socket info
-                if (nsCRT::strcmp(mSocketTypes[type], "ssl") == 0 ||
-                    nsCRT::strcmp(mSocketTypes[type], "starttls") == 0) {
+                PRBool isSSL = (strcmp(mSocketTypes[type], "ssl") == 0);
+                if (isSSL || (strcmp(mSocketTypes[type], "starttls") == 0)) {
                     mSecurityInfo = socketInfo;
                     nsCOMPtr<nsISSLSocketControl> secCtrl(do_QueryInterface(mSecurityInfo));
                     if (secCtrl)
                         secCtrl->SetNotificationCallbacks(mNotificationCallbacks);
+                    // remember if socket type is SSL so we can ProxyStartSSL if need be.
+                    usingSSL = isSSL;
                 }
-                else if ((nsCRT::strcmp(mSocketTypes[type], "socks") == 0) 
-                         || (nsCRT::strcmp(mSocketTypes[type], "socks4") == 0)) {
+                else if ((strcmp(mSocketTypes[type], "socks") == 0) ||
+                         (strcmp(mSocketTypes[type], "socks4") == 0)) {
                     // since socks is transparent, any layers above
                     // it do not have to worry about proxy stuff
                     proxyHost = nsnull;
@@ -1036,14 +1039,16 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
         "rv = %x.\n\n",
         mHostName, mPort, this, rv));
 
-    if (rv == NS_OK && mSecurityInfo && mProxyHost && proxyTransparent) {
+    if (rv == NS_OK && mSecurityInfo && mProxyHost && proxyTransparent && usingSSL) {
         // if the connection phase is finished, and the ssl layer
         // has been pushed, and we were proxying (transparently; ie. nothing
         // has to happen in the protocol layer above us), it's time
         // for the ssl to start doing it's thing.
         nsCOMPtr<nsISSLSocketControl> sslControl = do_QueryInterface(mSecurityInfo, &rv);
-        if (NS_SUCCEEDED(rv) && sslControl)
+        if (NS_SUCCEEDED(rv) && sslControl) {
+            LOG(("nsSocketTransport: Calling ProxyStartSSL()\n"));
             sslControl->ProxyStartSSL();
+        }
     }
     return rv;
 }
