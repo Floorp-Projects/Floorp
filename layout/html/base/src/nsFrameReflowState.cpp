@@ -25,15 +25,14 @@
 #include "nsHTMLAtoms.h"
 
 const nsHTMLReflowState*
-nsHTMLReflowState::GetContainingBlockReflowState() const
+nsHTMLReflowState::GetContainingBlockReflowState(const nsReflowState* aParentRS)
 {
-  const nsReflowState* rs = parentReflowState;
-  while (nsnull != rs) {
-    if (nsnull != rs->frame) {
+  while (nsnull != aParentRS) {
+    if (nsnull != aParentRS->frame) {
       const nsStyleDisplay* display;
       nsresult rv;
-      rv = rs->frame->GetStyleData(eStyleStruct_Display,
-                                   (const nsStyleStruct*&) display);
+      rv = aParentRS->frame->GetStyleData(eStyleStruct_Display,
+                                          (const nsStyleStruct*&) display);
       if (NS_SUCCEEDED(rv) && (nsnull != display)) {
         switch (display->mDisplay) {
         case NS_STYLE_DISPLAY_BLOCK:
@@ -41,12 +40,19 @@ nsHTMLReflowState::GetContainingBlockReflowState() const
         case NS_STYLE_DISPLAY_RUN_IN:
         case NS_STYLE_DISPLAY_LIST_ITEM:
           // XXX This cast is Not Good
-          return (const nsHTMLReflowState*)rs;
+          return (const nsHTMLReflowState*)aParentRS;
         }
       }
     }
-    rs = rs->parentReflowState;
+    aParentRS = aParentRS->parentReflowState;
   }
+  return nsnull;
+}
+
+const nsHTMLReflowState*
+nsHTMLReflowState::GetPageBoxReflowState(const nsReflowState* aParentRS)
+{
+  // XXX write me as soon as we can ask a frame if it's a page frame...
   return nsnull;
 }
 
@@ -54,7 +60,8 @@ nscoord
 nsHTMLReflowState::GetContainingBlockContentWidth() const
 {
   nscoord width = 0;
-  const nsHTMLReflowState* rs = GetContainingBlockReflowState();
+  const nsHTMLReflowState* rs =
+    GetContainingBlockReflowState(parentReflowState);
   if (nsnull != rs) {
     if (rs->HaveFixedContentWidth()) {
       width = rs->minWidth;
@@ -71,7 +78,9 @@ nsHTMLReflowState::GetContainingBlockContentWidth() const
                                      (const nsStyleStruct*&) spacing);
         if (NS_SUCCEEDED(rv) && (nsnull != spacing)) {
           nsMargin borderPadding;
-          spacing->CalcBorderPaddingFor(rs->frame, borderPadding);
+          rs->ComputeBorderPaddingFor(rs->frame,
+                              (nsHTMLReflowState*) rs->parentReflowState,
+                              borderPadding);
           width -= borderPadding.left + borderPadding.right;
         }
       }
@@ -301,6 +310,205 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
   // (section 10.3/10.6 of the spec)
 }
 
+void
+nsHTMLReflowState::ComputeHorizontalValue(const nsHTMLReflowState& aRS,
+                                          nsStyleUnit aUnit,
+                                          nsStyleCoord& aCoord,
+                                          nscoord& aResult)
+{
+  aResult = 0;
+  if (eStyleUnit_Percent == aUnit) {
+    nscoord width = aRS.GetContainingBlockContentWidth();
+    float pct = aCoord.GetPercentValue();
+    aResult = NSToCoordFloor(width * pct);
+  }
+}
+
+void
+nsHTMLReflowState::ComputeVerticalValue(const nsHTMLReflowState& aRS,
+                                        nsStyleUnit aUnit,
+                                        nsStyleCoord& aCoord,
+                                        nscoord& aResult)
+{
+  aResult = 0;
+  if (eStyleUnit_Percent == aUnit) {
+    // XXX temporary!
+    nscoord width = aRS.GetContainingBlockContentWidth();
+    float pct = aCoord.GetPercentValue();
+    aResult = NSToCoordFloor(width * pct);
+  }
+}
+
+void
+nsHTMLReflowState::ComputeMarginFor(nsIFrame* aFrame,
+                                    const nsReflowState* aParentRS,
+                                    nsMargin& aResult)
+{
+  const nsStyleSpacing* spacing;
+  nsresult rv;
+  rv = aFrame->GetStyleData(eStyleStruct_Spacing,
+                            (const nsStyleStruct*&) spacing);
+  if (NS_SUCCEEDED(rv) && (nsnull != spacing)) {
+    // If style style can provide us the margin directly, then use it.
+    if (!spacing->GetMargin(aResult) && (nsnull != aParentRS)) {
+      // We have to compute the value (because it's uncomputable by
+      // the style code).
+      const nsHTMLReflowState* rs = GetContainingBlockReflowState(aParentRS);
+      if (nsnull != rs) {
+        nsStyleCoord left, right;
+        ComputeHorizontalValue(*rs, spacing->mMargin.GetLeftUnit(),
+                               spacing->mMargin.GetLeft(left), aResult.left);
+        ComputeHorizontalValue(*rs, spacing->mMargin.GetRightUnit(),
+                               spacing->mMargin.GetRight(right),
+                               aResult.right);
+      }
+      else {
+        aResult.left = 0;
+        aResult.right = 0;
+      }
+
+      const nsHTMLReflowState* rs2 = GetPageBoxReflowState(aParentRS);
+      nsStyleCoord top, bottom;
+      if (nsnull != rs2) {
+        // According to the CSS2 spec, margin percentages are
+        // calculated with respect to the *height* of the containing
+        // block when in a paginated context.
+        ComputeVerticalValue(*rs2, spacing->mMargin.GetTopUnit(),
+                             spacing->mMargin.GetTop(top), aResult.top);
+        ComputeVerticalValue(*rs2, spacing->mMargin.GetBottomUnit(),
+                             spacing->mMargin.GetBottom(bottom),
+                             aResult.bottom);
+      }
+      else if (nsnull != rs) {
+        // According to the CSS2 spec, margin percentages are
+        // calculated with respect to the *width* of the containing
+        // block, even for margin-top and margin-bottom.
+        ComputeHorizontalValue(*rs, spacing->mMargin.GetTopUnit(),
+                               spacing->mMargin.GetTop(top), aResult.top);
+        ComputeHorizontalValue(*rs, spacing->mMargin.GetBottomUnit(),
+                               spacing->mMargin.GetBottom(bottom),
+                               aResult.bottom);
+      }
+      else {
+        aResult.top = 0;
+        aResult.bottom = 0;
+      }
+    }
+  }
+}
+
+void
+nsHTMLReflowState::ComputePaddingFor(nsIFrame* aFrame,
+                                     const nsReflowState* aParentRS,
+                                     nsMargin& aResult)
+{
+  const nsStyleSpacing* spacing;
+  nsresult rv;
+  rv = aFrame->GetStyleData(eStyleStruct_Spacing,
+                            (const nsStyleStruct*&) spacing);
+  if (NS_SUCCEEDED(rv) && (nsnull != spacing)) {
+    // If style can provide us the padding directly, then use it.
+    if (!spacing->GetPadding(aResult) && (nsnull != aParentRS)) {
+      // We have to compute the value (because it's uncomputable by
+      // the style code).
+      const nsHTMLReflowState* rs = GetContainingBlockReflowState(aParentRS);
+      if (nsnull != rs) {
+        nsStyleCoord left, right, top, bottom;
+        ComputeHorizontalValue(*rs, spacing->mPadding.GetLeftUnit(),
+                               spacing->mPadding.GetLeft(left), aResult.left);
+        ComputeHorizontalValue(*rs, spacing->mPadding.GetRightUnit(),
+                               spacing->mPadding.GetRight(right),
+                               aResult.right);
+
+        // According to the CSS2 spec, padding percentages are
+        // calculated with respect to the *width* of the containing
+        // block, even for padding-top and padding-bottom.
+        ComputeHorizontalValue(*rs, spacing->mPadding.GetTopUnit(),
+                               spacing->mPadding.GetTop(top), aResult.top);
+        ComputeHorizontalValue(*rs, spacing->mPadding.GetBottomUnit(),
+                               spacing->mPadding.GetBottom(bottom),
+                               aResult.bottom);
+      }
+      else {
+        aResult.SizeTo(0, 0, 0, 0);
+      }
+    }
+  }
+  else {
+    aResult.SizeTo(0, 0, 0, 0);
+  }
+}
+
+void
+nsHTMLReflowState::ComputeBorderFor(nsIFrame* aFrame,
+                                    nsMargin& aResult)
+{
+  const nsStyleSpacing* spacing;
+  nsresult rv;
+  rv = aFrame->GetStyleData(eStyleStruct_Spacing,
+                            (const nsStyleStruct*&) spacing);
+  if (NS_SUCCEEDED(rv) && (nsnull != spacing)) {
+    // If style can provide us the border directly, then use it.
+    if (!spacing->GetBorder(aResult)) {
+      // CSS2 has no percentage borders
+      aResult.SizeTo(0, 0, 0, 0);
+    }
+  }
+  else {
+    aResult.SizeTo(0, 0, 0, 0);
+  }
+}
+
+void
+nsHTMLReflowState::ComputeBorderPaddingFor(nsIFrame* aFrame,
+                                           const nsReflowState* aParentRS,
+                                           nsMargin& aResult)
+{
+  const nsStyleSpacing* spacing;
+  nsresult rv;
+  rv = aFrame->GetStyleData(eStyleStruct_Spacing,
+                            (const nsStyleStruct*&) spacing);
+  if (NS_SUCCEEDED(rv) && (nsnull != spacing)) {
+    nsMargin b, p;
+
+    // If style style can provide us the margin directly, then use it.
+    if (!spacing->GetBorder(b)) {
+      b.SizeTo(0, 0, 0, 0);
+    }
+    if (!spacing->GetPadding(p) && (nsnull != aParentRS)) {
+      // We have to compute the value (because it's uncomputable by
+      // the style code).
+      const nsHTMLReflowState* rs = GetContainingBlockReflowState(aParentRS);
+      if (nsnull != rs) {
+        nsStyleCoord left, right, top, bottom;
+        ComputeHorizontalValue(*rs, spacing->mPadding.GetLeftUnit(),
+                               spacing->mPadding.GetLeft(left), p.left);
+        ComputeHorizontalValue(*rs, spacing->mPadding.GetRightUnit(),
+                               spacing->mPadding.GetRight(right), p.right);
+
+        // According to the CSS2 spec, padding percentages are
+        // calculated with respect to the *width* of the containing
+        // block, even for padding-top and padding-bottom.
+        ComputeHorizontalValue(*rs, spacing->mPadding.GetTopUnit(),
+                               spacing->mPadding.GetTop(top), p.top);
+        ComputeHorizontalValue(*rs, spacing->mPadding.GetBottomUnit(),
+                               spacing->mPadding.GetBottom(bottom), p.bottom);
+      }
+      else {
+        p.SizeTo(0, 0, 0, 0);
+      }
+    }
+
+    aResult.top = b.top + p.top;
+    aResult.right = b.right + p.right;
+    aResult.bottom = b.bottom + p.bottom;
+    aResult.left = b.left + p.left;
+  }
+  else {
+    aResult.SizeTo(0, 0, 0, 0);
+  }
+}
+
 //----------------------------------------------------------------------
 
 nsFrameReflowState::nsFrameReflowState(nsIPresContext& aPresContext,
@@ -329,7 +537,9 @@ nsFrameReflowState::nsFrameReflowState(nsIPresContext& aPresContext,
                       (const nsStyleStruct*&) mStyleSpacing);
 
   // Calculate our border and padding value
-  mStyleSpacing->CalcBorderPaddingFor(frame, mBorderPadding);
+  ComputeBorderPaddingFor(frame,
+                          (nsHTMLReflowState*)parentReflowState,
+                          mBorderPadding);
 
   // Set mNoWrap flag
   switch (mStyleText->mWhiteSpace) {
@@ -359,3 +569,27 @@ nsFrameReflowState::nsFrameReflowState(nsIPresContext& aPresContext,
 nsFrameReflowState::~nsFrameReflowState()
 {
 }
+
+void
+nsFrameReflowState::SetupChildReflowState(nsHTMLReflowState& aChildRS)
+{
+  // Get reflow reason set correctly. It's possible that a child was
+  // created and then it was decided that it could not be reflowed
+  // (for example, a block frame that isn't at the start of a
+  // line). In this case the reason will be wrong so we need to check
+  // the frame state.
+  nsReflowReason reason = eReflowReason_Resize;
+  nsIFrame* frame = aChildRS.frame;
+  nsFrameState state;
+  frame->GetFrameState(state);
+  if (NS_FRAME_FIRST_REFLOW & state) {
+    reason = eReflowReason_Initial;
+  }
+  else if (mNextRCFrame == frame) {
+    reason = eReflowReason_Incremental;
+    // Make sure we only incrementally reflow once
+    mNextRCFrame = nsnull;/* XXX bad coupling */
+  }
+  aChildRS.reason = reason;
+}
+

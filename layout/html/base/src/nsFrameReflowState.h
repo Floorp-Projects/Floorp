@@ -35,6 +35,8 @@ public:
                      const nsHTMLReflowMetrics& aMetrics);
   ~nsFrameReflowState();
 
+  void SetupChildReflowState(nsHTMLReflowState& aChildReflowState);
+
   nsIPresContext& mPresContext;
   nsIFrame* mNextRCFrame;
 
