@@ -3,12 +3,12 @@
 #include "nsCSSRendering.h"
 #include "nsIPresContext.h"
 #include "nsGenericHTMLElement.h"
+#include "nsIView.h"
+#include "nsIViewManager.h"
 
-#define ACTIVE "active"
-#define HOVER "hover"
-#define NORMAL ""
-#define FOCUS "focus"
-#define ENABLED "enabled"
+#define ACTIVE   "active"
+#define HOVER    "hover"
+#define FOCUS    "focus"
 #define DISABLED "disabled"
 
 nsButtonFrameRenderer::nsButtonFrameRenderer()
@@ -83,32 +83,16 @@ nsButtonFrameRenderer::SetPseudoClassAttribute(const nsString& value, PRBool not
   */
 }
 
+void
+nsButtonFrameRenderer::SetHover(PRBool aHover, PRBool notify)
+{
+   ToggleClass(aHover, HOVER, notify);
+}
 
 void
-nsButtonFrameRenderer::SetState(ButtonState state, PRBool notify)
+nsButtonFrameRenderer::SetActive(PRBool aActive, PRBool notify)
 {
-	// get the pseudo class
-	nsString pseudo = GetPseudoClassAttribute();
-
-    // remove all other states and add new state
-	switch (state)
-	{
-	  case hover:
-		 RemoveClass(pseudo, ACTIVE);
-		 AddClass(pseudo, HOVER);
-		 break;
-	  case active:
-		 RemoveClass(pseudo, HOVER);
-		 AddClass(pseudo, ACTIVE);
-		 break;
-	  case normal:
-		 RemoveClass(pseudo, HOVER);
- 		 RemoveClass(pseudo, ACTIVE);
-		 break;
-	}
-
-	// set the pseudo class
-	SetPseudoClassAttribute(pseudo, notify);
+   ToggleClass(aActive, ACTIVE, notify);
 }
 
 void
@@ -120,35 +104,29 @@ nsButtonFrameRenderer::SetFocus(PRBool aFocus, PRBool notify)
 void
 nsButtonFrameRenderer::SetDisabled(PRBool aDisabled, PRBool notify)
 {
-   // get the pseudo class
-   nsString pseudo = GetPseudoClassAttribute();
-
-   // if focus add it 
-   if (aDisabled) {
-	   AddClass(pseudo, DISABLED);
-	   RemoveClass(pseudo, ENABLED);
-   } else {
-	   RemoveClass(pseudo, DISABLED);
-	   AddClass(pseudo, ENABLED);
-   }
-
-   // set pseudo class
-   SetPseudoClassAttribute(pseudo, notify);
+  ToggleClass(aDisabled, DISABLED, notify);
 }
 
-nsButtonFrameRenderer::ButtonState
-nsButtonFrameRenderer::GetState()  
+PRBool
+nsButtonFrameRenderer::isHover() 
 {
 	nsString pseudo = GetPseudoClassAttribute();
 	PRInt32 index = IndexOfClass(pseudo, HOVER);
     if (index != -1)
-		return hover;
+		return PR_TRUE;
+	else
+		return PR_FALSE;
+}
 
-	index = IndexOfClass(pseudo, ACTIVE);
+PRBool
+nsButtonFrameRenderer::isActive() 
+{
+	nsString pseudo = GetPseudoClassAttribute();
+	PRInt32 index = IndexOfClass(pseudo, ACTIVE);
     if (index != -1)
-		return active;
-
-	return normal;
+		return PR_TRUE;
+	else
+		return PR_FALSE;
 }
 
 PRBool
@@ -260,41 +238,47 @@ nsButtonFrameRenderer::HandleEvent(nsIPresContext& aPresContext,
   nsCOMPtr<nsIContent> content;
   mFrame->GetContent(getter_AddRefs(content));
 
-/* View support has removed because views don't seem to be supporting
-   Transpancy and the manager isn't supporting event grabbing either.
   // get its view
   nsIView* view = nsnull;
-  GetView(&view);
+  mFrame->GetView(&view);
   nsCOMPtr<nsIViewManager> viewMan;
-  view->GetViewManager(*getter_AddRefs(viewMan));
-*/
+
+  if (view)
+    view->GetViewManager(*getter_AddRefs(viewMan));
 
   aEventStatus = nsEventStatus_eIgnore;
  
   switch (aEvent->message) {
 
-        case NS_MOUSE_ENTER:
-            SetState(hover, PR_TRUE);
-	      break;
-        case NS_MOUSE_LEFT_BUTTON_DOWN: 
- 			SetState(active, PR_TRUE);
-		  // grab all mouse events
-		  
-		 // PRBool result;
-		  //viewMan->GrabMouseEvents(view,result);
-		  break;
+    case NS_MOUSE_ENTER:
+     SetHover(PR_TRUE, PR_TRUE);
+    break;
 
-        case NS_MOUSE_LEFT_BUTTON_UP:
-			SetState(hover, PR_TRUE);
-			// stop grabbing mouse events
-            //viewMan->GrabMouseEvents(nsnull,result);
-	        break;
-        case NS_MOUSE_EXIT:
-			SetState(normal, PR_TRUE);
-	        break;
-  }
+    case NS_MOUSE_LEFT_BUTTON_DOWN: 
+      SetActive(PR_TRUE, PR_TRUE);
+      // grab all mouse events
 
-  //aEventStatus = nsEventStatus_eConsumeNoDefault;
+      PRBool result;
+      if (viewMan)
+      viewMan->GrabMouseEvents(view,result);
+    break;
+
+    case NS_MOUSE_LEFT_BUTTON_UP:
+      SetActive(PR_FALSE, PR_TRUE);
+      // stop grabbing mouse events
+      if (viewMan)
+      viewMan->GrabMouseEvents(nsnull,result);
+    break;
+      case NS_MOUSE_EXIT:
+      // if we don't have a view then we might not know when they release
+      // the button. So on exit go back to the normal state.
+      if (!viewMan)
+        SetActive(PR_FALSE, PR_TRUE);
+
+      SetHover(PR_FALSE, PR_TRUE);
+      
+      break;
+    }
 
   return NS_OK;
 }
@@ -416,6 +400,7 @@ nsButtonFrameRenderer::PaintBorderAndBackground(nsIPresContext& aPresContext,
 
 
 	// paint the border and background
+
 	nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, mFrame,
                                    aDirtyRect, buttonRect,  *color, *spacing, 0, 0);
 
@@ -534,6 +519,12 @@ nsButtonFrameRenderer::GetButtonOutlineBorderAndPadding()
 	return borderAndPadding;
 }
 
+nsMargin
+nsButtonFrameRenderer::GetFullButtonBorderAndPadding()
+{
+  return GetButtonOuterFocusBorderAndPadding() + GetButtonBorderAndPadding() + GetButtonInnerFocusMargin() + GetButtonInnerFocusBorderAndPadding();
+}
+
 void 
 nsButtonFrameRenderer::ReResolveStyles(nsIPresContext& aPresContext)
 {
@@ -573,13 +564,15 @@ nsButtonFrameRenderer::AddFocusBordersAndPadding(nsIPresContext& aPresContext,
                                   nsMargin& aBorderPadding)
 {
   aBorderPadding = aReflowState.mComputedBorderPadding;
+  
+  nsMargin m = GetButtonOuterFocusBorderAndPadding();
+  m += GetButtonInnerFocusMargin();
+  m += GetButtonInnerFocusBorderAndPadding();
 
-  aBorderPadding += GetButtonOuterFocusBorderAndPadding();
-  aBorderPadding += GetButtonInnerFocusMargin();
-  aBorderPadding += GetButtonInnerFocusBorderAndPadding();
+  aBorderPadding += m;
  
-  aMetrics.width += aBorderPadding.left + aBorderPadding.right;
-  aMetrics.height += aBorderPadding.top + aBorderPadding.bottom;
+  aMetrics.width += m.left + m.right;
+  aMetrics.height += m.top + m.bottom;
   
   aMetrics.ascent = aMetrics.height;
   aMetrics.descent = 0;

@@ -1957,6 +1957,11 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       }
       else if (nsHTMLAtoms::button == aTag) {
         rv = NS_NewHTMLButtonControlFrame(newFrame);
+        // the html4 button needs to act just like a 
+        // regular button except contain html content
+        // so it must be replaced or html outside it will
+        // draw into its borders. -EDV
+        isReplaced = PR_TRUE;
         processChildren = PR_TRUE;
       }
       else if (nsHTMLAtoms::label == aTag) {

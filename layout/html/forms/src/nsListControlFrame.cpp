@@ -1621,6 +1621,14 @@ NS_IMETHODIMP nsListControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
   return NS_OK;
 }
 
+nsresult nsListControlFrame::RequiresWidget(PRBool& aRequiresWidget)
+{
+  aRequiresWidget = PR_FALSE;
+  return NS_OK;
+}
+
+
+
 
 #if 0
 //----------------------------------------------------------------------

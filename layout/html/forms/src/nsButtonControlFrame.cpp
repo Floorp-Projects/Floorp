@@ -54,6 +54,23 @@ static NS_DEFINE_IID(kIButtonIID,      NS_IBUTTON_IID);
 static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
+nsButtonControlFrame::nsButtonControlFrame()
+{
+  mRenderer.SetNameSpace(kNameSpaceID_None);
+}
+
+NS_IMETHODIMP
+nsButtonControlFrame::Init(nsIPresContext&  aPresContext,
+              nsIContent*      aContent,
+              nsIFrame*        aParent,
+              nsIStyleContext* aContext,
+              nsIFrame*        aPrevInFlow)
+{
+  nsresult  rv = nsFormControlFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  mRenderer.SetFrame(this,aPresContext);
+  return rv;
+}
+
 void
 nsButtonControlFrame::GetDefaultLabel(nsString& aString) 
 {
@@ -124,14 +141,6 @@ nsButtonControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   }
 }
 
-nsButtonControlFrame::nsButtonControlFrame()
-{
-   // Initialize GFX-rendered state
-  mPressed = PR_FALSE;
-  mGotFocus = PR_FALSE;
-  mDisabled = PR_FALSE;
-}
-
 nsresult
 NS_NewButtonControlFrame(nsIFrame*& aResult)
 {
@@ -193,6 +202,30 @@ nsButtonControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
   }
 }
 
+//
+// ReResolveStyleContext
+//
+// When the style context changes, make sure that all of our styles are still up to date.
+//
+NS_IMETHODIMP
+nsButtonControlFrame::ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext)
+{
+
+  nsCOMPtr<nsIStyleContext> old ( dont_QueryInterface(mStyleContext) );
+  
+  // this re-resolves |mStyleContext|, so it may change
+  nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext); 
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  mRenderer.ReResolveStyles(*aPresContext);
+  
+  return NS_OK;
+  
+} // ReResolveStyleContext
+
+
 
 NS_IMETHODIMP
 nsButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
@@ -231,16 +264,41 @@ nsButtonControlFrame::Paint(nsIPresContext& aPresContext,
                             const nsRect& aDirtyRect,
                             nsFramePaintLayer aWhichLayer)
 {
-  if (eFramePaintLayer_Content == aWhichLayer) {
-	  nsString label;
-	  nsresult result = GetValue(&label);
-
-	  if (NS_CONTENT_ATTR_HAS_VALUE != result) {  
-      GetDefaultLabel(label);
-	  }
     nsRect rect(0, 0, mRect.width, mRect.height);
-    PaintButton(aPresContext, aRenderingContext, aDirtyRect, label, rect);
-  }
+    mRenderer.PaintButton(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, rect);
+
+    if (eFramePaintLayer_Content == aWhichLayer) {
+	    nsString label;
+	    nsresult result = GetValue(&label);
+
+	    if (NS_CONTENT_ATTR_HAS_VALUE != result) {  
+        GetDefaultLabel(label);
+	    }
+  
+     nsRect content;
+     mRenderer.GetButtonContentRect(rect,content);
+
+   // paint the title 
+	   const nsStyleFont* fontStyle = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
+	   const nsStyleColor* colorStyle = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+
+	   aRenderingContext.SetFont(fontStyle->mFont);
+	   
+	   // if disabled paint 
+	   if (PR_TRUE == mRenderer.isDisabled())
+	   {
+   		 float p2t;
+		   aPresContext.GetScaledPixelsToTwips(&p2t);
+		   nscoord pixel = NSIntPixelsToTwips(1, p2t);
+
+		   aRenderingContext.SetColor(NS_RGB(255,255,255));
+		   aRenderingContext.DrawString(label, content.x + pixel, content.y+ pixel);
+	   }
+
+	   aRenderingContext.SetColor(colorStyle->mColor);
+	   aRenderingContext.DrawString(label, content.x, content.y);
+    }
+
   return NS_OK;
 }
 
@@ -294,11 +352,16 @@ nsButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
   PRInt32 type;
   GetType(&type);
 
-  if (NS_FORM_INPUT_IMAGE == type) {
+  nsWidgetRendering mode;
+  aPresContext.GetWidgetRenderingMode(&mode);
+
+  if (eWidgetRendering_Gfx == mode || NS_FORM_INPUT_IMAGE == type) {
     nsSize ignore;
     GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, ignore);
-    nsMargin bp;
+    nsMargin bp(0,0,0,0);
     AddBordersAndPadding(&aPresContext, aReflowState, aDesiredSize, bp);
+    mRenderer.AddFocusBordersAndPadding(aPresContext, aReflowState, aDesiredSize, bp);
+
     if (nsnull != aDesiredSize.maxElementSize) {
       aDesiredSize.AddBorderPaddingToMaxElementSize(bp);
     }
@@ -319,23 +382,12 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
   PRInt32 type;
   GetType(&type);
 
-  nsWidgetRendering mode;
-  aPresContext->GetWidgetRenderingMode(&mode);
- 
   if (NS_FORM_INPUT_HIDDEN == type) { // there is no physical rep
     aDesiredLayoutSize.width   = 0;
     aDesiredLayoutSize.height  = 0;
     aDesiredLayoutSize.ascent  = 0;
     aDesiredLayoutSize.descent = 0;
   } else {
-    nsMargin outlineBorder;
-    if (eWidgetRendering_Gfx == mode) {
-      nsCOMPtr<nsIStyleContext> outlineStyle( dont_QueryInterface(mStyleContext));
-      nsCOMPtr<nsIAtom> sbAtom ( dont_QueryInterface(NS_NewAtom(":button-outline")) );
-      aPresContext->ProbePseudoStyleContextFor(mContent, sbAtom, mStyleContext, PR_FALSE, getter_AddRefs(outlineStyle));
-	    const nsStyleSpacing* outline = (const nsStyleSpacing*)outlineStyle->GetStyleData(eStyleStruct_Spacing);
-	    outline->CalcBorderFor(this, outlineBorder);
-    }
     nsSize styleSize;
     GetStyleSize(*aPresContext, aReflowState, styleSize);
     // a browse button shares its style context with its parent nsInputFile
@@ -352,7 +404,7 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
     nsInputDimensionSpec spec(nsHTMLAtoms::size, PR_TRUE, nsHTMLAtoms::value, 
                               &defaultLabel, 1, PR_FALSE, nsnull, 1);
     nsFormControlHelper::CalculateSize(aPresContext, aReflowState.rendContext, this, styleSize, 
-                                       spec, desiredSize, minSize, widthExplicit, heightExplicit, ignore);
+                                       spec, desiredSize, minSize, widthExplicit, heightExplicit, ignore);   
 
     // set desired size, max element size
     aDesiredLayoutSize.width = desiredSize.width;
@@ -360,16 +412,6 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
     if (aDesiredLayoutSize.maxElementSize) {
       aDesiredLayoutSize.maxElementSize->width  = minSize.width;
       aDesiredLayoutSize.maxElementSize->height = minSize.height;
-    }
-    if (eWidgetRendering_Gfx == mode) {
-      nscoord horOutline = outlineBorder.left + outlineBorder.right;
-      nscoord verOutline = outlineBorder.top  + outlineBorder.bottom;
-      aDesiredLayoutSize.width  += horOutline;
-      aDesiredLayoutSize.height += verOutline;
-      if (aDesiredLayoutSize.maxElementSize) {
-        aDesiredLayoutSize.maxElementSize->width  += horOutline;
-        aDesiredLayoutSize.maxElementSize->height += verOutline; 
-      }
     }
   }
 
@@ -428,41 +470,7 @@ nsButtonControlFrame::PaintButton(nsIPresContext& aPresContext,
                                   const nsRect& aDirtyRect,
                                   nsString& aLabel, const nsRect& aRect)
 {
-  PRBool disabled = nsFormFrame::GetDisabled(this);
-  if ( disabled != mDisabled)
-  {
-    if (disabled)
-      mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "DISABLED", PR_TRUE);
-    else 
-      mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "", PR_TRUE);
-
-    mDisabled = disabled;
-  }
-
-  //nsIStyleContext* kidSC;
-
-  nsCOMPtr<nsIStyleContext> outlineStyle( dont_QueryInterface(mStyleContext) );
-  nsCOMPtr<nsIAtom> outlineAtom ( dont_QueryInterface(NS_NewAtom(":button-outline")) );
-  aPresContext.ProbePseudoStyleContextFor(mContent, outlineAtom, mStyleContext,
-                                          PR_FALSE,
-                                          getter_AddRefs(outlineStyle));
-
-  nsCOMPtr<nsIStyleContext> focusStyle( dont_QueryInterface(mStyleContext) );
-  nsCOMPtr<nsIAtom> focusAtom ( dont_QueryInterface(NS_NewAtom(":button-focus")) );
-  aPresContext.ProbePseudoStyleContextFor(mContent, focusAtom, mStyleContext,
-                                          PR_FALSE,
-                                          getter_AddRefs(focusStyle));
-
-  nsFormControlHelper::PaintRectangularButton(aPresContext,
-                                              aRenderingContext,
-                                              aDirtyRect, aRect,
-                                              mPressed && mInside, mGotFocus, 
-                                              nsFormFrame::GetDisabled(this),
-                                              mInside,
-                                              outlineStyle,
-                                              focusStyle,
-                                              mStyleContext, aLabel, this);
-				
+   
 }
 
 NS_IMETHODIMP
@@ -478,69 +486,33 @@ nsButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
   } 
 
   // if disabled do nothing
-  if (nsFormFrame::GetDisabled(this)) {
+  if (mRenderer.isDisabled()) {
     return NS_OK;
   }
 
-  // get parent with view
-  nsIFrame *frame = nsnull;
-
-  GetParentWithView(&frame);
-  if (!frame)
-	 return NS_OK;
-
-  // get its view
-  nsIView* view = nsnull;
-  frame->GetView(&view);
-  nsCOMPtr<nsIViewManager> viewMan;
-  view->GetViewManager(*getter_AddRefs(viewMan));
-
+  nsresult result = mRenderer.HandleEvent(aPresContext, aEvent, aEventStatus);
+  if (NS_OK != result)
+     return result;
+    
   aEventStatus = nsEventStatus_eIgnore;
-  nsresult result = NS_OK;
  
   switch (aEvent->message) {
 
-        case NS_MOUSE_ENTER:
-		  mInside = PR_TRUE;
-		  if (mPressed)
-			   mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "PRESSED", PR_TRUE);
-          else
-        mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "ROLLOVER", PR_TRUE);
-	      break;
-        case NS_MOUSE_LEFT_BUTTON_DOWN: 
-          mGotFocus = PR_TRUE;
-		  mPressed = PR_TRUE;
-		  mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "PRESSED", PR_TRUE);
+    case NS_MOUSE_ENTER:
+	  break;
+ 
+    case NS_MOUSE_LEFT_BUTTON_DOWN:
+         mRenderer.SetFocus(PR_TRUE, PR_TRUE);         
+	  break;
 
-		  // grab all mouse events
-		  
-		  PRBool result;
-		  viewMan->GrabMouseEvents(view,result);
-		  break;
-
-        case NS_MOUSE_LEFT_BUTTON_UP:
-		    mPressed = PR_FALSE;
-			mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "", PR_TRUE);
-
-			// stop grabbing mouse events
-            viewMan->GrabMouseEvents(nsnull,result);
-
-			if (mInside)
+    case NS_MOUSE_LEFT_BUTTON_UP:
+      if (mRenderer.isHover()) 
 			   MouseClicked(&aPresContext);
+	  break;
 
-	        break;
-        case NS_MOUSE_EXIT:
-			mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "", PR_TRUE);
-		    mInside = PR_FALSE;
-
-		  // KLUDGE make is false when you exit because grabbing mouse events doesn't
-		  // seem to work. If it did we would know when the mouse was released outside of
-		  // us. And we could set this to false.
-		  mPressed = PR_FALSE;
-	      break;
+    case NS_MOUSE_EXIT:
+	  break;
   }
-
-  aEventStatus = nsEventStatus_eConsumeNoDefault;
 
   return NS_OK;
 
@@ -549,9 +521,7 @@ nsButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
 void 
 nsButtonControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
-  mGotFocus = aOn;
-  if (aRepaint) 
-    Redraw();
+  mRenderer.SetFocus(aOn, aRepaint);
 }
 
 void

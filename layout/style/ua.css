@@ -33,58 +33,74 @@ frameset {
 
 p {
   display: block;
-  margin: 1em 0;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 address {
   display: block;
   font-style: italic;
+  margin-bottom: 0;
+  margin-top: 0;
 }
 blockquote {
   display: block;
-  margin-left: 1em 40px;
+  margin-left: 40px;
+  margin-right: 40px;
+  margin-top: auto;
+  margin-bottom: auto;
 }
 center {
   display: block;
   text-align: center;
+  margin-bottom: 0;
+  margin-top: 0;
 }
 div {
   display: block;
+  margin-bottom: 0;
+  margin-top: 0;
 }
 h1 {
   display: block;
   font-size: xx-large;
   font-weight: bold;
-  margin: 1em 0;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 h2 {
   display: block;
   font-size: x-large;
   font-weight: bold;
-  margin: 1em 0;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 h3 {
   display: block;
   font-size: large;
   font-weight: bold;
-  margin: 1em 0;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 h4 {
   display: block;
   font-size: medium;
   font-weight: bold;
-  margin: 1em 0;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 h5 {
   display: block;
   font-size: small;
   font-weight: bold;
-  margin: 1em 0;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 h6 {
   display: block;
   font-size: x-small;
   font-weight: bold;
-  margin: 1em 0;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 layer {
   display: block;
@@ -95,17 +111,20 @@ listing {
   font-family: monospace;
   font-size: medium;
   white-space: pre;
-  margin: 1em 0;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 plaintext, xmp, pre {
   display: block;
   font-family: monospace;
   white-space: pre;
-  margin: 1em 0;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 multicol {
   display: block;
-  margin: 1em 0;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 
 /* tables */
@@ -297,14 +316,20 @@ fieldset {
 
 ul, menu, dir {
   display: block;
+  margin-right: 0;
+  margin-bottom: auto;
+  margin-top: auto;
   list-style-type: disc;
-  margin: 1em 0 1em 40px;
+  margin-left: 40px;
 }
 
 ol {
   display: block;
+  margin-right: 0;
+  margin-bottom: auto;
+  margin-top: auto;
   list-style-type: decimal;
-  margin: 1em 0 1em 40px;
+  margin-left: 40px;
 }
 
 li {
@@ -356,7 +381,8 @@ dir ol dir,  dir ul dir,  dir menu dir,  dir dir dir
 
 dl {
   display: block;
-  margin: 1em 0;
+  margin-bottom: auto;
+  margin-top: auto;
 }
 dt {
   display: block;
@@ -373,6 +399,9 @@ embed {
 }
 hr {
   display: block;
+  margin-top: 0;
+  margin-bottom: 0;
+  text-align: center;
   border: 1px -moz-bg-inset;
 }
 br {
@@ -407,6 +436,7 @@ input[type=radio] {
   width:12px;
   height:12px;
 }
+
 input[type=checkbox] {
   border: 2px inset rgb(192, 192, 192);
   width:11px;
@@ -415,51 +445,202 @@ input[type=checkbox] {
   color:black;
 }
 
-input[type=button] {
-  border: 2px outset rgb(192, 192, 192);
-  color:black;
-  background-color: rgb(192, 192, 192);
+input[type="submit"] { 
+  border: 2px outset rgb(156, 154, 156);
+  background-color: rgb(206, 207, 206);
+  color:black; 
+
+  padding: 1px;
 }
 
-input[type=submit] {
-  border: 1px outset rgb(156, 154, 156);
-  background-color:rgb(206, 207, 206);
-  color:black;
+input[type="submit"][pseudoclass~="active"] {
+  border-style: inset;
+
+  padding-left: 2px;
+  padding-right: 0px;
+  padding-top: 2px;
+  padding-bottom: 0px;
 }
 
-input[type=submit].rollover {
+input[type="submit"][pseudoclass~="active"]:-moz-outline {
+   border : 1px solid black;
 }
 
-input[type=submit].pressed {
-  border-style : inset;
+input[type="submit"][pseudoclass~="hover"]:-moz-outline {
+   border : 1px solid black;
 }
 
-input[type=submit].disabled {
-  border-style : solid;
+input[type="submit"][pseudoclass~="disabled"] {
+   border-style: solid;
+}
+
+input[type="submit"]:-moz-focus-inner {
+   padding-left  : 2px;
+   padding-right : 2px;
+   padding-top   : 1px;
+   padding-bottom: 1px;
+   margin: 0px;
+}
+
+input[type="submit"][pseudoclass~="focus"]:-moz-focus-inner {
+   padding-left  : 1px;
+   padding-right : 1px;
+   padding-top   : 0px;
+   padding-bottom: 0px;
+ 
+   margin: 0px;
+   border : 1px dotted black;
+}
+
+input[type="reset"] { 
+  border: 2px outset rgb(156, 154, 156);
+  background-color: rgb(206, 207, 206);
+  color:black; 
+
+  padding: 1px;
+}
+
+input[type="reset"][pseudoclass~="active"] {
+  border-style: inset;
+
+  padding-left: 2px;
+  padding-right: 0px;
+  padding-top: 2px;
+  padding-bottom: 0px;
+}
+
+input[type="reset"][pseudoclass~="active"]:-moz-outline {
+   border : 1px solid black;
+}
+
+input[type="reset"][pseudoclass~="hover"]:-moz-outline {
+   border : 1px solid black;
+}
+
+input[type="reset"][pseudoclass~="disabled"] {
+   border-style: solid;
+}
+
+input[type="reset"]:-moz-focus-inner {
+   padding-left  : 2px;
+   padding-right : 2px;
+   padding-top   : 1px;
+   padding-bottom: 1px;
+   margin: 0px;
+}
+
+input[type="reset"][pseudoclass~="focus"]:-moz-focus-inner {
+   padding-left  : 1px;
+   padding-right : 1px;
+   padding-top   : 0px;
+   padding-bottom: 0px;
+ 
+   margin: 0px;
+   border : 1px dotted black;
+}
+
+input[type="button"] { 
+  border: 2px outset rgb(156, 154, 156);
+  background-color: rgb(206, 207, 206);
+  color:black; 
+
+  padding: 1px;
+}
+
+input[type="button"][pseudoclass~="active"] {
+  border-style: inset;
+
+  padding-left: 2px;
+  padding-right: 0px;
+  padding-top: 2px;
+  padding-bottom: 0px;
+
+  background-color: rgb(220, 207, 206);
+}
+
+input[type="button"][pseudoclass~="active"]:-moz-outline {
+   border : 1px solid black;
+}
+
+input[type="button"][pseudoclass~="hover"]:-moz-outline {
+   border : 1px solid black;
+}
+
+input[type="button"][pseudoclass~="disabled"] {
+   border-style: solid;
+}
+
+input[type="button"]:-moz-focus-inner {
+   padding-left  : 2px;
+   padding-right : 2px;
+   padding-top   : 1px;
+   padding-bottom: 1px;
+   margin: 0px;
+}
+
+input[type="button"][pseudoclass~="focus"]:-moz-focus-inner {
+   padding-left  : 1px;
+   padding-right : 1px;
+   padding-top   : 0px;
+   padding-bottom: 0px;
+ 
+   margin: 0px;
+   border : 1px dotted black;
 }
 
 
-input[type=reset] {
-  border: 1px outset rgb(156, 154, 156);
-  background-color:rgb(206, 207, 206);
-  color:black;
+button { 
+  display: inline;
+  vertical-align: bottom;
+  cursor: default;
+
+  border: 2px outset rgb(156, 154, 156);
+  background-color: rgb(206, 207, 206);
+  color:black; 
+
+  padding: 1px;
 }
 
-input[type=reset].rollover {
+button[pseudoclass~="active"] {
+  border-style: inset;
+
+  padding-left: 2px;
+  padding-right: 0px;
+  padding-top: 2px;
+  padding-bottom: 0px;
 }
 
-input[type=reset].pressed {
-  border-style : inset;
+button[pseudoclass~="hover"] {
 }
 
-input[type=reset].disabled {
-  border-style : solid;
+button[pseudoclass~="active"]:-moz-outline {
+   border : 1px solid black;
 }
 
-input[type=file] {
-  border: 1px outset rgb(156, 154, 156);
-  background-color:rgb(206, 207, 206);
-  color:black;
+button[pseudoclass~="hover"]:-moz-outline {
+   border : 1px solid black;
+}
+
+button[pseudoclass~="disabled"] {
+   border-style: solid;
+}
+
+button:-moz-focus-inner {
+   padding-left  : 2px;
+   padding-right : 2px;
+   padding-top   : 1px;
+   padding-bottom: 1px;
+   margin: 0px;
+}
+
+button[pseudoclass~="focus"]:-moz-focus-inner {
+   padding-left  : 1px;
+   padding-right : 1px;
+   padding-top   : 0px;
+   padding-bottom: 0px;
+ 
+   margin: 0px;
+   border : 1px dotted black;
 }
 
 :-moz-file-button {
@@ -470,40 +651,20 @@ input[type=file] {
 
 :-moz-file-text {
   border: 2px inset rgb(192, 192, 192);
-  margin-right: 10px; 
+  margin-right:10px; 
   background-color: white;
   color: black;
 }
 
-input[type=file].rollover {
-}
-
-input[type=file].pressed {
-  border-style : inset;
-}
-
-input[type=file].disabled {
-  border-style : solid;
-}
-
-
-:button-outline {
-  border: 1px solid black;
-}
-
-:button-focus {
-  border: 2px solid salmon;
-}
-
 input[type=text] {
   border: 2px inset rgb(192, 192, 192);
-  margin-right: 10px; 
+  margin-right:10px; 
   background-color: white;
   color: black;
 }
 input[type=password] {
   border: 2px inset rgb(192, 192, 192);
-  margin-right: 10px; 
+  margin-right:10px; 
   background-color: white;
   color:black;
 }
@@ -516,29 +677,7 @@ label {
 	padding-left: 3px;
 	padding-right: 3px;
 }
-button {
-  display: inline;
-  vertical-align: bottom;
-  cursor: default;
-}
-button {
-  display: inline;
-  vertical-align: bottom;
-  /*background-color: white; */
-  /*border: 3px outset gray;*/
-  /*padding: 3px;*/
-  background-color: rgb(192,192,192); 
-  border: 2px solid rgb(192,192,192);
-  padding: 2px;
-  cursor: default;
-}
-button.rollover {
-  border: 2px outset rgb(192,192,192);
-}
-button.disabled {
-  border: 2px solid rgb(192,192,192);
-  color: rgb(225,225,225);
-}
+
 select {
   vertical-align: bottom;
   border: 1px inset #c0c0c0;
@@ -660,7 +799,6 @@ param {
 /* XXX Temporary until @page is supported... */
 :-moz-page {
   background: none;
-  display: block;
 }
 
 :root {

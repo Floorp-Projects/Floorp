@@ -883,4 +883,10 @@ NS_IMETHODIMP nsComboboxControlFrame::GetProperty(nsIAtom* aName, nsString& aVal
   return NS_OK;
 }
 
+nsresult nsComboboxControlFrame::RequiresWidget(PRBool& aRequiresWidget)
+{
+  aRequiresWidget = PR_FALSE;
+  return NS_OK;
+}
+
 

@@ -46,15 +46,7 @@
 #include "nsViewsCID.h"
 #include "nsColor.h"
 #include "nsIDocument.h"
-
-//Enumeration of possible mouse states used to detect mouse clicks
-/*enum nsMouseState {
-  eMouseNone,
-  eMouseEnter,
-  eMouseExit,
-  eMouseDown,
-  eMouseUp
-};*/
+#include "nsButtonFrameRenderer.h"
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
@@ -66,6 +58,8 @@ class nsHTMLButtonControlFrame : public nsHTMLContainerFrame,
 {
 public:
   nsHTMLButtonControlFrame();
+
+
 
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
@@ -89,9 +83,23 @@ public:
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
+  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+                   nsIContent*      aContent,
+                   nsIFrame*        aParent,
+                   nsIStyleContext* aContext,
+                   nsIFrame*        asPrevInFlow);
+
+  NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
+                                      nsIStyleContext* aParentContext) ;
+
+ 
+
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("ButtonControl", aResult);
   }
+
+  virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
+
 
   virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
   NS_IMETHOD GetType(PRInt32* aType) const;
@@ -126,19 +134,15 @@ public:
 protected:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
-  void AddToPadding(nsIPresContext& aPresContext, nsStyleUnit aStyleUnit,
-                    nscoord aValue, nscoord aLength, nsStyleCoord& aStyleCoord);
-  void ShiftContents(nsIPresContext& aPresContext, PRBool aDown);
   void GetTranslatedRect(nsRect& aRect);
 
   PRIntn GetSkipSides() const;
   PRBool mInline;
   nsFormFrame* mFormFrame;
-  nsMouseState mLastMouseState;
   nsCursor mPreviousCursor;
-  PRBool mGotFocus;
   nsRect mTranslatedRect;
   PRBool mDidInit;
+  nsButtonFrameRenderer mRenderer;
 };
 
 nsresult
@@ -155,11 +159,22 @@ nsHTMLButtonControlFrame::nsHTMLButtonControlFrame()
   : nsHTMLContainerFrame()
 {
   mInline = PR_TRUE;
-  mLastMouseState = eMouseNone;
   mPreviousCursor = eCursor_standard;
-  mGotFocus = PR_FALSE;
   mTranslatedRect = nsRect(0,0,0,0);
   mDidInit = PR_FALSE;
+  mRenderer.SetNameSpace(kNameSpaceID_None);
+}
+
+NS_IMETHODIMP
+nsHTMLButtonControlFrame::Init(nsIPresContext&  aPresContext,
+              nsIContent*      aContent,
+              nsIFrame*        aParent,
+              nsIStyleContext* aContext,
+              nsIFrame*        aPrevInFlow)
+{
+  nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  mRenderer.SetFrame(this,aPresContext);
+  return rv;
 }
 
 nsrefcnt nsHTMLButtonControlFrame::AddRef(void)
@@ -335,118 +350,10 @@ nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
   } 
 }
 
-#if 0
-// XXX temporary hack code until new style rules are added
-static
-void ReflowTemp(nsIPresContext& aPresContext, nsHTMLButtonControlFrame* aFrame, nsRect& aRect)
-{  
-  // XXX You can't do this. Incremental reflow commands are dispatched from the
-  // root frame downward...
-#if 0
-  nsHTMLReflowMetrics metrics(nsnull);
-  nsSize size;
-  aFrame->GetSize(size);
-  nsIPresShell        *shell;
-  nsIRenderingContext *acx;
-  shell = aPresContext.GetShell();
-  shell->CreateRenderingContext(aFrame, acx);
-  NS_RELEASE(shell);
-  nsIReflowCommand* cmd;
-  nsresult result = NS_NewHTMLReflowCommand(&cmd, aFrame, nsIReflowCommand::ContentChanged);
-  nsHTMLReflowState state(aPresContext, aFrame, *cmd, size, acx);
-  //nsHTMLReflowState state(aPresContext, aFrame, eReflowReason_Initial,
-  //                        size, acx);
-  state.reason = eReflowReason_Incremental;
-  nsReflowStatus status;
-  nsDidReflowStatus didStatus;
-  aFrame->WillReflow(aPresContext);
-  aFrame->Reflow(aPresContext, metrics, state, status);
-  aFrame->DidReflow(aPresContext, didStatus);
-  NS_IF_RELEASE(acx);
-  aFrame->Invalidate(aRect, PR_TRUE);
-  NS_RELEASE(cmd);
-#else
-  nsIContent* content;
-  aFrame->GetContent(&content);
-  if (nsnull != content) {
-    nsIDocument*  document;
-
-    content->GetDocument(document);
-    document->ContentChanged(content, nsnull);
-    NS_RELEASE(document);
-    NS_RELEASE(content);
-  }
-#endif
-}
-#endif
-
 void 
 nsHTMLButtonControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
-  mGotFocus = aOn;
-  if (aRepaint) {
-    nsRect rect(0, 0, mRect.width, mRect.height);
-    Invalidate(rect, PR_TRUE);
-  }
-}
-
-// XXX temporary hack code until new style rules are added
-void
-nsHTMLButtonControlFrame::AddToPadding(nsIPresContext& aPresContext,
-                                       nsStyleUnit aStyleUnit,
-                                       nscoord aValue, 
-                                       nscoord aLength,
-                                       nsStyleCoord& aStyleCoord)
-{
-  if (eStyleUnit_Coord == aStyleUnit) {
-    nscoord coord;
-    coord = aStyleCoord.GetCoordValue();
-    coord += aValue;
-    aStyleCoord.SetCoordValue(coord);
-  } else if (eStyleUnit_Percent == aStyleUnit) {
-    float increment = ((float)aValue) / ((float)aLength);
-    float percent = aStyleCoord.GetPercentValue();
-    percent += increment;
-    aStyleCoord.SetPercentValue(percent);
-  }
-}
-
-// XXX temporary hack code until new style rules are added
-void 
-nsHTMLButtonControlFrame::ShiftContents(nsIPresContext& aPresContext, PRBool aDown)
-{
-  nsStyleSpacing* spacing =
-    (nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing); // cast deliberate
-
-  float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
-  nscoord shift = (aDown) ? NSIntPixelsToTwips(1, p2t) : -NSIntPixelsToTwips(1, p2t);
-  nsStyleCoord styleCoord;
-
-  // alter the padding so the content shifts down and to the right one pixel
-  AddToPadding(aPresContext, spacing->mPadding.GetLeftUnit(), shift, mRect.width,
-               spacing->mPadding.GetLeft(styleCoord));
-  spacing->mPadding.SetLeft(styleCoord);
-  AddToPadding(aPresContext, spacing->mPadding.GetTopUnit(), shift, mRect.height,
-               spacing->mPadding.GetTop(styleCoord));
-  spacing->mPadding.SetTop(styleCoord);
-  AddToPadding(aPresContext, spacing->mPadding.GetRightUnit(), -shift, mRect.width,
-               spacing->mPadding.GetRight(styleCoord));
-  spacing->mPadding.SetRight(styleCoord);
-  AddToPadding(aPresContext, spacing->mPadding.GetBottomUnit(), -shift, mRect.height,
-               spacing->mPadding.GetBottom(styleCoord));
-  spacing->mPadding.SetBottom(styleCoord);
-
-  // XXX change the border, border-left, border-right, etc are not working. Instead change inset to outset, vice versa
-  for (PRInt32 i = 0; i < 4; i++) {
-    spacing->SetBorderStyle(i,(spacing->GetBorderStyle(i) == NS_STYLE_BORDER_STYLE_INSET) ? 
-                               NS_STYLE_BORDER_STYLE_OUTSET : NS_STYLE_BORDER_STYLE_INSET);
-  }
-
-  mStyleContext->RecalcAutomaticData(&aPresContext);
-
-  //nsRect rect(0, 0, mRect.width, mRect.height);
-  //ReflowTemp(aPresContext, this, rect);
+  mRenderer.SetFocus(aOn, aRepaint);
 }
 
 void
@@ -465,59 +372,46 @@ nsHTMLButtonControlFrame::GetTranslatedRect(nsRect& aRect)
 }
 
             
+
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::HandleEvent(nsIPresContext& aPresContext, 
                                       nsGUIEvent* aEvent,
                                       nsEventStatus& aEventStatus)
 {
-  if (nsFormFrame::GetDisabled(this)) { // XXX cache disabled
+  nsWidgetRendering mode;
+  aPresContext.GetWidgetRenderingMode(&mode);
+
+  // if disabled do nothing
+  if (mRenderer.isDisabled()) {
     return NS_OK;
   }
 
+  nsresult result = mRenderer.HandleEvent(aPresContext, aEvent, aEventStatus);
+  if (NS_OK != result)
+     return result;
+    
   aEventStatus = nsEventStatus_eIgnore;
-  nsIView* view;
-  GetView(&view);
-  if (view) {
-    nsIViewManager* viewMan;
-    view->GetViewManager(viewMan);
-    if (viewMan) {
-      nsIView* grabber;
-      viewMan->GetMouseEventGrabber(grabber);
-      if ((grabber == view) || (nsnull == grabber)) {
-        switch (aEvent->message) {
-        case NS_MOUSE_ENTER:
-          //mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "ROLLOVER", PR_TRUE);
-          if (mLastMouseState == eMouseDown) {
-            ShiftContents(aPresContext, PR_TRUE);
-          }
-	        break;
-        case NS_MOUSE_LEFT_BUTTON_DOWN:
-          mGotFocus = PR_TRUE;
-          ShiftContents(aPresContext, PR_TRUE);
-	        mLastMouseState = eMouseDown;
-          break;
-        case NS_MOUSE_LEFT_BUTTON_UP:
-	        if (eMouseDown == mLastMouseState) {
-            if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
-              ShiftContents(aPresContext, PR_FALSE);
-              MouseClicked(&aPresContext);
-            }
-	          mLastMouseState = eMouseUp;
-	        } 
-	        break;
-        case NS_MOUSE_EXIT:
-          //mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "", PR_TRUE);
-          if (mLastMouseState == eMouseDown) {
-            ShiftContents(aPresContext, PR_FALSE);
-          }
-	        break;
-        }
-        aEventStatus = nsEventStatus_eConsumeNoDefault;
-        NS_RELEASE(viewMan);
-      }
-    }
+ 
+  switch (aEvent->message) {
+
+    case NS_MOUSE_ENTER:
+	  break;
+ 
+    case NS_MOUSE_LEFT_BUTTON_DOWN:
+         mRenderer.SetFocus(PR_TRUE, PR_TRUE);         
+	  break;
+
+    case NS_MOUSE_LEFT_BUTTON_UP:
+      if (mRenderer.isHover()) 
+			   MouseClicked(&aPresContext);
+	  break;
+
+    case NS_MOUSE_EXIT:
+	  break;
   }
+
   return NS_OK;
+
 }
 
 
@@ -569,40 +463,12 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext& aPresContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
 {
-  nsresult result = nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-  if (NS_FAILED(result)) {
-    return result;
-  }
-  if (eFramePaintLayer_Overlay == aWhichLayer) {
-    if (mGotFocus) { // draw dashed line to indicate selection, XXX don't calc rect every time
-      const nsStyleSpacing* spacing =
-        (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-      nsMargin border;
-      spacing->CalcBorderFor(this, border);
 
-      float p2t;
-      aPresContext.GetScaledPixelsToTwips(&p2t);
-      nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+  nsRect rect(0, 0, mRect.width, mRect.height);
+  mRenderer.PaintButton(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, rect);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
-      nsRect outside(0, 0, mRect.width, mRect.height);
-      outside.Deflate(border);
-      outside.Deflate(onePixel, onePixel);
-
-      nsRect inside(outside);
-      inside.Deflate(onePixel, onePixel);
-
-      PRUint8 borderStyles[4];  
-      nscolor borderColors[4];  
-      nscolor black = NS_RGB(0,0,0);              
-      for (PRInt32 i = 0; i < 4; i++) {
-        borderStyles[i] = NS_STYLE_BORDER_STYLE_DOTTED; 
-        borderColors[i] = black;
-      }
-      nsCSSRendering::DrawDashedSides(0, aRenderingContext, borderStyles, borderColors, outside, 
-                                      inside, PR_FALSE, nsnull);
-    }
-  }
-  return result;
+  return NS_OK;
 }
 
 // XXX a hack until the reflow state does this correctly
@@ -640,6 +506,14 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
 {
   // XXX remove the following when the reflow state is fixed
   ButtonHack((nsHTMLReflowState&)aReflowState, "html4 button");
+
+  // commenting this out for now. We need a view to do mouse grabbing but
+  // it doesn't really seem to work correctly. When you press the only event
+  // you can get after that is a release. You need mouse enter and exit.
+  // the view also breaks the outline code. For some reason you can not reset 
+  // the clip rect to draw outside you bounds if you have a view. And you need to
+  // because the outline must be drawn outside of our bounds according to CSS. -EDV
+#if 0
   if (!mDidInit) {
     // create our view, we need a view to grab the mouse 
     nsIView* view;
@@ -668,16 +542,13 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
     }
     mDidInit = PR_TRUE;
   }
+#endif
 
   // reflow the child
   nsIFrame* firstKid = mFrames.FirstChild();
   nsSize availSize(aReflowState.computedWidth, aReflowState.computedHeight);
 
-  // get border and padding
-  const nsStyleSpacing* spacing =
-    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-  nsMargin borderPadding;
-  spacing->CalcBorderPaddingFor(this, borderPadding);
+  nsMargin borderPadding = mRenderer.GetFullButtonBorderAndPadding();
 
   if (NS_INTRINSICSIZE != availSize.width) {
     availSize.width -= borderPadding.left + borderPadding.right;
@@ -781,6 +652,13 @@ nsHTMLButtonControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContex
   return 0;
 }
 
+nsresult nsHTMLButtonControlFrame::RequiresWidget(PRBool& aRequiresWidget)
+{
+  aRequiresWidget = PR_FALSE;
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP nsHTMLButtonControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
 {
   return NS_OK;
@@ -790,6 +668,30 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::GetProperty(nsIAtom* aName, nsString& aV
 {
   return NS_OK;
 }
+
+//
+// ReResolveStyleContext
+//
+// When the style context changes, make sure that all of our styles are still up to date.
+//
+NS_IMETHODIMP
+nsHTMLButtonControlFrame::ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext)
+{
+
+  nsCOMPtr<nsIStyleContext> old ( dont_QueryInterface(mStyleContext) );
+  
+  // this re-resolves |mStyleContext|, so it may change
+  nsresult rv = nsHTMLContainerFrame::ReResolveStyleContext(aPresContext, aParentContext); 
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  mRenderer.ReResolveStyles(*aPresContext);
+  
+  return NS_OK;
+  
+} // ReResolveStyleContext
+
 
 
 

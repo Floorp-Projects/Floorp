@@ -67,11 +67,13 @@ public:
 	virtual void SetNameSpace(PRInt32 aNameSpace);
 	virtual void SetFrame(nsIFrame* aFrame, nsIPresContext& aPresContext);
  
-    virtual void SetState(ButtonState state, PRBool notify);
+	virtual void SetActive(PRBool aActive, PRBool notify);
+	virtual void SetHover(PRBool aHover, PRBool notify);
 	virtual void SetFocus(PRBool aFocus, PRBool notify);
 	virtual void SetDisabled(PRBool aDisabled, PRBool notify);
 
-	ButtonState GetState();
+	PRBool isActive();
+	PRBool isHover();
 	PRBool isDisabled();
 	PRBool isFocus();
 
@@ -85,6 +87,7 @@ public:
     virtual nsMargin GetButtonInnerFocusMargin();
     virtual nsMargin GetButtonInnerFocusBorderAndPadding();
     virtual nsMargin GetButtonOutlineBorderAndPadding();
+    virtual nsMargin GetFullButtonBorderAndPadding();
 
 	virtual void ReResolveStyles(nsIPresContext& aPresContext);
 

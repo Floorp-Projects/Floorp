@@ -78,6 +78,9 @@ public:
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
 
+  virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
+
+
   PRBool HasWidget();
  
   // nsIFormMouseListener

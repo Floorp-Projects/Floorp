@@ -296,16 +296,25 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
     }
   }
 
-  // add inside padding if necessary
-  if (!aWidthExplicit) {
-    PRInt32 hPadding = (2 * aFrame->GetHorizontalInsidePadding(*aPresContext, p2t, aDesiredSize.width, charWidth));
-    aDesiredSize.width += hPadding;
-    aMinSize.width += hPadding;
-  }
-  if (!aHeightExplicit) {
-    PRInt32 vPadding = (2 * aFrame->GetVerticalInsidePadding(p2t, aRowHeight));
-    aDesiredSize.height += vPadding;
-    aMinSize.height += vPadding;
+  nsWidgetRendering mode;
+  aPresContext->GetWidgetRenderingMode(&mode);
+
+  // only add in padding if we are not Gfx
+  PRBool requiresWidget = PR_FALSE;
+
+  aFrame->RequiresWidget(requiresWidget);
+
+  if (PR_TRUE == requiresWidget || eWidgetRendering_Gfx != mode) {
+    if (!aWidthExplicit) {
+      PRInt32 hPadding = (2 * aFrame->GetHorizontalInsidePadding(*aPresContext, p2t, aDesiredSize.width, charWidth));
+      aDesiredSize.width += hPadding;
+      aMinSize.width += hPadding;
+    }
+    if (!aHeightExplicit) {
+      PRInt32 vPadding = (2 * aFrame->GetVerticalInsidePadding(p2t, aRowHeight));
+      aDesiredSize.height += vPadding;
+      aMinSize.height += vPadding;
+    }
   }
 
   NS_RELEASE(hContent);
@@ -327,6 +336,19 @@ nsFormControlHelper::GetFont(nsIFormControlFrame *   aFormFrame,
                              nsFont&                 aFont)
 {
   const nsStyleFont* styleFont = (const nsStyleFont*)aStyleContext->GetStyleData(eStyleStruct_Font);
+
+  nsWidgetRendering m;
+  aPresContext->GetWidgetRenderingMode(&m);
+
+    // only add in padding if we are not Gfx
+  PRBool requiresWidget = PR_FALSE;
+
+  aFormFrame->RequiresWidget(requiresWidget);
+
+  if (PR_TRUE != requiresWidget && eWidgetRendering_Gfx == m) {
+    aFont = styleFont->mFont;
+    return;
+  }
 
   nsCompatibility mode;
   aPresContext->GetCompatibilityMode(&mode);

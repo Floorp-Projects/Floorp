@@ -389,6 +389,12 @@ nsFileControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
   return 0;
 }
 
+nsresult nsFileControlFrame::RequiresWidget(PRBool& aRequiresWidget)
+{
+  aRequiresWidget = PR_FALSE;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsFileControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
 {

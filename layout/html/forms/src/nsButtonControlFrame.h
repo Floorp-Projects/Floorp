@@ -20,6 +20,7 @@
 #define nsButtonControlFrame_h___
 
 #include "nsFormControlFrame.h"
+#include "nsButtonFrameRenderer.h"
 
 class nsButtonControlFrame : public nsFormControlFrame {
 public:
@@ -46,6 +47,15 @@ public:
                               nsIContent*     aChild,
                               nsIAtom*        aAttribute,
                               PRInt32         aHint);
+
+   NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+                   nsIContent*      aContent,
+                   nsIFrame*        aParent,
+                   nsIStyleContext* aContext,
+                   nsIFrame*        asPrevInFlow);
+
+  NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
+                                      nsIStyleContext* aParentContext) ;
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
@@ -104,13 +114,7 @@ protected:
   nsIFormControlFrame* mMouseListener; // for browse buttons only
 
    //GFX-rendered state variables
-  nsMouseState mLastMouseState;
-  PRBool mGotFocus;
-  PRBool mPressed;
-  PRBool mInside;
-
-  // KLUDGE variable to make sure disabling works.
-  PRBool mDisabled;
+   nsButtonFrameRenderer mRenderer;
 };
 
 
