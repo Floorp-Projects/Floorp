@@ -597,8 +597,8 @@ nsIParserNode* nsDTDContext::PopStyle(eHTMLTags aTag){
     nsEntryStack *theStack=mStack.mEntries[theLevel].mStyles;
     if(theStack) {
       if(aTag==theStack->Last()) {
-        return theStack->Pop();
         mResidualStyleCount--;
+        return theStack->Pop();
       } else {
         // NS_ERROR("bad residual style entry");
       }
@@ -624,8 +624,8 @@ nsIParserNode* nsDTDContext::RemoveStyle(eHTMLTags aTag){
     nsEntryStack *theStack=mStack.mEntries[theLevel].mStyles;
     if(theStack) {
       if(aTag==theStack->Last()) {
-        return theStack->Pop();
         mResidualStyleCount--;
+        return theStack->Pop();
       } else {
         // NS_ERROR("bad residual style entry");
       }

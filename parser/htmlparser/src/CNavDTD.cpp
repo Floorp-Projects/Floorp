@@ -3110,7 +3110,8 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
                   }
                 }
                 else if(1==theNode->mUseCount) {
-                  theNode->mUseCount--;  //cause it to get popped from style stack.
+                    //this fixes bug 30885 and 29626
+                  mBodyContext->PopStyle(theTag);
                 }
                 mBodyContext->PushStyles(theChildStyleStack);
               }
