@@ -240,9 +240,6 @@ NS_IMPL_SERVERPREF_STR(nsImapIncomingServer, AdminUrl,
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, CleanupInboxOnExit,
                         "cleanup_inbox_on_exit");
 			
-NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, EmptyTrashOnExit,
-                        "empty_trash_on_exit");
-
 NS_IMPL_SERVERPREF_BOOL(nsImapIncomingServer, OfflineDownload,
                         "offline_download");
 

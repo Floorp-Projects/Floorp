@@ -32,6 +32,8 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgCompCID.h"
 #include "prmem.h"
+#include "prcmon.h"
+#include "prthread.h"
 #include "plstr.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
@@ -55,6 +57,7 @@
 #include "nsIMsgBiffManager.h"
 #include "nsIObserverService.h"
 #include "nsIMsgMailSession.h"
+#include "nsIEventQueueService.h"
 
 #if defined(DEBUG_alecf) || defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_ACCOUNTMANAGER 1
@@ -80,6 +83,8 @@ static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 static NS_DEFINE_IID(kIFileLocatorIID,      NS_IFILELOCATOR_IID);
 static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
+static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 // use this to search for all servers with the given hostname/iid and
 // put them in "servers"
@@ -113,15 +118,17 @@ typedef struct _findAccountByKeyEntry {
 } findAccountByKeyEntry;
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsMsgAccountManager,
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsMsgAccountManager,
                               nsIMsgAccountManager,
                               nsIObserver,
-                              nsISupportsWeakReference)
+                              nsISupportsWeakReference,
+                              nsIUrlListener)
 
 nsMsgAccountManager::nsMsgAccountManager() :
   m_accountsLoaded(PR_FALSE),
   m_defaultAccount(null_nsCOMPtr()),
   m_haveShutdown(PR_FALSE),
+  m_emptyTrashInProgress(PR_FALSE),
   m_prefs(0)
 {
   NS_INIT_REFCNT();
@@ -170,7 +177,6 @@ nsresult nsMsgAccountManager::Init()
 
 nsresult nsMsgAccountManager::Shutdown()
 {
-
 	if(m_msgFolderCache)
 	{
 	  WriteToFolderCache(m_msgFolderCache);
@@ -804,6 +810,72 @@ PRBool nsMsgAccountManager::writeFolderCache(nsHashKey *aKey, void *aData,
 	return PR_TRUE;
 }
 
+// enumeration for empty trash on exit
+PRBool nsMsgAccountManager::emptyTrashOnExit(nsHashKey *aKey, void *aData,
+                                             void *closure)
+{
+    nsIMsgIncomingServer *server = (nsIMsgIncomingServer*)aData;
+    PRBool emptyTrashOnExit = PR_FALSE;
+    
+    server->GetEmptyTrashOnExit(&emptyTrashOnExit);
+    if (emptyTrashOnExit)
+    {
+        nsCOMPtr<nsIFolder> root;
+        server->GetRootFolder(getter_AddRefs(root));
+        nsXPIDLCString type;
+        server->GetType(getter_Copies(type));
+        if (root)
+        {
+            nsCOMPtr<nsIMsgFolder> folder;
+            folder = do_QueryInterface(root);
+            if (folder)
+            {
+                nsXPIDLCString passwd;
+                PRBool isImap = (type ? PL_strcmp(type, "imap") == 0 :
+                                 PR_FALSE);
+                if (isImap)
+                    server->GetPassword(getter_Copies(passwd));
+                if (!isImap || (isImap && passwd))
+                {
+                    nsCOMPtr<nsIUrlListener> urlListener;
+                    nsresult rv;
+                    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                                    kMsgAccountManagerCID, &rv);
+                    if (NS_FAILED(rv)) return rv;
+                    NS_WITH_SERVICE(nsIEventQueueService, pEventQService,
+                                    kEventQueueServiceCID, &rv);
+                    if (NS_FAILED(rv)) return rv;
+                    nsCOMPtr<nsIEventQueue> eventQueue;
+                    pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
+                                           getter_AddRefs(eventQueue)); 
+
+                    if (isImap)
+                    {
+                        accountManager->SetFolderDoingEmptyTrash(folder);
+                        urlListener = do_QueryInterface(accountManager, &rv);
+                    }
+                    folder->EmptyTrash(nsnull, urlListener);
+                    if (isImap && urlListener)
+                    {
+                      PRBool inProgress = PR_FALSE;
+                      accountManager->GetEmptyTrashInProgress(&inProgress);
+                      while (inProgress)
+                      {
+                        accountManager->GetEmptyTrashInProgress(&inProgress);
+                        PR_CEnterMonitor(folder);
+                        PR_CWait(folder, 10000UL);
+                        PR_CExitMonitor(folder);
+                        if (eventQueue)
+                          eventQueue->ProcessPendingEvents();
+                      }
+                    }
+                }
+            }
+        }
+    }
+	return PR_TRUE;
+}
+
 // enumaration for closing cached connections.
 PRBool nsMsgAccountManager::closeCachedConnections(nsHashKey *aKey, void *aData,
                                              void *closure)
@@ -1089,6 +1161,13 @@ nsMsgAccountManager::CloseCachedConnections()
 {
 	m_incomingServers.Enumerate(closeCachedConnections, nsnull);
 	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgAccountManager::EmptyTrashOnExit()
+{
+	m_incomingServers.Enumerate(emptyTrashOnExit, nsnull);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1672,4 +1751,40 @@ NS_IMETHODIMP nsMsgAccountManager::GetLocalFoldersServer(nsIMsgIncomingServer **
 	
 	rv = SetLocalFoldersServer(*aServer);
 	return rv;
+}
+  // nsIUrlListener methods
+
+NS_IMETHODIMP
+nsMsgAccountManager::OnStartRunningUrl(nsIURI * aUrl)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgAccountManager::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
+{
+  if (m_folderDoingEmptyTrash)
+  {
+    PR_CEnterMonitor(m_folderDoingEmptyTrash);
+    PR_CNotifyAll(m_folderDoingEmptyTrash);
+    m_emptyTrashInProgress = PR_FALSE;
+    PR_CExitMonitor(m_folderDoingEmptyTrash);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgAccountManager::SetFolderDoingEmptyTrash(nsIMsgFolder *folder)
+{
+  m_folderDoingEmptyTrash = folder;
+  m_emptyTrashInProgress = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgAccountManager::GetEmptyTrashInProgress(PRBool *bVal)
+{
+  NS_ENSURE_ARG_POINTER(bVal);
+  *bVal = m_emptyTrashInProgress;
+  return NS_OK;
 }

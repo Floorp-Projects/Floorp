@@ -67,6 +67,7 @@ nsMsgFolder::nsMsgFolder(void)
     mFlags(0),
     mNumUnreadMessages(-1),
     mNumTotalMessages(-1),
+    mExpungedBytes(0),
     mInitializedFromCache(PR_FALSE),
     mBiffState(nsMsgBiffState_NoMail),
     mNumNewBiffMessages(0),
@@ -1035,7 +1036,7 @@ NS_IMETHODIMP nsMsgFolder::Compact()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgFolder::EmptyTrash(nsIMsgWindow *msgWindow)
+NS_IMETHODIMP nsMsgFolder::EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *aListener)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1521,12 +1522,12 @@ NS_IMETHODIMP nsMsgFolder::EscapeMessageId(const char *messageId, const char **e
 }
 #endif
 
-NS_IMETHODIMP nsMsgFolder::GetExpungedBytesCount(PRUint32 *count)
+NS_IMETHODIMP nsMsgFolder::GetExpungedBytes(PRUint32 *count)
 {
 	if(!count)
 		return NS_ERROR_NULL_POINTER;
 
-	*count = 0;
+  *count = 0;
 	return NS_OK;
 }
 

@@ -59,6 +59,7 @@ public:
 	NS_IMETHOD GetFirstNewMessage(nsIMessage **firstNewMessage);
 	NS_IMETHOD ClearNewMessages();
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
+  NS_IMETHOD GetExpungedBytes(PRUint32 *count);
 
   NS_IMETHOD GetMsgDatabase(nsIMsgWindow *aMsgWindow,
                             nsIMsgDatabase** aMsgDatabase);

@@ -121,7 +121,7 @@ public:
 	NS_IMETHOD AddSubfolderWithPath(nsAutoString *name, nsIFileSpec *dbPath, nsIMsgFolder **child);
     
   NS_IMETHOD Compact();
-  NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow);
+  NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *aListener);
 	NS_IMETHOD Delete ();
 	NS_IMETHOD Rename (const PRUnichar *newName);
 	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
@@ -133,7 +133,6 @@ public:
     
 	NS_IMETHOD UpdateSummaryTotals(PRBool force) ;
     
-	NS_IMETHOD GetExpungedBytesCount(PRUint32 *count);
 	NS_IMETHOD GetDeletable (PRBool *deletable); 
 	NS_IMETHOD GetRequiresCleanup(PRBool *requiresCleanup);
     

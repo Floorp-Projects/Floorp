@@ -27,6 +27,7 @@
 #include "nsIFileSpec.idl"
 #include "nsISupportsArray.idl"
 #include "nsIMsgCopyServiceListener.idl"
+#include "nsIUrlListener.idl"
 
 %{ C++
 #include "nsIMsgDatabase.h"
@@ -131,7 +132,7 @@ interface nsIMsgFolder : nsIFolder {
   [noscript] nsIMsgFolder addSubfolder(in nsAutoString folderName);
   
   void compact();
-  void emptyTrash(in nsIMsgWindow aMsgWindow);
+  void emptyTrash(in nsIMsgWindow aMsgWindow, in nsIUrlListener aListener);
 
   /**
    * change the name of the folder
@@ -188,7 +189,7 @@ interface nsIMsgFolder : nsIFolder {
    */
     void clearNewMessages();
 
-	readonly attribute unsigned long expungedBytesCount;
+	readonly attribute unsigned long expungedBytes;
 
 
   /**

@@ -33,13 +33,16 @@
 #include "nsISmtpServer.h"
 #include "nsIPref.h"
 #include "nsIMsgFolderCache.h"
+#include "nsIMsgFolder.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
+#include "nsIUrlListener.h"
 
 class nsMsgAccountManager
 	: public nsIMsgAccountManager,
       public nsIObserver,
-      public nsSupportsWeakReference
+      public nsSupportsWeakReference,
+    public nsIUrlListener
 {
 public:
 
@@ -52,6 +55,7 @@ public:
   
   NS_DECL_NSIMSGACCOUNTMANAGER
   NS_DECL_NSIOBSERVER  
+  NS_DECL_NSIURLLISTENER
 
   nsresult Init();
   nsresult Shutdown();
@@ -67,6 +71,8 @@ private:
   nsHashtable m_incomingServers;
   nsCOMPtr<nsIMsgAccount> m_defaultAccount;
   nsCOMPtr<nsISupportsArray> m_incomingServerListeners;
+  nsCOMPtr<nsIMsgFolder> m_folderDoingEmptyTrash;
+  PRBool m_emptyTrashInProgress;
 
   nsCAutoString mAccountKeyList;
   
@@ -110,6 +116,9 @@ private:
   static PRBool PR_CALLBACK hashUnloadServer(nsHashKey *aKey, void *aData,
                                      void *closure);
 
+  // empty trash on exit
+  static PRBool emptyTrashOnExit(nsHashKey *aKey, void *aData,
+                                     void *closure);
   //
   // account enumerators
   // ("element" is always an account)

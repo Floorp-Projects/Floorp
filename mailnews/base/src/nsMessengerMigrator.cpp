@@ -1594,7 +1594,7 @@ nsMessengerMigrator::MigrateOldImapPrefs(nsIMsgIncomingServer *server, const cha
   MIGRATE_BOOL_PREF("mail.imap.server.%s.cleanup_inbox_on_exit",hostAndPort,imapServer,SetCleanupInboxOnExit)
   MIGRATE_INT_PREF("mail.imap.server.%s.delete_model",hostAndPort,imapServer,SetDeleteModel)
   MIGRATE_BOOL_PREF("mail.imap.server.%s.dual_use_folders",hostAndPort,imapServer,SetDualUseFolders)
-  MIGRATE_BOOL_PREF("mail.imap.server.%s.empty_trash_on_exit",hostAndPort,imapServer,SetEmptyTrashOnExit)
+  MIGRATE_BOOL_PREF("mail.imap.server.%s.empty_trash_on_exit",hostAndPort,server,SetEmptyTrashOnExit)
   MIGRATE_INT_PREF("mail.imap.server.%s.empty_trash_threshhold",hostAndPort,imapServer,SetEmptyTrashThreshhold)
   MIGRATE_STR_PREF("mail.imap.server.%s.namespace.other_users",hostAndPort,imapServer,SetOtherUsersNamespace)
   MIGRATE_STR_PREF("mail.imap.server.%s.namespace.personal",hostAndPort,imapServer,SetPersonalNamespace)

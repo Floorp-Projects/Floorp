@@ -105,7 +105,7 @@ public:
   NS_IMETHOD AddSubfolder(nsAutoString *folderName, nsIMsgFolder** newFolder);
 
   NS_IMETHOD Compact();
-  NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow);
+  NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *aListener);
 	NS_IMETHOD Delete ();
   NS_IMETHOD DeleteSubFolders(nsISupportsArray *folders, nsIMsgWindow *msgWindow);
 	NS_IMETHOD Rename (const PRUnichar *aNewName);
@@ -117,7 +117,6 @@ public:
 
 	NS_IMETHOD UpdateSummaryTotals(PRBool force) ;
 
-	NS_IMETHOD GetExpungedBytesCount(PRUint32 *count);
 	NS_IMETHOD GetDeletable (PRBool *deletable); 
 	NS_IMETHOD GetRequiresCleanup(PRBool *requiresCleanup);
 
@@ -178,7 +177,6 @@ protected:
 	virtual nsresult CreateBaseMessageURI(const char *aURI);
 
 protected:
-	PRUint32  mExpungedBytes;
 	PRBool		mHaveReadNameFromDB;
 	PRBool		mGettingMail;
 	PRBool		mInitialized;

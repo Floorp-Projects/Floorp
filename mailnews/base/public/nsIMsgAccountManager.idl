@@ -26,6 +26,7 @@
 #include "nsIMsgIncomingServer.idl"
 #include "nsISupportsArray.idl"
 #include "nsIIncomingServerListener.idl"
+#include "nsIMsgFolder.idl"
 
 interface nsIMsgFolderCache;
 interface nsIFolderListener;
@@ -134,6 +135,9 @@ interface nsIMsgAccountManager : nsISupports {
   void WriteToFolderCache(in nsIMsgFolderCache folderCache);
 
   void CloseCachedConnections();
+  void EmptyTrashOnExit();
+  void SetFolderDoingEmptyTrash(in nsIMsgFolder folder);
+  boolean GetEmptyTrashInProgress();
 
   void addRootFolderListener(in nsIFolderListener listener);
   void removeRootFolderListener(in nsIFolderListener listener);

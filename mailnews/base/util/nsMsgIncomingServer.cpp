@@ -987,3 +987,6 @@ NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Type, "type");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DownloadOnBiff, "download_on_biff");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, Valid, "valid");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, RedirectorType,  "redirector_type");
+NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, EmptyTrashOnExit,
+                        "empty_trash_on_exit");
+

@@ -663,6 +663,8 @@ NS_IMETHODIMP nsImapProtocol::Run()
 
 
   NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &result); 
+  
+  if (NS_FAILED(result)) return result;
 
     result = pEventQService->CreateMonitoredThreadEventQueue();
 	
@@ -779,6 +781,7 @@ nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
     command.Append(" close" CRLF);
     rv = m_outputStream->Write(command.GetBuffer(), command.Length(),
                                &writeCount);
+    Log("SendData", "TellThreadToDie", command.GetBuffer());
   }
 
   if (NS_SUCCEEDED(rv) && TestFlag(IMAP_CONNECTION_IS_OPEN) && m_outputStream)
@@ -788,6 +791,7 @@ nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
     command.Append(" logout" CRLF);
     rv = m_outputStream->Write(command.GetBuffer(), command.Length(),
                                &writeCount);
+    Log("SendData", "TellThreadToDie", command.GetBuffer());
   }
 
   PR_EnterMonitor(m_threadDeathMonitor);

@@ -689,7 +689,7 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
       }
       else if ((aCommand == kNC_EmptyTrash))
       {
-          rv = folder->EmptyTrash(mWindow);
+          rv = folder->EmptyTrash(mWindow, nsnull);
       }
       else if ((aCommand == kNC_Rename))
       {

@@ -39,6 +39,7 @@
 #include "nsIURL.h"
 #include "nsWeakReference.h"
 #include "nsIMsgFilterList.h"
+#include "nsIUrlListener.h"
 
  /* 
   * MsgFolder
@@ -94,7 +95,7 @@ public:
   NS_IMETHOD CreateSubfolder(const PRUnichar *folderName);
   NS_IMETHOD AddSubfolder(nsAutoString *folderName, nsIMsgFolder **newFolder);
   NS_IMETHOD Compact(void);
-  NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow);
+  NS_IMETHOD EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *aListener);
   NS_IMETHOD Rename(const PRUnichar *name);
   NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
   NS_IMETHOD ContainsChildNamed(const char *name, PRBool *_retval);
@@ -107,7 +108,7 @@ public:
   NS_IMETHOD HasNewMessages(PRBool *hasNewMessages);
   NS_IMETHOD GetFirstNewMessage(nsIMessage **firstNewMessage);
   NS_IMETHOD ClearNewMessages();
-  NS_IMETHOD GetExpungedBytesCount(PRUint32 *aExpungedBytesCount);
+  NS_IMETHOD GetExpungedBytes(PRUint32 *aExpungedBytesCount);
   NS_IMETHOD GetDeletable(PRBool *aDeletable);
   NS_IMETHOD GetRequiresCleanup(PRBool *aRequiresCleanup);
   NS_IMETHOD ClearRequiresCleanup(void);
@@ -234,6 +235,7 @@ protected:
                                          unknown; -2 means unknown but we already
                                          tried to find out.) */
   PRInt32 mNumTotalMessages;         /* count of existing messages. */
+  PRUint32 mExpungedBytes;
   nsCOMPtr<nsISupportsArray> mSubFolders;
   nsVoidArray *mListeners; //This can't be an nsISupportsArray because due to
 													 //ownership issues, listeners can't be AddRef'd

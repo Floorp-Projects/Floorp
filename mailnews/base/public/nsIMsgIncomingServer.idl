@@ -119,6 +119,9 @@ interface nsIMsgIncomingServer : nsISupports {
   /* what kind of logon redirector to use for this server, if any */
   attribute string redirectorType;
 
+  /* empty trash on exit */
+  attribute boolean emptyTrashOnExit;
+
   readonly attribute nsIMsgFilterList filterList;
 
   /* we use this to set the default local path.  we use this when migrating prefs */

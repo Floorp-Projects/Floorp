@@ -59,7 +59,7 @@ NS_IMPL_QUERY_INTERFACE_INHERITED2(nsMsgDBFolder,
                                    nsMsgFolder,
                                    nsIDBChangeListener,
                                    nsIUrlListener)
-                                     
+
 
 nsMsgDBFolder::nsMsgDBFolder(void)
 : mAddListener(PR_TRUE)
@@ -183,6 +183,33 @@ nsMsgDBFolder::GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread)
 	return rv;
 
 }
+
+
+NS_IMETHODIMP
+nsMsgDBFolder::GetExpungedBytes(PRUint32 *count)
+{
+	if(!count)
+		return NS_ERROR_NULL_POINTER;
+
+  if (mDatabase)
+  {
+    nsresult rv;
+    nsCOMPtr<nsIDBFolderInfo> folderInfo;
+    rv = mDatabase->GetDBFolderInfo(getter_AddRefs(folderInfo));
+    if (NS_FAILED(rv)) return rv;
+    rv = folderInfo->GetExpungedBytes((PRInt32 *) count);
+    if (NS_SUCCEEDED(rv))
+      mExpungedBytes = *count; // sync up with the database
+    return rv;
+  }
+  else
+  {
+    ReadDBFolderInfo(PR_FALSE);
+    *count = mExpungedBytes;
+  }
+	return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsMsgDBFolder::HasMessage(nsIMessage *message, PRBool *hasMessage)
@@ -390,6 +417,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 
 				folderInfo->GetNumMessages(&mNumTotalMessages);
 				folderInfo->GetNumNewMessages(&mNumUnreadMessages);
+        folderInfo->GetExpungedBytes((PRInt32 *)&mExpungedBytes);
 
 				//These should be put in IMAP folder only.
 				//folderInfo->GetImapTotalPendingMessages(&mNumPendingTotalMessages);
@@ -722,6 +750,7 @@ NS_IMETHODIMP nsMsgDBFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *e
 	element->GetInt32Property("flags", (PRInt32 *) &mFlags);
 	element->GetInt32Property("totalMsgs", &mNumTotalMessages);
 	element->GetInt32Property("totalUnreadMsgs", &mNumUnreadMessages);
+  element->GetInt32Property("expungedBytes", (PRInt32 *) &mExpungedBytes);
 
 	element->GetStringProperty("charset", &charset);
 

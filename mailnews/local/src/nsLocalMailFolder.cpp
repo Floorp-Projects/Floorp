@@ -388,8 +388,7 @@ nsLocalMailCopyState::~nsLocalMailCopyState()
 ///////////////////////////////////////////////////////////////////////////////
 
 nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
-  : mExpungedBytes(0), 
-    mHaveReadNameFromDB(PR_FALSE), mGettingMail(PR_FALSE),
+  : mHaveReadNameFromDB(PR_FALSE), mGettingMail(PR_FALSE),
     mInitialized(PR_FALSE), mCopyState(nsnull), mType(nsnull)
 {
 //  NS_INIT_REFCNT(); done by superclass
@@ -977,15 +976,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Compact()
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIMsgDatabase> db;
   nsCOMPtr<nsIDBFolderInfo> folderInfo;
-  PRInt32 expungedBytes = 0;
+  PRUint32 expungedBytes = 0;
   nsCOMPtr<nsIMsgDatabase> mailDBFactory;
   nsresult folderOpen = NS_OK;
   nsCOMPtr<nsIFileSpec> pathSpec;
   nsCOMPtr<nsIFileSpec> newPathSpec;
 
-  rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
-  if (NS_FAILED(rv)) return rv;
-  rv = folderInfo->GetExpungedBytes(&expungedBytes);
+  rv = GetExpungedBytes(&expungedBytes);
 
     // check if we need to compact the folder
   if (expungedBytes > 0)
@@ -1068,7 +1065,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Compact()
 }
 
 
-NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow)
+NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
+                                               nsIUrlListener *aListener)
 {
     nsresult rv;
     nsCOMPtr<nsIMsgFolder> trashFolder;
@@ -1080,6 +1078,10 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow)
         trashFolder->GetURI(getter_Copies(trashUri));
         trashFolder->GetFlags(&flags);
         trashFolder->RecursiveSetDeleteIsMoveToTrash(PR_FALSE);
+        PRInt32 totalMessages = 0;
+        rv = trashFolder->GetTotalMessages(PR_TRUE, &totalMessages);
+        if (totalMessages <= 0) return NS_OK;
+
         nsCOMPtr<nsIFolder> parent;
         rv = trashFolder->GetParent(getter_AddRefs(parent));
         if (NS_SUCCEEDED(rv) && parent)
@@ -1452,16 +1454,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::UpdateSummaryTotals(PRBool force)
 	}
 
 	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgLocalMailFolder::GetExpungedBytesCount(PRUint32 *count)
-{
-  if(!count)
-    return NS_ERROR_NULL_POINTER;
-
-  *count = mExpungedBytes;
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::GetDeletable(PRBool *deletable)

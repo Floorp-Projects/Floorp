@@ -51,7 +51,6 @@ interface nsIImapIncomingServer : nsISupports {
   attribute boolean cleanupInboxOnExit;
   attribute nsMsgImapDeleteModel deleteModel;
   attribute boolean dualUseFolders;
-  attribute boolean emptyTrashOnExit;
   attribute long emptyTrashThreshhold;
   attribute string personalNamespace;
   attribute string publicNamespace;

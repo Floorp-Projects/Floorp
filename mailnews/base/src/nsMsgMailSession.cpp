@@ -21,6 +21,7 @@
  */
 
 #include "msgCore.h" // for pre-compiled headers
+#include "nsMsgBaseCID.h"
 #include "nsMsgMailSession.h"
 #include "nsCOMPtr.h"
 #include "nsFileLocations.h"
@@ -30,6 +31,7 @@
 #include "nsMsgUtils.h"
 #include "nsIURI.h"
 #include "nsXPIDLString.h"
+#include "nsIMsgAccountManager.h"
 
 NS_IMPL_THREADSAFE_ADDREF(nsMsgMailSession)
 NS_IMPL_THREADSAFE_RELEASE(nsMsgMailSession)
@@ -39,6 +41,7 @@ NS_INTERFACE_MAP_BEGIN(nsMsgMailSession)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgMailSession)
 NS_INTERFACE_MAP_END_THREADSAFE
   
+static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 
 nsMsgMailSession::nsMsgMailSession():
   mRefCnt(0)
@@ -287,6 +290,16 @@ NS_IMETHODIMP nsMsgMailSession::AddMsgWindow(nsIMsgWindow *msgWindow)
 NS_IMETHODIMP nsMsgMailSession::RemoveMsgWindow(nsIMsgWindow *msgWindow)
 {
 	mWindows->RemoveElement(msgWindow);
+    PRUint32 count = 0;
+    mWindows->Count(&count);
+    if (count == 0)
+    {
+        nsresult rv;
+        NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                        kMsgAccountManagerCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        accountManager->EmptyTrashOnExit();
+    }
 	return NS_OK;
 }
 

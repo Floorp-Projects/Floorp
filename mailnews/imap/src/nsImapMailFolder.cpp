@@ -802,7 +802,8 @@ NS_IMETHODIMP nsImapMailFolder::Compact()
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow)
+NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
+                                           nsIUrlListener *aListener)
 {
     nsresult rv;
     nsCOMPtr<nsIMsgFolder> trashFolder;
@@ -814,13 +815,22 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash(nsIMsgWindow *msgWindow)
         rv = trashFolder->Delete(); // delete summary spec
         rv = trashFolder->GetMsgDatabase(msgWindow, getter_AddRefs(trashDB));
 
-        nsCOMPtr<nsIUrlListener> urlListener =
-            do_QueryInterface(trashFolder);
-
         NS_WITH_SERVICE (nsIImapService, imapService, kCImapService, &rv);
         if (NS_SUCCEEDED(rv))
-            rv = imapService->DeleteAllMessages(m_eventQueue, trashFolder,
-                                                urlListener, nsnull);
+        {
+            if (aListener)
+            {
+                rv = imapService->DeleteAllMessages(m_eventQueue, trashFolder,
+                                                    aListener, nsnull);
+            }
+            else
+            {
+                nsCOMPtr<nsIUrlListener> urlListener = 
+                    do_QueryInterface(trashFolder);
+                rv = imapService->DeleteAllMessages(m_eventQueue, trashFolder,
+                                                    urlListener, nsnull);
+            }
+        }
         PRBool hasSubfolders = PR_FALSE;
         rv = trashFolder->GetHasSubFolders(&hasSubfolders);
         if (hasSubfolders)
@@ -1011,12 +1021,6 @@ NS_IMETHODIMP nsImapMailFolder::UpdateSummaryTotals(PRBool force)
     return rv;
 }
     
-NS_IMETHODIMP nsImapMailFolder::GetExpungedBytesCount(PRUint32 *count)
-{
-    nsresult rv = NS_ERROR_FAILURE;
-    return rv;
-}
-
 NS_IMETHODIMP nsImapMailFolder::GetDeletable (PRBool *deletable)
 {
     nsresult rv = NS_ERROR_FAILURE;
@@ -2954,6 +2958,8 @@ nsresult nsImapMailFolder::GetTrashFolder(nsIMsgFolder **pTrashFolder)
   {
     PRUint32 numFolders;
     rv = rootFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, 1, &numFolders, pTrashFolder);
+	if (numFolders != 1)
+		rv = NS_ERROR_FAILURE;
     if (*pTrashFolder)
       NS_ADDREF(*pTrashFolder);
   }
