@@ -22,4 +22,4 @@ nsIMailboxUrl.h
 nsIMailboxService.h
 nsIPop3Service.h
 nsIPop3IncomingServer.h
-
+nsIMsgParseMailMsgState.h
