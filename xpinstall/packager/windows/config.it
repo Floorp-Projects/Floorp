@@ -574,6 +574,12 @@ SupersedeVersion0=$GreFileVersion$
 SupersedeMinVersion=
 SupersedeMaxVersion=
 
+;Since GRE is going to be installed into the [common files] folder,
+;Setup.exe needs to know to calculate the disk space required for this folder.
+;This section overrides the default user-chosen path for GRE only.
+[Component GRE-Destination Path0]
+Path=[COMMONFILESDIR]
+
 [Component Navigator]
 Description Short=Navigator
 ;*** LOCALIZE ME BABY ***
@@ -609,8 +615,8 @@ $InstallSizeArchive$:$UninstallFileZip$
 Attributes=SELECTED|INVISIBLE|DOWNLOAD_ONLY
 
 ;Since the uninstaller program is going to be installed into the Windows folder,
-;Setup.exe need to know to calculate the disk space required for the Windows folder.
-;This section overrides the default user-chosen path for Uninstaller only.
+;Setup.exe needs to know to calculate the disk space required for the Windows folder.
+;This section overrides the default user-chosen path for the Uninstaller only.
 [Component Uninstaller-Destination Path0]
 Path=[WINDIR]
 
