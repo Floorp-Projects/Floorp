@@ -149,6 +149,12 @@ protected:
                                  nsIRDFNode **target);
   nsresult createMessageStatusNode(nsIMessage *message,
                                    nsIRDFNode **target);
+
+
+  static nsresult getMessageArcLabelsOut(nsIMessage *message,
+                                         nsISupportsArray **arcs);
+  static nsresult getFolderArcLabelsOut(nsIMsgFolder *folder,
+                                        nsISupportsArray **arcs);
   
   nsresult DoDeleteFromFolder(nsIMsgFolder *folder,
 							  nsISupportsArray *arguments);

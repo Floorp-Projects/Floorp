@@ -578,59 +578,87 @@ NS_IMETHODIMP nsMSGFolderDataSource::ArcLabelsIn(nsIRDFNode* node,
 NS_IMETHODIMP nsMSGFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
                                                   nsIRDFArcsOutCursor** labels)
 {
-  nsISupportsArray *arcs;
-  NS_NewISupportsArray(&arcs);
-  if (arcs == nsnull)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsISupportsArray *arcs=nsnull;
+  nsresult rv = NS_RDF_NO_VALUE;
+  
+  //  if (arcs == nsnull)
+  //    return NS_ERROR_OUT_OF_MEMORY;
 
   nsIMsgFolder* folder;
   nsIMessage* message;
-  if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder)))
-  {
-    arcs->AppendElement(kNC_Name);
-	arcs->AppendElement(kNC_SpecialFolder);
-	arcs->AppendElement(kNC_TotalMessages);
-	arcs->AppendElement(kNC_TotalUnreadMessages);
-#if 1
-    nsIEnumerator* subFolders;
-    if (NS_SUCCEEDED(folder->GetSubFolders(&subFolders)))
-	{
-	    if(NS_OK == subFolders->First())
-		  arcs->AppendElement(kNC_Child);
-		NS_RELEASE(subFolders);
-	}
-
-    nsIEnumerator* messages;
-    if(NS_SUCCEEDED(folder->GetMessages(&messages)))
-	{
-		if(NS_OK == messages->First())
-		  arcs->AppendElement(kNC_MessageChild);
-		NS_RELEASE(messages);
-	}
-#else
-    arcs->AppendElement(kNC_Child);
-    arcs->AppendElement(kNC_MessageChild);
-#endif
-    NS_IF_RELEASE(folder);
+  if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(),
+                                          (void**)&folder))) {
+    fflush(stdout);
+    rv = getFolderArcLabelsOut(folder, &arcs);
+    NS_RELEASE(folder);
   }
-  else if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), (void**)&message)))
-  {
-    arcs->AppendElement(kNC_Subject);
-    arcs->AppendElement(kNC_Sender);
-    arcs->AppendElement(kNC_Date);
-	arcs->AppendElement(kNC_Status);
-    NS_IF_RELEASE(message);
+  else if (NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(),
+                                               (void**)&message))) {
+    fflush(stdout);
+    rv = getMessageArcLabelsOut(message, &arcs);
+    NS_RELEASE(message);
+  } else {
+    // how to return an empty cursor?
+    // for now return a 0-length nsISupportsArray
+    NS_NewISupportsArray(&arcs);
   }
 
   nsRDFArrayArcsOutCursor* cursor =
     new nsRDFArrayArcsOutCursor(this, source, arcs);
   NS_RELEASE(arcs);
+  
   if (cursor == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(cursor);
   *labels = cursor;
+  
   return NS_OK;
 }
+
+nsresult
+nsMSGFolderDataSource::getFolderArcLabelsOut(nsIMsgFolder *folder,
+                                             nsISupportsArray **aArcs)
+{
+  nsISupportsArray* arcs;
+  NS_NewISupportsArray(&arcs);
+  
+  arcs->AppendElement(kNC_Name);
+  arcs->AppendElement(kNC_SpecialFolder);
+  arcs->AppendElement(kNC_TotalMessages);
+  arcs->AppendElement(kNC_TotalUnreadMessages);
+  nsIEnumerator* subFolders;
+  if (NS_SUCCEEDED(folder->GetSubFolders(&subFolders)))
+    {
+	    if(NS_OK == subFolders->First())
+        arcs->AppendElement(kNC_Child);
+      NS_RELEASE(subFolders);
+    }
+  
+  nsIEnumerator* messages;
+  if(NS_SUCCEEDED(folder->GetMessages(&messages))) {
+    if(NS_OK == messages->First())
+      arcs->AppendElement(kNC_MessageChild);
+    NS_RELEASE(messages);
+  }
+  
+  *aArcs = arcs;
+  return NS_OK;
+}
+
+nsresult
+nsMSGFolderDataSource::getMessageArcLabelsOut(nsIMessage *folder,
+                                              nsISupportsArray **aArcs)
+{
+  nsISupportsArray *arcs;
+  NS_NewISupportsArray(&arcs);
+  arcs->AppendElement(kNC_Subject);
+  arcs->AppendElement(kNC_Sender);
+  arcs->AppendElement(kNC_Date);
+	arcs->AppendElement(kNC_Status);
+  *aArcs = arcs;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsMSGFolderDataSource::GetAllResources(nsIRDFResourceCursor** aCursor)
