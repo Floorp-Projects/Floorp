@@ -16,12 +16,16 @@
  * Reserved.
  */
 
+/* Library-private header for nsInterfaceInfo implementation. */
+
 #ifndef nsInterfaceInfo_h___
 #define nsInterfaceInfo_h___
 
 #include "nsIInterfaceInfo.h"
 #include "xpt_struct.h"
 #include "xpt_cpp.h"
+
+#include "nsInterfaceRecord.h"
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -47,8 +51,8 @@ class nsInterfaceInfo : public nsIInterfaceInfo
     NS_IMETHOD GetConstant(uint16 index, const nsXPTConstant** constant);
 
     // why constructor public?
-    nsInterfaceInfo(XPTInterfaceDirectoryEntry* entry,
-                      nsInterfaceInfo *parent);
+    nsInterfaceInfo(nsInterfaceRecord *record,
+                    nsInterfaceInfo *parent);
 public:
     virtual ~nsInterfaceInfo();
 
@@ -62,9 +66,9 @@ private:
     friend const nsIID*
         nsXPTParamInfo::GetInterfaceIID(nsIInterfaceInfo *info) const;
 
-    XPTInterfaceDirectoryEntry *getIDE() { return mEntry; };
-
-    XPTInterfaceDirectoryEntry* mEntry;
+    nsInterfaceRecord *getInterfaceRecord() { return mInterfaceRecord; };
+    nsInterfaceRecord *mInterfaceRecord;
+    
     nsInterfaceInfo* mParent;
 
     uint16 mMethodBaseIndex;

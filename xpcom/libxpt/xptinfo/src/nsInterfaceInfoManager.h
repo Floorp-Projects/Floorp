@@ -16,23 +16,20 @@
  * Reserved.
  */
 
+/* Library-private header for nsInterfaceInfoManager implementation. */
+
 #ifndef nsInterfaceInfoManager_h___
 #define nsInterfaceInfoManager_h___
 
+#include "plhash.h"
 #include "nsIAllocator.h"
-
-#include "xpt_struct.h"
-
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
-
-#include "nsInterfaceInfo.h"
-
 #include "nsHashtable.h"
 
-#include "plhash.h"
-
-class hash_record;
+#include "xpt_struct.h"
+#include "nsInterfaceInfo.h"
+#include "nsInterfaceRecord.h"
 
 class nsInterfaceInfoManager : public nsIInterfaceInfoManager
 {
@@ -64,9 +61,6 @@ private:
     // mapping between names and records
     PLHashTable *mInterfaceTable;
 
-    // mapping between entries and typelibs (for nsXPTParamInfo::GetInterface)
-    PLHashTable *mTypelibTable;
-
     // mapping between iids and names
     // (record handling is looked up by name; iids are translated there)
     nsHashtable *mIIDTable;
@@ -74,19 +68,7 @@ private:
     nsIAllocator* mAllocator;
 };
 
-// For references in the mInterfaceTable hashtable.
-class interface_record {
-public:
-    XPTHeader *which_header;
-    PRBool resolved;
-    XPTInterfaceDirectoryEntry *entry;
-    nsInterfaceInfo *info;
-#ifdef DEBUG
-    // which (counting from 1) typelib was it loaded from?
-    int which;
-#endif
-};    
-
-
-
 #endif /* nsInterfaceInfoManager_h___ */
+
+
+

@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+/* Implementation of nsIInterfaceInfoManager. */
+
 #include "nscore.h"
 
 #include "nsISupports.h"
@@ -30,9 +32,9 @@
 static NS_DEFINE_IID(kIInterfaceInfoIID, NS_IINTERFACEINFO_IID);
 NS_IMPL_ISUPPORTS(nsInterfaceInfo, kIInterfaceInfoIID);
 
-nsInterfaceInfo::nsInterfaceInfo(XPTInterfaceDirectoryEntry* entry,
+nsInterfaceInfo::nsInterfaceInfo(nsInterfaceRecord *record,
                                  nsInterfaceInfo *parent)
-    :   mEntry(entry),
+    :   mInterfaceRecord(record),
         mParent(parent)
 {
     NS_INIT_REFCNT();
@@ -48,14 +50,20 @@ nsInterfaceInfo::nsInterfaceInfo(XPTInterfaceDirectoryEntry* entry,
         mMethodBaseIndex = mConstantBaseIndex = 0;
     }
 
-    mMethodCount   = mEntry->interface_descriptor->num_methods;
-    mConstantCount = mEntry->interface_descriptor->num_constants;
+    mMethodCount   =
+        mInterfaceRecord->entry->interface_descriptor->num_methods;
+    mConstantCount =
+        mInterfaceRecord->entry->interface_descriptor->num_constants;
 }
 
 nsInterfaceInfo::~nsInterfaceInfo()
 {
-    if(mParent != NULL)
+    if (this->mParent != NULL)
         NS_RELEASE(mParent);
+
+    // remove interface record's notion of my existence
+    if (this->mInterfaceRecord != NULL)
+        this->mInterfaceRecord->info = NULL;
 }
 
 NS_IMETHODIMP
@@ -65,11 +73,11 @@ nsInterfaceInfo::GetName(char** name)
 
     nsIAllocator* allocator;
     if(NULL != (allocator = nsInterfaceInfoManager::GetAllocator())) {
-        int len = strlen(mEntry->name)+1;
+        int len = strlen(mInterfaceRecord->entry->name)+1;
         char* p = (char*)allocator->Alloc(len);
         NS_RELEASE(allocator);
         if(p) {
-            memcpy(p, mEntry->name, len);
+            memcpy(p, mInterfaceRecord->entry->name, len);
             *name = p;
             return NS_OK;
         }
@@ -89,7 +97,7 @@ nsInterfaceInfo::GetIID(nsIID** iid)
         nsIID* p = (nsIID*)allocator->Alloc(sizeof(nsIID));
         NS_RELEASE(allocator);
         if(p) {
-            memcpy(p, &mEntry->iid, sizeof(nsIID));
+            memcpy(p, &(mInterfaceRecord->entry->iid), sizeof(nsIID));
             *iid = p;
             return NS_OK;
         }
@@ -144,7 +152,7 @@ nsInterfaceInfo::GetMethodInfo(uint16 index, const nsXPTMethodInfo** info)
 
     // else...
     *info = NS_REINTERPRET_CAST(nsXPTMethodInfo*,
-                                &mEntry->interface_descriptor->
+                                &mInterfaceRecord->entry->interface_descriptor->
                                 method_descriptors[index - mMethodBaseIndex]);
     return NS_OK;
 }
@@ -163,9 +171,10 @@ nsInterfaceInfo::GetConstant(uint16 index, const nsXPTConstant** constant)
     }
 
     // else...
-    *constant = NS_REINTERPRET_CAST(nsXPTConstant*,
-                                    &mEntry->interface_descriptor->
-                                    const_descriptors[index-mConstantBaseIndex]);
+    *constant =
+        NS_REINTERPRET_CAST(nsXPTConstant*,
+                            &mInterfaceRecord->entry->interface_descriptor->
+                            const_descriptors[index-mConstantBaseIndex]);
     return NS_OK;
 }
 
@@ -175,12 +184,12 @@ void
 nsInterfaceInfo::print(FILE *fd)
 {
     fprintf(fd, "iid: %s name: %s name_space: %s\n",
-            mEntry->iid.ToString(),
-            mEntry->name,
-            mEntry->name_space);
+            this->mInterfaceRecord->entry->iid.ToString(),
+            this->mInterfaceRecord->entry->name,
+            this->mInterfaceRecord->entry->name_space);
     if (mParent != NULL) {
         fprintf(fd, "parent:\n\t");
-        mParent->print(fd);
+        this->mParent->print(fd);
     }
 }
 #endif

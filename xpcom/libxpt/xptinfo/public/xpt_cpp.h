@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-/* The InterfaceInfo support public stuff. */
+/* C++ wrappers for xpt_struct.h structures. */
 
 #ifndef xpt_cpp_h___
 #define xpt_cpp_h___

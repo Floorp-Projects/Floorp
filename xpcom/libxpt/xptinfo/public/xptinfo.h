@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+/* XPTI_PUBLIC_API and XPTI_GetInterfaceInfoManager declarations. */
+
 #ifndef xptiinfo_h___
 #define xptiinfo_h___
 
