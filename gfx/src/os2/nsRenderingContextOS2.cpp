@@ -1339,7 +1339,8 @@ NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const PRUnichar *aString,
          // Calculate width of the preceding non-unicode characters
         if( i-start > 0 )
         {
-          convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, &pstr[start], i-start, buf, sizeof(buf));
+          convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage,
+                                      &pstr[start], i-start, buf, sizeof(buf));
           GetWidth((const char*)buf,convertedLength,tWidth);
           aWidth += tWidth;
         }
@@ -1349,12 +1350,15 @@ NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const PRUnichar *aString,
         while( end < aLength && pstr[end] > 0x00FF )
           end++;
 
-        convertedLength = WideCharToMultiByte( 1208, &pstr[i], end-i, buf, sizeof(buf));
+         // change to use unicode font
         LONG oldLcid = GpiQueryCharSet(mPS);
         GFX (::GpiSetCharSet (mPS, 1), FALSE);
         doSetupFontAndTextColor = PR_FALSE;
+
+        convertedLength = WideCharToMultiByte( 1208, &pstr[i], end-i, buf, sizeof(buf));
         GetWidth((const char*)buf,convertedLength,tWidth);
         aWidth+=tWidth;
+
         doSetupFontAndTextColor = PR_TRUE;
         GFX (::GpiSetCharSet (mPS, oldLcid), FALSE);
         start = end;
@@ -1393,12 +1397,14 @@ NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const PRUnichar *aString,
         while( end < aLength && pstr[end] >= 0x0080 && pstr[end] <= 0x00FF )
           end++;
 
-        convertedLength = WideCharToMultiByte( 1252, &pstr[i], end-i, buf, sizeof(buf));
         LONG oldLcid = GpiQueryCharSet(mPS);
         GFX (::GpiSetCharSet (mPS, 1), FALSE);
         doSetupFontAndTextColor = PR_FALSE;
+
+        convertedLength = WideCharToMultiByte( 1252, &pstr[i], end-i, buf, sizeof(buf));
         GetWidth((const char*)buf,convertedLength,tWidth);
         aWidth+=tWidth;
+
         doSetupFontAndTextColor = PR_TRUE;
         GFX (::GpiSetCharSet (mPS, oldLcid), FALSE);
         start = end;
@@ -1409,7 +1415,7 @@ NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const PRUnichar *aString,
 
   if (createdFont)
   {
-    GpiDeleteSetId(mPS, 1);
+    GFX (::GpiDeleteSetId(mPS, 1), FALSE);
     createdFont = FALSE;
   }
 
@@ -1420,8 +1426,6 @@ NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const PRUnichar *aString,
     aWidth+= tWidth;
   }
 
-//  int convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, aString, aLength, buf, sizeof(buf));
-//  temp = GetWidth( buf, newLength, aWidth);
   return temp;
 }
 
@@ -1588,10 +1592,30 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString2(const PRUnichar *aString, PRU
 
         if( i-start > 0 )
         {
-          convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, &pstr[start], i-start, buf, sizeof(buf));
-          DrawString( buf, convertedLength, x, y, aSpacing);
-          GetWidth((const char*)buf,convertedLength,tWidth);
-          x += tWidth;
+          if( aSpacing )
+          {
+            convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage,
+                                        &pstr[start], i-start, buf, sizeof(buf));
+            char* bufptr = buf;                                
+
+            while( start < i )
+            {
+              DrawString( bufptr, 1, x, y, NULL );
+              x += *aSpacing;
+              bufptr++;
+              aSpacing++;
+              start++;
+            }
+          }
+          else
+          {
+            convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage,
+                                        &pstr[start], i-start, buf, sizeof(buf));
+            DrawString( buf, convertedLength, x, y, NULL );
+
+            GetWidth( buf, convertedLength, tWidth );
+            x += tWidth;
+          }
         }
 
          // Group unicode chars together
@@ -1599,20 +1623,36 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString2(const PRUnichar *aString, PRU
         while( end < aLength && pstr[end] > 0x00FF )
           end++;
 
-        convertedLength = WideCharToMultiByte( 1208, &pstr[i], end-i, buf, sizeof(buf));
         LONG oldLcid = GpiQueryCharSet(mPS);
         GFX (::GpiSetCharSet (mPS, 1), FALSE);
         doSetupFont = PR_FALSE;
-        rv = DrawString( buf, convertedLength, x, y, aSpacing);
-        GetWidth((const char*)buf,convertedLength,tWidth);
+
+        if( aSpacing )
+        {
+          while( i < end )
+          {
+            convertedLength = WideCharToMultiByte( 1208, &pstr[i], 1, buf, sizeof(buf));
+            rv = DrawString( buf, convertedLength, x, y, NULL );
+            x += *aSpacing;
+            aSpacing++;
+            i++;
+          }
+        }
+        else
+        {
+          convertedLength = WideCharToMultiByte( 1208, &pstr[i], end-i, buf, sizeof(buf));
+          rv = DrawString( buf, convertedLength, x, y, NULL );
+          GetWidth( buf, convertedLength, tWidth );
+          x += tWidth;
+        }
+
         doSetupFont = PR_TRUE;
         GFX (::GpiSetCharSet (mPS, oldLcid), FALSE);
-        x += tWidth;
         start = end;
         i = end - 1;
       }
     } /* endfor */
-  }
+  }                                              
   else
   {
     for (PRUint32 i = 0; i < aLength; i++)
@@ -1634,10 +1674,27 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString2(const PRUnichar *aString, PRU
 
         if( i-start > 0 )
         {
-          convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, &pstr[start], i-start, buf, sizeof(buf));
-          DrawString( buf, convertedLength, x, y, aSpacing);
-          GetWidth((const char*)buf,convertedLength,tWidth);
-          x += tWidth;
+          if( aSpacing )
+          {
+            while( start < i )
+            {
+              convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage,
+                                          &pstr[start], 1, buf, sizeof(buf));
+              DrawString( buf, convertedLength, x, y, NULL);
+              x += *aSpacing;
+              aSpacing++;
+              start++;
+            }
+          }
+          else
+          {
+            convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage,
+                                        &pstr[start], i-start, buf, sizeof(buf));
+            DrawString( buf, convertedLength, x, y, aSpacing);
+
+            GetWidth( buf, convertedLength, tWidth );
+            x += tWidth;
+          }
         }
 
          // Group chars together
@@ -1645,15 +1702,31 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString2(const PRUnichar *aString, PRU
         while( end < aLength && pstr[end] >= 0x0080 && pstr[end] <= 0x00FF )
           end++;
 
-        convertedLength = WideCharToMultiByte( 1252, &pstr[i], end-i, buf, sizeof(buf));
         LONG oldLcid = GpiQueryCharSet(mPS);
         GFX (::GpiSetCharSet (mPS, 1), FALSE);
         doSetupFont = PR_FALSE;
-        rv = DrawString( buf, convertedLength, x, y, aSpacing);
-        GetWidth((const char*)buf,convertedLength,tWidth);
+
+        if( aSpacing )
+        {
+          while( i < end )
+          {
+            convertedLength = WideCharToMultiByte( 1252, &pstr[i], 1, buf, sizeof(buf));
+            rv = DrawString( buf, convertedLength, x, y, NULL );
+            x += *aSpacing;
+            aSpacing++;
+            i++;
+          }
+        }
+        else
+        {
+          convertedLength = WideCharToMultiByte( 1252, &pstr[i], end-i, buf, sizeof(buf));
+          rv = DrawString( buf, convertedLength, x, y, NULL );
+          GetWidth( buf, convertedLength, tWidth );
+          x += tWidth;
+        }
+
         doSetupFont = PR_TRUE;
         GFX (::GpiSetCharSet (mPS, oldLcid), FALSE);
-        x += tWidth;
         start = end;
         i = end - 1;
       }
@@ -1668,14 +1741,53 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString2(const PRUnichar *aString, PRU
 
   if( aLength-start > 0 )
   {
-    convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, &pstr[start], aLength-start, buf, sizeof(buf));
-    rv = DrawString( buf, convertedLength, x, y, aSpacing);
+    if( aSpacing )
+    {
+       // In codepage 1252, we are guaranteed coming out of the for loop above
+       // that each char coming out of the WideCharToMultibyte translation
+       // has a one-to-one correspondence to a unicode character (i.e. the
+       // length of the unicode text passed in to WideCharToMultibyte is equal
+       // to convertedLength.  Therefore, we do one big conversion, and then
+       // cycle through the buffer to position each char.
+       // This is not necessarily true for other codepages, such as those
+       // supporting DBCS, where one unicode char may map to 2 or 3 chars.  In
+       // these cases, we have to do the translation a character at a time.
+      if (((nsFontMetricsOS2*)mFontMetrics)->mCodePage == 1252)
+      {
+        convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage,
+                                &pstr[start], aLength-start, buf, sizeof(buf));
+        char* bufptr = buf;                                
+        while( start < aLength )
+        {
+          DrawString( bufptr, 1, x, y, NULL );
+          x += *aSpacing;
+          bufptr++;
+          aSpacing++;
+          start++;
+        }
+      }
+      else
+      {
+        while( start < aLength )
+        {
+          convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage,
+                                      &pstr[start], 1, buf, sizeof(buf));
+          DrawString( buf, convertedLength, x, y, NULL );
+          x += *aSpacing;
+          aSpacing++;
+          start++;
+        }
+      }
+    }
+    else
+    {
+      convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage,
+                                &pstr[start], aLength-start, buf, sizeof(buf));
+      rv = DrawString( buf, convertedLength, x, y, NULL );
+    }
   }
 
   return rv;
-
-//    int convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, aString, aLength, buf, sizeof(buf));
-//    return DrawString( buf, newLength, aX, aY, aSpacing);
 }
 
 // Image drawing: just proxy on to the image object, so no worries yet.
