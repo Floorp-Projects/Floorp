@@ -652,8 +652,23 @@ function getDefaultFileName(aDefaultFileName, aNameFromHeaders, aDocumentURI, aD
       return unescape(url.fileName);
     }
   } catch (e) {
-    // This is something like a wyciwyg:, data:, and so forth
-    // URI... no usable filename here.
+    try {
+      // the file name might be non ASCII
+      // try unescape again with a characterSet
+      var textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
+                                   .getService(Components.interfaces.nsITextToSubURI);
+      var charset;
+      if (aDocument)
+        charset = aDocument.characterSet;
+      else if (document.commandDispatcher.focusedWindow)
+        charset = document.commandDispatcher.focusedWindow.document.characterSet;
+      else
+        charset = window._content.document.characterSet;
+      return textToSubURI.unEscapeURIForUI(charset, url.fileName);
+    } catch (e) {
+      // This is something like a wyciwyg:, data:, and so forth
+      // URI... no usable filename here.
+    }
   }
   
   if (aDocument) {
