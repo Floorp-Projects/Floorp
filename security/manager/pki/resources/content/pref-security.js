@@ -36,11 +36,11 @@
 function openCertManager()
 {
     window.open('chrome://pippki/content/certManager.xul',  "",
-                'chrome,width=500,height=400,resizable=1');
+                'chrome,width=500,height=400,resizable=yes,dialog=no');
 }
 
 function openDeviceManager()
 {
     window.open('chrome://pippki/content/device_manager.xul',  "devmgr",
-                'chrome,width=540,height=360,resizable=1');
+                'chrome,width=540,height=360,resizable=yes');
 }
