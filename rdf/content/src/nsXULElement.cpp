@@ -2717,14 +2717,15 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsXULElement::GetContentID(PRUint32* aID)
 {
-    *aID = 0;
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aID = mContentId;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULElement::SetContentID(PRUint32 aID)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mContentId = aID;
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
