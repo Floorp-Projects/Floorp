@@ -546,6 +546,7 @@ private:
 	static nsIRDFResource	*kNC_Child;
 	static nsIRDFResource	*kNC_Name;
 	static nsIRDFResource	*kRDF_type;
+	static nsIRDFResource	*kNC_RelatedLinksTopic;
 
 	nsCOMPtr<nsIRDFDataSource> mInner;
 
@@ -629,6 +630,7 @@ nsIRDFService		*RelatedLinksHandlerImpl::gRDFService;
 
 nsIRDFResource		*RelatedLinksHandlerImpl::kNC_RelatedLinksRoot;
 nsIRDFResource		*RelatedLinksHandlerImpl::kRDF_type;
+nsIRDFResource		*RelatedLinksHandlerImpl::kNC_RelatedLinksTopic;
 nsIRDFResource		*RelatedLinksHandlerImpl::kNC_Child;
 
 
@@ -655,6 +657,7 @@ RelatedLinksHandlerImpl::~RelatedLinksHandlerImpl()
 	{
 		NS_IF_RELEASE(kNC_RelatedLinksRoot);
 		NS_IF_RELEASE(kRDF_type);
+		NS_IF_RELEASE(kNC_RelatedLinksTopic);
 		NS_IF_RELEASE(kNC_Child);
 
 		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
@@ -678,6 +681,7 @@ RelatedLinksHandlerImpl::Init()
 
 		gRDFService->GetResource(kURINC_RelatedLinksRoot, &kNC_RelatedLinksRoot);
 		gRDFService->GetResource(RDF_NAMESPACE_URI "type", &kRDF_type);
+		gRDFService->GetResource(NC_NAMESPACE_URI "RelatedLinksTopic", &kNC_RelatedLinksTopic);
 		gRDFService->GetResource(NC_NAMESPACE_URI "child", &kNC_Child);
 	}
 
@@ -974,9 +978,11 @@ RelatedLinksHandlerImpl::ArcLabelsOut(nsIRDFResource *aSource,
 	nsISimpleEnumerator* result = new nsArrayEnumerator(array);
 	if (! result)	return(NS_ERROR_OUT_OF_MEMORY);
 
-	nsCOMPtr<nsIRDFNode>	typeNode;
-	if ((aSource == kNC_RelatedLinksRoot) || (NS_SUCCEEDED(rv = GetTarget(aSource,
-		kRDF_type, PR_TRUE, getter_AddRefs(typeNode))) && (rv != NS_RDF_NO_VALUE)))
+	PRBool	hasValueFlag = PR_FALSE;
+	if ((aSource == kNC_RelatedLinksRoot) || 
+		(NS_SUCCEEDED(rv = mInner->HasAssertion(aSource, kRDF_type,
+		kNC_RelatedLinksTopic, PR_TRUE, &hasValueFlag))) &&
+		(hasValueFlag == PR_TRUE))
 	{
 		array->AppendElement(kNC_Child);
 	}
