@@ -10,7 +10,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.47 $ ';
+$Version = '$Revision: 1.48 $ ';
 
 
 sub PrintUsage {
@@ -526,7 +526,7 @@ sub RunAliveTest {
 
   print LOG "$binaryName quit AliveTest with status $status\n";
   if ($status != 0) {
-    print LOG "$binaryName has crashed or quit on the AliveTest.  Turn the tree orange now.\n";
+    print LOG "Error: $binaryName has crashed or quit on the AliveTest.  Turn the tree orange now.\n";
     print LOG "----------- failure output from $binaryName for alive test --------------- \n";
     open READRUNLOG, "$BinaryLog";
     while (<READRUNLOG>) {
@@ -677,7 +677,7 @@ sub RunFileBasedTest {
   # Write test output to log.
   #
   if ($status != 0) {
-    print LOG "$testName has failed.  Turn the tree orange now.\n";
+    print LOG "Error: $testName has failed.  Turn the tree orange now.\n";
     print LOG "----------- failure output from ", $testName, " test --------------- \n";
   } else {
 	print LOG "----------- success output from ", $testName, " test --------------- \n";
@@ -761,7 +761,7 @@ sub RunBloatTest {
 
   print LOG "Client quit Bloat Test with status $status\n";
   if ($status <= 0) {
-    print LOG "$Binary has crashed or quit on the BloatTest.  Turn the tree orange now.\n";
+    print LOG "Error: $Binary has crashed or quit on the BloatTest.  Turn the tree orange now.\n";
     print LOG "----------- failure Output from mozilla-bin for BloatTest --------------- \n";
     open READRUNLOG, "$BinaryLog";
     while (<READRUNLOG>) {
