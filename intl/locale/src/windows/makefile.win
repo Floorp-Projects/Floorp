@@ -20,45 +20,40 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
+include <$(DEPTH)/config/config.mak>
 
-LIBRARY_NAME = nslocalewin_s
-
-MODULE=raptor 
+MODULE		= locale
+LIBRARY_NAME	= locale
+MODULE_NAME	= nsLocaleModule
 
 DEFINES=-DWIN32_LEAN_AND_MEAN
 
-OBJS =											\
-	.\$(OBJDIR)\nsCollationWin.obj				\
-	.\$(OBJDIR)\nsDateTimeFormatWin.obj         \
-	.\$(OBJDIR)\nsLocaleDLL.obj					\
-	.\$(OBJDIR)\nsIWin32LocaleImpl.obj			\
+OBJS =						\
+	.\$(OBJDIR)\nsCollationWin.obj		\
+	.\$(OBJDIR)\nsDateTimeFormatWin.obj     \
+	.\$(OBJDIR)\nsLocaleDLL.obj		\
+	.\$(OBJDIR)\nsIWin32LocaleImpl.obj	\
 	$(NULL)
 
 LINCS= \
 		-I..\
         -I$(PUBLIC)\locale		\
         -I$(PUBLIC)\xpcom		\
-        -I$(PUBLIC)\unicharutil \
-        -I$(PUBLIC)\uconv \
+        -I$(PUBLIC)\unicharutil		\
+        -I$(PUBLIC)\uconv		\
         -I$(PUBLIC)\raptor		\
         $(NULL)
 
 LCFLAGS = \
         $(LCFLAGS) \
-		$(DEFINES) \
+	$(DEFINES) \
         $(NULL)
 
-LLIBS=				\
- $(DIST)\lib\xpcom.lib	\
- $(DIST)\lib\nslocale_s.lib		\
-$(LIBNSPR)  
+SUB_LIBRARIES	=  $(DIST)\lib\nslocale_s.lib
 
-		 
+LLIBS=					\
+ $(DIST)\lib\xpcom.lib			\
+ $(LIBNSPR)  
+
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(LIBRARY) 
-	@echo $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib\
-
-clobber::
-        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
