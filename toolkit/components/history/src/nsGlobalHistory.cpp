@@ -640,7 +640,7 @@ nsGlobalHistory::AddPageToDatabase(const char *aURL,
   
   // For notifying observers, later...
   nsCOMPtr<nsIRDFResource> url;
-  rv = gRDFService->GetResource(aURL, getter_AddRefs(url));
+  rv = gRDFService->GetResource(nsDependentCString(aURL, len), getter_AddRefs(url));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIRDFDate> date;
@@ -980,7 +980,7 @@ nsGlobalHistory::SetPageTitle(const char *aURL, const PRUnichar *aTitle)
 
   // ...and update observers
   nsCOMPtr<nsIRDFResource> url;
-  rv = gRDFService->GetResource(aURL, getter_AddRefs(url));
+  rv = gRDFService->GetResource(nsDependentCString(aURL), getter_AddRefs(url));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIRDFLiteral> name;
@@ -1020,7 +1020,7 @@ nsGlobalHistory::RemovePage(const char *aURL)
   if (!mBatchesInProgress) {
     // get the resource so we can do the notification
     nsCOMPtr<nsIRDFResource> oldRowResource;
-    gRDFService->GetResource(aURL, getter_AddRefs(oldRowResource));
+    gRDFService->GetResource(nsDependentCString(aURL), getter_AddRefs(oldRowResource));
     NotifyFindUnassertions(oldRowResource, row);
   }
 
@@ -1141,7 +1141,7 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
       
       const char* startPtr = (const char*) yarn.mYarn_Buf;
       nsCAutoString uri(Substring(startPtr, startPtr+yarn.mYarn_Fill));
-      rv = gRDFService->GetResource(uri.get(), getter_AddRefs(resource));
+      rv = gRDFService->GetResource(uri, getter_AddRefs(resource));
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
       if (NS_FAILED(rv))
         continue;
@@ -1246,7 +1246,7 @@ nsGlobalHistory::HidePage(const char *aURL)
   // HasAssertion() correctly checks the Hidden column to show that
   // the row is hidden
   nsCOMPtr<nsIRDFResource> urlResource;
-  rv = gRDFService->GetResource(aURL, getter_AddRefs(urlResource));
+  rv = gRDFService->GetResource(nsDependentCString(aURL), getter_AddRefs(urlResource));
   if (NS_FAILED(rv)) return rv;
   return NotifyFindUnassertions(urlResource, row);
 }
@@ -1683,8 +1683,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       if (NS_FAILED(rv)) return rv;
       
       nsCOMPtr<nsIRDFResource> resource;
-      rv = gRDFService->GetResource(str.get(),
-                                    getter_AddRefs(resource));
+      rv = gRDFService->GetResource(str, getter_AddRefs(resource));
       if (NS_FAILED(rv)) return rv;
 
       return CallQueryInterface(resource, aTarget);
@@ -2337,21 +2336,21 @@ nsGlobalHistory::Init()
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF service");
     if (NS_FAILED(rv)) return rv;
 
-    gRDFService->GetResource(NC_NAMESPACE_URI "Page",        &kNC_Page);
-    gRDFService->GetResource(NC_NAMESPACE_URI "Date",        &kNC_Date);
-    gRDFService->GetResource(NC_NAMESPACE_URI "FirstVisitDate",
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Page"),        &kNC_Page);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Date"),        &kNC_Date);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "FirstVisitDate"),
                              &kNC_FirstVisitDate);
-    gRDFService->GetResource(NC_NAMESPACE_URI "VisitCount",  &kNC_VisitCount);
-    gRDFService->GetResource(NC_NAMESPACE_URI "AgeInDays",  &kNC_AgeInDays);
-    gRDFService->GetResource(NC_NAMESPACE_URI "Name",        &kNC_Name);
-    gRDFService->GetResource(NC_NAMESPACE_URI "Name?sort=true", &kNC_NameSort);
-    gRDFService->GetResource(NC_NAMESPACE_URI "Hostname",    &kNC_Hostname);
-    gRDFService->GetResource(NC_NAMESPACE_URI "Referrer",    &kNC_Referrer);
-    gRDFService->GetResource(NC_NAMESPACE_URI "child",       &kNC_child);
-    gRDFService->GetResource(NC_NAMESPACE_URI "URL",         &kNC_URL);
-    gRDFService->GetResource("NC:HistoryRoot",               &kNC_HistoryRoot);
-    gRDFService->GetResource("NC:HistoryByDateAndSite",           &kNC_HistoryByDateAndSite);
-    gRDFService->GetResource("NC:HistoryByDate",           &kNC_HistoryByDate);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "VisitCount"),  &kNC_VisitCount);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "AgeInDays"),  &kNC_AgeInDays);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Name"),        &kNC_Name);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Name?sort=true"), &kNC_NameSort);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Hostname"),    &kNC_Hostname);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "Referrer"),    &kNC_Referrer);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "child"),       &kNC_child);
+    gRDFService->GetResource(NS_LITERAL_CSTRING(NC_NAMESPACE_URI "URL"),         &kNC_URL);
+    gRDFService->GetResource(NS_LITERAL_CSTRING("NC:HistoryRoot"),               &kNC_HistoryRoot);
+    gRDFService->GetResource(NS_LITERAL_CSTRING("NC:HistoryByDateAndSite"),           &kNC_HistoryByDateAndSite);
+    gRDFService->GetResource(NS_LITERAL_CSTRING("NC:HistoryByDate"),           &kNC_HistoryByDate);
   }
 
   // register this as a named data source with the RDF service
@@ -2986,7 +2985,7 @@ nsGlobalHistory::GetRootDayQueries(nsISimpleEnumerator **aResult, PRBool aBySite
     uri.AppendInt(i);
     if (aBySite)
       uri.Append("&groupby=Hostname");
-    rv = gRDFService->GetResource(uri.get(), getter_AddRefs(finduri));
+    rv = gRDFService->GetResource(uri, getter_AddRefs(finduri));
     if (NS_FAILED(rv)) continue;
     rv = CreateFindEnumerator(finduri, getter_AddRefs(findEnumerator));
     if (NS_FAILED(rv)) continue;
@@ -2999,7 +2998,7 @@ nsGlobalHistory::GetRootDayQueries(nsISimpleEnumerator **aResult, PRBool aBySite
   uri.AppendInt(i-1);
   if (aBySite)
     uri.Append("&groupby=Hostname");
-  rv = gRDFService->GetResource(uri.get(), getter_AddRefs(finduri));
+  rv = gRDFService->GetResource(uri, getter_AddRefs(finduri));
   if (NS_SUCCEEDED(rv)) {
     rv = CreateFindEnumerator(finduri, getter_AddRefs(findEnumerator));
     if (NS_SUCCEEDED(rv)) {
@@ -3267,7 +3266,7 @@ nsGlobalHistory::NotifyFindAssertions(nsIRDFResource *aSource,
   query.terms.AppendElement((void *)&ageterm);
 
   GetFindUriPrefix(query, PR_TRUE, findUri);
-  gRDFService->GetResource(findUri.get(), getter_AddRefs(childFindResource));
+  gRDFService->GetResource(findUri, getter_AddRefs(childFindResource));
   NotifyAssert(kNC_HistoryByDateAndSite, kNC_child, childFindResource);
   
   query.terms.Clear();
@@ -3276,7 +3275,7 @@ nsGlobalHistory::NotifyFindAssertions(nsIRDFResource *aSource,
   query.terms.AppendElement((void *)&ageterm);
 
   GetFindUriPrefix(query, PR_TRUE, findUri);
-  gRDFService->GetResource(findUri.get(), getter_AddRefs(childFindResource));
+  gRDFService->GetResource(findUri, getter_AddRefs(childFindResource));
   NotifyAssert(kNC_HistoryByDate, kNC_child, childFindResource);
 
   query.terms.Clear();
@@ -3286,7 +3285,7 @@ nsGlobalHistory::NotifyFindAssertions(nsIRDFResource *aSource,
   query.terms.AppendElement((void *)&ageterm);
 
   GetFindUriPrefix(query, PR_TRUE, findUri);
-  gRDFService->GetResource(findUri.get(), getter_AddRefs(childFindResource));
+  gRDFService->GetResource(findUri, getter_AddRefs(childFindResource));
   NotifyAssert(childFindResource, kNC_child, aSource);
 
   query.terms.Clear();
@@ -3301,7 +3300,7 @@ nsGlobalHistory::NotifyFindAssertions(nsIRDFResource *aSource,
   query.terms.AppendElement((void *)&hostterm);
   
   GetFindUriPrefix(query, PR_FALSE, findUri);
-  gRDFService->GetResource(findUri.get(), getter_AddRefs(childFindResource));
+  gRDFService->GetResource(findUri, getter_AddRefs(childFindResource));
   NotifyAssert(parentFindResource, kNC_child, childFindResource);
   
   query.terms.Clear();
@@ -3314,13 +3313,13 @@ nsGlobalHistory::NotifyFindAssertions(nsIRDFResource *aSource,
   query.groupBy = kToken_HostnameColumn; // create groupby=Hostname
   
   GetFindUriPrefix(query, PR_TRUE, findUri);
-  gRDFService->GetResource(findUri.get(), getter_AddRefs(parentFindResource));
+  gRDFService->GetResource(findUri, getter_AddRefs(parentFindResource));
 
   query.groupBy = 0;            // create Hostname=<host>
   query.terms.AppendElement((void *)&hostterm);
   GetFindUriPrefix(query, PR_FALSE, findUri);
   findUri.Append(hostname);     // append <host>
-  gRDFService->GetResource(findUri.get(), getter_AddRefs(childFindResource));
+  gRDFService->GetResource(findUri, getter_AddRefs(childFindResource));
   
   NotifyAssert(parentFindResource, kNC_child, childFindResource);
 
@@ -3379,7 +3378,7 @@ nsGlobalHistory::NotifyFindUnassertions(nsIRDFResource *aSource,
   query.terms.AppendElement((void *)&hostterm);
   GetFindUriPrefix(query, PR_FALSE, findUri);
   
-  gRDFService->GetResource(findUri.get(), getter_AddRefs(findResource));
+  gRDFService->GetResource(findUri, getter_AddRefs(findResource));
   
   NotifyUnassert(findResource, kNC_child, aSource);
 
@@ -3389,7 +3388,7 @@ nsGlobalHistory::NotifyFindUnassertions(nsIRDFResource *aSource,
   query.terms.AppendElement((void *)&hostterm);
   GetFindUriPrefix(query, PR_FALSE, findUri);
   
-  gRDFService->GetResource(findUri.get(), getter_AddRefs(findResource));
+  gRDFService->GetResource(findUri, getter_AddRefs(findResource));
   NotifyUnassert(findResource, kNC_child, aSource);
 
   query.terms.Clear();
@@ -3565,7 +3564,7 @@ nsGlobalHistory::URLEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports*
   nsCOMPtr<nsIRDFResource> resource;
   const char* startPtr = (const char*) yarn.mYarn_Buf;
   rv = gRDFService->GetResource(
-            nsCAutoString(Substring(startPtr, startPtr+yarn.mYarn_Fill)).get(),
+            Substring(startPtr, startPtr+yarn.mYarn_Fill),
             getter_AddRefs(resource));
   if (NS_FAILED(rv)) return rv;
 
@@ -3899,7 +3898,7 @@ nsGlobalHistory::SearchEnumerator::ConvertToISupports(nsIMdbRow* aRow,
     
     const char* startPtr = (const char*)yarn.mYarn_Buf;
     rv = gRDFService->GetResource(
-            nsCAutoString(Substring(startPtr, startPtr+yarn.mYarn_Fill)).get(),
+            Substring(startPtr, startPtr+yarn.mYarn_Fill),
             getter_AddRefs(resource));
     if (NS_FAILED(rv)) return rv;
 
@@ -3923,7 +3922,7 @@ nsGlobalHistory::SearchEnumerator::ConvertToISupports(nsIMdbRow* aRow,
   findUri.Append(Substring(startPtr, startPtr+groupByValue.mYarn_Fill));
   findUri.Append('\0');
 
-  rv = gRDFService->GetResource(findUri.get(), getter_AddRefs(resource));
+  rv = gRDFService->GetResource(findUri, getter_AddRefs(resource));
   if (NS_FAILED(rv)) return rv;
 
   *aResult = resource;
