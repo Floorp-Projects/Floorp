@@ -63,6 +63,8 @@ class oeCollectedEventEnumerator : public nsISimpleEnumerator
     NS_IMETHOD HasMoreElements(PRBool *aResult) 
     {
       *aResult = PR_FALSE;
+      if( mEnumIndex >= mListOfEnums.Count() )
+           return NS_OK;
       mListOfEnums[mEnumIndex]->HasMoreElements(aResult);
       while (!*aResult && (++mEnumIndex < mListOfEnums.Count())) {
         mListOfEnums[mEnumIndex]->HasMoreElements(aResult);
